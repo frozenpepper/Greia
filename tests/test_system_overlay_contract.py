@@ -11,12 +11,12 @@ class SystemOverlayContractTests(unittest.TestCase):
     def test_hardware_state_directories_are_setgid_for_cross_service_reads(self) -> None:
         config = (PROJECT_ROOT / "build/overlay/etc/tmpfiles.d/greia-os.conf").read_text()
         self.assertIn(
-            "d /var/lib/greia-system-settings 2750 greiapanel pipsettings -",
+            "d /var/lib/greia-system-settings 2750 greiapanel greiasettings -",
             config,
         )
         self.assertIn("d /run/greia-hardware 2750 greiakid greiapanel -", config)
-        self.assertIn("d /var/lib/greia-profiles 2770 greiakid pipprofiles -", config)
-        self.assertIn("d /run/greia-os 0770 greiakid pipprofiles -", config)
+        self.assertIn("d /var/lib/greia-profiles 2770 greiakid greiaprofiles -", config)
+        self.assertIn("d /run/greia-os 0770 greiakid greiaprofiles -", config)
 
     def test_installed_x_session_starts_hardware_controller_before_launcher(self) -> None:
         session = (
