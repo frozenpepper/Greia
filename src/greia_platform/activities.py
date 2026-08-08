@@ -1,17 +1,16 @@
 from __future__ import annotations
 
-import ast
 import hashlib
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Mapping, Sequence
+from typing import Mapping, Sequence
 
 from .trust import ActivitySource, PackageTrust
 
 
 class ActivityValidationError(ValueError):
-    """Raised when an activity violates the platform package contract."""
+    """Raised when an Activity violates the runtime-neutral package contract."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -21,14 +20,16 @@ class SkillContribution:
 
 
 @dataclass(frozen=True, slots=True)
-class RewardDefinition:
-    reward_id: str
-    amount: int
+class ActivityEventDefinition:
+    event_id: str
+    kind: str
+    score_order: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
 class ActivityManifest:
     activity_id: str
+    legacy_ids: tuple[str, ...]
     title_key: str
     version: str
     runtime_type: str
@@ -37,10 +38,13 @@ class ActivityManifest:
     icon_id: str
     categories: tuple[str, ...]
     skills: tuple[SkillContribution, ...]
-    rewards: tuple[RewardDefinition, ...]
+    events: tuple[ActivityEventDefinition, ...]
     difficulty: int
     languages: tuple[str, ...]
-    capabilities: tuple[str, ...]
+    required_capabilities: tuple[str, ...]
+    optional_capabilities: tuple[str, ...]
+    requested_permissions: tuple[str, ...]
+    storage_schema_version: int
     root: Path
 
     @property
@@ -60,56 +64,58 @@ class ActivityRegistration:
 
 @dataclass(frozen=True, slots=True)
 class RuntimeCatalogue:
+    """Runtime-neutral package/API vocabulary shared by every Activity runtime."""
+
     api_version: str
-    allowed_import_roots: frozenset[str]
-    forbidden_import_roots: frozenset[str]
     forbidden_file_names: frozenset[str]
     forbidden_path_names: frozenset[str]
     forbidden_suffixes: frozenset[str]
     allowed_capabilities: frozenset[str]
-    privileged_capabilities: frozenset[str]
+    allowed_permissions: frozenset[str]
     maximum_activity_bytes: int
 
     @classmethod
     def load(cls, path: Path) -> "RuntimeCatalogue":
-        with path.open("rb") as handle:
-            raw = tomllib.load(handle)
+        try:
+            with path.open("rb") as handle:
+                raw = tomllib.load(handle)
+        except (OSError, tomllib.TOMLDecodeError) as exc:
+            raise ActivityValidationError(f"invalid runtime catalogue {path}: {exc}") from exc
         runtime = _mapping(raw, "runtime")
         validation = _mapping(raw, "validation")
         capabilities = _mapping(raw, "capabilities")
+        permissions = _mapping(raw, "permissions")
         catalogue = cls(
             api_version=_string(runtime, "api_version"),
-            allowed_import_roots=frozenset(_string_list(runtime, "allowed_import_roots")),
-            forbidden_import_roots=frozenset(_string_list(runtime, "forbidden_import_roots")),
-            forbidden_file_names=frozenset(name.casefold() for name in _string_list(validation, "forbidden_file_names")),
-            forbidden_path_names=frozenset(name.casefold() for name in _string_list(validation, "forbidden_path_names")),
-            forbidden_suffixes=frozenset(name.casefold() for name in _string_list(validation, "forbidden_suffixes")),
+            forbidden_file_names=frozenset(
+                name.casefold() for name in _string_list(validation, "forbidden_file_names")
+            ),
+            forbidden_path_names=frozenset(
+                name.casefold() for name in _string_list(validation, "forbidden_path_names")
+            ),
+            forbidden_suffixes=frozenset(
+                suffix.casefold() for suffix in _string_list(validation, "forbidden_suffixes")
+            ),
             allowed_capabilities=frozenset(_string_list(capabilities, "allowed")),
-            privileged_capabilities=frozenset(_string_list(capabilities, "privileged")),
+            allowed_permissions=frozenset(_string_list(permissions, "allowed")),
             maximum_activity_bytes=_integer(validation, "maximum_activity_bytes", minimum=1),
         )
-        import_overlap = catalogue.allowed_import_roots & catalogue.forbidden_import_roots
-        if import_overlap:
+        overlap = catalogue.allowed_capabilities & catalogue.allowed_permissions
+        if overlap:
             raise ActivityValidationError(
-                "runtime import roots cannot be both allowed and forbidden: "
-                + ", ".join(sorted(import_overlap))
-            )
-        unknown_privileged = catalogue.privileged_capabilities - catalogue.allowed_capabilities
-        if unknown_privileged:
-            raise ActivityValidationError(
-                "privileged capabilities must also be allowed: "
-                + ", ".join(sorted(unknown_privileged))
+                "capability and permission vocabularies must be disjoint: "
+                + ", ".join(sorted(overlap))
             )
         return catalogue
 
 
 class ActivityRegistry:
-    """Discovers and validates curated activity packages.
+    """Discover and validate runtime-neutral Greia Activity package facts.
 
-    Phase 0 validates Python-adapter Activity packages against the curated
-    platform runtime. The manifest keeps an explicit runtime type so image
-    profiles can reason about runtime inclusion without changing Activity-level
-    storage/progression/package contracts when more adapters arrive.
+    The registry owns package provenance, manifest semantics, path safety, package
+    footprint, stable identity and platform vocabulary. Runtime-specific source
+    policy (for example Python AST/import validation or future Web content rules)
+    belongs to the selected runtime adapter/manager in ``greia_launcher``.
     """
 
     def __init__(
@@ -135,12 +141,11 @@ class ActivityRegistry:
         self._registrations_by_manifest_object: dict[int, ActivityRegistration] = {}
 
     def discover(self) -> tuple[ActivityManifest, ...]:
-        registrations = self.discover_registrations()
-        return tuple(registration.manifest for registration in registrations)
+        return tuple(registration.manifest for registration in self.discover_registrations())
 
     def discover_registrations(self) -> tuple[ActivityRegistration, ...]:
         registrations: list[ActivityRegistration] = []
-        seen_ids: set[str] = set()
+        identities: dict[str, str] = {}
         self._registrations_by_manifest_object.clear()
         for source in self._activity_sources:
             parent = source.root
@@ -149,11 +154,14 @@ class ActivityRegistry:
             for manifest_path in sorted(parent.glob("*/activity.toml")):
                 registration = self.validate_registration(manifest_path.parent, source)
                 manifest = registration.manifest
-                if manifest.activity_id in seen_ids:
-                    raise ActivityValidationError(
-                        f"duplicate activity id: {manifest.activity_id}"
-                    )
-                seen_ids.add(manifest.activity_id)
+                for identity in (manifest.activity_id, *manifest.legacy_ids):
+                    previous = identities.get(identity)
+                    if previous is not None and previous != manifest.activity_id:
+                        raise ActivityValidationError(
+                            f"Activity identity/alias collision {identity!r}: "
+                            f"{previous} and {manifest.activity_id}"
+                        )
+                    identities[identity] = manifest.activity_id
                 registrations.append(registration)
                 self._registrations_by_manifest_object[id(manifest)] = registration
         return tuple(registrations)
@@ -167,14 +175,6 @@ class ActivityRegistry:
         return registration
 
     def discovery_token(self) -> tuple[tuple[str, int, int, int], ...]:
-        """Return a cheap token for activity-folder additions/replacements.
-
-        Full AST/package validation is intentionally not run every two seconds on
-        the Atom reference machine. Curated installers should replace activity
-        directories atomically; manifest and package-directory mtimes detect that
-        contract while preserving hot discovery.
-        """
-
         items: list[tuple[str, int, int, int]] = []
         for parent in self._activity_roots:
             if not parent.exists():
@@ -189,14 +189,7 @@ class ActivityRegistry:
                     root_mtime = manifest.parent.stat().st_mtime_ns
                 except OSError:
                     continue
-                items.append(
-                    (
-                        manifest.as_posix(),
-                        stat.st_mtime_ns,
-                        stat.st_size,
-                        root_mtime,
-                    )
-                )
+                items.append((manifest.as_posix(), stat.st_mtime_ns, stat.st_size, root_mtime))
         return tuple(items)
 
     def validate_package(self, activity_root: Path) -> ActivityManifest:
@@ -214,8 +207,7 @@ class ActivityRegistry:
         source = source or self._source_for_root(root)
         self._validate_tree(root)
         manifest = self._parse_manifest(root)
-        self._validate_manifest(manifest)
-        self._validate_python_imports(root)
+        self._validate_manifest(manifest, source)
         return ActivityRegistration(
             manifest=manifest,
             package_digest=package_digest(root),
@@ -225,8 +217,7 @@ class ActivityRegistry:
 
     def _source_for_root(self, root: Path) -> ActivitySource:
         matches = [
-            source
-            for source in self._activity_sources
+            source for source in self._activity_sources
             if root == source.root or source.root in root.parents
         ]
         if not matches:
@@ -239,17 +230,6 @@ class ActivityRegistry:
 
     def _validate_tree(self, root: Path) -> None:
         total_bytes = 0
-        reserved_modules = {name.casefold() for name in self._runtime.allowed_import_roots}
-        try:
-            top_level = tuple(root.iterdir())
-        except OSError as exc:
-            raise ActivityValidationError(f"cannot inspect activity package: {exc}") from exc
-        for path in top_level:
-            module_name = path.name.casefold() if path.is_dir() else path.stem.casefold()
-            if module_name in reserved_modules:
-                raise ActivityValidationError(
-                    f"activity package may not shadow curated module {module_name!r}: {path.name}"
-                )
         for path in root.rglob("*"):
             if path.is_symlink():
                 raise ActivityValidationError(f"symlinks are forbidden: {path}")
@@ -259,10 +239,15 @@ class ActivityRegistry:
             if path.is_dir() and folded_name in self._runtime.forbidden_path_names:
                 raise ActivityValidationError(f"forbidden package directory: {path.name}")
             if path.is_file():
-                metadata = path.stat()
+                try:
+                    metadata = path.stat()
+                except OSError as exc:
+                    raise ActivityValidationError(f"cannot inspect package file {path}: {exc}") from exc
                 total_bytes += metadata.st_size
                 if path.suffix.casefold() in self._runtime.forbidden_suffixes:
-                    raise ActivityValidationError(f"bundled executable/dependency archive forbidden: {path}")
+                    raise ActivityValidationError(
+                        f"bundled executable/dependency archive forbidden: {path}"
+                    )
                 if metadata.st_mode & 0o111:
                     raise ActivityValidationError(f"executable activity files are forbidden: {path}")
         if total_bytes > self._runtime.maximum_activity_bytes:
@@ -281,6 +266,18 @@ class ActivityRegistry:
         activity = _mapping(raw, "activity")
         education = _mapping(raw, "education")
         runtime = _mapping(raw, "runtime")
+        requirements = _mapping(raw, "requirements")
+        permissions = _mapping(raw, "permissions")
+        storage = _mapping(raw, "storage")
+
+        if "capabilities" in runtime:
+            raise ActivityValidationError(
+                "runtime.capabilities is obsolete; use requirements.required_capabilities/optional_capabilities"
+            )
+        if "rewards" in education:
+            raise ActivityValidationError(
+                "education.rewards is forbidden; Activities report factual events"
+            )
 
         skills = tuple(
             SkillContribution(
@@ -289,93 +286,101 @@ class ActivityRegistry:
             )
             for item in _mapping_list(education, "skills")
         )
-        rewards = tuple(
-            RewardDefinition(
-                reward_id=_string(item, "id"),
-                amount=_integer(item, "amount", minimum=0, maximum=1000),
-            )
-            for item in _mapping_list(education, "rewards")
-        )
+        events = tuple(_parse_event(item) for item in _mapping_list_allow_empty(education, "events"))
 
         return ActivityManifest(
             activity_id=_string(activity, "id"),
+            legacy_ids=_string_list_allow_empty(activity, "legacy_ids", default=()),
             title_key=_string(activity, "title_key"),
             version=_string(activity, "version"),
-            runtime_type=_optional_string(runtime, "type", default="python"),
+            runtime_type=_string(runtime, "type"),
             api_version=_string(runtime, "api_version"),
             entrypoint=Path(_string(runtime, "entrypoint")),
             icon_id=_string(activity, "icon"),
             categories=tuple(_string_list(education, "categories")),
             skills=skills,
-            rewards=rewards,
+            events=events,
             difficulty=_integer(education, "difficulty", minimum=1, maximum=10),
             languages=tuple(_string_list(activity, "languages")),
-            capabilities=tuple(_string_list(runtime, "capabilities")),
+            required_capabilities=_string_list_allow_empty(
+                requirements, "required_capabilities", default=()
+            ),
+            optional_capabilities=_string_list_allow_empty(
+                requirements, "optional_capabilities", default=()
+            ),
+            requested_permissions=_string_list_allow_empty(
+                permissions, "requested", default=()
+            ),
+            storage_schema_version=_integer(storage, "schema_version", minimum=1),
             root=root,
         )
 
-    def _validate_manifest(self, manifest: ActivityManifest) -> None:
-        if manifest.runtime_type != "python":
+    def _validate_manifest(self, manifest: ActivityManifest, source: ActivitySource) -> None:
+        if not _is_canonical_activity_id(manifest.activity_id):
             raise ActivityValidationError(
-                f"activity {manifest.activity_id} targets runtime {manifest.runtime_type!r}; "
-                "the Phase 0 registry implements only the Python adapter"
+                "activity.id must be a permanent lower-case reverse-DNS identifier"
             )
-        if not _is_safe_identifier(manifest.activity_id):
+        if len(set(manifest.legacy_ids)) != len(manifest.legacy_ids):
+            raise ActivityValidationError("activity.legacy_ids must not contain duplicates")
+        if manifest.activity_id in manifest.legacy_ids:
+            raise ActivityValidationError("canonical Activity ID may not also be a legacy alias")
+        for legacy_id in manifest.legacy_ids:
+            if not _is_legacy_activity_id(legacy_id):
+                raise ActivityValidationError(f"invalid legacy Activity ID: {legacy_id!r}")
+        if manifest.legacy_ids and source.trust is not PackageTrust.BUILT_IN:
             raise ActivityValidationError(
-                "activity.id may contain lowercase ASCII letters, digits, dots, underscores, and hyphens"
+                "legacy Activity IDs are migration authority and require BUILT_IN package origin"
             )
         if manifest.api_version != self._runtime.api_version:
             raise ActivityValidationError(
                 f"activity {manifest.activity_id} targets API {manifest.api_version}; "
-                f"runtime provides {self._runtime.api_version}"
+                f"platform provides {self._runtime.api_version}"
             )
+        if not _is_runtime_type(manifest.runtime_type):
+            raise ActivityValidationError("runtime.type must be a bounded lower-case identifier")
         if manifest.entrypoint.is_absolute() or ".." in manifest.entrypoint.parts:
             raise ActivityValidationError("runtime.entrypoint must be a safe relative path")
-        launch_path = manifest.launch_path.resolve()
-        if manifest.root not in launch_path.parents:
-            raise ActivityValidationError("runtime.entrypoint escapes the activity package")
-        if launch_path.suffix != ".py" or not launch_path.is_file():
-            raise ActivityValidationError(f"entrypoint is not a Python file: {launch_path}")
+        try:
+            launch_path = manifest.launch_path.resolve(strict=True)
+        except OSError as exc:
+            raise ActivityValidationError(
+                f"runtime.entrypoint does not resolve to a package file: {manifest.entrypoint}"
+            ) from exc
+        if manifest.root not in launch_path.parents or not launch_path.is_file():
+            raise ActivityValidationError("runtime.entrypoint must resolve to a file inside the package")
         if not manifest.skills:
             raise ActivityValidationError("education.skills must contain at least one skill")
         if not manifest.languages:
             raise ActivityValidationError("activity.languages must not be empty")
-        if len(set(manifest.capabilities)) != len(manifest.capabilities):
-            raise ActivityValidationError("runtime.capabilities must not contain duplicates")
-        unknown = sorted(set(manifest.capabilities) - self._runtime.allowed_capabilities)
-        if unknown:
-            raise ActivityValidationError(
-                "activity requests unknown capabilities: " + ", ".join(unknown)
-            )
 
-    def _validate_python_imports(self, root: Path) -> None:
-        for path in sorted(root.rglob("*.py")):
-            try:
-                tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-            except (OSError, UnicodeDecodeError, SyntaxError) as exc:
-                raise ActivityValidationError(f"cannot parse {path}: {exc}") from exc
-            for node in ast.walk(tree):
-                root_name: str | None = None
-                if isinstance(node, ast.Import):
-                    for alias in node.names:
-                        self._validate_import_root(alias.name.split(".", 1)[0], path)
-                elif isinstance(node, ast.ImportFrom):
-                    if node.level:
-                        continue
-                    if node.module:
-                        root_name = node.module.split(".", 1)[0]
-                elif isinstance(node, ast.Call) and _is_dynamic_import_call(node):
-                    raise ActivityValidationError(f"dynamic imports are forbidden: {path}:{node.lineno}")
-                if root_name:
-                    self._validate_import_root(root_name, path)
-
-    def _validate_import_root(self, root_name: str, path: Path) -> None:
-        if root_name in self._runtime.forbidden_import_roots:
-            raise ActivityValidationError(f"forbidden import {root_name!r} in {path}")
-        if root_name not in self._runtime.allowed_import_roots:
+        _require_unique("requirements.required_capabilities", manifest.required_capabilities)
+        _require_unique("requirements.optional_capabilities", manifest.optional_capabilities)
+        _require_unique("permissions.requested", manifest.requested_permissions)
+        capability_overlap = set(manifest.required_capabilities) & set(manifest.optional_capabilities)
+        if capability_overlap:
             raise ActivityValidationError(
-                f"import {root_name!r} is outside the curated child runtime in {path}"
+                "capabilities cannot be both required and optional: "
+                + ", ".join(sorted(capability_overlap))
             )
+        unknown_capabilities = (
+            set(manifest.required_capabilities)
+            | set(manifest.optional_capabilities)
+        ) - self._runtime.allowed_capabilities
+        if unknown_capabilities:
+            raise ActivityValidationError(
+                "activity requests unknown capabilities: "
+                + ", ".join(sorted(unknown_capabilities))
+            )
+        unknown_permissions = (
+            set(manifest.requested_permissions) - self._runtime.allowed_permissions
+        )
+        if unknown_permissions:
+            raise ActivityValidationError(
+                "activity requests unknown permissions: "
+                + ", ".join(sorted(unknown_permissions))
+            )
+        event_ids = tuple(event.event_id for event in manifest.events)
+        _require_unique("education.events ids", event_ids)
 
 
 def package_digest(root: Path) -> str:
@@ -392,18 +397,73 @@ def package_digest(root: Path) -> str:
     return hasher.hexdigest()
 
 
-def _is_dynamic_import_call(node: ast.Call) -> bool:
-    function = node.func
-    if isinstance(function, ast.Name):
-        return function.id == "__import__"
-    if isinstance(function, ast.Attribute) and isinstance(function.value, ast.Name):
-        return function.value.id == "importlib" and function.attr in {"import_module", "reload"}
-    return False
+def _parse_event(raw: Mapping[str, object]) -> ActivityEventDefinition:
+    event_id = _string(raw, "id")
+    kind = _string(raw, "kind")
+    if not _is_event_id(event_id):
+        raise ActivityValidationError(f"invalid education event id: {event_id!r}")
+    if kind not in {"completion", "creation", "milestone", "score"}:
+        raise ActivityValidationError(f"unsupported education event kind: {kind!r}")
+    score_order_raw = raw.get("score_order")
+    if score_order_raw is None:
+        score_order = None
+    elif isinstance(score_order_raw, str) and score_order_raw in {
+        "higher_better",
+        "lower_better",
+    }:
+        score_order = score_order_raw
+    else:
+        raise ActivityValidationError(
+            "education event score_order must be higher_better or lower_better"
+        )
+    if kind == "score" and score_order is None:
+        raise ActivityValidationError("score events require score_order")
+    if kind != "score" and score_order is not None:
+        raise ActivityValidationError("non-score events may not declare score_order")
+    return ActivityEventDefinition(event_id=event_id, kind=kind, score_order=score_order)
 
 
-def _is_safe_identifier(value: str) -> bool:
+def _require_unique(label: str, values: tuple[str, ...]) -> None:
+    if len(set(values)) != len(values):
+        raise ActivityValidationError(f"{label} must not contain duplicates")
+
+
+def _is_canonical_activity_id(value: str) -> bool:
+    if not isinstance(value, str) or len(value) > 160:
+        return False
+    parts = value.split(".")
+    if len(parts) < 3:
+        return False
+    return all(_is_dns_like_segment(part) for part in parts)
+
+
+def _is_dns_like_segment(value: str) -> bool:
+    if not value or len(value) > 63:
+        return False
+    allowed = set("abcdefghijklmnopqrstuvwxyz0123456789-")
+    return (
+        value[0].isalnum()
+        and value[-1].isalnum()
+        and all(char in allowed for char in value)
+    )
+
+
+def _is_legacy_activity_id(value: str) -> bool:
+    if not isinstance(value, str) or not value or len(value) > 160:
+        return False
     allowed = set("abcdefghijklmnopqrstuvwxyz0123456789._-")
-    return bool(value) and value[0].isalnum() and all(char in allowed for char in value)
+    return value[0].isalnum() and value[-1].isalnum() and all(c in allowed for c in value)
+
+
+def _is_runtime_type(value: str) -> bool:
+    if not isinstance(value, str) or not value or len(value) > 64:
+        return False
+    allowed = set("abcdefghijklmnopqrstuvwxyz0123456789._-")
+    return value[0].isalnum() and value[-1].isalnum() and all(c in allowed for c in value)
+
+
+def _is_event_id(value: str) -> bool:
+    return _is_legacy_activity_id(value)
 
 
 def _mapping(container: Mapping[str, object], key: str) -> Mapping[str, object]:
@@ -415,6 +475,15 @@ def _mapping(container: Mapping[str, object], key: str) -> Mapping[str, object]:
 
 def _mapping_list(container: Mapping[str, object], key: str) -> tuple[Mapping[str, object], ...]:
     value = container.get(key)
+    if not isinstance(value, list) or not value or not all(isinstance(item, dict) for item in value):
+        raise ActivityValidationError(f"{key} must be a non-empty array of tables")
+    return tuple(value)  # type: ignore[arg-type]
+
+
+def _mapping_list_allow_empty(
+    container: Mapping[str, object], key: str
+) -> tuple[Mapping[str, object], ...]:
+    value = container.get(key, [])
     if not isinstance(value, list) or not all(isinstance(item, dict) for item in value):
         raise ActivityValidationError(f"{key} must be an array of tables")
     return tuple(value)  # type: ignore[arg-type]
@@ -429,16 +498,27 @@ def _string(container: Mapping[str, object], key: str) -> str:
 
 def _string_list(container: Mapping[str, object], key: str) -> tuple[str, ...]:
     value = container.get(key)
-    if not isinstance(value, list) or not value or not all(isinstance(item, str) and item.strip() for item in value):
+    if not isinstance(value, list) or not value or not all(
+        isinstance(item, str) and item.strip() for item in value
+    ):
         raise ActivityValidationError(f"{key} must be a non-empty array of strings")
     return tuple(item.strip() for item in value)
 
 
-def _optional_string(container: Mapping[str, object], key: str, *, default: str) -> str:
-    value = container.get(key, default)
-    if not isinstance(value, str) or not value:
-        raise ActivityValidationError(f"{key} must be a non-empty string")
-    return value
+def _string_list_allow_empty(
+    container: Mapping[str, object],
+    key: str,
+    *,
+    default: tuple[str, ...],
+) -> tuple[str, ...]:
+    value = container.get(key)
+    if value is None:
+        return default
+    if not isinstance(value, list) or not all(
+        isinstance(item, str) and item.strip() for item in value
+    ):
+        raise ActivityValidationError(f"{key} must be an array of strings")
+    return tuple(item.strip() for item in value)
 
 
 def _integer(
