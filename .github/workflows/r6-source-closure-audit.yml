@@ -1,3 +1,4 @@
+# executable source-closure audit trigger
 name: R6 source closure audit
 
 on:
@@ -27,7 +28,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 -m compileall -q src tests tools activities
-          PYTHONPATH=src python3 -m unittest discover -s tests -v | tee /tmp/r6-tests.log
+          PYTHONPATH=src python3 -m unittest discover -s tests -v 2>&1 | tee /tmp/r6-tests.log
           grep -F 'Ran 172 tests' /tmp/r6-tests.log
           grep -F 'OK' /tmp/r6-tests.log
 
@@ -35,34 +36,24 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-
-          # R6.1 typed HAL and semantic capability authority.
           grep -F 'class GreiaHAL:' src/greia_platform/hal.py
           grep -F 'class DisplayHAL(Protocol):' src/greia_platform/hal.py
           grep -F 'class InputHAL(Protocol):' src/greia_platform/hal.py
           grep -F 'class DeviceCapabilityService:' src/greia_platform/device_capabilities.py
           grep -F 'class HALDeviceCapabilityProbe:' src/greia_platform/device_capabilities.py
-
-          # Installed composition uses one shared device service for permission + runtime authority.
           grep -F 'build_launcher_runtime_services(' src/greia_launcher/main.py
           grep -F 'device_capabilities = DeviceCapabilityService(' src/greia_launcher/composition.py
           grep -F 'device_capabilities=device_capabilities' src/greia_launcher/composition.py
           grep -F 'RuntimeManager(' src/greia_launcher/composition.py
           grep -F 'device_capabilities,' src/greia_launcher/composition.py
           grep -F 'storage_service=storage_service' src/greia_launcher/composition.py
-
-          # Authority/runtime compatibility must be based on the same semantic snapshot.
           grep -F 'device_snapshot_token=device_snapshot.token' src/greia_platform/permissions.py
           grep -F 'expected_device_snapshot_token=authority.device_snapshot_token' src/greia_launcher/supervisor.py
           grep -F 'device capability snapshot changed after launch authority was issued' src/greia_launcher/runtime_adapter.py
-
-          # Universal storage is platform-owned and brokered into the Activity session.
           grep -F 'ActivityStorageService(StoragePolicy.load(storage_policy_path))' src/greia_launcher/composition.py
           grep -F 'GREIA_STORAGE_SOCKET' src/greia_launcher/supervisor.py
           grep -F 'GREIA_STORAGE_TOKEN' src/greia_launcher/supervisor.py
           grep -F 'ActivityStorageBroker.start' src/greia_launcher/supervisor.py
-
-          # Runtime-specific process facts, runtime handle mechanics, and lifecycle transport are adapter-owned.
           grep -F 'class RuntimeCommand:' src/greia_launcher/runtime_adapter.py
           grep -F 'class RuntimeInvocation:' src/greia_launcher/runtime_adapter.py
           grep -F 'class RuntimeLifecycleBinding:' src/greia_launcher/runtime_adapter.py
@@ -72,16 +63,12 @@ jobs:
           grep -F 'def cleanup(' src/greia_launcher/runtime_adapter.py
           grep -F 'GREIA_ACTIVITY_READY_PATH' src/greia_launcher/runtime_adapter.py
           grep -F 'GREIA_ACTIVITY_STOP_PATH' src/greia_launcher/runtime_adapter.py
-
-          # Generic Supervisor must not contain Python marker/process implementation details.
           ! grep -F 'ActivityControlChannel' src/greia_launcher/supervisor.py
           ! grep -F 'GREIA_ACTIVITY_READY_PATH' src/greia_launcher/supervisor.py
           ! grep -F 'GREIA_ACTIVITY_STOP_PATH' src/greia_launcher/supervisor.py
           ! grep -F 'subprocess.Popen' src/greia_launcher/supervisor.py
           ! grep -F 'signal_process_group' src/greia_launcher/supervisor.py
           grep -F 'GREIA_ACTIVITY_SESSION_ID' src/greia_launcher/supervisor.py
-
-          # Legacy X is explicitly below the HAL and remains provisional, not interface authority.
           grep -F 'class LegacyXDisplayHAL:' src/greia_platform/hal.py
           grep -F 'R7 replaces the legacy-X' src/greia_platform/hal.py
 
