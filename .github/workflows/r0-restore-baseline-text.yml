@@ -1,0 +1,109 @@
+name: R0 restore missing baseline text tree
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/r0-restore-baseline-text.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  restore:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out active recovery branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Restore missing verified baseline files
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin archive/pip-kids-os-v0.12-exact:refs/remotes/origin/archive/pip-kids-os-v0.12-exact
+          python3 <<'PY'
+          import base64
+          import hashlib
+          import io
+          import os
+          import shutil
+          import subprocess
+          import tarfile
+          from pathlib import Path, PurePosixPath
+
+          archive_ref = "origin/archive/pip-kids-os-v0.12-exact"
+          expected = "1787c4a91c6f116d693a584a87a98d980076b4b178111af2bac82bff71cfaeff"
+          listing = subprocess.check_output(
+              ["git", "ls-tree", "-r", "--name-only", archive_ref, ".recovery/text-bundle"],
+              text=True,
+          ).splitlines()
+          parts = sorted(path for path in listing if path.rsplit("/", 1)[-1].startswith("chunk-"))
+          if len(parts) != 7:
+              raise SystemExit(f"expected 7 verified recovery chunks, found {len(parts)}: {parts}")
+          encoded_parts = []
+          for path in parts:
+              encoded_parts.append(
+                  subprocess.check_output(["git", "show", f"{archive_ref}:{path}"], text=True).strip()
+              )
+          payload = base64.b64decode("".join(encoded_parts), validate=True)
+          actual = hashlib.sha256(payload).hexdigest()
+          if actual != expected:
+              raise SystemExit(f"recovery payload SHA-256 mismatch: {actual}")
+
+          added = []
+          preserved = []
+          with tarfile.open(fileobj=io.BytesIO(payload), mode="r:xz") as archive:
+              members = archive.getmembers()
+              for member in members:
+                  pure = PurePosixPath(member.name)
+                  if pure.is_absolute() or ".." in pure.parts or not pure.parts:
+                      raise SystemExit(f"unsafe recovery path: {member.name}")
+                  if not (member.isfile() or member.isdir()):
+                      raise SystemExit(f"unsupported recovery member type: {member.name}")
+              for member in members:
+                  if not member.isfile():
+                      continue
+                  destination = Path(*PurePosixPath(member.name).parts)
+                  if destination.exists():
+                      preserved.append(member.name)
+                      continue
+                  source = archive.extractfile(member)
+                  if source is None:
+                      raise SystemExit(f"cannot read recovery member: {member.name}")
+                  destination.parent.mkdir(parents=True, exist_ok=True)
+                  with destination.open("wb") as handle:
+                      shutil.copyfileobj(source, handle)
+                  os.chmod(destination, member.mode & 0o777)
+                  added.append(member.name)
+
+          print(f"verified baseline payload {actual}")
+          print(f"ADD_COUNT={len(added)} PRESERVE_COUNT={len(preserved)}")
+          for name in added:
+              print(f"ADD {name}")
+          PY
+
+      - name: Validate restored text tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f Makefile
+          python3 -m compileall -q src tests tools activities
+          git diff --check
+
+      - name: Commit restored baseline files
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "greia-r0-recovery"
+          git config user.email "greia-r0-recovery@users.noreply.github.com"
+          git add Makefile VERSION activities build runtime src tests tools
+          if git diff --cached --quiet; then
+            echo "No missing baseline files required restoration."
+            exit 0
+          fi
+          git commit -m "recovery: restore missing verified Greia baseline text tree"
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
