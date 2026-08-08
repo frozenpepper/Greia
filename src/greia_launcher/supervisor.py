@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from greia_platform.activities import ActivityManifest
+from greia_platform.permissions import ActivityAuthority
 from greia_platform.profiles import ProfileContext
 
 
@@ -14,31 +15,6 @@ SANDBOX_ACTIVITY_ROOT = Path("/run/greia-activity-data")
 SANDBOX_CUSTOMIZATION_ROOT = Path("/run/greia-customization")
 PRODUCTION_ROOT = Path("/opt/greia-os")
 PRODUCTION_BWRAP = Path("/usr/bin/bwrap")
-
-
-@dataclass(frozen=True, slots=True)
-class ActivityAuthority:
-    """Trusted launch authority derived outside the Activity process.
-
-    The manifest is validated by the platform registry before launch. These
-    booleans drive namespace/device exposure. Environment capability strings are
-    only descriptive mirrors of this authority and cannot expand it.
-    """
-
-    audio_basic: bool
-    customization_manage: bool
-    profile_manage_own: bool
-    removable_media_read: bool
-
-    @classmethod
-    def from_manifest(cls, manifest: ActivityManifest) -> "ActivityAuthority":
-        capabilities = frozenset(manifest.capabilities)
-        return cls(
-            audio_basic="audio.basic" in capabilities,
-            customization_manage="customization.manage" in capabilities,
-            profile_manage_own="profile.manage_own" in capabilities,
-            removable_media_read="removable_media.read" in capabilities,
-        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -77,26 +53,30 @@ class ActivitySupervisor:
         self._sandbox_executable = sandbox_executable
         self._require_sandbox_override = require_sandbox
 
-    def launch(self, manifest: ActivityManifest, profile: ProfileContext) -> ActivityResult:
+    def launch(
+        self,
+        manifest: ActivityManifest,
+        profile: ProfileContext,
+        authority: ActivityAuthority,
+    ) -> ActivityResult:
         executable = self._resolve_interpreter()
         sandboxed = self._sandbox_required()
         environment = self._sanitized_environment(
             manifest,
             profile,
+            authority,
             sandboxed=sandboxed,
         )
         if sandboxed:
             sandbox = self._resolve_sandbox()
             if not sandbox.is_file() or not os.access(sandbox, os.X_OK):
-                # Never fall back to an unsandboxed child process on an installed
-                # system. The launcher interprets this as an activity failure and
-                # remains available.
                 return ActivityResult(manifest.activity_id, 126)
             command = self._sandbox_command(
                 sandbox,
                 executable,
                 manifest,
                 profile,
+                authority,
             )
             cwd: Path | None = None
         else:
@@ -144,6 +124,7 @@ class ActivitySupervisor:
         executable: Path,
         manifest: ActivityManifest,
         profile: ProfileContext,
+        authority: ActivityAuthority,
     ) -> list[str]:
         """Build the fail-closed Linux namespace boundary for an activity.
 
@@ -154,7 +135,6 @@ class ActivitySupervisor:
         declared. Privileged customization access is a separate narrow bind.
         """
 
-        authority = ActivityAuthority.from_manifest(manifest)
         command = [
             str(sandbox),
             "--die-with-parent",
@@ -162,11 +142,6 @@ class ActivitySupervisor:
             "--unshare-user",
             "--disable-userns",
             "--unshare-pid",
-            # Keep host IPC because X11 shared-memory acceleration crosses the
-            # X client/server boundary. Flatpak documents that isolating IPC
-            # disables XShm and severely hurts X11 performance. Activities are
-            # sequential, and the stronger filesystem/PID/network boundaries
-            # remain in place; hostile-X11 isolation is a later display-backend gate.
             "--unshare-net",
             "--unshare-uts",
             "--ro-bind",
@@ -176,13 +151,11 @@ class ActivitySupervisor:
             "/proc",
             "--dev",
             "/dev",
-            # SDL may need accelerated rendering and ALSA. These device trees are
-            # exposed only when they exist, while the rest of host /dev stays out.
             "--dev-bind-try",
             "/dev/dri",
             "/dev/dri",
         ]
-        if authority.audio_basic:
+        if authority.has_capability("audio.basic"):
             command.extend(["--dev-bind-try", "/dev/snd", "/dev/snd"])
         activity_data = profile.activity_data_dir(manifest.activity_id)
         command.extend(
@@ -198,7 +171,7 @@ class ActivitySupervisor:
                 "/run/greia-os",
             ]
         )
-        if authority.customization_manage:
+        if authority.has_permission("customization.manage"):
             command.extend(
                 [
                     "--bind",
@@ -206,7 +179,7 @@ class ActivitySupervisor:
                     str(SANDBOX_CUSTOMIZATION_ROOT),
                 ]
             )
-        if not authority.removable_media_read:
+        if not authority.has_permission("removable_media.read"):
             command.extend(["--tmpfs", "/media/greia"])
         command.extend(
             [
@@ -222,6 +195,7 @@ class ActivitySupervisor:
     def _sanitized_environment(
         manifest: ActivityManifest,
         profile: ProfileContext,
+        authority: ActivityAuthority,
         *,
         sandboxed: bool = False,
     ) -> dict[str, str]:
@@ -239,7 +213,6 @@ class ActivitySupervisor:
         environment = {
             name: value for name, value in os.environ.items() if name in allowed_names
         }
-        authority = ActivityAuthority.from_manifest(manifest)
         activity_data = profile.activity_data_dir(manifest.activity_id)
         cache_dir = activity_data / "cache"
         config_dir = activity_data / "config"
@@ -249,7 +222,7 @@ class ActivitySupervisor:
             os.chmod(path, 0o770)
 
         avatar_request = activity_data / ".greia" / "requests" / "avatar.json"
-        if authority.profile_manage_own:
+        if authority.has_permission("profile.manage_own"):
             avatar_request.parent.mkdir(parents=True, exist_ok=True)
             os.chmod(avatar_request.parent, 0o770)
 
@@ -282,15 +255,16 @@ class ActivitySupervisor:
                 "GREIA_ACTIVITY_ROOT": str(manifest.root),
                 "GREIA_ACTIVITY_DATA_DIR": str(env_activity_data),
                 "GREIA_RUNTIME_API": manifest.api_version,
-                "GREIA_ACTIVITY_CAPABILITIES": ",".join(manifest.capabilities),
+                "GREIA_ACTIVITY_CAPABILITIES": ",".join(sorted(authority.sdk_features)),
+                "GREIA_PACKAGE_TRUST": authority.package_trust.value,
                 "GREIA_PROFILE_ID": profile.profile.profile_id,
                 "GREIA_PROFILE_NAME": profile.profile.display_name,
                 "GREIA_PROFILE_AVATAR": profile.profile.avatar_id,
                 "GREIA_MEDIA_ROOT": os.environ.get("GREIA_MEDIA_ROOT", "/media/greia"),
             }
         )
-        if authority.customization_manage:
+        if authority.has_permission("customization.manage"):
             environment["GREIA_CUSTOMIZATION_DIR"] = str(env_customization)
-        if authority.profile_manage_own:
+        if authority.has_permission("profile.manage_own"):
             environment["GREIA_AVATAR_REQUEST_PATH"] = str(env_avatar_request)
         return environment
