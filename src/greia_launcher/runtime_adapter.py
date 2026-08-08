@@ -9,10 +9,7 @@ from pathlib import Path
 from typing import Mapping, Protocol, Sequence
 
 from greia_platform.activities import ActivityManifest
-from greia_platform.device_capabilities import (
-    DeviceCapabilityService,
-    DeviceCapabilitySnapshot,
-)
+from greia_platform.device_capabilities import DeviceCapabilityService
 
 
 PRODUCTION_ROOT = Path("/opt/greia-os")
@@ -86,6 +83,9 @@ class RuntimeLaunchAdapter(Protocol):
 class PythonRuntimePolicy:
     allowed_import_roots: frozenset[str]
     forbidden_import_roots: frozenset[str]
+    forbidden_file_names: frozenset[str]
+    forbidden_path_names: frozenset[str]
+    forbidden_suffixes: frozenset[str]
 
     @classmethod
     def load(cls, path: Path) -> "PythonRuntimePolicy":
@@ -105,7 +105,19 @@ class PythonRuntimePolicy:
                 "Python import roots cannot be both allowed and forbidden: "
                 + ", ".join(sorted(overlap))
             )
-        return cls(allowed, forbidden)
+        return cls(
+            allowed_import_roots=allowed,
+            forbidden_import_roots=forbidden,
+            forbidden_file_names=_casefolded_string_set(
+                python, "forbidden_file_names"
+            ),
+            forbidden_path_names=_casefolded_string_set(
+                python, "forbidden_path_names"
+            ),
+            forbidden_suffixes=_casefolded_string_set(
+                python, "forbidden_suffixes"
+            ),
+        )
 
 
 class PythonRuntimeAdapter:
@@ -143,6 +155,21 @@ class PythonRuntimeAdapter:
                     raise RuntimeValidationError(
                         f"Activity package may not shadow curated module {module_name!r}: {path.name}"
                     )
+            for path in manifest.root.rglob("*"):
+                folded_name = path.name.casefold()
+                if path.is_dir() and folded_name in policy.forbidden_path_names:
+                    raise RuntimeValidationError(
+                        f"forbidden Python package directory: {path.name}"
+                    )
+                if path.is_file():
+                    if folded_name in policy.forbidden_file_names:
+                        raise RuntimeValidationError(
+                            f"forbidden Python package file: {path.name}"
+                        )
+                    if path.suffix.casefold() in policy.forbidden_suffixes:
+                        raise RuntimeValidationError(
+                            f"forbidden Python package suffix: {path}"
+                        )
         for path in sorted(manifest.root.rglob("*.py")):
             try:
                 tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
@@ -282,6 +309,20 @@ def _string_set(container: Mapping[str, object], key: str) -> frozenset[str]:
     ):
         raise RuntimeValidationError(f"python.{key} must be a non-empty string list")
     normalized = tuple(item.strip() for item in value)
+    if len(set(normalized)) != len(normalized):
+        raise RuntimeValidationError(f"python.{key} must not contain duplicates")
+    return frozenset(normalized)
+
+
+def _casefolded_string_set(
+    container: Mapping[str, object], key: str
+) -> frozenset[str]:
+    value = container.get(key, [])
+    if not isinstance(value, list) or not all(
+        isinstance(item, str) and item.strip() for item in value
+    ):
+        raise RuntimeValidationError(f"python.{key} must be a string list")
+    normalized = tuple(item.strip().casefold() for item in value)
     if len(set(normalized)) != len(normalized):
         raise RuntimeValidationError(f"python.{key} must not contain duplicates")
     return frozenset(normalized)
