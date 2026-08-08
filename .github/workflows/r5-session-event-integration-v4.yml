@@ -1,0 +1,123 @@
+name: R5 session event integration v4
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/r5-session-event-integration-v4.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  implement-and-verify:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Install verification dependency
+        run: python3 -m pip install --disable-pip-version-check --quiet Pillow
+
+      - name: Apply reviewed R5 integration and update installed-test composition
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+          import subprocess
+          import textwrap
+
+          source = Path('.github/workflows/r5-session-event-integration.yml').read_text(encoding='utf-8')
+          start_marker = "      - name: Apply R5 platform integration\n"
+          next_marker = "\n      - name: Install verification dependency\n"
+          block = source.split(start_marker, 1)[1].split(next_marker, 1)[0]
+          script = textwrap.dedent(block.split("        run: |\n", 1)[1])
+          replay = Path('/tmp/replay-r5-integration.sh')
+          replay.write_text(script, encoding='utf-8')
+          subprocess.run(['bash', str(replay)], check=True)
+
+          generated = Path('tests/test_r5_integration.py')
+          text = generated.read_text(encoding='utf-8')
+          old = 'import unittest\nfrom dataclasses import replace\n'
+          new = 'import unittest\nfrom dataclasses import replace\nfrom unittest import mock\n'
+          if text.count(old) != 1:
+              raise SystemExit('generated integration test import anchor mismatch')
+          generated.write_text(
+              text.replace(old, new, 1).replace(
+                  'unittest.mock.patch.object', 'mock.patch.object'
+              ),
+              encoding='utf-8',
+          )
+
+          def rep(path: str, old: str, new: str) -> None:
+              target = Path(path)
+              value = target.read_text(encoding='utf-8')
+              count = value.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected one test-composition anchor, found {count}: {old!r}')
+              target.write_text(value.replace(old, new, 1), encoding='utf-8')
+
+          rep(
+              'tests/test_supervisor.py',
+              'from greia_launcher.lifecycle import ActivityExitReason, ActivitySessionState\n',
+              'from greia_launcher.event_broker import ActivityEventBroker\nfrom greia_launcher.lifecycle import ActivityExitReason, ActivitySessionState\n',
+          )
+          rep(
+              'tests/test_supervisor.py',
+              'from greia_platform.device_capabilities import DeviceCapabilityService\nfrom greia_platform.storage import ActivityStorageService, StoragePolicy\n',
+              'from greia_platform.device_capabilities import DeviceCapabilityService\nfrom greia_platform.history import HistoryPolicy, PlatformHistoryService, ProgressionPolicy\nfrom greia_platform.storage import ActivityStorageService, StoragePolicy\n',
+          )
+          rep(
+              'tests/test_supervisor.py',
+              '        self.customization_dir = root / "customization"\n        self.customization_dir.mkdir(parents=True, exist_ok=True)\n',
+              '        self.customization_dir = root / "customization"\n        self.customization_dir.mkdir(parents=True, exist_ok=True)\n        self.progress_dir = root / "progress"\n        self.progress_dir.mkdir(parents=True, exist_ok=True)\n',
+          )
+          rep(
+              'tests/test_supervisor.py',
+              'def _broker_factory(runtime_root: Path):\n    def start(storage, session_id: str, *, sandboxed: bool):\n        return ActivityStorageBroker.start(\n            storage,\n            session_id,\n            runtime_root=runtime_root,\n            sandboxed=sandboxed,\n        )\n\n    return start\n\n\nclass SupervisorTests(unittest.TestCase):\n',
+              'def _broker_factory(runtime_root: Path):\n    def start(storage, session_id: str, *, sandboxed: bool):\n        return ActivityStorageBroker.start(\n            storage,\n            session_id,\n            runtime_root=runtime_root,\n            sandboxed=sandboxed,\n        )\n\n    return start\n\n\ndef _history_service() -> PlatformHistoryService:\n    return PlatformHistoryService(\n        HistoryPolicy(\n            schema_version=1,\n            max_sessions_per_profile=64,\n            max_events_per_session=64,\n            max_event_payload_bytes=8192,\n            max_idempotency_key_bytes=64,\n            max_reward_ledger_entries=256,\n            max_recent_sessions_summary=16,\n            max_score_absolute=10**12,\n            sqlite_busy_timeout_ms=2000,\n        ),\n        ProgressionPolicy(1, ()),\n    )\n\n\ndef _event_broker_factory(runtime_root: Path):\n    def start(store, manifest, progression, session_id: str, *, sandboxed: bool):\n        return ActivityEventBroker.start(\n            store,\n            manifest,\n            progression,\n            session_id,\n            runtime_root=runtime_root,\n            sandboxed=sandboxed,\n        )\n\n    return start\n\n\nclass SupervisorTests(unittest.TestCase):\n',
+          )
+          rep(
+              'tests/test_supervisor.py',
+              '                storage_service=_storage_service(),\n                storage_broker_factory=_broker_factory(root / "brokers"),\n            )\n            session = supervisor.start(manifest, profile, authority)\n            command = list(calls[0][0][0])\n',
+              '                storage_service=_storage_service(),\n                storage_broker_factory=_broker_factory(root / "brokers"),\n                history_service=_history_service(),\n                event_broker_factory=_event_broker_factory(root / "event-brokers"),\n            )\n            session = supervisor.start(manifest, profile, authority)\n            command = list(calls[0][0][0])\n',
+          )
+          rep(
+              'tests/test_supervisor.py',
+              '                storage_service=_storage_service(),\n                storage_broker_factory=_broker_factory(root / "brokers"),\n            )\n            session = supervisor.start(manifest, profile, authority)\n\n        self.assertEqual(session.state, ActivitySessionState.FAILED)\n',
+              '                storage_service=_storage_service(),\n                storage_broker_factory=_broker_factory(root / "brokers"),\n                history_service=_history_service(),\n                event_broker_factory=_event_broker_factory(root / "event-brokers"),\n            )\n            session = supervisor.start(manifest, profile, authority)\n\n        self.assertEqual(session.state, ActivitySessionState.FAILED)\n',
+          )
+          PY
+
+      - name: Compile and focused R5/R6 integration tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m compileall -q src tests tools activities
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_history.py' -v
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_r5_integration.py' -v
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_supervisor.py' -v
+
+      - name: Full provider-free gate
+        run: make verify
+
+      - name: Commit reviewed R5 integration
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          git add \
+            src/greia_launcher/composition.py \
+            src/greia_launcher/main.py \
+            src/greia_launcher/supervisor.py \
+            tests/test_r5_integration.py \
+            tests/test_supervisor.py
+          git diff --cached --check
+          git config user.name greia-r5-reimplementation
+          git config user.email greia-r5-reimplementation@users.noreply.github.com
+          git commit -m 'feat: integrate platform sessions and event broker into launcher'
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
