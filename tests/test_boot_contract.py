@@ -20,9 +20,9 @@ GOOD_LINE = (
     "udev.log_priority=3 vt.global_cursor_default=0 consoleblank=0"
 )
 AUTH = (
-    'set superusers="pip-recovery"\n'
+    'set superusers="greia-recovery"\n'
     "export superusers\n"
-    "password_pbkdf2 pip-recovery grub.pbkdf2.sha512.10000.ABCD1234\n"
+    "password_pbkdf2 greia-recovery grub.pbkdf2.sha512.10000.ABCD1234\n"
 )
 
 
@@ -110,17 +110,21 @@ class BootContractTests(unittest.TestCase):
             GOOD_LINE
             + " boot=live components live-media-path=/live"
             + " live-media-timeout=15 nopersistence noeject silent overlay-size=128M"
-            + f" pip.live_media_id={media_id}"
+            + f" greia.live_media_id={media_id}"
         )
         validate_grub_text(config(live_args), live_installer=True)
         for required in (
-            "pip.live_media_id",
+            "greia.live_media_id",
             "nopersistence",
             "silent",
             "overlay-size=128M",
         ):
             with self.subTest(required=required):
-                token = f" pip.live_media_id={media_id}" if required == "pip.live_media_id" else f" {required}"
+                token = (
+                    f" greia.live_media_id={media_id}"
+                    if required == "greia.live_media_id"
+                    else f" {required}"
+                )
                 with self.assertRaisesRegex(GrubContractError, required.split("=")[0]):
                     validate_grub_text(
                         config(live_args.replace(token, "")),
@@ -134,16 +138,15 @@ class BootContractTests(unittest.TestCase):
             + " nopersistence noeject silent overlay-size=128M"
         )
         for bad in (
-            "pip.live_media_id=not-a-uuid",
-            "pip.live_media_id=4F6FC2A3-578E-4AF1-BF48-8B6EAB7C72D9",
-            "live-media=removable pip.live_media_id=4f6fc2a3-578e-4af1-bf48-8b6eab7c72d9",
-            "live-media-uuid=aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee pip.live_media_id=4f6fc2a3-578e-4af1-bf48-8b6eab7c72d9",
-            "ignore_uuid pip.live_media_id=4f6fc2a3-578e-4af1-bf48-8b6eab7c72d9",
+            "greia.live_media_id=not-a-uuid",
+            "greia.live_media_id=4F6FC2A3-578E-4AF1-BF48-8B6EAB7C72D9",
+            "live-media=removable greia.live_media_id=4f6fc2a3-578e-4af1-bf48-8b6eab7c72d9",
+            "live-media-uuid=aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee greia.live_media_id=4f6fc2a3-578e-4af1-bf48-8b6eab7c72d9",
+            "ignore_uuid greia.live_media_id=4f6fc2a3-578e-4af1-bf48-8b6eab7c72d9",
         ):
             with self.subTest(bad=bad):
                 with self.assertRaises(GrubContractError):
                     validate_grub_text(config(base + " " + bad), live_installer=True)
-
 
     def test_live_installer_rejects_conflicting_duplicate_live_values(self) -> None:
         media_id = "4f6fc2a3-578e-4af1-bf48-8b6eab7c72d9"
@@ -151,7 +154,7 @@ class BootContractTests(unittest.TestCase):
             GOOD_LINE
             + " boot=live components live-media-path=/live live-media-timeout=15"
             + " nopersistence noeject silent overlay-size=128M"
-            + f" pip.live_media_id={media_id}"
+            + f" greia.live_media_id={media_id}"
         )
         for duplicate in (
             "boot=local",
