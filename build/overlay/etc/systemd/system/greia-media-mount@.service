@@ -1,0 +1,17 @@
+[Unit]
+Description=Mount removable media %I for Greia OS
+After=dev-%i.device
+BindsTo=dev-%i.device
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/lib/greia-os/mount-removable %I
+RemainAfterExit=yes
+TimeoutStartSec=15
+TimeoutStopSec=10
+ExecStop=/usr/local/lib/greia-os/unmount-removable %I
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=strict
+ReadWritePaths=/media/greia /run/greia-os
+NoNewPrivileges=yes
