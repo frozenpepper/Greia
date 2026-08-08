@@ -1,4 +1,4 @@
-name: R0 image content relay probe
+name: R0 restore verified binary assets
 
 on:
   pull_request:
@@ -7,22 +7,134 @@ on:
       - ".github/workflows/r0-image-content-probe.yml"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  probe:
+  restore-assets:
     if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.ref }}
-      - name: Probe exact source bytes
+          fetch-depth: 0
+
+      - name: Download and verify four ZIP-authority binary inputs
         shell: bash
         run: |
           set -euo pipefail
-          URL='https://lh7-rt.googleusercontent.com/slidesz/AGV_vUcvh29LvqEwd8nYqUY6brT5jSdoviXkM2DQvAKnO9U6aNACDfeXN5MCNaRzogmPmZEp9z8EIeralAGlY_bbTZJsb70FuMICZonbGKwSxYZBIeHcew6zJDRrPcqGm9ySv3IGfFosNnh1w-uqRT1SMMVhiipbwI5xhrNulJsTgkfuNi1YpBk=s2048?key=DLDXuCDhvbi66FtiZPZajw'
-          curl --fail --location --silent --show-error "$URL" -o /tmp/source.png
-          stat -c 'SIZE=%s' /tmp/source.png
-          sha256sum /tmp/source.png
-          test "$(sha256sum /tmp/source.png | awk '{print $1}')" = '026f09eddb72a0befb43beb1bc2ad912009c923feedcba86dc82e0302900b3c8'
+          test "$(git ls-files '*.png' | wc -l | tr -d ' ')" = "0"
+
+          SOURCE_URL='https://lh7-rt.googleusercontent.com/slidesz/AGV_vUcvh29LvqEwd8nYqUY6brT5jSdoviXkM2DQvAKnO9U6aNACDfeXN5MCNaRzogmPmZEp9z8EIeralAGlY_bbTZJsb70FuMICZonbGKwSxYZBIeHcew6zJDRrPcqGm9ySv3IGfFosNnh1w-uqRT1SMMVhiipbwI5xhrNulJsTgkfuNi1YpBk=s2048?key=DLDXuCDhvbi66FtiZPZajw'
+          TRANSPARENT_URL='https://lh7-rt.googleusercontent.com/slidesz/AGV_vUcgOXC0XjOv51YHddxeG5rJyJmUJfvAcnRLEdplIa3dFs3NW9C_8cAcjmA0x1yXj9WcwN9aumWKLSetoXrlIDWzhzqjPlm3d70nhUWCmir_noezi3Zuc8X_UMENZ3E-5wvnhjTywsBw9skUzPQLo3D2d85YK8znAONu4noq0Sk8QGpoMrM=s2048?key=DLDXuCDhvbi66FtiZPZajw'
+          LABELED_URL='https://lh7-rt.googleusercontent.com/slidesz/AGV_vUcpaUvZfImOEvfXznNXZvnWYcKr6n-6Rls5moQ6furhD8mP1QS7gDzQX-39SGumf33eHlkJXgBX5iUefd5vRUaG5VH83TLfnSipvfU9nsFaYImb17cwkbuxnz6oCWIp-NJpsmf0r-uJIWOnKjDARour_RtSmT-gsaj-hysiqB9ED1HuUFI=s2048?key=DLDXuCDhvbi66FtiZPZajw'
+          BOOT_URL='https://lh7-rt.googleusercontent.com/slidesz/AGV_vUdpCAXTkiOS4djgULqjE2amqTXPxx1OX_B_-2l1z1_pYAkbmdGhirtnXsbknuXereEBXOSMZVKWEelIcwV7l8S1_oEXKRTCKYe6Be1vJVHtODfrzSlniugAOtPCXOJmXlzrpNRjE7nC59k5K3oi1L5Wjz5QzfCSMNMxo3dsiQTjFdlP=s2048?key=DLDXuCDhvbi66FtiZPZajw'
+
+          mkdir -p assets/source/generated_variants
+          mkdir -p build/overlay/etc/plymouth/themes/greia
+          mkdir -p build/installer-overlay/etc/plymouth/themes/greia
+
+          curl --fail --location --retry 2 --silent --show-error "$SOURCE_URL" -o assets/source/core_icons_v1_source.png
+          curl --fail --location --retry 2 --silent --show-error "$TRANSPARENT_URL" -o assets/source/generated_variants/transparent_atlas_experiment.png
+          curl --fail --location --retry 2 --silent --show-error "$LABELED_URL" -o assets/source/generated_variants/labeled_catalog_experiment.png
+          curl --fail --location --retry 2 --silent --show-error "$BOOT_URL" -o build/overlay/etc/plymouth/themes/greia/boot-mark.png
+          cp build/overlay/etc/plymouth/themes/greia/boot-mark.png build/installer-overlay/etc/plymouth/themes/greia/boot-mark.png
+
+          printf '%s  %s\n' \
+            '026f09eddb72a0befb43beb1bc2ad912009c923feedcba86dc82e0302900b3c8' 'assets/source/core_icons_v1_source.png' \
+            '37e364af103c917729cc874576bd3237868c0bc5e45124e46d0241e179399ec7' 'assets/source/generated_variants/transparent_atlas_experiment.png' \
+            '2ffe0b660ad0d533c0758a613928de4a69345b252ffb427e276cea009624586a' 'assets/source/generated_variants/labeled_catalog_experiment.png' \
+            '200b4075cba1586b3d6ff5357547b7ea3b672f45fcb1f0ec8e0381c63d6bf6b7' 'build/overlay/etc/plymouth/themes/greia/boot-mark.png' \
+            '200b4075cba1586b3d6ff5357547b7ea3b672f45fcb1f0ec8e0381c63d6bf6b7' 'build/installer-overlay/etc/plymouth/themes/greia/boot-mark.png' \
+            | sha256sum --check --strict
+
+      - name: Regenerate canonical runtime art byte-for-byte
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check --quiet \
+            'pillow==12.3.0' 'opencv-python-headless==4.13.0.92'
+          mkdir -p assets/icons/core/v1 assets/catalog
+          python3 tools/extract_core_icons.py \
+            --source assets/source/core_icons_v1_source.png \
+            --output-root assets/icons/core/v1 \
+            --catalog /tmp/generated-core-icons-v1.toml \
+            --contact-sheet assets/catalog/core_icons_v1_contact_sheet.png
+
+      - name: Verify all 123 PNGs against the uploaded ZIP ledger
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from __future__ import annotations
+
+          import hashlib
+          from pathlib import Path
+
+          expected: dict[str, str] = {}
+          for manifest in sorted(Path('docs/recovery/v0.12').glob('manifest-part-*.sha256')):
+              for raw in manifest.read_text(encoding='utf-8').splitlines():
+                  line = raw.strip()
+                  if not line or line.startswith('#'):
+                      continue
+                  digest, _size, path = line.split(maxsplit=2)
+                  expected[path] = digest
+
+          assets = sorted(Path('assets/icons/core/v1').rglob('*.png')) + [
+              Path('assets/source/core_icons_v1_source.png'),
+              Path('assets/source/generated_variants/transparent_atlas_experiment.png'),
+              Path('assets/source/generated_variants/labeled_catalog_experiment.png'),
+              Path('assets/catalog/core_icons_v1_contact_sheet.png'),
+          ]
+          if len(assets) != 121:
+              raise SystemExit(f'expected 121 asset PNGs, found {len(assets)}')
+
+          mismatches: list[str] = []
+          for path in assets:
+              rel = path.as_posix()
+              wanted = expected.get(rel)
+              if wanted is None:
+                  mismatches.append(f'no ZIP ledger entry for {rel}')
+                  continue
+              actual = hashlib.sha256(path.read_bytes()).hexdigest()
+              if actual != wanted:
+                  mismatches.append(f'{rel}: {actual} != {wanted}')
+
+          boot_expected = '200b4075cba1586b3d6ff5357547b7ea3b672f45fcb1f0ec8e0381c63d6bf6b7'
+          for path in [
+              Path('build/overlay/etc/plymouth/themes/greia/boot-mark.png'),
+              Path('build/installer-overlay/etc/plymouth/themes/greia/boot-mark.png'),
+          ]:
+              actual = hashlib.sha256(path.read_bytes()).hexdigest()
+              if actual != boot_expected:
+                  mismatches.append(f'{path}: {actual} != {boot_expected}')
+
+          if mismatches:
+              raise SystemExit('\n'.join(mismatches))
+
+          project_pngs = [p for p in Path('.').rglob('*.png') if '.git' not in p.parts]
+          if len(project_pngs) != 123:
+              raise SystemExit(f'expected exactly 123 project PNGs, found {len(project_pngs)}')
+          print('ZIP_LEDGER_PNGS_VERIFIED=123')
+          PY
+
+      - name: Full gate before binary commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          make verify
+          git diff --check
+
+      - name: Commit all 123 verified binary assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'greia-r0-recovery'
+          git config user.email 'greia-r0-recovery@users.noreply.github.com'
+          git add assets/icons assets/source assets/catalog/core_icons_v1_contact_sheet.png \
+            build/overlay/etc/plymouth/themes/greia/boot-mark.png \
+            build/installer-overlay/etc/plymouth/themes/greia/boot-mark.png
+          PNG_COUNT="$(git diff --cached --name-only -- '*.png' | wc -l | tr -d ' ')"
+          test "$PNG_COUNT" = '123'
+          git commit -m 'recovery: restore all 123 verified Greia PNG assets'
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
