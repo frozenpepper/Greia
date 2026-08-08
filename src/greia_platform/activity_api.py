@@ -138,3 +138,45 @@ def _require_capability(capability: str) -> None:
     capabilities = frozenset(item for item in raw.split(",") if item)
     if capability not in capabilities:
         raise PermissionError(f"activity lacks required capability: {capability}")
+
+
+def mark_activity_ready() -> None:
+    """Signal that the Activity has created its usable child-facing surface.
+
+    This lifecycle marker is cooperative state, not an authorization token.
+    The supervisor creates a unique per-launch channel inside the Activity's own
+    writable namespace and verifies the session ID before accepting the marker.
+    """
+
+    session_id, path = _lifecycle_path("GREIA_ACTIVITY_READY_PATH")
+    _write_lifecycle_marker(path, session_id)
+
+
+def activity_stop_requested() -> bool:
+    """Return whether Greia requested a graceful stop for this launch."""
+
+    session_id, path = _lifecycle_path("GREIA_ACTIVITY_STOP_PATH")
+    try:
+        return path.read_text(encoding="ascii").strip() == session_id
+    except (OSError, UnicodeDecodeError):
+        return False
+
+
+def _lifecycle_path(environment_name: str) -> tuple[str, Path]:
+    session_id = os.environ.get("GREIA_ACTIVITY_SESSION_ID", "").strip()
+    raw_path = os.environ.get(environment_name, "").strip()
+    raw_data = os.environ.get("GREIA_ACTIVITY_DATA_DIR", "").strip()
+    if not session_id or not raw_path or not raw_data:
+        raise RuntimeError("activity was not launched with a lifecycle control channel")
+    data_root = Path(raw_data).resolve(strict=False)
+    path = Path(raw_path).resolve(strict=False)
+    if path == data_root or data_root not in path.parents:
+        raise RuntimeError("activity lifecycle path escapes the private data namespace")
+    return session_id, path
+
+
+def _write_lifecycle_marker(path: Path, session_id: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    temporary.write_text(session_id + "\n", encoding="ascii")
+    temporary.replace(path)
