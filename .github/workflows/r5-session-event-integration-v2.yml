@@ -1,0 +1,153 @@
+name: R5 session event integration v2
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/r5-session-event-integration-v2.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  implement-and-verify:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Install verification dependency
+        run: python3 -m pip install --disable-pip-version-check --quiet Pillow
+
+      - name: Fix real ProfileContext storage namespace
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+
+          def rep(path: str, old: str, new: str) -> None:
+              target = Path(path)
+              text = target.read_text(encoding="utf-8")
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"{path}: expected one R4 anchor, found {count}: {old!r}")
+              target.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+          rep(
+              "src/greia_platform/profiles.py",
+              "class ProfileContext:\n    profile: ChildProfile\n    root: Path\n    customization_dir: Path\n    activities_dir: Path\n    progress_dir: Path\n\n    def activity_data_dir(self, activity_id: str) -> Path:\n",
+              "class ProfileContext:\n    profile: ChildProfile\n    root: Path\n    customization_dir: Path\n    activities_dir: Path\n    storage_dir: Path\n    progress_dir: Path\n\n    def activity_data_dir(self, activity_id: str) -> Path:\n",
+          )
+          rep(
+              "src/greia_platform/profiles.py",
+              "        _ensure_managed_directory(target, self.root, mode=0o770)\n        return target\n\n\nclass ProfileStore:\n",
+              "        _ensure_managed_directory(target, self.root, mode=0o770)\n        return target\n\n    def activity_storage_dir(self, activity_id: str) -> Path:\n        if not activity_id or any(\n            character not in \"abcdefghijklmnopqrstuvwxyz0123456789._-\"\n            for character in activity_id\n        ):\n            raise ProfileError(\"unsafe activity identifier\")\n        _ensure_managed_directory(self.storage_dir, self.root, mode=0o2770)\n        target = self.storage_dir / activity_id\n        _ensure_managed_directory(target, self.root, mode=0o770)\n        return target\n\n\nclass ProfileStore:\n",
+          )
+          rep(
+              "src/greia_platform/profiles.py",
+              "            customization_dir=root / \"customization\",\n            activities_dir=root / \"activities\",\n            progress_dir=root / \"progress\",\n",
+              "            customization_dir=root / \"customization\",\n            activities_dir=root / \"activities\",\n            storage_dir=root / \"storage\",\n            progress_dir=root / \"progress\",\n",
+          )
+          rep(
+              "src/greia_platform/profiles.py",
+              "                ProfileContext(\n                    profile,\n                    self.data_root / profile.profile_id,\n                    self.data_root / profile.profile_id / \"customization\",\n                    self.data_root / profile.profile_id / \"activities\",\n                    self.data_root / profile.profile_id / \"progress\",\n                )\n",
+              "                ProfileContext(\n                    profile=profile,\n                    root=self.data_root / profile.profile_id,\n                    customization_dir=self.data_root / profile.profile_id / \"customization\",\n                    activities_dir=self.data_root / profile.profile_id / \"activities\",\n                    storage_dir=self.data_root / profile.profile_id / \"storage\",\n                    progress_dir=self.data_root / profile.profile_id / \"progress\",\n                )\n",
+          )
+          rep(
+              "src/greia_platform/profiles.py",
+              "            context.customization_dir,\n            context.activities_dir,\n            context.progress_dir,\n",
+              "            context.customization_dir,\n            context.activities_dir,\n            context.storage_dir,\n            context.progress_dir,\n",
+          )
+
+          rep(
+              "tests/test_profiles.py",
+              "            self.assertNotEqual(\n                first_context.activity_data_dir(\"shape_garden\"),\n                second_context.activity_data_dir(\"shape_garden\"),\n            )\n            first_theme = ThemeStore.load(\n",
+              "            self.assertNotEqual(\n                first_context.activity_data_dir(\"shape_garden\"),\n                second_context.activity_data_dir(\"shape_garden\"),\n            )\n            first_storage = first_context.activity_storage_dir(\"org.greia.shape-garden\")\n            second_storage = second_context.activity_storage_dir(\"org.greia.shape-garden\")\n            self.assertNotEqual(first_storage, second_storage)\n            self.assertEqual(first_storage.parent, first_context.storage_dir)\n            self.assertNotEqual(\n                first_storage,\n                first_context.activity_data_dir(\"org.greia.shape-garden\"),\n            )\n            first_theme = ThemeStore.load(\n",
+          )
+          PY
+
+      - name: Verify R4 storage profile contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m compileall -q src tests tools activities
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_profiles.py' -v
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_supervisor.py' -v
+          make verify
+
+      - name: Commit R4 profile storage namespace fix
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          git add src/greia_platform/profiles.py tests/test_profiles.py
+          git diff --cached --check
+          git config user.name greia-r4-repair
+          git config user.email greia-r4-repair@users.noreply.github.com
+          git commit -m 'fix: add durable Activity storage namespace to real profiles'
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
+
+      - name: Replay reviewed R5 integration patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+          import subprocess
+          import textwrap
+
+          source = Path('.github/workflows/r5-session-event-integration.yml').read_text(encoding='utf-8')
+          start_marker = "      - name: Apply R5 platform integration\n"
+          next_marker = "\n      - name: Install verification dependency\n"
+          if source.count(start_marker) != 1 or source.count(next_marker) != 1:
+              raise SystemExit('cannot locate reviewed R5 integration block')
+          block = source.split(start_marker, 1)[1].split(next_marker, 1)[0]
+          run_marker = "        run: |\n"
+          if block.count(run_marker) != 1:
+              raise SystemExit('cannot locate R5 integration run payload')
+          script = textwrap.dedent(block.split(run_marker, 1)[1])
+          path = Path('/tmp/replay-r5-integration.sh')
+          path.write_text(script, encoding='utf-8')
+          subprocess.run(['bash', str(path)], check=True)
+
+          # The generated integration test uses mock explicitly rather than relying
+          # on unittest package attribute side effects.
+          test = Path('tests/test_r5_integration.py')
+          text = test.read_text(encoding='utf-8')
+          old = 'import unittest\nfrom dataclasses import replace\n'
+          new = 'import unittest\nfrom dataclasses import replace\nfrom unittest import mock\n'
+          if text.count(old) != 1:
+              raise SystemExit('generated R5 integration test import anchor mismatch')
+          text = text.replace(old, new, 1).replace('unittest.mock.patch.object', 'mock.patch.object')
+          test.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Verify R5 integration
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m compileall -q src tests tools activities
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_history.py' -v
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_r5_integration.py' -v
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_supervisor.py' -v
+          make verify
+
+      - name: Commit reviewed R5 integration
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          git add \
+            src/greia_launcher/composition.py \
+            src/greia_launcher/main.py \
+            src/greia_launcher/supervisor.py \
+            tests/test_r5_integration.py
+          git diff --cached --check
+          git config user.name greia-r5-reimplementation
+          git config user.email greia-r5-reimplementation@users.noreply.github.com
+          git commit -m 'feat: integrate platform sessions and event broker into launcher'
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
