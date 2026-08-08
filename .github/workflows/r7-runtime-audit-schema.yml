@@ -1,0 +1,63 @@
+name: R7 runtime-audit schema update
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/r7-runtime-audit-schema.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  verify-and-persist:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Update legacy runtime-audit schema assertion
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+          path = Path('tests/test_system_overlay_contract.py')
+          text = path.read_text(encoding='utf-8')
+          old = '        self.assertIn("collector_version=2", collector)\n'
+          new = '        self.assertIn("collector_version=3", collector)\n'
+          if text.count(old) != 1:
+              raise SystemExit('runtime-audit collector version assertion mismatch')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
+
+      - name: Install verification dependency
+        run: python3 -m pip install --disable-pip-version-check --quiet Pillow
+
+      - name: Focused R7 probe/audit tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m compileall -q src tests tools activities
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_direct_graphics_probe.py' -v
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_r7_runtime_audit.py' -v
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_system_overlay_contract.py' -v
+
+      - name: Full provider-free gate
+        run: make verify
+
+      - name: Commit schema assertion and remove this workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          git rm .github/workflows/r7-runtime-audit-schema.yml
+          git add tests/test_system_overlay_contract.py
+          git diff --cached --check
+          git config user.name greia-r7
+          git config user.email greia-r7@users.noreply.github.com
+          git commit -m 'test: advance runtime-audit evidence schema to v3'
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
