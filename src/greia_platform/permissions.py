@@ -49,13 +49,7 @@ class ActivityAuthority:
 
 @dataclass(frozen=True, slots=True)
 class PermissionPolicy:
-    """Trusted policy inputs used to compute one launch's effective grants.
-
-    R1 deliberately models every authority gate now even though Phase 0 still
-    uses static runtime/hardware/build/parent sets. R6 will replace the static
-    capability inputs with the Device Capability Service without changing the
-    broker/supervisor contract.
-    """
+    """Trusted policy inputs used to compute one launch's effective grants."""
 
     runtime_capabilities: frozenset[str]
     hardware_capabilities: frozenset[str]
@@ -122,10 +116,10 @@ class PermissionPolicy:
         build_allowed_permissions: frozenset[str] | None = None,
         built_in_grants: Mapping[str, frozenset[str]] | None = None,
     ) -> "PermissionPolicy":
-        # Phase 0 has no Device Capability Service yet. These sets therefore
-        # represent the capabilities the current image/runtime path is prepared
-        # to attempt, NOT physical-hardware certification. Device-backed binds
-        # remain fail-soft (`--dev-bind-try`) and R6 replaces this static input.
+        # These static sets describe Phase-0 intended composition and provide
+        # deterministic source-test/developer fallback only. Installed launchers
+        # must inject the trusted DeviceCapabilityService; this fallback is not
+        # physical-hardware certification.
         supported = runtime.allowed_capabilities
         return cls(
             runtime_capabilities=supported,
@@ -156,10 +150,9 @@ class PermissionPolicy:
 class PermissionBroker:
     """Compute effective Activity grants outside the Activity process.
 
-    The current security policy intentionally grants privileged permissions only
-    to packages whose registry source is ``BUILT_IN``. Future signed/parent trust
-    states remain deny-by-default until R10 introduces the package trust chain
-    and explicit policy for them.
+    Privileged permissions remain deny-by-default except for explicitly allowed
+    Greia built-ins. Device capability truth comes from the injected trusted
+    DeviceCapabilityService; package requests cannot define hardware truth.
     """
 
     def __init__(
@@ -168,9 +161,6 @@ class PermissionBroker:
         device_capabilities: DeviceCapabilityService | None = None,
     ):
         self._policy = policy
-        # R6 makes device capability state a platform-owned authority. The
-        # static fallback preserves deterministic source tests/developer runs
-        # while installed launchers inject the real DeviceCapabilityService.
         self._device_capabilities = device_capabilities or DeviceCapabilityService.static(
             policy.hardware_capabilities,
             source_id="permission-policy-static",
@@ -224,10 +214,6 @@ class PermissionBroker:
             & self._policy.parent_allowed_permissions
         )
 
-        # Platform security policy: privilege is origin + identity. A package
-        # must come from a BUILT_IN source and be explicitly allowlisted for the
-        # requested operation. Merely choosing a reserved Activity ID never grants
-        # authority to an external package.
         if registration.package_trust is PackageTrust.BUILT_IN:
             security_allowed = self._policy.built_in_grants.get(
                 manifest.activity_id, frozenset()
