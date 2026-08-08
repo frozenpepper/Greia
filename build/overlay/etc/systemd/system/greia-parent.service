@@ -1,0 +1,42 @@
+[Unit]
+Description=Greia OS parent status service
+After=network.target greia-first-boot.service
+Requires=greia-first-boot.service
+Wants=network.target
+
+[Service]
+Type=simple
+User=greiapanel
+Group=greiapanel
+WorkingDirectory=/opt/greia-os
+Environment=GREIA_OS_ROOT=/opt/greia-os
+Environment=PYTHONPATH=/opt/greia-os/src
+Environment=PYTHONNOUSERSITE=1
+Environment=GREIA_PROFILES_DIR=/var/lib/greia-profiles
+Environment=GREIA_ACTIVE_PROFILE_STATUS=/run/greia-os/active-profile.json
+Environment=GREIA_SYSTEM_SETTINGS_DIR=/var/lib/greia-system-settings
+Environment=GREIA_HARDWARE_STATUS=/run/greia-hardware/status.json
+StateDirectory=greia-os
+ExecStart=/usr/bin/python3 -m greia_parent.server --bind 0.0.0.0 --port 8766
+Restart=on-failure
+RestartSec=2
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=yes
+ReadOnlyPaths=/run/greia-hardware
+ProtectSystem=strict
+ReadWritePaths=/var/lib/greia-os /var/lib/greia-profiles /var/lib/greia-system-settings /run/greia-os
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+SystemCallArchitectures=native
+LimitCORE=0
+TasksMax=32
+
+[Install]
+WantedBy=multi-user.target

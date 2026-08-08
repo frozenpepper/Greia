@@ -1,0 +1,37 @@
+#!/bin/sh
+set -eu
+mkdir -p /run/greia-os
+# Remove only a proven-stale X lock. Deleting a live server's lock/socket can
+# permit a duplicate Xorg instance and destroy the graphical handoff. Malformed
+# lock state fails closed behind the branded cover and is handled by service
+# retry/recovery rather than guessed away.
+x_lock=/tmp/.X0-lock
+x_socket=/tmp/.X11-unix/X0
+if [ -e "$x_lock" ]; then
+  x_pid="$(tr -d '[:space:]' < "$x_lock" 2>/dev/null || true)"
+  case "$x_pid" in
+    ''|*[!0-9]*)
+      echo "Refusing malformed Xorg display lock: $x_lock" >&2
+      exit 1
+      ;;
+  esac
+  if kill -0 "$x_pid" 2>/dev/null; then
+    echo "Xorg display :0 is already owned by PID $x_pid" >&2
+    exit 1
+  fi
+  rm -f "$x_lock"
+  rm -f "$x_socket"
+elif [ -e "$x_socket" ]; then
+  echo "Refusing orphan Xorg display socket without a lock: $x_socket" >&2
+  exit 1
+fi
+# Keep Plymouth and Xorg on the same VT. A separate hidden X VT is not reliable:
+# Xorg activates its selected VT when starting, while -novtswitch only controls
+# switching back during reset/shutdown. Always return to VT1 before starting X.
+chvt 1 >/dev/null 2>&1 || true
+# Retain the splash pixels while releasing Plymouth's device ownership. The
+# continuity still depends on the DRM/Xorg driver and must be verified from a
+# frame-by-frame boot recording on every supported profile.
+if [ ! -e /run/greia-os/boot-cover-released ]; then
+  plymouth quit --retain-splash >/dev/null 2>&1 || true
+fi

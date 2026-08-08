@@ -1,0 +1,23 @@
+schema_version = 1
+max_profiles = 8
+max_name_characters = 24
+max_secret_characters = 32
+secret_iterations = 120000
+default_name = "Explorer"
+default_avatar = "unicorn"
+default_mask_secret = false
+
+avatars = [
+  "unicorn",
+  "robot",
+  "owl",
+  "dinosaur",
+  "wizard",
+  "green_monster",
+  "rainbow",
+  "globe",
+  "car",
+  "book",
+  "backpack",
+  "star_trophy",
+]

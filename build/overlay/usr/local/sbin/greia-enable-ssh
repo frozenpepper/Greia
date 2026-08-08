@@ -1,0 +1,22 @@
+#!/bin/sh
+set -eu
+[ "$(id -u)" -eq 0 ] || { echo "Must run as root." >&2; exit 1; }
+[ "$#" -eq 1 ] || { echo "Usage: greia-enable-ssh PUBLIC_KEY_FILE" >&2; exit 2; }
+key_file="$1"
+[ -r "$key_file" ] || { echo "Public key file is not readable." >&2; exit 1; }
+key_line="$(sed -n '1p' "$key_file")"
+case "$key_line" in
+  ssh-ed25519\ *|sk-ssh-ed25519@openssh.com\ *|ecdsa-sha2-nistp256\ *|ssh-rsa\ *) ;;
+  *) echo "Unsupported or malformed SSH public key." >&2; exit 1 ;;
+esac
+home=/var/lib/greia-admin
+install -d -m 0700 -o greiaadmin -g greiaadmin "$home/.ssh"
+printf '%s\n' "$key_line" > "$home/.ssh/authorized_keys"
+chown greiaadmin:greiaadmin "$home/.ssh/authorized_keys"
+chmod 0600 "$home/.ssh/authorized_keys"
+# Raw cloned images intentionally contain no host keys. Generate them only
+# when a parent opts in to SSH, keeping ordinary first boot faster and unique.
+if ! find /etc/ssh -maxdepth 1 -type f -name 'ssh_host_*_key' -print -quit 2>/dev/null | grep -q .; then
+  ssh-keygen -A >/dev/null 2>&1
+fi
+systemctl enable --now ssh.service

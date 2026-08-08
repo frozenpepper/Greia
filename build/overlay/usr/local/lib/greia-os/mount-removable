@@ -1,0 +1,24 @@
+#!/bin/sh
+set -eu
+device_name="$1"
+case "$device_name" in
+  sd[a-z]|sd[a-z][0-9]*|mmcblk[0-9]|mmcblk[0-9]p[0-9]*) ;;
+  *) exit 1 ;;
+esac
+device="/dev/$device_name"
+target="/media/greia/$device_name"
+[ -b "$device" ] || exit 0
+# Do not ask mount to dispatch arbitrary filesystem helpers based on untrusted
+# media metadata. The curated image-import path only needs common camera/USB
+# filesystems, all mounted read-only and non-executable.
+filesystem="$(blkid -p -o value -s TYPE -- "$device" 2>/dev/null || true)"
+case "$filesystem" in
+  vfat|exfat|ntfs|ntfs3) ;;
+  *) exit 0 ;;
+esac
+mkdir -p "$target"
+mount_options="nosuid,nodev,noexec,noatime,ro"
+mount -t "$filesystem" -o "$mount_options" -- "$device" "$target" >/dev/null 2>&1 || {
+  rmdir "$target" >/dev/null 2>&1 || true
+  exit 0
+}

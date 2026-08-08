@@ -1,0 +1,5 @@
+x11-xserver-utils
+xinit
+xinput
+xserver-xorg-core
+xserver-xorg-input-libinput

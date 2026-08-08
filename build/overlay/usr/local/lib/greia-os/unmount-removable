@@ -1,0 +1,10 @@
+#!/bin/sh
+set -eu
+device_name="$1"
+case "$device_name" in
+  sd[a-z]|sd[a-z][0-9]*|mmcblk[0-9]|mmcblk[0-9]p[0-9]*) ;;
+  *) exit 1 ;;
+esac
+target="/media/greia/$device_name"
+umount "$target" >/dev/null 2>&1 || true
+rmdir "$target" >/dev/null 2>&1 || true

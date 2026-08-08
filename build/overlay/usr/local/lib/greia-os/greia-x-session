@@ -1,0 +1,27 @@
+#!/bin/sh
+set -eu
+export GREIA_OS_ROOT=/opt/greia-os
+export GREIA_SYSTEM_SETTINGS_DIR=/var/lib/greia-system-settings
+export GREIA_PROFILES_DIR=/var/lib/greia-profiles
+export GREIA_ACTIVE_PROFILE_STATUS=/run/greia-os/active-profile.json
+export GREIA_HARDWARE_STATUS=/run/greia-hardware/status.json
+export PYTHONPATH=/opt/greia-os/src
+
+/usr/bin/python3 -m greia_platform.hardware_session \
+  --root "$GREIA_OS_ROOT" \
+  --state-dir "$GREIA_SYSTEM_SETTINGS_DIR" \
+  --status-path "$GREIA_HARDWARE_STATUS" &
+hardware_pid=$!
+cleanup() {
+  kill "$hardware_pid" >/dev/null 2>&1 || true
+  wait "$hardware_pid" >/dev/null 2>&1 || true
+}
+trap cleanup EXIT INT TERM
+
+# Do not exec the launcher here. The shell must remain alive so its EXIT trap
+# always reaps the hardware watcher when X or the launcher restarts.
+set +e
+/usr/bin/python3 -m greia_launcher.main
+launcher_status=$?
+set -e
+exit "$launcher_status"

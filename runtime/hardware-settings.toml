@@ -1,0 +1,13 @@
+schema_version = 1
+
+[defaults]
+# Tap-to-click is intentionally disabled. Physical touchpad buttons remain usable.
+touchpad_tap = false
+touchpad_speed = 0.0
+mouse_speed = 0.0
+natural_scrolling = false
+resolution = "auto"
+
+[limits]
+minimum_speed = -1.0
+maximum_speed = 1.0

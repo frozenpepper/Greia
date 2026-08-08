@@ -1,0 +1,5 @@
+alsa-utils
+fonts-dejavu-core
+python3
+python3-pil
+python3-pygame

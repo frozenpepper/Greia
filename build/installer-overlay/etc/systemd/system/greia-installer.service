@@ -1,0 +1,32 @@
+[Unit]
+Description=Greia OS graphical installer
+After=local-fs.target systemd-logind.service plymouth-start.service
+Conflicts=getty@tty1.service
+StartLimitIntervalSec=30
+StartLimitBurst=4
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/greia-os
+Environment=GREIA_OS_ROOT=/opt/greia-os
+Environment=PYTHONPATH=/opt/greia-os/src
+Environment=PYTHONNOUSERSITE=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStartPre=/usr/local/lib/greia-os/prepare-installer-vt
+ExecStart=/usr/bin/xinit /usr/bin/python3 -m greia_installer.main --root /opt/greia-os --payload /run/live/medium/payload/pip-rootfs.squashfs --payload-digest /etc/greia-os/expected-payload.sha256 -- :0 vt1 -keeptty -novtswitch -background none -quiet -nolisten tcp -noreset
+Restart=on-failure
+RestartSec=2
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+StandardInput=tty
+StandardOutput=journal
+StandardError=journal
+PrivateTmp=yes
+ProtectHome=read-only
+LimitCORE=0
+TasksMax=128
+
+[Install]
+WantedBy=graphical.target

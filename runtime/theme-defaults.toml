@@ -1,0 +1,94 @@
+schema_version = 1
+
+[defaults]
+background = "cream"
+accent = "sunshine"
+text = "cocoa"
+
+[[backgrounds]]
+id = "cream"
+color = "#F7EBCB"
+
+[[backgrounds]]
+id = "sky"
+color = "#CFEAF7"
+
+[[backgrounds]]
+id = "mint"
+color = "#D9F2D0"
+
+[[backgrounds]]
+id = "lavender"
+color = "#E8DDF7"
+
+[[backgrounds]]
+id = "peach"
+color = "#F8D8BD"
+
+[[backgrounds]]
+id = "rose"
+color = "#F5D6DF"
+
+[[backgrounds]]
+id = "sand"
+color = "#EEDDBA"
+
+[[backgrounds]]
+id = "aqua"
+color = "#CFEDE7"
+
+[[accents]]
+id = "sunshine"
+color = "#FFC234"
+
+[[accents]]
+id = "coral"
+color = "#F46F61"
+
+[[accents]]
+id = "leaf"
+color = "#59B86A"
+
+[[accents]]
+id = "ocean"
+color = "#4A91D8"
+
+[[accents]]
+id = "grape"
+color = "#9464C9"
+
+[[accents]]
+id = "raspberry"
+color = "#D85683"
+
+[[accents]]
+id = "orange"
+color = "#F39A38"
+
+[[accents]]
+id = "turquoise"
+color = "#44B8AE"
+
+[[texts]]
+id = "cocoa"
+color = "#3D2C1F"
+
+[[texts]]
+id = "navy"
+color = "#253B59"
+
+[[texts]]
+id = "forest"
+color = "#28513A"
+
+[[texts]]
+id = "plum"
+color = "#563A64"
+
+[[texts]]
+id = "charcoal"
+color = "#30343A"
+
+[[texts]]
+id = "burgundy"
+color = "#6A3040"
