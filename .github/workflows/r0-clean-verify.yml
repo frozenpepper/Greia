@@ -33,6 +33,9 @@ jobs:
           printf 'HEAD=' && git rev-parse HEAD
           printf 'FILES=' && git ls-files | wc -l
           printf 'PNG=' && git ls-files '*.png' | wc -l
+          echo '--- TRACKED FILES BEGIN ---'
+          git ls-files
+          echo '--- TRACKED FILES END ---'
           git status --short
       - name: Compile Python source
         shell: bash
