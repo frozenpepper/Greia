@@ -20,7 +20,7 @@ class SkillContribution:
     weight: int
 
 
-@dataclass(frozen=True, slots=True=True)
+@dataclass(frozen=True, slots=True)
 class RewardDefinition:
     reward_id: str
     amount: int
