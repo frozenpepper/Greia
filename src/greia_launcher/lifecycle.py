@@ -27,6 +27,7 @@ class ActivityExitReason(StrEnum):
     GRACEFUL_STOP = "graceful_stop"
     FORCED_STOP = "forced_stop"
     SYSTEM_SHUTDOWN = "system_shutdown"
+    PLATFORM_FAILURE = "platform_failure"
 
 
 class ProcessHandle(Protocol):
@@ -42,11 +43,11 @@ class ProcessHandle(Protocol):
 
 @dataclass(frozen=True, slots=True)
 class ActivityControlChannel:
-    """Per-launch lifecycle channel stored inside the Activity's private data.
+    """Per-launch lifecycle channel inside Greia-owned ephemeral runtime space.
 
     Markers are cooperation signals, not authority. The Activity can write them
-    because it owns its own data namespace; it cannot use them to gain any new
-    mount, device or broker permission.
+    because the current session workspace is exposed to that Activity, but the
+    workspace is removed after exit and is never authoritative child save data.
     """
 
     session_id: str
@@ -64,6 +65,28 @@ class ActivityControlChannel:
         child_root = child_activity_data / ".greia" / "runtime" / session_id
         host_root.mkdir(parents=True, exist_ok=False)
         os.chmod(host_root, 0o770)
+        return cls(session_id, host_root, child_root)
+
+    @classmethod
+    def create_workspace(
+        cls,
+        host_runtime_root: Path,
+        child_runtime_root: Path | None = None,
+    ) -> "ActivityControlChannel":
+        """Create one ephemeral session workspace.
+
+        `host_runtime_root` is a Greia-controlled runtime directory such as
+        `/run/greia-os/activity-runtime`; it is intentionally outside profile
+        durable storage. In a sandbox the whole resulting session directory is
+        mounted at the fixed `child_runtime_root`. Developer runs use the host
+        session directory directly.
+        """
+
+        session_id = uuid.uuid4().hex
+        host_root = host_runtime_root / session_id
+        host_root.mkdir(parents=True, exist_ok=False)
+        os.chmod(host_root, 0o770)
+        child_root = host_root if child_runtime_root is None else child_runtime_root
         return cls(session_id, host_root, child_root)
 
     @property
