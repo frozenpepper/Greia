@@ -1,0 +1,39 @@
+name: R0 apply exact parent test injection fix
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/r0-apply-parent-test-fix.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  apply-fix:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+      - name: Decode and verify exact test fix
+        shell: bash
+        run: |
+          set -euo pipefail
+          base64 --decode .recovery/parent-status-fix.b64 > /tmp/test_parent_status.py
+          test "$(git hash-object /tmp/test_parent_status.py)" = "e79bb30e60accde71e077ca6db80938c3f8b3019"
+          cp /tmp/test_parent_status.py tests/test_parent_status.py
+          PYTHONPATH=src python3 -m unittest tests.test_parent_status -v
+          git diff --check -- tests/test_parent_status.py
+      - name: Commit focused fix
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'greia-r0-recovery'
+          git config user.email 'greia-r0-recovery@users.noreply.github.com'
+          git add tests/test_parent_status.py
+          test "$(git diff --cached --name-only | wc -l | tr -d ' ')" = "1"
+          git commit -m 'test: isolate parent active-session state from installed runtime path'
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
