@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+[ "$(id -u)" -eq 0 ] || { echo "Must run as root." >&2; exit 1; }
+systemctl disable --now ssh.service >/dev/null 2>&1 || true
+rm -f /var/lib/greia-admin/.ssh/authorized_keys

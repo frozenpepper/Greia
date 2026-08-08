@@ -30,6 +30,16 @@ class ActivityExitReason(StrEnum):
     PLATFORM_FAILURE = "platform_failure"
 
 
+class ActivityLifecycleControl(Protocol):
+    session_id: str
+
+    def ready(self) -> bool: ...
+
+    def request_stop(self) -> None: ...
+
+    def cleanup(self) -> None: ...
+
+
 class ProcessHandle(Protocol):
     pid: int
     returncode: int | None
@@ -60,7 +70,17 @@ class ActivityControlChannel:
         host_activity_data: Path,
         child_activity_data: Path,
     ) -> "ActivityControlChannel":
-        session_id = uuid.uuid4().hex
+        return cls.create_for_session(
+            new_activity_session_id(), host_activity_data, child_activity_data
+        )
+
+    @classmethod
+    def create_for_session(
+        cls,
+        session_id: str,
+        host_activity_data: Path,
+        child_activity_data: Path,
+    ) -> "ActivityControlChannel":
         host_root = host_activity_data / ".greia" / "runtime" / session_id
         child_root = child_activity_data / ".greia" / "runtime" / session_id
         host_root.mkdir(parents=True, exist_ok=False)
@@ -153,7 +173,8 @@ class ActivityResult:
 class ActivitySession:
     activity_id: str
     package_digest: str
-    control: ActivityControlChannel
+    session_id: str
+    control: ActivityLifecycleControl | None
     process: ProcessHandle | None
     state: ActivitySessionState
     started_at: float
@@ -165,12 +186,12 @@ class ActivitySession:
     result: ActivityResult | None = None
 
     @property
-    def session_id(self) -> str:
-        return self.control.session_id
-
-    @property
     def terminal(self) -> bool:
         return self.state in {ActivitySessionState.EXITED, ActivitySessionState.FAILED}
+
+
+def new_activity_session_id() -> str:
+    return uuid.uuid4().hex
 
 
 def signal_process_group(process: ProcessHandle, *, force: bool) -> None:

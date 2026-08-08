@@ -3,24 +3,40 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from greia_launcher.runtime_adapter import PythonRuntimeAdapter, PythonRuntimePolicy, RuntimeManager
 from greia_platform.activities import ActivityRegistry, RuntimeCatalogue
-from greia_platform.trust import ActivitySource, PackageTrust
 from greia_platform.assets import AssetCatalogue
 from greia_platform.customization import ThemePalette
+from greia_platform.device_capabilities import DeviceCapabilityService
 from greia_platform.hardware import HardwareDefaults
 from greia_platform.history import HistoryPolicy, ProgressionPolicy
 from greia_platform.profiles import ProfilePolicy
 from greia_platform.storage import StoragePolicy
+from greia_platform.trust import ActivitySource, PackageTrust
 from build_profile import BuildProfile
 
 
 def main() -> int:
     root = Path(__file__).resolve().parents[1]
-    runtime = RuntimeCatalogue.load(root / "runtime" / "child-runtime.toml")
+    runtime_path = root / "runtime" / "child-runtime.toml"
+    runtime = RuntimeCatalogue.load(runtime_path)
+    runtime_manager = RuntimeManager(
+        [PythonRuntimeAdapter(policy=PythonRuntimePolicy.load(runtime_path))],
+        # Project validation proves static/package compatibility, not physical
+        # hardware. Installed launch composition injects the real HAL-backed
+        # DeviceCapabilityService instead of this deterministic source-test view.
+        DeviceCapabilityService.static(
+            runtime.allowed_capabilities,
+            source_id="project-validation-static",
+        ),
+    )
     activities = ActivityRegistry(
         [ActivitySource(root / "activities", PackageTrust.BUILT_IN, "greia-system")],
         runtime,
     ).discover()
+    for activity in activities:
+        runtime_manager.validate_package(activity)
+
     assets = AssetCatalogue.load(root / "assets" / "catalog" / "core_icons_v1.toml")
     palette = ThemePalette.load(root / "runtime" / "theme-defaults.toml")
     hardware = HardwareDefaults.load(root / "runtime" / "hardware-settings.toml")

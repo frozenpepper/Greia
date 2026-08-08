@@ -1,0 +1,15 @@
+#!/bin/sh
+set -eu
+uuid_file=/etc/greia-os/root-filesystem-uuid
+[ -s "$uuid_file" ] || { echo "Missing Pip root filesystem UUID" >&2; exit 1; }
+root_uuid="$(cat "$uuid_file")"
+case "$root_uuid" in
+  *[!0-9A-Fa-f-]*|'') echo "Invalid Pip root filesystem UUID" >&2; exit 1 ;;
+esac
+cat <<EOF
+menuentry 'Greia OS' --unrestricted --id greia-os {
+  search --no-floppy --fs-uuid --set=root $root_uuid
+  linux /vmlinuz root=UUID=$root_uuid ro quiet splash loglevel=0 console=null panic=5 systemd.show_status=false rd.systemd.show_status=false systemd.crash_shell=no systemd.crash_chvt=0 udev.log_priority=3 vt.global_cursor_default=0 consoleblank=0
+  initrd /initrd.img
+}
+EOF

@@ -1,0 +1,44 @@
+#!/bin/sh
+set -eu
+mkdir -p /var/lib/greia-kid /run/greia-os
+chown greiakid:greiakid /var/lib/greia-kid
+chown greiakid:pipprofiles /run/greia-os
+chmod 0770 /run/greia-os
+# Remove only a proven-stale X lock. Deleting a live server's lock/socket can
+# permit a duplicate Xorg instance and destroy the graphical handoff. Malformed
+# lock state fails closed behind the branded cover and is handled by service
+# retry/recovery rather than guessed away.
+x_lock=/tmp/.X0-lock
+x_socket=/tmp/.X11-unix/X0
+if [ -e "$x_lock" ]; then
+  x_pid="$(tr -d '[:space:]' < "$x_lock" 2>/dev/null || true)"
+  case "$x_pid" in
+    ''|*[!0-9]*)
+      echo "Refusing malformed Xorg display lock: $x_lock" >&2
+      exit 1
+      ;;
+  esac
+  if kill -0 "$x_pid" 2>/dev/null; then
+    echo "Xorg display :0 is already owned by PID $x_pid" >&2
+    exit 1
+  fi
+  rm -f "$x_lock"
+  rm -f "$x_socket"
+elif [ -e "$x_socket" ]; then
+  echo "Refusing orphan Xorg display socket without a lock: $x_socket" >&2
+  exit 1
+fi
+# Plymouth and Xorg deliberately use the same virtual terminal. Starting X on
+# a different VT would permit Xorg's initial VT activation to reveal a clear or
+# black frame before the launcher is ready; -novtswitch does not suppress that
+# initial activation. Force VT1 every time so service restarts also recover
+# from a parent/recovery VT.
+chvt 1 >/dev/null 2>&1 || true
+# On the first graphical start, release Plymouth's DRM/framebuffer ownership
+# while requesting that the already-rendered pixels remain. Xorg's
+# `-background none` asks the video driver not to paint a root background.
+# Neither request is a mathematical guarantee across drivers: frame-by-frame
+# Acer and QEMU recordings remain a mandatory acceptance gate.
+if [ ! -e /run/greia-os/boot-cover-released ]; then
+  plymouth quit --retain-splash >/dev/null 2>&1 || true
+fi

@@ -1,0 +1,110 @@
+#!/bin/sh
+set -eu
+
+# Collect a bounded, privacy-conscious evidence bundle from a built/installed
+# Greia OS system. Run as root and copy the resulting .tar.gz to removable
+# media only after reviewing its contents. Raw storage serials, WWNs, private
+# SSH keys, pairing tokens, cookies, environment variables, and parent request
+# logs are intentionally excluded.
+
+umask 077
+output_root=${1:-/var/lib/greia-audit}
+case "$output_root" in
+  /*) ;;
+  *) echo "Output directory must be an absolute path." >&2; exit 2 ;;
+esac
+mkdir -p "$output_root"
+stamp=$(date -u +%Y%m%dT%H%M%SZ 2>/dev/null || printf unknown-time)
+bundle_name="pip-runtime-audit-$stamp"
+work_dir="$output_root/$bundle_name"
+archive="$output_root/$bundle_name.tar.gz"
+mkdir -p "$work_dir"
+
+capture() {
+  name=$1
+  shift
+  "$@" >"$work_dir/$name" 2>&1 || true
+}
+
+copy_if_readable() {
+  source_path=$1
+  target_name=$2
+  if [ -r "$source_path" ]; then
+    cp -- "$source_path" "$work_dir/$target_name"
+  fi
+}
+
+{
+  printf 'collected_utc=%s\n' "$stamp"
+  printf 'collector_version=2\n'
+  printf 'privacy_contract=no raw disk serials/WWNs, private SSH keys, pairing tokens, cookies, process environments, or parent request logs\n'
+} >"$work_dir/README.txt"
+
+capture uname.txt uname -a
+copy_if_readable /etc/os-release os-release
+copy_if_readable /etc/debian_version debian-version.txt
+copy_if_readable /proc/cmdline kernel-cmdline.txt
+copy_if_readable /proc/meminfo meminfo.txt
+copy_if_readable /etc/greia-os/build-info build-info.txt
+copy_if_readable /etc/greia-os/base-system-manifest base-system-manifest.txt
+copy_if_readable /etc/greia-os/package-manifest.tsv package-manifest.tsv
+copy_if_readable /etc/greia-os/security-support-status.txt security-support-status.txt
+copy_if_readable /etc/X11/Xwrapper.config Xwrapper.config
+copy_if_readable /etc/systemd/logind.conf.d/10-greia-vts.conf logind-greia-vts.conf
+copy_if_readable /etc/default/grub.d/10-greia-quiet.cfg grub-greia-quiet.cfg
+
+capture filesystem-usage.txt df -B1 -T
+capture memory-usage.txt free -b
+capture mounts.txt findmnt --list --output TARGET,SOURCE,FSTYPE,OPTIONS
+capture block-devices-sanitized.txt lsblk --bytes --output NAME,PATH,SIZE,TYPE,RM,HOTPLUG,RO,TRAN,FSTYPE,MOUNTPOINTS,MODEL
+capture processes-by-memory.txt ps -eo pid,ppid,user,group,comm,rss,vsz,etimes --sort=-rss
+capture kernel-packages.txt dpkg-query -W '-f=${Package}\t${Version}\t${Architecture}\n' 'linux-image-*'
+capture xorg-packages.txt dpkg-query -W '-f=${Package}\t${Version}\t${Architecture}\n' 'xserver-xorg-*'
+capture support-status-current.txt check-support-status --no-heading
+capture systemd-boot-time.txt systemd-analyze time
+capture systemd-critical-chain.txt systemd-analyze critical-chain
+capture systemd-slowest-units.txt systemd-analyze blame
+capture launcher-unit-status.txt systemctl status --no-pager --full greia-launcher.service
+capture parent-unit-status.txt systemctl status --no-pager --full greia-parent.service
+capture first-boot-unit-status.txt systemctl status --no-pager --full greia-first-boot.service
+capture graphical-target-status.txt systemctl status --no-pager --full graphical.target
+capture kiosk-unit-enable-state.txt systemctl is-enabled greia-launcher.service greia-parent.service greia-first-boot.service
+capture console-shell-enable-state.txt systemctl is-enabled getty@.service autovt@.service console-getty.service debug-shell.service emergency.service rescue.service console-shell.service kbrequest.target getty@tty1.service getty@tty2.service getty@tty3.service getty@tty4.service getty@tty5.service getty@tty6.service
+capture active-console-shell-units.txt systemctl list-units --all --no-pager 'getty*' 'autovt*' 'console-getty*' 'debug-shell*' 'emergency*' 'rescue*' 'console-shell*' 'kbrequest*'
+capture launcher-security.txt systemd-analyze security --no-pager greia-launcher.service
+capture parent-security.txt systemd-analyze security --no-pager greia-parent.service
+capture listening-sockets.txt ss -lntup
+capture active-seat.txt loginctl seat-status seat0
+capture virtual-terminal-state.txt sh -c 'printf "active_vt="; cat /sys/class/tty/tty0/active 2>/dev/null || true; printf "\n"; fgconsole 2>/dev/null || true'
+
+# These are public-key fingerprints only. Private key material is never copied.
+if command -v ssh-keygen >/dev/null 2>&1; then
+  : >"$work_dir/ssh-host-public-fingerprints.txt"
+  for key in /etc/ssh/ssh_host_*_key.pub; do
+    [ -r "$key" ] || continue
+    ssh-keygen -lf "$key" >>"$work_dir/ssh-host-public-fingerprints.txt" 2>&1 || true
+  done
+fi
+
+# Xorg's location differs when root rights are dropped. Keep only bounded logs.
+: >"$work_dir/xorg-log-tail.txt"
+for log in /var/log/Xorg.0.log /var/lib/greia-kid/.local/share/xorg/Xorg.0.log /root/.local/share/xorg/Xorg.0.log; do
+  [ -r "$log" ] || continue
+  printf '\n===== %s =====\n' "$log" >>"$work_dir/xorg-log-tail.txt"
+  tail -n 1200 "$log" >>"$work_dir/xorg-log-tail.txt" 2>&1 || true
+done
+
+# Hash machine-id instead of disclosing it.
+if [ -r /etc/machine-id ]; then
+  sha256sum /etc/machine-id >"$work_dir/machine-id.sha256"
+fi
+
+# Record file permissions without copying profile, token, or password state.
+capture managed-path-permissions.txt stat -c '%A %a %U %G %n' \
+  /var/lib/greia-kid /var/lib/greia-profiles /var/lib/greia-system-settings \
+  /run/greia-os /run/greia-hardware /var/lib/greia-parent 2>/dev/null
+
+# Create the archive first; only then remove the expanded working directory.
+tar -C "$output_root" -czf "$archive" "$bundle_name"
+rm -rf --one-file-system -- "$work_dir"
+printf '%s\n' "$archive"

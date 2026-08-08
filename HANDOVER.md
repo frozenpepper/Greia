@@ -1,278 +1,167 @@
-# Greia — Standalone Handover
+# Greia — Standalone Engineering Handover
 
-**Date:** 2026-08-08  
-**Version:** `0.13.0-phase0-dev`  
-**State:** audited remediation plan ACTIVE; R2/R3/R4/R5 source-complete locally; R6.1 Device Capability/HAL authority tranche recovered and verified; R0 canonical GitHub completeness remains open because binary assets and some historical source are absent remotely; final local verification **219/219** passing; R6 remains the current functional phase.
+**Date:** 2026-08-09
+**Version:** `0.13.0-phase0-dev`
+**Repository:** `frozenpepper/Greia` (private)
+**Canonical target:** `main` after PR #1 integration
+**PR:** #1 — R0/R5/R6 integrated recovery and source closure
+**Current functional phase:** **R7 — Direct Greia graphics/session architecture**
 
-## 1. Mandatory active plan
+## 1. Current source state
 
-The authoritative implementation plan is:
+The long recovery/source-loss incident is closed at source level. Do not reopen v0.12 recovery and do not recreate R5 again.
 
-`docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`
-
-The plan audit/correction record is:
-
-`docs/reviews/2026-08-08_ACTIVE_PLAN_AUDIT_AND_CORRECTION.md`
-
-Every implementation session must obey `AGENTS.md`: read the active plan, resume the first incomplete blocking phase, append progress after substantive work, update this handover, verify before claiming closure, and remove the active-plan reference only after the whole program is complete.
-
-## 2. Architectural authority
-
-Read in this order before cross-cutting changes:
-
-1. `AGENTS.md`
-2. `docs/architecture/GREIA_ARCHITECTURE.md`
-3. ADR 0012 — platform architecture constitution
-4. ADR 0013 — declarative image profiles/composable artifacts
-5. ADR 0014 — Greia identity, ARM parity, direct-graphics direction
-6. ADR 0015 — permanent Activity identity, capability requirements, permissions, events
-7. ADR 0016 — universal storage, ephemeral runtime state, transactional save migrations
-8. active remediation plan
-9. this handover
-
-## 3. Non-negotiable current architecture
-
-- Greia Shell is the child's OS experience; Linux is substrate.
-- No desktop environment, generic WM, shell/login/package manager/filesystem UI/browser chrome in normal child use.
-- Activity is the universal abstraction above Python/Web/future runtimes.
-- Profiles, effective permissions, durable storage, sessions, progression/rewards, packages, backup/restore and parent policy are Greia-owned services.
-- ARM and legacy x86 are peers. Raspberry Pi 400/500 are explicit ARM references; the old Acer/Atom remains the extreme C0 reference.
-- Xorg is provisional migration/evidence only; target graphics are DRM/KMS-first and appliance-oriented.
-- Activity process environment values are descriptive, never security authority.
-- Durable child state is architecture-neutral.
-- Removable media is untrusted and never autorun.
-- Global reward economics belong to Greia; Activities report facts/events.
-- The earlier chat-only generic `Resource Service` idea was hallucinated and is rejected. Do not reintroduce it.
-
-## 4. R0 — canonical GitHub completeness
-
-**Status: OPEN.**
-
-The private repository `frozenpepper/Greia` is the intended long-term canonical repository but is still not a complete independently buildable mirror of the verified local tree.
-
-Known gap: the local tree contains 123 PNG assets and remote spot-checks such as `assets/icons/core/v1/128/unicorn.png` returned 404. The GitHub connector supports binary Git blobs but only through base64 string payloads and exposes no mounted-file/bulk upload primitive, so multi-megabyte asset import remains an operational blocker. Temporary probe files have been removed.
-
-Continue mirroring touched text/source files, but do not claim R0 closed until all required source/assets are actually remote or an explicitly accepted repository-managed asset mechanism replaces them.
-
-## 5. R1 — package trust, PermissionBroker, per-Activity authority
-
-The security model now uses platform-owned package origin/trust and registry-issued Activity registrations. `PermissionBroker` computes effective grants from package trust/origin, validated manifest requests, runtime/build/parent/security policy and provisional capability availability.
-
-System privilege requires both trusted built-in origin and explicit built-in identity policy. External packages cannot gain privilege by copying a system Activity ID. Built-in origin alone is insufficient for another Activity to self-request system permission.
-
-The sandbox no longer exposes the whole active profile writable. Effective grants control narrow customization/media/profile-request access; sibling profile/Activity/platform state remains hidden. Activity-controlled capability environment strings cannot expand authority.
-
-Linux Bubblewrap execution remains runtime evidence for R14.
-
-## 6. R2 — runtime-neutral Activity lifecycle — SOURCE COMPLETE locally
-
-Implemented:
-
-- nonblocking `Popen` session ownership;
-- one active Activity per child session for Phase 0;
-- per-launch UUID control channel;
-- STARTING/RUNNING/STOPPING/terminal state;
-- READY handshake and timeout;
-- graceful-stop request/deadline;
-- forced process-group termination;
-- system-shutdown termination;
-- normalized exit reasons/timestamps;
-- cleanup and shell recovery contract;
-- minimal `RuntimeLaunchAdapter` + `PythonRuntimeAdapter`;
-- pause/checkpoint explicitly optional; Phase-0 Python claims neither;
-- child SDK `mark_activity_ready()` / `activity_stop_requested()`.
-
-The fast READY-then-exit race is covered and fixed.
-
-R2 full verification milestone was **159/159** before later phases added tests.
-
-## 7. R3 — permanent IDs and manifest semantics — SOURCE COMPLETE locally
-
-ADR 0015 accepted.
-
-Canonical first-party IDs:
-
-- `org.greia.shape-garden` (trusted one-time legacy alias `shape_garden`)
-- `org.greia.workshop-settings` (trusted one-time legacy alias `workshop_settings`)
-
-Rules:
-
-- canonical Activity IDs are reverse-DNS durable identity;
-- legacy aliases are migration authority and accepted only from trusted built-in provenance in Phase 0;
-- canonical/legacy collisions fail closed;
-- profile migration is no-merge and idempotent after success;
-- manifest capability requirements and privileged permission requests are separate;
-- missing required capability blocks launch authority;
-- missing optional capability allows launch but blocks dependent permission;
-- `education.rewards` is forbidden;
-- Activities declare factual events (`completion`, `creation`, `milestone`, `score`); score events declare higher/lower-is-better semantics;
-- Greia R5 owns event→progression/reward mapping.
-
-R3 full verification milestone was **169/169**.
-
-## 8. R4 — Universal Storage Service — SOURCE COMPLETE locally
-
-ADR 0016 accepted.
-
-### 8.1 Durable vs ephemeral state
-
-Authoritative durable Activity state lives in Greia-managed:
-
-`profile/storage/<activity_id>/`
-
-It is **not mounted into the Activity sandbox**.
-
-Activity HOME/XDG/lifecycle scratch is a Greia-owned ephemeral per-session runtime workspace (installed target: under `/run/greia-os/activity-runtime/<session_id>`). It is removed on exit. Direct Python file writes there are therefore not an alternative persistent save system.
-
-The legacy/profile `activities/<activity_id>` namespace remains only for narrow compatibility/system-request state and is not general HOME.
-
-### 8.2 Storage API
-
-`ActivityStorage`/`ActivityStorageService` provide:
-
-- portable JSON key/value state;
-- private binary files with conservative portable relative paths;
-- atomic writes;
-- quota and file-count/size/path limits;
-- protected machine free-space reserve;
-- platform metadata and checkpoint tokens;
-- strict revalidation of existing namespaces;
-- storage schema comparison;
-- transactional migrations.
-
-Current Phase-0 policy (`runtime/storage-policy.toml`):
-
-- 32 MiB namespace quota;
-- 2 MiB KV total;
-- 256 KiB per KV value;
-- 16 MiB per private file;
-- 512 private files;
-- 64 MiB protected machine free-space reserve;
-- 2 rollback snapshots.
-
-These are platform defaults, not Activity-owned authority and not constitutional constants.
-
-### 8.3 Runtime-neutral broker
-
-Activities access storage through a per-session Greia broker:
-
-- Unix-domain socket;
-- random session token;
-- broker already bound to one trusted `ActivityStorage`, so the Activity cannot select profile/Activity identity in requests;
-- physical storage path never exposed;
-- bounded frame/header/payload protocol;
-- at most 2 active requests and backlog 2;
-- stalled request timeout 2 seconds;
-- host/internal error paths sanitized;
-- broker directory/socket removed at cleanup.
-
-Python uses `ActivityStorageClient` via `get_storage()`. Future Web must bridge to these same logical semantics rather than own authoritative localStorage/IndexedDB state.
-
-### 8.4 Migration
-
-Manifest requires:
-
-```toml
-[storage]
-schema_version = 1
-```
-
-Opening older schema raises `StorageMigrationRequired`; newer stored schema fails closed.
-
-Migration copies old storage to a Greia working namespace while old data remains active. Only after target schema/quota validation does commit rename old active state to a bounded rollback snapshot and atomically promote the working copy. Failed/uncommitted migrations remove the working copy and preserve old active state. R10 Package Manager owns when Activity version migrations run/activate.
-
-Prototype Activity-ID migration moves both compatibility and durable storage namespaces and refuses collisions.
-
-### 8.5 R4 hardening found during review
-
-Before closure, additional hardening was added:
-
-- private-file reads take the storage lock;
-- final-component symlinks are rejected on read;
-- storage lock symlinks are rejected and `O_NOFOLLOW` is used where available;
-- existing storage is revalidated against current file-size/count/quota policy on open;
-- malformed metadata types fail rather than coerce;
-- normalized Unicode object-key collisions fail;
-- broker threading/backlog/timeouts are bounded for low-memory hardware;
-- oversized KV payloads are rejected before JSON decode.
-
-## 9. R5 — Session/Event/Progression — SOURCE COMPLETE locally
-
-R5 is source-complete locally under ADR 0017. Greia now creates authoritative sessions before child launch, persists READY/terminal/restart outcomes, accepts only manifest-declared normalized events through a live-session-bound broker, provides transactional idempotency, owns best-score calculation and progression/reward economics, maintains a bounded auditable reward ledger, exposes bounded parent-readable summaries, and provides logical R11 backup export. Activity cooperation is optional for session existence; forged reward/profile/session fields have no authority.
-
-R5 closure milestone was **213/213** tests plus project/runtime/Activity/asset/build validation and approximately 16 MiB source footprint. Child progress remains local product state, not analytics, and R5 introduces no default upload path. Linux/Bubblewrap broker behavior remains evidence-pending.
-
-## 10. R6 — Device Capability Service / HAL — IN PROGRESS
-
-Recovered after the interrupted session and verified as a coherent first tranche:
-
-- typed HAL protocols/states for display, input, audio, removable media, network and power;
-- provisional legacy-X display/input adapters wrap the existing X session controller without making X11 a permanent Greia contract;
-- Linux audio/removable-media/network/systemd-power probes;
-- immutable `DeviceCapabilitySnapshot` with portable semantic capability IDs, provenance/source ID, machine metadata, details and deterministic state token;
-- `DeviceCapabilityService` owns snapshot caching/refresh;
-- `HALDeviceCapabilityProbe` maps board/backend observations into Greia semantic capabilities;
-- `PermissionBroker` now consumes an injected trusted `DeviceCapabilityService` for launch/grant decisions instead of treating Phase-0 static hardware assumptions as the live authority;
-- a deterministic static capability service remains only as an explicit source-test/developer fallback;
-- missing required device capability fails launch authority, while missing optional capability removes the dependent permission grant;
-- X-session controller now exposes bounded pointer-presence probing for the provisional HAL adapter.
-
-The snapshot details are deep-frozen after validation so the token and visible observation cannot diverge through later mutation.
-
-R6 is **not complete**. R6.2 still needs runtime-specific package/static validation, compatibility/resource selection and full Runtime Manager integration, and the installed launcher composition root must inject the real HAL-backed capability service rather than relying on the deterministic static fallback. R7/R8 later replace provisional X/board backends without changing this semantic capability contract.
-
-## 11. Current verification
-
-Final recovered-tree verification after R6.1 recovery:
+Authoritative clean-checkout source evidence:
 
 ```text
-make verify
+checkout: 7562471d868a23cd90d88b43aed2501988eb5740
+tracked files: 318
+tracked PNGs: 123
+git worktree: clean
+Python compile: PASS
+R5 source architecture invariants: PASS
+R6 source architecture invariants: PASS
+provider-free tests: 194 / 194 PASS
+project validation: PASS
+bundled Activity validators: PASS (2 / 2)
+source/shell/footprint gate: PASS
 ```
 
-passes:
+The permanent `.github/workflows/r0-clean-verify.yml` is read-only CI and enforces R5/R6 source invariants plus full `make verify`.
 
-- **219 / 219 provider-free unit tests**;
-- project/runtime/Activity/asset validation;
-- canonical Activity validation;
-- build/system-overlay source contracts;
-- source footprint approximately **16 MiB**.
+## 2. Phase classification
 
-Current Activity digests:
+```text
+R0   canonical repository / reproducibility                COMPLETE
+R1   PermissionBroker / trust / per-Activity authority     source implementation green in complete gate
+R2   runtime-neutral lifecycle/watchdog                    source implementation green in complete gate
+R3   permanent Activity IDs / caps / perms / events        source implementation green in complete gate
+R4   Universal Storage                                     source implementation green; real ProfileContext namespace repaired
+R5   sessions / events / progression / reward ledger       SOURCE-CLOSED — NEW reviewed reimplementation
+R6.1 Device Capability Service / typed HAL                  SOURCE-CLOSED
+R6.2 Runtime Manager / runtime adapter integration          SOURCE-CLOSED
+R7   direct graphics/session architecture                  NEXT / NOT YET IMPLEMENTED
+R8+  not started or open per active plan
+```
 
-- `org.greia.shape-garden`: `dd53995e845564fc1bf735de76c1f4753d8de9e829cc86e78ba562265f21ca99`
-- `org.greia.workshop-settings`: `a2d60444a3e95f2f00d5f0a1410819955e108bfbcc22315cf20d4ff4bfbcfeae`
+“Source-closed” is intentionally narrower than physical certification. Direct DRM/KMS, Acer behavior, Pi 400/500 behavior, installed-image performance, and no-visible-Linux hardware evidence remain assigned to R7/R8/R14.
 
-This remains **source evidence**. Linux Unix-socket/Bubblewrap/Acer/Pi/runtime behavior remains UNPROVEN until controlled evidence phases.
+## 3. R0 continuity closure
 
-## 12. Immediate next work inside R6
+Historical v0.12 archive byte authority remains:
 
-Continue R6.2 in this order:
+```text
+SHA-256 7afb5028aa9f70930de1df8df4aa5a1fe00321fbfdeb94a4316cb234c332b124
+318 archive files
+123 PNGs
+```
 
-1. move runtime-specific package/static validation behind the Runtime Adapter/Manager rather than leaving Python validation as a universal registry concern;
-2. add runtime compatibility/resource selection using the trusted semantic device capability snapshot;
-3. inject the HAL-backed `DeviceCapabilityService` at the installed launcher composition root;
-4. keep Storage/Session/Progression/PermissionBroker runtime-neutral;
-5. add negative tests proving runtime or Activity code cannot forge device capability truth;
-6. preserve X11 only as a provisional backend until R7 direct graphics is evidence-ready.
+All required baseline source/build/test/config and all 123 PNG assets are now repository-managed. The current GitHub tree passes the full source/build/test gate without any chat-session archive or lost local workspace.
 
-Do not jump to Web, Pi image, or direct graphics implementation around this shared capability/HAL/runtime boundary.
+## 4. R5 replacement — important provenance
 
-## 13. Later blocking spine
+The former post-v0.12 `src/greia_platform/history.py` was genuinely lost and could not be recovered. The current module is **not historical recovered source**. It is a new reviewed reimplementation authorized on 2026-08-09 and grounded in:
 
-After R6:
+1. ADR 0017;
+2. `runtime/history-policy.toml`;
+3. `runtime/progression-policy.toml`;
+4. surviving event protocol/client/broker contracts;
+5. Profile/Storage contracts;
+6. parent progress-summary contract.
 
-- R7 direct DRM/KMS-first graphics;
-- R8 Pi 400/500 ARM64 image adapters/evidence;
-- R9 embedded Web runtime;
-- R10 `.greiaactivity`;
-- R11 `.greiabackup`;
-- R12 parent management integration;
-- R13 boot/recovery continuity;
-- R13B signed rollback-safe Greia OS/runtime updates + preserve-profile recovery;
-- R14 final multi-architecture certification.
+Core authority: `ProfileHistoryStore` owns the private per-profile SQLite implementation; Activities do not. It records authoritative sessions before runtime/storage/sandbox/child creation, READY/final state, restart recovery, bounded event history, score aggregates, reward balances/ledger and portable logical export.
 
-## 14. Evidence discipline
+Event idempotency is content-bound and transactional. An identical replay returns the existing event without progression duplication; conflicting reuse fails. Rewards are computed only from Greia progression policy; Activity payload reward-like fields have no authority.
 
-Never infer Linux image, Bubblewrap runtime, direct DRM/KMS, Acer, Raspberry Pi, Web engine, memory/footprint, boot continuity, update/recovery or installer acceptance from source tests alone.
+## 5. Installed R5 integration
 
-**Do not authorize Acer internal-disk installation until the established hardware/image evidence gates are satisfied and reviewed.**
+Installed launcher composition creates one `PlatformHistoryService`. `ActivitySupervisor` owns session orchestration and per-session broker lifetime but not SQLite policy.
+
+Every Activity launch receives, where applicable:
+
+- Universal Storage broker socket + opaque token;
+- Event broker socket + opaque token;
+- runtime-adapter lifecycle transport;
+- platform session ID.
+
+Durable Storage/history roots are never mounted into the Activity sandbox. The event broker binds the trusted live manifest + profile history store + platform progression policy + platform session ID.
+
+Launch failure, runtime failure, READY timeout, forced stop, platform failure, normal completion and platform restart are normalized distinctly. Missing Bubblewrap and cleanup failures are regression-tested so authoritative rows do not remain falsely open.
+
+## 6. Parent progress boundary
+
+`ParentProgressReader` is wired into parent status/API/UI. It exposes only bounded logical summaries. It does not expose DB paths, raw event payloads, idempotency keys, broker tokens, or internal session IDs. Corrupt history returns `available:false` and does not take other parent controls down.
+
+## 7. R4 integration repair discovered during R5 work
+
+Real `ProfileContext` previously lacked `activity_storage_dir()`, while synthetic Supervisor tests accidentally hid that production mismatch. Profiles now have a dedicated `storage/` namespace, separate from raw Activity data/HOME, with validated per-Activity directories. This is covered by real ProfileContext tests.
+
+## 8. R6 source architecture
+
+R6 source closure remains intact after the R5 integration:
+
+- one shared HAL-backed `DeviceCapabilityService` feeds PermissionBroker and RuntimeManager;
+- launch authority carries the semantic device snapshot token and stale compatibility fails before process creation;
+- Activity Registry remains runtime-neutral;
+- Python validation/env/lifecycle transport/process behavior is behind `PythonRuntimeAdapter`;
+- RuntimeManager owns adapter lookup/compatibility/launch delegation;
+- runtime adapters own command/cwd/runtime env, runtime handle creation, exit normalization, force-stop and cleanup;
+- platform session identity remains runtime-independent;
+- Supervisor contains no Python READY/STOP marker implementation, direct `Popen`, or process-group signaling;
+- Storage, Session, Event, Progression and Reward remain common platform services rather than Python-specific services.
+
+## 9. Key commits
+
+```text
+1d34e5e2c67d0113e146c7fa48d16dc60aa9c82c  restore all 123 archive-verified PNG assets
+67cb59c7308c71226777742731d957c845e464a6  snapshot-bind launch authority
+94f93941db32a91e77c8af09f0eab4bb7c28bc07  runtime-owned lifecycle transport
+0cfb82aa89df5ebc9c03a01061ebd8da82f8f4dd  new R5 History/Progression authority
+b89906cc5b3a6d01e87dd6177838976dd001f500  trust-aware Activity validator regression coverage
+5bd867c9488fcd61a598813cdf7a42c396ec3b2c  real ProfileContext durable Storage namespace
+e790a36e36b845d0a9d0ecf057180ffd3a213af3  installed sessions/event broker integration
+2819f73dcc57c3b69d002532c03f5d2021e7c10f  R5 failure-path + parent progress closure
+7562471d868a23cd90d88b43aed2501988eb5740  permanent clean R5/R6 architecture gate
+```
+
+## 10. Mandatory resume order
+
+Before implementation:
+
+1. `AGENTS.md`
+2. `README.md`
+3. `docs/architecture/GREIA_ARCHITECTURE.md`
+4. ADR 0012
+5. ADR 0013
+6. ADR 0014
+7. ADR 0015
+8. ADR 0016
+9. ADR 0017
+10. `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`
+11. `docs/reviews/2026-08-09_R5_REIMPLEMENTATION_AND_R6_INTEGRATED_CLOSURE.md`
+12. this handover
+
+## 11. Exact next phase — R7
+
+Do not refactor R1–R6 again unless an R7 integration test exposes a concrete defect.
+
+First R7 tranche:
+
+1. inventory every `DISPLAY`, Xauthority, XShm, `xinput`, `xrandr`, Xorg package/config/service/session assumption;
+2. inspect `build/overlay/usr/local/lib/greia-os/greia-x-session`, Xorg configs, package sets, `hardware_session.py`, `hal.py`, launcher/Pygame/SDL initialization and related tests;
+3. classify each dependency as target interface, provisional backend, build/boot glue, or removable legacy debt;
+4. define the direct Display/Input backend beneath the existing R6 typed HAL; do not change Activity APIs;
+5. prototype SDL direct DRM/KMS/KMSDRM and establish VM/x86 measurement methodology;
+6. determine by evidence—not convenience—whether a tiny compositor/session broker is required for shell↔Activity ownership, Web surfaces, transitions and crash recovery;
+7. do not deepen X11 and do not claim hardware success from source tests.
+
+## 12. Non-negotiable continuity rules
+
+- GitHub is canonical source of truth; commit coherent tranches as work proceeds.
+- Do not reopen v0.12 recovery.
+- Do not describe the new R5 implementation as recovered historical source.
+- Do not fork Storage/Session/Event/Progression/Reward per runtime.
+- Do not make Activity environment text trusted authority.
+- Do not expose a Linux desktop/shell/WM in the normal child path.
+- Xorg is provisional; R7 must move toward the direct graphics target rather than layering more architecture on X11.
+- Hardware evidence gaps must stay explicit until actually tested.

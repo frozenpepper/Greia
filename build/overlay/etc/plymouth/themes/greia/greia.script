@@ -1,0 +1,6 @@
+Window.SetBackgroundTopColor(0.969, 0.922, 0.796);
+Window.SetBackgroundBottomColor(0.969, 0.922, 0.796);
+mark_image = Image("boot-mark.png");
+mark_sprite = Sprite(mark_image);
+mark_sprite.SetX(Window.GetWidth() / 2 - mark_image.GetWidth() / 2);
+mark_sprite.SetY(Window.GetHeight() / 2 - mark_image.GetHeight() / 2);

@@ -1,0 +1,35 @@
+PYTHON ?= python3
+PYTHONPATH := src
+
+.PHONY: verify test validate assets footprint shell-check clean-bytecode
+
+verify: clean-bytecode test validate shell-check footprint
+	$(MAKE) clean-bytecode
+
+clean-bytecode:
+	find . -type d -name __pycache__ -prune -exec rm -rf {} +
+	find . -type f -name "*.py[co]" -delete
+
+test: clean-bytecode
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m unittest discover -s tests -v
+
+validate:
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) tools/validate_project.py
+	@for activity in activities/*; do \
+		if [ -f "$$activity/activity.toml" ]; then \
+			PYTHONPATH=$(PYTHONPATH) $(PYTHON) tools/validate_activity.py "$$activity" || exit $$?; \
+		fi; \
+	done
+
+assets:
+	$(PYTHON) tools/extract_core_icons.py \
+		--source assets/source/core_icons_v1_source.png \
+		--output-root assets/icons/core/v1 \
+		--catalog assets/catalog/core_icons_v1.toml \
+		--contact-sheet assets/catalog/core_icons_v1_contact_sheet.png
+
+shell-check:
+	@find build -type f -perm -0100 -print | while read file; do bash -n "$$file"; done
+
+footprint:
+	build/footprint-source.sh

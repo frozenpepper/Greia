@@ -1,0 +1,139 @@
+# R0/R5/R6 clean-clone verification
+name: R0 clean-tree verification
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/r0-clean-verify.yml"
+      - "src/**"
+      - "tests/**"
+      - "runtime/**"
+      - "activities/**"
+      - "assets/**"
+      - "build/**"
+      - "tools/**"
+      - "Makefile"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Install verification dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check Pillow
+
+      - name: Repository inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf 'HEAD=' && git rev-parse HEAD
+          printf 'FILES=' && git ls-files | wc -l
+          printf 'PNG=' && git ls-files '*.png' | wc -l
+          test -z "$(git status --short)"
+
+      - name: Compile Python source
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m compileall -q src tests tools activities
+
+      - name: R5 source architecture invariants
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Durable History/Progression authority is a platform service, not Activity code.
+          grep -F 'class PlatformHistoryService:' src/greia_platform/history.py
+          grep -F 'class ProfileHistoryStore:' src/greia_platform/history.py
+          grep -F 'class ProgressionPolicy:' src/greia_platform/history.py
+          grep -F 'history_service = PlatformHistoryService.load(' src/greia_launcher/composition.py
+          grep -F 'history_service=history_service' src/greia_launcher/composition.py
+          grep -F 'history_store.start_session(' src/greia_launcher/supervisor.py
+          grep -F 'history_store.finish_session(' src/greia_launcher/supervisor.py
+
+          # Activity events cross only the per-session authenticated broker boundary.
+          grep -F 'ActivityEventBroker.start' src/greia_launcher/supervisor.py
+          grep -F 'GREIA_EVENT_SOCKET' src/greia_launcher/supervisor.py
+          grep -F 'GREIA_EVENT_TOKEN' src/greia_launcher/supervisor.py
+          grep -F 'SANDBOX_EVENT_ROOT' src/greia_launcher/supervisor.py
+          ! grep -F 'history.sqlite3' src/greia_launcher/supervisor.py
+          ! grep -F 'database_path' src/greia_launcher/supervisor.py
+
+          # Parent controls consume bounded logical summaries and degrade safely on history errors.
+          grep -F 'ParentProgressReader' src/greia_parent/server.py
+          grep -F '"/api/progress"' src/greia_parent/server.py
+          grep -F 'return self.unavailable_payload()' src/greia_parent/progress.py
+          ! grep -F 'database_path' src/greia_parent/server.py
+          ! grep -F 'idempotency_key' src/greia_parent/server.py
+
+      - name: R6 source architecture invariants
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Typed HAL / semantic device authority.
+          grep -F 'class GreiaHAL:' src/greia_platform/hal.py
+          grep -F 'class DisplayHAL(Protocol):' src/greia_platform/hal.py
+          grep -F 'class InputHAL(Protocol):' src/greia_platform/hal.py
+          grep -F 'class DeviceCapabilityService:' src/greia_platform/device_capabilities.py
+          grep -F 'class HALDeviceCapabilityProbe:' src/greia_platform/device_capabilities.py
+
+          # Installed composition shares one device authority and platform storage service.
+          grep -F 'build_launcher_runtime_services(' src/greia_launcher/main.py
+          grep -F 'device_capabilities = DeviceCapabilityService(' src/greia_launcher/composition.py
+          grep -F 'device_capabilities=device_capabilities' src/greia_launcher/composition.py
+          grep -F 'RuntimeManager(' src/greia_launcher/composition.py
+          grep -F 'device_capabilities,' src/greia_launcher/composition.py
+          grep -F 'storage_service=storage_service' src/greia_launcher/composition.py
+
+          # Permission and runtime compatibility use one semantic device observation.
+          grep -F 'device_snapshot_token=device_snapshot.token' src/greia_platform/permissions.py
+          grep -F 'expected_device_snapshot_token=authority.device_snapshot_token' src/greia_launcher/supervisor.py
+          grep -F 'device capability snapshot changed after launch authority was issued' src/greia_launcher/runtime_adapter.py
+
+          # Shared Universal Storage is brokered into each Activity session.
+          grep -F 'ActivityStorageService(StoragePolicy.load(storage_policy_path))' src/greia_launcher/composition.py
+          grep -F 'GREIA_STORAGE_SOCKET' src/greia_launcher/supervisor.py
+          grep -F 'GREIA_STORAGE_TOKEN' src/greia_launcher/supervisor.py
+          grep -F 'ActivityStorageBroker.start' src/greia_launcher/supervisor.py
+
+          # Runtime-specific command, handle, exit and lifecycle transport belong to adapters.
+          grep -F 'class RuntimeCommand:' src/greia_launcher/runtime_adapter.py
+          grep -F 'class RuntimeInvocation:' src/greia_launcher/runtime_adapter.py
+          grep -F 'class RuntimeLifecycleBinding:' src/greia_launcher/runtime_adapter.py
+          grep -F 'def create_lifecycle_binding(' src/greia_launcher/runtime_adapter.py
+          grep -F 'def collect_exit(' src/greia_launcher/runtime_adapter.py
+          grep -F 'def force_stop(' src/greia_launcher/runtime_adapter.py
+          grep -F 'def cleanup(' src/greia_launcher/runtime_adapter.py
+          grep -F 'GREIA_ACTIVITY_READY_PATH' src/greia_launcher/runtime_adapter.py
+          grep -F 'GREIA_ACTIVITY_STOP_PATH' src/greia_launcher/runtime_adapter.py
+
+          # Supervisor must remain runtime-neutral at these implementation seams.
+          ! grep -F 'ActivityControlChannel' src/greia_launcher/supervisor.py
+          ! grep -F 'GREIA_ACTIVITY_READY_PATH' src/greia_launcher/supervisor.py
+          ! grep -F 'GREIA_ACTIVITY_STOP_PATH' src/greia_launcher/supervisor.py
+          ! grep -F 'subprocess.Popen' src/greia_launcher/supervisor.py
+          ! grep -F 'signal_process_group' src/greia_launcher/supervisor.py
+          grep -F 'GREIA_ACTIVITY_SESSION_ID' src/greia_launcher/supervisor.py
+
+          # Legacy X remains a provisional backend below HAL, not target/interface authority.
+          grep -F 'class LegacyXDisplayHAL:' src/greia_platform/hal.py
+          grep -F 'R7 replaces the legacy-X' src/greia_platform/hal.py
+
+      - name: Full provider-free gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          make verify

@@ -1,0 +1,3 @@
+# Administrative access is possible only after a parent installs an SSH key or
+# the future local Parent Door authenticates and starts a greiaadmin session.
+greiaadmin ALL=(ALL:ALL) NOPASSWD: ALL

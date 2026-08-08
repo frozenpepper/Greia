@@ -1,0 +1,10 @@
+[Match]
+Name=en* eth*
+
+[Network]
+DHCP=yes
+IPv6PrivacyExtensions=yes
+MulticastDNS=yes
+
+[DHCPv4]
+UseHostname=yes

@@ -1,0 +1,11 @@
+#!/bin/sh
+set -eu
+[ "$(id -u)" -eq 0 ] || { echo "Must run as root." >&2; exit 1; }
+# This helper is an implementation primitive. A future Parent Door may invoke
+# it only after local parent authentication. It never runs during child boot.
+return_to_launcher() {
+  chvt 1 >/dev/null 2>&1 || true
+}
+trap return_to_launcher EXIT INT TERM
+export TERM=linux
+openvt -c 3 -f -s -w -- su -l greiaadmin

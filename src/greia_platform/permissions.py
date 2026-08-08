@@ -29,6 +29,7 @@ class ActivityAuthority:
     activity_id: str
     package_digest: str
     package_trust: PackageTrust
+    device_snapshot_token: str
     requested_capabilities: frozenset[str]
     effective_capabilities: frozenset[str]
     requested_permissions: frozenset[str]
@@ -232,6 +233,7 @@ class PermissionBroker:
             activity_id=manifest.activity_id,
             package_digest=registration.package_digest,
             package_trust=registration.package_trust,
+            device_snapshot_token=device_snapshot.token,
             requested_capabilities=requested_capabilities,
             effective_capabilities=effective_capabilities,
             requested_permissions=requested_permissions,

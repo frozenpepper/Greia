@@ -1,0 +1,11 @@
+ACTION=="add", SUBSYSTEM=="block", ENV{DEVTYPE}=="partition", ENV{ID_BUS}=="usb", TAG+="systemd", ENV{SYSTEMD_WANTS}+="greia-media-mount@%k.service"
+ACTION=="add", SUBSYSTEM=="block", ENV{DEVTYPE}=="partition", ENV{ID_DRIVE_FLASH_SD}=="1", TAG+="systemd", ENV{SYSTEMD_WANTS}+="greia-media-mount@%k.service"
+# Some simple USB keys and card readers expose a filesystem on the whole block
+# device without a partition table. Accept only devices already identified by
+# udev as removable media with a filesystem.
+ACTION=="add", SUBSYSTEM=="block", ENV{DEVTYPE}=="disk", ENV{ID_FS_USAGE}=="filesystem", ENV{ID_BUS}=="usb", TAG+="systemd", ENV{SYSTEMD_WANTS}+="greia-media-mount@%k.service"
+ACTION=="add", SUBSYSTEM=="block", ENV{DEVTYPE}=="disk", ENV{ID_FS_USAGE}=="filesystem", ENV{ID_DRIVE_FLASH_SD}=="1", TAG+="systemd", ENV{SYSTEMD_WANTS}+="greia-media-mount@%k.service"
+# Built-in MMC/SD readers do not consistently expose ID_DRIVE_FLASH_SD on old
+# hardware. Match native mmc block names as a constrained fallback.
+ACTION=="add", SUBSYSTEM=="block", ENV{DEVTYPE}=="partition", KERNEL=="mmcblk[0-9]p[0-9]", TAG+="systemd", ENV{SYSTEMD_WANTS}+="greia-media-mount@%k.service"
+ACTION=="add", SUBSYSTEM=="block", ENV{DEVTYPE}=="disk", KERNEL=="mmcblk[0-9]", ENV{ID_FS_USAGE}=="filesystem", TAG+="systemd", ENV{SYSTEMD_WANTS}+="greia-media-mount@%k.service"

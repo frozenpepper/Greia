@@ -1,0 +1,6 @@
+# Phase 0's platform shell already needs these packages. Keeping this explicit
+# models the Python Activity adapter as a separately selectable runtime family;
+# the resolver de-duplicates shared dependencies in the final apt transaction.
+python3
+python3-pil
+python3-pygame

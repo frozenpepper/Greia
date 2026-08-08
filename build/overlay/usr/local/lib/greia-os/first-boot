@@ -1,0 +1,13 @@
+#!/bin/sh
+set -eu
+install -d -m 0750 -o greiapanel -g greiapanel /var/lib/greia-os
+install -d -m 0750 -o greiakid -g greiakid /var/lib/greia-kid
+install -d -m 2770 -o greiakid -g pipprofiles /var/lib/greia-profiles
+install -d -m 2750 -o greiapanel -g pipsettings /var/lib/greia-system-settings
+install -d -m 2750 -o greiakid -g greiapanel /run/greia-hardware
+machine_id="$(cat /etc/machine-id 2>/dev/null || true)"
+[ -n "$machine_id" ] || systemd-machine-id-setup >/dev/null 2>&1
+# SSH host keys remain absent until a parent explicitly enables SSH.
+# Avoid CPU/entropy work in the child-visible first-boot critical path.
+printf '%s\n' "initialized" > /var/lib/greia-os/initialized
+chown greiapanel:greiapanel /var/lib/greia-os/initialized
