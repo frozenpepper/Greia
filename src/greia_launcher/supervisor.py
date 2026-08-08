@@ -2,13 +2,23 @@ from __future__ import annotations
 
 import os
 import subprocess
-import sys
-from dataclasses import dataclass
 from pathlib import Path
+from typing import Callable, Mapping
 
 from greia_platform.activities import ActivityManifest
 from greia_platform.permissions import ActivityAuthority
 from greia_platform.profiles import ProfileContext
+
+from .lifecycle import (
+    ActivityControlChannel,
+    ActivityExitReason,
+    ActivityResult,
+    ActivitySession,
+    ActivitySessionState,
+    monotonic_now,
+    signal_process_group,
+)
+from .runtime_adapter import PythonRuntimeAdapter, RuntimeLaunchAdapter
 
 
 SANDBOX_ACTIVITY_ROOT = Path("/run/greia-activity-data")
@@ -17,29 +27,20 @@ PRODUCTION_ROOT = Path("/opt/greia-os")
 PRODUCTION_BWRAP = Path("/usr/bin/bwrap")
 
 
-@dataclass(frozen=True, slots=True)
-class ActivityResult:
-    activity_id: str
-    return_code: int
+class ActivityLifecycleError(RuntimeError):
+    """Raised when the platform cannot preserve the one-Activity lifecycle."""
 
-    @property
-    def succeeded(self) -> bool:
-        return self.return_code == 0
+
+ProcessFactory = Callable[..., subprocess.Popen[bytes]]
 
 
 class ActivitySupervisor:
-    """Launch one curated activity in the shared Python runtime.
+    """Own one Activity process from launch through cleanup.
 
-    Development runs use the host process namespace so the project remains easy
-    to test on macOS. Installed Greia OS runs fail closed through bubblewrap:
-    an ordinary Activity gets only its own writable `(profile_id, activity_id)`
-    data namespace, sibling Activity/profile/platform state is hidden, networking
-    is absent, and the host filesystem is otherwise read-only. Narrow privileged
-    resources are mounted only when a validated manifest is trusted for them.
-
-    This is deliberately an OS boundary in addition to manifest/import review.
-    Python's built-in ``open()`` is sufficient to read arbitrary paths, so a
-    shared Unix uid plus HOME/XDG scoping alone is not profile isolation.
+    The supervisor is the runtime-neutral lifecycle/security owner. Runtime
+    adapters choose the child runtime command; this class owns effective
+    authority, Bubblewrap shape, per-launch control paths, readiness, graceful
+    stop, forced process-tree termination and normalized exit results.
     """
 
     def __init__(
@@ -48,63 +49,277 @@ class ActivitySupervisor:
         *,
         sandbox_executable: Path | None = None,
         require_sandbox: bool | None = None,
+        ready_timeout_seconds: float = 10.0,
+        graceful_stop_seconds: float = 2.0,
+        runtime_adapters: Mapping[str, RuntimeLaunchAdapter] | None = None,
+        process_factory: ProcessFactory = subprocess.Popen,
     ):
-        self._python_executable = python_executable
+        if ready_timeout_seconds <= 0:
+            raise ValueError("ready_timeout_seconds must be positive")
+        if graceful_stop_seconds <= 0:
+            raise ValueError("graceful_stop_seconds must be positive")
+        adapters = dict(runtime_adapters or {})
+        adapters.setdefault("python", PythonRuntimeAdapter(python_executable))
+        self._runtime_adapters = adapters
         self._sandbox_executable = sandbox_executable
         self._require_sandbox_override = require_sandbox
+        self._ready_timeout_seconds = ready_timeout_seconds
+        self._graceful_stop_seconds = graceful_stop_seconds
+        self._process_factory = process_factory
+        self._active_session: ActivitySession | None = None
 
-    def launch(
+    @property
+    def active_session(self) -> ActivitySession | None:
+        session = self._active_session
+        if session is not None and not session.terminal:
+            return session
+        return None
+
+    def start(
         self,
         manifest: ActivityManifest,
         profile: ProfileContext,
         authority: ActivityAuthority,
-    ) -> ActivityResult:
-        executable = self._resolve_interpreter()
+    ) -> ActivitySession:
+        if self.active_session is not None:
+            raise ActivityLifecycleError("only one Activity may run at a time")
+        if authority.activity_id != manifest.activity_id:
+            raise ActivityLifecycleError("Activity authority identity does not match manifest")
+
+        adapter = self._runtime_adapters.get(manifest.runtime_type)
+        if adapter is None:
+            return self._failed_launch_session(manifest, profile, authority)
+
         sandboxed = self._sandbox_required()
+        host_activity_data = profile.activity_data_dir(manifest.activity_id)
+        child_activity_data = SANDBOX_ACTIVITY_ROOT if sandboxed else host_activity_data
+        control = ActivityControlChannel.create(host_activity_data, child_activity_data)
         environment = self._sanitized_environment(
             manifest,
             profile,
             authority,
+            control,
             sandboxed=sandboxed,
         )
+        runtime_command = adapter.command_for(manifest)
+
         if sandboxed:
             sandbox = self._resolve_sandbox()
             if not sandbox.is_file() or not os.access(sandbox, os.X_OK):
-                return ActivityResult(manifest.activity_id, 126)
+                return self._failed_launch_session(
+                    manifest,
+                    profile,
+                    authority,
+                    control=control,
+                )
             command = self._sandbox_command(
                 sandbox,
-                executable,
+                runtime_command.command,
                 manifest,
                 profile,
                 authority,
             )
             cwd: Path | None = None
         else:
-            command = [str(executable), str(manifest.launch_path)]
-            cwd = manifest.root
+            command = list(runtime_command.command)
+            cwd = runtime_command.cwd
+
+        started = monotonic_now()
         try:
-            completed = subprocess.run(
+            process = self._process_factory(
                 command,
                 cwd=cwd,
                 env=environment,
-                check=False,
                 shell=False,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                close_fds=True,
+                start_new_session=True,
             )
         except OSError:
-            return ActivityResult(manifest.activity_id, 126)
-        return ActivityResult(manifest.activity_id, completed.returncode)
+            return self._failed_launch_session(
+                manifest,
+                profile,
+                authority,
+                control=control,
+                started_at=started,
+            )
 
-    def _resolve_interpreter(self) -> Path:
-        if self._python_executable is not None:
-            return self._python_executable
-        configured = os.environ.get("GREIA_CHILD_PYTHON")
-        if configured:
-            return Path(configured)
-        installed_root = Path(os.environ.get("GREIA_OS_ROOT", str(PRODUCTION_ROOT))).resolve()
-        system_python = Path("/usr/bin/python3")
-        if installed_root == PRODUCTION_ROOT and system_python.exists():
-            return system_python
-        return Path(sys.executable)
+        session = ActivitySession(
+            activity_id=manifest.activity_id,
+            package_digest=authority.package_digest,
+            control=control,
+            process=process,
+            state=ActivitySessionState.STARTING,
+            started_at=started,
+            ready_deadline=started + self._ready_timeout_seconds,
+            graceful_stop_seconds=self._graceful_stop_seconds,
+        )
+        self._active_session = session
+        return session
+
+    def poll(self, session: ActivitySession) -> ActivityResult | None:
+        if session.result is not None:
+            return session.result
+        if self._active_session is not session:
+            raise ActivityLifecycleError("session is not owned by this supervisor")
+        process = session.process
+        if process is None:
+            raise ActivityLifecycleError("non-terminal session has no process")
+
+        now = monotonic_now()
+        return_code = process.poll()
+        if return_code is not None:
+            # READY is a per-launch marker, so consume it even when the child
+            # exits between polling ticks. Otherwise a fast Activity can create
+            # its usable surface, publish READY, and terminate before Greia
+            # observes the intermediate RUNNING state.
+            if session.ready_at is None and session.control.ready():
+                session.ready_at = now
+            return self._finish_session(session, return_code, now)
+
+        if session.state is ActivitySessionState.STARTING:
+            if session.control.ready():
+                session.ready_at = now
+                session.state = ActivitySessionState.RUNNING
+            elif now >= session.ready_deadline:
+                self.force_stop(session, ActivityExitReason.READY_TIMEOUT)
+
+        if session.state is ActivitySessionState.STOPPING:
+            requested_at = session.stop_requested_at
+            if (
+                requested_at is not None
+                and session.forced_reason is None
+                and now - requested_at >= session.graceful_stop_seconds
+            ):
+                self.force_stop(session, ActivityExitReason.FORCED_STOP)
+
+        return_code = process.poll()
+        if return_code is not None:
+            return self._finish_session(session, return_code, monotonic_now())
+        return None
+
+    def request_stop(self, session: ActivitySession) -> ActivityResult | None:
+        if session.result is not None:
+            return session.result
+        if self._active_session is not session:
+            raise ActivityLifecycleError("session is not owned by this supervisor")
+        if session.state is not ActivitySessionState.STOPPING:
+            session.control.request_stop()
+            session.stop_requested_at = monotonic_now()
+            session.state = ActivitySessionState.STOPPING
+        return self.poll(session)
+
+    def force_stop(
+        self,
+        session: ActivitySession,
+        reason: ActivityExitReason = ActivityExitReason.FORCED_STOP,
+    ) -> ActivityResult | None:
+        if session.result is not None:
+            return session.result
+        if self._active_session is not session:
+            raise ActivityLifecycleError("session is not owned by this supervisor")
+        if reason not in {
+            ActivityExitReason.FORCED_STOP,
+            ActivityExitReason.READY_TIMEOUT,
+            ActivityExitReason.SYSTEM_SHUTDOWN,
+        }:
+            raise ValueError("force_stop requires a forced terminal reason")
+        session.forced_reason = reason
+        session.state = ActivitySessionState.STOPPING
+        process = session.process
+        if process is not None:
+            signal_process_group(process, force=True)
+            return_code = process.poll()
+            if return_code is not None:
+                return self._finish_session(session, return_code, monotonic_now())
+        return None
+
+    def shutdown_active(self) -> ActivityResult | None:
+        session = self.active_session
+        if session is None:
+            return None
+        return self.force_stop(session, ActivityExitReason.SYSTEM_SHUTDOWN)
+
+    def _finish_session(
+        self,
+        session: ActivitySession,
+        return_code: int,
+        ended_at: float,
+    ) -> ActivityResult:
+        if session.forced_reason is not None:
+            reason = session.forced_reason
+        elif session.stop_requested_at is not None and return_code == 0:
+            reason = ActivityExitReason.GRACEFUL_STOP
+        elif return_code == 0:
+            reason = ActivityExitReason.NORMAL
+        else:
+            reason = ActivityExitReason.CRASH
+
+        state = (
+            ActivitySessionState.EXITED
+            if reason in {ActivityExitReason.NORMAL, ActivityExitReason.GRACEFUL_STOP}
+            else ActivitySessionState.FAILED
+        )
+        result = ActivityResult(
+            activity_id=session.activity_id,
+            session_id=session.session_id,
+            return_code=return_code,
+            exit_reason=reason,
+            ready=session.ready_at is not None,
+            started_at=session.started_at,
+            ready_at=session.ready_at,
+            ended_at=ended_at,
+        )
+        session.state = state
+        session.result = result
+        session.control.cleanup()
+        if self._active_session is session:
+            self._active_session = None
+        return result
+
+    def _failed_launch_session(
+        self,
+        manifest: ActivityManifest,
+        profile: ProfileContext,
+        authority: ActivityAuthority,
+        *,
+        control: ActivityControlChannel | None = None,
+        started_at: float | None = None,
+    ) -> ActivitySession:
+        sandboxed = self._sandbox_required()
+        host_activity_data = profile.activity_data_dir(manifest.activity_id)
+        if control is None:
+            control = ActivityControlChannel.create(
+                host_activity_data,
+                SANDBOX_ACTIVITY_ROOT if sandboxed else host_activity_data,
+            )
+        started = monotonic_now() if started_at is None else started_at
+        ended = monotonic_now()
+        result = ActivityResult(
+            activity_id=manifest.activity_id,
+            session_id=control.session_id,
+            return_code=126,
+            exit_reason=ActivityExitReason.LAUNCH_FAILURE,
+            ready=False,
+            started_at=started,
+            ready_at=None,
+            ended_at=ended,
+        )
+        session = ActivitySession(
+            activity_id=manifest.activity_id,
+            package_digest=authority.package_digest,
+            control=control,
+            process=None,
+            state=ActivitySessionState.FAILED,
+            started_at=started,
+            ready_deadline=started,
+            graceful_stop_seconds=self._graceful_stop_seconds,
+            result=result,
+        )
+        control.cleanup()
+        return session
 
     def _sandbox_required(self) -> bool:
         if self._require_sandbox_override is not None:
@@ -121,20 +336,11 @@ class ActivitySupervisor:
     @staticmethod
     def _sandbox_command(
         sandbox: Path,
-        executable: Path,
+        runtime_command: tuple[str, ...],
         manifest: ActivityManifest,
         profile: ProfileContext,
         authority: ActivityAuthority,
     ) -> list[str]:
-        """Build the fail-closed Linux namespace boundary for an activity.
-
-        The Activity's own data bind is established before the global profile tree
-        is hidden. The active profile root itself is never mounted writable into
-        the Activity namespace. Current Activities have no network capability, so
-        each gets a fresh network namespace. Media is hidden unless explicitly
-        declared. Privileged customization access is a separate narrow bind.
-        """
-
         command = [
             str(sandbox),
             "--die-with-parent",
@@ -181,14 +387,7 @@ class ActivitySupervisor:
             )
         if not authority.has_permission("removable_media.read"):
             command.extend(["--tmpfs", "/media/greia"])
-        command.extend(
-            [
-                "--chdir",
-                str(manifest.root),
-                str(executable),
-                str(manifest.launch_path),
-            ]
-        )
+        command.extend(["--chdir", str(manifest.root), *runtime_command])
         return command
 
     @staticmethod
@@ -196,6 +395,7 @@ class ActivitySupervisor:
         manifest: ActivityManifest,
         profile: ProfileContext,
         authority: ActivityAuthority,
+        control: ActivityControlChannel,
         *,
         sandboxed: bool = False,
     ) -> dict[str, str]:
@@ -261,6 +461,9 @@ class ActivitySupervisor:
                 "GREIA_PROFILE_NAME": profile.profile.display_name,
                 "GREIA_PROFILE_AVATAR": profile.profile.avatar_id,
                 "GREIA_MEDIA_ROOT": os.environ.get("GREIA_MEDIA_ROOT", "/media/greia"),
+                "GREIA_ACTIVITY_SESSION_ID": control.session_id,
+                "GREIA_ACTIVITY_READY_PATH": str(control.child_ready_path),
+                "GREIA_ACTIVITY_STOP_PATH": str(control.child_stop_path),
             }
         )
         if authority.has_permission("customization.manage"):
