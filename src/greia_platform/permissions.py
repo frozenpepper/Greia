@@ -7,6 +7,7 @@ from types import MappingProxyType
 from typing import Mapping
 
 from .activities import ActivityRegistration, RuntimeCatalogue
+from .device_capabilities import DeviceCapabilityService
 from .trust import PackageTrust
 
 
@@ -61,7 +62,7 @@ class PermissionPolicy:
     build_allowed_capabilities: frozenset[str]
     build_allowed_permissions: frozenset[str]
     parent_allowed_permissions: frozenset[str]
-    privileged_permissions: frozenset[str]
+    known_permissions: frozenset[str]
     permission_capability_requirements: Mapping[str, str]
     built_in_grants: Mapping[str, frozenset[str]]
 
@@ -82,7 +83,7 @@ class PermissionPolicy:
         if not isinstance(allowed_raw, list) or not all(isinstance(item, str) for item in allowed_raw):
             raise PermissionDecisionError("build.allowed_permissions must be a string list")
         allowed_permissions = frozenset(allowed_raw)
-        unknown = allowed_permissions - runtime.privileged_capabilities
+        unknown = allowed_permissions - runtime.allowed_permissions
         if unknown:
             raise PermissionDecisionError(
                 "permission policy contains unknown privileged permissions: "
@@ -133,21 +134,21 @@ class PermissionPolicy:
             build_allowed_permissions=(
                 build_allowed_permissions
                 if build_allowed_permissions is not None
-                else runtime.privileged_capabilities
+                else runtime.allowed_permissions
             ),
             parent_allowed_permissions=(
                 build_allowed_permissions
                 if build_allowed_permissions is not None
-                else runtime.privileged_capabilities
+                else runtime.allowed_permissions
             ),
-            privileged_permissions=runtime.privileged_capabilities,
+            known_permissions=runtime.allowed_permissions,
             permission_capability_requirements=MappingProxyType(
-                {"removable_media.read": "removable_media.read"}
+                {"removable_media.read": "removable_media"}
             ),
             built_in_grants=MappingProxyType(
                 dict(built_in_grants)
                 if built_in_grants is not None
-                else {"workshop_settings": runtime.privileged_capabilities}
+                else {"org.greia.workshop-settings": runtime.allowed_permissions}
             ),
         )
 
@@ -161,19 +162,34 @@ class PermissionBroker:
     and explicit policy for them.
     """
 
-    def __init__(self, policy: PermissionPolicy):
+    def __init__(
+        self,
+        policy: PermissionPolicy,
+        device_capabilities: DeviceCapabilityService | None = None,
+    ):
         self._policy = policy
+        # R6 makes device capability state a platform-owned authority. The
+        # static fallback preserves deterministic source tests/developer runs
+        # while installed launchers inject the real DeviceCapabilityService.
+        self._device_capabilities = device_capabilities or DeviceCapabilityService.static(
+            policy.hardware_capabilities,
+            source_id="permission-policy-static",
+        )
 
     @classmethod
     def phase0(
-        cls, runtime: RuntimeCatalogue, policy_path: Path | None = None
+        cls,
+        runtime: RuntimeCatalogue,
+        policy_path: Path | None = None,
+        *,
+        device_capabilities: DeviceCapabilityService | None = None,
     ) -> "PermissionBroker":
         policy = (
             PermissionPolicy.load(policy_path, runtime)
             if policy_path is not None
             else PermissionPolicy.phase0(runtime)
         )
-        return cls(policy)
+        return cls(policy, device_capabilities=device_capabilities)
 
     def issue(self, registration: ActivityRegistration) -> ActivityAuthority:
         if not isinstance(registration, ActivityRegistration):
@@ -182,16 +198,25 @@ class PermissionBroker:
             )
 
         manifest = registration.manifest
-        requested = frozenset(manifest.capabilities)
-        requested_permissions = requested & self._policy.privileged_permissions
-        requested_capabilities = requested - self._policy.privileged_permissions
-
-        effective_capabilities = (
-            requested_capabilities
-            & self._policy.runtime_capabilities
-            & self._policy.hardware_capabilities
+        requested_capabilities = frozenset(
+            (*manifest.required_capabilities, *manifest.optional_capabilities)
+        )
+        requested_permissions = frozenset(manifest.requested_permissions)
+        device_snapshot = self._device_capabilities.snapshot()
+        available_capabilities = (
+            self._policy.runtime_capabilities
+            & device_snapshot.capabilities
             & self._policy.build_allowed_capabilities
         )
+        missing_required = (
+            frozenset(manifest.required_capabilities) - available_capabilities
+        )
+        if missing_required:
+            raise PermissionDecisionError(
+                "Activity requires unavailable capabilities: "
+                + ", ".join(sorted(missing_required))
+            )
+        effective_capabilities = requested_capabilities & available_capabilities
 
         policy_permissions = (
             requested_permissions
@@ -214,7 +239,7 @@ class PermissionBroker:
         granted_permissions = frozenset(
             permission
             for permission in policy_permissions
-            if self._permission_capability_is_available(permission)
+            if self._permission_capability_is_available(permission, available_capabilities)
         )
 
         return ActivityAuthority(
@@ -227,12 +252,10 @@ class PermissionBroker:
             granted_permissions=granted_permissions,
         )
 
-    def _permission_capability_is_available(self, permission: str) -> bool:
+    def _permission_capability_is_available(
+        self,
+        permission: str,
+        available_capabilities: frozenset[str],
+    ) -> bool:
         requirement = self._policy.permission_capability_requirements.get(permission)
-        if requirement is None:
-            return True
-        return (
-            requirement in self._policy.runtime_capabilities
-            and requirement in self._policy.hardware_capabilities
-            and requirement in self._policy.build_allowed_capabilities
-        )
+        return requirement is None or requirement in available_capabilities
