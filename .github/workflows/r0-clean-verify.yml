@@ -1,4 +1,4 @@
-# R0 post-asset clean-clone verification
+# R0 post-cleanup clean-clone verification
 name: R0 clean-tree verification
 
 on:
