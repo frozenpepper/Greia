@@ -1,0 +1,318 @@
+name: R6 runtime lifecycle binding
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/r6-runtime-lifecycle-binding.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  implement-and-verify:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Apply runtime lifecycle binding refactor
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+
+          def rep(path: str, old: str, new: str) -> None:
+              p = Path(path)
+              text = p.read_text(encoding='utf-8')
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected one anchor, found {count}: {old!r}')
+              p.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          # Platform lifecycle owns session identity independently of runtime transport.
+          rep(
+              'src/greia_launcher/lifecycle.py',
+              'class ProcessHandle(Protocol):\n',
+              'class ActivityLifecycleControl(Protocol):\n    session_id: str\n\n    def ready(self) -> bool: ...\n\n    def request_stop(self) -> None: ...\n\n    def cleanup(self) -> None: ...\n\n\nclass ProcessHandle(Protocol):\n',
+          )
+          rep(
+              'src/greia_launcher/lifecycle.py',
+              '    @classmethod\n    def create(\n        cls,\n        host_activity_data: Path,\n        child_activity_data: Path,\n    ) -> "ActivityControlChannel":\n        session_id = uuid.uuid4().hex\n        host_root = host_activity_data / ".greia" / "runtime" / session_id\n',
+              '    @classmethod\n    def create(\n        cls,\n        host_activity_data: Path,\n        child_activity_data: Path,\n    ) -> "ActivityControlChannel":\n        return cls.create_for_session(\n            new_activity_session_id(), host_activity_data, child_activity_data\n        )\n\n    @classmethod\n    def create_for_session(\n        cls,\n        session_id: str,\n        host_activity_data: Path,\n        child_activity_data: Path,\n    ) -> "ActivityControlChannel":\n        host_root = host_activity_data / ".greia" / "runtime" / session_id\n',
+          )
+          rep(
+              'src/greia_launcher/lifecycle.py',
+              'class ActivitySession:\n    activity_id: str\n    package_digest: str\n    control: ActivityControlChannel\n    process: ProcessHandle | None\n',
+              'class ActivitySession:\n    activity_id: str\n    package_digest: str\n    session_id: str\n    control: ActivityLifecycleControl | None\n    process: ProcessHandle | None\n',
+          )
+          rep(
+              'src/greia_launcher/lifecycle.py',
+              '    @property\n    def session_id(self) -> str:\n        return self.control.session_id\n\n    @property\n    def terminal(self) -> bool:\n',
+              '    @property\n    def terminal(self) -> bool:\n',
+          )
+          rep(
+              'src/greia_launcher/lifecycle.py',
+              'def signal_process_group(process: ProcessHandle, *, force: bool) -> None:\n',
+              'def new_activity_session_id() -> str:\n    return uuid.uuid4().hex\n\n\ndef signal_process_group(process: ProcessHandle, *, force: bool) -> None:\n',
+          )
+
+          # Runtime adapter owns its lifecycle transport binding.
+          rep(
+              'src/greia_launcher/runtime_adapter.py',
+              'from .lifecycle import ProcessHandle, signal_process_group\n',
+              'from .lifecycle import (\n    ActivityControlChannel,\n    ActivityLifecycleControl,\n    ProcessHandle,\n    signal_process_group,\n)\n',
+          )
+          rep(
+              'src/greia_launcher/runtime_adapter.py',
+              'class RuntimeInvocation:\n    command: tuple[str, ...]\n    cwd: Path | None\n    environment: tuple[tuple[str, str], ...]\n\n\nclass RuntimeExitKind',
+              'class RuntimeInvocation:\n    command: tuple[str, ...]\n    cwd: Path | None\n    environment: tuple[tuple[str, str], ...]\n\n\n@dataclass(frozen=True, slots=True)\nclass RuntimeLifecycleBinding:\n    control: ActivityLifecycleControl\n    environment: tuple[tuple[str, str], ...] = ()\n\n\nclass RuntimeExitKind',
+          )
+          rep(
+              'src/greia_launcher/runtime_adapter.py',
+              '    def command_for(self, manifest: ActivityManifest) -> RuntimeCommand: ...\n\n    def launch(self, invocation: RuntimeInvocation) -> ProcessHandle: ...\n',
+              '    def command_for(self, manifest: ActivityManifest) -> RuntimeCommand: ...\n\n    def create_lifecycle_binding(\n        self,\n        session_id: str,\n        host_activity_data: Path,\n        child_activity_data: Path,\n    ) -> RuntimeLifecycleBinding: ...\n\n    def launch(self, invocation: RuntimeInvocation) -> ProcessHandle: ...\n',
+          )
+          rep(
+              'src/greia_launcher/runtime_adapter.py',
+              '    def launch(self, invocation: RuntimeInvocation) -> ProcessHandle:\n',
+              '    def create_lifecycle_binding(\n        self,\n        session_id: str,\n        host_activity_data: Path,\n        child_activity_data: Path,\n    ) -> RuntimeLifecycleBinding:\n        control = ActivityControlChannel.create_for_session(\n            session_id, host_activity_data, child_activity_data\n        )\n        return RuntimeLifecycleBinding(\n            control=control,\n            environment=(\n                ("GREIA_ACTIVITY_READY_PATH", str(control.child_ready_path)),\n                ("GREIA_ACTIVITY_STOP_PATH", str(control.child_stop_path)),\n            ),\n        )\n\n    def launch(self, invocation: RuntimeInvocation) -> ProcessHandle:\n',
+          )
+          rep(
+              'src/greia_launcher/runtime_adapter.py',
+              '    def launch(\n        self, preparation: RuntimeLaunchPreparation, invocation: RuntimeInvocation\n    ) -> ProcessHandle:\n',
+              '    def create_lifecycle_binding(\n        self,\n        preparation: RuntimeLaunchPreparation,\n        session_id: str,\n        host_activity_data: Path,\n        child_activity_data: Path,\n    ) -> RuntimeLifecycleBinding:\n        adapter = self.adapter_for(preparation.compatibility.runtime_type)\n        binding = adapter.create_lifecycle_binding(\n            session_id, host_activity_data, child_activity_data\n        )\n        _validate_lifecycle_binding(binding, session_id)\n        return binding\n\n    def launch(\n        self, preparation: RuntimeLaunchPreparation, invocation: RuntimeInvocation\n    ) -> ProcessHandle:\n',
+          )
+          rep(
+              'src/greia_launcher/runtime_adapter.py',
+              'def _validate_runtime_command(\n',
+              'def _validate_lifecycle_binding(\n    binding: RuntimeLifecycleBinding, expected_session_id: str\n) -> None:\n    if binding.control.session_id != expected_session_id:\n        raise RuntimeValidationError(\n            "runtime lifecycle binding changed the platform session identity"\n        )\n    environment = binding.environment\n    if not isinstance(environment, tuple):\n        raise RuntimeValidationError("runtime lifecycle environment must be immutable")\n    allowed_activity_names = {\n        "GREIA_ACTIVITY_READY_PATH",\n        "GREIA_ACTIVITY_STOP_PATH",\n    }\n    seen: set[str] = set()\n    for item in environment:\n        if (\n            not isinstance(item, tuple)\n            or len(item) != 2\n            or not isinstance(item[0], str)\n            or not isinstance(item[1], str)\n        ):\n            raise RuntimeValidationError(\n                "runtime lifecycle environment entries must be text pairs"\n            )\n        name, value = item\n        if (\n            not _environment_name(name)\n            or "\\x00" in value\n            or len(value) > 8192\n            or (name not in allowed_activity_names and not name.startswith("GREIA_RUNTIME_"))\n        ):\n            raise RuntimeValidationError(\n                "runtime lifecycle environment contains an invalid entry"\n            )\n        if name == "GREIA_ACTIVITY_SESSION_ID":\n            raise RuntimeValidationError(\n                "runtime lifecycle binding may not replace platform session identity"\n            )\n        if name in seen:\n            raise RuntimeValidationError(\n                f"runtime lifecycle environment duplicates {name!r}"\n            )\n        seen.add(name)\n\n\ndef _validate_runtime_command(\n',
+          )
+
+          # Supervisor owns session identity/state, adapter supplies transport/control.
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '    ActivityControlChannel,\n    ActivityExitReason,\n',
+              '    ActivityLifecycleControl,\n    ActivityExitReason,\n',
+          )
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '    monotonic_now,\n)\n',
+              '    monotonic_now,\n    new_activity_session_id,\n)\n',
+          )
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '        if authority.activity_id != manifest.activity_id:\n            raise ActivityLifecycleError("Activity authority identity does not match manifest")\n        if not frozenset(manifest.required_capabilities).issubset(\n',
+              '        if authority.activity_id != manifest.activity_id:\n            raise ActivityLifecycleError("Activity authority identity does not match manifest")\n        session_id = new_activity_session_id()\n        if not frozenset(manifest.required_capabilities).issubset(\n',
+          )
+          # Convert early failure calls to carry platform session id.
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '            return self._failed_launch_session(manifest, profile, authority)\n\n        try:\n',
+              '            return self._failed_launch_session(\n                manifest, profile, authority, session_id=session_id\n            )\n\n        try:\n',
+          )
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '        except RuntimeAdapterError:\n            return self._failed_launch_session(manifest, profile, authority)\n        runtime_command = preparation.command\n\n        sandboxed = self._sandbox_required()\n        host_activity_data = profile.activity_data_dir(manifest.activity_id)\n        child_activity_data = SANDBOX_ACTIVITY_ROOT if sandboxed else host_activity_data\n        control = ActivityControlChannel.create(host_activity_data, child_activity_data)\n\n        sandbox: Path | None = None\n',
+              '        except RuntimeAdapterError:\n            return self._failed_launch_session(\n                manifest, profile, authority, session_id=session_id\n            )\n        runtime_command = preparation.command\n\n        sandboxed = self._sandbox_required()\n        host_activity_data = profile.activity_data_dir(manifest.activity_id)\n        child_activity_data = SANDBOX_ACTIVITY_ROOT if sandboxed else host_activity_data\n\n        sandbox: Path | None = None\n',
+          )
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '                return self._failed_launch_session(\n                    manifest, profile, authority, control=control\n                )\n\n        resources: tuple[SessionResource, ...] = ()\n',
+              '                return self._failed_launch_session(\n                    manifest, profile, authority, session_id=session_id\n                )\n\n        try:\n            lifecycle_binding = self._runtime_manager.create_lifecycle_binding(\n                preparation,\n                session_id,\n                host_activity_data,\n                child_activity_data,\n            )\n        except (RuntimeAdapterError, OSError):\n            return self._failed_launch_session(\n                manifest, profile, authority, session_id=session_id\n            )\n        control = lifecycle_binding.control\n\n        resources: tuple[SessionResource, ...] = ()\n',
+          )
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '                    storage, control.session_id, sandboxed=sandboxed\n',
+              '                    storage, session_id, sandboxed=sandboxed\n',
+          )
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '                    manifest, profile, authority, control=control\n',
+              '                    manifest,\n                    profile,\n                    authority,\n                    session_id=session_id,\n                    control=control,\n',
+          )
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '            authority,\n            control,\n            sandboxed=sandboxed,\n',
+              '            authority,\n            session_id,\n            sandboxed=sandboxed,\n',
+          )
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '            runtime_environment=runtime_command.environment,\n        )\n',
+              '            runtime_environment=runtime_command.environment,\n            lifecycle_environment=lifecycle_binding.environment,\n        )\n',
+          )
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '                authority,\n                control=control,\n                started_at=started,\n',
+              '                authority,\n                session_id=session_id,\n                control=control,\n                started_at=started,\n',
+          )
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '            package_digest=authority.package_digest,\n            control=control,\n',
+              '            package_digest=authority.package_digest,\n            session_id=session_id,\n            control=control,\n',
+          )
+          # Active session control is generic; fail closed if missing unexpectedly.
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '        preparation = self._runtime_preparations.get(session.session_id)\n        if preparation is None:\n            raise ActivityLifecycleError("session has no runtime preparation")\n\n        now = monotonic_now()\n',
+              '        preparation = self._runtime_preparations.get(session.session_id)\n        if preparation is None:\n            raise ActivityLifecycleError("session has no runtime preparation")\n        control = session.control\n        if control is None:\n            raise ActivityLifecycleError("active session has no lifecycle control")\n\n        now = monotonic_now()\n',
+          )
+          # Replace poll control accesses with local generic control.
+          text_path = Path('src/greia_launcher/supervisor.py')
+          text = text_path.read_text(encoding='utf-8')
+          text = text.replace('session.control.ready()', 'control.ready()')
+          text_path.write_text(text, encoding='utf-8')
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '        if session.state is not ActivitySessionState.STOPPING:\n            session.control.request_stop()\n',
+              '        control = session.control\n        if control is None:\n            raise ActivityLifecycleError("active session has no lifecycle control")\n        if session.state is not ActivitySessionState.STOPPING:\n            control.request_stop()\n',
+          )
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '        session.state = state\n        session.result = result\n        session.control.cleanup()\n',
+              '        session.state = state\n        session.result = result\n        if session.control is not None:\n            session.control.cleanup()\n',
+          )
+          # Failed launch no longer manufactures a Python control channel.
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '        *,\n        control: ActivityControlChannel | None = None,\n        started_at: float | None = None,\n',
+              '        *,\n        session_id: str,\n        control: ActivityLifecycleControl | None = None,\n        started_at: float | None = None,\n',
+          )
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '        sandboxed = self._sandbox_required()\n        host_activity_data = profile.activity_data_dir(manifest.activity_id)\n        if control is None:\n            control = ActivityControlChannel.create(\n                host_activity_data,\n                SANDBOX_ACTIVITY_ROOT if sandboxed else host_activity_data,\n            )\n        started = monotonic_now() if started_at is None else started_at\n',
+              '        started = monotonic_now() if started_at is None else started_at\n',
+          )
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '            session_id=control.session_id,\n',
+              '            session_id=session_id,\n',
+          )
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '            package_digest=authority.package_digest,\n            control=control,\n            process=None,\n',
+              '            package_digest=authority.package_digest,\n            session_id=session_id,\n            control=control,\n            process=None,\n',
+          )
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '        control.cleanup()\n        return session\n\n    def _cleanup_runtime_session',
+              '        if control is not None:\n            control.cleanup()\n        return session\n\n    def _cleanup_runtime_session',
+          )
+          # Generic env owns session ID but not Python marker paths.
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '        authority: ActivityAuthority,\n        control: ActivityControlChannel,\n        *,\n',
+              '        authority: ActivityAuthority,\n        session_id: str,\n        *,\n',
+          )
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '        runtime_environment: tuple[tuple[str, str], ...] = (),\n    ) -> dict[str, str]:\n',
+              '        runtime_environment: tuple[tuple[str, str], ...] = (),\n        lifecycle_environment: tuple[tuple[str, str], ...] = (),\n    ) -> dict[str, str]:\n',
+          )
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '                "GREIA_ACTIVITY_SESSION_ID": control.session_id,\n                "GREIA_ACTIVITY_READY_PATH": str(control.child_ready_path),\n                "GREIA_ACTIVITY_STOP_PATH": str(control.child_stop_path),\n',
+              '                "GREIA_ACTIVITY_SESSION_ID": session_id,\n',
+          )
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '        environment.update(dict(runtime_environment))\n        if storage_broker is not None:\n',
+              '        environment.update(dict(runtime_environment))\n        for name, value in lifecycle_environment:\n            if name in environment:\n                raise ActivityLifecycleError(\n                    f"runtime lifecycle environment collides with platform name {name!r}"\n                )\n            environment[name] = value\n        if storage_broker is not None:\n',
+          )
+
+          # RuntimeManager tests prove platform session binding and identity refusal.
+          rep(
+              'tests/test_runtime_manager.py',
+              '    RuntimeInvocation,\n    RuntimeLifecycleSupport,\n',
+              '    RuntimeInvocation,\n    RuntimeLifecycleBinding,\n    RuntimeLifecycleSupport,\n',
+          )
+          rep(
+              'tests/test_runtime_manager.py',
+              '    def test_runtime_manager_delegates_launch_and_exit_collection_to_adapter(self) -> None:\n',
+              '    def test_python_lifecycle_binding_uses_platform_session_identity(self) -> None:\n        shape = next(\n            item for item in self._built_in_manifests()\n            if item.activity_id == "org.greia.shape-garden"\n        )\n        manager = self._manager({"display", "pointer"})\n        preparation = manager.prepare_launch(shape)\n        with tempfile.TemporaryDirectory() as temporary:\n            root = Path(temporary)\n            binding = manager.create_lifecycle_binding(\n                preparation,\n                "a" * 32,\n                root / "host",\n                root / "child",\n            )\n            environment = dict(binding.environment)\n            self.assertEqual(binding.control.session_id, "a" * 32)\n            self.assertNotIn("GREIA_ACTIVITY_SESSION_ID", environment)\n            self.assertTrue(\n                environment["GREIA_ACTIVITY_READY_PATH"].endswith("/ready")\n            )\n            binding.control.cleanup()\n\n    def test_runtime_manager_delegates_launch_and_exit_collection_to_adapter(self) -> None:\n',
+          )
+
+          # Supervisor tests: failed pre-runtime launch has platform session ID and no
+          # Python control; active Python env still gets marker transport from adapter.
+          rep(
+              'tests/test_supervisor.py',
+              '    def test_unavailable_runtime_is_normalized_to_launch_failure(self) -> None:\n',
+              '    def test_failed_runtime_preparation_has_platform_session_without_transport(self) -> None:\n        with tempfile.TemporaryDirectory() as temporary:\n            root = Path(temporary)\n            manifest = replace(_manifest(root / "activity"), runtime_type="web")\n            profile = _ProfileContext(root / "profile")\n            authority = _Authority(\n                manifest.activity_id, capabilities={"display", "pointer"}\n            )\n            supervisor = ActivitySupervisor(\n                require_sandbox=False,\n                runtime_manager=_manager({"display", "pointer"}),\n            )\n            session = supervisor.start(manifest, profile, authority)\n\n        self.assertEqual(len(session.session_id), 32)\n        int(session.session_id, 16)\n        self.assertIsNone(session.control)\n        self.assertEqual(session.result.session_id, session.session_id)\n        self.assertEqual(session.result.exit_reason, ActivityExitReason.LAUNCH_FAILURE)\n\n    def test_unavailable_runtime_is_normalized_to_launch_failure(self) -> None:\n',
+          )
+          rep(
+              'tests/test_supervisor.py',
+              '        environment = calls[0][1]["env"]\n        self.assertEqual(environment["PYTHONNOUSERSITE"], "1")\n        self.assertEqual(environment["PYTHONDONTWRITEBYTECODE"], "1")\n',
+              '        environment = calls[0][1]["env"]\n        self.assertEqual(environment["PYTHONNOUSERSITE"], "1")\n        self.assertEqual(environment["PYTHONDONTWRITEBYTECODE"], "1")\n        self.assertEqual(environment["GREIA_ACTIVITY_SESSION_ID"], session.session_id)\n        self.assertIn("GREIA_ACTIVITY_READY_PATH", environment)\n        self.assertIn("GREIA_ACTIVITY_STOP_PATH", environment)\n',
+          )
+
+          plan = Path('docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md')
+          marker = '---\n\n# 9. Final completion criteria'
+          entry = '''## 2026-08-09 — R6.2 runtime-owned lifecycle transport\n\n- Implemented: Greia now allocates Activity session identity independently of runtime transport; `ActivitySession` stores that platform session ID explicitly and failed pre-runtime launches no longer manufacture Python marker directories. Runtime adapters create a `RuntimeLifecycleBinding` for the platform session; the Python adapter owns the existing READY/STOP file-marker channel and marker-path environment, while Supervisor consumes only the generic lifecycle-control protocol.\n- Tests/evidence: Python binding preserves the platform session ID, lifecycle binding cannot replace session identity, failed unavailable-runtime launches retain a valid platform session with no runtime transport, active Python launches still receive READY/STOP SDK paths through the adapter, focused activity-api/runtime/supervisor tests, and complete recoverable suite.\n- Decisions: `GREIA_ACTIVITY_SESSION_ID` is a platform-owned universal SDK fact; runtime-specific lifecycle transport variables are adapter-owned. Future Web/runtime adapters may use `GREIA_RUNTIME_*` bridge variables without changing Supervisor state semantics.\n- R6.2 source status: runtime-specific validation, launch preparation, lifecycle transport, runtime-handle creation, exit normalization, force-stop and cleanup are now all behind the adapter/RuntimeManager seam. Platform Storage remains shared and brokered. The remaining full-R6 blocker is not an R6.2 seam: lost post-v0.12 R5 history/session/progression authority prevents complete `make verify` and event/session integration.\n- Next exact step: perform and persist the final R6 source-closure audit against ADRs 0012/0014/0015, update PR evidence, and define the explicit R5 reimplementation decision required to unblock full verification; do not begin R7.\n- Commit(s): this tranche commit.\n\n'''
+          current = plan.read_text(encoding='utf-8')
+          if entry.splitlines()[0] in current or current.count(marker) != 1:
+              raise SystemExit('plan insertion precondition failed')
+          plan.write_text(current.replace(marker, entry + marker, 1), encoding='utf-8')
+
+          hand = Path('HANDOVER.md')
+          marker = '---\n\n## 2. Mandatory resume order'
+          section = '''## R6.2 runtime-owned lifecycle transport — 2026-08-09\n\nPlatform session identity is now independent of any runtime's lifecycle transport. `ActivitySession.session_id` is explicit and Greia allocates it before runtime preparation, so even an unavailable-runtime launch has a valid session identity without creating Python files. RuntimeManager asks the selected adapter to create a `RuntimeLifecycleBinding` for that session. `PythonRuntimeAdapter` owns the current READY/STOP file-marker `ActivityControlChannel` and its `GREIA_ACTIVITY_READY_PATH` / `GREIA_ACTIVITY_STOP_PATH` SDK environment; Supervisor only requires the generic `ActivityLifecycleControl` operations (`ready`, `request_stop`, `cleanup`). `GREIA_ACTIVITY_SESSION_ID` remains platform-owned. This closes the final identified runtime-specific lifecycle leak in R6.2 while leaving the R5 history/event continuity blocker explicit.\n\n'''
+          current = hand.read_text(encoding='utf-8')
+          if section.splitlines()[0] in current or current.count(marker) != 1:
+              raise SystemExit('handover insertion precondition failed')
+          hand.write_text(current.replace(marker, section + marker, 1), encoding='utf-8')
+          PY
+
+      - name: Install test dependency
+        run: python3 -m pip install --disable-pip-version-check --quiet Pillow
+
+      - name: Compile
+        run: python3 -m compileall -q src tests
+
+      - name: Focused lifecycle/runtime tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_activity_api.py' -v
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_runtime_manager.py' -v
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_supervisor.py' -v
+
+      - name: Static runtime-neutrality check
+        shell: bash
+        run: |
+          set -euo pipefail
+          ! grep -F 'ActivityControlChannel' src/greia_launcher/supervisor.py
+          ! grep -F 'GREIA_ACTIVITY_READY_PATH' src/greia_launcher/supervisor.py
+          ! grep -F 'GREIA_ACTIVITY_STOP_PATH' src/greia_launcher/supervisor.py
+          grep -F 'GREIA_ACTIVITY_READY_PATH' src/greia_launcher/runtime_adapter.py
+          grep -F 'GREIA_ACTIVITY_STOP_PATH' src/greia_launcher/runtime_adapter.py
+
+      - name: Complete currently recoverable unit suite
+        run: PYTHONPATH=src python3 -m unittest discover -s tests -v
+
+      - name: Confirm known R5 source-loss boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +e
+          PYTHONPATH=src python3 tools/validate_project.py >/tmp/v.out 2>&1
+          status=$?
+          set -e
+          cat /tmp/v.out
+          test "$status" -ne 0
+          grep -F "ModuleNotFoundError: No module named 'greia_platform.history'" /tmp/v.out
+
+      - name: Commit coherent lifecycle-binding tranche
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          git add src/greia_launcher/lifecycle.py src/greia_launcher/runtime_adapter.py src/greia_launcher/supervisor.py tests/test_runtime_manager.py tests/test_supervisor.py docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md HANDOVER.md
+          git diff --cached --check
+          git config user.name greia-r6-implementation
+          git config user.email greia-r6-implementation@users.noreply.github.com
+          git commit -m 'refactor: move lifecycle transport behind runtime adapters'
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
