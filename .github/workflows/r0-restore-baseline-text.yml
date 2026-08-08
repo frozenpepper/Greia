@@ -20,79 +20,94 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
 
-      - name: Restore missing verified baseline files
+      - name: Restore exactly 100 ZIP-derived baseline files
         shell: bash
         run: |
           set -euo pipefail
-          git fetch origin archive/pip-kids-os-v0.12-exact:refs/remotes/origin/archive/pip-kids-os-v0.12-exact
+          SOURCE_REF="recovery/r0-local-authority-payload"
+          REMOTE_REF="refs/remotes/origin/${SOURCE_REF}"
+          git fetch origin "${SOURCE_REF}:${REMOTE_REF}"
+
           python3 <<'PY'
           import base64
           import hashlib
           import io
           import os
-          import shutil
           import subprocess
           import tarfile
           from pathlib import Path, PurePosixPath
 
-          archive_ref = "origin/archive/pip-kids-os-v0.12-exact"
-          expected = "1787c4a91c6f116d693a584a87a98d980076b4b178111af2bac82bff71cfaeff"
-          listing = subprocess.check_output(
-              ["git", "ls-tree", "-r", "--name-only", archive_ref, ".recovery/text-bundle"],
-              text=True,
-          ).splitlines()
-          parts = sorted(path for path in listing if path.rsplit("/", 1)[-1].startswith("chunk-"))
-          if len(parts) != 7:
-              raise SystemExit(f"expected 7 verified recovery chunks, found {len(parts)}: {parts}")
+          remote_ref = "refs/remotes/origin/recovery/r0-local-authority-payload"
+          expected_payload_sha256 = "7b8c8bbbe193dcbc85e73fffcbd42a1305fbd27755016918e521c9b7747b44f3"
+          expected_chunks = [f".recovery/r0-baseline/chunk-{index:03d}" for index in range(7)]
+
           encoded_parts = []
-          for path in parts:
-              encoded_parts.append(
-                  subprocess.check_output(["git", "show", f"{archive_ref}:{path}"], text=True).strip()
+          for path in expected_chunks:
+              raw = subprocess.check_output(["git", "show", f"{remote_ref}:{path}"])
+              encoded_parts.append(raw.strip())
+
+          payload = base64.b64decode(b"".join(encoded_parts), validate=True)
+          actual_payload_sha256 = hashlib.sha256(payload).hexdigest()
+          if actual_payload_sha256 != expected_payload_sha256:
+              raise SystemExit(
+                  f"baseline payload SHA-256 mismatch: {actual_payload_sha256}"
               )
-          payload = base64.b64decode("".join(encoded_parts), validate=True)
-          actual = hashlib.sha256(payload).hexdigest()
-          if actual != expected:
-              raise SystemExit(f"recovery payload SHA-256 mismatch: {actual}")
 
           added = []
-          preserved = []
           with tarfile.open(fileobj=io.BytesIO(payload), mode="r:xz") as archive:
               members = archive.getmembers()
+              files = [member for member in members if member.isfile()]
+              if len(files) != 100:
+                  raise SystemExit(f"expected exactly 100 files, found {len(files)}")
+
               for member in members:
                   pure = PurePosixPath(member.name)
                   if pure.is_absolute() or ".." in pure.parts or not pure.parts:
                       raise SystemExit(f"unsafe recovery path: {member.name}")
                   if not (member.isfile() or member.isdir()):
                       raise SystemExit(f"unsupported recovery member type: {member.name}")
-              for member in members:
-                  if not member.isfile():
-                      continue
-                  destination = Path(*PurePosixPath(member.name).parts)
+
+              for member in files:
+                  pure = PurePosixPath(member.name)
+                  destination = Path(*pure.parts)
                   if destination.exists():
-                      preserved.append(member.name)
-                      continue
+                      raise SystemExit(
+                          f"refusing to overwrite existing R6 path: {member.name}"
+                      )
                   source = archive.extractfile(member)
                   if source is None:
                       raise SystemExit(f"cannot read recovery member: {member.name}")
                   destination.parent.mkdir(parents=True, exist_ok=True)
-                  with destination.open("wb") as handle:
-                      shutil.copyfileobj(source, handle)
+                  destination.write_bytes(source.read())
                   os.chmod(destination, member.mode & 0o777)
                   added.append(member.name)
 
-          print(f"verified baseline payload {actual}")
-          print(f"ADD_COUNT={len(added)} PRESERVE_COUNT={len(preserved)}")
+          if len(added) != 100:
+              raise SystemExit(f"expected 100 restored files, restored {len(added)}")
+
+          Path("/tmp/r0-added.bin").write_bytes(
+              b"".join(name.encode("utf-8") + b"\0" for name in added)
+          )
+          print(f"PAYLOAD_SHA256={actual_payload_sha256}")
+          print(f"RESTORED_FILES={len(added)}")
           for name in added:
               print(f"ADD {name}")
           PY
 
-      - name: Validate restored text tree
+      - name: Stage and validate restored tree
         shell: bash
         run: |
           set -euo pipefail
+          while IFS= read -r -d '' path; do
+            git add -- "$path"
+          done < /tmp/r0-added.bin
+
+          STAGED_COUNT="$(git diff --cached --name-only | wc -l | tr -d ' ')"
+          test "$STAGED_COUNT" = "100"
           test -f Makefile
           python3 -m compileall -q src tests tools activities
-          git diff --check
+          find src tests tools activities -type d -name __pycache__ -prune -exec rm -rf {} + || true
+          git diff --cached --check
 
       - name: Commit restored baseline files
         shell: bash
@@ -100,10 +115,5 @@ jobs:
           set -euo pipefail
           git config user.name "greia-r0-recovery"
           git config user.email "greia-r0-recovery@users.noreply.github.com"
-          git add Makefile VERSION activities build runtime src tests tools
-          if git diff --cached --quiet; then
-            echo "No missing baseline files required restoration."
-            exit 0
-          fi
-          git commit -m "recovery: restore missing verified Greia baseline text tree"
+          git commit -m "recovery: restore 100 missing verified Greia baseline files"
           git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
