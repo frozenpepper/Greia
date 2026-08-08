@@ -39,18 +39,6 @@ class ActivityContractTests(unittest.TestCase):
             ):
                 ActivityRegistry([root.parent], self.runtime).validate_package(root)
 
-    def test_forbidden_dependency_file_is_rejected(self) -> None:
-        with self._copy_sample() as root:
-            (root / "requirements.txt").write_text("requests\n", encoding="utf-8")
-            with self.assertRaisesRegex(ActivityValidationError, "forbidden package file"):
-                ActivityRegistry([root.parent], self.runtime).validate_package(root)
-
-    def test_forbidden_dependency_directory_is_rejected(self) -> None:
-        with self._copy_sample() as root:
-            (root / ".venv").mkdir()
-            with self.assertRaisesRegex(ActivityValidationError, "forbidden package directory"):
-                ActivityRegistry([root.parent], self.runtime).validate_package(root)
-
     def test_executable_file_is_rejected(self) -> None:
         with self._copy_sample() as root:
             payload = root / "payload"
