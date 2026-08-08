@@ -9,205 +9,130 @@
 
 ## 0. Purpose
 
-This plan converts the 2026-08-08 architecture deep review into an ordered implementation program.
+This plan converts the 2026-08-08 architecture deep review into one ordered implementation program. Greia's architecture is ahead of the current Phase-0 code: the prototype already has useful hardened boundaries, but several are weaker than the constitutional design or are still only documented. This plan closes those gaps without discarding tested behavior, without creating Python/Web-specific copies of platform services, and without weakening the old-hardware or ARM goals.
 
-The review found that Greia's architecture is substantially stronger than the current Phase-0 implementation. The existing implementation is a useful hardened prototype, but several boundaries are still provisional or weaker than the architecture requires. The objective of this plan is to close those gaps **without discarding working safety properties, without introducing runtime-specific parallel systems, and without weakening the low-end/ARM goals**.
+The ordering is deliberate: **authority → lifecycle → manifest/progression boundary → storage → sessions/progression → runtime adapters → graphics/ARM/Web → packages/backups/parent integration → release evidence**.
 
-The plan deliberately puts authority, isolation, lifecycle and data ownership ahead of Web, packaging, graphics polish or ecosystem expansion. New runtime and package work must be built on trustworthy platform boundaries rather than retrofitted later.
-
-When this plan is complete:
-
-- the Greia Activity abstraction is real in implementation rather than mostly architectural;
-- each Activity has a kernel/supervisor-enforced writable namespace limited to its own data;
-- Activity capabilities are enforced by trusted platform components, not self-reported environment variables;
-- the supervisor owns Activity lifetime, readiness, watchdog, graceful stop and forced recovery;
-- storage, sessions, progression and reward authority are shared platform services;
-- manifests describe facts/requirements rather than granting global reward economics;
-- runtime adapters can support Python and Web without forking platform services;
-- the child graphics path no longer depends architecturally on X11;
-- Raspberry Pi 400/500 and legacy i386 are supported as peer reference families below the same platform contracts;
-- `.greiaactivity` install/update and `.greiabackup` backup/restore use the same stable identities and storage model;
-- parent controls operate through typed privileged services;
-- every major claim is backed by the appropriate source, VM or physical-hardware evidence.
+When complete, Greia must have a real runtime-neutral Activity platform, per-Activity durable isolation, trusted capability enforcement, platform-owned lifecycle/storage/sessions/progression, direct appliance graphics, peer ARM/x86 support, safe offline Activity installation/update, portable backup/restore, typed parent authority and evidence-backed release claims.
 
 ---
 
 # 1. Mandatory continuation protocol
 
-This document is the **active implementation plan**.
+This file is the **active implementation plan**.
 
-Every future contributor/agent working on implementation MUST:
+Every future implementation session MUST:
 
 1. read `AGENTS.md`;
-2. read the architecture constitution and relevant ADRs referenced there;
-3. read this plan before modifying implementation source;
-4. find the first phase below whose closure criteria are not all satisfied;
-5. resume from that phase rather than inventing a competing work plan;
-6. update the progress log in this file after every substantive implementation turn;
-7. update `HANDOVER.md` with the exact current phase, completed work, verification and blockers;
-8. run the required source verification before claiming a source phase complete;
-9. preserve unresolved evidence gates explicitly;
+2. read the architecture constitution and relevant ADRs;
+3. read this plan;
+4. resume the first incomplete phase below;
+5. not create a competing plan or jump ahead around an open safety prerequisite;
+6. append progress here after substantive work;
+7. update `HANDOVER.md` with exact current phase, verification, blockers and next step;
+8. run the required verification before claiming source completion;
+9. preserve VM/hardware evidence gaps explicitly;
 10. commit coherent work to the canonical GitHub repository.
 
-Do not skip an earlier safety/authority phase merely because a later feature is more visible.
+Do not rewrite old progress entries to make history look cleaner. Append corrections.
 
-Once **all** phases and final closure criteria in this plan are complete, the contributor completing the plan MUST:
-
-- mark this document `COMPLETE`;
-- add a final closure log entry with evidence references;
-- update `HANDOVER.md`;
-- remove the active-plan reference and special resume instructions for this file from `AGENTS.md`;
-- retain this file under `docs/plans/` as historical implementation evidence.
+When—and only when—all final completion criteria are satisfied, the contributor closing this plan MUST mark it `COMPLETE`, append final evidence, update `HANDOVER.md`, and remove the active-plan reference/special resume instructions from `AGENTS.md`. The plan remains in `docs/plans/` as historical evidence.
 
 ---
 
-# 2. Review findings being addressed
+# 2. Findings being addressed
 
-## F-01 — Active profile is overexposed to Activities — HIGH
+## F-01 — Active profile overexposure — HIGH
 
-Current Bubblewrap isolation hides sibling profiles and platform state, but binds the entire active profile root writable into the Activity namespace.
+The reviewed Bubblewrap command hid sibling profiles but bound the whole active profile writable. One Activity could therefore reach sibling Activity state and profile-owned data.
 
-That means an Activity can potentially access or mutate:
+**Required:** installed Activities receive only `(profile_id, activity_id)` writable state. Any extra resource is a narrow trusted mount or brokered service.
 
-- another Activity's save directory under the same profile;
-- profile customization data;
-- profile-local progress data;
-- future profile-local service state.
+## F-02 — Environment capability strings are not authority — HIGH
 
-This violates the constitutional durable namespace `(profile_id, activity_id)`.
+`GREIA_ACTIVITY_CAPABILITIES` is Activity-process state and can be changed by Activity code.
 
-**Required outcome:** ordinary Activities receive only their own writable Activity data namespace. Additional writable resources are explicit capability-specific mounts or brokered services, never the whole profile root.
+**Required:** environment capability values are descriptive/ergonomic only. Real authority lives outside the Activity process in namespace/device/network/broker policy derived from the validated manifest and platform trust policy.
 
-## F-02 — Environment capability strings are not an authorization boundary — HIGH
+## F-03 — Blocking Activity lifetime/no watchdog — HIGH
 
-`GREIA_ACTIVITY_CAPABILITIES` is supplied to the child process and consumed by SDK helper checks. An Activity controls its own process environment after launch, so these checks cannot authorize privileged operations.
+`ActivitySupervisor.launch()` still blocks on `subprocess.run()`.
 
-**Required outcome:** capabilities remain useful descriptive SDK context, but security enforcement occurs in trusted supervisor/broker/filesystem/device boundaries outside Activity control.
+**Required:** Greia owns spawn, READY, liveness, stop deadline, forced termination, cleanup and normalized exit reason, and can always recover the shell.
 
-## F-03 — Activity lifetime is blocking and lacks platform watchdog/forced-return ownership — HIGH
+## F-04 — Activity-authored global reward values — MEDIUM-HIGH
 
-The supervisor currently uses blocking `subprocess.run()`. There is no durable Activity process/session handle, readiness timeout, health/watchdog path, graceful-stop deadline or platform-owned forced termination contract.
+Prototype manifests can declare concrete reward amounts.
 
-**Required outcome:** Greia owns the process from spawn to cleanup and can always return to the shell after freeze/crash/failure.
+**Required:** Activities describe objectives/events/scores; Greia owns reward economics and global progression policy.
 
-## F-04 — Manifest reward amounts conflict with platform-owned reward economics — MEDIUM-HIGH
+## F-05 — Runtime abstraction not yet concrete — MEDIUM
 
-Current manifests may contain concrete reward definitions such as `reward.star = 1`.
+Runtime type exists in metadata, but validation/execution remain Python-specific.
 
-The architecture says Activities report facts; Greia decides global rewards and progression.
+**Required:** introduce a small runtime-adapter protocol when it enables the second runtime. Keep storage/session/progression/package/backup outside runtime adapters.
 
-**Required outcome:** manifests may declare objective/event semantics, educational contributions and presentation metadata, but global reward values/mappings live in platform policy/configuration controlled by Greia.
+## F-06 — Universal storage not implemented — HIGH ecosystem prerequisite
 
-## F-05 — Runtime abstraction is explicit in metadata but not yet polymorphic in implementation — MEDIUM
+**Required:** runtime-neutral profile+Activity storage API, private files, quotas, atomic writes/checkpoints, schema versions and transactional migrations.
 
-The current registry/supervisor correctly exposes `runtime.type`, but validation and execution are Python-specific.
+## F-07 — Automatic Session Service not implemented — MEDIUM-HIGH
 
-**Required outcome:** introduce a small runtime-adapter protocol only when it enables concrete multi-runtime work. Avoid broad speculative refactoring and avoid runtime conditionals leaking into platform services.
+**Required:** authoritative platform session records independent of Activity cooperation.
 
-## F-06 — Universal storage service is architectural only — HIGH for future ecosystem work
+## F-08 — Progression/reward service not implemented — MEDIUM-HIGH
 
-Current Activity storage is mostly filesystem convention and environment setup.
+**Required:** normalized Activity events feed platform-owned progression/reward state; no direct Activity global-balance writes.
 
-**Required outcome:** platform-owned Activity storage API with architecture-neutral key/value/private-file semantics, quota accounting, atomic writes/checkpoints, schema versions and migration transactions.
+## F-09 — Xorg remains implementation while target is direct graphics — HIGH architectural debt
 
-## F-07 — Automatic session service is architectural only — MEDIUM-HIGH
+**Required:** evidence-backed DRM/KMS-first Greia display/session path; Xorg removed from target profiles only after replacement proves equivalent or stronger behavior.
 
-**Required outcome:** Greia creates authoritative session records independent of Activity cooperation, including normalized start/ready/end/exit reason and bounded history.
+## F-10 — ARM architecture accepted, Pi images absent — HIGH project-goal gap
 
-## F-08 — Progression/reward ledger is architectural only — MEDIUM-HIGH
+**Required:** Pi 400 and Pi 500 board/image adapters under the same Activity/profile/storage/progression/package/backup contracts.
 
-**Required outcome:** normalized Activity events feed a platform-owned progression engine and reward ledger. Activities cannot directly mutate global balances.
+## F-11 — Web first-class in architecture, absent in implementation — MEDIUM project-goal gap
 
-## F-09 — Xorg is still implemented while Greia targets direct appliance graphics — HIGH architectural debt
+**Required:** benchmark embedded engines, select one by evidence, then implement Web as another Activity runtime—never as a child browser product.
 
-Current Xorg behavior is a migration baseline, not the intended architecture.
+## F-12 — `.greiaactivity` install/update path absent — MEDIUM-HIGH
 
-**Required outcome:** measured DRM/KMS-first graphical/session implementation with a minimal abstraction usable by shell and runtime adapters. Remove Xorg only after equivalent or stronger evidence exists.
+**Required:** stable IDs, version comparison, bounded scanning, staged validation, immutable versions, atomic activation, rollback and save-preserving uninstall.
 
-## F-10 — ARM is first-class architecturally but no Pi image adapters exist — HIGH project goal gap
+## F-13 — `.greiabackup` absent — HIGH product requirement
 
-**Required outcome:** Pi 400 and Pi 500 board/image adapters and profiles below shared contracts, with physical evidence for boot/display/input/audio/network/removable media.
+**Required:** portable logical backup/restore across i386/amd64/ARM64, including dormant save namespaces for Activities not currently installed.
 
-## F-11 — Web is first-class architecturally but unimplemented — MEDIUM project goal gap
+## F-14 — Parent privileged authority needs consolidation — HIGH as scope grows
 
-**Required outcome:** benchmark and select an embedded Web engine, then implement a Web runtime adapter sharing lifecycle/storage/session/progression/permissions with Python.
+**Required:** typed privileged services, explicit authorization, no arbitrary command endpoint and no broad privileged child Activity.
 
-## F-12 — Activity package/install/update format is architectural only — MEDIUM-HIGH
+## F-15 — Boot cover/recovery remains provisional — HIGH release blocker
 
-**Required outcome:** `.greiaactivity` transport, safe scanning/import, stable-ID version comparison, staged validation, immutable version install, atomic activation, rollback and save-preserving uninstall.
-
-## F-13 — Portable backup/restore is architectural only — HIGH product requirement gap
-
-**Required outcome:** `.greiabackup` logical export/restore portable across i386/amd64/ARM64 and capable of preserving data for temporarily missing Activities.
-
-## F-14 — Parent management needs brokered privileged authority — HIGH as capabilities grow
-
-**Required outcome:** parent operations use typed privileged services and explicit authorization. Child Activities never gain broad privileged filesystem/process interfaces.
-
-## F-15 — Provisional boot-cover/recovery evidence remains incomplete — HIGH release blocker
-
-Stock Plymouth remains development-only because Linux details can still be exposed under certain paths.
-
-**Required outcome:** verified noninteractive branded boot cover plus graphical recovery behavior, with frame-by-frame evidence.
+**Required:** verified branded-only boot cover and graphical recovery without an Escape/details/text path exposing Linux.
 
 ## F-16 — Hardware/image claims remain unproven — HIGH release blocker
 
-The source test suite does not prove Acer or Raspberry Pi behavior, installed footprint, 768 MiB installer behavior, graphics performance or sandbox/runtime overhead.
+**Required:** source tests never substitute for QEMU/Acer/Pi evidence, resource measurement or frame-by-frame graphical acceptance.
 
-**Required outcome:** preserve the existing evidence discipline and close hardware claims only with appropriate VM/physical evidence.
+## F-17 — `/media/pip` migration residue — FIXED IN CURRENT R1 WORK
 
-## F-17 — Greia migration residue — FIXED during review, regression-protected
-
-`GREIA_MEDIA_ROOT` and sandbox media hiding still referenced `/media/pip` after the technical rebrand.
-
-**Required outcome:** `/media/greia` is canonical and regression tests prevent reintroduction of active prototype paths outside explicitly historical documentation.
+**Required:** `/media/greia` stays canonical and regression tests prevent active prototype paths from returning.
 
 ---
 
-# 3. Cross-cutting implementation rules
+# 3. Cross-cutting rules
 
-These apply to every phase.
-
-### 3.1 One platform service per concern
-
-Do not create Python-specific and Web-specific storage, session, progression, package or backup systems.
-
-### 3.2 Trusted authority stays outside Activity processes
-
-An Activity may request or describe capabilities. It may not authorize itself.
-
-Trusted enforcement mechanisms may include:
-
-- mount namespace shape;
-- device exposure;
-- network namespace/policy;
-- Unix socket or other broker endpoints owned by Greia;
-- parent-service authorization;
-- package validation and trusted Activity classification.
-
-### 3.3 Stable identities
-
-Profile IDs and Activity IDs are durable cross-machine identities. UI names/titles are not identity.
-
-### 3.4 Data is portable
-
-Authoritative child data must not rely on Python pickle, absolute host paths, CPU-native object serialization or machine-specific IDs.
-
-### 3.5 Fail closed
-
-Installed Greia must not silently fall back from a required security boundary to a weaker one.
-
-### 3.6 Resource evidence before dependency adoption
-
-Every new runtime/system dependency must have disk/RAM/latency and architecture-support evidence before becoming part of a certified profile.
-
-### 3.7 No desktop creep
-
-Do not introduce a desktop environment, generic WM or X11 dependency to solve a local problem.
-
-### 3.8 Refactor only for a concrete boundary
-
-Do not rewrite working Phase-0 code solely to match class names from architecture diagrams. Introduce abstractions when they are required for the next verified capability.
+- One platform service per concern; no Python/Web copies of storage, progression, backup, install/update or parent policy.
+- Trusted authority stays outside Activity processes.
+- Profile IDs and Activity IDs are stable durable identity; presentation names are not.
+- Authoritative child data is architecture-neutral; no pickle/raw memory/absolute-host-path storage contract.
+- Installed-system security falls closed; no silent unsandboxed fallback.
+- New platform dependencies require disk/RAM/latency/architecture/security-maintenance evidence.
+- No desktop environment, generic window manager or new X11 dependency as a convenience shortcut.
+- Introduce abstractions for a concrete capability, not to make diagrams and class names match aesthetically.
+- Negative security tests are mandatory: proving the allowed case works is insufficient.
 
 ---
 
@@ -215,336 +140,122 @@ Do not rewrite working Phase-0 code solely to match class names from architectur
 
 ## R0 — Continuity, plan authority and regression baseline
 
-**Goal:** establish this plan as the single active remediation program and lock the current verified baseline.
+**Goal:** make this the single active program and lock a verified starting point.
 
-Work:
+Required:
 
-- commit this plan before implementation changes;
-- reference it explicitly from `AGENTS.md` as mandatory active plan;
-- add resume/progress/removal instructions to `AGENTS.md`;
-- update `HANDOVER.md` to identify R1 as the current phase;
-- add/retain tests for Greia technical naming, including `/media/greia`;
-- run `make verify` and record baseline.
+- commit this plan before implementation work;
+- make `AGENTS.md` require it and define resume/progress/removal rules;
+- update `HANDOVER.md`;
+- preserve Greia naming tests including `/media/greia`;
+- run `make verify`.
 
-Closure:
+**Closure:** plan and AGENTS wiring committed; verified baseline remains at least 140/140; no known active technical path uses prototype naming.
 
-- plan committed;
-- `AGENTS.md` points to it;
-- baseline remains 140/140 or higher;
-- no known active Greia technical path falls back to prototype naming.
+**Status:** COMPLETE.
 
 ## R1 — Kernel/supervisor-enforced Activity authority and per-Activity storage isolation
 
-**Goal:** make the real security boundary match `(profile_id, activity_id)`.
+**Goal:** make the real installed security boundary match `(profile_id, activity_id)`.
 
-### R1.1 Define an Activity execution authority model
+### R1.1 Trusted launch authority
 
-Introduce a small immutable trusted launch-policy object derived from a validated manifest plus runtime catalogue/trust policy.
+Use an immutable launch-authority object derived by platform code from the validated manifest. It controls actual namespace/device/resource exposure. Activity environment variables only mirror that state.
 
-It should distinguish:
+### R1.2 Writable namespace
 
-- ordinary Activity data access;
-- read-only removable media;
-- audio/device exposure;
-- privileged system-Activity operations;
-- future broker endpoints.
+Installed Activities must:
 
-Do not let Activity code instantiate a more privileged policy.
+- receive only their own Activity data directory writable;
+- see host filesystem read-only;
+- not receive the complete active profile root;
+- not see sibling Activity state;
+- receive customization only through a narrow trusted path where required;
+- receive removable media read-only only when authorized;
+- use a narrow own-profile request/broker path rather than registry access.
 
-### R1.2 Restrict writable filesystem exposure
+### R1.3 Capability behavior
 
-For installed/sandboxed Activities:
-
-- expose only the current Activity's private data directory writable;
-- keep host filesystem read-only;
-- hide the complete profile registry/tree;
-- do not mount the active profile root wholesale;
-- expose customization only when needed and preferably through a broker rather than direct write access;
-- expose avatar/profile mutations through a narrow request/broker interface, not writable profile root access;
-- expose removable media read-only only when explicitly authorized.
-
-### R1.3 Make SDK capability checks advisory/descriptive
-
-Keep capability information available for friendly early errors and feature discovery, but document/test that it is not the security boundary.
-
-Every privileged effect must still fail if the trusted platform boundary did not grant it, even if Activity code forges environment variables.
+Forging `GREIA_ACTIVITY_CAPABILITIES` must not create mounts, devices, media visibility, profile mutation authority or future broker credentials.
 
 ### R1.4 Tests
 
-Add tests proving:
+Prove at source level:
 
-- Activity A cannot name/mount Activity B's data path;
-- an ordinary Activity receives no writable profile customization/progress root;
-- forged `GREIA_ACTIVITY_CAPABILITIES` cannot create a privileged mount/broker authority;
-- privileged system Activity receives only its specific narrow authority;
-- `/media/greia` is hidden unless removable-media read is authorized;
-- missing sandbox still fails closed.
+- Activity A cannot receive Activity B state;
+- ordinary Activity receives no writable profile customization/progress root;
+- forged capability environment cannot expand sandbox authority;
+- trusted built-in privileged Activity gets only its narrow resource;
+- media is hidden unless authorized;
+- missing Bubblewrap still fails closed;
+- ordinary Activity receives no profile-request channel.
 
-**R1 closure:** source tests pass and the generated sandbox command demonstrates least-privilege mounts. Linux Bubblewrap runtime evidence remains separately required.
+**Source closure:** least-privilege sandbox command and negative tests pass. Linux Bubblewrap runtime evidence remains a separate R14 evidence item.
+
+**Status:** IN PROGRESS — first source tranche implemented and fully verified; see progress log.
 
 ## R2 — Non-blocking Activity lifecycle, readiness and watchdog
 
-**Goal:** make Greia own Activity lifetime and guaranteed return-to-shell behavior.
+Replace blocking one-shot execution with a supervised Activity session. Define states such as `STARTING`, `READY`, `RUNNING`, `STOPPING`, `EXITED`, `FAILED`; bounded READY; timestamps; graceful stop deadline; forced termination; process-tree cleanup; normalized exit reasons (`normal`, `crash`, `launch_failure`, `ready_timeout`, `forced_stop`, `system_shutdown`, etc.); guaranteed shell recovery; responsive shell/event loop.
 
-Work:
-
-- replace blocking one-shot execution with a supervised process/session object;
-- define states such as `STARTING`, `READY`, `RUNNING`, `STOPPING`, `EXITED`, `FAILED`;
-- introduce a bounded READY handshake mechanism that works across runtime families;
-- record spawn/ready/end timestamps;
-- support graceful stop request with deadline;
-- force terminate after deadline;
-- ensure child process tree dies with parent/supervisor;
-- normalize exit reasons (`normal`, `crash`, `launch_failure`, `ready_timeout`, `forced_stop`, `system_shutdown`, etc.);
-- guarantee shell recovery independent of Activity cooperation;
-- keep UI thread/event loop responsive while Activity runs;
-- design pause/checkpoint semantics as capability-based, not assumed universal.
-
-Tests:
-
-- normal exit;
-- launch failure;
-- never-ready Activity;
-- frozen Activity;
-- graceful stop;
-- forced kill;
-- supervisor cleanup;
-- exactly one active Activity per child session for Phase 0.
-
-**R2 closure:** deterministic source/process tests pass; real Linux freeze/kill/return behavior becomes an evidence gate.
+Tests: normal exit, launch failure, never-ready, freeze, graceful stop, forced kill, cleanup, exactly one active Phase-0 Activity.
 
 ## R3 — Manifest semantics and platform-owned progression boundary
 
-**Goal:** remove global reward economics from Activity packages before the progression service is implemented.
+Remove/deprecate concrete global reward amounts from Activity manifests. Define objective/event/score semantics; retain useful educational skill metadata; reject direct global reward grants; place global reward mapping in Greia-owned policy.
 
-Work:
+## R4 — Universal Storage Service and save migrations
 
-- deprecate/remove manifest reward amount definitions;
-- define normalized Activity event/objective declarations;
-- retain educational skill contributions as descriptive input where useful;
-- define score semantics without granting platform currency;
-- create platform-owned reward/progression policy mapping Activity facts to global rewards;
-- migrate bundled Activities/tests;
-- reject manifests attempting to directly grant global reward balances.
-
-**R3 closure:** bundled manifests contain no direct global reward amounts and validation enforces the boundary.
-
-## R4 — Universal Storage Service and transactional save migrations
-
-**Goal:** replace filesystem convention with the runtime-neutral storage contract.
-
-Work:
-
-- define `ActivityStorage` interface/protocol;
-- implement profile+Activity scoped key/value data;
-- implement private file/blob area;
-- atomic writes and checkpoint semantics;
-- quota accounting and bounded growth policy;
-- storage schema version;
-- migration transaction with source snapshot/working copy/commit/rollback;
-- architecture-neutral serialization rules;
-- integrate Python SDK;
-- define transport-neutral operations suitable for future Web bridge;
-- preserve existing data paths through migration where required.
-
-**R4 closure:** storage APIs are runtime-neutral, per-Activity isolated and migration-tested.
+Implement runtime-neutral `ActivityStorage`: profile+Activity scope, JSON-compatible key/value, private file/blob area, atomic writes/checkpoints, quota accounting, schema versioning, migration working-copy/snapshot/commit/rollback and portable serialization rules. Python SDK uses it first; Web later uses the same semantics through its bridge.
 
 ## R5 — Session Service, event pipeline and Progression/Reward Ledger
 
-**Goal:** establish platform-owned history and progression.
+Implement authoritative supervisor-created sessions, bounded local history, normalized Activity events, validation/deduplication/idempotency, platform-owned score/progression calculations, reward ledger, parent summaries and backup hooks. Treat this as local child progress, not telemetry.
 
-Work:
+## R6 — Runtime Adapter abstraction and Python migration
 
-- authoritative automatic session records from supervisor lifecycle;
-- bounded local session-history database/schema;
-- normalized Activity event envelope;
-- validation/deduplication/idempotency rules;
-- platform-owned score/progression calculations;
-- reward ledger with auditability and no Activity direct-write path;
-- parent-readable summaries;
-- backup hooks;
-- privacy policy: local child progress is not analytics and is not uploaded by default.
-
-**R5 closure:** Activity cooperation is optional for session existence; forged Activity events cannot directly mutate global reward state outside validated policy.
-
-## R6 — Runtime Adapter abstraction and Python adapter migration
-
-**Goal:** make the existing runtime seam concrete just before adding the second runtime.
-
-Work:
-
-- introduce a small runtime-adapter protocol for package validation, launch preparation, SDK transport, readiness, stop and normalized result;
-- migrate current Python behavior into `PythonRuntimeAdapter` without weakening sandbox rules;
-- keep Runtime Manager free of Python-specific paths/import validation;
-- do not duplicate Storage/Session/Progression logic;
-- keep image profile runtime declarations aligned with implemented adapters.
-
-**R6 closure:** Python passes all existing behavior through the generic manager and adding a runtime does not require changes to platform data/progression services.
+Introduce a minimal adapter protocol for runtime-specific package validation, launch preparation, SDK transport, READY/stop and normalized result. Migrate current Python behavior into it without weakening sandbox rules. Platform Storage/Session/Progression remain outside adapters.
 
 ## R7 — Direct Greia graphics/session architecture
 
-**Goal:** replace Xorg as the target implementation while preserving proven behavior until replacement evidence exists.
+Inventory all X11-specific contracts; define typed Display/Input platform interfaces; prototype SDL/direct DRM/KMS path; decide with evidence whether a tiny compositor/session broker is needed for Web surfaces/transitions/crash recovery/input routing; move resolution/input settings behind adapters; benchmark resource cost against Xorg; remove Xorg only after acceptance.
 
-Work:
+## R8 — ARM64 Pi 400/Pi 500 board/image adapters
 
-- inventory all X11-specific contracts (`DISPLAY`, Xauthority, `xinput`, `xrandr`, shared IPC/XShm, package sets, installer startup);
-- define typed Display/Input platform interfaces;
-- prototype SDL direct DRM/KMS/KMSDRM path on Linux;
-- determine whether a minimal compositor/session broker is justified for Web surfaces and crash-safe transitions;
-- define shell/activity ownership handoff and recovery;
-- migrate resolution/input settings to platform adapters rather than shell commands;
-- measure memory/disk/latency against Xorg baseline;
-- retain Xorg only as explicit compatibility adapter if physical evidence proves necessary;
-- remove Xorg package/service dependency from target profiles only after acceptance.
+Select base/kernel/firmware strategy, implement board/image adapters beneath shared build profiles, add Pi profiles only after adapters exist, and physically prove boot/display/input/audio/network/removable media/shutdown/recovery. Capability class remains separate from CPU architecture.
 
-**R7 closure:** direct path passes VM plus required physical reference evidence and no Activity API depends on X11.
+## R9 — Embedded Web runtime benchmark and adapter
 
-## R8 — ARM64 board/image adapters for Raspberry Pi 400 and Pi 500
+Benchmark WPE/WebKit-style candidates first (alternatives allowed): installed delta, RSS, startup, Canvas2D/SVG/JS/WebAudio, optional WebGL, direct-display integration, i386 feasibility, Pi behavior, security maintenance and crash/forced-return behavior.
 
-**Goal:** make ARM first-class in shipping/build implementation.
+Then implement packaged local Web Activities with no browser chrome, no child devtools/downloads/navigation, network denied by default, same lifecycle/watchdog and same Storage/Session/Event services. No authoritative unmanaged localStorage/IndexedDB save silo.
 
-Work:
+## R10 — `.greiaactivity` package/install/update
 
-- select base/kernel/firmware strategy;
-- implement Pi board/image boot adapter beneath shared build profile schema;
-- create explicit Pi 400 and Pi 500 profiles only after adapter implementation;
-- share Activity/runtime/storage/progression/package/backup contracts unchanged;
-- test boot, display, input, audio, Wi-Fi/network, USB/SD, shutdown/recovery;
-- measure resource classes and optional capabilities independently from CPU architecture.
-
-**R8 closure:** both Pi reference devices pass the defined physical acceptance protocol.
-
-## R9 — Embedded Web runtime selection and implementation
-
-**Goal:** add Web as a real Activity runtime without turning Greia into a browser appliance.
-
-Stage A — benchmark:
-
-- WPE/WebKit-style candidates first, alternatives allowed;
-- disk delta;
-- idle/peak RSS;
-- cold/warm launch;
-- Canvas2D/SVG/JS;
-- WebAudio/audio latency;
-- optional WebGL;
-- direct display integration;
-- i386/C0 feasibility;
-- Pi 400/500 performance;
-- security maintenance lifecycle.
-
-Stage B — adapter:
-
-- packaged local content only;
-- no browser chrome/navigation/downloads/devtools in child mode;
-- network denied by default;
-- Greia SDK bridge uses the same Storage/Session/Event APIs;
-- no authoritative unmanaged localStorage/IndexedDB state;
-- same lifecycle/watchdog/forced-return model as Python.
-
-**R9 closure:** at least one reference Web Activity passes common Activity acceptance on supported profiles; unsupported low-end profiles report compatibility cleanly rather than bloating C0.
-
-## R10 — `.greiaactivity` package/install/update system
-
-**Goal:** implement simple parent-facing offline Activity distribution with safe updates.
-
-Work:
-
-- strict documented container format;
-- stable Activity ID + semantic version policy;
-- package manifest with hashes/size metadata;
-- bounded safe archive reader rejecting traversal, symlinks, device nodes, case collisions and bombs;
-- removable-media bounded discovery without autorun;
-- classify New / Update / Installed / Older / Incompatible / Invalid;
-- stage to internal storage before full validation;
-- install immutable version beside current;
-- perform save migration transactionally;
-- atomic activation switch;
-- rollback on failure;
-- preserve saves on uninstall by default;
-- reserve signature/trust chain without mislabeling SHA-256 as authenticity.
-
-**R10 closure:** USB/SD multi-package scenarios, interrupted update and rollback are source/VM tested.
+Document strict container; stable ID/version policy; package manifest/integrity; safe archive reader rejecting traversal, symlink/hardlink/device/case-collision/bomb hazards; bounded USB/SD discovery; classify New/Update/Installed/Older/Incompatible/Invalid; stage internally; validate again; install immutable version beside current; transactional save migration; atomic activation; rollback; preserve saves on uninstall by default; reserve authenticity/signing separately from SHA-256 integrity.
 
 ## R11 — `.greiabackup` portable backup/restore
 
-**Goal:** meet the core parent requirement that a child's world can move to a new machine.
-
-Work:
-
-- documented logical archive schema;
-- profiles, avatars/customization, Activity saves/creations, progression/rewards, bounded session history and installed inventory;
-- exclude machine secrets and transient state by default;
-- preserve missing-Activity namespaces as dormant save-only state;
-- cross-architecture restore tests;
-- version compatibility/migration rules;
-- integrity checking;
-- dedicated security ADR for passphrase encryption/KDF before production encryption is selected;
-- parent UI flow for export to and import from USB/SD.
-
-**R11 closure:** representative i386-origin backup restores logically to ARM64/amd64 test fixture without data loss.
+Document logical archive for profiles, avatars/customization, Activity saves/creations, progression/rewards, bounded session history and installed inventory. Exclude machine secrets/transient state by default. Preserve missing-Activity data as dormant namespaces. Test cross-architecture restore. Select passphrase encryption/KDF only through a dedicated security ADR.
 
 ## R12 — Parent privileged service and management integration
 
-**Goal:** consolidate privileged machine management behind one typed parent authority layer.
+Consolidate typed requests for Activity install/update/remove, backup/restore, profiles, display/input/audio, Wi-Fi/network and diagnostics/recovery. Enforce authorization/pairing/revocation and bounded parameters. Never expose arbitrary shell command execution.
 
-Work:
+## R13 — Boot cover, recovery and graphical continuity
 
-- typed requests for Activity install/update/remove;
-- backup/restore;
-- child/profile administration;
-- display/input/audio settings;
-- network/Wi-Fi;
-- diagnostics/recovery;
-- authorization/pairing/revocation;
-- bounded validated parameters only;
-- no arbitrary command execution endpoint;
-- audit-safe local logging without child-data surveillance.
+Replace/patch provisional Plymouth path; eliminate child-accessible details/text fallback; add branded recovery states; keep a deliberate root-owned maintainer recovery route; capture firmware-to-profile-picker at high frame rate; test failure transitions. Release adapter registry changes only after evidence.
 
-**R12 closure:** parent UI cannot escape typed operations into arbitrary shell/system mutation.
+## R14 — Multi-architecture certification and Phase-0 closure
 
-## R13 — Boot cover, recovery and release graphical continuity
-
-**Goal:** satisfy the “Linux never appears” product contract without destroying recoverability.
-
-Work:
-
-- replace/patch provisional stock Plymouth path;
-- no Escape/details/text fallback in child mode;
-- branded failure/recovery surfaces;
-- launcher/display/service failure recovery without shell exposure;
-- deliberate root-owned recovery path for maintainers/parents;
-- high-frame-rate capture from firmware handoff to profile picker;
-- test kernel/display failure transitions.
-
-**R13 closure:** release adapter registry accepts the boot-cover backend only after evidence.
-
-## R14 — Full multi-architecture certification and Phase-0 closure
-
-**Goal:** turn source architecture into evidenced supported-system claims.
-
-Required evidence includes:
-
-- exact Acer inventory and selected architecture profile;
-- real target/live images;
-- installed C0 footprint below hard limit;
-- 768 MiB QEMU installer/runtime run;
-- installer peak memory/time;
-- Bubblewrap/runtime isolation behavior;
-- direct graphics/input/audio behavior;
-- non-destructive Acer USB boot;
-- Pi 400 and Pi 500 physical acceptance;
-- Activity watchdog/forced-return;
-- install/update/backup/restore scenarios;
-- no visible Linux text/desktop path under supported normal/failure interactions.
-
-**R14 closure:** all supported-profile claims have evidence and remaining unsupported capabilities are explicitly classified rather than implied.
+Close source claims with evidence: exact Acer inventory/profile, real target/live images, C0 footprint, 768 MiB QEMU install/runtime, installer peak memory/time, Bubblewrap runtime behavior, direct graphics/input/audio, Acer USB boot, Pi 400 and Pi 500 physical acceptance, watchdog, install/update/backup/restore flows and no visible Linux text/desktop under supported normal/failure interactions.
 
 ---
 
-# 5. Dependency/order map
+# 5. Dependency map
 
 ```text
-R0 governance
+R0
  ↓
 R1 authority/isolation
  ↓
@@ -557,98 +268,79 @@ R4 storage
 R5 sessions/events/progression
  ↓
 R6 runtime adapters
- ├──────────────→ R9 Web runtime
- │
+ ├──────────────→ R9 Web
  └→ R7 direct graphics → R8 Pi adapters
 
 R4 + R5 + R6 → R10 .greiaactivity
 R4 + R5      → R11 .greiabackup
-R10 + R11    → R12 parent management integration
-R7 + R12     → R13 boot/recovery continuity
-all          → R14 certification/closure
+R10 + R11    → R12 parent integration
+R7 + R12     → R13 boot/recovery
+all          → R14 certification
 ```
 
-Some implementation can proceed in parallel after prerequisites, but no phase may weaken an earlier boundary.
+Parallel work is allowed only after prerequisites and may never weaken an earlier boundary.
 
 ---
 
-# 6. Verification strategy
+# 6. Verification discipline
 
-## Every substantive source change
+For substantive source work:
 
-Run:
-
-```text
+```bash
 make verify
 ```
 
-If focused tests are needed during iteration:
+Focused iteration may use:
 
-```text
+```bash
 PYTHONPATH=src python3 -m unittest discover -s tests -v
 ```
 
-Remove generated `__pycache__`/bytecode before final packaging/validation where activity validation requires it.
+Remove generated Activity bytecode/caches before final validation where required.
 
-## Security-boundary phases
-
-Tests must verify both positive and negative behavior. A feature working is insufficient; unauthorized variants must fail closed.
-
-## Hardware/display phases
-
-Source tests are necessary but never sufficient. Record exact image/profile, hardware, kernel/base, commands/protocol, metrics and captured failure evidence.
+Security phases require positive and negative tests. Hardware/display phases require source tests **plus** exact VM/physical evidence; source structure never proves hardware behavior.
 
 ---
 
-# 7. Documentation/progress protocol
+# 7. Progress log
 
-After each substantive turn update this section and `HANDOVER.md`.
+## 2026-08-08 — R0 plan creation and continuity wiring
 
-Use entries of the form:
+- Implemented: created this plan from the architecture deep review and made it the mandatory active plan in `AGENTS.md`.
+- Tests/evidence: reviewed baseline was 140/140 provider-free tests passing.
+- Decision: authority/isolation and lifecycle precede graphics/Web/package expansion.
+- Commits: `48c38a73148e77884d516ae762b6adc974dbf7af` (plan); `d9222f0e7493b4f92eb99d5ef432abd47b7da294` (AGENTS active-plan/resume/removal rules).
+- Status: R0 complete.
 
-```text
-YYYY-MM-DD — Phase Rx.y
-- Implemented:
-- Tests/evidence:
-- Decisions:
-- Remaining blockers:
-- Next exact step:
-- Commit(s):
-```
+## 2026-08-08 — R1.1/R1.2 first authority-isolation tranche
 
-Do not rewrite old log entries to make history look cleaner. Append corrections explicitly.
-
----
-
-# 8. Progress log
-
-## 2026-08-08 — R0 plan creation
-
-- Implemented: architecture-remediation plan created from the v0.13 deep review.
-- Tests/evidence: pre-plan reviewed baseline was 140/140 provider-free tests passing.
-- Decisions: authority/isolation and lifecycle precede graphics/Web/package expansion.
-- Remaining blockers: R0 AGENTS/HANDOVER wiring; R1 implementation.
-- Next exact step: commit this plan, then make `AGENTS.md` reference it as mandatory active plan.
-- Commit(s): pending at document creation time.
+- Implemented: added immutable `ActivityAuthority` in the supervisor; installed Bubblewrap policy now binds only the current Activity's own data directory at `/run/greia-activity-data` instead of the entire active profile; profile registry/platform state remain hidden; `customization.manage` receives a separate narrow customization bind; unauthorized media is hidden at `/media/greia`; media-capable trusted Activity sees the existing root only read-only through the host ro-bind; avatar-change request storage moved into the requesting Activity's own private `.greia/requests/avatar.json` namespace; ordinary Activities receive no avatar-request environment path; SDK environment capability checks are explicitly documented as usability checks rather than security authority.
+- Additional security correction: launcher request consumption is restricted to a manifest that actually declares `profile.manage_own`, preventing an ordinary Activity from manually writing a correctly named request into its own data directory and having it consumed solely because it forged process environment state.
+- Migration correction: active runtime/system-overlay media defaults now use `/media/greia` rather than `/media/pip`.
+- Tests/evidence: new negative test proves forged `GREIA_ACTIVITY_CAPABILITIES` cannot add customization/media authority; least-privilege command tests prove the active profile root/customization are absent for an ordinary Activity; focused profile/API/supervisor tests pass; final local `make verify` passes **141/141 provider-free tests**, project/runtime/activity/asset validation and existing build/source gates.
+- Decisions: installed authority is enforced first by supervisor/kernel namespace shape. Direct customization write access remains only for the allowlisted built-in settings Activity as a narrow mount; later universal service/broker work may replace that mount without exposing the profile root.
+- GitHub source commits currently landed for this tranche include `42942fb4804134ee04d9103448396aaf8364e1ea` (supervisor authority), `8cbda88a960c9173dd8d75955247873334c3eae3` (SDK capability semantics/media root), `6310d05ba162c0372dca944af1b54027e024dd55` (least-privilege tests), `556d6647afb085f54bd86c3a8f654b3d0f40a892`, `40926ac3ba21565212259d47cbdf547b962c5ebb`, and `0bdb6bb66b8de615e4397388698c0a852cfe43ca` (system-overlay media root).
+- Remaining R1 work: ensure all supporting profile/launcher request-path changes are mirrored in the canonical repository; add any final negative tests needed for request consumption; obtain Linux Bubblewrap runtime evidence later under R14. Then mark R1 source closure and begin R2.
+- Next exact step: finish canonical-source mirroring for the avatar-request consumption path, rerun `make verify`, mark R1 source closure if no remaining trusted-authority gap exists, then begin non-blocking lifecycle/watchdog design.
 
 ---
 
-# 9. Final completion criteria
+# 8. Final completion criteria
 
-This plan may be marked complete only when all of the following are true:
+This plan is complete only when:
 
-- R0–R14 closure criteria are satisfied or explicitly superseded by accepted ADR with equivalent/stronger guarantees;
-- no open HIGH architecture-review finding remains without a separate active plan/ADR and explicit reason;
+- R0–R14 are closed or superseded by an accepted ADR with equivalent/stronger guarantees;
+- no HIGH architecture-review finding remains without explicit separate authority/plan;
 - per-Activity writable isolation is real;
-- capability security does not trust Activity-controlled environment state;
-- Activity lifecycle/watchdog is platform-owned;
+- Activity-controlled environment cannot create authority;
+- lifecycle/watchdog/forced-return is platform-owned;
 - storage/session/progression are shared platform services;
 - global reward economics are not Activity-authored;
-- Python and Web, where supported, use common platform semantics;
-- direct graphics path is accepted and X11 is not an unintended required layer;
-- Pi 400/500 and required x86 references have evidence-backed support status;
-- Activity install/update and child backup/restore satisfy the parent workflows;
-- boot/recovery visual continuity meets the no-visible-Linux contract;
+- supported Python/Web runtimes share common platform semantics;
+- direct graphics is accepted and X11 is not an unintended required layer;
+- Pi 400/500 and required x86 support statuses are evidence-backed;
+- install/update and backup/restore satisfy the defined parent workflows;
+- boot/recovery meets the no-visible-Linux contract;
 - `make verify` passes;
 - `HANDOVER.md` is current;
-- the active-plan reference to this file is removed from `AGENTS.md` as the final administrative action.
+- the active-plan reference/special resume instructions are removed from `AGENTS.md` as the final administrative action.
