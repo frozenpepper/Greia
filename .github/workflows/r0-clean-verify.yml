@@ -1,4 +1,4 @@
-# R0/R6 clean-clone verification
+# R0/R5/R6 clean-clone verification
 name: R0 clean-tree verification
 
 on:
@@ -16,7 +16,7 @@ on:
       - "Makefile"
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   verify:
@@ -27,39 +27,6 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
-
-      - name: Reconcile recovery hygiene
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 <<'PY'
-          from pathlib import Path
-
-          path = Path('tests/test_system_overlay_contract.py')
-          text = path.read_text(encoding='utf-8')
-          text = text.replace('greiapanel pipsettings', 'greiapanel greiasettings')
-          text = text.replace('greiakid pipprofiles', 'greiakid greiaprofiles')
-          path.write_text(text, encoding='utf-8')
-
-          gitignore = Path('.gitignore')
-          existing = gitignore.read_text(encoding='utf-8') if gitignore.exists() else ''
-          lines = existing.splitlines()
-          for value in ('__pycache__/', '*.py[cod]'):
-              if value not in lines:
-                  lines.append(value)
-          gitignore.write_text('\n'.join(lines).rstrip() + '\n', encoding='utf-8')
-          PY
-          tracked_cache=$(git ls-files | grep -E '(^|/)__pycache__/|\.py[co]$' || true)
-          if [ -n "$tracked_cache" ]; then
-            printf '%s\n' "$tracked_cache" | xargs -d '\n' git rm -f --
-          fi
-          git add .gitignore tests/test_system_overlay_contract.py
-          if ! git diff --cached --quiet; then
-            git config user.name "greia-r0-recovery"
-            git config user.email "greia-r0-recovery@users.noreply.github.com"
-            git commit -m "recovery: remove cached bytecode and finish Greia test migration"
-            git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
-          fi
 
       - name: Install verification dependencies
         shell: bash
@@ -74,13 +41,42 @@ jobs:
           printf 'HEAD=' && git rev-parse HEAD
           printf 'FILES=' && git ls-files | wc -l
           printf 'PNG=' && git ls-files '*.png' | wc -l
-          git status --short
+          test -z "$(git status --short)"
 
       - name: Compile Python source
         shell: bash
         run: |
           set -euo pipefail
           python3 -m compileall -q src tests tools activities
+
+      - name: R5 source architecture invariants
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Durable History/Progression authority is a platform service, not Activity code.
+          grep -F 'class PlatformHistoryService:' src/greia_platform/history.py
+          grep -F 'class ProfileHistoryStore:' src/greia_platform/history.py
+          grep -F 'class ProgressionPolicy:' src/greia_platform/history.py
+          grep -F 'history_service = PlatformHistoryService.load(' src/greia_launcher/composition.py
+          grep -F 'history_service=history_service' src/greia_launcher/composition.py
+          grep -F 'history_store.start_session(' src/greia_launcher/supervisor.py
+          grep -F 'history_store.finish_session(' src/greia_launcher/supervisor.py
+
+          # Activity events cross only the per-session authenticated broker boundary.
+          grep -F 'ActivityEventBroker.start' src/greia_launcher/supervisor.py
+          grep -F 'GREIA_EVENT_SOCKET' src/greia_launcher/supervisor.py
+          grep -F 'GREIA_EVENT_TOKEN' src/greia_launcher/supervisor.py
+          grep -F 'SANDBOX_EVENT_ROOT' src/greia_launcher/supervisor.py
+          ! grep -F 'history.sqlite3' src/greia_launcher/supervisor.py
+          ! grep -F 'database_path' src/greia_launcher/supervisor.py
+
+          # Parent controls consume bounded logical summaries and degrade safely on history errors.
+          grep -F 'ParentProgressReader' src/greia_parent/server.py
+          grep -F '"/api/progress"' src/greia_parent/server.py
+          grep -F 'return self.unavailable_payload()' src/greia_parent/progress.py
+          ! grep -F 'database_path' src/greia_parent/server.py
+          ! grep -F 'idempotency_key' src/greia_parent/server.py
 
       - name: R6 source architecture invariants
         shell: bash
