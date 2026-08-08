@@ -13,6 +13,7 @@ from greia_launcher.runtime_adapter import (
     RuntimeCommand,
     RuntimeCompatibilityError,
     RuntimeInvocation,
+    RuntimeLifecycleBinding,
     RuntimeLifecycleSupport,
     RuntimeManager,
     RuntimeUnavailableError,
@@ -40,6 +41,15 @@ class _CommandAdapter:
 
     def command_for(self, manifest) -> RuntimeCommand:
         return self.command
+
+
+class _WrongSessionPythonAdapter(PythonRuntimeAdapter):
+    def create_lifecycle_binding(
+        self, session_id, host_activity_data, child_activity_data
+    ):
+        return super().create_lifecycle_binding(
+            "b" * 32, host_activity_data, child_activity_data
+        )
 
 
 class RuntimeManagerTests(unittest.TestCase):
@@ -195,6 +205,57 @@ class RuntimeManagerTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(RuntimeValidationError, "escapes Activity package"):
             manager.prepare_launch(shape)
+
+    def test_python_lifecycle_binding_uses_platform_session_identity(self) -> None:
+        shape = next(
+            item for item in self._built_in_manifests()
+            if item.activity_id == "org.greia.shape-garden"
+        )
+        manager = self._manager({"display", "pointer"})
+        preparation = manager.prepare_launch(shape)
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            binding = manager.create_lifecycle_binding(
+                preparation,
+                "a" * 32,
+                root / "host",
+                root / "child",
+            )
+            environment = dict(binding.environment)
+            self.assertEqual(binding.control.session_id, "a" * 32)
+            self.assertNotIn("GREIA_ACTIVITY_SESSION_ID", environment)
+            self.assertTrue(
+                environment["GREIA_ACTIVITY_READY_PATH"].endswith("/ready")
+            )
+            binding.control.cleanup()
+
+    def test_lifecycle_binding_cannot_replace_platform_session_identity(self) -> None:
+        shape = next(
+            item for item in self._built_in_manifests()
+            if item.activity_id == "org.greia.shape-garden"
+        )
+        manager = RuntimeManager(
+            [
+                _WrongSessionPythonAdapter(
+                    Path("/usr/bin/python3"), policy=self.python_policy
+                )
+            ],
+            DeviceCapabilityService.static(
+                {"display", "pointer"}, source_id="runtime-manager-test"
+            ),
+        )
+        preparation = manager.prepare_launch(shape)
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            host = root / "host"
+            with self.assertRaisesRegex(
+                RuntimeValidationError, "changed the platform session identity"
+            ):
+                manager.create_lifecycle_binding(
+                    preparation, "a" * 32, host, root / "child"
+                )
+            runtime_root = host / ".greia" / "runtime"
+            self.assertFalse(runtime_root.exists() and any(runtime_root.iterdir()))
 
     def test_runtime_manager_delegates_launch_and_exit_collection_to_adapter(self) -> None:
         shape = next(

@@ -86,6 +86,10 @@ Runtime-family process details are now cleanly separated from the runtime-neutra
 
 The Runtime Adapter now owns actual runtime handle mechanics rather than stopping at command generation. `RuntimeInvocation` is the final platform-approved invocation (including Bubblewrap when installed); the selected adapter launches it, collects and normalizes runtime exit, performs force-stop, and cleans up its runtime handle. RuntimeManager delegates those operations. Supervisor retains Greia sandbox policy, READY/STOP deadlines, platform resource brokers and final Activity result composition, but it no longer creates `Popen` processes, sends process-group signals, or decides whether a raw runtime return code means normal/crash. The remaining runtime-specific lifecycle leak is the Python READY/STOP file-marker transport, which is still constructed by Supervisor and is the next R6.2 closure item.
 
+## R6.2 runtime-owned lifecycle transport — 2026-08-09
+
+Platform session identity is now independent of any runtime's lifecycle transport. `ActivitySession.session_id` is explicit and Greia allocates it before runtime preparation, so even an unavailable-runtime launch has a valid session identity without creating Python files. RuntimeManager asks the selected adapter to create a `RuntimeLifecycleBinding` for that session. `PythonRuntimeAdapter` owns the current READY/STOP file-marker `ActivityControlChannel` and its `GREIA_ACTIVITY_READY_PATH` / `GREIA_ACTIVITY_STOP_PATH` SDK environment; Supervisor only requires the generic `ActivityLifecycleControl` operations (`ready`, `request_stop`, `cleanup`). `GREIA_ACTIVITY_SESSION_ID` remains platform-owned. This closes the final identified runtime-specific lifecycle leak in R6.2 while leaving the R5 history/event continuity blocker explicit.
+
 ---
 
 ## 2. Mandatory resume order

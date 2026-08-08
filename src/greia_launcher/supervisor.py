@@ -11,12 +11,13 @@ from greia_platform.profiles import ProfileContext
 from greia_platform.storage import ActivityStorageService, StorageError
 
 from .lifecycle import (
-    ActivityControlChannel,
+    ActivityLifecycleControl,
     ActivityExitReason,
     ActivityResult,
     ActivitySession,
     ActivitySessionState,
     monotonic_now,
+    new_activity_session_id,
 )
 from .runtime_adapter import (
     PythonRuntimeAdapter,
@@ -139,10 +140,13 @@ class ActivitySupervisor:
             raise ActivityLifecycleError("only one Activity may run at a time")
         if authority.activity_id != manifest.activity_id:
             raise ActivityLifecycleError("Activity authority identity does not match manifest")
+        session_id = new_activity_session_id()
         if not frozenset(manifest.required_capabilities).issubset(
             authority.effective_capabilities
         ):
-            return self._failed_launch_session(manifest, profile, authority)
+            return self._failed_launch_session(
+                manifest, profile, authority, session_id=session_id
+            )
 
         try:
             preparation = self._runtime_manager.prepare_launch(
@@ -150,21 +154,35 @@ class ActivitySupervisor:
                 expected_device_snapshot_token=authority.device_snapshot_token,
             )
         except RuntimeAdapterError:
-            return self._failed_launch_session(manifest, profile, authority)
+            return self._failed_launch_session(
+                manifest, profile, authority, session_id=session_id
+            )
         runtime_command = preparation.command
 
         sandboxed = self._sandbox_required()
         host_activity_data = profile.activity_data_dir(manifest.activity_id)
         child_activity_data = SANDBOX_ACTIVITY_ROOT if sandboxed else host_activity_data
-        control = ActivityControlChannel.create(host_activity_data, child_activity_data)
 
         sandbox: Path | None = None
         if sandboxed:
             sandbox = self._resolve_sandbox()
             if not sandbox.is_file() or not os.access(sandbox, os.X_OK):
                 return self._failed_launch_session(
-                    manifest, profile, authority, control=control
+                    manifest, profile, authority, session_id=session_id
                 )
+
+        try:
+            lifecycle_binding = self._runtime_manager.create_lifecycle_binding(
+                preparation,
+                session_id,
+                host_activity_data,
+                child_activity_data,
+            )
+        except (RuntimeAdapterError, OSError):
+            return self._failed_launch_session(
+                manifest, profile, authority, session_id=session_id
+            )
+        control = lifecycle_binding.control
 
         resources: tuple[SessionResource, ...] = ()
         storage_broker: ActivityStorageBroker | None = None
@@ -177,11 +195,15 @@ class ActivitySupervisor:
                     package_version=manifest.version,
                 )
                 storage_broker = self._storage_broker_factory(
-                    storage, control.session_id, sandboxed=sandboxed
+                    storage, session_id, sandboxed=sandboxed
                 )
             except (StorageError, OSError):
                 return self._failed_launch_session(
-                    manifest, profile, authority, control=control
+                    manifest,
+                    profile,
+                    authority,
+                    session_id=session_id,
+                    control=control,
                 )
             resources = (storage_broker,)
 
@@ -189,10 +211,11 @@ class ActivitySupervisor:
             manifest,
             profile,
             authority,
-            control,
+            session_id,
             sandboxed=sandboxed,
             storage_broker=storage_broker,
             runtime_environment=runtime_command.environment,
+            lifecycle_environment=lifecycle_binding.environment,
         )
 
         if sandboxed:
@@ -223,6 +246,7 @@ class ActivitySupervisor:
                 manifest,
                 profile,
                 authority,
+                session_id=session_id,
                 control=control,
                 started_at=started,
                 resources=resources,
@@ -231,6 +255,7 @@ class ActivitySupervisor:
         session = ActivitySession(
             activity_id=manifest.activity_id,
             package_digest=authority.package_digest,
+            session_id=session_id,
             control=control,
             process=process,
             state=ActivitySessionState.STARTING,
@@ -255,6 +280,9 @@ class ActivitySupervisor:
         preparation = self._runtime_preparations.get(session.session_id)
         if preparation is None:
             raise ActivityLifecycleError("session has no runtime preparation")
+        control = session.control
+        if control is None:
+            raise ActivityLifecycleError("active session has no lifecycle control")
 
         now = monotonic_now()
         runtime_exit = self._runtime_manager.collect_exit(preparation, process)
@@ -263,12 +291,12 @@ class ActivitySupervisor:
             # exits between polling ticks. Otherwise a fast Activity can create
             # its usable surface, publish READY, and terminate before Greia
             # observes the intermediate RUNNING state.
-            if session.ready_at is None and session.control.ready():
+            if session.ready_at is None and control.ready():
                 session.ready_at = now
             return self._finish_session(session, runtime_exit, now)
 
         if session.state is ActivitySessionState.STARTING:
-            if session.control.ready():
+            if control.ready():
                 session.ready_at = now
                 session.state = ActivitySessionState.RUNNING
             elif now >= session.ready_deadline:
@@ -293,8 +321,11 @@ class ActivitySupervisor:
             return session.result
         if self._active_session is not session:
             raise ActivityLifecycleError("session is not owned by this supervisor")
+        control = session.control
+        if control is None:
+            raise ActivityLifecycleError("active session has no lifecycle control")
         if session.state is not ActivitySessionState.STOPPING:
-            session.control.request_stop()
+            control.request_stop()
             session.stop_requested_at = monotonic_now()
             session.state = ActivitySessionState.STOPPING
         return self.poll(session)
@@ -371,7 +402,8 @@ class ActivitySupervisor:
         )
         session.state = state
         session.result = result
-        session.control.cleanup()
+        if session.control is not None:
+            session.control.cleanup()
         if self._active_session is session:
             self._active_session = None
         return result
@@ -382,22 +414,16 @@ class ActivitySupervisor:
         profile: ProfileContext,
         authority: ActivityAuthority,
         *,
-        control: ActivityControlChannel | None = None,
+        session_id: str,
+        control: ActivityLifecycleControl | None = None,
         started_at: float | None = None,
         resources: tuple[SessionResource, ...] = (),
     ) -> ActivitySession:
-        sandboxed = self._sandbox_required()
-        host_activity_data = profile.activity_data_dir(manifest.activity_id)
-        if control is None:
-            control = ActivityControlChannel.create(
-                host_activity_data,
-                SANDBOX_ACTIVITY_ROOT if sandboxed else host_activity_data,
-            )
         started = monotonic_now() if started_at is None else started_at
         ended = monotonic_now()
         result = ActivityResult(
             activity_id=manifest.activity_id,
-            session_id=control.session_id,
+            session_id=session_id,
             return_code=126,
             exit_reason=ActivityExitReason.LAUNCH_FAILURE,
             ready=False,
@@ -408,6 +434,7 @@ class ActivitySupervisor:
         session = ActivitySession(
             activity_id=manifest.activity_id,
             package_digest=authority.package_digest,
+            session_id=session_id,
             control=control,
             process=None,
             state=ActivitySessionState.FAILED,
@@ -421,7 +448,8 @@ class ActivitySupervisor:
                 resource.stop()
             except Exception:
                 pass
-        control.cleanup()
+        if control is not None:
+            control.cleanup()
         return session
 
     def _cleanup_runtime_session(self, session: ActivitySession) -> bool:
@@ -531,11 +559,12 @@ class ActivitySupervisor:
         manifest: ActivityManifest,
         profile: ProfileContext,
         authority: ActivityAuthority,
-        control: ActivityControlChannel,
+        session_id: str,
         *,
         sandboxed: bool = False,
         storage_broker: ActivityStorageBroker | None = None,
         runtime_environment: tuple[tuple[str, str], ...] = (),
+        lifecycle_environment: tuple[tuple[str, str], ...] = (),
     ) -> dict[str, str]:
         allowed_names = {
             "DISPLAY",
@@ -597,12 +626,16 @@ class ActivitySupervisor:
                 "GREIA_PROFILE_NAME": profile.profile.display_name,
                 "GREIA_PROFILE_AVATAR": profile.profile.avatar_id,
                 "GREIA_MEDIA_ROOT": os.environ.get("GREIA_MEDIA_ROOT", "/media/greia"),
-                "GREIA_ACTIVITY_SESSION_ID": control.session_id,
-                "GREIA_ACTIVITY_READY_PATH": str(control.child_ready_path),
-                "GREIA_ACTIVITY_STOP_PATH": str(control.child_stop_path),
+                "GREIA_ACTIVITY_SESSION_ID": session_id,
             }
         )
         environment.update(dict(runtime_environment))
+        for name, value in lifecycle_environment:
+            if name in environment:
+                raise ActivityLifecycleError(
+                    f"runtime lifecycle environment collides with platform name {name!r}"
+                )
+            environment[name] = value
         if storage_broker is not None:
             environment["GREIA_STORAGE_SOCKET"] = str(storage_broker.child_socket)
             environment["GREIA_STORAGE_TOKEN"] = storage_broker.session_token

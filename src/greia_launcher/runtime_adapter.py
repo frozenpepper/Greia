@@ -13,7 +13,12 @@ from typing import Callable, Mapping, Protocol, Sequence
 from greia_platform.activities import ActivityManifest
 from greia_platform.device_capabilities import DeviceCapabilityService
 
-from .lifecycle import ProcessHandle, signal_process_group
+from .lifecycle import (
+    ActivityControlChannel,
+    ActivityLifecycleControl,
+    ProcessHandle,
+    signal_process_group,
+)
 
 
 PRODUCTION_ROOT = Path("/opt/greia-os")
@@ -68,6 +73,12 @@ class RuntimeInvocation:
     environment: tuple[tuple[str, str], ...]
 
 
+@dataclass(frozen=True, slots=True)
+class RuntimeLifecycleBinding:
+    control: ActivityLifecycleControl
+    environment: tuple[tuple[str, str], ...] = ()
+
+
 class RuntimeExitKind(StrEnum):
     NORMAL = "normal"
     CRASH = "crash"
@@ -119,6 +130,13 @@ class RuntimeLaunchAdapter(Protocol):
     def validate_package(self, manifest: ActivityManifest) -> None: ...
 
     def command_for(self, manifest: ActivityManifest) -> RuntimeCommand: ...
+
+    def create_lifecycle_binding(
+        self,
+        session_id: str,
+        host_activity_data: Path,
+        child_activity_data: Path,
+    ) -> RuntimeLifecycleBinding: ...
 
     def launch(self, invocation: RuntimeInvocation) -> ProcessHandle: ...
 
@@ -271,6 +289,23 @@ class PythonRuntimeAdapter:
             ),
         )
 
+    def create_lifecycle_binding(
+        self,
+        session_id: str,
+        host_activity_data: Path,
+        child_activity_data: Path,
+    ) -> RuntimeLifecycleBinding:
+        control = ActivityControlChannel.create_for_session(
+            session_id, host_activity_data, child_activity_data
+        )
+        return RuntimeLifecycleBinding(
+            control=control,
+            environment=(
+                ("GREIA_ACTIVITY_READY_PATH", str(control.child_ready_path)),
+                ("GREIA_ACTIVITY_STOP_PATH", str(control.child_stop_path)),
+            ),
+        )
+
     def launch(self, invocation: RuntimeInvocation) -> ProcessHandle:
         try:
             return self._process_factory(
@@ -377,6 +412,27 @@ class RuntimeManager:
             effective_optional_capabilities=optional & snapshot.capabilities,
         )
 
+    def create_lifecycle_binding(
+        self,
+        preparation: RuntimeLaunchPreparation,
+        session_id: str,
+        host_activity_data: Path,
+        child_activity_data: Path,
+    ) -> RuntimeLifecycleBinding:
+        adapter = self.adapter_for(preparation.compatibility.runtime_type)
+        binding = adapter.create_lifecycle_binding(
+            session_id, host_activity_data, child_activity_data
+        )
+        try:
+            _validate_lifecycle_binding(binding, session_id)
+        except RuntimeAdapterError:
+            try:
+                binding.control.cleanup()
+            except Exception:
+                pass
+            raise
+        return binding
+
     def launch(
         self, preparation: RuntimeLaunchPreparation, invocation: RuntimeInvocation
     ) -> ProcessHandle:
@@ -427,6 +483,52 @@ class RuntimeManager:
             compatibility=compatibility,
             lifecycle_support=adapter.lifecycle_support,
         )
+
+
+def _validate_lifecycle_binding(
+    binding: RuntimeLifecycleBinding, expected_session_id: str
+) -> None:
+    if binding.control.session_id != expected_session_id:
+        raise RuntimeValidationError(
+            "runtime lifecycle binding changed the platform session identity"
+        )
+    environment = binding.environment
+    if not isinstance(environment, tuple):
+        raise RuntimeValidationError("runtime lifecycle environment must be immutable")
+    allowed_activity_names = {
+        "GREIA_ACTIVITY_READY_PATH",
+        "GREIA_ACTIVITY_STOP_PATH",
+    }
+    seen: set[str] = set()
+    for item in environment:
+        if (
+            not isinstance(item, tuple)
+            or len(item) != 2
+            or not isinstance(item[0], str)
+            or not isinstance(item[1], str)
+        ):
+            raise RuntimeValidationError(
+                "runtime lifecycle environment entries must be text pairs"
+            )
+        name, value = item
+        if (
+            not _environment_name(name)
+            or "\x00" in value
+            or len(value) > 8192
+            or (name not in allowed_activity_names and not name.startswith("GREIA_RUNTIME_"))
+        ):
+            raise RuntimeValidationError(
+                "runtime lifecycle environment contains an invalid entry"
+            )
+        if name == "GREIA_ACTIVITY_SESSION_ID":
+            raise RuntimeValidationError(
+                "runtime lifecycle binding may not replace platform session identity"
+            )
+        if name in seen:
+            raise RuntimeValidationError(
+                f"runtime lifecycle environment duplicates {name!r}"
+            )
+        seen.add(name)
 
 
 def _validate_runtime_command(

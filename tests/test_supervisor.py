@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import tempfile
 import unittest
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from unittest import mock
 
@@ -216,6 +216,26 @@ class SupervisorTests(unittest.TestCase):
         self.assertEqual(session.result.exit_reason, ActivityExitReason.LAUNCH_FAILURE)
         factory.assert_not_called()
 
+    def test_failed_runtime_preparation_has_platform_session_without_transport(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest = replace(_manifest(root / "activity"), runtime_type="web")
+            profile = _ProfileContext(root / "profile")
+            authority = _Authority(
+                manifest.activity_id, capabilities={"display", "pointer"}
+            )
+            supervisor = ActivitySupervisor(
+                require_sandbox=False,
+                runtime_manager=_manager({"display", "pointer"}),
+            )
+            session = supervisor.start(manifest, profile, authority)
+
+        self.assertEqual(len(session.session_id), 32)
+        int(session.session_id, 16)
+        self.assertIsNone(session.control)
+        self.assertEqual(session.result.session_id, session.session_id)
+        self.assertEqual(session.result.exit_reason, ActivityExitReason.LAUNCH_FAILURE)
+
     def test_unavailable_runtime_is_normalized_to_launch_failure(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -277,6 +297,9 @@ class SupervisorTests(unittest.TestCase):
         environment = calls[0][1]["env"]
         self.assertEqual(environment["PYTHONNOUSERSITE"], "1")
         self.assertEqual(environment["PYTHONDONTWRITEBYTECODE"], "1")
+        self.assertEqual(environment["GREIA_ACTIVITY_SESSION_ID"], session.session_id)
+        self.assertIn("GREIA_ACTIVITY_READY_PATH", environment)
+        self.assertIn("GREIA_ACTIVITY_STOP_PATH", environment)
 
     def test_runtime_adapter_owns_forced_stop_and_exit_normalization(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
