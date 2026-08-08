@@ -1,0 +1,515 @@
+name: R5 session event integration
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/r5-session-event-integration.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  implement-and-verify:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Apply R5 platform integration
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+
+          def replace_once(path: str, old: str, new: str) -> None:
+              target = Path(path)
+              text = target.read_text(encoding="utf-8")
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"{path}: expected one integration anchor, found {count}: {old!r}")
+              target.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+          # Shared composition owns the R5 policy/service exactly once.
+          replace_once(
+              "src/greia_launcher/composition.py",
+              "from greia_platform.activities import RuntimeCatalogue\n",
+              "from greia_platform.activities import ActivityManifest, RuntimeCatalogue\n",
+          )
+          replace_once(
+              "src/greia_launcher/composition.py",
+              "from greia_platform.hardware_session import XSessionHardwareController\nfrom greia_platform.permissions import PermissionBroker\n",
+              "from greia_platform.hardware_session import XSessionHardwareController\nfrom greia_platform.history import PlatformHistoryService\nfrom greia_platform.permissions import PermissionBroker\n",
+          )
+          replace_once(
+              "src/greia_launcher/composition.py",
+              "    runtime_manager: RuntimeManager\n    storage_service: ActivityStorageService\n",
+              "    runtime_manager: RuntimeManager\n    storage_service: ActivityStorageService\n    history_service: PlatformHistoryService\n",
+          )
+          replace_once(
+              "src/greia_launcher/composition.py",
+              "def build_launcher_runtime_services(\n    runtime: RuntimeCatalogue,\n    *,\n    runtime_policy_path: Path,\n    permission_policy_path: Path,\n    storage_policy_path: Path,\n",
+              "def build_launcher_runtime_services(\n    runtime: RuntimeCatalogue,\n    activities: tuple[ActivityManifest, ...],\n    *,\n    runtime_policy_path: Path,\n    permission_policy_path: Path,\n    storage_policy_path: Path,\n    history_policy_path: Path,\n    progression_policy_path: Path,\n",
+          )
+          replace_once(
+              "src/greia_launcher/composition.py",
+              "    storage_service = ActivityStorageService(StoragePolicy.load(storage_policy_path))\n    return LauncherRuntimeServices(\n",
+              "    storage_service = ActivityStorageService(StoragePolicy.load(storage_policy_path))\n    history_service = PlatformHistoryService.load(\n        history_policy_path, progression_policy_path, activities\n    )\n    return LauncherRuntimeServices(\n",
+          )
+          replace_once(
+              "src/greia_launcher/composition.py",
+              "        runtime_manager=runtime_manager,\n        storage_service=storage_service,\n    )\n",
+              "        runtime_manager=runtime_manager,\n        storage_service=storage_service,\n        history_service=history_service,\n    )\n",
+          )
+
+          # Installed launcher discovers the canonical catalogue before composing
+          # progression policy and recovers unfinished sessions without bricking
+          # the shell when one profile history is corrupt.
+          replace_once(
+              "src/greia_launcher/main.py",
+              "from greia_platform.permissions import PermissionDecisionError\n",
+              "from greia_platform.history import HistoryError\nfrom greia_platform.permissions import PermissionDecisionError\n",
+          )
+          replace_once(
+              "src/greia_launcher/main.py",
+              "    permission_policy: Path\n    storage_policy: Path\n    profiles_dir: Path\n",
+              "    permission_policy: Path\n    storage_policy: Path\n    history_policy: Path\n    progression_policy: Path\n    profiles_dir: Path\n",
+          )
+          replace_once(
+              "src/greia_launcher/main.py",
+              "            permission_policy=root / \"runtime\" / \"permission-policy.toml\",\n            storage_policy=root / \"runtime\" / \"storage-policy.toml\",\n            profiles_dir=Path(\n",
+              "            permission_policy=root / \"runtime\" / \"permission-policy.toml\",\n            storage_policy=root / \"runtime\" / \"storage-policy.toml\",\n            history_policy=root / \"runtime\" / \"history-policy.toml\",\n            progression_policy=root / \"runtime\" / \"progression-policy.toml\",\n            profiles_dir=Path(\n",
+          )
+          replace_once(
+              "src/greia_launcher/main.py",
+              "        self.windowed = windowed\n        development_hal = None if self._installed_root() else _development_hal()\n        self.runtime_services = build_launcher_runtime_services(\n            self.runtime,\n            runtime_policy_path=self.paths.runtime_catalogue,\n            permission_policy_path=self.paths.permission_policy,\n            storage_policy_path=self.paths.storage_policy,\n            hal=development_hal,\n        )\n        self.supervisor = ActivitySupervisor(\n            runtime_manager=self.runtime_services.runtime_manager,\n            storage_service=self.runtime_services.storage_service,\n        )\n        self.allow_exit = allow_exit\n        self._activities = self.registry.discover()\n        self._activity_discovery_token = self.registry.discovery_token()\n",
+              "        self.windowed = windowed\n        self._activities = self.registry.discover()\n        self._activity_discovery_token = self.registry.discovery_token()\n        development_hal = None if self._installed_root() else _development_hal()\n        self.runtime_services = build_launcher_runtime_services(\n            self.runtime,\n            self._activities,\n            runtime_policy_path=self.paths.runtime_catalogue,\n            permission_policy_path=self.paths.permission_policy,\n            storage_policy_path=self.paths.storage_policy,\n            history_policy_path=self.paths.history_policy,\n            progression_policy_path=self.paths.progression_policy,\n            hal=development_hal,\n        )\n        self._history_recovery_failures: set[str] = set()\n        for child in self.profiles:\n            try:\n                self.runtime_services.history_service.recover_unfinished(\n                    self.profile_store.context(child.profile_id)\n                )\n            except HistoryError:\n                self._history_recovery_failures.add(child.profile_id)\n        self.supervisor = ActivitySupervisor(\n            runtime_manager=self.runtime_services.runtime_manager,\n            storage_service=self.runtime_services.storage_service,\n            history_service=self.runtime_services.history_service,\n        )\n        self.allow_exit = allow_exit\n",
+          )
+
+          # Supervisor owns universal session semantics; R5 service owns durable
+          # history/progression; event transport is a per-session platform resource.
+          replace_once(
+              "src/greia_launcher/supervisor.py",
+              "from greia_platform.device_capabilities import DeviceCapabilityService\nfrom greia_platform.permissions import ActivityAuthority\n",
+              "from greia_platform.device_capabilities import DeviceCapabilityService\nfrom greia_platform.history import (\n    HistoryError,\n    PlatformHistoryService,\n    ProfileHistoryStore,\n)\nfrom greia_platform.permissions import ActivityAuthority\n",
+          )
+          replace_once(
+              "src/greia_launcher/supervisor.py",
+              "from .lifecycle import (\n",
+              "from .event_broker import (\n    SANDBOX_EVENT_ROOT,\n    ActivityEventBroker,\n)\nfrom .lifecycle import (\n",
+          )
+          replace_once(
+              "src/greia_launcher/supervisor.py",
+              "StorageBrokerFactory = Callable[..., ActivityStorageBroker]\n",
+              "StorageBrokerFactory = Callable[..., ActivityStorageBroker]\nEventBrokerFactory = Callable[..., ActivityEventBroker]\n",
+          )
+          replace_once(
+              "src/greia_launcher/supervisor.py",
+              "        storage_service: ActivityStorageService | None = None,\n        storage_broker_factory: StorageBrokerFactory = ActivityStorageBroker.start,\n    ):\n",
+              "        storage_service: ActivityStorageService | None = None,\n        storage_broker_factory: StorageBrokerFactory = ActivityStorageBroker.start,\n        history_service: PlatformHistoryService | None = None,\n        event_broker_factory: EventBrokerFactory = ActivityEventBroker.start,\n    ):\n",
+          )
+          replace_once(
+              "src/greia_launcher/supervisor.py",
+              "        if self._sandbox_required() and storage_service is None:\n            raise ActivityLifecycleError(\n                \"installed ActivitySupervisor requires an injected ActivityStorageService\"\n            )\n        self._runtime_manager = runtime_manager\n        self._storage_service = storage_service\n        self._storage_broker_factory = storage_broker_factory\n        self._session_resources: dict[str, tuple[SessionResource, ...]] = {}\n",
+              "        if self._sandbox_required() and storage_service is None:\n            raise ActivityLifecycleError(\n                \"installed ActivitySupervisor requires an injected ActivityStorageService\"\n            )\n        if self._sandbox_required() and history_service is None:\n            raise ActivityLifecycleError(\n                \"installed ActivitySupervisor requires an injected PlatformHistoryService\"\n            )\n        self._runtime_manager = runtime_manager\n        self._storage_service = storage_service\n        self._storage_broker_factory = storage_broker_factory\n        self._history_service = history_service\n        self._event_broker_factory = event_broker_factory\n        self._history_stores: dict[str, ProfileHistoryStore] = {}\n        self._session_resources: dict[str, tuple[SessionResource, ...]] = {}\n",
+          )
+          replace_once(
+              "src/greia_launcher/supervisor.py",
+              "        session_id = new_activity_session_id()\n        if not frozenset(manifest.required_capabilities).issubset(\n",
+              "        session_id = new_activity_session_id()\n        history_store: ProfileHistoryStore | None = None\n        if self._history_service is not None:\n            try:\n                history_store = self._history_service.open(profile)\n                history_store.start_session(\n                    manifest,\n                    session_id=session_id,\n                    package_digest=authority.package_digest,\n                )\n            except HistoryError:\n                return self._failed_launch_session(\n                    manifest,\n                    profile,\n                    authority,\n                    session_id=session_id,\n                    reason=ActivityExitReason.PLATFORM_FAILURE,\n                )\n        if not frozenset(manifest.required_capabilities).issubset(\n",
+          )
+
+          # Every post-history early failure closes the authoritative row.
+          text_path = Path("src/greia_launcher/supervisor.py")
+          text = text_path.read_text(encoding="utf-8")
+          text = text.replace(
+              "manifest, profile, authority, session_id=session_id\n            )",
+              "manifest, profile, authority, session_id=session_id, history_store=history_store\n            )",
+              3,
+          )
+          text_path.write_text(text, encoding="utf-8")
+
+          replace_once(
+              "src/greia_launcher/supervisor.py",
+              "                return self._failed_launch_session(\n                    manifest,\n                    profile,\n                    authority,\n                    session_id=session_id,\n                    control=control,\n                )\n            resources = (storage_broker,)\n\n        environment = self._sanitized_environment(\n",
+              "                return self._failed_launch_session(\n                    manifest,\n                    profile,\n                    authority,\n                    session_id=session_id,\n                    control=control,\n                    history_store=history_store,\n                    reason=ActivityExitReason.PLATFORM_FAILURE,\n                )\n            resources = (storage_broker,)\n\n        event_broker: ActivityEventBroker | None = None\n        if history_store is not None and self._history_service is not None:\n            try:\n                event_broker = self._event_broker_factory(\n                    history_store,\n                    manifest,\n                    self._history_service.progression_policy,\n                    session_id,\n                    sandboxed=sandboxed,\n                )\n            except (HistoryError, OSError):\n                return self._failed_launch_session(\n                    manifest,\n                    profile,\n                    authority,\n                    session_id=session_id,\n                    control=control,\n                    history_store=history_store,\n                    resources=resources,\n                    reason=ActivityExitReason.PLATFORM_FAILURE,\n                )\n            resources = (*resources, event_broker)\n\n        environment = self._sanitized_environment(\n",
+          )
+          replace_once(
+              "src/greia_launcher/supervisor.py",
+              "            storage_broker=storage_broker,\n            runtime_environment=runtime_command.environment,\n",
+              "            storage_broker=storage_broker,\n            event_broker=event_broker,\n            runtime_environment=runtime_command.environment,\n",
+          )
+          replace_once(
+              "src/greia_launcher/supervisor.py",
+              "                authority,\n                storage_broker=storage_broker,\n            )\n",
+              "                authority,\n                storage_broker=storage_broker,\n                event_broker=event_broker,\n            )\n",
+          )
+          replace_once(
+              "src/greia_launcher/supervisor.py",
+              "                resources=resources,\n            )\n\n        session = ActivitySession(\n",
+              "                resources=resources,\n                history_store=history_store,\n            )\n\n        session = ActivitySession(\n",
+          )
+          replace_once(
+              "src/greia_launcher/supervisor.py",
+              "        self._session_resources[session.session_id] = resources\n        self._runtime_preparations[session.session_id] = preparation\n",
+              "        self._session_resources[session.session_id] = resources\n        if history_store is not None:\n            self._history_stores[session.session_id] = history_store\n        self._runtime_preparations[session.session_id] = preparation\n",
+          )
+
+          # READY is durable platform state. Failure to record it is a platform
+          # failure and terminates the Activity rather than silently diverging.
+          replace_once(
+              "src/greia_launcher/supervisor.py",
+              "            if session.ready_at is None and control.ready():\n                session.ready_at = now\n            return self._finish_session(session, runtime_exit, now)\n\n        if session.state is ActivitySessionState.STARTING:\n            if control.ready():\n                session.ready_at = now\n                session.state = ActivitySessionState.RUNNING\n",
+              "            if session.ready_at is None and control.ready():\n                if self._record_ready(session):\n                    session.ready_at = now\n                else:\n                    session.forced_reason = ActivityExitReason.PLATFORM_FAILURE\n            return self._finish_session(session, runtime_exit, now)\n\n        if session.state is ActivitySessionState.STARTING:\n            if control.ready():\n                if self._record_ready(session):\n                    session.ready_at = now\n                    session.state = ActivitySessionState.RUNNING\n                else:\n                    return self.force_stop(session, ActivityExitReason.PLATFORM_FAILURE)\n",
+          )
+          replace_once(
+              "src/greia_launcher/supervisor.py",
+              "            ActivityExitReason.SYSTEM_SHUTDOWN,\n        }:\n",
+              "            ActivityExitReason.SYSTEM_SHUTDOWN,\n            ActivityExitReason.PLATFORM_FAILURE,\n        }:\n",
+          )
+
+          # Event broker/resource cleanup happens before the durable session is
+          # closed. History close receives final normalized reason and monotonic
+          # active duration, while the store supplies its own wall-clock timestamp.
+          replace_once(
+              "src/greia_launcher/supervisor.py",
+              "        if not runtime_clean or not resources_clean:\n            reason = ActivityExitReason.PLATFORM_FAILURE\n\n        state = (\n",
+              "        if not runtime_clean or not resources_clean:\n            reason = ActivityExitReason.PLATFORM_FAILURE\n\n        history_store = self._history_stores.pop(session.session_id, None)\n        if history_store is not None:\n            try:\n                history_store.finish_session(\n                    session.session_id,\n                    reason.value,\n                    active_duration_seconds=max(0.0, ended_at - session.started_at),\n                )\n            except HistoryError:\n                reason = ActivityExitReason.PLATFORM_FAILURE\n\n        state = (\n",
+          )
+          replace_once(
+              "src/greia_launcher/supervisor.py",
+              "        resources: tuple[SessionResource, ...] = (),\n    ) -> ActivitySession:\n        started = monotonic_now() if started_at is None else started_at\n        ended = monotonic_now()\n        result = ActivityResult(\n",
+              "        resources: tuple[SessionResource, ...] = (),\n        history_store: ProfileHistoryStore | None = None,\n        reason: ActivityExitReason = ActivityExitReason.LAUNCH_FAILURE,\n    ) -> ActivitySession:\n        started = monotonic_now() if started_at is None else started_at\n        ended = monotonic_now()\n        for resource in reversed(resources):\n            try:\n                resource.stop()\n            except Exception:\n                reason = ActivityExitReason.PLATFORM_FAILURE\n        if control is not None:\n            control.cleanup()\n        if history_store is not None:\n            try:\n                history_store.finish_session(\n                    session_id,\n                    reason.value,\n                    active_duration_seconds=max(0.0, ended - started),\n                )\n            except HistoryError:\n                reason = ActivityExitReason.PLATFORM_FAILURE\n        result = ActivityResult(\n",
+          )
+          replace_once(
+              "src/greia_launcher/supervisor.py",
+              "            exit_reason=ActivityExitReason.LAUNCH_FAILURE,\n",
+              "            exit_reason=reason,\n",
+          )
+          replace_once(
+              "src/greia_launcher/supervisor.py",
+              "        for resource in reversed(resources):\n            try:\n                resource.stop()\n            except Exception:\n                pass\n        if control is not None:\n            control.cleanup()\n        return session\n\n    def _cleanup_runtime_session",
+              "        return session\n\n    def _record_ready(self, session: ActivitySession) -> bool:\n        history_store = self._history_stores.get(session.session_id)\n        if history_store is None:\n            return True\n        try:\n            history_store.mark_ready(session.session_id)\n        except HistoryError:\n            return False\n        return True\n\n    def _cleanup_runtime_session",
+          )
+
+          # Per-session event transport is platform-owned just like storage.
+          replace_once(
+              "src/greia_launcher/supervisor.py",
+              "        *,\n        storage_broker: ActivityStorageBroker | None = None,\n    ) -> list[str]:\n",
+              "        *,\n        storage_broker: ActivityStorageBroker | None = None,\n        event_broker: ActivityEventBroker | None = None,\n    ) -> list[str]:\n",
+          )
+          replace_once(
+              "src/greia_launcher/supervisor.py",
+              "        if storage_broker is not None:\n            command.extend(\n                [\n                    \"--ro-bind\",\n                    str(storage_broker.host_root),\n                    str(SANDBOX_STORAGE_ROOT),\n                ]\n            )\n",
+              "        if storage_broker is not None:\n            command.extend(\n                [\n                    \"--ro-bind\",\n                    str(storage_broker.host_root),\n                    str(SANDBOX_STORAGE_ROOT),\n                ]\n            )\n        if event_broker is not None:\n            command.extend(\n                [\n                    \"--ro-bind\",\n                    str(event_broker.host_root),\n                    str(SANDBOX_EVENT_ROOT),\n                ]\n            )\n",
+          )
+          replace_once(
+              "src/greia_launcher/supervisor.py",
+              "        sandboxed: bool = False,\n        storage_broker: ActivityStorageBroker | None = None,\n        runtime_environment: tuple[tuple[str, str], ...] = (),\n",
+              "        sandboxed: bool = False,\n        storage_broker: ActivityStorageBroker | None = None,\n        event_broker: ActivityEventBroker | None = None,\n        runtime_environment: tuple[tuple[str, str], ...] = (),\n",
+          )
+          replace_once(
+              "src/greia_launcher/supervisor.py",
+              "        if storage_broker is not None:\n            environment[\"GREIA_STORAGE_SOCKET\"] = str(storage_broker.child_socket)\n            environment[\"GREIA_STORAGE_TOKEN\"] = storage_broker.session_token\n",
+              "        if storage_broker is not None:\n            environment[\"GREIA_STORAGE_SOCKET\"] = str(storage_broker.child_socket)\n            environment[\"GREIA_STORAGE_TOKEN\"] = storage_broker.session_token\n        if event_broker is not None:\n            environment[\"GREIA_EVENT_SOCKET\"] = str(event_broker.child_socket)\n            environment[\"GREIA_EVENT_TOKEN\"] = event_broker.session_token\n",
+          )
+          PY
+
+          cat > tests/test_r5_integration.py <<'PY'
+          from __future__ import annotations
+
+          import tempfile
+          import unittest
+          from dataclasses import replace
+          from pathlib import Path
+
+          from greia_launcher.event_broker import ActivityEventBroker, SANDBOX_EVENT_ROOT
+          from greia_launcher.runtime_adapter import PythonRuntimeAdapter, RuntimeManager
+          from greia_launcher.storage_broker import ActivityStorageBroker
+          from greia_launcher.supervisor import ActivityLifecycleError, ActivitySupervisor
+          from greia_platform.activities import ActivityRegistry, RuntimeCatalogue
+          from greia_platform.device_capabilities import DeviceCapabilityService
+          from greia_platform.event_client import ActivityEventClient, ActivityEventClientError
+          from greia_platform.history import PlatformHistoryService
+          from greia_platform.profiles import ProfileStore
+          from greia_platform.storage import ActivityStorageService, StorageError, StoragePolicy
+          from greia_platform.trust import ActivitySource, PackageTrust
+
+
+          PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+
+          class _Authority:
+              def __init__(self, activity_id: str):
+                  self.activity_id = activity_id
+                  self.package_digest = "a" * 64
+                  self.package_trust = PackageTrust.BUILT_IN
+                  capabilities = {"display", "pointer"}
+                  self.device_snapshot_token = DeviceCapabilityService.static(
+                      capabilities, source_id="r5-integration-test"
+                  ).snapshot().token
+                  self.effective_capabilities = frozenset(capabilities)
+                  self.sdk_features = self.effective_capabilities
+
+              def has_capability(self, capability: str) -> bool:
+                  return capability in self.effective_capabilities
+
+              def has_permission(self, permission: str) -> bool:
+                  return False
+
+
+          class _FakeProcess:
+              def __init__(self):
+                  self.pid = 424242
+                  self.returncode = None
+
+              def poll(self):
+                  return self.returncode
+
+              def terminate(self):
+                  self.returncode = -15
+
+              def kill(self):
+                  self.returncode = -9
+
+
+          class _FailingStorage:
+              def open(self, *args, **kwargs):
+                  raise StorageError("synthetic platform storage failure")
+
+
+          class R5IntegrationTests(unittest.TestCase):
+              @classmethod
+              def setUpClass(cls) -> None:
+                  cls.runtime = RuntimeCatalogue.load(
+                      PROJECT_ROOT / "runtime" / "child-runtime.toml"
+                  )
+                  source = ActivitySource(
+                      PROJECT_ROOT / "activities", PackageTrust.BUILT_IN, "greia-system"
+                  )
+                  cls.activities = ActivityRegistry([source], cls.runtime).discover()
+                  cls.shape = next(
+                      item
+                      for item in cls.activities
+                      if item.activity_id == "org.greia.shape-garden"
+                  )
+                  cls.history = PlatformHistoryService.load(
+                      PROJECT_ROOT / "runtime" / "history-policy.toml",
+                      PROJECT_ROOT / "runtime" / "progression-policy.toml",
+                      cls.activities,
+                  )
+                  cls.storage = ActivityStorageService(
+                      StoragePolicy.load(PROJECT_ROOT / "runtime" / "storage-policy.toml")
+                  )
+
+              def _profile(self, root: Path):
+                  profiles = ProfileStore.load(
+                      PROJECT_ROOT / "runtime" / "profile-defaults.toml",
+                      root / "profiles",
+                  )
+                  child = profiles.ensure_initialized()[0]
+                  return profiles.context(child.profile_id)
+
+              def _manager(self, factory=None):
+                  adapter = PythonRuntimeAdapter(
+                      Path("/usr/bin/python3"), process_factory=factory
+                  )
+                  return RuntimeManager(
+                      [adapter],
+                      DeviceCapabilityService.static(
+                          {"display", "pointer"}, source_id="r5-integration-test"
+                      ),
+                  )
+
+              @staticmethod
+              def _storage_factory(root: Path):
+                  def start(storage, session_id: str, *, sandboxed: bool):
+                      return ActivityStorageBroker.start(
+                          storage, session_id, runtime_root=root, sandboxed=sandboxed
+                      )
+                  return start
+
+              @staticmethod
+              def _event_factory(root: Path):
+                  def start(store, manifest, progression, session_id: str, *, sandboxed: bool):
+                      return ActivityEventBroker.start(
+                          store,
+                          manifest,
+                          progression,
+                          session_id,
+                          runtime_root=root,
+                          sandboxed=sandboxed,
+                      )
+                  return start
+
+              def test_installed_supervisor_requires_history_authority(self) -> None:
+                  with self.assertRaisesRegex(
+                      ActivityLifecycleError, "PlatformHistoryService"
+                  ):
+                      ActivitySupervisor(
+                          require_sandbox=True,
+                          runtime_manager=self._manager(),
+                          storage_service=self.storage,
+                      )
+
+              def test_runtime_preparation_failure_is_still_authoritative_session(self) -> None:
+                  with tempfile.TemporaryDirectory() as temporary:
+                      root = Path(temporary)
+                      profile = self._profile(root)
+                      manifest = replace(self.shape, runtime_type="web")
+                      supervisor = ActivitySupervisor(
+                          require_sandbox=False,
+                          runtime_manager=self._manager(),
+                          history_service=self.history,
+                      )
+                      session = supervisor.start(manifest, profile, _Authority(manifest.activity_id))
+                      summary = self.history.open(profile).summary()
+
+                  self.assertEqual(session.result.exit_reason.value, "launch_failure")
+                  self.assertEqual(len(summary.recent_sessions), 1)
+                  self.assertEqual(summary.recent_sessions[0].exit_reason, "launch_failure")
+
+              def test_platform_storage_failure_is_distinct_and_recorded(self) -> None:
+                  with tempfile.TemporaryDirectory() as temporary:
+                      root = Path(temporary)
+                      profile = self._profile(root)
+                      supervisor = ActivitySupervisor(
+                          require_sandbox=False,
+                          runtime_manager=self._manager(),
+                          storage_service=_FailingStorage(),
+                          history_service=self.history,
+                      )
+                      session = supervisor.start(
+                          self.shape, profile, _Authority(self.shape.activity_id)
+                      )
+                      summary = self.history.open(profile).summary()
+
+                  self.assertEqual(session.result.exit_reason.value, "platform_failure")
+                  self.assertEqual(summary.recent_sessions[0].exit_reason, "platform_failure")
+
+              def test_event_broker_round_trip_applies_only_platform_reward_and_cleans_up(self) -> None:
+                  with tempfile.TemporaryDirectory() as temporary:
+                      root = Path(temporary)
+                      profile = self._profile(root)
+                      process = _FakeProcess()
+                      calls = []
+
+                      def factory(*args, **kwargs):
+                          calls.append((args, kwargs))
+                          return process
+
+                      supervisor = ActivitySupervisor(
+                          require_sandbox=False,
+                          runtime_manager=self._manager(factory),
+                          storage_service=self.storage,
+                          storage_broker_factory=self._storage_factory(root / "storage-brokers"),
+                          history_service=self.history,
+                          event_broker_factory=self._event_factory(root / "event-brokers"),
+                      )
+                      session = supervisor.start(
+                          self.shape, profile, _Authority(self.shape.activity_id)
+                      )
+                      environment = calls[0][1]["env"]
+                      event_socket = Path(environment["GREIA_EVENT_SOCKET"])
+                      client = ActivityEventClient(
+                          event_socket, environment["GREIA_EVENT_TOKEN"]
+                      )
+                      receipt = client.emit(
+                          "creation.completed",
+                          idempotency_key="creation-one",
+                          payload={"reward_id": "diamonds", "reward_delta": 9999},
+                      )
+                      self.assertEqual(receipt.reward_deltas, (("star", 1),))
+                      with self.assertRaises(ActivityEventClientError):
+                          ActivityEventClient(event_socket, "wrong-token").emit(
+                              "creation.completed", idempotency_key="forged-token"
+                          )
+                      with unittest.mock.patch.object(
+                          type(session.control), "ready", return_value=True
+                      ):
+                          self.assertIsNone(supervisor.poll(session))
+                      process.returncode = 0
+                      result = supervisor.poll(session)
+                      summary = self.history.open(profile).summary()
+
+                  self.assertEqual(result.exit_reason.value, "normal")
+                  self.assertTrue(result.ready)
+                  self.assertEqual(dict(summary.reward_balances), {"star": 1})
+                  self.assertEqual(summary.recent_sessions[0].exit_reason, "normal")
+                  self.assertTrue(summary.recent_sessions[0].ready)
+                  self.assertFalse(event_socket.exists())
+
+              def test_sandbox_receives_only_current_event_broker_endpoint(self) -> None:
+                  with tempfile.TemporaryDirectory() as temporary:
+                      root = Path(temporary)
+                      profile = self._profile(root)
+                      process = _FakeProcess()
+                      calls = []
+
+                      def factory(*args, **kwargs):
+                          calls.append((args, kwargs))
+                          return process
+
+                      supervisor = ActivitySupervisor(
+                          sandbox_executable=Path("/bin/true"),
+                          require_sandbox=True,
+                          runtime_manager=self._manager(factory),
+                          storage_service=self.storage,
+                          storage_broker_factory=self._storage_factory(root / "storage-brokers"),
+                          history_service=self.history,
+                          event_broker_factory=self._event_factory(root / "event-brokers"),
+                      )
+                      session = supervisor.start(
+                          self.shape, profile, _Authority(self.shape.activity_id)
+                      )
+                      command = list(calls[0][0][0])
+                      environment = calls[0][1]["env"]
+                      self.assertEqual(
+                          environment["GREIA_EVENT_SOCKET"],
+                          str(SANDBOX_EVENT_ROOT / "events.sock"),
+                      )
+                      event_root_index = command.index(str(SANDBOX_EVENT_ROOT))
+                      self.assertEqual(command[event_root_index - 2], "--ro-bind")
+                      self.assertIn("event-brokers", command[event_root_index - 1])
+                      process.returncode = 0
+                      supervisor.poll(session)
+
+
+          if __name__ == "__main__":
+              unittest.main()
+          PY
+
+      - name: Install verification dependency
+        run: python3 -m pip install --disable-pip-version-check --quiet Pillow
+
+      - name: Compile
+        run: python3 -m compileall -q src tests tools activities
+
+      - name: Focused R5 integration tests
+        run: |
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_history.py' -v
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_r5_integration.py' -v
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_supervisor.py' -v
+
+      - name: Full clean provider-free gate
+        run: make verify
+
+      - name: Commit reviewed R5 integration
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          git add \
+            src/greia_launcher/composition.py \
+            src/greia_launcher/main.py \
+            src/greia_launcher/supervisor.py \
+            tests/test_r5_integration.py
+          git diff --cached --check
+          git config user.name greia-r5-reimplementation
+          git config user.email greia-r5-reimplementation@users.noreply.github.com
+          git commit -m 'feat: integrate platform sessions and event broker into launcher'
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
