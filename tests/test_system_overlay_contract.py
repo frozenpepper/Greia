@@ -256,7 +256,7 @@ class SystemOverlayContractTests(unittest.TestCase):
         self.assertIn("emergency.service", collector)
         self.assertIn("rescue.service", collector)
         self.assertIn("kbrequest.target", collector)
-        self.assertIn("collector_version=2", collector)
+        self.assertIn("collector_version=3", collector)
         self.assertIn("ssh-host-public-fingerprints", collector)
         self.assertNotIn("SERIAL,WWN", collector)
         self.assertNotIn("pairing-token", collector)
