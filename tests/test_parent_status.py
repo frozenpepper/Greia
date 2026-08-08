@@ -48,6 +48,7 @@ class ParentStatusTests(unittest.TestCase):
                 customization,
                 root / "hardware",
                 root / "hardware-status.json",
+                active_profile_status_path=root / "active-profile.json",
             )
             app.theme_store.set_colors(background="sky", accent="grape", text="navy")
             customization.mkdir(parents=True, exist_ok=True)
@@ -212,6 +213,7 @@ class ParentStatusTests(unittest.TestCase):
                 profiles_dir=root / "profiles",
                 hardware_settings_dir=root / "hardware",
                 hardware_status_path=root / "hardware-status.json",
+                active_profile_status_path=root / "active-profile.json",
             )
             with mock.patch.object(
                 app.registry, "discover", side_effect=ActivityValidationError("broken package")
