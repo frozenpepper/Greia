@@ -1,0 +1,1 @@
+No further text probes needed; next operation uses Git blob API.
