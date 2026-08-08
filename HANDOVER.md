@@ -1,18 +1,18 @@
 # Greia — Standalone Engineering Handover
 
-**Date:** 2026-08-08  
+**Date:** 2026-08-09  
 **Version:** `0.13.0-phase0-dev`  
 **Repository:** `frozenpepper/Greia` (private)  
 **Active branch:** `r6-runtime-integration-recovery`  
 **Draft PR:** #1 — `R6.2: runtime-neutral Runtime Manager integration and remote recovery`  
 **R0 tracking:** issue #2 — `R0: restore GitHub as complete reproducible Greia source of truth`  
-**Current functional phase:** R6 — Device Capability / HAL / Runtime integration
+**Current functional phase:** **R6 overall blocked; R6.2 source architecture PASS**
 
 ## 1. Current state
 
-The long-running v0.12 ZIP recovery is **complete**. Do not reopen it.
+The v0.12 recovery incident is finished. Do not reopen it.
 
-The exact uploaded v0.12 archive was used as the historical byte authority:
+The exact uploaded historical archive remains the byte authority for the recovered baseline:
 
 ```text
 SHA-256: 7afb5028aa9f70930de1df8df4aa5a1fe00321fbfdeb94a4316cb234c332b124
@@ -21,80 +21,45 @@ SHA-256: 7afb5028aa9f70930de1df8df4aa5a1fe00321fbfdeb94a4316cb234c332b124
 46 Python files
 ```
 
-The Greia-migrated baseline was rebuilt locally from that archive and reproduced its original complete source gate:
+The Greia-migrated v0.12 baseline was rebuilt locally at **140/140 PASS**, missing baseline source/build/test/config was reconciled into GitHub without overwriting newer R1–R6 work, and all **123 PNGs** were restored and verified byte-for-byte against the archive ledger.
+
+Key recovery commits:
 
 ```text
-140 / 140 provider-free tests PASS
-project validation PASS
-shell/source checks PASS
+1d34e5e2c67d0113e146c7fa48d16dc60aa9c82c  recovery: restore all 123 ZIP-verified binary assets
+c746125a978b9286c5508e51fe2958c9ec3eae60  recovery: remove one-off R0 transport machinery
 ```
 
-Missing baseline source/build/test/config files were then reconciled into the current R6 branch without overwriting newer R1–R6 files.
-
-All **123 PNG assets** were restored. The four authoritative binary inputs were hash-checked, the runtime icon set/contact sheet was regenerated through the recovered extractor, and every resulting PNG was verified byte-for-byte against the archived v0.12 SHA-256 ledger before commit.
-
-Binary recovery commit:
+After recovery, real R6.2 implementation resumed and closed the remaining source-level Runtime Adapter gaps. The latest permanent clean-checkout CI evidence is:
 
 ```text
-1d34e5e2c67d0113e146c7fa48d16dc60aa9c82c
-recovery: restore all 123 ZIP-verified binary assets
+audited checkout: cd317a862b12ba6e85971bf23d0146a108c5faef
+repository files at that audit: 314
+tracked PNGs: 123
+Python compile: PASS
+R6 architecture-invariant CI step: PASS
+provider-free unit suite: 172 / 172 PASS
 ```
 
-Temporary transport workflows, base64 payload staging, trigger files and incomplete recovery chunks were removed afterward:
-
-```text
-c746125a978b9286c5508e51fe2958c9ec3eae60
-recovery: remove one-off R0 transport machinery
-```
-
-The **final post-cleanup clean GitHub checkout** was executed at:
-
-```text
-298336c5c75757f9df843be89dae2b8988b3b80c
-```
-
-and reports:
-
-```text
-313 tracked files
-123 tracked PNGs
-Python compile PASS
-158 / 158 unit tests PASS
-```
-
-The complete `make verify` gate now reaches `tools/validate_project.py` and fails only because a later, post-v0.12 R5 implementation file is absent:
+The same clean checkout then ran `make verify`. The entire 172-test suite passed and the gate stopped only here:
 
 ```text
 ModuleNotFoundError: No module named 'greia_platform.history'
 ```
 
-This is no longer a ZIP/binary recovery problem. It is a distinct historical R5 source-loss incident.
+That file is a **post-v0.12 R5 source-loss incident**, not unfinished recovery and not an R6.2 defect.
 
-## R6.2 launch-authority/device-snapshot coherence — 2026-08-09
+Detailed executable evidence:
 
-The first post-recovery implementation tranche closes a TOCTOU-style authority gap in R6.2. PermissionBroker records the opaque token of the trusted device snapshot used to compute effective capabilities and permissions in every `ActivityAuthority`. RuntimeManager launch preparation accepts that token as the expected compatibility observation, and ActivitySupervisor supplies it before any child process is created. If the Device Capability Service is refreshed and the semantic snapshot changes between authority issuance and launch preparation, launch fails closed. PermissionBroker still computes grants, RuntimeManager computes runtime/device compatibility, and Supervisor coordinates consistency without either service importing the other's authority type.
-
-## R6.2 universal storage launch transport — 2026-08-09
-
-The installed Activity path now actually exposes the previously implemented R4 Universal Storage Service. `build_launcher_runtime_services(...)` loads `runtime/storage-policy.toml` and returns an `ActivityStorageService`; the installed launcher injects it into `ActivitySupervisor`. For each launch, the supervisor opens the durable `(profile_id, activity_id)` namespace, starts a one-session Unix-socket `ActivityStorageBroker`, passes only `GREIA_STORAGE_SOCKET` and `GREIA_STORAGE_TOKEN`, and in Bubblewrap mounts only the ephemeral broker directory at `/run/greia-storage`. The durable namespace itself is never mounted into the Activity. The broker is stopped and its runtime directory removed on terminal cleanup; a cleanup failure becomes `platform_failure`. The R5 event broker remains intentionally unwired because its authoritative `history.py` dependency is the known lost source.
-
-## R6.2 runtime-command authority boundary — 2026-08-09
-
-Runtime-family process details are now cleanly separated from the runtime-neutral Supervisor. `RuntimeCommand` includes command, an in-package working directory, and a bounded runtime-specific environment. `PythonRuntimeAdapter` supplies `PYTHONNOUSERSITE=1` and `PYTHONDONTWRITEBYTECODE=1`; the Supervisor no longer hardcodes Python policy. RuntimeManager rejects malformed commands, cwd escaping the Activity package, duplicate/invalid environment entries, and attempts to override Greia/profile/session/storage variables or platform-owned `PATH/HOME/XDG/display/audio` transport. Bubblewrap uses the adapter-prepared cwd rather than replacing it with the manifest root.
-
-## R6.2 runtime session ownership — 2026-08-09
-
-The Runtime Adapter now owns actual runtime handle mechanics rather than stopping at command generation. `RuntimeInvocation` is the final platform-approved invocation (including Bubblewrap when installed); the selected adapter launches it, collects and normalizes runtime exit, performs force-stop, and cleans up its runtime handle. RuntimeManager delegates those operations. Supervisor retains Greia sandbox policy, READY/STOP deadlines, platform resource brokers and final Activity result composition, but it no longer creates `Popen` processes, sends process-group signals, or decides whether a raw runtime return code means normal/crash. The remaining runtime-specific lifecycle leak is the Python READY/STOP file-marker transport, which is still constructed by Supervisor and is the next R6.2 closure item.
-
-## R6.2 runtime-owned lifecycle transport — 2026-08-09
-
-Platform session identity is now independent of any runtime's lifecycle transport. `ActivitySession.session_id` is explicit and Greia allocates it before runtime preparation, so even an unavailable-runtime launch has a valid session identity without creating Python files. RuntimeManager asks the selected adapter to create a `RuntimeLifecycleBinding` for that session. `PythonRuntimeAdapter` owns the current READY/STOP file-marker `ActivityControlChannel` and its `GREIA_ACTIVITY_READY_PATH` / `GREIA_ACTIVITY_STOP_PATH` SDK environment; Supervisor only requires the generic `ActivityLifecycleControl` operations (`ready`, `request_stop`, `cleanup`). `GREIA_ACTIVITY_SESSION_ID` remains platform-owned. This closes the final identified runtime-specific lifecycle leak in R6.2 while leaving the R5 history/event continuity blocker explicit.
+```text
+docs/reviews/2026-08-09_R6_SOURCE_CLOSURE_AUDIT.md
+```
 
 ---
 
 ## 2. Mandatory resume order
 
-Before changing implementation source, read:
+Before implementation work, read in order:
 
 1. `AGENTS.md`
 2. `docs/architecture/GREIA_ARCHITECTURE.md`
@@ -105,47 +70,46 @@ Before changing implementation source, read:
 7. `docs/adr/0016-universal-storage-service-and-transactional-save-migrations.md`
 8. `docs/adr/0017-platform-owned-sessions-events-progression-and-reward-ledger.md`
 9. `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`
-10. `docs/reviews/2026-08-08_ACTIVE_PLAN_AUDIT_AND_CORRECTION.md`
-11. `docs/reviews/2026-08-08_R6_2_RUNTIME_INTEGRATION_AND_REMOTE_CONTINUITY.md`
-12. this handover
-13. GitHub issue #2
-14. draft PR #1
+10. `docs/reviews/2026-08-09_R6_SOURCE_CLOSURE_AUDIT.md`
+11. this handover
+12. issue #2 and draft PR #1
 
-Do not begin R7 until R0/R6 closure requirements are genuinely met.
+Do not start R7 until the R0/R5 blocker is resolved and R6 is re-audited against a complete clean-clone gate.
 
 ---
 
-## 3. Architecture invariants
+## 3. Non-negotiable architecture
 
 - Greia Shell is the child's operating environment; Linux is substrate.
 - `Activity` is the stable abstraction above Python, Web and future runtimes.
-- Package trust/origin, permissions, storage, sessions, progression/rewards, install/update, backup/restore and parent policy are platform-owned.
-- Runtime adapters own runtime-specific validation and launch mechanics only; they must not fork Greia platform services.
-- Hardware truth comes from the Device Capability Service/HAL, never Activity manifests or environment text.
-- ARM and legacy x86 are peer first-class platform families.
-- Xorg is provisional; the target display direction is DRM/KMS beneath stable Greia semantic contracts.
-- Durable Activity state remains architecture-neutral and brokered through shared services.
+- Package trust/origin, permissions, durable storage, sessions, progression/rewards, package/update, backup/restore and parent policy are platform-owned.
+- Runtime adapters own runtime-specific validation, process preparation, lifecycle transport and runtime-handle mechanics. They must not fork shared Greia services.
+- Hardware truth comes from the Device Capability Service/HAL, never Activity manifests or environment strings.
+- Capability requirement, permission request and effective grant are different concepts.
+- ARM and legacy x86 remain peer platform families.
+- Xorg is provisional evidence/migration infrastructure only. R7 is DRM/KMS-first beneath the stable HAL contracts.
+- Durable Activity state remains architecture-neutral and brokered.
 - Activities report factual normalized events; Greia owns progression/reward policy.
-- Do not reintroduce the rejected generic `Resource Service`.
-- Do not reconstruct missing security/storage/history authority from prose and call it recovered source.
+- Do not reconstruct lost security/storage/history authority from prose and call it recovered source.
 
 ---
 
 ## 4. Phase status
 
 ```text
-R0   canonical complete GitHub repository                         OPEN — narrowed to lost later R5 source
-R1   package trust / PermissionBroker / Activity authority        previously verified locally
-R2   runtime-neutral lifecycle / READY / watchdog                 previously verified locally
-R3   permanent Activity identity / manifest semantics             previously verified locally
-R4   Universal Storage Service                                    previously verified locally
-R5   sessions / events / progression / reward ledger              previously verified locally; history.py currently lost
-R6.1 Device Capability Service / typed HAL                        previously verified locally
-R6.2 Runtime Manager / runtime validation / launcher integration  IN PROGRESS
+R0   canonical complete GitHub repository                         OPEN — only later R5 source continuity remains
+R1   package trust / PermissionBroker / Activity authority        implemented / prior verification preserved
+R2   runtime-neutral lifecycle / READY / watchdog                 implemented / prior verification preserved
+R3   permanent Activity identity / manifest semantics             implemented / prior verification preserved
+R4   Universal Storage Service                                    implemented; now integrated into real launch sessions
+R5   sessions / events / progression / reward ledger              historical implementation lost in part; BLOCKING
+R6.1 Device Capability Service / typed HAL                        SOURCE PASS; physical evidence remains later
+R6.2 full Runtime Adapter integration                             SOURCE ARCHITECTURE PASS
+R6   overall phase closure                                        BLOCKED by R0/R5 and full-gate incompleteness
 R7+  not started
 ```
 
-Historical complete-tree milestones:
+Historical complete-tree milestones remain useful evidence only:
 
 ```text
 R2   159/159
@@ -154,45 +118,177 @@ R5   213/213
 R6.1 219/219
 ```
 
-Those are valid historical local-verification records, but the historical **219/219** tree is not yet reproducible from current GitHub because the later R5 history module is absent.
+The old 219/219 session-local tree no longer exists, so those results cannot substitute for current reproducibility.
 
 ---
 
-## 5. R0 recovery that is now complete
+## 5. R6.2 work completed after recovery
 
-### Baseline source
+### 5.1 Snapshot-bound launch authority
 
-The v0.12-derived Greia baseline was recovered and validated locally at 140/140. Missing baseline files were added to GitHub while preserving newer R1–R6 files.
-
-### Binary assets
-
-All 123 PNGs are now repository-managed. Representative restored path:
+Commit:
 
 ```text
-assets/icons/core/v1/128/unicorn.png
+67cb59c7308c71226777742731d957c845e464a6
+fix: bind launch authority to device capability snapshot
 ```
 
-The asset recovery required exact SHA agreement with the archived v0.12 ledger. It is complete and should not be revisited unless a future integrity check proves actual corruption.
+`ActivityAuthority` records the trusted `DeviceCapabilitySnapshot.token` used by PermissionBroker. RuntimeManager launch preparation accepts that token as the expected device observation, and Supervisor supplies it before process creation. If an explicit device refresh changes the semantic snapshot between authority issuance and launch, the launch fails closed.
 
-### Clean-clone proof
+This closes the stale-authority/TOCTOU gap without coupling RuntimeManager to PermissionBroker types.
 
-Final cleaned-tree GitHub Actions evidence at `298336c5...`:
+### 5.2 R4 Universal Storage wired into real Activity sessions
+
+Implementation milestone:
 
 ```text
-FILES=313
-PNG=123
-compileall PASS
-Ran 158 tests
-OK
+04e217a…
+feat: wire universal storage into Activity launch sessions
 ```
 
-The next command in `make verify` fails specifically at the missing R5 import, not at baseline build/source/assets.
+Installed composition loads `runtime/storage-policy.toml`, constructs the shared `ActivityStorageService`, and injects it into Supervisor.
+
+For every Activity launch, Supervisor:
+
+- opens the durable `(profile_id, activity_id)` namespace;
+- starts one ephemeral `ActivityStorageBroker`;
+- passes only `GREIA_STORAGE_SOCKET` and `GREIA_STORAGE_TOKEN`;
+- mounts only the ephemeral broker runtime root into Bubblewrap;
+- never mounts the durable namespace into the Activity;
+- stops/removes the broker on terminal cleanup;
+- converts broker-cleanup failure to `platform_failure`.
+
+End-to-end `ActivityStorageClient -> broker -> ActivityStorage` read/write and cleanup are covered by tests.
+
+### 5.3 Runtime-command authority boundary
+
+Implementation milestone:
+
+```text
+5fbc675…
+refactor: isolate runtime-specific launch command policy
+```
+
+`RuntimeCommand` now owns runtime-specific command, package-bounded cwd and bounded runtime environment.
+
+Python-only process policy lives in `PythonRuntimeAdapter`, including:
+
+```text
+PYTHONNOUSERSITE=1
+PYTHONDONTWRITEBYTECODE=1
+```
+
+RuntimeManager rejects malformed commands, cwd escaping the Activity package, duplicate/invalid environment entries, and runtime attempts to overwrite Greia/session/profile/storage or platform-owned `PATH/HOME/XDG/display/audio` variables.
+
+Supervisor no longer contains Python-specific process environment policy and Bubblewrap honors adapter-prepared cwd.
+
+### 5.4 Runtime handle/session mechanics behind adapters
+
+Implementation milestone:
+
+```text
+3e3c4f7…
+refactor: move runtime session mechanics behind adapters
+```
+
+The Runtime Adapter/RuntimeManager seam now owns:
+
+- final runtime-handle creation through `RuntimeInvocation`;
+- runtime exit collection and normalization;
+- force-stop;
+- runtime-handle cleanup.
+
+Supervisor retains Greia sandbox policy, state/deadline semantics and platform resource brokers, but it no longer directly creates `Popen`, signals process groups, or decides whether raw runtime return codes mean normal/crash.
+
+### 5.5 Runtime-owned lifecycle transport
+
+Implementation milestone:
+
+```text
+94f93941db32a91e77c8af09f0eab4bb7c28bc07
+refactor: move lifecycle transport behind runtime adapters
+```
+
+Platform session identity is now independent of runtime transport. Greia allocates `ActivitySession.session_id` before runtime preparation; even unavailable-runtime failures have a valid platform session ID without manufacturing Python files.
+
+RuntimeManager asks the selected adapter for a `RuntimeLifecycleBinding` bound to that exact session ID.
+
+`PythonRuntimeAdapter` owns the current READY/STOP marker transport and supplies:
+
+```text
+GREIA_ACTIVITY_READY_PATH
+GREIA_ACTIVITY_STOP_PATH
+```
+
+Supervisor consumes only the generic lifecycle-control protocol (`ready`, `request_stop`, `cleanup`) and owns only the universal:
+
+```text
+GREIA_ACTIVITY_SESSION_ID
+```
+
+A runtime lifecycle binding cannot replace platform session identity. Invalid bindings are cleaned before failure propagates.
 
 ---
 
-## 6. Remaining R0 blocker: lost post-v0.12 R5 history authority
+## 6. Permanent R6 clean-clone CI invariants
 
-Missing implementation:
+The standing workflow:
+
+```text
+.github/workflows/r0-clean-verify.yml
+```
+
+now permanently checks the R6 source architecture before `make verify`.
+
+It asserts:
+
+- typed `GreiaHAL`, Display/Input protocols and `DeviceCapabilityService`/HAL probe exist;
+- installed launcher composition constructs one trusted device service shared by PermissionBroker and RuntimeManager;
+- authority/device compatibility snapshot coherence remains wired;
+- Universal Storage service/broker launch transport remains wired;
+- `RuntimeCommand`, `RuntimeInvocation`, `RuntimeLifecycleBinding`, adapter exit/force-stop/cleanup seams remain present;
+- Python READY/STOP transport remains in the adapter;
+- Supervisor contains no concrete `ActivityControlChannel`, Python marker names, direct `subprocess.Popen`, or process-group signaling;
+- legacy X remains explicitly provisional below HAL.
+
+At clean checkout `cd317a862...`, this architecture-invariant step passed before the 172/172 suite.
+
+---
+
+## 7. R6 source-closure decision
+
+The executable audit concludes:
+
+```text
+R6.1 source architecture: PASS
+R6.1 hardware/direct-graphics evidence: NOT CLAIMED
+R6.2 source architecture: PASS
+R6 overall phase closure: BLOCKED
+R7: MUST NOT START
+```
+
+R6.2 now satisfies the source-level Runtime Adapter contract required by ADR 0012/0014/0015 and the active plan:
+
+- runtime-neutral package Registry;
+- runtime-specific validation behind adapter;
+- trusted semantic device compatibility;
+- snapshot-bound launch authority;
+- runtime-owned command/environment/cwd;
+- runtime-owned handle creation;
+- runtime-owned exit normalization;
+- runtime-owned force-stop and cleanup;
+- runtime-owned lifecycle transport;
+- platform-owned session identity;
+- shared platform-owned Storage transport;
+- installed launcher composition using the same trusted device authority on permission and runtime sides.
+
+Do not reopen R6.2 architecture merely because the full gate is red at the known R5 import.
+
+---
+
+## 8. The only current full-gate blocker
+
+Missing authoritative R5 source:
 
 ```text
 src/greia_platform/history.py
@@ -204,95 +300,88 @@ Likely associated lost historical tests:
 tests/test_history.py
 ```
 
-Authoritative recovery searches already performed:
+Recovery already exhausted:
 
-- direct `/mnt/data` filesystem search for `history.py`, `test_history.py`, Greia/R6 archives and `HistoryPolicy`/`ProgressionPolicy` symbols — no source found;
-- File Library searches for those paths/symbols, `greia_work`, R6.1 and 219-test archives — no source found;
-- GitHub code search — no implementation found;
-- direct historical-ref fetches — 404 for both source/test paths at relevant R5/R6 refs;
-- R5 commit `89f58f86ac4a5bc3772c0d73ee8497ec3f3d6402` adds `runtime/history-policy.toml`, not `history.py`;
-- R5 validation commit `f6ab2181735723091b1876c9513e47d6e25a94a8` imports `HistoryPolicy` / `ProgressionPolicy` from the absent module;
-- the prior R6.1 handover records the former authoritative session-local tree as `/mnt/data/greia_work` and reports 219/219 PASS, but that ephemeral tree no longer exists.
+- current `/mnt/data` filesystem;
+- uploaded File Library;
+- current GitHub code search;
+- relevant R5/R6 historical refs;
+- prior session archive/workspace searches.
 
-Therefore this is genuine historical source loss. It must not be mislabeled as unfinished ZIP recovery.
+The historical R5 commits preserve policy TOML, protocols/brokers and validator references, but the actual `HistoryPolicy` / `ProgressionPolicy` implementation never reached Git.
 
-If an exact historical copy is found, import it and rerun the full clean gate. If no exact copy exists, a replacement must be explicitly authorized as a **new R5 reimplementation**, designed/reviewed from the accepted ADR and surrounding contracts rather than represented as recovered code.
+This prevents:
+
+1. full clean-clone `make verify` PASS;
+2. honest restoration of R5 History/Progression authority;
+3. wiring the surviving event broker into the real History/Progression service;
+4. repository-complete R1–R6 integration proof.
 
 ---
 
-## 7. R6.2 currently persisted
+## 9. Exact next action
 
-Current R6.2 work includes:
+The next step requires an explicit project decision.
 
-- runtime-neutral Activity Registry;
-- permanent reverse-DNS Activity IDs and trusted legacy aliases;
-- package-origin/source authority hardening;
-- Python AST/import/dependency policy behind `PythonRuntimeAdapter`;
-- one `RuntimeManager` mapping runtime type to adapter;
-- fail-closed unknown/unavailable runtimes;
-- trusted `DeviceCapabilityService` compatibility evaluation;
-- shared HAL-backed launcher service composition;
-- ActivitySupervisor consuming RuntimeManager;
-- required platform-issued capability checks before child process creation.
+If authorized, treat the missing R5 History/Progression implementation as a **new reviewed reimplementation**, not as recovered source.
 
-Focused R6.2 evidence:
+The new R5 tranche must be derived from:
+
+- accepted ADR 0017;
+- surviving `runtime/history-policy.toml` and progression policy;
+- surviving event protocol/client/broker contracts;
+- surviving Storage and profile identity contracts;
+- surviving parent progress-summary contract;
+- active-plan R5 closure requirements.
+
+Required order:
+
+1. re-audit all surviving R5 contracts before writing replacement authority;
+2. implement `HistoryPolicy` / `ProgressionPolicy` and durable session/progression authority with clean OOP boundaries;
+3. restore authoritative automatic session lifecycle recording;
+4. wire `ActivityEventBroker` to that authority without giving Activities reward control;
+5. restore/expand R5 tests, including idempotency, bounded history, reward ledger and cross-profile/Activity isolation;
+6. run the complete clean-clone `make verify` gate;
+7. fix only genuine additional continuity gaps exposed by that gate;
+8. re-run the R6 closure audit;
+9. only after R0/R5/R6 all close may R7 direct graphics begin.
+
+Until that decision is made, do not fabricate a minimal `history.py` merely to turn CI green.
+
+---
+
+## 10. Current durable evidence
 
 ```text
-17 / 17 PASS
+v0.12 baseline rebuilt:                       140/140 PASS
+post-recovery clean suite:                    158/158 PASS
+snapshot/storage/runtime-command evolution:   163 -> 167 tests PASS
+runtime-session ownership:                    169/169 PASS
+runtime lifecycle binding final tranche:      172/172 PASS
+permanent clean-checkout R6 invariants:       PASS
+clean-checkout full gate:                     172/172 PASS, then missing history.py
 ```
 
-The restored clean tree additionally proves **158/158 current unit tests PASS**.
-
----
-
-## 8. Exact next action
-
-Do not reopen v0.12 recovery and do not start R7.
-
-First priority:
+Primary current review:
 
 ```text
-recover an exact authoritative copy of src/greia_platform/history.py
-and associated historical test source if available
+docs/reviews/2026-08-09_R6_SOURCE_CLOSURE_AUDIT.md
 ```
 
-Then:
-
-1. commit the exact recovered R5 source;
-2. run clean-clone `make verify`;
-3. reconcile any additional later R5/R6 gaps exposed by that gate;
-4. complete R6 installed-composition review against ADRs 0012, 0014 and 0015;
-5. update active plan and handover;
-6. only then close R0/R6 and move toward R7.
-
-If no historical source can be recovered, stop and obtain explicit authorization before implementing a new replacement history/progression service.
-
 ---
 
-## 9. Durable recovery evidence
+## 11. Final current-state statement
 
 ```text
-1d34e5e2c67d0113e146c7fa48d16dc60aa9c82c  restore all 123 ZIP-verified binary assets
-c746125a978b9286c5508e51fe2958c9ec3eae60  remove one-off R0 transport machinery
-298336c5c75757f9df843be89dae2b8988b3b80c  final post-cleanup clean-clone verification trigger
-```
-
-R0 issue #2 and draft PR #1 have been updated to the same final recovery boundary.
-
----
-
-## 10. Final state
-
-```text
-v0.12 ZIP baseline recovery: COMPLETE
-Greia migration of recovered baseline: VERIFIED locally at 140/140
-baseline source/build/test/config import: COMPLETE
-123 PNG recovery: COMPLETE, exact and ledger-verified
-final cleaned GitHub tree: 313 files / 123 PNGs
-current clean unit suite: 158/158 PASS
-remaining full-gate blocker: lost post-v0.12 R5 greia_platform.history implementation
-historical 219/219 evidence: preserved, but exact missing R5 source does not currently survive
-R0: OPEN only for later source recovery/final reproducibility
-R6.2: IN PROGRESS
+v0.12 recovery: COMPLETE
+binary/source baseline continuity: COMPLETE
+123 PNGs: repository-managed and ledger-verified
+R6.2 source architecture: PASS
+current recoverable unit suite: 172/172 PASS
+permanent R6 CI invariants: PASS
+full make verify: BLOCKED only at lost post-v0.12 greia_platform.history import
+R5 History/Progression authority: requires explicit new reimplementation decision
+R6 overall: NOT CLOSED
+PR #1: KEEP DRAFT
 R7: DO NOT START
 ```
