@@ -116,7 +116,10 @@ forbidden_suffixes = [
   ".tar",
   ".zip",
 ]
-forbidden_file_names = []
+forbidden_file_names = [
+  ".DS_Store",
+  "Thumbs.db",
+]
 
 [capabilities]
 allowed = [
