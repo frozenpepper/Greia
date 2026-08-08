@@ -1,0 +1,28 @@
+name: R0 image content relay probe
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/r0-image-content-probe.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+      - name: Probe exact source bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL='https://lh7-rt.googleusercontent.com/slidesz/AGV_vUcvh29LvqEwd8nYqUY6brT5jSdoviXkM2DQvAKnO9U6aNACDfeXN5MCNaRzogmPmZEp9z8EIeralAGlY_bbTZJsb70FuMICZonbGKwSxYZBIeHcew6zJDRrPcqGm9ySv3IGfFosNnh1w-uqRT1SMMVhiipbwI5xhrNulJsTgkfuNi1YpBk=s2048?key=DLDXuCDhvbi66FtiZPZajw'
+          curl --fail --location --silent --show-error "$URL" -o /tmp/source.png
+          stat -c 'SIZE=%s' /tmp/source.png
+          sha256sum /tmp/source.png
+          test "$(sha256sum /tmp/source.png | awk '{print $1}')" = '026f09eddb72a0befb43beb1bc2ad912009c923feedcba86dc82e0302900b3c8'
