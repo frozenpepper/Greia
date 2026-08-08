@@ -1,0 +1,168 @@
+name: R6 device snapshot coherence tranche
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/r6-device-snapshot-coherence.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  implement-and-verify:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Apply bounded R6.2 snapshot-coherence patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+
+          def replace_once(path: str, old: str, new: str) -> None:
+              target = Path(path)
+              text = target.read_text(encoding="utf-8")
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"{path}: expected one patch anchor, found {count}: {old!r}")
+              target.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+          # Bind platform-issued Activity authority to the semantic device
+          # observation used to compute effective capabilities and grants.
+          replace_once(
+              "src/greia_platform/permissions.py",
+              "    package_trust: PackageTrust\n    requested_capabilities: frozenset[str]\n",
+              "    package_trust: PackageTrust\n    device_snapshot_token: str\n    requested_capabilities: frozenset[str]\n",
+          )
+          replace_once(
+              "src/greia_platform/permissions.py",
+              "            package_trust=registration.package_trust,\n            requested_capabilities=requested_capabilities,\n",
+              "            package_trust=registration.package_trust,\n            device_snapshot_token=device_snapshot.token,\n            requested_capabilities=requested_capabilities,\n",
+          )
+
+          # RuntimeManager remains the compatibility authority, but callers can
+          # now require launch preparation to use the same device observation
+          # that was used to mint higher-level authority.
+          replace_once(
+              "src/greia_launcher/runtime_adapter.py",
+              "    def prepare_launch(self, manifest: ActivityManifest) -> RuntimeLaunchPreparation:\n        adapter = self.adapter_for(manifest.runtime_type)\n        adapter.validate_package(manifest)\n        compatibility = self.compatibility_for(manifest)\n        if not compatibility.compatible:\n",
+              "    def prepare_launch(\n        self,\n        manifest: ActivityManifest,\n        *,\n        expected_device_snapshot_token: str | None = None,\n    ) -> RuntimeLaunchPreparation:\n        adapter = self.adapter_for(manifest.runtime_type)\n        adapter.validate_package(manifest)\n        compatibility = self.compatibility_for(manifest)\n        if (\n            expected_device_snapshot_token is not None\n            and compatibility.device_snapshot_token != expected_device_snapshot_token\n        ):\n            raise RuntimeCompatibilityError(\n                \"device capability snapshot changed after launch authority was issued\"\n            )\n        if not compatibility.compatible:\n",
+          )
+
+          # Supervisor coordinates the two trusted decisions and fails closed
+          # before any process/sandbox creation if they are not snapshot-coherent.
+          replace_once(
+              "src/greia_launcher/supervisor.py",
+              "            preparation = self._runtime_manager.prepare_launch(manifest)\n",
+              "            preparation = self._runtime_manager.prepare_launch(\n                manifest,\n                expected_device_snapshot_token=authority.device_snapshot_token,\n            )\n",
+          )
+
+          # PermissionBroker evidence: the authority exposes exactly the token of
+          # the injected trusted device service observation.
+          replace_once(
+              "tests/test_permissions.py",
+              "        self.assertNotIn(\"removable_media\", authority.effective_capabilities)\n",
+              "        self.assertEqual(\n            authority.device_snapshot_token, device_service.snapshot().token\n        )\n        self.assertNotIn(\"removable_media\", authority.effective_capabilities)\n",
+          )
+
+          # Runtime-level negative test for stale expected snapshot.
+          replace_once(
+              "tests/test_runtime_manager.py",
+              "    def test_activity_environment_cannot_forge_runtime_device_truth(self) -> None:\n",
+              "    def test_launch_preparation_rejects_stale_device_snapshot_token(self) -> None:\n        shape = next(\n            item for item in self._built_in_manifests()\n            if item.activity_id == \"org.greia.shape-garden\"\n        )\n        stale_token = DeviceCapabilityService.static(\n            {\"display\", \"pointer\", \"audio.basic\"},\n            source_id=\"runtime-manager-test\",\n        ).snapshot().token\n        manager = self._manager({\"display\", \"pointer\"})\n\n        with self.assertRaisesRegex(RuntimeCompatibilityError, \"snapshot changed\"):\n            manager.prepare_launch(\n                shape, expected_device_snapshot_token=stale_token\n            )\n\n    def test_activity_environment_cannot_forge_runtime_device_truth(self) -> None:\n",
+          )
+
+          # Existing supervisor test authority mirrors the production contract.
+          replace_once(
+              "tests/test_supervisor.py",
+              "        self.package_trust = PackageTrust.BUILT_IN\n        self.effective_capabilities = frozenset(capabilities)\n",
+              "        self.package_trust = PackageTrust.BUILT_IN\n        self.device_snapshot_token = DeviceCapabilityService.static(\n            capabilities, source_id=\"supervisor-test\"\n        ).snapshot().token\n        self.effective_capabilities = frozenset(capabilities)\n",
+          )
+          replace_once(
+              "tests/test_supervisor.py",
+              "    def test_unavailable_runtime_is_normalized_to_launch_failure(self) -> None:\n",
+              "    def test_stale_device_authority_fails_before_process_creation(self) -> None:\n        with tempfile.TemporaryDirectory() as temporary:\n            root = Path(temporary)\n            manifest = _manifest(root / \"activity\")\n            profile = _ProfileContext(root / \"profile\")\n            authority = _Authority(\n                manifest.activity_id,\n                capabilities={\"display\", \"pointer\", \"audio.basic\"},\n            )\n            factory = mock.Mock(side_effect=AssertionError(\"process must not start\"))\n            supervisor = ActivitySupervisor(\n                require_sandbox=False,\n                runtime_manager=_manager({\"display\", \"pointer\"}),\n                process_factory=factory,\n            )\n            session = supervisor.start(manifest, profile, authority)\n\n        self.assertEqual(session.state, ActivitySessionState.FAILED)\n        self.assertEqual(session.result.exit_reason, ActivityExitReason.LAUNCH_FAILURE)\n        factory.assert_not_called()\n\n    def test_unavailable_runtime_is_normalized_to_launch_failure(self) -> None:\n",
+          )
+
+          plan = Path("docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md")
+          progress = """## 2026-08-09 — R6.2 snapshot-bound launch authority\n\n- Implemented: bound `ActivityAuthority` to the trusted `DeviceCapabilitySnapshot.token` used by PermissionBroker; RuntimeManager launch preparation can require an expected snapshot token; ActivitySupervisor now requires runtime compatibility to be evaluated against the same semantic device observation before process creation.\n- Tests/evidence: added positive token-binding coverage plus negative RuntimeManager and Supervisor stale-snapshot tests; focused R6 tests and complete currently-recoverable unit suite run in GitHub CI for this tranche.\n- Decisions: semantic snapshot equality, not wall-clock observation time, is the launch-coherence invariant. A refresh that changes no semantic capability/provenance remains valid; a changed snapshot fails closed before child creation. RuntimeManager does not depend on PermissionBroker types; Supervisor coordinates them via the opaque snapshot token.\n- Remaining blockers: full `make verify` remains blocked by the separately lost post-v0.12 R5 `src/greia_platform/history.py`; R6 installed composition and broader closure review remain open.\n- Next exact step: review the real installed launcher composition path and R6.2 lifecycle/SDK cleanup responsibilities against the accepted ADRs, then close any remaining runtime-integration gaps without starting R7.\n- Commit(s): this tranche commit.\n\n"""
+          marker = "---\n\n# 9. Final completion criteria"
+          text = plan.read_text(encoding="utf-8")
+          if progress.splitlines()[0] in text:
+              raise SystemExit("progress entry already exists")
+          if text.count(marker) != 1:
+              raise SystemExit("active plan final-criteria marker is not unique")
+          plan.write_text(text.replace(marker, progress + marker, 1), encoding="utf-8")
+
+          handover = Path("HANDOVER.md")
+          section = """## R6.2 launch-authority/device-snapshot coherence — 2026-08-09\n\nThe first post-recovery implementation tranche closes a real TOCTOU-style authority gap in R6.2. PermissionBroker now records the opaque token of the trusted device snapshot used to compute effective capabilities and permissions in every `ActivityAuthority`. RuntimeManager launch preparation accepts that token as an expected compatibility observation, and ActivitySupervisor supplies it before any child process is created. If the Device Capability Service is explicitly refreshed and the semantic snapshot changes between authority issuance and launch preparation, launch fails closed. This preserves separation of concerns: PermissionBroker computes grants, RuntimeManager computes runtime/device compatibility, and Supervisor coordinates their consistency without either service importing the other's authority type.\n\n"""
+          marker = "---\n\n## 1. Mandatory resume order"
+          text = handover.read_text(encoding="utf-8")
+          if section.splitlines()[0] in text:
+              raise SystemExit("handover section already exists")
+          if text.count(marker) != 1:
+              raise SystemExit("handover resume marker is not unique")
+          handover.write_text(text.replace(marker, section + marker, 1), encoding="utf-8")
+          PY
+
+      - name: Compile changed source
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m compileall -q src tests
+
+      - name: Focused R6 security and runtime tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          PYTHONPATH=src python3 -m unittest -v \
+            tests.test_permissions \
+            tests.test_runtime_manager \
+            tests.test_supervisor \
+            tests.test_device_capabilities \
+            tests.test_activity_registry_runtime_neutral
+
+      - name: Complete currently recoverable unit suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          PYTHONPATH=src python3 -m unittest discover -s tests -v
+
+      - name: Confirm known full-gate boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +e
+          PYTHONPATH=src python3 tools/validate_project.py > /tmp/validate.out 2>&1
+          status=$?
+          set -e
+          cat /tmp/validate.out
+          test "$status" -ne 0
+          grep -F "ModuleNotFoundError: No module named 'greia_platform.history'" /tmp/validate.out
+
+      - name: Commit coherent R6.2 tranche
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          git add \
+            src/greia_platform/permissions.py \
+            src/greia_launcher/runtime_adapter.py \
+            src/greia_launcher/supervisor.py \
+            tests/test_permissions.py \
+            tests/test_runtime_manager.py \
+            tests/test_supervisor.py \
+            docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md \
+            HANDOVER.md
+          git diff --cached --check
+          git config user.name "greia-r6-implementation"
+          git config user.email "greia-r6-implementation@users.noreply.github.com"
+          git commit -m "fix: bind launch authority to device capability snapshot"
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
