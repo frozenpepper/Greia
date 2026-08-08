@@ -1,0 +1,96 @@
+name: R0 install verified baseline text
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/r0-install-verified-baseline.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out active recovery branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Reconstruct and install verified missing baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin recovery/r0-local-authority-payload:refs/remotes/origin/recovery/r0-local-authority-payload
+          python3 <<'PY'
+          import base64
+          import hashlib
+          import io
+          import os
+          import shutil
+          import subprocess
+          import tarfile
+          from pathlib import Path, PurePosixPath
+
+          ref = "origin/recovery/r0-local-authority-payload"
+          expected = "7b8c8bbbe193dcbc85e73fffcbd42a1305fbd27755016918e521c9b7747b44f3"
+          paths = [f".recovery/local-authority/baseline-v2/chunk-{i:03d}" for i in range(7)]
+          encoded = "".join(
+              subprocess.check_output(["git", "show", f"{ref}:{path}"], text=True).strip()
+              for path in paths
+          )
+          payload = base64.b64decode(encoded, validate=True)
+          actual = hashlib.sha256(payload).hexdigest()
+          if actual != expected:
+              raise SystemExit(f"payload SHA-256 mismatch: {actual}")
+
+          added = []
+          with tarfile.open(fileobj=io.BytesIO(payload), mode="r:xz") as archive:
+              members = archive.getmembers()
+              files = [m for m in members if m.isfile()]
+              if len(files) != 100:
+                  raise SystemExit(f"expected 100 files, found {len(files)}")
+              for member in members:
+                  pure = PurePosixPath(member.name)
+                  if pure.is_absolute() or ".." in pure.parts or not pure.parts:
+                      raise SystemExit(f"unsafe path: {member.name}")
+                  if not (member.isfile() or member.isdir()):
+                      raise SystemExit(f"unsupported member: {member.name}")
+              for member in files:
+                  destination = Path(*PurePosixPath(member.name).parts)
+                  if destination.exists():
+                      raise SystemExit(f"refusing overwrite: {destination}")
+                  source = archive.extractfile(member)
+                  if source is None:
+                      raise SystemExit(f"cannot read: {member.name}")
+                  destination.parent.mkdir(parents=True, exist_ok=True)
+                  with destination.open("wb") as handle:
+                      shutil.copyfileobj(source, handle)
+                  os.chmod(destination, member.mode & 0o777)
+                  added.append(member.name)
+
+          print(f"verified payload {actual}")
+          print(f"installed {len(added)} missing files")
+          PY
+
+      - name: Validate restored source tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f Makefile
+          python3 -m compileall -q src tests tools activities
+          git diff --check
+          test -x tools/build_profile.py
+
+      - name: Commit verified baseline text
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "greia-r0-recovery"
+          git config user.email "greia-r0-recovery@users.noreply.github.com"
+          git add Makefile VERSION activities build runtime src tests tools
+          git commit -m "recovery: restore 100 missing verified Greia baseline files"
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
