@@ -56,6 +56,7 @@ class LauncherPaths:
     theme_defaults: Path
     profile_defaults: Path
     permission_policy: Path
+    storage_policy: Path
     profiles_dir: Path
     active_profile_status: Path
 
@@ -70,6 +71,7 @@ class LauncherPaths:
             theme_defaults=root / "runtime" / "theme-defaults.toml",
             profile_defaults=root / "runtime" / "profile-defaults.toml",
             permission_policy=root / "runtime" / "permission-policy.toml",
+            storage_policy=root / "runtime" / "storage-policy.toml",
             profiles_dir=Path(
                 os.environ.get("GREIA_PROFILES_DIR", "/var/lib/greia-profiles")
             ).resolve(),
@@ -160,10 +162,12 @@ class LauncherApplication:
             self.runtime,
             runtime_policy_path=self.paths.runtime_catalogue,
             permission_policy_path=self.paths.permission_policy,
+            storage_policy_path=self.paths.storage_policy,
             hal=development_hal,
         )
         self.supervisor = ActivitySupervisor(
-            runtime_manager=self.runtime_services.runtime_manager
+            runtime_manager=self.runtime_services.runtime_manager,
+            storage_service=self.runtime_services.storage_service,
         )
         self.allow_exit = allow_exit
         self._activities = self.registry.discover()

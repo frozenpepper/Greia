@@ -9,9 +9,16 @@ from unittest import mock
 
 from greia_launcher.lifecycle import ActivityExitReason, ActivitySessionState
 from greia_launcher.runtime_adapter import PythonRuntimeAdapter, RuntimeManager
-from greia_launcher.supervisor import ActivityLifecycleError, ActivitySupervisor
+from greia_launcher.storage_broker import ActivityStorageBroker
+from greia_launcher.supervisor import (
+    SANDBOX_STORAGE_ROOT,
+    ActivityLifecycleError,
+    ActivitySupervisor,
+)
 from greia_platform.activities import ActivityManifest, SkillContribution
 from greia_platform.device_capabilities import DeviceCapabilityService
+from greia_platform.storage import ActivityStorageService, StoragePolicy
+from greia_platform.storage_client import ActivityStorageClient
 from greia_platform.trust import PackageTrust
 
 
@@ -31,6 +38,11 @@ class _ProfileContext:
 
     def activity_data_dir(self, activity_id: str) -> Path:
         path = self.root / "activities" / activity_id
+        path.mkdir(parents=True, exist_ok=True)
+        return path
+
+    def activity_storage_dir(self, activity_id: str) -> Path:
+        path = self.root / "storage" / activity_id
         path.mkdir(parents=True, exist_ok=True)
         return path
 
@@ -111,10 +123,46 @@ def _manager(capabilities: set[str]) -> RuntimeManager:
     )
 
 
+def _storage_service() -> ActivityStorageService:
+    return ActivityStorageService(
+        StoragePolicy(
+            policy_schema_version=1,
+            namespace_quota_bytes=1024 * 1024,
+            max_kv_bytes=64 * 1024,
+            max_kv_value_bytes=16 * 1024,
+            max_key_bytes=128,
+            max_file_bytes=256 * 1024,
+            max_files=32,
+            max_path_bytes=256,
+            protected_free_bytes=0,
+            max_rollback_snapshots=1,
+        )
+    )
+
+
+def _broker_factory(runtime_root: Path):
+    def start(storage, session_id: str, *, sandboxed: bool):
+        return ActivityStorageBroker.start(
+            storage,
+            session_id,
+            runtime_root=runtime_root,
+            sandboxed=sandboxed,
+        )
+
+    return start
+
+
 class SupervisorTests(unittest.TestCase):
     def test_installed_supervisor_requires_explicit_runtime_manager(self) -> None:
         with self.assertRaisesRegex(ActivityLifecycleError, "injected HAL-backed RuntimeManager"):
             ActivitySupervisor(require_sandbox=True)
+
+    def test_installed_supervisor_requires_storage_service(self) -> None:
+        with self.assertRaisesRegex(ActivityLifecycleError, "ActivityStorageService"):
+            ActivitySupervisor(
+                require_sandbox=True,
+                runtime_manager=_manager({"display", "pointer"}),
+            )
 
     def test_missing_required_platform_authority_fails_before_process_creation(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -211,6 +259,45 @@ class SupervisorTests(unittest.TestCase):
         self.assertEqual(command[0], "/usr/bin/python3")
         self.assertEqual(Path(command[1]), manifest.launch_path)
 
+    def test_storage_broker_is_exposed_for_launch_and_removed_on_exit(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest = _manifest(root / "activity")
+            profile = _ProfileContext(root / "profile")
+            authority = _Authority(
+                manifest.activity_id, capabilities={"display", "pointer"}
+            )
+            process = _FakeProcess()
+            calls = []
+
+            def factory(*args, **kwargs):
+                calls.append((args, kwargs))
+                return process
+
+            supervisor = ActivitySupervisor(
+                require_sandbox=False,
+                runtime_manager=_manager({"display", "pointer"}),
+                storage_service=_storage_service(),
+                storage_broker_factory=_broker_factory(root / "brokers"),
+                process_factory=factory,
+            )
+            session = supervisor.start(manifest, profile, authority)
+            environment = calls[0][1]["env"]
+            socket_path = Path(environment["GREIA_STORAGE_SOCKET"])
+            client = ActivityStorageClient(
+                socket_path, environment["GREIA_STORAGE_TOKEN"]
+            )
+            client.kv_set("level", 7)
+            self.assertEqual(client.kv_get("level"), 7)
+            self.assertTrue(socket_path.exists())
+
+            process.returncode = 0
+            result = supervisor.poll(session)
+            self.assertEqual(result.exit_reason, ActivityExitReason.NORMAL)
+            self.assertFalse(socket_path.exists())
+
+        self.assertIsNone(supervisor.active_session)
+
     def test_only_one_activity_can_be_active(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -267,6 +354,49 @@ class SupervisorTests(unittest.TestCase):
         self.assertIn("GREIA_AVATAR_REQUEST_PATH", environment)
         self.assertNotIn("GREIA_CUSTOMIZATION_DIR", environment)
 
+    def test_sandbox_launch_mounts_only_ephemeral_storage_broker(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            sandbox = root / "bwrap"
+            sandbox.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
+            sandbox.chmod(0o755)
+            manifest = _manifest(root / "activity")
+            profile = _ProfileContext(root / "profile")
+            authority = _Authority(
+                manifest.activity_id, capabilities={"display", "pointer"}
+            )
+            process = _FakeProcess()
+            calls = []
+
+            def factory(*args, **kwargs):
+                calls.append((args, kwargs))
+                return process
+
+            supervisor = ActivitySupervisor(
+                sandbox_executable=sandbox,
+                require_sandbox=True,
+                runtime_manager=_manager({"display", "pointer"}),
+                storage_service=_storage_service(),
+                storage_broker_factory=_broker_factory(root / "brokers"),
+                process_factory=factory,
+            )
+            session = supervisor.start(manifest, profile, authority)
+            command = list(calls[0][0][0])
+            environment = calls[0][1]["env"]
+            self.assertEqual(
+                Path(environment["GREIA_STORAGE_SOCKET"]),
+                SANDBOX_STORAGE_ROOT / "storage.sock",
+            )
+            mount_index = command.index(str(SANDBOX_STORAGE_ROOT))
+            self.assertEqual(command[mount_index - 2], "--ro-bind")
+            host_broker_root = Path(command[mount_index - 1])
+            self.assertNotEqual(host_broker_root, profile.root)
+            self.assertTrue((host_broker_root / "storage.sock").exists())
+
+            process.returncode = 0
+            supervisor.poll(session)
+            self.assertFalse(host_broker_root.exists())
+
     def test_installed_missing_bubblewrap_fails_closed_without_starting_child(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -280,6 +410,8 @@ class SupervisorTests(unittest.TestCase):
                 sandbox_executable=root / "missing-bwrap",
                 require_sandbox=True,
                 runtime_manager=_manager({"display", "pointer"}),
+                storage_service=_storage_service(),
+                storage_broker_factory=_broker_factory(root / "brokers"),
                 process_factory=factory,
             )
             session = supervisor.start(manifest, profile, authority)

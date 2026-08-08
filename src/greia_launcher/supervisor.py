@@ -3,12 +3,13 @@ from __future__ import annotations
 import os
 import subprocess
 from pathlib import Path
-from typing import Callable, Mapping
+from typing import Callable, Mapping, Protocol
 
 from greia_platform.activities import ActivityManifest
 from greia_platform.device_capabilities import DeviceCapabilityService
 from greia_platform.permissions import ActivityAuthority
 from greia_platform.profiles import ProfileContext
+from greia_platform.storage import ActivityStorageService, StorageError
 
 from .lifecycle import (
     ActivityControlChannel,
@@ -24,6 +25,10 @@ from .runtime_adapter import (
     RuntimeAdapterError,
     RuntimeLaunchAdapter,
     RuntimeManager,
+)
+from .storage_broker import (
+    SANDBOX_STORAGE_ROOT,
+    ActivityStorageBroker,
 )
 
 
@@ -50,6 +55,11 @@ class ActivityLifecycleError(RuntimeError):
 
 
 ProcessFactory = Callable[..., subprocess.Popen[bytes]]
+StorageBrokerFactory = Callable[..., ActivityStorageBroker]
+
+
+class SessionResource(Protocol):
+    def stop(self) -> None: ...
 
 
 class ActivitySupervisor:
@@ -71,6 +81,8 @@ class ActivitySupervisor:
         graceful_stop_seconds: float = 2.0,
         runtime_manager: RuntimeManager | None = None,
         runtime_adapters: Mapping[str, RuntimeLaunchAdapter] | None = None,
+        storage_service: ActivityStorageService | None = None,
+        storage_broker_factory: StorageBrokerFactory = ActivityStorageBroker.start,
         process_factory: ProcessFactory = subprocess.Popen,
     ):
         if ready_timeout_seconds <= 0:
@@ -96,7 +108,14 @@ class ActivitySupervisor:
                     source_id="supervisor-development-static",
                 ),
             )
+        if self._sandbox_required() and storage_service is None:
+            raise ActivityLifecycleError(
+                "installed ActivitySupervisor requires an injected ActivityStorageService"
+            )
         self._runtime_manager = runtime_manager
+        self._storage_service = storage_service
+        self._storage_broker_factory = storage_broker_factory
+        self._session_resources: dict[str, tuple[SessionResource, ...]] = {}
         self._ready_timeout_seconds = ready_timeout_seconds
         self._graceful_stop_seconds = graceful_stop_seconds
         self._process_factory = process_factory
@@ -137,29 +156,52 @@ class ActivitySupervisor:
         host_activity_data = profile.activity_data_dir(manifest.activity_id)
         child_activity_data = SANDBOX_ACTIVITY_ROOT if sandboxed else host_activity_data
         control = ActivityControlChannel.create(host_activity_data, child_activity_data)
+
+        sandbox: Path | None = None
+        if sandboxed:
+            sandbox = self._resolve_sandbox()
+            if not sandbox.is_file() or not os.access(sandbox, os.X_OK):
+                return self._failed_launch_session(
+                    manifest, profile, authority, control=control
+                )
+
+        resources: tuple[SessionResource, ...] = ()
+        storage_broker: ActivityStorageBroker | None = None
+        if self._storage_service is not None:
+            try:
+                storage = self._storage_service.open(
+                    profile,
+                    manifest.activity_id,
+                    schema_version=manifest.storage_schema_version,
+                    package_version=manifest.version,
+                )
+                storage_broker = self._storage_broker_factory(
+                    storage, control.session_id, sandboxed=sandboxed
+                )
+            except (StorageError, OSError):
+                return self._failed_launch_session(
+                    manifest, profile, authority, control=control
+                )
+            resources = (storage_broker,)
+
         environment = self._sanitized_environment(
             manifest,
             profile,
             authority,
             control,
             sandboxed=sandboxed,
+            storage_broker=storage_broker,
         )
 
         if sandboxed:
-            sandbox = self._resolve_sandbox()
-            if not sandbox.is_file() or not os.access(sandbox, os.X_OK):
-                return self._failed_launch_session(
-                    manifest,
-                    profile,
-                    authority,
-                    control=control,
-                )
+            assert sandbox is not None
             command = self._sandbox_command(
                 sandbox,
                 runtime_command.command,
                 manifest,
                 profile,
                 authority,
+                storage_broker=storage_broker,
             )
             cwd: Path | None = None
         else:
@@ -186,6 +228,7 @@ class ActivitySupervisor:
                 authority,
                 control=control,
                 started_at=started,
+                resources=resources,
             )
 
         session = ActivitySession(
@@ -198,6 +241,7 @@ class ActivitySupervisor:
             ready_deadline=started + self._ready_timeout_seconds,
             graceful_stop_seconds=self._graceful_stop_seconds,
         )
+        self._session_resources[session.session_id] = resources
         self._active_session = session
         return session
 
@@ -299,6 +343,9 @@ class ActivitySupervisor:
         else:
             reason = ActivityExitReason.CRASH
 
+        if not self._cleanup_session_resources(session.session_id):
+            reason = ActivityExitReason.PLATFORM_FAILURE
+
         state = (
             ActivitySessionState.EXITED
             if reason in {ActivityExitReason.NORMAL, ActivityExitReason.GRACEFUL_STOP}
@@ -329,6 +376,7 @@ class ActivitySupervisor:
         *,
         control: ActivityControlChannel | None = None,
         started_at: float | None = None,
+        resources: tuple[SessionResource, ...] = (),
     ) -> ActivitySession:
         sandboxed = self._sandbox_required()
         host_activity_data = profile.activity_data_dir(manifest.activity_id)
@@ -360,8 +408,23 @@ class ActivitySupervisor:
             graceful_stop_seconds=self._graceful_stop_seconds,
             result=result,
         )
+        for resource in reversed(resources):
+            try:
+                resource.stop()
+            except Exception:
+                pass
         control.cleanup()
         return session
+
+    def _cleanup_session_resources(self, session_id: str) -> bool:
+        resources = self._session_resources.pop(session_id, ())
+        clean = True
+        for resource in reversed(resources):
+            try:
+                resource.stop()
+            except Exception:
+                clean = False
+        return clean
 
     def _sandbox_required(self) -> bool:
         if self._require_sandbox_override is not None:
@@ -382,6 +445,8 @@ class ActivitySupervisor:
         manifest: ActivityManifest,
         profile: ProfileContext,
         authority: ActivityAuthority,
+        *,
+        storage_broker: ActivityStorageBroker | None = None,
     ) -> list[str]:
         command = [
             str(sandbox),
@@ -419,6 +484,14 @@ class ActivitySupervisor:
                 "/run/greia-os",
             ]
         )
+        if storage_broker is not None:
+            command.extend(
+                [
+                    "--ro-bind",
+                    str(storage_broker.host_root),
+                    str(SANDBOX_STORAGE_ROOT),
+                ]
+            )
         if authority.has_permission("customization.manage"):
             command.extend(
                 [
@@ -440,6 +513,7 @@ class ActivitySupervisor:
         control: ActivityControlChannel,
         *,
         sandboxed: bool = False,
+        storage_broker: ActivityStorageBroker | None = None,
     ) -> dict[str, str]:
         allowed_names = {
             "DISPLAY",
@@ -508,6 +582,9 @@ class ActivitySupervisor:
                 "GREIA_ACTIVITY_STOP_PATH": str(control.child_stop_path),
             }
         )
+        if storage_broker is not None:
+            environment["GREIA_STORAGE_SOCKET"] = str(storage_broker.child_socket)
+            environment["GREIA_STORAGE_TOKEN"] = storage_broker.session_token
         if authority.has_permission("customization.manage"):
             environment["GREIA_CUSTOMIZATION_DIR"] = str(env_customization)
         if authority.has_permission("profile.manage_own"):

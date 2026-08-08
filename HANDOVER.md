@@ -74,6 +74,10 @@ This is no longer a ZIP/binary recovery problem. It is a distinct historical R5 
 
 The first post-recovery implementation tranche closes a TOCTOU-style authority gap in R6.2. PermissionBroker records the opaque token of the trusted device snapshot used to compute effective capabilities and permissions in every `ActivityAuthority`. RuntimeManager launch preparation accepts that token as the expected compatibility observation, and ActivitySupervisor supplies it before any child process is created. If the Device Capability Service is refreshed and the semantic snapshot changes between authority issuance and launch preparation, launch fails closed. PermissionBroker still computes grants, RuntimeManager computes runtime/device compatibility, and Supervisor coordinates consistency without either service importing the other's authority type.
 
+## R6.2 universal storage launch transport — 2026-08-09
+
+The installed Activity path now actually exposes the previously implemented R4 Universal Storage Service. `build_launcher_runtime_services(...)` loads `runtime/storage-policy.toml` and returns an `ActivityStorageService`; the installed launcher injects it into `ActivitySupervisor`. For each launch, the supervisor opens the durable `(profile_id, activity_id)` namespace, starts a one-session Unix-socket `ActivityStorageBroker`, passes only `GREIA_STORAGE_SOCKET` and `GREIA_STORAGE_TOKEN`, and in Bubblewrap mounts only the ephemeral broker directory at `/run/greia-storage`. The durable namespace itself is never mounted into the Activity. The broker is stopped and its runtime directory removed on terminal cleanup; a cleanup failure becomes `platform_failure`. The R5 event broker remains intentionally unwired because its authoritative `history.py` dependency is the known lost source.
+
 ---
 
 ## 2. Mandatory resume order
