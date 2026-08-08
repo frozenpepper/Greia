@@ -11,7 +11,7 @@ allowed_permissions = [
 # discovered from a BUILT_IN ActivitySource and match one of these stable IDs.
 # External packages that copy these IDs receive no privileged grants.
 [security.built_in]
-workshop_settings = [
+"org.greia.workshop-settings" = [
   "customization.manage",
   "profile.manage_own",
   "removable_media.read",
