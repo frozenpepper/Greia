@@ -1,0 +1,253 @@
+from __future__ import annotations
+
+import json
+import os
+import secrets
+import shutil
+import socketserver
+import tempfile
+import threading
+from dataclasses import dataclass
+from pathlib import Path
+
+from greia_platform.storage import ActivityStorage, StorageError, StorageQuotaExceeded
+from greia_platform.storage_protocol import (
+    StorageProtocolError,
+    receive_frame,
+    send_frame,
+)
+
+
+SANDBOX_STORAGE_ROOT = Path("/run/greia-storage")
+SANDBOX_STORAGE_SOCKET = SANDBOX_STORAGE_ROOT / "storage.sock"
+
+
+class _StorageRequestHandler(socketserver.BaseRequestHandler):
+    def handle(self) -> None:
+        server = self.server
+        assert isinstance(server, _StorageUnixServer)
+        self.request.settimeout(server.request_timeout_seconds)
+        try:
+            request, payload = receive_frame(
+                self.request,
+                max_payload_bytes=server.max_payload_bytes,
+            )
+            if request.get("session_token") != server.session_token:
+                raise _BrokerRequestError("unauthorized", "invalid storage session token")
+            response, response_payload = server.dispatch(request, payload)
+            send_frame(self.request, {"ok": True, **response}, response_payload)
+        except _BrokerRequestError as exc:
+            send_frame(
+                self.request,
+                {"ok": False, "error_code": exc.code, "message": exc.message},
+            )
+        except StorageQuotaExceeded as exc:
+            send_frame(
+                self.request,
+                {"ok": False, "error_code": "quota_exceeded", "message": str(exc)},
+            )
+        except (StorageError, StorageProtocolError):
+            send_frame(
+                self.request,
+                {
+                    "ok": False,
+                    "error_code": "storage_error",
+                    "message": "storage operation was rejected",
+                },
+            )
+        except Exception:
+            send_frame(
+                self.request,
+                {
+                    "ok": False,
+                    "error_code": "internal_error",
+                    "message": "storage broker operation failed",
+                },
+            )
+
+
+class _BrokerRequestError(RuntimeError):
+    def __init__(self, code: str, message: str):
+        self.code = code
+        self.message = message
+        super().__init__(message)
+
+
+class _StorageUnixServer(socketserver.ThreadingMixIn, socketserver.UnixStreamServer):
+    allow_reuse_address = False
+    daemon_threads = True
+    request_queue_size = 2
+    max_active_requests = 2
+    request_timeout_seconds = 2.0
+
+    def __init__(
+        self,
+        socket_path: Path,
+        storage: ActivityStorage,
+        session_token: str,
+    ):
+        self.storage = storage
+        self.session_token = session_token
+        self.max_payload_bytes = max(
+            storage.policy.max_file_bytes,
+            storage.policy.max_kv_value_bytes,
+        )
+        self._request_slots = threading.BoundedSemaphore(self.max_active_requests)
+        super().__init__(str(socket_path), _StorageRequestHandler)
+
+    def process_request(self, request, client_address) -> None:
+        if not self._request_slots.acquire(blocking=False):
+            request.close()
+            return
+        try:
+            super().process_request(request, client_address)
+        except Exception:
+            self._request_slots.release()
+            raise
+
+    def process_request_thread(self, request, client_address) -> None:
+        try:
+            super().process_request_thread(request, client_address)
+        finally:
+            self._request_slots.release()
+
+    def dispatch(
+        self,
+        request: dict[str, object],
+        payload: bytes,
+    ) -> tuple[dict[str, object], bytes]:
+        operation = request.get("op")
+        if operation == "kv.get":
+            key = _required_text(request, "key")
+            sentinel = object()
+            value = self.storage.kv_get(key, sentinel)
+            if value is sentinel:
+                return {"found": False}, b""
+            return {"found": True}, _json_payload(value)
+        if operation == "kv.set":
+            key = _required_text(request, "key")
+            if len(payload) > self.storage.policy.max_kv_value_bytes:
+                raise StorageQuotaExceeded("KV value exceeds per-value limit")
+            try:
+                value = json.loads(payload.decode("utf-8"))
+            except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+                raise _BrokerRequestError("invalid_request", "KV value is not JSON") from exc
+            self.storage.kv_set(key, value)
+            return {}, b""
+        if operation == "kv.delete":
+            return {"deleted": self.storage.kv_delete(_required_text(request, "key"))}, b""
+        if operation == "kv.list":
+            prefix = request.get("prefix")
+            if prefix is not None and not isinstance(prefix, str):
+                raise _BrokerRequestError("invalid_request", "KV prefix must be text")
+            return {}, _json_payload(list(self.storage.kv_list(prefix)))
+        if operation == "files.read":
+            return {}, self.storage.file_read(_required_text(request, "name"))
+        if operation == "files.write":
+            self.storage.file_write_atomic(_required_text(request, "name"), payload)
+            return {}, b""
+        if operation == "files.delete":
+            return {
+                "deleted": self.storage.file_delete(_required_text(request, "name"))
+            }, b""
+        if operation == "files.list":
+            prefix = request.get("prefix")
+            if prefix is not None and not isinstance(prefix, str):
+                raise _BrokerRequestError("invalid_request", "file prefix must be text")
+            return {}, _json_payload(list(self.storage.file_list(prefix)))
+        if operation == "info":
+            return {}, _json_payload(self.storage.info().as_dict())
+        if operation == "checkpoint":
+            return {"checkpoint_token": self.storage.checkpoint()}, b""
+        raise _BrokerRequestError("unsupported_operation", "unknown storage operation")
+
+
+@dataclass(slots=True)
+class ActivityStorageBroker:
+    """One-session Unix-socket broker for an Activity's logical storage."""
+
+    host_root: Path
+    host_socket: Path
+    child_socket: Path
+    session_token: str
+    _server: _StorageUnixServer
+    _thread: threading.Thread
+    _stopped: bool = False
+
+    @classmethod
+    def start(
+        cls,
+        storage: ActivityStorage,
+        session_id: str,
+        *,
+        runtime_root: Path | None = None,
+        sandboxed: bool,
+    ) -> "ActivityStorageBroker":
+        base = runtime_root or _default_runtime_root()
+        base = base.resolve(strict=False)
+        if base.is_symlink():
+            raise StorageError("storage broker runtime root may not be a symbolic link")
+        host_root = base / session_id
+        host_root.mkdir(parents=True, exist_ok=False)
+        os.chmod(host_root, 0o700)
+        host_socket = host_root / "storage.sock"
+        if len(os.fsencode(host_socket)) >= 100:
+            shutil.rmtree(host_root, ignore_errors=True)
+            raise StorageError("storage broker socket path is too long")
+        token = secrets.token_urlsafe(32)
+        try:
+            server = _StorageUnixServer(host_socket, storage, token)
+        except Exception:
+            shutil.rmtree(host_root, ignore_errors=True)
+            raise
+        os.chmod(host_socket, 0o600)
+        thread = threading.Thread(
+            target=server.serve_forever,
+            kwargs={"poll_interval": 0.05},
+            name=f"greia-storage-{session_id[:8]}",
+            daemon=True,
+        )
+        thread.start()
+        return cls(
+            host_root=host_root,
+            host_socket=host_socket,
+            child_socket=(SANDBOX_STORAGE_SOCKET if sandboxed else host_socket),
+            session_token=token,
+            _server=server,
+            _thread=thread,
+        )
+
+    def stop(self) -> None:
+        if self._stopped:
+            return
+        self._stopped = True
+        self._server.shutdown()
+        self._server.server_close()
+        self._thread.join(timeout=1.0)
+        shutil.rmtree(self.host_root, ignore_errors=True)
+
+
+def _required_text(container: dict[str, object], key: str) -> str:
+    value = container.get(key)
+    if not isinstance(value, str) or not value:
+        raise _BrokerRequestError("invalid_request", f"{key} must be non-empty text")
+    return value
+
+
+def _json_payload(value: object) -> bytes:
+    return json.dumps(
+        value,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        allow_nan=False,
+    ).encode("utf-8")
+
+
+def _default_runtime_root() -> Path:
+    configured = os.environ.get("GREIA_STORAGE_BROKER_ROOT")
+    if configured:
+        return Path(configured)
+    os_root = Path(os.environ.get("GREIA_OS_ROOT", "/opt/greia-os")).resolve(strict=False)
+    if os_root == Path("/opt/greia-os"):
+        return Path("/run/greia-os/storage")
+    return Path(tempfile.gettempdir()) / f"greia-storage-{os.getuid()}"
