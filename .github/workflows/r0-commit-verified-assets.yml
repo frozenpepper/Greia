@@ -25,10 +25,10 @@ jobs:
           set -euo pipefail
           test "$(git ls-files '*.png' | wc -l | tr -d ' ')" = "0"
 
-          SOURCE_URL='https://lh7-rt.googleusercontent.com/slidesz/AGV_vUcvh29LvqEwd8nYqUY6brT5jSdoviXkM2DQvAKnO9U6aNACDfeXN5MCNaRzogmPmZEp9z8EIeralAGlY_bbTZJsb70FuMICZonbGKwSxYZBIeHcew6zJDRrPcqGm9ySv3IGfFosNnh1w-uqRT1SMMVhiipbwI5xhrNulJsTgkfuNi1YpBk=s2048?key=DLDXuCDhvbi66FtiZPZajw'
-          TRANSPARENT_URL='https://lh7-rt.googleusercontent.com/slidesz/AGV_vUcgOXC0XjOv51YHddxeG5rJyJmUJfvAcnRLEdplIa3dFs3NW9C_8cAcjmA0x1yXj9WcwN9aumWKLSetoXrlIDWzhzqjPlm3d70nhUWCmir_noezi3Zuc8X_UMENZ3E-5wvnhjTywsBw9skUzPQLo3D2d85YK8znAONu4noq0Sk8QGpoMrM=s2048?key=DLDXuCDhvbi66FtiZPZajw'
-          LABELED_URL='https://lh7-rt.googleusercontent.com/slidesz/AGV_vUcpaUvZfImOEvfXznNXZvnWYcKr6n-6Rls5moQ6furhD8mP1QS7gDzQX-39SGumf33eHlkJXgBX5iUefd5vRUaG5VH83TLfnSipvfU9nsFaYImb17cwkbuxnz6oCWIp-NJpsmf0r-uJIWOnKjDARour_RtSmT-gsaj-hysiqB9ED1HuUFI=s2048?key=DLDXuCDhvbi66FtiZPZajw'
-          BOOT_URL='https://lh7-rt.googleusercontent.com/slidesz/AGV_vUdpCAXTkiOS4djgULqjE2amqTXPxx1OX_B_-2l1z1_pYAkbmdGhirtnXsbknuXereEBXOSMZVKWEelIcwV7l8S1_oEXKRTCKYe6Be1vJVHtODfrzSlniugAOtPCXOJmXlzrpNRjE7nC59k5K3oi1L5Wjz5QzfCSMNMxo3dsiQTjFdlP=s2048?key=DLDXuCDhvbi66FtiZPZajw'
+          SOURCE_URL='https://lh7-rt.googleusercontent.com/slidesz/AGV_vUdntUXo6WpvHfsfs9WjnfyjUoFBvonHvQr6T5tboeGDbTutkw9tF6qYwb8W0hpyEQCqxpODYTIC7bliBUWbdw-ncorhlpLpq4yxIuPP6Fowp_aqlFshGnugtu8CCYIRhPDbeDhs3rJZIpKHbRXBqGYXIIUSD-XQgs_4Khf4yjZPyq5T8rk8eQ=s2048?key=ExV124509o35y88vTY7z7g'
+          TRANSPARENT_URL='https://lh7-rt.googleusercontent.com/slidesz/AGV_vUfYNJcDDv8ISnoKIWinT-0mnxNbh1fqQnNwKXhQVAzXRd5130LMOwzyRom3jRKk4dIi9Q-u5VKNKBunHPubtD0uMqmS_nNU2PJe-GzIQhFG1Y9MyBINsdylkeRwFHcr8hB3zjboGohQUQS6Nj83n8QkfQEfRXOAYb7HEqfA7ItTI_5eC2SgIw=s2048?key=ExV124509o35y88vTY7z7g'
+          LABELED_URL='https://lh7-rt.googleusercontent.com/slidesz/AGV_vUfeFjKPXIbdRBOpYyCYtH6_cIdNP9gkfdp792QhXdzpNBCB5ZlrnPRaNM4a4IGN_Us5JRCJ7cU1FWpTISBye0lNy4kU016Ce3CsgcyA37mHW93Gl3oezEhP1R0Hv7p5e3eI2weYERxYMIpmgsPAqXgPNASByAaleGuYVgajxbwbRBuNl9vjLw=s2048?key=ExV124509o35y88vTY7z7g'
+          BOOT_URL='https://lh7-rt.googleusercontent.com/slidesz/AGV_vUfq33fJhOZgCShNUwoxP65m3aX01IfxV7YF5c1DAGH6fGM7nYL1XBOCDvg8oEjGtAzbYrZ27BLSy_3Fsa76edGcuSEppPc-Z9IVdVUi1uAz4K3R_CfQzTeIBB-SYtrZS5tNc8YaHXsizxbmLbPO8ZaOmLHB8zH5mRdzieW9LmqxNWiDrfHsyQ=s2048?key=ExV124509o35y88vTY7z7g'
 
           mkdir -p assets/source/generated_variants assets/icons/core/v1 assets/catalog
           mkdir -p build/overlay/etc/plymouth/themes/greia build/installer-overlay/etc/plymouth/themes/greia
