@@ -1,0 +1,158 @@
+name: R5 closure repair
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/r5-closure-repair.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  implement-and-verify:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Install verification dependency
+        run: python3 -m pip install --disable-pip-version-check --quiet Pillow
+
+      - name: Apply R5 closure fixes and regression tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+
+          def rep(path: str, old: str, new: str) -> None:
+              target = Path(path)
+              text = target.read_text(encoding='utf-8')
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected one closure anchor, found {count}: {old!r}')
+              target.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          # Every post-session launch failure must close the authoritative row.
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '            if not sandbox.is_file() or not os.access(sandbox, os.X_OK):\n                return self._failed_launch_session(\n                    manifest, profile, authority, session_id=session_id\n                )\n',
+              '            if not sandbox.is_file() or not os.access(sandbox, os.X_OK):\n                return self._failed_launch_session(\n                    manifest,\n                    profile,\n                    authority,\n                    session_id=session_id,\n                    history_store=history_store,\n                )\n',
+          )
+
+          # Lifecycle-control cleanup is platform cleanup too. A cleanup failure is
+          # normalized to platform_failure and must not prevent durable session close.
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '        runtime_clean = self._cleanup_runtime_session(session)\n        resources_clean = self._cleanup_session_resources(session.session_id)\n        if not runtime_clean or not resources_clean:\n            reason = ActivityExitReason.PLATFORM_FAILURE\n\n        history_store = self._history_stores.pop(session.session_id, None)\n',
+              '        runtime_clean = self._cleanup_runtime_session(session)\n        resources_clean = self._cleanup_session_resources(session.session_id)\n        control_clean = True\n        if session.control is not None:\n            try:\n                session.control.cleanup()\n            except Exception:\n                control_clean = False\n        if not runtime_clean or not resources_clean or not control_clean:\n            reason = ActivityExitReason.PLATFORM_FAILURE\n\n        history_store = self._history_stores.pop(session.session_id, None)\n',
+          )
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '        session.state = state\n        session.result = result\n        if session.control is not None:\n            session.control.cleanup()\n        if self._active_session is session:\n',
+              '        session.state = state\n        session.result = result\n        if self._active_session is session:\n',
+          )
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '        if control is not None:\n            control.cleanup()\n        if history_store is not None:\n',
+              '        if control is not None:\n            try:\n                control.cleanup()\n            except Exception:\n                reason = ActivityExitReason.PLATFORM_FAILURE\n        if history_store is not None:\n',
+          )
+
+          # Parent server consumes the existing bounded logical reader rather than
+          # opening SQLite or exposing history implementation details itself.
+          rep(
+              'src/greia_parent/server.py',
+              'from greia_platform.profiles import ActiveProfileSession, ProfileError, ProfileStore\n',
+              'from greia_platform.profiles import ActiveProfileSession, ProfileError, ProfileStore\nfrom greia_parent.progress import ParentProgressReader\n',
+          )
+          rep(
+              'src/greia_parent/server.py',
+              '        profiles = self.profile_store.ensure_initialized()\n        self.theme_store = self._theme_store(profiles[0].profile_id)  # compatibility/test helper\n',
+              '        profiles = self.profile_store.ensure_initialized()\n        self.progress_reader = ParentProgressReader.load(self.root, self.profile_store)\n        self.theme_store = self._theme_store(profiles[0].profile_id)  # compatibility/test helper\n',
+          )
+          rep(
+              'src/greia_parent/server.py',
+              '    def hardware_payload(self) -> dict[str, object]:\n',
+              '    def progress_payload(self, profile_id: str | None = None) -> dict[str, object]:\n        if profile_id is None:\n            active = self.active_session.read()\n            profile_id = (\n                str(active.get("profile_id"))\n                if isinstance(active, dict) and active.get("profile_id")\n                else None\n            )\n        if profile_id is None:\n            return ParentProgressReader.unavailable_payload()\n        # Validate caller-selected identity before the fail-soft history reader.\n        self.profile_store.context(profile_id)\n        return self.progress_reader.payload(profile_id)\n\n    def hardware_payload(self) -> dict[str, object]:\n',
+          )
+          rep(
+              'src/greia_parent/server.py',
+              '        payload["hardware"] = self.hardware_payload()\n        return payload\n',
+              '        payload["hardware"] = self.hardware_payload()\n        payload["progress"] = self.progress_payload(\n            str(active_id) if isinstance(active_id, str) and active_id else None\n        )\n        return payload\n',
+          )
+          rep(
+              'src/greia_parent/server.py',
+              '        if parsed.path == "/api/hardware":\n            self._send_json(200, self.app.hardware_payload())\n            return\n',
+              '        if parsed.path == "/api/hardware":\n            self._send_json(200, self.app.hardware_payload())\n            return\n        if parsed.path == "/api/progress":\n            requested_profile = query.get("profile_id", [""])[0] or None\n            try:\n                payload = self.app.progress_payload(requested_profile)\n            except ProfileError:\n                self._send_text(404, "Profile not found")\n                return\n            self._send_json(200, payload)\n            return\n',
+          )
+
+          # Render only sanitized aggregate/recent-session data already produced by
+          # ParentProgressReader; raw events, tokens, DB paths, keys never reach HTML.
+          rep(
+              'src/greia_parent/server.py',
+              '    profile_cards = "".join(\n        _render_profile_card(item, avatars, len(profiles), active_id)\n        for item in profiles\n        if isinstance(item, dict)\n    )\n\n    return f"""<!doctype html>\n',
+              '    profile_cards = "".join(\n        _render_profile_card(item, avatars, len(profiles), active_id)\n        for item in profiles\n        if isinstance(item, dict)\n    )\n    progress = payload.get("progress", {})\n    if isinstance(progress, dict) and progress.get("available"):\n        rewards = progress.get("reward_balances", {})\n        reward_items = (\n            "".join(\n                f"<li>{html.escape(str(name))}: {html.escape(str(value))}</li>"\n                for name, value in sorted(rewards.items())\n            )\n            if isinstance(rewards, dict) and rewards\n            else "<li>No rewards yet</li>"\n        )\n        sessions = progress.get("recent_sessions", [])\n        session_items = (\n            "".join(\n                f"<li>{html.escape(str(item.get(\'activity_id\', \'Activity\')))} — "\n                f"{html.escape(str(item.get(\'exit_reason\') or \'in progress\'))}</li>"\n                for item in sessions\n                if isinstance(item, dict)\n            )\n            if isinstance(sessions, list) and sessions\n            else "<li>No sessions yet</li>"\n        )\n        progress_html = (\n            f"<p><strong>Rewards</strong></p><ul>{reward_items}</ul>"\n            f"<p><strong>Recent activity</strong></p><ul>{session_items}</ul>"\n        )\n    else:\n        progress_html = "<p>Progress is unavailable for the current child.</p>"\n\n    return f"""<!doctype html>\n',
+          )
+          rep(
+              'src/greia_parent/server.py',
+              '<section><h2>Mouse, touchpad, and screen</h2><form method="post" action="/api/hardware">',
+              '<section><h2>Progress</h2>{progress_html}</section>\n<section><h2>Mouse, touchpad, and screen</h2><form method="post" action="/api/hardware">',
+          )
+
+          # Regression: missing Bubblewrap closes the row immediately.
+          path = Path('tests/test_r5_integration.py')
+          text = path.read_text(encoding='utf-8')
+          anchor = '    def test_platform_storage_failure_is_distinct_and_recorded(self) -> None:\n'
+          test = '''    def test_missing_bubblewrap_closes_authoritative_launch_failure(self) -> None:\n        with tempfile.TemporaryDirectory() as temporary:\n            root = Path(temporary)\n            profile = self._profile(root)\n            factory = mock.Mock(side_effect=AssertionError("process must not start"))\n            supervisor = ActivitySupervisor(\n                sandbox_executable=root / "missing-bwrap",\n                require_sandbox=True,\n                runtime_manager=self._manager(factory),\n                storage_service=self.storage,\n                history_service=self.history,\n            )\n            session = supervisor.start(\n                self.shape, profile, _Authority(self.shape.activity_id)\n            )\n            summary = self.history.open(profile).summary()\n\n        self.assertEqual(session.result.exit_reason.value, "launch_failure")\n        self.assertEqual(len(summary.recent_sessions), 1)\n        persisted = summary.recent_sessions[0]\n        self.assertEqual(persisted.exit_reason, "launch_failure")\n        self.assertIsNotNone(persisted.ended_at)\n        factory.assert_not_called()\n\n'''
+          if text.count(anchor) != 1:
+              raise SystemExit('R5 integration test anchor mismatch')
+          path.write_text(text.replace(anchor, test + anchor, 1), encoding='utf-8')
+
+          # Parent summaries are useful but intentionally not a forensic/raw-history API.
+          path = Path('tests/test_parent_status.py')
+          text = path.read_text(encoding='utf-8')
+          text = text.replace('import tempfile\nimport unittest\n', 'import json\nimport tempfile\nimport unittest\n', 1)
+          import_anchor = 'from greia_platform.activities import ActivityValidationError\n'
+          import_replacement = '''from greia_platform.activities import ActivityValidationError\nfrom greia_platform.history import ProfileHistoryStore, ProgressionPolicy\n'''
+          if text.count(import_anchor) != 1:
+              raise SystemExit('parent progress import anchor mismatch')
+          text = text.replace(import_anchor, import_replacement, 1)
+          anchor = '    def test_parent_server_is_single_threaded_and_has_socket_timeout(self) -> None:\n'
+          tests = '''    def test_parent_progress_summary_is_bounded_and_hides_history_internals(self) -> None:\n        with tempfile.TemporaryDirectory() as temporary:\n            root = Path(temporary)\n            app = ParentStatusApplication(\n                PROJECT_ROOT,\n                root / "parent",\n                profiles_dir=root / "profiles",\n                hardware_settings_dir=root / "hardware",\n                hardware_status_path=root / "hardware-status.json",\n                active_profile_status_path=root / "active-profile.json",\n            )\n            profile = app.profile_store.list_profiles()[0]\n            context = app.profile_store.context(profile.profile_id)\n            manifest = next(\n                item\n                for item in app.registry.discover()\n                if item.activity_id == "org.greia.shape-garden"\n            )\n            progression = ProgressionPolicy.load(\n                PROJECT_ROOT / "runtime" / "progression-policy.toml",\n                app.registry.discover(),\n            )\n            store = ProfileHistoryStore(context, app.progress_reader.history_policy)\n            store.start_session(\n                manifest,\n                session_id="sensitive-session-id",\n                package_digest="a" * 64,\n            )\n            store.mark_ready("sensitive-session-id")\n            store.emit_event(\n                manifest,\n                progression,\n                session_id="sensitive-session-id",\n                event_id="creation.completed",\n                idempotency_key="sensitive-idempotency-key",\n                payload={"private_detail": "do-not-expose"},\n            )\n            store.finish_session("sensitive-session-id", "normal")\n\n            payload = app.progress_payload(profile.profile_id)\n            encoded = json.dumps(payload, sort_keys=True)\n\n        self.assertTrue(payload["available"])\n        self.assertEqual(payload["reward_balances"], {"star": 1})\n        self.assertEqual(payload["recent_sessions"][0]["exit_reason"], "normal")\n        self.assertNotIn("history.sqlite3", encoded)\n        self.assertNotIn("sensitive-session-id", encoded)\n        self.assertNotIn("sensitive-idempotency-key", encoded)\n        self.assertNotIn("do-not-expose", encoded)\n        self.assertNotIn("database_path", encoded)\n\n    def test_corrupt_progress_is_unavailable_without_taking_parent_controls_down(self) -> None:\n        with tempfile.TemporaryDirectory() as temporary:\n            root = Path(temporary)\n            app = ParentStatusApplication(\n                PROJECT_ROOT,\n                root / "parent",\n                profiles_dir=root / "profiles",\n                hardware_settings_dir=root / "hardware",\n                hardware_status_path=root / "hardware-status.json",\n                active_profile_status_path=root / "active-profile.json",\n            )\n            profile = app.profile_store.list_profiles()[0]\n            context = app.profile_store.context(profile.profile_id)\n            store = ProfileHistoryStore(context, app.progress_reader.history_policy)\n            store.database_path.write_bytes(b"corrupt-history")\n\n            progress = app.progress_payload(profile.profile_id)\n            health = app.health_payload()\n\n        self.assertFalse(progress["available"])\n        self.assertTrue(app.profiles_payload())\n        self.assertTrue(health["profiles"])\n        self.assertFalse(health["progress"]["available"])\n\n'''
+          if text.count(anchor) != 1:
+              raise SystemExit('parent progress test anchor mismatch')
+          path.write_text(text.replace(anchor, tests + anchor, 1), encoding='utf-8')
+          PY
+
+      - name: Compile and focused R5 closure tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m compileall -q src tests tools activities
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_history.py' -v
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_r5_integration.py' -v
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_parent_status.py' -v
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_supervisor.py' -v
+
+      - name: Full provider-free gate
+        run: make verify
+
+      - name: Commit R5 closure repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          git add \
+            src/greia_launcher/supervisor.py \
+            src/greia_parent/server.py \
+            tests/test_r5_integration.py \
+            tests/test_parent_status.py
+          git diff --cached --check
+          git config user.name greia-r5-reimplementation
+          git config user.email greia-r5-reimplementation@users.noreply.github.com
+          git commit -m 'fix: close R5 launch failures and expose bounded parent progress'
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
