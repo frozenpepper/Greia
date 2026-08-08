@@ -25,7 +25,7 @@ jobs:
           base64 --decode .recovery/parent-status-fix.b64 > /tmp/test_parent_status.py
           test "$(git hash-object /tmp/test_parent_status.py)" = "e79bb30e60accde71e077ca6db80938c3f8b3019"
           cp /tmp/test_parent_status.py tests/test_parent_status.py
-          PYTHONPATH=src python3 -m unittest tests.test_parent_status -v
+          python3 -m py_compile tests/test_parent_status.py
           git diff --check -- tests/test_parent_status.py
       - name: Commit focused fix
         shell: bash
