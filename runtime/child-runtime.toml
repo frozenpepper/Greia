@@ -1,5 +1,7 @@
 [runtime]
 api_version = "0.1"
+
+[python]
 allowed_import_roots = [
   "__future__",
   "array",
@@ -114,13 +116,17 @@ forbidden_file_names = [
 [capabilities]
 allowed = [
   "audio.basic",
-  "customization.manage",
   "display",
+  "keyboard",
+  "network",
   "pointer",
-  "profile.manage_own",
-  "removable_media.read",
+  "power.controlled_shutdown",
+  "removable_media",
+  "touch",
 ]
-privileged = [
+
+[permissions]
+allowed = [
   "customization.manage",
   "profile.manage_own",
   "removable_media.read",
