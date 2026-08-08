@@ -94,7 +94,6 @@ class InstallerEngineTests(unittest.TestCase):
                     engine.install(request)
             self.assertEqual(runner.commands, [])
 
-
     def test_power_is_rechecked_in_engine_immediately_before_first_disk_mutation(self) -> None:
         class UnsafePowerProbe:
             def installation_block_reason(self) -> str | None:
@@ -141,7 +140,7 @@ class InstallerEngineTests(unittest.TestCase):
     def test_cleanup_tries_normal_unmount_before_lazy_fallback(self) -> None:
         runner = RecordingRunner()
         engine = InstallationEngine(project_root=PROJECT_ROOT, runner=runner)
-        mountpoint = Path("/tmp/pip-test-mount")
+        mountpoint = Path("/tmp/greia-test-mount")
         with mock.patch.object(engine, "_is_mountpoint", side_effect=[True, False]):
             error = engine._cleanup_mounts([mountpoint])
         self.assertIsNone(error)
@@ -153,12 +152,11 @@ class InstallerEngineTests(unittest.TestCase):
     def test_cleanup_reports_surviving_mount_and_never_recursively_deletes_it(self) -> None:
         runner = RecordingRunner()
         engine = InstallationEngine(project_root=PROJECT_ROOT, runner=runner)
-        mountpoint = Path("/tmp/pip-test-mount")
+        mountpoint = Path("/tmp/greia-test-mount")
         with mock.patch.object(engine, "_is_mountpoint", side_effect=[True, True]):
             error = engine._cleanup_mounts([mountpoint])
         self.assertIsInstance(error, InstallationError)
         self.assertIn("temporary directory was preserved", str(error))
-
 
     def test_root_fstab_uses_verified_uuid_not_shared_label(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -167,7 +165,7 @@ class InstallerEngineTests(unittest.TestCase):
             InstallationEngine._write_root_fstab(root, filesystem_uuid)
             fstab = (root / "etc/fstab").read_text(encoding="ascii")
             self.assertIn(f"UUID={filesystem_uuid} / ext4", fstab)
-            self.assertNotIn("LABEL=PIP_ROOT", fstab)
+            self.assertNotIn("LABEL=GREIA_ROOT", fstab)
 
     def test_filesystem_uuid_reader_rejects_missing_or_malformed_output(self) -> None:
         class UUIDRunner(RecordingRunner):
@@ -204,7 +202,7 @@ class InstallerEngineTests(unittest.TestCase):
             filesystem_uuid = "12345678-1234-5678-9abc-def012345678"
             engine._write_grub_root_uuid(root, filesystem_uuid)
             credential = engine._personalize_target(root)
-            self.assertEqual(credential.user, "pip-recovery")
+            self.assertEqual(credential.user, "greia-recovery")
             self.assertEqual(len(credential.code), 20)
             self.assertEqual((root / "etc/machine-id").read_text(), "")
             self.assertFalse((root / "var/lib/dbus/machine-id").exists())
@@ -218,7 +216,7 @@ class InstallerEngineTests(unittest.TestCase):
 
     def test_install_result_groups_recovery_code_for_parent_display(self) -> None:
         result = InstallResult(
-            recovery_user="pip-recovery",
+            recovery_user="greia-recovery",
             recovery_code="ABCDEFGHJKLMNPQRSTUV",
         )
         self.assertEqual(result.grouped_recovery_code, "ABCD EFGH JKLM NPQR STUV")
