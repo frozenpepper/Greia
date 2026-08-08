@@ -12,6 +12,7 @@ from greia_launcher.runtime_adapter import (
     PythonRuntimePolicy,
     RuntimeCommand,
     RuntimeCompatibilityError,
+    RuntimeInvocation,
     RuntimeLifecycleSupport,
     RuntimeManager,
     RuntimeUnavailableError,
@@ -194,6 +195,40 @@ class RuntimeManagerTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(RuntimeValidationError, "escapes Activity package"):
             manager.prepare_launch(shape)
+
+    def test_runtime_manager_delegates_launch_and_exit_collection_to_adapter(self) -> None:
+        shape = next(
+            item for item in self._built_in_manifests()
+            if item.activity_id == "org.greia.shape-garden"
+        )
+        process = mock.Mock()
+        process.poll.return_value = 7
+        factory = mock.Mock(return_value=process)
+        manager = RuntimeManager(
+            [
+                PythonRuntimeAdapter(
+                    Path("/usr/bin/python3"),
+                    policy=self.python_policy,
+                    process_factory=factory,
+                )
+            ],
+            DeviceCapabilityService.static(
+                {"display", "pointer"}, source_id="runtime-manager-test"
+            ),
+        )
+        preparation = manager.prepare_launch(shape)
+        invocation = RuntimeInvocation(
+            command=preparation.command.command,
+            cwd=preparation.command.cwd,
+            environment=preparation.command.environment,
+        )
+        launched = manager.launch(preparation, invocation)
+        runtime_exit = manager.collect_exit(preparation, launched)
+
+        self.assertIs(launched, process)
+        self.assertEqual(runtime_exit.return_code, 7)
+        self.assertEqual(runtime_exit.kind.value, "crash")
+        factory.assert_called_once()
 
     def test_activity_environment_cannot_forge_runtime_device_truth(self) -> None:
         shape = next(

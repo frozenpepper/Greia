@@ -82,6 +82,10 @@ The installed Activity path now actually exposes the previously implemented R4 U
 
 Runtime-family process details are now cleanly separated from the runtime-neutral Supervisor. `RuntimeCommand` includes command, an in-package working directory, and a bounded runtime-specific environment. `PythonRuntimeAdapter` supplies `PYTHONNOUSERSITE=1` and `PYTHONDONTWRITEBYTECODE=1`; the Supervisor no longer hardcodes Python policy. RuntimeManager rejects malformed commands, cwd escaping the Activity package, duplicate/invalid environment entries, and attempts to override Greia/profile/session/storage variables or platform-owned `PATH/HOME/XDG/display/audio` transport. Bubblewrap uses the adapter-prepared cwd rather than replacing it with the manifest root.
 
+## R6.2 runtime session ownership — 2026-08-09
+
+The Runtime Adapter now owns actual runtime handle mechanics rather than stopping at command generation. `RuntimeInvocation` is the final platform-approved invocation (including Bubblewrap when installed); the selected adapter launches it, collects and normalizes runtime exit, performs force-stop, and cleans up its runtime handle. RuntimeManager delegates those operations. Supervisor retains Greia sandbox policy, READY/STOP deadlines, platform resource brokers and final Activity result composition, but it no longer creates `Popen` processes, sends process-group signals, or decides whether a raw runtime return code means normal/crash. The remaining runtime-specific lifecycle leak is the Python READY/STOP file-marker transport, which is still constructed by Supervisor and is the next R6.2 closure item.
+
 ---
 
 ## 2. Mandatory resume order

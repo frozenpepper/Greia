@@ -91,6 +91,7 @@ class _FakeProcess:
 
     def kill(self) -> None:
         self.killed = True
+        self.returncode = -9
 
 
 def _manifest(root: Path, *, runtime_type: str = "python") -> ActivityManifest:
@@ -120,9 +121,16 @@ def _manifest(root: Path, *, runtime_type: str = "python") -> ActivityManifest:
     )
 
 
-def _manager(capabilities: set[str]) -> RuntimeManager:
+def _manager(capabilities: set[str], *, process_factory=None) -> RuntimeManager:
+    adapter = (
+        PythonRuntimeAdapter(Path("/usr/bin/python3"))
+        if process_factory is None
+        else PythonRuntimeAdapter(
+            Path("/usr/bin/python3"), process_factory=process_factory
+        )
+    )
     return RuntimeManager(
-        [PythonRuntimeAdapter(Path("/usr/bin/python3"))],
+        [adapter],
         DeviceCapabilityService.static(capabilities, source_id="supervisor-test"),
     )
 
@@ -177,8 +185,9 @@ class SupervisorTests(unittest.TestCase):
             factory = mock.Mock(side_effect=AssertionError("process must not start"))
             supervisor = ActivitySupervisor(
                 require_sandbox=False,
-                runtime_manager=_manager({"display", "pointer"}),
-                process_factory=factory,
+                runtime_manager=_manager(
+                    {"display", "pointer"}, process_factory=factory
+                ),
             )
             session = supervisor.start(manifest, profile, authority)
 
@@ -197,8 +206,9 @@ class SupervisorTests(unittest.TestCase):
             factory = mock.Mock(side_effect=AssertionError("process must not start"))
             supervisor = ActivitySupervisor(
                 require_sandbox=False,
-                runtime_manager=_manager({"display", "pointer"}),
-                process_factory=factory,
+                runtime_manager=_manager(
+                    {"display", "pointer"}, process_factory=factory
+                ),
             )
             session = supervisor.start(manifest, profile, authority)
 
@@ -217,8 +227,9 @@ class SupervisorTests(unittest.TestCase):
             factory = mock.Mock(side_effect=AssertionError("process must not start"))
             supervisor = ActivitySupervisor(
                 require_sandbox=False,
-                runtime_manager=_manager({"display", "pointer"}),
-                process_factory=factory,
+                runtime_manager=_manager(
+                    {"display", "pointer"}, process_factory=factory
+                ),
             )
             session = supervisor.start(manifest, profile, authority)
 
@@ -243,8 +254,9 @@ class SupervisorTests(unittest.TestCase):
 
             supervisor = ActivitySupervisor(
                 require_sandbox=False,
-                runtime_manager=_manager({"display", "pointer"}),
-                process_factory=factory,
+                runtime_manager=_manager(
+                    {"display", "pointer"}, process_factory=factory
+                ),
             )
             session = supervisor.start(manifest, profile, authority)
             self.assertEqual(session.state, ActivitySessionState.STARTING)
@@ -266,6 +278,30 @@ class SupervisorTests(unittest.TestCase):
         self.assertEqual(environment["PYTHONNOUSERSITE"], "1")
         self.assertEqual(environment["PYTHONDONTWRITEBYTECODE"], "1")
 
+    def test_runtime_adapter_owns_forced_stop_and_exit_normalization(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest = _manifest(root / "activity")
+            profile = _ProfileContext(root / "profile")
+            authority = _Authority(
+                manifest.activity_id, capabilities={"display", "pointer"}
+            )
+            process = _FakeProcess()
+            supervisor = ActivitySupervisor(
+                require_sandbox=False,
+                runtime_manager=_manager(
+                    {"display", "pointer"},
+                    process_factory=lambda *args, **kwargs: process,
+                ),
+            )
+            session = supervisor.start(manifest, profile, authority)
+            result = supervisor.force_stop(session)
+
+        self.assertTrue(process.killed)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.exit_reason, ActivityExitReason.FORCED_STOP)
+        self.assertEqual(result.return_code, -9)
+
     def test_storage_broker_is_exposed_for_launch_and_removed_on_exit(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -283,10 +319,11 @@ class SupervisorTests(unittest.TestCase):
 
             supervisor = ActivitySupervisor(
                 require_sandbox=False,
-                runtime_manager=_manager({"display", "pointer"}),
+                runtime_manager=_manager(
+                    {"display", "pointer"}, process_factory=factory
+                ),
                 storage_service=_storage_service(),
                 storage_broker_factory=_broker_factory(root / "brokers"),
-                process_factory=factory,
             )
             session = supervisor.start(manifest, profile, authority)
             environment = calls[0][1]["env"]
@@ -315,8 +352,10 @@ class SupervisorTests(unittest.TestCase):
             )
             supervisor = ActivitySupervisor(
                 require_sandbox=False,
-                runtime_manager=_manager({"display", "pointer"}),
-                process_factory=lambda *args, **kwargs: _FakeProcess(),
+                runtime_manager=_manager(
+                    {"display", "pointer"},
+                    process_factory=lambda *args, **kwargs: _FakeProcess(),
+                ),
             )
             supervisor.start(manifest, profile, authority)
             with self.assertRaisesRegex(ActivityLifecycleError, "only one Activity"):
@@ -405,10 +444,11 @@ class SupervisorTests(unittest.TestCase):
             supervisor = ActivitySupervisor(
                 sandbox_executable=sandbox,
                 require_sandbox=True,
-                runtime_manager=_manager({"display", "pointer"}),
+                runtime_manager=_manager(
+                    {"display", "pointer"}, process_factory=factory
+                ),
                 storage_service=_storage_service(),
                 storage_broker_factory=_broker_factory(root / "brokers"),
-                process_factory=factory,
             )
             session = supervisor.start(manifest, profile, authority)
             command = list(calls[0][0][0])
@@ -439,10 +479,11 @@ class SupervisorTests(unittest.TestCase):
             supervisor = ActivitySupervisor(
                 sandbox_executable=root / "missing-bwrap",
                 require_sandbox=True,
-                runtime_manager=_manager({"display", "pointer"}),
+                runtime_manager=_manager(
+                    {"display", "pointer"}, process_factory=factory
+                ),
                 storage_service=_storage_service(),
                 storage_broker_factory=_broker_factory(root / "brokers"),
-                process_factory=factory,
             )
             session = supervisor.start(manifest, profile, authority)
 

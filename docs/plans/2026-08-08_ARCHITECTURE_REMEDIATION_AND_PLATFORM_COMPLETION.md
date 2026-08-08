@@ -613,6 +613,15 @@ Do not rewrite old entries; append corrections.
 - Next exact step: perform an R6 closure audit against ADRs 0012/0014/0015 and the active plan, separating code-complete R6.2 items from the explicit R5 continuity blocker and any hardware-only evidence gates.
 - Commit(s): this tranche commit.
 
+## 2026-08-09 — R6.2 runtime session ownership
+
+- Implemented: runtime adapters now own final runtime process creation, exit collection/normalization, force-stop and runtime cleanup through `RuntimeInvocation`/`RuntimeExit`; RuntimeManager delegates those operations to the selected adapter. ActivitySupervisor still owns Greia sandbox policy, lifecycle deadlines and platform session resources, but no longer calls `Popen`, process-group signals or interprets raw runtime return codes itself.
+- Tests/evidence: direct RuntimeManager launch/exit delegation test, Supervisor forced-stop through adapter, focused runtime/supervisor tests, and complete recoverable suite.
+- Decisions: Bubblewrap command construction remains platform/sandbox policy; the selected adapter launches the resulting invocation so future Web/native adapters can own their runtime handle semantics without duplicating Greia isolation/storage/session policy. Exit classification is runtime-owned; Greia overlays platform reasons such as ready timeout, forced return and platform cleanup failure.
+- Remaining gap: Python READY/STOP marker transport is still created by the Supervisor rather than an adapter-owned lifecycle transport. That is the final R6.2 runtime-specific lifecycle seam to close before source-level R6.2 can be called complete.
+- Next exact step: move Python lifecycle READY/STOP transport construction and SDK environment behind the runtime adapter while preserving the same platform session ID and Supervisor state machine.
+- Commit(s): this tranche commit.
+
 ---
 
 # 9. Final completion criteria

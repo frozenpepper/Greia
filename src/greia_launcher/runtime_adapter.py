@@ -2,14 +2,18 @@ from __future__ import annotations
 
 import ast
 import os
+import subprocess
 import sys
 import tomllib
 from dataclasses import dataclass
+from enum import StrEnum
 from pathlib import Path
-from typing import Mapping, Protocol, Sequence
+from typing import Callable, Mapping, Protocol, Sequence
 
 from greia_platform.activities import ActivityManifest
 from greia_platform.device_capabilities import DeviceCapabilityService
+
+from .lifecycle import ProcessHandle, signal_process_group
 
 
 PRODUCTION_ROOT = Path("/opt/greia-os")
@@ -58,6 +62,24 @@ class RuntimeCommand:
 
 
 @dataclass(frozen=True, slots=True)
+class RuntimeInvocation:
+    command: tuple[str, ...]
+    cwd: Path | None
+    environment: tuple[tuple[str, str], ...]
+
+
+class RuntimeExitKind(StrEnum):
+    NORMAL = "normal"
+    CRASH = "crash"
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeExit:
+    return_code: int
+    kind: RuntimeExitKind
+
+
+@dataclass(frozen=True, slots=True)
 class RuntimeLifecycleSupport:
     """Optional lifecycle features exposed by one runtime family."""
 
@@ -97,6 +119,17 @@ class RuntimeLaunchAdapter(Protocol):
     def validate_package(self, manifest: ActivityManifest) -> None: ...
 
     def command_for(self, manifest: ActivityManifest) -> RuntimeCommand: ...
+
+    def launch(self, invocation: RuntimeInvocation) -> ProcessHandle: ...
+
+    def collect_exit(self, process: ProcessHandle) -> RuntimeExit | None: ...
+
+    def force_stop(self, process: ProcessHandle) -> None: ...
+
+    def cleanup(self, process: ProcessHandle) -> None: ...
+
+
+ProcessFactory = Callable[..., ProcessHandle]
 
 
 @dataclass(frozen=True, slots=True)
@@ -150,9 +183,11 @@ class PythonRuntimeAdapter:
         python_executable: Path | None = None,
         *,
         policy: PythonRuntimePolicy | None = None,
+        process_factory: ProcessFactory = subprocess.Popen,
     ):
         self._python_executable = python_executable
         self._policy = policy
+        self._process_factory = process_factory
 
     def validate_package(self, manifest: ActivityManifest) -> None:
         if manifest.runtime_type != self.runtime_type:
@@ -236,6 +271,38 @@ class PythonRuntimeAdapter:
             ),
         )
 
+    def launch(self, invocation: RuntimeInvocation) -> ProcessHandle:
+        try:
+            return self._process_factory(
+                list(invocation.command),
+                cwd=invocation.cwd,
+                env=dict(invocation.environment),
+                shell=False,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                close_fds=True,
+                start_new_session=True,
+            )
+        except OSError as exc:
+            raise RuntimeAdapterError(f"Python runtime process launch failed: {exc}") from exc
+
+    def collect_exit(self, process: ProcessHandle) -> RuntimeExit | None:
+        return_code = process.poll()
+        if return_code is None:
+            return None
+        return RuntimeExit(
+            return_code=return_code,
+            kind=RuntimeExitKind.NORMAL if return_code == 0 else RuntimeExitKind.CRASH,
+        )
+
+    def force_stop(self, process: ProcessHandle) -> None:
+        signal_process_group(process, force=True)
+
+    def cleanup(self, process: ProcessHandle) -> None:
+        if process.poll() is None:
+            self.force_stop(process)
+
     def resolve_interpreter(self) -> Path:
         if self._python_executable is not None:
             return self._python_executable
@@ -309,6 +376,28 @@ class RuntimeManager:
             missing_required_capabilities=missing,
             effective_optional_capabilities=optional & snapshot.capabilities,
         )
+
+    def launch(
+        self, preparation: RuntimeLaunchPreparation, invocation: RuntimeInvocation
+    ) -> ProcessHandle:
+        adapter = self.adapter_for(preparation.compatibility.runtime_type)
+        return adapter.launch(invocation)
+
+    def collect_exit(
+        self, preparation: RuntimeLaunchPreparation, process: ProcessHandle
+    ) -> RuntimeExit | None:
+        adapter = self.adapter_for(preparation.compatibility.runtime_type)
+        return adapter.collect_exit(process)
+
+    def force_stop(
+        self, preparation: RuntimeLaunchPreparation, process: ProcessHandle
+    ) -> None:
+        self.adapter_for(preparation.compatibility.runtime_type).force_stop(process)
+
+    def cleanup(
+        self, preparation: RuntimeLaunchPreparation, process: ProcessHandle
+    ) -> None:
+        self.adapter_for(preparation.compatibility.runtime_type).cleanup(process)
 
     def prepare_launch(
         self,

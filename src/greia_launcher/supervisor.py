@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import subprocess
 from pathlib import Path
 from typing import Callable, Mapping, Protocol
 
@@ -18,13 +17,16 @@ from .lifecycle import (
     ActivitySession,
     ActivitySessionState,
     monotonic_now,
-    signal_process_group,
 )
 from .runtime_adapter import (
     PythonRuntimeAdapter,
     RuntimeAdapterError,
     RuntimeCommand,
+    RuntimeExit,
+    RuntimeExitKind,
+    RuntimeInvocation,
     RuntimeLaunchAdapter,
+    RuntimeLaunchPreparation,
     RuntimeManager,
 )
 from .storage_broker import (
@@ -55,7 +57,6 @@ class ActivityLifecycleError(RuntimeError):
     """Raised when the platform cannot preserve the one-Activity lifecycle."""
 
 
-ProcessFactory = Callable[..., subprocess.Popen[bytes]]
 StorageBrokerFactory = Callable[..., ActivityStorageBroker]
 
 
@@ -84,7 +85,6 @@ class ActivitySupervisor:
         runtime_adapters: Mapping[str, RuntimeLaunchAdapter] | None = None,
         storage_service: ActivityStorageService | None = None,
         storage_broker_factory: StorageBrokerFactory = ActivityStorageBroker.start,
-        process_factory: ProcessFactory = subprocess.Popen,
     ):
         if ready_timeout_seconds <= 0:
             raise ValueError("ready_timeout_seconds must be positive")
@@ -117,9 +117,9 @@ class ActivitySupervisor:
         self._storage_service = storage_service
         self._storage_broker_factory = storage_broker_factory
         self._session_resources: dict[str, tuple[SessionResource, ...]] = {}
+        self._runtime_preparations: dict[str, RuntimeLaunchPreparation] = {}
         self._ready_timeout_seconds = ready_timeout_seconds
         self._graceful_stop_seconds = graceful_stop_seconds
-        self._process_factory = process_factory
         self._active_session: ActivitySession | None = None
 
     @property
@@ -210,20 +210,15 @@ class ActivitySupervisor:
             command = list(runtime_command.command)
             cwd = runtime_command.cwd
 
+        invocation = RuntimeInvocation(
+            command=tuple(command),
+            cwd=cwd,
+            environment=tuple(sorted(environment.items())),
+        )
         started = monotonic_now()
         try:
-            process = self._process_factory(
-                command,
-                cwd=cwd,
-                env=environment,
-                shell=False,
-                stdin=subprocess.DEVNULL,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                close_fds=True,
-                start_new_session=True,
-            )
-        except OSError:
+            process = self._runtime_manager.launch(preparation, invocation)
+        except RuntimeAdapterError:
             return self._failed_launch_session(
                 manifest,
                 profile,
@@ -244,6 +239,7 @@ class ActivitySupervisor:
             graceful_stop_seconds=self._graceful_stop_seconds,
         )
         self._session_resources[session.session_id] = resources
+        self._runtime_preparations[session.session_id] = preparation
         self._active_session = session
         return session
 
@@ -256,16 +252,20 @@ class ActivitySupervisor:
         if process is None:
             raise ActivityLifecycleError("non-terminal session has no process")
 
+        preparation = self._runtime_preparations.get(session.session_id)
+        if preparation is None:
+            raise ActivityLifecycleError("session has no runtime preparation")
+
         now = monotonic_now()
-        return_code = process.poll()
-        if return_code is not None:
+        runtime_exit = self._runtime_manager.collect_exit(preparation, process)
+        if runtime_exit is not None:
             # READY is a per-launch marker, so consume it even when the child
             # exits between polling ticks. Otherwise a fast Activity can create
             # its usable surface, publish READY, and terminate before Greia
             # observes the intermediate RUNNING state.
             if session.ready_at is None and session.control.ready():
                 session.ready_at = now
-            return self._finish_session(session, return_code, now)
+            return self._finish_session(session, runtime_exit, now)
 
         if session.state is ActivitySessionState.STARTING:
             if session.control.ready():
@@ -283,9 +283,9 @@ class ActivitySupervisor:
             ):
                 self.force_stop(session, ActivityExitReason.FORCED_STOP)
 
-        return_code = process.poll()
-        if return_code is not None:
-            return self._finish_session(session, return_code, monotonic_now())
+        runtime_exit = self._runtime_manager.collect_exit(preparation, process)
+        if runtime_exit is not None:
+            return self._finish_session(session, runtime_exit, monotonic_now())
         return None
 
     def request_stop(self, session: ActivitySession) -> ActivityResult | None:
@@ -317,11 +317,12 @@ class ActivitySupervisor:
         session.forced_reason = reason
         session.state = ActivitySessionState.STOPPING
         process = session.process
-        if process is not None:
-            signal_process_group(process, force=True)
-            return_code = process.poll()
-            if return_code is not None:
-                return self._finish_session(session, return_code, monotonic_now())
+        preparation = self._runtime_preparations.get(session.session_id)
+        if process is not None and preparation is not None:
+            self._runtime_manager.force_stop(preparation, process)
+            runtime_exit = self._runtime_manager.collect_exit(preparation, process)
+            if runtime_exit is not None:
+                return self._finish_session(session, runtime_exit, monotonic_now())
         return None
 
     def shutdown_active(self) -> ActivityResult | None:
@@ -333,19 +334,24 @@ class ActivitySupervisor:
     def _finish_session(
         self,
         session: ActivitySession,
-        return_code: int,
+        runtime_exit: RuntimeExit,
         ended_at: float,
     ) -> ActivityResult:
         if session.forced_reason is not None:
             reason = session.forced_reason
-        elif session.stop_requested_at is not None and return_code == 0:
+        elif (
+            session.stop_requested_at is not None
+            and runtime_exit.kind is RuntimeExitKind.NORMAL
+        ):
             reason = ActivityExitReason.GRACEFUL_STOP
-        elif return_code == 0:
+        elif runtime_exit.kind is RuntimeExitKind.NORMAL:
             reason = ActivityExitReason.NORMAL
         else:
             reason = ActivityExitReason.CRASH
 
-        if not self._cleanup_session_resources(session.session_id):
+        runtime_clean = self._cleanup_runtime_session(session)
+        resources_clean = self._cleanup_session_resources(session.session_id)
+        if not runtime_clean or not resources_clean:
             reason = ActivityExitReason.PLATFORM_FAILURE
 
         state = (
@@ -356,7 +362,7 @@ class ActivitySupervisor:
         result = ActivityResult(
             activity_id=session.activity_id,
             session_id=session.session_id,
-            return_code=return_code,
+            return_code=runtime_exit.return_code,
             exit_reason=reason,
             ready=session.ready_at is not None,
             started_at=session.started_at,
@@ -417,6 +423,17 @@ class ActivitySupervisor:
                 pass
         control.cleanup()
         return session
+
+    def _cleanup_runtime_session(self, session: ActivitySession) -> bool:
+        preparation = self._runtime_preparations.pop(session.session_id, None)
+        process = session.process
+        if preparation is None or process is None:
+            return preparation is None and process is None
+        try:
+            self._runtime_manager.cleanup(preparation, process)
+        except Exception:
+            return False
+        return True
 
     def _cleanup_session_resources(self, session_id: str) -> bool:
         resources = self._session_resources.pop(session_id, ())
