@@ -10,13 +10,12 @@ from greia_platform.device_capabilities import (
 )
 from greia_platform.hal import (
     GreiaHAL,
-    LegacyXDisplayHAL,
-    LegacyXInputHAL,
     LinuxAudioHAL,
     LinuxNetworkHAL,
     LinuxRemovableMediaHAL,
     SystemdPowerHAL,
 )
+from greia_platform.hal_legacy_x import LegacyXDisplayHAL, LegacyXInputHAL
 from greia_platform.hardware_session import XSessionHardwareController
 from greia_platform.history import PlatformHistoryService
 from greia_platform.permissions import PermissionBroker

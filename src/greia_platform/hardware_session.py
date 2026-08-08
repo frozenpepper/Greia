@@ -49,6 +49,16 @@ class ApplyResult:
     messages: tuple[str, ...]
 
 
+class HardwareSessionController(Protocol):
+    """Backend-neutral display/input settings controller used by the watcher."""
+
+    def topology_token(self) -> tuple[str, ...]: ...
+
+    def probe_display(self) -> DisplayProbe: ...
+
+    def apply(self, settings: HardwareSettings) -> ApplyResult: ...
+
+
 class XSessionHardwareController:
     """Applies validated preferences inside the active child X session.
 
@@ -206,6 +216,17 @@ class XSessionHardwareController:
 
         return bool(self._list_pointer_devices())
 
+    def keyboard_available(self) -> bool:
+        """Return whether XInput exposes a real keyboard on the active seat."""
+
+        completed = self.runner.run(["xinput", "--list", "--short"])
+        if completed.returncode != 0:
+            return False
+        return any(
+            "id=" in line and "slave  keyboard" in line.casefold()
+            for line in completed.stdout.splitlines()
+        )
+
     def _list_pointer_devices(self) -> tuple[tuple[str, bool], ...]:
         completed = self.runner.run(["xinput", "--list", "--short"])
         if completed.returncode != 0:
@@ -255,11 +276,11 @@ def run_watcher(
     *,
     interval_seconds: float = 0.5,
     once: bool = False,
-    controller: XSessionHardwareController | None = None,
+    controller: HardwareSessionController | None = None,
 ) -> int:
     controller = controller or XSessionHardwareController()
     last_settings_token: int | None = None
-    last_topology_token: tuple[str, str] | None = None
+    last_topology_token: tuple[str, ...] | None = None
     next_topology_probe = 0.0
     retry_at = 0.0
     last_apply_succeeded = False

@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
 
 from .hardware import DisplayMode
-from .hardware_session import XSessionHardwareController
 
 
 @dataclass(frozen=True, slots=True)
@@ -87,38 +85,6 @@ class GreiaHAL:
     removable_media: RemovableMediaHAL
     network: NetworkHAL
     power: PowerHAL
-
-
-class LegacyXDisplayHAL:
-    """Temporary R6 adapter over the already-tested Phase-0 X controller."""
-
-    def __init__(self, controller: XSessionHardwareController | None = None):
-        self._controller = controller or XSessionHardwareController()
-
-    def probe(self) -> DisplayState:
-        display = self._controller.probe_display()
-        return DisplayState(
-            available=display.output_name is not None,
-            modes=display.modes,
-            backend="legacy-x11",
-        )
-
-
-class LegacyXInputHAL:
-    """Temporary pointer/keyboard availability adapter for the X migration path."""
-
-    def __init__(self, controller: XSessionHardwareController | None = None):
-        self._controller = controller or XSessionHardwareController()
-
-    def probe(self) -> InputState:
-        # The Greia child X session itself is keyboard-capable when it exists;
-        # pointer presence is actually probed from xinput. R7 replaces this with
-        # direct libinput/evdev semantics rather than preserving X as authority.
-        return InputState(
-            pointer=self._controller.pointer_available(),
-            keyboard=bool(os.environ.get("DISPLAY")),
-            backend="legacy-x11",
-        )
 
 
 @dataclass(frozen=True, slots=True)
