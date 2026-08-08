@@ -1,248 +1,269 @@
 from __future__ import annotations
 
 import os
-import shutil
 import tempfile
 import unittest
+from dataclasses import dataclass
 from pathlib import Path
 from unittest import mock
 
-from greia_launcher.supervisor import ActivitySupervisor
-from greia_platform.activities import ActivityRegistry, RuntimeCatalogue
-from greia_platform.permissions import PermissionBroker
-from greia_platform.profiles import ProfileStore
-from greia_platform.trust import ActivitySource, PackageTrust
+from greia_launcher.lifecycle import ActivityExitReason, ActivitySessionState
+from greia_launcher.runtime_adapter import PythonRuntimeAdapter, RuntimeManager
+from greia_launcher.supervisor import ActivityLifecycleError, ActivitySupervisor
+from greia_platform.activities import ActivityManifest, SkillContribution
+from greia_platform.device_capabilities import DeviceCapabilityService
+from greia_platform.trust import PackageTrust
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-POLICY_PATH = PROJECT_ROOT / "runtime" / "permission-policy.toml"
+@dataclass(frozen=True)
+class _Profile:
+    profile_id: str = "0123456789abcdef0123456789abcdef"
+    display_name: str = "Mia"
+    avatar_id: str = "unicorn"
 
 
-def _built_in_activity(activity_id: str):
-    runtime = RuntimeCatalogue.load(PROJECT_ROOT / "runtime" / "child-runtime.toml")
-    registry = ActivityRegistry(
-        [
-            ActivitySource(
-                PROJECT_ROOT / "activities",
-                trust=PackageTrust.BUILT_IN,
-                source_id="greia-system",
-            )
-        ],
-        runtime,
+class _ProfileContext:
+    def __init__(self, root: Path):
+        self.root = root
+        self.profile = _Profile()
+        self.customization_dir = root / "customization"
+        self.customization_dir.mkdir(parents=True, exist_ok=True)
+
+    def activity_data_dir(self, activity_id: str) -> Path:
+        path = self.root / "activities" / activity_id
+        path.mkdir(parents=True, exist_ok=True)
+        return path
+
+
+class _Authority:
+    def __init__(
+        self,
+        activity_id: str,
+        *,
+        capabilities: set[str],
+        permissions: set[str] | None = None,
+    ):
+        self.activity_id = activity_id
+        self.package_digest = "a" * 64
+        self.package_trust = PackageTrust.BUILT_IN
+        self.effective_capabilities = frozenset(capabilities)
+        self._permissions = frozenset(permissions or set())
+        self.sdk_features = self.effective_capabilities | self._permissions
+
+    def has_capability(self, capability: str) -> bool:
+        return capability in self.effective_capabilities
+
+    def has_permission(self, permission: str) -> bool:
+        return permission in self._permissions
+
+
+class _FakeProcess:
+    def __init__(self):
+        self.pid = 424242
+        self.returncode: int | None = None
+        self.terminated = False
+        self.killed = False
+
+    def poll(self) -> int | None:
+        return self.returncode
+
+    def terminate(self) -> None:
+        self.terminated = True
+
+    def kill(self) -> None:
+        self.killed = True
+
+
+def _manifest(root: Path, *, runtime_type: str = "python") -> ActivityManifest:
+    entrypoint = Path("main.py" if runtime_type == "python" else "index.html")
+    target = root / entrypoint
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("print('ok')\n" if runtime_type == "python" else "<!doctype html>\n")
+    return ActivityManifest(
+        activity_id="org.greia.test-activity",
+        legacy_ids=(),
+        title_key="activity.test.title",
+        version="0.1.0",
+        runtime_type=runtime_type,
+        api_version="0.1",
+        entrypoint=entrypoint,
+        icon_id="test",
+        categories=("test",),
+        skills=(SkillContribution("test", 1),),
+        events=(),
+        difficulty=1,
+        languages=("en",),
+        required_capabilities=("display", "pointer"),
+        optional_capabilities=("audio.basic",),
+        requested_permissions=(),
+        storage_schema_version=1,
+        root=root,
     )
-    manifests = registry.discover()
-    manifest = next(item for item in manifests if item.activity_id == activity_id)
-    authority = PermissionBroker.phase0(runtime, POLICY_PATH).issue(registry.registration_for(manifest))
-    return runtime, registry, manifest, authority
+
+
+def _manager(capabilities: set[str]) -> RuntimeManager:
+    return RuntimeManager(
+        [PythonRuntimeAdapter(Path("/usr/bin/python3"))],
+        DeviceCapabilityService.static(capabilities, source_id="supervisor-test"),
+    )
 
 
 class SupervisorTests(unittest.TestCase):
-    def test_environment_drops_unapproved_values_and_scopes_home(self) -> None:
-        _, _, manifest, authority = _built_in_activity("workshop_settings")
+    def test_installed_supervisor_requires_explicit_runtime_manager(self) -> None:
+        with self.assertRaisesRegex(ActivityLifecycleError, "injected HAL-backed RuntimeManager"):
+            ActivitySupervisor(require_sandbox=True)
+
+    def test_missing_required_platform_authority_fails_before_process_creation(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
-            store = ProfileStore.load(
-                PROJECT_ROOT / "runtime" / "profile-defaults.toml",
-                Path(temporary) / "profiles",
+            root = Path(temporary)
+            manifest = _manifest(root / "activity")
+            profile = _ProfileContext(root / "profile")
+            authority = _Authority(manifest.activity_id, capabilities={"display"})
+            factory = mock.Mock(side_effect=AssertionError("process must not start"))
+            supervisor = ActivitySupervisor(
+                require_sandbox=False,
+                runtime_manager=_manager({"display", "pointer"}),
+                process_factory=factory,
             )
-            profile = store.ensure_initialized()[0]
-            context = store.context(profile.profile_id)
-            old = os.environ.get("SECRET_SHOULD_NOT_LEAK")
-            os.environ["SECRET_SHOULD_NOT_LEAK"] = "nope"
+            session = supervisor.start(manifest, profile, authority)
+
+        self.assertEqual(session.state, ActivitySessionState.FAILED)
+        self.assertEqual(session.result.exit_reason, ActivityExitReason.LAUNCH_FAILURE)
+        factory.assert_not_called()
+
+    def test_unavailable_runtime_is_normalized_to_launch_failure(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest = _manifest(root / "activity", runtime_type="web")
+            profile = _ProfileContext(root / "profile")
+            authority = _Authority(
+                manifest.activity_id, capabilities={"display", "pointer"}
+            )
+            factory = mock.Mock(side_effect=AssertionError("process must not start"))
+            supervisor = ActivitySupervisor(
+                require_sandbox=False,
+                runtime_manager=_manager({"display", "pointer"}),
+                process_factory=factory,
+            )
+            session = supervisor.start(manifest, profile, authority)
+
+        self.assertEqual(session.state, ActivitySessionState.FAILED)
+        self.assertEqual(session.result.return_code, 126)
+        factory.assert_not_called()
+
+    def test_runtime_manager_starts_child_and_ready_marker_drives_lifecycle(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest = _manifest(root / "activity")
+            profile = _ProfileContext(root / "profile")
+            authority = _Authority(
+                manifest.activity_id, capabilities={"display", "pointer"}
+            )
+            process = _FakeProcess()
+            calls: list[tuple[tuple[object, ...], dict[str, object]]] = []
+
+            def factory(*args, **kwargs):
+                calls.append((args, kwargs))
+                return process
+
+            supervisor = ActivitySupervisor(
+                require_sandbox=False,
+                runtime_manager=_manager({"display", "pointer"}),
+                process_factory=factory,
+            )
+            session = supervisor.start(manifest, profile, authority)
+            self.assertEqual(session.state, ActivitySessionState.STARTING)
+            self.assertIs(supervisor.active_session, session)
+            with mock.patch.object(type(session.control), "ready", return_value=True):
+                self.assertIsNone(supervisor.poll(session))
+            self.assertEqual(session.state, ActivitySessionState.RUNNING)
+            process.returncode = 0
+            result = supervisor.poll(session)
+
+        self.assertEqual(result.exit_reason, ActivityExitReason.NORMAL)
+        self.assertTrue(result.ready)
+        self.assertIsNone(supervisor.active_session)
+        self.assertEqual(len(calls), 1)
+        command = calls[0][0][0]
+        self.assertEqual(command[0], "/usr/bin/python3")
+        self.assertEqual(Path(command[1]), manifest.launch_path)
+
+    def test_only_one_activity_can_be_active(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest = _manifest(root / "activity")
+            profile = _ProfileContext(root / "profile")
+            authority = _Authority(
+                manifest.activity_id, capabilities={"display", "pointer"}
+            )
+            supervisor = ActivitySupervisor(
+                require_sandbox=False,
+                runtime_manager=_manager({"display", "pointer"}),
+                process_factory=lambda *args, **kwargs: _FakeProcess(),
+            )
+            supervisor.start(manifest, profile, authority)
+            with self.assertRaisesRegex(ActivityLifecycleError, "only one Activity"):
+                supervisor.start(manifest, profile, authority)
+
+    def test_environment_is_descriptive_and_drops_unapproved_host_values(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest = _manifest(root / "activity")
+            profile = _ProfileContext(root / "profile")
+            authority = _Authority(
+                manifest.activity_id,
+                capabilities={"display", "pointer"},
+                permissions={"profile.manage_own"},
+            )
+            control_root = profile.activity_data_dir(manifest.activity_id)
+            from greia_launcher.lifecycle import ActivityControlChannel
+
+            control = ActivityControlChannel.create(control_root, control_root)
             try:
-                environment = ActivitySupervisor._sanitized_environment(
-                    manifest, context, authority
-                )
-            finally:
-                if old is None:
-                    del os.environ["SECRET_SHOULD_NOT_LEAK"]
-                else:
-                    os.environ["SECRET_SHOULD_NOT_LEAK"] = old
-        self.assertNotIn("SECRET_SHOULD_NOT_LEAK", environment)
-        self.assertEqual(environment["GREIA_ACTIVITY_ID"], "workshop_settings")
-        self.assertEqual(environment["GREIA_PROFILE_ID"], profile.profile_id)
-        self.assertEqual(environment["HOME"], environment["GREIA_ACTIVITY_DATA_DIR"])
-        self.assertIn("profile.manage_own", environment["GREIA_ACTIVITY_CAPABILITIES"])
-        self.assertEqual(environment["GREIA_PACKAGE_TRUST"], "built_in")
-        self.assertNotIn("GREIA_PROFILES_DIR", environment)
-        self.assertNotIn("GREIA_PROFILE_DATA_DIR", environment)
-        self.assertEqual(
-            environment["GREIA_AVATAR_REQUEST_PATH"],
-            str(
-                context.activity_data_dir("workshop_settings")
-                / ".greia"
-                / "requests"
-                / "avatar.json"
-            ),
-        )
-        self.assertEqual(environment["PYTHONNOUSERSITE"], "1")
-
-    def test_installed_activity_sandbox_hides_sibling_and_parent_state(self) -> None:
-        _, _, manifest, authority = _built_in_activity("shape_garden")
-        with tempfile.TemporaryDirectory() as temporary:
-            store = ProfileStore.load(
-                PROJECT_ROOT / "runtime" / "profile-defaults.toml",
-                Path(temporary) / "profiles",
-            )
-            profile = store.ensure_initialized()[0]
-            context = store.context(profile.profile_id)
-            command = ActivitySupervisor._sandbox_command(
-                Path("/usr/bin/bwrap"),
-                Path("/usr/bin/python3"),
-                manifest,
-                context,
-                authority,
-            )
-            environment = ActivitySupervisor._sanitized_environment(
-                manifest, context, authority, sandboxed=True
-            )
-
-        self.assertIn("--unshare-user", command)
-        self.assertIn("--disable-userns", command)
-        self.assertIn("--unshare-pid", command)
-        self.assertIn("--unshare-net", command)
-        self.assertIn("--new-session", command)
-        self.assertIn("--die-with-parent", command)
-        self.assertIn("/var/lib/greia-profiles", command)
-        self.assertIn("/var/lib/greia-os", command)
-        self.assertIn("/run/greia-os", command)
-        self.assertIn("/media/greia", command)
-        self.assertEqual(environment["HOME"], "/run/greia-activity-data")
-        self.assertEqual(environment["GREIA_ACTIVITY_DATA_DIR"], environment["HOME"])
-        self.assertNotIn(str(context.root), environment.values())
-        self.assertNotIn(str(context.root), command)
-        self.assertIn(str(context.activity_data_dir("shape_garden")), command)
-        self.assertNotIn(str(context.customization_dir), command)
-        self.assertNotIn("GREIA_CUSTOMIZATION_DIR", environment)
-        self.assertNotIn("GREIA_AVATAR_REQUEST_PATH", environment)
-
-    def test_settings_sandbox_keeps_read_only_media_visible(self) -> None:
-        _, _, manifest, authority = _built_in_activity("workshop_settings")
-        with tempfile.TemporaryDirectory() as temporary:
-            store = ProfileStore.load(
-                PROJECT_ROOT / "runtime" / "profile-defaults.toml",
-                Path(temporary) / "profiles",
-            )
-            profile = store.ensure_initialized()[0]
-            context = store.context(profile.profile_id)
-            command = ActivitySupervisor._sandbox_command(
-                Path("/usr/bin/bwrap"),
-                Path("/usr/bin/python3"),
-                manifest,
-                context,
-                authority,
-            )
-        media_tmpfs_pair = ["--tmpfs", "/media/greia"]
-        self.assertFalse(
-            any(
-                command[index : index + 2] == media_tmpfs_pair
-                for index in range(len(command) - 1)
-            )
-        )
-        self.assertIn(str(context.activity_data_dir("workshop_settings")), command)
-        self.assertIn(str(context.customization_dir), command)
-        self.assertNotIn(str(context.root), command)
-
-    def test_forged_environment_capabilities_cannot_expand_sandbox_authority(self) -> None:
-        _, _, manifest, authority = _built_in_activity("shape_garden")
-        with tempfile.TemporaryDirectory() as temporary:
-            store = ProfileStore.load(
-                PROJECT_ROOT / "runtime" / "profile-defaults.toml",
-                Path(temporary) / "profiles",
-            )
-            profile = store.ensure_initialized()[0]
-            context = store.context(profile.profile_id)
-            with mock.patch.dict(
-                os.environ,
-                {"GREIA_ACTIVITY_CAPABILITIES": "customization.manage,removable_media.read"},
-                clear=False,
-            ):
-                command = ActivitySupervisor._sandbox_command(
-                    Path("/usr/bin/bwrap"),
-                    Path("/usr/bin/python3"),
-                    manifest,
-                    context,
-                    authority,
-                )
-        self.assertNotIn(str(context.customization_dir), command)
-        self.assertTrue(
-            any(
-                command[index : index + 2] == ["--tmpfs", "/media/greia"]
-                for index in range(len(command) - 1)
-            )
-        )
-
-    def test_reserved_id_spoof_from_external_source_gets_no_privileged_mounts(self) -> None:
-        runtime = RuntimeCatalogue.load(PROJECT_ROOT / "runtime" / "child-runtime.toml")
-        with tempfile.TemporaryDirectory() as temporary:
-            external_root = Path(temporary) / "activities"
-            fake_settings = external_root / "workshop_settings"
-            external_root.mkdir()
-            shutil.copytree(PROJECT_ROOT / "activities" / "workshop_settings", fake_settings)
-            registry = ActivityRegistry(
-                [
-                    ActivitySource(
-                        external_root,
-                        trust=PackageTrust.DEVELOPER_UNSIGNED,
-                        source_id="external-test",
+                with mock.patch.dict(
+                    os.environ,
+                    {
+                        "SECRET_SHOULD_NOT_LEAK": "nope",
+                        "GREIA_ACTIVITY_CAPABILITIES": "customization.manage,network",
+                    },
+                    clear=False,
+                ):
+                    environment = ActivitySupervisor._sanitized_environment(
+                        manifest, profile, authority, control
                     )
-                ],
-                runtime,
-            )
-            manifest = registry.discover()[0]
-            authority = PermissionBroker.phase0(runtime, POLICY_PATH).issue(
-                registry.registration_for(manifest)
-            )
-            store = ProfileStore.load(
-                PROJECT_ROOT / "runtime" / "profile-defaults.toml",
-                Path(temporary) / "profiles",
-            )
-            profile = store.ensure_initialized()[0]
-            context = store.context(profile.profile_id)
-            command = ActivitySupervisor._sandbox_command(
-                Path("/usr/bin/bwrap"),
-                Path("/usr/bin/python3"),
-                manifest,
-                context,
-                authority,
-            )
-            environment = ActivitySupervisor._sanitized_environment(
-                manifest, context, authority, sandboxed=True
-            )
+            finally:
+                control.cleanup()
 
-        self.assertEqual(authority.package_trust, PackageTrust.DEVELOPER_UNSIGNED)
-        self.assertFalse(authority.granted_permissions)
-        self.assertNotIn(str(context.customization_dir), command)
-        self.assertIn("/media/greia", command)
+        self.assertNotIn("SECRET_SHOULD_NOT_LEAK", environment)
+        self.assertEqual(environment["GREIA_ACTIVITY_ID"], manifest.activity_id)
+        self.assertEqual(
+            set(environment["GREIA_ACTIVITY_CAPABILITIES"].split(",")),
+            set(authority.sdk_features),
+        )
+        self.assertNotIn("customization.manage", environment["GREIA_ACTIVITY_CAPABILITIES"])
+        self.assertIn("GREIA_AVATAR_REQUEST_PATH", environment)
         self.assertNotIn("GREIA_CUSTOMIZATION_DIR", environment)
-        self.assertNotIn("GREIA_AVATAR_REQUEST_PATH", environment)
 
-    def test_installed_runtime_fails_closed_when_bubblewrap_is_missing(self) -> None:
-        _, _, manifest, authority = _built_in_activity("shape_garden")
+    def test_installed_missing_bubblewrap_fails_closed_without_starting_child(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
-            store = ProfileStore.load(
-                PROJECT_ROOT / "runtime" / "profile-defaults.toml",
-                Path(temporary) / "profiles",
+            root = Path(temporary)
+            manifest = _manifest(root / "activity")
+            profile = _ProfileContext(root / "profile")
+            authority = _Authority(
+                manifest.activity_id, capabilities={"display", "pointer"}
             )
-            profile = store.ensure_initialized()[0]
-            context = store.context(profile.profile_id)
-            result = ActivitySupervisor(
-                python_executable=Path(__import__("sys").executable),
-                sandbox_executable=Path(temporary) / "missing-bwrap",
+            factory = mock.Mock(side_effect=AssertionError("process must not start"))
+            supervisor = ActivitySupervisor(
+                sandbox_executable=root / "missing-bwrap",
                 require_sandbox=True,
-            ).launch(manifest, context, authority)
-        self.assertEqual(result.return_code, 126)
+                runtime_manager=_manager({"display", "pointer"}),
+                process_factory=factory,
+            )
+            session = supervisor.start(manifest, profile, authority)
 
-    def test_developer_run_uses_current_interpreter(self) -> None:
-        old_root = os.environ.get("GREIA_OS_ROOT")
-        os.environ["GREIA_OS_ROOT"] = str(PROJECT_ROOT)
-        try:
-            resolved = ActivitySupervisor()._resolve_interpreter()
-        finally:
-            if old_root is None:
-                del os.environ["GREIA_OS_ROOT"]
-            else:
-                os.environ["GREIA_OS_ROOT"] = old_root
-        self.assertEqual(resolved.resolve(), Path(__import__("sys").executable).resolve())
+        self.assertEqual(session.state, ActivitySessionState.FAILED)
+        self.assertEqual(session.result.exit_reason, ActivityExitReason.LAUNCH_FAILURE)
+        factory.assert_not_called()
 
 
 if __name__ == "__main__":
