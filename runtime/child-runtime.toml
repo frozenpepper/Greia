@@ -65,40 +65,18 @@ forbidden_import_roots = [
   "sysconfig",
   "venv",
 ]
-
-[validation]
-maximum_activity_bytes = 52428800
 forbidden_path_names = [
-  ".git",
-  ".hg",
-  ".svn",
   "__pycache__",
   ".venv",
   "dist-packages",
-  "node_modules",
   "site-packages",
-  "vendor",
-  "vendored",
   "venv",
   "wheels",
 ]
 forbidden_suffixes = [
-  ".app",
-  ".bash",
-  ".bin",
-  ".class",
-  ".dll",
-  ".dylib",
   ".egg",
-  ".exe",
-  ".jar",
   ".pyc",
-  ".run",
-  ".sh",
-  ".so",
-  ".tar",
   ".whl",
-  ".zip",
 ]
 forbidden_file_names = [
   "Pipfile",
@@ -112,6 +90,33 @@ forbidden_file_names = [
   "sitecustomize.py",
   "usercustomize.py",
 ]
+
+[validation]
+maximum_activity_bytes = 52428800
+forbidden_path_names = [
+  ".git",
+  ".hg",
+  ".svn",
+  "node_modules",
+  "vendor",
+  "vendored",
+]
+forbidden_suffixes = [
+  ".app",
+  ".bash",
+  ".bin",
+  ".class",
+  ".dll",
+  ".dylib",
+  ".exe",
+  ".jar",
+  ".run",
+  ".sh",
+  ".so",
+  ".tar",
+  ".zip",
+]
+forbidden_file_names = []
 
 [capabilities]
 allowed = [
