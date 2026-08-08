@@ -1,0 +1,50 @@
+name: R0 recover launcher main
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/r0-recover-launcher-main.yml"
+      - "docs/recovery/r0-payload/launcher-main.xz.b64.*"
+
+permissions:
+  contents: write
+
+jobs:
+  recover:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Decode and verify recovered launcher
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat docs/recovery/r0-payload/launcher-main.xz.b64.* \
+            | tr -d '\n' \
+            | base64 --decode > /tmp/launcher-main.py.xz
+          echo "4e5ec90361084d9ab73d39dbcf7c9a04f2668d5f364b876e8d6ab088a7ba4aa0  /tmp/launcher-main.py.xz" | sha256sum --check --strict
+          xz --decompress --stdout /tmp/launcher-main.py.xz > /tmp/main.py
+          echo "f990a2d6c76f6e02403ad1360f4200e0223664238698ca33bbd520ebbe29ff77  /tmp/main.py" | sha256sum --check --strict
+          install -m 0644 /tmp/main.py src/greia_launcher/main.py
+          python3 -m py_compile src/greia_launcher/main.py
+          git diff --check
+
+      - name: Commit recovered launcher source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "greia-r0-recovery"
+          git config user.email "greia-r0-recovery@users.noreply.github.com"
+          git add src/greia_launcher/main.py
+          if git diff --cached --quiet; then
+            echo "Launcher source already matches recovered payload."
+            exit 0
+          fi
+          git commit -m "restore: recover installed Greia launcher composition root"
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
