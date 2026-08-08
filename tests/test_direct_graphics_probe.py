@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from tools.probe_direct_graphics import DirectGraphicsProbe, ProbeInputs
+from greia_platform.direct_graphics_probe import DirectGraphicsProbe, ProbeInputs
 
 
 class DirectGraphicsProbeTests(unittest.TestCase):
