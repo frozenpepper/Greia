@@ -1,0 +1,36 @@
+[activity]
+id = "org.greia.workshop-settings"
+legacy_ids = ["workshop_settings"]
+title_key = "activity.workshop_settings.title"
+version = "0.1.0"
+icon = "palette"
+languages = ["*"]
+
+[education]
+categories = ["creativity", "self_expression", "digital_literacy"]
+difficulty = 1
+skills = [
+  { id = "independence.choice_making", weight = 2 },
+  { id = "creativity.visual_design", weight = 2 },
+  { id = "digital.device.removable_media", weight = 1 },
+]
+events = []
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[requirements]
+required_capabilities = ["display", "pointer"]
+optional_capabilities = ["removable_media"]
+
+[permissions]
+requested = [
+  "customization.manage",
+  "profile.manage_own",
+  "removable_media.read",
+]
+
+[storage]
+schema_version = 1
