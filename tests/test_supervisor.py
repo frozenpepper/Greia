@@ -8,7 +8,11 @@ from pathlib import Path
 from unittest import mock
 
 from greia_launcher.lifecycle import ActivityExitReason, ActivitySessionState
-from greia_launcher.runtime_adapter import PythonRuntimeAdapter, RuntimeManager
+from greia_launcher.runtime_adapter import (
+    PythonRuntimeAdapter,
+    RuntimeCommand,
+    RuntimeManager,
+)
 from greia_launcher.storage_broker import ActivityStorageBroker
 from greia_launcher.supervisor import (
     SANDBOX_STORAGE_ROOT,
@@ -258,6 +262,9 @@ class SupervisorTests(unittest.TestCase):
         command = calls[0][0][0]
         self.assertEqual(command[0], "/usr/bin/python3")
         self.assertEqual(Path(command[1]), manifest.launch_path)
+        environment = calls[0][1]["env"]
+        self.assertEqual(environment["PYTHONNOUSERSITE"], "1")
+        self.assertEqual(environment["PYTHONDONTWRITEBYTECODE"], "1")
 
     def test_storage_broker_is_exposed_for_launch_and_removed_on_exit(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -353,6 +360,29 @@ class SupervisorTests(unittest.TestCase):
         self.assertNotIn("customization.manage", environment["GREIA_ACTIVITY_CAPABILITIES"])
         self.assertIn("GREIA_AVATAR_REQUEST_PATH", environment)
         self.assertNotIn("GREIA_CUSTOMIZATION_DIR", environment)
+        self.assertNotIn("PYTHONNOUSERSITE", environment)
+        self.assertNotIn("PYTHONDONTWRITEBYTECODE", environment)
+
+    def test_sandbox_command_honors_runtime_working_directory(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest = _manifest(root / "activity")
+            nested = manifest.root / "runtime-work"
+            nested.mkdir()
+            profile = _ProfileContext(root / "profile")
+            authority = _Authority(
+                manifest.activity_id, capabilities={"display", "pointer"}
+            )
+            command = ActivitySupervisor._sandbox_command(
+                root / "bwrap",
+                RuntimeCommand(command=("runtime", "--start"), cwd=nested),
+                manifest,
+                profile,
+                authority,
+            )
+            chdir = command.index("--chdir")
+            self.assertEqual(Path(command[chdir + 1]), nested)
+            self.assertEqual(command[chdir + 2 :], ["runtime", "--start"])
 
     def test_sandbox_launch_mounts_only_ephemeral_storage_broker(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

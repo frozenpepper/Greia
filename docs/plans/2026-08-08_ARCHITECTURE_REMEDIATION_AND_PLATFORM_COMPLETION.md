@@ -604,6 +604,15 @@ Do not rewrite old entries; append corrections.
 - Next exact step: audit remaining runtime-specific lifecycle/cleanup behavior after storage transport, then define the explicit R5 reimplementation/recovery boundary needed to restore event-session integration before R6 can close.
 - Commit(s): this tranche commit.
 
+## 2026-08-09 — R6.2 runtime-command authority boundary
+
+- Implemented: `RuntimeCommand` now carries runtime-family-specific environment alongside command/cwd; `PythonRuntimeAdapter` owns Python-only process flags; RuntimeManager validates command text, package-bounded working directory and runtime environment before launch; ActivitySupervisor no longer injects Python settings and honors adapter cwd in Bubblewrap.
+- Tests/evidence: Python-specific environment ownership, platform-environment override rejection, cwd escape rejection, generic supervisor environment remaining Python-neutral, adapter cwd honored in sandbox, focused runtime/supervisor tests, and complete recoverable suite.
+- Decisions: runtime adapters may add bounded runtime-family process settings but cannot overwrite Greia/session/profile/storage authority, `PATH/HOME/XDG_*`, or inherited display/audio transport. Runtime-specific cwd must remain inside the Activity package.
+- Remaining blocker: R5 event/session/progression integration remains blocked by lost `greia_platform.history`; RuntimeLifecycleSupport pause/checkpoint remains declarative and is not promoted until a real runtime requires it.
+- Next exact step: perform an R6 closure audit against ADRs 0012/0014/0015 and the active plan, separating code-complete R6.2 items from the explicit R5 continuity blocker and any hardware-only evidence gates.
+- Commit(s): this tranche commit.
+
 ---
 
 # 9. Final completion criteria

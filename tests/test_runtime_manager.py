@@ -10,7 +10,9 @@ from unittest import mock
 from greia_launcher.runtime_adapter import (
     PythonRuntimeAdapter,
     PythonRuntimePolicy,
+    RuntimeCommand,
     RuntimeCompatibilityError,
+    RuntimeLifecycleSupport,
     RuntimeManager,
     RuntimeUnavailableError,
     RuntimeValidationError,
@@ -22,6 +24,21 @@ from greia_platform.trust import ActivitySource, PackageTrust
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 RUNTIME_PATH = PROJECT_ROOT / "runtime" / "child-runtime.toml"
+
+
+class _CommandAdapter:
+    runtime_type = "python"
+    lifecycle_support = RuntimeLifecycleSupport()
+    required_device_capabilities = frozenset()
+
+    def __init__(self, command: RuntimeCommand):
+        self.command = command
+
+    def validate_package(self, manifest) -> None:
+        return None
+
+    def command_for(self, manifest) -> RuntimeCommand:
+        return self.command
 
 
 class RuntimeManagerTests(unittest.TestCase):
@@ -126,6 +143,57 @@ class RuntimeManagerTests(unittest.TestCase):
 
         with self.assertRaisesRegex(RuntimeCompatibilityError, "snapshot changed"):
             manager.prepare_launch(shape, expected_device_snapshot_token=stale_token)
+
+    def test_python_runtime_owns_python_specific_environment(self) -> None:
+        shape = next(
+            item for item in self._built_in_manifests()
+            if item.activity_id == "org.greia.shape-garden"
+        )
+        preparation = self._manager({"display", "pointer"}).prepare_launch(shape)
+        self.assertEqual(
+            dict(preparation.command.environment),
+            {"PYTHONNOUSERSITE": "1", "PYTHONDONTWRITEBYTECODE": "1"},
+        )
+
+    def test_runtime_environment_cannot_override_platform_authority(self) -> None:
+        shape = next(
+            item for item in self._built_in_manifests()
+            if item.activity_id == "org.greia.shape-garden"
+        )
+        manager = RuntimeManager(
+            [
+                _CommandAdapter(
+                    RuntimeCommand(
+                        command=("runtime",),
+                        cwd=shape.root,
+                        environment=(("GREIA_PROFILE_ID", "forged"),),
+                    )
+                )
+            ],
+            DeviceCapabilityService.static(
+                {"display", "pointer"}, source_id="runtime-manager-test"
+            ),
+        )
+        with self.assertRaisesRegex(RuntimeValidationError, "platform-owned"):
+            manager.prepare_launch(shape)
+
+    def test_runtime_working_directory_cannot_escape_package(self) -> None:
+        shape = next(
+            item for item in self._built_in_manifests()
+            if item.activity_id == "org.greia.shape-garden"
+        )
+        manager = RuntimeManager(
+            [
+                _CommandAdapter(
+                    RuntimeCommand(command=("runtime",), cwd=PROJECT_ROOT)
+                )
+            ],
+            DeviceCapabilityService.static(
+                {"display", "pointer"}, source_id="runtime-manager-test"
+            ),
+        )
+        with self.assertRaisesRegex(RuntimeValidationError, "escapes Activity package"):
+            manager.prepare_launch(shape)
 
     def test_activity_environment_cannot_forge_runtime_device_truth(self) -> None:
         shape = next(

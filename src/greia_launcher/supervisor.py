@@ -23,6 +23,7 @@ from .lifecycle import (
 from .runtime_adapter import (
     PythonRuntimeAdapter,
     RuntimeAdapterError,
+    RuntimeCommand,
     RuntimeLaunchAdapter,
     RuntimeManager,
 )
@@ -191,13 +192,14 @@ class ActivitySupervisor:
             control,
             sandboxed=sandboxed,
             storage_broker=storage_broker,
+            runtime_environment=runtime_command.environment,
         )
 
         if sandboxed:
             assert sandbox is not None
             command = self._sandbox_command(
                 sandbox,
-                runtime_command.command,
+                runtime_command,
                 manifest,
                 profile,
                 authority,
@@ -441,7 +443,7 @@ class ActivitySupervisor:
     @staticmethod
     def _sandbox_command(
         sandbox: Path,
-        runtime_command: tuple[str, ...],
+        runtime_command: RuntimeCommand,
         manifest: ActivityManifest,
         profile: ProfileContext,
         authority: ActivityAuthority,
@@ -502,7 +504,9 @@ class ActivitySupervisor:
             )
         if not authority.has_permission("removable_media.read"):
             command.extend(["--tmpfs", "/media/greia"])
-        command.extend(["--chdir", str(manifest.root), *runtime_command])
+        command.extend(
+            ["--chdir", str(runtime_command.cwd), *runtime_command.command]
+        )
         return command
 
     @staticmethod
@@ -514,6 +518,7 @@ class ActivitySupervisor:
         *,
         sandboxed: bool = False,
         storage_broker: ActivityStorageBroker | None = None,
+        runtime_environment: tuple[tuple[str, str], ...] = (),
     ) -> dict[str, str]:
         allowed_names = {
             "DISPLAY",
@@ -564,8 +569,6 @@ class ActivitySupervisor:
                 "XDG_CACHE_HOME": str(env_cache),
                 "XDG_CONFIG_HOME": str(env_config),
                 "XDG_DATA_HOME": str(env_data),
-                "PYTHONNOUSERSITE": "1",
-                "PYTHONDONTWRITEBYTECODE": "1",
                 "GREIA_OS_ROOT": os.environ.get("GREIA_OS_ROOT", str(PRODUCTION_ROOT)),
                 "GREIA_ACTIVITY_ID": manifest.activity_id,
                 "GREIA_ACTIVITY_ROOT": str(manifest.root),
@@ -582,6 +585,7 @@ class ActivitySupervisor:
                 "GREIA_ACTIVITY_STOP_PATH": str(control.child_stop_path),
             }
         )
+        environment.update(dict(runtime_environment))
         if storage_broker is not None:
             environment["GREIA_STORAGE_SOCKET"] = str(storage_broker.child_socket)
             environment["GREIA_STORAGE_TOKEN"] = storage_broker.session_token

@@ -78,6 +78,10 @@ The first post-recovery implementation tranche closes a TOCTOU-style authority g
 
 The installed Activity path now actually exposes the previously implemented R4 Universal Storage Service. `build_launcher_runtime_services(...)` loads `runtime/storage-policy.toml` and returns an `ActivityStorageService`; the installed launcher injects it into `ActivitySupervisor`. For each launch, the supervisor opens the durable `(profile_id, activity_id)` namespace, starts a one-session Unix-socket `ActivityStorageBroker`, passes only `GREIA_STORAGE_SOCKET` and `GREIA_STORAGE_TOKEN`, and in Bubblewrap mounts only the ephemeral broker directory at `/run/greia-storage`. The durable namespace itself is never mounted into the Activity. The broker is stopped and its runtime directory removed on terminal cleanup; a cleanup failure becomes `platform_failure`. The R5 event broker remains intentionally unwired because its authoritative `history.py` dependency is the known lost source.
 
+## R6.2 runtime-command authority boundary — 2026-08-09
+
+Runtime-family process details are now cleanly separated from the runtime-neutral Supervisor. `RuntimeCommand` includes command, an in-package working directory, and a bounded runtime-specific environment. `PythonRuntimeAdapter` supplies `PYTHONNOUSERSITE=1` and `PYTHONDONTWRITEBYTECODE=1`; the Supervisor no longer hardcodes Python policy. RuntimeManager rejects malformed commands, cwd escaping the Activity package, duplicate/invalid environment entries, and attempts to override Greia/profile/session/storage variables or platform-owned `PATH/HOME/XDG/display/audio` transport. Bubblewrap uses the adapter-prepared cwd rather than replacing it with the manifest root.
+
 ---
 
 ## 2. Mandatory resume order

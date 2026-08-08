@@ -13,6 +13,25 @@ from greia_platform.device_capabilities import DeviceCapabilityService
 
 
 PRODUCTION_ROOT = Path("/opt/greia-os")
+_PLATFORM_OWNED_ENVIRONMENT = frozenset(
+    {
+        "DISPLAY",
+        "HOME",
+        "LANG",
+        "LC_ALL",
+        "PATH",
+        "PULSE_SERVER",
+        "PYTHONPATH",
+        "SDL_AUDIODRIVER",
+        "SDL_VIDEODRIVER",
+        "WAYLAND_DISPLAY",
+        "XAUTHORITY",
+        "XDG_CACHE_HOME",
+        "XDG_CONFIG_HOME",
+        "XDG_DATA_HOME",
+        "XDG_RUNTIME_DIR",
+    }
+)
 
 
 class RuntimeAdapterError(ValueError):
@@ -35,6 +54,7 @@ class RuntimeCompatibilityError(RuntimeAdapterError):
 class RuntimeCommand:
     command: tuple[str, ...]
     cwd: Path
+    environment: tuple[tuple[str, str], ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -210,6 +230,10 @@ class PythonRuntimeAdapter:
         return RuntimeCommand(
             command=(str(self.resolve_interpreter()), str(manifest.launch_path)),
             cwd=manifest.root,
+            environment=(
+                ("PYTHONNOUSERSITE", "1"),
+                ("PYTHONDONTWRITEBYTECODE", "1"),
+            ),
         )
 
     def resolve_interpreter(self) -> Path:
@@ -307,11 +331,68 @@ class RuntimeManager:
                 "Activity/runtime requires unavailable device capabilities: "
                 + ", ".join(sorted(compatibility.missing_required_capabilities))
             )
+        runtime_command = adapter.command_for(manifest)
+        _validate_runtime_command(runtime_command, manifest)
         return RuntimeLaunchPreparation(
-            command=adapter.command_for(manifest),
+            command=runtime_command,
             compatibility=compatibility,
             lifecycle_support=adapter.lifecycle_support,
         )
+
+
+def _validate_runtime_command(
+    runtime_command: RuntimeCommand, manifest: ActivityManifest
+) -> None:
+    command = runtime_command.command
+    if (
+        not isinstance(command, tuple)
+        or not command
+        or not all(isinstance(item, str) and item and "\x00" not in item for item in command)
+    ):
+        raise RuntimeValidationError("runtime command must be non-empty NUL-free text")
+
+    try:
+        package_root = manifest.root.resolve(strict=True)
+        working_directory = runtime_command.cwd.resolve(strict=True)
+    except OSError as exc:
+        raise RuntimeValidationError(f"runtime working directory is unavailable: {exc}") from exc
+    if not working_directory.is_dir():
+        raise RuntimeValidationError("runtime working directory is not a directory")
+    if working_directory != package_root and package_root not in working_directory.parents:
+        raise RuntimeValidationError("runtime working directory escapes Activity package root")
+
+    environment = runtime_command.environment
+    if not isinstance(environment, tuple):
+        raise RuntimeValidationError("runtime environment must be an immutable tuple")
+    seen: set[str] = set()
+    for item in environment:
+        if (
+            not isinstance(item, tuple)
+            or len(item) != 2
+            or not isinstance(item[0], str)
+            or not isinstance(item[1], str)
+        ):
+            raise RuntimeValidationError("runtime environment entries must be text pairs")
+        name, value = item
+        if not _environment_name(name) or "\x00" in value or len(value) > 8192:
+            raise RuntimeValidationError("runtime environment contains an invalid entry")
+        if name in seen:
+            raise RuntimeValidationError(f"runtime environment duplicates {name!r}")
+        if (
+            name.startswith("GREIA_")
+            or name.startswith("XDG_")
+            or name in _PLATFORM_OWNED_ENVIRONMENT
+        ):
+            raise RuntimeValidationError(
+                f"runtime environment may not override platform-owned name {name!r}"
+            )
+        seen.add(name)
+
+
+def _environment_name(value: str) -> bool:
+    if not value or len(value) > 128 or value[0].isdigit():
+        return False
+    return all(character.isascii() and (character.isalnum() or character == "_") for character in value)
 
 
 def _string_set(container: Mapping[str, object], key: str) -> frozenset[str]:
