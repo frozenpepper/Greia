@@ -58,6 +58,8 @@ The prototype work established and hardened the basic platform shell, profile sy
 - active profile is the only writable child namespace exposed to an Activity;
 - installer power/target identity is rechecked immediately before destructive operations.
 
+> **Review correction (P0.17A):** the P0.14 statement above is accurate only at the *profile-to-profile* level. The current Bubblewrap mount exposes the complete active profile root writable to the Activity, so it does not yet enforce per-Activity storage isolation inside that profile. See the v0.13 architecture review.
+
 ### P0.15 — Platform architecture constitution — COMPLETE (DESIGN / NO RUNTIME CLAIM)
 
 ADR 0012 establishes:
@@ -96,9 +98,37 @@ ADR 0014 and the v0.13 migration establish:
 - current Xorg code remains temporarily so existing hardened behavior/tests are not discarded before an evidence-backed replacement exists;
 - `make verify` passes **140/140** provider-free tests after the complete identity migration.
 
+### P0.17A — Architecture deep review and visual-system inventory — COMPLETE IN SOURCE
+
+- v0.13 implementation reviewed against ADR 0012/0013/0014 and repository contracts;
+- review recorded in `docs/reviews/2026-08-08_ARCHITECTURE_DEEP_REVIEW_V0_13.md`;
+- production OS visual/character/icon/screen inventory recorded in `docs/design/GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md`;
+- missed technical rename `/media/pip` identified and corrected to canonical `/media/greia` in the verified local source tree;
+- high-priority architecture finding: Bubblewrap currently grants each Activity writable access to the full active profile root, which provides inter-profile isolation but not per-Activity storage isolation;
+- high-priority architecture finding: in-process environment-variable capability checks are not a trusted authorization boundary and must become brokered platform authority before broad third-party Activity distribution;
+- forced-return/watchdog remains a high-priority lifecycle blocker;
+- current Activity manifest concrete reward amounts should be replaced by platform-mapped event/objective semantics before Progression Engine implementation;
+- Runtime Adapter, universal Storage, Session Service, Progression/Reward Ledger, `.greiaactivity`, `.greiabackup`, direct graphics and ARM image adapters remain intentionally pending;
+- `make verify` still passes **140/140** after the local path correction;
+- no hardware/image evidence claims are added by this source review.
+
 ## Current implementation/evidence work
 
-### P0.18 — Direct Greia graphics/session architecture
+### P0.18 — Activity authority and lifecycle correction
+
+Before a general package ecosystem or Web runtime, align runtime authority with ADR 0012.
+
+Required work:
+
+1. stop bind-mounting the whole active profile writable into ordinary Activity sandboxes;
+2. expose only the current Activity's writable namespace;
+3. move privileged profile/customization operations behind a trusted Greia broker/IPC boundary;
+4. treat Activity environment capability values as convenience metadata only, never authority;
+5. add negative tests proving an Activity cannot mutate another Activity's save, profile customization, avatar/profile registry, progression, parent state or system state;
+6. replace blocking `subprocess.run()` Activity execution with a supervised Activity session supporting READY, liveness, graceful stop, forced process-tree termination and normalized exit reasons;
+7. preserve the low-end Bubblewrap/resource constraints and fail-closed launch behavior.
+
+### P0.19 — Direct Greia graphics/session architecture
 
 Design and implement the replacement for the provisional Xorg path.
 
@@ -114,7 +144,7 @@ Required work:
 
 **Acceptance:** no conventional desktop/display-server UI; shell and Activity lifecycle proven on required references; low-resolution/input/audio settings behavior preserved through platform APIs; resource measurements recorded.
 
-### P0.19 — ARM64 Raspberry Pi image adapters
+### P0.20 — ARM64 Raspberry Pi image adapters
 
 Add real board/image adapters below the shared profile schema for Pi 400 and Pi 500.
 
@@ -126,27 +156,15 @@ Required work:
 - prove display/input/audio/network/removable-media behavior;
 - verify the same profile/storage/progression/package/backup contracts as x86.
 
-### P0.20 — Embedded Web runtime benchmark and selection
+### P0.21 — Embedded Web runtime benchmark and selection
 
 Web is a first-class architectural runtime but remains unimplemented.
 
-Benchmark candidate embedded engines (WPE/WebKit-like family first; alternatives allowed) for:
-
-- incremental installed size;
-- idle/peak RSS;
-- startup latency;
-- Canvas2D/SVG/JavaScript/audio behavior;
-- optional WebGL;
-- direct-display/session integration;
-- i386 availability for the C0 question;
-- ARM64/Pi behavior;
-- security-update lifecycle;
-- crash/forced-return behavior;
-- network-denied sandbox behavior.
+Benchmark candidate embedded engines (WPE/WebKit-like family first; alternatives allowed) for incremental installed size, idle/peak RSS, startup latency, Canvas2D/SVG/JavaScript/audio behavior, optional WebGL, direct-display/session integration, i386 availability, ARM64/Pi behavior, security-update lifecycle, crash/forced-return behavior, and network-denied sandbox behavior.
 
 Do not add a Web package set to a certified image profile before this evidence exists.
 
-### P0.21 — Universal platform storage/session/progression implementation
+### P0.22 — Universal platform storage/session/progression implementation
 
 Implement the constitution's logical services without runtime-specific forks:
 
@@ -159,16 +177,19 @@ Implement the constitution's logical services without runtime-specific forks:
 - parent-readable bounded summaries;
 - backup/restore hooks.
 
-### P0.22 — `.greiaactivity` package/install/update path
+Before implementing rewards, replace concrete Activity-owned reward amounts with Activity event/objective declarations interpreted by Greia-owned policy.
+
+### P0.23 — `.greiaactivity` package/install/update path
 
 Implement stable-ID packages, safe bounded import, USB/SD discovery, New/Update/Installed/Older/Incompatible/Invalid classification, staged validation, immutable versions, atomic activation, rollback, and save-preserving uninstall.
 
-### P0.23 — `.greiabackup` portable backup/restore
+### P0.24 — `.greiabackup` portable backup/restore
 
 Implement logical cross-architecture backup/restore for profiles, customization, saves/creations, progression/rewards, bounded session history, and installed-Activity inventory while excluding machine secrets by default. Preserve save-only namespaces for Activities absent on the destination.
 
 ## Remaining Phase 0 blockers from the existing baseline
 
+- correct the Activity writable namespace/capability authority boundary identified in P0.17A;
 - replace/patch stock Plymouth with a verified noninteractive branded-only boot-cover backend;
 - real Acer inventory and one evidence-selected architecture profile;
 - measured sub-1,000 MiB image build;
@@ -195,7 +216,8 @@ Stop and reassess rather than layer hacks when any of these occurs:
 - installer media is ever offered as an installation target;
 - selected-disk identity cannot be re-verified immediately before destructive operations;
 - tap-to-click cannot be kept off by default on the reference touchpad;
-- ARM support would require a separate Activity/profile/storage/progression ecosystem.
+- ARM support would require a separate Activity/profile/storage/progression ecosystem;
+- Activity sandboxing would require trusting mutable Activity-controlled metadata for privileged authority.
 
 ## Evidence discipline
 
