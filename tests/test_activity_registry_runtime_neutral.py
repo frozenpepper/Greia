@@ -67,6 +67,31 @@ class RuntimeNeutralActivityRegistryTests(unittest.TestCase):
                 fake_source,
             )
 
+    def test_overlapping_source_cannot_reclassify_nested_external_package(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "activities"
+            external_root = root / "external"
+            package = external_root / "shape"
+            external_root.mkdir(parents=True)
+            shutil.copytree(PROJECT_ROOT / "activities" / "shape_garden", package)
+            manifest_path = package / "activity.toml"
+            manifest_path.write_text(
+                manifest_path.read_text(encoding="utf-8").replace(
+                    'legacy_ids = ["shape_garden"]\n', ""
+                ),
+                encoding="utf-8",
+            )
+            built_in = ActivitySource(root, PackageTrust.BUILT_IN, "built-in-ancestor")
+            external = ActivitySource(
+                external_root, PackageTrust.DEVELOPER_UNSIGNED, "external-nested"
+            )
+            registry = ActivityRegistry([built_in, external], self.runtime)
+
+            registration = registry.validate_registration(package)
+            self.assertEqual(registration.package_trust, PackageTrust.DEVELOPER_UNSIGNED)
+            with self.assertRaisesRegex(ActivityValidationError, "authoritative configured source"):
+                registry.validate_registration(package, built_in)
+
     def test_python_package_rule_belongs_to_python_adapter(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             activities = Path(temporary) / "activities"
