@@ -3,7 +3,7 @@
 **Date:** 2026-08-09
 **Version:** `0.13.0-phase0-dev`
 **Repository:** `frozenpepper/Greia` (private)
-**Canonical integration branch at this handover:** `r6-runtime-integration-recovery`
+**Canonical target:** `main` after PR #1 integration
 **PR:** #1 — R0/R5/R6 integrated recovery and source closure
 **Current functional phase:** **R7 — Direct Greia graphics/session architecture**
 
