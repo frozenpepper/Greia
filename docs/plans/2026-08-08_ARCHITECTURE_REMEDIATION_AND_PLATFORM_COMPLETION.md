@@ -1,9 +1,9 @@
 # Greia — Architecture Remediation and Platform Completion Plan
 
-**Status:** ACTIVE — mandatory implementation plan until all closure criteria are satisfied  
-**Created:** 2026-08-08  
-**Source baseline:** `0.13.0-phase0-dev`  
-**Authority:** subordinate to the Greia architecture constitution and accepted ADRs; authoritative for implementation ordering and progress tracking while active  
+**Status:** ACTIVE — mandatory implementation plan until all closure criteria are satisfied
+**Created:** 2026-08-08
+**Source baseline:** `0.13.0-phase0-dev`
+**Authority:** subordinate to the Greia architecture constitution and accepted ADRs; authoritative for implementation ordering and progress tracking while active
 **Plan audit:** 2026-08-08 full re-audit completed after an assistant-response consistency failure. See `docs/reviews/2026-08-08_ACTIVE_PLAN_AUDIT_AND_CORRECTION.md`.
 
 ---
@@ -214,8 +214,8 @@ Required:
 - `make verify` baseline recorded;
 - complete build/test working tree represented in GitHub, including required binary assets, or a documented repository-managed external-asset mechanism.
 
-**Closure:** all above true.  
-**Status:** **REOPENED / INCOMPLETE** — governance wiring and source verification are real, but GitHub binary-asset completeness is not yet true.
+**Closure:** all above true.
+**Status:** **COMPLETE** — canonical source/build/test/assets are in GitHub and the clean-clone source gate passes. Physical/hardware evidence remains assigned to later phases.
 
 ## R1 — PermissionBroker, trusted Activity authority, and per-Activity isolation
 
@@ -266,7 +266,7 @@ Prove:
 - media is hidden unless granted;
 - missing Bubblewrap fails closed.
 
-**Source closure:** least-privilege mount shape and PermissionBroker/trust-origin tests pass. Linux Bubblewrap runtime evidence remains a later/final evidence item.  
+**Source closure:** least-privilege mount shape and PermissionBroker/trust-origin tests pass. Linux Bubblewrap runtime evidence remains a later/final evidence item.
 **Status:** **IN PROGRESS** — per-Activity mount patch is real and verified; PermissionBroker/trust-origin work remains.
 
 ## R2 — Runtime-neutral Activity lifecycle, readiness, watchdog, forced return
@@ -630,6 +630,16 @@ Do not rewrite old entries; append corrections.
 - R6.2 source status: runtime-specific validation, launch preparation, lifecycle transport, runtime-handle creation, exit normalization, force-stop and cleanup are now all behind the adapter/RuntimeManager seam. Platform Storage remains shared and brokered. The remaining full-R6 blocker is not an R6.2 seam: lost post-v0.12 R5 history/session/progression authority prevents complete `make verify` and event/session integration.
 - Next exact step: perform and persist the final R6 source-closure audit against ADRs 0012/0014/0015, update PR evidence, and define the explicit R5 reimplementation decision required to unblock full verification; do not begin R7.
 - Commit(s): this tranche commit.
+
+## 2026-08-09 — R0/R5/R6 integrated source closure after reviewed R5 reimplementation
+
+- Implemented: explicitly replaced the unrecoverable historical R5 History/Progression authority with a new reviewed implementation grounded in ADR 0017 and surviving policy/protocol contracts; restored automatic authoritative sessions, transactional/idempotent event processing, platform-owned score/progression/reward accounting, restart recovery, logical export and bounded parent summaries; wired per-session authenticated event brokers into the installed launcher; repaired the real `ProfileContext` Universal Storage namespace exposed by integration; corrected built-in package source authority in standalone validation and parent-server registry construction; fixed launch/cleanup failure paths so authoritative session rows always close with normalized reasons.
+- Tests/evidence: permanent clean GitHub checkout `7562471d868a23cd90d88b43aed2501988eb5740` reports **318 tracked files / 123 PNGs**, clean worktree, Python compile PASS, R5 invariants PASS, R6 invariants PASS, **194/194 provider-free tests PASS**, project validation PASS, both bundled Activity validators PASS, and source/shell/footprint gate PASS.
+- Decisions: **R0 is COMPLETE. R5 is SOURCE-CLOSED as a new reviewed reimplementation, not historical recovery. R6.1 and R6.2 are SOURCE-CLOSED.** Current source also keeps the R1–R4 safety/storage spine green under the complete gate. Source closure does not promote direct-graphics or physical-hardware evidence: Acer/Pi/DRM/KMS obligations remain in R7/R8/R14.
+- Remaining blockers: the next blocking architectural phase is R7 direct graphics/session architecture. Later package/backup/parent/recovery/certification phases remain open per the dependency map.
+- Next exact step: begin R7 by inventorying every `DISPLAY`, Xauthority, XShm, `xinput`, `xrandr`, Xorg package/config/service and SDL/Pygame assumption; classify interface vs provisional backend dependencies; then implement the direct display/input path beneath the stable R6 HAL without deepening X11.
+- Evidence document: `docs/reviews/2026-08-09_R5_REIMPLEMENTATION_AND_R6_INTEGRATED_CLOSURE.md`.
+- Key commits: `0cfb82aa89df5ebc9c03a01061ebd8da82f8f4dd`, `5bd867c9488fcd61a598813cdf7a42c396ec3b2c`, `e790a36e36b845d0a9d0ecf057180ffd3a213af3`, `2819f73dcc57c3b69d002532c03f5d2021e7c10f`, `7562471d868a23cd90d88b43aed2501988eb5740`.
 
 ---
 
