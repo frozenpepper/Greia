@@ -14,9 +14,14 @@ On resumption, remote `main` was confirmed at the expected R6.1 recovery commit.
 - `src/greia_platform/permissions.py` already consumed the permanent R3 manifest contract (`required_capabilities`, `optional_capabilities`, `requested_permissions`, `allowed_permissions`);
 - the remote `src/greia_platform/activities.py` and `runtime/child-runtime.toml` still represented the older prototype contract (`runtime.capabilities`, Activity-authored rewards, Python policy embedded in the registry);
 - several files known to exist in the previously verified local R4/R5/R6 tree are absent remotely, including the launcher composition file named by the handover and some history/session source;
-- repository code search finds no remote launcher construction site for `PermissionBroker.phase0(...)` or `ActivitySupervisor(...)`.
+- repository code search finds no remote launcher construction site for `PermissionBroker.phase0(...)` or `ActivitySupervisor(...)`;
+- the surviving remote `tests/test_supervisor.py` was pre-R2 and still tested the removed blocking `.launch()` API, prototype Activity IDs, the old sandbox command signature and interpreter resolution on the supervisor.
 
-Therefore this session did **not** reconstruct a fake complete tree or claim `make verify` against an incomplete repository. It repaired the specific R3/R6 text seams that can be grounded in accepted ADRs and existing committed consumers, committed each coherent tranche, and kept R0/R6 closure blockers explicit.
+Historical Git tree checks also proved that important missing files were never committed rather than merely deleted later: `src/greia_platform/history.py`, `src/greia_launcher/main.py`, and `tests/test_history.py` return 404 even at relevant R5-era commit refs. Individual R5 commits preserved selected policy/protocol/broker fragments, but not the complete verified local tree.
+
+Therefore this session did **not** reconstruct a fake complete tree or claim `make verify` against an incomplete repository. It repaired the specific R3/R6 text seams that can be grounded in accepted ADRs and existing committed consumers, replaced one provably obsolete surviving supervisor test module with current contract tests, committed each coherent tranche, and kept R0/R6 closure blockers explicit.
+
+R0 is now tracked explicitly as GitHub issue **#2 — `R0: restore GitHub as complete reproducible Greia source of truth`**.
 
 ## Implemented R6.2 architecture
 
@@ -127,14 +132,38 @@ Installed construction without an explicitly injected `RuntimeManager` fails clo
 
 The supervisor also rejects a launch when the platform-issued `ActivityAuthority` does not contain all manifest-required capabilities.
 
+### 7. Supervisor regression coverage brought forward to the current contract
+
+The remote `tests/test_supervisor.py` was demonstrably stale and contradicted the already-accepted R2 lifecycle architecture. It has been replaced with tests of the current seam rather than preserved as compatibility debt.
+
+The new tests cover:
+
+- installed supervisor requires an explicitly injected Runtime Manager;
+- missing required platform-issued capability fails before child process creation;
+- unavailable runtime becomes normalized launch failure;
+- Runtime Manager prepares a child command and READY drives STARTING → RUNNING;
+- only one Activity may be active;
+- Activity environment is descriptive and host-injected capability strings cannot expand it;
+- missing Bubblewrap on an installed path fails closed without starting the child.
+
+The tests use synthetic profile/authority contracts where appropriate so they exercise supervisor responsibilities rather than re-testing PermissionBroker/ProfileStore internals.
+
 ## Focused source evidence
 
 A local reconstructed scratch tree was used only to exercise the exact changed R6.2 modules. It is not claimed as the complete canonical Greia tree.
 
-The following focused suite passed:
+The combined focused suite passed:
 
 ```text
-9 / 9 PASS
+16 / 16 PASS
+```
+
+Breakdown:
+
+```text
+3  runtime-neutral Activity Registry boundary tests
+6  Runtime Manager / Python adapter / trusted device authority tests
+7  current ActivitySupervisor / Runtime Manager integration tests
 ```
 
 Coverage includes:
@@ -147,13 +176,22 @@ Coverage includes:
 6. dynamic imports are rejected by the Python adapter;
 7. missing required device capability blocks runtime launch preparation;
 8. missing optional device capability does not block launch preparation;
-9. forged `GREIA_ACTIVITY_CAPABILITIES` environment content cannot create device truth.
+9. forged `GREIA_ACTIVITY_CAPABILITIES` environment content cannot create device truth;
+10. installed supervisor construction requires an injected Runtime Manager;
+11. missing required platform authority blocks process creation;
+12. unavailable runtime is normalized to launch failure;
+13. Runtime Manager launch preparation integrates with supervisor lifecycle/READY handling;
+14. one-active-Activity enforcement remains intact;
+15. sanitized child environment remains descriptive and cannot inherit forged host authority;
+16. missing installed Bubblewrap remains fail closed.
 
 Additional smoke checks passed for:
 
 - Python compilation of the changed registry/runtime/composition/supervisor modules;
 - installed supervisor construction failing without an injected Runtime Manager;
 - supervisor refusing launch before process creation when platform-issued authority lacks a required capability.
+
+This does **not** replace the complete-tree historical 219-test gate.
 
 ## GitHub commit sequence
 
@@ -198,7 +236,12 @@ fix: harden runtime-neutral Activity registry identity handling
 
 261e5b4d459f26ece6634f99fd142c45f3fd0b5e
 test: pin runtime-neutral Activity registry boundaries
+
+0c41c994ded0a95512ef5ab2df611b74b344b6d1
+test: replace stale blocking-launch supervisor coverage
 ```
+
+Continuity/documentation commits follow these implementation commits and should be read through current branch HEAD rather than treated as a fixed list in this section.
 
 ## Why R6 is not closed
 
@@ -209,24 +252,29 @@ The remote GitHub tree currently cannot prove those points because:
 1. the launcher composition call site named by the handover is absent remotely;
 2. repository code search finds no alternative remote construction site using `PermissionBroker.phase0` or `ActivitySupervisor`;
 3. several previously verified R4/R5 source files and tests are absent remotely;
-4. the historical binary asset library remains absent;
-5. therefore GitHub HEAD/this branch is not an independently reproducible complete tree and cannot honestly run the prior 219-test project gate.
+4. historical commit-tree checks prove some missing authority files were never committed at all;
+5. at least one surviving test module had remained at a pre-R2 API until repaired in this branch;
+6. the historical binary asset library remains absent;
+7. therefore GitHub HEAD/this branch is not an independently reproducible complete tree and cannot honestly run the prior 219-test project gate.
 
 The new `composition.py` is the intended installed composition building block, but wiring it into an invented replacement launcher would create ungrounded architecture and hide the R0 continuity failure.
 
 ## Immediate next action
 
+R0 recovery is tracked in GitHub issue #2.
+
 Before marking R6 source-complete or starting R7:
 
 1. restore/import the missing verified source tree into GitHub using a normal Git-capable environment or another complete-tree transfer path;
-2. reconcile this branch against that complete tree rather than overwriting newer/verified files blindly;
-3. wire `build_launcher_runtime_services(...)` into the real installed launcher composition root;
-4. use the same `DeviceCapabilityService` instance for permission issuance and Runtime Manager compatibility;
-5. run the R6 focused suite against the full tree;
-6. run `make verify` and require the complete gate to pass;
-7. review R6 against ADRs 0012, 0014, 0015 and the active remediation plan;
-8. append the verified R6 closure entry to the active plan and update `HANDOVER.md`;
-9. only then begin R7 direct graphics.
+2. restore the missing binary asset library through a reliable binary/bulk Git path;
+3. reconcile this branch against that complete tree rather than overwriting newer/verified files blindly;
+4. wire `build_launcher_runtime_services(...)` into the real installed launcher composition root;
+5. use the same `DeviceCapabilityService` instance for permission issuance and Runtime Manager compatibility;
+6. run the R6 focused suite against the full tree;
+7. run `make verify` and require the complete gate to pass;
+8. review R6 against ADRs 0012, 0014, 0015 and the active remediation plan;
+9. append the verified R6 closure entry to the active plan and update `HANDOVER.md`;
+10. only then begin R7 direct graphics.
 
 ## Evidence limits
 
