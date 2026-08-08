@@ -15,6 +15,7 @@ from .customization import (
     WallpaperImporter,
 )
 from .profiles import ProfilePolicy, write_avatar_request
+from .storage_client import ActivityStorageClient
 
 
 @lru_cache(maxsize=1)
@@ -46,6 +47,18 @@ def _media_scanner() -> RemovableImageScanner:
 @lru_cache(maxsize=1)
 def _profile_policy() -> ProfilePolicy:
     return ProfilePolicy.load(_root() / "runtime" / "profile-defaults.toml")
+
+
+@lru_cache(maxsize=1)
+def get_storage() -> ActivityStorageClient:
+    """Return this launch's runtime-neutral Greia durable storage client.
+
+    The client talks to a per-session platform broker. It never receives the
+    physical profile storage path, so quota, migration and backup semantics stay
+    under Greia authority rather than becoming raw Activity filesystem policy.
+    """
+
+    return ActivityStorageClient.from_environment()
 
 
 def get_active_profile() -> dict[str, object]:
