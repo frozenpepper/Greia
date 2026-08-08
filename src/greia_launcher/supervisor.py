@@ -6,10 +6,19 @@ from typing import Callable, Mapping, Protocol
 
 from greia_platform.activities import ActivityManifest
 from greia_platform.device_capabilities import DeviceCapabilityService
+from greia_platform.history import (
+    HistoryError,
+    PlatformHistoryService,
+    ProfileHistoryStore,
+)
 from greia_platform.permissions import ActivityAuthority
 from greia_platform.profiles import ProfileContext
 from greia_platform.storage import ActivityStorageService, StorageError
 
+from .event_broker import (
+    SANDBOX_EVENT_ROOT,
+    ActivityEventBroker,
+)
 from .lifecycle import (
     ActivityLifecycleControl,
     ActivityExitReason,
@@ -59,6 +68,7 @@ class ActivityLifecycleError(RuntimeError):
 
 
 StorageBrokerFactory = Callable[..., ActivityStorageBroker]
+EventBrokerFactory = Callable[..., ActivityEventBroker]
 
 
 class SessionResource(Protocol):
@@ -86,6 +96,8 @@ class ActivitySupervisor:
         runtime_adapters: Mapping[str, RuntimeLaunchAdapter] | None = None,
         storage_service: ActivityStorageService | None = None,
         storage_broker_factory: StorageBrokerFactory = ActivityStorageBroker.start,
+        history_service: PlatformHistoryService | None = None,
+        event_broker_factory: EventBrokerFactory = ActivityEventBroker.start,
     ):
         if ready_timeout_seconds <= 0:
             raise ValueError("ready_timeout_seconds must be positive")
@@ -114,9 +126,16 @@ class ActivitySupervisor:
             raise ActivityLifecycleError(
                 "installed ActivitySupervisor requires an injected ActivityStorageService"
             )
+        if self._sandbox_required() and history_service is None:
+            raise ActivityLifecycleError(
+                "installed ActivitySupervisor requires an injected PlatformHistoryService"
+            )
         self._runtime_manager = runtime_manager
         self._storage_service = storage_service
         self._storage_broker_factory = storage_broker_factory
+        self._history_service = history_service
+        self._event_broker_factory = event_broker_factory
+        self._history_stores: dict[str, ProfileHistoryStore] = {}
         self._session_resources: dict[str, tuple[SessionResource, ...]] = {}
         self._runtime_preparations: dict[str, RuntimeLaunchPreparation] = {}
         self._ready_timeout_seconds = ready_timeout_seconds
@@ -141,11 +160,28 @@ class ActivitySupervisor:
         if authority.activity_id != manifest.activity_id:
             raise ActivityLifecycleError("Activity authority identity does not match manifest")
         session_id = new_activity_session_id()
+        history_store: ProfileHistoryStore | None = None
+        if self._history_service is not None:
+            try:
+                history_store = self._history_service.open(profile)
+                history_store.start_session(
+                    manifest,
+                    session_id=session_id,
+                    package_digest=authority.package_digest,
+                )
+            except HistoryError:
+                return self._failed_launch_session(
+                    manifest,
+                    profile,
+                    authority,
+                    session_id=session_id,
+                    reason=ActivityExitReason.PLATFORM_FAILURE,
+                )
         if not frozenset(manifest.required_capabilities).issubset(
             authority.effective_capabilities
         ):
             return self._failed_launch_session(
-                manifest, profile, authority, session_id=session_id
+                manifest, profile, authority, session_id=session_id, history_store=history_store
             )
 
         try:
@@ -155,7 +191,7 @@ class ActivitySupervisor:
             )
         except RuntimeAdapterError:
             return self._failed_launch_session(
-                manifest, profile, authority, session_id=session_id
+                manifest, profile, authority, session_id=session_id, history_store=history_store
             )
         runtime_command = preparation.command
 
@@ -180,7 +216,7 @@ class ActivitySupervisor:
             )
         except (RuntimeAdapterError, OSError):
             return self._failed_launch_session(
-                manifest, profile, authority, session_id=session_id
+                manifest, profile, authority, session_id=session_id, history_store=history_store
             )
         control = lifecycle_binding.control
 
@@ -204,8 +240,33 @@ class ActivitySupervisor:
                     authority,
                     session_id=session_id,
                     control=control,
+                    history_store=history_store,
+                    reason=ActivityExitReason.PLATFORM_FAILURE,
                 )
             resources = (storage_broker,)
+
+        event_broker: ActivityEventBroker | None = None
+        if history_store is not None and self._history_service is not None:
+            try:
+                event_broker = self._event_broker_factory(
+                    history_store,
+                    manifest,
+                    self._history_service.progression_policy,
+                    session_id,
+                    sandboxed=sandboxed,
+                )
+            except (HistoryError, OSError):
+                return self._failed_launch_session(
+                    manifest,
+                    profile,
+                    authority,
+                    session_id=session_id,
+                    control=control,
+                    history_store=history_store,
+                    resources=resources,
+                    reason=ActivityExitReason.PLATFORM_FAILURE,
+                )
+            resources = (*resources, event_broker)
 
         environment = self._sanitized_environment(
             manifest,
@@ -214,6 +275,7 @@ class ActivitySupervisor:
             session_id,
             sandboxed=sandboxed,
             storage_broker=storage_broker,
+            event_broker=event_broker,
             runtime_environment=runtime_command.environment,
             lifecycle_environment=lifecycle_binding.environment,
         )
@@ -227,6 +289,7 @@ class ActivitySupervisor:
                 profile,
                 authority,
                 storage_broker=storage_broker,
+                event_broker=event_broker,
             )
             cwd: Path | None = None
         else:
@@ -250,6 +313,7 @@ class ActivitySupervisor:
                 control=control,
                 started_at=started,
                 resources=resources,
+                history_store=history_store,
             )
 
         session = ActivitySession(
@@ -264,6 +328,8 @@ class ActivitySupervisor:
             graceful_stop_seconds=self._graceful_stop_seconds,
         )
         self._session_resources[session.session_id] = resources
+        if history_store is not None:
+            self._history_stores[session.session_id] = history_store
         self._runtime_preparations[session.session_id] = preparation
         self._active_session = session
         return session
@@ -292,13 +358,19 @@ class ActivitySupervisor:
             # its usable surface, publish READY, and terminate before Greia
             # observes the intermediate RUNNING state.
             if session.ready_at is None and control.ready():
-                session.ready_at = now
+                if self._record_ready(session):
+                    session.ready_at = now
+                else:
+                    session.forced_reason = ActivityExitReason.PLATFORM_FAILURE
             return self._finish_session(session, runtime_exit, now)
 
         if session.state is ActivitySessionState.STARTING:
             if control.ready():
-                session.ready_at = now
-                session.state = ActivitySessionState.RUNNING
+                if self._record_ready(session):
+                    session.ready_at = now
+                    session.state = ActivitySessionState.RUNNING
+                else:
+                    return self.force_stop(session, ActivityExitReason.PLATFORM_FAILURE)
             elif now >= session.ready_deadline:
                 self.force_stop(session, ActivityExitReason.READY_TIMEOUT)
 
@@ -343,6 +415,7 @@ class ActivitySupervisor:
             ActivityExitReason.FORCED_STOP,
             ActivityExitReason.READY_TIMEOUT,
             ActivityExitReason.SYSTEM_SHUTDOWN,
+            ActivityExitReason.PLATFORM_FAILURE,
         }:
             raise ValueError("force_stop requires a forced terminal reason")
         session.forced_reason = reason
@@ -385,6 +458,17 @@ class ActivitySupervisor:
         if not runtime_clean or not resources_clean:
             reason = ActivityExitReason.PLATFORM_FAILURE
 
+        history_store = self._history_stores.pop(session.session_id, None)
+        if history_store is not None:
+            try:
+                history_store.finish_session(
+                    session.session_id,
+                    reason.value,
+                    active_duration_seconds=max(0.0, ended_at - session.started_at),
+                )
+            except HistoryError:
+                reason = ActivityExitReason.PLATFORM_FAILURE
+
         state = (
             ActivitySessionState.EXITED
             if reason in {ActivityExitReason.NORMAL, ActivityExitReason.GRACEFUL_STOP}
@@ -418,14 +502,32 @@ class ActivitySupervisor:
         control: ActivityLifecycleControl | None = None,
         started_at: float | None = None,
         resources: tuple[SessionResource, ...] = (),
+        history_store: ProfileHistoryStore | None = None,
+        reason: ActivityExitReason = ActivityExitReason.LAUNCH_FAILURE,
     ) -> ActivitySession:
         started = monotonic_now() if started_at is None else started_at
         ended = monotonic_now()
+        for resource in reversed(resources):
+            try:
+                resource.stop()
+            except Exception:
+                reason = ActivityExitReason.PLATFORM_FAILURE
+        if control is not None:
+            control.cleanup()
+        if history_store is not None:
+            try:
+                history_store.finish_session(
+                    session_id,
+                    reason.value,
+                    active_duration_seconds=max(0.0, ended - started),
+                )
+            except HistoryError:
+                reason = ActivityExitReason.PLATFORM_FAILURE
         result = ActivityResult(
             activity_id=manifest.activity_id,
             session_id=session_id,
             return_code=126,
-            exit_reason=ActivityExitReason.LAUNCH_FAILURE,
+            exit_reason=reason,
             ready=False,
             started_at=started,
             ready_at=None,
@@ -443,14 +545,17 @@ class ActivitySupervisor:
             graceful_stop_seconds=self._graceful_stop_seconds,
             result=result,
         )
-        for resource in reversed(resources):
-            try:
-                resource.stop()
-            except Exception:
-                pass
-        if control is not None:
-            control.cleanup()
         return session
+
+    def _record_ready(self, session: ActivitySession) -> bool:
+        history_store = self._history_stores.get(session.session_id)
+        if history_store is None:
+            return True
+        try:
+            history_store.mark_ready(session.session_id)
+        except HistoryError:
+            return False
+        return True
 
     def _cleanup_runtime_session(self, session: ActivitySession) -> bool:
         preparation = self._runtime_preparations.pop(session.session_id, None)
@@ -494,6 +599,7 @@ class ActivitySupervisor:
         authority: ActivityAuthority,
         *,
         storage_broker: ActivityStorageBroker | None = None,
+        event_broker: ActivityEventBroker | None = None,
     ) -> list[str]:
         command = [
             str(sandbox),
@@ -539,6 +645,14 @@ class ActivitySupervisor:
                     str(SANDBOX_STORAGE_ROOT),
                 ]
             )
+        if event_broker is not None:
+            command.extend(
+                [
+                    "--ro-bind",
+                    str(event_broker.host_root),
+                    str(SANDBOX_EVENT_ROOT),
+                ]
+            )
         if authority.has_permission("customization.manage"):
             command.extend(
                 [
@@ -563,6 +677,7 @@ class ActivitySupervisor:
         *,
         sandboxed: bool = False,
         storage_broker: ActivityStorageBroker | None = None,
+        event_broker: ActivityEventBroker | None = None,
         runtime_environment: tuple[tuple[str, str], ...] = (),
         lifecycle_environment: tuple[tuple[str, str], ...] = (),
     ) -> dict[str, str]:
@@ -639,6 +754,9 @@ class ActivitySupervisor:
         if storage_broker is not None:
             environment["GREIA_STORAGE_SOCKET"] = str(storage_broker.child_socket)
             environment["GREIA_STORAGE_TOKEN"] = storage_broker.session_token
+        if event_broker is not None:
+            environment["GREIA_EVENT_SOCKET"] = str(event_broker.child_socket)
+            environment["GREIA_EVENT_TOKEN"] = event_broker.session_token
         if authority.has_permission("customization.manage"):
             environment["GREIA_CUSTOMIZATION_DIR"] = str(env_customization)
         if authority.has_permission("profile.manage_own"):

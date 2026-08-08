@@ -7,6 +7,7 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from unittest import mock
 
+from greia_launcher.event_broker import ActivityEventBroker
 from greia_launcher.lifecycle import ActivityExitReason, ActivitySessionState
 from greia_launcher.runtime_adapter import (
     PythonRuntimeAdapter,
@@ -21,6 +22,7 @@ from greia_launcher.supervisor import (
 )
 from greia_platform.activities import ActivityManifest, SkillContribution
 from greia_platform.device_capabilities import DeviceCapabilityService
+from greia_platform.history import HistoryPolicy, PlatformHistoryService, ProgressionPolicy
 from greia_platform.storage import ActivityStorageService, StoragePolicy
 from greia_platform.storage_client import ActivityStorageClient
 from greia_platform.trust import PackageTrust
@@ -39,6 +41,8 @@ class _ProfileContext:
         self.profile = _Profile()
         self.customization_dir = root / "customization"
         self.customization_dir.mkdir(parents=True, exist_ok=True)
+        self.progress_dir = root / "progress"
+        self.progress_dir.mkdir(parents=True, exist_ok=True)
 
     def activity_data_dir(self, activity_id: str) -> Path:
         path = self.root / "activities" / activity_id
@@ -156,6 +160,37 @@ def _broker_factory(runtime_root: Path):
     def start(storage, session_id: str, *, sandboxed: bool):
         return ActivityStorageBroker.start(
             storage,
+            session_id,
+            runtime_root=runtime_root,
+            sandboxed=sandboxed,
+        )
+
+    return start
+
+
+def _history_service() -> PlatformHistoryService:
+    return PlatformHistoryService(
+        HistoryPolicy(
+            schema_version=1,
+            max_sessions_per_profile=64,
+            max_events_per_session=64,
+            max_event_payload_bytes=8192,
+            max_idempotency_key_bytes=64,
+            max_reward_ledger_entries=256,
+            max_recent_sessions_summary=16,
+            max_score_absolute=10**12,
+            sqlite_busy_timeout_ms=2000,
+        ),
+        ProgressionPolicy(1, ()),
+    )
+
+
+def _event_broker_factory(runtime_root: Path):
+    def start(store, manifest, progression, session_id: str, *, sandboxed: bool):
+        return ActivityEventBroker.start(
+            store,
+            manifest,
+            progression,
             session_id,
             runtime_root=runtime_root,
             sandboxed=sandboxed,
@@ -472,6 +507,8 @@ class SupervisorTests(unittest.TestCase):
                 ),
                 storage_service=_storage_service(),
                 storage_broker_factory=_broker_factory(root / "brokers"),
+                history_service=_history_service(),
+                event_broker_factory=_event_broker_factory(root / "event-brokers"),
             )
             session = supervisor.start(manifest, profile, authority)
             command = list(calls[0][0][0])
@@ -507,6 +544,8 @@ class SupervisorTests(unittest.TestCase):
                 ),
                 storage_service=_storage_service(),
                 storage_broker_factory=_broker_factory(root / "brokers"),
+                history_service=_history_service(),
+                event_broker_factory=_event_broker_factory(root / "event-brokers"),
             )
             session = supervisor.start(manifest, profile, authority)
 

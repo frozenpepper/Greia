@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from greia_platform.activities import RuntimeCatalogue
+from greia_platform.activities import ActivityManifest, RuntimeCatalogue
 from greia_platform.device_capabilities import (
     DeviceCapabilityService,
     HALDeviceCapabilityProbe,
@@ -18,6 +18,7 @@ from greia_platform.hal import (
     SystemdPowerHAL,
 )
 from greia_platform.hardware_session import XSessionHardwareController
+from greia_platform.history import PlatformHistoryService
 from greia_platform.permissions import PermissionBroker
 from greia_platform.storage import ActivityStorageService, StoragePolicy
 
@@ -32,6 +33,7 @@ class LauncherRuntimeServices:
     permission_broker: PermissionBroker
     runtime_manager: RuntimeManager
     storage_service: ActivityStorageService
+    history_service: PlatformHistoryService
 
 
 def provisional_installed_hal() -> GreiaHAL:
@@ -55,10 +57,13 @@ def provisional_installed_hal() -> GreiaHAL:
 
 def build_launcher_runtime_services(
     runtime: RuntimeCatalogue,
+    activities: tuple[ActivityManifest, ...],
     *,
     runtime_policy_path: Path,
     permission_policy_path: Path,
     storage_policy_path: Path,
+    history_policy_path: Path,
+    progression_policy_path: Path,
     hal: GreiaHAL | None = None,
     python_executable: Path | None = None,
 ) -> LauncherRuntimeServices:
@@ -82,9 +87,13 @@ def build_launcher_runtime_services(
         device_capabilities,
     )
     storage_service = ActivityStorageService(StoragePolicy.load(storage_policy_path))
+    history_service = PlatformHistoryService.load(
+        history_policy_path, progression_policy_path, activities
+    )
     return LauncherRuntimeServices(
         device_capabilities=device_capabilities,
         permission_broker=permission_broker,
         runtime_manager=runtime_manager,
         storage_service=storage_service,
+        history_service=history_service,
     )

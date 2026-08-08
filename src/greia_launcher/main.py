@@ -31,6 +31,7 @@ from greia_platform.hal import (
     StaticPowerHAL,
     StaticRemovableMediaHAL,
 )
+from greia_platform.history import HistoryError
 from greia_platform.permissions import PermissionDecisionError
 from greia_platform.trust import ActivitySource, PackageTrust
 from greia_platform.profiles import (
@@ -57,6 +58,8 @@ class LauncherPaths:
     profile_defaults: Path
     permission_policy: Path
     storage_policy: Path
+    history_policy: Path
+    progression_policy: Path
     profiles_dir: Path
     active_profile_status: Path
 
@@ -72,6 +75,8 @@ class LauncherPaths:
             profile_defaults=root / "runtime" / "profile-defaults.toml",
             permission_policy=root / "runtime" / "permission-policy.toml",
             storage_policy=root / "runtime" / "storage-policy.toml",
+            history_policy=root / "runtime" / "history-policy.toml",
+            progression_policy=root / "runtime" / "progression-policy.toml",
             profiles_dir=Path(
                 os.environ.get("GREIA_PROFILES_DIR", "/var/lib/greia-profiles")
             ).resolve(),
@@ -157,21 +162,33 @@ class LauncherApplication:
         )
         self.theme_controller = self.selector_theme
         self.windowed = windowed
+        self._activities = self.registry.discover()
+        self._activity_discovery_token = self.registry.discovery_token()
         development_hal = None if self._installed_root() else _development_hal()
         self.runtime_services = build_launcher_runtime_services(
             self.runtime,
+            self._activities,
             runtime_policy_path=self.paths.runtime_catalogue,
             permission_policy_path=self.paths.permission_policy,
             storage_policy_path=self.paths.storage_policy,
+            history_policy_path=self.paths.history_policy,
+            progression_policy_path=self.paths.progression_policy,
             hal=development_hal,
         )
+        self._history_recovery_failures: set[str] = set()
+        for child in self.profiles:
+            try:
+                self.runtime_services.history_service.recover_unfinished(
+                    self.profile_store.context(child.profile_id)
+                )
+            except HistoryError:
+                self._history_recovery_failures.add(child.profile_id)
         self.supervisor = ActivitySupervisor(
             runtime_manager=self.runtime_services.runtime_manager,
             storage_service=self.runtime_services.storage_service,
+            history_service=self.runtime_services.history_service,
         )
         self.allow_exit = allow_exit
-        self._activities = self.registry.discover()
-        self._activity_discovery_token = self.registry.discovery_token()
         self._selected = 0
         self._profile_selected = 0
         self._active_profile: ProfileContext | None = None
