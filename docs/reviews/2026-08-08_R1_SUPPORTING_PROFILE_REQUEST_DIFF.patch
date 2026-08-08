@@ -1,0 +1,62 @@
+--- src/greia_platform/profiles.py
++++ src/greia_platform/profiles.py
+@@ -327,11 +327,12 @@
+                 # rmtree is safe only after the no-symlink/direct-parent checks above.
+                 shutil.rmtree(target)
+ 
+-    def avatar_request_path(self, profile_id: str) -> Path:
++    def avatar_request_path(self, profile_id: str, activity_id: str) -> Path:
+         _validate_profile_id(profile_id)
+-        return self.data_root / profile_id / ".avatar-request.json"
++        context = self.context(profile_id)
++        return context.activity_data_dir(activity_id) / ".greia" / "requests" / "avatar.json"
+ 
+-    def consume_avatar_request(self, profile_id: str) -> ChildProfile | None:
++    def consume_avatar_request(self, profile_id: str, activity_id: str) -> ChildProfile | None:
+         """Apply one bounded own-profile avatar request from a child activity.
+ 
+         Activities never receive the profile registry path. The launcher consumes
+@@ -339,7 +340,9 @@
+         inside the launcher/parent profile service boundary.
+         """
+ 
+-        request_path = self.avatar_request_path(profile_id)
++        request_path = self.avatar_request_path(profile_id, activity_id)
++        request_path.parent.mkdir(parents=True, exist_ok=True)
++        os.chmod(request_path.parent, 0o770)
+         try:
+             if request_path.stat().st_size > 4096:
+                 raise ProfileError("avatar request is too large")
+--- src/greia_launcher/main.py
++++ src/greia_launcher/main.py
+@@ -327,7 +327,8 @@
+         pygame.mouse.set_visible(False)
+         pygame.event.clear()
+         try:
+-            self.profile_store.consume_avatar_request(profile_id)
++            if "profile.manage_own" in manifest.capabilities:
++                self.profile_store.consume_avatar_request(profile_id, manifest.activity_id)
+             refreshed = self.session.activate(self.profile_store, profile_id)
+         except ProfileError:
+             self._logout(pygame)
+--- tests/test_profiles.py
++++ tests/test_profiles.py
+@@ -82,15 +82,15 @@
+         with tempfile.TemporaryDirectory() as temporary:
+             store = self.make_store(Path(temporary))
+             profile = store.ensure_initialized()[0]
+-            request_path = store.avatar_request_path(profile.profile_id)
++            request_path = store.avatar_request_path(profile.profile_id, "workshop_settings")
+             write_avatar_request(
+                 store.policy, request_path, profile.profile_id, "owl"
+             )
+-            updated = store.consume_avatar_request(profile.profile_id)
++            updated = store.consume_avatar_request(profile.profile_id, "workshop_settings")
+             self.assertIsNotNone(updated)
+             self.assertEqual(updated.avatar_id, "owl")
+             self.assertFalse(request_path.exists())
+-            self.assertIsNone(store.consume_avatar_request(profile.profile_id))
++            self.assertIsNone(store.consume_avatar_request(profile.profile_id, "workshop_settings"))
+ 
+     def test_final_profile_cannot_be_deleted(self) -> None:
+         with tempfile.TemporaryDirectory() as temporary:
