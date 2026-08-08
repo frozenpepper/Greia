@@ -14,6 +14,7 @@ from .customization import (
     WallpaperCandidate,
     WallpaperImporter,
 )
+from .event_client import ActivityEventClient, ActivityEventReceipt
 from .profiles import ProfilePolicy, write_avatar_request
 from .storage_client import ActivityStorageClient
 
@@ -59,6 +60,35 @@ def get_storage() -> ActivityStorageClient:
     """
 
     return ActivityStorageClient.from_environment()
+
+
+@lru_cache(maxsize=1)
+def get_events() -> ActivityEventClient:
+    """Return this launch's runtime-neutral validated Activity event client."""
+
+    return ActivityEventClient.from_environment()
+
+
+def emit_activity_event(
+    event_id: str,
+    *,
+    idempotency_key: str,
+    score: float | int | None = None,
+    payload: object = None,
+) -> ActivityEventReceipt:
+    """Report an Activity fact to Greia's platform-owned progression pipeline.
+
+    The Activity chooses only a declared event ID, an idempotency key, optional
+    score, and portable payload. Profile/session/Activity identity and reward
+    economics remain bound by trusted Greia services outside the Activity.
+    """
+
+    return get_events().emit(
+        event_id,
+        idempotency_key=idempotency_key,
+        score=score,
+        payload=payload,
+    )
 
 
 def get_active_profile() -> dict[str, object]:
