@@ -1,5 +1,6 @@
 name: R0 clean-tree verification
 
+# R0 recovery trigger after verified baseline restoration.
 on:
   pull_request:
     branches: [main]
