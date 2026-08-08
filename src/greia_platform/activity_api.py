@@ -1,0 +1,140 @@
+from __future__ import annotations
+
+import os
+from functools import lru_cache
+from pathlib import Path
+
+from .assets import AssetCatalogue
+from .customization import (
+    RemovableImageScanner,
+    ResolvedTheme,
+    ThemePalette,
+    ThemePreferences,
+    ThemeStore,
+    WallpaperCandidate,
+    WallpaperImporter,
+)
+from .profiles import ProfilePolicy, write_avatar_request
+
+
+@lru_cache(maxsize=1)
+def _root() -> Path:
+    return Path(os.environ.get("GREIA_OS_ROOT", "/opt/greia-os")).resolve()
+
+
+@lru_cache(maxsize=1)
+def _catalogue() -> AssetCatalogue:
+    return AssetCatalogue.load(_root() / "assets" / "catalog" / "core_icons_v1.toml")
+
+
+@lru_cache(maxsize=1)
+def _theme_store() -> ThemeStore:
+    state_dir = os.environ.get("GREIA_CUSTOMIZATION_DIR")
+    if not state_dir:
+        raise RuntimeError("activity was not launched with profile-scoped customization")
+    return ThemeStore.load(
+        _root() / "runtime" / "theme-defaults.toml",
+        Path(state_dir),
+    )
+
+
+@lru_cache(maxsize=1)
+def _media_scanner() -> RemovableImageScanner:
+    return RemovableImageScanner(Path(os.environ.get("GREIA_MEDIA_ROOT", "/media/greia")))
+
+
+@lru_cache(maxsize=1)
+def _profile_policy() -> ProfilePolicy:
+    return ProfilePolicy.load(_root() / "runtime" / "profile-defaults.toml")
+
+
+def get_active_profile() -> dict[str, object]:
+    profile_id = os.environ.get("GREIA_PROFILE_ID", "")
+    if not profile_id:
+        raise RuntimeError("activity was not launched inside a child profile")
+    return {
+        "profile_id": profile_id,
+        "display_name": os.environ.get("GREIA_PROFILE_NAME", ""),
+        "avatar_id": os.environ.get("GREIA_PROFILE_AVATAR", ""),
+    }
+
+
+def get_profile_avatar_choices() -> tuple[str, ...]:
+    _require_capability("profile.manage_own")
+    return _profile_policy().avatars
+
+
+def set_active_profile_avatar(avatar_id: str) -> dict[str, object]:
+    _require_capability("profile.manage_own")
+    profile_id = os.environ.get("GREIA_PROFILE_ID", "")
+    request_path = os.environ.get("GREIA_AVATAR_REQUEST_PATH", "")
+    if not profile_id or not request_path:
+        raise RuntimeError("activity was not launched with an own-profile request channel")
+    write_avatar_request(
+        _profile_policy(), Path(request_path), profile_id, avatar_id
+    )
+    updated = get_active_profile()
+    updated["avatar_id"] = avatar_id
+    return updated
+
+
+def get_icon_path(asset_id: str, size: int = 128) -> Path:
+    """Resolve a shared semantic icon without exposing arbitrary asset paths."""
+
+    icon = _catalogue().get(asset_id)
+    if size <= 64:
+        return icon.path_64
+    if size <= 128:
+        return icon.path_128
+    return icon.path_256
+
+
+def get_theme() -> ResolvedTheme:
+    return _theme_store().resolve()
+
+
+def get_theme_palette() -> ThemePalette:
+    _require_capability("customization.manage")
+    return _theme_store().palette
+
+
+def set_theme_color(kind: str, swatch_id: str) -> ThemePreferences:
+    _require_capability("customization.manage")
+    store = _theme_store()
+    if kind == "background":
+        return store.set_colors(background=swatch_id)
+    if kind == "accent":
+        return store.set_colors(accent=swatch_id)
+    if kind == "text":
+        return store.set_colors(text=swatch_id)
+    raise ValueError(f"unknown theme color kind: {kind}")
+
+
+def list_wallpaper_candidates() -> tuple[WallpaperCandidate, ...]:
+    _require_capability("removable_media.read")
+    return _media_scanner().scan()
+
+
+def import_wallpaper(candidate: WallpaperCandidate) -> Path:
+    _require_capability("customization.manage")
+    _require_capability("removable_media.read")
+    return WallpaperImporter(_theme_store(), _media_scanner()).import_image(candidate.path)
+
+
+def disable_wallpaper() -> ThemePreferences:
+    _require_capability("customization.manage")
+    return _theme_store().clear_wallpaper()
+
+
+def _require_capability(capability: str) -> None:
+    """Fail early when the launch context did not declare a capability.
+
+    This is an SDK usability check, not the security boundary. An Activity can
+    mutate its own environment after launch. Installed-system authority is
+    enforced by the supervisor's mount/device/network/broker policy, which is
+    derived from the validated manifest outside the Activity process.
+    """
+    raw = os.environ.get("GREIA_ACTIVITY_CAPABILITIES", "")
+    capabilities = frozenset(item for item in raw.split(",") if item)
+    if capability not in capabilities:
+        raise PermissionError(f"activity lacks required capability: {capability}")
