@@ -1,94 +1,113 @@
 # AGENTS.md — Greia Project Contracts
 
-This file defines repository-wide rules for contributors and coding agents.
+This repository implements a child-first educational Linux appliance/platform. These rules apply repository-wide.
 
-## 1. Read order
+## Authoritative read order
 
-Before changing architecture or implementation, read:
+Before changing implementation or architecture, read:
 
-1. `README.md`
-2. `docs/architecture/GREIA_ARCHITECTURE.md`
-3. relevant ADRs under `docs/adr/`
-4. the active implementation plan, when present
+1. `README.md`;
+2. `docs/architecture/GREIA_ARCHITECTURE.md`;
+3. `docs/adr/0012-platform-architecture-constitution.md`;
+4. `docs/adr/0014-greia-identity-arm-parity-and-direct-graphics-direction.md`;
+5. relevant narrower ADRs, especially ADR 0013 for image composition;
+6. `docs/plans/2026-08-06_PHASE0_BOOTABLE_VERTICAL_SLICE.md`;
+7. `HANDOVER.md`.
 
-## 2. Product invariants
+Update the active plan and `HANDOVER.md` after substantive implementation work.
 
-Greia is a child-first computing platform, not a themed Linux desktop.
+## Non-negotiable product contracts
 
-Contributors MUST preserve these invariants unless a superseding ADR explicitly changes them:
+1. **No visible Linux shell during normal child operation.** No boot text, login prompt, terminal, desktop, window manager, package manager, filesystem UI, or browser chrome may appear in the supported child path.
+2. **Greia Shell is the child's graphical OS.** Linux is the substrate, not the product surface.
+3. **Activity is the universal abstraction.** Python, Web, and future runtimes are adapters below common Activity/package/storage/progression/permission/lifecycle contracts.
+4. **Reference floor:** first-generation Acer Aspire One remains the extreme low-resource reference, currently estimated around 768 MiB RAM, 7 GB storage, and 1024×600 until inventory evidence replaces estimates.
+5. **ARM is co-equal with legacy x86.** Raspberry Pi 400 and Raspberry Pi 500 are explicit first-class ARM reference devices. ARM is not a later port.
+6. **Disk budget:** current C0 preferred installed core ≤800 MiB; required target <1,000 MiB; >1,250 MiB requires architecture review.
+7. **One curated environment per runtime family.** Phase 0 has one shared Python runtime. Activities may not install, download, compile, or resolve private dependencies. No Activity venvs, wheels/site-packages bundles, package managers, browser binaries, or executable installers.
+8. **Curated Activities only.** Packages must pass manifest, source/import, path-safety, capability, and footprint validation before inclusion.
+9. **Offline-first.** Core shell, Activities, saves, progression, language packs, and parent management must function without cloud services.
+10. **Language-neutral child navigation.** Prefer symbols, color, position, animation, and optional speech; text appears when educationally purposeful.
+11. **Platform-owned progression and child data.** Activities report facts/events and write only their own profile-scoped state. They do not directly mutate global rewards/progression.
+12. **Portable state.** Durable child data and backups must be architecture-neutral across i386/ARM64/amd64.
+13. **Removable media is untrusted and never autorun.** Media scanning is bounded; executable Activity code is never run in place from USB/SD.
+14. **Installation is graphical and fail-closed.** Whole-disk installation may offer only verified eligible targets; payload and device identity must be rechecked before destructive work.
+15. **Tap-to-click defaults off.** Hardware settings are typed/bounded platform policy, never arbitrary shell/xinput/xrandr command injection.
+16. **Every child uses an explicit Greia profile.** Boot shows the profile picker; no silent last-user resume. Saves, customizations, rewards, language state, and Activity data are profile-scoped.
+17. **Uninstall and data deletion are separate.** Removing an Activity preserves child saves by default.
+18. **Backups are logical/open.** `.greiabackup` must not be a raw filesystem dump or architecture-specific serialization.
 
-- Linux is an implementation substrate; the Greia Shell is the child's operating-system experience.
-- Normal child use exposes no desktop environment, login prompt, terminal, shell, package manager, filesystem browser, browser chrome, or conventional window-management UI.
-- `Activity` is the universal content abstraction. Python, Web, and future runtimes are implementation adapters below the Activity contract.
-- Profiles, storage, sessions, progression, rewards, installation, updates, backup/restore, permissions, and parent controls are platform services and MUST NOT fork by runtime family.
-- ARM and i386 are co-equal first-class architecture targets. Raspberry Pi 400 and Raspberry Pi 500 are reference ARM devices; old Atom-class netbooks remain a hard low-resource reference class.
-- Activity manifests target capabilities and compatibility classes, not CPU architectures, except where native code makes architecture declarations genuinely unavoidable.
-- Durable user data MUST remain portable across CPU architectures.
-- Parent management is a separate trust/authority surface, not a privileged child Activity.
-- Removable media is never autorun. Media insertion may trigger bounded scanning and parent-facing install/update prompts only.
-- Activity installation and updates are transactional and fail closed.
-- Uninstalling an Activity MUST NOT destroy child saves by default.
-- Global progression/reward authority belongs to Greia, not to Activity code.
-- Greia is offline-first; cloud services may extend but may not become the only owner of child identity or saves.
-- Package and backup formats should remain documented, inspectable open formats.
+## Graphics and display direction
 
-## 3. Graphics and display direction
+Do not introduce a desktop environment or general-purpose window manager.
 
-Do NOT introduce X11, a desktop environment, or a general-purpose window manager as a new architectural dependency.
+**Do not deepen X11 dependency.** The existing hardened Xorg path is a temporary Phase 0 migration/evidence baseline inherited from v0.12. ADR 0014 makes the target direction direct/appliance-oriented around DRM/KMS and the thinnest practical session/surface layer. New graphics architecture work must move toward that target.
 
-Historic Pip-era Phase-0 work used Xorg provisionally. That implementation is evidence/history, not the intended Greia architecture.
+A tiny compositor may be selected only if evidence shows it materially improves safe surface ownership, transitions, crash recovery, Web-runtime integration, or input routing at acceptable RAM/disk/latency cost. “Desktop Linux normally uses it” is not a justification.
 
-The Greia direction is a minimal direct graphics/input stack built around Linux DRM/KMS and suitable input/audio interfaces, with the Greia Shell owning the graphical session. SDL/Pygame and the future embedded Web runtime should use the thinnest practical platform paths.
+## Engineering rules
 
-If a tiny compositor or other display component is proposed, it must justify its RAM, disk, latency, compatibility, isolation, and maintenance cost with evidence. "Desktop Linux normally uses it" is not sufficient.
+- Preserve clean boundaries between `greia_platform`, `greia_launcher`, `greia_parent`, `greia_installer`, Activities, build system, runtime adapters, and platform/hardware adapters.
+- Image composition follows ADR 0013: declarative `build/profiles/*.toml` plus composable `build/package-sets/`. Never restore executable shell-sourced profiles or one universal dependency list.
+- Build profiles describe intended composition; runtime probing/certification remains authoritative for actual hardware capability.
+- Prefer typed dataclasses/protocols and dependency injection at architectural seams. Use polymorphism when multiple runtime/platform adapters genuinely exist.
+- Reuse existing systems before inventing parallel ones. Runtime-specific copies of storage, progression, backup, install/update, or parent policy are forbidden.
+- Child and installer processes invoke external commands with argument arrays and `shell=False`; never interpolate disk paths into shell command strings.
+- Never expose privileged operations directly to Activities.
+- Keep logs/caches bounded. Do not add persistent caches without explicit limits.
+- Use canonical asset IDs/catalogues rather than filesystem discovery as product logic.
+- Profile state remains bounded under `/var/lib/greia-profiles`; every child gets one customization root and one Activity-data root.
+- Removable child media stays read-only at the platform boundary.
+- Preserve fail-closed Bubblewrap/namespace behavior until a replacement sandbox is evidence-accepted.
+- Do not claim source tests prove hardware behavior.
 
-## 4. Runtime policy
+## Greia technical identities
 
-Python is a first-class runtime family. Web is intended to become a first-class runtime family after measured engine selection.
+The old prototype identities have been migrated. Active implementation uses Greia technical names such as:
 
-Activities MUST NOT bring private operating-system-level dependency managers into the child system. For Python this means no per-Activity venv/pip/uv/poetry/conda dependency environment. For Web this means no bundled browser executable or Node/npm runtime on the child machine.
+- `greiakid` — child shell/Activity Unix identity;
+- `greiapanel` — parent service identity;
+- `greiaadmin` — explicit advanced parent/recovery identity;
+- `greiaprofiles` — bounded profile-tree group;
+- `greiasettings` — bounded hardware/settings group;
+- `/etc/greia-os`, `/var/lib/greia-profiles`, `/opt/greia-os`;
+- `GREIA_*` environment/build variables.
 
-Runtime adapters are platform-owned and curated.
+Do not reintroduce Pip-prefixed technical identifiers. **Professor Pip** is reserved for the character/content layer.
 
-## 5. Old-hardware discipline
+## Validation
 
-Resource use is an architecture concern.
+Before packaging or committing a substantive implementation change:
 
-New platform dependencies must be evaluated for:
+```bash
+make verify
+```
 
-- installed-size delta;
-- idle and peak RAM;
-- launch latency;
-- steady-state CPU;
-- graphics compatibility;
-- i386 availability where relevant;
-- ARM64 availability and Raspberry Pi behavior;
-- update/security maintenance burden.
+For focused unit work, first remove `__pycache__` and use:
 
-Do not weaken the low-end reference target merely to simplify implementation.
+```bash
+PYTHONPATH=src python3 -m unittest discover -s tests -v
+```
 
-## 6. Architecture vs evidence
+Activity validation intentionally rejects cached bytecode inside Activity folders.
 
-Never claim hardware/runtime behavior from source structure alone.
+## Evidence labels
 
-Use these labels in design work where useful:
+Use these terms accurately:
 
 - **CONSTITUTIONAL** — stable platform contract;
-- **SELECTED** — implementation chosen by ADR;
-- **PROVISIONAL** — development/evidence implementation, not final;
-- **DEFERRED** — intentionally outside the active phase;
-- **UNPROVEN** — designed/implemented but missing required runtime or hardware evidence.
+- **SELECTED** — implementation selected by ADR;
+- **PROVISIONAL** — development/evidence implementation, not release architecture;
+- **DEFERRED** — intentionally outside the current phase;
+- **UNPROVEN** — designed/implemented but lacking required runtime/hardware evidence.
 
-## 7. Code quality
+## Packaging and continuity
 
-Prefer clean OOP boundaries, typed interfaces, dependency injection at architectural seams, and polymorphism where multiple runtimes/platform adapters exist.
+Every substantive work turn should leave:
 
-Do not duplicate runtime-specific versions of platform services.
+- a complete project archive when the working environment supports it;
+- updated `HANDOVER.md`;
+- updated active plan/ADRs where decisions changed;
+- no build caches, venvs, downloaded package archives, disk images, or heavyweight transient evidence inside the source archive.
 
-Avoid procedural sprawl and configuration encoded as executable shell when a typed declarative representation is appropriate.
-
-Use existing abstractions before inventing new ones.
-
-## 8. Repository as source of truth
-
-Substantive Greia architecture, implementation, plans, and handovers should be committed to this repository as work proceeds. Chat transcripts are not the canonical specification.
+The GitHub repository is the canonical long-term source of truth; chat transcripts are not.
