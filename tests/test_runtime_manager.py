@@ -113,6 +113,20 @@ class RuntimeManagerTests(unittest.TestCase):
             "removable_media", preparation.compatibility.effective_optional_capabilities
         )
 
+    def test_launch_preparation_rejects_stale_device_snapshot_token(self) -> None:
+        shape = next(
+            item for item in self._built_in_manifests()
+            if item.activity_id == "org.greia.shape-garden"
+        )
+        stale_token = DeviceCapabilityService.static(
+            {"display", "pointer", "audio.basic"},
+            source_id="runtime-manager-test",
+        ).snapshot().token
+        manager = self._manager({"display", "pointer"})
+
+        with self.assertRaisesRegex(RuntimeCompatibilityError, "snapshot changed"):
+            manager.prepare_launch(shape, expected_device_snapshot_token=stale_token)
+
     def test_activity_environment_cannot_forge_runtime_device_truth(self) -> None:
         shape = next(
             item for item in self._built_in_manifests()

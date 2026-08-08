@@ -125,7 +125,10 @@ class ActivitySupervisor:
             return self._failed_launch_session(manifest, profile, authority)
 
         try:
-            preparation = self._runtime_manager.prepare_launch(manifest)
+            preparation = self._runtime_manager.prepare_launch(
+                manifest,
+                expected_device_snapshot_token=authority.device_snapshot_token,
+            )
         except RuntimeAdapterError:
             return self._failed_launch_session(manifest, profile, authority)
         runtime_command = preparation.command

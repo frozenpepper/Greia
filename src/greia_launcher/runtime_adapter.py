@@ -286,10 +286,22 @@ class RuntimeManager:
             effective_optional_capabilities=optional & snapshot.capabilities,
         )
 
-    def prepare_launch(self, manifest: ActivityManifest) -> RuntimeLaunchPreparation:
+    def prepare_launch(
+        self,
+        manifest: ActivityManifest,
+        *,
+        expected_device_snapshot_token: str | None = None,
+    ) -> RuntimeLaunchPreparation:
         adapter = self.adapter_for(manifest.runtime_type)
         adapter.validate_package(manifest)
         compatibility = self.compatibility_for(manifest)
+        if (
+            expected_device_snapshot_token is not None
+            and compatibility.device_snapshot_token != expected_device_snapshot_token
+        ):
+            raise RuntimeCompatibilityError(
+                "device capability snapshot changed after launch authority was issued"
+            )
         if not compatibility.compatible:
             raise RuntimeCompatibilityError(
                 "Activity/runtime requires unavailable device capabilities: "

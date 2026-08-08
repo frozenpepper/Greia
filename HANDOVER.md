@@ -70,6 +70,10 @@ ModuleNotFoundError: No module named 'greia_platform.history'
 
 This is no longer a ZIP/binary recovery problem. It is a distinct historical R5 source-loss incident.
 
+## R6.2 launch-authority/device-snapshot coherence — 2026-08-09
+
+The first post-recovery implementation tranche closes a TOCTOU-style authority gap in R6.2. PermissionBroker records the opaque token of the trusted device snapshot used to compute effective capabilities and permissions in every `ActivityAuthority`. RuntimeManager launch preparation accepts that token as the expected compatibility observation, and ActivitySupervisor supplies it before any child process is created. If the Device Capability Service is refreshed and the semantic snapshot changes between authority issuance and launch preparation, launch fails closed. PermissionBroker still computes grants, RuntimeManager computes runtime/device compatibility, and Supervisor coordinates consistency without either service importing the other's authority type.
+
 ---
 
 ## 2. Mandatory resume order

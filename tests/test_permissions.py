@@ -190,6 +190,9 @@ class PermissionBrokerTests(unittest.TestCase):
             device_capabilities=device_service,
         ).issue(registration)
 
+        self.assertEqual(
+            authority.device_snapshot_token, device_service.snapshot().token
+        )
         self.assertNotIn("removable_media", authority.effective_capabilities)
         self.assertNotIn("removable_media.read", authority.granted_permissions)
         self.assertIn("customization.manage", authority.granted_permissions)

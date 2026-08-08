@@ -46,6 +46,9 @@ class _Authority:
         self.activity_id = activity_id
         self.package_digest = "a" * 64
         self.package_trust = PackageTrust.BUILT_IN
+        self.device_snapshot_token = DeviceCapabilityService.static(
+            capabilities, source_id="supervisor-test"
+        ).snapshot().token
         self.effective_capabilities = frozenset(capabilities)
         self._permissions = frozenset(permissions or set())
         self.sdk_features = self.effective_capabilities | self._permissions
@@ -119,6 +122,26 @@ class SupervisorTests(unittest.TestCase):
             manifest = _manifest(root / "activity")
             profile = _ProfileContext(root / "profile")
             authority = _Authority(manifest.activity_id, capabilities={"display"})
+            factory = mock.Mock(side_effect=AssertionError("process must not start"))
+            supervisor = ActivitySupervisor(
+                require_sandbox=False,
+                runtime_manager=_manager({"display", "pointer"}),
+                process_factory=factory,
+            )
+            session = supervisor.start(manifest, profile, authority)
+
+        self.assertEqual(session.state, ActivitySessionState.FAILED)
+        self.assertEqual(session.result.exit_reason, ActivityExitReason.LAUNCH_FAILURE)
+        factory.assert_not_called()
+
+    def test_stale_device_authority_fails_before_process_creation(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest = _manifest(root / "activity")
+            profile = _ProfileContext(root / "profile")
+            authority = _Authority(
+                manifest.activity_id, capabilities={"display", "pointer", "audio.basic"}
+            )
             factory = mock.Mock(side_effect=AssertionError("process must not start"))
             supervisor = ActivitySupervisor(
                 require_sandbox=False,
