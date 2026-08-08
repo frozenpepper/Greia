@@ -1,6 +1,5 @@
 name: R0 clean-tree verification
 
-# R0 recovery trigger after verified baseline restoration.
 on:
   pull_request:
     branches: [main]
@@ -27,6 +26,11 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
+      - name: Install verification dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check Pillow
       - name: Repository inventory
         shell: bash
         run: |
@@ -34,9 +38,6 @@ jobs:
           printf 'HEAD=' && git rev-parse HEAD
           printf 'FILES=' && git ls-files | wc -l
           printf 'PNG=' && git ls-files '*.png' | wc -l
-          echo '--- TRACKED FILES BEGIN ---'
-          git ls-files
-          echo '--- TRACKED FILES END ---'
           git status --short
       - name: Compile Python source
         shell: bash
