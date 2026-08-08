@@ -1,0 +1,46 @@
+[Unit]
+Description=Greia OS child launcher
+After=local-fs.target systemd-logind.service plymouth-start.service greia-first-boot.service
+Requires=greia-first-boot.service
+Wants=greia-parent.service
+Conflicts=getty@tty1.service
+StartLimitIntervalSec=30
+StartLimitBurst=8
+
+[Service]
+Type=simple
+User=greiakid
+Group=greiakid
+PAMName=login
+WorkingDirectory=/opt/greia-os
+Environment=GREIA_OS_ROOT=/opt/greia-os
+Environment=PYTHONPATH=/opt/greia-os/src
+Environment=PYTHONNOUSERSITE=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=HOME=/var/lib/greia-kid
+Environment=GREIA_PROFILES_DIR=/var/lib/greia-profiles
+Environment=GREIA_ACTIVE_PROFILE_STATUS=/run/greia-os/active-profile.json
+Environment=GREIA_MEDIA_ROOT=/media/greia
+Environment=GREIA_SYSTEM_SETTINGS_DIR=/var/lib/greia-system-settings
+Environment=GREIA_HARDWARE_STATUS=/run/greia-hardware/status.json
+ExecStartPre=+/usr/local/lib/greia-os/prepare-launcher-vt
+ExecStart=/usr/bin/xinit /usr/local/lib/greia-os/greia-x-session -- :0 vt1 -keeptty -novtswitch -background none -quiet -nolisten tcp -noreset
+Restart=always
+RestartSec=1
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+StandardInput=tty
+StandardOutput=journal
+StandardError=journal
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=strict
+ReadWritePaths=/var/lib/greia-kid /var/lib/greia-profiles /var/lib/xkb /run/greia-hardware /run/greia-os
+RestrictSUIDSGID=yes
+LockPersonality=yes
+LimitCORE=0
+TasksMax=128
+
+[Install]
+WantedBy=graphical.target
