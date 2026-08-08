@@ -1,0 +1,13 @@
+schema_version = 1
+
+# R4 Phase-0 default for one Activity's authoritative portable namespace.
+# This is intentionally platform policy rather than package-owned authority.
+namespace_quota_bytes = 33554432       # 32 MiB
+max_kv_bytes = 2097152                  # 2 MiB
+max_kv_value_bytes = 262144             # 256 KiB
+max_key_bytes = 128
+max_file_bytes = 16777216               # 16 MiB
+max_files = 512
+max_path_bytes = 512
+protected_free_bytes = 67108864          # 64 MiB machine reserve
+max_rollback_snapshots = 2
