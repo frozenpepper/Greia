@@ -1,0 +1,287 @@
+name: R6 runtime-neutral storage launch transport
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/r6-storage-launch-transport.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  implement-and-verify:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Apply R6.2 storage transport integration
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+
+          def rep(path: str, old: str, new: str) -> None:
+              p = Path(path)
+              text = p.read_text(encoding='utf-8')
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected one anchor, found {count}: {old!r}')
+              p.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          # Trusted composition owns the universal storage service.
+          rep(
+              'src/greia_launcher/composition.py',
+              'from greia_platform.permissions import PermissionBroker\n\nfrom .runtime_adapter',
+              'from greia_platform.permissions import PermissionBroker\nfrom greia_platform.storage import ActivityStorageService, StoragePolicy\n\nfrom .runtime_adapter',
+          )
+          rep(
+              'src/greia_launcher/composition.py',
+              '    permission_broker: PermissionBroker\n    runtime_manager: RuntimeManager\n',
+              '    permission_broker: PermissionBroker\n    runtime_manager: RuntimeManager\n    storage_service: ActivityStorageService\n',
+          )
+          rep(
+              'src/greia_launcher/composition.py',
+              '    permission_policy_path: Path,\n    hal: GreiaHAL | None = None,\n',
+              '    permission_policy_path: Path,\n    storage_policy_path: Path,\n    hal: GreiaHAL | None = None,\n',
+          )
+          rep(
+              'src/greia_launcher/composition.py',
+              '    runtime_manager = RuntimeManager(\n        [\n            PythonRuntimeAdapter(\n                python_executable,\n                policy=PythonRuntimePolicy.load(runtime_policy_path),\n            )\n        ],\n        device_capabilities,\n    )\n    return LauncherRuntimeServices(\n',
+              '    runtime_manager = RuntimeManager(\n        [\n            PythonRuntimeAdapter(\n                python_executable,\n                policy=PythonRuntimePolicy.load(runtime_policy_path),\n            )\n        ],\n        device_capabilities,\n    )\n    storage_service = ActivityStorageService(StoragePolicy.load(storage_policy_path))\n    return LauncherRuntimeServices(\n',
+          )
+          rep(
+              'src/greia_launcher/composition.py',
+              '        permission_broker=permission_broker,\n        runtime_manager=runtime_manager,\n    )\n',
+              '        permission_broker=permission_broker,\n        runtime_manager=runtime_manager,\n        storage_service=storage_service,\n    )\n',
+          )
+
+          # Installed launcher provides storage policy/service to the supervisor.
+          rep(
+              'src/greia_launcher/main.py',
+              '    permission_policy: Path\n    profiles_dir: Path\n',
+              '    permission_policy: Path\n    storage_policy: Path\n    profiles_dir: Path\n',
+          )
+          rep(
+              'src/greia_launcher/main.py',
+              '            permission_policy=root / "runtime" / "permission-policy.toml",\n            profiles_dir=Path(\n',
+              '            permission_policy=root / "runtime" / "permission-policy.toml",\n            storage_policy=root / "runtime" / "storage-policy.toml",\n            profiles_dir=Path(\n',
+          )
+          rep(
+              'src/greia_launcher/main.py',
+              '            permission_policy_path=self.paths.permission_policy,\n            hal=development_hal,\n        )\n        self.supervisor = ActivitySupervisor(\n            runtime_manager=self.runtime_services.runtime_manager\n        )\n',
+              '            permission_policy_path=self.paths.permission_policy,\n            storage_policy_path=self.paths.storage_policy,\n            hal=development_hal,\n        )\n        self.supervisor = ActivitySupervisor(\n            runtime_manager=self.runtime_services.runtime_manager,\n            storage_service=self.runtime_services.storage_service,\n        )\n',
+          )
+
+          # Supervisor owns one broker as a runtime-neutral per-session resource.
+          rep(
+              'src/greia_launcher/supervisor.py',
+              'from typing import Callable, Mapping\n',
+              'from typing import Callable, Mapping, Protocol\n',
+          )
+          rep(
+              'src/greia_launcher/supervisor.py',
+              'from greia_platform.profiles import ProfileContext\n\nfrom .lifecycle import (\n',
+              'from greia_platform.profiles import ProfileContext\nfrom greia_platform.storage import ActivityStorageService, StorageError\n\nfrom .lifecycle import (\n',
+          )
+          rep(
+              'src/greia_launcher/supervisor.py',
+              'from .runtime_adapter import (\n    PythonRuntimeAdapter,\n    RuntimeAdapterError,\n    RuntimeLaunchAdapter,\n    RuntimeManager,\n)\n\n\nSANDBOX_ACTIVITY_ROOT',
+              'from .runtime_adapter import (\n    PythonRuntimeAdapter,\n    RuntimeAdapterError,\n    RuntimeLaunchAdapter,\n    RuntimeManager,\n)\nfrom .storage_broker import (\n    SANDBOX_STORAGE_ROOT,\n    ActivityStorageBroker,\n)\n\n\nSANDBOX_ACTIVITY_ROOT',
+          )
+          rep(
+              'src/greia_launcher/supervisor.py',
+              'ProcessFactory = Callable[..., subprocess.Popen[bytes]]\n\n\nclass ActivitySupervisor:',
+              'ProcessFactory = Callable[..., subprocess.Popen[bytes]]\nStorageBrokerFactory = Callable[..., ActivityStorageBroker]\n\n\nclass SessionResource(Protocol):\n    def stop(self) -> None: ...\n\n\nclass ActivitySupervisor:',
+          )
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '        runtime_adapters: Mapping[str, RuntimeLaunchAdapter] | None = None,\n        process_factory: ProcessFactory = subprocess.Popen,\n    ):\n',
+              '        runtime_adapters: Mapping[str, RuntimeLaunchAdapter] | None = None,\n        storage_service: ActivityStorageService | None = None,\n        storage_broker_factory: StorageBrokerFactory = ActivityStorageBroker.start,\n        process_factory: ProcessFactory = subprocess.Popen,\n    ):\n',
+          )
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '        self._runtime_manager = runtime_manager\n        self._ready_timeout_seconds = ready_timeout_seconds\n',
+              '        if self._sandbox_required() and storage_service is None:\n            raise ActivityLifecycleError(\n                "installed ActivitySupervisor requires an injected ActivityStorageService"\n            )\n        self._runtime_manager = runtime_manager\n        self._storage_service = storage_service\n        self._storage_broker_factory = storage_broker_factory\n        self._session_resources: dict[str, tuple[SessionResource, ...]] = {}\n        self._ready_timeout_seconds = ready_timeout_seconds\n',
+          )
+
+          # Replace the launch block from sandbox decision through environment setup.
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '        sandboxed = self._sandbox_required()\n        host_activity_data = profile.activity_data_dir(manifest.activity_id)\n        child_activity_data = SANDBOX_ACTIVITY_ROOT if sandboxed else host_activity_data\n        control = ActivityControlChannel.create(host_activity_data, child_activity_data)\n        environment = self._sanitized_environment(\n            manifest,\n            profile,\n            authority,\n            control,\n            sandboxed=sandboxed,\n        )\n\n        if sandboxed:\n            sandbox = self._resolve_sandbox()\n            if not sandbox.is_file() or not os.access(sandbox, os.X_OK):\n                return self._failed_launch_session(\n                    manifest,\n                    profile,\n                    authority,\n                    control=control,\n                )\n            command = self._sandbox_command(\n                sandbox,\n                runtime_command.command,\n                manifest,\n                profile,\n                authority,\n            )\n            cwd: Path | None = None\n        else:\n            command = list(runtime_command.command)\n            cwd = runtime_command.cwd\n',
+              '        sandboxed = self._sandbox_required()\n        host_activity_data = profile.activity_data_dir(manifest.activity_id)\n        child_activity_data = SANDBOX_ACTIVITY_ROOT if sandboxed else host_activity_data\n        control = ActivityControlChannel.create(host_activity_data, child_activity_data)\n\n        sandbox: Path | None = None\n        if sandboxed:\n            sandbox = self._resolve_sandbox()\n            if not sandbox.is_file() or not os.access(sandbox, os.X_OK):\n                return self._failed_launch_session(\n                    manifest, profile, authority, control=control\n                )\n\n        resources: tuple[SessionResource, ...] = ()\n        storage_broker: ActivityStorageBroker | None = None\n        if self._storage_service is not None:\n            try:\n                storage = self._storage_service.open(\n                    profile,\n                    manifest.activity_id,\n                    schema_version=manifest.storage_schema_version,\n                    package_version=manifest.version,\n                )\n                storage_broker = self._storage_broker_factory(\n                    storage, control.session_id, sandboxed=sandboxed\n                )\n            except (StorageError, OSError):\n                return self._failed_launch_session(\n                    manifest, profile, authority, control=control\n                )\n            resources = (storage_broker,)\n\n        environment = self._sanitized_environment(\n            manifest,\n            profile,\n            authority,\n            control,\n            sandboxed=sandboxed,\n            storage_broker=storage_broker,\n        )\n\n        if sandboxed:\n            assert sandbox is not None\n            command = self._sandbox_command(\n                sandbox,\n                runtime_command.command,\n                manifest,\n                profile,\n                authority,\n                storage_broker=storage_broker,\n            )\n            cwd: Path | None = None\n        else:\n            command = list(runtime_command.command)\n            cwd = runtime_command.cwd\n',
+          )
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '                control=control,\n                started_at=started,\n            )\n\n        session = ActivitySession(\n',
+              '                control=control,\n                started_at=started,\n                resources=resources,\n            )\n\n        session = ActivitySession(\n',
+          )
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '        self._active_session = session\n        return session\n',
+              '        self._session_resources[session.session_id] = resources\n        self._active_session = session\n        return session\n',
+          )
+
+          # Resource cleanup affects normalized result: cleanup failure is platform failure.
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '        state = (\n            ActivitySessionState.EXITED\n            if reason in {ActivityExitReason.NORMAL, ActivityExitReason.GRACEFUL_STOP}\n            else ActivitySessionState.FAILED\n        )\n        result = ActivityResult(\n',
+              '        if not self._cleanup_session_resources(session.session_id):\n            reason = ActivityExitReason.PLATFORM_FAILURE\n\n        state = (\n            ActivitySessionState.EXITED\n            if reason in {ActivityExitReason.NORMAL, ActivityExitReason.GRACEFUL_STOP}\n            else ActivitySessionState.FAILED\n        )\n        result = ActivityResult(\n',
+          )
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '        started_at: float | None = None,\n    ) -> ActivitySession:\n',
+              '        started_at: float | None = None,\n        resources: tuple[SessionResource, ...] = (),\n    ) -> ActivitySession:\n',
+          )
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '        control.cleanup()\n        return session\n\n    def _sandbox_required(self) -> bool:\n',
+              '        for resource in reversed(resources):\n            try:\n                resource.stop()\n            except Exception:\n                pass\n        control.cleanup()\n        return session\n\n    def _cleanup_session_resources(self, session_id: str) -> bool:\n        resources = self._session_resources.pop(session_id, ())\n        clean = True\n        for resource in reversed(resources):\n            try:\n                resource.stop()\n            except Exception:\n                clean = False\n        return clean\n\n    def _sandbox_required(self) -> bool:\n',
+          )
+
+          # Sandbox receives only the ephemeral broker directory/socket.
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '        authority: ActivityAuthority,\n    ) -> list[str]:\n',
+              '        authority: ActivityAuthority,\n        *,\n        storage_broker: ActivityStorageBroker | None = None,\n    ) -> list[str]:\n',
+          )
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '        if authority.has_permission("customization.manage"):\n            command.extend(\n',
+              '        if storage_broker is not None:\n            command.extend(\n                [\n                    "--ro-bind",\n                    str(storage_broker.host_root),\n                    str(SANDBOX_STORAGE_ROOT),\n                ]\n            )\n        if authority.has_permission("customization.manage"):\n            command.extend(\n',
+          )
+
+          # Environment carries only broker endpoint + unguessable per-session token.
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '        *,\n        sandboxed: bool = False,\n    ) -> dict[str, str]:\n',
+              '        *,\n        sandboxed: bool = False,\n        storage_broker: ActivityStorageBroker | None = None,\n    ) -> dict[str, str]:\n',
+          )
+          rep(
+              'src/greia_launcher/supervisor.py',
+              '        if authority.has_permission("customization.manage"):\n            environment["GREIA_CUSTOMIZATION_DIR"] = str(env_customization)\n',
+              '        if storage_broker is not None:\n            environment["GREIA_STORAGE_SOCKET"] = str(storage_broker.child_socket)\n            environment["GREIA_STORAGE_TOKEN"] = storage_broker.session_token\n        if authority.has_permission("customization.manage"):\n            environment["GREIA_CUSTOMIZATION_DIR"] = str(env_customization)\n',
+          )
+
+          # Test profile and storage-service helper.
+          rep(
+              'tests/test_supervisor.py',
+              'from greia_launcher.supervisor import ActivityLifecycleError, ActivitySupervisor\n',
+              'from greia_launcher.supervisor import (\n    SANDBOX_STORAGE_ROOT,\n    ActivityLifecycleError,\n    ActivitySupervisor,\n)\n',
+          )
+          rep(
+              'tests/test_supervisor.py',
+              'from greia_platform.device_capabilities import DeviceCapabilityService\nfrom greia_platform.trust import PackageTrust\n',
+              'from greia_platform.device_capabilities import DeviceCapabilityService\nfrom greia_platform.storage import ActivityStorageService, StoragePolicy\nfrom greia_platform.storage_client import ActivityStorageClient\nfrom greia_platform.trust import PackageTrust\n',
+          )
+          rep(
+              'tests/test_supervisor.py',
+              '    def activity_data_dir(self, activity_id: str) -> Path:\n        path = self.root / "activities" / activity_id\n        path.mkdir(parents=True, exist_ok=True)\n        return path\n',
+              '    def activity_data_dir(self, activity_id: str) -> Path:\n        path = self.root / "activities" / activity_id\n        path.mkdir(parents=True, exist_ok=True)\n        return path\n\n    def activity_storage_dir(self, activity_id: str) -> Path:\n        path = self.root / "storage" / activity_id\n        path.mkdir(parents=True, exist_ok=True)\n        return path\n',
+          )
+          rep(
+              'tests/test_supervisor.py',
+              'def _manager(capabilities: set[str]) -> RuntimeManager:\n    return RuntimeManager(\n        [PythonRuntimeAdapter(Path("/usr/bin/python3"))],\n        DeviceCapabilityService.static(capabilities, source_id="supervisor-test"),\n    )\n\n\nclass SupervisorTests',
+              'def _manager(capabilities: set[str]) -> RuntimeManager:\n    return RuntimeManager(\n        [PythonRuntimeAdapter(Path("/usr/bin/python3"))],\n        DeviceCapabilityService.static(capabilities, source_id="supervisor-test"),\n    )\n\n\ndef _storage_service() -> ActivityStorageService:\n    return ActivityStorageService(\n        StoragePolicy(\n            policy_schema_version=1,\n            namespace_quota_bytes=1024 * 1024,\n            max_kv_bytes=64 * 1024,\n            max_kv_value_bytes=16 * 1024,\n            max_key_bytes=128,\n            max_file_bytes=256 * 1024,\n            max_files=32,\n            max_path_bytes=256,\n            protected_free_bytes=0,\n            max_rollback_snapshots=1,\n        )\n    )\n\n\nclass SupervisorTests',
+          )
+
+          # Installed construction must not permit a launcher without universal storage.
+          rep(
+              'tests/test_supervisor.py',
+              '    def test_missing_required_platform_authority_fails_before_process_creation(self) -> None:\n',
+              '    def test_installed_supervisor_requires_storage_service(self) -> None:\n        with self.assertRaisesRegex(ActivityLifecycleError, "ActivityStorageService"):\n            ActivitySupervisor(\n                require_sandbox=True,\n                runtime_manager=_manager({"display", "pointer"}),\n            )\n\n    def test_missing_required_platform_authority_fails_before_process_creation(self) -> None:\n',
+          )
+
+          # End-to-end client <-> broker <-> ActivityStorage and cleanup evidence.
+          rep(
+              'tests/test_supervisor.py',
+              '    def test_only_one_activity_can_be_active(self) -> None:\n',
+              '    def test_storage_broker_is_exposed_for_launch_and_removed_on_exit(self) -> None:\n        with tempfile.TemporaryDirectory() as temporary:\n            root = Path(temporary)\n            manifest = _manifest(root / "activity")\n            profile = _ProfileContext(root / "profile")\n            authority = _Authority(\n                manifest.activity_id, capabilities={"display", "pointer"}\n            )\n            process = _FakeProcess()\n            calls = []\n\n            def factory(*args, **kwargs):\n                calls.append((args, kwargs))\n                return process\n\n            supervisor = ActivitySupervisor(\n                require_sandbox=False,\n                runtime_manager=_manager({"display", "pointer"}),\n                storage_service=_storage_service(),\n                process_factory=factory,\n            )\n            session = supervisor.start(manifest, profile, authority)\n            environment = calls[0][1]["env"]\n            socket_path = Path(environment["GREIA_STORAGE_SOCKET"])\n            client = ActivityStorageClient(\n                socket_path, environment["GREIA_STORAGE_TOKEN"]\n            )\n            client.kv_set("level", 7)\n            self.assertEqual(client.kv_get("level"), 7)\n            self.assertTrue(socket_path.exists())\n\n            process.returncode = 0\n            result = supervisor.poll(session)\n            self.assertEqual(result.exit_reason, ActivityExitReason.NORMAL)\n            self.assertFalse(socket_path.exists())\n\n        self.assertIsNone(supervisor.active_session)\n\n    def test_only_one_activity_can_be_active(self) -> None:\n',
+          )
+
+          # Sandbox wiring proves host broker root is mounted at fixed runtime-neutral child path.
+          rep(
+              'tests/test_supervisor.py',
+              '    def test_installed_missing_bubblewrap_fails_closed_without_starting_child(self) -> None:\n',
+              '    def test_sandbox_launch_mounts_only_ephemeral_storage_broker(self) -> None:\n        with tempfile.TemporaryDirectory() as temporary:\n            root = Path(temporary)\n            sandbox = root / "bwrap"\n            sandbox.write_text("#!/bin/sh\\nexit 1\\n", encoding="utf-8")\n            sandbox.chmod(0o755)\n            manifest = _manifest(root / "activity")\n            profile = _ProfileContext(root / "profile")\n            authority = _Authority(\n                manifest.activity_id, capabilities={"display", "pointer"}\n            )\n            process = _FakeProcess()\n            calls = []\n\n            def factory(*args, **kwargs):\n                calls.append((args, kwargs))\n                return process\n\n            supervisor = ActivitySupervisor(\n                sandbox_executable=sandbox,\n                require_sandbox=True,\n                runtime_manager=_manager({"display", "pointer"}),\n                storage_service=_storage_service(),\n                process_factory=factory,\n            )\n            session = supervisor.start(manifest, profile, authority)\n            command = list(calls[0][0][0])\n            environment = calls[0][1]["env"]\n            self.assertEqual(\n                Path(environment["GREIA_STORAGE_SOCKET"]),\n                SANDBOX_STORAGE_ROOT / "storage.sock",\n            )\n            mount_index = command.index(str(SANDBOX_STORAGE_ROOT))\n            self.assertEqual(command[mount_index - 2], "--ro-bind")\n            host_broker_root = Path(command[mount_index - 1])\n            self.assertNotEqual(host_broker_root, profile.root)\n            self.assertTrue((host_broker_root / "storage.sock").exists())\n\n            process.returncode = 0\n            supervisor.poll(session)\n            self.assertFalse(host_broker_root.exists())\n\n    def test_installed_missing_bubblewrap_fails_closed_without_starting_child(self) -> None:\n',
+          )
+          rep(
+              'tests/test_supervisor.py',
+              '                runtime_manager=_manager({"display", "pointer"}),\n                process_factory=factory,\n            )\n            session = supervisor.start(manifest, profile, authority)\n\n        self.assertEqual(session.state, ActivitySessionState.FAILED)\n        self.assertEqual(session.result.exit_reason, ActivityExitReason.LAUNCH_FAILURE)\n        factory.assert_not_called()\n\n\nif __name__ == "__main__":',
+              '                runtime_manager=_manager({"display", "pointer"}),\n                storage_service=_storage_service(),\n                process_factory=factory,\n            )\n            session = supervisor.start(manifest, profile, authority)\n\n        self.assertEqual(session.state, ActivitySessionState.FAILED)\n        self.assertEqual(session.result.exit_reason, ActivityExitReason.LAUNCH_FAILURE)\n        factory.assert_not_called()\n\n\nif __name__ == "__main__":',
+          )
+
+          # Continuity records.
+          plan = Path('docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md')
+          marker = '---\n\n# 9. Final completion criteria'
+          entry = '''## 2026-08-09 — R6.2 universal storage launch transport\n\n- Implemented: installed launcher composition now loads the platform storage policy and injects one `ActivityStorageService` into `ActivitySupervisor`; each Activity launch opens the profile/Activity durable namespace, starts an ephemeral `ActivityStorageBroker`, exposes only its Unix socket plus per-session token, mounts only the broker runtime directory into Bubblewrap, and cleans the broker on normal/crash/failure cleanup.\n- Tests/evidence: added installed-construction fail-closed coverage, an end-to-end `ActivityStorageClient -> broker -> ActivityStorage` write/read test, sandbox mount isolation coverage, broker cleanup-on-exit coverage, focused supervisor/storage tests and the complete currently-recoverable suite.\n- Decisions: Storage remains a runtime-neutral Greia platform service and is not moved into `PythonRuntimeAdapter`. The Supervisor owns broker lifetime because it owns the Activity session; RuntimeManager remains responsible for runtime-specific validation/launch preparation. Broker-cleanup failure normalizes an otherwise completed launch to `platform_failure`.\n- Remaining blocker: R5 event/progression broker integration cannot be completed honestly while `src/greia_platform/history.py` is lost; do not reconstruct it implicitly.\n- Next exact step: audit remaining runtime-specific lifecycle/cleanup behavior after storage transport, then define the explicit R5 reimplementation/recovery boundary needed to restore event-session integration before R6 can close.\n- Commit(s): this tranche commit.\n\n'''
+          text = plan.read_text(encoding='utf-8')
+          if entry.splitlines()[0] in text or text.count(marker) != 1:
+              raise SystemExit('plan insertion precondition failed')
+          plan.write_text(text.replace(marker, entry + marker, 1), encoding='utf-8')
+
+          hand = Path('HANDOVER.md')
+          marker = '---\n\n## 2. Mandatory resume order'
+          section = '''## R6.2 universal storage launch transport — 2026-08-09\n\nThe installed Activity path now actually exposes the previously implemented R4 Universal Storage Service. `build_launcher_runtime_services(...)` loads `runtime/storage-policy.toml` and returns an `ActivityStorageService`; the installed launcher injects it into `ActivitySupervisor`. For each launch, the supervisor opens the durable `(profile_id, activity_id)` namespace, starts a one-session Unix-socket `ActivityStorageBroker`, passes only `GREIA_STORAGE_SOCKET` and `GREIA_STORAGE_TOKEN`, and in Bubblewrap mounts only the ephemeral broker directory at `/run/greia-storage`. The durable namespace itself is never mounted into the Activity. The broker is stopped and its runtime directory removed on terminal cleanup; a cleanup failure becomes `platform_failure`. The R5 event broker remains intentionally unwired because its authoritative `history.py` dependency is the known lost source.\n\n'''
+          text = hand.read_text(encoding='utf-8')
+          if section.splitlines()[0] in text or text.count(marker) != 1:
+              raise SystemExit('handover insertion precondition failed')
+          hand.write_text(text.replace(marker, section + marker, 1), encoding='utf-8')
+          PY
+
+      - name: Install test dependency
+        run: python3 -m pip install --disable-pip-version-check --quiet Pillow
+
+      - name: Compile
+        run: python3 -m compileall -q src tests
+
+      - name: Focused storage and supervisor tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_supervisor.py' -v
+          PYTHONPATH=src python3 - <<'PY'
+          from pathlib import Path
+          from greia_platform.storage import StoragePolicy
+          policy = StoragePolicy.load(Path('runtime/storage-policy.toml'))
+          assert policy.namespace_quota_bytes == 33554432
+          print('storage policy load PASS')
+          PY
+
+      - name: Complete currently recoverable unit suite
+        run: PYTHONPATH=src python3 -m unittest discover -s tests -v
+
+      - name: Confirm known R5 source-loss boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +e
+          PYTHONPATH=src python3 tools/validate_project.py >/tmp/v.out 2>&1
+          s=$?
+          set -e
+          cat /tmp/v.out
+          test "$s" -ne 0
+          grep -F "ModuleNotFoundError: No module named 'greia_platform.history'" /tmp/v.out
+
+      - name: Commit coherent R6.2 storage tranche
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          git add \
+            src/greia_launcher/composition.py \
+            src/greia_launcher/main.py \
+            src/greia_launcher/supervisor.py \
+            tests/test_supervisor.py \
+            docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md \
+            HANDOVER.md
+          git diff --cached --check
+          git config user.name greia-r6-implementation
+          git config user.email greia-r6-implementation@users.noreply.github.com
+          git commit -m 'feat: wire universal storage into Activity launch sessions'
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
