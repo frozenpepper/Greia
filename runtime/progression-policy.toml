@@ -1,0 +1,11 @@
+schema_version = 1
+
+# Global reward economics are Greia-owned policy. Activity packages only declare
+# factual events. This initial rule exists to prove the authority boundary.
+[[rules]]
+id = "shape-garden-creation-star"
+activity_id = "org.greia.shape-garden"
+event_id = "creation.completed"
+once_per_session = true
+reward_id = "star"
+reward_delta = 1
