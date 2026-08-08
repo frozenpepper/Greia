@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Callable, Mapping
 
 from greia_platform.activities import ActivityManifest
+from greia_platform.device_capabilities import DeviceCapabilityService
 from greia_platform.permissions import ActivityAuthority
 from greia_platform.profiles import ProfileContext
 
@@ -18,13 +19,30 @@ from .lifecycle import (
     monotonic_now,
     signal_process_group,
 )
-from .runtime_adapter import PythonRuntimeAdapter, RuntimeLaunchAdapter
+from .runtime_adapter import (
+    PythonRuntimeAdapter,
+    RuntimeAdapterError,
+    RuntimeLaunchAdapter,
+    RuntimeManager,
+)
 
 
 SANDBOX_ACTIVITY_ROOT = Path("/run/greia-activity-data")
 SANDBOX_CUSTOMIZATION_ROOT = Path("/run/greia-customization")
 PRODUCTION_ROOT = Path("/opt/greia-os")
 PRODUCTION_BWRAP = Path("/usr/bin/bwrap")
+_DEVELOPMENT_CAPABILITIES = frozenset(
+    {
+        "audio.basic",
+        "display",
+        "keyboard",
+        "network",
+        "pointer",
+        "power.controlled_shutdown",
+        "removable_media",
+        "touch",
+    }
+)
 
 
 class ActivityLifecycleError(RuntimeError):
@@ -37,10 +55,10 @@ ProcessFactory = Callable[..., subprocess.Popen[bytes]]
 class ActivitySupervisor:
     """Own one Activity process from launch through cleanup.
 
-    The supervisor is the runtime-neutral lifecycle/security owner. Runtime
-    adapters choose the child runtime command; this class owns effective
-    authority, Bubblewrap shape, per-launch control paths, readiness, graceful
-    stop, forced process-tree termination and normalized exit results.
+    Runtime selection and runtime/device compatibility are delegated to one
+    RuntimeManager. This supervisor remains the runtime-neutral lifecycle and
+    sandbox owner: it consumes platform-issued ActivityAuthority rather than
+    trusting Activity environment or manifest claims as grants.
     """
 
     def __init__(
@@ -51,6 +69,7 @@ class ActivitySupervisor:
         require_sandbox: bool | None = None,
         ready_timeout_seconds: float = 10.0,
         graceful_stop_seconds: float = 2.0,
+        runtime_manager: RuntimeManager | None = None,
         runtime_adapters: Mapping[str, RuntimeLaunchAdapter] | None = None,
         process_factory: ProcessFactory = subprocess.Popen,
     ):
@@ -58,11 +77,26 @@ class ActivitySupervisor:
             raise ValueError("ready_timeout_seconds must be positive")
         if graceful_stop_seconds <= 0:
             raise ValueError("graceful_stop_seconds must be positive")
-        adapters = dict(runtime_adapters or {})
-        adapters.setdefault("python", PythonRuntimeAdapter(python_executable))
-        self._runtime_adapters = adapters
+        if runtime_manager is not None and runtime_adapters is not None:
+            raise ValueError("provide runtime_manager or runtime_adapters, not both")
+
         self._sandbox_executable = sandbox_executable
         self._require_sandbox_override = require_sandbox
+        if runtime_manager is None:
+            if self._sandbox_required():
+                raise ActivityLifecycleError(
+                    "installed ActivitySupervisor requires an injected HAL-backed RuntimeManager"
+                )
+            adapters = dict(runtime_adapters or {})
+            adapters.setdefault("python", PythonRuntimeAdapter(python_executable))
+            runtime_manager = RuntimeManager(
+                adapters,
+                DeviceCapabilityService.static(
+                    _DEVELOPMENT_CAPABILITIES,
+                    source_id="supervisor-development-static",
+                ),
+            )
+        self._runtime_manager = runtime_manager
         self._ready_timeout_seconds = ready_timeout_seconds
         self._graceful_stop_seconds = graceful_stop_seconds
         self._process_factory = process_factory
@@ -85,10 +119,16 @@ class ActivitySupervisor:
             raise ActivityLifecycleError("only one Activity may run at a time")
         if authority.activity_id != manifest.activity_id:
             raise ActivityLifecycleError("Activity authority identity does not match manifest")
-
-        adapter = self._runtime_adapters.get(manifest.runtime_type)
-        if adapter is None:
+        if not frozenset(manifest.required_capabilities).issubset(
+            authority.effective_capabilities
+        ):
             return self._failed_launch_session(manifest, profile, authority)
+
+        try:
+            preparation = self._runtime_manager.prepare_launch(manifest)
+        except RuntimeAdapterError:
+            return self._failed_launch_session(manifest, profile, authority)
+        runtime_command = preparation.command
 
         sandboxed = self._sandbox_required()
         host_activity_data = profile.activity_data_dir(manifest.activity_id)
@@ -101,7 +141,6 @@ class ActivitySupervisor:
             control,
             sandboxed=sandboxed,
         )
-        runtime_command = adapter.command_for(manifest)
 
         if sandboxed:
             sandbox = self._resolve_sandbox()
