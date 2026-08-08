@@ -1,4 +1,4 @@
-# R0/R5/R6 clean-clone verification
+# R0/R5/R6/R7 clean-clone verification
 name: R0 clean-tree verification
 
 on:
@@ -78,25 +78,33 @@ jobs:
           ! grep -F 'database_path' src/greia_parent/server.py
           ! grep -F 'idempotency_key' src/greia_parent/server.py
 
-      - name: R6 source architecture invariants
+      - name: R6/R7 source architecture invariants
         shell: bash
         run: |
           set -euo pipefail
 
-          # Typed HAL / semantic device authority.
+          # Typed HAL / semantic device authority stays backend-neutral.
           grep -F 'class GreiaHAL:' src/greia_platform/hal.py
           grep -F 'class DisplayHAL(Protocol):' src/greia_platform/hal.py
           grep -F 'class InputHAL(Protocol):' src/greia_platform/hal.py
           grep -F 'class DeviceCapabilityService:' src/greia_platform/device_capabilities.py
           grep -F 'class HALDeviceCapabilityProbe:' src/greia_platform/device_capabilities.py
+          ! grep -F 'LegacyXDisplayHAL' src/greia_platform/hal.py
+          ! grep -F 'LegacyXInputHAL' src/greia_platform/hal.py
+          ! grep -F 'XSessionHardwareController' src/greia_platform/hal.py
+          ! grep -F 'DISPLAY' src/greia_platform/hal.py
+          grep -F 'class LegacyXDisplayHAL:' src/greia_platform/hal_legacy_x.py
+          grep -F 'class LegacyXInputHAL:' src/greia_platform/hal_legacy_x.py
+          grep -F 'class HardwareSessionController(Protocol):' src/greia_platform/hardware_session.py
 
-          # Installed composition shares one device authority and platform storage service.
+          # Installed compatibility composition still shares one device authority and platform storage service.
           grep -F 'build_launcher_runtime_services(' src/greia_launcher/main.py
           grep -F 'device_capabilities = DeviceCapabilityService(' src/greia_launcher/composition.py
           grep -F 'device_capabilities=device_capabilities' src/greia_launcher/composition.py
           grep -F 'RuntimeManager(' src/greia_launcher/composition.py
           grep -F 'device_capabilities,' src/greia_launcher/composition.py
           grep -F 'storage_service=storage_service' src/greia_launcher/composition.py
+          grep -F 'from greia_platform.hal_legacy_x import LegacyXDisplayHAL, LegacyXInputHAL' src/greia_launcher/composition.py
 
           # Permission and runtime compatibility use one semantic device observation.
           grep -F 'device_snapshot_token=device_snapshot.token' src/greia_platform/permissions.py
@@ -127,10 +135,6 @@ jobs:
           ! grep -F 'subprocess.Popen' src/greia_launcher/supervisor.py
           ! grep -F 'signal_process_group' src/greia_launcher/supervisor.py
           grep -F 'GREIA_ACTIVITY_SESSION_ID' src/greia_launcher/supervisor.py
-
-          # Legacy X remains a provisional backend below HAL, not target/interface authority.
-          grep -F 'class LegacyXDisplayHAL:' src/greia_platform/hal.py
-          grep -F 'R7 replaces the legacy-X' src/greia_platform/hal.py
 
       - name: Full provider-free gate
         shell: bash
