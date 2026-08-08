@@ -1,4 +1,4 @@
-# R0/R6 clean-clone verification — closure continuity trigger 2
+# R0/R6 clean-clone verification
 name: R0 clean-tree verification
 
 on:
@@ -28,65 +28,19 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
 
-      - name: Persist R6 source-closure continuity records
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 <<'PY'
-          from pathlib import Path
-          plan = Path('docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md')
-          plan_heading = '## 2026-08-09 — R6 source-closure audit'
-          plan_entry = '''## 2026-08-09 — R6 source-closure audit
-
-- Implemented/audited: the permanent fresh-checkout CI re-proved the typed HAL/device boundary, installed shared Device Capability Service composition, snapshot-bound launch authority, runtime-neutral Registry, adapter-owned runtime command/environment/cwd, adapter-owned runtime handle/exit/force-stop/cleanup, adapter-owned Python lifecycle transport, and platform-owned brokered Universal Storage launch transport.
-- Tests/evidence: Python compile PASS; **172/172** recoverable provider-free tests PASS; permanent R6 architecture-invariant CI step PASS; `make verify` reaches project validation and stops only at the known lost post-v0.12 `greia_platform.history` import.
-- Decision: **R6.2 source architecture is PASS** against ADR 0012/0014/0015 and the active-plan runtime-adapter criteria. **R6 overall remains IN PROGRESS/BLOCKED**, because R0 requires a complete clean-clone gate and the lost R5 History/Progression authority also blocks honest event/session integration. Hardware/direct-graphics evidence is not promoted by source tests.
-- Remaining blocker: exact historical R5 History/Progression source is unavailable after exhaustive recovery. Further progress requires an explicit decision to reimplement that R5 authority as new reviewed code from accepted ADR 0017 and surviving contracts rather than pretending it is recovered.
-- Next exact step: if reimplementation is authorized, reconstruct R5 History/Progression behind the existing policy/event/storage boundaries, restore event broker/session integration, run the complete gate, then re-run R6 closure. Do not begin R7 before that.
-- Evidence document: `docs/reviews/2026-08-09_R6_SOURCE_CLOSURE_AUDIT.md`.
-
-'''
-          marker = '---\n\n# 9. Final completion criteria'
-          text = plan.read_text(encoding='utf-8')
-          if plan_heading not in text:
-              if text.count(marker) != 1:
-                  raise SystemExit('active plan closure marker is not unique')
-              plan.write_text(text.replace(marker, plan_entry + marker, 1), encoding='utf-8')
-
-          handover = Path('HANDOVER.md')
-          handover_heading = '## R6 source-closure audit — 2026-08-09'
-          handover_entry = '''## R6 source-closure audit — 2026-08-09
-
-The permanent fresh-checkout CI now classifies **R6.2 source architecture as PASS** with **172/172 recoverable provider-free tests PASS**. The installed launcher uses the shared HAL-backed Device Capability Service for PermissionBroker and RuntimeManager; launch authority is snapshot-bound; Universal Storage is brokered into real Activity sessions; runtime-specific validation, environment/cwd, runtime-handle creation, exit normalization, force-stop, cleanup and lifecycle transport all live behind the Runtime Adapter/RuntimeManager seam. Supervisor contains no Python marker paths, concrete `ActivityControlChannel`, direct `Popen`, or process-group signaling. R6 as a whole is **not closed**: full `make verify` still stops only at the lost post-v0.12 `src/greia_platform/history.py`, which also prevents honest R5 event/session/progression integration. The next project decision is whether to authorize a new reviewed R5 History/Progression reimplementation from ADR 0017 and surviving contracts. R7 must not start first. See `docs/reviews/2026-08-09_R6_SOURCE_CLOSURE_AUDIT.md`.
-
-'''
-          marker = '---\n\n## 2. Mandatory resume order'
-          text = handover.read_text(encoding='utf-8')
-          if handover_heading not in text:
-              if text.count(marker) != 1:
-                  raise SystemExit('handover resume marker is not unique')
-              handover.write_text(text.replace(marker, handover_entry + marker, 1), encoding='utf-8')
-          PY
-          git add docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md HANDOVER.md
-          if ! git diff --cached --quiet; then
-            git diff --cached --check
-            git config user.name "greia-r6-audit"
-            git config user.email "greia-r6-audit@users.noreply.github.com"
-            git commit -m "docs: record R6 source closure status"
-            git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
-          fi
-
       - name: Reconcile recovery hygiene
         shell: bash
         run: |
           set -euo pipefail
           python3 <<'PY'
           from pathlib import Path
+
           path = Path('tests/test_system_overlay_contract.py')
           text = path.read_text(encoding='utf-8')
           text = text.replace('greiapanel pipsettings', 'greiapanel greiasettings')
           text = text.replace('greiakid pipprofiles', 'greiakid greiaprofiles')
           path.write_text(text, encoding='utf-8')
+
           gitignore = Path('.gitignore')
           existing = gitignore.read_text(encoding='utf-8') if gitignore.exists() else ''
           lines = existing.splitlines()
@@ -108,7 +62,10 @@ The permanent fresh-checkout CI now classifies **R6.2 source architecture as PAS
           fi
 
       - name: Install verification dependencies
-        run: python3 -m pip install --disable-pip-version-check Pillow
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check Pillow
 
       - name: Repository inventory
         shell: bash
@@ -120,30 +77,43 @@ The permanent fresh-checkout CI now classifies **R6.2 source architecture as PAS
           git status --short
 
       - name: Compile Python source
-        run: python3 -m compileall -q src tests tools activities
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m compileall -q src tests tools activities
 
       - name: R6 source architecture invariants
         shell: bash
         run: |
           set -euo pipefail
+
+          # Typed HAL / semantic device authority.
           grep -F 'class GreiaHAL:' src/greia_platform/hal.py
           grep -F 'class DisplayHAL(Protocol):' src/greia_platform/hal.py
           grep -F 'class InputHAL(Protocol):' src/greia_platform/hal.py
           grep -F 'class DeviceCapabilityService:' src/greia_platform/device_capabilities.py
           grep -F 'class HALDeviceCapabilityProbe:' src/greia_platform/device_capabilities.py
+
+          # Installed composition shares one device authority and platform storage service.
           grep -F 'build_launcher_runtime_services(' src/greia_launcher/main.py
           grep -F 'device_capabilities = DeviceCapabilityService(' src/greia_launcher/composition.py
           grep -F 'device_capabilities=device_capabilities' src/greia_launcher/composition.py
           grep -F 'RuntimeManager(' src/greia_launcher/composition.py
           grep -F 'device_capabilities,' src/greia_launcher/composition.py
           grep -F 'storage_service=storage_service' src/greia_launcher/composition.py
+
+          # Permission and runtime compatibility use one semantic device observation.
           grep -F 'device_snapshot_token=device_snapshot.token' src/greia_platform/permissions.py
           grep -F 'expected_device_snapshot_token=authority.device_snapshot_token' src/greia_launcher/supervisor.py
           grep -F 'device capability snapshot changed after launch authority was issued' src/greia_launcher/runtime_adapter.py
+
+          # Shared Universal Storage is brokered into each Activity session.
           grep -F 'ActivityStorageService(StoragePolicy.load(storage_policy_path))' src/greia_launcher/composition.py
           grep -F 'GREIA_STORAGE_SOCKET' src/greia_launcher/supervisor.py
           grep -F 'GREIA_STORAGE_TOKEN' src/greia_launcher/supervisor.py
           grep -F 'ActivityStorageBroker.start' src/greia_launcher/supervisor.py
+
+          # Runtime-specific command, handle, exit and lifecycle transport belong to adapters.
           grep -F 'class RuntimeCommand:' src/greia_launcher/runtime_adapter.py
           grep -F 'class RuntimeInvocation:' src/greia_launcher/runtime_adapter.py
           grep -F 'class RuntimeLifecycleBinding:' src/greia_launcher/runtime_adapter.py
@@ -153,14 +123,21 @@ The permanent fresh-checkout CI now classifies **R6.2 source architecture as PAS
           grep -F 'def cleanup(' src/greia_launcher/runtime_adapter.py
           grep -F 'GREIA_ACTIVITY_READY_PATH' src/greia_launcher/runtime_adapter.py
           grep -F 'GREIA_ACTIVITY_STOP_PATH' src/greia_launcher/runtime_adapter.py
+
+          # Supervisor must remain runtime-neutral at these implementation seams.
           ! grep -F 'ActivityControlChannel' src/greia_launcher/supervisor.py
           ! grep -F 'GREIA_ACTIVITY_READY_PATH' src/greia_launcher/supervisor.py
           ! grep -F 'GREIA_ACTIVITY_STOP_PATH' src/greia_launcher/supervisor.py
           ! grep -F 'subprocess.Popen' src/greia_launcher/supervisor.py
           ! grep -F 'signal_process_group' src/greia_launcher/supervisor.py
           grep -F 'GREIA_ACTIVITY_SESSION_ID' src/greia_launcher/supervisor.py
+
+          # Legacy X remains a provisional backend below HAL, not target/interface authority.
           grep -F 'class LegacyXDisplayHAL:' src/greia_platform/hal.py
           grep -F 'R7 replaces the legacy-X' src/greia_platform/hal.py
 
       - name: Full provider-free gate
-        run: make verify
+        shell: bash
+        run: |
+          set -euo pipefail
+          make verify
