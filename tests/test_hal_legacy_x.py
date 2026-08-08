@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import subprocess
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 from greia_platform.hal_legacy_x import LegacyXInputHAL
@@ -33,7 +34,7 @@ class LegacyXHALTests(unittest.TestCase):
     def test_generic_hal_module_contains_no_x_session_dependency(self) -> None:
         import greia_platform.hal as hal
 
-        source = open(hal.__file__, encoding="utf-8").read()
+        source = Path(hal.__file__).read_text(encoding="utf-8")
         self.assertNotIn("XSessionHardwareController", source)
         self.assertNotIn("DISPLAY", source)
         self.assertNotIn("hardware_session", source)
