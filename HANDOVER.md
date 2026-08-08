@@ -1,8 +1,8 @@
 # Greia — Standalone Handover
 
-Date: 2026-08-08  
-Version: `0.13.0-phase0-dev`  
-State: architecture-remediation plan ACTIVE; R0 complete; R1 authority/isolation in progress; local full verification 141/141 passing after first R1 tranche; hardware/display/ARM/Web evidence still pending.
+**Date:** 2026-08-08  
+**Version:** `0.13.0-phase0-dev`  
+**State:** active remediation plan audited and corrected; fresh source verification 141/141 passing; R0 reopened for canonical GitHub completeness; R1 per-Activity isolation patch exists but trusted PermissionBroker/package-origin authority remains incomplete; R2+ not implemented.
 
 ## 1. Mandatory active plan
 
@@ -10,138 +10,188 @@ The authoritative implementation plan is:
 
 `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`
 
-`AGENTS.md` requires every future implementation session to read that plan, resume the first incomplete phase, append progress after substantive work, update this handover, and remove the active-plan reference only after the plan's final completion criteria are all satisfied.
+The audit/correction record is:
 
-Do not replace it with a new competing plan while it is active.
+`docs/reviews/2026-08-08_ACTIVE_PLAN_AUDIT_AND_CORRECTION.md`
 
-## 2. Current phase
+`AGENTS.md` requires future implementation sessions to read the plan, resume the first incomplete blocking phase, append progress, update this handover, run verification, and remove the active-plan reference only after full closure.
 
-**R1 — kernel/supervisor-enforced Activity authority and per-Activity storage isolation.**
+## 2. Read order
 
-The architecture deep review found that the old Bubblewrap boundary hid sibling profiles but still exposed the complete active profile root writable. It also found that `GREIA_ACTIVITY_CAPABILITIES` was being used as an SDK permission check even though Activity code can mutate its own environment.
+1. `AGENTS.md`
+2. `docs/adr/0012-platform-architecture-constitution.md`
+3. `docs/adr/0013-declarative-image-profiles-and-composable-build-artifacts.md`
+4. `docs/adr/0014-greia-identity-arm-parity-and-direct-graphics-direction.md`
+5. `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`
+6. `docs/reviews/2026-08-08_ACTIVE_PLAN_AUDIT_AND_CORRECTION.md`
+7. `docs/reviews/2026-08-08_ARCHITECTURE_DEEP_REVIEW_V0_13.md`
+8. `docs/design/GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md`
+9. this handover
 
-The current R1 work addresses those findings before lifecycle, Web, graphics or package expansion.
+## 3. Product/architecture invariants
 
-## 3. R1 work completed in the current tranche
+- Greia is the child-facing graphical OS experience; Linux remains substrate.
+- No conventional desktop/window-manager/browser-chrome/shell path is part of normal child operation.
+- Activity is the universal abstraction above Python/Web/future runtimes.
+- Profiles, storage, sessions, progression, rewards, package/update, backup/restore, permissions, and parent policy are platform services, not runtime-specific copies.
+- ARM and legacy x86 are co-equal; Pi 400 and Pi 500 are explicit ARM references; the old Acer/Atom class remains the hard low-resource reference.
+- Xorg is a provisional migration/evidence implementation, not the target architecture; direct DRM/KMS-first appliance graphics remains the target.
+- Child data must be architecture-neutral and portable.
+- Parent authority is separate and typed/bounded.
+- Removable media is never autorun.
+- Global reward economics belong to Greia, not Activity packages.
 
-Implemented and verified locally:
+## 4. Audit correction: discard the generic Resource Service idea
 
-- added immutable `ActivityAuthority` derived by platform code from the validated Activity manifest;
-- installed Bubblewrap command no longer binds the complete active profile root writable;
-- ordinary Activities bind only their own Activity data directory at `/run/greia-activity-data`;
-- sibling Activity/profile/platform state remains hidden;
-- trusted `customization.manage` receives a separate narrow customization bind rather than the whole profile;
-- unauthorized removable media is hidden at `/media/greia`;
-- media-capable trusted Activity sees media only through the host read-only root view;
-- `GREIA_ACTIVITY_CAPABILITIES` remains available for SDK ergonomics but is explicitly documented as **not** the security authority;
-- avatar-change requests now live inside the requesting Activity's own private data namespace at `.greia/requests/avatar.json`;
-- ordinary Activities receive no avatar-request environment path;
-- launcher-side avatar-request consumption occurs only for a validated manifest declaring `profile.manage_own`, preventing a forged environment variable from creating own-profile mutation authority;
-- active system/runtime defaults were corrected from the missed `/media/pip` prototype path to `/media/greia`.
+A previous chat reply proposed a generic `Resource Service`. That was not in the architecture or plan and has been explicitly rejected.
 
-## 4. Verification
+Responsibilities remain where the constitution places them:
 
-After the first R1 authority/isolation tranche:
+- durable Activity files/blobs → Storage Service;
+- static/package assets → Asset API/package;
+- removable media → Removable Media Service;
+- temporary runtime state → Runtime Adapter/session;
+- package staging/cache → Package Manager;
+- hardware availability → Device Capability/HAL.
 
-```text
+Do not reintroduce a generic Resource Service without a future ADR proving a real unowned responsibility.
+
+## 5. Fresh verification
+
+A fresh local run on 2026-08-08:
+
+```bash
 make verify
 ```
 
-passes locally with:
+passed:
 
-- **141 / 141 provider-free unit tests PASS**;
-- project/runtime/activity/asset validation PASS;
-- bundled Activity validation PASS;
-- existing build/system-overlay source gates PASS;
-- source footprint remains approximately 15 MiB.
+- **141 / 141 unit tests**;
+- project/runtime/Activity/asset validation;
+- bundled Activity validation;
+- existing build/system-overlay source gates;
+- source footprint approximately 15 MiB.
 
-New/updated negative tests prove that:
+This is source evidence only. It does not prove installed Bubblewrap behavior, image boot, DRM/KMS behavior, Acer behavior, Pi behavior, Web runtime behavior, or memory/footprint certification.
 
-- an ordinary Activity's sandbox command does not include the active profile root;
-- only the Activity's own data directory is writable;
-- ordinary Activity receives no customization or profile-request channel;
-- forged `GREIA_ACTIVITY_CAPABILITIES` cannot add customization/media mounts;
-- removable media is hidden unless authorized;
-- missing Bubblewrap still fails closed.
+## 6. Current truthful R0 state — REOPENED / INCOMPLETE
 
-This remains **source evidence only**. Linux Bubblewrap execution of the new mount layout must still be evidenced under the later certification phase.
+Plan/AGENTS/HANDOVER governance exists and source verification passes.
 
-## 5. Relevant commits
+However, GitHub is not yet a complete canonical working tree. During the plan audit, a direct GitHub fetch of:
 
-Plan/continuity:
+`assets/icons/core/v1/128/unicorn.png`
 
-- `48c38a73148e77884d516ae762b6adc974dbf7af` — create active architecture-remediation plan;
-- `d9222f0e7493b4f92eb99d5ef432abd47b7da294` — make the plan mandatory in `AGENTS.md` with resume/progress/removal rules;
-- `4bd561471b8f425fd918e3d3e62ba00b4e40ad0b` — log first R1 implementation progress in the active plan.
+returned 404 while the file exists in the current working tree and is used by the asset catalogue/tests.
 
-R1 source/tests/system overlay already mirrored into GitHub:
+Therefore future work must not claim canonical repository completeness until required binary assets are in GitHub or an explicit repository-managed external-asset mechanism exists.
 
-- `42942fb4804134ee04d9103448396aaf8364e1ea` — per-Activity supervisor authority/mount shape;
-- `8cbda88a960c9173dd8d75955247873334c3eae3` — SDK capability semantics and Greia media root;
-- `6310d05ba162c0372dca944af1b54027e024dd55` — least-privilege/forged-capability supervisor tests;
-- `556d6647afb085f54bd86c3a8f654b3d0f40a892` — Greia removable-media service path;
-- `40926ac3ba21565212259d47cbdf547b962c5ebb` — launcher media environment path;
-- `0bdb6bb66b8de615e4397388698c0a852cfe43ca` — tmpfiles Greia media root;
-- `5f648f9d0c5f7d69cb7e1b6b3db21df5e9120b1c` — exact supporting diff for profile-scoped avatar request consumption where the earlier documentation-first repository bootstrap does not yet contain those full source files.
+## 7. Current truthful R1 state — STARTED / INCOMPLETE
 
-## 6. Repository-mirroring note
+### Real source improvements already present
 
-The Greia GitHub repository was initially bootstrapped documentation-first before the complete v0.13 tree was available. Current implementation work is being moved into the canonical repository as it is touched.
+`src/greia_launcher/supervisor.py` contains:
 
-For R1, the supervisor, Activity API, tests and relevant system-overlay files are present as source. The exact remaining profile/launcher request-path changes are preserved in:
+- immutable `ActivityAuthority`;
+- installed Bubblewrap binding only the current Activity's data namespace writable at `/run/greia-activity-data`;
+- no writable whole-profile bind;
+- profile/platform roots hidden;
+- narrow customization bind for the trusted settings Activity;
+- `/media/greia` hidden when media access is absent;
+- per-Activity environment/Home/XDG scope.
 
-`docs/reviews/2026-08-08_R1_SUPPORTING_PROFILE_REQUEST_DIFF.patch`
+Additional source/tests provide:
 
-Do not reconstruct those changes from memory. A future source-mirroring pass should apply/replace that continuity patch with the full canonical `profiles.py`, `main.py`, and `test_profiles.py` files, then remove the temporary need for the patch as an implementation carrier.
+- avatar request inside the requesting Activity data namespace;
+- launcher consumption limited to the profile-management Activity path;
+- negative test showing forged `GREIA_ACTIVITY_CAPABILITIES` cannot expand the current sandbox mount shape;
+- missing Bubblewrap remains fail closed.
 
-## 7. R1 remaining work
+### Why R1 is NOT closed
 
-Before marking R1 source-complete:
+ADR 0012 requires an effective PermissionBroker model. The current implementation still has two provisional weaknesses:
 
-1. ensure the profile/launcher avatar-request changes are represented as full canonical source files in GitHub, not only the continuity patch;
-2. review all current privileged Activity operations and verify each effect is enforced by a trusted mount/device/broker boundary rather than Activity-controlled environment state;
-3. add any final negative tests needed around own-profile request consumption;
-4. rerun `make verify`;
-5. append the R1 closure entry to the active plan.
+1. `ActivityAuthority.from_manifest()` derives authority from manifest fields after validation;
+2. privileged manifest capabilities are currently protected by an Activity-ID allowlist.
 
-Linux Bubblewrap runtime evidence can remain UNPROVEN until the controlled Linux/VM evidence phase, provided the source phase labels that gap explicitly.
+That is not sufficient for the future `.greiaactivity` ecosystem. An external package must not acquire system privilege by claiming a reserved ID.
 
-## 8. Next phase
+R1 must therefore add:
 
-After R1 source closure, begin:
+- package trust/origin tiers;
+- platform `PermissionBroker` / effective-grant calculation;
+- grant inputs: package trust/origin + manifest request + runtime/hardware capability + build policy + parent policy + platform security policy;
+- supervisor consumes platform-issued effective grants rather than deriving privilege directly from manifest fields;
+- reserved-ID/package-origin spoof negative tests;
+- fabricated-manifest/effective-grant bypass negative tests.
 
-**R2 — non-blocking Activity lifecycle, READY handshake, watchdog, graceful stop and forced return.**
+The manifest's current `runtime.capabilities` field is also semantically overloaded. R3 will formally split capability requirements from permission requests, but R1 must already ensure requests do not self-grant privilege.
 
-The current blocking `subprocess.run()` supervisor must evolve into a runtime-neutral supervised Activity session before Web or a broad package ecosystem is added.
+## 8. Corrected plan architecture
 
-## 9. Stable architecture that remains in force
+Blocking spine:
 
-- Activity is the universal abstraction above runtimes.
-- Python and future Web share storage/session/progression/package/backup semantics.
-- ARM and i386 are peer first-class platform families; Pi 400 and Pi 500 are explicit ARM references.
-- Xorg is a provisional migration/evidence baseline, not Greia's target architecture.
-- Direct DRM/KMS-first appliance graphics remains the target direction.
-- Platform owns durable child data, sessions, progression and rewards.
-- Activity state is architecture-neutral and logically keyed by `(profile_id, activity_id)`.
-- Removable media is untrusted and never autorun.
-- `.greiaactivity` and `.greiabackup` remain future open platform formats to be implemented by the active plan.
-- Source tests never substitute for Acer/Pi/QEMU hardware evidence.
+```text
+R0 canonical repository/governance
+ ↓
+R1 PermissionBroker/trust/per-Activity authority
+ ↓
+R2 runtime-neutral lifecycle + minimal session/adapter seam
+ ↓
+R3 stable IDs + capability/permission/event manifest semantics
+ ↓
+R4 universal storage
+ ↓
+R5 sessions/events/progression
+ ↓
+R6 Device Capability/HAL + full runtime integration
+```
 
-## 10. Important later blockers
+After R6, the plan allows explicit parallel tracks:
 
-The active plan also covers:
+- R7 direct graphics/session → R8 Pi 400/500 image + ARM graphics evidence;
+- R9 Web runtime;
+- R10 `.greiaactivity`;
+- R11 `.greiabackup` once R4/R5 are ready;
+- R12 parent-management integration;
+- R13 boot/recovery continuity;
+- R13B signed rollback-safe Greia OS/runtime updates + preserve-profile recovery;
+- R14 final multi-architecture certification.
 
-- non-blocking lifecycle/watchdog;
-- removal of Activity-authored global reward amounts;
-- universal Storage/Session/Progression services;
-- runtime-adapter abstraction;
-- direct graphics replacement for Xorg;
-- Pi 400/500 image adapters;
-- embedded Web runtime benchmark/selection;
-- `.greiaactivity` install/update;
-- `.greiabackup` portable restore;
-- typed Parent privileged service integration;
-- branded-only boot/recovery continuity;
-- full multi-architecture certification.
+## 9. Important corrections made by the audit
 
-Do not authorize Acer internal-disk installation before the established hardware/image evidence gates are satisfied and reviewed.
+- A real PermissionBroker/trust-origin model is now required in R1.
+- Capability availability, permission request, and effective grant are distinct concepts.
+- Minimal runtime lifecycle seam is introduced in R2 rather than deferring all abstraction to R6.
+- Permanent Activity IDs are settled/migrated in R3 before durable state depends on them.
+- R4 now explicitly prevents raw filesystem access from becoming a parallel save system that bypasses quota/migration/backup semantics.
+- R6 now includes Device Capability Service and HAL protocols.
+- R7/R8 evidence requirements are no longer circular: R7 closes x86/VM direct architecture; R8 closes Pi-specific evidence.
+- Trusted broker foundations begin in R1; R12 is later integration, not the first privileged broker.
+- R10 includes package trust/origin so external packages cannot spoof system privilege.
+- R13B adds production Greia OS/runtime update and preserve-profile recovery work.
+- R0 now requires real canonical GitHub completeness.
+
+## 10. Next exact step
+
+Do not start R2 yet.
+
+1. make GitHub sufficient to reproduce the current build/test tree, including required binary assets;
+2. finish R1 with a trusted PermissionBroker/effective-grant model and package-origin trust;
+3. add reserved-ID/package-origin spoof tests and fabricated-manifest authority tests;
+4. run `make verify`;
+5. append R0/R1 progress to the active plan and update this handover;
+6. commit coherent changes;
+7. only then begin R2 lifecycle/watchdog work.
+
+## 11. Evidence discipline
+
+Source tests do not prove hardware behavior. Keep these explicitly UNPROVEN until appropriate evidence exists:
+
+- Linux Bubblewrap execution of new R1 mount/grant shape;
+- direct DRM/KMS path;
+- Acer boot/install/resource behavior;
+- Pi 400/500 image/boot/display/input/audio behavior;
+- Web runtime footprint/performance;
+- installed sub-1-GiB C0 target;
+- no-visible-Linux frame-by-frame boot/failure behavior.
