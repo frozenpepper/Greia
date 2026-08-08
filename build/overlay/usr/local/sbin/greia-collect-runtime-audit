@@ -36,7 +36,7 @@ copy_if_readable() {
 
 {
   printf 'collected_utc=%s\n' "$stamp"
-  printf 'collector_version=2\n'
+  printf 'collector_version=3\n'
   printf 'privacy_contract=no raw disk serials/WWNs, private SSH keys, pairing tokens, cookies, process environments, or parent request logs\n'
 } >"$work_dir/README.txt"
 
@@ -76,6 +76,11 @@ capture parent-security.txt systemd-analyze security --no-pager greia-parent.ser
 capture listening-sockets.txt ss -lntup
 capture active-seat.txt loginctl seat-status seat0
 capture virtual-terminal-state.txt sh -c 'printf "active_vt="; cat /sys/class/tty/tty0/active 2>/dev/null || true; printf "\n"; fgconsole 2>/dev/null || true'
+
+# R7 passive evidence: this does not initialize SDL video, acquire DRM master,
+# open input devices, or change display state. It records only bounded compiled
+# and kernel/runtime prerequisites. Active KMSDRM proof remains a separate test.
+capture direct-graphics-probe.json env PYTHONPATH=/opt/greia-os/src python3 -m greia_platform.direct_graphics_probe
 
 # These are public-key fingerprints only. Private key material is never copied.
 if command -v ssh-keygen >/dev/null 2>&1; then
