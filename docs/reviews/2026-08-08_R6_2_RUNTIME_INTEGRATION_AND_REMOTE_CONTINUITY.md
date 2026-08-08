@@ -44,7 +44,11 @@ R0 is now tracked explicitly as GitHub issue **#2 — `R0: restore GitHub as com
 
 It no longer parses Python AST, rejects non-Python runtime types, requires `.py` entrypoints, or owns Python import/dependency policy.
 
-An explicit caller-supplied `ActivitySource` must be one of the registry's configured sources and must contain the package root. A caller cannot substitute a different source object to alter package-origin classification.
+Package-origin authority is platform-owned:
+
+- an explicit caller-supplied `ActivitySource` must be one of the registry's configured sources;
+- the package must resolve through the registry's own most-specific authoritative configured source;
+- when configured source roots overlap, a caller cannot revalidate a nested external package through a less-specific built-in ancestor source.
 
 ### 2. Python-specific policy behind `PythonRuntimeAdapter`
 
@@ -155,13 +159,13 @@ A local reconstructed scratch tree was used only to exercise the exact changed R
 The combined focused suite passed:
 
 ```text
-16 / 16 PASS
+17 / 17 PASS
 ```
 
 Breakdown:
 
 ```text
-3  runtime-neutral Activity Registry boundary tests
+4  runtime-neutral Activity Registry / package-origin boundary tests
 6  Runtime Manager / Python adapter / trusted device authority tests
 7  current ActivitySupervisor / Runtime Manager integration tests
 ```
@@ -170,20 +174,21 @@ Coverage includes:
 
 1. duplicate canonical Activity IDs fail closed;
 2. an unconfigured source cannot replace registry package origin;
-3. a Python-only dependency file is accepted by the runtime-neutral registry but rejected by the Python adapter;
-4. a safe non-Python package may pass runtime-neutral registry validation while an unavailable runtime fails closed in Runtime Manager;
-5. forbidden Python imports are rejected by the Python adapter;
-6. dynamic imports are rejected by the Python adapter;
-7. missing required device capability blocks runtime launch preparation;
-8. missing optional device capability does not block launch preparation;
-9. forged `GREIA_ACTIVITY_CAPABILITIES` environment content cannot create device truth;
-10. installed supervisor construction requires an injected Runtime Manager;
-11. missing required platform authority blocks process creation;
-12. unavailable runtime is normalized to launch failure;
-13. Runtime Manager launch preparation integrates with supervisor lifecycle/READY handling;
-14. one-active-Activity enforcement remains intact;
-15. sanitized child environment remains descriptive and cannot inherit forged host authority;
-16. missing installed Bubblewrap remains fail closed.
+3. overlapping configured sources cannot reclassify a nested external package through a built-in ancestor;
+4. a Python-only dependency file is accepted by the runtime-neutral registry but rejected by the Python adapter;
+5. a safe non-Python package may pass runtime-neutral registry validation while an unavailable runtime fails closed in Runtime Manager;
+6. forbidden Python imports are rejected by the Python adapter;
+7. dynamic imports are rejected by the Python adapter;
+8. missing required device capability blocks runtime launch preparation;
+9. missing optional device capability does not block launch preparation;
+10. forged `GREIA_ACTIVITY_CAPABILITIES` environment content cannot create device truth;
+11. installed supervisor construction requires an injected Runtime Manager;
+12. missing required platform authority blocks process creation;
+13. unavailable runtime is normalized to launch failure;
+14. Runtime Manager launch preparation integrates with supervisor lifecycle/READY handling;
+15. one-active-Activity enforcement remains intact;
+16. sanitized child environment remains descriptive and cannot inherit forged host authority;
+17. missing installed Bubblewrap remains fail closed.
 
 Additional smoke checks passed for:
 
@@ -193,55 +198,29 @@ Additional smoke checks passed for:
 
 This does **not** replace the complete-tree historical 219-test gate.
 
-## GitHub commit sequence
+## Important GitHub commits
 
-The branch deliberately uses small commits so recovery does not depend on one long uncommitted session:
+The branch deliberately uses small commits so recovery does not depend on one long uncommitted session. Important implementation/security commits include:
 
 ```text
-39d8d0d817e1847e5e2852b2522dfa05d9a34447
-fix: restore split runtime capability and permission policy
-
-500b385c75386626e21bad8644d0d5aeb84c677e
-fix: bind built-in grants to permanent Activity identity
-
-c1ea1ea22f4f16e1922042fef1ce1da4b988f790
-refactor: restore runtime-neutral Activity registry contract
-
-b00c112c66d2d076d1976b6f4fdd20fd58c395ab
-feat: add trusted Runtime Manager validation and compatibility seam
-
-fe5e5db86ce27e04be8194fa1a4078cd1504b4a1
-test: cover Runtime Manager validation and device authority
-
-c84db6a106895574715f6c63724c7355d5a673e9
-refactor: validate Activity runtime policy through Runtime Manager
-
-7088c6484b7db0c48ea5f73db49c36427ba6718b
-feat: compose shared HAL-backed launch authority services
-
-abe19383197e149debab179599b2674f7ac59bc0
-refactor: make Activity supervisor consume Runtime Manager
-
-2e3a0b2cee94a56f6dea536d563088b45194a4b1
-refactor: move Python package restrictions into Python runtime policy
-
-8d06b1710d6489b3b895f51f0ee60e32d94a33e5
-refactor: keep Python package policy behind Python adapter
-
-5ea4b37ae7c55acd8ea46f1d55f9badf08b4c3e0
-fix: keep generic package validation catalogue loadable
-
-809ac8c7fd0d6012e2fcff51c8cbad24ca6e3bd2
-fix: harden runtime-neutral Activity registry identity handling
-
-261e5b4d459f26ece6634f99fd142c45f3fd0b5e
-test: pin runtime-neutral Activity registry boundaries
-
-0c41c994ded0a95512ef5ab2df611b74b344b6d1
-test: replace stale blocking-launch supervisor coverage
+39d8d0d817e1847e5e2852b2522dfa05d9a34447  restore split capability/permission policy
+500b385c75386626e21bad8644d0d5aeb84c677e  bind built-in grants to permanent Activity ID
+c1ea1ea22f4f16e1922042fef1ce1da4b988f790  restore runtime-neutral Activity Registry contract
+b00c112c66d2d076d1976b6f4fdd20fd58c395ab  add Runtime Manager validation/compatibility seam
+fe5e5db86ce27e04be8194fa1a4078cd1504b4a1  test Runtime Manager/device authority
+c84db6a106895574715f6c63724c7355d5a673e9  validate Activity runtime policy through Runtime Manager
+7088c6484b7db0c48ea5f73db49c36427ba6718b  compose shared HAL-backed launcher services
+abe19383197e149debab179599b2674f7ac59bc0  make supervisor consume Runtime Manager
+2e3a0b2cee94a56f6dea536d563088b45194a4b1  move Python package restrictions into Python policy
+8d06b1710d6489b3b895f51f0ee60e32d94a33e5  enforce Python package policy in adapter
+809ac8c7fd0d6012e2fcff51c8cbad24ca6e3bd2  harden Registry identity/source handling
+261e5b4d459f26ece6634f99fd142c45f3fd0b5e  pin Registry/runtime boundaries
+0c41c994ded0a95512ef5ab2df611b74b344b6d1  replace stale blocking-launch supervisor coverage
+0a8264871ef0fcd087cec7fd95c8900e89f8d6a9  keep package origin authoritative across overlapping sources
+fab599f5dd1ab61cd59fb3aab2fd3435016a77cc  test overlapping-source reclassification denial
 ```
 
-Continuity/documentation commits follow these implementation commits and should be read through current branch HEAD rather than treated as a fixed list in this section.
+Documentation/continuity commits follow in branch history. Read current branch HEAD rather than assuming this list is exhaustive.
 
 ## Why R6 is not closed
 
