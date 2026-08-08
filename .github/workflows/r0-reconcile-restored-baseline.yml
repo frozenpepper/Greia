@@ -1,3 +1,4 @@
+# Triggered after the verified 100-file baseline restore.
 name: R0 reconcile restored baseline
 
 on:
@@ -27,7 +28,6 @@ jobs:
           from pathlib import Path
 
           root = Path('.')
-
           replacements = {
               root / 'tests/test_boot_contract.py': {
                   'pip-recovery': 'greia-recovery',
@@ -59,26 +59,17 @@ from pathlib import Path
 from greia_platform.activities import ActivityRegistry, ActivityValidationError, RuntimeCatalogue
 from greia_platform.trust import ActivitySource, PackageTrust
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 RUNTIME_PATH = PROJECT_ROOT / "runtime" / "child-runtime.toml"
-
 
 class ActivityContractTests(unittest.TestCase):
     def setUp(self) -> None:
         self.runtime = RuntimeCatalogue.load(RUNTIME_PATH)
 
     def test_sample_activities_are_discovered_from_built_in_source(self) -> None:
-        source = ActivitySource(
-            PROJECT_ROOT / "activities",
-            trust=PackageTrust.BUILT_IN,
-            source_id="builtin",
-        )
+        source = ActivitySource(PROJECT_ROOT / "activities", trust=PackageTrust.BUILT_IN, source_id="builtin")
         activities = ActivityRegistry([source], self.runtime).discover()
-        self.assertEqual(
-            [activity.activity_id for activity in activities],
-            ["org.greia.shape-garden", "org.greia.workshop-settings"],
-        )
+        self.assertEqual([a.activity_id for a in activities], ["org.greia.shape-garden", "org.greia.workshop-settings"])
         self.assertEqual(activities[0].legacy_ids, ("shape_garden",))
         self.assertEqual(activities[0].icon_id, "garden")
         self.assertIn("customization.manage", activities[1].requested_permissions)
@@ -129,10 +120,7 @@ class ActivityContractTests(unittest.TestCase):
     def test_unknown_capability_is_rejected(self) -> None:
         with self._copy_sample() as root:
             manifest = (root / "activity.toml").read_text(encoding="utf-8")
-            manifest = manifest.replace(
-                'required_capabilities = ["display", "pointer"]',
-                'required_capabilities = ["display", "kernel.root"]',
-            )
+            manifest = manifest.replace('required_capabilities = ["display", "pointer"]', 'required_capabilities = ["display", "kernel.root"]')
             (root / "activity.toml").write_text(manifest, encoding="utf-8")
             with self.assertRaisesRegex(ActivityValidationError, "unknown Activity capabilities"):
                 ActivityRegistry([root.parent], self.runtime).validate_package(root)
@@ -140,10 +128,7 @@ class ActivityContractTests(unittest.TestCase):
     def test_duplicate_required_capabilities_are_rejected(self) -> None:
         with self._copy_sample() as root:
             manifest = (root / "activity.toml").read_text(encoding="utf-8")
-            manifest = manifest.replace(
-                'required_capabilities = ["display", "pointer"]',
-                'required_capabilities = ["display", "display"]',
-            )
+            manifest = manifest.replace('required_capabilities = ["display", "pointer"]', 'required_capabilities = ["display", "display"]')
             (root / "activity.toml").write_text(manifest, encoding="utf-8")
             with self.assertRaisesRegex(ActivityValidationError, "must not contain duplicates"):
                 ActivityRegistry([root.parent], self.runtime).validate_package(root)
@@ -170,19 +155,14 @@ class ActivityContractTests(unittest.TestCase):
         shutil.copytree(PROJECT_ROOT / "activities" / "shape_garden", root)
         if not keep_legacy_alias:
             manifest = root / "activity.toml"
-            text = manifest.read_text(encoding="utf-8")
-            text = text.replace('legacy_ids = ["shape_garden"]\\n', 'legacy_ids = []\\n')
+            text = manifest.read_text(encoding="utf-8").replace('legacy_ids = ["shape_garden"]\\n', 'legacy_ids = []\\n')
             manifest.write_text(text, encoding="utf-8")
-
         class Context:
             def __enter__(self_nonlocal):
                 return root
-
             def __exit__(self_nonlocal, *args: object):
                 temporary.cleanup()
-
         return Context()
-
 
 if __name__ == "__main__":
     unittest.main()
@@ -191,15 +171,14 @@ if __name__ == "__main__":
 
           gitignore = root / '.gitignore'
           existing = gitignore.read_text(encoding='utf-8') if gitignore.exists() else ''
-          required = ['__pycache__/', '*.py[cod]']
           lines = existing.splitlines()
-          for value in required:
+          for value in ('__pycache__/', '*.py[cod]'):
               if value not in lines:
                   lines.append(value)
           gitignore.write_text('\n'.join(lines).rstrip() + '\n', encoding='utf-8')
           PY
 
-          tracked_cache=$(git ls-files | grep -E '(^|/)__pycache__/|\\.py[co]$' || true)
+          tracked_cache=$(git ls-files | grep -E '(^|/)__pycache__/|\.py[co]$' || true)
           if [ -n "$tracked_cache" ]; then
             printf '%s\n' "$tracked_cache" | xargs -d '\n' git rm -f --
           fi
