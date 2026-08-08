@@ -1,0 +1,46 @@
+name: R0 clean-tree verification
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/r0-clean-verify.yml"
+      - "src/**"
+      - "tests/**"
+      - "runtime/**"
+      - "activities/**"
+      - "assets/**"
+      - "build/**"
+      - "tools/**"
+      - "Makefile"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+      - name: Repository inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf 'HEAD=' && git rev-parse HEAD
+          printf 'FILES=' && git ls-files | wc -l
+          printf 'PNG=' && git ls-files '*.png' | wc -l
+          git status --short
+      - name: Compile Python source
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m compileall -q src tests tools activities
+      - name: Full provider-free gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          make verify
