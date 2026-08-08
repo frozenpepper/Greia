@@ -1,0 +1,9 @@
+schema_version = 1
+max_sessions_per_profile = 2000
+max_events_per_session = 256
+max_event_payload_bytes = 8192
+max_idempotency_key_bytes = 64
+max_reward_ledger_entries = 10000
+max_recent_sessions_summary = 50
+max_score_absolute = 1000000000000
+sqlite_busy_timeout_ms = 2000
