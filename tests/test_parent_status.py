@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import tempfile
 import unittest
 from unittest import mock
@@ -9,6 +10,7 @@ from http.server import HTTPServer
 
 from greia_parent.server import ParentHTTPServer, ParentStatusApplication, render_status_page
 from greia_platform.activities import ActivityValidationError
+from greia_platform.history import ProfileHistoryStore, ProgressionPolicy
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -223,6 +225,81 @@ class ParentStatusTests(unittest.TestCase):
             self.assertEqual(payload["activities"], ())
             self.assertIn("broken package", str(payload["activity_catalogue_error"]))
             self.assertTrue(payload["profiles"])
+
+    def test_parent_progress_summary_is_bounded_and_hides_history_internals(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            app = ParentStatusApplication(
+                PROJECT_ROOT,
+                root / "parent",
+                profiles_dir=root / "profiles",
+                hardware_settings_dir=root / "hardware",
+                hardware_status_path=root / "hardware-status.json",
+                active_profile_status_path=root / "active-profile.json",
+            )
+            profile = app.profile_store.list_profiles()[0]
+            context = app.profile_store.context(profile.profile_id)
+            manifest = next(
+                item
+                for item in app.registry.discover()
+                if item.activity_id == "org.greia.shape-garden"
+            )
+            progression = ProgressionPolicy.load(
+                PROJECT_ROOT / "runtime" / "progression-policy.toml",
+                app.registry.discover(),
+            )
+            store = ProfileHistoryStore(context, app.progress_reader.history_policy)
+            store.start_session(
+                manifest,
+                session_id="sensitive-session-id",
+                package_digest="a" * 64,
+            )
+            store.mark_ready("sensitive-session-id")
+            store.emit_event(
+                manifest,
+                progression,
+                session_id="sensitive-session-id",
+                event_id="creation.completed",
+                idempotency_key="sensitive-idempotency-key",
+                payload={"private_detail": "do-not-expose"},
+            )
+            store.finish_session("sensitive-session-id", "normal")
+
+            payload = app.progress_payload(profile.profile_id)
+            encoded = json.dumps(payload, sort_keys=True)
+
+        self.assertTrue(payload["available"])
+        self.assertEqual(payload["reward_balances"], {"star": 1})
+        self.assertEqual(payload["recent_sessions"][0]["exit_reason"], "normal")
+        self.assertNotIn("history.sqlite3", encoded)
+        self.assertNotIn("sensitive-session-id", encoded)
+        self.assertNotIn("sensitive-idempotency-key", encoded)
+        self.assertNotIn("do-not-expose", encoded)
+        self.assertNotIn("database_path", encoded)
+
+    def test_corrupt_progress_is_unavailable_without_taking_parent_controls_down(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            app = ParentStatusApplication(
+                PROJECT_ROOT,
+                root / "parent",
+                profiles_dir=root / "profiles",
+                hardware_settings_dir=root / "hardware",
+                hardware_status_path=root / "hardware-status.json",
+                active_profile_status_path=root / "active-profile.json",
+            )
+            profile = app.profile_store.list_profiles()[0]
+            context = app.profile_store.context(profile.profile_id)
+            store = ProfileHistoryStore(context, app.progress_reader.history_policy)
+            store.database_path.write_bytes(b"corrupt-history")
+
+            progress = app.progress_payload(profile.profile_id)
+            health = app.health_payload()
+
+        self.assertFalse(progress["available"])
+        self.assertTrue(app.profiles_payload())
+        self.assertTrue(health["profiles"])
+        self.assertFalse(health["progress"]["available"])
 
     def test_parent_server_is_single_threaded_and_has_socket_timeout(self) -> None:
         self.assertTrue(issubclass(ParentHTTPServer, HTTPServer))

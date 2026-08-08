@@ -152,6 +152,30 @@ class R5IntegrationTests(unittest.TestCase):
         self.assertEqual(len(summary.recent_sessions), 1)
         self.assertEqual(summary.recent_sessions[0].exit_reason, "launch_failure")
 
+    def test_missing_bubblewrap_closes_authoritative_launch_failure(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            profile = self._profile(root)
+            factory = mock.Mock(side_effect=AssertionError("process must not start"))
+            supervisor = ActivitySupervisor(
+                sandbox_executable=root / "missing-bwrap",
+                require_sandbox=True,
+                runtime_manager=self._manager(factory),
+                storage_service=self.storage,
+                history_service=self.history,
+            )
+            session = supervisor.start(
+                self.shape, profile, _Authority(self.shape.activity_id)
+            )
+            summary = self.history.open(profile).summary()
+
+        self.assertEqual(session.result.exit_reason.value, "launch_failure")
+        self.assertEqual(len(summary.recent_sessions), 1)
+        persisted = summary.recent_sessions[0]
+        self.assertEqual(persisted.exit_reason, "launch_failure")
+        self.assertIsNotNone(persisted.ended_at)
+        factory.assert_not_called()
+
     def test_platform_storage_failure_is_distinct_and_recorded(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

@@ -21,6 +21,8 @@ from greia_platform.hardware import (
 )
 from greia_platform.health import collect_health
 from greia_platform.profiles import ActiveProfileSession, ProfileError, ProfileStore
+from greia_platform.trust import ActivitySource, PackageTrust
+from greia_parent.progress import ParentProgressReader
 
 
 PAIRING_TOKEN_MINIMUM_LENGTH = 32
@@ -82,7 +84,16 @@ class ParentStatusApplication:
             )
         ).resolve()
         self.runtime = RuntimeCatalogue.load(self.root / "runtime" / "child-runtime.toml")
-        self.registry = ActivityRegistry([self.root / "activities"], self.runtime)
+        self.registry = ActivityRegistry(
+            [
+                ActivitySource(
+                    self.root / "activities",
+                    trust=PackageTrust.BUILT_IN,
+                    source_id="greia-system",
+                )
+            ],
+            self.runtime,
+        )
         self.assets = AssetCatalogue.load(
             self.root / "assets" / "catalog" / "core_icons_v1.toml"
         )
@@ -90,6 +101,7 @@ class ParentStatusApplication:
             self.root / "runtime" / "profile-defaults.toml", self.profiles_dir
         )
         profiles = self.profile_store.ensure_initialized()
+        self.progress_reader = ParentProgressReader.load(self.root, self.profile_store)
         self.theme_store = self._theme_store(profiles[0].profile_id)  # compatibility/test helper
         self.active_session = ActiveProfileSession(self.active_profile_status_path)
         self.hardware_store = HardwareSettingsStore.load(
@@ -173,6 +185,20 @@ class ParentStatusApplication:
             payload.append(item)
         return payload
 
+    def progress_payload(self, profile_id: str | None = None) -> dict[str, object]:
+        if profile_id is None:
+            active = self.active_session.read()
+            profile_id = (
+                str(active.get("profile_id"))
+                if isinstance(active, dict) and active.get("profile_id")
+                else None
+            )
+        if profile_id is None:
+            return ParentProgressReader.unavailable_payload()
+        # Validate caller-selected identity before the fail-soft history reader.
+        self.profile_store.context(profile_id)
+        return self.progress_reader.payload(profile_id)
+
     def hardware_payload(self) -> dict[str, object]:
         desired = self.hardware_store.read()
         status = read_apply_status(self.hardware_status_path, desired).as_json_dict()
@@ -206,6 +232,9 @@ class ParentStatusApplication:
             "default_mask_secret": self.profile_store.policy.default_mask_secret,
         }
         payload["hardware"] = self.hardware_payload()
+        payload["progress"] = self.progress_payload(
+            str(active_id) if isinstance(active_id, str) and active_id else None
+        )
         return payload
 
     def reset_customization(self, profile_id: str | None = None) -> dict[str, object]:
@@ -318,6 +347,15 @@ class ParentRequestHandler(BaseHTTPRequestHandler):
             return
         if parsed.path == "/api/hardware":
             self._send_json(200, self.app.hardware_payload())
+            return
+        if parsed.path == "/api/progress":
+            requested_profile = query.get("profile_id", [""])[0] or None
+            try:
+                payload = self.app.progress_payload(requested_profile)
+            except ProfileError:
+                self._send_text(404, "Profile not found")
+                return
+            self._send_json(200, payload)
             return
         if parsed.path == "/":
             self._send_html(200, render_status_page(self.app.health_payload()))
@@ -483,6 +521,34 @@ def render_status_page(payload: dict[str, object]) -> str:
         for item in profiles
         if isinstance(item, dict)
     )
+    progress = payload.get("progress", {})
+    if isinstance(progress, dict) and progress.get("available"):
+        rewards = progress.get("reward_balances", {})
+        reward_items = (
+            "".join(
+                f"<li>{html.escape(str(name))}: {html.escape(str(value))}</li>"
+                for name, value in sorted(rewards.items())
+            )
+            if isinstance(rewards, dict) and rewards
+            else "<li>No rewards yet</li>"
+        )
+        sessions = progress.get("recent_sessions", [])
+        session_items = (
+            "".join(
+                f"<li>{html.escape(str(item.get('activity_id', 'Activity')))} — "
+                f"{html.escape(str(item.get('exit_reason') or 'in progress'))}</li>"
+                for item in sessions
+                if isinstance(item, dict)
+            )
+            if isinstance(sessions, list) and sessions
+            else "<li>No sessions yet</li>"
+        )
+        progress_html = (
+            f"<p><strong>Rewards</strong></p><ul>{reward_items}</ul>"
+            f"<p><strong>Recent activity</strong></p><ul>{session_items}</ul>"
+        )
+    else:
+        progress_html = "<p>Progress is unavailable for the current child.</p>"
 
     return f"""<!doctype html>
 <html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -500,6 +566,7 @@ button.danger{{background:var(--danger);color:white}} .actions{{display:flex;gap
 <section><dl><dt>Runtime API</dt><dd>{html.escape(str(payload.get('runtime_api_version','unknown')))}</dd><dt>Uptime</dt><dd>{html.escape(str(payload.get('uptime_seconds',0)))} seconds</dd><dt>Memory available</dt><dd>{gib(payload.get('memory_available_bytes'))} / {gib(payload.get('memory_total_bytes'))}</dd><dt>Disk free</dt><dd>{gib(payload.get('disk_free_bytes'))} / {gib(payload.get('disk_total_bytes'))}</dd></dl></section>
 <section><h2>Child accounts</h2><p>Reset child appearance is available separately for every account.</p><div class="grid">{profile_cards}</div>
 <h3>Add child</h3><form method="post" action="/api/profiles/create"><label>Name<input name="display_name" maxlength="24" required></label><label>Avatar<select name="avatar_id">{avatar_options}</select></label><label>Optional simple password — shown while typing by default<input name="secret" maxlength="32" autocomplete="new-password"></label><label><input type="checkbox" name="mask_secret"> Hide password on the child screen</label><button type="submit">Add child</button></form></section>
+<section><h2>Progress</h2>{progress_html}</section>
 <section><h2>Mouse, touchpad, and screen</h2><form method="post" action="/api/hardware"><label><input type="checkbox" name="touchpad_tap"{touchpad_tap}> Tap touchpad to click</label><small>Disabled by default. Physical touchpad buttons continue to work.</small><label><input type="checkbox" name="natural_scrolling"{natural_scrolling}> Natural scrolling</label><div class="grid"><label>Mouse speed<input type="range" name="mouse_speed" min="-1" max="1" step="0.25" value="{mouse_speed}"></label><label>Touchpad speed<input type="range" name="touchpad_speed" min="-1" max="1" step="0.25" value="{touchpad_speed}"></label><label>Screen resolution<select name="resolution">{resolution_options}</select></label></div><p><small>{apply_status}</small></p><button type="submit">Apply hardware settings</button></form><form method="post" action="/api/hardware/reset"><div class="actions"><button class="danger" type="submit">Restore hardware defaults</button></div></form></section>
 <section><h2>Installed activities</h2><ul>{activity_items}</ul></section></main>"""
 

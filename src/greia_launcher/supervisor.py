@@ -204,7 +204,11 @@ class ActivitySupervisor:
             sandbox = self._resolve_sandbox()
             if not sandbox.is_file() or not os.access(sandbox, os.X_OK):
                 return self._failed_launch_session(
-                    manifest, profile, authority, session_id=session_id
+                    manifest,
+                    profile,
+                    authority,
+                    session_id=session_id,
+                    history_store=history_store,
                 )
 
         try:
@@ -455,7 +459,13 @@ class ActivitySupervisor:
 
         runtime_clean = self._cleanup_runtime_session(session)
         resources_clean = self._cleanup_session_resources(session.session_id)
-        if not runtime_clean or not resources_clean:
+        control_clean = True
+        if session.control is not None:
+            try:
+                session.control.cleanup()
+            except Exception:
+                control_clean = False
+        if not runtime_clean or not resources_clean or not control_clean:
             reason = ActivityExitReason.PLATFORM_FAILURE
 
         history_store = self._history_stores.pop(session.session_id, None)
@@ -486,8 +496,6 @@ class ActivitySupervisor:
         )
         session.state = state
         session.result = result
-        if session.control is not None:
-            session.control.cleanup()
         if self._active_session is session:
             self._active_session = None
         return result
@@ -513,7 +521,10 @@ class ActivitySupervisor:
             except Exception:
                 reason = ActivityExitReason.PLATFORM_FAILURE
         if control is not None:
-            control.cleanup()
+            try:
+                control.cleanup()
+            except Exception:
+                reason = ActivityExitReason.PLATFORM_FAILURE
         if history_store is not None:
             try:
                 history_store.finish_session(
