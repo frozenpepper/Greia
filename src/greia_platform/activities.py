@@ -185,9 +185,10 @@ class ActivityRegistry:
         if source is not None:
             if source not in self._sources:
                 raise ActivityValidationError("Activity source is not configured in this registry")
-            if root != source.root and source.root not in root.parents:
-                raise ActivityValidationError("Activity package is outside its configured source")
-            configured = source
+            if source != configured:
+                raise ActivityValidationError(
+                    "Activity source is not the authoritative configured source for this package"
+                )
         self._validate_tree(root)
         manifest = self._parse_manifest(root)
         self._validate_manifest(manifest, configured)
