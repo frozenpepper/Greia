@@ -156,6 +156,7 @@ class ProfileContext:
     root: Path
     customization_dir: Path
     activities_dir: Path
+    storage_dir: Path
     progress_dir: Path
 
     def activity_data_dir(self, activity_id: str) -> Path:
@@ -163,6 +164,17 @@ class ProfileContext:
             raise ProfileError("unsafe activity identifier")
         _ensure_managed_directory(self.activities_dir, self.root, mode=0o2770)
         target = self.activities_dir / activity_id
+        _ensure_managed_directory(target, self.root, mode=0o770)
+        return target
+
+    def activity_storage_dir(self, activity_id: str) -> Path:
+        if not activity_id or any(
+            character not in "abcdefghijklmnopqrstuvwxyz0123456789._-"
+            for character in activity_id
+        ):
+            raise ProfileError("unsafe activity identifier")
+        _ensure_managed_directory(self.storage_dir, self.root, mode=0o2770)
+        target = self.storage_dir / activity_id
         _ensure_managed_directory(target, self.root, mode=0o770)
         return target
 
@@ -223,6 +235,7 @@ class ProfileStore:
             root=root,
             customization_dir=root / "customization",
             activities_dir=root / "activities",
+            storage_dir=root / "storage",
             progress_dir=root / "progress",
         )
         self._ensure_context_directories(context)
@@ -459,11 +472,12 @@ class ProfileStore:
         for profile in profiles:
             self._ensure_context_directories(
                 ProfileContext(
-                    profile,
-                    self.data_root / profile.profile_id,
-                    self.data_root / profile.profile_id / "customization",
-                    self.data_root / profile.profile_id / "activities",
-                    self.data_root / profile.profile_id / "progress",
+                    profile=profile,
+                    root=self.data_root / profile.profile_id,
+                    customization_dir=self.data_root / profile.profile_id / "customization",
+                    activities_dir=self.data_root / profile.profile_id / "activities",
+                    storage_dir=self.data_root / profile.profile_id / "storage",
+                    progress_dir=self.data_root / profile.profile_id / "progress",
                 )
             )
 
@@ -478,6 +492,7 @@ class ProfileStore:
             context.root,
             context.customization_dir,
             context.activities_dir,
+            context.storage_dir,
             context.progress_dir,
         ):
             _ensure_managed_directory(path, self.data_root, mode=0o2770)

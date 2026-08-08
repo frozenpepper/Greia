@@ -44,6 +44,14 @@ class ProfileStoreTests(unittest.TestCase):
                 first_context.activity_data_dir("shape_garden"),
                 second_context.activity_data_dir("shape_garden"),
             )
+            first_storage = first_context.activity_storage_dir("org.greia.shape-garden")
+            second_storage = second_context.activity_storage_dir("org.greia.shape-garden")
+            self.assertNotEqual(first_storage, second_storage)
+            self.assertEqual(first_storage.parent, first_context.storage_dir)
+            self.assertNotEqual(
+                first_storage,
+                first_context.activity_data_dir("org.greia.shape-garden"),
+            )
             first_theme = ThemeStore.load(
                 PROJECT_ROOT / "runtime" / "theme-defaults.toml",
                 first_context.customization_dir,

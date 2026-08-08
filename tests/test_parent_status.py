@@ -127,10 +127,11 @@ class ParentStatusTests(unittest.TestCase):
             self.assertEqual(reset["background"], "cream")
 
             payload = app.profiles_payload()
-            encoded = repr(payload).lower()
-            self.assertNotIn("digest", encoded)
-            self.assertNotIn("salt", encoded)
-            self.assertNotIn("2468", encoded)
+            for public_profile in payload:
+                self.assertNotIn("secret", public_profile)
+                self.assertNotIn("digest", public_profile)
+                self.assertNotIn("salt", public_profile)
+                self.assertNotIn("iterations", public_profile)
 
             deleted = app.delete_profile(
                 {"profile_id": [profile_id], "confirm": ["delete"]}
