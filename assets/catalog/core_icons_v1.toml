@@ -1,0 +1,316 @@
+catalog_id = "greia.core-icons.v1"
+catalog_version = "1.0.0"
+source_sha256 = "026f09eddb72a0befb43beb1bc2ad912009c923feedcba86dc82e0302900b3c8"
+source_note = "Extracted from the first approved project-generated icon sheet; later regenerated sheets are non-canonical experiments."
+
+[[icons]]
+id = "book"
+category = "literacy"
+alt_key = "asset.book"
+path_64 = "icons/core/v1/64/book.png"
+path_128 = "icons/core/v1/128/book.png"
+path_256 = "icons/core/v1/256/book.png"
+
+[[icons]]
+id = "robot"
+category = "characters"
+alt_key = "asset.robot"
+path_64 = "icons/core/v1/64/robot.png"
+path_128 = "icons/core/v1/128/robot.png"
+path_256 = "icons/core/v1/256/robot.png"
+
+[[icons]]
+id = "unicorn"
+category = "characters"
+alt_key = "asset.unicorn"
+path_64 = "icons/core/v1/64/unicorn.png"
+path_128 = "icons/core/v1/128/unicorn.png"
+path_256 = "icons/core/v1/256/unicorn.png"
+
+[[icons]]
+id = "globe"
+category = "learning"
+alt_key = "asset.globe"
+path_64 = "icons/core/v1/64/globe.png"
+path_128 = "icons/core/v1/128/globe.png"
+path_256 = "icons/core/v1/256/globe.png"
+
+[[icons]]
+id = "backpack"
+category = "navigation"
+alt_key = "asset.backpack"
+path_64 = "icons/core/v1/64/backpack.png"
+path_128 = "icons/core/v1/128/backpack.png"
+path_256 = "icons/core/v1/256/backpack.png"
+
+[[icons]]
+id = "palette"
+category = "creativity"
+alt_key = "asset.palette"
+path_64 = "icons/core/v1/64/palette.png"
+path_128 = "icons/core/v1/128/palette.png"
+path_256 = "icons/core/v1/256/palette.png"
+
+[[icons]]
+id = "abc_board"
+category = "literacy"
+alt_key = "asset.abc_board"
+path_64 = "icons/core/v1/64/abc_board.png"
+path_128 = "icons/core/v1/128/abc_board.png"
+path_256 = "icons/core/v1/256/abc_board.png"
+
+[[icons]]
+id = "music_star"
+category = "music"
+alt_key = "asset.music_star"
+path_64 = "icons/core/v1/64/music_star.png"
+path_128 = "icons/core/v1/128/music_star.png"
+path_256 = "icons/core/v1/256/music_star.png"
+
+[[icons]]
+id = "potions"
+category = "science"
+alt_key = "asset.potions"
+path_64 = "icons/core/v1/64/potions.png"
+path_128 = "icons/core/v1/128/potions.png"
+path_256 = "icons/core/v1/256/potions.png"
+
+[[icons]]
+id = "treasure_chest"
+category = "rewards"
+alt_key = "asset.treasure_chest"
+path_64 = "icons/core/v1/64/treasure_chest.png"
+path_128 = "icons/core/v1/128/treasure_chest.png"
+path_256 = "icons/core/v1/256/treasure_chest.png"
+
+[[icons]]
+id = "coins"
+category = "rewards"
+alt_key = "asset.coins"
+path_64 = "icons/core/v1/64/coins.png"
+path_128 = "icons/core/v1/128/coins.png"
+path_256 = "icons/core/v1/256/coins.png"
+
+[[icons]]
+id = "star_trophy"
+category = "rewards"
+alt_key = "asset.star_trophy"
+path_64 = "icons/core/v1/64/star_trophy.png"
+path_128 = "icons/core/v1/128/star_trophy.png"
+path_256 = "icons/core/v1/256/star_trophy.png"
+
+[[icons]]
+id = "map"
+category = "adventure"
+alt_key = "asset.map"
+path_64 = "icons/core/v1/64/map.png"
+path_128 = "icons/core/v1/128/map.png"
+path_256 = "icons/core/v1/256/map.png"
+
+[[icons]]
+id = "magnifier"
+category = "science"
+alt_key = "asset.magnifier"
+path_64 = "icons/core/v1/64/magnifier.png"
+path_128 = "icons/core/v1/128/magnifier.png"
+path_256 = "icons/core/v1/256/magnifier.png"
+
+[[icons]]
+id = "puzzle_pieces"
+category = "logic"
+alt_key = "asset.puzzle_pieces"
+path_64 = "icons/core/v1/64/puzzle_pieces.png"
+path_128 = "icons/core/v1/128/puzzle_pieces.png"
+path_256 = "icons/core/v1/256/puzzle_pieces.png"
+
+[[icons]]
+id = "car"
+category = "world"
+alt_key = "asset.car"
+path_64 = "icons/core/v1/64/car.png"
+path_128 = "icons/core/v1/128/car.png"
+path_256 = "icons/core/v1/256/car.png"
+
+[[icons]]
+id = "garden"
+category = "nature"
+alt_key = "asset.garden"
+path_64 = "icons/core/v1/64/garden.png"
+path_128 = "icons/core/v1/128/garden.png"
+path_256 = "icons/core/v1/256/garden.png"
+
+[[icons]]
+id = "coin_bag"
+category = "rewards"
+alt_key = "asset.coin_bag"
+path_64 = "icons/core/v1/64/coin_bag.png"
+path_128 = "icons/core/v1/128/coin_bag.png"
+path_256 = "icons/core/v1/256/coin_bag.png"
+
+[[icons]]
+id = "owl"
+category = "characters"
+alt_key = "asset.owl"
+path_64 = "icons/core/v1/64/owl.png"
+path_128 = "icons/core/v1/128/owl.png"
+path_256 = "icons/core/v1/256/owl.png"
+
+[[icons]]
+id = "dinosaur"
+category = "characters"
+alt_key = "asset.dinosaur"
+path_64 = "icons/core/v1/64/dinosaur.png"
+path_128 = "icons/core/v1/128/dinosaur.png"
+path_256 = "icons/core/v1/256/dinosaur.png"
+
+[[icons]]
+id = "cup_trophy"
+category = "rewards"
+alt_key = "asset.cup_trophy"
+path_64 = "icons/core/v1/64/cup_trophy.png"
+path_128 = "icons/core/v1/128/cup_trophy.png"
+path_256 = "icons/core/v1/256/cup_trophy.png"
+
+[[icons]]
+id = "rainbow"
+category = "nature"
+alt_key = "asset.rainbow"
+path_64 = "icons/core/v1/64/rainbow.png"
+path_128 = "icons/core/v1/128/rainbow.png"
+path_256 = "icons/core/v1/256/rainbow.png"
+
+[[icons]]
+id = "abc_blocks"
+category = "literacy"
+alt_key = "asset.abc_blocks"
+path_64 = "icons/core/v1/64/abc_blocks.png"
+path_128 = "icons/core/v1/128/abc_blocks.png"
+path_256 = "icons/core/v1/256/abc_blocks.png"
+
+[[icons]]
+id = "block_puzzle"
+category = "logic"
+alt_key = "asset.block_puzzle"
+path_64 = "icons/core/v1/64/block_puzzle.png"
+path_128 = "icons/core/v1/128/block_puzzle.png"
+path_256 = "icons/core/v1/256/block_puzzle.png"
+
+[[icons]]
+id = "medal"
+category = "rewards"
+alt_key = "asset.medal"
+path_64 = "icons/core/v1/64/medal.png"
+path_128 = "icons/core/v1/128/medal.png"
+path_256 = "icons/core/v1/256/medal.png"
+
+[[icons]]
+id = "puzzle_trophy"
+category = "rewards"
+alt_key = "asset.puzzle_trophy"
+path_64 = "icons/core/v1/64/puzzle_trophy.png"
+path_128 = "icons/core/v1/128/puzzle_trophy.png"
+path_256 = "icons/core/v1/256/puzzle_trophy.png"
+
+[[icons]]
+id = "wizard"
+category = "characters"
+alt_key = "asset.wizard"
+path_64 = "icons/core/v1/64/wizard.png"
+path_128 = "icons/core/v1/128/wizard.png"
+path_256 = "icons/core/v1/256/wizard.png"
+
+[[icons]]
+id = "green_monster"
+category = "characters"
+alt_key = "asset.green_monster"
+path_64 = "icons/core/v1/64/green_monster.png"
+path_128 = "icons/core/v1/128/green_monster.png"
+path_256 = "icons/core/v1/256/green_monster.png"
+
+[[icons]]
+id = "heart"
+category = "status"
+alt_key = "asset.heart"
+path_64 = "icons/core/v1/64/heart.png"
+path_128 = "icons/core/v1/128/heart.png"
+path_256 = "icons/core/v1/256/heart.png"
+
+[[icons]]
+id = "notebook"
+category = "literacy"
+alt_key = "asset.notebook"
+path_64 = "icons/core/v1/64/notebook.png"
+path_128 = "icons/core/v1/128/notebook.png"
+path_256 = "icons/core/v1/256/notebook.png"
+
+[[icons]]
+id = "train_blocks"
+category = "toys"
+alt_key = "asset.train_blocks"
+path_64 = "icons/core/v1/64/train_blocks.png"
+path_128 = "icons/core/v1/128/train_blocks.png"
+path_256 = "icons/core/v1/256/train_blocks.png"
+
+[[icons]]
+id = "pouch"
+category = "rewards"
+alt_key = "asset.pouch"
+path_64 = "icons/core/v1/64/pouch.png"
+path_128 = "icons/core/v1/128/pouch.png"
+path_256 = "icons/core/v1/256/pouch.png"
+
+[[icons]]
+id = "lightning"
+category = "status"
+alt_key = "asset.lightning"
+path_64 = "icons/core/v1/64/lightning.png"
+path_128 = "icons/core/v1/128/lightning.png"
+path_256 = "icons/core/v1/256/lightning.png"
+
+[[icons]]
+id = "small_heart"
+category = "status"
+alt_key = "asset.small_heart"
+path_64 = "icons/core/v1/64/small_heart.png"
+path_128 = "icons/core/v1/128/small_heart.png"
+path_256 = "icons/core/v1/256/small_heart.png"
+
+[[icons]]
+id = "yellow_star"
+category = "status"
+alt_key = "asset.yellow_star"
+path_64 = "icons/core/v1/64/yellow_star.png"
+path_128 = "icons/core/v1/128/yellow_star.png"
+path_256 = "icons/core/v1/256/yellow_star.png"
+
+[[icons]]
+id = "pink_star"
+category = "status"
+alt_key = "asset.pink_star"
+path_64 = "icons/core/v1/64/pink_star.png"
+path_128 = "icons/core/v1/128/pink_star.png"
+path_256 = "icons/core/v1/256/pink_star.png"
+
+[[icons]]
+id = "check"
+category = "controls"
+alt_key = "asset.check"
+path_64 = "icons/core/v1/64/check.png"
+path_128 = "icons/core/v1/128/check.png"
+path_256 = "icons/core/v1/256/check.png"
+
+[[icons]]
+id = "x_mark"
+category = "controls"
+alt_key = "asset.x_mark"
+path_64 = "icons/core/v1/64/x_mark.png"
+path_128 = "icons/core/v1/128/x_mark.png"
+path_256 = "icons/core/v1/256/x_mark.png"
+
+[[icons]]
+id = "close_button"
+category = "controls"
+alt_key = "asset.close_button"
+path_64 = "icons/core/v1/64/close_button.png"
+path_128 = "icons/core/v1/128/close_button.png"
+path_256 = "icons/core/v1/256/close_button.png"
