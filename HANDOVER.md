@@ -10,9 +10,9 @@
 
 ---
 
-## 1. Resume without chat history
+## 1. Mandatory resume order
 
-Before substantive work read, in this order:
+Read before substantive work:
 
 1. `AGENTS.md`;
 2. `README.md`;
@@ -22,14 +22,12 @@ Before substantive work read, in this order:
 6. `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`;
 7. this `HANDOVER.md`;
 8. `docs/agents/GREIA_AGENT_OPERATIONS.md`;
-9. `skills/greia-activity-authoring/SKILL.md` for any Activity work;
-10. the exact R7/testing/review documents named below.
+9. `skills/greia-activity-authoring/SKILL.md` for Activity work;
+10. the exact R7/testing/review docs named below.
 
-GitHub is canonical. Resolve the actual branch HEAD before editing or testing; do not assume the SHA in a previous chat summary is still current.
+GitHub is canonical. Resolve the actual branch HEAD before editing/testing.
 
-### Documentation authority
-
-`docs/DOCUMENTATION.md` now defines the project documentation model:
+`docs/DOCUMENTATION.md` defines ownership:
 
 ```text
 AGENTS.md                    repository-wide work/product rules
@@ -42,59 +40,53 @@ agent operations/skills      derived living manuals
 reviews                      dated evidence/analysis snapshots
 ```
 
-Do not choose whichever document is convenient when two statements differ. Correct the stale derived document according to the owner of the fact.
-
 ---
 
 ## 2. Critical hosted-execution rule
 
-**Do not use the GitHub Actions execution service without the repository owner's explicit authorization for that specific use.**
+**Do not use the GitHub Actions execution service without explicit repository-owner authorization for that specific use.**
 
 Without authorization do not:
 
-- trigger, rerun or dispatch hosted workflows;
+- trigger/rerun/dispatch hosted workflows;
 - add automatic hosted triggers;
-- query Actions runs/status/jobs/steps/logs/artifacts as project evidence;
+- query Actions runs/status/jobs/steps/logs/artifacts as evidence;
 - download Actions artifacts.
 
-Reading/editing workflow source files as normal repository files is allowed when required by a source task.
-
-GitHub remains expected for commits/PR review/source persistence. Verification runs locally or on another explicitly owner-approved environment.
+Reading/editing workflow source as ordinary repository source is allowed when needed. GitHub remains expected for commits/PR review/source persistence.
 
 ---
 
-## 3. Current high-level project state
+## 3. Current project state
 
 ### R0–R6
 
-R0–R6 are **SOURCE-CLOSED** at their recorded source boundaries. Do not reopen the old v0.12 recovery incident or reconstruct superseded history without a concrete defect.
+R0–R6 are **SOURCE-CLOSED** at their recorded source boundaries. Do not reopen the old v0.12 recovery incident without a concrete defect.
 
-The formerly lost post-v0.12 R5 history/progression implementation was replaced by a **new reviewed R5 implementation**. Never describe it as historical recovery.
+The formerly lost post-v0.12 R5 history/progression authority was replaced by a **new reviewed R5 implementation**. Do not describe it as historical recovery.
 
 ### R7
 
-R7 is the active blocking architecture phase.
-
-Current production implementation remains:
+R7 is the active blocking phase.
 
 ```text
-installed graphics/session: Xorg + xinit compatibility
-status:                     PROVISIONAL
-production compositor:      none selected
-serial direct DRM:          evidence candidate only
-ActivitySupervisor DRM:     must not become DRM master
+installed production graphics/session: Xorg + xinit compatibility
+status:                                PROVISIONAL
+production compositor:                 none selected
+serial direct DRM ownership:           evidence candidate only
+ActivitySupervisor DRM master:         forbidden
 ordinary Activity raw input ownership: forbidden target direction
 ```
 
-The real installed Activity lifecycle already uses the backend-neutral `DisplaySessionCoordinator` with an explicit `LegacyXDisplaySessionBackend`. This is the live ownership/recovery seam, **not** a completed direct-graphics migration.
+The installed Activity lifecycle already uses backend-neutral `DisplaySessionCoordinator` plus `LegacyXDisplaySessionBackend`. This is a real ownership/recovery seam, **not** a completed direct-graphics migration.
 
-Current X-compatible sandbox concessions such as shared IPC / display transport and broad graphics-device compatibility must not be removed blindly while installed production still uses Xorg.
+Current X-compatible sandbox concessions must not be removed blindly while installed production still uses Xorg.
 
 ---
 
 ## 4. Verification boundary — do not overclaim
 
-Last complete source gate genuinely executed successfully:
+Last complete source gate genuinely executed:
 
 ```text
 commit: 097f0281888a58f6f26425807ce99d9f35449313
@@ -104,7 +96,7 @@ bundled Activity validation: PASS
 source/shell/footprint gate: PASS
 ```
 
-Focused R7 checks genuinely executed earlier:
+Focused checks genuinely executed earlier:
 
 ```text
 DisplaySessionCoordinator isolated fixture: 22 / 22 PASS
@@ -112,41 +104,36 @@ compositor-package pure-logic fixture:       14 / 14 PASS
 serial fake-SDL/process fixture:              8 / 8 PASS
 ```
 
-The serial 8/8 result predates later strengthening of that evidence path; do not claim the strengthened suite executed from that result.
+The serial 8/8 result predates later strengthening of that evidence path.
 
-Everything newer that has not explicitly been run remains **UNPROVEN / committed but unexecuted**.
+Everything newer that has not explicitly executed remains **UNPROVEN / committed but unexecuted**. No current claim exists for:
 
-No current claim exists for:
-
-- a newer complete `make verify` count;
+- newer complete `make verify`;
 - current launcher/display integration regressions;
 - current R7 local-evidence tests;
-- current developer-remote regressions;
-- developer image construction;
-- SSH/mDNS developer-target login;
-- real screenshot capture;
-- real remote keyboard/mouse/text input;
-- real remote Activity deployment/trust behavior;
-- reboot/reconnect acceptance;
-- active KMSDRM QEMU PASS;
-- serial KMSDRM QEMU handoff PASS;
-- active seat/input PASS;
-- physical Acer direct graphics/session PASS;
+- developer-remote regressions;
+- developer image build;
+- SSH/mDNS login;
+- screenshot/input/deployment/reboot hardware acceptance;
+- active KMSDRM QEMU;
+- serial KMSDRM QEMU handoff;
+- active seat/input;
+- physical Acer direct graphics/session;
 - Pi 400/500 physical acceptance.
 
-The 2026-08-10 documentation audit ran **no source/unit/VM/hardware verification command** and changes none of these evidence boundaries.
+The 2026-08-10 documentation audit executed **no source/unit/VM/hardware verification command** and changes none of these evidence boundaries.
 
 ---
 
 ## 5. Documentation deep review completed 2026-08-10
 
-Review report:
+Review:
 
 ```text
 docs/reviews/2026-08-10_DOCUMENTATION_DEEP_REVIEW.md
 ```
 
-Repository-wide documentation added/rewritten during the audit:
+Audited/improved on `r7-direct-graphics`:
 
 ```text
 docs/DOCUMENTATION.md
@@ -155,31 +142,45 @@ AGENTS.md
 docs/architecture/GREIA_ARCHITECTURE.md
 docs/agents/GREIA_AGENT_OPERATIONS.md
 skills/greia-activity-authoring/SKILL.md
+HANDOVER.md
 ```
-
-These long-lived documents were synchronized independently onto `main` as well as the active R7 branch so their governance/authoring guidance does not depend on PR #4 merging.
 
 Key outcomes:
 
-- README is now durable orientation, not a stale second handover;
-- architecture overview is explicitly synthesis rather than a competing “constitution”;
-- conceptual future YAML/Web/package examples are separated from current APIs;
-- Activity skill now follows actual current parser/SDK/runtime declarations;
-- operations manual now covers first connection, dedicated known-host handling and intentional reimage host-key rollover;
-- hosted Actions prohibition now explicitly includes run/status/log/artifact queries;
-- current test counts/SHAs belong here or in dated evidence, not in durable overview docs.
+- explicit documentation ownership/precedence/freshness model;
+- README is durable orientation instead of a stale second handover;
+- architecture overview no longer competes with ADR 0012 as a “constitution”;
+- future YAML/Web/package examples are labelled conceptual;
+- Activity skill is grounded in current parser/SDK/runtime source;
+- agent operations includes first connection, known-host and intentional-reimage procedure;
+- hosted Actions prohibition explicitly covers run/status/log/artifact queries;
+- current test counts/SHAs belong here or in dated evidence.
 
-### Known documentation debt deliberately not rewritten
+### Integration/reconciliation history
 
-The active plan is append-only and some early phase-body status lines remain visually stale relative to later closure entries. Current state is this handover plus the latest progress log.
+The audit versions were briefly committed independently to both `main` and R7. GitHub then reported a merge conflict caused by the independent histories, even where file contents matched.
 
-A future plan-format cleanup should add a current phase-status index near the top **without rewriting historical progress**. Do that during a real implementation-state plan update rather than manufacturing a documentation-only phase transition.
+This was resolved without force pushes and without weakening the workflow policy:
+
+1. duplicate **audit-only** main tree changes were explicitly reverted in `main` commit `06590b484e091617cc96583fb9291034509b7990`;
+2. the improved audit versions remained on `r7-direct-graphics`;
+3. merge commit `ea5c68953c73571a5d2ab5f73f0638428c7b25c8` incorporated current `main` history into the R7 branch while retaining the newer R7 tree as the explicit conflict resolution;
+4. temporary sync PR #5 was closed unmerged;
+5. PR #4 returned to **mergeable=true**.
+
+Therefore the **audited documentation versions currently live on the active R7 branch / PR #4**. `main` retains its pre-audit documentation versions until PR #4 or a later deliberate documentation integration brings the reviewed versions across.
+
+### Remaining documentation debt
+
+The active plan is intentionally append-only; some early phase-body status lines remain visually stale relative to later closure entries. Current state is this handover plus latest progress entries.
+
+When the plan next receives a real implementation-state update, add a small current phase-status index near the top without rewriting historical progress.
 
 ---
 
-## 6. Current R7 display/session implementation
+## 6. Current R7 source/evidence primitives
 
-Existing R7 source includes:
+Relevant source/tools:
 
 ```text
 src/greia_launcher/display_session.py
@@ -193,25 +194,13 @@ tools/r7_qemu_kmsdrm_handoff_acceptance.py
 tools/r7_local_evidence.py
 ```
 
-### Display session
-
-`DisplaySessionCoordinator` owns typed Shell↔Activity session transitions/leases above backend-specific mechanics.
-
-The installed launcher composes `LegacyXDisplaySessionBackend` today. ActivitySupervisor coordinates lifecycle timing but does not own DRM master semantics.
-
-### Direct evidence candidates
-
-R7 is comparing, from evidence rather than preference:
+R7 is evidence-comparing:
 
 - serial direct SDL/KMSDRM Shell→Activity→Shell ownership;
-- a minimal persistent Greia-owned compositor/session broker where justified;
-- the current Xorg compatibility cost/behavior baseline.
+- the smallest justified persistent Greia compositor/session broker;
+- current Xorg compatibility resource/authority behavior.
 
-No compositor is selected.
-
-### Package candidate measurement
-
-The fixed compositor/runtime candidates currently measured by the package probe are:
+Fixed package/reference candidates currently include:
 
 ```text
 cage
@@ -219,7 +208,7 @@ weston
 wlroots-runtime
 ```
 
-These are benchmark/reference candidates, not production dependencies.
+They are benchmark candidates, not selected production dependencies.
 
 ---
 
@@ -231,69 +220,52 @@ Exact protocol:
 docs/testing/2026-08-09_R7_EXTERNAL_LINUX_EVIDENCE_EXECUTION.md
 ```
 
-On an owner-controlled disposable/root-safe x86-64 Linux checkout:
+On owner-controlled disposable/root-safe x86-64 Linux:
 
 ```bash
 SOURCE_SHA="$(git rev-parse HEAD)"
 RUN_ROOT="/var/tmp/greia-r7-${SOURCE_SHA}"
 
-python3 tools/r7_local_evidence.py \
-  --run-root "$RUN_ROOT" \
-  --plan-only
-
-sudo -E python3 tools/r7_local_evidence.py \
-  --run-root "$RUN_ROOT"
+python3 tools/r7_local_evidence.py --run-root "$RUN_ROOT" --plan-only
+sudo -E python3 tools/r7_local_evidence.py --run-root "$RUN_ROOT"
 ```
 
-The protocol runs the current source gate, production image build, passive installed probe, exact package deltas and conditional active/serial QEMU evidence.
+First failure is authoritative for the attempt. Do not reuse the run root or repeat active/serial evidence merely to manufacture PASS.
 
-The **first failure is authoritative for that attempt**. Do not reuse the same run root or rerun active/serial evidence merely to manufacture PASS.
-
-Active seat/input and physical Acer evidence remain separate requirements even if the local orchestrator completes.
+Active seat/input and physical Acer evidence remain separate requirements.
 
 ---
 
-## 8. Developer remote-control/test-console source
+## 8. Developer remote-control/test console
 
-Detailed feature/security protocol:
+Feature/security protocol:
 
 ```text
 docs/testing/2026-08-09_DEVELOPER_REMOTE_CONTROL.md
 ```
 
-General agent/operator procedure:
+General operator procedure:
 
 ```text
 docs/agents/GREIA_AGENT_OPERATIONS.md
 ```
 
-### Developer profile
+Developer profile:
 
 ```text
 build/profiles/modern-amd64-dev.toml
+hostname/mDNS: greia-dev / greia-dev.local
+status: experimental developer-only
+current display: Xorg compatibility
 ```
 
-Properties include:
-
-```text
-explicit experimental developer profile
-installed hostname: greia-dev
-expected mDNS:      greia-dev.local
-current display:    Xorg compatibility
-remote package set: developer-remote
-```
-
-Normal/release `modern-amd64` does not opt into the developer-remote path.
-
-### Build
-
-On compatible owner-controlled Linux:
+Build on compatible owner-controlled Linux:
 
 ```bash
 sudo bash build/build-developer-image.sh out
 ```
 
-Expected artifacts include:
+Expected artifacts:
 
 ```text
 out/greia-os-modern-amd64-dev.img
@@ -302,11 +274,9 @@ out/greia-os-modern-amd64-dev-ssh-key.pub
 out/greia-os-modern-amd64-dev-developer-remote.json
 ```
 
-The private key is operator secret material and must never enter Git/shared evidence.
+Private key is operator secret material and must never enter Git/shared evidence.
 
-### SSH/security model
-
-Developer target is designed for:
+SSH model:
 
 ```text
 user:                    greiaadmin
@@ -318,15 +288,15 @@ machine SSH host keys:   generated on actual machine
 passwordless privilege:  bounded through /usr/local/sbin/greia-devctl
 ```
 
-First acceptance should use wired Ethernet. No repository-stored Wi-Fi secret provisioning is implemented.
+Use wired Ethernet for first acceptance. No repository-stored Wi-Fi secret provisioning is implemented.
 
-### Remote client
+Remote client:
 
 ```text
 tools/greia_remote.py
 ```
 
-Current commands:
+Commands:
 
 ```text
 wait
@@ -347,19 +317,17 @@ poweroff
 shell
 ```
 
-The client uses a dedicated:
+Dedicated known-hosts file:
 
 ```text
 ~/.greia/known_hosts
 ```
 
-Intentional reimage host-key rollover procedure is documented in the operations manual. Do not globally disable SSH host-key checking.
+Intentional reimage host-key rollover is documented in the operations manual; do not disable host-key verification globally.
 
 ---
 
 ## 9. Developer Activity trust boundary
-
-This must not regress.
 
 Built-in source:
 
@@ -375,31 +343,26 @@ Ordinary remote developer source:
 trust = DEVELOPER_UNSIGNED
 ```
 
-Normal remote deployment:
+Normal deployment:
 
 ```bash
 python3 tools/greia_remote.py deploy path/to/activity
 ```
 
-must not upgrade trust or permit privileged system permissions simply because the operator uploaded it.
+must not upgrade trust or grant privileged system permissions merely because an operator uploaded it.
 
-Deliberate testing of an existing built-in requires explicit replacement:
+Explicit built-in test replacement only:
 
 ```bash
 python3 tools/greia_remote.py deploy path/to/activity --replace-system
-```
-
-and the original must remain recoverable with:
-
-```bash
 python3 tools/greia_remote.py restore <activity-id>
 ```
 
-Do not use `--replace-system` as a shortcut around an ordinary developer validation/trust failure.
+Do not use `--replace-system` to bypass ordinary validation/trust failures.
 
 ---
 
-## 10. Live graphical installer remote-control boundary
+## 10. Live graphical installer remote boundary
 
 Source exists:
 
@@ -410,13 +373,13 @@ tools/provision_developer_installer.py
 Intended live identity:
 
 ```text
-hostname/mDNS: greia-installer-dev.local
+hostname/mDNS:    greia-installer-dev.local
 display endpoint: root@:0
-SSH: key-only greiaadmin
-wired DHCP/mDNS: developer-only
+SSH:              key-only greiaadmin
+wired DHCP/mDNS:  developer-only
 ```
 
-The intended workflow is to remotely **drive the existing graphical fail-closed installer** while preserving:
+The operator must remotely drive the **existing graphical fail-closed installer**, preserving:
 
 - eligible-target discovery;
 - removable-media exclusion;
@@ -426,17 +389,15 @@ The intended workflow is to remotely **drive the existing graphical fail-closed 
 
 ### Current limitation
 
-The live installer provisioner is **not yet wired into `build/build-installer-image.sh`**.
+The live provisioner is **not yet wired into `build/build-installer-image.sh`**.
 
-Therefore first-time remote USB installation is **not currently claimed operational**.
+First-time remote USB installation is therefore **not claimed operational**.
 
-Do not replace this gap with a remote `dd`, unattended disk wipe or generic destructive root endpoint.
-
-After the installed developer target is proven, add the two narrow canonical installer-builder hooks on a real Linux build/test path and then test remote graphical installation.
+Never substitute a remote `dd`, unattended disk wipe or generic destructive root endpoint.
 
 ---
 
-## 11. Current Activity authoring contract
+## 11. Current Activity authoring snapshot
 
 Canonical skill:
 
@@ -444,14 +405,14 @@ Canonical skill:
 skills/greia-activity-authoring/SKILL.md
 ```
 
-Important current implementation facts:
+Current implementation facts:
 
 ```text
 development manifest: activity.toml
 runtime:              Python/Pygame
-runtime API:          0.1 (verify current runtime file before authoring)
+runtime API:          0.1 (verify current runtime source before authoring)
 package hard ceiling: 50 MiB
-storage:              Greia brokered KV/private-file API
+storage:              brokered Greia KV/private-file API
 events:               Greia broker; 64 KiB encoded event-message ceiling
 shared graphics:      semantic core icon catalogue + theme API
 general widget kit:   NOT IMPLEMENTED
@@ -460,15 +421,13 @@ Web SDK/runtime:       future/deferred
 .greiabackup:          future backup phase
 ```
 
-Current exact implementation owners are listed in `docs/DOCUMENTATION.md` and the skill.
-
-Do not turn conceptual YAML/Web examples from architecture into current code.
+Do not turn conceptual architecture examples into current APIs without checking source/runtime owners.
 
 ---
 
 ## 12. Exact next developer-remote acceptance step
 
-On an owner-controlled Linux checkout at the actual current branch HEAD:
+On owner-controlled Linux at actual branch HEAD:
 
 ```bash
 PYTHONPATH=src python3 -m unittest discover \
@@ -477,11 +436,10 @@ PYTHONPATH=src python3 -m unittest discover \
   -v
 
 make verify
-
 sudo bash build/build-developer-image.sh out
 ```
 
-Then install/boot the developer target through an existing safe path, preferably with wired Ethernet for first acceptance.
+Then install/boot through an existing safe path with wired Ethernet first.
 
 From the operator computer:
 
@@ -499,26 +457,25 @@ python3 tools/greia_remote.py reboot
 python3 tools/greia_remote.py wait --timeout 180
 ```
 
-Acceptance must prove, not assume:
+Acceptance must prove:
 
-- `greia-dev.local` reachable or explicit DHCP address used;
-- public-key login succeeds;
-- password/root SSH remain denied;
-- machine host key is actual-machine generated;
-- screenshot is real visible-screen PNG;
-- bounded GUI input affects expected UI state;
-- ordinary deployed Activity remains `DEVELOPER_UNSIGNED`;
-- built-in collision/replacement policy behaves correctly;
-- reboot/reconnect works;
+- connectivity;
+- key-only login and password/root denial;
+- real machine-generated host identity;
+- real display screenshot;
+- bounded input changes expected UI;
+- ordinary deployment remains `DEVELOPER_UNSIGNED`;
+- built-in collision/replacement/restore semantics;
+- reboot/reconnect;
 - normal/release profile remains unaffected.
 
-Preserve the first real failure rather than repeatedly modifying/retrying until it passes.
+Preserve first real failures.
 
 ---
 
 ## 13. Exact next R7 graphics/evidence step
 
-In parallel with developer-target acceptance, run the existing controlled local R7 evidence protocol once on the actual branch HEAD:
+In parallel, run the local R7 evidence protocol once at actual branch HEAD:
 
 ```bash
 SOURCE_SHA="$(git rev-parse HEAD)"
@@ -527,43 +484,39 @@ python3 tools/r7_local_evidence.py --run-root "$RUN_ROOT" --plan-only
 sudo -E python3 tools/r7_local_evidence.py --run-root "$RUN_ROOT"
 ```
 
-Return/archive the complete run root.
+Then, from evidence:
 
-Then, from evidence rather than preference:
-
-1. inspect exact installed SDL/direct capability;
-2. inspect Cage/Weston/wlroots package/file deltas;
-3. inspect active/serial QEMU result where KMSDRM is compiled;
+1. inspect installed SDL/direct capability;
+2. inspect Cage/Weston/wlroots package deltas;
+3. inspect active/serial QEMU where applicable;
 4. obtain active seat/input evidence;
-5. compare serial ownership vs the smallest justified compositor/session-broker prototype vs Xorg resource/authority behavior;
-6. require physical legacy Intel/Acer scanout/input/suspend/crash acceptance before migrating production;
-7. leave Pi physical display evidence to R8/R14 after the Pi image/board adapter exists.
+5. compare serial vs minimal compositor/session broker vs Xorg resource/authority behavior;
+6. require physical legacy Intel/Acer scanout/input/suspend/crash acceptance before production migration;
+7. defer Pi physical display acceptance to R8/R14 after Pi image/board adapters exist.
 
-No compositor should be selected before that evidence exists.
+No compositor should be selected before evidence supports it.
 
 ---
 
-## 14. Product/security invariants to preserve
+## 14. Invariants to preserve
 
 - no visible Linux UI in normal child operation;
-- one Greia profile explicitly selected at boot;
-- Activity is runtime-neutral;
-- Activities do not own global progression/reward economics;
-- portable profile/Activity data stays architecture-neutral;
-- per-Activity durable isolation/trust boundaries stay fail-closed;
-- developer remote access never silently appears in normal/release images;
-- remote file placement never upgrades package trust;
-- current X11 compatibility must not deepen into an Activity API;
-- ActivitySupervisor must not become DRM master;
-- destructive installation remains graphical and device/payload revalidated;
-- no private credentials/keys in Git;
+- explicit Greia profile selection;
+- Activity remains runtime-neutral;
+- global progression/reward economics remain platform-owned;
+- durable child state remains architecture-neutral;
+- per-Activity isolation/trust stays fail-closed;
+- developer remote access never appears implicitly in release images;
+- remote placement never upgrades Activity trust;
+- X11 compatibility does not become Activity API;
+- ActivitySupervisor never becomes DRM master;
+- destructive installation remains graphical/device/payload revalidated;
+- no private credentials in Git;
 - no unapproved hosted Actions execution/query surface.
 
 ---
 
 ## 15. Continuity files
-
-Primary current files:
 
 ```text
 AGENTS.md
@@ -581,12 +534,12 @@ docs/reviews/2026-08-09_R7_X11_DIRECT_GRAPHICS_DEPENDENCY_AUDIT.md
 docs/reviews/2026-08-09_R7_SESSION_OWNERSHIP_CANDIDATE_MATRIX.md
 ```
 
-Before ending the next substantive implementation tranche:
+After the next substantive implementation tranche:
 
 - commit coherent work;
-- append active-plan progress if implementation/phase state changed;
+- append plan progress if implementation/phase state changed;
 - update this handover;
-- update the operations manual or Activity skill when their source contracts changed;
-- record exactly what verification actually ran;
-- preserve remaining VM/physical evidence gaps;
+- update operations/Activity skill when their source contracts changed;
+- record exactly what verification ran;
+- preserve VM/physical gaps;
 - state the next exact legitimate step.
