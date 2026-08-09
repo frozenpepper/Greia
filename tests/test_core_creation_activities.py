@@ -61,6 +61,26 @@ class WritingLogicTests(unittest.TestCase):
         buffer.end()
         self.assertEqual(buffer.cursor, len(buffer.text))
 
+    def test_undo_history_is_bounded_and_keeps_latest_states(self) -> None:
+        history = WRITING.UndoHistory(maximum=2)
+        first = WRITING.TextSnapshot("a", 1)
+        second = WRITING.TextSnapshot("ab", 2)
+        third = WRITING.TextSnapshot("abc", 3)
+        history.remember(first)
+        history.remember(second)
+        history.remember(third)
+        self.assertEqual(history.pop(), third)
+        self.assertEqual(history.pop(), second)
+        self.assertIsNone(history.pop())
+
+    def test_undo_history_deduplicates_adjacent_state(self) -> None:
+        history = WRITING.UndoHistory(maximum=4)
+        snapshot = WRITING.TextSnapshot("hello", 5)
+        history.remember(snapshot)
+        history.remember(snapshot)
+        self.assertEqual(history.pop(), snapshot)
+        self.assertIsNone(history.pop())
+
     def test_document_repository_keeps_text_portable_and_recent(self) -> None:
         storage = FakeStorage()
         repo = WRITING.DocumentRepository(storage)
