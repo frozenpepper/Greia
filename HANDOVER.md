@@ -21,10 +21,18 @@ Production Greia still boots through the known **Xorg/xinit compatibility path**
 GitHub is the persistent source of truth. Resolve the exact branch tip from `r7-direct-graphics` when resuming rather than trusting a hand-written hash. The last source commit immediately before this handover refresh is:
 
 ```text
+67bb08d5872317a79c75fc0cd4a1739e387246cf
+```
+
+That commit updates the core `DisplayTransport` regression suite to match the corrected direct-`xinit` compatibility contract: `DISPLAY` is required; Xauthority is optional but validated if present.
+
+The installed-launcher integration immediately before it was minimized at:
+
+```text
 5f45c7d44a9f254e5181dc068333a0db7292a658
 ```
 
-That commit removes accidental formatting churn from the installed-launcher integration. Relative to the pre-integration commit `f1aa18b6fca32d04cdc7b0063184f49b3638493a`, `src/greia_launcher/main.py` has only 9 changed lines; the other cumulative change is the new display-session lifecycle regression file.
+Relative to the pre-integration commit `f1aa18b6fca32d04cdc7b0063184f49b3638493a`, `src/greia_launcher/main.py` has only 9 changed lines; the other cumulative change is the new display-session lifecycle regression file.
 
 ---
 
@@ -50,9 +58,9 @@ isolated compositor-package pure-logic fixture: 14 / 14 PASS
 serial KMSDRM fake-SDL/process suite: 8 / 8 PASS before later serial strengthening
 ```
 
-The latest strengthened serial tests, hardware-settings tests, installer-adapter tests, passive seat/input tests, legacy-X display-session tests, and Supervisor/display-session lifecycle integration tests are committed but have **not** executed in a real current checkout.
+The latest strengthened serial tests, hardware-settings tests, installer-adapter tests, passive seat/input tests, legacy-X display-session tests, corrected core DisplayTransport tests, and Supervisor/display-session lifecycle integration tests are committed but have **not** executed in a real current checkout.
 
-Fresh GitHub Actions triggered after the real installed-launcher integration still fail before step 1:
+Fresh GitHub Actions triggered after the real installed-launcher integration still failed before step 1:
 
 ```text
 source verification run 31314374079
@@ -152,10 +160,11 @@ Greia starts the compatibility session with `xinit` directly, not `startx`.
 
 Do not invent an Xauthority path merely to satisfy an abstraction.
 
-Relevant commit:
+Relevant commits:
 
 ```text
 5e44a3926d6989652945f1d5a9625ec997051cca
+67bb08d5872317a79c75fc0cd4a1739e387246cf
 ```
 
 ### 4.3 Installed composition
@@ -306,6 +315,8 @@ covers:
 - simultaneous Wayland rejection;
 - conflicting SDL backend rejection;
 - no-op compatibility present/restore mechanics.
+
+`tests/test_display_session.py` has also been corrected so the core LEGACY_X11 contract itself tests both direct-xinit `DISPLAY`-only operation and optional validated Xauthority.
 
 These tests are **committed but unexecuted** in a real current checkout due to the verification boundary above.
 
@@ -507,6 +518,13 @@ f1aa18b6fca32d04cdc7b0063184f49b3638493a  compose provisional installed display 
 5ce6d3c85cafcc166c15adfc61f14a6c465d4961  add Supervisor/display-session lifecycle regressions
 0cec31b2418b88bde25aecd1b484f076e63444aa  activate coordinator in installed launcher
 5f45c7d44a9f254e5181dc068333a0db7292a658  remove accidental launcher formatting churn
+67bb08d5872317a79c75fc0cd4a1739e387246cf  correct core DisplayTransport regression to optional Xauthority
+```
+
+Latest continuity commits:
+
+```text
+c6af8e930165950d182432f21d6385d8c7288f35  append active-plan progress
 ```
 
 GitHub branch history is authoritative for exact chronology.
