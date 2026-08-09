@@ -18,7 +18,7 @@ The former lost post-v0.12 R5 `history.py` was replaced by a new reviewed R5 imp
 
 Production Greia still boots through the known **Xorg/xinit compatibility path**. No direct-KMS production profile/package set is enabled. No compositor has been selected. Serial direct DRM ownership remains evidence-only.
 
-GitHub is the persistent source of truth. Resolve the exact branch tip from `r7-direct-graphics` when resuming rather than trusting a hand-written hash. The last source commit immediately before this handover refresh is:
+GitHub is the persistent source of truth. Resolve the exact branch tip from `r7-direct-graphics` when resuming rather than trusting a hand-written hash. The last **source/test** commit in the current tranche is:
 
 ```text
 67bb08d5872317a79c75fc0cd4a1739e387246cf
@@ -26,7 +26,9 @@ GitHub is the persistent source of truth. Resolve the exact branch tip from `r7-
 
 That commit updates the core `DisplayTransport` regression suite to match the corrected direct-`xinit` compatibility contract: `DISPLAY` is required; Xauthority is optional but validated if present.
 
-The installed-launcher integration immediately before it was minimized at:
+The branch also contains later documentation-only continuity commits. Always resolve the actual branch tip from GitHub before resuming.
+
+The installed-launcher integration was minimized at:
 
 ```text
 5f45c7d44a9f254e5181dc068333a0db7292a658
@@ -521,7 +523,7 @@ f1aa18b6fca32d04cdc7b0063184f49b3638493a  compose provisional installed display 
 67bb08d5872317a79c75fc0cd4a1739e387246cf  correct core DisplayTransport regression to optional Xauthority
 ```
 
-Latest continuity commits:
+Latest continuity commits include:
 
 ```text
 c6af8e930165950d182432f21d6385d8c7288f35  append active-plan progress
