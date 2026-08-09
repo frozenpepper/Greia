@@ -128,7 +128,12 @@ TARGET_LOOP=""
 debootstrap --arch="$ARCH" --variant=minbase --include=ca-certificates "$SUITE" "$LIVE_ROOT" "$MIRROR"
 live_arch="$(chroot "$LIVE_ROOT" /usr/bin/dpkg --print-architecture)"
 [[ "$live_arch" == "$ARCH" ]] || { echo "Live root architecture $live_arch does not match profile $ARCH." >&2; exit 1; }
-rsync -a "$SCRIPT_DIR/installer-overlay/" "$LIVE_ROOT/"
+# Repository checkout ownership is never live-image filesystem authority.
+rsync -a --chown=root:root "$SCRIPT_DIR/installer-overlay/" "$LIVE_ROOT/"
+[[ "$(stat -c '%u:%g' "$LIVE_ROOT")" == "0:0" ]] || {
+  echo "Greia installer overlay changed live root ownership away from root:root." >&2
+  exit 1
+}
 cat > "$LIVE_ROOT/etc/apt/sources.list" <<SOURCES
 deb $MIRROR $SUITE main non-free-firmware
 deb $MIRROR $SUITE-updates main non-free-firmware
@@ -150,7 +155,9 @@ package_output="$(python3 "$PROFILE_TOOL" --package-root "$PACKAGE_SET_ROOT" pac
 mapfile -t packages <<< "$package_output"
 (( ${#packages[@]} > 0 )) || { echo "Resolved installer package set is empty." >&2; exit 1; }
 chroot "$LIVE_ROOT" /usr/bin/env DEBIAN_FRONTEND=noninteractive apt-get update
-chroot "$LIVE_ROOT" /usr/bin/env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "${packages[@]}"
+# Keep intentionally pre-seeded Greia conffiles without any dpkg prompt.
+chroot "$LIVE_ROOT" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
+  apt-get -o Dpkg::Options::=--force-confold install -y --no-install-recommends "${packages[@]}"
 
 install -d -m 0755 "$LIVE_ROOT/opt/greia-os"
 rsync -a --delete --exclude '__pycache__' "$PROJECT_ROOT/src" "$PROJECT_ROOT/runtime" "$LIVE_ROOT/opt/greia-os/"

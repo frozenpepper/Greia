@@ -135,7 +135,14 @@ resolved_arch="$(chroot "$ROOTFS" /usr/bin/dpkg --print-architecture)"
 [[ "$resolved_arch" == "$ARCH" ]] || { echo "Bootstrapped architecture $resolved_arch does not match profile $ARCH." >&2; exit 1; }
 
 # Apply size policy before installing the runtime package set.
-rsync -a "$PROJECT_ROOT/build/overlay/" "$ROOTFS/"
+# Repository checkout ownership is never target-filesystem authority.
+# Static appliance overlay files are installed as root regardless of the UID/GID
+# of the developer or CI checkout that produced the image.
+rsync -a --chown=root:root "$PROJECT_ROOT/build/overlay/" "$ROOTFS/"
+[[ "$(stat -c '%u:%g' "$ROOTFS")" == "0:0" ]] || {
+  echo "Greia overlay changed target root ownership away from root:root." >&2
+  exit 1
+}
 PROJECT_VERSION="$(tr -d '\r\n' < "$PROJECT_ROOT/VERSION")"
 [[ -n "$PROJECT_VERSION" ]] || { echo "VERSION is empty." >&2; exit 1; }
 install -d -m 0755 "$ROOTFS/etc/greia-os"
@@ -179,8 +186,10 @@ mapfile -t packages <<< "$package_output"
 
 printf 'grub-pc grub-pc/install_devices_empty boolean true\n' | chroot "$ROOTFS" debconf-set-selections
 chroot "$ROOTFS" /usr/bin/env DEBIAN_FRONTEND=noninteractive apt-get update
+# Greia intentionally pre-seeds appliance conffiles in the overlay. dpkg's
+# conffile prompt is independent of debconf, so make product ownership explicit.
 chroot "$ROOTFS" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
-  apt-get install -y --no-install-recommends "${packages[@]}"
+  apt-get -o Dpkg::Options::=--force-confold install -y --no-install-recommends "${packages[@]}"
 
 # Appliance users have no passwords. pipprofiles owns the bounded profile
 # registry/tree shared by the launcher and typed parent profile controls;
