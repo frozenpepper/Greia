@@ -1,0 +1,218 @@
+name: R7 image reliability source gate
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/r7-image-reliability-gate.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Apply candidate reliability patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+
+          def replace_once(path: str, old: str, new: str) -> None:
+              p = Path(path)
+              text = p.read_text(encoding='utf-8')
+              if text.count(old) != 1:
+                  raise SystemExit(f'{path}: expected one patch anchor')
+              p.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          apt_options = '''APT_ACQUIRE_OPTIONS=(\n  -o Acquire::Retries=3\n  -o Acquire::http::Timeout=20\n  -o Acquire::https::Timeout=20\n)\n\n'''
+          replace_once(
+              'build/build-image.sh',
+              "package_output=\"$(python3 \"$PROFILE_TOOL\" --package-root \"$PACKAGE_SET_ROOT\" packages \"$PROFILE_PATH\" --scope target)\"\n",
+              apt_options + "package_output=\"$(python3 \"$PROFILE_TOOL\" --package-root \"$PACKAGE_SET_ROOT\" packages \"$PROFILE_PATH\" --scope target)\"\n",
+          )
+          replace_once(
+              'build/build-image.sh',
+              'chroot "$ROOTFS" /usr/bin/env DEBIAN_FRONTEND=noninteractive apt-get update\n',
+              'chroot "$ROOTFS" /usr/bin/env DEBIAN_FRONTEND=noninteractive apt-get "${APT_ACQUIRE_OPTIONS[@]}" update\n',
+          )
+          replace_once(
+              'build/build-image.sh',
+              'apt-get -o Dpkg::Options::=--force-confold install -y --no-install-recommends "${packages[@]}"\n',
+              'apt-get "${APT_ACQUIRE_OPTIONS[@]}" -o Dpkg::Options::=--force-confold install -y --no-install-recommends "${packages[@]}"\n',
+          )
+          replace_once(
+              'build/build-image.sh',
+              'require_commands=(debootstrap parted losetup mkfs.ext4 blkid grub-install grub-script-check grub-mkpasswd-pbkdf2 chroot mount umount mountpoint findmnt rsync python3)\n',
+              'require_commands=(debootstrap parted losetup mkfs.ext4 blkid grub-install grub-script-check grub-mkpasswd-pbkdf2 chroot mount umount mountpoint findmnt udevadm rsync python3)\n',
+          )
+
+          replace_once(
+              'build/build-installer-image.sh',
+              "package_output=\"$(python3 \"$PROFILE_TOOL\" --package-root \"$PACKAGE_SET_ROOT\" packages \"$PROFILE_PATH\" --scope installer)\"\n",
+              apt_options + "package_output=\"$(python3 \"$PROFILE_TOOL\" --package-root \"$PACKAGE_SET_ROOT\" packages \"$PROFILE_PATH\" --scope installer)\"\n",
+          )
+          replace_once(
+              'build/build-installer-image.sh',
+              'chroot "$LIVE_ROOT" /usr/bin/env DEBIAN_FRONTEND=noninteractive apt-get update\n',
+              'chroot "$LIVE_ROOT" /usr/bin/env DEBIAN_FRONTEND=noninteractive apt-get "${APT_ACQUIRE_OPTIONS[@]}" update\n',
+          )
+          replace_once(
+              'build/build-installer-image.sh',
+              'apt-get -o Dpkg::Options::=--force-confold install -y --no-install-recommends "${packages[@]}"\n',
+              'apt-get "${APT_ACQUIRE_OPTIONS[@]}" -o Dpkg::Options::=--force-confold install -y --no-install-recommends "${packages[@]}"\n',
+          )
+          replace_once(
+              'build/build-installer-image.sh',
+              'required=(debootstrap parted losetup mkfs.ext4 blkid grub-install grub-script-check grub-mkpasswd-pbkdf2 chroot mount umount mountpoint findmnt rsync mksquashfs python3)\n',
+              'required=(debootstrap parted losetup mkfs.ext4 blkid grub-install grub-script-check grub-mkpasswd-pbkdf2 chroot mount umount mountpoint findmnt udevadm rsync mksquashfs python3)\n',
+          )
+          PY
+
+          cat > build/lib/safe-cleanup.sh <<'SH'
+          #!/usr/bin/env bash
+          # Shared destructive-build cleanup helpers. Source from bash with set -Eeuo.
+
+          safe_udev_settle() {
+            udevadm settle --timeout=5 >/dev/null 2>&1 || true
+          }
+
+          safe_unmount_path_tree() {
+            local path="$1"
+            [[ -n "$path" ]] || return 0
+
+            local targets=()
+            local index target attempt
+            mapfile -t targets < <(findmnt -rn -R -o TARGET --target "$path" 2>/dev/null || true)
+            for (( index=${#targets[@]}-1; index>=0; index-- )); do
+              target="${targets[$index]}"
+              [[ -n "$target" ]] || continue
+              case "$target" in
+                "$path"|"$path"/*) ;;
+                *)
+                  echo "ERROR: refusing cleanup target outside requested mount tree: $target" >&2
+                  return 1
+                  ;;
+              esac
+              for attempt in {1..20}; do
+                mountpoint -q -- "$target" || break
+                sync
+                umount -- "$target" 2>/dev/null || true
+                mountpoint -q -- "$target" || break
+                sleep 0.1
+              done
+              if mountpoint -q -- "$target"; then
+                echo "ERROR: mount remains busy after bounded normal-unmount retries: $target" >&2
+                return 1
+              fi
+            done
+            safe_udev_settle
+          }
+
+          safe_unmount_paths() {
+            local paths=("$@")
+            local failed=0
+            local index path
+            for (( index=${#paths[@]}-1; index>=0; index-- )); do
+              path="${paths[$index]}"
+              [[ -n "$path" ]] || continue
+              safe_unmount_path_tree "$path" || failed=1
+            done
+            return "$failed"
+          }
+
+          safe_detach_loop() {
+            local loop_device="${1:-}"
+            [[ -n "$loop_device" ]] || return 0
+            local attempt
+            for attempt in {1..20}; do
+              if ! losetup "$loop_device" >/dev/null 2>&1; then
+                return 0
+              fi
+              losetup -d "$loop_device" 2>/dev/null || true
+              safe_udev_settle
+              if ! losetup "$loop_device" >/dev/null 2>&1; then
+                return 0
+              fi
+              sleep 0.1
+            done
+            echo "ERROR: loop device is still associated after detach and udev settle: $loop_device" >&2
+            return 1
+          }
+
+          safe_remove_build_dir() {
+            local build_dir="$1"
+            [[ -n "$build_dir" && "$build_dir" != "/" ]] || return 1
+            if findmnt -rn -R "$build_dir" 2>/dev/null | grep -q .; then
+              echo "ERROR: refusing to remove build tree with live mounts: $build_dir" >&2
+              return 1
+            fi
+            rm -rf --one-file-system -- "$build_dir"
+          }
+          SH
+
+          cat > tests/test_build_reliability.py <<'PYTEST'
+          from __future__ import annotations
+
+          import unittest
+          from pathlib import Path
+
+
+          ROOT = Path(__file__).resolve().parents[1]
+
+
+          class BuildReliabilityTests(unittest.TestCase):
+              def test_apt_network_failures_have_bounded_native_retries(self) -> None:
+                  for name in ("build/build-image.sh", "build/build-installer-image.sh"):
+                      text = (ROOT / name).read_text(encoding="utf-8")
+                      self.assertIn("Acquire::Retries=3", text)
+                      self.assertIn("Acquire::http::Timeout=20", text)
+                      self.assertIn("Acquire::https::Timeout=20", text)
+                      self.assertGreaterEqual(text.count('"${APT_ACQUIRE_OPTIONS[@]}"'), 2)
+                      self.assertIn("Dpkg::Options::=--force-confold", text)
+                      self.assertIn("udevadm", text)
+
+              def test_cleanup_never_uses_lazy_unmount_for_build_loop_trees(self) -> None:
+                  helper = (ROOT / "build/lib/safe-cleanup.sh").read_text(encoding="utf-8")
+                  self.assertNotIn("umount -l", helper)
+                  self.assertIn("for attempt in {1..20}", helper)
+                  self.assertIn("mount remains busy after bounded normal-unmount retries", helper)
+                  self.assertIn("udevadm settle --timeout=5", helper)
+                  self.assertIn("losetup -d", helper)
+                  self.assertIn("safe_udev_settle", helper)
+
+              def test_cleanup_still_refuses_paths_outside_requested_tree(self) -> None:
+                  helper = (ROOT / "build/lib/safe-cleanup.sh").read_text(encoding="utf-8")
+                  self.assertIn('"$path"|"$path"/*', helper)
+                  self.assertIn("refusing cleanup target outside requested mount tree", helper)
+                  self.assertIn("refusing to remove build tree with live mounts", helper)
+
+
+          if __name__ == "__main__":
+              unittest.main()
+          PYTEST
+          chmod 0755 build/lib/safe-cleanup.sh
+          git diff --check
+
+      - name: Install test dependency
+        run: python3 -m pip install --disable-pip-version-check --quiet Pillow
+
+      - name: Focused reliability tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m compileall -q src tests tools activities
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_build_reliability.py' -v
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_build_reproducibility.py' -v
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_system_overlay_contract.py' -v
+
+      - name: Full provider-free gate
+        run: make verify
