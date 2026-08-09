@@ -5,13 +5,38 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/r7-production-image-probe-v3.yml"
+      - "build/**"
 
 permissions:
   contents: write
 
 jobs:
-  build-probe-record:
+  preflight:
     if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.edge.outputs.should_run }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 2
+      - id: edge
+        name: Run expensive probe only for latest build/probe change
+        shell: bash
+        run: |
+          set -euo pipefail
+          changed="$(git diff-tree --no-commit-id --name-only -r HEAD)"
+          printf '%s\n' "$changed"
+          if printf '%s\n' "$changed" | grep -Eq '^(build/|\.github/workflows/r7-production-image-probe-v3\.yml$)'; then
+            echo 'should_run=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'should_run=false' >> "$GITHUB_OUTPUT"
+          fi
+
+  build-probe-record:
+    needs: preflight
+    if: needs.preflight.outputs.should_run == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 55
     steps:
@@ -36,21 +61,96 @@ jobs:
             debootstrap parted e2fsprogs grub-pc-bin grub-common rsync gpgv udev util-linux
 
       - name: Build production modern-amd64 image
+        id: build
+        shell: bash
+        run: |
+          set -uo pipefail
+          out="$RUNNER_TEMP/greia-r7-image"
+          mkdir -p "$out"
+          set +e
+          sudo build/build-image.sh modern-amd64 "$out"
+          status=$?
+          set -e
+          printf '%s\n' "$status" | tee /tmp/r7-build-status
+          image="$out/greia-os-modern-amd64.img"
+          if test -s "$image"; then
+            sha256sum "$image" | tee /tmp/r7-image-sha256
+          fi
+          if test "$status" -eq 0; then
+            test -s "$image"
+            test -s "$out/greia-os-modern-amd64-footprint.txt"
+            test -s "$out/greia-os-modern-amd64-image-profile.json"
+            cp "$out/greia-os-modern-amd64-footprint.txt" /tmp/r7-footprint.txt
+            cp "$out/greia-os-modern-amd64-image-profile.json" /tmp/r7-image-profile.json
+          fi
+          exit 0
+
+      - name: Verify cleanup or capture exact leaked-loop state
         shell: bash
         run: |
           set -euo pipefail
           out="$RUNNER_TEMP/greia-r7-image"
-          mkdir -p "$out"
-          sudo build/build-image.sh modern-amd64 "$out"
           image="$out/greia-os-modern-amd64.img"
-          test -s "$image"
-          test -s "$out/greia-os-modern-amd64-footprint.txt"
-          test -s "$out/greia-os-modern-amd64-image-profile.json"
+          build_status="$(cat /tmp/r7-build-status)"
           leaked="$(sudo losetup -j "$image" 2>/dev/null || true)"
-          test -z "$leaked" || { echo "builder leaked loop association: $leaked" >&2; exit 1; }
-          sha256sum "$image" | tee /tmp/r7-image-sha256
-          cp "$out/greia-os-modern-amd64-footprint.txt" /tmp/r7-footprint.txt
-          cp "$out/greia-os-modern-amd64-image-profile.json" /tmp/r7-image-profile.json
+
+          if test -n "$leaked"; then
+            echo '=== R7 LEAKED LOOP DIAGNOSTIC: BEFORE RECOVERY ==='
+            printf '%s\n' "$leaked"
+            sudo losetup --list --json --output NAME,BACK-FILE,AUTOCLEAR,PARTSCAN,RO,OFFSET,SIZELIMIT || true
+            sudo lsblk -a -o NAME,KNAME,MAJ:MIN,TYPE,PKNAME,MOUNTPOINTS || true
+            sudo findmnt -rn -R --target "$RUNNER_TEMP" || true
+
+            while IFS= read -r loop; do
+              test -n "$loop" || continue
+              name="${loop#/dev/}"
+              echo "=== exact loop: $loop ==="
+              sudo losetup --list --noheadings --output NAME,BACK-FILE,AUTOCLEAR,PARTSCAN,RO,OFFSET,SIZELIMIT "$loop" || true
+              sudo partx --show "$loop" || true
+              for attr in autoclear backing_file dio offset sizelimit; do
+                if test -r "/sys/block/$name/loop/$attr"; then
+                  printf 'sysfs.%s=' "$attr"
+                  sudo cat "/sys/block/$name/loop/$attr" || true
+                fi
+              done
+              echo 'holders:'
+              sudo find "/sys/block/$name/holders" -maxdepth 1 -mindepth 1 -printf '%f\n' 2>/dev/null || true
+              echo 'partition nodes:'
+              sudo find "/sys/block/$name" -maxdepth 1 -mindepth 1 -name "${name}p*" -printf '%f\n' 2>/dev/null || true
+              echo 'process fds referencing loop:'
+              sudo bash -c '
+                shopt -s nullglob
+                for fd in /proc/[0-9]*/fd/*; do
+                  target=$(readlink "$fd" 2>/dev/null || true)
+                  case "$target" in
+                    /dev/'"$name"'|/dev/'"$name"'p*) printf "%s -> %s\n" "$fd" "$target" ;;
+                  esac
+                done
+              ' || true
+
+              # Recovery experiment: target only this image loop. Re-flush on
+              # every attempt and wait on BACKING-FILE disassociation, which is
+              # the actual lifecycle condition we care about after lazy detach.
+              sudo partx -d "$loop" 2>/dev/null || true
+              for attempt in $(seq 1 80); do
+                sudo blockdev --flushbufs "$loop" 2>/dev/null || true
+                sudo losetup -d "$loop" 2>/dev/null || true
+                sudo udevadm settle --timeout=2 >/dev/null 2>&1 || true
+                if test -z "$(sudo losetup -j "$image" 2>/dev/null || true)"; then
+                  echo "R7_DIAGNOSTIC_DETACHED_AFTER_ATTEMPT=$attempt"
+                  break
+                fi
+                sleep 0.25
+              done
+            done < <(printf '%s\n' "$leaked" | cut -d: -f1)
+
+            echo '=== R7 LEAKED LOOP DIAGNOSTIC: AFTER RECOVERY ==='
+            sudo losetup -j "$image" || true
+          fi
+
+          remaining="$(sudo losetup -j "$image" 2>/dev/null || true)"
+          test -z "$remaining" || { echo "diagnostic could not detach exact image loop: $remaining" >&2; exit 1; }
+          test "$build_status" -eq 0 || { echo "production builder exited $build_status; diagnostic cleanup succeeded but build remains failed" >&2; exit "$build_status"; }
 
       - name: Inspect installed SDL in finished image
         shell: bash
@@ -64,11 +164,13 @@ jobs:
             set +e
             mountpoint -q "$root" && sudo umount "$root"
             sudo partx -d "$loop" >/dev/null 2>&1 || true
-            sudo udevadm settle --timeout=5 >/dev/null 2>&1 || true
-            sudo blockdev --flushbufs "$loop" >/dev/null 2>&1 || true
-            sudo udevadm settle --timeout=5 >/dev/null 2>&1 || true
-            sudo losetup -d "$loop" >/dev/null 2>&1 || true
-            sudo udevadm settle --timeout=5 >/dev/null 2>&1 || true
+            for _ in $(seq 1 40); do
+              sudo blockdev --flushbufs "$loop" >/dev/null 2>&1 || true
+              sudo losetup -d "$loop" >/dev/null 2>&1 || true
+              sudo udevadm settle --timeout=2 >/dev/null 2>&1 || true
+              test -z "$(sudo losetup -j "$image" 2>/dev/null || true)" && break
+              sleep 0.25
+            done
           }
           trap cleanup_probe EXIT INT TERM
           for _ in $(seq 1 20); do test -b "${loop}p1" && break; sleep 0.2; done
