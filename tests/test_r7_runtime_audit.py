@@ -28,6 +28,16 @@ class R7RuntimeAuditTests(unittest.TestCase):
         self.assertNotIn("pygame.display", collector)
         self.assertNotIn("/dev/input/event", collector)
 
+    def test_runtime_audit_only_copies_prior_active_acceptance_result(self) -> None:
+        collector = COLLECTOR.read_text(encoding="utf-8")
+        self.assertIn(
+            "copy_if_readable /var/lib/greia-kmsdrm-acceptance/result.json kmsdrm-acceptance.json",
+            collector,
+        )
+        self.assertNotIn("systemctl start greia-kmsdrm-acceptance.service", collector)
+        self.assertNotIn("greia_platform.kmsdrm_acceptance", collector)
+        self.assertNotIn("--acknowledge-display-takeover", collector)
+
     def test_probe_module_is_in_the_existing_installed_source_tree(self) -> None:
         builder = BUILD_IMAGE.read_text(encoding="utf-8")
         module = PROJECT_ROOT / "src" / "greia_platform" / "direct_graphics_probe.py"
