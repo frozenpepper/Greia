@@ -19,6 +19,7 @@ SCHEMA_VERSION = 1
 EXPECTED_PROFILE = "modern-amd64-dev"
 EXPECTED_PACKAGE_SET = "developer-remote"
 MARKER = Path("etc/greia-os/developer-remote")
+DISPLAY_ENDPOINT = Path("etc/greia-os/developer-display.json")
 ADMIN_HOME = Path("var/lib/greia-admin")
 AUTHORIZED_KEYS = ADMIN_HOME / ".ssh/authorized_keys"
 SUDOERS = Path("etc/sudoers.d/greia-developer-remote")
@@ -62,7 +63,9 @@ class DeveloperImageProvisioner:
         self._require_root()
         image = self.config.image.resolve()
         if not image.is_file() or image.stat().st_size == 0:
-            raise DeveloperImageProvisionError(f"developer image is missing or empty: {image}")
+            raise DeveloperImageProvisionError(
+                f"developer image is missing or empty: {image}"
+            )
         self.config.output_dir.mkdir(parents=True, exist_ok=True)
         for path in (self.key_path, self.public_key_path, self.report_path):
             if path.exists():
@@ -95,7 +98,9 @@ class DeveloperImageProvisioner:
 
         after_sha = _sha256_file(image)
         if before_sha == after_sha:
-            raise DeveloperImageProvisionError("developer provisioning did not modify the image")
+            raise DeveloperImageProvisionError(
+                "developer provisioning did not modify the image"
+            )
         report = {
             "schema_version": SCHEMA_VERSION,
             "ok": True,
@@ -112,6 +117,7 @@ class DeveloperImageProvisioner:
             "ssh_host_keys_cloned": False,
             "ssh_host_keys_generated_on_first_boot": True,
             "passwordless_sudo_surface": "/usr/local/sbin/greia-devctl",
+            "display_endpoint": {"user": "greiakid", "display": ":0"},
             "developer_activity_root": DEVELOPER_ACTIVITY_ROOT,
             "developer_activity_trust": "developer_unsigned",
             "production_profile_changed": False,
@@ -128,7 +134,9 @@ class DeveloperImageProvisioner:
         try:
             payload = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as exc:
-            raise DeveloperImageProvisionError(f"cannot read image profile: {exc}") from exc
+            raise DeveloperImageProvisionError(
+                f"cannot read image profile: {exc}"
+            ) from exc
         profile = payload.get("profile")
         package_sets = payload.get("package_sets")
         if not isinstance(profile, dict) or profile.get("profile_id") != EXPECTED_PROFILE:
@@ -136,7 +144,9 @@ class DeveloperImageProvisioner:
                 f"refusing to provision non-developer profile; expected {EXPECTED_PROFILE!r}"
             )
         if not isinstance(package_sets, dict):
-            raise DeveloperImageProvisionError("image profile has no package-set declaration")
+            raise DeveloperImageProvisionError(
+                "image profile has no package-set declaration"
+            )
         target_sets = package_sets.get("target")
         if not isinstance(target_sets, list) or EXPECTED_PACKAGE_SET not in target_sets:
             raise DeveloperImageProvisionError(
@@ -212,6 +222,14 @@ class DeveloperImageProvisioner:
             encoding="utf-8",
         )
         os.chmod(marker, 0o600)
+
+        endpoint = root / DISPLAY_ENDPOINT
+        endpoint.write_text(
+            json.dumps({"user": "greiakid", "display": ":0"}, sort_keys=True)
+            + "\n",
+            encoding="utf-8",
+        )
+        os.chmod(endpoint, 0o600)
 
         sudoers = root / SUDOERS
         sudoers.parent.mkdir(parents=True, exist_ok=True)
