@@ -1,0 +1,139 @@
+name: R7 boot runtime closure and loop teardown
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/r7-boot-runtime-closure.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  verify-and-persist:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Apply minimal boot/runtime closure repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+
+          def add_package(path: str, package: str) -> None:
+              p = Path(path)
+              lines = [line.strip() for line in p.read_text(encoding='utf-8').splitlines() if line.strip()]
+              if package not in lines:
+                  lines.append(package)
+              p.write_text('\n'.join(sorted(lines)) + '\n', encoding='utf-8')
+
+          add_package('build/package-sets/boot-cover-plymouth.txt', 'plymouth-label')
+          add_package('build/package-sets/platform-base.txt', 'e2fsprogs')
+
+          cleanup = Path('build/lib/safe-cleanup.sh')
+          text = cleanup.read_text(encoding='utf-8')
+          anchor = '''  local attempt\n  for attempt in {1..20}; do\n'''
+          replacement = '''  # losetup --partscan creates kernel partition mappings. Remove them after\n  # all filesystems are unmounted so they cannot hold the loop association open.\n  partx -d "$loop_device" 2>/dev/null || true\n  safe_udev_settle\n  local attempt\n  for attempt in {1..20}; do\n'''
+          if text.count(anchor) != 1:
+              raise SystemExit('safe_detach_loop anchor mismatch')
+          cleanup.write_text(text.replace(anchor, replacement, 1), encoding='utf-8')
+
+          for path, marker in (
+              ('build/build-image.sh', 'require_commands=('),
+              ('build/build-installer-image.sh', 'required=('),
+          ):
+              p = Path(path)
+              text = p.read_text(encoding='utf-8')
+              line = next(line for line in text.splitlines() if line.startswith(marker))
+              if ' partx ' not in f' {line} ':
+                  new_line = line.replace('parted losetup', 'parted partx losetup')
+                  if new_line == line:
+                      raise SystemExit(f'{path}: required-command anchor mismatch')
+                  text = text.replace(line, new_line, 1)
+              p.write_text(text, encoding='utf-8')
+          PY
+
+          cat > tests/test_image_runtime_closure.py <<'PYTEST'
+          from __future__ import annotations
+
+          import unittest
+          from pathlib import Path
+
+
+          ROOT = Path(__file__).resolve().parents[1]
+
+
+          class ImageRuntimeClosureTests(unittest.TestCase):
+              def _packages(self, relative: str) -> set[str]:
+                  return {
+                      line.strip()
+                      for line in (ROOT / relative).read_text(encoding="utf-8").splitlines()
+                      if line.strip() and not line.lstrip().startswith("#")
+                  }
+
+              def test_target_has_ext4_fsck_runtime(self) -> None:
+                  self.assertIn("e2fsprogs", self._packages("build/package-sets/platform-base.txt"))
+                  self.assertIn("e2fsprogs", self._packages("build/package-sets/installer-base.txt"))
+
+              def test_plymouth_theme_has_label_plugin_runtime(self) -> None:
+                  packages = self._packages("build/package-sets/boot-cover-plymouth.txt")
+                  self.assertIn("plymouth", packages)
+                  self.assertIn("plymouth-label", packages)
+
+              def test_partscan_mappings_are_removed_before_loop_detach(self) -> None:
+                  helper = (ROOT / "build/lib/safe-cleanup.sh").read_text(encoding="utf-8")
+                  partx = helper.index('partx -d "$loop_device"')
+                  detach = helper.index('losetup -d "$loop_device"')
+                  self.assertLess(partx, detach)
+                  self.assertIn("safe_udev_settle", helper[partx:detach])
+
+              def test_both_builders_require_partx(self) -> None:
+                  for relative in ("build/build-image.sh", "build/build-installer-image.sh"):
+                      text = (ROOT / relative).read_text(encoding="utf-8")
+                      command_line = next(
+                          line for line in text.splitlines()
+                          if line.startswith(("require_commands=(", "required=("))
+                      )
+                      self.assertIn("partx", command_line.split())
+
+
+          if __name__ == "__main__":
+              unittest.main()
+          PYTEST
+
+          git diff --check
+
+      - name: Install test dependency
+        run: python3 -m pip install --disable-pip-version-check --quiet Pillow
+
+      - name: Focused closure regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m compileall -q src tests tools activities
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_image_runtime_closure.py' -v
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_build_reliability.py' -v
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_build_reproducibility.py' -v
+
+      - name: Full provider-free gate
+        run: make verify
+
+      - name: Persist verified closure and remove this workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm .github/workflows/r7-boot-runtime-closure.yml
+          git add build/package-sets/boot-cover-plymouth.txt build/package-sets/platform-base.txt \
+            build/lib/safe-cleanup.sh build/build-image.sh build/build-installer-image.sh \
+            tests/test_image_runtime_closure.py
+          git diff --cached --check
+          git config user.name greia-r7
+          git config user.email greia-r7@users.noreply.github.com
+          git commit -m 'build: close initramfs runtime dependencies and loop mappings'
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
