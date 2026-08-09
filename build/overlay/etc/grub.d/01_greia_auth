@@ -1,14 +1,14 @@
 #!/bin/sh
 set -eu
 hash_file=/etc/greia-os/grub-recovery.pbkdf2
-[ -s "$hash_file" ] || { echo "Missing Pip GRUB recovery hash" >&2; exit 1; }
+[ -s "$hash_file" ] || { echo "Missing Greia GRUB recovery hash" >&2; exit 1; }
 hash="$(cat "$hash_file")"
 case "$hash" in
   grub.pbkdf2.*) ;;
-  *) echo "Invalid Pip GRUB recovery hash" >&2; exit 1 ;;
+  *) echo "Invalid Greia GRUB recovery hash" >&2; exit 1 ;;
 esac
 cat <<EOF
-set superusers="pip-recovery"
+set superusers="greia-recovery"
 export superusers
-password_pbkdf2 pip-recovery $hash
+password_pbkdf2 greia-recovery $hash
 EOF
