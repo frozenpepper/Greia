@@ -33,6 +33,7 @@ from greia_platform.hal import (
 )
 from greia_platform.history import HistoryError
 from greia_platform.permissions import PermissionDecisionError
+from greia_platform.trust import ActivitySource, PackageTrust
 from greia_platform.profiles import (
     ActiveProfileSession,
     ChildProfile,
@@ -40,7 +41,6 @@ from greia_platform.profiles import (
     ProfileError,
     ProfileStore,
 )
-from greia_platform.trust import ActivitySource, PackageTrust
 
 from .composition import (
     build_launcher_runtime_services,
@@ -521,18 +521,12 @@ class LauncherApplication:
         width, height = screen.get_size()
         header_size = max(70, min(100, height // 6))
         header_icon = self._load_icon("rainbow", header_size, pygame)
-        screen.blit(
-            header_icon,
-            header_icon.get_rect(center=(width // 2, header_size // 2 + 8)),
-        )
+        screen.blit(header_icon, header_icon.get_rect(center=(width // 2, header_size // 2 + 8)))
         if not self.profiles:
             self._draw_empty(screen, pygame)
             return
 
-        columns = min(
-            4 if width >= 900 else 3 if width >= 700 else 2,
-            len(self.profiles),
-        )
+        columns = min(4 if width >= 900 else 3 if width >= 700 else 2, len(self.profiles))
         page = calculate_grid_page(
             len(self.profiles), self._profile_selected, columns=columns, max_rows=2
         )
@@ -541,14 +535,8 @@ class LauncherApplication:
         side_reserve = 150 if page.page_count > 1 else 30
         gap = max(12, min(22, width // 48))
         usable_w = max(240, width - side_reserve)
-        tile_w = min(
-            205,
-            (usable_w - gap * (page.columns - 1)) // page.columns,
-        )
-        tile_h = min(
-            205,
-            (available_h - gap * max(0, page.rows - 1)) // max(1, page.rows),
-        )
+        tile_w = min(205, (usable_w - gap * (page.columns - 1)) // page.columns)
+        tile_h = min(205, (available_h - gap * max(0, page.rows - 1)) // max(1, page.rows))
         tile_w = max(110, tile_w)
         tile_h = max(120, tile_h)
         total_w = page.columns * tile_w + (page.columns - 1) * gap
@@ -577,10 +565,7 @@ class LauncherApplication:
             )
             icon_size = min(int(rect.width * 0.58), int(rect.height * 0.58))
             icon = self._load_icon(profile.avatar_id, icon_size, pygame)
-            screen.blit(
-                icon,
-                icon.get_rect(center=(rect.centerx, rect.top + rect.height * 0.40)),
-            )
+            screen.blit(icon, icon.get_rect(center=(rect.centerx, rect.top + rect.height * 0.40)))
             name = self._font(max(23, min(38, rect.height // 6)), pygame).render(
                 profile.display_name, True, theme.text
             )
@@ -590,26 +575,12 @@ class LauncherApplication:
                     name,
                     (
                         scaled_width,
-                        max(
-                            1,
-                            round(
-                                name.get_height()
-                                * scaled_width
-                                / name.get_width()
-                            ),
-                        ),
+                        max(1, round(name.get_height() * scaled_width / name.get_width())),
                     ),
                 )
-            screen.blit(
-                name,
-                name.get_rect(
-                    center=(rect.centerx, rect.bottom - rect.height * 0.15)
-                ),
-            )
+            screen.blit(name, name.get_rect(center=(rect.centerx, rect.bottom - rect.height * 0.15)))
             if profile.has_secret:
-                lock = self._load_icon(
-                    "yellow_star", max(26, rect.width // 7), pygame
-                )
+                lock = self._load_icon("yellow_star", max(26, rect.width // 7), pygame)
                 screen.blit(lock, lock.get_rect(topright=(rect.right - 8, rect.top + 8)))
             self._targets.append(HitTarget("profile", profile, rect))
 
@@ -635,60 +606,24 @@ class LauncherApplication:
             profile.display_name, True, theme.text
         )
         screen.blit(name, name.get_rect(center=(width // 2, height // 2 - 54)))
-        entry = pygame.Rect(
-            width // 2 - min(300, width // 3),
-            height // 2,
-            min(600, width * 2 // 3),
-            max(74, height // 8),
-        )
+        entry = pygame.Rect(width // 2 - min(300, width // 3), height // 2, min(600, width * 2 // 3), max(74, height // 8))
         pygame.draw.rect(screen, theme.panel, entry, border_radius=20)
-        border = (
-            self.ERROR
-            if time.monotonic() < self._secret_error_until
-            else theme.accent
-        )
+        border = self.ERROR if time.monotonic() < self._secret_error_until else theme.accent
         pygame.draw.rect(screen, border, entry, width=7, border_radius=20)
-        visible = (
-            "•" * len(self._secret_text)
-            if profile.mask_secret
-            else self._secret_text
+        visible = "•" * len(self._secret_text) if profile.mask_secret else self._secret_text
+        text_surface = self._font(max(32, min(50, entry.height // 2)), pygame).render(
+            visible or "…", True, theme.text
         )
-        text_surface = self._font(
-            max(32, min(50, entry.height // 2)), pygame
-        ).render(visible or "…", True, theme.text)
         if text_surface.get_width() > entry.width - 28:
             text_surface = text_surface.subsurface(
-                (
-                    text_surface.get_width() - entry.width + 28,
-                    0,
-                    entry.width - 28,
-                    text_surface.get_height(),
-                )
+                (text_surface.get_width() - entry.width + 28, 0, entry.width - 28, text_surface.get_height())
             ).copy()
-        screen.blit(
-            text_surface,
-            text_surface.get_rect(midleft=(entry.left + 18, entry.centery)),
-        )
+        screen.blit(text_surface, text_surface.get_rect(midleft=(entry.left + 18, entry.centery)))
         button_size = max(68, min(92, height // 7))
         gap = 24
-        cancel = pygame.Rect(
-            width // 2 - button_size - gap,
-            entry.bottom + 22,
-            button_size,
-            button_size,
-        )
-        erase = pygame.Rect(
-            width // 2 - button_size // 2,
-            entry.bottom + 22,
-            button_size,
-            button_size,
-        )
-        accept = pygame.Rect(
-            width // 2 + gap,
-            entry.bottom + 22,
-            button_size,
-            button_size,
-        )
+        cancel = pygame.Rect(width // 2 - button_size - gap, entry.bottom + 22, button_size, button_size)
+        erase = pygame.Rect(width // 2 - button_size // 2, entry.bottom + 22, button_size, button_size)
+        accept = pygame.Rect(width // 2 + gap, entry.bottom + 22, button_size, button_size)
         for rect, icon_id, action in (
             (cancel, "close_button", "cancel_unlock"),
             (erase, "abc_board", "backspace"),
@@ -707,11 +642,7 @@ class LauncherApplication:
             badge = pygame.Rect(14, 10, badge_size, badge_size)
             pygame.draw.rect(screen, theme.panel, badge, border_radius=22)
             pygame.draw.rect(screen, theme.accent, badge, width=5, border_radius=22)
-            avatar = self._load_icon(
-                self._active_profile.profile.avatar_id,
-                badge_size - 12,
-                pygame,
-            )
+            avatar = self._load_icon(self._active_profile.profile.avatar_id, badge_size - 12, pygame)
             screen.blit(avatar, avatar.get_rect(center=badge.center))
             self._targets.append(HitTarget("switch_profile", None, badge))
         if not self._activities:
@@ -748,9 +679,7 @@ class LauncherApplication:
                 tile_size,
             )
             selected = global_index == self._selected
-            self._draw_activity_tile(
-                screen, rect, activity, selected, theme, pygame
-            )
+            self._draw_activity_tile(screen, rect, activity, selected, theme, pygame)
             self._targets.append(HitTarget("activity", global_index, rect))
 
         self._draw_page_controls(
@@ -762,9 +691,7 @@ class LauncherApplication:
             next_action="activity_page",
             total=len(self._activities),
         )
-        if (
-            self._last_result and not self._last_result.succeeded
-        ) or self._catalogue_error:
+        if (self._last_result and not self._last_result.succeeded) or self._catalogue_error:
             self._draw_error_badge(screen, pygame)
 
     def _draw_page_controls(
@@ -783,46 +710,21 @@ class LauncherApplication:
         size = max(54, min(72, screen.get_height() // 8))
         center_y = screen.get_height() // 2 + 24
         controls = (
-            (
-                "previous",
-                pygame.Rect(14, center_y - size // 2, size, size),
-                previous_action,
-            ),
-            (
-                "next",
-                pygame.Rect(
-                    screen.get_width() - size - 14,
-                    center_y - size // 2,
-                    size,
-                    size,
-                ),
-                next_action,
-            ),
+            ("previous", pygame.Rect(14, center_y - size // 2, size, size), previous_action),
+            ("next", pygame.Rect(screen.get_width() - size - 14, center_y - size // 2, size, size), next_action),
         )
         for direction, rect, action in controls:
-            enabled = (
-                page.page_index > 0
-                if direction == "previous"
-                else page.page_index + 1 < page.page_count
-            )
+            enabled = page.page_index > 0 if direction == "previous" else page.page_index + 1 < page.page_count
             if not enabled:
                 continue
             pygame.draw.rect(screen, theme.panel, rect, border_radius=20)
             pygame.draw.rect(screen, theme.accent, rect, width=5, border_radius=20)
             inset = max(13, rect.width // 4)
             if direction == "previous":
-                points = (
-                    (rect.right - inset, rect.top + inset),
-                    (rect.left + inset, rect.centery),
-                    (rect.right - inset, rect.bottom - inset),
-                )
+                points = ((rect.right - inset, rect.top + inset), (rect.left + inset, rect.centery), (rect.right - inset, rect.bottom - inset))
                 target_index = max(0, page.start - page.page_size)
             else:
-                points = (
-                    (rect.left + inset, rect.top + inset),
-                    (rect.right - inset, rect.centery),
-                    (rect.left + inset, rect.bottom - inset),
-                )
+                points = ((rect.left + inset, rect.top + inset), (rect.right - inset, rect.centery), (rect.left + inset, rect.bottom - inset))
                 target_index = min(total - 1, page.stop)
             pygame.draw.polygon(screen, theme.text, points)
             self._targets.append(HitTarget(action, target_index, rect))
@@ -837,23 +739,12 @@ class LauncherApplication:
         pygame: Any,
     ) -> None:
         border = 8 if selected else 3
-        border_color = (
-            theme.accent if selected else _mix(theme.text, theme.panel, 0.72)
-        )
+        border_color = theme.accent if selected else _mix(theme.text, theme.panel, 0.72)
         pygame.draw.rect(screen, theme.panel, rect, border_radius=24)
-        pygame.draw.rect(
-            screen,
-            border_color,
-            rect,
-            width=border,
-            border_radius=24,
-        )
+        pygame.draw.rect(screen, border_color, rect, width=border, border_radius=24)
         icon_size = int(rect.width * 0.62)
         icon = self._load_icon(activity.icon_id, icon_size, pygame)
-        screen.blit(
-            icon,
-            icon.get_rect(center=(rect.centerx, rect.centery - rect.height * 0.06)),
-        )
+        screen.blit(icon, icon.get_rect(center=(rect.centerx, rect.centery - rect.height * 0.06)))
 
     def _load_icon(self, icon_id: str, size: int, pygame: Any) -> Any:
         cache_key = (icon_id, size)
@@ -884,11 +775,7 @@ class LauncherApplication:
         screen.blit(icon, icon.get_rect(center=(x, y)))
 
     def _draw_empty(self, screen: Any, pygame: Any) -> None:
-        icon = self._load_icon(
-            "robot",
-            min(screen.get_width(), screen.get_height()) // 3,
-            pygame,
-        )
+        icon = self._load_icon("robot", min(screen.get_width(), screen.get_height()) // 3, pygame)
         screen.blit(icon, icon.get_rect(center=screen.get_rect().center))
 
     def _draw_error_badge(self, screen: Any, pygame: Any) -> None:
@@ -947,10 +834,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    return LauncherApplication(
-        windowed=args.windowed,
-        allow_exit=args.allow_exit,
-    ).run()
+    return LauncherApplication(windowed=args.windowed, allow_exit=args.allow_exit).run()
 
 
 if __name__ == "__main__":
