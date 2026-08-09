@@ -1,10 +1,17 @@
 from __future__ import annotations
 
+import os
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
 
-from greia_platform.direct_graphics_probe import DirectGraphicsProbe, ProbeInputs
+from greia_platform.direct_graphics_probe import (
+    DirectGraphicsProbe,
+    ProbeInputs,
+    _pygame_metadata,
+)
 
 
 class DirectGraphicsProbeTests(unittest.TestCase):
@@ -97,6 +104,28 @@ class DirectGraphicsProbeTests(unittest.TestCase):
         self.assertFalse(snapshot["pygame"]["available"])
         self.assertFalse(snapshot["assessment"]["kmsdrm_prerequisites_visible"])
         self.assertTrue(snapshot["assessment"]["active_kmsdrm_test_required"])
+
+    def test_pygame_metadata_hides_support_prompt_and_restores_caller_environment(self) -> None:
+        fake_pygame = SimpleNamespace(
+            get_sdl_version=lambda: (2, 32, 4),
+            version=SimpleNamespace(ver="2.6.1"),
+        )
+
+        def import_pygame(name: str) -> object:
+            self.assertEqual(name, "pygame")
+            self.assertEqual(os.environ.get("PYGAME_HIDE_SUPPORT_PROMPT"), "1")
+            return fake_pygame
+
+        with patch.dict(os.environ, {"PYGAME_HIDE_SUPPORT_PROMPT": "caller"}):
+            with patch(
+                "greia_platform.direct_graphics_probe.importlib.import_module",
+                side_effect=import_pygame,
+            ):
+                metadata = _pygame_metadata()
+            self.assertEqual(os.environ.get("PYGAME_HIDE_SUPPORT_PROMPT"), "caller")
+
+        self.assertEqual(metadata["version"], "2.6.1")
+        self.assertEqual(metadata["sdl_version"], [2, 32, 4])
 
 
 if __name__ == "__main__":
