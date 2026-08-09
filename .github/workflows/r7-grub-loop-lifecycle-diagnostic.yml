@@ -1,0 +1,110 @@
+name: R7 GRUB loop lifecycle diagnostic
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/r7-grub-loop-lifecycle-diagnostic.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  grub-loop-reference:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Install exact loop and BIOS GRUB tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            util-linux parted e2fsprogs udev grub-pc-bin grub-common
+
+      - name: Exercise GRUB against disposable loop image
+        shell: bash
+        run: |
+          set -euo pipefail
+          image="$RUNNER_TEMP/r7-grub-loop.img"
+          root="$RUNNER_TEMP/r7-grub-loop-root"
+          mkdir -p "$root"
+          truncate -s 256M "$image"
+          sudo parted -s "$image" mklabel msdos
+          sudo parted -s "$image" mkpart primary ext4 1MiB 100%
+          sudo parted -s "$image" set 1 boot on
+          loop="$(sudo losetup --find --show --partscan "$image")"
+          for _ in $(seq 1 30); do test -b "${loop}p1" && break; sleep 0.1; done
+          test -b "${loop}p1"
+          sudo mkfs.ext4 -q -F "${loop}p1"
+          sudo mount "${loop}p1" "$root"
+          sudo mkdir -p "$root/boot"
+
+          echo '=== before grub-install ==='
+          sudo losetup --list --noheadings --output NAME,BACK-FILE,AUTOCLEAR,PARTSCAN,RO "$loop"
+          sudo lsblk -a -o NAME,KNAME,MAJ:MIN,TYPE,PKNAME,MOUNTPOINTS "$loop"
+
+          sudo grub-install --target=i386-pc --boot-directory="$root/boot" --recheck "$loop"
+          sudo sync
+
+          echo '=== immediately after grub-install ==='
+          sudo losetup --list --noheadings --output NAME,BACK-FILE,AUTOCLEAR,PARTSCAN,RO "$loop"
+          sudo lsblk -a -o NAME,KNAME,MAJ:MIN,TYPE,PKNAME,MOUNTPOINTS "$loop"
+          echo 'process fds:'
+          sudo bash -c '
+            shopt -s nullglob
+            for fd in /proc/[0-9]*/fd/*; do
+              target=$(readlink "$fd" 2>/dev/null || true)
+              case "$target" in
+                /dev/'"${loop#/dev/}"'|/dev/'"${loop#/dev/}"'p*) printf "%s -> %s\n" "$fd" "$target" ;;
+              esac
+            done
+          ' || true
+
+          sudo umount "$root"
+          echo '=== after root unmount ==='
+          sudo lsblk -a -o NAME,KNAME,MAJ:MIN,TYPE,PKNAME,MOUNTPOINTS "$loop"
+
+          set +e
+          sudo partx -d "$loop" >/tmp/grub-partx.out 2>/tmp/grub-partx.err
+          partx_status=$?
+          set -e
+          echo "PARTX_STATUS=$partx_status"
+          sed 's/^/partx_stdout: /' /tmp/grub-partx.out || true
+          sed 's/^/partx_stderr: /' /tmp/grub-partx.err || true
+          sudo udevadm settle --timeout=5 || true
+          echo '=== after partx -d ==='
+          sudo lsblk -a -o NAME,KNAME,MAJ:MIN,TYPE,PKNAME,MOUNTPOINTS "$loop"
+
+          sudo blockdev --flushbufs "$loop" || true
+          set +e
+          sudo losetup -d "$loop" >/tmp/grub-detach.out 2>/tmp/grub-detach.err
+          detach_status=$?
+          set -e
+          echo "DETACH_STATUS=$detach_status"
+          sed 's/^/detach_stdout: /' /tmp/grub-detach.out || true
+          sed 's/^/detach_stderr: /' /tmp/grub-detach.err || true
+          sudo udevadm settle --timeout=5 || true
+          remaining="$(sudo losetup -j "$image" 2>/dev/null || true)"
+          echo "R7_GRUB_LOOP_REMAINING=$remaining"
+          if test -n "$remaining"; then
+            sudo losetup --list --noheadings --output NAME,BACK-FILE,AUTOCLEAR,PARTSCAN,RO "$loop" || true
+            sudo lsblk -a -o NAME,KNAME,MAJ:MIN,TYPE,PKNAME,MOUNTPOINTS "$loop" || true
+          fi
+          test -z "$remaining"
+
+      - name: Remove one-off diagnostic
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm .github/workflows/r7-grub-loop-lifecycle-diagnostic.yml
+          git config user.name greia-r7
+          git config user.email greia-r7@users.noreply.github.com
+          git commit -m 'ci: retire completed GRUB loop diagnostic'
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
