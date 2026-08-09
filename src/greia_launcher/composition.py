@@ -24,6 +24,8 @@ from greia_platform.history import PlatformHistoryService
 from greia_platform.permissions import PermissionBroker
 from greia_platform.storage import ActivityStorageService, StoragePolicy
 
+from .display_session import DisplaySessionCoordinator
+from .display_session_legacy_x import LegacyXDisplaySessionBackend
 from .runtime_adapter import PythonRuntimeAdapter, PythonRuntimePolicy, RuntimeManager
 
 
@@ -55,6 +57,17 @@ def provisional_installed_hal() -> GreiaHAL:
         network=LinuxNetworkHAL(),
         power=SystemdPowerHAL(),
     )
+
+
+def provisional_installed_display_session() -> DisplaySessionCoordinator:
+    """Compose the current X11 compatibility session behind the R7 contract.
+
+    This deliberately preserves the existing production Xorg/xinit mechanism.
+    Replacing this factory with a measured direct/compositor backend must not
+    require changes to ActivitySupervisor or Activity runtime APIs.
+    """
+
+    return DisplaySessionCoordinator(LegacyXDisplaySessionBackend())
 
 
 def build_launcher_runtime_services(
