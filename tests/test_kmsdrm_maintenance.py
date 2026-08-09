@@ -28,6 +28,7 @@ class KMSDRMMaintenanceTests(unittest.TestCase):
         self.assertIn("TimeoutStartSec=20", unit)
         self.assertIn("--acknowledge-display-takeover", unit)
         self.assertIn("/proc/[0-9]*/comm", unit)
+        self.assertIn("/sys/class/tty/tty0/active", unit)
         self.assertNotIn("pgrep", unit)
         self.assertNotIn("Conflicts=greia-launcher.service", unit)
         self.assertNotIn("[Install]", unit)
@@ -51,6 +52,8 @@ class KMSDRMMaintenanceTests(unittest.TestCase):
         self.assertIn("CRITICAL: Greia launcher did not restore", script)
         self.assertIn('payload.get("actual_video_driver") != "kmsdrm"', script)
         self.assertIn("/proc/[0-9]*/comm", script)
+        self.assertIn("/sys/class/tty/tty0/active", script)
+        self.assertIn("expected active VT tty1", script)
         self.assertNotIn("pgrep", script)
         self.assertNotIn("procps", script)
 

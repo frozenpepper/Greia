@@ -79,6 +79,11 @@ if systemctl is-active --quiet "$launcher"; then
   echo "Refusing KMSDRM takeover: launcher remained active after stop." >&2
   exit 1
 fi
+active_vt="$(cat /sys/class/tty/tty0/active 2>/dev/null || true)"
+if [ "$active_vt" != "tty1" ]; then
+  echo "Refusing KMSDRM takeover: expected active VT tty1, found ${active_vt:-unknown}." >&2
+  exit 1
+fi
 
 rm -f -- "$result"
 systemctl reset-failed "$acceptance" >/dev/null 2>&1 || true
