@@ -51,7 +51,7 @@ Do not confuse conceptual architecture examples with the current Activity SDK.
 | events/progression facts | implemented Greia event client/broker |
 | shared icons | implemented semantic core icon catalogue |
 | theme read API | implemented |
-| general shared Activity widget toolkit | **not implemented yet** |
+| shared Activity UI primitives | **minimal implemented layer** in `src/greia_platform/activity_ui.py`; not a general widget framework |
 | Web Activity runtime/JS SDK | architectural/planned, not current authoring target |
 | `.greiaactivity` archive installation format | future implementation phase |
 | `.greiabackup` author-facing format | future implementation phase |
@@ -71,6 +71,7 @@ docs/DOCUMENTATION.md
 skills/greia-activity-authoring/SKILL.md
 src/greia_platform/activities.py
 src/greia_platform/activity_api.py
+src/greia_platform/activity_ui.py
 src/greia_platform/storage_client.py
 src/greia_platform/event_client.py
 src/greia_platform/event_protocol.py
@@ -90,6 +91,10 @@ Useful real built-in references include:
 ```text
 activities/shape_garden/activity.toml
 activities/shape_garden/main.py
+activities/writing/activity.toml
+activities/writing/main.py
+activities/painting/activity.toml
+activities/painting/main.py
 ```
 
 Reference Activities are examples, not immutable style law. Prefer the current SDK/validator over copying an old implementation quirk.
@@ -144,6 +149,8 @@ Avoid:
 
 Text is not forbidden. Unnecessary reading dependency is.
 
+The bundled **Writing** and **Painting** Activities are reference examples for the “creative tool, not miniature desktop application” rule: large default text, large canvas, few icon-led controls, automatic durable saves, and visual galleries instead of file dialogs.
+
 ---
 
 ## 6. Package contract
@@ -193,6 +200,8 @@ Current canonical IDs are lower-case reverse-DNS-style identifiers with at least
 
 ```text
 org.greia.shape-garden
+org.greia.writing
+org.greia.painting
 org.example.maze-garden
 ```
 
@@ -344,6 +353,14 @@ Do not build Activity logic around forbidden/general host-authority modules such
 
 If a reusable platform function is missing, extend a typed Greia service/SDK boundary rather than smuggling Linux authority into the Activity.
 
+### Current multi-file limitation
+
+The static Python validator currently ignores package-relative imports (`from .model import ...`), but the installed Python adapter still launches `runtime.entrypoint` as a **direct file**. Therefore package-relative imports from that entrypoint are not yet a supported installed authoring pattern.
+
+Do not work around this with `sys.path` mutation, dynamic imports, `importlib`, or by adding arbitrary local module names to the curated import allowlist.
+
+Until runtime module-launch semantics are deliberately implemented and tested, keep a small Activity's local implementation in its entrypoint file, or move genuinely cross-Activity primitives into a reviewed `greia_platform` SDK module. This is a known runtime/authoring limitation, not a desired long-term architecture.
+
 ---
 
 ## 11. Lifecycle: READY and STOP
@@ -456,6 +473,16 @@ checkpoint_token = storage.checkpoint()
 ```
 
 The client transport accepts large bounded payloads, but that is not permission to waste memory/storage. Inspect service quota/info and design compact state.
+
+Current Phase-0 policy is approximately:
+
+```text
+32 MiB one-Activity namespace quota
+16 MiB maximum one private file
+512 private files maximum
+```
+
+The policy file is authoritative. Creative tools must refuse or surface quota failures safely; they must never silently discard old child work to make room.
 
 Do not bypass Greia storage with an arbitrary persistent filesystem location; that breaks quota/migration/backup semantics.
 
@@ -615,13 +642,32 @@ An Activity is still allowed to have a deliberate game/art visual identity; them
 
 ## 17. Shared UI/graphics library status
 
-At this review Greia has shared semantic assets/theme services, but **no accepted general-purpose Activity widget/layout/animation toolkit**.
+Greia now has a **deliberately small first shared Activity UI primitive layer**:
 
-Do not fabricate imports such as `greia_ui.Button` because an architecture description sounds like one should exist.
+```text
+src/greia_platform/activity_ui.py
+```
 
-When multiple Activities repeatedly need the same optimized child control/layout/font-cache/transition/audio-cue primitives, propose a reviewed shared SDK library. Once accepted, update this skill and prefer the shared implementation over private clones.
+Current primitives include:
 
-Until then, keep Activity-local UI infrastructure small, reusable within the Activity, and compatible with the performance rules below.
+- `ChildUiMetrics` — 1024×600-first proportional metrics and large toolbar geometry;
+- cached semantic icon loading/scaling;
+- rounded icon-button rendering;
+- small shared symbols currently needed by real Activities (new/grid/undo/eraser);
+- a bounded RGB `mix()` helper.
+
+The initial consumers are:
+
+```text
+activities/writing
+activities/painting
+```
+
+This is **not** a general widget/layout/scene/animation framework. Do not invent `greia_ui.Button`, CSS-like layout systems, retained widget trees, animation engines, or other abstractions that do not exist.
+
+Add a shared primitive only when at least one real cross-Activity need justifies it and the primitive remains cheap on the C0 reference floor. Prefer extending this narrow SDK layer over copy-pasting the same child-control geometry/rendering into multiple Activities.
+
+If richer repeated needs emerge (gallery cards, text measurement/cache, focus navigation, transitions, audio feedback), design them from measured real consumers and update this skill in the same tranche.
 
 ---
 
@@ -685,6 +731,11 @@ Prefer:
 - meaningful-event durable writes rather than every-frame saves;
 - optional richer effects rather than raising the hardware floor.
 
+Creative-tool examples:
+
+- Writing recomputes visual line layout only when text changes, not every frame;
+- Painting draws directly into a bounded canvas surface, keeps undo history bounded, and PNG-encodes only on autosave/transition rather than every pointer event.
+
 ### Frame-rate guidance
 
 A stable **30 FPS** is a sensible default authoring target for most 2D child Activities on the low-end reference class. It is currently guidance, not a formally measured release threshold.
@@ -704,6 +755,7 @@ Design at **1024×600 first**.
 Good patterns:
 
 - derive layout from the actual surface size;
+- use `ChildUiMetrics` for common large toolbar geometry where appropriate;
 - use a small number of meaningful breakpoints only when necessary;
 - cache resolution-dependent surfaces and rebuild only on size change;
 - use integer/rational scaling for pixel art when suitable;
@@ -755,6 +807,8 @@ An Activity must not reveal Linux internals to children.
 - keep durable writes atomic through Greia storage;
 - inspect failures through developer logs/screenshot tooling.
 
+For a creation tool, a save/quota failure must not be disguised as success. Keep the in-memory creation intact where practical and show a child-safe persistent failure state; never delete another creation automatically to hide the quota condition.
+
 ---
 
 ## 24. Portable state/randomness
@@ -766,7 +820,8 @@ Good durable state:
 ```text
 level number
 puzzle seed/version
-child drawing bytes
+UTF-8 child document
+PNG child drawing
 Activity-local settings
 logical score/progress state
 ```
@@ -829,6 +884,8 @@ Keep domain/simulation logic decoupled from rendering when that improves testing
 
 Avoid broad mutable globals; narrow immutable/cached resources are acceptable when clear.
 
+The current direct-file Python launch limitation may force a small Activity to keep several clean classes in one `main.py`; do not respond by writing one giant procedural function. Preserve internal boundaries even when they cannot yet be split into package-relative modules.
+
 ---
 
 ## 27. Provider-free tests
@@ -842,7 +899,9 @@ Add deterministic tests for logic that does not require the installed display/se
 - save encode/decode;
 - content rules;
 - bounded randomness;
-- layout calculations.
+- layout calculations;
+- creation-library ordering and quota behavior;
+- bounded undo/history semantics.
 
 Do not replace qualitative visual/content judgment with naive regex/word-count checks.
 
@@ -915,7 +974,7 @@ Do not claim this remote loop works on hardware until the current handover recor
 
 ## 31. Performance acceptance loop
 
-For a nontrivial game/animation:
+For a nontrivial game/animation or creation tool:
 
 1. validate package/imports;
 2. run provider-free logic tests;
@@ -923,12 +982,12 @@ For a nontrivial game/animation:
 4. deploy to the developer target when hardware acceptance is available;
 5. test at 1024×600;
 6. capture startup/first usable screen;
-7. exercise the busiest realistic scene;
+7. exercise the busiest realistic scene or longest realistic document/canvas interaction;
 8. observe frame pacing/responsiveness;
 9. collect RSS/CPU evidence when tooling allows;
-10. check logs for stalls/errors;
-11. optimize measured hotspots;
-12. repeat and preserve before/after evidence.
+10. exercise autosave/quota/error behavior;
+11. check logs for stalls/errors;
+12. optimize measured hotspots and repeat with preserved evidence.
 
 Simplify expensive effects or make them progressive enhancement rather than redefining the reference hardware away.
 
@@ -948,8 +1007,9 @@ Before claiming a new Activity source-ready:
 - READY emitted only when usable;
 - STOP honored in long-running loop;
 - Greia storage used for durable state;
+- no silent eviction/deletion of child creations on quota/library pressure;
 - normalized events declared/emitted where progression facts exist;
-- shared icons/theme used where appropriate;
+- shared icons/theme/UI primitives used where appropriate;
 - Activity assets optimized;
 - 1024×600 usable;
 - child navigation does not unnecessarily require reading;
@@ -986,7 +1046,7 @@ Update this file in the same tranche whenever any of these change:
 - runtime API version;
 - allowed capabilities/permission requests;
 - effective trust behavior relevant to authors;
-- Python import/runtime policy;
+- Python import/runtime policy or entrypoint/module semantics;
 - lifecycle API;
 - storage API;
 - event/progression API/protocol limits;
