@@ -53,6 +53,7 @@ class DirectGraphicsProbe:
             name: bool(self._library_finder(name))
             for name in ("drm", "gbm", "EGL", "input", "seat")
         }
+        scanout_connector_visible = _has_connected_connector_with_mode(drm["connectors"])
         return {
             "schema_version": SCHEMA_VERSION,
             "passive": True,
@@ -67,9 +68,13 @@ class DirectGraphicsProbe:
             "assessment": {
                 # This is intentionally only a prerequisite classification. A
                 # successful active KMSDRM window/frame test is still mandatory.
+                # A DRM card without a connected connector/mode is not enough to
+                # establish a scanout path and should be diagnosed as topology.
+                "scanout_connector_visible": scanout_connector_visible,
                 "kmsdrm_prerequisites_visible": bool(
                     "kmsdrm" in drivers
                     and drm["card_nodes"]
+                    and scanout_connector_visible
                     and libraries["drm"]
                     and libraries["gbm"]
                 ),
@@ -137,6 +142,24 @@ class DirectGraphicsProbe:
             "xdg_seat": _bounded_env_value(env.get("XDG_SEAT")),
             "xdg_vtnr": _bounded_env_value(env.get("XDG_VTNR")),
         }
+
+
+def _has_connected_connector_with_mode(connectors: object) -> bool:
+    if not isinstance(connectors, list):
+        return False
+    for connector in connectors:
+        if not isinstance(connector, Mapping):
+            continue
+        status = connector.get("status")
+        modes = connector.get("modes")
+        if (
+            isinstance(status, str)
+            and status.strip().lower() == "connected"
+            and isinstance(modes, list)
+            and any(isinstance(mode, str) and mode.strip() for mode in modes)
+        ):
+            return True
+    return False
 
 
 def _compiled_sdl_video_drivers() -> tuple[str, ...]:
