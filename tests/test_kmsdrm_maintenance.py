@@ -8,6 +8,13 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 OVERLAY = PROJECT_ROOT / "build" / "overlay"
 SERVICE = OVERLAY / "etc" / "systemd" / "system" / "greia-kmsdrm-acceptance.service"
+HANDOFF_SERVICE = (
+    OVERLAY
+    / "etc"
+    / "systemd"
+    / "system"
+    / "greia-kmsdrm-handoff-acceptance.service"
+)
 CONTROLLER = OVERLAY / "usr" / "local" / "sbin" / "greia-run-kmsdrm-acceptance"
 TMPFILES = OVERLAY / "usr" / "lib" / "tmpfiles.d" / "greia-r7-maintenance.conf"
 LAUNCHER_SERVICE = OVERLAY / "etc" / "systemd" / "system" / "greia-launcher.service"
@@ -27,6 +34,28 @@ class KMSDRMMaintenanceTests(unittest.TestCase):
         self.assertIn("StateDirectory=greia-kmsdrm-acceptance", unit)
         self.assertIn("TimeoutStartSec=20", unit)
         self.assertIn("--acknowledge-display-takeover", unit)
+        self.assertIn("/proc/[0-9]*/comm", unit)
+        self.assertIn("/sys/class/tty/tty0/active", unit)
+        self.assertNotIn("pgrep", unit)
+        self.assertNotIn("Conflicts=greia-launcher.service", unit)
+        self.assertNotIn("[Install]", unit)
+        self.assertNotIn("WantedBy=", unit)
+
+    def test_serial_handoff_service_is_manual_bounded_greiakid_pam_vt_session(self) -> None:
+        unit = HANDOFF_SERVICE.read_text(encoding="utf-8")
+        self.assertIn("Type=oneshot", unit)
+        self.assertIn("User=greiakid", unit)
+        self.assertIn("Group=greiakid", unit)
+        self.assertIn("PAMName=login", unit)
+        self.assertIn("TTYPath=/dev/tty1", unit)
+        self.assertIn("StandardInput=tty-fail", unit)
+        self.assertIn("Environment=SDL_VIDEODRIVER=kmsdrm", unit)
+        self.assertIn("UnsetEnvironment=DISPLAY WAYLAND_DISPLAY XAUTHORITY", unit)
+        self.assertIn("StateDirectory=greia-kmsdrm-handoff-acceptance", unit)
+        self.assertIn("TimeoutStartSec=75", unit)
+        self.assertIn("greia_platform.kmsdrm_serial_handoff", unit)
+        self.assertIn("--acknowledge-display-takeover", unit)
+        self.assertIn("Conflicts=getty@tty1.service greia-kmsdrm-acceptance.service", unit)
         self.assertIn("/proc/[0-9]*/comm", unit)
         self.assertIn("/sys/class/tty/tty0/active", unit)
         self.assertNotIn("pgrep", unit)
@@ -72,6 +101,7 @@ class KMSDRMMaintenanceTests(unittest.TestCase):
         launcher = LAUNCHER_SERVICE.read_text(encoding="utf-8")
         self.assertIn("/usr/bin/xinit", launcher)
         self.assertNotIn("greia-kmsdrm-acceptance", launcher)
+        self.assertNotIn("greia-kmsdrm-handoff-acceptance", launcher)
         self.assertFalse(
             (
                 OVERLAY
@@ -80,6 +110,16 @@ class KMSDRMMaintenanceTests(unittest.TestCase):
                 / "system"
                 / "graphical.target.wants"
                 / "greia-kmsdrm-acceptance.service"
+            ).exists()
+        )
+        self.assertFalse(
+            (
+                OVERLAY
+                / "etc"
+                / "systemd"
+                / "system"
+                / "graphical.target.wants"
+                / "greia-kmsdrm-handoff-acceptance.service"
             ).exists()
         )
 
