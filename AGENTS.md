@@ -36,6 +36,22 @@ Repository commits/pushes are allowed and expected for source persistence. Verif
 
 Do not treat CI availability as implicit permission to spend money. Do not infer authorization from earlier runs, from the existence of a workflow file, or from a request to “move forward.”
 
+## Developer remote-control boundary
+
+Greia developer/test images may expose a remote-control surface so an operator can deploy test Activities, collect screenshots/logs/status, inject bounded test input, restart Greia services, reboot/power off, and use an explicit maintenance SSH shell without physically operating the target machine.
+
+This capability is **development-only**:
+
+- normal/release profiles must not enable SSH merely because developer tooling exists in the repository;
+- remote enablement requires an explicit developer image/profile marker and key provisioning;
+- password authentication and root SSH login remain disabled; never commit private keys, Wi-Fi passwords, tokens, or other operator credentials;
+- passwordless privilege escalation must stay behind a bounded Greia-owned control command such as `greia-devctl`, not generic `sudo` access;
+- ordinary remotely deployed Activities retain `DEVELOPER_UNSIGNED` trust and live in a source distinct from `/opt/greia-os/activities`; remote file placement must never upgrade package trust;
+- deliberate replacement of a built-in Activity requires an explicit developer operation and a recoverable original backup;
+- screenshot/input implementations may use the current Xorg compatibility backend on a developer image, but this is not an R7 production display/input architecture decision;
+- remote installation must drive the existing graphical fail-closed installer and its target/payload revalidation. Do not add an unattended destructive disk-install shortcut merely for convenience;
+- developer tooling must preserve negative evidence and must not be used to bypass Bubblewrap, PermissionBroker, lifecycle, installer or hardware acceptance gates.
+
 ## Non-negotiable product contracts
 
 1. **No visible Linux shell during normal child operation.** No boot text, login prompt, terminal, desktop, window manager, package manager, filesystem UI, or browser chrome may appear in the supported child path.
