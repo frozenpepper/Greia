@@ -79,6 +79,29 @@ class DisplayTransportTests(unittest.TestCase):
                 sdl_video_driver="x11",
             )
 
+    def test_transport_kind_and_sdl_backend_must_match(self):
+        with self.assertRaisesRegex(ValueError, "must request SDL x11"):
+            DisplayTransport(
+                kind=DisplayTransportKind.LEGACY_X11,
+                sdl_video_driver="wayland",
+                display=":0",
+                xauthority="/run/greia/xauthority",
+            )
+        with self.assertRaisesRegex(ValueError, "must request SDL wayland"):
+            DisplayTransport(
+                kind=DisplayTransportKind.WAYLAND,
+                sdl_video_driver="x11",
+                wayland_display="wayland-1",
+                xdg_runtime_dir="/run/user/1000",
+            )
+        with self.assertRaisesRegex(TypeError, "DisplayTransportKind"):
+            DisplayTransport(  # type: ignore[arg-type]
+                kind="wayland",
+                sdl_video_driver="wayland",
+                wayland_display="wayland-1",
+                xdg_runtime_dir="/run/user/1000",
+            )
+
     def test_direct_kmsdrm_transport_cannot_smuggle_window_system_endpoint(self):
         direct = DisplayTransport(
             kind=DisplayTransportKind.DIRECT_KMSDRM,
