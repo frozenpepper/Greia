@@ -20,9 +20,10 @@ from .trust import ActivitySource, PackageTrust
 
 DEVELOPER_MARKER = Path("/etc/greia-os/developer-remote")
 GREIA_ROOT = Path("/opt/greia-os")
-ACTIVITY_ROOT = GREIA_ROOT / "activities"
+SYSTEM_ACTIVITY_ROOT = GREIA_ROOT / "activities"
 RUNTIME_CATALOGUE = GREIA_ROOT / "runtime/child-runtime.toml"
 STATE_ROOT = Path("/var/lib/greia-developer")
+DEVELOPER_ACTIVITY_ROOT = STATE_ROOT / "activities"
 UPLOAD_ROOT = Path("/var/lib/greia-admin/greia-dev-upload")
 STATE_FILE = STATE_ROOT / "deployments.json"
 STAGING_ROOT = STATE_ROOT / "staging"
@@ -81,7 +82,9 @@ class DeveloperControl:
 
     SSH is only the transport. Privileged operations stay in this bounded command
     surface so remote tooling does not need to know Greia's internal filesystem or
-    systemd implementation details.
+    systemd implementation details. Ordinary remote Activity deployments live in a
+    dedicated DEVELOPER_UNSIGNED source; only explicit system replacement touches
+    the built-in Activity tree.
     """
 
     def __init__(self) -> None:
@@ -103,6 +106,7 @@ class DeveloperControl:
                 Path("/run/greia-os/active-profile.json")
             ),
             "hardware": _read_json_optional(Path("/run/greia-hardware/status.json")),
+            "developer_activity_root": str(DEVELOPER_ACTIVITY_ROOT),
             "deployments": self._load_state(),
         }
 
@@ -172,9 +176,19 @@ class DeveloperControl:
         current_backup: Path | None = None
         target: Path | None = None
         try:
-            trust = PackageTrust.BUILT_IN if replace_system else PackageTrust.DEVELOPER_UNSIGNED
+            trust = (
+                PackageTrust.BUILT_IN
+                if replace_system
+                else PackageTrust.DEVELOPER_UNSIGNED
+            )
             registry = ActivityRegistry(
-                [ActivitySource(STAGING_ROOT, trust=trust, source_id="greia-developer-upload")],
+                [
+                    ActivitySource(
+                        STAGING_ROOT,
+                        trust=trust,
+                        source_id="greia-developer-upload",
+                    )
+                ],
                 RuntimeCatalogue.load(RUNTIME_CATALOGUE),
             )
             manifest = registry.validate_package(stage)
@@ -184,42 +198,63 @@ class DeveloperControl:
                     "use --replace-system only for deliberate built-in testing"
                 )
 
-            target = ACTIVITY_ROOT / manifest.activity_id
+            system_target = SYSTEM_ACTIVITY_ROOT / manifest.activity_id
+            developer_target = DEVELOPER_ACTIVITY_ROOT / manifest.activity_id
             state = self._load_state()
             existing = state.get(manifest.activity_id)
             original_backup: str | None = None
-            kind = "developer"
 
-            if target.exists():
-                if existing is None and not replace_system:
+            if replace_system:
+                if developer_target.exists() or (
+                    existing is not None and existing.get("kind") == "developer"
+                ):
                     raise DeveloperControlError(
-                        f"{manifest.activity_id!r} is an installed system Activity; "
-                        "refusing to replace it without --replace-system"
+                        "remove the developer Activity before replacing a built-in with the same ID"
                     )
+                target = system_target
+                kind = "system-replacement"
                 if existing is not None:
-                    kind = str(existing.get("kind", "developer"))
+                    if existing.get("kind") != "system-replacement":
+                        raise DeveloperControlError("deployment state kind mismatch")
                     value = existing.get("original_backup")
                     original_backup = value if isinstance(value, str) and value else None
-                elif replace_system:
-                    kind = "system-replacement"
+                elif target.exists():
                     original = BACKUP_ROOT / (
                         f"{manifest.activity_id}-original-{int(time.time())}-{uuid.uuid4().hex}"
                     )
                     target.rename(original)
                     current_backup = original
                     original_backup = str(original)
-
-                if target.exists():
-                    previous = BACKUP_ROOT / (
-                        f"{manifest.activity_id}-previous-{int(time.time())}-{uuid.uuid4().hex}"
+                else:
+                    raise DeveloperControlError(
+                        f"{manifest.activity_id!r} is not an installed system Activity"
                     )
-                    target.rename(previous)
-                    current_backup = previous
+            else:
+                if system_target.exists():
+                    raise DeveloperControlError(
+                        f"{manifest.activity_id!r} is an installed system Activity; "
+                        "use --replace-system for deliberate built-in testing"
+                    )
+                if existing is not None and existing.get("kind") != "developer":
+                    raise DeveloperControlError("deployment state kind mismatch")
+                target = developer_target
+                kind = "developer"
+
+            if target.exists():
+                previous = BACKUP_ROOT / (
+                    f"{manifest.activity_id}-previous-{int(time.time())}-{uuid.uuid4().hex}"
+                )
+                target.rename(previous)
+                current_backup = previous
 
             try:
                 stage.rename(target)
             except Exception:
-                if current_backup is not None and current_backup.exists() and not target.exists():
+                if (
+                    current_backup is not None
+                    and current_backup.exists()
+                    and not target.exists()
+                ):
                     current_backup.rename(target)
                 raise
 
@@ -248,13 +283,11 @@ class DeveloperControl:
         _validate_activity_id(activity_id)
         state = self._load_state()
         record = state.get(activity_id)
-        if record is None:
-            raise DeveloperControlError("Activity is not a remote developer deployment")
-        if record.get("kind") == "system-replacement":
+        if not isinstance(record, dict) or record.get("kind") != "developer":
             raise DeveloperControlError(
-                "system replacement must be restored with restore-activity, not removed"
+                "Activity is not an ordinary remote developer deployment"
             )
-        target = ACTIVITY_ROOT / activity_id
+        target = DEVELOPER_ACTIVITY_ROOT / activity_id
         if target.exists():
             shutil.rmtree(target)
         state.pop(activity_id, None)
@@ -272,8 +305,10 @@ class DeveloperControl:
             raise DeveloperControlError("system replacement record has no original backup")
         backup = Path(backup_text)
         if BACKUP_ROOT.resolve() not in backup.resolve().parents or not backup.is_dir():
-            raise DeveloperControlError("original Activity backup is missing or outside backup root")
-        target = ACTIVITY_ROOT / activity_id
+            raise DeveloperControlError(
+                "original Activity backup is missing or outside backup root"
+            )
+        target = SYSTEM_ACTIVITY_ROOT / activity_id
         if target.exists():
             shutil.rmtree(target)
         backup.rename(target)
@@ -283,7 +318,8 @@ class DeveloperControl:
 
     def _ensure_state_dirs(self) -> None:
         for path, mode in (
-            (STATE_ROOT, 0o700),
+            (STATE_ROOT, 0o755),
+            (DEVELOPER_ACTIVITY_ROOT, 0o755),
             (STAGING_ROOT, 0o700),
             (BACKUP_ROOT, 0o700),
         ):
@@ -296,7 +332,9 @@ class DeveloperControl:
         try:
             raw = json.loads(STATE_FILE.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as exc:
-            raise DeveloperControlError(f"developer deployment state is invalid: {exc}") from exc
+            raise DeveloperControlError(
+                f"developer deployment state is invalid: {exc}"
+            ) from exc
         if not isinstance(raw, dict):
             raise DeveloperControlError("developer deployment state root must be an object")
         result: dict[str, dict[str, object]] = {}
@@ -308,19 +346,25 @@ class DeveloperControl:
 
     def _write_state(self, state: Mapping[str, Mapping[str, object]]) -> None:
         tmp = STATE_FILE.with_name(f".{STATE_FILE.name}.{uuid.uuid4().hex}.tmp")
-        tmp.write_text(json.dumps(state, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        tmp.write_text(
+            json.dumps(state, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
         os.chmod(tmp, 0o600)
         os.replace(tmp, STATE_FILE)
 
     @staticmethod
     def _require_root() -> None:
         if os.geteuid() != 0:
-            raise DeveloperControlError("greia-devctl must run as root through its sudo policy")
+            raise DeveloperControlError(
+                "greia-devctl must run as root through its sudo policy"
+            )
 
     @staticmethod
     def _require_developer_image() -> None:
         if not DEVELOPER_MARKER.is_file():
-            raise DeveloperControlError("developer remote control is not enabled on this image")
+            raise DeveloperControlError(
+                "developer remote control is not enabled on this image"
+            )
 
 
 def _make_tree_read_only(root: Path) -> None:
@@ -329,14 +373,17 @@ def _make_tree_read_only(root: Path) -> None:
             mode = stat.S_IMODE(path.stat().st_mode)
             os.chmod(path, mode & ~0o222)
         except OSError as exc:
-            raise DeveloperControlError(f"cannot seal deployed Activity path {path}: {exc}") from exc
+            raise DeveloperControlError(
+                f"cannot seal deployed Activity path {path}: {exc}"
+            ) from exc
 
 
 def _validate_activity_id(value: str) -> None:
     if not value or len(value) > 128:
         raise DeveloperControlError("Activity ID is invalid")
-    allowed = set("abcdefghijklmnopqrstuvwxyz0123456789._-")
-    if value[0] not in allowed or any(ch not in allowed for ch in value):
+    allowed_first = set("abcdefghijklmnopqrstuvwxyz0123456789")
+    allowed_rest = allowed_first | set("._-")
+    if value[0] not in allowed_first or any(ch not in allowed_rest for ch in value):
         raise DeveloperControlError("Activity ID contains unsupported characters")
 
 
@@ -374,7 +421,9 @@ def _service_state(service: str) -> str:
 
 
 def _run_checked(argv: Sequence[str]) -> None:
-    completed = subprocess.run(list(argv), check=False, capture_output=True, text=True)
+    completed = subprocess.run(
+        list(argv), check=False, capture_output=True, text=True
+    )
     if completed.returncode != 0:
         raise DeveloperControlError(
             f"command failed ({' '.join(argv)}): {completed.stderr.strip()}"
@@ -382,7 +431,9 @@ def _run_checked(argv: Sequence[str]) -> None:
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Greia development-image remote control")
+    parser = argparse.ArgumentParser(
+        description="Greia development-image remote control"
+    )
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("status")
     sub.add_parser("screenshot")
@@ -416,7 +467,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         elif args.command == "restart-launcher":
             control.restart_launcher()
         elif args.command == "deploy-activity":
-            record = control.deploy_activity(args.path, replace_system=args.replace_system)
+            record = control.deploy_activity(
+                args.path, replace_system=args.replace_system
+            )
             print(json.dumps(record.as_dict(), indent=2, sort_keys=True))
         elif args.command == "remove-activity":
             control.remove_activity(args.activity_id)
