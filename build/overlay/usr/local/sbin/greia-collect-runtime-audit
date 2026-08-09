@@ -82,6 +82,10 @@ capture virtual-terminal-state.txt sh -c 'printf "active_vt="; cat /sys/class/tt
 # and kernel/runtime prerequisites. Active KMSDRM proof remains a separate test.
 capture direct-graphics-probe.json env PYTHONPATH=/opt/greia-os/src python3 -m greia_platform.direct_graphics_probe
 
+# If a maintainer explicitly ran the active KMSDRM acceptance transaction,
+# include its bounded result without triggering or repeating display takeover.
+copy_if_readable /var/lib/greia-kmsdrm-acceptance/result.json kmsdrm-acceptance.json
+
 # These are public-key fingerprints only. Private key material is never copied.
 if command -v ssh-keygen >/dev/null 2>&1; then
   : >"$work_dir/ssh-host-public-fingerprints.txt"
