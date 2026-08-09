@@ -1,224 +1,118 @@
 # Greia Agent Operations Manual
 
-**Audience:** coding, review and test agents working on Greia OS  
-**Status:** mandatory derived operating manual  
-**Last reviewed:** 2026-08-10  
-**Canonical repository:** `frozenpepper/Greia`
+**Audience:** coding/review/testing agents working on Greia OS  
+**Status:** mandatory operating contract for repository and test-hardware work  
+**Last reviewed:** 2026-08-09  
+**Canonical repository:** `frozenpepper/Greia`  
 
 ---
 
-## 1. Purpose and authority
+## 1. Purpose
 
-This is the practical operating manual for working on Greia and its test hardware. It answers questions such as:
+This document tells an agent how to work on Greia safely and reproducibly, including how to use the canonical GitHub repository, build/test the system, connect to developer hardware, operate the graphical OS remotely, collect evidence, and hand work to the next agent.
 
-- what must an agent read before editing;
-- which repository/branch/state is authoritative;
-- how source verification differs from hardware evidence;
-- how to build an explicit developer image;
-- how to connect to a Greia test machine from the operator computer;
-- how to capture screenshots, inject bounded input, inspect logs and deploy Activities;
-- how to preserve failure evidence;
-- when to stop rather than “fixing the test”;
-- how to leave the project resumable.
+It is intentionally operational. Architecture rationale remains in the architecture document and ADRs; Activity-authoring guidance lives in `skills/greia-activity-authoring/SKILL.md`.
 
-Read `docs/DOCUMENTATION.md` for the documentation authority model.
-
-This manual is derived from `AGENTS.md`, accepted ADRs, source tools and test protocols. It **does not override** them. If it disagrees with the owner of an implemented contract, correct this manual.
-
-Activity-authoring rules live in:
-
-```text
-skills/greia-activity-authoring/SKILL.md
-```
+If this document conflicts with an accepted ADR or `AGENTS.md`, the ADR/`AGENTS.md` rule wins and this document must be corrected in the same work tranche.
 
 ---
 
-## 2. Start-of-task checklist
+## 2. Mandatory read order before changing Greia
 
-Before substantive Greia work:
+Read these files before substantive work:
 
-1. read `AGENTS.md`;
-2. read `README.md` and `docs/DOCUMENTATION.md`;
-3. read the architecture overview and relevant accepted ADRs;
-4. read the mandatory active remediation plan;
-5. read the current `HANDOVER.md`;
-6. resolve the actual active branch and HEAD from the repository, not chat memory;
-7. read the phase-specific testing/review documents named by the handover;
-8. for Activity work, read the Activity authoring skill and current API/runtime source owners;
-9. identify whether the task is **source work**, **VM evidence**, **physical-hardware evidence**, or a mixture;
-10. identify any destructive operation before running it.
+1. `AGENTS.md`
+2. `README.md`
+3. `docs/architecture/GREIA_ARCHITECTURE.md`
+4. accepted ADRs relevant to the work, especially ADR 0012–0017
+5. `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`
+6. `HANDOVER.md`
+7. this file
+8. narrower testing/review documents referenced by the active phase
+9. for Activity work, `skills/greia-activity-authoring/SKILL.md`
 
-If the repository and a previous chat summary disagree, the repository wins.
-
----
-
-## 3. Repository/Git discipline
-
-GitHub is the persistent source of truth for project source and reviewed documentation.
-
-### Required behavior
-
-- work on the branch named by the current handover unless the task explicitly changes branch strategy;
-- resolve the current HEAD before editing;
-- commit coherent work frequently enough that loss of the execution environment does not erase a substantial tranche;
-- keep `HANDOVER.md` current when continuation state changes;
-- keep generated images, private keys, downloaded packages, caches and bulky runtime evidence outside Git;
-- preserve historical plan/evidence entries rather than rewriting them to make history cleaner;
-- do not merge a draft PR merely to eliminate a conflict;
-- do not silently drop a repository-wide rule from either side of a merge.
-
-### Branch/commit evidence
-
-Every hardware/VM evidence attempt must record the exact source SHA used. “Latest” or a branch name alone is not enough.
+Do not rely on chat memory when the repository says something different. GitHub is the project source of truth.
 
 ---
 
-## 4. Hosted execution prohibition
+## 3. Git and GitHub operating rules
 
-Without explicit owner authorization for that specific use, **do not interact with GitHub Actions as an execution/evidence service**.
+### 3.1 Repository is persistent authority
 
-That means no:
+- Work from the current canonical branch or the active feature branch named in `HANDOVER.md`.
+- Resolve the current branch tip before editing; do not assume a SHA from an old handover is still HEAD.
+- Commit coherent work frequently enough that a lost execution environment does not destroy a substantial tranche.
+- Keep generated disk images, private keys, downloaded package archives, build caches and bulky runtime evidence out of Git.
+- Keep `HANDOVER.md` and the active plan current after every substantive tranche.
+- Append plan progress; never rewrite historical progress to make the history look cleaner.
 
-- trigger;
-- rerun;
-- manual dispatch;
-- automatic trigger addition;
-- run/status/job/step/log query;
-- artifact query/download.
+### 3.2 GitHub Actions / paid execution
 
-Reading or editing `.github/workflows/*` as ordinary source is allowed when the task requires source review. Do not execute or interrogate the hosted service.
+**Do not enable, trigger, rerun, or add GitHub-hosted Actions without explicit repository-owner authorization for that specific paid execution.**
 
-Use local or otherwise explicitly owner-approved environments for verification/evidence.
+A request such as “move forward”, “test this”, or “verify it” is not authorization.
 
-A request to “move forward”, “test”, “verify” or “check CI” is not authorization to spend hosted resources or use the Actions execution surface.
+Use GitHub normally for source persistence, review, branches and PR metadata. Use local or explicitly owner-approved execution for builds/tests/evidence.
 
----
+### 3.3 Never merge merely to make a conflict disappear
 
-## 5. Evidence vocabulary
-
-Before testing, classify what the result can prove.
-
-### Source evidence
-
-Examples:
-
-```text
-make verify
-unit/contract tests
-static project validation
-Activity validation
-shell syntax checks
-source footprint checks
-```
-
-Source evidence does not prove Linux image behavior, graphics/input, VM boot, physical devices or performance.
-
-### VM/image evidence
-
-Examples:
-
-```text
-raw image build
-image footprint/package manifest
-QEMU boot
-KMSDRM acquisition/handoff
-installer VM behavior
-```
-
-VM evidence does not prove the Acer, Pi 400 or Pi 500 physical path unless the relevant acceptance definition explicitly says so.
-
-### Physical evidence
-
-Physical evidence must identify the actual machine and relevant hardware/runtime facts. It is required for claims tied to reference hardware.
-
-Use `PASS`, `FAIL`, `NOT-RUN`, `UNPROVEN`, `SOURCE-CLOSED`, `PROVISIONAL` and related labels with explicit scope.
-
-The exact most recent executed evidence belongs in `HANDOVER.md` or a dated evidence report—not in durable overview documents.
+A PR conflict must be understood. Resolve compatible repository-wide governance rules on `main` where appropriate; otherwise reconcile the feature branch without silently dropping either side. Do not merge a draft PR unless the owner has asked for that merge.
 
 ---
 
-## 6. Current graphics/session boundary
+## 4. Current project/evidence boundary
 
-The target architecture is direct/appliance-oriented, but the current installed production path remains an explicit **Xorg/xinit compatibility backend** while R7 is open.
+R0–R6 are source-closed. The active blocking architecture phase is R7 direct graphics/session work.
 
-Therefore:
+Production Greia currently remains on the Xorg/xinit compatibility path. Do not turn development conveniences into a production X11 dependency, do not make Activities DRM master, and do not introduce a generic desktop environment/window manager.
 
-- do not deepen Activity dependence on X11;
-- do not remove current X-compatible sandbox concessions blindly while production still uses them;
-- do not make ActivitySupervisor the DRM master;
-- do not grant ordinary Activities raw input ownership;
-- do not select a compositor because it is conventional desktop Linux practice;
-- treat serial direct ownership/compositor candidates according to current R7 evidence, not preference.
+The last complete provider-free source gate that is safe to cite is the exact result recorded in current `HANDOVER.md`. Resolve that file before quoting counts; never infer a newer PASS from committed tests.
 
-Exact current R7 implementation/evidence state is in `HANDOVER.md`.
+Source tests do not prove VM or physical-hardware behavior.
 
 ---
 
-## 7. Operator computer prerequisites
+## 5. Supported operator environments
 
-The current remote developer client is:
+### 5.1 Operator computer
+
+The owner commonly controls Greia from macOS. The repository-side remote helper is platform-neutral Python and uses the host `ssh`/`scp` clients:
 
 ```text
 tools/greia_remote.py
 ```
 
-The operator computer needs:
+No special GUI remote-desktop product is required. Screenshot and input operations are exposed as Greia developer controls.
 
-- Python 3;
-- OpenSSH `ssh`;
-- OpenSSH `scp`;
-- `ssh-keygen` for deliberate dedicated-known-host cleanup after an intentional reimage;
-- a checkout of the Greia repository containing the client tool;
-- the private operator key emitted by the developer-image build.
+### 5.2 Linux build/test environment
 
-The default operator environment may be macOS, but the client uses normal Python/OpenSSH behavior and is not macOS-specific.
+Raw Greia image and installer construction must run on an owner-controlled compatible Linux environment as documented by the relevant build/test protocol. Do not attempt destructive image operations on an unsuitable host merely to get a result.
 
-Do not copy the private key into the repository.
-
----
-
-## 8. Linux build/evidence environment
-
-Raw image building and the current R7 image/QEMU evidence path require an owner-controlled compatible Linux environment with root access and the prerequisites named by the exact test protocol.
-
-For R7 local evidence read:
+For current local R7 exact-image work also read:
 
 ```text
 docs/testing/2026-08-09_R7_EXTERNAL_LINUX_EVIDENCE_EXECUTION.md
 ```
 
-Rules include:
+### 5.3 Physical reference hardware
 
-- use a disposable/root-safe checkout;
-- keep run roots outside the repository;
-- never mutate the production source image in place;
-- preserve first failure;
-- do not auto-install host packages from the orchestrator;
-- do not weaken classification/timeouts to obtain PASS.
-
----
-
-## 9. Reference hardware
-
-The first-generation Acer Aspire One is the extreme low-resource reference. Until exact inventory supersedes estimates, design assumptions are approximately:
+The first-generation Acer Aspire One remains the extreme low-resource reference. Current estimated floor until inventory evidence replaces it is roughly:
 
 ```text
 RAM:        768 MiB
-storage:    ~7 GB
-resolution: 1024×600
+storage:    7 GB
+resolution: 1024x600
 ```
 
-Raspberry Pi 400 and Pi 500 are co-equal ARM references, with board/image/physical work assigned to later architecture phases.
+Raspberry Pi 400 and Pi 500 are co-equal future/current ARM reference targets, but Pi board/image adapters and physical evidence belong to R8/R14.
 
-Do not redefine the reference floor because development on a modern PC is easier.
-
-Before destructive installation on a physical machine, confirm the current plan/test protocol explicitly allows it.
+Never claim a hardware family is accepted from source/QEMU tests alone.
 
 ---
 
-## 10. Normal image versus developer image
+## 6. Developer image versus normal/release image
 
-Remote control is deliberately opt-in.
+Remote developer control is intentionally opt-in.
 
 Developer profile:
 
@@ -232,32 +126,41 @@ Normal/reference profile:
 build/profiles/modern-amd64.toml
 ```
 
-Only the explicit developer profile may opt into the `developer-remote` package/provisioning path.
+Only the explicit developer profile may include the `developer-remote` package set and provisioning marker.
 
-Normal/release Greia must not become remotely accessible simply because developer helper source exists.
+Normal/release Greia must not become SSH-accessible simply because developer tooling exists in the repository.
 
-The developer path must keep:
-
-- password authentication disabled;
-- keyboard-interactive authentication disabled;
-- root SSH login disabled;
-- private operator key outside the image/repository;
-- machine SSH host identity generated on the actual booted machine;
-- passwordless privilege bounded to Greia-owned `greia-devctl` operations.
+Private SSH keys, Wi-Fi passwords, API tokens and other credentials must never be committed.
 
 ---
 
-## 11. Build the installed developer target
+## 7. Before using physical test hardware
 
-On the compatible Linux build host:
+An agent must establish all of the following before changing or testing the netbook:
+
+1. current repository/branch/HEAD are known;
+2. intended image/profile is named explicitly;
+3. the current test protocol has been read;
+4. destructive versus non-destructive operations are distinguished;
+5. first-failure/stop conditions are understood;
+6. evidence destination is outside the source tree;
+7. no hosted paid execution is being invoked without authorization.
+
+If installation would erase a disk, use the existing graphical fail-closed installer flow. Do not invent a remote `dd`, unattended wipe endpoint, or generic root command merely for convenience.
+
+---
+
+## 8. Build the installed developer target
+
+On an owner-controlled compatible Linux build host:
 
 ```bash
 sudo bash build/build-developer-image.sh out
 ```
 
-This wraps the canonical image builder; it is not a second OS build architecture.
+This wrapper uses the canonical image builder and then performs developer-only provisioning. It must not fork Greia into a second OS build system.
 
-Expected artifacts currently include:
+Expected developer artifacts include:
 
 ```text
 out/greia-os-modern-amd64-dev.img
@@ -266,15 +169,9 @@ out/greia-os-modern-amd64-dev-ssh-key.pub
 out/greia-os-modern-amd64-dev-developer-remote.json
 ```
 
-Treat the private key as secret local operator material:
+Treat the private key as local operator credential material. Do not commit, paste into issues/PRs, or include it in evidence archives intended for sharing.
 
-- mode should remain restrictive;
-- never commit it;
-- never paste it into an issue/PR/chat handover;
-- do not include it in a shareable evidence bundle;
-- if the image/key is discarded, discard the private key deliberately.
-
-Implementation/security details:
+For exact developer-remote implementation/security details read:
 
 ```text
 docs/testing/2026-08-09_DEVELOPER_REMOTE_CONTROL.md
@@ -282,47 +179,43 @@ docs/testing/2026-08-09_DEVELOPER_REMOTE_CONTROL.md
 
 ---
 
-## 12. First network acceptance
+## 9. Physical connection assumptions
 
-Use **wired Ethernet** for the first developer-remote acceptance whenever possible.
+For the first remote-control acceptance use wired Ethernet whenever possible.
 
-The installed developer target is intended to use DHCP/mDNS and appear as:
+The installed developer target is intended to acquire wired DHCP, advertise mDNS, and appear as:
 
 ```text
 greia-dev.local
 ```
 
-The planned developer live installer uses a separate identity:
+The planned remotely operated developer live installer will use a different identity:
 
 ```text
 greia-installer-dev.local
 ```
 
-Do not commit Wi-Fi credentials to solve initial connectivity. The current developer path does not define a repository-stored Wi-Fi secret mechanism.
+so the live USB and installed target can have independent SSH host keys while using the same operator public key.
 
-If mDNS is unavailable, obtain the DHCP address out of band and pass it via `--host`. Do not hard-code the address into Greia source.
+Do not hard-code a guessed IP address into source. If mDNS is unavailable on the LAN, the operator may determine the DHCP lease out of band and pass `--host` to the client without changing Greia source.
 
 ---
 
-## 13. First connection
+## 10. Connecting to an installed developer netbook
 
-From the operator checkout:
+From the repository checkout on the operator computer, wait for Greia:
 
 ```bash
 python3 tools/greia_remote.py wait --timeout 180
+```
+
+Then inspect status:
+
+```bash
 python3 tools/greia_remote.py status
 ```
 
-Defaults are owned by `tools/greia_remote.py`; at this review they are:
-
-```text
-host:        greia-dev.local
-user:        greiaadmin
-key:         out/greia-os-modern-amd64-dev-ssh-key
-known-hosts: ~/.greia/known_hosts
-```
-
-Override a non-default host/key explicitly:
+If a non-default host/key is required:
 
 ```bash
 python3 tools/greia_remote.py \
@@ -331,48 +224,29 @@ python3 tools/greia_remote.py \
   status
 ```
 
-The client uses a **dedicated Greia known-hosts file**. Do not disable SSH host-key checking globally.
+The helper uses the dedicated Greia known-hosts file by default:
 
-### Intentional reimage / changed host key
-
-A new image or live environment is expected to generate a new SSH host identity. A host-key mismatch is therefore meaningful and must not be bypassed automatically.
-
-If—and only if—you know the machine was intentionally reimaged/replaced:
-
-1. preserve the previous `~/.greia/known_hosts` as evidence if relevant;
-2. confirm the expected target identity/reimage;
-3. remove only the affected host entry from the dedicated Greia file, for example:
-
-```bash
-ssh-keygen -f ~/.greia/known_hosts -R greia-dev.local
+```text
+~/.greia/known_hosts
 ```
 
-4. reconnect and allow the client to accept the new key;
-5. record the identity rollover in the evidence if the test concerns host-key behavior.
-
-Do not use `StrictHostKeyChecking=no` as a shortcut.
+Do not disable SSH host-key verification globally to make a test convenient.
 
 ---
 
-## 14. Stable remote control surface
+## 11. Remote graphical test controls
 
-Agents should use the repository client rather than scripting internal systemd/X11/filesystem details directly.
+### 11.1 Screenshot
 
-### Status
-
-```bash
-python3 tools/greia_remote.py status
-```
-
-### Screenshot
+Capture the actual current display and return the PNG to the operator computer:
 
 ```bash
 python3 tools/greia_remote.py screenshot out/screen.png
 ```
 
-A successful command exit is not enough for a visual test; inspect/retain the PNG when the visible state matters.
+The current Xorg developer compatibility backend is an implementation detail. Agents should use the stable command rather than directly scraping X11.
 
-### Keyboard
+### 11.2 Keyboard
 
 ```bash
 python3 tools/greia_remote.py key Return
@@ -381,7 +255,7 @@ python3 tools/greia_remote.py key Left
 python3 tools/greia_remote.py key Right
 ```
 
-### Pointer
+### 11.3 Pointer
 
 ```bash
 python3 tools/greia_remote.py mousemove 500 300
@@ -389,147 +263,150 @@ python3 tools/greia_remote.py click
 python3 tools/greia_remote.py click 3
 ```
 
-### Text
+### 11.4 Text input
 
 ```bash
 python3 tools/greia_remote.py type "test text"
 ```
 
-### Logs
+Use screenshots before and after important input sequences. A successful command exit is not proof that the expected UI state appeared.
+
+---
+
+## 12. Logs, status and service recovery
+
+Retrieve bounded launcher logs:
 
 ```bash
 python3 tools/greia_remote.py logs --service launcher --lines 500
 ```
 
-Current bounded groups are defined by source and include:
+Useful groups include:
 
 ```text
-all
 launcher
-installer
 parent
+network
 ssh
 developer-remote
-network
+installer
+all
 ```
 
-### Service/power controls
+Restart the installed Greia launcher:
 
 ```bash
 python3 tools/greia_remote.py restart
-python3 tools/greia_remote.py restart-installer
+```
+
+The live developer installer path also defines `restart-installer`, but first-time USB remote installation must not be claimed operational until the canonical installer builder actually integrates and passes the live provisioner.
+
+Reboot/power off:
+
+```bash
 python3 tools/greia_remote.py reboot
 python3 tools/greia_remote.py poweroff
 ```
 
-After reboot, run `wait` again and prove reconnection.
-
-The current screenshot/input backend uses Xorg compatibility implementation details underneath `greia-devctl`. Agents should use the stable operator commands so R7 can replace those internals later.
+After reboot, use `wait` again and prove reconnection.
 
 ---
 
-## 15. Maintenance SSH shell
+## 13. Maintenance SSH shell
 
-An explicit developer/recovery shell is available:
+An explicit development/recovery shell exists:
 
 ```bash
 python3 tools/greia_remote.py shell
 ```
 
-Use it for investigation when the bounded controls are insufficient.
+Use it when inspection genuinely requires a shell. Automated test flows should prefer typed `greia-devctl` operations rather than embedding arbitrary root filesystem/systemd commands.
 
-For repeatable automated tests, prefer `greia-devctl`-backed client commands. Do not encode arbitrary privileged shell commands as the normal test API.
-
-The shell does not change Activity trust or create a product-facing shell feature.
+Never expose a generic privileged shell API to Activities or turn it into a normal product feature.
 
 ---
 
-## 16. Remote Activity deployment and trust
+## 14. Remote Activity deployment
 
-Ordinary developer deployment:
+For ordinary developer Activities:
 
 ```bash
 python3 tools/greia_remote.py deploy path/to/activity
 ```
 
-The developer Activity source is:
+The developer source is:
 
 ```text
 /var/lib/greia-developer/activities
-trust = DEVELOPER_UNSIGNED
+PackageTrust.DEVELOPER_UNSIGNED
 ```
 
 The built-in source remains:
 
 ```text
 /opt/greia-os/activities
-trust = BUILT_IN
+PackageTrust.BUILT_IN
 ```
 
-Remote file placement must never upgrade package trust.
+Remote placement must never upgrade package trust.
 
-Ordinary developer deployment is revalidated and must not obtain privileged permissions merely because the operator uploaded it.
-
-Remove a developer deployment:
+Remove an ordinary remote deployment:
 
 ```bash
 python3 tools/greia_remote.py remove <activity-id>
 ```
 
-### Explicit built-in replacement
-
-Only when intentionally testing an already installed built-in:
+For deliberate built-in testing only:
 
 ```bash
 python3 tools/greia_remote.py deploy path/to/activity --replace-system
-```
-
-Restore the preserved original:
-
-```bash
 python3 tools/greia_remote.py restore <activity-id>
 ```
 
-Do not use `--replace-system` to bypass a normal developer-package validation/trust failure.
+The original built-in must remain recoverable. Do not use `--replace-system` as the default development loop.
 
-For Activity authoring/validation rules use the Activity skill.
+For authoring/validation rules see `skills/greia-activity-authoring/SKILL.md`.
 
 ---
 
-## 17. First-time remote installation boundary
+## 15. First-time remote installation boundary
 
-The intended eventual developer flow is:
+Source includes a developer live-installer provisioner, but agents must check the current handover before claiming it is integrated.
+
+The intended eventual flow is:
 
 ```text
 boot developer USB
 → greia-installer-dev.local becomes reachable
-→ remotely capture/drive the existing graphical installer
-→ installer performs normal eligible-target/payload/device safety checks
+→ operator captures screenshots and drives existing graphical installer remotely
+→ existing eligible-target/payload/device checks remain authoritative
 → reboot
 → installed target appears as greia-dev.local
 ```
 
-Remote installation must preserve the **existing graphical fail-closed installer**. Never replace it with a remote `dd`, generic disk-write endpoint, unattended wipe or arbitrary root command for convenience.
+**Never replace this with an unattended destructive disk-wipe command.**
 
-Source contains `tools/provision_developer_installer.py`, but whether it is integrated into the canonical installer artifact is a **current-state fact owned by `HANDOVER.md`**. Check the handover before claiming remote first-install capability.
+If current `HANDOVER.md` says the live provisioner is not wired into `build/build-installer-image.sh`, installation still requires the existing safe local interaction path.
 
 ---
 
-## 18. Standard source verification
+## 16. Standard source verification
 
-Canonical source gate:
+The canonical source gate is:
 
 ```bash
 make verify
 ```
 
-Focused unit iteration:
+It runs provider-free unit tests, project/Activity validation, shell syntax checks and source-footprint checks.
+
+For focused iteration:
 
 ```bash
 PYTHONPATH=src python3 -m unittest discover -s tests -v
 ```
 
-Focused developer-remote regression suite:
+Developer-remote focused suite:
 
 ```bash
 PYTHONPATH=src python3 -m unittest discover \
@@ -538,126 +415,87 @@ PYTHONPATH=src python3 -m unittest discover \
   -v
 ```
 
-Do not copy an old test count into a new claim. State the commit and command actually executed.
+Do not claim PASS unless the command actually executed in the current checkout and you have the result.
 
 ---
 
-## 19. R7 local image/QEMU evidence
+## 17. Evidence discipline on real hardware
 
-Use the exact active protocol:
+For every meaningful physical test, record at minimum:
 
-```text
-docs/testing/2026-08-09_R7_EXTERNAL_LINUX_EVIDENCE_EXECUTION.md
-```
-
-Typical operator shape (verify against the current protocol/tool before execution):
-
-```bash
-SOURCE_SHA="$(git rev-parse HEAD)"
-RUN_ROOT="/var/tmp/greia-r7-${SOURCE_SHA}"
-python3 tools/r7_local_evidence.py --run-root "$RUN_ROOT" --plan-only
-sudo -E python3 tools/r7_local_evidence.py --run-root "$RUN_ROOT"
-```
-
-The first failed attempt is evidence. Do not reuse its run root or silently rerun the same active/serial proof until it passes.
-
----
-
-## 20. Physical test evidence record
-
-For every meaningful physical attempt preserve at minimum:
-
-- repository branch and exact SHA;
-- image/profile identity and hash where applicable;
+- repository branch and exact commit SHA;
+- image/profile identity;
+- image hash when applicable;
 - machine identity/inventory relevant to the test;
-- connection path (wired/mDNS/IP as relevant);
-- exact command/input sequence;
-- timestamps or ordered step numbers;
-- stdout/stderr and bounded logs;
+- command sequence;
+- timestamps or sequence ordering;
+- stdout/stderr/logs;
 - screenshots before/after visible transitions;
-- PASS/FAIL/NOT-RUN classification for each expected result;
-- first failure exactly as seen;
-- reboots/power cycles;
-- manual intervention required;
-- any intentional host-key rollover/reimage event.
+- explicit PASS/FAIL/NOT-RUN classification;
+- first failure exactly as observed;
+- whether a reboot/power cycle occurred;
+- whether any manual intervention was required.
 
-Keep heavyweight raw evidence outside the repository. Commit concise reviewed findings/protocol changes when appropriate.
+Keep large evidence archives outside the repository. Commit only concise reviewed summaries/protocol updates when appropriate.
+
+### Negative evidence is evidence
+
+If an operation fails, preserve the failure. Do not weaken the test, silently change the environment, or retry repeatedly until it passes unless the protocol explicitly authorizes a new attempt.
+
+If a test must be rerun after a fix, make the new attempt distinguishable from the failed one.
 
 ---
 
-## 21. Performance/resource evidence
+## 18. Performance/resource evidence
 
-Greia performance is a correctness concern.
+Greia targets very constrained machines. When testing a new system dependency, runtime, display path or nontrivial Activity, measure rather than assume.
 
-Measure relevant changes rather than relying on desktop intuition:
+Relevant dimensions include:
 
 - installed bytes/delta;
 - idle and peak RSS;
-- steady/busy CPU;
-- launch-to-first-usable-screen time;
+- CPU load/steady-state usage;
+- launch time and first usable frame;
 - transition/recovery latency;
-- process/file-descriptor count when relevant;
-- graphics/backend behavior;
-- 1024×600 usability;
-- behavior at the low-memory reference floor;
-- Activity frame pacing and hot-loop cost for nontrivial games/animations.
+- file-descriptor/process count where relevant;
+- GPU/backend behavior;
+- 1024x600 usability;
+- behavior under the low-memory reference class.
 
-Do not introduce a dependency solely because it is conventional on desktop Linux.
+Do not justify a dependency because it is common on desktop Linux. Greia's resource floor is architectural.
 
 ---
 
-## 22. Stop conditions
+## 19. Agent stop conditions
 
-Stop the current evidence attempt and report the boundary when any of these occurs unless the exact protocol explicitly says otherwise:
+Stop the current evidence attempt and report clearly when any of these occurs unless the applicable protocol explicitly says otherwise:
 
 - wrong branch/SHA/profile/image;
-- unexpected dirty source tree;
-- build/test tooling unexpectedly modifies canonical source;
+- source tree becomes unexpectedly dirty;
+- build/test tool modifies canonical source artifacts unexpectedly;
 - destructive target identity is ambiguous;
 - image/payload integrity mismatch;
-- SSH host identity changes without a known intentional reimage;
-- required security/isolation boundary is absent;
-- first authoritative test/hardware failure is reached;
-- mount/loop cleanup cannot be proven;
-- proceeding would require unapproved hosted execution;
-- proceeding would require inventing credentials;
-- proceeding would require bypassing installer/device/trust/sandbox checks.
+- SSH host identity/key state contradicts the developer-image contract;
+- a required security boundary is absent;
+- first authoritative hardware/evidence failure is reached;
+- proceeding would require unapproved paid hosted execution;
+- proceeding would require inventing credentials or bypassing a safety check.
 
-Partial truthful evidence is preferable to a manufactured PASS.
+Partial, truthful evidence is better than a manufactured PASS.
 
 ---
 
-## 23. End-of-task continuity
+## 20. Handover duties after substantive work
 
-After substantive work:
+Before ending a substantive Greia work tranche:
 
-- commit coherent source/documentation changes;
-- update `HANDOVER.md` when continuation state changed;
-- update the active plan when implementation/phase state changed;
-- update this manual if repository/build/hardware/remote operating procedure changed;
-- update the Activity skill if its governed authoring contracts changed;
-- preserve exact verification/evidence scope and unproven gaps;
-- state the next legitimate step;
-- leave no generated images, private keys, caches or bulky evidence in the source tree.
+1. commit coherent source/documentation changes to GitHub;
+2. append an accurate progress entry to the active remediation plan;
+3. update `HANDOVER.md` with exact implemented/unimplemented state;
+4. record exactly which tests actually ran and their results;
+5. record hardware/VM evidence still missing;
+6. state the exact next legitimate step;
+7. update this manual if project/test-hardware operating procedure changed;
+8. update `skills/greia-activity-authoring/SKILL.md` if the Activity SDK, package schema, shared assets/UI canon, performance requirements or validation workflow changed.
 
-Documentation-only reviews need not create a fake implementation-plan progress entry when no implementation/phase state changed. Preserve the review under `docs/reviews/` and refresh the handover if the continuation documentation changed.
-
----
-
-## 24. Drift check for future maintainers
-
-When modifying developer tooling, check these implementation owners against this manual:
-
-```text
-tools/greia_remote.py
-src/greia_platform/developer_control.py
-src/greia_platform/developer_input.py
-src/greia_platform/developer_capture.py
-src/greia_platform/developer_session.py
-build/profiles/modern-amd64-dev.toml
-build/build-developer-image.sh
-tools/provision_developer_image.py
-tools/provision_developer_installer.py
-```
-
-When those contracts change, update the manual in the same tranche.
+These two agent-facing documents are living contracts and must not be allowed to drift behind the implementation.
