@@ -3,106 +3,88 @@
 **Date:** 2026-08-09  
 **Version:** `0.13.0-phase0-dev`  
 **Repository:** `frozenpepper/Greia` (private)  
-**Canonical integration target:** `main`  
+**Integration target:** `main`  
 **Active branch:** `r7-direct-graphics`  
 **Draft PR:** #4 — `R7: direct graphics/session migration and KMSDRM evidence path`  
-**Current blocking phase:** **R7 — Direct graphics/session architecture**
+**Blocking phase:** **R7 — Direct graphics/session architecture**
 
 ---
 
 ## 1. Resume state
 
-R0–R6 are source-closed. Do **not** reopen the old v0.12 recovery incident or refactor the completed authority/storage/session/runtime spine without a concrete R7 integration defect.
+R0–R6 are source-closed. Do not reopen the old v0.12 recovery incident or deep-refactor the completed authority/storage/session/runtime spine without a concrete defect.
 
-The former lost post-v0.12 R5 `history.py` was replaced by a new reviewed R5 implementation. Never describe it as recovered historical source.
+The formerly lost post-v0.12 R5 `history.py` was replaced by a **new reviewed R5 implementation**. Never describe it as historical recovery.
 
-Production Greia still boots through the known **Xorg/xinit compatibility path**. No direct-KMS production profile/package set is enabled. No compositor has been selected. Serial direct DRM ownership remains evidence-only.
+Production Greia still boots through the known **Xorg/xinit compatibility path**. No direct-KMS production profile is enabled. No compositor is selected. Serial direct DRM ownership remains evidence-only.
 
-GitHub is the persistent source of truth. Resolve the exact branch tip from `r7-direct-graphics` when resuming rather than trusting a hand-written hash. The last **source/test** commit in the current tranche is:
-
-```text
-67bb08d5872317a79c75fc0cd4a1739e387246cf
-```
-
-That commit updates the core `DisplayTransport` regression suite to match the corrected direct-`xinit` compatibility contract: `DISPLAY` is required; Xauthority is optional but validated if present.
-
-The branch also contains later documentation-only continuity commits. Always resolve the actual branch tip from GitHub before resuming.
-
-The installed-launcher integration was minimized at:
-
-```text
-5f45c7d44a9f254e5181dc068333a0db7292a658
-```
-
-Relative to the pre-integration commit `f1aa18b6fca32d04cdc7b0063184f49b3638493a`, `src/greia_launcher/main.py` has only 9 changed lines; the other cumulative change is the new display-session lifecycle regression file.
+GitHub is canonical. Always resolve the actual `r7-direct-graphics` branch tip before resuming; documentation-only commits may follow the latest source commit.
 
 ---
 
-## 2. Exact verification boundary — do not overclaim
+## 2. Verification boundary — do not overclaim
 
 The last complete provider-free source gate that actually executed successfully remains:
 
 ```text
-source checkpoint: 097f0281888a58f6f26425807ce99d9f35449313
+commit: 097f0281888a58f6f26425807ce99d9f35449313
 provider-free tests: 232 / 232 PASS
 project validation: PASS
 bundled Activity validation: PASS
 source/shell/footprint gate: PASS
 ```
 
-Do **not** claim a newer complete test count.
-
-Focused checks that actually executed earlier in R7:
+Focused R7 checks that actually executed earlier:
 
 ```text
-isolated current DisplaySessionCoordinator fixture: 22 / 22 PASS
+isolated DisplaySessionCoordinator fixture: 22 / 22 PASS
 isolated compositor-package pure-logic fixture: 14 / 14 PASS
 serial KMSDRM fake-SDL/process suite: 8 / 8 PASS before later serial strengthening
 ```
 
-The latest strengthened serial tests, hardware-settings tests, installer-adapter tests, passive seat/input tests, legacy-X display-session tests, corrected core DisplayTransport tests, and Supervisor/display-session lifecycle integration tests are committed but have **not** executed in a real current checkout.
+The latest strengthened serial tests, hardware-settings tests, installer-adapter tests, passive seat/input tests, legacy-X display-session tests, corrected core DisplayTransport tests, and Supervisor/display-session integration tests are committed but have **not** executed in a real current checkout.
 
-Fresh GitHub Actions triggered after the real installed-launcher integration still failed before step 1:
+Newest Actions runs after the final source/CI hardening still fail before step 1:
 
 ```text
-source verification run 31314374079
-  verify: failure
+source verification: 31316863439
+  verify = failure
   steps = null
   logs = null
 
-exact-image run 31314374090
-  preflight: failure
+exact-image evidence: 31316863424
+  preflight = failure
   steps = null
   logs = null
-  build-probe-record: skipped because preflight never executed
+  build-probe-record = skipped
 
-clean-tree run 31314374082
-  verify: failure
+clean-tree verification: 31316863437
+  verify = failure
   steps = null
   logs = null
 ```
 
-No checkout, Greia test, image build, package transaction, SDL probe, or QEMU step executed in those jobs. Do not burn retries merely to reproduce this condition.
+No checkout, Greia test, image build, package transaction, SDL probe or QEMU step executed in those failures. Do not spend retries merely reproducing this condition.
 
-The current execution environment also has no GitHub DNS/network route and no existing authenticated checkout, so it cannot run a true current `make verify` locally.
+The assistant execution container also has no GitHub DNS/network route and no authenticated checkout, so it cannot substitute a true current local `make verify`.
 
 ---
 
-## 3. R7 architecture rule
+## 3. R7 architectural invariant
 
-R7 is **not** “remove Xorg by handing DRM/input authority to every Activity.”
+R7 is not “remove Xorg by making each Activity a DRM/input owner.”
 
-The target invariant remains:
+The target remains:
 
 - one Greia-owned seat/display/input authority;
-- Activities receive bounded surface/event transport, not broad raw `/dev/input` or DRM-master authority;
-- `ActivitySupervisor` owns Activity lifecycle, sandbox and platform-session resources but must not become DRM master;
+- Activities receive bounded surface/event transport rather than broad raw `/dev/input` or DRM-master authority;
+- `ActivitySupervisor` owns lifecycle, sandbox and platform-session resources but **must not become DRM master**;
 - shell → Activity → shell presentation/recovery is a platform session concern above runtime-specific process mechanics;
-- Python and future Web runtimes share the same display-session semantics;
-- serial direct ownership and a small persistent Greia-owned compositor/session broker remain candidates to be measured;
+- Python and future Web runtimes share the same session semantics;
+- serial direct ownership and a small persistent Greia-owned compositor/session broker are candidates to be measured, not assumed;
 - production Xorg remains until direct-session architecture, resource measurements and physical legacy Intel/Acer evidence are accepted.
 
-Primary R7 documents:
+Primary R7 references:
 
 ```text
 docs/reviews/2026-08-09_R7_X11_DIRECT_GRAPHICS_DEPENDENCY_AUDIT.md
@@ -113,141 +95,105 @@ docs/testing/2026-08-09_R7_QEMU_KMSDRM_ACCEPTANCE.md
 
 ---
 
-## 4. Real launcher now uses the display-session contract
+## 4. DisplaySessionCoordinator is now live in the installed launcher
 
-This is the major change in the latest tranche.
+This is the central architectural advance of the latest work.
 
-Before this tranche, `DisplaySessionCoordinator` was a strong source contract and evidence seam but the normal installed launcher did not actually compose it around real Activity lifecycle events.
+Previously `DisplaySessionCoordinator` was a strong typed contract/evidence seam but the real installed launcher did not compose it around actual Activity lifecycle events.
 
 Now the installed path does.
 
-### 4.1 Explicit X11 compatibility backend
+### Explicit X compatibility backend
 
-New file:
+New source:
 
 ```text
 src/greia_launcher/display_session_legacy_x.py
 ```
 
-Class:
-
-```text
-LegacyXDisplaySessionBackend
-```
-
-Properties:
+`LegacyXDisplaySessionBackend`:
 
 ```text
 backend_id = legacy-x11-session
 transport_kind = LEGACY_X11
 ```
 
-The current Xorg session runs shell and Activity clients in the same X server. Therefore the compatibility backend deliberately does **not** add a window manager, display manager, auth helper, or second X/session process.
+It adds no desktop, window manager, display manager, second X server or new authentication process. The current X server already hosts Shell and Activity clients.
 
-`prepare_activity()`:
+Its `prepare_activity()`:
 
 - requires the current `DISPLAY` endpoint;
-- rejects simultaneous `WAYLAND_DISPLAY` ambiguity;
-- rejects an explicitly conflicting non-`x11` `SDL_VIDEODRIVER`;
-- preserves `XAUTHORITY` only if it actually exists in the process environment;
-- returns a typed `DisplayTransport(kind=LEGACY_X11, sdl_video_driver="x11", ...)`.
+- rejects simultaneous Wayland ambiguity;
+- rejects an explicitly conflicting SDL backend;
+- preserves `XAUTHORITY` only if it is actually present;
+- returns a typed bounded LEGACY_X11 transport.
 
-`present_activity()` and `restore_shell()` are intentionally no-op server mechanics for the compatibility backend because the launcher already stops repainting while the child is active and resumes repainting after cleanup.
+`present_activity()` and `restore_shell()` intentionally perform no X-server switch: the compatibility launcher already stops repainting while an Activity owns presentation and resumes afterwards.
 
-### 4.2 Xauthority contract corrected to match the actual xinit path
+### Direct-xinit Xauthority correction
 
-Greia starts the compatibility session with `xinit` directly, not `startx`.
+Greia's compatibility service invokes `xinit` directly. The typed LEGACY_X11 transport therefore requires `DISPLAY`, while `XAUTHORITY` is optional-but-validated if present. Greia does not invent an authority file merely to satisfy an abstraction.
 
-`DisplayTransport` therefore now requires `DISPLAY` for `LEGACY_X11`, while `XAUTHORITY` is optional. If `XAUTHORITY` is present, it must still be an absolute bounded valid path.
+Core regression coverage was corrected to match this contract.
 
-Do not invent an Xauthority path merely to satisfy an abstraction.
-
-Relevant commits:
+Relevant source/test commits:
 
 ```text
 5e44a3926d6989652945f1d5a9625ec997051cca
+0c4fb197fa02ba818aed402e20e489779381d110
+0e2904679116ee32f4a02616997c71571bd41f27
 67bb08d5872317a79c75fc0cd4a1739e387246cf
 ```
 
-### 4.3 Installed composition
+---
 
-`src/greia_launcher/composition.py` now defines:
+## 5. ActivitySupervisor now owns display-session timing, not display hardware
 
-```text
-provisional_installed_display_session()
-```
+`ActivitySupervisor` accepts an optional injected `DisplaySessionCoordinator`.
 
-which returns:
+Installed launcher composition injects:
 
 ```text
 DisplaySessionCoordinator(LegacyXDisplaySessionBackend())
 ```
 
-The function is explicitly provisional. Replacing this factory with a measured direct/compositor backend should not require Activity API or lifecycle changes.
+Non-installed/windowed development keeps the previous no-coordinator path.
 
-Relevant commit:
-
-```text
-f1aa18b6fca32d04cdc7b0063184f49b3638493a
-```
-
-### 4.4 ActivitySupervisor integration
-
-`ActivitySupervisor` now accepts an optional injected:
+The installed Activity path is now:
 
 ```text
-display_coordinator: DisplaySessionCoordinator | None
-```
-
-Installed launcher composition injects it; non-installed/windowed development keeps `None`, preserving existing development behavior.
-
-For one platform Activity session ID, the supervisor now performs:
-
-```text
-platform session ID allocated
+Greia session ID
 → runtime/package/capability preparation
-→ lifecycle transport and brokers created
-→ display coordinator prepare_activity(session_id)
-→ typed DisplaySessionLease stored
-→ lease transport environment applied to child invocation
-→ child starts
-→ READY observed
-→ coordinator.activity_ready(lease)
-→ Activity becomes RUNNING
+→ lifecycle + storage/event brokers
+→ display prepare(session_id)
+→ exact DisplaySessionLease
+→ bounded typed transport applied to child environment
+→ child launch
+→ READY
+→ display present(lease)
+→ running Activity
 → normal exit / crash / timeout / forced stop / launch failure
 → runtime cleanup
-→ coordinator.activity_ended(lease) / shell recovery
-→ resource cleanup
-→ authoritative history terminal reason
+→ display restore(lease)
+→ broker/control cleanup
+→ authoritative terminal history reason
 ```
 
-A display restore failure changes the authoritative Activity result to:
+Display restoration failure changes the authoritative Activity result/history reason to:
 
 ```text
 platform_failure
 ```
 
-before final history closure.
+### Fast READY + exit
 
-This is important: display recovery is now part of Greia platform lifecycle correctness, not a launcher-UI afterthought.
+If an Activity publishes READY but is already terminal when Greia polls it, READY is recorded but the dead child surface is **not** presented. The prepared lease is restored during terminal cleanup.
 
-Relevant commit:
+### Typed transport overrides stale host selectors
 
-```text
-07bdc4ef6f1ff8b486e4d369ed1253890a2382a7
-```
+When a display lease exists, its transport is authoritative for the child invocation.
 
-### 4.5 Fast READY + exit edge
-
-If an Activity publishes READY and exits between two supervisor polls, Greia records the READY event but deliberately does **not** call `present_activity()` for a process that is already dead. It restores the prepared display lease during terminal cleanup.
-
-This avoids briefly presenting a stale/dead child surface merely because a READY marker existed.
-
-### 4.6 Typed display environment becomes authoritative for the child transport
-
-When a display lease exists, the child process receives transport values from the lease rather than arbitrary inherited display selectors.
-
-Supported transport environment names are only:
+Permitted display transport environment names are only:
 
 ```text
 DISPLAY
@@ -257,109 +203,128 @@ SDL_VIDEODRIVER
 XDG_RUNTIME_DIR
 ```
 
-Before the typed transport is applied, inherited mutually exclusive selectors are removed:
+Inherited mutually exclusive selectors are removed before the lease is applied. `XDG_RUNTIME_DIR` is preserved unless the selected transport supplies its own value because it may also serve non-display session infrastructure.
 
-```text
-DISPLAY
-XAUTHORITY
-WAYLAND_DISPLAY
-SDL_VIDEODRIVER
-```
-
-`XDG_RUNTIME_DIR` is preserved unless the selected transport explicitly supplies one, because it can also serve non-display/session infrastructure.
-
-No DRM/input device path can be represented by `DisplayTransport`.
-
-### 4.7 Installed launcher activation
-
-`src/greia_launcher/main.py` now builds the provisional display coordinator only on the installed root and injects it into `ActivitySupervisor`.
+Raw DRM/input device grants cannot be represented by `DisplayTransport`.
 
 Relevant commits:
 
 ```text
+07bdc4ef6f1ff8b486e4d369ed1253890a2382a7
+f1aa18b6fca32d04cdc7b0063184f49b3638493a
 0cec31b2418b88bde25aecd1b484f076e63444aa
 5f45c7d44a9f254e5181dc068333a0db7292a658
 ```
 
-The second commit removes accidental unrelated formatting churn from the first. Cumulative comparison against the pre-integration point confirms only 9 semantic/format lines differ in `main.py`.
+The `main.py` integration was deliberately cleaned after an initial noisy write; cumulative comparison against the pre-integration point showed only 9 changed lines in `main.py` plus the new lifecycle regression file.
 
 ---
 
-## 5. New lifecycle regression coverage
+## 6. Post-prepare environment failure is now fail-closed
 
-New file:
+The previously documented source hardening edge is **closed**.
+
+Commit:
+
+```text
+fb4822999e7196fbb5322449bd30eaaddfe602ba
+```
+
+After display preparation and broker/lifecycle creation, final child-environment assembly is now inside the common failed-launch boundary.
+
+If final environment assembly raises because of a platform/runtime/display collision, invalid typed data or filesystem error, Greia now:
+
+```text
+never launches the child
+→ restores the prepared display lease
+→ stops session resources
+→ cleans lifecycle control
+→ closes authoritative history
+→ returns platform_failure
+```
+
+Regression:
 
 ```text
 tests/test_supervisor_display_session.py
 ```
 
-Committed tests cover:
-
-1. typed Wayland transport replacing stale host X/Wayland/SDL selector variables;
-2. READY causing prepare → present and normal exit causing restore using one session ID;
-3. fast READY+terminal exit recording READY without presenting a dead surface;
-4. presentation failure restoring the shell, force-stopping the Activity, and returning `platform_failure`;
-5. shell-restore failure converting an otherwise normal process exit into `platform_failure` and leaving the coordinator fail-closed;
-6. process-launch failure after display prepare restoring the prepared display session.
-
-New file:
+Commit:
 
 ```text
-tests/test_display_session_legacy_x.py
+72e9b17a4c97c51405f5183215a7132b2997d1c3
 ```
 
-covers:
+The test deliberately injects a forbidden lifecycle `HOME` after display preparation and asserts:
 
-- xinit-style `DISPLAY` without XAUTHORITY;
-- optional valid XAUTHORITY preservation;
-- invalid relative authority rejection;
-- missing DISPLAY rejection;
-- simultaneous Wayland rejection;
-- conflicting SDL backend rejection;
-- no-op compatibility present/restore mechanics.
+- process factory is never called;
+- Activity session is FAILED;
+- exit reason is `platform_failure`;
+- the exact display session is restored to Shell.
 
-`tests/test_display_session.py` has also been corrected so the core LEGACY_X11 contract itself tests both direct-xinit `DISPLAY`-only operation and optional validated Xauthority.
-
-These tests are **committed but unexecuted** in a real current checkout due to the verification boundary above.
+The regression is committed but not executed in a real current checkout because of the verification boundary above.
 
 ---
 
-## 6. One known source hardening edge remains
+## 7. Exact-image workflow now covers the live integration
 
-Do not lose this item.
+The second previously documented CI hardening edge is also **closed**.
 
-The display lease and brokers are prepared immediately before final child-environment assembly. `_sanitized_environment()` can raise `ActivityLifecycleError` for a lifecycle/display environment collision or invalid transport environment.
+Existing authoritative workflow only:
 
-The current `start()` call to `_sanitized_environment()` is not yet wrapped in the common `_failed_launch_session(...)` cleanup path.
+```text
+.github/workflows/r7-production-image-probe-v3.yml
+```
 
-The typed current backends should normally provide valid data, so this is not evidence of a current production failure; however, architecturally it should be hardened so **any post-prepare environment assembly failure restores the display and releases brokers/control before returning `platform_failure`**.
+Commit:
 
-This is a good next source patch before further mechanism work.
+```text
+24dfc5e34ba97bfc98e967b6fb8463b282483c3a
+```
+
+Added to the top-level pull-request path coverage:
+
+```text
+src/greia_launcher/composition.py
+src/greia_launcher/display_session.py
+src/greia_launcher/display_session_legacy_x.py
+src/greia_launcher/main.py
+src/greia_launcher/supervisor.py
+tests/test_display_session.py
+tests/test_display_session_legacy_x.py
+tests/test_supervisor_display_session.py
+```
+
+The same live integration files are represented in the internal preflight changed-path regex, so once generated evidence eventually exists, later ownership/lifecycle changes cannot be silently classified as irrelevant.
+
+The commit diff was inspected immediately after the full-file GitHub contents write: **only the intended path-list and preflight-regex lines changed**. The build, package probe, QEMU, source verification and evidence-recording steps were untouched.
+
+Do not create another R7 builder or parallel evidence workflow.
 
 ---
 
-## 7. Existing R7 evidence primitives remain unchanged in status
+## 8. Existing R7 evidence primitives
 
 ### Passive probe
 
-`src/greia_platform/direct_graphics_probe.py` inventories without active device acquisition:
+`src/greia_platform/direct_graphics_probe.py` passively inventories:
 
-- SDL/Pygame versions and compiled video drivers;
-- DRM cards/render nodes;
-- connector/mode topology;
-- libdrm/GBM/EGL/libinput/libseat visibility;
+- Pygame/SDL versions and compiled SDL video drivers;
+- DRM card/render nodes;
+- KMS connector/mode topology;
+- libdrm/GBM/EGL/libinput/libseat presence;
 - bounded input-event topology;
 - logind/seat/session runtime visibility;
 - active VT;
-- transport-presence facts.
+- presence-only display/session transport facts.
 
-It still explicitly requires later active KMSDRM and active seat/input evidence.
+It does not open DRM/input devices and still requires active KMSDRM plus active seat/input evidence.
 
 ### Active KMSDRM
 
-`src/greia_platform/kmsdrm_acceptance.py` requires explicit takeover acknowledgement, actual SDL `kmsdrm`, no X/Wayland authority, a valid fullscreen surface, and changing rendered-buffer evidence.
+`src/greia_platform/kmsdrm_acceptance.py` requires explicit takeover acknowledgement, actual selected SDL `kmsdrm`, no residual X/Wayland authority, bounded fullscreen surface dimensions and changing rendered-buffer evidence.
 
-### Serial handoff
+### Serial evidence candidate
 
 `src/greia_platform/kmsdrm_serial_handoff.py` measures:
 
@@ -371,19 +336,19 @@ Shell KMSDRM
 → Shell reacquire
 ```
 
-This remains evidence-only and does not authorize serial direct ownership for production.
+This remains evidence-only and does not authorize broad Activity DRM/input access or select serial ownership as production architecture.
 
-### QEMU
+### Disposable QEMU
 
-`tools/r7_qemu_kmsdrm_handoff_acceptance.py` still performs a two-boot sequence on a disposable clone only.
+`tools/r7_qemu_kmsdrm_handoff_acceptance.py` performs the active + serial two-boot sequence on a disposable clone. The source production image is not mutated.
 
 No real current QEMU PASS exists.
 
 ---
 
-## 8. Compositor package benchmark state
+## 9. Compositor/reference package benchmark
 
-`tools/r7_compositor_package_probe.py` retains fixed benchmark candidates:
+Fixed measurement candidates remain:
 
 ```text
 cage
@@ -391,78 +356,73 @@ weston
 wlroots-runtime -> libwlroots-0.18
 ```
 
-It measures incremental closure relative to the **current Xorg production image**. It is not the final Xorg-removed footprint.
+`tools/r7_compositor_package_probe.py` measures **incremental closure relative to the current Xorg production image**, not the eventual Xorg-removed footprint.
 
 The probe:
 
-- never mounts the source production image;
-- hashes source before/after, including failure paths;
+- never mounts the source image;
+- hashes source before/after including failure paths;
 - uses one disposable clone per candidate;
-- exposes none of host `/dev`, `/sys`, or `/run`;
+- exposes none of host `/dev`, `/sys` or `/run`;
 - uses a bounded private tmpfs `/dev` plus fresh procfs;
 - uses no-recommends/no-upgrade/no-remove APT policy;
-- rejects baseline package changes/removals;
+- rejects baseline package removals/version/architecture changes;
 - protects systemd and GRUB boot-state trees;
-- cleans APT/log noise;
 - removes disposable clones by default on success and failure.
 
-No real package-delta transaction has executed yet.
-
-No compositor package has been added to a Greia production package set.
+No real package transaction report exists yet. No compositor package has been added to production Greia.
 
 ---
 
-## 9. Activity sandbox state — do not migrate prematurely
+## 10. Activity sandbox state — unchanged intentionally
 
-Production Activities still carry compatibility concessions inherited from the accepted Xorg path:
+The current Xorg production baseline still carries compatibility concessions:
 
-- shared host IPC may still be needed for XShm;
-- X/Wayland/SDL transport variables remain part of compatibility environment policy;
+- shared host IPC may still be needed by XShm;
+- X/Wayland/SDL transport variables remain in compatibility environment policy;
 - `/dev/dri` remains broadly bind-passed.
 
-Do **not** remove these merely because `DisplaySessionCoordinator` is now live.
+Do not remove these merely because the display-session coordinator is now live.
 
-After real evidence selects the direct/compositor session architecture, the direct profile should:
+After measured evidence selects a direct/compositor design, the direct profile must:
 
 - remove X socket/Xauthority transport;
-- enable IPC isolation where no selected runtime requires shared host IPC;
+- enable IPC isolation where no selected runtime requires shared IPC;
 - remove or tightly broker raw DRM authority for ordinary Activities;
-- ensure input events come through Greia-owned seat/session infrastructure rather than raw `/dev/input` access.
+- route input through Greia-owned seat/session infrastructure rather than raw child `/dev/input` authority.
 
 ---
 
-## 10. Single authoritative exact-image gate
+## 11. Single authoritative exact-image evidence chain
 
-Do not create a parallel builder or R7 gate.
-
-Existing workflow:
+Keep using only:
 
 ```text
 .github/workflows/r7-production-image-probe-v3.yml
 ```
 
-Intended evidence chain:
+Intended sequence:
 
 ```text
 exact modern-amd64 production image
-→ builder cleanup proof
-→ installed SDL/passive direct prerequisites
+→ builder success + zero leaked resources
+→ installed SDL/passive prerequisites
 → Cage package delta
 → Weston package delta
-→ wlroots package delta
-→ active QEMU KMSDRM when compiled
+→ wlroots-runtime package delta
+→ if kmsdrm compiled: active QEMU KMSDRM
 → serial clean/crash/reacquire QEMU
-→ full source gate
+→ full current source gate
 → persist bounded evidence
 ```
 
-The evidence document is still absent, so the workflow remains eligible. Its current executions fail before preflight step 1 for the external zero-step condition described above.
+If installed SDL lacks KMSDRM, that is a packaging classification, not a PASS.
 
-Future workflow path filters should explicitly include the new live integration files (`supervisor.py`, `composition.py`, `main.py`, `display_session_legacy_x.py` and their R7 tests) before the evidence document exists/changes the preflight behavior. This is another small source/CI hardening item.
+If active acquisition or serial recovery fails, preserve that negative evidence; do not weaken the gate.
 
 ---
 
-## 11. Production decision
+## 12. Production decision
 
 **UNCHANGED.**
 
@@ -472,61 +432,68 @@ No compositor is selected.
 
 Serial direct ownership remains evidence-only.
 
-The fact that `DisplaySessionCoordinator` is now used by the real launcher does not imply a graphics migration. It means the stable ownership/recovery contract is finally exercised by production-path source while the compatibility backend preserves the current mechanism.
+The live use of `DisplaySessionCoordinator` is not a graphics-backend migration. It means the platform ownership/recovery contract is now exercised by real installed-source lifecycle while the compatibility backend preserves today's mechanism.
 
-Even a future active + serial QEMU PASS is not enough to switch production. R7 still requires:
+Before any production migration, R7 still requires:
 
-- exact package/resource comparisons;
-- a persistent compositor/session-broker runtime prototype if the measurements justify it;
-- idle/peak RSS;
-- process/FD count;
-- startup and transition latency;
+- current complete source verification;
+- exact installed-SDL and package-delta evidence;
+- active KMSDRM and serial recovery evidence where supported;
+- active seat/input evidence;
+- runtime comparison of serial vs smallest viable compositor/session broker vs Xorg;
+- idle/peak RSS, process/FD counts, startup and transition latency;
 - crash/forced-return behavior;
-- authority-boundary comparison against serial ownership and Xorg;
-- physical legacy Intel/Acer scanout/input/suspend/crash evidence.
+- authority-boundary comparison;
+- physical legacy Intel/Acer scanout/input/suspend/crash acceptance.
 
-Pi direct-display evidence remains an R8/R14 physical gate after Pi image adapters exist.
-
----
-
-## 12. Exact next steps
-
-Resume in this order:
-
-1. harden the post-display-prepare environment-assembly failure path so it always enters `_failed_launch_session(...)` and restores display/brokers/control;
-2. add the new real-launcher/session integration files to the unified exact-image workflow trigger/preflight path set;
-3. run current `make verify` as soon as a real checkout/runner can execute and record the actual count;
-4. run the existing single exact-image workflow and preserve all negative evidence;
-5. inspect installed SDL and exact Cage/Weston/wlroots package deltas;
-6. if KMSDRM exists, execute active and serial QEMU evidence without weakening either test;
-7. execute active seat/input evidence;
-8. only after those measurements, select the smallest viable compositor/session-broker reference worth a runtime prototype beneath `DisplaySessionCoordinator`;
-9. measure compositor vs serial vs Xorg resource/authority/recovery behavior;
-10. write the R7 session-architecture ADR from evidence;
-11. require physical legacy Intel/Acer acceptance before production migration.
-
-Do not implement a compositor merely to make visible progress while the package/resource evidence is unavailable.
+Pi direct-display evidence remains an R8/R14 gate after Pi board/image adapters exist.
 
 ---
 
-## 13. Key commits from the latest tranche
+## 13. Exact next step
+
+The two remaining source/CI hardening items from the previous handover are complete.
+
+**Do not add another display mechanism now merely to show progress.**
+
+Next legitimate sequence when an executable environment is available:
+
+1. run the current full `make verify` and record the actual count;
+2. execute the existing unified exact-image workflow;
+3. preserve exact SDL classification and Cage/Weston/wlroots package deltas;
+4. if KMSDRM exists, run active KMSDRM and serial clean/crash/reacquire QEMU evidence;
+5. run active seat/input evidence;
+6. from those measurements, choose the smallest viable persistent compositor/session-broker reference worth a runtime prototype, if any;
+7. prototype it **below `DisplaySessionCoordinator`**;
+8. compare compositor vs serial vs Xorg authority, RSS, process/FD count, startup, transition and recovery behavior;
+9. write the R7 session-architecture ADR from evidence;
+10. require physical legacy Intel/Acer acceptance before switching production.
+
+Until step 1/2 can genuinely execute, preserve the current Xorg production path and the existing evidence gaps.
+
+---
+
+## 14. Key latest source/CI commits
 
 ```text
-5e44a3926d6989652945f1d5a9625ec997051cca  align LEGACY_X11 transport with direct-xinit authority reality
-0c4fb197fa02ba818aed402e20e489779381d110  add explicit legacy X display-session compatibility backend
-0e2904679116ee32f4a02616997c71571bd41f27  add legacy X display-session regression tests
-07bdc4ef6f1ff8b486e4d369ed1253890a2382a7  bind display-session lease into ActivitySupervisor lifecycle
-f1aa18b6fca32d04cdc7b0063184f49b3638493a  compose provisional installed display session explicitly
-5ce6d3c85cafcc166c15adfc61f14a6c465d4961  add Supervisor/display-session lifecycle regressions
+5e44a3926d6989652945f1d5a9625ec997051cca  align LEGACY_X11 transport with direct-xinit reality
+0c4fb197fa02ba818aed402e20e489779381d110  add explicit legacy-X session backend
+0e2904679116ee32f4a02616997c71571bd41f27  add legacy-X session regressions
+07bdc4ef6f1ff8b486e4d369ed1253890a2382a7  integrate display lease into ActivitySupervisor
+f1aa18b6fca32d04cdc7b0063184f49b3638493a  explicit installed display-session composition
+5ce6d3c85cafcc166c15adfc61f14a6c465d4961  add Supervisor/display lifecycle regressions
 0cec31b2418b88bde25aecd1b484f076e63444aa  activate coordinator in installed launcher
 5f45c7d44a9f254e5181dc068333a0db7292a658  remove accidental launcher formatting churn
-67bb08d5872317a79c75fc0cd4a1739e387246cf  correct core DisplayTransport regression to optional Xauthority
+67bb08d5872317a79c75fc0cd4a1739e387246cf  correct core X transport regression
+fb4822999e7196fbb5322449bd30eaaddfe602ba  fail closed on post-prepare environment assembly
+72e9b17a4c97c51405f5183215a7132b2997d1c3  test post-prepare cleanup
+24dfc5e34ba97bfc98e967b6fb8463b282483c3a  include live integration in exact-image gate
 ```
 
-Latest continuity commits include:
+Active-plan progress from the live integration is recorded at:
 
 ```text
-c6af8e930165950d182432f21d6385d8c7288f35  append active-plan progress
+c6af8e930165950d182432f21d6385d8c7288f35
 ```
 
-GitHub branch history is authoritative for exact chronology.
+GitHub branch history remains authoritative for exact chronology.
