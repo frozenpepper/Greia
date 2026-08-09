@@ -44,7 +44,11 @@ target_sets = [
   "parent-recovery",
   "developer-remote",
 ]
-installer_sets = ["installer-base"]
+installer_sets = [
+  "installer-base",
+  "network-basic",
+  "developer-remote",
+]
 extra_packages = []
 
 [resources]
