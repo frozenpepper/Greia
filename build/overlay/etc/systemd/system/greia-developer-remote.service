@@ -7,7 +7,7 @@ Before=ssh.service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/lib/greia-os/prepare-developer-remote
+ExecStart=/bin/sh /usr/local/lib/greia-os/prepare-developer-remote
 RemainAfterExit=yes
 
 [Install]
