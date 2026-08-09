@@ -50,7 +50,7 @@ jobs:
           set -euo pipefail
           PYTHONPATH=src python3 -m unittest \
             tests.test_boot_contract \
-            tests.test_system_overlay_contract.SystemOverlayContractTests.test_installed_boot_path_is_real_silent_and_authenticated
+            tests.test_system_overlay_contract
 
       - name: Full provider-free gate
         shell: bash
