@@ -20,10 +20,11 @@ The documentation is intentionally split by authority and freshness.
 2. **`docs/DOCUMENTATION.md`** — which document owns which kind of truth and how to resolve drift/conflicts.
 3. **`docs/architecture/GREIA_ARCHITECTURE.md`** — living architecture overview/synthesis.
 4. **accepted ADRs under `docs/adr/`** — normative architecture decisions.
-5. **`docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`** — mandatory active implementation plan until its closure criteria are satisfied.
-6. **`HANDOVER.md`** — current branch, implementation, verification/evidence boundary, blockers and exact next step.
-7. **`docs/agents/GREIA_AGENT_OPERATIONS.md`** — project/build/test-hardware operating manual for agents.
-8. **`skills/greia-activity-authoring/SKILL.md`** — canonical Activity-authoring skill.
+5. **`docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md`** — mandatory Phase-0 writing and painting product requirement.
+6. **`docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`** — mandatory active implementation plan until its closure criteria are satisfied.
+7. **`HANDOVER.md`** — current branch, implementation, verification/evidence boundary, blockers and exact next step.
+8. **`docs/agents/GREIA_AGENT_OPERATIONS.md`** — project/build/test-hardware operating manual for agents.
+9. **`skills/greia-activity-authoring/SKILL.md`** — canonical Activity-authoring skill.
 
 Do not use this README as a substitute for the current handover.
 
@@ -67,6 +68,31 @@ Greia Platform
 ```
 
 An Activity keeps one platform identity, save namespace, lifecycle, permission model, progression integration and package identity regardless of runtime.
+
+---
+
+## Creative computing from the beginning
+
+The first user-ready Phase-0 Greia image is required to include two first-party built-in creative Activities:
+
+- a **simple writing/text-editing Activity**;
+- a **simple painting/drawing Activity**.
+
+These are baseline Greia product capabilities, not optional demos or later ecosystem extras.
+
+The writing Activity should open quickly into a large, uncluttered editing surface with **large readable text by default**, automatic profile-scoped saving, a very small set of child-sized controls and no desktop-style file workflow.
+
+The painting Activity should provide a large responsive canvas, a compact cheerful color palette, a few brush sizes, eraser, bounded undo, automatic saving and a simple visual gallery. It should feel playful without becoming a miniature professional graphics package.
+
+Both are also intended to become reference Activities for the first reusable Greia child-UI primitives: large semantic buttons, tool states, palettes, cards/galleries, typography, undo feedback and cached low-resource rendering. The current repository does **not** yet have a general widget toolkit; reusable primitives should be extracted from real duplication rather than designed speculatively.
+
+Exact requirement:
+
+```text
+docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md
+```
+
+R7 remains the current blocking architecture phase; this requirement does not authorize skipping safety/display prerequisites. It does mean final Phase-0/user-ready-image acceptance is incomplete until both creative Activities exist and pass real low-end visual/input/storage acceptance.
 
 ---
 
@@ -199,6 +225,7 @@ For image/hardware work, use the exact applicable procedure under `docs/testing/
 - `AGENTS.md` — repository-wide engineering/agent contracts.
 - `HANDOVER.md` — current continuation/evidence snapshot.
 - `docs/DOCUMENTATION.md` — documentation ownership, precedence and freshness rules.
+- `docs/product/` — explicit child-facing product/UX requirements, including mandatory Phase-0 core creation Activities.
 - `docs/architecture/` — living architecture synthesis.
 - `docs/adr/` — accepted/proposed architecture decisions.
 - `docs/plans/` — active and historical implementation plans.
