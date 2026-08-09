@@ -6,12 +6,14 @@ on:
     paths:
       - ".github/workflows/r7-production-image-probe-v3.yml"
       - "build/**"
+      - "src/greia_launcher/display_session.py"
       - "src/greia_platform/direct_graphics_probe.py"
       - "src/greia_platform/kmsdrm_acceptance.py"
       - "src/greia_platform/kmsdrm_serial_handoff.py"
       - "tools/r7_compositor_package_probe.py"
       - "tools/r7_qemu_kmsdrm_acceptance.py"
       - "tools/r7_qemu_kmsdrm_handoff_acceptance.py"
+      - "tests/test_display_session.py"
       - "tests/test_kmsdrm_serial_handoff.py"
       - "tests/test_r7_compositor_package_probe.py"
       - "tests/test_r7_qemu_kmsdrm_harness.py"
@@ -32,13 +34,16 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 2
       - id: edge
-        name: Run expensive probe only for a relevant latest change
+        name: Keep exact-image gate eligible until evidence is committed
         shell: bash
         run: |
           set -euo pipefail
+          evidence='docs/reviews/2026-08-09_R7_PRODUCTION_IMAGE_SDL_EVIDENCE.md'
           changed="$(git diff-tree --no-commit-id --name-only -r HEAD)"
           printf '%s\n' "$changed"
-          if printf '%s\n' "$changed" | grep -Eq '^(build/|src/greia_platform/(direct_graphics_probe|kmsdrm_acceptance|kmsdrm_serial_handoff)\.py$|tools/r7_(compositor_package_probe|qemu_kmsdrm(_handoff)?_acceptance)\.py$|tests/test_(kmsdrm_serial_handoff|r7_compositor_package_probe|r7_qemu_kmsdrm(_handoff)?_harness)\.py$|\.github/workflows/r7-production-image-probe-v3\.yml$)'; then
+          if [ ! -s "$evidence" ]; then
+            echo 'should_run=true' >> "$GITHUB_OUTPUT"
+          elif printf '%s\n' "$changed" | grep -Eq '^(build/|src/greia_launcher/display_session\.py$|src/greia_platform/(direct_graphics_probe|kmsdrm_acceptance|kmsdrm_serial_handoff)\.py$|tools/r7_(compositor_package_probe|qemu_kmsdrm(_handoff)?_acceptance)\.py$|tests/test_(display_session|kmsdrm_serial_handoff|r7_compositor_package_probe|r7_qemu_kmsdrm(_handoff)?_harness)\.py$|\.github/workflows/r7-production-image-probe-v3\.yml$)'; then
             echo 'should_run=true' >> "$GITHUB_OUTPUT"
           else
             echo 'should_run=false' >> "$GITHUB_OUTPUT"
@@ -190,7 +195,6 @@ jobs:
           image="$RUNNER_TEMP/greia-r7-image/greia-os-modern-amd64.img"
           out="$RUNNER_TEMP/greia-r7-compositor-packages"
           mkdir -p "$out"
-          image_sha="$(cat /tmp/r7-image-sha256 | awk '{print $1}')"
 
           for candidate in cage weston wlroots-runtime; do
             sudo python3 tools/r7_compositor_package_probe.py \
