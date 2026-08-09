@@ -52,6 +52,11 @@ safe_detach_loop() {
   # all filesystems are unmounted so they cannot hold the loop association open.
   partx -d "$loop_device" 2>/dev/null || true
   safe_udev_settle
+  # The real Greia image diagnostic found no mounts, holders, open FDs, or
+  # residual partx map, yet the loop association survived until its block
+  # buffers were flushed. Flush only this known loop before detaching it.
+  blockdev --flushbufs "$loop_device" 2>/dev/null || true
+  safe_udev_settle
   local attempt
   for attempt in {1..20}; do
     if ! losetup "$loop_device" >/dev/null 2>&1; then return 0; fi
