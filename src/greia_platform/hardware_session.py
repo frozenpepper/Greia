@@ -177,6 +177,22 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def __getattr__(name: str):
+    """Temporary source-compatibility bridge for the still-X-bound installer.
+
+    R7 moved the implementation itself to `hal_legacy_x`. The installer is the
+    remaining historical importer and will be migrated to an injected semantic
+    display/settings controller before R7-A is closed. The bridge is lazy so
+    importing this generic watcher does not import or execute the X adapter.
+    """
+
+    if name == "XSessionHardwareController":
+        from .hal_legacy_x import LegacyXHardwareSessionController
+
+        return LegacyXHardwareSessionController
+    raise AttributeError(name)
+
+
 def main() -> int:
     # Production remains on the explicit legacy-X compatibility adapter during
     # R7. Keeping this import local prevents the generic watcher from acquiring
