@@ -94,15 +94,15 @@ class KMSDRMAcceptanceRunner:
             width, height = _surface_size(surface)
             frame_hashes: list[str] = []
             for index in range(self.config.frame_count):
-                # Three high-contrast deterministic frames make stale/no-op
-                # surfaces easier to identify in video capture while remaining
-                # independent of Greia UI/theme assets.
+                # High-contrast deterministic frames make stale/no-op surfaces
+                # detectable without depending on Greia UI/theme assets.
                 color = _frame_color(index)
                 surface.fill(color)
                 pygame.display.flip()
                 pygame.event.pump()
                 raw = pygame.image.tostring(surface, "RGB")
                 frame_hashes.append(hashlib.sha256(raw).hexdigest())
+            _require_expected_frame_diversity(frame_hashes, self.config.frame_count)
             ended = self._clock()
             duration = max(0.0, float(ended - started))
             if not math.isfinite(duration):
@@ -119,7 +119,7 @@ class KMSDRMAcceptanceRunner:
                 "pygame_version": str(pygame.version.ver),
                 "sdl_version": [int(value) for value in pygame.get_sdl_version()],
                 "limitations": [
-                    "proves SDL/Pygame active KMSDRM display creation and rendered buffers",
+                    "proves SDL/Pygame active KMSDRM display creation and changing rendered buffers",
                     "does not by itself prove physical scanout continuity, input routing, or shell-Activity ownership",
                 ],
             }
@@ -149,15 +149,23 @@ class KMSDRMAcceptanceRunner:
             raise KMSDRMAcceptanceError(
                 "active KMSDRM acceptance requires explicit display-takeover acknowledgement"
             )
-        if self.config.frame_count < 1 or self.config.frame_count > 16:
-            raise KMSDRMAcceptanceError("frame_count must be between 1 and 16")
+        if (
+            isinstance(self.config.frame_count, bool)
+            or not isinstance(self.config.frame_count, int)
+            or self.config.frame_count < 1
+            or self.config.frame_count > 16
+        ):
+            raise KMSDRMAcceptanceError("frame_count must be an integer between 1 and 16")
         if self.environment.get("SDL_VIDEODRIVER") != _REQUIRED_VIDEO_DRIVER:
             raise KMSDRMAcceptanceError(
                 "SDL_VIDEODRIVER must be explicitly set to kmsdrm"
             )
-        if self.environment.get("DISPLAY") or self.environment.get("WAYLAND_DISPLAY"):
+        if any(
+            self.environment.get(name)
+            for name in ("DISPLAY", "XAUTHORITY", "WAYLAND_DISPLAY")
+        ):
             raise KMSDRMAcceptanceError(
-                "active KMSDRM acceptance refuses X11/Wayland transport variables"
+                "active KMSDRM acceptance refuses X11/Wayland transport authority"
             )
 
     def _write_result(self, result: Mapping[str, object]) -> None:
@@ -173,6 +181,14 @@ class KMSDRMAcceptanceRunner:
         temporary.write_text(payload, encoding="utf-8")
         os.chmod(temporary, 0o644)
         os.replace(temporary, target)
+
+
+def _require_expected_frame_diversity(frame_hashes: list[str], frame_count: int) -> None:
+    expected_unique = min(frame_count, len(_FRAME_PALETTE))
+    if len(frame_hashes) != frame_count or len(set(frame_hashes)) < expected_unique:
+        raise KMSDRMAcceptanceError(
+            "active KMSDRM rendered-frame evidence did not change as expected"
+        )
 
 
 def _surface_size(surface) -> tuple[int, int]:
@@ -191,9 +207,11 @@ def _surface_size(surface) -> tuple[int, int]:
     return width, height
 
 
+_FRAME_PALETTE = ((16, 16, 16), (238, 238, 224), (96, 128, 160))
+
+
 def _frame_color(index: int) -> tuple[int, int, int]:
-    palette = ((16, 16, 16), (238, 238, 224), (96, 128, 160))
-    return palette[index % len(palette)]
+    return _FRAME_PALETTE[index % len(_FRAME_PALETTE)]
 
 
 def _bounded_error(exc: Exception, maximum: int = 300) -> str:
