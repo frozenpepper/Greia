@@ -18,10 +18,12 @@ on:
       - "build/overlay/usr/lib/tmpfiles.d/greia-r7-maintenance.conf"
       - "build/profiles/**"
       - "build/package-sets/**"
+      - "tools/r7_qemu_kmsdrm_acceptance.py"
       - "tests/test_hal_legacy_x.py"
       - "tests/test_direct_graphics_probe.py"
       - "tests/test_kmsdrm_acceptance.py"
       - "tests/test_kmsdrm_maintenance.py"
+      - "tests/test_r7_qemu_kmsdrm_harness.py"
       - "tests/test_r7_runtime_audit.py"
       - "tests/test_system_overlay_contract.py"
 
@@ -51,6 +53,7 @@ jobs:
           PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_direct_graphics_probe.py' -v
           PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_kmsdrm_acceptance.py' -v
           PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_kmsdrm_maintenance.py' -v
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_r7_qemu_kmsdrm_harness.py' -v
           PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_r7_runtime_audit.py' -v
 
       - name: R7 architecture and maintenance invariants
@@ -95,6 +98,16 @@ jobs:
           grep -F '/proc/[0-9]*/comm' build/overlay/usr/local/sbin/greia-run-kmsdrm-acceptance
           ! grep -F 'pgrep' build/overlay/usr/local/sbin/greia-run-kmsdrm-acceptance
           grep -F '0750 root root' build/overlay/usr/lib/tmpfiles.d/greia-r7-maintenance.conf
+
+          # QEMU acceptance mutates a cloned image only, has no guest network,
+          # keeps writes persistent for evidence, and presents a DRM-capable GPU
+          # without requiring a host display window.
+          grep -F 'source_image_mutated": False' tools/r7_qemu_kmsdrm_acceptance.py
+          grep -F '"virtio-vga"' tools/r7_qemu_kmsdrm_acceptance.py
+          grep -F '"-display"' tools/r7_qemu_kmsdrm_acceptance.py
+          grep -F '"-nic"' tools/r7_qemu_kmsdrm_acceptance.py
+          grep -F 'normal_launcher_masked_only_in_clone' tools/r7_qemu_kmsdrm_acceptance.py
+          ! grep -F '"-snapshot"' tools/r7_qemu_kmsdrm_acceptance.py
 
           # Normal boot remains the known X compatibility path until active evidence.
           grep -F '/usr/bin/xinit' build/overlay/etc/systemd/system/greia-launcher.service
