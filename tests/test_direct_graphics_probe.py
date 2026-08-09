@@ -27,15 +27,33 @@ class DirectGraphicsProbeTests(unittest.TestCase):
         (connector / "modes").write_text(
             "1024x600\n800x600\n", encoding="utf-8"
         )
+
+        input_root = root / "dev" / "input"
+        input_root.mkdir(parents=True)
+        (input_root / "event3").touch()
+        input_event = root / "sys" / "class" / "input" / "event3" / "device"
+        input_event.mkdir(parents=True)
+        (input_event / "name").write_text("Greia Test Touchpad\n", encoding="utf-8")
+
+        (root / "run" / "systemd" / "system").mkdir(parents=True)
+        seats = root / "run" / "systemd" / "seats"
+        seats.mkdir(parents=True)
+        (seats / "seat0").write_text("ACTIVE=u1\n", encoding="utf-8")
+        sessions = root / "run" / "systemd" / "sessions"
+        sessions.mkdir(parents=True)
+        (sessions / "u1").write_text("SEAT=seat0\n", encoding="utf-8")
+        active_vt = root / "sys" / "class" / "tty" / "tty0"
+        active_vt.mkdir(parents=True)
+        (active_vt / "active").write_text("tty1\n", encoding="utf-8")
         return root
 
     @staticmethod
     def _libraries(name: str) -> str | None:
-        if name in {"drm", "gbm", "EGL", "input"}:
+        if name in {"drm", "gbm", "EGL", "input", "seat"}:
             return f"lib{name}.so"
         return None
 
-    def test_probe_reports_prerequisites_without_claiming_active_kms_success(self) -> None:
+    def test_probe_reports_prerequisites_without_claiming_active_kms_or_input_success(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = self._fixture_root(temporary)
             probe = DirectGraphicsProbe(
@@ -43,9 +61,11 @@ class DirectGraphicsProbeTests(unittest.TestCase):
                     root=root,
                     environment={
                         "DISPLAY": ":0-secret-display-value",
+                        "XAUTHORITY": "/secret/xauthority",
                         "SDL_VIDEODRIVER": "kmsdrm",
                         "XDG_SEAT": "seat0",
                         "XDG_VTNR": "1",
+                        "XDG_SESSION_ID": "secret-session-id",
                     },
                 ),
                 library_finder=self._libraries,
@@ -72,11 +92,28 @@ class DirectGraphicsProbeTests(unittest.TestCase):
                 }
             ],
         )
+        self.assertEqual(snapshot["input"]["event_nodes"], ["event3"])
+        self.assertEqual(
+            snapshot["input"]["sysfs_events"],
+            [{"event": "event3", "name": "Greia Test Touchpad"}],
+        )
+        self.assertTrue(snapshot["session"]["logind_runtime_present"])
+        self.assertTrue(snapshot["session"]["seat0_runtime_present"])
+        self.assertEqual(snapshot["session"]["session_runtime_count"], 1)
+        self.assertEqual(snapshot["session"]["active_vt"], "tty1")
+        self.assertTrue(snapshot["session"]["display_present"])
+        self.assertTrue(snapshot["session"]["xauthority_present"])
         self.assertTrue(snapshot["assessment"]["scanout_connector_visible"])
+        self.assertTrue(snapshot["assessment"]["input_topology_visible"])
+        self.assertTrue(snapshot["assessment"]["seat_runtime_visible"])
         self.assertTrue(snapshot["assessment"]["kmsdrm_prerequisites_visible"])
         self.assertTrue(snapshot["assessment"]["active_kmsdrm_test_required"])
-        self.assertTrue(snapshot["session"]["display_present"])
-        self.assertNotIn(":0-secret-display-value", repr(snapshot))
+        self.assertTrue(snapshot["assessment"]["active_seat_input_test_required"])
+        representation = repr(snapshot)
+        self.assertNotIn(":0-secret-display-value", representation)
+        self.assertNotIn("/secret/xauthority", representation)
+        self.assertNotIn("secret-session-id", representation)
+        self.assertNotIn("ACTIVE=u1", representation)
 
     def test_installed_libraries_do_not_substitute_for_compiled_kms_driver(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -90,6 +127,8 @@ class DirectGraphicsProbeTests(unittest.TestCase):
 
         self.assertFalse(snapshot["sdl"]["kmsdrm_compiled"])
         self.assertTrue(snapshot["assessment"]["scanout_connector_visible"])
+        self.assertTrue(snapshot["assessment"]["input_topology_visible"])
+        self.assertTrue(snapshot["assessment"]["seat_runtime_visible"])
         self.assertFalse(snapshot["assessment"]["kmsdrm_prerequisites_visible"])
 
     def test_card_without_connected_mode_is_not_a_visible_scanout_path(self) -> None:
@@ -136,10 +175,40 @@ class DirectGraphicsProbeTests(unittest.TestCase):
 
         self.assertEqual(snapshot["drm"]["card_nodes"], [])
         self.assertEqual(snapshot["drm"]["connectors"], [])
+        self.assertEqual(snapshot["input"]["event_nodes"], [])
+        self.assertEqual(snapshot["input"]["sysfs_events"], [])
         self.assertFalse(snapshot["pygame"]["available"])
+        self.assertFalse(snapshot["session"]["logind_runtime_present"])
+        self.assertFalse(snapshot["session"]["seat0_runtime_present"])
+        self.assertEqual(snapshot["session"]["session_runtime_count"], 0)
+        self.assertEqual(snapshot["session"]["active_vt"], "")
         self.assertFalse(snapshot["assessment"]["scanout_connector_visible"])
+        self.assertFalse(snapshot["assessment"]["input_topology_visible"])
+        self.assertFalse(snapshot["assessment"]["seat_runtime_visible"])
         self.assertFalse(snapshot["assessment"]["kmsdrm_prerequisites_visible"])
         self.assertTrue(snapshot["assessment"]["active_kmsdrm_test_required"])
+        self.assertTrue(snapshot["assessment"]["active_seat_input_test_required"])
+
+    def test_input_inventory_is_bounded_and_does_not_open_devices(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            dev_input = root / "dev" / "input"
+            dev_input.mkdir(parents=True)
+            sys_input = root / "sys" / "class" / "input"
+            for index in range(140):
+                (dev_input / f"event{index}").touch()
+                device = sys_input / f"event{index}" / "device"
+                device.mkdir(parents=True)
+                (device / "name").write_text("device\n", encoding="utf-8")
+            snapshot = DirectGraphicsProbe(
+                ProbeInputs(root=root, environment={}),
+                library_finder=lambda name: None,
+                sdl_driver_probe=lambda: (),
+                pygame_probe=lambda: {"available": False},
+            ).snapshot()
+
+        self.assertEqual(len(snapshot["input"]["event_nodes"]), 128)
+        self.assertEqual(len(snapshot["input"]["sysfs_events"]), 128)
 
     def test_pygame_metadata_hides_support_prompt_and_restores_caller_environment(self) -> None:
         fake_pygame = SimpleNamespace(
