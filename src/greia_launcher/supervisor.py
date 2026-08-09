@@ -312,20 +312,34 @@ class ActivitySupervisor:
                 )
             self._display_leases[session_id] = display_lease
 
-        environment = self._sanitized_environment(
-            manifest,
-            profile,
-            authority,
-            session_id,
-            sandboxed=sandboxed,
-            storage_broker=storage_broker,
-            event_broker=event_broker,
-            runtime_environment=runtime_command.environment,
-            lifecycle_environment=lifecycle_binding.environment,
-            display_environment=(
-                None if display_lease is None else display_lease.transport.environment()
-            ),
-        )
+        try:
+            environment = self._sanitized_environment(
+                manifest,
+                profile,
+                authority,
+                session_id,
+                sandboxed=sandboxed,
+                storage_broker=storage_broker,
+                event_broker=event_broker,
+                runtime_environment=runtime_command.environment,
+                lifecycle_environment=lifecycle_binding.environment,
+                display_environment=(
+                    None
+                    if display_lease is None
+                    else display_lease.transport.environment()
+                ),
+            )
+        except (ActivityLifecycleError, OSError, TypeError, ValueError):
+            return self._failed_launch_session(
+                manifest,
+                profile,
+                authority,
+                session_id=session_id,
+                control=control,
+                history_store=history_store,
+                resources=resources,
+                reason=ActivityExitReason.PLATFORM_FAILURE,
+            )
 
         if sandboxed:
             assert sandbox is not None
