@@ -10,11 +10,13 @@
 
 ## 1. Continuity state
 
-Do **not** reopen the old v0.12 recovery incident. The recovered baseline is already repository-managed.
+Do **not** reopen the old v0.12 recovery incident. The recovered baseline is repository-managed.
 
-The former post-v0.12 R5 `history.py` loss was resolved by a **new reviewed R5 reimplementation**, not by pretending prose was recovered source. R1–R6 are source-closed and are not to be refactored again unless R7 exposes a concrete integration defect.
+The former post-v0.12 R5 `history.py` loss was resolved by a **new reviewed R5 reimplementation**, not by pretending prose was recovered source. R1–R6 are source-closed and should not be refactored again unless R7 exposes a concrete integration defect.
 
 R7 is active. Production Greia still boots the known Xorg compatibility path. No direct-KMS normal-boot profile/package set is enabled.
+
+GitHub is the persistent source of truth. This branch is intentionally being committed in small coherent tranches so work is not lost if an execution environment disappears.
 
 ## 2. Exact verification boundary
 
@@ -28,24 +30,52 @@ bundled Activity validation: PASS
 source/shell/footprint gate: PASS
 ```
 
-Subsequent R7 source/tooling commits are persisted in GitHub but must **not** be described as fully CI-verified yet. Current pull-request workflow jobs are being created and immediately failing before step 1 (`steps = null` / zero executed steps), including ordinary R7 source verification and R0 clean verification. That is an Actions runner/account launch failure boundary, not test evidence.
+Do **not** claim a newer full test count until a complete gate actually executes.
+
+Subsequent R7 source/tooling commits are persisted in GitHub but remain **awaiting executable full-run verification**. Earlier pull-request workflow jobs were created and immediately failed before step 1 with `steps = null` / zero executed steps. At the latest integration head (`eb9b8d40585579d5e5a2710eb59f6b4b7a48482d`) GitHub had not attached any workflow run or commit status at all when checked.
+
+Those states are execution/control-plane evidence, not Greia source-test failures.
 
 The branch head immediately before this handover update was:
 
 ```text
-aff082f8c8c1c280dcb9167cd8df2efb5a756f0b
+eb9b8d40585579d5e5a2710eb59f6b4b7a48482d
 ```
 
-## 3. R7 source architecture already implemented
+## 3. R7 architectural boundary
 
-### 3.1 Legacy-X quarantine
+The accepted R7 target is **not** “let every Activity own DRM/input.”
+
+The R7 dependency audit establishes:
+
+- one Greia-owned seat/display/input authority;
+- Activities remain runtime-neutral and use the existing Storage/Session/Event/Progression authorities;
+- arbitrary Activities must not receive unrestricted raw DRM-master or raw-input authority merely because Xorg is removed;
+- shell → Activity → shell continuity and crash recovery must be explicit;
+- serial direct ownership and a tiny Greia-owned compositor/session broker must be measured rather than selected by assumption;
+- Xorg remains the compatibility baseline until direct-session evidence is sufficient.
+
+`ActivitySupervisor` remains the owner of Greia lifecycle, sandbox and platform resources. It should **not** become the DRM owner. Display/session ownership belongs above the runtime-specific process layer.
+
+Current X behavior deliberately leaves the Shell Pygame/X surface alive while a child Activity runs. That behavior cannot simply be copied to two independent KMSDRM masters.
+
+## 4. Legacy-X quarantine and typed HAL
+
+R7-A/R7-B source work already in the branch:
 
 - semantic HAL remains backend-neutral;
 - legacy X display/input implementation is quarantined below the typed HAL;
+- hardware watching uses injected typed controllers rather than importing X implementations into generic HAL;
 - current installed launcher behavior is intentionally unchanged while direct-graphics evidence is incomplete;
 - ordinary Activity APIs remain runtime/display neutral.
 
-### 3.2 Passive direct-graphics probe
+Detailed dependency audit:
+
+```text
+docs/reviews/2026-08-09_R7_X11_DIRECT_GRAPHICS_DEPENDENCY_AUDIT.md
+```
+
+## 5. Passive direct-graphics probe
 
 `src/greia_platform/direct_graphics_probe.py` is passive by design. It records:
 
@@ -54,11 +84,14 @@ aff082f8c8c1c280dcb9167cd8df2efb5a756f0b
 - whether `kmsdrm` is compiled;
 - libdrm/GBM/EGL/input/seat library visibility;
 - DRM card/render nodes and connector/mode metadata when actually available;
-- bounded session transport facts.
+- bounded session transport facts;
+- whether a connected connector with at least one mode is visible.
 
 It never calls `pygame.display.set_mode`, never acquires DRM master and never treats installed libraries as active success.
 
-### 3.3 Active KMSDRM acceptance primitive
+A DRM card node by itself is not enough. The passive prerequisite classification requires a connected connector with at least one mode so broken/headless topology is not misdiagnosed as an ownership failure.
+
+## 6. Active KMSDRM acceptance primitive
 
 `src/greia_platform/kmsdrm_acceptance.py` is a separate active test. It requires:
 
@@ -75,113 +108,67 @@ Installed maintenance path:
 - `greia-kmsdrm-acceptance.service` is manual/disabled;
 - runs as `greiakid` with `PAMName=login` on `/dev/tty1`;
 - refuses live X and requires active VT1;
-- root controller stops current X only after installing a restoration trap and restores the normal launcher on every exit path;
 - runtime audit may collect prior evidence but never triggers the active test.
 
-## 4. Real production-image work completed during R7
-
-Building the real Debian Trixie `modern-amd64` image exposed multiple production defects. These were fixed rather than bypassed:
-
-- overlay copy no longer imports checkout UID/GID into the target filesystem;
-- intended Greia conffiles install noninteractively;
-- APT has bounded native retries/timeouts;
-- debootstrap signature verification is forced against a pinned official Debian archive trust root;
-- Plymouth/initramfs closure includes `plymouth-label`;
-- ext4 root closure includes `e2fsprogs`;
-- cleanup failure can no longer be returned as successful image construction;
-- loop cleanup uses normal unmounts, partition removal, buffer flush, udev settling and fail-closed association checks;
-- partition children must actually disappear before the parent loop is detached;
-- loop association is checked from sysfs rather than by reopening the block device;
-- stale GRUB recovery identity was corrected from `pip-recovery` to authoritative `greia-recovery` and regression-tested.
-
-Important durable commits include:
+The root maintenance controller:
 
 ```text
-478c148e...  ownership-safe/noninteractive image assembly
-b67fea8a...  pinned Debian bootstrap trust root
-f84d2e26...  bind checked-in GRUB generator to Greia recovery identity
-097f0281...  stale GRUB contract-test identity corrected; 232/232 executed PASS
-de875088...  verify kernel partition-child removal before loop detach
+/usr/local/sbin/greia-run-kmsdrm-acceptance
 ```
 
-A real image build reached all of the following before the loop-teardown work was finalized:
+installs launcher restoration before stopping X and restores the normal launcher on every exit path.
 
-- valid Debian Trixie Release signature;
-- target package installation;
-- initramfs generation;
-- Greia first-boot/session overlay installation;
-- authenticated `greia-recovery` GRUB contract;
-- BIOS GRUB installation;
-- image footprint/profile generation.
+## 7. PAM/logind least-privilege closure
 
-That earlier image was about 797 MiB accounted filesystem use. Its build was **not accepted** because the builder still reported an associated loop device. Do not turn that image into a PASS retroactively.
+R7 explicitly includes `libpam-systemd` in `build/package-sets/platform-base.txt` because the KMSDRM maintenance services depend on a PAM/logind seat session while images use `--no-install-recommends`.
 
-After `de875088...`, the stricter cleanup helper passed its own live privileged micro-test. The exact full production image has not yet been rebuilt successfully under that revision because GitHub Actions stopped launching jobs before step 1.
+This is deliberately **not** solved by adding `greiakid` permanently to `video`/`render`.
 
-## 5. Loop teardown forensic conclusions
+The intended authority is active session/seat ownership through PAM/logind/uaccess. A regression pins that policy.
 
-Do not reopen discarded theories without new evidence.
+## 8. Production-image hardening completed during R7
 
-Diagnostics established:
+Real `modern-amd64` image work found and fixed:
 
-- the historical leaked loop showed `AUTOCLEAR=1`;
-- no live mount, sysfs holder or process FD was found at inspection time;
-- a disposable `--partscan` lifecycle detached cleanly;
-- a disposable explicit `partx -a/-d` lifecycle also detached cleanly;
-- an isolated BIOS `grub-install --target=i386-pc --recheck` lifecycle detached cleanly.
+- checkout UID/GID leaking into target filesystem ownership;
+- interactive dpkg conffile prompts;
+- unpinned debootstrap trust-root behavior;
+- unbounded APT failure behavior;
+- missing Plymouth/font runtime closure;
+- missing ext4-fsck runtime closure;
+- stale `pip-recovery` GRUB identity;
+- builder cleanup errors being masked by later control flow;
+- incomplete loop partition teardown;
+- missing buffer flush/udev settling;
+- lack of explicit partition-child disappearance checks;
+- loop-association checks that reopened the block device rather than using sysfs.
 
-Therefore:
+A previous real image reached Debian package install, initramfs, Greia overlay, authenticated GRUB, BIOS GRUB install and footprint/profile generation. It was about 797 MiB accounted filesystem use but is **not accepted** because loop cleanup was incomplete at that revision.
 
-- do not switch production from `--partscan` to explicit `partx` merely as cargo-cult;
-- do not blame GRUB itself;
-- current production cleanup instead verifies child partition disappearance and fails closed if it cannot prove teardown.
+The stricter cleanup helper later passed its privileged teardown micro-test. The exact finished production image still needs a complete executable rerun under the current branch.
 
-## 6. Exact Debian SDL authority
+## 9. Exact Debian SDL authority
 
-The actual Greia image package transaction resolved Debian Trixie:
+The actual Greia image transaction resolved Debian Trixie:
 
 ```text
 libsdl2-2.0-0  2.32.4+dfsg-1  amd64
 python3-pygame  2.6.1-1+b2    amd64
 ```
 
-Debian's exact SDL source package build dependencies include `libdrm-dev` and `libgbm-dev`, and its `debian/rules` explicitly uses:
+Debian's SDL source packaging enables video KMSDRM and includes DRM/GBM build dependencies. That is package-build evidence only.
 
-```text
---disable-kmsdrm-shared
---enable-video-kmsdrm
-```
+Greia still requires its own finished-image `SDL_GetNumVideoDrivers()` evidence and active acquisition test.
 
-This is strong package-build authority that Debian intends KMSDRM compiled into SDL rather than as an optional shared backend. It does **not** replace Greia's stricter finished-image `SDL_GetNumVideoDrivers()` runtime probe.
+## 10. Disposable active QEMU harness
 
-See:
-
-- `docs/testing/2026-08-09_R7_QEMU_KMSDRM_ACCEPTANCE.md`
-- Debian source-package/rules links recorded there.
-
-## 7. PAM/logind least-privilege closure
-
-A static review found a concrete R7 dependency gap after the last executed full gate:
-
-- the acceptance service uses `PAMName=login`;
-- `greiakid` intentionally does **not** belong permanently to `video` or `render`;
-- the image was built with `--no-install-recommends`, so `libpam-systemd` was not guaranteed present.
-
-Debian documents `libpam-systemd` as the PAM module that registers user sessions with logind and says software depending on logind functionality must depend on it. DRM `card*` devices are tagged for `uaccess` by systemd rules.
-
-R7 now therefore includes `libpam-systemd` in `build/package-sets/platform-base.txt` and a regression that requires it while also forbidding the shortcut of broad static `video`/`render` membership for `greiakid`.
-
-This change is committed but awaits an executable full CI/image run because of the current Actions launch problem.
-
-## 8. Disposable active QEMU harness
-
-New host tool:
+Baseline host tool:
 
 ```text
 tools/r7_qemu_kmsdrm_acceptance.py
 ```
 
-Tests:
+Baseline tests:
 
 ```text
 tests/test_r7_qemu_kmsdrm_harness.py
@@ -193,76 +180,268 @@ Documentation:
 docs/testing/2026-08-09_R7_QEMU_KMSDRM_ACCEPTANCE.md
 ```
 
-The harness deliberately does **not** create or enable a production direct-KMS boot profile. It:
+The harness:
 
 1. hashes the finished production image;
-2. creates a sparse/reflink-capable disposable clone;
-3. mutates only that clone;
-4. verifies the installed R7 probes/services exist;
-5. masks the normal X launcher only inside the clone;
-6. installs a test-only one-shot boot unit after `greia-first-boot.service`;
-7. boots QEMU with TCG, `virtio-vga`, `-display none`, no monitor and no guest network;
-8. requires tty1 and refuses X;
-9. runs the passive probe first;
-10. only then starts the existing Greia PAM/VT KMSDRM acceptance service;
-11. requires actual SDL driver `kmsdrm` and rendered-frame evidence;
-12. powers the guest off on all exit paths;
+2. clones it and never mutates the source image;
+3. modifies only the disposable clone;
+4. masks the normal launcher only in that clone;
+5. boots after Greia first boot;
+6. uses `virtio-vga`, `-display none`, no monitor and no guest network;
+7. requires tty1 and no X;
+8. runs the passive probe first;
+9. starts the existing PAM/VT KMSDRM service only after passive prerequisites pass;
+10. requires actual SDL driver `kmsdrm`;
+11. requires rendered-frame hashes and valid surface dimensions;
+12. powers off on all exit paths;
 13. remounts the clone read-only and validates persisted evidence;
-14. emits `ACTIVE_QEMU_KMSDRM_PASS` only on the full evidence contract.
+14. emits `ACTIVE_QEMU_KMSDRM_PASS` only on the full contract.
 
-Host image mounting uses Greia's fail-closed cleanup helper. Cleanup errors are never hidden by an earlier exception. Guest summary failure is also not allowed to prevent shutdown.
+A QEMU PASS proves virtual DRM/KMS acquisition/rendering only. It does not prove Acer/Pi physical scanout, input routing, suspend/resume, no-visible-Linux behavior or production session architecture.
 
-A QEMU PASS proves virtual DRM/KMS acquisition/rendering only. It does not prove legacy Intel/Acer or Raspberry Pi physical scanout/input/session behavior and does not authorize production migration by itself.
+## 11. New serial shell↔child KMSDRM ownership experiment
 
-## 9. Unified exact-image → QEMU evidence gate
-
-`.github/workflows/r7-production-image-probe-v3.yml` now represents one authoritative chain:
-
-1. build exact `modern-amd64` production image;
-2. require builder exit 0 and zero leaked resources;
-3. mount finished image read-only;
-4. execute installed SDL driver enumeration inside that image;
-5. if `kmsdrm` is absent, stop before active takeover and classify package work required;
-6. if `kmsdrm` is present, install QEMU and run the disposable active harness;
-7. require report image SHA to equal the just-built production-image SHA;
-8. rerun full provider-free source gate;
-9. commit bounded image/package/passive/QEMU evidence;
-10. self-retire the one-off workflow only after successful evidence persistence.
-
-Positive classification:
+R7-D now has a concrete serial-ownership evidence primitive:
 
 ```text
-SDL_KMSDRM_COMPILED_QEMU_ACTIVE_PASS
+src/greia_platform/kmsdrm_serial_handoff.py
+tests/test_kmsdrm_serial_handoff.py
 ```
 
-Negative installed-package classification:
+Committed starting at:
+
+```text
+cb2b38b82b67fdc4aa9345526b09f6cf59c2ba04
+5d18869d5b6f8374f31bca34ac664245445420cb
+```
+
+The sequence is intentionally explicit:
+
+```text
+Shell acquires KMSDRM and renders
+        ↓
+Shell calls SDL display quit / releases
+        ↓
+clean child process acquires KMSDRM and renders
+        ↓
+clean child exits
+        ↓
+Shell reacquires and renders
+        ↓
+second child acquires KMSDRM and renders
+        ↓
+second child persists evidence then os._exit(23)
+WITHOUT pygame.display.quit()
+        ↓
+Shell reacquires after abrupt child death and renders
+```
+
+The crash child exists specifically to test kernel/SDL recovery from an Activity-like process dying without orderly SDL cleanup.
+
+Focused provider-free tests for this new primitive were executed outside GitHub Actions against fake SDL/process boundaries:
+
+```text
+8 / 8 PASS
+```
+
+That focused result is **not** a replacement for `make verify` or hardware evidence.
+
+### 11.1 Manual installed service
+
+New disabled/manual unit:
+
+```text
+build/overlay/etc/systemd/system/greia-kmsdrm-handoff-acceptance.service
+```
+
+It:
+
+- runs as `greiakid`;
+- uses `PAMName=login`;
+- uses tty1;
+- explicitly selects `SDL_VIDEODRIVER=kmsdrm`;
+- unsets X11/Wayland transport;
+- refuses live X;
+- is not enabled at boot;
+- conflicts with the simpler active KMSDRM maintenance unit, not with normal launcher startup.
+
+The existing root maintenance controller now accepts:
+
+```text
+greia-run-kmsdrm-acceptance active
+greia-run-kmsdrm-acceptance handoff
+```
+
+`active` remains the default for compatibility.
+
+Both modes share the same root-only stop-X / require-VT1 / strict-result-validation / unconditional-launcher-restore path.
+
+### 11.2 Disposable two-boot QEMU handoff harness
+
+New host tool:
+
+```text
+tools/r7_qemu_kmsdrm_handoff_acceptance.py
+```
+
+Tests:
+
+```text
+tests/test_r7_qemu_kmsdrm_handoff_harness.py
+```
+
+The wrapper deliberately reuses `QemuKMSDRMAcceptanceHarness` rather than duplicating the production-image acceptance logic.
+
+Boot 1:
+
+```text
+exact production image
+→ disposable clone
+→ passive prerequisites
+→ active KMSDRM acquisition/render
+→ ACTIVE_QEMU_KMSDRM_PASS
+```
+
+Only after boot 1 passes, the already-disposable clone's **test runner only** is replaced for boot 2.
+
+Boot 2:
+
+```text
+same disposable clone
+→ tty1 / no X
+→ serial handoff service
+→ shell/clean-child/shell/crash-child/shell sequence
+→ strict persisted evidence
+→ SERIAL_QEMU_KMSDRM_HANDOFF_PASS
+```
+
+The source production image is never mounted or modified by this wrapper.
+
+Focused host-side checks executed before commit proved:
+
+- wrapper module compiles;
+- generated guest script passes `sh -n`;
+- plan contains the expected two boots over one disposable clone;
+- strict synthetic passing evidence validates.
+
+Again, this is source/orchestration evidence, not a real QEMU PASS yet.
+
+## 12. Unified exact-image → active-QEMU → serial-handoff gate
+
+`.github/workflows/r7-production-image-probe-v3.yml` remains the **single authoritative R7 production-image chain**.
+
+At commit:
+
+```text
+eb9b8d40585579d5e5a2710eb59f6b4b7a48482d
+```
+
+the workflow was upgraded to:
+
+1. build exact `modern-amd64` production image;
+2. require builder exit 0 and zero surviving resources;
+3. mount finished image read-only;
+4. execute installed SDL driver enumeration inside that image;
+5. if `kmsdrm` is absent, classify package work required and do not attempt takeover;
+6. if `kmsdrm` is present, install QEMU;
+7. run `tools/r7_qemu_kmsdrm_handoff_acceptance.py`;
+8. require boot-1 `ACTIVE_QEMU_KMSDRM_PASS`;
+9. require boot-2 `SERIAL_QEMU_KMSDRM_HANDOFF_PASS`;
+10. require both reports to identify the exact just-built production-image SHA;
+11. rerun the complete provider-free source gate;
+12. persist bounded passive/package/active/handoff evidence;
+13. retire the one-off workflow only after successful evidence persistence.
+
+Positive classification becomes:
+
+```text
+SDL_KMSDRM_COMPILED_QEMU_ACTIVE_AND_SERIAL_HANDOFF_PASS
+```
+
+Negative installed-package classification remains:
 
 ```text
 SDL_KMSDRM_NOT_COMPILED_PACKAGING_WORK_REQUIRED
 ```
 
-This workflow currently cannot execute because Actions jobs fail before step 1. Do not interpret those red jobs as a failed image/QEMU result.
+A positive serial classification still does **not** select serial direct ownership as production architecture.
 
-## 10. GitHub Actions launch blocker
+## 13. Current external execution blocker
 
-Current symptom on connector-authored PR commits:
+Earlier current-generation PR workflow runs exhibited:
 
 ```text
 workflow run created
 job conclusion: failure
-job steps: null / zero steps executed
-no build/test log exists
+job steps: null
+zero steps executed
+no test/build log
 ```
 
-It affects at least:
+This affected ordinary source verification and the production-image/QEMU gate.
 
-- `R7 direct-graphics source verification`;
-- `R0 clean-tree verification`;
-- `R7 exact production image and active QEMU KMSDRM evidence`.
+For current head `eb9b8d405...`, a later check returned:
 
-A rerun showed the same no-step failure. This is presently an external execution blocker. Do not weaken Greia gates or alter source merely to make those red run summaries disappear.
+```text
+workflow runs: []
+combined statuses: []
+```
 
-## 11. Mandatory resume order
+So no current workflow execution can be claimed at all.
+
+Do not weaken Greia gates to make GitHub summaries look green. Preserve the distinction between:
+
+- test/build actually ran and failed;
+- job was created but executed zero steps;
+- no run/status was attached to the commit.
+
+## 14. Why the serial experiment does not finish R7-D
+
+Even if the serial QEMU experiment passes mechanically, production Greia cannot simply hand arbitrary Activities `/dev/dri/card*` and `/dev/input/*`.
+
+That would undermine the R1–R6 authority model and make each runtime responsible for hardware ownership/recovery.
+
+R7 still needs an explicit measured comparison between:
+
+### Candidate A — serial direct ownership
+
+Potential benefit:
+
+- smallest graphics stack;
+- no compositor while an Activity owns the screen.
+
+Costs/risks to measure:
+
+- shell surface destruction/recreation;
+- black-frame/flicker latency;
+- direct DRM authority in child sandbox;
+- input authority problem;
+- crash recovery;
+- suspend/resume;
+- runtime portability;
+- Web runtime integration.
+
+### Candidate B — tiny Greia-owned compositor/session broker
+
+Potential benefit:
+
+- one persistent Greia seat/DRM/input owner;
+- Activities receive a surface protocol rather than raw hardware;
+- shell and Activity recovery can remain Greia-owned;
+- Web/Python can share session semantics.
+
+Costs/risks to measure:
+
+- installed footprint;
+- idle/peak RSS;
+- composition overhead on C0 hardware;
+- startup latency;
+- i386/Pi package feasibility;
+- dependency/security maintenance.
+
+Do not introduce a general desktop environment, shell, window manager or user-facing compositor UI. Any compositor candidate is a hidden appliance/session component only.
+
+## 15. Mandatory resume order
 
 Before further R7 work:
 
@@ -276,27 +455,41 @@ Before further R7 work:
 8. `docs/testing/2026-08-09_R7_QEMU_KMSDRM_ACCEPTANCE.md`
 9. this handover
 
-## 12. Exact next work
+## 16. Exact next work
 
-When Actions can execute jobs again:
+Source-side work that does **not** require physical Acer/Pi testing:
 
-1. run the permanent R7 source gate on the current branch and record the new exact test count;
-2. run the unified production image → installed SDL → conditional active QEMU gate;
-3. if installed SDL does not enumerate KMSDRM, fix package/build authority and repeat before active takeover;
-4. if passive KMSDRM passes but QEMU active acquisition fails, preserve the guest evidence and investigate PAM/logind/DRM-master/connector/GBM/EGL ownership without changing production boot;
-5. if QEMU passes, keep Xorg as production compatibility path and proceed to physical legacy-x86/Acer acceptance before considering session migration;
-6. Raspberry Pi 400/500 direct DRM/KMS remains a separate physical R8 gate.
+1. keep the serial handoff experiment evidence-only;
+2. define the smallest Greia-owned compositor/session-broker candidate and measurement contract;
+3. measure/record candidate package closure, installed delta, idle/peak RSS and process count on exact images when runners execute;
+4. prototype shell↔Activity surface transition and forced-return semantics without moving Storage/Session/Event authority;
+5. move display/input settings behind the final selected typed backend adapters;
+6. compare direct path vs Xorg baseline for cold launch, steady RAM, crash recovery and visible transition behavior;
+7. only after evidence select the R7 session architecture.
+
+When Actions can execute:
+
+1. run the current full source gate and record the exact test count;
+2. run the unified exact-image → installed SDL → active QEMU → serial-handoff QEMU gate;
+3. preserve all negative evidence;
+4. if baseline active acquisition fails, investigate PAM/logind/DRM-master/connector/GBM/EGL;
+5. if active passes but serial recovery fails, treat that as evidence against serial ownership rather than weakening the test;
+6. if both pass, keep Xorg production and continue the compositor/session-broker comparison;
+7. physical legacy Intel/Acer acceptance remains mandatory before production migration;
+8. Raspberry Pi 400/500 direct DRM/KMS remains a separate R8/R14 physical gate.
 
 No direct-KMS production profile/package set should be created until the evidence justifies it.
 
-## 13. Non-negotiable continuity rules
+## 17. Non-negotiable continuity rules
 
 - GitHub is canonical source of truth; commit coherent tranches as work proceeds.
 - Do not reopen v0.12 recovery.
 - Do not describe the new R5 implementation as recovered historical source.
 - Do not fork Storage/Session/Event/Progression/Reward by runtime or display backend.
 - Do not make Activity environment text trusted authority.
+- Do not hand arbitrary Activities broad DRM/input authority merely to remove X.
 - Do not expose a Linux desktop, terminal, login prompt or WM in the normal child path.
-- Xorg is provisional, but it stays the production path until direct-session evidence is sufficient.
+- Xorg is provisional, but it stays production until direct-session evidence is sufficient.
 - Never claim hardware success from source tests, package metadata or QEMU alone.
-- Preserve negative evidence and distinguish a job that never started from a test that actually failed.
+- Preserve negative evidence.
+- Distinguish “job never started,” “no workflow attached,” and “test actually failed.”
