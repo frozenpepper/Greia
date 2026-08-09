@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -13,6 +14,35 @@ from tools.r7_qemu_kmsdrm_acceptance import (
     guest_unit_text,
     validate_evidence,
 )
+
+
+def passing_bundle() -> EvidenceBundle:
+    return EvidenceBundle(
+        summary={
+            "schema_version": 1,
+            "ok": True,
+            "phase": "complete",
+            "acceptance_status": "0",
+            "active_vt": "tty1",
+            "launcher_masked": True,
+        },
+        passive={
+            "schema_version": 1,
+            "passive": True,
+            "sdl": {"kmsdrm_compiled": True},
+            "drm": {"card_nodes": ["card0"]},
+            "assessment": {"kmsdrm_prerequisites_visible": True},
+        },
+        active={
+            "schema_version": 1,
+            "ok": True,
+            "requested_video_driver": "kmsdrm",
+            "actual_video_driver": "kmsdrm",
+            "surface": {"width": 1024, "height": 768},
+            "frame_count": 3,
+            "frame_sha256": ["a" * 64, "b" * 64, "c" * 64],
+        },
+    )
 
 
 class QemuKMSDRMHarnessTests(unittest.TestCase):
@@ -70,100 +100,81 @@ class QemuKMSDRMHarnessTests(unittest.TestCase):
         complete_index = script.index("phase=complete")
         self.assertLess(passive_index, active_index)
         self.assertLess(active_index, complete_index)
-        self.assertIn('chvt 1', script)
-        self.assertIn('kmsdrm_compiled', script)
-        self.assertIn('kmsdrm_prerequisites_visible', script)
+        self.assertIn("chvt 1", script)
+        self.assertIn("kmsdrm_compiled", script)
+        self.assertIn("kmsdrm_prerequisites_visible", script)
         self.assertIn('systemctl start "$acceptance"', script)
         self.assertIn('payload.get("actual_video_driver") != "kmsdrm"', script)
         self.assertIn("/proc/[0-9]*/comm", script)
         self.assertIn("systemctl poweroff --no-block", script)
         self.assertNotIn("greia-run-kmsdrm-acceptance", script)
 
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "guest-runner.sh"
+            path.write_text(script, encoding="utf-8")
+            syntax = subprocess.run(
+                ["sh", "-n", str(path)],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(syntax.returncode, 0, syntax.stderr)
+
     def test_strong_evidence_bundle_passes(self) -> None:
-        bundle = EvidenceBundle(
-            summary={
-                "schema_version": 1,
-                "ok": True,
-                "phase": "complete",
-                "active_vt": "tty1",
-                "launcher_masked": True,
-            },
-            passive={
-                "schema_version": 1,
-                "passive": True,
-                "sdl": {"kmsdrm_compiled": True},
-                "drm": {"card_nodes": ["card0"]},
-                "assessment": {"kmsdrm_prerequisites_visible": True},
-            },
-            active={
-                "schema_version": 1,
-                "ok": True,
-                "requested_video_driver": "kmsdrm",
-                "actual_video_driver": "kmsdrm",
-                "surface": {"width": 1024, "height": 768},
-                "frame_count": 3,
-                "frame_sha256": ["a" * 64, "b" * 64, "c" * 64],
-            },
-        )
-        validate_evidence(bundle)
+        validate_evidence(passing_bundle())
 
     def test_wrong_active_driver_is_rejected(self) -> None:
-        bundle = EvidenceBundle(
-            summary={
-                "schema_version": 1,
-                "ok": True,
-                "phase": "complete",
-                "active_vt": "tty1",
-                "launcher_masked": True,
-            },
-            passive={
-                "schema_version": 1,
-                "passive": True,
-                "sdl": {"kmsdrm_compiled": True},
-                "drm": {"card_nodes": ["card0"]},
-                "assessment": {"kmsdrm_prerequisites_visible": True},
-            },
-            active={
-                "schema_version": 1,
-                "ok": True,
-                "requested_video_driver": "kmsdrm",
-                "actual_video_driver": "x11",
-                "surface": {"width": 1024, "height": 768},
-                "frame_count": 3,
-                "frame_sha256": ["a" * 64, "b" * 64, "c" * 64],
-            },
-        )
+        baseline = passing_bundle()
+        active = dict(baseline.active)
+        active["actual_video_driver"] = "x11"
         with self.assertRaisesRegex(QemuKMSDRMAcceptanceError, "not kmsdrm"):
-            validate_evidence(bundle)
+            validate_evidence(
+                EvidenceBundle(
+                    summary=baseline.summary,
+                    passive=baseline.passive,
+                    active=active,
+                )
+            )
 
     def test_missing_passive_kmsdrm_is_rejected(self) -> None:
-        bundle = EvidenceBundle(
-            summary={
-                "schema_version": 1,
-                "ok": True,
-                "phase": "complete",
-                "active_vt": "tty1",
-                "launcher_masked": True,
-            },
-            passive={
-                "schema_version": 1,
-                "passive": True,
-                "sdl": {"kmsdrm_compiled": False},
-                "drm": {"card_nodes": ["card0"]},
-                "assessment": {"kmsdrm_prerequisites_visible": False},
-            },
-            active={
-                "schema_version": 1,
-                "ok": True,
-                "requested_video_driver": "kmsdrm",
-                "actual_video_driver": "kmsdrm",
-                "surface": {"width": 1024, "height": 768},
-                "frame_count": 3,
-                "frame_sha256": ["a" * 64, "b" * 64, "c" * 64],
-            },
-        )
+        baseline = passing_bundle()
+        passive = dict(baseline.passive)
+        passive["sdl"] = {"kmsdrm_compiled": False}
+        passive["assessment"] = {"kmsdrm_prerequisites_visible": False}
         with self.assertRaisesRegex(QemuKMSDRMAcceptanceError, "does not enumerate"):
-            validate_evidence(bundle)
+            validate_evidence(
+                EvidenceBundle(
+                    summary=baseline.summary,
+                    passive=passive,
+                    active=baseline.active,
+                )
+            )
+
+    def test_malformed_nested_evidence_fails_closed(self) -> None:
+        baseline = passing_bundle()
+        passive = dict(baseline.passive)
+        passive["sdl"] = "not-an-object"
+        with self.assertRaisesRegex(QemuKMSDRMAcceptanceError, "does not enumerate"):
+            validate_evidence(
+                EvidenceBundle(
+                    summary=baseline.summary,
+                    passive=passive,
+                    active=baseline.active,
+                )
+            )
+
+    def test_invalid_frame_hash_is_rejected(self) -> None:
+        baseline = passing_bundle()
+        active = dict(baseline.active)
+        active["frame_sha256"] = ["a" * 64, "b" * 64, "not-a-sha256"]
+        with self.assertRaisesRegex(QemuKMSDRMAcceptanceError, "malformed frame hash"):
+            validate_evidence(
+                EvidenceBundle(
+                    summary=baseline.summary,
+                    passive=baseline.passive,
+                    active=active,
+                )
+            )
 
     def test_invalid_config_fails_closed(self) -> None:
         with self.assertRaisesRegex(QemuKMSDRMAcceptanceError, "timeout"):
