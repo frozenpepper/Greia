@@ -4,3 +4,4 @@
 # resolution de-duplicates the final target list.
 openssh-server
 sudo
+xdotool
