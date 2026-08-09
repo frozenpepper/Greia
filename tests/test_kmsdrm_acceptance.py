@@ -65,14 +65,19 @@ class _Image:
         return bytes(surface.color) * 8
 
 
+class _StaticImage:
+    def tostring(self, surface, format_name):
+        return b"unchanged-frame"
+
+
 class _Pygame:
     FULLSCREEN = 1
     version = _Version()
 
-    def __init__(self, *, driver: str = "kmsdrm"):
+    def __init__(self, *, driver: str = "kmsdrm", image=None):
         self.display = _Display(driver=driver)
         self.event = _Event()
-        self.image = _Image()
+        self.image = image or _Image()
 
     def get_sdl_version(self):
         return (2, 32, 4)
@@ -102,25 +107,31 @@ class KMSDRMAcceptanceTests(unittest.TestCase):
             ):
                 runner.run()
 
-    def test_refuses_x11_or_wayland_fallback_transport(self) -> None:
+    def test_refuses_x11_or_wayland_transport_authority(self) -> None:
         for environment in (
             {"SDL_VIDEODRIVER": "kmsdrm", "DISPLAY": ":0"},
+            {
+                "SDL_VIDEODRIVER": "kmsdrm",
+                "XAUTHORITY": "/run/greia/xauthority",
+            },
             {"SDL_VIDEODRIVER": "kmsdrm", "WAYLAND_DISPLAY": "wayland-0"},
         ):
             with self.subTest(environment=environment):
                 with tempfile.TemporaryDirectory() as temporary:
+                    pygame = _Pygame()
                     runner = KMSDRMAcceptanceRunner(
                         KMSDRMAcceptanceConfig(
                             output_path=Path(temporary) / "result.json",
                             acknowledge_display_takeover=True,
                         ),
                         environment=environment,
-                        pygame_module=_Pygame(),
+                        pygame_module=pygame,
                     )
                     with self.assertRaisesRegex(
                         KMSDRMAcceptanceError, "refuses X11/Wayland"
                     ):
                         runner.run()
+                    self.assertFalse(pygame.display.initialized)
 
     def test_refuses_when_sdl_selects_any_driver_other_than_kmsdrm(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -170,21 +181,46 @@ class KMSDRMAcceptanceTests(unittest.TestCase):
         self.assertEqual(pygame.event.pumps, 3)
         self.assertFalse(pygame.display.initialized)
 
-    def test_frame_count_is_bounded_before_pygame_initialization(self) -> None:
-        pygame = _Pygame()
+    def test_static_rendered_buffer_fails_closed(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary) / "result.json"
+            pygame = _Pygame(image=_StaticImage())
             runner = KMSDRMAcceptanceRunner(
                 KMSDRMAcceptanceConfig(
-                    output_path=Path(temporary) / "result.json",
+                    output_path=output,
                     acknowledge_display_takeover=True,
-                    frame_count=17,
+                    frame_count=3,
                 ),
                 environment={"SDL_VIDEODRIVER": "kmsdrm"},
                 pygame_module=pygame,
             )
-            with self.assertRaisesRegex(KMSDRMAcceptanceError, "between 1 and 16"):
+            with self.assertRaisesRegex(KMSDRMAcceptanceError, "did not change"):
                 runner.run()
+            payload = json.loads(output.read_text(encoding="utf-8"))
+
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["error_type"], "KMSDRMAcceptanceError")
+        self.assertEqual(pygame.display.flips, 3)
         self.assertFalse(pygame.display.initialized)
+
+    def test_frame_count_is_strict_integer_and_bounded_before_pygame_initialization(self) -> None:
+        for frame_count in (True, 0, 17, 2.0):
+            with self.subTest(frame_count=frame_count), tempfile.TemporaryDirectory() as temporary:
+                pygame = _Pygame()
+                runner = KMSDRMAcceptanceRunner(
+                    KMSDRMAcceptanceConfig(
+                        output_path=Path(temporary) / "result.json",
+                        acknowledge_display_takeover=True,
+                        frame_count=frame_count,  # type: ignore[arg-type]
+                    ),
+                    environment={"SDL_VIDEODRIVER": "kmsdrm"},
+                    pygame_module=pygame,
+                )
+                with self.assertRaisesRegex(
+                    KMSDRMAcceptanceError, "integer between 1 and 16"
+                ):
+                    runner.run()
+                self.assertFalse(pygame.display.initialized)
 
 
 if __name__ == "__main__":
