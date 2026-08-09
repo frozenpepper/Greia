@@ -130,8 +130,13 @@ class MountedRawImage(AbstractContextManager[Path]):
 
     def __exit__(self, exc_type, exc, traceback) -> bool:
         cleanup_error = self._cleanup()
-        if cleanup_error is not None and exc is None:
-            raise QemuKMSDRMAcceptanceError("raw-image cleanup failed") from cleanup_error
+        if cleanup_error is not None:
+            detail = (
+                "raw-image cleanup failed while handling another failure"
+                if exc is not None
+                else "raw-image cleanup failed"
+            )
+            raise QemuKMSDRMAcceptanceError(detail) from cleanup_error
         return False
 
     def _cleanup(self) -> Exception | None:
@@ -430,7 +435,6 @@ power_off() {
   sync
   systemctl poweroff --no-block >/dev/null 2>&1 || /sbin/poweroff -f >/dev/null 2>&1 || true
 }
-trap power_off EXIT HUP INT TERM
 
 write_summary() {
   active_vt="$(cat /sys/class/tty/tty0/active 2>/dev/null || true)"
@@ -456,7 +460,13 @@ temporary.write_text(json.dumps(payload, sort_keys=True, separators=(",", ":")) 
 temporary.replace(target)
 PY
 }
-trap 'write_summary; power_off' EXIT HUP INT TERM
+
+finish() {
+  set +e
+  write_summary || true
+  power_off
+}
+trap finish EXIT HUP INT TERM
 
 phase=activate-vt
 chvt 1 || exit 1
