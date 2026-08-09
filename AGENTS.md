@@ -28,6 +28,14 @@ Do not rewrite earlier progress entries to make history appear cleaner. Append c
 
 When—and only when—the active remediation plan's final completion criteria are all satisfied, the contributor closing it MUST mark the plan complete, append final evidence, update `HANDOVER.md`, and **remove this active-plan reference and these special resume/progress instructions from `AGENTS.md`**. The completed plan remains under `docs/plans/` as historical evidence.
 
+## GitHub Actions and paid execution
+
+**GitHub-hosted Actions are opt-in only. Never enable, trigger, rerun, or add an automatic GitHub Actions workflow without the repository owner's explicit authorization for that specific use.** This includes pull-request, push, schedule, and manual `workflow_dispatch` runs when they consume hosted-runner minutes or other paid resources.
+
+Repository commits/pushes are allowed and expected for source persistence. Verification should run locally or on an explicitly owner-approved external/local environment. Existing workflow definitions may be retained only as manual reference tooling; automatic triggers must not be reintroduced without explicit owner approval.
+
+Do not treat CI availability as implicit permission to spend money. Do not infer authorization from earlier runs, from the existence of a workflow file, or from a request to “move forward.”
+
 ## Non-negotiable product contracts
 
 1. **No visible Linux shell during normal child operation.** No boot text, login prompt, terminal, desktop, window manager, package manager, filesystem UI, or browser chrome may appear in the supported child path.
