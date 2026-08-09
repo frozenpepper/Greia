@@ -11,8 +11,9 @@ from pathlib import Path
 from typing import Any
 
 from greia_platform.hardware import HardwareDefaults, HardwareSettings
-from greia_platform.hardware_session import XSessionHardwareController
+from greia_platform.hardware_session import HardwareSessionController
 
+from .composition import provisional_installer_hardware_controller
 from .disk import BlockDevice, DiskProbeError, LsblkDiskProbe
 from .engine import (
     InstallProgress,
@@ -84,6 +85,7 @@ class InstallerApplication:
         windowed: bool,
         demo: bool,
         power_probe: PowerSupplyProbe | None = None,
+        hardware_controller: HardwareSessionController | None = None,
     ):
         self.root = root.resolve()
         self.payload = payload.resolve()
@@ -91,6 +93,7 @@ class InstallerApplication:
         self.windowed = windowed
         self.demo = demo
         self.power_probe = power_probe or PowerSupplyProbe()
+        self.hardware_controller = hardware_controller
         defaults = HardwareDefaults.load(self.root / "runtime" / "hardware-settings.toml")
         settings = HardwareSettings(
             schema_version=defaults.schema_version,
@@ -142,7 +145,8 @@ class InstallerApplication:
     def _available_resolutions(self) -> tuple[str, ...]:
         if self.demo:
             return ("auto", "800x600", "1024x600", "1024x768")
-        display = XSessionHardwareController().probe_display()
+        controller = self.hardware_controller or provisional_installer_hardware_controller()
+        display = controller.probe_display()
         return ("auto", *display.allowed_mode_ids)
 
     def run(self) -> int:
@@ -202,6 +206,7 @@ class InstallerApplication:
                 self._exit_requested = True
             else:
                 import subprocess
+
                 # Never ask the parent to pull a mounted live USB. Power off
                 # cleanly first; the USB can then be removed before the next boot.
                 subprocess.run(["systemctl", "poweroff"], check=False, shell=False)
@@ -571,6 +576,9 @@ def main() -> int:
         payload_digest=args.payload_digest,
         windowed=args.windowed,
         demo=args.demo,
+        hardware_controller=(
+            None if args.demo else provisional_installer_hardware_controller()
+        ),
     ).run()
 
 
