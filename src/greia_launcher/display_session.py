@@ -52,7 +52,13 @@ class DisplayTransport:
             if self.sdl_video_driver != "x11":
                 raise ValueError("legacy X11 transport must request SDL x11")
             _require_endpoint(self.display, "X11 display")
-            _require_absolute_path(self.xauthority, "Xauthority path")
+            # Greia's compatibility session currently invokes xinit directly.
+            # xinit guarantees DISPLAY but, unlike startx, does not promise an
+            # XAUTHORITY environment/file contract. Represent the actual
+            # session rather than inventing credentials. If an authority path
+            # is present it remains strictly validated.
+            if self.xauthority is not None:
+                _require_absolute_path(self.xauthority, "Xauthority path")
             if self.wayland_display is not None or self.xdg_runtime_dir is not None:
                 raise ValueError("legacy X11 transport cannot carry Wayland authority")
         elif self.kind is DisplayTransportKind.WAYLAND:
