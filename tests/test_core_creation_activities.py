@@ -55,10 +55,11 @@ class WritingLogicTests(unittest.TestCase):
         self.assertTrue(buffer.delete())
         self.assertEqual(buffer.text, "cio")
         buffer.insert("\nabc")
+        self.assertEqual(buffer.text, "ci\nabco")
         buffer.home()
-        self.assertEqual(buffer.cursor, 2)
+        self.assertEqual(buffer.cursor, 3)
         buffer.end()
-        self.assertEqual(buffer.cursor, 2)
+        self.assertEqual(buffer.cursor, len(buffer.text))
 
     def test_document_repository_keeps_text_portable_and_recent(self) -> None:
         storage = FakeStorage()
