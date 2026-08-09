@@ -84,7 +84,17 @@ class DisplayTransportTests(unittest.TestCase):
                 xdg_runtime_dir="/run/user/1000",
             )
 
-    def test_legacy_x11_requires_bounded_x_endpoint_and_absolute_authority(self):
+    def test_legacy_x11_requires_bounded_x_endpoint_and_validates_optional_authority(self):
+        direct_xinit = DisplayTransport(
+            kind=DisplayTransportKind.LEGACY_X11,
+            sdl_video_driver="x11",
+            display=":0",
+        )
+        self.assertEqual(
+            dict(direct_xinit.environment()),
+            {"SDL_VIDEODRIVER": "x11", "DISPLAY": ":0"},
+        )
+
         transport = DisplayTransport(
             kind=DisplayTransportKind.LEGACY_X11,
             sdl_video_driver="x11",
@@ -333,7 +343,6 @@ class DisplaySessionCoordinatorTests(unittest.TestCase):
                 kind=DisplayTransportKind.LEGACY_X11,
                 sdl_video_driver="x11",
                 display=":0",
-                xauthority="/run/greia/xauthority",
             )
         )
         _, coordinator = self._coordinator(backend)
