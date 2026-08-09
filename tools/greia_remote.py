@@ -117,6 +117,9 @@ class GreiaRemote:
     def restart_launcher(self) -> None:
         self.devctl("restart-launcher")
 
+    def restart_installer(self) -> None:
+        self.devctl("restart-installer")
+
     def key(self, keys: Sequence[str]) -> None:
         if not keys:
             raise RemoteError("at least one key expression is required")
@@ -134,7 +137,9 @@ class GreiaRemote:
     def deploy_activity(self, path: Path, *, replace_system: bool) -> str:
         source = path.expanduser().resolve(strict=True)
         if not source.is_dir() or not (source / "activity.toml").is_file():
-            raise RemoteError("deploy source must be an Activity directory containing activity.toml")
+            raise RemoteError(
+                "deploy source must be an Activity directory containing activity.toml"
+            )
         token = uuid.uuid4().hex
         remote_root = f"/var/lib/greia-admin/greia-dev-upload/{token}"
         self._ssh_user_command("mkdir", "-p", remote_root)
@@ -152,7 +157,8 @@ class GreiaRemote:
             )
             if completed.returncode != 0:
                 raise RemoteError(
-                    f"Activity upload failed with status {completed.returncode}: {completed.stderr.strip()}"
+                    f"Activity upload failed with status {completed.returncode}: "
+                    f"{completed.stderr.strip()}"
                 )
             args = ["deploy-activity", remote_root]
             if replace_system:
@@ -200,7 +206,9 @@ class GreiaRemote:
     def shell(self) -> None:
         os.execvp("ssh", self.ssh_base())
 
-    def _ssh_user_command(self, *args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
+    def _ssh_user_command(
+        self, *args: str, check: bool = True
+    ) -> subprocess.CompletedProcess[str]:
         completed = subprocess.run(
             [*self.ssh_base(), shlex.join(list(args))],
             check=False,
@@ -220,7 +228,9 @@ def _validate_activity_id(value: str) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Control a Greia developer image over SSH")
+    parser = argparse.ArgumentParser(
+        description="Control a Greia developer image over SSH"
+    )
     parser.add_argument("--host", default=DEFAULT_HOST)
     parser.add_argument("--user", default=DEFAULT_USER)
     parser.add_argument("--key", type=Path, default=DEFAULT_KEY)
@@ -233,11 +243,20 @@ def build_parser() -> argparse.ArgumentParser:
     logs = sub.add_parser("logs")
     logs.add_argument(
         "--service",
-        choices=["all", "launcher", "parent", "ssh", "developer-remote", "network"],
+        choices=[
+            "all",
+            "launcher",
+            "installer",
+            "parent",
+            "ssh",
+            "developer-remote",
+            "network",
+        ],
         default="all",
     )
     logs.add_argument("--lines", type=int, default=300)
     sub.add_parser("restart")
+    sub.add_parser("restart-installer")
 
     key_parser = sub.add_parser("key")
     key_parser.add_argument("keys", nargs="+")
@@ -282,6 +301,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             sys.stdout.write(remote.logs(args.service, args.lines))
         elif args.command == "restart":
             remote.restart_launcher()
+        elif args.command == "restart-installer":
+            remote.restart_installer()
         elif args.command == "key":
             remote.key(args.keys)
         elif args.command == "mousemove":
@@ -292,7 +313,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             remote.type_text(args.text)
         elif args.command == "deploy":
             sys.stdout.write(
-                remote.deploy_activity(args.activity, replace_system=args.replace_system)
+                remote.deploy_activity(
+                    args.activity, replace_system=args.replace_system
+                )
             )
         elif args.command == "remove":
             remote.remove_activity(args.activity_id)
