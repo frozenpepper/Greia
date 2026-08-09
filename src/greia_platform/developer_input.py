@@ -8,10 +8,10 @@ import sys
 from pathlib import Path
 from typing import Sequence
 
+from .developer_session import DeveloperDisplayEndpoint, DeveloperSessionError
+
 
 DEVELOPER_MARKER = Path("/etc/greia-os/developer-remote")
-DISPLAY_USER = "greiakid"
-DISPLAY_NAME = ":0"
 _KEY_RE = re.compile(r"^[A-Za-z0-9_+.:=-]{1,64}$")
 
 
@@ -19,21 +19,25 @@ class DeveloperInputError(RuntimeError):
     """Raised when development-only GUI input injection must fail closed."""
 
 
-def _require_developer_root() -> None:
+def _developer_endpoint() -> DeveloperDisplayEndpoint:
     if os.geteuid() != 0:
-        raise DeveloperInputError("developer input helper must run through greia-devctl sudo")
+        raise DeveloperInputError(
+            "developer input helper must run through greia-devctl sudo"
+        )
     if not DEVELOPER_MARKER.is_file():
-        raise DeveloperInputError("developer remote control is not enabled on this image")
+        raise DeveloperInputError(
+            "developer remote control is not enabled on this image"
+        )
+    try:
+        return DeveloperDisplayEndpoint.load()
+    except DeveloperSessionError as exc:
+        raise DeveloperInputError(str(exc)) from exc
 
 
 def _run_xdotool(args: Sequence[str]) -> None:
+    endpoint = _developer_endpoint()
     argv = [
-        "runuser",
-        "--user",
-        DISPLAY_USER,
-        "--",
-        "/usr/bin/env",
-        f"DISPLAY={DISPLAY_NAME}",
+        *endpoint.runuser_prefix(),
         "/usr/bin/xdotool",
         *args,
     ]
@@ -56,7 +60,9 @@ def key(keys: Sequence[str]) -> None:
 def mousemove(x: int, y: int) -> None:
     for name, value in (("x", x), ("y", y)):
         if isinstance(value, bool) or value < 0 or value > 16384:
-            raise DeveloperInputError(f"mouse {name} coordinate must be between 0 and 16384")
+            raise DeveloperInputError(
+                f"mouse {name} coordinate must be between 0 and 16384"
+            )
     _run_xdotool(["mousemove", "--sync", str(x), str(y)])
 
 
@@ -67,13 +73,21 @@ def click(button: int) -> None:
 
 
 def type_text(text: str) -> None:
-    if not text or len(text) > 512 or "\x00" in text or "\n" in text or "\r" in text:
+    if (
+        not text
+        or len(text) > 512
+        or "\x00" in text
+        or "\n" in text
+        or "\r" in text
+    ):
         raise DeveloperInputError("typed text must be 1..512 characters on one line")
     _run_xdotool(["type", "--clearmodifiers", "--delay", "10", "--", text])
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Greia development-only GUI input control")
+    parser = argparse.ArgumentParser(
+        description="Greia development-only GUI input control"
+    )
     sub = parser.add_subparsers(dest="command", required=True)
     key_parser = sub.add_parser("key")
     key_parser.add_argument("keys", nargs="+")
@@ -90,7 +104,6 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(argv)
     try:
-        _require_developer_root()
         if args.command == "key":
             key(args.keys)
         elif args.command == "mousemove":
