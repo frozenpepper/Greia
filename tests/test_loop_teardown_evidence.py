@@ -8,15 +8,22 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class LoopTeardownEvidenceTests(unittest.TestCase):
-    def test_loop_buffer_flush_precedes_detach(self) -> None:
+    def test_partition_children_are_verified_before_parent_detach(self) -> None:
         helper = (ROOT / "build/lib/safe-cleanup.sh").read_text(encoding="utf-8")
-        partx = helper.index('partx -d "$loop_device"')
+        remove_call = helper.index('safe_remove_loop_partitions "$loop_device"')
         flush = helper.index('blockdev --flushbufs "$loop_device"')
         detach = helper.index('losetup -d "$loop_device"')
-        self.assertLess(partx, flush)
+        self.assertLess(remove_call, flush)
         self.assertLess(flush, detach)
-        self.assertIn("safe_udev_settle", helper[partx:detach])
+        self.assertIn('/sys/class/block/${loop_name}p[0-9]*', helper)
+        self.assertIn('loop partition mappings remain after bounded partx teardown', helper)
         self.assertNotIn("losetup -D", helper)
+
+    def test_loop_association_probe_does_not_reopen_block_device(self) -> None:
+        helper = (ROOT / "build/lib/safe-cleanup.sh").read_text(encoding="utf-8")
+        self.assertIn('/sys/class/block/$loop_name/loop/backing_file', helper)
+        self.assertIn('safe_loop_is_associated "$loop_device"', helper)
+        self.assertNotIn('losetup "$loop_device" >/dev/null', helper)
 
     def test_both_builders_require_blockdev_explicitly(self) -> None:
         for relative in ("build/build-image.sh", "build/build-installer-image.sh"):

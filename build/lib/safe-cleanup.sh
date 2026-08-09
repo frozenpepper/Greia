@@ -45,27 +45,67 @@ safe_unmount_paths() {
   return "$failed"
 }
 
+safe_loop_partition_children_present() {
+  local loop_device="${1:-}"
+  [[ -n "$loop_device" ]] || return 1
+  local loop_name="${loop_device#/dev/}"
+  compgen -G "/sys/class/block/${loop_name}p[0-9]*" >/dev/null
+}
+
+safe_remove_loop_partitions() {
+  local loop_device="${1:-}"
+  [[ -n "$loop_device" ]] || return 0
+  local attempt
+  for attempt in {1..20}; do
+    if ! safe_loop_partition_children_present "$loop_device"; then
+      return 0
+    fi
+    # partx modifies kernel partition bookkeeping; a transient busy
+    # child must not be ignored and carried into parent loop detach.
+    partx -d "$loop_device" >/dev/null 2>&1 || true
+    safe_udev_settle
+    if ! safe_loop_partition_children_present "$loop_device"; then
+      return 0
+    fi
+    sleep 0.1
+  done
+  echo "ERROR: loop partition mappings remain after bounded partx teardown: $loop_device" >&2
+  return 1
+}
+
+safe_loop_is_associated() {
+  local loop_device="${1:-}"
+  [[ -n "$loop_device" ]] || return 1
+  local loop_name="${loop_device#/dev/}"
+  local backing_path="/sys/class/block/$loop_name/loop/backing_file"
+  [[ -r "$backing_path" ]] || return 1
+  local backing
+  backing="$(cat "$backing_path" 2>/dev/null || true)"
+  [[ -n "$backing" ]]
+}
+
 safe_detach_loop() {
   local loop_device="${1:-}"
   [[ -n "$loop_device" ]] || return 0
-  # losetup --partscan creates kernel partition mappings. Remove them after
-  # all filesystems are unmounted so they cannot hold the loop association open.
-  partx -d "$loop_device" 2>/dev/null || true
-  safe_udev_settle
-  # The real Greia image diagnostic found no mounts, holders, open FDs, or
-  # residual partx map, yet the loop association survived until its block
-  # buffers were flushed. Flush only this known loop before detaching it.
+  # Remove and verify kernel partition children before touching the
+  # parent loop. Never suppress a persistent child mapping.
+  safe_remove_loop_partitions "$loop_device" || return 1
+
   blockdev --flushbufs "$loop_device" 2>/dev/null || true
   safe_udev_settle
   local attempt
   for attempt in {1..20}; do
-    if ! losetup "$loop_device" >/dev/null 2>&1; then return 0; fi
+    if ! safe_loop_is_associated "$loop_device"; then
+      return 0
+    fi
     losetup -d "$loop_device" 2>/dev/null || true
     safe_udev_settle
-    if ! losetup "$loop_device" >/dev/null 2>&1; then return 0; fi
+    if ! safe_loop_is_associated "$loop_device"; then
+      return 0
+    fi
     sleep 0.1
   done
-  echo "ERROR: loop device is still associated after detach and udev settle: $loop_device" >&2
+  echo "ERROR: loop backing file is still associated after detach and udev settle: $loop_device" >&2
   return 1
 }
 
