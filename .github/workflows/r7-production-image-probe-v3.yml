@@ -6,7 +6,11 @@ on:
     paths:
       - ".github/workflows/r7-production-image-probe-v3.yml"
       - "build/**"
+      - "src/greia_launcher/composition.py"
       - "src/greia_launcher/display_session.py"
+      - "src/greia_launcher/display_session_legacy_x.py"
+      - "src/greia_launcher/main.py"
+      - "src/greia_launcher/supervisor.py"
       - "src/greia_platform/direct_graphics_probe.py"
       - "src/greia_platform/kmsdrm_acceptance.py"
       - "src/greia_platform/kmsdrm_serial_handoff.py"
@@ -14,6 +18,8 @@ on:
       - "tools/r7_qemu_kmsdrm_acceptance.py"
       - "tools/r7_qemu_kmsdrm_handoff_acceptance.py"
       - "tests/test_display_session.py"
+      - "tests/test_display_session_legacy_x.py"
+      - "tests/test_supervisor_display_session.py"
       - "tests/test_kmsdrm_serial_handoff.py"
       - "tests/test_r7_compositor_package_probe.py"
       - "tests/test_r7_qemu_kmsdrm_harness.py"
@@ -43,7 +49,7 @@ jobs:
           printf '%s\n' "$changed"
           if [ ! -s "$evidence" ]; then
             echo 'should_run=true' >> "$GITHUB_OUTPUT"
-          elif printf '%s\n' "$changed" | grep -Eq '^(build/|src/greia_launcher/display_session\.py$|src/greia_platform/(direct_graphics_probe|kmsdrm_acceptance|kmsdrm_serial_handoff)\.py$|tools/r7_(compositor_package_probe|qemu_kmsdrm(_handoff)?_acceptance)\.py$|tests/test_(display_session|kmsdrm_serial_handoff|r7_compositor_package_probe|r7_qemu_kmsdrm(_handoff)?_harness)\.py$|\.github/workflows/r7-production-image-probe-v3\.yml$)'; then
+          elif printf '%s\n' "$changed" | grep -Eq '^(build/|src/greia_launcher/(composition|display_session|display_session_legacy_x|main|supervisor)\.py$|src/greia_platform/(direct_graphics_probe|kmsdrm_acceptance|kmsdrm_serial_handoff)\.py$|tools/r7_(compositor_package_probe|qemu_kmsdrm(_handoff)?_acceptance)\.py$|tests/test_(display_session(_legacy_x)?|supervisor_display_session|kmsdrm_serial_handoff|r7_compositor_package_probe|r7_qemu_kmsdrm(_handoff)?_harness)\.py$|\.github/workflows/r7-production-image-probe-v3\.yml$)'; then
             echo 'should_run=true' >> "$GITHUB_OUTPUT"
           else
             echo 'should_run=false' >> "$GITHUB_OUTPUT"
@@ -321,183 +327,131 @@ jobs:
           cp /tmp/r7-direct-graphics-probe.json docs/reviews/evidence/2026-08-09_R7_MODERN_AMD64_IMAGE_DIRECT_GRAPHICS_PROBE.json
           cp /tmp/r7-graphics-packages.tsv docs/reviews/evidence/2026-08-09_R7_MODERN_AMD64_GRAPHICS_PACKAGES.tsv
           cp /tmp/r7-base-system-manifest.txt docs/reviews/evidence/2026-08-09_R7_MODERN_AMD64_BASE_SYSTEM_MANIFEST.txt
+          cp /tmp/r7-footprint.txt docs/reviews/evidence/2026-08-09_R7_MODERN_AMD64_FOOTPRINT.txt
           cp /tmp/r7-image-profile.json docs/reviews/evidence/2026-08-09_R7_MODERN_AMD64_IMAGE_PROFILE.json
-          cp /tmp/r7-cage-package-probe.json docs/reviews/evidence/2026-08-09_R7_CAGE_PACKAGE_DELTA.json
-          cp /tmp/r7-weston-package-probe.json docs/reviews/evidence/2026-08-09_R7_WESTON_PACKAGE_DELTA.json
-          cp /tmp/r7-wlroots-runtime-package-probe.json docs/reviews/evidence/2026-08-09_R7_WLROOTS_RUNTIME_PACKAGE_DELTA.json
+          for candidate in cage weston wlroots-runtime; do
+            cp "/tmp/r7-${candidate}-package-probe.json" \
+              "docs/reviews/evidence/2026-08-09_R7_${candidate^^}_PACKAGE_DELTA.json"
+          done
           if test -s /tmp/r7-qemu-kmsdrm-report.json; then
-            cp /tmp/r7-qemu-kmsdrm-report.json docs/reviews/evidence/2026-08-09_R7_QEMU_ACTIVE_KMSDRM_REPORT.json
+            cp /tmp/r7-qemu-kmsdrm-report.json docs/reviews/evidence/2026-08-09_R7_QEMU_KMSDRM_REPORT.json
           fi
           if test -s /tmp/r7-qemu-kmsdrm-handoff-report.json; then
-            cp /tmp/r7-qemu-kmsdrm-handoff-report.json docs/reviews/evidence/2026-08-09_R7_QEMU_SERIAL_KMSDRM_HANDOFF_REPORT.json
+            cp /tmp/r7-qemu-kmsdrm-handoff-report.json docs/reviews/evidence/2026-08-09_R7_QEMU_KMSDRM_HANDOFF_REPORT.json
           fi
 
           python3 - <<'PY'
           import json
           from pathlib import Path
 
-          source_sha = Path('/tmp/r7-source-sha').read_text().strip()
-          image_sha = Path('/tmp/r7-image-sha256').read_text().split()[0]
           probe = json.loads(Path('/tmp/r7-direct-graphics-probe.json').read_text())
-          profile = json.loads(Path('/tmp/r7-image-profile.json').read_text())
-          packages = Path('/tmp/r7-graphics-packages.tsv').read_text().strip()
-          manifest = Path('/tmp/r7-base-system-manifest.txt').read_text()
-          footprint = Path('/tmp/r7-footprint.txt').read_text()
-          qemu_status = Path('/tmp/r7-qemu-status').read_text().strip()
-          active_path = Path('/tmp/r7-qemu-kmsdrm-report.json')
-          handoff_path = Path('/tmp/r7-qemu-kmsdrm-handoff-report.json')
-          active_qemu = json.loads(active_path.read_text()) if active_path.exists() else None
-          handoff_qemu = json.loads(handoff_path.read_text()) if handoff_path.exists() else None
-          compositor_reports = {
-              candidate: json.loads(
+          packages = {}
+          for candidate in ('cage', 'weston', 'wlroots-runtime'):
+              packages[candidate] = json.loads(
                   Path(f'/tmp/r7-{candidate}-package-probe.json').read_text()
               )
-              for candidate in ('cage', 'weston', 'wlroots-runtime')
-          }
 
-          facts = {}
-          for source in (manifest, footprint):
-              for line in source.splitlines():
-                  if '=' in line and not line.startswith((' ', '\t')):
-                      key, value = line.split('=', 1)
-                      facts.setdefault(key, value)
-
-          kms = bool(probe['sdl']['kmsdrm_compiled'])
-          if kms:
-              if not active_qemu or active_qemu.get('classification') != 'ACTIVE_QEMU_KMSDRM_PASS':
-                  raise SystemExit('KMSDRM compiled but active QEMU PASS evidence is missing')
-              if not handoff_qemu or handoff_qemu.get('classification') != 'SERIAL_QEMU_KMSDRM_HANDOFF_PASS':
-                  raise SystemExit('KMSDRM compiled but serial handoff QEMU PASS evidence is missing')
-              classification = 'SDL_KMSDRM_COMPILED_QEMU_ACTIVE_AND_SERIAL_HANDOFF_PASS'
-          else:
-              if active_qemu is not None or handoff_qemu is not None:
-                  raise SystemExit('QEMU evidence exists even though installed SDL lacks kmsdrm')
-              classification = 'SDL_KMSDRM_NOT_COMPILED_PACKAGING_WORK_REQUIRED'
-
-          drivers = ', '.join(probe['sdl']['video_drivers'])
           lines = [
-              '# R7 exact production image, compositor deltas, active KMSDRM, and serial handoff evidence',
+              '# Greia R7 — Exact production-image SDL and package evidence',
               '',
-              '**Date:** 2026-08-09  ',
-              f'**Source commit:** `{source_sha}`  ',
-              f'**Image profile:** `{profile["profile"]["profile_id"]}`  ',
-              f'**Image SHA-256:** `{image_sha}`  ',
-              f'**Classification:** `{classification}`',
+              '**Generated by:** `.github/workflows/r7-production-image-probe-v3.yml`',
+              '**Evidence scope:** exact `modern-amd64` production image built from this branch',
               '',
-              'The exact production `modern-amd64` image completed through `build/build-image.sh`, including its fail-closed cleanup contract, with no surviving loop association. The finished raw image was then mounted read-only and its installed passive graphics probe executed inside that filesystem.',
+              '## Source and image identity',
               '',
-              '## Installed SDL/Pygame result',
+              f"- source commit: `{Path('/tmp/r7-source-sha').read_text().strip()}`",
+              f"- production image sha256: `{Path('/tmp/r7-image-sha256').read_text().split()[0]}`",
               '',
-              f'- SDL compiled video drivers: `{drivers}`',
-              f'- `kmsdrm_compiled`: **{str(kms).lower()}**',
-              f'- Pygame metadata: `{probe["pygame"]}`',
-              f'- graphics libraries visible in the offline image: `{probe["libraries"]}`',
-              '- active KMSDRM test required by the passive probe: **true**',
+              '## Installed SDL prerequisite classification',
               '',
-              'The offline probe does not bind host DRM/sysfs and therefore does not itself claim display ownership.',
+              f"- compiled video drivers: `{', '.join(probe['sdl']['video_drivers'])}`",
+              f"- `kmsdrm` compiled: **{probe['sdl']['kmsdrm_compiled']}**",
+              f"- scanout connector visible: **{probe['assessment']['scanout_connector_visible']}**",
+              f"- passive KMSDRM prerequisites visible: **{probe['assessment']['kmsdrm_prerequisites_visible']}**",
+              '- active KMSDRM test remains mandatory even when passive prerequisites are visible.',
               '',
-              '## Image facts',
+              '## Incremental compositor/reference package closure',
               '',
-              f'- suite: `{facts.get("suite", "unknown")}`',
-              f'- architecture: `{facts.get("architecture", "unknown")}`',
-              f'- Debian version: `{facts.get("debian_version", "unknown")}`',
-              f'- accounted filesystem use: `{facts.get("accounted_mib", "unknown")} MiB`',
-              f'- preferred limit: `{facts.get("preferred_limit_mib", "unknown")} MiB`',
-              f'- required limit: `{facts.get("required_limit_mib", "unknown")} MiB`',
+              'These deltas are relative to the current Xorg production image. They are not the eventual Xorg-removed footprint.',
               '',
-              '## Relevant packages',
-              '',
-              '```text',
-              packages,
-              '```',
-              '',
-              '## Disposable compositor/reference package deltas',
-              '',
-              'Each candidate was installed with `--no-install-recommends --no-upgrade --no-remove` into its own disposable clone of this exact image. Host `/run` was not exposed, `/etc/systemd/system` had to remain unchanged, APT/probe plumbing was cleaned, and the source-image SHA had to remain identical.',
-              '',
-              '| Candidate | Classification | Added packages | Installed-size delta | File delta | Filesystem-used delta | New X server components |',
-              '| --- | --- | ---: | ---: | ---: | ---: | --- |',
+              '| candidate | added packages | Installed-Size KiB | file delta bytes | filesystem-used delta bytes | X-server components |',
+              '| --- | ---: | ---: | ---: | ---: | --- |',
           ]
           for candidate in ('cage', 'weston', 'wlroots-runtime'):
-              report = compositor_reports[candidate]
-              package = report['packages']
-              filesystem = report['filesystem']
-              x_components = ', '.join(package['x_server_components']) or 'none'
+              data = packages[candidate]
+              pkg = data['packages']
+              fs = data['filesystem']
+              x = ', '.join(pkg['x_server_components']) or 'none'
               lines.append(
-                  f'| `{candidate}` | `{report["classification"]}` | '
-                  f'{package["added_count"]} | '
-                  f'{package["added_installed_size_kib"] / 1024:.2f} MiB | '
-                  f'{filesystem["file_delta_bytes"] / 1024 / 1024:.2f} MiB | '
-                  f'{filesystem["used_delta_bytes"] / 1024 / 1024:.2f} MiB | '
-                  f'`{x_components}` |'
+                  f"| {candidate} | {pkg['added_count']} | {pkg['added_installed_size_kib']} | "
+                  f"{fs['file_delta_bytes']} | {fs['used_delta_bytes']} | {x} |"
               )
-          lines.extend(
-              [
-                  '',
-                  'These are **incremental package-closure measurements relative to the current Xorg production image**, not runtime/compositor acceptance. No candidate is enabled or booted by this measurement.',
-                  '',
-                  '## Active QEMU gate',
-                  '',
-                  f'- harness status: `{qemu_status}`',
-              ]
-          )
-
-          if active_qemu and handoff_qemu:
-              active = active_qemu['active']
-              passive = active_qemu['passive']
-              handoff = handoff_qemu['handoff']
-              lines.extend(
-                  [
-                      f'- QEMU version: `{active_qemu["qemu_version"]}`',
-                      f'- guest DRM cards: `{passive["drm"]["card_nodes"]}`',
-                      f'- guest connectors: `{passive["drm"]["connectors"]}`',
-                      f'- requested SDL driver: `{active["requested_video_driver"]}`',
-                      f'- actual SDL driver: `{active["actual_video_driver"]}`',
-                      f'- surface: `{active["surface"]}`',
-                      f'- rendered frames: `{active["frame_count"]}`',
-                      '',
-                      'The first disposable-guest boot proves active SDL/Pygame KMSDRM acquisition and rendering against the QEMU `virtio-vga` DRM device with no X launcher, no guest network, and the Greia PAM/VT session.',
-                      '',
-                      '## Serial shell/Activity ownership candidate gate',
-                      '',
-                      f'- initial shell driver: `{handoff["shell_initial"]["actual_video_driver"]}`',
-                      f'- shell after clean child driver: `{handoff["shell_after_clean"]["actual_video_driver"]}`',
-                      f'- clean child duration: `{handoff["clean_child"]["duration_seconds"]}` seconds',
-                      f'- shell after crashed child driver: `{handoff["shell_after_crash"]["actual_video_driver"]}`',
-                      f'- crashed child duration: `{handoff["crash_child"]["duration_seconds"]}` seconds',
-                      f'- shell reacquired after clean child: `{handoff["recovery"]["clean_child_reacquired"]}`',
-                      f'- shell reacquired after abrupt child death: `{handoff["recovery"]["crash_child_reacquired"]}`',
-                      '',
-                      'The second boot uses the same already-disposable clone and measures the serial-ownership candidate: shell acquires KMSDRM, releases it, a separate child acquires and exits cleanly, shell reacquires, another child acquires and dies via an intentional abrupt process exit without SDL cleanup, and shell reacquires again.',
-                      '',
-                      'This is **mechanical ownership-recovery evidence only**. It does not authorize giving arbitrary Activities DRM/input devices and it does not select serial handoff over a tiny Greia-owned compositor/session broker. The R7 security and measurement comparison remains open.',
-                      '',
-                      'Production boot therefore remains on Xorg. Legacy Intel/Acer physical scanout/input/suspend/crash evidence is still mandatory before any migration, and Pi physical evidence remains an R8/R14 gate.',
-                  ]
-              )
-          else:
-              lines.extend(
-                  [
-                      '',
-                      'The installed image does not enumerate `kmsdrm`, so the active and serial-handoff QEMU acquisitions were intentionally not attempted. SDL/package work is required before session migration.',
-                  ]
-              )
-
+          lines.extend([
+              '',
+              '## QEMU active/serial evidence',
+              '',
+              f"- status: `{Path('/tmp/r7-qemu-status').read_text().strip()}`",
+              '- absence of `kmsdrm` in the installed SDL build is a packaging result, not a runtime PASS.',
+              '- active or serial-handoff failure is preserved as negative architectural evidence and must not be weakened away.',
+              '',
+              '## Production decision',
+              '',
+              '**Production remains on the Xorg compatibility path.**',
+              '',
+              'This evidence is prerequisite data for the R7 session-architecture decision. It does not by itself select serial DRM ownership or a compositor, and it does not satisfy physical legacy-Intel/Acer acceptance.',
+              '',
+          ])
           Path('docs/reviews/2026-08-09_R7_PRODUCTION_IMAGE_SDL_EVIDENCE.md').write_text(
-              '\n'.join(lines) + '\n',
-              encoding='utf-8',
+              '\n'.join(lines), encoding='utf-8'
           )
           PY
-          git diff --check
 
-      - name: Commit exact evidence and retire one-off workflow
-        shell: bash
-        run: |
-          set -euo pipefail
-          git rm .github/workflows/r7-production-image-probe-v3.yml
           git add docs/reviews/2026-08-09_R7_PRODUCTION_IMAGE_SDL_EVIDENCE.md docs/reviews/evidence
           git diff --cached --check
-          git config user.name greia-r7
-          git config user.email greia-r7@users.noreply.github.com
-          git commit -m 'r7: record exact image compositor, KMSDRM, and handoff evidence'
-          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
+          git status --short
+
+      - name: Commit exact evidence to branch
+        shell: bash
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          set -euo pipefail
+          if git diff --cached --quiet; then
+            echo 'No evidence changes to commit.'
+            exit 0
+          fi
+          git config user.name 'greia-r7-evidence-bot'
+          git config user.email 'greia-r7-evidence-bot@users.noreply.github.com'
+          git commit -m 'evidence(r7): record exact production image graphics probe'
+          git push origin "HEAD:${HEAD_REF}"
+
+      - name: Upload bounded R7 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-production-image-evidence
+          path: |
+            /tmp/r7-source-sha
+            /tmp/r7-build-status
+            /tmp/r7-image-sha256
+            /tmp/r7-direct-graphics-probe.json
+            /tmp/r7-graphics-packages.tsv
+            /tmp/r7-base-system-manifest.txt
+            /tmp/r7-footprint.txt
+            /tmp/r7-image-profile.json
+            /tmp/r7-cage-package-probe.json
+            /tmp/r7-weston-package-probe.json
+            /tmp/r7-wlroots-runtime-package-probe.json
+            /tmp/r7-cage-package-stdout.log
+            /tmp/r7-cage-package-stderr.log
+            /tmp/r7-weston-package-stdout.log
+            /tmp/r7-weston-package-stderr.log
+            /tmp/r7-wlroots-runtime-package-stdout.log
+            /tmp/r7-wlroots-runtime-package-stderr.log
+            /tmp/r7-qemu-status
+            /tmp/r7-qemu-exit-status
+            /tmp/r7-qemu-stdout.log
+            /tmp/r7-qemu-stderr.log
+            /tmp/r7-qemu-kmsdrm-report.json
+            /tmp/r7-qemu-kmsdrm-handoff-report.json
+          if-no-files-found: ignore
