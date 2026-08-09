@@ -12,18 +12,20 @@ Before changing implementation or architecture, read:
 4. `docs/adr/0012-platform-architecture-constitution.md`;
 5. `docs/adr/0014-greia-identity-arm-parity-and-direct-graphics-direction.md`;
 6. relevant narrower accepted ADRs, especially ADR 0013 for image composition and later ADRs for trust/runtime/storage/progression boundaries;
-7. **`docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md` — MANDATORY ACTIVE IMPLEMENTATION PLAN**;
-8. `HANDOVER.md`;
-9. **`docs/agents/GREIA_AGENT_OPERATIONS.md` — mandatory project/build/test-hardware operating manual for agents**;
-10. `skills/greia-activity-authoring/SKILL.md` whenever creating, modifying, reviewing, validating, optimizing, packaging, deploying, or testing an Activity;
-11. phase-specific testing/review documents referenced by `HANDOVER.md` or the active plan;
-12. `docs/plans/2026-08-06_PHASE0_BOOTABLE_VERTICAL_SLICE.md` only as historical/supporting Phase-0 context where it is not superseded.
+7. **`docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md` — mandatory first-user-ready-image writing and painting requirement**;
+8. **`docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md` — MANDATORY ACTIVE IMPLEMENTATION PLAN**;
+9. `HANDOVER.md`;
+10. **`docs/agents/GREIA_AGENT_OPERATIONS.md` — mandatory project/build/test-hardware operating manual for agents**;
+11. `skills/greia-activity-authoring/SKILL.md` whenever creating, modifying, reviewing, validating, optimizing, packaging, deploying, or testing an Activity;
+12. phase-specific testing/review documents referenced by `HANDOVER.md` or the active plan;
+13. `docs/plans/2026-08-06_PHASE0_BOOTABLE_VERTICAL_SLICE.md` only as historical/supporting Phase-0 context where it is not superseded.
 
 `docs/DOCUMENTATION.md` defines which document class owns which fact. In short:
 
 - `AGENTS.md` owns repository-wide work rules and non-negotiable product constraints;
 - accepted ADRs own normative architecture decisions;
 - source/runtime declarations own exact implemented APIs/schemas/command vocabularies;
+- product requirement documents own explicit child-facing scope/UX requirements where referenced here;
 - the active plan owns sequencing and closure criteria;
 - `HANDOVER.md` owns current branch/evidence state;
 - `docs/testing/*` owns exact named test procedures;
@@ -41,7 +43,8 @@ After every substantive **implementation** turn:
 4. update `docs/agents/GREIA_AGENT_OPERATIONS.md` if repository/build/test-hardware/remote-control procedure changed;
 5. update `skills/greia-activity-authoring/SKILL.md` in the same tranche whenever the Activity manifest/API/runtime policy/trust model/shared assets or UI canon/performance requirements/validation or deployment workflow changed;
 6. update `docs/DOCUMENTATION.md` when documentation ownership/precedence/freshness rules change;
-7. commit coherent work to the canonical GitHub repository.
+7. update the applicable `docs/product/*` requirement when accepted child-facing product scope or UX changes materially;
+8. commit coherent work to the canonical GitHub repository.
 
 For substantive documentation-only work, update `HANDOVER.md` when the continuation contract changes and preserve a dated review when useful; an implementation-plan progress entry is required only when implementation/phase state actually changes.
 
@@ -106,6 +109,7 @@ This capability is **development-only**:
 16. **Every child uses an explicit Greia profile.** Boot shows the profile picker; no silent last-user resume. Saves, customizations, rewards, language state, and Activity data are profile-scoped.
 17. **Uninstall and data deletion are separate.** Removing an Activity preserves child saves by default.
 18. **Backups are logical/open.** `.greiabackup` must not be a raw filesystem dump or architecture-specific serialization.
+19. **Creative computing exists from the beginning.** The first user-ready Phase-0 Greia image must ship first-party built-in **writing/text-editing** and **painting/drawing** Activities. They must be simple, fast, cute, uncluttered and child-sized; writing defaults to large readable text; painting provides a large responsive canvas and a small tool set; both autosave profile-scoped creations through Greia Storage and expose no Linux file-management workflow. Exact product requirements live in `docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md`.
 
 ## Graphics and display direction
 
@@ -133,6 +137,7 @@ A tiny compositor may be selected only if evidence shows it materially improves 
 - Preserve fail-closed Bubblewrap/namespace behavior until a replacement sandbox is evidence-accepted.
 - Do not claim source tests prove VM or physical-hardware behavior.
 - Do not turn conceptual examples in architecture docs into implementation without checking the current source/runtime contract.
+- First-party built-in Activities must obey the same platform lifecycle/storage/profile/display/session boundaries as other Activities; built-in status is not permission to bypass the architecture.
 
 ## Greia technical identities
 
@@ -185,6 +190,7 @@ Every substantive implementation turn should leave:
 
 - updated `HANDOVER.md`;
 - updated active plan/ADRs where implementation state or decisions changed;
+- updated product requirements when accepted child-facing scope changed;
 - updated agent operations/Activity skill when their governed contracts changed;
 - no build caches, venvs, downloaded package archives, disk images, private keys, or heavyweight transient evidence inside the source tree.
 
