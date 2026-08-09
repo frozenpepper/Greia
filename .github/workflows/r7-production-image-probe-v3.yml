@@ -1,4 +1,4 @@
-name: R7 exact production image, active QEMU KMSDRM, and serial handoff evidence
+name: R7 exact image, compositor deltas, active QEMU KMSDRM, and serial handoff evidence
 
 on:
   pull_request:
@@ -9,9 +9,11 @@ on:
       - "src/greia_platform/direct_graphics_probe.py"
       - "src/greia_platform/kmsdrm_acceptance.py"
       - "src/greia_platform/kmsdrm_serial_handoff.py"
+      - "tools/r7_compositor_package_probe.py"
       - "tools/r7_qemu_kmsdrm_acceptance.py"
       - "tools/r7_qemu_kmsdrm_handoff_acceptance.py"
       - "tests/test_kmsdrm_serial_handoff.py"
+      - "tests/test_r7_compositor_package_probe.py"
       - "tests/test_r7_qemu_kmsdrm_harness.py"
       - "tests/test_r7_qemu_kmsdrm_handoff_harness.py"
 
@@ -36,7 +38,7 @@ jobs:
           set -euo pipefail
           changed="$(git diff-tree --no-commit-id --name-only -r HEAD)"
           printf '%s\n' "$changed"
-          if printf '%s\n' "$changed" | grep -Eq '^(build/|src/greia_platform/(direct_graphics_probe|kmsdrm_acceptance|kmsdrm_serial_handoff)\.py$|tools/r7_qemu_kmsdrm(_handoff)?_acceptance\.py$|tests/test_(kmsdrm_serial_handoff|r7_qemu_kmsdrm(_handoff)?_harness)\.py$|\.github/workflows/r7-production-image-probe-v3\.yml$)'; then
+          if printf '%s\n' "$changed" | grep -Eq '^(build/|src/greia_platform/(direct_graphics_probe|kmsdrm_acceptance|kmsdrm_serial_handoff)\.py$|tools/r7_(compositor_package_probe|qemu_kmsdrm(_handoff)?_acceptance)\.py$|tests/test_(kmsdrm_serial_handoff|r7_compositor_package_probe|r7_qemu_kmsdrm(_handoff)?_harness)\.py$|\.github/workflows/r7-production-image-probe-v3\.yml$)'; then
             echo 'should_run=true' >> "$GITHUB_OUTPUT"
           else
             echo 'should_run=false' >> "$GITHUB_OUTPUT"
@@ -46,7 +48,7 @@ jobs:
     needs: preflight
     if: needs.preflight.outputs.should_run == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 80
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
         with:
@@ -181,6 +183,60 @@ jobs:
           trap - EXIT INT TERM
           test -z "$(sudo losetup -j "$image" 2>/dev/null || true)"
 
+      - name: Measure compositor package deltas in disposable image clones
+        shell: bash
+        run: |
+          set -euo pipefail
+          image="$RUNNER_TEMP/greia-r7-image/greia-os-modern-amd64.img"
+          out="$RUNNER_TEMP/greia-r7-compositor-packages"
+          mkdir -p "$out"
+          image_sha="$(cat /tmp/r7-image-sha256 | awk '{print $1}')"
+
+          for candidate in cage weston wlroots-runtime; do
+            sudo python3 tools/r7_compositor_package_probe.py \
+              --image "$image" \
+              --output-dir "$out" \
+              --candidate "$candidate" \
+              > "/tmp/r7-${candidate}-package-stdout.log" \
+              2> "/tmp/r7-${candidate}-package-stderr.log"
+          done
+          sudo chown -R "$(id -u):$(id -g)" "$out"
+
+          for candidate in cage weston wlroots-runtime; do
+            report="$out/greia-r7-${candidate}-package-probe.json"
+            test -s "$report"
+            cp "$report" "/tmp/r7-${candidate}-package-probe.json"
+            cat "$report"
+          done
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          image_sha = Path('/tmp/r7-image-sha256').read_text().split()[0]
+          for candidate in ('cage', 'weston', 'wlroots-runtime'):
+              payload = json.loads(
+                  Path(f'/tmp/r7-{candidate}-package-probe.json').read_text()
+              )
+              assert payload['schema_version'] == 1
+              assert payload['ok'] is True
+              assert payload['candidate'] == candidate
+              assert payload['source_image_sha256'] == image_sha
+              assert payload['source_image_sha256_after'] == image_sha
+              assert payload['source_image_mutated'] is False
+              assert payload['host_run_exposed'] is False
+              assert payload['boot_or_service_changes'] is False
+              assert payload['apt_policy'] == {
+                  'install_recommends': False,
+                  'upgrades_allowed': False,
+                  'removals_allowed': False,
+              }
+              assert payload['packages']['removed'] == []
+              assert payload['packages']['upgraded_or_changed'] == []
+          PY
+
+          test -z "$(sudo losetup -j "$image" 2>/dev/null || true)"
+
       - name: Run active and serial-handoff QEMU evidence when KMSDRM is compiled
         shell: bash
         run: |
@@ -262,6 +318,9 @@ jobs:
           cp /tmp/r7-graphics-packages.tsv docs/reviews/evidence/2026-08-09_R7_MODERN_AMD64_GRAPHICS_PACKAGES.tsv
           cp /tmp/r7-base-system-manifest.txt docs/reviews/evidence/2026-08-09_R7_MODERN_AMD64_BASE_SYSTEM_MANIFEST.txt
           cp /tmp/r7-image-profile.json docs/reviews/evidence/2026-08-09_R7_MODERN_AMD64_IMAGE_PROFILE.json
+          cp /tmp/r7-cage-package-probe.json docs/reviews/evidence/2026-08-09_R7_CAGE_PACKAGE_DELTA.json
+          cp /tmp/r7-weston-package-probe.json docs/reviews/evidence/2026-08-09_R7_WESTON_PACKAGE_DELTA.json
+          cp /tmp/r7-wlroots-runtime-package-probe.json docs/reviews/evidence/2026-08-09_R7_WLROOTS_RUNTIME_PACKAGE_DELTA.json
           if test -s /tmp/r7-qemu-kmsdrm-report.json; then
             cp /tmp/r7-qemu-kmsdrm-report.json docs/reviews/evidence/2026-08-09_R7_QEMU_ACTIVE_KMSDRM_REPORT.json
           fi
@@ -285,6 +344,12 @@ jobs:
           handoff_path = Path('/tmp/r7-qemu-kmsdrm-handoff-report.json')
           active_qemu = json.loads(active_path.read_text()) if active_path.exists() else None
           handoff_qemu = json.loads(handoff_path.read_text()) if handoff_path.exists() else None
+          compositor_reports = {
+              candidate: json.loads(
+                  Path(f'/tmp/r7-{candidate}-package-probe.json').read_text()
+              )
+              for candidate in ('cage', 'weston', 'wlroots-runtime')
+          }
 
           facts = {}
           for source in (manifest, footprint):
@@ -307,7 +372,7 @@ jobs:
 
           drivers = ', '.join(probe['sdl']['video_drivers'])
           lines = [
-              '# R7 exact production image, active KMSDRM, and serial handoff evidence',
+              '# R7 exact production image, compositor deltas, active KMSDRM, and serial handoff evidence',
               '',
               '**Date:** 2026-08-09  ',
               f'**Source commit:** `{source_sha}`  ',
@@ -342,10 +407,36 @@ jobs:
               packages,
               '```',
               '',
-              '## Active QEMU gate',
+              '## Disposable compositor/reference package deltas',
               '',
-              f'- harness status: `{qemu_status}`',
+              'Each candidate was installed with `--no-install-recommends --no-upgrade --no-remove` into its own disposable clone of this exact image. Host `/run` was not exposed, `/etc/systemd/system` had to remain unchanged, APT/probe plumbing was cleaned, and the source-image SHA had to remain identical.',
+              '',
+              '| Candidate | Classification | Added packages | Installed-size delta | File delta | Filesystem-used delta | New X server components |',
+              '| --- | --- | ---: | ---: | ---: | ---: | --- |',
           ]
+          for candidate in ('cage', 'weston', 'wlroots-runtime'):
+              report = compositor_reports[candidate]
+              package = report['packages']
+              filesystem = report['filesystem']
+              x_components = ', '.join(package['x_server_components']) or 'none'
+              lines.append(
+                  f'| `{candidate}` | `{report["classification"]}` | '
+                  f'{package["added_count"]} | '
+                  f'{package["added_installed_size_kib"] / 1024:.2f} MiB | '
+                  f'{filesystem["file_delta_bytes"] / 1024 / 1024:.2f} MiB | '
+                  f'{filesystem["used_delta_bytes"] / 1024 / 1024:.2f} MiB | '
+                  f'`{x_components}` |'
+              )
+          lines.extend(
+              [
+                  '',
+                  'These are **incremental package-closure measurements relative to the current Xorg production image**, not runtime/compositor acceptance. No candidate is enabled or booted by this measurement.',
+                  '',
+                  '## Active QEMU gate',
+                  '',
+                  f'- harness status: `{qemu_status}`',
+              ]
+          )
 
           if active_qemu and handoff_qemu:
               active = active_qemu['active']
@@ -404,5 +495,5 @@ jobs:
           git diff --cached --check
           git config user.name greia-r7
           git config user.email greia-r7@users.noreply.github.com
-          git commit -m 'r7: record exact image active KMSDRM and serial handoff evidence'
+          git commit -m 'r7: record exact image compositor, KMSDRM, and handoff evidence'
           git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
