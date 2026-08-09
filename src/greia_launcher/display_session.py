@@ -43,13 +43,19 @@ class DisplayTransport:
     xdg_runtime_dir: str | None = None
 
     def __post_init__(self) -> None:
+        if not isinstance(self.kind, DisplayTransportKind):
+            raise TypeError("display transport kind must be a DisplayTransportKind")
         _require_simple_token(self.sdl_video_driver, "SDL video driver")
         if self.kind is DisplayTransportKind.LEGACY_X11:
+            if self.sdl_video_driver != "x11":
+                raise ValueError("legacy X11 transport must request SDL x11")
             if not self.display or not self.xauthority:
                 raise ValueError("legacy X11 transport requires display and xauthority")
             if self.wayland_display is not None:
                 raise ValueError("legacy X11 transport cannot carry a Wayland display")
         elif self.kind is DisplayTransportKind.WAYLAND:
+            if self.sdl_video_driver != "wayland":
+                raise ValueError("Wayland transport must request SDL wayland")
             if not self.wayland_display or not self.xdg_runtime_dir:
                 raise ValueError(
                     "Wayland transport requires wayland_display and xdg_runtime_dir"
