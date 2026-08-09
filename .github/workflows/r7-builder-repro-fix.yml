@@ -1,0 +1,191 @@
+name: R7 production image-builder reproducibility repair
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/r7-builder-repro-fix.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  repair-verify-build-probe:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Apply bounded production-builder repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+
+          def replace_once(path: str, old: str, new: str) -> None:
+              p = Path(path)
+              text = p.read_text(encoding='utf-8')
+              if text.count(old) != 1:
+                  raise SystemExit(f'{path}: expected exactly one repair anchor')
+              p.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          replace_once(
+              'build/build-image.sh',
+              'rsync -a "$PROJECT_ROOT/build/overlay/" "$ROOTFS/"\n',
+              '''# Repository checkout ownership is never target-filesystem authority.\n# Static appliance overlay files are installed as root regardless of the UID/GID\n# of the developer or CI checkout that produced the image.\nrsync -a --chown=root:root "$PROJECT_ROOT/build/overlay/" "$ROOTFS/"\n[[ "$(stat -c '%u:%g' "$ROOTFS")" == "0:0" ]] || {\n  echo "Greia overlay changed target root ownership away from root:root." >&2\n  exit 1\n}\n''',
+          )
+          replace_once(
+              'build/build-image.sh',
+              '''chroot "$ROOTFS" /usr/bin/env DEBIAN_FRONTEND=noninteractive \\\n  apt-get install -y --no-install-recommends "${packages[@]}"\n''',
+              '''# Greia intentionally pre-seeds appliance conffiles in the overlay. dpkg's\n# normal conffile prompt is independent of debconf, so make the image policy\n# explicit: keep the product-owned file and never block an automated build.\nchroot "$ROOTFS" /usr/bin/env DEBIAN_FRONTEND=noninteractive \\\n  apt-get -o Dpkg::Options::=--force-confold install -y --no-install-recommends "${packages[@]}"\n''',
+          )
+          replace_once(
+              'build/build-installer-image.sh',
+              'rsync -a "$SCRIPT_DIR/installer-overlay/" "$LIVE_ROOT/"\n',
+              '''# Repository checkout ownership is never live-image filesystem authority.\nrsync -a --chown=root:root "$SCRIPT_DIR/installer-overlay/" "$LIVE_ROOT/"\n[[ "$(stat -c '%u:%g' "$LIVE_ROOT")" == "0:0" ]] || {\n  echo "Greia installer overlay changed live root ownership away from root:root." >&2\n  exit 1\n}\n''',
+          )
+          replace_once(
+              'build/build-installer-image.sh',
+              'chroot "$LIVE_ROOT" /usr/bin/env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "${packages[@]}"\n',
+              '''# Keep intentionally pre-seeded Greia conffiles without any dpkg prompt.\nchroot "$LIVE_ROOT" /usr/bin/env DEBIAN_FRONTEND=noninteractive \\\n  apt-get -o Dpkg::Options::=--force-confold install -y --no-install-recommends "${packages[@]}"\n''',
+          )
+
+          cleanup = Path('build/lib/safe-cleanup.sh')
+          cleanup.write_text('''#!/usr/bin/env bash\n# Shared destructive-build cleanup helpers. Source from bash with set -Eeuo.\n\nsafe_unmount_path_tree() {\n  local path="$1"\n  [[ -n "$path" ]] || return 0\n  mountpoint -q -- "$path" || return 0\n\n  local targets=()\n  local index target failed=0\n  mapfile -t targets < <(findmnt -rn -R -o TARGET --target "$path" 2>/dev/null || true)\n  for (( index=${#targets[@]}-1; index>=0; index-- )); do\n    target="${targets[$index]}"\n    [[ -n "$target" ]] || continue\n    case "$target" in\n      "$path"|"$path"/*) ;;\n      *)\n        echo "ERROR: refusing cleanup target outside requested mount tree: $target" >&2\n        failed=1\n        continue\n        ;;\n    esac\n    if mountpoint -q -- "$target"; then\n      umount -- "$target" 2>/dev/null || true\n    fi\n    if mountpoint -q -- "$target"; then\n      umount -l -- "$target" 2>/dev/null || true\n    fi\n    if mountpoint -q -- "$target"; then\n      echo "ERROR: mount is still attached; preserving build directory: $target" >&2\n      failed=1\n    fi\n  done\n  return "$failed"\n}\n\nsafe_unmount_paths() {\n  local paths=("$@")\n  local failed=0\n  local index path\n  for (( index=${#paths[@]}-1; index>=0; index-- )); do\n    path="${paths[$index]}"\n    [[ -n "$path" ]] || continue\n    safe_unmount_path_tree "$path" || failed=1\n  done\n  return "$failed"\n}\n\nsafe_detach_loop() {\n  local loop_device="${1:-}"\n  [[ -n "$loop_device" ]] || return 0\n  local attempt\n  for attempt in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do\n    if ! losetup "$loop_device" >/dev/null 2>&1; then\n      return 0\n    fi\n    losetup -d "$loop_device" 2>/dev/null || true\n    if ! losetup "$loop_device" >/dev/null 2>&1; then\n      return 0\n    fi\n    sleep 0.05\n  done\n  echo "ERROR: loop device is still attached: $loop_device" >&2\n  return 1\n}\n\nsafe_remove_build_dir() {\n  local build_dir="$1"\n  [[ -n "$build_dir" && "$build_dir" != "/" ]] || return 1\n  if findmnt -rn -R "$build_dir" 2>/dev/null | grep -q .; then\n    echo "ERROR: refusing to remove build tree with live mounts: $build_dir" >&2\n    return 1\n  fi\n  rm -rf --one-file-system -- "$build_dir"\n}\n''', encoding='utf-8')
+
+          Path('tests/test_build_reproducibility.py').write_text('''from __future__ import annotations\n\nimport unittest\nfrom pathlib import Path\n\n\nPROJECT_ROOT = Path(__file__).resolve().parents[1]\n\n\nclass BuildReproducibilityTests(unittest.TestCase):\n    def test_repository_ownership_cannot_leak_into_target_or_installer_root(self) -> None:\n        target = (PROJECT_ROOT / "build/build-image.sh").read_text(encoding="utf-8")\n        installer = (PROJECT_ROOT / "build/build-installer-image.sh").read_text(encoding="utf-8")\n        self.assertIn('rsync -a --chown=root:root "$PROJECT_ROOT/build/overlay/" "$ROOTFS/"', target)\n        self.assertIn('rsync -a --chown=root:root "$SCRIPT_DIR/installer-overlay/" "$LIVE_ROOT/"', installer)\n        self.assertIn("stat -c '%u:%g' \"$ROOTFS\"", target)\n        self.assertIn("stat -c '%u:%g' \"$LIVE_ROOT\"", installer)\n\n    def test_preseeded_product_conffiles_are_kept_without_interactive_dpkg_prompt(self) -> None:\n        target = (PROJECT_ROOT / "build/build-image.sh").read_text(encoding="utf-8")\n        installer = (PROJECT_ROOT / "build/build-installer-image.sh").read_text(encoding="utf-8")\n        for builder in (target, installer):\n            self.assertIn("DEBIAN_FRONTEND=noninteractive", builder)\n            self.assertIn("Dpkg::Options::=--force-confold", builder)\n        self.assertLess(target.index("build/overlay/"), target.index("Dpkg::Options::=--force-confold"))\n        self.assertLess(installer.index("installer-overlay/"), installer.index("Dpkg::Options::=--force-confold"))\n\n    def test_cleanup_walks_bind_submounts_before_detaching_loop_device(self) -> None:\n        helper = (PROJECT_ROOT / "build/lib/safe-cleanup.sh").read_text(encoding="utf-8")\n        self.assertIn("safe_unmount_path_tree", helper)\n        self.assertIn("findmnt -rn -R -o TARGET --target", helper)\n        self.assertIn('"$path"|"$path"/*', helper)\n        self.assertIn("mapfile -t targets", helper)\n        self.assertIn("for attempt in 1 2 3 4 5 6 7 8 9 10", helper)\n        self.assertLess(helper.index("safe_unmount_paths()"), helper.index("safe_detach_loop()"))\n\n\nif __name__ == "__main__":\n    unittest.main()\n''', encoding='utf-8')
+          PY
+          git diff --check
+
+      - name: Install verification and image-build dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check --quiet Pillow
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            debootstrap parted e2fsprogs grub-pc-bin grub-common rsync
+
+      - name: Focused builder regression tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m compileall -q src tests tools activities
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_build_reproducibility.py' -v
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_system_overlay_contract.py' -v
+
+      - name: Full provider-free gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          make verify
+
+      - name: Persist source repair before live image build
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add build/build-image.sh build/build-installer-image.sh build/lib/safe-cleanup.sh tests/test_build_reproducibility.py
+          git diff --cached --check
+          git config user.name greia-r7
+          git config user.email greia-r7@users.noreply.github.com
+          git commit -m 'build: make Greia image assembly ownership-safe and noninteractive'
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
+          git rev-parse HEAD | tee /tmp/r7-builder-repair-sha
+
+      - name: Build production modern-amd64 image
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/greia-r7-image"
+          mkdir -p "$out"
+          sudo build/build-image.sh modern-amd64 "$out"
+          test -s "$out/greia-os-modern-amd64.img"
+          test -s "$out/greia-os-modern-amd64-footprint.txt"
+          sha256sum "$out/greia-os-modern-amd64.img" | tee /tmp/r7-image-sha256
+          cp "$out/greia-os-modern-amd64-footprint.txt" /tmp/r7-footprint.txt
+          if sudo losetup -a | grep -F "$out/greia-os-modern-amd64.img"; then
+            echo 'production builder leaked a loop device after successful completion' >&2
+            exit 1
+          fi
+
+      - name: Mount finished image and enumerate installed SDL drivers
+        shell: bash
+        run: |
+          set -euo pipefail
+          image="$RUNNER_TEMP/greia-r7-image/greia-os-modern-amd64.img"
+          root="$RUNNER_TEMP/greia-r7-mounted"
+          mkdir -p "$root"
+          loop="$(sudo losetup --find --show --partscan "$image")"
+          cleanup_probe() {
+            set +e
+            mountpoint -q "$root" && sudo umount "$root"
+            sudo losetup -d "$loop" 2>/dev/null || true
+          }
+          trap cleanup_probe EXIT INT TERM
+          for _ in $(seq 1 20); do test -b "${loop}p1" && break; sleep 0.2; done
+          test -b "${loop}p1"
+          sudo mount -o ro,noload "${loop}p1" "$root"
+          test "$(stat -c '%u:%g' "$root")" = '0:0'
+          probe="$(sudo chroot "$root" /usr/bin/env PYGAME_HIDE_SUPPORT_PROMPT=1 PYTHONPATH=/opt/greia-os/src PYTHONNOUSERSITE=1 python3 -m greia_platform.direct_graphics_probe)"
+          printf '%s\n' "$probe" | tee /tmp/r7-direct-graphics-probe.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          payload = json.loads(Path('/tmp/r7-direct-graphics-probe.json').read_text())
+          assert payload['schema_version'] == 1
+          assert payload['passive'] is True
+          assert isinstance(payload['sdl']['video_drivers'], list)
+          print('compiled SDL video drivers:', ', '.join(payload['sdl']['video_drivers']))
+          print('kmsdrm_compiled:', payload['sdl']['kmsdrm_compiled'])
+          PY
+          sudo chroot "$root" dpkg-query -W '-f=${Package}\t${Version}\t${Architecture}\n' \
+            libsdl2-2.0-0 python3-pygame libdrm2 libgbm1 libegl1 \
+            > /tmp/r7-graphics-packages.tsv
+          cleanup_probe
+          trap - EXIT INT TERM
+
+      - name: Persist exact built-image evidence and clean one-off workflows
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p docs/reviews/evidence
+          cp /tmp/r7-direct-graphics-probe.json docs/reviews/evidence/2026-08-09_R7_MODERN_AMD64_IMAGE_DIRECT_GRAPHICS_PROBE.json
+          cp /tmp/r7-graphics-packages.tsv docs/reviews/evidence/2026-08-09_R7_MODERN_AMD64_GRAPHICS_PACKAGES.tsv
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          source_sha = Path('/tmp/r7-builder-repair-sha').read_text().strip()
+          image_sha = Path('/tmp/r7-image-sha256').read_text().split()[0]
+          probe = json.loads(Path('/tmp/r7-direct-graphics-probe.json').read_text())
+          packages = Path('/tmp/r7-graphics-packages.tsv').read_text().strip()
+          footprint = Path('/tmp/r7-footprint.txt').read_text()
+          facts = {}
+          for line in footprint.splitlines():
+              if '=' in line and not line.startswith((' ', '\t')):
+                  key, value = line.split('=', 1)
+                  facts.setdefault(key, value)
+          kms = bool(probe['sdl']['kmsdrm_compiled'])
+          classification = 'SDL_KMSDRM_COMPILED_ACTIVE_TEST_NEXT' if kms else 'SDL_KMSDRM_NOT_COMPILED_PACKAGING_WORK_REQUIRED'
+          drivers = ', '.join(probe['sdl']['video_drivers'])
+          body = f'''# R7 modern-amd64 built-image direct-graphics probe\n\n**Date:** 2026-08-09  \n**Source commit:** `{source_sha}`  \n**Build profile:** `modern-amd64`  \n**Image SHA-256:** `{image_sha}`  \n**Classification:** `{classification}`\n\nThis evidence was produced through the production `build/build-image.sh` path after the ownership/noninteractive-build repair, then by mounting the finished raw image read-only and executing the installed `greia_platform.direct_graphics_probe` inside that exact image. No DRM master or display takeover occurred.\n\n## Installed SDL result\n\n- compiled SDL video drivers: `{drivers}`\n- `kmsdrm_compiled`: **{str(kms).lower()}**\n- Pygame metadata: `{probe['pygame']}`\n- libraries visible inside the image: `{probe['libraries']}`\n- active KMSDRM test remains required: **true**\n\nThe mounted-image chroot intentionally had no guest DRM device/sysfs bound into it, so DRM-node and connector observations are not hardware evidence.\n\n## Key image facts\n\n- architecture: `{facts.get('architecture', 'unknown')}`\n- Debian suite: `{facts.get('suite', 'unknown')}`\n- accounted filesystem use: `{facts.get('accounted_mib', 'unknown')} MiB`\n- preferred limit: `{facts.get('preferred_limit_mib', 'unknown')} MiB`\n- required limit: `{facts.get('required_limit_mib', 'unknown')} MiB`\n\n## Relevant package versions\n\n```text\n{packages}\n```\n\n## Decision\n\n'''
+          if kms:
+              body += 'The exact production-built Greia image contains an SDL build that enumerates `kmsdrm`. The next R7 evidence step is controlled active KMSDRM acquisition in a disposable VM/physical session; no SDL rebuild is justified from packaging assumptions.\n'
+          else:
+              body += 'The exact production-built Greia image SDL build does **not** enumerate `kmsdrm`. Active takeover is therefore blocked at packaging. R7 must provide and re-probe a maintained SDL build/package with KMSDRM before changing boot/session ownership.\n'
+          Path('docs/reviews/2026-08-09_R7_MODERN_AMD64_IMAGE_DIRECT_GRAPHICS_PROBE.md').write_text(body, encoding='utf-8')
+          PY
+          git rm --ignore-unmatch \
+            .github/workflows/r7-builder-repro-fix.yml \
+            .github/workflows/r7-amd64-image-probe.yml \
+            .github/workflows/r7-source-checkpoint.yml \
+            .github/workflows/r7-kms-maintenance-hardening.yml \
+            .github/workflows/r7-kms-maintenance-hardening-v2.yml
+          git add docs/reviews/2026-08-09_R7_MODERN_AMD64_IMAGE_DIRECT_GRAPHICS_PROBE.md docs/reviews/evidence
+          git diff --cached --check
+          git commit -m 'r7: record production-built SDL direct-graphics evidence'
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
