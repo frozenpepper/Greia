@@ -122,7 +122,7 @@ class ChrootRuntimeMounts(AbstractContextManager[None]):
                     "-t",
                     "tmpfs",
                     "-o",
-                    "mode=0755,nosuid,noexec,size=64k",
+                    "mode=0755,nosuid,noexec,size=64k,nr_inodes=64",
                     "greia-r7-dev",
                     str(dev),
                 ]
@@ -217,6 +217,9 @@ class CompositorPackageProbe:
                 "host_sysfs_exposed": False,
                 "host_run_exposed": False,
             },
+            "host_devices_exposed": False,
+            "host_sysfs_exposed": False,
+            "host_run_exposed": False,
             "boot_or_service_changes": False,
         }
 
@@ -237,19 +240,17 @@ class CompositorPackageProbe:
         source_sha_before = _sha256_file(source)
         report: dict[str, object] | None = None
         primary_error: BaseException | None = None
-        clone_created = False
         try:
             self._clone_source_image(source)
-            clone_created = True
             report = self._measure_clone(source, source_sha_before)
         except BaseException as exc:
             primary_error = exc
         finally:
             source_sha_after = _sha256_file(source)
             cleanup_error: BaseException | None = None
-            if clone_created and not self.config.keep_test_image:
+            if test_image.exists() and not self.config.keep_test_image:
                 try:
-                    test_image.unlink(missing_ok=True)
+                    test_image.unlink()
                 except BaseException as exc:  # pragma: no cover - filesystem failure
                     cleanup_error = exc
 
@@ -372,6 +373,9 @@ class CompositorPackageProbe:
                     "host_sysfs_exposed": False,
                     "host_run_exposed": False,
                 },
+                "host_devices_exposed": False,
+                "host_sysfs_exposed": False,
+                "host_run_exposed": False,
                 "boot_or_service_changes": False,
                 "apt_policy": {
                     "install_recommends": False,
