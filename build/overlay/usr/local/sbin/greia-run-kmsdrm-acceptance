@@ -48,7 +48,11 @@ restore_launcher() {
   fi
   exit "$status"
 }
-trap restore_launcher EXIT HUP INT TERM
+interrupt() {
+  exit 130
+}
+trap restore_launcher EXIT
+trap interrupt HUP INT TERM
 
 systemctl stop "$launcher"
 
@@ -74,14 +78,13 @@ fi
 rm -f -- "$result"
 systemctl reset-failed "$acceptance" >/dev/null 2>&1 || true
 
-acceptance_status=0
-if ! systemctl start "$acceptance"; then
-  acceptance_status=$?
-  # POSIX ! changes $? to the negated status, so recover the real unit result
-  # from systemd rather than trusting shell inversion.
+set +e
+systemctl start "$acceptance"
+acceptance_status=$?
+set -e
+if [ "$acceptance_status" -ne 0 ]; then
   unit_result="$(systemctl show -p Result --value "$acceptance" 2>/dev/null || true)"
   echo "KMSDRM acceptance service failed (Result=${unit_result:-unknown})." >&2
-  acceptance_status=1
 fi
 
 if [ ! -r "$result" ]; then
