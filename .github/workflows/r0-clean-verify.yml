@@ -1,31 +1,19 @@
 # R0/R5/R6/R7 clean-clone verification
+# GitHub-hosted execution is manual-only. Do not add automatic triggers without explicit owner authorization.
 name: R0 clean-tree verification
 
 on:
-  pull_request:
-    branches: [main]
-    paths:
-      - ".github/workflows/r0-clean-verify.yml"
-      - "src/**"
-      - "tests/**"
-      - "runtime/**"
-      - "activities/**"
-      - "assets/**"
-      - "build/**"
-      - "tools/**"
-      - "Makefile"
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
   verify:
-    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
 
       - name: Install verification dependencies
@@ -54,7 +42,6 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Durable History/Progression authority is a platform service, not Activity code.
           grep -F 'class PlatformHistoryService:' src/greia_platform/history.py
           grep -F 'class ProfileHistoryStore:' src/greia_platform/history.py
           grep -F 'class ProgressionPolicy:' src/greia_platform/history.py
@@ -62,16 +49,12 @@ jobs:
           grep -F 'history_service=history_service' src/greia_launcher/composition.py
           grep -F 'history_store.start_session(' src/greia_launcher/supervisor.py
           grep -F 'history_store.finish_session(' src/greia_launcher/supervisor.py
-
-          # Activity events cross only the per-session authenticated broker boundary.
           grep -F 'ActivityEventBroker.start' src/greia_launcher/supervisor.py
           grep -F 'GREIA_EVENT_SOCKET' src/greia_launcher/supervisor.py
           grep -F 'GREIA_EVENT_TOKEN' src/greia_launcher/supervisor.py
           grep -F 'SANDBOX_EVENT_ROOT' src/greia_launcher/supervisor.py
           ! grep -F 'history.sqlite3' src/greia_launcher/supervisor.py
           ! grep -F 'database_path' src/greia_launcher/supervisor.py
-
-          # Parent controls consume bounded logical summaries and degrade safely on history errors.
           grep -F 'ParentProgressReader' src/greia_parent/server.py
           grep -F '"/api/progress"' src/greia_parent/server.py
           grep -F 'return self.unavailable_payload()' src/greia_parent/progress.py
@@ -83,7 +66,6 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Typed HAL / semantic device authority stays backend-neutral.
           grep -F 'class GreiaHAL:' src/greia_platform/hal.py
           grep -F 'class DisplayHAL(Protocol):' src/greia_platform/hal.py
           grep -F 'class InputHAL(Protocol):' src/greia_platform/hal.py
@@ -96,8 +78,6 @@ jobs:
           grep -F 'class LegacyXDisplayHAL:' src/greia_platform/hal_legacy_x.py
           grep -F 'class LegacyXInputHAL:' src/greia_platform/hal_legacy_x.py
           grep -F 'class HardwareSessionController(Protocol):' src/greia_platform/hardware_session.py
-
-          # Installed compatibility composition still shares one device authority and platform storage service.
           grep -F 'build_launcher_runtime_services(' src/greia_launcher/main.py
           grep -F 'device_capabilities = DeviceCapabilityService(' src/greia_launcher/composition.py
           grep -F 'device_capabilities=device_capabilities' src/greia_launcher/composition.py
@@ -105,19 +85,13 @@ jobs:
           grep -F 'device_capabilities,' src/greia_launcher/composition.py
           grep -F 'storage_service=storage_service' src/greia_launcher/composition.py
           grep -F 'from greia_platform.hal_legacy_x import LegacyXDisplayHAL, LegacyXInputHAL' src/greia_launcher/composition.py
-
-          # Permission and runtime compatibility use one semantic device observation.
           grep -F 'device_snapshot_token=device_snapshot.token' src/greia_platform/permissions.py
           grep -F 'expected_device_snapshot_token=authority.device_snapshot_token' src/greia_launcher/supervisor.py
           grep -F 'device capability snapshot changed after launch authority was issued' src/greia_launcher/runtime_adapter.py
-
-          # Shared Universal Storage is brokered into each Activity session.
           grep -F 'ActivityStorageService(StoragePolicy.load(storage_policy_path))' src/greia_launcher/composition.py
           grep -F 'GREIA_STORAGE_SOCKET' src/greia_launcher/supervisor.py
           grep -F 'GREIA_STORAGE_TOKEN' src/greia_launcher/supervisor.py
           grep -F 'ActivityStorageBroker.start' src/greia_launcher/supervisor.py
-
-          # Runtime-specific command, handle, exit and lifecycle transport belong to adapters.
           grep -F 'class RuntimeCommand:' src/greia_launcher/runtime_adapter.py
           grep -F 'class RuntimeInvocation:' src/greia_launcher/runtime_adapter.py
           grep -F 'class RuntimeLifecycleBinding:' src/greia_launcher/runtime_adapter.py
@@ -127,8 +101,6 @@ jobs:
           grep -F 'def cleanup(' src/greia_launcher/runtime_adapter.py
           grep -F 'GREIA_ACTIVITY_READY_PATH' src/greia_launcher/runtime_adapter.py
           grep -F 'GREIA_ACTIVITY_STOP_PATH' src/greia_launcher/runtime_adapter.py
-
-          # Supervisor must remain runtime-neutral at these implementation seams.
           ! grep -F 'ActivityControlChannel' src/greia_launcher/supervisor.py
           ! grep -F 'GREIA_ACTIVITY_READY_PATH' src/greia_launcher/supervisor.py
           ! grep -F 'GREIA_ACTIVITY_STOP_PATH' src/greia_launcher/supervisor.py
