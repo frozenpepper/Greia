@@ -1,0 +1,7 @@
+#!/bin/sh
+set -eu
+exec /usr/bin/env \
+  PYTHONPATH=/opt/greia-os/src \
+  PYTHONNOUSERSITE=1 \
+  PYTHONDONTWRITEBYTECODE=1 \
+  /usr/bin/python3 -m greia_platform.developer_control "$@"
