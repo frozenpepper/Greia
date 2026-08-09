@@ -29,8 +29,8 @@ class DirectGraphicsProbe:
 
     The probe deliberately does not initialize a video backend, open DRM/input
     devices, acquire DRM master, or change display state. It only inventories
-    compiled/runtime facts. Active KMSDRM acceptance belongs in a controlled VM
-    or physical-hardware harness.
+    compiled/runtime facts. Active KMSDRM and seat/input acceptance belong in a
+    controlled VM or physical-hardware harness.
     """
 
     def __init__(
@@ -49,11 +49,20 @@ class DirectGraphicsProbe:
     def snapshot(self) -> dict[str, object]:
         drivers = self._safe_sdl_drivers()
         drm = self._drm_snapshot()
+        input_topology = self._input_snapshot()
+        session = self._session_snapshot()
         libraries = {
             name: bool(self._library_finder(name))
             for name in ("drm", "gbm", "EGL", "input", "seat")
         }
         scanout_connector_visible = _has_connected_connector_with_mode(drm["connectors"])
+        input_topology_visible = bool(
+            input_topology["event_nodes"] or input_topology["sysfs_events"]
+        )
+        seat_runtime_visible = bool(
+            session["logind_runtime_present"]
+            and (session["seat0_runtime_present"] or session["xdg_seat"])
+        )
         return {
             "schema_version": SCHEMA_VERSION,
             "passive": True,
@@ -64,13 +73,15 @@ class DirectGraphicsProbe:
             },
             "libraries": libraries,
             "drm": drm,
-            "session": self._session_snapshot(),
+            "input": input_topology,
+            "session": session,
             "assessment": {
-                # This is intentionally only a prerequisite classification. A
-                # successful active KMSDRM window/frame test is still mandatory.
-                # A DRM card without a connected connector/mode is not enough to
-                # establish a scanout path and should be diagnosed as topology.
+                # These are prerequisite classifications only. They never prove
+                # DRM master, logind TakeDevice, libinput access, scanout, or
+                # input delivery to the Greia shell.
                 "scanout_connector_visible": scanout_connector_visible,
+                "input_topology_visible": input_topology_visible,
+                "seat_runtime_visible": seat_runtime_visible,
                 "kmsdrm_prerequisites_visible": bool(
                     "kmsdrm" in drivers
                     and drm["card_nodes"]
@@ -79,6 +90,7 @@ class DirectGraphicsProbe:
                     and libraries["gbm"]
                 ),
                 "active_kmsdrm_test_required": True,
+                "active_seat_input_test_required": True,
             },
         }
 
@@ -130,17 +142,56 @@ class DirectGraphicsProbe:
             "connectors": connectors,
         }
 
+    def _input_snapshot(self) -> dict[str, object]:
+        root = self.inputs.root
+        event_nodes = _relative_names(root / "dev" / "input", "event*")
+        sysfs_events: list[dict[str, str]] = []
+        input_sysfs = root / "sys" / "class" / "input"
+        if input_sysfs.is_dir():
+            try:
+                entries = sorted(input_sysfs.glob("event*"), key=lambda item: item.name)
+            except OSError:
+                entries = []
+            for entry in entries[:128]:
+                name = _read_small_text(entry / "device" / "name", maximum_bytes=512)
+                sysfs_events.append(
+                    {
+                        "event": _bounded_identifier(entry.name, maximum=64),
+                        "name": _bounded_text(name, maximum=160),
+                    }
+                )
+        return {
+            "event_nodes": list(event_nodes[:128]),
+            "sysfs_events": sysfs_events,
+        }
+
     def _session_snapshot(self) -> dict[str, object]:
         env = self.inputs.environment
-        # Presence rather than values avoids leaking display/session tokens into
-        # diagnostics while still showing which transport the current image uses.
+        root = self.inputs.root
+        sessions_root = root / "run" / "systemd" / "sessions"
+        try:
+            session_runtime_count = sum(
+                1 for entry in sessions_root.iterdir() if entry.is_file()
+            )
+        except OSError:
+            session_runtime_count = 0
         return {
+            # Presence rather than token values avoids leaking session cookies or
+            # identifiers while still classifying the active environment.
             "display_present": bool(env.get("DISPLAY")),
+            "xauthority_present": bool(env.get("XAUTHORITY")),
             "wayland_display_present": bool(env.get("WAYLAND_DISPLAY")),
             "sdl_videodriver": _bounded_env_value(env.get("SDL_VIDEODRIVER")),
             "xdg_session_id_present": bool(env.get("XDG_SESSION_ID")),
             "xdg_seat": _bounded_env_value(env.get("XDG_SEAT")),
             "xdg_vtnr": _bounded_env_value(env.get("XDG_VTNR")),
+            "logind_runtime_present": (root / "run" / "systemd" / "system").is_dir(),
+            "seat0_runtime_present": (root / "run" / "systemd" / "seats" / "seat0").is_file(),
+            "session_runtime_count": min(session_runtime_count, 4096),
+            "active_vt": _bounded_identifier(
+                _read_small_text(root / "sys" / "class" / "tty" / "tty0" / "active", maximum_bytes=64),
+                maximum=32,
+            ),
         }
 
 
@@ -222,6 +273,22 @@ def _read_small_text(path: Path, *, maximum_bytes: int = 16_384) -> str:
 def _bounded_env_value(value: str | None, *, maximum: int = 128) -> str | None:
     if value is None or not value or len(value) > maximum or "\x00" in value:
         return None
+    return value
+
+
+def _bounded_identifier(value: str, *, maximum: int) -> str:
+    if not value or len(value) > maximum:
+        return ""
+    allowed = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.:-")
+    if any(character not in allowed for character in value):
+        return ""
+    return value
+
+
+def _bounded_text(value: str, *, maximum: int) -> str:
+    value = " ".join(value.split())
+    if len(value) > maximum:
+        return value[:maximum]
     return value
 
 
