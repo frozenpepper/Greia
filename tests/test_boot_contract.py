@@ -10,6 +10,7 @@ from greia_platform.boot_contract import (
     validate_grub_config,
     validate_grub_text,
 )
+from greia_platform.grub_security import RECOVERY_USER
 
 
 GOOD_LINE = (
@@ -42,6 +43,20 @@ class BootContractTests(unittest.TestCase):
         entries = validate_grub_text(config())
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].kernel_path, "/vmlinuz")
+
+    def test_checked_in_grub_auth_generator_matches_recovery_identity(self) -> None:
+        script_path = (
+            Path(__file__).resolve().parents[1]
+            / "build"
+            / "overlay"
+            / "etc"
+            / "grub.d"
+            / "01_greia_auth"
+        )
+        script = script_path.read_text(encoding="utf-8")
+        self.assertIn(f'set superusers="{RECOVERY_USER}"', script)
+        self.assertIn(f"password_pbkdf2 {RECOVERY_USER} $hash", script)
+        self.assertNotIn("pip-recovery", script)
 
     def test_rejects_an_extra_console(self) -> None:
         with self.assertRaisesRegex(GrubContractError, "console=null"):
