@@ -2,45 +2,73 @@
 
 This repository implements a child-first educational Linux appliance/platform. These rules apply repository-wide.
 
-## Authoritative read order and ACTIVE plan
+## Authoritative read order and active plan
 
 Before changing implementation or architecture, read:
 
 1. `README.md`;
-2. `docs/architecture/GREIA_ARCHITECTURE.md`;
-3. `docs/adr/0012-platform-architecture-constitution.md`;
-4. `docs/adr/0014-greia-identity-arm-parity-and-direct-graphics-direction.md`;
-5. relevant narrower ADRs, especially ADR 0013 for image composition;
-6. **`docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md` — MANDATORY ACTIVE IMPLEMENTATION PLAN**;
-7. `HANDOVER.md`;
-8. **`docs/agents/GREIA_AGENT_OPERATIONS.md` — mandatory project/build/test-hardware operating manual for agents**;
-9. `skills/greia-activity-authoring/SKILL.md` whenever creating, modifying, reviewing, validating, optimizing, packaging, deploying, or testing an Activity;
-10. `docs/plans/2026-08-06_PHASE0_BOOTABLE_VERTICAL_SLICE.md` only as supporting Phase-0 history/evidence context where it is not superseded by the active remediation plan.
+2. **`docs/DOCUMENTATION.md` — documentation authority, ownership and freshness model**;
+3. `docs/architecture/GREIA_ARCHITECTURE.md`;
+4. `docs/adr/0012-platform-architecture-constitution.md`;
+5. `docs/adr/0014-greia-identity-arm-parity-and-direct-graphics-direction.md`;
+6. relevant narrower accepted ADRs, especially ADR 0013 for image composition and later ADRs for trust/runtime/storage/progression boundaries;
+7. **`docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md` — MANDATORY ACTIVE IMPLEMENTATION PLAN**;
+8. `HANDOVER.md`;
+9. **`docs/agents/GREIA_AGENT_OPERATIONS.md` — mandatory project/build/test-hardware operating manual for agents**;
+10. `skills/greia-activity-authoring/SKILL.md` whenever creating, modifying, reviewing, validating, optimizing, packaging, deploying, or testing an Activity;
+11. phase-specific testing/review documents referenced by `HANDOVER.md` or the active plan;
+12. `docs/plans/2026-08-06_PHASE0_BOOTABLE_VERTICAL_SLICE.md` only as historical/supporting Phase-0 context where it is not superseded.
 
-The architecture-remediation plan is the single active implementation plan until its final completion criteria are satisfied. Resume from the first incomplete phase in that plan. Do not create a competing implementation plan or jump ahead to a more visible feature while an earlier authority/safety prerequisite remains open.
+`docs/DOCUMENTATION.md` defines which document class owns which fact. In short:
 
-After every substantive implementation turn:
+- `AGENTS.md` owns repository-wide work rules and non-negotiable product constraints;
+- accepted ADRs own normative architecture decisions;
+- source/runtime declarations own exact implemented APIs/schemas/command vocabularies;
+- the active plan owns sequencing and closure criteria;
+- `HANDOVER.md` owns current branch/evidence state;
+- `docs/testing/*` owns exact named test procedures;
+- agent operations/skills are derived living manuals and must track their implementation owners.
+
+Do not resolve contradictions by choosing whichever document is convenient. Identify the owner of the fact and correct stale derived documentation.
+
+The architecture-remediation plan is the single active implementation plan until its final completion criteria are satisfied. Resume from the first incomplete blocking phase in that plan. Do not create a competing implementation plan or jump ahead to a more visible feature while an earlier authority/safety prerequisite remains open.
+
+After every substantive **implementation** turn:
 
 1. append an accurate progress entry to `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`;
 2. update `HANDOVER.md` with the exact current phase, implemented work, verification/evidence, blockers, and next exact step;
 3. run the verification required by the active phase before claiming it complete;
 4. update `docs/agents/GREIA_AGENT_OPERATIONS.md` if repository/build/test-hardware/remote-control procedure changed;
 5. update `skills/greia-activity-authoring/SKILL.md` in the same tranche whenever the Activity manifest/API/runtime policy/trust model/shared assets or UI canon/performance requirements/validation or deployment workflow changed;
-6. commit coherent work to the canonical GitHub repository.
+6. update `docs/DOCUMENTATION.md` when documentation ownership/precedence/freshness rules change;
+7. commit coherent work to the canonical GitHub repository.
+
+For substantive documentation-only work, update `HANDOVER.md` when the continuation contract changes and preserve a dated review when useful; an implementation-plan progress entry is required only when implementation/phase state actually changes.
 
 Do not rewrite earlier progress entries to make history appear cleaner. Append corrections explicitly.
 
-The two agent-facing manuals are **living contracts**. A source change that makes either manual materially wrong is not completely documented until the affected manual is corrected.
+The agent operations manual and Activity authoring skill are **living derived contracts**. A source change that makes either materially wrong is not completely documented until the affected manual is corrected.
 
 When—and only when—the active remediation plan's final completion criteria are all satisfied, the contributor closing it MUST mark the plan complete, append final evidence, update `HANDOVER.md`, and **remove this active-plan reference and these special resume/progress instructions from `AGENTS.md`**. The completed plan remains under `docs/plans/` as historical evidence.
 
-## GitHub Actions and paid execution
+## GitHub Actions and paid/hosted execution
 
-**GitHub-hosted Actions are opt-in only. Never enable, trigger, rerun, or add an automatic GitHub Actions workflow without the repository owner's explicit authorization for that specific use.** This includes pull-request, push, schedule, and manual `workflow_dispatch` runs when they consume hosted-runner minutes or other paid resources.
+**GitHub-hosted Actions are opt-in only. Do not use the Actions execution surface unless the repository owner explicitly authorizes that specific use.**
 
-Repository commits/pushes are allowed and expected for source persistence. Verification should run locally or on an explicitly owner-approved external/local environment. Existing workflow definitions may be retained only as manual reference tooling; automatic triggers must not be reintroduced without explicit owner approval.
+Without that explicit authorization, agents must not:
 
-Do not treat CI availability as implicit permission to spend money. Do not infer authorization from earlier runs, from the existence of a workflow file, or from a request to “move forward.”
+- enable or add automatic hosted workflow triggers;
+- trigger or rerun a hosted workflow;
+- dispatch a manual hosted workflow;
+- query Actions runs/status/jobs/steps/logs/artifacts as part of project execution or evidence gathering;
+- download hosted workflow artifacts;
+- infer permission from the existence of workflow files, previous runs, CI availability, or a request to “move forward”, “test”, or “verify”.
+
+Reading/editing workflow **source files** as ordinary repository source is allowed when required by the task; executing or interrogating the hosted Actions service is not.
+
+Repository commits/pushes/PR review are allowed and expected for source persistence. Verification runs locally or on an explicitly owner-approved execution environment.
+
+Do not treat available hosted compute as implicit permission to spend money.
 
 ## Developer remote-control boundary
 
@@ -51,23 +79,23 @@ This capability is **development-only**:
 - normal/release profiles must not enable SSH merely because developer tooling exists in the repository;
 - remote enablement requires an explicit developer image/profile marker and key provisioning;
 - password authentication and root SSH login remain disabled; never commit private keys, Wi-Fi passwords, tokens, or other operator credentials;
-- passwordless privilege escalation must stay behind a bounded Greia-owned control command such as `greia-devctl`, not generic `sudo` access;
+- passwordless privilege escalation must stay behind a bounded Greia-owned control command such as `greia-devctl`, not generic passwordless sudo/root APIs;
 - ordinary remotely deployed Activities retain `DEVELOPER_UNSIGNED` trust and live in a source distinct from `/opt/greia-os/activities`; remote file placement must never upgrade package trust;
 - deliberate replacement of a built-in Activity requires an explicit developer operation and a recoverable original backup;
 - screenshot/input implementations may use the current Xorg compatibility backend on a developer image, but this is not an R7 production display/input architecture decision;
 - remote installation must drive the existing graphical fail-closed installer and its target/payload revalidation. Do not add an unattended destructive disk-install shortcut merely for convenience;
-- developer tooling must preserve negative evidence and must not be used to bypass Bubblewrap, PermissionBroker, lifecycle, installer or hardware acceptance gates.
+- developer tooling must preserve negative evidence and must not bypass Bubblewrap, PermissionBroker, lifecycle, installer or hardware acceptance gates.
 
 ## Non-negotiable product contracts
 
-1. **No visible Linux shell during normal child operation.** No boot text, login prompt, terminal, desktop, window manager, package manager, filesystem UI, or browser chrome may appear in the supported child path.
+1. **No visible Linux shell during normal child operation.** No boot text, login prompt, terminal, desktop, generic window manager, package manager, filesystem UI, or browser chrome may appear in the supported child path.
 2. **Greia Shell is the child's graphical OS.** Linux is the substrate, not the product surface.
 3. **Activity is the universal abstraction.** Python, Web, and future runtimes are adapters below common Activity/package/storage/progression/permission/lifecycle contracts.
 4. **Reference floor:** first-generation Acer Aspire One remains the extreme low-resource reference, currently estimated around 768 MiB RAM, 7 GB storage, and 1024×600 until inventory evidence replaces estimates.
 5. **ARM is co-equal with legacy x86.** Raspberry Pi 400 and Raspberry Pi 500 are explicit first-class ARM reference devices. ARM is not a later port.
 6. **Disk budget:** current C0 preferred installed core ≤800 MiB; required target <1,000 MiB; >1,250 MiB requires architecture review.
 7. **One curated environment per runtime family.** Phase 0 has one shared Python runtime. Activities may not install, download, compile, or resolve private dependencies. No Activity venvs, wheels/site-packages bundles, package managers, browser binaries, or executable installers.
-8. **Curated Activities only.** Packages must pass manifest, source/import, path-safety, capability, and footprint validation before inclusion.
+8. **Curated Activities only.** Packages must pass manifest, source/import, path-safety, capability, trust and footprint validation before inclusion.
 9. **Offline-first.** Core shell, Activities, saves, progression, language packs, and parent management must function without cloud services.
 10. **Language-neutral child navigation.** Prefer symbols, color, position, animation, and optional speech; text appears when educationally purposeful.
 11. **Platform-owned progression and child data.** Activities report facts/events and write only their own profile-scoped state. They do not directly mutate global rewards/progression.
@@ -83,7 +111,9 @@ This capability is **development-only**:
 
 Do not introduce a desktop environment or general-purpose window manager.
 
-**Do not deepen X11 dependency.** The existing hardened Xorg path is a temporary Phase 0 migration/evidence baseline inherited from v0.12. ADR 0014 makes the target direction direct/appliance-oriented around DRM/KMS and the thinnest practical session/surface layer. New graphics architecture work must move toward that target.
+**Do not deepen X11 dependency.** The installed production path currently uses an explicit Xorg/xinit compatibility backend while R7 measures/selects the target display/session design. Xorg is therefore **PROVISIONAL implementation**, not the Greia architectural API.
+
+ADR 0014 makes the target direction direct/appliance-oriented around DRM/KMS and the thinnest practical Greia-owned session/surface layer. New graphics architecture work must move toward that target or preserve compatibility without expanding X11 coupling.
 
 A tiny compositor may be selected only if evidence shows it materially improves safe surface ownership, transitions, crash recovery, Web-runtime integration, or input routing at acceptable RAM/disk/latency cost. “Desktop Linux normally uses it” is not a justification.
 
@@ -99,9 +129,10 @@ A tiny compositor may be selected only if evidence shows it materially improves 
 - Keep logs/caches bounded. Do not add persistent caches without explicit limits.
 - Use canonical asset IDs/catalogues rather than filesystem discovery as product logic.
 - Profile state remains bounded under `/var/lib/greia-profiles`; every child gets one customization root and one Activity-data root.
-- Removable child media stays read-only at the platform boundary.
+- Removable child media stays read-only at the platform boundary unless a distinct trusted parent/system workflow owns a write operation.
 - Preserve fail-closed Bubblewrap/namespace behavior until a replacement sandbox is evidence-accepted.
-- Do not claim source tests prove hardware behavior.
+- Do not claim source tests prove VM or physical-hardware behavior.
+- Do not turn conceptual examples in architecture docs into implementation without checking the current source/runtime contract.
 
 ## Greia technical identities
 
@@ -133,23 +164,28 @@ PYTHONPATH=src python3 -m unittest discover -s tests -v
 
 Activity validation intentionally rejects cached bytecode inside Activity folders.
 
+Do not claim a test result that did not execute against the stated commit/checkout. Exact current executed evidence belongs in `HANDOVER.md` or a dated evidence report.
+
 ## Evidence labels
 
 Use these terms accurately:
 
 - **CONSTITUTIONAL** — stable platform contract;
-- **SELECTED** — implementation selected by ADR;
-- **PROVISIONAL** — development/evidence implementation, not release architecture;
+- **SELECTED** — implementation selected by accepted decision;
+- **PROVISIONAL** — current implementation/evidence candidate, not final release architecture;
+- **SOURCE-CLOSED** — source scope closed at a recorded boundary while runtime/hardware evidence may remain;
 - **DEFERRED** — intentionally outside the current phase;
-- **UNPROVEN** — designed/implemented but lacking required runtime/hardware evidence.
+- **UNPROVEN** — designed/implemented but lacking required runtime/hardware evidence;
+- **HISTORICAL** — retained snapshot, not current instruction;
+- **COMPLETE** — explicitly named closure criteria satisfied.
 
 ## Packaging and continuity
 
-Every substantive work turn should leave:
+Every substantive implementation turn should leave:
 
 - updated `HANDOVER.md`;
-- updated active plan/ADRs where decisions changed;
+- updated active plan/ADRs where implementation state or decisions changed;
 - updated agent operations/Activity skill when their governed contracts changed;
-- no build caches, venvs, downloaded package archives, disk images, or heavyweight transient evidence inside the source tree.
+- no build caches, venvs, downloaded package archives, disk images, private keys, or heavyweight transient evidence inside the source tree.
 
 The GitHub repository is the canonical long-term source of truth; chat transcripts are not.
