@@ -107,6 +107,9 @@ class QemuKMSDRMHarnessTests(unittest.TestCase):
         self.assertIn('payload.get("actual_video_driver") != "kmsdrm"', script)
         self.assertIn("/proc/[0-9]*/comm", script)
         self.assertIn("systemctl poweroff --no-block", script)
+        self.assertIn("finish() {", script)
+        self.assertIn("set +e\n  write_summary || true\n  power_off", script)
+        self.assertIn("trap finish EXIT HUP INT TERM", script)
         self.assertNotIn("greia-run-kmsdrm-acceptance", script)
 
         with tempfile.TemporaryDirectory() as tmp:
