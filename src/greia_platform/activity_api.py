@@ -41,6 +41,24 @@ def _theme_store() -> ThemeStore:
 
 
 @lru_cache(maxsize=1)
+def _default_theme_store() -> ThemeStore:
+    """Return the read-only canonical theme view available to every Activity.
+
+    Ordinary Activities must be able to render with Greia's canonical palette
+    without receiving `customization.manage` or a raw path to the child's
+    customization directory. The deliberately nonexistent state directory
+    makes ThemeStore resolve only trusted platform defaults. A future
+    read-only profile-theme snapshot may extend this without widening file
+    authority.
+    """
+
+    return ThemeStore.load(
+        _root() / "runtime" / "theme-defaults.toml",
+        _root() / "runtime" / ".activity-theme-default",
+    )
+
+
+@lru_cache(maxsize=1)
 def _media_scanner() -> RemovableImageScanner:
     return RemovableImageScanner(Path(os.environ.get("GREIA_MEDIA_ROOT", "/media/greia")))
 
@@ -133,7 +151,18 @@ def get_icon_path(asset_id: str, size: int = 128) -> Path:
 
 
 def get_theme() -> ResolvedTheme:
-    return _theme_store().resolve()
+    """Return the Activity-visible Greia theme without expanding authority.
+
+    A trusted customization Activity that was granted the profile-scoped
+    customization path receives the actual resolved child theme. Ordinary
+    Activities receive the canonical default resolved palette and never gain
+    raw read/write access to the child's customization files merely to obtain
+    colors.
+    """
+
+    if os.environ.get("GREIA_CUSTOMIZATION_DIR"):
+        return _theme_store().resolve()
+    return _default_theme_store().resolve()
 
 
 def get_theme_palette() -> ThemePalette:
