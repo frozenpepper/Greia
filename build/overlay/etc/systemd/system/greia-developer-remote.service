@@ -1,8 +1,9 @@
 [Unit]
 Description=Greia development-only remote preparation
 ConditionPathExists=/etc/greia-os/developer-remote
-After=local-fs.target greia-first-boot.service
-Requires=greia-first-boot.service
+After=local-fs.target greia-first-boot.service systemd-networkd.service systemd-resolved.service
+Requires=greia-first-boot.service systemd-networkd.service systemd-resolved.service
+Wants=avahi-daemon.service
 Before=ssh.service
 
 [Service]
