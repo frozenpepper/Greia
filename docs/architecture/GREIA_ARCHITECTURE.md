@@ -1,16 +1,27 @@
-# Greia Architecture Constitution
+# Greia Architecture — Living Overview
 
-**Status:** Living architecture baseline  
-**Date:** 2026-08-08  
+**Status:** Living architecture synthesis  
+**Last reviewed:** 2026-08-10  
+**Authority:** accepted ADRs are normative; implemented APIs/schemas are owned by source/runtime declarations; this document synthesizes the cross-cutting architecture.  
 **Scope:** Product philosophy, platform boundaries, Activity model, runtimes, profiles, storage, progression, package/update model, backup/restore, parent controls, hardware abstraction, ARM/i386 strategy, graphics direction, security boundaries, and open questions.
 
 ---
 
-## 0. Purpose
+## 0. Purpose and how to read this document
 
 Greia is a non-profit, open-source computing platform for children. It is built on Linux, but it is not intended to behave like a conventional Linux desktop distribution.
 
-The purpose of this document is to define the stable product architecture above any particular Linux distribution release, bootloader, graphics backend, CPU family, or Activity runtime.
+This document explains the stable product architecture above any particular Linux distribution release, bootloader, graphics backend, CPU family, or Activity runtime.
+
+**It is not a competing ADR/implementation specification.**
+
+- `docs/adr/*` contains accepted normative decisions.
+- `docs/DOCUMENTATION.md` defines documentation ownership/precedence.
+- source/runtime declarations own exact currently implemented schemas/APIs.
+- `skills/greia-activity-authoring/SKILL.md` is the current Activity-authoring specification for agents/developers.
+- `HANDOVER.md` owns current branch, verification and hardware-evidence state.
+
+Several examples below are deliberately **conceptual/future-facing** to describe stable semantics. A YAML manifest, a simplified `storage.get()` call, a Web SDK example, `.greiaactivity` layout, or capability-class label shown here is not automatically the current authoring API.
 
 Greia should be able to evolve from an old i386 netbook to a Raspberry Pi 400/500 or a modern PC without becoming several different products.
 
@@ -365,13 +376,13 @@ Greia Shell or supervised Activity
 
 ## 6. X11 status
 
-Historic Pip-era Phase-0 work used a minimal Xorg session because it was a pragmatic compatibility path during early implementation.
+The current installed production path uses a deliberately narrow **Xorg/xinit compatibility backend** while the R7 display/session architecture is measured and proven.
 
-That work remains valuable as historical evidence and code, but **X11 is not an intended Greia architectural layer**.
+That backend is **PROVISIONAL**. It is not an Activity API and does not make X11 part of the intended Greia architectural layer.
 
-The Greia direction is to avoid X11 unless future hard evidence demonstrates that a particular reference device cannot meet the product requirements without a narrowly scoped compatibility path.
+The target direction remains direct/appliance-oriented. Xorg may survive only as an explicitly scoped compatibility adapter if physical evidence shows that a reference device requires it.
 
-Even in that case, X11 would remain a platform adapter detail, not an Activity API.
+Even in that case, X11 remains below the platform/Activity contract.
 
 ## 7. DRM/KMS-first direction
 
@@ -409,9 +420,9 @@ Greia has one logical Activity Runtime Manager.
 A runtime adapter is responsible for:
 
 - validating runtime-specific package requirements;
-- preparing a sandbox;
+- preparing runtime-specific launch state beneath platform sandbox policy;
 - exposing the Greia SDK bridge;
-- launching the Activity;
+- launching the Activity through the platform-owned session/lifecycle boundary;
 - readiness handshake;
 - pause/checkpoint/resume semantics where supported;
 - graceful stop;
@@ -471,7 +482,7 @@ Network access is denied by default.
 
 ## 12. Web engine selection is still an evidence question
 
-No web engine is constitutionally selected yet.
+No web engine is selected yet.
 
 The likely family to investigate is an embedded WebKit/WPE-style stack rather than Chromium, because the target includes very low-resource machines and ARM devices.
 
@@ -508,16 +519,18 @@ Each Activity has a globally stable ID.
 
 The title is presentation and may change or be localized. The ID is identity and must not change casually.
 
-Example:
+Conceptual identity example:
 
 ```yaml
 id: org.greia.maze
 version: 1.2.0
 ```
 
-## 15. Universal manifest
+For the **current implemented manifest**, Activity authors must use `activity.toml` and the authoring skill/source parser rather than this conceptual YAML fragment.
 
-A future normalized manifest should be able to express at least:
+## 15. Universal manifest semantics
+
+A future/runtime-neutral normalized manifest needs to express at least the following semantic concerns:
 
 ```yaml
 id: org.greia.constellations
@@ -559,7 +572,7 @@ scoring:
   model: high_score
 ```
 
-Exact schema syntax remains subject to implementation ADRs; the semantic separation is constitutional.
+This is **conceptual**, not the current Python manifest syntax. The semantic separation is architectural; `src/greia_platform/activities.py` and `runtime/child-runtime.toml` own the implemented contract.
 
 ## 16. Capability classes
 
@@ -572,7 +585,7 @@ For example:
 - **C2** — modern baseline with richer multimedia/GPU capability;
 - **C3** — high-capability optional features.
 
-The precise thresholds must be measured and versioned.
+The precise thresholds must be measured and versioned. These labels must not acquire invented numeric thresholds merely because they appear in examples.
 
 A Raspberry Pi 500 may be substantially more capable than an old Atom netbook even though both are first-class platform targets.
 
@@ -580,11 +593,11 @@ A Raspberry Pi 500 may be substantially more capable than an old Atom netbook ev
 
 An Activity may offer optional richer features while retaining a lower baseline.
 
-Example:
+Conceptually:
 
 ```text
-C0 machine → SVG/Canvas2D effects
-C2 machine → higher-resolution assets + WebGL effects
+C0 machine → simpler 2D effect path
+C2 machine → higher-resolution/richer optional effect path
 ```
 
 This should be one Activity package whenever practical, not separate “old computer” and “new computer” products.
@@ -626,7 +639,9 @@ Runtime sandboxes should fail closed when required isolation cannot be establish
 
 ## 20. Storage is a core platform service
 
-A Python Activity should receive logical APIs such as:
+The stable semantic contract is key/value state plus private files/blobs scoped to `(profile_id, activity_id)`.
+
+Conceptually:
 
 ```python
 storage.get("current_level")
@@ -634,14 +649,9 @@ storage.set("current_level", 7)
 storage.write_file("drawing.png", data)
 ```
 
-A Web Activity should receive equivalent semantics, for example:
+and future Web Activities should receive equivalent semantics.
 
-```javascript
-await Greia.storage.get("current_level");
-await Greia.storage.set("current_level", 7);
-```
-
-Both map into the same profile/activity namespace.
+**Current Python implementation:** use `get_storage()` and `ActivityStorageClient.kv_get/kv_set/file_*` as documented by `skills/greia-activity-authoring/SKILL.md`; the simplified calls above are architectural shorthand.
 
 ## 21. Separate platform-owned data from Activity-owned data
 
@@ -669,7 +679,7 @@ Greia may use SQLite for platform-owned structured data such as sessions, regist
 
 Activity authors should not be forced to interact with the platform database directly.
 
-Their official SDK can expose simpler JSON-compatible key/value and file/blob semantics.
+Their official SDK exposes simpler portable logical operations.
 
 ## 23. Save schema versions
 
@@ -722,11 +732,11 @@ Installing that Activity later should make its preserved state available again.
 
 ## 27. Backup format
 
-The future canonical extension should be Greia-branded, for example `.greiabackup`.
+The intended future canonical extension is `.greiabackup`.
 
-The archive should be versioned and documented.
+The archive must be versioned and documented.
 
-A reasonable internal structure could contain:
+A conceptual internal structure could contain:
 
 ```text
 manifest.yaml
@@ -737,7 +747,7 @@ rewards/
 shared/
 ```
 
-The exact schema requires a dedicated format ADR.
+This is not yet the implemented format; the exact schema requires its dedicated implementation/format decision.
 
 ---
 
@@ -747,34 +757,26 @@ The exact schema requires a dedicated format ADR.
 
 Python and Web Activities use the same outer package concept.
 
-A future package extension may be `.greiaactivity`.
+The intended future package extension is `.greiaactivity`.
 
-Example contents:
+Conceptual contents:
 
 ```text
-manifest.yaml
-activity/
-assets/
-signature/
+manifest
+activity payload
+assets
+integrity/authenticity metadata
 ```
 
-Only the runtime metadata and payload layout differ inside.
+This is not the current development directory schema. Current authors use `activity.toml` and the repository validator.
 
 ## 29. Parent-friendly removable-media installation
 
-Inserting a USB stick or SD card may cause Greia to scan it automatically for valid Activity packages.
+Inserting a USB stick or SD card may cause Greia to scan it automatically for valid Activity packages once the package-install phase is implemented.
 
 No code is executed from the removable medium.
 
 Greia reads bounded package metadata, validates packages, compares stable IDs and versions, then shows the parent a simple result.
-
-Example:
-
-```text
-Maze          1.0  → NEW / INSTALL
-Animals       1.2  → UPDATE from installed 1.1
-Drawing Lab   1.0  → ALREADY INSTALLED
-```
 
 Parents do not browse Linux paths or use package-manager terminology.
 
@@ -803,14 +805,9 @@ Unexpected media removal or power loss should not corrupt the previous working p
 
 Open source does not mean arbitrary unsigned code should be indistinguishable from trusted distribution content.
 
-The precise trust model remains to be specified, but Greia needs a clear distinction among:
+Current source already distinguishes built-in and developer-unsigned origins for development/runtime authority. The **distribution signing/community trust chain** remains a future package-system decision.
 
-- official Greia-signed packages;
-- trusted community/source packages;
-- locally developed/test packages;
-- invalid/tampered packages.
-
-The parent UI should communicate trust without requiring cryptographic expertise.
+The parent UI should eventually communicate trust without requiring cryptographic expertise.
 
 ---
 
@@ -864,9 +861,9 @@ PC and Pi boot firmware/partition details may differ substantially without produ
 
 ## 35. Declarative image profiles
 
-The previous project already moved toward typed declarative image profiles rather than executable shell profile fragments. That direction should continue.
+Greia uses typed declarative image profiles rather than executable shell profile fragments.
 
-A build profile should declare intent such as:
+A build profile declares intent such as:
 
 - platform family;
 - architecture;
@@ -877,7 +874,7 @@ A build profile should declare intent such as:
 - display adapter;
 - resource budget.
 
-Runtime hardware probing then establishes what the actual machine can do.
+Runtime hardware probing/certification establishes what the actual machine can do.
 
 Declarations are not evidence.
 
@@ -915,7 +912,7 @@ Isolation should cover as appropriate:
 
 ## 38. Network denied by default
 
-Especially for Web Activities, arbitrary network access should not be the default.
+Especially for future Web Activities, arbitrary network access should not be the default.
 
 An ordinary offline Activity should not be able to silently become a tracking client.
 
@@ -923,11 +920,11 @@ Network capability must be declared and mediated by policy.
 
 ## 39. Child-safe crash behavior
 
-If an Activity crashes or hangs, Greia should reclaim control and return to a safe child-facing surface.
+If an Activity crashes or hangs, Greia must reclaim control and return to a safe child-facing surface.
 
 A terminal traceback, browser error page, Linux crash dialog, or frozen black screen is not an acceptable normal failure experience.
 
-The platform owns a universal forced-return/watchdog mechanism.
+The platform owns the universal forced-return/watchdog mechanism; exact current source/evidence status belongs in `HANDOVER.md`.
 
 ## 40. Fail closed
 
@@ -979,7 +976,7 @@ Rejected as the default assumption because its footprint/process model is poorly
 
 ## 47. X11 as a permanent platform dependency
 
-Rejected. Historical Xorg work remains useful as migration/evidence material, but Greia should not carry X11 simply because it is conventional.
+Rejected. The current Xorg/xinit path is a **provisional compatibility implementation** while R7 evidence is gathered; it must not become permanent merely through inertia.
 
 ## 48. Java as a default first-class runtime
 
@@ -997,11 +994,11 @@ Rejected because interruption or a bad package can destroy the working installat
 
 # Part XVI — Open research and implementation questions
 
-The following are intentionally not settled by this constitution.
+The following are intentionally not settled by this living overview. Current phase status belongs in the active plan/handover.
 
 ## 51. Direct graphics stack
 
-Need evidence to select the exact shell/display architecture across old Intel and Raspberry Pi hardware.
+R7 requires evidence to select the exact shell/display architecture across old Intel and future Raspberry Pi paths.
 
 Questions include:
 
@@ -1009,12 +1006,12 @@ Questions include:
 - whether one tiny compositor materially improves Web runtime integration;
 - GPU fallback behavior;
 - mode switching and resolution control;
-- boot-to-shell continuity without X11;
+- boot-to-shell continuity without architectural X11 dependence;
 - handling of multiple Activity surfaces if ever required.
 
 ## 52. Web engine
 
-Need benchmarked comparison of WPE WebKit / WebKit variants and any other realistic embedded engines on i386 and ARM64.
+Need benchmarked comparison of WPE WebKit / WebKit variants and any other realistic embedded engines on required architectures.
 
 ## 53. Boot cover
 
@@ -1022,11 +1019,11 @@ Need a genuinely noninteractive branded boot path that never reveals normal Linu
 
 ## 54. Exact backup/package schemas
 
-Need versioned format ADRs and migration rules.
+Need versioned format decisions and migration rules.
 
-## 55. Package trust chain
+## 55. Package distribution trust chain
 
-Need signing-key lifecycle, community package policy, offline trust/verification, rollback, and recovery design.
+Need signing-key lifecycle, community package policy, offline authenticity verification, rollback, and recovery design above the already implemented development/built-in trust-origin distinction.
 
 ## 56. Activity forced-return input
 
@@ -1038,13 +1035,13 @@ Need measured thresholds and certification tests rather than invented labels.
 
 ## 58. ARM image strategy
 
-Raspberry Pi 400/500 must be first-class, but board/image details require their own implementation profile and testing rather than pretending x86 GRUB/MBR logic transfers to ARM.
+Raspberry Pi 400/500 must be first-class, but board/image details require their own implementation profiles/testing rather than pretending x86 GRUB/MBR logic transfers to ARM.
 
 ---
 
 # Part XVII — Architecture summary
 
-## 59. One-sentence constitution
+## 59. One-sentence architectural summary
 
 > **Greia is a console-like child operating environment centered on runtime-independent Activities, with platform-owned identity, lifecycle, storage, sessions, progression, installation, backup, permissions, parent controls, and hardware abstraction over a deliberately replaceable Linux/runtime/display substrate.**
 
