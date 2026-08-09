@@ -15,8 +15,11 @@ from greia_platform.hal import (
     LinuxRemovableMediaHAL,
     SystemdPowerHAL,
 )
-from greia_platform.hal_legacy_x import LegacyXDisplayHAL, LegacyXInputHAL
-from greia_platform.hardware_session import XSessionHardwareController
+from greia_platform.hal_legacy_x import (
+    LegacyXDisplayHAL,
+    LegacyXHardwareSessionController,
+    LegacyXInputHAL,
+)
 from greia_platform.history import PlatformHistoryService
 from greia_platform.permissions import PermissionBroker
 from greia_platform.storage import ActivityStorageService, StoragePolicy
@@ -43,7 +46,7 @@ def provisional_installed_hal() -> GreiaHAL:
     probing hardware independently.
     """
 
-    x_controller = XSessionHardwareController()
+    x_controller = LegacyXHardwareSessionController()
     return GreiaHAL(
         display=LegacyXDisplayHAL(x_controller),
         input=LegacyXInputHAL(x_controller),
