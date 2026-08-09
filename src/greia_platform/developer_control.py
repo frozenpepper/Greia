@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Mapping, Sequence
 
 from .activities import ActivityRegistry, ActivityValidationError, RuntimeCatalogue
+from .developer_session import DeveloperDisplayEndpoint, DeveloperSessionError
 from .trust import ActivitySource, PackageTrust
 
 
@@ -28,11 +29,10 @@ UPLOAD_ROOT = Path("/var/lib/greia-admin/greia-dev-upload")
 STATE_FILE = STATE_ROOT / "deployments.json"
 STAGING_ROOT = STATE_ROOT / "staging"
 BACKUP_ROOT = STATE_ROOT / "backups"
-DISPLAY_USER = "greiakid"
-DISPLAY_NAME = ":0"
 
 _SERVICE_MAP: Mapping[str, tuple[str, ...]] = {
     "launcher": ("greia-launcher.service",),
+    "installer": ("greia-installer.service",),
     "parent": ("greia-parent.service",),
     "ssh": ("ssh.service",),
     "developer-remote": ("greia-developer-remote.service",),
@@ -44,6 +44,7 @@ _SERVICE_MAP: Mapping[str, tuple[str, ...]] = {
     ),
     "all": (
         "greia-launcher.service",
+        "greia-installer.service",
         "greia-parent.service",
         "greia-developer-remote.service",
         "ssh.service",
@@ -90,6 +91,10 @@ class DeveloperControl:
     def __init__(self) -> None:
         self._require_root()
         self._require_developer_image()
+        try:
+            self.display_endpoint = DeveloperDisplayEndpoint.load()
+        except DeveloperSessionError as exc:
+            raise DeveloperControlError(str(exc)) from exc
         self._ensure_state_dirs()
 
     def status(self) -> dict[str, object]:
@@ -102,6 +107,10 @@ class DeveloperControl:
                 service: _service_state(service)
                 for service in _SERVICE_MAP["all"]
             },
+            "display_endpoint": {
+                "user": self.display_endpoint.user,
+                "display": self.display_endpoint.display,
+            },
             "active_profile": _read_json_optional(
                 Path("/run/greia-os/active-profile.json")
             ),
@@ -112,12 +121,7 @@ class DeveloperControl:
 
     def screenshot(self) -> bytes:
         argv = [
-            "runuser",
-            "--user",
-            DISPLAY_USER,
-            "--",
-            "/usr/bin/env",
-            f"DISPLAY={DISPLAY_NAME}",
+            *self.display_endpoint.runuser_prefix(),
             "PYGAME_HIDE_SUPPORT_PROMPT=1",
             "PYTHONPATH=/opt/greia-os/src",
             "PYTHONNOUSERSITE=1",
@@ -126,7 +130,7 @@ class DeveloperControl:
             "-m",
             "greia_platform.developer_capture",
             "--display",
-            DISPLAY_NAME,
+            self.display_endpoint.display,
         ]
         completed = subprocess.run(argv, check=False, capture_output=True)
         if completed.returncode != 0:
@@ -155,6 +159,9 @@ class DeveloperControl:
 
     def restart_launcher(self) -> None:
         _run_checked(["systemctl", "restart", "greia-launcher.service"])
+
+    def restart_installer(self) -> None:
+        _run_checked(["systemctl", "restart", "greia-installer.service"])
 
     def reboot(self) -> None:
         _run_checked(["systemctl", "reboot"])
@@ -441,6 +448,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     logs.add_argument("--service", choices=sorted(_SERVICE_MAP), default="all")
     logs.add_argument("--lines", type=int, default=300)
     sub.add_parser("restart-launcher")
+    sub.add_parser("restart-installer")
     deploy = sub.add_parser("deploy-activity")
     deploy.add_argument("path", type=Path)
     deploy.add_argument("--replace-system", action="store_true")
@@ -466,6 +474,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             sys.stdout.write(control.logs(args.service, args.lines))
         elif args.command == "restart-launcher":
             control.restart_launcher()
+        elif args.command == "restart-installer":
+            control.restart_installer()
         elif args.command == "deploy-activity":
             record = control.deploy_activity(
                 args.path, replace_system=args.replace_system
