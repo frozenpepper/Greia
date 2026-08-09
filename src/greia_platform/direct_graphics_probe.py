@@ -162,7 +162,15 @@ def _compiled_sdl_video_drivers() -> tuple[str, ...]:
 
 
 def _pygame_metadata() -> dict[str, object]:
-    pygame = importlib.import_module("pygame")
+    previous_prompt_setting = os.environ.get("PYGAME_HIDE_SUPPORT_PROMPT")
+    os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
+    try:
+        pygame = importlib.import_module("pygame")
+    finally:
+        if previous_prompt_setting is None:
+            os.environ.pop("PYGAME_HIDE_SUPPORT_PROMPT", None)
+        else:
+            os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = previous_prompt_setting
     sdl_version = tuple(int(value) for value in pygame.get_sdl_version())
     return {
         "available": True,
