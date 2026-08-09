@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import json
+import os
+import stat
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest import mock
 
 
@@ -14,17 +17,28 @@ TOOLS = PROJECT_ROOT / "tools"
 if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 
+from greia_launcher.main import _activity_sources  # noqa: E402
 from greia_platform import developer_control as devctl  # noqa: E402
 from greia_platform import developer_input as devinput  # noqa: E402
+from greia_platform.activities import ActivityValidationError  # noqa: E402
 from greia_platform.developer_capture import (  # noqa: E402
     DeveloperCaptureError,
     capture_legacy_x11_png,
 )
+from greia_platform.developer_session import (  # noqa: E402
+    DeveloperDisplayEndpoint,
+    DeveloperSessionError,
+)
+from greia_platform.trust import PackageTrust  # noqa: E402
 from greia_remote import GreiaRemote, RemoteError  # noqa: E402
 from provision_developer_image import (  # noqa: E402
     DeveloperImageProvisionError,
     DeveloperImageProvisioner,
     ProvisionConfig,
+)
+from provision_developer_installer import (  # noqa: E402
+    DeveloperInstallerProvisioner,
+    ProvisionConfig as InstallerProvisionConfig,
 )
 from build_profile import BuildProfile  # noqa: E402
 
@@ -37,30 +51,74 @@ class DeveloperRemoteTests(unittest.TestCase):
         dev = BuildProfile.load(PROJECT_ROOT / "build/profiles/modern-amd64-dev.toml")
         normal = BuildProfile.load(PROJECT_ROOT / "build/profiles/modern-amd64.toml")
         self.assertIn("developer-remote", dev.package_set_names("target"))
+        self.assertIn("developer-remote", dev.package_set_names("installer"))
         self.assertNotIn("developer-remote", normal.package_set_names("target"))
+        self.assertNotIn("developer-remote", normal.package_set_names("installer"))
         self.assertEqual(dev.image.hostname, "greia-dev")
         self.assertEqual(dev.identity.certification_state, "experimental")
         packages = dev.resolve_packages(PROJECT_ROOT / "build/package-sets", "target")
         self.assertIn("openssh-server", packages)
+        self.assertIn("python3-pil", packages)
         self.assertIn("xdotool", packages)
+
+    def test_display_endpoint_accepts_installed_and_live_users(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "endpoint.json"
+            for user in ("greiakid", "root"):
+                path.write_text(
+                    json.dumps({"user": user, "display": ":0"}),
+                    encoding="utf-8",
+                )
+                endpoint = DeveloperDisplayEndpoint.load(path)
+                self.assertEqual(endpoint.user, user)
+                self.assertEqual(endpoint.display, ":0")
+                self.assertEqual(
+                    endpoint.runuser_prefix()[:4],
+                    ["runuser", "--user", user, "--"],
+                )
+
+    def test_display_endpoint_rejects_unbounded_values(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "endpoint.json"
+            path.write_text(
+                json.dumps({"user": "root;id", "display": ":0"}),
+                encoding="utf-8",
+            )
+            with self.assertRaises(DeveloperSessionError):
+                DeveloperDisplayEndpoint.load(path)
+            path.write_text(
+                json.dumps({"user": "root", "display": "bad display"}),
+                encoding="utf-8",
+            )
+            with self.assertRaises(DeveloperSessionError):
+                DeveloperDisplayEndpoint.load(path)
 
     def test_capture_rejects_unbounded_display_selector_before_backend_access(self):
         with self.assertRaises(DeveloperCaptureError):
             capture_legacy_x11_png("bad display")
 
-    def test_screenshot_runs_as_display_user_and_requires_png(self):
+    def test_screenshot_runs_as_declared_display_user_and_requires_png(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             marker = root / "developer-remote"
             marker.write_text("enabled\n", encoding="utf-8")
             state = root / "state"
+            endpoint = DeveloperDisplayEndpoint(user="greiakid", display=":0")
             with (
                 mock.patch.object(devctl, "DEVELOPER_MARKER", marker),
                 mock.patch.object(devctl, "STATE_ROOT", state),
+                mock.patch.object(
+                    devctl, "DEVELOPER_ACTIVITY_ROOT", state / "activities"
+                ),
                 mock.patch.object(devctl, "STAGING_ROOT", state / "staging"),
                 mock.patch.object(devctl, "BACKUP_ROOT", state / "backups"),
                 mock.patch.object(devctl, "STATE_FILE", state / "deployments.json"),
                 mock.patch("greia_platform.developer_control.os.geteuid", return_value=0),
+                mock.patch.object(
+                    devctl.DeveloperDisplayEndpoint,
+                    "load",
+                    return_value=endpoint,
+                ),
                 mock.patch(
                     "greia_platform.developer_control.subprocess.run",
                     return_value=subprocess.CompletedProcess([], 0, PNG, b""),
@@ -83,22 +141,84 @@ class DeveloperRemoteTests(unittest.TestCase):
                 with self.assertRaisesRegex(devctl.DeveloperControlError, "not enabled"):
                     devctl.DeveloperControl()
 
+    def test_developer_state_permissions_expose_only_activity_source(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            marker = root / "developer-remote"
+            marker.write_text("enabled\n", encoding="utf-8")
+            state = root / "state"
+            endpoint = DeveloperDisplayEndpoint(user="greiakid", display=":0")
+            with (
+                mock.patch.object(devctl, "DEVELOPER_MARKER", marker),
+                mock.patch.object(devctl, "STATE_ROOT", state),
+                mock.patch.object(
+                    devctl, "DEVELOPER_ACTIVITY_ROOT", state / "activities"
+                ),
+                mock.patch.object(devctl, "STAGING_ROOT", state / "staging"),
+                mock.patch.object(devctl, "BACKUP_ROOT", state / "backups"),
+                mock.patch.object(devctl, "STATE_FILE", state / "deployments.json"),
+                mock.patch("greia_platform.developer_control.os.geteuid", return_value=0),
+                mock.patch.object(
+                    devctl.DeveloperDisplayEndpoint,
+                    "load",
+                    return_value=endpoint,
+                ),
+            ):
+                devctl.DeveloperControl()
+            self.assertEqual(stat.S_IMODE(state.stat().st_mode), 0o755)
+            self.assertEqual(
+                stat.S_IMODE((state / "activities").stat().st_mode), 0o755
+            )
+            self.assertEqual(stat.S_IMODE((state / "staging").stat().st_mode), 0o700)
+            self.assertEqual(stat.S_IMODE((state / "backups").stat().st_mode), 0o700)
+
     def test_activity_id_validation_rejects_path_escape(self):
         devctl._validate_activity_id("maze.one")
         with self.assertRaises(devctl.DeveloperControlError):
             devctl._validate_activity_id("../escape")
+        with self.assertRaises(devctl.DeveloperControlError):
+            devctl._validate_activity_id(".hidden")
 
-    def test_gui_input_runs_only_xdotool_as_display_user(self):
-        with mock.patch(
-            "greia_platform.developer_input.subprocess.run",
-            return_value=subprocess.CompletedProcess([], 0, "", ""),
-        ) as run:
+    def test_launcher_activity_sources_preserve_package_trust(self):
+        paths = SimpleNamespace(
+            activities=Path("/opt/greia-os/activities"),
+            developer_activities=Path("/var/lib/greia-developer/activities"),
+        )
+        sources = _activity_sources(paths)
+        self.assertEqual(len(sources), 2)
+        self.assertEqual(sources[0].trust, PackageTrust.BUILT_IN)
+        self.assertEqual(sources[1].trust, PackageTrust.DEVELOPER_UNSIGNED)
+        self.assertEqual(sources[1].source_id, "greia-developer-remote")
+
+    def test_launcher_rejects_overlapping_developer_and_system_roots(self):
+        paths = SimpleNamespace(
+            activities=Path("/opt/greia-os/activities"),
+            developer_activities=Path("/opt/greia-os/activities/developer"),
+        )
+        with self.assertRaises(ActivityValidationError):
+            _activity_sources(paths)
+
+    def test_gui_input_runs_only_xdotool_as_declared_display_user(self):
+        endpoint = DeveloperDisplayEndpoint(user="greiakid", display=":0")
+        with (
+            mock.patch.object(
+                devinput,
+                "_developer_endpoint",
+                return_value=endpoint,
+            ),
+            mock.patch(
+                "greia_platform.developer_input.subprocess.run",
+                return_value=subprocess.CompletedProcess([], 0, "", ""),
+            ) as run,
+        ):
             devinput.key(["Return", "ctrl+l"])
         argv = run.call_args.args[0]
         self.assertEqual(argv[:4], ["runuser", "--user", "greiakid", "--"])
         self.assertIn("DISPLAY=:0", argv)
         self.assertIn("/usr/bin/xdotool", argv)
-        self.assertEqual(argv[-4:], ["key", "--clearmodifiers", "Return", "ctrl+l"])
+        self.assertEqual(
+            argv[-4:], ["key", "--clearmodifiers", "Return", "ctrl+l"]
+        )
 
     def test_gui_input_rejects_shell_like_key_expression(self):
         with self.assertRaises(devinput.DeveloperInputError):
@@ -136,7 +256,9 @@ class DeveloperRemoteTests(unittest.TestCase):
                 ),
                 encoding="utf-8",
             )
-            with self.assertRaisesRegex(DeveloperImageProvisionError, "non-developer"):
+            with self.assertRaisesRegex(
+                DeveloperImageProvisionError, "non-developer"
+            ):
                 provisioner._validate_profile(root)
 
     def test_provisioner_rejects_persisted_ssh_host_identity(self):
@@ -144,9 +266,47 @@ class DeveloperRemoteTests(unittest.TestCase):
             root = Path(tmp)
             ssh = root / "etc/ssh"
             ssh.mkdir(parents=True)
-            (ssh / "ssh_host_ed25519_key").write_text("private", encoding="utf-8")
-            with self.assertRaisesRegex(DeveloperImageProvisionError, "retained SSH host identity"):
+            (ssh / "ssh_host_ed25519_key").write_text(
+                "private", encoding="utf-8"
+            )
+            with self.assertRaisesRegex(
+                DeveloperImageProvisionError, "retained SSH host identity"
+            ):
                 DeveloperImageProvisioner._assert_no_host_keys(root)
+
+    def test_live_installer_policy_is_remote_but_not_unattended(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "etc").mkdir(parents=True)
+            provisioner = DeveloperInstallerProvisioner(
+                InstallerProvisionConfig(
+                    root=root,
+                    public_key=root / "unused.pub",
+                    report=root / "report.json",
+                )
+            )
+            provisioner._write_developer_policy(root)
+            provisioner._write_network_policy(root)
+            provisioner._write_hostname(root)
+            endpoint = json.loads(
+                (root / "etc/greia-os/developer-display.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            self.assertEqual(endpoint, {"user": "root", "display": ":0"})
+            network = (
+                root / "etc/systemd/network/20-greia-developer-ethernet.network"
+            ).read_text(encoding="utf-8")
+            self.assertIn("DHCP=yes", network)
+            self.assertEqual(
+                (root / "etc/hostname").read_text(encoding="utf-8"),
+                "greia-installer-dev\n",
+            )
+            service = (
+                root / "etc/systemd/system/greia-developer-remote.service"
+            ).read_text(encoding="utf-8")
+            self.assertIn("Before=ssh.service", service)
+            self.assertNotIn("greia-first-boot.service", service)
 
     def test_remote_ssh_uses_key_only_batch_mode_and_private_known_hosts(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -186,7 +346,7 @@ class DeveloperRemoteTests(unittest.TestCase):
                 self.assertEqual(remote.screenshot(output), output.resolve())
             self.assertEqual(output.read_bytes(), PNG)
 
-    def test_remote_gui_methods_stay_inside_devctl(self):
+    def test_remote_gui_and_restart_methods_stay_inside_devctl(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             key = root / "key"
@@ -210,6 +370,10 @@ class DeveloperRemoteTests(unittest.TestCase):
                 call.assert_called_with("click", "1")
                 remote.type_text("hello")
                 call.assert_called_with("type", "hello")
+                remote.restart_launcher()
+                call.assert_called_with("restart-launcher")
+                remote.restart_installer()
+                call.assert_called_with("restart-installer")
 
     def test_remote_rejects_invalid_activity_id_before_ssh(self):
         from greia_remote import _validate_activity_id
@@ -224,7 +388,10 @@ class DeveloperRemoteTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertIn("ConditionPathExists=/etc/greia-os/developer-remote", unit)
         self.assertIn("Before=ssh.service", unit)
-        self.assertIn("ExecStart=/bin/sh /usr/local/lib/greia-os/prepare-developer-remote", unit)
+        self.assertIn(
+            "ExecStart=/bin/sh /usr/local/lib/greia-os/prepare-developer-remote",
+            unit,
+        )
         ssh = (
             PROJECT_ROOT / "build/overlay/etc/ssh/sshd_config.d/20-greia-parent.conf"
         ).read_text(encoding="utf-8")
@@ -238,8 +405,12 @@ class DeveloperRemoteTests(unittest.TestCase):
         self.assertIn("/usr/local/sbin/greia-devctl 0755 root root", tmpfiles)
 
     def test_developer_builder_wraps_canonical_image_builder(self):
-        wrapper = (PROJECT_ROOT / "build/build-developer-image.sh").read_text(encoding="utf-8")
-        self.assertIn('"$SCRIPT_DIR/build-image.sh" "$PROFILE" "$OUTPUT_DIR"', wrapper)
+        wrapper = (PROJECT_ROOT / "build/build-developer-image.sh").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn(
+            '"$SCRIPT_DIR/build-image.sh" "$PROFILE" "$OUTPUT_DIR"', wrapper
+        )
         self.assertIn("tools/provision_developer_image.py", wrapper)
         self.assertNotIn("debootstrap", wrapper)
 
