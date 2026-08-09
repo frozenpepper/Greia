@@ -14,12 +14,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping, Sequence
 
-from r7_qemu_kmsdrm_acceptance import (
-    CommandRunner,
-    MountedRawImage,
-    SAFE_CLEANUP,
-)
-
+from r7_qemu_kmsdrm_acceptance import CommandRunner, MountedRawImage, SAFE_CLEANUP
 
 SCHEMA_VERSION = 1
 
@@ -45,6 +40,19 @@ _DESKTOP_RISK_PACKAGES = frozenset(
         "foot",
         "alacritty",
     }
+)
+_PRIVATE_DEVICES: tuple[tuple[str, str, str, str], ...] = (
+    ("null", "c", "1", "3"),
+    ("zero", "c", "1", "5"),
+    ("full", "c", "1", "7"),
+    ("random", "c", "1", "8"),
+    ("urandom", "c", "1", "9"),
+)
+_BOOT_STATE_PATHS = (
+    "etc/systemd/system",
+    "etc/default/grub",
+    "etc/default/grub.d",
+    "boot/grub",
 )
 
 
@@ -90,10 +98,11 @@ class ProbeConfig:
 
 
 class ChrootRuntimeMounts(AbstractContextManager[None]):
-    """Provide only the virtual filesystems needed for trusted Debian APT/dpkg.
+    """Provide a private minimal /dev plus fresh procfs to trusted Debian APT/dpkg.
 
-    Host /run is deliberately *not* exposed. In particular, package maintainer
-    scripts must not be able to reach the host systemd private control socket.
+    Host /dev, /sys and /run are deliberately not exposed. The private /dev is
+    a short-lived tmpfs containing only pseudo devices required by ordinary
+    noninteractive package scripts.
     """
 
     def __init__(self, root: Path, *, runner: CommandRunner):
@@ -102,18 +111,37 @@ class ChrootRuntimeMounts(AbstractContextManager[None]):
         self._mounted: list[Path] = []
 
     def __enter__(self) -> None:
-        for name in ("dev", "proc", "sys"):
-            (self.root / name).mkdir(parents=True, exist_ok=True)
+        dev = self.root / "dev"
+        proc = self.root / "proc"
+        dev.mkdir(parents=True, exist_ok=True)
+        proc.mkdir(parents=True, exist_ok=True)
         try:
-            self._rbind(Path("/dev"), self.root / "dev")
-            self.runner.run(["mount", "-t", "proc", "proc", str(self.root / "proc")])
-            self._mounted.append(self.root / "proc")
-            self._rbind(Path("/sys"), self.root / "sys")
+            self.runner.run(
+                [
+                    "mount",
+                    "-t",
+                    "tmpfs",
+                    "-o",
+                    "mode=0755,nosuid,noexec,size=64k",
+                    "greia-r7-dev",
+                    str(dev),
+                ]
+            )
+            self._mounted.append(dev)
+            for name, kind, major, minor in _PRIVATE_DEVICES:
+                node = dev / name
+                self.runner.run(["mknod", "-m", "0666", str(node), kind, major, minor])
+            self.runner.run(["mount", "-t", "proc", "proc", str(proc)])
+            self._mounted.append(proc)
+            self.runner.run(["ln", "-s", "/proc/self/fd", str(dev / "fd")])
+            self.runner.run(["ln", "-s", "/proc/self/fd/0", str(dev / "stdin")])
+            self.runner.run(["ln", "-s", "/proc/self/fd/1", str(dev / "stdout")])
+            self.runner.run(["ln", "-s", "/proc/self/fd/2", str(dev / "stderr")])
         except Exception:
             cleanup_error = self._cleanup()
             if cleanup_error is not None:
                 raise CompositorPackageProbeError(
-                    "chroot runtime mount setup failed and cleanup was incomplete"
+                    "private chroot runtime setup failed and cleanup was incomplete"
                 ) from cleanup_error
             raise
         return None
@@ -122,22 +150,17 @@ class ChrootRuntimeMounts(AbstractContextManager[None]):
         cleanup_error = self._cleanup()
         if cleanup_error is not None:
             detail = (
-                "chroot runtime cleanup failed while handling another failure"
+                "private chroot runtime cleanup failed while handling another failure"
                 if exc is not None
-                else "chroot runtime cleanup failed"
+                else "private chroot runtime cleanup failed"
             )
             raise CompositorPackageProbeError(detail) from cleanup_error
         return False
 
-    def _rbind(self, source: Path, target: Path) -> None:
-        self.runner.run(["mount", "--rbind", str(source), str(target)])
-        self._mounted.append(target)
-        self.runner.run(["mount", "--make-rslave", str(target)])
-
     def _cleanup(self) -> Exception | None:
         if not self._mounted:
             return None
-        paths = " ".join(shlex.quote(str(path)) for path in self._mounted)
+        paths = " ".join(shlex.quote(str(path)) for path in reversed(self._mounted))
         command = (
             f"source {shlex.quote(str(SAFE_CLEANUP))}; "
             f"safe_unmount_paths {paths}"
@@ -151,14 +174,7 @@ class ChrootRuntimeMounts(AbstractContextManager[None]):
 
 
 class CompositorPackageProbe:
-    """Measure candidate package closure in a disposable production-image clone.
-
-    This tool does not enable a compositor, change production package sets, or
-    boot the clone. It performs a bounded APT transaction with
-    --no-install-recommends, --no-upgrade, and --no-remove, then reports the
-    exact package/filesystem delta after restoring probe plumbing and cleaning
-    APT/log state to the same policy used by the production image builder.
-    """
+    """Measure compositor/reference package closure in a disposable image clone."""
 
     def __init__(self, config: ProbeConfig, *, runner: CommandRunner | None = None):
         config.validate()
@@ -194,7 +210,13 @@ class CompositorPackageProbe:
                 "upgrades_allowed": False,
                 "removals_allowed": False,
             },
-            "host_run_exposed": False,
+            "chroot_runtime": {
+                "private_minimal_dev": True,
+                "fresh_procfs": True,
+                "host_devices_exposed": False,
+                "host_sysfs_exposed": False,
+                "host_run_exposed": False,
+            },
             "boot_or_service_changes": False,
         }
 
@@ -204,32 +226,51 @@ class CompositorPackageProbe:
         source = self.config.source_image.resolve()
         if not source.is_file() or source.stat().st_size <= 0:
             raise CompositorPackageProbeError(f"source image is missing or empty: {source}")
+
         self.config.output_dir.mkdir(parents=True, exist_ok=True)
-        if self.test_image.exists():
-            raise CompositorPackageProbeError(
-                f"refusing to replace existing test image: {self.test_image}"
-            )
-        if source == self.test_image.resolve():
+        test_image = self.test_image.resolve()
+        if test_image.exists():
+            raise CompositorPackageProbeError(f"refusing to replace existing test image: {test_image}")
+        if source == test_image:
             raise CompositorPackageProbeError("source and test images must differ")
 
         source_sha_before = _sha256_file(source)
-        self._clone_source_image(source)
-        success = False
+        report: dict[str, object] | None = None
+        primary_error: BaseException | None = None
+        clone_created = False
         try:
+            self._clone_source_image(source)
+            clone_created = True
             report = self._measure_clone(source, source_sha_before)
+        except BaseException as exc:
+            primary_error = exc
+        finally:
             source_sha_after = _sha256_file(source)
+            cleanup_error: BaseException | None = None
+            if clone_created and not self.config.keep_test_image:
+                try:
+                    test_image.unlink(missing_ok=True)
+                except BaseException as exc:  # pragma: no cover - filesystem failure
+                    cleanup_error = exc
+
             if source_sha_after != source_sha_before:
                 raise CompositorPackageProbeError(
                     "source image hash changed during disposable package measurement"
-                )
-            report["source_image_sha256_after"] = source_sha_after
-            report["source_image_mutated"] = False
-            _write_json(self.report_path, report)
-            success = True
-            return report
-        finally:
-            if success and not self.config.keep_test_image:
-                self.test_image.unlink(missing_ok=True)
+                ) from primary_error
+            if cleanup_error is not None:
+                raise CompositorPackageProbeError(
+                    "disposable package-probe image cleanup failed"
+                ) from cleanup_error
+
+        if primary_error is not None:
+            raise primary_error
+        if report is None:  # pragma: no cover - defensive invariant
+            raise CompositorPackageProbeError("package probe produced no report")
+
+        report["source_image_sha256_after"] = source_sha_before
+        report["source_image_mutated"] = False
+        _write_json(self.report_path, report)
+        return report
 
     def _measure_clone(self, source: Path, source_sha: str) -> dict[str, object]:
         mountpoint = self.config.output_dir / f"mounted-{self.config.candidate}-probe"
@@ -246,7 +287,7 @@ class CompositorPackageProbe:
             )
             baseline_file_bytes = _du_bytes(root, self.runner)
             baseline_fs_bytes = _filesystem_used_bytes(root, self.runner)
-            systemd_tree_before = _tree_signature(root / "etc/systemd/system")
+            boot_state_before = _boot_state_signature(root)
             resolver_backup = _prepare_clone_for_apt(root)
 
             try:
@@ -263,6 +304,14 @@ class CompositorPackageProbe:
                         capture_output=True,
                     ).stdout
                     current = parse_package_manifest(current_text)
+                    missing_requested = [
+                        package for package in self.candidate_packages if package not in current
+                    ]
+                    if missing_requested:
+                        raise CompositorPackageProbeError(
+                            "candidate transaction completed without requested packages: "
+                            + ", ".join(missing_requested)
+                        )
                     downloaded_bytes = sum(
                         path.stat().st_size
                         for path in (root / "var/cache/apt/archives").glob("*.deb")
@@ -273,11 +322,12 @@ class CompositorPackageProbe:
                 _remove_probe_mutations(root, resolver_backup)
 
             _truncate_measurement_logs(root)
-            systemd_tree_after = _tree_signature(root / "etc/systemd/system")
-            if systemd_tree_after != systemd_tree_before:
+            boot_state_after = _boot_state_signature(root)
+            if boot_state_after != boot_state_before:
                 raise CompositorPackageProbeError(
-                    "candidate transaction changed /etc/systemd/system boot/service state"
+                    "candidate transaction changed protected boot/service state"
                 )
+
             final_file_bytes = _du_bytes(root, self.runner)
             final_fs_bytes = _filesystem_used_bytes(root, self.runner)
             self.apt_log_path.write_text(apt_log, encoding="utf-8")
@@ -315,7 +365,13 @@ class CompositorPackageProbe:
                 "source_image": str(source),
                 "source_image_sha256": source_sha,
                 "test_image": str(self.test_image.resolve()),
-                "host_run_exposed": False,
+                "chroot_runtime": {
+                    "private_minimal_dev": True,
+                    "fresh_procfs": True,
+                    "host_devices_exposed": False,
+                    "host_sysfs_exposed": False,
+                    "host_run_exposed": False,
+                },
                 "boot_or_service_changes": False,
                 "apt_policy": {
                     "install_recommends": False,
@@ -347,6 +403,7 @@ class CompositorPackageProbe:
                 "limitations": [
                     "measures incremental package/filesystem closure relative to the current Xorg production image",
                     "candidate is not enabled or booted",
+                    "fixed Debian APT/dpkg package code is trusted; this chroot is not an arbitrary-code sandbox",
                     "does not measure compositor RSS, latency, scanout, input routing, or crash recovery",
                     "does not authorize adding the candidate to a production Greia package set",
                 ],
@@ -457,6 +514,8 @@ class CompositorPackageProbe:
             "udevadm",
             "du",
             "df",
+            "mknod",
+            "ln",
         )
         missing = [command for command in required if shutil.which(command) is None]
         if missing:
@@ -505,7 +564,7 @@ def compare_package_manifests(
     current_names = set(current)
     added = sorted(current_names - baseline_names)
     removed = sorted(baseline_names - current_names)
-    changed = []
+    changed: list[object] = []
     for name in sorted(baseline_names & current_names):
         before = baseline[name]
         after = current[name]
@@ -545,6 +604,12 @@ def _capture_resolv_conf(root: Path) -> ResolvConfBackup:
 
 
 def _prepare_clone_for_apt(root: Path) -> ResolvConfBackup:
+    policy = root / "usr/sbin/policy-rc.d"
+    if policy.exists() or policy.is_symlink():
+        raise CompositorPackageProbeError(
+            "production image unexpectedly already contains /usr/sbin/policy-rc.d"
+        )
+
     backup = _capture_resolv_conf(root)
     try:
         host_resolv = Path("/etc/resolv.conf")
@@ -560,21 +625,19 @@ def _prepare_clone_for_apt(root: Path) -> ResolvConfBackup:
         resolv.write_bytes(content)
         os.chmod(resolv, 0o644)
 
-        policy = root / "usr/sbin/policy-rc.d"
-        if policy.exists() or policy.is_symlink():
-            raise CompositorPackageProbeError(
-                "production image unexpectedly already contains /usr/sbin/policy-rc.d"
-            )
+        policy.parent.mkdir(parents=True, exist_ok=True)
         policy.write_text("#!/bin/sh\nexit 101\n", encoding="ascii")
         os.chmod(policy, 0o755)
         return backup
     except Exception:
+        policy.unlink(missing_ok=True)
         _restore_resolv_conf(root, backup)
         raise
 
 
 def _remove_probe_mutations(root: Path, backup: ResolvConfBackup) -> None:
-    (root / "usr/sbin/policy-rc.d").unlink(missing_ok=True)
+    policy = root / "usr/sbin/policy-rc.d"
+    policy.unlink(missing_ok=True)
     _restore_resolv_conf(root, backup)
 
 
@@ -611,6 +674,11 @@ def _truncate_measurement_logs(root: Path) -> None:
 def _tree_signature(root: Path) -> tuple[tuple[str, str, str], ...]:
     if not root.exists():
         return ()
+    if root.is_symlink():
+        return (("", "symlink", os.readlink(root)),)
+    if root.is_file():
+        return (("", "file", _sha256_file(root)),)
+
     records: list[tuple[str, str, str]] = []
     for path in sorted(root.rglob("*"), key=lambda item: str(item.relative_to(root))):
         relative = str(path.relative_to(root))
@@ -623,6 +691,13 @@ def _tree_signature(root: Path) -> tuple[tuple[str, str, str], ...]:
         else:
             records.append((relative, "other", ""))
     return tuple(records)
+
+
+def _boot_state_signature(root: Path) -> tuple[tuple[str, tuple[tuple[str, str, str], ...]], ...]:
+    return tuple(
+        (relative, _tree_signature(root / relative))
+        for relative in _BOOT_STATE_PATHS
+    )
 
 
 def _du_bytes(root: Path, runner: CommandRunner) -> int:
