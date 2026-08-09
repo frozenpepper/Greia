@@ -55,6 +55,7 @@ from .theme import LauncherThemeController
 class LauncherPaths:
     root: Path
     activities: Path
+    developer_activities: Path | None
     runtime_catalogue: Path
     asset_catalogue: Path
     theme_defaults: Path
@@ -72,6 +73,9 @@ class LauncherPaths:
         return cls(
             root=root,
             activities=root / "activities",
+            developer_activities=_optional_absolute_path_from_environment(
+                "GREIA_DEVELOPER_ACTIVITY_ROOT"
+            ),
             runtime_catalogue=root / "runtime" / "child-runtime.toml",
             asset_catalogue=root / "assets" / "catalog" / "core_icons_v1.toml",
             theme_defaults=root / "runtime" / "theme-defaults.toml",
@@ -140,16 +144,7 @@ class LauncherApplication:
     def __init__(self, *, windowed: bool = False, allow_exit: bool = False):
         self.paths = LauncherPaths.from_environment()
         self.runtime = RuntimeCatalogue.load(self.paths.runtime_catalogue)
-        self.registry = ActivityRegistry(
-            [
-                ActivitySource(
-                    self.paths.activities,
-                    trust=PackageTrust.BUILT_IN,
-                    source_id="greia-system",
-                )
-            ],
-            self.runtime,
-        )
+        self.registry = ActivityRegistry(_activity_sources(self.paths), self.runtime)
         self.assets = AssetCatalogue.load(self.paths.asset_catalogue)
         self.profile_store = ProfileStore.load(
             self.paths.profile_defaults, self.paths.profiles_dir
@@ -795,6 +790,44 @@ class LauncherApplication:
         if handoff.exists():
             completed = subprocess.run([str(handoff)], check=False, shell=False)
             self._first_frame_released = completed.returncode == 0
+
+
+def _optional_absolute_path_from_environment(name: str) -> Path | None:
+    value = os.environ.get(name)
+    if value is None or not value.strip():
+        return None
+    path = Path(value.strip())
+    if not path.is_absolute():
+        raise ActivityValidationError(f"{name} must be an absolute path")
+    return path.resolve()
+
+
+def _activity_sources(paths: LauncherPaths) -> tuple[ActivitySource, ...]:
+    sources = [
+        ActivitySource(
+            paths.activities,
+            trust=PackageTrust.BUILT_IN,
+            source_id="greia-system",
+        )
+    ]
+    developer = paths.developer_activities
+    if developer is not None:
+        if (
+            developer == paths.activities
+            or developer in paths.activities.parents
+            or paths.activities in developer.parents
+        ):
+            raise ActivityValidationError(
+                "developer Activity root must be separate from the built-in Activity root"
+            )
+        sources.append(
+            ActivitySource(
+                developer,
+                trust=PackageTrust.DEVELOPER_UNSIGNED,
+                source_id="greia-developer-remote",
+            )
+        )
+    return tuple(sources)
 
 
 def _development_hal() -> GreiaHAL:
