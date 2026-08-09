@@ -85,6 +85,9 @@ cleanup() {
   fi
   if (( cleanup_failed != 0 )); then
     echo "Build cleanup was incomplete. Inspect and detach resources manually; no recursive deletion was attempted." >&2
+    if (( original_status == 0 )); then
+      return 1
+    fi
   fi
   return "$original_status"
 }

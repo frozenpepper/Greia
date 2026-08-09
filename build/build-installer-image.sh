@@ -75,6 +75,9 @@ cleanup() {
   fi
   if (( cleanup_failed != 0 )); then
     echo "Installer-image cleanup was incomplete. Inspect resources manually; build data was preserved." >&2
+    if (( original_status == 0 )); then
+      return 1
+    fi
   fi
   return "$original_status"
 }
