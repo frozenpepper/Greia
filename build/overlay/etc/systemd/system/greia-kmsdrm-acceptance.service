@@ -16,7 +16,7 @@ Environment=PYTHONDONTWRITEBYTECODE=1
 Environment=HOME=/var/lib/greia-kid
 Environment=SDL_VIDEODRIVER=kmsdrm
 UnsetEnvironment=DISPLAY WAYLAND_DISPLAY XAUTHORITY
-ExecStartPre=/bin/sh -ec '! pgrep -x xinit >/dev/null 2>&1 && ! pgrep -x Xorg >/dev/null 2>&1 && ! pgrep -x X >/dev/null 2>&1'
+ExecStartPre=/bin/sh -ec 'for f in /proc/[0-9]*/comm; do [ -r "$f" ] || continue; IFS= read -r name < "$f" || continue; case "$name" in xinit|Xorg|X) exit 1 ;; esac; done'
 ExecStart=/usr/bin/python3 -m greia_platform.kmsdrm_acceptance --output /var/lib/greia-kmsdrm-acceptance/result.json --acknowledge-display-takeover
 TimeoutStartSec=20
 TTYPath=/dev/tty1
