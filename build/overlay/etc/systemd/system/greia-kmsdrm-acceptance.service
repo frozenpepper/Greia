@@ -2,7 +2,7 @@
 Description=Greia R7 active KMSDRM acceptance session
 Documentation=file:/opt/greia-os/src/greia_platform/kmsdrm_acceptance.py
 After=local-fs.target systemd-logind.service systemd-user-sessions.service
-Conflicts=greia-launcher.service getty@tty1.service
+Conflicts=getty@tty1.service
 
 [Service]
 Type=oneshot
@@ -16,7 +16,9 @@ Environment=PYTHONDONTWRITEBYTECODE=1
 Environment=HOME=/var/lib/greia-kid
 Environment=SDL_VIDEODRIVER=kmsdrm
 UnsetEnvironment=DISPLAY WAYLAND_DISPLAY XAUTHORITY
+ExecStartPre=/bin/sh -ec '! pgrep -x xinit >/dev/null 2>&1 && ! pgrep -x Xorg >/dev/null 2>&1 && ! pgrep -x X >/dev/null 2>&1'
 ExecStart=/usr/bin/python3 -m greia_platform.kmsdrm_acceptance --output /var/lib/greia-kmsdrm-acceptance/result.json --acknowledge-display-takeover
+TimeoutStartSec=20
 TTYPath=/dev/tty1
 TTYReset=yes
 TTYVHangup=yes
