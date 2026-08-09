@@ -1,0 +1,7 @@
+upstream_package=debian-archive-keyring_2025.1_all.deb
+upstream_url=https://deb.debian.org/debian/pool/main/d/debian-archive-keyring/debian-archive-keyring_2025.1_all.deb
+upstream_package_sha256=9ea7778e443144ca490668737a8ab22dd3e748bb99e805e22ec055abeb3c7fac
+extracted_path=/usr/share/keyrings/debian-archive-keyring.gpg
+extracted_keyring_sha256=506b815cbb32d9b6066b4a2aa524071e071761e7e7f68c3ac74f3061ba852017
+reviewed_utc=2026-08-09
+purpose=Greia debootstrap Release signature trust root

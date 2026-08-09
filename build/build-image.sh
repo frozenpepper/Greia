@@ -8,6 +8,7 @@ source "$SCRIPT_DIR/lib/safe-cleanup.sh"
 
 PROFILE_TOOL="$PROJECT_ROOT/tools/build_profile.py"
 PACKAGE_SET_ROOT="$SCRIPT_DIR/package-sets"
+DEBIAN_ARCHIVE_KEYRING="$PROJECT_ROOT/build/trust/debian-archive-keyring-2025.1.gpg"
 
 usage() {
   cat <<'USAGE'
@@ -130,7 +131,8 @@ mount "$partition" "$ROOTFS"
 MOUNTS+=("$ROOTFS")
 
 echo "Bootstrapping Debian $SUITE $ARCH..."
-debootstrap --arch="$ARCH" --variant=minbase --include=ca-certificates "$SUITE" "$ROOTFS" "$MIRROR"
+[[ -r "$DEBIAN_ARCHIVE_KEYRING" ]] || { echo "Pinned Debian archive keyring is missing: $DEBIAN_ARCHIVE_KEYRING" >&2; exit 1; }
+debootstrap --arch="$ARCH" --variant=minbase --include=ca-certificates --keyring="$DEBIAN_ARCHIVE_KEYRING" --force-check-gpg "$SUITE" "$ROOTFS" "$MIRROR"
 resolved_arch="$(chroot "$ROOTFS" /usr/bin/dpkg --print-architecture)"
 [[ "$resolved_arch" == "$ARCH" ]] || { echo "Bootstrapped architecture $resolved_arch does not match profile $ARCH." >&2; exit 1; }
 

@@ -8,6 +8,7 @@ source "$SCRIPT_DIR/lib/safe-cleanup.sh"
 
 PROFILE_TOOL="$PROJECT_ROOT/tools/build_profile.py"
 PACKAGE_SET_ROOT="$SCRIPT_DIR/package-sets"
+DEBIAN_ARCHIVE_KEYRING="$PROJECT_ROOT/build/trust/debian-archive-keyring-2025.1.gpg"
 
 usage() {
   cat <<'USAGE'
@@ -125,7 +126,8 @@ losetup -d "$TARGET_LOOP"
 TARGET_LOOP=""
 
 # Build the small live installer environment.
-debootstrap --arch="$ARCH" --variant=minbase --include=ca-certificates "$SUITE" "$LIVE_ROOT" "$MIRROR"
+[[ -r "$DEBIAN_ARCHIVE_KEYRING" ]] || { echo "Pinned Debian archive keyring is missing: $DEBIAN_ARCHIVE_KEYRING" >&2; exit 1; }
+debootstrap --arch="$ARCH" --variant=minbase --include=ca-certificates --keyring="$DEBIAN_ARCHIVE_KEYRING" --force-check-gpg "$SUITE" "$LIVE_ROOT" "$MIRROR"
 live_arch="$(chroot "$LIVE_ROOT" /usr/bin/dpkg --print-architecture)"
 [[ "$live_arch" == "$ARCH" ]] || { echo "Live root architecture $live_arch does not match profile $ARCH." >&2; exit 1; }
 # Repository checkout ownership is never live-image filesystem authority.
