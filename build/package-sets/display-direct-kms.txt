@@ -1,0 +1,8 @@
+libdrm2
+libegl1
+libgbm1
+libgl1-mesa-dri
+libgles2
+libinput10
+libpam-systemd
+libudev1
