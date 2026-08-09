@@ -1,0 +1,121 @@
+name: R7 loop flush teardown repair
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/r7-loop-flush-repair.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  verify-and-persist:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Apply diagnostic-backed teardown repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+
+          helper = Path('build/lib/safe-cleanup.sh')
+          text = helper.read_text(encoding='utf-8')
+          old = '''  partx -d "$loop_device" 2>/dev/null || true\n  safe_udev_settle\n  local attempt\n'''
+          new = '''  partx -d "$loop_device" 2>/dev/null || true\n  safe_udev_settle\n  # The real Greia image diagnostic found no mounts, holders, open FDs, or\n  # residual partx map, yet the loop association survived until its block\n  # buffers were flushed. Flush only this known loop before detaching it.\n  blockdev --flushbufs "$loop_device" 2>/dev/null || true\n  safe_udev_settle\n  local attempt\n'''
+          if text.count(old) != 1:
+              raise SystemExit('safe cleanup flush anchor mismatch')
+          helper.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          for path, prefix in (
+              ('build/build-image.sh', 'require_commands=('),
+              ('build/build-installer-image.sh', 'required=('),
+          ):
+              p = Path(path)
+              text = p.read_text(encoding='utf-8')
+              line = next(line for line in text.splitlines() if line.startswith(prefix))
+              words = line.replace('(', ' ').replace(')', ' ').split()
+              if 'blockdev' not in words:
+                  if 'partx' not in words:
+                      raise SystemExit(f'{path}: partx missing before blockdev repair')
+                  new_line = line.replace('partx losetup', 'partx blockdev losetup')
+                  if new_line == line:
+                      raise SystemExit(f'{path}: command-list anchor mismatch')
+                  text = text.replace(line, new_line, 1)
+              p.write_text(text, encoding='utf-8')
+          PY
+
+          cat > tests/test_loop_teardown_evidence.py <<'PYTEST'
+          from __future__ import annotations
+
+          import unittest
+          from pathlib import Path
+
+
+          ROOT = Path(__file__).resolve().parents[1]
+
+
+          class LoopTeardownEvidenceTests(unittest.TestCase):
+              def test_loop_buffer_flush_precedes_detach(self) -> None:
+                  helper = (ROOT / "build/lib/safe-cleanup.sh").read_text(encoding="utf-8")
+                  partx = helper.index('partx -d "$loop_device"')
+                  flush = helper.index('blockdev --flushbufs "$loop_device"')
+                  detach = helper.index('losetup -d "$loop_device"')
+                  self.assertLess(partx, flush)
+                  self.assertLess(flush, detach)
+                  self.assertIn("safe_udev_settle", helper[partx:detach])
+                  self.assertNotIn("losetup -D", helper)
+
+              def test_both_builders_require_blockdev_explicitly(self) -> None:
+                  for relative in ("build/build-image.sh", "build/build-installer-image.sh"):
+                      text = (ROOT / relative).read_text(encoding="utf-8")
+                      command_line = next(
+                          line for line in text.splitlines()
+                          if line.startswith(("require_commands=(", "required=("))
+                      )
+                      words = command_line.replace("(", " ").replace(")", " ").split()
+                      self.assertIn("blockdev", words)
+                      self.assertIn("partx", words)
+                      self.assertIn("losetup", words)
+
+              def test_cleanup_failure_is_not_hidden_as_build_success(self) -> None:
+                  for relative in ("build/build-image.sh", "build/build-installer-image.sh"):
+                      text = (ROOT / relative).read_text(encoding="utf-8")
+                      cleanup = text[text.index("cleanup() {"):text.index("trap cleanup EXIT")]
+                      self.assertIn("if (( original_status == 0 )); then", cleanup)
+                      self.assertIn("return 1", cleanup)
+
+
+          if __name__ == "__main__":
+              unittest.main()
+          PYTEST
+          git diff --check
+
+      - name: Verify exact repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check --quiet Pillow
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_loop_teardown_evidence.py' -v
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_image_runtime_closure.py' -v
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_build_cleanup_contract.py' -v
+          make verify
+
+      - name: Persist repair and remove diagnostics
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm .github/workflows/r7-loop-flush-repair.yml .github/workflows/r7-loop-diagnostic.yml
+          git add build/lib/safe-cleanup.sh build/build-image.sh build/build-installer-image.sh tests/test_loop_teardown_evidence.py
+          git diff --cached --check
+          git config user.name greia-r7
+          git config user.email greia-r7@users.noreply.github.com
+          git commit -m 'build: flush image loop buffers before deterministic detach'
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
