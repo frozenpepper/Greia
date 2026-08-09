@@ -14,9 +14,16 @@ command -v systemctl >/dev/null 2>&1 || {
   echo "systemctl is required." >&2
   exit 69
 }
-command -v pgrep >/dev/null 2>&1 || {
-  echo "pgrep is required to prove the legacy display session stopped." >&2
-  exit 69
+
+legacy_x_alive() {
+  for comm in /proc/[0-9]*/comm; do
+    [ -r "$comm" ] || continue
+    IFS= read -r name < "$comm" || continue
+    case "$name" in
+      xinit|Xorg|X) return 0 ;;
+    esac
+  done
+  return 1
 }
 
 if ! systemctl is-active --quiet "$launcher"; then
@@ -58,9 +65,7 @@ systemctl stop "$launcher"
 
 x_stopped=0
 for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40; do
-  if ! pgrep -x xinit >/dev/null 2>&1 \
-     && ! pgrep -x Xorg >/dev/null 2>&1 \
-     && ! pgrep -x X >/dev/null 2>&1; then
+  if ! legacy_x_alive; then
     x_stopped=1
     break
   fi
