@@ -117,6 +117,20 @@ class GreiaRemote:
     def restart_launcher(self) -> None:
         self.devctl("restart-launcher")
 
+    def key(self, keys: Sequence[str]) -> None:
+        if not keys:
+            raise RemoteError("at least one key expression is required")
+        self.devctl("key", *keys)
+
+    def mousemove(self, x: int, y: int) -> None:
+        self.devctl("mousemove", str(x), str(y))
+
+    def click(self, button: int = 1) -> None:
+        self.devctl("click", str(button))
+
+    def type_text(self, text: str) -> None:
+        self.devctl("type", text)
+
     def deploy_activity(self, path: Path, *, replace_system: bool) -> str:
         source = path.expanduser().resolve(strict=True)
         if not source.is_dir() or not (source / "activity.toml").is_file():
@@ -224,6 +238,17 @@ def build_parser() -> argparse.ArgumentParser:
     )
     logs.add_argument("--lines", type=int, default=300)
     sub.add_parser("restart")
+
+    key_parser = sub.add_parser("key")
+    key_parser.add_argument("keys", nargs="+")
+    move = sub.add_parser("mousemove")
+    move.add_argument("x", type=int)
+    move.add_argument("y", type=int)
+    click = sub.add_parser("click")
+    click.add_argument("button", type=int, nargs="?", default=1)
+    type_parser = sub.add_parser("type")
+    type_parser.add_argument("text")
+
     deploy = sub.add_parser("deploy")
     deploy.add_argument("activity", type=Path)
     deploy.add_argument("--replace-system", action="store_true")
@@ -257,6 +282,14 @@ def main(argv: Sequence[str] | None = None) -> int:
             sys.stdout.write(remote.logs(args.service, args.lines))
         elif args.command == "restart":
             remote.restart_launcher()
+        elif args.command == "key":
+            remote.key(args.keys)
+        elif args.command == "mousemove":
+            remote.mousemove(args.x, args.y)
+        elif args.command == "click":
+            remote.click(args.button)
+        elif args.command == "type":
+            remote.type_text(args.text)
         elif args.command == "deploy":
             sys.stdout.write(
                 remote.deploy_activity(args.activity, replace_system=args.replace_system)
