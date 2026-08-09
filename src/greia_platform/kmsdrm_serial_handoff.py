@@ -16,6 +16,7 @@ from typing import Callable, Mapping, Protocol, Sequence
 SCHEMA_VERSION = 1
 _REQUIRED_VIDEO_DRIVER = "kmsdrm"
 _CRASH_CHILD_EXIT = 23
+_SHELL_FRAME_COUNT = 3
 
 
 class KMSDRMSerialHandoffError(RuntimeError):
@@ -184,14 +185,14 @@ class KMSDRMSerialHandoffRunner:
             _validate_crash_child(crash_child)
 
             shell_after_crash = self._shell_phase(pygame, "shell-after-crash", 2)
-            shell_hashes = {
+            shell_hashes = (
                 shell_initial["frame_sha256"],
                 shell_after_clean["frame_sha256"],
                 shell_after_crash["frame_sha256"],
-            }
-            if len(shell_hashes) < 2:
+            )
+            if len(set(shell_hashes)) != _SHELL_FRAME_COUNT:
                 raise KMSDRMSerialHandoffError(
-                    "serial handoff shell phases did not produce distinct rendered buffers"
+                    "serial handoff shell phases did not produce three distinct rendered buffers"
                 )
 
             result = {
@@ -218,7 +219,7 @@ class KMSDRMSerialHandoffRunner:
                 "pygame_version": str(pygame.version.ver),
                 "sdl_version": [int(value) for value in pygame.get_sdl_version()],
                 "limitations": [
-                    "proves serial SDL/Pygame KMSDRM release and reacquisition between processes",
+                    "proves serial SDL/Pygame KMSDRM release and reacquisition between processes with changing rendered buffers",
                     "does not prove Activity sandbox input, shell UI continuity, or physical scanout",
                     "does not authorize serial DRM ownership as the production Greia session design",
                 ],
@@ -279,16 +280,26 @@ class KMSDRMSerialHandoffRunner:
             raise KMSDRMSerialHandoffError(
                 "serial KMSDRM handoff requires explicit display-takeover acknowledgement"
             )
+        timeout = self.config.child_timeout_seconds
         if (
-            self.config.child_timeout_seconds <= 0
-            or self.config.child_timeout_seconds > 120
+            isinstance(timeout, bool)
+            or not isinstance(timeout, (int, float))
+            or not math.isfinite(float(timeout))
+            or timeout <= 0
+            or timeout > 120
         ):
             raise KMSDRMSerialHandoffError(
-                "child timeout must be greater than 0 and at most 120 seconds"
+                "child timeout must be a finite number greater than 0 and at most 120 seconds"
             )
-        if self.config.clean_child_frames < 1 or self.config.clean_child_frames > 16:
+        frames = self.config.clean_child_frames
+        if (
+            isinstance(frames, bool)
+            or not isinstance(frames, int)
+            or frames < 1
+            or frames > 16
+        ):
             raise KMSDRMSerialHandoffError(
-                "clean child frame count must be between 1 and 16"
+                "clean child frame count must be an integer between 1 and 16"
             )
         _validate_environment(self.environment)
 
@@ -310,32 +321,38 @@ def _run_crash_child(
     _validate_environment(environment)
     pygame = pygame_module or _import_pygame()
     pygame.display.init()
-    surface = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-    driver = pygame.display.get_driver()
-    if driver != _REQUIRED_VIDEO_DRIVER:
-        pygame.display.quit()
-        raise KMSDRMSerialHandoffError(
-            f"crash child SDL selected {driver!r}, expected {_REQUIRED_VIDEO_DRIVER!r}"
+    try:
+        surface = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+        driver = pygame.display.get_driver()
+        if driver != _REQUIRED_VIDEO_DRIVER:
+            raise KMSDRMSerialHandoffError(
+                f"crash child SDL selected {driver!r}, expected {_REQUIRED_VIDEO_DRIVER!r}"
+            )
+        width, height = _surface_size(surface)
+        surface.fill(_frame_color(3))
+        pygame.display.flip()
+        pygame.event.pump()
+        raw = pygame.image.tostring(surface, "RGB")
+        _write_json(
+            marker_path,
+            {
+                "schema_version": SCHEMA_VERSION,
+                "ok": True,
+                "actual_video_driver": driver,
+                "surface": {"width": width, "height": height},
+                "frame_sha256": hashlib.sha256(raw).hexdigest(),
+                "intentional_abrupt_exit": True,
+            },
+            durable=True,
         )
-    width, height = _surface_size(surface)
-    surface.fill(_frame_color(3))
-    pygame.display.flip()
-    pygame.event.pump()
-    raw = pygame.image.tostring(surface, "RGB")
-    _write_json(
-        marker_path,
-        {
-            "schema_version": SCHEMA_VERSION,
-            "ok": True,
-            "actual_video_driver": driver,
-            "surface": {"width": width, "height": height},
-            "frame_sha256": hashlib.sha256(raw).hexdigest(),
-            "intentional_abrupt_exit": True,
-        },
-        durable=True,
-    )
-    # Intentionally do not call pygame.display.quit(). This proves whether the
-    # parent can reacquire KMSDRM after an Activity-like process dies uncleanly.
+    except Exception:
+        try:
+            pygame.display.quit()
+        finally:
+            raise
+
+    # Intentionally do not call pygame.display.quit(). The process exits while
+    # owning SDL/KMSDRM so the parent must recover kernel/display ownership.
     os._exit(_CRASH_CHILD_EXIT)
 
 
@@ -344,13 +361,16 @@ def _validate_environment(environment: Mapping[str, str]) -> None:
         raise KMSDRMSerialHandoffError(
             "SDL_VIDEODRIVER must be explicitly set to kmsdrm"
         )
-    if environment.get("DISPLAY") or environment.get("WAYLAND_DISPLAY"):
+    if any(
+        environment.get(name)
+        for name in ("DISPLAY", "XAUTHORITY", "WAYLAND_DISPLAY")
+    ):
         raise KMSDRMSerialHandoffError(
-            "serial KMSDRM handoff refuses X11/Wayland transport variables"
+            "serial KMSDRM handoff refuses X11/Wayland transport authority"
         )
 
 
-def _validate_clean_child(payload: Mapping[str, object], minimum_frames: int) -> None:
+def _validate_clean_child(payload: Mapping[str, object], expected_frames: int) -> None:
     if payload.get("schema_version") != 1 or payload.get("ok") is not True:
         raise KMSDRMSerialHandoffError("clean child result did not pass")
     if (
@@ -358,16 +378,19 @@ def _validate_clean_child(payload: Mapping[str, object], minimum_frames: int) ->
         or payload.get("actual_video_driver") != _REQUIRED_VIDEO_DRIVER
     ):
         raise KMSDRMSerialHandoffError("clean child did not actively select kmsdrm")
+
     frame_count = payload.get("frame_count")
     hashes = payload.get("frame_sha256")
     if (
         not isinstance(frame_count, int)
         or isinstance(frame_count, bool)
-        or frame_count < minimum_frames
+        or frame_count != expected_frames
         or not isinstance(hashes, list)
         or len(hashes) != frame_count
     ):
         raise KMSDRMSerialHandoffError("clean child rendered-frame evidence is invalid")
+    _validate_frame_hashes(hashes, frame_count, "clean child")
+    _validate_surface_mapping(payload.get("surface"))
 
 
 def _validate_crash_child(payload: Mapping[str, object]) -> None:
@@ -378,14 +401,27 @@ def _validate_crash_child(payload: Mapping[str, object]) -> None:
         or payload.get("intentional_abrupt_exit") is not True
     ):
         raise KMSDRMSerialHandoffError("crash child acquisition evidence is invalid")
-    digest = payload.get("frame_sha256")
-    if (
-        not isinstance(digest, str)
-        or len(digest) != 64
-        or any(character not in "0123456789abcdef" for character in digest)
-    ):
-        raise KMSDRMSerialHandoffError("crash child frame hash is invalid")
+    _validate_frame_hash(payload.get("frame_sha256"), "crash child")
     _validate_surface_mapping(payload.get("surface"))
+
+
+def _validate_frame_hashes(hashes: list[object], frame_count: int, label: str) -> None:
+    for digest in hashes:
+        _validate_frame_hash(digest, label)
+    expected_unique = min(frame_count, 3)
+    if len(set(hashes)) < expected_unique:
+        raise KMSDRMSerialHandoffError(
+            f"{label} rendered-frame hashes did not change as expected"
+        )
+
+
+def _validate_frame_hash(value: object, label: str) -> None:
+    if (
+        not isinstance(value, str)
+        or len(value) != 64
+        or any(character not in "0123456789abcdef" for character in value)
+    ):
+        raise KMSDRMSerialHandoffError(f"{label} frame hash is invalid")
 
 
 def _surface_size(surface) -> tuple[int, int]:
