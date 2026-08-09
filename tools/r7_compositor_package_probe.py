@@ -69,6 +69,13 @@ class PackageRecord:
 
 
 @dataclass(frozen=True, slots=True)
+class ResolvConfBackup:
+    kind: str
+    payload: bytes | str | None
+    mode: int | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class ProbeConfig:
     source_image: Path
     output_dir: Path
@@ -146,7 +153,8 @@ class CompositorPackageProbe:
     This tool does not enable a compositor, change production package sets, or
     boot the clone. It only performs a bounded APT transaction with
     --no-install-recommends, --no-upgrade, and --no-remove, then reports the
-    exact package/filesystem delta after cleaning APT state again.
+    exact package/filesystem delta after restoring probe plumbing and cleaning
+    APT/log state to the same policy used by the production image builder.
     """
 
     def __init__(self, config: ProbeConfig, *, runner: CommandRunner | None = None):
@@ -234,29 +242,32 @@ class CompositorPackageProbe:
             )
             baseline_file_bytes = _du_bytes(root, self.runner)
             baseline_fs_bytes = _filesystem_used_bytes(root, self.runner)
-            _prepare_clone_for_apt(root)
+            resolver_backup = _prepare_clone_for_apt(root)
 
-            with ChrootRuntimeMounts(root, runner=self.runner):
-                apt_log = self._install_candidate(root)
-                current_text = self.runner.run(
-                    [
-                        "chroot",
-                        str(root),
-                        "dpkg-query",
-                        "-W",
-                        "-f=${Package}\\t${Version}\\t${Architecture}\\t${Installed-Size}\\n",
-                    ],
-                    capture_output=True,
-                ).stdout
-                current = parse_package_manifest(current_text)
-                downloaded_bytes = sum(
-                    path.stat().st_size
-                    for path in (root / "var/cache/apt/archives").glob("*.deb")
-                    if path.is_file()
-                )
-                self._clean_apt(root)
+            try:
+                with ChrootRuntimeMounts(root, runner=self.runner):
+                    apt_log = self._install_candidate(root)
+                    current_text = self.runner.run(
+                        [
+                            "chroot",
+                            str(root),
+                            "dpkg-query",
+                            "-W",
+                            "-f=${Package}\\t${Version}\\t${Architecture}\\t${Installed-Size}\\n",
+                        ],
+                        capture_output=True,
+                    ).stdout
+                    current = parse_package_manifest(current_text)
+                    downloaded_bytes = sum(
+                        path.stat().st_size
+                        for path in (root / "var/cache/apt/archives").glob("*.deb")
+                        if path.is_file()
+                    )
+                    self._clean_apt(root)
+            finally:
+                _remove_probe_mutations(root, resolver_backup)
 
-            _remove_probe_mutations(root)
+            _truncate_measurement_logs(root)
             final_file_bytes = _du_bytes(root, self.runner)
             final_fs_bytes = _filesystem_used_bytes(root, self.runner)
             self.apt_log_path.write_text(apt_log, encoding="utf-8")
@@ -271,10 +282,7 @@ class CompositorPackageProbe:
                     "candidate transaction changed baseline package versions despite --no-upgrade"
                 )
 
-            added_records = [
-                current[name]
-                for name in package_delta["added"]
-            ]
+            added_records = [current[name] for name in package_delta["added"]]
             introduced_names = {record.name for record in added_records}
             x_components = sorted(
                 name
@@ -334,9 +342,12 @@ class CompositorPackageProbe:
 
     def _install_candidate(self, root: Path) -> str:
         acquire = (
-            "-o", "Acquire::Retries=3",
-            "-o", "Acquire::http::Timeout=20",
-            "-o", "Acquire::https::Timeout=20",
+            "-o",
+            "Acquire::Retries=3",
+            "-o",
+            "Acquire::http::Timeout=20",
+            "-o",
+            "Acquire::https::Timeout=20",
         )
         update = self.runner.run(
             [
@@ -458,9 +469,7 @@ def parse_package_manifest(text: str) -> dict[str, PackageRecord]:
                 f"invalid package manifest line {line_number}: empty identity field"
             )
         if name in records:
-            raise CompositorPackageProbeError(
-                f"duplicate package in manifest: {name}"
-            )
+            raise CompositorPackageProbeError(f"duplicate package in manifest: {name}")
         try:
             size = int(size_text)
         except ValueError as exc:
@@ -488,10 +497,7 @@ def compare_package_manifests(
     for name in sorted(baseline_names & current_names):
         before = baseline[name]
         after = current[name]
-        if (
-            before.version != after.version
-            or before.architecture != after.architecture
-        ):
+        if before.version != after.version or before.architecture != after.architecture:
             changed.append(
                 {
                     "name": name,
@@ -508,15 +514,37 @@ def compare_package_manifests(
     }
 
 
-def _prepare_clone_for_apt(root: Path) -> None:
+def _capture_resolv_conf(root: Path) -> ResolvConfBackup:
     resolv = root / "etc/resolv.conf"
+    if resolv.is_symlink():
+        return ResolvConfBackup("symlink", os.readlink(resolv))
+    if not resolv.exists():
+        return ResolvConfBackup("missing", None)
+    if not resolv.is_file():
+        raise CompositorPackageProbeError(
+            "production image resolv.conf is neither a file nor a symlink"
+        )
+    data = resolv.read_bytes()
+    if len(data) > 64 * 1024:
+        raise CompositorPackageProbeError(
+            "production image resolv.conf is unexpectedly large"
+        )
+    return ResolvConfBackup("file", data, resolv.stat().st_mode & 0o777)
+
+
+def _prepare_clone_for_apt(root: Path) -> ResolvConfBackup:
+    backup = _capture_resolv_conf(root)
     host_resolv = Path("/etc/resolv.conf")
     try:
         content = host_resolv.read_bytes()
     except OSError as exc:
         raise CompositorPackageProbeError("host resolv.conf is unreadable") from exc
     if not content or len(content) > 64 * 1024:
-        raise CompositorPackageProbeError("host resolv.conf is empty or unexpectedly large")
+        raise CompositorPackageProbeError(
+            "host resolv.conf is empty or unexpectedly large"
+        )
+
+    resolv = root / "etc/resolv.conf"
     if resolv.exists() or resolv.is_symlink():
         resolv.unlink()
     resolv.write_bytes(content)
@@ -524,18 +552,48 @@ def _prepare_clone_for_apt(root: Path) -> None:
 
     policy = root / "usr/sbin/policy-rc.d"
     if policy.exists() or policy.is_symlink():
+        _restore_resolv_conf(root, backup)
         raise CompositorPackageProbeError(
             "production image unexpectedly already contains /usr/sbin/policy-rc.d"
         )
     policy.write_text("#!/bin/sh\nexit 101\n", encoding="ascii")
     os.chmod(policy, 0o755)
+    return backup
 
 
-def _remove_probe_mutations(root: Path) -> None:
+def _remove_probe_mutations(root: Path, backup: ResolvConfBackup) -> None:
     (root / "usr/sbin/policy-rc.d").unlink(missing_ok=True)
-    # resolv.conf is disposable-clone plumbing. Removing it avoids counting the
-    # host resolver contents as compositor package cost; the clone is never booted.
-    (root / "etc/resolv.conf").unlink(missing_ok=True)
+    _restore_resolv_conf(root, backup)
+
+
+def _restore_resolv_conf(root: Path, backup: ResolvConfBackup) -> None:
+    resolv = root / "etc/resolv.conf"
+    if resolv.exists() or resolv.is_symlink():
+        resolv.unlink()
+    if backup.kind == "missing":
+        return
+    if backup.kind == "symlink":
+        if not isinstance(backup.payload, str):
+            raise CompositorPackageProbeError("invalid resolver symlink backup")
+        resolv.symlink_to(backup.payload)
+        return
+    if backup.kind == "file":
+        if not isinstance(backup.payload, bytes) or backup.mode is None:
+            raise CompositorPackageProbeError("invalid resolver file backup")
+        resolv.write_bytes(backup.payload)
+        os.chmod(resolv, backup.mode)
+        return
+    raise CompositorPackageProbeError(f"invalid resolver backup kind: {backup.kind!r}")
+
+
+def _truncate_measurement_logs(root: Path) -> None:
+    log_root = root / "var/log"
+    if not log_root.exists():
+        return
+    for path in log_root.rglob("*"):
+        if path.is_file() and not path.is_symlink():
+            with path.open("wb"):
+                pass
 
 
 def _du_bytes(root: Path, runner: CommandRunner) -> int:
