@@ -14,7 +14,11 @@ from greia_launcher.display_session import (
     DisplayTransportKind,
 )
 from greia_launcher.lifecycle import ActivityExitReason, ActivitySessionState
-from greia_launcher.runtime_adapter import PythonRuntimeAdapter, RuntimeManager
+from greia_launcher.runtime_adapter import (
+    PythonRuntimeAdapter,
+    RuntimeLifecycleBinding,
+    RuntimeManager,
+)
 from greia_launcher.supervisor import ActivitySupervisor
 from greia_platform.activities import ActivityManifest, SkillContribution
 from greia_platform.device_capabilities import DeviceCapabilityService
@@ -106,6 +110,24 @@ class _DisplayBackend:
             raise RuntimeError("restore failed")
 
 
+class _CollidingLifecycleAdapter(PythonRuntimeAdapter):
+    def create_lifecycle_binding(
+        self,
+        session_id: str,
+        host_activity_data: Path,
+        child_activity_data: Path,
+    ) -> RuntimeLifecycleBinding:
+        binding = super().create_lifecycle_binding(
+            session_id,
+            host_activity_data,
+            child_activity_data,
+        )
+        return RuntimeLifecycleBinding(
+            control=binding.control,
+            environment=(*binding.environment, ("HOME", "/forbidden-runtime-home")),
+        )
+
+
 def _manifest(root: Path) -> ActivityManifest:
     root.mkdir(parents=True, exist_ok=True)
     (root / "main.py").write_text("print('ok')\n", encoding="utf-8")
@@ -131,11 +153,12 @@ def _manifest(root: Path) -> ActivityManifest:
     )
 
 
-def _manager(process_factory) -> RuntimeManager:
+def _manager(process_factory, *, adapter: PythonRuntimeAdapter | None = None) -> RuntimeManager:
     capabilities = {"display", "pointer"}
     return RuntimeManager(
         [
-            PythonRuntimeAdapter(
+            adapter
+            or PythonRuntimeAdapter(
                 Path("/usr/bin/python3"),
                 process_factory=process_factory,
             )
@@ -306,6 +329,43 @@ class SupervisorDisplaySessionTests(unittest.TestCase):
 
         self.assertEqual(session.state, ActivitySessionState.FAILED)
         self.assertEqual(session.result.exit_reason, ActivityExitReason.LAUNCH_FAILURE)
+        self.assertTrue(coordinator.snapshot.shell_available)
+        self.assertEqual(
+            backend.calls,
+            [
+                ("prepare", session.session_id),
+                ("restore", session.session_id),
+            ],
+        )
+
+    def test_environment_collision_after_display_prepare_restores_without_launch(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest = _manifest(root / "activity")
+            profile = _ProfileContext(root / "profile")
+            authority = _Authority(manifest.activity_id)
+            backend = _DisplayBackend()
+            coordinator = DisplaySessionCoordinator(backend)
+            launched: list[bool] = []
+
+            def factory(*args, **kwargs):
+                launched.append(True)
+                return _FakeProcess()
+
+            adapter = _CollidingLifecycleAdapter(
+                Path("/usr/bin/python3"),
+                process_factory=factory,
+            )
+            supervisor = ActivitySupervisor(
+                require_sandbox=False,
+                runtime_manager=_manager(factory, adapter=adapter),
+                display_coordinator=coordinator,
+            )
+            session = supervisor.start(manifest, profile, authority)
+
+        self.assertEqual(launched, [])
+        self.assertEqual(session.state, ActivitySessionState.FAILED)
+        self.assertEqual(session.result.exit_reason, ActivityExitReason.PLATFORM_FAILURE)
         self.assertTrue(coordinator.snapshot.shell_available)
         self.assertEqual(
             backend.calls,
