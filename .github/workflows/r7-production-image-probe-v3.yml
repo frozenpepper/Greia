@@ -1,4 +1,4 @@
-name: R7 exact production image and active QEMU KMSDRM evidence
+name: R7 exact production image, active QEMU KMSDRM, and serial handoff evidence
 
 on:
   pull_request:
@@ -8,8 +8,12 @@ on:
       - "build/**"
       - "src/greia_platform/direct_graphics_probe.py"
       - "src/greia_platform/kmsdrm_acceptance.py"
+      - "src/greia_platform/kmsdrm_serial_handoff.py"
       - "tools/r7_qemu_kmsdrm_acceptance.py"
+      - "tools/r7_qemu_kmsdrm_handoff_acceptance.py"
+      - "tests/test_kmsdrm_serial_handoff.py"
       - "tests/test_r7_qemu_kmsdrm_harness.py"
+      - "tests/test_r7_qemu_kmsdrm_handoff_harness.py"
 
 permissions:
   contents: write
@@ -32,7 +36,7 @@ jobs:
           set -euo pipefail
           changed="$(git diff-tree --no-commit-id --name-only -r HEAD)"
           printf '%s\n' "$changed"
-          if printf '%s\n' "$changed" | grep -Eq '^(build/|src/greia_platform/(direct_graphics_probe|kmsdrm_acceptance)\.py$|tools/r7_qemu_kmsdrm_acceptance\.py$|tests/test_r7_qemu_kmsdrm_harness\.py$|\.github/workflows/r7-production-image-probe-v3\.yml$)'; then
+          if printf '%s\n' "$changed" | grep -Eq '^(build/|src/greia_platform/(direct_graphics_probe|kmsdrm_acceptance|kmsdrm_serial_handoff)\.py$|tools/r7_qemu_kmsdrm(_handoff)?_acceptance\.py$|tests/test_(kmsdrm_serial_handoff|r7_qemu_kmsdrm(_handoff)?_harness)\.py$|\.github/workflows/r7-production-image-probe-v3\.yml$)'; then
             echo 'should_run=true' >> "$GITHUB_OUTPUT"
           else
             echo 'should_run=false' >> "$GITHUB_OUTPUT"
@@ -42,7 +46,7 @@ jobs:
     needs: preflight
     if: needs.preflight.outputs.should_run == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 70
+    timeout-minutes: 80
     steps:
       - uses: actions/checkout@v4
         with:
@@ -177,21 +181,21 @@ jobs:
           trap - EXIT INT TERM
           test -z "$(sudo losetup -j "$image" 2>/dev/null || true)"
 
-      - name: Run disposable active QEMU acquisition when KMSDRM is compiled
+      - name: Run active and serial-handoff QEMU evidence when KMSDRM is compiled
         shell: bash
         run: |
           set -euo pipefail
           if test "$(cat /tmp/r7-kmsdrm-compiled)" != 1; then
-            echo 'KMSDRM is not compiled in the exact image; active QEMU test is intentionally skipped.'
+            echo 'KMSDRM is not compiled in the exact image; active and handoff QEMU tests are intentionally skipped.'
             printf 'not-run-kmsdrm-not-compiled\n' > /tmp/r7-qemu-status
             exit 0
           fi
 
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends qemu-system-x86
-          qout="$RUNNER_TEMP/greia-r7-qemu-active"
+          qout="$RUNNER_TEMP/greia-r7-qemu-active-handoff"
           mkdir -p "$qout"
           set +e
-          sudo python3 tools/r7_qemu_kmsdrm_acceptance.py \
+          sudo python3 tools/r7_qemu_kmsdrm_handoff_acceptance.py \
             --image "$RUNNER_TEMP/greia-r7-image/greia-os-modern-amd64.img" \
             --output-dir "$qout" \
             --timeout-seconds 240 \
@@ -202,26 +206,45 @@ jobs:
           cat /tmp/r7-qemu-stdout.log || true
           cat /tmp/r7-qemu-stderr.log >&2 || true
           printf '%s\n' "$qstatus" > /tmp/r7-qemu-exit-status
+
           if test -s "$qout/greia-r7-qemu-kmsdrm-report.json"; then
             cp "$qout/greia-r7-qemu-kmsdrm-report.json" /tmp/r7-qemu-kmsdrm-report.json
             cat /tmp/r7-qemu-kmsdrm-report.json
           fi
+          if test -s "$qout/greia-r7-qemu-kmsdrm-handoff-report.json"; then
+            cp "$qout/greia-r7-qemu-kmsdrm-handoff-report.json" /tmp/r7-qemu-kmsdrm-handoff-report.json
+            cat /tmp/r7-qemu-kmsdrm-handoff-report.json
+          fi
+
           test "$qstatus" -eq 0 || {
-            echo "active QEMU KMSDRM harness failed with status $qstatus" >&2
+            echo "active/serial QEMU KMSDRM harness failed with status $qstatus" >&2
             exit "$qstatus"
           }
           test -s /tmp/r7-qemu-kmsdrm-report.json
+          test -s /tmp/r7-qemu-kmsdrm-handoff-report.json
           python3 - <<'PY'
           import json
           from pathlib import Path
-          report = json.loads(Path('/tmp/r7-qemu-kmsdrm-report.json').read_text())
-          assert report['schema_version'] == 1
-          assert report['ok'] is True
-          assert report['classification'] == 'ACTIVE_QEMU_KMSDRM_PASS'
+
+          active = json.loads(Path('/tmp/r7-qemu-kmsdrm-report.json').read_text())
+          handoff = json.loads(Path('/tmp/r7-qemu-kmsdrm-handoff-report.json').read_text())
           image_sha = Path('/tmp/r7-image-sha256').read_text().split()[0]
-          assert report['source_image_sha256'] == image_sha
+
+          assert active['schema_version'] == 1
+          assert active['ok'] is True
+          assert active['classification'] == 'ACTIVE_QEMU_KMSDRM_PASS'
+          assert active['source_image_sha256'] == image_sha
+
+          assert handoff['schema_version'] == 1
+          assert handoff['ok'] is True
+          assert handoff['classification'] == 'SERIAL_QEMU_KMSDRM_HANDOFF_PASS'
+          assert handoff['source_image_sha256'] == image_sha
+          assert handoff['baseline']['classification'] == 'ACTIVE_QEMU_KMSDRM_PASS'
+          recovery = handoff['handoff']['recovery']
+          assert recovery['clean_child_reacquired'] is True
+          assert recovery['crash_child_reacquired'] is True
           PY
-          printf 'active-qemu-pass\n' > /tmp/r7-qemu-status
+          printf 'active-and-serial-handoff-qemu-pass\n' > /tmp/r7-qemu-status
 
       - name: Reconfirm provider-free source gate
         shell: bash
@@ -242,6 +265,9 @@ jobs:
           if test -s /tmp/r7-qemu-kmsdrm-report.json; then
             cp /tmp/r7-qemu-kmsdrm-report.json docs/reviews/evidence/2026-08-09_R7_QEMU_ACTIVE_KMSDRM_REPORT.json
           fi
+          if test -s /tmp/r7-qemu-kmsdrm-handoff-report.json; then
+            cp /tmp/r7-qemu-kmsdrm-handoff-report.json docs/reviews/evidence/2026-08-09_R7_QEMU_SERIAL_KMSDRM_HANDOFF_REPORT.json
+          fi
 
           python3 - <<'PY'
           import json
@@ -255,8 +281,11 @@ jobs:
           manifest = Path('/tmp/r7-base-system-manifest.txt').read_text()
           footprint = Path('/tmp/r7-footprint.txt').read_text()
           qemu_status = Path('/tmp/r7-qemu-status').read_text().strip()
-          qemu_path = Path('/tmp/r7-qemu-kmsdrm-report.json')
-          qemu = json.loads(qemu_path.read_text()) if qemu_path.exists() else None
+          active_path = Path('/tmp/r7-qemu-kmsdrm-report.json')
+          handoff_path = Path('/tmp/r7-qemu-kmsdrm-handoff-report.json')
+          active_qemu = json.loads(active_path.read_text()) if active_path.exists() else None
+          handoff_qemu = json.loads(handoff_path.read_text()) if handoff_path.exists() else None
+
           facts = {}
           for source in (manifest, footprint):
               for line in source.splitlines():
@@ -266,23 +295,103 @@ jobs:
 
           kms = bool(probe['sdl']['kmsdrm_compiled'])
           if kms:
-              if not qemu or qemu.get('classification') != 'ACTIVE_QEMU_KMSDRM_PASS':
+              if not active_qemu or active_qemu.get('classification') != 'ACTIVE_QEMU_KMSDRM_PASS':
                   raise SystemExit('KMSDRM compiled but active QEMU PASS evidence is missing')
-              classification = 'SDL_KMSDRM_COMPILED_QEMU_ACTIVE_PASS'
+              if not handoff_qemu or handoff_qemu.get('classification') != 'SERIAL_QEMU_KMSDRM_HANDOFF_PASS':
+                  raise SystemExit('KMSDRM compiled but serial handoff QEMU PASS evidence is missing')
+              classification = 'SDL_KMSDRM_COMPILED_QEMU_ACTIVE_AND_SERIAL_HANDOFF_PASS'
           else:
-              if qemu is not None:
+              if active_qemu is not None or handoff_qemu is not None:
                   raise SystemExit('QEMU evidence exists even though installed SDL lacks kmsdrm')
               classification = 'SDL_KMSDRM_NOT_COMPILED_PACKAGING_WORK_REQUIRED'
 
           drivers = ', '.join(probe['sdl']['video_drivers'])
-          body = f'''# R7 exact production image and QEMU KMSDRM evidence\n\n**Date:** 2026-08-09  \n**Source commit:** `{source_sha}`  \n**Image profile:** `{profile['profile']['profile_id']}`  \n**Image SHA-256:** `{image_sha}`  \n**Classification:** `{classification}`\n\nThe exact production `modern-amd64` image completed through `build/build-image.sh`, including its fail-closed cleanup contract, with no surviving loop association. The finished raw image was then mounted read-only and its installed passive graphics probe executed inside that filesystem.\n\n## Installed SDL/Pygame result\n\n- SDL compiled video drivers: `{drivers}`\n- `kmsdrm_compiled`: **{str(kms).lower()}**\n- Pygame metadata: `{probe['pygame']}`\n- graphics libraries visible in the offline image: `{probe['libraries']}`\n- active KMSDRM test required by the passive probe: **true**\n\nThe offline probe does not bind host DRM/sysfs and therefore does not itself claim display ownership.\n\n## Image facts\n\n- suite: `{facts.get('suite', 'unknown')}`\n- architecture: `{facts.get('architecture', 'unknown')}`\n- Debian version: `{facts.get('debian_version', 'unknown')}`\n- accounted filesystem use: `{facts.get('accounted_mib', 'unknown')} MiB`\n- preferred limit: `{facts.get('preferred_limit_mib', 'unknown')} MiB`\n- required limit: `{facts.get('required_limit_mib', 'unknown')} MiB`\n\n## Relevant packages\n\n```text\n{packages}\n```\n\n## Active QEMU gate\n\n- harness status: `{qemu_status}`\n'''
-          if qemu:
-              active = qemu['active']
-              passive = qemu['passive']
-              body += f'''- QEMU version: `{qemu['qemu_version']}`\n- guest DRM cards: `{passive['drm']['card_nodes']}`\n- guest connectors: `{passive['drm']['connectors']}`\n- requested SDL driver: `{active['requested_video_driver']}`\n- actual SDL driver: `{active['actual_video_driver']}`\n- surface: `{active['surface']}`\n- rendered frames: `{active['frame_count']}`\n\nThe QEMU test used a disposable clone, `virtio-vga`, `-display none`, no guest network, no X launcher, `tty1`, and the existing Greia PAM/VT KMSDRM acceptance service. A PASS therefore proves active SDL/Pygame KMSDRM acquisition and rendering against a virtual DRM device.\n\nIt still does **not** authorize production session migration. Legacy Intel/Acer and Raspberry Pi physical DRM/KMS, input ownership, suspend/resume, crash recovery, and no-shell/no-desktop appliance behavior remain physical acceptance gates.\n'''
+          lines = [
+              '# R7 exact production image, active KMSDRM, and serial handoff evidence',
+              '',
+              '**Date:** 2026-08-09  ',
+              f'**Source commit:** `{source_sha}`  ',
+              f'**Image profile:** `{profile["profile"]["profile_id"]}`  ',
+              f'**Image SHA-256:** `{image_sha}`  ',
+              f'**Classification:** `{classification}`',
+              '',
+              'The exact production `modern-amd64` image completed through `build/build-image.sh`, including its fail-closed cleanup contract, with no surviving loop association. The finished raw image was then mounted read-only and its installed passive graphics probe executed inside that filesystem.',
+              '',
+              '## Installed SDL/Pygame result',
+              '',
+              f'- SDL compiled video drivers: `{drivers}`',
+              f'- `kmsdrm_compiled`: **{str(kms).lower()}**',
+              f'- Pygame metadata: `{probe["pygame"]}`',
+              f'- graphics libraries visible in the offline image: `{probe["libraries"]}`',
+              '- active KMSDRM test required by the passive probe: **true**',
+              '',
+              'The offline probe does not bind host DRM/sysfs and therefore does not itself claim display ownership.',
+              '',
+              '## Image facts',
+              '',
+              f'- suite: `{facts.get("suite", "unknown")}`',
+              f'- architecture: `{facts.get("architecture", "unknown")}`',
+              f'- Debian version: `{facts.get("debian_version", "unknown")}`',
+              f'- accounted filesystem use: `{facts.get("accounted_mib", "unknown")} MiB`',
+              f'- preferred limit: `{facts.get("preferred_limit_mib", "unknown")} MiB`',
+              f'- required limit: `{facts.get("required_limit_mib", "unknown")} MiB`',
+              '',
+              '## Relevant packages',
+              '',
+              '```text',
+              packages,
+              '```',
+              '',
+              '## Active QEMU gate',
+              '',
+              f'- harness status: `{qemu_status}`',
+          ]
+
+          if active_qemu and handoff_qemu:
+              active = active_qemu['active']
+              passive = active_qemu['passive']
+              handoff = handoff_qemu['handoff']
+              lines.extend(
+                  [
+                      f'- QEMU version: `{active_qemu["qemu_version"]}`',
+                      f'- guest DRM cards: `{passive["drm"]["card_nodes"]}`',
+                      f'- guest connectors: `{passive["drm"]["connectors"]}`',
+                      f'- requested SDL driver: `{active["requested_video_driver"]}`',
+                      f'- actual SDL driver: `{active["actual_video_driver"]}`',
+                      f'- surface: `{active["surface"]}`',
+                      f'- rendered frames: `{active["frame_count"]}`',
+                      '',
+                      'The first disposable-guest boot proves active SDL/Pygame KMSDRM acquisition and rendering against the QEMU `virtio-vga` DRM device with no X launcher, no guest network, and the Greia PAM/VT session.',
+                      '',
+                      '## Serial shell/Activity ownership candidate gate',
+                      '',
+                      f'- initial shell driver: `{handoff["shell_initial"]["actual_video_driver"]}`',
+                      f'- shell after clean child driver: `{handoff["shell_after_clean"]["actual_video_driver"]}`',
+                      f'- clean child duration: `{handoff["clean_child"]["duration_seconds"]}` seconds',
+                      f'- shell after crashed child driver: `{handoff["shell_after_crash"]["actual_video_driver"]}`',
+                      f'- crashed child duration: `{handoff["crash_child"]["duration_seconds"]}` seconds',
+                      f'- shell reacquired after clean child: `{handoff["recovery"]["clean_child_reacquired"]}`',
+                      f'- shell reacquired after abrupt child death: `{handoff["recovery"]["crash_child_reacquired"]}`',
+                      '',
+                      'The second boot uses the same already-disposable clone and measures the serial-ownership candidate: shell acquires KMSDRM, releases it, a separate child acquires and exits cleanly, shell reacquires, another child acquires and dies via an intentional abrupt process exit without SDL cleanup, and shell reacquires again.',
+                      '',
+                      'This is **mechanical ownership-recovery evidence only**. It does not authorize giving arbitrary Activities DRM/input devices and it does not select serial handoff over a tiny Greia-owned compositor/session broker. The R7 security and measurement comparison remains open.',
+                      '',
+                      'Production boot therefore remains on Xorg. Legacy Intel/Acer physical scanout/input/suspend/crash evidence is still mandatory before any migration, and Pi physical evidence remains an R8/R14 gate.',
+                  ]
+              )
           else:
-              body += '\nThe installed image does not enumerate `kmsdrm`, so the active QEMU acquisition was intentionally not attempted. SDL/package work is required before session migration.\n'
-          Path('docs/reviews/2026-08-09_R7_PRODUCTION_IMAGE_SDL_EVIDENCE.md').write_text(body, encoding='utf-8')
+              lines.extend(
+                  [
+                      '',
+                      'The installed image does not enumerate `kmsdrm`, so the active and serial-handoff QEMU acquisitions were intentionally not attempted. SDL/package work is required before session migration.',
+                  ]
+              )
+
+          Path('docs/reviews/2026-08-09_R7_PRODUCTION_IMAGE_SDL_EVIDENCE.md').write_text(
+              '\n'.join(lines) + '\n',
+              encoding='utf-8',
+          )
           PY
           git diff --check
 
@@ -295,5 +404,5 @@ jobs:
           git diff --cached --check
           git config user.name greia-r7
           git config user.email greia-r7@users.noreply.github.com
-          git commit -m 'r7: record exact image and active QEMU KMSDRM evidence'
+          git commit -m 'r7: record exact image active KMSDRM and serial handoff evidence'
           git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
