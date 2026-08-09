@@ -1,0 +1,108 @@
+name: R7 direct-graphics source verification
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/r7-source-verify.yml"
+      - "src/greia_platform/hal.py"
+      - "src/greia_platform/hal_legacy_x.py"
+      - "src/greia_platform/hardware_session.py"
+      - "src/greia_platform/direct_graphics_probe.py"
+      - "src/greia_platform/kmsdrm_acceptance.py"
+      - "src/greia_launcher/**"
+      - "build/overlay/etc/systemd/system/greia-launcher.service"
+      - "build/overlay/etc/systemd/system/greia-kmsdrm-acceptance.service"
+      - "build/overlay/usr/local/sbin/greia-run-kmsdrm-acceptance"
+      - "build/overlay/usr/local/sbin/greia-collect-runtime-audit"
+      - "build/overlay/usr/lib/tmpfiles.d/greia-r7-maintenance.conf"
+      - "build/profiles/**"
+      - "build/package-sets/**"
+      - "tests/test_hal_legacy_x.py"
+      - "tests/test_direct_graphics_probe.py"
+      - "tests/test_kmsdrm_acceptance.py"
+      - "tests/test_kmsdrm_maintenance.py"
+      - "tests/test_r7_runtime_audit.py"
+      - "tests/test_system_overlay_contract.py"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Install verification dependency
+        run: python3 -m pip install --disable-pip-version-check --quiet Pillow
+
+      - name: Compile and focused R7 tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m compileall -q src tests tools activities
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_hal_legacy_x.py' -v
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_hardware_session.py' -v
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_direct_graphics_probe.py' -v
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_kmsdrm_acceptance.py' -v
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_kmsdrm_maintenance.py' -v
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_r7_runtime_audit.py' -v
+
+      - name: R7 architecture and maintenance invariants
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Semantic HAL stays X-free; X is an explicit compatibility backend.
+          ! grep -F 'XSessionHardwareController' src/greia_platform/hal.py
+          ! grep -F 'DISPLAY' src/greia_platform/hal.py
+          grep -F 'class LegacyXDisplayHAL:' src/greia_platform/hal_legacy_x.py
+          grep -F 'class HardwareSessionController(Protocol):' src/greia_platform/hardware_session.py
+
+          # Passive evidence never acquires the display or claims active success.
+          grep -F '"active_kmsdrm_test_required": True' src/greia_platform/direct_graphics_probe.py
+          ! grep -F 'pygame.display.set_mode' src/greia_platform/direct_graphics_probe.py
+          grep -F 'direct-graphics-probe.json' build/overlay/usr/local/sbin/greia-collect-runtime-audit
+          ! grep -F 'systemctl start greia-kmsdrm-acceptance.service' build/overlay/usr/local/sbin/greia-collect-runtime-audit
+
+          # Active acceptance is explicit, bounded, and refuses X/Wayland fallback.
+          grep -F 'acknowledge_display_takeover' src/greia_platform/kmsdrm_acceptance.py
+          grep -F 'SDL_VIDEODRIVER must be explicitly set to kmsdrm' src/greia_platform/kmsdrm_acceptance.py
+          grep -F 'active KMSDRM acceptance refuses X11/Wayland transport variables' src/greia_platform/kmsdrm_acceptance.py
+          grep -F 'actual_video_driver' src/greia_platform/kmsdrm_acceptance.py
+
+          # Maintenance service is a manual greiakid PAM/VT session; direct start
+          # cannot stop the normal launcher and no boot target enables it.
+          grep -F 'Type=oneshot' build/overlay/etc/systemd/system/greia-kmsdrm-acceptance.service
+          grep -F 'User=greiakid' build/overlay/etc/systemd/system/greia-kmsdrm-acceptance.service
+          grep -F 'PAMName=login' build/overlay/etc/systemd/system/greia-kmsdrm-acceptance.service
+          grep -F 'TTYPath=/dev/tty1' build/overlay/etc/systemd/system/greia-kmsdrm-acceptance.service
+          grep -F 'Environment=SDL_VIDEODRIVER=kmsdrm' build/overlay/etc/systemd/system/greia-kmsdrm-acceptance.service
+          grep -F 'TimeoutStartSec=20' build/overlay/etc/systemd/system/greia-kmsdrm-acceptance.service
+          ! grep -F 'Conflicts=greia-launcher.service' build/overlay/etc/systemd/system/greia-kmsdrm-acceptance.service
+          ! grep -F '[Install]' build/overlay/etc/systemd/system/greia-kmsdrm-acceptance.service
+
+          # Root controller establishes restore trap before stopping Greia, uses no
+          # extra procps dependency, and boot tmpfiles restricts it to root/group.
+          grep -F 'trap restore_launcher EXIT' build/overlay/usr/local/sbin/greia-run-kmsdrm-acceptance
+          grep -F 'systemctl stop "$launcher"' build/overlay/usr/local/sbin/greia-run-kmsdrm-acceptance
+          grep -F 'systemctl start "$launcher"' build/overlay/usr/local/sbin/greia-run-kmsdrm-acceptance
+          grep -F '/proc/[0-9]*/comm' build/overlay/usr/local/sbin/greia-run-kmsdrm-acceptance
+          ! grep -F 'pgrep' build/overlay/usr/local/sbin/greia-run-kmsdrm-acceptance
+          grep -F '0750 root root' build/overlay/usr/lib/tmpfiles.d/greia-r7-maintenance.conf
+
+          # Normal boot remains the known X compatibility path until active evidence.
+          grep -F '/usr/bin/xinit' build/overlay/etc/systemd/system/greia-launcher.service
+          test ! -e build/profiles/r7-qemu-amd64-direct-kms.toml
+          test ! -e build/package-sets/display-direct-kms.txt
+
+      - name: Shell syntax
+        run: sh -n build/overlay/usr/local/sbin/greia-run-kmsdrm-acceptance
+
+      - name: Full provider-free gate
+        run: make verify
