@@ -1,4 +1,4 @@
-name: R7 exact production image SDL evidence
+name: R7 exact production image and active QEMU KMSDRM evidence
 
 on:
   pull_request:
@@ -6,6 +6,10 @@ on:
     paths:
       - ".github/workflows/r7-production-image-probe-v3.yml"
       - "build/**"
+      - "src/greia_platform/direct_graphics_probe.py"
+      - "src/greia_platform/kmsdrm_acceptance.py"
+      - "tools/r7_qemu_kmsdrm_acceptance.py"
+      - "tests/test_r7_qemu_kmsdrm_harness.py"
 
 permissions:
   contents: write
@@ -22,13 +26,13 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 2
       - id: edge
-        name: Run expensive probe only for latest build/probe change
+        name: Run expensive probe only for a relevant latest change
         shell: bash
         run: |
           set -euo pipefail
           changed="$(git diff-tree --no-commit-id --name-only -r HEAD)"
           printf '%s\n' "$changed"
-          if printf '%s\n' "$changed" | grep -Eq '^(build/|\.github/workflows/r7-production-image-probe-v3\.yml$)'; then
+          if printf '%s\n' "$changed" | grep -Eq '^(build/|src/greia_platform/(direct_graphics_probe|kmsdrm_acceptance)\.py$|tools/r7_qemu_kmsdrm_acceptance\.py$|tests/test_r7_qemu_kmsdrm_harness\.py$|\.github/workflows/r7-production-image-probe-v3\.yml$)'; then
             echo 'should_run=true' >> "$GITHUB_OUTPUT"
           else
             echo 'should_run=false' >> "$GITHUB_OUTPUT"
@@ -38,7 +42,7 @@ jobs:
     needs: preflight
     if: needs.preflight.outputs.should_run == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 55
+    timeout-minutes: 70
     steps:
       - uses: actions/checkout@v4
         with:
@@ -61,7 +65,6 @@ jobs:
             debootstrap parted e2fsprogs grub-pc-bin grub-common rsync gpgv udev util-linux
 
       - name: Build production modern-amd64 image
-        id: build
         shell: bash
         run: |
           set -uo pipefail
@@ -76,83 +79,54 @@ jobs:
           if test -s "$image"; then
             sha256sum "$image" | tee /tmp/r7-image-sha256
           fi
-          if test "$status" -eq 0; then
-            test -s "$image"
-            test -s "$out/greia-os-modern-amd64-footprint.txt"
-            test -s "$out/greia-os-modern-amd64-image-profile.json"
-            cp "$out/greia-os-modern-amd64-footprint.txt" /tmp/r7-footprint.txt
-            cp "$out/greia-os-modern-amd64-image-profile.json" /tmp/r7-image-profile.json
-          fi
           exit 0
 
-      - name: Verify cleanup or capture exact leaked-loop state
+      - name: Require builder success and zero surviving resources
         shell: bash
         run: |
           set -euo pipefail
           out="$RUNNER_TEMP/greia-r7-image"
           image="$out/greia-os-modern-amd64.img"
-          build_status="$(cat /tmp/r7-build-status)"
-          leaked="$(sudo losetup -j "$image" 2>/dev/null || true)"
+          status="$(cat /tmp/r7-build-status)"
+          leaked=""
+          if test -e "$image"; then
+            leaked="$(sudo losetup -j "$image" 2>/dev/null || true)"
+          fi
 
           if test -n "$leaked"; then
-            echo '=== R7 LEAKED LOOP DIAGNOSTIC: BEFORE RECOVERY ==='
+            echo '=== R7 unexpected post-builder loop association ==='
             printf '%s\n' "$leaked"
             sudo losetup --list --json --output NAME,BACK-FILE,AUTOCLEAR,PARTSCAN,RO,OFFSET,SIZELIMIT || true
             sudo lsblk -a -o NAME,KNAME,MAJ:MIN,TYPE,PKNAME,MOUNTPOINTS || true
             sudo findmnt -rn -R --target "$RUNNER_TEMP" || true
-
             while IFS= read -r loop; do
               test -n "$loop" || continue
               name="${loop#/dev/}"
               echo "=== exact loop: $loop ==="
               sudo losetup --list --noheadings --output NAME,BACK-FILE,AUTOCLEAR,PARTSCAN,RO,OFFSET,SIZELIMIT "$loop" || true
-              sudo partx --show "$loop" || true
-              for attr in autoclear backing_file dio offset sizelimit; do
-                if test -r "/sys/block/$name/loop/$attr"; then
-                  printf 'sysfs.%s=' "$attr"
-                  sudo cat "/sys/block/$name/loop/$attr" || true
-                fi
-              done
-              echo 'holders:'
-              sudo find "/sys/block/$name/holders" -maxdepth 1 -mindepth 1 -printf '%f\n' 2>/dev/null || true
-              echo 'partition nodes:'
-              sudo find "/sys/block/$name" -maxdepth 1 -mindepth 1 -name "${name}p*" -printf '%f\n' 2>/dev/null || true
-              echo 'process fds referencing loop:'
-              sudo bash -c '
-                shopt -s nullglob
-                for fd in /proc/[0-9]*/fd/*; do
-                  target=$(readlink "$fd" 2>/dev/null || true)
-                  case "$target" in
-                    /dev/'"$name"'|/dev/'"$name"'p*) printf "%s -> %s\n" "$fd" "$target" ;;
-                  esac
-                done
-              ' || true
-
-              # Recovery experiment: target only this image loop. Re-flush on
-              # every attempt and wait on BACKING-FILE disassociation, which is
-              # the actual lifecycle condition we care about after lazy detach.
-              sudo partx -d "$loop" 2>/dev/null || true
-              for attempt in $(seq 1 80); do
-                sudo blockdev --flushbufs "$loop" 2>/dev/null || true
-                sudo losetup -d "$loop" 2>/dev/null || true
-                sudo udevadm settle --timeout=2 >/dev/null 2>&1 || true
-                if test -z "$(sudo losetup -j "$image" 2>/dev/null || true)"; then
-                  echo "R7_DIAGNOSTIC_DETACHED_AFTER_ATTEMPT=$attempt"
-                  break
-                fi
-                sleep 0.25
-              done
+              sudo find "/sys/class/block/$name/holders" -maxdepth 1 -mindepth 1 -printf 'holder=%f\n' 2>/dev/null || true
+              sudo find "/sys/class/block/$name" -maxdepth 1 -mindepth 1 -name "${name}p*" -printf 'child=%f\n' 2>/dev/null || true
+              sudo bash -c "source '$PWD/build/lib/safe-cleanup.sh'; safe_detach_loop '$loop'" || true
             done < <(printf '%s\n' "$leaked" | cut -d: -f1)
-
-            echo '=== R7 LEAKED LOOP DIAGNOSTIC: AFTER RECOVERY ==='
-            sudo losetup -j "$image" || true
           fi
 
-          remaining="$(sudo losetup -j "$image" 2>/dev/null || true)"
-          test -z "$remaining" || { echo "diagnostic could not detach exact image loop: $remaining" >&2; exit 1; }
-          test "$build_status" -eq 0 || { echo "production builder exited $build_status; diagnostic cleanup succeeded but build remains failed" >&2; exit "$build_status"; }
+          test "$status" -eq 0 || {
+            echo "production builder exited $status" >&2
+            exit "$status"
+          }
+          test -s "$image"
+          test -s "$out/greia-os-modern-amd64-footprint.txt"
+          test -s "$out/greia-os-modern-amd64-image-profile.json"
+          test -z "$leaked" || {
+            echo 'builder returned success with a surviving loop association' >&2
+            exit 1
+          }
+          test -z "$(sudo losetup -j "$image" 2>/dev/null || true)"
+          cp "$out/greia-os-modern-amd64-footprint.txt" /tmp/r7-footprint.txt
+          cp "$out/greia-os-modern-amd64-image-profile.json" /tmp/r7-image-profile.json
+          sha256sum "$image" | tee /tmp/r7-image-sha256
 
-      - name: Inspect installed SDL in finished image
+      - name: Inspect installed SDL in the exact finished image
         shell: bash
         run: |
           set -euo pipefail
@@ -163,17 +137,10 @@ jobs:
           cleanup_probe() {
             set +e
             mountpoint -q "$root" && sudo umount "$root"
-            sudo partx -d "$loop" >/dev/null 2>&1 || true
-            for _ in $(seq 1 40); do
-              sudo blockdev --flushbufs "$loop" >/dev/null 2>&1 || true
-              sudo losetup -d "$loop" >/dev/null 2>&1 || true
-              sudo udevadm settle --timeout=2 >/dev/null 2>&1 || true
-              test -z "$(sudo losetup -j "$image" 2>/dev/null || true)" && break
-              sleep 0.25
-            done
+            sudo bash -c "source '$PWD/build/lib/safe-cleanup.sh'; safe_detach_loop '$loop'" || true
           }
           trap cleanup_probe EXIT INT TERM
-          for _ in $(seq 1 20); do test -b "${loop}p1" && break; sleep 0.2; done
+          for _ in $(seq 1 30); do test -b "${loop}p1" && break; sleep 0.1; done
           test -b "${loop}p1"
           sudo mount -o ro,noload "${loop}p1" "$root"
           test "$(stat -c '%u:%g' "$root")" = '0:0'
@@ -193,6 +160,10 @@ jobs:
           assert p['schema_version'] == 1
           assert p['passive'] is True
           assert p['assessment']['active_kmsdrm_test_required'] is True
+          Path('/tmp/r7-kmsdrm-compiled').write_text(
+              '1\n' if p['sdl']['kmsdrm_compiled'] else '0\n',
+              encoding='utf-8',
+          )
           print('SDL_COMPILED_VIDEO_DRIVERS=' + ','.join(p['sdl']['video_drivers']))
           print('KMSDRM_COMPILED=' + str(p['sdl']['kmsdrm_compiled']).lower())
           PY
@@ -206,6 +177,59 @@ jobs:
           trap - EXIT INT TERM
           test -z "$(sudo losetup -j "$image" 2>/dev/null || true)"
 
+      - name: Run disposable active QEMU acquisition when KMSDRM is compiled
+        shell: bash
+        run: |
+          set -euo pipefail
+          if test "$(cat /tmp/r7-kmsdrm-compiled)" != 1; then
+            echo 'KMSDRM is not compiled in the exact image; active QEMU test is intentionally skipped.'
+            printf 'not-run-kmsdrm-not-compiled\n' > /tmp/r7-qemu-status
+            exit 0
+          fi
+
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends qemu-system-x86
+          qout="$RUNNER_TEMP/greia-r7-qemu-active"
+          mkdir -p "$qout"
+          set +e
+          sudo python3 tools/r7_qemu_kmsdrm_acceptance.py \
+            --image "$RUNNER_TEMP/greia-r7-image/greia-os-modern-amd64.img" \
+            --output-dir "$qout" \
+            --timeout-seconds 240 \
+            > /tmp/r7-qemu-stdout.log 2> /tmp/r7-qemu-stderr.log
+          qstatus=$?
+          set -e
+          sudo chown -R "$(id -u):$(id -g)" "$qout" 2>/dev/null || true
+          cat /tmp/r7-qemu-stdout.log || true
+          cat /tmp/r7-qemu-stderr.log >&2 || true
+          printf '%s\n' "$qstatus" > /tmp/r7-qemu-exit-status
+          if test -s "$qout/greia-r7-qemu-kmsdrm-report.json"; then
+            cp "$qout/greia-r7-qemu-kmsdrm-report.json" /tmp/r7-qemu-kmsdrm-report.json
+            cat /tmp/r7-qemu-kmsdrm-report.json
+          fi
+          test "$qstatus" -eq 0 || {
+            echo "active QEMU KMSDRM harness failed with status $qstatus" >&2
+            exit "$qstatus"
+          }
+          test -s /tmp/r7-qemu-kmsdrm-report.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path('/tmp/r7-qemu-kmsdrm-report.json').read_text())
+          assert report['schema_version'] == 1
+          assert report['ok'] is True
+          assert report['classification'] == 'ACTIVE_QEMU_KMSDRM_PASS'
+          image_sha = Path('/tmp/r7-image-sha256').read_text().split()[0]
+          assert report['source_image_sha256'] == image_sha
+          PY
+          printf 'active-qemu-pass\n' > /tmp/r7-qemu-status
+
+      - name: Reconfirm provider-free source gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check --quiet Pillow
+          make verify
+
       - name: Record exact evidence and decision
         shell: bash
         run: |
@@ -215,6 +239,9 @@ jobs:
           cp /tmp/r7-graphics-packages.tsv docs/reviews/evidence/2026-08-09_R7_MODERN_AMD64_GRAPHICS_PACKAGES.tsv
           cp /tmp/r7-base-system-manifest.txt docs/reviews/evidence/2026-08-09_R7_MODERN_AMD64_BASE_SYSTEM_MANIFEST.txt
           cp /tmp/r7-image-profile.json docs/reviews/evidence/2026-08-09_R7_MODERN_AMD64_IMAGE_PROFILE.json
+          if test -s /tmp/r7-qemu-kmsdrm-report.json; then
+            cp /tmp/r7-qemu-kmsdrm-report.json docs/reviews/evidence/2026-08-09_R7_QEMU_ACTIVE_KMSDRM_REPORT.json
+          fi
 
           python3 - <<'PY'
           import json
@@ -227,25 +254,39 @@ jobs:
           packages = Path('/tmp/r7-graphics-packages.tsv').read_text().strip()
           manifest = Path('/tmp/r7-base-system-manifest.txt').read_text()
           footprint = Path('/tmp/r7-footprint.txt').read_text()
+          qemu_status = Path('/tmp/r7-qemu-status').read_text().strip()
+          qemu_path = Path('/tmp/r7-qemu-kmsdrm-report.json')
+          qemu = json.loads(qemu_path.read_text()) if qemu_path.exists() else None
           facts = {}
           for source in (manifest, footprint):
               for line in source.splitlines():
                   if '=' in line and not line.startswith((' ', '\t')):
-                      k, v = line.split('=', 1)
-                      facts.setdefault(k, v)
+                      key, value = line.split('=', 1)
+                      facts.setdefault(key, value)
+
           kms = bool(probe['sdl']['kmsdrm_compiled'])
-          classification = 'SDL_KMSDRM_COMPILED_ACTIVE_GUEST_TEST_NEXT' if kms else 'SDL_KMSDRM_NOT_COMPILED_PACKAGING_WORK_REQUIRED'
-          drivers = ', '.join(probe['sdl']['video_drivers'])
-          body = f'''# R7 exact production image SDL evidence\n\n**Date:** 2026-08-09  \n**Source commit:** `{source_sha}`  \n**Image profile:** `{profile['profile']['profile_id']}`  \n**Image SHA-256:** `{image_sha}`  \n**Classification:** `{classification}`\n\nThe exact production `modern-amd64` image completed through `build/build-image.sh` with its cleanup contract satisfied and no surviving loop association. The finished raw image was then mounted read-only and its installed passive graphics probe executed inside that filesystem. No display backend was initialized and no DRM master was acquired.\n\n## Installed SDL/Pygame result\n\n- SDL compiled video drivers: `{drivers}`\n- `kmsdrm_compiled`: **{str(kms).lower()}**\n- Pygame metadata: `{probe['pygame']}`\n- graphics libraries visible: `{probe['libraries']}`\n- active KMSDRM acquisition remains required: **true**\n\nThe offline inspection deliberately did not bind a host DRM device or host sysfs, so DRM-node/connector fields are not hardware evidence.\n\n## Image facts\n\n- suite: `{facts.get('suite', 'unknown')}`\n- architecture: `{facts.get('architecture', 'unknown')}`\n- Debian version: `{facts.get('debian_version', 'unknown')}`\n- accounted filesystem use: `{facts.get('accounted_mib', 'unknown')} MiB`\n- preferred limit: `{facts.get('preferred_limit_mib', 'unknown')} MiB`\n- required limit: `{facts.get('required_limit_mib', 'unknown')} MiB`\n\n## Relevant packages\n\n```text\n{packages}\n```\n\n## Decision\n\n'''
           if kms:
-              body += 'The exact production image enumerates SDL `kmsdrm`. Do not rebuild SDL. Proceed to a disposable QEMU guest active-acquisition test using this production image lineage; production boot remains Xorg until guest and hardware evidence support migration.\n'
+              if not qemu or qemu.get('classification') != 'ACTIVE_QEMU_KMSDRM_PASS':
+                  raise SystemExit('KMSDRM compiled but active QEMU PASS evidence is missing')
+              classification = 'SDL_KMSDRM_COMPILED_QEMU_ACTIVE_PASS'
           else:
-              body += 'The exact production image does not enumerate SDL `kmsdrm`. Do not attempt active takeover. The next R7 source tranche must establish a maintained KMSDRM-capable SDL package/build, then rebuild and repeat this exact installed-driver probe before any session migration.\n'
+              if qemu is not None:
+                  raise SystemExit('QEMU evidence exists even though installed SDL lacks kmsdrm')
+              classification = 'SDL_KMSDRM_NOT_COMPILED_PACKAGING_WORK_REQUIRED'
+
+          drivers = ', '.join(probe['sdl']['video_drivers'])
+          body = f'''# R7 exact production image and QEMU KMSDRM evidence\n\n**Date:** 2026-08-09  \n**Source commit:** `{source_sha}`  \n**Image profile:** `{profile['profile']['profile_id']}`  \n**Image SHA-256:** `{image_sha}`  \n**Classification:** `{classification}`\n\nThe exact production `modern-amd64` image completed through `build/build-image.sh`, including its fail-closed cleanup contract, with no surviving loop association. The finished raw image was then mounted read-only and its installed passive graphics probe executed inside that filesystem.\n\n## Installed SDL/Pygame result\n\n- SDL compiled video drivers: `{drivers}`\n- `kmsdrm_compiled`: **{str(kms).lower()}**\n- Pygame metadata: `{probe['pygame']}`\n- graphics libraries visible in the offline image: `{probe['libraries']}`\n- active KMSDRM test required by the passive probe: **true**\n\nThe offline probe does not bind host DRM/sysfs and therefore does not itself claim display ownership.\n\n## Image facts\n\n- suite: `{facts.get('suite', 'unknown')}`\n- architecture: `{facts.get('architecture', 'unknown')}`\n- Debian version: `{facts.get('debian_version', 'unknown')}`\n- accounted filesystem use: `{facts.get('accounted_mib', 'unknown')} MiB`\n- preferred limit: `{facts.get('preferred_limit_mib', 'unknown')} MiB`\n- required limit: `{facts.get('required_limit_mib', 'unknown')} MiB`\n\n## Relevant packages\n\n```text\n{packages}\n```\n\n## Active QEMU gate\n\n- harness status: `{qemu_status}`\n'''
+          if qemu:
+              active = qemu['active']
+              passive = qemu['passive']
+              body += f'''- QEMU version: `{qemu['qemu_version']}`\n- guest DRM cards: `{passive['drm']['card_nodes']}`\n- guest connectors: `{passive['drm']['connectors']}`\n- requested SDL driver: `{active['requested_video_driver']}`\n- actual SDL driver: `{active['actual_video_driver']}`\n- surface: `{active['surface']}`\n- rendered frames: `{active['frame_count']}`\n\nThe QEMU test used a disposable clone, `virtio-vga`, `-display none`, no guest network, no X launcher, `tty1`, and the existing Greia PAM/VT KMSDRM acceptance service. A PASS therefore proves active SDL/Pygame KMSDRM acquisition and rendering against a virtual DRM device.\n\nIt still does **not** authorize production session migration. Legacy Intel/Acer and Raspberry Pi physical DRM/KMS, input ownership, suspend/resume, crash recovery, and no-shell/no-desktop appliance behavior remain physical acceptance gates.\n'''
+          else:
+              body += '\nThe installed image does not enumerate `kmsdrm`, so the active QEMU acquisition was intentionally not attempted. SDL/package work is required before session migration.\n'
           Path('docs/reviews/2026-08-09_R7_PRODUCTION_IMAGE_SDL_EVIDENCE.md').write_text(body, encoding='utf-8')
           PY
           git diff --check
 
-      - name: Commit evidence and remove one-off workflow
+      - name: Commit exact evidence and retire one-off workflow
         shell: bash
         run: |
           set -euo pipefail
@@ -254,5 +295,5 @@ jobs:
           git diff --cached --check
           git config user.name greia-r7
           git config user.email greia-r7@users.noreply.github.com
-          git commit -m 'r7: record exact production image SDL evidence'
+          git commit -m 'r7: record exact image and active QEMU KMSDRM evidence'
           git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
