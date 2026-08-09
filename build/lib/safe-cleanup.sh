@@ -48,6 +48,10 @@ safe_unmount_paths() {
 safe_detach_loop() {
   local loop_device="${1:-}"
   [[ -n "$loop_device" ]] || return 0
+  # losetup --partscan creates kernel partition mappings. Remove them after
+  # all filesystems are unmounted so they cannot hold the loop association open.
+  partx -d "$loop_device" 2>/dev/null || true
+  safe_udev_settle
   local attempt
   for attempt in {1..20}; do
     if ! losetup "$loop_device" >/dev/null 2>&1; then return 0; fi

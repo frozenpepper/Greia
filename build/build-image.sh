@@ -92,7 +92,7 @@ trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-require_commands=(debootstrap parted losetup mkfs.ext4 blkid grub-install grub-script-check grub-mkpasswd-pbkdf2 chroot mount umount mountpoint findmnt udevadm rsync python3)
+require_commands=(debootstrap parted partx losetup mkfs.ext4 blkid grub-install grub-script-check grub-mkpasswd-pbkdf2 chroot mount umount mountpoint findmnt udevadm rsync python3)
 for command_name in "${require_commands[@]}"; do
   command -v "$command_name" >/dev/null || {
     echo "Missing build dependency: $command_name" >&2
