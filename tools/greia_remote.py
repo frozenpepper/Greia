@@ -1,0 +1,286 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import os
+import re
+import shlex
+import subprocess
+import sys
+import time
+import uuid
+from pathlib import Path
+from typing import Sequence
+
+
+DEFAULT_HOST = "greia-dev.local"
+DEFAULT_USER = "greiaadmin"
+DEFAULT_KEY = Path("out/greia-os-modern-amd64-dev-ssh-key")
+DEFAULT_KNOWN_HOSTS = Path.home() / ".greia" / "known_hosts"
+_ACTIVITY_ID_RE = re.compile(r"^[a-z0-9][a-z0-9._-]{0,127}$")
+
+
+class RemoteError(RuntimeError):
+    pass
+
+
+class GreiaRemote:
+    def __init__(self, *, host: str, user: str, key: Path, known_hosts: Path):
+        self.host = host
+        self.user = user
+        self.key = key.expanduser().resolve()
+        self.known_hosts = known_hosts.expanduser().resolve()
+        if not self.key.is_file():
+            raise RemoteError(f"SSH private key not found: {self.key}")
+        self.known_hosts.parent.mkdir(parents=True, exist_ok=True)
+
+    @property
+    def destination(self) -> str:
+        return f"{self.user}@{self.host}"
+
+    def ssh_base(self) -> list[str]:
+        return [
+            "ssh",
+            "-i",
+            str(self.key),
+            "-o",
+            "BatchMode=yes",
+            "-o",
+            "StrictHostKeyChecking=accept-new",
+            "-o",
+            f"UserKnownHostsFile={self.known_hosts}",
+            "-o",
+            "ConnectTimeout=8",
+            self.destination,
+        ]
+
+    def scp_base(self) -> list[str]:
+        return [
+            "scp",
+            "-i",
+            str(self.key),
+            "-o",
+            "BatchMode=yes",
+            "-o",
+            "StrictHostKeyChecking=accept-new",
+            "-o",
+            f"UserKnownHostsFile={self.known_hosts}",
+            "-o",
+            "ConnectTimeout=8",
+        ]
+
+    def devctl(
+        self,
+        *args: str,
+        binary: bool = False,
+        check: bool = True,
+    ) -> subprocess.CompletedProcess[bytes] | subprocess.CompletedProcess[str]:
+        command = shlex.join(["sudo", "-n", "/usr/local/sbin/greia-devctl", *args])
+        completed = subprocess.run(
+            [*self.ssh_base(), command],
+            check=False,
+            capture_output=True,
+            text=not binary,
+        )
+        if check and completed.returncode != 0:
+            stderr = (
+                completed.stderr.decode("utf-8", errors="replace")
+                if binary
+                else completed.stderr
+            )
+            raise RemoteError(
+                f"remote command failed with status {completed.returncode}: {stderr.strip()}"
+            )
+        return completed
+
+    def status(self) -> str:
+        completed = self.devctl("status")
+        assert isinstance(completed.stdout, str)
+        return completed.stdout
+
+    def screenshot(self, output: Path) -> Path:
+        completed = self.devctl("screenshot", binary=True)
+        assert isinstance(completed.stdout, bytes)
+        payload = completed.stdout
+        if payload[:8] != b"\x89PNG\r\n\x1a\n":
+            raise RemoteError("remote screenshot did not return PNG data")
+        output = output.expanduser().resolve()
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_bytes(payload)
+        return output
+
+    def logs(self, service: str, lines: int) -> str:
+        completed = self.devctl("logs", "--service", service, "--lines", str(lines))
+        assert isinstance(completed.stdout, str)
+        return completed.stdout
+
+    def restart_launcher(self) -> None:
+        self.devctl("restart-launcher")
+
+    def deploy_activity(self, path: Path, *, replace_system: bool) -> str:
+        source = path.expanduser().resolve(strict=True)
+        if not source.is_dir() or not (source / "activity.toml").is_file():
+            raise RemoteError("deploy source must be an Activity directory containing activity.toml")
+        token = uuid.uuid4().hex
+        remote_root = f"/var/lib/greia-admin/greia-dev-upload/{token}"
+        self._ssh_user_command("mkdir", "-p", remote_root)
+        try:
+            completed = subprocess.run(
+                [
+                    *self.scp_base(),
+                    "-r",
+                    str(source) + "/.",
+                    f"{self.destination}:{remote_root}/",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            if completed.returncode != 0:
+                raise RemoteError(
+                    f"Activity upload failed with status {completed.returncode}: {completed.stderr.strip()}"
+                )
+            args = ["deploy-activity", remote_root]
+            if replace_system:
+                args.append("--replace-system")
+            result = self.devctl(*args)
+            assert isinstance(result.stdout, str)
+            return result.stdout
+        finally:
+            self._ssh_user_command("rm", "-rf", remote_root, check=False)
+
+    def remove_activity(self, activity_id: str) -> None:
+        _validate_activity_id(activity_id)
+        self.devctl("remove-activity", activity_id)
+
+    def restore_activity(self, activity_id: str) -> None:
+        _validate_activity_id(activity_id)
+        self.devctl("restore-activity", activity_id)
+
+    def reboot(self) -> None:
+        completed = self.devctl("reboot", check=False)
+        if completed.returncode not in (0, 255):
+            stderr = completed.stderr if isinstance(completed.stderr, str) else ""
+            raise RemoteError(f"reboot request failed: {stderr.strip()}")
+
+    def poweroff(self) -> None:
+        completed = self.devctl("poweroff", check=False)
+        if completed.returncode not in (0, 255):
+            stderr = completed.stderr if isinstance(completed.stderr, str) else ""
+            raise RemoteError(f"poweroff request failed: {stderr.strip()}")
+
+    def wait_until_ready(self, timeout_seconds: int) -> None:
+        if timeout_seconds < 1 or timeout_seconds > 1800:
+            raise RemoteError("wait timeout must be between 1 and 1800 seconds")
+        deadline = time.monotonic() + timeout_seconds
+        last_error = "not attempted"
+        while time.monotonic() < deadline:
+            try:
+                self.devctl("status")
+                return
+            except RemoteError as exc:
+                last_error = str(exc)
+                time.sleep(2)
+        raise RemoteError(f"Greia did not become remotely ready: {last_error}")
+
+    def shell(self) -> None:
+        os.execvp("ssh", self.ssh_base())
+
+    def _ssh_user_command(self, *args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
+        completed = subprocess.run(
+            [*self.ssh_base(), shlex.join(list(args))],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if check and completed.returncode != 0:
+            raise RemoteError(
+                f"remote file-transfer preparation failed: {completed.stderr.strip()}"
+            )
+        return completed
+
+
+def _validate_activity_id(value: str) -> None:
+    if not _ACTIVITY_ID_RE.fullmatch(value):
+        raise RemoteError("Activity ID is invalid")
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="Control a Greia developer image over SSH")
+    parser.add_argument("--host", default=DEFAULT_HOST)
+    parser.add_argument("--user", default=DEFAULT_USER)
+    parser.add_argument("--key", type=Path, default=DEFAULT_KEY)
+    parser.add_argument("--known-hosts", type=Path, default=DEFAULT_KNOWN_HOSTS)
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    sub.add_parser("status")
+    screenshot = sub.add_parser("screenshot")
+    screenshot.add_argument("output", type=Path)
+    logs = sub.add_parser("logs")
+    logs.add_argument(
+        "--service",
+        choices=["all", "launcher", "parent", "ssh", "developer-remote", "network"],
+        default="all",
+    )
+    logs.add_argument("--lines", type=int, default=300)
+    sub.add_parser("restart")
+    deploy = sub.add_parser("deploy")
+    deploy.add_argument("activity", type=Path)
+    deploy.add_argument("--replace-system", action="store_true")
+    remove = sub.add_parser("remove")
+    remove.add_argument("activity_id")
+    restore = sub.add_parser("restore")
+    restore.add_argument("activity_id")
+    wait = sub.add_parser("wait")
+    wait.add_argument("--timeout", type=int, default=120)
+    sub.add_parser("reboot")
+    sub.add_parser("poweroff")
+    sub.add_parser("shell")
+    return parser
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+    try:
+        remote = GreiaRemote(
+            host=args.host,
+            user=args.user,
+            key=args.key,
+            known_hosts=args.known_hosts,
+        )
+        if args.command == "status":
+            sys.stdout.write(remote.status())
+        elif args.command == "screenshot":
+            path = remote.screenshot(args.output)
+            print(path)
+        elif args.command == "logs":
+            sys.stdout.write(remote.logs(args.service, args.lines))
+        elif args.command == "restart":
+            remote.restart_launcher()
+        elif args.command == "deploy":
+            sys.stdout.write(
+                remote.deploy_activity(args.activity, replace_system=args.replace_system)
+            )
+        elif args.command == "remove":
+            remote.remove_activity(args.activity_id)
+        elif args.command == "restore":
+            remote.restore_activity(args.activity_id)
+        elif args.command == "wait":
+            remote.wait_until_ready(args.timeout)
+            print("Greia developer remote is ready.")
+        elif args.command == "reboot":
+            remote.reboot()
+        elif args.command == "poweroff":
+            remote.poweroff()
+        elif args.command == "shell":
+            remote.shell()
+        else:  # pragma: no cover
+            raise RemoteError("unsupported command")
+    except (OSError, RemoteError, subprocess.SubprocessError) as exc:
+        print(f"greia_remote: {exc}", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
