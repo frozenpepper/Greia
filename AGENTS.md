@@ -13,7 +13,9 @@ Before changing implementation or architecture, read:
 5. relevant narrower ADRs, especially ADR 0013 for image composition;
 6. **`docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md` — MANDATORY ACTIVE IMPLEMENTATION PLAN**;
 7. `HANDOVER.md`;
-8. `docs/plans/2026-08-06_PHASE0_BOOTABLE_VERTICAL_SLICE.md` only as supporting Phase-0 history/evidence context where it is not superseded by the active remediation plan.
+8. **`docs/agents/GREIA_AGENT_OPERATIONS.md` — mandatory project/build/test-hardware operating manual for agents**;
+9. `skills/greia-activity-authoring/SKILL.md` whenever creating, modifying, reviewing, validating, optimizing, packaging, deploying, or testing an Activity;
+10. `docs/plans/2026-08-06_PHASE0_BOOTABLE_VERTICAL_SLICE.md` only as supporting Phase-0 history/evidence context where it is not superseded by the active remediation plan.
 
 The architecture-remediation plan is the single active implementation plan until its final completion criteria are satisfied. Resume from the first incomplete phase in that plan. Do not create a competing implementation plan or jump ahead to a more visible feature while an earlier authority/safety prerequisite remains open.
 
@@ -22,9 +24,13 @@ After every substantive implementation turn:
 1. append an accurate progress entry to `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`;
 2. update `HANDOVER.md` with the exact current phase, implemented work, verification/evidence, blockers, and next exact step;
 3. run the verification required by the active phase before claiming it complete;
-4. commit coherent work to the canonical GitHub repository.
+4. update `docs/agents/GREIA_AGENT_OPERATIONS.md` if repository/build/test-hardware/remote-control procedure changed;
+5. update `skills/greia-activity-authoring/SKILL.md` in the same tranche whenever the Activity manifest/API/runtime policy/trust model/shared assets or UI canon/performance requirements/validation or deployment workflow changed;
+6. commit coherent work to the canonical GitHub repository.
 
 Do not rewrite earlier progress entries to make history appear cleaner. Append corrections explicitly.
+
+The two agent-facing manuals are **living contracts**. A source change that makes either manual materially wrong is not completely documented until the affected manual is corrected.
 
 When—and only when—the active remediation plan's final completion criteria are all satisfied, the contributor closing it MUST mark the plan complete, append final evidence, update `HANDOVER.md`, and **remove this active-plan reference and these special resume/progress instructions from `AGENTS.md`**. The completed plan remains under `docs/plans/` as historical evidence.
 
@@ -143,6 +149,7 @@ Every substantive work turn should leave:
 
 - updated `HANDOVER.md`;
 - updated active plan/ADRs where decisions changed;
+- updated agent operations/Activity skill when their governed contracts changed;
 - no build caches, venvs, downloaded package archives, disk images, or heavyweight transient evidence inside the source tree.
 
 The GitHub repository is the canonical long-term source of truth; chat transcripts are not.
