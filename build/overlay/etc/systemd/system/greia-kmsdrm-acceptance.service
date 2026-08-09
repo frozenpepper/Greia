@@ -1,0 +1,34 @@
+[Unit]
+Description=Greia R7 active KMSDRM acceptance session
+Documentation=file:/opt/greia-os/src/greia_platform/kmsdrm_acceptance.py
+After=local-fs.target systemd-logind.service systemd-user-sessions.service
+Conflicts=greia-launcher.service getty@tty1.service
+
+[Service]
+Type=oneshot
+User=greiakid
+Group=greiakid
+PAMName=login
+WorkingDirectory=/opt/greia-os
+Environment=PYTHONPATH=/opt/greia-os/src
+Environment=PYTHONNOUSERSITE=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=HOME=/var/lib/greia-kid
+Environment=SDL_VIDEODRIVER=kmsdrm
+UnsetEnvironment=DISPLAY WAYLAND_DISPLAY XAUTHORITY
+ExecStart=/usr/bin/python3 -m greia_platform.kmsdrm_acceptance --output /var/lib/greia-kmsdrm-acceptance/result.json --acknowledge-display-takeover
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+StandardInput=tty-fail
+StandardOutput=journal
+StandardError=journal
+StateDirectory=greia-kmsdrm-acceptance
+StateDirectoryMode=0750
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=strict
+RestrictSUIDSGID=yes
+LockPersonality=yes
+LimitCORE=0
+TasksMax=32
