@@ -1,0 +1,143 @@
+name: R7 loop partition lifecycle diagnostic
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/r7-loop-lifecycle-diagnostic.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  compare-loop-lifecycles:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Install lifecycle tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            util-linux parted e2fsprogs udev
+
+      - name: Compare kernel partscan and explicit partx mappings
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          diagnose() {
+            local label="$1" image="$2" loop="$3"
+            echo "===== $label ====="
+            echo "image=$image loop=$loop"
+            sudo losetup --list --noheadings --output NAME,BACK-FILE,AUTOCLEAR,PARTSCAN,RO "$loop" || true
+            sudo lsblk -a -o NAME,KNAME,MAJ:MIN,TYPE,PKNAME,MOUNTPOINTS "$loop" || true
+            echo '-- partx show --'
+            sudo partx --show "$loop" || true
+            echo '-- sysfs children --'
+            sudo find "/sys/block/${loop#/dev/}" -maxdepth 1 -mindepth 1 -printf '%f\n' 2>/dev/null | sort || true
+          }
+
+          cleanup_exact() {
+            local label="$1" image="$2" loop="$3"
+            echo "===== cleanup $label ====="
+            set +e
+            sudo partx -d "$loop" >/tmp/${label}-partx-d.out 2>/tmp/${label}-partx-d.err
+            local partx_status=$?
+            set -e
+            echo "partx_status=$partx_status"
+            sed 's/^/partx_stdout: /' /tmp/${label}-partx-d.out || true
+            sed 's/^/partx_stderr: /' /tmp/${label}-partx-d.err || true
+            sudo udevadm settle --timeout=5 || true
+            echo '-- after partx -d --'
+            sudo partx --show "$loop" || true
+            sudo lsblk -a -o NAME,KNAME,MAJ:MIN,TYPE,PKNAME,MOUNTPOINTS "$loop" || true
+            sudo find "/sys/block/${loop#/dev/}" -maxdepth 1 -mindepth 1 -printf '%f\n' 2>/dev/null | sort || true
+
+            sudo blockdev --flushbufs "$loop" || true
+            set +e
+            sudo losetup -d "$loop" >/tmp/${label}-losetup-d.out 2>/tmp/${label}-losetup-d.err
+            local detach_status=$?
+            set -e
+            echo "detach_status=$detach_status"
+            sed 's/^/detach_stdout: /' /tmp/${label}-losetup-d.out || true
+            sed 's/^/detach_stderr: /' /tmp/${label}-losetup-d.err || true
+            sudo udevadm settle --timeout=5 || true
+            echo "associated_after_detach=$(sudo losetup -j "$image" 2>/dev/null || true)"
+            if test -n "$(sudo losetup -j "$image" 2>/dev/null || true)"; then
+              sudo losetup --list --noheadings --output NAME,BACK-FILE,AUTOCLEAR,PARTSCAN,RO "$loop" || true
+              sudo lsblk -a -o NAME,KNAME,MAJ:MIN,TYPE,PKNAME,MOUNTPOINTS "$loop" || true
+            fi
+          }
+
+          make_image() {
+            local image="$1"
+            truncate -s 128M "$image"
+            sudo parted -s "$image" mklabel msdos
+            sudo parted -s "$image" mkpart primary ext4 1MiB 100%
+            sudo parted -s "$image" set 1 boot on
+          }
+
+          # Case A: current production lifecycle: kernel scans partitions via -P.
+          image_a="$RUNNER_TEMP/r7-partscan.img"
+          make_image "$image_a"
+          loop_a="$(sudo losetup --find --show --partscan "$image_a")"
+          for _ in $(seq 1 30); do test -b "${loop_a}p1" && break; sleep 0.1; done
+          test -b "${loop_a}p1"
+          sudo mkfs.ext4 -q -F "${loop_a}p1"
+          mount_a="$RUNNER_TEMP/r7-partscan-root"
+          mkdir -p "$mount_a"
+          sudo mount "${loop_a}p1" "$mount_a"
+          sudo sh -c "echo partscan > '$mount_a/lifecycle.txt'"
+          sudo sync
+          sudo umount "$mount_a"
+          diagnose partscan "$image_a" "$loop_a"
+          cleanup_exact partscan "$image_a" "$loop_a"
+          partscan_remaining="$(sudo losetup -j "$image_a" 2>/dev/null || true)"
+
+          # Case B: no LO_FLAGS_PARTSCAN; userspace adds/removes mapping explicitly.
+          image_b="$RUNNER_TEMP/r7-explicit-partx.img"
+          make_image "$image_b"
+          loop_b="$(sudo losetup --find --show "$image_b")"
+          sudo partx -a "$loop_b"
+          sudo udevadm settle --timeout=5 || true
+          for _ in $(seq 1 30); do test -b "${loop_b}p1" && break; sleep 0.1; done
+          test -b "${loop_b}p1"
+          sudo mkfs.ext4 -q -F "${loop_b}p1"
+          mount_b="$RUNNER_TEMP/r7-explicit-partx-root"
+          mkdir -p "$mount_b"
+          sudo mount "${loop_b}p1" "$mount_b"
+          sudo sh -c "echo explicit-partx > '$mount_b/lifecycle.txt'"
+          sudo sync
+          sudo umount "$mount_b"
+          diagnose explicit-partx "$image_b" "$loop_b"
+          cleanup_exact explicit-partx "$image_b" "$loop_b"
+          explicit_remaining="$(sudo losetup -j "$image_b" 2>/dev/null || true)"
+
+          echo "R7_PARTSCAN_REMAINING=$partscan_remaining"
+          echo "R7_EXPLICIT_PARTX_REMAINING=$explicit_remaining"
+          test -z "$explicit_remaining" || {
+            echo 'explicit partx lifecycle did not detach cleanly' >&2
+            exit 1
+          }
+
+          # The diagnostic's goal is comparison, not blessing current behavior.
+          # If both detach, production helper timing/state is the next suspect.
+          # If only explicit partx detaches, that is the candidate production fix.
+
+      - name: Remove one-off diagnostic
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm .github/workflows/r7-loop-lifecycle-diagnostic.yml
+          git config user.name greia-r7
+          git config user.email greia-r7@users.noreply.github.com
+          git commit -m 'ci: retire completed loop lifecycle diagnostic'
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
