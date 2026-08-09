@@ -1,0 +1,95 @@
+name: R7 KMSDRM maintenance hardening v2
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/r7-kms-maintenance-hardening-v2.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  harden-and-verify:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Require existing active VT1 before direct takeover
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+
+          def rep(path: str, old: str, new: str) -> None:
+              target = Path(path)
+              text = target.read_text(encoding='utf-8')
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected one anchor, found {count}: {old!r}')
+              target.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          rep(
+              'build/overlay/usr/local/sbin/greia-run-kmsdrm-acceptance',
+              'if systemctl is-active --quiet "$launcher"; then\n  echo "Refusing KMSDRM takeover: launcher remained active after stop." >&2\n  exit 1\nfi\n\nrm -f -- "$result"\n',
+              'if systemctl is-active --quiet "$launcher"; then\n  echo "Refusing KMSDRM takeover: launcher remained active after stop." >&2\n  exit 1\nfi\nactive_vt="$(cat /sys/class/tty/tty0/active 2>/dev/null || true)"\nif [ "$active_vt" != "tty1" ]; then\n  echo "Refusing KMSDRM takeover: expected active VT tty1, found ${active_vt:-unknown}." >&2\n  exit 1\nfi\n\nrm -f -- "$result"\n',
+          )
+          rep(
+              'build/overlay/etc/systemd/system/greia-kmsdrm-acceptance.service',
+              'ExecStartPre=/bin/sh -ec \'for f in /proc/[0-9]*/comm; do [ -r "$f" ] || continue; IFS= read -r name < "$f" || continue; case "$name" in xinit|Xorg|X) exit 1 ;; esac; done\'\n',
+              'ExecStartPre=/bin/sh -ec \'[ "$(cat /sys/class/tty/tty0/active 2>/dev/null || true)" = tty1 ] && for f in /proc/[0-9]*/comm; do [ -r "$f" ] || continue; IFS= read -r name < "$f" || continue; case "$name" in xinit|Xorg|X) exit 1 ;; esac; done\'\n',
+          )
+          rep(
+              'tests/test_kmsdrm_maintenance.py',
+              '        self.assertIn("/proc/[0-9]*/comm", unit)\n        self.assertNotIn("pgrep", unit)\n',
+              '        self.assertIn("/proc/[0-9]*/comm", unit)\n        self.assertIn("/sys/class/tty/tty0/active", unit)\n        self.assertNotIn("pgrep", unit)\n',
+          )
+          rep(
+              'tests/test_kmsdrm_maintenance.py',
+              '        self.assertIn("/proc/[0-9]*/comm", script)\n        self.assertNotIn("pgrep", script)\n',
+              '        self.assertIn("/proc/[0-9]*/comm", script)\n        self.assertIn("/sys/class/tty/tty0/active", script)\n        self.assertIn("expected active VT tty1", script)\n        self.assertNotIn("pgrep", script)\n',
+          )
+          PY
+
+      - name: Install verification dependency
+        run: python3 -m pip install --disable-pip-version-check --quiet Pillow
+
+      - name: Focused R7 source tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m compileall -q src tests tools activities
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_hal_legacy_x.py' -v
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_direct_graphics_probe.py' -v
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_kmsdrm_acceptance.py' -v
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_kmsdrm_maintenance.py' -v
+          PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_r7_runtime_audit.py' -v
+          sh -n build/overlay/usr/local/sbin/greia-run-kmsdrm-acceptance
+          grep -F 'active VT tty1' build/overlay/usr/local/sbin/greia-run-kmsdrm-acceptance
+          grep -F '/sys/class/tty/tty0/active' build/overlay/etc/systemd/system/greia-kmsdrm-acceptance.service
+
+      - name: Full provider-free gate
+        run: make verify
+
+      - name: Commit and remove one-off workflows
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          git rm \
+            .github/workflows/r7-kms-maintenance-hardening.yml \
+            .github/workflows/r7-kms-maintenance-hardening-v2.yml
+          git add \
+            build/overlay/etc/systemd/system/greia-kmsdrm-acceptance.service \
+            build/overlay/usr/local/sbin/greia-run-kmsdrm-acceptance \
+            tests/test_kmsdrm_maintenance.py
+          git diff --cached --check
+          git config user.name greia-r7
+          git config user.email greia-r7@users.noreply.github.com
+          git commit -m 'fix: require active VT1 for KMSDRM maintenance takeover'
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
