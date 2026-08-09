@@ -1,0 +1,202 @@
+name: R7 source checkpoint
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/r7-source-checkpoint.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  checkpoint:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Require final maintenance hardening
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -F 'expected active VT tty1' build/overlay/usr/local/sbin/greia-run-kmsdrm-acceptance
+          grep -F '/sys/class/tty/tty0/active' build/overlay/etc/systemd/system/greia-kmsdrm-acceptance.service
+          test ! -e build/profiles/r7-qemu-amd64-direct-kms.toml
+          test ! -e build/package-sets/display-direct-kms.txt
+          sh -n build/overlay/usr/local/sbin/greia-run-kmsdrm-acceptance
+
+      - name: Install verification dependency
+        run: python3 -m pip install --disable-pip-version-check --quiet Pillow
+
+      - name: Full source gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          make verify 2>&1 | tee /tmp/r7-verify.log
+          grep -F 'Ran 212 tests' /tmp/r7-verify.log
+          grep -F 'OK' /tmp/r7-verify.log
+          grep -F 'Project validation passed.' /tmp/r7-verify.log
+
+      - name: Persist R7 source checkpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > docs/reviews/2026-08-09_R7_SOURCE_CHECKPOINT_AND_KMS_ACCEPTANCE.md <<'EOF'
+          # Greia R7 — Source checkpoint before active KMSDRM evidence
+
+          **Date:** 2026-08-09
+          **Branch:** `r7-direct-graphics`
+          **Status:** source migration/measurement machinery green; **active KMSDRM runtime evidence still required**.
+          **Provider-free gate:** **212/212 PASS**
+
+          ## Completed source tranches
+
+          ### R7 dependency audit
+
+          `docs/reviews/2026-08-09_R7_X11_DIRECT_GRAPHICS_DEPENDENCY_AUDIT.md` inventories the current Xorg/xinit/XShm/xinput/xrandr/session/sandbox/SDL dependencies and classifies stable HAL interfaces versus provisional legacy-X implementation.
+
+          ### R7-A — legacy X isolated below the semantic HAL
+
+          - `hal.py` contains backend-neutral semantic contracts only;
+          - `LegacyXDisplayHAL` / `LegacyXInputHAL` live in `hal_legacy_x.py`;
+          - hardware-settings watcher consumes `HardwareSessionController` protocol rather than a concrete X controller;
+          - keyboard capability is probed from XInput instead of inferred from the `DISPLAY` environment;
+          - installed compatibility behavior remains Xorg; no child/platform API changed.
+
+          Verified milestone: `81c0d962dc4fa13536dba90b51f6e9c0c6344f52`, complete gate **196/196 PASS**.
+
+          ### R7-B — passive direct-graphics evidence
+
+          `greia_platform.direct_graphics_probe` is installed in every image through the existing source-tree installation and passively reports:
+
+          - Pygame + SDL versions;
+          - compiled SDL video-driver list and explicit `kmsdrm_compiled` fact;
+          - libdrm/GBM/EGL/libinput/libseat library visibility;
+          - DRM card/render nodes;
+          - DRM connector status and bounded mode lists;
+          - bounded session transport facts.
+
+          It does not initialize SDL video, open DRM/input devices, take DRM master, or change display state. Library presence never substitutes for an actual compiled `kmsdrm` driver. `active_kmsdrm_test_required` is always true.
+
+          Runtime audit collector v3 captures `direct-graphics-probe.json` automatically.
+
+          Complete gate after the passive/audit tranche: **202/202 PASS**.
+
+          ### R7-C — explicit active KMSDRM acceptance primitive
+
+          `greia_platform.kmsdrm_acceptance` is a separate active harness. It requires:
+
+          - explicit display-takeover acknowledgement;
+          - `SDL_VIDEODRIVER=kmsdrm`;
+          - no `DISPLAY`, `WAYLAND_DISPLAY`, or Xauthority transport;
+          - Pygame reporting the **actual** selected driver as exactly `kmsdrm`.
+
+          It creates a fullscreen surface, renders/flips deterministic frames, records distinct rendered-buffer SHA-256 hashes, Pygame/SDL versions, dimensions and duration, then releases the display. Its result explicitly states that this does not alone prove physical scanout, input routing, boot continuity, or shell↔Activity ownership.
+
+          Unit-tested source milestone passed complete gate **207/207**.
+
+          ## Reversible maintenance acceptance session
+
+          The existing X-compatible Greia image now contains a maintainer-only acceptance transaction rather than an unverified direct boot path:
+
+          - disabled `greia-kmsdrm-acceptance.service`;
+          - one-shot `greiakid` `PAMName=login` session on `/dev/tty1`;
+          - explicit `SDL_VIDEODRIVER=kmsdrm` and X/Wayland environment removal;
+          - service refuses legacy X processes and requires the already-active VT to be `tty1`;
+          - `TimeoutStartSec=20` bounds display acquisition;
+          - root-only controller requires the normal launcher to be active before takeover;
+          - restore trap is installed before the launcher is stopped;
+          - legacy X liveness is checked directly through procfs with no new `procps` dependency;
+          - controller validates bounded JSON and requires actual `kmsdrm` success;
+          - normal launcher is restarted on every success/failure/signal exit path; failure to restore is a distinct critical error;
+          - boot tmpfiles policy sets the controller to `0750 root:root`;
+          - acceptance service has no `[Install]` section and cannot stop the normal launcher when started directly;
+          - runtime audit only copies a prior `kmsdrm-acceptance.json`; it never triggers display takeover.
+
+          `docs/testing/2026-08-09_R7_KMSDRM_ACCEPTANCE.md` defines the exact one-command test, stop conditions and evidence return contract.
+
+          ## Deliberate non-action: no direct-boot profile yet
+
+          Early `direct-kms` profile/package scaffolding was removed before parser enablement. A profile that removed X packages while `greia-launcher.service` still started `xinit` would be a broken image, not progress.
+
+          Therefore the repository currently has **no enabled direct-KMS build profile**. The current Acer/Xorg compatibility profile remains unchanged.
+
+          ## Current clean source evidence
+
+          ```text
+          Python compile: PASS
+          R5/R6 permanent architecture invariants: PASS
+          R7 source/maintenance invariants: PASS
+          provider-free unit tests: 212 / 212 PASS
+          project validation: PASS
+          bundled Activity validation: PASS
+          source/shell/footprint gate: PASS
+          ```
+
+          This is source evidence only. No direct DRM/KMS hardware or VM success is claimed by this checkpoint.
+
+          ## Exact next gate
+
+          Build the **normal current X-compatible image** from this R7 branch and perform exactly:
+
+          1. baseline `greia-collect-runtime-audit`;
+          2. one root `/usr/local/sbin/greia-run-kmsdrm-acceptance` transaction;
+          3. verify Greia visibly returns to the normal child shell;
+          4. post-test `greia-collect-runtime-audit`;
+          5. preserve both audit archives unchanged.
+
+          The result determines the next implementation:
+
+          - if SDL has no compiled KMSDRM: evaluate/build a maintained SDL path before changing boot/session architecture;
+          - if KMSDRM is compiled but seat/DRM acquisition fails: diagnose the PAM/logind/VT/device-ownership evidence, not permissions hacks;
+          - if active KMSDRM succeeds: prototype Greia shell ownership next, then measure serial shell↔Activity DRM transfer against a tiny Greia-owned broker/compositor before choosing either.
+
+          Do not add `video`/`input` group workarounds, raw device chmods, a compositor, custom SDL, or a direct-boot profile in advance of this evidence.
+          EOF
+
+          python3 <<'PY'
+          from pathlib import Path
+
+          plan = Path('docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md')
+          text = plan.read_text(encoding='utf-8')
+          marker = '---\n\n# 9. Final completion criteria'
+          entry = '''## 2026-08-09 — R7 source checkpoint before active KMSDRM evidence\n\n- Implemented: completed the X11/direct-graphics dependency audit; isolated legacy X below the backend-neutral R6 HAL; made the hardware settings watcher controller-polymorphic; added an installed passive SDL/DRM/connector capability probe and runtime-audit evidence; added an explicit active Pygame/SDL KMSDRM acceptance harness; added a disabled PAM/VT maintenance session and root-only reversible controller that stops the compatibility launcher, proves X is gone and VT1 remains active, runs one bounded active KMSDRM test as `greiakid`, validates evidence, and restores the launcher on every exit path. Premature direct-KMS build-profile scaffolding was removed.\n- Tests/evidence: **212/212 provider-free tests PASS**, project validation PASS, Activity validation PASS, source/shell/footprint gate PASS. Earlier R7 milestones passed 196/196 (HAL decoupling), 202/202 (passive probe/runtime audit), and 207/207 (active harness source contract).\n- Decisions: normal boot remains the known X compatibility path until active evidence exists. Passive prerequisite visibility is never promoted to active KMS success. No video/input group grants, raw device chmods, custom SDL, compositor, or direct-boot profile is pre-authorized.\n- Remaining blockers: real QEMU/x86 KMSDRM display acquisition/restore evidence; then shell ownership and shell↔Activity ownership measurements; display/input direct backend; boot-cover and security migration; Acer evidence.\n- Next exact step: build the current compatibility image, collect baseline audit, execute exactly one `greia-run-kmsdrm-acceptance` transaction, verify Greia restores visibly, collect post-test audit, and let the observed failure/success class choose the next source tranche.\n- Evidence: `docs/reviews/2026-08-09_R7_SOURCE_CHECKPOINT_AND_KMS_ACCEPTANCE.md`; procedure: `docs/testing/2026-08-09_R7_KMSDRM_ACCEPTANCE.md`.\n\n'''
+          if entry.splitlines()[0] in text:
+              raise SystemExit('R7 checkpoint already recorded')
+          if text.count(marker) != 1:
+              raise SystemExit('active-plan marker mismatch')
+          plan.write_text(text.replace(marker, entry + marker, 1), encoding='utf-8')
+
+          hand = Path('HANDOVER.md')
+          text = hand.read_text(encoding='utf-8')
+          marker = '## 1. Current source state\n'
+          section = '''## R7 source checkpoint — active KMSDRM evidence is next\n\nR7 source preparation is now green at **212/212 provider-free tests PASS**. Legacy X is quarantined below the semantic HAL; passive direct-graphics evidence is installed and included in runtime audit; the explicit active KMSDRM harness is implemented; and the current X-compatible image has a disabled, root-only, reversible acceptance transaction that runs the harness as a real `greiakid` PAM/VT1 session and restores `greia-launcher.service` on every exit path. No direct-KMS boot profile is enabled. No active KMSDRM success is claimed yet. The next blocking evidence is exactly the procedure in `docs/testing/2026-08-09_R7_KMSDRM_ACCEPTANCE.md`: baseline audit → one maintenance takeover → visible Greia restoration → post-test audit. The observed result decides whether the next code work is SDL packaging, seat/DRM session ownership, or direct shell ownership. See `docs/reviews/2026-08-09_R7_SOURCE_CHECKPOINT_AND_KMS_ACCEPTANCE.md`.\n\n'''
+          if section.splitlines()[0] in text:
+              raise SystemExit('R7 handover checkpoint already recorded')
+          if text.count(marker) != 1:
+              raise SystemExit('handover marker mismatch')
+          hand.write_text(text.replace(marker, section + marker, 1), encoding='utf-8')
+          PY
+
+      - name: Commit continuity and remove one-off workflow debris
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          git rm --ignore-unmatch \
+            .github/workflows/r7-source-checkpoint.yml \
+            .github/workflows/r7-kms-maintenance-hardening.yml \
+            .github/workflows/r7-kms-maintenance-hardening-v2.yml
+          git add \
+            HANDOVER.md \
+            docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md \
+            docs/reviews/2026-08-09_R7_SOURCE_CHECKPOINT_AND_KMS_ACCEPTANCE.md
+          git diff --cached --check
+          git config user.name greia-r7
+          git config user.email greia-r7@users.noreply.github.com
+          git commit -m 'docs: record R7 source checkpoint before active KMS evidence'
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
