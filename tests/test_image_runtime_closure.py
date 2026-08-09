@@ -19,6 +19,26 @@ class ImageRuntimeClosureTests(unittest.TestCase):
         self.assertIn("e2fsprogs", self._packages("build/package-sets/platform-base.txt"))
         self.assertIn("e2fsprogs", self._packages("build/package-sets/installer-base.txt"))
 
+    def test_direct_graphics_pam_session_has_logind_runtime(self) -> None:
+        packages = self._packages("build/package-sets/platform-base.txt")
+        self.assertIn("libpam-systemd", packages)
+
+        service = (
+            ROOT
+            / "build/overlay/etc/systemd/system/greia-kmsdrm-acceptance.service"
+        ).read_text(encoding="utf-8")
+        self.assertIn("PAMName=login", service)
+        self.assertIn("User=greiakid", service)
+
+        builder = (ROOT / "build/build-image.sh").read_text(encoding="utf-8")
+        useradd = next(
+            line
+            for line in builder.splitlines()
+            if "--shell /usr/sbin/nologin --user-group --groups pipsettings,pipprofiles greiakid" in line
+        )
+        self.assertNotIn("video", useradd)
+        self.assertNotIn("render", useradd)
+
     def test_plymouth_theme_has_label_plugin_runtime(self) -> None:
         packages = self._packages("build/package-sets/boot-cover-plymouth.txt")
         self.assertIn("plymouth", packages)
