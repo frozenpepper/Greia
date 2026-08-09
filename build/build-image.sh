@@ -91,7 +91,7 @@ trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-require_commands=(debootstrap parted losetup mkfs.ext4 blkid grub-install grub-script-check grub-mkpasswd-pbkdf2 chroot mount umount mountpoint findmnt rsync python3)
+require_commands=(debootstrap parted losetup mkfs.ext4 blkid grub-install grub-script-check grub-mkpasswd-pbkdf2 chroot mount umount mountpoint findmnt udevadm rsync python3)
 for command_name in "${require_commands[@]}"; do
   command -v "$command_name" >/dev/null || {
     echo "Missing build dependency: $command_name" >&2
@@ -180,16 +180,22 @@ mount -t proc proc "$ROOTFS/proc"; MOUNTS+=("$ROOTFS/proc")
 mount --rbind /sys "$ROOTFS/sys"; MOUNTS+=("$ROOTFS/sys"); mount --make-rslave "$ROOTFS/sys"
 mount --rbind /run "$ROOTFS/run"; MOUNTS+=("$ROOTFS/run"); mount --make-rslave "$ROOTFS/run"
 
+APT_ACQUIRE_OPTIONS=(
+  -o Acquire::Retries=3
+  -o Acquire::http::Timeout=20
+  -o Acquire::https::Timeout=20
+)
+
 package_output="$(python3 "$PROFILE_TOOL" --package-root "$PACKAGE_SET_ROOT" packages "$PROFILE_PATH" --scope target)"
 mapfile -t packages <<< "$package_output"
 (( ${#packages[@]} > 0 )) || { echo "Resolved target package set is empty." >&2; exit 1; }
 
 printf 'grub-pc grub-pc/install_devices_empty boolean true\n' | chroot "$ROOTFS" debconf-set-selections
-chroot "$ROOTFS" /usr/bin/env DEBIAN_FRONTEND=noninteractive apt-get update
+chroot "$ROOTFS" /usr/bin/env DEBIAN_FRONTEND=noninteractive apt-get "${APT_ACQUIRE_OPTIONS[@]}" update
 # Greia intentionally pre-seeds appliance conffiles in the overlay. dpkg's
 # conffile prompt is independent of debconf, so make product ownership explicit.
 chroot "$ROOTFS" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
-  apt-get -o Dpkg::Options::=--force-confold install -y --no-install-recommends "${packages[@]}"
+  apt-get "${APT_ACQUIRE_OPTIONS[@]}" -o Dpkg::Options::=--force-confold install -y --no-install-recommends "${packages[@]}"
 
 # Appliance users have no passwords. pipprofiles owns the bounded profile
 # registry/tree shared by the launcher and typed parent profile controls;

@@ -1,37 +1,36 @@
 #!/usr/bin/env bash
 # Shared destructive-build cleanup helpers. Source from bash with set -Eeuo.
 
+safe_udev_settle() {
+  udevadm settle --timeout=5 >/dev/null 2>&1 || true
+}
+
 safe_unmount_path_tree() {
   local path="$1"
   [[ -n "$path" ]] || return 0
-  mountpoint -q -- "$path" || return 0
-
   local targets=()
-  local index target failed=0
+  local index target attempt
   mapfile -t targets < <(findmnt -rn -R -o TARGET --target "$path" 2>/dev/null || true)
   for (( index=${#targets[@]}-1; index>=0; index-- )); do
     target="${targets[$index]}"
     [[ -n "$target" ]] || continue
     case "$target" in
       "$path"|"$path"/*) ;;
-      *)
-        echo "ERROR: refusing cleanup target outside requested mount tree: $target" >&2
-        failed=1
-        continue
-        ;;
+      *) echo "ERROR: refusing cleanup target outside requested mount tree: $target" >&2; return 1 ;;
     esac
-    if mountpoint -q -- "$target"; then
+    for attempt in {1..20}; do
+      mountpoint -q -- "$target" || break
+      sync
       umount -- "$target" 2>/dev/null || true
-    fi
+      mountpoint -q -- "$target" || break
+      sleep 0.1
+    done
     if mountpoint -q -- "$target"; then
-      umount -l -- "$target" 2>/dev/null || true
-    fi
-    if mountpoint -q -- "$target"; then
-      echo "ERROR: mount is still attached; preserving build directory: $target" >&2
-      failed=1
+      echo "ERROR: mount remains busy after bounded normal-unmount retries: $target" >&2
+      return 1
     fi
   done
-  return "$failed"
+  safe_udev_settle
 }
 
 safe_unmount_paths() {
@@ -51,16 +50,13 @@ safe_detach_loop() {
   [[ -n "$loop_device" ]] || return 0
   local attempt
   for attempt in {1..20}; do
-    if ! losetup "$loop_device" >/dev/null 2>&1; then
-      return 0
-    fi
+    if ! losetup "$loop_device" >/dev/null 2>&1; then return 0; fi
     losetup -d "$loop_device" 2>/dev/null || true
-    if ! losetup "$loop_device" >/dev/null 2>&1; then
-      return 0
-    fi
-    sleep 0.05
+    safe_udev_settle
+    if ! losetup "$loop_device" >/dev/null 2>&1; then return 0; fi
+    sleep 0.1
   done
-  echo "ERROR: loop device is still attached: $loop_device" >&2
+  echo "ERROR: loop device is still associated after detach and udev settle: $loop_device" >&2
   return 1
 }
 

@@ -81,7 +81,7 @@ trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-required=(debootstrap parted losetup mkfs.ext4 blkid grub-install grub-script-check grub-mkpasswd-pbkdf2 chroot mount umount mountpoint findmnt rsync mksquashfs python3)
+required=(debootstrap parted losetup mkfs.ext4 blkid grub-install grub-script-check grub-mkpasswd-pbkdf2 chroot mount umount mountpoint findmnt udevadm rsync mksquashfs python3)
 for command_name in "${required[@]}"; do
   command -v "$command_name" >/dev/null || {
     echo "Missing build dependency: $command_name" >&2
@@ -151,13 +151,19 @@ mount -t proc proc "$LIVE_ROOT/proc"; MOUNTS+=("$LIVE_ROOT/proc")
 mount --rbind /sys "$LIVE_ROOT/sys"; MOUNTS+=("$LIVE_ROOT/sys"); mount --make-rslave "$LIVE_ROOT/sys"
 mount --rbind /run "$LIVE_ROOT/run"; MOUNTS+=("$LIVE_ROOT/run"); mount --make-rslave "$LIVE_ROOT/run"
 
+APT_ACQUIRE_OPTIONS=(
+  -o Acquire::Retries=3
+  -o Acquire::http::Timeout=20
+  -o Acquire::https::Timeout=20
+)
+
 package_output="$(python3 "$PROFILE_TOOL" --package-root "$PACKAGE_SET_ROOT" packages "$PROFILE_PATH" --scope installer)"
 mapfile -t packages <<< "$package_output"
 (( ${#packages[@]} > 0 )) || { echo "Resolved installer package set is empty." >&2; exit 1; }
-chroot "$LIVE_ROOT" /usr/bin/env DEBIAN_FRONTEND=noninteractive apt-get update
+chroot "$LIVE_ROOT" /usr/bin/env DEBIAN_FRONTEND=noninteractive apt-get "${APT_ACQUIRE_OPTIONS[@]}" update
 # Keep intentionally pre-seeded Greia conffiles without any dpkg prompt.
 chroot "$LIVE_ROOT" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
-  apt-get -o Dpkg::Options::=--force-confold install -y --no-install-recommends "${packages[@]}"
+  apt-get "${APT_ACQUIRE_OPTIONS[@]}" -o Dpkg::Options::=--force-confold install -y --no-install-recommends "${packages[@]}"
 
 install -d -m 0755 "$LIVE_ROOT/opt/greia-os"
 rsync -a --delete --exclude '__pycache__' "$PROJECT_ROOT/src" "$PROJECT_ROOT/runtime" "$LIVE_ROOT/opt/greia-os/"
