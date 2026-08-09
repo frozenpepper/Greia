@@ -103,28 +103,43 @@ class MountedRawImage(AbstractContextManager[Path]):
         if not loop.startswith("/dev/loop"):
             raise QemuKMSDRMAcceptanceError(f"unexpected loop device: {loop!r}")
         self.loop_device = loop
-        partition = Path(loop + "p1")
-        for _ in range(50):
-            if partition.exists():
-                break
-            time.sleep(0.1)
-        if not partition.exists():
-            raise QemuKMSDRMAcceptanceError(f"partition did not appear: {partition}")
+        try:
+            partition = Path(loop + "p1")
+            for _ in range(50):
+                if partition.exists():
+                    break
+                time.sleep(0.1)
+            if not partition.exists():
+                raise QemuKMSDRMAcceptanceError(f"partition did not appear: {partition}")
 
-        self.mountpoint.mkdir(parents=True, exist_ok=True)
-        mount_args = ["mount"]
-        if self.read_only:
-            mount_args.extend(["-o", "ro,noload"])
-        mount_args.extend([str(partition), str(self.mountpoint)])
-        self.runner.run(mount_args)
-        self.mounted = True
-        return self.mountpoint
+            self.mountpoint.mkdir(parents=True, exist_ok=True)
+            mount_args = ["mount"]
+            if self.read_only:
+                mount_args.extend(["-o", "ro,noload"])
+            mount_args.extend([str(partition), str(self.mountpoint)])
+            self.runner.run(mount_args)
+            self.mounted = True
+            return self.mountpoint
+        except Exception:
+            cleanup_error = self._cleanup()
+            if cleanup_error is not None:
+                raise QemuKMSDRMAcceptanceError(
+                    "raw-image setup failed and cleanup was incomplete"
+                ) from cleanup_error
+            raise
 
     def __exit__(self, exc_type, exc, traceback) -> bool:
+        cleanup_error = self._cleanup()
+        if cleanup_error is not None and exc is None:
+            raise QemuKMSDRMAcceptanceError("raw-image cleanup failed") from cleanup_error
+        return False
+
+    def _cleanup(self) -> Exception | None:
         cleanup_error: Exception | None = None
         if self.mounted:
             try:
                 self.runner.run(["umount", str(self.mountpoint)])
+                self.mounted = False
             except Exception as error:  # pragma: no cover - privileged failure path
                 cleanup_error = error
         if self.loop_device:
@@ -134,11 +149,10 @@ class MountedRawImage(AbstractContextManager[Path]):
             )
             try:
                 self.runner.run(["bash", "-c", command])
+                self.loop_device = None
             except Exception as error:  # pragma: no cover - privileged failure path
                 cleanup_error = cleanup_error or error
-        if cleanup_error is not None and exc is None:
-            raise QemuKMSDRMAcceptanceError("raw-image cleanup failed") from cleanup_error
-        return False
+        return cleanup_error
 
 
 class QemuKMSDRMAcceptanceHarness:
@@ -522,15 +536,18 @@ def validate_evidence(bundle: EvidenceBundle) -> None:
         raise QemuKMSDRMAcceptanceError("guest acceptance did not run on tty1")
     if summary.get("launcher_masked") is not True:
         raise QemuKMSDRMAcceptanceError("guest normal launcher was not masked in clone")
+    if summary.get("acceptance_status") != "0":
+        raise QemuKMSDRMAcceptanceError("guest acceptance service did not exit successfully")
 
     if passive.get("schema_version") != 1 or passive.get("passive") is not True:
         raise QemuKMSDRMAcceptanceError("invalid passive direct-graphics evidence")
-    if passive.get("sdl", {}).get("kmsdrm_compiled") is not True:  # type: ignore[union-attr]
+    sdl = passive.get("sdl")
+    if not isinstance(sdl, Mapping) or sdl.get("kmsdrm_compiled") is not True:
         raise QemuKMSDRMAcceptanceError("guest SDL does not enumerate kmsdrm")
-    drm = passive.get("drm", {})
+    drm = passive.get("drm")
     if not isinstance(drm, Mapping) or not drm.get("card_nodes"):
         raise QemuKMSDRMAcceptanceError("guest exposes no DRM card node")
-    assessment = passive.get("assessment", {})
+    assessment = passive.get("assessment")
     if not isinstance(assessment, Mapping) or assessment.get("kmsdrm_prerequisites_visible") is not True:
         raise QemuKMSDRMAcceptanceError("guest KMSDRM prerequisites are incomplete")
 
@@ -540,11 +557,18 @@ def validate_evidence(bundle: EvidenceBundle) -> None:
         raise QemuKMSDRMAcceptanceError("active SDL driver is not kmsdrm")
     frame_count = active.get("frame_count")
     hashes = active.get("frame_sha256")
-    if not isinstance(frame_count, int) or frame_count < 3:
+    if not isinstance(frame_count, int) or isinstance(frame_count, bool) or frame_count < 3:
         raise QemuKMSDRMAcceptanceError("active result has insufficient frame count")
     if not isinstance(hashes, list) or len(hashes) != frame_count or len(set(hashes)) < 2:
         raise QemuKMSDRMAcceptanceError("active result has invalid rendered-frame hashes")
-    surface = active.get("surface", {})
+    for digest in hashes:
+        if (
+            not isinstance(digest, str)
+            or len(digest) != 64
+            or any(character not in "0123456789abcdef" for character in digest)
+        ):
+            raise QemuKMSDRMAcceptanceError("active result has malformed frame hash")
+    surface = active.get("surface")
     if not isinstance(surface, Mapping):
         raise QemuKMSDRMAcceptanceError("active result has no surface metadata")
     for key in ("width", "height"):
