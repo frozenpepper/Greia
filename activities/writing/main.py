@@ -17,6 +17,7 @@ from greia_platform.activity_ui import (
     ChildUiMetrics,
     draw_icon_button,
     draw_plus_symbol,
+    draw_undo_symbol,
     load_icon,
     mix,
 )
@@ -24,6 +25,7 @@ from greia_platform.activity_ui import (
 AUTOSAVE_IDLE_SECONDS = 1.2
 MAX_DOCUMENTS = 120
 MAX_CHARACTERS = 120_000
+MAX_UNDO_STATES = 32
 INDEX_KEY = "documents.index.v1"
 
 
@@ -138,6 +140,36 @@ class TextBuffer:
         self.cursor = len(self.text) if end < 0 else end
 
 
+@dataclass(frozen=True, slots=True)
+class TextSnapshot:
+    text: str
+    cursor: int
+
+
+class UndoHistory:
+    def __init__(self, maximum: int = MAX_UNDO_STATES):
+        if maximum < 1:
+            raise ValueError("undo history must retain at least one state")
+        self.maximum = int(maximum)
+        self._items: list[TextSnapshot] = []
+
+    def remember(self, snapshot: TextSnapshot) -> None:
+        if self._items and self._items[-1] == snapshot:
+            return
+        self._items.append(snapshot)
+        if len(self._items) > self.maximum:
+            del self._items[0]
+
+    def pop(self) -> TextSnapshot | None:
+        return self._items.pop() if self._items else None
+
+    def clear(self) -> None:
+        self._items.clear()
+
+    def __bool__(self) -> bool:
+        return bool(self._items)
+
+
 def clamp_text(text: str) -> str:
     if not isinstance(text, str):
         raise TypeError("document text must be a string")
@@ -182,6 +214,7 @@ class WritingApp:
         self.records = self.repository.list_records()
         self.current: DocumentRecord | None = None
         self.buffer = TextBuffer()
+        self.undo_history = UndoHistory()
         self.mode = "edit"
         self.dirty = False
         self.save_error = False
@@ -214,8 +247,7 @@ class WritingApp:
                 elif event.type == pygame.KEYDOWN:
                     running = self._key(event)
                 elif event.type == pygame.TEXTINPUT and self.mode == "edit":
-                    if self.buffer.insert(event.text):
-                        self._changed()
+                    self._apply_edit(lambda: self.buffer.insert(event.text))
                 elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                     running = self._click(event.pos)
             self._autosave()
@@ -235,13 +267,15 @@ class WritingApp:
             if event.key in {pygame.K_RETURN, pygame.K_SPACE} and self.records:
                 self._open(self.records[0])
             return True
-        changed = False
+        if event.key == pygame.K_z and event.mod & (pygame.KMOD_CTRL | pygame.KMOD_META):
+            self._undo()
+            return True
         if event.key == pygame.K_BACKSPACE:
-            changed = self.buffer.backspace()
+            self._apply_edit(self.buffer.backspace)
         elif event.key == pygame.K_DELETE:
-            changed = self.buffer.delete()
+            self._apply_edit(self.buffer.delete)
         elif event.key == pygame.K_RETURN:
-            changed = self.buffer.insert("\n")
+            self._apply_edit(lambda: self.buffer.insert("\n"))
         elif event.key == pygame.K_LEFT:
             self.buffer.move(-1)
         elif event.key == pygame.K_RIGHT:
@@ -254,14 +288,13 @@ class WritingApp:
             self._move_vertical(-1)
         elif event.key == pygame.K_DOWN:
             self._move_vertical(1)
-        if changed:
-            self._changed()
         self._keep_cursor_visible()
         return True
 
     def _click(self, pos: tuple[int, int]) -> bool:
         close = self.metrics.toolbar_button(0, side="left")
         gallery = self.metrics.toolbar_button(1, side="left")
+        undo = self.metrics.toolbar_button(2, side="left")
         new = self.metrics.toolbar_button(0, side="right")
         if close.collidepoint(pos):
             self._save()
@@ -269,6 +302,9 @@ class WritingApp:
         if gallery.collidepoint(pos):
             self._save()
             self.mode = "gallery" if self.mode == "edit" else "edit"
+            return True
+        if undo.collidepoint(pos) and self.mode == "edit":
+            self._undo()
             return True
         if new.collidepoint(pos):
             self._save()
@@ -286,15 +322,16 @@ class WritingApp:
     def _new(self) -> None:
         try:
             record = self.repository.create()
-            self.save_error = False
         except RuntimeError:
-            record = DocumentRecord("0" * 32, "")
             self.save_error = True
+            return
         self.current = record
         self.buffer = TextBuffer()
+        self.undo_history.clear()
         self.records = [record, *[item for item in self.records if item.document_id != record.document_id]]
         self.mode = "edit"
         self.dirty = False
+        self.save_error = False
         self.scroll_line = 0
         self._layout_text = None
 
@@ -302,16 +339,32 @@ class WritingApp:
         self._save()
         try:
             text = self.repository.load_text(record.document_id)
-            self.save_error = False
         except (RuntimeError, UnicodeError, ValueError):
-            text = ""
             self.save_error = True
+            return
         self.current = record
         self.buffer = TextBuffer(text, len(text))
+        self.undo_history.clear()
         self.mode = "edit"
         self.dirty = False
+        self.save_error = False
         self.scroll_line = 0
         self._layout_text = None
+        self._keep_cursor_visible()
+
+    def _apply_edit(self, action) -> None:
+        snapshot = TextSnapshot(self.buffer.text, self.buffer.cursor)
+        if action():
+            self.undo_history.remember(snapshot)
+            self._changed()
+            self._keep_cursor_visible()
+
+    def _undo(self) -> None:
+        snapshot = self.undo_history.pop()
+        if snapshot is None:
+            return
+        self.buffer = TextBuffer(snapshot.text, snapshot.cursor)
+        self._changed()
         self._keep_cursor_visible()
 
     def _changed(self) -> None:
@@ -325,9 +378,6 @@ class WritingApp:
 
     def _save(self) -> None:
         if not self.dirty or self.current is None:
-            return
-        if self.current.document_id == "0" * 32:
-            self.save_error = True
             return
         try:
             updated = self.repository.save_text(self.current.document_id, self.buffer.text)
@@ -379,7 +429,8 @@ class WritingApp:
 
     def _cursor_line(self) -> int:
         lines = self._layout()
-        for index, line in enumerate(lines):
+        for index in range(len(lines) - 1, -1, -1):
+            line = lines[index]
             if line.start <= self.buffer.cursor <= line.end:
                 return index
         return max(0, len(lines) - 1)
@@ -433,9 +484,13 @@ class WritingApp:
         self.screen.fill(self.theme.background)
         close = self.metrics.toolbar_button(0, side="left")
         gallery = self.metrics.toolbar_button(1, side="left")
+        undo = self.metrics.toolbar_button(2, side="left")
         new = self.metrics.toolbar_button(0, side="right")
         draw_icon_button(self.screen, close, fill=self.theme.panel, icon=self.close_icon)
         draw_icon_button(self.screen, gallery, fill=self.theme.panel, icon=self.book_icon, selected=self.mode == "gallery", outline=self.theme.accent)
+        undo_fill = self.theme.panel if self.mode == "edit" and self.undo_history else mix(self.theme.panel, self.theme.background, 0.35)
+        draw_icon_button(self.screen, undo, fill=undo_fill)
+        draw_undo_symbol(self.screen, undo, self.theme.text)
         draw_icon_button(self.screen, new, fill=self.theme.accent)
         draw_plus_symbol(self.screen, new, self.theme.accent_text)
         status = (210, 76, 76) if self.save_error else ((246, 178, 55) if self.dirty else (87, 174, 104))
@@ -449,14 +504,16 @@ class WritingApp:
         rect = self.editor_rect
         pygame.draw.rect(self.screen, mix(self.theme.panel, (255, 255, 255), 0.58), rect, border_radius=self.metrics.radius)
         lines = self._layout()
+        cursor_line = self._cursor_line()
         line_height = self.font.get_linesize()
         x = rect.left + self.metrics.px(26)
         y = rect.top + self.metrics.px(18)
         visible = max(1, (rect.height - self.metrics.px(34)) // line_height)
-        for line in lines[self.scroll_line : self.scroll_line + visible]:
+        visible_lines = lines[self.scroll_line : self.scroll_line + visible]
+        for offset, line in enumerate(visible_lines):
             if line.text:
                 self.screen.blit(self.font.render(line.text, True, self.theme.text), (x, y))
-            if line.start <= self.buffer.cursor <= line.end:
+            if self.scroll_line + offset == cursor_line:
                 cursor_x = x + self.font.size(self.buffer.text[line.start : self.buffer.cursor])[0]
                 pygame.draw.line(self.screen, self.theme.accent, (cursor_x, y + 4), (cursor_x, y + line_height - 5), max(2, self.metrics.px(3)))
             y += line_height
