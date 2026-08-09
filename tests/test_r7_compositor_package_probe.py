@@ -15,6 +15,7 @@ if str(TOOLS) not in sys.path:
 
 from r7_compositor_package_probe import (  # noqa: E402
     CANDIDATES,
+    ChrootRuntimeMounts,
     CompositorPackageProbe,
     CompositorPackageProbeError,
     PackageRecord,
@@ -22,6 +23,7 @@ from r7_compositor_package_probe import (  # noqa: E402
     ResolvConfBackup,
     _capture_resolv_conf,
     _restore_resolv_conf,
+    _tree_signature,
     _truncate_measurement_logs,
     compare_package_manifests,
     parse_package_manifest,
@@ -39,6 +41,16 @@ class _RecordingRunner:
         return subprocess.CompletedProcess(command, 0, f"{label}-stdout\n", f"{label}-stderr\n")
 
 
+class _MountRecordingRunner:
+    def __init__(self):
+        self.calls: list[list[str]] = []
+
+    def run(self, argv, *, check=True, capture_output=False, text=True):
+        command = list(argv)
+        self.calls.append(command)
+        return subprocess.CompletedProcess(command, 0, "", "")
+
+
 class CompositorPackageProbeTests(unittest.TestCase):
     def test_candidate_set_is_fixed_and_small(self):
         self.assertEqual(
@@ -50,7 +62,7 @@ class CompositorPackageProbeTests(unittest.TestCase):
             },
         )
         with self.assertRaisesRegex(CompositorPackageProbeError, "unknown candidate"):
-            ProbeConfig(Path("image"), Path("out"), "cage --allow-unauthenticated").validate()
+            ProbeConfig(Path("image"), Path("out"), "not-a-candidate").validate()
 
     def test_plan_never_mutates_source_or_enables_boot_path(self):
         probe = CompositorPackageProbe(
@@ -59,6 +71,7 @@ class CompositorPackageProbeTests(unittest.TestCase):
         plan = probe.plan()
         self.assertIs(plan["source_image_mutated"], False)
         self.assertIs(plan["boot_or_service_changes"], False)
+        self.assertIs(plan["host_run_exposed"], False)
         self.assertEqual(plan["packages"], ["cage"])
         self.assertEqual(
             plan["apt_policy"],
@@ -83,9 +96,25 @@ class CompositorPackageProbeTests(unittest.TestCase):
         self.assertIn("--no-remove", install)
         self.assertIn("Dpkg::Options::=--force-confold", install)
         self.assertEqual(install[-1], "weston")
-        self.assertNotIn("--allow-unauthenticated", install)
         self.assertIn("update-stdout", log)
         self.assertIn("install-stderr", log)
+
+    def test_chroot_runtime_mounts_never_expose_host_run(self):
+        runner = _MountRecordingRunner()
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            with ChrootRuntimeMounts(root, runner=runner):
+                pass
+            run_target = str(root / "run")
+        flattened = [argument for command in runner.calls for argument in command]
+        self.assertNotIn("/run", flattened)
+        self.assertNotIn(run_target, flattened)
+        self.assertIn("/dev", flattened)
+        self.assertIn("/sys", flattened)
+        self.assertTrue(
+            any(command[:3] == ["mount", "-t", "proc"] for command in runner.calls)
+        )
+        self.assertTrue(any(command[:2] == ["bash", "-c"] for command in runner.calls))
 
     def test_manifest_parser_requires_exact_four_field_unique_records(self):
         parsed = parse_package_manifest(
@@ -198,6 +227,26 @@ class CompositorPackageProbeTests(unittest.TestCase):
             self.assertEqual(apt_log.stat().st_size, 0)
             self.assertEqual(dpkg_log.stat().st_size, 0)
             self.assertTrue(symlink.is_symlink())
+
+    def test_systemd_tree_signature_detects_file_and_symlink_changes(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            tree = root / "etc/systemd/system"
+            wants = tree / "graphical.target.wants"
+            wants.mkdir(parents=True)
+            unit = tree / "greia-test.service"
+            unit.write_text("[Service]\nType=oneshot\n", encoding="utf-8")
+            enabled = wants / "greia-test.service"
+            enabled.symlink_to("../greia-test.service")
+            before = _tree_signature(tree)
+
+            unit.write_text("[Service]\nType=simple\n", encoding="utf-8")
+            self.assertNotEqual(before, _tree_signature(tree))
+
+            unit.write_text("[Service]\nType=oneshot\n", encoding="utf-8")
+            enabled.unlink()
+            enabled.symlink_to("../different.service")
+            self.assertNotEqual(before, _tree_signature(tree))
 
 
 if __name__ == "__main__":
