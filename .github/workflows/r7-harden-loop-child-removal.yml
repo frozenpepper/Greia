@@ -1,0 +1,253 @@
+name: R7 gate strict loop partition teardown
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/r7-harden-loop-child-removal.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  gate-and-commit:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Apply strict teardown candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > build/lib/safe-cleanup.sh <<'SH'
+          #!/usr/bin/env bash
+          # Shared destructive-build cleanup helpers. Source from bash with set -Eeuo.
+
+          safe_udev_settle() {
+            udevadm settle --timeout=5 >/dev/null 2>&1 || true
+          }
+
+          safe_unmount_path_tree() {
+            local path="$1"
+            [[ -n "$path" ]] || return 0
+            local targets=()
+            local index target attempt
+            mapfile -t targets < <(findmnt -rn -R -o TARGET --target "$path" 2>/dev/null || true)
+            for (( index=${#targets[@]}-1; index>=0; index-- )); do
+              target="${targets[$index]}"
+              [[ -n "$target" ]] || continue
+              case "$target" in
+                "$path"|"$path"/*) ;;
+                *) echo "ERROR: refusing cleanup target outside requested mount tree: $target" >&2; return 1 ;;
+              esac
+              for attempt in {1..20}; do
+                mountpoint -q -- "$target" || break
+                sync
+                umount -- "$target" 2>/dev/null || true
+                mountpoint -q -- "$target" || break
+                sleep 0.1
+              done
+              if mountpoint -q -- "$target"; then
+                echo "ERROR: mount remains busy after bounded normal-unmount retries: $target" >&2
+                return 1
+              fi
+            done
+            safe_udev_settle
+          }
+
+          safe_unmount_paths() {
+            local paths=("$@")
+            local failed=0
+            local index path
+            for (( index=${#paths[@]}-1; index>=0; index-- )); do
+              path="${paths[$index]}"
+              [[ -n "$path" ]] || continue
+              safe_unmount_path_tree "$path" || failed=1
+            done
+            return "$failed"
+          }
+
+          safe_loop_partition_children_present() {
+            local loop_device="${1:-}"
+            [[ -n "$loop_device" ]] || return 1
+            local loop_name="${loop_device#/dev/}"
+            compgen -G "/sys/class/block/${loop_name}p[0-9]*" >/dev/null
+          }
+
+          safe_remove_loop_partitions() {
+            local loop_device="${1:-}"
+            [[ -n "$loop_device" ]] || return 0
+            local attempt
+            for attempt in {1..20}; do
+              if ! safe_loop_partition_children_present "$loop_device"; then
+                return 0
+              fi
+              # partx modifies kernel partition bookkeeping; a transient busy
+              # child must not be ignored and carried into parent loop detach.
+              partx -d "$loop_device" >/dev/null 2>&1 || true
+              safe_udev_settle
+              if ! safe_loop_partition_children_present "$loop_device"; then
+                return 0
+              fi
+              sleep 0.1
+            done
+            echo "ERROR: loop partition mappings remain after bounded partx teardown: $loop_device" >&2
+            return 1
+          }
+
+          safe_loop_is_associated() {
+            local loop_device="${1:-}"
+            [[ -n "$loop_device" ]] || return 1
+            local loop_name="${loop_device#/dev/}"
+            local backing_path="/sys/class/block/$loop_name/loop/backing_file"
+            [[ -r "$backing_path" ]] || return 1
+            local backing
+            backing="$(cat "$backing_path" 2>/dev/null || true)"
+            [[ -n "$backing" ]]
+          }
+
+          safe_detach_loop() {
+            local loop_device="${1:-}"
+            [[ -n "$loop_device" ]] || return 0
+            # Remove and verify kernel partition children before touching the
+            # parent loop. Never suppress a persistent child mapping.
+            safe_remove_loop_partitions "$loop_device" || return 1
+
+            blockdev --flushbufs "$loop_device" 2>/dev/null || true
+            safe_udev_settle
+            local attempt
+            for attempt in {1..20}; do
+              if ! safe_loop_is_associated "$loop_device"; then
+                return 0
+              fi
+              losetup -d "$loop_device" 2>/dev/null || true
+              safe_udev_settle
+              if ! safe_loop_is_associated "$loop_device"; then
+                return 0
+              fi
+              sleep 0.1
+            done
+            echo "ERROR: loop backing file is still associated after detach and udev settle: $loop_device" >&2
+            return 1
+          }
+
+          safe_remove_build_dir() {
+            local build_dir="$1"
+            [[ -n "$build_dir" && "$build_dir" != "/" ]] || return 1
+            if findmnt -rn -R "$build_dir" 2>/dev/null | grep -q .; then
+              echo "ERROR: refusing to remove build tree with live mounts: $build_dir" >&2
+              return 1
+            fi
+            rm -rf --one-file-system -- "$build_dir"
+          }
+          SH
+
+          cat > tests/test_loop_teardown_evidence.py <<'PY'
+          from __future__ import annotations
+
+          import unittest
+          from pathlib import Path
+
+
+          ROOT = Path(__file__).resolve().parents[1]
+
+
+          class LoopTeardownEvidenceTests(unittest.TestCase):
+              def test_partition_children_are_verified_before_parent_detach(self) -> None:
+                  helper = (ROOT / "build/lib/safe-cleanup.sh").read_text(encoding="utf-8")
+                  remove_call = helper.index('safe_remove_loop_partitions "$loop_device"')
+                  flush = helper.index('blockdev --flushbufs "$loop_device"')
+                  detach = helper.index('losetup -d "$loop_device"')
+                  self.assertLess(remove_call, flush)
+                  self.assertLess(flush, detach)
+                  self.assertIn('/sys/class/block/${loop_name}p[0-9]*', helper)
+                  self.assertIn('loop partition mappings remain after bounded partx teardown', helper)
+                  self.assertNotIn("losetup -D", helper)
+
+              def test_loop_association_probe_does_not_reopen_block_device(self) -> None:
+                  helper = (ROOT / "build/lib/safe-cleanup.sh").read_text(encoding="utf-8")
+                  self.assertIn('/sys/class/block/$loop_name/loop/backing_file', helper)
+                  self.assertIn('safe_loop_is_associated "$loop_device"', helper)
+                  self.assertNotIn('losetup "$loop_device" >/dev/null', helper)
+
+              def test_both_builders_require_blockdev_explicitly(self) -> None:
+                  for relative in ("build/build-image.sh", "build/build-installer-image.sh"):
+                      text = (ROOT / relative).read_text(encoding="utf-8")
+                      command_line = next(
+                          line for line in text.splitlines()
+                          if line.startswith(("require_commands=(", "required=("))
+                      )
+                      words = command_line.replace("(", " ").replace(")", " ").split()
+                      self.assertIn("blockdev", words)
+                      self.assertIn("partx", words)
+                      self.assertIn("losetup", words)
+
+              def test_cleanup_failure_is_not_hidden_as_build_success(self) -> None:
+                  for relative in ("build/build-image.sh", "build/build-installer-image.sh"):
+                      text = (ROOT / relative).read_text(encoding="utf-8")
+                      cleanup = text[text.index("cleanup() {"):text.index("trap cleanup EXIT")]
+                      self.assertIn("if (( original_status == 0 )); then", cleanup)
+                      self.assertIn("return 1", cleanup)
+
+
+          if __name__ == "__main__":
+              unittest.main()
+          PY
+
+          chmod 0755 build/lib/safe-cleanup.sh
+          bash -n build/lib/safe-cleanup.sh
+          git diff --check
+
+      - name: Install test dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check Pillow
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            util-linux parted e2fsprogs udev
+
+      - name: Focused static and live teardown gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          PYTHONPATH=src python3 -m unittest tests.test_loop_teardown_evidence
+
+          image="$RUNNER_TEMP/r7-safe-cleanup.img"
+          root="$RUNNER_TEMP/r7-safe-cleanup-root"
+          mkdir -p "$root"
+          truncate -s 128M "$image"
+          sudo parted -s "$image" mklabel msdos
+          sudo parted -s "$image" mkpart primary ext4 1MiB 100%
+          loop="$(sudo losetup --find --show --partscan "$image")"
+          for _ in $(seq 1 30); do test -b "${loop}p1" && break; sleep 0.1; done
+          test -b "${loop}p1"
+          sudo mkfs.ext4 -q -F "${loop}p1"
+          sudo mount "${loop}p1" "$root"
+          sudo sh -c "echo gate > '$root/evidence.txt'"
+          sudo sync
+          sudo umount "$root"
+          sudo bash -c "source '$PWD/build/lib/safe-cleanup.sh'; safe_detach_loop '$loop'"
+          test -z "$(sudo losetup -j "$image" 2>/dev/null || true)"
+
+      - name: Full provider-free gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          make verify
+
+      - name: Commit exact tested repair and remove gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm .github/workflows/r7-harden-loop-child-removal.yml
+          git add build/lib/safe-cleanup.sh tests/test_loop_teardown_evidence.py
+          git diff --cached --check
+          git config user.name greia-r7
+          git config user.email greia-r7@users.noreply.github.com
+          git commit -m 'build: verify partition removal before loop detach'
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
