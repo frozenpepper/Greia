@@ -72,6 +72,7 @@ class DirectGraphicsProbeTests(unittest.TestCase):
                 }
             ],
         )
+        self.assertTrue(snapshot["assessment"]["scanout_connector_visible"])
         self.assertTrue(snapshot["assessment"]["kmsdrm_prerequisites_visible"])
         self.assertTrue(snapshot["assessment"]["active_kmsdrm_test_required"])
         self.assertTrue(snapshot["session"]["display_present"])
@@ -88,6 +89,40 @@ class DirectGraphicsProbeTests(unittest.TestCase):
             ).snapshot()
 
         self.assertFalse(snapshot["sdl"]["kmsdrm_compiled"])
+        self.assertTrue(snapshot["assessment"]["scanout_connector_visible"])
+        self.assertFalse(snapshot["assessment"]["kmsdrm_prerequisites_visible"])
+
+    def test_card_without_connected_mode_is_not_a_visible_scanout_path(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = self._fixture_root(temporary)
+            connector = root / "sys" / "class" / "drm" / "card0-eDP-1"
+            (connector / "status").write_text("disconnected\n", encoding="utf-8")
+            (connector / "modes").write_text("\n", encoding="utf-8")
+            snapshot = DirectGraphicsProbe(
+                ProbeInputs(root=root, environment={}),
+                library_finder=self._libraries,
+                sdl_driver_probe=lambda: ("kmsdrm", "dummy"),
+                pygame_probe=lambda: {"available": True},
+            ).snapshot()
+
+        self.assertEqual(snapshot["drm"]["card_nodes"], ["card0"])
+        self.assertFalse(snapshot["assessment"]["scanout_connector_visible"])
+        self.assertFalse(snapshot["assessment"]["kmsdrm_prerequisites_visible"])
+
+    def test_connected_connector_without_modes_is_not_a_visible_scanout_path(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = self._fixture_root(temporary)
+            connector = root / "sys" / "class" / "drm" / "card0-eDP-1"
+            (connector / "modes").write_text("\n", encoding="utf-8")
+            snapshot = DirectGraphicsProbe(
+                ProbeInputs(root=root, environment={}),
+                library_finder=self._libraries,
+                sdl_driver_probe=lambda: ("kmsdrm",),
+                pygame_probe=lambda: {"available": True},
+            ).snapshot()
+
+        self.assertTrue(snapshot["drm"]["card_nodes"])
+        self.assertFalse(snapshot["assessment"]["scanout_connector_visible"])
         self.assertFalse(snapshot["assessment"]["kmsdrm_prerequisites_visible"])
 
     def test_missing_runtime_facts_are_reported_without_active_side_effects(self) -> None:
@@ -102,6 +137,7 @@ class DirectGraphicsProbeTests(unittest.TestCase):
         self.assertEqual(snapshot["drm"]["card_nodes"], [])
         self.assertEqual(snapshot["drm"]["connectors"], [])
         self.assertFalse(snapshot["pygame"]["available"])
+        self.assertFalse(snapshot["assessment"]["scanout_connector_visible"])
         self.assertFalse(snapshot["assessment"]["kmsdrm_prerequisites_visible"])
         self.assertTrue(snapshot["assessment"]["active_kmsdrm_test_required"])
 
