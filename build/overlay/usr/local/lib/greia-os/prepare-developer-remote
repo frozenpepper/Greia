@@ -1,0 +1,34 @@
+#!/bin/sh
+set -eu
+
+marker=/etc/greia-os/developer-remote
+authorized_keys=/var/lib/greia-admin/.ssh/authorized_keys
+
+[ -f "$marker" ] || {
+  echo "Greia developer remote marker is absent." >&2
+  exit 1
+}
+[ -s "$authorized_keys" ] || {
+  echo "Greia developer remote authorized_keys is absent or empty." >&2
+  exit 1
+}
+
+install -d -m 0700 -o root -g root /var/lib/greia-developer
+install -d -m 0700 -o root -g root \
+  /var/lib/greia-developer/staging \
+  /var/lib/greia-developer/backups
+install -d -m 0700 -o greiaadmin -g greiaadmin /var/lib/greia-admin/greia-dev-upload
+
+# Production/recovery images deliberately omit SSH host keys. Developer images
+# generate them on the actual machine so cloned image files never share host
+# identity.
+/usr/bin/ssh-keygen -A
+
+# The client key is provisioned during developer-image creation. Keep the
+# account locked for password auth; sshd accepts the explicit public key only.
+chown -R greiaadmin:greiaadmin /var/lib/greia-admin/.ssh
+chmod 0700 /var/lib/greia-admin/.ssh
+chmod 0600 "$authorized_keys"
+
+printf '%s\n' ready > /var/lib/greia-developer/remote-ready
+chmod 0600 /var/lib/greia-developer/remote-ready
