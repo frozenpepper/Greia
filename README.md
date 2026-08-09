@@ -126,7 +126,9 @@ The current baseline still must not be promoted as a finished OS image. Importan
 
 ## Repository map
 
-- `AGENTS.md` — non-negotiable product and engineering contracts.
+- `AGENTS.md` — non-negotiable product and engineering contracts and mandatory agent read/maintenance rules.
+- `docs/agents/GREIA_AGENT_OPERATIONS.md` — operational manual for agents: Git/GitHub discipline, builds, local verification, developer images, test-hardware connection, remote screenshots/input/deployment/logs, evidence and stop conditions.
+- `skills/greia-activity-authoring/SKILL.md` — living agent skill for creating/optimizing Greia Activities against the current manifest, SDK, storage/events, shared graphics/theme canon, performance floor, validation and remote test loop.
 - `HANDOVER.md` — current standalone implementation/migration handover.
 - `docs/architecture/GREIA_ARCHITECTURE.md` — Greia living architecture overview.
 - `docs/adr/0012-platform-architecture-constitution.md` — long-form platform constitution inherited and rebranded from the prototype tree.
