@@ -90,7 +90,11 @@ class ProbeConfig:
 
 
 class ChrootRuntimeMounts(AbstractContextManager[None]):
-    """Provide the minimum virtual filesystems required for APT/dpkg in a clone."""
+    """Provide only the virtual filesystems needed for trusted Debian APT/dpkg.
+
+    Host /run is deliberately *not* exposed. In particular, package maintainer
+    scripts must not be able to reach the host systemd private control socket.
+    """
 
     def __init__(self, root: Path, *, runner: CommandRunner):
         self.root = root
@@ -98,14 +102,13 @@ class ChrootRuntimeMounts(AbstractContextManager[None]):
         self._mounted: list[Path] = []
 
     def __enter__(self) -> None:
-        for name in ("dev", "proc", "sys", "run"):
+        for name in ("dev", "proc", "sys"):
             (self.root / name).mkdir(parents=True, exist_ok=True)
         try:
             self._rbind(Path("/dev"), self.root / "dev")
             self.runner.run(["mount", "-t", "proc", "proc", str(self.root / "proc")])
             self._mounted.append(self.root / "proc")
             self._rbind(Path("/sys"), self.root / "sys")
-            self._rbind(Path("/run"), self.root / "run")
         except Exception:
             cleanup_error = self._cleanup()
             if cleanup_error is not None:
@@ -151,7 +154,7 @@ class CompositorPackageProbe:
     """Measure candidate package closure in a disposable production-image clone.
 
     This tool does not enable a compositor, change production package sets, or
-    boot the clone. It only performs a bounded APT transaction with
+    boot the clone. It performs a bounded APT transaction with
     --no-install-recommends, --no-upgrade, and --no-remove, then reports the
     exact package/filesystem delta after restoring probe plumbing and cleaning
     APT/log state to the same policy used by the production image builder.
@@ -191,6 +194,7 @@ class CompositorPackageProbe:
                 "upgrades_allowed": False,
                 "removals_allowed": False,
             },
+            "host_run_exposed": False,
             "boot_or_service_changes": False,
         }
 
@@ -242,6 +246,7 @@ class CompositorPackageProbe:
             )
             baseline_file_bytes = _du_bytes(root, self.runner)
             baseline_fs_bytes = _filesystem_used_bytes(root, self.runner)
+            systemd_tree_before = _tree_signature(root / "etc/systemd/system")
             resolver_backup = _prepare_clone_for_apt(root)
 
             try:
@@ -268,6 +273,11 @@ class CompositorPackageProbe:
                 _remove_probe_mutations(root, resolver_backup)
 
             _truncate_measurement_logs(root)
+            systemd_tree_after = _tree_signature(root / "etc/systemd/system")
+            if systemd_tree_after != systemd_tree_before:
+                raise CompositorPackageProbeError(
+                    "candidate transaction changed /etc/systemd/system boot/service state"
+                )
             final_file_bytes = _du_bytes(root, self.runner)
             final_fs_bytes = _filesystem_used_bytes(root, self.runner)
             self.apt_log_path.write_text(apt_log, encoding="utf-8")
@@ -305,6 +315,7 @@ class CompositorPackageProbe:
                 "source_image": str(source),
                 "source_image_sha256": source_sha,
                 "test_image": str(self.test_image.resolve()),
+                "host_run_exposed": False,
                 "boot_or_service_changes": False,
                 "apt_policy": {
                     "install_recommends": False,
@@ -334,7 +345,8 @@ class CompositorPackageProbe:
                     "used_delta_bytes": final_fs_bytes - baseline_fs_bytes,
                 },
                 "limitations": [
-                    "measures package and filesystem closure only; candidate is not enabled or booted",
+                    "measures incremental package/filesystem closure relative to the current Xorg production image",
+                    "candidate is not enabled or booted",
                     "does not measure compositor RSS, latency, scanout, input routing, or crash recovery",
                     "does not authorize adding the candidate to a production Greia package set",
                 ],
@@ -534,31 +546,31 @@ def _capture_resolv_conf(root: Path) -> ResolvConfBackup:
 
 def _prepare_clone_for_apt(root: Path) -> ResolvConfBackup:
     backup = _capture_resolv_conf(root)
-    host_resolv = Path("/etc/resolv.conf")
     try:
+        host_resolv = Path("/etc/resolv.conf")
         content = host_resolv.read_bytes()
-    except OSError as exc:
-        raise CompositorPackageProbeError("host resolv.conf is unreadable") from exc
-    if not content or len(content) > 64 * 1024:
-        raise CompositorPackageProbeError(
-            "host resolv.conf is empty or unexpectedly large"
-        )
+        if not content or len(content) > 64 * 1024:
+            raise CompositorPackageProbeError(
+                "host resolv.conf is empty or unexpectedly large"
+            )
 
-    resolv = root / "etc/resolv.conf"
-    if resolv.exists() or resolv.is_symlink():
-        resolv.unlink()
-    resolv.write_bytes(content)
-    os.chmod(resolv, 0o644)
+        resolv = root / "etc/resolv.conf"
+        if resolv.exists() or resolv.is_symlink():
+            resolv.unlink()
+        resolv.write_bytes(content)
+        os.chmod(resolv, 0o644)
 
-    policy = root / "usr/sbin/policy-rc.d"
-    if policy.exists() or policy.is_symlink():
+        policy = root / "usr/sbin/policy-rc.d"
+        if policy.exists() or policy.is_symlink():
+            raise CompositorPackageProbeError(
+                "production image unexpectedly already contains /usr/sbin/policy-rc.d"
+            )
+        policy.write_text("#!/bin/sh\nexit 101\n", encoding="ascii")
+        os.chmod(policy, 0o755)
+        return backup
+    except Exception:
         _restore_resolv_conf(root, backup)
-        raise CompositorPackageProbeError(
-            "production image unexpectedly already contains /usr/sbin/policy-rc.d"
-        )
-    policy.write_text("#!/bin/sh\nexit 101\n", encoding="ascii")
-    os.chmod(policy, 0o755)
-    return backup
+        raise
 
 
 def _remove_probe_mutations(root: Path, backup: ResolvConfBackup) -> None:
@@ -594,6 +606,23 @@ def _truncate_measurement_logs(root: Path) -> None:
         if path.is_file() and not path.is_symlink():
             with path.open("wb"):
                 pass
+
+
+def _tree_signature(root: Path) -> tuple[tuple[str, str, str], ...]:
+    if not root.exists():
+        return ()
+    records: list[tuple[str, str, str]] = []
+    for path in sorted(root.rglob("*"), key=lambda item: str(item.relative_to(root))):
+        relative = str(path.relative_to(root))
+        if path.is_symlink():
+            records.append((relative, "symlink", os.readlink(path)))
+        elif path.is_dir():
+            records.append((relative, "directory", ""))
+        elif path.is_file():
+            records.append((relative, "file", _sha256_file(path)))
+        else:
+            records.append((relative, "other", ""))
+    return tuple(records)
 
 
 def _du_bytes(root: Path, runner: CommandRunner) -> int:
