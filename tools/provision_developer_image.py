@@ -78,9 +78,10 @@ class DeveloperImageProvisioner:
                 fingerprint = self._provision_client_key(root, uid=uid, gid=gid)
                 self._write_remote_policy(root, fingerprint=fingerprint)
                 self._enable_units(root)
-                self._validate_sshd(root)
+                self._validate_sshd_without_persisting_host_keys(root)
                 self._validate_sudoers(root)
                 self._remove_temporary_client_key(root)
+                self._assert_no_host_keys(root)
         finally:
             if mountpoint.exists():
                 try:
@@ -110,7 +111,9 @@ class DeveloperImageProvisioner:
             "production_profile_changed": False,
             "declared_profile": profile,
         }
-        self.report_path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        self.report_path.write_text(
+            json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
         os.chmod(self.report_path, 0o600)
         return report
 
@@ -130,12 +133,20 @@ class DeveloperImageProvisioner:
             raise DeveloperImageProvisionError("image profile has no package-set declaration")
         target_sets = package_sets.get("target")
         if not isinstance(target_sets, list) or EXPECTED_PACKAGE_SET not in target_sets:
-            raise DeveloperImageProvisionError("developer image is missing developer-remote package set")
+            raise DeveloperImageProvisionError(
+                "developer image is missing developer-remote package set"
+            )
         return payload
 
     def _admin_identity(self, root: Path) -> tuple[int, int]:
-        uid = int(self._chroot(root, ["id", "-u", "greiaadmin"], capture_output=True).stdout.strip())
-        gid = int(self._chroot(root, ["id", "-g", "greiaadmin"], capture_output=True).stdout.strip())
+        uid = int(
+            self._chroot(root, ["id", "-u", "greiaadmin"], capture_output=True)
+            .stdout.strip()
+        )
+        gid = int(
+            self._chroot(root, ["id", "-g", "greiaadmin"], capture_output=True)
+            .stdout.strip()
+        )
         return uid, gid
 
     def _provision_client_key(self, root: Path, *, uid: int, gid: int) -> str:
@@ -158,7 +169,19 @@ class DeveloperImageProvisioner:
         )
         tmp_pub = Path(str(tmp_key) + ".pub")
         if not tmp_key.is_file() or not tmp_pub.is_file():
-            raise DeveloperImageProvisionError("ssh-keygen did not create the developer client key")
+            raise DeveloperImageProvisionError(
+                "ssh-keygen did not create the developer client key"
+            )
+
+        fingerprint = self._chroot(
+            root,
+            ["/usr/bin/ssh-keygen", "-lf", "/tmp/greia-dev-client-key.pub"],
+            capture_output=True,
+        ).stdout.strip()
+        if not fingerprint:
+            raise DeveloperImageProvisionError(
+                "could not fingerprint generated developer key"
+            )
 
         shutil.copyfile(tmp_key, self.key_path)
         shutil.copyfile(tmp_pub, self.public_key_path)
@@ -172,14 +195,6 @@ class DeveloperImageProvisioner:
         shutil.copyfile(tmp_pub, root / AUTHORIZED_KEYS)
         os.chmod(root / AUTHORIZED_KEYS, 0o600)
         os.chown(root / AUTHORIZED_KEYS, uid, gid)
-
-        completed = self.runner.run(
-            ["ssh-keygen", "-lf", str(self.public_key_path)],
-            capture_output=True,
-        )
-        fingerprint = completed.stdout.strip()
-        if not fingerprint:
-            raise DeveloperImageProvisionError("could not fingerprint generated developer key")
         return fingerprint
 
     def _write_remote_policy(self, root: Path, *, fingerprint: str) -> None:
@@ -222,15 +237,34 @@ class DeveloperImageProvisioner:
             ]
         )
 
-    def _validate_sshd(self, root: Path) -> None:
-        self._chroot(root, ["/usr/sbin/sshd", "-t"])
+    def _validate_sshd_without_persisting_host_keys(self, root: Path) -> None:
+        try:
+            self._chroot(root, ["/usr/bin/ssh-keygen", "-A"])
+            self._chroot(root, ["/usr/sbin/sshd", "-t"])
+        finally:
+            for path in (root / "etc/ssh").glob("ssh_host_*"):
+                if path.is_file() or path.is_symlink():
+                    path.unlink(missing_ok=True)
 
     def _validate_sudoers(self, root: Path) -> None:
-        self._chroot(root, ["/usr/sbin/visudo", "-cf", "/etc/sudoers.d/greia-developer-remote"])
+        self._chroot(
+            root,
+            ["/usr/sbin/visudo", "-cf", "/etc/sudoers.d/greia-developer-remote"],
+        )
 
     def _remove_temporary_client_key(self, root: Path) -> None:
         (root / "tmp/greia-dev-client-key").unlink(missing_ok=True)
         (root / "tmp/greia-dev-client-key.pub").unlink(missing_ok=True)
+
+    @staticmethod
+    def _assert_no_host_keys(root: Path) -> None:
+        remaining = sorted(
+            path.name for path in (root / "etc/ssh").glob("ssh_host_*") if path.exists()
+        )
+        if remaining:
+            raise DeveloperImageProvisionError(
+                "developer image retained SSH host identity: " + ", ".join(remaining)
+            )
 
     def _chroot(
         self,
@@ -247,7 +281,9 @@ class DeveloperImageProvisioner:
     @staticmethod
     def _require_root() -> None:
         if os.geteuid() != 0:
-            raise DeveloperImageProvisionError("developer image provisioning must run as root")
+            raise DeveloperImageProvisionError(
+                "developer image provisioning must run as root"
+            )
 
 
 def _sha256_file(path: Path) -> str:
@@ -259,7 +295,9 @@ def _sha256_file(path: Path) -> str:
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Provision Greia's development-only remote-control image")
+    parser = argparse.ArgumentParser(
+        description="Provision Greia's development-only remote-control image"
+    )
     parser.add_argument("--image", required=True, type=Path)
     parser.add_argument("--output-dir", required=True, type=Path)
     return parser.parse_args(argv)
