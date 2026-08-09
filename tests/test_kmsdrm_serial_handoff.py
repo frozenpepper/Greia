@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 import subprocess
 import tempfile
 import unittest
@@ -25,7 +26,7 @@ class _Surface:
         return (800, 600)
 
     def fill(self, color):
-        self.color = color
+        self.color = tuple(color)
 
 
 class _Display:
@@ -65,13 +66,19 @@ class _Image:
         return bytes(surface.color) * 32
 
 
+class _StaticImage:
+    @staticmethod
+    def tostring(surface, format_name):
+        return b"static-shell-frame"
+
+
 class _Pygame:
     FULLSCREEN = 1
 
-    def __init__(self, driver: str = "kmsdrm"):
+    def __init__(self, driver: str = "kmsdrm", image=None):
         self.display = _Display(driver)
         self.event = _Event()
-        self.image = _Image()
+        self.image = image or _Image()
         self.version = _Version()
 
     @staticmethod
@@ -113,8 +120,8 @@ class _Children:
     ):
         self.clean_return = clean_return
         self.crash_return = crash_return
-        self.clean_payload = clean_payload or _clean_payload()
-        self.crash_payload = crash_payload or _crash_payload()
+        self.clean_payload = clean_payload if clean_payload is not None else _clean_payload()
+        self.crash_payload = crash_payload if crash_payload is not None else _crash_payload()
         self.calls: list[tuple[object, ...]] = []
 
     def run_clean(self, output_path: Path, *, frame_count: int):
@@ -129,16 +136,28 @@ class _Children:
 
 
 class SerialHandoffTests(unittest.TestCase):
-    def _runner(self, root: Path, *, pygame=None, children=None, environment=None):
+    def _runner(
+        self,
+        root: Path,
+        *,
+        pygame=None,
+        children=None,
+        environment=None,
+        child_timeout_seconds=15.0,
+        clean_child_frames=3,
+    ):
         return KMSDRMSerialHandoffRunner(
             SerialHandoffConfig(
                 output_path=root / "result.json",
                 acknowledge_display_takeover=True,
+                child_timeout_seconds=child_timeout_seconds,
+                clean_child_frames=clean_child_frames,
             ),
             environment=environment
             or {
                 "SDL_VIDEODRIVER": "kmsdrm",
                 "DISPLAY": "",
+                "XAUTHORITY": "",
                 "WAYLAND_DISPLAY": "",
             },
             pygame_module=pygame or _Pygame(),
@@ -163,7 +182,14 @@ class SerialHandoffTests(unittest.TestCase):
         self.assertEqual(pygame.event.pumps, 3)
         self.assertEqual(persisted["crash_child"]["return_code"], 23)
         self.assertEqual(
-            result["shell_after_crash"]["actual_video_driver"], "kmsdrm"
+            len(
+                {
+                    result["shell_initial"]["frame_sha256"],
+                    result["shell_after_clean"]["frame_sha256"],
+                    result["shell_after_crash"]["frame_sha256"],
+                }
+            ),
+            3,
         )
 
     def test_refuses_non_kmsdrm_environment_before_display_init(self):
@@ -178,16 +204,46 @@ class SerialHandoffTests(unittest.TestCase):
                 runner.run()
         self.assertEqual(pygame.display.init_count, 0)
 
-    def test_refuses_x11_or_wayland_transport_before_display_init(self):
-        for name in ("DISPLAY", "WAYLAND_DISPLAY"):
+    def test_refuses_x11_or_wayland_transport_authority_before_display_init(self):
+        for name, value in (
+            ("DISPLAY", ":0"),
+            ("XAUTHORITY", "/run/greia/xauthority"),
+            ("WAYLAND_DISPLAY", "wayland-0"),
+        ):
             with self.subTest(name=name), tempfile.TemporaryDirectory() as temporary:
                 pygame = _Pygame()
                 runner = self._runner(
                     Path(temporary),
                     pygame=pygame,
-                    environment={"SDL_VIDEODRIVER": "kmsdrm", name: "unexpected"},
+                    environment={"SDL_VIDEODRIVER": "kmsdrm", name: value},
                 )
-                with self.assertRaisesRegex(KMSDRMSerialHandoffError, "transport"):
+                with self.assertRaisesRegex(KMSDRMSerialHandoffError, "transport authority"):
+                    runner.run()
+                self.assertEqual(pygame.display.init_count, 0)
+
+    def test_timeout_and_frame_configuration_are_strict_and_finite(self):
+        bad_timeouts = (True, 0, -1, 121, math.inf, math.nan, "15")
+        for value in bad_timeouts:
+            with self.subTest(timeout=value), tempfile.TemporaryDirectory() as temporary:
+                pygame = _Pygame()
+                runner = self._runner(
+                    Path(temporary),
+                    pygame=pygame,
+                    child_timeout_seconds=value,
+                )
+                with self.assertRaisesRegex(KMSDRMSerialHandoffError, "finite number"):
+                    runner.run()
+                self.assertEqual(pygame.display.init_count, 0)
+
+        for value in (True, 0, 17, 3.0):
+            with self.subTest(frames=value), tempfile.TemporaryDirectory() as temporary:
+                pygame = _Pygame()
+                runner = self._runner(
+                    Path(temporary),
+                    pygame=pygame,
+                    clean_child_frames=value,
+                )
+                with self.assertRaisesRegex(KMSDRMSerialHandoffError, "integer between"):
                     runner.run()
                 self.assertEqual(pygame.display.init_count, 0)
 
@@ -214,6 +270,42 @@ class SerialHandoffTests(unittest.TestCase):
         self.assertEqual(pygame.display.init_count, 1)
         self.assertEqual(pygame.display.quit_count, 1)
 
+    def test_clean_child_frame_count_must_match_request_exactly(self):
+        payload = _clean_payload(4)
+        with tempfile.TemporaryDirectory() as temporary:
+            with self.assertRaisesRegex(KMSDRMSerialHandoffError, "rendered-frame evidence"):
+                self._runner(
+                    Path(temporary),
+                    children=_Children(clean_payload=payload),
+                    clean_child_frames=3,
+                ).run()
+
+    def test_clean_child_hashes_must_be_valid_and_change(self):
+        malformed = _clean_payload()
+        malformed["frame_sha256"] = ["1" * 64, "not-a-hash", "3" * 64]
+        duplicate = _clean_payload()
+        duplicate["frame_sha256"] = ["a" * 64, "a" * 64, "a" * 64]
+
+        cases = (
+            (malformed, "frame hash is invalid"),
+            (duplicate, "did not change"),
+        )
+        for payload, message in cases:
+            with self.subTest(message=message), tempfile.TemporaryDirectory() as temporary:
+                with self.assertRaisesRegex(KMSDRMSerialHandoffError, message):
+                    self._runner(
+                        Path(temporary), children=_Children(clean_payload=payload)
+                    ).run()
+
+    def test_clean_child_surface_is_validated(self):
+        payload = _clean_payload()
+        payload["surface"] = {"width": 0, "height": 600}
+        with tempfile.TemporaryDirectory() as temporary:
+            with self.assertRaisesRegex(KMSDRMSerialHandoffError, "surface dimensions"):
+                self._runner(
+                    Path(temporary), children=_Children(clean_payload=payload)
+                ).run()
+
     def test_crash_child_must_use_intentional_abrupt_exit(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -233,6 +325,16 @@ class SerialHandoffTests(unittest.TestCase):
                 self._runner(
                     Path(temporary), children=_Children(crash_payload=malformed)
                 ).run()
+
+    def test_static_shell_buffers_fail_recovery_evidence(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            pygame = _Pygame(image=_StaticImage())
+            with self.assertRaisesRegex(
+                KMSDRMSerialHandoffError, "three distinct rendered buffers"
+            ):
+                self._runner(Path(temporary), pygame=pygame).run()
+        self.assertEqual(pygame.display.init_count, 3)
+        self.assertEqual(pygame.display.quit_count, 3)
 
     def test_missing_acknowledgement_is_rejected(self):
         with tempfile.TemporaryDirectory() as temporary:
