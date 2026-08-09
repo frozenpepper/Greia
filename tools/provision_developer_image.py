@@ -23,6 +23,10 @@ ADMIN_HOME = Path("var/lib/greia-admin")
 AUTHORIZED_KEYS = ADMIN_HOME / ".ssh/authorized_keys"
 SUDOERS = Path("etc/sudoers.d/greia-developer-remote")
 SSH_DROPIN = Path("etc/systemd/system/ssh.service.d/30-greia-developer-remote.conf")
+LAUNCHER_DROPIN = Path(
+    "etc/systemd/system/greia-launcher.service.d/30-greia-developer-activities.conf"
+)
+DEVELOPER_ACTIVITY_ROOT = "/var/lib/greia-developer/activities"
 
 
 class DeveloperImageProvisionError(RuntimeError):
@@ -108,6 +112,8 @@ class DeveloperImageProvisioner:
             "ssh_host_keys_cloned": False,
             "ssh_host_keys_generated_on_first_boot": True,
             "passwordless_sudo_surface": "/usr/local/sbin/greia-devctl",
+            "developer_activity_root": DEVELOPER_ACTIVITY_ROOT,
+            "developer_activity_trust": "developer_unsigned",
             "production_profile_changed": False,
             "declared_profile": profile,
         }
@@ -216,15 +222,24 @@ class DeveloperImageProvisioner:
         )
         os.chmod(sudoers, 0o440)
 
-        dropin = root / SSH_DROPIN
-        dropin.parent.mkdir(parents=True, exist_ok=True)
-        dropin.write_text(
+        ssh_dropin = root / SSH_DROPIN
+        ssh_dropin.parent.mkdir(parents=True, exist_ok=True)
+        ssh_dropin.write_text(
             "[Unit]\n"
             "Requires=greia-developer-remote.service\n"
             "After=greia-developer-remote.service\n",
             encoding="utf-8",
         )
-        os.chmod(dropin, 0o644)
+        os.chmod(ssh_dropin, 0o644)
+
+        launcher_dropin = root / LAUNCHER_DROPIN
+        launcher_dropin.parent.mkdir(parents=True, exist_ok=True)
+        launcher_dropin.write_text(
+            "[Service]\n"
+            f"Environment=GREIA_DEVELOPER_ACTIVITY_ROOT={DEVELOPER_ACTIVITY_ROOT}\n",
+            encoding="utf-8",
+        )
+        os.chmod(launcher_dropin, 0o644)
 
     def _enable_units(self, root: Path) -> None:
         self.runner.run(
