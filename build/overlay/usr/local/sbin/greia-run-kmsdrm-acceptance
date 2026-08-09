@@ -2,8 +2,22 @@
 set -eu
 
 launcher=greia-launcher.service
-acceptance=greia-kmsdrm-acceptance.service
-result=/var/lib/greia-kmsdrm-acceptance/result.json
+mode="${1:-active}"
+
+case "$mode" in
+  active)
+    acceptance=greia-kmsdrm-acceptance.service
+    result=/var/lib/greia-kmsdrm-acceptance/result.json
+    ;;
+  handoff)
+    acceptance=greia-kmsdrm-handoff-acceptance.service
+    result=/var/lib/greia-kmsdrm-handoff-acceptance/result.json
+    ;;
+  *)
+    echo "Usage: greia-run-kmsdrm-acceptance [active|handoff]" >&2
+    exit 64
+    ;;
+esac
 
 if [ "$(id -u)" -ne 0 ]; then
   echo "This maintenance acceptance must be run as root." >&2
@@ -19,8 +33,7 @@ legacy_x_alive() {
   for comm in /proc/[0-9]*/comm; do
     [ -r "$comm" ] || continue
     IFS= read -r name < "$comm" || continue
-    case "$name" in
-      xinit|Xorg|X) return 0 ;;
+    case "$name" in xinit|Xorg|X) return 0 ;;
     esac
   done
   return 1
@@ -94,20 +107,21 @@ acceptance_status=$?
 set -e
 if [ "$acceptance_status" -ne 0 ]; then
   unit_result="$(systemctl show -p Result --value "$acceptance" 2>/dev/null || true)"
-  echo "KMSDRM acceptance service failed (Result=${unit_result:-unknown})." >&2
+  echo "KMSDRM ${mode} acceptance service failed (Result=${unit_result:-unknown})." >&2
 fi
 
 if [ ! -r "$result" ]; then
-  echo "KMSDRM acceptance produced no readable result JSON." >&2
+  echo "KMSDRM ${mode} acceptance produced no readable result JSON." >&2
   exit 1
 fi
 
-if ! python3 - "$result" <<'PY'
+if ! python3 - "$result" "$mode" <<'PY'
 import json
 import sys
 from pathlib import Path
 
 path = Path(sys.argv[1])
+mode = sys.argv[2]
 try:
     payload = json.loads(path.read_text(encoding="utf-8"))
 except (OSError, json.JSONDecodeError) as exc:
@@ -116,8 +130,45 @@ if payload.get("schema_version") != 1:
     raise SystemExit("unexpected acceptance result schema")
 if payload.get("requested_video_driver") != "kmsdrm":
     raise SystemExit("acceptance result did not request kmsdrm")
-if payload.get("ok") is not True or payload.get("actual_video_driver") != "kmsdrm":
-    raise SystemExit("active KMSDRM acceptance did not pass")
+if payload.get("ok") is not True:
+    raise SystemExit(f"{mode} KMSDRM acceptance did not pass")
+
+if mode == "active":
+    if payload.get("actual_video_driver") != "kmsdrm":
+        raise SystemExit("active KMSDRM acceptance did not use kmsdrm")
+elif mode == "handoff":
+    recovery = payload.get("recovery")
+    if not isinstance(recovery, dict):
+        raise SystemExit("handoff acceptance has no recovery evidence")
+    if recovery.get("clean_child_reacquired") is not True:
+        raise SystemExit("shell did not reacquire after clean child")
+    if recovery.get("crash_child_reacquired") is not True:
+        raise SystemExit("shell did not reacquire after crashed child")
+    for key in ("shell_initial", "shell_after_clean", "shell_after_crash"):
+        phase = payload.get(key)
+        if not isinstance(phase, dict) or phase.get("actual_video_driver") != "kmsdrm":
+            raise SystemExit(f"handoff phase {key} did not use kmsdrm")
+    clean = payload.get("clean_child")
+    if not isinstance(clean, dict) or clean.get("return_code") != 0:
+        raise SystemExit("clean child handoff evidence is invalid")
+    clean_result = clean.get("result")
+    if (
+        not isinstance(clean_result, dict)
+        or clean_result.get("actual_video_driver") != "kmsdrm"
+    ):
+        raise SystemExit("clean child did not use kmsdrm")
+    crash = payload.get("crash_child")
+    if not isinstance(crash, dict) or crash.get("return_code") != 23:
+        raise SystemExit("crash child handoff evidence is invalid")
+    crash_result = crash.get("result")
+    if (
+        not isinstance(crash_result, dict)
+        or crash_result.get("actual_video_driver") != "kmsdrm"
+        or crash_result.get("intentional_abrupt_exit") is not True
+    ):
+        raise SystemExit("crash child did not prove abrupt kmsdrm ownership")
+else:
+    raise SystemExit("unsupported validation mode")
 PY
 then
   exit 1
@@ -127,4 +178,4 @@ if [ "$acceptance_status" -ne 0 ]; then
   exit "$acceptance_status"
 fi
 
-printf 'PASS: active KMSDRM evidence written to %s\n' "$result"
+printf 'PASS: %s KMSDRM evidence written to %s\n' "$mode" "$result"
