@@ -19,11 +19,12 @@ Read before substantive work:
 3. `docs/DOCUMENTATION.md`;
 4. `docs/architecture/GREIA_ARCHITECTURE.md`;
 5. accepted ADRs relevant to the task, especially ADR 0012–0017;
-6. `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`;
-7. this `HANDOVER.md`;
-8. `docs/agents/GREIA_AGENT_OPERATIONS.md`;
-9. `skills/greia-activity-authoring/SKILL.md` for Activity work;
-10. the exact R7/testing/review docs named below.
+6. **`docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md`**;
+7. `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`;
+8. this `HANDOVER.md`;
+9. `docs/agents/GREIA_AGENT_OPERATIONS.md`;
+10. `skills/greia-activity-authoring/SKILL.md` for Activity work;
+11. the exact R7/testing/review docs named below.
 
 GitHub is canonical. Resolve the actual branch HEAD before editing/testing.
 
@@ -33,6 +34,7 @@ GitHub is canonical. Resolve the actual branch HEAD before editing/testing.
 AGENTS.md                    repository-wide work/product rules
 accepted ADRs                normative architecture decisions
 source/runtime declarations  exact implemented APIs/schemas/commands
+docs/product/*               explicit child-facing product/UX requirements
 active remediation plan      ordering and closure criteria
 HANDOVER.md                  current branch/evidence/blocker state
 docs/testing/*               exact named test/operator procedures
@@ -82,6 +84,40 @@ The installed Activity lifecycle already uses backend-neutral `DisplaySessionCoo
 
 Current X-compatible sandbox concessions must not be removed blindly while installed production still uses Xorg.
 
+### Mandatory Phase-0 creative baseline — REQUIRED / NOT YET IMPLEMENTED
+
+The owner established on 2026-08-10 that Greia must provide useful creative computing **from the beginning**.
+
+The first user-ready Phase-0 image MUST ship two first-party built-in Activities:
+
+1. a simple child-first **writing/text-editing Activity**;
+2. a simple child-first **painting/drawing Activity**.
+
+Canonical requirement:
+
+```text
+docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md
+```
+
+Key product constraints:
+
+- simple, essential, cute and uncluttered;
+- large controls;
+- writing uses large readable text by default;
+- painting devotes most of the screen to a responsive canvas;
+- very small deliberate tool sets rather than desktop/professional feature creep;
+- automatic profile-scoped saving through Greia Storage;
+- no Linux filesystem/file-dialog workflow in the child path;
+- 1024×600-first design;
+- low-end Acer performance is part of correctness;
+- first-party/built-in status does not permit bypassing Activity lifecycle/storage/trust/display contracts.
+
+These two Activities are also intended to become the first serious reference workloads for reusable Greia child-UI primitives. Do **not** invent a large widget framework first; extract small shared primitives only after real duplication appears in Text/Paint/Shell code.
+
+This requirement does **not** reorder the current blocking R7 architecture/safety work. It does mean **Phase-0/final user-ready-image certification is incomplete until both creative Activities are implemented and accepted on real target hardware.**
+
+No implementation or test PASS for these two Activities is currently claimed.
+
 ---
 
 ## 4. Verification boundary — do not overclaim
@@ -119,9 +155,11 @@ Everything newer that has not explicitly executed remains **UNPROVEN / committed
 - serial KMSDRM QEMU handoff;
 - active seat/input;
 - physical Acer direct graphics/session;
-- Pi 400/500 physical acceptance.
+- Pi 400/500 physical acceptance;
+- writing Activity implementation/acceptance;
+- painting Activity implementation/acceptance.
 
-The 2026-08-10 documentation audit executed **no source/unit/VM/hardware verification command** and changes none of these evidence boundaries.
+The 2026-08-10 documentation/product-requirement work executed **no source/unit/VM/hardware verification command** and changes none of these evidence boundaries.
 
 ---
 
@@ -174,7 +212,7 @@ Therefore the **audited documentation versions currently live on the active R7 b
 
 The active plan is intentionally append-only; some early phase-body status lines remain visually stale relative to later closure entries. Current state is this handover plus latest progress entries.
 
-When the plan next receives a real implementation-state update, add a small current phase-status index near the top without rewriting historical progress.
+When the plan next receives a real implementation-state update, add a small current phase-status index near the top without rewriting historical progress. At that time also incorporate the mandatory writing/painting baseline into the plan's explicit Phase-0/final certification criteria rather than rewriting old progress entries during this product-requirement-only tranche.
 
 ---
 
@@ -421,6 +459,8 @@ Web SDK/runtime:       future/deferred
 .greiabackup:          future backup phase
 ```
 
+The writing/painting requirement should eventually drive real shared child-UI primitives, but no general toolkit is currently implemented or accepted.
+
 Do not turn conceptual architecture examples into current APIs without checking source/runtime owners.
 
 ---
@@ -512,7 +552,9 @@ No compositor should be selected before evidence supports it.
 - ActivitySupervisor never becomes DRM master;
 - destructive installation remains graphical/device/payload revalidated;
 - no private credentials in Git;
-- no unapproved hosted Actions execution/query surface.
+- no unapproved hosted Actions execution/query surface;
+- first user-ready Phase-0 image includes the mandatory writing and painting Activities;
+- those built-in Activities remain subject to normal Greia platform boundaries.
 
 ---
 
@@ -523,6 +565,7 @@ AGENTS.md
 README.md
 docs/DOCUMENTATION.md
 HANDOVER.md
+docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md
 docs/architecture/GREIA_ARCHITECTURE.md
 docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md
 docs/agents/GREIA_AGENT_OPERATIONS.md
@@ -540,6 +583,7 @@ After the next substantive implementation tranche:
 - append plan progress if implementation/phase state changed;
 - update this handover;
 - update operations/Activity skill when their source contracts changed;
+- update product requirements if accepted child-facing scope changes;
 - record exactly what verification ran;
 - preserve VM/physical gaps;
 - state the next exact legitimate step.
