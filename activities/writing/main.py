@@ -25,7 +25,7 @@ from greia_platform.activity_ui import (
 AUTOSAVE_IDLE_SECONDS = 1.2
 MAX_DOCUMENTS = 120
 MAX_CHARACTERS = 120_000
-MAX_UNDO_STATES = 32
+MAX_UNDO_EDITS = 128
 INDEX_KEY = "documents.index.v1"
 
 
@@ -71,8 +71,16 @@ class DocumentRepository:
         if len(records) >= MAX_DOCUMENTS:
             raise RuntimeError("document library limit reached")
         record = DocumentRecord(uuid.uuid4().hex, "")
-        self.storage.file_write_atomic(self._name(record.document_id), b"")
-        self._write_index([record, *records])
+        name = self._name(record.document_id)
+        self.storage.file_write_atomic(name, b"")
+        try:
+            self._write_index([record, *records])
+        except RuntimeError:
+            try:
+                self.storage.file_delete(name)
+            except RuntimeError:
+                pass
+            raise
         return record
 
     def load_text(self, document_id: str) -> str:
@@ -96,6 +104,27 @@ class DocumentRepository:
         return f"documents/{document_id}.txt"
 
 
+@dataclass(frozen=True, slots=True)
+class TextEdit:
+    start: int
+    removed: str
+    inserted: str
+    cursor_before: int
+    cursor_after: int
+
+    def undo(self, buffer: "TextBuffer") -> None:
+        if self.start < 0 or self.start + len(self.inserted) > len(buffer.text):
+            raise ValueError("undo edit is outside the current text")
+        if buffer.text[self.start : self.start + len(self.inserted)] != self.inserted:
+            raise ValueError("undo edit no longer matches current text")
+        buffer.text = (
+            buffer.text[: self.start]
+            + self.removed
+            + buffer.text[self.start + len(self.inserted) :]
+        )
+        buffer.cursor = max(0, min(self.cursor_before, len(buffer.text)))
+
+
 @dataclass(slots=True)
 class TextBuffer:
     text: str = ""
@@ -105,28 +134,36 @@ class TextBuffer:
         self.text = clamp_text(self.text)
         self.cursor = max(0, min(int(self.cursor), len(self.text)))
 
-    def insert(self, value: str) -> bool:
+    def insert(self, value: str) -> TextEdit | None:
         if not value:
-            return False
+            return None
         value = value[: max(0, MAX_CHARACTERS - len(self.text))]
         if not value:
-            return False
-        self.text = self.text[: self.cursor] + value + self.text[self.cursor :]
-        self.cursor += len(value)
-        return True
+            return None
+        start = self.cursor
+        cursor_before = self.cursor
+        self.text = self.text[:start] + value + self.text[start:]
+        self.cursor = start + len(value)
+        return TextEdit(start, "", value, cursor_before, self.cursor)
 
-    def backspace(self) -> bool:
+    def backspace(self) -> TextEdit | None:
         if self.cursor == 0:
-            return False
-        self.text = self.text[: self.cursor - 1] + self.text[self.cursor :]
-        self.cursor -= 1
-        return True
+            return None
+        cursor_before = self.cursor
+        start = self.cursor - 1
+        removed = self.text[start : self.cursor]
+        self.text = self.text[:start] + self.text[self.cursor :]
+        self.cursor = start
+        return TextEdit(start, removed, "", cursor_before, self.cursor)
 
-    def delete(self) -> bool:
+    def delete(self) -> TextEdit | None:
         if self.cursor >= len(self.text):
-            return False
-        self.text = self.text[: self.cursor] + self.text[self.cursor + 1 :]
-        return True
+            return None
+        cursor_before = self.cursor
+        start = self.cursor
+        removed = self.text[start : start + 1]
+        self.text = self.text[:start] + self.text[start + 1 :]
+        return TextEdit(start, removed, "", cursor_before, self.cursor)
 
     def move(self, delta: int) -> None:
         self.cursor = max(0, min(len(self.text), self.cursor + int(delta)))
@@ -140,27 +177,19 @@ class TextBuffer:
         self.cursor = len(self.text) if end < 0 else end
 
 
-@dataclass(frozen=True, slots=True)
-class TextSnapshot:
-    text: str
-    cursor: int
-
-
 class UndoHistory:
-    def __init__(self, maximum: int = MAX_UNDO_STATES):
+    def __init__(self, maximum: int = MAX_UNDO_EDITS):
         if maximum < 1:
-            raise ValueError("undo history must retain at least one state")
+            raise ValueError("undo history must retain at least one edit")
         self.maximum = int(maximum)
-        self._items: list[TextSnapshot] = []
+        self._items: list[TextEdit] = []
 
-    def remember(self, snapshot: TextSnapshot) -> None:
-        if self._items and self._items[-1] == snapshot:
-            return
-        self._items.append(snapshot)
+    def remember(self, edit: TextEdit) -> None:
+        self._items.append(edit)
         if len(self._items) > self.maximum:
             del self._items[0]
 
-    def pop(self) -> TextSnapshot | None:
+    def pop(self) -> TextEdit | None:
         return self._items.pop() if self._items else None
 
     def clear(self) -> None:
@@ -353,17 +382,17 @@ class WritingApp:
         self._keep_cursor_visible()
 
     def _apply_edit(self, action) -> None:
-        snapshot = TextSnapshot(self.buffer.text, self.buffer.cursor)
-        if action():
-            self.undo_history.remember(snapshot)
+        edit = action()
+        if edit is not None:
+            self.undo_history.remember(edit)
             self._changed()
             self._keep_cursor_visible()
 
     def _undo(self) -> None:
-        snapshot = self.undo_history.pop()
-        if snapshot is None:
+        edit = self.undo_history.pop()
+        if edit is None:
             return
-        self.buffer = TextBuffer(snapshot.text, snapshot.cursor)
+        edit.undo(self.buffer)
         self._changed()
         self._keep_cursor_visible()
 
