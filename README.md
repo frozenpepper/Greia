@@ -75,24 +75,33 @@ An Activity keeps one platform identity, save namespace, lifecycle, permission m
 
 The first user-ready Phase-0 Greia image is required to include two first-party built-in creative Activities:
 
-- a **simple writing/text-editing Activity**;
-- a **simple painting/drawing Activity**.
+- **Writing** — a simple child-first text editor;
+- **Painting** — a simple child-first painting/drawing Activity.
 
 These are baseline Greia product capabilities, not optional demos or later ecosystem extras.
 
-The writing Activity should open quickly into a large, uncluttered editing surface with **large readable text by default**, automatic profile-scoped saving, a very small set of child-sized controls and no desktop-style file workflow.
+A first source tranche now exists on the active development branch:
 
-The painting Activity should provide a large responsive canvas, a compact cheerful color palette, a few brush sizes, eraser, bounded undo, automatic saving and a simple visual gallery. It should feel playful without becoming a miniature professional graphics package.
+```text
+activities/writing/
+activities/painting/
+src/greia_platform/activity_ui.py
+```
 
-Both are also intended to become reference Activities for the first reusable Greia child-UI primitives: large semantic buttons, tool states, palettes, cards/galleries, typography, undo feedback and cached low-resource rendering. The current repository does **not** yet have a general widget toolkit; reusable primitives should be extracted from real duplication rather than designed speculatively.
+Writing currently implements a large uncluttered text surface, large readable text by default, multiline/caret navigation, bounded undo, visual gallery and automatic profile-scoped UTF-8 saving. Painting currently implements a large canvas, cheerful palette, three brush sizes, eraser, bounded stroke undo, visual gallery and automatic profile-scoped PNG saving.
 
-Exact requirement:
+They request no privileged permissions and use Greia lifecycle/Storage contracts rather than desktop file workflows.
+
+The first genuinely shared child-UI primitives also now exist in `src/greia_platform/activity_ui.py`: 1024×600-first metrics, cached semantic icons, large rounded icon buttons and a few small shared symbols. This is **deliberately not a general widget toolkit**. Further primitives should be extracted from real repeated Activity needs, not designed speculatively.
+
+Exact product and current acceptance state:
 
 ```text
 docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md
+HANDOVER.md
 ```
 
-R7 remains the current blocking architecture phase; this requirement does not authorize skipping safety/display prerequisites. It does mean final Phase-0/user-ready-image acceptance is incomplete until both creative Activities exist and pass real low-end visual/input/storage acceptance.
+The current source tranche is **not yet execution/hardware evidence**. R7 remains the blocking architecture phase, and final Phase-0/user-ready-image acceptance remains incomplete until both creative Activities pass real low-end visual/input/storage/performance acceptance.
 
 ---
 
@@ -176,9 +185,10 @@ It is the maintained agent/developer guide for:
 - `activity.toml` and current validation rules;
 - Python runtime/import policy;
 - lifecycle READY/STOP handling;
-- Greia storage and event APIs;
+- Greia Storage and event APIs;
 - capabilities, permissions and trust;
 - shared semantic icons/theme integration;
+- the current small shared Activity UI layer;
 - 1024×600 child UX;
 - low-end performance/optimization;
 - validation and remote deployment/testing.
@@ -233,11 +243,11 @@ For image/hardware work, use the exact applicable procedure under `docs/testing/
 - `docs/testing/` — exact operator/evidence protocols.
 - `docs/agents/` — agent operational manuals.
 - `skills/` — reusable project skills, including Activity authoring.
-- `src/greia_platform/` — shared platform contracts/services.
+- `src/greia_platform/` — shared platform contracts/services, including the narrow shared Activity UI primitives.
 - `src/greia_launcher/` — child shell and Activity supervision.
 - `src/greia_parent/` — bounded parent-management service.
 - `src/greia_installer/` — graphical installer/whole-disk engine.
-- `activities/` — curated built-in Activities.
+- `activities/` — curated built-in Activities, including Writing and Painting source tranches.
 - `assets/` — canonical shared visual assets/catalogues.
 - `runtime/` — curated runtime and policy declarations.
 - `build/` — profiles, package sets, overlays and builders.
