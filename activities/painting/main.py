@@ -318,15 +318,15 @@ class PaintingApp:
     def _new(self) -> None:
         try:
             record = self.repository.create()
-            self.save_error = False
         except RuntimeError:
-            record = PaintingRecord("0" * 32)
             self.save_error = True
+            return
         self.current = record
         self.records = [record, *[item for item in self.records if item.painting_id != record.painting_id]]
         self.mode = "paint"
         self._blank()
         self.dirty = False
+        self.save_error = False
 
     def _open(self, record: PaintingRecord) -> None:
         self._save()
@@ -358,9 +358,6 @@ class PaintingApp:
 
     def _save(self) -> None:
         if not self.dirty or self.current is None:
-            return
-        if self.current.painting_id == "0" * 32:
-            self.save_error = True
             return
         try:
             record = self.repository.save_png(self.current.painting_id, self._encode_png(self.canvas))
