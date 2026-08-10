@@ -48,6 +48,7 @@ Provider-free regression source has been added at:
 ```text
 tests/test_core_creation_activities.py
 tests/test_activity_theme_access.py
+tests/test_activity_ui.py
 ```
 
 The new shared SDK surface is deliberately small. `activity_ui.py` currently provides only reusable 1024×600-first metrics, cached semantic-icon scaling, large rounded icon buttons, a few shared symbols and a bounded RGB helper. It is **not** a general widget framework.
@@ -114,7 +115,7 @@ The implemented source currently provides:
 - Left/Right/Up/Down and Home/End navigation;
 - Backspace/Delete/Enter;
 - soft wrapping and vertical scrolling;
-- bounded 32-state undo with a large visible undo control;
+- bounded **128-edit operation undo** with a large visible undo control;
 - optional Ctrl/Cmd-Z keyboard alternative;
 - a visual document gallery;
 - a large New control;
@@ -123,6 +124,8 @@ The implemented source currently provides:
 - visible saved/dirty/save-failure state;
 - Greia semantic icons and canonical theme colors;
 - profile-scoped Greia Storage only.
+
+Writing undo stores only the changed fragments and cursor positions for each edit, not full-document snapshots. This keeps the history meaningfully bounded even for long documents on the low-memory reference class.
 
 The source deliberately does **not** contain a formatting ribbon, file dialog or Linux path workflow.
 
@@ -134,6 +137,7 @@ private files: documents/<uuid>.txt
 encoding:      UTF-8
 library bound: 120 indexed documents
 text bound:    120,000 Unicode code points per document
+undo bound:    128 recent edit operations
 ```
 
 The bounds are Activity UX safeguards beneath the platform’s authoritative Storage quota.
