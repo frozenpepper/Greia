@@ -80,12 +80,21 @@ class PaintingRepository:
                 break
         return records
 
-    def create(self) -> PaintingRecord:
+    def create(self, initial_png: bytes) -> PaintingRecord:
         records = self.list_records()
         if len(records) >= MAX_PAINTINGS:
             raise RuntimeError("painting library limit reached")
         record = PaintingRecord(uuid.uuid4().hex)
-        self._write_index([record, *records])
+        name = self._name(record.painting_id)
+        self.storage.file_write_atomic(name, bytes(initial_png))
+        try:
+            self._write_index([record, *records])
+        except RuntimeError:
+            try:
+                self.storage.file_delete(name)
+            except RuntimeError:
+                pass
+            raise
         return record
 
     def load_png(self, painting_id: str) -> bytes:
@@ -178,9 +187,8 @@ class PaintingApp:
         self.last_change = 0.0
         self.thumbnail_cache: dict[str, pygame.Surface] = {}
         self.canvas_background = mix(self.theme.panel, (255, 255, 255), 0.72)
-        self.canvas = pygame.Surface(self.canvas_rect.size).convert()
-        self.base_canvas = pygame.Surface(self.canvas_rect.size).convert()
-        self._blank()
+        self.canvas = self._new_blank_surface()
+        self.base_canvas = self.canvas.copy()
         if self.records:
             self._open(self.records[0])
         else:
@@ -207,10 +215,11 @@ class PaintingApp:
         while running and not activity_stop_requested():
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    running = False
+                    if self._save():
+                        running = False
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                    self._save()
-                    running = False
+                    if self._save():
+                        running = False
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     self._mouse_down(event.pos)
                 elif event.type == pygame.MOUSEMOTION and self.drawing:
@@ -277,15 +286,15 @@ class PaintingApp:
         eraser = self.metrics.toolbar_button(1, side="right")
 
         if close.collidepoint(pos):
-            self._save()
-            return False
+            return not self._save()
         if gallery.collidepoint(pos):
-            self._save()
+            if not self._save():
+                return True
             self.mode = "gallery" if self.mode == "paint" else "paint"
             return True
         if new.collidepoint(pos):
-            self._save()
-            self._new()
+            if self._save():
+                self._new()
             return True
         if undo.collidepoint(pos) and self.mode == "paint":
             self._undo()
@@ -338,60 +347,65 @@ class PaintingApp:
         self.last_change = time.monotonic()
 
     def _new(self) -> None:
+        blank = self._new_blank_surface()
         try:
-            record = self.repository.create()
-        except RuntimeError:
+            record = self.repository.create(self._encode_png(blank))
+        except (RuntimeError, ValueError, OSError):
             self.save_error = True
             return
         self.current = record
         self.records = [record, *[item for item in self.records if item.painting_id != record.painting_id]]
         self.mode = "paint"
-        self._blank()
-        self.dirty = False
-        self.save_error = False
-
-    def _open(self, record: PaintingRecord) -> None:
-        self._save()
-        self._blank()
-        try:
-            surface = self._decode_png(self.repository.load_png(record.painting_id), self.canvas_rect.size)
-        except (RuntimeError, ValueError, OSError):
-            surface = None
-        if surface is not None:
-            self.canvas.blit(surface, (0, 0))
-            self.base_canvas.blit(surface, (0, 0))
-        self.current = record
-        self.mode = "paint"
-        self.dirty = False
-        self.history.clear()
-
-    def _blank(self) -> None:
-        if self.canvas.get_size() != self.canvas_rect.size:
-            self.canvas = pygame.Surface(self.canvas_rect.size).convert()
-            self.base_canvas = pygame.Surface(self.canvas_rect.size).convert()
-        self.canvas.fill(self.canvas_background)
-        self.base_canvas.fill(self.canvas_background)
+        self.canvas = blank
+        self.base_canvas = blank.copy()
         self.history.clear()
         self.active_points = []
         self.continuation_only = False
+        self.dirty = False
+        self.save_error = False
+
+    def _open(self, record: PaintingRecord) -> bool:
+        if not self._save():
+            return False
+        try:
+            surface = self._decode_png(self.repository.load_png(record.painting_id), self.canvas_rect.size)
+        except (RuntimeError, ValueError, OSError):
+            self.save_error = True
+            return False
+        self.current = record
+        self.mode = "paint"
+        self.canvas = surface
+        self.base_canvas = surface.copy()
+        self.history.clear()
+        self.active_points = []
+        self.continuation_only = False
+        self.dirty = False
+        self.save_error = False
+        return True
+
+    def _new_blank_surface(self) -> pygame.Surface:
+        surface = pygame.Surface(self.canvas_rect.size).convert()
+        surface.fill(self.canvas_background)
+        return surface
 
     def _autosave(self) -> None:
         if self.dirty and time.monotonic() - self.last_change >= AUTOSAVE_IDLE_SECONDS:
             self._save()
 
-    def _save(self) -> None:
+    def _save(self) -> bool:
         if not self.dirty or self.current is None:
-            return
+            return True
         try:
             record = self.repository.save_png(self.current.painting_id, self._encode_png(self.canvas))
         except (RuntimeError, ValueError, OSError):
             self.save_error = True
-            return
+            return False
         self.current = record
         self.records = [record, *[item for item in self.records if item.painting_id != record.painting_id]]
         self.thumbnail_cache.pop(record.painting_id, None)
         self.dirty = False
         self.save_error = False
+        return True
 
     def _brush_color(self) -> tuple[int, int, int]:
         return self.canvas_background if self.eraser else COLORS[self.selected_color]
