@@ -30,6 +30,7 @@ AUTOSAVE_IDLE_SECONDS = 1.0
 INDEX_KEY = "paintings.index.v1"
 MAX_PAINTINGS = 48
 MAX_UNDO_STROKES = 24
+MAX_STROKE_POINTS = 2048
 COLORS = (
     (42, 45, 54),
     (239, 77, 83),
@@ -128,6 +129,8 @@ class StrokeHistory:
     def add(self, stroke: Stroke) -> Stroke | None:
         if stroke.size <= 0 or not stroke.points:
             raise ValueError("stroke must have positive size and at least one point")
+        if len(stroke.points) > MAX_STROKE_POINTS:
+            raise ValueError("stroke exceeds point bound")
         self._items.append(stroke)
         if len(self._items) <= self.maximum:
             return None
@@ -169,6 +172,7 @@ class PaintingApp:
         self.history = StrokeHistory()
         self.active_points: list[tuple[int, int]] = []
         self.drawing = False
+        self.continuation_only = False
         self.dirty = False
         self.save_error = False
         self.last_change = 0.0
@@ -226,6 +230,7 @@ class PaintingApp:
             return
         point = self._local(pos)
         self.drawing = True
+        self.continuation_only = False
         self.active_points = [point]
         self._draw_dot(self.canvas, point)
 
@@ -235,12 +240,18 @@ class PaintingApp:
         point = self._local(pos)
         if not self.active_points:
             self.active_points = [point]
+            self.continuation_only = False
             self._draw_dot(self.canvas, point)
             return
         previous = self.active_points[-1]
         if (point[0] - previous[0]) ** 2 + (point[1] - previous[1]) ** 2 < self.metrics.px(3) ** 2:
             return
+        if len(self.active_points) >= MAX_STROKE_POINTS:
+            self._commit_active_stroke()
+            self.active_points = [previous]
+            self.continuation_only = True
         self.active_points.append(point)
+        self.continuation_only = False
         self._draw_segment(self.canvas, previous, point)
 
     def _mouse_up(self, pos: tuple[int, int]) -> bool:
@@ -249,7 +260,12 @@ class PaintingApp:
                 point = self._local(pos)
                 if point != self.active_points[-1]:
                     previous = self.active_points[-1]
+                    if len(self.active_points) >= MAX_STROKE_POINTS:
+                        self._commit_active_stroke()
+                        self.active_points = [previous]
+                        self.continuation_only = True
                     self.active_points.append(point)
+                    self.continuation_only = False
                     self._draw_segment(self.canvas, previous, point)
             self._finish_stroke()
             return True
@@ -294,17 +310,23 @@ class PaintingApp:
                 return True
         return True
 
-    def _finish_stroke(self) -> None:
-        self.drawing = False
-        if not self.active_points:
+    def _commit_active_stroke(self) -> None:
+        if not self.active_points or self.continuation_only:
+            self.active_points = []
+            self.continuation_only = False
             return
         stroke = Stroke(self._brush_color(), self._brush_size(), tuple(self.active_points))
         dropped = self.history.add(stroke)
         if dropped is not None:
             self._render_stroke(self.base_canvas, dropped)
         self.active_points = []
+        self.continuation_only = False
         self.dirty = True
         self.last_change = time.monotonic()
+
+    def _finish_stroke(self) -> None:
+        self.drawing = False
+        self._commit_active_stroke()
 
     def _undo(self) -> None:
         if self.history.undo() is None:
@@ -351,6 +373,7 @@ class PaintingApp:
         self.base_canvas.fill(self.canvas_background)
         self.history.clear()
         self.active_points = []
+        self.continuation_only = False
 
     def _autosave(self) -> None:
         if self.dirty and time.monotonic() - self.last_change >= AUTOSAVE_IDLE_SECONDS:
