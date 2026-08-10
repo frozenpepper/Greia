@@ -104,6 +104,32 @@ class WritingLogicTests(unittest.TestCase):
         self.assertEqual(history.pop(), second)
         self.assertIsNone(history.pop())
 
+    def test_undo_history_is_bounded_by_total_changed_text(self) -> None:
+        history = WRITING.UndoHistory(maximum=10, max_payload_chars=4)
+        buffer = WRITING.TextBuffer()
+        first = buffer.insert("ab")
+        second = buffer.insert("cd")
+        third = buffer.insert("ef")
+        assert first is not None and second is not None and third is not None
+        history.remember(first)
+        history.remember(second)
+        self.assertEqual(history.payload_chars, 4)
+        history.remember(third)
+        self.assertEqual(history.payload_chars, 4)
+        self.assertEqual(history.pop(), third)
+        self.assertEqual(history.pop(), second)
+        self.assertIsNone(history.pop())
+
+    def test_oversized_single_undo_payload_is_not_retained(self) -> None:
+        history = WRITING.UndoHistory(maximum=10, max_payload_chars=3)
+        buffer = WRITING.TextBuffer()
+        edit = buffer.insert("abcd")
+        assert edit is not None
+        history.remember(edit)
+        self.assertEqual(history.payload_chars, 0)
+        self.assertIsNone(history.pop())
+        self.assertEqual(buffer.text, "abcd")
+
     def test_undo_edit_stores_only_changed_fragment_not_full_document(self) -> None:
         original = "x" * 50_000
         buffer = WRITING.TextBuffer(original, len(original))
@@ -112,7 +138,7 @@ class WritingLogicTests(unittest.TestCase):
         assert edit is not None
         self.assertEqual(edit.removed, "")
         self.assertEqual(edit.inserted, "y")
-        self.assertEqual(len(edit.inserted) + len(edit.removed), 1)
+        self.assertEqual(edit.payload_chars, 1)
         edit.undo(buffer)
         self.assertEqual(buffer.text, original)
 
@@ -192,6 +218,12 @@ class PaintingLogicTests(unittest.TestCase):
         self.assertEqual(history.items, (second, third))
         self.assertEqual(history.undo(), third)
         self.assertEqual(history.items, (second,))
+
+    def test_stroke_point_count_is_bounded(self) -> None:
+        history = PAINTING.StrokeHistory()
+        points = tuple((index, 0) for index in range(PAINTING.MAX_STROKE_POINTS + 1))
+        with self.assertRaises(ValueError):
+            history.add(PAINTING.Stroke((1, 2, 3), 8, points))
 
     def test_invalid_stroke_is_rejected(self) -> None:
         history = PAINTING.StrokeHistory()
