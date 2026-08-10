@@ -300,7 +300,8 @@ class WritingApp:
         while running and not activity_stop_requested():
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    running = False
+                    if self._save():
+                        running = False
                 elif event.type == pygame.KEYDOWN:
                     running = self._key(event)
                 elif event.type == pygame.TEXTINPUT and self.mode == "edit":
@@ -318,8 +319,7 @@ class WritingApp:
 
     def _key(self, event: pygame.event.Event) -> bool:
         if event.key == pygame.K_ESCAPE:
-            self._save()
-            return False
+            return not self._save()
         if self.mode == "gallery":
             if event.key in {pygame.K_RETURN, pygame.K_SPACE} and self.records:
                 self._open(self.records[0])
@@ -354,18 +354,18 @@ class WritingApp:
         undo = self.metrics.toolbar_button(2, side="left")
         new = self.metrics.toolbar_button(0, side="right")
         if close.collidepoint(pos):
-            self._save()
-            return False
+            return not self._save()
         if gallery.collidepoint(pos):
-            self._save()
+            if not self._save():
+                return True
             self.mode = "gallery" if self.mode == "edit" else "edit"
             return True
         if undo.collidepoint(pos) and self.mode == "edit":
             self._undo()
             return True
         if new.collidepoint(pos):
-            self._save()
-            self._new()
+            if self._save():
+                self._new()
             return True
         if self.mode == "gallery":
             for rect, record in self._gallery_cards():
@@ -392,13 +392,14 @@ class WritingApp:
         self.scroll_line = 0
         self._layout_text = None
 
-    def _open(self, record: DocumentRecord) -> None:
-        self._save()
+    def _open(self, record: DocumentRecord) -> bool:
+        if not self._save():
+            return False
         try:
             text = self.repository.load_text(record.document_id)
         except (RuntimeError, UnicodeError, ValueError):
             self.save_error = True
-            return
+            return False
         self.current = record
         self.buffer = TextBuffer(text, len(text))
         self.undo_history.clear()
@@ -408,6 +409,7 @@ class WritingApp:
         self.scroll_line = 0
         self._layout_text = None
         self._keep_cursor_visible()
+        return True
 
     def _apply_edit(self, action) -> None:
         edit = action()
@@ -433,18 +435,19 @@ class WritingApp:
         if self.dirty and time.monotonic() - self.last_change >= AUTOSAVE_IDLE_SECONDS:
             self._save()
 
-    def _save(self) -> None:
+    def _save(self) -> bool:
         if not self.dirty or self.current is None:
-            return
+            return True
         try:
             updated = self.repository.save_text(self.current.document_id, self.buffer.text)
         except (RuntimeError, ValueError):
             self.save_error = True
-            return
+            return False
         self.current = updated
         self.records = [updated, *[item for item in self.records if item.document_id != updated.document_id]]
         self.dirty = False
         self.save_error = False
+        return True
 
     def _layout(self) -> list[VisualLine]:
         if self._layout_text == self.buffer.text:
