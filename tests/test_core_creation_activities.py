@@ -42,30 +42,61 @@ class FakeStorage:
             raise RuntimeError("missing private file")
         return self.files[name]
 
+    def file_delete(self, name: str) -> bool:
+        return self.files.pop(name, None) is not None
+
+
+class FailingIndexStorage(FakeStorage):
+    def kv_set(self, key: str, value: object) -> None:
+        if key == WRITING.INDEX_KEY:
+            raise RuntimeError("simulated index failure")
+        super().kv_set(key, value)
+
 
 class WritingLogicTests(unittest.TestCase):
-    def test_text_buffer_edits_without_desktop_editor_semantics(self) -> None:
+    def test_text_buffer_edits_and_inverse_edits(self) -> None:
         buffer = WRITING.TextBuffer("ciao", 4)
-        self.assertTrue(buffer.insert("!"))
+        insert = buffer.insert("!")
+        self.assertIsNotNone(insert)
         self.assertEqual(buffer.text, "ciao!")
-        self.assertTrue(buffer.backspace())
+        assert insert is not None
+        insert.undo(buffer)
         self.assertEqual(buffer.text, "ciao")
+        self.assertEqual(buffer.cursor, 4)
+
+        backspace = buffer.backspace()
+        self.assertIsNotNone(backspace)
+        self.assertEqual(buffer.text, "cia")
+        assert backspace is not None
+        backspace.undo(buffer)
+        self.assertEqual(buffer.text, "ciao")
+        self.assertEqual(buffer.cursor, 4)
+
         buffer.move(-2)
-        self.assertEqual(buffer.cursor, 2)
-        self.assertTrue(buffer.delete())
+        delete = buffer.delete()
+        self.assertIsNotNone(delete)
         self.assertEqual(buffer.text, "cio")
+        assert delete is not None
+        delete.undo(buffer)
+        self.assertEqual(buffer.text, "ciao")
+        self.assertEqual(buffer.cursor, 2)
+
+    def test_text_buffer_line_navigation(self) -> None:
+        buffer = WRITING.TextBuffer("ciao", 2)
         buffer.insert("\nabc")
-        self.assertEqual(buffer.text, "ci\nabco")
+        self.assertEqual(buffer.text, "ci\nabcao")
         buffer.home()
         self.assertEqual(buffer.cursor, 3)
         buffer.end()
-        self.assertEqual(buffer.cursor, len(buffer.text))
+        self.assertEqual(buffer.cursor, len("ci\nabc"))
 
-    def test_undo_history_is_bounded_and_keeps_latest_states(self) -> None:
+    def test_undo_history_is_bounded_and_keeps_latest_edits(self) -> None:
         history = WRITING.UndoHistory(maximum=2)
-        first = WRITING.TextSnapshot("a", 1)
-        second = WRITING.TextSnapshot("ab", 2)
-        third = WRITING.TextSnapshot("abc", 3)
+        buffer = WRITING.TextBuffer()
+        first = buffer.insert("a")
+        second = buffer.insert("b")
+        third = buffer.insert("c")
+        assert first is not None and second is not None and third is not None
         history.remember(first)
         history.remember(second)
         history.remember(third)
@@ -73,13 +104,25 @@ class WritingLogicTests(unittest.TestCase):
         self.assertEqual(history.pop(), second)
         self.assertIsNone(history.pop())
 
-    def test_undo_history_deduplicates_adjacent_state(self) -> None:
-        history = WRITING.UndoHistory(maximum=4)
-        snapshot = WRITING.TextSnapshot("hello", 5)
-        history.remember(snapshot)
-        history.remember(snapshot)
-        self.assertEqual(history.pop(), snapshot)
-        self.assertIsNone(history.pop())
+    def test_undo_edit_stores_only_changed_fragment_not_full_document(self) -> None:
+        original = "x" * 50_000
+        buffer = WRITING.TextBuffer(original, len(original))
+        edit = buffer.insert("y")
+        self.assertIsNotNone(edit)
+        assert edit is not None
+        self.assertEqual(edit.removed, "")
+        self.assertEqual(edit.inserted, "y")
+        self.assertEqual(len(edit.inserted) + len(edit.removed), 1)
+        edit.undo(buffer)
+        self.assertEqual(buffer.text, original)
+
+    def test_undo_rejects_mismatched_current_text(self) -> None:
+        buffer = WRITING.TextBuffer("abc", 3)
+        edit = buffer.insert("d")
+        assert edit is not None
+        buffer.text = "abXc"
+        with self.assertRaises(ValueError):
+            edit.undo(buffer)
 
     def test_document_repository_keeps_text_portable_and_recent(self) -> None:
         storage = FakeStorage()
@@ -92,6 +135,13 @@ class WritingLogicTests(unittest.TestCase):
         self.assertEqual(repo.list_records()[0].document_id, second.document_id)
         repo.save_text(first.document_id, "again")
         self.assertEqual(repo.list_records()[0].document_id, first.document_id)
+
+    def test_document_create_rolls_back_private_file_if_index_fails(self) -> None:
+        storage = FailingIndexStorage()
+        with self.assertRaises(RuntimeError):
+            WRITING.DocumentRepository(storage).create()
+        self.assertEqual(storage.files, {})
+        self.assertNotIn(WRITING.INDEX_KEY, storage.kv)
 
     def test_document_limit_refuses_new_work_instead_of_evicting_old_work(self) -> None:
         storage = FakeStorage()
