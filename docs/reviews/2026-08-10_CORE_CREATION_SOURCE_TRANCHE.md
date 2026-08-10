@@ -1,6 +1,6 @@
 # Greia Core Creation Activities — Source Tranche Review — 2026-08-10
 
-**Scope:** first source implementation of mandatory Phase-0 Writing and Painting Activities, first shared child-Activity UI primitives, and least-privilege theme-read correction  
+**Scope:** first source implementation of mandatory Phase-0 Writing and Painting Activities, first shared child-Activity UI primitives, least-privilege theme-read correction, and durability/performance hardening  
 **Status:** SOURCE IMPLEMENTED / STATICALLY REVIEWED / EXECUTION UNPROVEN  
 **Blocking architecture phase remains:** R7 direct graphics/session  
 **Hardware acceptance:** NOT RUN
@@ -24,9 +24,7 @@ This source work proceeds in parallel with R7 only because it consumes already-e
 
 ---
 
-## 2. Source added
-
-### Writing
+## 2. Writing source
 
 ```text
 activities/writing/activity.toml
@@ -43,18 +41,48 @@ Implemented source behavior includes:
 - large default text at the 1024×600 reference scale;
 - Unicode `TEXTINPUT`;
 - multiline text, caret placement/navigation, wrapping and scroll;
-- bounded edit-operation undo;
 - visual gallery and New;
 - debounced automatic saves plus transition/exit save attempts;
+- child-initiated Close/New/gallery/document-switch transitions proceed only after a successful required save;
 - UTF-8 Greia private files and a bounded logical index;
 - rollback attempt if empty-file creation succeeds but logical-index creation fails;
 - no filesystem browser/file-dialog abstraction;
 - no formatting-ribbon/desktop-office scope;
 - no silent eviction of older child documents on library pressure.
 
-Writing’s undo history was specifically hardened after static review. It now retains up to **128 inverse edit operations** containing only inserted/deleted fragments and cursor positions rather than 32 complete document snapshots. A single-character edit on a 50,000-character document therefore records one changed character, not a second 50,000-character string.
+### Writing undo memory model
 
-### Painting
+The initial full-document-snapshot idea was rejected during static review as technically bounded but inappropriate for the ~768 MiB reference class.
+
+Current undo stores inverse edit operations containing only:
+
+```text
+start position
+removed fragment
+inserted fragment
+cursor before/after
+```
+
+Bounds:
+
+```text
+recent operations:          128 maximum
+total retained edit payload: 65,536 changed characters maximum
+```
+
+An oversized single paste/edit remains valid document content but is deliberately not retained as an undo payload. A one-character edit on a 50,000-character document therefore retains one changed character, not another 50,000-character snapshot.
+
+### Writing creation transaction
+
+New-document creation writes the empty private UTF-8 file before adding the logical index record. If index creation fails, Writing attempts to delete the just-created private file before propagating failure, reducing hidden quota leakage from a partial New operation.
+
+### Writing caret boundary
+
+Soft wrapping can create a logical cursor index that is both the end of one visual line and the start of the next. Writing assigns that boundary to the later visual line and renders the caret once, avoiding ambiguous/double caret ownership.
+
+---
+
+## 3. Painting source
 
 ```text
 activities/painting/activity.toml
@@ -69,19 +97,51 @@ Implemented source behavior includes:
 - required `display`, `pointer`; optional `touch`;
 - large fullscreen raster canvas;
 - ten fixed colors, three brush sizes, eraser;
-- bounded stroke undo;
 - visual gallery and New;
 - pointer-point decimation;
 - debounced PNG save through Greia Storage;
+- child-initiated Close/New/gallery/painting-switch transitions proceed only after a successful required save;
 - no per-frame PNG encoding or durable write;
 - no filesystem browser;
 - no silent eviction of older child paintings when the bounded library is full.
 
-Painting’s undo model retains only recent stroke geometry. Once the history window is exceeded, the oldest stroke is folded into a base canvas and removed from undo history rather than retaining unlimited full-canvas snapshots.
+### Painting undo/vector memory model
+
+Painting does not retain unlimited full-canvas undo snapshots.
+
+Current bounds:
+
+```text
+recent undo stroke chunks: 24 maximum
+sampled points/chunk:      2,048 maximum
+```
+
+An exceptionally long continuous mouse-down gesture is split into bounded continuation chunks rather than allowing one Python point list to grow indefinitely. When the 24-entry undo window fills, the oldest stroke chunk is folded into a base canvas and removed from vector undo history while the visible artwork remains unchanged.
+
+### Painting creation transaction
+
+New Painting creation now writes a real blank PNG first, then adds the logical library record. If the index write fails, Painting attempts to delete the newly written PNG before reporting failure.
+
+This prevents ambiguous index-only “blank paintings” and reduces hidden quota leakage after partial New operations.
 
 ---
 
-## 3. Shared child-Activity UI primitives
+## 4. Save-failure transition rule
+
+A durability defect was found during the final pass: the initial UI attempted a save before New/Gallery/Close but could continue even when that save failed.
+
+Current rule for both Activities:
+
+- automatic save failure leaves the current creation dirty and visibly in error;
+- a child-initiated transition that would abandon the current in-memory creation does **not** proceed until the required save succeeds;
+- existing/older work is never deleted automatically to hide quota pressure;
+- platform-enforced lifecycle STOP remains authoritative and cannot be vetoed by an Activity.
+
+This separates child UX durability from platform lifecycle authority cleanly.
+
+---
+
+## 5. Shared child-Activity UI primitives
 
 Added:
 
@@ -100,13 +160,18 @@ This is intentionally a very small shared SDK layer justified by two real consum
 
 It is **not** a general widget/layout/scene/animation system.
 
-This is the desired extraction direction: real Activities first, measured duplication second, smallest reusable primitive third.
+Desired extraction discipline remains:
+
+1. real Activities first;
+2. measured/repeated need second;
+3. smallest reusable primitive third;
+4. low-end measurement before richer shared abstractions become canon.
 
 ---
 
-## 4. Theme API authority defect found during implementation
+## 6. Theme API authority defect found during implementation
 
-Writing/Painting initially exposed a platform contract inconsistency.
+Writing/Painting exposed a platform contract inconsistency.
 
 `get_theme()` was documented as an ordinary Activity read API, but implementation depended on `GREIA_CUSTOMIZATION_DIR`. The installed supervisor exposes that profile customization path only when `customization.manage` is granted.
 
@@ -132,7 +197,7 @@ trusted customization context
     -> existing resolved child customization state
 ```
 
-A future ordinary-Activity **read-only personalized theme snapshot** remains a useful enhancement, but must be implemented without exposing raw customization files or mutation authority.
+A future ordinary-Activity **read-only personalized theme snapshot** remains useful, but must not expose raw customization files or mutation authority.
 
 Regression source:
 
@@ -142,9 +207,9 @@ tests/test_activity_theme_access.py
 
 ---
 
-## 5. Python authoring/runtime mismatch deliberately not changed
+## 7. Python authoring/runtime mismatch deliberately not changed
 
-The static Activity validator currently ignores package-relative imports, while the installed Python runtime adapter launches the configured entrypoint as a direct file.
+The static Activity validator currently tolerates package-relative imports, while the installed Python runtime adapter launches the configured entrypoint as a direct file.
 
 Therefore this is not yet a supported installed pattern:
 
@@ -152,48 +217,19 @@ Therefore this is not yet a supported installed pattern:
 from .model import Model
 ```
 
-The tempting fix was to broaden runtime launch semantics to support package/module execution. That was **not** done in this tranche because the current full regression suite cannot execute here and this creative-app work should not silently alter the stable runtime seam.
+The tempting fix was to broaden runtime launch semantics to module execution. That was **not** done in this tranche because the current full regression suite cannot execute here and creative-app work should not silently alter the stable runtime seam.
 
 Instead:
 
 - Activity-local implementation remains internally class-structured inside each `main.py`;
 - genuinely shared child UI primitives moved into reviewed `greia_platform.activity_ui`;
-- the limitation is now explicit in `skills/greia-activity-authoring/SKILL.md`.
+- the limitation is explicit in `skills/greia-activity-authoring/SKILL.md`.
 
 A future runtime-module-entrypoint change must include dedicated runtime/supervisor regressions and a current full source gate.
 
 ---
 
-## 6. Durability/safety review decisions
-
-### No silent child-work eviction
-
-Both repositories have bounded visible libraries, but reaching that bound refuses a new creation rather than silently deleting or dropping an older creation from the logical index.
-
-The Activity skill now makes this a general creation-tool rule.
-
-### No phantom New state on refusal
-
-Writing and Painting were hardened so a refused New operation leaves the existing current creation/library intact and exposes an error state rather than switching to an unsavable fake creation.
-
-### Writing creation rollback
-
-Writing creates an empty private UTF-8 document file before adding the logical library entry. If that index write fails, the repository now attempts to remove the just-created private file before propagating the failure, reducing hidden quota leakage from partial New operations.
-
-### Writing caret boundary
-
-Soft wrapping can create a cursor index that is simultaneously the end of one visual line and the start of the next. Writing now assigns that boundary to the later visual line and renders the caret once, preventing ambiguous/double visual ownership.
-
-### Memory-bounded undo
-
-- Writing: maximum **128 inverse edit operations**; no full-document undo snapshots.
-- Painting: maximum 24 recent strokes; older strokes are folded into base pixels.
-
-These are Activity-level UX/memory bounds beneath the platform Storage quota and may be tuned after physical measurement.
-
----
-
-## 7. Provider-free regression source added
+## 8. Provider-free regression source added
 
 ```text
 tests/test_core_creation_activities.py
@@ -204,15 +240,20 @@ tests/test_activity_theme_access.py
 Coverage includes:
 
 - text-buffer editing and inverse edits;
-- bounded edit-operation Writing undo;
-- proof that a one-character edit on a large document stores only the changed fragment;
-- rejection of mismatched/stale inverse edits;
-- document index/order/portable text behavior;
+- Writing undo operation-count bound;
+- Writing total changed-text payload bound;
+- oversized single undo payload refusal without discarding the actual edit;
+- proof that one-character edits on large documents retain only changed fragments;
+- stale/mismatched inverse-edit rejection;
+- document index/order/portable UTF-8 behavior;
 - new-document private-file rollback on simulated index failure;
-- refusal without silent eviction;
+- refusal without silent old-work eviction;
 - bounded preview semantics;
 - painting index/order/private-file behavior;
-- bounded Painting undo and invalid stroke rejection;
+- transactional blank-PNG rollback on simulated Painting index failure;
+- bounded Painting undo;
+- 2,048-point stroke-chunk limit;
+- invalid stroke rejection;
 - shared 1024×600 UI geometry/scaling;
 - RGB helper bounds;
 - ordinary canonical-theme access without customization authority;
@@ -222,7 +263,7 @@ Coverage includes:
 
 ---
 
-## 8. Static contract checks performed
+## 9. Static contract checks performed
 
 The source was cross-checked against the repository’s current declarations for:
 
@@ -240,7 +281,7 @@ This is source review, not execution evidence.
 
 ---
 
-## 9. Current evidence boundary
+## 10. Current evidence boundary
 
 Last complete source gate that actually executed remains:
 
@@ -271,7 +312,7 @@ No GitHub Actions execution/query service was used for this implementation tranc
 
 ---
 
-## 10. Exact next execution step
+## 11. Exact next execution step
 
 On an owner-controlled Linux checkout at actual branch HEAD:
 
@@ -299,7 +340,7 @@ Only after the source gate is current should the developer image and installed v
 
 ---
 
-## 11. Product acceptance still open
+## 12. Product acceptance still open
 
 Writing still needs real acceptance for:
 
@@ -307,7 +348,7 @@ Writing still needs real acceptance for:
 - wrapping/caret behavior;
 - repeated undo on long documents;
 - keyboard/input-method behavior;
-- autosave/relaunch/failure behavior;
+- autosave/relaunch/save-failure behavior;
 - gallery scaling;
 - 1024×600 visual comfort;
 - low-end latency/RSS.
@@ -315,9 +356,10 @@ Writing still needs real acceptance for:
 Painting still needs real acceptance for:
 
 - slow/fast pointer stroke quality;
+- behavior at the 2,048-point continuation boundary;
 - >24-stroke bounded undo behavior;
 - eraser feel;
-- PNG autosave/relaunch/failure behavior;
+- PNG autosave/relaunch/save-failure behavior;
 - gallery scaling;
 - touch semantics before claiming touch support;
 - 1024×600 visual comfort;
@@ -327,7 +369,7 @@ Both still need installed lifecycle/crash/forced-return acceptance and future lo
 
 ---
 
-## 12. R7 relationship
+## 13. R7 relationship
 
 R7 remains blocking. Production remains on the provisional Xorg/xinit compatibility backend. No compositor is selected by this work, no raw DRM/input authority is granted to Activities, and no physical direct-graphics evidence is advanced.
 
@@ -335,7 +377,7 @@ Writing and Painting are useful future acceptance workloads for whatever display
 
 ---
 
-## 13. Continuity note — active plan append
+## 14. Continuity note — active plan append
 
 `AGENTS.md` normally requires a substantive implementation tranche to append the active remediation plan progress log.
 
