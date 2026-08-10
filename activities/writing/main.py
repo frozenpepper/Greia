@@ -26,6 +26,7 @@ AUTOSAVE_IDLE_SECONDS = 1.2
 MAX_DOCUMENTS = 120
 MAX_CHARACTERS = 120_000
 MAX_UNDO_EDITS = 128
+MAX_UNDO_PAYLOAD_CHARS = 65_536
 INDEX_KEY = "documents.index.v1"
 
 
@@ -112,6 +113,10 @@ class TextEdit:
     cursor_before: int
     cursor_after: int
 
+    @property
+    def payload_chars(self) -> int:
+        return len(self.removed) + len(self.inserted)
+
     def undo(self, buffer: "TextBuffer") -> None:
         if self.start < 0 or self.start + len(self.inserted) > len(buffer.text):
             raise ValueError("undo edit is outside the current text")
@@ -178,22 +183,45 @@ class TextBuffer:
 
 
 class UndoHistory:
-    def __init__(self, maximum: int = MAX_UNDO_EDITS):
+    def __init__(
+        self,
+        maximum: int = MAX_UNDO_EDITS,
+        max_payload_chars: int = MAX_UNDO_PAYLOAD_CHARS,
+    ):
         if maximum < 1:
             raise ValueError("undo history must retain at least one edit")
+        if max_payload_chars < 1:
+            raise ValueError("undo payload bound must be positive")
         self.maximum = int(maximum)
+        self.max_payload_chars = int(max_payload_chars)
         self._items: list[TextEdit] = []
+        self._payload_chars = 0
+
+    @property
+    def payload_chars(self) -> int:
+        return self._payload_chars
 
     def remember(self, edit: TextEdit) -> None:
+        payload = edit.payload_chars
+        if payload > self.max_payload_chars:
+            self.clear()
+            return
         self._items.append(edit)
-        if len(self._items) > self.maximum:
-            del self._items[0]
+        self._payload_chars += payload
+        while len(self._items) > self.maximum or self._payload_chars > self.max_payload_chars:
+            removed = self._items.pop(0)
+            self._payload_chars -= removed.payload_chars
 
     def pop(self) -> TextEdit | None:
-        return self._items.pop() if self._items else None
+        if not self._items:
+            return None
+        edit = self._items.pop()
+        self._payload_chars -= edit.payload_chars
+        return edit
 
     def clear(self) -> None:
         self._items.clear()
+        self._payload_chars = 0
 
     def __bool__(self) -> bool:
         return bool(self._items)
