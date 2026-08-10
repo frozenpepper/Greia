@@ -43,13 +43,16 @@ Implemented source behavior includes:
 - large default text at the 1024×600 reference scale;
 - Unicode `TEXTINPUT`;
 - multiline text, caret placement/navigation, wrapping and scroll;
-- bounded undo;
+- bounded edit-operation undo;
 - visual gallery and New;
 - debounced automatic saves plus transition/exit save attempts;
 - UTF-8 Greia private files and a bounded logical index;
+- rollback attempt if empty-file creation succeeds but logical-index creation fails;
 - no filesystem browser/file-dialog abstraction;
 - no formatting-ribbon/desktop-office scope;
 - no silent eviction of older child documents on library pressure.
+
+Writing’s undo history was specifically hardened after static review. It now retains up to **128 inverse edit operations** containing only inserted/deleted fragments and cursor positions rather than 32 complete document snapshots. A single-character edit on a 50,000-character document therefore records one changed character, not a second 50,000-character string.
 
 ### Painting
 
@@ -173,13 +176,17 @@ The Activity skill now makes this a general creation-tool rule.
 
 Writing and Painting were hardened so a refused New operation leaves the existing current creation/library intact and exposes an error state rather than switching to an unsavable fake creation.
 
+### Writing creation rollback
+
+Writing creates an empty private UTF-8 document file before adding the logical library entry. If that index write fails, the repository now attempts to remove the just-created private file before propagating the failure, reducing hidden quota leakage from partial New operations.
+
 ### Writing caret boundary
 
 Soft wrapping can create a cursor index that is simultaneously the end of one visual line and the start of the next. Writing now assigns that boundary to the later visual line and renders the caret once, preventing ambiguous/double visual ownership.
 
-### Bounded undo
+### Memory-bounded undo
 
-- Writing: maximum 32 text snapshots.
+- Writing: maximum **128 inverse edit operations**; no full-document undo snapshots.
 - Painting: maximum 24 recent strokes; older strokes are folded into base pixels.
 
 These are Activity-level UX/memory bounds beneath the platform Storage quota and may be tuned after physical measurement.
@@ -196,9 +203,12 @@ tests/test_activity_theme_access.py
 
 Coverage includes:
 
-- text-buffer editing/navigation;
-- bounded/deduplicated Writing undo;
+- text-buffer editing and inverse edits;
+- bounded edit-operation Writing undo;
+- proof that a one-character edit on a large document stores only the changed fragment;
+- rejection of mismatched/stale inverse edits;
 - document index/order/portable text behavior;
+- new-document private-file rollback on simulated index failure;
 - refusal without silent eviction;
 - bounded preview semantics;
 - painting index/order/private-file behavior;
@@ -295,6 +305,7 @@ Writing still needs real acceptance for:
 
 - long Unicode text;
 - wrapping/caret behavior;
+- repeated undo on long documents;
 - keyboard/input-method behavior;
 - autosave/relaunch/failure behavior;
 - gallery scaling;
