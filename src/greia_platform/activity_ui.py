@@ -1,17 +1,26 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from functools import lru_cache
 from pathlib import Path
 
 import pygame
 
+from .ui_core import BoundedCache
+
 REFERENCE_WIDTH = 1024
 REFERENCE_HEIGHT = 600
+_ICON_CACHE: BoundedCache[tuple[str, int], pygame.Surface] = BoundedCache(64)
 
 
 @dataclass(frozen=True, slots=True)
 class ChildUiMetrics:
+    """Cheap 1024×600-first geometry for child-sized Pygame controls.
+
+    This is a renderer-specific implementation helper, not the universal Greia
+    UI contract. Semantic Screen/Overlay/Collection concepts live in
+    `greia_platform.ui_core`.
+    """
+
     width: int
     height: int
     scale: float
@@ -46,14 +55,26 @@ class ChildUiMetrics:
         return pygame.Rect(x, y, self.button_size, self.button_size)
 
 
-@lru_cache(maxsize=64)
 def load_icon(path: str | Path, size: int) -> pygame.Surface:
+    """Load and scale one icon variant through the shared hard-bounded cache."""
+
     if size <= 0:
         raise ValueError("icon size must be positive")
-    image = pygame.image.load(str(path)).convert_alpha()
-    if image.get_width() == size and image.get_height() == size:
-        return image
-    return pygame.transform.smoothscale(image, (size, size))
+    key = (str(Path(path)), int(size))
+    cached = _ICON_CACHE.get(key)
+    if cached is not None:
+        return cached
+    image = pygame.image.load(key[0]).convert_alpha()
+    if image.get_width() != size or image.get_height() != size:
+        image = pygame.transform.smoothscale(image, (size, size))
+    _ICON_CACHE[key] = image
+    return image
+
+
+def clear_icon_cache() -> None:
+    """Drop renderer-specific cached icon surfaces after display teardown/change."""
+
+    _ICON_CACHE.clear()
 
 
 def draw_icon_button(
@@ -65,6 +86,8 @@ def draw_icon_button(
     selected: bool = False,
     outline: tuple[int, int, int] | None = None,
 ) -> None:
+    """Draw a lightweight icon button directly onto its owning surface."""
+
     radius = max(8, min(rect.width, rect.height) // 4)
     pygame.draw.rect(surface, fill, rect, border_radius=radius)
     if selected:
