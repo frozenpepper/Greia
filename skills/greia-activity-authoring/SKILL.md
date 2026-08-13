@@ -23,6 +23,7 @@ skills/greia-activity-authoring/SKILL.md
 src/greia_platform/activities.py
 src/greia_platform/activity_api.py
 src/greia_platform/ui_core.py
+src/greia_platform/pygame_ui.py
 src/greia_platform/activity_ui.py
 src/greia_platform/storage_client.py
 src/greia_platform/event_client.py
@@ -124,7 +125,11 @@ A child-facing “folder” is a semantic `Collection`, never a Linux filesystem
 
 ### Current Pygame helpers
 
-`src/greia_platform/activity_ui.py` is the current lightweight Pygame helper layer. It provides 1024×600-first child metrics, large toolbar geometry, bounded icon scaling/cache and a few direct-draw symbols/buttons used by real first-party Activities.
+`src/greia_platform/pygame_ui.py` is the platform-wide import surface for new shared Pygame consumers. Existing first-party Activities may continue importing `src/greia_platform/activity_ui.py`, which currently owns the same helper implementation for compatibility.
+
+The helpers provide 1024×600-first child metrics, large toolbar geometry, bounded icon scaling/cache and a few direct-draw symbols/buttons used by real first-party Activities.
+
+There must be one implementation, not divergent Shell/installer/Activity copies. The compatibility direction may be flipped after current focused tests execute, but do not combine that mechanical migration with framework growth.
 
 This is **not** a universal retained widget toolkit. Do not add a DOM/CSS clone, scene graph, giant widget hierarchy or animation framework speculatively. Extract the smallest stable primitive after real duplication appears in multiple consumers.
 
