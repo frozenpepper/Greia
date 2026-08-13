@@ -5,53 +5,37 @@
 **Repository:** `frozenpepper/Greia` (private)  
 **Integration target:** `main`  
 **Active branch:** `r7-direct-graphics`  
-**Draft PR:** #4 — `R7: direct graphics/session migration and KMSDRM evidence path`  
+**Draft PR:** #4  
 **Blocking architecture phase:** **R7 — Direct graphics/session architecture**
 
----
+## 1. Resume order
 
-## 1. Mandatory resume order
-
-Read before substantive work:
+Read:
 
 1. `AGENTS.md`;
 2. `README.md`;
 3. `docs/DOCUMENTATION.md`;
 4. `docs/architecture/GREIA_ARCHITECTURE.md`;
-5. accepted ADRs relevant to the task, especially ADR 0012–0018;
-6. **`docs/adr/0018-lightweight-ui-foundation.md`** for any Shell/installer/parent/native-UI work;
-7. **`docs/engineering/ENGINEERING_FOUNDATIONS.md`** for repository-wide OOP/polymorphism/maintainability/performance rules;
-8. `docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md`;
-9. `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`;
-10. this `HANDOVER.md`;
-11. `docs/agents/GREIA_AGENT_OPERATIONS.md`;
-12. `skills/greia-activity-authoring/SKILL.md` for Activity work;
-13. phase-specific testing/review documents referenced below.
+5. relevant accepted ADRs, especially ADR 0012–0018;
+6. `docs/engineering/ENGINEERING_FOUNDATIONS.md`;
+7. relevant `docs/product/*` requirement;
+8. `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`;
+9. this file;
+10. `docs/agents/GREIA_AGENT_OPERATIONS.md`;
+11. `skills/greia-activity-authoring/SKILL.md` for Activity work;
+12. applicable `docs/testing/*` procedure.
 
-GitHub is canonical. Resolve actual branch HEAD before editing/testing. Do not infer current state from a chat SHA.
+GitHub is canonical. Resolve actual branch HEAD before editing/testing.
 
----
+## 2. Hosted-execution rule
 
-## 2. Permanent hosted-execution boundary
+Do **not** use/query/trigger/rerun GitHub Actions without explicit repository-owner authorization for that specific hosted use. Repository source reads/writes/commits/PR discussion remain expected.
 
-**Do not use the GitHub Actions execution/query surface without explicit repository-owner authorization for that specific hosted use.**
+No GitHub Actions execution/query service was used in the 2026-08-13 consolidation.
 
-Without that authorization do not:
+## 3. Verification boundary
 
-- trigger/rerun/dispatch hosted workflows;
-- add automatic hosted triggers;
-- query Actions runs/status/jobs/steps/logs/artifacts;
-- download Actions artifacts.
-
-Repository source reads/writes/commits/PR discussion remain expected.
-
-No GitHub Actions execution/query service was used in the 2026-08-13 UI-foundation tranche.
-
----
-
-## 3. Verification boundary — do not overclaim
-
-Last complete source gate genuinely executed remains:
+Last complete source gate genuinely executed:
 
 ```text
 commit: 097f0281888a58f6f26425807ce99d9f35449313
@@ -61,62 +45,55 @@ bundled Activity validation: PASS
 source/shell/footprint gate: PASS
 ```
 
-Earlier focused evidence genuinely executed:
+Earlier focused evidence:
 
 ```text
-DisplaySessionCoordinator isolated fixture: 22 / 22 PASS
-compositor-package pure-logic fixture:       14 / 14 PASS
-serial fake-SDL/process fixture:              8 / 8 PASS
+DisplaySessionCoordinator fixture: 22 / 22 PASS
+compositor-package pure logic:     14 / 14 PASS
+serial fake-SDL/process:            8 / 8 PASS before later strengthening
 ```
 
-The serial 8/8 result predates later strengthening.
+Everything newer is **UNPROVEN** unless explicitly recorded otherwise. No new PASS is claimed for the UI/creative/consolidation source.
 
-Everything newer remains **UNPROVEN** unless explicitly recorded otherwise.
+## 4. Repository consolidation completed
 
-The 2026-08-13 UI-foundation tranche did **not** execute:
+The repository now has one discoverable authority chain:
 
 ```text
-tests/test_ui_core.py
-tests/test_activity_ui.py after shared-cache change
-current full make verify
-Shell migration
-installer migration
-idle/invalidation physical measurements
+AGENTS.md
+  ↓
+docs/DOCUMENTATION.md
+  ↓
+accepted ADRs + docs/engineering/ENGINEERING_FOUNDATIONS.md
+  ↓
+source/runtime contract owner
+  ↓
+HANDOVER.md for current evidence/state
 ```
 
-No new PASS count is claimed.
+The active plan now contains the missing 2026-08-13 consolidation progress entry; the former “plan append debt” is closed.
 
----
+README is now a stable landing page rather than a duplicate handover. The Activity skill is a concise derived manual that points to canonical source/architecture owners instead of repeating broad architecture prose.
 
-## 4. Permanent open-source engineering architecture
+## 5. Permanent engineering contract
 
-`AGENTS.md` now makes this a hard repository requirement:
+`AGENTS.md` and `docs/engineering/ENGINEERING_FOUNDATIONS.md` require:
 
-- strong object-oriented foundations around stable domain concepts;
+- cohesive OOP domain structure around real concepts/invariants;
 - purposeful polymorphism at genuine variation points;
 - narrow typed interfaces/ABCs/protocols;
-- composition preferred over inheritance;
-- inheritance only for real substitutability;
-- explicit dependency injection at architecture seams;
-- explicit lifecycle/resource ownership;
-- bounded caches, histories, queues, surfaces and transient state;
-- no god classes or giant cross-domain managers;
-- no repeated backend/type/runtime switch trees when a polymorphic seam is appropriate;
-- useful docstrings for public architectural classes and extension points;
-- code/module organization that outside contributors can understand without chat history;
-- performance treated as architecture correctness, not late optimization.
+- composition by default; inheritance only for real substitutability;
+- explicit dependency direction and lifecycle/resource ownership;
+- no god classes or duplicated backend/runtime service stacks;
+- bounded caches, histories, queues and transient state;
+- low-allocation/hot-path discipline;
+- useful public docstrings and discoverable extension points;
+- tests at the narrowest meaningful layer;
+- simple abstractions justified by real consumers rather than speculative framework growth.
 
-Detailed guidance:
+Strong OOP does not mean maximizing class count.
 
-```text
-docs/engineering/ENGINEERING_FOUNDATIONS.md
-```
-
-This guidance does **not** mean “everything must be a class.” Small pure calculations remain functions; abstractions must own real concepts, invariants, lifecycle, resource ownership, duplication or extension seams.
-
----
-
-## 5. Accepted lightweight UI architecture — ADR 0018
+## 6. Lightweight UI foundation — ADR 0018
 
 Normative decision:
 
@@ -124,37 +101,18 @@ Normative decision:
 docs/adr/0018-lightweight-ui-foundation.md
 ```
 
-Greia deliberately uses:
+Greia UI vocabulary:
 
 ```text
 Screen
-  -> optional Overlay / Sheet
-      -> Panel / Card / Collection
-          -> Control
+  └── optional Overlay / Sheet
+        └── Panel / Card / Collection
+              └── Control
 ```
 
-Greia deliberately does **not** use a normal desktop/window metaphor.
+A child-visible “folder” is a semantic `Collection`, never a Linux path. Greia does not introduce a conventional desktop/window-manager model.
 
-Do not add:
-
-- arbitrary draggable/resizable windows;
-- minimize/maximize state;
-- taskbars/docks;
-- arbitrary z-order/window-manager behavior;
-- filesystem Explorer/Finder concepts;
-- generic retained widget/DOM/scene frameworks without a new evidence-backed ADR.
-
-### Collection semantics
-
-`Collection` is the common child-facing grouping abstraction.
-
-A Collection may visually appear as a folder, shelf, box, bag, book, etc., but it is a semantic ordered group of Greia object references and **never a Linux filesystem path**.
-
----
-
-## 6. UI core source now implemented
-
-New renderer-neutral module:
+Renderer-neutral source:
 
 ```text
 src/greia_platform/ui_core.py
@@ -176,186 +134,105 @@ InvalidationTracker
 SurfaceNavigator
 ```
 
-Important semantics:
+`ui_core.py` imports no Pygame.
 
-- `Screen` is one full logical Greia UI surface;
-- `Overlay` is bounded transient/modal UI over a Screen;
-- `Control` is a small polymorphic interactive element owned by a surface;
-- `Collection` is immutable semantic grouping and rejects filesystem-shaped IDs;
-- `PagedGrid` computes visible pages deterministically without renderer dependency;
-- `BoundedCache` is hard-bounded LRU storage with optional eviction cleanup;
-- `InvalidationTracker` separates static dirty rendering from explicit animation;
-- `SurfaceNavigator` owns exactly one Screen plus a bounded Overlay stack and routes events polymorphically.
+## 7. Current Pygame helper consolidation
 
-`ui_core.py` imports no Pygame. This is intentional so the semantics survive future renderer/runtime choices.
-
----
-
-## 7. Current Pygame helper layer
-
-Current first-party Python renderer helper remains:
+Current single implementation remains:
 
 ```text
 src/greia_platform/activity_ui.py
 ```
 
-It still exposes the current Activity-facing helpers:
+Platform-wide import name for new shared Pygame consumers:
 
 ```text
-ChildUiMetrics
-load_icon
-clear_icon_cache
-draw_icon_button
-draw_plus_symbol
-draw_grid_symbol
-draw_undo_symbol
-draw_eraser_symbol
-mix
+src/greia_platform/pygame_ui.py
 ```
 
-The icon cache now uses shared `ui_core.BoundedCache` with a hard 64-entry bound.
+`pygame_ui.py` re-exports the existing implementation; there is **no duplicate helper implementation**. Existing Writing/Painting imports therefore remain stable.
 
-Writing/Painting continue importing the same existing `activity_ui` API. No deliberate author-facing breaking rename was introduced in this tranche.
+After focused/current tests pass, the compatibility direction may be flipped mechanically so `pygame_ui.py` physically owns the renderer implementation and `activity_ui.py` becomes the historical Activity compatibility façade. Do not combine that rename with new framework behavior.
 
-Future Shell/installer/native-Pygame sharing should promote renderer-specific primitives under a neutral implementation-layer name only in one coherent migration, not through a half-moved dependency graph.
+The current icon cache is hard-bounded through `ui_core.BoundedCache`.
 
----
+## 8. UI regression source
 
-## 8. UI-core regression source
-
-Added:
+Committed source includes:
 
 ```text
 tests/test_ui_core.py
-```
-
-It covers:
-
-- polymorphic Screen/Overlay lifecycle and event routing;
-- bounded overlay-stack behavior;
-- immutable semantic Collection behavior;
-- rejection of filesystem-shaped Collection IDs;
-- deterministic PagedGrid page/navigation behavior;
-- bounded LRU cache behavior;
-- invalidation/animation redraw-state behavior.
-
-Existing:
-
-```text
+tests/test_ui_core_lifecycle.py
 tests/test_activity_ui.py
 ```
 
-continues covering 1024×600 child metrics and color helper behavior.
+Coverage includes polymorphic Screen/Overlay lifecycle/event routing, modal/non-modal behavior, bounded overlay depth, semantic Collection behavior, deterministic paging, bounded LRU caching, cache replacement edge cases, invalidation state, child metrics and color helpers.
 
-These tests are committed but unexecuted in the current checkout/evidence boundary.
+These tests are unexecuted in the current evidence boundary.
 
----
+## 9. Phase-0 Writing and Painting
 
-## 9. Performance rules now part of UI correctness
-
-For the Acer-class resource floor:
-
-- caches must have explicit bounds;
-- images/fonts/scaled assets are reused rather than recreated per frame;
-- ordinary controls should draw directly to the owning surface instead of each owning a backing Surface;
-- only visible Collection items/pages should be laid out/rendered;
-- histories/animations/transient pools need explicit bounds;
-- avoid per-frame filesystem IO, image decoding, font construction and large scaling;
-- static Shell screens should migrate toward invalidation/event-driven redraw rather than continuously repainting unchanged content;
-- normal Shell animation should stay around 30 Hz unless measurement demonstrates a need for more.
-
-Do not optimize by sacrificing input responsiveness or correctness. Measure on low-end hardware before certification.
-
----
-
-## 10. Existing Shell/installer state relative to the new UI core
-
-The existing Shell already has useful concepts such as paged grids, hit targets, icon/font caching and explicit modes, but they remain implemented locally/procedurally in `src/greia_launcher/main.py`.
-
-The installer still owns local button/layout/font/icon code in `src/greia_installer/main.py`.
-
-They were **not** big-bang rewritten in this tranche because the new UI-core regression source has not executed yet.
-
-Safe migration order after focused PASS:
-
-1. migrate Shell paging to shared `PagedGrid`;
-2. migrate Shell icon/font dictionaries to explicit `BoundedCache` ownership;
-3. migrate installer icon/font caches to the same bounded resource model;
-4. extract real Shell modes incrementally into concrete `Screen`/`Overlay` subclasses;
-5. only then introduce invalidation-driven idle redraw with focused tests and physical measurement.
-
-Do not rewrite all Shell UI at once.
-
----
-
-## 11. Mandatory Phase-0 creative Activities
-
-Product contract:
+Mandatory product contract:
 
 ```text
 docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md
 ```
 
-Current source identities:
+Stable IDs:
 
 ```text
 org.greia.writing
 org.greia.painting
 ```
 
-Both are source-implemented first tranches and remain unexecuted/hardware-unproven.
+Both source tranches exist and remain execution/hardware-unproven.
 
-Writing currently includes large Unicode text, caret/navigation/wrapping, bounded inverse-edit undo, visual gallery and debounced profile-scoped UTF-8 saving.
+Writing includes large Unicode text, wrapping/caret/navigation, bounded inverse-edit undo, visual gallery and debounced profile-scoped UTF-8 saving.
 
-Painting currently includes large raster canvas, ten colors, three brush sizes, eraser, bounded stroke undo, gallery and debounced profile-scoped PNG saving.
+Painting includes a large raster canvas, fixed cheerful palette, three brush sizes, eraser, bounded stroke undo, visual gallery and debounced profile-scoped PNG saving.
 
-Neither may be considered Phase-0 product-complete until real 1024×600 visual/input/storage/lifecycle and Acer resource acceptance executes.
+No Linux file-management workflow is exposed.
 
----
+## 10. Safe UI migration boundary
 
-## 12. R7 remains blocking
+Existing Shell and installer still contain local/procedural UI code. They were deliberately not big-bang rewritten before the new common tests execute.
 
-Current production graphics/session state:
+After focused/current PASS, migrate incrementally:
 
-```text
-installed path:           Xorg + xinit compatibility
-status:                   PROVISIONAL
-production compositor:    none selected
-serial direct DRM path:   evidence candidate only
-```
+1. Shell-local grid paging → `ui_core.PagedGrid`;
+2. Shell icon/font caches → explicit bounded cache ownership;
+3. installer icon/font caches → same bounded resource model;
+4. installer font construction out of per-frame draw path;
+5. Shell modes → concrete `Screen` / `Overlay` implementations;
+6. static Shell loop → invalidation/event-driven idle rendering, with visual/input/performance acceptance.
 
-Do not:
+Do not rewrite all Shell/installer UI in one tranche.
 
-- make `ActivitySupervisor` the DRM master;
-- grant ordinary Activities raw DRM/input ownership;
-- remove current X-compatible sandbox concessions before a replacement is accepted;
-- select a compositor without evidence;
-- claim physical Acer/Pi display acceptance without physical evidence.
+## 11. R7 remains blocking
 
-Relevant R7 tools remain under:
+Production graphics/session state remains:
 
 ```text
-src/greia_platform/direct_graphics_probe.py
-src/greia_platform/kmsdrm_acceptance.py
-src/greia_platform/kmsdrm_serial_handoff.py
-tools/r7_local_evidence.py
-tools/r7_qemu_kmsdrm_acceptance.py
-tools/r7_qemu_kmsdrm_handoff_acceptance.py
+installed path:         Xorg + xinit compatibility
+status:                 PROVISIONAL
+production compositor:  none selected
+serial direct DRM:      evidence candidate only
 ```
 
----
+Do not make `ActivitySupervisor` DRM owner, grant ordinary Activities raw DRM/input authority, remove current X-compatibility concessions before a replacement is accepted, or select a compositor without evidence.
 
-## 13. Developer remote path
+Relevant evidence protocol:
 
-Developer-only profile:
+```text
+docs/testing/2026-08-09_R7_EXTERNAL_LINUX_EVIDENCE_EXECUTION.md
+```
+
+## 12. Developer remote path
+
+Developer-only profile and client:
 
 ```text
 build/profiles/modern-amd64-dev.toml
-```
-
-Remote client:
-
-```text
 tools/greia_remote.py
 ```
 
@@ -366,19 +243,16 @@ Trust separation remains:
 /var/lib/greia-developer/activities      DEVELOPER_UNSIGNED
 ```
 
-No physical remote-control acceptance is currently claimed.
+Developer-remote tests/image/physical behavior remain unexecuted/unproven.
 
-The live graphical installer remote provisioner exists but remains not wired into the canonical installer builder; first-time remote USB installation is therefore not claimed operational.
+## 13. Exact next source verification
 
----
-
-## 14. Exact next source verification step
-
-On owner-controlled Linux at actual branch HEAD:
+On an owner-controlled current Linux checkout:
 
 ```bash
 PYTHONPATH=src python3 -m unittest \
   tests.test_ui_core \
+  tests.test_ui_core_lifecycle \
   tests.test_activity_ui \
   tests.test_core_creation_activities \
   tests.test_activity_theme_access \
@@ -395,19 +269,11 @@ PYTHONPATH=src python3 -m unittest discover \
 make verify
 ```
 
-Stop on the first real failure and preserve exact stdout/stderr. Do not weaken a contract/test to manufacture PASS.
+Stop on first real failure and preserve exact stdout/stderr. Do not weaken tests/contracts to manufacture PASS.
 
-Only after that source gate should Shell/installer UI migration proceed.
+Only after this gate should existing Shell/installer UI behavior migrate onto the common primitives.
 
----
-
-## 15. Exact next R7 evidence step
-
-Protocol:
-
-```text
-docs/testing/2026-08-09_R7_EXTERNAL_LINUX_EVIDENCE_EXECUTION.md
-```
+## 14. Exact next R7 evidence
 
 On the approved disposable/root-safe Linux environment:
 
@@ -418,43 +284,21 @@ python3 tools/r7_local_evidence.py --run-root "$RUN_ROOT" --plan-only
 sudo -E python3 tools/r7_local_evidence.py --run-root "$RUN_ROOT"
 ```
 
-First failure is authoritative for an attempt. Preserve the run root and do not rerun merely to manufacture PASS.
+Preserve first failure and the complete run root. Do not rerun merely to manufacture PASS.
 
----
-
-## 16. Active-plan append debt
-
-The active remediation plan remains append-only:
-
-```text
-docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md
-```
-
-This repository-access path still lacks a safe line-append operation for the large historical plan. Do not reconstruct/replace the full history merely to insert one paragraph.
-
-The next authenticated local-checkout tranche must append progress entries for:
-
-- the 2026-08-10 creative-source tranche if still absent;
-- the 2026-08-13 lightweight UI-foundation tranche.
-
-This is explicit continuity/documentation debt, not hidden implementation completion.
-
----
-
-## 17. Invariants to preserve
+## 15. Invariants
 
 - no visible Linux UI in normal child operation;
-- explicit child profile selection;
+- explicit Greia child profiles;
 - Activity remains runtime-neutral;
-- global progression remains platform-owned;
-- portable profile-scoped child state;
-- first-generation Acer is the extreme resource floor;
-- ARM64 is co-equal, not a later port;
-- no unauthorized GitHub-hosted execution;
-- no generic desktop/window-manager architecture;
-- no child-facing filesystem folders/paths;
-- strong OOP/polymorphic architecture at genuine extension seams;
-- composition over unnecessary inheritance;
+- progression/rewards remain platform-owned;
+- child state remains portable and profile-scoped;
+- Acer remains the extreme resource floor;
+- ARM is co-equal, not a later port;
+- no unauthorized hosted execution;
+- no desktop/window-manager architecture;
+- no child-facing filesystem paths;
+- strong OOP/polymorphic seams with composition-first design;
 - explicit bounded resources and cleanup;
-- code/documentation must remain understandable to outside contributors;
-- R7 evidence boundaries remain honest.
+- architecture/docs remain understandable without chat history;
+- source/VM/physical evidence boundaries remain honest.
