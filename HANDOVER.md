@@ -1,6 +1,6 @@
 # Greia — Standalone Engineering Handover
 
-**Date:** 2026-08-10  
+**Date:** 2026-08-13  
 **Version family:** `0.13.x` development  
 **Repository:** `frozenpepper/Greia` (private)  
 **Integration target:** `main`  
@@ -10,60 +10,48 @@
 
 ---
 
-## 1. Resume without chat history
+## 1. Mandatory resume order
 
-Read in this order before substantive work:
+Read before substantive work:
 
 1. `AGENTS.md`;
 2. `README.md`;
 3. `docs/DOCUMENTATION.md`;
 4. `docs/architecture/GREIA_ARCHITECTURE.md`;
-5. accepted ADRs relevant to the work, especially ADR 0012–0017;
-6. `docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md`;
-7. `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`;
-8. this `HANDOVER.md`;
-9. `docs/agents/GREIA_AGENT_OPERATIONS.md`;
-10. `skills/greia-activity-authoring/SKILL.md` for Activity work;
-11. the phase-specific testing/review documents named below.
+5. accepted ADRs relevant to the task, especially ADR 0012–0018;
+6. **`docs/adr/0018-lightweight-ui-foundation.md`** for any Shell/installer/parent/native-UI work;
+7. **`docs/engineering/ENGINEERING_FOUNDATIONS.md`** for repository-wide OOP/polymorphism/maintainability/performance rules;
+8. `docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md`;
+9. `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`;
+10. this `HANDOVER.md`;
+11. `docs/agents/GREIA_AGENT_OPERATIONS.md`;
+12. `skills/greia-activity-authoring/SKILL.md` for Activity work;
+13. phase-specific testing/review documents referenced below.
 
-GitHub is canonical. Resolve actual branch HEAD before editing or testing; do not trust a SHA remembered from chat.
-
-Documentation ownership is defined by `docs/DOCUMENTATION.md`:
-
-```text
-AGENTS.md                    repository-wide work/product rules
-docs/product/*               accepted child-facing product requirements
-accepted ADRs                normative architecture decisions
-source/runtime declarations  exact implemented APIs/schemas/commands
-active remediation plan      ordering and closure criteria
-HANDOVER.md                  current implementation/evidence/blocker state
-docs/testing/*               exact named procedures
-agent operations/skills      derived living manuals
-reviews                      dated analysis/evidence/provenance
-```
+GitHub is canonical. Resolve actual branch HEAD before editing/testing. Do not infer current state from a chat SHA.
 
 ---
 
-## 2. Critical hosted-execution rule
+## 2. Permanent hosted-execution boundary
 
-**Do not use the GitHub Actions execution service without explicit repository-owner authorization for that specific use.**
+**Do not use the GitHub Actions execution/query surface without explicit repository-owner authorization for that specific hosted use.**
 
-Without authorization do not:
+Without that authorization do not:
 
 - trigger/rerun/dispatch hosted workflows;
 - add automatic hosted triggers;
 - query Actions runs/status/jobs/steps/logs/artifacts;
 - download Actions artifacts.
 
-Reading/editing workflow source as normal repository source is allowed. GitHub commits/PR review/source persistence remain expected.
+Repository source reads/writes/commits/PR discussion remain expected.
 
-No Actions execution/query service was used in the 2026-08-10 creative implementation tranche.
+No GitHub Actions execution/query service was used in the 2026-08-13 UI-foundation tranche.
 
 ---
 
-## 3. Verification/evidence boundary — do not overclaim
+## 3. Verification boundary — do not overclaim
 
-Last complete source gate genuinely executed:
+Last complete source gate genuinely executed remains:
 
 ```text
 commit: 097f0281888a58f6f26425807ce99d9f35449313
@@ -81,421 +69,319 @@ compositor-package pure-logic fixture:       14 / 14 PASS
 serial fake-SDL/process fixture:              8 / 8 PASS
 ```
 
-The serial 8/8 result predates later strengthening of that path.
+The serial 8/8 result predates later strengthening.
 
-Everything newer that has not explicitly executed remains **UNPROVEN / committed but unexecuted**.
+Everything newer remains **UNPROVEN** unless explicitly recorded otherwise.
 
-The current creative tranche has **not** executed:
+The 2026-08-13 UI-foundation tranche did **not** execute:
 
 ```text
-tests/test_core_creation_activities.py
-tests/test_activity_theme_access.py
-tests/test_activity_ui.py
-standalone Writing validator
-standalone Painting validator
+tests/test_ui_core.py
+tests/test_activity_ui.py after shared-cache change
 current full make verify
-installed/windowed Writing or Painting
-developer-image build
-physical screenshot/input/performance acceptance
+Shell migration
+installer migration
+idle/invalidation physical measurements
 ```
 
-No newer PASS count is claimed.
+No new PASS count is claimed.
 
 ---
 
-## 4. R0–R6 state
+## 4. Permanent open-source engineering architecture
 
-R0–R6 are **SOURCE-CLOSED** at their recorded boundaries. Do not reopen the old v0.12 recovery incident without a concrete defect.
+`AGENTS.md` now makes this a hard repository requirement:
 
-The formerly lost post-v0.12 R5 history/progression authority was replaced by a **new reviewed implementation**; never describe it as historical recovery.
+- strong object-oriented foundations around stable domain concepts;
+- purposeful polymorphism at genuine variation points;
+- narrow typed interfaces/ABCs/protocols;
+- composition preferred over inheritance;
+- inheritance only for real substitutability;
+- explicit dependency injection at architecture seams;
+- explicit lifecycle/resource ownership;
+- bounded caches, histories, queues, surfaces and transient state;
+- no god classes or giant cross-domain managers;
+- no repeated backend/type/runtime switch trees when a polymorphic seam is appropriate;
+- useful docstrings for public architectural classes and extension points;
+- code/module organization that outside contributors can understand without chat history;
+- performance treated as architecture correctness, not late optimization.
 
-The source foundations now consumed by the creative Activities include:
+Detailed guidance:
 
-- stable Activity manifests/IDs;
-- PermissionBroker/trust boundary;
-- runtime-neutral lifecycle/READY/STOP;
-- profile-scoped Universal Storage;
-- automatic sessions/events/progression;
-- HAL/device-capability authority;
-- Python runtime adapter;
-- semantic shared assets.
+```text
+docs/engineering/ENGINEERING_FOUNDATIONS.md
+```
+
+This guidance does **not** mean “everything must be a class.” Small pure calculations remain functions; abstractions must own real concepts, invariants, lifecycle, resource ownership, duplication or extension seams.
 
 ---
 
-## 5. R7 remains the blocking architecture phase
+## 5. Accepted lightweight UI architecture — ADR 0018
 
-Current production state:
-
-```text
-installed graphics/session:   Xorg + xinit compatibility
-status:                       PROVISIONAL
-production compositor:        none selected
-serial direct DRM ownership:  evidence candidate only
-ActivitySupervisor DRM owner: forbidden
-ordinary raw input ownership: forbidden target direction
-```
-
-Installed Activity lifecycle already uses backend-neutral `DisplaySessionCoordinator` with `LegacyXDisplaySessionBackend`. That is a real ownership/recovery seam, **not** a completed direct-graphics migration.
-
-Current X-compatible sandbox concessions must not be removed blindly while production still uses Xorg.
-
-Relevant R7 source/tools:
+Normative decision:
 
 ```text
-src/greia_launcher/display_session.py
-src/greia_launcher/display_session_legacy_x.py
-src/greia_platform/direct_graphics_probe.py
-src/greia_platform/kmsdrm_acceptance.py
-src/greia_platform/kmsdrm_serial_handoff.py
-tools/r7_compositor_package_probe.py
-tools/r7_qemu_kmsdrm_acceptance.py
-tools/r7_qemu_kmsdrm_handoff_acceptance.py
-tools/r7_local_evidence.py
+docs/adr/0018-lightweight-ui-foundation.md
 ```
 
-Reference package/compositor candidates remain:
+Greia deliberately uses:
 
 ```text
-cage
-weston
-wlroots-runtime
+Screen
+  -> optional Overlay / Sheet
+      -> Panel / Card / Collection
+          -> Control
 ```
 
-They are measurement candidates only.
+Greia deliberately does **not** use a normal desktop/window metaphor.
+
+Do not add:
+
+- arbitrary draggable/resizable windows;
+- minimize/maximize state;
+- taskbars/docks;
+- arbitrary z-order/window-manager behavior;
+- filesystem Explorer/Finder concepts;
+- generic retained widget/DOM/scene frameworks without a new evidence-backed ADR.
+
+### Collection semantics
+
+`Collection` is the common child-facing grouping abstraction.
+
+A Collection may visually appear as a folder, shelf, box, bag, book, etc., but it is a semantic ordered group of Greia object references and **never a Linux filesystem path**.
 
 ---
 
-## 6. Mandatory Phase-0 creative baseline — first source tranche implemented
+## 6. UI core source now implemented
 
-Canonical product contract:
-
-```text
-docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md
-```
-
-Dated source review:
+New renderer-neutral module:
 
 ```text
-docs/reviews/2026-08-10_CORE_CREATION_SOURCE_TRANCHE.md
+src/greia_platform/ui_core.py
 ```
 
-### Writing
+Current contracts:
 
 ```text
-Activity ID: org.greia.writing
-source:      activities/writing/
-runtime:     Python/Pygame API 0.1
-permissions: none
-required:    display, keyboard, pointer
-optional:    touch
+UiEventResult
+UiSurface
+Screen
+Overlay
+Control
+Collection[T]
+GridPage
+PagedGrid
+BoundedCache[K,V]
+InvalidationTracker
+SurfaceNavigator
 ```
 
-Current source implements:
+Important semantics:
 
-- fullscreen large-text editing;
-- approximately 42 px default body text at the 1024×600 reference scale;
-- Unicode `TEXTINPUT`;
-- multiline text;
-- click caret placement;
-- arrows/Home/End/Backspace/Delete/Enter;
-- soft wrapping and vertical scrolling;
-- one unambiguous caret owner at soft-wrap boundaries;
-- large visible Undo plus optional Ctrl/Cmd-Z;
-- **128 recent edit-operation undo entries**;
-- undo stores inserted/deleted fragments and cursor positions, not full-document snapshots;
-- visual document gallery;
-- New document;
-- debounced autosave plus transition/exit save attempts;
-- UTF-8 private files through Greia Storage;
-- rollback attempt for an empty private file if new-document index creation fails;
-- no filesystem browser/file dialog;
-- no formatting ribbon;
-- no privileged permissions;
-- no silent old-document eviction when the bounded library is full;
-- refused New leaves existing work/library intact rather than creating an unsavable phantom document.
+- `Screen` is one full logical Greia UI surface;
+- `Overlay` is bounded transient/modal UI over a Screen;
+- `Control` is a small polymorphic interactive element owned by a surface;
+- `Collection` is immutable semantic grouping and rejects filesystem-shaped IDs;
+- `PagedGrid` computes visible pages deterministically without renderer dependency;
+- `BoundedCache` is hard-bounded LRU storage with optional eviction cleanup;
+- `InvalidationTracker` separates static dirty rendering from explicit animation;
+- `SurfaceNavigator` owns exactly one Screen plus a bounded Overlay stack and routes events polymorphically.
 
-Current logical/durability bounds:
-
-```text
-KV index:      documents.index.v1
-private files: documents/<uuid>.txt
-library:       120 indexed documents
-text:          120,000 Unicode code points per document
-undo:          128 recent edit operations
-```
-
-### Painting
-
-```text
-Activity ID: org.greia.painting
-source:      activities/painting/
-runtime:     Python/Pygame API 0.1
-permissions: none
-required:    display, pointer
-optional:    touch
-```
-
-Current source implements:
-
-- large fullscreen raster canvas;
-- 10 fixed cheerful colors;
-- 3 brush sizes;
-- eraser;
-- large icon-led controls;
-- bounded undo;
-- New drawing;
-- visual gallery;
-- direct pointer-stroke feedback;
-- pointer-point decimation;
-- debounced PNG saving through Greia Storage;
-- no per-frame PNG encoding/storage write;
-- no filesystem browser;
-- no privileged permissions;
-- no silent old-painting eviction;
-- refused New leaves existing painting/library intact instead of creating a phantom unsavable painting.
-
-Painting undo retains at most 24 recent strokes. When the window fills, the oldest stroke is folded into a base canvas and removed from undo history. Artwork remains visible without unlimited full-canvas history.
-
-Current logical/durability bounds:
-
-```text
-KV index:      paintings.index.v1
-private files: paintings/<uuid>.png
-library:       48 indexed paintings
-undo:          24 recent strokes
-```
-
-### Creative source is not product-complete
-
-Still required before Phase-0/user-ready acceptance:
-
-- execute the new focused tests;
-- run both standalone Activity validators;
-- run a current complete `make verify`;
-- real 1024×600 visual review;
-- Writing Unicode/caret/wrap/autosave/relaunch acceptance;
-- Painting slow/fast stroke/undo/eraser/autosave/relaunch acceptance;
-- quota/save-failure UX acceptance;
-- gallery scaling beyond the first six visible cards;
-- explicit touch-event acceptance before claiming touch support;
-- installed display/session exit/crash/forced-return acceptance;
-- Acer CPU/RSS/responsiveness/frame-pacing measurements;
-- eventual logical `.greiabackup` integration once R11 exists.
-
-R7 remains blocking. Creative source work does not select a compositor or advance R7 hardware evidence.
+`ui_core.py` imports no Pygame. This is intentional so the semantics survive future renderer/runtime choices.
 
 ---
 
-## 7. First shared Activity UI primitives
+## 7. Current Pygame helper layer
 
-New SDK module:
+Current first-party Python renderer helper remains:
 
 ```text
 src/greia_platform/activity_ui.py
 ```
 
-Current scope:
-
-- `ChildUiMetrics` — 1024×600-first scaling and large toolbar geometry;
-- cached semantic-icon loading/scaling;
-- rounded icon buttons;
-- small New/Grid/Undo/Eraser symbols;
-- bounded RGB `mix()` helper.
-
-Initial consumers:
+It still exposes the current Activity-facing helpers:
 
 ```text
-activities/writing
-activities/painting
+ChildUiMetrics
+load_icon
+clear_icon_cache
+draw_icon_button
+draw_plus_symbol
+draw_grid_symbol
+draw_undo_symbol
+draw_eraser_symbol
+mix
 ```
 
-This is deliberately **not** a general widget/layout/scene/animation toolkit. Extract future primitives only from repeated real Activity needs and measure their cost on the C0 reference hardware.
+The icon cache now uses shared `ui_core.BoundedCache` with a hard 64-entry bound.
 
-Provider-free source coverage exists in:
+Writing/Painting continue importing the same existing `activity_ui` API. No deliberate author-facing breaking rename was introduced in this tranche.
+
+Future Shell/installer/native-Pygame sharing should promote renderer-specific primitives under a neutral implementation-layer name only in one coherent migration, not through a half-moved dependency graph.
+
+---
+
+## 8. UI-core regression source
+
+Added:
+
+```text
+tests/test_ui_core.py
+```
+
+It covers:
+
+- polymorphic Screen/Overlay lifecycle and event routing;
+- bounded overlay-stack behavior;
+- immutable semantic Collection behavior;
+- rejection of filesystem-shaped Collection IDs;
+- deterministic PagedGrid page/navigation behavior;
+- bounded LRU cache behavior;
+- invalidation/animation redraw-state behavior.
+
+Existing:
 
 ```text
 tests/test_activity_ui.py
 ```
 
-but remains unexecuted in this tranche.
+continues covering 1024×600 child metrics and color helper behavior.
+
+These tests are committed but unexecuted in the current checkout/evidence boundary.
 
 ---
 
-## 8. Theme API least-privilege correction
+## 9. Performance rules now part of UI correctness
 
-Creative implementation exposed a platform contract defect: `get_theme()` previously depended on `GREIA_CUSTOMIZATION_DIR`, while the supervisor exposes that profile path only with `customization.manage`.
+For the Acer-class resource floor:
 
-Giving ordinary creative Activities mutation authority merely to obtain colors would be wrong.
+- caches must have explicit bounds;
+- images/fonts/scaled assets are reused rather than recreated per frame;
+- ordinary controls should draw directly to the owning surface instead of each owning a backing Surface;
+- only visible Collection items/pages should be laid out/rendered;
+- histories/animations/transient pools need explicit bounds;
+- avoid per-frame filesystem IO, image decoding, font construction and large scaling;
+- static Shell screens should migrate toward invalidation/event-driven redraw rather than continuously repainting unchanged content;
+- normal Shell animation should stay around 30 Hz unless measurement demonstrates a need for more.
 
-Current source behavior:
-
-```text
-ordinary Activity get_theme()
-    -> trusted canonical default Greia resolved palette
-    -> no raw child customization/wallpaper path
-    -> no customization.manage required
-
-trusted customization context get_theme()
-    -> existing profile-scoped resolved customization state
-```
-
-Files:
-
-```text
-src/greia_platform/activity_api.py
-tests/test_activity_theme_access.py
-```
-
-A future ordinary-Activity read-only personalized theme snapshot is a valid enhancement, but it must not expose raw profile customization files just for cosmetics.
-
-Regression source is committed but unexecuted.
+Do not optimize by sacrificing input responsiveness or correctness. Measure on low-end hardware before certification.
 
 ---
 
-## 9. Known Python Activity modularity limitation
+## 10. Existing Shell/installer state relative to the new UI core
 
-The static validator tolerates package-relative imports, but the installed Python adapter launches `runtime.entrypoint` as a **direct file**.
+The existing Shell already has useful concepts such as paged grids, hit targets, icon/font caching and explicit modes, but they remain implemented locally/procedurally in `src/greia_launcher/main.py`.
 
-Therefore this is not yet a supported installed pattern:
+The installer still owns local button/layout/font/icon code in `src/greia_installer/main.py`.
 
-```python
-from .model import Model
-```
+They were **not** big-bang rewritten in this tranche because the new UI-core regression source has not executed yet.
 
-Do not work around it with `sys.path`, dynamic imports or `importlib` in an Activity.
+Safe migration order after focused PASS:
 
-Writing and Painting keep internally clean classes in one `main.py`; genuinely reusable cross-Activity code lives in reviewed `greia_platform.activity_ui`.
+1. migrate Shell paging to shared `PagedGrid`;
+2. migrate Shell icon/font dictionaries to explicit `BoundedCache` ownership;
+3. migrate installer icon/font caches to the same bounded resource model;
+4. extract real Shell modes incrementally into concrete `Screen`/`Overlay` subclasses;
+5. only then introduce invalidation-driven idle redraw with focused tests and physical measurement.
 
-A future module-entrypoint change must update runtime adapter tests and the Activity skill, and must receive a current full source gate.
+Do not rewrite all Shell UI at once.
 
 ---
 
-## 10. Developer remote-control/test console
+## 11. Mandatory Phase-0 creative Activities
 
-Protocols:
+Product contract:
 
 ```text
-docs/agents/GREIA_AGENT_OPERATIONS.md
-docs/testing/2026-08-09_DEVELOPER_REMOTE_CONTROL.md
+docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md
 ```
 
-Developer profile:
+Current source identities:
+
+```text
+org.greia.writing
+org.greia.painting
+```
+
+Both are source-implemented first tranches and remain unexecuted/hardware-unproven.
+
+Writing currently includes large Unicode text, caret/navigation/wrapping, bounded inverse-edit undo, visual gallery and debounced profile-scoped UTF-8 saving.
+
+Painting currently includes large raster canvas, ten colors, three brush sizes, eraser, bounded stroke undo, gallery and debounced profile-scoped PNG saving.
+
+Neither may be considered Phase-0 product-complete until real 1024×600 visual/input/storage/lifecycle and Acer resource acceptance executes.
+
+---
+
+## 12. R7 remains blocking
+
+Current production graphics/session state:
+
+```text
+installed path:           Xorg + xinit compatibility
+status:                   PROVISIONAL
+production compositor:    none selected
+serial direct DRM path:   evidence candidate only
+```
+
+Do not:
+
+- make `ActivitySupervisor` the DRM master;
+- grant ordinary Activities raw DRM/input ownership;
+- remove current X-compatible sandbox concessions before a replacement is accepted;
+- select a compositor without evidence;
+- claim physical Acer/Pi display acceptance without physical evidence.
+
+Relevant R7 tools remain under:
+
+```text
+src/greia_platform/direct_graphics_probe.py
+src/greia_platform/kmsdrm_acceptance.py
+src/greia_platform/kmsdrm_serial_handoff.py
+tools/r7_local_evidence.py
+tools/r7_qemu_kmsdrm_acceptance.py
+tools/r7_qemu_kmsdrm_handoff_acceptance.py
+```
+
+---
+
+## 13. Developer remote path
+
+Developer-only profile:
 
 ```text
 build/profiles/modern-amd64-dev.toml
-hostname: greia-dev.local
-status: experimental / developer-only
 ```
 
-Build on compatible owner-controlled Linux:
-
-```bash
-sudo bash build/build-developer-image.sh out
-```
-
-Expected local artifacts:
-
-```text
-out/greia-os-modern-amd64-dev.img
-out/greia-os-modern-amd64-dev-ssh-key
-out/greia-os-modern-amd64-dev-ssh-key.pub
-out/greia-os-modern-amd64-dev-developer-remote.json
-```
-
-The private key is secret operator material and must not enter Git/shared evidence.
-
-Remote helper:
+Remote client:
 
 ```text
 tools/greia_remote.py
 ```
 
-Commands include:
+Trust separation remains:
 
 ```text
-wait status screenshot logs restart restart-installer
-key mousemove click type
-deploy remove restore
-reboot poweroff shell
+/opt/greia-os/activities                 BUILT_IN
+/var/lib/greia-developer/activities      DEVELOPER_UNSIGNED
 ```
 
-Dedicated known-hosts file:
+No physical remote-control acceptance is currently claimed.
 
-```text
-~/.greia/known_hosts
-```
-
-No physical developer-remote acceptance is currently claimed.
+The live graphical installer remote provisioner exists but remains not wired into the canonical installer builder; first-time remote USB installation is therefore not claimed operational.
 
 ---
 
-## 11. Developer Activity trust boundary
-
-Built-in source:
-
-```text
-/opt/greia-os/activities
-trust = BUILT_IN
-```
-
-Ordinary remote developer source:
-
-```text
-/var/lib/greia-developer/activities
-trust = DEVELOPER_UNSIGNED
-```
-
-Normal deployment:
-
-```bash
-python3 tools/greia_remote.py deploy path/to/activity
-```
-
-must not upgrade trust or grant privileged permissions.
-
-Explicit built-in replacement test only:
-
-```bash
-python3 tools/greia_remote.py deploy path/to/activity --replace-system
-python3 tools/greia_remote.py restore <activity-id>
-```
-
-Do not use `--replace-system` to bypass ordinary validation/trust failures.
-
----
-
-## 12. Live graphical installer remote boundary
-
-Source exists:
-
-```text
-tools/provision_developer_installer.py
-```
-
-Intended live identity:
-
-```text
-greia-installer-dev.local
-root@:0 display endpoint
-key-only greiaadmin SSH
-wired DHCP/mDNS
-```
-
-It remains **not wired into `build/build-installer-image.sh`**. First-time remote USB installation is therefore not claimed operational.
-
-Remote installation must drive the existing graphical fail-closed installer. Never substitute unattended `dd`, a disk-wipe API or a generic destructive root command.
-
----
-
-## 13. Exact next source verification step
+## 14. Exact next source verification step
 
 On owner-controlled Linux at actual branch HEAD:
 
 ```bash
 PYTHONPATH=src python3 -m unittest \
+  tests.test_ui_core \
+  tests.test_activity_ui \
   tests.test_core_creation_activities \
   tests.test_activity_theme_access \
-  tests.test_activity_ui \
   -v
 
 PYTHONPATH=src python3 tools/validate_activity.py activities/writing
@@ -509,49 +395,9 @@ PYTHONPATH=src python3 -m unittest discover \
 make verify
 ```
 
-Stop at the first real failure and preserve exact stdout/stderr. Do not weaken a test or validator to manufacture PASS.
+Stop on the first real failure and preserve exact stdout/stderr. Do not weaken a contract/test to manufacture PASS.
 
-If the current source gate passes, build the developer image:
-
-```bash
-sudo bash build/build-developer-image.sh out
-```
-
-Then use the developer-remote protocol for real visual/input/storage acceptance, including Writing and Painting.
-
----
-
-## 14. Creative installed acceptance sequence
-
-Once the developer target itself is accepted:
-
-### Writing
-
-1. launch and screenshot first usable page;
-2. type multilingual/Unicode text;
-3. exercise insert/delete/caret movement across soft wraps;
-4. exercise visible Undo repeatedly on a long document;
-5. wait for autosave;
-6. exit/relaunch and verify exact text remains;
-7. create a second document and use gallery;
-8. exercise a save/quota failure without losing current/old work;
-9. force-stop/crash and prove Greia returns safely;
-10. collect launcher logs and CPU/RSS evidence.
-
-### Painting
-
-1. launch and screenshot blank canvas;
-2. draw slow and fast strokes;
-3. exercise colors/sizes/eraser;
-4. draw more than 24 strokes and exercise bounded undo;
-5. wait for autosave;
-6. exit/relaunch and verify PNG remains;
-7. create a second painting and use gallery;
-8. exercise a save/quota failure without deleting old work;
-9. force-stop/crash and prove Greia returns safely;
-10. collect launcher logs and CPU/RSS/frame-pacing evidence.
-
-Touch needs separate real touch-capable acceptance before being claimed supported.
+Only after that source gate should Shell/installer UI migration proceed.
 
 ---
 
@@ -563,7 +409,7 @@ Protocol:
 docs/testing/2026-08-09_R7_EXTERNAL_LINUX_EVIDENCE_EXECUTION.md
 ```
 
-On owner-controlled disposable/root-safe x86-64 Linux:
+On the approved disposable/root-safe Linux environment:
 
 ```bash
 SOURCE_SHA="$(git rev-parse HEAD)"
@@ -572,85 +418,43 @@ python3 tools/r7_local_evidence.py --run-root "$RUN_ROOT" --plan-only
 sudo -E python3 tools/r7_local_evidence.py --run-root "$RUN_ROOT"
 ```
 
-First failure is authoritative for the attempt. Do not reuse the run root or repeat active/serial evidence just to obtain PASS.
-
-Only evidence may justify serial/direct/compositor selection. Physical legacy Intel/Acer acceptance remains mandatory before production migration. Pi physical display acceptance remains R8/R14 after Pi board/image adapters exist.
+First failure is authoritative for an attempt. Preserve the run root and do not rerun merely to manufacture PASS.
 
 ---
 
-## 16. Active-plan administrative debt from this tranche
+## 16. Active-plan append debt
 
-`AGENTS.md` normally requires every substantive implementation tranche to append:
+The active remediation plan remains append-only:
 
 ```text
 docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md
 ```
 
-The available GitHub connector can only replace that approximately 700-line append-only historical file as a whole, and the current execution environment has no authenticated/networked local Git checkout. Reconstructing the historical plan merely to insert one paragraph creates an unacceptable truncation/provenance risk.
+This repository-access path still lacks a safe line-append operation for the large historical plan. Do not reconstruct/replace the full history merely to insert one paragraph.
 
-Therefore the plan file was **intentionally not rewritten** in this tranche.
+The next authenticated local-checkout tranche must append progress entries for:
 
-The complete current implementation/evidence state is preserved in:
+- the 2026-08-10 creative-source tranche if still absent;
+- the 2026-08-13 lightweight UI-foundation tranche.
 
-```text
-HANDOVER.md
-docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md
-docs/reviews/2026-08-10_CORE_CREATION_SOURCE_TRANCHE.md
-skills/greia-activity-authoring/SKILL.md
-```
-
-The **next authenticated local-checkout tranche must append** a 2026-08-10 creative-source progress entry to the existing active plan without modifying/reformatting its historical entries. This is administrative documentation debt only; it does not alter R7 ordering or closure status.
+This is explicit continuity/documentation debt, not hidden implementation completion.
 
 ---
 
 ## 17. Invariants to preserve
 
 - no visible Linux UI in normal child operation;
-- explicit Greia profile selection;
+- explicit child profile selection;
 - Activity remains runtime-neutral;
-- global progression/reward economics remain platform-owned;
-- durable child state remains architecture-neutral;
-- per-Activity isolation/trust remains fail-closed;
-- ordinary theming never grants customization mutation authority;
-- child creation quota pressure never silently deletes/evicts old work;
-- developer remote access never leaks into release images;
-- remote placement never upgrades Activity trust;
-- X11 compatibility never becomes Activity API;
-- ActivitySupervisor never becomes DRM master;
-- destructive installation remains graphical and revalidated;
-- no private credentials in Git;
-- no unapproved hosted Actions execution/query surface.
-
----
-
-## 18. Continuity files
-
-```text
-AGENTS.md
-README.md
-docs/DOCUMENTATION.md
-HANDOVER.md
-docs/architecture/GREIA_ARCHITECTURE.md
-docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md
-docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md
-docs/agents/GREIA_AGENT_OPERATIONS.md
-skills/greia-activity-authoring/SKILL.md
-docs/reviews/2026-08-10_DOCUMENTATION_DEEP_REVIEW.md
-docs/reviews/2026-08-10_PHASE0_CREATIVE_BASELINE_DECISION.md
-docs/reviews/2026-08-10_CORE_CREATION_SOURCE_TRANCHE.md
-docs/testing/2026-08-09_DEVELOPER_REMOTE_CONTROL.md
-docs/testing/2026-08-09_R7_EXTERNAL_LINUX_EVIDENCE_EXECUTION.md
-docs/reviews/2026-08-09_R7_X11_DIRECT_GRAPHICS_DEPENDENCY_AUDIT.md
-docs/reviews/2026-08-09_R7_SESSION_OWNERSHIP_CANDIDATE_MATRIX.md
-```
-
-After the next substantive tranche:
-
-- commit coherent work;
-- repair the pending active-plan append when an authenticated local checkout is available;
-- otherwise append active-plan progress normally when implementation state changes;
-- update this handover;
-- update operations/Activity skill when governed contracts change;
-- record exactly what verification actually ran;
-- preserve VM/physical evidence gaps;
-- state the next legitimate step.
+- global progression remains platform-owned;
+- portable profile-scoped child state;
+- first-generation Acer is the extreme resource floor;
+- ARM64 is co-equal, not a later port;
+- no unauthorized GitHub-hosted execution;
+- no generic desktop/window-manager architecture;
+- no child-facing filesystem folders/paths;
+- strong OOP/polymorphic architecture at genuine extension seams;
+- composition over unnecessary inheritance;
+- explicit bounded resources and cleanup;
+- code/documentation must remain understandable to outside contributors;
+- R7 evidence boundaries remain honest.
