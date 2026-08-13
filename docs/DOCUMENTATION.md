@@ -1,295 +1,248 @@
 # Greia Documentation Map and Authority Model
 
 **Status:** repository-wide documentation contract  
-**Last reviewed:** 2026-08-10  
+**Last reviewed:** 2026-08-13  
 **Audience:** contributors, coding agents, reviewers, test operators, Activity authors
 
 ---
 
-## 1. Why this file exists
+## 1. Purpose
 
-Greia has several kinds of documentation because the project has several kinds of truth: product principles, explicit child-facing product requirements, accepted architecture decisions, implemented APIs, active work sequencing, current branch state, test procedures, and historical evidence.
+Greia has several kinds of truth: repository rules, product requirements, accepted architecture, engineering guidance, implemented APIs, active sequencing, current evidence, test procedures, and historical reviews. These documents must not silently compete.
 
-Those documents must not silently compete with one another.
-
-This file defines **which document class owns which fact**, how conflicts are resolved, and what must be updated when implementation changes.
-
-The goal is simple: a future contributor should be able to determine whether a statement is a durable rule, a product requirement, a selected design, a current implementation fact, an unproven candidate, or historical evidence without reconstructing that distinction from chat history.
+This file defines **which document class owns which fact**, how conflicts are resolved, and which documents must change when implementation changes. A contributor should be able to determine whether a statement is a durable rule, product requirement, selected architecture, implementation fact, current evidence, or historical context without chat history.
 
 ---
 
-## 2. Authority order
+## 2. Authority and ownership
 
-When two repository documents appear to disagree, classify the disagreement before editing anything.
+### 2.1 Repository-wide rules — `AGENTS.md`
 
-### 2.1 Repository work rules
+`AGENTS.md` owns mandatory contributor/agent behavior and non-negotiable repository/product constraints, including:
 
-`AGENTS.md` owns repository-wide contributor/agent operating constraints, including:
-
-- mandatory read/update duties;
+- required read/update duties;
 - Git/GitHub persistence rules;
 - paid/hosted execution restrictions;
 - non-negotiable product contracts;
-- continuity requirements;
-- evidence terminology.
+- engineering expectations;
+- continuity and evidence terminology.
 
-A narrower procedure must not weaken `AGENTS.md`.
+A narrower document may strengthen but must not weaken `AGENTS.md`.
 
-### 2.2 Explicit product/UX requirements
+### 2.2 Product requirements — `docs/product/*`
 
-Files under `docs/product/` own detailed child-facing product requirements that have been explicitly accepted but do not themselves define low-level architecture or implementation APIs.
+Product requirement documents own explicitly accepted child-facing scope and UX requirements. They constrain design but do not override accepted ADRs, security boundaries, or source-owned API contracts.
 
-Example:
+Example: `docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md` owns the mandatory Phase-0 Writing/Painting product scope and acceptance intent.
 
-```text
-docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md
-```
+### 2.3 Normative architecture — accepted ADRs
 
-owns the required Phase-0 Writing/Painting scope, UX intent and product acceptance criteria.
-
-A product requirement may constrain architecture/implementation choices, but it does not authorize bypassing an accepted ADR, security boundary or active blocking prerequisite. Exact implementation schemas remain source-owned.
-
-### 2.3 Accepted architectural decisions
-
-Accepted ADRs own normative architecture decisions.
-
-Important examples include:
+Accepted ADRs own architecture decisions. Important current examples include:
 
 - ADR 0012 — platform architecture constitution;
 - ADR 0013 — declarative image profiles/composable artifacts;
-- ADR 0014 — Greia identity, ARM parity, direct-graphics direction;
-- later accepted ADRs that narrow or supersede earlier decisions.
+- ADR 0014 — Greia identity, ARM parity and direct-graphics direction;
+- ADR 0018 — lightweight Screen/Overlay/Collection UI foundation.
 
-When accepted ADRs conflict, the later explicitly superseding decision wins for the scope it supersedes. Do not infer supersession merely from a newer date.
+A newer ADR supersedes an older one only where it explicitly says so.
 
-`docs/architecture/GREIA_ARCHITECTURE.md` is a living synthesis of these decisions. It is explanatory and cross-cutting; it is **not a second ADR system**.
+`docs/architecture/GREIA_ARCHITECTURE.md` is the living cross-cutting synthesis of accepted architecture; it is not a second ADR system.
 
-### 2.4 Implemented contract truth
+### 2.4 Repository engineering guidance — `docs/engineering/ENGINEERING_FOUNDATIONS.md`
 
-For exact currently implemented schemas, command vocabularies and APIs, **source/runtime declarations are authoritative**.
+This mandatory guide owns repository-wide implementation guidance for:
 
-Examples:
+- strong OOP structure around real domain concepts;
+- purposeful polymorphism at genuine variation points;
+- composition versus inheritance;
+- dependency direction and explicit ownership/lifecycle;
+- bounded-resource and low-allocation engineering;
+- documentation and testability expectations for extension points.
+
+It does **not** override accepted ADRs or exact source contracts. If a rule becomes architectural rather than implementation guidance, record it in an ADR and keep this guide aligned.
+
+### 2.5 Exact implemented contracts — source/runtime declarations
+
+For exact currently implemented APIs, schemas, command vocabularies and limits, source/runtime declarations are authoritative.
 
 | Fact | Canonical implementation owner |
 |---|---|
 | Activity manifest parser/validation | `src/greia_platform/activities.py` |
-| Activity runtime allow/deny lists, capability/permission vocabulary, package byte ceiling | `runtime/child-runtime.toml` |
+| Activity runtime/capability/permission/package policy | `runtime/child-runtime.toml` |
 | Python Activity SDK helpers | `src/greia_platform/activity_api.py` |
-| shared child Activity UI primitives | `src/greia_platform/activity_ui.py` |
-| Activity storage client operations | `src/greia_platform/storage_client.py` |
-| Activity event client/protocol | `src/greia_platform/event_client.py`, `src/greia_platform/event_protocol.py` |
-| shared icon IDs/paths | `assets/catalog/core_icons_v1.toml` |
-| theme palette/defaults | `runtime/theme-defaults.toml` |
+| renderer-neutral UI semantics/navigation/resource primitives | `src/greia_platform/ui_core.py` |
+| current Pygame child UI helpers | `src/greia_platform/activity_ui.py` |
+| Activity storage operations | `src/greia_platform/storage_client.py` |
+| Activity event protocol/client | `src/greia_platform/event_protocol.py`, `src/greia_platform/event_client.py` |
+| shared semantic icons | `assets/catalog/core_icons_v1.toml` |
+| theme defaults | `runtime/theme-defaults.toml` |
 | resolved theme object | `src/greia_platform/customization.py` |
-| developer remote client commands | `tools/greia_remote.py` |
-| privileged developer operations | `src/greia_platform/developer_control.py`, `developer_input.py` |
+| developer remote client vocabulary | `tools/greia_remote.py` |
+| privileged developer operations | `src/greia_platform/developer_control.py`, `src/greia_platform/developer_input.py` |
 | image composition | `build/profiles/*.toml`, `build/package-sets/*.txt`, canonical builders |
 
-Documentation may explain these contracts but must not invent a conflicting schema for convenience.
+Documentation may explain these contracts but must not invent a conflicting one. If implementation intentionally changes, update affected living manuals in the same tranche.
 
-If an implemented contract intentionally changes, update its agent-facing documentation in the same tranche.
+### 2.6 Active implementation sequencing — active plan
 
-### 2.5 Active implementation plan
+`docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md` owns active ordering, prerequisites, closure criteria, and its append-only progress history while active.
 
-`docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md` owns:
+The plan does not override accepted architecture or accepted product requirements. Historical progress entries remain historical; current continuation/evidence belongs in `HANDOVER.md`.
 
-- active implementation ordering;
-- phase prerequisites;
-- phase closure criteria;
-- append-only progress history while the plan remains active.
-
-The plan does **not** override accepted architecture or explicitly accepted product requirements.
-
-Individual historical progress entries remain historical snapshots. For the current phase/evidence state, use `HANDOVER.md` and the latest progress entry rather than an early log entry.
-
-### 2.6 Current branch and evidence state
+### 2.7 Current branch/evidence state — `HANDOVER.md`
 
 `HANDOVER.md` owns the current continuation snapshot:
 
-- active branch/PR;
-- blocking phase;
-- what is implemented now;
+- active branch/PR and blocking phase;
+- what source is implemented now;
 - which tests actually executed;
 - what remains unexecuted/unproven;
-- hardware/VM evidence boundaries;
+- VM/physical-hardware evidence boundaries;
 - exact next legitimate step.
 
-It is expected to change frequently.
+Transient SHAs, test counts and blockers should normally live here rather than in durable architecture documents.
 
-Do **not** copy current test counts, branch SHAs, temporary blockers or one-off evidence states into README/architecture unless there is a durable reason. Those copies become stale quickly.
+### 2.8 Exact test/operator procedures — `docs/testing/*`
 
-### 2.7 Test/operator procedures
+Named test protocols own prerequisites, commands, stop conditions, evidence to preserve, and what a PASS does not prove. They may be stricter than general guidance but may not weaken repository or architecture safety rules.
 
-Files under `docs/testing/` own exact procedures for a named test or operator workflow.
+### 2.9 Agent/developer manuals — `docs/agents/*` and `skills/*`
 
-A test protocol may specify stricter stop conditions than general documentation. It may not weaken `AGENTS.md`, architecture safety rules, or installer/device protections.
+`docs/agents/GREIA_AGENT_OPERATIONS.md` is the operational entry point for project/build/test-hardware work.
 
-Test protocols must distinguish:
+`skills/greia-activity-authoring/SKILL.md` is the canonical living authoring guide for Activities.
 
-- prerequisites;
-- exact commands;
-- expected classifications;
-- stop conditions;
-- evidence to preserve/return;
-- what a PASS does **not** prove.
+These are derived manuals. They must track source/ADRs/product rules and never outrank them.
 
-### 2.8 Agent-facing operational manuals
+### 2.10 Reviews/evidence — `docs/reviews/*`
 
-`docs/agents/GREIA_AGENT_OPERATIONS.md` is the concise operational entry point for agents working on the project and test hardware.
-
-`skills/greia-activity-authoring/SKILL.md` is the canonical agent skill for Activity creation/modification.
-
-These are **derived living manuals**. They must track the implemented contracts they summarize. They do not outrank source schemas or accepted ADRs.
-
-### 2.9 Reviews and evidence
-
-Files under `docs/reviews/` are dated analyses/evidence snapshots unless explicitly promoted by an ADR, product requirement or active-plan decision.
-
-A review can explain why a decision was made or preserve negative evidence. It is not automatically the current architecture just because it is detailed.
+Reviews are dated analysis/evidence snapshots unless explicitly promoted into an ADR, product requirement, or active-plan decision. Do not silently rewrite historical evidence to match later reality.
 
 ---
 
 ## 3. Status vocabulary
 
-Use the repository status words consistently.
+Use these repository terms consistently:
 
-- **CONSTITUTIONAL** — durable product/platform invariant.
+- **CONSTITUTIONAL** — durable platform/product invariant.
 - **SELECTED** — implementation/design selected by accepted decision.
-- **PROVISIONAL** — current implementation used while evidence/architecture remains open.
-- **SOURCE-CLOSED** — required source work for that scope is complete at the recorded boundary; hardware/runtime evidence may still remain.
-- **UNPROVEN** — source/design exists but required runtime, VM or physical evidence has not been obtained.
+- **PROVISIONAL** — current implementation while architecture/evidence remains open.
+- **SOURCE-CLOSED** — required source scope closed at the named boundary; runtime/hardware evidence may remain.
+- **UNPROVEN** — designed/implemented but lacking required execution/runtime/hardware evidence.
 - **DEFERRED** — intentionally outside the current phase.
-- **HISTORICAL** — retained for provenance; not current instructions.
-- **COMPLETE** — closure criteria for the explicitly named scope are satisfied.
+- **HISTORICAL** — retained provenance, not current instruction.
+- **COMPLETE** — all explicitly named closure criteria satisfied.
 
 Never use `PASS`, `accepted`, `complete`, or `supported` without naming the scope when ambiguity is possible.
-
-Examples:
-
-```text
-source unit tests: PASS
-Acer direct scanout: UNPROVEN
-R6 source scope: SOURCE-CLOSED
-production display backend: PROVISIONAL Xorg compatibility
-Writing first source tranche: implemented / unexecuted
-Web runtime: DEFERRED / unimplemented
-```
 
 ---
 
 ## 4. Implemented versus conceptual examples
 
-Architecture documents often show conceptual future APIs or package layouts. Those examples communicate semantics; they are not automatically copy-paste authoring specifications.
+Architecture documents often use conceptual examples to communicate semantics. They are not automatically current APIs.
 
 In particular:
 
-- conceptual YAML manifests in architecture documents do not replace the implemented `activity.toml` parser;
-- conceptual `storage.get()` examples do not replace the current Python `ActivityStorageClient.kv_get()` API;
-- `.greiaactivity` and `.greiabackup` are architectural format directions until their dedicated implementation phases close;
-- Web SDK examples remain future-facing until the Web runtime is implemented and documented;
-- capability-class examples such as C0/C1/C2/C3 remain semantic classes until thresholds are measured/versioned;
-- a product UX document may require behavior such as large controls or automatic saving without prescribing an unsupported platform API.
+- conceptual YAML manifests do not replace the implemented `activity.toml` parser;
+- conceptual storage snippets do not replace the current Activity Storage client;
+- `.greiaactivity` and `.greiabackup` remain architectural directions until their implementation phases close;
+- Web SDK/runtime examples remain future-facing until implemented;
+- capability-class examples remain semantic until measured/versioned;
+- UI terms in ADR 0018 are renderer-neutral semantics; current Pygame helpers in `activity_ui.py` are one implementation layer, not the permanent universal renderer contract.
 
-Activity authors must use `skills/greia-activity-authoring/SKILL.md` plus the implementation owners listed above.
+Activity authors use the Activity skill plus the implementation owners above.
 
 ---
 
 ## 5. Freshness rules
 
-### Durable documents
+### Durable
 
-These should contain stable contracts and avoid transient execution facts:
+Keep transient execution facts out of:
 
 - `README.md`;
 - `AGENTS.md`;
 - accepted ADRs;
 - `docs/product/*` requirement documents;
 - `docs/architecture/GREIA_ARCHITECTURE.md`;
-- this documentation map;
-- the Activity authoring skill, except where it clearly labels an implemented snapshot.
+- `docs/engineering/ENGINEERING_FOUNDATIONS.md`;
+- this documentation map.
 
-### Frequently updated documents
+### Frequently updated
 
-These may contain exact current state:
+Current state belongs in:
 
 - `HANDOVER.md`;
-- active plan progress log;
+- active-plan progress log;
 - active test protocols;
 - dated evidence/review reports.
 
-### Historical documents
+### Historical
 
-Do not silently rewrite dated evidence to match current reality. Add a correction/superseding note or a new review instead.
-
-A product requirement can update its explicit implementation-status line while preserving the accepted requirement itself; dated decision reviews remain historical snapshots of the decision moment.
+Do not rewrite old evidence/progress entries to make history cleaner. Append corrections or add a superseding dated review.
 
 ---
 
 ## 6. Required update triggers
 
-When changing the following, update the corresponding docs in the same work tranche.
-
 | Change | Required documentation update |
 |---|---|
-| repository workflow / hardware test operation | `docs/agents/GREIA_AGENT_OPERATIONS.md` |
-| Activity manifest/API/runtime policy/trust/assets/theme/UI/performance/deploy flow | `skills/greia-activity-authoring/SKILL.md` |
-| child-facing accepted product scope/acceptance | relevant `docs/product/*`, plus `AGENTS.md` when non-negotiable |
-| architectural decision | new/updated ADR + architecture overview if cross-cutting |
-| active work ordering/closure criteria | active plan |
-| actual current implementation/evidence/blocker | `HANDOVER.md` |
-| test command/stop/evidence protocol | relevant `docs/testing/*` |
-| developer remote command vocabulary | operator docs + agent operations manual |
-| reference hardware/resource requirement | `AGENTS.md`/ADR as appropriate + Activity skill if author-facing |
+| repository workflow / hardware operation | `docs/agents/GREIA_AGENT_OPERATIONS.md` |
+| repository-wide OOP/dependency/performance/maintainability rules | `docs/engineering/ENGINEERING_FOUNDATIONS.md`; `AGENTS.md` when non-negotiable |
+| Activity manifest/API/runtime/trust/assets/theme/UI/performance/deploy flow | `skills/greia-activity-authoring/SKILL.md` |
+| child-facing accepted product scope/acceptance | relevant `docs/product/*`; `AGENTS.md` when non-negotiable |
+| architectural decision | ADR + architecture overview when cross-cutting |
+| renderer-neutral UI architecture/semantics | ADR 0018 + `ui_core.py` + affected living manuals |
+| active ordering/closure criteria | active plan |
+| current implementation/evidence/blocker | `HANDOVER.md` |
+| test command/stop/evidence protocol | applicable `docs/testing/*` |
+| reference hardware/resource requirement | `AGENTS.md`/ADR as appropriate + authoring guidance when relevant |
 
-A source change that makes a mandated living manual materially wrong is incompletely documented.
+A source change that leaves a mandated living manual materially wrong is incompletely documented.
 
 ---
 
-## 7. Avoid documentation duplication
+## 7. Avoid duplication
 
-Prefer linking to the owner of a fact instead of copying it.
+Link to the owner of a fact instead of copying transient details across many files. Safety-critical rules may be intentionally duplicated, but duplicated safety language must remain semantically identical.
 
-Good:
+Prefer:
 
 > Current executed verification and unproven hardware gates are recorded in `HANDOVER.md`.
 
-Bad:
-
-> Copying a test count into README, architecture, the active plan header, three testing guides and the PR body.
-
-Some duplication is intentionally useful for safety-critical rules (for example the paid-hosted-execution prohibition or destructive installer boundary), but duplicated safety rules must remain semantically identical.
+Avoid copying the same branch SHA/test count into README, architecture, testing guides, plan headers, and PR descriptions.
 
 ---
 
-## 8. Documentation review checklist
+## 8. Review checklist
 
-When doing a documentation review, check at least:
+A documentation review should verify at least:
 
-1. links/paths point to real canonical files;
+1. paths point to real canonical files;
 2. active plan references are current;
-3. no durable doc carries a stale branch SHA/test count as current truth;
-4. implemented and future APIs are visibly distinguished;
-5. product requirements are separated from implementation detail but reflected in current state;
-6. hardware claims identify source/VM/physical evidence scope;
-7. developer-only behavior is not described as release behavior;
-8. trust/permission/capability language matches implementation boundaries;
-9. destructive operations remain fail-closed;
-10. no document implies GitHub-hosted execution is authorized;
-11. Activity examples match current parser/SDK or are clearly labelled conceptual;
-12. dated reviews remain historical rather than being silently repurposed;
-13. `HANDOVER.md` still lets a new agent resume without chat history.
+3. durable docs do not present stale SHAs/test counts as current truth;
+4. implemented and future APIs are distinguished;
+5. product requirements are separate from exact implementation;
+6. ADR 0018/UI-core semantics are not confused with Pygame-only helpers;
+7. engineering guidance does not override source/ADRs;
+8. hardware claims identify source/VM/physical evidence scope;
+9. developer-only behavior is not described as release behavior;
+10. trust/permission/capability language matches implementation;
+11. destructive operations remain fail-closed;
+12. no document implies GitHub-hosted execution is implicitly authorized;
+13. dated reviews remain historical;
+14. `HANDOVER.md` is sufficient to resume without chat history.
 
 ---
 
 ## 9. Navigation
 
-Start here according to task:
-
-- **New contributor/agent:** `AGENTS.md` → `README.md` → this file → architecture/ADRs/product requirements → active plan → `HANDOVER.md`.
-- **OS/platform implementation:** add `docs/agents/GREIA_AGENT_OPERATIONS.md` and phase-specific review/testing docs.
-- **Activity implementation:** add the relevant `docs/product/*` requirement, `skills/greia-activity-authoring/SKILL.md`, and current runtime/API source owners.
-- **Physical/VM evidence:** start with `HANDOVER.md`, then use the exact applicable `docs/testing/*` protocol.
-- **Why was this architecture chosen?** read the accepted ADR and relevant dated review/evidence.
-- **What should the child experience do?** read the explicit product requirement first, then implementation/source docs.
+- **New contributor/agent:** `AGENTS.md` → `README.md` → this file → architecture/ADRs → `docs/engineering/ENGINEERING_FOUNDATIONS.md` → product requirements → active plan → `HANDOVER.md`.
+- **OS/platform implementation:** also read `docs/agents/GREIA_AGENT_OPERATIONS.md` and relevant testing/review docs.
+- **UI work:** read ADR 0018, `src/greia_platform/ui_core.py`, the relevant renderer implementation, and the engineering foundations.
+- **Activity implementation:** read the relevant product requirement, Activity skill, and current runtime/API source owners.
+- **Physical/VM evidence:** start with `HANDOVER.md`, then the exact applicable `docs/testing/*` protocol.
+- **Why was architecture chosen?** read the accepted ADR and relevant dated review/evidence.
+- **What should the child experience do?** read the product requirement first, then source/implementation docs.
 
 GitHub is the persistent project source of truth. Chat transcripts are context, not canonical documentation.
