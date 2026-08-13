@@ -12,13 +12,15 @@ Before changing implementation or architecture, read:
 4. `docs/adr/0012-platform-architecture-constitution.md`;
 5. `docs/adr/0014-greia-identity-arm-parity-and-direct-graphics-direction.md`;
 6. relevant narrower accepted ADRs, especially ADR 0013 for image composition and later ADRs for trust/runtime/storage/progression boundaries;
-7. **`docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md` — mandatory first-user-ready-image writing and painting requirement**;
-8. **`docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md` — MANDATORY ACTIVE IMPLEMENTATION PLAN**;
-9. `HANDOVER.md`;
-10. **`docs/agents/GREIA_AGENT_OPERATIONS.md` — mandatory project/build/test-hardware operating manual for agents**;
-11. `skills/greia-activity-authoring/SKILL.md` whenever creating, modifying, reviewing, validating, optimizing, packaging, deploying, or testing an Activity;
-12. phase-specific testing/review documents referenced by `HANDOVER.md` or the active plan;
-13. `docs/plans/2026-08-06_PHASE0_BOOTABLE_VERTICAL_SLICE.md` only as historical/supporting Phase-0 context where it is not superseded.
+7. **`docs/adr/0018-lightweight-ui-foundation.md` — mandatory lightweight Screen/Overlay/Collection UI architecture and low-resource UI rules**;
+8. **`docs/engineering/ENGINEERING_FOUNDATIONS.md` — mandatory OOP, polymorphism, maintainability, dependency and performance guidance**;
+9. **`docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md` — mandatory first-user-ready-image writing and painting requirement**;
+10. **`docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md` — MANDATORY ACTIVE IMPLEMENTATION PLAN**;
+11. `HANDOVER.md`;
+12. **`docs/agents/GREIA_AGENT_OPERATIONS.md` — mandatory project/build/test-hardware operating manual for agents**;
+13. `skills/greia-activity-authoring/SKILL.md` whenever creating, modifying, reviewing, validating, optimizing, packaging, deploying, or testing an Activity;
+14. phase-specific testing/review documents referenced by `HANDOVER.md` or the active plan;
+15. `docs/plans/2026-08-06_PHASE0_BOOTABLE_VERTICAL_SLICE.md` only as historical/supporting Phase-0 context where it is not superseded.
 
 `docs/DOCUMENTATION.md` defines which document class owns which fact. In short:
 
@@ -44,7 +46,8 @@ After every substantive **implementation** turn:
 5. update `skills/greia-activity-authoring/SKILL.md` in the same tranche whenever the Activity manifest/API/runtime policy/trust model/shared assets or UI canon/performance requirements/validation or deployment workflow changed;
 6. update `docs/DOCUMENTATION.md` when documentation ownership/precedence/freshness rules change;
 7. update the applicable `docs/product/*` requirement when accepted child-facing product scope or UX changes materially;
-8. commit coherent work to the canonical GitHub repository.
+8. update `docs/engineering/ENGINEERING_FOUNDATIONS.md` when repository-wide implementation/extension rules change materially;
+9. commit coherent work to the canonical GitHub repository.
 
 For substantive documentation-only work, update `HANDOVER.md` when the continuation contract changes and preserve a dated review when useful; an implementation-plan progress entry is required only when implementation/phase state actually changes.
 
@@ -110,6 +113,7 @@ This capability is **development-only**:
 17. **Uninstall and data deletion are separate.** Removing an Activity preserves child saves by default.
 18. **Backups are logical/open.** `.greiabackup` must not be a raw filesystem dump or architecture-specific serialization.
 19. **Creative computing exists from the beginning.** The first user-ready Phase-0 Greia image must ship first-party built-in **writing/text-editing** and **painting/drawing** Activities. They must be simple, fast, cute, uncluttered and child-sized; writing defaults to large readable text; painting provides a large responsive canvas and a small tool set; both autosave profile-scoped creations through Greia Storage and expose no Linux file-management workflow. Exact product requirements live in `docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md`.
+20. **Greia UI is a lightweight appliance surface, not a desktop.** The common vocabulary is Screen → optional Overlay/Sheet → Panel/Card/Collection → Control. A Collection is a semantic child grouping, never a Linux filesystem folder. Do not introduce general-purpose draggable/resizable windows, taskbars, arbitrary z-order, or a desktop window manager. ADR 0018 owns the exact UI architecture.
 
 ## Graphics and display direction
 
@@ -121,6 +125,25 @@ ADR 0014 makes the target direction direct/appliance-oriented around DRM/KMS and
 
 A tiny compositor may be selected only if evidence shows it materially improves safe surface ownership, transitions, crash recovery, Web-runtime integration, or input routing at acceptable RAM/disk/latency cost. “Desktop Linux normally uses it” is not a justification.
 
+## Open-source architecture, OOP and maintainability
+
+**A strong, clean object-oriented base is a permanent project requirement.** Greia is intended to become an important open-source project; contributors must be able to understand where behavior belongs, substitute implementations safely, and extend the system without copying monoliths or reconstructing architecture from chat history.
+
+Mandatory rules:
+
+- Model stable domain concepts, invariants, lifecycle and resource ownership with cohesive classes/dataclasses. Do not create classes merely to inflate abstraction count; small pure functions remain appropriate for local calculations.
+- At genuine variation points, define narrow typed protocols/abstract base classes and use polymorphic implementations. Runtime adapters, display/session backends, hardware adapters, storage implementations, UI Screens/Overlays/Controls and renderer-specific implementations are examples.
+- Prefer polymorphic dispatch over repeated `if backend/type/runtime == ...` trees spread through callers when the branches represent substitutable implementations.
+- Prefer composition over inheritance. Use inheritance only where the subtype is genuinely substitutable for the base contract; avoid deep inheritance trees and mixin webs.
+- Keep interfaces narrow and dependencies explicit. Inject services/adapters at architecture seams rather than discovering them through mutable global state.
+- Every long-lived resource must have an obvious owner, bound and cleanup lifecycle. This includes subprocesses, threads, display leases, mounts, caches, histories, queues, surfaces and hardware authority.
+- Avoid god classes, giant cross-domain `manager` objects, circular dependencies, hidden globals, parallel implementations of existing platform services, and speculative general frameworks.
+- Public architectural classes/protocols/extension points require useful docstrings. Non-obvious algorithms require comments explaining **why**. Accepted extension seams must also be described in repository documentation.
+- Architecture and code organization must make it easy for outside contributors to locate the correct extension point without tracing unrelated subsystems.
+- Clean architecture never excuses wasteful runtime behavior. On Greia, explicit ownership, bounded structures and reusable services are also performance requirements.
+
+`docs/engineering/ENGINEERING_FOUNDATIONS.md` is mandatory implementation guidance for these rules. ADR 0018 applies them specifically to the lightweight UI foundation.
+
 ## Engineering rules
 
 - Preserve clean boundaries between `greia_platform`, `greia_launcher`, `greia_parent`, `greia_installer`, Activities, build system, runtime adapters, and platform/hardware adapters.
@@ -131,6 +154,8 @@ A tiny compositor may be selected only if evidence shows it materially improves 
 - Child and installer processes invoke external commands with argument arrays and `shell=False`; never interpolate disk paths into shell command strings.
 - Never expose privileged operations directly to Activities.
 - Keep logs/caches bounded. Do not add persistent caches without explicit limits.
+- UI caches, histories, collection pages and animation/transient state must have explicit bounds appropriate to the Acer resource floor. Avoid per-frame image decoding, font construction, filesystem IO, or unnecessary off-screen Surfaces.
+- Static Shell UI should move toward invalidation/event-driven redraw rather than continuously repainting unchanged content; do not weaken input responsiveness or animation correctness to achieve this.
 - Use canonical asset IDs/catalogues rather than filesystem discovery as product logic.
 - Profile state remains bounded under `/var/lib/greia-profiles`; every child gets one customization root and one Activity-data root.
 - Removable child media stays read-only at the platform boundary unless a distinct trusted parent/system workflow owns a write operation.
@@ -192,6 +217,7 @@ Every substantive implementation turn should leave:
 - updated active plan/ADRs where implementation state or decisions changed;
 - updated product requirements when accepted child-facing scope changed;
 - updated agent operations/Activity skill when their governed contracts changed;
+- updated engineering foundations when repository-wide implementation/extension rules changed;
 - no build caches, venvs, downloaded package archives, disk images, private keys, or heavyweight transient evidence inside the source tree.
 
 The GitHub repository is the canonical long-term source of truth; chat transcripts are not.
