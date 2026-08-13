@@ -18,14 +18,7 @@ This file defines **which document class owns which fact**, how conflicts are re
 
 ### 2.1 Repository-wide rules — `AGENTS.md`
 
-`AGENTS.md` owns mandatory contributor/agent behavior and non-negotiable repository/product constraints, including:
-
-- required read/update duties;
-- Git/GitHub persistence rules;
-- paid/hosted execution restrictions;
-- non-negotiable product contracts;
-- engineering expectations;
-- continuity and evidence terminology.
+`AGENTS.md` owns mandatory contributor/agent behavior and non-negotiable repository/product constraints, including required read/update duties, Git/GitHub persistence rules, hosted-execution restrictions, product contracts, engineering expectations, continuity, and evidence terminology.
 
 A narrower document may strengthen but must not weaken `AGENTS.md`.
 
@@ -37,29 +30,15 @@ Example: `docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md` owns the mandatory Ph
 
 ### 2.3 Normative architecture — accepted ADRs
 
-Accepted ADRs own architecture decisions. Important current examples include:
+Accepted ADRs own architecture decisions. Important current examples include ADR 0012 (platform constitution), ADR 0013 (declarative image composition), ADR 0014 (identity/ARM/direct-graphics direction), and ADR 0018 (lightweight Screen/Overlay/Collection UI foundation).
 
-- ADR 0012 — platform architecture constitution;
-- ADR 0013 — declarative image profiles/composable artifacts;
-- ADR 0014 — Greia identity, ARM parity and direct-graphics direction;
-- ADR 0018 — lightweight Screen/Overlay/Collection UI foundation.
-
-A newer ADR supersedes an older one only where it explicitly says so.
-
-`docs/architecture/GREIA_ARCHITECTURE.md` is the living cross-cutting synthesis of accepted architecture; it is not a second ADR system.
+A newer ADR supersedes an older one only where it explicitly says so. `docs/architecture/GREIA_ARCHITECTURE.md` is the living cross-cutting synthesis, not a second ADR system.
 
 ### 2.4 Repository engineering guidance — `docs/engineering/ENGINEERING_FOUNDATIONS.md`
 
-This mandatory guide owns repository-wide implementation guidance for:
+This mandatory guide owns repository-wide implementation guidance for strong OOP structure, purposeful polymorphism, composition versus inheritance, dependency direction, explicit ownership/lifecycle, bounded-resource engineering, documentation and testability expectations.
 
-- strong OOP structure around real domain concepts;
-- purposeful polymorphism at genuine variation points;
-- composition versus inheritance;
-- dependency direction and explicit ownership/lifecycle;
-- bounded-resource and low-allocation engineering;
-- documentation and testability expectations for extension points.
-
-It does **not** override accepted ADRs or exact source contracts. If a rule becomes architectural rather than implementation guidance, record it in an ADR and keep this guide aligned.
+It does **not** override accepted ADRs or exact source contracts.
 
 ### 2.5 Exact implemented contracts — source/runtime declarations
 
@@ -71,7 +50,8 @@ For exact currently implemented APIs, schemas, command vocabularies and limits, 
 | Activity runtime/capability/permission/package policy | `runtime/child-runtime.toml` |
 | Python Activity SDK helpers | `src/greia_platform/activity_api.py` |
 | renderer-neutral UI semantics/navigation/resource primitives | `src/greia_platform/ui_core.py` |
-| current Pygame child UI helpers | `src/greia_platform/activity_ui.py` |
+| platform-wide Pygame UI import surface for new shared consumers | `src/greia_platform/pygame_ui.py` |
+| existing Activity Pygame helper implementation/compatibility surface | `src/greia_platform/activity_ui.py` |
 | Activity storage operations | `src/greia_platform/storage_client.py` |
 | Activity event protocol/client | `src/greia_platform/event_protocol.py`, `src/greia_platform/event_client.py` |
 | shared semantic icons | `assets/catalog/core_icons_v1.toml` |
@@ -85,22 +65,15 @@ Documentation may explain these contracts but must not invent a conflicting one.
 
 ### 2.6 Active implementation sequencing — active plan
 
-`docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md` owns active ordering, prerequisites, closure criteria, and its append-only progress history while active.
+`docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md` owns active ordering, prerequisites, closure criteria, and append-only progress history while active.
 
-The plan does not override accepted architecture or accepted product requirements. Historical progress entries remain historical; current continuation/evidence belongs in `HANDOVER.md`.
+Historical progress entries remain historical; current continuation/evidence belongs in `HANDOVER.md`.
 
 ### 2.7 Current branch/evidence state — `HANDOVER.md`
 
-`HANDOVER.md` owns the current continuation snapshot:
+`HANDOVER.md` owns the current branch/PR, blocking phase, implemented state, actually executed tests, unproven work, hardware evidence boundaries, and exact next legitimate step.
 
-- active branch/PR and blocking phase;
-- what source is implemented now;
-- which tests actually executed;
-- what remains unexecuted/unproven;
-- VM/physical-hardware evidence boundaries;
-- exact next legitimate step.
-
-Transient SHAs, test counts and blockers should normally live here rather than in durable architecture documents.
+Transient SHAs, test counts and blockers should normally live there rather than in durable architecture documents.
 
 ### 2.8 Exact test/operator procedures — `docs/testing/*`
 
@@ -108,9 +81,7 @@ Named test protocols own prerequisites, commands, stop conditions, evidence to p
 
 ### 2.9 Agent/developer manuals — `docs/agents/*` and `skills/*`
 
-`docs/agents/GREIA_AGENT_OPERATIONS.md` is the operational entry point for project/build/test-hardware work.
-
-`skills/greia-activity-authoring/SKILL.md` is the canonical living authoring guide for Activities.
+`docs/agents/GREIA_AGENT_OPERATIONS.md` is the operational entry point for project/build/test-hardware work. `skills/greia-activity-authoring/SKILL.md` is the living authoring guide for Activities.
 
 These are derived manuals. They must track source/ADRs/product rules and never outrank them.
 
@@ -121,8 +92,6 @@ Reviews are dated analysis/evidence snapshots unless explicitly promoted into an
 ---
 
 ## 3. Status vocabulary
-
-Use these repository terms consistently:
 
 - **CONSTITUTIONAL** — durable platform/product invariant.
 - **SELECTED** — implementation/design selected by accepted decision.
@@ -139,16 +108,16 @@ Never use `PASS`, `accepted`, `complete`, or `supported` without naming the scop
 
 ## 4. Implemented versus conceptual examples
 
-Architecture documents often use conceptual examples to communicate semantics. They are not automatically current APIs.
+Architecture examples communicate semantics; they are not automatically current APIs.
 
 In particular:
 
-- conceptual YAML manifests do not replace the implemented `activity.toml` parser;
-- conceptual storage snippets do not replace the current Activity Storage client;
-- `.greiaactivity` and `.greiabackup` remain architectural directions until their implementation phases close;
+- conceptual YAML manifests do not replace `activity.toml`;
+- conceptual storage snippets do not replace the current Storage client;
+- `.greiaactivity` / `.greiabackup` remain directions until their implementation phases close;
 - Web SDK/runtime examples remain future-facing until implemented;
-- capability-class examples remain semantic until measured/versioned;
-- UI terms in ADR 0018 are renderer-neutral semantics; current Pygame helpers in `activity_ui.py` are one implementation layer, not the permanent universal renderer contract.
+- capability classes remain semantic until measured/versioned;
+- ADR 0018 terms are renderer-neutral; `pygame_ui.py` is the shared Pygame import surface and `activity_ui.py` remains the current compatibility implementation for existing first-party Activities.
 
 Activity authors use the Activity skill plus the implementation owners above.
 
@@ -156,30 +125,11 @@ Activity authors use the Activity skill plus the implementation owners above.
 
 ## 5. Freshness rules
 
-### Durable
+Keep transient execution facts out of durable files such as README, AGENTS, accepted ADRs, product requirements, architecture synthesis, engineering foundations and this map.
 
-Keep transient execution facts out of:
+Current state belongs in `HANDOVER.md`, active-plan progress, active test procedures, and dated evidence/review reports.
 
-- `README.md`;
-- `AGENTS.md`;
-- accepted ADRs;
-- `docs/product/*` requirement documents;
-- `docs/architecture/GREIA_ARCHITECTURE.md`;
-- `docs/engineering/ENGINEERING_FOUNDATIONS.md`;
-- this documentation map.
-
-### Frequently updated
-
-Current state belongs in:
-
-- `HANDOVER.md`;
-- active-plan progress log;
-- active test protocols;
-- dated evidence/review reports.
-
-### Historical
-
-Do not rewrite old evidence/progress entries to make history cleaner. Append corrections or add a superseding dated review.
+Do not rewrite historical evidence/progress to make history cleaner; append corrections or add a superseding dated review.
 
 ---
 
@@ -188,15 +138,15 @@ Do not rewrite old evidence/progress entries to make history cleaner. Append cor
 | Change | Required documentation update |
 |---|---|
 | repository workflow / hardware operation | `docs/agents/GREIA_AGENT_OPERATIONS.md` |
-| repository-wide OOP/dependency/performance/maintainability rules | `docs/engineering/ENGINEERING_FOUNDATIONS.md`; `AGENTS.md` when non-negotiable |
-| Activity manifest/API/runtime/trust/assets/theme/UI/performance/deploy flow | `skills/greia-activity-authoring/SKILL.md` |
+| repository-wide OOP/dependency/performance/maintainability rules | engineering foundations; `AGENTS.md` when non-negotiable |
+| Activity manifest/API/runtime/trust/assets/theme/UI/performance/deploy flow | Activity authoring skill |
 | child-facing accepted product scope/acceptance | relevant `docs/product/*`; `AGENTS.md` when non-negotiable |
 | architectural decision | ADR + architecture overview when cross-cutting |
 | renderer-neutral UI architecture/semantics | ADR 0018 + `ui_core.py` + affected living manuals |
+| renderer-specific shared Pygame implementation/import ownership | `pygame_ui.py` / `activity_ui.py` + affected living manuals |
 | active ordering/closure criteria | active plan |
 | current implementation/evidence/blocker | `HANDOVER.md` |
 | test command/stop/evidence protocol | applicable `docs/testing/*` |
-| reference hardware/resource requirement | `AGENTS.md`/ADR as appropriate + authoring guidance when relevant |
 
 A source change that leaves a mandated living manual materially wrong is incompletely documented.
 
@@ -204,45 +154,22 @@ A source change that leaves a mandated living manual materially wrong is incompl
 
 ## 7. Avoid duplication
 
-Link to the owner of a fact instead of copying transient details across many files. Safety-critical rules may be intentionally duplicated, but duplicated safety language must remain semantically identical.
-
-Prefer:
-
-> Current executed verification and unproven hardware gates are recorded in `HANDOVER.md`.
-
-Avoid copying the same branch SHA/test count into README, architecture, testing guides, plan headers, and PR descriptions.
+Link to the owner of a fact instead of copying transient details across files. Safety-critical rules may be intentionally duplicated, but duplicated safety language must remain semantically identical.
 
 ---
 
 ## 8. Review checklist
 
-A documentation review should verify at least:
-
-1. paths point to real canonical files;
-2. active plan references are current;
-3. durable docs do not present stale SHAs/test counts as current truth;
-4. implemented and future APIs are distinguished;
-5. product requirements are separate from exact implementation;
-6. ADR 0018/UI-core semantics are not confused with Pygame-only helpers;
-7. engineering guidance does not override source/ADRs;
-8. hardware claims identify source/VM/physical evidence scope;
-9. developer-only behavior is not described as release behavior;
-10. trust/permission/capability language matches implementation;
-11. destructive operations remain fail-closed;
-12. no document implies GitHub-hosted execution is implicitly authorized;
-13. dated reviews remain historical;
-14. `HANDOVER.md` is sufficient to resume without chat history.
+Check that paths exist, active plan references are current, durable docs avoid stale execution facts, implemented/future APIs are distinct, ADR 0018 semantics are not confused with Pygame helpers, engineering guidance does not override source/ADRs, hardware claims name evidence scope, developer-only behavior is not described as release behavior, destructive operations remain fail-closed, hosted execution is never implicitly authorized, dated reviews remain historical, and `HANDOVER.md` is sufficient to resume without chat history.
 
 ---
 
 ## 9. Navigation
 
-- **New contributor/agent:** `AGENTS.md` → `README.md` → this file → architecture/ADRs → `docs/engineering/ENGINEERING_FOUNDATIONS.md` → product requirements → active plan → `HANDOVER.md`.
-- **OS/platform implementation:** also read `docs/agents/GREIA_AGENT_OPERATIONS.md` and relevant testing/review docs.
-- **UI work:** read ADR 0018, `src/greia_platform/ui_core.py`, the relevant renderer implementation, and the engineering foundations.
-- **Activity implementation:** read the relevant product requirement, Activity skill, and current runtime/API source owners.
-- **Physical/VM evidence:** start with `HANDOVER.md`, then the exact applicable `docs/testing/*` protocol.
-- **Why was architecture chosen?** read the accepted ADR and relevant dated review/evidence.
-- **What should the child experience do?** read the product requirement first, then source/implementation docs.
+- **New contributor/agent:** `AGENTS.md` → `README.md` → this file → architecture/ADRs → engineering foundations → product requirements → active plan → `HANDOVER.md`.
+- **OS/platform implementation:** also read agent operations and relevant testing/review docs.
+- **UI work:** ADR 0018 → `ui_core.py` → `pygame_ui.py` (or existing `activity_ui.py` compatibility consumer) → engineering foundations.
+- **Activity implementation:** relevant product requirement → Activity skill → current runtime/API source owners.
+- **Physical/VM evidence:** `HANDOVER.md` → exact applicable `docs/testing/*` protocol.
 
 GitHub is the persistent project source of truth. Chat transcripts are context, not canonical documentation.
