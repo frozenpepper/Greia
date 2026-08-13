@@ -2,10 +2,26 @@ from __future__ import annotations
 
 import unittest
 
+from greia_platform import activity_ui, pygame_ui
 from greia_platform.activity_ui import ChildUiMetrics, mix
 
 
 class ChildUiMetricsTests(unittest.TestCase):
+    def test_platform_pygame_import_reexports_existing_helpers(self) -> None:
+        for name in (
+            "ChildUiMetrics",
+            "clear_icon_cache",
+            "draw_eraser_symbol",
+            "draw_grid_symbol",
+            "draw_icon_button",
+            "draw_plus_symbol",
+            "draw_undo_symbol",
+            "load_icon",
+            "mix",
+        ):
+            with self.subTest(name=name):
+                self.assertIs(getattr(pygame_ui, name), getattr(activity_ui, name))
+
     def test_reference_geometry_keeps_large_child_controls(self) -> None:
         metrics = ChildUiMetrics.for_size(1024, 600)
         self.assertEqual(metrics.scale, 1.0)
