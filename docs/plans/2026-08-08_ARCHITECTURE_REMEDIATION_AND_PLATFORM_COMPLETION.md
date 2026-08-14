@@ -23,7 +23,8 @@ When this plan is complete, Greia must have:
 - stable Activity identities;
 - shared Storage, Session, Event, Progression, and Reward services;
 - a semantic Device Capability/HAL layer;
-- Python and Web runtime adapters using the same platform services;
+- runtime-neutral interaction profiles and Phase-0 controller/joystick support;
+- Python and Web runtime adapters using the same platform services and input semantics;
 - direct appliance graphics without accidental X11 dependence;
 - peer i386/x86-64 and Raspberry Pi 400/500 architecture support;
 - safe `.greiaactivity` installation/update;
@@ -181,11 +182,17 @@ ADR 0012 requires signed, rollback-safe Greia OS/runtime updates, offline bundle
 
 **Required:** explicit R13B before final certification.
 
+## F-25 — Controller/input conventions would fragment per Activity — HIGH Phase-0 UX/architecture risk
+
+Without a shared input model, each Activity could invent joystick button numbers, dead zones, controller-as-mouse behavior and keyboard mappings independently. A future Web runtime would then require a second incompatible controller stack, and raw controller access could bypass protected Greia system input.
+
+**Required:** ADR 0020 runtime-neutral interaction profiles; controller as a first-class HAL capability; centralized mapping/dead-zone/virtual-pointer policy; Greia-owned physical device/system-input authority; Python/Web semantic parity; physical controller evidence in R7/R14.
+
 ---
 
 # 3. Cross-cutting rules
 
-1. **One platform service per concern.** Do not create Python/Web copies of storage, sessions, progression, package, backup, or parent policy.
+1. **One platform service per concern.** Do not create Python/Web copies of storage, sessions, progression, package, backup, parent policy, or standard input mapping.
 2. **Capability, permission request, and grant are distinct.** Activity code may request; only the platform grants.
 3. **Trusted authority stays outside Activity processes.** Effective grants come from a PermissionBroker using package trust/origin plus policy/capability inputs.
 4. **Stable identities precede durable state.** Profile IDs and Activity IDs are persistent cross-machine identity; titles are not.
@@ -196,6 +203,7 @@ ADR 0012 requires signed, rollback-safe Greia OS/runtime updates, offline bundle
 9. **Refactor for concrete boundaries.** Do not rewrite working code merely to make class names match diagrams.
 10. **Negative security tests are mandatory.** The unauthorized case must be proven to fail.
 11. **Reject a generic Resource Service.** Durable files belong to Storage; static assets to Asset/package; removable media to Media Service; temporary runtime data to Runtime Adapter/session; package cache to Package Manager; hardware availability to HAL.
+12. **Input intent is not physical-device authority.** Activities declare interaction profiles; Greia owns controller discovery/normalization, reserved system input, and the production physical-input path. Do not grant ordinary Activities raw `/dev/input` to manufacture controller support.
 
 ---
 
@@ -352,7 +360,7 @@ Typed semantic interfaces for at least:
 
 - capability snapshot/probing;
 - Display Service;
-- Input Service;
+- Input Service, including controller availability;
 - Audio Service;
 - Removable Media Service;
 - Power Service;
@@ -362,24 +370,28 @@ Existing Xorg/xinput/xrandr/systemd behavior may temporarily sit behind provisio
 
 ### R6.2 Runtime integration
 
-Complete the runtime-adapter protocol begun minimally in R2 for runtime-specific static/package validation, launch preparation, SDK transport, lifecycle session creation, cleanup, and normalized results. Migrate Python behavior without duplicating Storage/Session/Progression.
+Complete the runtime-adapter protocol begun minimally in R2 for runtime-specific static/package validation, launch preparation, SDK transport, lifecycle session creation, cleanup, and normalized results. Migrate Python behavior without duplicating Storage/Session/Progression/input semantics.
 
-## R7 — Direct Greia graphics/session architecture
+## R7 — Direct Greia graphics/session/input architecture
 
-**Goal:** implement the target appliance display/session model without circular Pi evidence requirements.
+**Goal:** implement the target appliance display/session/input model without circular Pi evidence requirements.
 
 Work:
 
 - inventory `DISPLAY`, Xauthority, XShm, `xinput`, `xrandr`, Xorg package/service assumptions;
 - typed Display/Input implementations behind R6 interfaces;
 - prototype SDL direct DRM/KMS/KMSDRM path;
-- determine by measurement whether a tiny compositor/session broker is justified for Web surfaces, transitions, crash recovery, and input routing;
-- define shell↔Activity surface ownership/recovery;
+- preserve ADR 0019 trusted Home/Back above Activity rendering and consume protected system input before Activity delivery;
+- implement ADR 0020 physical controller ownership/brokerage without ordinary Activity raw `/dev/input` authority;
+- map keyboard/pointer/touch/controller into the runtime-neutral interaction profiles and reserve controller Guide/system input where reliably available;
+- prove bounded controller discovery/open/reconnect and virtual-pointer behavior;
+- determine by measurement whether a tiny compositor/session broker is justified for Web surfaces, transitions, crash recovery, trusted chrome and input routing;
+- define shell↔Activity surface/input ownership/recovery;
 - move display/input settings behind platform adapters;
-- benchmark disk/RAM/startup/latency against Xorg;
+- benchmark disk/RAM/process/FD/startup/input/latency cost against Xorg;
 - retain Xorg only as an explicit compatibility adapter if physical evidence requires it.
 
-**R7 closure:** direct architecture plus x86/VM and available x86 physical evidence accepted; no Activity API depends on X11. Pi-specific display evidence is deferred explicitly to R8.
+**R7 closure:** direct display/session/input architecture plus x86/VM and available x86 physical evidence accepted; no Activity API depends on X11 or raw host input devices; mandatory Home remains outside Activity authority; controller/joystick Shell navigation, simple game mapping, pointer virtual-pointer behavior, disconnect/reconnect and reserved system-input interception are proven for the selected backend; resource cost is acceptable on the Acer floor. Pi-specific display/input evidence is deferred explicitly to R8.
 
 ## R8 — Raspberry Pi 400 / Pi 500 ARM64 board and image adapters
 
@@ -390,8 +402,8 @@ Work:
 - select base/kernel/firmware strategy;
 - board/image boot adapters beneath the same build-profile schema;
 - Pi profiles only after adapters exist;
-- integrate R7 direct display/session backend;
-- test boot/display/input/audio/network/removable media/shutdown/recovery;
+- integrate R7 direct display/session/input backend;
+- test boot/display/keyboard/pointer/controller/audio/network/removable media/shutdown/recovery;
 - close Pi-specific HAL/display/input work;
 - measure capability/resource classes independently of architecture.
 
@@ -399,9 +411,9 @@ Work:
 
 **Goal:** add Web without turning Greia into a browser appliance.
 
-Stage A benchmark: WPE/WebKit-style candidates first, alternatives allowed; installed delta, idle/peak RSS, cold/warm startup, Canvas2D/SVG/JS/WebAudio, optional WebGL, R7 display/session integration, i386 feasibility, Pi behavior, security maintenance, crash/forced-return.
+Stage A benchmark: WPE/WebKit-style candidates first, alternatives allowed; installed delta, idle/peak RSS, cold/warm startup, Canvas2D/SVG/JS/WebAudio, optional WebGL, R7 display/session/input integration, i386 feasibility, Pi behavior, security maintenance, crash/forced-return.
 
-Stage B adapter: packaged local content only; no child browser chrome/navigation/downloads/devtools; network denied by default; same Storage/Session/Event services and lifecycle/watchdog as Python; no authoritative unmanaged localStorage/IndexedDB save silo.
+Stage B adapter: packaged local content only; no child browser chrome/navigation/downloads/devtools; network denied by default; same Storage/Session/Event services and lifecycle/watchdog as Python; same ADR 0019 external system chrome; same ADR 0020 interaction-profile/controller semantics through a Web bridge rather than per-page controller-brand mappings; no authoritative unmanaged localStorage/IndexedDB save silo.
 
 ## R10 — `.greiaactivity` package/install/update
 
@@ -479,6 +491,8 @@ Evidence includes:
 - installer peak memory/time;
 - Bubblewrap/effective-grant behavior;
 - direct graphics/input/audio;
+- platform-owned Home/Back and protected system input;
+- Phase-0 controller/joystick navigation, game mapping, virtual pointer, reconnect and latency/resource evidence;
 - non-destructive Acer USB boot;
 - Pi 400 and Pi 500 physical acceptance;
 - Activity watchdog/forced-return;
@@ -505,9 +519,9 @@ R4 universal storage
 R5 sessions/events/progression
  ↓
 R6 Device Capability/HAL + full runtime integration
- ├────────────→ R7 direct graphics/session (x86/VM evidence)
- │                  └────────→ R8 Pi image + ARM direct-display evidence
- ├────────────→ R9 Web runtime (uses R7 session/surface architecture)
+ ├────────────→ R7 direct graphics/session/input (x86/VM evidence)
+ │                  └────────→ R8 Pi image + ARM display/input evidence
+ ├────────────→ R9 Web runtime (uses R7 session/surface/input architecture)
  └────────────→ R10 .greiaactivity
 
 R4 + R5             → R11 .greiabackup
@@ -535,7 +549,7 @@ Focused iteration may use:
 PYTHONPATH=src python3 -m unittest discover -s tests -v
 ```
 
-Security phases require positive **and negative** tests. Hardware/display phases require source tests plus exact VM/physical evidence; source structure never proves hardware behavior.
+Security phases require positive **and negative** tests. Hardware/display/input phases require source tests plus exact VM/physical evidence; source structure never proves hardware behavior.
 
 ---
 
@@ -713,6 +727,15 @@ Do not rewrite old entries; append corrections.
 - Next exact step: execute `tests.test_system_chrome` with the existing UI/creative focused suite and current `make verify`. After source PASS, integrate the chrome coordinator beside `DisplaySessionCoordinator`, prototype the smallest trusted overlay/input backend, and preserve negative evidence rather than falling back to an Activity-drawn or DOM-injected button.
 - Commit(s): source/docs are preserved in branch history; resolve actual current HEAD from GitHub before execution.
 
+## 2026-08-15 — Phase-0 runtime-neutral input profiles and controller foundation
+
+- Implemented: accepted `docs/product/ACTIVITY_INPUT_STANDARDS.md` and ADR 0020; added `greia_platform.input_core` with runtime-neutral interaction profiles, semantic actions, brand-neutral physical controller vocabulary, centralized circular dead-zone normalization and bounded Greia virtual pointer; added `controller` to the typed HAL/device-capability/runtime vocabulary; added conservative controller-presence probing without opening Activity devices; added `pygame_input.py` translating keyboard/SDL-controller events into Greia semantics plus an explicitly bounded trusted controller owner (maximum 4 open / 16 scanned); added `[input].profile` to the Activity manifest contract with API-0.1 `hybrid` compatibility; added `get_input_profile()` and platform launch-context propagation; declared Painting=`pointer` and Writing=`text`; added focused source regressions and a dedicated physical controller acceptance protocol; updated AGENTS, README, architecture, engineering foundations, documentation map, agent operations, Activity skill and ADR 0019 product cross-reference.
+- Tests/evidence: all input/controller tests added in this tranche are **committed but unexecuted**. No Shell controller navigation, physical controller, reconnect, virtual-pointer-on-real-Activity, reserved Guide interception, Web bridge or Acer latency/resource PASS is claimed. The last genuinely executed complete source gate remains **232/232 PASS at `097f0281888a58f6f26425807ce99d9f35449313`**.
+- Decisions: controller is a device capability, not an Activity-specific control scheme. New Activities declare interaction intent (`navigation`, `pointer`, `directional`, `game`, `text`, `hybrid`). Simple games use the learned arrows+Space / D-pad-or-left-stick+south-face baseline; pointer Activities use a Greia semantic virtual pointer; text Activities retain real typing/editing semantics. Consumer-brand labels terminate at backend adapters. Controller Guide/system input is platform-reserved where available. Ordinary Activities do not gain raw `/dev/input`; production physical-device ownership/brokerage is an R7 platform responsibility. A fallback controller Home chord remains intentionally undecided pending accidental-activation evidence.
+- Remaining blockers: execute the focused input/UI/source gate; then compose the bounded trusted Pygame controller owner/standard navigation mapping into the existing Shell loop without a big-bang launcher rewrite; implement the production R7 physical-input/system-input broker alongside trusted system chrome; prove controller navigation, analog repeat/dead zones, disconnect/reconnect, pointer virtual cursor, Guide interception and Activity raw-device denial on real hardware; measure resource/input latency on the Acer floor; later implement equivalent Web semantic transport.
+- Next exact step: run `tests.test_input_core`, `tests.test_pygame_input`, `tests.test_activity_input_contract`, `tests.test_hal_legacy_x`, `tests.test_system_chrome` plus the existing UI/creative focused gate and `make verify`. If source passes, make the smallest Shell integration using `PygameControllerSet`/`PygameInputTranslator`, then execute `docs/testing/2026-08-15_PHASE0_INPUT_CONTROLLER_ACCEPTANCE.md` on owner-controlled hardware. Do not broaden the Activity sandbox to `/dev/input` as an implementation shortcut.
+- Commit(s): source/docs are preserved in branch history; resolve actual current HEAD from GitHub before execution.
+
 ---
 
 # 9. Final completion criteria
@@ -730,9 +753,11 @@ This plan may be marked complete only when:
 - Storage/Session/Progression/Reward services are shared platform services;
 - global reward economics are not Activity-authored;
 - Device Capability/HAL services are authoritative above board-specific adapters;
-- Python and Web, where supported, use common platform semantics;
-- direct graphics is accepted and X11 is not an unintended architectural requirement;
+- Python and Web, where supported, use common platform semantics including Activity input profiles;
+- direct graphics/session/input architecture is accepted and X11 is not an unintended architectural requirement;
 - platform-owned Activity Home remains available outside Activity rendering/input authority across every supported runtime/backend;
+- controller/joystick support is proven from Shell through representative Activity profiles without broad raw Activity input authority;
+- reserved controller system input is intercepted by Greia before Activity delivery where the hardware exposes it;
 - Pi 400/500 and required x86 references have evidence-backed support status;
 - Activity install/update/rollback and child backup/restore satisfy parent workflows;
 - boot/recovery continuity meets the no-visible-Linux contract;
