@@ -19,8 +19,8 @@ class InputState:
     pointer: bool
     keyboard: bool
     touch: bool = False
-    controller: bool = False
     backend: str = "unknown"
+    controller: bool = False
 
 
 @dataclass(frozen=True, slots=True)
