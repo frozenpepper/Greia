@@ -20,6 +20,9 @@ type = "python"
 api_version = "0.1"
 entrypoint = "main.py"
 
+[input]
+profile = "text"
+
 [requirements]
 required_capabilities = ["display", "keyboard", "pointer"]
 optional_capabilities = ["touch"]
