@@ -179,6 +179,64 @@ def draw_eraser_symbol(
     surface.blit(rotated, rotated.get_rect(center=rect.center))
 
 
+def draw_home_symbol(
+    surface: pygame.Surface,
+    rect: pygame.Rect,
+    color: tuple[int, int, int],
+) -> None:
+    """Draw Greia's canonical simple Home glyph inside a control rectangle."""
+
+    span = max(12, min(rect.width, rect.height) // 3)
+    roof_y = rect.centery - span // 2
+    left = rect.centerx - span
+    right = rect.centerx + span
+    wall_top = rect.centery
+    bottom = rect.centery + span
+    stroke = max(3, min(rect.width, rect.height) // 12)
+    pygame.draw.lines(
+        surface,
+        color,
+        False,
+        [(left, wall_top), (rect.centerx, roof_y), (right, wall_top)],
+        stroke,
+    )
+    body = pygame.Rect(left + stroke, wall_top - stroke // 2, span * 2 - stroke * 2, bottom - wall_top)
+    pygame.draw.rect(surface, color, body, width=stroke, border_radius=max(2, stroke))
+    door_width = max(stroke * 2, body.width // 4)
+    door = pygame.Rect(
+        rect.centerx - door_width // 2,
+        body.bottom - max(stroke * 2, body.height // 2),
+        door_width,
+        max(stroke * 2, body.height // 2),
+    )
+    pygame.draw.rect(surface, color, door, width=stroke, border_radius=max(1, stroke // 2))
+
+
+def draw_back_symbol(
+    surface: pygame.Surface,
+    rect: pygame.Rect,
+    color: tuple[int, int, int],
+) -> None:
+    """Draw Greia's canonical Back glyph; this is Greia navigation, not browser history."""
+
+    span = max(12, min(rect.width, rect.height) // 3)
+    stroke = max(3, min(rect.width, rect.height) // 12)
+    tip = (rect.centerx - span, rect.centery)
+    tail = (rect.centerx + span, rect.centery)
+    pygame.draw.line(surface, color, tip, tail, stroke)
+    pygame.draw.lines(
+        surface,
+        color,
+        False,
+        [
+            (rect.centerx - span // 3, rect.centery - span * 2 // 3),
+            tip,
+            (rect.centerx - span // 3, rect.centery + span * 2 // 3),
+        ],
+        stroke,
+    )
+
+
 def mix(
     color: tuple[int, int, int],
     other: tuple[int, int, int],
