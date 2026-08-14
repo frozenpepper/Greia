@@ -63,14 +63,7 @@ Renderer-neutral source:
 src/greia_platform/system_chrome.py
 ```
 
-Current source owns:
-
-```text
-SystemNavigationAction.HOME
-SystemNavigationAction.BACK
-UiRect
-ActivitySystemChromeLayout
-```
+Current source owns `SystemNavigationAction.HOME`, `SystemNavigationAction.BACK`, `UiRect` and `ActivitySystemChromeLayout`.
 
 At 1024×600 the current layout is approximately:
 
@@ -83,21 +76,32 @@ protected area:  about 142×76 px, top-left
 
 The complete Home+Back footprint remains reserved even when Back is absent.
 
-Backend-neutral lifecycle seam:
+Backend-neutral lifecycle source:
 
 ```text
 src/greia_launcher/system_chrome.py
 ```
 
-It defines `SystemChromeBackend`, `SystemChromeCoordinator`, exact-generation leases/snapshots and fail-closed action validation.
+It now defines:
 
-Canonical Pygame glyph helpers now include `draw_home_symbol` and `draw_back_symbol`, exposed through `pygame_ui.py` and the current `activity_ui.py` compatibility implementation.
+```text
+SystemChromeBackend
+SystemChromeCoordinator
+SystemChromeLease / SystemChromeSnapshot
+SystemChromeNavigationBridge
+SystemNavigationRequest
+ActivityStopController
+```
+
+The coordinator uses exact-generation leases and fail-closed action validation. The navigation bridge converts one validated Home/Back action into the existing Greia Activity stop authority and retains only one bounded navigation request for the Shell's post-Activity destination. Home and Back therefore share the same runtime-neutral graceful/forced stop path; the Activity never receives or vetoes the intent.
+
+Canonical Pygame glyph helpers include `draw_home_symbol` and `draw_back_symbol`, exposed through `pygame_ui.py` and the current `activity_ui.py` compatibility implementation.
 
 ## Critical runtime boundary
 
-**No concrete production `SystemChromeBackend` exists yet, and the current installed Xorg/xinit path does not yet compose the new coordinator.**
+**No concrete production `SystemChromeBackend` exists yet, and the current installed Xorg/xinit path does not yet compose the new coordinator/bridge.**
 
-Therefore no claim is made yet that a real Activity cannot cover/intercept Home, that protected input is withheld from Python/Web content, or that Home has been exercised against a frozen Activity on target hardware.
+Therefore no claim is made yet that a real Activity cannot cover/intercept Home, that protected input is withheld from Python/Web content, or that Home has been exercised against an unresponsive Activity on target hardware.
 
 This is intentional. Drawing Home inside a Python Activity or injecting it into Web content would violate ADR 0019 even if it looked correct.
 
@@ -123,7 +127,7 @@ tests/test_system_chrome.py
 tests/test_activity_ui.py
 ```
 
-Coverage includes fixed Home geometry, reserved Back footprint, Back availability, child-sized hit geometry, coordinator lifecycle, Home action independent of Activity participation, invalid Back rejection and stale-lease rejection.
+Coverage includes fixed Home geometry, reserved Back footprint, Back availability, child-sized hit geometry, coordinator lifecycle, Home action independent of Activity participation, invalid Back rejection, stale-lease rejection, Home/Back routing into the shared stop authority, duplicate-action suppression, and cross-session rejection.
 
 Pure tests cannot prove real display/input isolation; that requires backend/runtime evidence.
 
@@ -144,7 +148,7 @@ installed path:         Xorg + xinit compatibility
 status:                 PROVISIONAL
 production compositor:  none selected
 serial direct DRM:      evidence candidate only
-trusted system chrome:  source contract/seam implemented; concrete backend UNPROVEN
+trusted system chrome:  contract/coordinator/lifecycle bridge implemented; concrete backend UNPROVEN
 ```
 
 R7 production acceptance now also requires:
@@ -188,9 +192,9 @@ Stop on first real failure and preserve exact stdout/stderr. Do not weaken contr
 
 After source PASS:
 
-1. compose `SystemChromeCoordinator` into installed Activity lifecycle beside `DisplaySessionCoordinator`, without making `ActivitySupervisor` a renderer;
+1. compose `SystemChromeCoordinator` and `SystemChromeNavigationBridge` into installed Activity presentation beside `DisplaySessionCoordinator`, without making `ActivitySupervisor` a renderer;
 2. implement/prototype the smallest trusted R7 overlay/input backend;
-3. route Home into the existing authoritative `ActivitySupervisor.request_stop()` path;
+3. feed its protected Home/Back input into the already-implemented navigation bridge and existing supervisor stop authority;
 4. preserve a Greia launch-origin token for optional Back; the current flat Activity catalogue has no distinct nested origin, so Back should remain unavailable there;
 5. prove overlay/input authority with real Python Activity content;
 6. measure resource cost versus current Xorg and direct-ownership candidates on the Acer floor;
