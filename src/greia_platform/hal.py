@@ -19,6 +19,7 @@ class InputState:
     pointer: bool
     keyboard: bool
     touch: bool = False
+    controller: bool = False
     backend: str = "unknown"
 
 
@@ -54,6 +55,12 @@ class InputHAL(Protocol):
     def probe(self) -> InputState: ...
 
 
+class ControllerPresenceProbe(Protocol):
+    """Narrow host-side probe for controller/joystick presence."""
+
+    def available(self) -> bool: ...
+
+
 class AudioHAL(Protocol):
     def probe(self) -> AudioState: ...
 
@@ -76,7 +83,7 @@ class GreiaHAL:
 
     Current backends are intentionally provisional. R7 replaces the legacy-X
     display/input implementations and R8 adds Pi board adapters without changing
-    Activity, storage, session, or progression contracts.
+    Activity, storage, session, progression, or semantic input contracts.
     """
 
     display: DisplayHAL
@@ -85,6 +92,36 @@ class GreiaHAL:
     removable_media: RemovableMediaHAL
     network: NetworkHAL
     power: PowerHAL
+
+
+@dataclass(frozen=True, slots=True)
+class LinuxControllerPresenceProbe:
+    """Conservative Linux presence probe without opening controller devices.
+
+    This establishes only that the host exposes a conventional joystick/gamepad
+    node. Runtime/session input authority remains a separate R7 concern; this
+    class never grants an Activity raw `/dev/input` access.
+    """
+
+    input_root: Path = Path("/dev/input")
+
+    def available(self) -> bool:
+        try:
+            entries = tuple(self.input_root.iterdir())
+        except OSError:
+            return False
+        for entry in entries:
+            name = entry.name
+            if name.startswith("js") and name[2:].isdigit():
+                return True
+        by_id = self.input_root / "by-id"
+        try:
+            return any(
+                item.name.endswith("-event-joystick")
+                for item in by_id.iterdir()
+            )
+        except OSError:
+            return False
 
 
 @dataclass(frozen=True, slots=True)
