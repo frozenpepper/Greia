@@ -287,5 +287,5 @@ class LegacyXInputHAL:
             pointer=self._controller.pointer_available(),
             keyboard=self._controller.keyboard_available(),
             controller=self._controller_probe.available(),
-            backend="legacy-x11+linux-input",
+            backend="legacy-x11",
         )
