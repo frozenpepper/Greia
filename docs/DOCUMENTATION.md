@@ -30,10 +30,11 @@ Important examples:
 
 - `docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md` owns the mandatory Phase-0 Writing/Painting scope and acceptance intent.
 - `docs/product/ACTIVITY_SYSTEM_NAVIGATION.md` owns the universal child-facing Home/Back behavior and acceptance criteria.
+- `docs/product/ACTIVITY_INPUT_STANDARDS.md` owns the Phase-0 keyboard/pointer/touch/controller interaction standards and learned default controls.
 
 ### 2.3 Normative architecture — accepted ADRs
 
-Accepted ADRs own architecture decisions. Important current examples include ADR 0012 (platform constitution), ADR 0013 (declarative image composition), ADR 0014 (identity/ARM/direct-graphics direction), ADR 0018 (lightweight Screen/Overlay/Collection UI foundation), and ADR 0019 (platform-owned Activity system navigation chrome).
+Accepted ADRs own architecture decisions. Important current examples include ADR 0012 (platform constitution), ADR 0013 (declarative image composition), ADR 0014 (identity/ARM/direct-graphics direction), ADR 0018 (lightweight Screen/Overlay/Collection UI foundation), ADR 0019 (platform-owned Activity system navigation chrome), and ADR 0020 (runtime-neutral input profiles and controller support).
 
 A newer ADR supersedes an older one only where it explicitly says so. `docs/architecture/GREIA_ARCHITECTURE.md` is the living cross-cutting synthesis, not a second ADR system.
 
@@ -49,9 +50,13 @@ For exact currently implemented APIs, schemas, command vocabularies and limits, 
 
 | Fact | Canonical implementation owner |
 |---|---|
-| Activity manifest parser/validation | `src/greia_platform/activities.py` |
+| Activity manifest parser/validation, including `input.profile` | `src/greia_platform/activities.py` |
 | Activity runtime/capability/permission/package policy | `runtime/child-runtime.toml` |
-| Python Activity SDK helpers | `src/greia_platform/activity_api.py` |
+| Python Activity SDK helpers and launch input-profile view | `src/greia_platform/activity_api.py` |
+| renderer-neutral Activity input profiles/actions/dead-zone/virtual-pointer semantics | `src/greia_platform/input_core.py` |
+| current Pygame keyboard/controller translation and bounded trusted controller owner | `src/greia_platform/pygame_input.py` |
+| typed input-device capability state | `src/greia_platform/hal.py`, `src/greia_platform/device_capabilities.py` |
+| provisional legacy-X pointer/keyboard plus Linux controller-presence composition | `src/greia_platform/hal_legacy_x.py` |
 | renderer-neutral UI semantics/navigation/resource primitives | `src/greia_platform/ui_core.py` |
 | Activity system Home/Back action vocabulary and protected geometry | `src/greia_platform/system_chrome.py` |
 | trusted system-chrome backend lifecycle/lease seam | `src/greia_launcher/system_chrome.py` |
@@ -123,7 +128,8 @@ In particular:
 - Web SDK/runtime examples remain future-facing until implemented;
 - capability classes remain semantic until measured/versioned;
 - ADR 0018 terms are renderer-neutral; `pygame_ui.py` is the shared Pygame import surface and `activity_ui.py` remains the current compatibility implementation for existing first-party Activities;
-- ADR 0019's Home/Back controls are **platform chrome**, not Activity widgets. `system_chrome.py` source defines the contract but does not by itself prove that the provisional Xorg production path can enforce the overlay/input boundary.
+- ADR 0019's Home/Back controls are **platform chrome**, not Activity widgets. `system_chrome.py` source defines the contract but does not by itself prove that the provisional Xorg production path can enforce the overlay/input boundary;
+- ADR 0020's input profiles/actions are runtime-neutral semantics. `pygame_input.py` is one current adapter/helper and does not make raw SDL/Pygame controller ownership the universal Activity API. The production physical-input/broker boundary remains an R7 evidence/implementation item.
 
 Activity authors use the Activity skill plus the implementation owners above.
 
@@ -145,11 +151,12 @@ Do not rewrite historical evidence/progress to make history cleaner; append corr
 |---|---|
 | repository workflow / hardware operation | `docs/agents/GREIA_AGENT_OPERATIONS.md` |
 | repository-wide OOP/dependency/performance/maintainability rules | engineering foundations; `AGENTS.md` when non-negotiable |
-| Activity manifest/API/runtime/trust/assets/theme/UI/performance/deploy flow | Activity authoring skill |
+| Activity manifest/API/runtime/trust/assets/theme/UI/input/performance/deploy flow | Activity authoring skill |
 | child-facing accepted product scope/acceptance | relevant `docs/product/*`; `AGENTS.md` when non-negotiable |
 | architectural decision | ADR + architecture overview when cross-cutting |
 | renderer-neutral UI architecture/semantics | ADR 0018 + `ui_core.py` + affected living manuals |
 | Activity system navigation/chrome behavior | ADR 0019 + `docs/product/ACTIVITY_SYSTEM_NAVIGATION.md` + system-chrome source + Activity skill + active R7 plan |
+| Activity input/controller semantics or authority | ADR 0020 + `docs/product/ACTIVITY_INPUT_STANDARDS.md` + input/HAL source + Activity skill + active R7 plan |
 | renderer-specific shared Pygame implementation/import ownership | `pygame_ui.py` / `activity_ui.py` + affected living manuals |
 | active ordering/closure criteria | active plan |
 | current implementation/evidence/blocker | `HANDOVER.md` |
@@ -167,7 +174,7 @@ Link to the owner of a fact instead of copying transient details across files. S
 
 ## 8. Review checklist
 
-Check that paths exist, active plan references are current, durable docs avoid stale execution facts, implemented/future APIs are distinct, ADR 0018 semantics are not confused with Pygame helpers, ADR 0019 system chrome is not mistaken for Activity-owned UI, engineering guidance does not override source/ADRs, hardware claims name evidence scope, developer-only behavior is not described as release behavior, destructive operations remain fail-closed, hosted execution is never implicitly authorized, dated reviews remain historical, and `HANDOVER.md` is sufficient to resume without chat history.
+Check that paths exist, active plan references are current, durable docs avoid stale execution facts, implemented/future APIs are distinct, ADR 0018 semantics are not confused with Pygame helpers, ADR 0019 system chrome is not mistaken for Activity-owned UI, ADR 0020 input semantics are not confused with raw physical-device authority, controller support does not grant ordinary Activities `/dev/input`, engineering guidance does not override source/ADRs, hardware claims name evidence scope, developer-only behavior is not described as release behavior, destructive operations remain fail-closed, hosted execution is never implicitly authorized, dated reviews remain historical, and `HANDOVER.md` is sufficient to resume without chat history.
 
 ---
 
@@ -177,6 +184,7 @@ Check that paths exist, active plan references are current, durable docs avoid s
 - **OS/platform implementation:** also read agent operations and relevant testing/review docs.
 - **UI work:** ADR 0018 → `ui_core.py` → `pygame_ui.py` (or existing `activity_ui.py` compatibility consumer) → engineering foundations.
 - **Activity system chrome/R7 surface ownership:** `docs/product/ACTIVITY_SYSTEM_NAVIGATION.md` → ADR 0019 → `src/greia_platform/system_chrome.py` → `src/greia_launcher/system_chrome.py` → active R7 plan/HANDOVER.
+- **Input/controller work:** `docs/product/ACTIVITY_INPUT_STANDARDS.md` → ADR 0020 → `input_core.py` → HAL/input adapter source → active R7 plan/HANDOVER.
 - **Activity implementation:** relevant product requirement → Activity skill → current runtime/API source owners.
 - **Physical/VM evidence:** `HANDOVER.md` → exact applicable `docs/testing/*` protocol.
 
