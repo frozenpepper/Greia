@@ -20,12 +20,16 @@ docs/DOCUMENTATION.md
 docs/engineering/ENGINEERING_FOUNDATIONS.md
 docs/adr/0018-lightweight-ui-foundation.md
 docs/adr/0019-platform-owned-activity-system-navigation.md
+docs/adr/0020-runtime-neutral-input-profiles-and-controller-support.md
 docs/product/ACTIVITY_SYSTEM_NAVIGATION.md
+docs/product/ACTIVITY_INPUT_STANDARDS.md
 skills/greia-activity-authoring/SKILL.md
 src/greia_platform/activities.py
 src/greia_platform/activity_api.py
+src/greia_platform/input_core.py
 src/greia_platform/ui_core.py
 src/greia_platform/system_chrome.py
+src/greia_platform/pygame_input.py
 src/greia_platform/pygame_ui.py
 src/greia_platform/activity_ui.py
 src/greia_platform/storage_client.py
@@ -47,6 +51,7 @@ A Greia Activity is a supervised child-facing experience, not a Linux desktop pr
 - **Linux internals are not Activity APIs.** No X11/DRM/systemd/device-file/shell/distro-path dependency.
 - **Greia owns lifecycle, durable namespace, sessions, permissions and global progression.**
 - **Greia owns the universal Home/Back system chrome.** Activities cannot replace or control it.
+- **Greia owns standard input semantics and controller normalization.** Activities declare interaction intent rather than brands/devices.
 - **Offline-first.** Core use and saving work without network.
 - **Portable state only.** Do not persist host paths, native object graphs or architecture-specific state.
 - **Curated runtime only.** No per-Activity venv/package manager/private dependency environment.
@@ -73,6 +78,30 @@ Activity ID is durable identity; title is presentation. Do not casually rename I
 
 Current implemented runtime is Python/Pygame API 0.1. Web/runtime archive formats remain future-facing until source says otherwise.
 
+### Interaction profile
+
+New and materially updated Activities declare their default Greia interaction intent:
+
+```toml
+[input]
+profile = "directional"
+```
+
+Supported values:
+
+```text
+navigation
+pointer
+directional
+game
+text
+hybrid
+```
+
+Existing API 0.1 packages without `[input]` temporarily resolve to `hybrid` for compatibility. Do not rely on that fallback for new work.
+
+The profile is **not** a hardware requirement. A pointer Activity does not need to know whether its pointer came from a mouse, touch, or a Greia controller virtual pointer.
+
 ### Python module limitation
 
 The installed adapter currently launches the manifest entrypoint as a direct file. Package-relative imports such as `from .model import Model` are therefore not yet a supported installed pattern. Do not work around this with `sys.path` mutation/dynamic imports. Small Activities may keep several clean classes in `main.py`; genuinely reusable cross-Activity primitives belong in reviewed `greia_platform` modules.
@@ -81,9 +110,13 @@ The installed adapter currently launches the manifest entrypoint as a direct fil
 
 Use only vocabulary declared by `runtime/child-runtime.toml`; do not invent strings. Require only what is essential and use optional capabilities for progressive enhancement.
 
-A manifest permission request is not authority. Ordinary Activities do not gain privileged filesystem/system access.
+`controller` means controller input is available on the current device. **Do not require `controller` merely because Greia can map a controller into your normal interaction profile.** Require it only if the Activity genuinely cannot function without a controller.
 
-Lifecycle helpers live in `greia_platform.activity_api`. Call READY only after the child has a usable surface and essential state/assets are ready. Long-running loops must honor Greia STOP requests; Greia retains forced-termination authority.
+A manifest permission request is not authority. Ordinary Activities do not gain privileged filesystem/system/device access. In particular, controller support does not authorize raw `/dev/input` access.
+
+Lifecycle helpers live in `greia_platform.activity_api`. `get_input_profile()` returns the platform-validated default interaction profile for the launch. It is descriptive context, not physical-device authority.
+
+Call READY only after the child has a usable surface and essential state/assets are ready. Long-running loops must honor Greia STOP requests; Greia retains forced-termination authority.
 
 Unexpected failures should terminate into Supervisor recovery rather than exposing Linux/Python internals or spinning forever.
 
@@ -105,7 +138,7 @@ Read the active profile via the SDK rather than walking profile directories.
 
 Activities report declared facts/events; Greia owns global reward/progression economics. Event protocol limits and score direction are source/manifest-owned.
 
-## 6. Shared assets, theme and UI
+## 6. Shared assets, theme, UI and input
 
 Use semantic core icons through `get_icon_path()` and the canonical asset catalogue; do not hard-code `/opt/greia-os/assets/...` paths.
 
@@ -127,6 +160,41 @@ BoundedCache
 
 A child-facing “folder” is a semantic `Collection`, never a Linux filesystem directory. Activities do not create a desktop/window-manager model.
 
+### Standard input semantics
+
+ADR 0020 and `docs/product/ACTIVITY_INPUT_STANDARDS.md` define the shared input model.
+
+The default learned conventions are:
+
+```text
+navigation:
+  arrows / D-pad-or-stick     move focus
+  Space or Enter / south face activate
+
+pointer:
+  mouse/touch                 spatial input
+  controller left stick       Greia virtual pointer
+  controller south face       primary press/click
+
+directional:
+  arrows / D-pad-or-stick     movement
+  Space / south face          primary action
+
+game:
+  same simple baseline        plus semantic secondary controls when needed
+
+text:
+  real keyboard text semantics; do not steal Space/Enter/arrows for game mapping
+```
+
+Use semantic/positional controller concepts such as `FACE_SOUTH`, D-pad, stick, shoulder and trigger. Do not build Activity behavior around Xbox/PlayStation/Nintendo branding or raw joystick/SDL button numbers.
+
+Keyboard, pointer, touch and controller should coexist naturally where the profile supports them. Do not add an “input mode” setting merely to choose between devices.
+
+Dead zones, common mapping, controller virtual-pointer response, reconnect behavior and reserved system input are platform concerns. Do not copy them into each Activity.
+
+`src/greia_platform/input_core.py` owns current runtime-neutral actions/mappings. `src/greia_platform/pygame_input.py` is a current Pygame translation/helper layer; it does not grant an Activity raw controller-device ownership.
+
 ### Mandatory Greia Home / optional Greia Back
 
 ADR 0019 and `docs/product/ACTIVITY_SYSTEM_NAVIGATION.md` define a higher-trust platform layer above Activity content.
@@ -144,7 +212,10 @@ Do not:
 - make Home themeable by the Activity;
 - intercept or override the system action;
 - treat Greia Back as browser history;
-- assume a Pygame key event or HTML/DOM event is the security boundary.
+- assume a Pygame key event or HTML/DOM event is the security boundary;
+- consume the controller Guide/system control as an Activity action.
+
+The controller Guide/system control is platform-reserved where available. A fallback multi-button Home chord is intentionally not frozen until accidental-activation testing supports one.
 
 `src/greia_platform/system_chrome.py` defines the current protected corner geometry. The complete Home+Back footprint remains reserved even when Back is absent, so avoid placing essential controls/content inside that region. Activity background art may extend behind it.
 
@@ -152,13 +223,13 @@ First-party Activities receive no exception.
 
 ### Current Pygame helpers
 
-`src/greia_platform/pygame_ui.py` is the platform-wide import surface for new shared Pygame consumers. Existing first-party Activities may continue importing `src/greia_platform/activity_ui.py`, which currently owns the same helper implementation for compatibility.
+`src/greia_platform/pygame_ui.py` is the platform-wide import surface for new shared Pygame UI consumers. Existing first-party Activities may continue importing `src/greia_platform/activity_ui.py`, which currently owns the same helper implementation for compatibility.
 
 The helpers provide 1024×600-first child metrics, large toolbar geometry, bounded icon scaling/cache and small direct-draw symbols/buttons. They also contain the canonical Home/Back glyph primitives used by the future trusted platform chrome renderer; importing those glyph functions in an Activity does **not** grant ownership of the real system controls.
 
 There must be one implementation, not divergent Shell/installer/Activity copies. The compatibility direction may be flipped after current focused tests execute, but do not combine that mechanical migration with framework growth.
 
-This is **not** a universal retained widget toolkit. Do not add a DOM/CSS clone, scene graph, giant widget hierarchy or animation framework speculatively. Extract the smallest stable primitive after real duplication appears in multiple consumers.
+This is **not** a universal retained widget toolkit or game/input engine. Do not add a DOM/CSS clone, scene graph, giant widget hierarchy, animation framework or input scripting framework speculatively. Extract the smallest stable primitive after real duplication appears in multiple consumers.
 
 ## 7. OOP and architecture quality
 
@@ -170,7 +241,7 @@ Follow `docs/engineering/ENGINEERING_FOUNDATIONS.md`.
 - prefer composition over inheritance unless substitutability is real;
 - make ownership/cleanup explicit;
 - keep dependencies flowing through Greia platform contracts rather than hidden globals;
-- do not build a second profile/storage/progression/package/backup platform inside an Activity;
+- do not build a second profile/storage/progression/package/backup/input platform inside an Activity;
 - public extension points and non-obvious invariants require useful docstrings/comments.
 
 Strong OOP does not mean maximizing class count. Abstractions must own a real invariant, remove repeated behavior or provide a genuine extension seam.
@@ -181,22 +252,28 @@ Reference assumptions include old Atom-class hardware, roughly 768 MiB RAM and 1
 
 Avoid per-frame:
 
-- disk/file scans or durable writes;
+- disk/file or controller-device discovery;
 - image decoding/scaling;
 - font construction;
 - network operations;
 - large temporary object graphs;
-- unbounded particles/history/cache growth.
+- unbounded particles/history/cache/device growth.
 
 Prefer load/convert once, bounded caches, visible-page rendering, elapsed-time animation and debounced persistence. Static UI should redraw on change where practical. Stable 30-FPS-class pacing is a reasonable default for ordinary 2D Activity animation, not a universal requirement.
 
-Every cache/history/queue needs an explicit bound or demonstrable natural bound.
+Every cache/history/queue/device-owner set needs an explicit bound or demonstrable natural bound.
 
 ## 9. Input/audio/error rules
 
 Pointer and touch should share large target geometry where practical; never assume tap-to-click. Keyboard alternatives are welcome but must not hide the only path unless keyboard is inherently required (for example Writing).
 
-The Activity must not rely on receiving pointer/touch events from the protected Greia system-chrome region; a conformant backend consumes those before Activity input dispatch.
+For simple game-like Activities, prefer the learned Greia baseline rather than inventing a new control scheme: arrows + Space and D-pad/left-stick + south face action.
+
+For pointer Activities, preserve spatial semantics. A controller should move the Greia virtual pointer instead of forcing game-style directional semantics onto painting/dragging.
+
+For text Activities, preserve actual text-entry behavior. Do not reinterpret Space/Enter/arrows globally through the game profile.
+
+The Activity must not rely on receiving pointer/touch/controller events from Greia's protected system-navigation controls; a conformant backend consumes reserved system input before Activity delivery.
 
 Audio should enhance, not gate, interaction; preload/bound short sounds and degrade gracefully when optional audio is unavailable.
 
@@ -216,9 +293,9 @@ Integrated provider-free gate:
 make verify
 ```
 
-Meaningful pure tests include state transitions, procedural logic, text buffers, save/index ordering, rollback, bounded history/cache behavior, layout/paging geometry and score/event logic.
+Meaningful pure tests include state transitions, procedural logic, text buffers, save/index ordering, rollback, bounded history/cache behavior, layout/paging geometry, semantic input mappings and score/event logic.
 
-Do not replace visual judgment with brittle pixel-exact tests. Local/windowed execution does not prove installed sandbox/storage/display/session/system-chrome or low-end hardware behavior. Use the applicable `docs/testing/*` protocol for VM/physical evidence.
+Do not replace visual/input judgment with brittle pixel-exact tests. Local/windowed execution does not prove installed sandbox/storage/display/session/system-chrome/controller authority or low-end hardware behavior. Use the applicable `docs/testing/*` protocol for VM/physical evidence.
 
 Do not claim commands passed unless they actually executed against the stated checkout.
 
@@ -227,8 +304,12 @@ Do not claim commands passed unless they actually executed against the stated ch
 Before claiming an Activity source-ready, verify at least:
 
 - stable ID and manifest validation;
+- explicit appropriate `[input].profile` for new/materially changed Activities;
 - deliberate package/storage schema versions;
 - minimal required/optional capabilities and permissions;
+- no unnecessary `controller` requirement and no raw device dependency;
+- standard Greia input conventions used where the interaction profile fits;
+- no controller-brand/raw button-number Activity semantics;
 - curated imports only;
 - READY/STOP correctness;
 - Greia Storage only for durable state;
@@ -236,18 +317,18 @@ Before claiming an Activity source-ready, verify at least:
 - events only where meaningful and declared;
 - semantic assets/theme/shared UI used appropriately;
 - essential controls avoid the reserved system-chrome region;
-- no attempt to replace, suppress or intercept Greia Home/Back;
+- no attempt to replace, suppress or intercept Greia Home/Back/system input;
 - 1024×600 usability and child-sized controls;
 - bounded hot-loop/history/cache behavior;
-- no per-frame durable writes;
+- no per-frame durable writes/device enumeration;
 - child-safe failure behavior;
 - useful provider-free tests;
 - standalone validation actually executed;
 - `make verify` actually executed before integration-PASS claims;
-- required installed/physical evidence completed and accurately scoped.
+- required installed/physical input/display evidence completed and accurately scoped.
 
 Writing (`org.greia.writing`) and Painting (`org.greia.painting`) are current first-party creative references, but their exact acceptance state belongs in `docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md` and `HANDOVER.md`.
 
 ## 12. Maintaining this skill
 
-Update this file in the same tranche when Activity-facing manifest/runtime/lifecycle/storage/event/trust/theme/assets/UI/system-chrome/performance/deployment contracts materially change. If implementation makes this guide materially wrong, the tranche is not fully documented.
+Update this file in the same tranche when Activity-facing manifest/runtime/lifecycle/storage/event/trust/theme/assets/UI/input/system-chrome/performance/deployment contracts materially change. If implementation makes this guide materially wrong, the tranche is not fully documented.
