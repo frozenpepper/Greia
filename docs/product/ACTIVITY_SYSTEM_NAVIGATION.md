@@ -59,26 +59,34 @@ At the 1024×600 reference size, the visible symbol is deliberately smaller than
 
 Activity authors should avoid placing essential content in the protected region. They do not receive authority over the region.
 
+## Controller system input
+
+ADR 0020 defines standard Activity input/controller semantics. System navigation remains a higher-trust layer.
+
+Where a supported controller reliably exposes a dedicated **Guide/system** control, Greia reserves that control for platform use; it is never delivered as an ordinary Activity action. The intended role is a hardware route to the same Greia Home semantics, subject to backend/hardware acceptance.
+
+A fallback multi-button Home chord may be selected later for controllers without a reliable Guide control, but no chord is frozen until child testing demonstrates that accidental activation is acceptably rare. Activities must not claim potential system chords for essential gameplay.
+
 ## Runtime neutrality
 
 The system navigation layer sits above Activity runtimes:
 
 ```text
-Greia display/session owner
-├── trusted Greia system chrome + protected input
+Greia display/session/input owner
+├── trusted Greia system chrome + protected pointer/touch/controller input
 └── Activity surface
     ├── Python/Pygame
     ├── Web/HTML
     └── future runtimes
 ```
 
-Python and Web Activities do not draw the Greia Home/Back controls themselves. A future Web bridge therefore does not inject a removable DOM button and JavaScript does not receive protected-region pointer/touch events.
+Python and Web Activities do not draw the Greia Home/Back controls themselves. A future Web bridge therefore does not inject a removable DOM button and JavaScript does not receive protected-region or reserved-controller system input.
 
 ## Display/input acceptance requirement
 
-A production display/session backend is conformant only if it can preserve trusted Greia system chrome above the Activity surface and route protected-region input to Greia before Activity input dispatch.
+A production display/session/input backend is conformant only if it can preserve trusted Greia system chrome above the Activity surface and route protected system input to Greia before Activity input dispatch.
 
-A backend that gives an Activity exclusive uncontested framebuffer/input ownership with no trusted overlay path is not sufficient for production, even if raw scanout itself works.
+A backend that gives an Activity exclusive uncontested framebuffer/input ownership with no trusted overlay/system-input path is not sufficient for production, even if raw scanout itself works.
 
 This requirement is part of R7 display/session architecture selection and is one reason a minimal Greia-owned compositor/session broker may be justified. It does **not** authorize a desktop environment or general-purpose window manager.
 
@@ -86,7 +94,7 @@ This requirement is part of R7 display/session architecture selection and is one
 
 If Greia cannot provide or preserve mandatory Home chrome for a production Activity session, the platform must fail closed rather than silently launch an Activity without the escape affordance.
 
-The current provisional Xorg path is not certified against this new invariant until a trusted system-chrome host is implemented and executed. Source contracts alone are not runtime evidence.
+The current provisional Xorg path is not certified against this invariant until a trusted system-chrome/input host is implemented and executed. Source contracts alone are not runtime evidence.
 
 ## Acceptance criteria
 
@@ -95,10 +103,11 @@ For each supported runtime/backend combination, verify that:
 1. Home is visible at the canonical location over arbitrary Activity content.
 2. The Activity cannot cover or restyle Home.
 3. Pointer/touch inside Home is consumed by Greia and not delivered to the Activity.
-4. Home requests graceful stop and returns to Shell.
-5. An uncooperative/frozen Activity is forcibly returned after the platform deadline.
-6. Back appears only when Greia has a distinct launch origin and returns there.
-7. Web content cannot intercept the system controls or turn Back into browser history.
-8. Python content cannot intercept the system controls through Pygame input.
-9. First-party Activities receive no exemption.
-10. The controls remain usable at 1024×600 and on the Acer resource floor.
+4. A reserved controller Guide/system input, when supported by the hardware/backend, is consumed by Greia and not delivered to Activity content.
+5. Home requests graceful stop and returns to Shell.
+6. An uncooperative/frozen Activity is forcibly returned after the platform deadline.
+7. Back appears only when Greia has a distinct launch origin and returns there.
+8. Web content cannot intercept the system controls or turn Back into browser history.
+9. Python content cannot intercept the system controls through Pygame input.
+10. First-party Activities receive no exemption.
+11. The controls remain usable at 1024×600 and on the Acer resource floor.
