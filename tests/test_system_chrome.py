@@ -9,6 +9,7 @@ from greia_platform.system_chrome import (
 from greia_launcher.system_chrome import (
     SystemChromeCoordinator,
     SystemChromeError,
+    SystemChromeNavigationBridge,
     SystemChromePhase,
 )
 
@@ -32,6 +33,20 @@ class RecordingChromeBackend:
 
     def hide(self, session_id: str) -> None:
         self.events.append(("hide", session_id))
+
+
+class RecordingStopController:
+    def __init__(self) -> None:
+        self.sessions: list[object] = []
+
+    def request_stop(self, session: object) -> None:
+        self.sessions.append(session)
+        return None
+
+
+class FakeSession:
+    def __init__(self, session_id: str) -> None:
+        self.session_id = session_id
 
 
 class ActivitySystemChromeLayoutTests(unittest.TestCase):
@@ -132,6 +147,60 @@ class SystemChromeCoordinatorTests(unittest.TestCase):
         with self.assertRaises(SystemChromeError):
             coordinator.activity_ready(old)
         coordinator.activity_ready(current)
+
+
+class SystemChromeNavigationBridgeTests(unittest.TestCase):
+    def test_home_requests_platform_stop_once_and_returns_shell_intent(self) -> None:
+        backend = RecordingChromeBackend()
+        backend.actions.extend(
+            [SystemNavigationAction.HOME, SystemNavigationAction.HOME]
+        )
+        coordinator = SystemChromeCoordinator(backend)
+        stop = RecordingStopController()
+        bridge = SystemChromeNavigationBridge(coordinator, stop)  # type: ignore[arg-type]
+        lease = coordinator.prepare("session-a", back_available=False)
+        coordinator.activity_ready(lease)
+        session = FakeSession("session-a")
+
+        first = bridge.poll(lease, session)  # type: ignore[arg-type]
+        second = bridge.poll(lease, session)  # type: ignore[arg-type]
+
+        self.assertIsNotNone(first)
+        assert first is not None
+        self.assertIs(first.action, SystemNavigationAction.HOME)
+        self.assertEqual(first.session_id, "session-a")
+        self.assertIs(second, first)
+        self.assertEqual(stop.sessions, [session])
+        self.assertEqual(backend.actions, [SystemNavigationAction.HOME])
+
+    def test_back_uses_same_platform_stop_path_but_preserves_destination_intent(self) -> None:
+        backend = RecordingChromeBackend()
+        backend.actions.append(SystemNavigationAction.BACK)
+        coordinator = SystemChromeCoordinator(backend)
+        stop = RecordingStopController()
+        bridge = SystemChromeNavigationBridge(coordinator, stop)  # type: ignore[arg-type]
+        lease = coordinator.prepare("session-a", back_available=True)
+        coordinator.activity_ready(lease)
+        session = FakeSession("session-a")
+
+        request = bridge.poll(lease, session)  # type: ignore[arg-type]
+
+        self.assertIsNotNone(request)
+        assert request is not None
+        self.assertIs(request.action, SystemNavigationAction.BACK)
+        self.assertEqual(stop.sessions, [session])
+
+    def test_bridge_rejects_cross_session_navigation(self) -> None:
+        backend = RecordingChromeBackend()
+        coordinator = SystemChromeCoordinator(backend)
+        stop = RecordingStopController()
+        bridge = SystemChromeNavigationBridge(coordinator, stop)  # type: ignore[arg-type]
+        lease = coordinator.prepare("session-a", back_available=False)
+        coordinator.activity_ready(lease)
+
+        with self.assertRaises(SystemChromeError):
+            bridge.poll(lease, FakeSession("session-b"))  # type: ignore[arg-type]
+        self.assertEqual(stop.sessions, [])
 
 
 if __name__ == "__main__":
