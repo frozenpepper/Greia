@@ -2,7 +2,7 @@
 
 **Audience:** coding, review and test agents working on Greia OS  
 **Status:** mandatory derived operating manual  
-**Last reviewed:** 2026-08-10  
+**Last reviewed:** 2026-08-15  
 **Canonical repository:** `frozenpepper/Greia`
 
 ---
@@ -17,6 +17,7 @@ This is the practical operating manual for working on Greia and its test hardwar
 - how to build an explicit developer image;
 - how to connect to a Greia test machine from the operator computer;
 - how to capture screenshots, inject bounded input, inspect logs and deploy Activities;
+- how to execute controller/input acceptance without bypassing Greia's input authority;
 - how to preserve failure evidence;
 - when to stop rather than “fixing the test”;
 - how to leave the project resumable.
@@ -111,7 +112,7 @@ shell syntax checks
 source footprint checks
 ```
 
-Source evidence does not prove Linux image behavior, graphics/input, VM boot, physical devices or performance.
+Source evidence does not prove Linux image behavior, graphics/input, controller latency/reconnect, VM boot, physical devices or performance.
 
 ### VM/image evidence
 
@@ -125,11 +126,11 @@ KMSDRM acquisition/handoff
 installer VM behavior
 ```
 
-VM evidence does not prove the Acer, Pi 400 or Pi 500 physical path unless the relevant acceptance definition explicitly says so.
+VM evidence does not prove the Acer, Pi 400 or Pi 500 physical path or physical controller behavior unless the relevant acceptance definition explicitly says so.
 
 ### Physical evidence
 
-Physical evidence must identify the actual machine and relevant hardware/runtime facts. It is required for claims tied to reference hardware.
+Physical evidence must identify the actual machine and relevant hardware/runtime facts. It is required for claims tied to reference hardware, controller behavior, real input latency or device reconnect.
 
 Use `PASS`, `FAIL`, `NOT-RUN`, `UNPROVEN`, `SOURCE-CLOSED`, `PROVISIONAL` and related labels with explicit scope.
 
@@ -137,7 +138,7 @@ The exact most recent executed evidence belongs in `HANDOVER.md` or a dated evid
 
 ---
 
-## 6. Current graphics/session boundary
+## 6. Current graphics/input/session boundary
 
 The target architecture is direct/appliance-oriented, but the current installed production path remains an explicit **Xorg/xinit compatibility backend** while R7 is open.
 
@@ -146,11 +147,21 @@ Therefore:
 - do not deepen Activity dependence on X11;
 - do not remove current X-compatible sandbox concessions blindly while production still uses them;
 - do not make ActivitySupervisor the DRM master;
-- do not grant ordinary Activities raw input ownership;
+- do not grant ordinary Activities raw `/dev/input` or other physical-input ownership merely to support controllers;
+- keep Greia Home/Back and reserved controller system input above Activity delivery;
+- keep controller-brand/button-number details below ADR 0020's runtime-neutral input contract;
 - do not select a compositor because it is conventional desktop Linux practice;
-- treat serial direct ownership/compositor candidates according to current R7 evidence, not preference.
+- treat serial direct ownership/compositor/input-broker candidates according to current R7 evidence, not preference.
 
 Exact current R7 implementation/evidence state is in `HANDOVER.md`.
+
+Controller/input source and physical acceptance is defined by:
+
+```text
+docs/testing/2026-08-15_PHASE0_INPUT_CONTROLLER_ACCEPTANCE.md
+```
+
+Use that protocol rather than inventing one-off controller tests or broadening Activity device access.
 
 ---
 
@@ -187,14 +198,21 @@ For R7 local evidence read:
 docs/testing/2026-08-09_R7_EXTERNAL_LINUX_EVIDENCE_EXECUTION.md
 ```
 
+For controller/input evidence read:
+
+```text
+docs/testing/2026-08-15_PHASE0_INPUT_CONTROLLER_ACCEPTANCE.md
+```
+
 Rules include:
 
-- use a disposable/root-safe checkout;
+- use a disposable/root-safe checkout where required;
 - keep run roots outside the repository;
 - never mutate the production source image in place;
 - preserve first failure;
 - do not auto-install host packages from the orchestrator;
-- do not weaken classification/timeouts to obtain PASS.
+- do not weaken classification/timeouts/input authority to obtain PASS;
+- do not add Activity `/dev/input` access as a test shortcut.
 
 ---
 
@@ -211,6 +229,8 @@ resolution: 1024×600
 Raspberry Pi 400 and Pi 500 are co-equal ARM references, with board/image/physical work assigned to later architecture phases.
 
 Do not redefine the reference floor because development on a modern PC is easier.
+
+For final controller acceptance, record the actual controller model/family and connection type alongside the machine/SHA. One controller family must not silently become the portable Greia contract.
 
 Before destructive installation on a physical machine, confirm the current plan/test protocol explicitly allows it.
 
@@ -426,6 +446,8 @@ After reboot, run `wait` again and prove reconnection.
 
 The current screenshot/input backend uses Xorg compatibility implementation details underneath `greia-devctl`. Agents should use the stable operator commands so R7 can replace those internals later.
 
+Remote keyboard/pointer injection is not evidence for physical controller support. Controller acceptance requires the dedicated physical-input protocol.
+
 ---
 
 ## 15. Maintenance SSH shell
@@ -468,7 +490,7 @@ trust = BUILT_IN
 
 Remote file placement must never upgrade package trust.
 
-Ordinary developer deployment is revalidated and must not obtain privileged permissions merely because the operator uploaded it.
+Ordinary developer deployment is revalidated and must not obtain privileged permissions or raw input devices merely because the operator uploaded it.
 
 Remove a developer deployment:
 
@@ -529,6 +551,18 @@ Focused unit iteration:
 PYTHONPATH=src python3 -m unittest discover -s tests -v
 ```
 
+Focused input/controller source gate:
+
+```bash
+PYTHONPATH=src python3 -m unittest \
+  tests.test_input_core \
+  tests.test_pygame_input \
+  tests.test_activity_input_contract \
+  tests.test_hal_legacy_x \
+  tests.test_system_chrome \
+  -v
+```
+
 Focused developer-remote regression suite:
 
 ```bash
@@ -542,15 +576,21 @@ Do not copy an old test count into a new claim. State the commit and command act
 
 ---
 
-## 19. R7 local image/QEMU evidence
+## 19. R7 local image/QEMU and controller evidence
 
-Use the exact active protocol:
+Use the exact active graphics/session protocol:
 
 ```text
 docs/testing/2026-08-09_R7_EXTERNAL_LINUX_EVIDENCE_EXECUTION.md
 ```
 
-Typical operator shape (verify against the current protocol/tool before execution):
+Use the Phase-0 controller/input protocol:
+
+```text
+docs/testing/2026-08-15_PHASE0_INPUT_CONTROLLER_ACCEPTANCE.md
+```
+
+Typical R7 operator shape (verify against the current protocol/tool before execution):
 
 ```bash
 SOURCE_SHA="$(git rev-parse HEAD)"
@@ -561,6 +601,8 @@ sudo -E python3 tools/r7_local_evidence.py --run-root "$RUN_ROOT"
 
 The first failed attempt is evidence. Do not reuse its run root or silently rerun the same active/serial proof until it passes.
 
+Controller evidence must identify the actual device/family/connection and must not be substituted with remote keyboard injection or a synthetic unit test.
+
 ---
 
 ## 20. Physical test evidence record
@@ -570,6 +612,7 @@ For every meaningful physical attempt preserve at minimum:
 - repository branch and exact SHA;
 - image/profile identity and hash where applicable;
 - machine identity/inventory relevant to the test;
+- controller/input device identity and connection type where relevant;
 - connection path (wired/mDNS/IP as relevant);
 - exact command/input sequence;
 - timestamps or ordered step numbers;
@@ -577,7 +620,7 @@ For every meaningful physical attempt preserve at minimum:
 - screenshots before/after visible transitions;
 - PASS/FAIL/NOT-RUN classification for each expected result;
 - first failure exactly as seen;
-- reboots/power cycles;
+- reboots/power cycles and controller disconnect/reconnect events;
 - manual intervention required;
 - any intentional host-key rollover/reimage event.
 
@@ -596,8 +639,10 @@ Measure relevant changes rather than relying on desktop intuition:
 - steady/busy CPU;
 - launch-to-first-usable-screen time;
 - transition/recovery latency;
-- process/file-descriptor count when relevant;
-- graphics/backend behavior;
+- process/file-descriptor/controller-handle count when relevant;
+- graphics/input/backend behavior;
+- controller button/axis latency and neutral-stick drift where relevant;
+- controller reconnect behavior;
 - 1024×600 usability;
 - behavior at the low-memory reference floor;
 - Activity frame pacing and hot-loop cost for nontrivial games/animations.
@@ -616,7 +661,8 @@ Stop the current evidence attempt and report the boundary when any of these occu
 - destructive target identity is ambiguous;
 - image/payload integrity mismatch;
 - SSH host identity changes without a known intentional reimage;
-- required security/isolation boundary is absent;
+- required security/isolation/system-input boundary is absent;
+- controller support would require broadening an ordinary Activity to raw `/dev/input`;
 - first authoritative test/hardware failure is reached;
 - mount/loop cleanup cannot be proven;
 - proceeding would require unapproved hosted execution;
@@ -658,6 +704,18 @@ build/profiles/modern-amd64-dev.toml
 build/build-developer-image.sh
 tools/provision_developer_image.py
 tools/provision_developer_installer.py
+```
+
+When modifying Activity/controller input, also check:
+
+```text
+src/greia_platform/input_core.py
+src/greia_platform/pygame_input.py
+src/greia_platform/hal.py
+src/greia_platform/device_capabilities.py
+src/greia_platform/hal_legacy_x.py
+runtime/child-runtime.toml
+docs/testing/2026-08-15_PHASE0_INPUT_CONTROLLER_ACCEPTANCE.md
 ```
 
 When those contracts change, update the manual in the same tranche.
