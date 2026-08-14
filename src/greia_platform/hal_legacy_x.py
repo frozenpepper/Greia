@@ -3,7 +3,12 @@ from __future__ import annotations
 import subprocess
 from typing import Protocol, Sequence
 
-from .hal import DisplayState, InputState
+from .hal import (
+    ControllerPresenceProbe,
+    DisplayState,
+    InputState,
+    LinuxControllerPresenceProbe,
+)
 from .hardware import HardwareSettings
 from .hardware_session import ApplyResult, DisplayProbe
 
@@ -262,14 +267,25 @@ class LegacyXDisplayHAL:
 
 
 class LegacyXInputHAL:
-    """Compatibility InputHAL backed by XInput during the R7 migration."""
+    """Compatibility InputHAL during the R7 migration.
 
-    def __init__(self, controller: LegacyXHardwareSessionController | None = None):
+    XInput remains responsible only for the current pointer/keyboard view.
+    Controller presence is deliberately probed below X11 because controller
+    support is a Greia input capability, not an X-specific concept.
+    """
+
+    def __init__(
+        self,
+        controller: LegacyXHardwareSessionController | None = None,
+        controller_probe: ControllerPresenceProbe | None = None,
+    ):
         self._controller = controller or LegacyXHardwareSessionController()
+        self._controller_probe = controller_probe or LinuxControllerPresenceProbe()
 
     def probe(self) -> InputState:
         return InputState(
             pointer=self._controller.pointer_available(),
             keyboard=self._controller.keyboard_available(),
-            backend="legacy-x11",
+            controller=self._controller_probe.available(),
+            backend="legacy-x11+linux-input",
         )
