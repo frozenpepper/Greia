@@ -20,6 +20,10 @@ except ImportError:  # pragma: no cover - depends on the curated pygame build
     sdl_controller = None
 
 
+MAX_OPEN_CONTROLLERS = 4
+MAX_CONTROLLER_SCAN = 16
+
+
 @dataclass(frozen=True, slots=True)
 class ControllerAxisEvent:
     """One SDL-controller axis update translated into Greia vocabulary."""
@@ -79,6 +83,133 @@ _CONTROLLER_AXES = _controller_axis_map()
 _CONTROLLER_BUTTON_DOWN = getattr(pygame, "CONTROLLERBUTTONDOWN", -1)
 _CONTROLLER_BUTTON_UP = getattr(pygame, "CONTROLLERBUTTONUP", -1)
 _CONTROLLER_AXIS_MOTION = getattr(pygame, "CONTROLLERAXISMOTION", -1)
+_CONTROLLER_DEVICE_EVENTS = frozenset(
+    {
+        getattr(pygame, "CONTROLLERDEVICEADDED", -2),
+        getattr(pygame, "CONTROLLERDEVICEREMOVED", -3),
+        getattr(pygame, "CONTROLLERDEVICEREMAPPED", -4),
+    }
+)
+
+
+class PygameControllerSet:
+    """Explicit bounded owner for controllers in trusted Pygame surfaces.
+
+    This is suitable for Greia Shell and controlled backend prototypes. It is
+    deliberately not an Activity permission mechanism: production Activities
+    should receive brokered/semantic input rather than raw `/dev/input` access.
+
+    On a topology event the tiny controller set is rebuilt from SDL's mapping
+    catalogue. Rebuilding avoids stale instance bookkeeping and is bounded by
+    both scan and open limits.
+    """
+
+    def __init__(
+        self,
+        *,
+        maximum_open: int = MAX_OPEN_CONTROLLERS,
+        maximum_scan: int = MAX_CONTROLLER_SCAN,
+    ) -> None:
+        if not 1 <= maximum_open <= 8:
+            raise ValueError("maximum_open must be in [1, 8]")
+        if not maximum_open <= maximum_scan <= 64:
+            raise ValueError("maximum_scan must be between maximum_open and 64")
+        self._maximum_open = int(maximum_open)
+        self._maximum_scan = int(maximum_scan)
+        self._controllers: list[object] = []
+        self._started = False
+
+    @property
+    def supported(self) -> bool:
+        return sdl_controller is not None
+
+    @property
+    def opened_count(self) -> int:
+        return len(self._controllers)
+
+    def start(self) -> int:
+        if self._started:
+            return self.opened_count
+        self._started = True
+        if sdl_controller is None:
+            return 0
+        try:
+            sdl_controller.init()
+            sdl_controller.set_eventstate(True)
+            self._refresh()
+        except (pygame.error, RuntimeError):
+            self.close()
+            return 0
+        return self.opened_count
+
+    def handle_event(self, event: pygame.event.Event) -> bool:
+        """Refresh after a bounded controller topology event.
+
+        Returns True when the event represented controller topology, allowing a
+        caller to invalidate any controller-specific UI hints if desired.
+        """
+
+        if event.type not in _CONTROLLER_DEVICE_EVENTS:
+            return False
+        if self._started and sdl_controller is not None:
+            self._refresh()
+        return True
+
+    def first_left_stick(self) -> tuple[float, float]:
+        """Return the first attached controller's normalized left-stick state."""
+
+        if sdl_controller is None:
+            return 0.0, 0.0
+        for controller in self._controllers:
+            try:
+                if not controller.attached():
+                    continue
+                raw_x = controller.get_axis(sdl_controller.CONTROLLER_AXIS_LEFTX)
+                raw_y = controller.get_axis(sdl_controller.CONTROLLER_AXIS_LEFTY)
+            except (pygame.error, RuntimeError):
+                continue
+            return _signed_axis(raw_x), _signed_axis(raw_y)
+        return 0.0, 0.0
+
+    def close(self) -> None:
+        for controller in reversed(self._controllers):
+            try:
+                controller.quit()
+            except (pygame.error, RuntimeError):
+                pass
+        self._controllers.clear()
+        if self._started and sdl_controller is not None:
+            try:
+                sdl_controller.quit()
+            except (pygame.error, RuntimeError):
+                pass
+        self._started = False
+
+    def _refresh(self) -> None:
+        assert sdl_controller is not None
+        for controller in reversed(self._controllers):
+            try:
+                controller.quit()
+            except (pygame.error, RuntimeError):
+                pass
+        self._controllers.clear()
+        count = min(max(0, int(sdl_controller.get_count())), self._maximum_scan)
+        for index in range(count):
+            if len(self._controllers) >= self._maximum_open:
+                break
+            try:
+                if not sdl_controller.is_controller(index):
+                    continue
+                self._controllers.append(sdl_controller.Controller(index))
+            except (pygame.error, RuntimeError):
+                continue
+
+    def __enter__(self) -> "PygameControllerSet":
+        self.start()
+        return self
+
+    def __exit__(self, exc_type, exc, traceback) -> None:
+        self.close()
 
 
 class PygameInputTranslator:
@@ -144,6 +275,12 @@ class PygameInputTranslator:
         if axis in {ControllerAxis.LEFT_TRIGGER, ControllerAxis.RIGHT_TRIGGER}:
             value = min(1.0, max(0.0, raw / 32768.0))
         else:
-            divisor = 32768.0 if raw < 0 else 32767.0
-            value = min(1.0, max(-1.0, raw / divisor))
+            value = _signed_axis(raw)
         return ControllerAxisEvent(axis, value)
+
+
+def _signed_axis(raw: int) -> float:
+    if not isinstance(raw, int) or isinstance(raw, bool):
+        raise TypeError("controller axis value must be an integer")
+    divisor = 32768.0 if raw < 0 else 32767.0
+    return min(1.0, max(-1.0, raw / divisor))
