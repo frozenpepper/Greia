@@ -6,6 +6,8 @@ from typing import Protocol
 
 from greia_platform.system_chrome import SystemNavigationAction
 
+from .lifecycle import ActivityResult, ActivitySession
+
 
 class SystemChromeError(RuntimeError):
     """Raised when Greia cannot preserve trusted Activity navigation chrome."""
@@ -38,6 +40,12 @@ class SystemChromeBackend(Protocol):
     def hide(self, session_id: str) -> None: ...
 
 
+class ActivityStopController(Protocol):
+    """Narrow lifecycle authority required by trusted system navigation."""
+
+    def request_stop(self, session: ActivitySession) -> ActivityResult | None: ...
+
+
 @dataclass(frozen=True, slots=True)
 class SystemChromeLease:
     """Exact-object ownership token for one Activity chrome generation."""
@@ -54,6 +62,14 @@ class SystemChromeSnapshot:
     generation: int
     back_available: bool
     failure: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class SystemNavigationRequest:
+    """One Greia-owned request to end an Activity and choose a Shell destination."""
+
+    session_id: str
+    action: SystemNavigationAction
 
 
 class SystemChromeCoordinator:
@@ -192,6 +208,47 @@ class SystemChromeCoordinator:
             raise SystemChromeError("stale or foreign system chrome lease")
         if lease.session_id != self._session_id or lease.generation != self._generation:
             raise SystemChromeError("system chrome lease does not match active generation")
+
+
+class SystemChromeNavigationBridge:
+    """Translate trusted chrome input into Greia's existing stop lifecycle.
+
+    Home and Back both end the current Activity through the same authoritative
+    lifecycle. The returned action is retained for the Shell to choose the
+    post-Activity destination; the Activity never receives or vetoes it.
+    """
+
+    def __init__(
+        self,
+        coordinator: SystemChromeCoordinator,
+        stop_controller: ActivityStopController,
+    ) -> None:
+        self._coordinator = coordinator
+        self._stop_controller = stop_controller
+        self._requests: dict[int, SystemNavigationRequest] = {}
+
+    def poll(
+        self,
+        lease: SystemChromeLease,
+        session: ActivitySession,
+    ) -> SystemNavigationRequest | None:
+        if session.session_id != lease.session_id:
+            raise SystemChromeError("system chrome lease/session identity mismatch")
+        existing = self._requests.get(lease.generation)
+        if existing is not None:
+            return existing
+        action = self._coordinator.poll_action(lease)
+        if action is None:
+            return None
+        request = SystemNavigationRequest(session.session_id, action)
+        self._requests[lease.generation] = request
+        self._stop_controller.request_stop(session)
+        return request
+
+    def clear(self, lease: SystemChromeLease) -> None:
+        """Retire the remembered navigation request after Activity cleanup."""
+
+        self._requests.pop(lease.generation, None)
 
 
 def _session_id(value: str) -> str:
