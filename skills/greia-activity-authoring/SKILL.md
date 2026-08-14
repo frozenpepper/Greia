@@ -6,7 +6,7 @@ description: Canonical agent guide for designing, implementing, validating and t
 # Greia Activity Authoring Skill
 
 **Status:** living derived authoring guide  
-**Reviewed:** 2026-08-13
+**Reviewed:** 2026-08-15
 
 This file is practical guidance. Exact implemented APIs/schemas are owned by source/runtime declarations; accepted ADRs own architecture; product docs own child-facing requirements.
 
@@ -19,10 +19,13 @@ AGENTS.md
 docs/DOCUMENTATION.md
 docs/engineering/ENGINEERING_FOUNDATIONS.md
 docs/adr/0018-lightweight-ui-foundation.md
+docs/adr/0019-platform-owned-activity-system-navigation.md
+docs/product/ACTIVITY_SYSTEM_NAVIGATION.md
 skills/greia-activity-authoring/SKILL.md
 src/greia_platform/activities.py
 src/greia_platform/activity_api.py
 src/greia_platform/ui_core.py
+src/greia_platform/system_chrome.py
 src/greia_platform/pygame_ui.py
 src/greia_platform/activity_ui.py
 src/greia_platform/storage_client.py
@@ -43,6 +46,7 @@ A Greia Activity is a supervised child-facing experience, not a Linux desktop pr
 - **Activity is the stable abstraction.** Python/Pygame is one runtime.
 - **Linux internals are not Activity APIs.** No X11/DRM/systemd/device-file/shell/distro-path dependency.
 - **Greia owns lifecycle, durable namespace, sessions, permissions and global progression.**
+- **Greia owns the universal Home/Back system chrome.** Activities cannot replace or control it.
 - **Offline-first.** Core use and saving work without network.
 - **Portable state only.** Do not persist host paths, native object graphs or architecture-specific state.
 - **Curated runtime only.** No per-Activity venv/package manager/private dependency environment.
@@ -123,11 +127,34 @@ BoundedCache
 
 A child-facing “folder” is a semantic `Collection`, never a Linux filesystem directory. Activities do not create a desktop/window-manager model.
 
+### Mandatory Greia Home / optional Greia Back
+
+ADR 0019 and `docs/product/ACTIVITY_SYSTEM_NAVIGATION.md` define a higher-trust platform layer above Activity content.
+
+Every visible child Activity eventually runs beneath Greia-owned system chrome containing:
+
+- **Home** — always present; ends the Activity and returns to the child's root Shell/home surface;
+- **Back** — shown only when Greia itself has a distinct previous Shell/Collection context; ends the Activity and returns there.
+
+Activity authors **must not draw their own copy as a substitute**. The real controls are rendered and input-owned by Greia outside the Activity process/content surface. This applies equally to Python and Web Activities.
+
+Do not:
+
+- reserve a manifest permission to hide Home;
+- make Home themeable by the Activity;
+- intercept or override the system action;
+- treat Greia Back as browser history;
+- assume a Pygame key event or HTML/DOM event is the security boundary.
+
+`src/greia_platform/system_chrome.py` defines the current protected corner geometry. The complete Home+Back footprint remains reserved even when Back is absent, so avoid placing essential controls/content inside that region. Activity background art may extend behind it.
+
+First-party Activities receive no exception.
+
 ### Current Pygame helpers
 
 `src/greia_platform/pygame_ui.py` is the platform-wide import surface for new shared Pygame consumers. Existing first-party Activities may continue importing `src/greia_platform/activity_ui.py`, which currently owns the same helper implementation for compatibility.
 
-The helpers provide 1024×600-first child metrics, large toolbar geometry, bounded icon scaling/cache and a few direct-draw symbols/buttons used by real first-party Activities.
+The helpers provide 1024×600-first child metrics, large toolbar geometry, bounded icon scaling/cache and small direct-draw symbols/buttons. They also contain the canonical Home/Back glyph primitives used by the future trusted platform chrome renderer; importing those glyph functions in an Activity does **not** grant ownership of the real system controls.
 
 There must be one implementation, not divergent Shell/installer/Activity copies. The compatibility direction may be flipped after current focused tests execute, but do not combine that mechanical migration with framework growth.
 
@@ -169,6 +196,8 @@ Every cache/history/queue needs an explicit bound or demonstrable natural bound.
 
 Pointer and touch should share large target geometry where practical; never assume tap-to-click. Keyboard alternatives are welcome but must not hide the only path unless keyboard is inherently required (for example Writing).
 
+The Activity must not rely on receiving pointer/touch events from the protected Greia system-chrome region; a conformant backend consumes those before Activity input dispatch.
+
 Audio should enhance, not gate, interaction; preload/bound short sounds and degrade gracefully when optional audio is unavailable.
 
 Children must never see tracebacks, terminals or Linux diagnostics. Development diagnosis belongs in logs/screenshot tooling.
@@ -189,7 +218,7 @@ make verify
 
 Meaningful pure tests include state transitions, procedural logic, text buffers, save/index ordering, rollback, bounded history/cache behavior, layout/paging geometry and score/event logic.
 
-Do not replace visual judgment with brittle pixel-exact tests. Local/windowed execution does not prove installed sandbox/storage/display/session or low-end hardware behavior. Use the applicable `docs/testing/*` protocol for VM/physical evidence.
+Do not replace visual judgment with brittle pixel-exact tests. Local/windowed execution does not prove installed sandbox/storage/display/session/system-chrome or low-end hardware behavior. Use the applicable `docs/testing/*` protocol for VM/physical evidence.
 
 Do not claim commands passed unless they actually executed against the stated checkout.
 
@@ -206,6 +235,8 @@ Before claiming an Activity source-ready, verify at least:
 - no silent creation eviction/deletion;
 - events only where meaningful and declared;
 - semantic assets/theme/shared UI used appropriately;
+- essential controls avoid the reserved system-chrome region;
+- no attempt to replace, suppress or intercept Greia Home/Back;
 - 1024×600 usability and child-sized controls;
 - bounded hot-loop/history/cache behavior;
 - no per-frame durable writes;
@@ -219,4 +250,4 @@ Writing (`org.greia.writing`) and Painting (`org.greia.painting`) are current fi
 
 ## 12. Maintaining this skill
 
-Update this file in the same tranche when Activity-facing manifest/runtime/lifecycle/storage/event/trust/theme/assets/UI/performance/deployment contracts materially change. If implementation makes this guide materially wrong, the tranche is not fully documented.
+Update this file in the same tranche when Activity-facing manifest/runtime/lifecycle/storage/event/trust/theme/assets/UI/system-chrome/performance/deployment contracts materially change. If implementation makes this guide materially wrong, the tranche is not fully documented.
