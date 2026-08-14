@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping, Sequence
 
+from .input_core import InteractionProfile, SUPPORTED_INTERACTION_PROFILES
 from .trust import ActivitySource, PackageTrust
 
 
@@ -46,6 +47,7 @@ class ActivityManifest:
     requested_permissions: tuple[str, ...]
     storage_schema_version: int
     root: Path
+    input_profile: str = InteractionProfile.HYBRID.value
 
     @property
     def launch_path(self) -> Path:
@@ -206,7 +208,7 @@ class ActivityRegistry:
         ]
         if not matches:
             raise ActivityValidationError(f"activity is outside configured roots: {root}")
-        return max(matches, key=lambda item: len(item.root.parts))
+        return max(matches, key=lambda item: len(source.root.parts))
 
     def _validate_tree(self, root: Path) -> None:
         total = 0
@@ -248,6 +250,16 @@ class ActivityRegistry:
         requirements = _table(raw, "requirements")
         permissions = _table(raw, "permissions")
         storage = _table(raw, "storage")
+        raw_input = raw.get("input")
+        if raw_input is None:
+            # API 0.1 compatibility for existing packages. New packages should
+            # declare this explicitly so the platform can choose consistent
+            # keyboard/pointer/controller behavior before runtime launch.
+            input_profile = InteractionProfile.HYBRID.value
+        elif isinstance(raw_input, dict):
+            input_profile = _text(raw_input, "profile")
+        else:
+            raise ActivityValidationError("input must be a table")
         if "capabilities" in runtime:
             raise ActivityValidationError("runtime.capabilities is obsolete")
         if "rewards" in education:
@@ -281,6 +293,7 @@ class ActivityRegistry:
             requested_permissions=_texts(permissions, "requested", allow_empty=True),
             storage_schema_version=_integer(storage, "schema_version", 1),
             root=root,
+            input_profile=input_profile,
         )
 
     def _validate_manifest(self, manifest: ActivityManifest, source: ActivitySource) -> None:
@@ -307,6 +320,10 @@ class ActivityRegistry:
             raise ActivityValidationError("runtime.entrypoint does not exist") from exc
         if manifest.root not in launch_path.parents or not launch_path.is_file():
             raise ActivityValidationError("runtime.entrypoint must be a file inside the package")
+        if manifest.input_profile not in SUPPORTED_INTERACTION_PROFILES:
+            raise ActivityValidationError(
+                "unsupported input.profile: " + repr(manifest.input_profile)
+            )
 
         _unique("activity.languages", manifest.languages)
         _unique("education.categories", manifest.categories)
