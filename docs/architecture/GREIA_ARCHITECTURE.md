@@ -3,7 +3,7 @@
 **Status:** Living architecture synthesis  
 **Last reviewed:** 2026-08-15  
 **Authority:** accepted ADRs are normative; implemented APIs/schemas are owned by source/runtime declarations; this document synthesizes the cross-cutting architecture.  
-**Scope:** Product philosophy, platform boundaries, Activity model, runtimes, profiles, storage, progression, package/update model, backup/restore, parent controls, hardware abstraction, ARM/i386 strategy, graphics direction, security boundaries, and open questions.
+**Scope:** Product philosophy, platform boundaries, Activity model, runtimes, profiles, storage, progression, package/update model, backup/restore, parent controls, hardware abstraction, ARM/i386 strategy, graphics/input direction, security boundaries, and open questions.
 
 ---
 
@@ -27,7 +27,7 @@ Greia should be able to evolve from an old i386 netbook to a Raspberry Pi 400/50
 
 The core rule is:
 
-> **Greia presents one child operating environment, one Activity model, one profile model, one progression/storage model, and one parent-management model across all supported hardware and runtimes.**
+> **Greia presents one child operating environment, one Activity model, one profile model, one progression/storage model, one input model, and one parent-management model across all supported hardware and runtimes.**
 
 Implementation layers are allowed to differ below those contracts.
 
@@ -83,11 +83,14 @@ Its responsibilities include:
 - child-safe failure states;
 - visible progression/rewards;
 - profile customization;
-- system Activities designed for the child.
+- system Activities designed for the child;
+- stable keyboard/pointer/touch/controller navigation conventions.
 
 The shell is not merely an application launcher placed on top of another desktop shell.
 
 A child-facing Activity never becomes the ultimate owner of the child's route back to Greia. ADR 0019 requires platform-owned system navigation above the Activity surface.
+
+Likewise, an Activity is not expected to rediscover and normalize physical controllers by itself. ADR 0020 places standard interaction semantics and physical controller authority at the Greia platform boundary.
 
 ## 3. Professor Pip is content, not the platform identity
 
@@ -143,6 +146,7 @@ The following must be common to all Activities regardless of runtime:
 - backup/restore;
 - lifecycle supervision;
 - platform-owned Home/Back system navigation;
+- runtime-neutral interaction profiles and input semantics;
 - uninstall behavior;
 - compatibility/capability checks.
 
@@ -229,18 +233,20 @@ A normal Activity should request capabilities such as:
 - pointer input;
 - keyboard input;
 - touch;
+- controller;
 - audio;
 - Canvas2D;
 - WebGL;
 - camera;
 - microphone;
 - accelerometer;
-- controller;
 - minimum compatibility/resource class.
 
 It should not normally request `i386` or `arm64`.
 
 Architecture-specific packaging is reserved for cases where native executable code makes it unavoidable.
+
+A controller capability is distinct from an interaction profile: `controller` means controller input is available, while `pointer`, `directional`, `game`, `text`, and related profiles describe how the Activity is intended to be used.
 
 ## P-09 — Child data is architecture-neutral
 
@@ -282,12 +288,39 @@ For every major dependency, Greia considers:
 - launch latency;
 - steady-state CPU;
 - old GPU behavior;
+- input latency and device-state overhead;
 - i386 support where required;
 - ARM64 support;
 - security-update burden;
 - maintenance complexity.
 
 The old-hardware reference floor is a design constraint, not a forgotten compatibility tier.
+
+## P-13 — Children learn Greia input, not each device brand
+
+Controller/joystick support is a Phase-0 platform requirement.
+
+Greia standardizes common interaction intent rather than consumer controller labels. The initial profiles are:
+
+```text
+navigation
+pointer
+directional
+game
+text
+hybrid
+```
+
+The simple game baseline is intentionally stable:
+
+```text
+keyboard:    arrow keys + Space
+controller:  D-pad/left stick + south face button
+```
+
+Pointer Activities may receive a Greia virtual pointer from a controller. Text Activities retain real text-entry semantics. Keyboard, pointer, touch and controller can coexist rather than forcing a global input mode.
+
+Physical controller mapping, dead zones, reconnect behavior and reserved system input belong to Greia, not to individual Activities.
 
 ---
 
@@ -319,7 +352,8 @@ Responsibilities include:
 
 - hardware capability probing;
 - display backend;
-- input backend;
+- physical input/controller backend;
+- protected system-input interception;
 - trusted Activity system-chrome backend;
 - audio backend;
 - removable-media handling;
@@ -337,6 +371,7 @@ The durable logical core owns:
 - Profile Service;
 - Activity Registry;
 - Activity Runtime Manager;
+- runtime-neutral input profile/mapping semantics;
 - Storage Service;
 - Session Service;
 - Progression Engine;
@@ -350,39 +385,40 @@ The durable logical core owns:
 
 ### Layer D — Greia Shell
 
-The Greia Shell renders and coordinates the child operating environment, including the post-Activity destination associated with platform Home/Back navigation.
+The Greia Shell renders and coordinates the child operating environment, including the post-Activity destination associated with platform Home/Back navigation and standard navigation behavior across available input devices.
 
 ### Layer E — Activities
 
-Activities use Greia APIs rather than depending directly on Linux, board firmware, CPU architecture, display-server details, or system-chrome authority.
+Activities use Greia APIs rather than depending directly on Linux, board firmware, CPU architecture, display-server details, raw input devices, controller brands, or system-chrome authority.
 
 ---
 
-# Part IV — Graphics and graphical session
+# Part IV — Graphics, input and graphical session
 
 ## 5. No conventional desktop stack
 
 Greia does not require a desktop environment or general-purpose window manager.
 
-The intended child graphics architecture is direct and appliance-oriented.
+The intended child graphics/input architecture is direct and appliance-oriented.
 
 Conceptually:
 
 ```text
-Linux kernel
+Linux kernel + device drivers
    ↓
-DRM/KMS + GPU driver
+DRM/KMS + input devices
    ↓
-minimal Greia display/session authority
-   ├── trusted Greia Home/Back + protected input
+minimal Greia display/session/input authority
+   ├── trusted Greia Home/Back + protected system input
+   ├── normalized keyboard/pointer/touch/controller input
    └── Greia Shell or supervised Activity surface
 ```
 
-The trusted system-chrome layer is tiny and fixed-purpose. It is not a taskbar, desktop panel or general window-manager surface.
+The trusted system-chrome/input layer is tiny and fixed-purpose. It is not a taskbar, desktop panel or general window-manager surface.
 
 ## 6. X11 status
 
-The current installed production path uses a deliberately narrow **Xorg/xinit compatibility backend** while the R7 display/session architecture is measured and proven.
+The current installed production path uses a deliberately narrow **Xorg/xinit compatibility backend** while the R7 display/session/input architecture is measured and proven.
 
 That backend is **PROVISIONAL**. It is not an Activity API and does not make X11 part of the intended Greia architectural layer.
 
@@ -390,7 +426,7 @@ The target direction remains direct/appliance-oriented. Xorg may survive only as
 
 Even in that case, X11 remains below the platform/Activity contract.
 
-The current Xorg path is not automatically certified for ADR 0019 merely because it can display an Activity. Production certification also requires a trusted system-chrome/input implementation that the Activity cannot control.
+The current Xorg path is not automatically certified for ADR 0019 or ADR 0020 merely because it can display an Activity and receive keyboard/pointer events. Production certification also requires a trusted system-chrome/input implementation and controller path that the Activity cannot control.
 
 ## 7. DRM/KMS-first direction
 
@@ -400,18 +436,19 @@ For Python/Pygame, SDL should use a suitable direct backend where hardware allow
 
 For a Web Activity runtime, Greia should select an embeddable engine/backend able to fit the appliance model rather than launching a conventional desktop browser.
 
-Direct scanout alone is not the complete product requirement. If an Activity becomes the uncontested owner of both framebuffer and input, another trusted layer must still preserve mandatory Greia Home/Back and protected input.
+Direct scanout alone is not the complete product requirement. If an Activity becomes the uncontested owner of both framebuffer and physical input, another trusted layer must still preserve mandatory Greia Home/Back, protected system input and runtime-neutral controller normalization.
 
-## 8. Compositor policy
+## 8. Compositor/session-broker policy
 
 Greia does not require a compositor merely because desktop Linux normally uses one.
 
 A tiny compositor or embedded scene-management/session layer may be adopted only if it materially simplifies:
 
 - trusted Home/Back composition above Activity content;
-- protected system-chrome input routing;
+- protected system-chrome/controller input routing;
 - safe transitions;
 - process/surface ownership;
+- runtime-neutral physical-input brokerage;
 - Web runtime integration;
 - crash recovery;
 - other genuinely required multi-surface behavior;
@@ -430,14 +467,16 @@ ADR 0019 defines a universal high-trust child-navigation layer independent of ru
 
 The Activity cannot hide, move, restyle, cover, disable, replace or intercept the real system controls. Pointer/touch input in their protected region belongs to Greia before Activity input dispatch.
 
+Where a supported controller reliably exposes a Guide/system control, that control is also reserved to Greia rather than delivered as an Activity action. A fallback multi-button Home chord remains an evidence question rather than an invented default.
+
 Conceptually:
 
 ```text
-Greia display/session authority
+Greia display/session/input authority
 ├── trusted system chrome
 │   ├── Home — mandatory
 │   └── Back — context-dependent
-│
+├── reserved pointer/touch/controller system input
 └── one Activity surface
     ├── Python/Pygame
     ├── Web/HTML
@@ -447,6 +486,39 @@ Greia display/session authority
 Current renderer-neutral geometry/actions live in `src/greia_platform/system_chrome.py`; the backend-neutral lifecycle/navigation seam lives in `src/greia_launcher/system_chrome.py`. Exact current implementation/evidence status belongs in `HANDOVER.md`.
 
 A production R7 backend is not accepted merely because it can scan out Activity frames. It must also preserve this trusted chrome/input invariant without turning Greia into a desktop/window-manager environment.
+
+### 8.2 Runtime-neutral Activity input
+
+ADR 0020 defines the normal Activity input layer below protected Greia system input and above runtime/device-specific APIs.
+
+Conceptually:
+
+```text
+keyboard / mouse / touch / controller
+               ↓
+      trusted Greia input backend
+               ↓
+      reserve system Home/Back input
+               ↓
+      interaction-profile mapping
+               ↓
+        semantic Activity input
+          ┌────┴────┐
+        Python      Web
+```
+
+Current profiles are:
+
+- `navigation` — focus/menu movement and activation;
+- `pointer` — spatial input, including controller virtual pointer;
+- `directional` — simple four-direction movement plus primary action;
+- `game` — richer game semantics retaining the simple baseline;
+- `text` — real text input without stealing normal typing/editing keys;
+- `hybrid` — genuinely mixed modes where one default is insufficient.
+
+The platform owns common dead-zone normalization, positional controller mapping, virtual-pointer behavior and physical controller lifecycle. Activities should not inspect `/dev/input`, SDL joystick indices or consumer-brand button labels as their portable control model.
+
+`src/greia_platform/input_core.py` owns current renderer-neutral semantics. `src/greia_platform/pygame_input.py` is a current Pygame translation/trusted-controller helper and remains below the universal contract.
 
 ---
 
@@ -463,6 +535,7 @@ A runtime adapter is responsible for:
 - exposing the Greia SDK bridge;
 - launching the Activity through the platform-owned session/lifecycle boundary;
 - readiness handshake;
+- translating/brokering the runtime-neutral Activity input contract where required;
 - pause/checkpoint/resume semantics where supported;
 - graceful stop;
 - forced termination;
@@ -471,7 +544,7 @@ A runtime adapter is responsible for:
 
 The platform above this adapter must not care whether the Activity was implemented in Python or Web technology.
 
-System Home/Back is deliberately above the runtime adapter rather than implemented separately by each runtime.
+System Home/Back and protected physical-input ownership are deliberately above the runtime adapter rather than implemented separately by each runtime.
 
 ## 10. Python runtime family
 
@@ -490,7 +563,9 @@ Reasons:
 - simpler ARM/i386 portability;
 - predictable offline installation.
 
-Python Activities may use normal in-content navigation, but they do not draw or receive input authority over the real Greia system Home/Back region.
+Python Activities may use normal in-content navigation, but they do not draw or receive input authority over the real Greia system Home/Back region and should not own raw physical controller devices in the production architecture.
+
+The current source includes Pygame translation helpers so Python-side semantics can converge immediately; that does not make SDL/Pygame raw device ownership the Activity contract.
 
 ## 11. Web runtime family
 
@@ -523,6 +598,8 @@ The Web runtime should execute packaged local content inside a Greia-controlled 
 
 Greia system Home/Back remains outside the page/DOM. Web content cannot style, cover, remove or intercept it, and Greia Back is never mapped to arbitrary browser history.
 
+Standard controller support should cross the Greia input bridge using the same semantic interaction profiles as Python. Ordinary Web Activities should not each need to reinvent browser Gamepad API brand/button mappings for normal Greia controls.
+
 Network access is denied by default.
 
 ## 12. Web engine selection is still an evidence question
@@ -543,6 +620,7 @@ Selection requires real measurements on reference hardware for:
 - crash recovery;
 - direct-display integration;
 - trusted Greia system-chrome integration;
+- runtime-neutral keyboard/pointer/touch/controller bridge integration;
 - i386 availability;
 - ARM64/Raspberry Pi behavior;
 - security-maintenance lifecycle.
@@ -594,6 +672,9 @@ runtime:
   type: web
   entrypoint: web/index.html
 
+input:
+  profile: pointer
+
 compatibility:
   minimum_class: C0
 
@@ -603,6 +684,8 @@ capabilities:
     audio: true
     canvas2d: true
   optional:
+    touch: true
+    controller: true
     webgl: true
 
 permissions:
@@ -620,7 +703,11 @@ scoring:
 
 This is **conceptual**, not the current Python manifest syntax. The semantic separation is architectural; `src/greia_platform/activities.py` and `runtime/child-runtime.toml` own the implemented contract.
 
+The current implemented manifest already accepts an `[input] profile = ...` table. Existing API 0.1 packages without it temporarily default to `hybrid` for compatibility; new and materially updated Activities should declare intent explicitly.
+
 System Home/Back is intentionally absent from Activity manifest authority: an Activity does not request permission to show, hide or configure mandatory Greia system navigation.
+
+Similarly, an interaction profile is not permission to open physical devices. An Activity requests `controller` capability only if it genuinely requires a controller, not merely to benefit from Greia mapping a controller onto an otherwise usable interaction profile.
 
 ## 16. Capability classes
 
@@ -649,6 +736,8 @@ C2 machine → higher-resolution/richer optional effect path
 ```
 
 This should be one Activity package whenever practical, not separate “old computer” and “new computer” products.
+
+Input also follows progressive enhancement: a pointer Activity can remain fully usable with mouse/touch while gaining a controller virtual pointer when controller input exists.
 
 ---
 
@@ -878,10 +967,13 @@ Parent controls may include:
 - sound/volume;
 - display resolution/mode;
 - pointer/touchpad sensitivity;
+- controller/virtual-pointer preferences if later exposed as bounded platform policy;
 - tap-to-click;
 - language/accessibility;
 - storage usage;
 - diagnostics/recovery.
+
+Any controller setting exposed to parents must remain typed/bounded platform policy rather than arbitrary device-command execution.
 
 ## 33. Local and remote parent surfaces
 
@@ -901,7 +993,7 @@ The architecture should converge above the hardware/boot seam:
 
 ```text
 PC BIOS/UEFI path ─┐
-                   ├→ Linux + Greia Platform → same Shell/Activity contracts
+                   ├→ Linux + Greia Platform → same Shell/Activity/input contracts
 Raspberry Pi path ─┘
 ```
 
@@ -919,7 +1011,7 @@ A build profile declares intent such as:
 - compatibility class;
 - package sets;
 - runtime families;
-- display adapter;
+- display/input adapter;
 - resource budget.
 
 Runtime hardware probing/certification establishes what the actual machine can do.
@@ -937,6 +1029,8 @@ At minimum the project should maintain physical or reproducible acceptance targe
 - Raspberry Pi 500;
 - representative modern amd64 PC.
 
+Controller/input acceptance should use representative supported USB/Bluetooth hardware as appropriate to the target's actual capabilities rather than assuming one brand/model defines the platform contract.
+
 As hardware availability evolves, specific models may be retired through an ADR while preserving portable child data.
 
 ---
@@ -953,11 +1047,13 @@ Isolation should cover as appropriate:
 - process namespace/lifecycle;
 - network permissions;
 - removable-media permissions;
-- device permissions;
+- raw device/input permissions;
 - parent-state access;
 - sibling Activity data;
 - privileged OS operations;
 - the platform-owned system-navigation surface/input region.
+
+Controller support must not become a reason to expose broad `/dev/input` access to ordinary Activities.
 
 ## 38. Network denied by default
 
@@ -967,7 +1063,7 @@ An ordinary offline Activity should not be able to silently become a tracking cl
 
 Network capability must be declared and mediated by policy.
 
-## 39. Child-safe crash and return behavior
+## 39. Child-safe crash, return and input behavior
 
 If an Activity crashes or hangs, Greia must reclaim control and return to a safe child-facing surface.
 
@@ -977,11 +1073,13 @@ The platform owns the universal forced-return/watchdog mechanism.
 
 ADR 0019 additionally gives the child a universal learned route home while the Activity is visible: the Greia Home control is outside Activity rendering/input authority, requests graceful stop, and relies on the same platform forced-return path if the Activity does not cooperate.
 
+ADR 0020 requires physical controller/system input to be normalized/intercepted on the platform side so an Activity cannot consume a controller system button before Greia has a chance to act on it.
+
 Exact current source/evidence status belongs in `HANDOVER.md`.
 
 ## 40. Fail closed
 
-If a security-critical sandbox, package verifier, privileged helper, destructive-operation safety gate, or production mandatory-system-chrome boundary is unavailable, Greia should refuse the unsafe operation rather than silently falling back to a weaker path.
+If a security-critical sandbox, package verifier, privileged helper, destructive-operation safety gate, or production mandatory-system-chrome/input boundary is unavailable, Greia should refuse the unsafe operation rather than silently falling back to a weaker path.
 
 ---
 
@@ -1017,7 +1115,7 @@ Rejected because it exposes implementation substrate, increases resource cost, f
 
 ## 44. Runtime-first platform
 
-Rejected because separate Python/Web install, save, progress, parent, or system-navigation systems would duplicate core logic and break portability.
+Rejected because separate Python/Web install, save, progress, parent, input, or system-navigation systems would duplicate core logic and break portability.
 
 ## 45. Per-Activity Python environments
 
@@ -1047,29 +1145,38 @@ Rejected because interruption or a bad package can destroy the working installat
 
 Rejected. A Python helper drawn by Activity code or a DOM element injected into Web content cannot satisfy the invariant because the Activity runtime would retain the ability to cover, restyle, intercept or otherwise interfere with it. Mandatory system navigation belongs to Greia's higher-trust display/input layer.
 
+## 50.2 Per-Activity controller stacks and raw input ownership
+
+Rejected. Ordinary Activities must not implement the platform by opening raw joystick nodes, hard-coding SDL button indices/controller brands, inventing their own dead zones/reconnect policy, or obtaining broad `/dev/input` access. Those details belong below ADR 0020's runtime-neutral input contract.
+
+## 50.3 Controller-as-global-Linux-mouse
+
+Rejected as the general pointer architecture. Pointer-profile Activities may receive a Greia semantic virtual pointer, but globally emulating a host mouse creates surprising cross-context behavior and weakens the separation between Activity input and protected system input.
+
 ---
 
 # Part XVI — Open research and implementation questions
 
 The following are intentionally not settled by this living overview. Current phase status belongs in the active plan/handover.
 
-## 51. Direct graphics stack
+## 51. Direct graphics/input stack
 
-R7 requires evidence to select the exact shell/display architecture across old Intel and future Raspberry Pi paths.
+R7 requires evidence to select the exact shell/display/input architecture across old Intel and future Raspberry Pi paths.
 
 Questions include:
 
 - SDL KMSDRM behavior on reference machines;
-- whether one tiny compositor/session broker materially improves trusted system-chrome ownership and Web runtime integration;
+- whether one tiny compositor/session broker materially improves trusted system-chrome ownership, input brokerage and Web runtime integration;
 - GPU fallback behavior;
 - mode switching and resolution control;
 - boot-to-shell continuity without architectural X11 dependence;
-- how protected Home/Back input is consumed before Activity input;
+- how protected Home/Back pointer/touch/controller input is consumed before Activity input;
+- how controller/device reconnect is handled without exposing raw devices to Activities;
 - handling of multiple Activity surfaces if ever genuinely required.
 
 ## 52. Web engine
 
-Need benchmarked comparison of WPE WebKit / WebKit variants and any other realistic embedded engines on required architectures, including integration beneath the external Greia system-chrome layer.
+Need benchmarked comparison of WPE WebKit / WebKit variants and any other realistic embedded engines on required architectures, including integration beneath the external Greia system-chrome layer and runtime-neutral input bridge.
 
 ## 53. Boot cover
 
@@ -1090,17 +1197,35 @@ The Home/Back product semantics are settled by ADR 0019. R7 still needs evidence
 Required evidence includes:
 
 - Home remains visible above arbitrary Activity rendering;
-- protected pointer/touch input is consumed before Activity delivery;
+- protected pointer/touch/controller system input is consumed before Activity delivery;
 - Home initiates graceful stop and still returns from an unresponsive Activity through the existing forced-return authority;
 - Back appears only from a valid Greia launch origin;
 - the layer has acceptable RAM/disk/process/FD/startup/input/render cost on the Acer floor;
 - future Web content cannot manipulate the system controls.
 
-## 57. Capability classes
+## 57. Controller/input backend evidence
+
+The semantic model is settled by ADR 0020, but R7 still needs real backend and controller evidence.
+
+Required evidence includes:
+
+- Shell navigation with keyboard and supported controller;
+- simple directional/game mappings with D-pad and analog left stick;
+- pointer-profile virtual-pointer quality and latency;
+- controller dead-zone behavior on representative hardware;
+- disconnect/reconnect without losing keyboard/pointer operation;
+- Guide/system input withheld from Activity content where the device exposes it;
+- no broad raw `/dev/input` Activity authority;
+- bounded controller handles/device state and acceptable Acer resource cost;
+- equivalent transport semantics ready for future Web.
+
+The exact fallback controller chord for Home, if one is needed, remains open until child accidental-activation testing justifies it.
+
+## 58. Capability classes
 
 Need measured thresholds and certification tests rather than invented labels.
 
-## 58. ARM image strategy
+## 59. ARM image strategy
 
 Raspberry Pi 400/500 must be first-class, but board/image details require their own implementation profiles/testing rather than pretending x86 GRUB/MBR logic transfers to ARM.
 
@@ -1108,11 +1233,11 @@ Raspberry Pi 400/500 must be first-class, but board/image details require their 
 
 # Part XVII — Architecture summary
 
-## 59. One-sentence architectural summary
+## 60. One-sentence architectural summary
 
-> **Greia is a console-like child operating environment centered on runtime-independent Activities, with platform-owned identity, lifecycle, storage, sessions, progression, installation, backup, permissions, parent controls, system navigation, and hardware abstraction over a deliberately replaceable Linux/runtime/display substrate.**
+> **Greia is a console-like child operating environment centered on runtime-independent Activities, with platform-owned identity, lifecycle, storage, sessions, progression, installation, backup, permissions, parent controls, system navigation, input semantics, and hardware abstraction over a deliberately replaceable Linux/runtime/display/input substrate.**
 
-## 60. Core diagram
+## 61. Core diagram
 
 ```text
                            PARENTS
@@ -1123,10 +1248,11 @@ Raspberry Pi 400/500 must be first-class, but board/image details require their 
 ┌───────────────────────────────────────────────────────────────┐
 │                     GREIA PLATFORM CORE                       │
 │ Profiles • Registry • Storage • Sessions • Progression       │
-│ Rewards • Packages • Backup • Permissions • Health • Assets  │
+│ Rewards • Packages • Backup • Permissions • Input • Assets   │
 └──────────────────────────────┬────────────────────────────────┘
                                │
                      universal Activity contract
+                  input profile + lifecycle + services
                                │
                      Activity Runtime Manager
                      ┌─────────┼─────────┐
@@ -1138,8 +1264,9 @@ Raspberry Pi 400/500 must be first-class, but board/image details require their 
                  Activity content surface
                                │
              ┌─────────────────┴─────────────────┐
-             │ Greia display/session authority  │
+             │ Greia display/session/input      │
              │ Home/Back + protected input      │
+             │ device normalization/brokerage   │
              └─────────────────┬─────────────────┘
                                │
                   hardware/platform adapters
@@ -1150,4 +1277,4 @@ Raspberry Pi 400/500 must be first-class, but board/image details require their 
                             400 / 500
 ```
 
-The supported hardware may change. Runtime implementations may change. Linux distributions and boot mechanisms may change. The contracts above them are what make the system Greia.
+The supported hardware may change. Runtime implementations may change. Linux distributions, boot mechanisms, display backends and controller hardware may change. The contracts above them are what make the system Greia.
