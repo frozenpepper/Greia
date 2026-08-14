@@ -124,6 +124,7 @@ forbidden_file_names = [
 [capabilities]
 allowed = [
   "audio.basic",
+  "controller",
   "display",
   "keyboard",
   "network",
