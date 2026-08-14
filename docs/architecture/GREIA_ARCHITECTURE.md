@@ -1,7 +1,7 @@
 # Greia Architecture — Living Overview
 
 **Status:** Living architecture synthesis  
-**Last reviewed:** 2026-08-10  
+**Last reviewed:** 2026-08-15  
 **Authority:** accepted ADRs are normative; implemented APIs/schemas are owned by source/runtime declarations; this document synthesizes the cross-cutting architecture.  
 **Scope:** Product philosophy, platform boundaries, Activity model, runtimes, profiles, storage, progression, package/update model, backup/restore, parent controls, hardware abstraction, ARM/i386 strategy, graphics direction, security boundaries, and open questions.
 
@@ -58,7 +58,7 @@ choose Activity
    ↓
 Activity runs under Greia supervision
    ↓
-Activity exits or fails
+Activity exits or Greia Home/Back ends it
    ↓
 Greia Shell safely returns
 ```
@@ -86,6 +86,8 @@ Its responsibilities include:
 - system Activities designed for the child.
 
 The shell is not merely an application launcher placed on top of another desktop shell.
+
+A child-facing Activity never becomes the ultimate owner of the child's route back to Greia. ADR 0019 requires platform-owned system navigation above the Activity surface.
 
 ## 3. Professor Pip is content, not the platform identity
 
@@ -140,6 +142,7 @@ The following must be common to all Activities regardless of runtime:
 - parental controls;
 - backup/restore;
 - lifecycle supervision;
+- platform-owned Home/Back system navigation;
 - uninstall behavior;
 - compatibility/capability checks.
 
@@ -317,6 +320,7 @@ Responsibilities include:
 - hardware capability probing;
 - display backend;
 - input backend;
+- trusted Activity system-chrome backend;
 - audio backend;
 - removable-media handling;
 - Wi-Fi/network configuration;
@@ -346,11 +350,11 @@ The durable logical core owns:
 
 ### Layer D — Greia Shell
 
-The Greia Shell renders and coordinates the child operating environment.
+The Greia Shell renders and coordinates the child operating environment, including the post-Activity destination associated with platform Home/Back navigation.
 
 ### Layer E — Activities
 
-Activities use Greia APIs rather than depending directly on Linux, board firmware, CPU architecture, or display-server details.
+Activities use Greia APIs rather than depending directly on Linux, board firmware, CPU architecture, display-server details, or system-chrome authority.
 
 ---
 
@@ -369,10 +373,12 @@ Linux kernel
    ↓
 DRM/KMS + GPU driver
    ↓
-minimal Greia display/runtime path
-   ↓
-Greia Shell or supervised Activity
+minimal Greia display/session authority
+   ├── trusted Greia Home/Back + protected input
+   └── Greia Shell or supervised Activity surface
 ```
+
+The trusted system-chrome layer is tiny and fixed-purpose. It is not a taskbar, desktop panel or general window-manager surface.
 
 ## 6. X11 status
 
@@ -384,6 +390,8 @@ The target direction remains direct/appliance-oriented. Xorg may survive only as
 
 Even in that case, X11 remains below the platform/Activity contract.
 
+The current Xorg path is not automatically certified for ADR 0019 merely because it can display an Activity. Production certification also requires a trusted system-chrome/input implementation that the Activity cannot control.
+
 ## 7. DRM/KMS-first direction
 
 The preferred direction is to use the kernel's modern direct display interfaces and the thinnest practical rendering path.
@@ -392,22 +400,53 @@ For Python/Pygame, SDL should use a suitable direct backend where hardware allow
 
 For a Web Activity runtime, Greia should select an embeddable engine/backend able to fit the appliance model rather than launching a conventional desktop browser.
 
+Direct scanout alone is not the complete product requirement. If an Activity becomes the uncontested owner of both framebuffer and input, another trusted layer must still preserve mandatory Greia Home/Back and protected input.
+
 ## 8. Compositor policy
 
 Greia does not require a compositor merely because desktop Linux normally uses one.
 
-A tiny compositor or embedded scene-management layer may be adopted only if it materially simplifies:
+A tiny compositor or embedded scene-management/session layer may be adopted only if it materially simplifies:
 
+- trusted Home/Back composition above Activity content;
+- protected system-chrome input routing;
 - safe transitions;
 - process/surface ownership;
 - Web runtime integration;
 - crash recovery;
-- input routing;
-- multi-surface requirements;
+- other genuinely required multi-surface behavior;
 
 and if its cost is acceptable on reference hardware.
 
 The architectural rule is not “never Wayland”. The rule is **never add an unnecessary desktop layer**.
+
+### 8.1 Platform-owned Activity system navigation
+
+ADR 0019 defines a universal high-trust child-navigation layer independent of runtime.
+
+**Home** is always present while a child Activity is visible. It ends the current Activity through Greia's existing graceful-stop/forced-return lifecycle and returns toward the child Shell root.
+
+**Back** is optional and appears only when Greia has a meaningful distinct launch origin. It ends the Activity and returns to that Greia Shell/Collection context. It is not browser history and it is not Activity-internal navigation.
+
+The Activity cannot hide, move, restyle, cover, disable, replace or intercept the real system controls. Pointer/touch input in their protected region belongs to Greia before Activity input dispatch.
+
+Conceptually:
+
+```text
+Greia display/session authority
+├── trusted system chrome
+│   ├── Home — mandatory
+│   └── Back — context-dependent
+│
+└── one Activity surface
+    ├── Python/Pygame
+    ├── Web/HTML
+    └── future runtime
+```
+
+Current renderer-neutral geometry/actions live in `src/greia_platform/system_chrome.py`; the backend-neutral lifecycle/navigation seam lives in `src/greia_launcher/system_chrome.py`. Exact current implementation/evidence status belongs in `HANDOVER.md`.
+
+A production R7 backend is not accepted merely because it can scan out Activity frames. It must also preserve this trusted chrome/input invariant without turning Greia into a desktop/window-manager environment.
 
 ---
 
@@ -432,6 +471,8 @@ A runtime adapter is responsible for:
 
 The platform above this adapter must not care whether the Activity was implemented in Python or Web technology.
 
+System Home/Back is deliberately above the runtime adapter rather than implemented separately by each runtime.
+
 ## 10. Python runtime family
 
 Python/Pygame is a first-class runtime.
@@ -448,6 +489,8 @@ Reasons:
 - fewer dependency conflicts;
 - simpler ARM/i386 portability;
 - predictable offline installation.
+
+Python Activities may use normal in-content navigation, but they do not draw or receive input authority over the real Greia system Home/Back region.
 
 ## 11. Web runtime family
 
@@ -478,6 +521,8 @@ The child should never see:
 
 The Web runtime should execute packaged local content inside a Greia-controlled fullscreen Activity surface.
 
+Greia system Home/Back remains outside the page/DOM. Web content cannot style, cover, remove or intercept it, and Greia Back is never mapped to arbitrary browser history.
+
 Network access is denied by default.
 
 ## 12. Web engine selection is still an evidence question
@@ -497,6 +542,7 @@ Selection requires real measurements on reference hardware for:
 - WebGL behavior;
 - crash recovery;
 - direct-display integration;
+- trusted Greia system-chrome integration;
 - i386 availability;
 - ARM64/Raspberry Pi behavior;
 - security-maintenance lifecycle.
@@ -573,6 +619,8 @@ scoring:
 ```
 
 This is **conceptual**, not the current Python manifest syntax. The semantic separation is architectural; `src/greia_platform/activities.py` and `runtime/child-runtime.toml` own the implemented contract.
+
+System Home/Back is intentionally absent from Activity manifest authority: an Activity does not request permission to show, hide or configure mandatory Greia system navigation.
 
 ## 16. Capability classes
 
@@ -908,7 +956,8 @@ Isolation should cover as appropriate:
 - device permissions;
 - parent-state access;
 - sibling Activity data;
-- privileged OS operations.
+- privileged OS operations;
+- the platform-owned system-navigation surface/input region.
 
 ## 38. Network denied by default
 
@@ -918,17 +967,21 @@ An ordinary offline Activity should not be able to silently become a tracking cl
 
 Network capability must be declared and mediated by policy.
 
-## 39. Child-safe crash behavior
+## 39. Child-safe crash and return behavior
 
 If an Activity crashes or hangs, Greia must reclaim control and return to a safe child-facing surface.
 
 A terminal traceback, browser error page, Linux crash dialog, or frozen black screen is not an acceptable normal failure experience.
 
-The platform owns the universal forced-return/watchdog mechanism; exact current source/evidence status belongs in `HANDOVER.md`.
+The platform owns the universal forced-return/watchdog mechanism.
+
+ADR 0019 additionally gives the child a universal learned route home while the Activity is visible: the Greia Home control is outside Activity rendering/input authority, requests graceful stop, and relies on the same platform forced-return path if the Activity does not cooperate.
+
+Exact current source/evidence status belongs in `HANDOVER.md`.
 
 ## 40. Fail closed
 
-If a security-critical sandbox, package verifier, privileged helper, or destructive-operation safety gate is unavailable, Greia should refuse the unsafe operation rather than silently falling back to a weaker path.
+If a security-critical sandbox, package verifier, privileged helper, destructive-operation safety gate, or production mandatory-system-chrome boundary is unavailable, Greia should refuse the unsafe operation rather than silently falling back to a weaker path.
 
 ---
 
@@ -964,7 +1017,7 @@ Rejected because it exposes implementation substrate, increases resource cost, f
 
 ## 44. Runtime-first platform
 
-Rejected because separate Python/Web install, save, progress, and parent systems would duplicate core logic and break portability.
+Rejected because separate Python/Web install, save, progress, parent, or system-navigation systems would duplicate core logic and break portability.
 
 ## 45. Per-Activity Python environments
 
@@ -990,6 +1043,10 @@ Rejected because child data must survive uninstall and restore even when the Act
 
 Rejected because interruption or a bad package can destroy the working installation.
 
+## 50.1 Activity-owned mandatory Home controls
+
+Rejected. A Python helper drawn by Activity code or a DOM element injected into Web content cannot satisfy the invariant because the Activity runtime would retain the ability to cover, restyle, intercept or otherwise interfere with it. Mandatory system navigation belongs to Greia's higher-trust display/input layer.
+
 ---
 
 # Part XVI — Open research and implementation questions
@@ -1003,15 +1060,16 @@ R7 requires evidence to select the exact shell/display architecture across old I
 Questions include:
 
 - SDL KMSDRM behavior on reference machines;
-- whether one tiny compositor materially improves Web runtime integration;
+- whether one tiny compositor/session broker materially improves trusted system-chrome ownership and Web runtime integration;
 - GPU fallback behavior;
 - mode switching and resolution control;
 - boot-to-shell continuity without architectural X11 dependence;
-- handling of multiple Activity surfaces if ever required.
+- how protected Home/Back input is consumed before Activity input;
+- handling of multiple Activity surfaces if ever genuinely required.
 
 ## 52. Web engine
 
-Need benchmarked comparison of WPE WebKit / WebKit variants and any other realistic embedded engines on required architectures.
+Need benchmarked comparison of WPE WebKit / WebKit variants and any other realistic embedded engines on required architectures, including integration beneath the external Greia system-chrome layer.
 
 ## 53. Boot cover
 
@@ -1025,9 +1083,18 @@ Need versioned format decisions and migration rules.
 
 Need signing-key lifecycle, community package policy, offline authenticity verification, rollback, and recovery design above the already implemented development/built-in trust-origin distinction.
 
-## 56. Activity forced-return input
+## 56. Trusted system-chrome backend evidence
 
-Need a universal child/parent emergency-return interaction that works across runtime families without interfering with educational gameplay.
+The Home/Back product semantics are settled by ADR 0019. R7 still needs evidence for the concrete backend that enforces them across real Activity content.
+
+Required evidence includes:
+
+- Home remains visible above arbitrary Activity rendering;
+- protected pointer/touch input is consumed before Activity delivery;
+- Home initiates graceful stop and still returns from an unresponsive Activity through the existing forced-return authority;
+- Back appears only from a valid Greia launch origin;
+- the layer has acceptable RAM/disk/process/FD/startup/input/render cost on the Acer floor;
+- future Web content cannot manipulate the system controls.
 
 ## 57. Capability classes
 
@@ -1043,7 +1110,7 @@ Raspberry Pi 400/500 must be first-class, but board/image details require their 
 
 ## 59. One-sentence architectural summary
 
-> **Greia is a console-like child operating environment centered on runtime-independent Activities, with platform-owned identity, lifecycle, storage, sessions, progression, installation, backup, permissions, parent controls, and hardware abstraction over a deliberately replaceable Linux/runtime/display substrate.**
+> **Greia is a console-like child operating environment centered on runtime-independent Activities, with platform-owned identity, lifecycle, storage, sessions, progression, installation, backup, permissions, parent controls, system navigation, and hardware abstraction over a deliberately replaceable Linux/runtime/display substrate.**
 
 ## 60. Core diagram
 
@@ -1068,7 +1135,14 @@ Raspberry Pi 400/500 must be first-class, but board/image details require their 
                      │         │         │
                      └─────────┼─────────┘
                                │
-                  Greia hardware/platform adapters
+                 Activity content surface
+                               │
+             ┌─────────────────┴─────────────────┐
+             │ Greia display/session authority  │
+             │ Home/Back + protected input      │
+             └─────────────────┬─────────────────┘
+                               │
+                  hardware/platform adapters
                                │
               ┌────────────────┼─────────────────┐
               │                │                 │
