@@ -190,6 +190,28 @@ class SystemChromeNavigationBridgeTests(unittest.TestCase):
         self.assertIs(request.action, SystemNavigationAction.BACK)
         self.assertEqual(stop.sessions, [session])
 
+    def test_bridge_is_one_request_bounded_across_generations(self) -> None:
+        backend = RecordingChromeBackend()
+        backend.actions.extend([SystemNavigationAction.HOME, SystemNavigationAction.HOME])
+        coordinator = SystemChromeCoordinator(backend)
+        stop = RecordingStopController()
+        bridge = SystemChromeNavigationBridge(coordinator, stop)  # type: ignore[arg-type]
+
+        first_lease = coordinator.prepare("session-a", back_available=False)
+        coordinator.activity_ready(first_lease)
+        bridge.poll(first_lease, FakeSession("session-a"))  # type: ignore[arg-type]
+        coordinator.activity_ended(first_lease)
+
+        second_lease = coordinator.prepare("session-b", back_available=False)
+        coordinator.activity_ready(second_lease)
+        with self.assertRaises(SystemChromeError):
+            bridge.poll(second_lease, FakeSession("session-b"))  # type: ignore[arg-type]
+
+        bridge.clear(first_lease)
+        request = bridge.poll(second_lease, FakeSession("session-b"))  # type: ignore[arg-type]
+        self.assertIsNotNone(request)
+        self.assertEqual(len(stop.sessions), 2)
+
     def test_bridge_rejects_cross_session_navigation(self) -> None:
         backend = RecordingChromeBackend()
         coordinator = SystemChromeCoordinator(backend)
