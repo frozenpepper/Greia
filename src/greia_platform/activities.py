@@ -208,7 +208,7 @@ class ActivityRegistry:
         ]
         if not matches:
             raise ActivityValidationError(f"activity is outside configured roots: {root}")
-        return max(matches, key=lambda item: len(source.root.parts))
+        return max(matches, key=lambda item: len(item.root.parts))
 
     def _validate_tree(self, root: Path) -> None:
         total = 0
