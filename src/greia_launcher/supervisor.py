@@ -840,6 +840,7 @@ class ActivitySupervisor:
                 "GREIA_ACTIVITY_ID": manifest.activity_id,
                 "GREIA_ACTIVITY_ROOT": str(manifest.root),
                 "GREIA_ACTIVITY_DATA_DIR": str(env_activity_data),
+                "GREIA_ACTIVITY_INPUT_PROFILE": manifest.input_profile,
                 "GREIA_RUNTIME_API": manifest.api_version,
                 "GREIA_ACTIVITY_CAPABILITIES": ",".join(sorted(authority.sdk_features)),
                 "GREIA_PACKAGE_TRUST": authority.package_trust.value,
