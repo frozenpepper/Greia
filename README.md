@@ -12,9 +12,9 @@ Greia deliberately targets constrained hardware, with the first-generation Acer 
 1. `AGENTS.md` — non-negotiable repository rules.
 2. `docs/DOCUMENTATION.md` — authority, ownership and freshness.
 3. `docs/architecture/GREIA_ARCHITECTURE.md` — living architecture synthesis.
-4. `docs/adr/` — accepted normative decisions; ADR 0018 owns the lightweight UI foundation and ADR 0019 owns platform-controlled Activity Home/Back navigation.
+4. `docs/adr/` — accepted normative decisions; ADR 0018 owns lightweight UI, ADR 0019 trusted Activity Home/Back, and ADR 0020 runtime-neutral input/controller support.
 5. `docs/engineering/ENGINEERING_FOUNDATIONS.md` — mandatory OOP, polymorphism, dependency, documentation and low-resource guidance.
-6. `docs/product/` — accepted child-facing requirements, including `ACTIVITY_SYSTEM_NAVIGATION.md`.
+6. `docs/product/` — accepted child-facing requirements, including Activity system navigation and input standards.
 7. `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md` — active implementation plan until closed.
 8. `HANDOVER.md` — exact current branch, evidence, blockers and next step.
 9. `docs/agents/GREIA_AGENT_OPERATIONS.md` — build/test-hardware operations.
@@ -24,7 +24,7 @@ Current verification counts, branch SHAs and hardware status belong in `HANDOVER
 
 ## Core model
 
-The stable product abstraction is **Activity**, independent of runtime. Greia owns profiles, storage, sessions, permissions, progression, backup, lifecycle and parent policy.
+The stable product abstraction is **Activity**, independent of runtime. Greia owns profiles, storage, sessions, permissions, progression, backup, lifecycle, standard input behavior and parent policy.
 
 The child UI is appliance-like, not desktop-like. ADR 0018 defines the small renderer-neutral vocabulary:
 
@@ -43,6 +43,14 @@ Every child-facing Activity must retain the same small Greia-owned **Home** affo
 
 The product requirement is `docs/product/ACTIVITY_SYSTEM_NAVIGATION.md`; ADR 0019 makes trusted system chrome and protected input an R7 display/session acceptance requirement. Renderer-neutral geometry/actions live in `src/greia_platform/system_chrome.py`, with the backend lifecycle seam in `src/greia_launcher/system_chrome.py`.
 
+### Learned input across Activities
+
+Controller/joystick support is part of Phase 0, but Activities do not code against controller brands or Linux device paths. ADR 0020 defines runtime-neutral interaction profiles such as `pointer`, `directional`, `game` and `text`.
+
+The simple game baseline is deliberately learnable: **arrow keys + Space** on keyboard, and **D-pad/left stick + south face button** on a controller. Pointer Activities can receive a Greia virtual pointer from the controller rather than becoming controller-specific. Keyboard, pointer, touch and controller can coexist.
+
+`src/greia_platform/input_core.py` owns current semantic mappings/dead-zone/virtual-pointer rules; `src/greia_platform/pygame_input.py` is a Pygame translation/trusted-controller helper. Physical controller authority and reserved system input remain Greia platform concerns, not ordinary Activity `/dev/input` access.
+
 ## Engineering standard
 
 Greia is intended to become a long-lived open-source project. Code must be easy to understand and extend: cohesive domain objects, narrow interfaces at real variation points, purposeful polymorphism, composition by default, explicit ownership/lifecycle, bounded resources, clean dependency direction, useful public docstrings, and tests at the narrowest meaningful layer.
@@ -54,6 +62,8 @@ The canonical guidance is `docs/engineering/ENGINEERING_FOUNDATIONS.md`.
 - Greia Shell, not Linux desktop UI, is the child-facing OS.
 - Activity is runtime-neutral.
 - Every Activity retains Greia-owned Home navigation outside Activity rendering/input authority.
+- Controller/joystick support and standard learned input semantics exist from Phase 0.
+- Ordinary Activities do not receive raw physical-input authority merely to support controllers.
 - Core operation is offline-first.
 - Durable child state is profile-scoped and architecture-neutral.
 - Privileged authority stays outside Activity processes.
@@ -76,7 +86,7 @@ GitHub-hosted execution is opt-in only and requires explicit owner authorization
 
 ## Repository map
 
-- `src/greia_platform/` — shared platform contracts/services/UI semantics, including system-chrome geometry/actions
+- `src/greia_platform/` — shared platform contracts/services/UI/input semantics, including system chrome and controller mapping
 - `src/greia_launcher/` — child Shell/session orchestration, including trusted system-chrome lifecycle
 - `src/greia_parent/` — parent authority surface
 - `src/greia_installer/` — graphical installer
