@@ -14,15 +14,17 @@ Before changing implementation or architecture, read:
 6. relevant narrower accepted ADRs, especially ADR 0013 for image composition and later ADRs for trust/runtime/storage/progression boundaries;
 7. **`docs/adr/0018-lightweight-ui-foundation.md` — mandatory lightweight Screen/Overlay/Collection UI architecture and low-resource UI rules**;
 8. **`docs/adr/0019-platform-owned-activity-system-navigation.md` — mandatory platform-owned Activity Home/Back chrome and protected-input architecture**;
-9. **`docs/engineering/ENGINEERING_FOUNDATIONS.md` — mandatory OOP, polymorphism, maintainability, dependency and performance guidance**;
-10. **`docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md` — mandatory first-user-ready-image writing and painting requirement**;
-11. **`docs/product/ACTIVITY_SYSTEM_NAVIGATION.md` — mandatory universal Home/Back child-navigation requirement**;
-12. **`docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md` — MANDATORY ACTIVE IMPLEMENTATION PLAN**;
-13. `HANDOVER.md`;
-14. **`docs/agents/GREIA_AGENT_OPERATIONS.md` — mandatory project/build/test-hardware operating manual for agents**;
-15. `skills/greia-activity-authoring/SKILL.md` whenever creating, modifying, reviewing, validating, optimizing, packaging, deploying, or testing an Activity;
-16. phase-specific testing/review documents referenced by `HANDOVER.md` or the active plan;
-17. `docs/plans/2026-08-06_PHASE0_BOOTABLE_VERTICAL_SLICE.md` only as historical/supporting Phase-0 context where it is not superseded.
+9. **`docs/adr/0020-runtime-neutral-input-profiles-and-controller-support.md` — mandatory runtime-neutral input profiles, controller support and physical-input authority**;
+10. **`docs/engineering/ENGINEERING_FOUNDATIONS.md` — mandatory OOP, polymorphism, maintainability, dependency and performance guidance**;
+11. **`docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md` — mandatory first-user-ready-image writing and painting requirement**;
+12. **`docs/product/ACTIVITY_SYSTEM_NAVIGATION.md` — mandatory universal Home/Back child-navigation requirement**;
+13. **`docs/product/ACTIVITY_INPUT_STANDARDS.md` — mandatory Phase-0 keyboard/pointer/touch/controller interaction standards**;
+14. **`docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md` — MANDATORY ACTIVE IMPLEMENTATION PLAN**;
+15. `HANDOVER.md`;
+16. **`docs/agents/GREIA_AGENT_OPERATIONS.md` — mandatory project/build/test-hardware operating manual for agents**;
+17. `skills/greia-activity-authoring/SKILL.md` whenever creating, modifying, reviewing, validating, optimizing, packaging, deploying, or testing an Activity;
+18. phase-specific testing/review documents referenced by `HANDOVER.md` or the active plan;
+19. `docs/plans/2026-08-06_PHASE0_BOOTABLE_VERTICAL_SLICE.md` only as historical/supporting Phase-0 context where it is not superseded.
 
 `docs/DOCUMENTATION.md` defines which document class owns which fact. In short:
 
@@ -45,7 +47,7 @@ After every substantive **implementation** turn:
 2. update `HANDOVER.md` with the exact current phase, implemented work, verification/evidence, blockers, and next exact step;
 3. run the verification required by the active phase before claiming it complete;
 4. update `docs/agents/GREIA_AGENT_OPERATIONS.md` if repository/build/test-hardware/remote-control procedure changed;
-5. update `skills/greia-activity-authoring/SKILL.md` in the same tranche whenever the Activity manifest/API/runtime policy/trust model/shared assets or UI canon/performance requirements/validation or deployment workflow changed;
+5. update `skills/greia-activity-authoring/SKILL.md` in the same tranche whenever the Activity manifest/API/runtime policy/trust model/shared assets or UI/input canon/performance requirements/validation or deployment workflow changed;
 6. update `docs/DOCUMENTATION.md` when documentation ownership/precedence/freshness rules change;
 7. update the applicable `docs/product/*` requirement when accepted child-facing product scope or UX changes materially;
 8. update `docs/engineering/ENGINEERING_FOUNDATIONS.md` when repository-wide implementation/extension rules change materially;
@@ -117,6 +119,7 @@ This capability is **development-only**:
 19. **Creative computing exists from the beginning.** The first user-ready Phase-0 Greia image must ship first-party built-in **writing/text-editing** and **painting/drawing** Activities. They must be simple, fast, cute, uncluttered and child-sized; writing defaults to large readable text; painting provides a large responsive canvas and a small tool set; both autosave profile-scoped creations through Greia Storage and expose no Linux file-management workflow. Exact product requirements live in `docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md`.
 20. **Greia UI is a lightweight appliance surface, not a desktop.** The common vocabulary is Screen → optional Overlay/Sheet → Panel/Card/Collection → Control. A Collection is a semantic child grouping, never a Linux filesystem folder. Do not introduce general-purpose draggable/resizable windows, taskbars, arbitrary z-order, or a desktop window manager. ADR 0018 owns the exact UI architecture.
 21. **Every child-facing Activity has immutable Greia system navigation.** Home is always present in the same protected location, outside Activity rendering/input authority, and always returns toward the Shell through Greia lifecycle authority. Greia may add Back beside it only for a meaningful Shell/Collection launch origin. Activities cannot hide, move, restyle, cover, intercept, disable or replace the real system controls. This applies equally to Python, Web and first-party Activities. Exact product behavior is in `docs/product/ACTIVITY_SYSTEM_NAVIGATION.md`; ADR 0019 owns the architecture.
+22. **Controller/joystick support and learned input standards exist from Phase 0.** Activities declare a runtime-neutral interaction profile (`navigation`, `pointer`, `directional`, `game`, `text`, or `hybrid`) rather than controller brands or raw button/device identifiers. Simple game-like Activities default to arrows + Space and D-pad/left-stick + south face button; pointer Activities may use a Greia virtual pointer; text Activities retain real text-key semantics. Keyboard, pointer, touch and controller can coexist. Physical controller ownership, dead zones, mapping and reserved system input are platform concerns; ordinary Activities must not gain raw `/dev/input` authority merely for controller support. Exact product behavior is in `docs/product/ACTIVITY_INPUT_STANDARDS.md`; ADR 0020 owns the architecture.
 
 ## Graphics and display direction
 
@@ -128,6 +131,8 @@ ADR 0014 makes the target direction direct/appliance-oriented around DRM/KMS and
 
 ADR 0019 adds a mandatory R7 acceptance property: the selected production display/session design must preserve a tiny Greia-owned Home/Back layer above the Activity surface and route input in its protected region to Greia before Activity input dispatch. A raw direct-ownership design that gives the Activity uncontested framebuffer/input authority is not sufficient by itself.
 
+ADR 0020 additionally requires the R7 input/session path to own controller devices, normalize controller input, intercept reserved system controls before Activity delivery, and feed the same interaction semantics to Python and future Web runtimes. Do not solve controller support by broadening ordinary Activity access to `/dev/input`.
+
 A tiny compositor/session broker may be selected when evidence shows it is the smallest reliable way to preserve trusted system chrome, safe surface ownership, transitions, crash recovery, Web-runtime integration, or input routing at acceptable RAM/disk/latency cost. “Desktop Linux normally uses it” is not a justification, and this requirement does not authorize desktop/window-manager features.
 
 ## Open-source architecture, OOP and maintainability
@@ -137,17 +142,17 @@ A tiny compositor/session broker may be selected when evidence shows it is the s
 Mandatory rules:
 
 - Model stable domain concepts, invariants, lifecycle and resource ownership with cohesive classes/dataclasses. Do not create classes merely to inflate abstraction count; small pure functions remain appropriate for local calculations.
-- At genuine variation points, define narrow typed protocols/abstract base classes and use polymorphic implementations. Runtime adapters, display/session backends, system-chrome backends, hardware adapters, storage implementations, UI Screens/Overlays/Controls and renderer-specific implementations are examples.
+- At genuine variation points, define narrow typed protocols/abstract base classes and use polymorphic implementations. Runtime adapters, display/session backends, system-chrome backends, input backends, hardware adapters, storage implementations, UI Screens/Overlays/Controls and renderer-specific implementations are examples.
 - Prefer polymorphic dispatch over repeated `if backend/type/runtime == ...` trees spread through callers when the branches represent substitutable implementations.
 - Prefer composition over inheritance. Use inheritance only where the subtype is genuinely substitutable for the base contract; avoid deep inheritance trees and mixin webs.
 - Keep interfaces narrow and dependencies explicit. Inject services/adapters at architecture seams rather than discovering them through mutable global state.
-- Every long-lived resource must have an obvious owner, bound and cleanup lifecycle. This includes subprocesses, threads, display leases, system-chrome leases, mounts, caches, histories, queues, surfaces and hardware authority.
+- Every long-lived resource must have an obvious owner, bound and cleanup lifecycle. This includes subprocesses, threads, display leases, system-chrome leases, controller handles, mounts, caches, histories, queues, surfaces and hardware authority.
 - Avoid god classes, giant cross-domain `manager` objects, circular dependencies, hidden globals, parallel implementations of existing platform services, and speculative general frameworks.
 - Public architectural classes/protocols/extension points require useful docstrings. Non-obvious algorithms require comments explaining **why**. Accepted extension seams must also be described in repository documentation.
 - Architecture and code organization must make it easy for outside contributors to locate the correct extension point without tracing unrelated subsystems.
 - Clean architecture never excuses wasteful runtime behavior. On Greia, explicit ownership, bounded structures and reusable services are also performance requirements.
 
-`docs/engineering/ENGINEERING_FOUNDATIONS.md` is mandatory implementation guidance for these rules. ADR 0018 applies them specifically to the lightweight UI foundation; ADR 0019 applies them to trusted Activity navigation chrome.
+`docs/engineering/ENGINEERING_FOUNDATIONS.md` is mandatory implementation guidance for these rules. ADR 0018 applies them specifically to the lightweight UI foundation; ADR 0019 applies them to trusted Activity navigation chrome; ADR 0020 applies them to runtime-neutral input and controller ownership.
 
 ## Engineering rules
 
@@ -155,11 +160,12 @@ Mandatory rules:
 - Image composition follows ADR 0013: declarative `build/profiles/*.toml` plus composable `build/package-sets/`. Never restore executable shell-sourced profiles or one universal dependency list.
 - Build profiles describe intended composition; runtime probing/certification remains authoritative for actual hardware capability.
 - Prefer typed dataclasses/protocols and dependency injection at architectural seams. Use polymorphism when multiple runtime/platform adapters genuinely exist.
-- Reuse existing systems before inventing parallel ones. Runtime-specific copies of storage, progression, backup, install/update, or parent policy are forbidden.
+- Reuse existing systems before inventing parallel ones. Runtime-specific copies of storage, progression, backup, install/update, parent policy, or standard input mapping are forbidden.
 - Child and installer processes invoke external commands with argument arrays and `shell=False`; never interpolate disk paths into shell command strings.
 - Never expose privileged operations directly to Activities.
 - Keep logs/caches bounded. Do not add persistent caches without explicit limits.
 - UI caches, histories, collection pages and animation/transient state must have explicit bounds appropriate to the Acer resource floor. Avoid per-frame image decoding, font construction, filesystem IO, or unnecessary off-screen Surfaces.
+- Controller/device ownership and reconnect state must be explicitly bounded; centralize dead zones, virtual-pointer behavior and common mappings rather than copying them into Activities.
 - Static Shell UI should move toward invalidation/event-driven redraw rather than continuously repainting unchanged content; do not weaken input responsiveness or animation correctness to achieve this.
 - Mandatory Activity system chrome must stay tiny and platform-owned; do not turn Home/Back into Activity widgets, DOM injection, or justification for a general compositor/window toolkit.
 - Use canonical asset IDs/catalogues rather than filesystem discovery as product logic.
@@ -168,7 +174,7 @@ Mandatory rules:
 - Preserve fail-closed Bubblewrap/namespace behavior until a replacement sandbox is evidence-accepted.
 - Do not claim source tests prove VM or physical-hardware behavior.
 - Do not turn conceptual examples in architecture docs into implementation without checking the current source/runtime contract.
-- First-party built-in Activities must obey the same platform lifecycle/storage/profile/display/session/system-chrome boundaries as other Activities; built-in status is not permission to bypass the architecture.
+- First-party built-in Activities must obey the same platform lifecycle/storage/profile/display/session/system-chrome/input boundaries as other Activities; built-in status is not permission to bypass the architecture.
 
 ## Greia technical identities
 
