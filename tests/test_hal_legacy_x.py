@@ -24,14 +24,30 @@ class _Runner:
         return subprocess.CompletedProcess(command, 1, "", "unsupported")
 
 
+class _ControllerProbe:
+    def __init__(self, available: bool):
+        self._available = available
+
+    def available(self) -> bool:
+        return self._available
+
+
 class LegacyXHALTests(unittest.TestCase):
     def test_input_capability_is_probed_not_inferred_from_display_environment(self) -> None:
         controller = LegacyXHardwareSessionController(_Runner())
         with patch.dict(os.environ, {}, clear=True):
-            state = LegacyXInputHAL(controller).probe()
+            state = LegacyXInputHAL(controller, _ControllerProbe(True)).probe()
         self.assertTrue(state.pointer)
         self.assertTrue(state.keyboard)
+        self.assertTrue(state.controller)
         self.assertEqual(state.backend, "legacy-x11")
+
+    def test_controller_absence_does_not_change_pointer_or_keyboard_capability(self) -> None:
+        controller = LegacyXHardwareSessionController(_Runner())
+        state = LegacyXInputHAL(controller, _ControllerProbe(False)).probe()
+        self.assertTrue(state.pointer)
+        self.assertTrue(state.keyboard)
+        self.assertFalse(state.controller)
 
     def test_generic_hal_module_contains_no_x_session_dependency(self) -> None:
         import greia_platform.hal as hal
