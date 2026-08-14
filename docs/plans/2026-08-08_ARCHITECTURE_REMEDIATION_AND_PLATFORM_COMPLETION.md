@@ -704,6 +704,15 @@ Do not rewrite old entries; append corrections.
 - Next exact step: on an owner-controlled current checkout, run `tests.test_ui_core`, `tests.test_ui_core_lifecycle`, `tests.test_activity_ui`, `tests.test_core_creation_activities`, `tests.test_activity_theme_access`, validate Writing/Painting, then `make verify`. Preserve first failure and do not weaken tests. Only after PASS should existing Shell/installer behavior migrate to shared primitives.
 - Commit(s): UI/engineering consolidation is preserved in branch history; resolve actual current HEAD from GitHub before execution.
 
+## 2026-08-15 — R7 platform-owned Activity system navigation contract
+
+- Implemented: accepted `docs/product/ACTIVITY_SYSTEM_NAVIGATION.md` and ADR 0019; added renderer-neutral mandatory Home/optional Back geometry and action contracts in `greia_platform.system_chrome`; added a backend-neutral exact-lease `SystemChromeCoordinator`; added `SystemChromeNavigationBridge` so validated platform chrome actions enter the existing Greia Activity stop lifecycle without runtime-specific exit logic; added canonical Pygame Home/Back glyph primitives; added focused regression source; updated AGENTS, documentation authority, engineering guidance, README, ADR 0018 and the Activity authoring skill.
+- Tests/evidence: new system-chrome and compatibility regression source is committed but has not executed in a real current checkout. No new PASS is claimed. The last genuinely executed complete source gate remains **232/232 PASS at `097f0281888a58f6f26425807ce99d9f35449313`**. There is no current trusted Xorg/compositor system-chrome runtime evidence.
+- Decisions: Home is mandatory Greia-owned chrome outside Activity rendering/input authority; Back, when available, means return to the Greia launch origin after ending the Activity and is not browser history or Activity-internal navigation. ADR 0019 narrows R7 closure: a production backend must preserve trusted Home above Activity content and consume protected-region input before Activity dispatch. Raw serial DRM/KMS ownership by the Activity cannot close R7 by itself unless another trusted layer preserves this invariant. A tiny Greia-owned compositor/session broker may be justified by this requirement, but no desktop/window-manager behavior is authorized.
+- Remaining blockers: run the focused/current source gate; implement and compose a concrete trusted `SystemChromeBackend` as part of R7; prove overlay/input authority and graceful/forced Home return against real Activity content; measure resource impact on the Acer floor; extend future Web acceptance so page content cannot manipulate system chrome.
+- Next exact step: execute `tests.test_system_chrome` with the existing UI/creative focused suite and current `make verify`. After source PASS, integrate the chrome coordinator beside `DisplaySessionCoordinator`, prototype the smallest trusted overlay/input backend, and preserve negative evidence rather than falling back to an Activity-drawn or DOM-injected button.
+- Commit(s): source/docs are preserved in branch history; resolve actual current HEAD from GitHub before execution.
+
 ---
 
 # 9. Final completion criteria
@@ -723,6 +732,7 @@ This plan may be marked complete only when:
 - Device Capability/HAL services are authoritative above board-specific adapters;
 - Python and Web, where supported, use common platform semantics;
 - direct graphics is accepted and X11 is not an unintended architectural requirement;
+- platform-owned Activity Home remains available outside Activity rendering/input authority across every supported runtime/backend;
 - Pi 400/500 and required x86 references have evidence-backed support status;
 - Activity install/update/rollback and child backup/restore satisfy parent workflows;
 - boot/recovery continuity meets the no-visible-Linux contract;
