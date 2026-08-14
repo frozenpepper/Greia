@@ -31,6 +31,8 @@ Screen
               └── Control
 ```
 
+Mandatory Activity Home/Back system navigation is deliberately **not** an Activity `Overlay` in this hierarchy. It belongs to the higher-trust platform presentation/input layer defined by ADR 0019 and remains outside Activity rendering and input authority.
+
 ### 2. Child grouping uses Collections, not filesystem folders
 
 A **Collection** is an ordered group of child-facing object references with stable semantic identity and optional presentation metadata.
@@ -43,7 +45,7 @@ Collections may group Activities, documents, paintings, settings choices, reward
 
 Greia source should be structured around cohesive domain objects with explicit ownership and narrow responsibilities.
 
-At genuine variation points, use typed interfaces/protocols/abstract base classes and polymorphic implementations rather than growing type/backend conditionals throughout callers. Examples include runtime adapters, display/session backends, hardware adapters, storage implementations, Screens, Overlays, controls, and renderer-specific UI implementations.
+At genuine variation points, use typed interfaces/protocols/abstract base classes and polymorphic implementations rather than growing type/backend conditionals throughout callers. Examples include runtime adapters, display/session backends, system-chrome backends, hardware adapters, storage implementations, Screens, Overlays, controls, and renderer-specific UI implementations.
 
 Composition is preferred over inheritance when behavior is assembled rather than specialized. Inheritance is appropriate when substitutability is real and enforced by a narrow base contract.
 
@@ -58,6 +60,8 @@ Greia's semantic concepts — Screen, Overlay, Collection, navigation, focus/act
 The current Python implementation may provide efficient Pygame-specific controls/rendering beneath those concepts. A future Web runtime may implement equivalent semantics differently without importing a Python/Pygame widget implementation.
 
 Therefore a first-party Pygame UI helper is not itself the universal Activity contract.
+
+ADR 0019 separately defines renderer-neutral **platform system chrome** above Activity runtime surfaces. An Activity-renderer implementation may share glyph primitives with the platform renderer, but the mandatory Home/Back controls themselves cannot be owned by Activity code.
 
 ### 5. Performance and bounded resources are part of UI correctness
 
@@ -78,6 +82,8 @@ Required rules:
 - Activities that need a different frame policy own that decision inside their supervised surface.
 
 Resource usage is an acceptance property, not a later optimization pass.
+
+Mandatory system chrome must likewise remain a tiny bounded presentation/input layer and must not become an excuse for a general retained desktop compositor or independent always-busy rendering framework.
 
 ### 6. The initial common vocabulary is intentionally small
 
@@ -111,6 +117,17 @@ src/greia_platform/activity_ui.py
 
 `ui_core.py` owns renderer-neutral semantic/navigation/resource primitives. `activity_ui.py` remains the current lightweight Pygame implementation used by first-party Python Activities and may consume those common primitives.
 
+Platform-wide Pygame consumers may use `src/greia_platform/pygame_ui.py` as the neutral import surface while existing Activity imports remain compatible.
+
+Mandatory Activity system navigation is owned separately by:
+
+```text
+src/greia_platform/system_chrome.py
+src/greia_launcher/system_chrome.py
+```
+
+under ADR 0019.
+
 Existing Shell/installer UI should migrate incrementally to these primitives when the migration removes real duplication or resource waste. Migration must preserve current product behavior and R7 display/session boundaries; this ADR does not select a compositor or change graphics ownership.
 
 ## Consequences
@@ -139,4 +156,5 @@ This ADR does not:
 - make Pygame the permanent universal renderer;
 - expose filesystem folders to children;
 - require every tiny draw helper to become a class;
+- make mandatory Activity system Home/Back an Activity-owned Overlay or widget;
 - authorize speculative framework growth before real consumers exist.
