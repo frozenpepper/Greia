@@ -214,8 +214,9 @@ class SystemChromeNavigationBridge:
     """Translate trusted chrome input into Greia's existing stop lifecycle.
 
     Home and Back both end the current Activity through the same authoritative
-    lifecycle. The returned action is retained for the Shell to choose the
-    post-Activity destination; the Activity never receives or vetoes it.
+    lifecycle. Exactly one navigation request can be retained because Greia
+    permits one active Activity; this keeps the bridge naturally hard-bounded.
+    The Activity never receives or vetoes the navigation intent.
     """
 
     def __init__(
@@ -225,7 +226,7 @@ class SystemChromeNavigationBridge:
     ) -> None:
         self._coordinator = coordinator
         self._stop_controller = stop_controller
-        self._requests: dict[int, SystemNavigationRequest] = {}
+        self._request: tuple[int, SystemNavigationRequest] | None = None
 
     def poll(
         self,
@@ -234,21 +235,24 @@ class SystemChromeNavigationBridge:
     ) -> SystemNavigationRequest | None:
         if session.session_id != lease.session_id:
             raise SystemChromeError("system chrome lease/session identity mismatch")
-        existing = self._requests.get(lease.generation)
-        if existing is not None:
-            return existing
+        if self._request is not None:
+            generation, existing = self._request
+            if generation == lease.generation:
+                return existing
+            raise SystemChromeError("uncleared system navigation request from older generation")
         action = self._coordinator.poll_action(lease)
         if action is None:
             return None
         request = SystemNavigationRequest(session.session_id, action)
-        self._requests[lease.generation] = request
+        self._request = (lease.generation, request)
         self._stop_controller.request_stop(session)
         return request
 
     def clear(self, lease: SystemChromeLease) -> None:
         """Retire the remembered navigation request after Activity cleanup."""
 
-        self._requests.pop(lease.generation, None)
+        if self._request is not None and self._request[0] == lease.generation:
+            self._request = None
 
 
 def _session_id(value: str) -> str:
