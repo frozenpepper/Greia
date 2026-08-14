@@ -25,7 +25,7 @@ Performance and maintainability are not competing goals. On Greia, unnecessary a
 
 ### Model stable concepts as objects
 
-Prefer classes/dataclasses for stable concepts that own invariants, state, lifecycle or behavior. Examples include Activity manifests, profile contexts, storage/session objects, display backends, UI Screens, Collections, runtime adapters, hardware adapters and bounded caches.
+Prefer classes/dataclasses for stable concepts that own invariants, state, lifecycle or behavior. Examples include Activity manifests, profile contexts, storage/session objects, display backends, system-chrome coordinators, UI Screens, Collections, runtime adapters, hardware adapters and bounded caches.
 
 Do not create classes merely to wrap one stateless function. Small pure functions remain appropriate for local calculations and transformations.
 
@@ -39,6 +39,9 @@ Good examples:
 DisplaySessionBackend
   ├── LegacyXDisplaySessionBackend
   └── future direct/compositor backend
+
+SystemChromeBackend
+  └── future selected trusted overlay/input backend
 
 RuntimeAdapter
   ├── PythonRuntimeAdapter
@@ -74,7 +77,7 @@ A protocol/base class should expose only what callers need. Do not create univer
 
 ### Make ownership obvious
 
-Long-lived resources must have an identifiable owner and cleanup path. This includes subprocesses, display leases, storage sessions, temporary mounts, threads, caches, renderer surfaces and hardware authority.
+Long-lived resources must have an identifiable owner and cleanup path. This includes subprocesses, display leases, system-chrome leases, storage sessions, temporary mounts, threads, caches, renderer surfaces and hardware authority.
 
 Global mutable singletons are strongly discouraged. Pass dependencies explicitly at architectural seams.
 
@@ -109,7 +112,7 @@ Circular package dependencies are architecture defects unless there is an except
 
 ## 4. UI architecture
 
-ADR 0018 owns the lightweight UI architecture.
+ADR 0018 owns the lightweight UI architecture. ADR 0019 owns platform-controlled Activity Home/Back chrome.
 
 Core semantic vocabulary:
 
@@ -125,7 +128,23 @@ BoundedCache
 
 A Screen is the full logical surface. Overlay/Sheet is bounded transient UI. Collection is the child-facing grouping abstraction and is not a filesystem folder.
 
-Current renderer-specific Pygame helpers live beneath those semantics. Future Web/native renderers can implement the same concepts independently.
+### Trusted Activity system chrome
+
+System Home/Back is **not an Activity Overlay** and is not an Activity widget. It belongs to a higher-trust display/input layer above the Activity surface.
+
+The architecture must preserve this dependency direction:
+
+```text
+Greia display/session authority
+├── SystemChromeBackend / protected input
+└── Activity runtime surface
+```
+
+Do not implement mandatory Home by asking Python Activities to draw a helper or by injecting a removable DOM element into Web content. That would invert ownership and violate ADR 0019.
+
+`src/greia_platform/system_chrome.py` owns renderer-neutral geometry/actions. `src/greia_launcher/system_chrome.py` owns the backend-neutral trusted chrome lifecycle seam. Concrete display/input implementations remain below those contracts.
+
+Current renderer-specific Pygame helpers live beneath UI semantics. Future Web/native renderers can implement equivalent ordinary Activity UI concepts independently, while system chrome remains outside Activity authority entirely.
 
 Do not create a desktop/window-manager abstraction, general retained scene graph, DOM clone or giant widget toolkit without a new evidence-backed architecture decision.
 
@@ -155,6 +174,8 @@ Prefer shared `BoundedCache` for general LRU-style UI resource caches rather tha
 Static screens should eventually render on invalidation/input rather than burning a continuous frame loop while nothing changes.
 
 Animations must be explicit, bounded and useful. Ordinary Shell animation should target at most about 30 Hz unless measurement shows a higher rate is needed.
+
+The mandatory Activity Home/Back layer must stay tiny: one protected region, no general window tree, no independent high-frequency animation loop unless measurement proves one necessary. System chrome is not justification for a desktop compositor.
 
 ### Collections
 
@@ -187,14 +208,17 @@ Test contracts at the narrowest useful layer.
 Prefer pure/provider-free tests for:
 
 - paging/layout calculations;
+- system-chrome protected geometry/action routing;
 - state machines;
-- lifecycle sequencing;
+- lifecycle sequencing and stale-lease rejection;
 - resource/cache bounds;
 - serialization/validation;
 - polymorphic dispatch behavior;
 - failure/rollback invariants.
 
 Then use VM/physical tests only for behavior that actually depends on the environment, display stack, hardware, timing or device drivers.
+
+For ADR 0019 specifically, pure tests can prove geometry/coordinator contracts but **cannot** prove that an Activity cannot cover chrome or receive protected input. That requires real backend/runtime evidence.
 
 Do not replace hardware evidence with mocks, and do not make unit tests unnecessarily dependent on hardware.
 
@@ -214,6 +238,7 @@ A substantive code review should ask:
 10. Are failure paths and rollback semantics tested?
 11. Does the change preserve architecture neutrality across runtimes and hardware?
 12. Does the code stay simple enough for the problem actually being solved?
+13. For Activity presentation/input changes, can Greia still preserve mandatory Home independently of Activity cooperation?
 
 ## 9. Anti-patterns
 
@@ -225,6 +250,7 @@ Avoid:
 - speculative generic frameworks;
 - stringly-typed backend dispatch scattered across the codebase;
 - copy/pasted runtime/platform service implementations;
+- Activity-drawn or DOM-injected mandatory system Home controls;
 - unbounded dictionaries used as caches;
 - per-frame file/image/font construction;
 - hidden filesystem paths as product semantics;
