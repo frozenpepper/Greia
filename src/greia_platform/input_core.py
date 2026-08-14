@@ -52,6 +52,15 @@ class PhysicalControl(StrEnum):
     CONTROLLER_GUIDE = "controller_guide"
 
 
+class ControllerAxis(StrEnum):
+    LEFT_X = "left_x"
+    LEFT_Y = "left_y"
+    RIGHT_X = "right_x"
+    RIGHT_Y = "right_y"
+    LEFT_TRIGGER = "left_trigger"
+    RIGHT_TRIGGER = "right_trigger"
+
+
 class SemanticAction(StrEnum):
     """Portable Activity intents produced by Greia's standard mappings."""
 
@@ -158,6 +167,7 @@ _DIRECTIONAL_MAP = {
 _GAME_MAP = {
     **_DIRECTIONAL_MAP,
     PhysicalControl.CONTROLLER_FACE_EAST: SemanticAction.SECONDARY,
+    PhysicalControl.CONTROLLER_BACK: SemanticAction.CANCEL,
 }
 
 _POINTER_MAP = {
