@@ -20,6 +20,9 @@ type = "python"
 api_version = "0.1"
 entrypoint = "main.py"
 
+[input]
+profile = "pointer"
+
 [requirements]
 required_capabilities = ["display", "pointer"]
 optional_capabilities = ["touch"]
