@@ -1,7 +1,7 @@
 # Greia OS
 
 **Stage:** early platform development (`0.13.x`)  
-**Docs reviewed:** 2026-08-13
+**Docs reviewed:** 2026-08-15
 
 Greia is a non-profit, open-source, Activity-first computing platform for young children. Linux is the substrate; **Greia Shell is the operating-system experience**. Normal child use must not expose a desktop, terminal, login prompt, package manager, filesystem browser, browser chrome, generic window manager, or boot text.
 
@@ -12,9 +12,9 @@ Greia deliberately targets constrained hardware, with the first-generation Acer 
 1. `AGENTS.md` — non-negotiable repository rules.
 2. `docs/DOCUMENTATION.md` — authority, ownership and freshness.
 3. `docs/architecture/GREIA_ARCHITECTURE.md` — living architecture synthesis.
-4. `docs/adr/` — accepted normative decisions; ADR 0018 owns the lightweight UI foundation.
+4. `docs/adr/` — accepted normative decisions; ADR 0018 owns the lightweight UI foundation and ADR 0019 owns platform-controlled Activity Home/Back navigation.
 5. `docs/engineering/ENGINEERING_FOUNDATIONS.md` — mandatory OOP, polymorphism, dependency, documentation and low-resource guidance.
-6. `docs/product/` — accepted child-facing requirements.
+6. `docs/product/` — accepted child-facing requirements, including `ACTIVITY_SYSTEM_NAVIGATION.md`.
 7. `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md` — active implementation plan until closed.
 8. `HANDOVER.md` — exact current branch, evidence, blockers and next step.
 9. `docs/agents/GREIA_AGENT_OPERATIONS.md` — build/test-hardware operations.
@@ -37,6 +37,12 @@ Screen
 
 A child-visible “folder” is a semantic `Collection`, never a Linux path. `src/greia_platform/ui_core.py` owns renderer-neutral UI semantics/navigation/resource bounds. New shared Pygame consumers import `src/greia_platform/pygame_ui.py`; existing first-party Activities retain `activity_ui.py` as the compatibility implementation surface. This is deliberately not a universal widget framework.
 
+### Universal way home
+
+Every child-facing Activity must retain the same small Greia-owned **Home** affordance in the same place. Activity code cannot hide, restyle, cover, intercept or disable it. Home ends the Activity through Greia's authoritative lifecycle and returns to the child Shell. Greia may also show a platform-owned **Back** control when there is a meaningful previous Greia screen/Collection; it is never browser history or Activity-defined navigation.
+
+The product requirement is `docs/product/ACTIVITY_SYSTEM_NAVIGATION.md`; ADR 0019 makes trusted system chrome and protected input an R7 display/session acceptance requirement. Renderer-neutral geometry/actions live in `src/greia_platform/system_chrome.py`, with the backend lifecycle seam in `src/greia_launcher/system_chrome.py`.
+
 ## Engineering standard
 
 Greia is intended to become a long-lived open-source project. Code must be easy to understand and extend: cohesive domain objects, narrow interfaces at real variation points, purposeful polymorphism, composition by default, explicit ownership/lifecycle, bounded resources, clean dependency direction, useful public docstrings, and tests at the narrowest meaningful layer.
@@ -47,6 +53,7 @@ The canonical guidance is `docs/engineering/ENGINEERING_FOUNDATIONS.md`.
 
 - Greia Shell, not Linux desktop UI, is the child-facing OS.
 - Activity is runtime-neutral.
+- Every Activity retains Greia-owned Home navigation outside Activity rendering/input authority.
 - Core operation is offline-first.
 - Durable child state is profile-scoped and architecture-neutral.
 - Privileged authority stays outside Activity processes.
@@ -69,8 +76,8 @@ GitHub-hosted execution is opt-in only and requires explicit owner authorization
 
 ## Repository map
 
-- `src/greia_platform/` — shared platform contracts/services/UI semantics
-- `src/greia_launcher/` — child Shell/session orchestration
+- `src/greia_platform/` — shared platform contracts/services/UI semantics, including system-chrome geometry/actions
+- `src/greia_launcher/` — child Shell/session orchestration, including trusted system-chrome lifecycle
 - `src/greia_parent/` — parent authority surface
 - `src/greia_installer/` — graphical installer
 - `activities/` — curated built-in Activities
