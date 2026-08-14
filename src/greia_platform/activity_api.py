@@ -15,6 +15,7 @@ from .customization import (
     WallpaperImporter,
 )
 from .event_client import ActivityEventClient, ActivityEventReceipt
+from .input_core import InteractionProfile, parse_interaction_profile
 from .profiles import ProfilePolicy, write_avatar_request
 from .storage_client import ActivityStorageClient
 
@@ -85,6 +86,21 @@ def get_events() -> ActivityEventClient:
     """Return this launch's runtime-neutral validated Activity event client."""
 
     return ActivityEventClient.from_environment()
+
+
+def get_input_profile() -> InteractionProfile:
+    """Return the platform-validated default interaction profile for this launch.
+
+    This is descriptive Activity context, not input-device authority. Physical
+    devices and reserved Greia system navigation remain owned above the Activity
+    runtime; renderer/runtime adapters use the same profile vocabulary.
+    """
+
+    raw = os.environ.get(
+        "GREIA_ACTIVITY_INPUT_PROFILE",
+        InteractionProfile.HYBRID.value,
+    )
+    return parse_interaction_profile(raw)
 
 
 def emit_activity_event(
