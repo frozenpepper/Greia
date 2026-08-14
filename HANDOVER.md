@@ -1,39 +1,24 @@
 # Greia — Standalone Engineering Handover
 
-**Date:** 2026-08-13  
+**Date:** 2026-08-15  
 **Version family:** `0.13.x` development  
 **Repository:** `frozenpepper/Greia` (private)  
 **Integration target:** `main`  
 **Active branch:** `r7-direct-graphics`  
 **Draft PR:** #4  
-**Blocking architecture phase:** **R7 — Direct graphics/session architecture**
+**Blocking phase:** **R7 — Direct graphics/session architecture**
 
-## 1. Resume order
+## Resume order
 
-Read:
-
-1. `AGENTS.md`;
-2. `README.md`;
-3. `docs/DOCUMENTATION.md`;
-4. `docs/architecture/GREIA_ARCHITECTURE.md`;
-5. relevant accepted ADRs, especially ADR 0012–0018;
-6. `docs/engineering/ENGINEERING_FOUNDATIONS.md`;
-7. relevant `docs/product/*` requirement;
-8. `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`;
-9. this file;
-10. `docs/agents/GREIA_AGENT_OPERATIONS.md`;
-11. `skills/greia-activity-authoring/SKILL.md` for Activity work;
-12. applicable `docs/testing/*` procedure.
+Read `AGENTS.md`, `README.md`, `docs/DOCUMENTATION.md`, the architecture synthesis, relevant accepted ADRs through ADR 0019, `docs/engineering/ENGINEERING_FOUNDATIONS.md`, applicable product requirements, the active remediation plan, this handover, agent operations, the Activity authoring skill, and the applicable testing procedure.
 
 GitHub is canonical. Resolve actual branch HEAD before editing/testing.
 
-## 2. Hosted-execution rule
+## Hosted execution
 
-Do **not** use/query/trigger/rerun GitHub Actions without explicit repository-owner authorization for that specific hosted use. Repository source reads/writes/commits/PR discussion remain expected.
+Do **not** use, query, trigger or rerun GitHub Actions without explicit owner authorization for that specific hosted use. Repository source/PR operations remain allowed. No Actions service was used in this tranche.
 
-No GitHub Actions execution/query service was used in the 2026-08-13 consolidation.
-
-## 3. Verification boundary
+## Verification boundary
 
 Last complete source gate genuinely executed:
 
@@ -45,212 +30,140 @@ bundled Activity validation: PASS
 source/shell/footprint gate: PASS
 ```
 
-Earlier focused evidence:
+Everything newer is **UNPROVEN** unless explicitly recorded otherwise. No new PASS is claimed for the current UI, creative or system-chrome source.
+
+## Mandatory Activity system navigation
+
+Accepted product requirement:
 
 ```text
-DisplaySessionCoordinator fixture: 22 / 22 PASS
-compositor-package pure logic:     14 / 14 PASS
-serial fake-SDL/process:            8 / 8 PASS before later strengthening
+docs/product/ACTIVITY_SYSTEM_NAVIGATION.md
 ```
 
-Everything newer is **UNPROVEN** unless explicitly recorded otherwise. No new PASS is claimed for the UI/creative/consolidation source.
-
-## 4. Repository consolidation completed
-
-The repository now has one discoverable authority chain:
+Normative architecture:
 
 ```text
-AGENTS.md
-  ↓
-docs/DOCUMENTATION.md
-  ↓
-accepted ADRs + docs/engineering/ENGINEERING_FOUNDATIONS.md
-  ↓
-source/runtime contract owner
-  ↓
-HANDOVER.md for current evidence/state
+docs/adr/0019-platform-owned-activity-system-navigation.md
 ```
 
-The active plan now contains the missing 2026-08-13 consolidation progress entry; the former “plan append debt” is closed.
+Permanent behavior:
 
-README is now a stable landing page rather than a duplicate handover. The Activity skill is a concise derived manual that points to canonical source/architecture owners instead of repeating broad architecture prose.
-
-## 5. Permanent engineering contract
-
-`AGENTS.md` and `docs/engineering/ENGINEERING_FOUNDATIONS.md` require:
-
-- cohesive OOP domain structure around real concepts/invariants;
-- purposeful polymorphism at genuine variation points;
-- narrow typed interfaces/ABCs/protocols;
-- composition by default; inheritance only for real substitutability;
-- explicit dependency direction and lifecycle/resource ownership;
-- no god classes or duplicated backend/runtime service stacks;
-- bounded caches, histories, queues and transient state;
-- low-allocation/hot-path discipline;
-- useful public docstrings and discoverable extension points;
-- tests at the narrowest meaningful layer;
-- simple abstractions justified by real consumers rather than speculative framework growth.
-
-Strong OOP does not mean maximizing class count.
-
-## 6. Lightweight UI foundation — ADR 0018
-
-Normative decision:
-
-```text
-docs/adr/0018-lightweight-ui-foundation.md
-```
-
-Greia UI vocabulary:
-
-```text
-Screen
-  └── optional Overlay / Sheet
-        └── Panel / Card / Collection
-              └── Control
-```
-
-A child-visible “folder” is a semantic `Collection`, never a Linux path. Greia does not introduce a conventional desktop/window-manager model.
+- **Home is mandatory** whenever a child-facing Activity is visible.
+- Home uses one stable Greia location/graphic with a child-sized hit target.
+- Home is outside Activity rendering and input authority.
+- Activity code cannot hide, move, restyle, cover, disable, replace or intercept the real Home control.
+- Home ends the Activity through Greia lifecycle authority: graceful STOP first, then bounded forced return when required.
+- **Back is optional Greia navigation**, shown only when Greia has a distinct previous Shell/Collection launch origin.
+- Back ends the Activity and returns to that Greia origin. It is not browser history or Activity-internal navigation.
+- first-party Activities receive no exemption.
 
 Renderer-neutral source:
 
 ```text
-src/greia_platform/ui_core.py
+src/greia_platform/system_chrome.py
 ```
 
-Current contracts:
+Current source owns:
 
 ```text
-UiEventResult
-UiSurface
-Screen
-Overlay
-Control
-Collection[T]
-GridPage
-PagedGrid
-BoundedCache[K,V]
-InvalidationTracker
-SurfaceNavigator
+SystemNavigationAction.HOME
+SystemNavigationAction.BACK
+UiRect
+ActivitySystemChromeLayout
 ```
 
-`ui_core.py` imports no Pygame.
-
-## 7. Current Pygame helper consolidation
-
-Current single implementation remains:
+At 1024×600 the current layout is approximately:
 
 ```text
-src/greia_platform/activity_ui.py
+Home hit target: 60×60 px
+Back hit target: 60×60 px
+visible glyph:   36 px
+protected area:  about 142×76 px, top-left
 ```
 
-Platform-wide import name for new shared Pygame consumers:
+The complete Home+Back footprint remains reserved even when Back is absent.
+
+Backend-neutral lifecycle seam:
 
 ```text
-src/greia_platform/pygame_ui.py
+src/greia_launcher/system_chrome.py
 ```
 
-`pygame_ui.py` re-exports the existing implementation; there is **no duplicate helper implementation**. Existing Writing/Painting imports therefore remain stable.
+It defines `SystemChromeBackend`, `SystemChromeCoordinator`, exact-generation leases/snapshots and fail-closed action validation.
 
-After focused/current tests pass, the compatibility direction may be flipped mechanically so `pygame_ui.py` physically owns the renderer implementation and `activity_ui.py` becomes the historical Activity compatibility façade. Do not combine that rename with new framework behavior.
+Canonical Pygame glyph helpers now include `draw_home_symbol` and `draw_back_symbol`, exposed through `pygame_ui.py` and the current `activity_ui.py` compatibility implementation.
 
-The current icon cache is hard-bounded through `ui_core.BoundedCache`.
+## Critical runtime boundary
 
-## 8. UI regression source
+**No concrete production `SystemChromeBackend` exists yet, and the current installed Xorg/xinit path does not yet compose the new coordinator.**
 
-Committed source includes:
+Therefore no claim is made yet that a real Activity cannot cover/intercept Home, that protected input is withheld from Python/Web content, or that Home has been exercised against a frozen Activity on target hardware.
+
+This is intentional. Drawing Home inside a Python Activity or injecting it into Web content would violate ADR 0019 even if it looked correct.
+
+R7 must provide:
 
 ```text
-tests/test_ui_core.py
-tests/test_ui_core_lifecycle.py
+Greia display/session authority
+├── mandatory Home / optional Back + protected input
+└── Activity surface
+    ├── Python/Pygame
+    ├── future Web/HTML
+    └── future runtimes
+```
+
+A serial direct-DRM design giving the Activity uncontested framebuffer/input ownership cannot close production R7 unless another trusted layer preserves the system chrome and protected input.
+
+## System-chrome regression source
+
+Committed but unexecuted:
+
+```text
+tests/test_system_chrome.py
 tests/test_activity_ui.py
 ```
 
-Coverage includes polymorphic Screen/Overlay lifecycle/event routing, modal/non-modal behavior, bounded overlay depth, semantic Collection behavior, deterministic paging, bounded LRU caching, cache replacement edge cases, invalidation state, child metrics and color helpers.
+Coverage includes fixed Home geometry, reserved Back footprint, Back availability, child-sized hit geometry, coordinator lifecycle, Home action independent of Activity participation, invalid Back rejection and stale-lease rejection.
 
-These tests are unexecuted in the current evidence boundary.
+Pure tests cannot prove real display/input isolation; that requires backend/runtime evidence.
 
-## 9. Phase-0 Writing and Painting
+## UI/OOP foundation
 
-Mandatory product contract:
+ADR 0018 remains the lightweight UI foundation. `src/greia_platform/ui_core.py` owns renderer-neutral Screen/Overlay/Control/Collection/PagedGrid/BoundedCache/Invalidation/SurfaceNavigator semantics. Mandatory system Home/Back is explicitly **not** an Activity Overlay; ADR 0019 places it at a higher trust layer.
 
-```text
-docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md
-```
+`docs/engineering/ENGINEERING_FOUNDATIONS.md` remains mandatory: cohesive OOP concepts, purposeful polymorphism, composition-first design, explicit dependencies/lifecycles, bounded resources, simple extension seams and useful public documentation.
 
-Stable IDs:
+## Phase-0 creative Activities
 
-```text
-org.greia.writing
-org.greia.painting
-```
+Writing (`org.greia.writing`) and Painting (`org.greia.painting`) remain source-implemented but execution/hardware-unproven. They receive no exemption from ADR 0019.
 
-Both source tranches exist and remain execution/hardware-unproven.
-
-Writing includes large Unicode text, wrapping/caret/navigation, bounded inverse-edit undo, visual gallery and debounced profile-scoped UTF-8 saving.
-
-Painting includes a large raster canvas, fixed cheerful palette, three brush sizes, eraser, bounded stroke undo, visual gallery and debounced profile-scoped PNG saving.
-
-No Linux file-management workflow is exposed.
-
-## 10. Safe UI migration boundary
-
-Existing Shell and installer still contain local/procedural UI code. They were deliberately not big-bang rewritten before the new common tests execute.
-
-After focused/current PASS, migrate incrementally:
-
-1. Shell-local grid paging → `ui_core.PagedGrid`;
-2. Shell icon/font caches → explicit bounded cache ownership;
-3. installer icon/font caches → same bounded resource model;
-4. installer font construction out of per-frame draw path;
-5. Shell modes → concrete `Screen` / `Overlay` implementations;
-6. static Shell loop → invalidation/event-driven idle rendering, with visual/input/performance acceptance.
-
-Do not rewrite all Shell/installer UI in one tranche.
-
-## 11. R7 remains blocking
-
-Production graphics/session state remains:
+## R7 production state
 
 ```text
 installed path:         Xorg + xinit compatibility
 status:                 PROVISIONAL
 production compositor:  none selected
 serial direct DRM:      evidence candidate only
+trusted system chrome:  source contract/seam implemented; concrete backend UNPROVEN
 ```
 
-Do not make `ActivitySupervisor` DRM owner, grant ordinary Activities raw DRM/input authority, remove current X-compatibility concessions before a replacement is accepted, or select a compositor without evidence.
+R7 production acceptance now also requires:
 
-Relevant evidence protocol:
+- platform Home rendered above arbitrary Activity content;
+- protected Home/Back input consumed before Activity input;
+- Activity cannot suppress or replace Home;
+- Home graceful-stop plus forced-return behavior for an unresponsive Activity;
+- identical external system-chrome semantics for future Web runtime;
+- measured resource cost on the Acer floor;
+- no desktop/window-manager creep.
 
-```text
-docs/testing/2026-08-09_R7_EXTERNAL_LINUX_EVIDENCE_EXECUTION.md
-```
-
-## 12. Developer remote path
-
-Developer-only profile and client:
-
-```text
-build/profiles/modern-amd64-dev.toml
-tools/greia_remote.py
-```
-
-Trust separation remains:
-
-```text
-/opt/greia-os/activities                 BUILT_IN
-/var/lib/greia-developer/activities      DEVELOPER_UNSIGNED
-```
-
-Developer-remote tests/image/physical behavior remain unexecuted/unproven.
-
-## 13. Exact next source verification
+## Exact next source verification
 
 On an owner-controlled current Linux checkout:
 
 ```bash
 PYTHONPATH=src python3 -m unittest \
+  tests.test_system_chrome \
   tests.test_ui_core \
   tests.test_ui_core_lifecycle \
   tests.test_activity_ui \
@@ -269,36 +182,36 @@ PYTHONPATH=src python3 -m unittest discover \
 make verify
 ```
 
-Stop on first real failure and preserve exact stdout/stderr. Do not weaken tests/contracts to manufacture PASS.
+Stop on first real failure and preserve exact stdout/stderr. Do not weaken contracts to manufacture PASS.
 
-Only after this gate should existing Shell/installer UI behavior migrate onto the common primitives.
+## Next system-chrome/R7 implementation
 
-## 14. Exact next R7 evidence
+After source PASS:
 
-On the approved disposable/root-safe Linux environment:
+1. compose `SystemChromeCoordinator` into installed Activity lifecycle beside `DisplaySessionCoordinator`, without making `ActivitySupervisor` a renderer;
+2. implement/prototype the smallest trusted R7 overlay/input backend;
+3. route Home into the existing authoritative `ActivitySupervisor.request_stop()` path;
+4. preserve a Greia launch-origin token for optional Back; the current flat Activity catalogue has no distinct nested origin, so Back should remain unavailable there;
+5. prove overlay/input authority with real Python Activity content;
+6. measure resource cost versus current Xorg and direct-ownership candidates on the Acer floor;
+7. later reuse the same external layer for Web rather than adding DOM controls.
 
-```bash
-SOURCE_SHA="$(git rev-parse HEAD)"
-RUN_ROOT="/var/tmp/greia-r7-${SOURCE_SHA}"
-python3 tools/r7_local_evidence.py --run-root "$RUN_ROOT" --plan-only
-sudo -E python3 tools/r7_local_evidence.py --run-root "$RUN_ROOT"
-```
+Once a production backend is selected, installed composition should fail closed if mandatory Home cannot be prepared/preserved.
 
-Preserve first failure and the complete run root. Do not rerun merely to manufacture PASS.
+## Existing R7 evidence
 
-## 15. Invariants
+Use the existing local protocol in `docs/testing/2026-08-09_R7_EXTERNAL_LINUX_EVIDENCE_EXECUTION.md`. Its existing scanout evidence predates ADR 0019 and therefore cannot by itself close the new trusted-chrome requirement.
+
+## Invariants
 
 - no visible Linux UI in normal child operation;
-- explicit Greia child profiles;
 - Activity remains runtime-neutral;
+- every child-facing Activity retains Greia-owned Home outside Activity rendering/input authority;
+- Greia Back, when shown, returns to Greia launch origin and is not browser history;
 - progression/rewards remain platform-owned;
-- child state remains portable and profile-scoped;
-- Acer remains the extreme resource floor;
-- ARM is co-equal, not a later port;
+- child state remains portable/profile-scoped;
+- Acer remains the extreme resource floor and ARM remains co-equal;
 - no unauthorized hosted execution;
 - no desktop/window-manager architecture;
-- no child-facing filesystem paths;
-- strong OOP/polymorphic seams with composition-first design;
-- explicit bounded resources and cleanup;
-- architecture/docs remain understandable without chat history;
-- source/VM/physical evidence boundaries remain honest.
+- strong OOP/polymorphic seams with bounded resource ownership;
+- source/VM/physical evidence boundaries remain explicit and honest.
