@@ -8,8 +8,10 @@ this module; existing Activities may keep importing `activity_ui`.
 from .activity_ui import (
     ChildUiMetrics,
     clear_icon_cache,
+    draw_back_symbol,
     draw_eraser_symbol,
     draw_grid_symbol,
+    draw_home_symbol,
     draw_icon_button,
     draw_plus_symbol,
     draw_undo_symbol,
@@ -20,8 +22,10 @@ from .activity_ui import (
 __all__ = [
     "ChildUiMetrics",
     "clear_icon_cache",
+    "draw_back_symbol",
     "draw_eraser_symbol",
     "draw_grid_symbol",
+    "draw_home_symbol",
     "draw_icon_button",
     "draw_plus_symbol",
     "draw_undo_symbol",
