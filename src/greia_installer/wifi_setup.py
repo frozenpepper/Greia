@@ -9,7 +9,6 @@ from .wifi import (
     IwdNetworkProfile,
     WifiBackend,
     WifiConnection,
-    WifiError,
     WifiNetwork,
     WifiSecurity,
 )
@@ -206,6 +205,7 @@ class WifiSetupController:
             self._error = (
                 "Enterprise Wi-Fi can be configured later in Greia Parents"
             )
+            self._passphrase = ""
             return
         generation = self._next_generation()
         passphrase = self._passphrase
@@ -269,6 +269,7 @@ class WifiSetupController:
                     self._error = (
                         "Wi-Fi backend returned an invalid connection result"
                     )
+                    self._passphrase = ""
                     continue
                 self._profile = connection.profile
                 self._connected_ssid = connection.network.ssid
@@ -278,9 +279,11 @@ class WifiSetupController:
             elif kind == "error":
                 self._profile = None
                 self._connected_ssid = ""
+                self._passphrase = ""
                 self._phase = WifiSetupPhase.ERROR
                 self._error = str(payload) or payload.__class__.__name__
             else:
+                self._passphrase = ""
                 self._phase = WifiSetupPhase.ERROR
                 self._error = "Unknown Wi-Fi worker result"
 
