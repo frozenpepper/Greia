@@ -3,16 +3,36 @@ from __future__ import annotations
 import time
 import unittest
 
-from greia_installer.wifi import IwdNetworkProfile, WifiConnection, WifiNetwork, WifiSecurity
+from greia_installer.wifi import (
+    IwdNetworkProfile,
+    WifiConnection,
+    WifiNetwork,
+    WifiSecurity,
+)
 from greia_installer.wifi_setup import WifiSetupController, WifiSetupPhase
 
 
 class FakeBackend:
     def __init__(self) -> None:
         self.networks = (
-            WifiNetwork("Home", WifiSecurity.PERSONAL, -40.0, "/net/connman/iwd/demo/home"),
-            WifiNetwork("Guest", WifiSecurity.OPEN, -60.0, "/net/connman/iwd/demo/guest"),
-            WifiNetwork("School", WifiSecurity.ENTERPRISE, -65.0, "/net/connman/iwd/demo/school"),
+            WifiNetwork(
+                "Home",
+                WifiSecurity.PERSONAL,
+                -40.0,
+                "/net/connman/iwd/demo/home",
+            ),
+            WifiNetwork(
+                "Guest",
+                WifiSecurity.OPEN,
+                -60.0,
+                "/net/connman/iwd/demo/guest",
+            ),
+            WifiNetwork(
+                "School",
+                WifiSecurity.ENTERPRISE,
+                -65.0,
+                "/net/connman/iwd/demo/school",
+            ),
         )
         self.available_value = True
         self.calls = 0
@@ -23,9 +43,16 @@ class FakeBackend:
     def scan(self) -> tuple[WifiNetwork, ...]:
         return self.networks
 
-    def connect(self, network: WifiNetwork, passphrase: str = "") -> WifiConnection:
+    def connect(
+        self,
+        network: WifiNetwork,
+        passphrase: str = "",
+    ) -> WifiConnection:
         self.calls += 1
-        return WifiConnection(network, IwdNetworkProfile.for_network(network, passphrase))
+        return WifiConnection(
+            network,
+            IwdNetworkProfile.for_network(network, passphrase),
+        )
 
 
 def finish(controller: WifiSetupController) -> None:
@@ -47,6 +74,7 @@ class InstallerWifiSetupTests(unittest.TestCase):
         finish(controller)
         self.assertEqual(controller.snapshot.phase, WifiSetupPhase.READY)
         controller.append_password("correct-horse")
+        self.assertNotIn("correct-horse", repr(controller.snapshot))
         controller.connect()
         finish(controller)
         self.assertEqual(controller.snapshot.phase, WifiSetupPhase.CONNECTED)
