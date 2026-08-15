@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import platform
 import re
 import subprocess
@@ -26,9 +27,46 @@ from .hardware_support import HardwareSupportPoolError, VerifiedHardwareSupportP
 
 
 _DRIVER_RE = re.compile(r"^[A-Za-z0-9_.+-]{1,128}$")
+_ID_RE = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}$")
 _MAX_BOUND_DRIVERS = 256
 _MAX_FIRMWARE_DECLARATIONS_PER_DRIVER = 256
 _MAX_FIRMWARE_DECLARATION_BYTES = 1024
+
+
+class HardwareEnablementPlanError(RuntimeError):
+    pass
+
+
+@dataclass(frozen=True, slots=True)
+class TargetImageHardwareIdentity:
+    """The target payload's distro identity relevant to local package selection."""
+
+    suite: str
+    architecture: str
+
+    def __post_init__(self) -> None:
+        if not _ID_RE.fullmatch(self.suite):
+            raise HardwareEnablementPlanError("target image suite is invalid")
+        if not _ID_RE.fullmatch(self.architecture):
+            raise HardwareEnablementPlanError("target image architecture is invalid")
+
+    @classmethod
+    def load(cls, path: Path) -> "TargetImageHardwareIdentity":
+        if path.is_symlink() or not path.is_file():
+            raise HardwareEnablementPlanError("target image profile is missing or unsafe")
+        try:
+            raw = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise HardwareEnablementPlanError("target image profile is unreadable") from exc
+        try:
+            base = raw["base"]
+            suite = base["suite"]
+            architecture = base["architecture"]
+        except (KeyError, TypeError) as exc:
+            raise HardwareEnablementPlanError("target image profile has no base identity") from exc
+        if not isinstance(suite, str) or not isinstance(architecture, str):
+            raise HardwareEnablementPlanError("target image profile base identity is invalid")
+        return cls(suite, architecture)
 
 
 @dataclass(frozen=True, slots=True)
