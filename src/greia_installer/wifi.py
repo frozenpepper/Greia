@@ -48,10 +48,10 @@ class WifiNetwork:
 
 @dataclass(frozen=True, slots=True)
 class IwdNetworkProfile:
-    """One successfully tested iwd profile safe to persist into the target.
+    """One tested iwd profile safe to copy into the installed target.
 
-    The profile text can contain a Wi-Fi passphrase, so its repr is deliberately
-    suppressed. Callers must never log or place ``content`` into install records.
+    ``content`` can contain a Wi-Fi credential and is deliberately suppressed
+    from repr. Callers must never put it in ordinary logs or install records.
     """
 
     ssid: str
@@ -67,19 +67,33 @@ class IwdNetworkProfile:
         if "\x00" in self.content:
             raise ValueError("iwd profile contains NUL")
 
+    @classmethod
+    def for_network(
+        cls,
+        network: WifiNetwork,
+        passphrase: str = "",
+    ) -> "IwdNetworkProfile":
+        if not network.installer_supported:
+            raise WifiError(
+                "This Wi-Fi network needs enterprise credentials; "
+                "configure it later in Greia Parents"
+            )
+        if network.security is WifiSecurity.PERSONAL:
+            _validate_passphrase(passphrase)
+        elif passphrase:
+            raise WifiError("Open Wi-Fi networks do not use a password")
+        return cls(
+            network.ssid,
+            _profile_filename(network.ssid, network.security),
+            _profile_content(network.security, passphrase),
+        )
+
     def write_to(self, target_root: Path) -> Path:
         state_dir = target_root / IWD_STATE_DIR.relative_to("/")
         state_dir.mkdir(parents=True, exist_ok=True)
         os.chmod(state_dir, 0o700)
         destination = state_dir / self.filename
-        temporary = state_dir / f".{self.filename}.greia-installer.tmp"
-        try:
-            temporary.write_text(self.content, encoding="utf-8")
-            os.chmod(temporary, 0o600)
-            os.replace(temporary, destination)
-            os.chmod(destination, 0o600)
-        finally:
-            temporary.unlink(missing_ok=True)
+        _atomic_private_write(destination, self.content)
         return destination
 
 
@@ -91,17 +105,22 @@ class WifiConnection:
 
 class WifiBackend(Protocol):
     def available(self) -> bool: ...
+
     def scan(self) -> tuple[WifiNetwork, ...]: ...
-    def connect(self, network: WifiNetwork, passphrase: str = "") -> WifiConnection: ...
+
+    def connect(
+        self,
+        network: WifiNetwork,
+        passphrase: str = "",
+    ) -> WifiConnection: ...
 
 
 class IwdWifiBackend:
-    """Root-side live-installer Wi-Fi backend using iwd's documented D-Bus API.
+    """Live-installer Wi-Fi backend using iwd's D-Bus API.
 
-    Credentials never appear in subprocess arguments because this adapter does
-    not use ``iwctl --passphrase``. For a Personal network it writes one
-    root-only iwd profile, asks iwd to connect through D-Bus, and returns the
-    exact successfully tested profile for target installation.
+    The password never appears in a subprocess argument. Greia creates a
+    root-only iwd profile, asks iwd to connect, and returns the exact profile
+    that succeeded so the installer can copy it to the target atomically.
     """
 
     def __init__(
@@ -114,9 +133,15 @@ class IwdWifiBackend:
         bus: Any | None = None,
     ) -> None:
         self.state_dir = state_dir
-        self.scan_timeout_seconds = _bounded_timeout(scan_timeout_seconds, 1.0, 15.0)
-        self.connect_timeout_seconds = _bounded_timeout(connect_timeout_seconds, 5.0, 45.0)
-        self.poll_interval_seconds = _bounded_timeout(poll_interval_seconds, 0.02, 0.50)
+        self.scan_timeout_seconds = _bounded_timeout(
+            scan_timeout_seconds, 1.0, 15.0
+        )
+        self.connect_timeout_seconds = _bounded_timeout(
+            connect_timeout_seconds, 5.0, 45.0
+        )
+        self.poll_interval_seconds = _bounded_timeout(
+            poll_interval_seconds, 0.02, 0.50
+        )
         self._bus = bus
 
     def available(self) -> bool:
@@ -134,8 +159,8 @@ class IwdWifiBackend:
         try:
             station.Scan()
         except Exception as exc:
-            # iwd may report Busy when a scan is already underway. We still wait
-            # for Scanning to clear and consume that scan instead of failing UX.
+            # If iwd already has an in-flight scan, consume it instead of making
+            # a harmless refresh race visible to the parent.
             if "Busy" not in str(exc):
                 raise WifiError("Wi-Fi scan could not start") from exc
         self._wait_station_scanning(station_path)
@@ -143,6 +168,7 @@ class IwdWifiBackend:
             ordered: Sequence[Sequence[Any]] = station.GetOrderedNetworks()
         except Exception as exc:
             raise WifiError("Wi-Fi scan results are unavailable") from exc
+
         refreshed = self._managed_objects()
         result: list[WifiNetwork] = []
         seen: set[tuple[str, WifiSecurity]] = set()
@@ -162,6 +188,8 @@ class IwdWifiBackend:
                 signal_dbm = max(-100.0, min(0.0, int(record[1]) / 100.0))
                 network = WifiNetwork(name, security, signal_dbm, object_path)
             except (ValueError, TypeError):
+                # WEP and malformed/unsupported records are not promoted into
+                # Greia's installer interaction model.
                 continue
             key = (network.ssid, network.security)
             if key in seen:
@@ -170,52 +198,42 @@ class IwdWifiBackend:
             result.append(network)
         return tuple(result)
 
-    def connect(self, network: WifiNetwork, passphrase: str = "") -> WifiConnection:
-        if not network.installer_supported:
-            raise WifiError("This Wi-Fi network needs enterprise credentials; configure it later in Greia Parents")
-        if network.security is WifiSecurity.PERSONAL:
-            _validate_passphrase(passphrase)
-        elif passphrase:
-            raise WifiError("Open Wi-Fi networks do not use a password")
-
-        profile_path = self.state_dir / _profile_filename(network.ssid, network.security)
+    def connect(
+        self,
+        network: WifiNetwork,
+        passphrase: str = "",
+    ) -> WifiConnection:
+        profile = IwdNetworkProfile.for_network(network, passphrase)
+        profile_path = self.state_dir / profile.filename
         self.state_dir.mkdir(parents=True, exist_ok=True)
         os.chmod(self.state_dir, 0o700)
         previous = profile_path.read_bytes() if profile_path.exists() else None
-        profile_content = _profile_content(network.security, passphrase)
         created_by_attempt = previous is None
         try:
-            if network.security is WifiSecurity.PERSONAL:
-                _atomic_private_write(profile_path, profile_content)
-                # Let iwd's state-directory watch observe the newly provisioned
-                # profile before Connect. A bounded retry below handles slower
-                # devices without exposing the secret through iwctl argv.
-                time.sleep(self.poll_interval_seconds)
-            connection = self._connect_network(network)
-            saved_path = self.state_dir / _profile_filename(network.ssid, network.security)
+            _atomic_private_write(profile_path, profile.content)
+            # Give iwd's state-directory watcher one short opportunity to observe
+            # the file; the bounded retry below covers slower reference devices.
+            time.sleep(self.poll_interval_seconds)
+            self._connect_network(network)
             try:
-                saved_content = saved_path.read_text(encoding="utf-8")
+                saved_content = profile_path.read_text(encoding="utf-8")
             except OSError as exc:
-                raise WifiError("Wi-Fi connected but its saved profile could not be read") from exc
-            os.chmod(saved_path, 0o600)
+                raise WifiError(
+                    "Wi-Fi connected but its saved profile could not be read"
+                ) from exc
+            os.chmod(profile_path, 0o600)
             return WifiConnection(
-                connection,
-                IwdNetworkProfile(connection.ssid, saved_path.name, saved_content),
+                network,
+                IwdNetworkProfile(network.ssid, profile_path.name, saved_content),
             )
         except Exception:
             if created_by_attempt:
                 profile_path.unlink(missing_ok=True)
             elif previous is not None:
-                temporary = profile_path.with_name(f".{profile_path.name}.restore.tmp")
-                try:
-                    temporary.write_bytes(previous)
-                    os.chmod(temporary, 0o600)
-                    os.replace(temporary, profile_path)
-                finally:
-                    temporary.unlink(missing_ok=True)
+                _atomic_private_write_bytes(profile_path, previous)
             raise
 
-    def _connect_network(self, network: WifiNetwork) -> WifiNetwork:
+    def _connect_network(self, network: WifiNetwork) -> None:
         interface = self._interface(network.object_path, NETWORK_INTERFACE)
         error: Exception | None = None
         for attempt in range(2):
@@ -225,23 +243,22 @@ class IwdWifiBackend:
                 break
             except Exception as exc:
                 error = exc
-                if attempt == 0 and network.security is WifiSecurity.PERSONAL and "NotConfigured" in str(exc):
+                if attempt == 0 and "NotConfigured" in str(exc):
                     time.sleep(min(0.50, self.poll_interval_seconds * 2.0))
                     continue
                 break
         if error is not None:
             raise WifiError("Could not connect to the selected Wi-Fi network") from error
 
-        objects = self._managed_objects()
-        station_path = self._station_path(objects)
+        station_path = self._station_path(self._managed_objects())
         if station_path is None:
             raise WifiError("Wi-Fi device disappeared while connecting")
         deadline = time.monotonic() + self.connect_timeout_seconds
         while time.monotonic() < deadline:
-            state = self._property(station_path, STATION_INTERFACE, "State")
-            if str(state) == "connected":
-                return network
-            if str(state) == "disconnected":
+            state = str(self._property(station_path, STATION_INTERFACE, "State"))
+            if state == "connected":
+                return
+            if state == "disconnected":
                 raise WifiError("Wi-Fi connection was rejected")
             time.sleep(self.poll_interval_seconds)
         raise WifiError("Wi-Fi connection timed out")
@@ -249,12 +266,16 @@ class IwdWifiBackend:
     def _wait_station_scanning(self, station_path: str) -> None:
         deadline = time.monotonic() + self.scan_timeout_seconds
         while time.monotonic() < deadline:
-            if not bool(self._property(station_path, STATION_INTERFACE, "Scanning")):
+            if not bool(
+                self._property(station_path, STATION_INTERFACE, "Scanning")
+            ):
                 return
             time.sleep(self.poll_interval_seconds)
         raise WifiError("Wi-Fi scan timed out")
 
-    def _managed_objects(self) -> Mapping[str, Mapping[str, Mapping[str, Any]]]:
+    def _managed_objects(
+        self,
+    ) -> Mapping[str, Mapping[str, Mapping[str, Any]]]:
         manager = self._interface("/", OBJECT_MANAGER_INTERFACE)
         try:
             return manager.GetManagedObjects()
@@ -262,7 +283,9 @@ class IwdWifiBackend:
             raise WifiError("iwd is not available") from exc
 
     @staticmethod
-    def _station_path(objects: Mapping[str, Mapping[str, Mapping[str, Any]]]) -> str | None:
+    def _station_path(
+        objects: Mapping[str, Mapping[str, Mapping[str, Any]]],
+    ) -> str | None:
         candidates = sorted(
             str(path)
             for path, interfaces in objects.items()
@@ -275,7 +298,9 @@ class IwdWifiBackend:
         try:
             return properties.Get(interface, name)
         except Exception as exc:
-            raise WifiError(f"Wi-Fi state property {name!r} is unavailable") from exc
+            raise WifiError(
+                f"Wi-Fi state property {name!r} is unavailable"
+            ) from exc
 
     def _interface(self, object_path: str, interface: str) -> Any:
         bus = self._system_bus()
@@ -305,11 +330,8 @@ def _profile_filename(ssid: str, security: WifiSecurity) -> str:
     if security not in {WifiSecurity.OPEN, WifiSecurity.PERSONAL}:
         raise ValueError("unsupported installer Wi-Fi security type")
     raw = ssid.encode("utf-8")
-    safe = all(
-        byte in b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 _-"
-        for byte in raw
-    )
-    stem = ssid if safe else "=" + raw.hex()
+    safe_bytes = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 _-"
+    stem = ssid if all(byte in safe_bytes for byte in raw) else "=" + raw.hex()
     suffix = ".open" if security is WifiSecurity.OPEN else ".psk"
     return stem + suffix
 
@@ -319,8 +341,30 @@ def _profile_content(security: WifiSecurity, passphrase: str) -> str:
         return "[Settings]\nAutoConnect=true\n"
     if security is WifiSecurity.PERSONAL:
         _validate_passphrase(passphrase)
-        return f"[Security]\nPassphrase={passphrase}\n\n[Settings]\nAutoConnect=true\n"
+        escaped = _escape_iwd_value(passphrase)
+        return (
+            f"[Security]\nPassphrase={escaped}\n\n"
+            "[Settings]\nAutoConnect=true\n"
+        )
     raise ValueError("unsupported installer Wi-Fi security type")
+
+
+def _escape_iwd_value(value: str) -> str:
+    """Escape an iwd settings value using its documented key-file syntax."""
+
+    result: list[str] = []
+    for character in value:
+        if character == "\\":
+            result.append("\\\\")
+        elif character == " ":
+            result.append("\\s")
+        elif character == "\t":
+            result.append("\\t")
+        elif character in {"\x00", "\r", "\n"}:
+            raise WifiError("Wi-Fi password contains unsupported control characters")
+        else:
+            result.append(character)
+    return "".join(result)
 
 
 def _validate_ssid(ssid: str) -> None:
@@ -344,6 +388,17 @@ def _atomic_private_write(path: Path, content: str) -> None:
     temporary = path.with_name(f".{path.name}.greia-installer.tmp")
     try:
         temporary.write_text(content, encoding="utf-8")
+        os.chmod(temporary, 0o600)
+        os.replace(temporary, path)
+        os.chmod(path, 0o600)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def _atomic_private_write_bytes(path: Path, content: bytes) -> None:
+    temporary = path.with_name(f".{path.name}.greia-installer.restore.tmp")
+    try:
+        temporary.write_bytes(content)
         os.chmod(temporary, 0o600)
         os.replace(temporary, path)
         os.chmod(path, 0o600)
