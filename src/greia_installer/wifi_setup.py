@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import queue
 import threading
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 
 from .wifi import (
@@ -29,9 +29,9 @@ class WifiSetupSnapshot:
     phase: WifiSetupPhase
     networks: tuple[WifiNetwork, ...]
     selected_index: int
-    passphrase: str
-    connected_ssid: str
-    error: str
+    passphrase: str = field(repr=False)
+    connected_ssid: str = ""
+    error: str = ""
 
     @property
     def selected_network(self) -> WifiNetwork | None:
