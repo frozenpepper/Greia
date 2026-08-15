@@ -8,6 +8,7 @@ from pathlib import Path
 
 from greia_installer.hardware_support import (
     HardwareSupportPoolError,
+    HardwareSupportPoolPackage,
     VerifiedHardwareSupportPool,
 )
 
@@ -97,6 +98,38 @@ class InstallerHardwareSupportPoolTests(unittest.TestCase):
             ("firmware-realtek",),
         )
         self.assertEqual(pool.packages_for_firmware("missing.bin"), ())
+
+    def test_multiple_providers_choose_smallest_verified_candidate_for_same_file(self) -> None:
+        small = HardwareSupportPoolPackage(
+            "firmware-small",
+            "1",
+            "all",
+            "pool/firmware-small.deb",
+            10,
+            "0" * 64,
+            True,
+        )
+        large = HardwareSupportPoolPackage(
+            "firmware-large",
+            "1",
+            "all",
+            "pool/firmware-large.deb",
+            100,
+            "1" * 64,
+            True,
+        )
+        pool = VerifiedHardwareSupportPool(
+            Path("/verified"),
+            "trixie",
+            "amd64",
+            (large, small),
+            frozenset({"firmware-large", "firmware-small"}),
+            frozenset({"firmware-large", "firmware-small"}),
+            frozenset(),
+            110,
+            (("shared.bin", ("firmware-large", "firmware-small")),),
+        )
+        self.assertEqual(pool.packages_for_firmware("shared.bin"), ("firmware-small",))
 
     def test_unsafe_firmware_pattern_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
