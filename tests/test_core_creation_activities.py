@@ -88,7 +88,7 @@ class WritingLogicTests(unittest.TestCase):
         buffer.home()
         self.assertEqual(buffer.cursor, 3)
         buffer.end()
-        self.assertEqual(buffer.cursor, len("ci\nabc"))
+        self.assertEqual(buffer.cursor, len(buffer.text))
 
     def test_undo_history_is_bounded_and_keeps_latest_edits(self) -> None:
         history = WRITING.UndoHistory(maximum=2)
@@ -191,8 +191,8 @@ class PaintingLogicTests(unittest.TestCase):
     def test_painting_repository_preserves_recent_order(self) -> None:
         storage = FakeStorage()
         repo = PAINTING.PaintingRepository(storage)
-        first = repo.create()
-        second = repo.create()
+        first = repo.create(b"png-zero")
+        second = repo.create(b"png-two")
         self.assertEqual(repo.list_records()[0].painting_id, second.painting_id)
         repo.save_png(first.painting_id, b"png-one")
         self.assertEqual(repo.list_records()[0].painting_id, first.painting_id)
@@ -204,7 +204,7 @@ class PaintingLogicTests(unittest.TestCase):
         storage.kv[PAINTING.INDEX_KEY] = records
         before = list(records)
         with self.assertRaises(RuntimeError):
-            PAINTING.PaintingRepository(storage).create()
+            PAINTING.PaintingRepository(storage).create(b"png-new")
         self.assertEqual(storage.kv[PAINTING.INDEX_KEY], before)
 
     def test_undo_history_is_bounded_and_returns_fold_candidate(self) -> None:
