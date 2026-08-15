@@ -20,7 +20,7 @@ class HardwareSupportPoolManifestTests(unittest.TestCase):
             )
             (root / "Fw-Contents-all-trixie-non-free-firmware").write_text(
                 "lib/firmware/amd.bin non-free-firmware/kernel/firmware-amd-graphics\n"
-                "lib/firmware/rtl.bin non-free-firmware/kernel/firmware-realtek\n",
+                "usr/lib/firmware/rtl.bin non-free-firmware/kernel/firmware-realtek\n",
                 encoding="utf-8",
             )
             manifest = build_manifest(root, "trixie", "amd64")
@@ -37,7 +37,32 @@ class HardwareSupportPoolManifestTests(unittest.TestCase):
             manifest["metadata_files"],
             ["Fw-Contents-all-trixie-non-free-firmware"],
         )
+        self.assertFalse(manifest["metadata_suite_fallback"])
+        self.assertEqual(
+            manifest["firmware_providers"],
+            {
+                "amd.bin": ["firmware-amd-graphics"],
+                "rtl.bin": ["firmware-realtek"],
+            },
+        )
         self.assertTrue(manifest["policy"]["general_isenkram_lookup_is_advisory_only"])
+
+    def test_contents_multiple_providers_are_preserved(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "Fw-Contents-trixie").write_text(
+                "lib/firmware/shared.bin non-free-firmware/kernel/firmware-one,non-free-firmware/kernel/firmware-two\n",
+                encoding="utf-8",
+            )
+            manifest = build_manifest(root, "trixie", "amd64")
+        self.assertEqual(
+            manifest["firmware_packages"],
+            ["firmware-one", "firmware-two"],
+        )
+        self.assertEqual(
+            manifest["firmware_providers"]["shared.bin"],
+            ["firmware-one", "firmware-two"],
+        )
 
     def test_falls_back_to_available_firmware_metadata_when_suite_named_file_is_absent(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -49,13 +74,15 @@ class HardwareSupportPoolManifestTests(unittest.TestCase):
             manifest = build_manifest(root, "trixie", "arm64")
         self.assertEqual(manifest["firmware_packages"], ["firmware-linux-free"])
         self.assertEqual(manifest["microcode_packages"], [])
+        self.assertTrue(manifest["metadata_suite_fallback"])
 
-    def test_package_path_is_reduced_to_safe_debian_package_basename(self) -> None:
+    def test_non_firmware_paths_and_unsafe_names_are_not_promoted(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             (root / "Fw-Contents-test").write_text(
                 "lib/firmware/a.bin section/kernel/firmware-atheros\n"
-                "lib/firmware/b.bin ../../unsafe/package name\n"
+                "usr/share/doc/readme section/doc/something\n"
+                "lib/firmware/../escape.bin section/kernel/firmware-unsafe\n"
                 "lib/firmware/c.bin section/kernel/firmware-realtek\n",
                 encoding="utf-8",
             )
@@ -64,6 +91,7 @@ class HardwareSupportPoolManifestTests(unittest.TestCase):
             manifest["firmware_packages"],
             ["firmware-atheros", "firmware-realtek"],
         )
+        self.assertNotIn("../escape.bin", manifest["firmware_providers"])
 
     def test_missing_metadata_directory_is_a_hard_failure(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -80,6 +108,7 @@ class HardwareSupportPoolManifestTests(unittest.TestCase):
             manifest = build_manifest(root, "bookworm", "i386")
         encoded = json.dumps(manifest, sort_keys=True, allow_nan=False)
         self.assertIn("firmware-realtek", encoded)
+        self.assertIn("firmware_providers", encoded)
 
 
 if __name__ == "__main__":
