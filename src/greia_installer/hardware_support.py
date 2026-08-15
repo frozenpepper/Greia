@@ -56,6 +56,8 @@ class VerifiedHardwareSupportPool:
     architecture: str
     packages: tuple[HardwareSupportPoolPackage, ...]
     provided_candidates: frozenset[str]
+    provided_firmware: frozenset[str]
+    provided_microcode: frozenset[str]
     total_bytes: int
 
     @classmethod
@@ -141,20 +143,32 @@ class VerifiedHardwareSupportPool:
 
         cls._verify_repository_indexes(root, raw)
 
-        candidates = raw.get("provided_candidate_packages")
-        if not isinstance(candidates, list) or not all(
-            isinstance(item, str) and _PACKAGE_RE.fullmatch(item) for item in candidates
-        ):
-            raise HardwareSupportPoolError("hardware-support candidate list is invalid")
-        provided = frozenset(candidates)
         manifest_candidates = {package.package for package in packages if package.candidate}
+        provided = cls._validated_package_set(raw, "provided_candidate_packages")
+        firmware = cls._validated_package_set(raw, "provided_firmware_packages")
+        microcode = cls._validated_package_set(raw, "provided_microcode_packages")
+        if not firmware.isdisjoint(microcode):
+            raise HardwareSupportPoolError("hardware-support firmware/microcode classes overlap")
+        if firmware | microcode != provided:
+            raise HardwareSupportPoolError("hardware-support candidate classes do not match candidate set")
         if not provided <= manifest_candidates:
             raise HardwareSupportPoolError("hardware-support candidate list references non-candidate payloads")
         manifest_total = raw.get("total_bytes")
         if not isinstance(manifest_total, int) or manifest_total != total:
             raise HardwareSupportPoolError("hardware-support pool total size does not match manifest")
 
-        return cls(root, suite, architecture, tuple(packages), provided, total)
+        return cls(root, suite, architecture, tuple(packages), provided, firmware, microcode, total)
+
+    @staticmethod
+    def _validated_package_set(raw: dict[str, object], field: str) -> frozenset[str]:
+        value = raw.get(field)
+        if not isinstance(value, list) or not all(
+            isinstance(item, str) and _PACKAGE_RE.fullmatch(item) for item in value
+        ):
+            raise HardwareSupportPoolError(f"hardware-support {field} is invalid")
+        if len(value) != len(set(value)):
+            raise HardwareSupportPoolError(f"hardware-support {field} contains duplicates")
+        return frozenset(value)
 
     @staticmethod
     def _verify_repository_indexes(root: Path, raw: dict[str, object]) -> None:
@@ -188,6 +202,18 @@ class VerifiedHardwareSupportPool:
                 raise HardwareSupportPoolError(
                     f"hardware-support package is not available in the verified pool: {package}"
                 )
+        return requested
+
+    def require_firmware(self, packages: Iterable[str]) -> tuple[str, ...]:
+        requested = self.require_candidates(packages)
+        if any(package not in self.provided_firmware for package in requested):
+            raise HardwareSupportPoolError("requested hardware package is not verified firmware")
+        return requested
+
+    def require_microcode(self, packages: Iterable[str]) -> tuple[str, ...]:
+        requested = self.require_candidates(packages)
+        if any(package not in self.provided_microcode for package in requested):
+            raise HardwareSupportPoolError("requested hardware package is not verified microcode")
         return requested
 
     @property
