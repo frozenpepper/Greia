@@ -37,6 +37,15 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _package_list(raw: dict[str, object], field: str) -> tuple[str, ...]:
+    value = raw.get(field)
+    if not isinstance(value, list) or not all(
+        isinstance(item, str) and _PACKAGE_RE.fullmatch(item) for item in value
+    ):
+        raise PoolFinalizeError(f"candidate manifest {field} is invalid")
+    return tuple(dict.fromkeys(value))
+
+
 def _control(path: Path) -> str:
     completed = subprocess.run(
         ["dpkg-deb", "-f", str(path)],
@@ -69,11 +78,15 @@ def finalize_pool(pool_root: Path, candidate_manifest: Path, max_bytes: int) -> 
         candidates = json.loads(candidate_manifest.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise PoolFinalizeError("candidate manifest is unreadable") from exc
-    candidate_packages = candidates.get("candidate_packages")
-    if not isinstance(candidate_packages, list) or not all(
-        isinstance(item, str) and _PACKAGE_RE.fullmatch(item) for item in candidate_packages
-    ):
-        raise PoolFinalizeError("candidate manifest package list is invalid")
+    if not isinstance(candidates, dict):
+        raise PoolFinalizeError("candidate manifest root is invalid")
+    candidate_packages = _package_list(candidates, "candidate_packages")
+    firmware_packages = _package_list(candidates, "firmware_packages")
+    microcode_packages = _package_list(candidates, "microcode_packages")
+    if not set(firmware_packages).isdisjoint(microcode_packages):
+        raise PoolFinalizeError("firmware and microcode candidate classes overlap")
+    if set(candidate_packages) != set(firmware_packages) | set(microcode_packages):
+        raise PoolFinalizeError("candidate package union does not match firmware/microcode classes")
 
     deb_dir = pool_root / "pool"
     if not deb_dir.is_dir():
@@ -94,6 +107,7 @@ def finalize_pool(pool_root: Path, candidate_manifest: Path, max_bytes: int) -> 
     repository_stanzas: list[str] = []
     seen_identity: set[tuple[str, str]] = set()
     provided_names: set[str] = set()
+    candidate_set = set(candidate_packages)
     for path in debs:
         control = _control(path)
         package = _field(control, "Package")
@@ -118,7 +132,7 @@ def finalize_pool(pool_root: Path, candidate_manifest: Path, max_bytes: int) -> 
                 "filename": f"pool/{path.name}",
                 "size": size,
                 "sha256": digest,
-                "candidate": package in candidate_packages,
+                "candidate": package in candidate_set,
             }
         )
         repository_stanzas.append(
@@ -134,8 +148,10 @@ def finalize_pool(pool_root: Path, candidate_manifest: Path, max_bytes: int) -> 
         with gzip.GzipFile(fileobj=raw, mode="wb", compresslevel=9, mtime=0) as handle:
             handle.write(packages_text.encode("utf-8"))
 
-    provided_candidates = sorted(set(candidate_packages) & provided_names)
-    unavailable_candidates = sorted(set(candidate_packages) - provided_names)
+    provided_candidates = sorted(candidate_set & provided_names)
+    provided_firmware = sorted(set(firmware_packages) & provided_names)
+    provided_microcode = sorted(set(microcode_packages) & provided_names)
+    unavailable_candidates = sorted(candidate_set - provided_names)
     manifest = {
         "schema_version": 1,
         "suite": candidates.get("suite", "unknown"),
@@ -144,6 +160,8 @@ def finalize_pool(pool_root: Path, candidate_manifest: Path, max_bytes: int) -> 
         "package_count": len(packages),
         "total_bytes": total_bytes,
         "provided_candidate_packages": provided_candidates,
+        "provided_firmware_packages": provided_firmware,
+        "provided_microcode_packages": provided_microcode,
         "unavailable_candidate_packages": unavailable_candidates,
         "packages": packages,
         "repository_indexes": {
