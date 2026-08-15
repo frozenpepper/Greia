@@ -13,16 +13,17 @@ class LiveHardwareFirmwareBuildScriptTests(unittest.TestCase):
             encoding="utf-8"
         )
         self.assertIn("verify_hardware_support_pool.py", source)
-        self.assertIn("--list firmware", source)
+        self.assertIn("--list broad-firmware", source)
         self.assertIn("file:/opt/greia-hardware-support", source)
         self.assertIn("Dir::Etc::sourcelist=/run/greia-hardware-support.list", source)
         self.assertIn("Dir::Etc::sourceparts=-", source)
         self.assertIn("--no-install-recommends", source)
 
-    def test_live_firmware_does_not_install_microcode_or_use_network_downloaders(self) -> None:
+    def test_live_firmware_does_not_install_all_alternatives_microcode_or_vendor_downloads(self) -> None:
         source = (PROJECT_ROOT / "build/install-live-hardware-firmware.sh").read_text(
             encoding="utf-8"
         )
+        self.assertNotIn("--list firmware\n", source)
         self.assertNotIn("--list microcode", source)
         self.assertNotIn("curl ", source)
         self.assertNotIn("wget ", source)
