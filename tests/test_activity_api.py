@@ -17,6 +17,7 @@ class ActivityApiCapabilityTests(unittest.TestCase):
         activity_api._root.cache_clear()
         activity_api._catalogue.cache_clear()
         activity_api._theme_store.cache_clear()
+        activity_api._default_theme_store.cache_clear()
         activity_api._media_scanner.cache_clear()
         activity_api._profile_policy.cache_clear()
 
