@@ -4,7 +4,6 @@
 **Version family:** `0.13.x` development  
 **Repository:** `frozenpepper/Greia` (private)  
 **Canonical/default/development branch:** `main`  
-**Current main HEAD before this handover commit:** `6019eb06134478861010cdcfae649a921f1ffc7d`  
 **Blocking phase:** **R7 — Direct graphics/session/input architecture**
 
 ## Branch policy
@@ -18,15 +17,13 @@ From 2026-08-15 onward:
 - commit coherent work directly to `main` as work proceeds;
 - GitHub remains the persistent source of truth;
 - old branch refs were collapsed onto the same `main` commit after review so no divergent current source remains;
-- the available GitHub connector did not expose branch-ref deletion, so duplicate ref names may remain visible until deleted through a GitHub surface that supports ref deletion. They contain the same commit as `main` and must not be used for development.
+- duplicate historical ref names may remain visible until a GitHub surface supporting ref deletion is used; they must not be used for development.
 
 PR #4 (`r7-direct-graphics`) was merged into `main` with merge commit:
 
 ```text
 6019eb06134478861010cdcfae649a921f1ffc7d
 ```
-
-Before collapse, the remaining non-main branches were reviewed. Branch-only material not already in `main` consisted only of obsolete recovery/probe payloads and old recovery GitHub Actions workflows, not current project source. Those obsolete artifacts were deliberately **not reintroduced into `main`**; the refs were moved to current `main` instead.
 
 ## Resume order
 
@@ -38,11 +35,12 @@ Read, in order:
 4. `docs/architecture/GREIA_ARCHITECTURE.md`
 5. accepted ADRs through ADR 0020
 6. `docs/engineering/ENGINEERING_FOUNDATIONS.md`
-7. `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`
-8. this handover
-9. applicable testing/review docs
-10. `docs/agents/GREIA_AGENT_OPERATIONS.md`
-11. `skills/greia-activity-authoring/SKILL.md` for Activity work
+7. product requirements, including `docs/product/INSTALLER_WIFI_SETUP.md`
+8. `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`
+9. this handover
+10. applicable testing/review docs
+11. `docs/agents/GREIA_AGENT_OPERATIONS.md`
+12. `skills/greia-activity-authoring/SKILL.md` for Activity work
 
 Always resolve the current **`main` HEAD** before editing or testing.
 
@@ -65,6 +63,100 @@ source/shell/footprint gate: PASS
 ```
 
 Everything newer remains **UNPROVEN unless explicitly recorded otherwise**. Do not promote source presence to runtime or hardware PASS.
+
+## Installation-time Wi-Fi — source implemented, physical acceptance pending
+
+Product requirement:
+
+```text
+docs/product/INSTALLER_WIFI_SETUP.md
+```
+
+Physical/source acceptance protocol:
+
+```text
+docs/testing/2026-08-15_INSTALLER_WIFI_ACCEPTANCE.md
+```
+
+The graphical installer now has this intended flow:
+
+```text
+Welcome
+→ target disk
+→ input/screen settings
+→ Wi-Fi (optional)
+→ final confirmation
+→ installation
+```
+
+Permanent product semantics:
+
+- Wi-Fi setup is optional; **Skip for now** must always preserve a complete offline installation path.
+- Internet reachability is never required to install or first-boot Greia.
+- Phase-0 installer supports visible open and WPA/WPA2/WPA3-Personal networks through iwd's `open`/`psk` model.
+- Enterprise/802.1X is identified but deliberately deferred to a later typed Greia Parents configuration flow; it is not misrepresented as a one-password Personal network.
+- WEP is unsupported.
+- Hidden/manual SSID support remains a follow-up compatibility feature.
+- credentials must not appear in command-line arguments, ordinary logs or `install-record.json`.
+- password UI is masked and cleared after successful connection/skip.
+- successful configuration persists the exact tested iwd profile to the installed target under `/var/lib/iwd` with private permissions.
+- the installation record stores only `wifi_configured: true/false`, never SSID/password.
+- slow scan/connection/DHCP work runs outside the Pygame event/render loop.
+- stale async scan/connect results are invalidated by generation and cannot overwrite a newer parent choice.
+
+Relevant source:
+
+```text
+src/greia_installer/wifi.py
+src/greia_installer/wifi_setup.py
+src/greia_installer/main.py
+src/greia_installer/engine.py
+```
+
+Live installer networking additions:
+
+```text
+build/package-sets/installer-base.txt
+build/installer-overlay/etc/iwd/main.conf
+build/installer-overlay/etc/resolv.conf
+build/installer-overlay/etc/systemd/system/greia-installer.service
+```
+
+Every live installer now declares the small wireless stack in `installer-base`:
+
+```text
+iwd
+python3-dbus
+rfkill
+systemd-resolved
+wireless-regdb
+```
+
+Live iwd temporarily owns address/DNS configuration (`EnableNetworkConfiguration=true`) so the installation environment does not need a second live network manager. The installed target retains the existing platform architecture where iwd owns Wi-Fi authentication and systemd-networkd owns address configuration.
+
+The build-profile resolver also applies the selected profile's kernel, video packages and `extra_packages` to installer artifacts. Therefore any firmware package required by the exact Acer/Pi radio after physical inventory should be added to the hardware profile so both live installer and installed target receive it; do not add a separate ad-hoc installer firmware path.
+
+Focused regression source added:
+
+```text
+tests/test_installer_wifi.py
+tests/test_installer_wifi_setup.py
+tests/test_installer_wifi_persistence.py
+tests/test_installer_wifi_build_contract.py
+```
+
+These tests are **COMMITTED BUT UNEXECUTED**. No real Acer Wi-Fi scan, Personal connection, wrong-password recovery, target profile persistence or first-boot reconnect PASS is currently claimed.
+
+Important physical acceptance still required:
+
+1. boot exact Acer installer USB;
+2. prove the real radio/driver/firmware is present;
+3. scan visible networks;
+4. connect to a supported Personal network without password leakage;
+5. prove wrong-password recovery;
+6. install using that network;
+7. remove USB and prove first-boot reconnect;
+8. separately prove a complete offline install using Skip for now.
 
 ## Current Phase-0 UI / system-navigation state
 
@@ -203,7 +295,7 @@ snapshot.json
 
 This is the intended primitive for a local development agent to observe -> interact -> observe repeatedly.
 
-Explicit Acer developer profiles now exist for all current Acer architecture candidates:
+Explicit Acer developer profiles exist for all current Acer architecture candidates:
 
 ```text
 acer-aspire-one-i386-dev
@@ -254,13 +346,28 @@ trusted Pygame controller set: source implemented; Shell composition pending ver
 production Activity input broker: NOT IMPLEMENTED
 physical controller evidence: NOT RUN
 Acer remote-agent physical evidence: NOT RUN
+installer Wi-Fi physical evidence: NOT RUN
 ```
 
 Do not make `ActivitySupervisor` the DRM master. Do not broaden Activity raw input authority. Do not select a compositor merely because desktop Linux commonly uses one.
 
 ## Exact next source verification
 
-On an owner-controlled current checkout of `main`:
+On an owner-controlled current checkout of `main`, run the new installer Wi-Fi focused gate first:
+
+```bash
+PYTHONPATH=src python3 -m unittest \
+  tests.test_installer_wifi \
+  tests.test_installer_wifi_setup \
+  tests.test_installer_wifi_persistence \
+  tests.test_installer_wifi_build_contract \
+  tests.test_installer_state \
+  tests.test_installer_engine \
+  tests.test_build_profiles \
+  -v
+```
+
+Then run the existing focused UI/input gate:
 
 ```bash
 PYTHONPATH=src python3 -m unittest \
@@ -291,27 +398,28 @@ make verify
 
 Stop on first real failure and preserve exact stdout/stderr. Do not weaken tests to manufacture PASS.
 
-## Next implementation after source PASS
+## Next implementation/evidence after source PASS
 
 Keep changes incremental and commit directly to `main`:
 
-1. minimally compose `ShellInputController` into `greia_launcher.main`, with explicit suspend/resume/cleanup around Activity presentation;
-2. verify Shell controller navigation/reconnect on owner-controlled hardware;
-3. implement the R7 trusted physical-input broker beside display-session/system-chrome authority so Activities receive normalized semantic controller input without `/dev/input` ownership;
-4. integrate controller virtual-pointer behavior into Painting;
-5. prove one simple directional/game Activity using keyboard/controller parity;
-6. prove Guide/system input is withheld from Activity content;
-7. execute Acer input/resource/latency evidence;
-8. build/install the correct Acer developer profile and execute the remote-agent acceptance protocol;
-9. later expose the same semantic input bridge to the Web runtime;
+1. run the installer Wi-Fi demo/windowed visual acceptance at 1024×600;
+2. build the exact Acer installer image and execute `docs/testing/2026-08-15_INSTALLER_WIFI_ACCEPTANCE.md`, initially non-destructively through the Wi-Fi page;
+3. if exact radio firmware is missing, add it to the Acer hardware profile and rebuild rather than installing it manually on the live target;
+4. minimally compose `ShellInputController` into `greia_launcher.main`, with explicit suspend/resume/cleanup around Activity presentation;
+5. verify Shell controller navigation/reconnect on owner-controlled hardware;
+6. implement the R7 trusted physical-input broker beside display-session/system-chrome authority so Activities receive normalized semantic controller input without `/dev/input` ownership;
+7. integrate controller virtual-pointer behavior into Painting;
+8. prove one simple directional/game Activity using keyboard/controller parity;
+9. execute Acer input/resource/latency evidence and remote-agent acceptance;
 10. only after real evidence, decide whether the production display/session implementation is serial direct ownership, a tiny Greia-owned compositor/session broker, or a retained explicit compatibility adapter.
-
-Do not combine the small Shell input integration with a broad UI rewrite.
 
 ## Invariants
 
 - `main` is the sole development branch unless the owner explicitly changes policy;
 - no visible Linux UI in normal child operation;
+- installation-time Wi-Fi is available when wanted but never required;
+- credentials never enter normal install records/logs/argv;
+- complete offline installation and first boot remain mandatory;
 - Activity remains runtime-neutral;
 - every child-facing Activity retains Greia-owned Home outside Activity authority;
 - controller/joystick support is a platform concern, not per-Activity raw hardware code;
