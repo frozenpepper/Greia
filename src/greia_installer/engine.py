@@ -22,6 +22,14 @@ from greia_platform.grub_security import (
 from greia_platform.hardware import HardwareSettings, HardwareSettingsStore
 
 from .disk import BlockDevice, LsblkDiskProbe, partition_one_path
+from .hardware_enablement import (
+    HardwareEnablementPlanError,
+    InstallerHardwareEnablementPlan,
+    InstallerHardwareEnablementPlanner,
+    TargetImageHardwareIdentity,
+)
+from .hardware_support import HardwareSupportPoolError, VerifiedHardwareSupportPool
+from .hardware_support_install import TargetHardwareSupportInstaller
 from .power import PowerSupplyProbe
 from .wifi import IwdNetworkProfile
 
@@ -38,6 +46,8 @@ class InstallRequest:
     locale: str = "en"
     payload_digest: Path | None = None
     wifi_profile: IwdNetworkProfile | None = None
+    hardware_support_pool: Path | None = None
+    target_profile: Path | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -58,6 +68,12 @@ class InstallResult:
             self.recovery_code[index : index + 4]
             for index in range(0, len(self.recovery_code), 4)
         )
+
+
+@dataclass(frozen=True, slots=True)
+class PreparedHardwareSupport:
+    identity: TargetImageHardwareIdentity
+    plan: InstallerHardwareEnablementPlan
 
 
 class InstallationPowerProbe(Protocol):
@@ -119,6 +135,7 @@ class InstallationEngine:
         report(InstallProgress(0.01, "payload", "Checking the installation files"))
         self._verify_payload(request.payload, request.payload_digest)
         self._verify_target(request.target)
+        hardware_support = self._prepare_hardware_support(request, report)
 
         target_mount = Path(tempfile.mkdtemp(prefix="pip-install-target."))
         mounted: list[Path] = []
@@ -127,9 +144,9 @@ class InstallationEngine:
         try:
             report(InstallProgress(0.03, "prepare", "Checking the selected disk"))
             self._verify_target(request.target)
-            # Payload hashing can take significant time on the reference Acer.
-            # Recheck AC/battery state at the engine boundary immediately before
-            # the first irreversible command instead of trusting the UI preflight.
+            # Payload hashing and hardware discovery can take significant time on
+            # the reference Acer. Recheck AC/battery state immediately before the
+            # first irreversible command instead of trusting the UI preflight.
             self._verify_pre_erase_power()
             self._verify_target(request.target)
 
@@ -186,8 +203,34 @@ class InstallationEngine:
             self._write_grub_root_uuid(target_mount, filesystem_uuid)
 
             report(InstallProgress(0.70, "configure", "Applying parent choices"))
-            self._write_initial_configuration(target_mount, request)
+            self._write_initial_configuration(
+                target_mount,
+                request,
+                hardware_support.plan if hardware_support is not None else None,
+            )
             self._mount_chroot_filesystems(target_mount, mounted)
+
+            if hardware_support is not None and hardware_support.plan.target_packages:
+                report(
+                    InstallProgress(
+                        0.74,
+                        "hardware",
+                        "Adding support for this computer",
+                    )
+                )
+                # Re-read and re-hash the media pool at the point of use. The
+                # earlier pre-erase verification is not treated as perpetual
+                # authority across a long destructive installation transaction.
+                pool = self._load_hardware_support_pool(
+                    request, hardware_support.identity
+                )
+                TargetHardwareSupportInstaller(self.runner).install(
+                    target_root=target_mount,
+                    pool=pool,
+                    packages=hardware_support.plan.target_packages,
+                    mounted=mounted,
+                )
+
             recovery_credential = self._personalize_target(target_mount)
 
             report(InstallProgress(0.78, "bootloader", "Making the disk bootable"))
@@ -246,6 +289,47 @@ class InstallationEngine:
             recovery_user=recovery_credential.user,
             recovery_code=recovery_credential.code,
         )
+
+    def _prepare_hardware_support(
+        self,
+        request: InstallRequest,
+        report: Callable[[InstallProgress], None],
+    ) -> PreparedHardwareSupport | None:
+        if request.hardware_support_pool is None and request.target_profile is None:
+            return None
+        if request.hardware_support_pool is None or request.target_profile is None:
+            raise InstallationError(
+                "hardware support requires both the media pool and target image profile"
+            )
+        report(InstallProgress(0.02, "hardware", "Checking hardware compatibility"))
+        try:
+            identity = TargetImageHardwareIdentity.load(request.target_profile)
+            pool = self._load_hardware_support_pool(request, identity)
+            plan = InstallerHardwareEnablementPlanner.linux_default(pool=pool).plan()
+        except (HardwareEnablementPlanError, HardwareSupportPoolError) as exc:
+            raise InstallationError(f"hardware support verification failed: {exc}") from exc
+        if not plan.complete:
+            detail = "; ".join(plan.diagnostics[:3]) or "hardware support resolution is incomplete"
+            raise InstallationError(
+                "hardware support could not be resolved safely before disk changes: " + detail
+            )
+        return PreparedHardwareSupport(identity, plan)
+
+    @staticmethod
+    def _load_hardware_support_pool(
+        request: InstallRequest,
+        identity: TargetImageHardwareIdentity,
+    ) -> VerifiedHardwareSupportPool:
+        if request.hardware_support_pool is None:
+            raise InstallationError("hardware support pool is missing")
+        try:
+            return VerifiedHardwareSupportPool.load(
+                request.hardware_support_pool,
+                expected_suite=identity.suite,
+                expected_architecture=identity.architecture,
+            )
+        except HardwareSupportPoolError as exc:
+            raise InstallationError(f"hardware support media verification failed: {exc}") from exc
 
     def _verify_target_identity(self, expected: BlockDevice) -> BlockDevice:
         current = self.probe.probe().by_path(expected.path)
@@ -383,7 +467,12 @@ class InstallationEngine:
             hasher=self.grub_password_hasher,
         )
 
-    def _write_initial_configuration(self, target_root: Path, request: InstallRequest) -> None:
+    def _write_initial_configuration(
+        self,
+        target_root: Path,
+        request: InstallRequest,
+        hardware_plan: InstallerHardwareEnablementPlan | None = None,
+    ) -> None:
         defaults = target_root / "opt/greia-os/runtime/hardware-settings.toml"
         state_dir = target_root / "var/lib/greia-system-settings"
         store = HardwareSettingsStore.load(defaults, state_dir)
@@ -404,6 +493,15 @@ class InstallationEngine:
             # Never put SSIDs, profile contents or Wi-Fi credentials into the
             # ordinary installation record. This boolean is enough for support.
             "wifi_configured": request.wifi_profile is not None,
+            # Package names are support-state metadata, not raw hardware
+            # inventory. Do not persist modaliases, sysfs paths or driver/device
+            # serial information in the ordinary installation record.
+            "hardware_enablement_complete": (
+                hardware_plan.complete if hardware_plan is not None else None
+            ),
+            "hardware_support_packages": (
+                list(hardware_plan.target_packages) if hardware_plan is not None else []
+            ),
         }
         (record_dir / "install-record.json").write_text(
             json.dumps(record, sort_keys=True, separators=(",", ":")) + "\n",
