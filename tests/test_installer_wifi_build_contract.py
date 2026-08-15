@@ -40,6 +40,11 @@ class InstallerWifiBuildContractTests(unittest.TestCase):
         self.assertIn("Wants=iwd.service systemd-resolved.service", service)
         self.assertIn("iwd.service systemd-resolved.service", service)
 
+    def test_installer_does_not_override_systemd_resolved_resolv_conf(self) -> None:
+        self.assertFalse(
+            (PROJECT_ROOT / "build/installer-overlay/etc/resolv.conf").exists()
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
