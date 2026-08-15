@@ -23,6 +23,7 @@ from greia_platform.hardware import HardwareSettings, HardwareSettingsStore
 
 from .disk import BlockDevice, LsblkDiskProbe, partition_one_path
 from .power import PowerSupplyProbe
+from .wifi import IwdNetworkProfile
 
 
 class InstallationError(RuntimeError):
@@ -36,6 +37,7 @@ class InstallRequest:
     hardware_settings: HardwareSettings
     locale: str = "en"
     payload_digest: Path | None = None
+    wifi_profile: IwdNetworkProfile | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -386,6 +388,11 @@ class InstallationEngine:
         state_dir = target_root / "var/lib/greia-system-settings"
         store = HardwareSettingsStore.load(defaults, state_dir)
         store.replace(request.hardware_settings)
+        if request.wifi_profile is not None:
+            try:
+                request.wifi_profile.write_to(target_root)
+            except OSError as exc:
+                raise InstallationError("could not save the selected Wi-Fi network") from exc
         record_dir = target_root / "etc/greia-os"
         record_dir.mkdir(parents=True, exist_ok=True)
         record = {
@@ -394,6 +401,9 @@ class InstallationEngine:
             "target_identity_sha256": request.target.identity_digest,
             "locale": request.locale,
             "hardware_settings": request.hardware_settings.as_json_dict(),
+            # Never put SSIDs, profile contents or Wi-Fi credentials into the
+            # ordinary installation record. This boolean is enough for support.
+            "wifi_configured": request.wifi_profile is not None,
         }
         (record_dir / "install-record.json").write_text(
             json.dumps(record, sort_keys=True, separators=(",", ":")) + "\n",
