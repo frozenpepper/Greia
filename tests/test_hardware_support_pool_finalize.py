@@ -19,6 +19,8 @@ class HardwareSupportPoolFinalizeTests(unittest.TestCase):
                     "schema_version": 1,
                     "suite": "trixie",
                     "architecture": "amd64",
+                    "firmware_packages": ["firmware-realtek"],
+                    "microcode_packages": ["intel-microcode"],
                     "candidate_packages": ["firmware-realtek", "intel-microcode"],
                 }
             ),
@@ -46,6 +48,8 @@ class HardwareSupportPoolFinalizeTests(unittest.TestCase):
 
             self.assertEqual(manifest["package_count"], 1)
             self.assertEqual(manifest["provided_candidate_packages"], ["firmware-realtek"])
+            self.assertEqual(manifest["provided_firmware_packages"], ["firmware-realtek"])
+            self.assertEqual(manifest["provided_microcode_packages"], [])
             self.assertEqual(manifest["unavailable_candidate_packages"], ["intel-microcode"])
             entry = manifest["packages"][0]
             self.assertTrue(entry["candidate"])
@@ -58,6 +62,8 @@ class HardwareSupportPoolFinalizeTests(unittest.TestCase):
                 self.assertEqual(handle.read(), packages_text)
             persisted = json.loads((pool / "manifest.json").read_text(encoding="utf-8"))
             self.assertEqual(persisted["packages"], manifest["packages"])
+            self.assertEqual(len(persisted["repository_indexes"]["Packages"]["sha256"]), 64)
+            self.assertEqual(len(persisted["repository_indexes"]["Packages.gz"]["sha256"]), 64)
 
     def test_pool_size_bound_is_fail_closed(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -99,6 +105,25 @@ class HardwareSupportPoolFinalizeTests(unittest.TestCase):
             candidates = self.make_candidate_manifest(root)
             with self.assertRaisesRegex(PoolFinalizeError, "symlinked"):
                 finalize_pool(pool, candidates, 1024 * 1024)
+
+    def test_candidate_class_union_must_be_exact(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            pool = root / "support"
+            (pool / "pool").mkdir(parents=True)
+            manifest = root / "bad.json"
+            manifest.write_text(
+                json.dumps(
+                    {
+                        "firmware_packages": ["firmware-realtek"],
+                        "microcode_packages": [],
+                        "candidate_packages": ["firmware-realtek", "tlp"],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(PoolFinalizeError, "union"):
+                finalize_pool(pool, manifest, 1024 * 1024)
 
 
 if __name__ == "__main__":
