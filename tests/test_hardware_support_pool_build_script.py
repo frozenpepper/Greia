@@ -19,7 +19,17 @@ class HardwareSupportPoolBuildScriptTests(unittest.TestCase):
         self.assertIn("build_hardware_support_pool_manifest.py", source)
         self.assertIn("finalize_hardware_support_pool.py", source)
 
-    def test_pool_builder_does_not_use_vendor_downloaders_or_curl(self) -> None:
+    def test_dependency_resolution_uses_exact_target_payload_state_not_live_status(self) -> None:
+        source = (PROJECT_ROOT / "build/populate-hardware-support-pool.sh").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("TARGET_DPKG_STATUS", source)
+        self.assertIn("pip-rootfs.squashfs", source)
+        self.assertIn("unsquashfs -cat", source)
+        self.assertIn("var/lib/dpkg/status", source)
+        self.assertIn("Dir::State::status=/tmp/greia-target-dpkg-status", source)
+
+    def test_pool_builder_does_not_use_vendor_downloaders_or_direct_dpkg_install(self) -> None:
         source = (PROJECT_ROOT / "build/populate-hardware-support-pool.sh").read_text(
             encoding="utf-8"
         )
