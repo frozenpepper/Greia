@@ -110,39 +110,45 @@ class LinuxSysfsHardwareInventory:
         directory_count = 0
         truncated = False
 
-        try:
-            walker = os.walk(self.sysfs_devices, topdown=True, followlinks=False)
-            for current, directories, files in walker:
-                directory_count += 1
-                if directory_count > self.max_directories:
-                    truncated = True
-                    break
-                directories.sort()
-                files.sort()
-                if "modalias" not in files:
-                    continue
-                if len(devices) >= self.max_devices:
-                    truncated = True
-                    break
-                current_path = Path(current)
-                try:
-                    modalias = _read_bounded_text(current_path / "modalias", _MAX_MODALIAS_BYTES)
-                    if not modalias:
-                        continue
-                    relative = current_path.relative_to(self.sysfs_devices)
-                    path_text = "/" if str(relative) == "." else "/" + str(relative)
-                    devices.append(
-                        HardwareDevice(
-                            sysfs_path=path_text,
-                            subsystem=_symlink_basename(current_path / "subsystem"),
-                            modalias=modalias,
-                            driver=_symlink_basename(current_path / "driver"),
-                        )
-                    )
-                except (OSError, UnicodeError, ValueError, HardwareEnablementError):
-                    scan_errors += 1
-        except OSError:
+        def record_walk_error(_: OSError) -> None:
+            nonlocal scan_errors
             scan_errors += 1
+
+        walker = os.walk(
+            self.sysfs_devices,
+            topdown=True,
+            onerror=record_walk_error,
+            followlinks=False,
+        )
+        for current, directories, files in walker:
+            directory_count += 1
+            if directory_count > self.max_directories:
+                truncated = True
+                break
+            directories.sort()
+            files.sort()
+            if "modalias" not in files:
+                continue
+            if len(devices) >= self.max_devices:
+                truncated = True
+                break
+            current_path = Path(current)
+            try:
+                modalias = _read_bounded_text(current_path / "modalias", _MAX_MODALIAS_BYTES)
+                if not modalias:
+                    continue
+                relative = current_path.relative_to(self.sysfs_devices)
+                path_text = "/" if str(relative) == "." else "/" + str(relative)
+                devices.append(
+                    HardwareDevice(
+                        sysfs_path=path_text,
+                        subsystem=_symlink_basename(current_path / "subsystem"),
+                        modalias=modalias,
+                        driver=_symlink_basename(current_path / "driver"),
+                    )
+                )
+            except (OSError, UnicodeError, ValueError, HardwareEnablementError):
+                scan_errors += 1
 
         devices.sort(key=lambda item: (item.subsystem, item.modalias, item.sysfs_path))
         return HardwareInventory(tuple(devices), truncated=truncated, scan_errors=scan_errors)
@@ -182,6 +188,8 @@ class HardwareSupportPlan:
 
     @property
     def automatic_packages(self) -> tuple[str, ...]:
+        if not self.complete:
+            return ()
         return tuple(
             recommendation.package
             for recommendation in self.recommendations
@@ -267,9 +275,7 @@ class IsenkramHardwareSupportResolver:
                 )
 
         lookup_result = self._run((self.lookup_command, "-l"), "hardware lookup", diagnostics)
-        if lookup_result is None:
-            complete = False
-        else:
+        if lookup_result is not None:
             for package in _package_lines(lookup_result.stdout, self.max_recommendations):
                 recommendations.setdefault(
                     package,
@@ -289,7 +295,7 @@ class IsenkramHardwareSupportResolver:
         ordered = tuple(
             sorted(
                 recommendations.values(),
-                key=lambda item: (item.disposition.value, item.kind.value, item.package),
+                key=_recommendation_sort_key,
             )[: self.max_recommendations]
         )
         return HardwareSupportPlan(inventory.token, ordered, complete, tuple(diagnostics))
@@ -340,8 +346,8 @@ class X86MicrocodeResolver:
 
     def _package(self) -> str:
         try:
-            text = _read_bounded_text(self.cpuinfo, 256 * 1024)
-        except (OSError, UnicodeError, ValueError):
+            text = _read_text_prefix(self.cpuinfo, 64 * 1024)
+        except (OSError, UnicodeError):
             return ""
         vendors = {
             line.split(":", 1)[1].strip()
@@ -376,12 +382,14 @@ class CompositeHardwareSupportResolver:
                 ):
                     recommendations[item.package] = item
         ordered = tuple(
-            sorted(
-                recommendations.values(),
-                key=lambda item: (item.disposition.value, item.kind.value, item.package),
-            )[: self.max_recommendations]
+            sorted(recommendations.values(), key=_recommendation_sort_key)[: self.max_recommendations]
         )
         return HardwareSupportPlan(inventory.token, ordered, complete, tuple(diagnostics))
+
+
+def _recommendation_sort_key(item: HardwareSupportRecommendation) -> tuple[int, str, str]:
+    priority = 0 if item.disposition is SupportDisposition.AUTO_ELIGIBLE else 1
+    return (priority, item.kind.value, item.package)
 
 
 def _package_lines(output: str, limit: int) -> tuple[str, ...]:
@@ -403,6 +411,12 @@ def _read_bounded_text(path: Path, max_bytes: int) -> str:
     if len(payload) > max_bytes:
         raise ValueError(f"bounded hardware file exceeds {max_bytes} bytes")
     return payload.decode("utf-8").strip()
+
+
+def _read_text_prefix(path: Path, max_bytes: int) -> str:
+    with path.open("rb") as handle:
+        payload = handle.read(max_bytes)
+    return payload.decode("utf-8", errors="strict")
 
 
 def _symlink_basename(path: Path) -> str:
