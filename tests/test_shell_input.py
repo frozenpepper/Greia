@@ -52,7 +52,10 @@ class ShellInputControllerTests(unittest.TestCase):
         self.assertIsNone(shell.handle_event(event))
 
     def test_controller_dpad_and_south_face_use_navigation_semantics(self) -> None:
-        from pygame._sdl2 import controller as sdl_controller
+        try:
+            from pygame._sdl2 import controller as sdl_controller
+        except ImportError:
+            self.skipTest("curated pygame build has no SDL2 controller module")
 
         controllers = _Controllers()
         shell = ShellInputController(controllers=controllers)  # type: ignore[arg-type]
@@ -68,7 +71,10 @@ class ShellInputControllerTests(unittest.TestCase):
         self.assertIs(shell.handle_event(activate), SemanticAction.ACTIVATE)
 
     def test_guide_remains_reserved_and_never_reaches_shell_activity_navigation(self) -> None:
-        from pygame._sdl2 import controller as sdl_controller
+        try:
+            from pygame._sdl2 import controller as sdl_controller
+        except ImportError:
+            self.skipTest("curated pygame build has no SDL2 controller module")
 
         controllers = _Controllers()
         shell = ShellInputController(controllers=controllers)  # type: ignore[arg-type]
