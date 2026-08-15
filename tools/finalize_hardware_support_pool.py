@@ -78,9 +78,11 @@ def finalize_pool(pool_root: Path, candidate_manifest: Path, max_bytes: int) -> 
     deb_dir = pool_root / "pool"
     if not deb_dir.is_dir():
         raise PoolFinalizeError(f"hardware-support pool directory is missing: {deb_dir}")
-    debs = tuple(sorted(path for path in deb_dir.glob("*.deb") if path.is_file() and not path.is_symlink()))
+    debs = tuple(sorted(deb_dir.glob("*.deb")))
     if len(debs) > _MAX_DEBS:
         raise PoolFinalizeError("hardware-support pool contains too many Debian packages")
+    if any(path.is_symlink() or not path.is_file() for path in debs):
+        raise PoolFinalizeError("hardware-support pool contains a symlinked or invalid Debian package")
 
     total_bytes = sum(path.stat().st_size for path in debs)
     if total_bytes > max_bytes:
