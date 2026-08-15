@@ -1,11 +1,11 @@
 # Greia — Standalone Engineering Handover
 
-**Date:** 2026-08-15  
+**Date:** 2026-08-16  
 **Version family:** `0.13.x` development  
 **Repository:** `frozenpepper/Greia` (private)  
 **Canonical/default/development branch:** `main`  
 **Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**  
-**Current cross-cutting tranche:** **ADR 0021 automatic hardware enablement — Ubuntu source gate failed at `5182ba4…`; repair committed, exact-current-main rerun pending**
+**Current cross-cutting tranche:** **ADR 0021 automatic hardware enablement — Ubuntu aggregate gate reached 530 tests at `8d05fbb…`, failed only on Shell input; second repair committed, exact-current-main rerun pending**
 
 ## Branch policy
 
@@ -13,7 +13,7 @@ The repository owner requires a **single-branch workflow**. `main` is the only d
 
 Historical duplicate ref names may remain visible because the available connector does not expose ref deletion. They are not development branches and must never contain divergent current source. After substantive work, advance those aliases to the exact current `main` commit until a GitHub surface capable of deleting them is used.
 
-A temporary connector safety ref named `agent/ubuntu-source-gate-repair` was created while repairing the 2026-08-15 Ubuntu source-gate regression so half-applied multi-file edits were not exposed on `main`. This was contrary to the normal single-branch rule and must not become a development branch. After the repair is advanced to `main`, keep that ref non-divergent at the exact same commit until it can be deleted.
+A temporary connector safety ref named `agent/ubuntu-source-gate-repair` was created while repairing the earlier 2026-08-15 Ubuntu source-gate regression so half-applied multi-file edits were not exposed on `main`. This was contrary to the normal single-branch rule and must not become a development branch. Keep that ref non-divergent at the exact current `main` commit until it can be deleted.
 
 ## Hosted execution boundary
 
@@ -21,7 +21,7 @@ Do **not** use, query, trigger, rerun, inspect or download GitHub Actions runs/j
 
 ## Evidence boundary
 
-Last complete source gate genuinely executed before the hardware-enablement tranche:
+Last complete source gate genuinely executed before the current hardware-enablement/input repair sequence:
 
 ```text
 commit: 097f0281888a58f6f26425807ce99d9f35449313
@@ -31,28 +31,51 @@ bundled Activity validation: PASS
 source/shell/footprint gate: PASS
 ```
 
-Latest owner-controlled hardware-enablement source-gate attempt:
+Latest owner-controlled hardware-enablement aggregate-gate attempt:
 
 ```text
 host: Intel Mac mini / Ubuntu 24.04.4 LTS / x86_64
-commit: 5182ba487dba562c9670b0bd87eadd32700fd357
-profile inspected: legacy-x86-i686
-focused hardware-enablement suites: PASS
-full source gate: FAIL
-full-suite result: 520 tests; failures=4; errors=6
+commit: 8d05fbb6f36c3623d6df794f6cfc2beabef2f47e
+profile intended: legacy-x86-i686
+focused hardware-enablement suite 1: 77 PASS
+focused hardware-enablement suite 2: 32 PASS
+full source suite / make verify: 530 tests
+full-suite result: FAIL; failures=1; errors=2
+aggregate gate exit: 2
 image build: NOT RUN
 SD write: NOT RUN
 ```
 
-The failure was correctly stopped before physical-media mutation. The preserved report is summarized in:
+The operator correctly stopped before physical-media mutation. All three remaining failures were confined to Shell/controller input:
+
+1. two tests still bypassed Greia's new SDL2/Pygame compatibility constants and directly accessed distro-missing `pygame._sdl2.controller.CONTROLLER_BUTTON_*` exports;
+2. `ShellInputController` incorrectly delayed an exact `1.40` analog-repeat deadline because `1.30 + 0.10` encoded as `1.4000000000000001`.
+
+The preserved analysis/repair record is:
+
+```text
+docs/reviews/2026-08-16_UBUNTU_SOURCE_GATE_8D05FBB_SHELL_INPUT_REPAIR.md
+```
+
+Repair commits:
+
+```text
+29380333dd521c234b9c41ec30df471020076cf0
+  fix: honor analog repeat deadlines at float boundaries
+
+bf13b419ed20e20634499cc03b9ef381a3b1b464
+  tests: use Greia controller compatibility constants
+```
+
+The earlier broad regression repair remains documented in:
 
 ```text
 docs/reviews/2026-08-15_UBUNTU_LEGACY_X86_SOURCE_GATE_FAILURE_AND_REPAIR.md
 ```
 
-The repair tranche fixes two genuine implementation defects, restores explicit developer-SSH hardening, and updates stale regression expectations for current Activity/theme/lifecycle contracts. **The repair is still UNPROVEN until the owner-controlled Ubuntu host pulls the exact current `main` SHA and reruns `bash tools/run_hardware_enablement_source_gate.sh` successfully.** Do not build/write the SD before that pass.
+**Current source remains UNPROVEN until the owner-controlled Ubuntu host pulls exact current `origin/main` and reruns `bash tools/run_hardware_enablement_source_gate.sh` successfully. Do not build/write the SD before that pass.**
 
-Everything newer than the last genuinely passing evidence remains **UNPROVEN unless explicitly recorded otherwise**. In particular, the composed hardware-enablement code described below has not yet passed a canonical Debian installer build, a VM installation, or diverse physical-machine acceptance.
+Everything newer than the last genuinely passing evidence remains **UNPROVEN unless explicitly recorded otherwise**. In particular, the composed hardware-enablement code has not yet passed a canonical installer build, VM installation, or diverse physical-machine acceptance.
 
 ## ADR 0021 — automatic hardware enablement
 
@@ -221,7 +244,7 @@ Only after this verification may the temporary APT source use local `trusted=yes
 
 `InstallerHardwareEnablementPlanner` intersects current machine evidence with the verified media pool. Automatic target package output is empty unless the plan is complete.
 
-`InstallationEngine` now supports explicit live-service composition through:
+`InstallationEngine` supports explicit live-service composition through:
 
 ```text
 GREIA_HARDWARE_SUPPORT_POOL=/opt/greia-hardware-support
@@ -295,7 +318,7 @@ tests/test_installer_hardware_support_service.py
 tests/test_installer_engine.py
 ```
 
-These focused hardware-enablement suites executed successfully on the Ubuntu host at failed aggregate-gate SHA `5182ba487dba562c9670b0bd87eadd32700fd357`; the subsequent full source suite failed for the cross-project regressions documented above. The repair requires a complete aggregate-gate rerun before source closure.
+Both focused hardware-enablement suites executed successfully on the Ubuntu host at aggregate-gate SHA `8d05fbb6f36c3623d6df794f6cfc2beabef2f47e`; the subsequent full source suite failed only on the three Shell/controller cases documented above. The new repair requires a complete aggregate-gate rerun before source closure.
 
 ## Exact next source gate
 
@@ -308,13 +331,15 @@ git pull --ff-only origin main
 bash tools/run_hardware_enablement_source_gate.sh
 ```
 
-That canonical script already runs the focused hardware-enablement suites and the broader source gate. Stop on non-zero exit and preserve the exact output and SHA.
+The canonical script already runs the focused hardware-enablement suites and the broader source gate. Stop on non-zero exit and preserve exact output and SHA.
 
 Only after it exits zero may the Acer SD preparation continue with:
 
 ```bash
 sudo bash build/build-legacy-x86-sd-installer.sh out
 ```
+
+Then verify the image digest, positively identify the intended SD whole device, raw-write the image, and require a physical read-back SHA match before calling the card prepared.
 
 Do not weaken tests, substitute an Acer-specific profile, or replace Debian metadata with Greia-authored device tables.
 
@@ -362,15 +387,16 @@ Visible Open and WPA/WPA2/WPA3-Personal are the initial cases. Enterprise/802.1X
 
 ## Developer remote-control / Acer agent workflow
 
-`tools/greia_remote.py` supports remote status/screenshot/snapshot/logs/input/Activity deployment/service restart/reboot/poweroff/shell on explicit developer images. The 2026-08-15 Ubuntu regression exposed and repaired a `self.key`/`key()` name collision. Developer SSH authentication is again explicitly hardened by `build/overlay/etc/ssh/sshd_config.d/20-greia-parent.conf`; normal images still do not enable SSH merely because the policy file exists. Physical remote-agent acceptance remains NOT RUN.
+`tools/greia_remote.py` supports remote status/screenshot/snapshot/logs/input/Activity deployment/service restart/reboot/poweroff/shell on explicit developer images. The earlier Ubuntu regression exposed and repaired a `self.key`/`key()` name collision. Developer SSH authentication is explicitly hardened by `build/overlay/etc/ssh/sshd_config.d/20-greia-parent.conf`; normal images still do not enable SSH merely because the policy file exists. Physical remote-agent acceptance remains NOT RUN.
 
 ## Other active R7 state
 
 - Production display remains provisional Xorg/xinit; no compositor selected.
 - ADR 0019 trusted system Home/Back source exists; concrete production backend remains unproven.
-- ADR 0020 input/controller semantic source exists; Pygame now tolerates distro builds that expose `_sdl2.controller` without re-exporting SDL2 controller enum constants; production Activity input broker and physical controller acceptance remain open.
-- `ShellInputController` still needs focused source verification and minimal live composition.
-- Writing/Painting remain source-implemented; stale regression expectations were aligned with their current contracts, but current execution/hardware evidence remains unproven.
+- ADR 0020 input/controller semantic source exists. Pygame tolerates distro builds that expose `_sdl2.controller` without re-exporting SDL2 controller enum constants; Shell tests now consume that Greia portability layer rather than bypassing it.
+- `ShellInputController` analog repeat now treats a one-ULP floating representation difference at an exact configured deadline as due; the owner-controlled Ubuntu gate rerun is still required before claiming source PASS.
+- Production Activity input broker and physical controller acceptance remain open.
+- Writing/Painting remain source-implemented; current execution/hardware evidence remains unproven.
 
 ## Non-negotiable continuation rules
 
