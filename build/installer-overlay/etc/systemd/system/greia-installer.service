@@ -11,6 +11,8 @@ Type=simple
 User=root
 WorkingDirectory=/opt/greia-os
 Environment=GREIA_OS_ROOT=/opt/greia-os
+Environment=GREIA_HARDWARE_SUPPORT_POOL=/opt/greia-hardware-support
+Environment=GREIA_TARGET_IMAGE_PROFILE=/etc/greia-os/target-image-profile.json
 Environment=PYTHONPATH=/opt/greia-os/src
 Environment=PYTHONNOUSERSITE=1
 Environment=PYTHONDONTWRITEBYTECODE=1
