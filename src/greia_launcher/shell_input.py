@@ -58,6 +58,7 @@ class ShellInputController:
         )
 
     def start(self) -> ShellInputSnapshot:
+        self._reset_analog()
         self._controllers.start()
         return self.snapshot
 
