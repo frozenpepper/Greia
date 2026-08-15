@@ -2,6 +2,7 @@ ca-certificates
 dbus
 debian-security-support
 e2fsprogs
+isenkram-cli
 iwd
 kbd
 live-boot
