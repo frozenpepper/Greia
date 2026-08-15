@@ -8,15 +8,9 @@
 
 ## Branch policy
 
-The repository owner has explicitly requested a **single-branch workflow**. `main` is the only development/integration branch. Do not create feature, recovery, archive or work branches unless the owner explicitly changes this policy. Commit coherent work directly to `main` as work proceeds. GitHub remains the persistent source of truth.
+The repository owner requires a **single-branch workflow**. `main` is the only development/integration branch. Do not create feature, recovery, archive or work branches unless the owner explicitly changes this policy. Commit coherent work directly to `main`; GitHub remains the persistent source of truth.
 
-PR #4 (`r7-direct-graphics`) was merged into `main` with merge commit `6019eb06134478861010cdcfae649a921f1ffc7d`. Historical duplicate ref names may remain visible because the available connector does not expose ref deletion; they must not be used for development and should be kept aligned to `main` until they can be physically deleted.
-
-## Resume order
-
-Read `AGENTS.md`, `README.md`, `docs/DOCUMENTATION.md`, `docs/architecture/GREIA_ARCHITECTURE.md`, accepted ADRs through ADR 0020, `docs/engineering/ENGINEERING_FOUNDATIONS.md`, applicable product requirements including `docs/product/INSTALLER_WIFI_SETUP.md`, the active implementation plan, this handover, applicable testing/review docs, agent operations, and the Activity skill when relevant.
-
-Always resolve the current **`main` HEAD** before editing or testing.
+Historical duplicate ref names may remain visible because the available connector does not expose ref deletion. They are not development branches and must not contain divergent current source.
 
 ## Hosted execution boundary
 
@@ -34,23 +28,18 @@ bundled Activity validation: PASS
 source/shell/footprint gate: PASS
 ```
 
-Everything newer remains **UNPROVEN unless explicitly recorded otherwise**. Do not promote source presence to runtime or hardware PASS.
+Everything newer remains **UNPROVEN unless explicitly recorded otherwise**.
 
 ## Installation-time Wi-Fi — source implemented, physical acceptance pending
 
-Product requirement:
+Owners:
 
 ```text
 docs/product/INSTALLER_WIFI_SETUP.md
-```
-
-Physical/source acceptance protocol:
-
-```text
 docs/testing/2026-08-15_INSTALLER_WIFI_ACCEPTANCE.md
 ```
 
-The graphical installer now has this intended flow:
+Graphical flow:
 
 ```text
 Welcome
@@ -61,20 +50,19 @@ Welcome
 → installation
 ```
 
-Permanent product semantics:
+Current contract:
 
-- Wi-Fi setup is optional; **Skip for now** must always preserve a complete offline installation path.
-- Internet reachability is never required to install or first-boot Greia.
-- Phase-0 installer supports visible open and WPA/WPA2/WPA3-Personal networks through iwd's `open`/`psk` model.
-- Enterprise/802.1X is identified but deliberately deferred to a later typed Greia Parents configuration flow; WEP is unsupported; hidden/manual SSID remains follow-up scope.
-- credentials must not appear in command-line arguments, ordinary logs or `install-record.json`.
-- password UI is masked and transient credentials are suppressed from ordinary object repr/debug output and cleared after successful connection, failed connection, or skip.
-- successful configuration persists the exact tested iwd profile to the installed target under `/var/lib/iwd` with private permissions.
-- the installation record stores only `wifi_configured: true/false`, never SSID/password.
-- slow scan/connection/DHCP work runs outside the Pygame event/render loop.
-- stale async scan/connect results are invalidated by generation and cannot overwrite a newer parent choice.
+- **Skip for now** preserves full offline installation/first boot.
+- Visible Open and WPA/WPA2/WPA3-Personal networks are the initial supported installer cases.
+- Enterprise/802.1X is identified and deferred; WEP unsupported; hidden/manual SSID is follow-up scope.
+- Credentials never belong in argv, ordinary logs or `install-record.json`.
+- Password is masked, hidden from ordinary repr/debug output, and cleared after success/failure/skip.
+- Successful connection persists the exact tested iwd profile under target `/var/lib/iwd` with private permissions.
+- Install record contains only `wifi_configured: true/false`, not SSID/password.
+- Scan/connect/DHCP work is asynchronous and generation-bound so stale results cannot replace newer parent choices.
+- Back from final confirmation allows reselecting Wi-Fi rather than trapping the accepted choice.
 
-Relevant source:
+Source owners:
 
 ```text
 src/greia_installer/wifi.py
@@ -83,7 +71,7 @@ src/greia_installer/main.py
 src/greia_installer/engine.py
 ```
 
-Live installer networking additions:
+Live installer networking:
 
 ```text
 build/package-sets/installer-base.txt
@@ -91,7 +79,7 @@ build/installer-overlay/etc/iwd/main.conf
 build/installer-overlay/etc/systemd/system/greia-installer.service
 ```
 
-Every live installer now declares the small wireless stack in `installer-base`:
+Live package set now includes:
 
 ```text
 iwd
@@ -101,75 +89,37 @@ systemd-resolved
 wireless-regdb
 ```
 
-Live iwd temporarily owns address/DNS configuration (`EnableNetworkConfiguration=true`) so the installation environment does not need a second live network manager. Debian's `systemd-resolved` package owns normal live `/etc/resolv.conf` integration; Greia deliberately does not overlay a competing regular file. The installed target retains the existing platform architecture where iwd owns Wi-Fi authentication and systemd-networkd owns address configuration.
+Live iwd owns temporary address/DNS configuration. `systemd-resolved` owns normal live `/etc/resolv.conf` integration; Greia deliberately does not overlay a competing file. Installed Greia retains iwd authentication plus systemd-networkd address configuration.
 
-The build-profile resolver also applies the selected profile's kernel, video packages and `extra_packages` to installer artifacts. Therefore any firmware package required by the exact Acer/Pi radio after physical inventory should be added to the hardware profile so both live installer and installed target receive it; do not add a separate ad-hoc installer firmware path.
+The build-profile resolver applies the selected profile's kernel and `extra_packages` to both installer and target. Any exact Acer/Pi Wi-Fi firmware discovered by physical acceptance therefore belongs in the hardware profile rather than an installer-only hack.
 
-Focused regression source added:
+Regression source:
 
 ```text
 tests/test_installer_wifi.py
 tests/test_installer_wifi_setup.py
 tests/test_installer_wifi_persistence.py
 tests/test_installer_wifi_build_contract.py
+tests/test_installer_state.py
 ```
 
-These tests are **COMMITTED BUT UNEXECUTED**. No real Acer Wi-Fi scan, Personal connection, wrong-password recovery, target profile persistence or first-boot reconnect PASS is currently claimed.
+These tests are **COMMITTED BUT UNEXECUTED**. Physical Acer Wi-Fi evidence is **NOT RUN**.
 
-Important physical acceptance still required:
+Mandatory physical proof: boot exact Acer installer, prove radio/driver/firmware, scan, Personal connect, wrong-password recovery, install, first-boot reconnect, plus a separate complete offline Skip-for-now installation.
 
-1. boot exact Acer installer USB;
-2. prove the real radio/driver/firmware is present;
-3. scan visible networks;
-4. connect to a supported Personal network without password leakage;
-5. prove wrong-password recovery;
-6. install using that network;
-7. remove USB and prove first-boot reconnect;
-8. separately prove a complete offline install using Skip for now.
+## Other active R7 state
 
-## Phase-0 UI / system-navigation state
-
-ADR 0018 owns the lightweight Greia UI foundation in `src/greia_platform/ui_core.py`. ADR 0019 requires immutable Greia-owned Activity Home/Back outside Activity rendering/input authority; current source lives in `src/greia_platform/system_chrome.py` and `src/greia_launcher/system_chrome.py`. No concrete production trusted `SystemChromeBackend` has yet passed real hardware acceptance.
-
-## Phase-0 input/controller state — ADR 0020
-
-Controller/joystick support is a Phase-0 platform requirement. Current runtime-neutral source is in `src/greia_platform/input_core.py`, `src/greia_platform/pygame_input.py`, and `src/greia_launcher/shell_input.py`.
-
-Important boundaries remain: ordinary Activities do not receive broad `/dev/input`; Guide/system input is platform-reserved where supported; Shell controller composition still needs focused verification; production Activity controller delivery still requires the trusted R7 input broker; generic unmapped joystick policy still needs explicit evidence-backed closure.
-
-Physical acceptance procedure:
-
-```text
-docs/testing/2026-08-15_PHASE0_INPUT_CONTROLLER_ACCEPTANCE.md
-```
-
-## First-party Phase-0 creative Activities
-
-Source exists for `org.greia.writing` (`text`) and `org.greia.painting` (`pointer`). Both remain source-implemented but current execution/hardware evidence is unproven.
+- Production display remains provisional Xorg/xinit; no compositor selected.
+- ADR 0019 trusted system Home/Back source exists, concrete production backend remains unproven.
+- ADR 0020 input/controller semantic source exists; production Activity input broker and physical controller acceptance remain open.
+- `ShellInputController` still needs focused source verification and minimal live composition.
+- Writing/Painting remain source-implemented but current execution/hardware evidence unproven.
 
 ## Developer remote-control / Acer agent workflow
 
-The installed developer-image architecture is designed so an agent on the operator computer can remotely test and monitor Greia. `tools/greia_remote.py` supports wait/status/screenshot/snapshot/logs/key/mouse/text/Activity deploy/remove/restore/service restart/reboot/poweroff/shell operations. Screenshot streams actual Greia-display PNG bytes to the operator; snapshot collects `screen.png`, `status.json`, `logs.txt`, and `snapshot.json`.
-
-Acer developer profiles exist for the current i386/non-PAE/amd64 candidates. Matching normal profiles remain remote-disabled. Physical Acer remote-agent acceptance is defined by `docs/testing/2026-08-15_ACER_REMOTE_AGENT_ACCEPTANCE.md` and remains **NOT RUN**.
-
-## R7 production state
-
-```text
-installed display path:       Xorg + xinit compatibility
-status:                       PROVISIONAL
-production compositor:        none selected
-trusted system chrome:        source contract/coordinator implemented; backend unproven
-controller semantic core:     source implemented; unproven
-production Activity input broker: NOT IMPLEMENTED
-physical controller evidence: NOT RUN
-Acer remote-agent physical evidence: NOT RUN
-installer Wi-Fi physical evidence: NOT RUN
-```
+`tools/greia_remote.py` supports remote wait/status/screenshot/snapshot/logs/input/Activity deployment/service restart/reboot/poweroff/shell on explicit developer images. Screenshot streams actual Greia-display PNG bytes to the operator. Physical Acer remote-agent acceptance remains NOT RUN.
 
 ## Exact next source verification
-
-On an owner-controlled current checkout of `main`, run:
 
 ```bash
 PYTHONPATH=src python3 -m unittest \
@@ -203,28 +153,12 @@ PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_developer_remote.p
 make verify
 ```
 
-Stop on first real failure and preserve exact stdout/stderr. Do not weaken tests to manufacture PASS.
+Stop on first genuine failure and preserve exact stdout/stderr. Do not weaken tests to manufacture PASS.
 
-## Next implementation/evidence after source PASS
+## Next evidence after source PASS
 
-1. Run the installer Wi-Fi demo/windowed visual acceptance at 1024×600.
-2. Build the exact Acer installer image and execute `docs/testing/2026-08-15_INSTALLER_WIFI_ACCEPTANCE.md`, initially non-destructively through the Wi-Fi page.
-3. If exact radio firmware is missing, add it to the Acer hardware profile and rebuild rather than installing it manually on the live target.
-4. Continue the open R7 system-chrome/input/controller integration and physical evidence sequence.
-5. Execute Acer remote-agent acceptance once the exact developer profile is installed.
-
-## Invariants
-
-- `main` is the sole development branch unless the owner explicitly changes policy;
-- no visible Linux UI in normal child operation;
-- installation-time Wi-Fi is available when wanted but never required;
-- Wi-Fi credentials never enter normal install records/logs/argv;
-- complete offline installation and first boot remain mandatory;
-- Activity remains runtime-neutral;
-- every child-facing Activity retains Greia-owned Home outside Activity authority;
-- controller/joystick support is a platform concern, not per-Activity raw hardware code;
-- progression/rewards remain platform-owned;
-- Acer remains the extreme resource floor and ARM remains co-equal;
-- no unauthorized hosted execution;
-- no desktop/window-manager architecture;
-- source/VM/physical evidence boundaries remain explicit and honest.
+1. Run the Wi-Fi installer demo at 1024×600.
+2. Build exact Acer installer image and execute `docs/testing/2026-08-15_INSTALLER_WIFI_ACCEPTANCE.md`, beginning non-destructively.
+3. If radio firmware is missing, add it to the Acer profile and rebuild.
+4. Continue R7 trusted system-chrome/input/controller integration and physical evidence.
+5. Execute Acer remote-agent acceptance on the installed developer profile.
