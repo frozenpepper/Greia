@@ -1,0 +1,3 @@
+# Greia broad installer hardware support: boot-critical modules must be
+# available before the live root/squashfs is reachable.
+MODULES=most
