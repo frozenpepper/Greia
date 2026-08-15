@@ -126,11 +126,13 @@ class VerifiedHardwareSupportPool:
             if total > _MAX_POOL_BYTES:
                 raise HardwareSupportPoolError("hardware-support pool exceeds runtime byte bound")
 
-        actual_paths = {
-            path.resolve()
-            for path in (root / "pool").glob("*.deb")
-            if path.is_file() and not path.is_symlink()
-        }
+        pool_dir = root / "pool"
+        if not pool_dir.is_dir() or pool_dir.is_symlink():
+            raise HardwareSupportPoolError("hardware-support package directory is invalid")
+        pool_entries = tuple(sorted(pool_dir.glob("*.deb")))
+        if any(path.is_symlink() or not path.is_file() for path in pool_entries):
+            raise HardwareSupportPoolError("hardware-support pool contains a symlinked or invalid package")
+        actual_paths = {path.resolve() for path in pool_entries}
         if actual_paths != expected_paths:
             raise HardwareSupportPoolError("hardware-support pool contains unmanifested package payloads")
         for index_name in ("Packages", "Packages.gz"):
