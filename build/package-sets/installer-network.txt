@@ -1,0 +1,5 @@
+iwd
+python3-dbus
+rfkill
+systemd-resolved
+wireless-regdb
