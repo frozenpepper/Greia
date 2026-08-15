@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import os
 import subprocess
 import tempfile
 import unittest
@@ -9,7 +10,13 @@ from unittest import mock
 
 from greia_installer.disk import BlockDevice
 from greia_installer.engine import InstallRequest, InstallResult, InstallationEngine, InstallationError
+from greia_installer.hardware_enablement import InstallerHardwareEnablementPlan
 from greia_platform.hardware import HardwareDefaults, HardwareSettings
+from greia_platform.hardware_enablement import (
+    HardwareDevice,
+    HardwareInventory,
+    HardwareSupportPlan,
+)
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -93,6 +100,49 @@ class InstallerEngineTests(unittest.TestCase):
                 with self.assertRaisesRegex(InstallationError, "integrity record is missing"):
                     engine.install(request)
             self.assertEqual(runner.commands, [])
+
+    def test_hardware_support_media_failure_stops_before_first_disk_mutation(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            payload = root / "payload.squashfs"
+            digest_path = root / "expected.sha256"
+            payload.write_bytes(b"verified payload")
+            digest_path.write_text(hashlib.sha256(payload.read_bytes()).hexdigest() + "\n")
+            runner = RecordingRunner()
+            engine = InstallationEngine(project_root=PROJECT_ROOT, runner=runner)
+            request = InstallRequest(
+                target(),
+                payload,
+                settings(),
+                payload_digest=digest_path,
+                hardware_support_pool=root / "missing-support-pool",
+                target_profile=root / "missing-target-profile.json",
+            )
+            with mock.patch("greia_installer.engine.os.geteuid", return_value=0), \
+                 mock.patch.object(engine, "_verify_target"):
+                with self.assertRaisesRegex(InstallationError, "hardware support"):
+                    engine.install(request)
+            destructive = {"wipefs", "parted", "mkfs.ext4", "grub-install"}
+            self.assertFalse(
+                any(command and command[0] in destructive for command in runner.commands),
+                runner.commands,
+            )
+
+    def test_live_service_environment_can_explicitly_supply_hardware_support_paths(self) -> None:
+        with mock.patch.dict(
+            os.environ,
+            {
+                "GREIA_HARDWARE_SUPPORT_POOL": "/opt/greia-hardware-support",
+                "GREIA_TARGET_IMAGE_PROFILE": "/etc/greia-os/target-image-profile.json",
+            },
+            clear=False,
+        ):
+            request = InstallRequest(target(), Path("/payload"), settings())
+        self.assertEqual(request.hardware_support_pool, Path("/opt/greia-hardware-support"))
+        self.assertEqual(
+            request.target_profile,
+            Path("/etc/greia-os/target-image-profile.json"),
+        )
 
     def test_power_is_rechecked_in_engine_immediately_before_first_disk_mutation(self) -> None:
         class UnsafePowerProbe:
@@ -235,6 +285,44 @@ class InstallerEngineTests(unittest.TestCase):
             self.assertIn("target_identity_sha256", record)
             self.assertNotIn("PRIVATE-SERIAL", record)
             self.assertNotIn("PRIVATE-WWN", record)
+
+    def test_install_record_keeps_hardware_inventory_private_and_records_only_support_packages(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            defaults = root / "opt/greia-os/runtime/hardware-settings.toml"
+            defaults.parent.mkdir(parents=True)
+            defaults.write_bytes((PROJECT_ROOT / "runtime/hardware-settings.toml").read_bytes())
+            inventory = HardwareInventory(
+                (
+                    HardwareDevice(
+                        "/pci0000:00/private-device-path",
+                        "pci",
+                        "pci:v00001234d00005678PRIVATE-MODALIAS",
+                        "private_driver",
+                    ),
+                )
+            )
+            resolver_plan = HardwareSupportPlan(inventory.token, (), True)
+            hardware_plan = InstallerHardwareEnablementPlan(
+                inventory,
+                resolver_plan,
+                ("firmware-realtek",),
+                ("intel-microcode",),
+                (),
+                (),
+            )
+            engine = InstallationEngine(project_root=PROJECT_ROOT, runner=RecordingRunner())
+            engine._write_initial_configuration(
+                root,
+                InstallRequest(target(), root / "unused", settings()),
+                hardware_plan,
+            )
+            record = (root / "etc/greia-os/install-record.json").read_text()
+            self.assertIn("firmware-realtek", record)
+            self.assertIn("intel-microcode", record)
+            self.assertNotIn("private-device-path", record)
+            self.assertNotIn("PRIVATE-MODALIAS", record)
+            self.assertNotIn("private_driver", record)
 
 
 if __name__ == "__main__":
