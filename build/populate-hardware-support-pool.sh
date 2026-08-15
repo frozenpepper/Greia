@@ -6,22 +6,24 @@ PROJECT_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 
 usage() {
   cat <<'USAGE'
-Usage: populate-hardware-support-pool.sh LIVE_ROOT SUITE ARCH TARGET_DPKG_STATUS
+Usage: populate-hardware-support-pool.sh LIVE_ROOT SUITE ARCH [TARGET_DPKG_STATUS]
 
 Populate LIVE_ROOT/opt/greia-hardware-support with a bounded download-only
 Debian firmware/microcode repository derived from isenkram firmware metadata.
 Dependency resolution uses the final target image's dpkg status, not the richer
 live installer state, so the frozen repository is sufficient offline.
+
+When TARGET_DPKG_STATUS is omitted, the canonical installer-build layout is
+used and var/lib/dpkg/status is read directly from the exact target squashfs
+beside LIVE_ROOT.
 USAGE
 }
 
-[[ $# -eq 4 ]] || { usage >&2; exit 2; }
+[[ $# -ge 3 && $# -le 4 ]] || { usage >&2; exit 2; }
 LIVE_ROOT="$(realpath "$1")"
 SUITE="$2"
 ARCH="$3"
-TARGET_DPKG_STATUS="$(realpath "$4")"
 [[ -d "$LIVE_ROOT" ]] || { echo "Live root not found: $LIVE_ROOT" >&2; exit 1; }
-[[ -r "$TARGET_DPKG_STATUS" ]] || { echo "Target dpkg status not found: $TARGET_DPKG_STATUS" >&2; exit 1; }
 [[ -d "$LIVE_ROOT/usr/share/isenkram" ]] || {
   echo "isenkram firmware metadata missing from live root" >&2
   exit 1
@@ -34,7 +36,29 @@ AVAILABLE_LIST="$POOL_ROOT/available-candidates.txt"
 TARGET_STATUS_IN_CHROOT="$LIVE_ROOT/tmp/greia-target-dpkg-status"
 rm -rf "$POOL_ROOT"
 install -d -m 0755 "$POOL_DIR/partial"
-install -m 0644 "$TARGET_DPKG_STATUS" "$TARGET_STATUS_IN_CHROOT"
+
+if [[ $# -eq 4 ]]; then
+  TARGET_DPKG_STATUS="$(realpath "$4")"
+  [[ -r "$TARGET_DPKG_STATUS" ]] || { echo "Target dpkg status not found: $TARGET_DPKG_STATUS" >&2; exit 1; }
+  install -m 0644 "$TARGET_DPKG_STATUS" "$TARGET_STATUS_IN_CHROOT"
+else
+  TARGET_PAYLOAD="$(dirname "$LIVE_ROOT")/pip-rootfs.squashfs"
+  [[ -r "$TARGET_PAYLOAD" ]] || {
+    echo "Canonical target payload not found beside live root: $TARGET_PAYLOAD" >&2
+    exit 1
+  }
+  command -v unsquashfs >/dev/null || {
+    echo "unsquashfs is required to inspect the exact target package state" >&2
+    exit 1
+  }
+  unsquashfs -cat "$TARGET_PAYLOAD" var/lib/dpkg/status > "$TARGET_STATUS_IN_CHROOT"
+  [[ -s "$TARGET_STATUS_IN_CHROOT" ]] || {
+    echo "Could not extract target dpkg status from target payload" >&2
+    exit 1
+  }
+  chmod 0644 "$TARGET_STATUS_IN_CHROOT"
+fi
+
 cleanup() {
   rm -f "$TARGET_STATUS_IN_CHROOT"
 }
