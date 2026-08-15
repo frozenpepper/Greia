@@ -52,6 +52,7 @@ OUTPUT_IMAGE="$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}.img"
 REPORT="$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}-report.txt"
 INSTALLER_PROFILE_REPORT="$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}-image-profile.json"
 PAYLOAD_PROFILE_REPORT="$OUTPUT_DIR/greia-os-${PROFILE_ID}-payload-image-profile.json"
+HARDWARE_SUPPORT_REPORT="$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}-hardware-support.json"
 BUILD_DIR="$(mktemp -d -p "${TMPDIR:-/tmp}" greia-installer-build.XXXXXX)"
 INSTALLER_PROFILE_MANIFEST="$BUILD_DIR/installer-image-profile.json"
 python3 "$PROFILE_TOOL" manifest "$PROFILE_PATH" --scope installer > "$INSTALLER_PROFILE_MANIFEST"
@@ -85,7 +86,7 @@ trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-required=(debootstrap parted partx blockdev losetup mkfs.ext4 blkid grub-install grub-script-check grub-mkpasswd-pbkdf2 chroot mount umount mountpoint findmnt udevadm rsync mksquashfs python3)
+required=(debootstrap parted partx blockdev losetup mkfs.ext4 blkid grub-install grub-script-check grub-mkpasswd-pbkdf2 chroot mount umount mountpoint findmnt udevadm rsync mksquashfs python3 dpkg-deb)
 for command_name in "${required[@]}"; do
   command -v "$command_name" >/dev/null || {
     echo "Missing build dependency: $command_name" >&2
@@ -128,7 +129,9 @@ MOUNTS=()
 losetup -d "$TARGET_LOOP"
 TARGET_LOOP=""
 
-# Build the small live installer environment.
+# Build the live installer environment. It is allowed to be substantially
+# larger than the installed target because broad hardware support belongs on
+# removable installation media, not permanently on low-storage child devices.
 [[ -r "$DEBIAN_ARCHIVE_KEYRING" ]] || { echo "Pinned Debian archive keyring is missing: $DEBIAN_ARCHIVE_KEYRING" >&2; exit 1; }
 debootstrap --arch="$ARCH" --variant=minbase --include=ca-certificates --keyring="$DEBIAN_ARCHIVE_KEYRING" --force-check-gpg "$SUITE" "$LIVE_ROOT" "$MIRROR"
 live_arch="$(chroot "$LIVE_ROOT" /usr/bin/dpkg --print-architecture)"
@@ -169,6 +172,28 @@ chroot "$LIVE_ROOT" /usr/bin/env DEBIAN_FRONTEND=noninteractive apt-get "${APT_A
 # Keep intentionally pre-seeded Greia conffiles without any dpkg prompt.
 chroot "$LIVE_ROOT" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
   apt-get "${APT_ACQUIRE_OPTIONS[@]}" -o Dpkg::Options::=--force-confold install -y --no-install-recommends "${packages[@]}"
+
+# ADR 0021: freeze a broad signed Debian firmware/microcode repository on the
+# installer while APT metadata is current, then install the verified firmware
+# class into the live root for reliable coldplug. The final target later gets
+# only machine-specific packages selected from the same frozen repository.
+"$SCRIPT_DIR/populate-hardware-support-pool.sh" "$LIVE_ROOT" "$SUITE" "$ARCH"
+"$SCRIPT_DIR/install-live-hardware-firmware.sh" "$LIVE_ROOT" "$SUITE" "$ARCH"
+cp "$LIVE_ROOT/opt/greia-hardware-support/manifest.json" "$HARDWARE_SUPPORT_REPORT"
+hardware_support_pool_bytes="$(python3 - "$HARDWARE_SUPPORT_REPORT" <<'PY'
+import json
+import sys
+from pathlib import Path
+print(json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))["total_bytes"])
+PY
+)"
+hardware_support_package_count="$(python3 - "$HARDWARE_SUPPORT_REPORT" <<'PY'
+import json
+import sys
+from pathlib import Path
+print(json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))["package_count"])
+PY
+)"
 
 install -d -m 0755 "$LIVE_ROOT/opt/greia-os"
 rsync -a --delete --exclude '__pycache__' "$PROJECT_ROOT/src" "$PROJECT_ROOT/runtime" "$LIVE_ROOT/opt/greia-os/"
@@ -235,6 +260,8 @@ chroot "$LIVE_ROOT" dpkg-query -W -f='${Package}\t${Version}\t${Architecture}\t$
   echo "debian_version=$(cat "$LIVE_ROOT/etc/debian_version")"
   echo "resolved_kernel_packages=$(chroot "$LIVE_ROOT" dpkg-query -W -f='${Package}=${Version} ' 'linux-image-*' 2>/dev/null || true)"
   echo "resolved_xorg_packages=$(chroot "$LIVE_ROOT" dpkg-query -W -f='${Package}=${Version} ' 'xserver-xorg-*' 2>/dev/null || true)"
+  echo "hardware_support_pool_packages=$hardware_support_package_count"
+  echo "hardware_support_pool_bytes=$hardware_support_pool_bytes"
   echo "build_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo "mirror=$MIRROR"
   echo "security_mirror=$SECURITY_MIRROR"
@@ -377,6 +404,10 @@ install -m 0644 "$INSTALLER_PROFILE_MANIFEST" "$INSTALLER_PROFILE_REPORT"
   echo "installer_profile_manifest_sha256=$(sha256sum "$INSTALLER_PROFILE_MANIFEST" | awk '{print $1}')"
   echo "payload_profile_manifest=$PAYLOAD_PROFILE_REPORT"
   echo "payload_profile_manifest_sha256=$(sha256sum "$TARGET_PROFILE_MANIFEST" | awk '{print $1}')"
+  echo "hardware_support_manifest=$HARDWARE_SUPPORT_REPORT"
+  echo "hardware_support_manifest_sha256=$(sha256sum "$HARDWARE_SUPPORT_REPORT" | awk '{print $1}')"
+  echo "hardware_support_pool_packages=$hardware_support_package_count"
+  echo "hardware_support_pool_bytes=$hardware_support_pool_bytes"
   echo "installer_grub_recovery_code=$INSTALLER_RECOVERY_CODE"
   echo "live_security_support_state=$live_security_support_state"
   echo "live_security_support_probe_exit=$live_support_status_exit"
@@ -389,4 +420,5 @@ install -m 0644 "$INSTALLER_PROFILE_MANIFEST" "$INSTALLER_PROFILE_REPORT"
 } > "$REPORT"
 
 echo "Created graphical installer image: $OUTPUT_IMAGE"
+echo "Hardware support manifest: $HARDWARE_SUPPORT_REPORT"
 echo "Report: $REPORT"
