@@ -38,7 +38,7 @@ class ActivityApiCapabilityTests(unittest.TestCase):
             palette = activity_api.get_theme_palette()
         self.assertEqual(palette.default_background, "cream")
 
-    def test_theme_access_refuses_missing_profile_scope(self) -> None:
+    def test_theme_access_without_profile_scope_uses_canonical_default(self) -> None:
         with patch.dict(
             os.environ,
             {
@@ -47,8 +47,9 @@ class ActivityApiCapabilityTests(unittest.TestCase):
             },
             clear=True,
         ):
-            with self.assertRaisesRegex(RuntimeError, "profile-scoped customization"):
-                activity_api.get_theme()
+            theme = activity_api.get_theme()
+            expected = activity_api._default_theme_store().resolve()
+        self.assertEqual(theme, expected)
 
     def test_avatar_change_uses_scoped_request_file_not_profile_registry(self) -> None:
         with tempfile.TemporaryDirectory() as temporary, patch.dict(
