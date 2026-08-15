@@ -5,6 +5,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -16,8 +17,9 @@ from r7_qemu_kmsdrm_acceptance import CommandRunner, MountedRawImage
 
 
 SCHEMA_VERSION = 1
-EXPECTED_PROFILE = "modern-amd64-dev"
+DEFAULT_EXPECTED_PROFILE = "modern-amd64-dev"
 EXPECTED_PACKAGE_SET = "developer-remote"
+_PROFILE_RE = re.compile(r"^[a-z0-9][a-z0-9._-]{0,127}$")
 MARKER = Path("etc/greia-os/developer-remote")
 DISPLAY_ENDPOINT = Path("etc/greia-os/developer-display.json")
 ADMIN_HOME = Path("var/lib/greia-admin")
@@ -38,10 +40,22 @@ class DeveloperImageProvisionError(RuntimeError):
 class ProvisionConfig:
     image: Path
     output_dir: Path
+    expected_profile: str = DEFAULT_EXPECTED_PROFILE
+
+    def __post_init__(self) -> None:
+        if not _PROFILE_RE.fullmatch(self.expected_profile):
+            raise DeveloperImageProvisionError("expected developer profile ID is invalid")
 
 
 class DeveloperImageProvisioner:
-    """Provision key-only SSH and bounded developer control into one dev image."""
+    """Provision key-only SSH and bounded developer control into one dev image.
+
+    The exact expected profile is supplied by the developer-image builder and is
+    verified against the image's embedded profile manifest. Remote capability is
+    additionally gated by the explicit ``developer-remote`` package set, so this
+    tool cannot silently turn an ordinary release/profile image into a remote
+    developer target.
+    """
 
     def __init__(self, config: ProvisionConfig, *, runner: CommandRunner | None = None):
         self.config = config
@@ -49,7 +63,7 @@ class DeveloperImageProvisioner:
 
     @property
     def key_path(self) -> Path:
-        return self.config.output_dir / f"greia-os-{EXPECTED_PROFILE}-ssh-key"
+        return self.config.output_dir / f"greia-os-{self.config.expected_profile}-ssh-key"
 
     @property
     def public_key_path(self) -> Path:
@@ -57,7 +71,10 @@ class DeveloperImageProvisioner:
 
     @property
     def report_path(self) -> Path:
-        return self.config.output_dir / f"greia-os-{EXPECTED_PROFILE}-developer-remote.json"
+        return (
+            self.config.output_dir
+            / f"greia-os-{self.config.expected_profile}-developer-remote.json"
+        )
 
     def run(self) -> dict[str, object]:
         self._require_root()
@@ -104,7 +121,7 @@ class DeveloperImageProvisioner:
         report = {
             "schema_version": SCHEMA_VERSION,
             "ok": True,
-            "profile": EXPECTED_PROFILE,
+            "profile": self.config.expected_profile,
             "image": str(image),
             "image_sha256_before_provisioning": before_sha,
             "image_sha256": after_sha,
@@ -139,9 +156,10 @@ class DeveloperImageProvisioner:
             ) from exc
         profile = payload.get("profile")
         package_sets = payload.get("package_sets")
-        if not isinstance(profile, dict) or profile.get("profile_id") != EXPECTED_PROFILE:
+        expected = self.config.expected_profile
+        if not isinstance(profile, dict) or profile.get("profile_id") != expected:
             raise DeveloperImageProvisionError(
-                f"refusing to provision non-developer profile; expected {EXPECTED_PROFILE!r}"
+                f"refusing to provision unexpected profile; expected {expected!r}"
             )
         if not isinstance(package_sets, dict):
             raise DeveloperImageProvisionError(
@@ -217,7 +235,7 @@ class DeveloperImageProvisioner:
         marker = root / MARKER
         marker.parent.mkdir(parents=True, exist_ok=True)
         marker.write_text(
-            "profile=modern-amd64-dev\n"
+            f"profile={self.config.expected_profile}\n"
             f"client_key_fingerprint={fingerprint}\n",
             encoding="utf-8",
         )
@@ -333,6 +351,11 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument("--image", required=True, type=Path)
     parser.add_argument("--output-dir", required=True, type=Path)
+    parser.add_argument(
+        "--expected-profile",
+        default=DEFAULT_EXPECTED_PROFILE,
+        help="exact profile ID embedded in the image (default: modern-amd64-dev)",
+    )
     return parser.parse_args(argv)
 
 
@@ -340,7 +363,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(argv)
     try:
         report = DeveloperImageProvisioner(
-            ProvisionConfig(image=args.image, output_dir=args.output_dir)
+            ProvisionConfig(
+                image=args.image,
+                output_dir=args.output_dir,
+                expected_profile=args.expected_profile,
+            )
         ).run()
     except DeveloperImageProvisionError as exc:
         print(f"developer image provisioning failed: {exc}", file=sys.stderr)
