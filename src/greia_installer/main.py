@@ -207,8 +207,6 @@ class InstallerApplication:
             self.wifi.append_password(text)
 
     def _handle_key(self, key: int, pygame: Any) -> bool:
-        if self.windowed and key == pygame.K_q:
-            return False
         if self.state.page == InstallerPage.WIFI:
             if key == pygame.K_ESCAPE:
                 self._back()
@@ -255,21 +253,28 @@ class InstallerApplication:
             else:
                 import subprocess
 
-                # Never ask the parent to pull a mounted live USB. Power off
-                # cleanly first; the USB can then be removed before the next boot.
                 subprocess.run(
                     ["systemctl", "poweroff"], check=False, shell=False
                 )
 
     def _back(self) -> None:
-        previous = {
-            InstallerPage.TARGET: InstallerPage.WELCOME,
-            InstallerPage.SETTINGS: InstallerPage.TARGET,
-            InstallerPage.WIFI: InstallerPage.SETTINGS,
-            InstallerPage.CONFIRM: InstallerPage.WIFI,
-            InstallerPage.ERROR: InstallerPage.CONFIRM,
-        }
-        self.state.page = previous.get(self.state.page, self.state.page)
+        page = self.state.page
+        if page == InstallerPage.TARGET:
+            self.state.page = InstallerPage.WELCOME
+        elif page == InstallerPage.SETTINGS:
+            self.state.page = InstallerPage.TARGET
+        elif page == InstallerPage.WIFI:
+            # Leaving this stage means no in-flight scan/connection may later
+            # become the parent's chosen installation profile.
+            self.wifi.skip()
+            self.state.page = InstallerPage.SETTINGS
+        elif page == InstallerPage.CONFIRM:
+            # Back from final confirmation means the parent wants to reconsider
+            # Wi-Fi, so discard the accepted profile and present a fresh scan.
+            self.state.page = InstallerPage.WIFI
+            self.wifi.refresh()
+        elif page == InstallerPage.ERROR:
+            self.state.page = InstallerPage.CONFIRM
 
     def _handle_mouse_down(self, position: tuple[int, int]) -> None:
         if self.state.page == InstallerPage.CONFIRM and self._inside(
@@ -765,9 +770,11 @@ class InstallerApplication:
                 screen, "Looking for Wi-Fi networks…", font, text, main.centery
             )
         elif snapshot.phase is WifiSetupPhase.CONNECTING:
+            selected = snapshot.selected_network
+            name = selected.ssid if selected is not None else "Wi-Fi"
             self._center_text(
                 screen,
-                f"Connecting to {snapshot.selected_network.ssid if snapshot.selected_network else 'Wi-Fi'}…",
+                f"Connecting to {name}…",
                 font,
                 text,
                 main.centery,
@@ -894,9 +901,7 @@ class InstallerApplication:
         page_start = (
             snapshot.selected_index // self.WIFI_ROWS_PER_PAGE
         ) * self.WIFI_ROWS_PER_PAGE
-        visible = snapshot.networks[
-            page_start : page_start + self.WIFI_ROWS_PER_PAGE
-        ]
+        visible = snapshot.networks[page_start : page_start + self.WIFI_ROWS_PER_PAGE]
         for offset, network in enumerate(visible):
             index = page_start + offset
             rect = pygame.Rect(
@@ -941,7 +946,7 @@ class InstallerApplication:
             )
             pygame.draw.rect(screen, background, password_rect, border_radius=14)
             pygame.draw.rect(screen, text, password_rect, width=1, border_radius=14)
-            masked = "•" * len(snapshot.passphrase)
+            masked = "*" * len(snapshot.passphrase)
             placeholder = masked or "Wi-Fi password"
             screen.blit(
                 small_font.render(placeholder, True, text),
