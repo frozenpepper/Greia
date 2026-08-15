@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 import shlex
@@ -18,6 +19,15 @@ DEFAULT_USER = "greiaadmin"
 DEFAULT_KEY = Path("out/greia-os-modern-amd64-dev-ssh-key")
 DEFAULT_KNOWN_HOSTS = Path.home() / ".greia" / "known_hosts"
 _ACTIVITY_ID_RE = re.compile(r"^[a-z0-9][a-z0-9._-]{0,127}$")
+_LOG_SERVICE_CHOICES = (
+    "all",
+    "launcher",
+    "installer",
+    "parent",
+    "ssh",
+    "developer-remote",
+    "network",
+)
 
 
 class RemoteError(RuntimeError):
@@ -113,6 +123,43 @@ class GreiaRemote:
         completed = self.devctl("logs", "--service", service, "--lines", str(lines))
         assert isinstance(completed.stdout, str)
         return completed.stdout
+
+    def snapshot(self, output_dir: Path, *, service: str = "all", lines: int = 500) -> Path:
+        """Collect one agent-friendly local evidence snapshot from the target.
+
+        Screenshot bytes are transferred directly over the existing authenticated
+        SSH/devctl channel. Status and bounded logs are written beside the PNG so
+        a local agent can inspect one self-contained observation without manual
+        copying from the Greia machine.
+        """
+
+        if service not in _LOG_SERVICE_CHOICES:
+            raise RemoteError(f"unknown log service group: {service}")
+        if isinstance(lines, bool) or lines < 1 or lines > 5000:
+            raise RemoteError("log line count must be between 1 and 5000")
+        root = output_dir.expanduser().resolve()
+        root.mkdir(parents=True, exist_ok=True)
+        self.screenshot(root / "screen.png")
+        (root / "status.json").write_text(self.status(), encoding="utf-8")
+        (root / "logs.txt").write_text(self.logs(service, lines), encoding="utf-8")
+        (root / "snapshot.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "host": self.host,
+                    "user": self.user,
+                    "captured_at_unix": int(time.time()),
+                    "log_service": service,
+                    "log_lines": lines,
+                    "files": ["screen.png", "status.json", "logs.txt"],
+                },
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        return root
 
     def restart_launcher(self) -> None:
         self.devctl("restart-launcher")
@@ -227,6 +274,11 @@ def _validate_activity_id(value: str) -> None:
         raise RemoteError("Activity ID is invalid")
 
 
+def _add_log_options(parser: argparse.ArgumentParser, *, default_lines: int) -> None:
+    parser.add_argument("--service", choices=_LOG_SERVICE_CHOICES, default="all")
+    parser.add_argument("--lines", type=int, default=default_lines)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Control a Greia developer image over SSH"
@@ -241,20 +293,10 @@ def build_parser() -> argparse.ArgumentParser:
     screenshot = sub.add_parser("screenshot")
     screenshot.add_argument("output", type=Path)
     logs = sub.add_parser("logs")
-    logs.add_argument(
-        "--service",
-        choices=[
-            "all",
-            "launcher",
-            "installer",
-            "parent",
-            "ssh",
-            "developer-remote",
-            "network",
-        ],
-        default="all",
-    )
-    logs.add_argument("--lines", type=int, default=300)
+    _add_log_options(logs, default_lines=300)
+    snapshot = sub.add_parser("snapshot")
+    snapshot.add_argument("output_dir", type=Path)
+    _add_log_options(snapshot, default_lines=500)
     sub.add_parser("restart")
     sub.add_parser("restart-installer")
 
@@ -299,6 +341,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(path)
         elif args.command == "logs":
             sys.stdout.write(remote.logs(args.service, args.lines))
+        elif args.command == "snapshot":
+            root = remote.snapshot(
+                args.output_dir,
+                service=args.service,
+                lines=args.lines,
+            )
+            print(root)
         elif args.command == "restart":
             remote.restart_launcher()
         elif args.command == "restart-installer":
