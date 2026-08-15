@@ -13,6 +13,8 @@ from greia_platform.input_core import (
     SemanticAction,
 )
 from greia_platform.pygame_input import (
+    CONTROLLER_BUTTON_A,
+    CONTROLLER_BUTTON_GUIDE,
     MAX_CONTROLLER_SCAN,
     MAX_OPEN_CONTROLLERS,
     PygameControllerSet,
@@ -44,11 +46,10 @@ class PygameInputTranslatorTests(unittest.TestCase):
         translator = PygameInputTranslator(InteractionProfile.GAME)
         if not translator.controller_translation_available:
             self.skipTest("curated pygame build has no SDL2 controller module")
-        from pygame._sdl2 import controller as sdl_controller
 
         event = pygame.event.Event(
             pygame.CONTROLLERBUTTONDOWN,
-            button=sdl_controller.CONTROLLER_BUTTON_GUIDE,
+            button=CONTROLLER_BUTTON_GUIDE,
         )
         physical = translator.physical_digital(event)
         self.assertIsNotNone(physical)
@@ -60,11 +61,10 @@ class PygameInputTranslatorTests(unittest.TestCase):
         translator = PygameInputTranslator(InteractionProfile.GAME)
         if not translator.controller_translation_available:
             self.skipTest("curated pygame build has no SDL2 controller module")
-        from pygame._sdl2 import controller as sdl_controller
 
         event = pygame.event.Event(
             pygame.CONTROLLERBUTTONDOWN,
-            button=sdl_controller.CONTROLLER_BUTTON_A,
+            button=CONTROLLER_BUTTON_A,
         )
         translated = translator.digital(event)
         self.assertIsNotNone(translated)
