@@ -79,19 +79,9 @@ build/installer-overlay/etc/iwd/main.conf
 build/installer-overlay/etc/systemd/system/greia-installer.service
 ```
 
-Live package set now includes:
+Live package set includes `iwd`, `python3-dbus`, `rfkill`, `systemd-resolved`, and `wireless-regdb`. Live iwd owns temporary address/DNS configuration. `systemd-resolved` owns normal live `/etc/resolv.conf`; Greia deliberately does not overlay a competing file. Installed Greia retains iwd authentication plus systemd-networkd address configuration.
 
-```text
-iwd
-python3-dbus
-rfkill
-systemd-resolved
-wireless-regdb
-```
-
-Live iwd owns temporary address/DNS configuration. `systemd-resolved` owns normal live `/etc/resolv.conf` integration; Greia deliberately does not overlay a competing file. Installed Greia retains iwd authentication plus systemd-networkd address configuration.
-
-The build-profile resolver applies the selected profile's kernel and `extra_packages` to both installer and target. Any exact Acer/Pi Wi-Fi firmware discovered by physical acceptance therefore belongs in the hardware profile rather than an installer-only hack.
+The build-profile resolver applies selected-profile kernel/`extra_packages` to both installer and target. Any exact Acer/Pi Wi-Fi firmware discovered by physical acceptance belongs in the hardware profile rather than an installer-only hack.
 
 Regression source:
 
