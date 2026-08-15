@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import unittest
 import threading
+import unittest
 from pathlib import Path
 from unittest import mock
 
@@ -53,6 +53,22 @@ class InstallerStateTests(unittest.TestCase):
         self.assertFalse(app.state.settings.touchpad_tap)
         self.assertEqual(app.state.target.path, Path("/dev/sda"))
         self.assertIn("1024x600", app.available_resolutions)
+
+    def test_settings_continue_enters_optional_wifi_before_confirmation(self) -> None:
+        app = self.make_app()
+        app.state.page = InstallerPage.SETTINGS
+        app._activate_primary()
+        self.assertEqual(app.state.page, InstallerPage.WIFI)
+        self.assertNotEqual(app.state.page, InstallerPage.CONFIRM)
+
+    def test_wifi_back_returns_to_settings_and_confirm_back_returns_to_wifi(self) -> None:
+        app = self.make_app()
+        app.state.page = InstallerPage.WIFI
+        app._back()
+        self.assertEqual(app.state.page, InstallerPage.SETTINGS)
+        app.state.page = InstallerPage.CONFIRM
+        app._back()
+        self.assertEqual(app.state.page, InstallerPage.WIFI)
 
     def test_hold_is_cancelled_when_pointer_leaves_button(self) -> None:
         app = self.make_app()
