@@ -1,4 +1,4 @@
-# Pip OS image profiles
+# Greia OS image profiles
 
 Image profiles are **declarative TOML data**, not shell fragments. They describe what an OS image contains; they do not claim what hardware capabilities a running machine actually exposes.
 
@@ -28,6 +28,41 @@ Adapter and runtime package sets are composed by `tools/build_profile.py`; profi
 The profile schema recognizes `arm64` as an architecture, but the current image builders intentionally implement only the BIOS x86 path (`i386`/`amd64`, GRUB PC, one ext4 root, Xorg). An ARM profile must not be faked by pushing ARM values through x86 builder logic. A board-specific boot/image adapter is required first.
 
 Likewise, the architecture recognizes a future `web` Activity runtime family, but no Web engine/package set is implemented yet. Declaring `web` therefore fails closed during package resolution until a measured platform-owned Web adapter exists.
+
+## Acer Aspire One candidates
+
+The repository deliberately carries three Acer hardware candidates until physical inventory/boot evidence selects the exact reference profile:
+
+```text
+acer-aspire-one-i386
+acer-aspire-one-i386-nonpae
+acer-aspire-one-amd64
+```
+
+Each has a matching **development-only remote-control variant**:
+
+```text
+acer-aspire-one-i386-dev
+acer-aspire-one-i386-nonpae-dev
+acer-aspire-one-amd64-dev
+```
+
+The developer variants preserve the matching architecture, kernel, display packages, C0 resource policy and image layout. They add the explicit `developer-remote` package set, use hostname `greia-dev`, and remain `experimental`; they are never release profiles.
+
+Build the developer variant that corresponds to the physical Acer profile actually accepted by evidence:
+
+```bash
+sudo bash build/build-developer-image.sh out acer-aspire-one-i386-dev
+```
+
+The default developer wrapper profile remains `modern-amd64-dev` for compatibility when no second argument is supplied.
+
+Remote-control details and Acer acceptance are documented in:
+
+```text
+docs/testing/2026-08-09_DEVELOPER_REMOTE_CONTROL.md
+docs/testing/2026-08-15_ACER_REMOTE_AGENT_ACCEPTANCE.md
+```
 
 ## Useful commands
 
