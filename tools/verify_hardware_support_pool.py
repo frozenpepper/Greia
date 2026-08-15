@@ -18,7 +18,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--list",
         dest="list_class",
-        choices=("firmware", "microcode", "candidates"),
+        choices=("firmware", "broad-firmware", "microcode", "candidates"),
     )
     parser.add_argument("--json", action="store_true")
     return parser
@@ -33,6 +33,8 @@ def main() -> int:
     )
     if args.list_class == "firmware":
         selected = sorted(pool.provided_firmware)
+    elif args.list_class == "broad-firmware":
+        selected = sorted(pool.broad_firmware)
     elif args.list_class == "microcode":
         selected = sorted(pool.provided_microcode)
     elif args.list_class == "candidates":
@@ -49,6 +51,7 @@ def main() -> int:
                     "package_count": len(pool.packages),
                     "total_bytes": pool.total_bytes,
                     "provided_firmware_packages": sorted(pool.provided_firmware),
+                    "broad_firmware_packages": sorted(pool.broad_firmware),
                     "provided_microcode_packages": sorted(pool.provided_microcode),
                     "provided_candidate_packages": sorted(pool.provided_candidates),
                 },
