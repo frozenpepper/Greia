@@ -133,6 +133,7 @@ def finalize_pool(pool_root: Path, candidate_manifest: Path, max_bytes: int) -> 
         )
 
     packages: list[dict[str, object]] = []
+    package_sizes: dict[str, int] = {}
     repository_stanzas: list[str] = []
     seen_identity: set[tuple[str, str]] = set()
     provided_names: set[str] = set()
@@ -152,6 +153,7 @@ def finalize_pool(pool_root: Path, candidate_manifest: Path, max_bytes: int) -> 
         seen_identity.add(identity)
         provided_names.add(package)
         size = path.stat().st_size
+        package_sizes[package] = min(size, package_sizes.get(package, size))
         digest = _sha256(path)
         packages.append(
             {
@@ -186,6 +188,20 @@ def finalize_pool(pool_root: Path, candidate_manifest: Path, max_bytes: int) -> 
         for firmware_name, package_names in sorted(firmware_providers.items())
         if set(package_names) & provided_firmware_set
     }
+    # Live media needs broad coldplug coverage, but Debian Contents can list
+    # alternative packages for one firmware file. Pick one deterministic,
+    # minimal verified provider for each concrete file; keep all alternatives
+    # in the frozen pool for machine-specific target selection.
+    broad_firmware = sorted(
+        {
+            min(
+                providers,
+                key=lambda package: (package_sizes.get(package, max_bytes + 1), package),
+            )
+            for providers in filtered_providers.values()
+            if providers
+        }
+    )
     unavailable_candidates = sorted(candidate_set - provided_names)
     manifest = {
         "schema_version": 1,
@@ -199,6 +215,7 @@ def finalize_pool(pool_root: Path, candidate_manifest: Path, max_bytes: int) -> 
         "provided_candidate_packages": provided_candidates,
         "provided_firmware_packages": provided_firmware,
         "provided_microcode_packages": provided_microcode,
+        "broad_firmware_packages": broad_firmware,
         "firmware_providers": filtered_providers,
         "unavailable_candidate_packages": unavailable_candidates,
         "packages": packages,
