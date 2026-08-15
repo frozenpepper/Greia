@@ -255,18 +255,38 @@ class VerifiedHardwareSupportPool:
         return requested
 
     def packages_for_firmware(self, firmware_pattern: str) -> tuple[str, ...]:
+        """Return a minimal deterministic package set covering matched firmware.
+
+        Debian Contents can name multiple packages providing one file. Greia
+        chooses one verified provider per concrete firmware file, preferring the
+        smallest downloaded candidate payload and then package name. Wildcard
+        declarations still cover every concrete firmware file they match.
+        """
+
         if not _safe_firmware_name(firmware_pattern):
             raise HardwareSupportPoolError("requested firmware path/pattern is invalid")
         wildcard = any(character in firmware_pattern for character in "*?[")
-        packages: set[str] = set()
+        package_sizes: dict[str, int] = {}
+        for package in self.packages:
+            if package.package in self.provided_firmware:
+                previous = package_sizes.get(package.package)
+                if previous is None or package.size < previous:
+                    package_sizes[package.package] = package.size
+        selected: set[str] = set()
         for firmware_name, providers in self.firmware_providers:
-            if (
+            matched = (
                 fnmatch.fnmatchcase(firmware_name, firmware_pattern)
                 if wildcard
                 else firmware_name == firmware_pattern
-            ):
-                packages.update(providers)
-        return tuple(sorted(packages))
+            )
+            if not matched:
+                continue
+            preferred = min(
+                providers,
+                key=lambda package: (package_sizes.get(package, _MAX_POOL_BYTES + 1), package),
+            )
+            selected.add(preferred)
+        return tuple(sorted(selected))
 
     @property
     def apt_source_line(self) -> str:
