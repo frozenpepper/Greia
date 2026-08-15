@@ -4,7 +4,6 @@ import queue
 import threading
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Protocol
 
 from .wifi import (
     IwdNetworkProfile,
@@ -50,32 +49,43 @@ class DemoWifiBackend:
 
     def scan(self) -> tuple[WifiNetwork, ...]:
         return (
-            WifiNetwork("Greia Family Wi-Fi", WifiSecurity.PERSONAL, -37.0, "/net/connman/iwd/demo/1"),
-            WifiNetwork("Library Guest", WifiSecurity.OPEN, -58.0, "/net/connman/iwd/demo/2"),
-            WifiNetwork("School Enterprise", WifiSecurity.ENTERPRISE, -66.0, "/net/connman/iwd/demo/3"),
+            WifiNetwork(
+                "Greia Family Wi-Fi",
+                WifiSecurity.PERSONAL,
+                -37.0,
+                "/net/connman/iwd/demo/1",
+            ),
+            WifiNetwork(
+                "Library Guest",
+                WifiSecurity.OPEN,
+                -58.0,
+                "/net/connman/iwd/demo/2",
+            ),
+            WifiNetwork(
+                "School Enterprise",
+                WifiSecurity.ENTERPRISE,
+                -66.0,
+                "/net/connman/iwd/demo/3",
+            ),
         )
 
-    def connect(self, network: WifiNetwork, passphrase: str = "") -> WifiConnection:
-        if network.security is WifiSecurity.ENTERPRISE:
-            raise WifiError("Enterprise Wi-Fi can be configured later in Greia Parents")
-        if network.security is WifiSecurity.PERSONAL and not 8 <= len(passphrase) <= 63:
-            raise WifiError("Wi-Fi password must contain 8 to 63 characters")
-        suffix = ".open" if network.security is WifiSecurity.OPEN else ".psk"
-        content = "[Settings]\nAutoConnect=true\n"
-        if network.security is WifiSecurity.PERSONAL:
-            content = f"[Security]\nPassphrase={passphrase}\n\n" + content
+    def connect(
+        self,
+        network: WifiNetwork,
+        passphrase: str = "",
+    ) -> WifiConnection:
         return WifiConnection(
             network,
-            IwdNetworkProfile(network.ssid, f"demo{suffix}", content),
+            IwdNetworkProfile.for_network(network, passphrase),
         )
 
 
 class WifiSetupController:
-    """Small UI-facing owner for asynchronous scan/connect work.
+    """UI-facing owner for asynchronous Wi-Fi scan/connect work.
 
-    The Pygame installer remains responsive while iwd scans or waits for DHCP.
-    One worker may exist at a time and all UI state changes happen when the main
-    thread calls :meth:`drain`.
+    The Pygame installer stays responsive while iwd scans or obtains network
+    configuration. A monotonically increasing generation invalidates stale
+    results whenever the parent skips, refreshes, or starts a newer operation.
     """
 
     MAX_PASSWORD_CHARACTERS = 63
@@ -89,8 +99,9 @@ class WifiSetupController:
         self._profile: IwdNetworkProfile | None = None
         self._connected_ssid = ""
         self._error = ""
-        self._events: queue.Queue[tuple[str, object]] = queue.Queue()
+        self._events: queue.Queue[tuple[int, str, object]] = queue.Queue()
         self._worker: threading.Thread | None = None
+        self._generation = 0
 
     @property
     def snapshot(self) -> WifiSetupSnapshot:
@@ -109,7 +120,7 @@ class WifiSetupController:
 
     @property
     def busy(self) -> bool:
-        return self._worker is not None
+        return self._worker is not None and self._worker.is_alive()
 
     def begin(self) -> None:
         if self._phase is WifiSetupPhase.IDLE:
@@ -118,6 +129,7 @@ class WifiSetupController:
     def refresh(self) -> None:
         if self.busy:
             return
+        generation = self._next_generation()
         self._profile = None
         self._connected_ssid = ""
         self._error = ""
@@ -126,13 +138,17 @@ class WifiSetupController:
         def worker() -> None:
             try:
                 if not self._backend.available():
-                    self._events.put(("unavailable", ()))
+                    self._events.put((generation, "unavailable", ()))
                     return
-                self._events.put(("networks", self._backend.scan()))
+                self._events.put((generation, "networks", self._backend.scan()))
             except Exception as exc:
-                self._events.put(("error", exc))
+                self._events.put((generation, "error", exc))
 
-        self._worker = threading.Thread(target=worker, name="greia-wifi-scan", daemon=True)
+        self._worker = threading.Thread(
+            target=worker,
+            name="greia-wifi-scan",
+            daemon=True,
+        )
         self._worker.start()
 
     def select(self, index: int) -> None:
@@ -162,7 +178,8 @@ class WifiSetupController:
         filtered = "".join(
             character
             for character in text
-            if character not in {"\x00", "\r", "\n"} and character.isprintable()
+            if character not in {"\x00", "\r", "\n"}
+            and character.isprintable()
         )
         remaining = self.MAX_PASSWORD_CHARACTERS - len(self._passphrase)
         self._passphrase += filtered[:remaining]
@@ -186,35 +203,48 @@ class WifiSetupController:
             return
         if not network.installer_supported:
             self._phase = WifiSetupPhase.ERROR
-            self._error = "Enterprise Wi-Fi can be configured later in Greia Parents"
+            self._error = (
+                "Enterprise Wi-Fi can be configured later in Greia Parents"
+            )
             return
+        generation = self._next_generation()
         passphrase = self._passphrase
         self._phase = WifiSetupPhase.CONNECTING
         self._error = ""
 
         def worker() -> None:
             try:
-                self._events.put(("connected", self._backend.connect(network, passphrase)))
+                connection = self._backend.connect(network, passphrase)
+                self._events.put((generation, "connected", connection))
             except Exception as exc:
-                self._events.put(("error", exc))
+                self._events.put((generation, "error", exc))
 
-        self._worker = threading.Thread(target=worker, name="greia-wifi-connect", daemon=True)
+        self._worker = threading.Thread(
+            target=worker,
+            name="greia-wifi-connect",
+            daemon=True,
+        )
         self._worker.start()
 
     def skip(self) -> None:
-        if self.busy:
-            return
+        # The worker itself cannot be cancelled safely at arbitrary D-Bus/DHCP
+        # points, so invalidate its result. It may finish in the background, but
+        # it can no longer alter installer state or become the installed profile.
+        self._next_generation()
         self._profile = None
         self._connected_ssid = ""
         self._passphrase = ""
         self._error = ""
+        self._phase = WifiSetupPhase.IDLE
 
     def drain(self) -> None:
         while True:
             try:
-                kind, payload = self._events.get_nowait()
+                generation, kind, payload = self._events.get_nowait()
             except queue.Empty:
                 return
+            if generation != self._generation:
+                continue
             self._worker = None
             if kind == "unavailable":
                 self._phase = WifiSetupPhase.UNAVAILABLE
@@ -223,15 +253,22 @@ class WifiSetupController:
             elif kind == "networks":
                 networks = tuple(payload)  # type: ignore[arg-type]
                 self._networks = networks
-                self._selected_index = min(self._selected_index, max(0, len(networks) - 1))
+                self._selected_index = min(
+                    self._selected_index,
+                    max(0, len(networks) - 1),
+                )
                 self._phase = WifiSetupPhase.READY
                 if not networks:
-                    self._error = "No Wi-Fi networks found. You can refresh or continue offline."
+                    self._error = (
+                        "No Wi-Fi networks found. You can refresh or continue offline."
+                    )
             elif kind == "connected":
                 connection = payload
                 if not isinstance(connection, WifiConnection):
                     self._phase = WifiSetupPhase.ERROR
-                    self._error = "Wi-Fi backend returned an invalid connection result"
+                    self._error = (
+                        "Wi-Fi backend returned an invalid connection result"
+                    )
                     continue
                 self._profile = connection.profile
                 self._connected_ssid = connection.network.ssid
@@ -246,3 +283,7 @@ class WifiSetupController:
             else:
                 self._phase = WifiSetupPhase.ERROR
                 self._error = "Unknown Wi-Fi worker result"
+
+    def _next_generation(self) -> int:
+        self._generation += 1
+        return self._generation
