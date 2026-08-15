@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from math import inf, nextafter
 
 from greia_platform.input_core import (
     DEFAULT_INPUT_POLICY,
@@ -114,7 +115,10 @@ class ShellInputController:
             self._held_analog_direction = direction
             self._next_repeat_at = now + self._policy.navigation_repeat_delay_seconds
             return direction
-        if now < self._next_repeat_at:
+        # Durations such as 1.30 + 0.10 can encode as 1.4000000000000001.
+        # Treat a timestamp at the immediately adjacent representable value as
+        # the configured deadline rather than delaying one UI polling cycle.
+        if now < nextafter(self._next_repeat_at, -inf):
             return None
         self._next_repeat_at = now + self._policy.navigation_repeat_interval_seconds
         return direction
