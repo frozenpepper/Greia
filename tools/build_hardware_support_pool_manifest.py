@@ -19,7 +19,10 @@ _PACKAGE_RE = re.compile(r"^[a-z0-9][a-z0-9+.-]*$")
 _MAX_METADATA_FILES = 64
 _MAX_METADATA_BYTES = 64 * 1024 * 1024
 _MAX_PACKAGES = 512
+_MAX_FIRMWARE_PROVIDERS = 65536
+_MAX_FIRMWARE_PATH_BYTES = 1024
 _X86_MICROCODE_PACKAGES = ("amd64-microcode", "intel-microcode")
+_FIRMWARE_PREFIXES = ("lib/firmware/", "usr/lib/firmware/")
 
 
 class PoolManifestError(RuntimeError):
@@ -45,8 +48,11 @@ def _metadata_files(root: Path, suite: str) -> tuple[Path, ...]:
     return preferred or files
 
 
-def _packages(files: tuple[Path, ...]) -> tuple[str, ...]:
+def _firmware_metadata(
+    files: tuple[Path, ...],
+) -> tuple[tuple[str, ...], dict[str, list[str]]]:
     packages: set[str] = set()
+    providers: dict[str, set[str]] = {}
     total_bytes = 0
     for path in files:
         size = path.stat().st_size
@@ -58,20 +64,51 @@ def _packages(files: tuple[Path, ...]) -> tuple[str, ...]:
                 line = raw_line.strip()
                 if not line or line.startswith("#"):
                     continue
-                fields = line.split()
-                if len(fields) < 2:
+                try:
+                    file_path, locations = line.rsplit(None, 1)
+                except ValueError:
                     continue
-                package = fields[-1].rsplit("/", 1)[-1]
-                if _PACKAGE_RE.fullmatch(package):
-                    packages.add(package)
+                firmware_name = _firmware_name(file_path)
+                if firmware_name is None:
+                    continue
+                provider_packages: set[str] = set()
+                for location in locations.split(","):
+                    package = location.rsplit("/", 1)[-1]
+                    if _PACKAGE_RE.fullmatch(package):
+                        packages.add(package)
+                        provider_packages.add(package)
+                if provider_packages:
+                    providers.setdefault(firmware_name, set()).update(provider_packages)
                 if len(packages) > _MAX_PACKAGES:
                     raise PoolManifestError("firmware package candidate count exceeds the bound")
-    return tuple(sorted(packages))
+                if len(providers) > _MAX_FIRMWARE_PROVIDERS:
+                    raise PoolManifestError("firmware provider mapping exceeds the entry bound")
+    return (
+        tuple(sorted(packages)),
+        {name: sorted(values) for name, values in sorted(providers.items())},
+    )
+
+
+def _firmware_name(file_path: str) -> str | None:
+    for prefix in _FIRMWARE_PREFIXES:
+        if file_path.startswith(prefix):
+            name = file_path[len(prefix) :]
+            encoded = name.encode("utf-8")
+            if (
+                name
+                and len(encoded) <= _MAX_FIRMWARE_PATH_BYTES
+                and "\x00" not in name
+                and not name.startswith("/")
+                and ".." not in Path(name).parts
+            ):
+                return name
+            return None
+    return None
 
 
 def build_manifest(root: Path, suite: str, architecture: str) -> dict[str, object]:
     files = _metadata_files(root, suite)
-    firmware_packages = _packages(files)
+    firmware_packages, providers = _firmware_metadata(files)
     microcode_packages: tuple[str, ...] = ()
     if architecture in {"i386", "amd64"}:
         microcode_packages = _X86_MICROCODE_PACKAGES
@@ -80,9 +117,11 @@ def build_manifest(root: Path, suite: str, architecture: str) -> dict[str, objec
         "suite": suite,
         "architecture": architecture,
         "metadata_files": [path.name for path in files],
+        "metadata_suite_fallback": not any(suite in path.name for path in files),
         "firmware_packages": list(firmware_packages),
         "microcode_packages": list(microcode_packages),
         "candidate_packages": list(sorted(set(firmware_packages) | set(microcode_packages))),
+        "firmware_providers": providers,
         "policy": {
             "general_isenkram_lookup_is_advisory_only": True,
             "package_availability_must_be_verified_by_apt": True,
