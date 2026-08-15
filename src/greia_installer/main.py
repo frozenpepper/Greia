@@ -20,15 +20,17 @@ from .engine import (
     InstallRequest,
     InstallResult,
     InstallationEngine,
-    InstallationError,
 )
 from .power import PowerSupplyProbe
+from .wifi import IwdWifiBackend, WifiSecurity
+from .wifi_setup import DemoWifiBackend, WifiSetupController, WifiSetupPhase
 
 
 class InstallerPage(Enum):
     WELCOME = auto()
     TARGET = auto()
     SETTINGS = auto()
+    WIFI = auto()
     CONFIRM = auto()
     INSTALLING = auto()
     COMPLETE = auto()
@@ -75,6 +77,7 @@ class DemoInstallationEngine:
 
 class InstallerApplication:
     HOLD_SECONDS = 2.0
+    WIFI_ROWS_PER_PAGE = 4
 
     def __init__(
         self,
@@ -89,7 +92,9 @@ class InstallerApplication:
     ):
         self.root = root.resolve()
         self.payload = payload.resolve()
-        self.payload_digest = payload_digest.resolve() if payload_digest is not None else None
+        self.payload_digest = (
+            payload_digest.resolve() if payload_digest is not None else None
+        )
         self.windowed = windowed
         self.demo = demo
         self.power_probe = power_probe or PowerSupplyProbe()
@@ -112,7 +117,12 @@ class InstallerApplication:
             progress=InstallProgress(0.0, "ready", "Ready"),
         )
         self.available_resolutions = self._available_resolutions()
-        self._events: queue.Queue[InstallProgress | InstallResult | Exception] = queue.Queue()
+        self.wifi = WifiSetupController(
+            DemoWifiBackend() if self.demo else IwdWifiBackend()
+        )
+        self._events: queue.Queue[InstallProgress | InstallResult | Exception] = (
+            queue.Queue()
+        )
         self._worker: threading.Thread | None = None
         self._hold_started: float | None = None
         self._buttons: dict[str, Any] = {}
@@ -145,7 +155,9 @@ class InstallerApplication:
     def _available_resolutions(self) -> tuple[str, ...]:
         if self.demo:
             return ("auto", "800x600", "1024x600", "1024x768")
-        controller = self.hardware_controller or provisional_installer_hardware_controller()
+        controller = (
+            self.hardware_controller or provisional_installer_hardware_controller()
+        )
         display = controller.probe_display()
         return ("auto", *display.allowed_mode_ids)
 
@@ -155,6 +167,7 @@ class InstallerApplication:
         os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
         pygame.init()
         pygame.font.init()
+        pygame.key.start_text_input()
         flags = pygame.RESIZABLE if self.windowed else pygame.FULLSCREEN
         size = (1024, 600) if self.windowed else (0, 0)
         screen = pygame.display.set_mode(size, flags)
@@ -164,9 +177,12 @@ class InstallerApplication:
         running = True
         while running and not self._exit_requested:
             self._drain_worker_events()
+            self.wifi.drain()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT and self.windowed:
                     running = False
+                elif event.type == pygame.TEXTINPUT:
+                    self._handle_text_input(event.text)
                 elif event.type == pygame.KEYDOWN:
                     running = self._handle_key(event.key, pygame)
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -179,12 +195,34 @@ class InstallerApplication:
             if not self.windowed and os.environ.get("PIP_SKIP_BOOT_HANDOFF") != "1":
                 self._release_boot_cover_once()
             clock.tick(30)
+        pygame.key.stop_text_input()
         pygame.quit()
         return 0
 
+    def _handle_text_input(self, text: str) -> None:
+        if self.state.page != InstallerPage.WIFI:
+            return
+        network = self.wifi.snapshot.selected_network
+        if network is not None and network.security is WifiSecurity.PERSONAL:
+            self.wifi.append_password(text)
+
     def _handle_key(self, key: int, pygame: Any) -> bool:
-        if self.windowed and key in {pygame.K_ESCAPE, pygame.K_q}:
+        if self.windowed and key == pygame.K_q:
             return False
+        if self.state.page == InstallerPage.WIFI:
+            if key == pygame.K_ESCAPE:
+                self._back()
+            elif key == pygame.K_UP:
+                self.wifi.move_selection(-1)
+            elif key == pygame.K_DOWN:
+                self.wifi.move_selection(1)
+            elif key == pygame.K_BACKSPACE:
+                self.wifi.backspace_password()
+            elif key == pygame.K_r:
+                self.wifi.refresh()
+            elif key == pygame.K_RETURN:
+                self._activate_primary()
+            return True
         if key in {pygame.K_RETURN, pygame.K_SPACE}:
             self._activate_primary()
         elif key == pygame.K_ESCAPE and self.state.page not in {
@@ -200,7 +238,17 @@ class InstallerApplication:
         elif self.state.page == InstallerPage.TARGET and self.state.target:
             self.state.page = InstallerPage.SETTINGS
         elif self.state.page == InstallerPage.SETTINGS:
-            self.state.page = InstallerPage.CONFIRM
+            self.state.page = InstallerPage.WIFI
+            self.wifi.begin()
+        elif self.state.page == InstallerPage.WIFI:
+            snapshot = self.wifi.snapshot
+            if snapshot.phase in {WifiSetupPhase.CONNECTED, WifiSetupPhase.UNAVAILABLE}:
+                self.state.page = InstallerPage.CONFIRM
+            elif snapshot.selected_network is None:
+                self.wifi.skip()
+                self.state.page = InstallerPage.CONFIRM
+            else:
+                self.wifi.connect()
         elif self.state.page == InstallerPage.COMPLETE:
             if self.demo:
                 self._exit_requested = True
@@ -209,19 +257,24 @@ class InstallerApplication:
 
                 # Never ask the parent to pull a mounted live USB. Power off
                 # cleanly first; the USB can then be removed before the next boot.
-                subprocess.run(["systemctl", "poweroff"], check=False, shell=False)
+                subprocess.run(
+                    ["systemctl", "poweroff"], check=False, shell=False
+                )
 
     def _back(self) -> None:
         previous = {
             InstallerPage.TARGET: InstallerPage.WELCOME,
             InstallerPage.SETTINGS: InstallerPage.TARGET,
-            InstallerPage.CONFIRM: InstallerPage.SETTINGS,
+            InstallerPage.WIFI: InstallerPage.SETTINGS,
+            InstallerPage.CONFIRM: InstallerPage.WIFI,
             InstallerPage.ERROR: InstallerPage.CONFIRM,
         }
         self.state.page = previous.get(self.state.page, self.state.page)
 
     def _handle_mouse_down(self, position: tuple[int, int]) -> None:
-        if self.state.page == InstallerPage.CONFIRM and self._inside("install", position):
+        if self.state.page == InstallerPage.CONFIRM and self._inside(
+            "install", position
+        ):
             self._hold_started = time.monotonic()
 
     def _handle_mouse_up(self, position: tuple[int, int]) -> None:
@@ -232,6 +285,18 @@ class InstallerApplication:
         if self.state.page == InstallerPage.CONFIRM:
             self._hold_started = None
             return
+        if self.state.page == InstallerPage.WIFI:
+            if self._inside("wifi-refresh", position):
+                self.wifi.refresh()
+                return
+            if self._inside("wifi-skip", position):
+                self.wifi.skip()
+                self.state.page = InstallerPage.CONFIRM
+                return
+            for index in range(len(self.wifi.snapshot.networks)):
+                if self._inside(f"wifi-{index}", position):
+                    self.wifi.select(index)
+                    return
         if self._inside("primary", position):
             self._activate_primary()
             return
@@ -264,11 +329,17 @@ class InstallerApplication:
         if self._inside("tap", position):
             settings = replace(settings, touchpad_tap=not settings.touchpad_tap)
         elif self._inside("natural", position):
-            settings = replace(settings, natural_scrolling=not settings.natural_scrolling)
+            settings = replace(
+                settings, natural_scrolling=not settings.natural_scrolling
+            )
         elif self._inside("mouse-minus", position):
-            settings = replace(settings, mouse_speed=max(-1.0, settings.mouse_speed - 0.25))
+            settings = replace(
+                settings, mouse_speed=max(-1.0, settings.mouse_speed - 0.25)
+            )
         elif self._inside("mouse-plus", position):
-            settings = replace(settings, mouse_speed=min(1.0, settings.mouse_speed + 0.25))
+            settings = replace(
+                settings, mouse_speed=min(1.0, settings.mouse_speed + 0.25)
+            )
         elif self._inside("touch-minus", position):
             settings = replace(
                 settings, touchpad_speed=max(-1.0, settings.touchpad_speed - 0.25)
@@ -309,6 +380,7 @@ class InstallerApplication:
             payload=self.payload,
             payload_digest=self.payload_digest,
             hardware_settings=self.state.settings,
+            wifi_profile=self.wifi.profile,
         )
 
         def worker() -> None:
@@ -318,7 +390,9 @@ class InstallerApplication:
             except Exception as exc:
                 self._events.put(exc)
 
-        self._worker = threading.Thread(target=worker, name="greia-installer", daemon=True)
+        self._worker = threading.Thread(
+            target=worker, name="greia-installer", daemon=True
+        )
         self._worker.start()
 
     def _drain_worker_events(self) -> None:
@@ -345,66 +419,243 @@ class InstallerApplication:
         text = (61, 44, 31)
         accent = (255, 194, 52)
         danger = (181, 46, 46)
+        success = (51, 128, 76)
         screen.fill(background)
         self._buttons.clear()
         font = pygame.font.Font(None, max(27, height // 22))
         title_font = pygame.font.Font(None, max(42, height // 12))
         small_font = pygame.font.Font(None, max(22, height // 28))
 
-        main = pygame.Rect(max(24, width * 0.06), max(20, height * 0.06), width * 0.88, height * 0.88)
+        main = pygame.Rect(
+            max(24, width * 0.06),
+            max(20, height * 0.06),
+            width * 0.88,
+            height * 0.88,
+        )
         pygame.draw.rect(screen, panel, main, border_radius=28)
         page = self.state.page
         if page == InstallerPage.WELCOME:
-            self._center_title(screen, "Install Greia OS", title_font, text, main.top + 45)
-            self._icon(screen, pygame, "robot", min(220, int(height * 0.38)), (width // 2, height // 2))
-            self._button(screen, pygame, "primary", "Start", accent, text, font, (width // 2, main.bottom - 70), 260)
+            self._center_title(
+                screen, "Install Greia OS", title_font, text, main.top + 45
+            )
+            self._icon(
+                screen,
+                pygame,
+                "robot",
+                min(220, int(height * 0.38)),
+                (width // 2, height // 2),
+            )
+            self._button(
+                screen,
+                pygame,
+                "primary",
+                "Start",
+                accent,
+                text,
+                font,
+                (width // 2, main.bottom - 70),
+                260,
+            )
         elif page == InstallerPage.TARGET:
-            self._center_title(screen, "Choose the internal disk", title_font, text, main.top + 32)
+            self._center_title(
+                screen,
+                "Choose the internal disk",
+                title_font,
+                text,
+                main.top + 32,
+            )
             if not self.state.targets:
-                self._center_text(screen, "No safe internal disk was found.", font, danger, height // 2)
+                self._center_text(
+                    screen,
+                    "No safe internal disk was found.",
+                    font,
+                    danger,
+                    height // 2,
+                )
             for index, target in enumerate(self.state.targets[:4]):
-                rect = pygame.Rect(main.left + 60, main.top + 120 + index * 86, main.width - 120, 68)
+                rect = pygame.Rect(
+                    main.left + 60,
+                    main.top + 120 + index * 86,
+                    main.width - 120,
+                    68,
+                )
                 selected = index == self.state.selected_target
-                pygame.draw.rect(screen, accent if selected else background, rect, border_radius=18)
-                pygame.draw.rect(screen, text, rect, width=3 if selected else 1, border_radius=18)
+                pygame.draw.rect(
+                    screen, accent if selected else background, rect, border_radius=18
+                )
+                pygame.draw.rect(
+                    screen,
+                    text,
+                    rect,
+                    width=3 if selected else 1,
+                    border_radius=18,
+                )
                 self._buttons[f"target-{index}"] = rect
                 label = font.render(target.display_name, True, text)
                 screen.blit(label, label.get_rect(midleft=(rect.left + 24, rect.centery)))
-            self._navigation(screen, pygame, font, accent, text, enabled=self.state.target is not None)
+            self._navigation(
+                screen,
+                pygame,
+                font,
+                accent,
+                text,
+                enabled=self.state.target is not None,
+            )
         elif page == InstallerPage.SETTINGS:
-            self._center_title(screen, "Input and screen", title_font, text, main.top + 26)
-            self._toggle_row(screen, pygame, "tap", "Tap touchpad to click", self.state.settings.touchpad_tap, font, text, accent, main.top + 110)
-            self._toggle_row(screen, pygame, "natural", "Natural scrolling", self.state.settings.natural_scrolling, font, text, accent, main.top + 178)
-            self._stepper_row(screen, pygame, "mouse", "Mouse speed", self.state.settings.mouse_speed, font, text, accent, main.top + 246)
-            self._stepper_row(screen, pygame, "touch", "Touchpad speed", self.state.settings.touchpad_speed, font, text, accent, main.top + 314)
-            self._value_row(screen, pygame, "resolution", "Screen resolution", self.state.settings.resolution, font, text, accent, main.top + 382)
+            self._center_title(
+                screen, "Input and screen", title_font, text, main.top + 26
+            )
+            self._toggle_row(
+                screen,
+                pygame,
+                "tap",
+                "Tap touchpad to click",
+                self.state.settings.touchpad_tap,
+                font,
+                text,
+                accent,
+                main.top + 110,
+            )
+            self._toggle_row(
+                screen,
+                pygame,
+                "natural",
+                "Natural scrolling",
+                self.state.settings.natural_scrolling,
+                font,
+                text,
+                accent,
+                main.top + 178,
+            )
+            self._stepper_row(
+                screen,
+                pygame,
+                "mouse",
+                "Mouse speed",
+                self.state.settings.mouse_speed,
+                font,
+                text,
+                accent,
+                main.top + 246,
+            )
+            self._stepper_row(
+                screen,
+                pygame,
+                "touch",
+                "Touchpad speed",
+                self.state.settings.touchpad_speed,
+                font,
+                text,
+                accent,
+                main.top + 314,
+            )
+            self._value_row(
+                screen,
+                pygame,
+                "resolution",
+                "Screen resolution",
+                self.state.settings.resolution,
+                font,
+                text,
+                accent,
+                main.top + 382,
+            )
             self._navigation(screen, pygame, font, accent, text, enabled=True)
+        elif page == InstallerPage.WIFI:
+            self._draw_wifi(
+                screen,
+                pygame,
+                main,
+                font,
+                title_font,
+                small_font,
+                background,
+                text,
+                accent,
+                danger,
+                success,
+            )
         elif page == InstallerPage.CONFIRM:
-            self._center_title(screen, "Ready to install", title_font, text, main.top + 34)
+            self._center_title(
+                screen, "Ready to install", title_font, text, main.top + 34
+            )
             target = self.state.target
             target_text = target.display_name if target else "Unknown disk"
-            self._center_text(screen, target_text, font, text, main.top + 130)
-            self._center_text(screen, "Everything currently on this disk will be erased.", font, danger, main.top + 190)
-            self._center_text(screen, "Tap-to-click starts disabled and can be changed later.", small_font, text, main.top + 235)
-            rect = self._button(screen, pygame, "install", "Hold to erase and install", danger, (255,255,255), font, (width // 2, main.bottom - 110), 390)
+            self._center_text(screen, target_text, font, text, main.top + 125)
+            wifi_text = (
+                f"Wi-Fi: {self.wifi.profile.ssid}"
+                if self.wifi.profile is not None
+                else "Wi-Fi: set up later"
+            )
+            self._center_text(screen, wifi_text, small_font, text, main.top + 170)
+            self._center_text(
+                screen,
+                "Everything currently on this disk will be erased.",
+                font,
+                danger,
+                main.top + 220,
+            )
+            self._center_text(
+                screen,
+                "Tap-to-click starts disabled and can be changed later.",
+                small_font,
+                text,
+                main.top + 265,
+            )
+            rect = self._button(
+                screen,
+                pygame,
+                "install",
+                "Hold to erase and install",
+                danger,
+                (255, 255, 255),
+                font,
+                (width // 2, main.bottom - 110),
+                390,
+            )
             if self._hold_started is not None:
-                fraction = min(1.0, (time.monotonic() - self._hold_started) / self.HOLD_SECONDS)
-                fill = rect.copy(); fill.width = int(rect.width * fraction)
+                fraction = min(
+                    1.0,
+                    (time.monotonic() - self._hold_started) / self.HOLD_SECONDS,
+                )
+                fill = rect.copy()
+                fill.width = int(rect.width * fraction)
                 pygame.draw.rect(screen, (120, 24, 24), fill, border_radius=18)
-                label = font.render("Keep holding…", True, (255,255,255))
+                label = font.render("Keep holding…", True, (255, 255, 255))
                 screen.blit(label, label.get_rect(center=rect.center))
             self._back_button(screen, pygame, font, accent, text)
         elif page == InstallerPage.INSTALLING:
-            self._center_title(screen, "Installing", title_font, text, main.top + 50)
-            self._icon(screen, pygame, "robot", min(180, int(height * 0.3)), (width // 2, main.top + 220))
-            track = pygame.Rect(main.left + 100, main.bottom - 170, main.width - 200, 28)
+            self._center_title(
+                screen, "Installing", title_font, text, main.top + 50
+            )
+            self._icon(
+                screen,
+                pygame,
+                "robot",
+                min(180, int(height * 0.3)),
+                (width // 2, main.top + 220),
+            )
+            track = pygame.Rect(
+                main.left + 100, main.bottom - 170, main.width - 200, 28
+            )
             pygame.draw.rect(screen, background, track, border_radius=14)
-            fill = track.copy(); fill.width = int(track.width * self.state.progress.fraction)
+            fill = track.copy()
+            fill.width = int(track.width * self.state.progress.fraction)
             pygame.draw.rect(screen, accent, fill, border_radius=14)
-            self._center_text(screen, self.state.progress.detail, font, text, main.bottom - 105)
-            self._center_text(screen, "Do not remove the USB key.", small_font, danger, main.bottom - 65)
+            self._center_text(
+                screen, self.state.progress.detail, font, text, main.bottom - 105
+            )
+            self._center_text(
+                screen,
+                "Do not remove the USB key.",
+                small_font,
+                danger,
+                main.bottom - 65,
+            )
         elif page == InstallerPage.COMPLETE:
-            self._center_title(screen, "All done!", title_font, text, main.top + 28)
+            self._center_title(
+                screen, "All done!", title_font, text, main.top + 28
+            )
             self._icon(
                 screen,
                 pygame,
@@ -420,9 +671,15 @@ class InstallerApplication:
                 text,
                 main.top + 245,
             )
-            recovery_code = result.grouped_recovery_code if result is not None else "CODE UNAVAILABLE"
+            recovery_code = (
+                result.grouped_recovery_code
+                if result is not None
+                else "CODE UNAVAILABLE"
+            )
             code_font = pygame.font.Font(None, max(33, height // 15))
-            self._center_text(screen, recovery_code, code_font, danger, main.top + 305)
+            self._center_text(
+                screen, recovery_code, code_font, danger, main.top + 305
+            )
             self._center_text(
                 screen,
                 "Photograph or write it down.",
@@ -450,33 +707,352 @@ class InstallerApplication:
                 480,
             )
         elif page == InstallerPage.ERROR:
-            self._center_title(screen, "Installation stopped", title_font, danger, main.top + 45)
-            self._icon(screen, pygame, "close_button", min(160, int(height * 0.28)), (width // 2, main.top + 210))
-            message = self.state.error + " The selected disk may be incomplete if installation had already begun."
-            self._wrapped_text(screen, message, small_font, text, pygame.Rect(main.left + 100, main.top + 300, main.width - 200, 150))
+            self._center_title(
+                screen,
+                "Installation stopped",
+                title_font,
+                danger,
+                main.top + 45,
+            )
+            self._icon(
+                screen,
+                pygame,
+                "close_button",
+                min(160, int(height * 0.28)),
+                (width // 2, main.top + 210),
+            )
+            message = (
+                self.state.error
+                + " The selected disk may be incomplete if installation had already begun."
+            )
+            self._wrapped_text(
+                screen,
+                message,
+                small_font,
+                text,
+                pygame.Rect(main.left + 100, main.top + 300, main.width - 200, 150),
+            )
             self._back_button(screen, pygame, font, accent, text)
 
-    def _navigation(self, screen: Any, pygame: Any, font: Any, accent: tuple[int,int,int], text: tuple[int,int,int], *, enabled: bool) -> None:
+    def _draw_wifi(
+        self,
+        screen: Any,
+        pygame: Any,
+        main: Any,
+        font: Any,
+        title_font: Any,
+        small_font: Any,
+        background: tuple[int, int, int],
+        text: tuple[int, int, int],
+        accent: tuple[int, int, int],
+        danger: tuple[int, int, int],
+        success: tuple[int, int, int],
+    ) -> None:
+        snapshot = self.wifi.snapshot
+        self._center_title(
+            screen, "Wi-Fi (optional)", title_font, text, main.top + 20
+        )
+        self._center_text(
+            screen,
+            "Connect now, or set it up later in Greia Parents.",
+            small_font,
+            text,
+            main.top + 76,
+        )
+
+        if snapshot.phase is WifiSetupPhase.SCANNING:
+            self._center_text(
+                screen, "Looking for Wi-Fi networks…", font, text, main.centery
+            )
+        elif snapshot.phase is WifiSetupPhase.CONNECTING:
+            self._center_text(
+                screen,
+                f"Connecting to {snapshot.selected_network.ssid if snapshot.selected_network else 'Wi-Fi'}…",
+                font,
+                text,
+                main.centery,
+            )
+        elif snapshot.phase is WifiSetupPhase.UNAVAILABLE:
+            self._center_text(
+                screen,
+                "No wireless adapter is available. You can continue offline.",
+                font,
+                text,
+                main.centery - 15,
+            )
+            self._button(
+                screen,
+                pygame,
+                "primary",
+                "Continue offline",
+                accent,
+                text,
+                font,
+                (screen.get_width() - 190, screen.get_height() - 70),
+                270,
+            )
+        elif snapshot.phase is WifiSetupPhase.CONNECTED:
+            self._center_text(
+                screen,
+                f"Connected to {snapshot.connected_ssid}",
+                font,
+                success,
+                main.centery - 20,
+            )
+            self._center_text(
+                screen,
+                "This network will be ready after the first boot.",
+                small_font,
+                text,
+                main.centery + 25,
+            )
+            self._button(
+                screen,
+                pygame,
+                "primary",
+                "Continue",
+                accent,
+                text,
+                font,
+                (screen.get_width() - 185, screen.get_height() - 70),
+                250,
+            )
+        else:
+            self._draw_wifi_networks(
+                screen,
+                pygame,
+                main,
+                font,
+                small_font,
+                background,
+                text,
+                accent,
+                danger,
+            )
+
+        if snapshot.error and snapshot.phase is not WifiSetupPhase.UNAVAILABLE:
+            self._center_text(
+                screen,
+                snapshot.error[:90],
+                small_font,
+                danger,
+                main.bottom - 93,
+            )
+
+        self._back_button(screen, pygame, font, accent, text)
+        if snapshot.phase not in {
+            WifiSetupPhase.CONNECTED,
+            WifiSetupPhase.UNAVAILABLE,
+            WifiSetupPhase.CONNECTING,
+        }:
+            self._button(
+                screen,
+                pygame,
+                "wifi-refresh",
+                "Refresh",
+                background,
+                text,
+                small_font,
+                (screen.get_width() // 2, screen.get_height() - 70),
+                170,
+            )
+            self._button(
+                screen,
+                pygame,
+                "wifi-skip",
+                "Skip for now",
+                accent,
+                text,
+                small_font,
+                (screen.get_width() - 170, screen.get_height() - 70),
+                210,
+            )
+
+    def _draw_wifi_networks(
+        self,
+        screen: Any,
+        pygame: Any,
+        main: Any,
+        font: Any,
+        small_font: Any,
+        background: tuple[int, int, int],
+        text: tuple[int, int, int],
+        accent: tuple[int, int, int],
+        danger: tuple[int, int, int],
+    ) -> None:
+        snapshot = self.wifi.snapshot
+        if not snapshot.networks:
+            self._center_text(
+                screen,
+                "No networks found. Refresh, or continue offline.",
+                font,
+                text,
+                main.centery,
+            )
+            return
+
+        page_start = (
+            snapshot.selected_index // self.WIFI_ROWS_PER_PAGE
+        ) * self.WIFI_ROWS_PER_PAGE
+        visible = snapshot.networks[
+            page_start : page_start + self.WIFI_ROWS_PER_PAGE
+        ]
+        for offset, network in enumerate(visible):
+            index = page_start + offset
+            rect = pygame.Rect(
+                main.left + 70,
+                main.top + 105 + offset * 62,
+                main.width - 140,
+                52,
+            )
+            selected = index == snapshot.selected_index
+            supported = network.installer_supported
+            fill = accent if selected else background
+            if not supported:
+                fill = (232, 228, 217)
+            pygame.draw.rect(screen, fill, rect, border_radius=15)
+            pygame.draw.rect(
+                screen,
+                text,
+                rect,
+                width=3 if selected else 1,
+                border_radius=15,
+            )
+            self._buttons[f"wifi-{index}"] = rect
+            label = font.render(network.ssid, True, text)
+            screen.blit(label, (rect.left + 16, rect.top + 10))
+            if network.security is WifiSecurity.OPEN:
+                security = "Open"
+            elif network.security is WifiSecurity.PERSONAL:
+                security = "Password"
+            else:
+                security = "Enterprise — later"
+            strength = _signal_label(network.signal_dbm)
+            detail = small_font.render(f"{security} · {strength}", True, text)
+            screen.blit(detail, detail.get_rect(midright=(rect.right - 16, rect.centery)))
+
+        network = snapshot.selected_network
+        if network is None:
+            return
+        controls_y = main.top + 365
+        if network.security is WifiSecurity.PERSONAL:
+            password_rect = pygame.Rect(
+                main.left + 90, controls_y, main.width - 340, 48
+            )
+            pygame.draw.rect(screen, background, password_rect, border_radius=14)
+            pygame.draw.rect(screen, text, password_rect, width=1, border_radius=14)
+            masked = "•" * len(snapshot.passphrase)
+            placeholder = masked or "Wi-Fi password"
+            screen.blit(
+                small_font.render(placeholder, True, text),
+                (password_rect.left + 16, password_rect.top + 12),
+            )
+            self._buttons["wifi-password"] = password_rect
+        if network.installer_supported:
+            self._button(
+                screen,
+                pygame,
+                "primary",
+                "Connect",
+                accent,
+                text,
+                font,
+                (main.right - 165, controls_y + 24),
+                220,
+            )
+        else:
+            note = small_font.render(
+                "Enterprise Wi-Fi can be configured later in Greia Parents.",
+                True,
+                danger,
+            )
+            screen.blit(note, note.get_rect(center=(main.centerx, controls_y + 24)))
+
+    def _navigation(
+        self,
+        screen: Any,
+        pygame: Any,
+        font: Any,
+        accent: tuple[int, int, int],
+        text: tuple[int, int, int],
+        *,
+        enabled: bool,
+    ) -> None:
         self._back_button(screen, pygame, font, accent, text)
         color = accent if enabled else (200, 195, 180)
-        self._button(screen, pygame, "primary", "Continue", color, text, font, (screen.get_width() - 185, screen.get_height() - 70), 250)
+        self._button(
+            screen,
+            pygame,
+            "primary",
+            "Continue",
+            color,
+            text,
+            font,
+            (screen.get_width() - 185, screen.get_height() - 70),
+            250,
+        )
 
-    def _back_button(self, screen: Any, pygame: Any, font: Any, accent: tuple[int,int,int], text: tuple[int,int,int]) -> None:
-        self._button(screen, pygame, "back", "Back", accent, text, font, (150, screen.get_height() - 70), 190)
+    def _back_button(
+        self,
+        screen: Any,
+        pygame: Any,
+        font: Any,
+        accent: tuple[int, int, int],
+        text: tuple[int, int, int],
+    ) -> None:
+        self._button(
+            screen,
+            pygame,
+            "back",
+            "Back",
+            accent,
+            text,
+            font,
+            (150, screen.get_height() - 70),
+            190,
+        )
 
-    def _toggle_row(self, screen: Any, pygame: Any, key: str, label: str, value: bool, font: Any, text: tuple[int,int,int], accent: tuple[int,int,int], y: int) -> None:
-        rect = pygame.Rect(screen.get_width() * 0.16, y, screen.get_width() * 0.68, 54)
-        pygame.draw.rect(screen, (247,235,203), rect, border_radius=16)
+    def _toggle_row(
+        self,
+        screen: Any,
+        pygame: Any,
+        key: str,
+        label: str,
+        value: bool,
+        font: Any,
+        text: tuple[int, int, int],
+        accent: tuple[int, int, int],
+        y: int,
+    ) -> None:
+        rect = pygame.Rect(
+            screen.get_width() * 0.16, y, screen.get_width() * 0.68, 54
+        )
+        pygame.draw.rect(screen, (247, 235, 203), rect, border_radius=16)
         screen.blit(font.render(label, True, text), (rect.left + 18, rect.top + 13))
         state_rect = pygame.Rect(rect.right - 116, rect.top + 7, 98, 40)
-        pygame.draw.rect(screen, accent if value else (180,175,165), state_rect, border_radius=20)
+        pygame.draw.rect(
+            screen, accent if value else (180, 175, 165), state_rect, border_radius=20
+        )
         knob_x = state_rect.right - 20 if value else state_rect.left + 20
-        pygame.draw.circle(screen, (255,255,255), (knob_x, state_rect.centery), 15)
+        pygame.draw.circle(screen, (255, 255, 255), (knob_x, state_rect.centery), 15)
         self._buttons[key] = rect
 
-    def _stepper_row(self, screen: Any, pygame: Any, key: str, label: str, value: float, font: Any, text: tuple[int,int,int], accent: tuple[int,int,int], y: int) -> None:
-        rect = pygame.Rect(screen.get_width() * 0.16, y, screen.get_width() * 0.68, 54)
-        pygame.draw.rect(screen, (247,235,203), rect, border_radius=16)
+    def _stepper_row(
+        self,
+        screen: Any,
+        pygame: Any,
+        key: str,
+        label: str,
+        value: float,
+        font: Any,
+        text: tuple[int, int, int],
+        accent: tuple[int, int, int],
+        y: int,
+    ) -> None:
+        rect = pygame.Rect(
+            screen.get_width() * 0.16, y, screen.get_width() * 0.68, 54
+        )
+        pygame.draw.rect(screen, (247, 235, 203), rect, border_radius=16)
         screen.blit(font.render(label, True, text), (rect.left + 18, rect.top + 13))
         minus = pygame.Rect(rect.right - 210, rect.top + 6, 46, 42)
         plus = pygame.Rect(rect.right - 58, rect.top + 6, 46, 42)
@@ -485,13 +1061,28 @@ class InstallerApplication:
             glyph_image = font.render(glyph, True, text)
             screen.blit(glyph_image, glyph_image.get_rect(center=button_rect.center))
         value_image = font.render(f"{value:+.2f}", True, text)
-        screen.blit(value_image, value_image.get_rect(center=(rect.right - 111, rect.centery)))
+        screen.blit(
+            value_image, value_image.get_rect(center=(rect.right - 111, rect.centery))
+        )
         self._buttons[f"{key}-minus"] = minus
         self._buttons[f"{key}-plus"] = plus
 
-    def _value_row(self, screen: Any, pygame: Any, key: str, label: str, value: str, font: Any, text: tuple[int,int,int], accent: tuple[int,int,int], y: int) -> None:
-        rect = pygame.Rect(screen.get_width() * 0.16, y, screen.get_width() * 0.68, 54)
-        pygame.draw.rect(screen, (247,235,203), rect, border_radius=16)
+    def _value_row(
+        self,
+        screen: Any,
+        pygame: Any,
+        key: str,
+        label: str,
+        value: str,
+        font: Any,
+        text: tuple[int, int, int],
+        accent: tuple[int, int, int],
+        y: int,
+    ) -> None:
+        rect = pygame.Rect(
+            screen.get_width() * 0.16, y, screen.get_width() * 0.68, 54
+        )
+        pygame.draw.rect(screen, (247, 235, 203), rect, border_radius=16)
         screen.blit(font.render(label, True, text), (rect.left + 18, rect.top + 13))
         value_rect = pygame.Rect(rect.right - 190, rect.top + 6, 172, 42)
         pygame.draw.rect(screen, accent, value_rect, border_radius=14)
@@ -499,45 +1090,96 @@ class InstallerApplication:
         screen.blit(value_image, value_image.get_rect(center=value_rect.center))
         self._buttons[key] = rect
 
-    def _button(self, screen: Any, pygame: Any, key: str, label: str, background: tuple[int,int,int], foreground: tuple[int,int,int], font: Any, center: tuple[int,int], width: int) -> Any:
-        rect = pygame.Rect(0, 0, width, 58); rect.center = center
+    def _button(
+        self,
+        screen: Any,
+        pygame: Any,
+        key: str,
+        label: str,
+        background: tuple[int, int, int],
+        foreground: tuple[int, int, int],
+        font: Any,
+        center: tuple[int, int],
+        width: int,
+    ) -> Any:
+        rect = pygame.Rect(0, 0, width, 58)
+        rect.center = center
         pygame.draw.rect(screen, background, rect, border_radius=18)
         image = font.render(label, True, foreground)
         screen.blit(image, image.get_rect(center=rect.center))
         self._buttons[key] = rect
         return rect
 
-    def _icon(self, screen: Any, pygame: Any, icon_id: str, size: int, center: tuple[int,int]) -> None:
+    def _icon(
+        self,
+        screen: Any,
+        pygame: Any,
+        icon_id: str,
+        size: int,
+        center: tuple[int, int],
+    ) -> None:
         key = (icon_id, size)
         image = self._icon_cache.get(key)
         if image is None:
-            path = self.root / "assets" / "icons" / "core" / "v1" / "256" / f"{icon_id}.png"
+            path = (
+                self.root
+                / "assets"
+                / "icons"
+                / "core"
+                / "v1"
+                / "256"
+                / f"{icon_id}.png"
+            )
             image = pygame.image.load(str(path)).convert_alpha()
             image = pygame.transform.smoothscale(image, (size, size))
             self._icon_cache[key] = image
         screen.blit(image, image.get_rect(center=center))
 
-    def _center_title(self, screen: Any, text_value: str, font: Any, color: tuple[int,int,int], y: int) -> None:
+    def _center_title(
+        self,
+        screen: Any,
+        text_value: str,
+        font: Any,
+        color: tuple[int, int, int],
+        y: int,
+    ) -> None:
         image = font.render(text_value, True, color)
         screen.blit(image, image.get_rect(midtop=(screen.get_width() // 2, y)))
 
-    def _center_text(self, screen: Any, text_value: str, font: Any, color: tuple[int,int,int], y: int) -> None:
+    def _center_text(
+        self,
+        screen: Any,
+        text_value: str,
+        font: Any,
+        color: tuple[int, int, int],
+        y: int,
+    ) -> None:
         image = font.render(text_value, True, color)
         screen.blit(image, image.get_rect(center=(screen.get_width() // 2, y)))
 
-    def _wrapped_text(self, screen: Any, text_value: str, font: Any, color: tuple[int,int,int], rect: Any) -> None:
-        words = text_value.split(); line = ""; y = rect.top
+    def _wrapped_text(
+        self,
+        screen: Any,
+        text_value: str,
+        font: Any,
+        color: tuple[int, int, int],
+        rect: Any,
+    ) -> None:
+        words = text_value.split()
+        line = ""
+        y = rect.top
         for word in words:
             candidate = f"{line} {word}".strip()
             if font.size(candidate)[0] > rect.width and line:
-                screen.blit(font.render(line, True, color), (rect.left, y)); y += font.get_linesize()
+                screen.blit(font.render(line, True, color), (rect.left, y))
+                y += font.get_linesize()
                 line = word
             else:
                 line = candidate
         if line:
             screen.blit(font.render(line, True, color), (rect.left, y))
 
-    def _inside(self, key: str, position: tuple[int,int]) -> bool:
+    def _inside(self, key: str, position: tuple[int, int]) -> bool:
         rect = self._buttons.get(key)
         return bool(rect and rect.collidepoint(position))
 
@@ -556,10 +1198,28 @@ class InstallerApplication:
             self._boot_released = completed.returncode == 0
 
 
+def _signal_label(signal_dbm: float) -> str:
+    if signal_dbm >= -50:
+        return "Strong"
+    if signal_dbm >= -67:
+        return "Good"
+    if signal_dbm >= -78:
+        return "Fair"
+    return "Weak"
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--root", type=Path, default=Path(os.environ.get("GREIA_OS_ROOT", "/opt/greia-os")))
-    parser.add_argument("--payload", type=Path, default=Path("/run/live/medium/payload/pip-rootfs.squashfs"))
+    parser.add_argument(
+        "--root",
+        type=Path,
+        default=Path(os.environ.get("GREIA_OS_ROOT", "/opt/greia-os")),
+    )
+    parser.add_argument(
+        "--payload",
+        type=Path,
+        default=Path("/run/live/medium/payload/pip-rootfs.squashfs"),
+    )
     parser.add_argument("--payload-digest", type=Path)
     parser.add_argument("--windowed", action="store_true")
     parser.add_argument("--demo", action="store_true")
@@ -569,7 +1229,9 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     if not args.demo and os.geteuid() != 0:
-        raise SystemExit("The live installer must run as root. Use --demo for a safe preview.")
+        raise SystemExit(
+            "The live installer must run as root. Use --demo for a safe preview."
+        )
     return InstallerApplication(
         root=args.root,
         payload=args.payload,
