@@ -6,19 +6,22 @@ PROJECT_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 
 usage() {
   cat <<'USAGE'
-Usage: populate-hardware-support-pool.sh LIVE_ROOT SUITE ARCH
+Usage: populate-hardware-support-pool.sh LIVE_ROOT SUITE ARCH TARGET_DPKG_STATUS
 
 Populate LIVE_ROOT/opt/greia-hardware-support with a bounded download-only
 Debian firmware/microcode repository derived from isenkram firmware metadata.
-The live root must already have apt lists and isenkram-cli installed.
+Dependency resolution uses the final target image's dpkg status, not the richer
+live installer state, so the frozen repository is sufficient offline.
 USAGE
 }
 
-[[ $# -eq 3 ]] || { usage >&2; exit 2; }
+[[ $# -eq 4 ]] || { usage >&2; exit 2; }
 LIVE_ROOT="$(realpath "$1")"
 SUITE="$2"
 ARCH="$3"
+TARGET_DPKG_STATUS="$(realpath "$4")"
 [[ -d "$LIVE_ROOT" ]] || { echo "Live root not found: $LIVE_ROOT" >&2; exit 1; }
+[[ -r "$TARGET_DPKG_STATUS" ]] || { echo "Target dpkg status not found: $TARGET_DPKG_STATUS" >&2; exit 1; }
 [[ -d "$LIVE_ROOT/usr/share/isenkram" ]] || {
   echo "isenkram firmware metadata missing from live root" >&2
   exit 1
@@ -28,8 +31,14 @@ POOL_ROOT="$LIVE_ROOT/opt/greia-hardware-support"
 POOL_DIR="$POOL_ROOT/pool"
 CANDIDATE_MANIFEST="$POOL_ROOT/candidates.json"
 AVAILABLE_LIST="$POOL_ROOT/available-candidates.txt"
+TARGET_STATUS_IN_CHROOT="$LIVE_ROOT/tmp/greia-target-dpkg-status"
 rm -rf "$POOL_ROOT"
 install -d -m 0755 "$POOL_DIR/partial"
+install -m 0644 "$TARGET_DPKG_STATUS" "$TARGET_STATUS_IN_CHROOT"
+cleanup() {
+  rm -f "$TARGET_STATUS_IN_CHROOT"
+}
+trap cleanup EXIT
 
 python3 "$PROJECT_ROOT/tools/build_hardware_support_pool_manifest.py" \
   --isenkram-dir "$LIVE_ROOT/usr/share/isenkram" \
@@ -63,6 +72,7 @@ if (( ${#available_packages[@]} > 0 )); then
       -o Acquire::Retries=3 \
       -o Acquire::http::Timeout=20 \
       -o Acquire::https::Timeout=20 \
+      -o Dir::State::status=/tmp/greia-target-dpkg-status \
       -o Dir::Cache::archives=/opt/greia-hardware-support/pool \
       --download-only install -y --no-install-recommends \
       "${available_packages[@]}"
