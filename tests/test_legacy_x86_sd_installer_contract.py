@@ -58,6 +58,22 @@ class LegacyX86SdInstallerContractTests(unittest.TestCase):
         self.assertNotIn("linux-image-686-pae", source)
         self.assertNotIn("PROFILE=", source)
 
+    def test_mac_driver_provisions_x86_vm_and_builds_without_target_probe(self) -> None:
+        source = (
+            PROJECT_ROOT / "tools/mac-build-legacy-x86-sd.sh"
+        ).read_text(encoding="utf-8")
+        self.assertIn('INSTANCE="greia-builder-x86"', source)
+        self.assertIn('PROFILE="legacy-x86-i686"', source)
+        self.assertIn("--vm-type=qemu", source)
+        self.assertIn("--arch=x86_64", source)
+        self.assertIn("lima-additional-guestagents", source)
+        self.assertIn("run_hardware_enablement_source_gate.sh", source)
+        self.assertIn("build-legacy-x86-sd-installer.sh", source)
+        self.assertIn("limactl copy", source)
+        self.assertIn("shasum -a 256", source)
+        self.assertNotIn("lscpu", source)
+        self.assertNotIn("/proc/cpuinfo", source)
+
 
 if __name__ == "__main__":
     unittest.main()
