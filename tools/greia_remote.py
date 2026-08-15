@@ -38,10 +38,10 @@ class GreiaRemote:
     def __init__(self, *, host: str, user: str, key: Path, known_hosts: Path):
         self.host = host
         self.user = user
-        self.key = key.expanduser().resolve()
+        self.key_path = key.expanduser().resolve()
         self.known_hosts = known_hosts.expanduser().resolve()
-        if not self.key.is_file():
-            raise RemoteError(f"SSH private key not found: {self.key}")
+        if not self.key_path.is_file():
+            raise RemoteError(f"SSH private key not found: {self.key_path}")
         self.known_hosts.parent.mkdir(parents=True, exist_ok=True)
 
     @property
@@ -52,7 +52,7 @@ class GreiaRemote:
         return [
             "ssh",
             "-i",
-            str(self.key),
+            str(self.key_path),
             "-o",
             "BatchMode=yes",
             "-o",
@@ -68,7 +68,7 @@ class GreiaRemote:
         return [
             "scp",
             "-i",
-            str(self.key),
+            str(self.key_path),
             "-o",
             "BatchMode=yes",
             "-o",
