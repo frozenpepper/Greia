@@ -25,11 +25,20 @@ class ActivityContractTests(unittest.TestCase):
         activities = ActivityRegistry([source], self.runtime).discover()
         self.assertEqual(
             [activity.activity_id for activity in activities],
-            ["org.greia.shape-garden", "org.greia.workshop-settings"],
+            [
+                "org.greia.painting",
+                "org.greia.shape-garden",
+                "org.greia.workshop-settings",
+                "org.greia.writing",
+            ],
         )
-        self.assertEqual(activities[0].legacy_ids, ("shape_garden",))
-        self.assertEqual(activities[0].icon_id, "garden")
-        self.assertIn("customization.manage", activities[1].requested_permissions)
+        by_id = {activity.activity_id: activity for activity in activities}
+        self.assertEqual(by_id["org.greia.shape-garden"].legacy_ids, ("shape_garden",))
+        self.assertEqual(by_id["org.greia.shape-garden"].icon_id, "garden")
+        self.assertIn(
+            "customization.manage",
+            by_id["org.greia.workshop-settings"].requested_permissions,
+        )
 
     def test_external_package_cannot_claim_legacy_alias(self) -> None:
         with self._copy_sample(keep_legacy_alias=True) as root:
