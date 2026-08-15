@@ -11,8 +11,9 @@ usage() {
 Usage: sudo build/build-legacy-x86-sd-installer.sh [OUTPUT_DIR]
 
 Build the generic Greia legacy-x86/i686 graphical installer and place the
-one-shot Linux hardware-evidence collector directly on the installer media.
-This command intentionally does NOT inspect a target PC before building.
+one-shot AntiX boot helper plus optional hardware-evidence collector directly
+on the installer media. This command intentionally does NOT inspect a target PC
+before building.
 USAGE
 }
 
@@ -77,21 +78,31 @@ install -d -m 0755 "$MOUNT/greia-tools" "$MOUNT/greia-evidence"
 install -m 0755 \
   "$PROJECT_ROOT/tools/collect-linux-hardware-evidence.sh" \
   "$MOUNT/greia-tools/collect-linux-hardware-evidence.sh"
+install -m 0755 \
+  "$PROJECT_ROOT/tools/prepare-antix-sd-boot.sh" \
+  "$MOUNT/greia-tools/prepare-antix-sd-boot.sh"
 cat > "$MOUNT/greia-tools/README.txt" <<'README'
-Greia engineering hardware evidence
-===================================
+Greia legacy-x86 SD helper tools
+================================
 
-This tool is OPTIONAL evidence collection. It is not needed to choose or boot
-this installer and it does not select drivers/packages.
+The generic Greia legacy-x86 installer is already selected. Neither helper
+chooses an image, driver, kernel flavor, or firmware package.
 
-From an existing Linux installation after mounting this installer partition
-read-write at /mnt/greia-sd, run:
+On a machine currently running AntiX/Linux, mount this Greia SD read-write and
+run ONE command from the SD:
 
-  sudo bash /mnt/greia-sd/greia-tools/collect-linux-hardware-evidence.sh \
-      /mnt/greia-sd/greia-evidence
+  sudo bash <SD-MOUNT>/greia-tools/prepare-antix-sd-boot.sh
 
-The script writes one timestamped .txt report under /greia-evidence on this SD.
-No hand-copying terminal output is required.
+That helper:
+  * infers the SD device from its own mounted path;
+  * verifies the Greia kernel/initrd/live filesystem/payload;
+  * runs the optional hardware-evidence collector and writes one report under
+    <SD-MOUNT>/greia-evidence/;
+  * creates the AntiX GRUB entry for booting this SD;
+  * runs update-grub and verifies the entry exists.
+
+The evidence report is for engineering/certification only. No hand-copying
+terminal output to another computer is required.
 README
 chmod 0644 "$MOUNT/greia-tools/README.txt"
 sync
@@ -114,12 +125,13 @@ for line in lines:
     if line.startswith("sha256="):
         updated.append(f"sha256={digest}")
         seen_sha = True
-    elif not line.startswith("hardware_evidence_tool=") and not line.startswith("hardware_evidence_output_dir="):
+    elif not line.startswith("hardware_evidence_tool=") and not line.startswith("hardware_evidence_output_dir=") and not line.startswith("antix_sd_boot_helper="):
         updated.append(line)
 if not seen_sha:
     raise SystemExit("installer report has no sha256 field")
 updated.append("hardware_evidence_tool=/greia-tools/collect-linux-hardware-evidence.sh")
 updated.append("hardware_evidence_output_dir=/greia-evidence")
+updated.append("antix_sd_boot_helper=/greia-tools/prepare-antix-sd-boot.sh")
 path.write_text("\n".join(updated) + "\n", encoding="utf-8")
 PY
 
@@ -131,5 +143,6 @@ Image: $IMAGE
 Final SHA-256: $FINAL_SHA
 Digest file: $FINAL_DIGEST
 Report: $REPORT
-Optional Linux evidence tool on media: /greia-tools/collect-linux-hardware-evidence.sh
+AntiX one-shot boot helper on media: /greia-tools/prepare-antix-sd-boot.sh
+Optional hardware evidence tool on media: /greia-tools/collect-linux-hardware-evidence.sh
 EOF
