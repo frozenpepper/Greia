@@ -145,8 +145,9 @@ def finalize_pool(pool_root: Path, candidate_manifest: Path, max_bytes: int) -> 
 
     packages_text = "\n".join(repository_stanzas)
     (pool_root / "Packages").write_text(packages_text, encoding="utf-8")
-    with gzip.open(pool_root / "Packages.gz", "wb", compresslevel=9, mtime=0) as handle:
-        handle.write(packages_text.encode("utf-8"))
+    with (pool_root / "Packages.gz").open("wb") as raw:
+        with gzip.GzipFile(fileobj=raw, mode="wb", compresslevel=9, mtime=0) as handle:
+            handle.write(packages_text.encode("utf-8"))
     (pool_root / "manifest.json").write_text(
         json.dumps(manifest, sort_keys=True, indent=2) + "\n",
         encoding="utf-8",
