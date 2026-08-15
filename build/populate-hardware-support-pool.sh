@@ -90,7 +90,11 @@ done
 printf '%s\n' "${available_packages[@]}" > "$AVAILABLE_LIST"
 
 before_packages="$(chroot "$LIVE_ROOT" dpkg-query -W -f='${Package}\t${Version}\n' | LC_ALL=C sort | sha256sum | awk '{print $1}')"
-if (( ${#available_packages[@]} > 0 )); then
+for package in "${available_packages[@]}"; do
+  # Resolve candidates independently. Debian firmware providers can be
+  # alternatives or conflict with one another; requiring all candidates in one
+  # solver transaction would make the broad media pool less compatible. The
+  # archive cache is shared, so dependency .debs accumulate into one local repo.
   chroot "$LIVE_ROOT" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
     apt-get \
       -o Acquire::Retries=3 \
@@ -99,8 +103,8 @@ if (( ${#available_packages[@]} > 0 )); then
       -o Dir::State::status=/tmp/greia-target-dpkg-status \
       -o Dir::Cache::archives=/opt/greia-hardware-support/pool \
       --download-only install -y --no-install-recommends \
-      "${available_packages[@]}"
-fi
+      "$package"
+done
 after_packages="$(chroot "$LIVE_ROOT" dpkg-query -W -f='${Package}\t${Version}\n' | LC_ALL=C sort | sha256sum | awk '{print $1}')"
 [[ "$before_packages" == "$after_packages" ]] || {
   echo "Hardware-support pool population changed the live installed package set; refusing build." >&2
