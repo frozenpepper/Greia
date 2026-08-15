@@ -1,6 +1,7 @@
 [Unit]
 Description=Greia OS graphical installer
-After=local-fs.target systemd-logind.service plymouth-start.service
+Wants=iwd.service systemd-resolved.service
+After=local-fs.target systemd-logind.service plymouth-start.service iwd.service systemd-resolved.service
 Conflicts=getty@tty1.service
 StartLimitIntervalSec=30
 StartLimitBurst=4
