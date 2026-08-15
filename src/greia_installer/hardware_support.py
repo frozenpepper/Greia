@@ -63,6 +63,7 @@ class VerifiedHardwareSupportPool:
     provided_microcode: frozenset[str]
     total_bytes: int
     firmware_providers: tuple[tuple[str, tuple[str, ...]], ...] = ()
+    broad_firmware: frozenset[str] = frozenset()
 
     @classmethod
     def load(
@@ -151,11 +152,16 @@ class VerifiedHardwareSupportPool:
         provided = cls._validated_package_set(raw, "provided_candidate_packages")
         firmware = cls._validated_package_set(raw, "provided_firmware_packages")
         microcode = cls._validated_package_set(raw, "provided_microcode_packages")
+        broad_firmware = cls._validated_package_set(raw, "broad_firmware_packages")
         providers = cls._validated_firmware_providers(raw, firmware)
         if not firmware.isdisjoint(microcode):
             raise HardwareSupportPoolError("hardware-support firmware/microcode classes overlap")
         if firmware | microcode != provided:
             raise HardwareSupportPoolError("hardware-support candidate classes do not match candidate set")
+        if not broad_firmware <= firmware:
+            raise HardwareSupportPoolError("broad live firmware references non-firmware package")
+        if any(not (set(provider_packages) & broad_firmware) for _, provider_packages in providers):
+            raise HardwareSupportPoolError("broad live firmware does not cover every mapped firmware file")
         if not provided <= manifest_candidates:
             raise HardwareSupportPoolError("hardware-support candidate list references non-candidate payloads")
         manifest_total = raw.get("total_bytes")
@@ -172,6 +178,7 @@ class VerifiedHardwareSupportPool:
             microcode,
             total,
             providers,
+            broad_firmware,
         )
 
     @staticmethod
