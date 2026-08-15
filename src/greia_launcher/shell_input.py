@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from greia_platform.input_core import (
     DEFAULT_INPUT_POLICY,
     InputEdge,
+    InputSource,
     InteractionProfile,
     SemanticAction,
     StandardInputPolicy,
@@ -75,8 +76,14 @@ class ShellInputController:
         if self._controllers.handle_event(event):  # type: ignore[arg-type]
             self._reset_analog()
             return None
+        physical = self._translator.physical_digital(event)  # type: ignore[arg-type]
+        if physical is None:
+            return None
+        control, edge, source = physical
+        if source is not InputSource.CONTROLLER or edge is not InputEdge.PRESSED:
+            return None
         translated = self._translator.digital(event)  # type: ignore[arg-type]
-        if translated is None or translated.edge is not InputEdge.PRESSED:
+        if translated is None:
             return None
         if translated.action in {
             SemanticAction.NAV_UP,
