@@ -9,7 +9,7 @@ import subprocess
 import tempfile
 import time
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Protocol, Sequence
 
@@ -38,6 +38,11 @@ class InstallationError(RuntimeError):
     pass
 
 
+def _optional_path_from_environment(name: str) -> Path | None:
+    value = os.environ.get(name, "").strip()
+    return Path(value) if value else None
+
+
 @dataclass(frozen=True, slots=True)
 class InstallRequest:
     target: BlockDevice
@@ -46,8 +51,16 @@ class InstallRequest:
     locale: str = "en"
     payload_digest: Path | None = None
     wifi_profile: IwdNetworkProfile | None = None
-    hardware_support_pool: Path | None = None
-    target_profile: Path | None = None
+    hardware_support_pool: Path | None = field(
+        default_factory=lambda: _optional_path_from_environment(
+            "GREIA_HARDWARE_SUPPORT_POOL"
+        )
+    )
+    target_profile: Path | None = field(
+        default_factory=lambda: _optional_path_from_environment(
+            "GREIA_TARGET_IMAGE_PROFILE"
+        )
+    )
 
 
 @dataclass(frozen=True, slots=True)
