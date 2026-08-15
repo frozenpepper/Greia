@@ -338,7 +338,7 @@ class SupervisorDisplaySessionTests(unittest.TestCase):
             ],
         )
 
-    def test_environment_collision_after_display_prepare_restores_without_launch(self) -> None:
+    def test_invalid_lifecycle_environment_fails_before_display_prepare(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             manifest = _manifest(root / "activity")
@@ -365,15 +365,9 @@ class SupervisorDisplaySessionTests(unittest.TestCase):
 
         self.assertEqual(launched, [])
         self.assertEqual(session.state, ActivitySessionState.FAILED)
-        self.assertEqual(session.result.exit_reason, ActivityExitReason.PLATFORM_FAILURE)
+        self.assertEqual(session.result.exit_reason, ActivityExitReason.LAUNCH_FAILURE)
         self.assertTrue(coordinator.snapshot.shell_available)
-        self.assertEqual(
-            backend.calls,
-            [
-                ("prepare", session.session_id),
-                ("restore", session.session_id),
-            ],
-        )
+        self.assertEqual(backend.calls, [])
 
 
 if __name__ == "__main__":
