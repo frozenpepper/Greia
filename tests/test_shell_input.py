@@ -6,6 +6,11 @@ import pygame
 
 from greia_launcher.shell_input import ShellInputController
 from greia_platform.input_core import SemanticAction, StandardInputPolicy
+from greia_platform.pygame_input import (
+    CONTROLLER_BUTTON_A,
+    CONTROLLER_BUTTON_DPAD_RIGHT,
+    CONTROLLER_BUTTON_GUIDE,
+)
 
 
 class _Controllers:
@@ -53,7 +58,7 @@ class ShellInputControllerTests(unittest.TestCase):
 
     def test_controller_dpad_and_south_face_use_navigation_semantics(self) -> None:
         try:
-            from pygame._sdl2 import controller as sdl_controller
+            from pygame._sdl2 import controller as _sdl_controller  # noqa: F401
         except ImportError:
             self.skipTest("curated pygame build has no SDL2 controller module")
 
@@ -61,18 +66,18 @@ class ShellInputControllerTests(unittest.TestCase):
         shell = ShellInputController(controllers=controllers)  # type: ignore[arg-type]
         right = pygame.event.Event(
             pygame.CONTROLLERBUTTONDOWN,
-            button=sdl_controller.CONTROLLER_BUTTON_DPAD_RIGHT,
+            button=CONTROLLER_BUTTON_DPAD_RIGHT,
         )
         activate = pygame.event.Event(
             pygame.CONTROLLERBUTTONDOWN,
-            button=sdl_controller.CONTROLLER_BUTTON_A,
+            button=CONTROLLER_BUTTON_A,
         )
         self.assertIs(shell.handle_event(right), SemanticAction.NAV_RIGHT)
         self.assertIs(shell.handle_event(activate), SemanticAction.ACTIVATE)
 
     def test_guide_remains_reserved_and_never_reaches_shell_activity_navigation(self) -> None:
         try:
-            from pygame._sdl2 import controller as sdl_controller
+            from pygame._sdl2 import controller as _sdl_controller  # noqa: F401
         except ImportError:
             self.skipTest("curated pygame build has no SDL2 controller module")
 
@@ -80,7 +85,7 @@ class ShellInputControllerTests(unittest.TestCase):
         shell = ShellInputController(controllers=controllers)  # type: ignore[arg-type]
         guide = pygame.event.Event(
             pygame.CONTROLLERBUTTONDOWN,
-            button=sdl_controller.CONTROLLER_BUTTON_GUIDE,
+            button=CONTROLLER_BUTTON_GUIDE,
         )
         self.assertIsNone(shell.handle_event(guide))
 
