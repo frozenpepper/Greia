@@ -87,7 +87,7 @@ class HardwareSupportPoolFinalizeTests(unittest.TestCase):
                 with self.assertRaises(PoolFinalizeError):
                     finalize_pool(pool, candidates, 1024 * 1024)
 
-    def test_symlinked_deb_is_not_admitted_to_repository(self) -> None:
+    def test_symlinked_deb_is_a_hard_failure(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             pool = root / "support"
@@ -97,9 +97,8 @@ class HardwareSupportPoolFinalizeTests(unittest.TestCase):
             outside.write_bytes(b"outside")
             (deb_dir / "firmware-realtek_1_all.deb").symlink_to(outside)
             candidates = self.make_candidate_manifest(root)
-            manifest = finalize_pool(pool, candidates, 1024 * 1024)
-            self.assertEqual(manifest["package_count"], 0)
-            self.assertEqual(manifest["provided_candidate_packages"], [])
+            with self.assertRaisesRegex(PoolFinalizeError, "symlinked"):
+                finalize_pool(pool, candidates, 1024 * 1024)
 
 
 if __name__ == "__main__":
