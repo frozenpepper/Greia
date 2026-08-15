@@ -3,11 +3,11 @@ set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
-PROFILE="modern-amd64-dev"
 OUTPUT_DIR="${1:-$PROJECT_ROOT/out}"
+PROFILE="${2:-modern-amd64-dev}"
 
 [[ ${EUID:-$(id -u)} -eq 0 ]] || {
-  echo "Run as root: sudo build/build-developer-image.sh [OUTPUT_DIR]" >&2
+  echo "Run as root: sudo build/build-developer-image.sh [OUTPUT_DIR] [PROFILE]" >&2
   exit 1
 }
 
@@ -19,11 +19,13 @@ image="$OUTPUT_DIR/greia-os-${PROFILE}.img"
 
 python3 "$PROJECT_ROOT/tools/provision_developer_image.py" \
   --image "$image" \
-  --output-dir "$OUTPUT_DIR"
+  --output-dir "$OUTPUT_DIR" \
+  --expected-profile "$PROFILE"
 
 cat <<EOF
 
 Greia developer image ready.
+Profile: $PROFILE
 Image: $image
 SSH user: greiaadmin
 Host hint after first boot: greia-dev.local
