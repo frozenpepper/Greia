@@ -37,6 +37,11 @@ def make_pool(root: Path, *, payload: bytes = b"firmware", extra_deb: bool = Fal
         "provided_candidate_packages": ["firmware-realtek"],
         "provided_firmware_packages": ["firmware-realtek"],
         "provided_microcode_packages": [],
+        "firmware_providers": {
+            "rtl.bin": ["firmware-realtek"],
+            "rtl_nic/rtl8106e-1.fw": ["firmware-realtek"],
+            "rtl_nic/rtl8168g-2.fw": ["firmware-realtek"],
+        },
         "unavailable_candidate_packages": [],
         "packages": [
             {
@@ -82,6 +87,32 @@ class InstallerHardwareSupportPoolTests(unittest.TestCase):
             pool.apt_source_line,
             "deb [trusted=yes] file:/run/greia-hardware-support ./",
         )
+
+    def test_firmware_provider_lookup_supports_exact_and_kernel_glob_patterns(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            pool = VerifiedHardwareSupportPool.load(make_pool(Path(temporary)))
+        self.assertEqual(pool.packages_for_firmware("rtl.bin"), ("firmware-realtek",))
+        self.assertEqual(
+            pool.packages_for_firmware("rtl_nic/rtl*.fw"),
+            ("firmware-realtek",),
+        )
+        self.assertEqual(pool.packages_for_firmware("missing.bin"), ())
+
+    def test_unsafe_firmware_pattern_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            pool = VerifiedHardwareSupportPool.load(make_pool(Path(temporary)))
+        with self.assertRaisesRegex(HardwareSupportPoolError, "path/pattern"):
+            pool.packages_for_firmware("../escape.bin")
+
+    def test_firmware_provider_may_not_reference_non_firmware_package(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            pool_root = make_pool(Path(temporary))
+            manifest_path = pool_root / "manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["firmware_providers"]["rtl.bin"] = ["tlp"]
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+            with self.assertRaisesRegex(HardwareSupportPoolError, "non-firmware"):
+                VerifiedHardwareSupportPool.load(pool_root)
 
     def test_firmware_cannot_be_reclassified_as_microcode(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
