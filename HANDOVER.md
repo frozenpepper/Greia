@@ -98,7 +98,7 @@ Permanent product semantics:
 - WEP is unsupported.
 - Hidden/manual SSID support remains a follow-up compatibility feature.
 - credentials must not appear in command-line arguments, ordinary logs or `install-record.json`.
-- password UI is masked and cleared after successful connection/skip.
+- password UI is masked and cleared after successful connection/skip/failure.
 - successful configuration persists the exact tested iwd profile to the installed target under `/var/lib/iwd` with private permissions.
 - the installation record stores only `wifi_configured: true/false`, never SSID/password.
 - slow scan/connection/DHCP work runs outside the Pygame event/render loop.
@@ -118,7 +118,6 @@ Live installer networking additions:
 ```text
 build/package-sets/installer-base.txt
 build/installer-overlay/etc/iwd/main.conf
-build/installer-overlay/etc/resolv.conf
 build/installer-overlay/etc/systemd/system/greia-installer.service
 ```
 
@@ -132,7 +131,7 @@ systemd-resolved
 wireless-regdb
 ```
 
-Live iwd temporarily owns address/DNS configuration (`EnableNetworkConfiguration=true`) so the installation environment does not need a second live network manager. The installed target retains the existing platform architecture where iwd owns Wi-Fi authentication and systemd-networkd owns address configuration.
+Live iwd temporarily owns address/DNS configuration (`EnableNetworkConfiguration=true`) so the installation environment does not need a second live network manager. Debian's `systemd-resolved` package owns the normal live `/etc/resolv.conf` integration; Greia deliberately does not overlay a competing regular file. The installed target retains the existing platform architecture where iwd owns Wi-Fi authentication and systemd-networkd owns address configuration.
 
 The build-profile resolver also applies the selected profile's kernel, video packages and `extra_packages` to installer artifacts. Therefore any firmware package required by the exact Acer/Pi radio after physical inventory should be added to the hardware profile so both live installer and installed target receive it; do not add a separate ad-hoc installer firmware path.
 
