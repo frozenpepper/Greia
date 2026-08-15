@@ -8,8 +8,9 @@ usage() {
   cat <<'USAGE'
 Usage: install-live-hardware-firmware.sh LIVE_ROOT SUITE ARCH
 
-Verify LIVE_ROOT/opt/greia-hardware-support, then install every firmware-class
-candidate from that frozen local repository into the live installer root.
+Verify LIVE_ROOT/opt/greia-hardware-support, then install the frozen minimal
+broad-firmware cover into the live installer root. Alternative verified
+providers remain in the local pool for machine-specific target selection.
 Microcode is intentionally excluded from the live installer and is selected for
 the installed target instead.
 USAGE
@@ -27,11 +28,11 @@ mapfile -t firmware_packages < <(
     --root "$POOL_ROOT" \
     --suite "$SUITE" \
     --architecture "$ARCH" \
-    --list firmware
+    --list broad-firmware
 )
 
 if (( ${#firmware_packages[@]} == 0 )); then
-  echo "Hardware support pool contains no firmware packages for $SUITE/$ARCH."
+  echo "Hardware support pool contains no broad firmware packages for $SUITE/$ARCH."
   exit 0
 fi
 
