@@ -38,6 +38,7 @@ def make_pool(root: Path, *, payload: bytes = b"firmware", extra_deb: bool = Fal
         "provided_candidate_packages": ["firmware-realtek"],
         "provided_firmware_packages": ["firmware-realtek"],
         "provided_microcode_packages": [],
+        "broad_firmware_packages": ["firmware-realtek"],
         "firmware_providers": {
             "rtl.bin": ["firmware-realtek"],
             "rtl_nic/rtl8106e-1.fw": ["firmware-realtek"],
@@ -81,6 +82,7 @@ class InstallerHardwareSupportPoolTests(unittest.TestCase):
             )
         self.assertEqual(pool.provided_candidates, frozenset({"firmware-realtek"}))
         self.assertEqual(pool.provided_firmware, frozenset({"firmware-realtek"}))
+        self.assertEqual(pool.broad_firmware, frozenset({"firmware-realtek"}))
         self.assertEqual(pool.provided_microcode, frozenset())
         self.assertEqual(pool.require_candidates(["firmware-realtek"]), ("firmware-realtek",))
         self.assertEqual(pool.require_firmware(["firmware-realtek"]), ("firmware-realtek",))
@@ -130,6 +132,16 @@ class InstallerHardwareSupportPoolTests(unittest.TestCase):
             (("shared.bin", ("firmware-large", "firmware-small")),),
         )
         self.assertEqual(pool.packages_for_firmware("shared.bin"), ("firmware-small",))
+
+    def test_broad_firmware_must_cover_every_mapped_firmware_file(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            pool_root = make_pool(Path(temporary))
+            manifest_path = pool_root / "manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["broad_firmware_packages"] = []
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+            with self.assertRaisesRegex(HardwareSupportPoolError, "does not cover"):
+                VerifiedHardwareSupportPool.load(pool_root)
 
     def test_unsafe_firmware_pattern_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
