@@ -1,0 +1,8 @@
+# Development-only remote-control capability.
+# openssh-server and sudo are repeated deliberately so this package set remains
+# self-describing even if parent-recovery composition changes later. Package
+# resolution de-duplicates the final target list.
+openssh-server
+python3-pil
+sudo
+xdotool

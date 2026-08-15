@@ -1,0 +1,57 @@
+schema_version = 1
+
+[profile]
+id = "modern-amd64-dev"
+certification_state = "experimental"
+description = "Development-only x86-64 profile with opt-in remote control; never a release image."
+
+[platform]
+family = "standard-x86-64"
+compatibility_class = "C2"
+
+[base]
+suite = "trixie"
+architecture = "amd64"
+mirror = "https://deb.debian.org/debian"
+security_mirror = "https://security.debian.org/debian-security"
+support_end_date = "2030-06-30"
+kernel_package = "linux-image-amd64"
+
+[image]
+layout = "bios-single-ext4"
+size_mib = 3072
+hostname = "greia-dev"
+
+[boot]
+installed_adapter = "grub-pc-bios"
+installer_adapter = "grub-pc-bios-live"
+cover_backend = "stock-plymouth-provisional"
+
+[display]
+adapter = "xorg"
+video_packages = ["xserver-xorg-video-vesa", "xserver-xorg-video-fbdev"]
+
+[runtimes]
+enabled = ["python"]
+
+[packages]
+target_sets = [
+  "platform-base",
+  "platform-shell-pygame",
+  "activity-sandbox",
+  "network-basic",
+  "removable-media-common",
+  "parent-recovery",
+  "developer-remote",
+]
+installer_sets = [
+  "installer-base",
+  "network-basic",
+  "developer-remote",
+]
+extra_packages = []
+
+[resources]
+preferred_core_mib = 800
+required_core_mib = 1000
+architecture_review_mib = 1250

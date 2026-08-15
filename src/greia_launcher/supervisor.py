@@ -15,6 +15,11 @@ from greia_platform.permissions import ActivityAuthority
 from greia_platform.profiles import ProfileContext
 from greia_platform.storage import ActivityStorageService, StorageError
 
+from .display_session import (
+    DisplaySessionCoordinator,
+    DisplaySessionError,
+    DisplaySessionLease,
+)
 from .event_broker import (
     SANDBOX_EVENT_ROOT,
     ActivityEventBroker,
@@ -61,6 +66,15 @@ _DEVELOPMENT_CAPABILITIES = frozenset(
         "touch",
     }
 )
+_DISPLAY_TRANSPORT_ENVIRONMENT = frozenset(
+    {
+        "DISPLAY",
+        "SDL_VIDEODRIVER",
+        "WAYLAND_DISPLAY",
+        "XAUTHORITY",
+        "XDG_RUNTIME_DIR",
+    }
+)
 
 
 class ActivityLifecycleError(RuntimeError):
@@ -82,6 +96,12 @@ class ActivitySupervisor:
     RuntimeManager. This supervisor remains the runtime-neutral lifecycle and
     sandbox owner: it consumes platform-issued ActivityAuthority rather than
     trusting Activity environment or manifest claims as grants.
+
+    When a DisplaySessionCoordinator is injected, the supervisor composes its
+    lifecycle observations with the display-side ownership state machine. The
+    coordinator still owns display mechanics; the supervisor only ensures that
+    prepare/present/restore occur at the same authoritative platform session
+    boundaries as READY, process exit and normalized history.
     """
 
     def __init__(
@@ -98,6 +118,7 @@ class ActivitySupervisor:
         storage_broker_factory: StorageBrokerFactory = ActivityStorageBroker.start,
         history_service: PlatformHistoryService | None = None,
         event_broker_factory: EventBrokerFactory = ActivityEventBroker.start,
+        display_coordinator: DisplaySessionCoordinator | None = None,
     ):
         if ready_timeout_seconds <= 0:
             raise ValueError("ready_timeout_seconds must be positive")
@@ -135,9 +156,11 @@ class ActivitySupervisor:
         self._storage_broker_factory = storage_broker_factory
         self._history_service = history_service
         self._event_broker_factory = event_broker_factory
+        self._display_coordinator = display_coordinator
         self._history_stores: dict[str, ProfileHistoryStore] = {}
         self._session_resources: dict[str, tuple[SessionResource, ...]] = {}
         self._runtime_preparations: dict[str, RuntimeLaunchPreparation] = {}
+        self._display_leases: dict[str, DisplaySessionLease] = {}
         self._ready_timeout_seconds = ready_timeout_seconds
         self._graceful_stop_seconds = graceful_stop_seconds
         self._active_session: ActivitySession | None = None
@@ -272,17 +295,51 @@ class ActivitySupervisor:
                 )
             resources = (*resources, event_broker)
 
-        environment = self._sanitized_environment(
-            manifest,
-            profile,
-            authority,
-            session_id,
-            sandboxed=sandboxed,
-            storage_broker=storage_broker,
-            event_broker=event_broker,
-            runtime_environment=runtime_command.environment,
-            lifecycle_environment=lifecycle_binding.environment,
-        )
+        display_lease: DisplaySessionLease | None = None
+        if self._display_coordinator is not None:
+            try:
+                display_lease = self._display_coordinator.prepare_activity(session_id)
+            except DisplaySessionError:
+                return self._failed_launch_session(
+                    manifest,
+                    profile,
+                    authority,
+                    session_id=session_id,
+                    control=control,
+                    history_store=history_store,
+                    resources=resources,
+                    reason=ActivityExitReason.PLATFORM_FAILURE,
+                )
+            self._display_leases[session_id] = display_lease
+
+        try:
+            environment = self._sanitized_environment(
+                manifest,
+                profile,
+                authority,
+                session_id,
+                sandboxed=sandboxed,
+                storage_broker=storage_broker,
+                event_broker=event_broker,
+                runtime_environment=runtime_command.environment,
+                lifecycle_environment=lifecycle_binding.environment,
+                display_environment=(
+                    None
+                    if display_lease is None
+                    else display_lease.transport.environment()
+                ),
+            )
+        except (ActivityLifecycleError, OSError, TypeError, ValueError):
+            return self._failed_launch_session(
+                manifest,
+                profile,
+                authority,
+                session_id=session_id,
+                control=control,
+                history_store=history_store,
+                resources=resources,
+                reason=ActivityExitReason.PLATFORM_FAILURE,
+            )
 
         if sandboxed:
             assert sandbox is not None
@@ -358,11 +415,10 @@ class ActivitySupervisor:
         runtime_exit = self._runtime_manager.collect_exit(preparation, process)
         if runtime_exit is not None:
             # READY is a per-launch marker, so consume it even when the child
-            # exits between polling ticks. Otherwise a fast Activity can create
-            # its usable surface, publish READY, and terminate before Greia
-            # observes the intermediate RUNNING state.
+            # exits between polling ticks. The process is already terminal, so
+            # record READY in history but do not present a now-dead surface.
             if session.ready_at is None and control.ready():
-                if self._record_ready(session):
+                if self._record_ready(session, present_display=False):
                     session.ready_at = now
                 else:
                     session.forced_reason = ActivityExitReason.PLATFORM_FAILURE
@@ -370,7 +426,7 @@ class ActivitySupervisor:
 
         if session.state is ActivitySessionState.STARTING:
             if control.ready():
-                if self._record_ready(session):
+                if self._record_ready(session, present_display=True):
                     session.ready_at = now
                     session.state = ActivitySessionState.RUNNING
                 else:
@@ -458,6 +514,7 @@ class ActivitySupervisor:
             reason = ActivityExitReason.CRASH
 
         runtime_clean = self._cleanup_runtime_session(session)
+        display_clean = self._cleanup_display_session(session.session_id)
         resources_clean = self._cleanup_session_resources(session.session_id)
         control_clean = True
         if session.control is not None:
@@ -465,7 +522,7 @@ class ActivitySupervisor:
                 session.control.cleanup()
             except Exception:
                 control_clean = False
-        if not runtime_clean or not resources_clean or not control_clean:
+        if not runtime_clean or not display_clean or not resources_clean or not control_clean:
             reason = ActivityExitReason.PLATFORM_FAILURE
 
         history_store = self._history_stores.pop(session.session_id, None)
@@ -515,6 +572,8 @@ class ActivitySupervisor:
     ) -> ActivitySession:
         started = monotonic_now() if started_at is None else started_at
         ended = monotonic_now()
+        if not self._cleanup_display_session(session_id):
+            reason = ActivityExitReason.PLATFORM_FAILURE
         for resource in reversed(resources):
             try:
                 resource.stop()
@@ -558,7 +617,9 @@ class ActivitySupervisor:
         )
         return session
 
-    def _record_ready(self, session: ActivitySession) -> bool:
+    def _record_ready(self, session: ActivitySession, *, present_display: bool) -> bool:
+        if present_display and not self._present_display_session(session.session_id):
+            return False
         history_store = self._history_stores.get(session.session_id)
         if history_store is None:
             return True
@@ -567,6 +628,39 @@ class ActivitySupervisor:
         except HistoryError:
             return False
         return True
+
+    def _present_display_session(self, session_id: str) -> bool:
+        lease = self._display_leases.get(session_id)
+        if lease is None:
+            return True
+        coordinator = self._display_coordinator
+        if coordinator is None:
+            self._display_leases.pop(session_id, None)
+            return False
+        try:
+            coordinator.activity_ready(lease)
+        except DisplaySessionError:
+            # activity_ready() already attempts shell recovery. Retire this lease
+            # either way; a FAILED coordinator remains fail-closed for later
+            # prepare attempts while the current Activity is force-stopped.
+            self._display_leases.pop(session_id, None)
+            return False
+        return True
+
+    def _cleanup_display_session(self, session_id: str) -> bool:
+        lease = self._display_leases.pop(session_id, None)
+        if lease is None:
+            return True
+        coordinator = self._display_coordinator
+        if coordinator is None:
+            return False
+        if coordinator.snapshot.shell_available:
+            return True
+        try:
+            coordinator.activity_ended(lease)
+        except (DisplaySessionError, TypeError):
+            return False
+        return coordinator.snapshot.shell_available
 
     def _cleanup_runtime_session(self, session: ActivitySession) -> bool:
         preparation = self._runtime_preparations.pop(session.session_id, None)
@@ -691,6 +785,7 @@ class ActivitySupervisor:
         event_broker: ActivityEventBroker | None = None,
         runtime_environment: tuple[tuple[str, str], ...] = (),
         lifecycle_environment: tuple[tuple[str, str], ...] = (),
+        display_environment: Mapping[str, str] | None = None,
     ) -> dict[str, str]:
         allowed_names = {
             "DISPLAY",
@@ -745,6 +840,7 @@ class ActivitySupervisor:
                 "GREIA_ACTIVITY_ID": manifest.activity_id,
                 "GREIA_ACTIVITY_ROOT": str(manifest.root),
                 "GREIA_ACTIVITY_DATA_DIR": str(env_activity_data),
+                "GREIA_ACTIVITY_INPUT_PROFILE": manifest.input_profile,
                 "GREIA_RUNTIME_API": manifest.api_version,
                 "GREIA_ACTIVITY_CAPABILITIES": ",".join(sorted(authority.sdk_features)),
                 "GREIA_PACKAGE_TRUST": authority.package_trust.value,
@@ -755,6 +851,7 @@ class ActivitySupervisor:
                 "GREIA_ACTIVITY_SESSION_ID": session_id,
             }
         )
+        ActivitySupervisor._apply_display_environment(environment, display_environment)
         environment.update(dict(runtime_environment))
         for name, value in lifecycle_environment:
             if name in environment:
@@ -773,3 +870,37 @@ class ActivitySupervisor:
         if authority.has_permission("profile.manage_own"):
             environment["GREIA_AVATAR_REQUEST_PATH"] = str(env_avatar_request)
         return environment
+
+    @staticmethod
+    def _apply_display_environment(
+        environment: dict[str, str],
+        display_environment: Mapping[str, str] | None,
+    ) -> None:
+        if display_environment is None:
+            return
+        unknown = set(display_environment) - _DISPLAY_TRANSPORT_ENVIRONMENT
+        if unknown:
+            raise ActivityLifecycleError(
+                "display transport contains unsupported environment names: "
+                + ", ".join(sorted(unknown))
+            )
+        for name, value in display_environment.items():
+            if not isinstance(name, str) or not isinstance(value, str):
+                raise ActivityLifecycleError(
+                    "display transport environment entries must be text"
+                )
+            if "\x00" in value or len(value) > 8192:
+                raise ActivityLifecycleError(
+                    f"display transport environment value is invalid for {name!r}"
+                )
+
+        # These names select mutually exclusive display transports. Remove
+        # inherited values first so a typed Wayland/KMSDRM lease cannot carry a
+        # stale X11 endpoint (or vice versa). XDG_RUNTIME_DIR is also used by
+        # non-display services, so preserve it unless the selected transport
+        # explicitly supplies its own runtime directory.
+        for name in ("DISPLAY", "XAUTHORITY", "WAYLAND_DISPLAY", "SDL_VIDEODRIVER"):
+            environment.pop(name, None)
+        if "XDG_RUNTIME_DIR" in display_environment:
+            environment.pop("XDG_RUNTIME_DIR", None)
+        environment.update(display_environment)

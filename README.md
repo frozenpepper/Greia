@@ -1,158 +1,103 @@
 # Greia OS
 
-Status: Phase 0 source fifth-review hardened; Greia identity migration complete in the verified source tree; direct graphics, built images, and reference-hardware evidence remain pending  
-Version: `0.13.0-phase0-dev`  
-Date: 2026-08-08
+**Stage:** early platform development (`0.13.x`)  
+**Docs reviewed:** 2026-08-15
 
-Greia is a non-profit, open-source, Activity-first educational computing platform for young children. Linux is the implementation substrate; the Greia graphical shell is the operating-system experience. During normal child use Linux must disappear: no desktop, terminal, shell, login prompt, package manager, filesystem UI, browser chrome, or boot text may appear.
+Greia is a non-profit, open-source, Activity-first computing platform for young children. Linux is the substrate; **Greia Shell is the operating-system experience**. Normal child use must not expose a desktop, terminal, login prompt, package manager, filesystem browser, browser chrome, generic window manager, or boot text.
 
-The first-generation Acer Aspire One remains the hard low-end reference device. Raspberry Pi 400 and Raspberry Pi 500 are co-equal first-class ARM reference devices rather than future ports. Current Acer estimates—still requiring hardware inventory evidence—are roughly 768 MiB RAM, 7 GB storage, and 1024×600. The preferred installed core target remains at most 800 MiB; the current builder hard-fails at 1,000 MiB or more.
+Greia deliberately targets constrained hardware, with the first-generation Acer Aspire One as the extreme low-resource reference and Raspberry Pi / modern x86 systems behind the same platform contracts.
 
-## Architecture constitution
+## Start here
 
-ADR 0012 (`docs/adr/0012-platform-architecture-constitution.md`) is the long-form platform constitution. It makes **Activity** the stable abstraction above replaceable runtime/display/hardware adapters, preserves one curated shared Python runtime for Phase 0, defines a future first-class Web adapter without creating a second app ecosystem, and specifies portable storage, sessions, progression, packages, backups, permissions, HAL boundaries, and multi-architecture strategy.
+1. `AGENTS.md` — non-negotiable repository rules.
+2. `docs/DOCUMENTATION.md` — authority, ownership and freshness.
+3. `docs/architecture/GREIA_ARCHITECTURE.md` — living architecture synthesis.
+4. `docs/adr/` — accepted normative decisions; ADR 0018 owns lightweight UI, ADR 0019 trusted Activity Home/Back, and ADR 0020 runtime-neutral input/controller support.
+5. `docs/engineering/ENGINEERING_FOUNDATIONS.md` — mandatory OOP, polymorphism, dependency, documentation and low-resource guidance.
+6. `docs/product/` — accepted child-facing requirements, including Activity system navigation and input standards.
+7. `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md` — active implementation plan until closed.
+8. `HANDOVER.md` — exact current branch, evidence, blockers and next step.
+9. `docs/agents/GREIA_AGENT_OPERATIONS.md` — build/test-hardware operations.
+10. `skills/greia-activity-authoring/SKILL.md` — Activity-authoring guide.
 
-ADR 0014 (`docs/adr/0014-greia-identity-arm-parity-and-direct-graphics-direction.md`) supersedes the remaining Pip-era identity and graphics ambiguity: **Xorg is retained only as a temporary Phase 0 migration/evidence baseline and is not part of the target Greia architecture.** The target graphics path is direct/appliance-oriented around DRM/KMS and the thinnest practical session/surface layer.
+Current verification counts, branch SHAs and hardware status belong in `HANDOVER.md`, not here.
 
-## Greia v0.13 migration
+## Core model
 
-The complete uploaded v0.12 working tree was migrated to Greia and verified locally before this repository update.
+The stable product abstraction is **Activity**, independent of runtime. Greia owns profiles, storage, sessions, permissions, progression, backup, lifecycle, standard input behavior and parent policy.
 
-The technical migration covers:
-
-- Python namespaces: `greia_platform`, `greia_launcher`, `greia_parent`, `greia_installer`;
-- system services, build artifacts, and technical paths using Greia naming;
-- `/etc/greia-os` and `/var/lib/greia-profiles`;
-- `GREIA_*` build/runtime environment variables;
-- future `.greiaactivity` and `.greiabackup` formats;
-- `globalThis.Greia` as the future Web SDK bridge name;
-- Greia parent API/service branding;
-- project documentation and evidence protocols.
-
-**Professor Pip** remains reserved for the child-facing character/content layer. He is no longer the technical platform identity.
-
-The migrated v0.13 tree passes:
+The child UI is appliance-like, not desktop-like. ADR 0018 defines the small renderer-neutral vocabulary:
 
 ```text
-140 / 140 provider-free unit tests
-project/runtime/activity/asset validation
-shell syntax/contract checks
-source footprint gate
+Screen
+  └── optional Overlay / Sheet
+        └── Panel / Card / Collection
+              └── Control
 ```
 
-This is source evidence only. It does not prove a Linux image, direct DRM/KMS behavior, Raspberry Pi boot support, Web runtime behavior, or physical Acer behavior.
+A child-visible “folder” is a semantic `Collection`, never a Linux path. `src/greia_platform/ui_core.py` owns renderer-neutral UI semantics/navigation/resource bounds. New shared Pygame consumers import `src/greia_platform/pygame_ui.py`; existing first-party Activities retain `activity_ui.py` as the compatibility implementation surface. This is deliberately not a universal widget framework.
 
-## Core platform model
+### Universal way home
 
-Greia is **Activity-first and runtime-agnostic**.
+Every child-facing Activity must retain the same small Greia-owned **Home** affordance in the same place. Activity code cannot hide, restyle, cover, intercept or disable it. Home ends the Activity through Greia's authoritative lifecycle and returns to the child Shell. Greia may also show a platform-owned **Back** control when there is a meaningful previous Greia screen/Collection; it is never browser history or Activity-defined navigation.
 
-```text
-Greia Platform
-    │
-    ├── Profiles / Parent policy
-    ├── Storage / Sessions / Progression / Rewards
-    ├── Package / Backup / Permissions
-    ├── Greia Shell
-    │
-    └── Activity Runtime Manager
-           ├── Python/Pygame
-           ├── Web (planned, engine unselected)
-           └── future runtimes
+The product requirement is `docs/product/ACTIVITY_SYSTEM_NAVIGATION.md`; ADR 0019 makes trusted system chrome and protected input an R7 display/session acceptance requirement. Renderer-neutral geometry/actions live in `src/greia_platform/system_chrome.py`, with the backend lifecycle seam in `src/greia_launcher/system_chrome.py`.
+
+### Learned input across Activities
+
+Controller/joystick support is part of Phase 0, but Activities do not code against controller brands or Linux device paths. ADR 0020 defines runtime-neutral interaction profiles such as `pointer`, `directional`, `game` and `text`.
+
+The simple game baseline is deliberately learnable: **arrow keys + Space** on keyboard, and **D-pad/left stick + south face button** on a controller. Pointer Activities can receive a Greia virtual pointer from the controller rather than becoming controller-specific. Keyboard, pointer, touch and controller can coexist.
+
+`src/greia_platform/input_core.py` owns current semantic mappings/dead-zone/virtual-pointer rules; `src/greia_platform/pygame_input.py` is a Pygame translation/trusted-controller helper. Physical controller authority and reserved system input remain Greia platform concerns, not ordinary Activity `/dev/input` access.
+
+## Engineering standard
+
+Greia is intended to become a long-lived open-source project. Code must be easy to understand and extend: cohesive domain objects, narrow interfaces at real variation points, purposeful polymorphism, composition by default, explicit ownership/lifecycle, bounded resources, clean dependency direction, useful public docstrings, and tests at the narrowest meaningful layer.
+
+The canonical guidance is `docs/engineering/ENGINEERING_FOUNDATIONS.md`.
+
+## Product invariants
+
+- Greia Shell, not Linux desktop UI, is the child-facing OS.
+- Activity is runtime-neutral.
+- Every Activity retains Greia-owned Home navigation outside Activity rendering/input authority.
+- Controller/joystick support and standard learned input semantics exist from Phase 0.
+- Ordinary Activities do not receive raw physical-input authority merely to support controllers.
+- Core operation is offline-first.
+- Durable child state is profile-scoped and architecture-neutral.
+- Privileged authority stays outside Activity processes.
+- ARM and legacy x86 are peers behind common contracts.
+- Resource cost is architectural correctness, not a later optimization pass.
+- The first user-ready Phase-0 image includes first-party Writing and Painting Activities.
+- Installation/destructive operations fail closed.
+
+## Build and evidence
+
+Canonical provider-free source verification:
+
+```bash
+make verify
 ```
 
-An Activity has one platform identity, manifest model, lifecycle, save namespace, progression integration, permission model, install/update path, backup behavior, and parent-policy surface. Runtime type is an implementation property.
+VM/physical evidence uses the applicable procedure under `docs/testing/`. Source tests do not prove hardware behavior.
 
-## Graphics direction
-
-Greia is not a Linux desktop distribution. It does not require a desktop environment, general-purpose window manager, or X11 as a product layer.
-
-The intended architecture is approximately:
-
-```text
-Linux kernel + drivers
-        ↓
-DRM/KMS / GBM/EGL where appropriate
-        ↓
-minimal Greia display/session layer
-        ↓
-Greia Shell OR supervised Activity runtime
-```
-
-The hardened v0.12 Xorg path remains temporarily in source only to preserve a tested migration/evidence baseline while the direct path is designed and proven. Do not add new features that deepen X11 dependency.
-
-## Architecture families
-
-ARM64 and legacy x86 are peers behind common Greia contracts.
-
-Reference families include:
-
-- legacy i386 Atom/netbook — extreme low-resource floor;
-- Raspberry Pi 400 — ARM64 reference;
-- Raspberry Pi 500 — current ARM64 reference;
-- modern amd64 PC — modern compatibility reference.
-
-Activities target capabilities/resource classes, not CPU family, except when unavoidable native code makes architecture-specific packaging necessary.
-
-## Current image architecture inherited from v0.12
-
-ADR 0013 (`docs/adr/0013-declarative-image-profiles-and-composable-build-artifacts.md`) established:
-
-- declarative typed TOML image profiles;
-- composable architectural package sets rather than one universal list;
-- explicit runtime families per image profile;
-- distinct boot/display/runtime adapter declarations;
-- profile-owned resource budgets;
-- machine-readable image-profile declarations separate from observed hardware capabilities;
-- ARM64 accepted by the profile schema but intentionally rejected by the current x86 BIOS builder until an ARM board/image adapter exists.
-
-That source architecture is preserved by the Greia migration.
-
-## Important Phase 0 blockers
-
-The current baseline still must not be promoted as a finished OS image. Important open evidence/implementation gates include:
-
-- replace stock Plymouth with a genuinely noninteractive branded-only boot cover;
-- implement and measure the direct graphics/session path replacing Xorg;
-- add real Raspberry Pi 400/500 boot/image adapters;
-- build and measure the selected Acer target/live image;
-- prove the installed core stays below its resource gate;
-- prove installation and runtime behavior at exactly 768 MiB RAM;
-- prove Activity sandbox/input/audio/display behavior on real targets;
-- implement the platform-owned frozen-Activity watchdog/forced-return path;
-- implement graphical Wi-Fi, pairing/revocation, and recovery surfaces;
-- select/benchmark the embedded Web runtime before adding it to any profile.
-
-**Do not install to the Acer internal disk until the existing evidence gates are satisfied and reviewed.**
+GitHub-hosted execution is opt-in only and requires explicit owner authorization; see `AGENTS.md`.
 
 ## Repository map
 
-- `AGENTS.md` — non-negotiable product and engineering contracts and mandatory agent read/maintenance rules.
-- `docs/agents/GREIA_AGENT_OPERATIONS.md` — operational manual for agents: Git/GitHub discipline, builds, local verification, developer images, test-hardware connection, remote screenshots/input/deployment/logs, evidence and stop conditions.
-- `skills/greia-activity-authoring/SKILL.md` — living agent skill for creating/optimizing Greia Activities against the current manifest, SDK, storage/events, shared graphics/theme canon, performance floor, validation and remote test loop.
-- `HANDOVER.md` — current standalone implementation/migration handover.
-- `docs/architecture/GREIA_ARCHITECTURE.md` — Greia living architecture overview.
-- `docs/adr/0012-platform-architecture-constitution.md` — long-form platform constitution inherited and rebranded from the prototype tree.
-- `docs/adr/0013-declarative-image-profiles-and-composable-build-artifacts.md` — image composition/profile/package-set architecture.
-- `docs/adr/0014-greia-identity-arm-parity-and-direct-graphics-direction.md` — Greia identity, ARM parity, and direct-graphics decision.
-- `docs/plans/2026-08-06_PHASE0_BOOTABLE_VERTICAL_SLICE.md` — active Phase 0 implementation/evidence plan; P0.17 records the Greia migration.
-- `src/greia_platform/` — shared platform contracts and state.
-- `src/greia_launcher/` — child shell/account picker and Activity supervisor.
-- `src/greia_parent/` — bounded parent-management service.
-- `src/greia_installer/` — graphical installer and whole-disk engine.
-- `activities/` — curated dependency-free Activities.
-- `build/` — image profiles, package sets, overlays, image builders, QEMU and media tooling.
-- `runtime/` — curated runtime declarations and platform defaults.
-- `tests/` — provider-free source/contract tests.
+- `src/greia_platform/` — shared platform contracts/services/UI/input semantics, including system chrome and controller mapping
+- `src/greia_launcher/` — child Shell/session orchestration, including trusted system-chrome lifecycle
+- `src/greia_parent/` — parent authority surface
+- `src/greia_installer/` — graphical installer
+- `activities/` — curated built-in Activities
+- `runtime/` — runtime/policy declarations
+- `build/` — image composition/builders
+- `tests/` — source/contract tests
+- `docs/` — architecture, engineering, product, plan, evidence and operations docs
 
 ## Naming
 
-- **Greia** — project/platform/ecosystem
-- **Greia OS** — installable operating-system image and underlying system
-- **Greia Shell** — child-facing graphical operating environment
-- **Greia Parents** — parental-management surface
-- **Greia SDK** — Activity-facing SDK and developer tooling
-- **Professor Pip** — optional recurring child-facing guide/character
+**Greia** is the platform; **Greia OS** is the installable system; **Greia Shell** is the child graphical environment; **Greia Parents** is the parent surface; **Professor Pip** is optional child-facing content, never the technical platform identity.
 
-## License
-
-Greia is intended to be non-profit and open source. A project-wide license will be selected before public release; the repository remains private during early design and implementation work.
+Greia is intended to be non-profit and open source. A project-wide license must be selected before public release.

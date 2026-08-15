@@ -1,0 +1,15 @@
+#!/bin/sh
+set -eu
+
+module=greia_platform.developer_control
+case "${1:-}" in
+  key|mousemove|click|type)
+    module=greia_platform.developer_input
+    ;;
+esac
+
+exec /usr/bin/env \
+  PYTHONPATH=/opt/greia-os/src \
+  PYTHONNOUSERSITE=1 \
+  PYTHONDONTWRITEBYTECODE=1 \
+  /usr/bin/python3 -m "$module" "$@"

@@ -8,6 +8,7 @@ source "$SCRIPT_DIR/lib/safe-cleanup.sh"
 
 PROFILE_TOOL="$PROJECT_ROOT/tools/build_profile.py"
 PACKAGE_SET_ROOT="$SCRIPT_DIR/package-sets"
+DEBIAN_ARCHIVE_KEYRING="$PROJECT_ROOT/build/trust/debian-archive-keyring-2025.1.gpg"
 
 usage() {
   cat <<'USAGE'
@@ -74,6 +75,9 @@ cleanup() {
   fi
   if (( cleanup_failed != 0 )); then
     echo "Installer-image cleanup was incomplete. Inspect resources manually; build data was preserved." >&2
+    if (( original_status == 0 )); then
+      return 1
+    fi
   fi
   return "$original_status"
 }
@@ -81,7 +85,7 @@ trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-required=(debootstrap parted losetup mkfs.ext4 blkid grub-install grub-script-check grub-mkpasswd-pbkdf2 chroot mount umount mountpoint findmnt rsync mksquashfs python3)
+required=(debootstrap parted partx blockdev losetup mkfs.ext4 blkid grub-install grub-script-check grub-mkpasswd-pbkdf2 chroot mount umount mountpoint findmnt udevadm rsync mksquashfs python3)
 for command_name in "${required[@]}"; do
   command -v "$command_name" >/dev/null || {
     echo "Missing build dependency: $command_name" >&2
@@ -125,10 +129,16 @@ losetup -d "$TARGET_LOOP"
 TARGET_LOOP=""
 
 # Build the small live installer environment.
-debootstrap --arch="$ARCH" --variant=minbase --include=ca-certificates "$SUITE" "$LIVE_ROOT" "$MIRROR"
+[[ -r "$DEBIAN_ARCHIVE_KEYRING" ]] || { echo "Pinned Debian archive keyring is missing: $DEBIAN_ARCHIVE_KEYRING" >&2; exit 1; }
+debootstrap --arch="$ARCH" --variant=minbase --include=ca-certificates --keyring="$DEBIAN_ARCHIVE_KEYRING" --force-check-gpg "$SUITE" "$LIVE_ROOT" "$MIRROR"
 live_arch="$(chroot "$LIVE_ROOT" /usr/bin/dpkg --print-architecture)"
 [[ "$live_arch" == "$ARCH" ]] || { echo "Live root architecture $live_arch does not match profile $ARCH." >&2; exit 1; }
-rsync -a "$SCRIPT_DIR/installer-overlay/" "$LIVE_ROOT/"
+# Repository checkout ownership is never live-image filesystem authority.
+rsync -a --chown=root:root "$SCRIPT_DIR/installer-overlay/" "$LIVE_ROOT/"
+[[ "$(stat -c '%u:%g' "$LIVE_ROOT")" == "0:0" ]] || {
+  echo "Greia installer overlay changed live root ownership away from root:root." >&2
+  exit 1
+}
 cat > "$LIVE_ROOT/etc/apt/sources.list" <<SOURCES
 deb $MIRROR $SUITE main non-free-firmware
 deb $MIRROR $SUITE-updates main non-free-firmware
@@ -146,11 +156,19 @@ mount -t proc proc "$LIVE_ROOT/proc"; MOUNTS+=("$LIVE_ROOT/proc")
 mount --rbind /sys "$LIVE_ROOT/sys"; MOUNTS+=("$LIVE_ROOT/sys"); mount --make-rslave "$LIVE_ROOT/sys"
 mount --rbind /run "$LIVE_ROOT/run"; MOUNTS+=("$LIVE_ROOT/run"); mount --make-rslave "$LIVE_ROOT/run"
 
+APT_ACQUIRE_OPTIONS=(
+  -o Acquire::Retries=3
+  -o Acquire::http::Timeout=20
+  -o Acquire::https::Timeout=20
+)
+
 package_output="$(python3 "$PROFILE_TOOL" --package-root "$PACKAGE_SET_ROOT" packages "$PROFILE_PATH" --scope installer)"
 mapfile -t packages <<< "$package_output"
 (( ${#packages[@]} > 0 )) || { echo "Resolved installer package set is empty." >&2; exit 1; }
-chroot "$LIVE_ROOT" /usr/bin/env DEBIAN_FRONTEND=noninteractive apt-get update
-chroot "$LIVE_ROOT" /usr/bin/env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "${packages[@]}"
+chroot "$LIVE_ROOT" /usr/bin/env DEBIAN_FRONTEND=noninteractive apt-get "${APT_ACQUIRE_OPTIONS[@]}" update
+# Keep intentionally pre-seeded Greia conffiles without any dpkg prompt.
+chroot "$LIVE_ROOT" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
+  apt-get "${APT_ACQUIRE_OPTIONS[@]}" -o Dpkg::Options::=--force-confold install -y --no-install-recommends "${packages[@]}"
 
 install -d -m 0755 "$LIVE_ROOT/opt/greia-os"
 rsync -a --delete --exclude '__pycache__' "$PROJECT_ROOT/src" "$PROJECT_ROOT/runtime" "$LIVE_ROOT/opt/greia-os/"

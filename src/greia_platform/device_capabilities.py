@@ -100,6 +100,8 @@ class HALDeviceCapabilityProbe:
             capabilities.add("keyboard")
         if input_state.touch:
             capabilities.add("touch")
+        if input_state.controller:
+            capabilities.add("controller")
         if audio.basic_output:
             capabilities.add("audio.basic")
         if removable.service_available:
@@ -121,6 +123,7 @@ class HALDeviceCapabilityProbe:
                     "pointer": input_state.pointer,
                     "keyboard": input_state.keyboard,
                     "touch": input_state.touch,
+                    "controller": input_state.controller,
                     "backend": input_state.backend,
                 },
                 "audio": {

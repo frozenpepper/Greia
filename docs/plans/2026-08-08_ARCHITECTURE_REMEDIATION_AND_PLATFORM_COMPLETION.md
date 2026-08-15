@@ -23,7 +23,8 @@ When this plan is complete, Greia must have:
 - stable Activity identities;
 - shared Storage, Session, Event, Progression, and Reward services;
 - a semantic Device Capability/HAL layer;
-- Python and Web runtime adapters using the same platform services;
+- runtime-neutral interaction profiles and Phase-0 controller/joystick support;
+- Python and Web runtime adapters using the same platform services and input semantics;
 - direct appliance graphics without accidental X11 dependence;
 - peer i386/x86-64 and Raspberry Pi 400/500 architecture support;
 - safe `.greiaactivity` installation/update;
@@ -181,11 +182,17 @@ ADR 0012 requires signed, rollback-safe Greia OS/runtime updates, offline bundle
 
 **Required:** explicit R13B before final certification.
 
+## F-25 — Controller/input conventions would fragment per Activity — HIGH Phase-0 UX/architecture risk
+
+Without a shared input model, each Activity could invent joystick button numbers, dead zones, controller-as-mouse behavior and keyboard mappings independently. A future Web runtime would then require a second incompatible controller stack, and raw controller access could bypass protected Greia system input.
+
+**Required:** ADR 0020 runtime-neutral interaction profiles; controller as a first-class HAL capability; centralized mapping/dead-zone/virtual-pointer policy; Greia-owned physical device/system-input authority; Python/Web semantic parity; physical controller evidence in R7/R14.
+
 ---
 
 # 3. Cross-cutting rules
 
-1. **One platform service per concern.** Do not create Python/Web copies of storage, sessions, progression, package, backup, or parent policy.
+1. **One platform service per concern.** Do not create Python/Web copies of storage, sessions, progression, package, backup, parent policy, or standard input mapping.
 2. **Capability, permission request, and grant are distinct.** Activity code may request; only the platform grants.
 3. **Trusted authority stays outside Activity processes.** Effective grants come from a PermissionBroker using package trust/origin plus policy/capability inputs.
 4. **Stable identities precede durable state.** Profile IDs and Activity IDs are persistent cross-machine identity; titles are not.
@@ -196,6 +203,7 @@ ADR 0012 requires signed, rollback-safe Greia OS/runtime updates, offline bundle
 9. **Refactor for concrete boundaries.** Do not rewrite working code merely to make class names match diagrams.
 10. **Negative security tests are mandatory.** The unauthorized case must be proven to fail.
 11. **Reject a generic Resource Service.** Durable files belong to Storage; static assets to Asset/package; removable media to Media Service; temporary runtime data to Runtime Adapter/session; package cache to Package Manager; hardware availability to HAL.
+12. **Input intent is not physical-device authority.** Activities declare interaction profiles; Greia owns controller discovery/normalization, reserved system input, and the production physical-input path. Do not grant ordinary Activities raw `/dev/input` to manufacture controller support.
 
 ---
 
@@ -352,7 +360,7 @@ Typed semantic interfaces for at least:
 
 - capability snapshot/probing;
 - Display Service;
-- Input Service;
+- Input Service, including controller availability;
 - Audio Service;
 - Removable Media Service;
 - Power Service;
@@ -362,24 +370,28 @@ Existing Xorg/xinput/xrandr/systemd behavior may temporarily sit behind provisio
 
 ### R6.2 Runtime integration
 
-Complete the runtime-adapter protocol begun minimally in R2 for runtime-specific static/package validation, launch preparation, SDK transport, lifecycle session creation, cleanup, and normalized results. Migrate Python behavior without duplicating Storage/Session/Progression.
+Complete the runtime-adapter protocol begun minimally in R2 for runtime-specific static/package validation, launch preparation, SDK transport, lifecycle session creation, cleanup, and normalized results. Migrate Python behavior without duplicating Storage/Session/Progression/input semantics.
 
-## R7 — Direct Greia graphics/session architecture
+## R7 — Direct Greia graphics/session/input architecture
 
-**Goal:** implement the target appliance display/session model without circular Pi evidence requirements.
+**Goal:** implement the target appliance display/session/input model without circular Pi evidence requirements.
 
 Work:
 
 - inventory `DISPLAY`, Xauthority, XShm, `xinput`, `xrandr`, Xorg package/service assumptions;
 - typed Display/Input implementations behind R6 interfaces;
 - prototype SDL direct DRM/KMS/KMSDRM path;
-- determine by measurement whether a tiny compositor/session broker is justified for Web surfaces, transitions, crash recovery, and input routing;
-- define shell↔Activity surface ownership/recovery;
+- preserve ADR 0019 trusted Home/Back above Activity rendering and consume protected system input before Activity delivery;
+- implement ADR 0020 physical controller ownership/brokerage without ordinary Activity raw `/dev/input` authority;
+- map keyboard/pointer/touch/controller into the runtime-neutral interaction profiles and reserve controller Guide/system input where reliably available;
+- prove bounded controller discovery/open/reconnect and virtual-pointer behavior;
+- determine by measurement whether a tiny compositor/session broker is justified for Web surfaces, transitions, crash recovery, trusted chrome and input routing;
+- define shell↔Activity surface/input ownership/recovery;
 - move display/input settings behind platform adapters;
-- benchmark disk/RAM/startup/latency against Xorg;
+- benchmark disk/RAM/process/FD/startup/input/latency cost against Xorg;
 - retain Xorg only as an explicit compatibility adapter if physical evidence requires it.
 
-**R7 closure:** direct architecture plus x86/VM and available x86 physical evidence accepted; no Activity API depends on X11. Pi-specific display evidence is deferred explicitly to R8.
+**R7 closure:** direct display/session/input architecture plus x86/VM and available x86 physical evidence accepted; no Activity API depends on X11 or raw host input devices; mandatory Home remains outside Activity authority; controller/joystick Shell navigation, simple game mapping, pointer virtual-pointer behavior, disconnect/reconnect and reserved system-input interception are proven for the selected backend; resource cost is acceptable on the Acer floor. Pi-specific display/input evidence is deferred explicitly to R8.
 
 ## R8 — Raspberry Pi 400 / Pi 500 ARM64 board and image adapters
 
@@ -390,8 +402,8 @@ Work:
 - select base/kernel/firmware strategy;
 - board/image boot adapters beneath the same build-profile schema;
 - Pi profiles only after adapters exist;
-- integrate R7 direct display/session backend;
-- test boot/display/input/audio/network/removable media/shutdown/recovery;
+- integrate R7 direct display/session/input backend;
+- test boot/display/keyboard/pointer/controller/audio/network/removable media/shutdown/recovery;
 - close Pi-specific HAL/display/input work;
 - measure capability/resource classes independently of architecture.
 
@@ -399,9 +411,9 @@ Work:
 
 **Goal:** add Web without turning Greia into a browser appliance.
 
-Stage A benchmark: WPE/WebKit-style candidates first, alternatives allowed; installed delta, idle/peak RSS, cold/warm startup, Canvas2D/SVG/JS/WebAudio, optional WebGL, R7 display/session integration, i386 feasibility, Pi behavior, security maintenance, crash/forced-return.
+Stage A benchmark: WPE/WebKit-style candidates first, alternatives allowed; installed delta, idle/peak RSS, cold/warm startup, Canvas2D/SVG/JS/WebAudio, optional WebGL, R7 display/session/input integration, i386 feasibility, Pi behavior, security maintenance, crash/forced-return.
 
-Stage B adapter: packaged local content only; no child browser chrome/navigation/downloads/devtools; network denied by default; same Storage/Session/Event services and lifecycle/watchdog as Python; no authoritative unmanaged localStorage/IndexedDB save silo.
+Stage B adapter: packaged local content only; no child browser chrome/navigation/downloads/devtools; network denied by default; same Storage/Session/Event services and lifecycle/watchdog as Python; same ADR 0019 external system chrome; same ADR 0020 interaction-profile/controller semantics through a Web bridge rather than per-page controller-brand mappings; no authoritative unmanaged localStorage/IndexedDB save silo.
 
 ## R10 — `.greiaactivity` package/install/update
 
@@ -479,6 +491,8 @@ Evidence includes:
 - installer peak memory/time;
 - Bubblewrap/effective-grant behavior;
 - direct graphics/input/audio;
+- platform-owned Home/Back and protected system input;
+- Phase-0 controller/joystick navigation, game mapping, virtual pointer, reconnect and latency/resource evidence;
 - non-destructive Acer USB boot;
 - Pi 400 and Pi 500 physical acceptance;
 - Activity watchdog/forced-return;
@@ -505,9 +519,9 @@ R4 universal storage
 R5 sessions/events/progression
  ↓
 R6 Device Capability/HAL + full runtime integration
- ├────────────→ R7 direct graphics/session (x86/VM evidence)
- │                  └────────→ R8 Pi image + ARM direct-display evidence
- ├────────────→ R9 Web runtime (uses R7 session/surface architecture)
+ ├────────────→ R7 direct graphics/session/input (x86/VM evidence)
+ │                  └────────→ R8 Pi image + ARM display/input evidence
+ ├────────────→ R9 Web runtime (uses R7 session/surface/input architecture)
  └────────────→ R10 .greiaactivity
 
 R4 + R5             → R11 .greiabackup
@@ -535,7 +549,7 @@ Focused iteration may use:
 PYTHONPATH=src python3 -m unittest discover -s tests -v
 ```
 
-Security phases require positive **and negative** tests. Hardware/display phases require source tests plus exact VM/physical evidence; source structure never proves hardware behavior.
+Security phases require positive **and negative** tests. Hardware/display/input phases require source tests plus exact VM/physical evidence; source structure never proves hardware behavior.
 
 ---
 
@@ -641,6 +655,87 @@ Do not rewrite old entries; append corrections.
 - Evidence document: `docs/reviews/2026-08-09_R5_REIMPLEMENTATION_AND_R6_INTEGRATED_CLOSURE.md`.
 - Key commits: `0cfb82aa89df5ebc9c03a01061ebd8da82f8f4dd`, `5bd867c9488fcd61a598813cdf7a42c396ec3b2c`, `e790a36e36b845d0a9d0ecf057180ffd3a213af3`, `2819f73dcc57c3b69d002532c03f5d2021e7c10f`, `7562471d868a23cd90d88b43aed2501988eb5740`.
 
+## 2026-08-09 — R7 serial ownership and backend-neutral display-session tranche
+
+- Implemented: added an evidence-only serial SDL/KMSDRM ownership probe covering Shell acquisition, clean child takeover, Shell reacquisition, abrupt child death without SDL cleanup, and final Shell reacquisition; installed a disabled PAM/logind VT1 handoff-acceptance service; extended the existing root maintenance controller with a strictly validated `handoff` mode while retaining `active` as default; layered a second disposable QEMU boot over the existing active KMSDRM production-image harness; upgraded the single exact-image CI chain to require both active and serial-handoff QEMU classifications when `kmsdrm` is compiled; introduced `DisplaySessionCoordinator` and typed bounded `DisplayTransport` semantics above runtime-specific process launch; recorded an explicit serial-versus-compositor measurement matrix.
+- Tests/evidence: focused serial-handoff unit suite executed **8/8 PASS** against fake SDL/process boundaries; generated QEMU guest handoff script passed `sh -n`; two-boot plan and strict synthetic passing evidence were validated before commit; display-session recovery tests were added but the complete current `make verify` has not executed because GitHub Actions remains unavailable at the runner boundary. No real QEMU serial PASS, Acer PASS, Pi PASS, or newer full source-test count is claimed. Last actually executed complete source gate remains **232/232 PASS at `097f0281888a58f6f26425807ce99d9f35449313`**.
+- Decisions: serial direct DRM ownership remains a measurement/evidence candidate only and does **not** authorize broad child `/dev/dri` or raw input access. Shell/Activity ownership semantics are now backend-neutral so serial teardown/reacquire and a persistent compositor can sit below the same launcher contract. Production remains Xorg. Debian Trixie Cage 0.2.0-2 is retained as a compositor benchmark/reference but its stock binary hard-depends on Xwayland; Weston is also a reference candidate. No compositor dependency is added to the production image yet.
+- Remaining blockers: obtain executable active + serial QEMU evidence from the exact production image; run the complete source gate; measure exact package closure/RAM/process/startup/transition cost for compositor references; prototype the smallest persistent Greia-owned compositor/session-broker candidate below `DisplaySessionCoordinator`; move final display/input settings behind the selected adapters; compare against Xorg; complete physical legacy Intel/Acer acceptance before production migration.
+- Next exact step: measure candidate package/resource closure without enabling a new boot path, then prototype the smallest persistent compositor/session broker underneath the new backend-neutral display-session contract. Treat any serial failure as evidence against the candidate rather than weakening the handoff test.
+- Commit(s): `cb2b38b82b67fdc4aa9345526b09f6cf59c2ba04`, `5d18869d5b6f8374f31bca34ac664245445420cb`, `906117ec3a2321778521de0f8a8c00b10a25736d`, `d97a9d8ff6364b7ef2caf6d6dc461ac5528c1963`, `92043ef151074ff448380d4c36eeab34dd4e5282`, `79f37a162971d9f93e9df2efb4f9ce99eb1d81b4`, `ddbe8d9633af77ee7281a80f219c84b4c3c9d462`, `92abc06bc8127d4b1018dd45ae545888c83d73fc`, `eb9b8d40585579d5e5a2710eb59f6b4b7a48482d`, `e26d9fa44a74164df6fcebe3e20a9e55f2c1809e`, `1752eae2637e43a8a7d9c1bbc6ed8dc92f448756`, `772dc5b23a5a821d843738340f925122a7dd3e1a`, `02113b91647cdd14a7cd2d1ddfc459477e967c25`.
+
+## 2026-08-09 — R7 exact compositor package-delta and CI-evidence hardening
+
+- Implemented: added `tools/r7_compositor_package_probe.py` with a fixed candidate set (`cage`, `weston`, `wlroots-runtime`) to measure exact incremental package/filesystem closure in separate disposable clones of the production image; restored the clone's original resolver state and removed measurement-log noise before byte accounting; removed host `/run` from the chroot so maintainer scripts cannot reach the host systemd control socket; snapshot and require `/etc/systemd/system` to remain unchanged; reject candidate transactions that remove or version-change baseline packages; record introduced X-server/desktop-risk components; integrated all three package measurements into the single exact-image R7 workflow; hardened `DisplayTransport` so each typed transport is bound to its exact SDL backend; fixed the exact-image preflight so the expensive gate remains eligible until the generated R7 evidence document actually exists.
+- Tests/evidence: provider-free package-probe regressions were added for the fixed candidate set, no-recommends/no-upgrade/no-remove APT contract, host-`/run` exclusion, package-manifest comparison, resolver restoration, log normalization, and systemd-tree change detection; display-transport pairing regressions were added. These new repository tests have **not** executed under the current GitHub runner condition. Current Actions runs `31292322548` (source verification), `31292322559` (exact-image preflight), and `31292322575` (clean-tree verification) failed before step 1 with `steps = null` / no logs; one controlled rerun of source verification and exact-image preflight reproduced the same boundary. The last actually executed complete source gate remains **232/232 PASS at `097f0281888a58f6f26425807ce99d9f35449313`**. No real compositor package-delta report, active QEMU PASS, serial-handoff QEMU PASS, Acer PASS, or Pi PASS is claimed.
+- Decisions: package measurement is **incremental relative to the current Xorg production image** and is not an eventual Xorg-removed footprint claim. Measurement helpers must not become generic package installers or mutate production boot/session state. Cage/Weston/wlroots remain benchmark/reference candidates only. Serial direct ownership remains evidence-only. Production remains Xorg. No further CI retries should be spent merely reproducing the same zero-step runner boundary.
+- Remaining blockers: obtain one genuinely executable unified exact-image run; compare the real Cage/Weston/wlroots package/file deltas; obtain active and serial KMSDRM QEMU evidence when applicable; run the current complete provider-free source gate; then prototype the smallest compositor/session-broker candidate below `DisplaySessionCoordinator` and measure RSS/process/FD/startup/transition/recovery cost against serial ownership and Xorg. Physical legacy Intel/Acer evidence remains mandatory before production migration.
+- Next exact step: let the single unified workflow execute when GitHub runners are functional. Preserve every negative classification. If active acquisition or serial recovery fails, treat that as architectural evidence rather than weakening the gate. Only after exact package/resource evidence exists should a compositor candidate be prototyped below the backend-neutral display-session contract.
+- Commit(s): `37f01485080af27b3d0159b79104252d94be14f8`, `a2e63dfcfbdfba2f43646a1d74d9ceb5b915cb08`, `3d52118116dd8fe2203a4b4510a8f3205428e2b1`, `fef55f88143ad330f2ffc30e5e036bd88fa05284`, `c2dfd4064e319cae59320d758e3a3f28aff36c11`, `d59f4fcad9f65bbb06224e93526bd906636ce80c`, `f30a7c85c73387e1e39e4a0269002faad4cd6544`, `cbf5f99de5fff9d17a9a16294926419bc1c3b0b6`, `c77f77a95f37cffaf5b3c5820510da4f56ef5a0c`.
+
+## 2026-08-09 — R7 source-boundary correction, lease ownership, settings decoupling, and passive seat/input evidence
+
+- Implemented: corrected a continuity error where the prior session's prose had described host-namespace hardening that was not actually present on the GitHub branch; the repository was treated as authoritative and corrected before further work. The compositor package probe now exposes no host `/dev`, `/sys`, or `/run`, uses a private bounded tmpfs `/dev` plus fresh procfs, rechecks the immutable source-image hash even on failure, removes disposable clones by default on both success and failure, requires requested packages to exist after the transaction, and protects systemd plus GRUB boot-state trees. `DisplaySessionCoordinator` now issues exact-object `DisplaySessionLease` ownership tokens, rejects stale/fabricated callbacks, makes presentation an explicit in-flight phase, requires backend/transport-kind agreement, and preserves combined primary/restore failure provenance. Active KMSDRM evidence now rejects residual `XAUTHORITY`, rejects bool/non-integer frame counts, and requires deterministic rendered-buffer diversity. Serial KMSDRM evidence now validates exact child frame counts, hashes, surfaces, finite configuration values, three distinct shell recovery buffers, and abrupt-child semantics. R7-A settings decoupling was completed at source level: the generic hardware watcher requires an injected semantic controller; all `xrandr`/`xinput`/libinput command mapping lives in `hal_legacy_x`; launcher composition explicitly selects that compatibility adapter; installer resolution discovery now consumes `HardwareSessionController` and legacy-X selection lives only in `greia_installer.composition`. The passive direct probe now inventories bounded input-event topology, logind/seat/session runtime presence, active VT, and transport-presence facts without opening DRM/input devices or claiming active input.
+- Tests/evidence: isolated current display-session fixture executed **22/22 PASS**; isolated current compositor-package pure-logic fixture executed **14/14 PASS** with only the QEMU/raw-image mount dependency stubbed. The earlier serial fake-SDL/process suite executed **8/8 PASS before the latest serial evidence-strengthening edits**, so the strengthened serial suite is not claimed as executed. Later hardware-settings, installer-adapter, active/serial evidence and passive seat/input regressions are committed but could not execute in a real current checkout: this execution container has no GitHub DNS/network access and no existing authenticated checkout. Fresh Actions runs `31294925789` (source), `31294925798` (exact-image preflight) and `31294925820` (clean tree) again failed before step 1 with `steps = null` / no logs; exact-image `build-probe-record` was skipped because preflight never executed. The last actually executed complete source gate therefore remains **232/232 PASS at `097f0281888a58f6f26425807ce99d9f35449313`**.
+- Decisions: R7-A is materially source-implemented but is **not labeled fully verified** until the current full gate runs. GitHub remains canonical when chat prose and persisted source disagree. Production remains Xorg; no compositor is selected; serial direct ownership remains evidence-only. `ActivitySupervisor` still intentionally retains X-compatibility concessions (shared IPC, inherited X/Wayland transport variables, broad `/dev/dri` bind) and they must not be removed blindly while production uses Xorg. They will be narrowed only after the display/session architecture is selected and proven. `ActivitySupervisor` must not become DRM owner. No compositor runtime prototype should be added before exact package/resource evidence exists.
+- Remaining blockers: one genuinely executable current `make verify`; one genuinely executable unified exact-image run yielding installed-SDL classification and exact Cage/Weston/wlroots deltas; active and serial QEMU evidence where KMSDRM is present; active seat/input evidence; measured compositor-vs-serial-vs-Xorg runtime/resource comparison; explicit direct-profile sandbox authority migration; physical legacy Intel/Acer scanout/input/suspend/crash acceptance before production migration.
+- Next exact step: when a runner/environment genuinely executes, run the current full source gate and the existing single exact-image workflow without creating parallel builders or weakening gates. Preserve negative evidence. Only after real package/resource evidence exists should the smallest viable Greia-owned compositor/session-broker candidate be prototyped below `DisplaySessionCoordinator` and compared against serial ownership and Xorg.
+- Commit(s): key current tranche commits include `90eb280e9f81d61e8f9eff07906768f110626af1`, `656d16d78335bce8574b130bf60dbabf634bfca4`, `fa6dc192f853bfd97635ef12632590c381071803`, `e7d84a64c8a4147a0b14c5eebee82eb41d0b0f26`, `8d3008e3196ede988c1409d23186d0f2a6dbf8f3`, `50cb0b58551e640d178617308013283f2226ba8e`, `c9ec137189865a976fe6b9c9767c104986379a43`, `87edc24057c4f09ddebb05af2ab44c18bab070c6`, `63189eb9f1ab2fd0a6d29bf3c4d1466b64b28784`, `7d14d13acf55e2cf31ea62622a11ec9093a4778e`, `635bd77f341160a7d0c4bb3c5ca0789e313258f8`, `42b4fb416703c7fb7ef4e3c8a93475d804813661`, and handover refresh `71751658303ef324fb8ecd12df54078aa99dd679`; additional evidence/settings commits are preserved in branch history.
+
+## 2026-08-09 — R7 live installed display-session lifecycle integration
+
+- Implemented: the backend-neutral `DisplaySessionCoordinator` is now composed into the **real installed Activity lifecycle** rather than remaining an evidence/prototype seam. Added `LegacyXDisplaySessionBackend` as an explicit compatibility implementation for the current Xorg/xinit session; it introduces no new window manager/display manager/X server and simply describes the existing child transport. Corrected the legacy-X transport contract to require `DISPLAY` while treating `XAUTHORITY` as optional-but-validated when present, matching Greia's direct `xinit` compatibility path instead of inventing credentials. `ActivitySupervisor` now prepares one display lease using the platform Activity session ID, applies only that lease's bounded transport environment to the child invocation, presents on authoritative READY, avoids presenting a process that already exited after publishing READY, and restores the shell on launch failure, normal exit, crash, forced stop and timeout. Display restore failure now participates in terminal cleanup and converts the authoritative Activity result/history reason to `platform_failure`. Installed launcher composition injects this coordinator only on the installed root; development/windowed paths retain the previous no-coordinator behavior. A follow-up commit removed accidental unrelated `main.py` formatting churn; cumulative comparison against the pre-integration point shows only 9 changed lines in `main.py` plus the new lifecycle regression test file.
+- Tests/evidence: added `tests/test_display_session_legacy_x.py` and `tests/test_supervisor_display_session.py` covering xinit-style transport without fabricated Xauthority, invalid/ambiguous compatibility transport, typed transport overriding stale host selectors, READY/present/normal restore, fast READY+exit without dead-surface presentation, presentation failure, restore failure -> `platform_failure`, and process-launch failure recovery. These latest integration tests have **not executed** in a real current checkout. Fresh Actions runs `31314374079` (source), `31314374090` (exact-image preflight) and `31314374082` (clean tree) again failed before step 1 with `steps = null` / no logs; exact-image build remained skipped. The last actually executed complete source gate remains **232/232 PASS at `097f0281888a58f6f26425807ce99d9f35449313`**.
+- Decisions: the display-session contract is now a live installed-source boundary, but this is **not a graphics-backend migration**. Production remains Xorg/xinit. `ActivitySupervisor` coordinates lifecycle timing but does not own DRM. Raw Activity `/dev/dri` and shared-IPC X compatibility concessions remain unchanged until a measured direct/compositor design is selected. No compositor is selected and no production package set changes in this tranche.
+- Remaining blockers: harden the post-display-prepare child-environment assembly failure path so any `ActivityLifecycleError` enters common failed-launch cleanup; add the new live integration files to the exact-image workflow's future path-trigger/preflight set; obtain a genuinely executable current `make verify`; obtain exact-image SDL/package-delta/QEMU/seat-input evidence; compare compositor-vs-serial-vs-Xorg runtime/resource/authority behavior; require physical legacy Intel/Acer evidence before production migration.
+- Next exact step: close the two small source/CI hardening items above, then stop adding display mechanisms until one executable current source/exact-image environment yields the measurements required to choose the next backend prototype.
+- Commit(s): `5e44a3926d6989652945f1d5a9625ec997051cca`, `0c4fb197fa02ba818aed402e20e489779381d110`, `0e2904679116ee32f4a02616997c71571bd41f27`, `07bdc4ef6f1ff8b486e4d369ed1253890a2382a7`, `f1aa18b6fca32d04cdc7b0063184f49b3638493a`, `5ce6d3c85cafcc166c15adfc61f14a6c465d4961`, `0cec31b2418b88bde25aecd1b484f076e63444aa`, `5f45c7d44a9f254e5181dc068333a0db7292a658`, handover refresh `b1e012e48d0afaa116da065fbc83d49c2be0d20c`.
+
+## 2026-08-09 — R7 paid-CI correction and local evidence execution path
+
+- Implemented: corrected an execution-governance failure: GitHub-hosted Actions had been used without explicit repository-owner authorization. Hosted paid execution is now opt-in only. `main` clean verification was changed to manual-only (`05df6b97bd95e375c9986c6e045a437df749c6a2`); the R7 branch clean verifier is manual-only (`21be2d987665fd9638154ddd3da82d0ca3f96591`); the R7 automatic source and exact-image hosted workflows were removed (`63734d9bf280b36feb0b03ef49989d29ed8f4176`, `f3534bf13a83d4018fb5e4d00f614af09ab2e105`). A permanent rule was added to `AGENTS.md` on the branch and independently on `main` requiring explicit owner authorization before enabling, triggering, rerunning or adding GitHub-hosted Actions (`1c3f407e62f94820e391cd664e41aa7026ca2685`, `c5f02191876d2038880bbbcd09e98b7bd79d2552`). Added `tools/r7_local_evidence.py`, an OOP local Linux orchestrator that reuses the existing production builder, passive direct-graphics probe, fixed compositor package probe, and active+serial QEMU harness while keeping all generated evidence outside the repository and never installing host packages or committing/pushing evidence. Reworked `docs/testing/2026-08-09_R7_EXTERNAL_LINUX_EVIDENCE_EXECUTION.md` into a local-only controlled-Linux operator protocol.
+- Tests/evidence: added `tests/test_r7_local_evidence.py` covering run-root isolation, no-GitHub-Actions plan semantics, fixed package candidate set, mandatory active KMSDRM and active seat/input follow-up flags, immutable source-image/package-boundary validation, KMSDRM-not-compiled QEMU skip semantics, and non-overclaiming summary behavior. These new tests are **committed but not executed**. The last complete source gate that actually executed remains **232/232 PASS at `097f0281888a58f6f26425807ce99d9f35449313`**. No new package-delta, active QEMU, serial QEMU, seat/input or physical Acer result is claimed.
+- Decisions: GitHub remains canonical for source persistence, but GitHub-hosted execution is not implicitly authorized and must not be used without explicit owner approval for that specific use. R7 evidence execution now proceeds on a controlled/disposable local Linux environment via existing Greia implementations. First failure is preserved; the local orchestrator does not rerun active/serial QEMU in the same attempt, does not mutate the production source image, and deliberately leaves active seat/input and physical Acer evidence incomplete. Production remains Xorg/xinit. No compositor is selected and no Activity becomes DRM/input owner.
+- Remaining blockers: execute the current source gate in a controlled local Linux checkout; build and inspect the exact current production image; obtain real Cage/Weston/wlroots package deltas; if installed SDL exposes KMSDRM, obtain active and serial QEMU evidence; obtain active seat/input evidence; compare compositor-vs-serial-vs-Xorg authority/resource/runtime behavior; migrate the direct-profile sandbox only after architecture selection; complete physical legacy Intel/Acer acceptance before production migration.
+- Next exact step: in a disposable/root-owned Linux checkout, inspect `python3 tools/r7_local_evidence.py --run-root <outside-repo-path> --plan-only`, then run the local orchestrator exactly once for the evidence attempt and return the complete run-root archive. Preserve the first failure and do not weaken/retry the active evidence path merely to obtain PASS. Only after real package/runtime evidence exists should a compositor/session-broker prototype be selected, and any such prototype belongs below `DisplaySessionCoordinator`.
+- Commit(s): `05df6b97bd95e375c9986c6e045a437df749c6a2`, `21be2d987665fd9638154ddd3da82d0ca3f96591`, `63734d9bf280b36feb0b03ef49989d29ed8f4176`, `f3534bf13a83d4018fb5e4d00f614af09ab2e105`, `1c3f407e62f94820e391cd664e41aa7026ca2685`, `c5f02191876d2038880bbbcd09e98b7bd79d2552`, `37b536f758bf4918865f3e0419623c36e81af33c`, `396ef3d490e11605912bce8a74e46e266659fa53`, `6c6ca623dda97406572582c6f5c915b2bf72d1a4`, handover refresh `faf2a5ab5cc6c8a2c4729d48763a353fe12e120d`.
+
+## 2026-08-09 — R7 developer remote-control/test-console tranche
+
+- Implemented: added an explicit experimental `modern-amd64-dev` image profile and `developer-remote` package set; added a canonical-builder wrapper plus bounded raw-image provisioner that generates a per-image operator Ed25519 client key, installs only the public half for `greiaadmin`, enables SSH only on the marked developer image, validates sudo/sshd configuration, refuses persistent cloned SSH host identity, and declares the installed developer display endpoint as `greiakid@:0`. Added a Greia-owned `greia-devctl` privileged command surface, root-owned deployment state, deterministic developer-only wired DHCP/mDNS preparation, status/log/screenshot/service/power controls, and constrained GUI input via a fixed `xdotool` backend. Added a Mac/operator `tools/greia_remote.py` client for wait/status/screenshot/logs/key/mouse/text/deploy/remove/restore/restart/reboot/poweroff/shell operations. Ordinary remote Activity deployments now live under `/var/lib/greia-developer/activities`, are registered by the real launcher as a separate `DEVELOPER_UNSIGNED` source, cannot request privileged permissions, and cannot collide with the built-in root; deliberate `--replace-system` testing is explicit and preserves the original built-in for restore. Added a typed developer display-session endpoint so installed Greia and the planned live installer can use different display owners without duplicating control logic. Added `tools/provision_developer_installer.py` to provision the existing live graphical installer with key-only SSH, wired DHCP/mDNS and `root@:0` developer display control while preserving the installer’s graphical safety model.
+- Tests/evidence: `tests/test_developer_remote.py` now covers developer-vs-normal profile separation, display-endpoint validation, screenshot/input execution under the declared display user, developer marker enforcement, root-only deployment metadata vs readable developer Activity source, path/ID rejection, `BUILT_IN` versus `DEVELOPER_UNSIGNED` launcher sources, non-overlapping roots, fixed xdotool invocation, image-profile/host-key provisioning constraints, remote client key/known-host behavior, and live-installer remote-but-not-unattended policy. These tests are **committed but not executed**. No developer image has been built in a current Linux checkout; no SSH login, mDNS, screenshot, xdotool input, remote Activity deployment, reboot/reconnect, or live-installer remote-control result is claimed. The last complete source gate that actually executed remains **232/232 PASS at `097f0281888a58f6f26425807ce99d9f35449313`**.
+- Decisions: remote control is a developer/test capability only and must never be enabled implicitly on normal/release profiles. SSH is transport, not product authority: password/root login stay disabled and passwordless sudo is bounded to `greia-devctl`. Remote file placement may not upgrade Activity trust. Current screenshot/input are Xorg-development compatibility implementations beneath a stable developer-session/control seam and do not select X11 as R7 production architecture. Remote installation must drive the existing graphical fail-closed installer; no unattended destructive disk-write command is accepted. The live-installer provisioner is source-implemented but **not wired into `build/build-installer-image.sh` yet** because that destructive-media-sensitive integration must receive a real Linux build/test instead of an unexecuted whole-file builder rewrite.
+- Remaining blockers: run current source tests locally; build `modern-amd64-dev`; verify unique first-boot SSH host keys, key-only `greiaadmin` login, deterministic wired DHCP/mDNS, screenshots and bounded GUI input on the target; verify ordinary remote deployment retains `DEVELOPER_UNSIGNED` trust and built-in replace/restore is reversible; then integrate the live-installer provisioner at the two canonical builder hook points and prove remote graphical installation without weakening eligible-target/payload/device confirmation. R7 graphics/package/QEMU/seat/input/Acer evidence remains separately outstanding.
+- Next exact step: on an owner-controlled Linux checkout, run the focused developer-remote suite and full `make verify`; build the developer target with `sudo bash build/build-developer-image.sh out`; install/boot it through an existing safe path and execute the acceptance checklist in `docs/testing/2026-08-09_DEVELOPER_REMOTE_CONTROL.md` from the operator computer. Preserve the first real failures. Only after target remote control is proven should the canonical live-installer builder hooks be added and tested.
+- Commit(s): key tranche commits include `0592226229770a42a7ddcb40d4035cc4ee9b6041`, `2d87d1fdc4f04ca9154cee34bd350ee25a3e47c0`, `9e3694efefcafa67cf432173e0a5f7a4acca82ca`, `ec9000476f5f234c2a44200533974730de2d2801`, `223292db0c512c89d675dca5348a86741ff15b0d`, `2880683be3d8eda7881610789abe1b051b00605e`, `d96bc90bd5ed8cb9025dfb456c5b8aa3e7455d14`, `0cc35694ed710c78c011f18b0b2639ecbcd4ad13`, `fefea94ad015e286220e43a6e77de33ac0f50ecd`, `b7898af51fa06a72877749928f3116c20eb68007`, `c3e206b203f66352a2aba21870fe6bf95261a036`.
+
+## 2026-08-13 — Phase-0 creative source and lightweight UI/engineering consolidation
+
+- Implemented: added first-party Writing and Painting source tranches with bounded undo/persistence behavior; introduced renderer-neutral `ui_core.py` with Screen/Overlay/Control/Collection/PagedGrid/BoundedCache/InvalidationTracker/SurfaceNavigator; accepted ADR 0018; added mandatory repository-wide OOP/polymorphism/maintainability guidance in `docs/engineering/ENGINEERING_FOUNDATIONS.md`; consolidated `docs/DOCUMENTATION.md`, README and the Activity authoring skill around canonical owners; added `pygame_ui.py` as the platform-wide import name for the existing single Pygame helper implementation while preserving current `activity_ui.py` compatibility.
+- Tests/evidence: UI/creative regression source is committed but has not executed in a real current checkout. No new PASS is claimed. The last genuinely executed complete source gate remains **232/232 PASS at `097f0281888a58f6f26425807ce99d9f35449313`**.
+- Decisions: Greia uses Screen/Overlay/Collection semantics rather than desktop windows/filesystem folders. Performance/resource bounds are part of UI correctness. Strong OOP means cohesive domain objects and purposeful polymorphism at real variation points, not maximal class count. Existing Shell/installer UI will migrate incrementally only after focused/current source verification; no big-bang UI rewrite is authorized. R7 production graphics status remains unchanged.
+- Remaining blockers: run focused UI/creative tests and current `make verify`; then migrate Shell paging/resource caches and installer font/icon caches onto the common UI foundation; continue R7 exact-image/package/QEMU/seat/input/physical evidence separately.
+- Next exact step: on an owner-controlled current checkout, run `tests.test_ui_core`, `tests.test_ui_core_lifecycle`, `tests.test_activity_ui`, `tests.test_core_creation_activities`, `tests.test_activity_theme_access`, validate Writing/Painting, then `make verify`. Preserve first failure and do not weaken tests. Only after PASS should existing Shell/installer behavior migrate to shared primitives.
+- Commit(s): UI/engineering consolidation is preserved in branch history; resolve actual current HEAD from GitHub before execution.
+
+## 2026-08-15 — R7 platform-owned Activity system navigation contract
+
+- Implemented: accepted `docs/product/ACTIVITY_SYSTEM_NAVIGATION.md` and ADR 0019; added renderer-neutral mandatory Home/optional Back geometry and action contracts in `greia_platform.system_chrome`; added a backend-neutral exact-lease `SystemChromeCoordinator`; added `SystemChromeNavigationBridge` so validated platform chrome actions enter the existing Greia Activity stop lifecycle without runtime-specific exit logic; added canonical Pygame Home/Back glyph primitives; added focused regression source; updated AGENTS, documentation authority, engineering guidance, README, ADR 0018 and the Activity authoring skill.
+- Tests/evidence: new system-chrome and compatibility regression source is committed but has not executed in a real current checkout. No new PASS is claimed. The last genuinely executed complete source gate remains **232/232 PASS at `097f0281888a58f6f26425807ce99d9f35449313`**. There is no current trusted Xorg/compositor system-chrome runtime evidence.
+- Decisions: Home is mandatory Greia-owned chrome outside Activity rendering/input authority; Back, when available, means return to the Greia launch origin after ending the Activity and is not browser history or Activity-internal navigation. ADR 0019 narrows R7 closure: a production backend must preserve trusted Home above Activity content and consume protected-region input before Activity dispatch. Raw serial DRM/KMS ownership by the Activity cannot close R7 by itself unless another trusted layer preserves this invariant. A tiny Greia-owned compositor/session broker may be justified by this requirement, but no desktop/window-manager behavior is authorized.
+- Remaining blockers: run the focused/current source gate; implement and compose a concrete trusted `SystemChromeBackend` as part of R7; prove overlay/input authority and graceful/forced Home return against real Activity content; measure resource impact on the Acer floor; extend future Web acceptance so page content cannot manipulate system chrome.
+- Next exact step: execute `tests.test_system_chrome` with the existing UI/creative focused suite and current `make verify`. After source PASS, integrate the chrome coordinator beside `DisplaySessionCoordinator`, prototype the smallest trusted overlay/input backend, and preserve negative evidence rather than falling back to an Activity-drawn or DOM-injected button.
+- Commit(s): source/docs are preserved in branch history; resolve actual current HEAD from GitHub before execution.
+
+## 2026-08-15 — Phase-0 runtime-neutral input profiles and controller foundation
+
+- Implemented: accepted `docs/product/ACTIVITY_INPUT_STANDARDS.md` and ADR 0020; added `greia_platform.input_core` with runtime-neutral interaction profiles, semantic actions, brand-neutral physical controller vocabulary, centralized circular dead-zone normalization and bounded Greia virtual pointer; added `controller` to the typed HAL/device-capability/runtime vocabulary; added conservative controller-presence probing without opening Activity devices; added `pygame_input.py` translating keyboard/SDL-controller events into Greia semantics plus an explicitly bounded trusted controller owner (maximum 4 open / 16 scanned); added `[input].profile` to the Activity manifest contract with API-0.1 `hybrid` compatibility; added `get_input_profile()` and platform launch-context propagation; declared Painting=`pointer` and Writing=`text`; added focused source regressions and a dedicated physical controller acceptance protocol; updated AGENTS, README, architecture, engineering foundations, documentation map, agent operations, Activity skill and ADR 0019 product cross-reference.
+- Tests/evidence: all input/controller tests added in this tranche are **committed but unexecuted**. No Shell controller navigation, physical controller, reconnect, virtual-pointer-on-real-Activity, reserved Guide interception, Web bridge or Acer latency/resource PASS is claimed. The last genuinely executed complete source gate remains **232/232 PASS at `097f0281888a58f6f26425807ce99d9f35449313`**.
+- Decisions: controller is a device capability, not an Activity-specific control scheme. New Activities declare interaction intent (`navigation`, `pointer`, `directional`, `game`, `text`, `hybrid`). Simple games use the learned arrows+Space / D-pad-or-left-stick+south-face baseline; pointer Activities use a Greia semantic virtual pointer; text Activities retain real typing/editing semantics. Consumer-brand labels terminate at backend adapters. Controller Guide/system input is platform-reserved where available. Ordinary Activities do not gain raw `/dev/input`; production physical-device ownership/brokerage is an R7 platform responsibility. A fallback controller Home chord remains intentionally undecided pending accidental-activation evidence.
+- Remaining blockers: execute the focused input/UI/source gate; then compose the bounded trusted Pygame controller owner/standard navigation mapping into the existing Shell loop without a big-bang launcher rewrite; implement the production R7 physical-input/system-input broker alongside trusted system chrome; prove controller navigation, analog repeat/dead zones, disconnect/reconnect, pointer virtual cursor, Guide interception and Activity raw-device denial on real hardware; measure resource/input latency on the Acer floor; later implement equivalent Web semantic transport.
+- Next exact step: run `tests.test_input_core`, `tests.test_pygame_input`, `tests.test_activity_input_contract`, `tests.test_hal_legacy_x`, `tests.test_system_chrome` plus the existing UI/creative focused gate and `make verify`. If source passes, make the smallest Shell integration using `PygameControllerSet`/`PygameInputTranslator`, then execute `docs/testing/2026-08-15_PHASE0_INPUT_CONTROLLER_ACCEPTANCE.md` on owner-controlled hardware. Do not broaden the Activity sandbox to `/dev/input` as an implementation shortcut.
+- Commit(s): source/docs are preserved in branch history; resolve actual current HEAD from GitHub before execution.
+
 ---
 
 # 9. Final completion criteria
@@ -658,8 +753,11 @@ This plan may be marked complete only when:
 - Storage/Session/Progression/Reward services are shared platform services;
 - global reward economics are not Activity-authored;
 - Device Capability/HAL services are authoritative above board-specific adapters;
-- Python and Web, where supported, use common platform semantics;
-- direct graphics is accepted and X11 is not an unintended architectural requirement;
+- Python and Web, where supported, use common platform semantics including Activity input profiles;
+- direct graphics/session/input architecture is accepted and X11 is not an unintended architectural requirement;
+- platform-owned Activity Home remains available outside Activity rendering/input authority across every supported runtime/backend;
+- controller/joystick support is proven from Shell through representative Activity profiles without broad raw Activity input authority;
+- reserved controller system input is intercepted by Greia before Activity delivery where the hardware exposes it;
 - Pi 400/500 and required x86 references have evidence-backed support status;
 - Activity install/update/rollback and child backup/restore satisfy parent workflows;
 - boot/recovery continuity meets the no-visible-Linux contract;

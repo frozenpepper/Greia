@@ -1,905 +1,334 @@
 ---
 name: greia-activity-authoring
-description: Canonical agent skill for designing, implementing, validating, optimizing, and remotely testing Greia Activities against the current Greia SDK and platform contracts.
+description: Canonical agent guide for designing, implementing, validating and testing Greia Activities against current platform contracts.
 ---
 
 # Greia Activity Authoring Skill
 
-**Audience:** coding agents and human developers creating or modifying Greia Activities  
-**Status:** living canonical authoring skill; keep synchronized with the implemented SDK  
-**Last reviewed:** 2026-08-09  
+**Status:** living derived authoring guide  
+**Reviewed:** 2026-08-15
 
----
+This file is practical guidance. Exact implemented APIs/schemas are owned by source/runtime declarations; accepted ADRs own architecture; product docs own child-facing requirements.
 
-## 1. When to use this skill
+## 1. Mandatory read set
 
-Use this skill whenever the task is to:
-
-- create a new Greia Activity;
-- modify an existing Activity;
-- port an educational game/tool into Greia;
-- design Activity manifest metadata;
-- use Greia storage/events/profile/theme/assets APIs;
-- optimize an Activity for Greia hardware;
-- validate/package/deploy an Activity;
-- remotely test an Activity on a Greia developer machine.
-
-For OS/platform/installer work, use `docs/agents/GREIA_AGENT_OPERATIONS.md` instead.
-
----
-
-## 2. Mandatory source-of-truth read set
-
-Before authoring an Activity, inspect the current versions of:
+Before materially changing an Activity read:
 
 ```text
 AGENTS.md
+docs/DOCUMENTATION.md
+docs/engineering/ENGINEERING_FOUNDATIONS.md
+docs/adr/0018-lightweight-ui-foundation.md
+docs/adr/0019-platform-owned-activity-system-navigation.md
+docs/adr/0020-runtime-neutral-input-profiles-and-controller-support.md
+docs/product/ACTIVITY_SYSTEM_NAVIGATION.md
+docs/product/ACTIVITY_INPUT_STANDARDS.md
 skills/greia-activity-authoring/SKILL.md
 src/greia_platform/activities.py
 src/greia_platform/activity_api.py
+src/greia_platform/input_core.py
+src/greia_platform/ui_core.py
+src/greia_platform/system_chrome.py
+src/greia_platform/pygame_input.py
+src/greia_platform/pygame_ui.py
+src/greia_platform/activity_ui.py
 src/greia_platform/storage_client.py
 src/greia_platform/event_client.py
+src/greia_platform/event_protocol.py
 runtime/child-runtime.toml
+runtime/storage-policy.toml
 runtime/theme-defaults.toml
 assets/catalog/core_icons_v1.toml
 ```
 
-When educational events/progression are involved also inspect:
+For progression/rewards also inspect `runtime/progression-policy.toml`. For exact current execution/hardware state read `HANDOVER.md`.
+
+## 2. Product canon
+
+A Greia Activity is a supervised child-facing experience, not a Linux desktop program.
+
+- **Activity is the stable abstraction.** Python/Pygame is one runtime.
+- **Linux internals are not Activity APIs.** No X11/DRM/systemd/device-file/shell/distro-path dependency.
+- **Greia owns lifecycle, durable namespace, sessions, permissions and global progression.**
+- **Greia owns the universal Home/Back system chrome.** Activities cannot replace or control it.
+- **Greia owns standard input semantics and controller normalization.** Activities declare interaction intent rather than brands/devices.
+- **Offline-first.** Core use and saving work without network.
+- **Portable state only.** Do not persist host paths, native object graphs or architecture-specific state.
+- **Curated runtime only.** No per-Activity venv/package manager/private dependency environment.
+- **Low-resource hardware is first-class.** Performance is correctness.
+
+Design at **1024×600 first** with large forgiving targets, direct manipulation, immediate feedback, minimal unnecessary reading and an obvious safe return path. Avoid desktop chrome, tiny controls, file dialogs, dense settings panes and traceback/error walls.
+
+## 3. Current package/runtime contract
+
+Current package shape:
 
 ```text
-runtime/progression-policy.toml
-```
-
-Do not assume this skill is newer than the implementation. If those files changed incompatibly, update this skill in the same tranche.
-
----
-
-## 3. Product canon
-
-A Greia Activity is not a free-standing Linux program and not a desktop application.
-
-It is one supervised child-facing Activity inside the Greia platform.
-
-### Non-negotiable principles
-
-- **Activity is runtime-neutral.** Python/Pygame is the current implemented runtime, not the platform identity.
-- **Linux details are not Activity APIs.** Do not depend on X11, DRM, device files, systemd, shell commands, distro paths or CPU architecture.
-- **Greia owns identity, lifecycle, storage, sessions, permissions and global progression.**
-- **Offline-first.** Core play/use and saves must work without Internet access.
-- **Child-first.** The experience should feel like part of Greia, not like a desktop application embedded inside it.
-- **Low-resource hardware is first-class.** Optimize for the extreme C0/reference floor rather than assuming a modern PC.
-- **Portable state.** Save data must survive moves between i386, amd64 and ARM64 where the Activity is supported.
-- **No private dependency environment.** Activities use the curated Greia runtime.
-
----
-
-## 4. Child UX canon
-
-Default Activity design should favor young children and the appliance model.
-
-### Prefer
-
-- direct manipulation;
-- large obvious targets;
-- visual/audio feedback;
-- consistent symbols and semantic Greia icons;
-- minimal required reading for core navigation;
-- repetition, discoverability and immediate feedback;
-- forgiving input;
-- obvious safe return/finish behavior;
-- layouts that work at **1024×600** without scrolling a desktop-like viewport;
-- language-neutral navigation where text is not educationally necessary;
-- localized text when text is purposeful.
-
-### Avoid
-
-- menu bars, window chrome, file pickers or desktop metaphors;
-- tiny controls designed for a precise mouse;
-- keyboard shortcuts as the only path for a child;
-- modal error text requiring adult interpretation;
-- assumptions that every child can read;
-- dense settings screens;
-- unbounded flashing/particle effects;
-- hidden exits that can trap the child in an Activity.
-
-Text is allowed and often educationally useful; the rule is not “no text”. The rule is that ordinary child navigation should not depend on reading unnecessarily.
-
----
-
-## 5. Package shape
-
-Current development packages are directories discovered by an `activity.toml` file.
-
-Typical shape:
-
-```text
-my-activity/
+my_activity/
 ├── activity.toml
 ├── main.py
-└── assets/
-    ├── ...
+└── assets/        # only Activity-specific runtime assets when necessary
 ```
 
-Do not include:
+`runtime/child-runtime.toml` and `src/greia_platform/activities.py` are authoritative. Current hard package ceiling is 50 MiB; it is a ceiling, not a target.
 
-- `.git`, `.hg`, `.svn`;
-- `node_modules`, vendored dependency trees;
-- virtual environments;
-- `requirements.txt`;
-- `pyproject.toml`;
-- `setup.py`/`setup.cfg`;
-- wheels, eggs, shared libraries or executable installers;
-- shell scripts/executable files;
-- caches/compiled bytecode;
-- symlinks.
+Do not ship dependency trees, venvs, package-manager files, bytecode caches, symlinks, native installers/binaries or unnecessary source/master artwork.
 
-The authoritative forbidden paths/files/suffixes and maximum Activity bytes live in:
+Activity ID is durable identity; title is presentation. Do not casually rename IDs.
 
-```text
-runtime/child-runtime.toml
-```
+Current implemented runtime is Python/Pygame API 0.1. Web/runtime archive formats remain future-facing until source says otherwise.
 
-At the time of this review the maximum validated Activity package size is **50 MiB**. Treat that as a ceiling, not a target. Prefer far smaller packages.
+### Interaction profile
 
----
-
-## 6. Canonical Activity identity
-
-Activity IDs are durable identity. Titles are presentation.
-
-Current canonical IDs are lower-case reverse-DNS-style identifiers with at least three components, for example:
-
-```text
-org.greia.shape-garden
-org.example.number-train
-```
-
-Do not casually rename an Activity ID after release or after durable saves depend on it.
-
-Legacy aliases are reserved for trusted built-in migration and are not available to ordinary developer packages.
-
-Versions and save-schema versions are separate concepts.
-
----
-
-## 7. Current manifest contract
-
-`src/greia_platform/activities.py` is authoritative for parsing and validation.
-
-A current Python Activity manifest follows this semantic shape:
+New and materially updated Activities declare their default Greia interaction intent:
 
 ```toml
-[activity]
-id = "org.example.maze-garden"
-legacy_ids = []
-title_key = "activity.maze-garden.title"
-version = "0.1.0"
-icon = "puzzle_pieces"
-languages = ["en", "it"]
-
-[runtime]
-type = "python"
-api_version = "0.1"
-entrypoint = "main.py"
-
-[requirements]
-required_capabilities = ["display", "pointer"]
-optional_capabilities = ["keyboard", "audio.basic", "touch"]
-
-[permissions]
-requested = []
-
-[storage]
-schema_version = 1
-
-[education]
-categories = ["logic", "spatial"]
-difficulty = 3
-
-[[education.skills]]
-id = "spatial-reasoning"
-weight = 5
-
-[[education.events]]
-id = "maze.completed"
-kind = "completion"
-
-[[education.events]]
-id = "maze.time"
-kind = "score"
-score_order = "lower_better"
+[input]
+profile = "directional"
 ```
 
-Do not copy this blindly if the parser/schema has changed. Re-check `activities.py` and `child-runtime.toml` first.
-
-### Current event kinds
-
-The implemented manifest accepts:
+Supported values:
 
 ```text
-completion
-creation
-milestone
-score
-```
-
-A `score` event must declare exactly one score order:
-
-```text
-higher_better
-lower_better
-```
-
-Non-score events must not declare `score_order`.
-
-Activities report facts; they do not declare arbitrary global reward amounts.
-
----
-
-## 8. Capabilities versus permissions
-
-These are deliberately separate.
-
-### Capabilities
-
-Capabilities describe runtime/hardware functions an Activity needs or can optionally enhance itself with.
-
-Current allowed vocabulary is defined only by:
-
-```text
-runtime/child-runtime.toml
-```
-
-At this review it includes concepts such as:
-
-```text
-display
+navigation
 pointer
-keyboard
-touch
-audio.basic
-network
-removable_media
-power.controlled_shutdown
+directional
+game
+text
+hybrid
 ```
 
-Do not invent a capability string.
+Existing API 0.1 packages without `[input]` temporarily resolve to `hybrid` for compatibility. Do not rely on that fallback for new work.
 
-Use required capabilities only when the Activity genuinely cannot function without them. Use optional capabilities for progressive enhancement.
+The profile is **not** a hardware requirement. A pointer Activity does not need to know whether its pointer came from a mouse, touch, or a Greia controller virtual pointer.
 
-### Permissions
+### Python module limitation
 
-Permissions request privileged platform operations. A request is **not a grant**.
+The installed adapter currently launches the manifest entrypoint as a direct file. Package-relative imports such as `from .model import Model` are therefore not yet a supported installed pattern. Do not work around this with `sys.path` mutation/dynamic imports. Small Activities may keep several clean classes in `main.py`; genuinely reusable cross-Activity primitives belong in reviewed `greia_platform` modules.
 
-Current allowed permission vocabulary is also defined by `runtime/child-runtime.toml` and includes narrow operations such as profile/customization/removable-media management.
+## 4. Capabilities, permissions and lifecycle
 
-Ordinary remotely deployed `DEVELOPER_UNSIGNED` Activities are intentionally refused if they request privileged permissions.
+Use only vocabulary declared by `runtime/child-runtime.toml`; do not invent strings. Require only what is essential and use optional capabilities for progressive enhancement.
 
-Do not design a normal Activity around privileged permission access unless the product requirement explicitly makes it a trusted system Activity.
+`controller` means controller input is available on the current device. **Do not require `controller` merely because Greia can map a controller into your normal interaction profile.** Require it only if the Activity genuinely cannot function without a controller.
 
----
+A manifest permission request is not authority. Ordinary Activities do not gain privileged filesystem/system/device access. In particular, controller support does not authorize raw `/dev/input` access.
 
-## 9. Python runtime rules
+Lifecycle helpers live in `greia_platform.activity_api`. `get_input_profile()` returns the platform-validated default interaction profile for the launch. It is descriptive context, not physical-device authority.
 
-Greia Phase 0 uses one curated shared Python runtime.
+Call READY only after the child has a usable surface and essential state/assets are ready. Long-running loops must honor Greia STOP requests; Greia retains forced-termination authority.
 
-Before importing a module, inspect the current `[python]` allow/forbid lists in:
+Unexpected failures should terminate into Supervisor recovery rather than exposing Linux/Python internals or spinning forever.
+
+## 5. Storage, profiles and events
+
+Use Greia Storage through `get_storage()`; never invent durable filesystem locations. Durable namespace is platform-owned and profile/activity scoped.
+
+Portable values should be JSON-compatible logical state, UTF-8 text and explicit media formats such as PNG where appropriate. Do not persist Pygame surfaces, pickle/native graphs, host absolute paths or open resource identifiers.
+
+Creation tools:
+
+- use atomic/debounced writes;
+- save on meaningful transitions;
+- keep current in-memory work where practical after save failure;
+- never silently evict older child creations to manufacture space;
+- use visual logical galleries, not filesystem browsing.
+
+Read the active profile via the SDK rather than walking profile directories.
+
+Activities report declared facts/events; Greia owns global reward/progression economics. Event protocol limits and score direction are source/manifest-owned.
+
+## 6. Shared assets, theme, UI and input
+
+Use semantic core icons through `get_icon_path()` and the canonical asset catalogue; do not hard-code `/opt/greia-os/assets/...` paths.
+
+Use `get_theme()` for the current resolved palette. Ordinary Activities must not request customization-management authority merely to obtain colors.
+
+### Renderer-neutral UI semantics
+
+ADR 0018 and `src/greia_platform/ui_core.py` define the common semantic layer:
 
 ```text
-runtime/child-runtime.toml
+Screen
+Overlay
+Control
+Collection
+PagedGrid
+InvalidationTracker
+BoundedCache
 ```
 
-The intended authoring model includes standard-library modules selected by Greia plus platform-curated packages such as Pygame/Pillow and `greia_platform`.
+A child-facing “folder” is a semantic `Collection`, never a Linux filesystem directory. Activities do not create a desktop/window-manager model.
 
-Activities must not depend directly on modules that provide arbitrary OS/process/network authority when the runtime forbids them. In particular, do not design around direct shell/process execution, private package installation, ctypes/native code loading, arbitrary sockets or host filesystem discovery.
+### Standard input semantics
 
-If an Activity needs a new platform function, add or extend a typed Greia platform/SDK service rather than smuggling Linux authority into the Activity.
+ADR 0020 and `docs/product/ACTIVITY_INPUT_STANDARDS.md` define the shared input model.
 
----
-
-## 10. Lifecycle API
-
-Import lifecycle helpers from:
-
-```python
-from greia_platform.activity_api import (
-    activity_stop_requested,
-    mark_activity_ready,
-)
-```
-
-### Ready
-
-Call:
-
-```python
-mark_activity_ready()
-```
-
-only after the Activity has created a usable child-facing surface and completed essential startup.
-
-Do not mark READY at module import merely to satisfy a watchdog.
-
-### Stop
-
-Long-running loops should check:
-
-```python
-if activity_stop_requested():
-    running = False
-```
-
-and leave cleanly when practical.
-
-Greia still owns forced termination. Activity cooperation improves graceful return but is not authoritative lifecycle control.
-
----
-
-## 11. Durable storage
-
-Use the runtime-neutral Greia storage client:
-
-```python
-from greia_platform.activity_api import get_storage
-
-storage = get_storage()
-```
-
-### JSON-compatible KV state
-
-```python
-level = storage.kv_get("current_level", 1)
-storage.kv_set("current_level", 2)
-storage.kv_delete("old_key")
-keys = storage.kv_list()
-```
-
-Values must be portable JSON. Do not use pickle/native Python object serialization as official durable state.
-
-### Private files
-
-```python
-storage.file_write_atomic("drawing.png", png_bytes)
-data = storage.file_read("drawing.png")
-files = storage.file_list()
-storage.file_delete("drawing.png")
-```
-
-Use logical relative names, not host absolute paths.
-
-### Checkpoints/info
-
-```python
-checkpoint_token = storage.checkpoint()
-info = storage.info()
-```
-
-Do not bypass Greia storage by inventing another persistent path. Greia needs to preserve quotas, migration and backup semantics.
-
----
-
-## 12. Events and progression
-
-Use:
-
-```python
-from greia_platform.activity_api import emit_activity_event
-```
-
-Example completion:
-
-```python
-emit_activity_event(
-    "maze.completed",
-    idempotency_key=f"maze:{maze_id}:complete",
-    payload={"maze_id": maze_id},
-)
-```
-
-Example score:
-
-```python
-emit_activity_event(
-    "maze.time",
-    idempotency_key=f"maze:{maze_id}:time:{attempt_id}",
-    score=elapsed_seconds,
-)
-```
-
-Rules:
-
-- event ID must be declared in the manifest;
-- use a stable idempotency key for one logical fact;
-- payload must remain portable/JSON-compatible;
-- Activity code reports facts/scores only;
-- Greia owns reward economics and global progression;
-- never write directly into platform history/progression databases.
-
----
-
-## 13. Profile API
-
-Read current profile presentation data through:
-
-```python
-from greia_platform.activity_api import get_active_profile
-
-profile = get_active_profile()
-```
-
-This exposes bounded presentation identity such as profile ID, display name and avatar ID.
-
-Do not search profile directories or infer sibling users from the filesystem.
-
-Profile-changing APIs require explicit platform permission and are normally reserved for trusted system Activities.
-
----
-
-## 14. Shared graphics and visual canon
-
-### 14.1 Use semantic Greia assets
-
-The current canonical shared icon library is:
+The default learned conventions are:
 
 ```text
-assets/catalog/core_icons_v1.toml
+navigation:
+  arrows / D-pad-or-stick     move focus
+  Space or Enter / south face activate
+
+pointer:
+  mouse/touch                 spatial input
+  controller left stick       Greia virtual pointer
+  controller south face       primary press/click
+
+directional:
+  arrows / D-pad-or-stick     movement
+  Space / south face          primary action
+
+game:
+  same simple baseline        plus semantic secondary controls when needed
+
+text:
+  real keyboard text semantics; do not steal Space/Enter/arrows for game mapping
 ```
 
-Resolve icons through the SDK:
+Use semantic/positional controller concepts such as `FACE_SOUTH`, D-pad, stick, shoulder and trigger. Do not build Activity behavior around Xbox/PlayStation/Nintendo branding or raw joystick/SDL button numbers.
 
-```python
-from greia_platform.activity_api import get_icon_path
+Keyboard, pointer, touch and controller should coexist naturally where the profile supports them. Do not add an “input mode” setting merely to choose between devices.
 
-path = get_icon_path("unicorn", 128)
-```
+Dead zones, common mapping, controller virtual-pointer response, reconnect behavior and reserved system input are platform concerns. Do not copy them into each Activity.
 
-Do not hard-code `/opt/greia-os/assets/...` paths.
+`src/greia_platform/input_core.py` owns current runtime-neutral actions/mappings. `src/greia_platform/pygame_input.py` is a current Pygame translation/helper layer; it does not grant an Activity raw controller-device ownership.
 
-The catalogue currently provides semantic IDs including examples such as:
+### Mandatory Greia Home / optional Greia Back
 
-```text
-book
-robot
-unicorn
-globe
-backpack
-palette
-abc_board
-music_star
-potions
-treasure_chest
-coins
-star_trophy
-map
-magnifier
-puzzle_pieces
-car
-garden
-owl
-dinosaur
-rainbow
-heart
-yellow_star
-check
-close_button
-```
+ADR 0019 and `docs/product/ACTIVITY_SYSTEM_NAVIGATION.md` define a higher-trust platform layer above Activity content.
 
-Always inspect the catalogue for the current exact list rather than inventing filenames.
+Every visible child Activity eventually runs beneath Greia-owned system chrome containing:
 
-### 14.2 Theme integration
+- **Home** — always present; ends the Activity and returns to the child's root Shell/home surface;
+- **Back** — shown only when Greia itself has a distinct previous Shell/Collection context; ends the Activity and returns there.
 
-Get the child's resolved Greia theme with:
+Activity authors **must not draw their own copy as a substitute**. The real controls are rendered and input-owned by Greia outside the Activity process/content surface. This applies equally to Python and Web Activities.
 
-```python
-from greia_platform.activity_api import get_theme
+Do not:
 
-theme = get_theme()
-```
+- reserve a manifest permission to hide Home;
+- make Home themeable by the Activity;
+- intercept or override the system action;
+- treat Greia Back as browser history;
+- assume a Pygame key event or HTML/DOM event is the security boundary;
+- consume the controller Guide/system control as an Activity action.
 
-Use theme colors where they fit the Activity rather than duplicating platform palette constants.
+The controller Guide/system control is platform-reserved where available. A fallback multi-button Home chord is intentionally not frozen until accidental-activation testing supports one.
 
-`runtime/theme-defaults.toml` defines the canonical platform palette and defaults.
+`src/greia_platform/system_chrome.py` defines the current protected corner geometry. The complete Home+Back footprint remains reserved even when Back is absent, so avoid placing essential controls/content inside that region. Activity background art may extend behind it.
 
-### 14.3 Current limitation: no general Greia widget toolkit yet
+First-party Activities receive no exception.
 
-At this review Greia has shared semantic assets and theme services, but there is **not yet a canonical general-purpose Activity widget/layout/animation library**.
+### Current Pygame helpers
 
-Do not pretend one exists.
+`src/greia_platform/pygame_ui.py` is the platform-wide import surface for new shared Pygame UI consumers. Existing first-party Activities may continue importing `src/greia_platform/activity_ui.py`, which currently owns the same helper implementation for compatibility.
 
-When multiple Activities begin duplicating the same performant child controls, layout primitives, transitions, audio cues or animation infrastructure, propose a reviewed shared library under the Greia platform/SDK rather than copy-pasting slightly different implementations forever.
+The helpers provide 1024×600-first child metrics, large toolbar geometry, bounded icon scaling/cache and small direct-draw symbols/buttons. They also contain the canonical Home/Back glyph primitives used by the future trusted platform chrome renderer; importing those glyph functions in an Activity does **not** grant ownership of the real system controls.
 
-When such a shared graphics/UI library is accepted, this skill must be updated immediately and Activity authors should prefer it over private clones.
+There must be one implementation, not divergent Shell/installer/Activity copies. The compatibility direction may be flipped after current focused tests execute, but do not combine that mechanical migration with framework growth.
 
----
+This is **not** a universal retained widget toolkit or game/input engine. Do not add a DOM/CSS clone, scene graph, giant widget hierarchy, animation framework or input scripting framework speculatively. Extract the smallest stable primitive after real duplication appears in multiple consumers.
 
-## 15. Asset authoring rules
+## 7. OOP and architecture quality
 
-Use shared semantic assets when the concept is platform-wide. Bundle Activity-specific artwork only when it genuinely belongs to that Activity.
+Follow `docs/engineering/ENGINEERING_FOUNDATIONS.md`.
 
-For Activity-owned artwork:
+- model stable domain concepts with cohesive classes/dataclasses;
+- use narrow interfaces/abstract bases at genuine variation points;
+- prefer polymorphic implementations to growing backend/type conditional trees;
+- prefer composition over inheritance unless substitutability is real;
+- make ownership/cleanup explicit;
+- keep dependencies flowing through Greia platform contracts rather than hidden globals;
+- do not build a second profile/storage/progression/package/backup/input platform inside an Activity;
+- public extension points and non-obvious invariants require useful docstrings/comments.
 
-- keep dimensions proportional to actual screen use;
-- avoid shipping giant source-resolution images when only small sprites are rendered;
-- prefer formats Pygame/Pillow can decode efficiently in the curated runtime;
-- preload resources during bounded startup rather than repeatedly opening files during frames;
-- cache scaled variants used repeatedly;
-- preserve aspect ratio unless distortion is intentional;
-- avoid thousands of tiny files when a simpler bounded representation works;
-- do not ship duplicate copies of existing Greia shared icons.
+Strong OOP does not mean maximizing class count. Abstractions must own a real invariant, remove repeated behavior or provide a genuine extension seam.
 
-Source/master artwork that is not needed at runtime should stay outside the Activity package when possible.
+## 8. Performance canon
 
----
+Reference assumptions include old Atom-class hardware, roughly 768 MiB RAM and 1024×600 until measured evidence supersedes them.
 
-## 16. Performance canon
+Avoid per-frame:
 
-Performance is part of correctness on Greia.
-
-The extreme reference class includes an old Atom-class netbook with roughly 768 MiB RAM and a 1024×600 screen until exact inventory supersedes the estimate.
-
-### Required engineering attitude
-
-- profile rather than assume;
-- keep startup bounded;
-- keep memory bounded;
-- keep frame work bounded;
-- avoid hidden background work;
-- prefer simple 2D techniques that remain pleasant on weak hardware;
-- implement richer effects as optional progressive enhancement when needed.
-
-### Pygame hot-loop rules
-
-**Do not perform these every frame unless proven trivial and necessary:**
-
-- disk reads;
-- image decode/load;
+- disk/file or controller-device discovery;
+- image decoding/scaling;
 - font construction;
-- large image scaling;
-- expensive text layout for unchanged strings;
-- constructing large lists/dicts of temporary objects;
-- scanning directories;
-- storage broker writes;
 - network operations;
-- uncontrolled particle/object spawning.
+- large temporary object graphs;
+- unbounded particles/history/cache/device growth.
 
-Prefer:
+Prefer load/convert once, bounded caches, visible-page rendering, elapsed-time animation and debounced persistence. Static UI should redraw on change where practical. Stable 30-FPS-class pacing is a reasonable default for ordinary 2D Activity animation, not a universal requirement.
 
-- load/decode once;
-- `convert()`/`convert_alpha()` surfaces after display initialization where appropriate;
-- cache fonts;
-- cache rendered static text;
-- cache scaled sprites/backgrounds per required size;
-- update only changed state;
-- use `pygame.time.Clock()` or equivalent bounded pacing;
-- cap particle/entity counts;
-- reuse objects/surfaces where simple and clear;
-- perform durable writes on meaningful state transitions, not every frame;
-- keep animations based on elapsed time rather than frame count.
+Every cache/history/queue/device-owner set needs an explicit bound or demonstrable natural bound.
 
-### Frame-rate guidance
+## 9. Input/audio/error rules
 
-A **stable 30 FPS** on low-end C0 hardware is a sensible default authoring target for most child Activities. Do not spend CPU/GPU chasing 60 FPS when the interaction does not benefit.
+Pointer and touch should share large target geometry where practical; never assume tap-to-click. Keyboard alternatives are welcome but must not hide the only path unless keyboard is inherently required (for example Writing).
 
-This is current authoring guidance, not yet a constitutional release threshold. Measure on target hardware and record real results.
+For simple game-like Activities, prefer the learned Greia baseline rather than inventing a new control scheme: arrows + Space and D-pad/left-stick + south face action.
 
-### Startup guidance
+For pointer Activities, preserve spatial semantics. A controller should move the Greia virtual pointer instead of forcing game-style directional semantics onto painting/dragging.
 
-Create the display, essential assets and first usable interaction promptly; then call `mark_activity_ready()`.
+For text Activities, preserve actual text-entry behavior. Do not reinterpret Space/Enter/arrows globally through the game profile.
 
-Large optional content may be prepared lazily after the child can interact, provided this does not create input stalls or nondeterministic loading failures.
+The Activity must not rely on receiving pointer/touch/controller events from Greia's protected system-navigation controls; a conformant backend consumes reserved system input before Activity delivery.
 
----
+Audio should enhance, not gate, interaction; preload/bound short sounds and degrade gracefully when optional audio is unavailable.
 
-## 17. Resolution/layout performance
+Children must never see tracebacks, terminals or Linux diagnostics. Development diagnosis belongs in logs/screenshot tooling.
 
-The extreme reference display is 1024×600.
+## 10. Validation and evidence
 
-Design at that size first.
-
-Recommended patterns:
-
-- derive layout from current surface dimensions;
-- establish a small number of resolution/layout breakpoints only if genuinely needed;
-- use integer/rational scaling where suitable for crisp pixel art;
-- cache resolution-dependent surfaces and rebuild only after a resolution change;
-- keep child targets comfortably large;
-- reserve safe margins rather than packing the whole screen.
-
-Do not build a 1920×1080 scene and downscale the entire framebuffer every frame on the netbook.
-
----
-
-## 18. Input design
-
-Only require capabilities the Activity actually needs.
-
-Prefer one interaction model that gracefully supports several devices when practical:
-
-- pointer/touch targets share geometry;
-- keyboard can provide an alternative, not a secret mandatory path;
-- no assumption that tap-to-click is enabled;
-- ignore accidental repeated input where appropriate;
-- make destructive/irreversible child actions difficult to trigger accidentally.
-
-Do not open `/dev/input` or depend on X11 input APIs. Greia supplies the Activity-visible input environment through the runtime/display/session architecture.
-
----
-
-## 19. Audio design
-
-Audio should enhance rather than block play.
-
-- preload short common sounds where feasible;
-- avoid decoding the same effect repeatedly;
-- bound simultaneous channels/effects;
-- keep functionality usable if audio is unavailable when `audio.basic` is optional;
-- do not use audio as the only communication channel for an essential state;
-- respect eventual platform/parent audio policy rather than implementing a private system-volume control.
-
----
-
-## 20. Error and recovery behavior
-
-An Activity should fail cleanly rather than reveal Linux internals.
-
-- catch expected content/data errors at an Activity boundary and present child-safe recovery when practical;
-- do not show Python tracebacks to children;
-- do not invoke a shell/terminal for debugging;
-- allow unexpected crashes to terminate so Greia Supervisor can record/recover them;
-- do not catch `BaseException` and spin forever trying to hide fatal failures;
-- honor stop requests in the main loop;
-- keep durable writes atomic through Greia storage.
-
-During development, inspect failures through remote logs rather than adding Linux-facing debug UI to the child experience.
-
----
-
-## 21. Architecture-neutral state and randomness
-
-Save only what is required to reconstruct logical Activity state.
-
-Good durable examples:
-
-```text
-level number
-puzzle seed
-child-created drawing bytes
-settings flags
-score/history facts local to the Activity
-```
-
-Avoid persisting:
-
-```text
-raw pygame Surface objects
-memory addresses
-absolute paths
-pickle blobs
-open file/socket descriptors
-machine IDs
-CPU/GPU-specific objects
-```
-
-If deterministic replay matters, save explicit seeds/versioned generation parameters rather than enormous derived state.
-
----
-
-## 22. Do not create a second platform inside the Activity
-
-An Activity must not independently implement replacements for:
-
-- child profiles;
-- global reward ledger;
-- global progression;
-- package installation/update;
-- backups;
-- OS settings;
-- hardware configuration;
-- generic networking authority;
-- filesystem browser;
-- shell/terminal;
-- app store/launcher.
-
-If a reusable concern belongs above one Activity, propose it at the Greia platform/SDK layer.
-
----
-
-## 23. Validation during development
-
-Validate one Activity explicitly:
+Validate one Activity:
 
 ```bash
 PYTHONPATH=src python3 tools/validate_activity.py path/to/activity
 ```
 
-Run the project validation/gate before declaring repository work complete:
+Integrated provider-free gate:
 
 ```bash
 make verify
 ```
 
-The project gate validates every bundled Activity under `activities/*` that contains `activity.toml`.
+Meaningful pure tests include state transitions, procedural logic, text buffers, save/index ordering, rollback, bounded history/cache behavior, layout/paging geometry, semantic input mappings and score/event logic.
 
-Remove `__pycache__`/compiled bytecode before packaging; the validator intentionally rejects prohibited artifacts.
+Do not replace visual/input judgment with brittle pixel-exact tests. Local/windowed execution does not prove installed sandbox/storage/display/session/system-chrome/controller authority or low-end hardware behavior. Use the applicable `docs/testing/*` protocol for VM/physical evidence.
 
-Do not weaken validation rules merely to make an Activity pass. Fix the Activity or make a deliberate reviewed platform change.
+Do not claim commands passed unless they actually executed against the stated checkout.
 
----
+## 11. Definition of done
 
-## 24. Local/windowed development
+Before claiming an Activity source-ready, verify at least:
 
-Where current launcher/Activity tooling permits windowed/source development, use it for rapid iteration, but do not treat it as proof of installed sandbox, storage-broker, lifecycle, display-backend or hardware behavior.
+- stable ID and manifest validation;
+- explicit appropriate `[input].profile` for new/materially changed Activities;
+- deliberate package/storage schema versions;
+- minimal required/optional capabilities and permissions;
+- no unnecessary `controller` requirement and no raw device dependency;
+- standard Greia input conventions used where the interaction profile fits;
+- no controller-brand/raw button-number Activity semantics;
+- curated imports only;
+- READY/STOP correctness;
+- Greia Storage only for durable state;
+- no silent creation eviction/deletion;
+- events only where meaningful and declared;
+- semantic assets/theme/shared UI used appropriately;
+- essential controls avoid the reserved system-chrome region;
+- no attempt to replace, suppress or intercept Greia Home/Back/system input;
+- 1024×600 usability and child-sized controls;
+- bounded hot-loop/history/cache behavior;
+- no per-frame durable writes/device enumeration;
+- child-safe failure behavior;
+- useful provider-free tests;
+- standalone validation actually executed;
+- `make verify` actually executed before integration-PASS claims;
+- required installed/physical input/display evidence completed and accurately scoped.
 
-An Activity that works on a modern Mac/PC may still be unacceptable on the reference netbook due to:
+Writing (`org.greia.writing`) and Painting (`org.greia.painting`) are current first-party creative references, but their exact acceptance state belongs in `docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md` and `HANDOVER.md`.
 
-- memory;
-- load/decode time;
-- Pygame/SDL behavior;
-- 1024×600 layout;
-- sandbox/import restrictions;
-- missing optional capabilities;
-- graphics/input backend behavior.
+## 12. Maintaining this skill
 
----
-
-## 25. Remote deployment/test loop
-
-Once an explicit Greia developer image is installed, use the repository helper rather than touching the netbook for routine testing.
-
-Read:
-
-```text
-docs/agents/GREIA_AGENT_OPERATIONS.md
-docs/testing/2026-08-09_DEVELOPER_REMOTE_CONTROL.md
-```
-
-Typical loop:
-
-```bash
-python3 tools/greia_remote.py wait --timeout 180
-python3 tools/greia_remote.py deploy path/to/activity
-python3 tools/greia_remote.py screenshot out/activity-before.png
-# navigate/operate using key, mousemove, click, type
-python3 tools/greia_remote.py screenshot out/activity-after.png
-python3 tools/greia_remote.py logs --service launcher --lines 500
-```
-
-For an ordinary Activity, never use `--replace-system` merely because deployment by normal trust fails. Fix the manifest/permissions/package instead.
-
----
-
-## 26. Performance acceptance loop
-
-For nontrivial Activities, especially animations/games:
-
-1. validate the package;
-2. test basic logic provider-free where practical;
-3. run/window the Activity in development;
-4. deploy to the Greia developer target;
-5. test at 1024×600;
-6. capture startup/first usable screen;
-7. exercise the busiest realistic scene;
-8. observe responsiveness/frame pacing;
-9. collect process/RSS/CPU evidence when tooling allows;
-10. check logs for stalls/errors;
-11. repeat after optimization;
-12. preserve before/after evidence rather than relying on subjective impressions.
-
-If a visual effect is expensive on the netbook, simplify it or make it progressive enhancement. Do not redefine the reference hardware away.
-
----
-
-## 27. Code-quality canon
-
-Prefer clean, readable object boundaries over procedural sprawl, especially for reusable game/activity systems.
-
-Useful separations often include:
-
-```text
-Activity/Application
-Scene/State
-Model/domain state
-Renderer/view
-Input mapping
-Asset cache
-Audio controller
-Greia service adapter
-```
-
-Do not force classes where a simple pure function is clearer. Use polymorphism when there are genuinely multiple interchangeable behaviors (scenes, activities, tools, challenge types, rendering strategies), not as decoration.
-
-Keep simulation/domain logic decoupled from rendering where that improves testing and reuse.
-
-Avoid global mutable state except narrow immutable/cached shared resources.
-
----
-
-## 28. Testing expectations for Activity code
-
-Add provider-free tests for logic that can fail without a display:
-
-- procedural generation;
-- scoring/local progression facts;
-- collision/math;
-- state transitions;
-- save-state encode/decode;
-- content rules;
-- bounded random generation;
-- layout calculations when practical.
-
-Do not build brittle screenshot-pixel tests for every visual detail. Use visual acceptance screenshots for layout/appearance and deterministic unit tests for logic/contracts.
-
-Never replace semantic LLM/game/content judgment with naive regex/word-count checks when the requirement is actually qualitative.
-
----
-
-## 29. Definition of done for a new Activity
-
-A new Activity is not done merely because `main.py` starts.
-
-Before claiming source-ready, confirm:
-
-- stable canonical Activity ID chosen;
-- manifest validates;
-- required vs optional capabilities are minimal and accurate;
-- no unnecessary privileged permissions;
-- curated-runtime imports only;
-- no private dependency files/environment;
-- uses Greia storage rather than arbitrary durable paths;
-- declares/emits normalized events where progression facts exist;
-- shared Greia assets/theme used where appropriate;
-- Activity-specific assets are optimized;
-- 1024×600 layout is usable;
-- child navigation does not unnecessarily require reading;
-- startup marks READY at the correct point;
-- main loop honors stop request;
-- per-frame work is bounded/cached;
-- persistent writes are not performed every frame;
-- errors do not expose Linux/Python internals to the child;
-- provider-free tests added for meaningful logic;
-- `validate_activity.py` passes;
-- repository `make verify` passes when the work is integrated;
-- real developer-hardware acceptance is performed when required;
-- no source test is misrepresented as physical-hardware proof.
-
----
-
-## 30. Definition of done for an Activity modification
-
-For an existing Activity:
-
-- preserve canonical ID unless there is an explicit migration decision;
-- decide whether package version changes;
-- decide whether save-schema version changes;
-- preserve existing save semantics or provide a reviewed migration path when platform support exists;
-- do not silently remove educational events/skills or change score direction;
-- compare resource/performance behavior for significant visual/content changes;
-- test the modified path plus startup/exit/storage basics;
-- redeploy remotely and verify with screenshots/logs where hardware evidence is relevant.
-
----
-
-## 31. Maintaining this skill
-
-This file is a living project artifact, not generic advice.
-
-Update it in the same tranche whenever any of these change:
-
-- Activity manifest schema;
-- runtime API version;
-- allowed capabilities or permissions;
-- Python import/runtime policy;
-- lifecycle API;
-- storage API;
-- event/progression API;
-- package validation rules/size limit;
-- Activity trust model;
-- shared asset catalogue or resolution API;
-- theme API/palette policy;
-- accepted shared graphics/UI/audio library;
-- developer deployment workflow;
-- performance/reference-hardware requirements;
-- packaging/install format;
-- Web-runtime Activity SDK when it becomes implemented.
-
-If a source change makes this skill wrong, the source change is not completely documented until this file is corrected.
+Update this file in the same tranche when Activity-facing manifest/runtime/lifecycle/storage/event/trust/theme/assets/UI/input/system-chrome/performance/deployment contracts materially change. If implementation makes this guide materially wrong, the tranche is not fully documented.

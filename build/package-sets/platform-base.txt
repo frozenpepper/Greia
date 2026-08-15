@@ -1,7 +1,9 @@
 ca-certificates
 dbus
 debian-security-support
+e2fsprogs
 kbd
+libpam-systemd
 systemd-sysv
 udev
 util-linux

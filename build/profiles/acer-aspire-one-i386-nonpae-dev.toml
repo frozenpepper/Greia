@@ -1,0 +1,56 @@
+schema_version = 1
+
+[profile]
+id = "acer-aspire-one-i386-nonpae-dev"
+certification_state = "experimental"
+description = "Development-only Acer Aspire One i386 non-PAE profile with opt-in remote control; never a release image."
+
+[platform]
+family = "legacy-x86"
+compatibility_class = "C0"
+
+[base]
+suite = "bookworm"
+architecture = "i386"
+mirror = "https://deb.debian.org/debian"
+security_mirror = "https://security.debian.org/debian-security"
+support_end_date = "2028-06-30"
+kernel_package = "linux-image-686"
+
+[image]
+layout = "bios-single-ext4"
+size_mib = 2048
+hostname = "greia-dev"
+
+[boot]
+installed_adapter = "grub-pc-bios"
+installer_adapter = "grub-pc-bios-live"
+cover_backend = "stock-plymouth-provisional"
+
+[display]
+adapter = "xorg"
+video_packages = ["xserver-xorg-video-intel", "xserver-xorg-video-vesa", "xserver-xorg-video-fbdev"]
+
+[runtimes]
+enabled = ["python"]
+
+[packages]
+target_sets = [
+  "platform-base",
+  "platform-shell-pygame",
+  "activity-sandbox",
+  "network-basic",
+  "removable-media-common",
+  "parent-recovery",
+  "developer-remote",
+]
+installer_sets = [
+  "installer-base",
+  "developer-remote",
+]
+extra_packages = ["xserver-xorg-legacy"]
+
+[resources]
+preferred_core_mib = 800
+required_core_mib = 1000
+architecture_review_mib = 1250

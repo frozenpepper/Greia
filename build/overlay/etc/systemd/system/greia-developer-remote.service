@@ -1,0 +1,15 @@
+[Unit]
+Description=Greia development-only remote preparation
+ConditionPathExists=/etc/greia-os/developer-remote
+After=local-fs.target greia-first-boot.service systemd-networkd.service systemd-resolved.service
+Requires=greia-first-boot.service systemd-networkd.service systemd-resolved.service
+Wants=avahi-daemon.service
+Before=ssh.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh /usr/local/lib/greia-os/prepare-developer-remote
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

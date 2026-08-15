@@ -1,0 +1,181 @@
+#!/bin/sh
+set -eu
+
+launcher=greia-launcher.service
+mode="${1:-active}"
+
+case "$mode" in
+  active)
+    acceptance=greia-kmsdrm-acceptance.service
+    result=/var/lib/greia-kmsdrm-acceptance/result.json
+    ;;
+  handoff)
+    acceptance=greia-kmsdrm-handoff-acceptance.service
+    result=/var/lib/greia-kmsdrm-handoff-acceptance/result.json
+    ;;
+  *)
+    echo "Usage: greia-run-kmsdrm-acceptance [active|handoff]" >&2
+    exit 64
+    ;;
+esac
+
+if [ "$(id -u)" -ne 0 ]; then
+  echo "This maintenance acceptance must be run as root." >&2
+  exit 77
+fi
+
+command -v systemctl >/dev/null 2>&1 || {
+  echo "systemctl is required." >&2
+  exit 69
+}
+
+legacy_x_alive() {
+  for comm in /proc/[0-9]*/comm; do
+    [ -r "$comm" ] || continue
+    IFS= read -r name < "$comm" || continue
+    case "$name" in xinit|Xorg|X) return 0 ;;
+    esac
+  done
+  return 1
+}
+
+if ! systemctl is-active --quiet "$launcher"; then
+  echo "Refusing KMSDRM takeover: the normal Greia launcher is not active." >&2
+  exit 69
+fi
+
+restored=0
+restore_launcher() {
+  status=$?
+  trap - EXIT HUP INT TERM
+  set +e
+  systemctl stop "$acceptance" >/dev/null 2>&1
+  systemctl reset-failed "$acceptance" >/dev/null 2>&1
+  systemctl start "$launcher"
+  launcher_status=$?
+  if [ "$launcher_status" -eq 0 ]; then
+    for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+      if systemctl is-active --quiet "$launcher"; then
+        restored=1
+        break
+      fi
+      sleep 0.1
+    done
+  fi
+  if [ "$restored" -ne 1 ]; then
+    echo "CRITICAL: Greia launcher did not restore after KMSDRM acceptance." >&2
+    exit 70
+  fi
+  exit "$status"
+}
+interrupt() {
+  exit 130
+}
+trap restore_launcher EXIT
+trap interrupt HUP INT TERM
+
+systemctl stop "$launcher"
+
+x_stopped=0
+for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40; do
+  if ! legacy_x_alive; then
+    x_stopped=1
+    break
+  fi
+  sleep 0.1
+done
+if [ "$x_stopped" -ne 1 ]; then
+  echo "Refusing KMSDRM takeover: legacy X processes are still alive." >&2
+  exit 1
+fi
+if systemctl is-active --quiet "$launcher"; then
+  echo "Refusing KMSDRM takeover: launcher remained active after stop." >&2
+  exit 1
+fi
+active_vt="$(cat /sys/class/tty/tty0/active 2>/dev/null || true)"
+if [ "$active_vt" != "tty1" ]; then
+  echo "Refusing KMSDRM takeover: expected active VT tty1, found ${active_vt:-unknown}." >&2
+  exit 1
+fi
+
+rm -f -- "$result"
+systemctl reset-failed "$acceptance" >/dev/null 2>&1 || true
+
+set +e
+systemctl start "$acceptance"
+acceptance_status=$?
+set -e
+if [ "$acceptance_status" -ne 0 ]; then
+  unit_result="$(systemctl show -p Result --value "$acceptance" 2>/dev/null || true)"
+  echo "KMSDRM ${mode} acceptance service failed (Result=${unit_result:-unknown})." >&2
+fi
+
+if [ ! -r "$result" ]; then
+  echo "KMSDRM ${mode} acceptance produced no readable result JSON." >&2
+  exit 1
+fi
+
+if ! python3 - "$result" "$mode" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+mode = sys.argv[2]
+try:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+except (OSError, json.JSONDecodeError) as exc:
+    raise SystemExit(f"invalid acceptance result: {exc}")
+if payload.get("schema_version") != 1:
+    raise SystemExit("unexpected acceptance result schema")
+if payload.get("requested_video_driver") != "kmsdrm":
+    raise SystemExit("acceptance result did not request kmsdrm")
+if payload.get("ok") is not True:
+    raise SystemExit(f"{mode} KMSDRM acceptance did not pass")
+
+if mode == "active":
+    if payload.get("actual_video_driver") != "kmsdrm":
+        raise SystemExit("active KMSDRM acceptance did not use kmsdrm")
+elif mode == "handoff":
+    recovery = payload.get("recovery")
+    if not isinstance(recovery, dict):
+        raise SystemExit("handoff acceptance has no recovery evidence")
+    if recovery.get("clean_child_reacquired") is not True:
+        raise SystemExit("shell did not reacquire after clean child")
+    if recovery.get("crash_child_reacquired") is not True:
+        raise SystemExit("shell did not reacquire after crashed child")
+    for key in ("shell_initial", "shell_after_clean", "shell_after_crash"):
+        phase = payload.get(key)
+        if not isinstance(phase, dict) or phase.get("actual_video_driver") != "kmsdrm":
+            raise SystemExit(f"handoff phase {key} did not use kmsdrm")
+    clean = payload.get("clean_child")
+    if not isinstance(clean, dict) or clean.get("return_code") != 0:
+        raise SystemExit("clean child handoff evidence is invalid")
+    clean_result = clean.get("result")
+    if (
+        not isinstance(clean_result, dict)
+        or clean_result.get("actual_video_driver") != "kmsdrm"
+    ):
+        raise SystemExit("clean child did not use kmsdrm")
+    crash = payload.get("crash_child")
+    if not isinstance(crash, dict) or crash.get("return_code") != 23:
+        raise SystemExit("crash child handoff evidence is invalid")
+    crash_result = crash.get("result")
+    if (
+        not isinstance(crash_result, dict)
+        or crash_result.get("actual_video_driver") != "kmsdrm"
+        or crash_result.get("intentional_abrupt_exit") is not True
+    ):
+        raise SystemExit("crash child did not prove abrupt kmsdrm ownership")
+else:
+    raise SystemExit("unsupported validation mode")
+PY
+then
+  exit 1
+fi
+
+if [ "$acceptance_status" -ne 0 ]; then
+  exit "$acceptance_status"
+fi
+
+printf 'PASS: %s KMSDRM evidence written to %s\n' "$mode" "$result"

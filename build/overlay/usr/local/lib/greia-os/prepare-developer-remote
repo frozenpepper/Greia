@@ -1,0 +1,64 @@
+#!/bin/sh
+set -eu
+
+marker=/etc/greia-os/developer-remote
+authorized_keys=/var/lib/greia-admin/.ssh/authorized_keys
+
+[ -f "$marker" ] || {
+  echo "Greia developer remote marker is absent." >&2
+  exit 1
+}
+[ -s "$authorized_keys" ] || {
+  echo "Greia developer remote authorized_keys is absent or empty." >&2
+  exit 1
+}
+
+# The launcher needs read/traverse access only to the dedicated developer
+# Activity source. Deployment metadata, staging and built-in backups remain
+# root-only.
+install -d -m 0755 -o root -g root /var/lib/greia-developer
+install -d -m 0755 -o root -g root /var/lib/greia-developer/activities
+install -d -m 0700 -o root -g root \
+  /var/lib/greia-developer/staging \
+  /var/lib/greia-developer/backups
+install -d -m 0700 -o greiaadmin -g greiaadmin /var/lib/greia-admin/greia-dev-upload
+
+# Developer-only deterministic wired networking. Normal/release Greia does not
+# receive this file from the immutable overlay because this helper only runs
+# when the explicit developer marker exists.
+install -d -m 0755 /etc/systemd/network
+cat > /etc/systemd/network/20-greia-developer-ethernet.network <<'NETWORK'
+[Match]
+Type=ether
+
+[Network]
+DHCP=yes
+IPv6AcceptRA=yes
+MulticastDNS=yes
+NETWORK
+chmod 0644 /etc/systemd/network/20-greia-developer-ethernet.network
+
+install -d -m 0755 /etc/systemd/resolved.conf.d
+cat > /etc/systemd/resolved.conf.d/20-greia-developer.conf <<'RESOLVED'
+[Resolve]
+MulticastDNS=yes
+RESOLVED
+chmod 0644 /etc/systemd/resolved.conf.d/20-greia-developer.conf
+ln -sfn ../run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+
+systemctl restart systemd-networkd.service systemd-resolved.service
+systemctl restart avahi-daemon.service 2>/dev/null || true
+
+# Production/recovery images deliberately omit SSH host keys. Developer images
+# generate them on the actual machine so cloned image files never share host
+# identity.
+/usr/bin/ssh-keygen -A
+
+# The client key is provisioned during developer-image creation. Keep the
+# account locked for password auth; sshd accepts the explicit public key only.
+chown -R greiaadmin:greiaadmin /var/lib/greia-admin/.ssh
+chmod 0700 /var/lib/greia-admin/.ssh
+chmod 0600 "$authorized_keys"
+
+printf '%s\n' ready > /var/lib/greia-developer/remote-ready
+chmod 0600 /var/lib/greia-developer/remote-ready
