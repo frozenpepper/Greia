@@ -112,6 +112,8 @@ class StandardInputPolicy:
 
     stick_dead_zone: float = 0.22
     navigation_threshold: float = 0.55
+    navigation_repeat_delay_seconds: float = 0.36
+    navigation_repeat_interval_seconds: float = 0.12
     pointer_speed_fraction_per_second: float = 1.10
     pointer_precision_floor: float = 0.35
 
@@ -120,6 +122,12 @@ class StandardInputPolicy:
             raise ValueError("stick_dead_zone must be in [0, 0.95)")
         if not self.stick_dead_zone < self.navigation_threshold <= 1.0:
             raise ValueError("navigation_threshold must exceed dead zone and be <= 1")
+        if not 0.15 <= self.navigation_repeat_delay_seconds <= 1.0:
+            raise ValueError("navigation repeat delay must be in [0.15, 1.0]")
+        if not 0.05 <= self.navigation_repeat_interval_seconds <= 0.5:
+            raise ValueError("navigation repeat interval must be in [0.05, 0.5]")
+        if self.navigation_repeat_interval_seconds > self.navigation_repeat_delay_seconds:
+            raise ValueError("navigation repeat interval must not exceed initial delay")
         if not 0.05 <= self.pointer_speed_fraction_per_second <= 4.0:
             raise ValueError("pointer speed fraction is outside the supported bound")
         if not 0.0 < self.pointer_precision_floor <= 1.0:
