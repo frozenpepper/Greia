@@ -138,7 +138,7 @@ class HardwareResolverTests(unittest.TestCase):
         self.assertEqual(plan.automatic_packages, ("firmware-realtek",))
         self.assertEqual(plan.advisory_packages, ("bluez",))
 
-    def test_tool_failure_is_diagnostic_and_prevents_complete_plan(self) -> None:
+    def test_firmware_tool_failure_is_diagnostic_and_prevents_auto_packages(self) -> None:
         resolver, _ = self.make_resolver(
             CommandResult(2, "", "failed"),
             CommandResult(0, "bluez\n", ""),
@@ -148,16 +148,30 @@ class HardwareResolverTests(unittest.TestCase):
         self.assertEqual(plan.automatic_packages, ())
         self.assertIn("firmware failed with exit 2", plan.diagnostics)
 
-    def test_incomplete_inventory_prevents_complete_plan_without_granting_more_authority(self) -> None:
+    def test_advisory_lookup_failure_does_not_invalidate_complete_firmware_plan(self) -> None:
+        resolver, _ = self.make_resolver(
+            CommandResult(0, "firmware-realtek\n", ""),
+            CommandResult(4, "", "failed"),
+        )
+        plan = resolver.resolve(inventory())
+        self.assertTrue(plan.complete)
+        self.assertEqual(plan.automatic_packages, ("firmware-realtek",))
+        self.assertEqual(plan.advisory_packages, ())
+        self.assertIn("hardware lookup failed with exit 4", plan.diagnostics)
+
+    def test_incomplete_inventory_suppresses_auto_packages_without_hiding_diagnostics(self) -> None:
         resolver, _ = self.make_resolver(
             CommandResult(0, "firmware-realtek\n", ""),
             CommandResult(0, "tlp\n", ""),
         )
         plan = resolver.resolve(inventory(truncated=True))
         self.assertFalse(plan.complete)
-        self.assertEqual(plan.automatic_packages, ("firmware-realtek",))
+        self.assertEqual(plan.automatic_packages, ())
         self.assertEqual(plan.advisory_packages, ("tlp",))
         self.assertIn("hardware inventory was truncated", plan.diagnostics)
+        self.assertTrue(
+            any(item.package == "firmware-realtek" for item in plan.recommendations)
+        )
 
     def test_x86_microcode_policy_is_architecture_level_and_bounded(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
