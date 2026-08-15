@@ -1,23 +1,34 @@
 from __future__ import annotations
 
 import platform
+import re
+import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
 from greia_platform.hardware_enablement import (
+    CommandRunner,
     CompositeHardwareSupportResolver,
     HardwareInventory,
     HardwareInventoryProvider,
     HardwareSupportPlan,
+    HardwareSupportRecommendation,
     HardwareSupportResolver,
     IsenkramHardwareSupportResolver,
     LinuxSysfsHardwareInventory,
+    SubprocessCommandRunner,
     SupportDisposition,
     SupportKind,
     X86MicrocodeResolver,
 )
 
-from .hardware_support import VerifiedHardwareSupportPool
+from .hardware_support import HardwareSupportPoolError, VerifiedHardwareSupportPool
+
+
+_DRIVER_RE = re.compile(r"^[A-Za-z0-9_.+-]{1,128}$")
+_MAX_BOUND_DRIVERS = 256
+_MAX_FIRMWARE_DECLARATIONS_PER_DRIVER = 256
+_MAX_FIRMWARE_DECLARATION_BYTES = 1024
 
 
 @dataclass(frozen=True, slots=True)
@@ -44,6 +55,87 @@ class InstallerHardwareEnablementPlan:
     @property
     def degraded(self) -> bool:
         return not self.complete
+
+
+@dataclass(frozen=True, slots=True)
+class BoundDriverFirmwareResolver:
+    """Resolve firmware declared by the drivers actually bound to this machine.
+
+    Kernel modules describe firmware through modinfo metadata. The resulting
+    firmware names/patterns are mapped only through the already-verified Debian
+    provider map frozen into the Greia installer media; driver/vendor names do
+    not become package-selection rules.
+    """
+
+    pool: VerifiedHardwareSupportPool
+    runner: CommandRunner = SubprocessCommandRunner()
+    modinfo_command: str = "/sbin/modinfo"
+    timeout_seconds: float = 5.0
+
+    def __post_init__(self) -> None:
+        if not 1.0 <= self.timeout_seconds <= 30.0:
+            raise ValueError("modinfo timeout must be in [1, 30] seconds")
+
+    def resolve(self, inventory: HardwareInventory) -> HardwareSupportPlan:
+        diagnostics: list[str] = []
+        recommendations: dict[str, HardwareSupportRecommendation] = {}
+        drivers = tuple(
+            sorted(
+                {
+                    device.driver
+                    for device in inventory.devices
+                    if device.driver and _DRIVER_RE.fullmatch(device.driver)
+                }
+            )
+        )
+        if len(drivers) > _MAX_BOUND_DRIVERS:
+            diagnostics.append("bound driver inventory exceeded firmware resolver bound")
+            drivers = drivers[:_MAX_BOUND_DRIVERS]
+
+        for driver in drivers:
+            try:
+                result = self.runner.run(
+                    (self.modinfo_command, "-F", "firmware", driver),
+                    timeout_seconds=self.timeout_seconds,
+                )
+            except (OSError, subprocess.TimeoutExpired) as exc:
+                diagnostics.append(
+                    f"firmware metadata unavailable for bound driver {driver}: {exc.__class__.__name__}"
+                )
+                continue
+            if result.returncode != 0:
+                diagnostics.append(
+                    f"firmware metadata lookup failed for bound driver {driver}: exit {result.returncode}"
+                )
+                continue
+            declarations = _firmware_declarations(result.stdout)
+            for declaration in declarations:
+                try:
+                    providers = self.pool.packages_for_firmware(declaration)
+                except HardwareSupportPoolError:
+                    diagnostics.append(
+                        f"bound driver {driver} exposed an invalid firmware declaration"
+                    )
+                    continue
+                if not providers:
+                    diagnostics.append(
+                        f"no frozen Debian firmware provider matched {driver}:{declaration}"
+                    )
+                    continue
+                for package in providers:
+                    recommendations[package] = HardwareSupportRecommendation(
+                        package,
+                        SupportKind.FIRMWARE,
+                        SupportDisposition.AUTO_ELIGIBLE,
+                        "bound-driver-modinfo",
+                    )
+
+        return HardwareSupportPlan(
+            inventory.token,
+            tuple(sorted(recommendations.values(), key=lambda item: item.package)),
+            complete=not inventory.truncated and inventory.scan_errors == 0,
+            diagnostics=tuple(diagnostics),
+        )
 
 
 class InstallerHardwareEnablementPlanner:
@@ -74,6 +166,17 @@ class InstallerHardwareEnablementPlanner:
             )
         else:
             for item in resolution.recommendations:
+                # isenkram's broad modalias lookup is advisory because it can
+                # suggest user-space utilities. A recommendation becomes safe
+                # automatic firmware only when the independently verified pool
+                # classifies that exact package as firmware.
+                if (
+                    item.disposition is SupportDisposition.ADVISORY
+                    and item.kind is SupportKind.HARDWARE_PACKAGE
+                    and item.package in self._pool.provided_firmware
+                ):
+                    required_firmware.append(item.package)
+                    continue
                 if item.disposition is not SupportDisposition.AUTO_ELIGIBLE:
                     continue
                 if item.kind is SupportKind.FIRMWARE:
@@ -116,7 +219,10 @@ class InstallerHardwareEnablementPlanner:
         cpuinfo: Path = Path("/proc/cpuinfo"),
     ) -> "InstallerHardwareEnablementPlanner":
         machine_id = (machine or platform.machine() or "unknown").lower()
-        resolvers: list[HardwareSupportResolver] = [IsenkramHardwareSupportResolver()]
+        resolvers: list[HardwareSupportResolver] = [
+            BoundDriverFirmwareResolver(pool),
+            IsenkramHardwareSupportResolver(),
+        ]
         if machine_id in {"i386", "i486", "i586", "i686", "x86_64", "amd64"}:
             resolvers.append(X86MicrocodeResolver(cpuinfo))
         return cls(
@@ -124,3 +230,22 @@ class InstallerHardwareEnablementPlanner:
             resolver=CompositeHardwareSupportResolver(tuple(resolvers)),
             pool=pool,
         )
+
+
+def _firmware_declarations(output: str) -> tuple[str, ...]:
+    declarations: list[str] = []
+    for raw_line in output.splitlines():
+        value = raw_line.strip()
+        if not value:
+            continue
+        try:
+            encoded = value.encode("utf-8")
+        except UnicodeError:
+            continue
+        if len(encoded) > _MAX_FIRMWARE_DECLARATION_BYTES:
+            continue
+        if value not in declarations:
+            declarations.append(value)
+        if len(declarations) >= _MAX_FIRMWARE_DECLARATIONS_PER_DRIVER:
+            break
+    return tuple(declarations)
