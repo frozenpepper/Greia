@@ -238,7 +238,7 @@ class IwdWifiBackend:
         error: Exception | None = None
         for attempt in range(2):
             try:
-                interface.Connect()
+                interface.Connect(timeout=self.connect_timeout_seconds + 5.0)
                 error = None
                 break
             except Exception as exc:
