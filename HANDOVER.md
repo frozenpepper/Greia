@@ -10,13 +10,27 @@
 
 ## Resume order
 
-Read `AGENTS.md`, `README.md`, `docs/DOCUMENTATION.md`, `docs/architecture/GREIA_ARCHITECTURE.md`, relevant accepted ADRs through ADR 0020, `docs/engineering/ENGINEERING_FOUNDATIONS.md`, applicable product requirements, the active remediation plan, this handover, agent operations, the Activity authoring skill, and the applicable testing procedure.
+Read, in order:
 
-GitHub is canonical. Resolve actual branch HEAD before editing/testing.
+1. `AGENTS.md`
+2. `README.md`
+3. `docs/DOCUMENTATION.md`
+4. `docs/architecture/GREIA_ARCHITECTURE.md`
+5. accepted ADRs through ADR 0020
+6. `docs/engineering/ENGINEERING_FOUNDATIONS.md`
+7. `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`
+8. this handover
+9. applicable testing/review docs
+10. `docs/agents/GREIA_AGENT_OPERATIONS.md`
+11. `skills/greia-activity-authoring/SKILL.md` for Activity work
 
-## Hosted execution
+GitHub is canonical. Resolve the actual branch HEAD before editing or testing.
 
-Do **not** use, query, trigger or rerun GitHub Actions without explicit owner authorization for that specific hosted use. Repository source/PR operations remain allowed. No Actions service was used in the 2026-08-15 system-navigation/input tranches.
+## Hosted execution boundary
+
+Do **not** use, query, trigger, rerun, inspect or download GitHub Actions runs/jobs/logs/artifacts without explicit owner authorization for that specific hosted use.
+
+Repository source/PR operations are allowed. No GitHub Actions service was used in the 2026-08-15 UI/input/remote-control tranches.
 
 ## Verification boundary
 
@@ -30,9 +44,49 @@ bundled Activity validation: PASS
 source/shell/footprint gate: PASS
 ```
 
-Everything newer is **UNPROVEN** unless explicitly recorded otherwise. No new PASS is claimed for current UI, creative, system-chrome, controller/input or Shell-input source.
+Everything newer is **UNPROVEN** unless explicitly recorded otherwise. Do not infer PASS from committed tests or source review.
 
-## Mandatory Activity system navigation — ADR 0019
+## R7 production state
+
+```text
+installed display path:          Xorg + xinit compatibility
+status:                          PROVISIONAL
+production compositor:           none selected
+serial direct DRM:               evidence candidate only
+trusted Activity Home/Back:      contracts/coordinator source implemented; concrete backend UNPROVEN
+controller semantic core:        source implemented; UNPROVEN
+Shell controller helper:         source implemented; live composition pending verification
+production Activity input broker: NOT IMPLEMENTED
+physical Acer R7 evidence:       NOT RUN for current branch
+Pi evidence:                     later R8/R14
+```
+
+Production migration still requires physical legacy Intel/Acer evidence. Ordinary Activities do not become DRM or raw-input owners.
+
+## ADR 0018 — lightweight UI foundation
+
+Renderer-neutral UI source:
+
+```text
+src/greia_platform/ui_core.py
+```
+
+Current stable vocabulary:
+
+```text
+Screen
+Overlay / Sheet
+Panel / Card / Collection
+Control
+```
+
+A child-visible folder-like thing is a semantic `Collection`, never a Linux path.
+
+The foundation includes bounded `PagedGrid`, `BoundedCache`, `InvalidationTracker` and `SurfaceNavigator`. New shared Pygame code imports `pygame_ui.py`; current implementation remains in `activity_ui.py` for compatibility.
+
+First-party Writing and Painting source exists and remains unexecuted/hardware-unproven.
+
+## ADR 0019 — mandatory Greia Home/Back
 
 Product requirement:
 
@@ -40,38 +94,18 @@ Product requirement:
 docs/product/ACTIVITY_SYSTEM_NAVIGATION.md
 ```
 
-Normative architecture:
+Every child-facing Activity must retain Greia-owned **Home** outside Activity rendering/input authority. Optional **Back** returns to a valid Greia launch origin; it is not browser history or Activity-internal navigation.
 
-```text
-docs/adr/0019-platform-owned-activity-system-navigation.md
-```
-
-Permanent behavior:
-
-- Home is mandatory whenever a child-facing Activity is visible.
-- Home is outside Activity rendering/input authority and uses one stable Greia location/graphic.
-- Home ends the Activity through Greia lifecycle authority: graceful STOP first, then bounded forced return if required.
-- Back is optional Greia navigation shown only for a meaningful previous Shell/Collection origin; it is not browser history or Activity-internal navigation.
-- first-party Activities receive no exemption.
-- pointer/touch/controller input reserved for system navigation must be consumed before Activity delivery.
-
-Renderer-neutral source:
+Source:
 
 ```text
 src/greia_platform/system_chrome.py
-```
-
-Backend-neutral lifecycle/navigation seam:
-
-```text
 src/greia_launcher/system_chrome.py
 ```
 
-It defines `SystemChromeBackend`, exact-generation leases/snapshots, `SystemChromeCoordinator`, `SystemChromeNavigationBridge`, `SystemNavigationRequest` and the narrow `ActivityStopController` protocol.
+The current Xorg path does **not yet** provide a physically accepted trusted overlay/protected-input implementation, so ADR 0019 remains an R7 blocker.
 
-No concrete production `SystemChromeBackend` exists yet. The current Xorg/xinit path therefore remains unproven for the actual unforgeable overlay/protected-input guarantee.
-
-## Phase-0 input/controller standard — ADR 0020
+## ADR 0020 — runtime-neutral input/controller support
 
 Product requirement:
 
@@ -79,15 +113,7 @@ Product requirement:
 docs/product/ACTIVITY_INPUT_STANDARDS.md
 ```
 
-Normative architecture:
-
-```text
-docs/adr/0020-runtime-neutral-input-profiles-and-controller-support.md
-```
-
-Controller/joystick support is a Phase-0 requirement, but Activities describe **interaction intent**, not controller brands or raw devices.
-
-Current profiles:
+Interaction profiles:
 
 ```text
 navigation
@@ -103,322 +129,306 @@ Learned baseline:
 ```text
 navigation: arrows / D-pad-or-left-stick; Space/Enter / south face activate
 simple game: arrows + Space; D-pad/left-stick + south face primary
-pointer: mouse/touch plus Greia controller virtual pointer; south face primary
-text: preserve real typing/editing semantics; do not steal Space/Enter/arrows
+pointer: mouse/touch plus Greia semantic controller virtual pointer
+text: preserve real keyboard typing/editing semantics
 ```
 
-Keyboard, pointer, touch and controller can coexist. `controller` is a device capability, not an instruction that every Activity must require a gamepad.
-
-The controller Guide/system control is platform-reserved where reliably available. No fallback multi-button Home chord is frozen yet; it requires accidental-activation evidence first.
-
-Ordinary Activities must not receive broad `/dev/input` access merely for controller support.
-
-## Input source implementation
-
-Renderer/runtime-neutral input semantics:
+Key source:
 
 ```text
 src/greia_platform/input_core.py
-```
-
-Current contracts include:
-
-```text
-InteractionProfile
-InputSource
-PhysicalControl
-ControllerAxis
-SemanticAction
-InputEdge
-SemanticInputEvent
-MovementVector
-StandardInputPolicy
-StandardInputMapper
-VirtualPointer
-normalize_stick()
-navigation_direction()
-```
-
-Important current centralized defaults are initial tuning values, not hardware facts:
-
-```text
-stick dead zone:              0.22
-navigation threshold:         0.55
-initial analog repeat delay:  0.36 s
-repeat interval:              0.12 s
-virtual-pointer speed:        screen-relative/bounded
-```
-
-Pygame adapter/trusted-controller helper:
-
-```text
 src/greia_platform/pygame_input.py
-```
-
-It translates SDL/Pygame controller constants immediately into brand-neutral Greia positional semantics and contains `PygameControllerSet`, a trusted bounded owner with current hard bounds:
-
-```text
-maximum simultaneously opened controllers: 4
-maximum controller candidates scanned:      16
-```
-
-It has explicit start/refresh/close lifecycle and is **not** an Activity permission mechanism.
-
-Typed device capability changes:
-
-```text
-src/greia_platform/hal.py
-src/greia_platform/hal_legacy_x.py
-src/greia_platform/device_capabilities.py
-runtime/child-runtime.toml
-```
-
-`InputState` now includes controller availability while preserving its previous positional constructor meaning. `LinuxControllerPresenceProbe` conservatively detects conventional controller nodes without opening them; that is capability observation, not Activity authority.
-
-## Activity input manifest / SDK
-
-Current manifest contract accepts:
-
-```toml
-[input]
-profile = "pointer"
-```
-
-`src/greia_platform/activities.py` validates the profile. Existing API 0.1 packages without `[input]` temporarily resolve to `hybrid` for compatibility.
-
-The Supervisor places the validated profile in platform launch context as:
-
-```text
-GREIA_ACTIVITY_INPUT_PROFILE
-```
-
-Python SDK helper:
-
-```python
-get_input_profile()
-```
-
-This is descriptive context, not physical-device authority.
-
-First-party reference declarations:
-
-```text
-org.greia.painting → pointer
-org.greia.writing  → text
-```
-
-Neither requires `controller`, intentionally.
-
-## Shell controller source boundary
-
-Source-ready trusted Shell helper:
-
-```text
 src/greia_launcher/shell_input.py
+src/greia_platform/hal.py
+src/greia_platform/device_capabilities.py
 ```
 
-`ShellInputController` owns:
+Important invariants:
 
-- bounded `PygameControllerSet` lifecycle;
-- controller-only semantic event translation so keyboard events cannot be double-handled;
-- D-pad/south/east navigation semantics;
-- left-stick navigation using centralized dead-zone and repeat policy;
-- Guide remaining reserved/non-navigation;
-- analog state reset at ownership boundaries.
+- controller is a device capability, not an Activity-specific controller stack;
+- consumer-brand button names terminate at backend adapters;
+- Guide/system input is platform-reserved where available;
+- ordinary Activities do not receive broad `/dev/input`;
+- controller-to-pointer behavior is semantic, not a global fake Linux mouse;
+- Writing declares `text`; Painting declares `pointer`;
+- mapped game controllers and generic/unmapped joysticks remain distinct compatibility cases; see `docs/reviews/2026-08-15_INPUT_CONTROLLER_FOUNDATION_ADVERSARIAL_REVIEW.md`.
 
-Regression source:
+`ShellInputController` is source-ready but is intentionally **not yet composed into `greia_launcher.main`**. After source PASS, integrate it narrowly without combining that change with the larger Shell UI migration.
+
+## Acer remote-agent development control
+
+### Goal
+
+After a **developer image** is installed on the Acer, an agent running on the operator computer should be able to control, observe, test and monitor the target without routine physical interaction.
+
+Source review:
 
 ```text
-tests/test_shell_input.py
+docs/reviews/2026-08-15_ACER_REMOTE_AGENT_CONTROL_REVIEW.md
 ```
 
-**Important:** `ShellInputController` is not yet composed into the large `src/greia_launcher/main.py` event loop. This is deliberate. The available repository write surface requires whole-file replacement for `main.py`; doing that before source verification would add disproportionate unexecuted risk. After focused PASS, make the smallest possible integration:
-
-1. lazily construct/start `ShellInputController` after Pygame initialization;
-2. feed only controller events to its semantic navigation path while preserving the existing keyboard handlers unchanged;
-3. poll bounded left-stick navigation once per Shell loop;
-4. close/suspend Shell controller ownership before launching an Activity and restart/reset it when Shell returns;
-5. always close it in launcher shutdown cleanup;
-6. do not combine this with the larger UI migration.
-
-This Shell integration is useful but does **not** solve Activity controller delivery. Production Activity controller input still belongs to the R7 trusted semantic input broker/session layer described below.
-
-## Critical production input boundary
-
-The target architecture is now:
+Physical acceptance protocol:
 
 ```text
-physical keyboard / mouse / touch / controller
-                  ↓
-        Greia trusted input/session owner
-                  ↓
-     reserve Home/Back/system input first
-                  ↓
-       interaction-profile normalization
-                  ↓
-        runtime-neutral Activity input
-             ┌─────────┴─────────┐
-          Python/Pygame       Web/HTML
+docs/testing/2026-08-15_ACER_REMOTE_AGENT_ACCEPTANCE.md
 ```
 
-The current Activity sandbox does not receive broad `/dev/input`, and that must not be changed merely to make controller events appear in Pygame.
+### Acer developer profiles
 
-R7 must provide the production semantic controller/input bridge/broker so Activities can receive appropriate controller semantics without bypassing Greia's reserved system input. The same bridge model must be reusable by Web rather than each page implementing browser-specific Gamepad mappings.
-
-## System/input regression source — committed but unexecuted
-
-Current relevant tests include:
+The physical Acer profile is still an evidence question, so the repository carries three normal candidates and three matching developer variants:
 
 ```text
-tests/test_input_core.py
-tests/test_pygame_input.py
-tests/test_activity_input_contract.py
-tests/test_hal_legacy_x.py
-tests/test_shell_input.py
-tests/test_system_chrome.py
-tests/test_activity_ui.py
+normal                              developer remote
+acer-aspire-one-i386                acer-aspire-one-i386-dev
+acer-aspire-one-i386-nonpae         acer-aspire-one-i386-nonpae-dev
+acer-aspire-one-amd64               acer-aspire-one-amd64-dev
 ```
 
-Coverage includes standard mappings, text-key preservation, Guide reservation, analog normalization, virtual-pointer bounds, controller capability separation, manifest compatibility/validation, bounded Pygame controller ownership, no keyboard double-handling in the Shell helper, analog repeat behavior, and trusted system-chrome lifecycle/action routing.
+Each `*-dev` profile preserves the matching Acer architecture, kernel, Xorg/video packages, C0 resource policy and image layout, adds `developer-remote`, uses hostname `greia-dev`, and remains `experimental`.
 
-Pure tests cannot prove physical controller latency/reconnect, Activity raw-device denial under the selected backend, or real protected system-input interception.
+Do **not** use `modern-amd64-dev` on the Acer merely for convenience.
 
-## Physical controller acceptance protocol
+Build shape:
 
-Use:
+```bash
+PROFILE="acer-aspire-one-i386-dev"   # replace only after physical profile selection
+sudo bash build/build-developer-image.sh out "$PROFILE"
+```
+
+The wrapper still defaults to `modern-amd64-dev` if the optional profile argument is omitted, preserving existing behavior.
+
+`tools/provision_developer_image.py` now validates the exact requested profile and independently requires the embedded `developer-remote` package set, so it cannot silently convert a normal profile into a remote developer image.
+
+### Installed remote-control surface
+
+Operator client:
 
 ```text
-docs/testing/2026-08-15_PHASE0_INPUT_CONTROLLER_ACCEPTANCE.md
+tools/greia_remote.py
 ```
 
-The protocol covers:
-
-- source gate;
-- Shell D-pad/left-stick/south-face navigation;
-- keyboard/mouse coexistence;
-- controller disconnect/reconnect;
-- directional/game baseline;
-- pointer-profile controller virtual pointer;
-- Writing/text-key preservation;
-- Guide/system-input interception;
-- negative raw `/dev/input` evidence;
-- Acer resource/latency measurements.
-
-Remote `xdotool` keyboard/mouse injection is not physical controller evidence.
-
-## UI/OOP foundation
-
-ADR 0018 remains the lightweight UI foundation. `src/greia_platform/ui_core.py` owns renderer-neutral Screen/Overlay/Control/Collection/PagedGrid/BoundedCache/Invalidation/SurfaceNavigator semantics.
-
-`docs/engineering/ENGINEERING_FOUNDATIONS.md` now explicitly requires controller/input ownership bounds, centralized mappings/dead zones, no per-Activity brand/raw-button stacks, no global controller-to-Linux-mouse architecture, and no broad Activity `/dev/input` authority.
-
-## Phase-0 creative Activities
-
-Writing (`org.greia.writing`) and Painting (`org.greia.painting`) remain source-implemented but execution/hardware-unproven. They now explicitly declare `text` and `pointer` input profiles respectively.
-
-Painting has **not yet** been wired to a production controller virtual-pointer transport; Writing intentionally does not pretend a controller is a general typing device.
-
-## R7 production state
+Stable operations include:
 
 ```text
-installed display path:       Xorg + xinit compatibility
-status:                       PROVISIONAL
-production compositor:        none selected
-serial direct DRM:            evidence candidate only
-trusted system chrome:        contract/coordinator/bridge source implemented; backend UNPROVEN
-controller semantic core:     source implemented; UNPROVEN
-trusted Pygame controller set: source implemented; Shell composition pending verification
-production Activity input broker: NOT IMPLEMENTED
-physical controller evidence: NOT RUN
+wait
+status
+screenshot
+snapshot
+logs
+key
+mousemove
+click
+type
+deploy
+remove
+restore
+restart
+restart-installer
+reboot
+poweroff
+shell
 ```
 
-R7 production acceptance now requires both ADR 0019 and ADR 0020:
+Transport/security:
 
-- Home above arbitrary Activity content;
-- protected pointer/touch/controller system input consumed before Activity input;
-- Activity cannot suppress/replace Home;
-- graceful and forced Home return;
-- controller device ownership without broad raw Activity input access;
-- Shell controller navigation;
-- simple-game keyboard/controller mapping;
-- pointer-profile virtual-pointer behavior;
-- disconnect/reconnect recovery;
-- Guide/system input intercepted before Activity delivery where supported;
-- reusable semantic transport for Web;
-- measured Acer resource/input-latency cost;
-- no desktop/window-manager creep.
+- key-only SSH as `greiaadmin`;
+- password and keyboard-interactive authentication disabled;
+- root SSH disabled;
+- private operator key remains off the target;
+- target generates its own SSH host keys;
+- dedicated Greia known-hosts file;
+- passwordless privileged automation restricted to `/usr/local/sbin/greia-devctl`;
+- no unrestricted root command API;
+- normal/release profiles remain remote-disabled.
 
-## Exact next source verification
+First physical acceptance should use wired Ethernet/DHCP + mDNS. Expected host:
 
-On an owner-controlled current Linux checkout:
+```text
+greia-dev.local
+```
+
+### Screenshot transfer
+
+The screenshot path is already end-to-end in source:
+
+```text
+operator agent
+→ SSH
+→ greia-devctl screenshot
+→ fixed capture helper as greiakid on declared display
+→ current Xorg compatibility capture via Pillow/ImageGrab
+→ PNG bytes on SSH stdout
+→ tools/greia_remote.py validates PNG
+→ local operator file
+```
+
+There is no separate manual screenshot-copy step.
+
+Example:
+
+```bash
+python3 tools/greia_remote.py \
+  --host greia-dev.local \
+  --key out/greia-os-${PROFILE}-ssh-key \
+  screenshot out/acer-screen.png
+```
+
+The capture backend is Xorg compatibility implementation. When R7 changes display ownership, the backend below this stable operator command must change.
+
+### Agent-friendly observation bundle
+
+New `snapshot` command:
+
+```bash
+python3 tools/greia_remote.py \
+  --host greia-dev.local \
+  --key out/greia-os-${PROFILE}-ssh-key \
+  snapshot out/acer-observation-001 \
+  --service all --lines 500
+```
+
+Local output:
+
+```text
+screen.png
+status.json
+logs.txt
+snapshot.json
+```
+
+This is the preferred observation primitive for an agent on the operator computer. It gives visual state + structured machine state + bounded logs in one local directory.
+
+### Remote GUI testing
+
+Current developer input uses fixed `/usr/bin/xdotool` beneath bounded Greia commands. The agent can:
+
+```bash
+python3 tools/greia_remote.py --host "$HOST" --key "$KEY" key Right
+python3 tools/greia_remote.py --host "$HOST" --key "$KEY" key Return
+python3 tools/greia_remote.py --host "$HOST" --key "$KEY" mousemove 500 300
+python3 tools/greia_remote.py --host "$HOST" --key "$KEY" click
+python3 tools/greia_remote.py --host "$HOST" --key "$KEY" type "Greia test"
+```
+
+Input is bounded and executed against the declared Greia display user rather than a root desktop/session.
+
+### Status/log/restart/reboot monitoring
+
+The agent can collect machine-readable status and bounded journal groups, restart the launcher, reboot/power off, wait for the machine to reappear, and collect a new snapshot.
+
+Typical unattended loop:
+
+```text
+wait
+→ snapshot
+→ inject input
+→ snapshot
+→ inspect local PNG/status/logs
+→ repeat
+→ restart/reboot if needed
+→ wait
+→ snapshot
+```
+
+### Activity iteration
+
+`deploy`, `remove`, and `restore` are source-implemented. Ordinary developer Activities remain `DEVELOPER_UNSIGNED`; remote file placement cannot upgrade trust. Built-in replacement requires explicit `--replace-system` and preserves the original for restore.
+
+### Important current limitation — Greia core hot-deployment
+
+The remote surface is sufficient to **control/test/monitor the installed system and iterate Activities**, but it does **not yet provide arbitrary hot replacement of `/opt/greia-os/src`** for Greia platform/core changes.
+
+That is intentional today because `greia-devctl` itself uses the immutable installed source. A bad arbitrary platform upload must not be able to destroy the recovery/control implementation needed to revert it.
+
+Core/platform Python changes therefore currently require a rebuilt/reinstalled developer image before executing them on the Acer.
+
+If a developer platform-overlay mechanism is added later, it must keep `greia-devctl` and rollback authority outside the replaceable tree and support atomic rollback after an immediately crashing upload. Do not solve this by granting unrestricted root SSH/sudo.
+
+### First-time remote installation limitation
+
+`tools/provision_developer_installer.py` exists, but the remote developer live-installer path is **not yet wired/physically accepted through the canonical installer image builder**.
+
+Therefore do not claim the very first USB installation is remotely operable. The current accepted remote-agent workflow starts after the developer target has been installed through an existing safe path and boots.
+
+### Physical proof status
+
+No Acer developer image built from this new source has yet been physically booted and exercised. Therefore these are **source capabilities, not a hardware PASS**.
+
+Physical certification requires `docs/testing/2026-08-15_ACER_REMOTE_AGENT_ACCEPTANCE.md`, including:
+
+- remote discovery/readiness;
+- key-only authentication;
+- screenshot matching the actual physical Acer display;
+- PNG transfer to the operator computer;
+- keyboard/pointer interaction with before/after screenshots;
+- status/log monitoring;
+- launcher restart;
+- reboot/reconnect;
+- Activity deploy/remove/restore;
+- developer security boundary checks.
+
+## New remote-control regression source
+
+Committed but unexecuted:
+
+```text
+tests/test_developer_remote.py
+tests/test_developer_remote_profiles.py
+tests/test_developer_remote_snapshot.py
+```
+
+Focused remote verification on an owner-controlled checkout:
 
 ```bash
 PYTHONPATH=src python3 -m unittest \
-  tests.test_input_core \
-  tests.test_pygame_input \
-  tests.test_activity_input_contract \
-  tests.test_hal_legacy_x \
-  tests.test_shell_input \
-  tests.test_system_chrome \
-  tests.test_ui_core \
-  tests.test_ui_core_lifecycle \
-  tests.test_activity_ui \
-  tests.test_core_creation_activities \
-  tests.test_activity_theme_access \
+  tests.test_developer_remote \
+  tests.test_developer_remote_profiles \
+  tests.test_developer_remote_snapshot \
   -v
+```
 
-PYTHONPATH=src python3 tools/validate_activity.py activities/writing
-PYTHONPATH=src python3 tools/validate_activity.py activities/painting
+Then run the broader current input/UI/creative focused suite and:
 
-PYTHONPATH=src python3 -m unittest discover \
-  -s tests \
-  -p 'test_developer_remote.py' \
-  -v
-
+```bash
 make verify
 ```
 
-Stop on the first real failure and preserve exact stdout/stderr. Do not weaken contracts to manufacture PASS.
+Stop on first real failure. Do not weaken security/profile/screenshot contracts to manufacture PASS.
 
-## Next implementation after source PASS
+## Exact next physical remote-agent step
 
-Keep the sequence narrow:
+After source PASS:
 
-1. minimally compose `ShellInputController` into `greia_launcher.main` with explicit suspend/resume/cleanup around Activity launch;
-2. verify Shell D-pad/left-stick/south-face navigation and reconnect on owner-controlled hardware;
-3. design/implement the R7 trusted physical-input broker/bridge beside the system-chrome/display-session authority so controller events can reach Activities semantically without `/dev/input` access;
-4. integrate `pointer` virtual-pointer semantics with Painting as the first spatial reference;
-5. add one simple directional/game reference proving arrows+Space and D-pad/stick+south-face parity;
-6. prove Guide/system input is withheld from Activity content;
-7. measure Acer resource/latency behavior using `docs/testing/2026-08-15_PHASE0_INPUT_CONTROLLER_ACCEPTANCE.md`;
-8. later expose the same semantic bridge to the Web runtime.
+1. identify which Acer hardware profile the physical unit actually supports;
+2. build the matching `*-dev` image;
+3. install it through the existing safe graphical path;
+4. connect wired Ethernet for first acceptance;
+5. run `docs/testing/2026-08-15_ACER_REMOTE_AGENT_ACCEPTANCE.md` from the operator computer;
+6. preserve screenshot/status/log evidence and first failure;
+7. only after that claim the Acer is remotely agent-operable.
 
-Do not combine step 1 with the pending broad Shell UI migration. Do not invent a controller Home chord before child accidental-activation evidence.
+## Other immediate R7 work after source verification
 
-## Existing R7 evidence
-
-Use the existing graphics/session protocol:
-
-```text
-docs/testing/2026-08-09_R7_EXTERNAL_LINUX_EVIDENCE_EXECUTION.md
-```
-
-Its existing scanout/seat evidence predates ADR 0019/0020 and therefore cannot by itself close trusted chrome or controller/input requirements.
+- minimally compose `ShellInputController` into the Shell;
+- implement the trusted production Activity input broker beside ADR 0019 system chrome;
+- prove controller/joystick behavior physically;
+- continue exact-image/direct-graphics/package/resource evidence;
+- do not select a production compositor without evidence;
+- do not big-bang rewrite Shell/installer UI.
 
 ## Invariants
 
 - no visible Linux UI in normal child operation;
 - Activity remains runtime-neutral;
-- every child-facing Activity retains Greia-owned Home outside Activity rendering/input authority;
-- controller/joystick support is a Phase-0 platform concern, not per-Activity hardware code;
-- Activities declare interaction intent, not controller brands/raw indices;
-- simple game defaults remain arrows+Space and D-pad/left-stick+south-face;
-- pointer Activities may use Greia virtual-pointer semantics; text Activities keep real typing semantics;
-- ordinary Activities do not gain raw `/dev/input` merely for controller support;
-- Guide/system input is platform-reserved where supported;
-- progression/rewards remain platform-owned;
-- child state remains portable/profile-scoped;
+- every child Activity retains Greia-owned Home outside Activity authority;
+- controller/joystick semantics are Greia-owned and runtime-neutral;
+- ordinary Activities do not receive broad raw input access;
+- developer remote control is explicit dev-image capability, never release default;
+- screenshot/input automation stays behind bounded developer commands;
+- private SSH keys never enter the image/repository/evidence bundle;
+- remote Activity placement does not upgrade trust;
 - Acer remains the extreme resource floor and ARM remains co-equal;
+- GitHub remains canonical source persistence;
 - no unauthorized hosted execution;
 - no desktop/window-manager architecture;
 - strong OOP/polymorphic seams with bounded resource ownership;
