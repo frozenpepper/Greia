@@ -24,8 +24,10 @@ def make_pool(root: Path, *, payload: bytes = b"firmware", extra_deb: bool = Fal
     deb.write_bytes(payload)
     if extra_deb:
         (deb_dir / "unmanifested_1_all.deb").write_bytes(b"extra")
-    (pool / "Packages").write_text("Package: firmware-realtek\n", encoding="utf-8")
-    (pool / "Packages.gz").write_bytes(b"gzip-placeholder")
+    packages_payload = b"Package: firmware-realtek\n"
+    packages_gzip_payload = b"gzip-placeholder"
+    (pool / "Packages").write_bytes(packages_payload)
+    (pool / "Packages.gz").write_bytes(packages_gzip_payload)
     manifest = {
         "schema_version": 1,
         "suite": "trixie",
@@ -45,6 +47,16 @@ def make_pool(root: Path, *, payload: bytes = b"firmware", extra_deb: bool = Fal
                 "candidate": True,
             }
         ],
+        "repository_indexes": {
+            "Packages": {
+                "size": len(packages_payload),
+                "sha256": digest(packages_payload),
+            },
+            "Packages.gz": {
+                "size": len(packages_gzip_payload),
+                "sha256": digest(packages_gzip_payload),
+            },
+        },
     }
     (pool / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
     return pool
@@ -73,10 +85,27 @@ class InstallerHardwareSupportPoolTests(unittest.TestCase):
             with self.assertRaises(HardwareSupportPoolError):
                 VerifiedHardwareSupportPool.load(pool_root)
 
+    def test_repository_index_digest_mismatch_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            pool_root = make_pool(Path(temporary))
+            (pool_root / "Packages").write_bytes(b"changed")
+            with self.assertRaisesRegex(HardwareSupportPoolError, "index changed"):
+                VerifiedHardwareSupportPool.load(pool_root)
+
     def test_unmanifested_deb_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             pool_root = make_pool(Path(temporary), extra_deb=True)
             with self.assertRaisesRegex(HardwareSupportPoolError, "unmanifested"):
+                VerifiedHardwareSupportPool.load(pool_root)
+
+    def test_unmanifested_symlinked_deb_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            pool_root = make_pool(root)
+            outside = root / "outside.deb"
+            outside.write_bytes(b"outside")
+            (pool_root / "pool/unmanifested_1_all.deb").symlink_to(outside)
+            with self.assertRaisesRegex(HardwareSupportPoolError, "symlinked"):
                 VerifiedHardwareSupportPool.load(pool_root)
 
     def test_wrong_suite_or_architecture_is_rejected(self) -> None:
