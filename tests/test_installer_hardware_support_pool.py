@@ -35,6 +35,8 @@ def make_pool(root: Path, *, payload: bytes = b"firmware", extra_deb: bool = Fal
         "package_count": 1,
         "total_bytes": len(payload),
         "provided_candidate_packages": ["firmware-realtek"],
+        "provided_firmware_packages": ["firmware-realtek"],
+        "provided_microcode_packages": [],
         "unavailable_candidate_packages": [],
         "packages": [
             {
@@ -72,11 +74,20 @@ class InstallerHardwareSupportPoolTests(unittest.TestCase):
                 expected_architecture="amd64",
             )
         self.assertEqual(pool.provided_candidates, frozenset({"firmware-realtek"}))
+        self.assertEqual(pool.provided_firmware, frozenset({"firmware-realtek"}))
+        self.assertEqual(pool.provided_microcode, frozenset())
         self.assertEqual(pool.require_candidates(["firmware-realtek"]), ("firmware-realtek",))
+        self.assertEqual(pool.require_firmware(["firmware-realtek"]), ("firmware-realtek",))
         self.assertEqual(
             pool.apt_source_line,
             "deb [trusted=yes] file:/run/greia-hardware-support ./",
         )
+
+    def test_firmware_cannot_be_reclassified_as_microcode(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            pool = VerifiedHardwareSupportPool.load(make_pool(Path(temporary)))
+            with self.assertRaisesRegex(HardwareSupportPoolError, "not verified microcode"):
+                pool.require_microcode(["firmware-realtek"])
 
     def test_digest_mismatch_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
