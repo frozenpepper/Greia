@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import fnmatch
 import hashlib
 import json
 import re
@@ -13,6 +14,8 @@ _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 _MAX_POOL_PACKAGES = 1024
 _MAX_POOL_BYTES = 2 * 1024 * 1024 * 1024
 _MAX_INDEX_BYTES = 32 * 1024 * 1024
+_MAX_FIRMWARE_PROVIDERS = 65536
+_MAX_FIRMWARE_PATH_BYTES = 1024
 
 
 class HardwareSupportPoolError(RuntimeError):
@@ -59,6 +62,7 @@ class VerifiedHardwareSupportPool:
     provided_firmware: frozenset[str]
     provided_microcode: frozenset[str]
     total_bytes: int
+    firmware_providers: tuple[tuple[str, tuple[str, ...]], ...] = ()
 
     @classmethod
     def load(
@@ -147,6 +151,7 @@ class VerifiedHardwareSupportPool:
         provided = cls._validated_package_set(raw, "provided_candidate_packages")
         firmware = cls._validated_package_set(raw, "provided_firmware_packages")
         microcode = cls._validated_package_set(raw, "provided_microcode_packages")
+        providers = cls._validated_firmware_providers(raw, firmware)
         if not firmware.isdisjoint(microcode):
             raise HardwareSupportPoolError("hardware-support firmware/microcode classes overlap")
         if firmware | microcode != provided:
@@ -157,7 +162,17 @@ class VerifiedHardwareSupportPool:
         if not isinstance(manifest_total, int) or manifest_total != total:
             raise HardwareSupportPoolError("hardware-support pool total size does not match manifest")
 
-        return cls(root, suite, architecture, tuple(packages), provided, firmware, microcode, total)
+        return cls(
+            root,
+            suite,
+            architecture,
+            tuple(packages),
+            provided,
+            firmware,
+            microcode,
+            total,
+            providers,
+        )
 
     @staticmethod
     def _validated_package_set(raw: dict[str, object], field: str) -> frozenset[str]:
@@ -169,6 +184,29 @@ class VerifiedHardwareSupportPool:
         if len(value) != len(set(value)):
             raise HardwareSupportPoolError(f"hardware-support {field} contains duplicates")
         return frozenset(value)
+
+    @staticmethod
+    def _validated_firmware_providers(
+        raw: dict[str, object], firmware_packages: frozenset[str]
+    ) -> tuple[tuple[str, tuple[str, ...]], ...]:
+        value = raw.get("firmware_providers")
+        if not isinstance(value, dict) or len(value) > _MAX_FIRMWARE_PROVIDERS:
+            raise HardwareSupportPoolError("hardware-support firmware provider map is invalid")
+        result: list[tuple[str, tuple[str, ...]]] = []
+        for firmware_name, package_names in value.items():
+            if not _safe_firmware_name(firmware_name):
+                raise HardwareSupportPoolError("hardware-support firmware provider path is invalid")
+            if not isinstance(package_names, list) or not package_names or not all(
+                isinstance(item, str) and _PACKAGE_RE.fullmatch(item) for item in package_names
+            ):
+                raise HardwareSupportPoolError("hardware-support firmware provider packages are invalid")
+            unique = tuple(dict.fromkeys(package_names))
+            if len(unique) != len(package_names):
+                raise HardwareSupportPoolError("hardware-support firmware provider packages contain duplicates")
+            if any(package not in firmware_packages for package in unique):
+                raise HardwareSupportPoolError("hardware-support firmware provider references non-firmware package")
+            result.append((firmware_name, unique))
+        return tuple(sorted(result))
 
     @staticmethod
     def _verify_repository_indexes(root: Path, raw: dict[str, object]) -> None:
@@ -216,11 +254,37 @@ class VerifiedHardwareSupportPool:
             raise HardwareSupportPoolError("requested hardware package is not verified microcode")
         return requested
 
+    def packages_for_firmware(self, firmware_pattern: str) -> tuple[str, ...]:
+        if not _safe_firmware_name(firmware_pattern):
+            raise HardwareSupportPoolError("requested firmware path/pattern is invalid")
+        wildcard = any(character in firmware_pattern for character in "*?[")
+        packages: set[str] = set()
+        for firmware_name, providers in self.firmware_providers:
+            if (
+                fnmatch.fnmatchcase(firmware_name, firmware_pattern)
+                if wildcard
+                else firmware_name == firmware_pattern
+            ):
+                packages.update(providers)
+        return tuple(sorted(packages))
+
     @property
     def apt_source_line(self) -> str:
         # This source is trusted only after load() has verified the frozen
         # package payloads and both repository indexes against the manifest.
         return "deb [trusted=yes] file:/run/greia-hardware-support ./"
+
+
+def _safe_firmware_name(value: object) -> bool:
+    if not isinstance(value, str) or not value or "\x00" in value:
+        return False
+    try:
+        encoded = value.encode("utf-8")
+    except UnicodeError:
+        return False
+    if len(encoded) > _MAX_FIRMWARE_PATH_BYTES or value.startswith("/"):
+        return False
+    return ".." not in Path(value).parts
 
 
 def _sha256(path: Path) -> str:
