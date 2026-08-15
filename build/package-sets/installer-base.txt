@@ -5,6 +5,7 @@ e2fsprogs
 isenkram-cli
 iwd
 kbd
+kmod
 live-boot
 parted
 python3
