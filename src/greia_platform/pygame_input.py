@@ -24,6 +24,47 @@ MAX_OPEN_CONTROLLERS = 4
 MAX_CONTROLLER_SCAN = 16
 
 
+def _controller_constant(name: str, fallback: int) -> int:
+    """Return a stable SDL2 controller enum across Pygame packaging variants.
+
+    Some distro Pygame builds expose pygame._sdl2.controller and its Controller
+    API without re-exporting SDL's CONTROLLER_BUTTON_* / CONTROLLER_AXIS_*
+    integer constants. SDL2 defines these enums with stable numeric values, so
+    Greia keeps those values as compatibility fallbacks instead of making the
+    whole input module unimportable on such builds.
+    """
+
+    if sdl_controller is None:
+        return fallback
+    return int(getattr(sdl_controller, name, fallback))
+
+
+CONTROLLER_BUTTON_A = _controller_constant("CONTROLLER_BUTTON_A", 0)
+CONTROLLER_BUTTON_B = _controller_constant("CONTROLLER_BUTTON_B", 1)
+CONTROLLER_BUTTON_X = _controller_constant("CONTROLLER_BUTTON_X", 2)
+CONTROLLER_BUTTON_Y = _controller_constant("CONTROLLER_BUTTON_Y", 3)
+CONTROLLER_BUTTON_BACK = _controller_constant("CONTROLLER_BUTTON_BACK", 4)
+CONTROLLER_BUTTON_GUIDE = _controller_constant("CONTROLLER_BUTTON_GUIDE", 5)
+CONTROLLER_BUTTON_START = _controller_constant("CONTROLLER_BUTTON_START", 6)
+CONTROLLER_BUTTON_LEFTSHOULDER = _controller_constant(
+    "CONTROLLER_BUTTON_LEFTSHOULDER", 9
+)
+CONTROLLER_BUTTON_RIGHTSHOULDER = _controller_constant(
+    "CONTROLLER_BUTTON_RIGHTSHOULDER", 10
+)
+CONTROLLER_BUTTON_DPAD_UP = _controller_constant("CONTROLLER_BUTTON_DPAD_UP", 11)
+CONTROLLER_BUTTON_DPAD_DOWN = _controller_constant("CONTROLLER_BUTTON_DPAD_DOWN", 12)
+CONTROLLER_BUTTON_DPAD_LEFT = _controller_constant("CONTROLLER_BUTTON_DPAD_LEFT", 13)
+CONTROLLER_BUTTON_DPAD_RIGHT = _controller_constant("CONTROLLER_BUTTON_DPAD_RIGHT", 14)
+
+CONTROLLER_AXIS_LEFTX = _controller_constant("CONTROLLER_AXIS_LEFTX", 0)
+CONTROLLER_AXIS_LEFTY = _controller_constant("CONTROLLER_AXIS_LEFTY", 1)
+CONTROLLER_AXIS_RIGHTX = _controller_constant("CONTROLLER_AXIS_RIGHTX", 2)
+CONTROLLER_AXIS_RIGHTY = _controller_constant("CONTROLLER_AXIS_RIGHTY", 3)
+CONTROLLER_AXIS_TRIGGERLEFT = _controller_constant("CONTROLLER_AXIS_TRIGGERLEFT", 4)
+CONTROLLER_AXIS_TRIGGERRIGHT = _controller_constant("CONTROLLER_AXIS_TRIGGERRIGHT", 5)
+
+
 @dataclass(frozen=True, slots=True)
 class ControllerAxisEvent:
     """One SDL-controller axis update translated into Greia vocabulary."""
@@ -47,21 +88,21 @@ def _controller_button_map() -> dict[int, PhysicalControl]:
     if sdl_controller is None:
         return {}
     return {
-        sdl_controller.CONTROLLER_BUTTON_DPAD_UP: PhysicalControl.CONTROLLER_DPAD_UP,
-        sdl_controller.CONTROLLER_BUTTON_DPAD_DOWN: PhysicalControl.CONTROLLER_DPAD_DOWN,
-        sdl_controller.CONTROLLER_BUTTON_DPAD_LEFT: PhysicalControl.CONTROLLER_DPAD_LEFT,
-        sdl_controller.CONTROLLER_BUTTON_DPAD_RIGHT: PhysicalControl.CONTROLLER_DPAD_RIGHT,
+        CONTROLLER_BUTTON_DPAD_UP: PhysicalControl.CONTROLLER_DPAD_UP,
+        CONTROLLER_BUTTON_DPAD_DOWN: PhysicalControl.CONTROLLER_DPAD_DOWN,
+        CONTROLLER_BUTTON_DPAD_LEFT: PhysicalControl.CONTROLLER_DPAD_LEFT,
+        CONTROLLER_BUTTON_DPAD_RIGHT: PhysicalControl.CONTROLLER_DPAD_RIGHT,
         # SDL/Pygame names these A/B/X/Y, but the physical position is the
         # portable Greia contract. Activities never receive the brand labels.
-        sdl_controller.CONTROLLER_BUTTON_A: PhysicalControl.CONTROLLER_FACE_SOUTH,
-        sdl_controller.CONTROLLER_BUTTON_B: PhysicalControl.CONTROLLER_FACE_EAST,
-        sdl_controller.CONTROLLER_BUTTON_X: PhysicalControl.CONTROLLER_FACE_WEST,
-        sdl_controller.CONTROLLER_BUTTON_Y: PhysicalControl.CONTROLLER_FACE_NORTH,
-        sdl_controller.CONTROLLER_BUTTON_LEFTSHOULDER: PhysicalControl.CONTROLLER_LEFT_SHOULDER,
-        sdl_controller.CONTROLLER_BUTTON_RIGHTSHOULDER: PhysicalControl.CONTROLLER_RIGHT_SHOULDER,
-        sdl_controller.CONTROLLER_BUTTON_START: PhysicalControl.CONTROLLER_START,
-        sdl_controller.CONTROLLER_BUTTON_BACK: PhysicalControl.CONTROLLER_BACK,
-        sdl_controller.CONTROLLER_BUTTON_GUIDE: PhysicalControl.CONTROLLER_GUIDE,
+        CONTROLLER_BUTTON_A: PhysicalControl.CONTROLLER_FACE_SOUTH,
+        CONTROLLER_BUTTON_B: PhysicalControl.CONTROLLER_FACE_EAST,
+        CONTROLLER_BUTTON_X: PhysicalControl.CONTROLLER_FACE_WEST,
+        CONTROLLER_BUTTON_Y: PhysicalControl.CONTROLLER_FACE_NORTH,
+        CONTROLLER_BUTTON_LEFTSHOULDER: PhysicalControl.CONTROLLER_LEFT_SHOULDER,
+        CONTROLLER_BUTTON_RIGHTSHOULDER: PhysicalControl.CONTROLLER_RIGHT_SHOULDER,
+        CONTROLLER_BUTTON_START: PhysicalControl.CONTROLLER_START,
+        CONTROLLER_BUTTON_BACK: PhysicalControl.CONTROLLER_BACK,
+        CONTROLLER_BUTTON_GUIDE: PhysicalControl.CONTROLLER_GUIDE,
     }
 
 
@@ -69,12 +110,12 @@ def _controller_axis_map() -> dict[int, ControllerAxis]:
     if sdl_controller is None:
         return {}
     return {
-        sdl_controller.CONTROLLER_AXIS_LEFTX: ControllerAxis.LEFT_X,
-        sdl_controller.CONTROLLER_AXIS_LEFTY: ControllerAxis.LEFT_Y,
-        sdl_controller.CONTROLLER_AXIS_RIGHTX: ControllerAxis.RIGHT_X,
-        sdl_controller.CONTROLLER_AXIS_RIGHTY: ControllerAxis.RIGHT_Y,
-        sdl_controller.CONTROLLER_AXIS_TRIGGERLEFT: ControllerAxis.LEFT_TRIGGER,
-        sdl_controller.CONTROLLER_AXIS_TRIGGERRIGHT: ControllerAxis.RIGHT_TRIGGER,
+        CONTROLLER_AXIS_LEFTX: ControllerAxis.LEFT_X,
+        CONTROLLER_AXIS_LEFTY: ControllerAxis.LEFT_Y,
+        CONTROLLER_AXIS_RIGHTX: ControllerAxis.RIGHT_X,
+        CONTROLLER_AXIS_RIGHTY: ControllerAxis.RIGHT_Y,
+        CONTROLLER_AXIS_TRIGGERLEFT: ControllerAxis.LEFT_TRIGGER,
+        CONTROLLER_AXIS_TRIGGERRIGHT: ControllerAxis.RIGHT_TRIGGER,
     }
 
 
@@ -164,8 +205,8 @@ class PygameControllerSet:
             try:
                 if not controller.attached():
                     continue
-                raw_x = controller.get_axis(sdl_controller.CONTROLLER_AXIS_LEFTX)
-                raw_y = controller.get_axis(sdl_controller.CONTROLLER_AXIS_LEFTY)
+                raw_x = controller.get_axis(CONTROLLER_AXIS_LEFTX)
+                raw_y = controller.get_axis(CONTROLLER_AXIS_LEFTY)
             except (pygame.error, RuntimeError):
                 continue
             return _signed_axis(raw_x), _signed_axis(raw_y)
