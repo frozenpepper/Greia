@@ -30,6 +30,70 @@ source/shell/footprint gate: PASS
 
 Everything newer remains **UNPROVEN unless explicitly recorded otherwise**.
 
+## ADR 0021 — automatic hardware enablement
+
+Greia's hardware-support strategy is now general rather than machine-list driven:
+
+```text
+hardware
+  ↓
+Linux kernel + udev driver binding
+  ↓
+Greia bounded hardware inventory
+  ↓
+Hardware Support Resolver
+  ├─ modalias → support package
+  ├─ missing firmware → firmware package
+  ├─ CPU microcode
+  └─ approved generic hardware metadata
+  ↓
+trusted signed local-media / approved Debian package source
+  ↓
+install only required support packages
+  ↓
+re-probe actual working hardware
+  ↓
+Greia semantic HAL capabilities
+```
+
+Normative owner:
+
+```text
+docs/adr/0021-automatic-hardware-enablement-and-capability-discovery.md
+```
+
+Permanent direction:
+
+- do **not** maintain a Greia PCI/USB-ID-to-driver table;
+- Linux kernel/udev/kmod owns normal driver matching and module loading;
+- Greia observes bound drivers and working capabilities;
+- installer media should carry a broad architecture/suite-appropriate compressed **Hardware Support Pool** with signed firmware/support packages and resolution metadata;
+- the final installed target should receive only the support packages it actually needs wherever practical;
+- resolver inputs should use Debian modalias/AppStream/isenkram/firmware-Contents metadata rather than Greia keyword/vendor lists;
+- missing support must be re-probed after package installation; package presence alone is not success;
+- automatic hardware installation may use only pre-approved signed package sources, never arbitrary vendor installers/downloads;
+- generic hardware compatibility and Greia hardware **certification** are distinct;
+- named machine profiles remain for architecture/boot families, extreme floors, board-specific exceptions and physical certification, not as the general driver database;
+- per-machine firmware `extra_packages` are now the exception path. A normal newly encountered Wi-Fi/GPU/audio firmware need should be solved by the generic Hardware Support Resolver/Pool first;
+- the resolver must also exist in lightweight idempotent form after installation so replaced/added hardware can be enabled automatically where trusted packages are available;
+- when offline after installation and newly added hardware requires firmware that is not cached locally, Greia may ask the parent to insert compatible Greia installation/recovery media containing the support pool.
+
+Kernel-family policy remains below the Greia platform contract. Modern amd64 currently uses Debian 13/Trixie, while true legacy i386 remains on Debian 12/Bookworm because Debian 13 no longer provides a regular i386 kernel/installer. Modern profiles may later use an explicitly approved newer/backports kernel when required for new hardware; firmware cannot compensate for an absent kernel driver.
+
+Implementation still required before broad hardware-support claims:
+
+1. bounded sysfs/udev hardware inventory;
+2. generic package/firmware resolver abstraction;
+3. build-time Hardware Support Pool and compact resolution metadata on installer media;
+4. offline installer resolution before Wi-Fi/input/audio/display capability decisions where relevant;
+5. trusted target package persistence;
+6. post-install first-boot/hardware-change resolver;
+7. post-enable semantic HAL re-probe/classification;
+8. diagnostics distinguishing absent vs present-but-unresolved vs working hardware;
+9. resource/installer-media measurements and multi-machine acceptance corpus.
+
+No source implementation of the ADR 0021 resolver/pool is claimed yet.
+
 ## Installation-time Wi-Fi — source implemented, physical acceptance pending
 
 Owners:
@@ -81,7 +145,7 @@ build/installer-overlay/etc/systemd/system/greia-installer.service
 
 Live package set includes `iwd`, `python3-dbus`, `rfkill`, `systemd-resolved`, and `wireless-regdb`. Live iwd owns temporary address/DNS configuration. `systemd-resolved` owns normal live `/etc/resolv.conf`; Greia deliberately does not overlay a competing file. Installed Greia retains iwd authentication plus systemd-networkd address configuration.
 
-The build-profile resolver applies selected-profile kernel/`extra_packages` to both installer and target. Any exact Acer/Pi Wi-Fi firmware discovered by physical acceptance belongs in the hardware profile rather than an installer-only hack.
+The Wi-Fi page currently assumes a usable kernel network device exists. Under ADR 0021 the generic Hardware Support Resolver must ultimately run before the Wi-Fi decision so a radio that requires packaged firmware can become usable from offline installer media without a model-specific patch.
 
 Regression source:
 
@@ -93,9 +157,7 @@ tests/test_installer_wifi_build_contract.py
 tests/test_installer_state.py
 ```
 
-These tests are **COMMITTED BUT UNEXECUTED**. Physical Acer Wi-Fi evidence is **NOT RUN**.
-
-Mandatory physical proof: boot exact Acer installer, prove radio/driver/firmware, scan, Personal connect, wrong-password recovery, install, first-boot reconnect, plus a separate complete offline Skip-for-now installation.
+These tests are **COMMITTED BUT UNEXECUTED**. Physical Wi-Fi evidence is **NOT RUN**.
 
 ## Other active R7 state
 
@@ -145,10 +207,12 @@ make verify
 
 Stop on first genuine failure and preserve exact stdout/stderr. Do not weaken tests to manufacture PASS.
 
-## Next evidence after source PASS
+## Next implementation/evidence after source PASS
 
-1. Run the Wi-Fi installer demo at 1024×600.
-2. Build exact Acer installer image and execute `docs/testing/2026-08-15_INSTALLER_WIFI_ACCEPTANCE.md`, beginning non-destructively.
-3. If radio firmware is missing, add it to the Acer profile and rebuild.
-4. Continue R7 trusted system-chrome/input/controller integration and physical evidence.
-5. Execute Acer remote-agent acceptance on the installed developer profile.
+1. Implement ADR 0021 bounded hardware inventory and resolver contracts before adding more model-specific firmware packages.
+2. Prototype/build the installer Hardware Support Pool and measure installer-media size/RAM impact; do not install the whole pool into the final target.
+3. Integrate offline support resolution ahead of installer Wi-Fi capability selection and prove on multiple unlike Wi-Fi adapters.
+4. Run the Wi-Fi installer demo at 1024×600 and physical installer acceptance.
+5. Continue R7 trusted system-chrome/input/controller integration and physical evidence.
+6. Execute Acer remote-agent acceptance on the installed developer profile.
+7. Expand hardware acceptance beyond the Acer into a deliberately diverse old/new PC corpus plus Pi references.
