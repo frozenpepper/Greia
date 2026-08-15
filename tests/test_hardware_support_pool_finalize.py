@@ -56,6 +56,7 @@ class HardwareSupportPoolFinalizeTests(unittest.TestCase):
             self.assertEqual(manifest["provided_candidate_packages"], ["firmware-realtek"])
             self.assertEqual(manifest["provided_firmware_packages"], ["firmware-realtek"])
             self.assertEqual(manifest["provided_microcode_packages"], [])
+            self.assertEqual(manifest["broad_firmware_packages"], ["firmware-realtek"])
             self.assertEqual(
                 manifest["firmware_providers"],
                 {
@@ -79,6 +80,44 @@ class HardwareSupportPoolFinalizeTests(unittest.TestCase):
             self.assertEqual(persisted["packages"], manifest["packages"])
             self.assertEqual(len(persisted["repository_indexes"]["Packages"]["sha256"]), 64)
             self.assertEqual(len(persisted["repository_indexes"]["Packages.gz"]["sha256"]), 64)
+
+    def test_broad_live_cover_chooses_smallest_provider_per_concrete_firmware(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            pool = root / "support"
+            deb_dir = pool / "pool"
+            deb_dir.mkdir(parents=True)
+            (deb_dir / "firmware-large_1_all.deb").write_bytes(b"x" * 100)
+            (deb_dir / "firmware-small_1_all.deb").write_bytes(b"x" * 10)
+            candidates = root / "candidates.json"
+            candidates.write_text(
+                json.dumps(
+                    {
+                        "firmware_packages": ["firmware-large", "firmware-small"],
+                        "microcode_packages": [],
+                        "candidate_packages": ["firmware-large", "firmware-small"],
+                        "firmware_providers": {
+                            "shared.bin": ["firmware-large", "firmware-small"],
+                            "only-large.bin": ["firmware-large"],
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            controls = {
+                "firmware-large_1_all.deb": "Package: firmware-large\nVersion: 1\nArchitecture: all\n",
+                "firmware-small_1_all.deb": "Package: firmware-small\nVersion: 1\nArchitecture: all\n",
+            }
+
+            def control(path: Path) -> str:
+                return controls[path.name]
+
+            with mock.patch("tools.finalize_hardware_support_pool._control", side_effect=control):
+                manifest = finalize_pool(pool, candidates, 1024 * 1024)
+        self.assertEqual(
+            manifest["broad_firmware_packages"],
+            ["firmware-large", "firmware-small"],
+        )
 
     def test_provider_entries_for_unavailable_firmware_are_dropped(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -110,6 +149,7 @@ class HardwareSupportPoolFinalizeTests(unittest.TestCase):
             manifest["firmware_providers"],
             {"rtl.bin": ["firmware-realtek"]},
         )
+        self.assertEqual(manifest["broad_firmware_packages"], ["firmware-realtek"])
 
     def test_pool_size_bound_is_fail_closed(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
