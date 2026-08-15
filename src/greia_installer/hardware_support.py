@@ -12,6 +12,7 @@ _PACKAGE_RE = re.compile(r"^[a-z0-9][a-z0-9+.-]*$")
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 _MAX_POOL_PACKAGES = 1024
 _MAX_POOL_BYTES = 2 * 1024 * 1024 * 1024
+_MAX_INDEX_BYTES = 32 * 1024 * 1024
 
 
 class HardwareSupportPoolError(RuntimeError):
@@ -44,6 +45,8 @@ class HardwareSupportPoolPackage:
             raise HardwareSupportPoolError("hardware-support package size is invalid")
         if not _SHA256_RE.fullmatch(self.sha256):
             raise HardwareSupportPoolError("hardware-support package digest is invalid")
+        if not isinstance(self.candidate, bool):
+            raise HardwareSupportPoolError("hardware-support candidate flag is invalid")
 
 
 @dataclass(frozen=True, slots=True)
@@ -65,6 +68,8 @@ class VerifiedHardwareSupportPool:
     ) -> "VerifiedHardwareSupportPool":
         root = root.resolve()
         manifest_path = root / "manifest.json"
+        if manifest_path.is_symlink() or not manifest_path.is_file():
+            raise HardwareSupportPoolError("hardware-support manifest is missing or unsafe")
         try:
             raw = json.loads(manifest_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as exc:
@@ -104,8 +109,6 @@ class VerifiedHardwareSupportPool:
                 )
             except (KeyError, TypeError) as exc:
                 raise HardwareSupportPoolError("hardware-support package entry is incomplete") from exc
-            if not isinstance(package.candidate, bool):
-                raise HardwareSupportPoolError("hardware-support candidate flag is invalid")
             identity = (package.package, package.architecture)
             if identity in seen_identity:
                 raise HardwareSupportPoolError("hardware-support package identity is duplicated")
@@ -135,10 +138,8 @@ class VerifiedHardwareSupportPool:
         actual_paths = {path.resolve() for path in pool_entries}
         if actual_paths != expected_paths:
             raise HardwareSupportPoolError("hardware-support pool contains unmanifested package payloads")
-        for index_name in ("Packages", "Packages.gz"):
-            index = root / index_name
-            if index.is_symlink() or not index.is_file():
-                raise HardwareSupportPoolError(f"hardware-support repository index is missing: {index_name}")
+
+        cls._verify_repository_indexes(root, raw)
 
         candidates = raw.get("provided_candidate_packages")
         if not isinstance(candidates, list) or not all(
@@ -155,6 +156,29 @@ class VerifiedHardwareSupportPool:
 
         return cls(root, suite, architecture, tuple(packages), provided, total)
 
+    @staticmethod
+    def _verify_repository_indexes(root: Path, raw: dict[str, object]) -> None:
+        indexes = raw.get("repository_indexes")
+        if not isinstance(indexes, dict) or set(indexes) != {"Packages", "Packages.gz"}:
+            raise HardwareSupportPoolError("hardware-support repository index manifest is invalid")
+        for index_name in ("Packages", "Packages.gz"):
+            metadata = indexes.get(index_name)
+            if not isinstance(metadata, dict):
+                raise HardwareSupportPoolError("hardware-support repository index metadata is invalid")
+            size = metadata.get("size")
+            digest = metadata.get("sha256")
+            if not isinstance(size, int) or not 0 <= size <= _MAX_INDEX_BYTES:
+                raise HardwareSupportPoolError("hardware-support repository index size is invalid")
+            if not isinstance(digest, str) or not _SHA256_RE.fullmatch(digest):
+                raise HardwareSupportPoolError("hardware-support repository index digest is invalid")
+            index = root / index_name
+            if index.is_symlink() or not index.is_file():
+                raise HardwareSupportPoolError(f"hardware-support repository index is missing: {index_name}")
+            if index.stat().st_size != size or _sha256(index) != digest:
+                raise HardwareSupportPoolError(
+                    f"hardware-support repository index changed: {index_name}"
+                )
+
     def require_candidates(self, packages: Iterable[str]) -> tuple[str, ...]:
         requested = tuple(dict.fromkeys(packages))
         for package in requested:
@@ -168,6 +192,8 @@ class VerifiedHardwareSupportPool:
 
     @property
     def apt_source_line(self) -> str:
+        # This source is trusted only after load() has verified the frozen
+        # package payloads and both repository indexes against the manifest.
         return "deb [trusted=yes] file:/run/greia-hardware-support ./"
 
 
