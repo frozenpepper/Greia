@@ -19,9 +19,15 @@ class HardwareSupportPoolFinalizeTests(unittest.TestCase):
                     "schema_version": 1,
                     "suite": "trixie",
                     "architecture": "amd64",
+                    "metadata_files": ["Fw-Contents-trixie"],
+                    "metadata_suite_fallback": False,
                     "firmware_packages": ["firmware-realtek"],
                     "microcode_packages": ["intel-microcode"],
                     "candidate_packages": ["firmware-realtek", "intel-microcode"],
+                    "firmware_providers": {
+                        "rtl.bin": ["firmware-realtek"],
+                        "rtl/optional.bin": ["firmware-realtek"],
+                    },
                 }
             ),
             encoding="utf-8",
@@ -50,6 +56,15 @@ class HardwareSupportPoolFinalizeTests(unittest.TestCase):
             self.assertEqual(manifest["provided_candidate_packages"], ["firmware-realtek"])
             self.assertEqual(manifest["provided_firmware_packages"], ["firmware-realtek"])
             self.assertEqual(manifest["provided_microcode_packages"], [])
+            self.assertEqual(
+                manifest["firmware_providers"],
+                {
+                    "rtl.bin": ["firmware-realtek"],
+                    "rtl/optional.bin": ["firmware-realtek"],
+                },
+            )
+            self.assertEqual(manifest["metadata_files"], ["Fw-Contents-trixie"])
+            self.assertFalse(manifest["metadata_suite_fallback"])
             self.assertEqual(manifest["unavailable_candidate_packages"], ["intel-microcode"])
             entry = manifest["packages"][0]
             self.assertTrue(entry["candidate"])
@@ -64,6 +79,37 @@ class HardwareSupportPoolFinalizeTests(unittest.TestCase):
             self.assertEqual(persisted["packages"], manifest["packages"])
             self.assertEqual(len(persisted["repository_indexes"]["Packages"]["sha256"]), 64)
             self.assertEqual(len(persisted["repository_indexes"]["Packages.gz"]["sha256"]), 64)
+
+    def test_provider_entries_for_unavailable_firmware_are_dropped(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            pool = root / "support"
+            deb_dir = pool / "pool"
+            deb_dir.mkdir(parents=True)
+            candidates = root / "candidates.json"
+            candidates.write_text(
+                json.dumps(
+                    {
+                        "firmware_packages": ["firmware-realtek", "firmware-missing"],
+                        "microcode_packages": [],
+                        "candidate_packages": ["firmware-realtek", "firmware-missing"],
+                        "firmware_providers": {
+                            "rtl.bin": ["firmware-realtek", "firmware-missing"],
+                            "missing.bin": ["firmware-missing"],
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            package = deb_dir / "firmware-realtek_1_all.deb"
+            package.write_bytes(b"package")
+            control = "Package: firmware-realtek\nVersion: 1\nArchitecture: all\n"
+            with mock.patch("tools.finalize_hardware_support_pool._control", return_value=control):
+                manifest = finalize_pool(pool, candidates, 1024 * 1024)
+        self.assertEqual(
+            manifest["firmware_providers"],
+            {"rtl.bin": ["firmware-realtek"]},
+        )
 
     def test_pool_size_bound_is_fail_closed(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -118,6 +164,7 @@ class HardwareSupportPoolFinalizeTests(unittest.TestCase):
                         "firmware_packages": ["firmware-realtek"],
                         "microcode_packages": [],
                         "candidate_packages": ["firmware-realtek", "tlp"],
+                        "firmware_providers": {"rtl.bin": ["firmware-realtek"]},
                     }
                 ),
                 encoding="utf-8",
