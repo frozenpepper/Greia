@@ -1,0 +1,3 @@
+# Greia hardware portability: keep broadly useful boot-critical modules in the
+# installed initramfs; machine-specific firmware remains selected separately.
+MODULES=most
