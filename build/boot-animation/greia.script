@@ -1,0 +1,73 @@
+# Greia OS Plymouth animation — 52 pre-sized 222x600 frames at 7 fps.
+# No runtime scaling: on the 1024x600 Acer reference the art fills the full vertical height.
+Window.SetBackgroundTopColor(0.0, 0.0627, 0.1725);
+Window.SetBackgroundBottomColor(0.0, 0.0627, 0.1725);
+
+frames[0] = Image("frames/frame_0000.png");
+frames[1] = Image("frames/frame_0001.png");
+frames[2] = Image("frames/frame_0002.png");
+frames[3] = Image("frames/frame_0003.png");
+frames[4] = Image("frames/frame_0004.png");
+frames[5] = Image("frames/frame_0005.png");
+frames[6] = Image("frames/frame_0006.png");
+frames[7] = Image("frames/frame_0007.png");
+frames[8] = Image("frames/frame_0008.png");
+frames[9] = Image("frames/frame_0009.png");
+frames[10] = Image("frames/frame_0010.png");
+frames[11] = Image("frames/frame_0011.png");
+frames[12] = Image("frames/frame_0012.png");
+frames[13] = Image("frames/frame_0013.png");
+frames[14] = Image("frames/frame_0014.png");
+frames[15] = Image("frames/frame_0015.png");
+frames[16] = Image("frames/frame_0016.png");
+frames[17] = Image("frames/frame_0017.png");
+frames[18] = Image("frames/frame_0018.png");
+frames[19] = Image("frames/frame_0019.png");
+frames[20] = Image("frames/frame_0020.png");
+frames[21] = Image("frames/frame_0021.png");
+frames[22] = Image("frames/frame_0022.png");
+frames[23] = Image("frames/frame_0023.png");
+frames[24] = Image("frames/frame_0024.png");
+frames[25] = Image("frames/frame_0025.png");
+frames[26] = Image("frames/frame_0026.png");
+frames[27] = Image("frames/frame_0027.png");
+frames[28] = Image("frames/frame_0028.png");
+frames[29] = Image("frames/frame_0029.png");
+frames[30] = Image("frames/frame_0030.png");
+frames[31] = Image("frames/frame_0031.png");
+frames[32] = Image("frames/frame_0032.png");
+frames[33] = Image("frames/frame_0033.png");
+frames[34] = Image("frames/frame_0034.png");
+frames[35] = Image("frames/frame_0035.png");
+frames[36] = Image("frames/frame_0036.png");
+frames[37] = Image("frames/frame_0037.png");
+frames[38] = Image("frames/frame_0038.png");
+frames[39] = Image("frames/frame_0039.png");
+frames[40] = Image("frames/frame_0040.png");
+frames[41] = Image("frames/frame_0041.png");
+frames[42] = Image("frames/frame_0042.png");
+frames[43] = Image("frames/frame_0043.png");
+frames[44] = Image("frames/frame_0044.png");
+frames[45] = Image("frames/frame_0045.png");
+frames[46] = Image("frames/frame_0046.png");
+frames[47] = Image("frames/frame_0047.png");
+frames[48] = Image("frames/frame_0048.png");
+frames[49] = Image("frames/frame_0049.png");
+frames[50] = Image("frames/frame_0050.png");
+frames[51] = Image("frames/frame_0051.png");
+
+frame_index = 0;
+animation_sprite = Sprite(frames[0]);
+animation_sprite.SetX(Window.GetX() + Window.GetWidth() / 2 - frames[0].GetWidth() / 2);
+animation_sprite.SetY(Window.GetY() + Window.GetHeight() / 2 - frames[0].GetHeight() / 2);
+animation_sprite.SetZ(100);
+
+fun refresh_callback() {
+  frame_index = frame_index + 1;
+  if (frame_index >= 52)
+    frame_index = 0;
+  animation_sprite.SetImage(frames[frame_index]);
+}
+
+Plymouth.SetRefreshRate(7);
+Plymouth.SetRefreshFunction(refresh_callback);
