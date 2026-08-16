@@ -44,6 +44,56 @@ cleanup() {
 }
 trap cleanup EXIT
 
+# Some non-free firmware packages (for example firmware-ipw2x00 and
+# firmware-ivtv) gate installation behind a debconf license-acceptance
+# question. In this noninteractive build the prompt cannot be shown, so
+# pre-seed acceptance for every license template shipped in the frozen pool.
+# This is the same decision the live media already makes by carrying the
+# broad firmware cover at all.
+mapfile -t license_acceptances < <(
+  python3 - "$POOL_ROOT" "$SUITE" "$ARCH" <<'PY'
+import io
+import json
+import re
+import subprocess
+import sys
+import tarfile
+from pathlib import Path
+
+pool_root = Path(sys.argv[1])
+manifest = json.loads((pool_root / "manifest.json").read_text(encoding="utf-8"))
+templates = []
+for package in manifest.get("packages", []):
+    deb = pool_root / "pool" / package["filename"].split("/", 1)[1]
+    if not deb.exists():
+        continue
+    control_tar = subprocess.run(
+        ["dpkg-deb", "--ctrl-tarfile", str(deb)],
+        check=True,
+        stdout=subprocess.PIPE,
+    ).stdout
+    with tarfile.open(fileobj=io.BytesIO(control_tar), mode="r") as handle:
+        member = None
+        for candidate in ("./templates", "templates"):
+            try:
+                member = handle.extractfile(candidate)
+            except KeyError:
+                continue
+            break
+        if member is None:
+            continue
+        text = member.read().decode("utf-8", errors="replace")
+    owner = package["package"]
+    for match in re.finditer(r"^Template:\s*(\S+)/license/accepted\s*$", text, re.M):
+        template = match.group(1)
+        if template == owner:
+            print(f"{owner} {owner}/license/accepted boolean true")
+PY
+)
+if (( ${#license_acceptances[@]} > 0 )); then
+  printf '%s\n' "${license_acceptances[@]}" | chroot "$LIVE_ROOT" debconf-set-selections
+fi
+
 APT_LOCAL_OPTIONS=(
   -o Dir::Etc::sourcelist=/run/greia-hardware-support.list
   -o Dir::Etc::sourceparts=-
