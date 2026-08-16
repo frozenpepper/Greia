@@ -1,6 +1,6 @@
 [Plymouth Theme]
 Name=Greia OS
-Description=Quiet symbol-only boot cover
+Description=Greia OS animated boot cover
 ModuleName=script
 
 [script]
