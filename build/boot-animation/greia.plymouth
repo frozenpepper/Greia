@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Greia OS
+Description=Greia animated night-forest boot cover
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/greia
+ScriptFile=/usr/share/plymouth/themes/greia/greia.script
