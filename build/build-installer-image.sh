@@ -157,7 +157,14 @@ for virtual in dev proc sys run; do mkdir -p "$LIVE_ROOT/$virtual"; done
 mount --rbind /dev "$LIVE_ROOT/dev"; MOUNTS+=("$LIVE_ROOT/dev"); mount --make-rslave "$LIVE_ROOT/dev"
 mount -t proc proc "$LIVE_ROOT/proc"; MOUNTS+=("$LIVE_ROOT/proc")
 mount --rbind /sys "$LIVE_ROOT/sys"; MOUNTS+=("$LIVE_ROOT/sys"); mount --make-rslave "$LIVE_ROOT/sys"
-mount --rbind /run "$LIVE_ROOT/run"; MOUNTS+=("$LIVE_ROOT/run"); mount --make-rslave "$LIVE_ROOT/run"
+# /run is always tmpfs at runtime; a fresh mount here avoids carrying the
+# build host's desktop-session mounts (for example gvfs/portal under
+# /run/user/1000) into the live root, which would keep the build busy and
+# block teardown. Seed a resolver stub so chroot apt/DNS still works while
+# the build shares the host network namespace.
+mount -t tmpfs tmpfs "$LIVE_ROOT/run"; MOUNTS+=("$LIVE_ROOT/run")
+install -d -m 0755 "$LIVE_ROOT/run/systemd/resolve"
+cat /etc/resolv.conf > "$LIVE_ROOT/run/systemd/resolve/stub-resolv.conf" 2>/dev/null || true
 
 # The live-media UUID must exist before the kernel package postinst runs
 # update-initramfs during the apt install below: the installer overlay's
