@@ -105,6 +105,20 @@ for package in "${available_packages[@]}"; do
       --download-only install -y --no-install-recommends \
       "$package"
 done
+# The broad-firmware cover is installed into the live installer root, not the
+# final target. Re-resolve the same candidates against the live root's own
+# dpkg state so dependencies that the target image already satisfies but the
+# live installer still needs (for example dosfstools) are present in the pool.
+for package in "${available_packages[@]}"; do
+  chroot "$LIVE_ROOT" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
+    apt-get \
+      -o Acquire::Retries=3 \
+      -o Acquire::http::Timeout=20 \
+      -o Acquire::https::Timeout=20 \
+      -o Dir::Cache::archives=/opt/greia-hardware-support/pool \
+      --download-only install -y --no-install-recommends \
+      "$package"
+done
 after_packages="$(chroot "$LIVE_ROOT" dpkg-query -W -f='${Package}\t${Version}\n' | LC_ALL=C sort | sha256sum | awk '{print $1}')"
 [[ "$before_packages" == "$after_packages" ]] || {
   echo "Hardware-support pool population changed the live installed package set; refusing build." >&2
