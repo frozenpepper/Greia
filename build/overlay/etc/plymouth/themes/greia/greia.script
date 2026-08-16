@@ -1,8 +1,11 @@
-# Greia OS Plymouth animation — 52 pre-sized 222x600 frames at 7 fps.
-# No runtime scaling: the art fills the 600px Acer reference height.
+# Greia Plymouth boot animation
+# Final runtime assets are committed directly: 52 RGB PNG frames, 222x600, 7 fps.
+# No runtime scaling, decoding pipeline, archive extraction, or frame reconstruction.
+
 Window.SetBackgroundTopColor(0.0, 0.0627, 0.1725);
 Window.SetBackgroundBottomColor(0.0, 0.0627, 0.1725);
 
+frames = [];
 frames[0] = Image("frames/frame_0000.png");
 frames[1] = Image("frames/frame_0001.png");
 frames[2] = Image("frames/frame_0002.png");
@@ -56,19 +59,27 @@ frames[49] = Image("frames/frame_0049.png");
 frames[50] = Image("frames/frame_0050.png");
 frames[51] = Image("frames/frame_0051.png");
 
+frame_count = 52;
 frame_index = 0;
-animation_sprite = Sprite(frames[0]);
-animation_sprite.SetX(Window.GetX() + Window.GetWidth() / 2 - frames[0].GetWidth() / 2);
-animation_sprite.SetY(Window.GetY() + Window.GetHeight() / 2 - frames[0].GetHeight() / 2);
-animation_sprite.SetZ(100);
-animation_sprite.SetOpacity(1);
+animation = Sprite(frames[0]);
+
+# The legacy Acer reference screen is 1024x600. Each frame is already exactly
+# 600 px tall, so the boot path performs no scaling work. On larger screens the
+# artwork remains centered at its native 222x600 size.
+animation.SetX(Window.GetX() + (Window.GetWidth() - frames[0].GetWidth()) / 2);
+animation.SetY(Window.GetY() + (Window.GetHeight() - frames[0].GetHeight()) / 2);
+animation.SetZ(100);
+animation.SetOpacity(1);
 
 fun refresh_callback() {
-  frame_index = frame_index + 1;
-  if (frame_index >= 52)
-    frame_index = 0;
-  animation_sprite.SetImage(frames[frame_index]);
+    frame_index = frame_index + 1;
+    if (frame_index >= frame_count)
+        frame_index = 0;
+    animation.SetImage(frames[frame_index]);
 }
 
+# Plymouth exposes an explicit refresh rate; drive animation from refresh, not
+# boot-progress callbacks. This gives regular 7 fps even when boot progress is
+# stalled or jumps.
 Plymouth.SetRefreshRate(7);
 Plymouth.SetRefreshFunction(refresh_callback);

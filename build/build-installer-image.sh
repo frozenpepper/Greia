@@ -227,8 +227,18 @@ printf '%s\n' /opt/greia-os/src > "$LIVE_ROOT/usr/lib/python3/dist-packages/pip_
 chown -R root:root "$LIVE_ROOT/opt/greia-os"
 chmod -R a-w "$LIVE_ROOT/opt/greia-os"
 
+GREIA_PLYMOUTH_THEME="$PROJECT_ROOT/build/overlay/etc/plymouth/themes/greia"
+
+test -f "$GREIA_PLYMOUTH_THEME/greia.plymouth"
+test -f "$GREIA_PLYMOUTH_THEME/greia.script"
+test -f "$GREIA_PLYMOUTH_THEME/frames/frame_0000.png"
+test -f "$GREIA_PLYMOUTH_THEME/frames/frame_0051.png"
+
 install -d -m 0755 "$LIVE_ROOT/usr/share/plymouth/themes/greia"
-cp -a "$LIVE_ROOT/etc/plymouth/themes/greia/." "$LIVE_ROOT/usr/share/plymouth/themes/greia/"
+rsync -a --delete \
+  "$GREIA_PLYMOUTH_THEME/" \
+  "$LIVE_ROOT/usr/share/plymouth/themes/greia/"
+
 chroot "$LIVE_ROOT" plymouth-set-default-theme greia
 systemctl --root="$LIVE_ROOT" enable greia-installer.service
 systemctl --root="$LIVE_ROOT" mask getty@.service autovt@.service console-getty.service debug-shell.service emergency.service rescue.service console-shell.service kbrequest.target getty@tty1.service getty@tty2.service getty@tty3.service getty@tty4.service getty@tty5.service getty@tty6.service plymouth-quit.service plymouth-quit-wait.service

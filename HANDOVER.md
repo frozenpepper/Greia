@@ -1,11 +1,11 @@
 # Greia — Standalone Engineering Handover
 
-**Date:** 2026-08-16  
+**Date:** 2026-08-17  
 **Version family:** `0.13.x` development  
 **Repository:** `frozenpepper/Greia` (private)  
 **Canonical/default/development branch:** `main`  
 **Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**  
-**Current cross-cutting tranche:** **ADR 0021 automatic hardware enablement — Ubuntu aggregate source gate PASS at `f305aed…` + Activity-bytecode validation fix; installer build/SD preparation in progress**
+**Current cross-cutting tranche:** **Boot animation: direct 52-frame Plymouth theme integration & cleanup on canonical `main`**
 
 ## Branch policy
 
@@ -114,6 +114,16 @@ the bytecode-validation fix on the owner-controlled Ubuntu host. Installer
 build and SD preparation follow the current rerun runbook; nothing about a
 canonical installer build, VM installation, or diverse physical-machine
 acceptance is implied by this source PASS.**
+
+### 2026-08-17 — Boot animation: direct 52-frame Plymouth theme integration & cleanup
+
+- Direct 52-frame theme source committed to the single canonical location: `build/overlay/etc/plymouth/themes/greia/`.
+- 52 RGB PNG frames, each 222x600, 8-bit RGB (color type 2), 7 fps refresh rate driven by `Plymouth.SetRefreshRate(7)`.
+- One canonical asset copy in repository; duplicate copy removed from `build/installer-overlay/etc/plymouth/themes/greia/`.
+- `build/build-installer-image.sh` updated to stage canonical theme directly from `$PROJECT_ROOT/build/overlay/etc/plymouth/themes/greia`.
+- Failed experimental chunk/b85/generator machinery and reconstruction hooks removed cleanly from the current tree (`runtime/boot-animation`, `build/boot-animation`, `00-greia-boot-animation` hooks).
+- Added `tests/test_boot_animation_contract.py` validating 52 frames, IHDR dimensions (222x600), bit depth/color type, 7 fps refresh rate, and builder wiring.
+- Physical Acer playback evidence remains pending until actually booted on target hardware.
 
 Everything newer than the last genuinely passing evidence remains **UNPROVEN unless explicitly recorded otherwise**. In particular, the composed hardware-enablement code has not yet passed a canonical installer build, VM installation, or diverse physical-machine acceptance.
 

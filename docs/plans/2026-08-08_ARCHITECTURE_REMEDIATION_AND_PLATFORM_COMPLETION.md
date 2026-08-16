@@ -745,6 +745,15 @@ Do not rewrite old entries; append corrections.
 - Next exact step: `sudo bash build/build-legacy-x86-sd-installer.sh out`, verify artifacts/SHA, then SD identification/write/read-back per the rerun runbook.
 - Commit(s): this progress entry ships with the test fix, its review, and the HANDOVER update in the current `main` commit.
 
+## 2026-08-17 — Boot animation: direct 52-frame Plymouth theme integration & cleanup
+
+- Implemented: replaced the experimental chunk/generator machinery with direct runtime PNG assets. The repository now carries one canonical Plymouth theme under `build/overlay/etc/plymouth/themes/greia/` containing 52 lossless 222x600 RGB PNG frames (`frame_0000.png` through `frame_0051.png`), `greia.plymouth`, and `greia.script` configured for 7 fps refresh playback (`Plymouth.SetRefreshRate(7)`). Deleted the experimental `runtime/boot-animation`, `build/boot-animation`, and `00-greia-boot-animation` initramfs hooks from the tree. Removed duplicate theme copy from `build/installer-overlay/etc/plymouth/themes/greia/` and wired `build/build-installer-image.sh` to stage the canonical theme directly from `$PROJECT_ROOT/build/overlay/etc/plymouth/themes/greia`.
+- Tests/evidence: `tests/test_boot_animation_contract.py` added and passing (5/5 PASS), verifying canonical directory layout, 52 frames, 222x600 dimensions, 8-bit RGB color depth, 7 fps script contract, generator removal, and installer builder wiring.
+- Decisions: boot animation uses direct canonical PNG runtime assets without runtime generator, base85 encoding, or frame reconstruction. One canonical copy in `build/overlay/etc/plymouth/themes/greia/` serves both installed target and live installer.
+- Remaining blockers: physical Acer boot and visual verification of Plymouth animation playback during actual startup.
+- Next exact step: continue hardware-enablement SD installer build and physical verification per rerun runbook.
+- Commit(s): boot animation integration commit on `main`.
+
 ---
 
 # 9. Final completion criteria

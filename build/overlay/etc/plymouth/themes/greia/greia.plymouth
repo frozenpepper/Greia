@@ -1,6 +1,6 @@
 [Plymouth Theme]
-Name=Greia OS
-Description=Greia OS animated boot cover
+Name=Greia
+Description=Greia animated boot splash
 ModuleName=script
 
 [script]
