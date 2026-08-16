@@ -1,0 +1,34 @@
+#!/bin/sh
+set -eu
+
+PREREQ=""
+prereqs() {
+  echo "$PREREQ"
+}
+
+case "${1:-}" in
+  prereqs)
+    prereqs
+    exit 0
+    ;;
+esac
+
+# The overlay exists before package configuration finishes. Early kernel
+# postinst runs may not yet have Python or the canonical runtime payload, so
+# deliberately no-op until the builder's final update-initramfs pass.
+[ -x /usr/bin/python3 ] || exit 0
+[ -d /usr/share/plymouth/themes/greia ] || exit 0
+[ -r /opt/greia-os/runtime/boot-animation/generate.py ] || exit 0
+[ -d /opt/greia-os/runtime/boot-animation/data ] || exit 0
+
+/usr/bin/python3 /opt/greia-os/runtime/boot-animation/generate.py \
+  --data-dir /opt/greia-os/runtime/boot-animation/data \
+  --output-dir /usr/share/plymouth/themes/greia/frames
+
+# Include the exact generated frames directly. Do not depend on distro
+# Plymouth hook ordering or asset-discovery behavior.
+if [ -n "${DESTDIR:-}" ]; then
+  install -d -m 0755 "$DESTDIR/usr/share/plymouth/themes/greia/frames"
+  cp -a /usr/share/plymouth/themes/greia/frames/. \
+    "$DESTDIR/usr/share/plymouth/themes/greia/frames/"
+fi
