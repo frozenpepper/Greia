@@ -159,6 +159,22 @@ mount -t proc proc "$LIVE_ROOT/proc"; MOUNTS+=("$LIVE_ROOT/proc")
 mount --rbind /sys "$LIVE_ROOT/sys"; MOUNTS+=("$LIVE_ROOT/sys"); mount --make-rslave "$LIVE_ROOT/sys"
 mount --rbind /run "$LIVE_ROOT/run"; MOUNTS+=("$LIVE_ROOT/run"); mount --make-rslave "$LIVE_ROOT/run"
 
+# The live-media UUID must exist before the kernel package postinst runs
+# update-initramfs during the apt install below: the installer overlay's
+# greia-live-media-id initramfs hook embeds it and fails closed when absent.
+install -d -m 0755 "$LIVE_ROOT/etc/greia-os"
+live_media_id="$(python3 - <<'PYUUID'
+import uuid
+print(uuid.uuid4())
+PYUUID
+)"
+[[ "$live_media_id" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]] || {
+  echo "Generated live-media identifier is invalid." >&2
+  exit 1
+}
+printf '%s\n' "$live_media_id" > "$LIVE_ROOT/etc/greia-os/live-media-id"
+chmod 0644 "$LIVE_ROOT/etc/greia-os/live-media-id"
+
 APT_ACQUIRE_OPTIONS=(
   -o Acquire::Retries=3
   -o Acquire::http::Timeout=20
@@ -217,17 +233,6 @@ PROJECT_VERSION="$(tr -d '\r\n' < "$PROJECT_ROOT/VERSION")"
 [[ -n "$PROJECT_VERSION" ]] || { echo "VERSION is empty." >&2; exit 1; }
 install -d -m 0755 "$LIVE_ROOT/etc/greia-os"
 install -m 0644 "$TARGET_PAYLOAD_DIGEST" "$LIVE_ROOT/etc/greia-os/expected-payload.sha256"
-live_media_id="$(python3 - <<'PYUUID'
-import uuid
-print(uuid.uuid4())
-PYUUID
-)"
-[[ "$live_media_id" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]] || {
-  echo "Generated live-media identifier is invalid." >&2
-  exit 1
-}
-printf '%s\n' "$live_media_id" > "$LIVE_ROOT/etc/greia-os/live-media-id"
-chmod 0644 "$LIVE_ROOT/etc/greia-os/live-media-id"
 cat > "$LIVE_ROOT/etc/greia-os/build-info" <<BUILDINFO
 GREIA_OS_VERSION=$PROJECT_VERSION
 PIP_RUNTIME_API=0.1
