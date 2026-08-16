@@ -5,7 +5,7 @@
 **Repository:** `frozenpepper/Greia` (private)  
 **Canonical/default/development branch:** `main`  
 **Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**  
-**Current cross-cutting tranche:** **ADR 0021 automatic hardware enablement — Ubuntu aggregate gate reached 530 tests at `8d05fbb…`, failed only on Shell input; second repair committed, exact-current-main rerun pending**
+**Current cross-cutting tranche:** **ADR 0021 automatic hardware enablement — Ubuntu aggregate source gate PASS at `f305aed…` + Activity-bytecode validation fix; installer build/SD preparation in progress**
 
 ## Branch policy
 
@@ -73,7 +73,47 @@ The earlier broad regression repair remains documented in:
 docs/reviews/2026-08-15_UBUNTU_LEGACY_X86_SOURCE_GATE_FAILURE_AND_REPAIR.md
 ```
 
-**Current source remains UNPROVEN until the owner-controlled Ubuntu host pulls exact current `origin/main` and reruns `bash tools/run_hardware_enablement_source_gate.sh` successfully. Do not build/write the SD before that pass.**
+### 2026-08-16 — Ubuntu aggregate source gate PASS (with Activity-bytecode validation fix)
+
+Owner-controlled Ubuntu rerun (Rerun 3) at the current repair baseline:
+
+```text
+host: Intel Mac mini / Ubuntu 24.04.4 LTS / x86_64
+commit: f305aed838104cd26b8330eea776a78525e88956
+profile intended: legacy-x86-i686
+focused hardware-enablement suite 1: 77 PASS
+focused hardware-enablement suite 2: 32 PASS
+full source suite / make verify: 530 tests PASS
+project validation: PASS (4 Activities)
+source/shell/footprint gate: PASS
+aggregate gate exit: 0
+```
+
+The rerun exposed one additional genuine gate defect that earlier attempts
+never reached because `make test` always failed first: `make verify` runs
+`test` before `validate`, and `tests/test_core_creation_activities.py`
+loads `activities/writing/main.py` and `activities/painting/main.py` via
+`importlib.util.spec_from_file_location` + `exec_module`, which writes
+`__pycache__/main.cpython-*.pyc` into the Activity folders. The subsequent
+`validate_project.py` (and `validate_activity.py`) forbid bytecode inside
+Activity folders, so the validate stage always failed after those tests ran.
+The fix sets `sys.dont_write_bytecode = True` in that test module so the
+Activity tree stays bytecode-free; the aggregate gate then passes end-to-end.
+
+Evidence:
+
+```text
+docs/reviews/2026-08-16_UBUNTU_ACTIVITY_BYTECODE_VALIDATION_FIX.md
+```
+
+The verified aggregate-gate PASS is the first genuinely executed full source
+gate since `097f0281888a58f6f26425807ce99d9f35449313` (232/232).
+
+**Current source is PROVEN for the aggregate source gate at `f305aed…` +
+the bytecode-validation fix on the owner-controlled Ubuntu host. Installer
+build and SD preparation follow the current rerun runbook; nothing about a
+canonical installer build, VM installation, or diverse physical-machine
+acceptance is implied by this source PASS.**
 
 Everything newer than the last genuinely passing evidence remains **UNPROVEN unless explicitly recorded otherwise**. In particular, the composed hardware-enablement code has not yet passed a canonical installer build, VM installation, or diverse physical-machine acceptance.
 

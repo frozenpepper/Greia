@@ -736,6 +736,15 @@ Do not rewrite old entries; append corrections.
 - Next exact step: run `tests.test_input_core`, `tests.test_pygame_input`, `tests.test_activity_input_contract`, `tests.test_hal_legacy_x`, `tests.test_system_chrome` plus the existing UI/creative focused gate and `make verify`. If source passes, make the smallest Shell integration using `PygameControllerSet`/`PygameInputTranslator`, then execute `docs/testing/2026-08-15_PHASE0_INPUT_CONTROLLER_ACCEPTANCE.md` on owner-controlled hardware. Do not broaden the Activity sandbox to `/dev/input` as an implementation shortcut.
 - Commit(s): source/docs are preserved in branch history; resolve actual current HEAD from GitHub before execution.
 
+## 2026-08-16 — Ubuntu aggregate source gate PASS + Activity-bytecode validation fix
+
+- Implemented: fixed the last reachable failure in the canonical Ubuntu aggregate source gate. `tests/test_core_creation_activities.py` loads the first-party Writing/Painting Activities directly from the Activity tree via `importlib.util.spec_from_file_location` + `exec_module`, which wrote `__pycache__` caches into the Activity folders that the later `validate` stage must reject. The test module now sets `sys.dont_write_bytecode = True` so the Activity tree stays bytecode-free. Documented in `docs/reviews/2026-08-16_UBUNTU_ACTIVITY_BYTECODE_VALIDATION_FIX.md`; HANDOVER updated.
+- Tests/evidence: on the owner-controlled Ubuntu host, `bash tools/run_hardware_enablement_source_gate.sh` exits **0** at `f305aed…` + fix: focused HE suites 77+32 PASS, full suite 530 PASS, project validation 4 Activities PASS, shell-check/footprint PASS. This is the first genuinely executed complete aggregate source gate since `097f0281888a58f6f26425807ce99d9f35449313` (232/232).
+- Decisions: the Activity tree must remain free of Python bytecode; test modules that load Activity source must suppress bytecode writes rather than leave caches that violate Activity validation.
+- Remaining blockers: proceed through the current rerun runbook — build the `legacy-x86-i686` installer, verify image SHA-256, positively identify the SD, raw-write, and physical read-back verify. Later hardware-enablement evidence still requires a canonical installer build, VM installation, and diverse physical-machine acceptance.
+- Next exact step: `sudo bash build/build-legacy-x86-sd-installer.sh out`, verify artifacts/SHA, then SD identification/write/read-back per the rerun runbook.
+- Commit(s): this progress entry ships with the test fix, its review, and the HANDOVER update in the current `main` commit.
+
 ---
 
 # 9. Final completion criteria
