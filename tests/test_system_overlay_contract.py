@@ -266,7 +266,7 @@ class SystemOverlayContractTests(unittest.TestCase):
     def test_live_boot_is_bounded_nonpersistent_and_uuid_matched(self) -> None:
         builder = (PROJECT_ROOT / "build/build-installer-image.sh").read_text()
         for argument in (
-            "pip.live_media_id=",
+            "greia.live_media_id=",
             "live-media-timeout=15",
             "nopersistence",
             "noeject",

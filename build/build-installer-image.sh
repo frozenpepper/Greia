@@ -373,12 +373,12 @@ set timeout=0
 set timeout_style=hidden
 set default=0
 set pager=0
-set superusers="pip-recovery"
+set superusers="greia-recovery"
 export superusers
-password_pbkdf2 pip-recovery $installer_grub_hash
+password_pbkdf2 greia-recovery $installer_grub_hash
 menuentry "Install Greia OS" --unrestricted --id greia-installer {
   search --no-floppy --fs-uuid --set=root $usb_root_uuid
-  linux /live/vmlinuz boot=live components live-media-path=/live live-media-timeout=15 nopersistence noeject silent overlay-size=128M pip.live_media_id=$live_media_id quiet splash loglevel=0 console=null panic=5 systemd.show_status=false rd.systemd.show_status=false systemd.crash_shell=no systemd.crash_chvt=0 udev.log_priority=3 vt.global_cursor_default=0 consoleblank=0
+  linux /live/vmlinuz boot=live components live-media-path=/live live-media-timeout=15 nopersistence noeject silent overlay-size=128M greia.live_media_id=$live_media_id quiet splash loglevel=0 console=null panic=5 systemd.show_status=false rd.systemd.show_status=false systemd.crash_shell=no systemd.crash_chvt=0 udev.log_priority=3 vt.global_cursor_default=0 consoleblank=0
   initrd /live/initrd.img
 }
 GRUB

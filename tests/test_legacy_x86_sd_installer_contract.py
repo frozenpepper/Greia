@@ -54,7 +54,7 @@ class LegacyX86SdInstallerContractTests(unittest.TestCase):
         self.assertIn("collect-linux-hardware-evidence.sh", source)
         self.assertIn("update-grub", source)
         self.assertIn("Greia installer from SD", source)
-        self.assertIn("pip.live_media_id=", source)
+        self.assertIn("greia.live_media_id=", source)
         self.assertNotIn("linux-image-686-pae", source)
         self.assertNotIn("PROFILE=", source)
 
