@@ -183,7 +183,13 @@ done
 mount --rbind /dev "$ROOTFS/dev"; MOUNTS+=("$ROOTFS/dev"); mount --make-rslave "$ROOTFS/dev"
 mount -t proc proc "$ROOTFS/proc"; MOUNTS+=("$ROOTFS/proc")
 mount --rbind /sys "$ROOTFS/sys"; MOUNTS+=("$ROOTFS/sys"); mount --make-rslave "$ROOTFS/sys"
-mount --rbind /run "$ROOTFS/run"; MOUNTS+=("$ROOTFS/run"); mount --make-rslave "$ROOTFS/run"
+# /run is tmpfs at runtime; a fresh mount avoids carrying the build host's
+# desktop-session mounts (gvfs/portal under /run/user/1000) into the chroot,
+# which would keep the build busy and block teardown. Seed a resolver stub so
+# chroot apt/DNS still works while sharing the host network namespace.
+mount -t tmpfs tmpfs "$ROOTFS/run"; MOUNTS+=("$ROOTFS/run")
+install -d -m 0755 "$ROOTFS/run/systemd/resolve"
+cat /etc/resolv.conf > "$ROOTFS/run/systemd/resolve/stub-resolv.conf" 2>/dev/null || true
 
 APT_ACQUIRE_OPTIONS=(
   -o Acquire::Retries=3
