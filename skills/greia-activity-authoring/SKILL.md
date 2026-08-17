@@ -6,7 +6,7 @@ description: Canonical agent guide for designing, implementing, validating and t
 # Greia Activity Authoring Skill
 
 **Status:** living derived authoring guide  
-**Reviewed:** 2026-08-15
+**Reviewed:** 2026-08-17
 
 This file is practical guidance. Exact implemented APIs/schemas are owned by source/runtime declarations; accepted ADRs own architecture; product docs own child-facing requirements.
 
@@ -41,7 +41,18 @@ runtime/theme-defaults.toml
 assets/catalog/core_icons_v1.toml
 ```
 
-For progression/rewards also inspect `runtime/progression-policy.toml`. For exact current execution/hardware state read `HANDOVER.md`.
+For progression/rewards also inspect `docs/adr/0017-platform-owned-sessions-events-progression-and-reward-ledger.md` and `runtime/progression-policy.toml`.
+
+For Activity work involving achievements/Awards/badges or score celebrations also read:
+
+```text
+docs/adr/0025-platform-owned-awards-badges-and-celebrations.md
+docs/product/AWARDS_BADGES_AND_CELEBRATIONS.md
+```
+
+Those documents currently define **selected architecture/product direction**, not a current Award manifest/API. Do not invent fields or calls that source does not implement.
+
+For exact current execution/hardware state read `HANDOVER.md`.
 
 ## 2. Product canon
 
@@ -50,6 +61,7 @@ A Greia Activity is a supervised child-facing experience, not a Linux desktop pr
 - **Activity is the stable abstraction.** Python/Pygame is one runtime.
 - **Linux internals are not Activity APIs.** No X11/DRM/systemd/device-file/shell/distro-path dependency.
 - **Greia owns lifecycle, durable namespace, sessions, permissions and global progression.**
+- **Greia owns durable Awards/badges and the official Greia celebration/collection experience.** Activities report facts; they do not directly mutate platform Award state.
 - **Greia owns the universal Home/Back system chrome.** Activities cannot replace or control it.
 - **Greia owns standard input semantics and controller normalization.** Activities declare interaction intent rather than brands/devices.
 - **Offline-first.** Core use and saving work without network.
@@ -136,7 +148,44 @@ Creation tools:
 
 Read the active profile via the SDK rather than walking profile directories.
 
-Activities report declared facts/events; Greia owns global reward/progression economics. Event protocol limits and score direction are source/manifest-owned.
+Activities report declared facts/events; Greia owns global reward/progression economics and durable Award authority. Event protocol limits and score direction are source/manifest-owned.
+
+### Awards, badges and celebrations
+
+ADR 0025 extends the existing ADR 0017 progression boundary. The authoring rule is deliberately simple:
+
+> **Report what the child actually did. Do not tell Greia what global reward/Award to grant.**
+
+Good event semantics include factual statements such as:
+
+```text
+level.completed
+painting.saved
+puzzle.solved
+perfect_run.completed
+creation.completed
+score.submitted
+```
+
+Bad authority semantics include:
+
+```text
+give_child_10_stars
+set_badge_earned
+unlock_global_hat
+award_cross_activity_trophy
+grant_badge("maze-master")
+```
+
+Do not put `award_id`, `badge_id`, `reward_delta`, `stars`, or similar fields into an event payload expecting them to authorize platform progression. Greia ignores/rejects unauthorized reward semantics according to the source-owned event/progression contract.
+
+Greia already owns score ordering/best-score comparison. Do not implement a second authoritative `new personal best` store merely to drive platform progression. Local in-Activity feedback is fine, but the official Greia `NEW BEST!` celebration is a platform concern.
+
+**Current implementation warning:** there is no current Activity Award manifest schema or `grant_badge()` API. ADR 0025 intentionally leaves exact future Activity-scoped Award metadata to a later source-owned package/progression implementation. Do not invent `[awards]` tables, badge RPCs, or local platform-ledger files in an Activity today.
+
+When that future schema exists, Activity-specific Award definitions are intended to be declarative and bounded to that Activity's validated evidence. Greia-wide/cross-Activity Awards remain platform policy.
+
+Activity code may still provide immediate local feedback for good play/creation. It must not pretend that local animation/save state is the authoritative Greia badge ceremony or collection.
 
 ## 6. Shared assets, theme, UI and input
 
@@ -221,6 +270,14 @@ The controller Guide/system control is platform-reserved where available. A fall
 
 First-party Activities receive no exception.
 
+### Greia Award celebration is also platform-owned
+
+The future official badge/new-best celebration defined by ADR 0025 is not an Activity widget and is not a general overlay API for Activity code.
+
+Authors should design normal completion moments so they make sense even if Greia presents a celebration shortly afterward or defers it to a safe transition. Do not rely on receiving input from Greia's trusted celebration/system region, and do not place essential one-frame-only information where a future bounded platform presentation would make it unreadable.
+
+This does **not** require current Activities to reserve a new hard-coded celebration rectangle; exact R7 presentation geometry/mechanics are not implemented yet.
+
 ### Current Pygame helpers
 
 `src/greia_platform/pygame_ui.py` is the platform-wide import surface for new shared Pygame UI consumers. Existing first-party Activities may continue importing `src/greia_platform/activity_ui.py`, which currently owns the same helper implementation for compatibility.
@@ -241,7 +298,7 @@ Follow `docs/engineering/ENGINEERING_FOUNDATIONS.md`.
 - prefer composition over inheritance unless substitutability is real;
 - make ownership/cleanup explicit;
 - keep dependencies flowing through Greia platform contracts rather than hidden globals;
-- do not build a second profile/storage/progression/package/backup/input platform inside an Activity;
+- do not build a second profile/storage/progression/Award/package/backup/input platform inside an Activity;
 - public extension points and non-obvious invariants require useful docstrings/comments.
 
 Strong OOP does not mean maximizing class count. Abstractions must own a real invariant, remove repeated behavior or provide a genuine extension seam.
@@ -315,6 +372,8 @@ Before claiming an Activity source-ready, verify at least:
 - Greia Storage only for durable state;
 - no silent creation eviction/deletion;
 - events only where meaningful and declared;
+- no attempt to use event payloads/local files as authoritative Greia reward/Award mutation;
+- no invented Award manifest/RPC fields before source implements them;
 - semantic assets/theme/shared UI used appropriately;
 - essential controls avoid the reserved system-chrome region;
 - no attempt to replace, suppress or intercept Greia Home/Back/system input;
@@ -331,4 +390,4 @@ Writing (`org.greia.writing`) and Painting (`org.greia.painting`) are current fi
 
 ## 12. Maintaining this skill
 
-Update this file in the same tranche when Activity-facing manifest/runtime/lifecycle/storage/event/trust/theme/assets/UI/input/system-chrome/performance/deployment contracts materially change. If implementation makes this guide materially wrong, the tranche is not fully documented.
+Update this file in the same tranche when Activity-facing manifest/runtime/lifecycle/storage/event/progression/Award/trust/theme/assets/UI/input/system-chrome/performance/deployment contracts materially change. If implementation makes this guide materially wrong, the tranche is not fully documented.
