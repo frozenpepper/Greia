@@ -5,81 +5,25 @@
 **Repository:** `frozenpepper/Greia` (private)  
 **Canonical/default/development branch:** `main`  
 **Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**  
-**Current cross-cutting tranche:** **Boot animation: direct 52-frame Plymouth theme integration & cleanup on canonical `main`**
+**Current cross-cutting tranche:** **Greia Parents API/client foundation — non-closing R12 preparation; production pairing and privileged parent operations remain open**
 
 ## Branch policy
 
-The repository owner requires a **single-branch workflow**. `main` is the only development/integration branch. Do not create feature, recovery, archive or work branches unless the owner explicitly changes this policy. Commit coherent work directly to `main`; GitHub remains the persistent source of truth.
+The repository owner requires a **single-branch workflow**. `main` is the only development/integration branch. Do not create feature, recovery, archive or work branches unless the owner explicitly changes this policy. Commit coherent work directly to `main`; GitHub is the persistent source of truth.
 
-Historical duplicate ref names may remain visible because the available connector does not expose ref deletion. They are not development branches and must never contain divergent current source. After substantive work, advance those aliases to the exact current `main` commit until a GitHub surface capable of deleting them is used.
-
-A temporary connector safety ref named `agent/ubuntu-source-gate-repair` was created while repairing the earlier 2026-08-15 Ubuntu source-gate regression so half-applied multi-file edits were not exposed on `main`. This was contrary to the normal single-branch rule and must not become a development branch. Keep that ref non-divergent at the exact current `main` commit until it can be deleted.
+Historical duplicate ref names may remain because the available connector cannot delete refs. They are not development branches and must not diverge from current `main`. A temporary historical ref named `agent/ubuntu-source-gate-repair` was created during an earlier connector safety repair; keep it at the exact current `main` commit until it can be deleted.
 
 ## Hosted execution boundary
 
 Do **not** use, query, trigger, rerun, inspect or download GitHub Actions runs/jobs/logs/artifacts without explicit owner authorization for that specific hosted use. Repository source operations are allowed. Verification runs locally or on an explicitly owner-approved execution environment.
 
-## Evidence boundary
+## Current evidence boundary
 
-Last complete source gate genuinely executed before the current hardware-enablement/input repair sequence:
-
-```text
-commit: 097f0281888a58f6f26425807ce99d9f35449313
-provider-free tests: 232 / 232 PASS
-project validation: PASS
-bundled Activity validation: PASS
-source/shell/footprint gate: PASS
-```
-
-Latest owner-controlled hardware-enablement aggregate-gate attempt:
+The latest genuinely executed complete owner-controlled aggregate source gate recorded in this repository is the Ubuntu rerun after the Activity-bytecode validation fix:
 
 ```text
 host: Intel Mac mini / Ubuntu 24.04.4 LTS / x86_64
-commit: 8d05fbb6f36c3623d6df794f6cfc2beabef2f47e
-profile intended: legacy-x86-i686
-focused hardware-enablement suite 1: 77 PASS
-focused hardware-enablement suite 2: 32 PASS
-full source suite / make verify: 530 tests
-full-suite result: FAIL; failures=1; errors=2
-aggregate gate exit: 2
-image build: NOT RUN
-SD write: NOT RUN
-```
-
-The operator correctly stopped before physical-media mutation. All three remaining failures were confined to Shell/controller input:
-
-1. two tests still bypassed Greia's new SDL2/Pygame compatibility constants and directly accessed distro-missing `pygame._sdl2.controller.CONTROLLER_BUTTON_*` exports;
-2. `ShellInputController` incorrectly delayed an exact `1.40` analog-repeat deadline because `1.30 + 0.10` encoded as `1.4000000000000001`.
-
-The preserved analysis/repair record is:
-
-```text
-docs/reviews/2026-08-16_UBUNTU_SOURCE_GATE_8D05FBB_SHELL_INPUT_REPAIR.md
-```
-
-Repair commits:
-
-```text
-29380333dd521c234b9c41ec30df471020076cf0
-  fix: honor analog repeat deadlines at float boundaries
-
-bf13b419ed20e20634499cc03b9ef381a3b1b464
-  tests: use Greia controller compatibility constants
-```
-
-The earlier broad regression repair remains documented in:
-
-```text
-docs/reviews/2026-08-15_UBUNTU_LEGACY_X86_SOURCE_GATE_FAILURE_AND_REPAIR.md
-```
-
-### 2026-08-16 — Ubuntu aggregate source gate PASS (with Activity-bytecode validation fix)
-
-Owner-controlled Ubuntu rerun (Rerun 3) at the current repair baseline:
-
-```text
-host: Intel Mac mini / Ubuntu 24.04.4 LTS / x86_64
-commit: f305aed838104cd26b8330eea776a78525e88956
+repair baseline: f305aed838104cd26b8330eea776a78525e88956 + bytecode-validation fix
 profile intended: legacy-x86-i686
 focused hardware-enablement suite 1: 77 PASS
 focused hardware-enablement suite 2: 32 PASS
@@ -89,43 +33,275 @@ source/shell/footprint gate: PASS
 aggregate gate exit: 0
 ```
 
-The rerun exposed one additional genuine gate defect that earlier attempts
-never reached because `make test` always failed first: `make verify` runs
-`test` before `validate`, and `tests/test_core_creation_activities.py`
-loads `activities/writing/main.py` and `activities/painting/main.py` via
-`importlib.util.spec_from_file_location` + `exec_module`, which writes
-`__pycache__/main.cpython-*.pyc` into the Activity folders. The subsequent
-`validate_project.py` (and `validate_activity.py`) forbid bytecode inside
-Activity folders, so the validate stage always failed after those tests ran.
-The fix sets `sys.dont_write_bytecode = True` in that test module so the
-Activity tree stays bytecode-free; the aggregate gate then passes end-to-end.
-
-Evidence:
+Evidence documents:
 
 ```text
+docs/reviews/2026-08-16_UBUNTU_SOURCE_GATE_8D05FBB_SHELL_INPUT_REPAIR.md
 docs/reviews/2026-08-16_UBUNTU_ACTIVITY_BYTECODE_VALIDATION_FIX.md
 ```
 
-The verified aggregate-gate PASS is the first genuinely executed full source
-gate since `097f0281888a58f6f26425807ce99d9f35449313` (232/232).
+Everything committed after that exact executed boundary is **UNPROVEN unless a later section explicitly records an executed result**. In particular, the current Greia Parents foundation added on 2026-08-17 has source tests but those tests have **not executed in the current GitHub-connector environment**. Do not infer a PASS from committed test files or syntax checks.
 
-**Current source is PROVEN for the aggregate source gate at `f305aed…` +
-the bytecode-validation fix on the owner-controlled Ubuntu host. Installer
-build and SD preparation follow the current rerun runbook; nothing about a
-canonical installer build, VM installation, or diverse physical-machine
-acceptance is implied by this source PASS.**
+The user has also reported that a more recent local test attempt encountered failures. Treat the current head as requiring a fresh owner-controlled source-gate run before using it as a release/build acceptance baseline. Preserve the first genuine failure instead of weakening tests.
 
-### 2026-08-17 — Boot animation: direct 52-frame Plymouth theme integration & cleanup
+## 2026-08-17 — Greia Parents API/client foundation
 
-- Direct 52-frame theme source committed to the single canonical location: `build/overlay/etc/plymouth/themes/greia/`.
-- 52 RGB PNG frames, each 222x600, 8-bit RGB (color type 2), 7 fps refresh rate driven by `Plymouth.SetRefreshRate(7)`.
-- One canonical asset copy in repository; duplicate copy removed from `build/installer-overlay/etc/plymouth/themes/greia/`.
-- `build/build-installer-image.sh` updated to stage canonical theme directly from `$PROJECT_ROOT/build/overlay/etc/plymouth/themes/greia`.
-- Failed experimental chunk/b85/generator machinery and reconstruction hooks removed cleanly from the current tree (`runtime/boot-animation`, `build/boot-animation`, `00-greia-boot-animation` hooks).
-- Added `tests/test_boot_animation_contract.py` validating 52 frames, IHDR dimensions (222x600), bit depth/color type, 7 fps refresh rate, and builder wiring.
-- Physical Acer playback evidence remains pending until actually booted on target hardware.
+Architecture/product authority:
 
-Everything newer than the last genuinely passing evidence remains **UNPROVEN unless explicitly recorded otherwise**. In particular, the composed hardware-enablement code has not yet passed a canonical installer build, VM installation, or diverse physical-machine acceptance.
+```text
+docs/adr/0022-parent-management-api-client-pairing-and-privilege-boundary.md
+docs/product/PARENT_MANAGEMENT.md
+docs/architecture/GREIA_PARENT_MANAGEMENT.md
+```
+
+Documentation map and README were updated to make these first-class project contracts. The active implementation plan now explicitly permits this as a **non-closing R12 preparatory foundation** without bypassing the R10/R11/package/backup prerequisites of full R12.
+
+### Core product decision
+
+The first parent client is a small responsive HTML application served directly by Greia, but the durable product boundary is the **Greia Parent API**. A later iOS/Android/desktop client must use the same discovery, pairing, authentication, resource IDs, capability negotiation and semantic operations.
+
+```text
+Greia Parents HTML client
+future native parent client
+            │
+            │ same versioned protocol
+            ▼
+      Greia Parent API
+      (unprivileged)
+            │
+            ├── profiles
+            ├── Activity inventory / future package operations
+            ├── progress/status
+            ├── hardware/settings
+            ├── paired devices
+            └── future maintenance operations
+                    │
+                    ▼
+         typed Greia services/brokers
+                    │
+                    ▼
+             Linux adapters
+```
+
+The Parent API must not become a generic root RPC, arbitrary shell bridge, package-manager frontend or filesystem-management API.
+
+### Implemented source
+
+New/changed source:
+
+```text
+src/greia_parent/protocol.py
+src/greia_parent/credentials.py
+src/greia_parent/api_server.py
+src/greia_parent/web_client.py
+src/greia_parent/server.py                  # retained legacy/domain compatibility surface
+build/overlay/etc/avahi/services/greia-parent.service
+build/overlay/etc/systemd/system/greia-parent.service
+tests/test_parent_api.py
+```
+
+`greia-parent.service` remains unprivileged as `greiapanel`, retains the existing strict systemd sandbox, and now starts:
+
+```text
+python3 -m greia_parent.api_server --bind 0.0.0.0 --port 8766
+```
+
+The HTML client is served at `/` after authentication and performs management through `/api/v1`. The previous server-rendered parent page remains available at `/legacy` during migration/troubleshooting.
+
+### Initial API-v1 foundation
+
+Current namespace:
+
+```text
+/api/v1
+```
+
+Implemented routes include:
+
+```text
+GET    /api/v1/meta
+GET    /api/v1
+GET    /api/v1/system
+GET    /api/v1/profiles
+POST   /api/v1/profiles
+PATCH  /api/v1/profiles/{id}
+DELETE /api/v1/profiles/{id}
+GET    /api/v1/activities
+GET    /api/v1/settings/hardware
+PUT    /api/v1/settings/hardware
+POST   /api/v1/settings/hardware/reset
+GET    /api/v1/progress
+GET    /api/v1/devices
+DELETE /api/v1/devices/{id}
+POST   /api/v1/pairing/bootstrap             # PROVISIONAL bootstrap only
+```
+
+Requests are bounded JSON objects. API errors use a typed JSON error envelope. Activity inventory exposes semantic Activity metadata but deliberately does not expose package filesystem roots or runtime entrypoints.
+
+### Capability negotiation
+
+The API reports what is actually implemented instead of letting clients guess from architecture/model.
+
+Currently advertised as available:
+
+```text
+profiles.manage
+activities.read
+progress.read
+settings.input
+settings.display
+paired_devices.manage
+```
+
+Currently advertised as unavailable:
+
+```text
+activities.install
+backup.manage
+settings.audio
+network.manage
+maintenance.ssh
+```
+
+A false capability is never permission for the HTML client to emulate the operation with shell commands.
+
+### Parent-device credentials
+
+`ParentDeviceCredentialStore` introduces independently revocable parent-client credentials:
+
+- bounded to 16 paired devices;
+- each client receives its own high-entropy bearer token;
+- the raw token is returned only when issued;
+- persistent state stores only a SHA-256 verifier/digest plus bounded non-secret device metadata;
+- one device can be revoked without rotating every other parent's credential;
+- state is bounded, validated, atomically replaced and mode `0600`;
+- malformed/symlinked/oversized credential state fails closed.
+
+Bearer credentials can authenticate through `Authorization: Bearer ...`; a dedicated browser cookie name is also understood by the API layer.
+
+The old single shared `parent-pairing-token` remains temporarily available only as a **transitional bootstrap mechanism** so the new API can be exercised before the Greia-local pairing UI exists.
+
+### Discovery
+
+Normal network-capable images now ship an Avahi service declaration:
+
+```text
+_greia-parent._tcp
+port: 8766
+TXT: api=1
+TXT: path=/api/v1
+TXT: product=greia
+```
+
+No secret is placed in mDNS. Discovery is convenience only; mDNS is not authentication.
+
+### Production pairing still required
+
+The accepted target first-pairing flow is not yet implemented:
+
+```text
+parent chooses Add a Greia
+→ client discovers nearby Greia or uses explicit connection information
+→ parent opens Pair a device on the Greia screen
+→ Greia displays a short-lived QR challenge + numeric fallback
+→ requesting client presents challenge
+→ Greia shows requesting device and asks Allow / Deny locally
+→ approved client receives its own revocable credential
+```
+
+Required production properties still open:
+
+- bounded short-lived challenge lifetime;
+- replay/attempt protection;
+- explicit local Greia-screen approval;
+- QR + numeric fallback presentation;
+- device identity binding;
+- authenticated encrypted transport;
+- browser/native reconnect behavior;
+- resource measurements on the C0/Acer floor.
+
+The current `http://<device>:8766` transport is explicitly **PROVISIONAL**. Do not claim production credential security merely because traffic is on a home LAN.
+
+### SSH policy
+
+Normal/release Greia still keeps SSH **disabled by default**. `first-boot` intentionally leaves SSH host keys absent until a parent explicitly enables SSH.
+
+Greia Parents does **not** use SSH as its management protocol.
+
+The eventual Parent App SSH maintenance control must cross a narrow typed privileged service/broker and enforce at least:
+
+```text
+SSH off by default
+key authentication only
+root SSH login disabled
+password SSH authentication disabled
+dedicated greiaadmin identity
+parent can enable/disable and replace/revoke key material
+```
+
+No release SSH enable/disable implementation has landed in this Parent foundation yet. The existing `developer-remote` profile/package path remains separate and development-only.
+
+### Parent-management functionality represented in product design
+
+The accepted parent-management product scope now includes:
+
+- create/rename/delete child profiles;
+- select/change avatars/icons;
+- set/replace/remove simple child passwords and masking preference;
+- installed Activity inventory;
+- future Activity install/update/remove via R10 package service;
+- mouse/touchpad/tap/natural-scroll settings;
+- display resolution and future brightness where supported;
+- future audio volume/mute/output through Audio Service;
+- future Wi-Fi/network management through Network Service;
+- system health/storage/diagnostics;
+- future backup/restore through R11;
+- future parent-controlled SSH maintenance;
+- paired-device listing/revocation;
+- later OS/runtime update/recovery through the typed platform services.
+
+The HTML UI must remain a client of those services through the Parent API. It must not contain Linux-specific management knowledge such as `xinput`, `xrandr`, ALSA/PipeWire commands, `iwd` command lines, direct `apt`, arbitrary `sudo`, or host filesystem edits.
+
+### Tests/evidence for Parent foundation
+
+`tests/test_parent_api.py` was added for:
+
+- raw-token non-persistence;
+- independent device authentication/revocation;
+- device-count/name bounds;
+- capability truthfulness;
+- bootstrap/Bearer behavior;
+- Activity metadata path non-disclosure;
+- HTML use of `/api/v1` rather than legacy form mutation paths;
+- `_greia-parent._tcp` advertisement;
+- normal-image separation from `developer-remote`/SSH.
+
+The authored Python source was syntax-checked during implementation. **No current repository test run or `make verify` was executed here; no PASS is claimed.**
+
+Foundation implementation/documentation commits include:
+
+```text
+50591969e11278bb1e767cf3e2da80cdb0b7e192  parent: establish API-first Greia Parents foundation
+10fc96dba2387f3fe7a6641eccec5cf79d07a05e  docs: define Greia Parents API-first product surface
+e04aa162ee78c0e42b7b353975ad957f4f631776  docs: map Greia Parents protocol and product authority
+469fb590d175ad81c3b67cedbac1479338e3edc8  plan: record Greia Parents API foundation
+```
+
+Resolve current `origin/main` before starting any new work; this handover update itself advances `main` once more.
+
+## 2026-08-17 — Boot animation state
+
+The direct Greia Plymouth animation remains integrated:
+
+- one canonical source at `build/overlay/etc/plymouth/themes/greia/`;
+- 52 direct RGB PNG frames, each 222x600;
+- 7 fps via `Plymouth.SetRefreshRate(7)`;
+- no Base85/XOR/delta/build-time frame reconstruction;
+- live installer stages the same canonical theme rather than a duplicate source copy;
+- experimental `runtime/boot-animation`, `build/boot-animation` and reconstruction hooks were removed;
+- physical Acer playback remains unproven until actual boot evidence exists.
+
+Do not restore the discarded generator/chunk approach.
 
 ## ADR 0021 — automatic hardware enablement
 
@@ -135,15 +311,10 @@ Architecture owner:
 docs/adr/0021-automatic-hardware-enablement-and-capability-discovery.md
 ```
 
-Current implementation review:
+Current implementation review / source acceptance material:
 
 ```text
 docs/reviews/2026-08-15_HARDWARE_ENABLEMENT_IMPLEMENTATION_REVIEW.md
-```
-
-Current acceptance gate:
-
-```text
 docs/testing/2026-08-15_HARDWARE_ENABLEMENT_SOURCE_ACCEPTANCE.md
 ```
 
@@ -158,9 +329,8 @@ Linux kernel / udev / kmod
       ↓
 bounded Greia sysfs inventory
       ↓
-bound-driver modinfo firmware declarations
-+ isenkram missing-firmware signal
-+ isenkram modalias advisory signal
+bound-driver firmware declarations
++ isenkram signals
 + x86 microcode policy
       ↓
 frozen Debian firmware-provider metadata
@@ -173,10 +343,10 @@ read-only local APT transaction
       ↓
 initramfs / GRUB regeneration
       ↓
-Greia HAL / semantic capability probes
+Greia HAL / semantic capabilities
 ```
 
-### Core source
+Core source:
 
 ```text
 src/greia_platform/hardware_enablement.py
@@ -197,228 +367,43 @@ build/populate-hardware-support-pool.sh
 build/install-live-hardware-firmware.sh
 ```
 
-### Inventory and resolution
+The live installer carries broad verified firmware support while the final installed target receives only the machine-specific support package plan where possible. Resolution is based on Linux/device metadata and frozen Debian provider metadata, not Greia-authored per-model tables.
 
-`LinuxSysfsHardwareInventory` observes a bounded, privacy-minimized hardware inventory. A device record contains only:
+The hardware support pool is bounded, integrity-checked, read-only at point of target installation, and used through a temporary local APT source. Package-removal plans are forbidden. Raw modalias/sysfs/driver evidence is not persisted in ordinary install records.
 
-```text
-sysfs path
-subsystem
-modalias
-bound driver
-```
+Persistent installed-system hotplug package installation remains deferred until the installer path passes its source/build/VM gates. Do not add a continuously running arbitrary `apt` agent or vendor installer path.
 
-Do not add storage/DMI/device serials or human-readable product-name heuristics to automatic resolution.
+## Current installer / SD route
 
-`IsenkramHardwareSupportResolver` treats:
-
-- `isenkram-autoinstall-firmware -l` as an automatic firmware signal;
-- general `isenkram-lookup -l` as advisory because it may recommend user-space utilities.
-
-A general advisory recommendation can become automatic only when the independently verified frozen pool classifies that exact package as firmware.
-
-`BoundDriverFirmwareResolver` independently asks the actual bound driver for `modinfo -F firmware` declarations and resolves exact or wildcard firmware paths through the frozen Debian provider map. This is required because the live installer already contains broad firmware; a detector for *currently missing* firmware alone can therefore legitimately return no missing firmware even though the final target still needs a firmware package.
-
-x86 CPU vendor policy may select `intel-microcode` or `amd64-microcode`; ARM does not use this x86 policy.
-
-### Frozen installer support pool
-
-The canonical installer builder now creates an offline local APT repository at:
-
-```text
-/opt/greia-hardware-support
-```
-
-Candidate firmware/provider data is derived from Debian/isenkram `Fw-Contents-*` metadata. Debian Contents entries with multiple comma-separated package providers are preserved correctly. Greia does not maintain a PCI/USB-ID-to-package table.
-
-Pool population:
-
-- is download-only;
-- resolves candidates independently so alternative/conflicting firmware providers do not poison one giant solver transaction;
-- resolves dependencies against the **exact target squashfs `dpkg` status**, not the richer live installer state;
-- forbids package-removal plans;
-- verifies the live installed package set did not change during download-only resolution;
-- admits no vendor downloaders or direct `dpkg -i` path.
-
-The finalizer:
-
-- bounds package count and pool bytes;
-- rejects symlinked/non-regular `.deb` payloads;
-- rejects duplicate package+architecture versions;
-- inspects Debian package metadata;
-- hashes every `.deb` by SHA-256;
-- generates flat `Packages` and reproducible `Packages.gz` indexes;
-- hashes both repository indexes;
-- freezes firmware/microcode classes and firmware-file provider mapping;
-- records unavailable candidates.
-
-### Broad live support versus lean installed target
-
-The USB/live image intentionally carries a broader compatibility payload than the installed Greia target.
-
-The frozen manifest records:
-
-```text
-provided_firmware_packages
-provided_microcode_packages
-broad_firmware_packages
-firmware_providers
-```
-
-`broad_firmware_packages` is a deterministic **minimal broad live cover**: for each concrete firmware file, the finalizer chooses one verified provider, preferring the smaller candidate `.deb` and then package name. The union of those providers is installed into the live installer. Every verified alternative remains in the frozen repository for exact machine-specific target selection.
-
-This avoids both bad extremes:
-
-- a tiny live installer unable to initialize hardware because firmware is missing;
-- every final low-storage Greia machine permanently carrying all firmware packages.
-
-The canonical builder composes the pool and broad live firmware **before** final live initramfs generation and squashfs compression. Its report records support-pool package count, bytes and manifest digest.
-
-### Runtime pool trust boundary
-
-`VerifiedHardwareSupportPool.load()` fail-closes on:
-
-- missing/symlinked manifest;
-- suite/architecture mismatch;
-- malformed/duplicate package identity;
-- package size or SHA-256 mismatch;
-- symlinked/missing/unmanifested `.deb` payloads;
-- `Packages`/`Packages.gz` size or digest mismatch;
-- invalid firmware/microcode classes;
-- provider mapping to non-firmware packages;
-- a broad-live cover that does not cover every mapped concrete firmware file.
-
-Only after this verification may the temporary APT source use local `trusted=yes`; trust comes from Greia's frozen-media verification, not from the APT flag itself.
-
-### Machine-specific target installation
-
-`InstallerHardwareEnablementPlanner` intersects current machine evidence with the verified media pool. Automatic target package output is empty unless the plan is complete.
-
-`InstallationEngine` supports explicit live-service composition through:
-
-```text
-GREIA_HARDWARE_SUPPORT_POOL=/opt/greia-hardware-support
-GREIA_TARGET_IMAGE_PROFILE=/etc/greia-os/target-image-profile.json
-```
-
-The production live installer service sets both. Demo/tests/off-media calls remain compatible when the variables are absent.
-
-Before the first destructive disk operation, the engine:
-
-1. verifies payload and disk identity;
-2. loads target suite/architecture from the target image profile;
-3. hashes/verifies the frozen support pool;
-4. resolves the current machine;
-5. stops before erase if resolution is incomplete or a required frozen package is missing.
-
-After the target payload is copied and chroot mounts exist, the engine:
-
-1. re-opens and re-hashes the support pool at point of use;
-2. bind-mounts it read-only under target `/run`;
-3. gives APT a temporary source list containing **only** that local file repository;
-4. installs only the selected machine-specific firmware/microcode package names plus frozen dependencies;
-5. forbids package removal;
-6. removes the temporary source;
-7. regenerates initramfs and GRUB afterward.
-
-The existing reverse-order mount cleanup owns the nested hardware-support bind mount before the target `/run` bind is detached.
-
-The ordinary install record may contain:
-
-```text
-hardware_enablement_complete
-hardware_support_packages
-```
-
-It must not contain raw modaliases, sysfs paths, bound driver names, device serials or Wi-Fi credentials.
-
-### Why persistent hotplug package installation is not implemented yet
-
-Do **not** add a second ad-hoc hardware system. The installed-system first-boot/hotplug resolver should reuse these same inventory/resolver/pool contracts, but persistent privileged package installation expands the attack/recovery surface beyond the one-shot installer transaction.
-
-Implement it only after the current source/build/VM installer path passes. Future likely behavior:
-
-```text
-new device hotplug
-→ kernel/udev bind if possible
-→ Greia re-probe
-→ if already usable: done
-→ if signed support package is needed: trusted installed resolver
-→ local installer media or approved Debian source
-→ package transaction / re-probe
-→ parent-visible working/degraded/unresolved status
-```
-
-No continuously running arbitrary `apt` agent and no vendor installer path.
-
-## Current hardware-enablement regression source
-
-```text
-tests/test_hardware_enablement.py
-tests/test_hardware_support_pool_manifest.py
-tests/test_hardware_support_pool_finalize.py
-tests/test_hardware_support_pool_build_script.py
-tests/test_live_hardware_firmware_build_script.py
-tests/test_hardware_enablement_build_contract.py
-tests/test_installer_builder_hardware_support.py
-tests/test_installer_hardware_support_pool.py
-tests/test_installer_hardware_enablement.py
-tests/test_installer_hardware_support_install.py
-tests/test_installer_hardware_support_service.py
-tests/test_installer_engine.py
-```
-
-Both focused hardware-enablement suites executed successfully on the Ubuntu host at aggregate-gate SHA `8d05fbb6f36c3623d6df794f6cfc2beabef2f47e`; the subsequent full source suite failed only on the three Shell/controller cases documented above. The new repair requires a complete aggregate-gate rerun before source closure.
-
-## Exact next source gate
-
-On the Intel Mac mini running Ubuntu, from an exact clean checkout of current `origin/main`:
-
-```bash
-git fetch origin
-git checkout main
-git pull --ff-only origin main
-bash tools/run_hardware_enablement_source_gate.sh
-```
-
-The canonical script already runs the focused hardware-enablement suites and the broader source gate. Stop on non-zero exit and preserve exact output and SHA.
-
-Only after it exits zero may the Acer SD preparation continue with:
+Canonical legacy SD installer build:
 
 ```bash
 sudo bash build/build-legacy-x86-sd-installer.sh out
 ```
 
-Then verify the image digest, positively identify the intended SD whole device, raw-write the image, and require a physical read-back SHA match before calling the card prepared.
+The generic `legacy-x86-i686` profile is architecture/family based; do not tailor the OS image to one Acer model.
 
-Do not weaken tests, substitute an Acer-specific profile, or replace Debian metadata with Greia-authored device tables.
+Current no-USB Acer bootstrap remains:
 
-## Build/VM evidence after source PASS
+```text
+Acer BIOS
+→ internal antiX
+→ antiX GRUB entry prepared from Greia SD helper
+→ Greia kernel/initrd/live system on SD
+→ graphical fail-closed installer
+→ final Greia on internal disk
+```
 
-1. Build at least one Bookworm/i386 installer and one Trixie/amd64 installer on an owner-controlled Debian/Ubuntu build environment.
-2. Record generated support-pool package counts/bytes and inspect manifests.
-3. Confirm package resolution never changes the live package set during download-only pool construction.
-4. Boot/install in the existing owner-controlled VM/QEMU path.
-5. Verify malformed/mismatched support media stops before disk mutation.
-6. Verify local read-only package transaction, cleanup, initramfs/GRUB ordering and no visible Linux UI.
-7. Only then begin broad physical-machine/peripheral acceptance.
+`tools/prepare-antix-sd-boot.sh` lives on the installer media and infers the SD from its own mounted path. The helper is for the current antiX bootstrap only; installed Greia still needs a Greia-owned reinstall/update-from-media path in a later recovery tranche.
 
-## Broad compatibility evidence still open
+Before any SD/raw-media operation:
 
-Automatic firmware/package resolution does not itself prove broad hardware support. Still required:
-
-- deliberately diverse old/new x86 physical-machine matrix;
-- keyboard/mouse/touchpad/touchscreen classes;
-- controller/joystick classes;
-- Wi-Fi and Ethernet families;
-- audio output/input;
-- internal/external displays and graphics paths;
-- storage/controllers/card readers/USB;
-- power/battery/brightness;
-- representative Bluetooth/USB peripherals;
-- explicit compatible/certified/degraded/unsupported results.
-
-Kernel support remains separate from firmware support. Very new/old hardware may require different kernel tracks. Current x86 Phase-0 boot remains BIOS-oriented; UEFI breadth is a separate compatibility tranche. R7 production graphics/session/input architecture remains independently blocking.
+- use a genuinely passing current source gate;
+- build on the owner-controlled compatible Linux host;
+- verify generated image SHA-256;
+- positively identify the intended whole SD device;
+- raw-write only that device;
+- perform physical read-back SHA verification.
 
 ## Existing Wi-Fi installer state
 
@@ -433,31 +418,50 @@ Welcome
 → installation
 ```
 
-Visible Open and WPA/WPA2/WPA3-Personal are the initial cases. Enterprise/802.1X is identified/deferred; WEP unsupported; hidden/manual SSID remains follow-up. Credentials are masked, absent from argv/log/install record, and successful profiles are persisted privately. Physical Wi-Fi acceptance remains NOT RUN.
+Visible Open and WPA/WPA2/WPA3-Personal are the initial cases. Enterprise/802.1X remains deferred; WEP unsupported; hidden/manual SSID is follow-up. Credentials must remain absent from argv/log/install records. Physical Wi-Fi acceptance remains open.
 
-## Developer remote-control / Acer agent workflow
+## Developer remote-control path
 
-`tools/greia_remote.py` supports remote status/screenshot/snapshot/logs/input/Activity deployment/service restart/reboot/poweroff/shell on explicit developer images. The earlier Ubuntu regression exposed and repaired a `self.key`/`key()` name collision. Developer SSH authentication is explicitly hardened by `build/overlay/etc/ssh/sshd_config.d/20-greia-parent.conf`; normal images still do not enable SSH merely because the policy file exists. Physical remote-agent acceptance remains NOT RUN.
+`tools/greia_remote.py` and explicit development profiles provide SSH-based remote engineering controls for test images. This is not the release Parent API and must stay separate.
+
+Development remote controls include bounded status/screenshot/log/input/Activity deployment/service restart/reboot/poweroff/shell capabilities. Normal/release profiles do not include `developer-remote` merely because these tools exist.
 
 ## Other active R7 state
 
 - Production display remains provisional Xorg/xinit; no compositor selected.
 - ADR 0019 trusted system Home/Back source exists; concrete production backend remains unproven.
-- ADR 0020 input/controller semantic source exists. Pygame tolerates distro builds that expose `_sdl2.controller` without re-exporting SDL2 controller enum constants; Shell tests now consume that Greia portability layer rather than bypassing it.
-- `ShellInputController` analog repeat now treats a one-ULP floating representation difference at an exact configured deadline as due; the owner-controlled Ubuntu gate rerun is still required before claiming source PASS.
+- ADR 0020 runtime-neutral input/controller semantic source exists.
+- `ShellInputController` contains the exact-deadline floating-point repair recorded in the Ubuntu source-gate review.
 - Production Activity input broker and physical controller acceptance remain open.
-- Writing/Painting remain source-implemented; current execution/hardware evidence remains unproven.
+- Writing/Painting remain source-implemented; current hardware/runtime evidence remains incomplete.
+- Direct KMSDRM/compositor/session work remains evidence-gated and must not be bypassed by deepening X11.
+
+## Exact continuation priorities
+
+The Parent API foundation is now persisted, but **R7 remains the primary blocking architecture phase**. Do not reinterpret the parent work as closing or skipping R7/R10/R11/R12.
+
+Immediate legitimate work sequence:
+
+1. Resolve exact current `origin/main` and run the current source gate on the owner-controlled Linux checkout. Include `tests/test_parent_api.py`. Preserve the first real failure; do not weaken tests.
+2. Continue the already defined installer/SD/hardware path only after the source gate genuinely passes at that exact head.
+3. Continue R7 direct graphics/session/input evidence and architecture work according to the active plan.
+4. For the next Greia Parents slice, implement the **local short-lived pairing challenge + Greia-screen Allow/Deny flow** and complete the encrypted transport/device-identity design before calling pairing production-safe.
+5. Define/implement a narrow typed parent privileged broker before enabling SSH, Activity package installation, audio/network administration, backup/restore or update controls. Reuse R10/R11/HAL services; no shell shortcuts.
 
 ## Non-negotiable continuation rules
 
 - `main` only unless the owner explicitly changes branch policy;
+- GitHub is canonical source truth;
 - no unauthorized GitHub Actions execution or inspection;
 - no visible Linux UI during normal child operation;
 - no per-model Greia driver database;
 - no arbitrary vendor drivers/downloaders;
 - no raw hardware identifiers exposed to Activities;
-- broad compatibility payload belongs primarily on removable installer media, not every final C0 target;
-- automatic package resolution must be bounded, signed/frozen, fail-closed and no-removal;
+- broad compatibility payload belongs primarily on installer media, not every C0 target;
+- automatic package resolution remains bounded, frozen/signed, fail-closed and no-removal;
 - source/build/VM/physical evidence boundaries remain explicit and honest;
-- do not implement persistent installed-system hotplug package installation before the installer path passes its current gates;
-- preserve ADR 0019/0020 R7 trusted system-chrome/input constraints while expanding hardware breadth.
+- normal/release SSH stays disabled unless a parent deliberately enables the future typed maintenance capability;
+- Greia Parents and future native clients use the same semantic Parent API; no client receives a private shell/root path;
+- current plaintext Parent transport/shared-token bootstrap are provisional and must not be described as production security;
+- preserve ADR 0019/0020 trusted system-chrome/input constraints while expanding hardware support;
+- do not claim current source PASS until a current checkout actually runs the gate successfully.
