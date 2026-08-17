@@ -1,0 +1,17 @@
+font_family=Nunito Sans
+font_license=SIL Open Font License 1.1
+upstream_source=https://github.com/google/fonts/tree/main/ofl/nunitosans
+upstream_variable_sha256=f934d7142fb4784bf828da485b7dcbd90c0c80d514e9d49a5da0ed3a1ae2491d
+derivation=Instantiated static weights (Regular 400, SemiBold 600, Bold 700, ExtraBold 800)
+  from the upstream variable font NunitoSans[YTLC,opsz,wdth,wght].ttf using
+  fontTools 4.46.0 varLib.instancer, then stripped variable tables (fvar,
+  gvar, avar, STAT, MVAR, HVAR) and corrected the name table and OS/2
+  usWeightClass. Glyph outlines are the pinned variable-font instances; no
+  other modification was made.
+files_modified=false (instances, not byte-identical copies)
+reviewed_utc=2026-08-17
+purpose=Greia default interface typeface (GREIA_VISUAL_STYLE_GUIDE.md section 3)
+bundled_files_sha256=NunitoSans-Regular.ttf 3f3b9fb0152cb504e0cd1029e3e71dc6edc57012b85352fbee9acc63aa84d936
+bundled_files_sha256=NunitoSans-SemiBold.ttf 0c0cb26172d548104d67fde11edce79825275f23a01f23224080f1b1045fad53
+bundled_files_sha256=NunitoSans-Bold.ttf 80a0d9ccfd7dd2c1edd2098e46b87e91375a58e94942afe0ab572bc228f58139
+bundled_files_sha256=NunitoSans-ExtraBold.ttf e072a6d0240e0f477086ca86fa35ac4f0810f9d9913fc8c38fe1d28150392cf2

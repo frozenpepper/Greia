@@ -16,6 +16,7 @@ from greia_platform.activities import (
 )
 from greia_platform.assets import AssetCatalogue
 from greia_platform.customization import ThemeStore
+from greia_platform.typography import FontRole, GreiaTypography
 from greia_platform.hal import (
     AudioState,
     DisplayState,
@@ -203,6 +204,9 @@ class LauncherApplication:
         self._next_boot_handoff_attempt = 0.0
         self._icon_cache: dict[tuple[str, int], Any] = {}
         self._font_cache: dict[int, Any] = {}
+        self._typography = GreiaTypography(
+            self.paths.root / "assets" / "fonts" / "nunito-sans"
+        )
         self._next_rescan = 0.0
         self._catalogue_error = False
         self._targets: list[HitTarget] = []
@@ -757,7 +761,7 @@ class LauncherApplication:
         size = max(18, size)
         font = self._font_cache.get(size)
         if font is None:
-            font = pygame.font.Font(None, size)
+            font = self._typography.font(FontRole.BODY, size)
             self._font_cache[size] = font
         return font
 

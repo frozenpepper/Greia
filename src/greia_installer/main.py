@@ -20,6 +20,7 @@ from greia_platform.keyboard_layout import (
     layout_by_id,
     layout_candidates,
 )
+from greia_platform.typography import FontRole, GreiaTypography
 
 from .composition import provisional_installer_hardware_controller
 from .disk import BlockDevice, DiskProbeError, LsblkDiskProbe
@@ -146,6 +147,9 @@ class InstallerApplication:
         self._layout_scroll = 0
         self._last_password_character: tuple[str, float] | None = None
         self._last_caret_blink = 0.0
+        self._typography = GreiaTypography(
+            self.root / "assets" / "fonts" / "nunito-sans"
+        )
 
     def _load_targets(self) -> tuple[BlockDevice, ...]:
         if self.demo:
@@ -572,9 +576,9 @@ class InstallerApplication:
         success = (51, 128, 76)
         screen.fill(background)
         self._buttons.clear()
-        font = pygame.font.Font(None, max(27, height // 22))
-        title_font = pygame.font.Font(None, max(42, height // 12))
-        small_font = pygame.font.Font(None, max(22, height // 28))
+        font = self._typography.font(FontRole.CONTROL, max(27, height // 22))
+        title_font = self._typography.font(FontRole.TITLE, max(42, height // 12))
+        small_font = self._typography.font(FontRole.BODY, max(22, height // 28))
 
         main = pygame.Rect(
             max(24, width * 0.06),
@@ -585,14 +589,12 @@ class InstallerApplication:
         pygame.draw.rect(screen, panel, main, border_radius=28)
         page = self.state.page
         if page == InstallerPage.WELCOME:
-            self._center_title(
-                screen, "Install Greia OS", title_font, text, main.top + 45
-            )
-            self._boot_logo(
+            self._hero_logo(
                 screen,
                 pygame,
-                (width // 2, height // 2),
-                int(height * 0.38),
+                main,
+                width,
+                height,
             )
             self._button(
                 screen,
@@ -828,7 +830,7 @@ class InstallerApplication:
                 if result is not None
                 else "CODE UNAVAILABLE"
             )
-            code_font = pygame.font.Font(None, max(33, height // 15))
+            code_font = self._typography.font(FontRole.DISPLAY, max(33, height // 15))
             self._center_text(
                 screen, recovery_code, code_font, danger, main.top + 305
             )
@@ -1484,6 +1486,41 @@ class InstallerApplication:
             image = pygame.transform.smoothscale(loaded, (width, height)).convert_alpha()
             self._icon_cache[key] = image
         screen.blit(image, image.get_rect(center=center))
+
+    def _hero_logo(
+        self,
+        screen: Any,
+        pygame: Any,
+        main: Any,
+        width: int,
+        height: int,
+    ) -> None:
+        """Render the boot-frame logo stretched to fill the panel vertically."""
+        key = ("hero-logo", main.height)
+        image = self._icon_cache.get(key)
+        if image is None:
+            frame_path = Path("/usr/share/plymouth/themes/greia/frames/frame_0051.png")
+            source = frame_path if frame_path.is_file() else (
+                self.root
+                / "assets"
+                / "icons"
+                / "core"
+                / "v1"
+                / "256"
+                / "robot.png"
+            )
+            loaded = pygame.image.load(str(source))
+            if loaded.get_width() <= 0 or loaded.get_height() <= 0:
+                loaded = pygame.image.load(
+                    str(self.root / "assets" / "icons" / "core" / "v1" / "256" / "robot.png")
+                )
+            target_height = int(main.height)
+            target_width = int(loaded.get_width() * target_height / loaded.get_height())
+            image = pygame.transform.smoothscale(loaded, (target_width, target_height)).convert_alpha()
+            self._icon_cache[key] = image
+        image_rect = image.get_rect()
+        image_rect.midtop = (width // 2, main.top + 10)
+        screen.blit(image, image_rect)
 
     def _draw_pointer(self, screen: Any, pygame: Any) -> None:
         if not pygame.mouse.get_focused():
