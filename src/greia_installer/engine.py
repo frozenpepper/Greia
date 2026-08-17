@@ -282,6 +282,11 @@ class InstallationEngine:
             missing = [str(path) for path in required if not path.exists()]
             if missing:
                 raise InstallationError("installed system is incomplete: " + ", ".join(missing))
+            self._verify_installed_boot_config(
+                target_mount,
+                filesystem_uuid,
+                partition,
+            )
             self.runner.run(["sync"])
             report(InstallProgress(1.0, "complete", "Installation complete"))
         except subprocess.CalledProcessError as exc:
@@ -426,6 +431,40 @@ class InstallationEngine:
                 return
             time.sleep(0.25)
         raise InstallationError(f"new partition did not appear: {partition}")
+
+    @staticmethod
+    def _verify_installed_boot_config(
+        target_root: Path,
+        filesystem_uuid: str,
+        partition: Path,
+    ) -> None:
+        """Fail install if the generated boot config cannot boot this disk.
+
+        Catches root-UUID mismatches and missing kernel/initrd before the
+        machine is handed back, instead of boot-looping after 'GRUB loaded'.
+        """
+        normalized = str(uuid.UUID(filesystem_uuid))
+        grub_cfg = target_root / "boot/grub/grub.cfg"
+        if not grub_cfg.is_file():
+            raise InstallationError("installed GRUB configuration is missing")
+        cfg_text = grub_cfg.read_text(encoding="utf-8", errors="replace")
+        if f"root=UUID={normalized}" not in cfg_text:
+            raise InstallationError(
+                "installed GRUB configuration does not reference the root filesystem UUID"
+            )
+        # The appliance entry loads /vmlinuz and /initrd.img symlinks; both must
+        # resolve to existing kernel/initrd files.
+        for link_name in ("vmlinuz", "initrd.img"):
+            link = target_root / link_name
+            if not link.exists():
+                raise InstallationError(
+                    f"installed boot entry is missing {link_name}"
+                )
+            target = link.resolve()
+            if not target.is_file() or target_root not in target.parents:
+                raise InstallationError(
+                    f"installed boot entry {link_name} does not resolve inside the system"
+                )
 
     def _mount_chroot_filesystems(self, root: Path, mounted: list[Path]) -> None:
         for name in ("dev", "proc", "sys", "run"):

@@ -271,6 +271,36 @@ class InstallerEngineTests(unittest.TestCase):
             self.assertTrue((root / "etc/greia-os/grub-recovery.pbkdf2").read_text().startswith("grub.pbkdf2."))
             self.assertTrue((root / "etc/greia-os/grub-recovery-code").read_text().strip())
 
+    def test_verify_installed_boot_config_accepts_consistent_uuid_and_kernel(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "boot/grub").mkdir(parents=True)
+            (root / "boot").mkdir(parents=True, exist_ok=True)
+            # Symlinks the appliance entry loads
+            os.symlink("boot/vmlinuz-6.1.0-52-686", root / "vmlinuz")
+            os.symlink("boot/initrd.img-6.1.0-52-686", root / "initrd.img")
+            (root / "boot/vmlinuz-6.1.0-52-686").write_bytes(b"kernel")
+            (root / "boot/initrd.img-6.1.0-52-686").write_bytes(b"initrd")
+            uuid_text = "12345678-1234-5678-9abc-def012345678"
+            (root / "boot/grub/grub.cfg").write_text(
+                f'menuentry "Greia OS" {{ linux /vmlinuz root=UUID={uuid_text} ro }}'
+            )
+            InstallationEngine._verify_installed_boot_config(root, uuid_text, Path("/dev/sda1"))
+
+    def test_verify_installed_boot_config_rejects_uuid_mismatch(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "boot/grub").mkdir(parents=True)
+            os.symlink("boot/vmlinuz", root / "vmlinuz")
+            (root / "boot/vmlinuz").write_bytes(b"kernel")
+            (root / "boot/grub/grub.cfg").write_text(
+                "menuentry 'Greia OS' { linux /vmlinuz root=UUID=aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa ro }"
+            )
+            with self.assertRaisesRegex(InstallationError, "root filesystem UUID"):
+                InstallationEngine._verify_installed_boot_config(
+                    root, "12345678-1234-5678-9abc-def012345678", Path("/dev/sda1")
+                )
+
     def test_install_result_groups_recovery_code_for_parent_display(self) -> None:
         result = InstallResult(
             recovery_user="greia-recovery",
