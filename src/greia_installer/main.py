@@ -771,6 +771,9 @@ class InstallerApplication:
                     1.0,
                     (time.monotonic() - self._hold_started) / self.HOLD_SECONDS,
                 )
+                # Redraw the whole button surface so no prior label bleeds
+                # through the progress fill.
+                pygame.draw.rect(screen, danger, rect, border_radius=18)
                 fill = rect.copy()
                 fill.width = int(rect.width * fraction)
                 pygame.draw.rect(screen, (120, 24, 24), fill, border_radius=18)
@@ -1055,7 +1058,7 @@ class InstallerApplication:
             "Connect now, or set it up later in Greia Parents.",
             small_font,
             text,
-            main.top + 76,
+            main.top + 40 + title_font.get_height(),
         )
 
         if snapshot.phase is WifiSetupPhase.SCANNING:
@@ -1123,6 +1126,7 @@ class InstallerApplication:
                 pygame,
                 main,
                 font,
+                title_font,
                 small_font,
                 background,
                 text,
@@ -1174,6 +1178,7 @@ class InstallerApplication:
         pygame: Any,
         main: Any,
         font: Any,
+        title_font: Any,
         small_font: Any,
         background: tuple[int, int, int],
         text: tuple[int, int, int],
@@ -1191,6 +1196,7 @@ class InstallerApplication:
             )
             return
 
+        rows_top = main.top + 40 + title_font.get_height() + small_font.get_height() + 8
         page_start = (
             snapshot.selected_index // self.WIFI_ROWS_PER_PAGE
         ) * self.WIFI_ROWS_PER_PAGE
@@ -1199,7 +1205,7 @@ class InstallerApplication:
             index = page_start + offset
             rect = pygame.Rect(
                 main.left + 70,
-                main.top + 105 + offset * 62,
+                rows_top + offset * 62,
                 main.width - 140,
                 52,
             )
@@ -1232,7 +1238,7 @@ class InstallerApplication:
         network = snapshot.selected_network
         if network is None:
             return
-        controls_y = main.top + 365
+        controls_y = rows_top + self.WIFI_ROWS_PER_PAGE * 62 + 16
         if network.security is WifiSecurity.PERSONAL:
             password_rect = pygame.Rect(
                 main.left + 90, controls_y, main.width - 340, 48
