@@ -88,7 +88,7 @@ class DemoInstallationEngine:
 
 class InstallerApplication:
     HOLD_SECONDS = 2.0
-    WIFI_ROWS_PER_PAGE = 4
+    WIFI_ROWS_PER_PAGE = 3
 
     def __init__(
         self,
