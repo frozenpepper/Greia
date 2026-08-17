@@ -172,7 +172,7 @@ class InstallerApplication:
         size = (1024, 600) if self.windowed else (0, 0)
         screen = pygame.display.set_mode(size, flags)
         pygame.display.set_caption("Install Greia OS")
-        pygame.mouse.set_visible(True)
+        pygame.mouse.set_visible(False)
         clock = pygame.time.Clock()
         running = True
         while running and not self._exit_requested:
@@ -191,6 +191,7 @@ class InstallerApplication:
                     self._handle_mouse_up(event.pos)
             self._update_install_hold(pygame)
             self._draw(screen, pygame)
+            self._draw_pointer(screen, pygame)
             pygame.display.flip()
             if not self.windowed and os.environ.get("PIP_SKIP_BOOT_HANDOFF") != "1":
                 self._release_boot_cover_once()
@@ -1139,6 +1140,13 @@ class InstallerApplication:
             image = pygame.transform.smoothscale(image, (size, size))
             self._icon_cache[key] = image
         screen.blit(image, image.get_rect(center=center))
+
+    def _draw_pointer(self, screen: Any, pygame: Any) -> None:
+        if not pygame.mouse.get_focused():
+            return
+        size = max(34, min(54, screen.get_height() // 12))
+        x, y = pygame.mouse.get_pos()
+        self._icon(screen, pygame, "yellow_star", size, (x, y))
 
     def _center_title(
         self,
