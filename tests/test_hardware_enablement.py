@@ -148,6 +148,22 @@ class HardwareResolverTests(unittest.TestCase):
         self.assertEqual(plan.automatic_packages, ())
         self.assertIn("firmware failed with exit 2", plan.diagnostics)
 
+    def test_firmware_tool_no_needed_firmware_exit_is_not_a_failure(self) -> None:
+        # isenkram-autoinstall-firmware -l exits 1 when no kernel driver
+        # requested missing firmware; that is the healthy outcome and must not
+        # block hardware resolution.
+        resolver, _ = self.make_resolver(
+            CommandResult(1, "", "info: did not find any firmware files requested"),
+            CommandResult(0, "bluez\n", ""),
+        )
+        plan = resolver.resolve(inventory())
+        self.assertTrue(plan.complete)
+        self.assertEqual(plan.automatic_packages, ())
+        self.assertEqual(plan.advisory_packages, ("bluez",))
+        self.assertFalse(
+            any("firmware failed" in diagnostic for diagnostic in plan.diagnostics)
+        )
+
     def test_advisory_lookup_failure_does_not_invalidate_complete_firmware_plan(self) -> None:
         resolver, _ = self.make_resolver(
             CommandResult(0, "firmware-realtek\n", ""),

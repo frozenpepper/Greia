@@ -262,7 +262,12 @@ class IsenkramHardwareSupportResolver:
         recommendations: dict[str, HardwareSupportRecommendation] = {}
         complete = not inventory.truncated and inventory.scan_errors == 0
 
-        firmware_result = self._run((self.firmware_command, "-l"), "firmware", diagnostics)
+        firmware_result = self._run(
+            (self.firmware_command, "-l"),
+            "firmware",
+            diagnostics,
+            benign_exit_codes=(1,),
+        )
         if firmware_result is None:
             complete = False
         else:
@@ -305,6 +310,8 @@ class IsenkramHardwareSupportResolver:
         command: Sequence[str],
         label: str,
         diagnostics: list[str],
+        *,
+        benign_exit_codes: tuple[int, ...] = (),
     ) -> CommandResult | None:
         try:
             result = self.runner.run(command, timeout_seconds=self.timeout_seconds)
@@ -312,6 +319,11 @@ class IsenkramHardwareSupportResolver:
             diagnostics.append(f"{label} unavailable: {exc.__class__.__name__}")
             return None
         if result.returncode != 0:
+            # ``isenkram-autoinstall-firmware -l`` exits 1 when it found no
+            # firmware files requested by loaded kernel modules. On a healthy
+            # machine that is the expected outcome, not a resolution failure.
+            if result.returncode in benign_exit_codes:
+                return result
             diagnostics.append(f"{label} failed with exit {result.returncode}")
             return None
         return result
