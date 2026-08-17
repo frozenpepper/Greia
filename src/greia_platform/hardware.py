@@ -43,6 +43,7 @@ class HardwareDefaults:
     mouse_speed: float
     natural_scrolling: bool
     resolution: str
+    keyboard_layout: str
     minimum_speed: float
     maximum_speed: float
 
@@ -63,6 +64,7 @@ class HardwareDefaults:
                     defaults["natural_scrolling"], "natural_scrolling"
                 ),
                 resolution=str(defaults["resolution"]),
+                keyboard_layout=str(defaults["keyboard_layout"]),
                 minimum_speed=float(limits["minimum_speed"]),
                 maximum_speed=float(limits["maximum_speed"]),
             )
@@ -70,6 +72,7 @@ class HardwareDefaults:
             raise HardwareSettingsError(f"invalid hardware defaults: {exc}") from exc
         if loaded.schema_version != 1:
             raise HardwareSettingsError("unsupported hardware settings schema")
+        loaded.validate_keyboard_layout(loaded.keyboard_layout)
         if loaded.minimum_speed < -1.0 or loaded.maximum_speed > 1.0:
             raise HardwareSettingsError("speed limits must remain within libinput range")
         if loaded.minimum_speed >= loaded.maximum_speed:
@@ -87,6 +90,15 @@ class HardwareDefaults:
             )
         return value
 
+    def validate_keyboard_layout(self, value: str) -> str:
+        from .keyboard_layout import layout_by_id
+
+        try:
+            layout_by_id(value)
+        except LookupError as exc:
+            raise HardwareSettingsError(f"unsupported keyboard layout: {value}") from exc
+        return value
+
 
 @dataclass(frozen=True, slots=True)
 class HardwareSettings:
@@ -96,6 +108,7 @@ class HardwareSettings:
     mouse_speed: float
     natural_scrolling: bool
     resolution: str
+    keyboard_layout: str
 
     def as_json_dict(self) -> dict[str, object]:
         return asdict(self)
@@ -144,6 +157,7 @@ class HardwareSettingsStore:
             mouse_speed=self.defaults.mouse_speed,
             natural_scrolling=self.defaults.natural_scrolling,
             resolution=self.defaults.resolution,
+            keyboard_layout=self.defaults.keyboard_layout,
         )
 
     def read(self) -> HardwareSettings:
@@ -177,6 +191,9 @@ class HardwareSettingsStore:
                     "natural_scrolling",
                 ),
                 resolution=str(raw.get("resolution", default.resolution)),
+                keyboard_layout=str(
+                    raw.get("keyboard_layout", default.keyboard_layout)
+                ),
             )
             self.validate(settings)
             return settings
@@ -191,6 +208,7 @@ class HardwareSettingsStore:
         mouse_speed: float | None = None,
         natural_scrolling: bool | None = None,
         resolution: str | None = None,
+        keyboard_layout: str | None = None,
         allowed_resolutions: Iterable[str] | None = None,
     ) -> HardwareSettings:
         current = self.read()
@@ -213,6 +231,11 @@ class HardwareSettingsStore:
                 else natural_scrolling
             ),
             resolution=current.resolution if resolution is None else resolution,
+            keyboard_layout=(
+                current.keyboard_layout
+                if keyboard_layout is None
+                else self.defaults.validate_keyboard_layout(keyboard_layout)
+            ),
         )
         self.validate(updated, allowed_resolutions=allowed_resolutions)
         self._write(updated)
@@ -250,6 +273,7 @@ class HardwareSettingsStore:
         self.defaults.validate_speed(settings.touchpad_speed, "touchpad_speed")
         self.defaults.validate_speed(settings.mouse_speed, "mouse_speed")
         _validate_resolution_id(settings.resolution)
+        self.defaults.validate_keyboard_layout(settings.keyboard_layout)
         if allowed_resolutions is not None:
             allowed = {"auto", *allowed_resolutions}
             if settings.resolution not in allowed:

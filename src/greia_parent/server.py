@@ -290,6 +290,11 @@ class ParentStatusApplication:
             mouse_speed=_form_float(form, "mouse_speed"),
             natural_scrolling=_form_checked(form, "natural_scrolling"),
             resolution=resolution,
+            keyboard_layout=(
+                _form_text(form, "keyboard_layout")
+                if "keyboard_layout" in form
+                else None
+            ),
             allowed_resolutions=allowed_modes or None,
         )
         return updated.as_json_dict()
@@ -501,6 +506,7 @@ def render_status_page(payload: dict[str, object]) -> str:
     mouse_speed = _safe_speed(desired.get("mouse_speed"))
     touchpad_speed = _safe_speed(desired.get("touchpad_speed"))
     resolution = str(desired.get("resolution", "auto"))
+    keyboard_layout = str(desired.get("keyboard_layout", "us"))
     mode_ids = [
         str(mode.get("id"))
         for mode in modes
@@ -513,6 +519,13 @@ def render_status_page(payload: dict[str, object]) -> str:
         f'<option value="{html.escape(mode)}"{" selected" if mode == resolution else ""}>'
         f'{html.escape("Automatic" if mode == "auto" else mode)}</option>'
         for mode in options
+    )
+    from greia_platform.keyboard_layout import available_layouts
+
+    keyboard_layout_options = "".join(
+        f'<option value="{html.escape(layout.id)}"{" selected" if layout.id == keyboard_layout else ""}>'
+        f"{html.escape(layout.label)}</option>"
+        for layout in available_layouts()
     )
     apply_status = html.escape(str(hardware.get("message", "Waiting for hardware session.")))
     avatar_options = _avatar_options(avatars, "")
@@ -567,7 +580,7 @@ button.danger{{background:var(--danger);color:white}} .actions{{display:flex;gap
 <section><h2>Child accounts</h2><p>Reset child appearance is available separately for every account.</p><div class="grid">{profile_cards}</div>
 <h3>Add child</h3><form method="post" action="/api/profiles/create"><label>Name<input name="display_name" maxlength="24" required></label><label>Avatar<select name="avatar_id">{avatar_options}</select></label><label>Optional simple password — shown while typing by default<input name="secret" maxlength="32" autocomplete="new-password"></label><label><input type="checkbox" name="mask_secret"> Hide password on the child screen</label><button type="submit">Add child</button></form></section>
 <section><h2>Progress</h2>{progress_html}</section>
-<section><h2>Mouse, touchpad, and screen</h2><form method="post" action="/api/hardware"><label><input type="checkbox" name="touchpad_tap"{touchpad_tap}> Tap touchpad to click</label><small>Disabled by default. Physical touchpad buttons continue to work.</small><label><input type="checkbox" name="natural_scrolling"{natural_scrolling}> Natural scrolling</label><div class="grid"><label>Mouse speed<input type="range" name="mouse_speed" min="-1" max="1" step="0.25" value="{mouse_speed}"></label><label>Touchpad speed<input type="range" name="touchpad_speed" min="-1" max="1" step="0.25" value="{touchpad_speed}"></label><label>Screen resolution<select name="resolution">{resolution_options}</select></label></div><p><small>{apply_status}</small></p><button type="submit">Apply hardware settings</button></form><form method="post" action="/api/hardware/reset"><div class="actions"><button class="danger" type="submit">Restore hardware defaults</button></div></form></section>
+<section><h2>Mouse, touchpad, and screen</h2><form method="post" action="/api/hardware"><label><input type="checkbox" name="touchpad_tap"{touchpad_tap}> Tap touchpad to click</label><small>Disabled by default. Physical touchpad buttons continue to work.</small><label><input type="checkbox" name="natural_scrolling"{natural_scrolling}> Natural scrolling</label><div class="grid"><label>Keyboard layout<select name="keyboard_layout">{keyboard_layout_options}</select></label><label>Mouse speed<input type="range" name="mouse_speed" min="-1" max="1" step="0.25" value="{mouse_speed}"></label><label>Touchpad speed<input type="range" name="touchpad_speed" min="-1" max="1" step="0.25" value="{touchpad_speed}"></label><label>Screen resolution<select name="resolution">{resolution_options}</select></label></div><p><small>{apply_status}</small></p><button type="submit">Apply hardware settings</button></form><form method="post" action="/api/hardware/reset"><div class="actions"><button class="danger" type="submit">Restore hardware defaults</button></div></form></section>
 <section><h2>Installed activities</h2><ul>{activity_items}</ul></section></main>"""
 
 

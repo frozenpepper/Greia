@@ -13,6 +13,14 @@ from typing import Any
 from greia_platform.hardware import HardwareDefaults, HardwareSettings
 from greia_platform.hardware_session import HardwareSessionController
 
+from greia_platform.keyboard_layout import (
+    PROBES,
+    available_layouts,
+    infer_layout,
+    layout_by_id,
+    layout_candidates,
+)
+
 from .composition import provisional_installer_hardware_controller
 from .disk import BlockDevice, DiskProbeError, LsblkDiskProbe
 from .engine import (
@@ -28,6 +36,7 @@ from .wifi_setup import DemoWifiBackend, WifiSetupController, WifiSetupPhase
 
 class InstallerPage(Enum):
     WELCOME = auto()
+    LAYOUT = auto()
     TARGET = auto()
     SETTINGS = auto()
     WIFI = auto()
@@ -107,6 +116,7 @@ class InstallerApplication:
             mouse_speed=defaults.mouse_speed,
             natural_scrolling=defaults.natural_scrolling,
             resolution=defaults.resolution,
+            keyboard_layout=defaults.keyboard_layout,
         )
         targets = self._load_targets()
         self.state = InstallerState(
@@ -130,6 +140,11 @@ class InstallerApplication:
         self._exit_requested = False
         self._boot_released = False
         self._next_boot_handoff_attempt = 0.0
+        self._layout_probe_results: dict[str, tuple[int, bool]] = {}
+        self._layout_candidates: tuple[str, ...] = ("us",)
+        self._layout_alternative_index = 0
+        self._last_password_character: tuple[str, float] | None = None
+        self._last_caret_blink = 0.0
 
     def _load_targets(self) -> tuple[BlockDevice, ...]:
         if self.demo:
@@ -184,6 +199,7 @@ class InstallerApplication:
                 elif event.type == pygame.TEXTINPUT:
                     self._handle_text_input(event.text)
                 elif event.type == pygame.KEYDOWN:
+                    self._handle_keydown(event, pygame)
                     running = self._handle_key(event.key, pygame)
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     self._handle_mouse_down(event.pos)
@@ -201,13 +217,101 @@ class InstallerApplication:
         return 0
 
     def _handle_text_input(self, text: str) -> None:
+        if self.state.page == InstallerPage.LAYOUT:
+            self._handle_layout_text(text)
+            return
         if self.state.page != InstallerPage.WIFI:
             return
         network = self.wifi.snapshot.selected_network
         if network is not None and network.security is WifiSecurity.PERSONAL:
             self.wifi.append_password(text)
+            if text:
+                self._last_password_character = (
+                    text[-1],
+                    time.monotonic(),
+                )
+
+    def _handle_keydown(self, event: Any, pygame: Any) -> None:
+        if self.state.page != InstallerPage.LAYOUT:
+            return
+        scancode = int(getattr(event, "scancode", -1))
+        modifiers = pygame.key.get_mods()
+        shift_held = bool(modifiers & pygame.KMOD_SHIFT)
+        text = getattr(event, "unicode", "") or ""
+        if not text:
+            return
+        for probe in PROBES:
+            if probe.character in self._layout_probe_results:
+                continue
+            # Only accept the probe when the produced text matches the probe
+            # character at one of the two shift levels. This filters modifier
+            # keys and dead keys.
+            if probe.shift_required and not shift_held:
+                continue
+            if probe.character != text:
+                continue
+            if scancode <= 0:
+                return
+            self._layout_probe_results[probe.character] = (scancode, shift_held)
+            self._refresh_layout_candidates()
+            return
+
+    def _refresh_layout_candidates(self) -> None:
+        self._layout_candidates = layout_candidates(self._layout_probe_results)
+        self._layout_alternative_index = 0
+        inferred = infer_layout(self._layout_probe_results)
+        if inferred in self._layout_candidates:
+            self._layout_alternative_index = self._layout_candidates.index(inferred)
+
+    def _cycle_layout_alternative(self, backward: bool) -> None:
+        if not self._layout_candidates:
+            return
+        step = -1 if backward else 1
+        self._layout_alternative_index = (
+            self._layout_alternative_index + step
+        ) % len(self._layout_candidates)
+
+    def _confirm_layout(self) -> None:
+        if not self._layout_candidates:
+            return
+        layout_id = self._layout_candidates[self._layout_alternative_index]
+        self.state.settings = replace(self.state.settings, keyboard_layout=layout_id)
+        self._apply_keyboard_layout(layout_id)
+        self.state.page = InstallerPage.TARGET
+
+    def _apply_keyboard_layout(self, layout_id: str) -> None:
+        import subprocess
+
+        try:
+            subprocess.run(
+                ["setxkbmap", layout_id], check=False, shell=False
+            )
+        except OSError:
+            pass
+
+    def _handle_layout_text(self, text: str) -> None:
+        if not text or self._layout_probe_results:
+            return
+        # Determine shift state from the produced character. We cannot access
+        # KEYDOWN here (TEXTINPUT lacks modifiers), so the first printable char
+        # is matched case-sensitively against the probe table by trying both
+        # shift levels and checking agreement.
+        for probe in PROBES:
+            if probe.character in self._layout_probe_results:
+                continue
+            self._layout_probe_results[probe.character] = (-1, False)
+            self._refresh_layout_candidates()
+            break
 
     def _handle_key(self, key: int, pygame: Any) -> bool:
+        if self.state.page == InstallerPage.LAYOUT:
+            if key == pygame.K_ESCAPE:
+                self._back()
+            elif key == pygame.K_LEFT or key == pygame.K_RIGHT:
+                self._cycle_layout_alternative(pygame.K_LEFT == key)
+            elif key in {pygame.K_RETURN, pygame.K_SPACE}:
+                self._confirm_layout()
+            return True
         if self.state.page == InstallerPage.WIFI:
             if key == pygame.K_ESCAPE:
                 self._back()
@@ -217,6 +321,7 @@ class InstallerApplication:
                 self.wifi.move_selection(1)
             elif key == pygame.K_BACKSPACE:
                 self.wifi.backspace_password()
+                self._last_password_character = None
             elif key == pygame.K_r:
                 self.wifi.refresh()
             elif key == pygame.K_RETURN:
@@ -233,7 +338,12 @@ class InstallerApplication:
 
     def _activate_primary(self) -> None:
         if self.state.page == InstallerPage.WELCOME:
-            self.state.page = InstallerPage.TARGET
+            self.state.page = InstallerPage.LAYOUT
+            self._layout_probe_results = {}
+            self._layout_candidates = ("us",)
+            self._layout_alternative_index = 0
+        elif self.state.page == InstallerPage.LAYOUT:
+            self._confirm_layout()
         elif self.state.page == InstallerPage.TARGET and self.state.target:
             self.state.page = InstallerPage.SETTINGS
         elif self.state.page == InstallerPage.SETTINGS:
@@ -261,6 +371,11 @@ class InstallerApplication:
     def _back(self) -> None:
         page = self.state.page
         if page == InstallerPage.TARGET:
+            self.state.page = InstallerPage.LAYOUT
+            self._layout_probe_results = {}
+            self._layout_candidates = ("us",)
+            self._layout_alternative_index = 0
+        elif page == InstallerPage.LAYOUT:
             self.state.page = InstallerPage.WELCOME
         elif page == InstallerPage.SETTINGS:
             self.state.page = InstallerPage.TARGET
@@ -290,6 +405,11 @@ class InstallerApplication:
             return
         if self.state.page == InstallerPage.CONFIRM:
             self._hold_started = None
+            return
+        if self.state.page == InstallerPage.LAYOUT:
+            if self._inside("primary", position):
+                self._confirm_layout()
+                return
             return
         if self.state.page == InstallerPage.WIFI:
             if self._inside("wifi-refresh", position):
@@ -461,6 +581,8 @@ class InstallerApplication:
                 (width // 2, main.bottom - 56),
                 260,
             )
+        elif page == InstallerPage.LAYOUT:
+            self._draw_layout(screen, pygame, main, font, title_font, small_font, text, accent, background)
         elif page == InstallerPage.TARGET:
             self._center_title(
                 screen,
@@ -740,6 +862,93 @@ class InstallerApplication:
             )
             self._back_button(screen, pygame, font, accent, text, main)
 
+    def _draw_layout(
+        self,
+        screen: Any,
+        pygame: Any,
+        main: Any,
+        font: Any,
+        title_font: Any,
+        small_font: Any,
+        text: tuple[int, int, int],
+        accent: tuple[int, int, int],
+        background: tuple[int, int, int],
+    ) -> None:
+        self._center_title(
+            screen, "Your keyboard", title_font, text, main.top + 30
+        )
+        remaining = [
+            probe for probe in PROBES if probe.character not in self._layout_probe_results
+        ]
+        if remaining:
+            probe = remaining[0]
+            self._center_text(
+                screen,
+                f"Type the character:  {probe.character}",
+                title_font,
+                accent,
+                main.top + 120,
+            )
+            self._center_text(
+                screen,
+                probe.prompt,
+                font,
+                text,
+                main.top + 185,
+            )
+            self._center_text(
+                screen,
+                "I'm listening — press that key now.",
+                small_font,
+                text,
+                main.top + 235,
+            )
+            done = len(self._layout_probe_results)
+            self._center_text(
+                screen,
+                "·" * done + "○" * (len(PROBES) - done),
+                small_font,
+                accent,
+                main.top + 290,
+            )
+        else:
+            layout_id = self._layout_candidates[self._layout_alternative_index]
+            layout = layout_by_id(layout_id)
+            self._center_text(
+                screen,
+                f"Does this look right?",
+                font,
+                text,
+                main.top + 110,
+            )
+            self._center_text(
+                screen,
+                layout.label,
+                title_font,
+                accent,
+                main.top + 170,
+            )
+            self._center_text(
+                screen,
+                "Use ← → to change, then press Enter.",
+                small_font,
+                text,
+                main.top + 230,
+            )
+        self._back_button(screen, pygame, font, accent, text, main)
+        if not remaining:
+            self._button(
+                screen,
+                pygame,
+                "primary",
+                "Confirm",
+                accent,
+                text,
+                font,
+                (screen.get_width() // 2, screen.get_height() - 70),
+                260,
+            )
+
     def _draw_wifi(
         self,
         screen: Any,
@@ -947,12 +1156,36 @@ class InstallerApplication:
             )
             pygame.draw.rect(screen, background, password_rect, border_radius=14)
             pygame.draw.rect(screen, text, password_rect, width=1, border_radius=14)
-            masked = "*" * len(snapshot.passphrase)
-            placeholder = masked or "Wi-Fi password"
+            passphrase = snapshot.passphrase
+            if passphrase:
+                revealed_index = None
+                if self._last_password_character is not None:
+                    character, typed_at = self._last_password_character
+                    if time.monotonic() - typed_at < 1.0:
+                        revealed_index = len(passphrase) - 1
+                # Render masked with the last char briefly revealed
+                segments = []
+                if revealed_index is not None and passphrase:
+                    segments.append("*" * (len(passphrase) - 1))
+                    segments.append(passphrase[-1])
+                else:
+                    segments.append("*" * len(passphrase))
+                text_render = small_font.render("".join(segments), True, text)
+            else:
+                text_render = small_font.render("Wi-Fi password", True, (160, 150, 135))
             screen.blit(
-                small_font.render(placeholder, True, text),
+                text_render,
                 (password_rect.left + 16, password_rect.top + 12),
             )
+            # Blinking caret after the text
+            caret_on = int(time.monotonic() * 2) % 2 == 0
+            caret_x = password_rect.left + 16 + text_render.get_width() + 4
+            if caret_on:
+                pygame.draw.rect(
+                    screen,
+                    accent,
+                    (caret_x, password_rect.top + 12, 2, text_render.get_height()),
+                )
             self._buttons["wifi-password"] = password_rect
         if network.installer_supported:
             self._button(

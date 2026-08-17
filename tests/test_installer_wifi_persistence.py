@@ -50,6 +50,7 @@ def settings() -> HardwareSettings:
         mouse_speed=defaults.mouse_speed,
         natural_scrolling=defaults.natural_scrolling,
         resolution=defaults.resolution,
+        keyboard_layout=defaults.keyboard_layout,
     )
 
 

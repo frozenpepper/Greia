@@ -7,6 +7,7 @@ touchpad_speed = 0.0
 mouse_speed = 0.0
 natural_scrolling = false
 resolution = "auto"
+keyboard_layout = "us"
 
 [limits]
 minimum_speed = -1.0

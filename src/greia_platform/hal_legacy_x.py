@@ -110,6 +110,11 @@ class LegacyXHardwareSessionController:
         success = True
         display = self.probe_display()
 
+        keyboard_messages, keyboard_success = self._apply_keyboard(settings)
+        success = success and keyboard_success
+        if keyboard_messages:
+            messages.extend(keyboard_messages)
+
         input_messages, input_success = self._apply_input(settings)
         success = success and input_success
         if input_messages:
@@ -144,6 +149,20 @@ class LegacyXHardwareSessionController:
             messages.append("No connected display output was detected.")
 
         return ApplyResult(success, self.probe_display(), tuple(messages))
+
+    def _apply_keyboard(
+        self, settings: HardwareSettings
+    ) -> tuple[tuple[str, ...], bool]:
+        from .keyboard_layout import layout_by_id
+
+        try:
+            layout_by_id(settings.keyboard_layout)
+        except LookupError:
+            return (f"Unsupported keyboard layout: {settings.keyboard_layout}",), False
+        completed = self.runner.run(["setxkbmap", settings.keyboard_layout])
+        if completed.returncode != 0:
+            return (f"Keyboard layout could not be applied ({settings.keyboard_layout}).",), False
+        return (f"Keyboard layout set to {settings.keyboard_layout}.",), True
 
     def _apply_input(self, settings: HardwareSettings) -> tuple[tuple[str, ...], bool]:
         devices = self._list_pointer_devices()

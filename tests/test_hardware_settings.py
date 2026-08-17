@@ -22,6 +22,16 @@ class HardwareSettingsTests(unittest.TestCase):
             settings = self.make_store(Path(temporary)).read()
         self.assertFalse(settings.touchpad_tap)
         self.assertEqual(settings.resolution, "auto")
+        self.assertEqual(settings.keyboard_layout, "us")
+
+    def test_keyboard_layout_can_be_updated_and_validated(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            store = self.make_store(Path(temporary))
+            updated = store.update(keyboard_layout="de")
+            self.assertEqual(updated.keyboard_layout, "de")
+            self.assertEqual(store.read().keyboard_layout, "de")
+            with self.assertRaisesRegex(HardwareSettingsError, "unsupported keyboard layout"):
+                store.update(keyboard_layout="not-a-real-layout")
 
     def test_parent_update_is_atomic_and_bounded(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

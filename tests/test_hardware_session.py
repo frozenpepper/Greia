@@ -91,6 +91,7 @@ class HardwareSessionTests(unittest.TestCase):
             mouse_speed=0.5,
             natural_scrolling=True,
             resolution="1024x600",
+            keyboard_layout="us",
         )
 
     def test_legacy_adapter_applies_only_known_xinput_and_xrandr_controls(self) -> None:
