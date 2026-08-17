@@ -318,9 +318,7 @@ class InstallerApplication:
         if self.state.page == InstallerPage.LAYOUT:
             if key == pygame.K_ESCAPE:
                 self._back()
-            elif self._layout_probe_results and len(
-                [p for p in PROBES if p.keycode in self._layout_probe_results]
-            ) >= len(PROBES):
+            elif len(self._layout_probe_results) >= 3:
                 if key == pygame.K_UP:
                     self._move_layout_selection(-1)
                 elif key == pygame.K_DOWN:
@@ -899,6 +897,12 @@ class InstallerApplication:
         remaining = [
             probe for probe in PROBES if probe.character not in self._layout_probe_results
         ]
+        # A few probes are enough to identify the layout family; if the parent
+        # cannot produce the current character (e.g. AltGr symbols), show the
+        # selector so they can still choose manually.
+        done_count = len(self._layout_probe_results)
+        if done_count >= 3:
+            remaining = []
         if remaining:
             probe = remaining[0]
             self._center_text(
@@ -925,7 +929,7 @@ class InstallerApplication:
             )
             self._center_text(
                 screen,
-                "After a few keys I'll show you a full list to confirm or change.",
+                f"After {3 - done_count} more key{'s' if 3 - done_count != 1 else ''} I'll show a list to confirm.",
                 small_font,
                 text,
                 main.top + 300,
