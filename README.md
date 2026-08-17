@@ -15,11 +15,12 @@ Greia deliberately targets constrained hardware, with the first-generation Acer 
 4. `docs/adr/` — accepted normative decisions; ADR 0018 owns lightweight UI, ADR 0019 trusted Activity Home/Back, ADR 0020 runtime-neutral input/controller support, ADR 0021 automatic hardware enablement, ADR 0022 the Parent API/client/pairing/privilege boundary, ADR 0023 the open Activity ecosystem/official catalogue boundary, ADR 0024 project licensing/trademark boundaries, and **ADR 0025 platform-owned Awards/badges/celebrations/collection**.
 5. `docs/engineering/ENGINEERING_FOUNDATIONS.md` — mandatory OOP, polymorphism, dependency, documentation and low-resource guidance.
 6. `docs/product/` — accepted product requirements, including Activity navigation/input, `PARENT_MANAGEMENT.md`, `ACTIVITY_ECOSYSTEM_AND_DISTRIBUTION.md`, and **`AWARDS_BADGES_AND_CELEBRATIONS.md`**.
-7. `docs/governance/LICENSING_AND_TRADEMARK.md` — selected license matrix, third-party/provenance rules and project-mark policy direction.
-8. `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md` — active implementation plan until closed.
-9. `HANDOVER.md` — exact current branch, evidence, blockers and next step.
-10. `docs/agents/GREIA_AGENT_OPERATIONS.md` — build/test-hardware operations.
-11. `skills/greia-activity-authoring/SKILL.md` — Activity-authoring guide.
+7. `docs/design/GREIA_VISUAL_STYLE_GUIDE.md` — canonical visual-language and typography direction; `GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md` is the complementary production-asset brief.
+8. `docs/governance/LICENSING_AND_TRADEMARK.md` — selected license matrix, third-party/provenance rules and project-mark policy direction.
+9. `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md` — active implementation plan until closed.
+10. `HANDOVER.md` — exact current branch, evidence, blockers and next step.
+11. `docs/agents/GREIA_AGENT_OPERATIONS.md` — build/test-hardware operations.
+12. `skills/greia-activity-authoring/SKILL.md` — Activity-authoring guide.
 
 Current verification counts, branch SHAs and hardware status belong in `HANDOVER.md`, not here.
 
@@ -37,6 +38,14 @@ Screen
 ```
 
 A child-visible “folder” is a semantic `Collection`, never a Linux path. `src/greia_platform/ui_core.py` owns renderer-neutral UI semantics/navigation/resource bounds. New shared Pygame consumers import `src/greia_platform/pygame_ui.py`; existing first-party Activities retain `activity_ui.py` as the compatibility implementation surface. This is deliberately not a universal widget framework.
+
+### Visual language and typography
+
+Greia's visual direction is **warm and playful without looking like baby software**, with readability and coherence taking priority over novelty. The canonical design guidance is `docs/design/GREIA_VISUAL_STYLE_GUIDE.md`, complemented by `docs/design/GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md` for concrete production artwork/assets.
+
+**Nunito Sans is the selected default Greia interface typeface.** The intended initial system uses a small static weight set — Regular, SemiBold, Bold and ExtraBold — rather than making variable-font rendering a C0 requirement. Standard Greia UI should use one coherent family and create personality primarily through hierarchy, illustration, shape, motion and celebration rather than hard-to-read novelty fonts.
+
+Nunito Sans is third-party font software under **SIL Open Font License 1.1 (OFL-1.1)**. The font may be bundled with Greia while remaining under its own license; it is not MPL/CC-BY Greia-owned material. The design decision is selected, but this documentation change does **not** imply that font files, typography theme tokens, a shared font cache or hardware readability evidence are already implemented. Those steps require pinned upstream provenance, the upstream OFL notice, source integration and low-resolution/physical validation.
 
 ### Universal way home
 
@@ -130,6 +139,8 @@ ADR 0024 selects **MPL-2.0** as the default license for Greia-owned software, wh
 
 Software/content licenses do not grant rights to impersonate official Greia builds, the Greia brand, or `Greia Approved` catalogue/certification marks. See `docs/governance/LICENSING_AND_TRADEMARK.md`.
 
+Third-party bundled fonts retain their own licenses. The selected default interface font, **Nunito Sans**, is intended to remain under OFL-1.1 with its upstream notice/provenance preserved when it is actually vendored into Greia.
+
 The **license policy is selected, but the public-release licensing/provenance audit is still pending**. Before the repository or an official distribution is made public, canonical license texts, SPDX/directory notices, third-party attribution/provenance and distributable asset rights must be mechanically completed and reviewed.
 
 ## Build and evidence
@@ -154,6 +165,7 @@ GitHub-hosted execution is opt-in only and requires explicit owner authorization
 - `runtime/` — runtime/policy declarations
 - `build/` — image composition/builders
 - `tests/` — source/contract tests
+- `docs/design/` — visual style/typography authority plus art/core-asset production requirements
 - `docs/product/` — accepted child/parent/ecosystem product requirements, including Awards/badges/celebrations
 - `docs/governance/` — licensing/trademark and future project-governance policy
 - `docs/` — architecture, engineering, plan, evidence and operations docs
