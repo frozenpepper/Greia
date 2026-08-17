@@ -143,6 +143,7 @@ class InstallerApplication:
         self._layout_probe_results: dict[str, tuple[int, bool]] = {}
         self._layout_candidates: tuple[str, ...] = ("us",)
         self._layout_alternative_index = 0
+        self._layout_scroll = 0
         self._last_password_character: tuple[str, float] | None = None
         self._last_caret_blink = 0.0
 
@@ -260,24 +261,38 @@ class InstallerApplication:
         self._layout_candidates = layout_candidates(self._layout_probe_results)
         self._layout_alternative_index = 0
         inferred = infer_layout(self._layout_probe_results)
-        if inferred in self._layout_candidates:
-            self._layout_alternative_index = self._layout_candidates.index(inferred)
+        all_ids = self._all_layout_ids
+        if inferred in all_ids:
+            self._layout_alternative_index = all_ids.index(inferred)
+        self._layout_scroll = 0
 
-    def _cycle_layout_alternative(self, backward: bool) -> None:
-        if not self._layout_candidates:
+    def _move_layout_selection(self, delta: int) -> None:
+        all_ids = self._all_layout_ids
+        if not all_ids:
             return
-        step = -1 if backward else 1
         self._layout_alternative_index = (
-            self._layout_alternative_index + step
-        ) % len(self._layout_candidates)
+            self._layout_alternative_index + delta
+        ) % len(all_ids)
 
     def _confirm_layout(self) -> None:
-        if not self._layout_candidates:
+        all_ids = self._all_layout_ids
+        if not all_ids:
             return
-        layout_id = self._layout_candidates[self._layout_alternative_index]
+        index = min(self._layout_alternative_index, len(all_ids) - 1)
+        layout_id = all_ids[index]
         self.state.settings = replace(self.state.settings, keyboard_layout=layout_id)
         self._apply_keyboard_layout(layout_id)
         self.state.page = InstallerPage.TARGET
+
+    @property
+    def _all_layout_ids(self) -> tuple[str, ...]:
+        return tuple(layout.id for layout in available_layouts())
+
+    def _layout_scroll_to(self, index: int, rows_visible: int) -> None:
+        if index < self._layout_scroll:
+            self._layout_scroll = index
+        elif index >= self._layout_scroll + rows_visible:
+            self._layout_scroll = index - rows_visible + 1
 
     def _apply_keyboard_layout(self, layout_id: str) -> None:
         import subprocess
@@ -307,10 +322,15 @@ class InstallerApplication:
         if self.state.page == InstallerPage.LAYOUT:
             if key == pygame.K_ESCAPE:
                 self._back()
-            elif key == pygame.K_LEFT or key == pygame.K_RIGHT:
-                self._cycle_layout_alternative(pygame.K_LEFT == key)
-            elif key in {pygame.K_RETURN, pygame.K_SPACE}:
-                self._confirm_layout()
+            elif self._layout_probe_results and len(
+                [p for p in PROBES if p.character in self._layout_probe_results]
+            ) >= len(PROBES):
+                if key == pygame.K_UP:
+                    self._move_layout_selection(-1)
+                elif key == pygame.K_DOWN:
+                    self._move_layout_selection(1)
+                elif key in {pygame.K_RETURN, pygame.K_SPACE}:
+                    self._confirm_layout()
             return True
         if self.state.page == InstallerPage.WIFI:
             if key == pygame.K_ESCAPE:
@@ -410,6 +430,10 @@ class InstallerApplication:
             if self._inside("primary", position):
                 self._confirm_layout()
                 return
+            for index in range(len(self._all_layout_ids)):
+                if self._inside(f"layout-{index}", position):
+                    self._layout_alternative_index = index
+                    return
             return
         if self.state.page == InstallerPage.WIFI:
             if self._inside("wifi-refresh", position):
@@ -875,7 +899,7 @@ class InstallerApplication:
         background: tuple[int, int, int],
     ) -> None:
         self._center_title(
-            screen, "Your keyboard", title_font, text, main.top + 30
+            screen, "Your keyboard", title_font, text, main.top + 26
         )
         remaining = [
             probe for probe in PROBES if probe.character not in self._layout_probe_results
@@ -887,21 +911,21 @@ class InstallerApplication:
                 f"Type the character:  {probe.character}",
                 title_font,
                 accent,
-                main.top + 120,
+                main.top + 110,
             )
             self._center_text(
                 screen,
                 probe.prompt,
                 font,
                 text,
-                main.top + 185,
+                main.top + 175,
             )
             self._center_text(
                 screen,
                 "I'm listening — press that key now.",
                 small_font,
                 text,
-                main.top + 235,
+                main.top + 225,
             )
             done = len(self._layout_probe_results)
             self._center_text(
@@ -909,31 +933,25 @@ class InstallerApplication:
                 "·" * done + "○" * (len(PROBES) - done),
                 small_font,
                 accent,
-                main.top + 290,
-            )
-        else:
-            layout_id = self._layout_candidates[self._layout_alternative_index]
-            layout = layout_by_id(layout_id)
-            self._center_text(
-                screen,
-                f"Does this look right?",
-                font,
-                text,
-                main.top + 110,
+                main.top + 280,
             )
             self._center_text(
                 screen,
-                layout.label,
-                title_font,
-                accent,
-                main.top + 170,
-            )
-            self._center_text(
-                screen,
-                "Use ← → to change, then press Enter.",
+                "After a few keys I'll show you a full list to confirm or change.",
                 small_font,
                 text,
-                main.top + 230,
+                main.top + 330,
+            )
+        else:
+            self._draw_layout_selector(
+                screen,
+                pygame,
+                main,
+                font,
+                small_font,
+                text,
+                accent,
+                background,
             )
         self._back_button(screen, pygame, font, accent, text, main)
         if not remaining:
@@ -945,9 +963,65 @@ class InstallerApplication:
                 accent,
                 text,
                 font,
-                (screen.get_width() // 2, screen.get_height() - 70),
+                (screen.get_width() // 2, screen.get_height() - 62),
                 260,
             )
+
+    def _draw_layout_selector(
+        self,
+        screen: Any,
+        pygame: Any,
+        main: Any,
+        font: Any,
+        small_font: Any,
+        text: tuple[int, int, int],
+        accent: tuple[int, int, int],
+        background: tuple[int, int, int],
+    ) -> None:
+        inferred_id = infer_layout(self._layout_probe_results)
+        all_ids = self._all_layout_ids
+        rows_visible = min(7, len(all_ids))
+        self._layout_scroll_to(self._layout_alternative_index, rows_visible)
+        top = main.top + 100
+        row_height = 52
+        for offset in range(rows_visible):
+            index = self._layout_scroll + offset
+            if index >= len(all_ids):
+                break
+            layout_id = all_ids[index]
+            layout = layout_by_id(layout_id)
+            rect = pygame.Rect(
+                main.left + 90, top + offset * row_height, main.width - 180, 46
+            )
+            selected = index == self._layout_alternative_index
+            inferred = layout_id == inferred_id
+            if selected:
+                fill = accent
+            elif inferred:
+                fill = (240, 225, 180)
+            else:
+                fill = background
+            pygame.draw.rect(screen, fill, rect, border_radius=14)
+            pygame.draw.rect(
+                screen,
+                text,
+                rect,
+                width=3 if selected else 1,
+                border_radius=14,
+            )
+            self._buttons[f"layout-{index}"] = rect
+            label = layout.label
+            if inferred:
+                label = "✓ " + label
+            image = font.render(label, True, text)
+            screen.blit(image, (rect.left + 16, rect.top + 8))
+        self._center_text(
+            screen,
+            "↑ ↓ or click to choose · Enter to confirm",
+            small_font,
+            text,
+            top + rows_visible * row_height + 22,
+        )
 
     def _draw_wifi(
         self,
