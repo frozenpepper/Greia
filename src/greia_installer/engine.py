@@ -106,6 +106,7 @@ class SubprocessRunner:
             check=check,
             shell=False,
             text=True,
+            stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )

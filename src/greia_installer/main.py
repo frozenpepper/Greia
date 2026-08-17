@@ -310,7 +310,10 @@ class InstallerApplication:
 
         try:
             subprocess.run(
-                ["setxkbmap", layout_id], check=False, shell=False
+                ["setxkbmap", layout_id],
+                check=False,
+                shell=False,
+                stdin=subprocess.DEVNULL,
             )
         except OSError:
             pass
@@ -387,7 +390,10 @@ class InstallerApplication:
                 import subprocess
 
                 subprocess.run(
-                    ["systemctl", "poweroff"], check=False, shell=False
+                    ["systemctl", "poweroff"],
+                    check=False,
+                    shell=False,
+                    stdin=subprocess.DEVNULL,
                 )
 
     def _back(self) -> None:
@@ -1609,7 +1615,12 @@ class InstallerApplication:
         if helper.exists():
             import subprocess
 
-            completed = subprocess.run([str(helper)], check=False, shell=False)
+            completed = subprocess.run(
+                [str(helper)],
+                check=False,
+                shell=False,
+                stdin=subprocess.DEVNULL,
+            )
             self._boot_released = completed.returncode == 0
 
 

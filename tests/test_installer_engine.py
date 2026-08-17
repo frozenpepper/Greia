@@ -9,7 +9,13 @@ from pathlib import Path
 from unittest import mock
 
 from greia_installer.disk import BlockDevice
-from greia_installer.engine import InstallRequest, InstallResult, InstallationEngine, InstallationError
+from greia_installer.engine import (
+    InstallRequest,
+    InstallResult,
+    InstallationEngine,
+    InstallationError,
+    SubprocessRunner,
+)
 from greia_installer.hardware_enablement import InstallerHardwareEnablementPlan
 from greia_platform.hardware import HardwareDefaults, HardwareSettings
 from greia_platform.hardware_enablement import (
@@ -324,6 +330,15 @@ class InstallerEngineTests(unittest.TestCase):
             self.assertNotIn("private-device-path", record)
             self.assertNotIn("PRIVATE-MODALIAS", record)
             self.assertNotIn("private_driver", record)
+
+    def test_subprocess_runner_detaches_stdin_from_terminal(self) -> None:
+        # The live installer runs as a background process group on the VT. If a
+        # child (e.g. apt-get) inherited the terminal as stdin, reading from it
+        # would send SIGTTIN and stop the whole install. stdin must be /dev/null.
+        runner = SubprocessRunner()
+        completed = runner.run(["python3", "-c", "import sys; print(sys.stdin.isatty())"])
+        self.assertEqual(completed.returncode, 0)
+        self.assertEqual(completed.stdout.strip(), "False")
 
 
 if __name__ == "__main__":
