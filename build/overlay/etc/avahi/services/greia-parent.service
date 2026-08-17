@@ -1,0 +1,12 @@
+<?xml version="1.0" standalone='no'?>
+<!DOCTYPE service-group SYSTEM "avahi-service.dtd">
+<service-group>
+  <name replace-wildcards="yes">Greia Parents on %h</name>
+  <service>
+    <type>_greia-parent._tcp</type>
+    <port>8766</port>
+    <txt-record>api=1</txt-record>
+    <txt-record>path=/api/v1</txt-record>
+    <txt-record>product=greia</txt-record>
+  </service>
+</service-group>

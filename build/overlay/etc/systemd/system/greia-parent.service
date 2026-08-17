@@ -1,5 +1,5 @@
 [Unit]
-Description=Greia OS parent status service
+Description=Greia OS parent management service
 After=network.target greia-first-boot.service
 Requires=greia-first-boot.service
 Wants=network.target
@@ -17,7 +17,7 @@ Environment=GREIA_ACTIVE_PROFILE_STATUS=/run/greia-os/active-profile.json
 Environment=GREIA_SYSTEM_SETTINGS_DIR=/var/lib/greia-system-settings
 Environment=GREIA_HARDWARE_STATUS=/run/greia-hardware/status.json
 StateDirectory=greia-os
-ExecStart=/usr/bin/python3 -m greia_parent.server --bind 0.0.0.0 --port 8766
+ExecStart=/usr/bin/python3 -m greia_parent.api_server --bind 0.0.0.0 --port 8766
 Restart=on-failure
 RestartSec=2
 NoNewPrivileges=yes
