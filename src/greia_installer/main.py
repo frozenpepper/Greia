@@ -89,6 +89,7 @@ class DemoInstallationEngine:
 class InstallerApplication:
     HOLD_SECONDS = 2.0
     WIFI_ROWS_PER_PAGE = 3
+    BUTTON_HEIGHT = 46
 
     def __init__(
         self,
@@ -600,8 +601,8 @@ class InstallerApplication:
                 accent,
                 text,
                 font,
-                (width - 190, height - 70),
-                260,
+                (width - 180, height - 60),
+                220,
             )
             return
 
@@ -769,8 +770,8 @@ class InstallerApplication:
                 danger,
                 (255, 255, 255),
                 font,
-                (width // 2, main.bottom - 110),
-                390,
+                (width // 2, main.bottom - 120),
+                340,
             )
             if self._hold_started is not None:
                 fraction = min(
@@ -865,8 +866,8 @@ class InstallerApplication:
                 accent,
                 text,
                 font,
-                (width // 2, main.bottom - 52),
-                480,
+                (width // 2, main.bottom - 40),
+                420,
             )
         elif page == InstallerPage.ERROR:
             self._center_title(
@@ -981,8 +982,8 @@ class InstallerApplication:
                 accent,
                 text,
                 font,
-                (screen.get_width() // 2, screen.get_height() - 62),
-                260,
+                (screen.get_width() // 2, self._bottom_row_y(main)),
+                220,
             )
 
     def _draw_layout_selector(
@@ -1097,8 +1098,8 @@ class InstallerApplication:
                 accent,
                 text,
                 font,
-                (screen.get_width() - 190, screen.get_height() - 70),
-                270,
+                (screen.get_width() - 190, self._bottom_row_y(main)),
+                230,
             )
         elif snapshot.phase is WifiSetupPhase.CONNECTED:
             self._center_text(
@@ -1123,8 +1124,8 @@ class InstallerApplication:
                 accent,
                 text,
                 font,
-                (screen.get_width() - 185, screen.get_height() - 70),
-                250,
+                (screen.get_width() - 185, self._bottom_row_y(main)),
+                220,
             )
         else:
             self._draw_wifi_networks(
@@ -1163,7 +1164,7 @@ class InstallerApplication:
                 background,
                 text,
                 small_font,
-                (screen.get_width() // 2, screen.get_height() - 70),
+                (screen.get_width() // 2, self._bottom_row_y(main)),
                 170,
             )
             self._button(
@@ -1174,8 +1175,8 @@ class InstallerApplication:
                 accent,
                 text,
                 small_font,
-                (screen.get_width() - 170, screen.get_height() - 70),
-                210,
+                (screen.get_width() - 170, self._bottom_row_y(main)),
+                200,
             )
 
     def _draw_wifi_networks(
@@ -1302,6 +1303,9 @@ class InstallerApplication:
             )
             screen.blit(note, note.get_rect(center=(main.centerx, controls_y + 24)))
 
+    def _bottom_row_y(self, main: Any) -> int:
+        return main.bottom - 40
+
     def _navigation(
         self,
         screen: Any,
@@ -1323,8 +1327,8 @@ class InstallerApplication:
             color,
             text,
             font,
-            (main.right - 145, main.bottom - 56),
-            250,
+            (main.right - 145, self._bottom_row_y(main)),
+            220,
         )
 
     def _back_button(
@@ -1344,8 +1348,8 @@ class InstallerApplication:
             accent,
             text,
             font,
-            (main.left + 130, main.bottom - 56),
-            190,
+            (main.left + 120, self._bottom_row_y(main)),
+            170,
         )
 
     def _toggle_row(
@@ -1438,7 +1442,7 @@ class InstallerApplication:
         center: tuple[int, int],
         width: int,
     ) -> Any:
-        rect = pygame.Rect(0, 0, width, 58)
+        rect = pygame.Rect(0, 0, width, self.BUTTON_HEIGHT)
         rect.center = center
         pygame.draw.rect(screen, background, rect, border_radius=18)
         image = font.render(label, True, foreground)

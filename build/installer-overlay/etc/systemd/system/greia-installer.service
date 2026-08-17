@@ -25,8 +25,8 @@ TTYReset=yes
 TTYVHangup=yes
 # The installer is a graphical application; it never reads from the terminal.
 # Giving it the VT as stdin makes every child a background process group with
-# the tty as input, so a read (apt-get, grub-mkpasswd-pbkdf2) triggers SIGTTIN
-# and freezes the install. stdin must be /dev/null instead.
+# the tty as input, so any child read triggers SIGTTIN and freezes the install.
+# stdin must be /dev/null instead.
 StandardInput=null
 StandardOutput=journal
 StandardError=journal
