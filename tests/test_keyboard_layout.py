@@ -116,6 +116,20 @@ class KeyboardLayoutTests(unittest.TestCase):
     def test_unknown_input_falls_back_to_us(self) -> None:
         self.assertEqual(infer_layout({"/": (-1, False, "x")}), "us")
 
+    def test_italian_shift_7_slash_probe_works_with_any_active_layout(self) -> None:
+        # On an Italian keyboard '/' is Shift+7 (scancode 36). The active layout
+        # may produce a different character (e.g. '&'), but the physical press
+        # must still resolve to Italian.
+        results = {
+            "/": (36, True, "&"),
+            ";": (55, True, ";"),
+            "-": (56, False, "-"),
+            "?": (45, True, "?"),
+            "z": (29, False, "z"),
+        }
+        self.assertEqual(infer_layout(results), "it")
+        self.assertIn("it", layout_candidates(results)[:3])
+
 
 if __name__ == "__main__":
     unittest.main()

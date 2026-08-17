@@ -249,22 +249,20 @@ class InstallerApplication:
         scancode = int(getattr(event, "scancode", -1))
         modifiers = int(getattr(event, "mod", 0)) or int(pygame.key.get_mods())
         shift_held = bool(modifiers & pygame.KMOD_SHIFT)
-        text = getattr(event, "unicode", "") or ""
         keycode_name = _HID_TO_XKB.get(scancode)
-        if not keycode_name or not text:
+        if not keycode_name:
             return
-        # The parent was asked to TYPE a character. Accept when the produced
-        # text matches the next unpressed probe's character, and record the
-        # physical scancode + shift state used.
+        # The parent was asked to press the physical key that types the probe
+        # character on THEIR keyboard. Whatever the active layout produced is
+        # irrelevant (it may be wrong); the physical scancode is layout-
+        # independent and is the signal we score.
         for probe in PROBES:
             if probe.character in self._layout_probe_results:
                 continue
-            if text != probe.character:
-                return
             self._layout_probe_results[probe.character] = (
                 scancode,
                 shift_held,
-                text,
+                "",
             )
             self._refresh_layout_candidates()
             return

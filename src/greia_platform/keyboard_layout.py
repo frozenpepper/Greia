@@ -47,7 +47,7 @@ class LayoutProbe:
 
     @property
     def instruction(self) -> str:
-        return f"Type this character:  {self.character}"
+        return f"Press the key that types “{self.character}”"
 
 
 _LAYOUTS: tuple[KeyboardLayout, ...] = (
@@ -142,14 +142,14 @@ def _score_probes(
         if not isinstance(produced, (tuple, list)) or len(produced) < 3:
             continue
         scancode, shift_held = int(produced[0]), bool(produced[1])
-        observed_character = produced[2]
         keycode = _HID_TO_XKB.get(scancode)
-        if not keycode or not observed_character:
+        if not keycode:
             continue
-        # The parent typed `character` on scancode with shift_held. A layout
-        # agrees if it would produce the SAME character on that physical key.
-        if observed_character != character:
-            continue
+        # The parent pressed the physical key that types `character` on their
+        # keyboard. We recorded the physical scancode and shift state; the
+        # character the active layout produced is deliberately ignored because
+        # that layout may be wrong. A candidate layout agrees if IT produces
+        # `character` on that same physical key at the same shift level.
         for layout_id in _LAYOUT_TABLE:
             if _character_for_layout(layout_id, keycode, shift_held) == character:
                 scores[layout_id] = scores.get(layout_id, 0) + 1
