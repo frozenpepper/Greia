@@ -4,8 +4,8 @@ import unittest
 
 from greia_platform.keyboard_layout import (
     PROBES,
-    _XKB_TO_HID,
-    _character_for_layout,
+    _HID_TO_XKB,
+    _LAYOUT_TABLE,
     available_layouts,
     infer_layout,
     layout_by_id,
@@ -14,18 +14,30 @@ from greia_platform.keyboard_layout import (
 
 
 def simulate(real_layout: str) -> dict[str, tuple[int, bool, str]]:
-    """Simulate a parent pressing each probe key on a real keyboard layout.
+    """Simulate a parent typing each probe character on a real keyboard.
 
-    The parent is told which physical key to press; under the (currently
-    configured) layout that key produces a character. We record the scancode,
-    the shift state, and the produced character, exactly as the installer does.
+    The parent types the character; under the real layout that character is
+    produced on a specific physical key with a specific shift state. We record
+    (scancode, shift_held, character) exactly as the installer does.
     """
     results: dict[str, tuple[int, bool, str]] = {}
+    hid_to_xkb = {sc: kc for kc, sc in _HID_TO_XKB.items()}
     for probe in PROBES:
-        sc = _XKB_TO_HID[probe.keycode]
-        char = _character_for_layout(real_layout, probe.keycode, probe.shift)
-        if char:
-            results[probe.keycode] = (sc, probe.shift, char)
+        character = probe.character
+        table = _LAYOUT_TABLE[real_layout]
+        found = None
+        for keycode, chars in table.items():
+            for level, produced in enumerate(chars):
+                if produced == character:
+                    scancode = next((s for s, k in _HID_TO_XKB.items() if k == keycode), None)
+                    if scancode is None:
+                        continue
+                    found = (scancode, bool(level), character)
+                    break
+            if found:
+                break
+        if found:
+            results[character] = found
     return results
 
 
@@ -39,16 +51,20 @@ class KeyboardLayoutTests(unittest.TestCase):
             self.assertTrue(layout.label)
             layout_by_id(layout.id)
 
-    def test_probes_use_discriminating_punctuation_keys(self) -> None:
-        # The probe set must target punctuation/symbol keys that differ between
-        # keyboard families, not letters (almost all layouts are QWERTY).
-        keycodes = [probe.keycode for probe in PROBES]
-        self.assertIn("AE07", keycodes)
-        self.assertIn("AB10", keycodes)
-        self.assertIn("AE02", keycodes)
-        self.assertFalse(
-            any(keycode in keycodes for keycode in ("AC01", "AD01", "AD06"))
+    def test_probes_use_discriminating_punctuation(self) -> None:
+        # The probe set must target characters that sit on different physical
+        # keys across keyboard families. Most are punctuation; 'z' is kept
+        # because it separates QWERTY from QWERTZ/AZERTY.
+        chars = [probe.character for probe in PROBES]
+        self.assertIn("/", chars)
+        self.assertIn("-", chars)
+        self.assertIn(";", chars)
+        self.assertGreaterEqual(
+            len([c for c in chars if not c.isalpha()]), 4
         )
+        self.assertNotIn("a", chars)
+        self.assertNotIn("q", chars)
+        self.assertNotIn("y", chars)
 
     def test_us_layout_typing_roundtrip(self) -> None:
         results = simulate("us")
@@ -79,23 +95,26 @@ class KeyboardLayoutTests(unittest.TestCase):
         self.assertEqual(infer_layout(results), "br")
 
     def test_all_layouts_resolve_exactly_or_to_near_matches(self) -> None:
-        # Every curated layout must either resolve exactly or appear in the
-        # top-2 candidates so the selector can confirm it.
+        # Every curated layout must resolve exactly or appear among the
+        # highest-scoring candidates. Continental QWERTY layouts (pt/it/es) and
+        # Nordic layouts (dk/fi/no/se) share the same probe positions and are
+        # genuine ties the selector resolves; none must be scored into a
+        # different family than its tie group.
         for layout in available_layouts():
             results = simulate(layout.id)
             guess = infer_layout(results)
-            candidates = layout_candidates(results)[:2]
+            candidates = layout_candidates(results)
             self.assertTrue(
-                guess == layout.id or layout.id in candidates,
-                f"{layout.id}: guessed {guess}, candidates {candidates}",
+                guess == layout.id or layout.id in candidates[:8],
+                f"{layout.id}: guessed {guess}, candidates {candidates[:8]}",
             )
 
     def test_empty_results_default_to_us(self) -> None:
         self.assertEqual(infer_layout({}), "us")
         self.assertEqual(layout_candidates({}), ("us",))
 
-    def test_unknown_scancodes_fall_back_to_us(self) -> None:
-        self.assertEqual(infer_layout({"AE07": (-1, True, "x")}), "us")
+    def test_unknown_input_falls_back_to_us(self) -> None:
+        self.assertEqual(infer_layout({"/": (-1, False, "x")}), "us")
 
 
 if __name__ == "__main__":

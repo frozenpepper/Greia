@@ -253,17 +253,19 @@ class InstallerApplication:
         keycode_name = _HID_TO_XKB.get(scancode)
         if not keycode_name or not text:
             return
-        # The current probe is the first unpressed one. The parent was told to
-        # press a specific physical key; verify they pressed the right physical
-        # key and record the character their (possibly wrong) layout produced.
+        # The parent was asked to TYPE a character. Accept when the produced
+        # text matches the next unpressed probe's character, and record the
+        # physical scancode + shift state used.
         for probe in PROBES:
-            if probe.keycode in self._layout_probe_results:
+            if probe.character in self._layout_probe_results:
                 continue
-            if keycode_name != probe.keycode:
+            if text != probe.character:
                 return
-            if probe.shift and not shift_held:
-                return
-            self._layout_probe_results[probe.keycode] = (scancode, shift_held, text)
+            self._layout_probe_results[probe.character] = (
+                scancode,
+                shift_held,
+                text,
+            )
             self._refresh_layout_candidates()
             return
 
@@ -572,19 +574,11 @@ class InstallerApplication:
         title_font = self._typography.font(FontRole.TITLE, max(42, height // 12))
         small_font = self._typography.font(FontRole.BODY, max(22, height // 28))
 
-        main = pygame.Rect(
-            max(24, width * 0.06),
-            max(20, height * 0.06),
-            width * 0.88,
-            height * 0.88,
-        )
-        pygame.draw.rect(screen, panel, main, border_radius=28)
         page = self.state.page
         if page == InstallerPage.WELCOME:
             self._hero_logo(
                 screen,
                 pygame,
-                main,
                 width,
                 height,
             )
@@ -596,10 +590,19 @@ class InstallerApplication:
                 accent,
                 text,
                 font,
-                (main.right - 210, height // 2),
-                240,
+                (width - 190, height - 70),
+                260,
             )
-        elif page == InstallerPage.LAYOUT:
+            return
+
+        main = pygame.Rect(
+            max(24, width * 0.06),
+            max(20, height * 0.06),
+            width * 0.88,
+            height * 0.88,
+        )
+        pygame.draw.rect(screen, panel, main, border_radius=28)
+        if page == InstallerPage.LAYOUT:
             self._draw_layout(screen, pygame, main, font, title_font, small_font, text, accent, background)
         elif page == InstallerPage.TARGET:
             self._center_title(
@@ -896,7 +899,7 @@ class InstallerApplication:
             screen, "Your keyboard", title_font, text, main.top + 26
         )
         remaining = [
-            probe for probe in PROBES if probe.keycode not in self._layout_probe_results
+            probe for probe in PROBES if probe.character not in self._layout_probe_results
         ]
         if remaining:
             probe = remaining[0]
@@ -1476,16 +1479,16 @@ class InstallerApplication:
         self,
         screen: Any,
         pygame: Any,
-        main: Any,
         width: int,
         height: int,
     ) -> None:
-        """Render the boot-frame logo left-aligned, filling the panel height.
+        """Render the boot-frame logo full-bleed, centered vertically.
 
-        The Start button occupies the right column of the panel, so the logo is
-        placed on the left and never overlaps it.
+        On screens taller than the artwork's natural height the logo keeps its
+        aspect ratio and is centered; on short screens it fills the full height.
+        There is no panel behind it.
         """
-        key = ("hero-logo", main.height)
+        key = ("hero-logo-full",)
         image = self._icon_cache.get(key)
         if image is None:
             frame_path = Path("/usr/share/plymouth/themes/greia/frames/frame_0051.png")
@@ -1503,13 +1506,17 @@ class InstallerApplication:
                 loaded = pygame.image.load(
                     str(self.root / "assets" / "icons" / "core" / "v1" / "256" / "robot.png")
                 )
-            target_height = int(main.height)
-            target_width = int(loaded.get_width() * target_height / loaded.get_height())
-            image = pygame.transform.smoothscale(loaded, (target_width, target_height)).convert_alpha()
+            image = loaded.convert_alpha()
             self._icon_cache[key] = image
-        image_rect = image.get_rect()
-        image_rect.midtop = (main.left + int(main.width * 0.35), main.top + 10)
-        screen.blit(image, image_rect)
+        natural = image.get_size()
+        # Cap at the screen height; never upscale beyond natural size.
+        scale = min(1.0, height / natural[1])
+        display_height = int(natural[1] * scale)
+        display_width = int(natural[0] * scale)
+        rect = image.get_rect()
+        rect.w, rect.h = display_width, display_height
+        rect.center = (width // 2, height // 2)
+        screen.blit(image, rect)
 
     def _draw_pointer(self, screen: Any, pygame: Any) -> None:
         if not pygame.mouse.get_focused():

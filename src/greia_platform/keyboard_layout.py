@@ -7,13 +7,13 @@ from .keyboard_layout_data import _LAYOUT_TABLE
 # Greia keyboard layouts: identifier is the xkbrules layout name passed to
 # setxkbmap, label is human-readable. The set is intentionally curated.
 #
-# Layout detection is keypress-guided. Each probe highlights a specific
-# physical key (the keycode is layout-independent) and asks the parent to press
-# it, optionally holding Shift. The installer records the character the current
-# (possibly wrong) layout produced on that physical key. Every candidate layout
-# is then scored by whether it produces the same character on the same physical
-# key at the same shift level. The layout agreeing with the most probes wins,
-# which is robust regardless of which layout is currently active.
+# Layout detection is keypress-guided but character-first. Each probe asks the
+# parent to TYPE a specific character (e.g. "/" or "-"); the installer records
+# the physical scancode they pressed and the character that resulted. Every
+# candidate layout is then scored by whether that layout would produce the same
+# character on the same physical key at the same shift level. This works for
+# any keyboard regardless of where the character sits, because the parent types
+# the character rather than being told which key to press.
 #
 # The probe set deliberately uses punctuation and symbols that differ between
 # keyboard families (QWERTY vs AZERTY, ISO vs ANSI, continental layouts). Letter
@@ -36,22 +36,18 @@ class KeyboardLayout:
 
 @dataclass(frozen=True, slots=True)
 class LayoutProbe:
-    """One physical key the parent presses to identify their keyboard.
+    """One character the parent types to identify their keyboard.
 
-    ``keycode`` is the xkb keycode name (layout-independent physical key).
-    ``shift`` requires the parent to hold Shift. ``prompt`` is a human
-    description shown with a visual highlight of the physical key.
+    ``character`` is what the parent is asked to type. We record the physical
+    scancode they used and the resulting character; layouts are scored by
+    agreement on (character, scancode, shift).
     """
 
-    keycode: str
-    shift: bool = False
-    prompt: str = ""
+    character: str
 
     @property
     def instruction(self) -> str:
-        prefix = "Hold Shift and press" if self.shift else "Press"
-        target = self.prompt or f"the highlighted key"
-        return f"{prefix} {target}"
+        return f"Type this character:  {self.character}"
 
 
 _LAYOUTS: tuple[KeyboardLayout, ...] = (
@@ -91,22 +87,27 @@ _HID_TO_XKB: dict[int, str] = {
 
 _XKB_TO_HID: dict[str, int] = {keycode: scancode for scancode, keycode in _HID_TO_XKB.items()}
 
-# Probe sequence. Ordered most-discriminating first; each probe is a physical
-# key whose printed character differs between layout families. Derived from the
-# generated xkb table (see build/gen-keyboard-layout-table.py).
+# Probe sequence. Ordered most-discriminating first. Each probe is a character
+# the parent types; we record the physical scancode + produced character. These
+# characters sit on different physical keys across layout families, which is
+# what makes them discriminating. See the generated xkb table for the exact
+# per-layout positions (build/gen-keyboard-layout-table.py).
+#
+# The set covers every layout family without requiring the parent to know where
+# any key is: they simply type the character, wherever their keyboard puts it.
 PROBES: tuple[LayoutProbe, ...] = (
-    # Shift+7: '/' on continental layouts, '&' on us/gb/pl/br, 'è' on fr/be
-    LayoutProbe("AE07", shift=True, prompt="the key with 7 on it"),
-    # The '/?' key: '/' on us/gb/pl, '-' on continental, ';' on br, '.' on ru/ua/tr
-    LayoutProbe("AB10", prompt="the key with / on it"),
-    # Shift+2: '@' on us/pl/br, '"' on gb/it/de/es/pt, 'é' on fr/be
-    LayoutProbe("AE02", shift=True, prompt="the key with 2 on it"),
-    # The '-' key: distinguishes fr (6 row) from continental (7 row) etc.
-    LayoutProbe("AE11", prompt="the key with - on it"),
-    # Shift+3: '#' on us/pl/br, '£' on gb/it/pt, '§' on de — splits it/es/pt
-    LayoutProbe("AE03", shift=True, prompt="the key with 3 on it"),
-    # The "'" key: distinguishes it (à), de/fi/se (ä), dk (ø), br (~)
-    LayoutProbe("AC11", prompt="the key with ' on it"),
+    # '/' : Shift+7 (continental), /? key (us/gb/pl), Shift+. (fr/be), etc.
+    LayoutProbe("/"),
+    # ';' : ; key (us/gb/pl), . key (continental), m key (fr/be), 7 key (ru/ua), etc.
+    LayoutProbe(";"),
+    # '-' : - key (us/gb/pl/br), / key (continental), 6 key (fr), = key (be/tr)
+    LayoutProbe("-"),
+    # '?' : / key (us/gb/pl), - key (continental), q key (fr/be), 7 key (ru/ua)
+    LayoutProbe("?"),
+    # 'z' : z key (QWERTY), y key (QWERTZ de/cz), w key (AZERTY fr/be)
+    LayoutProbe("z"),
+    # '@' : Shift+2 (us/pl/br), Shift+' (gb), AltGr (many continental)
+    LayoutProbe("@"),
 )
 
 
@@ -121,13 +122,6 @@ def layout_by_id(layout_id: str) -> KeyboardLayout:
     raise LookupError(f"unknown keyboard layout: {layout_id!r}")
 
 
-def probe_by_keycode(keycode: str) -> LayoutProbe | None:
-    for probe in PROBES:
-        if probe.keycode == keycode:
-            return probe
-    return None
-
-
 def _xkb_keycode(scancode: int) -> str | None:
     return _HID_TO_XKB.get(scancode)
 
@@ -140,34 +134,41 @@ def _character_for_layout(layout_id: str, keycode: str, shift: bool) -> str:
     return chars[level] if len(chars) > level else ""
 
 
-def infer_layout(probe_results: dict[str, tuple[int, bool]]) -> str:
-    """Infer the layout from physical key -> (scancode, shift_held) results.
-
-    Each probe is a physical key the parent pressed (identified by the
-    highlighted prompt). We recorded the scancode (physical position) and
-    whether Shift was held, together with the character the current layout
-    produced. For every candidate layout, check whether that physical key
-    produces the same character at the same shift level. The layout agreeing
-    with the most probes wins; ties resolve by the preference order.
-    """
-
-    if not probe_results:
-        return "us"
+def _score_probes(
+    probe_results: dict[str, tuple[int, bool, str]],
+) -> dict[str, int]:
     scores: dict[str, int] = {}
-    for keycode, produced in probe_results.items():
+    for character, produced in probe_results.items():
         if not isinstance(produced, (tuple, list)) or len(produced) < 3:
             continue
-        scancode, shift_held = produced[0], produced[1]
-        observed_keycode = _HID_TO_XKB.get(scancode)
-        probe = probe_by_keycode(keycode)
-        if not probe or not observed_keycode or observed_keycode != probe.keycode:
+        scancode, shift_held = int(produced[0]), bool(produced[1])
+        observed_character = produced[2]
+        keycode = _HID_TO_XKB.get(scancode)
+        if not keycode or not observed_character:
             continue
-        character = produced[2]
-        if not character:
+        # The parent typed `character` on scancode with shift_held. A layout
+        # agrees if it would produce the SAME character on that physical key.
+        if observed_character != character:
             continue
         for layout_id in _LAYOUT_TABLE:
             if _character_for_layout(layout_id, keycode, shift_held) == character:
                 scores[layout_id] = scores.get(layout_id, 0) + 1
+    return scores
+
+
+def infer_layout(probe_results: dict[str, tuple[int, bool, str]]) -> str:
+    """Infer the layout from character -> (scancode, shift_held, character).
+
+    The parent typed each probe character; we recorded the physical scancode,
+    shift state, and the character produced. A candidate layout is scored by
+    whether it produces the same character on the same physical key at the same
+    shift level. The layout agreeing with the most probes wins; ties resolve by
+    the preference order.
+    """
+
+    if not probe_results:
+        return "us"
+    scores = _score_probes(probe_results)
     if not scores:
         return "us"
     best = max(scores.values())
@@ -177,25 +178,12 @@ def infer_layout(probe_results: dict[str, tuple[int, bool]]) -> str:
     return _preferred(candidates)
 
 
-def layout_candidates(probe_results: dict[str, tuple[int, bool]]) -> tuple[str, ...]:
+def layout_candidates(probe_results: dict[str, tuple[int, bool, str]]) -> tuple[str, ...]:
     """Return layout ids ordered by probe agreement (best first)."""
 
     if not probe_results:
         return ("us",)
-    scores: dict[str, int] = {}
-    for keycode, produced in probe_results.items():
-        if not isinstance(produced, (tuple, list)) or len(produced) < 3:
-            continue
-        scancode, shift_held = produced[0], produced[1]
-        probe = probe_by_keycode(keycode)
-        if not probe or len(produced) < 3:
-            continue
-        character = produced[2]
-        if not character:
-            continue
-        for layout_id in _LAYOUT_TABLE:
-            if _character_for_layout(layout_id, keycode, shift_held) == character:
-                scores[layout_id] = scores.get(layout_id, 0) + 1
+    scores = _score_probes(probe_results)
     if not scores:
         return ("us",)
     return tuple(
