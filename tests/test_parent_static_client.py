@@ -32,18 +32,33 @@ class ParentStaticClientTests(unittest.TestCase):
             outside.write_text("secret", encoding="utf-8")
             try:
                 (root / "src").mkdir()
+                (root / "real").mkdir()
+                (root / "real" / "inside.js").write_text("inside", encoding="utf-8")
                 (root / "src" / ".hidden.js").write_text("hidden", encoding="utf-8")
                 (root / "src" / "too-large.js").write_bytes(b"x" * (MAX_STATIC_ASSET_BYTES + 1))
                 (root / "src" / "escape.js").symlink_to(outside)
+                (root / "src" / "inside.js").symlink_to(root / "real" / "inside.js")
                 client = ParentStaticClient(root)
 
                 self.assertIsNone(client.read("/../etc/passwd"))
                 self.assertIsNone(client.read("/src/%2e%2e/index.html"))
                 self.assertIsNone(client.read("/src/.hidden.js"))
                 self.assertIsNone(client.read("/src/escape.js"))
+                self.assertIsNone(client.read("/src/inside.js"))
                 self.assertIsNone(client.read("/src/too-large.js"))
             finally:
                 outside.unlink(missing_ok=True)
+
+    def test_rejects_symlinked_web_root(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            parent = Path(temporary)
+            real = parent / "real"
+            real.mkdir()
+            (real / "index.html").write_text("<html>Greia</html>", encoding="utf-8")
+            link = parent / "client"
+            link.symlink_to(real, target_is_directory=True)
+
+            self.assertIsNone(ParentStaticClient(link).read("/"))
 
     def test_missing_web_root_is_a_clean_miss(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
