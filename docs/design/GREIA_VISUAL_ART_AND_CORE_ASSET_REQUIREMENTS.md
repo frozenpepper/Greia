@@ -4,7 +4,9 @@
 **Date:** 2026-08-08  
 **Purpose:** Enumerate the fundamental graphical assets Greia needs as a coherent child operating environment, beyond individual Activity artwork.
 
-This document complements `docs/13_ART_LIBRARY_AND_ASSET_PIPELINE.md`. That document defines the semantic asset pipeline and current Core Icons v1 catalogue. This document defines **what visual material the platform itself still needs**.
+This document defines **what visual material the platform itself still needs**. The sibling `docs/design/GREIA_VISUAL_STYLE_GUIDE.md` owns the reusable visual-language and typography direction, including the selected default **Nunito Sans** interface family. Asset production should follow that guide rather than inventing independent typography/style rules here.
+
+This document also complements the semantic asset pipeline and current Core Icons v1 catalogue. Exact implemented asset/theme contracts remain source-owned; this production inventory does not by itself make an asset or typography feature implemented.
 
 ---
 
