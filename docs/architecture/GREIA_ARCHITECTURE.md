@@ -1,9 +1,9 @@
 # Greia Architecture — Living Overview
 
 **Status:** Living architecture synthesis  
-**Last reviewed:** 2026-08-15  
+**Last reviewed:** 2026-08-17  
 **Authority:** accepted ADRs are normative; implemented APIs/schemas are owned by source/runtime declarations; this document synthesizes the cross-cutting architecture.  
-**Scope:** Product philosophy, platform boundaries, Activity model, runtimes, profiles, storage, progression, package/update model, backup/restore, parent controls, hardware abstraction, ARM/i386 strategy, graphics/input direction, security boundaries, and open questions.
+**Scope:** Product philosophy, platform boundaries, Activity model, runtimes, profiles, storage, progression, Awards/badges/celebrations, package/update model, backup/restore, parent controls, hardware abstraction, ARM/i386 strategy, graphics/input direction, security boundaries, and open questions.
 
 ---
 
@@ -21,13 +21,13 @@ This document explains the stable product architecture above any particular Linu
 - `skills/greia-activity-authoring/SKILL.md` is the current Activity-authoring specification for agents/developers.
 - `HANDOVER.md` owns current branch, verification and hardware-evidence state.
 
-Several examples below are deliberately **conceptual/future-facing** to describe stable semantics. A YAML manifest, a simplified `storage.get()` call, a Web SDK example, `.greiaactivity` layout, or capability-class label shown here is not automatically the current authoring API.
+Several examples below are deliberately **conceptual/future-facing** to describe stable semantics. A YAML manifest, a simplified `storage.get()` call, a Web SDK example, `.greiaactivity` layout, Award declaration, or capability-class label shown here is not automatically the current authoring API.
 
 Greia should be able to evolve from an old i386 netbook to a Raspberry Pi 400/500 or a modern PC without becoming several different products.
 
 The core rule is:
 
-> **Greia presents one child operating environment, one Activity model, one profile model, one progression/storage model, one input model, and one parent-management model across all supported hardware and runtimes.**
+> **Greia presents one child operating environment, one Activity model, one profile model, one progression/Award/storage model, one input model, and one parent-management model across all supported hardware and runtimes.**
 
 Implementation layers are allowed to differ below those contracts.
 
@@ -81,7 +81,7 @@ Its responsibilities include:
 - transitions into and out of Activities;
 - global return/emergency UI;
 - child-safe failure states;
-- visible progression/rewards;
+- visible progression, rewards, Awards/badges and collection presentation;
 - profile customization;
 - system Activities designed for the child;
 - stable keyboard/pointer/touch/controller navigation conventions.
@@ -91,6 +91,8 @@ The shell is not merely an application launcher placed on top of another desktop
 A child-facing Activity never becomes the ultimate owner of the child's route back to Greia. ADR 0019 requires platform-owned system navigation above the Activity surface.
 
 Likewise, an Activity is not expected to rediscover and normalize physical controllers by itself. ADR 0020 places standard interaction semantics and physical controller authority at the Greia platform boundary.
+
+ADR 0025 similarly places durable Award authority and the official badge/new-best celebration experience at the Greia platform boundary rather than inside individual Activities.
 
 ## 3. Professor Pip is content, not the platform identity
 
@@ -141,6 +143,7 @@ The following must be common to all Activities regardless of runtime:
 - session recording;
 - scoring/progression reporting;
 - reward authority;
+- Award/badge authority and collection semantics;
 - permissions;
 - parental controls;
 - backup/restore;
@@ -163,7 +166,7 @@ Activity code may report facts such as:
 
 The platform decides how those facts affect global progression.
 
-An Activity must not directly grant arbitrary global currency, modify another Activity's progress, or rewrite the child's platform-owned reward ledger.
+An Activity must not directly grant arbitrary global currency, modify another Activity's progress, rewrite the child's platform-owned reward ledger, or directly mark a platform Award as earned.
 
 ## P-04 — Storage placement belongs to Greia
 
@@ -266,16 +269,17 @@ Children must be able to:
 - use installed Activities;
 - save progress;
 - create content;
-- earn local progression/rewards;
+- earn local progression/rewards/Awards;
+- browse their earned Award collection;
 - shut down safely.
 
-Cloud services may later add synchronization or convenience. They must not become the sole owner of identity or saves.
+Cloud services may later add synchronization or convenience. They must not become the sole owner of identity, saves, progression or Awards.
 
 ## P-11 — Open formats
 
 Greia Activity packages and Greia backup archives should be documented, inspectable formats.
 
-Parents should not need proprietary software to understand that their child's drawings, creations, and save data exist inside an archive.
+Parents should not need proprietary software to understand that their child's drawings, creations, save data and portable progression exist inside an archive.
 
 ## P-12 — Resource cost is an architectural dimension
 
@@ -322,6 +326,18 @@ Pointer Activities may receive a Greia virtual pointer from a controller. Text A
 
 Physical controller mapping, dead zones, reconnect behavior and reserved system input belong to Greia, not to individual Activities.
 
+## P-14 — Achievement is platform-owned and child-positive
+
+Greia distinguishes **Rewards**, **Awards/badges**, and **Celebrations**.
+
+Activities report facts and scores. Greia decides when validated evidence satisfies a durable Award rule, records the Award in profile-owned platform state, and presents the official celebration through Greia-owned UI.
+
+A genuine personal-best improvement may be celebrated without creating a permanent badge every time. Activity-specific Awards may eventually be declared through bounded package metadata, but runtime code does not directly write the Award ledger. Cross-Activity Awards are Greia policy because only Greia has authoritative cross-Activity evidence.
+
+Earned Awards survive Activity uninstall and logical backup/restore. Core Award policy must not depend on daily-login streak loss, expiring badges, advertising, purchases, artificial FOMO, public leaderboards, or screen-time-maximizing mechanics.
+
+ADR 0025 is normative; `docs/product/AWARDS_BADGES_AND_CELEBRATIONS.md` owns the child-facing product experience.
+
 ---
 
 # Part III — System layers
@@ -355,6 +371,7 @@ Responsibilities include:
 - physical input/controller backend;
 - protected system-input interception;
 - trusted Activity system-chrome backend;
+- bounded platform-owned transient presentation where required by the selected display/session design;
 - audio backend;
 - removable-media handling;
 - Wi-Fi/network configuration;
@@ -376,6 +393,8 @@ The durable logical core owns:
 - Session Service;
 - Progression Engine;
 - Reward Ledger;
+- Award/Achievement evaluation and Award Ledger;
+- bounded celebration scheduling/presentation state;
 - Permission Broker;
 - Package Manager;
 - Backup/Restore Service;
@@ -385,11 +404,11 @@ The durable logical core owns:
 
 ### Layer D — Greia Shell
 
-The Greia Shell renders and coordinates the child operating environment, including the post-Activity destination associated with platform Home/Back navigation and standard navigation behavior across available input devices.
+The Greia Shell renders and coordinates the child operating environment, including the post-Activity destination associated with platform Home/Back navigation, standard navigation behavior across available input devices, the child-facing Award collection, and deferred/safe celebration presentation where appropriate.
 
 ### Layer E — Activities
 
-Activities use Greia APIs rather than depending directly on Linux, board firmware, CPU architecture, display-server details, raw input devices, controller brands, or system-chrome authority.
+Activities use Greia APIs rather than depending directly on Linux, board firmware, CPU architecture, display-server details, raw input devices, controller brands, system-chrome authority, or Greia's private progression/Award ledgers.
 
 ---
 
@@ -410,11 +429,12 @@ DRM/KMS + input devices
    ↓
 minimal Greia display/session/input authority
    ├── trusted Greia Home/Back + protected system input
+   ├── bounded Greia-owned transient presentation when needed
    ├── normalized keyboard/pointer/touch/controller input
    └── Greia Shell or supervised Activity surface
 ```
 
-The trusted system-chrome/input layer is tiny and fixed-purpose. It is not a taskbar, desktop panel or general window-manager surface.
+The trusted system-chrome/input/presentation layer is tiny and fixed-purpose. It is not a taskbar, desktop panel, notification center, or general window-manager surface.
 
 ## 6. X11 status
 
@@ -426,7 +446,7 @@ The target direction remains direct/appliance-oriented. Xorg may survive only as
 
 Even in that case, X11 remains below the platform/Activity contract.
 
-The current Xorg path is not automatically certified for ADR 0019 or ADR 0020 merely because it can display an Activity and receive keyboard/pointer events. Production certification also requires a trusted system-chrome/input implementation and controller path that the Activity cannot control.
+The current Xorg path is not automatically certified for ADR 0019, ADR 0020 or ADR 0025 merely because it can display an Activity and receive keyboard/pointer events. Production certification also requires a trusted system-chrome/input implementation and a bounded platform-controlled presentation path that Activity content cannot own.
 
 ## 7. DRM/KMS-first direction
 
@@ -436,7 +456,7 @@ For Python/Pygame, SDL should use a suitable direct backend where hardware allow
 
 For a Web Activity runtime, Greia should select an embeddable engine/backend able to fit the appliance model rather than launching a conventional desktop browser.
 
-Direct scanout alone is not the complete product requirement. If an Activity becomes the uncontested owner of both framebuffer and physical input, another trusted layer must still preserve mandatory Greia Home/Back, protected system input and runtime-neutral controller normalization.
+Direct scanout alone is not the complete product requirement. If an Activity becomes the uncontested owner of both framebuffer and physical input, another trusted layer must still preserve mandatory Greia Home/Back, protected system input, runtime-neutral controller normalization, and the bounded platform-owned transient presentation required by ADR 0025 or an equivalent safe Greia-controlled deferred path.
 
 ## 8. Compositor/session-broker policy
 
@@ -446,6 +466,7 @@ A tiny compositor or embedded scene-management/session layer may be adopted only
 
 - trusted Home/Back composition above Activity content;
 - protected system-chrome/controller input routing;
+- bounded Greia-owned Award/celebration presentation;
 - safe transitions;
 - process/surface ownership;
 - runtime-neutral physical-input brokerage;
@@ -520,6 +541,32 @@ The platform owns common dead-zone normalization, positional controller mapping,
 
 `src/greia_platform/input_core.py` owns current renderer-neutral semantics. `src/greia_platform/pygame_input.py` is a current Pygame translation/trusted-controller helper and remains below the universal contract.
 
+### 8.3 Platform-owned Award and celebration presentation
+
+ADR 0025 requires Greia to own the official Award/badge and personal-best celebration experience.
+
+Granting and presenting are separate operations:
+
+```text
+validated event / score
+       ↓
+progression transaction
+       ↓
+Award grant / best-score update
+       ↓
+bounded celebration request
+       ↓
+Greia chooses an appropriate safe presentation moment
+```
+
+The durable grant must survive a crash/reboot even if the animation has not yet appeared. Conversely, a timed puzzle, drawing gesture or text entry must not be destroyed merely because a progression transaction completed.
+
+The selected display/session architecture therefore needs the smallest bounded capability to present Greia-owned transient UI above Activity content when safe, **or** a safe Greia-controlled transition/deferred presentation path that preserves the same product semantics.
+
+This is not authorization for a desktop notification system, arbitrary windows, Activity-owned overlay access, unbounded z-order, or background application surfaces. The mandatory Home/Back route remains authoritative and must not be obscured/disabled by celebration presentation.
+
+Exact source/API/presentation implementation is not yet selected. See `docs/product/AWARDS_BADGES_AND_CELEBRATIONS.md`.
+
 ---
 
 # Part V — Runtime architecture
@@ -544,7 +591,7 @@ A runtime adapter is responsible for:
 
 The platform above this adapter must not care whether the Activity was implemented in Python or Web technology.
 
-System Home/Back and protected physical-input ownership are deliberately above the runtime adapter rather than implemented separately by each runtime.
+System Home/Back, protected physical-input ownership, progression/Award authority, and official Award celebration presentation are deliberately above the runtime adapter rather than implemented separately by each runtime.
 
 ## 10. Python runtime family
 
@@ -598,6 +645,8 @@ The Web runtime should execute packaged local content inside a Greia-controlled 
 
 Greia system Home/Back remains outside the page/DOM. Web content cannot style, cover, remove or intercept it, and Greia Back is never mapped to arbitrary browser history.
 
+Likewise, the official Greia Award celebration is not a DOM widget controlled by Web content. Web Activities report the same factual event/score semantics and Greia owns award evaluation/presentation outside the page's authority.
+
 Standard controller support should cross the Greia input bridge using the same semantic interaction profiles as Python. Ordinary Web Activities should not each need to reinvent browser Gamepad API brand/button mappings for normal Greia controls.
 
 Network access is denied by default.
@@ -620,6 +669,7 @@ Selection requires real measurements on reference hardware for:
 - crash recovery;
 - direct-display integration;
 - trusted Greia system-chrome integration;
+- bounded Greia-owned transient presentation integration;
 - runtime-neutral keyboard/pointer/touch/controller bridge integration;
 - i386 availability;
 - ARM64/Raspberry Pi behavior;
@@ -709,6 +759,8 @@ System Home/Back is intentionally absent from Activity manifest authority: an Ac
 
 Similarly, an interaction profile is not permission to open physical devices. An Activity requests `controller` capability only if it genuinely requires a controller, not merely to benefit from Greia mapping a controller onto an otherwise usable interaction profile.
 
+ADR 0025 adds a future package concern without changing today's manifest: an Activity may eventually declare a bounded catalogue of **Activity-scoped Award definitions** bound to its own validated factual events/scores. That future metadata does not give runtime code a `grant_badge()` authority and does not permit an Activity to define Greia-wide Awards. The exact schema remains future source-owned work.
+
 ## 16. Capability classes
 
 Greia should classify machine capability separately from CPU architecture.
@@ -739,6 +791,8 @@ This should be one Activity package whenever practical, not separate “old comp
 
 Input also follows progressive enhancement: a pointer Activity can remain fully usable with mouse/touch while gaining a controller virtual pointer when controller input exists.
 
+The same principle applies to Greia Award presentation: a C0 machine may use a simpler bounded 2D reveal than a higher-capability machine, while Award identity, persistence and child meaning remain the same.
+
 ---
 
 # Part VII — Profiles and multi-user identity
@@ -758,6 +812,7 @@ Each profile can own:
 - Activity settings;
 - scores and progression;
 - rewards/unlocks;
+- **earned Awards/badges and collection state**;
 - child creations.
 
 The exact underlying Unix UID strategy is an implementation/security decision and may evolve independently.
@@ -770,9 +825,11 @@ Platform APIs should scope storage automatically.
 
 Runtime sandboxes should fail closed when required isolation cannot be established.
 
+Awards/badges are likewise profile-scoped. One child earning an Award does not silently grant it to sibling profiles on the same device.
+
 ---
 
-# Part VIII — Storage, sessions, saves, and progression
+# Part VIII — Storage, sessions, saves, progression, and Awards
 
 ## 20. Storage is a core platform service
 
@@ -798,6 +855,7 @@ Platform-owned data includes:
 - session journal;
 - global scores/progression indexes;
 - reward ledger;
+- Award definitions/earned-Award ledger and sufficient portable presentation metadata when implemented;
 - Activity registry/install history;
 - backup metadata;
 - parental policies.
@@ -810,13 +868,44 @@ Activity-owned private state includes:
 - Activity-local settings;
 - Activity-defined content state.
 
+An Activity's private save area is not the authoritative place to record a Greia Award.
+
 ## 22. SQLite is suitable internally
 
-Greia may use SQLite for platform-owned structured data such as sessions, registry entries, progression events, and installation records.
+Greia may use SQLite for platform-owned structured data such as sessions, registry entries, progression events, Award grants and installation records.
 
 Activity authors should not be forced to interact with the platform database directly.
 
 Their official SDK exposes simpler portable logical operations.
+
+## 22.1 Rewards, Awards, and celebrations remain distinct
+
+ADR 0017 already establishes score/progression/reward authority. ADR 0025 extends it with durable Awards and transient celebrations.
+
+Conceptually:
+
+```text
+Activity fact / score
+      ↓
+Greia progression engine
+      ├── best-score aggregate
+      ├── reward balance/ledger
+      └── Award rule evaluation
+              ↓
+          Award ledger
+              ↓
+      bounded celebration request
+```
+
+A new personal best normally updates the best-score aggregate and may trigger a `New Best!` celebration. It does not create a new permanent badge for every improvement. Specific milestone Awards are separate policy.
+
+Activity-specific Awards may eventually be declarative package metadata; Greia-wide Awards remain platform policy.
+
+## 22.2 Earned Awards outlive Activity installation
+
+Uninstalling an Activity must not erase platform Award history.
+
+The Award representation/backup contract must preserve enough stable identity and bounded child-facing representation to render an earned Award even when the package that originally defined it is absent. A missing package path must never turn the collection into a broken-image/filesystem-error surface.
 
 ## 23. Save schema versions
 
@@ -836,6 +925,8 @@ Parents may explicitly request deletion of saved data separately.
 
 Reinstallation should automatically reconnect to the preserved namespace.
 
+Platform progression and Award history are also separate from normal package uninstall and must remain unless an explicit future progression-reset operation says otherwise.
+
 ---
 
 # Part IX — Backup and restore
@@ -853,6 +944,7 @@ The backup should include, according to policy:
 - child creations;
 - scores/progression;
 - rewards/unlocks;
+- **earned Awards/badges and enough portable presentation state to preserve the collection**;
 - workshop customization;
 - Activity inventory/version metadata;
 - portable parent settings where appropriate.
@@ -866,6 +958,8 @@ A backup made on i386 must be restorable on ARM64 when compatible Activities exi
 Activity data for an Activity not currently installed should still be restored and retained dormant.
 
 Installing that Activity later should make its preserved state available again.
+
+Earned Awards must remain visible after restore even before the originating Activity is reinstalled; exact presentation metadata/fallback mechanics are defined by the future Award storage/backup schema.
 
 ## 27. Backup format
 
@@ -881,6 +975,7 @@ profiles/
 activity-data/
 progress/
 rewards/
+awards/
 shared/
 ```
 
@@ -906,6 +1001,8 @@ integrity/authenticity metadata
 ```
 
 This is not the current development directory schema. Current authors use `activity.toml` and the repository validator.
+
+Future package work may add validated Activity-scoped Award metadata/assets, but that is not a current manifest field and must not be invented by documentation before source owns the schema.
 
 ## 29. Parent-friendly removable-media installation
 
@@ -938,6 +1035,8 @@ failure → roll back
 
 Unexpected media removal or power loss should not corrupt the previous working package.
 
+An Activity update may improve Award names/artwork/definitions, but stable earned Award identity must not silently disappear or duplicate because presentation metadata changed.
+
 ## 31. Signature/authenticity
 
 Open source does not mean arbitrary unsigned code should be indistinguishable from trusted distribution content.
@@ -945,6 +1044,8 @@ Open source does not mean arbitrary unsigned code should be indistinguishable fr
 Current source already distinguishes built-in and developer-unsigned origins for development/runtime authority. The **distribution signing/community trust chain** remains a future package-system decision.
 
 The parent UI should eventually communicate trust without requiring cryptographic expertise.
+
+Award metadata/assets from third-party packages are part of the content that future package validation/trust policy must bound and validate; remote badge artwork is not required for normal offline operation.
 
 ---
 
@@ -971,9 +1072,12 @@ Parent controls may include:
 - tap-to-click;
 - language/accessibility;
 - storage usage;
-- diagnostics/recovery.
+- diagnostics/recovery;
+- a bounded read-only summary of child progression/Awards where product requirements justify it.
 
 Any controller setting exposed to parents must remain typed/bounded platform policy rather than arbitrary device-command execution.
+
+Normal product parent controls do not fabricate arbitrary child Awards; Awards represent trusted progression evidence.
 
 ## 33. Local and remote parent surfaces
 
@@ -993,7 +1097,7 @@ The architecture should converge above the hardware/boot seam:
 
 ```text
 PC BIOS/UEFI path ─┐
-                   ├→ Linux + Greia Platform → same Shell/Activity/input contracts
+                   ├→ Linux + Greia Platform → same Shell/Activity/input/Award contracts
 Raspberry Pi path ─┘
 ```
 
@@ -1031,6 +1135,8 @@ At minimum the project should maintain physical or reproducible acceptance targe
 
 Controller/input acceptance should use representative supported USB/Bluetooth hardware as appropriate to the target's actual capabilities rather than assuming one brand/model defines the platform contract.
 
+Award/celebration presentation must also remain bounded enough for the C0/Acer floor; richer machines may use richer visuals without changing Award semantics.
+
 As hardware availability evolves, specific models may be retired through an ADR while preserving portable child data.
 
 ---
@@ -1050,10 +1156,13 @@ Isolation should cover as appropriate:
 - raw device/input permissions;
 - parent-state access;
 - sibling Activity data;
+- platform progression/reward/Award ledgers;
 - privileged OS operations;
-- the platform-owned system-navigation surface/input region.
+- the platform-owned system-navigation and transient-presentation surface/input region.
 
 Controller support must not become a reason to expose broad `/dev/input` access to ordinary Activities.
+
+Award support must not become a reason to expose direct Award-ledger mutation or a general trusted-overlay API to Activities.
 
 ## 38. Network denied by default
 
@@ -1062,6 +1171,8 @@ Especially for future Web Activities, arbitrary network access should not be the
 An ordinary offline Activity should not be able to silently become a tracking client.
 
 Network capability must be declared and mediated by policy.
+
+Normal Award evaluation, grant, collection browsing and celebration must not require network connectivity.
 
 ## 39. Child-safe crash, return and input behavior
 
@@ -1075,11 +1186,15 @@ ADR 0019 additionally gives the child a universal learned route home while the A
 
 ADR 0020 requires physical controller/system input to be normalized/intercepted on the platform side so an Activity cannot consume a controller system button before Greia has a chance to act on it.
 
+ADR 0025 requires Award grants to persist independently from presentation. A crash after the grant but before the ceremony must not lose the Award, and recovery must not create an unbounded replay storm of stale celebrations.
+
 Exact current source/evidence status belongs in `HANDOVER.md`.
 
 ## 40. Fail closed
 
 If a security-critical sandbox, package verifier, privileged helper, destructive-operation safety gate, or production mandatory-system-chrome/input boundary is unavailable, Greia should refuse the unsafe operation rather than silently falling back to a weaker path.
+
+Award presentation failure is different: the durable Award must remain granted even if a non-security-critical animation cannot be shown. Greia may defer/simplify the ceremony rather than corrupt progression state.
 
 ---
 
@@ -1095,13 +1210,14 @@ Use:
 - **Greia Parents** — parent-management product/surface;
 - **Greia SDK** — Activity APIs/tooling;
 - **Greia Activity** — universal content package;
+- **Greia Award** — durable platform-owned achievement identity; badge is the initial child-facing presentation form;
 - **Professor Pip** — child-world character/guide where appropriate.
 
 ## 42. Legacy technical identifiers
 
 Old implementation identifiers beginning with `pip_`, old paths, and old package extensions are migration debt, not architectural vocabulary.
 
-They should not be mass-renamed blindly if doing so would break persisted Activity IDs, save paths, or compatibility boundaries.
+They should not be mass-renamed blindly if doing so would break persisted Activity IDs, save paths, Award IDs, or compatibility boundaries.
 
 Renames should preserve migration mappings and be tested.
 
@@ -1115,7 +1231,7 @@ Rejected because it exposes implementation substrate, increases resource cost, f
 
 ## 44. Runtime-first platform
 
-Rejected because separate Python/Web install, save, progress, parent, input, or system-navigation systems would duplicate core logic and break portability.
+Rejected because separate Python/Web install, save, progress, Award, parent, input, or system-navigation systems would duplicate core logic and break portability.
 
 ## 45. Per-Activity Python environments
 
@@ -1153,6 +1269,14 @@ Rejected. Ordinary Activities must not implement the platform by opening raw joy
 
 Rejected as the general pointer architecture. Pointer-profile Activities may receive a Greia semantic virtual pointer, but globally emulating a host mouse creates surprising cross-context behavior and weakens the separation between Activity input and protected system input.
 
+## 50.4 Activity-owned authoritative badges and reward popups
+
+Rejected. Activities may provide ordinary local feedback, but durable Greia Awards, cross-Activity achievement rules, personal-best authority and the official Greia collection/celebration cannot live in runtime-specific Activity save/UI code.
+
+## 50.5 Desktop notification/window manager justified by Awards
+
+Rejected. ADR 0025 requires only a bounded Greia-owned transient presentation path or safe platform-controlled deferred presentation. It does not justify a general notification center, movable/resizable windows, arbitrary z-order, background apps or desktop shell.
+
 ---
 
 # Part XVI — Open research and implementation questions
@@ -1166,17 +1290,18 @@ R7 requires evidence to select the exact shell/display/input architecture across
 Questions include:
 
 - SDL KMSDRM behavior on reference machines;
-- whether one tiny compositor/session broker materially improves trusted system-chrome ownership, input brokerage and Web runtime integration;
+- whether one tiny compositor/session broker materially improves trusted system-chrome ownership, input brokerage, bounded Award/celebration presentation and Web runtime integration;
 - GPU fallback behavior;
 - mode switching and resolution control;
 - boot-to-shell continuity without architectural X11 dependence;
 - how protected Home/Back pointer/touch/controller input is consumed before Activity input;
+- how a bounded Greia-owned transient celebration can be composed or safely deferred without Activity authority;
 - how controller/device reconnect is handled without exposing raw devices to Activities;
 - handling of multiple Activity surfaces if ever genuinely required.
 
 ## 52. Web engine
 
-Need benchmarked comparison of WPE WebKit / WebKit variants and any other realistic embedded engines on required architectures, including integration beneath the external Greia system-chrome layer and runtime-neutral input bridge.
+Need benchmarked comparison of WPE WebKit / WebKit variants and any other realistic embedded engines on required architectures, including integration beneath the external Greia system-chrome/transient-presentation layer and runtime-neutral input bridge.
 
 ## 53. Boot cover
 
@@ -1184,15 +1309,15 @@ Need a genuinely noninteractive branded boot path that never reveals normal Linu
 
 ## 54. Exact backup/package schemas
 
-Need versioned format decisions and migration rules.
+Need versioned format decisions and migration rules, including the Award state/presentation representation required by ADR 0025.
 
 ## 55. Package distribution trust chain
 
-Need signing-key lifecycle, community package policy, offline authenticity verification, rollback, and recovery design above the already implemented development/built-in trust-origin distinction.
+Need signing-key lifecycle, community package policy, offline authenticity verification, rollback, and recovery design above the already implemented development/built-in trust-origin distinction. Future Activity-scoped Award metadata/assets must participate in the same bounded package validation/provenance model.
 
-## 56. Trusted system-chrome backend evidence
+## 56. Trusted system-chrome and transient-presentation backend evidence
 
-The Home/Back product semantics are settled by ADR 0019. R7 still needs evidence for the concrete backend that enforces them across real Activity content.
+The Home/Back product semantics are settled by ADR 0019. ADR 0025 adds a bounded Greia-owned transient presentation requirement for Awards/celebrations. R7 still needs evidence for the concrete backend that enforces these properties across real Activity content.
 
 Required evidence includes:
 
@@ -1200,8 +1325,10 @@ Required evidence includes:
 - protected pointer/touch/controller system input is consumed before Activity delivery;
 - Home initiates graceful stop and still returns from an unresponsive Activity through the existing forced-return authority;
 - Back appears only from a valid Greia launch origin;
+- a bounded platform-owned celebration can be shown at a safe moment or deterministically deferred to a Greia-controlled transition without giving the Activity trusted-overlay authority;
+- celebration presentation cannot obscure/disable mandatory Home/Back;
 - the layer has acceptable RAM/disk/process/FD/startup/input/render cost on the Acer floor;
-- future Web content cannot manipulate the system controls.
+- future Web content cannot manipulate the system controls or official Greia Award presentation.
 
 ## 57. Controller/input backend evidence
 
@@ -1221,6 +1348,26 @@ Required evidence includes:
 
 The exact fallback controller chord for Home, if one is needed, remains open until child accidental-activation testing justifies it.
 
+## 57.1 Award subsystem implementation
+
+ADR 0025 settles the authority/product boundary but not the exact source schema.
+
+A future implementation tranche still needs to define and test:
+
+- stable Award definition and earned-grant schemas;
+- transactional/idempotent Award evaluation over ADR 0017 evidence;
+- personal-best celebration generation without badge spam;
+- Activity-scoped declarative Award metadata and bounds;
+- Greia-wide cross-Activity Award policy;
+- bounded celebration queue and safe-presentation scheduling;
+- Shell collection model/rendering and accessibility/localization;
+- durable presentation fallback/snapshot behavior when an Activity is uninstalled;
+- logical `.greiabackup` export/import with originating Activity absent;
+- optional bounded Parent API achievement summary;
+- C0/Acer CPU/RAM/disk/render/input measurements.
+
+Until these exist and execute, Awards/badges/celebrations are **SELECTED architecture and accepted product requirements**, not an implemented runtime feature.
+
 ## 58. Capability classes
 
 Need measured thresholds and certification tests rather than invented labels.
@@ -1235,7 +1382,7 @@ Raspberry Pi 400/500 must be first-class, but board/image details require their 
 
 ## 60. One-sentence architectural summary
 
-> **Greia is a console-like child operating environment centered on runtime-independent Activities, with platform-owned identity, lifecycle, storage, sessions, progression, installation, backup, permissions, parent controls, system navigation, input semantics, and hardware abstraction over a deliberately replaceable Linux/runtime/display/input substrate.**
+> **Greia is a console-like child operating environment centered on runtime-independent Activities, with platform-owned identity, lifecycle, storage, sessions, progression, rewards/Awards, installation, backup, permissions, parent controls, system navigation, input semantics, child-safe celebration/collection, and hardware abstraction over a deliberately replaceable Linux/runtime/display/input substrate.**
 
 ## 61. Core diagram
 
@@ -1245,36 +1392,38 @@ Raspberry Pi 400/500 must be first-class, but board/image details require their 
                     Greia Parents / Policy
                               │
                               ▼
-┌───────────────────────────────────────────────────────────────┐
-│                     GREIA PLATFORM CORE                       │
-│ Profiles • Registry • Storage • Sessions • Progression       │
-│ Rewards • Packages • Backup • Permissions • Input • Assets   │
-└──────────────────────────────┬────────────────────────────────┘
-                               │
-                     universal Activity contract
-                  input profile + lifecycle + services
-                               │
-                     Activity Runtime Manager
-                     ┌─────────┼─────────┐
-                     │         │         │
-                   Python      Web      Future
-                     │         │         │
-                     └─────────┼─────────┘
-                               │
-                 Activity content surface
-                               │
-             ┌─────────────────┴─────────────────┐
-             │ Greia display/session/input      │
-             │ Home/Back + protected input      │
-             │ device normalization/brokerage   │
-             └─────────────────┬─────────────────┘
-                               │
-                  hardware/platform adapters
-                               │
-              ┌────────────────┼─────────────────┐
-              │                │                 │
-         i386 netbook      Raspberry Pi       amd64 PC
-                            400 / 500
+┌──────────────────────────────────────────────────────────────────┐
+│                      GREIA PLATFORM CORE                         │
+│ Profiles • Registry • Storage • Sessions • Progression          │
+│ Rewards • Awards • Packages • Backup • Permissions • Input      │
+│ Assets • Celebration scheduling • Parent semantic services       │
+└───────────────────────────────┬──────────────────────────────────┘
+                                │
+                      universal Activity contract
+                   input profile + lifecycle + factual events
+                                │
+                      Activity Runtime Manager
+                      ┌─────────┼─────────┐
+                      │         │         │
+                    Python      Web      Future
+                      │         │         │
+                      └─────────┼─────────┘
+                                │
+                  Activity content surface
+                                │
+              ┌─────────────────┴──────────────────┐
+              │ Greia display/session/input       │
+              │ Home/Back + protected input       │
+              │ bounded Greia celebration path    │
+              │ device normalization/brokerage    │
+              └─────────────────┬──────────────────┘
+                                │
+                   hardware/platform adapters
+                                │
+               ┌────────────────┼─────────────────┐
+               │                │                 │
+          i386 netbook      Raspberry Pi       amd64 PC
+                             400 / 500
 ```
 
 The supported hardware may change. Runtime implementations may change. Linux distributions, boot mechanisms, display backends and controller hardware may change. The contracts above them are what make the system Greia.
