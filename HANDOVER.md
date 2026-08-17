@@ -5,7 +5,7 @@
 **Repository:** `frozenpepper/Greia` (private)  
 **Canonical/default/development branch:** `main`  
 **Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**  
-**Current cross-cutting state:** **ADR 0025 Awards/badges/celebrations architecture is accepted/documented but unimplemented; Greia Parents API/client foundation remains the latest substantive code tranche**
+**Current cross-cutting state:** **ADR 0025 Awards/badges/celebrations architecture and the Greia visual-style/Nunito Sans direction are accepted/documented but unimplemented; Greia Parents API/client foundation remains the latest substantive code tranche**
 
 ## Branch policy
 
@@ -488,6 +488,87 @@ a670ae43f56e171996d35f907dc0866fdc6406ce  docs: define child awards and badge co
 35894e4499045e79e602cb55f98af292a76319c1  docs: integrate awards into living architecture
 ```
 
+## 2026-08-17 — Visual style and typography direction
+
+This is a **documentation/design-selection tranche only**. It does not vendor fonts, alter runtime theme/source code, implement typography tokens, change an Activity API, or advance/close R7.
+
+New design authority:
+
+```text
+docs/design/GREIA_VISUAL_STYLE_GUIDE.md
+```
+
+The existing production-art inventory remains complementary:
+
+```text
+docs/design/GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md
+```
+
+The style guide now owns reusable visual-language and typography direction; the asset document owns the inventory of concrete logos, characters, icons, backgrounds, effects, and state artwork.
+
+### Selected typography
+
+The default Greia interface family is **Nunito Sans**.
+
+Selected direction:
+
+```text
+body         Nunito Sans Regular
+controls     Nunito Sans SemiBold
+titles       Nunito Sans Bold
+celebration  Nunito Sans ExtraBold
+```
+
+The initial deployment direction is to use a small set of **static weights**, not make variable-font support a C0/Acer requirement.
+
+The visual goal remains **warm and playful without looking like baby software**. Greia should obtain personality primarily from hierarchy, illustration, shape, motion, sound and celebration rather than novelty fonts or a different typeface for every surface.
+
+### Licensing/provenance boundary
+
+Nunito Sans is third-party font software under **SIL Open Font License 1.1 (OFL-1.1)**. When it is actually bundled, Greia must pin a traceable upstream version/source, preserve the upstream copyright/OFL notice, record whether files are modified, and list the font in the third-party provenance inventory required by ADR 0024.
+
+Do not treat Nunito Sans as Greia-owned MPL software or CC BY artwork.
+
+### What is not implemented yet
+
+Do **not** infer any of the following from the design selection:
+
+- Nunito font files are already present in the repository/image;
+- `runtime/theme-defaults.toml` already contains typography roles;
+- a shared font cache/loader already exists;
+- first-party Activities already consume a semantic typography API;
+- proposed pixel-size targets have passed physical Acer/800×600/1024×600 readability testing;
+- an accessibility alternate font has already been selected.
+
+Those are future source/provenance/evidence steps.
+
+### Implementation direction when scheduled
+
+When typography integration is actually implemented:
+
+1. pin a specific upstream Nunito Sans version/source;
+2. vendor only the justified static weights/glyph coverage;
+3. preserve OFL-1.1 copyright/license material;
+4. add the font to ADR-0024 provenance/third-party notices;
+5. expose semantic platform typography roles rather than arbitrary hard-coded font paths;
+6. use one bounded shared cache/load path rather than per-consumer/per-frame font loading;
+7. validate English/Italian accents and young-reader ambiguous glyphs;
+8. validate real layouts at 800×600 and 1024×600, including physical Acer-class evidence;
+9. update the Activity authoring skill only when an actual Activity-facing typography contract exists.
+
+Current correct wording is:
+
+> **Nunito Sans selected as the default Greia interface typeface; font bundling/typography API/readability evidence pending.**
+
+Documentation commits in this tranche include:
+
+```text
+48d59f4950c28823887b4176dc849364b7bf232f  docs: establish Greia visual style and typography guide
+2e486225ba2d14e4c66cb4c8f094bac65516988c  docs: surface visual style and Nunito Sans choice
+5fe192fd3668559e2be4c3a92bae0d0f4a90d6a0  docs: link asset requirements to visual style authority
+1b72fcd4301837af0764f28e851d74bb1180b417  docs: register visual design authority and typography ownership
+```
+
 ## 2026-08-17 — Boot animation state
 
 The direct Greia Plymouth animation remains integrated:
@@ -638,7 +719,7 @@ Development remote controls include bounded status/screenshot/log/input/Activity
 
 ## Exact continuation priorities
 
-The Parent API foundation, ecosystem/licensing policy and Awards architecture are now persisted, but **R7 remains the primary blocking architecture phase**. Do not reinterpret any documentation tranche as closing or skipping R7/R10/R11/R12.
+The Parent API foundation, ecosystem/licensing policy, Awards architecture and visual-style/Nunito Sans direction are now persisted, but **R7 remains the primary blocking architecture phase**. Do not reinterpret any documentation tranche as closing or skipping R7/R10/R11/R12.
 
 Immediate legitimate work sequence:
 
@@ -650,6 +731,7 @@ Immediate legitimate work sequence:
 6. When R10 package/distribution work begins, treat ADR 0023/0024/0025 as mandatory design constraints: keep independent parent-authorized installation, keep provenance/license/price separate, do not invent child commerce, do not claim public-release licensing complete before the provenance/license audit, and define Activity-scoped Award metadata only through a bounded validated source-owned schema if/when that feature is implemented.
 7. When R11 backup work begins, include logical Award state/presentation fallback required by ADR 0025 so earned badges survive cross-architecture restore with the source Activity absent.
 8. **Do not jump ahead to implementing the full Awards subsystem merely because ADR 0025 now exists.** When implementation is scheduled, build it on ADR 0017 progression evidence and the selected R7 presentation seam, preserving current active-plan ordering.
+9. When visual/typography integration is scheduled, treat `docs/design/GREIA_VISUAL_STYLE_GUIDE.md` as the design authority: use Nunito Sans as the default family, preserve its OFL-1.1 provenance, prefer the selected static weight subset initially, and introduce a shared semantic/bounded typography path rather than hard-coded font copies in each consumer. Do not claim font integration or physical readability before it is actually implemented/tested.
 
 ## Non-negotiable continuation rules
 
@@ -669,6 +751,7 @@ Immediate legitimate work sequence:
 - preserve ADR 0019/0020 trusted system-chrome/input constraints while expanding hardware support;
 - **preserve ADR 0025 Award authority: Activities report facts/scores and do not directly mutate durable Awards or the official Greia collection; official celebration is Greia-owned; grant and presentation remain separate; earned Awards survive uninstall/backup; core achievement design avoids manipulative streak/FOMO/advertising/purchase mechanics;**
 - **do not describe Awards/badges/celebrations as implemented until the ledger/evaluation/presentation/collection source and required evidence actually exist;**
+- **preserve the visual-style authority in `docs/design/GREIA_VISUAL_STYLE_GUIDE.md`: default interface family is Nunito Sans; the font remains OFL-1.1 third-party material; do not describe it as bundled or the typography API as implemented until source/provenance/evidence actually exists;**
 - the official catalogue must remain optional distribution infrastructure rather than the only supported Activity installation path;
 - child-facing advertising/purchase-pressure mechanics remain outside the official Greia ecosystem direction;
 - Activity provenance/trust, compatibility, license and price/entitlement remain distinct concepts;
