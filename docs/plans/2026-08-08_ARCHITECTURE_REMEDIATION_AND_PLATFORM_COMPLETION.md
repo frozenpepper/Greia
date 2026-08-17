@@ -458,6 +458,8 @@ Work:
 
 Typed operations for Activity install/update/remove, backup/restore, profiles, display/input/audio, Wi-Fi/network, diagnostics/recovery, authorization/pairing/revocation, and storage administration. No arbitrary command execution endpoint.
 
+ADR 0022 permits an earlier **non-closing Parent API/client foundation** after the relevant shared services exist: versioning, LAN discovery, per-device credential/revocation primitives, capability advertisement, and HTML/native client parity may wrap already-existing unprivileged profile/status/settings services. This exception does not authorize privileged effects, substitute package/backup/update implementations, or change R12 closure prerequisites. Full R12 still waits for the services it delegates to, including R10/R11 where applicable.
+
 ## R13 — Boot cover, recovery, and graphical continuity
 
 **Goal:** satisfy “Linux never appears” without destroying recovery.
@@ -531,7 +533,7 @@ R11 + R12           → R13B OS/runtime update + preserve-profile recovery
 all                  → R14 certification
 ```
 
-The blocking safety spine through R6 remains ordered. After R6, explicitly independent tracks may proceed in parallel when their prerequisites are satisfied. No later track may weaken an earlier boundary.
+The blocking safety spine through R6 remains ordered. After R6, explicitly independent tracks may proceed in parallel when their prerequisites are satisfied. No later track may weaken an earlier boundary. ADR 0022's non-closing Parent API/client foundation is an allowed preparatory tranche only; it does not move the R12 closure dependency shown above.
 
 ---
 
@@ -753,6 +755,15 @@ Do not rewrite old entries; append corrections.
 - Remaining blockers: physical Acer boot and visual verification of Plymouth animation playback during actual startup.
 - Next exact step: continue hardware-enablement SD installer build and physical verification per rerun runbook.
 - Commit(s): boot animation integration commit on `main`.
+
+## 2026-08-17 — R12 preparatory Parent API/client foundation (non-closing)
+
+- Implemented: accepted ADR 0022 and `docs/product/PARENT_MANAGEMENT.md`; added the narrower parent-management architecture design; introduced API-v1 protocol/capability vocabulary, bounded per-device credential storage with hashed persisted tokens and independent revocation, a versioned JSON facade over existing profile/progress/hardware/Activity-inventory services, `_greia-parent._tcp` Avahi discovery, and a dependency-free responsive HTML client that uses `/api/v1`. `greia-parent.service` now starts the API-first server while the legacy server-rendered UI remains available as a compatibility/troubleshooting view.
+- Tests/evidence: added `tests/test_parent_api.py` for credential persistence/revocation bounds, capability truthfulness, bootstrap/bearer behavior, Activity-path non-disclosure, HTML API usage, mDNS advertisement and normal-image SSH separation. The new source was syntax-checked while authored, but no current repository test suite or `make verify` was executed in this GitHub-connector environment; **no PASS is claimed** for the current head.
+- Decisions: the HTML page is the first client, not the parent authority implementation; future native clients use the same discovery/pairing/auth/API contract. Normal/release SSH stays off and is not a Parent API transport. Activity installation, backup/restore, audio/network management, SSH control and system update remain unavailable capabilities until their typed platform services/broker exist. The current shared pairing token and plaintext HTTP remain explicitly PROVISIONAL bootstrap/transport and cannot satisfy production pairing security.
+- Remaining blockers: current R7 remains the primary blocking platform phase; the newer repository head still needs a genuine source-gate run; production parent pairing still needs short-lived Greia-local QR/code challenge + Allow/Deny and authenticated encrypted transport; privileged parent operations still require the R12 typed broker and R10/R11 service prerequisites.
+- Next exact step: when repository verification is run on the owner-controlled Linux checkout, include `tests/test_parent_api.py` and preserve the first genuine failure. Separately, the next Parent slice is local pairing-challenge state/Greia-screen confirmation design followed by the typed privileged broker contract; do not implement SSH/package installation as shell shortcuts.
+- Commit(s): `50591969e11278bb1e767cf3e2da80cdb0b7e192`, `10fc96dba2387f3fe7a6641eccec5cf79d07a05e`, `e04aa162ee78c0e42b7b353975ad957f4f631776`; plan/HANDOVER synchronization commits follow this entry.
 
 ---
 
