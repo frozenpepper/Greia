@@ -15,6 +15,7 @@ from greia_platform.hardware_session import HardwareSessionController
 
 from greia_platform.keyboard_layout import (
     PROBES,
+    _HID_TO_XKB,
     available_layouts,
     infer_layout,
     layout_by_id,
@@ -222,9 +223,6 @@ class InstallerApplication:
         return 0
 
     def _handle_text_input(self, text: str) -> None:
-        if self.state.page == InstallerPage.LAYOUT:
-            self._handle_layout_text(text)
-            return
         if self.state.page != InstallerPage.WIFI:
             return
         network = self.wifi.snapshot.selected_network
@@ -240,24 +238,23 @@ class InstallerApplication:
         if self.state.page != InstallerPage.LAYOUT:
             return
         scancode = int(getattr(event, "scancode", -1))
-        modifiers = pygame.key.get_mods()
+        modifiers = int(getattr(event, "mod", 0)) or int(pygame.key.get_mods())
         shift_held = bool(modifiers & pygame.KMOD_SHIFT)
         text = getattr(event, "unicode", "") or ""
-        if not text:
+        keycode_name = _HID_TO_XKB.get(scancode)
+        if not keycode_name or not text:
             return
+        # The current probe is the first unpressed one. The parent was told to
+        # press a specific physical key; verify they pressed the right physical
+        # key and record the character their (possibly wrong) layout produced.
         for probe in PROBES:
-            if probe.character in self._layout_probe_results:
+            if probe.keycode in self._layout_probe_results:
                 continue
-            # Only accept the probe when the produced text matches the probe
-            # character at one of the two shift levels. This filters modifier
-            # keys and dead keys.
-            if probe.shift_required and not shift_held:
-                continue
-            if probe.character != text:
-                continue
-            if scancode <= 0:
+            if keycode_name != probe.keycode:
                 return
-            self._layout_probe_results[probe.character] = (scancode, shift_held)
+            if probe.shift and not shift_held:
+                return
+            self._layout_probe_results[probe.keycode] = (scancode, shift_held, text)
             self._refresh_layout_candidates()
             return
 
@@ -308,26 +305,12 @@ class InstallerApplication:
         except OSError:
             pass
 
-    def _handle_layout_text(self, text: str) -> None:
-        if not text or self._layout_probe_results:
-            return
-        # Determine shift state from the produced character. We cannot access
-        # KEYDOWN here (TEXTINPUT lacks modifiers), so the first printable char
-        # is matched case-sensitively against the probe table by trying both
-        # shift levels and checking agreement.
-        for probe in PROBES:
-            if probe.character in self._layout_probe_results:
-                continue
-            self._layout_probe_results[probe.character] = (-1, False)
-            self._refresh_layout_candidates()
-            break
-
     def _handle_key(self, key: int, pygame: Any) -> bool:
         if self.state.page == InstallerPage.LAYOUT:
             if key == pygame.K_ESCAPE:
                 self._back()
             elif self._layout_probe_results and len(
-                [p for p in PROBES if p.character in self._layout_probe_results]
+                [p for p in PROBES if p.keycode in self._layout_probe_results]
             ) >= len(PROBES):
                 if key == pygame.K_UP:
                     self._move_layout_selection(-1)
@@ -604,8 +587,8 @@ class InstallerApplication:
                 accent,
                 text,
                 font,
-                (width // 2, main.bottom - 56),
-                260,
+                (main.right - 210, height // 2),
+                240,
             )
         elif page == InstallerPage.LAYOUT:
             self._draw_layout(screen, pygame, main, font, title_font, small_font, text, accent, background)
@@ -904,45 +887,38 @@ class InstallerApplication:
             screen, "Your keyboard", title_font, text, main.top + 26
         )
         remaining = [
-            probe for probe in PROBES if probe.character not in self._layout_probe_results
+            probe for probe in PROBES if probe.keycode not in self._layout_probe_results
         ]
         if remaining:
             probe = remaining[0]
             self._center_text(
                 screen,
-                f"Type the character:  {probe.character}",
+                probe.instruction,
                 title_font,
                 accent,
                 main.top + 110,
             )
             self._center_text(
                 screen,
-                probe.prompt,
+                "I'm listening — press that key now.",
                 font,
                 text,
-                main.top + 175,
-            )
-            self._center_text(
-                screen,
-                "I'm listening — press that key now.",
-                small_font,
-                text,
-                main.top + 225,
+                main.top + 180,
             )
             done = len(self._layout_probe_results)
             self._center_text(
                 screen,
-                "·" * done + "○" * (len(PROBES) - done),
+                f"{done} of {len(PROBES)} pressed",
                 small_font,
                 accent,
-                main.top + 280,
+                main.top + 250,
             )
             self._center_text(
                 screen,
                 "After a few keys I'll show you a full list to confirm or change.",
                 small_font,
                 text,
-                main.top + 330,
+                main.top + 300,
             )
         else:
             self._draw_layout_selector(
@@ -982,10 +958,10 @@ class InstallerApplication:
     ) -> None:
         inferred_id = infer_layout(self._layout_probe_results)
         all_ids = self._all_layout_ids
-        rows_visible = min(7, len(all_ids))
+        rows_visible = min(6, len(all_ids))
         self._layout_scroll_to(self._layout_alternative_index, rows_visible)
-        top = main.top + 100
-        row_height = 52
+        top = main.top + 90
+        row_height = 50
         for offset in range(rows_visible):
             index = self._layout_scroll + offset
             if index >= len(all_ids):
@@ -993,7 +969,7 @@ class InstallerApplication:
             layout_id = all_ids[index]
             layout = layout_by_id(layout_id)
             rect = pygame.Rect(
-                main.left + 90, top + offset * row_height, main.width - 180, 46
+                main.left + 90, top + offset * row_height, main.width - 180, 44
             )
             selected = index == self._layout_alternative_index
             inferred = layout_id == inferred_id
@@ -1014,15 +990,15 @@ class InstallerApplication:
             self._buttons[f"layout-{index}"] = rect
             label = layout.label
             if inferred:
-                label = "✓ " + label
+                label = "> " + label
             image = font.render(label, True, text)
             screen.blit(image, (rect.left + 16, rect.top + 8))
         self._center_text(
             screen,
-            "↑ ↓ or click to choose · Enter to confirm",
+            "Use Up/Down or click to choose, then Enter to confirm",
             small_font,
             text,
-            top + rows_visible * row_height + 22,
+            top + rows_visible * row_height + 18,
         )
 
     def _draw_wifi(
@@ -1495,7 +1471,11 @@ class InstallerApplication:
         width: int,
         height: int,
     ) -> None:
-        """Render the boot-frame logo stretched to fill the panel vertically."""
+        """Render the boot-frame logo left-aligned, filling the panel height.
+
+        The Start button occupies the right column of the panel, so the logo is
+        placed on the left and never overlaps it.
+        """
         key = ("hero-logo", main.height)
         image = self._icon_cache.get(key)
         if image is None:
@@ -1519,7 +1499,7 @@ class InstallerApplication:
             image = pygame.transform.smoothscale(loaded, (target_width, target_height)).convert_alpha()
             self._icon_cache[key] = image
         image_rect = image.get_rect()
-        image_rect.midtop = (width // 2, main.top + 10)
+        image_rect.midtop = (main.left + int(main.width * 0.35), main.top + 10)
         screen.blit(image, image_rect)
 
     def _draw_pointer(self, screen: Any, pygame: Any) -> None:
