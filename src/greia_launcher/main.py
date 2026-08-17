@@ -770,8 +770,29 @@ class LauncherApplication:
         screen.blit(icon, icon.get_rect(center=(x, y)))
 
     def _draw_empty(self, screen: Any, pygame: Any) -> None:
-        icon = self._load_icon("robot", min(screen.get_width(), screen.get_height()) // 3, pygame)
-        screen.blit(icon, icon.get_rect(center=screen.get_rect().center))
+        self._boot_logo(screen, pygame, screen.get_rect().center)
+
+    def _boot_logo(self, screen: Any, pygame: Any, center: tuple[int, int]) -> None:
+        cache_key = ("boot-logo", self.paths.root)
+        image = self._icon_cache.get(cache_key)
+        if image is None:
+            frame_path = Path("/usr/share/plymouth/themes/greia/frames/frame_0051.png")
+            source = frame_path if frame_path.is_file() else None
+            if source is None:
+                fallback = self.assets.get("robot")
+                image = pygame.image.load(str(fallback.path_256)).convert_alpha()
+            else:
+                image = pygame.image.load(str(source)).convert_alpha()
+            max_height = max(120, min(300, screen.get_height() // 3))
+            if image.get_width() > image.get_height():
+                width = max_height
+                height = int(image.get_height() * width / image.get_width())
+            else:
+                height = max_height
+                width = int(image.get_width() * height / image.get_height())
+            image = pygame.transform.smoothscale(image, (width, height)).convert_alpha()
+            self._icon_cache[cache_key] = image
+        screen.blit(image, image.get_rect(center=center))
 
     def _draw_error_badge(self, screen: Any, pygame: Any) -> None:
         size = max(64, min(110, screen.get_height() // 6))
