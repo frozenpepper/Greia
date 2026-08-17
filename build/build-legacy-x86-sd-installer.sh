@@ -4,20 +4,24 @@ set -Eeuo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 PROFILE="legacy-x86-i686"
-OUTPUT_DIR="${1:-$PROJECT_ROOT/out}"
+PROFILE="${1:-$PROFILE}"
+OUTPUT_DIR="${2:-$PROJECT_ROOT/out}"
 
 usage() {
   cat <<'USAGE'
-Usage: sudo build/build-legacy-x86-sd-installer.sh [OUTPUT_DIR]
+Usage: sudo build/build-legacy-x86-sd-installer.sh [PROFILE] [OUTPUT_DIR]
 
-Build the generic Greia legacy-x86/i686 graphical installer and place the
-one-shot AntiX boot helper plus optional hardware-evidence collector directly
-on the installer media. This command intentionally does NOT inspect a target PC
-before building.
+Build a Greia legacy-x86 graphical installer and place the one-shot AntiX boot
+helper plus optional hardware-evidence collector directly on the installer
+media. This command intentionally does NOT inspect a target PC before building.
+
+PROFILE defaults to legacy-x86-i686 (the generic release-compatible image).
+A developer profile (for example legacy-x86-i686-dev) additionally enables
+default-on SSH and mDNS discovery for remote operator access.
 USAGE
 }
 
-[[ $# -le 1 ]] || { usage >&2; exit 2; }
+[[ $# -le 2 ]] || { usage >&2; exit 2; }
 [[ ${EUID:-$(id -u)} -eq 0 ]] || {
   echo "Run as root: sudo build/build-legacy-x86-sd-installer.sh [OUTPUT_DIR]" >&2
   exit 1

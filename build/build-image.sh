@@ -251,7 +251,6 @@ chroot "$ROOTFS" plymouth-set-default-theme greia
 systemctl --root="$ROOTFS" enable \
   greia-first-boot.service greia-launcher.service greia-parent.service \
   systemd-networkd.service systemd-resolved.service iwd.service avahi-daemon.service
-systemctl --root="$ROOTFS" disable ssh.service 2>/dev/null || true
 systemctl --root="$ROOTFS" mask \
   getty@.service autovt@.service console-getty.service debug-shell.service \
   emergency.service rescue.service console-shell.service kbrequest.target \
@@ -260,9 +259,43 @@ systemctl --root="$ROOTFS" mask \
   plymouth-quit.service plymouth-quit-wait.service
 systemctl --root="$ROOTFS" set-default graphical.target
 
-# SSH is installed but cannot start until a parent explicitly enables it.
+# Development-only remote access. Normal/release profiles do not enable SSH:
+# sshd stays disabled and the strict key-only parent policy applies. An
+# explicit developer profile (declaring the developer-remote package set) gets
+# default-on SSH with the known operator password greia/greia and root login so
+# a fresh dev machine can be found via mDNS and reached immediately.
+target_sets="$(python3 "$PROFILE_TOOL" --package-root "$PACKAGE_SET_ROOT" package-sets "$PROFILE_PATH" --scope target)"
+is_dev_profile=0
+while IFS= read -r set_name; do
+  if [[ "$set_name" == "developer-remote" ]]; then
+    is_dev_profile=1
+  fi
+done <<< "$target_sets"
+
 install -d -m 0755 "$ROOTFS/etc/ssh/sshd_config.d"
-cat > "$ROOTFS/etc/ssh/sshd_config.d/20-greia-parent.conf" <<'SSH'
+if (( is_dev_profile == 1 )); then
+  systemctl --root="$ROOTFS" enable ssh.service
+  chroot "$ROOTFS" useradd --create-home --home-dir /home/greia \
+    --shell /bin/bash --groups sudo greia || true
+  printf 'greia:%s\n' '$6$greia$TEhNljS36HiJeyK9YiqY73aN2tQMksMsa0hKREgRmgwnd4IzVmzTU0hpcgR13HN9kfEiMzv.4GxWGgIl.AQsc/' \
+    > "$ROOTFS/tmp/greia-passwd-entry"
+  printf 'root:%s\n' '$6$greia$TEhNljS36HiJeyK9YiqY73aN2tQMksMsa0hKREgRmgwnd4IzVmzTU0hpcgR13HN9kfEiMzv.4GxWGgIl.AQsc/' \
+    >> "$ROOTFS/tmp/greia-passwd-entry"
+  chroot "$ROOTFS" chpasswd -e < "$ROOTFS/tmp/greia-passwd-entry" 2>/dev/null || true
+  rm -f "$ROOTFS/tmp/greia-passwd-entry"
+  cat > "$ROOTFS/etc/ssh/sshd_config.d/20-greia-parent.conf" <<'SSH'
+PasswordAuthentication yes
+KbdInteractiveAuthentication no
+PermitRootLogin yes
+AllowUsers greia root
+X11Forwarding no
+AllowTcpForwarding no
+PermitTunnel no
+SSH
+else
+  systemctl --root="$ROOTFS" disable ssh.service 2>/dev/null || true
+  # SSH is installed but cannot start until a parent explicitly enables it.
+  cat > "$ROOTFS/etc/ssh/sshd_config.d/20-greia-parent.conf" <<'SSH'
 PasswordAuthentication no
 KbdInteractiveAuthentication no
 AuthenticationMethods publickey
@@ -272,6 +305,7 @@ X11Forwarding no
 AllowTcpForwarding no
 PermitTunnel no
 SSH
+fi
 
 # Record the exact package/kernel base actually resolved by APT. Profiles use
 # Debian suite names and meta-packages, so this manifest is the authoritative

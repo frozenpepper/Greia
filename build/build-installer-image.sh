@@ -244,6 +244,42 @@ systemctl --root="$LIVE_ROOT" enable greia-installer.service
 systemctl --root="$LIVE_ROOT" mask getty@.service autovt@.service console-getty.service debug-shell.service emergency.service rescue.service console-shell.service kbrequest.target getty@tty1.service getty@tty2.service getty@tty3.service getty@tty4.service getty@tty5.service getty@tty6.service plymouth-quit.service plymouth-quit-wait.service
 systemctl --root="$LIVE_ROOT" set-default graphical.target
 
+# Development-only remote access to the live installer. A developer profile
+# gets default-on SSH with the operator password greia/greia and mDNS hostname
+# greia-installer-dev.local so the running installer can be reached remotely.
+# Normal/release profiles keep the installer closed (no SSH).
+installer_sets="$(python3 "$PROFILE_TOOL" --package-root "$PACKAGE_SET_ROOT" package-sets "$PROFILE_PATH" --scope installer)"
+is_dev_profile=0
+while IFS= read -r set_name; do
+  if [[ "$set_name" == "developer-remote" ]]; then
+    is_dev_profile=1
+  fi
+done <<< "$installer_sets"
+
+if (( is_dev_profile == 1 )); then
+  printf '%s\n' greia-installer-dev > "$LIVE_ROOT/etc/hostname"
+  sed -i 's/^127\.0\.1\.1.*/127.0.1.1 greia-installer-dev/' "$LIVE_ROOT/etc/hosts"
+  systemctl --root="$LIVE_ROOT" enable ssh.service
+  chroot "$LIVE_ROOT" useradd --create-home --home-dir /home/greia \
+    --shell /bin/bash --groups sudo greia || true
+  printf 'greia:%s\n' '$6$greia$TEhNljS36HiJeyK9YiqY73aN2tQMksMsa0hKREgRmgwnd4IzVmzTU0hpcgR13HN9kfEiMzv.4GxWGgIl.AQsc/' \
+    > "$LIVE_ROOT/tmp/greia-passwd-entry"
+  printf 'root:%s\n' '$6$greia$TEhNljS36HiJeyK9YiqY73aN2tQMksMsa0hKREgRmgwnd4IzVmzTU0hpcgR13HN9kfEiMzv.4GxWGgIl.AQsc/' \
+    >> "$LIVE_ROOT/tmp/greia-passwd-entry"
+  chroot "$LIVE_ROOT" chpasswd -e < "$LIVE_ROOT/tmp/greia-passwd-entry" 2>/dev/null || true
+  rm -f "$LIVE_ROOT/tmp/greia-passwd-entry"
+  install -d -m 0755 "$LIVE_ROOT/etc/ssh/sshd_config.d"
+  cat > "$LIVE_ROOT/etc/ssh/sshd_config.d/20-greia-parent.conf" <<'SSH'
+PasswordAuthentication yes
+KbdInteractiveAuthentication no
+PermitRootLogin yes
+AllowUsers greia root
+X11Forwarding no
+AllowTcpForwarding no
+PermitTunnel no
+SSH
+fi
+
 # The live installer is a second Debian root, not merely a wrapper around the
 # target payload. Record and audit its exact resolved package/kernel base too.
 PROJECT_VERSION="$(tr -d '\r\n' < "$PROJECT_ROOT/VERSION")"
