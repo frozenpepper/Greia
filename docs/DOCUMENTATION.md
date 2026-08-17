@@ -8,9 +8,9 @@
 
 ## 1. Purpose
 
-Greia has several kinds of truth: repository rules, product requirements, accepted architecture, engineering guidance, implemented APIs, active sequencing, current evidence, test procedures, governance/licensing policy, and historical reviews. These documents must not silently compete.
+Greia has several kinds of truth: repository rules, product requirements, accepted architecture, engineering guidance, visual-design direction, implemented APIs, active sequencing, current evidence, test procedures, governance/licensing policy, and historical reviews. These documents must not silently compete.
 
-This file defines **which document class owns which fact**, how conflicts are resolved, and which documents must change when implementation changes. A contributor should be able to determine whether a statement is a durable rule, product requirement, selected architecture, implementation fact, current evidence, governance/legal policy, or historical context without chat history.
+This file defines **which document class owns which fact**, how conflicts are resolved, and which documents must change when implementation changes. A contributor should be able to determine whether a statement is a durable rule, product requirement, selected architecture, selected visual-design direction, implementation fact, current evidence, governance/legal policy, or historical context without chat history.
 
 ---
 
@@ -120,6 +120,16 @@ A repository-level default never overrides a more specific valid third-party lic
 
 Reviews are dated analysis/evidence snapshots unless explicitly promoted into an ADR, product requirement, governance decision, or active-plan decision. Do not silently rewrite historical evidence to match later reality.
 
+### 2.12 Visual design and production art — `docs/design/*`
+
+`docs/design/GREIA_VISUAL_STYLE_GUIDE.md` owns Greia's selected reusable visual-language and typography direction: overall tone, default font family, weight hierarchy, initial type-scale targets, readability rules, localization/accessibility direction, low-resource font behavior, and the distinction between selected design and implemented theme/font APIs.
+
+The current selected default interface typeface is **Nunito Sans**, with the font itself remaining third-party software under **OFL-1.1** when actually bundled. The style guide records the decision; it does **not** by itself mean the font files, typography tokens, font cache, or physical readability evidence exist.
+
+`docs/design/GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md` owns the complementary production inventory of logos, characters, backgrounds, icons, states, effects, and other graphical assets Greia needs. It should follow the style guide rather than creating a second typography or visual-language authority.
+
+Exact implemented colors/theme IDs remain source-owned by `runtime/theme-defaults.toml` and `src/greia_platform/customization.py`. Future implemented typography roles/loaders likewise become source-owned when they exist.
+
 ---
 
 ## 3. Status vocabulary
@@ -155,6 +165,7 @@ In particular:
 - ADR 0023 selects the open ecosystem/catalogue boundary but does not mean an Official Greia Catalogue, marketplace, entitlement system or independent `.greiaactivity` installer is currently implemented;
 - ADR 0024 selects licensing/trademark policy but does not mean the existing private tree has completed the third-party provenance audit, SPDX rollout, canonical license-text inclusion or public trademark policy;
 - **ADR 0025 selects the Award/badge/celebration architecture but does not mean a durable award ledger, award-package schema, celebration scheduler/overlay, Shell collection, or achievement Parent API is currently implemented. `runtime/progression-policy.toml` proving a `star` reward is not evidence that badges are already implemented.**
+- **`docs/design/GREIA_VISUAL_STYLE_GUIDE.md` selecting Nunito Sans does not mean Nunito font files are already vendored, that a typography theme/API already exists, or that the selected sizes have passed Acer/physical readability evidence.**
 
 Activity authors use the Activity skill plus the implementation owners above.
 
@@ -162,7 +173,7 @@ Activity authors use the Activity skill plus the implementation owners above.
 
 ## 5. Freshness rules
 
-Keep transient execution facts out of durable files such as README, AGENTS, accepted ADRs, product requirements, architecture synthesis, engineering foundations, governance policy and this map.
+Keep transient execution facts out of durable files such as README, AGENTS, accepted ADRs, product requirements, architecture synthesis, engineering foundations, visual-style guidance, governance policy and this map.
 
 Current state belongs in `HANDOVER.md`, active-plan progress, active test procedures, and dated evidence/review reports.
 
@@ -181,6 +192,8 @@ Do not rewrite historical evidence/progress to make history cleaner; append corr
 | Activity authoring/distribution/catalogue/parent-commerce product policy | `docs/product/ACTIVITY_ECOSYSTEM_AND_DISTRIBUTION.md` + ADR 0023 when architecture boundary changes |
 | **Awards/badges/celebration/collection product behavior** | **`docs/product/AWARDS_BADGES_AND_CELEBRATIONS.md` + ADR 0025 when authority/persistence/presentation architecture changes + Activity skill when author-facing event/award declaration rules change** |
 | **Award transient-presentation requirements that affect the production display/session boundary** | **ADR 0025 + active R7 plan + affected display/session/system-chrome docs/source when implementation changes** |
+| **visual language, typography family/weights/scale, readability or cross-surface style direction** | **`docs/design/GREIA_VISUAL_STYLE_GUIDE.md` + affected product/UI/asset docs; source/runtime theme owners and Activity skill when the implemented contract changes** |
+| **production artwork/icon/character/background/effect inventory** | **`docs/design/GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md` + style guide when the change also alters reusable visual-language rules** |
 | project license matrix, third-party provenance policy, contribution licensing or trademark/use policy | ADR 0024 when normative boundary changes + `docs/governance/LICENSING_AND_TRADEMARK.md` |
 | parent-management UX/features/pairing/maintenance expectations | `docs/product/PARENT_MANAGEMENT.md` + ADR 0022 when architectural/security boundary changes |
 | Parent API resources/versioning/device credentials/discovery | `src/greia_parent/*` + ADR 0022/parent architecture doc + affected product docs |
@@ -205,7 +218,7 @@ Link to the owner of a fact instead of copying transient details across files. S
 
 ## 8. Review checklist
 
-Check that paths exist, active plan references are current, durable docs avoid stale execution facts, implemented/future APIs are distinct, ADR 0018 semantics are not confused with Pygame helpers, ADR 0019 system chrome is not mistaken for Activity-owned UI, ADR 0020 input semantics are not confused with raw physical-device authority, controller support does not grant ordinary Activities `/dev/input`, ADR 0022 web/native client parity is preserved, the Parent API does not become a generic root/shell bridge, normal SSH remains disabled by default, provisional plaintext parent transport is not described as production-secure, ADR 0023's official catalogue does not become the only supported Activity installation route, price/license/provenance are not collapsed into one trust bit, child-facing advertising/purchase pressure is not introduced as a catalogue model, ADR 0024 does not falsely relicense third-party assets/code, public-release licensing is not claimed complete before the provenance/license-text/SPDX audit, **ADR 0025 Award authority is not confused with Activity event payloads, personal-best celebrations are not mechanically turned into endless permanent badges, award grants remain distinct from presentation, earned badges survive Activity uninstall/backup restore, and celebration UI does not weaken Home/Back or justify a general desktop notification/windowing layer**, engineering guidance does not override source/ADRs, hardware claims name evidence scope, developer-only behavior is not described as release behavior, destructive operations remain fail-closed, hosted execution is never implicitly authorized, dated reviews remain historical, and `HANDOVER.md` is sufficient to resume without chat history.
+Check that paths exist, active plan references are current, durable docs avoid stale execution facts, implemented/future APIs are distinct, ADR 0018 semantics are not confused with Pygame helpers, ADR 0019 system chrome is not mistaken for Activity-owned UI, ADR 0020 input semantics are not confused with raw physical-device authority, controller support does not grant ordinary Activities `/dev/input`, ADR 0022 web/native client parity is preserved, the Parent API does not become a generic root/shell bridge, normal SSH remains disabled by default, provisional plaintext parent transport is not described as production-secure, ADR 0023's official catalogue does not become the only supported Activity installation route, price/license/provenance are not collapsed into one trust bit, child-facing advertising/purchase pressure is not introduced as a catalogue model, ADR 0024 does not falsely relicense third-party assets/code, public-release licensing is not claimed complete before the provenance/license-text/SPDX audit, **ADR 0025 Award authority is not confused with Activity event payloads, personal-best celebrations are not mechanically turned into endless permanent badges, award grants remain distinct from presentation, earned badges survive Activity uninstall/backup restore, and celebration UI does not weaken Home/Back or justify a general desktop notification/windowing layer**, **the visual style guide remains the single reusable style/typography authority, Nunito Sans is not described as bundled before it is actually vendored, OFL-1.1 provenance/notice requirements remain attached to the font, and design targets are not misrepresented as source APIs or hardware PASS**, engineering guidance does not override source/ADRs, hardware claims name evidence scope, developer-only behavior is not described as release behavior, destructive operations remain fail-closed, hosted execution is never implicitly authorized, dated reviews remain historical, and `HANDOVER.md` is sufficient to resume without chat history.
 
 ---
 
@@ -213,10 +226,10 @@ Check that paths exist, active plan references are current, durable docs avoid s
 
 - **New contributor/agent:** `AGENTS.md` → `README.md` → this file → architecture/ADRs → engineering foundations → product requirements → active plan → `HANDOVER.md`.
 - **OS/platform implementation:** also read agent operations and relevant testing/review docs.
-- **UI work:** ADR 0018 → `ui_core.py` → `pygame_ui.py` (or existing `activity_ui.py` compatibility consumer) → engineering foundations.
+- **UI/visual design work:** `docs/design/GREIA_VISUAL_STYLE_GUIDE.md` → relevant product requirement/ADR → ADR 0018 → source-owned theme/UI contracts (`runtime/theme-defaults.toml`, `ui_core.py`, `pygame_ui.py` or existing `activity_ui.py`) → `GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md` when production assets are involved → engineering foundations.
 - **Activity system chrome/R7 surface ownership:** `docs/product/ACTIVITY_SYSTEM_NAVIGATION.md` → ADR 0019 → `src/greia_platform/system_chrome.py` → `src/greia_launcher/system_chrome.py` → active R7 plan/HANDOVER.
 - **Input/controller work:** `docs/product/ACTIVITY_INPUT_STANDARDS.md` → ADR 0020 → `input_core.py` → HAL/input adapter source → active R7 plan/HANDOVER.
-- **Awards/badges/celebrations:** **`docs/product/AWARDS_BADGES_AND_CELEBRATIONS.md` → ADR 0025 → ADR 0017 progression/event source owners → Shell/display/session implementation when the feature tranche begins → Activity skill for author-facing event/award declarations.**
+- **Awards/badges/celebrations:** **`docs/product/AWARDS_BADGES_AND_CELEBRATIONS.md` → ADR 0025 → `docs/design/GREIA_VISUAL_STYLE_GUIDE.md` for presentation styling → ADR 0017 progression/event source owners → Shell/display/session implementation when the feature tranche begins → Activity skill for author-facing event/award declarations.**
 - **Greia Parents work:** `docs/product/PARENT_MANAGEMENT.md` → ADR 0022 → `docs/architecture/GREIA_PARENT_MANAGEMENT.md` → `src/greia_parent/protocol.py` / `credentials.py` / `api_server.py` / `web_client.py` → active plan/HANDOVER.
 - **Activity ecosystem/catalogue work:** `docs/product/ACTIVITY_ECOSYSTEM_AND_DISTRIBUTION.md` → ADR 0023 → future R10 package/distribution source owners → Activity skill where author-facing workflow is implemented.
 - **Licensing/public-release governance:** ADR 0024 → `docs/governance/LICENSING_AND_TRADEMARK.md` → per-file/directory license/provenance notices and future public-release audit evidence.
