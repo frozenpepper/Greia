@@ -289,6 +289,101 @@ e04aa162ee78c0e42b7b353975ad957f4f631776  docs: map Greia Parents protocol and p
 
 Resolve current `origin/main` before starting any new work; this handover update itself advances `main` once more.
 
+## 2026-08-17 — Open Activity ecosystem, catalogue and licensing policy
+
+This is a **documentation/architecture policy tranche only**. It does not implement R10 package distribution, a store, payments, entitlements, signing, a native mobile app or new Activity manifest fields, and it does not advance/close R7.
+
+New authority:
+
+```text
+docs/adr/0023-open-activity-ecosystem-and-official-catalogue-boundary.md
+docs/adr/0024-project-licensing-and-trademark-boundary.md
+docs/product/ACTIVITY_ECOSYSTEM_AND_DISTRIBUTION.md
+docs/governance/LICENSING_AND_TRADEMARK.md
+```
+
+README and `docs/DOCUMENTATION.md` were updated to surface those decisions and their authority boundaries.
+
+### Ecosystem decision
+
+Greia is now explicitly an **open platform, not an open-core product**.
+
+Permanent architectural/product constraints:
+
+- the OS, Activity interfaces, authoring knowledge and supported independent installation path remain available without payment;
+- human and agent Activity authoring are public first-class interfaces, not hidden project knowledge;
+- a future Official Greia Catalogue is optional curated distribution infrastructure, not the only technically supported install source;
+- parents retain an explicit supported non-catalogue/sideload path once R10 `.greiaactivity` installation exists;
+- independent installation still passes normal package validation, sandbox, compatibility and parent approval — no autorun/bypass interpretation;
+- package provenance/trust, compatibility, price/entitlement and source-code license remain separate concepts;
+- free and paid Activities may coexist, including paid open-source Activities;
+- third-party Activity authors choose licenses for their independent work subject to incorporated dependencies and voluntary catalogue terms;
+- child-facing advertising, behavioral tracking and purchase-pressure mechanics are rejected for the official ecosystem direction;
+- purchases/entitlements belong to authenticated parent-facing UI;
+- a future native Greia Parents phone/desktop app may be paid, but essential management must remain available through a free Greia-controlled path and all clients use the same ADR-0022 Parent API;
+- core installed Activity use/local saves/progression/parent management remain local/offline-first; catalogue/cloud outages must not disable the child's installed computer.
+
+R10 package/signing/catalogue implementation must preserve these boundaries.
+
+### Licensing decision
+
+ADR 0024 selects the following policy:
+
+```text
+Greia-owned software                  MPL-2.0 default
+Greia-owned SDK implementation       MPL-2.0 default
+copyable future scaffolds/templates  Apache-2.0 when explicitly marked
+Greia-owned documentation            CC BY 4.0 default
+confirmed Greia-owned reusable media intended CC BY 4.0 default unless marked otherwise
+third-party code/media                retain original applicable rights/licenses
+independent Activities                author/publisher chooses
+Greia names/logos/trust marks         separate trademark/use policy; not granted by code/content licenses
+```
+
+This is intentionally **file-level/platform reciprocity without forcing unrelated Activities into Greia's license**.
+
+MPL was chosen over MIT/Apache as the platform default because Greia wants distributed modifications to covered Greia source files to remain open, while avoiding a stronger whole-work GPL/AGPL boundary around independently licensed Activities/integrations.
+
+Copyable boilerplate may be Apache-2.0 so generated/copied starter code does not accidentally impose MPL on an Activity author's own new files.
+
+### Licensing state is selected, not mechanically complete
+
+Do **not** claim that every existing repository byte is already MPL/CC BY licensed.
+
+Before the repository or an official distribution is made public, the project must complete a licensing/provenance gate including:
+
+- verify rights/provenance for existing Greia-authored source;
+- inventory third-party source/snippets;
+- inventory distributable icons/images/audio/fonts and their rights;
+- add canonical full license texts;
+- add a clear top-level licensing notice plus directory/file exceptions;
+- add SPDX identifiers where practical;
+- preserve upstream/third-party notices and source obligations in OS images;
+- explicitly mark permissive copyable templates/scaffolds;
+- create/review the public trademark/use policy for the actual legal entity/jurisdictions;
+- separately review marketplace/payment/privacy/tax obligations before operating a paid catalogue.
+
+Current correct wording is:
+
+> **license policy selected; public-release licensing/provenance audit pending**
+
+not “the entire tree is already relicensed”.
+
+### Tests/evidence for this policy tranche
+
+No implementation changed. No source/VM/hardware test was run or required for the documentation-only policy decisions. Repository paths/authority were reviewed through the GitHub connector. Existing post-Ubuntu implementation remains UNPROVEN until the owner-controlled source gate runs at current head.
+
+Policy commits in this tranche include:
+
+```text
+6db7d1656691f17b10b5f2ebb58b7bb731b56b71  docs: define open Activity ecosystem and catalogue boundary
+6409576d0fe57cea8cfb115dfc4bc9cff58e9e13  docs: select Greia licensing and trademark boundary
+44adad5d309bd9dd7395a69adccf3276c6a3e859  docs: define Activity ecosystem product policy
+b43720f2306fa92b8cc4ba344e110c6bb6ffa0fd  docs: add licensing and trademark policy
+d113ff7a9f87e60911b96fc10b113a355fc23e39  docs: surface ecosystem and licensing decisions
+2726d1ff789e24d215ae5276a1b5f8f58c9bae0e  docs: map ecosystem and governance authority
+```
+
 ## 2026-08-17 — Boot animation state
 
 The direct Greia Plymouth animation remains integrated:
@@ -438,7 +533,7 @@ Development remote controls include bounded status/screenshot/log/input/Activity
 
 ## Exact continuation priorities
 
-The Parent API foundation is now persisted, but **R7 remains the primary blocking architecture phase**. Do not reinterpret the parent work as closing or skipping R7/R10/R11/R12.
+The Parent API foundation and ecosystem/licensing policy are now persisted, but **R7 remains the primary blocking architecture phase**. Do not reinterpret either tranche as closing or skipping R7/R10/R11/R12.
 
 Immediate legitimate work sequence:
 
@@ -447,6 +542,7 @@ Immediate legitimate work sequence:
 3. Continue R7 direct graphics/session/input evidence and architecture work according to the active plan.
 4. For the next Greia Parents slice, implement the **local short-lived pairing challenge + Greia-screen Allow/Deny flow** and complete the encrypted transport/device-identity design before calling pairing production-safe.
 5. Define/implement a narrow typed parent privileged broker before enabling SSH, Activity package installation, audio/network administration, backup/restore or update controls. Reuse R10/R11/HAL services; no shell shortcuts.
+6. When R10 package/distribution work begins, treat ADR 0023/0024 as mandatory design constraints: keep independent parent-authorized installation, keep provenance/license/price separate, do not invent child commerce, and do not claim public-release licensing complete before the provenance/license audit.
 
 ## Non-negotiable continuation rules
 
@@ -464,4 +560,9 @@ Immediate legitimate work sequence:
 - Greia Parents and future native clients use the same semantic Parent API; no client receives a private shell/root path;
 - current plaintext Parent transport/shared-token bootstrap are provisional and must not be described as production security;
 - preserve ADR 0019/0020 trusted system-chrome/input constraints while expanding hardware support;
+- the official catalogue must remain optional distribution infrastructure rather than the only supported Activity installation path;
+- child-facing advertising/purchase-pressure mechanics remain outside the official Greia ecosystem direction;
+- Activity provenance/trust, compatibility, license and price/entitlement remain distinct concepts;
+- third-party Activity authors are not forced into Greia's platform license merely by using public Activity APIs;
+- license policy is selected but existing repository/public-distribution licensing must not be described as mechanically complete until the audit/license-text/SPDX/provenance gate is done;
 - do not claim current source PASS until a current checkout actually runs the gate successfully.
