@@ -30,7 +30,9 @@ RestartSec=1
 TTYPath=/dev/tty1
 TTYReset=yes
 TTYVHangup=yes
-StandardInput=tty
+# The launcher is a graphical application; stdin must never be the VT, or
+# children (activities, helpers) reading it would be SIGTTIN-stopped.
+StandardInput=null
 StandardOutput=journal
 StandardError=journal
 PrivateTmp=yes

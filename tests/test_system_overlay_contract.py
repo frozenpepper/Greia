@@ -120,6 +120,11 @@ class SystemOverlayContractTests(unittest.TestCase):
             self.assertIn("TTYPath=/dev/tty1", unit_text)
             self.assertNotIn(" vt2 ", unit_text)
             self.assertNotIn("TTYPath=/dev/tty2", unit_text)
+            # The GUI must never have the VT as stdin: a background process
+            # group reading the tty is SIGTTIN-stopped, freezing the install
+            # (apt-get / grub-mkpasswd-pbkdf2). stdin must be /dev/null.
+            self.assertIn("StandardInput=null", unit_text)
+            self.assertNotIn("StandardInput=tty", unit_text)
         for overlay in ("build/overlay", "build/installer-overlay"):
             release = (
                 PROJECT_ROOT / overlay / "usr/local/lib/greia-os/release-boot-cover"
