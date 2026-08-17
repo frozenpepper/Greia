@@ -146,6 +146,7 @@ class InstallerApplication:
         self._layout_candidates: tuple[str, ...] = ("us",)
         self._layout_alternative_index = 0
         self._layout_scroll = 0
+        self._layout_selector_forced = False
         self._last_password_character: tuple[str, float] | None = None
         self._last_caret_blink = 0.0
         self._typography = GreiaTypography(
@@ -318,13 +319,20 @@ class InstallerApplication:
         if self.state.page == InstallerPage.LAYOUT:
             if key == pygame.K_ESCAPE:
                 self._back()
-            elif len(self._layout_probe_results) >= 3:
+            elif len(self._layout_probe_results) >= 5:
                 if key == pygame.K_UP:
                     self._move_layout_selection(-1)
                 elif key == pygame.K_DOWN:
                     self._move_layout_selection(1)
                 elif key in {pygame.K_RETURN, pygame.K_SPACE}:
                     self._confirm_layout()
+            elif key in {pygame.K_RETURN, pygame.K_SPACE} and len(
+                self._layout_probe_results
+            ) >= 3:
+                # Enough probes to show a useful selector; jump to it early if
+                # the parent cannot type the remaining characters.
+                self._layout_selector_forced = True
+                self._refresh_layout_candidates()
             return True
         if self.state.page == InstallerPage.WIFI:
             if key == pygame.K_ESCAPE:
@@ -897,11 +905,12 @@ class InstallerApplication:
         remaining = [
             probe for probe in PROBES if probe.character not in self._layout_probe_results
         ]
-        # A few probes are enough to identify the layout family; if the parent
-        # cannot produce the current character (e.g. AltGr symbols), show the
-        # selector so they can still choose manually.
+        # The 'z' probe (5th) separates QWERTZ from QWERTY, which is what
+        # distinguishes German from Italian/Spanish/Portuguese. Requiring it
+        # avoids presenting a wrong guess. The final '@' probe is optional
+        # (AltGr-only on many layouts) and is handled by the selector.
         done_count = len(self._layout_probe_results)
-        if done_count >= 3:
+        if done_count >= 5 or self._layout_selector_forced:
             remaining = []
         if remaining:
             probe = remaining[0]
@@ -929,11 +938,19 @@ class InstallerApplication:
             )
             self._center_text(
                 screen,
-                f"After {3 - done_count} more key{'s' if 3 - done_count != 1 else ''} I'll show a list to confirm.",
+                f"After {5 - done_count} more key{'s' if 5 - done_count != 1 else ''} I'll show a list to confirm.",
                 small_font,
                 text,
                 main.top + 300,
             )
+            if done_count >= 3:
+                self._center_text(
+                    screen,
+                    "Or press Enter to see the list now.",
+                    small_font,
+                    text,
+                    main.top + 330,
+                )
         else:
             self._draw_layout_selector(
                 screen,
