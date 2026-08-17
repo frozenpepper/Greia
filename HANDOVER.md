@@ -5,7 +5,7 @@
 **Repository:** `frozenpepper/Greia` (private)  
 **Canonical/default/development branch:** `main`  
 **Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**  
-**Current cross-cutting tranche:** **Greia Parents API/client foundation — non-closing R12 preparation; production pairing and privileged parent operations remain open**
+**Current cross-cutting state:** **ADR 0025 Awards/badges/celebrations architecture is accepted/documented but unimplemented; Greia Parents API/client foundation remains the latest substantive code tranche**
 
 ## Branch policy
 
@@ -384,6 +384,110 @@ d113ff7a9f87e60911b96fc10b113a355fc23e39  docs: surface ecosystem and licensing 
 2726d1ff789e24d215ae5276a1b5f8f58c9bae0e  docs: map ecosystem and governance authority
 ```
 
+## 2026-08-17 — Platform-owned Awards, badges and celebrations
+
+This is a **documentation/architecture/product tranche only**. It does not implement an Award ledger, Award manifest schema, celebration scheduler/overlay, Shell badge collection, Parent API achievement resource, or new tests. It does not advance or close R7.
+
+New authority:
+
+```text
+docs/adr/0025-platform-owned-awards-badges-and-celebrations.md
+docs/product/AWARDS_BADGES_AND_CELEBRATIONS.md
+```
+
+The following main documents were updated to surface and synthesize the decision:
+
+```text
+README.md
+docs/DOCUMENTATION.md
+docs/architecture/GREIA_ARCHITECTURE.md
+HANDOVER.md
+```
+
+### Core Award model
+
+Greia now explicitly distinguishes:
+
+```text
+Reward      = quantity/balance such as stars
+Award       = durable named achievement; badge is the initial presentation form
+Celebration = transient Greia presentation such as badge reveal or NEW BEST
+Collection  = child-facing Greia place where earned Awards are revisited
+```
+
+ADR 0017 remains the progression foundation: Activities emit declared factual events/scores; Greia owns sessions, best-score comparison, progression policy and global reward economics. ADR 0025 extends the same authority boundary to durable Awards.
+
+Permanent selected constraints:
+
+- Activity runtime code does **not** receive direct `grant_badge()` / Award-ledger write authority;
+- arbitrary event payload fields such as `badge_id` or `award_id` do not authorize a grant;
+- Greia evaluates trusted progression evidence and grants Awards transactionally/idempotently;
+- personal-best detection stays Greia-owned using the existing higher/lower-better semantics;
+- a personal-best improvement normally creates a celebration, not endless permanent badge spam;
+- Activity-specific Award definitions may eventually be declarative package metadata bound only to that Activity's validated evidence;
+- Greia-wide/cross-Activity Awards are platform policy and cannot be defined/granted by one Activity;
+- earned Awards are profile-scoped, offline-first and not revoked by ordinary Activity content;
+- earned Awards survive Activity uninstall and logical backup/restore even if the originating Activity is absent;
+- backup/storage must preserve enough stable portable presentation information or a stable fallback so the collection does not depend on a removed package path;
+- core Award design rejects streak-loss anxiety, expiring badges, advertising-for-awards, purchasable achievement badges, artificial FOMO, public leaderboards by default and screen-time-maximizing reward loops.
+
+### Grant and presentation are deliberately separate
+
+A valid Award must be committed immediately from trusted evidence, while its visual ceremony is scheduled separately:
+
+```text
+validated event / score
+      ↓
+progression/Award transaction commits
+      ↓
+bounded celebration request
+      ↓
+Greia presentation scheduler chooses safe moment
+      ↓
+short visual/audio/spoken celebration
+```
+
+This prevents a badge popup from causing a child to fail a timed puzzle, interrupting a drawing gesture, stealing input during text entry, or otherwise sabotaging the task.
+
+A crash/reboot after the grant but before presentation must not lose the Award. Conversely, recovery must not replay an unbounded backlog of stale ceremonies.
+
+### R7 impact
+
+ADR 0025 is now a **mandatory architecture constraint on the selected R7 display/session design**:
+
+- the backend must not give Activities authority over the official Greia Award celebration;
+- Greia must have a bounded transient-presentation capability above Activity content **or** an equivalent safe Greia-controlled deferred presentation path;
+- mandatory Home/Back remains visible/authoritative and cannot be obscured/disabled by a celebration;
+- this requirement does **not** justify a desktop notification center, arbitrary windows, unbounded z-order or general compositor/window-manager features;
+- resource cost must remain acceptable on the Acer/C0 floor.
+
+The active plan remains the ordering authority. The Awards feature itself must not be used as an excuse to jump ahead of the current R7 blocking phase; rather, R7 must select a display/session architecture that does not foreclose ADR 0025.
+
+### Future R10/R11/Activity-author implications
+
+When those tranches are implemented:
+
+- R10 package work must define bounded/validated Activity-scoped Award metadata/assets if that capability is introduced; do not invent current `activity.toml` fields before source owns them;
+- R11 `.greiabackup` must include logical Award state and sufficient presentation/fallback state for source-Activity-absent restore;
+- Activity authoring remains fact-first: `level.completed`, `painting.saved`, `perfect_run.completed`, `score.submitted`, etc.; not `give_child_10_stars`, `set_badge_earned`, or `unlock_global_hat`;
+- the authoritative badge ceremony and collection remain Greia-owned across Python/Web/future runtimes.
+
+### Tests/evidence for this tranche
+
+No implementation changed and no source/VM/hardware test was run. **Do not describe Awards/badges/celebrations as an implemented Greia runtime feature.** Current correct wording is:
+
+> **Award/badge/celebration architecture selected and product requirements accepted; implementation/evidence pending.**
+
+Documentation commits include:
+
+```text
+651dd72c20f84fc6bb773622bb850fa050f0c558  docs: define platform-owned awards and celebrations
+a670ae43f56e171996d35f907dc0866fdc6406ce  docs: define child awards and badge collection experience
+24bb49024983fd533575746e24ff20b0e9296c01  docs: surface Greia awards architecture
+5ef29fdb574ceb009b3fca237e62a4c1aa48c41e  docs: map awards product and architecture authority
+35894e4499045e79e602cb55f98af292a76319c1  docs: integrate awards into living architecture
+```
+
 ## 2026-08-17 — Boot animation state
 
 The direct Greia Plymouth animation remains integrated:
@@ -526,23 +630,26 @@ Development remote controls include bounded status/screenshot/log/input/Activity
 - Production display remains provisional Xorg/xinit; no compositor selected.
 - ADR 0019 trusted system Home/Back source exists; concrete production backend remains unproven.
 - ADR 0020 runtime-neutral input/controller semantic source exists.
+- **ADR 0025 now additionally requires the selected display/session design to preserve a bounded Greia-owned Award/celebration presentation path or safe Greia-controlled deferred equivalent without weakening Home/Back; this requirement is architecture-selected but unimplemented/unproven.**
 - `ShellInputController` contains the exact-deadline floating-point repair recorded in the Ubuntu source-gate review.
 - Production Activity input broker and physical controller acceptance remain open.
 - Writing/Painting remain source-implemented; current hardware/runtime evidence remains incomplete.
-- Direct KMSDRM/compositor/session work remains evidence-gated and must not be bypassed by deepening X11.
+- Direct KMSDRM/compositor/session work remains evidence-gated and must not be bypassed by deepening X11 or by introducing a desktop notification/window layer for Awards.
 
 ## Exact continuation priorities
 
-The Parent API foundation and ecosystem/licensing policy are now persisted, but **R7 remains the primary blocking architecture phase**. Do not reinterpret either tranche as closing or skipping R7/R10/R11/R12.
+The Parent API foundation, ecosystem/licensing policy and Awards architecture are now persisted, but **R7 remains the primary blocking architecture phase**. Do not reinterpret any documentation tranche as closing or skipping R7/R10/R11/R12.
 
 Immediate legitimate work sequence:
 
 1. Resolve exact current `origin/main` and run the current source gate on the owner-controlled Linux checkout. Include `tests/test_parent_api.py`. Preserve the first real failure; do not weaken tests.
 2. Continue the already defined installer/SD/hardware path only after the source gate genuinely passes at that exact head.
-3. Continue R7 direct graphics/session/input evidence and architecture work according to the active plan.
+3. Continue R7 direct graphics/session/input evidence and architecture work according to the active plan, **while treating ADR 0025 as a mandatory selection constraint: the backend must not foreclose bounded Greia-owned celebration presentation or safe deferred presentation, and Home/Back must remain authoritative.**
 4. For the next Greia Parents slice, implement the **local short-lived pairing challenge + Greia-screen Allow/Deny flow** and complete the encrypted transport/device-identity design before calling pairing production-safe.
 5. Define/implement a narrow typed parent privileged broker before enabling SSH, Activity package installation, audio/network administration, backup/restore or update controls. Reuse R10/R11/HAL services; no shell shortcuts.
-6. When R10 package/distribution work begins, treat ADR 0023/0024 as mandatory design constraints: keep independent parent-authorized installation, keep provenance/license/price separate, do not invent child commerce, and do not claim public-release licensing complete before the provenance/license audit.
+6. When R10 package/distribution work begins, treat ADR 0023/0024/0025 as mandatory design constraints: keep independent parent-authorized installation, keep provenance/license/price separate, do not invent child commerce, do not claim public-release licensing complete before the provenance/license audit, and define Activity-scoped Award metadata only through a bounded validated source-owned schema if/when that feature is implemented.
+7. When R11 backup work begins, include logical Award state/presentation fallback required by ADR 0025 so earned badges survive cross-architecture restore with the source Activity absent.
+8. **Do not jump ahead to implementing the full Awards subsystem merely because ADR 0025 now exists.** When implementation is scheduled, build it on ADR 0017 progression evidence and the selected R7 presentation seam, preserving current active-plan ordering.
 
 ## Non-negotiable continuation rules
 
@@ -560,6 +667,8 @@ Immediate legitimate work sequence:
 - Greia Parents and future native clients use the same semantic Parent API; no client receives a private shell/root path;
 - current plaintext Parent transport/shared-token bootstrap are provisional and must not be described as production security;
 - preserve ADR 0019/0020 trusted system-chrome/input constraints while expanding hardware support;
+- **preserve ADR 0025 Award authority: Activities report facts/scores and do not directly mutate durable Awards or the official Greia collection; official celebration is Greia-owned; grant and presentation remain separate; earned Awards survive uninstall/backup; core achievement design avoids manipulative streak/FOMO/advertising/purchase mechanics;**
+- **do not describe Awards/badges/celebrations as implemented until the ledger/evaluation/presentation/collection source and required evidence actually exist;**
 - the official catalogue must remain optional distribution infrastructure rather than the only supported Activity installation path;
 - child-facing advertising/purchase-pressure mechanics remain outside the official Greia ecosystem direction;
 - Activity provenance/trust, compatibility, license and price/entitlement remain distinct concepts;
