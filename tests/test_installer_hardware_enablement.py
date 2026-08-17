@@ -112,6 +112,26 @@ class BoundDriverFirmwareResolverTests(unittest.TestCase):
         self.assertEqual(result.recommendations, ())
         self.assertTrue(any("no frozen Debian firmware provider" in item for item in result.diagnostics))
 
+    def test_builtin_driver_modinfo_exit_one_is_benign_not_a_failure(self) -> None:
+        # Built-in platform drivers are not loadable modules; modinfo exits 1
+        # and that is expected, not a hardware-resolution failure.
+        runner = FakeRunner(CommandResult(1, "modinfo: ERROR: Module acpi-wmi not found.\n", ""))
+        result = BoundDriverFirmwareResolver(
+            pool(), runner=runner, modinfo_command="/modinfo"
+        ).resolve(StaticInventory().snapshot())
+        self.assertTrue(result.complete)
+        self.assertEqual(result.recommendations, ())
+        self.assertFalse(
+            any("metadata lookup failed" in item for item in result.diagnostics)
+        )
+
+    def test_other_modinfo_exit_codes_remain_diagnostic(self) -> None:
+        runner = FakeRunner(CommandResult(2, "", "modinfo crashed"))
+        result = BoundDriverFirmwareResolver(
+            pool(), runner=runner, modinfo_command="/modinfo"
+        ).resolve(StaticInventory().snapshot())
+        self.assertTrue(any("exit 2" in item for item in result.diagnostics))
+
 
 class InstallerHardwareEnablementPlannerTests(unittest.TestCase):
     def test_complete_firmware_and_microcode_plan_becomes_target_package_list(self) -> None:

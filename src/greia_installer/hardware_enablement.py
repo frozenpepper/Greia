@@ -142,9 +142,13 @@ class BoundDriverFirmwareResolver:
                 )
                 continue
             if result.returncode != 0:
-                diagnostics.append(
-                    f"firmware metadata lookup failed for bound driver {driver}: exit {result.returncode}"
-                )
+                # Built-in platform drivers (acpi-wmi, ec, serial8250, ...) are
+                # not loadable modules, so modinfo cannot describe their
+                # firmware. That is expected, not a resolution failure.
+                if result.returncode != 1:
+                    diagnostics.append(
+                        f"firmware metadata lookup failed for bound driver {driver}: exit {result.returncode}"
+                    )
                 continue
             declarations = _firmware_declarations(result.stdout)
             for declaration in declarations:
