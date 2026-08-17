@@ -444,12 +444,11 @@ class InstallerApplication:
             self._center_title(
                 screen, "Install Greia OS", title_font, text, main.top + 45
             )
-            self._icon(
+            self._boot_logo(
                 screen,
                 pygame,
-                "robot",
-                min(220, int(height * 0.38)),
                 (width // 2, height // 2),
+                int(height * 0.38),
             )
             self._button(
                 screen,
@@ -459,7 +458,7 @@ class InstallerApplication:
                 accent,
                 text,
                 font,
-                (width // 2, main.bottom - 70),
+                (width // 2, main.bottom - 56),
                 260,
             )
         elif page == InstallerPage.TARGET:
@@ -502,6 +501,7 @@ class InstallerApplication:
             self._navigation(
                 screen,
                 pygame,
+                main,
                 font,
                 accent,
                 text,
@@ -566,7 +566,7 @@ class InstallerApplication:
                 accent,
                 main.top + 382,
             )
-            self._navigation(screen, pygame, font, accent, text, enabled=True)
+            self._navigation(screen, pygame, main, font, accent, text, enabled=True)
         elif page == InstallerPage.WIFI:
             self._draw_wifi(
                 screen,
@@ -629,7 +629,7 @@ class InstallerApplication:
                 pygame.draw.rect(screen, (120, 24, 24), fill, border_radius=18)
                 label = font.render("Keep holding…", True, (255, 255, 255))
                 screen.blit(label, label.get_rect(center=rect.center))
-            self._back_button(screen, pygame, font, accent, text)
+            self._back_button(screen, pygame, font, accent, text, main)
         elif page == InstallerPage.INSTALLING:
             self._center_title(
                 screen, "Installing", title_font, text, main.top + 50
@@ -738,7 +738,7 @@ class InstallerApplication:
                 text,
                 pygame.Rect(main.left + 100, main.top + 300, main.width - 200, 150),
             )
-            self._back_button(screen, pygame, font, accent, text)
+            self._back_button(screen, pygame, font, accent, text, main)
 
     def _draw_wifi(
         self,
@@ -847,7 +847,7 @@ class InstallerApplication:
                 main.bottom - 93,
             )
 
-        self._back_button(screen, pygame, font, accent, text)
+        self._back_button(screen, pygame, font, accent, text, main)
         if snapshot.phase not in {
             WifiSetupPhase.CONNECTED,
             WifiSetupPhase.UNAVAILABLE,
@@ -978,13 +978,14 @@ class InstallerApplication:
         self,
         screen: Any,
         pygame: Any,
+        main: Any,
         font: Any,
         accent: tuple[int, int, int],
         text: tuple[int, int, int],
         *,
         enabled: bool,
     ) -> None:
-        self._back_button(screen, pygame, font, accent, text)
+        self._back_button(screen, pygame, font, accent, text, main)
         color = accent if enabled else (200, 195, 180)
         self._button(
             screen,
@@ -994,7 +995,7 @@ class InstallerApplication:
             color,
             text,
             font,
-            (screen.get_width() - 185, screen.get_height() - 70),
+            (main.right - 145, main.bottom - 56),
             250,
         )
 
@@ -1005,6 +1006,7 @@ class InstallerApplication:
         font: Any,
         accent: tuple[int, int, int],
         text: tuple[int, int, int],
+        main: Any,
     ) -> None:
         self._button(
             screen,
@@ -1014,7 +1016,7 @@ class InstallerApplication:
             accent,
             text,
             font,
-            (150, screen.get_height() - 70),
+            (main.left + 130, main.bottom - 56),
             190,
         )
 
@@ -1138,6 +1140,41 @@ class InstallerApplication:
             )
             image = pygame.image.load(str(path)).convert_alpha()
             image = pygame.transform.smoothscale(image, (size, size))
+            self._icon_cache[key] = image
+        screen.blit(image, image.get_rect(center=center))
+
+    def _boot_logo(
+        self,
+        screen: Any,
+        pygame: Any,
+        center: tuple[int, int],
+        max_height: int,
+    ) -> None:
+        key = ("boot-logo", max_height)
+        image = self._icon_cache.get(key)
+        if image is None:
+            frame_path = (
+                Path("/usr/share/plymouth/themes/greia/frames/frame_0051.png")
+            )
+            source = frame_path if frame_path.is_file() else None
+            if source is None:
+                source = (
+                    self.root
+                    / "assets"
+                    / "icons"
+                    / "core"
+                    / "v1"
+                    / "256"
+                    / "robot.png"
+                )
+            loaded = pygame.image.load(str(source))
+            if loaded.get_width() > loaded.get_height():
+                width = max_height
+                height = int(loaded.get_height() * width / loaded.get_width())
+            else:
+                height = max_height
+                width = int(loaded.get_width() * height / loaded.get_height())
+            image = pygame.transform.smoothscale(loaded, (width, height)).convert_alpha()
             self._icon_cache[key] = image
         screen.blit(image, image.get_rect(center=center))
 
