@@ -1,0 +1,35 @@
+{
+  "files": {
+    "index.html": {
+      "bytes": 2154,
+      "sha256": "7ee0bd9a32a5e5283c7fb2d16d55d1f7274c809cd52e33bae1b0da1dbe1b5205"
+    },
+    "src/api.js": {
+      "bytes": 4478,
+      "sha256": "9dc42a5f2efb2eb99c0486841095e29e280055e1e52e85c1b143152b1639bf72"
+    },
+    "src/app.js": {
+      "bytes": 24961,
+      "sha256": "200b778197c32c4163f69f12406e9d6279075ff5b551825227b2ac976d4752e9"
+    },
+    "src/credential_store.js": {
+      "bytes": 650,
+      "sha256": "21d4ff5c0fe41a6a5a4ab9400c3153d11736939ec71d7838de43b70dc9c3ee2b"
+    },
+    "src/demo_api.js": {
+      "bytes": 4468,
+      "sha256": "9364689568aa827e4bda35454b9f4d3ee540ad0c4e2fe9e243a1d8f64a31cda4"
+    },
+    "src/state.js": {
+      "bytes": 2108,
+      "sha256": "be9047768f7606f644dd7fc0afd4dba77fcc5f8bf643b8fe52a47c69e706757a"
+    },
+    "styles/app.css": {
+      "bytes": 12646,
+      "sha256": "cf758802166d2496d2aa3da9de23471f7bfee7353f06ba5e59a708a9bee5dbfb"
+    }
+  },
+  "repository": "frozenpepper/Greia-Parent-App-Html",
+  "revision": "b186ba3fee3e8c946ad6b8fe4ce822cd1cb3303f",
+  "schema_version": 1
+}
