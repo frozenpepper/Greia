@@ -6,7 +6,7 @@
 
 ## Separate client repository
 
-The canonical HTML client source now lives in:
+The canonical HTML client source lives in:
 
 ```text
 frozenpepper/Greia-Parent-App-Html
@@ -14,7 +14,7 @@ frozenpepper/Greia-Parent-App-Html
 
 Greia OS remains authoritative for the Parent API, authentication, platform services, privileged operations and release integration. The client repository owns only the HTML/CSS/JavaScript client.
 
-`runtime/parent-app-client.toml` pins the reviewed client revision expected by this Greia source tree.
+`runtime/parent-app-client.toml` pins the reviewed client revision expected by this Greia source tree. `runtime/parent-app-client.manifest.json` independently freezes the exact runtime-file sizes and SHA-256 digests for that revision.
 
 ## Runtime shape
 
@@ -54,10 +54,26 @@ The public static shell contains no management data or credential. It must be re
 
 The API server adds CSP, `nosniff`, no-referrer and no-cache response policy for served client assets.
 
+## Build-time source verification
+
+`tools/stage_parent_app.py` is the source-to-image trust boundary. A build supplies a checkout/export of the separately maintained Parent App; the stager:
+
+1. loads the repository/revision pin;
+2. requires the hash manifest to name that exact pin;
+3. accepts only bounded static runtime paths/types;
+4. verifies every runtime file's byte count and SHA-256 before creating the target;
+5. rejects symlink assets, traversal and unexpected runtime locations;
+6. stages only the frozen runtime files, not repository docs/tests/tooling;
+7. writes through a fresh temporary directory before publishing the target directory.
+
+The content manifest, rather than mutable Git metadata on the build host, is sufficient to validate an exported source tree. The revision remains recorded for provenance and review.
+
 ## Current integration state
 
-The server-side loader and source pin exist. The release image does **not yet vendor the pinned client files** into `/usr/share/greia-parent-app`; until that build step lands, the old embedded prototype remains a transitional root fallback.
+The standalone client is implemented and its current reviewed revision is pinned. The server-side static loader, API shell/public-pairing boundary, frozen runtime manifest and integrity-checked stager exist.
 
-The next build integration must be deterministic and integrity checked. It must not fetch mutable GitHub content at Greia boot/runtime. A build may consume a locally supplied checkout/archive of the exact pinned revision or another repository-managed immutable input mechanism.
+The canonical image builder does **not yet invoke the stager**, so the release image does not yet populate `/usr/share/greia-parent-app` from the separate repository. Until that final build wiring lands, the old embedded prototype remains a transitional root fallback.
 
-Do not maintain two independently edited Parent Apps. Once the external client is vendored and source-verified, the embedded prototype should be removed.
+The remaining build integration must not fetch mutable GitHub content at Greia boot/runtime. The owner-controlled image build should receive a local checkout/export of the exact Parent App revision (for example through a declared `GREIA_PARENT_APP_SOURCE` build input), invoke the stager before image closure, and record the pinned revision/digest in build evidence.
+
+Do not maintain two independently edited Parent Apps. Once the external client is staged by the canonical image build and source-verified, remove the embedded prototype.
