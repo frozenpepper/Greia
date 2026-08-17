@@ -4,7 +4,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from greia_platform.hardware import HardwareSettingsError, HardwareSettingsStore
+from greia_platform.hardware import (
+    HardwareDefaults,
+    HardwareSettingsError,
+    HardwareSettingsStore,
+)
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -32,6 +36,21 @@ class HardwareSettingsTests(unittest.TestCase):
             self.assertEqual(store.read().keyboard_layout, "de")
             with self.assertRaisesRegex(HardwareSettingsError, "unsupported keyboard layout"):
                 store.update(keyboard_layout="not-a-real-layout")
+
+    def test_legacy_defaults_without_keyboard_layout_still_load(self) -> None:
+        # Older target payloads predate keyboard_layout; installing over them
+        # must not fail on the defaults file.
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            legacy = root / "hardware-settings.toml"
+            legacy.write_text(
+                "schema_version = 1\n\n[defaults]\ntouchpad_tap = false\n"
+                "touchpad_speed = 0.0\nmouse_speed = 0.0\nnatural_scrolling = false\n"
+                "resolution = \"auto\"\n\n[limits]\nminimum_speed = -1.0\nmaximum_speed = 1.0\n",
+                encoding="utf-8",
+            )
+            defaults = HardwareDefaults.load(legacy)
+            self.assertEqual(defaults.keyboard_layout, "us")
 
     def test_parent_update_is_atomic_and_bounded(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

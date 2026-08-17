@@ -195,8 +195,10 @@ class InstallerApplication:
         pygame.display.set_caption("Install Greia OS")
         pygame.mouse.set_visible(False)
         clock = pygame.time.Clock()
+        frame_budget = 1.0 / 30.0
         running = True
         while running and not self._exit_requested:
+            frame_started = time.monotonic()
             self._drain_worker_events()
             self.wifi.drain()
             for event in pygame.event.get():
@@ -218,6 +220,13 @@ class InstallerApplication:
             if not self.windowed and os.environ.get("PIP_SKIP_BOOT_HANDOFF") != "1":
                 self._release_boot_cover_once()
             clock.tick(30)
+            # Some low-end X/framebuffer configurations do not throttle via
+            # pygame's Clock (SDL_Delay no-ops), which would otherwise spin the
+            # CPU at 100%. Guarantee a frame budget with a wall-clock sleep.
+            elapsed = time.monotonic() - frame_started
+            remaining = frame_budget - elapsed
+            if remaining > 0:
+                time.sleep(remaining)
         pygame.key.stop_text_input()
         pygame.quit()
         return 0

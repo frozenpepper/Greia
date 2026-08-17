@@ -64,7 +64,9 @@ class HardwareDefaults:
                     defaults["natural_scrolling"], "natural_scrolling"
                 ),
                 resolution=str(defaults["resolution"]),
-                keyboard_layout=str(defaults["keyboard_layout"]),
+                # Older target payloads predate the keyboard_layout setting;
+                # default it to "us" so installs still work against them.
+                keyboard_layout=str(defaults.get("keyboard_layout", "us")),
                 minimum_speed=float(limits["minimum_speed"]),
                 maximum_speed=float(limits["maximum_speed"]),
             )
