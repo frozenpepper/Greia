@@ -31,7 +31,7 @@ class ParentStaticClient:
     """Bounded read-only loader for the separately maintained Parent App assets."""
 
     def __init__(self, root: Path):
-        self.root = root.resolve()
+        self.root = root
 
     @classmethod
     def from_environment(cls) -> "ParentStaticClient":
@@ -49,10 +49,17 @@ class ParentStaticClient:
         if relative is None:
             return None
         try:
+            if self.root.is_symlink():
+                return None
             root = self.root.resolve(strict=True)
-            candidate = (root / relative).resolve(strict=True)
+            unresolved = root
+            for part in relative.parts:
+                unresolved = unresolved / part
+                if unresolved.is_symlink():
+                    return None
+            candidate = unresolved.resolve(strict=True)
             candidate.relative_to(root)
-            if candidate.is_symlink() or not candidate.is_file():
+            if not candidate.is_file():
                 return None
             stat = candidate.stat()
             if stat.st_size < 0 or stat.st_size > MAX_STATIC_ASSET_BYTES:
