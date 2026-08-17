@@ -22,6 +22,7 @@ from greia_parent.server import (
     parse_args,
     render_status_page,
 )
+from greia_parent.static_client import ParentStaticClient, StaticClientAsset
 from greia_parent.web_client import render_parent_web_app
 from greia_platform.hardware import HardwareSettingsError
 from greia_platform.profiles import ProfileError
@@ -29,6 +30,7 @@ from greia_platform.profiles import ProfileError
 
 MAX_JSON_BODY_BYTES = 16 * 1024
 DEVICE_COOKIE = "greia_parent_device"
+_STATIC_PREFIXES = ("/src/", "/styles/", "/assets/")
 
 
 class ParentApiApplication(ParentStatusApplication):
@@ -120,14 +122,28 @@ class ParentApiRequestHandler(ParentRequestHandler):
     def app(self) -> ParentApiApplication:
         return self.server.app  # type: ignore[attr-defined,return-value]
 
+    @property
+    def static_client(self) -> ParentStaticClient:
+        return self.server.static_client  # type: ignore[attr-defined,return-value]
+
     def do_GET(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
         query = parse_qs(parsed.query)
 
-        if parsed.path == "/":
-            if not self._require_api_authorization(query):
+        # The client shell is intentionally public: an unpaired browser needs
+        # the HTML/JS pairing UI before it can hold a Parent API credential.
+        # All management data and mutations remain protected by /api/v1 auth.
+        if parsed.path == "/" or parsed.path.startswith(_STATIC_PREFIXES):
+            asset = self.static_client.read(parsed.path)
+            if asset is not None:
+                self._send_static_asset(asset)
                 return
-            self._send_html(200, render_parent_web_app())
+            if parsed.path == "/":
+                # Transitional fallback until the separately maintained client
+                # is vendored into release images. It contains no server secret.
+                self._send_html(200, render_parent_web_app())
+                return
+            self._send_static_not_found()
             return
         if parsed.path == "/legacy":
             if not self._require_api_authorization(query):
@@ -369,6 +385,31 @@ class ParentApiRequestHandler(ParentRequestHandler):
             return None
         return value
 
+    def _send_static_asset(self, asset: StaticClientAsset) -> None:
+        self.send_response(200)
+        self.send_header("Content-Type", asset.content_type)
+        self.send_header("Content-Length", str(len(asset.body)))
+        self.send_header("Cache-Control", asset.cache_control)
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Referrer-Policy", "no-referrer")
+        self.send_header(
+            "Content-Security-Policy",
+            "default-src 'self'; script-src 'self'; style-src 'self'; "
+            "img-src 'self' data:; connect-src 'self'; object-src 'none'; "
+            "base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
+        )
+        self.end_headers()
+        self.wfile.write(asset.body)
+
+    def _send_static_not_found(self) -> None:
+        body = b"Not found\n"
+        self.send_response(404)
+        self.send_header("Content-Type", "text/plain; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.end_headers()
+        self.wfile.write(body)
+
     def _send_api_error(self, status: int, code: str, message: str) -> None:
         self._send_json(status, {"error": {"code": code, "message": message}})
 
@@ -380,8 +421,11 @@ class ParentApiHTTPServer(ParentHTTPServer):
         self,
         address: tuple[str, int],
         app: ParentApiApplication,
+        *,
+        static_client: ParentStaticClient | None = None,
     ):
         self.app = app
+        self.static_client = static_client or ParentStaticClient.from_environment()
         HTTPServer.__init__(self, address, ParentApiRequestHandler)
 
 
