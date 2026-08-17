@@ -1,0 +1,16 @@
+schema_version = 1
+api_version = 1
+repository = "frozenpepper/Greia-Parent-App-Html"
+revision = "9d7ef9ee24907906103bdbb7596b523fec01488f"
+runtime_root = "/usr/share/greia-parent-app"
+integration_state = "source-pinned-not-yet-vendored"
+
+[client]
+entrypoint = "index.html"
+public_shell = true
+same_origin_api = "/api/v1"
+
+[security]
+allow_runtime_network_fetch = false
+allow_remote_javascript = false
+require_integrity_checked_build_input = true
