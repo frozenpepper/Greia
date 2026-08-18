@@ -16,6 +16,7 @@ docs/adr/0026-resolution-adaptive-ui-layout.md
 src/greia_platform/ui_preferences.py
 src/greia_platform/theme_snapshot.py
 src/greia_platform/activity_api.py
+src/greia_platform/activity_ui.py
 src/greia_launcher/theme.py
 src/greia_launcher/child_shell.py
 activities/workshop_settings/activity.toml
@@ -34,13 +35,21 @@ PYTHONPATH=src python3 -m unittest \
   tests.test_ui_preferences \
   tests.test_theme_snapshot \
   tests.test_activity_theme_access \
+  tests.test_activity_ui_preferences \
   tests.test_my_greia_settings_contract \
+  tests.test_my_greia_runtime \
   tests.test_customization \
+  tests.test_activity_ui \
   tests.test_responsive_layout \
+  tests.test_launcher_presentation \
   -v 2>&1 | tee "$SESSION_ROOT/my-greia-focused.log"
 ```
 
-Then run the existing launcher/Activity focused tests and finally `make verify`.
+Then run the other current launcher/Activity focused tests and finally:
+
+```bash
+make verify
+```
 
 These tests were added/changed in the repository but are **not evidence of PASS until you execute them locally**.
 
@@ -63,7 +72,7 @@ Review for these invariants:
 - thumbnail/cache growth remains bounded;
 - Activity lifecycle calls `mark_activity_ready()` and honors `activity_stop_requested()`.
 
-The removable-media-disappears case is particularly important: physically remove/eject the media while the wallpaper screen is open and repair any race that crashes the Activity.
+A source regression now covers the scan-to-thumbnail removable-media disappearance race, but that does **not** replace physically ejecting the media while the wallpaper screen is open.
 
 ## 4. Visual/interaction acceptance
 
@@ -106,6 +115,7 @@ The child must see three visually different choices. Verify:
 - large is visibly larger;
 - choice persists after leaving/re-entering My Greia;
 - launcher typography/interface presentation reflects the selected profile preference after return;
+- Writing/Painting and other first-party Activities using shared `ChildUiMetrics` receive the semantic size without per-resolution/per-size branches;
 - `large` does not clip launcher labels, category header, profile/password UI or launch overlay;
 - `compact` does not fall below documented readable/hit-target floors;
 - changing resolution does not reset the preference or require a separate layout.
@@ -153,7 +163,7 @@ For My Greia itself, `GREIA_CUSTOMIZATION_DIR` is expected because it is the tru
 
 Do not put raw customization paths or wallpaper paths into the ordinary snapshot to make a test pass.
 
-Where first-party Activity typography does not yet consume `GREIA_INTERFACE_SIZE`, treat that as implementation debt and migrate it through shared semantic UI/typography helpers rather than adding Activity-specific resolution/size branches.
+Where a first-party Activity still bypasses shared semantic UI/typography helpers, treat that as implementation debt and migrate it through the shared layer rather than adding Activity-specific resolution/size branches.
 
 ## 7. Launcher refresh acceptance
 
@@ -189,7 +199,8 @@ Add this to the main session result:
 - focused source tests:
 - colors:
 - wallpaper:
-- media-removal race:
+- media-removal source regression:
+- physical media-removal race:
 - interface size compact/normal/large:
 - avatar:
 - profile isolation:
