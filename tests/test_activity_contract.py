@@ -35,6 +35,14 @@ class ActivityContractTests(unittest.TestCase):
         by_id = {activity.activity_id: activity for activity in activities}
         self.assertEqual(by_id["org.greia.shape-garden"].legacy_ids, ("shape_garden",))
         self.assertEqual(by_id["org.greia.shape-garden"].icon_id, "garden")
+        self.assertEqual(
+            by_id["org.greia.shape-garden"].launcher_categories,
+            ("create", "learn"),
+        )
+        self.assertEqual(
+            by_id["org.greia.workshop-settings"].launcher_categories,
+            ("my_greia",),
+        )
         self.assertIn(
             "customization.manage",
             by_id["org.greia.workshop-settings"].requested_permissions,
@@ -46,6 +54,18 @@ class ActivityContractTests(unittest.TestCase):
                 ActivityValidationError,
                 "legacy Activity aliases require built-in",
             ):
+                ActivityRegistry([root.parent], self.runtime).validate_package(root)
+
+    def test_launcher_categories_are_bounded_separately_from_education_tags(self) -> None:
+        with self._copy_sample() as root:
+            manifest = (root / "activity.toml").read_text(encoding="utf-8")
+            manifest = manifest.replace(
+                'categories = ["create", "learn"]',
+                'categories = ["create", "play", "learn", "explore", "my_greia"]',
+                1,
+            )
+            (root / "activity.toml").write_text(manifest, encoding="utf-8")
+            with self.assertRaisesRegex(ActivityValidationError, "at most four"):
                 ActivityRegistry([root.parent], self.runtime).validate_package(root)
 
     def test_executable_file_is_rejected(self) -> None:
