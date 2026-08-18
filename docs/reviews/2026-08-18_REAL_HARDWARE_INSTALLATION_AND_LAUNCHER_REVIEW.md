@@ -23,7 +23,7 @@ This review found the most dangerous regression in item 8: the issue log said th
 
 A final adversarial pass also caught a subtler portability mistake in the remediation itself: the first storage-driver fix put x86-only module names in shared `initramfs-tools/modules` files. That would have solved the Acer while potentially creating a future ARM build failure. The final source keeps the shared module files architecture-neutral and makes the executable hook consult the **target kernel** before force-adding the broad x86 SATA/AHCI floor.
 
-The same pass removed the obsolete known-password/root-SSH bootstrap from both canonical builders instead of relying forever on an SSH drop-in to neutralize dead insecure code. It also serialized the current Parent package-install transaction so a future concurrent HTTP server cannot race receipt preparation against Activity activation within one package-service authority.
+The same pass removed the obsolete known-password/root-SSH bootstrap from both canonical builders instead of relying forever on an SSH drop-in to neutralize dead insecure code. It also gives the Parent package store a private process-wide transaction lock so receipt preparation and Activity activation cannot race merely because the HTTP/package-service process topology changes later.
 
 ## Hardware-derived platform invariants
 
@@ -203,9 +203,9 @@ The architecture previously had the correct policy—Parents must not raw-copy A
 6. stores one read-only immutable digest-addressed version;
 7. prepares the audit metadata before activation;
 8. atomically renames a validated active tree into the separate Parent Activity source as the commit point;
-9. serializes install transactions inside the long-lived package-service authority so overlapping requests cannot race receipt/activation bookkeeping.
+9. serializes the transaction process-wide with a private `0600` `.install.lock` `flock` in the authoritative package state root, with an additional in-process lock to avoid redundant local contenders.
 
-The current Parent API owns one long-lived service instance and currently uses a single-threaded `HTTPServer`; the lock is therefore defense-in-depth for future concurrent request handling. It is explicitly **not** a substitute for filesystem/process-wide locking when full R10 eventually supports multi-process package mutation.
+The lock target is required to be a regular file and is opened without following symlinks where the platform exposes `O_NOFOLLOW`. Two package-service instances/processes using the same local Greia package store therefore cannot race receipt/activation bookkeeping. Any future non-local/distributed package store would require a store-appropriate equivalent rather than assuming local `flock` semantics.
 
 Existing Activity IDs are rejected. **Updates, rollback selection, removal, signatures/revocation and curated-store policy are not declared complete by this tranche.**
 
@@ -243,7 +243,6 @@ The launcher rebuilds runtime/permission/history/supervisor authority **before**
 6. **Category display vocabulary/localization** should become platform-owned data rather than relying indefinitely on humanized identifiers.
 7. **Accessibility/input parity:** controller/touch category navigation, local Back mapping and pointer cursor policy should receive physical acceptance, especially on 1024×600 hardware.
 8. **Typography/readability:** Activity label and category-header sizes must be checked with the selected Nunito Sans implementation once the font itself is actually integrated; current source still uses the existing font loader.
-9. **Future package-manager concurrency:** if R10 ever permits multiple package-manager processes, replace the current in-process serialization with an explicit process/filesystem transaction lock rather than assuming the Parent HTTP process is unique.
 
 ## Review principle to carry forward
 
