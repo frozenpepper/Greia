@@ -275,8 +275,13 @@ class R5IntegrationTests(unittest.TestCase):
                 environment["GREIA_EVENT_SOCKET"],
                 str(SANDBOX_EVENT_ROOT / "events.sock"),
             )
-            event_root_index = command.index(str(SANDBOX_EVENT_ROOT))
+            event_root_indices = [
+                i for i, token in enumerate(command) if token == str(SANDBOX_EVENT_ROOT)
+            ]
+            self.assertGreaterEqual(len(event_root_indices), 2)
+            event_root_index = event_root_indices[1]
             self.assertEqual(command[event_root_index - 2], "--ro-bind")
+            self.assertEqual(command[event_root_index - 4], "--dir")
             self.assertIn("event-brokers", command[event_root_index - 1])
             process.returncode = 0
             supervisor.poll(session)

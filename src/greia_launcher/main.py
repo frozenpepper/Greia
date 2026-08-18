@@ -222,6 +222,7 @@ class LauncherApplication:
         screen = pygame.display.set_mode(default_size, display_flags)
         pygame.display.set_caption("Greia OS")
         pygame.mouse.set_visible(False)
+        _set_x11_input_focus(screen, pygame)
         clock = pygame.time.Clock()
         running = True
         last_display_size = screen.get_size()
@@ -400,12 +401,21 @@ class LauncherApplication:
             manifest, self._active_profile, authority
         )
         self._last_result = activity_session.result
+        self._draw_launch_overlay(pygame, text="Starting…")
+        pygame.display.flip()
+        _launch_feedback = time.monotonic()
         while self._last_result is None:
             # The child Activity owns the visible surface while running. Keep
-            # SDL responsive without repainting the Greia Shell over it.
-            pygame.event.pump()
+            # SDL responsive and show an immediate full-screen launch overlay
+            # that visibly blocks any further clicks or keys until ready.
+            for event in pygame.event.get():
+                pass
             self._last_result = self.supervisor.poll(activity_session)
             if self._last_result is None:
+                if time.monotonic() - _launch_feedback > 0.1:
+                    self._draw_launch_overlay(pygame, text="Starting…")
+                    pygame.display.flip()
+                    _launch_feedback = time.monotonic()
                 time.sleep(0.02)
         pygame.mouse.set_visible(False)
         pygame.event.clear()
@@ -418,6 +428,36 @@ class LauncherApplication:
         self._active_profile = refreshed
         self.theme_controller.invalidate()
         self.theme_controller.theme
+
+    def _draw_launch_overlay(self, pygame: Any, *, text: str) -> None:
+        """Full-screen launch overlay that visibly blocks interaction."""
+        screen = pygame.display.get_surface()
+        if screen is None:
+            return
+        width, height = screen.get_size()
+        overlay = pygame.Surface((width, height), pygame.SRCALPHA)
+        overlay.fill((255, 250, 240, 245))
+        screen.blit(overlay, (0, 0))
+        center = screen.get_rect().center
+        # Panel
+        panel = pygame.Rect(0, 0, min(360, width - 60), 170)
+        panel.center = center
+        pygame.draw.rect(screen, (247, 235, 203), panel, border_radius=24)
+        pygame.draw.rect(screen, (61, 44, 31), panel, width=2, border_radius=24)
+        # Pulsing dots
+        now = time.monotonic()
+        for index in range(3):
+            phase = (now * 2.0 + index * 0.8) % 2.0
+            radius = int(5 + 5 * (1.0 - abs(phase - 1.0)))
+            dot_center = (center[0] - 30 + index * 30, center[1] - 40)
+            pygame.draw.circle(screen, (255, 194, 52), dot_center, radius)
+        # Message
+        font = self._typography.font(FontRole.CONTROL, 32)
+        label = font.render(text, True, (61, 44, 31))
+        screen.blit(label, label.get_rect(center=(center[0], center[1] + 25)))
+        hint = self._typography.font(FontRole.BODY, 20)
+        hint_label = hint.render("Please wait…", True, (130, 120, 100))
+        screen.blit(hint_label, hint_label.get_rect(center=(center[0], center[1] + 65)))
 
     def _installed_root(self) -> bool:
         return self.paths.root == Path("/opt/greia-os")
@@ -888,6 +928,37 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--windowed", action="store_true")
     parser.add_argument("--allow-exit", action="store_true")
     return parser.parse_args()
+
+
+def _set_x11_input_focus(screen: Any, pygame: Any) -> None:
+    """Give the fullscreen window X input focus when no window manager runs.
+
+    Greia boots Xorg directly with no WM, so keyboard events go nowhere unless
+    the launcher window is focused. This sets X input focus to the SDL window.
+    """
+    import ctypes
+    import ctypes.util
+
+    if os.environ.get("SDL_VIDEODRIVER", "x11") != "x11":
+        return
+    try:
+        info = pygame.display.get_wm_info()
+    except Exception:
+        return
+    window_id = int(info.get("window", 0))
+    if not window_id:
+        return
+    x11 = ctypes.CDLL(ctypes.util.find_library("X11"))
+    display = x11.XOpenDisplay(None)
+    if not display:
+        return
+    revert_to = 1  # RevertToParent
+    current = ctypes.c_ulong()
+    revert = ctypes.c_int()
+    x11.XGetInputFocus(display, ctypes.byref(current), ctypes.byref(revert))
+    if current.value != window_id:
+        x11.XSetInputFocus(display, window_id, revert_to, 0)
+    x11.XCloseDisplay(display)
 
 
 def main() -> int:

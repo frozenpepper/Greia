@@ -69,16 +69,25 @@ class SystemOverlayContractTests(unittest.TestCase):
             self.assertIn('"activity-sandbox"', profile.read_text())
         supervisor = (PROJECT_ROOT / "src/greia_launcher/supervisor.py").read_text()
         for boundary in (
-            "--unshare-user",
-            "--disable-userns",
             "--unshare-pid",
             "--unshare-net",
             "--new-session",
             "--die-with-parent",
+            "--tmpfs",
+            "/run",
             "/var/lib/greia-profiles",
             "/var/lib/greia-os",
+            "--ro-bind",
+            "/",
+            "/",
         ):
             self.assertIn(boundary, supervisor)
+        # --unshare-user is intentionally not used: its user-namespace root loses
+        # access to greiakid:pipprofiles group-owned profile dirs, so bwrap could
+        # not traverse the activity-data source and every Activity failed to
+        # launch. PID/network/UTS isolation plus read-only root remains.
+        self.assertNotIn("--unshare-user", supervisor)
+        self.assertNotIn("--disable-userns", supervisor)
         # X11's shared-memory extension requires host IPC for acceptable low-end
         # performance, so do not accidentally isolate IPC before replacing X11.
         self.assertNotIn('"--unshare-ipc"', supervisor)
