@@ -439,7 +439,14 @@ class MyGreiaSettings:
 
     def _thumbnail(self, candidate: WallpaperCandidate, size: tuple[int, int]) -> pygame.Surface | None:
         width, height = max(1, size[0]), max(1, size[1])
-        key = (candidate.path, candidate.path.stat().st_mtime_ns, width, height)
+        try:
+            mtime = candidate.path.stat().st_mtime_ns
+        except OSError:
+            # Removable media can disappear between the bounded scan and the
+            # next draw frame. A stale candidate is a normal transient state,
+            # not a reason to crash the child-facing Activity.
+            return None
+        key = (candidate.path, mtime, width, height)
         if key in self.thumbnail_cache:
             return self.thumbnail_cache[key]
         if len(self.thumbnail_cache) >= self.MAX_THUMBNAIL_CACHE:
