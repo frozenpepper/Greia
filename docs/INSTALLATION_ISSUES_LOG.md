@@ -128,43 +128,50 @@ personalization removes host keys so cloned machines do not share SSH identity.
 
 - **normal/release images:** SSH is disabled; host keys are intentionally absent
   until a future parent-owned enablement path exists;
-- **developer images:** the supported provisioning architecture is key-only
+- **developer images:** the supported provisioning architecture was key-only
   `greiaadmin`, root/password SSH disabled, with per-machine host keys generated
   on the actual device.
 
 A package/profile flag that installs developer prerequisites is not authority to
 mint credentials or enable SSH.
 
-**Final source fix / invariant:**
+**2026-08-18 owner policy amendment (active):** the owner explicitly changed
+the development direction. During active development/hardware bring-up,
+developer/test installations must remain reachable over SSH after installation
+and reboot with the predictable login `greia` / `greia`. Root SSH login remains
+disabled. Key authentication is retained as an additional automation path but
+must not make the `greia` / `greia` login disappear.
 
-- both target and live installer overlays contain
-  `00-greia-security-floor.conf`;
-- password and keyboard-interactive authentication are disabled;
-- `AuthenticationMethods publickey` is required;
-- root login is disabled;
-- historical `root` and `greia` bootstrap identities are explicitly denied;
-- target first boot locks any historical bootstrap passwords;
-- **the canonical target builder no longer contains any known-password/root-SSH
-  developer branch** and always emits a closed SSH configuration;
+**Final source fix / invariant (reconciled):**
+
+- both target and live installer overlays contain `00-greia-security-floor.conf`;
+- the shared floor denies `root` only and does not deny the managed `greia`
+  account; base images keep the `greia` account password-locked and SSH off;
+- `PermitRootLogin no` is always required;
+- **the canonical target builder never enables SSH or mints a password** and
+  always emits a closed base configuration;
 - **the canonical live-installer builder likewise never creates a password or
   enables SSH**, including for a developer profile;
-- target developer reachability is an explicit post-build step through
+- developer reachability is an explicit post-build step through
   `build/build-developer-image.sh` → `tools/provision_developer_image.py`, which
-  generates an Ed25519 operator key and installs only the public key for
-  `greiaadmin` before enabling SSH;
+  sets the `greia` / `greia` development login, keeps root denied, installs an
+  operator key as an additional automation path, and rewrites the security floor
+  for the developer image before enabling SSH;
 - live-installer remote control is an explicit
-  `tools/provision_developer_installer.py` operation requiring an owner-provided
-  public key; root/password SSH remains disabled.
+  `tools/provision_developer_installer.py` operation that likewise enables the
+  `greia` / `greia` login and keeps root SSH disabled.
 
-`tests/test_installation_hardware_regressions.py` now forbids
-`PasswordAuthentication yes`, `PermitRootLogin yes`, the historical password
-hash, `chpasswd -e`, and related bootstrap artifacts in either canonical
-builder, while also asserting that the explicit developer path uses key
-provisioning.
+`tests/test_installation_hardware_regressions.py` locks the invariant that the
+canonical builders never mint credentials and that the explicit developer
+provisioning path enables the owner-approved `greia` / `greia` login with root
+denied.
 
 **General lesson:** a base builder must fail closed even if a later developer
 provisioning step is interrupted. Development convenience belongs in an
-explicit privileged provisioning stage, not in the reproducible base image.
+explicit privileged provisioning stage, not in the reproducible base image. An
+owner policy change that redefines development credentials is a contract
+migration for source, tests, and living documentation together, not a reason to
+keep two competing instructions.
 
 ---
 

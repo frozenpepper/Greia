@@ -87,8 +87,9 @@ Greia developer/test images may expose a remote-control surface so an operator c
 This capability is **development-only**:
 
 - normal/release profiles must not enable SSH merely because developer tooling exists in the repository;
-- remote enablement requires an explicit developer image/profile marker and key provisioning;
-- password authentication and root SSH login remain disabled; never commit private keys, Wi-Fi passwords, tokens, or other operator credentials;
+- remote enablement requires an explicit developer image/profile marker and provisioning;
+- during the active development/test cycle, developer images provide the owner-approved `greia` / `greia` SSH login; root SSH login remains disabled and base/release images keep the `greia` account locked with SSH off;
+- never commit private keys, Wi-Fi passwords, tokens, or other operator credentials;
 - passwordless privilege escalation must stay behind a bounded Greia-owned control command such as `greia-devctl`, not generic passwordless sudo/root APIs;
 - ordinary remotely deployed Activities retain `DEVELOPER_UNSIGNED` trust and live in a source distinct from `/opt/greia-os/activities`; remote file placement must never upgrade package trust;
 - deliberate replacement of a built-in Activity requires an explicit developer operation and a recoverable original backup;
@@ -182,7 +183,8 @@ The old prototype identities have been migrated. Active implementation uses Grei
 
 - `greiakid` — child shell/Activity Unix identity;
 - `greiapanel` — parent service identity;
-- `greiaadmin` — explicit advanced parent/recovery identity;
+- `greiaadmin` — explicit operator/recovery key-authentication identity;
+- `greia` — managed development/admin SSH identity (base images lock it and keep SSH off; explicit developer provisioning enables the `greia` / `greia` login);
 - `greiaprofiles` — bounded profile-tree group;
 - `greiasettings` — bounded hardware/settings group;
 - `/etc/greia-os`, `/var/lib/greia-profiles`, `/opt/greia-os`;

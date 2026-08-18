@@ -256,12 +256,12 @@ Only the explicit developer profile may opt into the `developer-remote` package/
 
 Normal/release Greia must not become remotely accessible simply because developer helper source exists.
 
-The developer path must keep:
+The developer path keeps:
 
-- password authentication disabled;
-- keyboard-interactive authentication disabled;
-- root SSH login disabled;
-- private operator key outside the image/repository;
+- the managed `greia` account as the development SSH user with the initial
+  `greia` / `greia` login (see §13/§14);
+- passwordless root SSH disabled (`PermitRootLogin no`);
+- a private operator key as an additional automation path;
 - machine SSH host identity generated on the actual booted machine;
 - passwordless privilege bounded to Greia-owned `greia-devctl` operations.
 
@@ -337,10 +337,16 @@ Defaults are owned by `tools/greia_remote.py`; at this review they are:
 
 ```text
 host:        greia-dev.local
-user:        greiaadmin
-key:         out/greia-os-modern-amd64-dev-ssh-key
+user:        greia
+password:    greia   (development/test login)
+key:         out/greia-os-modern-amd64-dev-ssh-key   (optional automation path)
 known-hosts: ~/.greia/known_hosts
 ```
+
+The `greia` / `greia` development login is the owner-approved path for the
+current development cycle. Password login is enabled only on explicitly
+provisioned developer images; base/release images keep the `greia` account
+locked and SSH off. Root SSH login is always disabled.
 
 Override a non-default host/key explicitly:
 
@@ -349,6 +355,9 @@ python3 tools/greia_remote.py \
   --host <hostname-or-ip> \
   --key <private-key-path> \
   status
+
+# Password-based development login:
+python3 tools/greia_remote.py --password greia status
 ```
 
 The client uses a **dedicated Greia known-hosts file**. Do not disable SSH host-key checking globally.

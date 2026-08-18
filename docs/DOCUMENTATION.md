@@ -73,6 +73,7 @@ For exact currently implemented APIs, schemas, command vocabularies and limits, 
 | base Greia Parent API routing/domain adaptation | `src/greia_parent/api_server.py` |
 | capability-gated Parent Activity package upload composition | `src/greia_parent/package_api.py` |
 | per-parent-device credential persistence/revocation | `src/greia_parent/credentials.py` |
+| main Parent password digest + typed change | `src/greia_platform/main_credential.py` |
 | built-in/dependency-free Parent web compatibility surface | `src/greia_parent/web_client.py` |
 | external pinned Parent HTML client source | `frozenpepper/Greia-Parent-App-Html`, pinned by `runtime/parent-app-client.toml` and integrity manifest |
 | Parent LAN service advertisement | `build/overlay/etc/avahi/services/greia-parent.service` |

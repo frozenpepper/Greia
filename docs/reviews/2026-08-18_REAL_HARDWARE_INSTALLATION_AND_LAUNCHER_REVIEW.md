@@ -90,22 +90,30 @@ Creating a fullscreen SDL window does not guarantee X keyboard focus when there 
 
 ### 10. Development access must fail closed
 
-The review found stale builder branches that wrote a known `greia/greia` password and enabled permissive root/password SSH for developer profiles, even though the supported developer architecture is key-only `greiaadmin`.
+The review found stale builder branches that wrote a known `greia/greia` password and enabled permissive root/password SSH for developer profiles, even though the supported developer architecture was key-only `greiaadmin`.
 
-The final source no longer carries that shortcut:
+> **2026-08-18 owner policy amendment (applied in the local-agent session after
+> this review was written):** the owner explicitly changed the development
+> direction. Developer/test installations must remain reachable over SSH after
+> install/reboot with the predictable `greia` / `greia` login, root SSH disabled,
+> and key auth retained only as an additional automation path. The paragraphs
+> below describing key-only `greiaadmin` as the only developer identity reflect
+> the policy that was in force when this review was written; the current
+> reconciled source/docs are described in `HANDOVER.md` and
+> `docs/agents/GREIA_AGENT_OPERATIONS.md`.
+
+The source no longer carries a build-time password shortcut:
 
 - both installed and live overlays contain `00-greia-security-floor.conf`;
-- password and keyboard-interactive auth are disabled;
-- root login is disabled;
-- authentication requires public key;
-- historical `root` and `greia` remote identities are explicitly denied;
-- target first boot locks the historical local bootstrap passwords;
+- the shared floor denies `root` only and does not deny the managed `greia` account;
+- base images keep `greia` password-locked and SSH disabled;
+- `PermitRootLogin no` is always required;
 - `build/build-image.sh` always produces a closed SSH configuration and never mints developer credentials;
 - `build/build-installer-image.sh` likewise never creates a password or enables SSH, even for a developer profile;
-- `build/build-developer-image.sh` is the explicit target developer path and delegates key creation/provisioning to `tools/provision_developer_image.py`;
-- live-installer remote operation requires the separate `tools/provision_developer_installer.py` path with an owner-provided public key.
+- `build/build-developer-image.sh` is the explicit target developer path and delegates provisioning to `tools/provision_developer_image.py`;
+- live-installer remote operation requires the separate `tools/provision_developer_installer.py` path.
 
-**Rule:** a package-set/profile declaration may install prerequisites but is never credential authority. Base builders fail closed; developer reachability is an explicit key-provisioning operation after the closed base exists.
+**Rule:** a package-set/profile declaration may install prerequisites but is never credential authority. Base builders fail closed; developer reachability is an explicit provisioning operation after the closed base exists.
 
 ## Installation regression locks added
 
@@ -121,9 +129,9 @@ The final source no longer carries that shortcut:
 - legacy mouse compatibility nodes remain ignored;
 - Bubblewrap retains private `/run` and explicit bind targets without the broken user namespace assumptions;
 - kiosk X input focus handoff remains present;
-- the canonical builders contain no known-password/root-SSH bootstrap and emit closed key-only SSH policy;
-- explicit developer target/live provisioning uses public-key paths rather than a profile-side password shortcut;
-- SSH security floors remain key-only/root-disabled and first boot locks historical bootstrap passwords.
+- the canonical builders contain no known-password/root-SSH bootstrap and emit closed SSH policy;
+- explicit developer target/live provisioning enables the owner-approved `greia` / `greia` development login with root denied, rather than a profile-side password shortcut;
+- SSH security floors remain root-disabled; base images keep the managed `greia` account locked and SSH off.
 
 These tests are intentionally hardware-family-neutral. They protect causes, not Acer strings.
 

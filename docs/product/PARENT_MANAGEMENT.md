@@ -1,9 +1,19 @@
 # Greia Parents — Product and Interaction Requirements
 
 **Status:** accepted product direction; implementation incremental  
-**Date:** 2026-08-17  
+**Date:** 2026-08-18  
 **Architecture owner:** ADR 0022  
 **Initial implementation:** responsive HTML client served by Greia itself
+
+> **2026-08-18 owner policy amendment (active):** the main Parent/admin
+> credential is intentionally simple and predictable. The initial login is
+> `greia` / `greia`. It is stored only as a bounded password digest, is
+> changeable from Greia Parents through a typed operation, and is never returned
+> by any API or log. During active development, developer/test installations
+> stay reachable over SSH as `greia` / `greia` (see `docs/agents/GREIA_AGENT_OPERATIONS.md`);
+> root SSH login remains disabled and child-facing operation still exposes no
+> shell or desktop. Old repository text describing a generated random end-install
+> recovery password/code is obsolete and must not be revived.
 
 ## 1. Product purpose
 
@@ -68,6 +78,27 @@ Revoking one device must not sign every other parent out.
 No pairing secret or bearer token is shown in ordinary device lists.
 
 ## 4. Primary management areas
+
+### Main Parent password
+
+The main Parent/admin credential is the human-readable Greia management login:
+
+```text
+username = greia
+password = greia     (initial, changeable from Greia Parents)
+```
+
+Requirements:
+
+- only a bounded PBKDF2 digest is persisted; no plaintext password file;
+- changing it is a typed Greia-owned operation that requires the current
+  password;
+- API responses never return the stored password or its digest;
+- Greia Parents exposes a clear **Change Parent password** control;
+- the main Parent password is distinct from per-device bearer credentials used
+  by paired parent clients; pairing credentials remain individually revocable;
+- during active development/test, the main Parent password intentionally owns
+  the development SSH login on developer images; root SSH login stays disabled.
 
 ### Children
 
@@ -162,7 +193,6 @@ Parents can eventually request safe restart/shutdown/recovery actions through ty
 Portable profile backup/restore is part of the eventual Parent App, backed by `.greiabackup` / R11.
 
 The web client does not implement an independent backup format.
-
 ### SSH maintenance
 
 Normal Greia ships with SSH **off**.
@@ -179,24 +209,29 @@ Authentication
   SSH public key: [ Add / replace key ]
 
 Root login                       Disabled
-Password login                   Disabled
-Remote user                      greiaadmin
-
-[ Enable SSH ]
+Remote user                      greia
 ```
 
 When disabled, the SSH service is not listening.
 
 When enabled:
 
-- key authentication only;
-- no root login;
-- no password authentication;
-- no generic web-to-shell endpoint;
+- the managed `greia` account is the administrative shell user;
+- root login is disabled;
+- a public key may be added as an additional automation path;
+- passwordless privilege escalation stays behind the bounded Greia-owned
+  `greia-devctl` control, not generic passwordless sudo/root APIs;
 - host connection details are shown after success;
 - parent can disable SSH and revoke/replace key material.
 
-Developer-image remote control remains separate from this release maintenance switch.
+During active development, developer/test images additionally provision the
+`greia` / `greia` login as described in `docs/agents/GREIA_AGENT_OPERATIONS.md`
+so the owner-controlled test agent can continue working after install and
+reboot. This development convenience is not a release security claim; final
+release SSH policy is a separate question.
+
+Developer-image remote control remains separate from this release maintenance
+switch.
 
 ## 5. Capability-driven client UI
 

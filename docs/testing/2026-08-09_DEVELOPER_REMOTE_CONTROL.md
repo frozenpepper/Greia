@@ -127,20 +127,27 @@ It restarts networkd/resolved before SSH starts.
 
 ## 5. SSH security model
 
-Remote transport uses the existing hardened OpenSSH policy:
+> **2026-08-18 owner policy amendment:** during the active development cycle,
+> developer/test images enable the owner-approved `greia` / `greia` development
+> login. Root SSH login remains disabled. The operator public-key path described
+> in the rest of this section remains available as an additional automation path
+> and must not make the `greia` / `greia` login disappear.
+
+Remote transport uses the existing hardened OpenSSH policy on the shared floor:
 
 ```text
-user: greiaadmin
-PasswordAuthentication no
-KbdInteractiveAuthentication no
-AuthenticationMethods publickey
+PasswordAuthentication no        (base floor; dev provisioning enables greia/greia)
+KbdInteractiveAuthentication no  (base floor; dev provisioning enables greia/greia)
 PermitRootLogin no
 X11Forwarding no
 AllowTcpForwarding no
 PermitTunnel no
 ```
 
-The `greiaadmin` password remains locked. Public-key login is the intended authentication method.
+On an explicitly provisioned developer image, `tools/provision_developer_image.py`
+and `tools/provision_developer_installer.py` rewrite the shared security floor so
+the `greia` / `greia` development login works (password + the operator key), while
+`PermitRootLogin no` is always preserved.
 
 Passwordless sudo is deliberately restricted to exactly:
 
@@ -150,7 +157,7 @@ Passwordless sudo is deliberately restricted to exactly:
 
 The Mac/client helper does not use `sudo sh`, `sudo bash`, unrestricted `sudo`, or a generic privileged command API.
 
-An interactive SSH shell is intentionally available under `greiaadmin` for development/recovery, but privileged product operations should normally use `greia-devctl` so automated tests do not encode arbitrary filesystem/systemd implementation details.
+An interactive SSH shell is intentionally available for development/recovery, but privileged product operations should normally use `greia-devctl` so automated tests do not encode arbitrary filesystem/systemd implementation details.
 
 ---
 
@@ -166,12 +173,15 @@ Defaults:
 
 ```text
 host: greia-dev.local
-user: greiaadmin
-key: out/greia-os-modern-amd64-dev-ssh-key
+user: greia
+password: greia          (development/test login)
+key: out/greia-os-modern-amd64-dev-ssh-key   (optional automation path)
 known-hosts: ~/.greia/known_hosts
 ```
 
-SSH uses batch/key authentication and a dedicated Greia known-hosts file.
+SSH uses a dedicated Greia known-hosts file. Password login uses the
+owner-approved `greia` / `greia` identity; key authentication remains available
+for automation.
 
 Wait for power-on/boot:
 
@@ -427,9 +437,9 @@ Before this capability is labelled accepted, a real developer image should prove
 
 1. normal `modern-amd64` still has SSH disabled and no developer marker;
 2. `modern-amd64-dev` boots with unique machine SSH host keys;
-3. password login fails;
+3. the `greia` / `greia` development login succeeds (owner policy);
 4. root SSH login fails;
-5. operator key login as `greiaadmin` succeeds;
+5. operator key login as `greiaadmin` succeeds as an additional automation path;
 6. wired DHCP comes up without local interaction;
 7. `greia-dev.local` resolves from the operator machine where LAN mDNS permits it;
 8. `status` works;

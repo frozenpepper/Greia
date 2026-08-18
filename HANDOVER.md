@@ -5,8 +5,8 @@
 **Repository:** `frozenpepper/Greia` (private)  
 **Canonical/default/development branch:** `main`  
 **Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**  
-**Latest reviewed implementation baseline before this handover update:** `7bb7119c69881910bca430a2a7ec403da5c0456d`  
-**External Parent HTML revision pinned by Greia:** `frozenpepper/Greia-Parent-App-Html@6ee02840e2fdfdbe68a6fa5869a8f085b50ae37f`
+**Latest reviewed implementation baseline before this handover update:** `9e6f0eb`  
+**External Parent HTML revision pinned by Greia:** `frozenpepper/Greia-Parent-App-Html@e30bcbcab393354b8ffb63d5829c08711d8023bd`
 
 ## Branch and execution policy
 
@@ -14,22 +14,41 @@
 
 Do **not** use, query, trigger, rerun, inspect or download GitHub-hosted Actions without explicit owner authorization for that specific hosted execution. Source verification runs on an owner-controlled environment.
 
+## Owner credential policy amendment (active since 2026-08-18)
+
+The owner has explicitly changed the credential/SSH direction. Current policy:
+
+1. There is **no generated random end-install password/recovery code** the parent
+   must preserve. The installer completion screen reports the simple `greia` /
+   `greia` login and directs the parent to Greia Parents to change it.
+2. The main Parent/admin credential is `greia` / `greia`, stored only as a
+   bounded PBKDF2 digest, changeable through the typed
+   `/api/v1/parent-password` operation, and never returned by an API.
+3. Each child may optionally have a separate Greia-profile password
+   (set/replace/clear from Greia Parents); child passwords are profile-level
+   Greia authentication, not one Linux account per child.
+4. During active development, developer/test installs remain reachable over SSH
+   as `greia` / `greia` after install and reboot. Root SSH login is disabled.
+   Key authentication is retained as an additional automation path.
+5. Base/release images keep `greia` locked and SSH off (fail closed).
+
 ## Evidence boundary — do not overclaim
 
-The latest genuinely executed complete owner-controlled aggregate source gate recorded in repository history remains the 2026-08-16 Ubuntu run after the Activity-bytecode validation fix:
+The 2026-08-18 local-agent session ran the focused source suites and the
+complete `make verify` on this checkout. Recorded executed evidence:
 
 ```text
-focused hardware-enablement suite 1: 77 PASS
-focused hardware-enablement suite 2: 32 PASS
-full source suite / make verify: 530 PASS
-project validation: PASS (4 Activities)
-source/shell/footprint gate: PASS
-aggregate gate exit: 0
+make verify (2026-08-18, local-agent session): 663 PASS
+focused 2026-08-18 suites (installation-hardware, ui-motion-scroll,
+  launcher-presentation, activity-packages, activity-contract, parent-api,
+  main-credential, installer-engine, installer-state, grub-security,
+  developer-remote, developer-remote-snapshot): 114 PASS
+Parent-App npm test at pinned e30bcbc: 10 PASS
 ```
 
-Everything in the 2026-08-18 review/implementation tranche below was performed through the connected GitHub repository. **The new Python/Node tests were not executed here. No fresh installer image was built here. No new physical-hardware boot/install PASS is claimed. No GitHub Actions execution was used.**
-
-Physical hardware work performed before this review is valuable evidence of the failures/root causes that motivated the fixes, but the reconciled source now needs a fresh owner-controlled source gate, generated-image inspection and physical acceptance.
+A fresh installer image and physical hardware acceptance remain the next
+required evidence; no new physical install/boot/launcher PASS is claimed in
+this handover update.
 
 Canonical review:
 
@@ -66,7 +85,7 @@ The most important discovery of this review was that several fixes documented af
 7. **Legacy `/dev/input/mouse*` nodes are compatibility aliases, not extra modern pointer devices.** The Xorg compatibility path ignores them and consumes event devices.
 8. **Bubblewrap mount destinations must be constructed inside the private filesystem before binds.** `/run` is private tmpfs; required bind targets are explicit; the previously broken user-namespace assumptions remain removed.
 9. **A kiosk without a window manager still needs explicit keyboard-focus handoff.** The current X11 compatibility path uses `XSetInputFocus`.
-10. **Developer access fails closed.** Base target/live builders never create developer passwords or enable SSH; explicit key provisioning is the only supported developer enablement path.
+10. **Developer access fails closed at the base and is enabled explicitly.** Base target/live builders never create usable developer passwords or enable SSH. Explicit developer provisioning (`provision_developer_image.py` / `provision_developer_installer.py`) enables the owner-approved `greia` / `greia` development login, keeps root SSH disabled, and retains an operator key as an additional automation path.
 11. **A hardware fix is not complete until the machine works, the build input contains the fix, a hardware-independent regression protects the cause, and documentation explains the failure class.**
 12. **A hardware fix for one architecture must not become a shared-overlay regression for another architecture.** Shared build files remain architecture-neutral; target-kernel/profile policy decides architecture-specific boot-critical modules.
 
@@ -133,28 +152,41 @@ The Activity sandbox now preserves the hardware-derived mount topology:
 
 Do not weaken Activity isolation merely because the launcher/display service currently needs broader Xorg authority. They are different trust boundaries.
 
-## Developer SSH path — fail-closed base, explicit key provisioning
+## Developer SSH path — fail-closed base, explicit greia/greia provisioning
 
-Both target and live overlays still carry `00-greia-security-floor.conf`:
+Both target and live overlays carry `00-greia-security-floor.conf`. The shared
+floor denies `root` only and does not deny the managed `greia` account; base
+images keep the `greia` account password-locked and SSH off:
 
 ```text
 PasswordAuthentication no
 KbdInteractiveAuthentication no
 AuthenticationMethods publickey
 PermitRootLogin no
-DenyUsers root greia
+DenyUsers root
 ```
 
-Target first boot also locks historical root/greia passwords.
+Target first boot locks the historical root password.
 
-More importantly, the stale known-password shortcut has now been removed from the canonical builders themselves:
+The canonical builders themselves never enable SSH or mint a password:
 
-- `build/build-image.sh` always leaves SSH disabled and writes key-only `greiaadmin` policy, including when the profile carries the `developer-remote` package set;
-- `build/build-installer-image.sh` likewise never creates a password or enables SSH;
-- `build/build-developer-image.sh` is the explicit target developer path and post-processes the closed base image via `tools/provision_developer_image.py`, which generates an Ed25519 operator key, installs only the public key for `greiaadmin`, and then enables the bounded developer services;
-- live-installer remote operation is a separate `tools/provision_developer_installer.py` path requiring an owner-supplied public key and keeping root/password SSH disabled.
+- `build/build-image.sh` always leaves SSH disabled and emits a closed base
+  configuration, including when the profile carries the `developer-remote`
+  package set;
+- `build/build-installer-image.sh` likewise never creates a password or enables
+  SSH;
+- `build/build-developer-image.sh` is the explicit target developer path and
+  post-processes the closed base image via `tools/provision_developer_image.py`,
+  which sets the owner-approved `greia` / `greia` development login, keeps root
+  denied, installs an Ed25519 operator key as an additional automation path, and
+  rewrites the security floor for the developer image before enabling SSH;
+- live-installer remote operation is a separate
+  `tools/provision_developer_installer.py` path that likewise enables the
+  `greia` / `greia` login and keeps root SSH disabled.
 
-`tests/test_installation_hardware_regressions.py` now explicitly forbids the historical password hash, `chpasswd -e`, `PasswordAuthentication yes`, `PermitRootLogin yes`, and related bootstrap material in both canonical builders.
+`tests/test_installation_hardware_regressions.py` locks the invariant that the
+canonical builders never mint credentials and that the explicit developer path
+enables the owner-approved `greia` / `greia` login with root denied.
 
 ---
 
@@ -421,32 +453,25 @@ Do not claim these PASS until they run on an owner-controlled checkout.
 
 # 7. Next exact verification step
 
-On an owner-controlled current Linux checkout, preserve the first failure and run focused source verification before the aggregate gate. At minimum include:
+The focused source suites and `make verify` passed on the 2026-08-18
+local-agent checkout (114 focused + 663 aggregate). The next required work is
+generated-image and physical acceptance:
 
-```bash
-PYTHONPATH=src python3 -m unittest \
-  tests.test_installation_hardware_regressions \
-  tests.test_ui_motion_scroll \
-  tests.test_launcher_presentation \
-  tests.test_activity_packages \
-  tests.test_activity_contract \
-  tests.test_parent_api -v
-
-make verify
-```
-
-In the external Parent HTML checkout at the exact pinned revision, run its normal Node test command from `package.json`.
-
-If source gates pass:
-
-1. rebuild the legacy installer/target through the canonical builder;
+1. build a fresh legacy installer/target through the canonical builder;
 2. inspect the produced initramfs and confirm the target kernel contains the needed x86 storage modules on the legacy profile;
 3. verify media UUID/payload coherence;
 4. repeat physical install/boot/input acceptance on the Acer;
-5. visually inspect the launcher at 1024×600, specifically Activity-name legibility, category icon/header/back layout, scroll behavior, hover/launch effects and focus;
-6. verify a developer target remains unreachable until the explicit key-provisioning developer builder completes, then verify key-only `greiaadmin` access after provisioning;
-7. exercise an owner-enabled `.greiaactivity` new-install through the Parent HTML client and confirm the running launcher discovers it only after authority rebuild;
-8. where available, repeat basic install/launcher acceptance on additional x86 hardware so the Acer does not become a hidden model-specific contract.
+5. confirm the installer completion screen shows the simple `greia` / `greia`
+   login and no random recovery code;
+6. after first boot, confirm the developer target is reachable over SSH as
+   `greia` / `greia`, that root SSH login is rejected, and that reboot
+   preserves reachability;
+7. connect the Parent HTML client and exercise the main Parent password change
+   (using a second SSH connection to prove any shared-credential synchronization
+   before closing the first) plus child password set/replace/clear;
+8. visually inspect the launcher at 1024×600, specifically Activity-name legibility, category icon/header/back layout, scroll behavior, hover/launch effects and focus;
+9. exercise an owner-enabled `.greiaactivity` new-install through the Parent HTML client and confirm the running launcher discovers it only after authority rebuild;
+10. where available, repeat basic install/launcher acceptance on additional x86 hardware so the Acer does not become a hidden model-specific contract.
 
 Do not convert source structure into a hardware certification claim.
 
@@ -480,6 +505,24 @@ eeca76c0b87e617785d4b53bae7b0bd337031091  build: remove password SSH bootstrap f
 7fe0a3a41926a271e47598be4bbc92044b37a8ae  tests: prove package lock spans service instances
 d392cfb2065eb123b5bc1c1555e364c7d5fd89f8  docs: process-wide Activity install lock
 7bb7119c69881910bca430a2a7ec403da5c0456d  review: process-wide package install serialization
+```
+
+Commits from the 2026-08-18 local-agent credential/SSH reconciliation:
+
+```text
+9676fff  packages: fix archive mode detection, activation cleanup, and already-installed errors
+9baa48b  parent: add typed main Parent credential and remove end-install random code UX
+c02f838  remote: keep developer installs reachable via greia/greia login
+ed3ea70  parent: pin updated Parent App with password change + served client parity
+36e2cd9  parent: pin Parent App with per-child password management
+9e6f0eb  build: persist appliance-session Xwrapper to the live installer overlay
+```
+
+External Parent HTML commits:
+
+```text
+32c22d8  parent-ui: add main Parent password change control via typed API
+e30bcbc  parent-ui: add per-child password set/replace/clear from the children view
 ```
 
 Earlier commits in the same tranche contain the Xorg/runtime/input reconciliation, target-kernel-aware initramfs hooks, Parent package API/client, trust-source composition and launcher presentation foundation. Repository history is authoritative for their exact ordering.
