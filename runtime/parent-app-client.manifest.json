@@ -1,12 +1,16 @@
 {
   "files": {
     "index.html": {
-      "bytes": 2154,
-      "sha256": "7ee0bd9a32a5e5283c7fb2d16d55d1f7274c809cd52e33bae1b0da1dbe1b5205"
+      "bytes": 2222,
+      "sha256": "d2751ef2b49176713b54adc64213dbcc683f87f93287b40935874baf9eb1b794"
+    },
+    "src/activity_install_ui.js": {
+      "bytes": 4069,
+      "sha256": "6895a26044ca51b8b9541f56d89e87f2468d54883540f19a48ab92cc45e1b7a5"
     },
     "src/api.js": {
-      "bytes": 4478,
-      "sha256": "9dc42a5f2efb2eb99c0486841095e29e280055e1e52e85c1b143152b1639bf72"
+      "bytes": 5234,
+      "sha256": "f694c7669c657391c29f6e92fc7c00443876603073e70dc82461417203ae9569"
     },
     "src/app.js": {
       "bytes": 24961,
@@ -30,6 +34,6 @@
     }
   },
   "repository": "frozenpepper/Greia-Parent-App-Html",
-  "revision": "b186ba3fee3e8c946ad6b8fe4ce822cd1cb3303f",
+  "revision": "6ee02840e2fdfdbe68a6fa5869a8f085b50ae37f",
   "schema_version": 1
 }
