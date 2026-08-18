@@ -233,8 +233,13 @@ class GreiaLauncherPresentation(LauncherApplication):
             self._ensure_selected_visible(pygame)
         elif key in {pygame.K_RETURN, pygame.K_SPACE}:
             self._launch_selected(pygame)
+        elif key == pygame.K_BACKSPACE and self._category_id != ALL_ACTIVITIES_ID:
+            self._set_category(ALL_ACTIVITIES_ID)
         elif key == pygame.K_ESCAPE:
-            self._logout(pygame)
+            if self._category_id != ALL_ACTIVITIES_ID:
+                self._set_category(ALL_ACTIVITIES_ID)
+            else:
+                self._logout(pygame)
         elif self.allow_exit and key == pygame.K_q:
             return False
         return True
@@ -245,6 +250,9 @@ class GreiaLauncherPresentation(LauncherApplication):
                 continue
             if target.action == "activity_category":
                 self._set_category(str(target.value))
+                return
+            if target.action == "activity_category_back":
+                self._set_category(ALL_ACTIVITIES_ID)
                 return
             if target.action == "presented_activity_select":
                 self._selected = int(target.value)
@@ -415,45 +423,145 @@ class GreiaLauncherPresentation(LauncherApplication):
     def _draw_category_bar(self, screen: Any, theme: Any, pygame: Any) -> None:
         if not self._catalogue.category_ids:
             return
+        if self._category_id != ALL_ACTIVITIES_ID:
+            self._draw_category_header(screen, theme, pygame)
+            return
+
+        collections = tuple(
+            item
+            for item in self._catalogue.collections
+            if item.collection_id != ALL_ACTIVITIES_ID
+        )
+        if not collections:
+            return
         left = 112 if self._active_profile is not None else 20
         right = screen.get_width() - 20
         gap = 9
         height = max(42, min(52, screen.get_height() // 11))
+        available = max(0, right - left)
+        show_labels = available >= len(collections) * 112
         x = left
         pointer = pygame.mouse.get_pos()
-        for collection in self._catalogue.collections:
+        pointer_active = pygame.mouse.get_focused()
+        for collection in collections:
             label_text = collection.title or collection.collection_id
             font = self._font(max(18, min(22, height // 2)), pygame)
             label = font.render(label_text, True, theme.text)
-            width = min(170, max(72, label.get_width() + 28))
+            icon_size = max(26, height - 14)
+            if show_labels:
+                width = min(174, max(88, label.get_width() + icon_size + 32))
+            else:
+                width = height
             if x + width > right:
                 break
             rect = pygame.Rect(x, 18, width, height)
-            selected = collection.collection_id == self._category_id
-            hovered = rect.collidepoint(pointer) and pygame.mouse.get_focused()
-            fill = (
-                theme.panel
-                if not selected
-                else _mix(theme.panel, theme.accent, 0.16)
-            )
+            hovered = pointer_active and rect.collidepoint(pointer)
             outline = (
-                theme.accent
-                if selected or hovered
-                else _mix(theme.text, theme.panel, 0.72)
+                theme.accent if hovered else _mix(theme.text, theme.panel, 0.72)
             )
-            pygame.draw.rect(screen, fill, rect, border_radius=height // 2)
+            pygame.draw.rect(screen, theme.panel, rect, border_radius=height // 2)
             pygame.draw.rect(
                 screen,
                 outline,
                 rect,
-                width=4 if selected else 2,
+                width=3 if hovered else 2,
                 border_radius=height // 2,
             )
-            screen.blit(label, label.get_rect(center=rect.center))
+            category_icon = self._load_icon(
+                collection.icon_id or "backpack", icon_size, pygame
+            )
+            category_icon = make_shadowed_icon(
+                category_icon,
+                pygame,
+                shadow_alpha=40,
+                shadow_offset=2,
+            )
+            if show_labels:
+                icon_center = (rect.left + 12 + icon_size // 2, rect.centery)
+                screen.blit(
+                    category_icon,
+                    category_icon.get_rect(center=icon_center),
+                )
+                label_rect = label.get_rect(
+                    midleft=(rect.left + 20 + icon_size, rect.centery)
+                )
+                screen.blit(label, label_rect)
+            else:
+                screen.blit(
+                    category_icon,
+                    category_icon.get_rect(center=rect.center),
+                )
             self._targets.append(
                 HitTarget("activity_category", collection.collection_id, rect)
             )
             x += width + gap
+
+    def _draw_category_header(self, screen: Any, theme: Any, pygame: Any) -> None:
+        """Draw persistent in-category identity and a local return-to-All control."""
+
+        collection = self._catalogue.collection(self._category_id)
+        left = 112 if self._active_profile is not None else 20
+        height = max(46, min(58, screen.get_height() // 10))
+        back_rect = pygame.Rect(left, 16, height, height)
+        hovered = back_rect.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_focused()
+        back_state = InteractionVisualState(hovered=hovered)
+        draw_raised_panel(
+            screen,
+            back_rect,
+            pygame,
+            fill=theme.panel,
+            outline=theme.accent if hovered else _mix(theme.text, theme.panel, 0.72),
+            state=back_state,
+            style=self._DEPTH,
+            cached_shadow=self._shadow_for(back_rect.size, pygame),
+        )
+        arrow_inset = max(12, height // 4)
+        arrow_x = back_rect.left + arrow_inset
+        arrow_tip_x = back_rect.left + height // 3
+        arrow_right = back_rect.right - arrow_inset
+        pygame.draw.line(
+            screen,
+            theme.text,
+            (arrow_tip_x, back_rect.centery),
+            (arrow_right, back_rect.centery),
+            width=max(3, height // 12),
+        )
+        pygame.draw.lines(
+            screen,
+            theme.text,
+            False,
+            (
+                (arrow_x + height // 8, back_rect.centery - height // 6),
+                (arrow_tip_x, back_rect.centery),
+                (arrow_x + height // 8, back_rect.centery + height // 6),
+            ),
+            width=max(3, height // 12),
+        )
+        self._targets.append(
+            HitTarget("activity_category_back", ALL_ACTIVITIES_ID, back_rect)
+        )
+
+        icon_size = max(38, height - 2)
+        category_icon = self._load_icon(
+            collection.icon_id or "backpack", icon_size, pygame
+        )
+        category_icon = make_shadowed_icon(
+            category_icon,
+            pygame,
+            shadow_alpha=48,
+            shadow_offset=max(2, icon_size // 24),
+        )
+        icon_center = (back_rect.right + 14 + icon_size // 2, back_rect.centery)
+        screen.blit(category_icon, category_icon.get_rect(center=icon_center))
+
+        label_text = collection.title or collection.collection_id
+        label = self._font(max(22, min(30, height // 2)), pygame).render(
+            label_text, True, theme.text
+        )
+        screen.blit(
+            label,
+            label.get_rect(midleft=(icon_center[0] + icon_size // 2 + 12, back_rect.centery)),
+        )
 
     def _draw_scroll_controls(
         self,
@@ -538,35 +646,65 @@ class GreiaLauncherPresentation(LauncherApplication):
             style=self._DEPTH,
             cached_shadow=shadow,
         )
-        icon_size = max(58, int(tile.width * 0.54))
+
+        # Reserve a real label band instead of treating the Activity name as an
+        # incidental caption. This keeps names legible across icon aspect ratios
+        # and makes every Activity identifiable even when its artwork is novel.
+        label_height = max(32, min(48, int(tile.height * 0.24)))
+        label_rect = pygame.Rect(
+            tile.left + 8,
+            tile.bottom - label_height - 7,
+            tile.width - 16,
+            label_height,
+        )
+        pygame.draw.rect(
+            screen,
+            _mix(theme.panel, theme.accent, 0.07),
+            label_rect,
+            border_radius=max(12, label_height // 3),
+        )
+        icon_room = max(54, label_rect.top - tile.top - 20)
+        icon_size = max(52, min(int(tile.width * 0.54), icon_room))
         icon = self._activity_icon(activity, icon_size, pygame)
+        icon_center_y = tile.top + max(12, (label_rect.top - tile.top) // 2)
         screen.blit(
             icon,
-            icon.get_rect(center=(tile.centerx, tile.centery - tile.height * 0.10)),
+            icon.get_rect(center=(tile.centerx, icon_center_y)),
         )
-        title = self._font(max(18, min(25, tile.height // 8)), pygame).render(
-            _activity_title(activity), True, theme.text
+        title = self._render_activity_label(
+            _activity_title(activity),
+            max_width=label_rect.width - 14,
+            max_height=label_rect.height - 8,
+            pygame=pygame,
+            color=theme.text,
+            preferred_size=max(18, min(25, tile.height // 8)),
         )
-        if title.get_width() > tile.width - 18:
-            target_width = tile.width - 18
-            title = pygame.transform.smoothscale(
-                title,
-                (
-                    target_width,
-                    max(
-                        1,
-                        round(
-                            title.get_height()
-                            * target_width
-                            / title.get_width()
-                        ),
-                    ),
-                ),
-            )
-        screen.blit(
-            title,
-            title.get_rect(center=(tile.centerx, tile.bottom - tile.height * 0.12)),
-        )
+        screen.blit(title, title.get_rect(center=label_rect.center))
+
+    def _render_activity_label(
+        self,
+        text: str,
+        *,
+        max_width: int,
+        max_height: int,
+        pygame: Any,
+        color: tuple[int, int, int],
+        preferred_size: int,
+    ) -> Any:
+        """Fit one Activity name without geometrically distorting glyphs."""
+
+        for size in range(preferred_size, 15, -1):
+            rendered = self._font(size, pygame).render(text, True, color)
+            if rendered.get_width() <= max_width and rendered.get_height() <= max_height:
+                return rendered
+        shortened = text.strip()
+        font = self._font(16, pygame)
+        while len(shortened) > 3:
+            shortened = shortened[:-2].rstrip()
+            rendered = font.render(shortened + "…", True, color)
+            if rendered.get_width() <= max_width:
+                return rendered
+        return font.render(shortened or "Activity", True, color)
 
     def _activity_icon(
         self, activity: ActivityManifest, size: int, pygame: Any
