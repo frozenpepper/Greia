@@ -1,6 +1,10 @@
 #!/bin/sh
 set -eu
-install -d -m 0750 -o greiapanel -g greiapanel /var/lib/greia-os
+# The state-root itself is traversal-only shared infrastructure. Sensitive
+# Parent state remains protected by the permissions of its child directories
+# and files; 0755 here is required so greiakid can reach the read-only
+# parent-installed Activity source without joining the Parent service group.
+install -d -m 0755 -o greiapanel -g greiapanel /var/lib/greia-os
 install -d -m 0750 -o greiakid -g greiakid /var/lib/greia-kid
 install -d -m 2770 -o greiakid -g pipprofiles /var/lib/greia-profiles
 install -d -m 2750 -o greiapanel -g pipsettings /var/lib/greia-system-settings
