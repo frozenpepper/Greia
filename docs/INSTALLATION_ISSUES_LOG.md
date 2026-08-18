@@ -132,9 +132,10 @@ personalization removes host keys so cloned machines do not share SSH identity.
   `greiaadmin`, root/password SSH disabled, with per-machine host keys generated
   on the actual device.
 
-The stale builder convenience branch no longer matches that architecture.
+A package/profile flag that installs developer prerequisites is not authority to
+mint credentials or enable SSH.
 
-**Current fix / invariant:**
+**Final source fix / invariant:**
 
 - both target and live installer overlays contain
   `00-greia-security-floor.conf`;
@@ -143,17 +144,27 @@ The stale builder convenience branch no longer matches that architecture.
 - root login is disabled;
 - historical `root` and `greia` bootstrap identities are explicitly denied;
 - target first boot locks any historical bootstrap passwords;
-- secure developer provisioning continues to use `greiaadmin` authorized keys.
+- **the canonical target builder no longer contains any known-password/root-SSH
+  developer branch** and always emits a closed SSH configuration;
+- **the canonical live-installer builder likewise never creates a password or
+  enables SSH**, including for a developer profile;
+- target developer reachability is an explicit post-build step through
+  `build/build-developer-image.sh` → `tools/provision_developer_image.py`, which
+  generates an Ed25519 operator key and installs only the public key for
+  `greiaadmin` before enabling SSH;
+- live-installer remote control is an explicit
+  `tools/provision_developer_installer.py` operation requiring an owner-provided
+  public key; root/password SSH remains disabled.
 
-Because the security-floor drop-in sorts before profile convenience drop-ins,
-a raw/interrupted build cannot re-enable password/root remote access by later
-configuration.
+`tests/test_installation_hardware_regressions.py` now forbids
+`PasswordAuthentication yes`, `PermitRootLogin yes`, the historical password
+hash, `chpasswd -e`, and related bootstrap artifacts in either canonical
+builder, while also asserting that the explicit developer path uses key
+provisioning.
 
-**Remaining cleanup:** remove the obsolete password-writing branches from the
-large builders themselves. They are now non-authoritative dead code, but should
-not remain indefinitely. Do this with a controlled builder/source test because
-the supported developer path is the separate key-only provisioner and must not
-be accidentally removed with the obsolete shortcut.
+**General lesson:** a base builder must fail closed even if a later developer
+provisioning step is interrupted. Development convenience belongs in an
+explicit privileged provisioning stage, not in the reproducible base image.
 
 ---
 
@@ -331,6 +342,7 @@ For the complete cross-cutting review and remaining risks, see
 
 Subsequent 2026-08-18 review commits persist the missing Xorg/runtime/input
 build fixes, make live/target storage-module inclusion target-kernel-aware,
-add hardware-independent regression locks, add the SSH security floor, and
-introduce the richer launcher/Activity-package foundation. The repository
-history is authoritative for the exact commit IDs of that follow-up tranche.
+remove password/root SSH bootstrap behavior from both canonical builders, add
+hardware-independent regression locks, and introduce the richer
+launcher/Activity-package foundation. The repository history is authoritative
+for the exact commit IDs of that follow-up tranche.
