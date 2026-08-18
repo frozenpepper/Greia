@@ -1,7 +1,6 @@
-# Greia installer images are built in chroots/VMs that cannot probe the target
-# computer. Keep these generic boot-critical storage modules explicit so an
-# installed system can find its root disk even when the build host used a
-# different controller stack.
-ahci
-libata
-sd_mod
+# Greia images are built away from their eventual hardware, so boot-critical
+# target drivers must never depend on build-host probing. Keep MODULES=most in
+# conf.d/greia-hardware and let the greia-storage-modules hook conditionally add
+# the broad x86 SATA/AHCI floor only when the TARGET kernel actually provides
+# those modules. Future architecture profiles must extend that target-kernel /
+# compatibility policy rather than hardcoding foreign modules in this shared file.
