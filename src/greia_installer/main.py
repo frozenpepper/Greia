@@ -80,10 +80,7 @@ class DemoInstallationEngine:
         for fraction, stage, detail in stages:
             callback(InstallProgress(fraction, stage, detail))
             time.sleep(0.45)
-        return InstallResult(
-            recovery_user="pip-recovery",
-            recovery_code="DEMO2345DEMO6789DEMO",
-        )
+        return InstallResult()
 
 
 class InstallerApplication:
@@ -826,38 +823,28 @@ class InstallerApplication:
                 min(125, int(height * 0.22)),
                 (width // 2, main.top + 150),
             )
-            result = self.state.result
             self._center_text(
                 screen,
-                "Save this parent recovery code",
+                "Greia is installed and ready.",
                 font,
                 text,
                 main.top + 245,
             )
-            recovery_code = (
-                result.grouped_recovery_code
-                if result is not None
-                else "CODE UNAVAILABLE"
-            )
-            code_font = self._typography.font(FontRole.DISPLAY, max(33, height // 15))
             self._center_text(
-                screen, recovery_code, code_font, danger, main.top + 305
+                screen,
+                "Your Parent login is:  greia  /  greia",
+                font,
+                accent,
+                main.top + 305,
             )
             self._center_text(
                 screen,
-                "Photograph or write it down.",
+                "You can change it in Greia Parents after first boot.",
                 small_font,
                 text,
                 main.top + 350,
             )
-            self._center_text(
-                screen,
-                "When asked, type only the letters and numbers — not the spaces.",
-                small_font,
-                text,
-                main.top + 382,
-            )
-            message = "Close the demo" if self.demo else "I saved it — turn off"
+            message = "Close the demo" if self.demo else "I'm ready — turn off"
             self._button(
                 screen,
                 pygame,

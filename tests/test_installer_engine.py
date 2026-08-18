@@ -301,12 +301,10 @@ class InstallerEngineTests(unittest.TestCase):
                     root, "12345678-1234-5678-9abc-def012345678", Path("/dev/sda1")
                 )
 
-    def test_install_result_groups_recovery_code_for_parent_display(self) -> None:
-        result = InstallResult(
-            recovery_user="greia-recovery",
-            recovery_code="ABCDEFGHJKLMNPQRSTUV",
-        )
-        self.assertEqual(result.grouped_recovery_code, "ABCD EFGH JKLM NPQR STUV")
+    def test_install_result_reports_simple_parent_login(self) -> None:
+        result = InstallResult()
+        self.assertEqual(result.parent_username, "greia")
+        self.assertEqual(result.parent_password, "greia")
 
     def test_install_record_hashes_device_identity_instead_of_storing_serial(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

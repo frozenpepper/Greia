@@ -72,15 +72,16 @@ class InstallProgress:
 
 @dataclass(frozen=True, slots=True)
 class InstallResult:
-    recovery_user: str
-    recovery_code: str
+    """Completion facts for the installed system.
 
-    @property
-    def grouped_recovery_code(self) -> str:
-        return " ".join(
-            self.recovery_code[index : index + 4]
-            for index in range(0, len(self.recovery_code), 4)
-        )
+    The end-install screen no longer asks the parent to preserve a generated
+    random credential. The initial Parent/admin identity is the simple,
+    predictable ``greia`` / ``greia`` pair defined by the active owner policy and
+    can be changed from Greia Parents after first boot.
+    """
+
+    parent_username: str = "greia"
+    parent_password: str = "greia"
 
 
 @dataclass(frozen=True, slots=True)
@@ -154,7 +155,6 @@ class InstallationEngine:
         target_mount = Path(tempfile.mkdtemp(prefix="pip-install-target."))
         mounted: list[Path] = []
         partition = partition_one_path(request.target.path)
-        recovery_credential: GrubRecoveryCredential | None = None
         try:
             report(InstallProgress(0.03, "prepare", "Checking the selected disk"))
             self._verify_target(request.target)
@@ -245,7 +245,7 @@ class InstallationEngine:
                     mounted=mounted,
                 )
 
-            recovery_credential = self._personalize_target(target_mount)
+            self._personalize_target(target_mount)
 
             report(InstallProgress(0.78, "bootloader", "Making the disk bootable"))
             self.runner.run(["chroot", str(target_mount), "update-initramfs", "-u", "-k", "all"])
@@ -302,12 +302,7 @@ class InstallationEngine:
                 pass
             if cleanup_error is not None and not _exception_is_active():
                 raise cleanup_error
-        if recovery_credential is None:
-            raise InstallationError("installation completed without a parent recovery credential")
-        return InstallResult(
-            recovery_user=recovery_credential.user,
-            recovery_code=recovery_credential.code,
-        )
+        return InstallResult()
 
     def _prepare_hardware_support(
         self,

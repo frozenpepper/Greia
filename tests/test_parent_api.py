@@ -88,6 +88,7 @@ class ParentApiTests(unittest.TestCase):
         self.assertFalse(capabilities["settings.audio"])
         self.assertFalse(capabilities["network.manage"])
         self.assertFalse(capabilities["maintenance.ssh"])
+        self.assertTrue(capabilities["parent.password"])
         paths = {resource["path"] for resource in payload["resources"]}
         self.assertIn(f"{API_BASE}/activities/install", paths)
 
@@ -144,6 +145,26 @@ class ParentApiTests(unittest.TestCase):
             )
             with self.assertRaises(PermissionError):
                 app.bootstrap_device("wrong", "Intruder")
+
+    def test_parent_password_change_requires_current_password_and_never_exposes_secret(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            app = ParentApiApplication(
+                PROJECT_ROOT,
+                root / "parent",
+                profiles_dir=root / "profiles",
+                hardware_settings_dir=root / "hardware",
+                hardware_status_path=root / "hardware-status.json",
+                active_profile_status_path=root / "active-profile.json",
+            )
+            payload = app.parent_password_payload()
+            self.assertEqual(payload["username"], "greia")
+            self.assertNotIn("password", payload)
+            with self.assertRaises(Exception):
+                app.change_parent_password("wrong", "newpass1")
+            app.change_parent_password("greia", "newpass1")
+            self.assertTrue(app.main_credential.verify("newpass1"))
+            self.assertFalse(app.main_credential.verify("greia"))
 
     def test_activity_api_payload_hides_filesystem_and_runtime_entrypoint_details(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

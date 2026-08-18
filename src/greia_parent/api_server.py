@@ -25,6 +25,7 @@ from greia_parent.server import (
 from greia_parent.static_client import ParentStaticClient, StaticClientAsset
 from greia_parent.web_client import render_parent_web_app
 from greia_platform.hardware import HardwareSettingsError
+from greia_platform.main_credential import MainCredentialError, MainCredentialStore
 from greia_platform.profiles import ProfileError
 
 
@@ -39,6 +40,8 @@ class ParentApiApplication(ParentStatusApplication):
     def __init__(self, *args: object, **kwargs: object):
         super().__init__(*args, **kwargs)
         self.device_credentials = ParentDeviceCredentialStore(self.state_dir)
+        self.main_credential = MainCredentialStore(self.state_dir / "main-credential.json")
+        self.main_credential.ensure_initialized()
 
     def authorized(
         self,
@@ -68,6 +71,18 @@ class ParentApiApplication(ParentStatusApplication):
 
     def devices_payload(self) -> list[dict[str, str]]:
         return [device.public_dict() for device in self.device_credentials.list_devices()]
+
+    def parent_password_payload(self) -> dict[str, object]:
+        """Public parent-password facts; never returns stored material."""
+        return {
+            "configured": True,
+            "username": "greia",
+            "changeable": True,
+        }
+
+    def change_parent_password(self, current: str, new: str) -> dict[str, object]:
+        self.main_credential.change(current, new)
+        return {"changed": True}
 
     def activities_payload(self) -> list[dict[str, object]]:
         return [
@@ -194,6 +209,11 @@ class ParentApiRequestHandler(ParentRequestHandler):
                 return
             self._send_json(200, self.app.devices_payload())
             return
+        if parsed.path == f"{API_BASE}/parent-password":
+            if not self._require_api_authorization(query):
+                return
+            self._send_json(200, self.app.parent_password_payload())
+            return
         if parsed.path.startswith(f"{API_BASE}/"):
             self._send_api_error(404, "not_found", "Not found")
             return
@@ -252,6 +272,20 @@ class ParentApiRequestHandler(ParentRequestHandler):
     def do_PUT(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
         query = parse_qs(parsed.query)
+        if parsed.path == f"{API_BASE}/parent-password":
+            if not self._require_api_authorization(query):
+                return
+            try:
+                body = self._read_json_object()
+                payload = self.app.change_parent_password(
+                    self._json_text(body, "current_password"),
+                    self._json_text(body, "new_password"),
+                )
+            except (MainCredentialError, ValueError) as exc:
+                self._send_api_error(400, "parent_password_rejected", str(exc))
+                return
+            self._send_json(200, payload)
+            return
         if parsed.path != f"{API_BASE}/settings/hardware":
             self._send_api_error(404, "not_found", "Not found")
             return

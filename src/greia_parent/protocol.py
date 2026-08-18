@@ -42,6 +42,11 @@ RESOURCES = (
     ),
     ParentApiResource("progress", f"{API_BASE}/progress", ("GET",)),
     ParentApiResource("paired_devices", f"{API_BASE}/devices", ("GET",)),
+    ParentApiResource(
+        "parent_password",
+        f"{API_BASE}/parent-password",
+        ("GET", "PUT"),
+    ),
 )
 
 CAPABILITIES = {
@@ -60,6 +65,10 @@ CAPABILITIES = {
     "settings.audio": False,
     "network.manage": False,
     "maintenance.ssh": False,
+    # The main Parent password is a typed Greia-owned credential. It is
+    # manageable from the HTML client whenever the Parent API is reachable; it
+    # must never be confused with per-device bearer credentials.
+    "parent.password": True,
 }
 
 

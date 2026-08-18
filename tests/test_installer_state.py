@@ -91,10 +91,10 @@ class InstallerStateTests(unittest.TestCase):
         app._back()
         self.assertEqual(app.state.page, InstallerPage.CONFIRM)
 
-    def test_success_event_preserves_recovery_code_for_completion_page(self) -> None:
+    def test_success_event_preserves_result_for_completion_page(self) -> None:
         app = self.make_app()
         app._worker = threading.Thread(target=lambda: None)
-        result = InstallResult("pip-recovery", "ABCDEFGHJKLMNPQRSTUV")
+        result = InstallResult()
         app._events.put(result)
         app._drain_worker_events()
         self.assertEqual(app.state.page, InstallerPage.COMPLETE)
