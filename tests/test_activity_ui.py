@@ -4,6 +4,7 @@ import unittest
 
 from greia_platform import activity_ui, pygame_ui
 from greia_platform.activity_ui import ChildUiMetrics, mix
+from greia_platform.system_chrome import ActivitySystemChromeLayout
 
 
 class ChildUiMetricsTests(unittest.TestCase):
@@ -35,6 +36,44 @@ class ChildUiMetricsTests(unittest.TestCase):
         self.assertGreaterEqual(first.width, 56)
         self.assertGreater(second.left, first.right)
         self.assertEqual(right.right, 1024 - metrics.margin)
+
+    def test_activity_geometry_stays_outside_platform_system_chrome(self) -> None:
+        for width, height in (
+            (640, 480),
+            (800, 600),
+            (1024, 600),
+            (1366, 768),
+            (1920, 1080),
+            (720, 1280),
+            (3840, 2160),
+        ):
+            with self.subTest(size=(width, height)):
+                metrics = ChildUiMetrics.for_size(width, height)
+                chrome = ActivitySystemChromeLayout.for_surface(width, height)
+                protected = chrome.protected_region
+                safe = metrics.activity_safe_rect()
+                left = metrics.activity_toolbar_button(0, side="left")
+                right = metrics.activity_toolbar_button(0, side="right")
+                content = metrics.activity_content_rect()
+
+                for rect in (safe, left, right, content):
+                    self.assertGreaterEqual(rect.left, 0)
+                    self.assertGreaterEqual(rect.top, 0)
+                    self.assertLessEqual(rect.right, width)
+                    self.assertLessEqual(rect.bottom, height)
+                for rect in (left, right, content):
+                    overlaps = not (
+                        rect.right <= protected.x
+                        or protected.right <= rect.left
+                        or rect.bottom <= protected.y
+                        or protected.bottom <= rect.top
+                    )
+                    self.assertFalse(overlaps)
+
+    def test_activity_content_rejects_impossible_bottom_reserve(self) -> None:
+        metrics = ChildUiMetrics.for_size(640, 480)
+        with self.assertRaises(ValueError):
+            metrics.activity_content_rect(bottom_reserve=10_000)
 
     def test_small_surface_scale_has_a_readability_floor(self) -> None:
         metrics = ChildUiMetrics.for_size(512, 300)
