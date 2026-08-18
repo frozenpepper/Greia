@@ -5,7 +5,7 @@
 **Repository:** `frozenpepper/Greia` (private)  
 **Canonical/default/development branch:** `main`  
 **Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**  
-**Latest reviewed implementation baseline before this handover update:** `04f3ae4734133d3f948aff8639c6d5af6925d6ec`  
+**Latest reviewed implementation baseline before this handover update:** `7bb7119c69881910bca430a2a7ec403da5c0456d`  
 **External Parent HTML revision pinned by Greia:** `frozenpepper/Greia-Parent-App-Html@6ee02840e2fdfdbe68a6fa5869a8f085b50ae37f`
 
 ## Branch and execution policy
@@ -319,7 +319,7 @@ src/greia_platform/activity_packages.py
 
 It accepts a bounded ZIP-based `.greiaactivity` whose `activity.toml` is at archive root and performs:
 
-1. one serialized install transaction per long-lived package-service authority;
+1. process-wide transaction serialization through a private `0600` `.install.lock` `flock` in the authoritative package store, plus an in-process lock to avoid redundant local contenders;
 2. request/archive size and entry-count bounds;
 3. traversal/absolute/backslash/hidden/portable-duplicate path rejection;
 4. encryption/symlink/special-file/compression-bomb rejection;
@@ -332,6 +332,8 @@ It accepts a bounded ZIP-based `.greiaactivity` whose `activity.toml` is at arch
 11. audit receipt preparation before activation;
 12. atomic active-directory rename as the install commit point.
 
+The lock target is required to be a regular file, is forced to mode `0600`, and is opened without following symlinks where `O_NOFOLLOW` is available. Separate `ActivityPackageService` processes sharing the same local package store therefore cannot race receipt/activation state.
+
 Existing Activity IDs are rejected. Updates, removal, rollback selection, signatures/revocation, curated-store policy and transactional save migration are still open R10 work.
 
 ## Adversarial corrections made during implementation
@@ -341,9 +343,9 @@ Several cross-component problems were found after the first package implementati
 - `/var/lib/greia-os` was previously `0750`, so `greiakid` could be unable to traverse to the Parent-installed read-only Activity source. It is now traversal-only `0755`; sensitive descendants retain their own private modes. `StateDirectoryMode=0755` migrates an existing Parent state root.
 - a hot-installed Activity could initially have appeared in the catalogue without rebuilding runtime/permission/history/supervisor authority. `GreiaLauncherPresentation` now validates the new registry set and rebuilds runtime services/supervisor **before** publishing the new catalogue; failure preserves the last known-good pair.
 - a receipt-write failure could otherwise have made the API report failure after executable code became visible. Receipt preparation now precedes activation, and interrupted immutable versions are digest-verified before retry reuse.
-- overlapping install requests could race receipt/activation bookkeeping if the Parent HTTP server became concurrent. `ActivityPackageService` now serializes installs within its long-lived service instance. The current Parent API owns exactly one such instance and is presently single-threaded, so this is defense-in-depth for future concurrency.
+- overlapping package-service processes could otherwise race receipt/activation bookkeeping. The store now owns the transaction lock, not merely one HTTP/service object.
 
-The in-process package lock is intentionally not presented as final R10 multi-process locking. If multiple package-manager processes become possible later, the transaction boundary must gain explicit process/filesystem serialization.
+Any future move to a non-local/distributed package store would need a storage-appropriate equivalent rather than assuming local `flock` semantics.
 
 ---
 
@@ -457,7 +459,7 @@ Do not convert source structure into a hardware certification claim.
 - Parent pairing/encrypted transport remains provisional/open.
 - General release `activities.install` stays disabled until transport/security and R10 lifecycle policy justify enablement.
 - R10 update/remove/rollback/signature/revocation/save-migration semantics are still open.
-- If R10 later permits several package-manager processes, replace the current in-process install serialization with a process/filesystem transaction lock.
+- A future non-local/distributed package store would need transaction serialization appropriate to that store rather than local `flock`.
 - Category display/localization should become platform-owned vocabulary rather than humanized IDs indefinitely.
 - Controller/touch/category interaction, local Back mapping and richer launcher effects need physical acceptance at the Acer floor.
 - Activity-name and category-header typography must be revisited when the selected Nunito Sans font is actually integrated; current source still uses the existing font loader.
@@ -471,12 +473,13 @@ Do not convert source structure into a hardware certification claim.
 39d3c46b345e6a5b412fb84b89712e1e6060792  launcher: explicit Activity names + category hierarchy
 48f15ae95349243023fb8798745eac4a70c184ca  launcher: stable semantic category icons
 43687167fc7b51720499ba59cfef6783d1a2b35c  platform: bounded package icon validation
-3a7d71776d2c092b80bd9411e49c580c858de3d7  packages: serialize install commit transactions
 33dbe71a4982723e8659f6546bb91deab78b0dcc  build: remove password SSH bootstrap from base images
 eeca76c0b87e617785d4b53bae7b0bd337031091  build: remove password SSH bootstrap from live installer
 8ad1153df01b108a7f15eef4f533a54aa8d0677c  tests: forbid password bootstrap in canonical builders
-735b59417b87b08cbe55f827069848528cebff44  docs: close builder SSH debt and package race finding
-04f3ae4734133d3f948aff8639c6d5af6925d6ec  docs: define serialized Activity install transaction
+40eca5312577eb7d08e8ca485938d6c45984c370  packages: process-wide install serialization
+7fe0a3a41926a271e47598be4bbc92044b37a8ae  tests: prove package lock spans service instances
+d392cfb2065eb123b5bc1c1555e364c7d5fd89f8  docs: process-wide Activity install lock
+7bb7119c69881910bca430a2a7ec403da5c0456d  review: process-wide package install serialization
 ```
 
 Earlier commits in the same tranche contain the Xorg/runtime/input reconciliation, target-kernel-aware initramfs hooks, Parent package API/client, trust-source composition and launcher presentation foundation. Repository history is authoritative for their exact ordering.
