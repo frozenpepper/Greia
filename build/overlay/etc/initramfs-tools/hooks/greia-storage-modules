@@ -1,0 +1,23 @@
+#!/bin/sh
+set -eu
+
+PREREQ=""
+prereqs() {
+    echo "$PREREQ"
+}
+case "${1:-}" in
+    prereqs)
+        prereqs
+        exit 0
+        ;;
+esac
+
+. /usr/share/initramfs-tools/hook-functions
+
+# Greia images are assembled away from their eventual hardware. Never let
+# initramfs-tools host probing decide whether the generic x86 root-disk stack is
+# present: explicitly add the storage modules required to discover SATA/AHCI
+# disks on legacy and modern x86 targets.
+for module in ahci libata sd_mod; do
+    manual_add_modules "$module"
+done
