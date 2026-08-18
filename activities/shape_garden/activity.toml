@@ -6,6 +6,9 @@ version = "0.1.0"
 icon = "garden"
 languages = ["*"]
 
+[presentation]
+categories = ["create", "learn"]
+
 [education]
 categories = ["creativity", "geometry", "fine_motor"]
 difficulty = 1
