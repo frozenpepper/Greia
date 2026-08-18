@@ -5,7 +5,7 @@
 **Repository:** `frozenpepper/Greia` (private)  
 **Canonical/default/development branch:** `main`  
 **Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**  
-**Source head reviewed immediately before this handover commit:** `0e3eea018fc0299cd7511aa6e3155149cc9974c2`  
+**Source head reviewed immediately before this handover refresh:** `d083775302bb8f875738a5962d33e9937c32434d`  
 **External Parent HTML revision currently pinned by Greia:** `frozenpepper/Greia-Parent-App-Html@e30bcbcab393354b8ffb63d5829c08711d8023bd`
 
 This file owns the **current** implementation/evidence boundary. Historical hardware detail remains in the dated reviews and installation issue log; exact APIs/limits remain source-owned.
@@ -30,9 +30,8 @@ focused installation/UI/package/Parent/credential suites: 114 PASS
 Parent-App npm test at pinned e30bcbc: 10 PASS
 ```
 
-A follow-up 2026-08-18 local-agent run on the merged current head
-(`edda4e6`) re-executed the complete source gate **after** the
-responsive/layout/localization/My-Greia tranche:
+A follow-up 2026-08-18 owner-controlled local-agent run at exact source boundary
+`edda4e687d9d73fe69cef40cbbbcea7a7ff0db7d` re-executed the complete source gate **after** the main responsive/layout/localization/My-Greia tranche:
 
 ```text
 make verify: 679 PASS
@@ -46,12 +45,15 @@ Parent-App npm test at pinned e30bcbc: 10 PASS
 ```
 
 The 663-PASS result is historical evidence for the earlier source boundary. The
-679-PASS result is the current executed evidence at `edda4e6` and reflects the
-merged responsive/layout/localization/My-Greia tranche.
+679-PASS result is executed evidence for **exactly `edda4e6`**, not for later
+commits. After that run, `3c0ee1517c6ba5ee8c1cbbde24f81bc39260e5b3`
+changed My Greia safe-area source and `0e3eea018fc0299cd7511aa6e3155149cc9974c2`
+added its regression, followed by documentation-only handover commits. Therefore
+the final My Greia safe-area source is **committed but not yet covered by a fresh
+owner-controlled full PASS**. Do not describe 679 PASS as current-head evidence.
 
-A rebuilt installer-image and fresh physical Acer acceptance remain the next
-required evidence; no rebuilt-image or fresh physical Acer PASS is claimed in
-this handover.
+A rebuilt installer-image and fresh physical Acer acceptance remain required;
+no rebuilt-image or fresh physical Acer PASS is claimed in this handover.
 
 ---
 
@@ -209,7 +211,7 @@ Required behavior:
 - runtime resize invalidates size-dependent geometry/caches;
 - generated/random viewport tests supplement the representative resolution matrix.
 
-The responsive source/tests added after the last executed 663-PASS boundary are currently **UNEXECUTED** until the owner-controlled local agent reruns them.
+The responsive/layout/localization/My-Greia source present at `edda4e6` was exercised by the 679-PASS run. The later My Greia safe-area source commit `3c0ee15` and its regression `0e3eea0` remain unexecuted at the current evidence boundary.
 
 ---
 
@@ -365,7 +367,7 @@ Physical eject/removal while the wallpaper page is open is still required accept
 
 ## Current My Greia evidence
 
-All My Greia/UI-preference/theme-snapshot/child-shell source and tests in this tranche are **committed but not executed by this assistant/connector session**. They require the owner-controlled focused gate and `make verify` before PASS may be recorded.
+The My Greia/UI-preference/theme-snapshot/child-shell source present at `edda4e6` was executed in the 679-PASS full source gate and the 131-PASS focused UI/platform gate. The later safe-area implementation `3c0ee15` and its regression `0e3eea0` are committed but **not yet re-executed** in an owner-controlled run. Physical 1024x600 acceptance is also still open.
 
 ---
 
@@ -454,7 +456,7 @@ After current-source tests pass:
 # 11. Remaining blockers / deliberately incomplete work
 
 - **R7 remains the primary blocking platform phase.** Xorg/xinit is provisional compatibility, not final selection.
-- Current responsive/Activity-canvas/localization/My-Greia source needs fresh owner-controlled execution.
+- The My Greia safe-area source/test commits after `edda4e6` need fresh owner-controlled execution; do not promote the 679-PASS result across that source change.
 - Full Activity language integration is not complete: profile-language persistence, localized catalogue title resolution, dynamic flag rendering/assets and platform pre-launch chooser still need end-to-end wiring/testing.
 - Parent secure pairing/encrypted transport remains open.
 - General release Activity upload remains disabled until Parent transport/security and R10 lifecycle policy justify it.
