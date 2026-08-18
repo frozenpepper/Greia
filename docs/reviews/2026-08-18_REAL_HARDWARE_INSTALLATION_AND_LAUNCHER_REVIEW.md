@@ -23,6 +23,8 @@ This review found the most dangerous regression in item 8: the issue log said th
 
 A final adversarial pass also caught a subtler portability mistake in the remediation itself: the first storage-driver fix put x86-only module names in shared `initramfs-tools/modules` files. That would have solved the Acer while potentially creating a future ARM build failure. The final source keeps the shared module files architecture-neutral and makes the executable hook consult the **target kernel** before force-adding the broad x86 SATA/AHCI floor.
 
+The same pass removed the obsolete known-password/root-SSH bootstrap from both canonical builders instead of relying forever on an SSH drop-in to neutralize dead insecure code. It also serialized the current Parent package-install transaction so a future concurrent HTTP server cannot race receipt preparation against Activity activation within one package-service authority.
+
 ## Hardware-derived platform invariants
 
 ### 1. Never derive boot-critical target drivers from the build machine
@@ -88,18 +90,22 @@ Creating a fullscreen SDL window does not guarantee X keyboard focus when there 
 
 ### 10. Development access must fail closed
 
-The review found stale builder branches that still write a known `greia/greia` password and a permissive SSH drop-in for developer profiles, even though the current supported developer provisioning architecture is key-only `greiaadmin` with root/password SSH disabled.
+The review found stale builder branches that wrote a known `greia/greia` password and enabled permissive root/password SSH for developer profiles, even though the supported developer architecture is key-only `greiaadmin`.
 
-Immediate defense-in-depth now guarantees that stale builder text cannot make the resulting machine remotely reachable by those credentials:
+The final source no longer carries that shortcut:
 
 - both installed and live overlays contain `00-greia-security-floor.conf`;
 - password and keyboard-interactive auth are disabled;
 - root login is disabled;
 - authentication requires public key;
 - historical `root` and `greia` remote identities are explicitly denied;
-- target first boot locks the historical local bootstrap passwords.
+- target first boot locks the historical local bootstrap passwords;
+- `build/build-image.sh` always produces a closed SSH configuration and never mints developer credentials;
+- `build/build-installer-image.sh` likewise never creates a password or enables SSH, even for a developer profile;
+- `build/build-developer-image.sh` is the explicit target developer path and delegates key creation/provisioning to `tools/provision_developer_image.py`;
+- live-installer remote operation requires the separate `tools/provision_developer_installer.py` path with an owner-provided public key.
 
-**Follow-up:** remove the obsolete password-writing branches from the large builders themselves. The security floor makes them non-authoritative now, but dead insecure code should still be deleted rather than preserved indefinitely.
+**Rule:** a package-set/profile declaration may install prerequisites but is never credential authority. Base builders fail closed; developer reachability is an explicit key-provisioning operation after the closed base exists.
 
 ## Installation regression locks added
 
@@ -115,6 +121,8 @@ Immediate defense-in-depth now guarantees that stale builder text cannot make th
 - legacy mouse compatibility nodes remain ignored;
 - Bubblewrap retains private `/run` and explicit bind targets without the broken user namespace assumptions;
 - kiosk X input focus handoff remains present;
+- the canonical builders contain no known-password/root-SSH bootstrap and emit closed key-only SSH policy;
+- explicit developer target/live provisioning uses public-key paths rather than a profile-side password shortcut;
 - SSH security floors remain key-only/root-disabled and first boot locks historical bootstrap passwords.
 
 These tests are intentionally hardware-family-neutral. They protect causes, not Acer strings.
@@ -194,7 +202,10 @@ The architecture previously had the correct policy—Parents must not raw-copy A
 5. records source/trust as `PARENT_TRUSTED_UNSIGNED` / `greia-parent-package-service`;
 6. stores one read-only immutable digest-addressed version;
 7. prepares the audit metadata before activation;
-8. atomically renames a validated active tree into the separate Parent Activity source as the commit point.
+8. atomically renames a validated active tree into the separate Parent Activity source as the commit point;
+9. serializes install transactions inside the long-lived package-service authority so overlapping requests cannot race receipt/activation bookkeeping.
+
+The current Parent API owns one long-lived service instance and currently uses a single-threaded `HTTPServer`; the lock is therefore defense-in-depth for future concurrent request handling. It is explicitly **not** a substitute for filesystem/process-wide locking when full R10 eventually supports multi-process package mutation.
 
 Existing Activity IDs are rejected. **Updates, rollback selection, removal, signatures/revocation and curated-store policy are not declared complete by this tranche.**
 
@@ -224,15 +235,15 @@ The launcher rebuilds runtime/permission/history/supervisor authority **before**
 
 ## Remaining risks / deliberately unfinished work
 
-1. **Delete the obsolete password-writing developer branches from the builders.** They are now neutralized by an earlier SSH security floor and first-boot locking, but dead insecure code remains technical debt.
-2. **Run the new Python and Parent Node tests in a real checkout.** This review was performed through the connected GitHub repository and did not invoke repository CI/Actions.
-3. **Rebuild installer and target images and repeat physical boot/install acceptance.** Source contracts are materially stronger, but generated initramfs/systemd/Xorg behavior and the new category/name layout must be proven in the produced artifacts.
-4. **Complete R10 update/removal/signature/rollback semantics** before making Activity installation generally available on release transports.
-5. **Finish secure Parent transport/pairing** before release-enabling executable package upload.
-6. **R7 remains open.** The Xorg policy here is the known-good provisional compatibility contract, not a decision to keep Xorg forever.
-7. **Category display vocabulary/localization** should become platform-owned data rather than relying indefinitely on humanized identifiers.
-8. **Accessibility/input parity:** controller/touch category navigation, local Back mapping and pointer cursor policy should receive physical acceptance, especially on 1024×600 hardware.
-9. **Typography/readability:** Activity label and category-header sizes must be checked with the selected Nunito Sans implementation once the font itself is actually integrated; current source still uses the existing font loader.
+1. **Run the new Python and Parent Node tests in a real checkout.** This review was performed through the connected GitHub repository and did not invoke repository CI/Actions.
+2. **Rebuild installer and target images and repeat physical boot/install acceptance.** Source contracts are materially stronger, but generated initramfs/systemd/Xorg behavior, fail-closed developer provisioning and the new category/name layout must be proven in produced artifacts.
+3. **Complete R10 update/removal/signature/rollback semantics** before making Activity installation generally available on release transports.
+4. **Finish secure Parent transport/pairing** before release-enabling executable package upload.
+5. **R7 remains open.** The Xorg policy here is the known-good provisional compatibility contract, not a decision to keep Xorg forever.
+6. **Category display vocabulary/localization** should become platform-owned data rather than relying indefinitely on humanized identifiers.
+7. **Accessibility/input parity:** controller/touch category navigation, local Back mapping and pointer cursor policy should receive physical acceptance, especially on 1024×600 hardware.
+8. **Typography/readability:** Activity label and category-header sizes must be checked with the selected Nunito Sans implementation once the font itself is actually integrated; current source still uses the existing font loader.
+9. **Future package-manager concurrency:** if R10 ever permits multiple package-manager processes, replace the current in-process serialization with an explicit process/filesystem transaction lock rather than assuming the Parent HTTP process is unique.
 
 ## Review principle to carry forward
 
