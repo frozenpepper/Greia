@@ -49,6 +49,7 @@ Do not use/query/trigger GitHub-hosted Actions without a new explicit owner auth
 - child-facing language cues use canonical flags when language distinction matters, not initials as the primary cue;
 - My Greia is a child-safe visual personalization Activity, not a general system administration panel;
 - ordinary Activities may receive read-only resolved child visual context, but never customization write paths merely to match colors/size;
+- an Activity may publish `READY` only after it has actually presented its first usable child-facing frame; Pygame initialization alone is not readiness;
 - R7 remains open and current Xorg is provisional compatibility, not the permanent architecture;
 - full R10 package lifecycle remains open even though bounded Parent new-install exists.
 
@@ -70,6 +71,7 @@ PYTHONPATH=src python3 -m unittest \
   tests.test_child_shell_visual_context \
   tests.test_my_greia_settings_contract \
   tests.test_my_greia_runtime \
+  tests.test_first_party_activity_readiness \
   tests.test_customization \
   tests.test_activity_ui \
   tests.test_launcher_presentation \
@@ -90,7 +92,18 @@ Then run the other subsystem-specific focused gates from the full protocol and f
 make verify 2>&1 | tee "$SESSION_ROOT/final-make-verify.log"
 ```
 
-The current repository contains source/test changes newer than the last recorded executed 663-PASS baseline. **Do not copy that old PASS count onto the current SHA.**
+### Exact evidence boundary
+
+The last complete owner-controlled source evidence currently recorded is:
+
+```text
+edda4e687d9d73fe69cef40cbbbcea7a7ff0db7d
+make verify: 679 PASS
+focused current-ui-platform gate: 131 PASS
+Parent-App npm test at pinned e30bcbc: 10 PASS
+```
+
+That evidence does **not** cover later source changes, including the final My Greia safe-area implementation/regression and the first-party first-frame readiness corrections. Do not copy the 679-PASS result onto the current SHA. The current checkout requires fresh execution of the focused gate and `make verify` before a new PASS can be recorded.
 
 ## 5. Parent HTML
 
@@ -119,6 +132,7 @@ Physical acceptance must include, at minimum:
 - My Greia colors/wallpaper/compact-normal-large/avatar with two-profile isolation;
 - physical removable-media ejection while My Greia wallpaper browser is open;
 - ordinary Activity visual snapshot present while `GREIA_CUSTOMIZATION_DIR` remains absent;
+- first-party Activities do not publish READY before their first visible frame;
 - Writing/Painting and representative game-like Activity behavior under the shared viewport/size contracts.
 
 ## 7. Evidence discipline
