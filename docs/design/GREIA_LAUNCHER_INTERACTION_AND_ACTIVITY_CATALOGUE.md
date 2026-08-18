@@ -290,7 +290,7 @@ The installer rejects archive traversal, hidden/absolute/backslash paths, portab
 
 The current new-install service uses:
 
-1. one serialized install transaction per long-lived package-service authority;
+1. process-wide serialization through a private `0600` lock file under the package state root (plus an in-process lock to avoid redundant local contenders);
 2. private staging;
 3. full registry/asset validation;
 4. digest-addressed read-only immutable version storage;
@@ -300,7 +300,7 @@ The current new-install service uses:
 
 If receipt preparation fails, no executable Activity becomes visible. An interrupted attempt may leave an immutable version or orphan pre-commit receipt, neither of which is launch-authoritative; retries verify the immutable digest before reuse.
 
-The current Parent API owns one long-lived `ActivityPackageService`, so in-process serialization prevents overlapping requests from racing receipt and activation state even if request handling becomes concurrent later. This is not the final multi-process package-manager lock: if R10 later allows several package-manager processes, the transaction boundary must gain explicit process/filesystem serialization rather than assuming one Parent API process.
+The process-wide lock uses `flock` on `.install.lock` in the authoritative package store, rejects a non-regular lock target, and fixes its mode to `0600`. Therefore two `ActivityPackageService` instances/processes sharing the same local Greia package store cannot race receipt and activation state merely because HTTP/process composition changes later. Any future move to a non-local/distributed package store would require a storage-appropriate equivalent rather than assuming local `flock` semantics.
 
 Existing Activity IDs are deliberately rejected. This tranche does **not** pretend that update, removal, rollback-selection, signature/revocation or curated-store policy is complete.
 
