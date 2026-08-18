@@ -82,6 +82,16 @@ ul{padding-left:1.2rem}.hidden{display:none}
 </section>
 
 <section>
+  <h2>Parent password</h2>
+  <form id="change-password">
+    <label>Current password<input name="current_password" type="password" autocomplete="current-password"></label>
+    <label>New password<input name="new_password" type="password" autocomplete="new-password"></label>
+    <button type="submit">Change Parent password</button>
+  </form>
+  <p class="muted">The main Greia admin login. Stored only as a digest and never returned by the API.</p>
+</section>
+
+<section>
   <h2>Coming through the same Parent API</h2>
   <div id="capabilities"></div>
   <p class="muted">Unavailable controls are not emulated with shell commands. They become available only when Greia exposes the corresponding typed platform service.</p>
@@ -200,6 +210,15 @@ function renderCapabilities(capabilities){
   }
 }
 
+document.getElementById("change-password").addEventListener("submit",async event=>{
+  event.preventDefault(); const form=new FormData(event.currentTarget);
+  try{
+    await request("/parent-password",{method:"PUT",body:JSON.stringify({
+      current_password:form.get("current_password"),new_password:form.get("new_password")
+    })});
+    event.currentTarget.reset(); message.className="status ok"; message.textContent="Parent password changed.";
+  }catch(error){showError(error)}
+});
 document.getElementById("create-profile").addEventListener("submit",async event=>{
   event.preventDefault(); const form=new FormData(event.currentTarget);
   try{
