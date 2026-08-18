@@ -21,6 +21,19 @@ def activity(
     )
 
 
+def png_header(width: int, height: int) -> bytes:
+    # Enough real PNG structure for the platform's dependency-free header
+    # validator: signature + IHDR length/type + dimensions + remaining IHDR bytes.
+    return (
+        b"\x89PNG\r\n\x1a\n"
+        + (13).to_bytes(4, "big")
+        + b"IHDR"
+        + width.to_bytes(4, "big")
+        + height.to_bytes(4, "big")
+        + b"\x08\x06\x00\x00\x00"
+    )
+
+
 class ActivityCatalogueTests(unittest.TestCase):
     def test_launcher_categories_are_separate_from_education_taxonomy(self) -> None:
         paint = activity(
@@ -64,18 +77,32 @@ class ActivityCatalogueTests(unittest.TestCase):
 
 
 class PackageActivityIconTests(unittest.TestCase):
-    def test_activity_can_own_a_png_inside_its_package(self) -> None:
+    def test_activity_can_own_a_bounded_png_inside_its_package(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp).resolve()
             icon = root / "assets" / "icon.png"
             icon.parent.mkdir()
-            icon.write_bytes(b"not-decoded-here")
+            icon.write_bytes(png_header(256, 256))
             manifest = SimpleNamespace(root=root, icon_id="package:assets/icon.png")
             self.assertEqual(package_icon_path(manifest), icon)
 
     def test_catalogue_icon_id_remains_backwards_compatible(self) -> None:
         manifest = SimpleNamespace(root=Path("/does/not/matter"), icon_id="paint")
         self.assertIsNone(package_icon_path(manifest))
+
+    def test_package_icon_rejects_invalid_header_and_extreme_dimensions(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp).resolve()
+            icon = root / "icon.png"
+            manifest = SimpleNamespace(root=root, icon_id="package:icon.png")
+
+            icon.write_bytes(b"not-a-png")
+            with self.assertRaisesRegex(ActivityIconError, "PNG icon"):
+                package_icon_path(manifest)
+
+            icon.write_bytes(png_header(4096, 4096))
+            with self.assertRaisesRegex(ActivityIconError, "dimensions"):
+                package_icon_path(manifest)
 
     def test_package_icon_cannot_escape_or_use_executable_formats(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
