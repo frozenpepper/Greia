@@ -5,7 +5,7 @@
 **Repository:** `frozenpepper/Greia` (private)  
 **Canonical/default/development branch:** `main`  
 **Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**  
-**Source head reviewed immediately before this handover refresh:** `85f60f9308600a6b1bc69f7349c488bec1d4a755`  
+**Source head reviewed immediately before this handover refresh:** `d6bed0e19c3e90acbe0497559856a77c2c66e737`  
 **External Parent HTML revision currently pinned by Greia:** `frozenpepper/Greia-Parent-App-Html@e30bcbcab393354b8ffb63d5829c08711d8023bd`
 
 This file owns the **current** implementation/evidence boundary. Historical hardware detail remains in the dated reviews and installation issue log; exact APIs/limits remain source-owned.
@@ -54,7 +54,8 @@ tranches:
 - Shape Garden logical-canvas/system-navigation migration and lightweight-presentation regression (`aaa24a1`, `a650357`, `e7c77d3`, `1768738`);
 - shared Pygame Activity-safe geometry derived from system chrome plus Painting/Writing migration (`8e586a8`, `11c434f`, `f1b614d`, `ff54863`, `bdd67b9`);
 - interface-size × resolution safe-geometry regression (`85f60f9`);
-- current operator/authoring/authority documentation (`b01613f`, `bf355fe`, `31c206e`).
+- current operator/authoring/authority documentation (`b01613f`, `bf355fe`, `31c206e`);
+- `0c06f5a` / `d6bed0e` restore Painting/Writing's pre-migration formatting around the new safe-UI calls; these last two commits are intended as **diff-noise cleanup only**, not additional behavior.
 
 Those later source/test changes are **committed but not yet covered by a fresh
 owner-controlled full PASS**. Do not describe 679 PASS as current-head evidence.
