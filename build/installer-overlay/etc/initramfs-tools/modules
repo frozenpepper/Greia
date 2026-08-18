@@ -1,0 +1,6 @@
+# Live media is built away from the eventual target hardware. Explicitly keep
+# the generic Linux storage stack needed by old SATA/AHCI machines in addition
+# to MODULES=most so bootability never depends on what the build host exposed.
+ahci
+libata
+sd_mod
