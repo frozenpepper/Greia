@@ -2,7 +2,7 @@
 
 **Audience:** coding, review and test agents working on Greia OS  
 **Status:** mandatory derived operating manual  
-**Last reviewed:** 2026-08-15  
+**Last reviewed:** 2026-08-19  
 **Canonical repository:** `frozenpepper/Greia`
 
 ---
@@ -13,11 +13,12 @@ This is the practical operating manual for working on Greia and its test hardwar
 
 - what must an agent read before editing;
 - which repository/branch/state is authoritative;
-- how source verification differs from hardware evidence;
+- how source verification differs from simulator, VM/image and physical evidence;
 - how to build an explicit developer image;
 - how to connect to a Greia test machine from the operator computer;
 - how to capture screenshots, inject bounded input, inspect logs and deploy Activities;
 - how to execute controller/input acceptance without bypassing Greia's input authority;
+- how to use the Activity Simulator without turning it into a second Greia implementation;
 - how to preserve failure evidence;
 - when to stop rather than “fixing the test”;
 - how to leave the project resumable.
@@ -30,6 +31,13 @@ Activity-authoring rules live in:
 
 ```text
 skills/greia-activity-authoring/SKILL.md
+```
+
+Activity Simulator architecture/operator guidance lives in:
+
+```text
+docs/adr/0029-real-runtime-activity-simulator.md
+docs/development/GREIA_ACTIVITY_SIMULATOR.md
 ```
 
 ---
@@ -46,8 +54,9 @@ Before substantive Greia work:
 6. resolve the actual active branch and HEAD from the repository, not chat memory;
 7. read the phase-specific testing/review documents named by the handover;
 8. for Activity work, read the Activity authoring skill and current API/runtime source owners;
-9. identify whether the task is **source work**, **VM evidence**, **physical-hardware evidence**, or a mixture;
-10. identify any destructive operation before running it.
+9. for simulator work, read ADR 0029 and the simulator developer guide before touching `src/greia_simulator/`;
+10. identify whether the task is **source work**, **simulator/developer evidence**, **VM/image evidence**, **physical-hardware evidence**, or a mixture;
+11. identify any destructive operation before running it.
 
 If the repository and a previous chat summary disagree, the repository wins.
 
@@ -70,7 +79,7 @@ GitHub is the persistent source of truth for project source and reviewed documen
 
 ### Branch/commit evidence
 
-Every hardware/VM evidence attempt must record the exact source SHA used. “Latest” or a branch name alone is not enough.
+Every simulator, hardware or VM evidence attempt must record the exact source SHA used when the result is retained as evidence. “Latest” or a branch name alone is not enough.
 
 ---
 
@@ -114,6 +123,36 @@ source footprint checks
 
 Source evidence does not prove Linux image behavior, graphics/input, controller latency/reconnect, VM boot, physical devices or performance.
 
+### Simulator/developer evidence
+
+The Greia Activity Simulator runs real Greia launcher/registry/permission/profile/runtime/storage/history/lifecycle/layout source over synthetic device facts. It is therefore stronger than a mock preview for those semantic contracts, but narrower than production/backend evidence.
+
+Simulator evidence may establish, at the exact tested source boundary:
+
+```text
+real ActivityRegistry / trust validation
+real launcher discovery/catalogue behavior
+real PermissionBroker + RuntimeManager compatibility against synthetic HAL facts
+real profile/theme/interface-size launch context
+real development-mode storage/history/events/lifecycle behavior
+real responsive/canvas/system-safe geometry at a selected viewport
+current local ActivityPackageService transaction behavior
+```
+
+It **does not** establish:
+
+```text
+Bubblewrap/kernel/filesystem containment
+Xorg/DRM/KMS/compositor/session-backend behavior
+trusted Home/Back non-coverability or input interception
+physical controller/touch/audio/network/removable-media behavior
+boot/installer/initramfs behavior
+Acer/Pi memory/CPU/performance behavior
+R7/R8/R9/R10/R14 closure
+```
+
+Always label retained results as `SIMULATOR` / `simulator-developer evidence` rather than silently promoting them to VM/physical/production proof.
+
 ### VM/image evidence
 
 Examples:
@@ -151,7 +190,8 @@ Therefore:
 - keep Greia Home/Back and reserved controller system input above Activity delivery;
 - keep controller-brand/button-number details below ADR 0020's runtime-neutral input contract;
 - do not select a compositor because it is conventional desktop Linux practice;
-- treat serial direct ownership/compositor/input-broker candidates according to current R7 evidence, not preference.
+- treat serial direct ownership/compositor/input-broker candidates according to current R7 evidence, not preference;
+- do not use successful simulator rendering to resolve R7 backend/session questions.
 
 Exact current R7 implementation/evidence state is in `HANDOVER.md`.
 
@@ -183,6 +223,8 @@ The operator computer needs:
 - the private operator key emitted by the developer-image build.
 
 The default operator environment may be macOS, but the client uses normal Python/OpenSSH behavior and is not macOS-specific.
+
+For Activity Simulator use, a desktop Python with the repository's Greia/Pygame dependencies and Tk support is also required. Tk is a control-plane dependency only; it is not part of the Greia OS child runtime contract.
 
 Do not copy the private key into the repository.
 
@@ -230,6 +272,8 @@ Raspberry Pi 400 and Pi 500 are co-equal ARM references, with board/image/physic
 
 Do not redefine the reference floor because development on a modern PC is easier.
 
+A 1024×600 simulator viewport is useful for layout iteration but does **not** reproduce the Acer's memory/CPU/GPU/input/display backend. Physical performance/readability claims still require the named hardware protocol.
+
 For final controller acceptance, record the actual controller model/family and connection type alongside the machine/SHA. One controller family must not silently become the portable Greia contract.
 
 Before destructive installation on a physical machine, confirm the current plan/test protocol explicitly allows it.
@@ -264,6 +308,8 @@ The developer path keeps:
 - a private operator key as an additional automation path;
 - machine SSH host identity generated on the actual booted machine;
 - passwordless privilege bounded to Greia-owned `greia-devctl` operations.
+
+The Activity Simulator is separate developer tooling. Its existence must not enable SSH, simulator packages, Tk or desktop control dependencies in a normal/release Greia image.
 
 ---
 
@@ -560,6 +606,12 @@ Focused unit iteration:
 PYTHONPATH=src python3 -m unittest discover -s tests -v
 ```
 
+Focused Activity Simulator contract gate:
+
+```bash
+PYTHONPATH=src python3 -m unittest tests.test_greia_simulator -v
+```
+
 Focused input/controller source gate:
 
 ```bash
@@ -610,7 +662,7 @@ sudo -E python3 tools/r7_local_evidence.py --run-root "$RUN_ROOT"
 
 The first failed attempt is evidence. Do not reuse its run root or silently rerun the same active/serial proof until it passes.
 
-Controller evidence must identify the actual device/family/connection and must not be substituted with remote keyboard injection or a synthetic unit test.
+Controller evidence must identify the actual device/family/connection and must not be substituted with remote keyboard injection, simulator capability switches or a synthetic unit test.
 
 ---
 
@@ -656,6 +708,8 @@ Measure relevant changes rather than relying on desktop intuition:
 - behavior at the low-memory reference floor;
 - Activity frame pacing and hot-loop cost for nontrivial games/animations.
 
+Desktop Activity Simulator timings/RSS are developer diagnostics only. They do not establish Acer/Pi performance closure because the host hardware and display backend are different.
+
 Do not introduce a dependency solely because it is conventional on desktop Linux.
 
 ---
@@ -672,6 +726,8 @@ Stop the current evidence attempt and report the boundary when any of these occu
 - SSH host identity changes without a known intentional reimage;
 - required security/isolation/system-input boundary is absent;
 - controller support would require broadening an ordinary Activity to raw `/dev/input`;
+- simulator success would need to be relabeled as backend/hardware/security evidence to satisfy the requested gate;
+- a simulator fix would require a second implementation of an existing Greia policy/service rather than using/improving the shared seam;
 - first authoritative test/hardware failure is reached;
 - mount/loop cleanup cannot be proven;
 - proceeding would require unapproved hosted execution;
@@ -689,8 +745,9 @@ After substantive work:
 - commit coherent source/documentation changes;
 - update `HANDOVER.md` when continuation state changed;
 - update the active plan when implementation/phase state changed;
-- update this manual if repository/build/hardware/remote operating procedure changed;
+- update this manual if repository/build/hardware/remote/simulator operating procedure changed;
 - update the Activity skill if its governed authoring contracts changed;
+- update ADR 0029 + the simulator developer guide + focused tests when simulator architecture/workflow changes;
 - preserve exact verification/evidence scope and unproven gaps;
 - state the next legitimate step;
 - leave no generated images, private keys, caches or bulky evidence in the source tree.
@@ -727,4 +784,62 @@ runtime/child-runtime.toml
 docs/testing/2026-08-15_PHASE0_INPUT_CONTROLLER_ACCEPTANCE.md
 ```
 
+When modifying the Activity Simulator, additionally check:
+
+```text
+docs/adr/0029-real-runtime-activity-simulator.md
+docs/development/GREIA_ACTIVITY_SIMULATOR.md
+src/greia_simulator/device.py
+src/greia_simulator/workspace.py
+src/greia_simulator/runtime.py
+src/greia_simulator/python_activity.py
+src/greia_simulator/child_shell.py
+src/greia_simulator/app.py
+tools/greia_simulator.py
+tests/test_greia_simulator.py
+skills/greia-activity-authoring/SKILL.md
+```
+
 When those contracts change, update the manual in the same tranche.
+
+---
+
+## 25. Activity Simulator operating workflow
+
+The simulator is intentionally **not** the default answer to every test request. Use it when the question is about Activity/package/profile/capability/responsive semantics and a physical/image backend is not itself the subject.
+
+Start it from the repository root:
+
+```bash
+python3 tools/greia_simulator.py
+```
+
+Default mutable state is outside the checkout at:
+
+```text
+~/.greia-simulator
+```
+
+Use `--state-dir` to isolate projects/test scenarios. Do not put simulator state inside the Greia checkout.
+
+### Source Activity iteration
+
+Use **Load Activity Folder…**. The tool copies to private staging, validates against the real runtime catalogue/registry and built-in identities, assigns `DEVELOPER_UNSIGNED`, then publishes the managed developer source. Do not bypass a validation failure by manually injecting the Activity into simulator state.
+
+### Package transaction testing
+
+Use **Install Activity Package…**. This calls the canonical `ActivityPackageService`; success is evidence for the current local new-install transaction only, not R10 lifecycle completion.
+
+### Device matrix
+
+Use the synthetic viewport/capability controls to vary facts that normally come from the device HAL. Prefer semantic combinations over hardware-name hacks. A named Acer preset is convenience for 1024×600 geometry, not a claim to emulate Acer CPU/GPU/input behavior.
+
+Press **Start / Apply** after changing synthetic device facts. The current tool restarts the synthetic child session rather than changing launch authority under a running Activity.
+
+### No simulator-only Activity policy
+
+If a test only passes after Activity code checks `GREIA_SIMULATOR`, stop. Simulator-specific source is allowed only below documented variation seams such as the synthetic HAL and current Python desktop-display adapter. Production Activity/package/profile/storage/layout/lifecycle policy must remain shared.
+
+### Web/HTML boundary
+
+Do not open an HTML Activity in Safari/Chrome/a private webview and call that Greia Web-runtime evidence. ADR 0029 requires the simulator to consume the future canonical R9 Web runtime adapter. Until that source exists, Web Activity execution remains unavailable in both current normal runtime composition and the simulator.
