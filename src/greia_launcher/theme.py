@@ -5,32 +5,64 @@ import time
 from typing import Any
 
 from greia_platform.customization import ResolvedTheme, ThemeStore
+from greia_platform.ui_preferences import UiPreferences, UiPreferencesStore
 
 
 class LauncherThemeController:
-    """Caches resolved theme state and display-sized wallpaper surfaces."""
+    """Caches profile visual state and display-sized wallpaper surfaces.
 
-    def __init__(self, store: ThemeStore):
+    Color/wallpaper and semantic interface-size preferences are deliberately
+    separate stores but share one refresh boundary. The launcher therefore
+    responds to My Greia changes without maintaining resolution-specific
+    layouts or polling unbounded state every frame.
+    """
+
+    def __init__(
+        self,
+        store: ThemeStore,
+        ui_store: UiPreferencesStore | None = None,
+    ):
         self.store = store
-        self._token: tuple[int, int] | None = None
+        self.ui_store = ui_store or UiPreferencesStore(store.state_dir)
+        self._token: tuple[int, int, int] | None = None
         self._theme: ResolvedTheme = store.resolve()
+        self._ui_preferences: UiPreferences = self.ui_store.read()
         self._wallpaper_key: tuple[Path, int, int, int] | None = None
         self._wallpaper_surface: Any | None = None
         self._next_token_check = 0.0
 
     @property
     def theme(self) -> ResolvedTheme:
+        self._refresh()
+        return self._theme
+
+    @property
+    def ui_preferences(self) -> UiPreferences:
+        self._refresh()
+        return self._ui_preferences
+
+    @property
+    def interface_scale(self) -> float:
+        return self.ui_preferences.scale
+
+    def _refresh(self) -> None:
         now = time.monotonic()
         if now < self._next_token_check:
-            return self._theme
+            return
         self._next_token_check = now + 0.25
-        token = self.store.version_token()
-        if token != self._token:
-            self._token = token
-            self._theme = self.store.resolve()
-            self._wallpaper_key = None
-            self._wallpaper_surface = None
-        return self._theme
+        token = (*self.store.version_token(), self.ui_store.version_token())
+        if token == self._token:
+            return
+        previous_ui = self._ui_preferences
+        self._token = token
+        self._theme = self.store.resolve()
+        self._ui_preferences = self.ui_store.read()
+        self._wallpaper_key = None
+        self._wallpaper_surface = None
+        # Font surfaces are owned by the launcher rather than this controller.
+        # Consumers key fonts by effective pixel size, so no explicit callback
+        # is needed when semantic size changes.
+        _ = previous_ui
 
     def invalidate(self) -> None:
         self._next_token_check = 0.0
@@ -74,6 +106,8 @@ class LauncherThemeController:
         scaled = pygame.transform.smoothscale(source, scaled_size)
         left = max(0, (scaled.get_width() - target_width) // 2)
         top = max(0, (scaled.get_height() - target_height) // 2)
-        self._wallpaper_surface = scaled.subsurface((left, top, target_width, target_height)).copy()
+        self._wallpaper_surface = scaled.subsurface(
+            (left, top, target_width, target_height)
+        ).copy()
         self._wallpaper_key = key
         return self._wallpaper_surface
