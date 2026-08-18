@@ -1,8 +1,8 @@
 [activity]
 id = "org.greia.workshop-settings"
 legacy_ids = ["workshop_settings"]
-title_key = "activity.workshop_settings.title"
-version = "0.1.0"
+title_key = "My Greia"
+version = "0.2.0"
 icon = "palette"
 languages = ["*"]
 
@@ -15,7 +15,7 @@ difficulty = 1
 skills = [
   { id = "independence.choice_making", weight = 2 },
   { id = "creativity.visual_design", weight = 2 },
-  { id = "digital.device.removable_media", weight = 1 },
+  { id = "digital.settings.personalization", weight = 2 },
 ]
 events = []
 
@@ -24,9 +24,12 @@ type = "python"
 api_version = "0.1"
 entrypoint = "main.py"
 
+[input]
+profile = "pointer"
+
 [requirements]
 required_capabilities = ["display", "pointer"]
-optional_capabilities = ["removable_media"]
+optional_capabilities = ["removable_media", "touch"]
 
 [permissions]
 requested = [
