@@ -106,7 +106,7 @@ class MyGreiaSettings:
         }
 
     def run(self) -> int:
-        mark_activity_ready()
+        ready_published = False
         while self.running and not activity_stop_requested():
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -124,6 +124,11 @@ class MyGreiaSettings:
                 self._rescan_media()
             self._draw()
             pygame.display.flip()
+            if not ready_published:
+                # READY means Greia can actually present a usable child frame,
+                # not merely that pygame initialized successfully.
+                mark_activity_ready()
+                ready_published = True
             self.clock.tick(30)
         pygame.quit()
         return 0
