@@ -1,0 +1,293 @@
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import shutil
+import stat
+import tempfile
+import zipfile
+from dataclasses import dataclass
+from pathlib import Path, PurePosixPath
+
+from .activities import ActivityManifest, ActivityRegistry, ActivityValidationError, RuntimeCatalogue
+from .trust import ActivitySource, PackageTrust
+
+
+MAX_ARCHIVE_ENTRIES = 512
+MAX_ARCHIVE_BYTES = 32 * 1024 * 1024
+MAX_PATH_CHARACTERS = 220
+MAX_COMPRESSION_RATIO = 200
+
+
+class ActivityPackageError(RuntimeError):
+    pass
+
+
+@dataclass(frozen=True, slots=True)
+class ActivityInstallReceipt:
+    activity_id: str
+    version: str
+    package_digest: str
+    package_trust: PackageTrust
+    source_id: str
+
+    def as_json_dict(self) -> dict[str, str]:
+        return {
+            "activity_id": self.activity_id,
+            "version": self.version,
+            "package_digest": self.package_digest,
+            "package_trust": self.package_trust.value,
+            "source_id": self.source_id,
+        }
+
+
+class ActivityPackageService:
+    """Single bounded authority for parent-approved local Activity packages.
+
+    This tranche intentionally supports *new installs only*. It establishes the
+    R10 safety/transaction seams without pretending update/signature policy is
+    solved: bounded acquisition, archive containment, normal ActivityRegistry
+    validation, immutable version storage, atomic activation and typed parent
+    provenance. Updates/removal remain separate future operations.
+    """
+
+    SOURCE_ID = "greia-parent-package-service"
+
+    def __init__(
+        self,
+        *,
+        state_root: Path,
+        runtime_catalogue: Path,
+        built_in_root: Path | None = None,
+    ) -> None:
+        self.state_root = state_root.resolve()
+        self.active_root = self.state_root / "active"
+        self.versions_root = self.state_root / "versions"
+        self.staging_root = self.state_root / "staging"
+        self.receipts_root = self.state_root / "receipts"
+        self.runtime = RuntimeCatalogue.load(runtime_catalogue)
+        self.built_in_root = built_in_root.resolve() if built_in_root else None
+
+    @classmethod
+    def from_environment(cls) -> "ActivityPackageService":
+        os_root = Path(os.environ.get("GREIA_OS_ROOT", "/opt/greia-os")).resolve()
+        return cls(
+            state_root=Path(
+                os.environ.get(
+                    "GREIA_PARENT_ACTIVITY_PACKAGE_ROOT",
+                    "/var/lib/greia-os/activity-packages",
+                )
+            ),
+            runtime_catalogue=os_root / "runtime" / "child-runtime.toml",
+            built_in_root=os_root / "activities",
+        )
+
+    def install_archive(self, archive_path: Path) -> ActivityInstallReceipt:
+        archive_path = archive_path.resolve(strict=True)
+        if not archive_path.is_file():
+            raise ActivityPackageError("Activity package is not a file")
+        size = archive_path.stat().st_size
+        if size <= 0 or size > MAX_ARCHIVE_BYTES:
+            raise ActivityPackageError(
+                f"Activity package archive must be between 1 and {MAX_ARCHIVE_BYTES} bytes"
+            )
+        self._ensure_roots()
+        stage_parent = Path(
+            tempfile.mkdtemp(prefix="install-", dir=str(self.staging_root))
+        )
+        package_root = stage_parent / "package"
+        package_root.mkdir(mode=0o700)
+        try:
+            self._extract_bounded_archive(archive_path, package_root)
+            if not (package_root / "activity.toml").is_file():
+                raise ActivityPackageError(
+                    "Activity package must contain activity.toml at archive root"
+                )
+            manifest, digest = self._validate_staged(stage_parent, package_root)
+            final_active = self.active_root / manifest.activity_id
+            if final_active.exists():
+                raise ActivityPackageError(
+                    f"Activity {manifest.activity_id} is already installed; update is not enabled yet"
+                )
+            immutable = self.versions_root / manifest.activity_id / digest
+            if immutable.exists():
+                raise ActivityPackageError("this exact Activity package is already stored")
+            immutable.parent.mkdir(parents=True, exist_ok=True)
+            os.chmod(immutable.parent, 0o700)
+            os.replace(package_root, immutable)
+            self._make_tree_read_only(immutable)
+
+            activation = self.active_root / f".{manifest.activity_id}.activating-{digest[:12]}"
+            if activation.exists():
+                shutil.rmtree(activation)
+            # Hard links keep the active view cheap while remaining a real tree:
+            # ActivityRegistry never follows a package-root symlink and future
+            # updates can atomically swap one active directory for another.
+            shutil.copytree(immutable, activation, copy_function=os.link)
+            self._make_tree_read_only(activation)
+            try:
+                os.rename(activation, final_active)
+            except FileExistsError as exc:
+                raise ActivityPackageError(
+                    f"Activity {manifest.activity_id} became installed concurrently"
+                ) from exc
+            receipt = ActivityInstallReceipt(
+                activity_id=manifest.activity_id,
+                version=manifest.version,
+                package_digest=digest,
+                package_trust=PackageTrust.PARENT_TRUSTED_UNSIGNED,
+                source_id=self.SOURCE_ID,
+            )
+            self._write_receipt(receipt)
+            return receipt
+        except (ActivityValidationError, OSError, zipfile.BadZipFile, zipfile.LargeZipFile) as exc:
+            if isinstance(exc, ActivityPackageError):
+                raise
+            raise ActivityPackageError(str(exc)) from exc
+        finally:
+            shutil.rmtree(stage_parent, ignore_errors=True)
+
+    def _ensure_roots(self) -> None:
+        self.state_root.mkdir(parents=True, exist_ok=True)
+        for path, mode in (
+            (self.active_root, 0o755),
+            (self.versions_root, 0o700),
+            (self.staging_root, 0o700),
+            (self.receipts_root, 0o700),
+        ):
+            path.mkdir(parents=True, exist_ok=True)
+            os.chmod(path, mode)
+
+    def _extract_bounded_archive(self, archive_path: Path, destination: Path) -> None:
+        seen: set[str] = set()
+        total = 0
+        with zipfile.ZipFile(archive_path, "r", allowZip64=False) as archive:
+            entries = archive.infolist()
+            if not entries or len(entries) > MAX_ARCHIVE_ENTRIES:
+                raise ActivityPackageError(
+                    f"Activity package must contain 1..{MAX_ARCHIVE_ENTRIES} archive entries"
+                )
+            for info in entries:
+                relative = self._safe_archive_path(info)
+                canonical = relative.as_posix().casefold()
+                if canonical in seen:
+                    raise ActivityPackageError(
+                        f"Activity package contains a duplicate portable path: {relative.as_posix()}"
+                    )
+                seen.add(canonical)
+                if info.flag_bits & 0x1:
+                    raise ActivityPackageError("encrypted Activity package entries are not supported")
+                mode = (info.external_attr >> 16) & 0xFFFF
+                if mode and stat.S_ISLNK(mode):
+                    raise ActivityPackageError("Activity package symlinks are forbidden")
+                if mode and not (stat.S_ISREG(mode) or stat.S_ISDIR(mode)):
+                    raise ActivityPackageError("Activity package contains a special filesystem entry")
+                if info.is_dir():
+                    target = destination.joinpath(*relative.parts)
+                    target.mkdir(parents=True, exist_ok=True)
+                    os.chmod(target, 0o755)
+                    continue
+                total += info.file_size
+                if total > self.runtime.maximum_activity_bytes:
+                    raise ActivityPackageError(
+                        "Activity package exceeds the platform uncompressed size limit"
+                    )
+                if (
+                    info.file_size > 1024 * 1024
+                    and info.compress_size > 0
+                    and info.file_size > info.compress_size * MAX_COMPRESSION_RATIO
+                ):
+                    raise ActivityPackageError("Activity package has an unsafe compression ratio")
+                target = destination.joinpath(*relative.parts)
+                target.parent.mkdir(parents=True, exist_ok=True)
+                with archive.open(info, "r") as source, target.open("xb") as sink:
+                    remaining = info.file_size
+                    while remaining:
+                        chunk = source.read(min(1024 * 1024, remaining))
+                        if not chunk:
+                            raise ActivityPackageError("Activity package entry ended unexpectedly")
+                        sink.write(chunk)
+                        remaining -= len(chunk)
+                    if source.read(1):
+                        raise ActivityPackageError("Activity package entry exceeds declared size")
+                os.chmod(target, 0o644)
+
+    @staticmethod
+    def _safe_archive_path(info: zipfile.ZipInfo) -> PurePosixPath:
+        name = info.filename
+        if not name or len(name) > MAX_PATH_CHARACTERS or "\\" in name or "\x00" in name:
+            raise ActivityPackageError("Activity package contains an invalid path")
+        path = PurePosixPath(name)
+        parts = tuple(part for part in path.parts if part != "")
+        if path.is_absolute() or not parts or any(part in {".", ".."} for part in parts):
+            raise ActivityPackageError("Activity package path escapes archive root")
+        if any(part.startswith(".") for part in parts):
+            raise ActivityPackageError("hidden Activity package paths are not supported")
+        return PurePosixPath(*parts)
+
+    def _validate_staged(
+        self, stage_parent: Path, package_root: Path
+    ) -> tuple[ActivityManifest, str]:
+        sources: list[ActivitySource] = []
+        if self.built_in_root is not None:
+            sources.append(
+                ActivitySource(
+                    self.built_in_root,
+                    PackageTrust.BUILT_IN,
+                    "greia-system",
+                )
+            )
+        sources.append(
+            ActivitySource(
+                self.active_root,
+                PackageTrust.PARENT_TRUSTED_UNSIGNED,
+                self.SOURCE_ID,
+            )
+        )
+        staging_source = ActivitySource(
+            stage_parent,
+            PackageTrust.PARENT_TRUSTED_UNSIGNED,
+            self.SOURCE_ID,
+        )
+        sources.append(staging_source)
+        registry = ActivityRegistry(tuple(sources), self.runtime)
+        registrations = registry.discover_registrations()
+        staged = next(
+            (
+                registration
+                for registration in registrations
+                if registration.manifest.root == package_root.resolve()
+            ),
+            None,
+        )
+        if staged is None:
+            raise ActivityPackageError("staged Activity did not validate as one installable package")
+        return staged.manifest, staged.package_digest
+
+    @staticmethod
+    def _make_tree_read_only(root: Path) -> None:
+        for path in root.rglob("*"):
+            if path.is_dir():
+                os.chmod(path, 0o555)
+            elif path.is_file():
+                os.chmod(path, 0o444)
+        os.chmod(root, 0o555)
+
+    def _write_receipt(self, receipt: ActivityInstallReceipt) -> None:
+        destination = self.receipts_root / f"{receipt.activity_id}.json"
+        temporary = destination.with_suffix(".json.tmp")
+        temporary.write_text(
+            json.dumps(receipt.as_json_dict(), sort_keys=True, separators=(",", ":")) + "\n",
+            encoding="utf-8",
+        )
+        os.chmod(temporary, 0o600)
+        os.replace(temporary, destination)
+
+
+def archive_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
