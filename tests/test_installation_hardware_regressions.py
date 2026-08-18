@@ -58,6 +58,20 @@ class RealHardwareInstallationRegressionTests(unittest.TestCase):
         self.assertIn("RuntimeDirectory=greia-os", unit)
         self.assertIn("RuntimeDirectoryMode=0755", unit)
 
+    def test_parent_activity_root_remains_traversable_without_exposing_private_children(self) -> None:
+        first_boot = self.read("build/overlay/usr/local/lib/greia-os/first-boot")
+        parent_unit = self.read("build/overlay/etc/systemd/system/greia-parent.service")
+        self.assertIn(
+            "install -d -m 0755 -o greiapanel -g greiapanel /var/lib/greia-os",
+            first_boot,
+        )
+        self.assertIn("StateDirectory=greia-os", parent_unit)
+        self.assertIn("StateDirectoryMode=0755", parent_unit)
+        self.assertIn(
+            "GREIA_PARENT_ACTIVITY_PACKAGE_ROOT=/var/lib/greia-os/activity-packages",
+            parent_unit,
+        )
+
     def test_provisional_xorg_service_is_not_wrapped_in_desktop_style_namespace(self) -> None:
         unit = self.read("build/overlay/etc/systemd/system/greia-launcher.service")
         # These proved incompatible with the current Xorg-owned VT/DRM/input
