@@ -16,12 +16,16 @@ esac
 
 # Greia early framebuffer cover: copy the Greia-owned renderer and the
 # canonical white boot-logo PPM into the generated initramfs so the first
-# initramfs stage that sees /dev/fb0 can paint the branded frame. Both are
-# built/generated at image build time; no runtime image decoder is involved.
-# FRAMEBUFFER=y (greia-framebuffer.conf) already selects the generic kernel
-# framebuffer driver set; this hook deliberately adds no architecture-specific
-# module names.
-copy_exec /usr/lib/greia-boot/greia-fb-splash /usr/lib/greia-boot/
+# initramfs stage that sees /dev/fb0 can paint the branded frame.
+#
+# The kernel package postinst runs update-initramfs before the builder has
+# compiled the renderer, so both files must be copied only when present; the
+# later authoritative update-initramfs (after the builder compiles the binary)
+# includes them. A missing renderer is therefore fail-soft here, never a reason
+# to abort the base package installation.
+if [ -f /usr/lib/greia-boot/greia-fb-splash ]; then
+    copy_exec /usr/lib/greia-boot/greia-fb-splash /usr/lib/greia-boot/
+fi
 
 # The PPM is a regular data file, not an executable; copy it directly.
 if [ -f /etc/greia-boot/boot-logo.ppm ]; then

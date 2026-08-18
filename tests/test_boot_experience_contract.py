@@ -177,7 +177,11 @@ class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
                 self.assertTrue(hook.is_file())
                 self.assertTrue(hook.stat().st_mode & 0o111)
                 hook_text = hook.read_text(encoding="utf-8")
+                # The hook is fail-soft: the renderer is compiled after the
+                # kernel package postinst runs update-initramfs, so it copies
+                # the binary only when already present.
                 self.assertIn("copy_exec /usr/lib/greia-boot/greia-fb-splash", hook_text)
+                self.assertIn("[ -f /usr/lib/greia-boot/greia-fb-splash ]", hook_text)
                 self.assertIn("boot-logo.ppm", hook_text)
                 self.assertNotIn("uvesafb", hook_text)
                 for stage in ("init-top", "local-premount", "init-bottom"):
