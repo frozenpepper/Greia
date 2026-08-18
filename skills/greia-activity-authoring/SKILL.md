@@ -19,19 +19,36 @@ AGENTS.md
 docs/DOCUMENTATION.md
 docs/architecture/GREIA_ARCHITECTURE.md
 docs/architecture/GREIA_ACTIVITY_ECOSYSTEM.md
-docs/adr/0012-platform-constitution.md
-docs/adr/0017-platform-owned-activity-events-progress-and-history.md
+docs/adr/0012-platform-architecture-constitution.md
+docs/adr/0017-platform-owned-sessions-events-progression-and-reward-ledger.md
 docs/adr/0018-lightweight-ui-foundation.md
 docs/adr/0019-platform-owned-activity-system-navigation.md
 docs/adr/0020-runtime-neutral-input-profiles-and-controller-support.md
 docs/adr/0023-open-activity-ecosystem-distribution-and-official-catalogue.md
+docs/adr/0026-resolution-adaptive-ui-layout.md
+docs/adr/0027-activity-coordinate-spaces-canvas-and-world-camera.md
+docs/adr/0028-platform-and-activity-localization-language-context.md
 docs/product/ACTIVITY_INPUT_STANDARDS.md
 docs/product/ACTIVITY_SYSTEM_NAVIGATION.md
+docs/product/RESPONSIVE_UI_AND_DISPLAY_LAYOUT.md
 docs/design/GREIA_VISUAL_STYLE_GUIDE.md
 docs/design/GREIA_LAUNCHER_INTERACTION_AND_ACTIVITY_CATALOGUE.md
+docs/design/GREIA_ACTIVITY_CANVAS_AND_VIEWPORT_AUTHORING.md
 runtime/child-runtime.toml
 src/greia_platform/activities.py
 src/greia_platform/activity_api.py
+src/greia_platform/responsive_layout.py
+src/greia_platform/activity_viewport.py
+src/greia_platform/localization.py
+src/greia_platform/language_presentation.py
+```
+
+For Pygame Activities also inspect:
+
+```text
+src/greia_platform/pygame_ui.py
+src/greia_platform/pygame_canvas.py
+src/greia_platform/activity_ui.py
 ```
 
 For packaging/install work also read:
@@ -57,12 +74,17 @@ An Activity must not:
 - manage the host package manager;
 - depend on arbitrary host filesystem paths;
 - assume direct ownership of Linux input devices or display-session authority;
+- assume one physical screen resolution as its semantic coordinate system;
+- maintain per-resolution coordinate tables/device-specific layouts when shared viewport/layout primitives can express the behavior;
+- treat translated display text as identifiers/authority;
+- hard-code user-facing prose/audio into game logic when it can be represented by localization keys/cues;
+- claim `languages = ["*"]` merely because hard-coded English happens to run everywhere;
+- bake launcher language flags into its own icon asset;
 - ship executable native files merely because they work on a developer machine;
-- turn display text or translated labels into identifiers/authority;
 - grant itself capabilities/permissions through UI state;
-- create an unbounded cache/widget/list merely because the current sample data is small.
+- create an unbounded cache/widget/list merely because current sample data is small.
 
-The platform owns lifecycle, profile/session state, package trust, permissions, system chrome, durable progress/history, and the physical display/input boundary.
+The platform owns lifecycle, profile/session state, package trust, permissions, system chrome, durable progress/history, physical display/input boundaries, the normal child UI-locale authority chain, launcher language presentation and the platform-owned pre-launch language chooser.
 
 ## 3. Package layout
 
@@ -74,16 +96,21 @@ Example:
 activities/my_activity/
 ├── activity.toml
 ├── main.py
+├── locales/
+│   ├── en.json
+│   └── it.json
 ├── assets/
 │   └── icon.png
 └── ...
 ```
 
+`locales/` is optional when the Activity is genuinely language-neutral. A single-language Activity should still be structured so adding another language is primarily data/assets work rather than a gameplay rewrite.
+
 Do not add generated caches, virtual environments, arbitrary shell installers, package-manager state or hidden metadata directories.
 
 The current registry rejects symlinks, forbidden names/suffixes, executable package files and packages above the configured runtime size limit.
 
-## 4. Current `activity.toml` shape
+## 4. Current `activity.toml` shape and migration warning
 
 The exact parser lives in `src/greia_platform/activities.py`; this is an authoring example, not a second schema definition.
 
@@ -146,9 +173,24 @@ Capabilities describe required/optional platform facilities. Permissions request
 
 Unknown, duplicated or overlapping required/optional capability declarations are validation errors.
 
-## 5. Launcher navigation categories are NOT education categories
+### 4.4 Localization metadata is in architectural migration
 
-This distinction is important after the 2026-08-18 launcher work.
+ADR 0028 selects a more precise future contract than the current broad `activity.languages` field. Conceptually it distinguishes:
+
+```text
+catalogue/title locales
+Activity UI locales
+Activity UI language-selection policy
+content/learning locales
+content-language-selection policy
+true language-neutrality
+```
+
+Do **not** silently invent unsupported manifest tables and assume the current parser consumes them. Inspect the exact current schema. If implementing the localization contract, update parser/runtime/tests/docs together.
+
+Even before the manifest migration is complete, write Activity code so user-facing strings/audio are isolated behind semantic resource keys and so a second language can be added without rewriting gameplay.
+
+## 5. Launcher navigation categories are NOT education categories
 
 ### Child-facing launcher navigation
 
@@ -169,8 +211,6 @@ explore
 my_greia
 ```
 
-The parser deliberately does not freeze that list forever, but category IDs are bounded platform-style identifiers and one package may currently declare at most four.
-
 An Activity may appear in more than one launcher category without duplicating installation, permissions, progress or saves.
 
 ### Educational taxonomy
@@ -182,11 +222,11 @@ Keep learning/progression metadata under:
 categories = ["creativity", "fine_motor", "geometry"]
 ```
 
-These values may be numerous/specific because they are semantic learning tags. **Do not add `fine_motor`, `problem_solving`, etc. to `[presentation]` merely to surface educational metadata as launcher tabs.**
+These values may be numerous/specific because they are semantic learning tags. Do not add `fine_motor`, `problem_solving`, etc. to `[presentation]` merely to surface educational metadata as launcher tabs.
 
 Older API-0.1 packages with no `[presentation]` table currently fall back to `education.categories` for compatibility. New/updated packages should not rely on that fallback.
 
-## 6. Activity icons
+## 6. Activity icons and dynamic language presentation
 
 ### Platform catalogue icon
 
@@ -196,8 +236,6 @@ A built-in Activity may reference a shared semantic icon ID:
 [activity]
 icon = "palette"
 ```
-
-The ID must exist in the platform asset catalogue.
 
 ### Package-owned icon
 
@@ -216,8 +254,6 @@ Current package-owned icon rules are owned by `src/greia_platform/activity_asset
 - bounded depth/length;
 - must resolve to a regular file strictly inside the validated package root.
 
-Parent package installation validates this reference **before activation**. Do not attempt to reference `/home/...`, `/usr/share/...`, URLs, removable media or another Activity's assets.
-
 Recommended visual authoring:
 
 - square source canvas;
@@ -225,7 +261,24 @@ Recommended visual authoring:
 - clear silhouette at launcher scale;
 - important detail away from the outer 8–10%;
 - no required text inside the icon;
-- expect the launcher to add its own subtle shadow/depth treatment.
+- expect launcher shadow/depth treatment.
+
+### Do not bake language into the Activity icon
+
+Greia owns the dynamic language emblem. For language-specific Activities, the launcher composites the flag corresponding to the **actual resolved launch language**.
+
+Examples selected by product policy:
+
+```text
+English    → British flag
+Spanish    → Spain flag
+Italian    → Italy flag
+French     → France flag
+```
+
+A multilingual Activity may show a different flag when the child profile language changes. An English-only Activity on an Italian system shows the British flag. A language-neutral Activity does not need a language flag.
+
+Do not use `EN`/`IT` initials as the primary child-facing language signal; many Greia users cannot read.
 
 ## 7. Input and interaction
 
@@ -243,31 +296,33 @@ Do not read `/dev/input` directly or make raw SDL/Pygame controller ownership a 
 
 Activities should remain operable without relying only on hover. Hover is enhancement, not the only indication of selection/action.
 
-## 8. UI architecture for Activities
+For pointer/touch content authored in reference/world coordinates, use the **same Greia transform object for rendering and physical→logical input mapping**. Do not independently rescale hit testing.
 
-ADR 0018 requires a lightweight semantic UI foundation, not a desktop widget framework.
+## 8. UI architecture and automatic resolution adaptation
 
-Current relevant shared layers include:
+ADR 0018 requires a lightweight semantic UI foundation. ADR 0026 additionally requires platform-owned automatic resolution adaptation.
+
+**Designers/programmers author one semantic layout. They do not maintain separate screen-resolution layouts.**
+
+Current shared layers include:
 
 ```text
 src/greia_platform/ui_core.py
 src/greia_platform/ui_motion.py
 src/greia_platform/ui_scroll.py
+src/greia_platform/responsive_layout.py
+src/greia_platform/activity_viewport.py
 src/greia_platform/pygame_ui.py
+src/greia_platform/pygame_canvas.py
 src/greia_platform/activity_ui.py
-```
-
-Pygame rendering helpers now also include:
-
-```text
 src/greia_platform/pygame_effects.py
 ```
 
 ### Use shared semantics, not launcher internals
 
-`greia_launcher.presentation` is platform Shell/launcher composition. An Activity must not import launcher modules merely to copy a shadow or animation.
+`greia_launcher.presentation` is platform Shell/launcher composition. An Activity must not import launcher modules merely to copy a shadow, animation or layout algorithm.
 
-If an effect becomes broadly useful to Activities, promote the concrete reusable primitive into the shared platform layer with bounded behavior and tests. The 2026-08-18 launcher work intentionally moved generic motion/scroll/depth primitives into `greia_platform` for this reason.
+If an effect/layout pattern becomes broadly useful to Activities, promote the concrete reusable primitive into the shared platform layer with bounded behavior and tests.
 
 ### Effects should be subtle and bounded
 
@@ -290,7 +345,236 @@ Avoid:
 
 The legacy 1024×600/i686 floor remains a real engineering constraint.
 
-## 9. Scrolling collections
+## 9. Activity viewport, reference canvas and world authoring
+
+ADR 0027 defines the spatial contract. The author chooses content semantics, not target resolutions.
+
+### 9.1 Default design reference
+
+For canvas-style visual authoring, the default logical reference is:
+
+```text
+1024 × 600 logical units
+```
+
+This is aligned with the reference netbook so designers have a concrete child-tested starting composition. It is not permission to assume the physical surface is 1024×600.
+
+### 9.2 Choose one or compose several spatial models
+
+```text
+fluid
+reference_canvas
+world_camera
+hybrid
+```
+
+Typical choices:
+
+- math/question grid → `fluid`;
+- text editor/gallery → `fluid`;
+- fixed puzzle/board → `reference_canvas` + `contain`;
+- decorative full-bleed scene → `reference_canvas` + `cover`;
+- side-scroller/top-down game → `world_camera` + `expand`;
+- painting/physics sandbox/game HUD → `hybrid`.
+
+Read `docs/design/GREIA_ACTIVITY_CANVAS_AND_VIEWPORT_AUTHORING.md` for the full decision guide.
+
+### 9.3 Reference canvas
+
+`contain` keeps the whole reference composition visible and may letterbox.
+
+`cover` fills the target but may crop outer expendable content.
+
+Never non-uniformly stretch the design to another aspect ratio.
+
+For simple Pygame fixed scenes, `PygameReferenceCanvas` lets the author draw once on the logical surface and maps presentation/input automatically.
+
+### 9.4 World camera
+
+World/game state uses stable logical coordinates independent of physical display pixels.
+
+`expand` normally preserves the reference camera scale while revealing additional world on the excess aspect-ratio axis. A wider screen can show more horizontal world; a taller screen can show more vertical world.
+
+Changing resolution must not rewrite physics, collisions, level coordinates or saved world state.
+
+Use `visible_logical_rect` for culling. Do not render an entire unbounded world because it exists.
+
+### 9.5 Fluid layout
+
+For semantic UI/grids/collections, declare usable size constraints and let `responsive_layout` select rows/columns/visible capacity. Do not author breakpoint tables like `if width >= 1920` / `elif width >= 1024` to manually move items.
+
+### 9.6 Hybrid layers
+
+Rich Activities commonly combine:
+
+```text
+world/background       world_camera
+HUD/tools              fluid safe UI
+fixed board/document   reference/logical canvas
+modal sheet            fluid overlay
+Home/Back              platform-owned chrome
+```
+
+### 9.7 System chrome / safe UI
+
+Greia Home/Back regions are platform-protected. Essential Activity controls belong in platform-derived safe UI geometry. Background/world art may visually extend under chrome where appropriate, but Activity pointer authority does not.
+
+Do not hard-code a pixel inset for system chrome.
+
+### 9.8 Durable state is resolution-neutral
+
+Do not save physical UI coordinates as portable content state.
+
+Good: world position, semantic item ID, painting document dimensions/content, text, camera world position if meaningful.
+
+Bad: button x/y because the current screen was 1366 pixels wide, current wrap points, physical pointer position as game state.
+
+## 10. Localization and language authoring
+
+ADR 0028 is mandatory for new language-aware Activity work.
+
+### 10.1 Many Activities may ship in one language — that is acceptable
+
+Do not reject or artificially block an English-only Activity on an Italian system. The platform resolves it to English and visually signals that fact with the British flag.
+
+The important requirement is honesty and structure: declare actual support and keep the Activity easy to translate later.
+
+### 10.2 Separate catalogue/title language from in-Activity UI language
+
+An English-only Activity may still ship an Italian launcher title.
+
+Example:
+
+```text
+launcher/profile locale:  it-IT
+launcher title:           Italian translation
+Activity UI:              English only
+launcher flag:            British flag
+```
+
+`activity.title_key` is a semantic key, not final prose. Localized launcher names should come from package/platform localization data once the manifest/runtime integration is complete.
+
+### 10.3 Separate UI language from content/learning language
+
+Do not use one ambiguous `language` variable for everything.
+
+Example Writing Activity:
+
+```text
+Greia UI:           Italian
+Writing UI:         Italian or language-neutral icons
+content language:   English
+spell/audio rules:  English
+```
+
+A language-learning Activity may likewise give Italian instructions while lesson words/audio are English.
+
+Conceptually keep:
+
+```text
+ui_locale
+content_locale
+```
+
+separate in code/state.
+
+### 10.4 Ordinary UI language follows the child profile
+
+Normal resolution is:
+
+```text
+device default locale
+→ optional child-profile override
+→ Activity supported UI locale/fallback
+```
+
+Do not invent a settings page where the parent configures a UI language for every Activity.
+
+### 10.5 Opt-in pre-launch language selection
+
+An Activity may explicitly declare that UI language or content language is selectable at launch.
+
+Greia owns the chooser. It should use large flags and optional spoken language names, not a text-heavy list. The Activity receives the selected locale as launch context.
+
+Do not build another private language chooser inside every Activity merely to choose runtime locale.
+
+### 10.6 Localization bundle structure
+
+ADR 0028 selects cross-runtime JSON bundles under `locales/`.
+
+Example:
+
+```json
+{
+  "schema_version": 1,
+  "locale": "it",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Scriviamo!",
+    "feedback.correct": "Bravissima!"
+  },
+  "audio": {
+    "feedback.correct": {
+      "path": "locales/it/audio/correct.ogg",
+      "caption_key": "feedback.correct"
+    }
+  }
+}
+```
+
+Current runtime-neutral primitives live in `greia_platform.localization`.
+
+### 10.7 Always isolate user-facing strings from gameplay logic
+
+Even if only English ships today, prefer:
+
+```text
+feedback.correct
+instruction.choose
+activity.title
+```
+
+over hard-coded prose spread through game state/control flow.
+
+Do not concatenate translated fragments into English sentence order.
+
+Bad:
+
+```text
+translated("you_have") + count + translated("apples")
+```
+
+Prefer a complete semantic message with named variables.
+
+### 10.8 Localize spoken instructions through semantic cue IDs
+
+Use cues such as:
+
+```text
+instruction.choose
+feedback.correct
+character.professor.welcome
+```
+
+rather than hard-coded locale-specific filenames in gameplay logic.
+
+Localized audio is part of the package data. Initial portable localized-audio support is OGG/WAV. Do not depend on arbitrary codecs available on a developer laptop.
+
+### 10.9 Language-neutral is a real semantic claim
+
+A shape-matching game with icons/sounds that require no linguistic interpretation may be language-neutral.
+
+An Activity with hard-coded English words is not language-neutral just because it technically launches everywhere.
+
+### 10.10 Localization must not create language-specific layouts
+
+Translations vary in length. Let ADR 0026 responsive layout absorb the difference through wrapping/reflow/bounded sizing.
+
+Do not create an Italian coordinate table and an English coordinate table.
+
+For canvas/world games, put translated HUD/instructions in fluid/safe UI layers where practical. If localized text belongs inside a fixed logical scene, give it logical bounds that shared text-fitting/wrapping can use.
+
+## 11. Scrolling collections
 
 Use renderer-neutral collection/scroll semantics where possible. `ScrollModel` keeps a selected item inside a bounded visible window and advances by semantic items/rows rather than requiring desktop-style free-pixel scrolling.
 
@@ -301,23 +585,25 @@ General rule:
 - keyboard/controller movement and pointer/touch scrolling update the same model;
 - a large content set must not cause an equally large retained widget/surface set.
 
-The launcher itself currently demonstrates a two-row bounded Activity window. That exact launcher layout is not an Activity requirement; the bounded principle is.
+The launcher's exact row count is not an Activity requirement; the bounded principle is.
 
-## 10. System navigation
+## 12. System navigation
 
 Universal Home/Back behavior is platform-owned system chrome under ADR 0019.
 
 Do not draw fake Home/Back buttons inside an Activity and treat them as equivalent security/lifecycle controls. Use the supported platform contract and leave protected chrome geometry/authority to the launcher/system layer.
 
-## 11. Storage, events, progress, awards
+## 13. Storage, events, progress and awards
 
 Use Greia's typed storage/event APIs. Do not write to arbitrary host paths or maintain a second authoritative progress database inside the package.
 
 Activity events should express semantic facts such as completion/creation/score/milestone. Platform progression/history owns durable interpretation.
 
-Awards/badges/celebrations are platform-owned architecture under ADR 0025. An Activity should emit the supported semantic evidence; it must not mint authoritative awards itself merely by displaying a badge image.
+Awards/badges/celebrations are platform-owned architecture under ADR 0025. An Activity should emit supported semantic evidence; it must not mint authoritative awards itself merely by displaying a badge image.
 
-## 12. Packaging as `.greiaactivity`
+Language and resolution are presentation/context. Do not rewrite semantic score/progress IDs because locale or screen size changes.
+
+## 14. Packaging as `.greiaactivity`
 
 The first implemented package-install seam uses a bounded ZIP archive commonly named with the `.greiaactivity` suffix.
 
@@ -327,11 +613,11 @@ The normal Activity root is the archive root:
 my-activity.greiaactivity
 ├── activity.toml
 ├── main.py
+├── locales/
 └── assets/
-    └── icon.png
 ```
 
-**Do not add a wrapper directory** such as `my-activity/activity.toml` inside the archive.
+Do not add a wrapper directory such as `my-activity/activity.toml` inside the archive.
 
 The current package service rejects unsafe archive/path/symlink/special-file/compression behavior, stages privately, validates through the ordinary registry, validates package-owned icons, stores a read-only digest-addressed immutable copy and atomically publishes a read-only active tree.
 
@@ -350,9 +636,9 @@ Current intentional limitations:
 
 Do not implement your own update/delete mechanism inside an Activity to work around these limitations.
 
-## 13. Parent installation
+## 15. Parent installation
 
-The Parent API now protocol-defines:
+The Parent API protocol-defines:
 
 ```text
 POST /api/v1/activities/install
@@ -376,7 +662,7 @@ PARENT_TRUSTED_UNSIGNED
 
 They remain separate from built-ins and developer-unsigned sources even though they use the same registry/runtime/permission/supervisor path after validation.
 
-## 14. Runtime discovery after install
+## 16. Runtime discovery after install
 
 The launcher can detect the Parent active package source while already running. The safe sequence is:
 
@@ -385,11 +671,22 @@ The launcher can detect the Parent active package source while already running. 
 3. publish the new child-facing catalogue only after authority rebuild succeeds;
 4. retain the previous known-good catalogue/runtime pair on failure.
 
-Activity authors should therefore not require a reboot/restart merely to make an otherwise valid new install discoverable, but they must also not assume package presence implies launch authority before registry/runtime composition succeeds.
+Activity authors should not require a reboot/restart merely to make an otherwise valid new install discoverable, but must not assume package presence implies launch authority before runtime composition succeeds.
 
-## 15. Validation and tests
+## 17. Validation and tests
 
-Before considering Activity source ready, run the repository's canonical validation/test paths on an owner-controlled checkout. Relevant focused tests commonly include Activity contract/runtime/input/UI tests, but the active plan/handover owns the exact current verification step.
+Before considering Activity source ready, run the repository's canonical owner-controlled validation/test paths.
+
+Relevant current focused architecture tests include, as applicable:
+
+```text
+tests.test_responsive_layout
+tests.test_activity_viewport
+tests.test_localization
+tests.test_language_presentation
+tests.test_ui_motion_scroll
+tests.test_launcher_presentation
+```
 
 For a `.greiaactivity` package, test at least:
 
@@ -403,19 +700,24 @@ For a `.greiaactivity` package, test at least:
 - package icon exists and is contained;
 - archive root contains `activity.toml` directly;
 - install rejection leaves no active executable package;
-- successful install appears through the ordinary registry and launches through normal authority;
+- successful install appears through ordinary registry and launches through normal authority;
 - input/profile behavior works on the intended hardware floor;
-- Home/Back/system chrome behavior remains platform-owned;
+- Home/Back/system chrome remains platform-owned;
+- responsive/canvas behavior does not require per-resolution source edits;
+- language declarations are honest;
+- single-language fallback works on a differently configured profile where applicable;
+- launcher title localization and dynamic language flag are correct where implemented;
+- strings/audio are isolated enough that another locale can be added without gameplay rewrite;
 - caches/lists/effects remain bounded.
 
-**Never claim PASS because a test file exists.** Record only commands actually executed and their real output/evidence.
+Never claim PASS because a test file exists. Record only commands actually executed and their real output/evidence.
 
-## 16. Quality checklist for child-facing Activities
+## 18. Quality checklist for child-facing Activities
 
 A good Greia Activity should generally be:
 
 - understandable with little or no reading for its target age where product scope requires it;
-- visually clear at 1024×600;
+- visually clear at the 1024×600 reference while automatically adapting to other usable viewports;
 - immediately responsive to input;
 - forgiving of mistakes;
 - replayable rather than a one-shot worksheet;
@@ -424,9 +726,12 @@ A good Greia Activity should generally be:
 - free of child-visible desktop/shell/package-manager artifacts;
 - able to crash/exit without taking the launcher/session down;
 - semantically integrated with platform storage/events/progress instead of inventing private equivalents;
-- visually compatible with Greia without requiring every package to reuse a generic system icon.
+- visually compatible with Greia without requiring every package to reuse a generic system icon;
+- honest about its available languages;
+- easy to localize later even if only one language ships initially;
+- free of per-resolution and per-language coordinate forks.
 
-## 17. When changing the Activity contract
+## 19. When changing the Activity contract
 
 If author-facing Activity behavior changes, update in the same tranche:
 
@@ -437,4 +742,4 @@ If author-facing Activity behavior changes, update in the same tranche:
 - `docs/DOCUMENTATION.md` if authority ownership changes;
 - active plan progress and `HANDOVER.md` for substantive implementation/evidence changes.
 
-If the change is architectural rather than merely implementation detail, resolve it through the applicable ADR instead of silently extending the manifest/API.
+If the change is architectural rather than merely implementation detail, resolve it through the applicable ADR instead of silently extending manifest/API behavior.
