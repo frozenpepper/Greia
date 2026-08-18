@@ -9,22 +9,57 @@ from greia_launcher.activity_icon import ActivityIconError, package_icon_path
 from greia_launcher.catalogue_view import ActivityCatalogue
 
 
-def activity(activity_id: str, *categories: str) -> SimpleNamespace:
-    return SimpleNamespace(activity_id=activity_id, categories=categories)
+def activity(
+    activity_id: str,
+    *education_categories: str,
+    launcher_categories: tuple[str, ...] = (),
+) -> SimpleNamespace:
+    return SimpleNamespace(
+        activity_id=activity_id,
+        categories=education_categories,
+        launcher_categories=launcher_categories,
+    )
 
 
 class ActivityCatalogueTests(unittest.TestCase):
-    def test_all_collection_and_semantic_categories_are_stable(self) -> None:
-        paint = activity("org.greia.paint", "creative", "art")
-        maze = activity("org.greia.maze", "thinking")
-        catalogue = ActivityCatalogue.from_activities((paint, maze))
-        self.assertEqual(catalogue.category_ids, ("all", "art", "creative", "thinking"))
-        self.assertEqual(catalogue.collection("all").items, (paint, maze))
-        self.assertEqual(catalogue.collection("creative").items, (paint,))
-        self.assertEqual(catalogue.collection("thinking").items, (maze,))
+    def test_launcher_categories_are_separate_from_education_taxonomy(self) -> None:
+        paint = activity(
+            "org.greia.paint",
+            "creativity",
+            "fine_motor",
+            launcher_categories=("create",),
+        )
+        maze = activity(
+            "org.greia.maze",
+            "geometry",
+            "problem_solving",
+            launcher_categories=("play", "learn"),
+        )
+        settings = activity(
+            "org.greia.settings",
+            "digital_literacy",
+            launcher_categories=("my_greia",),
+        )
+        catalogue = ActivityCatalogue.from_activities((paint, maze, settings))
+        self.assertEqual(
+            catalogue.category_ids,
+            ("all", "create", "play", "learn", "my_greia"),
+        )
+        self.assertEqual(catalogue.collection("all").items, (paint, maze, settings))
+        self.assertEqual(catalogue.collection("create").items, (paint,))
+        self.assertEqual(catalogue.collection("play").items, (maze,))
+        self.assertEqual(catalogue.collection("learn").items, (maze,))
+        self.assertNotIn("fine_motor", catalogue.category_ids)
+
+    def test_old_package_without_presentation_categories_keeps_compatibility(self) -> None:
+        old = activity("org.greia.old", "creative", "art")
+        catalogue = ActivityCatalogue.from_activities((old,))
+        self.assertEqual(catalogue.category_ids, ("all", "art", "creative"))
 
     def test_unknown_category_falls_back_to_all(self) -> None:
-        catalogue = ActivityCatalogue.from_activities((activity("org.greia.paint", "creative"),))
+        catalogue = ActivityCatalogue.from_activities(
+            (activity("org.greia.paint", "creative", launcher_categories=("create",)),)
+        )
         self.assertEqual(catalogue.nearest_category("missing"), "all")
 
 
