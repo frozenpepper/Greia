@@ -97,7 +97,10 @@ def main() -> int:
         for x, y, size, kind, color_index in shapes[-120:]:
             draw_shape(canvas.surface, x, y, size, kind, COLORS[color_index])
 
-        canvas.present(clear=theme.background, smooth=True)
+        # Flat geometric artwork does not need whole-frame smoothscale. The
+        # normal scaler is materially cheaper on low-resource targets while
+        # preserving the same Greia reference-canvas transform/aspect contract.
+        canvas.present(clear=theme.background)
         if pygame.mouse.get_focused():
             screen.blit(cursor_icon, cursor_icon.get_rect(center=pygame.mouse.get_pos()))
 
