@@ -8,38 +8,49 @@
 
 ## 1. Purpose
 
-Greia has several kinds of truth: repository rules, product requirements, accepted architecture, engineering guidance, visual-design direction, implemented APIs, active sequencing, current evidence, test procedures, governance/licensing policy and historical reviews. These documents must not silently compete.
+Greia has several kinds of truth: repository rules, product requirements, accepted architecture, engineering guidance, exact source/runtime contracts, active sequencing, current evidence, operator protocols, agent manuals, visual-design direction, governance and historical reviews. These documents must not silently compete.
 
-This file defines which document class owns which fact, how conflicts are resolved and which living documents must change when implementation changes.
+This file defines which class owns which fact. When two sources disagree, resolve the conflict by authority rather than by whichever prose was edited most recently.
 
 ---
 
-## 2. Authority order and ownership
+## 2. Authority order
 
 ### 2.1 Repository-wide rules — `AGENTS.md`
 
-`AGENTS.md` owns mandatory contributor/agent behavior and non-negotiable repository/product constraints, including required read/update duties, Git/GitHub persistence rules, hosted-execution restrictions, engineering expectations, continuity and evidence terminology. A narrower document may strengthen but must not weaken it.
+`AGENTS.md` owns mandatory contributor/agent behavior and non-negotiable repository/product constraints: required reading/updating, Git/GitHub persistence, hosted-execution restrictions, evidence language, engineering discipline and continuity rules. A narrower document may strengthen but not weaken it.
 
 ### 2.2 Product requirements — `docs/product/*`
 
-Product documents own explicitly accepted child-facing, parent-facing and ecosystem-facing behavior/acceptance intent. Important examples include:
+Product documents own explicitly accepted child-facing, parent-facing and ecosystem-facing behavior. Important current examples:
 
-- `PHASE0_CORE_CREATION_ACTIVITIES.md` — mandatory Phase-0 Writing/Painting scope;
+- `PHASE0_CORE_CREATION_ACTIVITIES.md` — mandatory Writing/Painting scope;
 - `ACTIVITY_SYSTEM_NAVIGATION.md` — universal Home/Back behavior;
-- `ACTIVITY_INPUT_STANDARDS.md` — keyboard/pointer/touch/controller interaction standards;
-- `PARENT_MANAGEMENT.md` — Greia Parents onboarding/management/paired-device/maintenance UX;
-- `ACTIVITY_ECOSYSTEM_AND_DISTRIBUTION.md` — open authoring/distribution and official-catalogue product direction;
-- `AWARDS_BADGES_AND_CELEBRATIONS.md` — child-facing awards/badges/celebration/collection expectations.
+- `ACTIVITY_INPUT_STANDARDS.md` — keyboard/pointer/touch/controller standards;
+- `RESPONSIVE_UI_AND_DISPLAY_LAYOUT.md` — one authored layout, automatic viewport adaptation across Greia-owned surfaces;
+- `MY_GREIA_SETTINGS.md` — child-safe visual personalization/settings scope;
+- `PARENT_MANAGEMENT.md` — Greia Parents onboarding/management/credential UX;
+- `ACTIVITY_ECOSYSTEM_AND_DISTRIBUTION.md` — open authoring/distribution and official-catalogue direction;
+- `AWARDS_BADGES_AND_CELEBRATIONS.md` — child-facing award/collection expectations.
 
 ### 2.3 Normative architecture — accepted ADRs
 
-Accepted ADRs own architectural decisions. Current cross-cutting authorities include ADR 0012/0013/0014/0018/0019/0020/0021/0022/0023/0024/0025. A newer ADR supersedes an older one only where it explicitly says so.
+Accepted ADRs own architectural decisions. Current cross-cutting authorities include ADR 0012/0013/0014/0018/0019/0020/0021/0022/0023/0024/0025/0026/0027/0028.
 
-`docs/architecture/GREIA_ARCHITECTURE.md` is the living synthesis, not a second ADR system. Narrow architecture/design documents are subordinate to accepted ADRs.
+Of particular relevance to current UI/Activity work:
+
+- ADR 0018 — lightweight semantic UI foundation;
+- ADR 0019 — platform-owned Activity system navigation;
+- ADR 0020 — runtime-neutral input profiles/controller support;
+- ADR 0026 — resolution-adaptive, single-authoring UI layout;
+- ADR 0027 — Activity coordinate spaces/reference canvas/world camera;
+- ADR 0028 — platform/Activity localization and language context.
+
+`docs/architecture/GREIA_ARCHITECTURE.md` is a living synthesis, not a second ADR system.
 
 ### 2.4 Engineering guidance — `docs/engineering/ENGINEERING_FOUNDATIONS.md`
 
-This mandatory guide owns repository-wide implementation guidance for OOP structure, purposeful polymorphism, dependency direction, explicit ownership/lifecycle, bounded-resource engineering, documentation and testability. It does not override an accepted ADR or exact source contract.
+This guide owns repository-wide implementation guidance for OOP structure, purposeful polymorphism, dependency direction, explicit ownership/lifecycle, bounded-resource engineering, documentation and testability. It does not override an accepted ADR or exact source contract.
 
 ### 2.5 Exact implemented contracts — source/runtime declarations
 
@@ -47,26 +58,37 @@ For exact currently implemented APIs, schemas, command vocabularies and limits, 
 
 | Fact | Canonical implementation owner |
 |---|---|
-| Activity manifest parser/validation, including `input.profile`, educational metadata and optional launcher `[presentation]` categories | `src/greia_platform/activities.py` |
+| Activity manifest parser/validation, input profile, education metadata and launcher presentation categories | `src/greia_platform/activities.py` |
 | Activity runtime/capability/permission/package limits | `runtime/child-runtime.toml` |
 | Activity source/trust vocabulary | `src/greia_platform/trust.py` |
-| bounded `.greiaactivity` **new-install** staging/validation/immutable-store/activation seam | `src/greia_platform/activity_packages.py` |
-| package-owned Activity presentation assets such as `package:assets/icon.png` | `src/greia_platform/activity_assets.py` |
-| Python Activity SDK helpers and launch input-profile view | `src/greia_platform/activity_api.py` |
-| renderer-neutral Activity input profiles/actions/dead-zone/virtual-pointer semantics | `src/greia_platform/input_core.py` |
-| current Pygame keyboard/controller translation | `src/greia_platform/pygame_input.py` |
-| typed input-device capability state | `src/greia_platform/hal.py`, `src/greia_platform/device_capabilities.py` |
+| bounded `.greiaactivity` new-install staging/validation/immutable-store/activation seam | `src/greia_platform/activity_packages.py` |
+| package-owned Activity icons/presentation assets | `src/greia_platform/activity_assets.py` |
+| Python Activity SDK helpers, read-only visual context and trusted customization helpers | `src/greia_platform/activity_api.py` |
+| renderer-neutral Activity input profiles/actions | `src/greia_platform/input_core.py` |
+| current Pygame input translation | `src/greia_platform/pygame_input.py` |
+| typed hardware capability state | `src/greia_platform/hal.py`, `src/greia_platform/device_capabilities.py` |
 | provisional legacy-X hardware/input composition | `src/greia_platform/hal_legacy_x.py` |
-| renderer-neutral UI semantics/navigation/resource primitives | `src/greia_platform/ui_core.py` |
+| renderer-neutral UI semantics | `src/greia_platform/ui_core.py` |
 | renderer-neutral interaction motion | `src/greia_platform/ui_motion.py` |
 | renderer-neutral bounded selection-aware scrolling | `src/greia_platform/ui_scroll.py` |
-| lightweight Pygame depth/shadow/raised-panel helpers | `src/greia_platform/pygame_effects.py` |
-| child launcher category projection/navigation policy | `src/greia_launcher/catalogue_view.py` |
-| current richer launcher presentation composition | `src/greia_launcher/presentation.py` |
-| Activity system Home/Back vocabulary and protected geometry | `src/greia_platform/system_chrome.py` |
-| trusted system-chrome backend lifecycle/lease seam | `src/greia_launcher/system_chrome.py` |
+| renderer-neutral viewport/rectangle/adaptive-grid calculations | `src/greia_platform/responsive_layout.py` |
+| renderer-neutral Activity canvas/world coordinate transforms | `src/greia_platform/activity_viewport.py` |
+| shared Pygame Activity canvas adapters | `src/greia_platform/pygame_canvas.py` |
+| Pygame child-control metrics and semantic interface-size composition | `src/greia_platform/activity_ui.py` |
 | platform-wide Pygame UI import surface | `src/greia_platform/pygame_ui.py` |
-| existing Activity Pygame helper compatibility surface | `src/greia_platform/activity_ui.py` |
+| lightweight Pygame depth/shadow/raised-panel effects | `src/greia_platform/pygame_effects.py` |
+| child profile semantic interface-size persistence (`compact/normal/large`) | `src/greia_platform/ui_preferences.py` |
+| child theme/color/wallpaper persistence and bounded media import | `src/greia_platform/customization.py` |
+| bounded read-only Activity theme snapshot encoding | `src/greia_platform/theme_snapshot.py` |
+| runtime-neutral localization bundles/locale fallback/string/audio lookup | `src/greia_platform/localization.py` |
+| child + Activity UI/content-language resolution policy | `src/greia_platform/language_context.py` |
+| child-facing language presentation / canonical flag mapping / chooser policy | `src/greia_platform/language_presentation.py` |
+| launcher category projection/navigation | `src/greia_launcher/catalogue_view.py` |
+| richer launcher presentation/effects/catalogue rendering | `src/greia_launcher/presentation.py` |
+| installed profile-aware launcher composition + ordinary Activity visual snapshots | `src/greia_launcher/child_shell.py` |
+| launcher profile-theme/wallpaper/UI-size refresh controller | `src/greia_launcher/theme.py` |
+| Activity system Home/Back vocabulary/protected geometry | `src/greia_platform/system_chrome.py` |
+| trusted system-chrome backend lifecycle/lease seam | `src/greia_launcher/system_chrome.py` |
 | Activity storage operations | `src/greia_platform/storage_client.py` |
 | Activity event protocol/client | `src/greia_platform/event_protocol.py`, `src/greia_platform/event_client.py` |
 | Greia Parent API version/resource/capability vocabulary | `src/greia_parent/protocol.py` |
@@ -74,56 +96,60 @@ For exact currently implemented APIs, schemas, command vocabularies and limits, 
 | capability-gated Parent Activity package upload composition | `src/greia_parent/package_api.py` |
 | per-parent-device credential persistence/revocation | `src/greia_parent/credentials.py` |
 | main Parent password digest + typed change | `src/greia_platform/main_credential.py` |
-| built-in/dependency-free Parent web compatibility surface | `src/greia_parent/web_client.py` |
-| external pinned Parent HTML client source | `frozenpepper/Greia-Parent-App-Html`, pinned by `runtime/parent-app-client.toml` and integrity manifest |
-| Parent LAN service advertisement | `build/overlay/etc/avahi/services/greia-parent.service` |
-| Parent service sandbox/runtime | `build/overlay/etc/systemd/system/greia-parent.service` |
-| shared semantic icons | `assets/catalog/core_icons_v1.toml` |
-| theme defaults | `runtime/theme-defaults.toml` |
-| resolved theme object | `src/greia_platform/customization.py` |
+| external Parent HTML client | `frozenpepper/Greia-Parent-App-Html`, pinned by `runtime/parent-app-client.toml` + integrity manifest |
+| Parent LAN advertisement/service | `build/overlay/etc/avahi/services/greia-parent.service`, `build/overlay/etc/systemd/system/greia-parent.service` |
+| shared semantic icon catalogue | `assets/catalog/core_icons_v1.toml` |
+| theme palette defaults | `runtime/theme-defaults.toml` |
+| first-party child settings UI | `activities/workshop_settings/` (`org.greia.workshop-settings`, child-facing name My Greia) |
 | developer remote client vocabulary | `tools/greia_remote.py` |
 | privileged developer operations | `src/greia_platform/developer_control.py`, `src/greia_platform/developer_input.py` |
-| image composition | `build/profiles/*.toml`, `build/package-sets/*.txt`, canonical builders and overlays |
+| image composition | `build/profiles/*.toml`, `build/package-sets/*.txt`, canonical builders/overlays |
 
-Documentation may explain these contracts but must not invent a conflicting one. When source intentionally changes, update the affected living manuals in the same tranche.
+Documentation may explain these contracts but must not invent a conflicting one. When source intentionally changes, update affected living manuals in the same tranche.
 
 ### 2.6 Active sequencing — active plan
 
-`docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md` owns active ordering, prerequisites, closure criteria and append-only progress history while active. Historical progress entries remain history; current continuation/evidence belongs in `HANDOVER.md`.
+`docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md` owns active ordering, prerequisites, closure criteria and append-only progress history while active. It does not turn a source implementation into executed evidence.
 
 ### 2.7 Current branch/evidence state — `HANDOVER.md`
 
-`HANDOVER.md` owns the current implementation/evidence boundary, unproven work, hardware evidence, blockers and exact next legitimate verification step. Do not promote committed test source into a PASS there unless it was actually executed.
+`HANDOVER.md` owns current implementation state, the exact evidence boundary, unproven work, blockers and the next legitimate verification step. Do not promote committed test source into PASS there unless actually executed against the named source boundary.
 
 ### 2.8 Exact operator procedures — `docs/testing/*`
 
-Named test protocols own prerequisites, commands, stop conditions, evidence to preserve and what a PASS does not prove. They may strengthen but not weaken repository/architecture safety rules.
+Named protocols own prerequisites, commands, stop conditions, evidence to preserve and what a PASS does not prove. Current UI procedures include:
 
-### 2.9 Agent/developer manuals — `docs/agents/*` and `skills/*`
+```text
+docs/testing/2026-08-18_LOCAL_AGENT_FULL_TEST_AND_FIX_SESSION.md
+docs/testing/2026-08-18_RESPONSIVE_UI_ACCEPTANCE.md
+docs/testing/2026-08-18_MY_GREIA_ACCEPTANCE.md
+```
 
-`docs/agents/GREIA_AGENT_OPERATIONS.md` is the operational entry point for project/build/test-hardware work. `skills/greia-activity-authoring/SKILL.md` is the living authoring guide for Activities. These are derived manuals and must track source/ADRs/product rules.
+### 2.9 Agent/developer manuals — `docs/agents/*`, `skills/*`
+
+`docs/agents/GREIA_AGENT_OPERATIONS.md` is the operational entry point for build/test/hardware work. `skills/greia-activity-authoring/SKILL.md` is the living Activity authoring guide and must track the responsive/canvas/localization contracts.
 
 ### 2.10 Governance/licensing — `docs/governance/*`
 
-`docs/governance/LICENSING_AND_TRADEMARK.md` owns practical license matrix, provenance/audit, contribution-license, third-party notice and project-mark guidance, subordinate to ADR 0024 where normative.
+`docs/governance/LICENSING_AND_TRADEMARK.md` owns practical license/provenance/contribution/trademark guidance, subordinate to ADR 0024 where normative.
 
 ### 2.11 Reviews/evidence — `docs/reviews/*`
 
-Reviews are dated analysis/evidence snapshots unless promoted into an ADR, product requirement, governance decision or active-plan decision. Do not rewrite historical evidence to make later reality look cleaner.
+Reviews are dated analysis/evidence snapshots unless promoted into a product requirement, ADR or active plan. Never rewrite historical evidence to pretend a later fix existed earlier.
 
-The 2026-08-18 real-hardware reconciliation is recorded in:
+Current hardware reconciliation:
 
 ```text
 docs/reviews/2026-08-18_REAL_HARDWARE_INSTALLATION_AND_LAUNCHER_REVIEW.md
 ```
 
-### 2.12 Visual design — `docs/design/*`
+### 2.12 Visual/design manuals — `docs/design/*`
 
-`docs/design/GREIA_VISUAL_STYLE_GUIDE.md` owns the selected reusable visual language and Nunito Sans typography direction. The selection does not itself prove bundled font files or physical readability evidence.
+`GREIA_VISUAL_STYLE_GUIDE.md` owns reusable visual-language direction. `GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md` owns the production-art inventory.
 
-`docs/design/GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md` owns the production art inventory.
+`GREIA_LAUNCHER_INTERACTION_AND_ACTIVITY_CATALOGUE.md` owns the current launcher interaction/catalogue synthesis.
 
-**`docs/design/GREIA_LAUNCHER_INTERACTION_AND_ACTIVITY_CATALOGUE.md` owns the current launcher interaction/catalogue design synthesis:** subtle bounded effects, category-navigation semantics, scroll behavior, package-owned icon authoring contract, Parent-installed Activity presentation boundary and the distinction between navigation categories and educational taxonomy. Exact behavior/limits remain source-owned by the implementation table above.
+`GREIA_ACTIVITY_CANVAS_AND_VIEWPORT_AUTHORING.md` owns the designer-facing spatial-mode decision guide below ADR 0027.
 
 ---
 
@@ -142,82 +168,71 @@ Never use `PASS`, `accepted`, `complete`, `supported` or `licensed` without nami
 
 ---
 
-## 4. Implemented versus conceptual — important current distinctions
+## 4. Implemented versus conceptual — current distinctions
 
 Architecture examples communicate semantics; they are not automatically current APIs.
 
-- `activity.toml` remains the implemented manifest; conceptual YAML does not replace it.
+- `activity.toml` remains the implemented manifest. Do not add conceptual localization tables unless the parser/runtime are migrated in the same tranche.
 - `.greiabackup` remains future-facing until its implementation phase closes.
-- **A bounded ZIP-based `.greiaactivity` new-install seam now exists in source, but full R10 does not.** Updates, removal, rollback selection, signatures/revocation, curated distribution and transactional save migration remain open.
-- The Parent API defines `POST /api/v1/activities/install`, but ordinary/release capability remains false while Parent transport is provisional HTTP. Explicit developer/owner-enabled machines can exercise the new-install seam; that is not production transport approval.
-- Parent-installed packages are a distinct `PARENT_TRUSTED_UNSIGNED` source, not built-ins and not developer-unsigned packages.
-- `education.categories` is learning/progression metadata. New Activity launcher navigation belongs in optional `[presentation] categories = [...]`; the current old-package fallback is compatibility behavior.
-- `icon = "package:assets/icon.png"` is now implemented for contained PNG/WebP Activity-owned icons. Arbitrary host paths are not supported.
-- ADR 0018 renderer-neutral terms remain broader than Pygame. `ui_motion.py`/`ui_scroll.py` are renderer-neutral; `pygame_effects.py` is one lightweight renderer implementation.
-- The current launcher shadows/hover/launch flourish are implemented presentation behavior but still require fresh physical performance/interaction acceptance on the reference hardware floor.
-- ADR 0019 Home/Back controls remain platform chrome, not Activity widgets.
-- ADR 0020 input profiles/actions remain runtime-neutral semantics; Pygame is one adapter, not universal raw controller authority.
-- ADR 0022 Parent API/client architecture is selected, but production local approval/pairing and authenticated encrypted transport remain open.
-- ADR 0023's open ecosystem/catalogue architecture does not mean the Official Greia Catalogue, marketplace or entitlement system exists.
-- ADR 0024 license policy selection does not prove the whole tree completed public-release provenance/SPDX/licensing audit.
-- ADR 0025 award/badge architecture does not mean the award ledger/scheduler/collection/Parent achievement resources are already implemented.
-- The Nunito Sans design selection does not mean font assets/tokens/readability evidence are already complete.
-- R7 remains open: the current Xorg/xinit display/session implementation and its service privileges are provisional compatibility behavior.
+- A bounded ZIP-based `.greiaactivity` **new-install** seam exists; full R10 update/remove/rollback/signature/revocation/save-migration does not.
+- Parent API `POST /api/v1/activities/install` exists, but ordinary/release install capability remains false while Parent transport/security is provisional.
+- Parent-installed packages remain `PARENT_TRUSTED_UNSIGNED`, not built-ins.
+- `education.categories` and launcher `[presentation].categories` are different semantics.
+- package-owned PNG/WebP Activity icons are implemented; arbitrary host paths are not.
+- ADR 0019 Home/Back remains platform chrome, not Activity widgets.
+- ADR 0026 selects automatic responsive layout but does not certify every existing surface until migrated/tested.
+- ADR 0027/reference-canvas/world transform source exists; raw legacy physical-pixel Activity code can still require migration.
+- ADR 0028 localization/language policy source exists, but full profile persistence, localized catalogue-title wiring, dynamic launcher flags and pre-launch chooser remain partially integrated/unproven.
+- My Greia semantic interface-size storage/read-only Activity visual snapshots exist in source but require fresh current-head owner-controlled verification.
+- R7 remains open; Xorg/xinit is provisional compatibility behavior.
 
 ---
 
-## 5. 2026-08-18 hardware-reconciliation documentation rule
+## 5. Hardware reconciliation rule
 
-Physical-hardware debugging exposed a recurring documentation/source failure: a fix can be true on the machine and described in a log while still being absent from a clean-build overlay.
-
-From this tranche onward, a hardware fix is not considered integrated until all four are true:
+A hardware fix is not integrated until all four are true:
 
 1. the immediate physical failure is resolved;
-2. the authoritative build/source input contains the fix;
+2. authoritative build/source contains the fix;
 3. a hardware-independent regression/invariant protects the root-cause class;
-4. living documentation explains the class of failure rather than only the machine/model symptom.
+4. living documentation explains the class rather than only the device symptom.
 
-The detailed failure record is `docs/INSTALLATION_ISSUES_LOG.md`; the cross-cutting review is the dated review above.
+Detailed hardware failures belong in `docs/INSTALLATION_ISSUES_LOG.md`; cross-cutting evidence belongs in dated reviews/HANDOVER.
 
 ---
 
 ## 6. Required update triggers
 
-| Change | Required living documentation update |
+| Change | Required living update |
 |---|---|
-| repository workflow / hardware operation | `docs/agents/GREIA_AGENT_OPERATIONS.md` |
-| repository-wide engineering rules | engineering foundations; `AGENTS.md` when non-negotiable |
-| Activity manifest/API/runtime/trust/assets/theme/UI/input/performance/deploy/package flow | Activity authoring skill + relevant design/architecture doc |
-| launcher interaction/catalogue/category/icon behavior | `GREIA_LAUNCHER_INTERACTION_AND_ACTIVITY_CATALOGUE.md` + Activity skill + source/tests |
-| Activity package install/update/remove/trust/activation behavior | Activity ecosystem architecture/product docs as appropriate + Activity skill + active plan + Parent docs when parent-facing |
-| installation/build/initramfs/display-service hardware contract | issue log + dated review/evidence + agent operations/testing docs as needed + active plan |
-| child-facing accepted product scope | relevant `docs/product/*`; `AGENTS.md` when constitutional |
-| Awards/badges/celebration behavior | product doc + ADR 0025 when architecture changes + Activity skill for author-facing contract |
-| visual language/typography | visual style guide + affected source/manuals |
-| production art inventory | visual art/core asset requirements |
-| project licensing/trademark policy | ADR 0024 when normative + governance manual |
-| Parent UX/features/pairing/maintenance | `PARENT_MANAGEMENT.md` + ADR 0022 when architecture/security changes |
-| Parent API resources/capabilities/device credentials/discovery/package operations | `src/greia_parent/*` + Parent architecture/product docs + Parent external client where applicable |
-| architectural decision | ADR + living architecture synthesis |
-| renderer-neutral UI semantics | ADR 0018 + `ui_core.py`/shared primitives + affected manuals |
-| Activity system navigation/chrome | ADR 0019 + product doc + source + Activity skill + active R7 plan |
-| Activity input/controller semantics | ADR 0020 + input product doc + source + Activity skill + active R7 plan |
+| repository workflow/hardware operation | `docs/agents/GREIA_AGENT_OPERATIONS.md` |
+| repository-wide non-negotiable rule | engineering foundations and/or `AGENTS.md` |
+| Activity manifest/API/runtime/trust/package flow | Activity authoring skill + relevant product/architecture docs |
+| responsive layout/shared geometry | ADR 0026 + responsive product doc + source/tests + affected author manuals |
+| Activity canvas/world coordinate contract | ADR 0027 + canvas authoring guide + Activity skill + source/tests |
+| Activity/localization/language behavior | ADR 0028 + Activity skill + source/tests + launcher/Parent docs where user-facing |
+| child visual personalization/My Greia scope | `MY_GREIA_SETTINGS.md` + source/tests + Activity skill when author-facing visual context changes |
+| launcher catalogue/category/icon/effects | launcher design + source/tests + Activity skill where author-facing |
+| package install/update/remove/trust | Activity ecosystem docs + Activity skill + active plan + Parent docs where applicable |
+| installation/build/initramfs/display hardware contract | issue log + review/evidence + operator docs + active plan |
+| Parent UX/credentials/pairing | `PARENT_MANAGEMENT.md` + ADR 0022 if architectural + Parent client/source |
+| architecture decision | ADR + living architecture synthesis |
 | active implementation/progress | active plan append + `HANDOVER.md` |
-| executed verification result | `HANDOVER.md` + dated review/evidence when durable |
+| executed verification | `HANDOVER.md` + durable review/evidence when useful |
 
 ---
 
 ## 7. Mandatory read order for substantive work
 
-Unless a narrower repository instruction says otherwise:
+Unless narrower instructions say otherwise:
 
 1. `AGENTS.md`
 2. this documentation map
-3. relevant architecture/accepted ADRs/product requirements
+3. relevant product docs / accepted ADRs
 4. `docs/engineering/ENGINEERING_FOUNDATIONS.md`
 5. active plan
 6. `HANDOVER.md`
-7. relevant agent manual or Activity skill
+7. relevant operator/agent/Activity manual
 8. exact source/runtime contracts being changed
 
-When documents conflict, resolve by authority class rather than recency alone. If an implementation fact changed intentionally, update the derived manuals; if it conflicts with an accepted decision, stop and resolve the architecture rather than quietly documenting the deviation.
+When documents conflict, resolve by authority class. If implementation intentionally changed, update derived manuals; if source conflicts with an accepted decision, resolve the architecture rather than quietly documenting the deviation.
