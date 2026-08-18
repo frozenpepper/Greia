@@ -1,0 +1,7 @@
+# Greia installer images are built in chroots/VMs that cannot probe the target
+# computer. Keep these generic boot-critical storage modules explicit so an
+# installed system can find its root disk even when the build host used a
+# different controller stack.
+ahci
+libata
+sd_mod
