@@ -5,6 +5,7 @@ import os
 import shutil
 import stat
 import tempfile
+import threading
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
@@ -56,6 +57,12 @@ class ActivityPackageService:
     solved: bounded acquisition, archive containment, normal ActivityRegistry
     validation, immutable version storage, atomic activation and typed parent
     provenance. Updates/removal remain separate future operations.
+
+    One service instance serializes installation transactions. The Parent API
+    owns one long-lived service instance, so overlapping HTTP requests cannot
+    race receipt preparation against active-directory publication. This is a
+    transaction-safety property, not a substitute for future multi-process
+    package-manager locking when R10 grows beyond the current service boundary.
     """
 
     SOURCE_ID = "greia-parent-package-service"
@@ -74,6 +81,7 @@ class ActivityPackageService:
         self.receipts_root = self.state_root / "receipts"
         self.runtime = RuntimeCatalogue.load(runtime_catalogue)
         self.built_in_root = built_in_root.resolve() if built_in_root else None
+        self._install_lock = threading.Lock()
 
     @classmethod
     def from_environment(cls) -> "ActivityPackageService":
@@ -90,6 +98,14 @@ class ActivityPackageService:
         )
 
     def install_archive(self, archive_path: Path) -> ActivityInstallReceipt:
+        """Install one new Activity under a serialized commit transaction."""
+
+        with self._install_lock:
+            return self._install_archive_serialized(archive_path)
+
+    def _install_archive_serialized(
+        self, archive_path: Path
+    ) -> ActivityInstallReceipt:
         archive_path = archive_path.resolve(strict=True)
         if not archive_path.is_file():
             raise ActivityPackageError("Activity package is not a file")
