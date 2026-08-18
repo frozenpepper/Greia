@@ -18,6 +18,11 @@ Environment=GREIA_SYSTEM_SETTINGS_DIR=/var/lib/greia-system-settings
 Environment=GREIA_HARDWARE_STATUS=/run/greia-hardware/status.json
 Environment=GREIA_PARENT_ACTIVITY_PACKAGE_ROOT=/var/lib/greia-os/activity-packages
 StateDirectory=greia-os
+# The state root must remain traversable by greiakid so the launcher can reach
+# /var/lib/greia-os/activity-packages/active. Sensitive Parent state is secured
+# by tighter child-directory/file modes. StateDirectoryMode also migrates an
+# existing 0750 state root on upgraded developer machines.
+StateDirectoryMode=0755
 ExecStart=/usr/bin/python3 -m greia_parent.package_api --bind 0.0.0.0 --port 8766
 Restart=on-failure
 RestartSec=2
