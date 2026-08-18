@@ -45,6 +45,7 @@ Do not use/query/trigger GitHub-hosted Actions without a new explicit owner auth
 - Greia UI is automatically responsive: designers/authors maintain **one semantic layout**, not one layout per resolution/device;
 - Activity authors can work in a 1024x600 logical reference canvas/world model while Greia automatically maps to the actual Activity viewport;
 - Activities may be fluid UI, fixed canvas, world-camera game, or hybrids; choose spatial semantics rather than physical pixels;
+- Activity controls/content must use platform-derived safe geometry rather than assuming the top-left surface belongs to the Activity; trusted Home/Back chrome owns that region;
 - localization is data/semantic-key driven; single-language Activities remain valid; launcher language presentation is platform-owned;
 - child-facing language cues use canonical flags when language distinction matters, not initials as the primary cue;
 - My Greia is a child-safe visual personalization Activity, not a general system administration panel;
@@ -72,6 +73,8 @@ PYTHONPATH=src python3 -m unittest \
   tests.test_my_greia_settings_contract \
   tests.test_my_greia_runtime \
   tests.test_first_party_activity_readiness \
+  tests.test_shape_garden_contract \
+  tests.test_core_activity_system_safe_ui \
   tests.test_customization \
   tests.test_activity_ui \
   tests.test_launcher_presentation \
@@ -103,7 +106,7 @@ focused current-ui-platform gate: 131 PASS
 Parent-App npm test at pinned e30bcbc: 10 PASS
 ```
 
-That evidence does **not** cover later source changes, including the final My Greia safe-area implementation/regression and the first-party first-frame readiness corrections. Do not copy the 679-PASS result onto the current SHA. The current checkout requires fresh execution of the focused gate and `make verify` before a new PASS can be recorded.
+That evidence does **not** cover later source changes, including the final My Greia safe-area implementation/regression, the first-party first-frame readiness corrections, the Shape Garden logical-canvas migration, or the new shared system-safe UI geometry consumed by Painting/Writing. Do not copy the 679-PASS result onto the current SHA. The current checkout requires fresh execution of the focused gate and `make verify` before a new PASS can be recorded.
 
 ## 5. Parent HTML
 
@@ -133,6 +136,8 @@ Physical acceptance must include, at minimum:
 - physical removable-media ejection while My Greia wallpaper browser is open;
 - ordinary Activity visual snapshot present while `GREIA_CUSTOMIZATION_DIR` remains absent;
 - first-party Activities do not publish READY before their first visible frame;
+- Painting/Writing toolbars and content stay outside trusted Home/Back chrome;
+- Shape Garden maps physical input through the shared logical canvas and ignores pointer input inside protected system chrome;
 - Writing/Painting and representative game-like Activity behavior under the shared viewport/size contracts.
 
 ## 7. Evidence discipline
