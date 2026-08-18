@@ -1,7 +1,7 @@
 # Real-Hardware Installation and Launcher Review — 2026-08-18
 
 **Status:** implementation review and engineering record  
-**Scope reviewed:** latest `main` through the August 18 Acer hardware tranche, installer/build contracts, systemd/Xorg/input/sandbox boot path, launcher UI foundations, Activity discovery/trust, Parent API and external Parent HTML client integration.  
+**Scope reviewed:** latest `main` through the August 18 Acer hardware tranche and subsequent remediation, installer/build contracts, systemd/Xorg/input/sandbox boot path, launcher UI foundations, Activity discovery/trust, Parent API and external Parent HTML client integration.  
 **Primary goal:** convert the physical-hardware debugging sequence into hardware-independent invariants so a future build does not rediscover the same failures on another machine.
 
 ## Executive conclusion
@@ -21,19 +21,22 @@ The hardware work found real platform defects, not a collection of Acer-specific
 
 This review found the most dangerous regression in item 8: the issue log said the Xorg namespace, wrapper and legacy-input failures had been fixed, while the current build tree still contained the pre-fix values. Those build inputs have now been corrected and locked by regression tests.
 
+A final adversarial pass also caught a subtler portability mistake in the remediation itself: the first storage-driver fix put x86-only module names in shared `initramfs-tools/modules` files. That would have solved the Acer while potentially creating a future ARM build failure. The final source keeps the shared module files architecture-neutral and makes the executable hook consult the **target kernel** before force-adding the broad x86 SATA/AHCI floor.
+
 ## Hardware-derived platform invariants
 
 ### 1. Never derive boot-critical target drivers from the build machine
 
 A target image is commonly assembled in a VM/chroot that exposes completely different storage hardware from the eventual laptop. Therefore host probing is not authority for the target initramfs.
 
-Greia now carries the generic x86 root-storage stack three ways:
+The current policy is deliberately two-layered:
 
-- `MODULES=most` in both target and live initramfs configuration;
-- explicit `ahci`, `libata`, `sd_mod` module lists;
-- executable `greia-storage-modules` initramfs hooks that call `manual_add_modules` for those modules.
+- `MODULES=most` in both target and live initramfs configuration provides the broad generic driver set;
+- executable `greia-storage-modules` hooks consult the **target kernel** with `modinfo -k "$version"` and conditionally `manual_add_modules` the broad x86 root-storage floor (`ahci`, `libata`, `sd_mod`) only when those modules exist.
 
-**Rule:** any future boot-critical hardware class whose absence can make the root filesystem undiscoverable must be selected from the compatibility profile/platform contract, never solely from build-host autodetection.
+The shared `etc/initramfs-tools/modules` files intentionally do **not** hardcode x86-only names. This prevents a legacy-x86 fix from poisoning a future ARM/board image.
+
+**Rule:** any future boot-critical hardware class whose absence can make the root filesystem undiscoverable must be selected from the compatibility profile/target-kernel contract, never solely from build-host autodetection and never by forcing one architecture's modules through a shared overlay.
 
 ### 2. Installer media is one versioned object, not a bag of files
 
@@ -103,7 +106,8 @@ Immediate defense-in-depth now guarantees that stale builder text cannot make th
 `tests/test_installation_hardware_regressions.py` now source-locks the reusable invariants above:
 
 - live-media identity and payload are emitted together;
-- both live and target initramfs configurations carry the generic storage stack and executable force-add hooks;
+- live and target initramfs use `MODULES=most` plus executable target-kernel-aware force-add hooks;
+- shared module files remain architecture-neutral rather than forcing x86 names everywhere;
 - graphical service stdin cannot be the VT and installer subprocess stdin is detached;
 - launcher runtime directory creation precedes service execution;
 - the current Xorg service cannot silently regain the incompatible heavy namespace;
@@ -117,27 +121,46 @@ These tests are intentionally hardware-family-neutral. They protect causes, not 
 
 ## Launcher/UI architecture review
 
-The old launcher already bounded visible Activities into pages, but presentation policy was embedded directly in the launcher and did not use the shared UI vocabulary consistently. It also ignored manifest categories and required every icon to exist in the system-wide icon catalogue.
+The old launcher already bounded visible Activities into pages, but presentation policy was embedded directly in the launcher and did not use the shared UI vocabulary consistently. It also ignored manifest navigation categories, required every icon to exist in the system-wide icon catalogue, and did not make Activity/category identity sufficiently explicit in the child UI.
 
 The new structure keeps lifecycle/security authority in `LauncherApplication` while moving richer presentation into `GreiaLauncherPresentation` and adding small reusable primitives:
 
 - `greia_platform.ui_motion`: renderer-neutral hover/press/launch transform samples;
 - `greia_platform.ui_scroll`: renderer-neutral selection-aware bounded scrolling;
 - `greia_platform.pygame_effects`: shallow depth, cached shadows, raised panels and shadowed icons;
-- `greia_launcher.catalogue_view`: semantic Activity category collections;
-- `greia_launcher.activity_icon`: safe package-owned icon resolution;
-- `greia_launcher.presentation`: launcher composition of categories, scrolling, hover, launch flourish and package icon display.
+- `greia_platform.activity_assets`: shared package-owned icon containment/header/decode validation;
+- `greia_launcher.catalogue_view`: semantic Activity category collections with stable category icons;
+- `greia_launcher.presentation`: launcher composition of category hierarchy, scrolling, labels, hover, launch flourish and package icon display.
 
 This deliberately does **not** introduce a scene graph, compositor or general animation engine. Motion is short sampled math; caches are bounded; only visible Activity tiles render.
 
 ### Activity catalogue behavior
 
-- "All" is always the first semantic collection.
-- Activities may belong to multiple categories without duplicating package state.
-- category IDs come from the manifest; display names are presentation metadata.
+- `All` is the root/category-landing collection.
+- Activities may belong to multiple launcher categories without duplicating package state.
+- launcher categories are separate from education/skill metadata.
+- known categories have stable semantic icons as well as titles.
 - the visible grid is two rows, selection-aware and scrollable by keyboard and mouse wheel.
 - scroll controls are rendered only when needed.
 - category selection resets the visible selection/window predictably.
+- entering a category replaces the chooser with a fixed header containing local Back, category icon and category title.
+- `Esc`/`Backspace` inside a category returns to `All`; `Esc` at `All` retains the existing profile/logout behavior.
+
+The launcher-local category Back control is not ADR-0019 Activity system chrome. It changes launcher navigation state only; it does not stop or escape a running Activity.
+
+### Activity names are part of the tile contract
+
+The latest real-hardware observation was that the installed launcher being exercised still showed icon-only Activity boxes. The newer repository presentation code already had a caption, but the layout treated it as an incidental line under the icon and the hardware image had not yet incorporated it.
+
+The final source now makes this explicit rather than relying on incidental geometry:
+
+- every Activity tile reserves a dedicated name band;
+- the icon is sized into the remaining artwork region;
+- labels shrink font size to fit instead of geometrically squashing glyphs;
+- long names ellipsize only as a last resort;
+- a package-provided icon is never sufficient identification by itself.
+
+This must be verified on the next 1024×600 physical image; source structure alone does not prove the final typography/layout is acceptable.
 
 ### Interaction behavior
 
@@ -148,13 +171,13 @@ This deliberately does **not** introduce a scene graph, compositor or general an
 
 ### Activity-owned icons
 
-Built-ins remain compatible with `icon = "paint"` catalogue IDs. Portable packages may use:
+Built-ins remain compatible with catalogue icon IDs. Portable packages may use:
 
 ```toml
 icon = "package:assets/icon.png"
 ```
 
-Package icon paths must be relative, contained in the Activity root, bounded in depth/length and currently PNG or WebP. This prevents an Activity manifest from turning the launcher into an arbitrary host-file reader.
+Package icons must be relative and contained in the Activity root. Platform validation now also bounds file size, validates supported image headers and rejects unreasonable decode dimensions before activation. This prevents an Activity manifest from turning the launcher into either an arbitrary host-file reader or a large decode-allocation trap on low-memory hardware.
 
 ## Parent Activity installation review
 
@@ -167,17 +190,17 @@ The architecture previously had the correct policy—Parents must not raw-copy A
 1. bounds compressed request size, entry count, path length and uncompressed total;
 2. rejects traversal, absolute/backslash/hidden paths, duplicate portable paths, encryption, symlinks and special files;
 3. streams extraction into private staging rather than using unsafe archive extraction helpers;
-4. validates the staged package through the ordinary `ActivityRegistry`, including collision/runtime/tree constraints;
+4. validates the staged package through the ordinary `ActivityRegistry`, including collision/runtime/tree constraints and package-owned icon validation;
 5. records source/trust as `PARENT_TRUSTED_UNSIGNED` / `greia-parent-package-service`;
 6. stores one read-only immutable digest-addressed version;
-7. atomically renames a validated active tree into the separate Parent Activity source;
-8. writes a bounded install receipt.
+7. prepares the audit metadata before activation;
+8. atomically renames a validated active tree into the separate Parent Activity source as the commit point.
 
 Existing Activity IDs are rejected. **Updates, rollback selection, removal, signatures/revocation and curated-store policy are not declared complete by this tranche.**
 
 ### Parent API and transport gate
 
-The protocol now defines `POST /api/v1/activities/install`, but the ordinary static capability remains false. The package-aware Parent service advertises it only when explicitly owner-enabled or on a developer image marker.
+The protocol defines `POST /api/v1/activities/install`, but the ordinary static capability remains false. The package-aware Parent service advertises it only when explicitly owner-enabled or on a developer image marker.
 
 That distinction is deliberate: the current Parent transport still reports `provisional-http`. Uploading executable Activity code over that transport must not silently become a release feature merely because package validation exists.
 
@@ -197,16 +220,19 @@ The Greia build pin and integrity manifest were advanced to the exact external-c
 
 Parent-installed Activities are a separate `ActivitySource` with `PARENT_TRUSTED_UNSIGNED`, then flow through the same registry, permission broker, runtime manager, history service and `ActivitySupervisor` as built-ins. They are not copied into `/opt`, relabeled as built-in, or smuggled through the developer-unsigned source.
 
+The launcher rebuilds runtime/permission/history/supervisor authority **before** publishing a newly discovered Activity into the visible catalogue, preventing a tile from appearing with stale launch authority.
+
 ## Remaining risks / deliberately unfinished work
 
 1. **Delete the obsolete password-writing developer branches from the builders.** They are now neutralized by an earlier SSH security floor and first-boot locking, but dead insecure code remains technical debt.
 2. **Run the new Python and Parent Node tests in a real checkout.** This review was performed through the connected GitHub repository and did not invoke repository CI/Actions.
-3. **Rebuild installer and target images and repeat physical boot/install acceptance.** Source contracts are materially stronger, but generated initramfs/systemd/Xorg behavior must be proven in the produced artifacts.
+3. **Rebuild installer and target images and repeat physical boot/install acceptance.** Source contracts are materially stronger, but generated initramfs/systemd/Xorg behavior and the new category/name layout must be proven in the produced artifacts.
 4. **Complete R10 update/removal/signature/rollback semantics** before making Activity installation generally available on release transports.
 5. **Finish secure Parent transport/pairing** before release-enabling executable package upload.
 6. **R7 remains open.** The Xorg policy here is the known-good provisional compatibility contract, not a decision to keep Xorg forever.
-7. **Category display metadata/localization** should become a platform vocabulary rather than relying indefinitely on humanized manifest IDs.
-8. **Accessibility/input parity:** controller/touch category navigation and pointer cursor policy should receive physical acceptance, especially on 1024×600 hardware.
+7. **Category display vocabulary/localization** should become platform-owned data rather than relying indefinitely on humanized identifiers.
+8. **Accessibility/input parity:** controller/touch category navigation, local Back mapping and pointer cursor policy should receive physical acceptance, especially on 1024×600 hardware.
+9. **Typography/readability:** Activity label and category-header sizes must be checked with the selected Nunito Sans implementation once the font itself is actually integrated; current source still uses the existing font loader.
 
 ## Review principle to carry forward
 
@@ -217,4 +243,4 @@ When physical hardware reveals a failure, the fix is not complete until all four
 3. a hardware-independent regression/invariant prevents accidental reversal;
 4. the documentation explains the *class of failure* and how future architecture should avoid it.
 
-The August 18 review found cases where only (1) and (4) were true. This tranche specifically closes that gap for the major installation/session failures above.
+The August 18 review found cases where only (1) and (4) were true. This tranche specifically closes that gap for the major installation/session failures above and applies the same discipline to the launcher/package work: implementation source and regression contracts exist, while physical rebuild/acceptance remains explicitly unclaimed.
