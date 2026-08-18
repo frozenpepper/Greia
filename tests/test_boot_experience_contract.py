@@ -34,8 +34,17 @@ class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
 
     def test_early_renderer_has_no_reference_hardware_geometry(self) -> None:
         source = EARLY_SOURCE.read_text(encoding="utf-8")
-        for forbidden in ("1024", "600", "Acer", "Aspire"):
+        # The renderer must query fbdev geometry at runtime. Guard against
+        # reference-hardware geometry being baked in: a literal 1024x600 display
+        # resolution, Acer model names, or a fixed framebuffer width/height
+        # constant. (Byte-size bounds such as `64 * 1024 * 1024` are resource
+        # limits, not display geometry, so the bare integer is not banned.)
+        for forbidden in ("Acer", "Aspire"):
             self.assertNotIn(forbidden, source)
+        self.assertNotIn("var.xres =", source)
+        self.assertNotIn("var.yres =", source)
+        # No fixed display-resolution literal (1024x600 etc.) may be encoded.
+        self.assertNotRegex(source, r"\b1024\s*[xX*]\s*600\b")
 
     def test_early_renderer_remains_nonblocking_and_console_silent(self) -> None:
         source = EARLY_SOURCE.read_text(encoding="utf-8")
