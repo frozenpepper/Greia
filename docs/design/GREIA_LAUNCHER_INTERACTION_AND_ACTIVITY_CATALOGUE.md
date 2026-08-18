@@ -9,7 +9,7 @@
 
 The launcher should feel alive, polished and child-friendly without becoming graphically heavy or architecturally special. Effects must therefore come from a small set of reusable, bounded primitives that Activities and other platform screens can use later.
 
-This document defines that interaction layer and the Activity catalogue model.
+This document defines that interaction layer, Activity catalogue/navigation metadata, package-owned icon contract and Parent-installed Activity boundary.
 
 ## Design principles
 
@@ -19,8 +19,10 @@ This document defines that interaction layer and the Activity catalogue model.
 4. **Input parity.** Pointer, keyboard and future controller/touch paths act on the same selection/navigation state.
 5. **Feedback precedes latency.** A click/activation must create visible response before startup work can block perception.
 6. **Presentation never owns authority.** Animation cannot grant package trust, permissions, storage access, focus authority or lifecycle state.
-7. **Package identity is separate from presentation.** Categories and icons are manifest metadata; launch identity remains the Activity ID and validated package registration.
-8. **Portable Activities are self-presenting.** An Activity may ship its own icon without adding an asset to the base OS.
+7. **Package identity is separate from presentation.** Launcher categories and icons are manifest metadata; launch identity remains the Activity ID and validated package registration.
+8. **Educational metadata is not navigation metadata.** A skill/progression tag such as `fine_motor` must not automatically become permanent launcher chrome for newly authored packages.
+9. **Portable Activities are self-presenting.** An Activity may ship its own icon without adding an asset to the base OS.
+10. **Live package discovery must rebuild authority before UI publication.** A newly installed tile is not launchable until runtime/permission/history/supervisor services have been rebuilt from the same validated registry set.
 
 ## Shared primitive layers
 
@@ -62,6 +64,10 @@ Pygame-only presentation helpers provide:
 
 All caches used by the launcher are bounded. Expensive blur filters, per-frame full-screen alpha effects and unbounded transformed-surface caches are out of scope for the reference hardware floor.
 
+### `greia_platform.activity_assets`
+
+Package-owned presentation asset validation is platform-owned rather than launcher-owned. The installer and launcher therefore use the same containment rule for Activity icons. A package with a broken `package:` icon path is rejected before activation instead of being accepted and failing only when drawn.
+
 ## Launcher composition
 
 `LauncherApplication` remains the lifecycle/security core. `GreiaLauncherPresentation` specializes child-facing presentation and navigation while reusing the authoritative profile/session/permission/runtime/supervisor paths.
@@ -91,32 +97,73 @@ The effect should be noticeable but not twitchy. Selection must still be obvious
 
 No launch animation may hide a validation failure indefinitely or continue as an unbounded loop.
 
+### Live package install while launcher is running
+
+The launcher periodically observes the registry discovery token. When Parent installation changes the active package tree:
+
+1. the registry validates the complete combined built-in/developer/Parent source set;
+2. the launcher holds the existing catalogue as last-known-good state;
+3. runtime manager, permission broker, storage/history/progression composition and `ActivitySupervisor` are rebuilt against the newly validated Activity set;
+4. only after that succeeds is the new catalogue published to the child UI;
+5. if validation/composition fails, the current catalogue/runtime pair remains authoritative and the launcher shows its error indicator.
+
+This prevents a visually present Activity from being backed by stale launch authority.
+
 ## Activity catalogue
 
 The Activity registry remains the source of package truth. `ActivityCatalogue` is only a projection for navigation.
 
-### Categories
+### Launcher navigation categories
 
-Every manifest already supports:
+New/updated manifests should declare child-facing navigation categories explicitly:
 
 ```toml
-categories = ["creative", "drawing"]
+[presentation]
+categories = ["create", "learn"]
 ```
+
+These are deliberately separate from the educational taxonomy:
+
+```toml
+[education]
+categories = ["creativity", "geometry", "fine_motor"]
+```
+
+`education.categories` continues to describe learning/skill context. It must not be overloaded merely to obtain a launcher tab.
+
+Current recommended high-level launcher vocabulary is:
+
+- `create`
+- `play`
+- `learn`
+- `explore`
+- `my_greia`
+
+The parser does not freeze this list as a permanent allowlist, but launcher category IDs must be bounded, lower-case platform-style identifiers and a package may declare at most four. A later localized category vocabulary may become platform-owned data without changing Activity identity.
+
+For compatibility, an older API 0.1 package with no `[presentation]` table temporarily falls back to its `education.categories`. This is compatibility behavior, not the recommended authoring pattern.
+
+Current built-ins intentionally demonstrate a compact information architecture:
+
+- Painting → `create`
+- Shape Garden → `create`, `learn`
+- Writing → `create`, `learn`
+- Workshop Settings → `my_greia`
 
 Rules:
 
 - `All` is always available and appears first;
+- known high-level categories have a stable child-facing ordering (`Create`, `Play`, `Learn`, `Explore`, `My Greia`);
 - one Activity may appear in multiple categories;
 - duplicate appearance never duplicates installation, progress or permissions;
-- category IDs are normalized for matching but remain semantic metadata;
-- category display vocabulary/localization should ultimately be platform-owned;
-- an Activity with no category still appears under `All`.
+- an Activity with no usable category still appears under `All`;
+- category selection is presentation state only.
 
 The current launcher shows category pills/tabs near the top of the Activity screen. `Tab` cycles categories; pointer activation chooses one. Future controller/touch bindings must map to the same category state.
 
-### Scrolling
+### Activity scrolling
 
-The launcher currently presents two visible Activity rows. Column count adapts to available width. The collection becomes scrollable when it exceeds visible capacity.
+The launcher presents two visible Activity rows. Column count adapts to available width. The collection becomes scrollable when it exceeds visible capacity.
 
 Supported navigation:
 
@@ -126,7 +173,7 @@ Supported navigation:
 - explicit up/down controls appear only when there is more content;
 - switching category resets selection and scroll window predictably.
 
-This must remain bounded regardless of the number of installed Activities.
+Only the visible window is rendered. Installed Activity count therefore does not create an unbounded tile/widget set.
 
 ## Activity icons
 
@@ -135,7 +182,8 @@ This must remain bounded regardless of the number of installed Activities.
 Existing Activities remain valid:
 
 ```toml
-icon = "paint"
+[activity]
+icon = "palette"
 ```
 
 The ID resolves through Greia's platform asset catalogue.
@@ -145,20 +193,21 @@ The ID resolves through Greia's platform asset catalogue.
 A portable Activity may ship its own icon:
 
 ```toml
+[activity]
 icon = "package:assets/icon.png"
 ```
 
 Current allowed formats are PNG and WebP.
 
-The resolver requires:
+The platform resolver requires:
 
 - a relative path;
-- no `.`/`..` traversal;
-- bounded length and depth;
+- no `.`/`..` escape;
+- bounded path length and depth;
 - resolution strictly inside the validated Activity package root;
 - a regular existing file.
 
-The launcher decorates the resulting icon with the same shallow shadow used for built-ins, so package-provided artwork still belongs visually to Greia without being redrawn by the OS.
+For Parent-installed packages the reference is validated during package installation. The launcher then loads exactly that validated package asset and decorates it with the same shallow shadow used for built-ins.
 
 Recommended authoring target:
 
@@ -176,33 +225,57 @@ Parent-installed packages are deliberately a separate source:
 - source ID: `greia-parent-package-service`;
 - active root: `/var/lib/greia-os/activity-packages/active` by default.
 
-The launcher composes this source with built-ins and any explicit developer source through the normal `ActivityRegistry`. It then rebuilds the same runtime/permission/history/supervisor services from the combined validated Activity set.
+The launcher composes this source with built-ins and any explicit developer source through the normal `ActivityRegistry`. It rebuilds the same runtime/permission/history/supervisor composition before publishing registry changes.
+
+The filesystem boundary is intentional:
+
+- `/var/lib/greia-os` is traversable by the launcher;
+- `/var/lib/greia-os/activity-packages/active` is read-only/traversable;
+- immutable versions, staging and receipts remain Parent-service-private;
+- sensitive Parent credentials remain protected by their own file/directory permissions.
 
 Presentation must never scan arbitrary Parent-upload directories directly.
 
 ## `.greiaactivity` packaging convention
 
-The first implemented new-install package format is a bounded ZIP archive named with the `.greiaactivity` suffix. The normal Activity package root is the archive root:
+The first implemented **new-install** package format is a bounded ZIP archive named with the `.greiaactivity` suffix. The normal Activity package root is the archive root:
 
 ```text
 my-activity.greiaactivity
 ├── activity.toml
-├── src/...
+├── main.py
 └── assets/
     └── icon.png
 ```
 
 Do **not** add another arbitrary top-level wrapper directory.
 
-Installation is performed by the platform package service, not by copying this directory from the Parent UI.
+The installer rejects archive traversal, hidden/absolute/backslash paths, portable duplicate paths, symlinks, special files, encrypted entries, unsafe compression, excessive entry count and excessive expanded size. The extracted tree is then validated through the normal `ActivityRegistry` and platform Activity-asset checks.
+
+### Install transaction
+
+The current new-install service uses:
+
+1. private staging;
+2. full registry/asset validation;
+3. digest-addressed read-only immutable version storage;
+4. a prepared read-only activation tree;
+5. audit receipt preparation;
+6. atomic rename of the activation tree into the Parent Activity source as the commit point.
+
+If receipt preparation fails, no executable Activity becomes visible. An interrupted attempt may leave an immutable version or orphan pre-commit receipt, neither of which is launch-authoritative; retries verify the immutable digest before reuse.
+
+Existing Activity IDs are deliberately rejected. This tranche does **not** pretend that update, removal, rollback-selection, signature/revocation or curated-store policy is complete.
 
 ## Parent install availability
 
 The existence of the endpoint does not imply release availability.
 
-`activities.install` remains capability-gated. Because the current Parent transport is provisional HTTP, ordinary/release systems keep executable package installation disabled. Explicit developer/owner-enabled systems can exercise the complete new-install path for development and acceptance.
+`POST /api/v1/activities/install` is protocol-defined, but `activities.install` remains capability-gated. Because the current Parent transport is provisional HTTP, ordinary/release systems keep executable package installation disabled. Explicit developer/owner-enabled systems can exercise the complete new-install path for development and acceptance.
 
-A production enablement decision requires the secure Parent transport/pairing work plus the remaining R10 update/signature/revocation/rollback policies.
+The external HTML Parent client asks the API index before showing the upload form. It sends the package bytes directly rather than base64/JSON wrapping them, applies the same 32 MiB request ceiling for immediate feedback, reports typed rejection messages and refreshes the Activity list after success.
+
+A production enablement decision requires secure Parent transport/pairing plus the remaining R10 update/signature/revocation/rollback policies.
 
 ## Performance constraints
 
@@ -211,7 +284,7 @@ The launcher must remain comfortable on the legacy 1024×600/i686 reference floo
 - 30 Hz is an acceptable UI target for these subtle effects;
 - motion calculations allocate no retained animation objects per frame;
 - icon/font/shadow caches are bounded;
-- only visible tiles are rendered;
+- only visible Activity tiles are rendered;
 - effects must degrade gracefully rather than delay input or Activity launch;
 - no effect may trigger network, disk scan or package discovery every frame.
 
