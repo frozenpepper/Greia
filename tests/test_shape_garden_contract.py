@@ -31,11 +31,14 @@ class ShapeGardenContractTests(unittest.TestCase):
         self.assertNotIn('"close_button"', source)
         self.assertNotIn("(x - 48) ** 2", source)
 
-    def test_reference_geometry_is_semantic_not_physical_surface_size(self) -> None:
+    def test_reference_geometry_is_semantic_and_render_work_stays_bounded(self) -> None:
         source = (ACTIVITY / "main.py").read_text(encoding="utf-8")
         self.assertIn("REFERENCE_WIDTH = 1024", source)
         self.assertIn("REFERENCE_HEIGHT = 600", source)
         self.assertIn("SOIL_TOP = 530", source)
+        self.assertIn("shapes[-120:]", source)
+        self.assertIn("canvas.present(clear=theme.background)", source)
+        self.assertNotIn("smooth=True", source)
         self.assertNotIn("screen.get_height() - 70", source)
         self.assertNotIn("screen.get_width(), 70", source)
 
