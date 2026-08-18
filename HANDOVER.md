@@ -1,11 +1,12 @@
 # Greia — Standalone Engineering Handover
 
-**Date:** 2026-08-18  
+**Date:** 2026-08-19  
 **Version family:** `0.13.x` development  
 **Repository:** `frozenpepper/Greia` (private)  
 **Canonical/default/development branch:** `main`  
 **Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**  
-**Source head reviewed immediately before this handover refresh:** `d6bed0e19c3e90acbe0497559856a77c2c66e737`  
+**Current simulator implementation source boundary:** `c9eac6da7106536629034d2e3e8c5dc2475ab6ac`  
+**Living documentation synchronization continues after that source commit on `main`**  
 **External Parent HTML revision currently pinned by Greia:** `frozenpepper/Greia-Parent-App-Html@e30bcbcab393354b8ffb63d5829c08711d8023bd`
 
 This file owns the **current** implementation/evidence boundary. Historical hardware detail remains in the dated reviews and installation issue log; exact APIs/limits remain source-owned.
@@ -19,6 +20,91 @@ This file owns the **current** implementation/evidence boundary. Historical hard
 Do **not** use, query, trigger, rerun, inspect or download GitHub-hosted Actions without explicit owner authorization for that specific hosted execution. Verification runs on an owner-controlled environment.
 
 Do not promote committed tests into PASS merely because the files exist.
+
+### 0.1 2026-08-19 — Greia Activity Simulator source tranche
+
+A new Mac-first, core-platform-neutral **Greia Activity Simulator** is now committed on `main`.
+
+Normative/developer documentation:
+
+```text
+docs/adr/0029-real-runtime-activity-simulator.md
+docs/development/GREIA_ACTIVITY_SIMULATOR.md
+```
+
+Implementation source:
+
+```text
+src/greia_simulator/__init__.py
+src/greia_simulator/device.py
+src/greia_simulator/workspace.py
+src/greia_simulator/runtime.py
+src/greia_simulator/python_activity.py
+src/greia_simulator/child_shell.py
+src/greia_simulator/app.py
+tools/greia_simulator.py
+tests/test_greia_simulator.py
+```
+
+The architectural invariant is deliberately strict: **the simulator is not a second Greia implementation.** It supplies only synthetic/missing-machine facts below existing variation seams and runs the real Greia services above them.
+
+The current Python simulator path uses:
+
+- the real `GreiaChildShell` presentation/profile/catalogue implementation;
+- the real `ActivityRegistry` and `RuntimeCatalogue`;
+- the real package trust vocabulary;
+- the real `PermissionBroker` and `RuntimeManager`;
+- the real `ActivitySupervisor` lifecycle semantics via the profile-visual specialization;
+- the real Activity storage/history/event services;
+- the real profile/customization/UI-preference state;
+- the real responsive/canvas/system-safe geometry;
+- a synthetic typed `GreiaHAL` for exact viewport + semantic capability facts;
+- an isolated simulator workspace outside the source checkout;
+- a narrow **simulator-only** Python/Pygame child bootstrap that maps current Activity fullscreen display requests to the selected synthetic desktop viewport.
+
+The desktop control plane currently provides:
+
+```text
+viewport presets: 1024x600, 1280x720, 1280x800, 1366x768, 1920x1080
+bounded custom WIDTHxHEIGHT
+compact / normal / large child interface size
+semantic capability toggles
+Load Activity Folder…
+Install Activity Package…
+Start / Apply
+Restart
+Stop
+```
+
+`Load Activity Folder…` stages a managed copy and validates through the ordinary Greia registry together with built-in identity authority under `DEVELOPER_UNSIGNED` trust. `Install Activity Package…` calls the canonical `ActivityPackageService`; there is no simulator-only unzip/install authority.
+
+Colors/wallpaper/avatar remain best exercised through the actual My Greia Activity rather than a duplicate simulator settings implementation.
+
+### Web/HTML boundary
+
+Web/HTML Activity execution is **not implemented by this simulator tranche**. Current normal launcher runtime composition still registers Python only. ADR 0029 explicitly forbids a simulator-only Safari/Chrome/private-webview workaround. Future simulator Web support must consume the canonical R9 Web runtime adapter/SDK once R9 implements it.
+
+### Simulator evidence boundary
+
+Simulator results may be retained as **simulator/developer evidence** for real registry/trust/runtime/profile/storage/history/lifecycle/responsive semantics against synthetic device facts.
+
+They do **not** prove:
+
+- Bubblewrap/kernel/filesystem containment;
+- Xorg/DRM/KMS/compositor/session-backend behavior;
+- trusted system-chrome non-coverability/input interception;
+- physical controller/touch/audio/network/removable-media behavior;
+- boot/installer/initramfs behavior;
+- Acer/Pi memory/CPU/GPU/performance;
+- R7/R8/R9/R10/R14 closure.
+
+R7 therefore remains the primary blocking platform phase exactly as before this simulator tranche.
+
+### Verification actually executed for this tranche
+
+In the assistant execution environment, the newly authored simulator Python/tool/test files were checked with `python3 -m py_compile` and were syntax-clean at the source tranche boundary. The environment did **not** contain a full authenticated/current Greia checkout with its runtime dependencies, so the new `tests/test_greia_simulator.py`, focused repository suites and `make verify` were **not executed** here.
+
+Do not describe the simulator source or current `main` as test-PASS on the basis of the committed test file or syntax compilation. A fresh owner-controlled focused/full gate remains required.
 
 ### Last genuinely executed source evidence
 
@@ -55,7 +141,8 @@ tranches:
 - shared Pygame Activity-safe geometry derived from system chrome plus Painting/Writing migration (`8e586a8`, `11c434f`, `f1b614d`, `ff54863`, `bdd67b9`);
 - interface-size × resolution safe-geometry regression (`85f60f9`);
 - current operator/authoring/authority documentation (`b01613f`, `bf355fe`, `31c206e`);
-- `0c06f5a` / `d6bed0e` restore Painting/Writing's pre-migration formatting around the new safe-UI calls; these last two commits are intended as **diff-noise cleanup only**, not additional behavior.
+- `0c06f5a` / `d6bed0e` restore Painting/Writing's pre-migration formatting around the new safe-UI calls; these last two commits are intended as **diff-noise cleanup only**, not additional behavior;
+- the 2026-08-19 Activity Simulator implementation at `c9eac6d` plus its living-documentation synchronization commits.
 
 Those later source/test changes are **committed but not yet covered by a fresh
 owner-controlled full PASS**. Do not describe 679 PASS as current-head evidence.
@@ -200,6 +287,8 @@ docs/testing/2026-08-18_RESPONSIVE_UI_ACCEPTANCE.md
 Core rule: **a designer/coder authors one semantic layout; Greia derives actual rectangles from the live usable viewport.** Designers must not maintain `800x600`, `1024x600`, `1080p`, Acer/Pi or similar coordinate variants.
 
 `1024x600` remains the low-resource/reference acceptance point, not a universal physical canvas.
+
+The Activity Simulator is now a convenient way to exercise these same shared layout/canvas paths at exact synthetic viewports, but it does not change the rule or become a second responsive implementation.
 
 Shared renderer-neutral source:
 
@@ -480,7 +569,13 @@ The canonical test-session entrypoint is:
 docs/testing/LOCAL_AGENT_START_HERE.md
 ```
 
-Its current UI/platform focused gate includes installation regressions, responsive layout, Activity viewport, semantic-size × viewport safe UI, My Greia, read-only visual context, first-party first-frame readiness, Shape Garden canvas/navigation, Painting/Writing safe UI, package/Parent and localization/language policy tests. After repairing any real failures, the agent must run the other full-session gates and finally:
+Its current UI/platform focused gate includes installation regressions, responsive layout, Activity viewport, semantic-size × viewport safe UI, My Greia, read-only visual context, first-party first-frame readiness, Shape Garden canvas/navigation, Painting/Writing safe UI, package/Parent and localization/language policy tests. The simulator contract suite must now also be included for current-head verification:
+
+```bash
+PYTHONPATH=src python3 -m unittest tests.test_greia_simulator -v
+```
+
+After repairing any real failures, the agent must run the other full-session gates and finally:
 
 ```bash
 make verify
@@ -503,7 +598,7 @@ After current-source tests pass:
 5. confirm installed developer/test SSH `greia / greia` after reboot and root SSH rejection;
 6. exercise the actual Parent HTML connection, main Parent-password change, child password set/replace/clear and owner-enabled Activity install;
 7. inspect launcher names/categories/category Back/icon/scroll/hover/launch effects at 1024x600;
-8. run the responsive matrix in an owner-controlled windowed/VM environment for compact/normal/large;
+8. run the responsive matrix in an owner-controlled windowed/VM environment for compact/normal/large; the new simulator may accelerate this developer pass but does not replace physical/reference acceptance;
 9. exercise My Greia colors/wallpaper/semantic size/avatar across at least two profiles;
 10. physically eject removable media while My Greia wallpaper browsing is open;
 11. prove My Greia controls never overlap platform Home/Back at the physical/reference target;
@@ -520,6 +615,9 @@ After current-source tests pass:
 
 - **R7 remains the primary blocking platform phase.** Xorg/xinit is provisional compatibility, not final selection.
 - All safe-area/readiness/Shape-Garden/shared-safe-UI source/test changes after `edda4e6` need fresh owner-controlled execution; do not promote the 679-PASS result across those source changes.
+- The new Activity Simulator source/tests also need a fresh owner-controlled focused/full gate; only syntax compilation was executed during its authoring session.
+- The simulator's current Python fullscreen wrapper is development compatibility below the runtime-adapter seam, not a production display contract. It should migrate to a stronger shared display/session seam when R7 provides one.
+- Web/HTML Activity simulation is intentionally unavailable until the canonical R9 Web runtime adapter exists.
 - Painting's durable document surface is still viewport-sized and requires a separate resolution-neutral document/save migration with compatibility tests.
 - Full Activity language integration is not complete: profile-language persistence, localized catalogue title resolution, dynamic flag rendering/assets and platform pre-launch chooser still need end-to-end wiring/testing.
 - Parent secure pairing/encrypted transport remains open.
@@ -554,6 +652,13 @@ Activity canvas/world/lifecycle:
   tests/test_shape_garden_contract.py
   tests/test_first_party_activity_readiness.py
   skills/greia-activity-authoring/SKILL.md
+
+Activity Simulator:
+  docs/adr/0029-real-runtime-activity-simulator.md
+  docs/development/GREIA_ACTIVITY_SIMULATOR.md
+  src/greia_simulator/
+  tools/greia_simulator.py
+  tests/test_greia_simulator.py
 
 Localization/language:
   src/greia_platform/localization.py
@@ -593,12 +698,13 @@ Before further substantive implementation, read in order:
 ```text
 AGENTS.md
 docs/DOCUMENTATION.md
-relevant product docs / accepted ADRs
+relevant product docs / accepted ADRs (including ADR 0029 for simulator work)
 docs/engineering/ENGINEERING_FOUNDATIONS.md
 docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md
 HANDOVER.md
 docs/agents/GREIA_AGENT_OPERATIONS.md
 skills/greia-activity-authoring/SKILL.md
+docs/development/GREIA_ACTIVITY_SIMULATOR.md (when Activity/simulator workflow is relevant)
 ```
 
-Then inspect the exact source owners being changed. Do not use the responsive/localization/My-Greia tranche as justification to skip R7 or to label R10 complete. Do not relabel older source/hardware evidence as evidence for the current head.
+Then inspect the exact source owners being changed. Do not use the responsive/localization/My-Greia/simulator tranches as justification to skip R7 or to label R9/R10 complete. Do not relabel older source/hardware evidence as evidence for the current head, and do not relabel simulator evidence as backend/hardware/security evidence.
