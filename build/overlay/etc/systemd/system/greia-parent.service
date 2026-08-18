@@ -16,8 +16,9 @@ Environment=GREIA_PROFILES_DIR=/var/lib/greia-profiles
 Environment=GREIA_ACTIVE_PROFILE_STATUS=/run/greia-os/active-profile.json
 Environment=GREIA_SYSTEM_SETTINGS_DIR=/var/lib/greia-system-settings
 Environment=GREIA_HARDWARE_STATUS=/run/greia-hardware/status.json
+Environment=GREIA_PARENT_ACTIVITY_PACKAGE_ROOT=/var/lib/greia-os/activity-packages
 StateDirectory=greia-os
-ExecStart=/usr/bin/python3 -m greia_parent.api_server --bind 0.0.0.0 --port 8766
+ExecStart=/usr/bin/python3 -m greia_parent.package_api --bind 0.0.0.0 --port 8766
 Restart=on-failure
 RestartSec=2
 NoNewPrivileges=yes
