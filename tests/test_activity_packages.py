@@ -72,13 +72,16 @@ class ActivityPackageServiceTests(unittest.TestCase):
             with self.assertRaisesRegex(ActivityPackageError, "already installed"):
                 service.install_archive(archive)
 
-    def test_install_transactions_are_serialized_per_package_authority(self) -> None:
+    def test_install_transactions_are_serialized_across_service_instances(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            service = ActivityPackageService(
-                state_root=root / "packages",
-                runtime_catalogue=RUNTIME,
-                built_in_root=root / "empty-builtins",
+            services = tuple(
+                ActivityPackageService(
+                    state_root=root / "packages",
+                    runtime_catalogue=RUNTIME,
+                    built_in_root=root / "empty-builtins",
+                )
+                for _ in range(2)
             )
             start = threading.Barrier(3)
             counter_lock = threading.Lock()
@@ -96,25 +99,40 @@ class ActivityPackageServiceTests(unittest.TestCase):
                     active_calls -= 1
                 return object()
 
-            def worker() -> None:
+            def worker(service: ActivityPackageService) -> None:
                 start.wait()
                 results.append(service.install_archive(root / "unused.greiaactivity"))
 
-            with mock.patch.object(
-                service,
-                "_install_archive_serialized",
-                side_effect=synthetic_install,
-            ):
-                threads = [threading.Thread(target=worker) for _ in range(2)]
+            patches = [
+                mock.patch.object(
+                    service,
+                    "_install_archive_serialized",
+                    side_effect=synthetic_install,
+                )
+                for service in services
+            ]
+            for patch in patches:
+                patch.start()
+            try:
+                threads = [
+                    threading.Thread(target=worker, args=(service,))
+                    for service in services
+                ]
                 for thread in threads:
                     thread.start()
                 start.wait()
                 for thread in threads:
                     thread.join(timeout=2)
                     self.assertFalse(thread.is_alive())
+            finally:
+                for patch in reversed(patches):
+                    patch.stop()
 
             self.assertEqual(len(results), 2)
             self.assertEqual(peak_calls, 1)
+            lock_path = root / "packages" / ".install.lock"
+            self.assertTrue(lock_path.is_file())
+            self.assertEqual(os.stat(lock_path).st_mode & 0o777, 0o600)
 
     def test_receipt_failure_cannot_publish_executable_activity(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
