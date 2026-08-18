@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from greia_parent.api_server import ParentApiApplication
 from greia_parent.credentials import (
@@ -11,6 +13,7 @@ from greia_parent.credentials import (
     ParentCredentialError,
     ParentDeviceCredentialStore,
 )
+from greia_parent.package_api import _activity_install_enabled
 from greia_parent.protocol import (
     API_BASE,
     API_VERSION,
@@ -85,6 +88,31 @@ class ParentApiTests(unittest.TestCase):
         self.assertFalse(capabilities["settings.audio"])
         self.assertFalse(capabilities["network.manage"])
         self.assertFalse(capabilities["maintenance.ssh"])
+        paths = {resource["path"] for resource in payload["resources"]}
+        self.assertIn(f"{API_BASE}/activities/install", paths)
+
+    def test_install_capability_override_is_typed_and_does_not_change_default(self) -> None:
+        self.assertTrue(api_index_payload({"activities.install": True})["capabilities"]["activities.install"])
+        self.assertFalse(api_index_payload()["capabilities"]["activities.install"])
+        with self.assertRaises(ValueError):
+            api_index_payload({"invented.capability": True})
+
+    def test_activity_install_is_fail_closed_without_explicit_owner_or_dev_enablement(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            marker = Path(temporary) / "developer-remote"
+            with mock.patch.dict(
+                os.environ,
+                {"GREIA_DEVELOPER_REMOTE_MARKER": str(marker)},
+                clear=False,
+            ):
+                os.environ.pop("GREIA_PARENT_ACTIVITY_INSTALL", None)
+                self.assertFalse(_activity_install_enabled())
+                marker.write_text("enabled\n", encoding="utf-8")
+                self.assertTrue(_activity_install_enabled())
+                os.environ["GREIA_PARENT_ACTIVITY_INSTALL"] = "false"
+                self.assertFalse(_activity_install_enabled())
+                os.environ["GREIA_PARENT_ACTIVITY_INSTALL"] = "true"
+                self.assertTrue(_activity_install_enabled())
 
     def test_parent_api_bootstrap_issues_device_credential_and_bearer_authenticates(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -166,7 +194,12 @@ class ParentApiTests(unittest.TestCase):
             / "system"
             / "greia-parent.service"
         ).read_text(encoding="utf-8")
-        self.assertIn("-m greia_parent.api_server", parent_service)
+        self.assertIn("-m greia_parent.package_api", parent_service)
+        self.assertIn(
+            "GREIA_PARENT_ACTIVITY_PACKAGE_ROOT=/var/lib/greia-os/activity-packages",
+            parent_service,
+        )
+        self.assertNotIn("GREIA_PARENT_ACTIVITY_INSTALL=true", parent_service)
 
         normal_profile = (
             PROJECT_ROOT / "build" / "profiles" / "legacy-x86-i686.toml"
