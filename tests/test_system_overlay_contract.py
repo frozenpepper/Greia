@@ -23,7 +23,9 @@ class SystemOverlayContractTests(unittest.TestCase):
             PROJECT_ROOT / "build/overlay/usr/local/lib/greia-os/greia-x-session"
         ).read_text()
         self.assertIn("greia_platform.hardware_session", session)
-        self.assertIn("greia_launcher.presentation", session)
+        # The child shell composes the authoritative launcher/presentation
+        # classes with safe profile visual context.
+        self.assertIn("greia_launcher.child_shell", session)
         self.assertNotIn("exec /usr/bin/python3 -m greia_launcher.main", session)
         self.assertIn("launcher_status=$?", session)
         self.assertIn("trap cleanup EXIT INT TERM", session)
