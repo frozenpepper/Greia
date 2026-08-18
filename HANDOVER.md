@@ -30,9 +30,28 @@ focused installation/UI/package/Parent/credential suites: 114 PASS
 Parent-App npm test at pinned e30bcbc: 10 PASS
 ```
 
-Those results remain valid historical evidence for the exact older source boundary that produced them. They are **not evidence for the current head** because substantial source and tests were committed afterward.
+A follow-up 2026-08-18 local-agent run on the merged current head
+(`edda4e6`) re-executed the complete source gate **after** the
+responsive/layout/localization/My-Greia tranche:
 
-No current-source My Greia, Activity viewport, localization, language-presentation, responsive-layout, child-shell visual-context, rebuilt installer-image or fresh physical Acer PASS is claimed in this handover.
+```text
+make verify: 679 PASS
+current-ui-platform focused gate (installation-hardware, ui-motion-scroll,
+  responsive-layout, activity-viewport, ui-preferences, theme-snapshot,
+  activity-theme-access, activity-ui-preferences, child-shell-visual-context,
+  my-greia-settings-contract, my-greia-runtime, customization, activity-ui,
+  launcher-presentation, activity-packages, activity-contract, parent-api,
+  localization, language-context, language-presentation): 131 PASS
+Parent-App npm test at pinned e30bcbc: 10 PASS
+```
+
+The 663-PASS result is historical evidence for the earlier source boundary. The
+679-PASS result is the current executed evidence at `edda4e6` and reflects the
+merged responsive/layout/localization/My-Greia tranche.
+
+A rebuilt installer-image and fresh physical Acer acceptance remain the next
+required evidence; no rebuilt-image or fresh physical Acer PASS is claimed in
+this handover.
 
 ---
 
