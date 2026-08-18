@@ -538,34 +538,14 @@ class WritingApp:
         gallery = self.metrics.activity_toolbar_button(0, side="left")
         undo = self.metrics.activity_toolbar_button(1, side="left")
         new = self.metrics.activity_toolbar_button(0, side="right")
-        draw_icon_button(
-            self.screen,
-            gallery,
-            fill=self.theme.panel,
-            icon=self.book_icon,
-            selected=self.mode == "gallery",
-            outline=self.theme.accent,
-        )
-        undo_fill = (
-            self.theme.panel
-            if self.mode == "edit" and self.undo_history
-            else mix(self.theme.panel, self.theme.background, 0.35)
-        )
+        draw_icon_button(self.screen, gallery, fill=self.theme.panel, icon=self.book_icon, selected=self.mode == "gallery", outline=self.theme.accent)
+        undo_fill = self.theme.panel if self.mode == "edit" and self.undo_history else mix(self.theme.panel, self.theme.background, 0.35)
         draw_icon_button(self.screen, undo, fill=undo_fill)
         draw_undo_symbol(self.screen, undo, self.theme.text)
         draw_icon_button(self.screen, new, fill=self.theme.accent)
         draw_plus_symbol(self.screen, new, self.theme.accent_text)
-        status = (
-            (210, 76, 76)
-            if self.save_error
-            else ((246, 178, 55) if self.dirty else (87, 174, 104))
-        )
-        pygame.draw.circle(
-            self.screen,
-            status,
-            (new.left - self.metrics.px(18), new.centery),
-            self.metrics.px(6),
-        )
+        status = (210, 76, 76) if self.save_error else ((246, 178, 55) if self.dirty else (87, 174, 104))
+        pygame.draw.circle(self.screen, status, (new.left - self.metrics.px(18), new.centery), self.metrics.px(6))
         if self.mode == "gallery":
             self._draw_gallery()
         else:
@@ -573,53 +553,27 @@ class WritingApp:
 
     def _draw_editor(self) -> None:
         rect = self.editor_rect
-        pygame.draw.rect(
-            self.screen,
-            mix(self.theme.panel, (255, 255, 255), 0.58),
-            rect,
-            border_radius=self.metrics.radius,
-        )
+        pygame.draw.rect(self.screen, mix(self.theme.panel, (255, 255, 255), 0.58), rect, border_radius=self.metrics.radius)
         lines = self._layout()
         cursor_line = self._cursor_line()
         line_height = self.font.get_linesize()
         x = rect.left + self.metrics.px(26)
         y = rect.top + self.metrics.px(18)
-        visible = max(
-            1,
-            (rect.height - self.metrics.px(34)) // line_height,
-        )
+        visible = max(1, (rect.height - self.metrics.px(34)) // line_height)
         visible_lines = lines[self.scroll_line : self.scroll_line + visible]
         for offset, line in enumerate(visible_lines):
             if line.text:
-                self.screen.blit(
-                    self.font.render(line.text, True, self.theme.text), (x, y)
-                )
+                self.screen.blit(self.font.render(line.text, True, self.theme.text), (x, y))
             if self.scroll_line + offset == cursor_line:
-                cursor_x = x + self.font.size(
-                    self.buffer.text[line.start : self.buffer.cursor]
-                )[0]
-                pygame.draw.line(
-                    self.screen,
-                    self.theme.accent,
-                    (cursor_x, y + 4),
-                    (cursor_x, y + line_height - 5),
-                    max(2, self.metrics.px(3)),
-                )
+                cursor_x = x + self.font.size(self.buffer.text[line.start : self.buffer.cursor])[0]
+                pygame.draw.line(self.screen, self.theme.accent, (cursor_x, y + 4), (cursor_x, y + line_height - 5), max(2, self.metrics.px(3)))
             y += line_height
 
     def _draw_gallery(self) -> None:
         for rect, record in self._gallery_cards():
-            pygame.draw.rect(
-                self.screen,
-                self.theme.panel,
-                rect,
-                border_radius=self.metrics.radius,
-            )
+            pygame.draw.rect(self.screen, self.theme.panel, rect, border_radius=self.metrics.radius)
             if not record.preview:
-                self.screen.blit(
-                    self.empty_icon,
-                    self.empty_icon.get_rect(center=rect.center),
-                )
+                self.screen.blit(self.empty_icon, self.empty_icon.get_rect(center=rect.center))
                 continue
             words = record.preview.split()
             line = ""
@@ -628,10 +582,7 @@ class WritingApp:
             for word in words:
                 candidate = f"{line} {word}".strip()
                 if line and self.small_font.size(candidate)[0] > max_width:
-                    self.screen.blit(
-                        self.small_font.render(line, True, self.theme.text),
-                        (rect.left + self.metrics.px(16), y),
-                    )
+                    self.screen.blit(self.small_font.render(line, True, self.theme.text), (rect.left + self.metrics.px(16), y))
                     y += self.small_font.get_linesize()
                     line = word
                     if y > rect.bottom - self.small_font.get_linesize() * 2:
@@ -639,10 +590,7 @@ class WritingApp:
                 else:
                     line = candidate
             if line and y < rect.bottom - self.small_font.get_linesize():
-                self.screen.blit(
-                    self.small_font.render(line, True, self.theme.text),
-                    (rect.left + self.metrics.px(16), y),
-                )
+                self.screen.blit(self.small_font.render(line, True, self.theme.text), (rect.left + self.metrics.px(16), y))
 
 
 def main() -> int:
