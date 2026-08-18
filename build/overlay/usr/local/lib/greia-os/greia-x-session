@@ -19,11 +19,11 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 # Do not exec the launcher here. The shell must remain alive so its EXIT trap
-# always reaps the hardware watcher when X or the launcher restarts. The
-# presentation module subclasses the authoritative launcher lifecycle core; it
-# does not duplicate Activity supervision or permission authority.
+# always reaps the hardware watcher when X or the launcher restarts. The child
+# shell composes the authoritative launcher/presentation classes with safe
+# profile visual context; it does not duplicate lifecycle or permission policy.
 set +e
-/usr/bin/python3 -m greia_launcher.presentation
+/usr/bin/python3 -m greia_launcher.child_shell
 launcher_status=$?
 set -e
 exit "$launcher_status"
