@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import fcntl
 import json
 import os
 import shutil
@@ -7,6 +8,8 @@ import stat
 import tempfile
 import threading
 import zipfile
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
@@ -25,6 +28,7 @@ MAX_ARCHIVE_ENTRIES = 512
 MAX_ARCHIVE_BYTES = 32 * 1024 * 1024
 MAX_PATH_CHARACTERS = 220
 MAX_COMPRESSION_RATIO = 200
+_INSTALL_LOCK_NAME = ".install.lock"
 
 
 class ActivityPackageError(RuntimeError):
@@ -58,11 +62,12 @@ class ActivityPackageService:
     validation, immutable version storage, atomic activation and typed parent
     provenance. Updates/removal remain separate future operations.
 
-    One service instance serializes installation transactions. The Parent API
-    owns one long-lived service instance, so overlapping HTTP requests cannot
-    race receipt preparation against active-directory publication. This is a
-    transaction-safety property, not a substitute for future multi-process
-    package-manager locking when R10 grows beyond the current service boundary.
+    Installation is serialized twice: a small in-process lock avoids redundant
+    contenders inside one service object, while a private ``flock`` file under
+    the package state root serializes separate package-service processes that
+    share the same authoritative store. Receipt preparation and active-tree
+    publication therefore cannot race merely because HTTP/process composition
+    changes later.
     """
 
     SOURCE_ID = "greia-parent-package-service"
@@ -98,10 +103,43 @@ class ActivityPackageService:
         )
 
     def install_archive(self, archive_path: Path) -> ActivityInstallReceipt:
-        """Install one new Activity under a serialized commit transaction."""
+        """Install one new Activity under a process-wide serialized transaction."""
 
-        with self._install_lock:
-            return self._install_archive_serialized(archive_path)
+        try:
+            self._ensure_roots()
+            with self._install_lock:
+                with self._process_install_lock():
+                    return self._install_archive_serialized(archive_path)
+        except ActivityPackageError:
+            raise
+        except OSError as exc:
+            raise ActivityPackageError(
+                f"could not establish Activity package transaction lock: {exc}"
+            ) from exc
+
+    @contextmanager
+    def _process_install_lock(self) -> Iterator[None]:
+        lock_path = self.state_root / _INSTALL_LOCK_NAME
+        flags = os.O_CREAT | os.O_RDWR
+        if hasattr(os, "O_CLOEXEC"):
+            flags |= os.O_CLOEXEC
+        if hasattr(os, "O_NOFOLLOW"):
+            flags |= os.O_NOFOLLOW
+        descriptor = os.open(lock_path, flags, 0o600)
+        try:
+            metadata = os.fstat(descriptor)
+            if not stat.S_ISREG(metadata.st_mode):
+                raise ActivityPackageError(
+                    "Activity package transaction lock is not a regular file"
+                )
+            os.fchmod(descriptor, 0o600)
+            fcntl.flock(descriptor, fcntl.LOCK_EX)
+            try:
+                yield
+            finally:
+                fcntl.flock(descriptor, fcntl.LOCK_UN)
+        finally:
+            os.close(descriptor)
 
     def _install_archive_serialized(
         self, archive_path: Path
@@ -114,7 +152,6 @@ class ActivityPackageService:
             raise ActivityPackageError(
                 f"Activity package archive must be between 1 and {MAX_ARCHIVE_BYTES} bytes"
             )
-        self._ensure_roots()
         stage_parent = Path(
             tempfile.mkdtemp(prefix="install-", dir=str(self.staging_root))
         )
