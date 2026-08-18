@@ -6,6 +6,9 @@ from pathlib import Path
 
 import pygame
 
+from .activity_viewport import ActivityViewport
+from .responsive_layout import UiRect
+from .system_chrome import ActivitySystemChromeLayout
 from .ui_core import BoundedCache
 from .ui_preferences import InterfaceSize
 
@@ -24,6 +27,11 @@ class ChildUiMetrics:
     author one layout rather than maintaining compact/normal/large variants.
     Growth is capped on very large displays and the constrained-screen floor is
     preserved.
+
+    Ordinary `toolbar_button()` intentionally describes a full-surface toolbar
+    for non-Activity surfaces. Greia Activities should use
+    `activity_toolbar_button()` / `activity_content_rect()` so essential controls
+    are derived from the same platform-owned Home/Back exclusion as input.
     """
 
     width: int
@@ -57,6 +65,8 @@ class ChildUiMetrics:
         return max(1, int(round(float(value) * self.scale)))
 
     def toolbar_button(self, index: int, *, side: str = "left") -> pygame.Rect:
+        """Return full-surface toolbar geometry for non-Activity UI."""
+
         if index < 0:
             raise ValueError("button index must be non-negative")
         y = self.margin + max(0, (self.toolbar_height - self.button_size) // 2)
@@ -68,6 +78,76 @@ class ChildUiMetrics:
         else:
             raise ValueError("side must be left or right")
         return pygame.Rect(x, y, self.button_size, self.button_size)
+
+    def activity_safe_rect(self) -> pygame.Rect:
+        """Return the usable Activity rectangle outside trusted Home/Back chrome."""
+
+        chrome = ActivitySystemChromeLayout.for_surface(self.width, self.height)
+        protected = chrome.protected_region
+        viewport = ActivityViewport.for_size(
+            self.width,
+            self.height,
+            protected_regions=(
+                UiRect(
+                    protected.x,
+                    protected.y,
+                    protected.width,
+                    protected.height,
+                ),
+            ),
+        )
+        safe = viewport.safe_ui_rect()
+        return pygame.Rect(safe.x, safe.y, safe.width, safe.height)
+
+    def activity_toolbar_button(
+        self,
+        index: int,
+        *,
+        side: str = "left",
+    ) -> pygame.Rect:
+        """Return one Activity toolbar button inside the platform-safe region."""
+
+        if index < 0:
+            raise ValueError("button index must be non-negative")
+        safe = self.activity_safe_rect()
+        y = safe.top + self.margin + max(
+            0, (self.toolbar_height - self.button_size) // 2
+        )
+        step = self.button_size + self.gap
+        if side == "left":
+            x = safe.left + self.margin + index * step
+        elif side == "right":
+            x = safe.right - self.margin - self.button_size - index * step
+        else:
+            raise ValueError("side must be left or right")
+        rect = pygame.Rect(x, y, self.button_size, self.button_size)
+        if not safe.contains(rect):
+            raise ValueError("Activity toolbar does not fit inside safe UI region")
+        return rect
+
+    def activity_content_rect(
+        self,
+        *,
+        top_gap: int | float = 6,
+        bottom_reserve: int = 0,
+    ) -> pygame.Rect:
+        """Return responsive Activity content below its safe toolbar.
+
+        `bottom_reserve` is already-scaled pixel space owned by the caller, for
+        example Painting's palette tray. Essential content never extends into
+        trusted system chrome or outside the real surface.
+        """
+
+        if bottom_reserve < 0:
+            raise ValueError("bottom reserve must not be negative")
+        safe = self.activity_safe_rect()
+        top = safe.top + self.margin + self.toolbar_height + self.px(top_gap)
+        bottom = safe.bottom - self.margin - bottom_reserve
+        left = safe.left + self.margin
+        right = safe.right - self.margin
+        if right <= left or bottom <= top:
+            raise ValueError("Activity safe UI region is too small for requested content")
+        return pygame.Rect(left, top, right - left, bottom - top)
 
 
 def load_icon(path: str | Path, size: int) -> pygame.Surface:
