@@ -6,29 +6,45 @@ import time
 from pathlib import Path
 from typing import Any
 
-from greia_platform.activities import ActivityManifest, ActivityValidationError
+from greia_platform.activities import (
+    ActivityManifest,
+    ActivityRegistry,
+    ActivityValidationError,
+)
 from greia_platform.pygame_effects import (
     PygameDepthStyle,
     draw_raised_panel,
     make_rounded_shadow,
     make_shadowed_icon,
 )
+from greia_platform.trust import ActivitySource, PackageTrust
 from greia_platform.ui_core import BoundedCache
-from greia_platform.ui_motion import HoverMotion, InteractionVisualState, LaunchMotion, MotionSample
+from greia_platform.ui_motion import HoverMotion, InteractionVisualState, LaunchMotion
 from greia_platform.ui_scroll import ScrollModel
 
 from .activity_icon import ActivityIconError, package_icon_path
 from .catalogue_view import ALL_ACTIVITIES_ID, ActivityCatalogue
-from .main import HitTarget, LauncherApplication, _set_x11_input_focus
+from .composition import build_launcher_runtime_services, provisional_installed_display_session
+from .main import (
+    HitTarget,
+    LauncherApplication,
+    _activity_sources,
+    _development_hal,
+    _set_x11_input_focus,
+)
+from .supervisor import ActivitySupervisor
+
+
+PARENT_ACTIVITY_SOURCE_ID = "greia-parent-package-service"
 
 
 class GreiaLauncherPresentation(LauncherApplication):
     """Child-facing presentation specialization for the launcher core.
 
     Lifecycle, permissions, profile ownership, Activity supervision and boot
-    handoff remain in ``LauncherApplication``. This class owns only the richer
-    presentation/navigation policy: semantic categories, bounded scrolling,
-    shallow depth, hover feedback and the launch flourish.
+    handoff remain in ``LauncherApplication``. This class owns richer
+    presentation/navigation plus the additional typed discovery source for
+    parent-installed packages. It never bypasses the registry or supervisor.
     """
 
     _DEPTH = PygameDepthStyle(shadow_offset=5, shadow_alpha=45, radius=24)
@@ -37,6 +53,7 @@ class GreiaLauncherPresentation(LauncherApplication):
 
     def __init__(self, *, windowed: bool = False, allow_exit: bool = False):
         super().__init__(windowed=windowed, allow_exit=allow_exit)
+        self._configure_parent_package_source()
         # Replace the old unbounded presentation dictionaries with explicit LRU
         # bounds while preserving the mapping surface used by the base class.
         self._icon_cache = BoundedCache(96)
@@ -48,6 +65,65 @@ class GreiaLauncherPresentation(LauncherApplication):
         self._activity_scroll_start = 0
         self._launching_activity_id: str | None = None
         self._launch_animation_started = 0.0
+
+    def _configure_parent_package_source(self) -> None:
+        """Compose parent-installed packages into the same launch authority path."""
+
+        package_root = Path(
+            os.environ.get(
+                "GREIA_PARENT_ACTIVITY_ROOT",
+                "/var/lib/greia-os/activity-packages/active",
+            )
+        ).resolve()
+        if (
+            package_root == self.paths.activities
+            or package_root in self.paths.activities.parents
+            or self.paths.activities in package_root.parents
+        ):
+            raise ActivityValidationError(
+                "parent Activity root must be separate from the built-in Activity root"
+            )
+        sources = (
+            *_activity_sources(self.paths),
+            ActivitySource(
+                package_root,
+                trust=PackageTrust.PARENT_TRUSTED_UNSIGNED,
+                source_id=PARENT_ACTIVITY_SOURCE_ID,
+            ),
+        )
+        registry = ActivityRegistry(sources, self.runtime)
+        try:
+            discovered = registry.discover()
+        except ActivityValidationError:
+            # The immutable package service should make this rare, but boot must
+            # stay fail-soft if package storage is externally damaged. Keep the
+            # already validated built-in/developer registry from the base class.
+            self._catalogue_error = True
+            return
+
+        self.registry = registry
+        self._activities = discovered
+        self._activity_discovery_token = registry.discovery_token()
+        development_hal = None if self._installed_root() else _development_hal()
+        self.runtime_services = build_launcher_runtime_services(
+            self.runtime,
+            self._activities,
+            runtime_policy_path=self.paths.runtime_catalogue,
+            permission_policy_path=self.paths.permission_policy,
+            storage_policy_path=self.paths.storage_policy,
+            history_policy_path=self.paths.history_policy,
+            progression_policy_path=self.paths.progression_policy,
+            hal=development_hal,
+        )
+        display_coordinator = (
+            provisional_installed_display_session() if self._installed_root() else None
+        )
+        self.supervisor = ActivitySupervisor(
+            runtime_manager=self.runtime_services.runtime_manager,
+            storage_service=self.runtime_services.storage_service,
+            history_service=self.runtime_services.history_service,
+            display_coordinator=display_coordinator,
+        )
 
     def run(self) -> int:
         import pygame
@@ -123,7 +199,12 @@ class GreiaLauncherPresentation(LauncherApplication):
         activities = self._presented_activities
         if key == pygame.K_TAB:
             self._cycle_category(1)
-        elif activities and key in {pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN}:
+        elif activities and key in {
+            pygame.K_LEFT,
+            pygame.K_RIGHT,
+            pygame.K_UP,
+            pygame.K_DOWN,
+        }:
             columns = self._columns(pygame)
             if key == pygame.K_LEFT:
                 delta = -1
@@ -149,6 +230,10 @@ class GreiaLauncherPresentation(LauncherApplication):
                 continue
             if target.action == "activity_category":
                 self._set_category(str(target.value))
+                return
+            if target.action == "presented_activity_select":
+                self._selected = int(target.value)
+                self._ensure_selected_visible(pygame)
                 return
             if target.action == "presented_activity":
                 self._selected = int(target.value)
@@ -229,12 +314,16 @@ class GreiaLauncherPresentation(LauncherApplication):
                 pygame,
                 fill=theme.panel,
                 outline=theme.accent,
-                state=InteractionVisualState(hovered=badge.collidepoint(pygame.mouse.get_pos())),
+                state=InteractionVisualState(
+                    hovered=badge.collidepoint(pygame.mouse.get_pos())
+                ),
                 style=self._DEPTH,
                 cached_shadow=shadow,
                 selected_width=5,
             )
-            avatar = self._load_icon(self._active_profile.profile.avatar_id, badge_size - 14, pygame)
+            avatar = self._load_icon(
+                self._active_profile.profile.avatar_id, badge_size - 14, pygame
+            )
             screen.blit(avatar, avatar.get_rect(center=badge.center))
             self._targets.append(HitTarget("switch_profile", None, badge))
 
@@ -246,13 +335,17 @@ class GreiaLauncherPresentation(LauncherApplication):
 
         columns = self._columns(pygame)
         scroll = ScrollModel(capacity=columns * 2, step=columns)
-        window = scroll.window(len(activities), self._selected, self._activity_scroll_start)
+        window = scroll.window(
+            len(activities), self._selected, self._activity_scroll_start
+        )
         self._activity_scroll_start = window.start
         visible_count = window.stop - window.start
         rows = max(1, (visible_count + columns - 1) // columns)
         top = max(116, height // 5)
         available_h = height - top - 28
-        side_reserve = 86 if window.can_scroll_backward or window.can_scroll_forward else 30
+        side_reserve = (
+            86 if window.can_scroll_backward or window.can_scroll_forward else 30
+        )
         gap = max(16, min(25, width // 42))
         usable_w = max(240, width - side_reserve)
         tile_size = min(
@@ -268,7 +361,9 @@ class GreiaLauncherPresentation(LauncherApplication):
 
         pointer = pygame.mouse.get_pos()
         pointer_active = pygame.mouse.get_focused()
-        for local_index, presented_index in enumerate(range(window.start, window.stop)):
+        for local_index, presented_index in enumerate(
+            range(window.start, window.stop)
+        ):
             activity = activities[presented_index]
             column = local_index % columns
             row = local_index // columns
@@ -284,15 +379,16 @@ class GreiaLauncherPresentation(LauncherApplication):
                 launching=activity.activity_id == self._launching_activity_id,
             )
             self._draw_activity_tile(screen, rect, activity, state, theme, pygame)
-            self._targets.append(HitTarget("presented_activity", presented_index, rect))
+            self._targets.append(
+                HitTarget("presented_activity", presented_index, rect)
+            )
 
         self._draw_scroll_controls(screen, theme, pygame, window, columns)
         if (self._last_result and not self._last_result.succeeded) or self._catalogue_error:
             self._draw_error_badge(screen, pygame)
 
     def _draw_category_bar(self, screen: Any, theme: Any, pygame: Any) -> None:
-        ids = self._catalogue.category_ids
-        if not ids:
+        if not self._catalogue.category_ids:
             return
         left = 112 if self._active_profile is not None else 20
         right = screen.get_width() - 20
@@ -310,23 +406,54 @@ class GreiaLauncherPresentation(LauncherApplication):
             rect = pygame.Rect(x, 18, width, height)
             selected = collection.collection_id == self._category_id
             hovered = rect.collidepoint(pointer) and pygame.mouse.get_focused()
-            fill = theme.panel if not selected else _mix(theme.panel, theme.accent, 0.16)
-            outline = theme.accent if selected or hovered else _mix(theme.text, theme.panel, 0.72)
+            fill = (
+                theme.panel
+                if not selected
+                else _mix(theme.panel, theme.accent, 0.16)
+            )
+            outline = (
+                theme.accent
+                if selected or hovered
+                else _mix(theme.text, theme.panel, 0.72)
+            )
             pygame.draw.rect(screen, fill, rect, border_radius=height // 2)
-            pygame.draw.rect(screen, outline, rect, width=4 if selected else 2, border_radius=height // 2)
+            pygame.draw.rect(
+                screen,
+                outline,
+                rect,
+                width=4 if selected else 2,
+                border_radius=height // 2,
+            )
             screen.blit(label, label.get_rect(center=rect.center))
-            self._targets.append(HitTarget("activity_category", collection.collection_id, rect))
+            self._targets.append(
+                HitTarget("activity_category", collection.collection_id, rect)
+            )
             x += width + gap
 
-    def _draw_scroll_controls(self, screen: Any, theme: Any, pygame: Any, window: Any, columns: int) -> None:
+    def _draw_scroll_controls(
+        self,
+        screen: Any,
+        theme: Any,
+        pygame: Any,
+        window: Any,
+        columns: int,
+    ) -> None:
         if not window.can_scroll_backward and not window.can_scroll_forward:
             return
         size = max(48, min(62, screen.get_height() // 9))
         x = screen.get_width() - size - 12
         center_y = screen.get_height() // 2 + 36
         controls = (
-            (-1, pygame.Rect(x, center_y - size - 8, size, size), window.can_scroll_backward),
-            (1, pygame.Rect(x, center_y + 8, size, size), window.can_scroll_forward),
+            (
+                -1,
+                pygame.Rect(x, center_y - size - 8, size, size),
+                window.can_scroll_backward,
+            ),
+            (
+                1,
+                pygame.Rect(x, center_y + 8, size, size),
+                window.can_scroll_forward,
+            ),
         )
         for direction, rect, enabled in controls:
             if not enabled:
@@ -335,30 +462,25 @@ class GreiaLauncherPresentation(LauncherApplication):
             pygame.draw.rect(screen, theme.accent, rect, width=4, border_radius=18)
             inset = max(12, rect.width // 4)
             if direction < 0:
-                points = ((rect.left + inset, rect.bottom - inset), (rect.centerx, rect.top + inset), (rect.right - inset, rect.bottom - inset))
+                points = (
+                    (rect.left + inset, rect.bottom - inset),
+                    (rect.centerx, rect.top + inset),
+                    (rect.right - inset, rect.bottom - inset),
+                )
             else:
-                points = ((rect.left + inset, rect.top + inset), (rect.centerx, rect.bottom - inset), (rect.right - inset, rect.top + inset))
+                points = (
+                    (rect.left + inset, rect.top + inset),
+                    (rect.centerx, rect.bottom - inset),
+                    (rect.right - inset, rect.top + inset),
+                )
             pygame.draw.polygon(screen, theme.text, points)
-            target = min(max(0, self._selected + direction * columns), len(self._presented_activities) - 1)
-            self._targets.append(HitTarget("presented_activity_select", target, rect))
-
-    def _handle_click(self, position: tuple[int, int], pygame: Any) -> None:  # type: ignore[override]
-        for target in reversed(self._targets):
-            if not target.rect.collidepoint(position):
-                continue
-            if target.action == "activity_category":
-                self._set_category(str(target.value))
-                return
-            if target.action == "presented_activity_select":
-                self._selected = int(target.value)
-                self._ensure_selected_visible(pygame)
-                return
-            if target.action == "presented_activity":
-                self._selected = int(target.value)
-                self._ensure_selected_visible(pygame)
-                self._launch_selected(pygame)
-                return
-        super()._handle_click(position, pygame)
+            target = min(
+                max(0, self._selected + direction * columns),
+                len(self._presented_activities) - 1,
+            )
+            self._targets.append(
+                HitTarget("presented_activity_select", target, rect)
+            )
 
     def _draw_activity_tile(
         self,
@@ -369,11 +491,16 @@ class GreiaLauncherPresentation(LauncherApplication):
         theme: Any,
         pygame: Any,
     ) -> None:
-        if state.launching:
-            motion = self._LAUNCH.sample(time.monotonic() - self._launch_animation_started)
-        else:
-            motion = self._HOVER.sample(state)
-        outline = theme.accent if state.emphasized else _mix(theme.text, theme.panel, 0.72)
+        motion = (
+            self._LAUNCH.sample(time.monotonic() - self._launch_animation_started)
+            if state.launching
+            else self._HOVER.sample(state)
+        )
+        outline = (
+            theme.accent
+            if state.emphasized
+            else _mix(theme.text, theme.panel, 0.72)
+        )
         shadow = self._shadow_for(rect.size, pygame)
         tile = draw_raised_panel(
             screen,
@@ -388,7 +515,10 @@ class GreiaLauncherPresentation(LauncherApplication):
         )
         icon_size = max(58, int(tile.width * 0.54))
         icon = self._activity_icon(activity, icon_size, pygame)
-        screen.blit(icon, icon.get_rect(center=(tile.centerx, tile.centery - tile.height * 0.10)))
+        screen.blit(
+            icon,
+            icon.get_rect(center=(tile.centerx, tile.centery - tile.height * 0.10)),
+        )
         title = self._font(max(18, min(25, tile.height // 8)), pygame).render(
             _activity_title(activity), True, theme.text
         )
@@ -396,11 +526,26 @@ class GreiaLauncherPresentation(LauncherApplication):
             target_width = tile.width - 18
             title = pygame.transform.smoothscale(
                 title,
-                (target_width, max(1, round(title.get_height() * target_width / title.get_width()))),
+                (
+                    target_width,
+                    max(
+                        1,
+                        round(
+                            title.get_height()
+                            * target_width
+                            / title.get_width()
+                        ),
+                    ),
+                ),
             )
-        screen.blit(title, title.get_rect(center=(tile.centerx, tile.bottom - tile.height * 0.12)))
+        screen.blit(
+            title,
+            title.get_rect(center=(tile.centerx, tile.bottom - tile.height * 0.12)),
+        )
 
-    def _activity_icon(self, activity: ActivityManifest, size: int, pygame: Any) -> Any:
+    def _activity_icon(
+        self, activity: ActivityManifest, size: int, pygame: Any
+    ) -> Any:
         key = (activity.activity_id, activity.version, size)
         cached = self._decorated_icon_cache.get(key)
         if cached is not None:
@@ -415,7 +560,12 @@ class GreiaLauncherPresentation(LauncherApplication):
         except (ActivityIconError, OSError, ValueError, pygame.error):
             self._catalogue_error = True
             source = self._load_icon("robot", size, pygame)
-        decorated = make_shadowed_icon(source, pygame, shadow_alpha=54, shadow_offset=max(2, size // 28))
+        decorated = make_shadowed_icon(
+            source,
+            pygame,
+            shadow_alpha=54,
+            shadow_offset=max(2, size // 28),
+        )
         self._decorated_icon_cache[key] = decorated
         return decorated
 
@@ -453,7 +603,11 @@ class GreiaLauncherPresentation(LauncherApplication):
         # the selected item back to its registry index. No package/lifecycle
         # authority is duplicated in this presentation class.
         global_index = next(
-            (index for index, item in enumerate(self._activities) if item is manifest),
+            (
+                index
+                for index, item in enumerate(self._activities)
+                if item is manifest
+            ),
             None,
         )
         if global_index is None:
@@ -464,7 +618,10 @@ class GreiaLauncherPresentation(LauncherApplication):
         try:
             super()._launch_selected(pygame)
         finally:
-            self._selected = min(presented_index, max(0, len(self._presented_activities) - 1))
+            self._selected = min(
+                presented_index,
+                max(0, len(self._presented_activities) - 1),
+            )
             self._ensure_selected_visible(pygame)
 
 
@@ -496,7 +653,10 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    return GreiaLauncherPresentation(windowed=args.windowed, allow_exit=args.allow_exit).run()
+    return GreiaLauncherPresentation(
+        windowed=args.windowed,
+        allow_exit=args.allow_exit,
+    ).run()
 
 
 if __name__ == "__main__":
