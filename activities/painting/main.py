@@ -210,8 +210,8 @@ class PaintingApp:
         )
 
     def run(self) -> int:
-        mark_activity_ready()
         running = True
+        ready_published = False
         while running and not activity_stop_requested():
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -229,6 +229,9 @@ class PaintingApp:
             self._autosave()
             self._draw()
             pygame.display.flip()
+            if not ready_published:
+                mark_activity_ready()
+                ready_published = True
             self.clock.tick(30)
         self._save()
         pygame.quit()
