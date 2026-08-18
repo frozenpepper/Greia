@@ -48,6 +48,10 @@ class ActivityManifest:
     storage_schema_version: int
     root: Path
     input_profile: str = InteractionProfile.HYBRID.value
+    # Launcher navigation is intentionally separate from educational taxonomy.
+    # Empty means an older package that should temporarily fall back to
+    # education.categories for compatibility.
+    launcher_categories: tuple[str, ...] = ()
 
     @property
     def launch_path(self) -> Path:
@@ -250,6 +254,15 @@ class ActivityRegistry:
         requirements = _table(raw, "requirements")
         permissions = _table(raw, "permissions")
         storage = _table(raw, "storage")
+
+        raw_presentation = raw.get("presentation")
+        if raw_presentation is None:
+            launcher_categories: tuple[str, ...] = ()
+        elif isinstance(raw_presentation, dict):
+            launcher_categories = _texts(raw_presentation, "categories")
+        else:
+            raise ActivityValidationError("presentation must be a table")
+
         raw_input = raw.get("input")
         if raw_input is None:
             # API 0.1 compatibility for existing packages. New packages should
@@ -288,12 +301,19 @@ class ActivityRegistry:
             events=events,
             difficulty=_integer(education, "difficulty", 1, 10),
             languages=_texts(activity, "languages"),
-            required_capabilities=_texts(requirements, "required_capabilities", allow_empty=True),
-            optional_capabilities=_texts(requirements, "optional_capabilities", allow_empty=True),
-            requested_permissions=_texts(permissions, "requested", allow_empty=True),
+            required_capabilities=_texts(
+                requirements, "required_capabilities", allow_empty=True
+            ),
+            optional_capabilities=_texts(
+                requirements, "optional_capabilities", allow_empty=True
+            ),
+            requested_permissions=_texts(
+                permissions, "requested", allow_empty=True
+            ),
             storage_schema_version=_integer(storage, "schema_version", 1),
             root=root,
             input_profile=input_profile,
+            launcher_categories=launcher_categories,
         )
 
     def _validate_manifest(self, manifest: ActivityManifest, source: ActivitySource) -> None:
@@ -327,6 +347,17 @@ class ActivityRegistry:
 
         _unique("activity.languages", manifest.languages)
         _unique("education.categories", manifest.categories)
+        _unique("presentation.categories", manifest.launcher_categories)
+        if len(manifest.launcher_categories) > 4:
+            raise ActivityValidationError(
+                "presentation.categories may contain at most four launcher categories"
+            )
+        if any(
+            not _bounded_id(value, 64) for value in manifest.launcher_categories
+        ):
+            raise ActivityValidationError(
+                "presentation.categories contains an invalid launcher category id"
+            )
         _unique("education.skills ids", tuple(item.skill_id for item in manifest.skills))
         _unique("education.events ids", tuple(item.event_id for item in manifest.events))
         _unique("requirements.required_capabilities", manifest.required_capabilities)
