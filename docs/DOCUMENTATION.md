@@ -74,7 +74,7 @@ For exact currently implemented APIs, schemas, command vocabularies and limits, 
 | renderer-neutral viewport/rectangle/adaptive-grid calculations | `src/greia_platform/responsive_layout.py` |
 | renderer-neutral Activity canvas/world coordinate transforms | `src/greia_platform/activity_viewport.py` |
 | shared Pygame Activity canvas adapters | `src/greia_platform/pygame_canvas.py` |
-| Pygame child-control metrics and semantic interface-size composition | `src/greia_platform/activity_ui.py` |
+| Pygame child-control metrics, semantic interface-size composition and platform-system-safe Activity toolbar/content geometry | `src/greia_platform/activity_ui.py` |
 | platform-wide Pygame UI import surface | `src/greia_platform/pygame_ui.py` |
 | lightweight Pygame depth/shadow/raised-panel effects | `src/greia_platform/pygame_effects.py` |
 | child profile semantic interface-size persistence (`compact/normal/large`) | `src/greia_platform/ui_preferences.py` |
@@ -125,9 +125,11 @@ docs/testing/2026-08-18_RESPONSIVE_UI_ACCEPTANCE.md
 docs/testing/2026-08-18_MY_GREIA_ACCEPTANCE.md
 ```
 
+`docs/testing/LOCAL_AGENT_START_HERE.md` composes the current mandatory focused gate and evidence boundary, including first-frame Activity readiness and system-safe core-Activity UI regressions.
+
 ### 2.9 Agent/developer manuals — `docs/agents/*`, `skills/*`
 
-`docs/agents/GREIA_AGENT_OPERATIONS.md` is the operational entry point for build/test/hardware work. `skills/greia-activity-authoring/SKILL.md` is the living Activity authoring guide and must track the responsive/canvas/localization contracts.
+`docs/agents/GREIA_AGENT_OPERATIONS.md` is the operational entry point for build/test/hardware work. `skills/greia-activity-authoring/SKILL.md` is the living Activity authoring guide and must track the responsive/canvas/localization/system-safe-UI/lifecycle-readiness contracts.
 
 ### 2.10 Governance/licensing — `docs/governance/*`
 
@@ -182,6 +184,10 @@ Architecture examples communicate semantics; they are not automatically current 
 - ADR 0019 Home/Back remains platform chrome, not Activity widgets.
 - ADR 0026 selects automatic responsive layout but does not certify every existing surface until migrated/tested.
 - ADR 0027/reference-canvas/world transform source exists; raw legacy physical-pixel Activity code can still require migration.
+- Shared Pygame `activity_toolbar_button()` / `activity_content_rect()` / `activity_safe_rect()` now derive essential Activity UI from the same protected system-chrome geometry; Painting and Writing consume this source path.
+- Shape Garden now uses `PygameReferenceCanvas`, maps physical pointer input through the same logical transform and rejects Activity interaction inside protected system chrome; this source migration is not yet current-head executed evidence.
+- First-party Python Activities now publish lifecycle READY only after a frame presentation in the same launch loop; the regression is committed but still requires fresh current-head execution.
+- Painting's current editor controls are system-safe, but its durable painting document surface remains coupled to the current editor viewport and still requires a separate resolution-neutral document-model migration.
 - ADR 0028 localization/language policy source exists, but full profile persistence, localized catalogue-title wiring, dynamic launcher flags and pre-launch chooser remain partially integrated/unproven.
 - My Greia semantic interface-size storage/read-only Activity visual snapshots exist in source but require fresh current-head owner-controlled verification.
 - R7 remains open; Xorg/xinit is provisional compatibility behavior.
