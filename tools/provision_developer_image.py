@@ -65,13 +65,14 @@ class ProvisionConfig:
 
 
 class DeveloperImageProvisioner:
-    """Provision key-only SSH and bounded developer control into one dev image.
+    """Provision the owner-approved greia/greia SSH login and bounded developer control into one dev image.
 
     The exact expected profile is supplied by the developer-image builder and is
     verified against the image's embedded profile manifest. Remote capability is
     additionally gated by the explicit ``developer-remote`` package set, so this
     tool cannot silently turn an ordinary release/profile image into a remote
-    developer target.
+    developer target. The greia/greia development login is enabled with root SSH
+    denied; the operator key is an additional automation path.
     """
 
     def __init__(self, config: ProvisionConfig, *, runner: CommandRunner | None = None):
