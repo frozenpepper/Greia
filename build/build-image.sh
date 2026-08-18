@@ -261,9 +261,21 @@ build_early_framebuffer() {
     apt-get "${APT_ACQUIRE_OPTIONS[@]}" -o Dpkg::Options::=--force-confold \
     install -y --no-install-recommends libklibc-dev >/dev/null
   install -d -m 0755 "$rootfs/usr/lib/greia-boot"
-  chroot "$rootfs" /usr/lib/klibc/bin/klcc -static -Os -s \
+  # Stage the renderer source into the target root so the target toolchain
+  # compiles it with target headers. klcc is a gcc wrapper that links against
+  # klibc; its path differs across Debian/Ubuntu, so locate it inside the root.
+  install -d -m 0755 "$rootfs/usr/src/greia-boot"
+  cp "$PROJECT_ROOT/build/early-boot/greia-fb-splash.c" \
+    "$rootfs/usr/src/greia-boot/greia-fb-splash.c"
+  local klcc_path
+  klcc_path="$(chroot "$rootfs" /bin/sh -c 'command -v klcc')" || {
+    echo "klcc not found in target root after libklibc-dev install." >&2
+    exit 1
+  }
+  chroot "$rootfs" "$klcc_path" -static -Os -s \
     -o /usr/lib/greia-boot/greia-fb-splash \
-    "$PROJECT_ROOT/build/early-boot/greia-fb-splash.c"
+    /usr/src/greia-boot/greia-fb-splash.c
+  rm -rf "$rootfs/usr/src/greia-boot"
   chmod 0755 "$rootfs/usr/lib/greia-boot/greia-fb-splash"
   # Verify the produced binary matches the target architecture before it can
   # ever reach an initramfs. The target is a chroot; readelf must run outside.

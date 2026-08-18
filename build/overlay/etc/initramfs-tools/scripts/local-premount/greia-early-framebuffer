@@ -1,6 +1,8 @@
 #!/bin/sh
 # Pre-root-mount Greia early-framebuffer reinforcement attempt.
+# Deliberately nonblocking and fail-soft: a missing framebuffer or renderer
+# must never delay or break boot.
 
-. /scripts/greia-early-framebuffer-helper
-
-greia_early_framebuffer_draw
+if [ -c /dev/fb0 ] && [ -x /usr/lib/greia-boot/greia-fb-splash ]; then
+    /usr/lib/greia-boot/greia-fb-splash >/dev/null 2>&1 || true
+fi

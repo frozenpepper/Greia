@@ -194,15 +194,13 @@ class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
                     )
                     self.assertTrue(script.is_file(), f"missing stage script {stage}")
                     self.assertTrue(script.stat().st_mode & 0o111)
-                    self.assertIn(
-                        ". /scripts/greia-early-framebuffer-helper",
-                        script.read_text(encoding="utf-8"),
-                    )
-                helper = (
-                    ROOT / prefix / "etc/initramfs-tools/scripts/greia-early-framebuffer-helper"
-                )
-                self.assertTrue(helper.is_file())
-                self.assertIn("greia-fb-splash", helper.read_text(encoding="utf-8"))
+                    script_text = script.read_text(encoding="utf-8")
+                    # Each stage self-contains the draw attempt so initramfs
+                    # prereq probing (which runs the host copy) never sources a
+                    # missing helper path.
+                    self.assertIn("greia-fb-splash", script_text)
+                    self.assertIn("[ -c /dev/fb0 ]", script_text)
+                    self.assertIn("|| true", script_text)
 
     def test_builders_compile_early_framebuffer_for_target_arch_and_remove_klibc(self) -> None:
         """Builders compile the cover inside the root and purge the build-only toolchain."""

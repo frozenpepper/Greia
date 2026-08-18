@@ -238,9 +238,18 @@ build_early_framebuffer() {
     apt-get "${APT_ACQUIRE_OPTIONS[@]}" -o Dpkg::Options::=--force-confold \
     install -y --no-install-recommends libklibc-dev >/dev/null
   install -d -m 0755 "$rootfs/usr/lib/greia-boot"
-  chroot "$rootfs" /usr/lib/klibc/bin/klcc -static -Os -s \
+  install -d -m 0755 "$rootfs/usr/src/greia-boot"
+  cp "$PROJECT_ROOT/build/early-boot/greia-fb-splash.c" \
+    "$rootfs/usr/src/greia-boot/greia-fb-splash.c"
+  local klcc_path
+  klcc_path="$(chroot "$rootfs" /bin/sh -c 'command -v klcc')" || {
+    echo "klcc not found in live root after libklibc-dev install." >&2
+    exit 1
+  }
+  chroot "$rootfs" "$klcc_path" -static -Os -s \
     -o /usr/lib/greia-boot/greia-fb-splash \
-    "$PROJECT_ROOT/build/early-boot/greia-fb-splash.c"
+    /usr/src/greia-boot/greia-fb-splash.c
+  rm -rf "$rootfs/usr/src/greia-boot"
   chmod 0755 "$rootfs/usr/lib/greia-boot/greia-fb-splash"
   elf_machine="$(readelf -h "$rootfs/usr/lib/greia-boot/greia-fb-splash" 2>/dev/null \
     | awk '/Machine:/{print $2, $3}')"
