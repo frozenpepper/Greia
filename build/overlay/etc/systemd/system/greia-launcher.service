@@ -23,6 +23,11 @@ Environment=GREIA_ACTIVE_PROFILE_STATUS=/run/greia-os/active-profile.json
 Environment=GREIA_MEDIA_ROOT=/media/greia
 Environment=GREIA_SYSTEM_SETTINGS_DIR=/var/lib/greia-system-settings
 Environment=GREIA_HARDWARE_STATUS=/run/greia-hardware/status.json
+# /run is tmpfs and starts empty on every boot. systemd constructs service
+# namespaces before ExecStartPre, so Greia-owned volatile paths must exist
+# before xinit or any helper starts.
+RuntimeDirectory=greia-os
+RuntimeDirectoryMode=0755
 ExecStartPre=+/usr/local/lib/greia-os/prepare-launcher-vt
 ExecStart=/usr/bin/xinit /usr/local/lib/greia-os/greia-x-session -- :0 vt1 -keeptty -novtswitch -background none -quiet -nolisten tcp -noreset
 Restart=always
@@ -31,16 +36,17 @@ TTYPath=/dev/tty1
 TTYReset=yes
 TTYVHangup=yes
 # The launcher is a graphical application; stdin must never be the VT, or
-# children (activities, helpers) reading it would be SIGTTIN-stopped.
+# children (Activities, helpers) reading it would be SIGTTIN-stopped.
 StandardInput=null
 StandardOutput=journal
 StandardError=journal
-PrivateTmp=yes
-ProtectHome=yes
-ProtectSystem=strict
-ReadWritePaths=/var/lib/greia-kid /var/lib/greia-profiles /var/lib/xkb /run/greia-hardware /run/greia-os
-RestrictSUIDSGID=yes
-LockPersonality=yes
+# IMPORTANT: this unit currently owns the provisional Xorg display server.
+# A desktop-style service sandbox (ProtectSystem/ProtectHome/PrivateTmp and
+# restrictive path namespaces) prevents Xorg from opening the VT/DRM/input
+# devices and from using its normal runtime/log paths on legacy hardware.
+# Activity isolation remains in ActivitySupervisor/Bubblewrap. Re-introduce a
+# launcher namespace only after the selected R7 display backend proves the
+# exact device/path contract on physical hardware.
 LimitCORE=0
 TasksMax=128
 
