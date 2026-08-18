@@ -13,10 +13,11 @@ This file exists so the local coding/test agent cannot accidentally run an older
 1. docs/testing/2026-08-18_LOCAL_AGENT_FULL_TEST_AND_FIX_SESSION.md
 2. docs/testing/2026-08-18_RESPONSIVE_UI_ACCEPTANCE.md
 3. docs/testing/2026-08-18_MY_GREIA_ACCEPTANCE.md
-4. HANDOVER.md
+4. docs/testing/2026-08-18_EARLY_BOOT_VISUAL_AND_AUDIO_ACCEPTANCE.md
+5. HANDOVER.md
 ```
 
-All three testing documents are mandatory parts of **one** current session. The addenda strengthen/extend the original full-session protocol; they do not replace its installation, SSH, Parent-App, package-install or hardware work.
+All four testing documents are mandatory parts of **one** current session. The addenda strengthen/extend the original full-session protocol; they do not replace its installation, SSH, Parent-App, package-install or hardware work.
 
 Before editing also obey the repository read order in `AGENTS.md` / `docs/DOCUMENTATION.md`.
 
@@ -32,7 +33,7 @@ You are not a passive runner. You are expected to:
 - rerun the smallest affected gate, then the broader gate;
 - continue after ordinary failures rather than stopping at the first red test.
 
-Do not make tests green by weakening invariants, deleting checks, encoding the Acer model into core behavior, adding per-resolution UI forks, broadening Activity/Parent authority, or bypassing the typed platform architecture.
+Do not make tests green by weakening invariants, deleting checks, encoding the Acer model into core behavior, adding per-resolution UI forks, broadening Activity/Parent authority, bypassing the typed platform architecture, or hiding boot diagnostics by deleting logging.
 
 Do not use/query/trigger GitHub-hosted Actions without a new explicit owner authorization.
 
@@ -42,6 +43,14 @@ Do not use/query/trigger GitHub-hosted Actions without a new explicit owner auth
 - no random end-install password/recovery-code UX;
 - Parent main password starts `greia / greia` and is Parent-changeable through typed Greia authority;
 - optional child passwords are Greia profile credentials, not Linux users;
+- normal Greia boot is a **consoleless appliance experience**: no intentional child-visible kernel/service text, blinking VT cursor, getty/login prompt, shell or interactive boot menu;
+- Plymouth is migration debt and is **not** the accepted future Greia boot architecture; remove it coherently from target and installer only once the Greia-owned replacement is integrated and buildable;
+- current legacy BIOS profiles may keep minimal zero-timeout GRUB purely as their bootloader; do not turn GRUB into the animation engine;
+- the earliest Greia-owned visual is a clean white frame with the Greia logo/artwork using essentially the full vertical display height while preserving aspect ratio;
+- the early framebuffer renderer must query actual geometry/pixel layout, never wait for graphics and never encode Acer/1024x600 assumptions;
+- the real startup animation is launcher-owned, visibly present, monotonic-time driven and adds no more than 1.0 s of intentional delay before the profile picker;
+- an optional boot chime starts only after the first real graphical launcher frame, is one-shot/fail-silent, and can never be a boot prerequisite;
+- console suppression must preserve journal and authorized SSH diagnostics;
 - Greia UI is automatically responsive: designers/authors maintain **one semantic layout**, not one layout per resolution/device;
 - Activity authors can work in a 1024x600 logical reference canvas/world model while Greia automatically maps to the actual Activity viewport;
 - Activities may be fluid UI, fixed canvas, world-camera game, or hybrids; choose spatial semantics rather than physical pixels;
@@ -62,6 +71,7 @@ After synchronizing to the actual current `origin/main`, record the SHA and run:
 set -o pipefail
 PYTHONPATH=src python3 -m unittest \
   tests.test_installation_hardware_regressions \
+  tests.test_boot_experience_contract \
   tests.test_ui_motion_scroll \
   tests.test_responsive_layout \
   tests.test_activity_viewport \
@@ -89,7 +99,7 @@ PYTHONPATH=src python3 -m unittest \
 
 If a named test module has been legitimately renamed by newer committed source, inspect the current tree and use the current authoritative replacement; do not silently skip the subsystem.
 
-Then run the other subsystem-specific focused gates from the full protocol and finally:
+Then run the dedicated boot implementation/physical protocol in `docs/testing/2026-08-18_EARLY_BOOT_VISUAL_AND_AUDIO_ACCEPTANCE.md`, the other subsystem-specific focused gates from the full protocol, and finally:
 
 ```bash
 make verify 2>&1 | tee "$SESSION_ROOT/final-make-verify.log"
@@ -106,7 +116,7 @@ focused current-ui-platform gate: 131 PASS
 Parent-App npm test at pinned e30bcbc: 10 PASS
 ```
 
-That evidence does **not** cover later source changes, including the final My Greia safe-area implementation/regression, the first-party first-frame readiness corrections, the Shape Garden logical-canvas migration, or the new shared system-safe UI geometry consumed by Painting/Writing. Do not copy the 679-PASS result onto the current SHA. The current checkout requires fresh execution of the focused gate and `make verify` before a new PASS can be recorded.
+That evidence does **not** cover later source changes, including the final My Greia safe-area implementation/regression, the first-party first-frame readiness corrections, the Shape Garden logical-canvas migration, the new shared system-safe UI geometry consumed by Painting/Writing, or the new early-boot framebuffer/design/test scaffold. Do not copy the 679-PASS result onto the current SHA. The current checkout requires fresh execution of the focused gates and `make verify` before a new PASS can be recorded.
 
 ## 5. Parent HTML
 
@@ -119,6 +129,8 @@ runtime/parent-app-client.manifest.json
 
 Run its `npm test`. If Parent-App source must change, commit/push the Parent-App repository first, then repin Greia to the exact new revision/integrity values.
 
+The child launcher/profile picker must **not wait on Parent-App/network readiness during normal boot** unless source inspection proves an actual safety prerequisite. Parent functionality should become available when its service is ready without holding the first child-facing interactive frame hostage.
+
 ## 6. Build and hardware
 
 Only after current source gates are green, build a fresh canonical developer/test installer for the actual target profile and follow the destructive-media safety rules in the full protocol.
@@ -128,6 +140,14 @@ Physical acceptance must include, at minimum:
 - graphical install and first boot;
 - no random recovery-code UX;
 - developer/test SSH `greia / greia` survives reboot, root rejected;
+- no Plymouth in the newly migrated target/installer package/initramfs path once the new boot backend is authoritative;
+- no child-visible console text, blinking cursor, getty/login prompt or interactive boot menu during successful normal boot;
+- white/full-height Greia static frame appears at the earliest attainable Greia-controlled boot stage and preserves aspect ratio;
+- no black/text flash deliberately introduced across bootloader → initramfs → X/launcher handoff;
+- launcher-owned startup animation is actually visible, plays once per machine boot and stays within the <=1.0 s intentional delay budget;
+- optional boot chime plays once only after the first graphical launcher frame, fails silently when audio is unavailable, and does not replay on a launcher-service restart;
+- `systemd-analyze`, launcher critical-chain and monotonic-journal evidence are captured, with before/after claims made only when comparable baseline evidence exists;
+- a second x86 machine/VM verifies the early renderer/visual path did not encode Acer-specific framebuffer/resolution behavior;
 - Parent HTML live connection and credential/profile management;
 - owner-enabled `.greiaactivity` install and hot discovery;
 - launcher names/categories/Back/scroll/effects/focus;
@@ -149,6 +169,8 @@ Every PASS/FAIL must be tied to:
 - exact command or physical procedure;
 - evidence path/result;
 - scope of what it proves.
+
+For boot/visual work also record which exact target/installer artifact was used, the profile ID, kernel/initramfs inspected, and whether observations came from logs, generated-artifact inspection or physical video. Those are different forms of evidence and must not be conflated.
 
 If source changes after an image was built/tested, the old image evidence belongs to the old SHA. Rebuild/retest the affected physical scope or label it honestly as stale/unproven.
 
