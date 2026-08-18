@@ -104,6 +104,10 @@ For exact currently implemented APIs, schemas, command vocabularies and limits, 
 | developer remote client vocabulary | `tools/greia_remote.py` |
 | privileged developer operations | `src/greia_platform/developer_control.py`, `src/greia_platform/developer_input.py` |
 | image composition | `build/profiles/*.toml`, `build/package-sets/*.txt`, canonical builders/overlays |
+| early-boot framebuffer cover renderer | `build/early-boot/greia-fb-splash.c`, `build/early-boot/README.md` |
+| canonical boot artwork lineage | `assets/boot/source/`, `assets/boot/static/`, `tools/generate_boot_artwork.py` |
+| launcher-owned boot intro | `src/greia_launcher/boot_intro.py` |
+| one-shot boot chime | `src/greia_launcher/boot_chime.py`, `assets/audio/system/greia-boot-chime.wav` |
 
 Documentation may explain these contracts but must not invent a conflicting one. When source intentionally changes, update affected living manuals in the same tranche.
 
