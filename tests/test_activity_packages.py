@@ -4,6 +4,7 @@ import os
 import tempfile
 import unittest
 import zipfile
+from collections.abc import Callable
 from pathlib import Path
 from unittest import mock
 
@@ -20,7 +21,7 @@ def write_activity_archive(
     source: Path,
     destination: Path,
     *,
-    manifest_transform: callable | None = None,
+    manifest_transform: Callable[[str], str] | None = None,
 ) -> None:
     with zipfile.ZipFile(destination, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         for path in sorted(source.rglob("*")):
@@ -107,7 +108,9 @@ class ActivityPackageServiceTests(unittest.TestCase):
 
             second = service.install_archive(archive)
             self.assertEqual(second.package_digest, first.package_digest)
-            self.assertTrue((service.active_root / first.activity_id / "activity.toml").is_file())
+            self.assertTrue(
+                (service.active_root / first.activity_id / "activity.toml").is_file()
+            )
 
     def test_package_identity_cannot_collide_with_built_in_activity(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
