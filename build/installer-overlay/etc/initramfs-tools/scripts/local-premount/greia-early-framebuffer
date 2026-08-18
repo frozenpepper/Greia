@@ -1,0 +1,6 @@
+#!/bin/sh
+# Pre-root-mount Greia early-framebuffer reinforcement attempt.
+
+. /scripts/greia-early-framebuffer-helper
+
+greia_early_framebuffer_draw

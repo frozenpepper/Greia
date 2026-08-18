@@ -51,9 +51,10 @@ class SystemOverlayContractTests(unittest.TestCase):
         self.assertNotIn("ext2|ext3|ext4|iso9660", mount_helper)
         self.assertIn("nosuid,nodev,noexec", mount_helper)
 
-    def test_release_build_is_blocked_while_profile_selects_provisional_plymouth(self) -> None:
+    def test_release_build_is_blocked_until_boot_cover_is_physically_accepted(self) -> None:
         for profile in (PROJECT_ROOT / "build/profiles").glob("*.toml"):
-            self.assertIn('cover_backend = "stock-plymouth-provisional"', profile.read_text())
+            text = profile.read_text()
+            self.assertIn('cover_backend = "greia-early-framebuffer-v1"', text)
         profile_tool = (PROJECT_ROOT / "tools/build_profile.py").read_text()
         self.assertIn("_RELEASE_SAFE_BOOT_COVERS", profile_tool)
         self.assertIn("frozenset()", profile_tool)
@@ -120,7 +121,7 @@ class SystemOverlayContractTests(unittest.TestCase):
         self.assertIn("findmnt -rn -R", helper)
         self.assertIn("rm -rf --one-file-system", helper)
 
-    def test_boot_cover_handoff_keeps_plymouth_and_xorg_on_same_vt(self) -> None:
+    def test_boot_cover_handoff_keeps_early_framebuffer_and_xorg_on_same_vt(self) -> None:
         units = (
             PROJECT_ROOT / "build/overlay/etc/systemd/system/greia-launcher.service",
             PROJECT_ROOT / "build/installer-overlay/etc/systemd/system/greia-installer.service",
@@ -144,11 +145,11 @@ class SystemOverlayContractTests(unittest.TestCase):
             prepare = (PROJECT_ROOT / overlay / "usr/local/lib/greia-os" / prepare_name).read_text()
             self.assertIn("chvt 1", prepare)
             self.assertNotIn("chvt 2", release)
-            self.assertNotIn("plymouth deactivate", release)
-            self.assertNotIn("plymouth quit", release)
+            # The early-framebuffer cover owns the frame; no Plymouth handoff.
+            self.assertNotIn("plymouth", release)
+            self.assertNotIn("plymouth", prepare)
             self.assertIn('> "$marker"', release)
-            self.assertIn("boot-cover-released", prepare)
-            self.assertIn("plymouth quit --retain-splash", prepare)
+            self.assertIn("boot-cover-released", release)
 
     def test_usb_writer_requires_removable_media_and_rechecks_identity(self) -> None:
         writer = (PROJECT_ROOT / "build/write-image.sh").read_text()

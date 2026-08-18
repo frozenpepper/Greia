@@ -1,0 +1,7 @@
+#!/bin/sh
+# Earliest initramfs Greia early-framebuffer draw attempt.
+# initramfs-tools sources scripts in init-top/ after device setup begins.
+
+. /scripts/greia-early-framebuffer-helper
+
+greia_early_framebuffer_draw

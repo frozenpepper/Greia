@@ -39,10 +39,17 @@ class ImageRuntimeClosureTests(unittest.TestCase):
         self.assertNotIn("video", useradd)
         self.assertNotIn("render", useradd)
 
-    def test_plymouth_theme_has_label_plugin_runtime(self) -> None:
-        packages = self._packages("build/package-sets/boot-cover-plymouth.txt")
-        self.assertIn("plymouth", packages)
-        self.assertIn("plymouth-label", packages)
+    def test_early_framebuffer_boot_cover_has_no_runtime_packages(self) -> None:
+        packages = self._packages("build/package-sets/boot-cover-greia-early-framebuffer.txt")
+        # The Greia-owned renderer is built inside the target root; the runtime
+        # package set must not drag compiler/toolchain/Plymouth into the image.
+        self.assertEqual(packages, set())
+
+    def test_no_profile_uses_plymouth_boot_cover_set(self) -> None:
+        for profile in (ROOT / "build/profiles").glob("*.toml"):
+            text = profile.read_text(encoding="utf-8")
+            self.assertNotIn("boot-cover-plymouth", text)
+            self.assertIn('cover_backend = "greia-early-framebuffer-v1"', text)
 
     def test_partscan_mappings_are_removed_before_loop_detach(self) -> None:
         helper = (ROOT / "build/lib/safe-cleanup.sh").read_text(encoding="utf-8")

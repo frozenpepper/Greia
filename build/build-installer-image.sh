@@ -229,21 +229,43 @@ printf '%s\n' /opt/greia-os/src > "$LIVE_ROOT/usr/lib/python3/dist-packages/pip_
 chown -R root:root "$LIVE_ROOT/opt/greia-os"
 chmod -R a-w "$LIVE_ROOT/opt/greia-os"
 
-GREIA_PLYMOUTH_THEME="$PROJECT_ROOT/build/overlay/etc/plymouth/themes/greia"
+# Build the Greia-owned early framebuffer boot cover for the TARGET
+# architecture inside the live root. Build-only libklibc-dev is removed again
+# before package-manifest/footprint capture.
+build_early_framebuffer() {
+  local rootfs="$1"
+  chroot "$rootfs" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
+    apt-get "${APT_ACQUIRE_OPTIONS[@]}" -o Dpkg::Options::=--force-confold \
+    install -y --no-install-recommends libklibc-dev >/dev/null
+  install -d -m 0755 "$rootfs/usr/lib/greia-boot"
+  chroot "$rootfs" /usr/lib/klibc/bin/klcc -static -Os -s \
+    -o /usr/lib/greia-boot/greia-fb-splash \
+    "$PROJECT_ROOT/build/early-boot/greia-fb-splash.c"
+  chmod 0755 "$rootfs/usr/lib/greia-boot/greia-fb-splash"
+  elf_machine="$(readelf -h "$rootfs/usr/lib/greia-boot/greia-fb-splash" 2>/dev/null \
+    | awk '/Machine:/{print $2, $3}')"
+  case "$ARCH" in
+    i386)
+      [ "$elf_machine" = "Intel 80386" ] || {
+        echo "Early framebuffer helper architecture ($elf_machine) does not match i386 target." >&2
+        exit 1
+      }
+      ;;
+    amd64)
+      [ "$elf_machine" = "Advanced Micro" ] || [ "$elf_machine" = "AMD x86-64" ] || {
+        echo "Early framebuffer helper architecture ($elf_machine) does not match amd64 target." >&2
+        exit 1
+      }
+      ;;
+  esac
+  chroot "$rootfs" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
+    apt-get "${APT_ACQUIRE_OPTIONS[@]}" -y remove --purge libklibc-dev >/dev/null
+  chroot "$rootfs" apt-get -y autoremove >/dev/null 2>&1 || true
+}
 
-test -f "$GREIA_PLYMOUTH_THEME/greia.plymouth"
-test -f "$GREIA_PLYMOUTH_THEME/greia.script"
-test -f "$GREIA_PLYMOUTH_THEME/frames/frame_0000.png"
-test -f "$GREIA_PLYMOUTH_THEME/frames/frame_0051.png"
-
-install -d -m 0755 "$LIVE_ROOT/usr/share/plymouth/themes/greia"
-rsync -a --delete \
-  "$GREIA_PLYMOUTH_THEME/" \
-  "$LIVE_ROOT/usr/share/plymouth/themes/greia/"
-
-chroot "$LIVE_ROOT" plymouth-set-default-theme greia
+build_early_framebuffer "$LIVE_ROOT"
 systemctl --root="$LIVE_ROOT" enable greia-installer.service
-systemctl --root="$LIVE_ROOT" mask getty@.service autovt@.service console-getty.service debug-shell.service emergency.service rescue.service console-shell.service kbrequest.target getty@tty1.service getty@tty2.service getty@tty3.service getty@tty4.service getty@tty5.service getty@tty6.service plymouth-quit.service plymouth-quit-wait.service
+systemctl --root="$LIVE_ROOT" mask getty@.service autovt@.service console-getty.service debug-shell.service emergency.service rescue.service console-shell.service kbrequest.target getty@tty1.service getty@tty2.service getty@tty3.service getty@tty4.service getty@tty5.service getty@tty6.service
 systemctl --root="$LIVE_ROOT" set-default graphical.target
 
 # The canonical live-installer builder also fails closed for developer profiles.

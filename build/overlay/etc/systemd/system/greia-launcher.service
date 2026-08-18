@@ -1,6 +1,6 @@
 [Unit]
 Description=Greia OS child launcher
-After=local-fs.target systemd-logind.service plymouth-start.service greia-first-boot.service
+After=local-fs.target systemd-logind.service greia-first-boot.service
 Requires=greia-first-boot.service
 Wants=greia-parent.service
 Conflicts=getty@tty1.service

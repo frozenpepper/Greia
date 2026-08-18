@@ -28,17 +28,14 @@ elif [ -e "$x_socket" ]; then
   echo "Refusing orphan Xorg display socket without a lock: $x_socket" >&2
   exit 1
 fi
-# Plymouth and Xorg deliberately use the same virtual terminal. Starting X on
-# a different VT would permit Xorg's initial VT activation to reveal a clear or
-# black frame before the launcher is ready; -novtswitch does not suppress that
-# initial activation. Force VT1 every time so service restarts also recover
-# from a parent/recovery VT.
+# The Greia early-framebuffer cover and Xorg deliberately use the same virtual
+# terminal. Starting X on a different VT would permit Xorg's initial VT
+# activation to reveal a clear or black frame before the launcher is ready;
+# -novtswitch does not suppress that initial activation. Force VT1 every time
+# so service restarts also recover from a parent/recovery VT.
 chvt 1 >/dev/null 2>&1 || true
-# On the first graphical start, release Plymouth's DRM/framebuffer ownership
-# while requesting that the already-rendered pixels remain. Xorg's
-# `-background none` asks the video driver not to paint a root background.
-# Neither request is a mathematical guarantee across drivers: frame-by-frame
-# Acer and QEMU recordings remain a mandatory acceptance gate.
-if [ ! -e /run/greia-os/boot-cover-released ]; then
-  plymouth quit --retain-splash >/dev/null 2>&1 || true
-fi
+# The Greia early-framebuffer cover already owns the frame. Xorg's
+# `-background none` asks the video driver not to paint a root background so
+# the branded frame remains visible until the launcher presents its first real
+# frame. Neither request is a mathematical guarantee across drivers:
+# frame-by-frame Acer and QEMU recordings remain a mandatory acceptance gate.

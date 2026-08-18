@@ -44,9 +44,10 @@ eval "$profile_assignments"
 python3 "$PROFILE_TOOL" --package-root "$PACKAGE_SET_ROOT" validate "$PROFILE_PATH" >/dev/null
 python3 "$PROFILE_TOOL" check-phase0-builder "$PROFILE_PATH" --scope target >/dev/null
 
-# Stock Plymouth remains one profile-selected development backend. Release
-# eligibility follows the declared boot adapter rather than a builder-global
-# assumption so a future accepted backend can be selected per image family.
+# Boot-cover release eligibility follows the declared boot adapter rather than
+# a builder-global assumption so a future accepted backend can be selected per
+# image family. No backend is release-safe until its physical acceptance gate
+# passes.
 if [[ "${PIP_RELEASE_BUILD:-0}" == "1" ]]; then
   if ! release_error="$(python3 "$PROFILE_TOOL" check-release "$PROFILE_PATH" 2>&1)"; then
     echo "Release build refused: $release_error" >&2
@@ -249,10 +250,45 @@ tmpfs /tmp tmpfs nosuid,nodev,noexec,mode=1777,size=64M 0 0
 tmpfs /var/tmp tmpfs nosuid,nodev,noexec,mode=1777,size=32M 0 0
 FSTAB
 
-# Copy Plymouth theme into its canonical runtime location.
-install -d -m 0755 "$ROOTFS/usr/share/plymouth/themes/greia"
-cp -a "$ROOTFS/etc/plymouth/themes/greia/." "$ROOTFS/usr/share/plymouth/themes/greia/"
-chroot "$ROOTFS" plymouth-set-default-theme greia
+# Build the Greia-owned early framebuffer boot cover for the TARGET
+# architecture inside the target root. The binary is compiled with the target
+# klibc toolchain so the build host architecture is never authoritative. The
+# build-only libklibc-dev package is removed again before package-manifest and
+# footprint capture so it cannot leak into the final image.
+build_early_framebuffer() {
+  local rootfs="$1"
+  chroot "$rootfs" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
+    apt-get "${APT_ACQUIRE_OPTIONS[@]}" -o Dpkg::Options::=--force-confold \
+    install -y --no-install-recommends libklibc-dev >/dev/null
+  install -d -m 0755 "$rootfs/usr/lib/greia-boot"
+  chroot "$rootfs" /usr/lib/klibc/bin/klcc -static -Os -s \
+    -o /usr/lib/greia-boot/greia-fb-splash \
+    "$PROJECT_ROOT/build/early-boot/greia-fb-splash.c"
+  chmod 0755 "$rootfs/usr/lib/greia-boot/greia-fb-splash"
+  # Verify the produced binary matches the target architecture before it can
+  # ever reach an initramfs. The target is a chroot; readelf must run outside.
+  elf_machine="$(readelf -h "$rootfs/usr/lib/greia-boot/greia-fb-splash" 2>/dev/null \
+    | awk '/Machine:/{print $2, $3}')"
+  case "$ARCH" in
+    i386)
+      [ "$elf_machine" = "Intel 80386" ] || {
+        echo "Early framebuffer helper architecture ($elf_machine) does not match i386 target." >&2
+        exit 1
+      }
+      ;;
+    amd64)
+      [ "$elf_machine" = "Advanced Micro" ] || [ "$elf_machine" = "AMD x86-64" ] || {
+        echo "Early framebuffer helper architecture ($elf_machine) does not match amd64 target." >&2
+        exit 1
+      }
+      ;;
+  esac
+  chroot "$rootfs" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
+    apt-get "${APT_ACQUIRE_OPTIONS[@]}" -y remove --purge libklibc-dev >/dev/null
+  chroot "$rootfs" apt-get -y autoremove >/dev/null 2>&1 || true
+}
+
+build_early_framebuffer "$ROOTFS"
 
 systemctl --root="$ROOTFS" enable \
   greia-first-boot.service greia-launcher.service greia-parent.service \
@@ -261,8 +297,7 @@ systemctl --root="$ROOTFS" mask \
   getty@.service autovt@.service console-getty.service debug-shell.service \
   emergency.service rescue.service console-shell.service kbrequest.target \
   getty@tty1.service getty@tty2.service getty@tty3.service \
-  getty@tty4.service getty@tty5.service getty@tty6.service \
-  plymouth-quit.service plymouth-quit-wait.service
+  getty@tty4.service getty@tty5.service getty@tty6.service
 systemctl --root="$ROOTFS" set-default graphical.target
 
 # The base image builder never enables remote access, including when a profile

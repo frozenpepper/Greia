@@ -1,0 +1,31 @@
+#!/bin/sh
+set -eu
+
+PREREQ=""
+prereqs() {
+    echo "$PREREQ"
+}
+case "${1:-}" in
+    prereqs)
+        prereqs
+        exit 0
+        ;;
+esac
+
+. /usr/share/initramfs-tools/hook-functions
+
+# Greia early framebuffer cover: copy the Greia-owned renderer and the
+# canonical white boot-logo PPM into the generated initramfs so the first
+# initramfs stage that sees /dev/fb0 can paint the branded frame. Both are
+# built/generated at image build time; no runtime image decoder is involved.
+# FRAMEBUFFER=y (greia-framebuffer.conf) already selects the generic kernel
+# framebuffer driver set; this hook deliberately adds no architecture-specific
+# module names.
+copy_exec /usr/lib/greia-boot/greia-fb-splash /usr/lib/greia-boot/
+
+# The PPM is a regular data file, not an executable; copy it directly.
+if [ -f /etc/greia-boot/boot-logo.ppm ]; then
+    mkdir -p "$DESTDIR/etc/greia-boot"
+    cp /etc/greia-boot/boot-logo.ppm "$DESTDIR/etc/greia-boot/boot-logo.ppm"
+    chmod 0644 "$DESTDIR/etc/greia-boot/boot-logo.ppm"
+fi

@@ -1,96 +1,60 @@
 from __future__ import annotations
 
-import struct
 import unittest
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-THEME_DIR = PROJECT_ROOT / "build" / "overlay" / "etc" / "plymouth" / "themes" / "greia"
 
 
-def _read_png_ihdr(path: Path) -> tuple[int, int, int, int]:
-    data = path.read_bytes()
-    if data[:8] != b"\x89PNG\r\n\x1a\n":
-        raise ValueError(f"{path} is not a valid PNG")
-    if data[12:16] != b"IHDR":
-        raise ValueError(f"{path} missing leading IHDR chunk")
-    width, height, bit_depth, color_type = struct.unpack(">IIBB", data[16:26])
-    return width, height, bit_depth, color_type
+class BootAnimationMigrationTests(unittest.TestCase):
+    """Plymouth is migration debt, not the accepted Greia boot architecture.
 
+    The Greia-owned early framebuffer cover replaces Plymouth in target and
+    installer boot. The legacy 52-frame Plymouth theme may remain in the tree
+    only as historical source material for the canonical artwork derivative; it
+    must never be staged into a built image or wired into the builders again.
+    """
 
-class BootAnimationContractTests(unittest.TestCase):
-    def test_canonical_theme_directory_and_files_exist(self) -> None:
-        self.assertTrue(THEME_DIR.is_dir(), f"Canonical theme directory missing: {THEME_DIR}")
-        self.assertTrue((THEME_DIR / "greia.plymouth").is_file())
-        self.assertTrue((THEME_DIR / "greia.script").is_file())
+    def test_legacy_theme_is_only_historical_source_material(self) -> None:
+        theme_dir = PROJECT_ROOT / "build" / "overlay" / "etc" / "plymouth" / "themes" / "greia"
+        # The legacy theme is permitted to remain as artwork source material.
+        self.assertTrue((theme_dir / "frames" / "frame_0051.png").is_file())
 
-    def test_canonical_theme_contains_exactly_52_direct_runtime_png_frames(self) -> None:
-        frames_dir = THEME_DIR / "frames"
-        self.assertTrue(frames_dir.is_dir())
-        frames = sorted(frames_dir.glob("frame_*.png"))
-        self.assertEqual(len(frames), 52, f"Expected 52 frames, got {len(frames)}")
+    def test_builders_never_stage_or_enable_plymouth(self) -> None:
+        for builder_name in ("build/build-image.sh", "build/build-installer-image.sh"):
+            with self.subTest(builder=builder_name):
+                builder = (PROJECT_ROOT / builder_name).read_text(encoding="utf-8")
+                self.assertNotIn("plymouth-set-default-theme", builder)
+                self.assertNotIn("usr/share/plymouth/themes", builder)
+                self.assertNotIn("plymouth-quit.service", builder)
+                self.assertNotIn("plymouth-quit-wait.service", builder)
 
-        for index, frame_path in enumerate(frames):
-            expected_name = f"frame_{index:04d}.png"
-            self.assertEqual(frame_path.name, expected_name)
-            width, height, bit_depth, color_type = _read_png_ihdr(frame_path)
-            self.assertEqual(
-                (width, height, bit_depth, color_type),
-                (222, 600, 8, 2),
-                f"{frame_path.name} must be 222x600, 8-bit RGB (color_type=2)",
-            )
+    def test_launcher_and_installer_services_do_not_order_after_plymouth(self) -> None:
+        for unit in (
+            PROJECT_ROOT / "build/overlay/etc/systemd/system/greia-launcher.service",
+            PROJECT_ROOT / "build/installer-overlay/etc/systemd/system/greia-installer.service",
+        ):
+            with self.subTest(unit=unit.name):
+                text = unit.read_text(encoding="utf-8")
+                self.assertNotIn("plymouth-start.service", text)
+                self.assertNotIn("plymouth", text)
 
-    def test_greia_script_playback_contract(self) -> None:
-        script = (THEME_DIR / "greia.script").read_text(encoding="utf-8")
-        self.assertIn("Plymouth.SetRefreshRate(7)", script)
-        self.assertIn("Plymouth.SetRefreshFunction", script)
-        self.assertNotIn("SetBootProgressFunction", script)
-        self.assertNotIn("Plymouth.GetTime", script)
-
-    def test_no_reconstruction_hook_or_generator_in_repository(self) -> None:
-        self.assertFalse((PROJECT_ROOT / "runtime" / "boot-animation").exists())
-        self.assertFalse((PROJECT_ROOT / "build" / "boot-animation").exists())
+    def test_no_plymouth_release_binary_or_theme_in_overlays(self) -> None:
+        # No Plymouth runtime theme is staged into the built overlays.
         self.assertFalse(
-            (
-                PROJECT_ROOT
-                / "build"
-                / "overlay"
-                / "etc"
-                / "initramfs-tools"
-                / "hooks"
-                / "00-greia-boot-animation"
-            ).exists()
-        )
-        self.assertFalse(
-            (
-                PROJECT_ROOT
-                / "build"
-                / "installer-overlay"
-                / "etc"
-                / "initramfs-tools"
-                / "hooks"
-                / "00-greia-boot-animation"
-            ).exists()
-        )
-        self.assertFalse(
-            (
-                PROJECT_ROOT
-                / "build"
-                / "installer-overlay"
-                / "etc"
-                / "plymouth"
-                / "themes"
-                / "greia"
-            ).exists()
+            (PROJECT_ROOT / "build/installer-overlay/etc/plymouth/themes/greia").exists()
         )
 
-    def test_installer_builder_stages_canonical_theme_source(self) -> None:
-        builder = (PROJECT_ROOT / "build" / "build-installer-image.sh").read_text(
-            encoding="utf-8"
-        )
-        self.assertIn(
-            'GREIA_PLYMOUTH_THEME="$PROJECT_ROOT/build/overlay/etc/plymouth/themes/greia"',
-            builder,
-        )
-        self.assertIn('"$LIVE_ROOT/usr/share/plymouth/themes/greia/"', builder)
-        self.assertIn("plymouth-set-default-theme greia", builder)
+    def test_boot_cover_release_and_vt_prep_no_longer_drive_plymouth(self) -> None:
+        release = (
+            PROJECT_ROOT / "build/overlay/usr/local/lib/greia-os/release-boot-cover"
+        ).read_text(encoding="utf-8")
+        self.assertNotIn("plymouth", release)
+        prepare = (
+            PROJECT_ROOT / "build/overlay/usr/local/lib/greia-os/prepare-launcher-vt"
+        ).read_text(encoding="utf-8")
+        self.assertNotIn("plymouth", prepare)
+
+
+if __name__ == "__main__":
+    unittest.main()

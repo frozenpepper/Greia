@@ -3,8 +3,9 @@ set -eu
 marker=/run/greia-os/boot-cover-released
 [ -e "$marker" ] && exit 0
 mkdir -p /run/greia-os
-# Plymouth and Xorg share VT1. The launcher/installer calls this helper only
-# after its first complete pygame.display.flip(), so no VT transition is needed
-# here. The marker prevents Plymouth handling from repeating on service restart.
+# The Greia early-framebuffer cover and Xorg share VT1. The launcher/installer
+# calls this helper only after its first complete pygame.display.flip(), so no
+# VT transition is needed here. The marker prevents the one-shot intro/chime
+# from repeating on service restart.
 : > "$marker"
 chmod 0660 "$marker" 2>/dev/null || true

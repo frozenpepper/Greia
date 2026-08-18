@@ -166,6 +166,60 @@ class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
                 pixel_data = data[data.index(b"\n255\n") + 5 :]
                 self.assertEqual(pixel_data, reference)
 
+    def test_initramfs_hooks_and_stages_are_present_in_both_overlays(self) -> None:
+        """Both target and installer overlays ship the early-framebuffer hook and stages."""
+        for prefix in ("build/overlay", "build/installer-overlay"):
+            with self.subTest(prefix=prefix):
+                hook = ROOT / prefix / "etc/initramfs-tools/hooks/greia-early-framebuffer"
+                self.assertTrue(hook.is_file())
+                self.assertTrue(hook.stat().st_mode & 0o111)
+                hook_text = hook.read_text(encoding="utf-8")
+                self.assertIn("copy_exec /usr/lib/greia-boot/greia-fb-splash", hook_text)
+                self.assertIn("boot-logo.ppm", hook_text)
+                self.assertNotIn("uvesafb", hook_text)
+                for stage in ("init-top", "local-premount", "init-bottom"):
+                    script = (
+                        ROOT
+                        / prefix
+                        / "etc/initramfs-tools/scripts"
+                        / stage
+                        / "greia-early-framebuffer"
+                    )
+                    self.assertTrue(script.is_file(), f"missing stage script {stage}")
+                    self.assertTrue(script.stat().st_mode & 0o111)
+                    self.assertIn(
+                        ". /scripts/greia-early-framebuffer-helper",
+                        script.read_text(encoding="utf-8"),
+                    )
+                helper = (
+                    ROOT / prefix / "etc/initramfs-tools/scripts/greia-early-framebuffer-helper"
+                )
+                self.assertTrue(helper.is_file())
+                self.assertIn("greia-fb-splash", helper.read_text(encoding="utf-8"))
+
+    def test_builders_compile_early_framebuffer_for_target_arch_and_remove_klibc(self) -> None:
+        """Builders compile the cover inside the root and purge the build-only toolchain."""
+        for builder_name in ("build/build-image.sh", "build/build-installer-image.sh"):
+            with self.subTest(builder=builder_name):
+                builder = (ROOT / builder_name).read_text(encoding="utf-8")
+                self.assertIn("libklibc-dev", builder)
+                self.assertIn("klcc", builder)
+                self.assertIn("greia-fb-splash.c", builder)
+                self.assertIn("remove --purge libklibc-dev", builder)
+                self.assertIn("readelf -h", builder)
+                self.assertIn("Intel 80386", builder)
+
+    def test_profiles_use_early_framebuffer_and_no_plymouth_runtime(self) -> None:
+        for profile in (ROOT / "build" / "profiles").glob("*.toml"):
+            with self.subTest(profile=profile.name):
+                text = profile.read_text(encoding="utf-8")
+                self.assertIn('cover_backend = "greia-early-framebuffer-v1"', text)
+                self.assertNotIn("stock-plymouth-provisional", text)
+        package_set = (
+            ROOT / "build" / "package-sets" / "boot-cover-greia-early-framebuffer.txt"
+        ).read_text(encoding="utf-8")
+        self.assertNotIn("plymouth", package_set.lower())
+
 
 if __name__ == "__main__":
     unittest.main()
