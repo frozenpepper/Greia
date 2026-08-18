@@ -18,6 +18,8 @@ from .event_client import ActivityEventClient, ActivityEventReceipt
 from .input_core import InteractionProfile, parse_interaction_profile
 from .profiles import ProfilePolicy, write_avatar_request
 from .storage_client import ActivityStorageClient
+from .theme_snapshot import ThemeSnapshotError, decode_theme_snapshot
+from .ui_preferences import InterfaceSize, UiPreferences, UiPreferencesStore
 
 
 @lru_cache(maxsize=1)
@@ -42,16 +44,16 @@ def _theme_store() -> ThemeStore:
 
 
 @lru_cache(maxsize=1)
-def _default_theme_store() -> ThemeStore:
-    """Return the read-only canonical theme view available to every Activity.
+def _ui_preferences_store() -> UiPreferencesStore:
+    state_dir = os.environ.get("GREIA_CUSTOMIZATION_DIR")
+    if not state_dir:
+        raise RuntimeError("activity was not launched with profile-scoped customization")
+    return UiPreferencesStore(Path(state_dir))
 
-    Ordinary Activities must be able to render with Greia's canonical palette
-    without receiving `customization.manage` or a raw path to the child's
-    customization directory. The deliberately nonexistent state directory
-    makes ThemeStore resolve only trusted platform defaults. A future
-    read-only profile-theme snapshot may extend this without widening file
-    authority.
-    """
+
+@lru_cache(maxsize=1)
+def _default_theme_store() -> ThemeStore:
+    """Return the read-only canonical theme view available as safe fallback."""
 
     return ThemeStore.load(
         _root() / "runtime" / "theme-defaults.toml",
@@ -71,12 +73,7 @@ def _profile_policy() -> ProfilePolicy:
 
 @lru_cache(maxsize=1)
 def get_storage() -> ActivityStorageClient:
-    """Return this launch's runtime-neutral Greia durable storage client.
-
-    The client talks to a per-session platform broker. It never receives the
-    physical profile storage path, so quota, migration and backup semantics stay
-    under Greia authority rather than becoming raw Activity filesystem policy.
-    """
+    """Return this launch's runtime-neutral Greia durable storage client."""
 
     return ActivityStorageClient.from_environment()
 
@@ -89,12 +86,7 @@ def get_events() -> ActivityEventClient:
 
 
 def get_input_profile() -> InteractionProfile:
-    """Return the platform-validated default interaction profile for this launch.
-
-    This is descriptive Activity context, not input-device authority. Physical
-    devices and reserved Greia system navigation remain owned above the Activity
-    runtime; renderer/runtime adapters use the same profile vocabulary.
-    """
+    """Return the platform-validated default interaction profile for this launch."""
 
     raw = os.environ.get(
         "GREIA_ACTIVITY_INPUT_PROFILE",
@@ -110,12 +102,7 @@ def emit_activity_event(
     score: float | int | None = None,
     payload: object = None,
 ) -> ActivityEventReceipt:
-    """Report an Activity fact to Greia's platform-owned progression pipeline.
-
-    The Activity chooses only a declared event ID, an idempotency key, optional
-    score, and portable payload. Profile/session/Activity identity and reward
-    economics remain bound by trusted Greia services outside the Activity.
-    """
+    """Report an Activity fact to Greia's platform-owned progression pipeline."""
 
     return get_events().emit(
         event_id,
@@ -167,18 +154,41 @@ def get_icon_path(asset_id: str, size: int = 128) -> Path:
 
 
 def get_theme() -> ResolvedTheme:
-    """Return the Activity-visible Greia theme without expanding authority.
+    """Return this launch's read-only resolved visual theme.
 
-    A trusted customization Activity that was granted the profile-scoped
-    customization path receives the actual resolved child theme. Ordinary
-    Activities receive the canonical default resolved palette and never gain
-    raw read/write access to the child's customization files merely to obtain
-    colors.
+    Trusted My Greia/customization code receives the real profile store because
+    it owns `customization.manage`. Ordinary Activities instead receive a
+    launch-time resolved snapshot. The snapshot carries colors only: it exposes
+    neither the customization directory nor the managed wallpaper file.
     """
 
     if os.environ.get("GREIA_CUSTOMIZATION_DIR"):
         return _theme_store().resolve()
+    snapshot = os.environ.get("GREIA_THEME_SNAPSHOT")
+    if snapshot:
+        try:
+            return decode_theme_snapshot(snapshot)
+        except ThemeSnapshotError:
+            pass
     return _default_theme_store().resolve()
+
+
+def get_ui_preferences() -> UiPreferences:
+    """Return bounded profile presentation preferences for this launch.
+
+    This is descriptive presentation context, not write authority. Ordinary
+    Activities receive a semantic value injected by Greia; only a trusted
+    customization Activity may persist a new value.
+    """
+
+    if os.environ.get("GREIA_CUSTOMIZATION_DIR"):
+        return _ui_preferences_store().read()
+    raw = os.environ.get("GREIA_INTERFACE_SIZE", InterfaceSize.NORMAL.value)
+    try:
+        size = InterfaceSize(raw)
+    except ValueError:
+        size = InterfaceSize.NORMAL
+    return UiPreferences(interface_size=size)
 
 
 def get_theme_palette() -> ThemePalette:
@@ -196,6 +206,11 @@ def set_theme_color(kind: str, swatch_id: str) -> ThemePreferences:
     if kind == "text":
         return store.set_colors(text=swatch_id)
     raise ValueError(f"unknown theme color kind: {kind}")
+
+
+def set_interface_size(value: str | InterfaceSize) -> UiPreferences:
+    _require_capability("customization.manage")
+    return _ui_preferences_store().set_interface_size(value)
 
 
 def list_wallpaper_candidates() -> tuple[WallpaperCandidate, ...]:
@@ -222,6 +237,7 @@ def _require_capability(capability: str) -> None:
     enforced by the supervisor's mount/device/network/broker policy, which is
     derived from the validated manifest outside the Activity process.
     """
+
     raw = os.environ.get("GREIA_ACTIVITY_CAPABILITIES", "")
     capabilities = frozenset(item for item in raw.split(",") if item)
     if capability not in capabilities:
@@ -229,12 +245,7 @@ def _require_capability(capability: str) -> None:
 
 
 def mark_activity_ready() -> None:
-    """Signal that the Activity has created its usable child-facing surface.
-
-    This lifecycle marker is cooperative state, not an authorization token.
-    The supervisor creates a unique per-launch channel inside the Activity's own
-    writable namespace and verifies the session ID before accepting the marker.
-    """
+    """Signal that the Activity has created its usable child-facing surface."""
 
     session_id, path = _lifecycle_path("GREIA_ACTIVITY_READY_PATH")
     _write_lifecycle_marker(path, session_id)
