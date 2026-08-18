@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 import shutil
@@ -10,7 +9,14 @@ import zipfile
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
-from .activities import ActivityManifest, ActivityRegistry, ActivityValidationError, RuntimeCatalogue
+from .activities import (
+    ActivityManifest,
+    ActivityRegistry,
+    ActivityValidationError,
+    RuntimeCatalogue,
+    package_digest,
+)
+from .activity_assets import package_icon_path
 from .trust import ActivitySource, PackageTrust
 
 
@@ -110,13 +116,21 @@ class ActivityPackageService:
                 raise ActivityPackageError(
                     f"Activity {manifest.activity_id} is already installed; update is not enabled yet"
                 )
+
             immutable = self.versions_root / manifest.activity_id / digest
-            if immutable.exists():
-                raise ActivityPackageError("this exact Activity package is already stored")
             immutable.parent.mkdir(parents=True, exist_ok=True)
             os.chmod(immutable.parent, 0o700)
-            os.replace(package_root, immutable)
-            self._make_tree_read_only(immutable)
+            if immutable.exists():
+                # Recover an immutable version left by an interrupted attempt.
+                # Its digest-addressed path is not trusted by name alone.
+                if not immutable.is_dir() or package_digest(immutable) != digest:
+                    raise ActivityPackageError(
+                        "stored immutable Activity version does not match its package digest"
+                    )
+                shutil.rmtree(package_root)
+            else:
+                os.replace(package_root, immutable)
+                self._make_tree_read_only(immutable)
 
             activation = self.active_root / f".{manifest.activity_id}.activating-{digest[:12]}"
             if activation.exists():
@@ -126,12 +140,6 @@ class ActivityPackageService:
             # updates can atomically swap one active directory for another.
             shutil.copytree(immutable, activation, copy_function=os.link)
             self._make_tree_read_only(activation)
-            try:
-                os.rename(activation, final_active)
-            except FileExistsError as exc:
-                raise ActivityPackageError(
-                    f"Activity {manifest.activity_id} became installed concurrently"
-                ) from exc
             receipt = ActivityInstallReceipt(
                 activity_id=manifest.activity_id,
                 version=manifest.version,
@@ -139,11 +147,31 @@ class ActivityPackageService:
                 package_trust=PackageTrust.PARENT_TRUSTED_UNSIGNED,
                 source_id=self.SOURCE_ID,
             )
+
+            # The active-directory rename is the install commit point. Write the
+            # audit receipt first, so any error that reaches the caller occurs
+            # before executable code becomes visible. A crash in this narrow
+            # pre-commit window can leave an orphan receipt/immutable version,
+            # both of which are safe and recoverable on retry.
             self._write_receipt(receipt)
-            return receipt
-        except (ActivityValidationError, OSError, zipfile.BadZipFile, zipfile.LargeZipFile) as exc:
-            if isinstance(exc, ActivityPackageError):
+            try:
+                os.rename(activation, final_active)
+            except (FileExistsError, OSError) as exc:
+                self._receipt_path(manifest.activity_id).unlink(missing_ok=True)
+                if isinstance(exc, FileExistsError):
+                    raise ActivityPackageError(
+                        f"Activity {manifest.activity_id} became installed concurrently"
+                    ) from exc
                 raise
+            return receipt
+        except ActivityPackageError:
+            raise
+        except (
+            ActivityValidationError,
+            OSError,
+            zipfile.BadZipFile,
+            zipfile.LargeZipFile,
+        ) as exc:
             raise ActivityPackageError(str(exc)) from exc
         finally:
             shutil.rmtree(stage_parent, ignore_errors=True)
@@ -177,12 +205,16 @@ class ActivityPackageService:
                     )
                 seen.add(canonical)
                 if info.flag_bits & 0x1:
-                    raise ActivityPackageError("encrypted Activity package entries are not supported")
+                    raise ActivityPackageError(
+                        "encrypted Activity package entries are not supported"
+                    )
                 mode = (info.external_attr >> 16) & 0xFFFF
                 if mode and stat.S_ISLNK(mode):
                     raise ActivityPackageError("Activity package symlinks are forbidden")
                 if mode and not (stat.S_ISREG(mode) or stat.S_ISDIR(mode)):
-                    raise ActivityPackageError("Activity package contains a special filesystem entry")
+                    raise ActivityPackageError(
+                        "Activity package contains a special filesystem entry"
+                    )
                 if info.is_dir():
                     target = destination.joinpath(*relative.parts)
                     target.mkdir(parents=True, exist_ok=True)
@@ -198,7 +230,9 @@ class ActivityPackageService:
                     and info.compress_size > 0
                     and info.file_size > info.compress_size * MAX_COMPRESSION_RATIO
                 ):
-                    raise ActivityPackageError("Activity package has an unsafe compression ratio")
+                    raise ActivityPackageError(
+                        "Activity package has an unsafe compression ratio"
+                    )
                 target = destination.joinpath(*relative.parts)
                 target.parent.mkdir(parents=True, exist_ok=True)
                 with archive.open(info, "r") as source, target.open("xb") as sink:
@@ -206,21 +240,34 @@ class ActivityPackageService:
                     while remaining:
                         chunk = source.read(min(1024 * 1024, remaining))
                         if not chunk:
-                            raise ActivityPackageError("Activity package entry ended unexpectedly")
+                            raise ActivityPackageError(
+                                "Activity package entry ended unexpectedly"
+                            )
                         sink.write(chunk)
                         remaining -= len(chunk)
                     if source.read(1):
-                        raise ActivityPackageError("Activity package entry exceeds declared size")
+                        raise ActivityPackageError(
+                            "Activity package entry exceeds declared size"
+                        )
                 os.chmod(target, 0o644)
 
     @staticmethod
     def _safe_archive_path(info: zipfile.ZipInfo) -> PurePosixPath:
         name = info.filename
-        if not name or len(name) > MAX_PATH_CHARACTERS or "\\" in name or "\x00" in name:
+        if (
+            not name
+            or len(name) > MAX_PATH_CHARACTERS
+            or "\\" in name
+            or "\x00" in name
+        ):
             raise ActivityPackageError("Activity package contains an invalid path")
         path = PurePosixPath(name)
         parts = tuple(part for part in path.parts if part != "")
-        if path.is_absolute() or not parts or any(part in {".", ".."} for part in parts):
+        if (
+            path.is_absolute()
+            or not parts
+            or any(part in {".", ".."} for part in parts)
+        ):
             raise ActivityPackageError("Activity package path escapes archive root")
         if any(part.startswith(".") for part in parts):
             raise ActivityPackageError("hidden Activity package paths are not supported")
@@ -245,12 +292,13 @@ class ActivityPackageService:
                 self.SOURCE_ID,
             )
         )
-        staging_source = ActivitySource(
-            stage_parent,
-            PackageTrust.PARENT_TRUSTED_UNSIGNED,
-            self.SOURCE_ID,
+        sources.append(
+            ActivitySource(
+                stage_parent,
+                PackageTrust.PARENT_TRUSTED_UNSIGNED,
+                self.SOURCE_ID,
+            )
         )
-        sources.append(staging_source)
         registry = ActivityRegistry(tuple(sources), self.runtime)
         registrations = registry.discover_registrations()
         staged = next(
@@ -262,7 +310,13 @@ class ActivityPackageService:
             None,
         )
         if staged is None:
-            raise ActivityPackageError("staged Activity did not validate as one installable package")
+            raise ActivityPackageError(
+                "staged Activity did not validate as one installable package"
+            )
+        # Package-owned presentation assets are part of install validity, not a
+        # launcher-time best-effort concern. A malformed icon reference must be
+        # rejected before the package becomes visible.
+        package_icon_path(staged.manifest)
         return staged.manifest, staged.package_digest
 
     @staticmethod
@@ -274,20 +328,20 @@ class ActivityPackageService:
                 os.chmod(path, 0o444)
         os.chmod(root, 0o555)
 
+    def _receipt_path(self, activity_id: str) -> Path:
+        return self.receipts_root / f"{activity_id}.json"
+
     def _write_receipt(self, receipt: ActivityInstallReceipt) -> None:
-        destination = self.receipts_root / f"{receipt.activity_id}.json"
+        destination = self._receipt_path(receipt.activity_id)
         temporary = destination.with_suffix(".json.tmp")
         temporary.write_text(
-            json.dumps(receipt.as_json_dict(), sort_keys=True, separators=(",", ":")) + "\n",
+            json.dumps(
+                receipt.as_json_dict(),
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+            + "\n",
             encoding="utf-8",
         )
         os.chmod(temporary, 0o600)
         os.replace(temporary, destination)
-
-
-def archive_sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
