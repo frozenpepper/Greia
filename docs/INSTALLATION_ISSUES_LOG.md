@@ -52,26 +52,30 @@ host-derived dependency selection was not valid target-hardware authority.
 With no root disk, the kernel could not mount the filesystem; the appliance
 kernel command line intentionally hid the panic and rebooted.
 
-**Fix / invariant:** both target and live image inputs now carry all three
-hardware-independent safeguards:
+**Fix / invariant:** both target and live image inputs now use a target-aware
+policy rather than either build-host probing or unconditional x86 module lists:
 
-1. `MODULES=most`;
-2. explicit `/etc/initramfs-tools/modules` entries for `ahci`, `libata`,
-   `sd_mod`;
-3. executable `greia-storage-modules` initramfs hooks that call
-   `manual_add_modules` for those drivers.
+1. `MODULES=most` provides the broad generic initramfs driver set;
+2. executable `greia-storage-modules` hooks inspect the **target kernel** with
+   `modinfo -k "$version"`;
+3. when that target kernel provides `ahci`, `libata`, or `sd_mod`, the hook calls
+   `manual_add_modules` so the x86 SATA/AHCI root-storage floor is guaranteed;
+4. shared `/etc/initramfs-tools/modules` files remain architecture-neutral and
+   do not hardcode x86-only names onto future ARM/board images.
 
-The regression suite requires the same policy in both live and target overlays.
+The regression suite requires the same target-kernel-aware policy in both live
+and target overlays.
 
 **Important correction to the earlier log:** commit `de6299e` added installed
 GRUB/root-UUID/kernel/initrd **boot-config verification**; it did not inspect the
-contents of the generated initramfs. The new storage-module policy prevents the
-specific host-probing omission structurally. Generated-image acceptance should
-still inspect the produced initramfs as an artifact-level check.
+contents of the generated initramfs. The target-kernel-aware storage policy
+prevents the specific host-probing omission structurally. Generated-image
+acceptance must still inspect the produced initramfs as an artifact-level check.
 
 **General lesson:** never let the hardware visible to the build VM/chroot decide
-whether a boot-critical target driver exists. Compatibility-profile policy must
-own that decision.
+whether a boot-critical target driver exists, and never solve that mistake by
+putting one architecture's module names into a shared cross-architecture
+overlay. Compatibility-profile/target-kernel policy must own the decision.
 
 ---
 
@@ -147,7 +151,9 @@ configuration.
 
 **Remaining cleanup:** remove the obsolete password-writing branches from the
 large builders themselves. They are now non-authoritative dead code, but should
-not remain indefinitely.
+not remain indefinitely. Do this with a controlled builder/source test because
+the supported developer path is the separate key-only provisioner and must not
+be accidentally removed with the obsolete shortcut.
 
 ---
 
@@ -324,7 +330,7 @@ For the complete cross-cutting review and remaining risks, see
 | `1b11c79` | installer: physical-key layout probes instead of active-layout assumptions |
 
 Subsequent 2026-08-18 review commits persist the missing Xorg/runtime/input
-build fixes, force the generic storage stack into live/target initramfs inputs,
+build fixes, make live/target storage-module inclusion target-kernel-aware,
 add hardware-independent regression locks, add the SSH security floor, and
 introduce the richer launcher/Activity-package foundation. The repository
 history is authoritative for the exact commit IDs of that follow-up tranche.
