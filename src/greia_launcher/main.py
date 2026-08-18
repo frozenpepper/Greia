@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from greia_platform.boot_logo import canonical_boot_logo as _canonical_boot_logo
 from greia_platform.activities import (
     ActivityManifest,
     ActivityRegistry,
@@ -820,8 +821,8 @@ class LauncherApplication:
         cache_key = ("boot-logo", self.paths.root)
         image = self._icon_cache.get(cache_key)
         if image is None:
-            frame_path = Path("/usr/share/plymouth/themes/greia/frames/frame_0051.png")
-            source = frame_path if frame_path.is_file() else None
+            frame_path = _canonical_boot_logo(self.paths.root)
+            source = frame_path if frame_path is not None else None
             if source is None:
                 fallback = self.assets.get("robot")
                 image = pygame.image.load(str(fallback.path_256)).convert_alpha()

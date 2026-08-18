@@ -10,6 +10,7 @@ from enum import Enum, auto
 from pathlib import Path
 from typing import Any
 
+from greia_platform.boot_logo import canonical_boot_logo as _canonical_boot_logo
 from greia_platform.hardware import HardwareDefaults, HardwareSettings
 from greia_platform.hardware_session import HardwareSessionController
 
@@ -1472,10 +1473,8 @@ class InstallerApplication:
         key = ("boot-logo", max_height)
         image = self._icon_cache.get(key)
         if image is None:
-            frame_path = (
-                Path("/usr/share/plymouth/themes/greia/frames/frame_0051.png")
-            )
-            source = frame_path if frame_path.is_file() else None
+            frame_path = _canonical_boot_logo(self.root)
+            source = frame_path if frame_path is not None else None
             if source is None:
                 source = (
                     self.root
@@ -1513,8 +1512,8 @@ class InstallerApplication:
         key = ("hero-logo-full",)
         image = self._icon_cache.get(key)
         if image is None:
-            frame_path = Path("/usr/share/plymouth/themes/greia/frames/frame_0051.png")
-            source = frame_path if frame_path.is_file() else (
+            frame_path = _canonical_boot_logo(self.root)
+            source = frame_path if frame_path is not None else (
                 self.root
                 / "assets"
                 / "icons"

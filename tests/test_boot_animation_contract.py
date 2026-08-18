@@ -4,21 +4,31 @@ import unittest
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+SOURCE_THEME = (
+    PROJECT_ROOT
+    / "assets"
+    / "boot"
+    / "source"
+    / "legacy-plymouth-theme"
+)
 
 
 class BootAnimationMigrationTests(unittest.TestCase):
     """Plymouth is migration debt, not the accepted Greia boot architecture.
 
     The Greia-owned early framebuffer cover replaces Plymouth in target and
-    installer boot. The legacy 52-frame Plymouth theme may remain in the tree
-    only as historical source material for the canonical artwork derivative; it
-    must never be staged into a built image or wired into the builders again.
+    installer boot. The legacy 52-frame Plymouth theme is preserved only as
+    historical source material for the canonical artwork derivative under
+    ``assets/boot/source/``; it must never be staged into a built image or
+    wired into the builders again.
     """
 
     def test_legacy_theme_is_only_historical_source_material(self) -> None:
-        theme_dir = PROJECT_ROOT / "build" / "overlay" / "etc" / "plymouth" / "themes" / "greia"
-        # The legacy theme is permitted to remain as artwork source material.
-        self.assertTrue((theme_dir / "frames" / "frame_0051.png").is_file())
+        # The legacy theme is preserved as artwork source material, outside the
+        # build overlays so it cannot leak into a produced image.
+        self.assertTrue((SOURCE_THEME / "frames" / "frame_0051.png").is_file())
+        self.assertFalse((PROJECT_ROOT / "build/overlay/etc/plymouth").exists())
+        self.assertFalse((PROJECT_ROOT / "build/installer-overlay/etc/plymouth").exists())
 
     def test_builders_never_stage_or_enable_plymouth(self) -> None:
         for builder_name in ("build/build-image.sh", "build/build-installer-image.sh"):

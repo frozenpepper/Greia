@@ -2,8 +2,9 @@
 """Generate Greia boot artwork derivatives from the canonical source.
 
 The canonical Greia boot logo is the final frame of the legacy boot
-animation (`build/overlay/etc/plymouth/themes/greia/frames/frame_0051.png`),
-which contains the Professor Pip mascot plus the GREIA wordmark drawn in
+animation (preserved as historical source material at
+`assets/boot/source/legacy-plymouth-theme/frames/frame_0051.png`), which
+contains the Professor Pip mascot plus the GREIA wordmark drawn in
 cream/white on a dark navy background.
 
 This tool derives the white-frame boot assets from that source so GRUB,
@@ -36,7 +37,13 @@ _WHITE = (255, 255, 255)
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_FRAME = (
-    ROOT / "build" / "overlay" / "etc" / "plymouth" / "themes" / "greia" / "frames" / "frame_0051.png"
+    ROOT
+    / "assets"
+    / "boot"
+    / "source"
+    / "legacy-plymouth-theme"
+    / "frames"
+    / "frame_0051.png"
 )
 SOURCE_OUT = ROOT / "assets" / "boot" / "source" / "greia-boot-logo.png"
 STATIC_OUT = ROOT / "assets" / "boot" / "static" / "greia-boot-logo.png"
