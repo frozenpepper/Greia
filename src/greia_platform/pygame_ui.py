@@ -1,8 +1,10 @@
 """Platform-wide name for the current shared Pygame UI helpers.
 
-The implementation remains in `activity_ui` until the compatibility direction
-can be flipped in one tested migration. New platform consumers should import
-this module; existing Activities may keep importing `activity_ui`.
+The legacy drawing implementation remains in `activity_ui` until the
+compatibility direction can be flipped in one tested migration. New platform
+and Activity consumers should import this module: it combines lightweight draw
+helpers with Greia's renderer-neutral responsive/canvas contracts through thin
+Pygame adapters.
 """
 
 from .activity_ui import (
@@ -18,9 +20,17 @@ from .activity_ui import (
     load_icon,
     mix,
 )
+from .pygame_canvas import (
+    PygameCanvasMapper,
+    PygameReferenceCanvas,
+    activity_viewport_for_surface,
+)
 
 __all__ = [
     "ChildUiMetrics",
+    "PygameCanvasMapper",
+    "PygameReferenceCanvas",
+    "activity_viewport_for_surface",
     "clear_icon_cache",
     "draw_back_symbol",
     "draw_eraser_symbol",
