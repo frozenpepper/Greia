@@ -15,6 +15,15 @@ _CATEGORY_ORDER = {
     "explore": 40,
     "my_greia": 50,
 }
+_CATEGORY_ICONS = {
+    ALL_ACTIVITIES_ID: "backpack",
+    "create": "palette",
+    "play": "puzzle_pieces",
+    "learn": "book",
+    "explore": "magnifier",
+    "my_greia": "unicorn",
+}
+_DEFAULT_CATEGORY_ICON = "backpack"
 
 
 @dataclass(frozen=True, slots=True)
@@ -26,6 +35,10 @@ class ActivityCatalogue:
     without duplicating package state or changing launch identity. Older API 0.1
     packages without explicit presentation metadata temporarily fall back to
     their education categories for compatibility.
+
+    Each collection also carries a stable semantic Greia icon. The renderer may
+    use that icon for category choices and for persistent in-category chrome;
+    category identity never depends on a filesystem asset path.
     """
 
     collections: tuple[Collection[ActivityManifest], ...]
@@ -43,7 +56,12 @@ class ActivityCatalogue:
                     continue
                 buckets.setdefault(normalized, []).append(activity)
         collections: list[Collection[ActivityManifest]] = [
-            Collection(ALL_ACTIVITIES_ID, ordered, title="All")
+            Collection(
+                ALL_ACTIVITIES_ID,
+                ordered,
+                title="All",
+                icon_id=_category_icon(ALL_ACTIVITIES_ID),
+            )
         ]
         for category_id in sorted(buckets, key=_category_sort_key):
             collections.append(
@@ -51,6 +69,7 @@ class ActivityCatalogue:
                     category_id,
                     tuple(buckets[category_id]),
                     title=_category_title(category_id),
+                    icon_id=_category_icon(category_id),
                 )
             )
         return cls(tuple(collections))
@@ -77,3 +96,7 @@ def _category_sort_key(value: str) -> tuple[int, str]:
 
 def _category_title(value: str) -> str:
     return value.replace("_", " ").replace("-", " ").strip().title() or "Other"
+
+
+def _category_icon(value: str) -> str:
+    return _CATEGORY_ICONS.get(value, _DEFAULT_CATEGORY_ICON)
