@@ -76,6 +76,8 @@ An Activity must not:
 - assume direct ownership of Linux input devices or display-session authority;
 - assume one physical screen resolution as its semantic coordinate system;
 - maintain per-resolution coordinate tables/device-specific layouts when shared viewport/layout primitives can express the behavior;
+- place essential Activity controls in the platform-owned Home/Back protected region;
+- publish lifecycle READY merely because a renderer initialized before a usable child-facing frame was actually presented;
 - treat translated display text as identifiers/authority;
 - hard-code user-facing prose/audio into game logic when it can be represented by localization keys/cues;
 - claim `languages = ["*"]` merely because hard-coded English happens to run everywhere;
@@ -324,6 +326,22 @@ src/greia_platform/pygame_effects.py
 
 If an effect/layout pattern becomes broadly useful to Activities, promote the concrete reusable primitive into the shared platform layer with bounded behavior and tests.
 
+### Pygame Activity controls must use Activity-safe geometry
+
+`ChildUiMetrics.toolbar_button()` is a full-surface helper retained for non-Activity Greia surfaces. Inside an Activity, essential controls/content must instead be derived from the platform-protected safe region:
+
+```python
+metrics = ChildUiMetrics.for_size(*screen.get_size())
+
+gallery = metrics.activity_toolbar_button(0, side="left")
+new = metrics.activity_toolbar_button(0, side="right")
+content = metrics.activity_content_rect()
+```
+
+Use `activity_safe_rect()` when an Activity-owned secondary region (for example a Painting palette) must be anchored to the usable Activity area.
+
+Do not compensate for Home/Back with a guessed top-left inset, and do not draw an Activity-owned Close/Home/Back control to reclaim that area. The shared helper and the system-chrome backend derive geometry from the same protected-region contract.
+
 ### Effects should be subtle and bounded
 
 Good examples:
@@ -389,6 +407,8 @@ Never non-uniformly stretch the design to another aspect ratio.
 
 For simple Pygame fixed scenes, `PygameReferenceCanvas` lets the author draw once on the logical surface and maps presentation/input automatically.
 
+For flat procedural scenes, prefer its normal presentation scaler unless smooth whole-frame resampling has a measured visual benefit. The low-resource target matters; do not spend CPU on smoothscale merely because it looks like a quality toggle.
+
 ### 9.4 World camera
 
 World/game state uses stable logical coordinates independent of physical display pixels.
@@ -420,6 +440,10 @@ Home/Back              platform-owned chrome
 Greia Home/Back regions are platform-protected. Essential Activity controls belong in platform-derived safe UI geometry. Background/world art may visually extend under chrome where appropriate, but Activity pointer authority does not.
 
 Do not hard-code a pixel inset for system chrome.
+
+For fluid Pygame Activities use `ChildUiMetrics.activity_toolbar_button()`, `activity_content_rect()` and, where needed, `activity_safe_rect()`. For reference/world Activities use `activity_viewport_for_surface()` / the mapper's logical safe-region support and reject Activity input inside protected physical chrome before mapping it into gameplay.
+
+Rendering and hit testing must therefore share both boundaries: the same logical↔physical transform for content, and the same Greia-owned protected-region authority for system navigation.
 
 ### 9.8 Durable state is resolution-neutral
 
@@ -587,11 +611,30 @@ General rule:
 
 The launcher's exact row count is not an Activity requirement; the bounded principle is.
 
-## 12. System navigation
+## 12. System navigation and lifecycle readiness
 
 Universal Home/Back behavior is platform-owned system chrome under ADR 0019.
 
-Do not draw fake Home/Back buttons inside an Activity and treat them as equivalent security/lifecycle controls. Use the supported platform contract and leave protected chrome geometry/authority to the launcher/system layer.
+Do not draw fake Home/Back/Close buttons inside an Activity and treat them as equivalent security/lifecycle controls. Use the supported platform contract and leave protected chrome geometry/authority to the launcher/system layer.
+
+### READY means first usable frame is actually presentable
+
+For Pygame Activities, do not call `mark_activity_ready()` immediately after initialization. Render and present the first usable child-facing frame first, then publish READY once:
+
+```python
+ready_published = False
+while running and not activity_stop_requested():
+    ...
+    draw_frame()
+    pygame.display.flip()
+    if not ready_published:
+        mark_activity_ready()
+        ready_published = True
+```
+
+The supervisor uses READY as a presentation/lifecycle boundary. Advertising it before the first frame can expose a blank/uninitialized transition and makes readiness evidence dishonest.
+
+Keep responding to `activity_stop_requested()` so platform Home/system shutdown can terminate the Activity through the authoritative lifecycle rather than through an Activity-owned fake close control.
 
 ## 13. Storage, events, progress and awards
 
@@ -682,6 +725,10 @@ Relevant current focused architecture tests include, as applicable:
 ```text
 tests.test_responsive_layout
 tests.test_activity_viewport
+tests.test_activity_ui
+tests.test_first_party_activity_readiness
+tests.test_shape_garden_contract
+tests.test_core_activity_system_safe_ui
 tests.test_localization
 tests.test_language_presentation
 tests.test_ui_motion_scroll
@@ -703,6 +750,9 @@ For a `.greiaactivity` package, test at least:
 - successful install appears through ordinary registry and launches through normal authority;
 - input/profile behavior works on the intended hardware floor;
 - Home/Back/system chrome remains platform-owned;
+- essential Activity controls/content stay outside protected system-chrome geometry;
+- reference/world pointer input uses the same transform as rendering and rejects protected-chrome input;
+- READY is published only after the first usable frame is presented;
 - responsive/canvas behavior does not require per-resolution source edits;
 - language declarations are honest;
 - single-language fallback works on a differently configured profile where applicable;
@@ -729,7 +779,8 @@ A good Greia Activity should generally be:
 - visually compatible with Greia without requiring every package to reuse a generic system icon;
 - honest about its available languages;
 - easy to localize later even if only one language ships initially;
-- free of per-resolution and per-language coordinate forks.
+- free of per-resolution and per-language coordinate forks;
+- free of Activity-owned fake system navigation and early READY publication.
 
 ## 19. When changing the Activity contract
 
