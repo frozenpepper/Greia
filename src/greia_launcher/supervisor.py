@@ -710,8 +710,6 @@ class ActivitySupervisor:
             str(sandbox),
             "--die-with-parent",
             "--new-session",
-            "--unshare-user",
-            "--disable-userns",
             "--unshare-pid",
             "--unshare-net",
             "--unshare-uts",
@@ -725,12 +723,19 @@ class ActivitySupervisor:
             "--dev-bind-try",
             "/dev/dri",
             "/dev/dri",
+            # /run is read-only under --ro-bind / /, which would prevent bwrap
+            # from creating the mount points for the per-session storage/event
+            # sockets and activity data. A private tmpfs keeps those writable.
+            "--tmpfs",
+            "/run",
         ]
         if authority.has_capability("audio.basic"):
             command.extend(["--dev-bind-try", "/dev/snd", "/dev/snd"])
         activity_data = profile.activity_data_dir(manifest.activity_id)
         command.extend(
             [
+                "--dir",
+                str(SANDBOX_ACTIVITY_ROOT),
                 "--bind",
                 str(activity_data),
                 str(SANDBOX_ACTIVITY_ROOT),
@@ -745,6 +750,8 @@ class ActivitySupervisor:
         if storage_broker is not None:
             command.extend(
                 [
+                    "--dir",
+                    str(SANDBOX_STORAGE_ROOT),
                     "--ro-bind",
                     str(storage_broker.host_root),
                     str(SANDBOX_STORAGE_ROOT),
@@ -753,6 +760,8 @@ class ActivitySupervisor:
         if event_broker is not None:
             command.extend(
                 [
+                    "--dir",
+                    str(SANDBOX_EVENT_ROOT),
                     "--ro-bind",
                     str(event_broker.host_root),
                     str(SANDBOX_EVENT_ROOT),

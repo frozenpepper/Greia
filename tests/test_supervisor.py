@@ -517,9 +517,15 @@ class SupervisorTests(unittest.TestCase):
                 Path(environment["GREIA_STORAGE_SOCKET"]),
                 SANDBOX_STORAGE_ROOT / "storage.sock",
             )
-            mount_index = command.index(str(SANDBOX_STORAGE_ROOT))
-            self.assertEqual(command[mount_index - 2], "--ro-bind")
-            host_broker_root = Path(command[mount_index - 1])
+            # The path appears twice: once as the --dir target, once as the
+            # --ro-bind target. The bind is the second occurrence.
+            mount_indices = [
+                i for i, token in enumerate(command) if token == str(SANDBOX_STORAGE_ROOT)
+            ]
+            bind_index = mount_indices[1]
+            self.assertEqual(command[bind_index - 2], "--ro-bind")
+            self.assertEqual(command[bind_index - 4], "--dir")
+            host_broker_root = Path(command[bind_index - 1])
             self.assertNotEqual(host_broker_root, profile.root)
             self.assertTrue((host_broker_root / "storage.sock").exists())
 
