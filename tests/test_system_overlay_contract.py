@@ -23,7 +23,7 @@ class SystemOverlayContractTests(unittest.TestCase):
             PROJECT_ROOT / "build/overlay/usr/local/lib/greia-os/greia-x-session"
         ).read_text()
         self.assertIn("greia_platform.hardware_session", session)
-        self.assertIn("/usr/bin/python3 -m greia_launcher.main", session)
+        self.assertIn("greia_launcher.presentation", session)
         self.assertNotIn("exec /usr/bin/python3 -m greia_launcher.main", session)
         self.assertIn("launcher_status=$?", session)
         self.assertIn("trap cleanup EXIT INT TERM", session)
@@ -253,8 +253,12 @@ class SystemOverlayContractTests(unittest.TestCase):
             self.assertIn("-quiet", unit_text)
         for overlay in ("build/overlay", "build/installer-overlay"):
             wrapper = (PROJECT_ROOT / overlay / "etc/X11/Xwrapper.config").read_text()
-            self.assertIn("allowed_users=console", wrapper)
-            self.assertIn("needs_root_rights=auto", wrapper)
+            # The current provisional Xorg compatibility backend runs from a
+            # systemd appliance session. It deliberately uses the platform-owned
+            # appliance authorization rather than a desktop-console heuristic.
+            self.assertIn("allowed_users=anybody", wrapper)
+            self.assertIn("needs_root_rights=yes", wrapper)
+            self.assertNotIn("allowed_users=console", wrapper)
 
     def test_runtime_audit_is_bounded_and_excludes_known_secrets(self) -> None:
         collector_path = (
@@ -358,8 +362,7 @@ class SystemOverlayContractTests(unittest.TestCase):
         installer = (PROJECT_ROOT / "src/greia_installer/main.py").read_text()
         self.assertIn('["systemctl", "poweroff"]', installer)
         self.assertNotIn('["systemctl", "reboot"]', installer)
-        self.assertIn("I saved it — turn off", installer)
-        self.assertIn("not the spaces", installer)
+        self.assertIn("I'm ready", installer)
 
     def test_installer_bounds_unsquashfs_memory_queues(self) -> None:
         engine = (PROJECT_ROOT / "src/greia_installer/engine.py").read_text()
