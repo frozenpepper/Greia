@@ -8,15 +8,24 @@ from greia_platform.ui_core import Collection
 
 
 ALL_ACTIVITIES_ID = "all"
+_CATEGORY_ORDER = {
+    "create": 10,
+    "play": 20,
+    "learn": 30,
+    "explore": 40,
+    "my_greia": 50,
+}
 
 
 @dataclass(frozen=True, slots=True)
 class ActivityCatalogue:
-    """Category projection of the authoritative Activity registry.
+    """Navigation-category projection of the authoritative Activity registry.
 
     Activities remain registry-owned objects; this class only builds semantic
-    UI Collections. One Activity may appear in multiple categories without
-    duplicating package state or changing launch identity.
+    UI Collections. One Activity may appear in multiple launcher categories
+    without duplicating package state or changing launch identity. Older API 0.1
+    packages without explicit presentation metadata temporarily fall back to
+    their education categories for compatibility.
     """
 
     collections: tuple[Collection[ActivityManifest], ...]
@@ -26,7 +35,9 @@ class ActivityCatalogue:
         ordered = tuple(activities)
         buckets: dict[str, list[ActivityManifest]] = {}
         for activity in ordered:
-            for category in activity.categories:
+            launcher_categories = getattr(activity, "launcher_categories", ())
+            categories = launcher_categories or activity.categories
+            for category in categories:
                 normalized = category.strip().casefold()
                 if not normalized:
                     continue
@@ -61,10 +72,7 @@ class ActivityCatalogue:
 
 
 def _category_sort_key(value: str) -> tuple[int, str]:
-    # Creation/play/learning-style buckets can later receive localized display
-    # ordering from platform metadata. Stable lexical order is deterministic in
-    # the meantime and never derives authority from display text.
-    return (0, value)
+    return (_CATEGORY_ORDER.get(value, 100), value)
 
 
 def _category_title(value: str) -> str:
