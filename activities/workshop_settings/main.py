@@ -70,6 +70,7 @@ class MyGreiaSettings:
         self.running = True
         self.targets: list[HitTarget] = []
         self.candidates: tuple[WallpaperCandidate, ...] = ()
+        self.selected_wallpaper_source: Path | None = None
         self.wallpaper_page = 0
         self.next_scan = 0.0
         self.thumbnail_cache: dict[tuple[Path, int, int, int], pygame.Surface | None] = {}
@@ -147,8 +148,10 @@ class MyGreiaSettings:
                     candidate = target.value
                     if candidate is None:
                         disable_wallpaper()
+                        self.selected_wallpaper_source = None
                     else:
                         import_wallpaper(candidate)  # type: ignore[arg-type]
+                        self.selected_wallpaper_source = candidate.path  # type: ignore[union-attr]
                     self.theme = get_theme()
                     self._success()
                 elif target.action == "wallpaper_page":
@@ -185,6 +188,8 @@ class MyGreiaSettings:
         previous_paths = {candidate.path for candidate in self.candidates}
         self.candidates = tuple(updated)
         current_paths = {candidate.path for candidate in self.candidates}
+        if self.selected_wallpaper_source not in current_paths:
+            self.selected_wallpaper_source = None
         if current_paths != previous_paths:
             self.wallpaper_page = min(self.wallpaper_page, self._maximum_wallpaper_page())
             self.thumbnail_cache = {
@@ -392,7 +397,12 @@ class MyGreiaSettings:
         for index, candidate in enumerate(items[: layout.capacity]):
             cell = layout.cell(index)
             rect = pygame.Rect(cell.x, cell.y, cell.width, cell.height)
-            selected = candidate is None and self.theme.wallpaper_path is None
+            selected = (
+                candidate is None and self.theme.wallpaper_path is None
+            ) or (
+                candidate is not None
+                and self.selected_wallpaper_source == candidate.path
+            )
             self._draw_wallpaper_tile(rect, candidate, selected)
             self.targets.append(HitTarget("wallpaper", candidate, rect))
 
