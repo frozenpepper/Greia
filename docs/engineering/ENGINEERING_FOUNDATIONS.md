@@ -25,7 +25,7 @@ Performance and maintainability are not competing goals. On Greia, unnecessary a
 
 ### Model stable concepts as objects
 
-Prefer classes/dataclasses for stable concepts that own invariants, state, lifecycle or behavior. Examples include Activity manifests, profile contexts, storage/session objects, display backends, system-chrome coordinators, input mappings/controller owners, UI Screens, Collections, runtime adapters, hardware adapters and bounded caches.
+Prefer classes/dataclasses for stable concepts that own invariants, state, lifecycle or behavior. Examples include Activity manifests, profile contexts, storage/session objects, display backends, system-chrome coordinators, input mappings/controller owners, UI Screens, Collections, runtime adapters, hardware adapters, synthetic-device profiles and bounded caches.
 
 Do not create classes merely to wrap one stateless function. Small pure functions remain appropriate for local calculations and transformations.
 
@@ -45,11 +45,13 @@ SystemChromeBackend
 
 InputHAL / trusted input backend
   ├── provisional legacy-X + Linux controller probing
+  ├── Activity-Simulator synthetic HAL below the same semantic contract
   └── future direct/session input implementation
 
 RuntimeAdapter
   ├── PythonRuntimeAdapter
-  └── future WebRuntimeAdapter
+  ├── SimulatorPythonRuntimeAdapter (development composition only)
+  └── future canonical WebRuntimeAdapter
 
 Screen
   ├── ProfilePickerScreen
@@ -81,7 +83,7 @@ A protocol/base class should expose only what callers need. Do not create univer
 
 ### Make ownership obvious
 
-Long-lived resources must have an identifiable owner and cleanup path. This includes subprocesses, display leases, system-chrome leases, controller handles, storage sessions, temporary mounts, threads, caches, renderer surfaces and hardware authority.
+Long-lived resources must have an identifiable owner and cleanup path. This includes subprocesses, display leases, system-chrome leases, controller handles, storage sessions, temporary mounts, threads, caches, renderer surfaces, simulator child processes and hardware authority.
 
 A trusted controller backend that opens devices must have explicit device-count bounds, reconnect behavior and teardown. An Activity must not become the accidental owner of system input merely because a runtime library can open a device.
 
@@ -106,19 +108,25 @@ greia_parent
 greia_installer
     installation UI + destructive engine boundary
 
+greia_simulator
+    development-only composition around real greia_platform/greia_launcher
+    with synthetic HAL/workspace/runtime-adapter facts below existing seams
+
 activities/*
     supervised Activity implementations using public platform APIs
 ```
 
 Renderer/runtime/hardware-specific implementations sit behind interfaces rather than leaking upward into platform semantics.
 
-Do not create parallel implementations of storage, profiles, progression, backup, permission policy or standard input mappings inside a UI/runtime just because it is convenient locally.
+Do not create parallel implementations of storage, profiles, progression, backup, permission policy or standard input mappings inside a UI/runtime/simulator just because it is convenient locally.
+
+The Activity Simulator is an especially important drift test: if a simulator feature needs to reproduce a Greia policy that already has a canonical owner, the design is wrong. Improve/inject the shared owner instead. Simulator-specific behavior belongs only at genuine absent-machine variation points such as synthetic HAL observations, isolated development roots and the current desktop Pygame display compatibility adapter selected by ADR 0029.
 
 Circular package dependencies are architecture defects unless there is an exceptional documented reason.
 
 ## 4. UI and input architecture
 
-ADR 0018 owns the lightweight UI architecture. ADR 0019 owns platform-controlled Activity Home/Back chrome. ADR 0020 owns runtime-neutral Activity input profiles and controller support.
+ADR 0018 owns the lightweight UI architecture. ADR 0019 owns platform-controlled Activity Home/Back chrome. ADR 0020 owns runtime-neutral Activity input profiles and controller support. ADR 0029 requires developer simulation to consume those same contracts rather than duplicating them.
 
 Core UI semantic vocabulary:
 
@@ -150,6 +158,8 @@ Do not implement mandatory Home by asking Python Activities to draw a helper or 
 
 `src/greia_platform/system_chrome.py` owns renderer-neutral geometry/actions. `src/greia_launcher/system_chrome.py` owns the backend-neutral trusted chrome lifecycle seam. Concrete display/input implementations remain below those contracts.
 
+A desktop simulator can exercise the shared protected geometry but cannot by itself prove that production trusted chrome is non-coverable or that protected input is intercepted above an Activity surface. Keep that evidence class explicit.
+
 ### Runtime-neutral input semantics
 
 `src/greia_platform/input_core.py` owns the common interaction-profile/action vocabulary, central analog normalization and Greia virtual-pointer semantics. `src/greia_platform/pygame_input.py` is a current Pygame translation/trusted-controller helper, not the universal Activity input API.
@@ -179,6 +189,12 @@ Text Activities must retain real text input: do not apply game/navigation mappin
 Current renderer-specific Pygame helpers live beneath UI/input semantics. Future Web/native renderers can implement equivalent ordinary Activity UI/input concepts independently, while system chrome remains outside Activity authority entirely.
 
 Do not create a desktop/window-manager abstraction, general retained scene graph, DOM clone, giant widget toolkit or generic input scripting framework without a new evidence-backed architecture decision.
+
+### Simulator display adaptation is below Activity semantics
+
+Current Pygame Activities still request a process display surface directly while R7 is open. ADR 0029 permits a narrow simulator-only runtime adapter/bootstrap to translate that request into a selected synthetic desktop viewport. It must not become an Activity API, a second layout engine or a reason for Activities to test `GREIA_SIMULATOR`.
+
+When the shared display/session abstraction later provides a better portable seam, migrate the simulator to that seam and retire compatibility interception that is no longer necessary.
 
 ## 5. Low-resource engineering rules
 
@@ -222,6 +238,10 @@ Render/layout only the visible page/items. Do not construct/render an unbounded 
 
 Never use an unbounded history/cache as a convenience feature. Refusing a new creation because a deliberate product limit is reached is preferable to silently evicting child work.
 
+### Simulator performance evidence
+
+Keep simulator adapters lightweight too, but do not tune Greia's low-resource acceptance from a modern desktop simulator. Desktop RSS/frame timing is diagnostic only; Acer/Pi resource claims require the actual target/evidence path.
+
 ## 6. Documentation rules for code
 
 Public architectural classes, protocols and extension points require useful docstrings explaining:
@@ -236,6 +256,8 @@ Non-obvious algorithms need comments explaining **why**, not comments that parap
 
 When a new architecture seam is accepted, update the relevant ADR/living architecture/agent documentation in the same tranche.
 
+For simulator changes, ADR 0029 and `docs/development/GREIA_ACTIVITY_SIMULATOR.md` are mandatory derived companions. When a production contract consumed by the simulator changes, update its simulator regression/manual in the same tranche if behavior is affected; never let a stale simulator silently define another contract.
+
 Do not make contributors infer stable contracts from one implementation class.
 
 ## 7. Testing rules
@@ -249,6 +271,7 @@ Prefer pure/provider-free tests for:
 - input-profile mappings;
 - analog dead-zone/normalization and virtual-pointer bounds;
 - controller-owner resource bounds and cleanup semantics;
+- simulator viewport parsing/HAL capability mapping/runtime adapter selection/state-root isolation;
 - state machines;
 - lifecycle sequencing and stale-lease rejection;
 - resource/cache bounds;
@@ -256,13 +279,15 @@ Prefer pure/provider-free tests for:
 - polymorphic dispatch behavior;
 - failure/rollback invariants.
 
-Then use VM/physical tests only for behavior that actually depends on the environment, display stack, controller hardware, timing or device drivers.
+Then use simulator, VM and physical tests only for behavior each environment can actually establish.
 
-For ADR 0019 specifically, pure tests can prove geometry/coordinator contracts but **cannot** prove that an Activity cannot cover chrome or receive protected input. That requires real backend/runtime evidence.
+The simulator can execute real Greia services against synthetic device facts, which makes it appropriate for Activity/package/profile/responsive/runtime semantic integration. It cannot prove production sandbox/display/session/input/hardware behavior merely because those higher-level services are real.
 
-For ADR 0020, pure tests can prove mappings and bounds but cannot prove controller latency, noisy-axis behavior, real disconnect/reconnect or protected system-input interception. Those require physical/backend evidence.
+For ADR 0019 specifically, pure tests and simulator runs can prove geometry/coordinator use but **cannot** prove that an Activity cannot cover production chrome or receive protected input. That requires real backend/runtime evidence.
 
-Do not replace hardware evidence with mocks, and do not make unit tests unnecessarily dependent on hardware.
+For ADR 0020, pure/simulator tests can prove mappings, bounds and capability policy but cannot prove controller latency, noisy-axis behavior, real disconnect/reconnect or protected system-input interception. Those require physical/backend evidence.
+
+Do not replace hardware evidence with mocks/simulation, and do not make unit tests unnecessarily dependent on hardware.
 
 ## 8. Review checklist
 
@@ -283,6 +308,9 @@ A substantive code review should ask:
 13. For Activity presentation/input changes, can Greia still preserve mandatory Home independently of Activity cooperation?
 14. Are controller-brand/raw-device details confined below the runtime-neutral input contract?
 15. Could a new input path accidentally grant an Activity access to reserved system input or `/dev/input`?
+16. If the change affects the simulator, is it varying only a genuine absent-machine/runtime seam rather than cloning a canonical Greia service?
+17. Could an Activity now behave differently solely because `GREIA_SIMULATOR` is present? If yes, reject/redesign that path.
+18. Is simulator evidence being classified honestly instead of used to satisfy a backend/hardware gate?
 
 ## 9. Anti-patterns
 
@@ -294,6 +322,9 @@ Avoid:
 - speculative generic frameworks;
 - stringly-typed backend dispatch scattered across the codebase;
 - copy/pasted runtime/platform service implementations;
+- simulator-local copies of manifest parsing, permission policy, profiles, storage, history/progression, launcher catalogue, responsive transforms or future Web APIs;
+- Activity code branches on simulator presence or named simulator/device presets;
+- host-browser/private-webview HTML execution labeled as canonical Greia Web runtime;
 - Activity-drawn or DOM-injected mandatory system Home controls;
 - per-Activity controller button/dead-zone/reconnect implementations;
 - controller-brand labels or raw joystick indices as Activity semantics;
