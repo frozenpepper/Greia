@@ -1,7 +1,7 @@
 # Greia OS
 
 **Stage:** early platform development (`0.13.x`)  
-**Docs reviewed:** 2026-08-17
+**Docs reviewed:** 2026-08-19
 
 Greia is a non-profit, open-source, Activity-first computing platform for young children. Linux is the substrate; **Greia Shell is the operating-system experience**. Normal child use must not expose a desktop, terminal, login prompt, package manager, filesystem browser, browser chrome, generic window manager, or boot text.
 
@@ -12,15 +12,16 @@ Greia deliberately targets constrained hardware, with the first-generation Acer 
 1. `AGENTS.md` — non-negotiable repository rules.
 2. `docs/DOCUMENTATION.md` — authority, ownership and freshness.
 3. `docs/architecture/GREIA_ARCHITECTURE.md` — living architecture synthesis; `docs/architecture/GREIA_PARENT_MANAGEMENT.md` narrows the parent-management subsystem.
-4. `docs/adr/` — accepted normative decisions; ADR 0018 owns lightweight UI, ADR 0019 trusted Activity Home/Back, ADR 0020 runtime-neutral input/controller support, ADR 0021 automatic hardware enablement, ADR 0022 the Parent API/client/pairing/privilege boundary, ADR 0023 the open Activity ecosystem/official catalogue boundary, ADR 0024 project licensing/trademark boundaries, and **ADR 0025 platform-owned Awards/badges/celebrations/collection**.
+4. `docs/adr/` — accepted normative decisions; in particular ADR 0018 owns lightweight UI, ADR 0019 trusted Activity Home/Back, ADR 0020 runtime-neutral input/controller support, ADR 0026 automatic responsive layout, ADR 0027 Activity coordinate/canvas/world transforms, ADR 0028 localization/language context, and **ADR 0029 the real-runtime Activity Simulator/non-drift evidence boundary**.
 5. `docs/engineering/ENGINEERING_FOUNDATIONS.md` — mandatory OOP, polymorphism, dependency, documentation and low-resource guidance.
 6. `docs/product/` — accepted product requirements, including Activity navigation/input, `PARENT_MANAGEMENT.md`, `ACTIVITY_ECOSYSTEM_AND_DISTRIBUTION.md`, and **`AWARDS_BADGES_AND_CELEBRATIONS.md`**.
 7. `docs/design/GREIA_VISUAL_STYLE_GUIDE.md` — canonical visual-language and typography direction; `GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md` is the complementary production-asset brief.
 8. `docs/governance/LICENSING_AND_TRADEMARK.md` — selected license matrix, third-party/provenance rules and project-mark policy direction.
 9. `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md` — active implementation plan until closed.
 10. `HANDOVER.md` — exact current branch, evidence, blockers and next step.
-11. `docs/agents/GREIA_AGENT_OPERATIONS.md` — build/test-hardware operations.
+11. `docs/agents/GREIA_AGENT_OPERATIONS.md` — build/test/hardware/simulator evidence operations.
 12. `skills/greia-activity-authoring/SKILL.md` — Activity-authoring guide.
+13. `docs/development/GREIA_ACTIVITY_SIMULATOR.md` — Mac-first Activity Simulator developer workflow.
 
 Current verification counts, branch SHAs and hardware status belong in `HANDOVER.md`, not here.
 
@@ -91,6 +92,24 @@ Human and software-agent Activity creation are both first-class public authoring
 
 See `docs/product/ACTIVITY_ECOSYSTEM_AND_DISTRIBUTION.md`.
 
+### Real-runtime Activity Simulator
+
+Greia now includes a **Mac-first Activity Simulator** for fast developer iteration without installing the full OS or running a VM:
+
+```bash
+python3 tools/greia_simulator.py
+```
+
+The simulated child window is the **real Greia Shell**, not a look-alike preview. It uses the real Activity registry/trust, PermissionBroker, RuntimeManager, lifecycle supervisor, profile/customization state, storage/history/events and shared responsive/canvas/system-safe geometry. The simulator supplies only an isolated development workspace, an exact synthetic viewport/capability `GreiaHAL`, and a narrow current-Pygame desktop display adapter below the runtime seam.
+
+It supports `Load Activity Folder…` through real `DEVELOPER_UNSIGNED` validation and `Install Activity Package…` through the canonical `ActivityPackageService`, plus representative/custom resolutions and child interface-size/capability simulation.
+
+ADR 0029 deliberately prevents simulator drift: Activity code must not branch on simulator presence, and a simulator-local copy of Greia policy is an architecture defect. Simulator results are developer semantic evidence, **not** Bubblewrap, graphics-backend, trusted-system-chrome, physical-controller, installer/boot, Acer/Pi performance or phase-closure evidence.
+
+Current Web/HTML Activity execution is intentionally not faked. The simulator will consume the same canonical R9 `WebRuntimeAdapter` when that runtime exists; opening an Activity in a host browser/private webview is not Greia Web support.
+
+See `docs/adr/0029-real-runtime-activity-simulator.md` and `docs/development/GREIA_ACTIVITY_SIMULATOR.md`.
+
 ### Greia Parents: web first, one protocol
 
 **Greia Parents** is the parent-management product surface. The first client is a small responsive HTML application served directly by each Greia machine, but the durable product boundary is the versioned **Greia Parent API**, not the HTML implementation.
@@ -127,6 +146,7 @@ The canonical guidance is `docs/engineering/ENGINEERING_FOUNDATIONS.md`.
 - Greia Parents HTML and future native clients share one Parent API; the network-facing Parent service does not gain generic root/shell authority.
 - Normal/release SSH is disabled by default and is not a dependency of Greia Parents.
 - The Activity authoring contract is public; an official catalogue must not become the only supported installation route.
+- The Activity Simulator runs real Greia services over synthetic device facts; it must not become a parallel Greia API or substitute for backend/hardware evidence.
 - Child-facing advertising/purchase-pressure mechanics are not part of the official Greia ecosystem model.
 - ARM and legacy x86 are peers behind common contracts.
 - Resource cost is architectural correctness, not a later optimization pass.
@@ -151,7 +171,13 @@ Canonical provider-free source verification:
 make verify
 ```
 
-VM/physical evidence uses the applicable procedure under `docs/testing/`. Source tests do not prove hardware behavior.
+Focused simulator source-contract verification:
+
+```bash
+PYTHONPATH=src python3 -m unittest tests.test_greia_simulator -v
+```
+
+VM/physical evidence uses the applicable procedure under `docs/testing/`. Source tests and simulator runs do not prove hardware/backend behavior.
 
 GitHub-hosted execution is opt-in only and requires explicit owner authorization; see `AGENTS.md`.
 
@@ -161,10 +187,13 @@ GitHub-hosted execution is opt-in only and requires explicit owner authorization
 - `src/greia_launcher/` — child Shell/session orchestration, including trusted system-chrome lifecycle
 - `src/greia_parent/` — Greia Parent API, per-device client credentials, responsive HTML client and compatibility parent surface
 - `src/greia_installer/` — graphical installer
+- `src/greia_simulator/` — development-only real-runtime simulator composition over synthetic device/workspace seams
+- `tools/greia_simulator.py` — desktop simulator entry point
 - `activities/` — curated built-in Activities
 - `runtime/` — runtime/policy declarations
 - `build/` — image composition/builders
-- `tests/` — source/contract tests
+- `tests/` — source/contract tests, including simulator non-drift contracts
+- `docs/development/` — developer-facing tooling guides such as the Activity Simulator manual
 - `docs/design/` — visual style/typography authority plus art/core-asset production requirements
 - `docs/product/` — accepted child/parent/ecosystem product requirements, including Awards/badges/celebrations
 - `docs/governance/` — licensing/trademark and future project-governance policy
