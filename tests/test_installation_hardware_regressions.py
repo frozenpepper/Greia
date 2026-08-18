@@ -87,6 +87,21 @@ class RealHardwareInstallationRegressionTests(unittest.TestCase):
         self.assertIn("_set_x11_input_focus(screen, pygame)", launcher)
         self.assertIn("XSetInputFocus", launcher)
 
+    def test_stale_developer_bootstrap_config_cannot_enable_password_or_root_ssh(self) -> None:
+        for prefix in ("build/overlay", "build/installer-overlay"):
+            with self.subTest(prefix=prefix):
+                floor = self.read(
+                    f"{prefix}/etc/ssh/sshd_config.d/00-greia-security-floor.conf"
+                )
+                self.assertIn("PasswordAuthentication no", floor)
+                self.assertIn("KbdInteractiveAuthentication no", floor)
+                self.assertIn("AuthenticationMethods publickey", floor)
+                self.assertIn("PermitRootLogin no", floor)
+                self.assertIn("DenyUsers root greia", floor)
+        first_boot = self.read("build/overlay/usr/local/lib/greia-os/first-boot")
+        self.assertIn("passwd --lock root", first_boot)
+        self.assertIn("passwd --lock greia", first_boot)
+
 
 if __name__ == "__main__":
     unittest.main()
