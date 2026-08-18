@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import unittest
 from pathlib import Path
 
@@ -31,9 +32,14 @@ class RealHardwareInstallationRegressionTests(unittest.TestCase):
             with self.subTest(prefix=prefix):
                 config = self.read(f"{prefix}/etc/initramfs-tools/conf.d/greia-hardware")
                 modules = self.read(f"{prefix}/etc/initramfs-tools/modules")
+                hook_path = PROJECT_ROOT / prefix / "etc/initramfs-tools/hooks/greia-storage-modules"
+                hook = hook_path.read_text(encoding="utf-8")
                 self.assertIn("MODULES=most", config)
+                self.assertTrue(os.access(hook_path, os.X_OK))
+                self.assertIn("manual_add_modules", hook)
                 for module in ("ahci", "libata", "sd_mod"):
                     self.assertIn(module, modules.splitlines())
+                    self.assertIn(module, hook)
 
     def test_graphical_services_can_never_inherit_the_vt_as_stdin(self) -> None:
         for unit in (
