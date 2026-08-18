@@ -1,6 +1,5 @@
-# Live media is built away from the eventual target hardware. Explicitly keep
-# the generic Linux storage stack needed by old SATA/AHCI machines in addition
-# to MODULES=most so bootability never depends on what the build host exposed.
-ahci
-libata
-sd_mod
+# Live media is built away from the eventual target hardware. Keep MODULES=most
+# in conf.d/greia-hardware and let greia-storage-modules conditionally add the
+# broad x86 SATA/AHCI floor only when the TARGET live kernel provides it. This
+# shared file must remain architecture-neutral so a future ARM/board profile is
+# not made unbootable by x86-only module names.
