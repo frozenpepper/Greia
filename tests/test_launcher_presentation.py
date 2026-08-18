@@ -7,6 +7,7 @@ from types import SimpleNamespace
 
 from greia_launcher.activity_icon import ActivityIconError, package_icon_path
 from greia_launcher.catalogue_view import ActivityCatalogue
+from greia_launcher.presentation import _activity_title
 
 
 def activity(
@@ -64,16 +65,43 @@ class ActivityCatalogueTests(unittest.TestCase):
         self.assertEqual(catalogue.collection("learn").items, (maze,))
         self.assertNotIn("fine_motor", catalogue.category_ids)
 
+    def test_launcher_categories_have_stable_semantic_icons(self) -> None:
+        catalogue = ActivityCatalogue.from_activities(
+            (
+                activity("org.greia.paint", launcher_categories=("create",)),
+                activity("org.greia.maze", launcher_categories=("play", "learn")),
+                activity("org.greia.settings", launcher_categories=("my_greia",)),
+            )
+        )
+        self.assertEqual(catalogue.collection("all").icon_id, "backpack")
+        self.assertEqual(catalogue.collection("create").icon_id, "palette")
+        self.assertEqual(catalogue.collection("play").icon_id, "puzzle_pieces")
+        self.assertEqual(catalogue.collection("learn").icon_id, "book")
+        self.assertEqual(catalogue.collection("my_greia").icon_id, "unicorn")
+
     def test_old_package_without_presentation_categories_keeps_compatibility(self) -> None:
         old = activity("org.greia.old", "creative", "art")
         catalogue = ActivityCatalogue.from_activities((old,))
         self.assertEqual(catalogue.category_ids, ("all", "art", "creative"))
+        self.assertEqual(catalogue.collection("art").icon_id, "backpack")
 
     def test_unknown_category_falls_back_to_all(self) -> None:
         catalogue = ActivityCatalogue.from_activities(
             (activity("org.greia.paint", "creative", launcher_categories=("create",)),)
         )
         self.assertEqual(catalogue.nearest_category("missing"), "all")
+
+    def test_activity_title_is_always_human_readable(self) -> None:
+        explicit = SimpleNamespace(
+            activity_id="org.greia.painting",
+            title_key="Painting",
+        )
+        localized_key = SimpleNamespace(
+            activity_id="org.greia.shape-garden",
+            title_key="activity.shape_garden.title",
+        )
+        self.assertEqual(_activity_title(explicit), "Painting")
+        self.assertEqual(_activity_title(localized_key), "Shape Garden")
 
 
 class PackageActivityIconTests(unittest.TestCase):
