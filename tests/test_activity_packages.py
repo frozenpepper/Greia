@@ -167,7 +167,10 @@ class ActivityPackageServiceTests(unittest.TestCase):
             active = service.active_root / first.activity_id
             # Simulate a safe pre-commit/crash residue by making the active path
             # absent while retaining the immutable version and audit metadata.
-            active.rename(root / "detached-active")
+            # The committed active tree is read-only, so discard it through the
+            # service's own read-only-aware cleanup rather than a raw rename
+            # (which cannot move a write-protected directory across parents).
+            service._discard_private_tree(active)
             service._receipt_path(first.activity_id).unlink()
 
             second = service.install_archive(archive)

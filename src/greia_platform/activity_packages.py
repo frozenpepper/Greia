@@ -157,6 +157,7 @@ class ActivityPackageService:
         )
         package_root = stage_parent / "package"
         package_root.mkdir(mode=0o700)
+        activation: Path | None = None
         try:
             self._extract_bounded_archive(archive_path, package_root)
             if not (package_root / "activity.toml").is_file():
@@ -227,7 +228,12 @@ class ActivityPackageService:
         ) as exc:
             raise ActivityPackageError(str(exc)) from exc
         finally:
-            shutil.rmtree(stage_parent, ignore_errors=True)
+            # The stage tree and any non-committed activation residue are private
+            # to this attempt. A receipt failure (or any error before the atomic
+            # rename) must not leave a launch-visible active entry behind.
+            self._discard_private_tree(stage_parent)
+            if activation is not None:
+                self._discard_private_tree(activation)
 
     def _ensure_roots(self) -> None:
         self.state_root.mkdir(parents=True, exist_ok=True)
@@ -262,9 +268,10 @@ class ActivityPackageService:
                         "encrypted Activity package entries are not supported"
                     )
                 mode = (info.external_attr >> 16) & 0xFFFF
-                if mode and stat.S_ISLNK(mode):
+                file_type = stat.S_IFMT(mode)
+                if file_type and stat.S_ISLNK(mode):
                     raise ActivityPackageError("Activity package symlinks are forbidden")
-                if mode and not (stat.S_ISREG(mode) or stat.S_ISDIR(mode)):
+                if file_type and not (stat.S_ISREG(mode) or stat.S_ISDIR(mode)):
                     raise ActivityPackageError(
                         "Activity package contains a special filesystem entry"
                     )
@@ -340,13 +347,6 @@ class ActivityPackageService:
             )
         sources.append(
             ActivitySource(
-                self.active_root,
-                PackageTrust.PARENT_TRUSTED_UNSIGNED,
-                self.SOURCE_ID,
-            )
-        )
-        sources.append(
-            ActivitySource(
                 stage_parent,
                 PackageTrust.PARENT_TRUSTED_UNSIGNED,
                 self.SOURCE_ID,
@@ -370,6 +370,36 @@ class ActivityPackageService:
         # launcher-time best-effort concern. A malformed icon reference must be
         # rejected before the package becomes visible.
         package_icon_path(staged.manifest)
+
+        # A staged package may never shadow a built-in identity. Discovery of the
+        # built-in source happens here, so a fresh package colliding with a
+        # built-in is reported clearly.
+        staged_id = staged.manifest.activity_id
+        if self.active_root is not None and (self.active_root / staged_id).exists():
+            raise ActivityPackageError(
+                f"Activity {staged_id} is already installed; update is not enabled yet"
+            )
+
+        # The staged package must not collide (including legacy aliases) with any
+        # already installed parent package. Discovery of the active source is done
+        # separately so the already-installed case above wins with the clearer
+        # message rather than a registry collision.
+        if self.active_root.exists():
+            combined = ActivityRegistry(
+                (
+                    *sources,
+                    ActivitySource(
+                        self.active_root,
+                        PackageTrust.PARENT_TRUSTED_UNSIGNED,
+                        self.SOURCE_ID,
+                    ),
+                ),
+                self.runtime,
+            )
+            try:
+                combined.discover_registrations()
+            except ActivityValidationError as exc:
+                raise ActivityPackageError(str(exc)) from exc
         return staged.manifest, staged.package_digest
 
     @staticmethod
@@ -380,6 +410,27 @@ class ActivityPackageService:
             elif path.is_file():
                 os.chmod(path, 0o444)
         os.chmod(root, 0o555)
+
+    @staticmethod
+    def _discard_private_tree(root: Path) -> None:
+        """Remove a private service tree that may contain read-only entries.
+
+        ``shutil.rmtree`` alone cannot delete directories whose mode bits were
+        cleared by ``_make_tree_read_only``, so restore write permission before
+        removing. Only private staging/activation trees are passed here; the
+        committed immutable/active trees are never discarded this way.
+        """
+
+        if not root.exists():
+            return
+        for path in root.rglob("*"):
+            if path.is_dir() and not os.access(path, os.W_OK):
+                os.chmod(path, 0o700)
+            elif path.is_file() and not os.access(path, os.W_OK):
+                os.chmod(path, 0o600)
+        if root.is_dir() and not os.access(root, os.W_OK):
+            os.chmod(root, 0o700)
+        shutil.rmtree(root, ignore_errors=True)
 
     def _receipt_path(self, activity_id: str) -> Path:
         return self.receipts_root / f"{activity_id}.json"
