@@ -156,6 +156,23 @@ class GreiaLauncherPresentation(LauncherApplication):
         running = True
         last_display_size = screen.get_size()
 
+        # Present the static white Greia frame immediately, then the short
+        # one-shot intro and the boot chime (which may only start after the
+        # first real frame is on screen). The intro is monotonic-time driven
+        # and bounded to <=1.0 s; the chime is fail-silent and asynchronous.
+        if not self.windowed:
+            try:
+                from .boot_chime import play_boot_chime
+                from .boot_intro import run_intro
+
+                pygame.display.flip()
+                if not self._first_frame_released:
+                    self._release_boot_cover()
+                run_intro(screen, pygame)
+                play_boot_chime()
+            except Exception:  # noqa: BLE001 - never fail boot for presentation
+                pass
+
         try:
             while running:
                 for event in pygame.event.get():

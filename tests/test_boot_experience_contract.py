@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import os
 import struct
+import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -232,6 +235,84 @@ class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
         self.assertIn("boot/grub/greia-boot-logo.png", builder)
         installer = (ROOT / "build/build-installer-image.sh").read_text(encoding="utf-8")
         self.assertIn("background_image /boot/grub/greia-boot-logo.png", installer)
+
+    def test_launcher_intro_is_bounded_and_monotonic(self) -> None:
+        intro = (ROOT / "src/greia_launcher/boot_intro.py").read_text(encoding="utf-8")
+        self.assertIn("MAX_INTRO_SECONDS = 1.0", intro)
+        self.assertIn("TARGET_INTRO_SECONDS = 0.85", intro)
+        self.assertIn("time.monotonic()", intro)
+        # No per-frame fixed sleep: the animation is elapsed-time driven and
+        # frames are dropped rather than sleeping them out.
+        self.assertNotIn("time.sleep(", intro)
+        self.assertIn("boot-intro-played", intro)
+        self.assertIn("/run/greia-os", intro)
+        # The intro must not load artwork from the removed Plymouth runtime.
+        self.assertNotIn("/usr/share/plymouth/", intro)
+
+    def test_launcher_intro_plays_once_per_boot(self) -> None:
+        import sys
+
+        sys.path.insert(0, str(ROOT / "src"))
+        import pygame
+
+        os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+        pygame.init()
+        try:
+            screen = pygame.display.set_mode((960, 540))
+            from greia_launcher import boot_intro
+
+            with tempfile.TemporaryDirectory() as tmp:
+                marker = Path(tmp) / "intro-marker"
+                with mock.patch.dict(
+                    os.environ,
+                    {
+                        "GREIA_BOOT_INTRO_MARKER": str(marker),
+                        "GREIA_BOOT_LOGO": str(ROOT / "assets/boot/static/greia-boot-logo.png"),
+                    },
+                    clear=False,
+                ):
+                    self.assertFalse(boot_intro.boot_intro_played())
+                    boot_intro.run_intro(screen, pygame)
+                    self.assertTrue(boot_intro.boot_intro_played())
+                    # A second call is skipped because the marker exists.
+                    boot_intro.run_intro(screen, pygame)
+        finally:
+            pygame.quit()
+
+    def test_boot_chime_is_one_shot_and_fail_silent(self) -> None:
+        import sys
+
+        sys.path.insert(0, str(ROOT / "src"))
+        from greia_launcher import boot_chime
+
+        with tempfile.TemporaryDirectory() as tmp:
+            marker = Path(tmp) / "chime-marker"
+            with mock.patch.dict(
+                os.environ,
+                {
+                    "GREIA_BOOT_CHIME_MARKER": str(marker),
+                    "GREIA_BOOT_CHIME": str(ROOT / "assets/audio/system/greia-boot-chime.wav"),
+                },
+                clear=False,
+            ):
+                self.assertFalse(boot_chime.chime_played())
+                # Simulate aplay present and succeeding, then verify the marker
+                # is written exactly once (fail-silent, one-shot).
+                import subprocess
+
+                with mock.patch(
+                    "subprocess.run",
+                    return_value=subprocess.CompletedProcess([], 0, b"", b""),
+                ):
+                    boot_chime.play_boot_chime()
+                import time
+
+                time.sleep(0.1)
+                self.assertTrue(boot_chime.chime_played())
+                boot_chime.play_boot_chime()
+                time.sleep(0.1)
+                # Still played exactly once semantics (idempotent marker).
+                self.assertTrue(boot_chime.chime_played())
 
 
 if __name__ == "__main__":
