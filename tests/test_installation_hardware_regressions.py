@@ -27,7 +27,7 @@ class RealHardwareInstallationRegressionTests(unittest.TestCase):
         self.assertIn('"$USB_MOUNT/payload/target-image-profile.json"', builder)
         self.assertIn("greia.live_media_id=$live_media_id", builder)
 
-    def test_target_and_live_initramfs_keep_generic_storage_stack(self) -> None:
+    def test_target_and_live_initramfs_keep_target_kernel_storage_policy(self) -> None:
         for prefix in ("build/overlay", "build/installer-overlay"):
             with self.subTest(prefix=prefix):
                 config = self.read(f"{prefix}/etc/initramfs-tools/conf.d/greia-hardware")
@@ -36,9 +36,17 @@ class RealHardwareInstallationRegressionTests(unittest.TestCase):
                 hook = hook_path.read_text(encoding="utf-8")
                 self.assertIn("MODULES=most", config)
                 self.assertTrue(os.access(hook_path, os.X_OK))
+                self.assertIn("modinfo", hook)
                 self.assertIn("manual_add_modules", hook)
+                # Shared overlays must not force x86-only modules on every future
+                # architecture. The hook consults the TARGET kernel instead.
+                module_lines = {
+                    line.strip()
+                    for line in modules.splitlines()
+                    if line.strip() and not line.lstrip().startswith("#")
+                }
                 for module in ("ahci", "libata", "sd_mod"):
-                    self.assertIn(module, modules.splitlines())
+                    self.assertNotIn(module, module_lines)
                     self.assertIn(module, hook)
 
     def test_graphical_services_can_never_inherit_the_vt_as_stdin(self) -> None:
