@@ -8,12 +8,7 @@ from .ui_motion import InteractionVisualState, MotionSample
 
 @dataclass(frozen=True, slots=True)
 class PygameDepthStyle:
-    """Small reusable depth recipe for Greia Pygame surfaces.
-
-    The implementation intentionally uses direct primitive drawing and at most
-    one tiny temporary shadow surface per draw. It is not a scene graph or a
-    compositor and remains suitable for the 1024x600 legacy reference floor.
-    """
+    """Small reusable depth recipe for Greia Pygame surfaces."""
 
     shadow_offset: int = 5
     shadow_alpha: int = 52
@@ -41,6 +36,22 @@ def transformed_rect(rect: Any, motion: MotionSample, pygame: Any) -> Any:
     return transformed
 
 
+def make_rounded_shadow(size: tuple[int, int], pygame: Any, *, style: PygameDepthStyle) -> Any:
+    """Create one reusable rounded shadow Surface for a size/style variant."""
+
+    width, height = size
+    if width < 1 or height < 1:
+        raise ValueError("shadow size must be positive")
+    shadow = pygame.Surface((width, height), pygame.SRCALPHA)
+    pygame.draw.rect(
+        shadow,
+        (0, 0, 0, style.shadow_alpha),
+        shadow.get_rect(),
+        border_radius=min(style.radius, width // 2, height // 2),
+    )
+    return shadow
+
+
 def draw_soft_shadow(
     surface: Any,
     rect: Any,
@@ -48,18 +59,14 @@ def draw_soft_shadow(
     *,
     style: PygameDepthStyle = PygameDepthStyle(),
     lift: float = 0.0,
+    cached_shadow: Any | None = None,
 ) -> None:
-    """Draw a cheap translucent rounded shadow without blurring the whole screen."""
+    """Draw a rounded shadow, reusing a caller-owned cached Surface when supplied."""
 
     offset = max(1, int(round(style.shadow_offset + max(0.0, lift) * 2.0)))
-    shadow_rect = pygame.Rect(0, 0, rect.width, rect.height)
-    shadow = pygame.Surface((rect.width, rect.height), pygame.SRCALPHA)
-    pygame.draw.rect(
-        shadow,
-        (0, 0, 0, style.shadow_alpha),
-        shadow_rect,
-        border_radius=min(style.radius, rect.width // 2, rect.height // 2),
-    )
+    shadow = cached_shadow
+    if shadow is None or shadow.get_size() != rect.size:
+        shadow = make_rounded_shadow(rect.size, pygame, style=style)
     surface.blit(shadow, (rect.left + offset, rect.top + offset))
 
 
@@ -75,11 +82,20 @@ def draw_raised_panel(
     style: PygameDepthStyle = PygameDepthStyle(),
     selected_width: int = 7,
     normal_width: int = 3,
+    cached_shadow: Any | None = None,
 ) -> Any:
     """Draw Greia's standard shallow raised card and return its transformed rect."""
 
     target = transformed_rect(rect, motion, pygame)
-    draw_soft_shadow(surface, target, pygame, style=style, lift=motion.shadow_lift)
+    usable_shadow = cached_shadow if target.size == rect.size else None
+    draw_soft_shadow(
+        surface,
+        target,
+        pygame,
+        style=style,
+        lift=motion.shadow_lift,
+        cached_shadow=usable_shadow,
+    )
     radius = min(style.radius, target.width // 2, target.height // 2)
     pygame.draw.rect(surface, fill, target, border_radius=radius)
     width = selected_width if state.emphasized else normal_width
@@ -87,23 +103,23 @@ def draw_raised_panel(
     return target
 
 
-def draw_shadowed_icon(
-    surface: Any,
+def make_shadowed_icon(
     icon: Any,
-    center: tuple[int, int],
     pygame: Any,
     *,
     shadow_alpha: int = 58,
     shadow_offset: int = 4,
-) -> None:
-    """Give a transparent icon a small silhouette shadow and then draw it."""
+) -> Any:
+    """Create one cacheable icon Surface containing a silhouette shadow."""
 
-    alpha = icon.get_alpha()
+    width = icon.get_width() + max(0, shadow_offset)
+    height = icon.get_height() + max(0, shadow_offset)
+    composite = pygame.Surface((width, height), pygame.SRCALPHA)
     mask = pygame.mask.from_surface(icon)
-    shadow = mask.to_surface(setcolor=(0, 0, 0, shadow_alpha), unsetcolor=(0, 0, 0, 0))
-    shadow.set_alpha(shadow_alpha)
-    rect = icon.get_rect(center=center)
-    surface.blit(shadow, (rect.left + shadow_offset, rect.top + shadow_offset))
-    surface.blit(icon, rect)
-    if alpha is not None:
-        icon.set_alpha(alpha)
+    shadow = mask.to_surface(
+        setcolor=(0, 0, 0, shadow_alpha),
+        unsetcolor=(0, 0, 0, 0),
+    )
+    composite.blit(shadow, (shadow_offset, shadow_offset))
+    composite.blit(icon, (0, 0))
+    return composite
