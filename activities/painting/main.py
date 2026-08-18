@@ -169,9 +169,7 @@ class PaintingApp:
         self.metrics = ChildUiMetrics.for_size(*self.screen.get_size())
         self.theme = get_theme()
         self.repository = PaintingRepository(get_storage())
-        self.empty_icon = load_icon(
-            get_icon_path("rainbow", 64), self.metrics.px(52)
-        )
+        self.empty_icon = load_icon(get_icon_path("rainbow", 64), self.metrics.px(52))
         self.records = self.repository.list_records()
         self.current: PaintingRecord | None = None
         self.mode = "paint"
@@ -200,10 +198,7 @@ class PaintingApp:
 
     @property
     def canvas_rect(self) -> pygame.Rect:
-        return self.metrics.activity_content_rect(
-            top_gap=2,
-            bottom_reserve=self.palette_height,
-        )
+        return self.metrics.activity_content_rect(top_gap=2, bottom_reserve=self.palette_height)
 
     def run(self) -> int:
         running = True
@@ -350,14 +345,7 @@ class PaintingApp:
             self.save_error = True
             return
         self.current = record
-        self.records = [
-            record,
-            *[
-                item
-                for item in self.records
-                if item.painting_id != record.painting_id
-            ],
-        ]
+        self.records = [record, *[item for item in self.records if item.painting_id != record.painting_id]]
         self.mode = "paint"
         self.canvas = blank
         self.base_canvas = blank.copy()
@@ -371,9 +359,7 @@ class PaintingApp:
         if not self._save():
             return False
         try:
-            surface = self._decode_png(
-                self.repository.load_png(record.painting_id), self.canvas_rect.size
-            )
+            surface = self._decode_png(self.repository.load_png(record.painting_id), self.canvas_rect.size)
         except (RuntimeError, ValueError, OSError):
             self.save_error = True
             return False
@@ -401,21 +387,12 @@ class PaintingApp:
         if not self.dirty or self.current is None:
             return True
         try:
-            record = self.repository.save_png(
-                self.current.painting_id, self._encode_png(self.canvas)
-            )
+            record = self.repository.save_png(self.current.painting_id, self._encode_png(self.canvas))
         except (RuntimeError, ValueError, OSError):
             self.save_error = True
             return False
         self.current = record
-        self.records = [
-            record,
-            *[
-                item
-                for item in self.records
-                if item.painting_id != record.painting_id
-            ],
-        ]
+        self.records = [record, *[item for item in self.records if item.painting_id != record.painting_id]]
         self.thumbnail_cache.pop(record.painting_id, None)
         self.dirty = False
         self.save_error = False
@@ -428,19 +405,9 @@ class PaintingApp:
         return self.metrics.px(BRUSH_SIZES[self.selected_size])
 
     def _draw_dot(self, surface: pygame.Surface, point: tuple[int, int]) -> None:
-        pygame.draw.circle(
-            surface,
-            self._brush_color(),
-            point,
-            max(1, self._brush_size() // 2),
-        )
+        pygame.draw.circle(surface, self._brush_color(), point, max(1, self._brush_size() // 2))
 
-    def _draw_segment(
-        self,
-        surface: pygame.Surface,
-        start: tuple[int, int],
-        end: tuple[int, int],
-    ) -> None:
+    def _draw_segment(self, surface: pygame.Surface, start: tuple[int, int], end: tuple[int, int]) -> None:
         color = self._brush_color()
         size = self._brush_size()
         radius = max(1, size // 2)
@@ -469,15 +436,7 @@ class PaintingApp:
         diameter = self.metrics.px(38)
         gap = self.metrics.px(8)
         return [
-            (
-                pygame.Rect(
-                    left + i * (diameter + gap),
-                    y - diameter // 2,
-                    diameter,
-                    diameter,
-                ),
-                i,
-            )
+            (pygame.Rect(left + i * (diameter + gap), y - diameter // 2, diameter, diameter), i)
             for i in range(len(COLORS))
         ]
 
@@ -489,17 +448,7 @@ class PaintingApp:
         y = safe.bottom - self.metrics.margin - self.palette_height // 2
         result = []
         for order, brush_index in enumerate(reversed(range(len(BRUSH_SIZES)))):
-            result.append(
-                (
-                    pygame.Rect(
-                        right - (order + 1) * size - order * gap,
-                        y - size // 2,
-                        size,
-                        size,
-                    ),
-                    brush_index,
-                )
-            )
+            result.append((pygame.Rect(right - (order + 1) * size - order * gap, y - size // 2, size, size), brush_index))
         return result
 
     def _gallery_cards(self) -> list[tuple[pygame.Rect, PaintingRecord]]:
@@ -510,29 +459,15 @@ class PaintingApp:
         cards = []
         for index, record in enumerate(self.records[:6]):
             row, col = divmod(index, 3)
-            cards.append(
-                (
-                    pygame.Rect(
-                        area.left + col * (card_w + gap),
-                        area.top + row * (card_h + gap),
-                        card_w,
-                        card_h,
-                    ),
-                    record,
-                )
-            )
+            cards.append((pygame.Rect(area.left + col * (card_w + gap), area.top + row * (card_h + gap), card_w, card_h), record))
         return cards
 
-    def _thumbnail(
-        self, record: PaintingRecord, size: tuple[int, int]
-    ) -> pygame.Surface | None:
+    def _thumbnail(self, record: PaintingRecord, size: tuple[int, int]) -> pygame.Surface | None:
         cached = self.thumbnail_cache.get(record.painting_id)
         if cached is not None and cached.get_size() == size:
             return cached
         try:
-            surface = self._decode_png(
-                self.repository.load_png(record.painting_id), size
-            )
+            surface = self._decode_png(self.repository.load_png(record.painting_id), size)
         except (RuntimeError, ValueError, OSError):
             return None
         self.thumbnail_cache[record.painting_id] = surface
@@ -544,37 +479,16 @@ class PaintingApp:
         undo = self.metrics.activity_toolbar_button(1, side="left")
         new = self.metrics.activity_toolbar_button(0, side="right")
         eraser = self.metrics.activity_toolbar_button(1, side="right")
-        draw_icon_button(
-            self.screen,
-            gallery,
-            fill=self.theme.panel,
-            selected=self.mode == "gallery",
-            outline=self.theme.accent,
-        )
+        draw_icon_button(self.screen, gallery, fill=self.theme.panel, selected=self.mode == "gallery", outline=self.theme.accent)
         draw_grid_symbol(self.screen, gallery, self.theme.text)
         draw_icon_button(self.screen, undo, fill=self.theme.panel)
         draw_undo_symbol(self.screen, undo, self.theme.text)
         draw_icon_button(self.screen, new, fill=self.theme.accent)
         draw_plus_symbol(self.screen, new, self.theme.accent_text)
-        draw_icon_button(
-            self.screen,
-            eraser,
-            fill=self.theme.panel,
-            selected=self.eraser,
-            outline=self.theme.accent,
-        )
+        draw_icon_button(self.screen, eraser, fill=self.theme.panel, selected=self.eraser, outline=self.theme.accent)
         draw_eraser_symbol(self.screen, eraser, self.theme.text)
-        status = (
-            (210, 76, 76)
-            if self.save_error
-            else ((246, 178, 55) if self.dirty else (87, 174, 104))
-        )
-        pygame.draw.circle(
-            self.screen,
-            status,
-            (eraser.left - self.metrics.px(18), eraser.centery),
-            self.metrics.px(6),
-        )
+        status = (210, 76, 76) if self.save_error else ((246, 178, 55) if self.dirty else (87, 174, 104))
+        pygame.draw.circle(self.screen, status, (eraser.left - self.metrics.px(18), eraser.centery), self.metrics.px(6))
         if self.mode == "gallery":
             self._draw_gallery()
         else:
@@ -582,12 +496,7 @@ class PaintingApp:
             self._draw_palette()
 
     def _draw_canvas(self) -> None:
-        pygame.draw.rect(
-            self.screen,
-            mix(self.theme.text, self.theme.background, 0.82),
-            self.canvas_rect.inflate(self.metrics.px(4), self.metrics.px(4)),
-            border_radius=self.metrics.radius,
-        )
+        pygame.draw.rect(self.screen, mix(self.theme.text, self.theme.background, 0.82), self.canvas_rect.inflate(self.metrics.px(4), self.metrics.px(4)), border_radius=self.metrics.radius)
         self.screen.blit(self.canvas, self.canvas_rect)
 
     def _draw_palette(self) -> None:
@@ -598,87 +507,44 @@ class PaintingApp:
             safe.width - self.metrics.margin * 2,
             self.palette_height,
         )
-        pygame.draw.rect(
-            self.screen, self.theme.panel, panel, border_radius=self.metrics.radius
-        )
+        pygame.draw.rect(self.screen, self.theme.panel, panel, border_radius=self.metrics.radius)
         for rect, index in self._color_buttons():
             pygame.draw.circle(self.screen, COLORS[index], rect.center, rect.width // 2)
             if index == self.selected_color and not self.eraser:
-                pygame.draw.circle(
-                    self.screen,
-                    self.theme.text,
-                    rect.center,
-                    rect.width // 2,
-                    max(3, self.metrics.px(4)),
-                )
+                pygame.draw.circle(self.screen, self.theme.text, rect.center, rect.width // 2, max(3, self.metrics.px(4)))
         for rect, index in self._size_buttons():
             if index == self.selected_size:
-                pygame.draw.circle(
-                    self.screen, self.theme.accent, rect.center, rect.width // 2
-                )
-            dot = (
-                self.theme.accent_text
-                if index == self.selected_size
-                else self.theme.text
-            )
-            pygame.draw.circle(
-                self.screen,
-                dot,
-                rect.center,
-                max(
-                    self.metrics.px(3),
-                    self.metrics.px(BRUSH_SIZES[index]) // 2,
-                ),
-            )
+                pygame.draw.circle(self.screen, self.theme.accent, rect.center, rect.width // 2)
+            dot = self.theme.accent_text if index == self.selected_size else self.theme.text
+            pygame.draw.circle(self.screen, dot, rect.center, max(self.metrics.px(3), self.metrics.px(BRUSH_SIZES[index]) // 2))
 
     def _draw_gallery(self) -> None:
         for rect, record in self._gallery_cards():
-            pygame.draw.rect(
-                self.screen,
-                self.theme.panel,
-                rect,
-                border_radius=self.metrics.radius,
-            )
+            pygame.draw.rect(self.screen, self.theme.panel, rect, border_radius=self.metrics.radius)
             inner = rect.inflate(-self.metrics.px(18), -self.metrics.px(18))
             thumb = self._thumbnail(record, inner.size)
             if thumb is None:
-                self.screen.blit(
-                    self.empty_icon, self.empty_icon.get_rect(center=rect.center)
-                )
+                self.screen.blit(self.empty_icon, self.empty_icon.get_rect(center=rect.center))
             else:
                 self.screen.blit(thumb, inner)
 
     @staticmethod
     def _encode_png(surface: pygame.Surface) -> bytes:
-        image = Image.frombytes(
-            "RGBA",
-            surface.get_size(),
-            pygame.image.tostring(surface, "RGBA"),
-        )
+        image = Image.frombytes("RGBA", surface.get_size(), pygame.image.tostring(surface, "RGBA"))
         buffer = io.BytesIO()
         image.save(buffer, format="PNG", optimize=False)
         return buffer.getvalue()
 
     @staticmethod
-    def _decode_png(
-        payload: bytes, target_size: tuple[int, int]
-    ) -> pygame.Surface:
+    def _decode_png(payload: bytes, target_size: tuple[int, int]) -> pygame.Surface:
         with Image.open(io.BytesIO(payload)) as image:
             converted = image.convert("RGB")
             if converted.size != target_size:
                 converted.thumbnail(target_size, Image.Resampling.BILINEAR)
                 background = Image.new("RGB", target_size, (255, 255, 255))
-                background.paste(
-                    converted,
-                    (
-                        (target_size[0] - converted.width) // 2,
-                        (target_size[1] - converted.height) // 2,
-                    ),
-                )
+                background.paste(converted, ((target_size[0] - converted.width) // 2, (target_size[1] - converted.height) // 2))
                 converted = background
-            return pygame.image.fromstring(
-                converted.tobytes(), converted.size, "RGB"
-            ).convert()
+            return pygame.image.fromstring(converted.tobytes(), converted.size, "RGB").convert()
 
 
 def main() -> int:
