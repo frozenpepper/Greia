@@ -28,7 +28,7 @@ def main() -> int:
     close_icon = pygame.image.load(str(get_icon_path("close_button", 64))).convert_alpha()
     cursor_icon = pygame.image.load(str(get_icon_path("yellow_star", 64))).convert_alpha()
     running = True
-    mark_activity_ready()
+    ready_published = False
 
     while running and not activity_stop_requested():
         for event in pygame.event.get():
@@ -51,6 +51,9 @@ def main() -> int:
             screen.blit(cursor_icon, cursor_icon.get_rect(center=pygame.mouse.get_pos()))
 
         pygame.display.flip()
+        if not ready_published:
+            mark_activity_ready()
+            ready_published = True
         clock.tick(30)
 
     pygame.quit()
