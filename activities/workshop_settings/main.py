@@ -23,8 +23,10 @@ from greia_platform.activity_api import (
     set_interface_size,
     set_theme_color,
 )
+from greia_platform.activity_viewport import ActivityViewport
 from greia_platform.customization import ColorSwatch, WallpaperCandidate
 from greia_platform.responsive_layout import AdaptiveGridPolicy, UiRect, Viewport
+from greia_platform.system_chrome import ActivitySystemChromeLayout
 from greia_platform.ui_preferences import InterfaceSize
 
 
@@ -33,6 +35,21 @@ class HitTarget:
     action: str
     value: object
     rect: pygame.Rect
+
+
+def settings_safe_ui_rect(width: int, height: int) -> UiRect:
+    """Return the child-settings region outside Greia-owned Home/Back chrome."""
+
+    chrome = ActivitySystemChromeLayout.for_surface(width, height)
+    protected = chrome.protected_region
+    viewport = ActivityViewport.for_size(
+        width,
+        height,
+        protected_regions=(
+            UiRect(protected.x, protected.y, protected.width, protected.height),
+        ),
+    )
+    return viewport.safe_ui_rect()
 
 
 class MyGreiaSettings:
@@ -201,26 +218,37 @@ class MyGreiaSettings:
     def _viewport(self) -> Viewport:
         return Viewport(*self.screen.get_size())
 
+    def _safe_ui_rect(self) -> UiRect:
+        return settings_safe_ui_rect(*self.screen.get_size())
+
     def _margin(self) -> int:
-        return self._viewport().bounded_px(18, minimum=10, maximum=28)
+        safe = self._safe_ui_rect()
+        return Viewport(safe.width, safe.height).bounded_px(
+            18, minimum=10, maximum=28
+        )
 
     def _top_bar_height(self) -> int:
-        return self._viewport().bounded_px(82, minimum=60, maximum=96)
+        safe = self._safe_ui_rect()
+        return Viewport(safe.width, safe.height).bounded_px(
+            82, minimum=60, maximum=96
+        )
 
     def _content_rect(self, *, footer: int = 0) -> pygame.Rect:
-        viewport = self._viewport()
+        safe = self._safe_ui_rect()
         margin = self._margin()
-        top = margin + self._top_bar_height() + margin
+        top = safe.y + margin + self._top_bar_height() + margin
         return pygame.Rect(
-            margin,
+            safe.x + margin,
             top,
-            max(1, viewport.width - margin * 2),
-            max(1, viewport.height - top - margin - footer),
+            max(1, safe.width - margin * 2),
+            max(1, safe.bottom - top - margin - footer),
         )
 
     def _draw(self) -> None:
         self.theme = get_theme()
         self.ui_preferences = get_ui_preferences()
+        # Background is decorative and may fill the complete Activity surface;
+        # all interactive settings geometry below is constrained to safe UI.
         self.screen.fill(self.theme.background)
         self.targets.clear()
         self._draw_mode_bar()
@@ -236,23 +264,36 @@ class MyGreiaSettings:
         self._draw_pointer()
 
     def _draw_mode_bar(self) -> None:
-        viewport = self._viewport()
+        safe = self._safe_ui_rect()
         margin = self._margin()
         bar_height = self._top_bar_height()
-        button = min(bar_height, max(46, (viewport.width - margin * 2) // 7))
-        gap = max(8, min(18, (viewport.width - button * len(self.MODES)) // (len(self.MODES) + 1)))
+        button = min(bar_height, max(46, (safe.width - margin * 2) // 7))
+        gap = max(
+            8,
+            min(
+                18,
+                (safe.width - button * len(self.MODES)) // (len(self.MODES) + 1),
+            ),
+        )
         total = button * len(self.MODES) + gap * (len(self.MODES) - 1)
-        x = max(margin, (viewport.width - total) // 2)
-        y = margin
+        x = safe.x + max(margin, (safe.width - total) // 2)
+        y = safe.y + margin
         pointer = pygame.mouse.get_pos()
         for mode in self.MODES:
             rect = pygame.Rect(x, y, button, button)
             selected = mode == self.mode
             hovered = pygame.mouse.get_focused() and rect.collidepoint(pointer)
-            pygame.draw.rect(self.screen, self.theme.panel, rect, border_radius=max(14, button // 4))
             pygame.draw.rect(
                 self.screen,
-                self.theme.accent if selected or hovered else _mix(self.theme.text, self.theme.panel, 0.72),
+                self.theme.panel,
+                rect,
+                border_radius=max(14, button // 4),
+            )
+            pygame.draw.rect(
+                self.screen,
+                self.theme.accent
+                if selected or hovered
+                else _mix(self.theme.text, self.theme.panel, 0.72),
                 rect,
                 width=6 if selected else 3,
                 border_radius=max(14, button // 4),
@@ -264,14 +305,29 @@ class MyGreiaSettings:
     def _draw_colors(self) -> None:
         area = self._content_rect()
         rows = (
-            ("background", self.palette.backgrounds, self.theme.preferences.background, "palette"),
-            ("accent", self.palette.accents, self.theme.preferences.accent, "yellow_star"),
+            (
+                "background",
+                self.palette.backgrounds,
+                self.theme.preferences.background,
+                "palette",
+            ),
+            (
+                "accent",
+                self.palette.accents,
+                self.theme.preferences.accent,
+                "yellow_star",
+            ),
             ("text", self.palette.texts, self.theme.preferences.text, "abc_blocks"),
         )
         row_height = max(1, area.height // len(rows))
         label_reserve = min(86, max(54, area.width // 10))
         for row_index, (kind, swatches, selected_id, icon_id) in enumerate(rows):
-            row = pygame.Rect(area.left, area.top + row_index * row_height, area.width, row_height)
+            row = pygame.Rect(
+                area.left,
+                area.top + row_index * row_height,
+                area.width,
+                row_height,
+            )
             icon_size = min(64, max(36, row.height - 24), label_reserve - 12)
             self._blit_icon(
                 icon_id,
@@ -293,21 +349,45 @@ class MyGreiaSettings:
                     size,
                     size,
                 )
-                self._draw_swatch(rect, swatch, kind, swatch.swatch_id == selected_id)
-                self.targets.append(HitTarget("color", (kind, swatch.swatch_id), rect.inflate(6, 6)))
+                self._draw_swatch(
+                    rect, swatch, kind, swatch.swatch_id == selected_id
+                )
+                self.targets.append(
+                    HitTarget("color", (kind, swatch.swatch_id), rect.inflate(6, 6))
+                )
 
-    def _draw_swatch(self, rect: pygame.Rect, swatch: ColorSwatch, kind: str, selected: bool) -> None:
-        pygame.draw.rect(self.screen, swatch.color, rect, border_radius=max(10, rect.width // 4))
+    def _draw_swatch(
+        self,
+        rect: pygame.Rect,
+        swatch: ColorSwatch,
+        kind: str,
+        selected: bool,
+    ) -> None:
         pygame.draw.rect(
             self.screen,
-            self.theme.accent if selected else _mix(self.theme.text, self.theme.panel, 0.6),
+            swatch.color,
+            rect,
+            border_radius=max(10, rect.width // 4),
+        )
+        pygame.draw.rect(
+            self.screen,
+            self.theme.accent
+            if selected
+            else _mix(self.theme.text, self.theme.panel, 0.6),
             rect,
             width=6 if selected else 2,
             border_radius=max(10, rect.width // 4),
         )
         if kind == "text":
-            panel = rect.inflate(-max(8, rect.width // 4), -max(8, rect.height // 3))
-            pygame.draw.rect(self.screen, self.theme.panel, panel, border_radius=max(5, panel.height // 4))
+            panel = rect.inflate(
+                -max(8, rect.width // 4), -max(8, rect.height // 3)
+            )
+            pygame.draw.rect(
+                self.screen,
+                self.theme.panel,
+                panel,
+                border_radius=max(5, panel.height // 4),
+            )
             pygame.draw.line(
                 self.screen,
                 swatch.color,
@@ -318,7 +398,14 @@ class MyGreiaSettings:
         if selected:
             self._selection_check(rect)
 
-    def _grid_layout(self, area: pygame.Rect, item_count: int, *, rows: int = 3, columns: int = 6):
+    def _grid_layout(
+        self,
+        area: pygame.Rect,
+        item_count: int,
+        *,
+        rows: int = 3,
+        columns: int = 6,
+    ):
         policy = AdaptiveGridPolicy(
             minimum_item_px=72,
             preferred_item_px=132,
@@ -328,17 +415,23 @@ class MyGreiaSettings:
             maximum_columns=columns,
             maximum_rows=rows,
         )
-        return policy.layout(UiRect(area.x, area.y, area.width, area.height), item_count)
+        return policy.layout(
+            UiRect(area.x, area.y, area.width, area.height), item_count
+        )
 
     def _draw_sizes(self) -> None:
         area = self._content_rect()
-        layout = self._grid_layout(area, len(tuple(InterfaceSize)), rows=1, columns=3)
+        layout = self._grid_layout(
+            area, len(tuple(InterfaceSize)), rows=1, columns=3
+        )
         samples = {
             InterfaceSize.COMPACT: 0.50,
             InterfaceSize.NORMAL: 0.66,
             InterfaceSize.LARGE: 0.82,
         }
         for index, size in enumerate(InterfaceSize):
+            if index >= layout.capacity:
+                break
             cell = layout.cell(index)
             rect = pygame.Rect(cell.x, cell.y, cell.width, cell.height)
             selected = size == self.ui_preferences.interface_size
@@ -354,7 +447,9 @@ class MyGreiaSettings:
 
     def _draw_avatars(self) -> None:
         area = self._content_rect()
-        layout = self._grid_layout(area, len(self.avatar_choices), rows=3, columns=5)
+        layout = self._grid_layout(
+            area, len(self.avatar_choices), rows=3, columns=5
+        )
         selected_avatar = str(self.profile.get("avatar_id", ""))
         for index in range(min(layout.capacity, len(self.avatar_choices))):
             avatar_id = self.avatar_choices[index]
@@ -377,7 +472,10 @@ class MyGreiaSettings:
             self.targets.append(HitTarget("avatar", avatar_id, rect))
 
     def _wallpaper_geometry(self) -> tuple[pygame.Rect, int, int]:
-        footer = self._viewport().bounded_px(64, minimum=48, maximum=72)
+        safe = self._safe_ui_rect()
+        footer = Viewport(safe.width, safe.height).bounded_px(
+            64, minimum=48, maximum=72
+        )
         area = self._content_rect(footer=footer)
         probe = self._grid_layout(area, 8, rows=2, columns=4)
         capacity = max(1, probe.capacity)
@@ -386,9 +484,13 @@ class MyGreiaSettings:
 
     def _maximum_wallpaper_page(self) -> int:
         _, _, page_capacity = self._wallpaper_geometry()
-        return max(0, (len(self.candidates) + page_capacity - 1) // page_capacity - 1)
+        return max(
+            0,
+            (len(self.candidates) + page_capacity - 1) // page_capacity - 1,
+        )
 
     def _draw_wallpapers(self) -> None:
+        safe = self._safe_ui_rect()
         area, footer, page_capacity = self._wallpaper_geometry()
         start = self.wallpaper_page * page_capacity
         items: list[WallpaperCandidate | None] = [None]
@@ -414,14 +516,24 @@ class MyGreiaSettings:
 
         maximum = self._maximum_wallpaper_page()
         if maximum > 0:
-            nav_y = self.screen.get_height() - self._margin() - footer // 2
+            nav_y = safe.bottom - self._margin() - footer // 2
             nav_size = min(54, footer - 6)
             if self.wallpaper_page > 0:
-                previous = pygame.Rect(area.centerx - nav_size - 12, nav_y - nav_size // 2, nav_size, nav_size)
+                previous = pygame.Rect(
+                    area.centerx - nav_size - 12,
+                    nav_y - nav_size // 2,
+                    nav_size,
+                    nav_size,
+                )
                 self._draw_arrow(previous, left=True)
                 self.targets.append(HitTarget("wallpaper_page", -1, previous))
             if self.wallpaper_page < maximum:
-                next_rect = pygame.Rect(area.centerx + 12, nav_y - nav_size // 2, nav_size, nav_size)
+                next_rect = pygame.Rect(
+                    area.centerx + 12,
+                    nav_y - nav_size // 2,
+                    nav_size,
+                    nav_size,
+                )
                 self._draw_arrow(next_rect, left=False)
                 self.targets.append(HitTarget("wallpaper_page", 1, next_rect))
 
@@ -434,20 +546,39 @@ class MyGreiaSettings:
         self._draw_choice_panel(rect, selected)
         inner = rect.inflate(-10, -10)
         if candidate is None:
-            pygame.draw.rect(self.screen, self.theme.background, inner, border_radius=max(10, inner.width // 8))
+            pygame.draw.rect(
+                self.screen,
+                self.theme.background,
+                inner,
+                border_radius=max(10, inner.width // 8),
+            )
             inset = max(12, min(inner.width, inner.height) // 4)
             self._blit_icon("x_mark", inner.inflate(-inset, -inset))
         else:
             thumbnail = self._thumbnail(candidate, inner.size)
             if thumbnail is None:
-                pygame.draw.rect(self.screen, _mix(self.theme.text, self.theme.panel, 0.84), inner, border_radius=12)
-                self._blit_icon("notebook", inner.inflate(-inner.width // 3, -inner.height // 3))
+                pygame.draw.rect(
+                    self.screen,
+                    _mix(self.theme.text, self.theme.panel, 0.84),
+                    inner,
+                    border_radius=12,
+                )
+                self._blit_icon(
+                    "notebook",
+                    inner.inflate(-inner.width // 3, -inner.height // 3),
+                )
             else:
-                self.screen.blit(thumbnail, thumbnail.get_rect(center=inner.center))
+                self.screen.blit(
+                    thumbnail, thumbnail.get_rect(center=inner.center)
+                )
         if selected:
             self._selection_check(rect)
 
-    def _thumbnail(self, candidate: WallpaperCandidate, size: tuple[int, int]) -> pygame.Surface | None:
+    def _thumbnail(
+        self,
+        candidate: WallpaperCandidate,
+        size: tuple[int, int],
+    ) -> pygame.Surface | None:
         width, height = max(1, size[0]), max(1, size[1])
         try:
             mtime = candidate.path.stat().st_mtime_ns
@@ -468,17 +599,31 @@ class MyGreiaSettings:
                     raise ValueError("too many pixels")
                 image = ImageOps.exif_transpose(opened).convert("RGB")
                 image.thumbnail((width, height), Image.Resampling.LANCZOS)
-                surface = pygame.image.fromstring(image.tobytes(), image.size, image.mode).convert()
-        except (OSError, ValueError, UnidentifiedImageError, Image.DecompressionBombError):
+                surface = pygame.image.fromstring(
+                    image.tobytes(), image.size, image.mode
+                ).convert()
+        except (
+            OSError,
+            ValueError,
+            UnidentifiedImageError,
+            Image.DecompressionBombError,
+        ):
             surface = None
         self.thumbnail_cache[key] = surface
         return surface
 
     def _draw_choice_panel(self, rect: pygame.Rect, selected: bool) -> None:
-        pygame.draw.rect(self.screen, self.theme.panel, rect, border_radius=max(16, min(rect.width, rect.height) // 6))
         pygame.draw.rect(
             self.screen,
-            self.theme.accent if selected else _mix(self.theme.text, self.theme.panel, 0.70),
+            self.theme.panel,
+            rect,
+            border_radius=max(16, min(rect.width, rect.height) // 6),
+        )
+        pygame.draw.rect(
+            self.screen,
+            self.theme.accent
+            if selected
+            else _mix(self.theme.text, self.theme.panel, 0.70),
             rect,
             width=6 if selected else 3,
             border_radius=max(16, min(rect.width, rect.height) // 6),
@@ -487,7 +632,10 @@ class MyGreiaSettings:
     def _selection_check(self, rect: pygame.Rect) -> None:
         size = max(22, min(38, min(rect.width, rect.height) // 3))
         icon = pygame.transform.smoothscale(self.icons["check"], (size, size))
-        self.screen.blit(icon, icon.get_rect(bottomright=(rect.right - 4, rect.bottom - 4)))
+        self.screen.blit(
+            icon,
+            icon.get_rect(bottomright=(rect.right - 4, rect.bottom - 4)),
+        )
 
     def _draw_arrow(self, rect: pygame.Rect, *, left: bool) -> None:
         self._draw_choice_panel(rect, False)
@@ -509,27 +657,35 @@ class MyGreiaSettings:
     def _draw_feedback(self) -> None:
         if time.monotonic() >= self.feedback_until:
             return
-        size = self._viewport().bounded_px(52, minimum=38, maximum=62)
-        icon_id = "x_mark" if self.feedback_error else "check"
+        safe = self._safe_ui_rect()
+        size = Viewport(safe.width, safe.height).bounded_px(
+            52, minimum=38, maximum=62
+        )
         rect = pygame.Rect(
-            self.screen.get_width() - size - self._margin(),
-            self.screen.get_height() - size - self._margin(),
+            safe.right - size - self._margin(),
+            safe.bottom - size - self._margin(),
             size,
             size,
         )
-        self._blit_icon(icon_id, rect)
+        self._blit_icon("x_mark" if self.feedback_error else "check", rect)
 
     def _draw_pointer(self) -> None:
         if not pygame.mouse.get_focused():
             return
         size = self._viewport().bounded_px(44, minimum=32, maximum=54)
-        icon = pygame.transform.smoothscale(self.icons["yellow_star"], (size, size))
+        icon = pygame.transform.smoothscale(
+            self.icons["yellow_star"], (size, size)
+        )
         self.screen.blit(icon, icon.get_rect(center=pygame.mouse.get_pos()))
 
     def _blit_icon(self, icon_id: str, rect: pygame.Rect) -> None:
         source = self.icons[icon_id]
         size = (max(1, rect.width), max(1, rect.height))
-        image = source if source.get_size() == size else pygame.transform.smoothscale(source, size)
+        image = (
+            source
+            if source.get_size() == size
+            else pygame.transform.smoothscale(source, size)
+        )
         self.screen.blit(image, image.get_rect(center=rect.center))
 
 
