@@ -5,7 +5,7 @@
 **Repository:** `frozenpepper/Greia` (private)  
 **Canonical/default/development branch:** `main`  
 **Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**  
-**Source head reviewed immediately before this handover refresh:** `b81bf08d21198457b3bc0660d2f560b79fc10eba`  
+**Source head reviewed immediately before this handover refresh:** `85f60f9308600a6b1bc69f7349c488bec1d4a755`  
 **External Parent HTML revision currently pinned by Greia:** `frozenpepper/Greia-Parent-App-Html@e30bcbcab393354b8ffb63d5829c08711d8023bd`
 
 This file owns the **current** implementation/evidence boundary. Historical hardware detail remains in the dated reviews and installation issue log; exact APIs/limits remain source-owned.
@@ -46,20 +46,20 @@ Parent-App npm test at pinned e30bcbc: 10 PASS
 
 The 663-PASS result is historical evidence for the earlier source boundary. The
 679-PASS result is executed evidence for **exactly `edda4e6`**, not for later
-commits. After that run, source changed again:
+commits. After that run, source changed again in several coherent UI/lifecycle
+tranches:
 
-- `3c0ee1517c6ba5ee8c1cbbde24f81bc39260e5b3` — My Greia safe-area implementation;
-- `0e3eea018fc0299cd7511aa6e3155149cc9974c2` — safe-area regression;
-- `3bce9ccd8de2da85be96551bf1d4edd2c3f40bdb` — My Greia publishes READY only after first frame;
-- `522c33e8dc814fbdbc678981e6b089b0a2c8e14a` — Shape Garden same readiness correction;
-- `880c3790bc05b6796a209fb6ea59744005a93f3c` — Painting same readiness correction;
-- `acbf0a425fe0be4dad976144727b2ac9a9335af4` — Writing same readiness correction;
-- `c22c4812bed4af6cc48c4641731e9ce742a08844` — regression requires display presentation before READY in the same launch loop.
+- My Greia safe-area implementation/regression (`3c0ee15`, `0e3eea0`);
+- first-party post-first-frame READY corrections + structural regression (`3bce9cc`, `522c33e`, `880c379`, `acbf0a4`, `c22c481`);
+- Shape Garden logical-canvas/system-navigation migration and lightweight-presentation regression (`aaa24a1`, `a650357`, `e7c77d3`, `1768738`);
+- shared Pygame Activity-safe geometry derived from system chrome plus Painting/Writing migration (`8e586a8`, `11c434f`, `f1b614d`, `ff54863`, `bdd67b9`);
+- interface-size × resolution safe-geometry regression (`85f60f9`);
+- current operator/authoring/authority documentation (`b01613f`, `bf355fe`, `31c206e`).
 
 Those later source/test changes are **committed but not yet covered by a fresh
 owner-controlled full PASS**. Do not describe 679 PASS as current-head evidence.
 
-A rebuilt installer-image and fresh physical Acer acceptance remain required;
+A rebuilt installer image and fresh physical Acer acceptance remain required;
 no rebuilt-image or fresh physical Acer PASS is claimed in this handover.
 
 ---
@@ -184,7 +184,7 @@ docs/design/GREIA_LAUNCHER_INTERACTION_AND_ACTIVITY_CATALOGUE.md
 
 ---
 
-# 4. Platform-wide responsive UI contract
+# 4. Platform-wide responsive UI and system-safe Activity geometry
 
 The owner explicitly rejected per-resolution/manual designer layouts.
 
@@ -204,21 +204,41 @@ Shared renderer-neutral source:
 
 ```text
 src/greia_platform/responsive_layout.py
+src/greia_platform/activity_viewport.py
 ```
 
-Required behavior:
+Pygame Activity controls now also have one shared system-safe layer in:
+
+```text
+src/greia_platform/activity_ui.py
+```
+
+`ChildUiMetrics` keeps its old full-surface `toolbar_button()` for non-Activity Greia surfaces, but Activities should use:
+
+```text
+activity_safe_rect()
+activity_toolbar_button()
+activity_content_rect()
+```
+
+Those helpers derive their geometry from `ActivitySystemChromeLayout` + `ActivityViewport.safe_ui_rect()`, so essential controls/content and trusted Home/Back share one authority rather than duplicating guessed insets.
+
+Painting and Writing have been migrated to these helpers and no longer draw Activity-owned close buttons. Their Gallery/Undo/New/Eraser controls and editor/palette regions now live in the platform-safe Activity area.
+
+The geometry regression covers `compact`, `normal` and `large` child interface-size preferences across 640x480, 800x600, 1024x600, 1366x768, 1920x1080, 720x1280 and 4K representative surfaces. This is committed test source, not executed current-head evidence.
+
+Required behavior remains:
 
 - semantic regions rather than screen-model coordinates;
 - reflow before shrink;
 - collections change rows/columns and scroll/page automatically;
 - bounded growth on large displays;
 - no essential off-screen controls;
+- no Activity control in trusted Home/Back protected geometry;
 - hit geometry derives from the same layout result as visible geometry;
 - aspect ratio is preserved for images/art;
-- runtime resize invalidates size-dependent geometry/caches;
+- runtime resize invalidates size-dependent geometry/caches where the surface supports resize;
 - generated/random viewport tests supplement the representative resolution matrix.
-
-The responsive/layout/localization/My-Greia source present at `edda4e6` was exercised by the 679-PASS run. Later My Greia safe-area and first-frame lifecycle changes remain outside that executed boundary.
 
 ---
 
@@ -240,9 +260,26 @@ Renderer-neutral owner:
 src/greia_platform/activity_viewport.py
 ```
 
-Pygame convenience helpers sit above it so simple Activity authors do not manually apply transform math to every point. Drawing and pointer/touch input use the same reversible transform. Platform Home/Back safe-area authority remains outside the Activity.
+Pygame convenience owner:
 
-The authoring principle is: **design once at the reference logical scale or semantic world scale; Greia adapts to the physical display.** A side-scroller may deliberately reveal more world on a wider screen; a fixed puzzle may remain geometrically identical with safe bars; an editor may use the extra space as additional content area.
+```text
+src/greia_platform/pygame_canvas.py
+```
+
+### Shape Garden migration
+
+Shape Garden is now a concrete first-party proof of the simple reference-canvas path rather than a known raw-physical-coordinate exception:
+
+- stable 1024x600 **logical** scene coordinates;
+- `PygameReferenceCanvas` presentation;
+- physical pointer positions mapped back through `canvas.pointer()`;
+- pointer input inside platform-protected system chrome rejected before gameplay mapping;
+- no Activity-owned close button;
+- explicit `pointer` input profile;
+- bounded rendering (`shapes[-120:]`);
+- normal whole-frame scale rather than `smoothscale` for this flat procedural scene, preserving the transform while avoiding unnecessary CPU on low-resource hardware.
+
+The Activity still exits on the authoritative `activity_stop_requested()` lifecycle; ESC remains a development/keyboard convenience, not system-navigation authority.
 
 ### First-frame readiness contract
 
@@ -251,6 +288,12 @@ A source review found all four bundled Python Activities were signaling `mark_ac
 The bundled Activities now publish READY once, only after their first rendered frame has been presented. `tests/test_first_party_activity_readiness.py` discovers the first-party Python entrypoints and requires the frame presentation and READY publication to occur in the same launch loop, with presentation first.
 
 This is a lifecycle semantic, not a Pygame timing optimization: **READY means a usable child-facing frame exists.** Initialization alone is not readiness.
+
+### Explicit remaining Painting document-model debt
+
+Painting's **controls/editor viewport** are now responsive and system-safe, but its durable PNG document surface is still sized from the current editor viewport. That pre-existing behavior can resample a painting when opened on a differently sized editor and then saved. It does not satisfy the longer-term resolution-neutral document-content requirement.
+
+Do not hide this by calling Painting fully resolution-neutral. Migrate the painting document to a stable logical/document coordinate space in a separate focused tranche with explicit save-compatibility tests rather than folding an implicit data migration into unrelated UI work.
 
 ---
 
@@ -328,11 +371,11 @@ It does **not** expose Wi-Fi, Parent password, child-password administration, SS
 
 The target child may not read, so the Activity is visual-first: large icon tabs, actual color swatches, wallpaper previews, three visually different size samples, avatar images and visual check/error feedback. There is no Activity-owned fake Close/Home/Back button; universal system navigation remains platform-owned.
 
-All essential My Greia controls now derive from `ActivityViewport.safe_ui_rect()` around the platform-owned `ActivitySystemChromeLayout` protected region. Background decoration may still fill the complete Activity surface, but tabs/settings/hit targets stay outside Home/Back authority at arbitrary supported resolutions. A regression covers 640x480, 800x600, 1024x600, 1366x768, 1920x1080, 720x1280 and 4K geometry.
+All essential My Greia controls derive from `ActivityViewport.safe_ui_rect()` around the platform-owned `ActivitySystemChromeLayout` protected region. Background decoration may still fill the complete Activity surface, but tabs/settings/hit targets stay outside Home/Back authority at arbitrary supported resolutions.
 
 ## Semantic interface-size preference
 
-New renderer-neutral owner:
+Renderer-neutral owner:
 
 ```text
 src/greia_platform/ui_preferences.py
@@ -348,7 +391,7 @@ large
 
 The preference is atomically persisted per profile under customization state. Responsive layout remains authoritative; `large` is never permission to clip content or create a separate fixed layout.
 
-`src/greia_platform/activity_ui.py::ChildUiMetrics` composes this semantic preference with live viewport scaling, so first-party Pygame Activities already using shared metrics inherit it automatically without `if large:` layout branches. Painting and Writing currently use that shared metrics path. Shape Garden remains a known legacy raw-coordinate Activity and should be migrated separately through the shared canvas/world helpers rather than being falsely described as responsive merely because the preference exists.
+`src/greia_platform/activity_ui.py::ChildUiMetrics` composes this semantic preference with live viewport scaling. Painting and Writing now consume both the semantic size and the platform-safe Activity geometry from that shared layer. Shape Garden consumes the semantic metrics for its child cursor and uses the reference-canvas path for its scene.
 
 ## Read-only visual context for ordinary Activities
 
@@ -383,7 +426,7 @@ Physical eject/removal while the wallpaper page is open is still required accept
 
 ## Current My Greia evidence
 
-The My Greia/UI-preference/theme-snapshot/child-shell source present at `edda4e6` was executed in the 679-PASS full source gate and the 131-PASS focused UI/platform gate. The later safe-area implementation/regression and post-first-frame readiness correction are committed but **not yet re-executed** in an owner-controlled run. Physical 1024x600 acceptance is also still open.
+The My Greia/UI-preference/theme-snapshot/child-shell source present at `edda4e6` was executed in the 679-PASS full source gate and the 131-PASS focused UI/platform gate. The later safe-area/readiness/shared-safe-geometry work is committed but **not yet re-executed** in an owner-controlled run. Physical 1024x600 acceptance is also still open.
 
 ---
 
@@ -436,7 +479,7 @@ The canonical test-session entrypoint is:
 docs/testing/LOCAL_AGENT_START_HERE.md
 ```
 
-Its current UI/platform focused gate includes installation regressions, responsive layout, Activity viewport, My Greia, read-only visual context, first-party first-frame readiness, package/Parent and localization/language policy tests. After repairing any real failures, the agent must run the other full-session gates and finally:
+Its current UI/platform focused gate includes installation regressions, responsive layout, Activity viewport, semantic-size × viewport safe UI, My Greia, read-only visual context, first-party first-frame readiness, Shape Garden canvas/navigation, Painting/Writing safe UI, package/Parent and localization/language policy tests. After repairing any real failures, the agent must run the other full-session gates and finally:
 
 ```bash
 make verify
@@ -459,28 +502,30 @@ After current-source tests pass:
 5. confirm installed developer/test SSH `greia / greia` after reboot and root SSH rejection;
 6. exercise the actual Parent HTML connection, main Parent-password change, child password set/replace/clear and owner-enabled Activity install;
 7. inspect launcher names/categories/category Back/icon/scroll/hover/launch effects at 1024x600;
-8. run the responsive matrix in an owner-controlled windowed/VM environment;
-9. exercise My Greia colors, wallpaper, semantic size and avatar across at least two profiles;
+8. run the responsive matrix in an owner-controlled windowed/VM environment for compact/normal/large;
+9. exercise My Greia colors/wallpaper/semantic size/avatar across at least two profiles;
 10. physically eject removable media while My Greia wallpaper browsing is open;
 11. prove My Greia controls never overlap platform Home/Back at the physical/reference target;
 12. prove Writing/Painting receive read-only child visual context and no customization path;
-13. prove first-party Activities do not signal READY before their first visible frame;
-14. measure idle/interaction resource behavior on the low-resource Acer floor;
-15. where practical, repeat basic install/UI acceptance on another x86 target/VM so one Acer does not become a hidden platform contract.
+13. prove Painting/Writing essential controls/content stay outside trusted Home/Back chrome;
+14. prove Shape Garden drawing/input mapping works at 1024x600 and at least one different aspect ratio, with protected system-chrome clicks not entering gameplay;
+15. prove first-party Activities do not signal READY before their first visible frame;
+16. measure idle/interaction resource behavior on the low-resource Acer floor;
+17. where practical, repeat basic install/UI acceptance on another x86 target/VM so one Acer does not become a hidden platform contract.
 
 ---
 
 # 11. Remaining blockers / deliberately incomplete work
 
 - **R7 remains the primary blocking platform phase.** Xorg/xinit is provisional compatibility, not final selection.
-- My Greia safe-area and first-party readiness source/test changes after `edda4e6` need fresh owner-controlled execution; do not promote the 679-PASS result across those source changes.
+- All safe-area/readiness/Shape-Garden/shared-safe-UI source/test changes after `edda4e6` need fresh owner-controlled execution; do not promote the 679-PASS result across those source changes.
+- Painting's durable document surface is still viewport-sized and requires a separate resolution-neutral document/save migration with compatibility tests.
 - Full Activity language integration is not complete: profile-language persistence, localized catalogue title resolution, dynamic flag rendering/assets and platform pre-launch chooser still need end-to-end wiring/testing.
 - Parent secure pairing/encrypted transport remains open.
 - General release Activity upload remains disabled until Parent transport/security and R10 lifecycle policy justify it.
 - R10 update/remove/rollback/signature/revocation/save-migration remains open.
 - Activity/category typography and all new customization choices need actual 1024x600 readability/performance acceptance.
 - Controller/touch behavior for launcher categories, system navigation and My Greia still needs physical acceptance.
-- Shape Garden remains a concrete example of legacy raw physical-coordinate/UI-owned-navigation code; migrate it through shared canvas/world/system-navigation contracts as a separate focused tranche rather than mixing it into unrelated lifecycle fixes.
 - Other later remediation phases remain governed by the active architecture-remediation plan.
 
 ---
@@ -492,15 +537,20 @@ Installation/hardware:
   docs/INSTALLATION_ISSUES_LOG.md
   docs/reviews/2026-08-18_REAL_HARDWARE_INSTALLATION_AND_LAUNCHER_REVIEW.md
 
-Responsive UI:
+Responsive / safe Activity UI:
   docs/adr/0026-resolution-adaptive-ui-layout.md
   docs/product/RESPONSIVE_UI_AND_DISPLAY_LAYOUT.md
   src/greia_platform/responsive_layout.py
+  src/greia_platform/activity_ui.py
+  tests/test_activity_ui.py
+  tests/test_core_activity_system_safe_ui.py
   docs/testing/2026-08-18_RESPONSIVE_UI_ACCEPTANCE.md
 
 Activity canvas/world/lifecycle:
   src/greia_platform/activity_viewport.py
   src/greia_platform/pygame_canvas.py
+  activities/shape_garden/
+  tests/test_shape_garden_contract.py
   tests/test_first_party_activity_readiness.py
   skills/greia-activity-authoring/SKILL.md
 
