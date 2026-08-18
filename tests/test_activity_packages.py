@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import os
 import tempfile
+import threading
+import time
 import unittest
 import zipfile
 from collections.abc import Callable
@@ -69,6 +71,50 @@ class ActivityPackageServiceTests(unittest.TestCase):
 
             with self.assertRaisesRegex(ActivityPackageError, "already installed"):
                 service.install_archive(archive)
+
+    def test_install_transactions_are_serialized_per_package_authority(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            service = ActivityPackageService(
+                state_root=root / "packages",
+                runtime_catalogue=RUNTIME,
+                built_in_root=root / "empty-builtins",
+            )
+            start = threading.Barrier(3)
+            counter_lock = threading.Lock()
+            active_calls = 0
+            peak_calls = 0
+            results: list[object] = []
+
+            def synthetic_install(_archive: Path) -> object:
+                nonlocal active_calls, peak_calls
+                with counter_lock:
+                    active_calls += 1
+                    peak_calls = max(peak_calls, active_calls)
+                time.sleep(0.05)
+                with counter_lock:
+                    active_calls -= 1
+                return object()
+
+            def worker() -> None:
+                start.wait()
+                results.append(service.install_archive(root / "unused.greiaactivity"))
+
+            with mock.patch.object(
+                service,
+                "_install_archive_serialized",
+                side_effect=synthetic_install,
+            ):
+                threads = [threading.Thread(target=worker) for _ in range(2)]
+                for thread in threads:
+                    thread.start()
+                start.wait()
+                for thread in threads:
+                    thread.join(timeout=2)
+                    self.assertFalse(thread.is_alive())
+
+            self.assertEqual(len(results), 2)
+            self.assertEqual(peak_calls, 1)
 
     def test_receipt_failure_cannot_publish_executable_activity(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
