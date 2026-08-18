@@ -104,8 +104,19 @@ class GreiaLauncherPresentation(LauncherApplication):
         self.registry = registry
         self._activities = discovered
         self._activity_discovery_token = registry.discovery_token()
+        self._rebuild_runtime_services()
+
+    def _rebuild_runtime_services(self) -> None:
+        """Rebind runtime/permission/history authority to the validated registry set.
+
+        Parent installation can change the registry while the launcher is
+        already running. Merely redrawing the new manifest would be unsafe: the
+        runtime manager and permission/history services must be rebuilt from the
+        exact same validated Activity set before that new tile becomes launchable.
+        """
+
         development_hal = None if self._installed_root() else _development_hal()
-        self.runtime_services = build_launcher_runtime_services(
+        runtime_services = build_launcher_runtime_services(
             self.runtime,
             self._activities,
             runtime_policy_path=self.paths.runtime_catalogue,
@@ -118,12 +129,16 @@ class GreiaLauncherPresentation(LauncherApplication):
         display_coordinator = (
             provisional_installed_display_session() if self._installed_root() else None
         )
-        self.supervisor = ActivitySupervisor(
-            runtime_manager=self.runtime_services.runtime_manager,
-            storage_service=self.runtime_services.storage_service,
-            history_service=self.runtime_services.history_service,
+        supervisor = ActivitySupervisor(
+            runtime_manager=runtime_services.runtime_manager,
+            storage_service=runtime_services.storage_service,
+            history_service=runtime_services.history_service,
             display_coordinator=display_coordinator,
         )
+        # Publish the pair only after both objects are completely built. The
+        # launch path therefore never observes a supervisor/runtime mismatch.
+        self.runtime_services = runtime_services
+        self.supervisor = supervisor
 
     def run(self) -> int:
         import pygame
@@ -289,8 +304,18 @@ class GreiaLauncherPresentation(LauncherApplication):
         except ActivityValidationError:
             self._catalogue_error = True
             return
-        self._catalogue_error = False
+        # Runtime authority must be rebuilt before the newly discovered manifest
+        # is published into the child-facing catalogue. If that construction
+        # fails, the last known-good service/catalogue pair remains authoritative.
+        previous_activities = self._activities
         self._activities = discovered
+        try:
+            self._rebuild_runtime_services()
+        except (ActivityValidationError, OSError, ValueError):
+            self._activities = previous_activities
+            self._catalogue_error = True
+            return
+        self._catalogue_error = False
         self._catalogue = ActivityCatalogue.from_activities(discovered)
         self._category_id = self._catalogue.nearest_category(self._category_id)
         presented = self._presented_activities
