@@ -6,10 +6,13 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
+from greia_launcher.child_shell import GreiaChildShell, ProfileVisualActivitySupervisor
+from greia_launcher.runtime_adapter import PythonRuntimeAdapter
 from greia_platform.activities import ActivityManifest
+from greia_simulator.child_shell import GreiaSimulatorChildShell
 from greia_simulator.device import DEFAULT_CAPABILITIES, SimulatedDeviceProfile, parse_viewport
 from greia_simulator.python_activity import normalize_display_request
-from greia_simulator.runtime import SimulatorPythonRuntimeAdapter
+from greia_simulator.runtime import SimulatorActivitySupervisor, SimulatorPythonRuntimeAdapter
 from greia_simulator.workspace import SimulatorWorkspace
 
 
@@ -87,6 +90,27 @@ class GreiaSimulatorRuntimeTests(unittest.TestCase):
             self.assertEqual(command.command[-1], str(entrypoint))
             self.assertEqual(command.cwd, root)
 
+    def test_simulator_extends_canonical_runtime_and_shell_seams(self) -> None:
+        self.assertTrue(issubclass(SimulatorPythonRuntimeAdapter, PythonRuntimeAdapter))
+        self.assertTrue(
+            issubclass(SimulatorActivitySupervisor, ProfileVisualActivitySupervisor)
+        )
+        self.assertTrue(issubclass(GreiaSimulatorChildShell, GreiaChildShell))
+
+    def test_first_party_activities_have_no_simulator_specific_behavior(self) -> None:
+        repo = Path(__file__).resolve().parents[1]
+        violations: list[str] = []
+        for path in sorted((repo / "activities").glob("*/**/*.py")):
+            source = path.read_text(encoding="utf-8")
+            if "GREIA_SIMULATOR" in source or "greia_simulator" in source:
+                violations.append(str(path.relative_to(repo)))
+        self.assertEqual(
+            violations,
+            [],
+            "Activity source must not branch/import on simulator identity: "
+            + ", ".join(violations),
+        )
+
 
 class GreiaSimulatorWorkspaceTests(unittest.TestCase):
     def test_environment_uses_isolated_state_and_real_repo_root(self) -> None:
@@ -116,6 +140,11 @@ class GreiaSimulatorWorkspaceTests(unittest.TestCase):
             with mock.patch.dict(os.environ, environment, clear=False):
                 loaded = SimulatedDeviceProfile.from_environment()
             self.assertEqual(loaded, device)
+
+    def test_workspace_must_live_outside_source_checkout(self) -> None:
+        repo = Path(__file__).resolve().parents[1]
+        with self.assertRaises(ValueError):
+            SimulatorWorkspace(repo, repo / ".simulator-state")
 
 
 if __name__ == "__main__":
