@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import os
 from pathlib import Path
 
 import pygame
 
 from .ui_core import BoundedCache
+from .ui_preferences import InterfaceSize
 
 REFERENCE_WIDTH = 1024
 REFERENCE_HEIGHT = 600
@@ -14,11 +16,14 @@ _ICON_CACHE: BoundedCache[tuple[str, int], pygame.Surface] = BoundedCache(64)
 
 @dataclass(frozen=True, slots=True)
 class ChildUiMetrics:
-    """Cheap 1024×600-first geometry for child-sized Pygame controls.
+    """Cheap responsive geometry for child-sized Pygame controls.
 
-    This is a renderer-specific implementation helper, not the universal Greia
-    UI contract. Semantic Screen/Overlay/Collection concepts live in
-    `greia_platform.ui_core`.
+    1024×600 remains the reference authoring scale, not a physical-screen
+    requirement. The active child's semantic interface-size preference is
+    composed into this shared metric, so first-party Activity authors still
+    author one layout rather than maintaining compact/normal/large variants.
+    Growth is capped on very large displays and the constrained-screen floor is
+    preserved.
     """
 
     width: int
@@ -34,7 +39,17 @@ class ChildUiMetrics:
     def for_size(cls, width: int, height: int) -> "ChildUiMetrics":
         if width <= 0 or height <= 0:
             raise ValueError("surface dimensions must be positive")
-        scale = max(0.5, min(width / REFERENCE_WIDTH, height / REFERENCE_HEIGHT))
+        viewport_scale = max(
+            0.5,
+            min(1.7, width / REFERENCE_WIDTH, height / REFERENCE_HEIGHT),
+        )
+        try:
+            preference = InterfaceSize(
+                os.environ.get("GREIA_INTERFACE_SIZE", InterfaceSize.NORMAL.value)
+            )
+        except ValueError:
+            preference = InterfaceSize.NORMAL
+        scale = max(0.5, min(1.9, viewport_scale * preference.scale))
         px = lambda value: max(1, int(round(value * scale)))
         return cls(width, height, scale, px(18), px(78), px(58), px(12), px(16))
 
