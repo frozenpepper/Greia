@@ -5,7 +5,7 @@
 **Repository:** `frozenpepper/Greia` (private)  
 **Canonical/default/development branch:** `main`  
 **Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**  
-**Latest reviewed implementation baseline before this handover update:** `e47570d29556c64c1723ea4b57fa9a99f81c67e9`  
+**Latest reviewed implementation baseline before this handover update:** `04f3ae4734133d3f948aff8639c6d5af6925d6ec`  
 **External Parent HTML revision pinned by Greia:** `frozenpepper/Greia-Parent-App-Html@6ee02840e2fdfdbe68a6fa5869a8f085b50ae37f`
 
 ## Branch and execution policy
@@ -66,7 +66,7 @@ The most important discovery of this review was that several fixes documented af
 7. **Legacy `/dev/input/mouse*` nodes are compatibility aliases, not extra modern pointer devices.** The Xorg compatibility path ignores them and consumes event devices.
 8. **Bubblewrap mount destinations must be constructed inside the private filesystem before binds.** `/run` is private tmpfs; required bind targets are explicit; the previously broken user-namespace assumptions remain removed.
 9. **A kiosk without a window manager still needs explicit keyboard-focus handoff.** The current X11 compatibility path uses `XSetInputFocus`.
-10. **Developer access fails closed.** Normal/release remote access stays off; developer access is key-only and root/password SSH remains disabled.
+10. **Developer access fails closed.** Base target/live builders never create developer passwords or enable SSH; explicit key provisioning is the only supported developer enablement path.
 11. **A hardware fix is not complete until the machine works, the build input contains the fix, a hardware-independent regression protects the cause, and documentation explains the failure class.**
 12. **A hardware fix for one architecture must not become a shared-overlay regression for another architecture.** Shared build files remain architecture-neutral; target-kernel/profile policy decides architecture-specific boot-critical modules.
 
@@ -133,11 +133,9 @@ The Activity sandbox now preserves the hardware-derived mount topology:
 
 Do not weaken Activity isolation merely because the launcher/display service currently needs broader Xorg authority. They are different trust boundaries.
 
-## SSH security-floor correction
+## Developer SSH path — fail-closed base, explicit key provisioning
 
-The review found stale developer-builder convenience branches that still write a historical `greia/greia` password and permissive SSH settings. Those branches conflict with the current key-only developer architecture.
-
-The generated target and live-installer overlays now include an earlier `00-greia-security-floor.conf` that:
+Both target and live overlays still carry `00-greia-security-floor.conf`:
 
 ```text
 PasswordAuthentication no
@@ -149,7 +147,14 @@ DenyUsers root greia
 
 Target first boot also locks historical root/greia passwords.
 
-**Remaining cleanup:** delete the obsolete password-writing branches from the large builders themselves after a controlled builder-focused test. The security floor makes them non-authoritative now, but dead insecure code should not remain indefinitely.
+More importantly, the stale known-password shortcut has now been removed from the canonical builders themselves:
+
+- `build/build-image.sh` always leaves SSH disabled and writes key-only `greiaadmin` policy, including when the profile carries the `developer-remote` package set;
+- `build/build-installer-image.sh` likewise never creates a password or enables SSH;
+- `build/build-developer-image.sh` is the explicit target developer path and post-processes the closed base image via `tools/provision_developer_image.py`, which generates an Ed25519 operator key, installs only the public key for `greiaadmin`, and then enables the bounded developer services;
+- live-installer remote operation is a separate `tools/provision_developer_installer.py` path requiring an owner-supplied public key and keeping root/password SSH disabled.
+
+`tests/test_installation_hardware_regressions.py` now explicitly forbids the historical password hash, `chpasswd -e`, `PasswordAuthentication yes`, `PermitRootLogin yes`, and related bootstrap material in both canonical builders.
 
 ---
 
@@ -314,28 +319,31 @@ src/greia_platform/activity_packages.py
 
 It accepts a bounded ZIP-based `.greiaactivity` whose `activity.toml` is at archive root and performs:
 
-1. request/archive size and entry-count bounds;
-2. traversal/absolute/backslash/hidden/portable-duplicate path rejection;
-3. encryption/symlink/special-file/compression-bomb rejection;
-4. streamed private staging;
-5. ordinary `ActivityRegistry` validation against built-ins + installed Parent packages;
-6. package-owned icon validation;
-7. `PARENT_TRUSTED_UNSIGNED` provenance;
-8. digest-addressed read-only immutable version storage;
-9. prepared read-only active tree;
-10. audit receipt preparation before activation;
-11. atomic active-directory rename as the install commit point.
+1. one serialized install transaction per long-lived package-service authority;
+2. request/archive size and entry-count bounds;
+3. traversal/absolute/backslash/hidden/portable-duplicate path rejection;
+4. encryption/symlink/special-file/compression-bomb rejection;
+5. streamed private staging;
+6. ordinary `ActivityRegistry` validation against built-ins + installed Parent packages;
+7. package-owned icon validation;
+8. `PARENT_TRUSTED_UNSIGNED` provenance;
+9. digest-addressed read-only immutable version storage;
+10. prepared read-only active tree;
+11. audit receipt preparation before activation;
+12. atomic active-directory rename as the install commit point.
 
 Existing Activity IDs are rejected. Updates, removal, rollback selection, signatures/revocation, curated-store policy and transactional save migration are still open R10 work.
 
 ## Adversarial corrections made during implementation
 
-Two cross-component problems were found after the first package implementation and fixed before handover:
+Several cross-component problems were found after the first package implementation and fixed before handover:
 
 - `/var/lib/greia-os` was previously `0750`, so `greiakid` could be unable to traverse to the Parent-installed read-only Activity source. It is now traversal-only `0755`; sensitive descendants retain their own private modes. `StateDirectoryMode=0755` migrates an existing Parent state root.
 - a hot-installed Activity could initially have appeared in the catalogue without rebuilding runtime/permission/history/supervisor authority. `GreiaLauncherPresentation` now validates the new registry set and rebuilds runtime services/supervisor **before** publishing the new catalogue; failure preserves the last known-good pair.
+- a receipt-write failure could otherwise have made the API report failure after executable code became visible. Receipt preparation now precedes activation, and interrupted immutable versions are digest-verified before retry reuse.
+- overlapping install requests could race receipt/activation bookkeeping if the Parent HTTP server became concurrent. `ActivityPackageService` now serializes installs within its long-lived service instance. The current Parent API owns exactly one such instance and is presently single-threaded, so this is defense-in-depth for future concurrency.
 
-The transaction was also tightened so a receipt failure cannot make the API report failure after executable code has already become visible. Interrupted immutable versions are digest-verified before retry reuse.
+The in-process package lock is intentionally not presented as final R10 multi-process locking. If multiple package-manager processes become possible later, the transaction boundary must gain explicit process/filesystem serialization.
 
 ---
 
@@ -434,8 +442,9 @@ If source gates pass:
 3. verify media UUID/payload coherence;
 4. repeat physical install/boot/input acceptance on the Acer;
 5. visually inspect the launcher at 1024×600, specifically Activity-name legibility, category icon/header/back layout, scroll behavior, hover/launch effects and focus;
-6. exercise an owner-enabled `.greiaactivity` new-install through the Parent HTML client and confirm the running launcher discovers it only after authority rebuild;
-7. where available, repeat basic install/launcher acceptance on additional x86 hardware so the Acer does not become a hidden model-specific contract.
+6. verify a developer target remains unreachable until the explicit key-provisioning developer builder completes, then verify key-only `greiaadmin` access after provisioning;
+7. exercise an owner-enabled `.greiaactivity` new-install through the Parent HTML client and confirm the running launcher discovers it only after authority rebuild;
+8. where available, repeat basic install/launcher acceptance on additional x86 hardware so the Acer does not become a hidden model-specific contract.
 
 Do not convert source structure into a hardware certification claim.
 
@@ -445,10 +454,10 @@ Do not convert source structure into a hardware certification claim.
 
 - **R7 remains open.** Xorg/xinit is still provisional compatibility implementation.
 - Generated live/target images must be rebuilt and physically accepted after this reconciliation.
-- The stale password-writing builder branches are neutralized but should be deleted under a controlled builder test.
 - Parent pairing/encrypted transport remains provisional/open.
 - General release `activities.install` stays disabled until transport/security and R10 lifecycle policy justify enablement.
 - R10 update/remove/rollback/signature/revocation/save-migration semantics are still open.
+- If R10 later permits several package-manager processes, replace the current in-process install serialization with a process/filesystem transaction lock.
 - Category display/localization should become platform-owned vocabulary rather than humanized IDs indefinitely.
 - Controller/touch/category interaction, local Back mapping and richer launcher effects need physical acceptance at the Acer floor.
 - Activity-name and category-header typography must be revisited when the selected Nunito Sans font is actually integrated; current source still uses the existing font loader.
@@ -456,7 +465,25 @@ Do not convert source structure into a hardware certification claim.
 
 ---
 
-# 9. Continuation rule
+# 9. Key commits from the final review correction loop
+
+```text
+39d3c46b345e6a5b412fb84b89712e1e6060792  launcher: explicit Activity names + category hierarchy
+48f15ae95349243023fb8798745eac4a70c184ca  launcher: stable semantic category icons
+43687167fc7b51720499ba59cfef6783d1a2b35c  platform: bounded package icon validation
+3a7d71776d2c092b80bd9411e49c580c858de3d7  packages: serialize install commit transactions
+33dbe71a4982723e8659f6546bb91deab78b0dcc  build: remove password SSH bootstrap from base images
+eeca76c0b87e617785d4b53bae7b0bd337031091  build: remove password SSH bootstrap from live installer
+8ad1153df01b108a7f15eef4f533a54aa8d0677c  tests: forbid password bootstrap in canonical builders
+735b59417b87b08cbe55f827069848528cebff44  docs: close builder SSH debt and package race finding
+04f3ae4734133d3f948aff8639c6d5af6925d6ec  docs: define serialized Activity install transaction
+```
+
+Earlier commits in the same tranche contain the Xorg/runtime/input reconciliation, target-kernel-aware initramfs hooks, Parent package API/client, trust-source composition and launcher presentation foundation. Repository history is authoritative for their exact ordering.
+
+---
+
+# 10. Continuation rule
 
 Before further implementation, read in order:
 
