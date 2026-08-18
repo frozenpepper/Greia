@@ -10,6 +10,10 @@ EARLY_SOURCE = ROOT / "build" / "early-boot" / "greia-fb-splash.c"
 EARLY_README = ROOT / "build" / "early-boot" / "README.md"
 BOOT_DESIGN = ROOT / "docs" / "design" / "GREIA_BOOT_EXPERIENCE.md"
 BOOT_CHIME = ROOT / "assets" / "audio" / "system" / "greia-boot-chime.wav"
+BOOT_SOURCE = ROOT / "assets" / "boot" / "source" / "greia-boot-logo.png"
+BOOT_STATIC = ROOT / "assets" / "boot" / "static" / "greia-boot-logo.png"
+TARGET_PPM = ROOT / "build" / "overlay" / "etc" / "greia-boot" / "boot-logo.ppm"
+INSTALLER_PPM = ROOT / "build" / "installer-overlay" / "etc" / "greia-boot" / "boot-logo.ppm"
 
 
 class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
@@ -129,6 +133,38 @@ class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
         duration_seconds = data_bytes / byte_rate
         self.assertGreater(duration_seconds, 0.15)
         self.assertLessEqual(duration_seconds, 1.2)
+
+    def test_canonical_boot_artwork_is_white_frame_derivative(self) -> None:
+        """The canonical static boot frame is white with a dark logo foreground."""
+        for path in (BOOT_SOURCE, BOOT_STATIC):
+            with self.subTest(path=path.name):
+                self.assertTrue(path.is_file())
+                from PIL import Image
+
+                image = Image.open(path).convert("RGB")
+                self.assertEqual(image.size, (222, 600))
+                # Corners must be pure/near-pure white (not the legacy navy).
+                for corner in ((0, 0), (221, 0), (0, 599), (221, 599)):
+                    r, g, b = image.getpixel(corner)
+                    self.assertGreaterEqual(min(r, g, b), 250)
+                # The logo foreground is dark (not navy-on-navy); at least one
+                # dark pixel exists (the mascot/wordmark).
+                pixels = list(image.getdata())
+                dark = sum(1 for (r, g, b) in pixels if r < 80 and g < 80 and b < 120)
+                self.assertGreater(dark, 1000)
+
+    def test_boot_ppms_are_p6_and_match_canonical_artwork(self) -> None:
+        """Target and installer initramfs PPMs are valid P6 and match the static art."""
+        from PIL import Image
+
+        reference = Image.open(BOOT_STATIC).convert("RGB").tobytes()
+        for path in (TARGET_PPM, INSTALLER_PPM):
+            with self.subTest(path=str(path)):
+                self.assertTrue(path.is_file())
+                data = path.read_bytes()
+                self.assertTrue(data.startswith(b"P6\n222 600\n255\n"))
+                pixel_data = data[data.index(b"\n255\n") + 5 :]
+                self.assertEqual(pixel_data, reference)
 
 
 if __name__ == "__main__":
