@@ -234,9 +234,12 @@ chmod -R a-w "$LIVE_ROOT/opt/greia-os"
 # before package-manifest/footprint capture.
 build_early_framebuffer() {
   local rootfs="$1"
+  # klcc needs the matching native compiler (e.g. i686-linux-gnu-gcc) which is
+  # provided by the gcc package; install it together with libklibc-dev so the
+  # target toolchain can actually compile. Both are removed again afterwards.
   chroot "$rootfs" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
     apt-get "${APT_ACQUIRE_OPTIONS[@]}" -o Dpkg::Options::=--force-confold \
-    install -y --no-install-recommends libklibc-dev >/dev/null
+    install -y --no-install-recommends libklibc-dev gcc >/dev/null
   install -d -m 0755 "$rootfs/usr/lib/greia-boot"
   install -d -m 0755 "$rootfs/usr/src/greia-boot"
   cp "$PROJECT_ROOT/build/early-boot/greia-fb-splash.c" \
@@ -268,7 +271,7 @@ build_early_framebuffer() {
       ;;
   esac
   chroot "$rootfs" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
-    apt-get "${APT_ACQUIRE_OPTIONS[@]}" -y remove --purge libklibc-dev >/dev/null
+    apt-get "${APT_ACQUIRE_OPTIONS[@]}" -y remove --purge libklibc-dev gcc >/dev/null
   chroot "$rootfs" apt-get -y autoremove >/dev/null 2>&1 || true
 }
 
