@@ -38,6 +38,19 @@ def _entrypoints() -> tuple[Path, ...]:
     return tuple(result)
 
 
+def _nearest_parent(
+    node: ast.AST,
+    parents: dict[ast.AST, ast.AST],
+    kinds: tuple[type[ast.AST], ...],
+) -> ast.AST | None:
+    cursor: ast.AST | None = node
+    while cursor is not None:
+        if isinstance(cursor, kinds):
+            return cursor
+        cursor = parents.get(cursor)
+    return None
+
+
 class FirstPartyActivityReadinessTests(unittest.TestCase):
     def test_ready_is_published_only_after_a_frame_presentation(self) -> None:
         checked: list[str] = []
@@ -64,18 +77,22 @@ class FirstPartyActivityReadinessTests(unittest.TestCase):
             )
             ready = ready_calls[0]
 
-            function: ast.FunctionDef | ast.AsyncFunctionDef | None = None
-            cursor: ast.AST | None = ready
-            while cursor is not None:
-                if isinstance(cursor, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                    function = cursor
-                    break
-                cursor = parents.get(cursor)
+            function = _nearest_parent(
+                ready,
+                parents,
+                (ast.FunctionDef, ast.AsyncFunctionDef),
+            )
             self.assertIsNotNone(
                 function,
                 f"{path.relative_to(ROOT)} READY call must live inside its launch function",
             )
-            assert function is not None
+            assert isinstance(function, (ast.FunctionDef, ast.AsyncFunctionDef))
+
+            ready_loop = _nearest_parent(ready, parents, (ast.While, ast.For, ast.AsyncFor))
+            self.assertIsNotNone(
+                ready_loop,
+                f"{path.relative_to(ROOT)} READY call must be tied to its presentation loop",
+            )
 
             presentations = [
                 node
@@ -85,10 +102,14 @@ class FirstPartyActivityReadinessTests(unittest.TestCase):
                     ("pygame", "display", "flip"),
                     ("pygame", "display", "update"),
                 }
+                and _nearest_parent(
+                    node, parents, (ast.While, ast.For, ast.AsyncFor)
+                )
+                is ready_loop
             ]
             self.assertTrue(
                 presentations,
-                f"{path.relative_to(ROOT)} publishes READY without a display presentation",
+                f"{path.relative_to(ROOT)} publishes READY without presenting in the same loop",
             )
             self.assertLess(
                 min(node.lineno for node in presentations),
