@@ -290,14 +290,17 @@ The installer rejects archive traversal, hidden/absolute/backslash paths, portab
 
 The current new-install service uses:
 
-1. private staging;
-2. full registry/asset validation;
-3. digest-addressed read-only immutable version storage;
-4. a prepared read-only activation tree;
-5. audit receipt preparation;
-6. atomic rename of the activation tree into the Parent Activity source as the commit point.
+1. one serialized install transaction per long-lived package-service authority;
+2. private staging;
+3. full registry/asset validation;
+4. digest-addressed read-only immutable version storage;
+5. a prepared read-only activation tree;
+6. audit receipt preparation;
+7. atomic rename of the activation tree into the Parent Activity source as the commit point.
 
 If receipt preparation fails, no executable Activity becomes visible. An interrupted attempt may leave an immutable version or orphan pre-commit receipt, neither of which is launch-authoritative; retries verify the immutable digest before reuse.
+
+The current Parent API owns one long-lived `ActivityPackageService`, so in-process serialization prevents overlapping requests from racing receipt and activation state even if request handling becomes concurrent later. This is not the final multi-process package-manager lock: if R10 later allows several package-manager processes, the transaction boundary must gain explicit process/filesystem serialization rather than assuming one Parent API process.
 
 Existing Activity IDs are deliberately rejected. This tranche does **not** pretend that update, removal, rollback-selection, signature/revocation or curated-store policy is complete.
 
