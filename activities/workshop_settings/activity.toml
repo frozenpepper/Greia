@@ -6,6 +6,9 @@ version = "0.1.0"
 icon = "palette"
 languages = ["*"]
 
+[presentation]
+categories = ["my_greia"]
+
 [education]
 categories = ["creativity", "self_expression", "digital_literacy"]
 difficulty = 1
