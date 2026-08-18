@@ -6,7 +6,7 @@ description: Canonical agent guide for designing, implementing, packaging, valid
 # Greia Activity Authoring Skill
 
 **Status:** living derived authoring guide  
-**Reviewed:** 2026-08-18
+**Reviewed:** 2026-08-19
 
 This file is practical guidance. Exact implemented APIs/schemas are owned by source/runtime declarations; accepted ADRs own architecture; product docs own child-facing requirements. When this guide disagrees with current source, inspect the authority map and resolve the discrepancy rather than coding to stale prose.
 
@@ -28,6 +28,7 @@ docs/adr/0023-open-activity-ecosystem-distribution-and-official-catalogue.md
 docs/adr/0026-resolution-adaptive-ui-layout.md
 docs/adr/0027-activity-coordinate-spaces-canvas-and-world-camera.md
 docs/adr/0028-platform-and-activity-localization-language-context.md
+docs/adr/0029-real-runtime-activity-simulator.md
 docs/product/ACTIVITY_INPUT_STANDARDS.md
 docs/product/ACTIVITY_SYSTEM_NAVIGATION.md
 docs/product/RESPONSIVE_UI_AND_DISPLAY_LAYOUT.md
@@ -59,6 +60,14 @@ src/greia_platform/activity_assets.py
 src/greia_platform/trust.py
 ```
 
+For desktop simulator work also read:
+
+```text
+docs/development/GREIA_ACTIVITY_SIMULATOR.md
+src/greia_simulator/
+tests/test_greia_simulator.py
+```
+
 Do not treat chat history as a substitute for these contracts.
 
 ## 2. Core Activity invariants
@@ -76,6 +85,7 @@ An Activity must not:
 - assume direct ownership of Linux input devices or display-session authority;
 - assume one physical screen resolution as its semantic coordinate system;
 - maintain per-resolution coordinate tables/device-specific layouts when shared viewport/layout primitives can express the behavior;
+- branch layout, storage, permissions, lifecycle or gameplay on `GREIA_SIMULATOR` or otherwise maintain a simulator-only behavior path;
 - place essential Activity controls in the platform-owned Home/Back protected region;
 - publish lifecycle READY merely because a renderer initialized before a usable child-facing frame was actually presented;
 - treat translated display text as identifiers/authority;
@@ -733,6 +743,7 @@ tests.test_localization
 tests.test_language_presentation
 tests.test_ui_motion_scroll
 tests.test_launcher_presentation
+tests.test_greia_simulator
 ```
 
 For a `.greiaactivity` package, test at least:
@@ -794,3 +805,74 @@ If author-facing Activity behavior changes, update in the same tranche:
 - active plan progress and `HANDOVER.md` for substantive implementation/evidence changes.
 
 If the change is architectural rather than merely implementation detail, resolve it through the applicable ADR instead of silently extending manifest/API behavior.
+
+## 20. Real-runtime Activity Simulator workflow
+
+ADR 0029 establishes the Greia Activity Simulator as a **developer surface over the real Greia platform**, not a separate target API.
+
+Start it from a desktop development checkout with:
+
+```bash
+python3 tools/greia_simulator.py
+```
+
+Read the complete operator guide in:
+
+```text
+docs/development/GREIA_ACTIVITY_SIMULATOR.md
+```
+
+### 20.1 Load source through Greia, not around it
+
+Use **Load Activity Folder…** for iterative source work. The simulator stages a private copy and validates it through the normal `RuntimeCatalogue` + `ActivityRegistry` with `DEVELOPER_UNSIGNED` trust and built-in identity authority. A simulator validation error is therefore a real Greia validation error; do not bypass it by placing files directly into the managed workspace.
+
+Use **Install Activity Package…** when validating an archive/distribution path. That button calls the canonical `ActivityPackageService`; it is not a simulator-specific unzip path.
+
+### 20.2 Resolution and child-size testing must not create simulator branches
+
+Use at least the 1024×600 floor plus other aspect ratios/sizes relevant to the Activity. Exercise `compact`, `normal` and `large` where UI density matters.
+
+**Never solve a simulator-only visual failure by writing code such as:**
+
+```python
+if os.environ.get("GREIA_SIMULATOR"):
+    ... special layout ...
+```
+
+and never choose coordinates from a simulator preset name. The Activity must consume its ordinary Greia viewport/layout/canvas/profile APIs. If the simulator reveals a mismatch, fix the shared platform abstraction or the Activity's normal implementation.
+
+The simulator's current Pygame fullscreen interception lives below the runtime-adapter seam and exists only to provide the synthetic physical viewport to unchanged Activity code. It is not an Activity authoring API.
+
+### 20.3 Capability switches test policy, not hardware quality
+
+The simulator supplies semantic capabilities through a synthetic `GreiaHAL`. Toggling `touch`, `controller`, `network`, etc. is useful for proving that the **real** compatibility/permission/runtime path handles presence/absence correctly.
+
+It does not prove controller button mappings, touch hardware, latency, noisy axes, reconnect, actual audio/network/removable media, kernel device ownership or input brokerage.
+
+### 20.4 Simulator evidence is deliberately narrower than physical/backend evidence
+
+A simulator run can be used as evidence for:
+
+- real manifest/registry/trust validation;
+- launcher discovery and category/icon presentation;
+- real PermissionBroker/runtime-manager compatibility decisions against the synthetic HAL;
+- real profile/theme/interface-size context;
+- real development-mode lifecycle/storage/history/event semantics;
+- responsive/canvas/system-safe geometry at the selected viewport;
+- current canonical local Activity package transaction.
+
+It cannot replace:
+
+- Bubblewrap/production filesystem isolation evidence;
+- Xorg/DRM/KMS/compositor/session-backend evidence;
+- trusted Home/Back non-coverability/input-interception evidence;
+- physical controller/touch/audio/network/media evidence;
+- boot/installer/initramfs evidence;
+- Acer/Pi performance/resource evidence;
+- R7/R8/R9/R10/R14 closure criteria.
+
+Always label simulator evidence as simulator/developer evidence.
+
+### 20.5 Web/HTML Activities remain tied to R9
+
+Do not treat host-browser success as Greia Web-runtime success. The simulator intentionally does **not** implement its own browser/webview Activity runtime. When the canonical R9 Web runtime adapter/SDK is implemented, the simulator must consume that same adapter. Until then, Python is the only current simulator Activity runtime and an HTML/Web Activity should remain unavailable for the same reason it is unavailable on current Greia runtime composition.
