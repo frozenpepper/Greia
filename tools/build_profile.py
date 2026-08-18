@@ -52,6 +52,10 @@ _INSTALLER_BOOT_PACKAGE_SETS: Mapping[str, str] = {
 }
 _BOOT_COVER_PACKAGE_SETS: Mapping[str, str] = {
     "stock-plymouth-provisional": "boot-cover-plymouth",
+    # Greia-owned early framebuffer cover. The renderer binary is produced by
+    # the builder inside the target root; the package set deliberately contains
+    # no external runtime packages for the cover itself.
+    "greia-early-framebuffer-v1": "boot-cover-greia-early-framebuffer",
 }
 # Empty by design in Phase 0. A future backend must be deliberately registered
 # here only after its noninteractive/no-text failure behavior is accepted.

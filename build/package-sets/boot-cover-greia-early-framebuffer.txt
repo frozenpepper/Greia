@@ -1,0 +1,9 @@
+# Greia early framebuffer boot cover (`greia-early-framebuffer-v1`).
+#
+# The cover is entirely Greia-owned: the static logo derivative is generated
+# from canonical artwork at build time, and the initramfs renderer binary is
+# compiled inside the target root with the target toolchain. Neither requires
+# an external runtime package, so this set is intentionally empty.
+#
+# Do not add compiler/toolchain/libklibc-dev here: those are build-time-only
+# dependencies and must not appear in the final image package manifest.

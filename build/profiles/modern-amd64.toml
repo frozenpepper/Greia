@@ -25,7 +25,7 @@ hostname = "greia"
 [boot]
 installed_adapter = "grub-pc-bios"
 installer_adapter = "grub-pc-bios-live"
-cover_backend = "stock-plymouth-provisional"
+cover_backend = "greia-early-framebuffer-v1"
 
 [display]
 adapter = "xorg"
