@@ -220,6 +220,19 @@ class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertNotIn("plymouth", package_set.lower())
 
+    def test_grub_uses_canonical_white_boot_logo_in_both_paths(self) -> None:
+        grub_script = (ROOT / "build/overlay/etc/grub.d/10_greia_appliance").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("background_image", grub_script)
+        self.assertIn("greia-boot-logo.png", grub_script)
+        self.assertIn("insmod png", grub_script)
+        self.assertIn("set timeout=0", grub_script)
+        builder = (ROOT / "build/build-image.sh").read_text(encoding="utf-8")
+        self.assertIn("boot/grub/greia-boot-logo.png", builder)
+        installer = (ROOT / "build/build-installer-image.sh").read_text(encoding="utf-8")
+        self.assertIn("background_image /boot/grub/greia-boot-logo.png", installer)
+
 
 if __name__ == "__main__":
     unittest.main()

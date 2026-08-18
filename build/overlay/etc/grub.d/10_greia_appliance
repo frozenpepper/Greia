@@ -6,7 +6,20 @@ root_uuid="$(cat "$uuid_file")"
 case "$root_uuid" in
   *[!0-9A-Fa-f-]*|'') echo "Invalid Pip root filesystem UUID" >&2; exit 1 ;;
 esac
+logo="/boot/grub/greia-boot-logo.png"
 cat <<EOF
+if loadfont unicode ; then
+  set gfxmode=auto
+  insmod all_video
+  insmod gfxterm
+  terminal_output gfxterm
+fi
+if [ -f $logo ]; then
+  insmod png
+  background_image $logo
+fi
+set timeout=0
+set timeout_style=hidden
 menuentry 'Greia OS' --unrestricted --id greia-os {
   search --no-floppy --fs-uuid --set=root $root_uuid
   linux /vmlinuz root=UUID=$root_uuid ro quiet splash loglevel=0 console=null panic=5 systemd.show_status=false rd.systemd.show_status=false systemd.crash_shell=no systemd.crash_chvt=0 udev.log_priority=3 vt.global_cursor_default=0 consoleblank=0

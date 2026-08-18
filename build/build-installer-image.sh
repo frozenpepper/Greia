@@ -420,11 +420,21 @@ INSTALLER_RECOVERY_CODE="$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}-grub-recov
 mkdir -p "$INSTALLER_GRUB_SECURITY_ROOT"
 PYTHONPATH="$PROJECT_ROOT/src" python3 -m greia_platform.grub_security   "$INSTALLER_GRUB_SECURITY_ROOT" --copy-code-to "$INSTALLER_RECOVERY_CODE"
 installer_grub_hash="$(cat "$INSTALLER_GRUB_SECURITY_ROOT/etc/greia-os/grub-recovery.pbkdf2")"
+install -m 0644 "$PROJECT_ROOT/assets/boot/static/greia-boot-logo.png" \
+  "$USB_MOUNT/boot/grub/greia-boot-logo.png"
 cat > "$USB_MOUNT/boot/grub/grub.cfg" <<GRUB
 set timeout=0
 set timeout_style=hidden
 set default=0
 set pager=0
+if loadfont unicode ; then
+  set gfxmode=auto
+  insmod all_video
+  insmod gfxterm
+  terminal_output gfxterm
+fi
+insmod png
+background_image /boot/grub/greia-boot-logo.png
 set superusers="greia-recovery"
 export superusers
 password_pbkdf2 greia-recovery $installer_grub_hash

@@ -382,6 +382,12 @@ PYTHONPATH="$PROJECT_ROOT/src" python3 -m greia_platform.grub_security "$ROOTFS"
 # from reintroducing recovery, alternate-init, or unauthenticated entries.
 find "$ROOTFS/etc/grub.d" -maxdepth 1 -type f -exec chmod a-x '{}' +
 chmod 0755 "$ROOTFS/etc/grub.d/00_header"   "$ROOTFS/etc/grub.d/01_greia_auth" "$ROOTFS/etc/grub.d/10_greia_appliance"
+# GRUB presents the canonical white Greia frame while the kernel/initramfs
+# loads. The PNG is the same derivative used by the early framebuffer cover
+# and launcher intro, so the child sees one continuous branded frame.
+install -d -m 0755 "$ROOTFS/boot/grub"
+install -m 0644 "$PROJECT_ROOT/assets/boot/static/greia-boot-logo.png" \
+  "$ROOTFS/boot/grub/greia-boot-logo.png"
 chroot "$ROOTFS" update-initramfs -u -k all
 chroot "$ROOTFS" update-grub
 chroot "$ROOTFS" grub-script-check /boot/grub/grub.cfg
