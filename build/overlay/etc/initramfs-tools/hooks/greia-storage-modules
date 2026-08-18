@@ -14,10 +14,14 @@ esac
 
 . /usr/share/initramfs-tools/hook-functions
 
-# Greia images are assembled away from their eventual hardware. Never let
-# initramfs-tools host probing decide whether the generic x86 root-disk stack is
-# present: explicitly add the storage modules required to discover SATA/AHCI
-# disks on legacy and modern x86 targets.
+# Greia images are assembled away from their eventual hardware. The currently
+# supported builders target x86, where SATA/AHCI is part of the broad legacy-PC
+# compatibility floor. Probe the TARGET kernel package, however, rather than
+# assuming every future architecture exposes these as modules: if a driver is
+# built in or genuinely absent on another platform, the hook must not turn that
+# future profile into a build failure.
 for module in ahci libata sd_mod; do
-    manual_add_modules "$module"
+    if modinfo -k "$version" "$module" >/dev/null 2>&1; then
+        manual_add_modules "$module"
+    fi
 done
