@@ -67,7 +67,14 @@ class PackageParentApiApplication(ParentApiApplication):
                 "version": registration.manifest.version,
                 "title_key": registration.manifest.title_key,
                 "icon_id": registration.manifest.icon_id,
+                # Educational taxonomy and launcher navigation are intentionally
+                # separate client concepts. Do not force Parents UI to infer one
+                # from the other.
                 "categories": list(registration.manifest.categories),
+                "launcher_categories": list(
+                    registration.manifest.launcher_categories
+                    or registration.manifest.categories
+                ),
                 "difficulty": registration.manifest.difficulty,
                 "languages": list(registration.manifest.languages),
                 "input_profile": registration.manifest.input_profile,
