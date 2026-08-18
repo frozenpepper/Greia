@@ -115,7 +115,45 @@ class RealHardwareInstallationRegressionTests(unittest.TestCase):
         self.assertIn("_set_x11_input_focus(screen, pygame)", launcher)
         self.assertIn("XSetInputFocus", launcher)
 
-    def test_stale_developer_bootstrap_config_cannot_enable_password_or_root_ssh(self) -> None:
+    def test_canonical_builders_never_mint_password_ssh_access(self) -> None:
+        forbidden = (
+            "PasswordAuthentication yes",
+            "PermitRootLogin yes",
+            "AllowUsers greia root",
+            "chpasswd -e",
+            "greia-passwd-entry",
+            "$6$greia$",
+        )
+        for builder_path in (
+            "build/build-image.sh",
+            "build/build-installer-image.sh",
+        ):
+            with self.subTest(builder=builder_path):
+                builder = self.read(builder_path)
+                for token in forbidden:
+                    self.assertNotIn(token, builder)
+                self.assertIn("PasswordAuthentication no", builder)
+                self.assertIn("AuthenticationMethods publickey", builder)
+                self.assertIn("PermitRootLogin no", builder)
+                self.assertIn("disable ssh.service", builder)
+
+        # Developer reachability is an explicit key-provisioning step after the
+        # closed base image exists; a profile/package-set name is not credential
+        # authority by itself.
+        developer_builder = self.read("build/build-developer-image.sh")
+        self.assertIn("provision_developer_image.py", developer_builder)
+        provisioner = self.read("tools/provision_developer_image.py")
+        self.assertIn('"ed25519"', provisioner)
+        self.assertIn("AUTHORIZED_KEYS", provisioner)
+        self.assertIn("greiaadmin", provisioner)
+
+        live_provisioner = self.read("tools/provision_developer_installer.py")
+        self.assertIn("public_key", live_provisioner)
+        self.assertIn("authorized_keys", live_provisioner)
+        self.assertIn('"password_authentication": False', live_provisioner)
+        self.assertIn('"root_login": False', live_provisioner)
+
+    def test_ssh_security_floor_and_first_boot_lock_historical_identities(self) -> None:
         for prefix in ("build/overlay", "build/installer-overlay"):
             with self.subTest(prefix=prefix):
                 floor = self.read(
