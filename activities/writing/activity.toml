@@ -6,6 +6,9 @@ version = "0.1.0"
 icon = "abc_board"
 languages = ["*"]
 
+[presentation]
+categories = ["create", "learn"]
+
 [education]
 categories = ["creativity", "writing", "language"]
 difficulty = 1
