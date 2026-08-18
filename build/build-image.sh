@@ -220,6 +220,12 @@ chroot "$ROOTFS" useradd --system --create-home --home-dir /var/lib/greia-os \
 chroot "$ROOTFS" useradd --create-home --home-dir /var/lib/greia-admin \
   --shell /bin/bash --groups sudo greiaadmin
 chroot "$ROOTFS" passwd --lock greiaadmin
+# The managed greia account is the owner-approved development/admin SSH and
+# Greia Parents identity. Base images keep it locked and SSH disabled; explicit
+# developer provisioning sets the greia/greia login on dev images only.
+chroot "$ROOTFS" useradd --create-home --home-dir /var/lib/greia \
+  --shell /bin/bash --groups sudo greia
+chroot "$ROOTFS" passwd --lock greia
 
 install -d -m 0755 "$ROOTFS/opt/greia-os"
 rsync -a --delete --exclude '__pycache__' \
@@ -263,9 +269,10 @@ systemctl --root="$ROOTFS" set-default graphical.target
 # carries the developer-remote package set. That set installs prerequisites; it
 # is not authority to mint credentials. The supported developer path is
 # build/build-developer-image.sh, which post-processes this closed base image
-# through tools/provision_developer_image.py and installs a generated Ed25519
-# public key for greiaadmin before enabling SSH. Normal/release images remain
-# closed, and a partially completed developer build therefore fails closed too.
+# through tools/provision_developer_image.py and enables the owner-approved
+# greia/greia development login before turning SSH on. Normal/release images
+# remain closed, and a partially completed developer build therefore fails
+# closed too.
 systemctl --root="$ROOTFS" disable ssh.service 2>/dev/null || true
 install -d -m 0755 "$ROOTFS/etc/ssh/sshd_config.d"
 cat > "$ROOTFS/etc/ssh/sshd_config.d/20-greia-parent.conf" <<'SSH'
@@ -273,7 +280,6 @@ PasswordAuthentication no
 KbdInteractiveAuthentication no
 AuthenticationMethods publickey
 PermitRootLogin no
-AllowUsers greiaadmin
 X11Forwarding no
 AllowTcpForwarding no
 PermitTunnel no

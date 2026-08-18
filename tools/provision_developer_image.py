@@ -19,17 +19,34 @@ from r7_qemu_kmsdrm_acceptance import CommandRunner, MountedRawImage
 SCHEMA_VERSION = 1
 DEFAULT_EXPECTED_PROFILE = "modern-amd64-dev"
 EXPECTED_PACKAGE_SET = "developer-remote"
+_DEVELOPMENT_USER = "greia"
+_DEVELOPMENT_PASSWORD = "greia"
+_OPERATOR_USER = "greiaadmin"
 _PROFILE_RE = re.compile(r"^[a-z0-9][a-z0-9._-]{0,127}$")
 MARKER = Path("etc/greia-os/developer-remote")
 DISPLAY_ENDPOINT = Path("etc/greia-os/developer-display.json")
 ADMIN_HOME = Path("var/lib/greia-admin")
 AUTHORIZED_KEYS = ADMIN_HOME / ".ssh/authorized_keys"
 SUDOERS = Path("etc/sudoers.d/greia-developer-remote")
+SSH_FLOOR = Path("etc/ssh/sshd_config.d/00-greia-security-floor.conf")
 SSH_DROPIN = Path("etc/systemd/system/ssh.service.d/30-greia-developer-remote.conf")
 LAUNCHER_DROPIN = Path(
     "etc/systemd/system/greia-launcher.service.d/30-greia-developer-activities.conf"
 )
 DEVELOPER_ACTIVITY_ROOT = "/var/lib/greia-developer/activities"
+
+_DEVELOPMENT_SSH_FLOOR = (
+    "# Development-image security floor (owner-approved greia/greia login).\n"
+    "# Explicit developer provisioning rewrites the base closed floor so the\n"
+    "# development/test SSH identity greia/greia works. root stays denied and\n"
+    "# the operator key remains an additional automation path.\n"
+    "PasswordAuthentication yes\n"
+    "KbdInteractiveAuthentication yes\n"
+    "PermitRootLogin no\n"
+    "AuthenticationMethods publickey,password\n"
+    "DenyUsers root\n"
+    "AllowUsers greia greiaadmin\n"
+)
 
 
 class DeveloperImageProvisionError(RuntimeError):
@@ -100,6 +117,7 @@ class DeveloperImageProvisioner:
                 profile = self._validate_profile(root)
                 uid, gid = self._admin_identity(root)
                 fingerprint = self._provision_client_key(root, uid=uid, gid=gid)
+                self._provision_development_identity(root)
                 self._write_remote_policy(root, fingerprint=fingerprint)
                 self._enable_units(root)
                 self._validate_sshd_without_persisting_host_keys(root)
@@ -125,11 +143,14 @@ class DeveloperImageProvisioner:
             "image": str(image),
             "image_sha256_before_provisioning": before_sha,
             "image_sha256": after_sha,
-            "ssh_user": "greiaadmin",
+            "ssh_user": _DEVELOPMENT_USER,
+            "ssh_password": _DEVELOPMENT_PASSWORD,
+            "ssh_operator_user": _OPERATOR_USER,
+            "ssh_operator_public_key": str(self.public_key_path.resolve()),
             "ssh_host_hint": "greia-dev.local",
             "ssh_private_key": str(self.key_path.resolve()),
             "ssh_public_key": str(self.public_key_path.resolve()),
-            "password_authentication": False,
+            "password_authentication": True,
             "root_login": False,
             "ssh_host_keys_cloned": False,
             "ssh_host_keys_generated_on_first_boot": True,
@@ -230,6 +251,47 @@ class DeveloperImageProvisioner:
         os.chmod(root / AUTHORIZED_KEYS, 0o600)
         os.chown(root / AUTHORIZED_KEYS, uid, gid)
         return fingerprint
+
+    def _provision_development_identity(self, root: Path) -> None:
+        """Enable the owner-approved greia/greia development login.
+
+        Base images fail closed (greia locked, SSH off, key-only floor). This
+        explicit developer provisioning step sets the greia password and rewrites
+        the shared security floor so password + the operator key both work while
+        root stays denied. The developer account is a real Linux account used for
+        development/test access only; it does not create per-child Linux logins.
+        """
+
+        probe = self._chroot(
+            root,
+            ["/usr/bin/id", "-u", _DEVELOPMENT_USER],
+            check=False,
+            capture_output=True,
+        )
+        if probe.returncode != 0:
+            self._chroot(
+                root,
+                [
+                    "/usr/sbin/useradd",
+                    "--create-home",
+                    "--home-dir",
+                    "/var/lib/greia",
+                    "--shell",
+                    "/bin/bash",
+                    "--groups",
+                    "sudo",
+                    _DEVELOPMENT_USER,
+                ],
+            )
+        self._chroot(
+            root,
+            ["/bin/bash", "-c", f"echo '{_DEVELOPMENT_USER}:{_DEVELOPMENT_PASSWORD}' | /usr/sbin/chpasswd"],
+        )
+
+        floor = root / SSH_FLOOR
+        floor.parent.mkdir(parents=True, exist_ok=True)
+        floor.write_text(_DEVELOPMENT_SSH_FLOOR, encoding="utf-8")
+        os.chmod(floor, 0o644)
 
     def _write_remote_policy(self, root: Path, *, fingerprint: str) -> None:
         marker = root / MARKER

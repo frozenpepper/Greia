@@ -26,7 +26,7 @@ class DeveloperRemoteSnapshotTests(unittest.TestCase):
         key.write_text("private\n", encoding="utf-8")
         return GreiaRemote(
             host="greia-dev.local",
-            user="greiaadmin",
+            user="greia",
             key=key,
             known_hosts=root / "known_hosts",
         )

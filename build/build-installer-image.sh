@@ -250,8 +250,8 @@ systemctl --root="$LIVE_ROOT" set-default graphical.target
 # A developer-remote package set may install SSH/network/test prerequisites, but
 # it does not authorize the builder to create a password or enable a daemon.
 # Remote control of a live installer is a separate explicit post-build/rootfs
-# operation through tools/provision_developer_installer.py, which requires an
-# owner-provided public key and keeps root/password SSH disabled.
+# operation through tools/provision_developer_installer.py, which enables the
+# owner-approved greia/greia development login and keeps root SSH disabled.
 systemctl --root="$LIVE_ROOT" disable ssh.service 2>/dev/null || true
 install -d -m 0755 "$LIVE_ROOT/etc/ssh/sshd_config.d"
 cat > "$LIVE_ROOT/etc/ssh/sshd_config.d/20-greia-parent.conf" <<'SSH'
@@ -259,7 +259,6 @@ PasswordAuthentication no
 KbdInteractiveAuthentication no
 AuthenticationMethods publickey
 PermitRootLogin no
-AllowUsers greiaadmin
 X11Forwarding no
 AllowTcpForwarding no
 PermitTunnel no

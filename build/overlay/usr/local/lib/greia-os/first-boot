@@ -13,14 +13,12 @@ machine_id="$(cat /etc/machine-id 2>/dev/null || true)"
 [ -n "$machine_id" ] || systemd-machine-id-setup >/dev/null 2>&1
 
 # A historical developer-builder convenience path wrote known passwords for
-# root/greia before later key-only personalization. The 00-greia-security-floor
-# already prevents those identities from authenticating over SSH from the first
-# instant sshd can start; first boot also locks them locally so a raw/interrupted
-# build cannot retain usable bootstrap credentials.
+# root before later key-only personalization. The 00-greia-security-floor
+# already prevents root from authenticating over SSH; first boot also locks the
+# root account locally so a raw/interrupted build cannot retain a usable
+# bootstrap credential. The managed `greia` account is password-locked at build
+# time on base images and set by explicit developer provisioning on dev images.
 passwd --lock root >/dev/null 2>&1 || true
-if id greia >/dev/null 2>&1; then
-  passwd --lock greia >/dev/null 2>&1 || true
-fi
 
 # SSH host keys remain absent until an explicitly provisioned developer image or
 # a future parent-owned enablement path creates them. Avoid CPU/entropy work in

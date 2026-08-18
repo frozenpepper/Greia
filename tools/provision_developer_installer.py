@@ -22,6 +22,20 @@ DEVCTL_SOURCE = PROJECT_ROOT / "build/overlay/usr/local/sbin/greia-devctl"
 PREPARE_SOURCE = (
     PROJECT_ROOT / "build/overlay/usr/local/lib/greia-os/prepare-developer-remote"
 )
+_DEVELOPMENT_USER = "greia"
+_DEVELOPMENT_PASSWORD = "greia"
+_OPERATOR_USER = "greiaadmin"
+_DEVELOPMENT_SSH_FLOOR = (
+    "# Live-installer development security floor (owner-approved greia/greia).\n"
+    "# Explicit developer provisioning rewrites the base closed floor so the\n"
+    "# development/test SSH identity greia/greia works. root stays denied.\n"
+    "PasswordAuthentication yes\n"
+    "KbdInteractiveAuthentication yes\n"
+    "PermitRootLogin no\n"
+    "AuthenticationMethods publickey,password\n"
+    "DenyUsers root\n"
+    "AllowUsers greia greiaadmin\n"
+)
 
 
 class DeveloperInstallerProvisionError(RuntimeError):
@@ -82,6 +96,7 @@ class DeveloperInstallerProvisioner:
         self._require_installed_tools(root)
         uid, gid = self._ensure_admin_user(root)
         self._install_authorized_key(root, public_key, uid=uid, gid=gid)
+        self._provision_development_identity(root)
         self._install_developer_helpers(root)
         self._write_developer_policy(root)
         self._write_network_policy(root)
@@ -98,9 +113,11 @@ class DeveloperInstallerProvisioner:
             "mode": "live-installer",
             "hostname": LIVE_HOSTNAME,
             "ssh_host_hint": f"{LIVE_HOSTNAME}.local",
-            "ssh_user": "greiaadmin",
+            "ssh_user": _DEVELOPMENT_USER,
+            "ssh_password": _DEVELOPMENT_PASSWORD,
+            "ssh_operator_user": _OPERATOR_USER,
             "ssh_public_key_source": str(public_key),
-            "password_authentication": False,
+            "password_authentication": True,
             "root_login": False,
             "ssh_host_keys_cloned": False,
             "ssh_host_keys_generated_on_boot": True,
@@ -186,6 +203,37 @@ class DeveloperInstallerProvisioner:
         shutil.copyfile(public_key, authorized)
         os.chmod(authorized, 0o600)
         os.chown(authorized, uid, gid)
+
+    def _provision_development_identity(self, root: Path) -> None:
+        probe = self._chroot(
+            root,
+            ["/usr/bin/id", "-u", _DEVELOPMENT_USER],
+            check=False,
+            capture_output=True,
+        )
+        if probe.returncode != 0:
+            self._chroot(
+                root,
+                [
+                    "/usr/sbin/useradd",
+                    "--create-home",
+                    "--home-dir",
+                    "/var/lib/greia",
+                    "--shell",
+                    "/bin/bash",
+                    "--groups",
+                    "sudo",
+                    _DEVELOPMENT_USER,
+                ],
+            )
+        self._chroot(
+            root,
+            ["/bin/bash", "-c", f"echo '{_DEVELOPMENT_USER}:{_DEVELOPMENT_PASSWORD}' | /usr/sbin/chpasswd"],
+        )
+        floor = root / "etc/ssh/sshd_config.d/00-greia-security-floor.conf"
+        floor.parent.mkdir(parents=True, exist_ok=True)
+        floor.write_text(_DEVELOPMENT_SSH_FLOOR, encoding="utf-8")
+        os.chmod(floor, 0o644)
 
     def _install_developer_helpers(self, root: Path) -> None:
         ssh_config = root / "etc/ssh/sshd_config.d/20-greia-parent.conf"

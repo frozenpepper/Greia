@@ -15,8 +15,9 @@ from typing import Sequence
 
 
 DEFAULT_HOST = "greia-dev.local"
-DEFAULT_USER = "greiaadmin"
+DEFAULT_USER = "greia"
 DEFAULT_KEY = Path("out/greia-os-modern-amd64-dev-ssh-key")
+DEFAULT_PASSWORD = "greia"
 DEFAULT_KNOWN_HOSTS = Path.home() / ".greia" / "known_hosts"
 _ACTIVITY_ID_RE = re.compile(r"^[a-z0-9][a-z0-9._-]{0,127}$")
 _LOG_SERVICE_CHOICES = (
@@ -35,12 +36,21 @@ class RemoteError(RuntimeError):
 
 
 class GreiaRemote:
-    def __init__(self, *, host: str, user: str, key: Path, known_hosts: Path):
+    def __init__(
+        self,
+        *,
+        host: str,
+        user: str,
+        key: Path,
+        known_hosts: Path,
+        password: str | None = None,
+    ):
         self.host = host
         self.user = user
         self.key_path = key.expanduser().resolve()
+        self.password = password
         self.known_hosts = known_hosts.expanduser().resolve()
-        if not self.key_path.is_file():
+        if self.password is None and not self.key_path.is_file():
             raise RemoteError(f"SSH private key not found: {self.key_path}")
         self.known_hosts.parent.mkdir(parents=True, exist_ok=True)
 
@@ -49,12 +59,17 @@ class GreiaRemote:
         return f"{self.user}@{self.host}"
 
     def ssh_base(self) -> list[str]:
-        return [
-            "ssh",
-            "-i",
-            str(self.key_path),
-            "-o",
-            "BatchMode=yes",
+        argv = ["ssh"]
+        if self.password is not None:
+            argv += ["-o", "BatchMode=no"]
+        else:
+            argv += [
+                "-i",
+                str(self.key_path),
+                "-o",
+                "BatchMode=yes",
+            ]
+        argv += [
             "-o",
             "StrictHostKeyChecking=accept-new",
             "-o",
@@ -63,14 +78,15 @@ class GreiaRemote:
             "ConnectTimeout=8",
             self.destination,
         ]
+        return argv
 
     def scp_base(self) -> list[str]:
-        return [
-            "scp",
-            "-i",
-            str(self.key_path),
-            "-o",
-            "BatchMode=yes",
+        argv = ["scp"]
+        if self.password is not None:
+            argv += ["-o", "BatchMode=no"]
+        else:
+            argv += ["-i", str(self.key_path), "-o", "BatchMode=yes"]
+        argv += [
             "-o",
             "StrictHostKeyChecking=accept-new",
             "-o",
@@ -78,6 +94,7 @@ class GreiaRemote:
             "-o",
             "ConnectTimeout=8",
         ]
+        return argv
 
     def devctl(
         self,
@@ -286,6 +303,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--host", default=DEFAULT_HOST)
     parser.add_argument("--user", default=DEFAULT_USER)
     parser.add_argument("--key", type=Path, default=DEFAULT_KEY)
+    parser.add_argument(
+        "--password",
+        default=None,
+        help="Authenticate with the greia development password (greia/greia by default).",
+    )
     parser.add_argument("--known-hosts", type=Path, default=DEFAULT_KNOWN_HOSTS)
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -333,6 +355,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             user=args.user,
             key=args.key,
             known_hosts=args.known_hosts,
+            password=args.password,
         )
         if args.command == "status":
             sys.stdout.write(remote.status())

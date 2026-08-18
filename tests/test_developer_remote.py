@@ -316,7 +316,7 @@ class DeveloperRemoteTests(unittest.TestCase):
             known = root / "known_hosts"
             remote = GreiaRemote(
                 host="greia-dev.local",
-                user="greiaadmin",
+                user="greia",
                 key=key,
                 known_hosts=known,
             )
@@ -324,7 +324,34 @@ class DeveloperRemoteTests(unittest.TestCase):
             self.assertIn("BatchMode=yes", argv)
             self.assertIn("StrictHostKeyChecking=accept-new", argv)
             self.assertIn(f"UserKnownHostsFile={known.resolve()}", argv)
-            self.assertEqual(argv[-1], "greiaadmin@greia-dev.local")
+            self.assertEqual(argv[-1], "greia@greia-dev.local")
+
+    def test_remote_ssh_supports_greia_password_login(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            known = root / "known_hosts"
+            remote = GreiaRemote(
+                host="greia-dev.local",
+                user="greia",
+                key=Path("/nonexistent-key"),
+                known_hosts=known,
+                password="greia",
+            )
+            argv = remote.ssh_base()
+            self.assertNotIn("BatchMode=yes", argv)
+            self.assertIn("BatchMode=no", argv)
+            self.assertIn("StrictHostKeyChecking=accept-new", argv)
+            self.assertEqual(argv[-1], "greia@greia-dev.local")
+
+    def test_remote_requires_key_or_password(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(RemoteError):
+                GreiaRemote(
+                    host="host",
+                    user="greia",
+                    key=Path("/missing-key"),
+                    known_hosts=Path(tmp) / "known_hosts",
+                )
 
     def test_remote_screenshot_writes_only_valid_png(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -333,7 +360,7 @@ class DeveloperRemoteTests(unittest.TestCase):
             key.write_text("private\n", encoding="utf-8")
             remote = GreiaRemote(
                 host="host",
-                user="greiaadmin",
+                user="greia",
                 key=key,
                 known_hosts=root / "known_hosts",
             )
@@ -353,7 +380,7 @@ class DeveloperRemoteTests(unittest.TestCase):
             key.write_text("private\n", encoding="utf-8")
             remote = GreiaRemote(
                 host="host",
-                user="greiaadmin",
+                user="greia",
                 key=key,
                 known_hosts=root / "known_hosts",
             )
@@ -397,7 +424,6 @@ class DeveloperRemoteTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertIn("PasswordAuthentication no", ssh)
         self.assertIn("PermitRootLogin no", ssh)
-        self.assertIn("AllowUsers greiaadmin", ssh)
         tmpfiles = (
             PROJECT_ROOT
             / "build/overlay/usr/lib/tmpfiles.d/greia-developer-remote.conf"

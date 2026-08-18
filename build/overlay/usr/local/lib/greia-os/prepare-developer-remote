@@ -8,10 +8,12 @@ authorized_keys=/var/lib/greia-admin/.ssh/authorized_keys
   echo "Greia developer remote marker is absent." >&2
   exit 1
 }
-[ -s "$authorized_keys" ] || {
-  echo "Greia developer remote authorized_keys is absent or empty." >&2
-  exit 1
-}
+# The owner-approved greia/greia development login is the primary path. The
+# operator key is an additional automation path and is not required for the
+# password login to work.
+if [ ! -s "$authorized_keys" ]; then
+  echo "Warning: developer operator authorized_keys is empty; password login remains available." >&2
+fi
 
 # The launcher needs read/traverse access only to the dedicated developer
 # Activity source. Deployment metadata, staging and built-in backups remain

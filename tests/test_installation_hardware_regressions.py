@@ -137,20 +137,24 @@ class RealHardwareInstallationRegressionTests(unittest.TestCase):
                 self.assertIn("PermitRootLogin no", builder)
                 self.assertIn("disable ssh.service", builder)
 
-        # Developer reachability is an explicit key-provisioning step after the
+        # Developer reachability is an explicit provisioning step after the
         # closed base image exists; a profile/package-set name is not credential
-        # authority by itself.
+        # authority by itself. The explicit developer path enables the
+        # owner-approved greia/greia login plus the operator key.
         developer_builder = self.read("build/build-developer-image.sh")
         self.assertIn("provision_developer_image.py", developer_builder)
         provisioner = self.read("tools/provision_developer_image.py")
         self.assertIn('"ed25519"', provisioner)
         self.assertIn("AUTHORIZED_KEYS", provisioner)
         self.assertIn("greiaadmin", provisioner)
+        self.assertIn('_DEVELOPMENT_USER = "greia"', provisioner)
+        self.assertIn('_DEVELOPMENT_PASSWORD = "greia"', provisioner)
+        self.assertIn("chpasswd", provisioner)
 
         live_provisioner = self.read("tools/provision_developer_installer.py")
         self.assertIn("public_key", live_provisioner)
         self.assertIn("authorized_keys", live_provisioner)
-        self.assertIn('"password_authentication": False', live_provisioner)
+        self.assertIn('"password_authentication": True', live_provisioner)
         self.assertIn('"root_login": False', live_provisioner)
 
     def test_ssh_security_floor_and_first_boot_lock_historical_identities(self) -> None:
@@ -163,10 +167,12 @@ class RealHardwareInstallationRegressionTests(unittest.TestCase):
                 self.assertIn("KbdInteractiveAuthentication no", floor)
                 self.assertIn("AuthenticationMethods publickey", floor)
                 self.assertIn("PermitRootLogin no", floor)
-                self.assertIn("DenyUsers root greia", floor)
+                # The managed greia account is not denied in the shared floor;
+                # base images lock it and keep SSH off, while explicit developer
+                # provisioning enables the greia/greia login on dev images.
+                self.assertIn("DenyUsers root", floor)
         first_boot = self.read("build/overlay/usr/local/lib/greia-os/first-boot")
         self.assertIn("passwd --lock root", first_boot)
-        self.assertIn("passwd --lock greia", first_boot)
 
 
 if __name__ == "__main__":
