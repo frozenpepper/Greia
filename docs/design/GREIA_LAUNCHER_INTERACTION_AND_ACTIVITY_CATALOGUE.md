@@ -22,7 +22,9 @@ This document defines that interaction layer, Activity catalogue/navigation meta
 7. **Package identity is separate from presentation.** Launcher categories and icons are manifest metadata; launch identity remains the Activity ID and validated package registration.
 8. **Educational metadata is not navigation metadata.** A skill/progression tag such as `fine_motor` must not automatically become permanent launcher chrome for newly authored packages.
 9. **Portable Activities are self-presenting.** An Activity may ship its own icon without adding an asset to the base OS.
-10. **Live package discovery must rebuild authority before UI publication.** A newly installed tile is not launchable until runtime/permission/history/supervisor services have been rebuilt from the same validated registry set.
+10. **Every Activity remains identifiable without recognizing artwork.** The launcher always reserves readable space for the Activity name; icons complement names rather than replacing them.
+11. **Category depth remains visible.** Once a child enters a category, the category identity stays pinned at the top together with a local Back-to-All control.
+12. **Live package discovery must rebuild authority before UI publication.** A newly installed tile is not launchable until runtime/permission/history/supervisor services have been rebuilt from the same validated registry set.
 
 ## Shared primitive layers
 
@@ -66,13 +68,24 @@ All caches used by the launcher are bounded. Expensive blur filters, per-frame f
 
 ### `greia_platform.activity_assets`
 
-Package-owned presentation asset validation is platform-owned rather than launcher-owned. The installer and launcher therefore use the same containment rule for Activity icons. A package with a broken `package:` icon path is rejected before activation instead of being accepted and failing only when drawn.
+Package-owned presentation asset validation is platform-owned rather than launcher-owned. The installer and launcher therefore use the same containment and decode-bound rules for Activity icons. A package with a broken `package:` icon path or unreasonable image dimensions is rejected before activation instead of being accepted and failing only when drawn.
 
 ## Launcher composition
 
 `LauncherApplication` remains the lifecycle/security core. `GreiaLauncherPresentation` specializes child-facing presentation and navigation while reusing the authoritative profile/session/permission/runtime/supervisor paths.
 
 The installed X session launches `greia_launcher.presentation`.
+
+### Activity tile anatomy
+
+An Activity tile is not just an icon in a box. It has two explicit visual regions:
+
+1. an artwork region for the Activity icon;
+2. a reserved name band at the bottom.
+
+The name band is part of the tile contract. It must remain readable even when an Activity ships unfamiliar artwork. Text fitting reduces font size and, only as a final fallback, shortens with an ellipsis; glyphs must not be geometrically squashed to fit.
+
+The icon remains visually dominant, but layout must leave enough vertical space that the name never appears accidentally clipped or absent.
 
 ### Hover and selection
 
@@ -152,14 +165,32 @@ Current built-ins intentionally demonstrate a compact information architecture:
 
 Rules:
 
-- `All` is always available and appears first;
+- `All` is always available and is the category landing/root view;
 - known high-level categories have a stable child-facing ordering (`Create`, `Play`, `Learn`, `Explore`, `My Greia`);
+- each category has a stable semantic Greia icon as well as a title;
 - one Activity may appear in multiple categories;
 - duplicate appearance never duplicates installation, progress or permissions;
 - an Activity with no usable category still appears under `All`;
 - category selection is presentation state only.
 
-The current launcher shows category pills/tabs near the top of the Activity screen. `Tab` cycles categories; pointer activation chooses one. Future controller/touch bindings must map to the same category state.
+### Category hierarchy and local Back
+
+The top-level `All` view presents the available categories as icon-led category controls. Once a child enters a category, the top row changes from the category chooser to a persistent category header:
+
+```text
+[ Back ]   [ Category icon ]  Category name
+```
+
+The header stays fixed while Activity content scrolls. This gives the child a continuous visual answer to “where am I?” and avoids requiring them to infer category state from a highlighted tab among many choices.
+
+The Back control here is **launcher-local navigation**, not ADR-0019 Activity system chrome. It returns to the launcher `All`/category landing. It does not stop a running Activity and must not be confused with Greia-owned Home/Back shown above Activity content.
+
+Keyboard semantics match the visual hierarchy:
+
+- `Esc` or `Backspace` inside a category returns to `All`;
+- `Esc` from `All` retains the existing profile/logout behavior;
+- `Tab` can still cycle categories for keyboard development/testing;
+- future controller/touch bindings must act on the same category state.
 
 ### Activity scrolling
 
@@ -205,7 +236,10 @@ The platform resolver requires:
 - no `.`/`..` escape;
 - bounded path length and depth;
 - resolution strictly inside the validated Activity package root;
-- a regular existing file.
+- a regular existing file;
+- a bounded file size;
+- a valid supported image header;
+- bounded decode dimensions (currently at most 1024×1024 for launcher package icons).
 
 For Parent-installed packages the reference is validated during package installation. The launcher then loads exactly that validated package asset and decorates it with the same shallow shadow used for built-ins.
 
@@ -215,7 +249,7 @@ Recommended authoring target:
 - transparent background where appropriate;
 - clear silhouette at small sizes;
 - important details kept away from outer 8–10% of the canvas;
-- no text required to identify the Activity.
+- no text required inside the artwork, because the launcher always renders the Activity name separately.
 
 ## Parent-installed Activities
 
@@ -285,6 +319,7 @@ The launcher must remain comfortable on the legacy 1024×600/i686 reference floo
 - motion calculations allocate no retained animation objects per frame;
 - icon/font/shadow caches are bounded;
 - only visible Activity tiles are rendered;
+- category header/Activity labels use existing cached font/icon paths and no per-frame disk discovery;
 - effects must degrade gracefully rather than delay input or Activity launch;
 - no effect may trigger network, disk scan or package discovery every frame.
 
