@@ -5,7 +5,7 @@
 **Repository:** `frozenpepper/Greia` (private)  
 **Canonical/default/development branch:** `main`  
 **Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**  
-**Implementation baseline immediately before this handover refresh:** `dfd9deb8c897fae06561fd9cf09821b43fcd5357`  
+**Source head reviewed immediately before this handover commit:** `0e3eea018fc0299cd7511aa6e3155149cc9974c2`  
 **External Parent HTML revision currently pinned by Greia:** `frozenpepper/Greia-Parent-App-Html@e30bcbcab393354b8ffb63d5829c08711d8023bd`
 
 This file owns the **current** implementation/evidence boundary. Historical hardware detail remains in the dated reviews and installation issue log; exact APIs/limits remain source-owned.
@@ -54,11 +54,13 @@ password: greia
 6. Base/release images stay fail-closed unless/until release remote-access policy is explicitly changed.
 7. If a Parent-password change is intentionally coupled to maintenance/SSH authentication, that coupling must go through a typed Greia-owned privileged operation, never a generic web-to-shell bridge.
 
-Canonical local-agent procedure:
+Current local-agent entrypoint:
 
 ```text
-docs/testing/2026-08-18_LOCAL_AGENT_FULL_TEST_AND_FIX_SESSION.md
+docs/testing/LOCAL_AGENT_START_HERE.md
 ```
+
+That entrypoint composes the full install/Parent/SSH protocol with the later responsive-UI and My-Greia addenda; do not run only the older base protocol and miss the addenda.
 
 ---
 
@@ -290,6 +292,8 @@ It does **not** expose Wi-Fi, Parent password, child-password administration, SS
 
 The target child may not read, so the Activity is visual-first: large icon tabs, actual color swatches, wallpaper previews, three visually different size samples, avatar images and visual check/error feedback. There is no Activity-owned fake Close/Home/Back button; universal system navigation remains platform-owned.
 
+All essential My Greia controls now derive from `ActivityViewport.safe_ui_rect()` around the platform-owned `ActivitySystemChromeLayout` protected region. Background decoration may still fill the complete Activity surface, but tabs/settings/hit targets stay outside Home/Back authority at arbitrary supported resolutions. A regression covers 640x480, 800x600, 1024x600, 1366x768, 1920x1080, 720x1280 and 4K geometry.
+
 ## Semantic interface-size preference
 
 New renderer-neutral owner:
@@ -332,9 +336,11 @@ src/greia_launcher/child_shell.py
 
 A direct regression now locks the ordinary-Activity boundary: visual snapshot present, semantic size present, customization path absent.
 
-## Removable-media race correction
+## Removable-media race and selection feedback corrections
 
 My Greia wallpaper browsing uses the existing bounded removable-image scanner/importer. A review found a scan-to-render race: a candidate could be removed after scan but before thumbnail `stat()`, crashing the Activity. The thumbnail path now catches that disappearance and returns a placeholder/none instead. A source regression covers the missing-file case.
+
+The current session also keeps an immediately selected removable wallpaper visibly selected while that source is still present. The managed imported wallpaper persists independently of the removable device; the removable-source selection marker itself is intentionally session-local rather than durable profile authority.
 
 Physical eject/removal while the wallpaper page is open is still required acceptance; source regression is not physical evidence.
 
@@ -387,25 +393,13 @@ The external Parent HTML client is separately pinned/integrity checked and must 
 
 Run on an owner-controlled current checkout from the final SHA.
 
-First run the My Greia/current UI tranche:
+The canonical test-session entrypoint is:
 
-```bash
-PYTHONPATH=src python3 -m unittest \
-  tests.test_ui_preferences \
-  tests.test_theme_snapshot \
-  tests.test_activity_theme_access \
-  tests.test_activity_ui_preferences \
-  tests.test_child_shell_visual_context \
-  tests.test_my_greia_settings_contract \
-  tests.test_my_greia_runtime \
-  tests.test_customization \
-  tests.test_activity_ui \
-  tests.test_responsive_layout \
-  tests.test_launcher_presentation \
-  -v
+```text
+docs/testing/LOCAL_AGENT_START_HERE.md
 ```
 
-Then run the other current focused suites named by the full local-agent protocol and finally:
+Its current UI/platform focused gate includes installation regressions, responsive layout, Activity viewport, My Greia, read-only visual context, package/Parent and localization/language policy tests. After repairing any real failures, the agent must run the other full-session gates and finally:
 
 ```bash
 make verify
@@ -431,9 +425,10 @@ After current-source tests pass:
 8. run the responsive matrix in an owner-controlled windowed/VM environment;
 9. exercise My Greia colors, wallpaper, semantic size and avatar across at least two profiles;
 10. physically eject removable media while My Greia wallpaper browsing is open;
-11. prove Writing/Painting receive read-only child visual context and no customization path;
-12. measure idle/interaction resource behavior on the low-resource Acer floor;
-13. where practical, repeat basic install/UI acceptance on another x86 target/VM so one Acer does not become a hidden platform contract.
+11. prove My Greia controls never overlap platform Home/Back at the physical/reference target;
+12. prove Writing/Painting receive read-only child visual context and no customization path;
+13. measure idle/interaction resource behavior on the low-resource Acer floor;
+14. where practical, repeat basic install/UI acceptance on another x86 target/VM so one Acer does not become a hidden platform contract.
 
 ---
 
@@ -494,8 +489,8 @@ Parent/package install:
   runtime/parent-app-client.toml
   runtime/parent-app-client.manifest.json
 
-Main local-agent protocol:
-  docs/testing/2026-08-18_LOCAL_AGENT_FULL_TEST_AND_FIX_SESSION.md
+Current local-agent entrypoint:
+  docs/testing/LOCAL_AGENT_START_HERE.md
 ```
 
 ---
