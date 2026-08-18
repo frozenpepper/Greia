@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Mapping
 
 
 API_VERSION = 1
@@ -30,6 +31,11 @@ RESOURCES = (
     ParentApiResource("profiles", f"{API_BASE}/profiles", ("GET", "POST")),
     ParentApiResource("activities", f"{API_BASE}/activities", ("GET",)),
     ParentApiResource(
+        "activity_install",
+        f"{API_BASE}/activities/install",
+        ("POST",),
+    ),
+    ParentApiResource(
         "hardware_settings",
         f"{API_BASE}/settings/hardware",
         ("GET", "PUT"),
@@ -45,10 +51,10 @@ CAPABILITIES = {
     "settings.input": True,
     "settings.display": True,
     "paired_devices.manage": True,
-    # These names intentionally exist now so the HTML client and a future phone
-    # client can consume the same protocol while the typed platform services are
-    # implemented. False means unavailable; it is never permission to emulate an
-    # operation with shell commands.
+    # The package endpoint is protocol-defined, but ordinary/release images keep
+    # it unavailable while Parent transport is still provisional HTTP. The
+    # package-aware server may advertise it only in an explicit developer or
+    # owner-enabled environment; clients must always honor this capability.
     "activities.install": False,
     "backup.manage": False,
     "settings.audio": False,
@@ -57,13 +63,25 @@ CAPABILITIES = {
 }
 
 
-def api_index_payload() -> dict[str, object]:
+def api_index_payload(
+    capability_overrides: Mapping[str, bool] | None = None,
+) -> dict[str, object]:
     """Return the versioned protocol index without leaking host implementation details."""
 
+    capabilities = dict(CAPABILITIES)
+    if capability_overrides:
+        unknown = set(capability_overrides) - set(capabilities)
+        if unknown:
+            raise ValueError(
+                "unknown Parent API capability override: " + ", ".join(sorted(unknown))
+            )
+        capabilities.update(
+            {name: bool(enabled) for name, enabled in capability_overrides.items()}
+        )
     return {
         "api_version": API_VERSION,
         "api_base": API_BASE,
         "service_type": SERVICE_TYPE,
         "resources": [resource.as_json_dict() for resource in RESOURCES],
-        "capabilities": dict(CAPABILITIES),
+        "capabilities": capabilities,
     }
