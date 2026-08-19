@@ -665,10 +665,10 @@ class WritingApp:
         categories = self.emoji_palette.categories
         category_height = min(
             self.metrics.px(54),
-            max(self.metrics.px(38), area.height // 6),
+            max(1, area.height // 6),
         )
         category_width = max(
-            self.metrics.px(38),
+            1,
             min(
                 self.metrics.px(58),
                 (area.width - gap * (len(categories) - 1)) // len(categories),
@@ -689,24 +689,25 @@ class WritingApp:
         ]
 
         grid_top = area.top + category_height + self.metrics.px(18)
-        grid_height = max(self.metrics.px(120), area.bottom - grid_top)
-        columns = 6
-        rows = 3
+        emoji_count = len(self.emoji_palette.selected.emoji)
+        columns = 6 if area.width >= self.metrics.px(500) else 5
+        rows = max(1, (emoji_count + columns - 1) // columns)
+        available_height = max(1, area.bottom - grid_top)
         cell = max(
-            self.metrics.px(40),
+            1,
             min(
                 self.metrics.px(72),
                 (area.width - gap * (columns - 1)) // columns,
-                (grid_height - gap * (rows - 1)) // rows,
+                (available_height - gap * (rows - 1)) // rows,
             ),
         )
         total_width = columns * cell + gap * (columns - 1)
+        total_height = rows * cell + gap * (rows - 1)
         grid_left = area.centerx - total_width // 2
+        grid_top += max(0, (available_height - total_height) // 2)
         items: list[tuple[pygame.Rect, str]] = []
         for index, cluster in enumerate(self.emoji_palette.selected.emoji):
             row, column = divmod(index, columns)
-            if row >= rows:
-                break
             items.append(
                 (
                     pygame.Rect(
@@ -852,7 +853,7 @@ class WritingApp:
             icon = self.typography.render(
                 self.emoji_palette.categories[index].icon,
                 FontRole.BODY,
-                min(rect.height - self.metrics.px(8), self.metrics.px(34)),
+                max(8, min(rect.height - self.metrics.px(8), self.metrics.px(34))),
                 self.theme.text,
             )
             self.screen.blit(icon, icon.get_rect(center=rect.center))
@@ -861,12 +862,12 @@ class WritingApp:
                 self.screen,
                 self.theme.background,
                 rect,
-                border_radius=max(9, self.metrics.radius // 2),
+                border_radius=max(4, min(9, self.metrics.radius // 2)),
             )
             rendered = self.typography.render(
                 cluster,
                 FontRole.BODY,
-                max(self.metrics.px(30), int(rect.height * 0.62)),
+                max(8, min(self.metrics.px(46), int(rect.height * 0.62))),
                 self.theme.text,
             )
             self.screen.blit(rendered, rendered.get_rect(center=rect.center))
