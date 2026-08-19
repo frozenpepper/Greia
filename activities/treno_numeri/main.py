@@ -203,7 +203,7 @@ def main() -> int:
         nonlocal train_departing, train_arriving, train_offset_x
         current_fruit = FRUITS[idx % len(FRUITS)]
         loaded_count = 0
-        train_offset_x = float(REFERENCE_WIDTH)
+        train_offset_x = -float(REFERENCE_WIDTH)
         train_arriving = True
         train_departing = False
 
@@ -256,8 +256,8 @@ def main() -> int:
                     whistle_anim = 1.0
                     for _ in range(8):
                         smoke_particles.append({
-                            "x": 350 + train_offset_x,
-                            "y": 210,
+                            "x": 611 + train_offset_x,
+                            "y": 165,
                             "vx": random.uniform(-2, -5),
                             "vy": random.uniform(-4, -8),
                             "radius": random.uniform(14, 26),
@@ -331,14 +331,32 @@ def main() -> int:
 
         # Train arrival / departure kinematics
         if train_arriving:
-            train_offset_x -= train_speed
-            if train_offset_x <= 0:
+            train_offset_x += train_speed
+            if random.random() < 0.25:
+                smoke_particles.append({
+                    "x": 611 + train_offset_x,
+                    "y": 165,
+                    "vx": random.uniform(-4, -1),
+                    "vy": random.uniform(-2, -5),
+                    "radius": random.uniform(10, 18),
+                    "alpha": 200,
+                })
+            if train_offset_x >= 0:
                 train_offset_x = 0
                 train_arriving = False
                 sounds.play("chug")
         elif train_departing:
-            train_offset_x -= train_speed * 1.5
-            if train_offset_x < -REFERENCE_WIDTH:
+            train_offset_x += train_speed * 1.5
+            if random.random() < 0.35:
+                smoke_particles.append({
+                    "x": 611 + train_offset_x,
+                    "y": 165,
+                    "vx": random.uniform(-5, -2),
+                    "vy": random.uniform(-3, -6),
+                    "radius": random.uniform(12, 22),
+                    "alpha": 220,
+                })
+            if train_offset_x > REFERENCE_WIDTH:
                 round_idx += 1
                 if round_idx >= total_stations:
                     is_victory = True
@@ -401,6 +419,7 @@ def main() -> int:
 
         # 3. Train & Wagons (Locomotive in Front Leading, Wagon Behind)
         tx = train_offset_x
+        wheel_ang = tx * 0.12
 
         # Cargo Wagon (Behind on Left)
         wagon_x = 100 + tx
@@ -410,10 +429,13 @@ def main() -> int:
         for sl in range(4):
             pygame.draw.line(surf, (180, 83, 9), (wagon_x + 10, 280 + sl * 22), (wagon_x + 250, 280 + sl * 22), 3)
         # Wagon Wheels
-        pygame.draw.circle(surf, (30, 41, 59), (int(wagon_x + 55), 378), 20)
-        pygame.draw.circle(surf, (234, 179, 8), (int(wagon_x + 55), 378), 12)
-        pygame.draw.circle(surf, (30, 41, 59), (int(wagon_x + 205), 378), 20)
-        pygame.draw.circle(surf, (234, 179, 8), (int(wagon_x + 205), 378), 12)
+        for wgw in (wagon_x + 55, wagon_x + 205):
+            pygame.draw.circle(surf, (30, 41, 59), (int(wgw), 378), 20)
+            pygame.draw.circle(surf, (234, 179, 8), (int(wgw), 378), 12)
+            w_sp1 = (int(wgw + math.cos(wheel_ang) * 9), int(378 + math.sin(wheel_ang) * 9))
+            w_sp2 = (int(wgw - math.cos(wheel_ang) * 9), int(378 - math.sin(wheel_ang) * 9))
+            pygame.draw.line(surf, (180, 83, 9), w_sp1, w_sp2, 3)
+            pygame.draw.circle(surf, (255, 255, 255), (int(wgw), 378), 4)
 
         # Draw Loaded Fruits inside Wagon
         for idx in range(loaded_count):
@@ -446,11 +468,30 @@ def main() -> int:
         pygame.draw.circle(surf, (234, 179, 8), (loco_x + 248, 275), 14, 3)
         pygame.draw.polygon(surf, (234, 179, 8), [(loco_x + 245, 345), (loco_x + 280, 375), (loco_x + 245, 375)])
 
-        # Large Golden Locomotive Wheels
+        # Large Golden Locomotive Wheels with Rotating Spokes and Driving Rod
+        wheel_ang = (train_offset_x) * 0.12
         for wx in (loco_x + 45, loco_x + 125, loco_x + 205):
             pygame.draw.circle(surf, (30, 41, 59), (int(wx), 378), 24)
             pygame.draw.circle(surf, (234, 179, 8), (int(wx), 378), 16)
+            sp1_x = wx + math.cos(wheel_ang) * 12
+            sp1_y = 378 + math.sin(wheel_ang) * 12
+            sp2_x = wx - math.cos(wheel_ang) * 12
+            sp2_y = 378 - math.sin(wheel_ang) * 12
+            pygame.draw.line(surf, (180, 83, 9), (int(sp1_x), int(sp1_y)), (int(sp2_x), int(sp2_y)), 3)
+            sp3_x = wx - math.sin(wheel_ang) * 12
+            sp3_y = 378 + math.cos(wheel_ang) * 12
+            sp4_x = wx + math.sin(wheel_ang) * 12
+            sp4_y = 378 - math.cos(wheel_ang) * 12
+            pygame.draw.line(surf, (180, 83, 9), (int(sp3_x), int(sp3_y)), (int(sp4_x), int(sp4_y)), 3)
             pygame.draw.circle(surf, (255, 255, 255), (int(wx), 378), 6)
+
+        # Connecting driving rod
+        rod_y_off = math.sin(wheel_ang) * 8
+        rod_x_off = math.cos(wheel_ang) * 8
+        rod_p1 = (int(loco_x + 45 + rod_x_off), int(378 + rod_y_off))
+        rod_p2 = (int(loco_x + 205 + rod_x_off), int(378 + rod_y_off))
+        pygame.draw.line(surf, (148, 163, 184), rod_p1, rod_p2, 6)
+        pygame.draw.line(surf, (51, 65, 85), rod_p1, rod_p2, 2)
 
         # 4. Flying Fruits
         for item in flying_items:
