@@ -1,19 +1,126 @@
 from __future__ import annotations
 
+import importlib.util
 import os
+import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest import mock
 
 from greia_launcher.child_shell import GreiaChildShell, ProfileVisualActivitySupervisor
-from greia_launcher.runtime_adapter import PythonRuntimeAdapter
-from greia_platform.activities import ActivityManifest
+from greia_launcher.composition import build_launcher_runtime_services
+from greia_launcher.runtime_adapter import (
+    PythonRuntimeAdapter,
+    PythonRuntimePolicy,
+    RuntimeUnavailableError,
+)
+from greia_platform.activities import (
+    ActivityManifest,
+    ActivityRegistry,
+    RuntimeCatalogue,
+)
+from greia_platform.permissions import PermissionDecisionError
+from greia_platform.trust import ActivitySource, PackageTrust
+from greia_platform.ui_preferences import UiPreferencesStore
 from greia_simulator.child_shell import GreiaSimulatorChildShell
-from greia_simulator.device import DEFAULT_CAPABILITIES, SimulatedDeviceProfile, parse_viewport
-from greia_simulator.python_activity import normalize_display_request
-from greia_simulator.runtime import SimulatorActivitySupervisor, SimulatorPythonRuntimeAdapter
+from greia_simulator.device import (
+    DEFAULT_CAPABILITIES,
+    HAL_SIMULATABLE_CAPABILITIES,
+    VIEWPORT_PRESETS,
+    SimulatedDeviceProfile,
+    canonical_capability_choices,
+    parse_viewport,
+)
+from greia_simulator.python_activity import normalize_display_request, run_activity
+from greia_simulator.runtime import SimulatorPythonRuntimeAdapter
 from greia_simulator.workspace import SimulatorWorkspace
+
+
+REPO = Path(__file__).resolve().parents[1]
+
+
+def _write_activity(
+    root: Path,
+    *,
+    activity_id: str = "org.example.simulated",
+    runtime_type: str = "python",
+    required: tuple[str, ...] = ("display",),
+    body: str = "pass\n",
+    version: str = "1.0.0",
+) -> Path:
+    root.mkdir(parents=True, exist_ok=True)
+    requirements = ", ".join(f'"{item}"' for item in required)
+    root.joinpath("activity.toml").write_text(
+        f'''[activity]\nid = "{activity_id}"\nlegacy_ids = []\ntitle_key = "Example Activity"\nversion = "{version}"\nicon = "robot"\nlanguages = ["*"]\n\n[presentation]\ncategories = ["play"]\n\n[education]\ncategories = ["test"]\ndifficulty = 1\nskills = [{{ id = "test.skill", weight = 1 }}]\nevents = [{{ id = "probe.completed", kind = "completion" }}]\n\n[runtime]\ntype = "{runtime_type}"\napi_version = "0.1"\nentrypoint = "main.py"\n\n[input]\nprofile = "hybrid"\n\n[requirements]\nrequired_capabilities = [{requirements}]\noptional_capabilities = []\n\n[permissions]\nrequested = []\n\n[storage]\nschema_version = 1\n''',
+        encoding="utf-8",
+    )
+    root.joinpath("main.py").write_text(body, encoding="utf-8")
+    return root
+
+
+def _manual_manifest(root: Path) -> ActivityManifest:
+    entrypoint = root / "main.py"
+    entrypoint.write_text("pass\n", encoding="utf-8")
+    return ActivityManifest(
+        activity_id="org.example.simulated",
+        legacy_ids=(),
+        title_key="Example Activity",
+        version="1.0.0",
+        runtime_type="python",
+        api_version="0.1",
+        entrypoint=Path("main.py"),
+        icon_id="robot",
+        categories=("test",),
+        skills=(),
+        events=(),
+        difficulty=1,
+        languages=("*",),
+        required_capabilities=("display",),
+        optional_capabilities=(),
+        requested_permissions=(),
+        storage_schema_version=1,
+        root=root,
+    )
+
+
+def _builtin_manifests(runtime: RuntimeCatalogue) -> tuple[ActivityManifest, ...]:
+    registry = ActivityRegistry(
+        (
+            ActivitySource(
+                REPO / "activities",
+                PackageTrust.BUILT_IN,
+                "greia-system",
+            ),
+        ),
+        runtime,
+    )
+    return registry.discover()
+
+
+def _services_for(
+    runtime: RuntimeCatalogue,
+    device: SimulatedDeviceProfile,
+    manifests: tuple[ActivityManifest, ...],
+):
+    adapter = SimulatorPythonRuntimeAdapter(
+        device,
+        policy=PythonRuntimePolicy.load(REPO / "runtime" / "child-runtime.toml"),
+    )
+    services = build_launcher_runtime_services(
+        runtime,
+        manifests,
+        runtime_policy_path=REPO / "runtime" / "child-runtime.toml",
+        permission_policy_path=REPO / "runtime" / "permission-policy.toml",
+        storage_policy_path=REPO / "runtime" / "storage-policy.toml",
+        history_policy_path=REPO / "runtime" / "history-policy.toml",
+        progression_policy_path=REPO / "runtime" / "progression-policy.toml",
+        hal=device.to_hal(),
+        runtime_adapters=(adapter,),
+    )
+    return adapter, services
 
 
 class GreiaSimulatorDeviceTests(unittest.TestCase):
@@ -44,6 +151,19 @@ class GreiaSimulatorDeviceTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             SimulatedDeviceProfile(1024, 600, frozenset({"keyboard"}))
 
+    def test_simulator_capability_choices_are_derived_from_runtime_catalogue(self) -> None:
+        runtime = RuntimeCatalogue.load(REPO / "runtime" / "child-runtime.toml")
+        choices = frozenset(canonical_capability_choices(runtime.allowed_capabilities))
+        self.assertEqual(choices, runtime.allowed_capabilities)
+        self.assertFalse(runtime.allowed_capabilities - HAL_SIMULATABLE_CAPABILITIES)
+
+    def test_presets_claim_geometry_only(self) -> None:
+        self.assertEqual(VIEWPORT_PRESETS["Reference 1024x600"], (1024, 600))
+        labels = " ".join(VIEWPORT_PRESETS).casefold()
+        self.assertNotIn("acer", labels)
+        self.assertNotIn("tablet", labels)
+        self.assertNotIn("low-resource", labels)
+
 
 class GreiaSimulatorRuntimeTests(unittest.TestCase):
     def test_pygame_request_is_forced_to_synthetic_viewport(self) -> None:
@@ -56,54 +176,109 @@ class GreiaSimulatorRuntimeTests(unittest.TestCase):
         self.assertEqual(size, (1366, 768))
         self.assertEqual(flags, 0b1011)
 
-    def test_python_adapter_uses_simulator_bootstrap(self) -> None:
+    def test_python_adapter_wraps_canonical_command_with_absolute_bootstrap(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
+            manifest = _manual_manifest(root)
+            device = SimulatedDeviceProfile(1366, 768, DEFAULT_CAPABILITIES)
+            canonical = PythonRuntimeAdapter(python_executable=Path("/python")).command_for(
+                manifest
+            )
+            adapter = SimulatorPythonRuntimeAdapter(
+                device,
+                python_executable=Path("/python"),
+            )
+            command = adapter.command_for(manifest)
+
+            self.assertEqual(command.cwd, canonical.cwd)
+            self.assertEqual(command.environment, canonical.environment)
+            self.assertEqual(command.command[0], canonical.command[0])
+            self.assertEqual(Path(command.command[1]), adapter.bootstrap_path)
+            self.assertTrue(adapter.bootstrap_path.is_absolute())
+            self.assertNotIn("-m", command.command)
+            self.assertEqual(command.command[2:4], ("--viewport", "1366x768"))
+            self.assertEqual(command.command[-1], str(manifest.launch_path))
+
+    def test_activity_package_cannot_shadow_trusted_bootstrap(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            manifest = _manual_manifest(root)
+            fake = root / "greia_simulator" / "python_activity.py"
+            fake.parent.mkdir()
+            fake.write_text("raise RuntimeError('shadowed')\n", encoding="utf-8")
+            adapter = SimulatorPythonRuntimeAdapter(
+                SimulatedDeviceProfile(),
+                python_executable=Path("/python"),
+            )
+            command = adapter.command_for(manifest)
+            self.assertEqual(Path(command.command[1]), adapter.bootstrap_path)
+            self.assertNotEqual(Path(command.command[1]), fake)
+            self.assertNotEqual(adapter.bootstrap_path.parent, root / "greia_simulator")
+
+    def test_bootstrap_hides_simulator_identity_and_prioritizes_trusted_source(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
             entrypoint = root / "main.py"
             entrypoint.write_text("pass\n", encoding="utf-8")
-            manifest = ActivityManifest(
-                activity_id="org.example.simulated",
-                legacy_ids=(),
-                title_key="activity.example.title",
-                version="1.0.0",
-                runtime_type="python",
-                api_version="0.1",
-                entrypoint=Path("main.py"),
-                icon_id="robot",
-                categories=("test",),
-                skills=(),
-                events=(),
-                difficulty=1,
-                languages=("*",),
-                required_capabilities=("display",),
-                optional_capabilities=(),
-                requested_permissions=(),
-                storage_schema_version=1,
-                root=root,
-            )
-            adapter = SimulatorPythonRuntimeAdapter(python_executable=Path("/python"))
-            command = adapter.command_for(manifest)
-            self.assertEqual(
-                command.command[:3],
-                ("/python", "-m", "greia_simulator.python_activity"),
-            )
-            self.assertEqual(command.command[-1], str(entrypoint))
-            self.assertEqual(command.cwd, root)
+            captured: dict[str, object] = {}
+            original_path = list(sys.path)
 
-    def test_simulator_extends_canonical_runtime_and_shell_seams(self) -> None:
+            def capture(path: str, *, run_name: str) -> None:
+                captured["path"] = path
+                captured["run_name"] = run_name
+                captured["environment"] = dict(os.environ)
+                captured["sys_path"] = list(sys.path)
+
+            environment = {
+                "GREIA_ACTIVITY_ROOT": str(root),
+                "GREIA_SIMULATOR": "stale",
+                "GREIA_SIMULATOR_VIEWPORT": "999x999",
+            }
+            try:
+                with mock.patch.dict(os.environ, environment, clear=False), mock.patch(
+                    "greia_simulator.python_activity.install_pygame_display_patch"
+                ) as display_patch, mock.patch(
+                    "greia_simulator.python_activity.runpy.run_path",
+                    side_effect=capture,
+                ):
+                    run_activity(entrypoint, target_size=(1024, 600))
+                display_patch.assert_called_once_with((1024, 600))
+            finally:
+                sys.path[:] = original_path
+
+            child_environment = captured["environment"]
+            assert isinstance(child_environment, dict)
+            self.assertFalse(
+                any(str(name).startswith("GREIA_SIMULATOR") for name in child_environment)
+            )
+            child_path = captured["sys_path"]
+            assert isinstance(child_path, list)
+            trusted_source = str(REPO / "src")
+            self.assertEqual(child_path[0], trusted_source)
+            self.assertEqual(child_path[1], str(root))
+
+    def test_simulator_does_not_replace_shell_authority_methods(self) -> None:
         self.assertTrue(issubclass(SimulatorPythonRuntimeAdapter, PythonRuntimeAdapter))
-        self.assertTrue(
-            issubclass(SimulatorActivitySupervisor, ProfileVisualActivitySupervisor)
-        )
         self.assertTrue(issubclass(GreiaSimulatorChildShell, GreiaChildShell))
+        self.assertNotIn("_rebuild_runtime_services", GreiaSimulatorChildShell.__dict__)
+        self.assertNotIn("_draw", GreiaSimulatorChildShell.__dict__)
+        self.assertIn("_rebuild_runtime_services", GreiaChildShell.__dict__)
+
+    def test_simulator_uses_shared_display_policy_hooks(self) -> None:
+        shell = object.__new__(GreiaSimulatorChildShell)
+        shell.simulated_device = SimulatedDeviceProfile(1111, 700, DEFAULT_CAPABILITIES)
+        pygame = SimpleNamespace(RESIZABLE=0x10)
+        event = SimpleNamespace(size=(700, 400))
+        self.assertEqual(shell._initial_display_request(pygame), ((1111, 700), 0x10))
+        self.assertEqual(shell._resize_display_request(event, pygame), ((1111, 700), 0x10))
+        self.assertIn("1111x700", shell._display_caption())
 
     def test_first_party_activities_have_no_simulator_specific_behavior(self) -> None:
-        repo = Path(__file__).resolve().parents[1]
         violations: list[str] = []
-        for path in sorted((repo / "activities").glob("*/**/*.py")):
+        for path in sorted((REPO / "activities").glob("*/**/*.py")):
             source = path.read_text(encoding="utf-8")
             if "GREIA_SIMULATOR" in source or "greia_simulator" in source:
-                violations.append(str(path.relative_to(repo)))
+                violations.append(str(path.relative_to(REPO)))
         self.assertEqual(
             violations,
             [],
@@ -113,38 +288,341 @@ class GreiaSimulatorRuntimeTests(unittest.TestCase):
 
 
 class GreiaSimulatorWorkspaceTests(unittest.TestCase):
-    def test_environment_uses_isolated_state_and_real_repo_root(self) -> None:
-        repo = Path(__file__).resolve().parents[1]
+    def test_environment_uses_only_normal_greia_roots(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
-            workspace = SimulatorWorkspace(repo, Path(directory) / "state")
-            environment = workspace.environment(
-                SimulatedDeviceProfile(1024, 600, DEFAULT_CAPABILITIES)
-            )
-            self.assertEqual(Path(environment["GREIA_OS_ROOT"]), repo.resolve())
+            workspace = SimulatorWorkspace(REPO, Path(directory) / "state")
+            environment = workspace.environment()
+            self.assertEqual(Path(environment["GREIA_OS_ROOT"]), REPO.resolve())
             self.assertTrue(
                 environment["GREIA_DEVELOPER_ACTIVITY_ROOT"].startswith(directory)
             )
-            self.assertEqual(environment["GREIA_SIMULATOR_VIEWPORT"], "1024x600")
-            self.assertEqual(environment["GREIA_SIMULATOR"], "1")
-
-    def test_environment_parses_back_to_same_device(self) -> None:
-        repo = Path(__file__).resolve().parents[1]
-        with tempfile.TemporaryDirectory() as directory:
-            workspace = SimulatorWorkspace(repo, Path(directory) / "state")
-            device = SimulatedDeviceProfile(
-                1280,
-                800,
-                frozenset({"display", "pointer", "touch"}),
+            self.assertFalse(
+                any(name.startswith("GREIA_SIMULATOR") for name in environment)
             )
-            environment = workspace.environment(device)
-            with mock.patch.dict(os.environ, environment, clear=False):
-                loaded = SimulatedDeviceProfile.from_environment()
-            self.assertEqual(loaded, device)
 
     def test_workspace_must_live_outside_source_checkout(self) -> None:
-        repo = Path(__file__).resolve().parents[1]
         with self.assertRaises(ValueError):
-            SimulatorWorkspace(repo, repo / ".simulator-state")
+            SimulatorWorkspace(REPO, REPO / ".simulator-state")
+
+    def test_workspace_is_bound_to_checkout_and_can_be_explicitly_rebound(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            state = base / "state"
+            first = SimulatorWorkspace(REPO, state)
+            first.ensure()
+
+            other_repo = base / "other-greia"
+            (other_repo / "runtime").mkdir(parents=True)
+            shutil_source = REPO / "runtime" / "child-runtime.toml"
+            (other_repo / "runtime" / "child-runtime.toml").write_bytes(
+                shutil_source.read_bytes()
+            )
+            second = SimulatorWorkspace(other_repo, state)
+            with self.assertRaisesRegex(RuntimeError, "another Greia checkout"):
+                second.ensure()
+            second.ensure(allow_repo_rebind=True)
+            metadata = second.metadata_path.read_text(encoding="utf-8")
+            self.assertIn(str(other_repo.resolve()), metadata)
+
+    def test_workspace_single_writer_lock(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            state = Path(directory) / "state"
+            first = SimulatorWorkspace(REPO, state)
+            second = SimulatorWorkspace(REPO, state)
+            first.acquire_lock()
+            try:
+                with self.assertRaisesRegex(RuntimeError, "already in use"):
+                    second.acquire_lock()
+            finally:
+                first.release_lock()
+            second.acquire_lock()
+            second.release_lock()
+
+    def test_profile_interface_size_uses_real_store_and_named_profile(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            workspace = SimulatorWorkspace(REPO, Path(directory) / "state")
+            profiles = workspace.profiles()
+            profile = profiles[0]
+            result = workspace.set_interface_size(profile.profile_id, "large")
+            self.assertEqual(result.value, "large")
+            context = workspace.profile_store().context(profile.profile_id)
+            persisted = UiPreferencesStore(context.customization_dir).read()
+            self.assertEqual(persisted.interface_size.value, "large")
+
+    def test_load_activity_is_canonical_developer_registration(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            workspace = SimulatorWorkspace(REPO, base / "state")
+            source = _write_activity(base / "source")
+            registration = workspace.load_activity(source)
+            self.assertEqual(registration.package_trust, PackageTrust.DEVELOPER_UNSIGNED)
+            self.assertEqual(registration.source_id, "greia-developer-remote")
+            self.assertEqual(registration.manifest.activity_id, "org.example.simulated")
+            self.assertTrue(registration.manifest.root.is_relative_to(workspace.developer_root))
+
+    def test_load_activity_rejects_builtin_identity_collision(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            workspace = SimulatorWorkspace(REPO, base / "state")
+            source = _write_activity(
+                base / "source",
+                activity_id="org.greia.shape-garden",
+            )
+            with self.assertRaises(ValueError):
+                workspace.load_activity(source)
+
+    def test_load_activity_rejects_source_state_overlap(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            state = base / "state"
+            workspace = SimulatorWorkspace(REPO, state)
+            workspace.ensure()
+            _write_activity(state / "inside")
+            with self.assertRaisesRegex(ValueError, "overlap"):
+                workspace.load_activity(state / "inside")
+            ancestor = base
+            _write_activity(ancestor)
+            with self.assertRaisesRegex(ValueError, "overlap"):
+                workspace.load_activity(ancestor)
+
+    @unittest.skipUnless(hasattr(os, "symlink"), "host has no symlink support")
+    def test_load_activity_rejects_file_and_directory_symlinks_before_copy(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            workspace = SimulatorWorkspace(REPO, base / "state")
+            outside = base / "outside.txt"
+            outside.write_text("secret", encoding="utf-8")
+
+            file_source = _write_activity(base / "file-source")
+            os.symlink(outside, file_source / "escape.txt")
+            with self.assertRaisesRegex(ValueError, "symlinks are forbidden"):
+                workspace.load_activity(file_source)
+
+            dir_source = _write_activity(base / "dir-source", activity_id="org.example.dirlink")
+            target_dir = base / "outside-dir"
+            target_dir.mkdir()
+            (target_dir / "payload.txt").write_text("outside", encoding="utf-8")
+            os.symlink(target_dir, dir_source / "linked-dir")
+            with self.assertRaisesRegex(ValueError, "symlinks are forbidden"):
+                workspace.load_activity(dir_source)
+
+    def test_oversize_source_is_rejected_before_staging_copy(self) -> None:
+        runtime = RuntimeCatalogue.load(REPO / "runtime" / "child-runtime.toml")
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            workspace = SimulatorWorkspace(REPO, base / "state")
+            source = _write_activity(base / "source")
+            with (source / "huge.dat").open("wb") as handle:
+                handle.truncate(runtime.maximum_activity_bytes + 1)
+            with self.assertRaisesRegex(ValueError, "exceeds"):
+                workspace.load_activity(source)
+            self.assertEqual(
+                tuple(workspace.state_root.glob("greia-simulator-load-*")),
+                (),
+            )
+
+    def test_failed_final_publication_restores_previous_valid_activity(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            workspace = SimulatorWorkspace(REPO, base / "state")
+            source = _write_activity(base / "source", body="VALUE = 'old'\n")
+            first = workspace.load_activity(source)
+            destination = first.manifest.root
+            self.assertIn("old", (destination / "main.py").read_text(encoding="utf-8"))
+
+            (source / "main.py").write_text("VALUE = 'new'\n", encoding="utf-8")
+            original = ActivityRegistry.discover_registrations
+            calls = {"count": 0}
+
+            def fail_final(registry_self):
+                calls["count"] += 1
+                if calls["count"] == 3:
+                    raise ValueError("forced final validation failure")
+                return original(registry_self)
+
+            with mock.patch.object(
+                ActivityRegistry,
+                "discover_registrations",
+                autospec=True,
+                side_effect=fail_final,
+            ):
+                with self.assertRaisesRegex(ValueError, "forced final"):
+                    workspace.load_activity(source)
+
+            self.assertIn("old", (destination / "main.py").read_text(encoding="utf-8"))
+
+    def test_package_install_delegates_to_canonical_service_when_available(self) -> None:
+        try:
+            import greia_platform.activity_packages as package_module
+        except ImportError:
+            self.skipTest("canonical package service is unavailable on this host")
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            workspace = SimulatorWorkspace(REPO, base / "state")
+            archive = base / "test.greiaactivity"
+            archive.write_bytes(b"placeholder")
+            receipt = object()
+            with mock.patch.object(
+                package_module,
+                "ActivityPackageService",
+            ) as service_class:
+                service_class.return_value.install_archive.return_value = receipt
+                self.assertIs(workspace.install_activity_package(archive), receipt)
+                service_class.assert_called_once_with(
+                    state_root=workspace.package_root,
+                    runtime_catalogue=REPO / "runtime" / "child-runtime.toml",
+                    built_in_root=REPO / "activities",
+                )
+                service_class.return_value.install_archive.assert_called_once_with(archive)
+
+
+class GreiaSimulatorAuthorityIntegrationTests(unittest.TestCase):
+    def test_canonical_composition_uses_injected_adapter_and_denies_missing_capability(self) -> None:
+        runtime = RuntimeCatalogue.load(REPO / "runtime" / "child-runtime.toml")
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            workspace = SimulatorWorkspace(REPO, base / "state")
+            registration = workspace.load_activity(
+                _write_activity(base / "source", required=("display", "touch"))
+            )
+            device = SimulatedDeviceProfile(
+                1024,
+                600,
+                frozenset({"display", "keyboard", "pointer"}),
+            )
+            manifests = (*_builtin_manifests(runtime), registration.manifest)
+            adapter, services = _services_for(runtime, device, manifests)
+            self.assertIs(services.runtime_manager.adapter_for("python"), adapter)
+            with self.assertRaises(PermissionDecisionError):
+                services.permission_broker.issue(registration)
+
+    def test_valid_but_unavailable_runtime_is_registry_valid_and_runtime_unavailable(self) -> None:
+        runtime = RuntimeCatalogue.load(REPO / "runtime" / "child-runtime.toml")
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            workspace = SimulatorWorkspace(REPO, base / "state")
+            registration = workspace.load_activity(
+                _write_activity(base / "source", runtime_type="web")
+            )
+            device = SimulatedDeviceProfile()
+            manifests = (*_builtin_manifests(runtime), registration.manifest)
+            _, services = _services_for(runtime, device, manifests)
+            authority = services.permission_broker.issue(registration)
+            self.assertEqual(authority.activity_id, registration.manifest.activity_id)
+            with self.assertRaises(RuntimeUnavailableError):
+                services.runtime_manager.prepare_launch(
+                    registration.manifest,
+                    expected_device_snapshot_token=authority.device_snapshot_token,
+                )
+
+    def test_bounded_shutdown_uses_normal_supervisor_path(self) -> None:
+        shell = object.__new__(GreiaSimulatorChildShell)
+        session = object()
+        result = object()
+        supervisor = mock.Mock()
+        supervisor.active_session = session
+        supervisor.request_stop.return_value = result
+        shell.supervisor = supervisor
+        shell._shutdown_active_bounded()
+        supervisor.request_stop.assert_called_once_with(session)
+        supervisor.force_stop.assert_not_called()
+
+    def test_bounded_shutdown_escalates_through_supervisor_not_process_kill(self) -> None:
+        shell = object.__new__(GreiaSimulatorChildShell)
+        session = object()
+        supervisor = mock.Mock()
+        supervisor.active_session = session
+        supervisor.request_stop.return_value = None
+        supervisor.poll.return_value = None
+        supervisor.force_stop.return_value = None
+        shell.supervisor = supervisor
+        with mock.patch(
+            "greia_simulator.child_shell.time.monotonic",
+            side_effect=(0.0, 2.0, 2.0, 3.0),
+        ), mock.patch("greia_simulator.child_shell.time.sleep"):
+            shell._shutdown_active_bounded()
+        supervisor.force_stop.assert_called_once()
+        self.assertEqual(supervisor.force_stop.call_args.args[0], session)
+
+    @unittest.skipUnless(
+        importlib.util.find_spec("pygame") is not None,
+        "Pygame is required for real simulator lifecycle integration",
+    )
+    def test_real_python_activity_ready_storage_event_history_and_stop(self) -> None:
+        runtime = RuntimeCatalogue.load(REPO / "runtime" / "child-runtime.toml")
+        body = '''from greia_platform.activity_api import (\n    activity_stop_requested, emit_activity_event, get_storage, mark_activity_ready\n)\nimport pygame\nimport time\n\npygame.init()\nscreen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)\nscreen.fill((255, 255, 255))\npygame.display.flip()\nget_storage().kv_set("probe", {"ok": True})\nemit_activity_event("probe.completed", idempotency_key="probe-1")\nmark_activity_ready()\nwhile not activity_stop_requested():\n    time.sleep(0.02)\npygame.quit()\n'''
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            workspace = SimulatorWorkspace(REPO, base / "state")
+            registration = workspace.load_activity(_write_activity(base / "source", body=body))
+            device = SimulatedDeviceProfile(640, 480, DEFAULT_CAPABILITIES)
+            manifests = (*_builtin_manifests(runtime), registration.manifest)
+            _, services = _services_for(runtime, device, manifests)
+            profile = workspace.profile_store().context(workspace.profiles()[0].profile_id)
+            authority = services.permission_broker.issue(registration)
+            supervisor = ProfileVisualActivitySupervisor(
+                runtime_manager=services.runtime_manager,
+                storage_service=services.storage_service,
+                history_service=services.history_service,
+                display_coordinator=None,
+            )
+            environment = workspace.environment()
+            environment.update(
+                {
+                    "SDL_VIDEODRIVER": "dummy",
+                    "PYGAME_HIDE_SUPPORT_PROMPT": "1",
+                }
+            )
+            with mock.patch.dict(os.environ, environment, clear=False):
+                session = supervisor.start(registration.manifest, profile, authority)
+                deadline = time.monotonic() + 8.0
+                while (
+                    session.result is None
+                    and session.ready_at is None
+                    and time.monotonic() < deadline
+                ):
+                    supervisor.poll(session)
+                    time.sleep(0.02)
+                self.assertIsNone(session.result, session.result)
+                self.assertIsNotNone(session.ready_at)
+
+                result = supervisor.request_stop(session)
+                deadline = time.monotonic() + 5.0
+                while result is None and time.monotonic() < deadline:
+                    time.sleep(0.02)
+                    result = supervisor.poll(session)
+                self.assertIsNotNone(result)
+                assert result is not None
+                self.assertTrue(result.ready)
+                self.assertTrue(result.succeeded)
+
+            storage = services.storage_service.open(
+                profile,
+                registration.manifest.activity_id,
+                schema_version=registration.manifest.storage_schema_version,
+                package_version=registration.manifest.version,
+            )
+            self.assertEqual(storage.kv_get("probe"), {"ok": True})
+            history = services.history_service.open(profile).export_state()
+            events = history["events"]
+            sessions = history["sessions"]
+            assert isinstance(events, list)
+            assert isinstance(sessions, list)
+            self.assertTrue(
+                any(
+                    event.get("activity_id") == registration.manifest.activity_id
+                    and event.get("event_id") == "probe.completed"
+                    for event in events
+                )
+            )
+            self.assertTrue(
+                any(
+                    item.get("activity_id") == registration.manifest.activity_id
+                    and item.get("ready") is True
+                    and item.get("ended_at") is not None
+                    for item in sessions
+                )
+            )
 
 
 if __name__ == "__main__":
