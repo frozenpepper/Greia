@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -26,7 +27,12 @@ from greia_platform.storage import ActivityStorageService, StoragePolicy
 
 from .display_session import DisplaySessionCoordinator
 from .display_session_legacy_x import LegacyXDisplaySessionBackend
-from .runtime_adapter import PythonRuntimeAdapter, PythonRuntimePolicy, RuntimeManager
+from .runtime_adapter import (
+    PythonRuntimeAdapter,
+    PythonRuntimePolicy,
+    RuntimeLaunchAdapter,
+    RuntimeManager,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -70,6 +76,26 @@ def provisional_installed_display_session() -> DisplaySessionCoordinator:
     return DisplaySessionCoordinator(LegacyXDisplaySessionBackend())
 
 
+def default_runtime_adapters(
+    runtime_policy_path: Path,
+    *,
+    python_executable: Path | None = None,
+) -> tuple[RuntimeLaunchAdapter, ...]:
+    """Return the canonical runtime-adapter set for ordinary Greia composition.
+
+    Synthetic/development compositions may inject another adapter set into
+    ``build_launcher_runtime_services``. Permission, storage, history and
+    device-authority composition stay here regardless of that variation.
+    """
+
+    return (
+        PythonRuntimeAdapter(
+            python_executable,
+            policy=PythonRuntimePolicy.load(runtime_policy_path),
+        ),
+    )
+
+
 def build_launcher_runtime_services(
     runtime: RuntimeCatalogue,
     activities: tuple[ActivityManifest, ...],
@@ -81,8 +107,16 @@ def build_launcher_runtime_services(
     progression_policy_path: Path,
     hal: GreiaHAL | None = None,
     python_executable: Path | None = None,
+    runtime_adapters: (
+        Sequence[RuntimeLaunchAdapter] | Mapping[str, RuntimeLaunchAdapter] | None
+    ) = None,
 ) -> LauncherRuntimeServices:
-    """Build one shared device-authority path for permissions and runtimes."""
+    """Build the single shared device/runtime/permission/history authority path.
+
+    ``hal`` and ``runtime_adapters`` are deliberate variation seams. Callers
+    must inject only those missing-machine/runtime facts; they must not rebuild
+    PermissionBroker, storage or history composition in parallel.
+    """
 
     device_capabilities = DeviceCapabilityService(
         HALDeviceCapabilityProbe(hal or provisional_installed_hal())
@@ -92,15 +126,15 @@ def build_launcher_runtime_services(
         permission_policy_path,
         device_capabilities=device_capabilities,
     )
-    runtime_manager = RuntimeManager(
-        [
-            PythonRuntimeAdapter(
-                python_executable,
-                policy=PythonRuntimePolicy.load(runtime_policy_path),
-            )
-        ],
-        device_capabilities,
+    adapters = (
+        runtime_adapters
+        if runtime_adapters is not None
+        else default_runtime_adapters(
+            runtime_policy_path,
+            python_executable=python_executable,
+        )
     )
+    runtime_manager = RuntimeManager(adapters, device_capabilities)
     storage_service = ActivityStorageService(StoragePolicy.load(storage_policy_path))
     history_service = PlatformHistoryService.load(
         history_policy_path, progression_policy_path, activities
