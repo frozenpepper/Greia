@@ -1,0 +1,5 @@
+# R13B system-update verifier/runtime dependencies.
+# Intentionally NOT included by current single-root profiles. Add only when a
+# profile gains a proven transactional slot backend and the C0 footprint delta
+# has been measured/accepted.
+python3-cryptography
