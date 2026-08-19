@@ -49,15 +49,10 @@ GOLD = (255, 205, 50)
 WHITE = (255, 255, 255)
 # CRITICAL AUDIO / TTS SYNTHESIS INSTRUCTIONS:
 # ============================================
-# 1. When generating audio with TTS (e.g. macOS `say` with voice 'Alice' for Italian):
-#    NEVER pass uppercase letters (e.g. 'C', 'A') or capitalized prompt phrases ('C come Cane').
-#    The TTS engine says "C maiuscola" or "capital C" if given uppercase characters!
-# 2. ALWAYS use explicit phonetic lowercase names for Italian letter sounds:
-#    ('a', 'bi', 'ci', 'di', 'e', 'effe', 'gi', 'i', 'elle', 'emme', 'enne', 'o', 'pi', 'cu', 'erre', 'esse', 'ti', 'u', 'vu', 'zeta').
-# 3. For prompt instruction phrases, ALWAYS pass lowercase strings:
-#    'ci come cane', 'a come ape', 'bi come barca', etc.
-# 4. Target instructional pace: ~180 wpm for Italian, ~185 wpm for English (calm, clear, toddler-appropriate).
-# See `tools/generate_foresta_audio.py` for the authoritative generation script.
+# When generating audio with TTS (e.g. macOS `say`), ALWAYS pass lowercase strings (.lower()).
+# Capital letters (like 'C' or 'C come Cane') cause macOS TTS to say "C maiuscola" or "capital C".
+# Target speech rate: ~180 wpm for Italian, ~185 wpm for English (gentle, toddler-friendly pace).
+# See `tools/generate_foresta_audio.py` to regenerate all audio assets.
 
 PHONICS_DATA = {
     "it": [
