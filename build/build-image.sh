@@ -351,6 +351,12 @@ AllowUsers greia
 FLOOR
   chmod 0644 "$rootfs/etc/ssh/sshd_config.d/00-greia-security-floor.conf"
   systemctl --root="$rootfs" enable ssh.service
+  # Developer marker: keeps the installed boot observable (console=tty1,
+  # panic=30) via grub.d/10_greia_appliance and identifies this image as a
+  # developer/test build.
+  install -d -m 0755 "$rootfs/etc/greia-os"
+  printf '%s\n' "profile=$PROFILE_ID" > "$rootfs/etc/greia-os/developer-remote"
+  chmod 0644 "$rootfs/etc/greia-os/developer-remote"
 }
 
 target_sets="$(python3 "$PROFILE_TOOL" --package-root "$PACKAGE_SET_ROOT" package-sets "$PROFILE_PATH" --scope target 2>/dev/null)"
@@ -430,7 +436,12 @@ install -m 0644 "$PROJECT_ROOT/assets/boot/static/greia-boot-logo.png" \
 chroot "$ROOTFS" update-initramfs -u -k all
 chroot "$ROOTFS" update-grub
 chroot "$ROOTFS" grub-script-check /boot/grub/grub.cfg
-PYTHONPATH="$PROJECT_ROOT/src" python3 -m greia_platform.boot_contract "$ROOTFS/boot/grub/grub.cfg"
+BOOT_CONTRACT_ARGS=()
+if [[ "$target_sets" == *developer-remote* ]]; then
+  BOOT_CONTRACT_ARGS+=(--developer)
+fi
+PYTHONPATH="$PROJECT_ROOT/src" python3 -m greia_platform.boot_contract \
+  "${BOOT_CONTRACT_ARGS[@]}" "$ROOTFS/boot/grub/grub.cfg"
 chroot "$ROOTFS" grub-install --target=i386-pc --boot-directory=/boot --recheck "$LOOP_DEVICE"
 
 # Raw images and installer payloads are cloned. Leave all identity material empty;

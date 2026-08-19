@@ -254,7 +254,11 @@ class InstallationEngine:
                 ["chroot", str(target_mount), "grub-script-check", "/boot/grub/grub.cfg"]
             )
             try:
-                validate_grub_config(target_mount / "boot/grub/grub.cfg")
+                developer = (target_mount / "etc/greia-os/developer-remote").is_file()
+                validate_grub_config(
+                    target_mount / "boot/grub/grub.cfg",
+                    developer=developer,
+                )
             except GrubContractError as exc:
                 raise InstallationError(f"installed boot configuration is unsafe: {exc}") from exc
             # The target is mounted by us at this point, so eligibility would now

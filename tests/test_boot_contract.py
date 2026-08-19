@@ -44,6 +44,36 @@ class BootContractTests(unittest.TestCase):
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].kernel_path, "/vmlinuz")
 
+    def test_developer_mode_keeps_boot_observable(self) -> None:
+        # Developer/test builds must keep the boot visible: a kernel panic
+        # prints to tty1 and waits 30 s instead of silently rebooting with
+        # console=null panic=5 (see INSTALLED_OS_BOOT_POSTMORTEM.md §16).
+        dev_line = GOOD_LINE.replace("console=null", "console=tty1").replace("panic=5", "panic=30")
+        entries = validate_grub_text(config(dev_line), developer=True)
+        self.assertEqual(len(entries), 1)
+        # The release consoleless line must NOT validate as developer mode.
+        with self.assertRaises(GrubContractError):
+            validate_grub_text(config(), developer=True)
+        # And the dev line must NOT validate as a normal (release) build.
+        with self.assertRaises(GrubContractError):
+            validate_grub_text(config(dev_line))
+
+    def test_developer_marker_flips_appliance_grub_args(self) -> None:
+        script_path = (
+            Path(__file__).resolve().parents[1]
+            / "build"
+            / "overlay"
+            / "etc"
+            / "grub.d"
+            / "10_greia_appliance"
+        )
+        script = script_path.read_text(encoding="utf-8")
+        self.assertIn("developer-remote", script)
+        self.assertIn("console=tty1", script)
+        self.assertIn("panic=30", script)
+        self.assertIn("console=null", script)
+        self.assertIn("panic=5", script)
+
     def test_checked_in_grub_auth_generator_matches_recovery_identity(self) -> None:
         script_path = (
             Path(__file__).resolve().parents[1]
