@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import tempfile
 from http.server import HTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
@@ -28,6 +27,7 @@ _ALLOWED_UPDATE_TYPES = frozenset(
         "application/octet-stream",
     }
 )
+_UPDATE_UPLOAD_SOCKET_TIMEOUT_SECONDS = 120.0
 
 
 class UpdateParentApiApplication(PackageParentApiApplication):
@@ -123,12 +123,12 @@ class UpdateParentApiRequestHandler(PackageParentApiRequestHandler):
 
         upload: Path | None = None
         try:
-            with tempfile.NamedTemporaryFile(
-                prefix="greia-parent-update-",
-                suffix=".greiaupdate",
-                delete=False,
-            ) as handle:
-                upload = Path(handle.name)
+            # Receive directly on the update-state filesystem. The exact staged
+            # inode is later hard-linked to its content-addressed candidate name,
+            # avoiding a second full-size local copy on the C0/Acer disk floor.
+            upload = self.app.update_inbox.create_receive_staging(length)
+            self.connection.settimeout(_UPDATE_UPLOAD_SOCKET_TIMEOUT_SECONDS)
+            with upload.open("wb") as handle:
                 remaining = length
                 while remaining:
                     chunk = self.rfile.read(min(1024 * 1024, remaining))
@@ -136,8 +136,10 @@ class UpdateParentApiRequestHandler(PackageParentApiRequestHandler):
                         raise SystemUpdateError("system update upload ended unexpectedly")
                     handle.write(chunk)
                     remaining -= len(chunk)
-            queued = self.app.update_inbox.receive(upload)
-        except (SystemUpdateError, OSError) as exc:
+            if upload.stat().st_size != length:
+                raise SystemUpdateError("system update upload size did not match Content-Length")
+            queued = self.app.update_inbox.receive_staged(upload)
+        except (SystemUpdateError, OSError, TimeoutError) as exc:
             self._send_api_error(400, "system_update_rejected", str(exc))
             return
         finally:
