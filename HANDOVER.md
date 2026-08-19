@@ -5,7 +5,7 @@
 **Repository:** `frozenpepper/Greia` (private)  
 **Canonical/default/development branch:** `main`  
 **Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**  
-**Current cross-cutting source tranches after the last executed aggregate gate:** **device-language selection/persistence + R13B transactional updates + Activity Simulator/emoji/Writing**  
+**Current cross-cutting source tranches after the last executed aggregate gate:** **device-language selection/persistence + 18-Activity English/Italian localization + child-UX work + R13B transactional updates + Activity Simulator/emoji/Writing**  
 **External Parent HTML runtime revision pinned by Greia:** `frozenpepper/Greia-Parent-App-Html@519651a5931269ed4275324f2a87ad3f0d08a3f6`
 
 This file owns the current continuation/evidence boundary. Historical implementation detail belongs in the append-only active plan and dated reviews. Exact APIs and limits remain source-owned.
@@ -35,7 +35,7 @@ footprint & shell check:             PASS
 
 That historical gate covered the then-current Activity Simulator/Remote Bridge, Unicode/color-emoji + Writing work, on-device Parent Settings/Wi-Fi/SSH foundation, UI performance work and six additional first-party Activities.
 
-**The device-language source described below landed after that gate and is UNPROVEN until a fresh current-head run executes.**
+**The device-language source, later 18-Activity English/Italian localization pass and concurrent child-UX work landed after that gate and are UNPROVEN until a fresh current-head run executes.**
 
 No current-head aggregate PASS, language-selector physical PASS, system-update activation/rollback PASS, current-head QEMU A/B PASS or Pi A/B PASS is claimed.
 
@@ -55,6 +55,12 @@ Product/implementation synthesis:
 
 ```text
 docs/product/SYSTEM_LANGUAGE_AND_LOCALIZATION.md
+```
+
+Standalone implementation review:
+
+```text
+docs/reviews/2026-08-19_DEVICE_LANGUAGE_SELECTION_AND_PERSISTENCE.md
 ```
 
 ## 3.1 Core rule
@@ -146,6 +152,16 @@ The selector:
 
 `src/greia_installer/engine.py` already writes `InstallRequest.locale` into the installed `install-record.json`; the previously missing UI binding is now present.
 
+A final composition audit caught a real live-image dependency gap: the installer used the shared color-emoji typography path while `installer-base.txt` did not yet include its rendering dependencies. The live installer package set now explicitly includes:
+
+```text
+fonts-noto-color-emoji
+python3-pil
+python3-regex
+```
+
+and `tests/test_system_language.py` protects that requirement. This prevents a source-correct flag selector from degrading into missing-glyph boxes/import failures on the physical live installer.
+
 ## 3.4 Parent API
 
 Canonical semantic route:
@@ -200,6 +216,8 @@ tests/language_api.test.js
 
 The async invalid-locale assertion was corrected in the pinned revision. No `npm test` run is claimed in this connector session.
 
+The external Parent repository has later documentation-only commits; Greia intentionally pins the reviewed runtime-source revision because those later docs do not alter staged runtime bytes.
+
 ## 3.6 Hidden on-device Parent Settings
 
 Source:
@@ -245,6 +263,8 @@ device default → optional child override → Activity supported-locale fallbac
 
 An English-only Activity remains valid on an Italian/Hindi/etc. device and falls back to a language it actually ships.
 
+Current `main` additionally contains English/Italian localization resources across all 18 first-party Activities. That work is later than the 781-test aggregate evidence and must be verified at the current head before being described as a current PASS.
+
 ## 3.8 Critical evidence distinction
 
 **Selectable does not mean fully translated.**
@@ -253,9 +273,10 @@ The current tranche implements language selection, persistence, API/client contr
 
 In particular:
 
+- current first-party Activity source has an English/Italian localization pass, but other device-selectable languages remain incomplete;
 - Chinese/Arabic/Hindi/Bengali require a reviewed platform script-font/fallback strategy beyond normal Nunito coverage;
 - Arabic requires real RTL shaping/layout/input acceptance;
-- installer/launcher/Parent string catalogues still need systematic translation work;
+- installer/launcher/Parent string catalogues still need systematic translation work beyond currently implemented strings;
 - individual Activities advertise/fallback according to the translations they actually ship.
 
 Do not describe Greia as “fully translated into 12 languages” until that separate work is complete and evidenced.
@@ -278,9 +299,10 @@ covers:
 - Parent resource/capability and read/update behavior;
 - first-screen installer entry-point contract;
 - narrow sudo helper contract;
-- runtime helper executable-mode tmpfiles contract.
+- runtime helper executable-mode tmpfiles contract;
+- live installer typography/color-flag dependency composition.
 
-These tests are committed but **not executed in this connector session**.
+Related existing tests cover the hidden Parent panel and installer contract. These tests are committed but **not executed in this connector session**.
 
 ---
 
@@ -351,12 +373,13 @@ On an owner-controlled current Linux checkout, resolve and record the exact curr
 PYTHONPATH=src python3 -m unittest \
   tests.test_system_language \
   tests.test_parent_api \
+  tests.test_launcher_parent_panel \
   tests.test_installer_engine -v
 ```
 
 ### B. Existing later-tranche focused gates
 
-Run the relevant system-update, emoji/Writing and simulator focused suites named in their docs/HANDOVER history.
+Run the relevant system-update, emoji/Writing, localization/Activity and simulator focused suites named in their docs/HANDOVER history.
 
 ### C. Complete source gate
 
@@ -390,12 +413,12 @@ No PASS is claimed for this sequence yet.
 
 # 8. Immediate continuation priorities
 
-1. Run `tests.test_system_language` and the relevant Parent/installer suites on owner-controlled current `main`.
+1. Run `tests.test_system_language` and the relevant Parent/installer/localization suites on owner-controlled current `main`.
 2. Run current `make verify`; preserve first failure and record exact SHA.
 3. Run Parent HTML `npm test` at the reviewed language-enabled revision.
 4. Rebuild current installer and physically verify the language-first flow + install transfer on Acer.
 5. Continue R7 as the first blocking architecture phase.
-6. Start the separate localization-content tranche: platform string catalogues, script-font coverage, shaping/RTL and responsive translated-text acceptance—without conflating it with the now-implemented selector/persistence.
+6. Continue the separate localization-content tranche: platform string catalogues, script-font coverage, shaping/RTL and responsive translated-text acceptance—without conflating it with the now-implemented selector/persistence.
 7. Continue R13B backend work only after its existing measurements/prerequisites.
 
 ---
