@@ -17,7 +17,7 @@ Environment=PYTHONPATH=/opt/greia-os/src
 Environment=PYTHONNOUSERSITE=1
 Environment=PYTHONDONTWRITEBYTECODE=1
 ExecStartPre=/usr/local/lib/greia-os/prepare-installer-vt
-ExecStart=/usr/bin/xinit /usr/bin/python3 -m greia_installer.main --root /opt/greia-os --payload /run/live/medium/payload/pip-rootfs.squashfs --payload-digest /etc/greia-os/expected-payload.sha256 -- :0 vt1 -keeptty -novtswitch -background none -quiet -nolisten tcp -noreset
+ExecStart=/usr/bin/xinit /usr/bin/python3 -m greia_installer.entrypoint --root /opt/greia-os --payload /run/live/medium/payload/pip-rootfs.squashfs --payload-digest /etc/greia-os/expected-payload.sha256 -- :0 vt1 -keeptty -novtswitch -background none -quiet -nolisten tcp -noreset
 Restart=on-failure
 RestartSec=2
 TTYPath=/dev/tty1
