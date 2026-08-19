@@ -330,23 +330,27 @@ def main() -> int:
                     except Exception:
                         pass
 
-    running = True
-    ready_published = False
-
-    while running and not activity_stop_requested():
-        cols = len(grid[0]) if grid else 11
-        rows = len(grid) if grid else 7
+    def compute_maze_metrics() -> tuple[int, int, int, int, int]:
+        m_cols = len(grid[0]) if grid else 9
+        m_rows = len(grid) if grid else 7
         hud_top = 80
         hud_bottom = 80
         avail_w = REFERENCE_WIDTH - 60
         avail_h = REFERENCE_HEIGHT - (hud_top + hud_bottom)
-        cell_w = avail_w // cols
-        cell_h = avail_h // rows
-        cs = max(28, min(cell_w, cell_h, 60))
-        maze_w = cols * cs
-        maze_h = rows * cs
-        ox = (REFERENCE_WIDTH - maze_w) // 2
-        oy = hud_top + (avail_h - maze_h) // 2
+        cell_w = avail_w // m_cols
+        cell_h = avail_h // m_rows
+        m_cs = max(20, min(cell_w, cell_h, 60))
+        maze_w = m_cols * m_cs
+        maze_h = m_rows * m_cs
+        m_ox = (REFERENCE_WIDTH - maze_w) // 2
+        m_oy = hud_top + (avail_h - maze_h) // 2
+        return m_cols, m_rows, m_cs, m_ox, m_oy
+
+    running = True
+    ready_published = False
+
+    while running and not activity_stop_requested():
+        cols, rows, cs, ox, oy = compute_maze_metrics()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -368,6 +372,7 @@ def main() -> int:
                     play_again_btn = pygame.Rect(REFERENCE_WIDTH // 2 - 120, REFERENCE_HEIGHT // 2 + 70, 240, 60)
                     if play_again_btn.collidepoint(mx, my):
                         start_new_game()
+                        cols, rows, cs, ox, oy = compute_maze_metrics()
                     continue
 
                 # Firefly Hint Button
@@ -398,6 +403,7 @@ def main() -> int:
                 if diff_btn.collidepoint(mx, my):
                     diff_idx = (diff_idx + 1) % len(DIFFICULTIES)
                     start_new_game()
+                    cols, rows, cs, ox, oy = compute_maze_metrics()
                     continue
 
                 # Direct Tap to Navigate Path
@@ -410,6 +416,9 @@ def main() -> int:
                             waypoints.clear()
                             for step in path[1:]:
                                 waypoints.append(step)
+
+        # Re-verify maze metrics before physics and rendering
+        cols, rows, cs, ox, oy = compute_maze_metrics()
 
         # Smooth Player Movement
         target_x = float(player_c)
