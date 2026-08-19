@@ -151,7 +151,7 @@ class SystemUpdateBundleTests(unittest.TestCase):
             self.assertEqual(first.path.read_bytes(), original_bytes)
             self.assertEqual(len(list(inbox.inbox_dir.glob("*.greiaupdate"))), 1)
 
-    def test_same_release_id_with_different_bundle_never_overwrites_previous_bytes(self) -> None:
+    def test_new_candidate_uses_new_digest_path_and_prunes_previous_inbox_candidate(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             first_source = self._unsigned_structurally_valid_bundle(
@@ -162,11 +162,13 @@ class SystemUpdateBundleTests(unittest.TestCase):
             )
             inbox = SystemUpdateInbox(root / "state")
             first = inbox.receive(first_source)
-            first_bytes = first.path.read_bytes()
+            first_path = first.path
             second = inbox.receive(second_source)
-            self.assertNotEqual(first.path, second.path)
-            self.assertEqual(first.path.read_bytes(), first_bytes)
-            self.assertEqual(len(list(inbox.inbox_dir.glob("*.greiaupdate"))), 2)
+            self.assertNotEqual(first_path, second.path)
+            self.assertFalse(first_path.exists())
+            self.assertTrue(second.path.is_file())
+            self.assertEqual(len(list(inbox.inbox_dir.glob("*.greiaupdate"))), 1)
+            self.assertEqual(inbox.status_payload()["bundle_sha256"], second.as_json_dict()["bundle_sha256"])
 
     def test_current_unavailable_backend_never_falls_back_to_active_root(self) -> None:
         backend = UnavailableSystemUpdateBackend("single-root layout")
