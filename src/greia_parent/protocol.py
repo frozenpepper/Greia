@@ -46,6 +46,11 @@ RESOURCES = (
         f"{API_BASE}/settings/hardware",
         ("GET", "PUT"),
     ),
+    ParentApiResource(
+        "language_settings",
+        f"{API_BASE}/settings/language",
+        ("GET", "PUT"),
+    ),
     ParentApiResource("progress", f"{API_BASE}/progress", ("GET",)),
     ParentApiResource("paired_devices", f"{API_BASE}/devices", ("GET",)),
     ParentApiResource(
@@ -67,6 +72,7 @@ CAPABILITIES = {
     "progress.read": True,
     "settings.input": True,
     "settings.display": True,
+    "settings.language": True,
     "paired_devices.manage": True,
     # Update status is a semantic read surface even before a machine has a
     # production A/B activation backend. It may correctly report unavailable.
