@@ -3,12 +3,13 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import shutil
 import sys
 import tempfile
+import tomllib
 import urllib.error
 import urllib.request
+from dataclasses import dataclass
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -27,6 +28,13 @@ from greia_platform.system_updates import (  # noqa: E402
 )
 
 
+@dataclass(frozen=True, slots=True)
+class UpdateTarget:
+    platform_family: str
+    architecture: str
+    profile: str
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Create, inspect and push signed Greia .greiaupdate bundles."
@@ -39,14 +47,26 @@ def _parser() -> argparse.ArgumentParser:
 
     build = sub.add_parser("build", help="build and sign one .greiaupdate bundle")
     build.add_argument("--payload", type=Path, required=True)
-    build.add_argument("--output", type=Path, required=True)
+    build.add_argument(
+        "--profile-file",
+        type=Path,
+        help="Greia build profile TOML; derives profile/family/architecture",
+    )
+    build.add_argument("--platform-family")
+    build.add_argument("--architecture")
+    build.add_argument("--profile")
     build.add_argument("--version", required=True)
-    build.add_argument("--release-id", required=True)
-    build.add_argument("--platform-family", required=True)
-    build.add_argument("--architecture", required=True)
-    build.add_argument("--profile", required=True)
-    build.add_argument("--signer", required=True)
+    build.add_argument(
+        "--release-id",
+        help="stable release identifier; defaults to greia-<version>",
+    )
+    build.add_argument("--signer", default="greia-release-main")
     build.add_argument("--private-key", type=Path, required=True)
+    build.add_argument(
+        "--output",
+        type=Path,
+        help="output path; defaults to out/greia-<version>-<profile>.greiaupdate",
+    )
     build.add_argument("--release-notes", default="")
     build.add_argument("--release-notes-file", type=Path)
 
@@ -86,6 +106,45 @@ def _release_notes(args: argparse.Namespace) -> str:
         except (OSError, UnicodeDecodeError) as exc:
             raise SystemUpdateError(f"unable to read release notes: {exc}") from exc
     return args.release_notes
+
+
+def _target_from_profile_file(path: Path) -> UpdateTarget:
+    try:
+        raw = tomllib.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError) as exc:
+        raise SystemUpdateError(f"unable to read Greia build profile: {exc}") from exc
+    try:
+        profile = raw["profile"]["id"]
+        platform_family = raw["platform"]["family"]
+        architecture = raw["base"]["architecture"]
+    except (KeyError, TypeError) as exc:
+        raise SystemUpdateError(
+            "build profile must define profile.id, platform.family and base.architecture"
+        ) from exc
+    if not all(isinstance(value, str) and value for value in (profile, platform_family, architecture)):
+        raise SystemUpdateError("build profile update identity fields must be non-empty text")
+    return UpdateTarget(platform_family, architecture, profile)
+
+
+def _resolve_target(args: argparse.Namespace) -> UpdateTarget:
+    explicit = (args.platform_family, args.architecture, args.profile)
+    if args.profile_file is not None:
+        if any(value is not None for value in explicit):
+            raise SystemUpdateError(
+                "use --profile-file or explicit --platform-family/--architecture/--profile, not both"
+            )
+        return _target_from_profile_file(args.profile_file)
+    if not all(isinstance(value, str) and value for value in explicit):
+        raise SystemUpdateError(
+            "build requires --profile-file or all of --platform-family, --architecture and --profile"
+        )
+    return UpdateTarget(args.platform_family, args.architecture, args.profile)
+
+
+def _build_output(args: argparse.Namespace, target: UpdateTarget) -> Path:
+    if args.output is not None:
+        return args.output
+    return PROJECT_ROOT / "out" / f"greia-{args.version}-{target.profile}.greiaupdate"
 
 
 def _verify_with_single_key(bundle_path: Path, public_key: Path) -> dict[str, object]:
@@ -141,15 +200,18 @@ def _push(args: argparse.Namespace) -> object:
         "Content-Length": str(size),
         "X-Greia-Update-Release": inspected.manifest.release_id,
     }
-    # urllib accepts a file-like object poorly for fixed-length PUT/POST across
-    # Python versions. The tool intentionally uses a bounded in-memory body only
-    # for small bundles and streams large artifacts with HTTPConnection below.
-    # Keeping this implementation dependency-free matters on operator Macs.
+    # Stream the potentially large artifact without loading it into RAM. This
+    # stays dependency-free on the operator Mac; only signing/verification needs
+    # the reviewed cryptography package.
     import http.client
     from urllib.parse import urlsplit
 
     parts = urlsplit(url)
-    connection_cls = http.client.HTTPSConnection if parts.scheme == "https" else http.client.HTTPConnection
+    if not parts.hostname:
+        raise SystemUpdateError("--url must include a host")
+    connection_cls = (
+        http.client.HTTPSConnection if parts.scheme == "https" else http.client.HTTPConnection
+    )
     connection = connection_cls(parts.hostname, parts.port, timeout=args.timeout)
     target = parts.path + (("?" + parts.query) if parts.query else "")
     try:
@@ -194,27 +256,35 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.command == "keygen":
             generate_ed25519_keypair(args.private_key, args.public_key)
-            print(json.dumps({
-                "private_key": str(args.private_key),
-                "public_key": str(args.public_key),
-            }, indent=2))
+            print(
+                json.dumps(
+                    {
+                        "private_key": str(args.private_key),
+                        "public_key": str(args.public_key),
+                    },
+                    indent=2,
+                )
+            )
             return 0
         if args.command == "build":
-            manifest = build_update_bundle(
+            target = _resolve_target(args)
+            output = _build_output(args, target)
+            release_id = args.release_id or f"greia-{args.version}"
+            build_update_bundle(
                 payload_path=args.payload,
-                output_path=args.output,
+                output_path=output,
                 version=args.version,
-                release_id=args.release_id,
-                platform_family=args.platform_family,
-                architecture=args.architecture,
-                profile=args.profile,
+                release_id=release_id,
+                platform_family=target.platform_family,
+                architecture=target.architecture,
+                profile=target.profile,
                 signer=args.signer,
                 private_key_path=args.private_key,
                 release_notes=_release_notes(args),
             )
-            inspected = inspect_update_bundle(args.output)
+            inspected = inspect_update_bundle(output)
             payload = inspected.as_json_dict()
-            payload["output"] = str(args.output)
+            payload["output"] = str(output)
             print(json.dumps(payload, indent=2, ensure_ascii=False))
             return 0
         if args.command == "inspect":
