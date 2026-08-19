@@ -1,12 +1,15 @@
-"""Typed synthetic-device configuration for the Greia Activity Simulator."""
+"""Typed synthetic-device facts for the Greia Activity Simulator."""
 
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass
+from typing import Iterable
 
 
-SIMULATOR_CAPABILITIES = frozenset(
+# This is a HAL implementation map, not an independent allowed-capability
+# vocabulary. The control plane derives its choices from RuntimeCatalogue and
+# refuses to start when canonical Greia gains a capability this HAL cannot map.
+HAL_SIMULATABLE_CAPABILITIES = frozenset(
     {
         "audio.basic",
         "controller",
@@ -32,23 +35,35 @@ DEFAULT_CAPABILITIES = frozenset(
     }
 )
 
-DEVICE_PRESETS: dict[str, tuple[int, int]] = {
-    "Acer / low-resource 1024x600": (1024, 600),
-    "HD 1280x720": (1280, 720),
-    "Tablet 1280x800": (1280, 800),
-    "Laptop 1366x768": (1366, 768),
-    "Full HD 1920x1080": (1920, 1080),
+# Geometry conveniences only. They deliberately do not claim machine model,
+# architecture, touch hardware or performance/resource emulation.
+VIEWPORT_PRESETS: dict[str, tuple[int, int]] = {
+    "Reference 1024x600": (1024, 600),
+    "1280x720": (1280, 720),
+    "1280x800": (1280, 800),
+    "1366x768": (1366, 768),
+    "1920x1080": (1920, 1080),
 }
+
+
+def canonical_capability_choices(allowed_capabilities: Iterable[str]) -> tuple[str, ...]:
+    """Return the canonical runtime vocabulary after checking HAL coverage."""
+
+    allowed = frozenset(allowed_capabilities)
+    unsupported = allowed - HAL_SIMULATABLE_CAPABILITIES
+    if unsupported:
+        raise ValueError(
+            "simulator HAL does not map canonical Greia capabilities: "
+            + ", ".join(sorted(unsupported))
+        )
+    if "display" not in allowed:
+        raise ValueError("canonical Greia runtime must expose the display capability")
+    return tuple(sorted(allowed))
 
 
 @dataclass(frozen=True, slots=True)
 class SimulatedDeviceProfile:
-    """One synthetic Greia device seen through the normal HAL capability seam.
-
-    Geometry is deliberately device/model agnostic: the simulator records an
-    exact viewport plus semantic capabilities. Greia layout/runtime code then
-    consumes those facts exactly as it consumes real HAL facts.
-    """
+    """One synthetic device observation supplied through the normal Greia HAL."""
 
     width: int = 1024
     height: int = 600
@@ -60,10 +75,11 @@ class SimulatedDeviceProfile:
         if not 240 <= int(self.height) <= 4320:
             raise ValueError("simulated display height must be within 240..4320")
         capabilities = frozenset(self.capabilities)
-        unknown = capabilities - SIMULATOR_CAPABILITIES
-        if unknown:
+        unsupported = capabilities - HAL_SIMULATABLE_CAPABILITIES
+        if unsupported:
             raise ValueError(
-                "unknown simulator capabilities: " + ", ".join(sorted(unknown))
+                "simulator HAL cannot represent capabilities: "
+                + ", ".join(sorted(unsupported))
             )
         if "display" not in capabilities:
             raise ValueError("the Activity Simulator requires the display capability")
@@ -76,20 +92,6 @@ class SimulatedDeviceProfile:
     @property
     def viewport(self) -> str:
         return f"{self.width}x{self.height}"
-
-    @classmethod
-    def from_environment(cls) -> "SimulatedDeviceProfile":
-        width, height = parse_viewport(
-            os.environ.get("GREIA_SIMULATOR_VIEWPORT", "1024x600")
-        )
-        raw = os.environ.get("GREIA_SIMULATOR_CAPABILITIES")
-        if raw is None:
-            capabilities = DEFAULT_CAPABILITIES
-        else:
-            capabilities = frozenset(
-                item.strip() for item in raw.split(",") if item.strip()
-            )
-        return cls(width=width, height=height, capabilities=capabilities)
 
     def to_hal(self):
         """Build the real GreiaHAL interface from synthetic capability facts."""
@@ -169,8 +171,9 @@ def parse_viewport(value: str) -> tuple[int, int]:
 
 __all__ = [
     "DEFAULT_CAPABILITIES",
-    "DEVICE_PRESETS",
-    "SIMULATOR_CAPABILITIES",
+    "HAL_SIMULATABLE_CAPABILITIES",
+    "VIEWPORT_PRESETS",
     "SimulatedDeviceProfile",
+    "canonical_capability_choices",
     "parse_viewport",
 ]
