@@ -175,8 +175,7 @@ class SimulatorDesktopApp:
             return 0
         finally:
             # Never release the writer lease while an owned child is still live.
-            # A failed final stop leaves a stale lock after this process exits;
-            # POSIX recovery may remove it only once this PID is genuinely dead.
+            # A failed final stop leaves the lease file intentionally fail-closed.
             if self.stop():
                 self.workspace.release_lock()
 
@@ -271,12 +270,20 @@ class SimulatorDesktopApp:
                 raise RuntimeError(
                     "the previous Greia Shell is still running; stop it before restarting"
                 )
-            self.process = subprocess.Popen(
+            process = subprocess.Popen(
                 self._child_command(device),
                 cwd=self.workspace.repo_root,
                 env=self._child_environment(),
                 stdin=subprocess.DEVNULL,
             )
+            self.process = process
+            try:
+                self.workspace.update_lock_child_pid(process.pid)
+            except Exception:
+                # Keep ownership of the actual process while trying to unwind it;
+                # if cleanup cannot be confirmed, stop() remains fail-closed.
+                self.stop()
+                raise
             self.status.set(
                 f"Running real Greia Shell at {device.viewport}; selected profile "
                 f"UI size={requested_size}."
@@ -288,15 +295,31 @@ class SimulatorDesktopApp:
     def restart(self) -> None:
         self.start()
 
+    def _clear_exited_process(self, process: subprocess.Popen[bytes], code: int) -> bool:
+        """Clear the workspace child lease before dropping the dead process handle."""
+
+        try:
+            self.workspace.update_lock_child_pid(None)
+        except Exception as exc:
+            self.process = process
+            self.status.set(
+                "Greia Shell exited, but workspace child ownership could not be cleared: "
+                f"{exc}"
+            )
+            return False
+        self.process = None
+        return True
+
     def stop(self) -> bool:
-        """Stop the owned Shell without dropping the handle before exit is known."""
+        """Stop the owned Shell without dropping its handle or lease prematurely."""
 
         process = self.process
         if process is None:
             return True
         code = process.poll()
         if code is not None:
-            self.process = None
+            if not self._clear_exited_process(process, code):
+                return False
             self.status.set(f"Greia Shell already exited (code {code}).")
             return True
 
@@ -314,11 +337,13 @@ class SimulatorDesktopApp:
             except Exception as exc:
                 code = process.poll()
                 if code is None:
-                    # Retain ownership so Start/Close cannot silently orphan it.
+                    # Retain both process handle and registered child PID.
                     self.process = process
                     self.status.set(f"Stop failed; Greia Shell is still running: {exc}")
                     return False
-            self.process = None
+            assert code is not None
+            if not self._clear_exited_process(process, code):
+                return False
             if forced:
                 self.status.set(
                     f"Greia Shell force-killed after lifecycle cleanup timeout (code {code})."
@@ -336,11 +361,13 @@ class SimulatorDesktopApp:
         if process is not None and not self._stopping:
             code = process.poll()
             if code is not None:
-                self.process = None
-                if code == 0:
-                    self.status.set("Greia Shell exited cleanly.")
-                else:
-                    self.status.set(f"Greia Shell exited unexpectedly with code {code}.")
+                if self._clear_exited_process(process, code):
+                    if code == 0:
+                        self.status.set("Greia Shell exited cleanly.")
+                    else:
+                        self.status.set(
+                            f"Greia Shell exited unexpectedly with code {code}."
+                        )
         try:
             self.root.after(500, self._poll_process_health)
         except Exception:
@@ -395,8 +422,9 @@ class SimulatorDesktopApp:
         if not self.stop():
             messagebox.showerror(
                 "Greia Simulator",
-                "The Greia Shell is still running, so the simulator workspace remains locked. "
-                "Resolve the stop failure before closing the control plane.",
+                "The Greia Shell is still running or its workspace ownership record could "
+                "not be cleared, so the simulator workspace remains locked. Resolve the "
+                "stop/lease failure before closing the control plane.",
             )
             return
         self.root.destroy()
