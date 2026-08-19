@@ -43,8 +43,8 @@ done
 
 # The target must be a removable whole disk (no partitions passed, RM=1).
 DEV_NAME="${DEVICE#/dev/}"
-RM="$(lsblk -dn -o RM "/dev/$DEV_NAME" 2>/dev/null || echo 0)"
-TYPE="$(lsblk -dn -o TYPE "/dev/$DEV_NAME" 2>/dev/null || echo part)"
+RM="$(lsblk -dn -o RM "/dev/$DEV_NAME" 2>/dev/null | tr -d '[:space:]' || echo 0)"
+TYPE="$(lsblk -dn -o TYPE "/dev/$DEV_NAME" 2>/dev/null | tr -d '[:space:]' || echo part)"
 if [[ "$RM" != "1" || "$TYPE" != "disk" ]]; then
   echo "Refusing: $DEVICE is not a removable whole-disk device (RM=$RM TYPE=$TYPE)." >&2
   exit 1
