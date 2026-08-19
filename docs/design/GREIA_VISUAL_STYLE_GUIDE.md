@@ -1,9 +1,9 @@
 # Greia Visual Style Guide
 
-**Status:** accepted visual-design direction; implementation pending where noted  
-**Date:** 2026-08-17  
+**Status:** accepted visual-design direction; Nunito typography and initial color-emoji path implemented in source, physical/C0 evidence pending where noted  
+**Date:** 2026-08-19  
 **Audience:** Greia Shell designers, platform developers, Activity authors, installer/Parent UI developers, artists, reviewers, and software agents  
-**Related:** `docs/design/GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md`, ADR 0018, ADR 0019, ADR 0025, `runtime/theme-defaults.toml`
+**Related:** `docs/design/GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md`, ADR 0018, ADR 0019, ADR 0025, `runtime/theme-defaults.toml`, `src/greia_platform/typography.py`
 
 ## 1. Purpose and authority
 
@@ -14,9 +14,7 @@ It complements `GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md`:
 - the **asset requirements** document defines what graphical assets and production artwork Greia needs;
 - this **style guide** defines the visual character and reusable presentation rules those assets and interfaces should follow.
 
-Accepted ADRs remain authoritative for architecture and trust boundaries. Source/runtime declarations remain authoritative for exact implemented theme/UI APIs. This guide must not invent an API merely to describe a desired design system.
-
-The current implementation already has color/theme primitives in `runtime/theme-defaults.toml` and shared UI semantics in `src/greia_platform/ui_core.py`, but **a platform typography-token API and bundled Nunito Sans font files are not yet implemented merely because this document selects them**.
+Accepted ADRs remain authoritative for architecture and trust boundaries. Source/runtime declarations remain authoritative for exact implemented theme/UI APIs. The exact current typography implementation is owned by `src/greia_platform/typography.py`; this guide owns the visual intent and cross-product design rules.
 
 ## 2. Visual personality
 
@@ -34,7 +32,7 @@ The visual language should be:
 - accessible under color-vision differences and usable without relying on tiny decorative detail;
 - capable of richer animation on stronger hardware without making animation necessary to understand state.
 
-Fun should come primarily from **illustration, character, motion, sound, spacing, shape, and celebration**, not from making ordinary interface text difficult to read.
+Fun should come primarily from **illustration, character, motion, sound, spacing, shape, celebration, and expressive content**, not from making ordinary interface text difficult to read.
 
 ## 3. Typography decision
 
@@ -42,7 +40,7 @@ Fun should come primarily from **illustration, character, motion, sound, spacing
 
 **Selected default Greia interface typeface: `Nunito Sans`.**
 
-Nunito Sans is selected because it sits deliberately between a neutral system sans-serif and an overtly childish display face:
+Nunito Sans sits deliberately between a neutral system sans-serif and an overtly childish display face:
 
 - rounded forms make it friendly without becoming cartoon typography;
 - conventional letterforms remain suitable for children who are learning to read;
@@ -55,7 +53,7 @@ The default design direction is therefore **one coherent family across most of t
 
 ### 3.2 Scope of the default
 
-Nunito Sans should be the default for:
+Nunito Sans is the default for:
 
 - Greia Shell navigation and labels;
 - profile selection;
@@ -75,46 +73,25 @@ Specialized literacy Activities may require pedagogically specific letterforms. 
 
 Nunito Sans is distributed under the **SIL Open Font License 1.1 (OFL-1.1)**.
 
-For Greia this means the font may be bundled and redistributed with the operating system, including in a distribution that also contains software under other licenses. The font itself remains under OFL-1.1; bundling it does not relicense Greia software.
+Greia now vendors the selected static weights under `assets/fonts/nunito-sans/`, with the upstream OFL text and provenance recorded under `build/trust/nunito-sans-2.3.2.provenance`.
 
-When Greia actually vendors/distributes the font, the repository/public-release licensing audit must:
+The font itself remains under OFL-1.1; bundling it does not relicense Greia software. The public-release provenance/licensing audit must continue to preserve the upstream copyright/license material and exact source/derivation record.
 
-- obtain the font from a traceable upstream source;
-- preserve the upstream copyright and OFL-1.1 license notice;
-- record the exact font version/source used;
-- record whether the files are unmodified;
-- retain any upstream Reserved Font Name conditions that apply;
-- keep Nunito Sans listed as third-party font software rather than treating it as Greia-owned CC BY media or MPL software.
+## 5. Weight system
 
-**Current state:** typography choice selected; font vendoring/package integration not yet implied or completed by this document.
+Greia uses a small static weight set rather than making variable-font rendering a low-end runtime requirement.
 
-## 5. Initial weight system
-
-Greia should begin with a small static weight set rather than requiring variable-font rendering.
-
-Preferred initial roles:
-
-| Role | Preferred Nunito Sans weight | Typical use |
+| Role | Nunito Sans weight | Typical use |
 |---|---|---|
 | Body | Regular | ordinary explanatory text, descriptions |
+| Secondary | Regular | secondary child text where hierarchy comes from size/placement |
 | Control | SemiBold | buttons, navigation, short labels |
 | Title | Bold | screen titles, Activity/card titles, profile names |
-| Celebration | ExtraBold | `NEW BADGE!`, major score/award moments, very short emphasis |
+| Display | ExtraBold | `NEW BADGE!`, major score/award moments, very short emphasis |
 
 Avoid Light/ExtraLight as normal child-facing UI weights. Thin strokes reduce robustness on old LCDs, low resolutions, scaling paths, and visually busy backgrounds.
 
-The implementation should initially prefer **static font files for the exact weights Greia uses**. Variable-font support may be evaluated later, but Greia should not make old-hardware correctness depend on it.
-
-A likely eventual deployed set is conceptually:
-
-```text
-NunitoSans-Regular
-NunitoSans-SemiBold
-NunitoSans-Bold
-NunitoSans-ExtraBold
-```
-
-The exact filenames/version/package source are implementation/provenance facts and must be recorded when the files are actually introduced.
+The current semantic roles and exact static filenames are source-owned by `src/greia_platform/typography.py`.
 
 ## 6. Initial child-facing type scale
 
@@ -200,56 +177,158 @@ Hai vinto un distintivo!
 42
 126
 1000
+
+Hello 🙂!
+Bravissima! ⭐
+Space 🚀 is fun
+👩🏽‍🔬  🇮🇹  1️⃣  ❤️
 ```
 
-The exact specimen may expand as Greia supports more languages. Its purpose is to expose ambiguous characters, score readability, child vocabulary, accents, and short/long UI labels at actual rendered sizes.
+The exact specimen may expand as Greia supports more languages. Its purpose is to expose ambiguous characters, score readability, child vocabulary, accents, emoji composition, and short/long UI labels at actual rendered sizes.
 
 Physical testing should consider both children who already read and younger children who rely primarily on shape/icon/audio cues.
 
 ## 9. Localization and fallback
 
-Greia's typography system must be language-aware without making individual Activities manage host font files.
+Greia's typography system is platform-owned and language-aware. Individual Activities must not search host font directories or implement independent fallback stacks.
 
-Nunito Sans is the selected default family where the required glyphs are present and suitable. As language coverage expands, Greia may need platform-owned fallback fonts for scripts or glyphs outside the selected family.
+Nunito Sans is the normal interface family where the required glyphs are present and suitable. As language coverage expands, additional platform-owned script fallback fonts may be added after license/provenance and real rendering review.
 
 Rules:
 
 - missing glyphs must never silently become boxes in a supported locale;
 - fallback is a Greia platform/theme concern, not an Activity-specific filesystem hunt;
 - localized text may need different sizing/line wrapping while preserving semantic hierarchy;
-- future fallback families require the same provenance/license review as the default font;
+- fallback families require the same provenance/license review as the default font;
 - support for a locale must be verified against the actual bundled font files/version, not assumed from a website specimen.
 
-## 10. Accessibility typography
+## 10. Emoji and expressive Unicode — platform requirement
 
-Greia should preserve an extension point for a future **high-legibility/accessibility font mode**.
+### 10.1 Full emoji support is not optional polish
 
-This document does **not** select or implement that alternate family yet. The important architectural rule is that accessibility typography should be switched through platform-owned semantic typography roles so Shell and conforming Activities change coherently.
+Greia must be able to display and edit ordinary Unicode emoji as real text content. This is especially important for young children, who naturally use emoji before or alongside fluent written language.
 
-An accessibility font mode must not require every Activity author to ship alternate font assets or manually duplicate layouts.
+Emoji support belongs to the **platform typography/text layer**, not to individual Activities.
 
-## 11. Platform typography roles
+The current initial stack is:
 
-The long-term design system should expose semantic typography roles rather than requiring consumers to open arbitrary `.ttf` paths.
+```text
+ordinary Greia text
+    → Nunito Sans
 
-Conceptually, consumers need roles such as:
+emoji grapheme cluster
+    → Noto Color Emoji
+    → Pillow embedded-color rasterization
+    → RGBA Pygame surface
+```
+
+`src/greia_platform/typography.py` owns the current Pygame implementation. `build/package-sets/platform-shell-pygame.txt` and `build/package-sets/runtime-python.txt` carry `fonts-noto-color-emoji` and `python3-regex` so the current Python/Pygame runtime has the actual font and Unicode grapheme segmentation dependency.
+
+This is deliberately behind a Greia service boundary. A future Web or SDL3 renderer may implement the same semantics differently without changing Activity-facing text meaning.
+
+### 10.2 Noto Color Emoji is fallback, not the Greia interface family
+
+Nunito Sans remains Greia's visual voice. Noto Color Emoji is a specific fallback for emoji presentation.
+
+Greia must **not** replace its semantic system iconography with Unicode emoji merely because emoji rendering exists. In particular:
+
+- Home remains the canonical Greia Home glyph/icon, not `🏠`;
+- Back remains Greia Back, not an arbitrary arrow emoji;
+- audio, settings, package trust, awards, recovery and other system controls continue to use controlled Greia semantic assets;
+- emoji are welcome in expressive text, child creations, messages, labels where appropriate, and Activity content.
+
+This keeps trusted UI stable and visually controlled across font/Unicode versions.
+
+### 10.3 Grapheme clusters are the editing unit
+
+Many visible emoji are not one Unicode codepoint. Examples include:
+
+```text
+👍🏽       base + skin-tone modifier
+👩‍🔬       ZWJ sequence
+🏳️‍🌈      variation selector + ZWJ sequence
+🇮🇹       regional-indicator pair
+1️⃣        keycap sequence
+❤️        variation-selector sequence
+```
+
+To the child these are each **one character**. Cursor movement, Backspace, Delete, selection, wrapping, hit-testing, truncation and preview generation must not split them.
+
+The current source uses Unicode extended grapheme clusters (`\X`) from the packaged `python3-regex` implementation. `src/greia_platform/typography.py` exposes grapheme-boundary helpers for renderer/editor code. The first-party Writing Activity has been migrated to use those boundaries.
+
+Do not implement new editable text by indexing visible characters as individual Python codepoints.
+
+### 10.4 Persistence stays standard UTF-8
+
+Emoji are stored as ordinary Unicode strings in Greia's logical UTF-8 text data. Do not substitute proprietary tokens such as `[GREIA_EMOJI_42]`, image filenames, or host-font glyph IDs.
+
+That keeps child documents portable across CPU architectures, future runtimes, backups and other applications.
+
+### 10.5 Current color-emoji rendering details are implementation facts
+
+On the current Debian 12/bookworm target, the packaged Noto Color Emoji font uses an embedded color-bitmap strike. The current Pygame backend uses Pillow's embedded-color path at the font's supported native strike and scales the resulting RGBA glyph to the requested UI size. That backend-specific fact must remain inside `GreiaTypography`; Activities must not copy it.
+
+The emoji surface cache is hard-bounded. Emoji must never be decoded/rasterized every frame without reuse.
+
+### 10.6 Emoji input / picker
+
+The renderer/editor foundation does **not** by itself mean Greia already has a child-facing emoji picker. A future Greia picker should be a large-tile, controller/touch/pointer-friendly platform component that inserts standard Unicode strings into the active text field.
+
+Until such a picker is implemented, normal OS/keyboard text input can still supply emoji where the host/input method supports them. Do not invent Activity-specific private emoji encodings.
+
+### 10.7 Emoji acceptance
+
+At minimum, visual/runtime acceptance should exercise:
+
+```text
+🙂 🚀 🦄
+❤️ ☀️
+👍🏽 👋🏻
+👩‍🔬 👨‍🚀 🏳️‍🌈
+🇮🇹 🇫🇷 🇯🇵
+1️⃣ 5️⃣ #️⃣
+```
+
+and mixed strings at representative child UI sizes.
+
+Acceptance is not merely “no exception.” It must check:
+
+- no tofu/missing-glyph boxes for supported sequences;
+- color pixels where color emoji are expected;
+- whole-cluster cursor movement and deletion;
+- correct wrapping/hit-testing around emoji;
+- bounded cache growth;
+- acceptable first-render and cached-render latency;
+- installed-size/RSS impact on the C0/Acer floor.
+
+The Debian font package is a meaningful disk addition, so low-resource image evidence is still required before calling the complete C0 emoji path physically accepted.
+
+## 11. Accessibility typography
+
+Greia preserves an extension point for a future **high-legibility/accessibility font mode**.
+
+This document does **not** select that alternate family yet. The important architectural rule is that accessibility typography switches through platform-owned semantic typography roles so Shell and conforming Activities change coherently.
+
+Emoji fallback remains orthogonal to the normal-text family: selecting a high-legibility body font should not require every Activity to rebuild its own emoji handling.
+
+## 12. Platform typography roles
+
+The current source exposes semantic typography roles rather than requiring consumers to open arbitrary `.ttf` paths:
 
 ```text
 body
 secondary
 control
 title
-display / celebration
+display
 ```
 
-This is intentionally **not a declaration of a current Python or Web API**. Exact role names, schema, caching objects, theme serialization, and runtime bridge become source-owned when implemented.
-
-The architecture goal is:
+The exact enum/cache/fallback implementation is source-owned by `src/greia_platform/typography.py`. The design architecture is:
 
 ```text
 Greia visual style
       ↓
-platform typography/theme roles
+platform typography roles + fallback
       ↓
 Shell / system UI / first-party Activities / future Web runtime
 ```
@@ -263,29 +342,36 @@ Shell      → another copy
 Installer  → another copy
 ```
 
-## 12. Runtime and low-resource requirements
+`src/greia_platform/pygame_ui.py` is the platform-wide Pygame import surface for shared renderer helpers and now re-exports the typography/grapheme contract for Pygame consumers.
+
+## 13. Runtime and low-resource requirements
 
 Typography is part of the low-resource architecture.
 
-Implementations should:
+Implementations must:
 
 - load fonts once and reuse them;
-- use a bounded font cache keyed by semantic family/weight/size or equivalent implementation state;
+- use bounded font/glyph/surface caches;
 - never construct/decode font resources per frame;
-- ship only the weights/glyph coverage actually justified by supported locales and design requirements;
+- ship only fonts justified by supported locales/design requirements;
 - avoid making variable-font processing a C0 requirement without evidence;
-- measure font package size and runtime memory cost on reference hardware;
-- produce stable metrics across supported renderer/runtime families closely enough that layouts do not become runtime-specific designs.
+- measure font package size and runtime memory/latency cost on reference hardware;
+- produce stable enough metrics across supported renderer/runtime families that layouts do not become runtime-specific designs;
+- preserve a child-safe degradation path when an optional fallback resource is missing while treating supported-release package composition as a verified build contract.
 
-The final implementation must work with Greia's existing bounded-resource UI philosophy rather than becoming a separate typography framework.
+The final implementation must stay within Greia's existing bounded-resource UI philosophy rather than becoming a separate heavyweight text framework.
 
-## 13. Relationship to Activities
+## 14. Relationship to Activities
 
-Activity authors should not infer that selecting Nunito Sans means they should bundle their own copy into each `.greiaactivity` package.
+Activity authors must not bundle private copies of Nunito/Noto merely to obtain ordinary Greia text behavior.
 
-The intended direction is a platform-owned shared typography service/theme so standard UI can reuse the system font efficiently and consistently.
+Standard Greia/Pygame UI should use the shared typography path. Activities should not:
 
-Until that contract is implemented, authors must follow the current source/authoring guide rather than inventing font paths or future APIs.
+- open `/usr/share/fonts/...` directly;
+- hard-code `/opt/greia-os/assets/fonts/...` paths;
+- implement their own emoji-range tables or ZWJ parser;
+- split user-editable text by Python codepoint when grapheme semantics are required;
+- use emoji as substitutes for protected Greia system controls.
 
 Where an Activity deliberately ships a custom content font, it must:
 
@@ -295,25 +381,23 @@ Where an Activity deliberately ships a custom content font, it must:
 - include its font cost inside the Activity package/resource budget;
 - not impersonate Greia system chrome or use typography to obscure required platform controls.
 
-## 14. Relationship to awards and celebrations
+## 15. Relationship to awards and celebrations
 
 ADR 0025 makes celebrations a Greia-owned presentation responsibility. Typography should reinforce that ownership.
 
-A badge reveal or personal-best celebration may use larger Nunito Sans Bold/ExtraBold, animation, scale, sound, and artwork, while ordinary explanatory text remains calm and readable.
+A badge reveal or personal-best celebration may use larger Nunito Sans Bold/ExtraBold, animation, scale, sound, artwork, and appropriate expressive emoji where it adds meaning. Ordinary explanatory text remains calm and readable.
 
 The celebration should feel special because of presentation—not because Greia temporarily switches to a hard-to-read novelty font.
 
-## 15. Relationship to the current palette/theme
+## 16. Relationship to the current palette/theme
 
-`runtime/theme-defaults.toml` currently owns implemented color choices such as cream backgrounds, cocoa text, sunshine/coral/leaf/ocean accents, and related theme IDs.
+`runtime/theme-defaults.toml` owns implemented color choices such as cream backgrounds, cocoa text, sunshine/coral/leaf/ocean accents, and related theme IDs.
 
-This style guide does not replace that source-owned contract. It records the design intention that typography, colors, icons, panels, and artwork should function as **one coherent Greia visual system**.
+This style guide does not replace that source-owned contract. Typography, colors, icons, panels, artwork, and expressive Unicode should function as **one coherent Greia visual system**.
 
-A future expansion of the theme model to typography should be implemented deliberately, with migrations/tests and updated authoring documentation, rather than by sprinkling font paths into individual consumers.
+## 17. What Greia should avoid
 
-## 16. What Greia should avoid
-
-Avoid as default OS styling:
+Avoid as default OS styling/typography:
 
 - Comic Sans-like or novelty fonts chosen merely to signal “for kids”;
 - highly geometric or condensed faces that sacrifice young-reader clarity;
@@ -324,37 +408,45 @@ Avoid as default OS styling:
 - text embedded permanently into raster artwork where localization is expected;
 - Activities overriding the visual identity of trusted Greia system chrome;
 - font loading from network/CDN resources for core operation;
-- per-Activity copies of a platform font once shared platform typography exists.
+- per-Activity copies of platform fonts;
+- direct dependency on host fontconfig behavior as the Activity API;
+- ad-hoc emoji codepoint/range logic copied between Activities;
+- using emoji as a replacement for Greia semantic system icons.
 
-## 17. Implementation checklist for introducing Nunito Sans
+## 18. Implementation/evidence checklist
 
-Selecting the font in this document is not the same as shipping it. When implementation begins, the tranche should at minimum:
+For platform typography and emoji support, maintain at least:
 
-1. select and pin an upstream Nunito Sans version/source;
-2. copy only the required static weights/glyph coverage into the appropriate repository/package location;
-3. include the upstream OFL-1.1 license/copyright material;
-4. add the font to the third-party licensing/provenance inventory required by ADR 0024;
-5. define source-owned semantic typography roles and a bounded cache/load path;
-6. migrate Greia-owned UI consumers through that common path rather than hard-coded per-consumer files;
-7. update `skills/greia-activity-authoring/SKILL.md` when an Activity-facing typography contract actually exists;
-8. validate Italian and English glyphs/accents plus the young-reader specimen;
-9. perform 800×600 / 1024×600 visual review and physical Acer-class testing;
-10. measure installed-size/RAM/rendering impact;
-11. retain a child-safe fallback if the font resource becomes unavailable/corrupt.
+1. pinned/provenanced Nunito Sans static weights and OFL material;
+2. explicit image/runtime dependency for the selected emoji fallback font;
+3. source-owned semantic typography/fallback service with bounded caches;
+4. Unicode extended-grapheme segmentation for editable text;
+5. mixed ordinary-text + emoji rendering without per-Activity font hunting;
+6. first-party text editor deletion/cursor/wrapping/hit-testing that is grapheme-safe;
+7. authoring documentation for the shared contract;
+8. Italian/English glyph and accent verification plus the young-reader/emoji specimen;
+9. provider-free regression tests for segmentation/editing/package composition;
+10. actual 800×600 / 1024×600 visual review and physical Acer-class testing;
+11. installed-size/RAM/first-render/cached-render measurements;
+12. child-safe behavior if a fallback resource becomes unavailable/corrupt;
+13. future platform emoji-picker acceptance when that separate UI feature is implemented.
 
-No implementation PASS is implied until those source/runtime/evidence steps actually occur.
+## 19. Current state
 
-## 18. Current selected state
-
-As of 2026-08-17:
+As of 2026-08-19:
 
 - **visual direction:** warm, playful, coherent, readable, not babyish;
 - **default interface font:** **Nunito Sans**;
-- **font license:** **SIL Open Font License 1.1 (OFL-1.1)**;
-- **initial weight direction:** Regular / SemiBold / Bold / ExtraBold;
-- **initial deployment direction:** static weights, platform-owned and cached;
-- **accessibility alternate:** extension point required, specific family not yet selected by this guide;
-- **font files bundled in Greia by this documentation change:** **no**;
-- **typography theme/API implemented by this documentation change:** **no**.
+- **Nunito license:** **SIL Open Font License 1.1 (OFL-1.1)**;
+- **bundled Nunito weights:** Regular / SemiBold / Bold / ExtraBold;
+- **semantic typography service:** implemented in `src/greia_platform/typography.py`;
+- **color emoji fallback:** source-implemented with system `Noto Color Emoji` + Pillow embedded-color rendering;
+- **grapheme segmentation:** source-implemented with packaged `python3-regex` Unicode `\X` path plus a development-host fallback;
+- **Python/Pygame package composition:** declares `fonts-noto-color-emoji`, `python3-pil`, `python3-pygame`, and `python3-regex`;
+- **Writing Activity:** migrated to grapheme-safe editing and mixed text/emoji rendering;
+- **provider-free emoji/Writing regressions:** committed, **not yet executed in an owner-controlled checkout at this head**;
+- **child-facing emoji picker:** not yet implemented;
+- **C0/Acer installed-size/RAM/latency/visual acceptance:** pending;
+- **accessibility alternate normal-text family:** extension point required, specific family not yet selected by this guide.
 
-This distinction should remain explicit so a design decision is never mistaken for an implemented or physically verified platform capability.
+Do not convert this source status into a physical/release-support claim until the current tests and low-resource evidence actually execute.
