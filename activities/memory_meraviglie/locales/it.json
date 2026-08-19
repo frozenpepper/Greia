@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "locale": "it",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Memory delle Meraviglie",
+    "hud.pairs": "Coppie: {found}/{total}",
+    "hud.moves": "Mosse: {moves}",
+    "theme.animals": "🐾 Animali",
+    "theme.sweets": "🍭 Dolcetti",
+    "theme.vehicles": "🚀 Veicoli",
+    "theme.nature": "🌸 Natura",
+    "grid.small": "2x2",
+    "grid.medium": "3x2",
+    "grid.large": "4x3",
+    "btn.new_game": "🔄 Nuovo",
+    "btn.play_again": "🎉 Gioca Ancora!",
+    "victory.title": "Bravissima! Hai trovato tutte le coppie! 🌟",
+    "victory.subtitle": "Che memoria fantastica!"
+  },
+  "audio": {}
+}

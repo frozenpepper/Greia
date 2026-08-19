@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "locale": "en",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Bridge Builders",
+    "btn.cross": "🐾 Cross!",
+    "btn.clear": "🧹 Clear",
+    "btn.play_again": "🎉 Next Level!",
+    "level.river": "Green River 🌊",
+    "level.canyon": "Rocky Canyon 🏔️",
+    "level.space": "Cosmic Abyss 🌌",
+    "victory.title": "Hooray! The bridge is super strong! 🐾🎉",
+    "victory.subtitle": "The puppy safely made it across to the picnic!"
+  },
+  "audio": {}
+}

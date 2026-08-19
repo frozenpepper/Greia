@@ -1,0 +1,41 @@
+[activity]
+id = "org.greia.acquario-magico"
+legacy_ids = []
+title_key = "activity.acquario_magico.title"
+version = "0.1.0"
+icon = "potions"
+languages = ["it", "en"]
+
+[presentation]
+categories = ["explore", "create"]
+
+[education]
+categories = ["marine_life", "sensory_calm", "observation"]
+difficulty = 1
+skills = [
+  { id = "sensory.visual_tracking.motion", weight = 3 },
+  { id = "lexicon.nature.marine", weight = 2 },
+  { id = "motor.pointer.target_selection", weight = 2 },
+]
+events = [
+  { id = "aquarium.fish_fed", kind = "milestone" },
+  { id = "aquarium.glow_mode_toggled", kind = "milestone" },
+]
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "hybrid"
+
+[requirements]
+required_capabilities = ["display", "pointer", "audio.basic"]
+optional_capabilities = ["keyboard", "touch"]
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1

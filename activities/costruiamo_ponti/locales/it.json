@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "locale": "it",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Costruiamo i Ponti",
+    "btn.cross": "🐾 Attraversa!",
+    "btn.clear": "🧹 Pulisci",
+    "btn.play_again": "🎉 Prossimo Livello!",
+    "level.river": "Fiume Verde 🌊",
+    "level.canyon": "Canyon Roccioso 🏔️",
+    "level.space": "Abisso Stellare 🌌",
+    "victory.title": "Evviva! Il ponte è solidissimo! 🐾🎉",
+    "victory.subtitle": "Il cucciolo ha raggiunto il picnic sano e salvo!"
+  },
+  "audio": {}
+}

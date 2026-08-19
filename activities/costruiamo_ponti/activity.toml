@@ -1,0 +1,41 @@
+[activity]
+id = "org.greia.costruiamo-ponti"
+legacy_ids = []
+title_key = "activity.costruiamo_ponti.title"
+version = "0.1.0"
+icon = "block_puzzle"
+languages = ["it", "en"]
+
+[presentation]
+categories = ["create", "play"]
+
+[education]
+categories = ["spatial_reasoning", "physics_intuition", "construction"]
+difficulty = 1
+skills = [
+  { id = "spatial.construction.bridge", weight = 3 },
+  { id = "physics.balance.structural", weight = 2 },
+  { id = "motor.pointer.target_selection", weight = 2 },
+]
+events = [
+  { id = "bridge.block_placed", kind = "milestone" },
+  { id = "bridge.crossing_completed", kind = "completion" },
+]
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "hybrid"
+
+[requirements]
+required_capabilities = ["display", "pointer", "audio.basic"]
+optional_capabilities = ["keyboard", "touch"]
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1

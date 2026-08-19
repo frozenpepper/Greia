@@ -1,0 +1,42 @@
+[activity]
+id = "org.greia.piccola-serra"
+legacy_ids = []
+title_key = "activity.piccola_serra.title"
+version = "0.1.0"
+icon = "garden"
+languages = ["it", "en"]
+
+[presentation]
+categories = ["explore", "create"]
+
+[education]
+categories = ["nature_cycles", "gardening", "cause_and_effect"]
+difficulty = 1
+skills = [
+  { id = "nature.plant_growth.cycles", weight = 3 },
+  { id = "motor.pointer.target_selection", weight = 2 },
+  { id = "cognition.sequencing.care", weight = 2 },
+]
+events = [
+  { id = "greenhouse.seed_planted", kind = "milestone" },
+  { id = "greenhouse.flower_bloomed", kind = "milestone" },
+  { id = "greenhouse.harvest_completed", kind = "completion" },
+]
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "hybrid"
+
+[requirements]
+required_capabilities = ["display", "pointer", "audio.basic"]
+optional_capabilities = ["keyboard", "touch"]
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1

@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "locale": "en",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Little Vet Clinic",
+    "patient.puppy": "Puppy 🐶",
+    "patient.kitten": "Kitten 🐱",
+    "patient.bunny": "Bunny 🐰",
+    "patient.dragon": "Little Dragon 🐲",
+    "tool.stetho": "🩺 Checkup",
+    "tool.bandage": "🩹 Bandage",
+    "tool.sponge": "🧼 Bath",
+    "tool.snack": "🥣 Treat",
+    "tool.cuddle": "💖 Cuddles",
+    "victory.title": "The puppy is healthy and happy! 🐶💖",
+    "victory.subtitle": "You are a wonderful vet doctor!",
+    "btn.next_patient": "🐾 Next Patient!"
+  },
+  "audio": {}
+}

@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "locale": "en",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Magical Labyrinth",
+    "hud.stars": "★ ",
+    "hud.level": "Level",
+    "hud.easy": "Small",
+    "hud.medium": "Adventure",
+    "hud.hard": "Master",
+    "btn.hint": "✨ Firefly",
+    "btn.hero": "🐾 Hero",
+    "btn.biome": "🎨 World",
+    "btn.new_maze": "🔄 New Maze",
+    "btn.play_again": "🎉 Play Again!",
+    "victory.title": "Hooray! You Reached the Castle!",
+    "victory.subtitle": "You completed the magical maze!",
+    "biome.forest": "Enchanted Forest 🌲",
+    "biome.castle": "Crystal Castle 💎",
+    "biome.candy": "Candy Valley 🍭",
+    "biome.space": "Starry Cosmos 🚀",
+    "hero.unicorn": "Unicorn 🦄",
+    "hero.bunny": "Bunny 🐰",
+    "hero.kitty": "Kitty 🐱",
+    "hero.fox": "Fox 🦊",
+    "hero.panda": "Panda 🐼",
+    "hero.dragon": "Dragon 🐲"
+  },
+  "audio": {}
+}

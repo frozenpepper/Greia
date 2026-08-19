@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "locale": "it",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "L'Acquario Magico",
+    "tool.add_fish": "🐠 Aggiungi",
+    "tool.feed": "🧆 Mangime",
+    "tool.bubbles": "🫧 Bolle",
+    "tool.glow": "💡 Bagliore Notturno",
+    "creature.clownfish": "Pesce Pagliaccio 🐠",
+    "creature.turtle": "Tartaruga 🐢",
+    "creature.octopus": "Polipetto 🐙",
+    "creature.dolphin": "Delfino 🐬",
+    "creature.puffer": "Pesce Palla 🐡"
+  },
+  "audio": {}
+}

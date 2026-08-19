@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "locale": "en",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Wonder Match",
+    "hud.pairs": "Pairs: {found}/{total}",
+    "hud.moves": "Moves: {moves}",
+    "theme.animals": "🐾 Animals",
+    "theme.sweets": "🍭 Sweets",
+    "theme.vehicles": "🚀 Vehicles",
+    "theme.nature": "🌸 Nature",
+    "grid.small": "2x2",
+    "grid.medium": "3x2",
+    "grid.large": "4x3",
+    "btn.new_game": "🔄 New Game",
+    "btn.play_again": "🎉 Play Again!",
+    "victory.title": "Awesome! You matched all pairs! 🌟",
+    "victory.subtitle": "What a fantastic memory!"
+  },
+  "audio": {}
+}

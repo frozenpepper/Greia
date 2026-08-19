@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "locale": "en",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Number Express",
+    "prompt.load": "Load {count} {item} into the wagon!",
+    "hud.station": "Station {number}",
+    "hud.score": "Stars: ★ {stars}",
+    "btn.whistle": "🚂 Whistle!",
+    "btn.depart": "🟢 Go!",
+    "btn.reset": "🔄 Reset",
+    "btn.play_again": "🎉 Play Again!",
+    "victory.title": "Hooray! The train reached the terminal! 🚂🌟",
+    "victory.subtitle": "Awesome job! You completed all stations!",
+    "item.apple": "apples 🍎",
+    "item.carrot": "carrots 🥕",
+    "item.banana": "bananas 🍌",
+    "item.strawberry": "strawberries 🍓",
+    "item.pumpkin": "pumpkins 🎃",
+    "item.orange": "oranges 🍊"
+  },
+  "audio": {}
+}

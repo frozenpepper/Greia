@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "locale": "en",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Magic Aquarium",
+    "tool.add_fish": "🐠 Add Fish",
+    "tool.feed": "🧆 Feed",
+    "tool.bubbles": "🫧 Bubbles",
+    "tool.glow": "💡 Night Glow",
+    "creature.clownfish": "Clownfish 🐠",
+    "creature.turtle": "Sea Turtle 🐢",
+    "creature.octopus": "Octopus 🐙",
+    "creature.dolphin": "Dolphin 🐬",
+    "creature.puffer": "Pufferfish 🐡"
+  },
+  "audio": {}
+}

@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "locale": "it",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "La Clinica dei Cuccioli",
+    "patient.puppy": "Cagnolino 🐶",
+    "patient.kitten": "Gattino 🐱",
+    "patient.bunny": "Coniglietto 🐰",
+    "patient.dragon": "Draghetto 🐲",
+    "tool.stetho": "🩺 Visita",
+    "tool.bandage": "🩹 Cerotto",
+    "tool.sponge": "🧼 Bagnetto",
+    "tool.snack": "🥣 Pappa",
+    "tool.cuddle": "💖 Coccole",
+    "victory.title": "Il cucciolo è guarito ed è felice! 🐶💖",
+    "victory.subtitle": "Sei una dottoressa fantastica!",
+    "btn.next_patient": "🐾 Prossimo Paziente!"
+  },
+  "audio": {}
+}

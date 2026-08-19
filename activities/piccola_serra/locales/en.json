@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "locale": "en",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Little Green Thumb",
+    "hud.harvest": "Harvest: 🧺 {count}",
+    "tool.seeds": "🌱 Seeds",
+    "tool.water": "💧 Water",
+    "tool.sun": "☀️ Sun",
+    "tool.harvest": "🧺 Harvest",
+    "plant.sunflower": "Sunflower 🌻",
+    "plant.strawberry": "Strawberry 🍓",
+    "plant.tulip": "Tulip 🌷",
+    "plant.carrot": "Carrot 🥕",
+    "victory.title": "What a magnificent harvest! 🌻🍓🥕",
+    "victory.subtitle": "Your greenhouse is a true paradise!",
+    "btn.play_again": "🎉 Plant More!"
+  },
+  "audio": {}
+}

@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "locale": "it",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Il Labirinto Magico",
+    "hud.stars": "★ ",
+    "hud.level": "Livello",
+    "hud.easy": "Piccolo",
+    "hud.medium": "Avventura",
+    "hud.hard": "Maestro",
+    "btn.hint": "✨ Lucciola",
+    "btn.hero": "🐾 Eroe",
+    "btn.biome": "🎨 Mondo",
+    "btn.new_maze": "🔄 Nuovo",
+    "btn.play_again": "🎉 Gioca Ancora!",
+    "victory.title": "Evviva! Sei al Castello!",
+    "victory.subtitle": "Hai completato il labirinto magico!",
+    "biome.forest": "Bosco Incantato 🌲",
+    "biome.castle": "Castello Cristallo 💎",
+    "biome.candy": "Valle Dolciumi 🍭",
+    "biome.space": "Spazio Stellare 🚀",
+    "hero.unicorn": "Unicorno 🦄",
+    "hero.bunny": "Coniglietto 🐰",
+    "hero.kitty": "Gattino 🐱",
+    "hero.fox": "Volpina 🦊",
+    "hero.panda": "Pandino 🐼",
+    "hero.dragon": "Draghetto 🐲"
+  },
+  "audio": {}
+}

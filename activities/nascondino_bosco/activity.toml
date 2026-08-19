@@ -1,0 +1,41 @@
+[activity]
+id = "org.greia.nascondino-bosco"
+legacy_ids = []
+title_key = "activity.nascondino_bosco.title"
+version = "0.1.0"
+icon = "magnifier"
+languages = ["it", "en"]
+
+[presentation]
+categories = ["explore", "play"]
+
+[education]
+categories = ["visual_attention", "nature_lexicon", "observation"]
+difficulty = 1
+skills = [
+  { id = "cognition.observation.visual_search", weight = 3 },
+  { id = "lexicon.nature.animals", weight = 2 },
+  { id = "motor.pointer.target_selection", weight = 2 },
+]
+events = [
+  { id = "woodland.animal_found", kind = "milestone" },
+  { id = "woodland.round_completed", kind = "completion" },
+]
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "hybrid"
+
+[requirements]
+required_capabilities = ["display", "pointer", "audio.basic"]
+optional_capabilities = ["keyboard", "touch"]
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1

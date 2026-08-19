@@ -1,0 +1,41 @@
+[activity]
+id = "org.greia.memory-meraviglie"
+legacy_ids = []
+title_key = "activity.memory_meraviglie.title"
+version = "0.1.0"
+icon = "puzzle_pieces"
+languages = ["it", "en"]
+
+[presentation]
+categories = ["learn", "play"]
+
+[education]
+categories = ["working_memory", "visual_matching", "lexicon"]
+difficulty = 1
+skills = [
+  { id = "cognition.working_memory.visual", weight = 3 },
+  { id = "cognition.matching.pairs", weight = 3 },
+  { id = "motor.pointer.target_selection", weight = 2 },
+]
+events = [
+  { id = "memory.pair_found", kind = "milestone" },
+  { id = "memory.game_completed", kind = "completion" },
+]
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "hybrid"
+
+[requirements]
+required_capabilities = ["display", "pointer", "audio.basic"]
+optional_capabilities = ["keyboard", "touch"]
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1

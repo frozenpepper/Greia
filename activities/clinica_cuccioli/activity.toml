@@ -1,0 +1,41 @@
+[activity]
+id = "org.greia.clinica-cuccioli"
+legacy_ids = []
+title_key = "activity.clinica_cuccioli.title"
+version = "0.1.0"
+icon = "heart"
+languages = ["it", "en"]
+
+[presentation]
+categories = ["care", "play"]
+
+[education]
+categories = ["empathy", "caregiving", "hygiene_and_health"]
+difficulty = 1
+skills = [
+  { id = "socioemotional.empathy.caring", weight = 3 },
+  { id = "cognition.sequencing.care", weight = 2 },
+  { id = "motor.pointer.target_selection", weight = 2 },
+]
+events = [
+  { id = "vet.treatment_applied", kind = "milestone" },
+  { id = "vet.patient_healed", kind = "completion" },
+]
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "hybrid"
+
+[requirements]
+required_capabilities = ["display", "pointer", "audio.basic"]
+optional_capabilities = ["keyboard", "touch"]
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1
