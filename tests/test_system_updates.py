@@ -49,7 +49,13 @@ class SystemUpdateBundleTests(unittest.TestCase):
             release_notes="Emoji and update plumbing.",
         )
 
-    def _unsigned_structurally_valid_bundle(self, root: Path, payload: bytes) -> Path:
+    def _unsigned_structurally_valid_bundle(
+        self,
+        root: Path,
+        payload: bytes,
+        *,
+        name: str = "candidate.greiaupdate",
+    ) -> Path:
         manifest = self._manifest(payload)
         signature = SignatureEnvelope(
             schema_version=SCHEMA_VERSION,
@@ -57,7 +63,7 @@ class SystemUpdateBundleTests(unittest.TestCase):
             signer=manifest.signer,
             signature=b"x" * 64,
         )
-        path = root / "candidate.greiaupdate"
+        path = root / name
         with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
             archive.writestr(MANIFEST_NAME, manifest.canonical_bytes())
             archive.writestr(SIGNATURE_NAME, signature.as_json_bytes())
@@ -106,6 +112,18 @@ class SystemUpdateBundleTests(unittest.TestCase):
             with self.assertRaises(UpdateBundleError):
                 inspect_update_bundle(path)
 
+    def test_signature_envelope_rejects_type_coercion(self) -> None:
+        malformed = json.dumps(
+            {
+                "schema_version": True,
+                "algorithm": "ed25519",
+                "signer": "greia-release-main",
+                "signature": "eA==",
+            }
+        ).encode("utf-8")
+        with self.assertRaises(UpdateSignatureError):
+            SignatureEnvelope.from_json_bytes(malformed)
+
     def test_inbox_receives_bounded_bytes_but_does_not_claim_signature_or_activation(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -113,11 +131,42 @@ class SystemUpdateBundleTests(unittest.TestCase):
             inbox = SystemUpdateInbox(root / "state")
             queued = inbox.receive(bundle)
             self.assertTrue(queued.path.is_file())
+            self.assertIn("greia-0.14.0-", queued.path.name)
             status = inbox.status_payload()
             self.assertEqual(status["state"], "received")
             self.assertFalse(status["signature_verified"])
             self.assertFalse(status["activation_available"])
+            self.assertRegex(str(status["bundle_sha256"]), r"^[0-9a-f]{64}$")
             self.assertNotIn("bundle_path", status)
+
+    def test_inbox_is_content_addressed_and_identical_reupload_is_idempotent(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            bundle = self._unsigned_structurally_valid_bundle(root, b"slot-image")
+            inbox = SystemUpdateInbox(root / "state")
+            first = inbox.receive(bundle)
+            original_bytes = first.path.read_bytes()
+            second = inbox.receive(bundle)
+            self.assertEqual(first.path, second.path)
+            self.assertEqual(first.path.read_bytes(), original_bytes)
+            self.assertEqual(len(list(inbox.inbox_dir.glob("*.greiaupdate"))), 1)
+
+    def test_same_release_id_with_different_bundle_never_overwrites_previous_bytes(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            first_source = self._unsigned_structurally_valid_bundle(
+                root, b"slot-image-a", name="first.greiaupdate"
+            )
+            second_source = self._unsigned_structurally_valid_bundle(
+                root, b"slot-image-b", name="second.greiaupdate"
+            )
+            inbox = SystemUpdateInbox(root / "state")
+            first = inbox.receive(first_source)
+            first_bytes = first.path.read_bytes()
+            second = inbox.receive(second_source)
+            self.assertNotEqual(first.path, second.path)
+            self.assertEqual(first.path.read_bytes(), first_bytes)
+            self.assertEqual(len(list(inbox.inbox_dir.glob("*.greiaupdate"))), 2)
 
     def test_current_unavailable_backend_never_falls_back_to_active_root(self) -> None:
         backend = UnavailableSystemUpdateBackend("single-root layout")
