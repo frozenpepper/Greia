@@ -174,9 +174,10 @@ class SimulatorDesktopApp:
             self.root.mainloop()
             return 0
         finally:
-            try:
-                self.stop()
-            finally:
+            # Never release the writer lease while an owned child is still live.
+            # A failed final stop leaves a stale lock after this process exits;
+            # POSIX recovery may remove it only once this PID is genuinely dead.
+            if self.stop():
                 self.workspace.release_lock()
 
     def _preset_selected(self, _event=None) -> None:
@@ -266,7 +267,10 @@ class SimulatorDesktopApp:
             profile_id = self._selected_profile_id()
             self.workspace.set_interface_size(profile_id, requested_size)
             self.interface_size.set(requested_size)
-            self.stop()
+            if not self.stop():
+                raise RuntimeError(
+                    "the previous Greia Shell is still running; stop it before restarting"
+                )
             self.process = subprocess.Popen(
                 self._child_command(device),
                 cwd=self.workspace.repo_root,
@@ -284,25 +288,46 @@ class SimulatorDesktopApp:
     def restart(self) -> None:
         self.start()
 
-    def stop(self) -> None:
+    def stop(self) -> bool:
+        """Stop the owned Shell without dropping the handle before exit is known."""
+
         process = self.process
-        self.process = None
         if process is None:
-            return
+            return True
         code = process.poll()
         if code is not None:
+            self.process = None
             self.status.set(f"Greia Shell already exited (code {code}).")
-            return
+            return True
 
         self._stopping = True
+        forced = False
         try:
-            process.terminate()
             try:
-                process.wait(timeout=4.0)
-            except subprocess.TimeoutExpired:
-                process.kill()
-                process.wait(timeout=2.0)
-            self.status.set("Greia Shell stopped; Activity lifecycle cleanup requested.")
+                process.terminate()
+                try:
+                    code = process.wait(timeout=4.0)
+                except subprocess.TimeoutExpired:
+                    forced = True
+                    process.kill()
+                    code = process.wait(timeout=2.0)
+            except Exception as exc:
+                code = process.poll()
+                if code is None:
+                    # Retain ownership so Start/Close cannot silently orphan it.
+                    self.process = process
+                    self.status.set(f"Stop failed; Greia Shell is still running: {exc}")
+                    return False
+            self.process = None
+            if forced:
+                self.status.set(
+                    f"Greia Shell force-killed after lifecycle cleanup timeout (code {code})."
+                )
+            elif code == 0:
+                self.status.set("Greia Shell stopped cleanly through lifecycle cleanup.")
+            else:
+                self.status.set(f"Greia Shell stopped with non-zero code {code}.")
+            return True
         finally:
             self._stopping = False
 
@@ -365,7 +390,15 @@ class SimulatorDesktopApp:
             self.status.set(f"Activity install failed: {exc}")
 
     def close(self) -> None:
-        self.stop()
+        from tkinter import messagebox
+
+        if not self.stop():
+            messagebox.showerror(
+                "Greia Simulator",
+                "The Greia Shell is still running, so the simulator workspace remains locked. "
+                "Resolve the stop failure before closing the control plane.",
+            )
+            return
         self.root.destroy()
 
 
@@ -396,10 +429,11 @@ def main(argv: list[str] | None = None) -> int:
     workspace = SimulatorWorkspace(args.repo_root, args.state_dir)
     workspace.acquire_lock(allow_repo_rebind=args.rebind_state)
     try:
-        return SimulatorDesktopApp(workspace).run()
+        app = SimulatorDesktopApp(workspace)
     except Exception:
         workspace.release_lock()
         raise
+    return app.run()
 
 
 if __name__ == "__main__":
