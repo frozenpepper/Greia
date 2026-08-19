@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import sys
 
 from greia_launcher.runtime_adapter import (
     PythonRuntimeAdapter,
@@ -27,7 +28,7 @@ class SimulatorPythonRuntimeAdapter(PythonRuntimeAdapter):
         python_executable: Path | None = None,
         **kwargs,
     ) -> None:
-        super().__init__(python_executable, **kwargs)
+        super().__init__(python_executable or Path(sys.executable), **kwargs)
         self._device = device
         self._bootstrap = Path(__file__).with_name("python_activity.py").resolve(strict=True)
 

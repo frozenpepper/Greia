@@ -11,6 +11,13 @@ from pathlib import Path
 from types import ModuleType, SimpleNamespace
 from unittest import mock
 
+REPO = Path(__file__).resolve().parents[1]
+_src = str(REPO / "src")
+if sys.path[:1] != [_src]:
+    if _src in sys.path:
+        sys.path.remove(_src)
+    sys.path.insert(0, _src)
+
 import greia_simulator.workspace as simulator_workspace
 from greia_launcher.child_shell import GreiaChildShell, ProfileVisualActivitySupervisor
 from greia_launcher.composition import build_launcher_runtime_services
@@ -330,7 +337,9 @@ class GreiaSimulatorWorkspaceTests(unittest.TestCase):
             environment = workspace.environment()
             self.assertEqual(Path(environment["GREIA_OS_ROOT"]), REPO.resolve())
             self.assertTrue(
-                environment["GREIA_DEVELOPER_ACTIVITY_ROOT"].startswith(directory)
+                environment["GREIA_DEVELOPER_ACTIVITY_ROOT"].startswith(
+                    str(Path(directory).resolve())
+                )
             )
             self.assertFalse(
                 any(name.startswith("GREIA_SIMULATOR") for name in environment)
@@ -774,7 +783,7 @@ while not activity_stop_requested():
     time.sleep(0.02)
 pygame.quit()
 '''
-        with tempfile.TemporaryDirectory() as directory:
+        with tempfile.TemporaryDirectory(dir="/tmp") as directory:
             base = Path(directory)
             workspace = SimulatorWorkspace(REPO, base / "state")
             registration = workspace.load_activity(_write_activity(base / "source", body=body))

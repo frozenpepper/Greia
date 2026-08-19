@@ -26,6 +26,11 @@ except ImportError:  # pragma: no cover - shipping Greia images install python3-
 # degrade safely instead of taking down the child session.
 
 DEFAULT_EMOJI_FONT = Path("/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf")
+_HOST_FALLBACK_EMOJI_FONTS: tuple[Path, ...] = (
+    Path("/System/Library/Fonts/Apple Color Emoji.ttc"),
+    Path("/System/Library/Fonts/CoreAddition/AppleColorEmoji.ttc"),
+    Path("/Library/Fonts/NotoColorEmoji.ttf"),
+)
 # Debian 12/bookworm's Noto Color Emoji package is CBDT/CBLC with a 109-pixel
 # native bitmap strike. Greia renders that strike and scales the RGBA result to
 # the requested UI size. Keep this version-specific fact behind this service.
@@ -62,8 +67,8 @@ class FontSpec:
     size: int
 
     def __post_init__(self) -> None:
-        if self.size < 8 or self.size > 160:
-            raise ValueError("font size must be within [8, 160]")
+        if self.size < 8 or self.size > 144:
+            raise ValueError(f"font size must be between 8 and 144, got {self.size}")
 
 
 @dataclass(frozen=True, slots=True)
@@ -90,7 +95,7 @@ class TypographyError(RuntimeError):
 
 
 def grapheme_spans(text: str) -> tuple[GraphemeSpan, ...]:
-    """Segment text into Unicode extended grapheme clusters.
+    r"""Segment text into Unicode extended grapheme clusters.
 
     Installed Greia images include ``python3-regex`` and use its Unicode ``\X``
     implementation. The stdlib fallback exists so source tools can still import
@@ -108,8 +113,8 @@ def grapheme_spans(text: str) -> tuple[GraphemeSpan, ...]:
             GraphemeSpan(
                 match.start(),
                 match.end(),
-                match.group(0),
-                is_emoji_cluster(match.group(0)),
+                match.group(),
+                is_emoji_cluster(match.group()),
             )
             for match in _GRAPHEME_PATTERN.finditer(text)
         )
@@ -117,33 +122,42 @@ def grapheme_spans(text: str) -> tuple[GraphemeSpan, ...]:
 
 
 def grapheme_boundaries(text: str) -> tuple[int, ...]:
-    """Return valid user-cursor boundaries, including zero and len(text)."""
+    """Return all valid cursor indices (0, end, and cluster boundaries)."""
 
-    spans = grapheme_spans(text)
-    if not spans:
+    if not text:
         return (0,)
-    return (0, *(span.end for span in spans))
+    boundaries = [0]
+    for span in grapheme_spans(text):
+        boundaries.append(span.end)
+    return tuple(boundaries)
 
 
 def previous_grapheme_boundary(text: str, cursor: int) -> int:
+    """Step back by one user-perceived character."""
+
     boundaries = grapheme_boundaries(text)
-    cursor = max(0, min(int(cursor), len(text)))
-    return boundaries[max(0, bisect.bisect_left(boundaries, cursor) - 1)]
+    pos = bisect.bisect_left(boundaries, cursor) - 1
+    return boundaries[max(0, pos)]
 
 
 def next_grapheme_boundary(text: str, cursor: int) -> int:
+    """Advance by one user-perceived character."""
+
     boundaries = grapheme_boundaries(text)
-    cursor = max(0, min(int(cursor), len(text)))
-    index = bisect.bisect_right(boundaries, cursor)
-    return boundaries[min(index, len(boundaries) - 1)]
+    pos = bisect.bisect_right(boundaries, cursor)
+    return boundaries[min(pos, len(boundaries) - 1)]
 
 
 def snap_grapheme_boundary(text: str, cursor: int) -> int:
-    """Clamp a stale codepoint cursor to the preceding safe user boundary."""
+    """Clamp a raw codepoint index to the nearest valid grapheme boundary."""
 
     boundaries = grapheme_boundaries(text)
-    cursor = max(0, min(int(cursor), len(text)))
-    return boundaries[max(0, bisect.bisect_right(boundaries, cursor) - 1)]
+    if cursor <= 0:
+        return 0
+    if cursor >= len(text):
+        return len(text)
+    pos = bisect.bisect_right(boundaries, cursor) - 1
+    return boundaries[pos]
 
 
 def truncate_grapheme_safe(text: str, maximum_codepoints: int) -> str:
@@ -205,7 +219,13 @@ class GreiaTypography:
         self._cache: dict[FontSpec, Any] = {}
         self._degraded: bool | None = None
         self._pygame_font = None
-        self._emoji_font_path = Path(emoji_font_path)
+        resolved_emoji_path = Path(emoji_font_path)
+        if not resolved_emoji_path.is_file() and emoji_font_path == DEFAULT_EMOJI_FONT:
+            for candidate in _HOST_FALLBACK_EMOJI_FONTS:
+                if candidate.is_file():
+                    resolved_emoji_path = candidate
+                    break
+        self._emoji_font_path = resolved_emoji_path
         self._emoji_native_strike_px = int(emoji_native_strike_px)
         if self._emoji_native_strike_px < 1:
             raise ValueError("emoji native strike must be positive")
@@ -398,10 +418,19 @@ class GreiaTypography:
 
     def _pillow_emoji_font(self) -> ImageFont.FreeTypeFont:
         if self._emoji_font is None:
-            self._emoji_font = ImageFont.truetype(
-                str(self._emoji_font_path),
-                self._emoji_native_strike_px,
-            )
+            strikes = (self._emoji_native_strike_px, 96, 64, 160, 48, 32, 20, 109)
+            last_err: Exception | None = None
+            for strike in strikes:
+                try:
+                    self._emoji_font = ImageFont.truetype(
+                        str(self._emoji_font_path),
+                        strike,
+                    )
+                    break
+                except OSError as err:
+                    last_err = err
+            if self._emoji_font is None:
+                raise last_err or OSError(f"cannot load emoji font {self._emoji_font_path}")
         return self._emoji_font
 
     @staticmethod

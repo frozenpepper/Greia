@@ -120,7 +120,7 @@ class FirstPartyActivityReadinessTests(unittest.TestCase):
 
         self.assertEqual(
             set(checked),
-            {"painting", "shape_garden", "workshop_settings", "writing"},
+            {"cucciolo_mio", "foresta_parole", "orchestra_animali", "painting", "pasticceria_magica", "shape_garden", "teatrino_fiabe", "volo_draghetto", "workshop_settings", "writing"},
             "new/removed first-party Python Activities must explicitly reconcile readiness coverage",
         )
 

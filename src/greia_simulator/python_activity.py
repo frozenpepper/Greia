@@ -39,8 +39,94 @@ def install_pygame_display_patch(
     # package-local pygame module from replacing the trusted renderer dependency
     # used to establish the synthetic surface.
     import pygame
+    from greia_platform.system_chrome import ActivitySystemChromeLayout
+    from greia_platform.activity_ui import draw_home_symbol
 
     original = pygame.display.set_mode
+    original_flip = pygame.display.flip
+    original_update = pygame.display.update
+    original_get_events = pygame.event.get
+
+    def _draw_chrome_overlay(surface: pygame.Surface | None) -> None:
+        if surface is None:
+            return
+        w, h = surface.get_size()
+        try:
+            chrome = ActivitySystemChromeLayout.for_surface(w, h)
+            hb = chrome.home_hitbox
+            home_rect = pygame.Rect(hb.x, hb.y, hb.width, hb.height)
+            # Draw trusted Home button pill
+            pygame.draw.rect(
+                surface,
+                (255, 248, 235),
+                home_rect,
+                border_radius=max(6, home_rect.width // 4),
+            )
+            pygame.draw.rect(
+                surface,
+                (61, 44, 31),
+                home_rect,
+                width=2,
+                border_radius=max(6, home_rect.width // 4),
+            )
+            draw_home_symbol(surface, home_rect, (61, 44, 31))
+
+            # Draw cursor on top of all chrome overlays when mouse is focused
+            if pygame.mouse.get_focused():
+                mx, my = pygame.mouse.get_pos()
+                if 0 <= mx < w and 0 <= my < h:
+                    cursor_pts = [
+                        (mx, my),
+                        (mx, my + 18),
+                        (mx + 5, my + 14),
+                        (mx + 10, my + 21),
+                        (mx + 13, my + 19),
+                        (mx + 8, my + 12),
+                        (mx + 14, my + 12),
+                    ]
+                    pygame.draw.polygon(surface, (61, 44, 31), cursor_pts)
+                    inner_pts = [
+                        (mx + 1, my + 2),
+                        (mx + 1, my + 15),
+                        (mx + 5, my + 12),
+                        (mx + 9, my + 18),
+                        (mx + 11, my + 17),
+                        (mx + 7, my + 11),
+                        (mx + 12, my + 11),
+                    ]
+                    pygame.draw.polygon(surface, (255, 255, 255), inner_pts)
+        except Exception:
+            pass
+
+    def simulator_flip():
+        surface = pygame.display.get_surface()
+        _draw_chrome_overlay(surface)
+        return original_flip()
+
+    def simulator_update(*args, **kwargs):
+        surface = pygame.display.get_surface()
+        _draw_chrome_overlay(surface)
+        return original_update(*args, **kwargs)
+
+    def simulator_get_events(*args, **kwargs):
+        events = original_get_events(*args, **kwargs)
+        surface = pygame.display.get_surface()
+        if surface is not None:
+            w, h = surface.get_size()
+            try:
+                chrome = ActivitySystemChromeLayout.for_surface(w, h)
+                for event in events:
+                    if (
+                        event.type in (pygame.MOUSEBUTTONUP, pygame.MOUSEBUTTONDOWN)
+                        and getattr(event, "button", None) == 1
+                    ):
+                        if chrome.home_hitbox.contains(event.pos[0], event.pos[1]):
+                            raise SystemExit(0)
+            except SystemExit:
+                raise
+            except Exception:
+                pass
+        return events
 
     def simulator_set_mode(
         size=(0, 0),
@@ -67,6 +153,9 @@ def install_pygame_display_patch(
             return original(normalized_size, normalized_flags, depth)
 
     pygame.display.set_mode = simulator_set_mode
+    pygame.display.flip = simulator_flip
+    pygame.display.update = simulator_update
+    pygame.event.get = simulator_get_events
     return original
 
 
@@ -92,8 +181,6 @@ def run_activity(entrypoint: Path, *, target_size: tuple[int, int]) -> None:
     if not path.is_file() or root not in path.parents:
         raise RuntimeError("simulated Activity entrypoint escaped its validated package")
 
-    install_pygame_display_patch(target_size)
-
     # Defensive cleanup for stale callers/older workspaces. Simulator identity
     # is private launch plumbing, never an Activity-facing feature flag.
     for name in tuple(os.environ):
@@ -113,6 +200,9 @@ def run_activity(entrypoint: Path, *, target_size: tuple[int, int]) -> None:
     ]
     sys.path.insert(0, package_path)
     sys.path.insert(0, trusted_source)
+
+    install_pygame_display_patch(target_size)
+
     runpy.run_path(str(path), run_name="__main__")
 
 

@@ -24,7 +24,16 @@ from .ui_preferences import InterfaceSize, UiPreferences, UiPreferencesStore
 
 @lru_cache(maxsize=1)
 def _root() -> Path:
-    return Path(os.environ.get("GREIA_OS_ROOT", "/opt/greia-os")).resolve()
+    explicit = os.environ.get("GREIA_OS_ROOT")
+    if explicit:
+        return Path(explicit).resolve()
+    opt = Path("/opt/greia-os")
+    if opt.exists():
+        return opt.resolve()
+    repo = Path(__file__).resolve().parents[2]
+    if (repo / "runtime" / "theme-defaults.toml").exists():
+        return repo.resolve()
+    return opt
 
 
 @lru_cache(maxsize=1)
@@ -123,6 +132,11 @@ def get_active_profile() -> dict[str, object]:
     }
 
 
+def get_profile_locale() -> str:
+    """Return the active profile or device UI locale tag string (e.g. 'it' or 'en')."""
+    return os.environ.get("GREIA_PROFILE_LOCALE", os.environ.get("GREIA_DEVICE_LOCALE", "it"))
+
+
 def get_profile_avatar_choices() -> tuple[str, ...]:
     _require_capability("profile.manage_own")
     return _profile_policy().avatars
@@ -163,14 +177,29 @@ def get_theme() -> ResolvedTheme:
     """
 
     if os.environ.get("GREIA_CUSTOMIZATION_DIR"):
-        return _theme_store().resolve()
+        try:
+            return _theme_store().resolve()
+        except Exception:
+            pass
     snapshot = os.environ.get("GREIA_THEME_SNAPSHOT")
     if snapshot:
         try:
             return decode_theme_snapshot(snapshot)
         except ThemeSnapshotError:
             pass
-    return _default_theme_store().resolve()
+    try:
+        return _default_theme_store().resolve()
+    except Exception:
+        from .customization import ThemePreferences
+        return ResolvedTheme(
+            preferences=ThemePreferences(1, "buttercup", "sky", "ink", False),
+            background=(255, 250, 240),
+            panel=(247, 235, 203),
+            accent=(255, 194, 52),
+            text=(61, 44, 31),
+            accent_text=(255, 255, 255),
+            wallpaper_path=None,
+        )
 
 
 def get_ui_preferences() -> UiPreferences:

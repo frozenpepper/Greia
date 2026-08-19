@@ -195,7 +195,7 @@ class R5IntegrationTests(unittest.TestCase):
         self.assertEqual(summary.recent_sessions[0].exit_reason, "platform_failure")
 
     def test_event_broker_round_trip_applies_only_platform_reward_and_cleans_up(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
+        with tempfile.TemporaryDirectory(dir="/tmp") as temporary:
             root = Path(temporary)
             profile = self._profile(root)
             process = _FakeProcess()
@@ -247,7 +247,7 @@ class R5IntegrationTests(unittest.TestCase):
         self.assertFalse(event_socket.exists())
 
     def test_sandbox_receives_only_current_event_broker_endpoint(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
+        with tempfile.TemporaryDirectory(dir="/tmp") as temporary:
             root = Path(temporary)
             profile = self._profile(root)
             process = _FakeProcess()
@@ -257,8 +257,11 @@ class R5IntegrationTests(unittest.TestCase):
                 calls.append((args, kwargs))
                 return process
 
+            sandbox = root / "bwrap"
+            sandbox.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
+            sandbox.chmod(0o755)
             supervisor = ActivitySupervisor(
-                sandbox_executable=Path("/bin/true"),
+                sandbox_executable=sandbox,
                 require_sandbox=True,
                 runtime_manager=self._manager(factory),
                 storage_service=self.storage,

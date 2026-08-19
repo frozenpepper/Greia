@@ -361,7 +361,7 @@ class SupervisorTests(unittest.TestCase):
         self.assertEqual(result.return_code, -9)
 
     def test_storage_broker_is_exposed_for_launch_and_removed_on_exit(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
+        with tempfile.TemporaryDirectory(dir="/tmp") as temporary:
             root = Path(temporary)
             manifest = _manifest(root / "activity")
             profile = _ProfileContext(root / "profile")
@@ -482,7 +482,7 @@ class SupervisorTests(unittest.TestCase):
             self.assertEqual(command[chdir + 2 :], ["runtime", "--start"])
 
     def test_sandbox_launch_mounts_only_ephemeral_storage_broker(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
+        with tempfile.TemporaryDirectory(dir="/tmp") as temporary:
             root = Path(temporary)
             sandbox = root / "bwrap"
             sandbox.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")

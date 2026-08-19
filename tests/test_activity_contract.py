@@ -26,8 +26,14 @@ class ActivityContractTests(unittest.TestCase):
         self.assertEqual(
             [activity.activity_id for activity in activities],
             [
+                "org.greia.cucciolo-mio",
+                "org.greia.foresta-parole",
+                "org.greia.orchestra-animali",
                 "org.greia.painting",
+                "org.greia.pasticceria-magica",
                 "org.greia.shape-garden",
+                "org.greia.teatrino-fiabe",
+                "org.greia.volo-draghetto",
                 "org.greia.workshop-settings",
                 "org.greia.writing",
             ],

@@ -940,26 +940,29 @@ def _set_x11_input_focus(screen: Any, pygame: Any) -> None:
     import ctypes
     import ctypes.util
 
-    if os.environ.get("SDL_VIDEODRIVER", "x11") != "x11":
-        return
     try:
+        if os.environ.get("SDL_VIDEODRIVER", "x11") != "x11":
+            return
         info = pygame.display.get_wm_info()
+        raw_window = info.get("window", 0)
+        if not isinstance(raw_window, int) or not raw_window:
+            return
+        x11_lib = ctypes.util.find_library("X11")
+        if not x11_lib:
+            return
+        x11 = ctypes.CDLL(x11_lib)
+        display = x11.XOpenDisplay(None)
+        if not display:
+            return
+        revert_to = 1  # RevertToParent
+        current = ctypes.c_ulong()
+        revert = ctypes.c_int()
+        x11.XGetInputFocus(display, ctypes.byref(current), ctypes.byref(revert))
+        if current.value != raw_window:
+            x11.XSetInputFocus(display, raw_window, revert_to, 0)
+        x11.XCloseDisplay(display)
     except Exception:
         return
-    window_id = int(info.get("window", 0))
-    if not window_id:
-        return
-    x11 = ctypes.CDLL(ctypes.util.find_library("X11"))
-    display = x11.XOpenDisplay(None)
-    if not display:
-        return
-    revert_to = 1  # RevertToParent
-    current = ctypes.c_ulong()
-    revert = ctypes.c_int()
-    x11.XGetInputFocus(display, ctypes.byref(current), ctypes.byref(revert))
-    if current.value != window_id:
-        x11.XSetInputFocus(display, window_id, revert_to, 0)
-    x11.XCloseDisplay(display)
 
 
 def main() -> int:

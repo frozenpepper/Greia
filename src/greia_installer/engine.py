@@ -460,7 +460,7 @@ class InstallationEngine:
                     f"installed boot entry is missing {link_name}"
                 )
             target = link.resolve()
-            if not target.is_file() or target_root not in target.parents:
+            if not target.is_file() or target_root.resolve() not in target.parents:
                 raise InstallationError(
                     f"installed boot entry {link_name} does not resolve inside the system"
                 )

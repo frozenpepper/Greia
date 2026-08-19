@@ -8,6 +8,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "src"
+TOOLS = str(Path(__file__).resolve().parent)
+
+while TOOLS in sys.path:
+    sys.path.remove(TOOLS)
 if str(SOURCE) not in sys.path:
     sys.path.insert(0, str(SOURCE))
 
