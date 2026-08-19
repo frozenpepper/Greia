@@ -217,7 +217,6 @@ class SimulatorDesktopApp:
                 current = UiPreferencesStore(context.customization_dir).read()
                 self.interface_size.set(current.interface_size.value)
         except Exception:
-            # A transient profile refresh should not make the control plane fail.
             self.interface_size.set("normal")
 
     def _device(self) -> SimulatedDeviceProfile:
@@ -297,8 +296,6 @@ class SimulatorDesktopApp:
 
         self._stopping = True
         try:
-            # SIGTERM is handled by the simulator Shell as an unwind request;
-            # it shuts any active Activity down through the real supervisor first.
             process.terminate()
             try:
                 process.wait(timeout=4.0)
@@ -397,8 +394,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
     workspace = SimulatorWorkspace(args.repo_root, args.state_dir)
-    workspace.ensure(allow_repo_rebind=args.rebind_state)
-    workspace.acquire_lock()
+    workspace.acquire_lock(allow_repo_rebind=args.rebind_state)
     try:
         return SimulatorDesktopApp(workspace).run()
     except Exception:
