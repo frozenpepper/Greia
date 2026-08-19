@@ -124,7 +124,10 @@ Current inbox properties:
 - a new candidate cannot overwrite existing content-addressed bytes;
 - only one current untrusted candidate is retained;
 - stale receive temporaries are cleaned;
-- a free-space reserve is preserved;
+- a free-space reserve is checked **before** a large HTTP receive starts;
+- the Parent HTTP receiver streams directly into a private staging file on the update-state filesystem;
+- successful publication hard-links that exact staged inode to its digest-addressed candidate name, so a Parent upload does not create a second full-size local copy;
+- the receive socket has a bounded timeout rather than allowing one upload to hold the single-threaded Parent server indefinitely;
 - status hides local filesystem paths;
 - receipt verifies bundle structure/payload hash consistency but intentionally reports `signature_verified = false` because the HTTP receiver is not the release-trust boundary.
 
@@ -281,11 +284,12 @@ Current focused Greia tests:
 
 ```text
 tests/test_system_updates.py
+tests/test_system_update_streaming.py
 tests/test_parent_system_updates.py
 tests/test_greia_update_tool.py
 ```
 
-They cover structural/hash rejection, strict signature-envelope types, content-addressed/single-candidate inbox behavior, idempotent re-upload, unavailable backend fail-closed behavior, compatibility identity, crypto round-trip when available, Parent capability separation, actual current `bios-single-ext4` profile activation false, unprivileged service hardening and profile-derived CLI identity.
+They cover structural/hash rejection, strict signature-envelope types, content-addressed/single-candidate inbox behavior, idempotent re-upload, **same-inode streamed publication/no second local copy**, free-space preflight, unavailable backend fail-closed behavior, compatibility identity, crypto round-trip when available, Parent capability separation, actual current `bios-single-ext4` profile activation false, unprivileged service hardening and profile-derived CLI identity.
 
 External Parent repo adds:
 
@@ -300,6 +304,7 @@ Required owner-controlled commands:
 ```bash
 PYTHONPATH=src python3 -m unittest \
   tests.test_system_updates \
+  tests.test_system_update_streaming \
   tests.test_parent_system_updates \
   tests.test_greia_update_tool -v
 
@@ -439,6 +444,7 @@ On an owner-controlled current Linux checkout, resolve/record the exact `main` S
 ```bash
 PYTHONPATH=src python3 -m unittest \
   tests.test_system_updates \
+  tests.test_system_update_streaming \
   tests.test_parent_system_updates \
   tests.test_greia_update_tool -v
 ```
