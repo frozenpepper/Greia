@@ -5,790 +5,653 @@
 **Repository:** `frozenpepper/Greia` (private)  
 **Canonical/default/development branch:** `main`  
 **Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**  
-**Simulator adversarial review source boundary:** `b4cda82ca18996ad67859976292f0457315052d4`  
-**Simulator hardening source/docs boundary before this handover update:** `f1e2ffdb7eaacdb9f6bd938fd917f731f0ef92e3`  
-**Adversarial simulator review:** `docs/reviews/2026-08-19_ACTIVITY_SIMULATOR_ADVERSARIAL_REVIEW.md`  
-**Hardening response:** `docs/reviews/2026-08-19_ACTIVITY_SIMULATOR_HARDENING_RESPONSE.md`  
-**External Parent HTML revision currently pinned by Greia:** `frozenpepper/Greia-Parent-App-Html@e30bcbcab393354b8ffb63d5829c08711d8023bd`
+**Current cross-cutting source tranches after the last full executed gate:** **Activity Simulator hardening + platform Unicode/color-emoji/Writing support**  
+**External Parent HTML revision pinned by Greia:** `frozenpepper/Greia-Parent-App-Html@e30bcbcab393354b8ffb63d5829c08711d8023bd`
 
-This file owns the **current** implementation/evidence boundary. Historical hardware detail remains in the dated reviews and installation issue log; exact APIs/limits remain source-owned.
+This handover owns the **current continuation/evidence boundary**. Historical implementation detail belongs in the append-only active plan and dated reviews. Exact APIs and limits remain source-owned.
 
 ---
 
-## 0. Branch, execution and evidence policy
+## 1. Repository and execution rules
 
-`main` is the owner-required development/integration branch. Do not create feature/recovery/work branches unless the owner explicitly changes that policy. GitHub is canonical persistence; commit coherent fixes as work proceeds.
+The owner requires a **single-branch workflow**. `main` is the only development/integration branch unless the owner explicitly changes that policy. Commit coherent work directly to `main`; GitHub is canonical project persistence.
 
-Do **not** use, query, trigger, rerun, inspect or download GitHub-hosted Actions without explicit owner authorization for that specific hosted execution. Verification runs on an owner-controlled environment.
+Do **not** use, query, trigger, rerun, inspect or download GitHub-hosted Actions without explicit owner authorization for that specific hosted execution. Verification is performed in an owner-controlled environment.
 
-Do not promote committed tests into PASS merely because the files exist.
+Never convert committed tests into a PASS claim merely because test files exist.
 
-### 0.1 2026-08-19 — Greia Activity Simulator source tranche
+The active implementation plan remains:
 
-A Mac-first, core-platform-neutral **Greia Activity Simulator** is committed on `main`.
+```text
+docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md
+```
 
-Normative/developer documentation:
+R7 remains the first incomplete blocking architecture phase. Cross-cutting source/product work must not be reinterpreted as closing or skipping R7.
+
+---
+
+## 2. Current evidence boundary
+
+The latest genuinely executed complete owner-controlled source gate recorded before the later simulator/emoji tranches is the 2026-08-18 early-boot run:
+
+```text
+boot/profile/installer focused set: 108 PASS
+boot-experience contract suite:       16 PASS
+make verify:                         706 PASS
+```
+
+That evidence applies to its exact pre-simulator/pre-emoji source boundary. It does **not** prove later source.
+
+The following later work is committed but lacks a fresh owner-controlled complete source PASS at current head:
+
+- the 2026-08-19 Greia Activity Simulator implementation/adversarial hardening;
+- the 2026-08-19 Unicode grapheme/color-emoji typography implementation;
+- the current Writing Activity grapheme-editing migration and emoji picker;
+- the new emoji/picker focused regression tests;
+- documentation/plan/handover synchronization after those source changes.
+
+No fresh installer image, current-head QEMU acceptance, current-head physical Acer acceptance, or current-head Pi acceptance is claimed here.
+
+---
+
+# 3. 2026-08-19 — Platform Unicode, color emoji and Writing
+
+## 3.1 Product/architecture decision
+
+Emoji support is now a **Greia platform typography/text capability**, not something each Activity is expected to solve independently.
+
+The selected/current Python/Pygame stack is:
+
+```text
+ordinary Greia text
+        ↓
+Nunito Sans semantic role
+
+emoji grapheme cluster
+        ↓
+Noto Color Emoji
+        ↓
+Pillow embedded-color rasterization
+        ↓
+RGBA Pygame surface
+```
+
+Important invariants:
+
+- **Nunito Sans remains Greia's normal interface family**;
+- Noto Color Emoji is a fallback, not a replacement system font;
+- emoji are expressive text/content, not substitutes for Greia Home/Back/settings/audio/trust/recovery icons;
+- authoritative text remains standard Unicode/UTF-8;
+- child-visible editing units are Unicode **extended grapheme clusters**, not individual Python codepoints;
+- Activities do not crawl `/usr/share/fonts`, implement private fallback stacks, maintain private emoji-range/ZWJ parsers, or persist proprietary emoji tokens;
+- platform resource/cache bounds remain mandatory on the Acer/C0 floor.
+
+Design/product/authoring authority:
+
+```text
+docs/design/GREIA_VISUAL_STYLE_GUIDE.md
+docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md
+skills/greia-activity-authoring/SKILL.md
+```
+
+## 3.2 Source implementation
+
+Current shared source:
+
+```text
+src/greia_platform/typography.py
+src/greia_platform/emoji_palette.py
+src/greia_platform/pygame_ui.py
+```
+
+`GreiaTypography` now provides:
+
+- existing semantic Nunito roles (`body`, `secondary`, `control`, `title`, `display`);
+- mixed ordinary-text + color-emoji rendering;
+- measurement using the same fallback decisions as rendering;
+- prefix width for caret/hit-test logic;
+- a hard-bounded normal font cache;
+- a hard-bounded **256-entry emoji surface cache**;
+- lazy Noto Color Emoji loading;
+- Pillow embedded-color rendering hidden behind the platform abstraction;
+- text/emoji variation-selector handling (`VS15` vs `VS16`);
+- child-safe degradation if the declared fallback font is present-but-corrupt/incompatible, without treating that degradation as a release-support PASS.
+
+The current Debian/bookworm Noto package exposes a color-bitmap native strike; that renderer-specific detail is deliberately kept inside `GreiaTypography`. Future SDL3/Web implementations may replace the backend without changing Activity-visible Unicode semantics.
+
+### Grapheme contract
+
+`src/greia_platform/typography.py` now exposes:
+
+```text
+grapheme_spans
+grapheme_boundaries
+previous_grapheme_boundary
+next_grapheme_boundary
+snap_grapheme_boundary
+truncate_grapheme_safe
+is_emoji_cluster
+```
+
+Installed Python/Pygame images now explicitly carry `python3-regex`; shipping segmentation uses Unicode `\X`. A small stdlib fallback exists only to keep development-host imports functional if that dependency is missing and is not the shipping segmentation authority.
+
+## 3.3 Image/runtime composition
+
+Both current Python/Pygame package sets now include the emoji/grapheme dependencies:
+
+```text
+build/package-sets/platform-shell-pygame.txt
+build/package-sets/runtime-python.txt
+```
+
+Required additions:
+
+```text
+fonts-noto-color-emoji
+python3-regex
+```
+
+Pillow and Pygame were already part of the current runtime family.
+
+This adds a meaningful installed-size cost, especially from the emoji font. The package change is source-declared but **C0 installed-footprint acceptance is still pending**.
+
+## 3.4 Shared curated emoji palette
+
+`src/greia_platform/emoji_palette.py` adds a bounded renderer-neutral model:
+
+```text
+EmojiCategory
+EmojiPalette
+DEFAULT_EMOJI_CATEGORIES
+```
+
+Current default palette:
+
+```text
+7 semantic categories
+18 common emoji per category
+maximum contract: 12 categories / 24 emoji per category
+```
+
+The palette is intentionally much smaller than the complete Unicode emoji catalogue. It is a **child-friendly picker model**, not the rendering limit. Valid emoji arriving from normal input/restored UTF-8 documents can still render through the typography fallback when supported by the installed emoji font.
+
+## 3.5 Writing Activity migration
+
+Current first-party consumer:
+
+```text
+activities/writing/main.py
+```
+
+Writing now uses Greia typography instead of raw default Pygame fonts for editor/gallery text and adds grapheme-safe behavior for:
+
+- Left/Right cursor movement;
+- Backspace;
+- Delete;
+- undo cursor restoration;
+- soft wrapping;
+- click hit testing;
+- Up/Down visual-column movement;
+- caret x-position;
+- previews;
+- maximum-document truncation.
+
+This prevents sequences such as the following from being torn apart:
+
+```text
+👍🏽
+👩‍🔬
+🏳️‍🌈
+🇮🇹
+1️⃣
+❤️
+```
+
+Documents remain ordinary UTF-8 under the existing Greia Storage path. No emoji image filenames/glyph IDs/private tokens are persisted.
+
+### Writing emoji picker
+
+Writing now includes a large visual emoji button and picker:
+
+- uses the shared `EmojiPalette` model;
+- seven categories / eighteen common emoji per category;
+- inserts the selected Unicode grapheme through normal `TextBuffer.insert()`;
+- Escape closes the picker before exiting the Activity;
+- switching document/gallery/new state closes the picker;
+- category/grid layout derives from the actual Greia-safe editor rectangle;
+- grid columns/rows and cell size reflow from available viewport space rather than assuming 1024×600;
+- no essential picker geometry is intentionally placed inside platform-owned Home/Back chrome.
+
+This is the **initial reference implementation**, not yet a universal platform picker renderer automatically attached to every Greia text field or future Web runtime.
+
+Touch/controller picker navigation is not claimed complete by this tranche.
+
+## 3.6 Focused regression source
+
+New tests:
+
+```text
+tests/test_typography_emoji.py
+tests/test_writing_emoji_editing.py
+```
+
+They cover, in source:
+
+- ZWJ/skin-tone/flag/keycap/combining grapheme segmentation;
+- valid cursor boundaries;
+- grapheme-safe truncation;
+- default emoji-presentation classification;
+- `VS15` text presentation versus `VS16` emoji presentation;
+- curated palette bounds and semantic selection;
+- declared Python/Pygame package dependencies;
+- missing-font capability degradation;
+- Writing whole-cluster Backspace/Delete;
+- whole-cluster horizontal movement;
+- undo restoring an entire emoji cluster;
+- preview/document bounds not retaining partial clusters.
+
+**These tests have not executed in an owner-controlled current checkout at this head. No PASS is claimed.**
+
+## 3.7 Required emoji verification next
+
+Run, on the owner-controlled Linux checkout:
+
+```bash
+PYTHONPATH=src python3 -m unittest \
+  tests.test_typography_emoji \
+  tests.test_writing_emoji_editing -v
+```
+
+Then run the relevant existing Writing/UI tests and Activity validation, followed by:
+
+```bash
+make verify
+```
+
+Preserve the first real failure. Do not weaken grapheme/emoji tests merely to obtain a green gate.
+
+Only after source PASS should the image be rebuilt for installed acceptance.
+
+Installed/visual evidence must include at least:
+
+```text
+🙂 🚀 🦄
+❤️ ☀️
+👍🏽 👋🏻
+👩‍🔬 👨‍🚀 🏳️‍🌈
+🇮🇹 🇫🇷 🇯🇵
+1️⃣ 5️⃣ #️⃣
+```
+
+and mixed Nunito+emoji text.
+
+Required checks:
+
+- no tofu/missing-glyph boxes for the accepted specimen;
+- actual color rendering where expected;
+- whole-cluster cursor movement/deletion;
+- correct wrapping and click placement around emoji;
+- picker fit/readability at **800×600 and 1024×600**;
+- save → exit → relaunch preservation;
+- installed font/package presence;
+- installed-size delta;
+- first-emoji render latency;
+- cached-emoji render latency;
+- RSS/CPU impact;
+- bounded cache growth;
+- physical Acer/C0 usability.
+
+---
+
+# 4. Greia Activity Simulator — current source state
+
+Normative/developer docs:
 
 ```text
 docs/adr/0029-real-runtime-activity-simulator.md
 docs/development/GREIA_ACTIVITY_SIMULATOR.md
-```
-
-Implementation source:
-
-```text
-src/greia_simulator/__init__.py
-src/greia_simulator/device.py
-src/greia_simulator/workspace.py
-src/greia_simulator/runtime.py
-src/greia_simulator/python_activity.py
-src/greia_simulator/child_shell.py
-src/greia_simulator/app.py
-tools/greia_simulator.py
-tests/test_greia_simulator.py
-```
-
-The architectural invariant is deliberately strict: **the simulator is not a second Greia implementation.** It supplies only synthetic/missing-machine facts below existing variation seams and runs the real Greia services above them.
-
-The hardened Python simulator path uses:
-
-- the real `GreiaChildShell` presentation/profile/catalogue implementation;
-- the real canonical launcher runtime-service composition and one supervisor publication path;
-- the real `ActivityRegistry` and `RuntimeCatalogue`;
-- the real package trust vocabulary;
-- the real `PermissionBroker` and `RuntimeManager`;
-- the real `ActivitySupervisor` lifecycle semantics via the profile-visual specialization;
-- the real Activity storage/history/event services;
-- the real profile/customization/UI-preference state;
-- the real responsive/canvas/system-safe geometry;
-- a synthetic typed `GreiaHAL` for exact viewport + semantic capability facts;
-- injected runtime adapters through the canonical launcher composition seam;
-- an isolated, checkout-bound, single-writer simulator workspace outside the source checkout;
-- a workspace lease that records both the controller PID and any owned Greia Shell PID so controller crashes cannot silently free live mutable state;
-- a narrow **simulator-only** Python/Pygame child bootstrap that is executed by absolute Greia-owned path and maps current Activity fullscreen display requests to the selected synthetic desktop viewport;
-- shared Shell display request hooks rather than simulator `_draw()`/private-cache manipulation.
-
-The desktop control plane currently provides:
-
-```text
-geometry-only viewport presets: 1024x600, 1280x720, 1280x800, 1366x768, 1920x1080
-bounded custom WIDTHxHEIGHT
-explicit real child-profile selector
-compact / normal / large child interface size for that profile
-semantic capability toggles derived from the canonical runtime catalogue
-Load Activity Folder…
-Install Activity Package…
-Start / Apply
-Restart
-Stop
-unexpected-child-process health reporting
-controller/Shell process-lease ownership
-prominent trusted-code-only safety warning
-```
-
-`Load Activity Folder…` now inspects a finite lstat/content-fingerprinted source snapshot before managed copying, applies the canonical Activity byte limit, rejects symlinks/special/executable/forbidden content and source/state overlap, validates through the ordinary Greia registry together with built-in identity authority under `DEVELOPER_UNSIGNED` trust, and publishes transactionally while preserving the previous valid Activity on failure. The copy checks exact content digests, not only inode/size/mtime, so same-metadata source mutation is rejected.
-
-`Install Activity Package…` calls the canonical `ActivityPackageService`; there is no simulator-only unzip/install authority. The import is intentionally lazy so non-package simulator functions do not inherit a POSIX package-lock import on hosts where the canonical package service is not available.
-
-Colors/wallpaper/avatar remain best exercised through the actual My Greia Activity rather than a duplicate simulator settings implementation.
-
-### Web/HTML boundary
-
-Web/HTML Activity execution is **not implemented by this simulator tranche**. A Web manifest may be registry-valid while the runtime manager correctly reports that no canonical Web adapter is available. ADR 0029 explicitly forbids a simulator-only Safari/Chrome/private-webview workaround. Future simulator Web support must consume the canonical R9 Web runtime adapter/SDK once R9 implements it.
-
-### Simulator evidence boundary
-
-Simulator results may be retained as **simulator/developer evidence** for real registry/trust/runtime/profile/storage/history/lifecycle/responsive semantics against synthetic device facts.
-
-They do **not** prove:
-
-- Bubblewrap/kernel/filesystem containment;
-- Xorg/DRM/KMS/compositor/session-backend behavior;
-- trusted system-chrome non-coverability/input interception;
-- physical controller/touch/audio/network/removable-media behavior;
-- boot/installer/initramfs behavior;
-- Acer/Pi memory/CPU/GPU/performance;
-- R7/R8/R9/R10/R14 closure.
-
-The desktop simulator is **not an untrusted-code security sandbox**. Load/run only trusted development Activities/packages. Semantic capability toggles exercise Greia compatibility/authority semantics; they do not physically revoke host filesystem/input/network access.
-
-R7 therefore remains the primary blocking platform phase exactly as before this simulator tranche.
-
-### 0.2 2026-08-19 — adversarial review and hardening response
-
-The first simulator implementation was reviewed adversarially against ADR 0029, the real launcher composition, runtime adapter, supervisor/lifecycle, ActivityRegistry, package service and acceptance claims. The complete review and source disposition are:
-
-```text
 docs/reviews/2026-08-19_ACTIVITY_SIMULATOR_ADVERSARIAL_REVIEW.md
 docs/reviews/2026-08-19_ACTIVITY_SIMULATOR_HARDENING_RESPONSE.md
 ```
 
-**Current classification:**
+Relevant historical source boundaries recorded before the emoji tranche:
 
 ```text
-ADVERSARIAL FINDINGS: ADDRESSED IN SOURCE
-FOCUSED HARDENING REGRESSIONS: COMMITTED, NOT YET EXECUTED FOR HARDENED HEAD
-FULL make verify: NOT YET EXECUTED FOR HARDENED HEAD
-MAC END-TO-END ACCEPTANCE: NOT YET EXECUTED FOR HARDENED HEAD
-PRODUCTION/HARDWARE CLAIMS: NONE
+initial/adversarial simulator source boundary: b4cda82ca18996ad67859976292f0457315052d4
+hardening source/docs boundary:               f1e2ffdb7eaacdb9f6bd938fd917f731f0ef92e3
 ```
 
-The adversarial findings were addressed by making the simulator thinner, not more special:
+The simulator is deliberately a thin developer surface over the real Greia platform, not a second runtime/platform implementation. It injects synthetic HAL/viewport/capability facts through canonical seams while reusing real registry/trust/runtime/storage/history/lifecycle/profile services.
 
-1. **One canonical service graph:** `build_launcher_runtime_services()` accepts typed HAL/runtime-adapter variation while retaining one PermissionBroker/RuntimeManager/storage/history graph; `GreiaChildShell` owns the one runtime-service/supervisor rebuild/publication sequence. The simulator no longer owns `build_simulator_runtime_services` or a simulator supervisor.
-2. **Shared Shell display seam:** `GreiaLauncherPresentation` owns initial/resize display request + caption hooks. `GreiaSimulatorChildShell` does not replace `_draw()`, private cache behavior or `_rebuild_runtime_services()`.
-3. **Trusted Python bootstrap:** the simulator runtime adapter wraps the canonical Python command and invokes `python_activity.py` by absolute Greia-owned path. Activity content cannot shadow it through `python -m`; trusted Greia `src/` is restored ahead of Activity content and stale `GREIA_SIMULATOR*` variables are removed before Activity execution.
-4. **Lifecycle/process-owned Stop/Restart:** control-plane SIGTERM unwinds the simulator Shell, which requests normal supervisor stop, polls boundedly and escalates through `force_stop(... SYSTEM_SHUTDOWN)` before the desktop controller resorts to process kill. The controller retains its `Popen` handle until exit is confirmed, registers the Shell PID in the workspace lease, clears that PID before dropping the dead handle and refuses replacement Start/lease release when ownership cleanup fails.
-5. **Transactional source loading:** preflight is lstat-aware, byte-bounded and content-fingerprinted; symlinks/special/executable/forbidden content and source/state overlap are rejected; copy verifies inspected file identity/size/mtime and exact content digest; final registry validation occurs before the previous valid managed Activity is discarded.
-6. **Capability/preset claims corrected:** capability choices derive from canonical runtime vocabulary; simulator owns only the HAL mapping and fails on unmapped future canonical capabilities. Presets are geometry-only and no longer imply Acer/tablet/CPU/RAM/GPU emulation.
-7. **Workspace authority hardened:** `workspace.json` binds schema and checkout; rebind is legal only under the writer lease. `.workspace.lock` is inode-owned, records controller + Shell PIDs, cannot be released while the child is registered, fails closed on partial/malformed state, retains a workspace when an orphaned Shell still lives, uses POSIX PID probing only on POSIX and fails closed on non-POSIX hosts rather than using unsafe Windows `os.kill(pid, 0)` semantics.
-8. **Profile/UI polish corrected:** the control plane edits the selected real profile rather than always the first, and Start preserves a newly selected interface size instead of rereading stale persisted state first.
-9. **Regression scope expanded:** test source covers canonical composition injection, shadow resistance, identity absence, display hooks, capability denial, workspace binding/locking/rebind/process ownership portability, controller Start/Stop lease semantics, profile persistence, positive/negative source staging including content TOCTOU, rollback, canonical package delegation, unavailable Web runtime, bounded shutdown and a real local Pygame READY/storage/event/history/STOP integration path.
+Current hardening regressions and manual Mac acceptance remain **unexecuted at the hardened/current head**. Do not claim simulator PASS from committed source.
 
-The current Python fullscreen wrapper remains temporary R7 compatibility debt; it is **not** promoted into a universal simulator display architecture. Windows/Linux packaged simulator maturity also remains future work. These are explicit open boundaries, not unresolved versions of the adversarial blockers.
-
-### Verification actually executed for this hardened tranche
-
-No owner-controlled focused/full/manual execution has yet been recorded for the hardened head. The initial simulator source had earlier been syntax-compiled, but later hardening changed source substantially; that historical syntax check is not current-head evidence.
-
-Required next commands on an owner-controlled current checkout are:
-
-```bash
-PYTHONPATH=src python3 -m unittest tests.test_greia_simulator -v
-make verify
-python3 tools/greia_simulator.py --state-dir "$HOME/.greia-simulator-acceptance"
-```
-
-Then execute `docs/testing/2026-08-19_ACTIVITY_SIMULATOR_ACCEPTANCE.md`.
-
-Do not describe the simulator source or current `main` as test-PASS until those commands actually run at the recorded SHA.
-
-### Last genuinely executed source evidence
-
-A 2026-08-18 owner-controlled local-agent session, **before the later responsive/layout/localization/My-Greia source tranche**, recorded:
-
-```text
-make verify: 663 PASS
-focused installation/UI/package/Parent/credential suites: 114 PASS
-Parent-App npm test at pinned e30bcbc: 10 PASS
-```
-
-A follow-up 2026-08-18 owner-controlled local-agent run at exact source boundary
-`edda4e687d9d73fe69cef40cbbbcea7a7ff0db7d` re-executed the complete source gate **after** the main responsive/layout/localization/My-Greia tranche:
-
-```text
-make verify: 679 PASS
-current-ui-platform focused gate (installation-hardware, ui-motion-scroll,
-  responsive-layout, activity-viewport, ui-preferences, theme-snapshot,
-  activity-theme-access, activity-ui-preferences, child-shell-visual-context,
-  my-greia-settings-contract, my-greia-runtime, customization, activity-ui,
-  launcher-presentation, activity-packages, activity-contract, parent-api,
-  localization, language-context, language-presentation): 131 PASS
-Parent-App npm test at pinned e30bcbc: 10 PASS
-```
-
-The 663-PASS result is historical evidence for the earlier source boundary. The
-679-PASS result is executed evidence for **exactly `edda4e6`**, not for later
-commits. After that run, source changed again in several coherent UI/lifecycle
-tranches:
-
-- My Greia safe-area implementation/regression (`3c0ee15`, `0e3eea0`);
-- first-party post-first-frame READY corrections + structural regression (`3bce9cc`, `522c33e`, `880c379`, `acbf0a4`, `c22c481`);
-- Shape Garden logical-canvas/system-navigation migration and lightweight-presentation regression (`aaa24a1`, `a650357`, `e7c77d3`, `1768738`);
-- shared Pygame Activity-safe geometry derived from system chrome plus Painting/Writing migration (`8e586a8`, `11c434f`, `f1b614d`, `ff54863`, `bdd67b9`);
-- interface-size × resolution safe-geometry regression (`85f60f9`);
-- current operator/authoring/authority documentation (`b01613f`, `bf355fe`, `31c206e`);
-- `0c06f5a` / `d6bed0e` restore Painting/Writing's pre-migration formatting around the new safe-UI calls; these last two commits are intended as **diff-noise cleanup only**, not additional behavior;
-- the 2026-08-19 Activity Simulator implementation, adversarial review, shared launcher seams, transactional source hardening, process/workspace lease hardening and expanded regression/docs tranche described above.
-
-Those later source/test changes are **committed but not yet covered by a fresh
-owner-controlled full PASS**. Do not describe 679 PASS as current-head evidence.
-
-A rebuilt installer image and fresh physical Acer acceptance remain required;
-no rebuilt-image or fresh physical Acer PASS is claimed in this handover.
-
----
-
-# 1. Owner credential / SSH policy — active
-
-The owner explicitly changed the credential/remote-development direction on 2026-08-18:
-
-1. There is **no generated random end-install password/recovery code** that a parent must preserve.
-2. Initial Parent/admin credentials are:
-
-```text
-username: greia
-password: greia
-```
-
-3. The main Parent password is stored as a bounded digest, changeable through the typed Parent operation, and never returned by an API.
-4. Each child may optionally have a separate Greia-profile password. Child passwords are Greia profile credentials, **not Linux users**.
-5. During active development/hardware bring-up, developer/test installs remain reachable over SSH as `greia / greia` after install and reboot. Root SSH remains disabled. Key authentication may remain as an additional automation path.
-6. Base/release images stay fail-closed unless/until release remote-access policy is explicitly changed.
-7. If a Parent-password change is intentionally coupled to maintenance/SSH authentication, that coupling must go through a typed Greia-owned privileged operation, never a generic web-to-shell bridge.
-
-Current local-agent entrypoint:
-
-```text
-docs/testing/LOCAL_AGENT_START_HERE.md
-```
-
-That entrypoint composes the full install/Parent/SSH protocol with the later responsive-UI and My-Greia addenda; do not run only the older base protocol and miss the addenda.
-
----
-
-# 2. Real-hardware installation reconciliation
-
-Canonical records:
-
-```text
-docs/INSTALLATION_ISSUES_LOG.md
-docs/reviews/2026-08-18_REAL_HARDWARE_INSTALLATION_AND_LAUNCHER_REVIEW.md
-```
-
-The main lesson from Acer bring-up is now a platform rule: **a hardware fix is integrated only when the physical problem is resolved, authoritative build source contains the fix, a hardware-independent regression protects the failure class, and living documentation explains the cause.** A manual repair on one machine is diagnostic evidence, not repository closure.
-
-Current persisted invariants include:
-
-1. Build-host hardware is not target-hardware authority.
-2. Live UUID, kernel/initrd/squashfs, install payload, digest and target profile form one coherent build artifact.
-3. Graphical services use noninteractive stdin (`StandardInput=null`); installer subprocesses use `DEVNULL` unless input is explicitly required.
-4. systemd-owned volatile paths needed during namespace setup use `RuntimeDirectory=` rather than late mkdir workarounds.
-5. Current Xorg-owned service hardening matches the actual provisional Xorg/VT/DRM/input requirements instead of desktop-daemon assumptions.
-6. `Xwrapper.config` uses the platform-owned appliance-session policy required by the current compatibility backend.
-7. legacy `/dev/input/mouse*` aliases are ignored so libinput does not treat one pointer twice.
-8. Bubblewrap uses a private `/run`, creates bind targets before binds and does not rely on the previously broken user-namespace assumptions.
-9. The no-WM Xorg path explicitly hands keyboard focus to Greia with `XSetInputFocus`.
-10. Shared initramfs overlays remain architecture-neutral. Target-kernel-aware hooks add `ahci`, `libata`, `sd_mod` only when the **target kernel** actually supplies them.
-11. Developer access is explicit and separate from release/base-image policy.
-
-Both target and live-installer images retain `MODULES=most`. Architecture-specific storage modules are handled by target-kernel-aware initramfs hooks rather than unconditional x86 lines in shared files.
-
-R7 remains open. These fixes make the current Xorg compatibility path reproducible; they do **not** select Xorg as Greia's permanent session architecture.
-
----
-
-# 3. Launcher interaction and Activity catalogue
-
-Lifecycle/security authority remains in `LauncherApplication`; richer catalogue presentation remains in `GreiaLauncherPresentation`.
-
-The installed X session now starts the profile-aware composition:
-
-```text
-python3 -m greia_launcher.child_shell
-```
-
-`GreiaChildShell` subclasses the richer presentation layer only to compose child visual preferences and the read-only Activity launch context. It does not replace package/runtime/permission/history/lifecycle authority.
-
-Important launcher behavior currently implemented in source:
-
-- shallow cached card/icon shadows;
-- bounded hover/selection lift/scale and stronger selection outline;
-- short ~420 ms squiggle/bounce launch flourish before the normal starting overlay;
-- bounded visible Activity window rather than an unbounded retained widget set;
-- selection-aware scrolling;
-- mouse-wheel semantic-row scrolling;
-- explicit scroll controls only when needed;
-- bounded icon/font/shadow/decorated-icon caches;
-- semantic launcher categories separate from educational taxonomy;
-- stable category icons;
-- explicit Activity-name band on every tile;
-- persistent in-category header with local Back + category icon + title.
-
-Current high-level launcher category vocabulary:
-
-```text
-All
-Create
-Play
-Learn
-Explore
-My Greia
-```
-
-Current stable semantic icons:
-
-```text
-All       -> backpack
-Create    -> palette
-Play      -> puzzle_pieces
-Learn     -> book
-Explore   -> magnifier
-My Greia  -> unicorn
-```
-
-`[presentation].categories` owns launcher navigation. `[education].categories` remains learning/progression metadata.
-
-Launcher-local Back only changes launcher category navigation. It is **not** ADR-0019 running-Activity system chrome.
-
-Canonical design:
-
-```text
-docs/design/GREIA_LAUNCHER_INTERACTION_AND_ACTIVITY_CATALOGUE.md
-```
-
----
-
-# 4. Platform-wide responsive UI and system-safe Activity geometry
-
-The owner explicitly rejected per-resolution/manual designer layouts.
-
-Canonical requirements/decision:
-
-```text
-docs/product/RESPONSIVE_UI_AND_DISPLAY_LAYOUT.md
-docs/adr/0026-resolution-adaptive-ui-layout.md
-docs/testing/2026-08-18_RESPONSIVE_UI_ACCEPTANCE.md
-```
-
-Core rule: **a designer/coder authors one semantic layout; Greia derives actual rectangles from the live usable viewport.** Designers must not maintain `800x600`, `1024x600`, `1080p`, Acer/Pi or similar coordinate variants.
-
-`1024x600` remains the low-resource/reference acceptance point, not a universal physical canvas.
-
-The Activity Simulator is intended to exercise these same shared layout/canvas paths at exact synthetic viewports. The adversarial **source blockers have now been addressed**, but broad simulator acceptance remains **unexecuted** until the hardened focused suite/full gate and manual protocol run on an owner-controlled current checkout. Do not treat committed hardening test source as executed evidence.
-
-Shared renderer-neutral source:
-
-```text
-src/greia_platform/responsive_layout.py
-src/greia_platform/activity_viewport.py
-```
-
-Pygame Activity controls now also have one shared system-safe layer in:
-
-```text
-src/greia_platform/activity_ui.py
-```
-
-`ChildUiMetrics` keeps its old full-surface `toolbar_button()` for non-Activity Greia surfaces, but Activities should use:
-
-```text
-activity_safe_rect()
-activity_toolbar_button()
-activity_content_rect()
-```
-
-Those helpers derive their geometry from `ActivitySystemChromeLayout` + `ActivityViewport.safe_ui_rect()`, so essential controls/content and trusted Home/Back share one authority rather than duplicating guessed insets.
-
-Painting and Writing have been migrated to these helpers and no longer draw Activity-owned close buttons. Their Gallery/Undo/New/Eraser controls and editor/palette regions now live in the platform-safe Activity area.
-
-The geometry regression covers `compact`, `normal` and `large` child interface-size preferences across 640x480, 800x600, 1024x600, 1366x768, 1920x1080, 720x1280 and 4K representative surfaces. This is committed test source, not executed current-head evidence.
-
-Required behavior remains:
-
-- semantic regions rather than screen-model coordinates;
-- reflow before shrink;
-- collections change rows/columns and scroll/page automatically;
-- bounded growth on large displays;
-- no essential off-screen controls;
-- no Activity control in trusted Home/Back protected geometry;
-- hit geometry derives from the same layout result as visible geometry;
-- aspect ratio is preserved for images/art;
-- runtime resize invalidates size-dependent geometry/caches where the surface supports resize;
-- generated/random viewport tests supplement the representative resolution matrix.
-
----
-
-# 5. Activity canvas / viewport architecture
-
-Activities can range from simple math grids to painting/editing tools, simulations, side-scrollers and top-down games. Greia therefore does not force every Activity into one fluid-widget model.
-
-The accepted Activity authoring model uses a common coordinate-transform core with multiple spatial semantics:
-
-- **reference canvas / contain** — fixed puzzle/board/composition authored against a logical reference, normally 1024x600, automatically letterboxed/contained;
-- **cover** — artwork/background regions that may crop safely while preserving aspect ratio;
-- **expand/world** — games/simulations where wider/taller real viewports reveal more world instead of stretching it;
-- **fluid UI** — grids/editors/collections where semantic regions reflow;
-- **hybrid** — world/canvas plus Greia-responsive HUD/UI.
-
-Renderer-neutral owner:
-
-```text
-src/greia_platform/activity_viewport.py
-```
-
-Pygame convenience owner:
-
-```text
-src/greia_platform/pygame_canvas.py
-```
-
-### Shape Garden migration
-
-Shape Garden is now a concrete first-party proof of the simple reference-canvas path rather than a known raw-physical-coordinate exception:
-
-- stable 1024x600 **logical** scene coordinates;
-- `PygameReferenceCanvas` presentation;
-- physical pointer positions mapped back through `canvas.pointer()`;
-- pointer input inside platform-protected system chrome rejected before gameplay mapping;
-- no Activity-owned close button;
-- explicit `pointer` input profile;
-- bounded rendering (`shapes[-120:]`);
-- normal whole-frame scale rather than `smoothscale` for this flat procedural scene, preserving the transform while avoiding unnecessary CPU on low-resource hardware.
-
-The Activity still exits on the authoritative `activity_stop_requested()` lifecycle; ESC remains a development/keyboard convenience, not system-navigation authority.
-
-### First-frame readiness contract
-
-A source review found all four bundled Python Activities were signaling `mark_activity_ready()` before their first `pygame.display.flip()`. That lets the supervisor believe a child-facing Activity is presentable while the visible surface may still be blank/uninitialized.
-
-The bundled Activities now publish READY once, only after their first rendered frame has been presented. `tests/test_first_party_activity_readiness.py` discovers the first-party Python entrypoints and requires the frame presentation and READY publication to occur in the same launch loop, with presentation first.
-
-This is a lifecycle semantic, not a Pygame timing optimization: **READY means a usable child-facing frame exists.** Initialization alone is not readiness.
-
-### Explicit remaining Painting document-model debt
-
-Painting's **controls/editor viewport** are now responsive and system-safe, but its durable PNG document surface is still sized from the current editor viewport. That pre-existing behavior can resample a painting when opened on a differently sized editor and then saved. It does not satisfy the longer-term resolution-neutral document-content requirement.
-
-Do not hide this by calling Painting fully resolution-neutral. Migrate the painting document to a stable logical/document coordinate space in a separate focused tranche with explicit save-compatibility tests rather than folding an implicit data migration into unrelated UI work.
-
----
-
-# 6. Localization and Activity language architecture
-
-Renderer/runtime-neutral localization foundations now exist in source:
-
-```text
-src/greia_platform/localization.py
-src/greia_platform/language_context.py
-src/greia_platform/language_presentation.py
-```
-
-The product direction is:
-
-```text
-device default language
-    -> optional per-child UI-language override
-    -> Activity UI-language resolution/fallback
-    -> optional platform-owned pre-launch Activity language chooser
-```
-
-Important semantic separation:
-
-- **Greia/UI language** controls launcher/system/ordinary Activity UI strings/audio;
-- **Activity content/learning language** is independent and may intentionally differ (for example Italian UI around an English writing/language-learning activity).
-
-Single-language Activities remain valid. Example: an English-only Activity can be installed and launched on an Italian child profile; it falls back to English rather than being hidden/rejected.
-
-Activity catalogue/title localization is deliberately separable from in-Activity UI support. An English-only Activity can still ship an Italian launcher name/description.
-
-Child-facing language signalling is visual-first. The owner selected **platform-owned canonical flags**, not initials, as the primary language cue when a language distinction matters:
-
-```text
-English -> British flag
-Spanish -> Spain flag
-Italian -> Italy flag
-...
-```
-
-A multilingual Activity's language indicator must be dynamic and represent the locale that will actually launch. An Activity that explicitly opts into selection should use a platform-owned flag-based pre-launch chooser rather than inventing a text-heavy language menu.
-
-The localization policy/core has been added, but full profile persistence, launcher-title resolution, flag asset/render integration and end-to-end chooser wiring must be treated as **UNPROVEN/partially integrated** until source integration and owner-controlled tests close them. Do not claim multilingual launcher support merely because the policy classes exist.
-
----
-
-# 7. My Greia — child-facing settings / personalization
-
-The existing privileged built-in `org.greia.workshop-settings` has been evolved into the child-facing **My Greia** Activity while retaining its stable package identity for permission/migration continuity.
-
-Canonical product requirement:
-
-```text
-docs/product/MY_GREIA_SETTINGS.md
-```
-
-Mandatory local-agent acceptance addendum:
-
-```text
-docs/testing/2026-08-18_MY_GREIA_ACCEPTANCE.md
-```
-
-## Child-facing scope
-
-My Greia deliberately exposes only low-risk, profile-scoped settings with obvious visual impact:
-
-- background/wallpaper;
-- curated background color;
-- curated accent color;
-- curated text color;
-- semantic interface size: `compact`, `normal`, `large`;
-- own avatar.
-
-It does **not** expose Wi-Fi, Parent password, child-password administration, SSH, package installation, disks, Linux users, boot/recovery, security permissions or arbitrary filesystem/system settings.
-
-The target child may not read, so the Activity is visual-first: large icon tabs, actual color swatches, wallpaper previews, three visually different size samples, avatar images and visual check/error feedback. There is no Activity-owned fake Close/Home/Back button; universal system navigation remains platform-owned.
-
-All essential My Greia controls derive from `ActivityViewport.safe_ui_rect()` around the platform-owned `ActivitySystemChromeLayout` protected region. Background decoration may still fill the complete Activity surface, but tabs/settings/hit targets stay outside Home/Back authority at arbitrary supported resolutions.
-
-## Semantic interface-size preference
-
-Renderer-neutral owner:
-
-```text
-src/greia_platform/ui_preferences.py
-```
-
-The setting is intentionally **not** a free percentage/pixel slider. It stores only:
-
-```text
-compact
-normal
-large
-```
-
-The preference is atomically persisted per profile under customization state. Responsive layout remains authoritative; `large` is never permission to clip content or create a separate fixed layout.
-
-`src/greia_platform/activity_ui.py::ChildUiMetrics` composes this semantic preference with live viewport scaling. Painting and Writing now consume both the semantic size and the platform-safe Activity geometry from that shared layer. Shape Garden consumes the semantic metrics for its child cursor and uses the reference-canvas path for its scene.
-
-## Read-only visual context for ordinary Activities
-
-A key architectural correction was made: previously ordinary Activities received only the canonical default theme unless they had customization write authority, so a child's color choice disappeared inside Writing/Painting.
-
-Current design:
-
-- **My Greia** retains `customization.manage` and direct managed profile customization access;
-- ordinary Activities do **not** receive `GREIA_CUSTOMIZATION_DIR`;
-- the profile-aware child shell injects a bounded resolved `GREIA_THEME_SNAPSHOT` and `GREIA_INTERFACE_SIZE` into ordinary launches;
-- the snapshot contains safe resolved palette values only and deliberately carries no wallpaper path or write authority;
-- the base supervisor constructs a sanitized launch environment first; the child-shell composition then supplies these visual-context values from the active profile rather than inheriting arbitrary host values.
-
-Source owners:
-
-```text
-src/greia_platform/theme_snapshot.py
-src/greia_platform/activity_api.py
-src/greia_launcher/theme.py
-src/greia_launcher/child_shell.py
-```
-
-A direct regression locks the ordinary-Activity boundary: visual snapshot present, semantic size present, customization path absent.
-
-## Removable-media race and selection feedback corrections
-
-My Greia wallpaper browsing uses the existing bounded removable-image scanner/importer. A review found a scan-to-render race: a candidate could be removed after scan but before thumbnail `stat()`, crashing the Activity. The thumbnail path now catches that disappearance and returns a placeholder/none instead. A source regression covers the missing-file case.
-
-The current session also keeps an immediately selected removable wallpaper visibly selected while that source is still present. The managed imported wallpaper persists independently of the removable device; the removable-source selection marker itself is intentionally session-local rather than durable profile authority.
-
-Physical eject/removal while the wallpaper page is open is still required acceptance; source regression is not physical evidence.
-
-## Current My Greia evidence
-
-The My Greia/UI-preference/theme-snapshot/child-shell source present at `edda4e6` was executed in the 679-PASS full source gate and the 131-PASS focused UI/platform gate. The later safe-area/readiness/shared-safe-geometry work is committed but **not yet re-executed** in an owner-controlled run. Physical 1024x600 acceptance is also still open.
-
----
-
-# 8. Activity packages / Parent installation
-
-The bounded `.greiaactivity` **new-install** seam remains implemented but does not close R10.
-
-Platform source:
-
-```text
-src/greia_platform/activity_packages.py
-```
-
-Important implemented properties:
-
-- bounded ZIP/request/entry/uncompressed-size handling;
-- traversal/absolute/backslash/hidden/portable-casefold duplicate rejection;
-- encrypted/symlink/special/compression-bomb rejection;
-- streamed private staging;
-- normal `ActivityRegistry` validation;
-- package icon validation before activation;
-- distinct `PARENT_TRUSTED_UNSIGNED` provenance;
-- digest-addressed immutable read-only version;
-- prepared read-only active tree;
-- receipt prepared before activation;
-- atomic active-directory rename as commit point;
-- process-wide local-store serialization with a private `flock` lock.
-
-Existing Activity IDs are rejected. Updates, removal, rollback selection, signatures/revocation, curated-store policy and save migration remain open R10 work.
-
-Greia Parent defines:
-
-```text
-POST /api/v1/activities/install
-```
-
-but ordinary/release capability remains disabled while Parent transport/security remains provisional. Explicit developer/owner-enabled machines can exercise the new-install path.
-
-The external Parent HTML client is separately pinned/integrity checked and must be changed in its own repository first, then repinned here.
-
----
-
-# 9. Current verification required before hardware rebuild
-
-Run on an owner-controlled current checkout from the final SHA.
-
-The canonical test-session entrypoint is:
-
-```text
-docs/testing/LOCAL_AGENT_START_HERE.md
-```
-
-The simulator adversarial source fixes S1–S5 are committed. **Do not reimplement them as a prerequisite.** First verify them with the focused regression suite:
+Required focused command remains:
 
 ```bash
 PYTHONPATH=src python3 -m unittest tests.test_greia_simulator -v
 ```
 
-If it fails, diagnose the real current-head failure and repair it without weakening the architecture/non-claim contracts. The focused suite includes controller/Shell process-lease ownership, source content-TOCTOU protection and the real local Pygame READY/storage/event/history/STOP integration when the host has Pygame available.
-
-Then run the canonical full source gate:
-
-```bash
-make verify
-```
-
-Only after focused + full source gates are green should the operator execute the manual Mac protocol:
+After current source PASS, manual acceptance is defined by:
 
 ```text
 docs/testing/2026-08-19_ACTIVITY_SIMULATOR_ACCEPTANCE.md
 ```
 
-Start the control plane for that protocol with an isolated state root, for example:
+Simulator evidence never substitutes for R7 display/session/input or physical hardware evidence.
+
+---
+
+# 5. Current R7 / display / input state
+
+R7 remains the primary blocking architecture phase.
+
+Current production/display state:
+
+- production Activity/display path remains **provisional Xorg/xinit**;
+- no compositor is selected;
+- serial direct DRM ownership remains an evidence candidate, not production architecture;
+- `DisplaySessionCoordinator` is the backend-neutral lifecycle seam;
+- installed legacy-X backend remains the compatibility implementation;
+- ADR 0019 trusted Home/Back remains a mandatory production authority requirement;
+- ADR 0020 runtime-neutral input/controller semantics remain mandatory;
+- ADR 0025 additionally requires a bounded Greia-owned Award/celebration presentation path or safe Greia-controlled deferred equivalent without weakening Home/Back;
+- ordinary Activities must not obtain raw display/input authority merely to make the backend convenient.
+
+Open R7 evidence still includes:
+
+- exact current source gate;
+- exact current production-image build;
+- installed SDL/backend classification;
+- compositor package/resource comparisons where still relevant;
+- active/serial QEMU evidence where applicable;
+- active seat/input evidence;
+- compositor/serial/Xorg authority/resource comparison;
+- direct-profile sandbox authority migration only after architecture selection;
+- physical legacy Intel/Acer scanout/input/suspend/crash acceptance;
+- trusted system-chrome non-coverability and protected input;
+- controller reconnect/dead-zone/virtual-pointer/system-input evidence.
+
+Do not deepen X11 merely because current production still uses it, and do not select a compositor simply to satisfy emoji/overlay/picker UI. Emoji rendering is an Activity/UI concern above the R7 transport seam.
+
+---
+
+# 6. Boot / installer / real-hardware state
+
+Current accepted source direction no longer treats Plymouth as the target Greia boot architecture.
+
+The current early-boot source path uses:
+
+- Greia-owned early framebuffer splash;
+- canonical white logo/frame lineage under `assets/boot/`;
+- target-built initramfs framebuffer renderer;
+- GRUB white-frame continuity;
+- Shell-owned short intro animation;
+- one-shot gentle PCM boot chime after the first real Shell frame;
+- no Python/SDL/audio dependency inside initramfs.
+
+The 2026-08-18 owner-controlled source gate reached **706 PASS**, but a fresh installer/target image and physical Acer boot acceptance remain required.
+
+Canonical hardware/install history:
+
+```text
+docs/INSTALLATION_ISSUES_LOG.md
+docs/reviews/2026-08-18_REAL_HARDWARE_INSTALLATION_AND_LAUNCHER_REVIEW.md
+docs/testing/LOCAL_AGENT_START_HERE.md
+```
+
+Hardware fixes remain integrated only when:
+
+```text
+physical failure resolved
++ authoritative build source corrected
++ hardware-independent regression added
++ living documentation explains root cause
+```
+
+A manual repair on one Acer is diagnostic evidence, not repository closure.
+
+---
+
+# 7. Parent credentials / SSH / Parent API
+
+Active owner credential direction:
+
+```text
+initial Parent/admin username: greia
+initial Parent/admin password: greia
+```
+
+There is no required generated random end-install recovery password.
+
+Current policy/source direction:
+
+- main Parent password is Greia-owned, stored as a bounded digest and changeable through typed Parent operations;
+- optional child-profile passwords remain Greia-profile credentials, not Linux users;
+- development/test installs may remain reachable as `greia / greia` during active hardware bring-up;
+- root SSH remains disabled;
+- key auth may coexist as an automation path;
+- base/release images remain fail-closed unless release remote-access policy is explicitly changed;
+- Parent credential changes must not become a generic web-to-shell/root bridge.
+
+The Greia Parent API/client foundation remains API-first and versioned. Current LAN HTTP/shared-bootstrap pieces remain **provisional**, not production credential security. Production pairing still requires the accepted Greia-local approval + authenticated encrypted transport path.
+
+---
+
+# 8. Activity package / catalogue state
+
+A guarded `.greiaactivity` **new-install foundation** exists. It uses the real Activity registry/trust/runtime path and includes bounded archive validation, immutable staged versions, transactional publication and distinct parent-trusted unsigned provenance.
+
+It is not full R10.
+
+Still open before R10 closure:
+
+- update/version replacement policy;
+- remove workflow;
+- rollback/version selection;
+- signature/revocation/public trust chain;
+- save migration/compatibility during update;
+- complete parent-facing release enablement.
+
+Ordinary/release systems must not silently enable package installation merely because source APIs exist. Parent capability negotiation remains authoritative.
+
+ADR 0023/0024 continue to require an optional official catalogue rather than an install monopoly, separate provenance/license/price concepts, and no child-facing advertising/purchase-pressure model.
+
+---
+
+# 9. Awards / badges state
+
+ADR 0025 and `docs/product/AWARDS_BADGES_AND_CELEBRATIONS.md` define the selected platform-owned Awards architecture.
+
+Important selected constraints:
+
+- Activities report facts/scores; they do not mint durable Awards directly;
+- Reward quantity, durable Award/badge and transient Celebration remain distinct;
+- award grant and presentation are separate operations;
+- earned Awards survive Activity uninstall and logical backup/restore;
+- cross-Activity achievements are Greia platform policy;
+- celebration UI must not weaken trusted Home/Back or justify a desktop notification/windowing layer;
+- manipulative streak/FOMO/advertising/purchase mechanics are rejected.
+
+The Award ledger/evaluator/collection/celebration scheduler are **not yet implemented** merely because the architecture is documented.
+
+---
+
+# 10. Responsive UI / localization / My Greia
+
+The current source contains the accepted responsive/canvas/localization platform work, including:
+
+- ADR 0026 automatic responsive UI/layout;
+- ADR 0027 Activity logical canvas/world-camera semantics;
+- ADR 0028 localization/language context;
+- platform-safe Activity geometry derived from trusted Home/Back regions;
+- shared Pygame responsive/canvas helpers;
+- current My Greia profile customization source;
+- first-party READY corrections requiring a first usable presented frame.
+
+These source families were covered by owner-controlled gates before the later simulator/emoji commits. Any change after those exact evidence boundaries requires a fresh aggregate run before current-head PASS is claimed.
+
+Typography/emoji is now part of this same shared UI story; do not create a separate Activity-local text platform.
+
+---
+
+# 11. Exact verification sequence now
+
+On the owner-controlled current Linux checkout, preserve the first failure and do not weaken tests.
+
+### A. Emoji/Writing focused gate
 
 ```bash
-python3 tools/greia_simulator.py \
-  --state-dir "$HOME/.greia-simulator-acceptance"
+PYTHONPATH=src python3 -m unittest \
+  tests.test_typography_emoji \
+  tests.test_writing_emoji_editing -v
 ```
 
-Do not weaken containment/security/property tests to get a green result. The local agent is explicitly authorized to diagnose and repair real failures, add regressions, commit coherent fixes to `main`, rerun the smallest relevant set, and continue.
+Also execute the existing relevant Writing/UI/Activity validation tests, including the first-party Activity validator.
 
-If source changes after an image was built, that old image is not physical evidence for the newer SHA.
+### B. Simulator focused gate
 
----
-
-# 10. Physical/rebuilt-image acceptance still required
-
-After current-source tests pass:
-
-1. build a fresh canonical developer/test installer for the actual target profile;
-2. verify target-kernel initramfs storage support and live-media/payload coherence;
-3. install on the Acer through the graphical installer;
-4. confirm no random recovery-password UX;
-5. confirm installed developer/test SSH `greia / greia` after reboot and root SSH rejection;
-6. exercise the actual Parent HTML connection, main Parent-password change, child password set/replace/clear and owner-enabled Activity install;
-7. inspect launcher names/categories/category Back/icon/scroll/hover/launch effects at 1024x600;
-8. run the responsive matrix in an owner-controlled windowed/VM environment for compact/normal/large; the hardened simulator may accelerate this developer pass but does not replace physical/reference acceptance;
-9. exercise My Greia colors/wallpaper/semantic size/avatar across at least two profiles;
-10. physically eject removable media while My Greia wallpaper browsing is open;
-11. prove My Greia controls never overlap platform Home/Back at the physical/reference target;
-12. prove Writing/Painting receive read-only child visual context and no customization path;
-13. prove Painting/Writing essential controls/content stay outside trusted Home/Back chrome;
-14. prove Shape Garden drawing/input mapping works at 1024x600 and at least one different aspect ratio, with protected system-chrome clicks not entering gameplay;
-15. prove first-party Activities do not signal READY before their first visible frame;
-16. measure idle/interaction resource behavior on the low-resource Acer floor;
-17. where practical, repeat basic install/UI acceptance on another x86 target/VM so one Acer does not become a hidden platform contract.
-
----
-
-# 11. Remaining blockers / deliberately incomplete work
-
-- **R7 remains the primary blocking platform phase.** Xorg/xinit is provisional compatibility, not final selection.
-- All safe-area/readiness/Shape-Garden/shared-safe-UI source/test changes after `edda4e6` need fresh owner-controlled execution; do not promote the 679-PASS result across those source changes.
-- **Activity Simulator adversarial findings are addressed in source, but the hardened head is unverified.** The focused simulator suite, full `make verify` and manual Mac acceptance still need owner-controlled execution before any simulator PASS claim.
-- The desktop simulator is **not an untrusted-code security sandbox**. Load/run only trusted development Activities/packages. Synthetic capability toggles prove Greia semantic compatibility/grant behavior, not physical host-input suppression or production filesystem containment.
-- The simulator's current Python fullscreen wrapper is development compatibility below the runtime-adapter seam, not a production display contract. It should migrate to the stronger shared R7 Activity display/surface seam when that architecture exists rather than grow into broad simulator monkeypatching.
-- Web/HTML Activity simulation is intentionally unavailable until the canonical R9 Web runtime adapter exists.
-- Windows/Linux **packaged simulator maturity** remains open. Core startup no longer requires the canonical package service at import time and stale-lock behavior fails closed on non-POSIX hosts, but complete host packaging/manual acceptance has not been performed.
-- A partial/malformed workspace lease intentionally fails closed. Manual stale-lock recovery must only happen after proving no controller or recorded Shell from that workspace is alive; this is conservative recovery behavior, not a second-writer shortcut.
-- Canonical Activity package install may remain unavailable on hosts that cannot currently import/run the canonical package service. The portability fix belongs in that canonical service; a simulator-only installer remains forbidden.
-- Painting's durable document surface is still viewport-sized and requires a separate resolution-neutral document/save migration with compatibility tests.
-- Full Activity language integration is not complete: profile-language persistence, localized catalogue title resolution, dynamic flag rendering/assets and platform pre-launch chooser still need end-to-end wiring/testing.
-- Parent secure pairing/encrypted transport remains open.
-- General release Activity upload remains disabled until Parent transport/security and R10 lifecycle policy justify it.
-- R10 update/remove/rollback/signature/revocation/save-migration remains open.
-- Activity/category typography and all new customization choices need actual 1024x600 readability/performance acceptance.
-- Controller/touch behavior for launcher categories, system navigation and My Greia still needs physical acceptance.
-- Other later remediation phases remain governed by the active architecture-remediation plan.
-
----
-
-# 12. Current source landmarks
-
-```text
-Installation/hardware:
-  docs/INSTALLATION_ISSUES_LOG.md
-  docs/reviews/2026-08-18_REAL_HARDWARE_INSTALLATION_AND_LAUNCHER_REVIEW.md
-
-Responsive / safe Activity UI:
-  docs/adr/0026-resolution-adaptive-ui-layout.md
-  docs/product/RESPONSIVE_UI_AND_DISPLAY_LAYOUT.md
-  src/greia_platform/responsive_layout.py
-  src/greia_platform/activity_ui.py
-  tests/test_activity_ui.py
-  tests/test_core_activity_system_safe_ui.py
-  docs/testing/2026-08-18_RESPONSIVE_UI_ACCEPTANCE.md
-
-Activity canvas/world/lifecycle:
-  src/greia_platform/activity_viewport.py
-  src/greia_platform/pygame_canvas.py
-  activities/shape_garden/
-  tests/test_shape_garden_contract.py
-  tests/test_first_party_activity_readiness.py
-  skills/greia-activity-authoring/SKILL.md
-
-Activity Simulator:
-  docs/adr/0029-real-runtime-activity-simulator.md
-  docs/development/GREIA_ACTIVITY_SIMULATOR.md
-  docs/reviews/2026-08-19_ACTIVITY_SIMULATOR_ADVERSARIAL_REVIEW.md
-  docs/reviews/2026-08-19_ACTIVITY_SIMULATOR_HARDENING_RESPONSE.md
-  docs/testing/2026-08-19_ACTIVITY_SIMULATOR_ACCEPTANCE.md
-  src/greia_launcher/composition.py
-  src/greia_launcher/child_shell.py
-  src/greia_launcher/presentation.py
-  src/greia_simulator/
-  tools/greia_simulator.py
-  tests/test_greia_simulator.py
-
-Localization/language:
-  src/greia_platform/localization.py
-  src/greia_platform/language_context.py
-  src/greia_platform/language_presentation.py
-
-My Greia:
-  docs/product/MY_GREIA_SETTINGS.md
-  activities/workshop_settings/
-  src/greia_platform/ui_preferences.py
-  src/greia_platform/theme_snapshot.py
-  src/greia_launcher/child_shell.py
-  docs/testing/2026-08-18_MY_GREIA_ACCEPTANCE.md
-
-Launcher/catalogue:
-  src/greia_launcher/main.py
-  src/greia_launcher/presentation.py
-  src/greia_launcher/catalogue_view.py
-  docs/design/GREIA_LAUNCHER_INTERACTION_AND_ACTIVITY_CATALOGUE.md
-
-Parent/package install:
-  src/greia_platform/activity_packages.py
-  src/greia_parent/package_api.py
-  runtime/parent-app-client.toml
-  runtime/parent-app-client.manifest.json
-
-Current local-agent entrypoint:
-  docs/testing/LOCAL_AGENT_START_HERE.md
+```bash
+PYTHONPATH=src python3 -m unittest tests.test_greia_simulator -v
 ```
 
+### C. Complete source gate
+
+```bash
+make verify
+```
+
+Only a real current-head execution can establish a current source PASS.
+
+### D. Then rebuild image / physical evidence
+
+If and only if source is green:
+
+1. build the canonical current legacy installer/target;
+2. inspect initramfs/boot-art/package composition;
+3. verify the added emoji/font package exists in the installed target;
+4. measure installed footprint;
+5. run Writing emoji visual/edit/save acceptance;
+6. repeat current boot/installer/launcher acceptance;
+7. continue the already defined R7 physical/display/input evidence.
+
 ---
 
-# 13. Continuation rule
+# 12. Current physical acceptance additions for emoji
 
-Before further substantive implementation, read in order:
+The next physical Acer/low-resource acceptance should now include a Writing session that proves:
+
+1. `Hello 🙂!` renders as Nunito + color emoji;
+2. `❤️`, `👍🏽`, `👩‍🔬`, `🏳️‍🌈`, `🇮🇹`, and `1️⃣` render without tofu/component breakup;
+3. Left/Right crosses each composed emoji in one step;
+4. Backspace/Delete removes each composed emoji in one operation;
+5. click placement does not land inside a grapheme sequence;
+6. wrapped lines do not split an emoji sequence;
+7. the visual picker is contained and legible at 1024×600 and the supported smaller reference viewport;
+8. picker insertion produces standard Unicode text;
+9. save/exit/relaunch preserves the exact text;
+10. first-render/cached-render latency and RSS are acceptable;
+11. emoji cache growth remains bounded;
+12. no Home/Back protected-region interaction is compromised.
+
+No physical PASS is currently claimed for this list.
+
+---
+
+# 13. Current source landmarks
+
+### Typography / emoji
 
 ```text
-AGENTS.md
-docs/DOCUMENTATION.md
-relevant product docs / accepted ADRs (including ADR 0029 for simulator work)
-docs/engineering/ENGINEERING_FOUNDATIONS.md
-docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md
-HANDOVER.md
-docs/agents/GREIA_AGENT_OPERATIONS.md
+src/greia_platform/typography.py
+src/greia_platform/emoji_palette.py
+src/greia_platform/pygame_ui.py
+activities/writing/main.py
+tests/test_typography_emoji.py
+tests/test_writing_emoji_editing.py
+build/package-sets/platform-shell-pygame.txt
+build/package-sets/runtime-python.txt
+docs/design/GREIA_VISUAL_STYLE_GUIDE.md
+docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md
 skills/greia-activity-authoring/SKILL.md
-docs/development/GREIA_ACTIVITY_SIMULATOR.md (when Activity/simulator workflow is relevant)
-docs/reviews/2026-08-19_ACTIVITY_SIMULATOR_ADVERSARIAL_REVIEW.md (historical finding set)
-docs/reviews/2026-08-19_ACTIVITY_SIMULATOR_HARDENING_RESPONSE.md (current source disposition)
 ```
 
-Then inspect the exact source owners being changed. Do not use the responsive/localization/My-Greia/simulator tranches as justification to skip R7 or to label R9/R10 complete. Do not relabel older source/hardware evidence as evidence for the current head, and do not relabel simulator evidence as backend/hardware/security evidence.
+### R7 display/session/input
+
+```text
+src/greia_launcher/display_session.py
+src/greia_launcher/system_chrome.py
+src/greia_platform/system_chrome.py
+src/greia_platform/input_core.py
+src/greia_platform/pygame_input.py
+src/greia_platform/hal.py
+src/greia_platform/hal_legacy_x.py
+```
+
+### Activity simulator
+
+```text
+src/greia_simulator/
+tools/greia_simulator.py
+tests/test_greia_simulator.py
+docs/adr/0029-real-runtime-activity-simulator.md
+docs/development/GREIA_ACTIVITY_SIMULATOR.md
+```
+
+### Parent / package
+
+```text
+src/greia_parent/
+src/greia_platform/activity_packages.py
+src/greia_platform/activity_assets.py
+src/greia_platform/trust.py
+```
+
+### Active plan / evidence
+
+```text
+docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md
+docs/testing/LOCAL_AGENT_START_HERE.md
+docs/INSTALLATION_ISSUES_LOG.md
+```
+
+---
+
+# 14. Exact continuation priorities
+
+1. **Run the new emoji/Writing focused tests** on the current owner-controlled Linux checkout.
+2. Run the current **simulator focused tests**.
+3. Run **`make verify`** at the exact same current checkout; preserve the first failure.
+4. If source passes, rebuild the current legacy installer/target and measure the **Noto Color Emoji + regex installed footprint**.
+5. Execute Writing visual/grapheme/picker/save acceptance on the real 1024×600/Acer-class path.
+6. Continue physical boot/installer/launcher acceptance for the current early-framebuffer image.
+7. Continue R7 direct graphics/session/input evidence; do not select/deepen X11 or add compositor complexity merely for emoji.
+8. Continue secure Parent pairing/encrypted transport and full R10/R11/R12 only according to their existing prerequisites.
+
+---
+
+# 15. Non-negotiable continuation rules
+
+- `main` only unless the owner explicitly changes branch policy;
+- GitHub is canonical source truth;
+- no unauthorized GitHub Actions use or inspection;
+- no current-head PASS claim without current-head execution;
+- no visible Linux UI during normal child operation;
+- R7 remains open; production Xorg/xinit remains provisional until evidence selects/migrates the backend;
+- trusted Home/Back remain outside Activity rendering/input authority;
+- ordinary Activities do not gain raw `/dev/input` or DRM authority as a convenience shortcut;
+- Activity display/input/runtime logic remains behind Greia platform contracts;
+- child text stays standard Unicode/UTF-8;
+- grapheme clusters are atomic user-visible editing units;
+- normal Greia UI uses the shared typography service instead of Activity-specific host-font discovery;
+- Noto Color Emoji is a fallback, not Greia system iconography;
+- emoji must not replace trusted Greia semantic controls;
+- shared emoji/grapheme caches remain bounded and resource cost must be measured on C0;
+- the Writing picker is a current reference implementation, not proof of universal cross-runtime picker support;
+- Awards remain Greia-owned progression state, not Activity-minted badges;
+- the official catalogue remains optional distribution infrastructure rather than the only supported Activity path;
+- license/provenance/price/trust remain separate concepts;
+- Parent HTTP/shared-bootstrap transport remains provisional until authenticated encrypted pairing is implemented;
+- normal/release SSH policy must not be inferred from current development bring-up convenience;
+- source/build/VM/physical evidence scopes stay explicit and honest.
+
+Resolve the exact current `main` SHA before any owner-controlled verification/build run and record that SHA with the returned evidence.
