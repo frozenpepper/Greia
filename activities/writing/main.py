@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+import bisect
+from dataclasses import dataclass, field
 import time
 import uuid
 
@@ -20,6 +21,14 @@ from greia_platform.activity_ui import (
     draw_undo_symbol,
     load_icon,
     mix,
+)
+from greia_platform.typography import (
+    FontRole,
+    GreiaTypography,
+    grapheme_boundaries,
+    grapheme_spans,
+    snap_grapheme_boundary,
+    truncate_grapheme_safe,
 )
 
 AUTOSAVE_IDLE_SECONDS = 1.2
@@ -62,7 +71,7 @@ class DocumentRepository:
             ):
                 continue
             seen.add(document_id)
-            records.append(DocumentRecord(document_id, preview[:80]))
+            records.append(DocumentRecord(document_id, truncate_grapheme_safe(preview, 80)))
             if len(records) >= MAX_DOCUMENTS:
                 break
         return records
@@ -86,7 +95,8 @@ class DocumentRepository:
 
     def load_text(self, document_id: str) -> str:
         _require_document_id(document_id)
-        return self.storage.file_read(self._name(document_id)).decode("utf-8")[:MAX_CHARACTERS]
+        decoded = self.storage.file_read(self._name(document_id)).decode("utf-8")
+        return truncate_grapheme_safe(decoded, MAX_CHARACTERS)
 
     def save_text(self, document_id: str, text: str) -> DocumentRecord:
         _require_document_id(document_id)
@@ -127,51 +137,77 @@ class TextEdit:
             + self.removed
             + buffer.text[self.start + len(self.inserted) :]
         )
-        buffer.cursor = max(0, min(self.cursor_before, len(buffer.text)))
+        buffer.cursor = snap_grapheme_boundary(
+            buffer.text,
+            max(0, min(self.cursor_before, len(buffer.text))),
+        )
+        buffer.invalidate_graphemes()
 
 
 @dataclass(slots=True)
 class TextBuffer:
     text: str = ""
     cursor: int = 0
+    _boundaries: tuple[int, ...] | None = field(default=None, init=False, repr=False)
 
     def __post_init__(self) -> None:
         self.text = clamp_text(self.text)
-        self.cursor = max(0, min(int(self.cursor), len(self.text)))
+        self.cursor = snap_grapheme_boundary(
+            self.text,
+            max(0, min(int(self.cursor), len(self.text))),
+        )
+
+    def invalidate_graphemes(self) -> None:
+        self._boundaries = None
+
+    def _cursor_boundaries(self) -> tuple[int, ...]:
+        if self._boundaries is None:
+            self._boundaries = grapheme_boundaries(self.text)
+        return self._boundaries
 
     def insert(self, value: str) -> TextEdit | None:
         if not value:
             return None
-        value = value[: max(0, MAX_CHARACTERS - len(self.text))]
+        value = truncate_grapheme_safe(value, max(0, MAX_CHARACTERS - len(self.text)))
         if not value:
             return None
         start = self.cursor
         cursor_before = self.cursor
         self.text = self.text[:start] + value + self.text[start:]
         self.cursor = start + len(value)
+        self.invalidate_graphemes()
         return TextEdit(start, "", value, cursor_before, self.cursor)
 
     def backspace(self) -> TextEdit | None:
         if self.cursor == 0:
             return None
+        boundaries = self._cursor_boundaries()
         cursor_before = self.cursor
-        start = self.cursor - 1
+        position = bisect.bisect_left(boundaries, self.cursor)
+        start = boundaries[max(0, position - 1)]
         removed = self.text[start : self.cursor]
         self.text = self.text[:start] + self.text[self.cursor :]
         self.cursor = start
+        self.invalidate_graphemes()
         return TextEdit(start, removed, "", cursor_before, self.cursor)
 
     def delete(self) -> TextEdit | None:
         if self.cursor >= len(self.text):
             return None
+        boundaries = self._cursor_boundaries()
         cursor_before = self.cursor
-        start = self.cursor
-        removed = self.text[start : start + 1]
-        self.text = self.text[:start] + self.text[start + 1 :]
-        return TextEdit(start, removed, "", cursor_before, self.cursor)
+        position = bisect.bisect_right(boundaries, self.cursor)
+        end = boundaries[min(position, len(boundaries) - 1)]
+        removed = self.text[self.cursor : end]
+        self.text = self.text[: self.cursor] + self.text[end:]
+        self.invalidate_graphemes()
+        return TextEdit(self.cursor, removed, "", cursor_before, self.cursor)
 
     def move(self, delta: int) -> None:
-        self.cursor = max(0, min(len(self.text), self.cursor + int(delta)))
+        boundaries = self._cursor_boundaries()
+        current = bisect.bisect_left(boundaries, self.cursor)
+        target = max(0, min(len(boundaries) - 1, current + int(delta)))
+        self.cursor = boundaries[target]
 
     def home(self) -> None:
         start = self.text.rfind("\n", 0, self.cursor)
@@ -230,11 +266,12 @@ class UndoHistory:
 def clamp_text(text: str) -> str:
     if not isinstance(text, str):
         raise TypeError("document text must be a string")
-    return text[:MAX_CHARACTERS]
+    return truncate_grapheme_safe(text, MAX_CHARACTERS)
 
 
 def preview_text(text: str) -> str:
-    return " ".join(text.replace("\x00", "").split())[:80]
+    compact = " ".join(text.replace("\x00", "").split())
+    return truncate_grapheme_safe(compact, 80)
 
 
 def _valid_document_id(value: str) -> bool:
@@ -261,8 +298,9 @@ class WritingApp:
         self.clock = pygame.time.Clock()
         self.metrics = ChildUiMetrics.for_size(*self.screen.get_size())
         self.theme = get_theme()
-        self.font = pygame.font.Font(None, self.metrics.px(42))
-        self.small_font = pygame.font.Font(None, self.metrics.px(27))
+        self.typography = GreiaTypography()
+        self.font_size = self.metrics.px(42)
+        self.small_font_size = self.metrics.px(27)
         self.repository = DocumentRepository(get_storage())
         icon_size = self.metrics.px(42)
         self.book_icon = load_icon(get_icon_path("book", 64), icon_size)
@@ -310,6 +348,7 @@ class WritingApp:
             self.clock.tick(30)
         self._save()
         pygame.key.stop_text_input()
+        self.typography.clear()
         pygame.quit()
         return 0
 
@@ -447,33 +486,41 @@ class WritingApp:
             return self._lines
         width = max(40, self.editor_rect.width - self.metrics.px(52))
         text = self.buffer.text
-        widths: dict[str, int] = {}
+        spans = grapheme_spans(text)
+        starts = [span.start for span in spans]
         lines: list[VisualLine] = []
         line_start = 0
         line_width = 0
-        last_space: int | None = None
+        last_space_end: int | None = None
         index = 0
-        while index < len(text):
-            ch = text[index]
-            if ch == "\n":
-                lines.append(VisualLine(line_start, index, text[line_start:index]))
-                index += 1
-                line_start = index
+        while index < len(spans):
+            span = spans[index]
+            if span.text == "\n":
+                lines.append(VisualLine(line_start, span.start, text[line_start : span.start]))
+                line_start = span.end
                 line_width = 0
-                last_space = None
+                last_space_end = None
+                index += 1
                 continue
-            char_width = widths.setdefault(ch, max(1, self.font.size(ch)[0]))
-            if ch.isspace():
-                last_space = index
-            if line_width + char_width > width and index > line_start:
-                wrap = last_space + 1 if last_space is not None and last_space >= line_start else index
+            cluster_width = max(
+                1,
+                self.typography.measure(span.text, FontRole.BODY, self.font_size).width,
+            )
+            if span.text.isspace():
+                last_space_end = span.end
+            if line_width + cluster_width > width and span.start > line_start:
+                wrap = (
+                    last_space_end
+                    if last_space_end is not None and last_space_end > line_start
+                    else span.start
+                )
                 lines.append(VisualLine(line_start, wrap, text[line_start:wrap].rstrip("\n")))
                 line_start = wrap
-                index = wrap
                 line_width = 0
-                last_space = None
+                last_space_end = None
+                index = bisect.bisect_left(starts, wrap)
                 continue
-            line_width += char_width
+            line_width += cluster_width
             index += 1
         lines.append(VisualLine(line_start, len(text), text[line_start:]))
         self._layout_text = text
@@ -489,7 +536,8 @@ class WritingApp:
         return max(0, len(lines) - 1)
 
     def _keep_cursor_visible(self) -> None:
-        visible = max(1, (self.editor_rect.height - self.metrics.px(34)) // self.font.get_linesize())
+        line_height = self.typography.line_height(FontRole.BODY, self.font_size)
+        visible = max(1, (self.editor_rect.height - self.metrics.px(34)) // line_height)
         current = self._cursor_line()
         if current < self.scroll_line:
             self.scroll_line = current
@@ -501,24 +549,31 @@ class WritingApp:
         current_index = self._cursor_line()
         target = lines[max(0, min(len(lines) - 1, current_index + delta))]
         current = lines[current_index]
-        column = max(0, self.buffer.cursor - current.start)
-        self.buffer.cursor = min(target.end, target.start + column)
+        current_prefix = self.buffer.text[current.start : self.buffer.cursor]
+        column = len(grapheme_spans(current_prefix))
+        target_boundaries = grapheme_boundaries(target.text)
+        offset = target_boundaries[min(column, len(target_boundaries) - 1)]
+        self.buffer.cursor = target.start + offset
 
     def _place_cursor(self, pos: tuple[int, int]) -> None:
         lines = self._layout()
-        line_height = self.font.get_linesize()
+        line_height = self.typography.line_height(FontRole.BODY, self.font_size)
         x0 = self.editor_rect.left + self.metrics.px(26)
         y0 = self.editor_rect.top + self.metrics.px(18)
         line_index = self.scroll_line + max(0, (pos[1] - y0) // line_height)
         line = lines[max(0, min(len(lines) - 1, line_index))]
         x = pos[0] - x0
         cursor = line.start
-        for offset, ch in enumerate(line.text):
-            char_width = self.font.size(ch)[0]
-            if x < char_width / 2:
+        for span in grapheme_spans(line.text):
+            cluster_width = self.typography.measure(
+                span.text,
+                FontRole.BODY,
+                self.font_size,
+            ).width
+            if x < cluster_width / 2:
                 break
-            x -= char_width
-            cursor = line.start + offset + 1
+            x -= cluster_width
+            cursor = line.start + span.end
         self.buffer.cursor = min(line.end, cursor)
         self._keep_cursor_visible()
 
@@ -530,7 +585,17 @@ class WritingApp:
         cards = []
         for index, record in enumerate(self.records[:6]):
             row, col = divmod(index, 3)
-            cards.append((pygame.Rect(area.left + col * (card_w + gap), area.top + row * (card_h + gap), card_w, card_h), record))
+            cards.append(
+                (
+                    pygame.Rect(
+                        area.left + col * (card_w + gap),
+                        area.top + row * (card_h + gap),
+                        card_w,
+                        card_h,
+                    ),
+                    record,
+                )
+            )
         return cards
 
     def _draw(self) -> None:
@@ -538,14 +603,34 @@ class WritingApp:
         gallery = self.metrics.activity_toolbar_button(0, side="left")
         undo = self.metrics.activity_toolbar_button(1, side="left")
         new = self.metrics.activity_toolbar_button(0, side="right")
-        draw_icon_button(self.screen, gallery, fill=self.theme.panel, icon=self.book_icon, selected=self.mode == "gallery", outline=self.theme.accent)
-        undo_fill = self.theme.panel if self.mode == "edit" and self.undo_history else mix(self.theme.panel, self.theme.background, 0.35)
+        draw_icon_button(
+            self.screen,
+            gallery,
+            fill=self.theme.panel,
+            icon=self.book_icon,
+            selected=self.mode == "gallery",
+            outline=self.theme.accent,
+        )
+        undo_fill = (
+            self.theme.panel
+            if self.mode == "edit" and self.undo_history
+            else mix(self.theme.panel, self.theme.background, 0.35)
+        )
         draw_icon_button(self.screen, undo, fill=undo_fill)
         draw_undo_symbol(self.screen, undo, self.theme.text)
         draw_icon_button(self.screen, new, fill=self.theme.accent)
         draw_plus_symbol(self.screen, new, self.theme.accent_text)
-        status = (210, 76, 76) if self.save_error else ((246, 178, 55) if self.dirty else (87, 174, 104))
-        pygame.draw.circle(self.screen, status, (new.left - self.metrics.px(18), new.centery), self.metrics.px(6))
+        status = (
+            (210, 76, 76)
+            if self.save_error
+            else ((246, 178, 55) if self.dirty else (87, 174, 104))
+        )
+        pygame.draw.circle(
+            self.screen,
+            status,
+            (new.left - self.metrics.px(18), new.centery),
+            self.metrics.px(6),
+        )
         if self.mode == "gallery":
             self._draw_gallery()
         else:
@@ -553,25 +638,53 @@ class WritingApp:
 
     def _draw_editor(self) -> None:
         rect = self.editor_rect
-        pygame.draw.rect(self.screen, mix(self.theme.panel, (255, 255, 255), 0.58), rect, border_radius=self.metrics.radius)
+        pygame.draw.rect(
+            self.screen,
+            mix(self.theme.panel, (255, 255, 255), 0.58),
+            rect,
+            border_radius=self.metrics.radius,
+        )
         lines = self._layout()
         cursor_line = self._cursor_line()
-        line_height = self.font.get_linesize()
+        line_height = self.typography.line_height(FontRole.BODY, self.font_size)
         x = rect.left + self.metrics.px(26)
         y = rect.top + self.metrics.px(18)
         visible = max(1, (rect.height - self.metrics.px(34)) // line_height)
         visible_lines = lines[self.scroll_line : self.scroll_line + visible]
         for offset, line in enumerate(visible_lines):
             if line.text:
-                self.screen.blit(self.font.render(line.text, True, self.theme.text), (x, y))
+                rendered = self.typography.render(
+                    line.text,
+                    FontRole.BODY,
+                    self.font_size,
+                    self.theme.text,
+                )
+                self.screen.blit(rendered, (x, y))
             if self.scroll_line + offset == cursor_line:
-                cursor_x = x + self.font.size(self.buffer.text[line.start : self.buffer.cursor])[0]
-                pygame.draw.line(self.screen, self.theme.accent, (cursor_x, y + 4), (cursor_x, y + line_height - 5), max(2, self.metrics.px(3)))
+                prefix = self.buffer.text[line.start : self.buffer.cursor]
+                cursor_x = x + self.typography.prefix_width(
+                    prefix,
+                    len(prefix),
+                    FontRole.BODY,
+                    self.font_size,
+                )
+                pygame.draw.line(
+                    self.screen,
+                    self.theme.accent,
+                    (cursor_x, y + 4),
+                    (cursor_x, y + line_height - 5),
+                    max(2, self.metrics.px(3)),
+                )
             y += line_height
 
     def _draw_gallery(self) -> None:
         for rect, record in self._gallery_cards():
-            pygame.draw.rect(self.screen, self.theme.panel, rect, border_radius=self.metrics.radius)
+            pygame.draw.rect(
+                self.screen,
+                self.theme.panel,
+                rect,
+                border_radius=self.metrics.radius,
+            )
             if not record.preview:
                 self.screen.blit(self.empty_icon, self.empty_icon.get_rect(center=rect.center))
                 continue
@@ -579,18 +692,43 @@ class WritingApp:
             line = ""
             y = rect.top + self.metrics.px(22)
             max_width = rect.width - self.metrics.px(30)
+            line_height = self.typography.line_height(FontRole.BODY, self.small_font_size)
             for word in words:
                 candidate = f"{line} {word}".strip()
-                if line and self.small_font.size(candidate)[0] > max_width:
-                    self.screen.blit(self.small_font.render(line, True, self.theme.text), (rect.left + self.metrics.px(16), y))
-                    y += self.small_font.get_linesize()
+                if (
+                    line
+                    and self.typography.measure(
+                        candidate,
+                        FontRole.BODY,
+                        self.small_font_size,
+                    ).width
+                    > max_width
+                ):
+                    self.screen.blit(
+                        self.typography.render(
+                            line,
+                            FontRole.BODY,
+                            self.small_font_size,
+                            self.theme.text,
+                        ),
+                        (rect.left + self.metrics.px(16), y),
+                    )
+                    y += line_height
                     line = word
-                    if y > rect.bottom - self.small_font.get_linesize() * 2:
+                    if y > rect.bottom - line_height * 2:
                         break
                 else:
                     line = candidate
-            if line and y < rect.bottom - self.small_font.get_linesize():
-                self.screen.blit(self.small_font.render(line, True, self.theme.text), (rect.left + self.metrics.px(16), y))
+            if line and y < rect.bottom - line_height:
+                self.screen.blit(
+                    self.typography.render(
+                        line,
+                        FontRole.BODY,
+                        self.small_font_size,
+                        self.theme.text,
+                    ),
+                    (rect.left + self.metrics.px(16), y),
+                )
 
 
 def main() -> int:
