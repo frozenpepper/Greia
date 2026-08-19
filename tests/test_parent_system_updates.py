@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import tempfile
+import tomllib
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -68,6 +69,13 @@ class ParentSystemUpdateTests(unittest.TestCase):
             status = app.system_update_payload()
             self.assertTrue(status["upload_available"])
             self.assertFalse(status["activation_available"])
+
+    def test_current_legacy_release_profile_is_single_root_and_has_no_update_runtime(self) -> None:
+        profile_path = PROJECT_ROOT / "build" / "profiles" / "legacy-x86-i686.toml"
+        profile = tomllib.loads(profile_path.read_text(encoding="utf-8"))
+        self.assertEqual(profile["image"]["layout"], "bios-single-ext4")
+        self.assertNotIn("system-update", profile["packages"]["target_sets"])
+        self.assertNotIn("system-update", profile["packages"]["installer_sets"])
 
     def test_installed_parent_service_uses_update_aware_unprivileged_composition(self) -> None:
         service = (
