@@ -24,6 +24,13 @@ class ParentSystemUpdateTests(unittest.TestCase):
             active_profile_status_path=root / "active-profile.json",
         )
 
+    def _environment(self, root: Path, *, update_upload: str) -> dict[str, str]:
+        return {
+            "GREIA_PARENT_SYSTEM_UPDATE_UPLOAD": update_upload,
+            "GREIA_PARENT_ACTIVITY_INSTALL": "0",
+            "GREIA_PARENT_ACTIVITY_PACKAGE_ROOT": str(root / "activity-packages"),
+        }
+
     def test_protocol_advertises_semantic_update_resources(self) -> None:
         by_name = {resource.name: resource for resource in RESOURCES}
         self.assertEqual(by_name["system_update"].path, "/api/v1/system/update")
@@ -37,14 +44,7 @@ class ParentSystemUpdateTests(unittest.TestCase):
     def test_normal_parent_api_reports_update_upload_and_activation_unavailable(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            with patch.dict(
-                os.environ,
-                {
-                    "GREIA_PARENT_SYSTEM_UPDATE_UPLOAD": "0",
-                    "GREIA_PARENT_ACTIVITY_INSTALL": "0",
-                },
-                clear=False,
-            ):
+            with patch.dict(os.environ, self._environment(root, update_upload="0"), clear=False):
                 app = self._app(root)
             index = app.index_payload()
             capabilities = index["capabilities"]
@@ -59,14 +59,7 @@ class ParentSystemUpdateTests(unittest.TestCase):
     def test_explicit_developer_upload_does_not_enable_activation(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            with patch.dict(
-                os.environ,
-                {
-                    "GREIA_PARENT_SYSTEM_UPDATE_UPLOAD": "1",
-                    "GREIA_PARENT_ACTIVITY_INSTALL": "0",
-                },
-                clear=False,
-            ):
+            with patch.dict(os.environ, self._environment(root, update_upload="1"), clear=False):
                 app = self._app(root)
             index = app.index_payload()
             capabilities = index["capabilities"]
