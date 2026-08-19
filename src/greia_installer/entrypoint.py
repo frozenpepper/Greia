@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import queue
 import subprocess
 import threading
 from typing import Any
@@ -19,7 +18,6 @@ from .main import (
     DemoInstallationEngine,
     InstallerApplication,
     InstallerPage,
-    InstallResult,
     parse_args,
 )
 
