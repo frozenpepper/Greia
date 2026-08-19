@@ -14,6 +14,105 @@ class StorageClientError(RuntimeError):
 
 
 @dataclass(frozen=True, slots=True)
+class StandaloneStorageClient:
+    """Ephemeral file-backed storage client for standalone direct execution."""
+
+    root: Path
+
+    def __post_init__(self) -> None:
+        self.root.mkdir(parents=True, exist_ok=True)
+        (self.root / "files").mkdir(parents=True, exist_ok=True)
+
+    @property
+    def _kv_path(self) -> Path:
+        return self.root / "kv.json"
+
+    @property
+    def _files_root(self) -> Path:
+        return self.root / "files"
+
+    def _read_kv(self) -> dict[str, object]:
+        if not self._kv_path.is_file():
+            return {}
+        try:
+            return json.loads(self._kv_path.read_text(encoding="utf-8"))
+        except Exception:
+            return {}
+
+    def _write_kv(self, data: dict[str, object]) -> None:
+        self._kv_path.write_text(
+            json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+
+    def kv_get(self, key: str, default: object = None) -> object:
+        return self._read_kv().get(key, default)
+
+    def kv_set(self, key: str, value: object) -> None:
+        try:
+            json.dumps(
+                value,
+                ensure_ascii=False,
+                separators=(",", ":"),
+                allow_nan=False,
+            )
+        except (TypeError, ValueError) as exc:
+            raise StorageClientError("storage value is not portable JSON") from exc
+        data = self._read_kv()
+        data[key] = value
+        self._write_kv(data)
+
+    def kv_delete(self, key: str) -> bool:
+        data = self._read_kv()
+        if key in data:
+            del data[key]
+            self._write_kv(data)
+            return True
+        return False
+
+    def kv_list(self, prefix: str | None = None) -> tuple[str, ...]:
+        keys = list(self._read_kv().keys())
+        if prefix:
+            keys = [k for k in keys if k.startswith(prefix)]
+        return tuple(sorted(keys))
+
+    def file_read(self, name: str) -> bytes:
+        path = self._files_root / name
+        if not path.is_file():
+            raise StorageClientError(f"file not found: {name}")
+        return path.read_bytes()
+
+    def file_write_atomic(self, name: str, payload: bytes) -> None:
+        if not isinstance(payload, (bytes, bytearray, memoryview)):
+            raise StorageClientError("private file payload must be bytes")
+        path = self._files_root / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temp = path.with_name(f".{path.name}.tmp")
+        temp.write_bytes(bytes(payload))
+        temp.replace(path)
+
+    def file_delete(self, name: str) -> bool:
+        path = self._files_root / name
+        if path.is_file():
+            path.unlink()
+            return True
+        return False
+
+    def file_list(self, prefix: str | None = None) -> tuple[str, ...]:
+        if not self._files_root.exists():
+            return ()
+        names = [p.name for p in self._files_root.iterdir() if p.is_file()]
+        if prefix:
+            names = [n for n in names if n.startswith(prefix)]
+        return tuple(sorted(names))
+
+    def info(self) -> dict[str, object]:
+        return {"standalone": True, "root": str(self.root)}
+
+    def checkpoint(self) -> str:
+        return "standalone-checkpoint"
+
+
+@dataclass(frozen=True, slots=True)
 class ActivityStorageClient:
     """Runtime-neutral logical storage client for one Activity launch."""
 
@@ -22,11 +121,15 @@ class ActivityStorageClient:
     max_payload_bytes: int = 32 * 1024 * 1024
 
     @classmethod
-    def from_environment(cls) -> "ActivityStorageClient":
+    def from_environment(cls) -> "ActivityStorageClient | StandaloneStorageClient":
         raw_socket = os.environ.get("GREIA_STORAGE_SOCKET", "").strip()
         token = os.environ.get("GREIA_STORAGE_TOKEN", "").strip()
         if not raw_socket or not token:
-            raise StorageClientError("Activity was not launched with Greia storage")
+            standalone_dir = os.environ.get(
+                "GREIA_STANDALONE_STORAGE_DIR",
+                str(Path.home() / ".greia-simulator" / "standalone-storage"),
+            )
+            return StandaloneStorageClient(Path(standalone_dir))
         return cls(Path(raw_socket), token)
 
     def kv_get(self, key: str, default: object = None) -> object:

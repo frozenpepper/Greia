@@ -1,0 +1,41 @@
+[activity]
+id = "org.greia.foresta-parole"
+legacy_ids = []
+title_key = "activity.foresta_parole.title"
+version = "0.1.0"
+icon = "owl"
+languages = ["it", "en"]
+
+[presentation]
+categories = ["learn", "play"]
+
+[education]
+categories = ["language", "phonics", "fine_motor"]
+difficulty = 1
+skills = [
+  { id = "language.phonological_awareness", weight = 3 },
+  { id = "language.letter_recognition", weight = 3 },
+  { id = "motor.pointer.precision", weight = 2 },
+]
+events = [
+  { id = "letter.matched", kind = "milestone" },
+  { id = "word.completed", kind = "completion" },
+]
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "pointer"
+
+[requirements]
+required_capabilities = ["display", "pointer", "audio.basic"]
+optional_capabilities = ["touch", "keyboard"]
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1

@@ -178,6 +178,23 @@ Process ownership is fail-closed:
 - the workspace lock cannot be released while a child PID remains registered;
 - if the controller crashes but the recorded Shell is still alive, POSIX stale-lock recovery keeps the workspace locked.
 
+## 10. Remote Web Canvas & CLI Control (`tools/greia_simulator_ctl.py`)
+
+The simulator includes a lightweight loopback remote bridge (`http://127.0.0.1:8767`) that enables visual interaction and programmatic inspection:
+
+1. **Interactive Web Canvas (`http://127.0.0.1:8767`):**
+   - Open in any web browser to view the real-time display canvas at 30 fps.
+   - Click, drag, and type directly from the browser window using your host mouse and keyboard.
+   - On-screen buttons provide quick directional navigation (arrows, enter, esc, tab) and one-click Parent Chord simulation (`s` + `t` for 5.0 seconds).
+
+2. **CLI Control Tool (`tools/greia_simulator_ctl.py`):**
+   - `python3 tools/greia_simulator_ctl.py status`: Inspect current mode, resolution, and frame count.
+   - `python3 tools/greia_simulator_ctl.py screenshot [file.png]`: Capture instantaneous screen snapshot to PNG.
+   - `python3 tools/greia_simulator_ctl.py key <KEY_NAME>`: Send key events (e.g. `LEFT`, `RIGHT`, `RETURN`, `ESCAPE`, `TAB`).
+   - `python3 tools/greia_simulator_ctl.py text <STRING>`: Type text strings directly into active text input fields.
+   - `python3 tools/greia_simulator_ctl.py click <X> <Y>`: Synthesize mouse clicks on synthetic viewport coordinates.
+   - `python3 tools/greia_simulator_ctl.py chord <KEY1> <KEY2> [DURATION]`: Simulate holding multi-key combinations (e.g. `chord s t 5.0`).
+
 The control plane also polls Shell health and reports a real unexpected exit code rather than continuing to claim it is running.
 
 ## 10. Suggested responsive pass

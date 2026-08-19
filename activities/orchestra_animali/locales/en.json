@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "locale": "en",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Animal Orchestra",
+    "mode.free": "🎵 Free Jam",
+    "mode.echo": "🎶 Musical Echo",
+    "inst.piano": "Piano 🐸",
+    "inst.drums": "Drums 🐻",
+    "inst.voice": "Singing 🐱",
+    "inst.guitar": "Guitar 🐰",
+    "inst.flute": "Flute 🐦",
+    "prompt.echo": "Listen and play the colored notes!",
+    "prompt.free": "Tap the animals or play the rainbow keys!",
+    "feedback.perfect": "Great job! Perfect melody! 🌟🎶",
+    "feedback.try_again": "Listen closely and try again 💕",
+    "hud.score": "Score: ",
+    "hud.stars": "★ "
+  },
+  "audio": {}
+}

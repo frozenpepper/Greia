@@ -35,6 +35,7 @@ from greia_platform.hal import (
 )
 from greia_platform.history import HistoryError
 from greia_platform.permissions import PermissionDecisionError
+from greia_platform.main_credential import MainCredentialStore
 from greia_platform.trust import ActivitySource, PackageTrust
 from greia_platform.profiles import (
     ActiveProfileSession,
@@ -48,7 +49,9 @@ from .composition import (
     build_launcher_runtime_services,
     provisional_installed_display_session,
 )
+from .key_chord import KeyChordTracker
 from .lifecycle import ActivityResult
+from .parent_panel import ParentSettingsOverlay
 from .supervisor import ActivitySupervisor
 from .theme import LauncherThemeController
 
@@ -205,12 +208,15 @@ class LauncherApplication:
         self._next_boot_handoff_attempt = 0.0
         self._icon_cache: dict[tuple[str, int], Any] = {}
         self._font_cache: dict[int, Any] = {}
+        self._profile_name_cache: dict[tuple[str, int, int, tuple[int, int, int]], Any] = {}
         self._typography = GreiaTypography(
             self.paths.root / "assets" / "fonts" / "nunito-sans"
         )
         self._next_rescan = 0.0
         self._catalogue_error = False
         self._targets: list[HitTarget] = []
+        self._parent_chord = KeyChordTracker({ord("s"), ord("t")}, hold_duration_seconds=5.0)
+        self._parent_panel = ParentSettingsOverlay(MainCredentialStore.from_environment())
 
     def run(self) -> int:
         import pygame
@@ -233,10 +239,22 @@ class LauncherApplication:
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT and self.allow_exit:
                         running = False
-                    elif event.type == pygame.TEXTINPUT and self._mode == "secret":
-                        self._handle_secret_text(event.text)
+                    elif event.type == pygame.TEXTINPUT:
+                        if self._mode == "parent_panel":
+                            self._parent_panel.handle_text_input(event.text)
+                        elif self._mode == "secret":
+                            self._handle_secret_text(event.text)
                     elif event.type == pygame.KEYDOWN:
-                        running = self._handle_key(event.key, pygame)
+                        if self._mode == "profiles" and self._parent_chord.handle_key_down(
+                            event.key, time.monotonic()
+                        ):
+                            self._mode = "parent_panel"
+                            self._parent_panel.open()
+                        else:
+                            running = self._handle_key(event.key, pygame)
+                    elif event.type == pygame.KEYUP:
+                        if self._mode == "profiles":
+                            self._parent_chord.handle_key_up(event.key)
                     elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                         self._handle_click(event.pos, pygame)
                     elif event.type == pygame.VIDEORESIZE and self.windowed:
@@ -249,6 +267,13 @@ class LauncherApplication:
                     last_display_size = screen.get_size()
                     self._icon_cache.clear()
                     self._font_cache.clear()
+                    self._profile_name_cache.clear()
+                if self._mode == "profiles":
+                    if self._parent_chord.poll(time.monotonic()):
+                        self._mode = "parent_panel"
+                        self._parent_panel.open()
+                elif self._mode == "parent_panel":
+                    self._parent_panel.drain()
                 self._rescan_if_due()
                 self._draw(screen, pygame)
                 pygame.display.flip()
@@ -262,6 +287,12 @@ class LauncherApplication:
         return 0
 
     def _handle_key(self, key: int, pygame: Any) -> bool:
+        if self._mode == "parent_panel":
+            running = self._parent_panel.handle_key(key, pygame)
+            if not self._parent_panel.is_open:
+                self._mode = "profiles"
+            return running
+
         if self._mode == "profiles":
             if key in {pygame.K_LEFT, pygame.K_UP} and self.profiles:
                 self._profile_selected = (self._profile_selected - 1) % len(self.profiles)
@@ -308,6 +339,10 @@ class LauncherApplication:
         self._secret_text += accepted[:remaining]
 
     def _handle_click(self, position: tuple[int, int], pygame: Any) -> None:
+        if self._mode == "parent_panel":
+            if not self._parent_panel.handle_click(position, pygame):
+                self._mode = "profiles"
+            return
         for target in reversed(self._targets):
             if not target.rect.collidepoint(position):
                 continue
@@ -413,7 +448,12 @@ class LauncherApplication:
                 pass
             self._last_result = self.supervisor.poll(activity_session)
             if self._last_result is None:
-                if time.monotonic() - _launch_feedback > 0.1:
+                is_ready = (
+                    activity_session.control.ready()
+                    if activity_session.control is not None
+                    else False
+                )
+                if not is_ready and time.monotonic() - _launch_feedback > 0.1:
                     self._draw_launch_overlay(pygame, text="Starting…")
                     pygame.display.flip()
                     _launch_feedback = time.monotonic()
@@ -549,7 +589,10 @@ class LauncherApplication:
     def _draw(self, screen: Any, pygame: Any) -> None:
         self._targets.clear()
         theme = self.theme_controller.draw_background(screen, pygame)
-        if self._mode == "profiles":
+        if self._mode == "parent_panel":
+            self._draw_profile_picker(screen, theme, pygame)
+            self._parent_panel.draw(screen, theme, self._typography, pygame, self._load_icon)
+        elif self._mode == "profiles":
             self._draw_profile_picker(screen, theme, pygame)
         elif self._mode == "secret":
             self._draw_secret_entry(screen, theme, pygame)
@@ -606,18 +649,11 @@ class LauncherApplication:
             icon_size = min(int(rect.width * 0.58), int(rect.height * 0.58))
             icon = self._load_icon(profile.avatar_id, icon_size, pygame)
             screen.blit(icon, icon.get_rect(center=(rect.centerx, rect.top + rect.height * 0.40)))
-            name = self._font(max(23, min(38, rect.height // 6)), pygame).render(
-                profile.display_name, True, theme.text
+            font_size = max(23, min(38, rect.height // 6))
+            max_name_width = rect.width - 18
+            name = self._profile_name_surface(
+                profile.display_name, font_size, max_name_width, theme.text, pygame
             )
-            if name.get_width() > rect.width - 18:
-                scaled_width = rect.width - 18
-                name = pygame.transform.smoothscale(
-                    name,
-                    (
-                        scaled_width,
-                        max(1, round(name.get_height() * scaled_width / name.get_width())),
-                    ),
-                )
             screen.blit(name, name.get_rect(center=(rect.centerx, rect.bottom - rect.height * 0.15)))
             if profile.has_secret:
                 lock = self._load_icon("yellow_star", max(26, rect.width // 7), pygame)
@@ -805,6 +841,32 @@ class LauncherApplication:
             font = self._typography.font(FontRole.BODY, size)
             self._font_cache[size] = font
         return font
+
+    def _profile_name_surface(
+        self,
+        name: str,
+        font_size: int,
+        max_width: int,
+        color: tuple[int, int, int],
+        pygame: Any,
+    ) -> Any:
+        key = (name, font_size, max_width, color)
+        cached = self._profile_name_cache.get(key)
+        if cached is not None:
+            return cached
+        rendered = self._font(font_size, pygame).render(name, True, color)
+        if rendered.get_width() > max_width:
+            scaled = pygame.transform.smoothscale(
+                rendered,
+                (
+                    max_width,
+                    max(1, round(rendered.get_height() * max_width / rendered.get_width())),
+                ),
+            )
+        else:
+            scaled = rendered
+        self._profile_name_cache[key] = scaled
+        return scaled
 
     def _draw_pointer(self, screen: Any, pygame: Any) -> None:
         if not pygame.mouse.get_focused():

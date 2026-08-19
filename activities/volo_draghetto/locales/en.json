@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "locale": "en",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Little Dragon's Flight",
+    "hud.stars": "★ ",
+    "hud.score": "Score: ",
+    "prompt.guide": "Move the pointer or arrow keys to fly across the clouds!",
+    "msg.rainbow_dash": "🌈 RAINBOW DASH! 🌟",
+    "msg.star_milestone": "Awesome! 20 Stars collected! 🌟✨",
+    "btn.accessories": "🎀 Accessories",
+    "acc.none": "None",
+    "acc.bow": "Pink Bow 🎀",
+    "acc.crown": "Royal Crown 👑",
+    "acc.glasses": "Sunglasses 😎",
+    "acc.flower": "Flower Crown 🌸"
+  },
+  "audio": {}
+}

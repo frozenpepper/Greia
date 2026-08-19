@@ -84,14 +84,12 @@ class LauncherThemeController:
         size: tuple[int, int],
         pygame: Any,
     ) -> Any | None:
-        try:
-            mtime = path.stat().st_mtime_ns
-        except OSError:
-            return None
-        key = (path, size[0], size[1], mtime)
+        key = (path, size[0], size[1])
         if key == self._wallpaper_key:
             return self._wallpaper_surface
         try:
+            if not path.is_file():
+                return None
             source = pygame.image.load(str(path)).convert()
         except (OSError, pygame.error):
             self._wallpaper_key = key

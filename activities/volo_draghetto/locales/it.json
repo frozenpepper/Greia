@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "locale": "it",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Il Volo del Draghetto",
+    "hud.stars": "★ ",
+    "hud.score": "Punti: ",
+    "prompt.guide": "Muovi il puntatore o le frecce per volare tra le nuvole!",
+    "msg.rainbow_dash": "🌈 SCATTO ARCOBALENO! 🌟",
+    "msg.star_milestone": "Fantastico! 20 Stelline raccolte! 🌟✨",
+    "btn.accessories": "🎀 Accessori",
+    "acc.none": "Nessuno",
+    "acc.bow": "Fiocchetto Rosa 🎀",
+    "acc.crown": "Corona Reale 👑",
+    "acc.glasses": "Occhiali da Sole 😎",
+    "acc.flower": "Corona di Fiori 🌸"
+  },
+  "audio": {}
+}

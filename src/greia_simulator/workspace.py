@@ -173,6 +173,7 @@ class SimulatorWorkspace:
             "GREIA_PARENT_ACTIVITY_ROOT": str(self.package_root / "active"),
             "GREIA_PARENT_ACTIVITY_PACKAGE_ROOT": str(self.package_root),
             "GREIA_MEDIA_ROOT": str(self.media_root),
+            "GREIA_MAIN_CREDENTIAL_PATH": str(self.state_root / "main-credential.json"),
             "GREIA_SKIP_BOOT_HANDOFF": "1",
         }
 

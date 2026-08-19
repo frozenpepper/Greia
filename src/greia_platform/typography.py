@@ -316,8 +316,13 @@ class GreiaTypography:
         pygame = self._ensure_pygame()
         rgb = tuple(max(0, min(255, int(channel))) for channel in color[:3])
         normal_font = self.font(role, size)
+        pieces = tuple(self._pieces(text))
+        if not pieces:
+            return normal_font.render("", True, rgb)
+        if len(pieces) == 1 and not pieces[0][0]:
+            return normal_font.render(pieces[0][1], True, rgb)
         surfaces: list[Any] = []
-        for emoji, value in self._pieces(text):
+        for emoji, value in pieces:
             surface = self._safe_emoji_surface(value, size) if emoji else None
             if surface is None:
                 surface = normal_font.render(value, True, rgb)

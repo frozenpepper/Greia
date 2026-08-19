@@ -1,0 +1,40 @@
+[activity]
+id = "org.greia.teatrino-fiabe"
+legacy_ids = []
+title_key = "activity.teatrino_fiabe.title"
+version = "0.1.0"
+icon = "wizard"
+languages = ["it", "en"]
+
+[presentation]
+categories = ["create", "play"]
+
+[education]
+categories = ["creativity", "storytelling", "visual_composition"]
+difficulty = 1
+skills = [
+  { id = "creativity.narrative_expression", weight = 3 },
+  { id = "creativity.visual_composition", weight = 2 },
+]
+events = [
+  { id = "scene.created", kind = "creation" },
+  { id = "story.played", kind = "completion" },
+]
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "pointer"
+
+[requirements]
+required_capabilities = ["display", "pointer", "audio.basic"]
+optional_capabilities = ["touch"]
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1

@@ -26,10 +26,12 @@ class SimulatorPythonRuntimeAdapter(PythonRuntimeAdapter):
         self,
         device: SimulatedDeviceProfile,
         python_executable: Path | None = None,
+        remote_port: int = 0,
         **kwargs,
     ) -> None:
         super().__init__(python_executable or Path(sys.executable), **kwargs)
         self._device = device
+        self._remote_port = remote_port
         self._bootstrap = Path(__file__).with_name("python_activity.py").resolve(strict=True)
 
     @property
@@ -39,14 +41,17 @@ class SimulatorPythonRuntimeAdapter(PythonRuntimeAdapter):
     def command_for(self, manifest: ActivityManifest) -> RuntimeCommand:
         canonical = super().command_for(manifest)
         interpreter = canonical.command[0]
+        cmd = [
+            interpreter,
+            str(self._bootstrap),
+            "--viewport",
+            self._device.viewport,
+        ]
+        if self._remote_port > 0:
+            cmd.extend(["--remote-port", str(self._remote_port)])
+        cmd.append(str(manifest.launch_path))
         return RuntimeCommand(
-            command=(
-                interpreter,
-                str(self._bootstrap),
-                "--viewport",
-                self._device.viewport,
-                str(manifest.launch_path),
-            ),
+            command=tuple(cmd),
             cwd=canonical.cwd,
             environment=canonical.environment,
         )

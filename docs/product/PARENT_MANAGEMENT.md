@@ -335,4 +335,16 @@ The first API/client slice is considered useful when it can:
 - list/revoke paired devices;
 - clearly report future capabilities as unavailable.
 
-It does **not** imply that Activity installation, audio/network management, backups, updates, SSH control, or production pairing security are finished.
+It does **not** imply that Activity installation, audio management, backups, updates, or production pairing security are finished.
+
+## 12. On-Device Parent Mode & Key Chord
+
+Greia physical devices provide an on-device Parent Settings Panel directly on the machine's display:
+
+- **Hidden activation gesture:** Holding keys `s` and `t` simultaneously for 5.0 seconds on the initial user selection screen (`_mode == "profiles"`).
+- **Accidental-activation resistance:** If either key is released before 5.0 seconds have elapsed, the hold timer resets immediately without disturbing ordinary child navigation.
+- **Parent authentication gate:** Opening the panel requires entering the main Parent password (`greia` by default, validated via `MainCredentialStore`).
+- **On-device capabilities:**
+  1. **Wi-Fi Manager:** Scan nearby SSIDs, select network, input passphrase with on-screen masking, and connect via `iwd` platform service.
+  2. **SSH Maintenance Switch:** On-demand toggle to enable or disable `ssh.service` with connection guidance (`ssh greia@<ip>`).
+  3. **Remote Companion Diagnostics:** Displays device LAN IP, mDNS status, and instructions for connecting via browser at `http://<ip>:8766`.

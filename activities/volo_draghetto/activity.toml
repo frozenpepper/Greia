@@ -1,0 +1,40 @@
+[activity]
+id = "org.greia.volo-draghetto"
+legacy_ids = []
+title_key = "activity.volo_draghetto.title"
+version = "0.1.0"
+icon = "dinosaur"
+languages = ["it", "en"]
+
+[presentation]
+categories = ["play", "explore"]
+
+[education]
+categories = ["fine_motor", "reaction_time", "spatial_awareness"]
+difficulty = 1
+skills = [
+  { id = "motor.coordination.hand_eye", weight = 3 },
+  { id = "motor.pointer.continuous_tracking", weight = 2 },
+]
+events = [
+  { id = "flight.star_milestone", kind = "milestone" },
+  { id = "flight.completed", kind = "completion" },
+]
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "hybrid"
+
+[requirements]
+required_capabilities = ["display", "pointer", "audio.basic"]
+optional_capabilities = ["keyboard", "touch"]
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1

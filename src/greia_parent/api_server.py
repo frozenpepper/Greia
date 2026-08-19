@@ -5,6 +5,7 @@ import json
 import socket
 from http import cookies
 from http.server import HTTPServer
+from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 from greia_parent.credentials import ParentCredentialError, ParentDeviceCredentialStore
@@ -27,6 +28,15 @@ from greia_parent.web_client import render_parent_web_app
 from greia_platform.hardware import HardwareSettingsError
 from greia_platform.main_credential import MainCredentialError, MainCredentialStore
 from greia_platform.profiles import ProfileError
+from greia_platform.ssh_maintenance import SshMaintenanceService, SshStatus
+from greia_platform.wifi import (
+    DemoWifiBackend,
+    IwdWifiBackend,
+    WifiBackend,
+    WifiError,
+    WifiNetwork,
+    WifiSecurity,
+)
 
 
 MAX_JSON_BODY_BYTES = 16 * 1024
@@ -38,10 +48,16 @@ class ParentApiApplication(ParentStatusApplication):
     """API-first parent application shared by HTML and future native clients."""
 
     def __init__(self, *args: object, **kwargs: object):
+        wifi_backend = kwargs.pop("wifi_backend", None)
+        ssh_service = kwargs.pop("ssh_service", None)
         super().__init__(*args, **kwargs)
         self.device_credentials = ParentDeviceCredentialStore(self.state_dir)
         self.main_credential = MainCredentialStore(self.state_dir / "main-credential.json")
         self.main_credential.ensure_initialized()
+        self.wifi_backend: WifiBackend = wifi_backend or (
+            IwdWifiBackend() if Path("/var/lib/iwd").exists() else DemoWifiBackend()
+        )
+        self.ssh_service: SshMaintenanceService = ssh_service or SshMaintenanceService()
 
     def authorized(
         self,
@@ -83,6 +99,42 @@ class ParentApiApplication(ParentStatusApplication):
     def change_parent_password(self, current: str, new: str) -> dict[str, object]:
         self.main_credential.change(current, new)
         return {"changed": True}
+
+    def wifi_payload(self) -> dict[str, object]:
+        return {
+            "available": self.wifi_backend.available(),
+            "networks": [
+                {
+                    "ssid": net.ssid,
+                    "security": net.security.value,
+                    "signal_dbm": net.signal_dbm,
+                }
+                for net in self.wifi_backend.scan()
+            ],
+        }
+
+    def connect_wifi(self, ssid: str, passphrase: str = "") -> dict[str, object]:
+        candidates = [net for net in self.wifi_backend.scan() if net.ssid == ssid]
+        if candidates:
+            network = candidates[0]
+        else:
+            security = WifiSecurity.PERSONAL if passphrase else WifiSecurity.OPEN
+            network = WifiNetwork(ssid, security, -50.0, "/net/connman/iwd/manual")
+        connection = self.wifi_backend.connect(network, passphrase)
+        return {
+            "connected": True,
+            "ssid": connection.network.ssid,
+        }
+
+    def ssh_payload(self) -> dict[str, object]:
+        return self.ssh_service.get_status().public_dict()
+
+    def update_ssh(self, enabled: bool, public_key: str | None = None) -> dict[str, object]:
+        if enabled:
+            status = self.ssh_service.enable(public_key)
+        else:
+            status = self.ssh_service.disable()
+        return status.public_dict()
 
     def activities_payload(self) -> list[dict[str, object]]:
         return [
@@ -214,6 +266,16 @@ class ParentApiRequestHandler(ParentRequestHandler):
                 return
             self._send_json(200, self.app.parent_password_payload())
             return
+        if parsed.path == f"{API_BASE}/network/wifi":
+            if not self._require_api_authorization(query):
+                return
+            self._send_json(200, self.app.wifi_payload())
+            return
+        if parsed.path == f"{API_BASE}/maintenance/ssh":
+            if not self._require_api_authorization(query):
+                return
+            self._send_json(200, self.app.ssh_payload())
+            return
         if parsed.path.startswith(f"{API_BASE}/"):
             self._send_api_error(404, "not_found", "Not found")
             return
@@ -239,6 +301,21 @@ class ParentApiRequestHandler(ParentRequestHandler):
             return
 
         query = parse_qs(parsed.query)
+        if parsed.path == f"{API_BASE}/network/wifi/connect":
+            if not self._require_api_authorization(query):
+                return
+            try:
+                body = self._read_json_object()
+                payload = self.app.connect_wifi(
+                    self._json_text(body, "ssid"),
+                    self._json_text(body, "passphrase", default=""),
+                )
+            except (WifiError, ValueError) as exc:
+                self._send_api_error(400, "wifi_connection_failed", str(exc))
+                return
+            self._send_json(200, payload)
+            return
+
         if parsed.path == f"{API_BASE}/profiles":
             if not self._require_api_authorization(query):
                 return
@@ -272,6 +349,20 @@ class ParentApiRequestHandler(ParentRequestHandler):
     def do_PUT(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
         query = parse_qs(parsed.query)
+        if parsed.path == f"{API_BASE}/maintenance/ssh":
+            if not self._require_api_authorization(query):
+                return
+            try:
+                body = self._read_json_object()
+                payload = self.app.update_ssh(
+                    bool(body.get("enabled", False)),
+                    self._json_text(body, "public_key", default=None),
+                )
+            except Exception as exc:
+                self._send_api_error(400, "ssh_update_failed", str(exc))
+                return
+            self._send_json(200, payload)
+            return
         if parsed.path == f"{API_BASE}/parent-password":
             if not self._require_api_authorization(query):
                 return

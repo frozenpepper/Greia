@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "locale": "en",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Fairy Tale Puppet Stage",
+    "bg.castle": "🏰 Castle",
+    "bg.forest": "🌲 Forest",
+    "bg.ocean": "🌊 Ocean",
+    "bg.space": "🚀 Space",
+    "puppet.princess": "Princess 👑",
+    "puppet.dragon": "Dragon 🐲",
+    "puppet.fairy": "Fairy 🧚",
+    "puppet.unicorn": "Unicorn 🦄",
+    "puppet.cat": "Wizard Cat 🐱",
+    "puppet.mermaid": "Mermaid 🧜",
+    "puppet.robot": "Robot 🤖",
+    "puppet.star": "Star 🌟",
+    "btn.record": "⏺️ Record",
+    "btn.recording": "⏹️ Stop",
+    "btn.play": "▶️ Play Show",
+    "btn.clear": "🧹 Clear",
+    "msg.recorded": "Show recorded! Press Play! 🎭",
+    "msg.playing": "Curtains up! Show time! ✨👏",
+    "msg.scene_saved": "Scene saved in the fairy tale chest! 💾"
+  },
+  "audio": {}
+}

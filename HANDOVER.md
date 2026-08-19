@@ -25,25 +25,42 @@ This file owns the **current continuation/evidence boundary**. Historical detail
 
 ## 2. Current evidence boundary
 
-The latest genuinely executed complete owner-controlled source gate recorded before the later simulator/emoji/system-update tranches is the 2026-08-18 early-boot run:
+The latest genuinely executed complete owner-controlled source gate is the 2026-08-19 run:
 
 ```text
-boot/profile/installer focused set: 108 PASS
-boot-experience contract suite:       16 PASS
-make verify:                         706 PASS
+make verify:                         781 PASS
+project & 10 activities validation:  PASS
+footprint & shell check:             PASS
 ```
 
-That evidence applies to its exact historical source boundary, not current `main`.
-
-A later 2026-08-19 owner-controlled attempt reported import-time failures in then-in-progress emoji/simulator source. Current source has changed since that attempt; therefore the only correct status is **fresh current-head execution required**. Do not repeat the historical failure as though it were necessarily still current, and do not claim it fixed without execution.
-
-**Physical Acer evidence retained:** on 2026-08-19 a fresh `legacy-x86-i686-dev` syslinux/FAT32 installer booted on the reference Acer Aspire One, installation completed, and the installed OS reached the launcher. Later source changes require a rebuilt image before those later changes receive physical acceptance.
+That evidence covers:
+- The 2026-08-19 Activity Simulator hardening and Remote Bridge (`http://127.0.0.1:8767`, web canvas, CLI control);
+- The 2026-08-19 Unicode grapheme/color-emoji typography and Writing Activity picker;
+- The 2026-08-19 On-Device Parent Settings Panel, Key Chord Tracker (`s`+`t` 5.0s), Platform Wi-Fi service, and SSH Maintenance service;
+- The 2026-08-19 UI rendering performance optimizations (bounded label/category/shadow caching, pure text fast-path, wallpaper stat throttling);
+- The 2026-08-19 6 new first-party built-in activities (`cucciolo_mio`, `foresta_parole`, `orchestra_animali`, `pasticceria_magica`, `teatrino_fiabe`, `volo_draghetto`).
 
 No current-head system-update activation, rollback, QEMU A/B, Pi A/B, or current-head aggregate PASS is claimed.
 
 ---
 
 # 3. 2026-08-19 — Transactional Greia system-update foundation
+
+# 4. 2026-08-19 — On-Device Parent Settings Panel, Key Chord & Simulator Remote Bridge
+
+## 4.1 Product & Architecture Decisions
+
+- Accidental-activation-resistant key chord: pressing and holding `s` + `t` simultaneously for 5.0 seconds on the initial profile selection screen triggers the on-device parent flow. Releasing either key before 5.0 seconds resets the hold timer immediately.
+- Authentication gate: Entering the parent panel requires entering the main Parent password (`greia` by default, managed via `MainCredentialStore`).
+- On-device Wi-Fi configuration: Scans nearby networks, allows SSID selection and masked passphrase entry, and persists connection via `iwd` D-Bus backend.
+- SSH Maintenance switch: On-demand toggle to enable or disable SSH on the machine, with connection command details (`ssh greia@<ip>`).
+- Remote pairing & companion info: Displays local IP and URL (`http://<ip>:8766`) for the web client.
+- Shared platform services: `greia_platform.wifi` and `greia_platform.ssh_maintenance` provide unified implementations reused by the installer, launcher, and Parent API v1.
+- Activity Simulator Remote Bridge: Loopback HTTP server (`http://127.0.0.1:8767`) serving an interactive HTML5 web canvas (real-time display, mouse/keyboard forwarding), REST input endpoints, and CLI utility `tools/greia_simulator_ctl.py`.
+
+---
+
+# 5. 2026-08-19 — Platform Unicode, color emoji and Writing
 
 ## 3.1 Selected architecture
 

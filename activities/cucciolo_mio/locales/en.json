@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "locale": "en",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "My Cute Pet",
+    "pet.cat": "Kitty 🐱",
+    "pet.bunny": "Bunny 🐰",
+    "pet.puppy": "Puppy 🐶",
+    "tab.feed": "🐟 Snacks",
+    "tab.bath": "🧼 Bath",
+    "tab.play": "🎾 Play",
+    "tab.sleep": "🌙 Sleep",
+    "tab.dress": "🎀 Dress Up",
+    "msg.nom_nom": "Yum yum! Delicious! 💖",
+    "msg.sparkle": "All clean and sparkling! ✨",
+    "msg.play": "Hooray! So much fun! 🎾",
+    "msg.sleep": "Sweet dreams, little pet... 🌙",
+    "msg.dress": "What a fabulous look! 🎀",
+    "stat.happiness": "Happiness",
+    "stat.hunger": "Tummy",
+    "stat.clean": "Clean"
+  },
+  "audio": {}
+}

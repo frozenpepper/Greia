@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "locale": "it",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "L'Orchestra degli Animali",
+    "mode.free": "🎵 Concerto Libero",
+    "mode.echo": "🎶 Eco Musicale",
+    "inst.piano": "Pianoforte 🐸",
+    "inst.drums": "Batteria 🐻",
+    "inst.voice": "Canto 🐱",
+    "inst.guitar": "Chitarra 🐰",
+    "inst.flute": "Flauto 🐦",
+    "prompt.echo": "Ascolta e suona le note colorate!",
+    "prompt.free": "Tocca gli animali o suona la tastiera!",
+    "feedback.perfect": "Bravissima! Melodia perfetta! 🌟🎶",
+    "feedback.try_again": "Ascolta bene e riprova 💕",
+    "hud.score": "Punti: ",
+    "hud.stars": "★ "
+  },
+  "audio": {}
+}

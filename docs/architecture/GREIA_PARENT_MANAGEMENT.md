@@ -303,7 +303,10 @@ Foundation now:
 ```text
 protocol constants/resource index
 per-device credential store
-API-v1 read/write facade over existing profile/hardware services
+API-v1 read/write facade over profile/hardware/network/ssh services
+on-device Parent Settings Panel via held key chord (s+t for 5s)
+Wi-Fi scanning and connection via shared platform iwd service
+SSH maintenance toggle via platform service
 Activity inventory
 mDNS advertisement
 HTML API client
@@ -317,8 +320,7 @@ authenticated encrypted transport
 typed privileged broker
 Activity install/update/remove through R10
 backup/restore through R11
-audio/network management through HAL/services
-SSH maintenance switch
+audio management through HAL/services
 operation resources
 native client if/when justified
 ```

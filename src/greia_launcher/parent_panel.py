@@ -1,0 +1,529 @@
+from __future__ import annotations
+
+import time
+from dataclasses import dataclass
+from enum import StrEnum
+from pathlib import Path
+from typing import Any, Callable
+
+from greia_platform.main_credential import MainCredentialStore
+from greia_platform.ssh_maintenance import SshMaintenanceService, SshStatus
+from greia_platform.typography import FontRole, GreiaTypography
+from greia_platform.wifi import (
+    DemoWifiBackend,
+    IwdWifiBackend,
+    WifiBackend,
+    WifiSecurity,
+    WifiSetupController,
+    WifiSetupPhase,
+)
+
+
+class ParentPanelState(StrEnum):
+    AUTH = "auth"
+    PANEL = "panel"
+    CLOSED = "closed"
+
+
+class ParentPanelTab(StrEnum):
+    WIFI = "wifi"
+    SSH = "ssh"
+    INFO = "info"
+
+
+@dataclass(frozen=True, slots=True)
+class PanelHitTarget:
+    action: str
+    value: object
+    rect: Any
+
+
+class ParentSettingsOverlay:
+    """On-device Parent Settings Panel for physical Greia devices.
+
+    Accessible from the user selection screen via a protected hidden key combination.
+    Provides immediate on-device access to Wi-Fi configuration, SSH maintenance,
+    and remote pairing diagnostics without exposing a Linux shell.
+    """
+
+    def __init__(
+        self,
+        credential_store: MainCredentialStore,
+        *,
+        wifi_backend: WifiBackend | None = None,
+        ssh_service: SshMaintenanceService | None = None,
+    ) -> None:
+        self.credential_store = credential_store
+        self.credential_store.ensure_initialized()
+
+        if wifi_backend is None:
+            backend = (
+                IwdWifiBackend()
+                if Path("/var/lib/iwd").exists() or Path("/etc/greia-os").exists()
+                else DemoWifiBackend()
+            )
+        else:
+            backend = wifi_backend
+
+        self.wifi_controller = WifiSetupController(backend)
+        self.ssh_service = ssh_service or SshMaintenanceService()
+
+        self.state = ParentPanelState.CLOSED
+        self.active_tab = ParentPanelTab.WIFI
+        self.password_text = ""
+        self.password_error_until = 0.0
+        self._targets: list[PanelHitTarget] = []
+        self._ssh_cached_status: SshStatus | None = None
+        self._last_ssh_poll = 0.0
+
+    def open(self) -> None:
+        self.state = ParentPanelState.AUTH
+        self.active_tab = ParentPanelTab.WIFI
+        self.password_text = ""
+        self.password_error_until = 0.0
+        self._targets.clear()
+        self.wifi_controller.begin()
+
+    def close(self) -> None:
+        self.state = ParentPanelState.CLOSED
+        self.password_text = ""
+        self.wifi_controller.skip()
+
+    @property
+    def is_open(self) -> bool:
+        return self.state != ParentPanelState.CLOSED
+
+    def drain(self) -> None:
+        self.wifi_controller.drain()
+
+    def handle_text_input(self, text: str) -> None:
+        if self.state == ParentPanelState.AUTH:
+            if time.monotonic() < self.password_error_until or not text:
+                return
+            accepted = "".join(
+                ch for ch in text if ch not in "\r\n\x00" and ch.isprintable()
+            )
+            if len(self.password_text) < 64:
+                self.password_text += accepted[: 64 - len(self.password_text)]
+        elif self.state == ParentPanelState.PANEL and self.active_tab == ParentPanelTab.WIFI:
+            self.wifi_controller.append_password(text)
+
+    def handle_key(self, key: int, pygame: Any) -> bool:
+        """Handle key input. Returns True to stay in overlay, False to close."""
+        if self.state == ParentPanelState.AUTH:
+            if key == pygame.K_ESCAPE:
+                self.close()
+                return False
+            if key == pygame.K_BACKSPACE:
+                self.password_text = self.password_text[:-1]
+                return True
+            if key in {pygame.K_RETURN, pygame.K_KP_ENTER}:
+                self._attempt_auth(pygame)
+                return True
+            return True
+
+        if self.state == ParentPanelState.PANEL:
+            if key == pygame.K_ESCAPE:
+                self.close()
+                return False
+            if key == pygame.K_TAB:
+                tabs = [ParentPanelTab.WIFI, ParentPanelTab.SSH, ParentPanelTab.INFO]
+                idx = (tabs.index(self.active_tab) + 1) % len(tabs)
+                self.active_tab = tabs[idx]
+                return True
+
+            if self.active_tab == ParentPanelTab.WIFI:
+                if key == pygame.K_UP:
+                    self.wifi_controller.move_selection(-1)
+                elif key == pygame.K_DOWN:
+                    self.wifi_controller.move_selection(1)
+                elif key == pygame.K_BACKSPACE:
+                    self.wifi_controller.backspace_password()
+                elif key in {pygame.K_RETURN, pygame.K_KP_ENTER}:
+                    self.wifi_controller.connect()
+
+            elif self.active_tab == ParentPanelTab.SSH:
+                if key in {pygame.K_RETURN, pygame.K_SPACE}:
+                    self.ssh_service.toggle()
+                    self._ssh_cached_status = None
+
+            return True
+
+        return False
+
+    def handle_click(self, pos: tuple[int, int], pygame: Any) -> bool:
+        """Handle click input. Returns True if handled, False if overlay closed."""
+        for target in reversed(self._targets):
+            if not target.rect.collidepoint(pos):
+                continue
+
+            if target.action == "cancel_auth" or target.action == "close_panel":
+                self.close()
+                return False
+            elif target.action == "confirm_auth":
+                self._attempt_auth(pygame)
+                return True
+            elif target.action == "switch_tab":
+                self.active_tab = ParentPanelTab(str(target.value))
+                return True
+            elif target.action == "wifi_refresh":
+                self.wifi_controller.refresh()
+                return True
+            elif target.action == "wifi_select":
+                self.wifi_controller.select(int(target.value))
+                return True
+            elif target.action == "wifi_connect":
+                self.wifi_controller.connect()
+                return True
+            elif target.action == "ssh_toggle":
+                self.ssh_service.toggle()
+                self._ssh_cached_status = None
+                return True
+
+        return True
+
+    def _attempt_auth(self, pygame: Any) -> None:
+        if time.monotonic() < self.password_error_until:
+            return
+        if self.credential_store.verify(self.password_text):
+            self.state = ParentPanelState.PANEL
+            self.password_text = ""
+            self.wifi_controller.begin()
+        else:
+            self.password_text = ""
+            self.password_error_until = time.monotonic() + 1.2
+
+    def draw(
+        self,
+        screen: Any,
+        theme: Any,
+        typography: GreiaTypography,
+        pygame: Any,
+        load_icon_fn: Callable[[str, int, Any], Any],
+    ) -> None:
+        self._targets.clear()
+        width, height = screen.get_size()
+
+        # Dimmed backdrop
+        backdrop = pygame.Surface((width, height), pygame.SRCALPHA)
+        backdrop.fill((30, 24, 20, 210))
+        screen.blit(backdrop, (0, 0))
+
+        if self.state == ParentPanelState.AUTH:
+            self._draw_auth_dialog(screen, theme, typography, pygame, load_icon_fn)
+        elif self.state == ParentPanelState.PANEL:
+            self._draw_panel(screen, theme, typography, pygame, load_icon_fn)
+
+    def _draw_auth_dialog(
+        self,
+        screen: Any,
+        theme: Any,
+        typography: GreiaTypography,
+        pygame: Any,
+        load_icon_fn: Callable[[str, int, Any], Any],
+    ) -> None:
+        width, height = screen.get_size()
+        center = (width // 2, height // 2)
+
+        card_w = min(480, width - 40)
+        card_h = min(320, height - 40)
+        card = pygame.Rect(0, 0, card_w, card_h)
+        card.center = center
+
+        pygame.draw.rect(screen, (255, 250, 240), card, border_radius=24)
+        pygame.draw.rect(screen, (61, 44, 31), card, width=3, border_radius=24)
+
+        # Title
+        font_title = typography.font(FontRole.TITLE, 28)
+        title = font_title.render("Parent Settings", True, (61, 44, 31))
+        screen.blit(title, title.get_rect(center=(card.centerx, card.top + 36)))
+
+        font_body = typography.font(FontRole.BODY, 18)
+        subtitle = font_body.render("Enter Parent Password", True, (118, 104, 93))
+        screen.blit(subtitle, subtitle.get_rect(center=(card.centerx, card.top + 70)))
+
+        # Password input box
+        input_rect = pygame.Rect(card.left + 30, card.top + 106, card_w - 60, 52)
+        pygame.draw.rect(screen, (246, 236, 209), input_rect, border_radius=14)
+        border_col = (181, 46, 46) if time.monotonic() < self.password_error_until else (241, 185, 35)
+        pygame.draw.rect(screen, border_col, input_rect, width=3, border_radius=14)
+
+        masked = "•" * len(self.password_text) or "…"
+        font_input = typography.font(FontRole.CONTROL, 24)
+        text_surf = font_input.render(masked, True, (61, 44, 31))
+        screen.blit(text_surf, text_surf.get_rect(midleft=(input_rect.left + 16, input_rect.centery)))
+
+        # Buttons
+        btn_w = (card_w - 80) // 2
+        btn_h = 48
+        btn_y = card.bottom - 66
+
+        cancel_rect = pygame.Rect(card.left + 30, btn_y, btn_w, btn_h)
+        confirm_rect = pygame.Rect(card.right - 30 - btn_w, btn_y, btn_w, btn_h)
+
+        # Cancel button
+        pygame.draw.rect(screen, (230, 220, 205), cancel_rect, border_radius=14)
+        lbl_cancel = font_body.render("Cancel", True, (61, 44, 31))
+        screen.blit(lbl_cancel, lbl_cancel.get_rect(center=cancel_rect.center))
+        self._targets.append(PanelHitTarget("cancel_auth", None, cancel_rect))
+
+        # Confirm button
+        pygame.draw.rect(screen, (241, 185, 35), confirm_rect, border_radius=14)
+        lbl_confirm = font_body.render("Unlock", True, (61, 44, 31))
+        screen.blit(lbl_confirm, lbl_confirm.get_rect(center=confirm_rect.center))
+        self._targets.append(PanelHitTarget("confirm_auth", None, confirm_rect))
+
+    def _draw_panel(
+        self,
+        screen: Any,
+        theme: Any,
+        typography: GreiaTypography,
+        pygame: Any,
+        load_icon_fn: Callable[[str, int, Any], Any],
+    ) -> None:
+        width, height = screen.get_size()
+        panel_rect = pygame.Rect(20, 20, width - 40, height - 40)
+
+        pygame.draw.rect(screen, (255, 250, 240), panel_rect, border_radius=24)
+        pygame.draw.rect(screen, (61, 44, 31), panel_rect, width=3, border_radius=24)
+
+        # Header bar
+        header_h = 56
+        header_rect = pygame.Rect(panel_rect.left, panel_rect.top, panel_rect.width, header_h)
+
+        font_title = typography.font(FontRole.TITLE, 24)
+        title = font_title.render("Parent Settings", True, (61, 44, 31))
+        screen.blit(title, (header_rect.left + 24, header_rect.top + 16))
+
+        # Close button (top right)
+        close_btn = pygame.Rect(header_rect.right - 50, header_rect.top + 10, 36, 36)
+        pygame.draw.rect(screen, (246, 236, 209), close_btn, border_radius=10)
+        pygame.draw.rect(screen, (61, 44, 31), close_btn, width=2, border_radius=10)
+        icon_close = load_icon_fn("close_button", 22, pygame)
+        screen.blit(icon_close, icon_close.get_rect(center=close_btn.center))
+        self._targets.append(PanelHitTarget("close_panel", None, close_btn))
+
+        # Tab bar
+        tab_y = header_rect.bottom + 8
+        tabs = [
+            (ParentPanelTab.WIFI, "Wi-Fi"),
+            (ParentPanelTab.SSH, "SSH Maintenance"),
+            (ParentPanelTab.INFO, "Remote & Pairing"),
+        ]
+        tab_x = panel_rect.left + 24
+        font_tab = typography.font(FontRole.CONTROL, 18)
+
+        for tab_id, label in tabs:
+            is_active = self.active_tab == tab_id
+            tab_w = 160
+            tab_rect = pygame.Rect(tab_x, tab_y, tab_w, 38)
+            bg = (241, 185, 35) if is_active else (246, 236, 209)
+            pygame.draw.rect(screen, bg, tab_rect, border_radius=12)
+            pygame.draw.rect(screen, (61, 44, 31), tab_rect, width=2 if is_active else 1, border_radius=12)
+
+            txt = font_tab.render(label, True, (61, 44, 31))
+            screen.blit(txt, txt.get_rect(center=tab_rect.center))
+            self._targets.append(PanelHitTarget("switch_tab", tab_id, tab_rect))
+            tab_x += tab_w + 12
+
+        # Content area
+        content_rect = pygame.Rect(
+            panel_rect.left + 24,
+            tab_y + 50,
+            panel_rect.width - 48,
+            panel_rect.bottom - (tab_y + 66),
+        )
+
+        if self.active_tab == ParentPanelTab.WIFI:
+            self._draw_wifi_tab(screen, content_rect, typography, pygame, load_icon_fn)
+        elif self.active_tab == ParentPanelTab.SSH:
+            self._draw_ssh_tab(screen, content_rect, typography, pygame, load_icon_fn)
+        elif self.active_tab == ParentPanelTab.INFO:
+            self._draw_info_tab(screen, content_rect, typography, pygame, load_icon_fn)
+
+    def _draw_wifi_tab(
+        self,
+        screen: Any,
+        rect: Any,
+        typography: GreiaTypography,
+        pygame: Any,
+        load_icon_fn: Callable[[str, int, Any], Any],
+    ) -> None:
+        font_body = typography.font(FontRole.BODY, 18)
+        font_bold = typography.font(FontRole.CONTROL, 18)
+        snapshot = self.wifi_controller.snapshot
+
+        # Top status / refresh bar
+        top_bar = pygame.Rect(rect.left, rect.top, rect.width, 42)
+        status_text = f"Status: {snapshot.phase.value.title()}"
+        if snapshot.connected_ssid:
+            status_text += f" (Connected: {snapshot.connected_ssid})"
+        if snapshot.error:
+            status_text = f"Error: {snapshot.error}"
+
+        status_surf = font_body.render(status_text, True, (181, 46, 46) if snapshot.error else (61, 44, 31))
+        screen.blit(status_surf, (top_bar.left, top_bar.top + 10))
+
+        # Refresh button
+        refresh_btn = pygame.Rect(top_bar.right - 110, top_bar.top, 100, 36)
+        pygame.draw.rect(screen, (246, 236, 209), refresh_btn, border_radius=10)
+        pygame.draw.rect(screen, (61, 44, 31), refresh_btn, width=1, border_radius=10)
+        lbl_refresh = font_body.render("Scan", True, (61, 44, 31))
+        screen.blit(lbl_refresh, lbl_refresh.get_rect(center=refresh_btn.center))
+        self._targets.append(PanelHitTarget("wifi_refresh", None, refresh_btn))
+
+        # Network list area
+        list_rect = pygame.Rect(rect.left, top_bar.bottom + 10, rect.width // 2 - 10, rect.height - 52)
+        pygame.draw.rect(screen, (246, 236, 209), list_rect, border_radius=16)
+        pygame.draw.rect(screen, (220, 210, 190), list_rect, width=1, border_radius=16)
+
+        item_y = list_rect.top + 8
+        for idx, network in enumerate(snapshot.networks[:6]):
+            item_rect = pygame.Rect(list_rect.left + 8, item_y, list_rect.width - 16, 40)
+            is_selected = idx == snapshot.selected_index
+            bg = (241, 185, 35) if is_selected else (255, 250, 240)
+            pygame.draw.rect(screen, bg, item_rect, border_radius=10)
+            pygame.draw.rect(screen, (61, 44, 31), item_rect, width=2 if is_selected else 1, border_radius=10)
+
+            # SSID label
+            label = network.ssid
+            if network.security == WifiSecurity.PERSONAL:
+                label += " 🔒"
+            elif network.security == WifiSecurity.ENTERPRISE:
+                label += " (Enterprise)"
+            txt_surf = font_body.render(label, True, (61, 44, 31))
+            screen.blit(txt_surf, (item_rect.left + 12, item_rect.top + 10))
+
+            self._targets.append(PanelHitTarget("wifi_select", idx, item_rect))
+            item_y += 46
+
+        if not snapshot.networks:
+            no_nets = font_body.render("No networks found. Click Scan.", True, (118, 104, 93))
+            screen.blit(no_nets, no_nets.get_rect(center=list_rect.center))
+
+        # Selected Network details & password form
+        form_rect = pygame.Rect(list_rect.right + 20, top_bar.bottom + 10, rect.width // 2 - 10, rect.height - 52)
+        pygame.draw.rect(screen, (246, 236, 209), form_rect, border_radius=16)
+
+        selected = snapshot.selected_network
+        if selected is not None:
+            lbl_title = font_bold.render(f"Network: {selected.ssid}", True, (61, 44, 31))
+            screen.blit(lbl_title, (form_rect.left + 16, form_rect.top + 16))
+
+            lbl_sec = font_body.render(f"Security: {selected.security.value.upper()}", True, (118, 104, 93))
+            screen.blit(lbl_sec, (form_rect.left + 16, form_rect.top + 46))
+
+            if selected.security == WifiSecurity.PERSONAL:
+                pwd_label = font_body.render("Password:", True, (61, 44, 31))
+                screen.blit(pwd_label, (form_rect.left + 16, form_rect.top + 80))
+
+                pwd_box = pygame.Rect(form_rect.left + 16, form_rect.top + 106, form_rect.width - 32, 44)
+                pygame.draw.rect(screen, (255, 250, 240), pwd_box, border_radius=10)
+                pygame.draw.rect(screen, (61, 44, 31), pwd_box, width=1, border_radius=10)
+
+                masked = "•" * len(snapshot.passphrase) or "Type password…"
+                txt = font_body.render(masked, True, (61, 44, 31) if snapshot.passphrase else (150, 140, 130))
+                screen.blit(txt, (pwd_box.left + 12, pwd_box.top + 12))
+
+            # Connect button
+            connect_btn = pygame.Rect(form_rect.left + 16, form_rect.bottom - 60, form_rect.width - 32, 44)
+            pygame.draw.rect(screen, (241, 185, 35), connect_btn, border_radius=12)
+            pygame.draw.rect(screen, (61, 44, 31), connect_btn, width=2, border_radius=12)
+            lbl_conn = font_bold.render("Connect", True, (61, 44, 31))
+            screen.blit(lbl_conn, lbl_conn.get_rect(center=connect_btn.center))
+            self._targets.append(PanelHitTarget("wifi_connect", None, connect_btn))
+        else:
+            hint = font_body.render("Select a Wi-Fi network from the list", True, (118, 104, 93))
+            screen.blit(hint, hint.get_rect(center=form_rect.center))
+
+    def _draw_ssh_tab(
+        self,
+        screen: Any,
+        rect: Any,
+        typography: GreiaTypography,
+        pygame: Any,
+        load_icon_fn: Callable[[str, int, Any], Any],
+    ) -> None:
+        now = time.monotonic()
+        if self._ssh_cached_status is None or now - self._last_ssh_poll > 2.0:
+            self._ssh_cached_status = self.ssh_service.get_status()
+            self._last_ssh_poll = now
+
+        status = self._ssh_cached_status
+        font_title = typography.font(FontRole.TITLE, 22)
+        font_body = typography.font(FontRole.BODY, 18)
+        font_bold = typography.font(FontRole.CONTROL, 18)
+
+        card = pygame.Rect(rect.left, rect.top, rect.width, rect.height)
+        pygame.draw.rect(screen, (246, 236, 209), card, border_radius=16)
+
+        title = font_title.render("SSH Maintenance Switch", True, (61, 44, 31))
+        screen.blit(title, (card.left + 24, card.top + 20))
+
+        # Status badge
+        is_on = status.active or status.enabled
+        badge_rect = pygame.Rect(card.left + 24, card.top + 58, 140, 36)
+        badge_bg = (47, 117, 81) if is_on else (181, 46, 46)
+        pygame.draw.rect(screen, badge_bg, badge_rect, border_radius=10)
+        lbl_status = font_bold.render("ENABLED" if is_on else "DISABLED", True, (255, 255, 255))
+        screen.blit(lbl_status, lbl_status.get_rect(center=badge_rect.center))
+
+        # Toggle Button
+        toggle_btn = pygame.Rect(badge_rect.right + 20, card.top + 58, 160, 36)
+        pygame.draw.rect(screen, (241, 185, 35), toggle_btn, border_radius=10)
+        pygame.draw.rect(screen, (61, 44, 31), toggle_btn, width=2, border_radius=10)
+        lbl_toggle = font_bold.render("Turn OFF" if is_on else "Turn ON", True, (61, 44, 31))
+        screen.blit(lbl_toggle, lbl_toggle.get_rect(center=toggle_btn.center))
+        self._targets.append(PanelHitTarget("ssh_toggle", None, toggle_btn))
+
+        # Connection details
+        y = card.top + 116
+        lines = [
+            f"Administrative user: {status.username}",
+            f"Device IP: {status.host_ip}",
+            f"SSH Port: {status.port}",
+            f"Connection command: ssh {status.username}@{status.host_ip}",
+        ]
+        for line in lines:
+            line_surf = font_body.render(line, True, (61, 44, 31))
+            screen.blit(line_surf, (card.left + 24, y))
+            y += 28
+
+        # Note
+        note_y = card.bottom - 48
+        note = font_body.render(
+            "Note: SSH allows administrative terminal access. Keep disabled when not in use.",
+            True,
+            (118, 104, 93),
+        )
+        screen.blit(note, (card.left + 24, note_y))
+
+    def _draw_info_tab(
+        self,
+        screen: Any,
+        rect: Any,
+        typography: GreiaTypography,
+        pygame: Any,
+        load_icon_fn: Callable[[str, int, Any], Any],
+    ) -> None:
+        font_title = typography.font(FontRole.TITLE, 22)
+        font_body = typography.font(FontRole.BODY, 18)
+
+        card = pygame.Rect(rect.left, rect.top, rect.width, rect.height)
+        pygame.draw.rect(screen, (246, 236, 209), card, border_radius=16)
+
+        title = font_title.render("Remote Parent Companion & Pairing", True, (61, 44, 31))
+        screen.blit(title, (card.left + 24, card.top + 20))
+
+        y = card.top + 64
+        lines = [
+            "Greia Parents is accessible from any browser on this home network.",
+            f"1. Connect your phone or laptop to the same Wi-Fi network.",
+            f"2. Open http://{self.ssh_service.get_status().host_ip}:8766 in your browser.",
+            "3. mDNS Service: _greia-parent._tcp (Bonjour / Avahi auto-discovery).",
+            "4. Main Parent login: username 'greia', default password 'greia'.",
+        ]
+        for line in lines:
+            surf = font_body.render(line, True, (61, 44, 31))
+            screen.blit(surf, (card.left + 24, y))
+            y += 32

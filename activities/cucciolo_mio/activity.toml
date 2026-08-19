@@ -1,0 +1,42 @@
+[activity]
+id = "org.greia.cucciolo-mio"
+legacy_ids = []
+title_key = "activity.cucciolo_mio.title"
+version = "0.1.0"
+icon = "unicorn"
+languages = ["it", "en"]
+
+[presentation]
+categories = ["play", "create"]
+
+[education]
+categories = ["empathy", "daily_routines", "fine_motor", "creativity"]
+difficulty = 1
+skills = [
+  { id = "emotional.empathy_caregiving", weight = 3 },
+  { id = "habits.hygiene_and_nutrition", weight = 2 },
+  { id = "motor.pointer.drag_and_drop", weight = 2 },
+]
+events = [
+  { id = "pet.fed", kind = "milestone" },
+  { id = "pet.groomed", kind = "milestone" },
+  { id = "pet.tucked_in", kind = "completion" },
+]
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "pointer"
+
+[requirements]
+required_capabilities = ["display", "pointer", "audio.basic"]
+optional_capabilities = ["touch"]
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1

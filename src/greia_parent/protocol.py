@@ -53,6 +53,12 @@ RESOURCES = (
         f"{API_BASE}/parent-password",
         ("GET", "PUT"),
     ),
+    ParentApiResource("wifi", f"{API_BASE}/network/wifi", ("GET", "POST")),
+    ParentApiResource(
+        "ssh_maintenance",
+        f"{API_BASE}/maintenance/ssh",
+        ("GET", "PUT"),
+    ),
 )
 
 CAPABILITIES = {
@@ -80,8 +86,8 @@ CAPABILITIES = {
     "activities.install": False,
     "backup.manage": False,
     "settings.audio": False,
-    "network.manage": False,
-    "maintenance.ssh": False,
+    "network.manage": True,
+    "maintenance.ssh": True,
     # The main Parent password is a typed Greia-owned credential. It is
     # manageable from the HTML client whenever the Parent API is reachable; it
     # must never be confused with per-device bearer credentials.

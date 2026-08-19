@@ -3,7 +3,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from .ui_core import BoundedCache
 from .ui_motion import InteractionVisualState, MotionSample
+
+_SHADOW_SURFACE_CACHE: BoundedCache[tuple[int, int, int, int], Any] = BoundedCache(128)
+
+
+def clear_effects_cache() -> None:
+    """Clear cached shadow surfaces."""
+    _SHADOW_SURFACE_CACHE.clear()
 
 
 @dataclass(frozen=True, slots=True)
@@ -42,6 +50,10 @@ def make_rounded_shadow(size: tuple[int, int], pygame: Any, *, style: PygameDept
     width, height = size
     if width < 1 or height < 1:
         raise ValueError("shadow size must be positive")
+    key = (width, height, style.radius, style.shadow_alpha)
+    cached = _SHADOW_SURFACE_CACHE.get(key)
+    if cached is not None:
+        return cached
     shadow = pygame.Surface((width, height), pygame.SRCALPHA)
     pygame.draw.rect(
         shadow,
@@ -49,6 +61,7 @@ def make_rounded_shadow(size: tuple[int, int], pygame: Any, *, style: PygameDept
         shadow.get_rect(),
         border_radius=min(style.radius, width // 2, height // 2),
     )
+    _SHADOW_SURFACE_CACHE[key] = shadow
     return shadow
 
 

@@ -10,9 +10,15 @@ Simulator identity is not part of the Activity environment contract.
 from __future__ import annotations
 
 import argparse
+import io
+import json
 import os
+import queue
 import runpy
 import sys
+import threading
+import time
+import urllib.request
 from pathlib import Path
 from typing import Any, Callable
 
@@ -32,6 +38,7 @@ def normalize_display_request(
 
 def install_pygame_display_patch(
     target_size: tuple[int, int],
+    remote_port: int = 0,
 ) -> Callable[..., Any]:
     """Install the narrow simulator display adapter and return the original call."""
 
@@ -46,6 +53,84 @@ def install_pygame_display_patch(
     original_flip = pygame.display.flip
     original_update = pygame.display.update
     original_get_events = pygame.event.get
+
+    frame_queue: queue.Queue[bytes] = queue.Queue(maxsize=2)
+    last_frame_sent = [0.0]
+    last_event_poll = [0.0]
+    pending_events: list[Any] = []
+
+    def _frame_worker() -> None:
+        while True:
+            try:
+                png_bytes = frame_queue.get()
+                req = urllib.request.Request(
+                    f"http://127.0.0.1:{remote_port}/api/frame",
+                    data=png_bytes,
+                    headers={"Content-Type": "image/png"},
+                    method="POST",
+                )
+                with urllib.request.urlopen(req, timeout=0.5):
+                    pass
+            except Exception:
+                pass
+
+    if remote_port > 0:
+        threading.Thread(target=_frame_worker, name="greia-sim-act-frame", daemon=True).start()
+
+    def _maybe_post_frame(surface: pygame.Surface | None) -> None:
+        if remote_port <= 0 or surface is None:
+            return
+        now = time.monotonic()
+        if now - last_frame_sent[0] < 0.030:
+            return
+        last_frame_sent[0] = now
+        try:
+            buf = io.BytesIO()
+            pygame.image.save(surface, buf, "png")
+            data = buf.getvalue()
+            if not frame_queue.full():
+                frame_queue.put_nowait(data)
+        except Exception:
+            pass
+
+    def _poll_remote_events() -> None:
+        if remote_port <= 0:
+            return
+        now = time.monotonic()
+        if now - last_event_poll[0] < 0.015:
+            return
+        last_event_poll[0] = now
+        try:
+            req = urllib.request.Request(f"http://127.0.0.1:{remote_port}/api/events")
+            with urllib.request.urlopen(req, timeout=0.2) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+            raw_list = data.get("events", [])
+            for item in raw_list:
+                ev_type = item.get("type")
+                if ev_type == "key":
+                    key_code = _resolve_pygame_key(item.get("key", ""), pygame)
+                    action = item.get("action", "press")
+                    if key_code is not None:
+                        if action in {"down", "press"}:
+                            pending_events.append(pygame.event.Event(pygame.KEYDOWN, key=key_code))
+                        if action in {"up", "press"}:
+                            pending_events.append(pygame.event.Event(pygame.KEYUP, key=key_code))
+                elif ev_type == "text":
+                    text = str(item.get("text", ""))
+                    if text:
+                        pending_events.append(pygame.event.Event(pygame.TEXTINPUT, text=text))
+                elif ev_type == "mouse":
+                    x = int(item.get("x", 0))
+                    y = int(item.get("y", 0))
+                    action = item.get("action", "click")
+                    button = int(item.get("button", 1))
+                    pending_events.append(pygame.event.Event(pygame.MOUSEMOTION, pos=(x, y), rel=(0, 0), buttons=(0, 0, 0)))
+                    if action in {"down", "click"}:
+                        pending_events.append(pygame.event.Event(pygame.MOUSEBUTTONDOWN, pos=(x, y), button=button))
+                    if action in {"up", "click"}:
+                        pending_events.append(pygame.event.Event(pygame.MOUSEBUTTONUP, pos=(x, y), button=button))
+        except Exception:
+            pass
 
     def _draw_chrome_overlay(surface: pygame.Surface | None) -> None:
         if surface is None:
@@ -101,15 +186,21 @@ def install_pygame_display_patch(
     def simulator_flip():
         surface = pygame.display.get_surface()
         _draw_chrome_overlay(surface)
+        _maybe_post_frame(surface)
         return original_flip()
 
     def simulator_update(*args, **kwargs):
         surface = pygame.display.get_surface()
         _draw_chrome_overlay(surface)
+        _maybe_post_frame(surface)
         return original_update(*args, **kwargs)
 
     def simulator_get_events(*args, **kwargs):
-        events = original_get_events(*args, **kwargs)
+        _poll_remote_events()
+        events = list(original_get_events(*args, **kwargs))
+        if pending_events:
+            events.extend(pending_events)
+            pending_events.clear()
         surface = pygame.display.get_surface()
         if surface is not None:
             w, h = surface.get_size()
@@ -159,6 +250,28 @@ def install_pygame_display_patch(
     return original
 
 
+def _resolve_pygame_key(name: str, pygame: Any) -> int | None:
+    name_upper = name.upper()
+    named_map = {
+        "LEFT": pygame.K_LEFT,
+        "RIGHT": pygame.K_RIGHT,
+        "UP": pygame.K_UP,
+        "DOWN": pygame.K_DOWN,
+        "RETURN": pygame.K_RETURN,
+        "ENTER": pygame.K_RETURN,
+        "ESCAPE": pygame.K_ESCAPE,
+        "ESC": pygame.K_ESCAPE,
+        "TAB": pygame.K_TAB,
+        "SPACE": pygame.K_SPACE,
+        "BACKSPACE": pygame.K_BACKSPACE,
+    }
+    if name_upper in named_map:
+        return named_map[name_upper]
+    if len(name) == 1:
+        return ord(name.lower())
+    return None
+
+
 def _parse_target_viewport(value: str) -> tuple[int, int]:
     """Validate the adapter-owned command argument without importing packages."""
 
@@ -172,7 +285,12 @@ def _parse_target_viewport(value: str) -> tuple[int, int]:
     return width, height
 
 
-def run_activity(entrypoint: Path, *, target_size: tuple[int, int]) -> None:
+def run_activity(
+    entrypoint: Path,
+    *,
+    target_size: tuple[int, int],
+    remote_port: int = 0,
+) -> None:
     root_raw = os.environ.get("GREIA_ACTIVITY_ROOT", "").strip()
     if not root_raw:
         raise RuntimeError("simulated Activity launch has no GREIA_ACTIVITY_ROOT")
@@ -201,7 +319,10 @@ def run_activity(entrypoint: Path, *, target_size: tuple[int, int]) -> None:
     sys.path.insert(0, package_path)
     sys.path.insert(0, trusted_source)
 
-    install_pygame_display_patch(target_size)
+    if remote_port > 0:
+        install_pygame_display_patch(target_size, remote_port=remote_port)
+    else:
+        install_pygame_display_patch(target_size)
 
     runpy.run_path(str(path), run_name="__main__")
 
@@ -209,9 +330,14 @@ def run_activity(entrypoint: Path, *, target_size: tuple[int, int]) -> None:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="trusted Greia simulator Python bootstrap")
     parser.add_argument("--viewport", required=True)
+    parser.add_argument("--remote-port", type=int, default=0)
     parser.add_argument("entrypoint", type=Path)
     args = parser.parse_args(sys.argv[1:] if argv is None else argv)
-    run_activity(args.entrypoint, target_size=_parse_target_viewport(args.viewport))
+    run_activity(
+        args.entrypoint,
+        target_size=_parse_target_viewport(args.viewport),
+        remote_port=args.remote_port,
+    )
     return 0
 
 

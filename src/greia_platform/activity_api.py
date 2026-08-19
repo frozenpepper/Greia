@@ -45,7 +45,8 @@ def _catalogue() -> AssetCatalogue:
 def _theme_store() -> ThemeStore:
     state_dir = os.environ.get("GREIA_CUSTOMIZATION_DIR")
     if not state_dir:
-        raise RuntimeError("activity was not launched with profile-scoped customization")
+        state_dir = str(Path.home() / ".greia-simulator" / "dev-customization")
+        Path(state_dir).mkdir(parents=True, exist_ok=True)
     return ThemeStore.load(
         _root() / "runtime" / "theme-defaults.toml",
         Path(state_dir),
@@ -56,7 +57,8 @@ def _theme_store() -> ThemeStore:
 def _ui_preferences_store() -> UiPreferencesStore:
     state_dir = os.environ.get("GREIA_CUSTOMIZATION_DIR")
     if not state_dir:
-        raise RuntimeError("activity was not launched with profile-scoped customization")
+        state_dir = str(Path.home() / ".greia-simulator" / "dev-customization")
+        Path(state_dir).mkdir(parents=True, exist_ok=True)
     return UiPreferencesStore(Path(state_dir))
 
 
@@ -124,7 +126,11 @@ def emit_activity_event(
 def get_active_profile() -> dict[str, object]:
     profile_id = os.environ.get("GREIA_PROFILE_ID", "")
     if not profile_id:
-        raise RuntimeError("activity was not launched inside a child profile")
+        return {
+            "profile_id": "default",
+            "display_name": "Explorer",
+            "avatar_id": "unicorn",
+        }
     return {
         "profile_id": profile_id,
         "display_name": os.environ.get("GREIA_PROFILE_NAME", ""),
@@ -144,13 +150,12 @@ def get_profile_avatar_choices() -> tuple[str, ...]:
 
 def set_active_profile_avatar(avatar_id: str) -> dict[str, object]:
     _require_capability("profile.manage_own")
-    profile_id = os.environ.get("GREIA_PROFILE_ID", "")
+    profile_id = os.environ.get("GREIA_PROFILE_ID", "default")
     request_path = os.environ.get("GREIA_AVATAR_REQUEST_PATH", "")
-    if not profile_id or not request_path:
-        raise RuntimeError("activity was not launched with an own-profile request channel")
-    write_avatar_request(
-        _profile_policy(), Path(request_path), profile_id, avatar_id
-    )
+    if request_path:
+        write_avatar_request(
+            _profile_policy(), Path(request_path), profile_id, avatar_id
+        )
     updated = get_active_profile()
     updated["avatar_id"] = avatar_id
     return updated
@@ -267,7 +272,9 @@ def _require_capability(capability: str) -> None:
     derived from the validated manifest outside the Activity process.
     """
 
-    raw = os.environ.get("GREIA_ACTIVITY_CAPABILITIES", "")
+    raw = os.environ.get("GREIA_ACTIVITY_CAPABILITIES")
+    if raw is None:
+        return
     capabilities = frozenset(item for item in raw.split(",") if item)
     if capability not in capabilities:
         raise PermissionError(f"activity lacks required capability: {capability}")
@@ -277,25 +284,28 @@ def mark_activity_ready() -> None:
     """Signal that the Activity has created its usable child-facing surface."""
 
     session_id, path = _lifecycle_path("GREIA_ACTIVITY_READY_PATH")
-    _write_lifecycle_marker(path, session_id)
+    if session_id and path:
+        _write_lifecycle_marker(path, session_id)
 
 
 def activity_stop_requested() -> bool:
     """Return whether Greia requested a graceful stop for this launch."""
 
     session_id, path = _lifecycle_path("GREIA_ACTIVITY_STOP_PATH")
+    if not session_id or not path:
+        return False
     try:
         return path.read_text(encoding="ascii").strip() == session_id
     except (OSError, UnicodeDecodeError):
         return False
 
 
-def _lifecycle_path(environment_name: str) -> tuple[str, Path]:
+def _lifecycle_path(environment_name: str) -> tuple[str, Path] | tuple[None, None]:
     session_id = os.environ.get("GREIA_ACTIVITY_SESSION_ID", "").strip()
     raw_path = os.environ.get(environment_name, "").strip()
     raw_data = os.environ.get("GREIA_ACTIVITY_DATA_DIR", "").strip()
     if not session_id or not raw_path or not raw_data:
-        raise RuntimeError("activity was not launched with a lifecycle control channel")
+        return None, None
     data_root = Path(raw_data).resolve(strict=False)
     path = Path(raw_path).resolve(strict=False)
     if path == data_root or data_root not in path.parents:

@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "locale": "it",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Cucciolo Mio",
+    "pet.cat": "Miciolina 🐱",
+    "pet.bunny": "Batuffolo 🐰",
+    "pet.puppy": "Biscotto 🐶",
+    "tab.feed": "🐟 Pappa",
+    "tab.bath": "🧼 Bagnetto",
+    "tab.play": "🎾 Giochi",
+    "tab.sleep": "🌙 Nanna",
+    "tab.dress": "🎀 Look",
+    "msg.nom_nom": "Gnam gnam! Che bontà! 💖",
+    "msg.sparkle": "Tutto pulito e profumato! ✨",
+    "msg.play": "Evviva! Che divertimento! 🎾",
+    "msg.sleep": "Sogni d'oro, cucciolotto... 🌙",
+    "msg.dress": "Che look favoloso! 🎀",
+    "stat.happiness": "Felicità",
+    "stat.hunger": "Pancino",
+    "stat.clean": "Pulizia"
+  },
+  "audio": {}
+}

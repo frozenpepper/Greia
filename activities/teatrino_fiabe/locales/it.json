@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "locale": "it",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Il Teatrino delle Fiabe",
+    "bg.castle": "🏰 Castello",
+    "bg.forest": "🌲 Bosco",
+    "bg.ocean": "🌊 Mare",
+    "bg.space": "🚀 Spazio",
+    "puppet.princess": "Principessa 👑",
+    "puppet.dragon": "Draghetto 🐲",
+    "puppet.fairy": "Fatina 🧚",
+    "puppet.unicorn": "Unicorno 🦄",
+    "puppet.cat": "Gatto Mago 🐱",
+    "puppet.mermaid": "Sirenetta 🧜",
+    "puppet.robot": "Robotino 🤖",
+    "puppet.star": "Stella 🌟",
+    "btn.record": "⏺️ Registra",
+    "btn.recording": "⏹️ Stop",
+    "btn.play": "▶️ Spettacolo",
+    "btn.clear": "🧹 Svuota",
+    "msg.recorded": "Spettacolo registrato! Premi Play! 🎭",
+    "msg.playing": "In scena! Sipario aperto! ✨👏",
+    "msg.scene_saved": "Scena salvata nel baule delle fiabe! 💾"
+  },
+  "audio": {}
+}

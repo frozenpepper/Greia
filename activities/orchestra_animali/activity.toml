@@ -1,0 +1,41 @@
+[activity]
+id = "org.greia.orchestra-animali"
+legacy_ids = []
+title_key = "activity.orchestra_animali.title"
+version = "0.1.0"
+icon = "music_star"
+languages = ["it", "en"]
+
+[presentation]
+categories = ["play", "learn"]
+
+[education]
+categories = ["music", "rhythm", "auditory_memory"]
+difficulty = 1
+skills = [
+  { id = "music.rhythm.perception", weight = 3 },
+  { id = "cognitive.working_memory.auditory", weight = 2 },
+  { id = "music.instrument_association", weight = 2 },
+]
+events = [
+  { id = "melody.matched", kind = "milestone" },
+  { id = "concert.performed", kind = "creation" },
+]
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "hybrid"
+
+[requirements]
+required_capabilities = ["display", "pointer", "audio.basic"]
+optional_capabilities = ["keyboard", "touch"]
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1

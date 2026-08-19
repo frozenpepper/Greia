@@ -86,11 +86,13 @@ class ParentApiTests(unittest.TestCase):
         self.assertFalse(capabilities["activities.install"])
         self.assertFalse(capabilities["backup.manage"])
         self.assertFalse(capabilities["settings.audio"])
-        self.assertFalse(capabilities["network.manage"])
-        self.assertFalse(capabilities["maintenance.ssh"])
+        self.assertTrue(capabilities["network.manage"])
+        self.assertTrue(capabilities["maintenance.ssh"])
         self.assertTrue(capabilities["parent.password"])
         paths = {resource["path"] for resource in payload["resources"]}
         self.assertIn(f"{API_BASE}/activities/install", paths)
+        self.assertIn(f"{API_BASE}/network/wifi", paths)
+        self.assertIn(f"{API_BASE}/maintenance/ssh", paths)
 
     def test_install_capability_override_is_typed_and_does_not_change_default(self) -> None:
         self.assertTrue(api_index_payload({"activities.install": True})["capabilities"]["activities.install"])
@@ -227,6 +229,41 @@ class ParentApiTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertIn('"network-basic"', normal_profile)
         self.assertNotIn('"developer-remote"', normal_profile)
+
+    def test_parent_api_wifi_and_ssh_payloads(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            app = ParentApiApplication(
+                PROJECT_ROOT,
+                root / "parent",
+                profiles_dir=root / "profiles",
+                hardware_settings_dir=root / "hardware",
+                hardware_status_path=root / "hardware-status.json",
+                active_profile_status_path=root / "active-profile.json",
+            )
+            # Wi-Fi payload
+            wifi_data = app.wifi_payload()
+            self.assertTrue(wifi_data["available"])
+            self.assertIsInstance(wifi_data["networks"], list)
+
+            # Wi-Fi connect
+            conn = app.connect_wifi("Greia Family Wi-Fi", "testpassphrase")
+            self.assertTrue(conn["connected"])
+            self.assertEqual(conn["ssid"], "Greia Family Wi-Fi")
+
+            # SSH payload & update
+            ssh_data = app.ssh_payload()
+            self.assertIn("active", ssh_data)
+            self.assertIn("enabled", ssh_data)
+            self.assertEqual(ssh_data["username"], "greia")
+
+            updated = app.update_ssh(True)
+            self.assertTrue(updated["active"])
+            self.assertTrue(updated["enabled"])
+
+            disabled = app.update_ssh(False)
+            self.assertFalse(disabled["active"])
+            self.assertFalse(disabled["enabled"])
 
 
 if __name__ == "__main__":

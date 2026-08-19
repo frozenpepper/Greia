@@ -158,6 +158,15 @@ class SimulatorDesktopApp:
             side="left", expand=True, fill="x"
         )
 
+        remote_group = ttk.LabelFrame(frame, text="Remote Web Canvas", padding=12)
+        remote_group.pack(fill="x", pady=(0, 10))
+        remote_row = ttk.Frame(remote_group)
+        remote_row.pack(fill="x")
+        ttk.Label(remote_row, text="http://127.0.0.1:8767").pack(side="left")
+        ttk.Button(remote_row, text="Open in Browser", command=self.open_web_canvas).pack(
+            side="right"
+        )
+
         self.status = tk.StringVar(
             value="Choose viewport/profile/capabilities, then Start / Apply."
         )
@@ -294,6 +303,10 @@ class SimulatorDesktopApp:
 
     def restart(self) -> None:
         self.start()
+
+    def open_web_canvas(self) -> None:
+        import webbrowser
+        webbrowser.open("http://127.0.0.1:8767")
 
     def _clear_exited_process(self, process: subprocess.Popen[bytes], code: int) -> bool:
         """Clear the workspace child lease before dropping the dead process handle."""

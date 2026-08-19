@@ -60,6 +60,15 @@ class GreiaLauncherPresentation(LauncherApplication):
         self._font_cache = BoundedCache(24)
         self._shadow_cache: BoundedCache[tuple[int, int, int], Any] = BoundedCache(16)
         self._decorated_icon_cache: BoundedCache[tuple[str, str, int], Any] = BoundedCache(64)
+        self._label_surface_cache: BoundedCache[
+            tuple[str, int, int, tuple[int, int, int], int], Any
+        ] = BoundedCache(128)
+        self._category_label_cache: BoundedCache[
+            tuple[str, int, tuple[int, int, int]], Any
+        ] = BoundedCache(32)
+        self._category_icon_cache: BoundedCache[
+            tuple[str, int, int, int], Any
+        ] = BoundedCache(32)
         self._catalogue = ActivityCatalogue.from_activities(self._activities)
         self._category_id = ALL_ACTIVITIES_ID
         self._activity_scroll_start = 0
@@ -198,12 +207,31 @@ class GreiaLauncherPresentation(LauncherApplication):
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT and self.allow_exit:
                         running = False
-                    elif event.type == pygame.TEXTINPUT and self._mode == "secret":
-                        self._handle_secret_text(event.text)
+                    elif event.type == pygame.TEXTINPUT:
+                        if self._mode == "parent_panel":
+                            self._parent_panel.handle_text_input(event.text)
+                        elif self._mode == "secret":
+                            self._handle_secret_text(event.text)
                     elif event.type == pygame.KEYDOWN:
-                        running = self._handle_key(event.key, pygame)
+                        if self._mode == "parent_panel":
+                            if not self._parent_panel.handle_key(event.key, pygame):
+                                self._mode = "profiles"
+                        elif self._mode == "profiles" and self._parent_chord.handle_key_down(
+                            event.key, time.monotonic()
+                        ):
+                            self._mode = "parent_panel"
+                            self._parent_panel.open()
+                        else:
+                            running = self._handle_key(event.key, pygame)
+                    elif event.type == pygame.KEYUP:
+                        if self._mode == "profiles":
+                            self._parent_chord.handle_key_up(event.key)
                     elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-                        self._handle_click(event.pos, pygame)
+                        if self._mode == "parent_panel":
+                            if not self._parent_panel.handle_click(event.pos):
+                                self._mode = "profiles"
+                        else:
+                            self._handle_click(event.pos, pygame)
                     elif event.type == pygame.MOUSEWHEEL and self._mode == "activities":
                         self._scroll_activity_rows(-event.y, pygame)
                     elif event.type == pygame.VIDEORESIZE:
@@ -220,10 +248,20 @@ class GreiaLauncherPresentation(LauncherApplication):
                     self._font_cache.clear()
                     self._shadow_cache.clear()
                     self._decorated_icon_cache.clear()
+                    self._label_surface_cache.clear()
+                    self._category_label_cache.clear()
+                    self._category_icon_cache.clear()
                     self._activity_scroll_start = 0
+                if self._mode == "profiles":
+                    if self._parent_chord.poll(time.monotonic()):
+                        self._mode = "parent_panel"
+                        self._parent_panel.open()
+                elif self._mode == "parent_panel":
+                    self._parent_panel.drain()
                 self._rescan_if_due()
                 self._draw(screen, pygame)
                 pygame.display.flip()
+                self._on_frame_presented(screen, pygame)
                 if not self._first_frame_released:
                     self._release_boot_cover()
                 clock.tick(30)
@@ -232,6 +270,9 @@ class GreiaLauncherPresentation(LauncherApplication):
             pygame.key.stop_text_input()
             pygame.quit()
         return 0
+
+    def _on_frame_presented(self, screen: Any, pygame: Any) -> None:
+        """Optional presentation hook called immediately after each frame is flipped."""
 
     @property
     def _presented_activities(self) -> tuple[ActivityManifest, ...]:
@@ -484,8 +525,8 @@ class GreiaLauncherPresentation(LauncherApplication):
         pointer_active = pygame.mouse.get_focused()
         for collection in collections:
             label_text = collection.title or collection.collection_id
-            font = self._font(max(18, min(22, height // 2)), pygame)
-            label = font.render(label_text, True, theme.text)
+            font_size = max(18, min(22, height // 2))
+            label = self._category_label_surface(label_text, font_size, theme.text, pygame)
             icon_size = max(26, height - 14)
             if show_labels:
                 width = min(174, max(88, label.get_width() + icon_size + 32))
@@ -506,14 +547,12 @@ class GreiaLauncherPresentation(LauncherApplication):
                 width=3 if hovered else 2,
                 border_radius=height // 2,
             )
-            category_icon = self._load_icon(
-                collection.icon_id or "backpack", icon_size, pygame
-            )
-            category_icon = make_shadowed_icon(
-                category_icon,
-                pygame,
+            category_icon = self._category_shadowed_icon(
+                collection.icon_id or "backpack",
+                icon_size,
                 shadow_alpha=40,
                 shadow_offset=2,
+                pygame=pygame,
             )
             if show_labels:
                 icon_center = (rect.left + 12 + icon_size // 2, rect.centery)
@@ -581,26 +620,56 @@ class GreiaLauncherPresentation(LauncherApplication):
         )
 
         icon_size = max(38, height - 2)
-        category_icon = self._load_icon(
-            collection.icon_id or "backpack", icon_size, pygame
-        )
-        category_icon = make_shadowed_icon(
-            category_icon,
-            pygame,
+        category_icon = self._category_shadowed_icon(
+            collection.icon_id or "backpack",
+            icon_size,
             shadow_alpha=48,
             shadow_offset=max(2, icon_size // 24),
+            pygame=pygame,
         )
         icon_center = (back_rect.right + 14 + icon_size // 2, back_rect.centery)
         screen.blit(category_icon, category_icon.get_rect(center=icon_center))
 
         label_text = collection.title or collection.collection_id
-        label = self._font(max(22, min(30, height // 2)), pygame).render(
-            label_text, True, theme.text
-        )
+        label_size = max(22, min(30, height // 2))
+        label = self._category_label_surface(label_text, label_size, theme.text, pygame)
         screen.blit(
             label,
             label.get_rect(midleft=(icon_center[0] + icon_size // 2 + 12, back_rect.centery)),
         )
+
+    def _category_label_surface(
+        self, text: str, size: int, color: tuple[int, int, int], pygame: Any
+    ) -> Any:
+        key = (text, size, color)
+        cached = self._category_label_cache.get(key)
+        if cached is not None:
+            return cached
+        rendered = self._font(size, pygame).render(text, True, color)
+        self._category_label_cache[key] = rendered
+        return rendered
+
+    def _category_shadowed_icon(
+        self,
+        icon_id: str,
+        size: int,
+        shadow_alpha: int,
+        shadow_offset: int,
+        pygame: Any,
+    ) -> Any:
+        key = (icon_id, size, shadow_alpha, shadow_offset)
+        cached = self._category_icon_cache.get(key)
+        if cached is not None:
+            return cached
+        base = self._load_icon(icon_id, size, pygame)
+        shadowed = make_shadowed_icon(
+            base,
+            pygame,
+            shadow_alpha=shadow_alpha,
+            shadow_offset=shadow_offset,
+        )
+        self._category_icon_cache[key] = shadowed
+        return shadowed
 
     def _draw_scroll_controls(
         self,
@@ -732,18 +801,31 @@ class GreiaLauncherPresentation(LauncherApplication):
     ) -> Any:
         """Fit one Activity name without geometrically distorting glyphs."""
 
+        cache_key = (text, max_width, max_height, color, preferred_size)
+        cached = self._label_surface_cache.get(cache_key)
+        if cached is not None:
+            return cached
+
+        result = None
         for size in range(preferred_size, 15, -1):
             rendered = self._font(size, pygame).render(text, True, color)
             if rendered.get_width() <= max_width and rendered.get_height() <= max_height:
-                return rendered
-        shortened = text.strip()
-        font = self._font(16, pygame)
-        while len(shortened) > 3:
-            shortened = shortened[:-2].rstrip()
-            rendered = font.render(shortened + "…", True, color)
-            if rendered.get_width() <= max_width:
-                return rendered
-        return font.render(shortened or "Activity", True, color)
+                result = rendered
+                break
+        if result is None:
+            shortened = text.strip()
+            font = self._font(16, pygame)
+            while len(shortened) > 3:
+                shortened = shortened[:-2].rstrip()
+                rendered = font.render(shortened + "…", True, color)
+                if rendered.get_width() <= max_width:
+                    result = rendered
+                    break
+            if result is None:
+                result = font.render(shortened or "Activity", True, color)
+
+        self._label_surface_cache[cache_key] = result
+        return result
 
     def _activity_icon(
         self, activity: ActivityManifest, size: int, pygame: Any
@@ -808,7 +890,7 @@ class GreiaLauncherPresentation(LauncherApplication):
             (
                 index
                 for index, item in enumerate(self._activities)
-                if item is manifest
+                if item.activity_id == manifest.activity_id
             ),
             None,
         )

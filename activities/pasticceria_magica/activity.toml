@@ -1,0 +1,41 @@
+[activity]
+id = "org.greia.pasticceria-magica"
+legacy_ids = []
+title_key = "activity.pasticceria_magica.title"
+version = "0.1.0"
+icon = "potions"
+languages = ["it", "en"]
+
+[presentation]
+categories = ["learn", "create"]
+
+[education]
+categories = ["math", "counting", "problem_solving", "creativity"]
+difficulty = 1
+skills = [
+  { id = "math.counting.quantities_to_10", weight = 3 },
+  { id = "math.logic.patterns", weight = 2 },
+  { id = "motor.pointer.drag_and_drop", weight = 2 },
+]
+events = [
+  { id = "recipe.completed", kind = "completion" },
+  { id = "pattern.solved", kind = "milestone" },
+]
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "pointer"
+
+[requirements]
+required_capabilities = ["display", "pointer", "audio.basic"]
+optional_capabilities = ["touch"]
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1
