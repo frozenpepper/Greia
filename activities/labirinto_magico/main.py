@@ -38,44 +38,44 @@ STORAGE_KEY = "labirinto_magico.progress.v2"
 
 BIOMES = [
     {
-        "id": "emerald_forest",
-        "bg": (236, 253, 245),
-        "wall": (16, 185, 129),
-        "wall_shadow": (5, 150, 105),
-        "wall_top": (52, 211, 153),
-        "path": (255, 255, 255),
-        "hint": (250, 204, 21),
+        "id": "midnight_galaxy",
+        "bg": (15, 23, 42),          # Deep midnight navy
+        "wall": (99, 102, 241),       # Luminous electric indigo
+        "wall_shadow": (2, 6, 23),    # Dark midnight shadow
+        "wall_top": (165, 180, 252),  # Glowing lilac top highlight
+        "path": (30, 41, 59),         # Twilight dark slate path
+        "hint": (253, 224, 71),       # Neon gold hint
         "collectible_color": (251, 191, 36),
     },
     {
-        "id": "candy_kingdom",
-        "bg": (253, 242, 248),
-        "wall": (244, 114, 182),
-        "wall_shadow": (219, 39, 119),
-        "wall_top": (249, 168, 212),
-        "path": (255, 255, 255),
-        "hint": (244, 63, 94),
-        "collectible_color": (236, 72, 153),
-    },
-    {
-        "id": "crystal_cave",
-        "bg": (240, 249, 255),
-        "wall": (56, 189, 248),
-        "wall_shadow": (2, 132, 199),
-        "wall_top": (125, 211, 252),
-        "path": (255, 255, 255),
-        "hint": (168, 85, 247),
-        "collectible_color": (147, 51, 234),
-    },
-    {
-        "id": "starlight_sky",
-        "bg": (245, 243, 255),
-        "wall": (139, 92, 246),
-        "wall_shadow": (109, 40, 217),
-        "wall_top": (196, 181, 253),
-        "path": (255, 255, 255),
-        "hint": (251, 191, 36),
+        "id": "emerald_forest",
+        "bg": (6, 44, 28),            # Deep dark forest
+        "wall": (22, 163, 74),        # Rich emerald stone
+        "wall_shadow": (2, 28, 16),   # Forest shadows
+        "wall_top": (74, 222, 128),   # Bright leaf highlight
+        "path": (20, 83, 45),         # Mossy earthen path
+        "hint": (251, 191, 36),       # Firefly glow
         "collectible_color": (250, 204, 21),
+    },
+    {
+        "id": "crystal_kingdom",
+        "bg": (24, 12, 48),           # Deep royal purple
+        "wall": (192, 38, 211),       # Luminous amethyst magenta
+        "wall_shadow": (10, 4, 22),   # Deep shadow purple
+        "wall_top": (240, 171, 252),  # Sparkling fuchsia
+        "path": (59, 7, 100),         # Dark crystal stone
+        "hint": (56, 189, 248),       # Cyan sparkle
+        "collectible_color": (244, 114, 182),
+    },
+    {
+        "id": "volcano_realm",
+        "bg": (28, 25, 23),           # Obsidian dark
+        "wall": (234, 88, 12),        # Glowing amber magma
+        "wall_shadow": (12, 10, 9),   # Charred stone
+        "wall_top": (251, 146, 60),   # Radiant orange flare
+        "path": (68, 20, 10),         # Dark volcanic floor
+        "hint": (254, 240, 138),      # Sunbeam glow
+        "collectible_color": (239, 68, 68),
     },
 ]
 
@@ -355,8 +355,10 @@ def main() -> int:
                 metrics = ChildUiMetrics.for_size(*screen.get_size())
                 canvas = PygameReferenceCanvas(screen)
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                pointer = metrics.to_reference(event.pos)
-                mx, my = pointer.x, pointer.y
+                pointer = canvas.pointer(event.pos)
+                if pointer is None:
+                    continue
+                mx, my = int(pointer[0]), int(pointer[1])
 
                 if not _is_safe_point(screen, event.pos):
                     continue
@@ -486,23 +488,41 @@ def main() -> int:
         pygame.draw.circle(surf, (234, 179, 8), (int(ex_x), int(ex_y)), exit_r + 3, 3)
         pygame.draw.circle(surf, (239, 68, 68), (int(ex_x), int(ex_y)), exit_r)
 
-        # 6. Hero Character
+        # 6. Hero Character with Cute Ears and Expression
         char_px = ox + (player_x + 0.5) * cs
         char_py = oy + (player_y + 0.5) * cs - math.sin(t_now * 6.0) * 2.0
         char_r = max(6, int(cs * 0.38))
+        # Hero outer glow
+        pygame.draw.circle(surf, (255, 255, 255), (int(char_px), int(char_py)), char_r + 2)
+        # Hero body
         pygame.draw.circle(surf, hero["color"], (int(char_px), int(char_py)), char_r)
-        pygame.draw.circle(surf, (30, 41, 59), (int(char_px), int(char_py)), char_r, 2)
-        # Cute face
+        # Ears based on hero type
+        h_id = hero["id"]
+        if h_id in ("bunny", "kitty", "fox", "puppy"):
+            ear_h = int(char_r * 0.7)
+            pygame.draw.circle(surf, hero["color"], (int(char_px - char_r * 0.6), int(char_py - char_r * 0.7)), max(3, char_r // 2))
+            pygame.draw.circle(surf, hero["color"], (int(char_px + char_r * 0.6), int(char_py - char_r * 0.7)), max(3, char_r // 2))
+            pygame.draw.circle(surf, (244, 114, 182), (int(char_px - char_r * 0.6), int(char_py - char_r * 0.7)), max(2, char_r // 4))
+            pygame.draw.circle(surf, (244, 114, 182), (int(char_px + char_r * 0.6), int(char_py - char_r * 0.7)), max(2, char_r // 4))
+        elif h_id == "unicorn":
+            # Golden horn
+            pygame.draw.polygon(surf, (250, 204, 21), [(int(char_px - 4), int(char_py - char_r * 0.7)), (int(char_px + 4), int(char_py - char_r * 0.7)), (int(char_px), int(char_py - char_r * 1.5))])
+        # Cute sparkling eyes
         eye_off = char_r * 0.35
-        pygame.draw.circle(surf, (20, 20, 30), (int(char_px - eye_off), int(char_py - 2)), max(2, int(char_r * 0.20)))
-        pygame.draw.circle(surf, (20, 20, 30), (int(char_px + eye_off), int(char_py - 2)), max(2, int(char_r * 0.20)))
+        pygame.draw.circle(surf, (15, 23, 42), (int(char_px - eye_off), int(char_py - 2)), max(2, int(char_r * 0.22)))
+        pygame.draw.circle(surf, (15, 23, 42), (int(char_px + eye_off), int(char_py - 2)), max(2, int(char_r * 0.22)))
+        pygame.draw.circle(surf, (255, 255, 255), (int(char_px - eye_off - 1), int(char_py - 3)), max(1, int(char_r * 0.10)))
+        pygame.draw.circle(surf, (255, 255, 255), (int(char_px + eye_off - 1), int(char_py - 3)), max(1, int(char_r * 0.10)))
+        # Cheeks
+        pygame.draw.circle(surf, (251, 113, 133), (int(char_px - eye_off), int(char_py + 4)), max(1, int(char_r * 0.15)))
+        pygame.draw.circle(surf, (251, 113, 133), (int(char_px + eye_off), int(char_py + 4)), max(1, int(char_r * 0.15)))
 
         # 7. Firefly Sprite
         if firefly_active:
             fx = ox + (firefly_pos[0] + 0.5) * cs
             fy = oy + (firefly_pos[1] + 0.5) * cs
-            pygame.draw.circle(surf, (254, 240, 138), (int(fx), int(fy)), max(4, int(cs * 0.28)))
-            pygame.draw.circle(surf, (255, 255, 255), (int(fx), int(fy)), max(2, int(cs * 0.15)))
+            pygame.draw.circle(surf, (254, 240, 138), (int(fx), int(fy)), max(6, int(cs * 0.36)))
+            pygame.draw.circle(surf, (255, 255, 255), (int(fx), int(fy)), max(3, int(cs * 0.20)))
 
         # 8. Top Star Progress (Zero-Text Star Pill)
         star_pill = pygame.Rect(80, 16, 130, 56)
@@ -512,38 +532,61 @@ def main() -> int:
         s_txt = typography.render(str(total_stars), FontRole.DISPLAY, 28, (180, 83, 9))
         surf.blit(s_txt, (star_pill.left + 58, star_pill.centery - s_txt.get_height() // 2))
 
-        # Hint Button (Top Right)
-        hint_btn = pygame.Rect(REFERENCE_WIDTH - 160, 16, 140, 56)
+        # Hint Button (Top Right: Giant Glowing Star/Firefly Icon)
+        hint_btn = pygame.Rect(REFERENCE_WIDTH - 150, 16, 130, 56)
         pygame.draw.rect(surf, (254, 240, 138), hint_btn, border_radius=18)
         pygame.draw.rect(surf, (234, 179, 8), hint_btn, width=3, border_radius=18)
-        pygame.draw.circle(surf, (234, 179, 8), (hint_btn.left + 32, hint_btn.centery), 16)
-        h_txt = typography.render("AIUTO", FontRole.DISPLAY, 20, (180, 83, 9))
-        surf.blit(h_txt, (hint_btn.left + 58, hint_btn.centery - h_txt.get_height() // 2))
+        hx = hint_btn.centerx
+        hy = hint_btn.centery
+        # Radiant gold glow
+        pygame.draw.circle(surf, (251, 191, 36), (hx, hy), 18)
+        pygame.draw.circle(surf, (255, 255, 255), (hx, hy), 9)
+        # Sparkle rays
+        for ang in (0, 45, 90, 135, 180, 225, 270, 315):
+            rad = math.radians(ang)
+            r1, r2 = 20, 25
+            pygame.draw.line(surf, (234, 179, 8), (hx + int(math.cos(rad)*r1), hy + int(math.sin(rad)*r1)), (hx + int(math.cos(rad)*r2), hy + int(math.sin(rad)*r2)), 3)
 
-        # 9. Bottom Controls (Giant Chunky 140x54px Buttons)
-        # Hero Button
+        # 9. Bottom Controls (Giant Chunky Pure-Icon Buttons)
+        # Hero Button (Giant Portrait Avatar)
         h_btn = pygame.Rect(REFERENCE_WIDTH // 2 - 240, REFERENCE_HEIGHT - 65, 140, 54)
         pygame.draw.rect(surf, (255, 255, 255), h_btn, border_radius=18)
         pygame.draw.rect(surf, hero["color"], h_btn, width=4, border_radius=18)
-        pygame.draw.circle(surf, hero["color"], (h_btn.left + 32, h_btn.centery), 16)
-        ht_txt = typography.render("EROE", FontRole.DISPLAY, 20, (30, 41, 59))
-        surf.blit(ht_txt, (h_btn.left + 58, h_btn.centery - ht_txt.get_height() // 2))
+        h_cx = h_btn.centerx
+        h_cy = h_btn.centery
+        pygame.draw.circle(surf, hero["color"], (h_cx, h_cy), 18)
+        pygame.draw.circle(surf, (20, 20, 30), (h_cx - 6, h_cy - 2), 3)
+        pygame.draw.circle(surf, (20, 20, 30), (h_cx + 6, h_cy - 2), 3)
+        pygame.draw.circle(surf, (244, 114, 182), (h_cx - 10, h_cy - 14), 5)
+        pygame.draw.circle(surf, (244, 114, 182), (h_cx + 10, h_cy - 14), 5)
 
-        # Biome Button
+        # Biome Button (Giant Elemental Crystal Orb)
         b_btn = pygame.Rect(REFERENCE_WIDTH // 2 - 70, REFERENCE_HEIGHT - 65, 140, 54)
         pygame.draw.rect(surf, (255, 255, 255), b_btn, border_radius=18)
         pygame.draw.rect(surf, biome["wall"], b_btn, width=4, border_radius=18)
-        pygame.draw.circle(surf, biome["wall"], (b_btn.left + 32, b_btn.centery), 16)
-        bt_txt = typography.render("MONDO", FontRole.DISPLAY, 18, (30, 41, 59))
-        surf.blit(bt_txt, (b_btn.left + 54, b_btn.centery - bt_txt.get_height() // 2))
+        b_cx = b_btn.centerx
+        b_cy = b_btn.centery
+        pygame.draw.circle(surf, biome["wall"], (b_cx, b_cy), 18)
+        pygame.draw.ellipse(surf, biome["wall_top"], pygame.Rect(b_cx - 24, b_cy - 6, 48, 12), 3)
+        pygame.draw.circle(surf, (255, 255, 255), (b_cx - 5, b_cy - 5), 5)
 
-        # Difficulty Button
+        # Difficulty Button (1, 2, or 3 Giant Golden Stars)
         d_btn = pygame.Rect(REFERENCE_WIDTH // 2 + 100, REFERENCE_HEIGHT - 65, 140, 54)
         pygame.draw.rect(surf, (255, 255, 255), d_btn, border_radius=18)
         pygame.draw.rect(surf, (234, 179, 8), d_btn, width=4, border_radius=18)
-        diff_labels = ["FACILE", "MEDIO", "GRANDE"]
-        dt_txt = typography.render(diff_labels[diff_idx % 3], FontRole.DISPLAY, 20, (217, 119, 6))
-        surf.blit(dt_txt, (d_btn.centerx - dt_txt.get_width() // 2, d_btn.centery - dt_txt.get_height() // 2))
+        num_stars_show = (diff_idx % 3) + 1
+        d_cx = d_btn.centerx
+        d_cy = d_btn.centery
+        if num_stars_show == 1:
+            pygame.draw.circle(surf, (234, 179, 8), (d_cx, d_cy), 15)
+            pygame.draw.circle(surf, (255, 255, 255), (d_cx, d_cy), 6)
+        elif num_stars_show == 2:
+            pygame.draw.circle(surf, (234, 179, 8), (d_cx - 18, d_cy), 13)
+            pygame.draw.circle(surf, (234, 179, 8), (d_cx + 18, d_cy), 13)
+        else:
+            pygame.draw.circle(surf, (234, 179, 8), (d_cx - 28, d_cy), 11)
+            pygame.draw.circle(surf, (234, 179, 8), (d_cx, d_cy), 13)
+            pygame.draw.circle(surf, (234, 179, 8), (d_cx + 28, d_cy), 11)
 
         # 10. Victory Modal
         if is_victory:

@@ -240,8 +240,10 @@ def main() -> int:
                 metrics = ChildUiMetrics.for_size(*screen.get_size())
                 canvas = PygameReferenceCanvas(screen)
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                pointer = metrics.to_reference(event.pos)
-                mx, my = pointer.x, pointer.y
+                pointer = canvas.pointer(event.pos)
+                if pointer is None:
+                    continue
+                mx, my = int(pointer[0]), int(pointer[1])
 
                 if not _is_safe_point(screen, event.pos):
                     continue

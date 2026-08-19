@@ -235,8 +235,10 @@ def main() -> int:
                 metrics = ChildUiMetrics.for_size(*screen.get_size())
                 canvas = PygameReferenceCanvas(screen)
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                pointer = metrics.to_reference(event.pos)
-                mx, my = pointer.x, pointer.y
+                pointer = canvas.pointer(event.pos)
+                if pointer is None:
+                    continue
+                mx, my = int(pointer[0]), int(pointer[1])
 
                 if not _is_safe_point(screen, event.pos):
                     continue
@@ -441,20 +443,34 @@ def main() -> int:
             pygame.draw.rect(surf, (234, 179, 8) if is_sel else (203, 213, 225), btn_rect, width=5 if is_sel else 2, border_radius=20)
             _draw_block_icon(surf, blk["id"], btn_rect.centerx, btn_rect.centery, 56)
 
-        # 8. Top Control Buttons (Giant Clean Buttons)
-        # GO / Cross Button
+        # 8. Top Control Buttons (Giant Clean Buttons with Dominant Icons)
+        # GO / Cross Button (Giant Green Button with Big Bunny/Arrow Icon)
         go_btn = pygame.Rect(REFERENCE_WIDTH - 180, 16, 160, 60)
         pygame.draw.rect(surf, (34, 197, 94), go_btn, border_radius=20)
         pygame.draw.rect(surf, (22, 101, 52), go_btn, width=4, border_radius=20)
-        go_txt = typography.render("VAI!", FontRole.DISPLAY, 28, (255, 255, 255))
-        surf.blit(go_txt, (go_btn.centerx - go_txt.get_width() // 2, go_btn.centery - go_txt.get_height() // 2))
+        # White Bunny Icon
+        bx = go_btn.left + 35
+        by = go_btn.centery + 2
+        pygame.draw.circle(surf, (255, 255, 255), (bx, by), 16)
+        pygame.draw.ellipse(surf, (255, 255, 255), pygame.Rect(bx - 10, by - 24, 8, 18))
+        pygame.draw.ellipse(surf, (244, 114, 182), pygame.Rect(bx - 8, by - 22, 4, 12))
+        pygame.draw.ellipse(surf, (255, 255, 255), pygame.Rect(bx + 2, by - 24, 8, 18))
+        pygame.draw.ellipse(surf, (244, 114, 182), pygame.Rect(bx + 4, by - 22, 4, 12))
+        pygame.draw.circle(surf, (20, 20, 30), (bx - 5, by - 2), 2)
+        pygame.draw.circle(surf, (20, 20, 30), (bx + 5, by - 2), 2)
+        # Big Play Arrow
+        pygame.draw.polygon(surf, (255, 255, 255), [(go_btn.left + 75, go_btn.centery - 16), (go_btn.left + 105, go_btn.centery), (go_btn.left + 75, go_btn.centery + 16)])
 
-        # Clear Button
-        clear_btn = pygame.Rect(REFERENCE_WIDTH - 350, 16, 150, 60)
+        # Clear Button (Giant Button with Big Broom Icon)
+        clear_btn = pygame.Rect(REFERENCE_WIDTH - 330, 16, 130, 60)
         pygame.draw.rect(surf, (241, 245, 249), clear_btn, border_radius=20)
         pygame.draw.rect(surf, (148, 163, 184), clear_btn, width=3, border_radius=20)
-        c_txt = typography.render("PULISCI", FontRole.DISPLAY, 20, (71, 85, 105))
-        surf.blit(c_txt, (clear_btn.centerx - c_txt.get_width() // 2, clear_btn.centery - c_txt.get_height() // 2))
+        # Broom / Erase Icon
+        cx = clear_btn.centerx
+        cy = clear_btn.centery
+        pygame.draw.line(surf, (120, 53, 15), (cx - 16, cy - 14), (cx + 6, cy + 8), 5)  # Handle
+        pygame.draw.polygon(surf, (234, 179, 8), [(cx + 2, cy + 4), (cx + 20, cy - 4), (cx + 16, cy + 18), (cx - 2, cy + 14)])  # Straw
+        pygame.draw.line(surf, (217, 119, 6), (cx + 4, cy + 8), (cx + 15, cy + 6), 3)
 
         # Star Pill
         star_pill = pygame.Rect(80, 16, 130, 60)

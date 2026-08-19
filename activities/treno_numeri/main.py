@@ -232,8 +232,10 @@ def main() -> int:
                 metrics = ChildUiMetrics.for_size(*screen.get_size())
                 canvas = PygameReferenceCanvas(screen)
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                pointer = metrics.to_reference(event.pos)
-                mx, my = pointer.x, pointer.y
+                pointer = canvas.pointer(event.pos)
+                if pointer is None:
+                    continue
+                mx, my = int(pointer[0]), int(pointer[1])
 
                 if not _is_safe_point(screen, event.pos):
                     continue
@@ -522,14 +524,17 @@ def main() -> int:
                 _draw_fruit(surf, current_fruit["id"], int(fx), int(fy), 46)
 
         # 7. Whistle & Station HUD Buttons
-        w_btn = pygame.Rect(REFERENCE_WIDTH - 160, 16, 140, 56)
+        w_btn = pygame.Rect(REFERENCE_WIDTH - 150, 16, 130, 56)
         pygame.draw.rect(surf, (234, 179, 8), w_btn, border_radius=18)
         pygame.draw.rect(surf, (202, 138, 4), w_btn, width=3, border_radius=18)
-        # Whistle Icon
-        pygame.draw.rect(surf, (30, 41, 59), (w_btn.left + 16, w_btn.centery - 8, 36, 16), border_radius=4)
-        pygame.draw.rect(surf, (239, 68, 68), (w_btn.left + 24, w_btn.centery - 18, 12, 10))
-        w_txt = typography.render("TUUT!", FontRole.CONTROL, 24, (20, 20, 30))
-        surf.blit(w_txt, (w_btn.left + 60, w_btn.centery - w_txt.get_height() // 2))
+        # Giant Whistle Icon with animated pull cord
+        wx = w_btn.centerx
+        wy = w_btn.centery
+        pygame.draw.rect(surf, (241, 245, 249), (wx - 32, wy - 8, 44, 16), border_radius=5)
+        pygame.draw.rect(surf, (239, 68, 68), (wx - 20, wy - 18, 14, 12), border_radius=3)
+        pygame.draw.circle(surf, (254, 240, 138), (wx + 18, wy), 8)
+        pygame.draw.circle(surf, (255, 255, 255), (wx + 30, wy - 8), 6)
+        pygame.draw.circle(surf, (255, 255, 255), (wx + 38, wy - 16), 8)
 
         # Station Stars Indicator (Top Left)
         star_pill = pygame.Rect(80, 16, 130, 56)
