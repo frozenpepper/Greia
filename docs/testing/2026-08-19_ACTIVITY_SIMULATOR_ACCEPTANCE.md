@@ -3,116 +3,146 @@
 **Date:** 2026-08-19  
 **Architecture authority:** `docs/adr/0029-real-runtime-activity-simulator.md`  
 **Developer guide:** `docs/development/GREIA_ACTIVITY_SIMULATOR.md`  
+**Adversarial review:** `docs/reviews/2026-08-19_ACTIVITY_SIMULATOR_ADVERSARIAL_REVIEW.md`  
 **Evidence class:** **SIMULATOR / developer semantic evidence only**
 
-This protocol validates that the Activity Simulator remains a thin synthetic-device composition over the real Greia platform. It must never be used to replace VM/image, production sandbox/backend, or physical-hardware acceptance.
+This protocol validates the hardened Activity Simulator as a thin synthetic-device composition over real Greia owners. It never replaces VM/image, production sandbox/backend or physical-hardware acceptance.
 
 ---
 
 ## 1. Hard invariants
 
-A passing simulator implementation must satisfy all of these:
+A PASS requires all of these:
 
-1. The child-facing window is the real profile-aware Greia child Shell, not a parallel launcher implementation.
-2. Activity discovery/manifest validation uses the real `RuntimeCatalogue` + `ActivityRegistry` and real trust vocabulary.
-3. Launch authorization/compatibility uses the real `PermissionBroker` + `RuntimeManager`.
-4. Activity lifecycle, READY/STOP, storage, history/events and profile visual context use the normal Greia service owners.
-5. Device variation is injected through typed synthetic `GreiaHAL` facts, not through Activity-specific conditionals.
-6. Resolution testing exercises the same Greia responsive/canvas/system-safe geometry used outside the simulator.
-7. `Load Activity Folder…` uses `DEVELOPER_UNSIGNED` trust and cannot collide with built-in identity authority.
-8. `Install Activity Package…` calls the canonical `ActivityPackageService` and does not implement a second extraction/install path.
-9. Simulator mutable state remains outside the Greia checkout.
-10. First-party Activities contain no `GREIA_SIMULATOR` branch/import and do not import `greia_simulator`.
-11. The current Pygame display override exists only below the simulator runtime-adapter seam and does not patch Greia policy/services.
-12. Web/HTML execution is unavailable until the canonical R9 Web runtime adapter exists; host-browser/private-webview execution is not an acceptable substitute.
-13. A simulator PASS is never promoted into Bubblewrap, display-session, trusted-system-chrome, physical-controller, boot/installer, Acer/Pi performance or R7/R8/R9/R10/R14 closure evidence.
+1. The child-facing window is the real `GreiaChildShell`.
+2. `build_launcher_runtime_services()` remains the single PermissionBroker/RuntimeManager/storage/history composition owner.
+3. `GreiaChildShell` remains the single runtime-service/supervisor rebuild owner; `GreiaSimulatorChildShell` does not override `_rebuild_runtime_services()` or `_draw()`.
+4. Simulator variation is injected only through typed HAL/runtime/display-policy seams.
+5. Discovery/manifest validation uses real `RuntimeCatalogue` + `ActivityRegistry` and real package trust.
+6. Required-capability denial reaches real PermissionBroker/RuntimeManager authority.
+7. Activity lifecycle, READY/STOP, storage, events/history and profile visual context use normal Greia owners.
+8. The Python compatibility bootstrap is an absolute Greia-owned path, not Activity-resolved `python -m` content.
+9. No `GREIA_SIMULATOR*`, simulator viewport flag or preset identity is exposed as an Activity API.
+10. Exact viewport sizing goes through shared Shell display-policy hooks and the temporary narrow Python Activity display bootstrap; no simulator `_draw()`/cache clone exists.
+11. Developer-folder acquisition rejects symlinks/special files/oversize/containment overlap before managed copy, then uses real registry validation and transactional last-known-good publication.
+12. Package install calls only canonical `ActivityPackageService`; no simulator extractor exists.
+13. Workspace state is outside the checkout, checkout-bound and single-writer.
+14. Quick interface-size changes target an explicitly selected real child profile through `UiPreferencesStore`.
+15. Stop/Restart retires an active Activity through `ActivitySupervisor` before the Shell is considered cleanly stopped.
+16. Viewport presets make geometry-only claims; they do not claim Acer/tablet/performance emulation.
+17. The UI/documentation prominently states that source-mode simulator execution is **not an untrusted-code security sandbox**.
+18. Web execution remains unavailable until canonical R9 Web runtime; no host-browser/private-webview substitute is accepted.
+19. Simulator PASS is never promoted into production sandbox/display-session/physical/boot/performance/phase-closure evidence.
 
-A violation of any item above is a **FAIL** even if an Activity appears to run.
+Any violation is a **FAIL**, even if an Activity appears to run.
 
 ---
 
 ## 2. Preconditions
 
-Use an owner-controlled current checkout with:
+Use an owner-controlled checkout:
 
 ```text
-correct repository: frozenpepper/Greia
-correct branch: main
-exact tested SHA recorded
-clean source tree, except deliberate work being tested
-Python 3 with current Greia/Pygame dependencies
-Tk available for the desktop control plane
+repository: frozenpepper/Greia
+branch: main
+record exact SHA
+working tree clean except deliberate test work
+Python with current Greia dependencies
+Pygame installed for complete simulator lifecycle coverage
+Tk available for desktop control-plane smoke test
 ```
 
-Do not use GitHub-hosted Actions unless the owner explicitly authorizes that hosted execution.
+Do not run/query/download GitHub-hosted Actions unless the owner explicitly authorizes that hosted execution.
 
-Choose simulator state **outside** the repository, for example:
+Choose state outside the checkout, for example:
 
 ```text
-~/.greia-simulator-acceptance
+$HOME/.greia-simulator-acceptance
 ```
 
-Do not put the state directory under the Greia checkout.
+Run only Activity source/packages you trust. This protocol does not turn the desktop simulator into malware isolation.
 
 ---
 
 ## 3. Source contract gate
 
-Record the exact SHA first:
+Record exact head:
 
 ```bash
 git rev-parse HEAD
 ```
 
-Run the focused simulator suite:
+Run:
 
 ```bash
 PYTHONPATH=src python3 -m unittest tests.test_greia_simulator -v
 ```
 
-This focused suite must include the non-drift checks that:
+A complete focused PASS must include the hardened regressions for:
 
-- `SimulatorPythonRuntimeAdapter` extends the canonical Python runtime adapter;
-- `SimulatorActivitySupervisor` extends the canonical profile-visual supervisor;
-- `GreiaSimulatorChildShell` extends the canonical Greia child Shell;
-- first-party Activity Python source does not branch/import on simulator identity;
-- simulator workspace state cannot be placed inside the source checkout;
-- synthetic capability/viewport facts round-trip through the intended environment/HAL path.
+```text
+canonical composition injection
+no simulator service graph / _rebuild_runtime_services / _draw replacement
+canonical capability vocabulary coverage
+absolute bootstrap + Activity shadow resistance
+no Activity-visible GREIA_SIMULATOR* identity
+trusted Greia source path ahead of Activity package
+shared exact Shell display hooks
+workspace checkout binding + single writer
+named-profile UiPreferencesStore persistence
+positive DEVELOPER_UNSIGNED source load
+built-in identity collision rejection
+source/state containment rejection
+file + directory symlink rejection
+oversize rejection before staging
+failed replacement restores previous valid managed Activity
+canonical ActivityPackageService delegation where host supports it
+missing-required-capability denial through real authority
+registry-valid but unavailable Web runtime fails at RuntimeManager
+bounded graceful/forced supervisor shutdown
+real local Python READY/storage/event/history/STOP integration
+```
 
-Then run the canonical full source gate:
+If the Pygame lifecycle integration is skipped because Pygame is absent, the **complete simulator source gate is NOT fully exercised**. Install the simulator dependency and rerun before retaining a complete simulator PASS.
+
+Then run affected shared-owner suites as appropriate and finally:
 
 ```bash
 make verify
 ```
 
-**Stop on a real failure.** Repair the source contract; do not weaken the simulator test or bypass registry/runtime authority to make the UI appear functional.
+Stop on the first real failure. Repair the implementation; do not weaken tests or create simulator exceptions.
 
 ---
 
-## 4. Desktop launch smoke test
+## 4. Workspace / safety smoke
 
-Start the simulator from the repository root:
+Start:
 
 ```bash
 python3 tools/greia_simulator.py \
   --state-dir "$HOME/.greia-simulator-acceptance"
 ```
 
-Expected:
+Verify:
 
-- the control plane opens without modifying the source checkout;
-- pressing **Start / Apply** opens a separate child-facing Greia window;
-- the child-facing window is the normal Greia profile picker/Shell composition;
-- closing/stopping the synthetic child leaves the control plane usable;
-- Restart creates a fresh child session using the current selected synthetic facts.
+- visible warning says this is not an untrusted-code sandbox;
+- `workspace.json` records this checkout;
+- a second simulator pointed at the same state root is rejected while the first is active;
+- state is outside the checkout;
+- ordinary start does not require canonical package-service import on a host where package install is unavailable;
+- control plane remains usable after child Shell exits/stops;
+- unexpected child exit displays its actual exit code.
 
-Record screenshots if visual behavior is part of the retained evidence.
+Do **not** delete a live workspace lock to create two writers.
+
+If deliberately testing checkout rebind, first stop the old simulator and use `--rebind-state`; record that action as part of evidence.
 
 ---
 
 ## 5. Required viewport / interface-size matrix
 
-Exercise at least:
+Exercise:
 
 ```text
 1024×600  + normal
@@ -120,164 +150,220 @@ Exercise at least:
 1280×800  + normal
 1366×768  + compact
 1920×1080 + normal
+1111×700  + normal (or another awkward custom viewport)
 ```
 
-Also use at least one awkward custom viewport/aspect ratio appropriate to the Activity under test.
+For each:
 
-For each configuration verify:
-
-- Greia Shell exactly uses the selected synthetic viewport;
+- Shell surface remains exactly the selected synthetic viewport even after host resize attempts;
+- normal Shell resize/cache behavior remains visually correct;
 - profile/category/Activity controls remain reachable;
-- labels remain readable enough for the intended child-facing UI;
-- essential Activity controls stay outside platform-protected Home/Back geometry;
-- reference-canvas content keeps aspect ratio according to its selected fit policy;
-- world/expand content reveals world rather than stretching gameplay coordinates;
-- fluid collections reflow/scroll rather than using a hidden per-resolution coordinate table;
-- `compact` / `normal` / `large` changes semantic sizing without creating a separate authored layout;
-- rendered and pointer/hit geometry remain aligned.
+- labels remain readable;
+- essential Activity controls remain outside protected Home/Back geometry;
+- reference canvas preserves aspect ratio;
+- expand/world content reveals world instead of stretching coordinates;
+- fluid collections reflow/scroll;
+- semantic interface size changes sizing without a separately authored layout;
+- rendered and hit/pointer geometry remain aligned.
 
-A layout fix that checks `GREIA_SIMULATOR`, a preset name or a hardware model is a **FAIL**. Fix the ordinary Activity/shared Greia layout implementation instead.
+A fix that checks simulator identity, viewport preset name or a hardware model in Activity code is a **FAIL**.
 
----
-
-## 6. Load Activity Folder acceptance
-
-Choose a valid development Activity source using **Load Activity Folder…**.
-
-Expected:
-
-1. source is copied into private simulator staging rather than symlinked;
-2. normal VCS/bytecode cache residue may be omitted;
-3. the real registry/runtime policy validates it;
-4. the package appears through the normal developer source with `DEVELOPER_UNSIGNED` trust;
-5. the real Greia launcher discovers it through its normal rescan path;
-6. its launcher category/title/icon behavior follows normal Greia presentation;
-7. launch goes through the real permission/runtime/lifecycle path.
-
-Negative cases to exercise at least once:
-
-- duplicate built-in Activity ID;
-- invalid/escaping entrypoint;
-- unsupported capability/permission/runtime declaration;
-- forbidden package content.
-
-Each must fail through normal Greia validation. Do not manually copy a rejected Activity into managed simulator state.
-
-Reload the same Activity after a small source edit and verify the managed developer copy is updated and normal discovery recovers.
+Viewport preset names must remain geometry-only. Do not describe 1024×600 as Acer performance emulation or 1280×800 as touch/tablet emulation.
 
 ---
 
-## 7. Capability-policy acceptance
+## 6. Developer source loading
 
-Use one Activity whose requirements make the result observable.
+Use **Load Activity Folder…** on a valid trusted source folder.
 
-### Required capability denial
+Positive expectations:
 
-Example: an Activity requiring `touch`.
+1. source/state do not overlap;
+2. source is lstat-inspected before managed copy;
+3. allowed VCS/cache residue may be ignored;
+4. no source symlink is dereferenced;
+5. source bytes stay within canonical maximum;
+6. staged package passes real registry validation with built-in identity authority;
+7. registration is `DEVELOPER_UNSIGNED`;
+8. launcher discovers it by normal rescan;
+9. launcher category/title/icon behavior is ordinary Greia behavior;
+10. launch authorization goes through normal permission/runtime/lifecycle authority.
 
-1. enable `touch`; confirm compatibility/launch behaves normally;
-2. disable `touch`, press **Start / Apply**, select the same profile/Activity;
-3. confirm the normal Greia compatibility/permission/runtime path rejects the missing required capability rather than Activity code discovering it ad hoc.
+Required negatives:
 
-### Optional capability fallback
+```text
+duplicate built-in Activity ID
+invalid/escaping entrypoint
+unknown capability
+unknown permission
+forbidden package content
+executable package file
+file symlink escaping source
+directory symlink escaping source
+special file where host supports creating one
+source inside simulator state
+simulator state inside source
+source larger than RuntimeCatalogue.maximum_activity_bytes
+```
 
-For an optional capability such as `controller`, toggle presence/absence and confirm the Activity remains launchable while its normal semantic fallback behaves correctly.
+For all preflight failures verify no unbounded staging copy remains.
 
-Do **not** call this physical controller/touch acceptance. This proves capability-policy behavior only.
+### Replacement rollback
+
+1. Load a valid Activity version/source state A.
+2. Change source to valid state B.
+3. Inject/cause a final publication/discovery failure in the automated regression or an equivalent controlled test.
+4. Confirm managed state A remains launchable/intact.
+
+Never delete the last-known-good managed Activity before replacement has committed.
+
+### Runtime declaration distinction
+
+Do not use “unsupported runtime” as a generic registry-negative case.
+
+- malformed/invalid runtime syntax/schema: registry validation may reject;
+- syntactically valid `runtime.type = "web"` at the current source boundary: registry may accept, while `RuntimeManager` must report runtime unavailable because R9 adapter does not exist.
+
+That distinction is canonical behavior and must not be hidden by simulator-specific prevalidation.
 
 ---
 
-## 8. Profile / My Greia acceptance
+## 7. Capability authority
 
-Use at least two simulator profiles where available.
+Use an Activity requiring `touch`.
+
+1. Enable `touch`, restart/apply and verify ordinary launch eligibility.
+2. Disable `touch`, restart/apply and select the same Activity.
+3. Confirm the real PermissionBroker/RuntimeManager path denies the missing required capability before Activity code can treat an environment flag as authority.
+
+For an optional capability such as controller, toggle presence and verify launch remains possible with ordinary semantic fallback.
+
+These tests prove policy semantics only. They do **not** prove host device denial, physical controller/touch correctness or production `/dev/input` containment.
+
+---
+
+## 8. Profile / My Greia
+
+Use at least two profiles where available.
 
 Verify:
 
-- `compact` / `normal` / `large` persists through the real `UiPreferencesStore`;
-- the real child Shell supplies the same read-only visual context to ordinary Activities;
-- ordinary Activities do not gain customization write authority merely because they run in the simulator;
-- colors/wallpaper/avatar are changed through the actual **My Greia** Activity, not a duplicate simulator preference store;
-- profile-specific visual settings do not leak between child profiles;
-- restarting the simulator preserves the isolated profile state.
+- control-plane profile selector reads each profile's actual `UiPreferencesStore` value;
+- changing `compact`/`normal`/`large` writes only the selected profile;
+- switching profiles updates the displayed current value;
+- ordinary Activities get read-only `GREIA_INTERFACE_SIZE`/theme context without customization write authority;
+- My Greia changes colors/wallpaper/avatar through normal Activity permissions;
+- state persists across Restart/control-plane relaunch;
+- settings do not leak between profiles.
 
-Language controls are not accepted as a simulator feature until Greia's authoritative profile-language persistence/end-to-end ADR-0028 integration is available. Do not add a shadow language setting just for the simulator.
+No shadow language setting is allowed before authoritative profile-language persistence is integrated.
 
 ---
 
-## 9. Python Activity lifecycle acceptance
+## 9. Python bootstrap / identity / lifecycle
 
-Launch a first-party Python Activity from the real simulator Shell.
+Launch a first-party or dedicated trusted Python probe Activity.
 
 Verify:
 
-- the Activity uses the selected synthetic viewport rather than taking over the developer's physical display;
-- current fullscreen requests are translated only in the simulator child process;
-- the first usable frame is presented before the Activity publishes READY according to the normal Activity contract;
-- storage/history/event behavior remains usable through the real Greia services;
-- normal exit/Greia stop returns to the child Shell;
-- a failed/never-ready Activity follows the normal supervisor failure/timeout semantics rather than wedging the control plane.
+- exact synthetic viewport is used instead of physical fullscreen takeover;
+- bootstrap command uses the absolute Greia-owned `python_activity.py` file;
+- an Activity containing `greia_simulator/python_activity.py` cannot replace the bootstrap;
+- Activity code cannot observe `GREIA_SIMULATOR`, `GREIA_SIMULATOR_VIEWPORT` or another simulator-only identity variable;
+- trusted Greia source remains importable even though supervisor strips inherited `PYTHONPATH`;
+- first frame is flipped before READY;
+- storage broker writes succeed;
+- declared event reaches history;
+- STOP reaches normal lifecycle channel;
+- graceful exit returns to Shell;
+- never-ready/crash path follows normal supervisor timeout/failure semantics.
 
-The simulator's desktop process/window lifecycle is developer evidence. It does not prove production display-session handoff/recovery.
+### Stop / Restart while Activity is running
+
+This is mandatory:
+
+1. Launch a probe Activity and wait until it is READY.
+2. Press **Restart** (repeat once with **Stop**).
+3. Verify the Activity receives/obeys normal STOP where cooperative.
+4. Verify non-cooperative Activity is escalated through supervisor force-stop.
+5. Verify no Activity process, storage/event broker socket/thread or unfinished live session is left behind after bounded cleanup.
+6. Verify new Shell can start and use the same profile cleanly.
+
+Do not infer cleanup merely because the Activity window disappeared.
 
 ---
 
-## 10. Canonical package-install acceptance
+## 10. Canonical package install
 
-Choose a valid `.greiaactivity`/ZIP package using **Install Activity Package…**.
+Where the host supports importing/running `ActivityPackageService`:
 
-Expected:
+- install a valid `.greiaactivity`/ZIP;
+- confirm normal archive/path/content bounds execute;
+- confirm state lands under isolated package root;
+- confirm normal Parent-trusted source becomes discoverable;
+- repeat same ID and preserve canonical current behavior;
+- test one malformed archive.
 
-- the call goes through `ActivityPackageService`;
-- normal bounded archive/path/content validation executes;
-- installed state is written under the isolated simulator package root;
-- the normal Parent-trusted source becomes discoverable through the real launcher;
-- re-import of an already-installed ID follows current canonical service behavior.
+Where the canonical package service is unavailable on that host, the correct result is:
 
-Also exercise one malformed archive and preserve its actual rejection.
+```text
+PACKAGE INSTALL: NOT AVAILABLE ON THIS HOST THROUGH CURRENT CANONICAL SERVICE
+```
 
-A PASS here is evidence only for the **currently implemented local new-install transaction**. It does not establish R10 update/remove/rollback/signature/revocation/save-migration completion.
+Do not add a simulator unzip fallback to make this green.
+
+A PASS is only current local new-install transaction evidence, not full R10.
 
 ---
 
 ## 11. Web/HTML expected result
 
-At the current source boundary, the normal launcher/runtime composition has no canonical Web runtime adapter.
+Current canonical runtime composition has no R9 Web adapter.
 
-Therefore the correct acceptance result is:
+Expected execution result:
 
 ```text
-Web/HTML Activity execution: NOT IMPLEMENTED / R9 prerequisite
+Web/HTML Activity execution: RUNTIME UNAVAILABLE / R9 prerequisite
 ```
 
-Do not:
+A structurally valid Web package may still appear in registry/discovery. That is not a simulator bug.
 
-- open the package in Safari/Chrome and call that a simulator PASS;
-- embed a simulator-only browser/private webview;
-- implement separate DOM storage/input/Home semantics.
+Forbidden substitutes:
 
-When R9 lands, update this protocol so the simulator is required to instantiate the **same canonical Web adapter** under the synthetic device composition.
+```text
+Safari/Chrome launch claimed as simulator PASS
+simulator-only browser/webview
+parallel DOM storage/input/Home APIs
+```
+
+After R9 lands, update this protocol to require injection of the same canonical Web adapter through the existing composition seam.
 
 ---
 
 ## 12. Evidence to preserve
 
-For a retained simulator acceptance run record:
+Record:
 
 ```text
 exact repository SHA
-host OS/Python/Pygame versions as relevant
-simulator state-root path
-viewport/interface-size/capability matrix exercised
+host OS / architecture
+Python / Pygame versions
+Tk availability
+state-root path and whether --rebind-state was used
+focused simulator suite result including skips
+make verify result
+viewport/interface-size/capability matrix
+profiles tested
 Activity IDs/versions tested
-focused simulator test command/result
-make verify command/result
-Load Activity positive/negative validation outcomes
-package install positive/negative outcomes
-screenshots for visually meaningful states
-first genuine failure, if any
+source-load positive/negative outcomes
+Stop/Restart while running outcome and process/resource checks
+package install result or canonical host-unavailable result
+Web runtime-unavailable result
+screenshots where useful
+first genuine failure if any
 ```
 
-Label the report prominently:
+Label retained report:
 
 ```text
 SIMULATOR / DEVELOPER EVIDENCE
@@ -287,38 +373,42 @@ SIMULATOR / DEVELOPER EVIDENCE
 
 ## 13. Explicit non-claims
 
-Even a complete PASS of this protocol does **not** prove:
+Even a complete PASS does not prove:
 
 ```text
-production Bubblewrap/kernel isolation
-production filesystem mount containment
-Xorg/KMSDRM/Wayland/compositor ownership or transition behavior
+untrusted-code isolation on developer host
+production Bubblewrap/kernel/filesystem containment
+physical host input denial
+Xorg/KMSDRM/Wayland/compositor ownership/transitions
 DRM/input device authority
 trusted Home/Back non-coverability/input interception
-physical controller mapping/latency/noise/reconnect
-physical touch/audio/network/removable-media behavior
-initramfs/GRUB/installer/boot continuity
-Acer/Pi CPU/RAM/GPU/storage/resource behavior
+physical controller/touch/audio/network/removable-media behavior
+boot/initramfs/GRUB/installer continuity
+Acer/Pi CPU/RAM/GPU/storage performance
 Web runtime support before R9
-full R10 lifecycle beyond the current new-install service
+full R10 update/remove/rollback/signature/revocation/save migration
 R7/R8/R9/R10/R14 closure
 ```
 
-Use the specific VM/image/physical protocol for those claims.
+Use the relevant VM/image/physical/security protocol for those claims.
 
 ---
 
-## 14. Failure rules
+## 14. Stop conditions
 
-Stop and report rather than hiding the defect if:
+Stop and report the first genuine failure if:
 
-- the simulator needs a second implementation of a Greia service/policy;
-- Activity source needs `GREIA_SIMULATOR` logic to pass;
-- a missing capability is handled only by simulator UI rather than the real runtime authority path;
-- a developer source is accepted only by bypassing `ActivityRegistry`;
-- package testing needs a custom simulator extractor/installer;
-- simulator state writes into the source checkout;
-- Web support requires a host-browser/private-webview shortcut;
-- a PASS claim would require relabeling simulator evidence as production/backend/physical proof.
+- simulator needs another Greia service/policy implementation;
+- simulator subclass replaces production rebuild/draw authority;
+- Activity needs simulator-specific code;
+- bootstrap can be shadowed by Activity content;
+- simulator identity leaks into Activity launch context;
+- missing capability is handled only by simulator UI;
+- source loading follows symlinks, copies before finite safety inspection, or destroys last-known-good state on failed replacement;
+- two control planes can write one workspace concurrently;
+- package testing requires a simulator extractor;
+- Stop/Restart leaves Activity/session/broker resources alive;
+- Web support needs a private browser path;
+- a PASS claim requires relabeling simulator evidence as production/backend/physical/security proof.
 
-The correct fix is to strengthen the shared Greia abstraction or preserve the open evidence boundary—not to make the simulator more special.
+Fix the shared abstraction or preserve an honest NOT-RUN/NOT-AVAILABLE boundary. Do not make the simulator more special.
