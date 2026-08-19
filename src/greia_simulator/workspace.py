@@ -10,7 +10,7 @@ import stat
 import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, BinaryIO
+from typing import Any
 
 from greia_platform.activities import ActivityRegistry, RuntimeCatalogue
 from greia_platform.profiles import ChildProfile, ProfileStore
@@ -127,8 +127,10 @@ class SimulatorWorkspace:
                 self.ensure(allow_repo_rebind=allow_repo_rebind)
             except Exception:
                 if self._lock_fd is None:
-                    os.close(descriptor)
-                    self._unlink_owned_lock(descriptor)
+                    try:
+                        self._unlink_owned_lock(descriptor)
+                    finally:
+                        os.close(descriptor)
                 else:
                     self.release_lock()
                 raise
