@@ -95,6 +95,9 @@ DIFFICULTIES = [
     {"id": "giant", "label_it": "GIGANTE", "label_en": "GIANT", "cols": 21, "rows": 13, "stars": 9},
     {"id": "epic", "label_it": "EPICO", "label_en": "EPIC", "cols": 25, "rows": 15, "stars": 12},
     {"id": "master", "label_it": "MAESTRO", "label_en": "MASTER", "cols": 29, "rows": 17, "stars": 15},
+    {"id": "titan", "label_it": "TITANO", "label_en": "TITAN", "cols": 37, "rows": 21, "stars": 20},
+    {"id": "colossal", "label_it": "COLOSSALE", "label_en": "COLOSSAL", "cols": 45, "rows": 25, "stars": 25},
+    {"id": "infinite", "label_it": "INFINITO", "label_en": "INFINITE", "cols": 53, "rows": 27, "stars": 30},
 ]
 
 
@@ -511,8 +514,8 @@ def main() -> int:
                 rect = pygame.Rect(rx, ry, cs, cs)
                 if grid[r][c] == 1:
                     pygame.draw.rect(surf, biome["wall_shadow"], rect)
-                    wall_inner = pygame.Rect(rx + 2, ry + 2, max(2, cs - 4), max(2, cs - 4))
-                    pygame.draw.rect(surf, biome["wall"], wall_inner, border_radius=max(2, cs // 8))
+                    wall_inner = pygame.Rect(rx + 1, ry + 1, max(2, cs - 2), max(2, cs - 2))
+                    pygame.draw.rect(surf, biome["wall"], wall_inner, border_radius=max(1, cs // 8))
                 else:
                     pygame.draw.rect(surf, biome["path"], rect)
                     pygame.draw.circle(surf, biome["bg"], (rx + cs // 2, ry + cs // 2), max(1, cs // 10))
@@ -522,28 +525,28 @@ def main() -> int:
             for step_r, step_c in firefly_path:
                 px = ox + (step_c + 0.5) * cs
                 py = oy + (step_r + 0.5) * cs
-                pygame.draw.circle(surf, biome["hint"], (int(px), int(py)), max(3, int(cs * 0.20)), 2)
+                pygame.draw.circle(surf, biome["hint"], (int(px), int(py)), max(2, int(cs * 0.20)), 2)
 
         # 4. Collectible Stars
         for item in collectibles:
             if not item["collected"]:
                 cx = ox + (item["c"] + 0.5) * cs
                 cy = oy + (item["r"] + 0.5) * cs + math.sin(t_now * 4.0 + item["anim_t"]) * 3.0
-                r_star = max(4, int(cs * 0.32))
+                r_star = max(3, int(cs * 0.32))
                 pygame.draw.circle(surf, biome["collectible_color"], (int(cx), int(cy)), r_star)
-                pygame.draw.circle(surf, (255, 255, 255), (int(cx), int(cy)), max(2, r_star // 3))
+                pygame.draw.circle(surf, (255, 255, 255), (int(cx), int(cy)), max(1, r_star // 3))
 
         # 5. Exit Castle
         ex_x = ox + (exit_pos["c"] + 0.5) * cs
         ex_y = oy + (exit_pos["r"] + 0.5) * cs
-        exit_r = max(6, int(cs * 0.40))
-        pygame.draw.circle(surf, (234, 179, 8), (int(ex_x), int(ex_y)), exit_r + 3, 3)
+        exit_r = max(5, int(cs * 0.40))
+        pygame.draw.circle(surf, (234, 179, 8), (int(ex_x), int(ex_y)), exit_r + 2, 2)
         pygame.draw.circle(surf, (239, 68, 68), (int(ex_x), int(ex_y)), exit_r)
 
         # 6. Hero Character with Cute Ears and Expression
         char_px = ox + (player_x + 0.5) * cs
         char_py = oy + (player_y + 0.5) * cs - math.sin(t_now * 6.0) * 2.0
-        char_r = max(6, int(cs * 0.38))
+        char_r = max(4, int(cs * 0.38))
         # Hero outer glow
         pygame.draw.circle(surf, (255, 255, 255), (int(char_px), int(char_py)), char_r + 2)
         # Hero body
@@ -551,23 +554,22 @@ def main() -> int:
         # Ears based on hero type
         h_id = hero["id"]
         if h_id in ("bunny", "kitty", "fox", "puppy"):
-            ear_h = int(char_r * 0.7)
-            pygame.draw.circle(surf, hero["color"], (int(char_px - char_r * 0.6), int(char_py - char_r * 0.7)), max(3, char_r // 2))
-            pygame.draw.circle(surf, hero["color"], (int(char_px + char_r * 0.6), int(char_py - char_r * 0.7)), max(3, char_r // 2))
-            pygame.draw.circle(surf, (244, 114, 182), (int(char_px - char_r * 0.6), int(char_py - char_r * 0.7)), max(2, char_r // 4))
-            pygame.draw.circle(surf, (244, 114, 182), (int(char_px + char_r * 0.6), int(char_py - char_r * 0.7)), max(2, char_r // 4))
+            pygame.draw.circle(surf, hero["color"], (int(char_px - char_r * 0.6), int(char_py - char_r * 0.7)), max(2, int(char_r * 0.45)))
+            pygame.draw.circle(surf, hero["color"], (int(char_px + char_r * 0.6), int(char_py - char_r * 0.7)), max(2, int(char_r * 0.45)))
+            pygame.draw.circle(surf, (244, 114, 182), (int(char_px - char_r * 0.6), int(char_py - char_r * 0.7)), max(1, int(char_r * 0.25)))
+            pygame.draw.circle(surf, (244, 114, 182), (int(char_px + char_r * 0.6), int(char_py - char_r * 0.7)), max(1, int(char_r * 0.25)))
         elif h_id == "unicorn":
             # Golden horn
-            pygame.draw.polygon(surf, (250, 204, 21), [(int(char_px - 4), int(char_py - char_r * 0.7)), (int(char_px + 4), int(char_py - char_r * 0.7)), (int(char_px), int(char_py - char_r * 1.5))])
+            pygame.draw.polygon(surf, (250, 204, 21), [(int(char_px - max(2, char_r // 3)), int(char_py - char_r * 0.7)), (int(char_px + max(2, char_r // 3)), int(char_py - char_r * 0.7)), (int(char_px), int(char_py - char_r * 1.5))])
         # Cute sparkling eyes
-        eye_off = char_r * 0.35
-        pygame.draw.circle(surf, (15, 23, 42), (int(char_px - eye_off), int(char_py - 2)), max(2, int(char_r * 0.22)))
-        pygame.draw.circle(surf, (15, 23, 42), (int(char_px + eye_off), int(char_py - 2)), max(2, int(char_r * 0.22)))
-        pygame.draw.circle(surf, (255, 255, 255), (int(char_px - eye_off - 1), int(char_py - 3)), max(1, int(char_r * 0.10)))
-        pygame.draw.circle(surf, (255, 255, 255), (int(char_px + eye_off - 1), int(char_py - 3)), max(1, int(char_r * 0.10)))
+        eye_off = max(1, int(char_r * 0.35))
+        pygame.draw.circle(surf, (15, 23, 42), (int(char_px - eye_off), int(char_py - max(1, char_r // 6))), max(1, int(char_r * 0.22)))
+        pygame.draw.circle(surf, (15, 23, 42), (int(char_px + eye_off), int(char_py - max(1, char_r // 6))), max(1, int(char_r * 0.22)))
+        pygame.draw.circle(surf, (255, 255, 255), (int(char_px - eye_off - 1), int(char_py - max(1, char_r // 4))), max(1, int(char_r * 0.10)))
+        pygame.draw.circle(surf, (255, 255, 255), (int(char_px + eye_off - 1), int(char_py - max(1, char_r // 4))), max(1, int(char_r * 0.10)))
         # Cheeks
-        pygame.draw.circle(surf, (251, 113, 133), (int(char_px - eye_off), int(char_py + 4)), max(1, int(char_r * 0.15)))
-        pygame.draw.circle(surf, (251, 113, 133), (int(char_px + eye_off), int(char_py + 4)), max(1, int(char_r * 0.15)))
+        pygame.draw.circle(surf, (251, 113, 133), (int(char_px - eye_off), int(char_py + max(1, char_r // 3))), max(1, int(char_r * 0.15)))
+        pygame.draw.circle(surf, (251, 113, 133), (int(char_px + eye_off), int(char_py + max(1, char_r // 3))), max(1, int(char_r * 0.15)))
 
         # 7. Firefly Sprite
         if firefly_active:
