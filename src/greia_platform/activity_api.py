@@ -18,6 +18,7 @@ from .event_client import ActivityEventClient, ActivityEventReceipt
 from .input_core import InteractionProfile, parse_interaction_profile
 from .profiles import ProfilePolicy, write_avatar_request
 from .storage_client import ActivityStorageClient
+from .system_language import SystemLanguageStore
 from .theme_snapshot import ThemeSnapshotError, decode_theme_snapshot
 from .ui_preferences import InterfaceSize, UiPreferences, UiPreferencesStore
 
@@ -83,6 +84,11 @@ def _profile_policy() -> ProfilePolicy:
 
 
 @lru_cache(maxsize=1)
+def _system_language_store() -> SystemLanguageStore:
+    return SystemLanguageStore.from_environment()
+
+
+@lru_cache(maxsize=1)
 def get_storage() -> ActivityStorageClient:
     """Return this launch's runtime-neutral Greia durable storage client."""
 
@@ -139,8 +145,22 @@ def get_active_profile() -> dict[str, object]:
 
 
 def get_profile_locale() -> str:
-    """Return the active profile or device UI locale tag string (e.g. 'it' or 'en')."""
-    return os.environ.get("GREIA_PROFILE_LOCALE", os.environ.get("GREIA_DEVICE_LOCALE", "it"))
+    """Return the profile override or current Greia device UI locale.
+
+    A launch-time profile/device environment value wins when the platform has
+    supplied one. Otherwise the Activity reads the same small, read-only Greia
+    device-language store used by the installer and Parent surfaces. Installed
+    Activities can read this descriptive state but cannot mutate it through the
+    Activity API.
+    """
+
+    profile_locale = os.environ.get("GREIA_PROFILE_LOCALE", "").strip()
+    if profile_locale:
+        return profile_locale
+    device_locale = os.environ.get("GREIA_DEVICE_LOCALE", "").strip()
+    if device_locale:
+        return device_locale
+    return _system_language_store().read().locale
 
 
 def get_profile_avatar_choices() -> tuple[str, ...]:
