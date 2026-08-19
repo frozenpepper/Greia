@@ -2,6 +2,7 @@ ca-certificates
 dbus
 debian-security-support
 e2fsprogs
+fonts-noto-color-emoji
 isenkram-cli
 iwd
 kbd
@@ -10,7 +11,9 @@ live-boot
 parted
 python3
 python3-dbus
+python3-pil
 python3-pygame
+python3-regex
 rfkill
 squashfs-tools
 systemd-resolved
