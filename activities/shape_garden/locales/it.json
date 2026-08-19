@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "locale": "it",
+  "direction": "ltr",
+  "strings": {
+    "activity.shape_garden.title": "Giardino delle Forme",
+    "activity.title": "Giardino delle Forme",
+    "btn.clear": "Pulisci",
+    "shape.circle": "Cerchio",
+    "shape.square": "Quadrato",
+    "shape.triangle": "Triangolo"
+  },
+  "audio": {}
+}

@@ -165,7 +165,7 @@ class SystemOverlayContractTests(unittest.TestCase):
         ).read_text()
         builder = (PROJECT_ROOT / "build/build-installer-image.sh").read_text()
         self.assertIn("xinit", unit)
-        self.assertIn("greia_installer.main", unit)
+        self.assertIn("greia_installer.entrypoint", unit)
         self.assertIn("getty@tty6.service", builder)
         self.assertIn("getty@.service", builder)
         self.assertIn("autovt@.service", builder)

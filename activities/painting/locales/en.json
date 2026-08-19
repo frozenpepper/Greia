@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "locale": "en",
+  "direction": "ltr",
+  "strings": {
+    "activity.painting.title": "Free Painting",
+    "activity.title": "Free Painting",
+    "btn.new": "New",
+    "btn.undo": "Undo",
+    "btn.clear": "Clear",
+    "btn.eraser": "Eraser"
+  },
+  "audio": {}
+}

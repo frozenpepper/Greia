@@ -4,7 +4,7 @@ legacy_ids = []
 title_key = "activity.writing.title"
 version = "0.1.0"
 icon = "abc_board"
-languages = ["*"]
+languages = ["it", "en"]
 
 [presentation]
 categories = ["create", "learn"]

@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "locale": "it",
+  "direction": "ltr",
+  "strings": {
+    "activity.painting.title": "Disegno Libero",
+    "activity.title": "Disegno Libero",
+    "btn.new": "Nuovo",
+    "btn.undo": "Annulla",
+    "btn.clear": "Pulisci",
+    "btn.eraser": "Gomma"
+  },
+  "audio": {}
+}

@@ -4,7 +4,7 @@ legacy_ids = []
 title_key = "activity.painting.title"
 version = "0.1.0"
 icon = "palette"
-languages = ["*"]
+languages = ["it", "en"]
 
 [presentation]
 categories = ["create"]

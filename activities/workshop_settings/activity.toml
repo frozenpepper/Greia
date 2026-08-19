@@ -4,7 +4,7 @@ legacy_ids = ["workshop_settings"]
 title_key = "My Greia"
 version = "0.2.0"
 icon = "palette"
-languages = ["*"]
+languages = ["it", "en"]
 
 [presentation]
 categories = ["my_greia"]

@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "locale": "it",
+  "direction": "ltr",
+  "strings": {
+    "activity.writing.title": "Scrittura e Lettere",
+    "activity.title": "Scrittura e Lettere",
+    "btn.new": "Nuovo Foglio",
+    "btn.undo": "Annulla",
+    "btn.clear": "Pulisci"
+  },
+  "audio": {}
+}

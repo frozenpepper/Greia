@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "locale": "en",
+  "direction": "ltr",
+  "strings": {
+    "My Greia": "My Greia",
+    "activity.workshop_settings.title": "My Greia",
+    "activity.title": "My Greia",
+    "section.avatar": "Choose Avatar",
+    "section.color": "Favorite Color",
+    "section.wallpaper": "Wallpaper",
+    "section.size": "Icon Size"
+  },
+  "audio": {}
+}

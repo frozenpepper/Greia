@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "locale": "it",
+  "direction": "ltr",
+  "strings": {
+    "My Greia": "La Mia Greia",
+    "activity.workshop_settings.title": "La Mia Greia",
+    "activity.title": "La Mia Greia",
+    "section.avatar": "Scegli Avatar",
+    "section.color": "Colore Preferito",
+    "section.wallpaper": "Sfondo Schermo",
+    "section.size": "Dimensione Icone"
+  },
+  "audio": {}
+}

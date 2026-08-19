@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "locale": "en",
+  "direction": "ltr",
+  "strings": {
+    "activity.writing.title": "Writing & Words",
+    "activity.title": "Writing & Words",
+    "btn.new": "New Page",
+    "btn.undo": "Undo",
+    "btn.clear": "Clear"
+  },
+  "audio": {}
+}

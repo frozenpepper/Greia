@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "locale": "en",
+  "direction": "ltr",
+  "strings": {
+    "activity.shape_garden.title": "Shape Garden",
+    "activity.title": "Shape Garden",
+    "btn.clear": "Clear",
+    "shape.circle": "Circle",
+    "shape.square": "Square",
+    "shape.triangle": "Triangle"
+  },
+  "audio": {}
+}

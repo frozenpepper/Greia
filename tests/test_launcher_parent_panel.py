@@ -87,6 +87,10 @@ class ParentSettingsOverlayTests(unittest.TestCase):
         self.overlay.handle_text_input("greia")
         self.overlay.handle_key(DummyPygame.K_RETURN, DummyPygame)
         self.assertEqual(self.overlay.state, ParentPanelState.PANEL)
+        self.assertEqual(self.overlay.active_tab, ParentPanelTab.LANGUAGE)
+
+        # Tab -> WIFI
+        self.overlay.handle_key(DummyPygame.K_TAB, DummyPygame)
         self.assertEqual(self.overlay.active_tab, ParentPanelTab.WIFI)
 
         # Tab -> SSH
@@ -97,9 +101,9 @@ class ParentSettingsOverlayTests(unittest.TestCase):
         self.overlay.handle_key(DummyPygame.K_TAB, DummyPygame)
         self.assertEqual(self.overlay.active_tab, ParentPanelTab.INFO)
 
-        # Tab -> WIFI
+        # Tab -> LANGUAGE
         self.overlay.handle_key(DummyPygame.K_TAB, DummyPygame)
-        self.assertEqual(self.overlay.active_tab, ParentPanelTab.WIFI)
+        self.assertEqual(self.overlay.active_tab, ParentPanelTab.LANGUAGE)
 
     def test_ssh_toggle_in_ssh_tab(self) -> None:
         self.overlay.open()
