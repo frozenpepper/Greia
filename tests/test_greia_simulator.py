@@ -378,6 +378,19 @@ class GreiaSimulatorWorkspaceTests(unittest.TestCase):
             second.acquire_lock()
             second.release_lock()
 
+    def test_partial_or_malformed_lock_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            workspace = SimulatorWorkspace(REPO, Path(directory) / "state")
+            workspace.ensure()
+            workspace.lock_path.write_text("{", encoding="utf-8")
+            with mock.patch.object(simulator_workspace.os, "name", "posix"), mock.patch.object(
+                simulator_workspace,
+                "_posix_pid_alive",
+            ) as pid_probe:
+                self.assertFalse(workspace._discard_stale_lock())
+                pid_probe.assert_not_called()
+            self.assertEqual(workspace.lock_path.read_text(encoding="utf-8"), "{")
+
     def test_non_posix_stale_lock_probe_fails_closed_without_pid_probe(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             workspace = SimulatorWorkspace(REPO, Path(directory) / "state")
@@ -475,6 +488,31 @@ class GreiaSimulatorWorkspaceTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "exceeds"):
                 workspace.load_activity(source)
             self.assertEqual(tuple(workspace.state_root.glob("greia-simulator-load-*")), ())
+
+    def test_snapshot_digest_rejects_same_metadata_different_content(self) -> None:
+        runtime = RuntimeCatalogue.load(REPO / "runtime" / "child-runtime.toml")
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            workspace = SimulatorWorkspace(REPO, base / "state")
+            workspace.ensure()
+            source = _write_activity(base / "source", body="VALUE = 'old'\n")
+            snapshot = workspace._inspect_development_tree(source, runtime)
+            entrypoint = source / "main.py"
+            original = entrypoint.stat()
+            replacement = "VALUE = 'new'\n"
+            self.assertEqual(len(replacement.encode("utf-8")), original.st_size)
+            entrypoint.write_text(replacement, encoding="utf-8")
+            os.utime(
+                entrypoint,
+                ns=(original.st_atime_ns, original.st_mtime_ns),
+            )
+            with self.assertRaisesRegex(ValueError, "changed while staging"):
+                workspace._copy_development_snapshot(
+                    source,
+                    workspace.state_root / "digest-staging",
+                    snapshot,
+                    runtime,
+                )
 
     def test_failed_final_publication_restores_previous_valid_activity(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
