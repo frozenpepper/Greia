@@ -303,26 +303,26 @@ def main() -> int:
                         continue
 
                 # Tool selection buttons (Bottom toolbar)
-                tool_y = REFERENCE_HEIGHT - 58
+                tool_y = REFERENCE_HEIGHT - 85
                 # 0: Seed button
-                if pygame.Rect(180, tool_y, 140, 44).collidepoint(mx, my):
+                if pygame.Rect(120, tool_y, 180, 72).collidepoint(mx, my):
                     if active_tool == 0:
                         selected_plant_type = (selected_plant_type + 1) % len(PLANTS)
                     active_tool = 0
                     continue
 
                 # 1: Water button
-                if pygame.Rect(350, tool_y, 140, 44).collidepoint(mx, my):
+                if pygame.Rect(320, tool_y, 180, 72).collidepoint(mx, my):
                     active_tool = 1
                     continue
 
                 # 2: Sun button
-                if pygame.Rect(520, tool_y, 140, 44).collidepoint(mx, my):
+                if pygame.Rect(520, tool_y, 180, 72).collidepoint(mx, my):
                     active_tool = 2
                     continue
 
                 # 3: Harvest button
-                if pygame.Rect(690, tool_y, 140, 44).collidepoint(mx, my):
+                if pygame.Rect(720, tool_y, 180, 72).collidepoint(mx, my):
                     active_tool = 3
                     continue
 
@@ -499,32 +499,40 @@ def main() -> int:
             cur_sz = max(2.0, p["size"] * max(0.0, min(1.0, p["life"])))
             pygame.draw.circle(surf, p["color"], (int(p["x"]), int(p["y"])), int(cur_sz))
 
-        # 4. Top HUD
-        title_surf = typography.render(t("activity.title", "La Piccola Serra"), FontRole.DISPLAY, 24, (30, 41, 59))
-        surf.blit(title_surf, (80, 20))
+        # 4. Top HUD (Star Pill & Harvest Counter)
+        star_pill = pygame.Rect(80, 16, 130, 56)
+        pygame.draw.rect(surf, (255, 255, 255), star_pill, border_radius=18)
+        pygame.draw.rect(surf, (234, 179, 8), star_pill, width=3, border_radius=18)
+        pygame.draw.circle(surf, (234, 179, 8), (star_pill.left + 30, star_pill.centery), 16)
+        s_txt = typography.render(str(total_stars), FontRole.DISPLAY, 28, (180, 83, 9))
+        surf.blit(s_txt, (star_pill.left + 58, star_pill.centery - s_txt.get_height() // 2))
 
-        h_txt = f"Raccolto: 🧺 {harvest_count}/{target_harvest}" if active_locale == "it" else f"Harvest: 🧺 {harvest_count}/{target_harvest}"
-        h_surf = typography.render(h_txt, FontRole.TITLE, 20, (146, 64, 14))
-        surf.blit(h_surf, (370, 22))
+        # Right Harvest Goal
+        h_pill = pygame.Rect(REFERENCE_WIDTH - 180, 16, 140, 56)
+        pygame.draw.rect(surf, (255, 255, 255), h_pill, border_radius=18)
+        pygame.draw.rect(surf, (249, 115, 22), h_pill, width=3, border_radius=18)
+        pygame.draw.circle(surf, (249, 115, 22), (h_pill.left + 30, h_pill.centery), 16)
+        h_surf = typography.render(str(harvest_count), FontRole.DISPLAY, 28, (217, 119, 6))
+        surf.blit(h_surf, (h_pill.left + 58, h_pill.centery - h_surf.get_height() // 2))
 
-        # 5. Bottom Tools Toolbar
-        tool_y = REFERENCE_HEIGHT - 58
+        # 5. Bottom Tools Toolbar (Giant Chunky 180x72px Buttons)
+        tool_y = REFERENCE_HEIGHT - 85
         tools_info = [
-            (180, f"🌱 {PLANTS[selected_plant_type]['name_it'].split()[0]}", 0, (34, 197, 94)),
-            (350, "💧 Annaffia", 1, (56, 189, 248)),
-            (520, "☀️ Sole", 2, (234, 179, 8)),
-            (690, "🧺 Raccogli", 3, (249, 115, 22)),
+            (120, "SEME", 0, (34, 197, 94)),
+            (320, "ACQUA", 1, (56, 189, 248)),
+            (520, "SOLE", 2, (234, 179, 8)),
+            (720, "RACCOGLI", 3, (249, 115, 22)),
         ]
 
         for tx, label, t_idx, col in tools_info:
-            b_rect = pygame.Rect(tx, tool_y, 140, 44)
+            b_rect = pygame.Rect(tx, tool_y, 180, 72)
             is_sel = active_tool == t_idx
             bg_col = col if is_sel else (255, 255, 255)
             txt_col = (255, 255, 255) if is_sel else (30, 41, 59)
-            pygame.draw.rect(surf, bg_col, b_rect, border_radius=12)
-            pygame.draw.rect(surf, col, b_rect, width=3 if is_sel else 2, border_radius=12)
-            lbl_surf = typography.render(label, FontRole.CONTROL, 16, txt_col)
-            surf.blit(lbl_surf, (b_rect.centerx - lbl_surf.get_width() // 2, b_rect.centery - lbl_lbl.get_height() // 2 if 'lbl_lbl' in locals() else b_rect.centery - lbl_surf.get_height() // 2))
+            pygame.draw.rect(surf, bg_col, b_rect, border_radius=20)
+            pygame.draw.rect(surf, col, b_rect, width=4 if is_sel else 2, border_radius=20)
+            lbl_surf = typography.render(label, FontRole.DISPLAY, 24, txt_col)
+            surf.blit(lbl_surf, (b_rect.centerx - lbl_surf.get_width() // 2, b_rect.centery - lbl_surf.get_height() // 2))
 
         # 6. Victory Modal
         if is_victory:
@@ -536,10 +544,10 @@ def main() -> int:
             pygame.draw.rect(surf, (30, 41, 59), card, border_radius=20)
             pygame.draw.rect(surf, (254, 202, 87), card, width=3, border_radius=20)
 
-            v_title = typography.render(t("victory.title", "Che splendido raccolto! 🌻🍓🥕"), FontRole.DISPLAY, 22, (254, 202, 87))
+            v_title = typography.render("SPLENDIDO RACCOLTO!", FontRole.DISPLAY, 24, (254, 202, 87))
             surf.blit(v_title, (card.centerx - v_title.get_width() // 2, card.top + 30))
 
-            v_sub = typography.render(t("victory.subtitle", "La tua serra è un vero paradiso!"), FontRole.BODY, 18, (241, 245, 249))
+            v_sub = typography.render("La serra e' un vero paradiso!", FontRole.BODY, 18, (241, 245, 249))
             surf.blit(v_sub, (card.centerx - v_sub.get_width() // 2, card.top + 75))
 
             for i in range(3):
@@ -549,7 +557,7 @@ def main() -> int:
 
             again_btn = pygame.Rect(card.centerx - 110, card.bottom - 65, 220, 46)
             pygame.draw.rect(surf, (34, 197, 94), again_btn, border_radius=14)
-            again_lbl = typography.render(t("btn.play_again", "🎉 Coltiva Ancora!"), FontRole.CONTROL, 20, (255, 255, 255))
+            again_lbl = typography.render("COLTIVA ANCORA", FontRole.CONTROL, 20, (255, 255, 255))
             surf.blit(again_lbl, (again_btn.centerx - again_lbl.get_width() // 2, again_btn.centery - again_lbl.get_height() // 2))
 
         # Present Canvas

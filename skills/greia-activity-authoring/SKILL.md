@@ -101,6 +101,26 @@ An Activity must not:
 - split user-editable Unicode text by Python codepoint when the child-visible unit is a grapheme cluster;
 - use Unicode emoji as substitutes for protected Greia system controls/icons.
 
+## 2.1 Mandatory Child UX, Sizing & Zero-Text Standards (Ages 3–7)
+
+Greia is designed for young children (ages 3–7). The following standards are **mandatory** for every first-party and third-party Activity:
+
+### 1. Zero-Text Dependency for Gameplay
+- **Young children cannot read**: Never rely on text instructions, text prompts, or small text subtitles to explain the game objective or required actions.
+- **Pure Iconographic & Numerical Goals**: All objectives must be communicated using **BIG NUMBERS** (e.g. `3` or `2 + 1 = 3`), **BIG ICONS / SYMBOLS** (e.g. 🍎, 🪵, 🩺), visual thought bubbles, animated arrows, and highlighted targets.
+- **Text as Secondary Subtitles Only**: If titles or labels exist for parents/older siblings, they must be purely supplementary and never required to understand what to do.
+
+### 2. Standard Minimum Dimensions
+- **Minimum Touch / Click Hit Targets**: $\ge 64\times 64\text{px}$ (Preferred: $72\times 72\text{px}$ to $96\times 96\text{px}$). Never create buttons under $56\text{px}$ in height.
+- **Minimum Tool & Interactive Icons**: $\ge 56\times 56\text{px}$ to $80\times 80\text{px}$.
+- **Primary Game Entities (Animals, Vehicles, Characters, Baskets, Cards)**: $\ge 80\times 80\text{px}$ to $150\times 150\text{px}$.
+- **Primary Numerical Displays & Counter Badges**: Typography font size $\ge 36\text{pt}$ to $64\text{pt}$ with high-contrast borders and pill backgrounds.
+
+### 3. Rich, Varied Mechanics & Playful Feedback
+- **Varied Gameplay**: Avoid repetitive or static loops where every round is identical. Randomize requirements (e.g. some patients need 1 care step, others need 3; some train stations teach additions, others subtractions).
+- **Visible, Animated Hints**: In search/puzzle games, provide active visual clues (e.g. twitching ears, blinking eyes, waving tails, shimmering sparkles) so children don't click at random.
+- **Playful, Non-Punitive Failure Loops**: If a child makes a mistake (e.g. incomplete bridge, wrong tool), provide cheerful, funny visual feedback (e.g. comical wobble onto a bouncy safety trampoline or splash) and an immediate visual cue for how to succeed.
+
 The platform owns lifecycle, profile/session state, package trust, permissions, system chrome, durable progress/history, physical display/input boundaries, the normal child UI-locale authority chain, launcher language presentation, platform-owned pre-launch language chooser, and shared typography/emoji fallback semantics.
 
 ## 3. Package layout

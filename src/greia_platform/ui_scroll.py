@@ -50,11 +50,17 @@ class ScrollModel:
             return ScrollWindow(0, 0, 0, 0, self.capacity)
         selected = min(max(0, int(selected)), total - 1)
         maximum_start = max(0, total - self.capacity)
-        start = min(max(0, int(start)), maximum_start)
         if selected < start:
-            start = selected
+            if self.step > 1:
+                start = (selected // self.step) * self.step
+            else:
+                start = selected
         elif selected >= start + self.capacity:
-            start = selected - self.capacity + 1
+            if self.step > 1:
+                raw_start = selected - self.capacity + 1
+                start = ((raw_start + self.step - 1) // self.step) * self.step
+            else:
+                start = selected - self.capacity + 1
         start = min(start, maximum_start)
         stop = min(total, start + self.capacity)
         return ScrollWindow(total, start, stop, selected, self.capacity)

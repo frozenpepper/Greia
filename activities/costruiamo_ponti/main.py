@@ -34,42 +34,37 @@ from greia_platform.typography import FontRole, GreiaTypography
 
 REFERENCE_WIDTH = 1024
 REFERENCE_HEIGHT = 600
-STORAGE_KEY = "costruiamo_ponti.progress.v1"
+STORAGE_KEY = "costruiamo_ponti.progress.v2"
 
-BLOCK_TYPES = [
-    {"id": "wood", "name_it": "Legno 🪵", "name_en": "Wood 🪵", "color": (180, 83, 9), "border": (146, 64, 14), "bouncy": False},
-    {"id": "stone", "name_it": "Pietra 🪨", "name_en": "Stone 🪨", "color": (100, 116, 139), "border": (71, 85, 105), "bouncy": False},
-    {"id": "shroom", "name_it": "Fungo 🍄", "name_en": "Mushroom 🍄", "color": (239, 68, 68), "border": (220, 38, 38), "bouncy": True},
-    {"id": "rainbow", "name_it": "Arcobaleno 🌈", "name_en": "Rainbow 🌈", "color": (168, 85, 247), "border": (147, 51, 234), "bouncy": False},
+BLOCKS = [
+    {"id": "wood", "color": (180, 83, 9), "border": (146, 64, 14), "type_name": "wood"},
+    {"id": "stone", "color": (100, 116, 139), "border": (71, 85, 105), "type_name": "stone"},
+    {"id": "shroom", "color": (239, 68, 68), "border": (220, 38, 38), "type_name": "shroom"},
+    {"id": "rainbow", "color": (168, 85, 247), "border": (147, 51, 234), "type_name": "rainbow"},
 ]
+BLOCK_TYPES = BLOCKS
 
 LEVELS = [
     {
         "id": "river",
-        "name_it": "Fiume Verde 🌊",
-        "name_en": "Green River 🌊",
         "sky": (186, 230, 253),
-        "gap_bg": (56, 189, 248),
+        "gap_water": (56, 189, 248),
         "cliff_color": (34, 197, 94),
-        "slots": 5,
+        "required": ["wood", "wood", "shroom", "wood"],
     },
     {
         "id": "canyon",
-        "name_it": "Canyon Roccioso 🏔️",
-        "name_en": "Rocky Canyon 🏔️",
         "sky": (254, 215, 170),
-        "gap_bg": (217, 119, 6),
+        "gap_water": (217, 119, 6),
         "cliff_color": (120, 53, 15),
-        "slots": 5,
+        "required": ["stone", "shroom", "stone", "rainbow"],
     },
     {
         "id": "space",
-        "name_it": "Abisso Stellare 🌌",
-        "name_en": "Cosmic Abyss 🌌",
         "sky": (15, 23, 42),
-        "gap_bg": (30, 27, 75),
+        "gap_water": (30, 27, 75),
         "cliff_color": (59, 130, 246),
-        "slots": 5,
+        "required": ["rainbow", "shroom", "rainbow", "shroom"],
     },
 ]
 
@@ -100,7 +95,7 @@ class BridgeAudio:
 
     def _init_sounds(self) -> None:
         rate = 22050
-        # Place block (wood thud)
+        # Place thud
         thud_samples = []
         for i in range(int(rate * 0.08)):
             t = i / rate
@@ -109,31 +104,22 @@ class BridgeAudio:
             thud_samples.append(int(32767.0 * 0.25 * env * val))
         self._sounds["place"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(thud_samples)))
 
-        # Boing jump
+        # Boing trampoline bounce
         boing_samples = []
-        for i in range(int(rate * 0.20)):
+        for i in range(int(rate * 0.22)):
             t = i / rate
-            env = math.exp(-5.0 * t)
-            freq = 300.0 + 400.0 * (t / 0.20)
+            env = math.exp(-4.5 * t)
+            freq = 300.0 + 500.0 * (t / 0.22)
             val = math.sin(2.0 * math.pi * freq * t)
-            boing_samples.append(int(32767.0 * 0.30 * env * val))
+            boing_samples.append(int(32767.0 * 0.32 * env * val))
         self._sounds["boing"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(boing_samples)))
-
-        # Step
-        step_samples = []
-        for i in range(int(rate * 0.05)):
-            t = i / rate
-            env = math.exp(-18.0 * t)
-            val = math.sin(2.0 * math.pi * 380.0 * t)
-            step_samples.append(int(32767.0 * 0.20 * env * val))
-        self._sounds["step"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(step_samples)))
 
         # Win fanfare
         win_samples = []
-        for i in range(int(rate * 0.45)):
+        for i in range(int(rate * 0.50)):
             t = i / rate
-            env = math.exp(-2.0 * t)
-            freq = 523.25 if t < 0.12 else (659.25 if t < 0.24 else (783.99 if t < 0.36 else 1046.50))
+            env = math.exp(-1.8 * t)
+            freq = 523.0 if t < 0.12 else (659.0 if t < 0.24 else (784.0 if t < 0.36 else 1046.0))
             val = math.sin(2.0 * math.pi * freq * t)
             win_samples.append(int(32767.0 * 0.30 * env * val))
         self._sounds["win"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(win_samples)))
@@ -145,6 +131,34 @@ class BridgeAudio:
                 snd.play()
             except Exception:
                 pass
+
+
+def _draw_block_icon(surface: pygame.Surface, block_id: str, cx: int, cy: int, size: int) -> None:
+    r = size // 2
+    if block_id == "wood":
+        # 3D Log
+        pygame.draw.rect(surface, (180, 83, 9), (cx - r, cy - r // 2, size, r), border_radius=6)
+        pygame.draw.ellipse(surface, (217, 119, 6), pygame.Rect(cx + r - r // 3, cy - r // 2, r * 2 // 3, r))
+        pygame.draw.circle(surface, (146, 64, 14), (cx + r, cy), max(2, r // 4))
+    elif block_id == "stone":
+        # Heavy stone block with bevel
+        pygame.draw.rect(surface, (100, 116, 139), (cx - r, cy - r, size, size), border_radius=8)
+        pygame.draw.rect(surface, (148, 163, 184), (cx - r + 3, cy - r + 3, size - 6, size // 3), border_radius=4)
+        pygame.draw.rect(surface, (71, 85, 105), (cx - r, cy - r, size, size), width=3, border_radius=8)
+    elif block_id == "shroom":
+        # Bouncy mushroom
+        pygame.draw.rect(surface, (255, 255, 255), (cx - r // 4, cy, r // 2, r), border_radius=4)
+        pygame.draw.ellipse(surface, (239, 68, 68), pygame.Rect(cx - r, cy - r, size, r * 5 // 4))
+        pygame.draw.circle(surface, (255, 255, 255), (cx - r // 2, cy - r // 3), max(2, r // 4))
+        pygame.draw.circle(surface, (255, 255, 255), (cx + r // 2, cy - r // 3), max(2, r // 4))
+        pygame.draw.circle(surface, (255, 255, 255), (cx, cy - r * 2 // 3), max(2, r // 4))
+    else:  # rainbow
+        # Glowing rainbow arch
+        colors = [(239, 68, 68), (234, 179, 8), (34, 197, 94), (59, 130, 246), (168, 85, 247)]
+        for idx, col in enumerate(colors):
+            rad = r - idx * 4
+            if rad > 4:
+                pygame.draw.arc(surface, col, pygame.Rect(cx - rad, cy - rad, rad * 2, rad * 2), 0, math.pi, 5)
 
 
 def _is_safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
@@ -171,114 +185,47 @@ def main() -> int:
     typography = GreiaTypography()
     sounds = BridgeAudio()
 
-    try:
-        storage = get_storage()
-    except Exception:
-        storage = None
-
-    package_root = Path(__file__).parent
-    support = ActivityLocaleSupport.localized(("it", "en"), default_ui_locale="it")
-    profile_lang = get_profile_locale()
-    context = resolve_activity_locale(profile_lang, support)
-    resources = LocalizedResources(package_root, context) if context else None
-    active_locale = context.selected.language if context else "it"
-
-    def t(key: str, default: str) -> str:
-        if resources is not None:
-            try:
-                res = resources.string(key)
-                if res:
-                    return res
-            except Exception:
-                pass
-        return default
+    storage = get_storage()
+    saved_data = storage.kv_get(STORAGE_KEY) if storage else {}
+    if not isinstance(saved_data, dict):
+        saved_data = {}
+    total_stars = saved_data.get("stars", 0)
 
     level_idx = 0
-    selected_block_idx = 0
+    selected_block_id = "wood"
+    slots: list[str | None] = [None, None, None, None]
 
-    gap_start = 240
-    gap_end = 780
-    slot_count = 5
-    slot_w = (gap_end - gap_start) // slot_count
-    bridge_y = 360
-
-    slots: list[dict[str, Any] | None] = [None] * slot_count
-
-    # Hero crossing state
-    is_crossing = False
-    hero_x = 120.0
-    hero_target_x = 120.0
-    hero_hop_y = 0.0
-    cross_step = -1
-
-    particles: list[dict[str, Any]] = []
+    # Bunny animation state
+    bunny_state = "idle"  # "idle", "walking", "failing", "celebrating"
+    bunny_pos = [100.0, 310.0]
+    bunny_target_step = 0
+    bunny_anim_timer = 0.0
     is_victory = False
+    particles: list[dict[str, Any]] = []
 
-    def reset_bridge() -> None:
-        nonlocal slots, is_crossing, hero_x, hero_target_x, hero_hop_y, cross_step, is_victory
-        slots = [None] * slot_count
-        is_crossing = False
-        hero_x = 120.0
-        hero_target_x = 120.0
-        hero_hop_y = 0.0
-        cross_step = -1
-        is_victory = False
-        particles.clear()
+    def setup_level(idx: int) -> None:
+        nonlocal slots, bunny_state, bunny_pos, bunny_target_step
+        cur_lvl = LEVELS[idx % len(LEVELS)]
+        slots = [None for _ in cur_lvl["required"]]
+        bunny_state = "idle"
+        bunny_pos = [100.0, 310.0]
+        bunny_target_step = 0
 
-    reset_bridge()
+    setup_level(0)
 
     running = True
     ready_published = False
 
     while running and not activity_stop_requested():
-        t_now = time.time()
-        lvl = LEVELS[level_idx]
+        cur_lvl = LEVELS[level_idx % len(LEVELS)]
+        required = cur_lvl["required"]
+        num_slots = len(required)
 
-        # Hero walking logic
-        if is_crossing:
-            dx = hero_target_x - hero_x
-            if abs(dx) > 2.0:
-                hero_x += dx * 0.12
-                hero_hop_y = -math.sin((1.0 - abs(dx) / slot_w) * math.pi) * 35.0
-            else:
-                hero_x = hero_target_x
-                hero_hop_y = 0.0
-                cross_step += 1
-                if cross_step < slot_count:
-                    current_blk = slots[cross_step]
-                    if current_blk is not None:
-                        hero_target_x = gap_start + (cross_step + 0.5) * slot_w
-                        if current_blk["bouncy"]:
-                            sounds.play("boing")
-                        else:
-                            sounds.play("step")
-                    else:
-                        # Fall / stop
-                        is_crossing = False
-                elif cross_step == slot_count:
-                    # Reached right cliff!
-                    hero_target_x = 880.0
-                    sounds.play("step")
-                elif cross_step > slot_count:
-                    # VICTORY!
-                    is_crossing = False
-                    is_victory = True
-                    sounds.play("win")
-                    try:
-                        emit_activity_event("bridge.crossing_completed", {"level": lvl["id"]})
-                    except Exception:
-                        pass
-                    for _ in range(50):
-                        particles.append({
-                            "x": random.uniform(700, 950),
-                            "y": random.uniform(200, 360),
-                            "vx": random.uniform(-2.0, 2.0),
-                            "vy": random.uniform(-2.0, 2.0),
-                            "color": (254, 202, 87),
-                            "size": random.uniform(4.0, 8.0),
-                            "life": 1.0,
-                            "decay": 0.02,
-                        })
+        # Slot layout
+        bridge_start_x = 220
+        bridge_end_x = 800
+        slot_w = (bridge_end_x - bridge_start_x) // num_slots
+        bridge_y = 350
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -287,242 +234,269 @@ def main() -> int:
                 screen = pygame.display.get_surface() or screen
                 metrics = ChildUiMetrics.for_size(*screen.get_size())
                 canvas = PygameReferenceCanvas(screen)
-            elif event.type == pygame.KEYDOWN:
-                if event.key in (pygame.K_SPACE, pygame.K_RETURN):
-                    if is_victory:
-                        level_idx = (level_idx + 1) % len(LEVELS)
-                        reset_bridge()
-                    elif not is_crossing and all(s is not None for s in slots):
-                        is_crossing = True
-                        cross_step = 0
-                        hero_target_x = gap_start + 0.5 * slot_w
-                elif event.key == pygame.K_c:
-                    reset_bridge()
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                pointer = metrics.to_reference(event.pos)
+                mx, my = pointer.x, pointer.y
 
-            elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                 if not _is_safe_point(screen, event.pos):
                     continue
-                logical = canvas.pointer(event.pos)
-                if logical is None:
-                    continue
-                mx, my = logical
 
                 if is_victory:
-                    btn_rect = pygame.Rect(REFERENCE_WIDTH // 2 - 120, REFERENCE_HEIGHT // 2 + 80, 240, 52)
+                    play_again_btn = pygame.Rect(REFERENCE_WIDTH // 2 - 120, REFERENCE_HEIGHT // 2 + 70, 240, 60)
+                    if play_again_btn.collidepoint(mx, my):
+                        is_victory = False
+                        level_idx = 0
+                        setup_level(0)
+                    continue
+
+                # Material Palette Selection (Bottom)
+                palette_y = 475
+                for b_idx, blk in enumerate(BLOCKS):
+                    btn_rect = pygame.Rect(180 + b_idx * 170, palette_y, 140, 96)
                     if btn_rect.collidepoint(mx, my):
-                        level_idx = (level_idx + 1) % len(LEVELS)
-                        reset_bridge()
+                        selected_block_id = blk["id"]
+                        sounds.play("place")
                         continue
 
-                # Cross Button (Top Right)
-                cross_btn = pygame.Rect(REFERENCE_WIDTH - 160, 15, 140, 42)
-                if cross_btn.collidepoint(mx, my):
-                    if not is_crossing and all(s is not None for s in slots):
-                        is_crossing = True
-                        cross_step = 0
-                        hero_target_x = gap_start + 0.5 * slot_w
-                    continue
-
-                # Clear Button (Top Right - 310)
-                clear_btn = pygame.Rect(REFERENCE_WIDTH - 310, 15, 140, 42)
-                if clear_btn.collidepoint(mx, my):
-                    reset_bridge()
-                    continue
-
-                # Bottom Block Selectors
-                tool_y = REFERENCE_HEIGHT - 58
-                for b_idx in range(len(BLOCK_TYPES)):
-                    bx = 180 + b_idx * 160
-                    if pygame.Rect(bx, tool_y, 145, 44).collidepoint(mx, my):
-                        selected_block_idx = b_idx
-                        break
-
-                # Slot Clicks (Building the bridge)
-                if not is_crossing and not is_victory:
-                    for s_i in range(slot_count):
-                        sx = gap_start + s_i * slot_w
-                        slot_rect = pygame.Rect(sx, bridge_y - 20, slot_w, 60)
+                # Bridge Slots Tapping
+                if bunny_state == "idle":
+                    for s_idx in range(num_slots):
+                        sx = bridge_start_x + s_idx * slot_w
+                        slot_rect = pygame.Rect(sx + 4, bridge_y, slot_w - 8, 70)
                         if slot_rect.collidepoint(mx, my):
-                            slots[s_i] = BLOCK_TYPES[selected_block_idx]
+                            slots[s_idx] = selected_block_id
                             sounds.play("place")
-                            try:
-                                emit_activity_event("bridge.block_placed", {"slot": s_i, "block": slots[s_i]["id"]})
-                            except Exception:
-                                pass
-                            # Sparkle
                             for _ in range(8):
                                 particles.append({
-                                    "x": float(slot_rect.centerx),
-                                    "y": float(slot_rect.centery),
-                                    "vx": random.uniform(-1.5, 1.5),
-                                    "vy": random.uniform(-1.5, 1.5),
-                                    "color": slots[s_i]["color"],
-                                    "size": random.uniform(3.0, 6.0),
+                                    "x": slot_rect.centerx,
+                                    "y": slot_rect.centery,
+                                    "vx": random.uniform(-3, 3),
+                                    "vy": random.uniform(-4, -1),
+                                    "color": (254, 240, 138),
+                                    "size": random.uniform(4, 8),
                                     "life": 1.0,
-                                    "decay": 0.04,
                                 })
-                            break
+
+                # GO Button (Cross bridge)
+                go_btn = pygame.Rect(REFERENCE_WIDTH - 180, 16, 160, 60)
+                if go_btn.collidepoint(mx, my) and bunny_state == "idle":
+                    bunny_state = "walking"
+                    bunny_target_step = 0
+                    bunny_anim_timer = 0.0
+
+                # Clear Button
+                clear_btn = pygame.Rect(REFERENCE_WIDTH - 350, 16, 150, 60)
+                if clear_btn.collidepoint(mx, my) and bunny_state == "idle":
+                    slots = [None for _ in required]
+                    sounds.play("place")
+
+        # Bunny Crossing / Physics Logic
+        if bunny_state == "walking":
+            bunny_anim_timer += 0.04
+            # Step to next slot
+            target_x = bridge_start_x + (bunny_target_step + 0.5) * slot_w
+            dx = target_x - bunny_pos[0]
+            if dx > 4:
+                bunny_pos[0] += 6.0
+                bunny_pos[1] = 310.0 - abs(math.sin(bunny_anim_timer * 8.0)) * 25.0
+            else:
+                # Arrived at slot - test block
+                if bunny_target_step < num_slots:
+                    placed = slots[bunny_target_step]
+                    expected = required[bunny_target_step]
+                    if placed != expected:
+                        # Mismatched or missing block -> Fall & Trampoline bounce!
+                        bunny_state = "failing"
+                        bunny_anim_timer = 0.0
+                        sounds.play("boing")
+                    else:
+                        # Correct block!
+                        if placed == "shroom":
+                            sounds.play("boing")
+                        bunny_target_step += 1
+                else:
+                    # Reached the right cliff!
+                    bunny_pos[0] += 6.0
+                    if bunny_pos[0] >= 870:
+                        bunny_state = "celebrating"
+                        sounds.play("win")
+                        total_stars += 1
+                        if storage:
+                            storage.kv_set(STORAGE_KEY, {"stars": total_stars})
+                        try:
+                            emit_activity_event("bridge.level_completed", {"level": level_idx + 1, "stars": total_stars})
+                        except Exception:
+                            pass
+
+        elif bunny_state == "failing":
+            bunny_anim_timer += 0.04
+            # Fall down to safety trampoline at y=430, then bounce back up to x=100
+            if bunny_anim_timer < 0.5:
+                bunny_pos[1] += 8.0
+            else:
+                # Bounce arc back to start
+                t = (bunny_anim_timer - 0.5) / 0.8
+                if t < 1.0:
+                    bunny_pos[0] = bunny_pos[0] * (1 - 0.08) + 100.0 * 0.08
+                    bunny_pos[1] = 430.0 - math.sin(t * math.pi) * 120.0
+                else:
+                    bunny_pos = [100.0, 310.0]
+                    bunny_state = "idle"
+
+        elif bunny_state == "celebrating":
+            bunny_anim_timer += 0.04
+            if bunny_anim_timer > 1.8:
+                level_idx += 1
+                if level_idx >= len(LEVELS):
+                    is_victory = True
+                else:
+                    setup_level(level_idx)
 
         # Update particles
-        surviving = []
+        surviving_p = []
         for p in particles:
             p["x"] += p["vx"]
             p["y"] += p["vy"]
-            p["life"] -= p["decay"]
+            p["life"] -= 0.04
             if p["life"] > 0:
-                surviving.append(p)
-        particles = surviving
+                surviving_p.append(p)
+        particles = surviving_p
 
         # RENDER TO CANVAS
         surf = canvas.surface
 
         # 1. Sky & Backdrop
-        surf.fill(lvl["sky"])
+        surf.fill(cur_lvl["sky"])
 
-        # Gap Background (River / Canyon / Cosmic Void)
-        pygame.draw.rect(surf, lvl["gap_bg"], (gap_start, 350, gap_end - gap_start, REFERENCE_HEIGHT - 350))
+        # Sun / Moon
+        pygame.draw.circle(surf, (254, 240, 138), (140, 100), 45)
 
-        # Left Cliff
-        pygame.draw.polygon(surf, lvl["cliff_color"], [
-            (0, 360), (gap_start, 360), (gap_start - 30, REFERENCE_HEIGHT), (0, REFERENCE_HEIGHT)
-        ])
-        # Right Cliff
-        pygame.draw.polygon(surf, lvl["cliff_color"], [
-            (gap_end, 360), (REFERENCE_WIDTH, 360), (REFERENCE_WIDTH, REFERENCE_HEIGHT), (gap_end + 30, REFERENCE_HEIGHT)
-        ])
+        # 2. Gap (Water / Abyss)
+        gap_rect = pygame.Rect(bridge_start_x - 10, bridge_y, (bridge_end_x - bridge_start_x) + 20, REFERENCE_HEIGHT - bridge_y)
+        pygame.draw.rect(surf, cur_lvl["gap_water"], gap_rect)
 
-        # Picnic Basket Goal on Right Cliff
-        pygame.draw.rect(surf, (249, 115, 22), (860, 320, 50, 40), border_radius=6)
-        pygame.draw.circle(surf, (239, 68, 68), (875, 310), 12)  # Balloon
-        pygame.draw.circle(surf, (234, 179, 8), (895, 305), 12)  # Balloon
+        # Safety Trampoline at the bottom of the chasm
+        tramp_x = (bridge_start_x + bridge_end_x) // 2
+        tramp_rect = pygame.Rect(tramp_x - 120, 440, 240, 36)
+        pygame.draw.rect(surf, (239, 68, 68), tramp_rect, border_radius=18)
+        pygame.draw.rect(surf, (254, 240, 138), (tramp_x - 100, 446, 200, 24), border_radius=12)
 
-        # 2. Draw Bridge Slots & Placed Blocks
-        for s_i in range(slot_count):
-            sx = gap_start + s_i * slot_w
-            slot_rect = pygame.Rect(sx + 3, bridge_y, slot_w - 6, 30)
-            blk = slots[s_i]
+        # 3. Cliffs (Left and Right)
+        left_cliff = pygame.Rect(0, bridge_y - 20, bridge_start_x, REFERENCE_HEIGHT - bridge_y + 20)
+        right_cliff = pygame.Rect(bridge_end_x, bridge_y - 20, REFERENCE_WIDTH - bridge_end_x, REFERENCE_HEIGHT - bridge_y + 20)
+        pygame.draw.rect(surf, cur_lvl["cliff_color"], left_cliff, border_top_right_radius=24)
+        pygame.draw.rect(surf, cur_lvl["cliff_color"], right_cliff, border_top_left_radius=24)
 
-            if blk is None:
-                # Empty ghost dashed slot
-                pygame.draw.rect(surf, (255, 255, 255), slot_rect, width=2, border_radius=6)
-                pygame.draw.circle(surf, (255, 255, 255), slot_rect.center, 6)
+        # Goal Party Flag on the Right Cliff
+        flag_x = bridge_end_x + 80
+        pygame.draw.rect(surf, (120, 53, 15), (flag_x, 240, 8, 100), border_radius=4)
+        pygame.draw.polygon(surf, (234, 179, 8), [(flag_x + 8, 240), (flag_x + 60, 260), (flag_x + 8, 280)])
+        # Golden Carrot Reward
+        pygame.draw.circle(surf, (249, 115, 22), (flag_x + 35, 310), 16)
+        pygame.draw.polygon(surf, (34, 197, 94), [(flag_x + 30, 294), (flag_x + 40, 294), (flag_x + 35, 285)])
+
+        # 4. Bridge Slots & Placed Blocks
+        for s_idx in range(num_slots):
+            sx = bridge_start_x + s_idx * slot_w
+            slot_rect = pygame.Rect(sx + 6, bridge_y, slot_w - 12, 60)
+            placed = slots[s_idx]
+            req_type = required[s_idx]
+
+            # Slot Frame
+            pygame.draw.rect(surf, (255, 255, 255, 180), slot_rect, border_radius=14)
+            pygame.draw.rect(surf, (203, 213, 225), slot_rect, width=3, border_radius=14)
+
+            if placed is not None:
+                # Draw placed block
+                _draw_block_icon(surf, placed, slot_rect.centerx, slot_rect.centery, 52)
             else:
-                # Render Block
-                pygame.draw.rect(surf, blk["color"], slot_rect, border_radius=8)
-                pygame.draw.rect(surf, blk["border"], slot_rect, width=3, border_radius=8)
-                if blk["bouncy"]:
-                    # Mushroom white dots
-                    pygame.draw.circle(surf, (255, 255, 255), (slot_rect.centerx - 15, slot_rect.centery), 4)
-                    pygame.draw.circle(surf, (255, 255, 255), (slot_rect.centerx + 15, slot_rect.centery), 4)
+                # Draw glowing requirement ghost cue
+                _draw_block_icon(surf, req_type, slot_rect.centerx, slot_rect.centery, 34)
 
-        # 3. Draw Hero Character (Bunny 🐰)
-        char_x = hero_x
-        char_y = bridge_y - 25 + hero_hop_y
-        char_r = 24
-        # Bunny Ears
-        pygame.draw.ellipse(surf, (255, 255, 255), (char_x - 14, char_y - 38, 10, 22))
-        pygame.draw.ellipse(surf, (255, 255, 255), (char_x + 4, char_y - 38, 10, 22))
-        pygame.draw.ellipse(surf, (244, 114, 182), (char_x - 12, char_y - 34, 6, 16))
-        pygame.draw.ellipse(surf, (244, 114, 182), (char_x + 6, char_y - 34, 6, 16))
+        # 5. Bunny Character
+        bx, by = bunny_pos
         # Body
-        pygame.draw.circle(surf, (255, 255, 255), (int(char_x), int(char_y)), char_r)
-        # Face
-        pygame.draw.circle(surf, (30, 30, 40), (int(char_x - 7), int(char_y - 4)), 4)
-        pygame.draw.circle(surf, (30, 30, 40), (int(char_x + 7), int(char_y - 4)), 4)
-        pygame.draw.circle(surf, (244, 114, 182), (int(char_x), int(char_y + 4)), 3)
+        pygame.draw.circle(surf, (255, 255, 255), (int(bx), int(by)), 30)
+        # Ears (Twitch animation)
+        ear_twitch = math.sin(time.time() * 6.0) * 3.0
+        pygame.draw.ellipse(surf, (255, 255, 255), pygame.Rect(bx - 18 + ear_twitch, by - 55, 14, 34))
+        pygame.draw.ellipse(surf, (244, 114, 182), pygame.Rect(bx - 14 + ear_twitch, by - 48, 8, 22))
+        pygame.draw.ellipse(surf, (255, 255, 255), pygame.Rect(bx + 4 - ear_twitch, by - 55, 14, 34))
+        pygame.draw.ellipse(surf, (244, 114, 182), pygame.Rect(bx + 8 - ear_twitch, by - 48, 8, 22))
+        # Eyes & Cute Nose
+        pygame.draw.circle(surf, (20, 20, 30), (int(bx - 8), int(by - 4)), 5)
+        pygame.draw.circle(surf, (20, 20, 30), (int(bx + 8), int(by - 4)), 5)
+        pygame.draw.circle(surf, (244, 114, 182), (int(bx), int(by + 4)), 4)
 
-        # 4. Draw Particles
+        # 6. Particles
         for p in particles:
-            cur_sz = max(2.0, p["size"] * max(0.0, min(1.0, p["life"])))
-            pygame.draw.circle(surf, p["color"], (int(p["x"]), int(p["y"])), int(cur_sz))
+            pygame.draw.circle(surf, p["color"], (int(p["x"]), int(p["y"])), int(p["size"]))
 
-        # 5. Top HUD
-        title_surf = typography.render(t("activity.title", "Costruiamo i Ponti"), FontRole.DISPLAY, 24, (30, 41, 59))
-        surf.blit(title_surf, (80, 20))
+        # 7. Bottom Palette Buttons (Giant Chunky 140x96px Targets)
+        palette_y = 475
+        for b_idx, blk in enumerate(BLOCKS):
+            btn_rect = pygame.Rect(180 + b_idx * 170, palette_y, 140, 96)
+            is_sel = (blk["id"] == selected_block_id)
+            pygame.draw.rect(surf, (255, 255, 255), btn_rect, border_radius=20)
+            pygame.draw.rect(surf, (234, 179, 8) if is_sel else (203, 213, 225), btn_rect, width=5 if is_sel else 2, border_radius=20)
+            _draw_block_icon(surf, blk["id"], btn_rect.centerx, btn_rect.centery, 56)
 
-        l_name = lvl["name_it"] if active_locale == "it" else lvl["name_en"]
-        lvl_surf = typography.render(l_name, FontRole.TITLE, 20, (71, 85, 105))
-        surf.blit(lvl_surf, (370, 22))
-
-        # Cross Button
-        cross_btn = pygame.Rect(REFERENCE_WIDTH - 160, 15, 140, 42)
-        can_cross = all(s is not None for s in slots)
-        cross_col = (34, 197, 94) if can_cross else (148, 163, 184)
-        pygame.draw.rect(surf, cross_col, cross_btn, border_radius=12)
-        c_txt = typography.render(t("btn.cross", "🐾 Attraversa!"), FontRole.CONTROL, 17, (255, 255, 255))
-        surf.blit(c_txt, (cross_btn.centerx - c_txt.get_width() // 2, cross_btn.centery - c_txt.get_height() // 2))
+        # 8. Top Control Buttons (Giant Clean Buttons)
+        # GO / Cross Button
+        go_btn = pygame.Rect(REFERENCE_WIDTH - 180, 16, 160, 60)
+        pygame.draw.rect(surf, (34, 197, 94), go_btn, border_radius=20)
+        pygame.draw.rect(surf, (22, 101, 52), go_btn, width=4, border_radius=20)
+        go_txt = typography.render("VAI!", FontRole.DISPLAY, 28, (255, 255, 255))
+        surf.blit(go_txt, (go_btn.centerx - go_txt.get_width() // 2, go_btn.centery - go_txt.get_height() // 2))
 
         # Clear Button
-        clear_btn = pygame.Rect(REFERENCE_WIDTH - 310, 15, 140, 42)
-        pygame.draw.rect(surf, (71, 85, 105), clear_btn, border_radius=12)
-        cl_txt = typography.render(t("btn.clear", "🧹 Pulisci"), FontRole.CONTROL, 17, (255, 255, 255))
-        surf.blit(cl_txt, (clear_btn.centerx - cl_txt.get_width() // 2, clear_btn.centery - cl_txt.get_height() // 2))
+        clear_btn = pygame.Rect(REFERENCE_WIDTH - 350, 16, 150, 60)
+        pygame.draw.rect(surf, (241, 245, 249), clear_btn, border_radius=20)
+        pygame.draw.rect(surf, (148, 163, 184), clear_btn, width=3, border_radius=20)
+        c_txt = typography.render("PULISCI", FontRole.DISPLAY, 20, (71, 85, 105))
+        surf.blit(c_txt, (clear_btn.centerx - c_txt.get_width() // 2, clear_btn.centery - c_txt.get_height() // 2))
 
-        # 6. Bottom Block Toolbar
-        tool_y = REFERENCE_HEIGHT - 58
-        for b_idx, blk in enumerate(BLOCK_TYPES):
-            bx = 180 + b_idx * 160
-            b_rect = pygame.Rect(bx, tool_y, 145, 44)
-            is_sel = selected_block_idx == b_idx
-            bg_col = blk["color"] if is_sel else (255, 255, 255)
-            txt_col = (255, 255, 255) if is_sel else (30, 41, 59)
-            pygame.draw.rect(surf, bg_col, b_rect, border_radius=12)
-            pygame.draw.rect(surf, blk["border"], b_rect, width=3 if is_sel else 2, border_radius=12)
-            b_name = blk["name_it"] if active_locale == "it" else blk["name_en"]
-            lbl_surf = typography.render(b_name, FontRole.CONTROL, 16, txt_col)
-            surf.blit(lbl_surf, (b_rect.centerx - lbl_surf.get_width() // 2, b_rect.centery - lbl_surf.get_height() // 2))
+        # Star Pill
+        star_pill = pygame.Rect(80, 16, 130, 60)
+        pygame.draw.rect(surf, (255, 255, 255), star_pill, border_radius=20)
+        pygame.draw.rect(surf, (234, 179, 8), star_pill, width=3, border_radius=20)
+        pygame.draw.circle(surf, (234, 179, 8), (star_pill.left + 30, star_pill.centery), 16)
+        s_txt = typography.render(str(total_stars), FontRole.DISPLAY, 28, (180, 83, 9))
+        surf.blit(s_txt, (star_pill.left + 58, star_pill.centery - s_txt.get_height() // 2))
 
-        # 7. Victory Modal
+        # 9. Victory Modal
         if is_victory:
             overlay = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.SRCALPHA)
-            overlay.fill((10, 15, 30, 200))
+            overlay.fill((10, 15, 30, 210))
             surf.blit(overlay, (0, 0))
 
-            card = pygame.Rect(REFERENCE_WIDTH // 2 - 220, REFERENCE_HEIGHT // 2 - 140, 440, 280)
-            pygame.draw.rect(surf, (30, 41, 59), card, border_radius=20)
-            pygame.draw.rect(surf, (254, 202, 87), card, width=3, border_radius=20)
+            card = pygame.Rect(REFERENCE_WIDTH // 2 - 250, REFERENCE_HEIGHT // 2 - 160, 500, 320)
+            pygame.draw.rect(surf, (255, 252, 245), card, border_radius=28)
+            pygame.draw.rect(surf, (234, 179, 8), card, width=5, border_radius=28)
 
-            v_title = typography.render(t("victory.title", "Il ponte è solidissimo! 🐾🎉"), FontRole.DISPLAY, 22, (254, 202, 87))
-            surf.blit(v_title, (card.centerx - v_title.get_width() // 2, card.top + 30))
+            v_title = typography.render("BRAVISSIMA!", FontRole.DISPLAY, 32, (217, 119, 6))
+            surf.blit(v_title, (card.centerx - v_title.get_width() // 2, card.top + 35))
 
-            v_sub = typography.render(t("victory.subtitle", "Il cucciolo ha raggiunto il picnic!"), FontRole.BODY, 18, (241, 245, 249))
-            surf.blit(v_sub, (card.centerx - v_sub.get_width() // 2, card.top + 75))
+            for i in range(5):
+                sx = card.centerx - 100 + i * 50
+                sy = card.top + 130
+                pygame.draw.circle(surf, (234, 179, 8), (sx, sy), 22)
+                pygame.draw.circle(surf, (254, 240, 138), (sx, sy), 10)
 
-            for i in range(3):
-                star_x = card.centerx - 50 + i * 50
-                star_y = card.top + 130
-                pygame.draw.circle(surf, (254, 202, 87), (star_x, star_y), 18)
-
-            again_btn = pygame.Rect(card.centerx - 110, card.bottom - 65, 220, 46)
-            pygame.draw.rect(surf, (34, 197, 94), again_btn, border_radius=14)
-            again_lbl = typography.render(t("btn.play_again", "🎉 Prossimo Livello!"), FontRole.CONTROL, 20, (255, 255, 255))
+            again_btn = pygame.Rect(card.centerx - 120, card.bottom - 80, 240, 60)
+            pygame.draw.rect(surf, (34, 197, 94), again_btn, border_radius=20)
+            again_lbl = typography.render("GIOCA ANCORA", FontRole.DISPLAY, 22, (255, 255, 255))
             surf.blit(again_lbl, (again_btn.centerx - again_lbl.get_width() // 2, again_btn.centery - again_lbl.get_height() // 2))
 
         # Present Canvas
-        canvas.present(clear=theme.background)
-
-        # Pointer cursor
-        if pygame.mouse.get_focused():
-            mpos = pygame.mouse.get_pos()
-            pygame.draw.circle(screen, (254, 202, 87), mpos, metrics.px(10))
-            pygame.draw.circle(screen, (255, 255, 255), mpos, metrics.px(5))
-
+        canvas.present()
         pygame.display.flip()
 
         if not ready_published:
             mark_activity_ready()
             ready_published = True
 
-        clock.tick(30)
-
-    if storage is not None:
-        try:
-            storage.kv_set(STORAGE_KEY, {
-                "level_idx": level_idx,
-                "timestamp": time.time(),
-            })
-        except Exception:
-            pass
+        clock.tick(60)
 
     pygame.quit()
     return 0

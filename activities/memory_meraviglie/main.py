@@ -441,42 +441,40 @@ def main() -> int:
             is_front = flip >= 0.5
             if is_front:
                 # Front face
-                pygame.draw.rect(surf, (255, 255, 255), cur_rect, border_radius=14)
-                pygame.draw.rect(surf, (226, 232, 240), cur_rect, width=2, border_radius=14)
+                pygame.draw.rect(surf, (255, 255, 255), cur_rect, border_radius=18)
+                pygame.draw.rect(surf, (203, 213, 225), cur_rect, width=3, border_radius=18)
                 if cos_flip > 0.4:
                     item = card["item"]
-                    # Emoji / Item symbol
-                    item_name = item["label_it"] if active_locale == "it" else item["label_en"]
-                    lbl_surf = typography.render(item_name, FontRole.TITLE, 18, (30, 41, 59))
-                    surf.blit(lbl_surf, (cur_rect.centerx - lbl_surf.get_width() // 2, cur_rect.centery + 30))
-                    # Color circle
-                    pygame.draw.circle(surf, item["color"], (cur_rect.centerx, cur_rect.centery - 20), int(card_w * 0.24))
-                    pygame.draw.circle(surf, (255, 255, 255), (cur_rect.centerx - 6, cur_rect.centery - 26), 6)
+                    # Giant colorful emblem
+                    emblem_r = int(card_w * 0.34)
+                    pygame.draw.circle(surf, item["color"], cur_rect.center, emblem_r)
+                    pygame.draw.circle(surf, (255, 255, 255), (cur_rect.centerx - emblem_r // 3, cur_rect.centery - emblem_r // 3), max(3, emblem_r // 3))
+                    pygame.draw.circle(surf, (20, 20, 30), cur_rect.center, emblem_r, 3)
             else:
                 # Back face
-                pygame.draw.rect(surf, theme_cfg["card_back"], cur_rect, border_radius=14)
-                pygame.draw.rect(surf, (255, 255, 255), cur_rect, width=3, border_radius=14)
+                pygame.draw.rect(surf, theme_cfg["card_back"], cur_rect, border_radius=18)
+                pygame.draw.rect(surf, (255, 255, 255), cur_rect, width=4, border_radius=18)
                 if cos_flip > 0.4:
-                    pygame.draw.circle(surf, (255, 255, 255), cur_rect.center, int(card_w * 0.18), 3)
-                    pygame.draw.circle(surf, (254, 240, 138), cur_rect.center, int(card_w * 0.10))
+                    pygame.draw.circle(surf, (255, 255, 255), cur_rect.center, int(card_w * 0.22), 4)
+                    pygame.draw.circle(surf, (254, 240, 138), cur_rect.center, int(card_w * 0.14))
 
         # 2. Draw Particles
         for p in particles:
             cur_sz = max(2.0, p["size"] * max(0.0, min(1.0, p["life"])))
             pygame.draw.circle(surf, p["color"], (int(p["x"]), int(p["y"])), int(cur_sz))
 
-        # 3. Top HUD
-        title_surf = typography.render(t("activity.title", "Memory delle Meraviglie"), FontRole.DISPLAY, 24, (30, 41, 59))
-        surf.blit(title_surf, (80, 20))
-
-        pairs_txt = f"Coppie: {pairs_found}/{total_pairs}  (Mosse: {moves_count})" if active_locale == "it" else f"Pairs: {pairs_found}/{total_pairs}  (Moves: {moves_count})"
-        pairs_surf = typography.render(pairs_txt, FontRole.TITLE, 20, (71, 85, 105))
-        surf.blit(pairs_surf, (370, 22))
+        # 3. Top HUD (Star Pill & Giant Buttons)
+        star_pill = pygame.Rect(80, 16, 130, 56)
+        pygame.draw.rect(surf, (255, 255, 255), star_pill, border_radius=18)
+        pygame.draw.rect(surf, (234, 179, 8), star_pill, width=3, border_radius=18)
+        pygame.draw.circle(surf, (234, 179, 8), (star_pill.left + 30, star_pill.centery), 16)
+        s_txt = typography.render(f"★ {pairs_found}/{total_pairs}", FontRole.DISPLAY, 24, (180, 83, 9))
+        surf.blit(s_txt, (star_pill.left + 54, star_pill.centery - s_txt.get_height() // 2))
 
         # New Game Button
-        new_btn = pygame.Rect(REFERENCE_WIDTH - 150, 15, 130, 42)
-        pygame.draw.rect(surf, (71, 85, 105), new_btn, border_radius=12)
-        new_txt = typography.render(t("btn.new_game", "🔄 Nuovo"), FontRole.CONTROL, 18, (255, 255, 255))
+        new_btn = pygame.Rect(REFERENCE_WIDTH - 160, 16, 140, 56)
+        pygame.draw.rect(surf, (71, 85, 105), new_btn, border_radius=18)
+        new_txt = typography.render("🔄 NUOVO", FontRole.DISPLAY, 20, (255, 255, 255))
         surf.blit(new_txt, (new_btn.centerx - new_txt.get_width() // 2, new_btn.centery - new_txt.get_height() // 2))
 
         # 4. Bottom Selectors

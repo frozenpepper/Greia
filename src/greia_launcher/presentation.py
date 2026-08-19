@@ -286,7 +286,8 @@ class GreiaLauncherPresentation(LauncherApplication):
 
     def _scroll_model(self, pygame: Any) -> ScrollModel:
         columns = self._columns(pygame)
-        return ScrollModel(capacity=columns * 2, step=columns)
+        page_capacity = columns * 2
+        return ScrollModel(capacity=page_capacity, step=page_capacity)
 
     def _handle_key(self, key: int, pygame: Any) -> bool:
         if self._mode != "activities":
@@ -364,7 +365,8 @@ class GreiaLauncherPresentation(LauncherApplication):
         if not activities or direction == 0:
             return
         columns = self._columns(pygame)
-        delta = columns * (-1 if direction < 0 else 1)
+        page_capacity = columns * 2
+        delta = page_capacity * (-1 if direction < 0 else 1)
         self._selected = min(max(0, self._selected + delta), len(activities) - 1)
         self._ensure_selected_visible(pygame)
 
@@ -461,28 +463,26 @@ class GreiaLauncherPresentation(LauncherApplication):
             return
 
         columns = self._columns(pygame)
-        scroll = ScrollModel(capacity=columns * 2, step=columns)
+        page_capacity = columns * 2
+        scroll = ScrollModel(capacity=page_capacity, step=page_capacity)
         window = scroll.window(
             len(activities), self._selected, self._activity_scroll_start
         )
         self._activity_scroll_start = window.start
-        visible_count = window.stop - window.start
-        rows = max(1, (visible_count + columns - 1) // columns)
+        rows = 2
         top = max(116, height // 5)
         available_h = height - top - 28
-        side_reserve = (
-            86 if window.can_scroll_backward or window.can_scroll_forward else 30
-        )
+        side_reserve = 86
         gap = max(16, min(25, width // 42))
         usable_w = max(240, width - side_reserve)
         tile_size = min(
             205,
             (usable_w - gap * (columns - 1)) // columns,
-            (available_h - gap * max(0, rows - 1)) // rows,
+            (available_h - gap * (rows - 1)) // rows,
         )
         tile_size = max(115, tile_size)
         total_width = columns * tile_size + (columns - 1) * gap
-        total_height = rows * tile_size + max(0, rows - 1) * gap
+        total_height = rows * tile_size + (rows - 1) * gap
         origin_x = (width - total_width) // 2
         origin_y = top + max(0, (available_h - total_height) // 2)
 

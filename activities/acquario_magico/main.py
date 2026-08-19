@@ -232,14 +232,14 @@ def main() -> int:
                 mx, my = logical
 
                 # Bottom Toolbar Actions
-                tool_y = REFERENCE_HEIGHT - 58
+                tool_y = REFERENCE_HEIGHT - 85
                 # 0: Add Fish Button
-                if pygame.Rect(140, tool_y, 160, 44).collidepoint(mx, my):
+                if pygame.Rect(100, tool_y, 180, 72).collidepoint(mx, my):
                     spawn_creature()
                     continue
 
                 # 1: Feed Button
-                if pygame.Rect(320, tool_y, 160, 44).collidepoint(mx, my):
+                if pygame.Rect(310, tool_y, 180, 72).collidepoint(mx, my):
                     for _ in range(5):
                         food_pellets.append({
                             "x": random.uniform(200, REFERENCE_WIDTH - 200),
@@ -254,7 +254,7 @@ def main() -> int:
                     continue
 
                 # 2: Bubbles Button
-                if pygame.Rect(500, tool_y, 160, 44).collidepoint(mx, my):
+                if pygame.Rect(520, tool_y, 180, 72).collidepoint(mx, my):
                     for _ in range(15):
                         bubbles.append({
                             "x": random.uniform(100, REFERENCE_WIDTH - 100),
@@ -267,7 +267,7 @@ def main() -> int:
                     continue
 
                 # 3: Glow Toggle Button
-                if pygame.Rect(680, tool_y, 190, 44).collidepoint(mx, my):
+                if pygame.Rect(730, tool_y, 180, 72).collidepoint(mx, my):
                     glow_mode = not glow_mode
                     sounds.play("glow")
                     try:
@@ -469,28 +469,28 @@ def main() -> int:
             cur_sz = max(1.5, p["size"] * max(0.0, min(1.0, p["life"])))
             pygame.draw.circle(surf, p["color"], (int(p["x"]), int(p["y"])), int(cur_sz))
 
-        # 8. Top HUD
-        title_surf = typography.render(t("activity.title", "L'Acquario Magico"), FontRole.DISPLAY, 24, (255, 255, 255))
-        surf.blit(title_surf, (80, 20))
+        # 8. Top HUD (Star Pill)
+        star_pill = pygame.Rect(80, 16, 130, 56)
+        pygame.draw.rect(surf, (255, 255, 255), star_pill, border_radius=18)
+        pygame.draw.rect(surf, (56, 189, 248), star_pill, width=3, border_radius=18)
+        pygame.draw.circle(surf, (56, 189, 248), (star_pill.left + 30, star_pill.centery), 16)
+        s_txt = typography.render(str(len(creatures)), FontRole.DISPLAY, 28, (2, 132, 199))
+        surf.blit(s_txt, (star_pill.left + 58, star_pill.centery - s_txt.get_height() // 2))
 
-        count_txt = f"Creature Marine: {len(creatures)}" if active_locale == "it" else f"Sea Creatures: {len(creatures)}"
-        count_surf = typography.render(count_txt, FontRole.TITLE, 20, (254, 240, 138))
-        surf.blit(count_surf, (370, 22))
-
-        # 9. Bottom Toolbar
-        tool_y = REFERENCE_HEIGHT - 58
+        # 9. Bottom Toolbar (Giant Chunky 180x72px Buttons)
+        tool_y = REFERENCE_HEIGHT - 85
         tools_info = [
-            (140, 160, "🐠 Aggiungi", (34, 197, 94)),
-            (320, 160, "🧆 Mangime", (249, 115, 22)),
-            (500, 160, "🫧 Bolle", (56, 189, 248)),
-            (680, 190, "💡 Bagliore", (168, 85, 247) if glow_mode else (71, 85, 105)),
+            (100, 180, "PESCE", (34, 197, 94)),
+            (310, 180, "CIBO", (249, 115, 22)),
+            (520, 180, "BOLLE", (56, 189, 248)),
+            (730, 180, "LUCE", (168, 85, 247) if glow_mode else (71, 85, 105)),
         ]
 
         for bx, bw, lbl, col in tools_info:
-            b_rect = pygame.Rect(bx, tool_y, bw, 44)
-            pygame.draw.rect(surf, col, b_rect, border_radius=12)
-            pygame.draw.rect(surf, (255, 255, 255), b_rect, width=2, border_radius=12)
-            lbl_surf = typography.render(lbl, FontRole.CONTROL, 16, (255, 255, 255))
+            b_rect = pygame.Rect(bx, tool_y, bw, 72)
+            pygame.draw.rect(surf, col, b_rect, border_radius=20)
+            pygame.draw.rect(surf, (255, 255, 255), b_rect, width=3, border_radius=20)
+            lbl_surf = typography.render(lbl, FontRole.DISPLAY, 24, (255, 255, 255))
             surf.blit(lbl_surf, (b_rect.centerx - lbl_surf.get_width() // 2, b_rect.centery - lbl_surf.get_height() // 2))
 
         # Present Canvas
