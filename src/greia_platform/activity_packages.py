@@ -90,7 +90,14 @@ class ActivityPackageService:
 
     @classmethod
     def from_environment(cls) -> "ActivityPackageService":
-        os_root = Path(os.environ.get("GREIA_OS_ROOT", "/opt/greia-os")).resolve()
+        default_root = Path(__file__).resolve().parents[2]
+        configured_os_root = Path(os.environ.get("GREIA_OS_ROOT", "/opt/greia-os")).resolve()
+        if (configured_os_root / "runtime" / "child-runtime.toml").is_file():
+            os_root = configured_os_root
+        elif (default_root / "runtime" / "child-runtime.toml").is_file():
+            os_root = default_root
+        else:
+            os_root = configured_os_root
         return cls(
             state_root=Path(
                 os.environ.get(
