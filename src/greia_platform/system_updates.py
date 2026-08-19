@@ -24,6 +24,7 @@ MAX_MANIFEST_BYTES = 64 * 1024
 MAX_SIGNATURE_BYTES = 16 * 1024
 MAX_PAYLOAD_BYTES = 1536 * 1024 * 1024
 MAX_BUNDLE_BYTES = 2 * 1024 * 1024 * 1024
+MIN_INBOX_FREE_BYTES = 128 * 1024 * 1024
 _MAX_RELEASE_ID = 96
 _MAX_VERSION = 64
 _MAX_NOTES = 4096
@@ -298,12 +299,13 @@ class UnavailableSystemUpdateBackend:
 
 
 class SystemUpdateInbox:
-    """Unprivileged immutable inbox for bounded Parent-delivered update bytes.
+    """Unprivileged single-candidate inbox for Parent-delivered update bytes.
 
     Receiving a bundle is not activation authority. This layer validates archive
-    structure and payload integrity, then stores the exact received artifact by
-    its content digest. Cryptographic trust and inactive-slot activation are
-    re-established by the privileged SystemUpdateService before any system write.
+    structure and payload integrity, stores the selected candidate by content
+    digest and removes older untrusted inbox candidates. Cryptographic trust and
+    inactive-slot activation are re-established by the privileged
+    SystemUpdateService before any system write.
     """
 
     def __init__(self, state_dir: Path) -> None:
@@ -314,8 +316,10 @@ class SystemUpdateInbox:
     def receive(self, bundle_path: Path) -> InspectedUpdateBundle:
         inspected = inspect_update_bundle(bundle_path)
         source_digest = sha256_file(bundle_path)
+        incoming_size = bundle_path.stat().st_size
         self.inbox_dir.mkdir(parents=True, exist_ok=True)
         os.chmod(self.inbox_dir, 0o700)
+        self._remove_stale_temporaries()
         destination = self.inbox_dir / (
             f"{inspected.manifest.release_id}-{source_digest}{BUNDLE_SUFFIX}"
         )
@@ -323,6 +327,11 @@ class SystemUpdateInbox:
             if not destination.is_file() or sha256_file(destination) != source_digest:
                 raise UpdateBundleError("content-addressed update inbox collision")
         else:
+            free_bytes = shutil.disk_usage(self.inbox_dir).free
+            if free_bytes < incoming_size + MIN_INBOX_FREE_BYTES:
+                raise UpdateBundleError(
+                    "not enough free space to receive update while preserving Greia reserve"
+                )
             temporary = destination.with_name(f".{destination.name}.{os.getpid()}.tmp")
             try:
                 with bundle_path.open("rb") as source, temporary.open("xb") as target:
@@ -342,6 +351,7 @@ class SystemUpdateInbox:
                 os.chmod(destination, 0o600)
             finally:
                 temporary.unlink(missing_ok=True)
+        self._prune_other_candidates(destination)
         payload = {
             "state": UpdateState.RECEIVED.value,
             "release": inspected.manifest.as_json_dict(),
@@ -372,6 +382,21 @@ class SystemUpdateInbox:
         public = dict(raw)
         public.pop("bundle_path", None)
         return public
+
+    def _remove_stale_temporaries(self) -> None:
+        try:
+            for candidate in self.inbox_dir.glob(".*.tmp"):
+                candidate.unlink(missing_ok=True)
+        except OSError as exc:
+            raise UpdateBundleError("unable to clean stale update inbox temporary") from exc
+
+    def _prune_other_candidates(self, keep: Path) -> None:
+        try:
+            for candidate in self.inbox_dir.glob(f"*{BUNDLE_SUFFIX}"):
+                if candidate != keep:
+                    candidate.unlink(missing_ok=True)
+        except OSError as exc:
+            raise UpdateBundleError("unable to bound update inbox candidates") from exc
 
 
 class SystemUpdateService:
