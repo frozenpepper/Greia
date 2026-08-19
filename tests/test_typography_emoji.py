@@ -62,6 +62,11 @@ class GraphemeContractTests(unittest.TestCase):
             with self.subTest(cluster=cluster):
                 self.assertFalse(is_emoji_cluster(cluster))
 
+    def test_text_and_emoji_variation_selectors_are_respected(self) -> None:
+        self.assertFalse(is_emoji_cluster("©"))
+        self.assertTrue(is_emoji_cluster("©️"))
+        self.assertFalse(is_emoji_cluster("©︎"))
+
 
 class EmojiPaletteTests(unittest.TestCase):
     def test_default_palette_is_bounded_and_every_item_is_one_emoji_grapheme(self) -> None:
