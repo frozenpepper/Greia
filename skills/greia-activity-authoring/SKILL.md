@@ -42,6 +42,8 @@ src/greia_platform/responsive_layout.py
 src/greia_platform/activity_viewport.py
 src/greia_platform/localization.py
 src/greia_platform/language_presentation.py
+src/greia_platform/typography.py
+src/greia_platform/emoji_palette.py
 ```
 
 For Pygame Activities also inspect:
@@ -94,9 +96,12 @@ An Activity must not:
 - bake launcher language flags into its own icon asset;
 - ship executable native files merely because they work on a developer machine;
 - grant itself capabilities/permissions through UI state;
-- create an unbounded cache/widget/list merely because current sample data is small.
+- create an unbounded cache/widget/list merely because current sample data is small;
+- open arbitrary system font paths or build a private font-fallback stack for ordinary Greia UI;
+- split user-editable Unicode text by Python codepoint when the child-visible unit is a grapheme cluster;
+- use Unicode emoji as substitutes for protected Greia system controls/icons.
 
-The platform owns lifecycle, profile/session state, package trust, permissions, system chrome, durable progress/history, physical display/input boundaries, the normal child UI-locale authority chain, launcher language presentation and the platform-owned pre-launch language chooser.
+The platform owns lifecycle, profile/session state, package trust, permissions, system chrome, durable progress/history, physical display/input boundaries, the normal child UI-locale authority chain, launcher language presentation, platform-owned pre-launch language chooser, and shared typography/emoji fallback semantics.
 
 ## 3. Package layout
 
@@ -328,6 +333,8 @@ src/greia_platform/pygame_ui.py
 src/greia_platform/pygame_canvas.py
 src/greia_platform/activity_ui.py
 src/greia_platform/pygame_effects.py
+src/greia_platform/typography.py
+src/greia_platform/emoji_palette.py
 ```
 
 ### Use shared semantics, not launcher internals
@@ -348,7 +355,7 @@ new = metrics.activity_toolbar_button(0, side="right")
 content = metrics.activity_content_rect()
 ```
 
-Use `activity_safe_rect()` when an Activity-owned secondary region (for example a Painting palette) must be anchored to the usable Activity area.
+Use `activity_safe_rect()` when an Activity-owned secondary region must be anchored to the usable Activity area.
 
 Do not compensate for Home/Back with a guessed top-left inset, and do not draw an Activity-owned Close/Home/Back control to reclaim that area. The shared helper and the system-chrome backend derive geometry from the same protected-region contract.
 
@@ -560,25 +567,9 @@ Current runtime-neutral primitives live in `greia_platform.localization`.
 
 ### 10.7 Always isolate user-facing strings from gameplay logic
 
-Even if only English ships today, prefer:
+Even if only English ships today, prefer semantic keys over hard-coded prose spread through game state/control flow.
 
-```text
-feedback.correct
-instruction.choose
-activity.title
-```
-
-over hard-coded prose spread through game state/control flow.
-
-Do not concatenate translated fragments into English sentence order.
-
-Bad:
-
-```text
-translated("you_have") + count + translated("apples")
-```
-
-Prefer a complete semantic message with named variables.
+Do not concatenate translated fragments into English sentence order. Prefer a complete semantic message with named variables.
 
 ### 10.8 Localize spoken instructions through semantic cue IDs
 
@@ -741,6 +732,8 @@ tests.test_shape_garden_contract
 tests.test_core_activity_system_safe_ui
 tests.test_localization
 tests.test_language_presentation
+tests.test_typography_emoji
+tests.test_writing_emoji_editing
 tests.test_ui_motion_scroll
 tests.test_launcher_presentation
 tests.test_greia_simulator
@@ -769,7 +762,9 @@ For a `.greiaactivity` package, test at least:
 - single-language fallback works on a differently configured profile where applicable;
 - launcher title localization and dynamic language flag are correct where implemented;
 - strings/audio are isolated enough that another locale can be added without gameplay rewrite;
-- caches/lists/effects remain bounded.
+- caches/lists/effects remain bounded;
+- user-editable Unicode text uses grapheme-safe editing where clusters may occur;
+- emoji/mixed text uses the Greia typography fallback rather than direct host-font assumptions where standard Greia text behavior is desired.
 
 Never claim PASS because a test file exists. Record only commands actually executed and their real output/evidence.
 
@@ -791,7 +786,8 @@ A good Greia Activity should generally be:
 - honest about its available languages;
 - easy to localize later even if only one language ships initially;
 - free of per-resolution and per-language coordinate forks;
-- free of Activity-owned fake system navigation and early READY publication.
+- free of Activity-owned fake system navigation and early READY publication;
+- Unicode-safe where child-authored text can contain emoji or composed characters.
 
 ## 19. When changing the Activity contract
 
@@ -876,3 +872,116 @@ Always label simulator evidence as simulator/developer evidence.
 ### 20.5 Web/HTML Activities remain tied to R9
 
 Do not treat host-browser success as Greia Web-runtime success. The simulator intentionally does **not** implement its own browser/webview Activity runtime. When the canonical R9 Web runtime adapter/SDK is implemented, the simulator must consume that same adapter. Until then, Python is the only current simulator Activity runtime and an HTML/Web Activity should remain unavailable for the same reason it is unavailable on current Greia runtime composition.
+
+## 21. Unicode text, emoji and the Greia typography service
+
+### 21.1 Use semantic Greia typography for standard UI
+
+The current Python/Pygame platform provides:
+
+```python
+from greia_platform.pygame_ui import FontRole, GreiaTypography
+
+typography = GreiaTypography()
+surface = typography.render(
+    "Great job! 🌟",
+    FontRole.TITLE,
+    32,
+    (40, 40, 40),
+)
+```
+
+For ordinary Greia controls, explanatory text, galleries and child-authored mixed text, prefer this shared service over opening `pygame.font.Font()` or `/usr/share/fonts/...` directly.
+
+The service owns:
+
+- semantic Nunito Sans roles;
+- font caching;
+- current Noto Color Emoji fallback;
+- Pillow color-emoji rasterization details;
+- bounded emoji-surface caching;
+- shared measurement consistent with rendering.
+
+A custom pedagogical/content font may still be appropriate for a particular Activity. That does not justify reimplementing normal Greia fallback behavior.
+
+### 21.2 Treat grapheme clusters as visible editing units
+
+A visible character may contain several codepoints:
+
+```text
+👍🏽
+👩‍🔬
+🏳️‍🌈
+🇮🇹
+1️⃣
+❤️
+```
+
+Use the shared helpers when implementing editable text:
+
+```python
+from greia_platform.pygame_ui import (
+    grapheme_boundaries,
+    grapheme_spans,
+    snap_grapheme_boundary,
+    truncate_grapheme_safe,
+)
+```
+
+Cursor movement, Backspace/Delete, selection endpoints, hit-testing, wrapping, preview truncation and document limits must not cut through a grapheme cluster.
+
+Do **not** infer that `len(text)` is the number of child-visible characters, and do not delete `text[cursor - 1:cursor]` as the general Backspace implementation.
+
+The current installed Python path uses `python3-regex` Unicode extended-grapheme segmentation (`\X`). A small stdlib fallback exists for development-host importability; it is not permission to create a second language-specific segmentation implementation in an Activity.
+
+### 21.3 Emoji are standard UTF-8 content
+
+Store emoji as ordinary Unicode strings. Do not persist:
+
+- Greia-private emoji IDs as the authoritative text;
+- emoji PNG filenames instead of text;
+- font glyph IDs;
+- host font paths.
+
+This preserves documents across Greia backup, architecture/runtime changes and external Unicode-aware tooling.
+
+### 21.4 The curated picker is reusable data, not the rendering limit
+
+`src/greia_platform/emoji_palette.py` provides a bounded child-friendly `EmojiPalette` used by the first-party Writing Activity. It is intentionally much smaller than the entire Unicode emoji catalogue.
+
+An Activity that genuinely needs a common-emoji picker should reuse that semantic palette rather than hard-code another random list. Rendering remains capable of emoji beyond the curated palette when valid Unicode text arrives through input/restored content and the installed emoji font supports it.
+
+A specialized Activity may have domain-specific symbols, but those are Activity content, not a replacement for the platform text fallback.
+
+### 21.5 System icons remain semantic Greia assets
+
+Do not replace:
+
+```text
+Home
+Back
+settings
+audio
+trust/recovery
+award/status controls
+```
+
+with `🏠`, `⬅️`, `⚙️`, `🔊` or other emoji merely because the renderer can display them. Emoji vary with font/Unicode version and are expressive text. Trusted Greia controls require controlled semantic assets and authority boundaries.
+
+### 21.6 Evidence and performance
+
+Emoji support is not complete merely because a smiley renders on a developer machine. Relevant acceptance includes:
+
+- simple emoji;
+- variation-selector sequences;
+- skin tones;
+- ZWJ sequences;
+- flags;
+- keycaps;
+- mixed Nunito + emoji lines;
+- whole-cluster cursor/delete/wrap/hit-test behavior;
+- bounded cache growth;
+- installed font/package footprint;
+- first-render and cached-render latency/RSS at the C0/Acer floor.
+
+Current focused source tests are `tests.test_typography_emoji` and `tests.test_writing_emoji_editing`. As always, committed tests are not a PASS claim until actually executed at the exact checkout.
