@@ -262,9 +262,11 @@ class SimulatorDesktopApp:
 
         try:
             device = self._device()
+            requested_size = self.interface_size.get()
             self._refresh_profiles()
             profile_id = self._selected_profile_id()
-            self.workspace.set_interface_size(profile_id, self.interface_size.get())
+            self.workspace.set_interface_size(profile_id, requested_size)
+            self.interface_size.set(requested_size)
             self.stop()
             self.process = subprocess.Popen(
                 self._child_command(device),
@@ -274,7 +276,7 @@ class SimulatorDesktopApp:
             )
             self.status.set(
                 f"Running real Greia Shell at {device.viewport}; selected profile "
-                f"UI size={self.interface_size.get()}."
+                f"UI size={requested_size}."
             )
         except Exception as exc:
             messagebox.showerror("Greia Simulator", str(exc))
