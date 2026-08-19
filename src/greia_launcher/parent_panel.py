@@ -8,6 +8,11 @@ from typing import Any, Callable
 
 from greia_platform.main_credential import MainCredentialStore
 from greia_platform.ssh_maintenance import SshMaintenanceService, SshStatus
+from greia_platform.system_language import (
+    SUPPORTED_SYSTEM_LANGUAGES,
+    SystemLanguageError,
+    SystemLanguageService,
+)
 from greia_platform.typography import FontRole, GreiaTypography
 from greia_platform.wifi import (
     DemoWifiBackend,
@@ -26,6 +31,7 @@ class ParentPanelState(StrEnum):
 
 
 class ParentPanelTab(StrEnum):
+    LANGUAGE = "language"
     WIFI = "wifi"
     SSH = "ssh"
     INFO = "info"
@@ -42,8 +48,9 @@ class ParentSettingsOverlay:
     """On-device Parent Settings Panel for physical Greia devices.
 
     Accessible from the user selection screen via a protected hidden key combination.
-    Provides immediate on-device access to Wi-Fi configuration, SSH maintenance,
-    and remote pairing diagnostics without exposing a Linux shell.
+    Provides immediate on-device access to the device language, Wi-Fi
+    configuration, SSH maintenance, and remote pairing diagnostics without
+    exposing a Linux shell.
     """
 
     def __init__(
@@ -52,6 +59,7 @@ class ParentSettingsOverlay:
         *,
         wifi_backend: WifiBackend | None = None,
         ssh_service: SshMaintenanceService | None = None,
+        language_service: SystemLanguageService | None = None,
     ) -> None:
         self.credential_store = credential_store
         self.credential_store.ensure_initialized()
@@ -67,20 +75,26 @@ class ParentSettingsOverlay:
 
         self.wifi_controller = WifiSetupController(backend)
         self.ssh_service = ssh_service or SshMaintenanceService()
+        self.language_service = language_service or SystemLanguageService.from_environment()
 
         self.state = ParentPanelState.CLOSED
-        self.active_tab = ParentPanelTab.WIFI
+        self.active_tab = ParentPanelTab.LANGUAGE
         self.password_text = ""
         self.password_error_until = 0.0
         self._targets: list[PanelHitTarget] = []
         self._ssh_cached_status: SshStatus | None = None
         self._last_ssh_poll = 0.0
+        self._language_index = 0
+        self._language_message = ""
+        self._sync_language_selection()
 
     def open(self) -> None:
         self.state = ParentPanelState.AUTH
-        self.active_tab = ParentPanelTab.WIFI
+        self.active_tab = ParentPanelTab.LANGUAGE
         self.password_text = ""
         self.password_error_until = 0.0
+        self._language_message = ""
+        self._sync_language_selection()
         self._targets.clear()
         self.wifi_controller.begin()
 
@@ -127,9 +141,27 @@ class ParentSettingsOverlay:
                 self.close()
                 return False
             if key == pygame.K_TAB:
-                tabs = [ParentPanelTab.WIFI, ParentPanelTab.SSH, ParentPanelTab.INFO]
+                tabs = [
+                    ParentPanelTab.LANGUAGE,
+                    ParentPanelTab.WIFI,
+                    ParentPanelTab.SSH,
+                    ParentPanelTab.INFO,
+                ]
                 idx = (tabs.index(self.active_tab) + 1) % len(tabs)
                 self.active_tab = tabs[idx]
+                return True
+
+            if self.active_tab == ParentPanelTab.LANGUAGE:
+                if key in {pygame.K_RIGHT, pygame.K_DOWN}:
+                    self._language_index = (
+                        self._language_index + 1
+                    ) % len(SUPPORTED_SYSTEM_LANGUAGES)
+                elif key in {pygame.K_LEFT, pygame.K_UP}:
+                    self._language_index = (
+                        self._language_index - 1
+                    ) % len(SUPPORTED_SYSTEM_LANGUAGES)
+                elif key in {pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_SPACE}:
+                    self._apply_language(self._language_index)
                 return True
 
             if self.active_tab == ParentPanelTab.WIFI:
@@ -166,6 +198,10 @@ class ParentSettingsOverlay:
             elif target.action == "switch_tab":
                 self.active_tab = ParentPanelTab(str(target.value))
                 return True
+            elif target.action == "language_select":
+                self._language_index = int(target.value)
+                self._apply_language(self._language_index)
+                return True
             elif target.action == "wifi_refresh":
                 self.wifi_controller.refresh()
                 return True
@@ -188,10 +224,41 @@ class ParentSettingsOverlay:
         if self.credential_store.verify(self.password_text):
             self.state = ParentPanelState.PANEL
             self.password_text = ""
+            self._sync_language_selection()
             self.wifi_controller.begin()
         else:
             self.password_text = ""
             self.password_error_until = time.monotonic() + 1.2
+
+    def _sync_language_selection(self) -> None:
+        try:
+            current = self.language_service.read().locale
+        except Exception:
+            current = SUPPORTED_SYSTEM_LANGUAGES[0].locale
+        self._language_index = next(
+            (
+                index
+                for index, language in enumerate(SUPPORTED_SYSTEM_LANGUAGES)
+                if language.locale == current
+            ),
+            0,
+        )
+
+    def _apply_language(self, index: int) -> None:
+        try:
+            language = SUPPORTED_SYSTEM_LANGUAGES[index]
+            saved = self.language_service.set(language.locale)
+            self._language_index = next(
+                (
+                    item_index
+                    for item_index, item in enumerate(SUPPORTED_SYSTEM_LANGUAGES)
+                    if item.locale == saved.locale
+                ),
+                index,
+            )
+            self._language_message = f"Language changed to {saved.name}."
+        except (SystemLanguageError, OSError, IndexError) as exc:
+            self._language_message = f"Could not change language: {exc}"
 
     def draw(
         self,
@@ -204,7 +271,6 @@ class ParentSettingsOverlay:
         self._targets.clear()
         width, height = screen.get_size()
 
-        # Dimmed backdrop
         backdrop = pygame.Surface((width, height), pygame.SRCALPHA)
         backdrop.fill((30, 24, 20, 210))
         screen.blit(backdrop, (0, 0))
@@ -233,7 +299,6 @@ class ParentSettingsOverlay:
         pygame.draw.rect(screen, (255, 250, 240), card, border_radius=24)
         pygame.draw.rect(screen, (61, 44, 31), card, width=3, border_radius=24)
 
-        # Title
         font_title = typography.font(FontRole.TITLE, 28)
         title = font_title.render("Parent Settings", True, (61, 44, 31))
         screen.blit(title, title.get_rect(center=(card.centerx, card.top + 36)))
@@ -242,7 +307,6 @@ class ParentSettingsOverlay:
         subtitle = font_body.render("Enter Parent Password", True, (118, 104, 93))
         screen.blit(subtitle, subtitle.get_rect(center=(card.centerx, card.top + 70)))
 
-        # Password input box
         input_rect = pygame.Rect(card.left + 30, card.top + 106, card_w - 60, 52)
         pygame.draw.rect(screen, (246, 236, 209), input_rect, border_radius=14)
         border_col = (181, 46, 46) if time.monotonic() < self.password_error_until else (241, 185, 35)
@@ -253,7 +317,6 @@ class ParentSettingsOverlay:
         text_surf = font_input.render(masked, True, (61, 44, 31))
         screen.blit(text_surf, text_surf.get_rect(midleft=(input_rect.left + 16, input_rect.centery)))
 
-        # Buttons
         btn_w = (card_w - 80) // 2
         btn_h = 48
         btn_y = card.bottom - 66
@@ -261,13 +324,11 @@ class ParentSettingsOverlay:
         cancel_rect = pygame.Rect(card.left + 30, btn_y, btn_w, btn_h)
         confirm_rect = pygame.Rect(card.right - 30 - btn_w, btn_y, btn_w, btn_h)
 
-        # Cancel button
         pygame.draw.rect(screen, (230, 220, 205), cancel_rect, border_radius=14)
         lbl_cancel = font_body.render("Cancel", True, (61, 44, 31))
         screen.blit(lbl_cancel, lbl_cancel.get_rect(center=cancel_rect.center))
         self._targets.append(PanelHitTarget("cancel_auth", None, cancel_rect))
 
-        # Confirm button
         pygame.draw.rect(screen, (241, 185, 35), confirm_rect, border_radius=14)
         lbl_confirm = font_body.render("Unlock", True, (61, 44, 31))
         screen.blit(lbl_confirm, lbl_confirm.get_rect(center=confirm_rect.center))
@@ -287,7 +348,6 @@ class ParentSettingsOverlay:
         pygame.draw.rect(screen, (255, 250, 240), panel_rect, border_radius=24)
         pygame.draw.rect(screen, (61, 44, 31), panel_rect, width=3, border_radius=24)
 
-        # Header bar
         header_h = 56
         header_rect = pygame.Rect(panel_rect.left, panel_rect.top, panel_rect.width, header_h)
 
@@ -295,7 +355,6 @@ class ParentSettingsOverlay:
         title = font_title.render("Parent Settings", True, (61, 44, 31))
         screen.blit(title, (header_rect.left + 24, header_rect.top + 16))
 
-        # Close button (top right)
         close_btn = pygame.Rect(header_rect.right - 50, header_rect.top + 10, 36, 36)
         pygame.draw.rect(screen, (246, 236, 209), close_btn, border_radius=10)
         pygame.draw.rect(screen, (61, 44, 31), close_btn, width=2, border_radius=10)
@@ -303,9 +362,9 @@ class ParentSettingsOverlay:
         screen.blit(icon_close, icon_close.get_rect(center=close_btn.center))
         self._targets.append(PanelHitTarget("close_panel", None, close_btn))
 
-        # Tab bar
         tab_y = header_rect.bottom + 8
         tabs = [
+            (ParentPanelTab.LANGUAGE, "Language"),
             (ParentPanelTab.WIFI, "Wi-Fi"),
             (ParentPanelTab.SSH, "SSH Maintenance"),
             (ParentPanelTab.INFO, "Remote & Pairing"),
@@ -326,7 +385,6 @@ class ParentSettingsOverlay:
             self._targets.append(PanelHitTarget("switch_tab", tab_id, tab_rect))
             tab_x += tab_w + 12
 
-        # Content area
         content_rect = pygame.Rect(
             panel_rect.left + 24,
             tab_y + 50,
@@ -334,12 +392,82 @@ class ParentSettingsOverlay:
             panel_rect.bottom - (tab_y + 66),
         )
 
-        if self.active_tab == ParentPanelTab.WIFI:
+        if self.active_tab == ParentPanelTab.LANGUAGE:
+            self._draw_language_tab(screen, content_rect, typography, pygame)
+        elif self.active_tab == ParentPanelTab.WIFI:
             self._draw_wifi_tab(screen, content_rect, typography, pygame, load_icon_fn)
         elif self.active_tab == ParentPanelTab.SSH:
             self._draw_ssh_tab(screen, content_rect, typography, pygame, load_icon_fn)
         elif self.active_tab == ParentPanelTab.INFO:
             self._draw_info_tab(screen, content_rect, typography, pygame, load_icon_fn)
+
+    def _draw_language_tab(
+        self,
+        screen: Any,
+        rect: Any,
+        typography: GreiaTypography,
+        pygame: Any,
+    ) -> None:
+        font_title = typography.font(FontRole.TITLE, 22)
+        font_body = typography.font(FontRole.BODY, 16)
+        card = pygame.Rect(rect.left, rect.top, rect.width, rect.height)
+        pygame.draw.rect(screen, (246, 236, 209), card, border_radius=16)
+        title = font_title.render("Greia language", True, (61, 44, 31))
+        screen.blit(title, (card.left + 20, card.top + 14))
+        note = font_body.render(
+            "This changes the device default. Activities use their own supported-language fallback.",
+            True,
+            (118, 104, 93),
+        )
+        screen.blit(note, (card.left + 20, card.top + 44))
+
+        columns = 3
+        gap = 10
+        left = card.left + 18
+        top = card.top + 78
+        width = card.width - 36
+        cell_w = (width - gap * (columns - 1)) // columns
+        cell_h = 62
+        for index, language in enumerate(SUPPORTED_SYSTEM_LANGUAGES):
+            row, column = divmod(index, columns)
+            cell = pygame.Rect(
+                left + column * (cell_w + gap),
+                top + row * (cell_h + 8),
+                cell_w,
+                cell_h,
+            )
+            selected = index == self._language_index
+            pygame.draw.rect(
+                screen,
+                (241, 185, 35) if selected else (255, 250, 240),
+                cell,
+                border_radius=12,
+            )
+            pygame.draw.rect(
+                screen,
+                (61, 44, 31),
+                cell,
+                width=3 if selected else 1,
+                border_radius=12,
+            )
+            flag = typography.render(
+                language.flag,
+                FontRole.DISPLAY,
+                28,
+                (61, 44, 31),
+            )
+            screen.blit(flag, flag.get_rect(midleft=(cell.left + 10, cell.centery)))
+            label = font_body.render(language.name, True, (61, 44, 31))
+            screen.blit(label, label.get_rect(midleft=(cell.left + 54, cell.centery)))
+            self._targets.append(PanelHitTarget("language_select", index, cell))
+
+        if self._language_message:
+            message = font_body.render(
+                self._language_message,
+                True,
+                (181, 46, 46) if self._language_message.startswith("Could not") else (47, 117, 81),
+            )
+            screen.blit(message, (card.left + 20, card.bottom - 26))
 
     def _draw_wifi_tab(
         self,
@@ -353,7 +481,6 @@ class ParentSettingsOverlay:
         font_bold = typography.font(FontRole.CONTROL, 18)
         snapshot = self.wifi_controller.snapshot
 
-        # Top status / refresh bar
         top_bar = pygame.Rect(rect.left, rect.top, rect.width, 42)
         status_text = f"Status: {snapshot.phase.value.title()}"
         if snapshot.connected_ssid:
@@ -364,7 +491,6 @@ class ParentSettingsOverlay:
         status_surf = font_body.render(status_text, True, (181, 46, 46) if snapshot.error else (61, 44, 31))
         screen.blit(status_surf, (top_bar.left, top_bar.top + 10))
 
-        # Refresh button
         refresh_btn = pygame.Rect(top_bar.right - 110, top_bar.top, 100, 36)
         pygame.draw.rect(screen, (246, 236, 209), refresh_btn, border_radius=10)
         pygame.draw.rect(screen, (61, 44, 31), refresh_btn, width=1, border_radius=10)
@@ -372,7 +498,6 @@ class ParentSettingsOverlay:
         screen.blit(lbl_refresh, lbl_refresh.get_rect(center=refresh_btn.center))
         self._targets.append(PanelHitTarget("wifi_refresh", None, refresh_btn))
 
-        # Network list area
         list_rect = pygame.Rect(rect.left, top_bar.bottom + 10, rect.width // 2 - 10, rect.height - 52)
         pygame.draw.rect(screen, (246, 236, 209), list_rect, border_radius=16)
         pygame.draw.rect(screen, (220, 210, 190), list_rect, width=1, border_radius=16)
@@ -385,7 +510,6 @@ class ParentSettingsOverlay:
             pygame.draw.rect(screen, bg, item_rect, border_radius=10)
             pygame.draw.rect(screen, (61, 44, 31), item_rect, width=2 if is_selected else 1, border_radius=10)
 
-            # SSID label
             label = network.ssid
             if network.security == WifiSecurity.PERSONAL:
                 label += " 🔒"
@@ -401,7 +525,6 @@ class ParentSettingsOverlay:
             no_nets = font_body.render("No networks found. Click Scan.", True, (118, 104, 93))
             screen.blit(no_nets, no_nets.get_rect(center=list_rect.center))
 
-        # Selected Network details & password form
         form_rect = pygame.Rect(list_rect.right + 20, top_bar.bottom + 10, rect.width // 2 - 10, rect.height - 52)
         pygame.draw.rect(screen, (246, 236, 209), form_rect, border_radius=16)
 
@@ -425,7 +548,6 @@ class ParentSettingsOverlay:
                 txt = font_body.render(masked, True, (61, 44, 31) if snapshot.passphrase else (150, 140, 130))
                 screen.blit(txt, (pwd_box.left + 12, pwd_box.top + 12))
 
-            # Connect button
             connect_btn = pygame.Rect(form_rect.left + 16, form_rect.bottom - 60, form_rect.width - 32, 44)
             pygame.draw.rect(screen, (241, 185, 35), connect_btn, border_radius=12)
             pygame.draw.rect(screen, (61, 44, 31), connect_btn, width=2, border_radius=12)
@@ -460,7 +582,6 @@ class ParentSettingsOverlay:
         title = font_title.render("SSH Maintenance Switch", True, (61, 44, 31))
         screen.blit(title, (card.left + 24, card.top + 20))
 
-        # Status badge
         is_on = status.active or status.enabled
         badge_rect = pygame.Rect(card.left + 24, card.top + 58, 140, 36)
         badge_bg = (47, 117, 81) if is_on else (181, 46, 46)
@@ -468,7 +589,6 @@ class ParentSettingsOverlay:
         lbl_status = font_bold.render("ENABLED" if is_on else "DISABLED", True, (255, 255, 255))
         screen.blit(lbl_status, lbl_status.get_rect(center=badge_rect.center))
 
-        # Toggle Button
         toggle_btn = pygame.Rect(badge_rect.right + 20, card.top + 58, 160, 36)
         pygame.draw.rect(screen, (241, 185, 35), toggle_btn, border_radius=10)
         pygame.draw.rect(screen, (61, 44, 31), toggle_btn, width=2, border_radius=10)
@@ -476,7 +596,6 @@ class ParentSettingsOverlay:
         screen.blit(lbl_toggle, lbl_toggle.get_rect(center=toggle_btn.center))
         self._targets.append(PanelHitTarget("ssh_toggle", None, toggle_btn))
 
-        # Connection details
         y = card.top + 116
         lines = [
             f"Administrative user: {status.username}",
@@ -489,7 +608,6 @@ class ParentSettingsOverlay:
             screen.blit(line_surf, (card.left + 24, y))
             y += 28
 
-        # Note
         note_y = card.bottom - 48
         note = font_body.render(
             "Note: SSH allows administrative terminal access. Keep disabled when not in use.",
@@ -518,7 +636,7 @@ class ParentSettingsOverlay:
         y = card.top + 64
         lines = [
             "Greia Parents is accessible from any browser on this home network.",
-            f"1. Connect your phone or laptop to the same Wi-Fi network.",
+            "1. Connect your phone or laptop to the same Wi-Fi network.",
             f"2. Open http://{self.ssh_service.get_status().host_ip}:8766 in your browser.",
             "3. mDNS Service: _greia-parent._tcp (Bonjour / Avahi auto-discovery).",
             "4. Main Parent login: username 'greia', default password 'greia'.",
