@@ -100,9 +100,19 @@ def run_activity(entrypoint: Path, *, target_size: tuple[int, int]) -> None:
         if name.startswith("GREIA_SIMULATOR"):
             os.environ.pop(name, None)
 
+    # ActivitySupervisor deliberately strips inherited PYTHONPATH. Re-establish
+    # only the Greia-owned source root required by the curated Activity runtime,
+    # and keep it ahead of Activity content so trusted platform modules cannot be
+    # shadowed even if a future validation regression misses a reserved name.
+    trusted_source = str(Path(__file__).resolve().parents[1])
     package_path = str(root)
-    if package_path not in sys.path:
-        sys.path.insert(0, package_path)
+    sys.path[:] = [
+        item
+        for item in sys.path
+        if item not in {trusted_source, package_path}
+    ]
+    sys.path.insert(0, package_path)
+    sys.path.insert(0, trusted_source)
     runpy.run_path(str(path), run_name="__main__")
 
 
