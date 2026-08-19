@@ -418,23 +418,69 @@ A freshly installed OS grey-screens + reboots when the **regenerated** initramfs
 Previously, `greia/greia` SSH depended on running `provision_developer_*` manually after a build — a step that could be missed (a flashed installer shipped with SSH off). **Now** `build-image.sh` and `build-installer-image.sh` detect the `developer-remote` package set in the profile and, for dev profiles:
 
 - create/unlock the `greia` account and set the `greia` password (`chpasswd`, then `passwd -u`);
-- rewrite the SSH floor to `AllowUsers greia` with password auth, `DenyUsers root`;
+- rewrite **both** `sshd_config.d` drop-ins (`00-greia-security-floor.conf` and `20-greia-parent.conf`) to `AllowUsers greia` with `PasswordAuthentication yes` / `AuthenticationMethods publickey,password`, `DenyUsers root` — so no later-sorted file re-introduces publickey-only and defeats the password login;
 - enable `ssh.service`;
 - write `/etc/greia-os/developer-remote` (which also flips the installed boot to observable `console=tty1 panic=30`).
 
 Normal/release profiles stay fail-closed (SSH off, greia locked). Root SSH is always disabled.
 
-**WHY:** the owner policy requires developer/test installs and the live installer to stay reachable as `greia / greia` during active hardware bring-up, and it must be reproducible — not dependent on a manual step that can be forgotten.
+**WHY:** the owner policy requires developer/test installs and the live installer to stay reachable as `greia / greia` during active hardware bring-up, and it must be reproducible — not dependent on a manual step that can be forgotten. A real defect where the `20-greia-parent.conf` base config (publickey-only) defeated the dev floor and left password SSH rejected was found and fixed; a regression locks that both drop-ins stay consistent.
 
 ## 6.5 Splash logo rendering
 
-The splash "one color glitch" was caused by a **noisy logo extraction** from the legacy animation frame (a crude brightness threshold over-captured the navy gradient), not by the renderer. The renderer's `pack_pixel` was verified correct for RGB565/24/32-bit framebuffers. The fix uses a luminance floor + median filter in `tools/generate_boot_artwork.py` and an indigo logo color that survives RGB565. The regression suite guards the white-frame + logo-color contract.
+Two distinct splash defects were found and fixed:
+
+1. **Color glitch ("one color rendered, broken"):** caused by a **noisy logo extraction** from the legacy animation frame (a crude brightness threshold over-captured the navy gradient). The renderer's `pack_pixel` was verified correct for RGB565/24/32-bit framebuffers. Fixed with a luminance floor + median filter in `tools/generate_boot_artwork.py` and an indigo logo color `(62,70,130)` that survives RGB565.
+2. **Geometry glitch ("full-screen-width, clipped vertically"):** the installed-OS splash could render the logo oversized/clipped when the initramfs framebuffer reported odd/degenerate geometry. Fixed in `build/early-boot/greia-fb-splash.c` to always preserve aspect ratio, cap to a margin fraction of the visible area, and guard every division against zero/oversized dimensions.
+
+Regressions in `tests/test_boot_experience_contract.py` lock both the logo-color/white-frame contract and the geometry invariant.
 
 ## 6.6 State / evidence
 
 - On 2026-08-19, a fresh `legacy-x86-i686-dev` syslinux/FAT32 installer **and** its installed OS **booted on the Acer** (installer completed; installed OS reached the launcher). This is the first recorded Acer physical PASS for the current lineage.
 - The boot/SSH/installer focused suites pass on the owner-controlled checkout; the full `make verify` is blocked only by the owner's in-progress emoji/simulator import errors (§2).
-- The clean-logo fix and later work are committed; the USB in use may predate some cosmetic fixes (see §6.5) — rebuild `tools/build-live-usb.sh` output from current `main` before further physical acceptance.
+- The splash color+geometry and SSH-consistency fixes are committed after the last physical build; **rebuild from current `main` before further physical acceptance** so these fixes reach the medium and installed system.
+
+## 6.7 How to rebuild the installer image (exact steps)
+
+The current Acer installer/test path is fully reproducible from `main`:
+
+```bash
+# 1. Ensure the checked-out tree is current main.
+cd <greia-checkout>
+git checkout main && git pull --ff-only origin main
+
+# 2. Build the installer image (target + live installer + payload).
+#    <profile> = legacy-x86-i686-dev for the developer/test image with SSH.
+mkdir -p /path/to/out
+sudo bash build/build-installer-image.sh legacy-x86-i686-dev /path/to/out
+
+# 3. Make the Acer-bootable syslinux/FAT32 USB from that image.
+#    <device> = the WHOLE removable USB disk (e.g. /dev/sdd). DESTRUCTIVE.
+sudo bash tools/build-live-usb.sh \
+  /path/to/out/greia-os-installer-legacy-x86-i686-dev.img \
+  /dev/sdd
+
+# 4. (Optional) regenerate boot artwork if the source logo frame changed.
+python3 tools/generate_boot_artwork.py
+
+# 5. Focused boot/SSH/installer gate before flashing.
+PYTHONPATH=src python3 -m unittest \
+  tests.test_boot_experience_contract \
+  tests.test_boot_contract \
+  tests.test_boot_animation_contract \
+  tests.test_installation_hardware_regressions \
+  tests.test_installer_engine \
+  tests.test_launcher_presentation -v
+```
+
+**Critical things to remember:**
+
+- **Do not boot a GRUB-MBR USB on the Acer** — use `tools/build-live-usb.sh` (syslinux/FAT32). See §6.2.
+- **Verify the media id is consistent** before booting: `.disk/live-uuid` == `syslinux.cfg` `greia.live_media_id` == initramfs `conf/uuid.conf`. `tools/build-live-usb.sh` derives all three from the image.
+- **SSH is `greia / greia`** on the live installer and the installed dev OS; root SSH is denied.
+- **The installed boot is observable** (`console=tty1 panic=30`) for dev images, so a kernel panic prints instead of silently rebooting.
+- The full `make verify` currently needs the owner's in-progress emoji/simulator import fixes before it passes end-to-end; the boot scope above is independent and green.
 
 Canonical hardware/install history:
 
