@@ -47,7 +47,7 @@ def install_pygame_display_patch(
     # used to establish the synthetic surface.
     import pygame
     from greia_platform.system_chrome import ActivitySystemChromeLayout
-    from greia_platform.activity_ui import draw_home_symbol
+    from greia_platform.activity_ui import draw_home_symbol, draw_back_symbol
 
     original = pygame.display.set_mode
     original_flip = pygame.display.flip
@@ -140,21 +140,68 @@ def install_pygame_display_patch(
             chrome = ActivitySystemChromeLayout.for_surface(w, h)
             hb = chrome.home_hitbox
             home_rect = pygame.Rect(hb.x, hb.y, hb.width, hb.height)
-            # Draw trusted Home button pill
+
+            # Drop shadow
+            shadow_rect = home_rect.move(0, 3)
             pygame.draw.rect(
                 surface,
-                (255, 248, 235),
-                home_rect,
-                border_radius=max(6, home_rect.width // 4),
+                (0, 0, 0, 40) if surface.get_flags() & pygame.SRCALPHA else (180, 160, 140),
+                shadow_rect,
+                border_radius=max(8, home_rect.width // 3),
             )
+
+            # Warm tactile Home button pill
             pygame.draw.rect(
                 surface,
-                (61, 44, 31),
+                (255, 252, 245),
                 home_rect,
-                width=2,
-                border_radius=max(6, home_rect.width // 4),
+                border_radius=max(8, home_rect.width // 3),
             )
-            draw_home_symbol(surface, home_rect, (61, 44, 31))
+            # Subtle top bevel highlight
+            highlight_rect = pygame.Rect(home_rect.x + 2, home_rect.y + 2, home_rect.width - 4, home_rect.height // 2)
+            pygame.draw.rect(
+                surface,
+                (255, 255, 255),
+                highlight_rect,
+                border_top_left_radius=max(6, home_rect.width // 3 - 2),
+                border_top_right_radius=max(6, home_rect.width // 3 - 2),
+            )
+            # Outline
+            pygame.draw.rect(
+                surface,
+                (78, 56, 40),
+                home_rect,
+                width=max(2, home_rect.width // 24),
+                border_radius=max(8, home_rect.width // 3),
+            )
+            draw_home_symbol(surface, home_rect, (78, 56, 40))
+
+            # If Back button is available, draw Back button pill
+            if chrome.back_available:
+                bb = chrome.back_hitbox
+                back_rect = pygame.Rect(bb.x, bb.y, bb.width, bb.height)
+                # Drop shadow
+                back_shadow = back_rect.move(0, 3)
+                pygame.draw.rect(
+                    surface,
+                    (0, 0, 0, 40) if surface.get_flags() & pygame.SRCALPHA else (180, 160, 140),
+                    back_shadow,
+                    border_radius=max(8, back_rect.width // 3),
+                )
+                pygame.draw.rect(
+                    surface,
+                    (255, 252, 245),
+                    back_rect,
+                    border_radius=max(8, back_rect.width // 3),
+                )
+                pygame.draw.rect(
+                    surface,
+                    (78, 56, 40),
+                    back_rect,
+                    width=max(2, back_rect.width // 24),
+                    border_radius=max(8, back_rect.width // 3),
+                )
+                draw_back_symbol(surface, back_rect, (78, 56, 40))
 
             # Draw cursor on top of all chrome overlays when mouse is focused
             if pygame.mouse.get_focused():

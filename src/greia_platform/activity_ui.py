@@ -279,32 +279,82 @@ def draw_home_symbol(
     rect: pygame.Rect,
     color: tuple[int, int, int],
 ) -> None:
-    """Draw Greia's canonical simple Home glyph inside a control rectangle."""
+    """Draw Greia's canonical cute cottage Home glyph inside a control rectangle."""
 
-    span = max(12, min(rect.width, rect.height) // 3)
-    roof_y = rect.centery - span // 2
-    left = rect.centerx - span
-    right = rect.centerx + span
-    wall_top = rect.centery
-    bottom = rect.centery + span
-    stroke = max(3, min(rect.width, rect.height) // 12)
-    pygame.draw.lines(
+    sz = min(rect.width, rect.height)
+    cx, cy = rect.centerx, rect.centery
+    scale = sz / 48.0
+
+    # Chimney on right
+    chimney_x = cx + int(6 * scale)
+    chimney_y = cy - int(16 * scale)
+    chimney_w = max(3, int(5 * scale))
+    chimney_h = max(5, int(9 * scale))
+    pygame.draw.rect(
         surface,
         color,
-        False,
-        [(left, wall_top), (rect.centerx, roof_y), (right, wall_top)],
-        stroke,
+        (chimney_x, chimney_y, chimney_w, chimney_h),
+        border_radius=max(1, int(1.5 * scale)),
     )
-    body = pygame.Rect(left + stroke, wall_top - stroke // 2, span * 2 - stroke * 2, bottom - wall_top)
-    pygame.draw.rect(surface, color, body, width=stroke, border_radius=max(2, stroke))
-    door_width = max(stroke * 2, body.width // 4)
-    door = pygame.Rect(
-        rect.centerx - door_width // 2,
-        body.bottom - max(stroke * 2, body.height // 2),
-        door_width,
-        max(stroke * 2, body.height // 2),
+
+    # Roof Triangle with overhang
+    roof_top = (cx, cy - int(14 * scale))
+    roof_left = (cx - int(16 * scale), cy - int(1 * scale))
+    roof_right = (cx + int(16 * scale), cy - int(1 * scale))
+    pygame.draw.polygon(surface, color, [roof_top, roof_left, roof_right])
+
+    # House Body
+    body_x = cx - int(12 * scale)
+    body_y = cy - int(2 * scale)
+    body_w = int(24 * scale)
+    body_h = int(16 * scale)
+    pygame.draw.rect(
+        surface,
+        color,
+        (body_x, body_y, body_w, body_h),
+        border_radius=max(2, int(3 * scale)),
     )
-    pygame.draw.rect(surface, color, door, width=stroke, border_radius=max(1, stroke // 2))
+
+    # Contrast details (cutouts on colored house)
+    detail_color = (255, 248, 235) if sum(color) < 450 else (61, 44, 31)
+
+    # Cozy arched door
+    door_w = max(6, int(8 * scale))
+    door_h = max(8, int(11 * scale))
+    door_x = cx - door_w // 2
+    door_y = body_y + body_h - door_h
+    pygame.draw.rect(
+        surface,
+        detail_color,
+        (door_x, door_y, door_w, door_h),
+        border_top_left_radius=door_w // 2,
+        border_top_right_radius=door_w // 2,
+    )
+
+    # Door knob
+    knob_x = door_x + door_w - max(2, int(2.5 * scale))
+    knob_y = door_y + door_h // 2
+    pygame.draw.circle(surface, color, (knob_x, knob_y), max(1, int(1.5 * scale)))
+
+    # Round attic window
+    window_r = max(2, int(3.2 * scale))
+    window_center = (cx, cy - int(4 * scale))
+    pygame.draw.circle(surface, detail_color, window_center, window_r)
+    if window_r >= 3:
+        pygame.draw.line(
+            surface,
+            color,
+            (window_center[0] - window_r + 1, window_center[1]),
+            (window_center[0] + window_r - 1, window_center[1]),
+            1,
+        )
+        pygame.draw.line(
+            surface,
+            color,
+            (window_center[0], window_center[1] - window_r + 1),
+            (window_center[0], window_center[1] + window_r - 1),
+            1,
+        )
 
 
 def draw_back_symbol(
@@ -312,24 +362,33 @@ def draw_back_symbol(
     rect: pygame.Rect,
     color: tuple[int, int, int],
 ) -> None:
-    """Draw Greia's canonical Back glyph; this is Greia navigation, not browser history."""
+    """Draw Greia's canonical chunky Back arrow glyph inside a control rectangle."""
 
-    span = max(12, min(rect.width, rect.height) // 3)
-    stroke = max(3, min(rect.width, rect.height) // 12)
-    tip = (rect.centerx - span, rect.centery)
-    tail = (rect.centerx + span, rect.centery)
-    pygame.draw.line(surface, color, tip, tail, stroke)
-    pygame.draw.lines(
+    sz = min(rect.width, rect.height)
+    cx, cy = rect.centerx, rect.centery
+    scale = sz / 48.0
+
+    # Arrow Head Points (Left-pointing rounded triangle)
+    tip_x = cx - int(14 * scale)
+    tip_y = cy
+    top_x = cx - int(2 * scale)
+    top_y = cy - int(12 * scale)
+    bot_x = cx - int(2 * scale)
+    bot_y = cy + int(12 * scale)
+
+    # Arrow Shaft (chunky rectangle extending to right)
+    shaft_x = cx - int(4 * scale)
+    shaft_y = cy - int(5 * scale)
+    shaft_w = int(17 * scale)
+    shaft_h = int(10 * scale)
+
+    pygame.draw.rect(
         surface,
         color,
-        False,
-        [
-            (rect.centerx - span // 3, rect.centery - span * 2 // 3),
-            tip,
-            (rect.centerx - span // 3, rect.centery + span * 2 // 3),
-        ],
-        stroke,
+        (shaft_x, shaft_y, shaft_w, shaft_h),
+        border_radius=max(2, int(3 * scale)),
     )
+    pygame.draw.polygon(surface, color, [(tip_x, tip_y), (top_x, top_y), (bot_x, bot_y)])
 
 
 def mix(

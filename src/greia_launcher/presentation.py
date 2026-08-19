@@ -291,6 +291,8 @@ class GreiaLauncherPresentation(LauncherApplication):
     def _handle_key(self, key: int, pygame: Any) -> bool:
         if self._mode != "activities":
             return super()._handle_key(key, pygame)
+        self._last_result = None
+        self._catalogue_error = False
         activities = self._presented_activities
         if key == pygame.K_TAB:
             self._cycle_category(1)
@@ -328,17 +330,29 @@ class GreiaLauncherPresentation(LauncherApplication):
         for target in reversed(self._targets):
             if not target.rect.collidepoint(position):
                 continue
+            if target.action == "error_badge_dismiss":
+                self._last_result = None
+                self._catalogue_error = False
+                return
             if target.action == "activity_category":
+                self._last_result = None
+                self._catalogue_error = False
                 self._set_category(str(target.value))
                 return
             if target.action == "activity_category_back":
+                self._last_result = None
+                self._catalogue_error = False
                 self._set_category(ALL_ACTIVITIES_ID)
                 return
             if target.action == "presented_activity_select":
+                self._last_result = None
+                self._catalogue_error = False
                 self._selected = int(target.value)
                 self._ensure_selected_visible(pygame)
                 return
             if target.action == "presented_activity":
+                self._last_result = None
+                self._catalogue_error = False
                 self._selected = int(target.value)
                 self._ensure_selected_visible(pygame)
                 self._launch_selected(pygame)
@@ -500,6 +514,13 @@ class GreiaLauncherPresentation(LauncherApplication):
         if (self._last_result and not self._last_result.succeeded) or self._catalogue_error:
             self._draw_error_badge(screen, pygame)
 
+    def _draw_error_badge(self, screen: Any, pygame: Any) -> None:
+        size = max(42, min(56, screen.get_height() // 10))
+        icon = self._load_icon("close_button", size, pygame)
+        badge_rect = icon.get_rect(topright=(screen.get_width() - 14, 14))
+        screen.blit(icon, badge_rect)
+        self._targets.append(HitTarget("error_badge_dismiss", 0, badge_rect))
+
     def _draw_category_bar(self, screen: Any, theme: Any, pygame: Any) -> None:
         if not self._catalogue.category_ids:
             return
@@ -515,7 +536,8 @@ class GreiaLauncherPresentation(LauncherApplication):
         if not collections:
             return
         left = 112 if self._active_profile is not None else 20
-        right = screen.get_width() - 20
+        error_active = (self._last_result and not self._last_result.succeeded) or self._catalogue_error
+        right = screen.get_width() - (76 if error_active else 20)
         gap = 9
         height = max(42, min(52, screen.get_height() // 11))
         available = max(0, right - left)

@@ -346,7 +346,10 @@ class LauncherApplication:
         for target in reversed(self._targets):
             if not target.rect.collidepoint(position):
                 continue
-            if target.action == "profile":
+            if target.action == "error_badge_dismiss":
+                self._last_result = None
+                self._catalogue_error = False
+            elif target.action == "profile":
                 self._select_profile(target.value, pygame)  # type: ignore[arg-type]
             elif target.action == "unlock":
                 self._attempt_unlock(pygame)
@@ -902,9 +905,11 @@ class LauncherApplication:
         screen.blit(image, image.get_rect(center=center))
 
     def _draw_error_badge(self, screen: Any, pygame: Any) -> None:
-        size = max(64, min(110, screen.get_height() // 6))
+        size = max(44, min(64, screen.get_height() // 10))
         icon = self._load_icon("close_button", size, pygame)
-        screen.blit(icon, icon.get_rect(topright=(screen.get_width() - 18, 18)))
+        badge_rect = icon.get_rect(topright=(screen.get_width() - 14, 14))
+        screen.blit(icon, badge_rect)
+        self._targets.append(HitTarget("error_badge_dismiss", 0, badge_rect))
 
     def _release_boot_cover(self) -> None:
         if self.windowed or os.environ.get("GREIA_SKIP_BOOT_HANDOFF") == "1":
