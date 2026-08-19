@@ -79,6 +79,12 @@ whether a boot-critical target driver exists, and never solve that mistake by
 putting one architecture's module names into a shared cross-architecture
 overlay. Compatibility-profile/target-kernel policy must own the decision.
 
+The full chronological account of this boot-loop — every diagnostic used
+(`break=top`, `/proc/modules`, `find / -name '*.ko'`, persistent journald,
+stderr capture), the reason the static checks misled us, and the complete
+fix sequence through to the working launcher — is documented in
+`INSTALLED_OS_BOOT_POSTMORTEM.md`.
+
 ---
 
 ## 3. Installer stalled at “Adding support for this computer”
