@@ -209,14 +209,24 @@ class SignatureEnvelope:
             "signature",
         }:
             raise UpdateSignatureError("signature envelope fields are invalid")
+        schema_version = value.get("schema_version")
+        algorithm = value.get("algorithm")
+        signer = value.get("signer")
+        encoded_signature = value.get("signature")
+        if isinstance(schema_version, bool) or not isinstance(schema_version, int):
+            raise UpdateSignatureError("signature schema_version must be an integer")
+        if not isinstance(algorithm, str) or not isinstance(signer, str):
+            raise UpdateSignatureError("signature algorithm/signer must be text")
+        if not isinstance(encoded_signature, str):
+            raise UpdateSignatureError("signature must be base64 text")
         try:
-            signature = base64.b64decode(str(value["signature"]), validate=True)
-        except (ValueError, TypeError) as exc:
+            signature = base64.b64decode(encoded_signature, validate=True)
+        except ValueError as exc:
             raise UpdateSignatureError("signature is not valid base64") from exc
         return cls(
-            schema_version=int(value["schema_version"]),
-            algorithm=str(value["algorithm"]),
-            signer=str(value["signer"]),
+            schema_version=schema_version,
+            algorithm=algorithm,
+            signer=signer,
             signature=signature,
         )
 
@@ -291,9 +301,9 @@ class SystemUpdateInbox:
     """Unprivileged immutable inbox for bounded Parent-delivered update bytes.
 
     Receiving a bundle is not activation authority. This layer validates archive
-    structure and payload integrity, then stores the exact received artifact.
-    Cryptographic trust and inactive-slot activation are re-established by the
-    privileged SystemUpdateService before any system write.
+    structure and payload integrity, then stores the exact received artifact by
+    its content digest. Cryptographic trust and inactive-slot activation are
+    re-established by the privileged SystemUpdateService before any system write.
     """
 
     def __init__(self, state_dir: Path) -> None:
@@ -303,24 +313,40 @@ class SystemUpdateInbox:
 
     def receive(self, bundle_path: Path) -> InspectedUpdateBundle:
         inspected = inspect_update_bundle(bundle_path)
+        source_digest = sha256_file(bundle_path)
         self.inbox_dir.mkdir(parents=True, exist_ok=True)
         os.chmod(self.inbox_dir, 0o700)
-        destination = self.inbox_dir / f"{inspected.manifest.release_id}{BUNDLE_SUFFIX}"
-        temporary = destination.with_name(f".{destination.name}.{os.getpid()}.tmp")
-        try:
-            with bundle_path.open("rb") as source, temporary.open("xb") as target:
-                shutil.copyfileobj(source, target, length=1024 * 1024)
-            os.chmod(temporary, 0o600)
-            if sha256_file(temporary) != sha256_file(bundle_path):
-                raise UpdateBundleError("queued update copy digest mismatch")
-            temporary.replace(destination)
-            os.chmod(destination, 0o600)
-        finally:
-            temporary.unlink(missing_ok=True)
+        destination = self.inbox_dir / (
+            f"{inspected.manifest.release_id}-{source_digest}{BUNDLE_SUFFIX}"
+        )
+        if destination.exists():
+            if not destination.is_file() or sha256_file(destination) != source_digest:
+                raise UpdateBundleError("content-addressed update inbox collision")
+        else:
+            temporary = destination.with_name(f".{destination.name}.{os.getpid()}.tmp")
+            try:
+                with bundle_path.open("rb") as source, temporary.open("xb") as target:
+                    shutil.copyfileobj(source, target, length=1024 * 1024)
+                os.chmod(temporary, 0o600)
+                if sha256_file(temporary) != source_digest:
+                    raise UpdateBundleError("queued update copy digest mismatch")
+                try:
+                    # Hard-link publication is atomic and never replaces an
+                    # existing content-addressed artifact. HTTPServer is
+                    # single-threaded today, but this also fails closed if a
+                    # future producer races the same digest into the inbox.
+                    os.link(temporary, destination)
+                except FileExistsError:
+                    if not destination.is_file() or sha256_file(destination) != source_digest:
+                        raise UpdateBundleError("content-addressed update inbox collision")
+                os.chmod(destination, 0o600)
+            finally:
+                temporary.unlink(missing_ok=True)
         payload = {
             "state": UpdateState.RECEIVED.value,
             "release": inspected.manifest.as_json_dict(),
             "bundle_path": str(destination),
+            "bundle_sha256": source_digest,
             "signature_verified": False,
             "activation_available": False,
         }
