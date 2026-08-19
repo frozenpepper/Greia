@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import os
 import sys
 import tempfile
@@ -10,6 +11,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
 
+import greia_simulator.workspace as simulator_workspace
 from greia_launcher.child_shell import GreiaChildShell, ProfileVisualActivitySupervisor
 from greia_launcher.composition import build_launcher_runtime_services
 from greia_launcher.runtime_adapter import (
@@ -54,7 +56,41 @@ def _write_activity(
     root.mkdir(parents=True, exist_ok=True)
     requirements = ", ".join(f'"{item}"' for item in required)
     root.joinpath("activity.toml").write_text(
-        f'''[activity]\nid = "{activity_id}"\nlegacy_ids = []\ntitle_key = "Example Activity"\nversion = "{version}"\nicon = "robot"\nlanguages = ["*"]\n\n[presentation]\ncategories = ["play"]\n\n[education]\ncategories = ["test"]\ndifficulty = 1\nskills = [{{ id = "test.skill", weight = 1 }}]\nevents = [{{ id = "probe.completed", kind = "completion" }}]\n\n[runtime]\ntype = "{runtime_type}"\napi_version = "0.1"\nentrypoint = "main.py"\n\n[input]\nprofile = "hybrid"\n\n[requirements]\nrequired_capabilities = [{requirements}]\noptional_capabilities = []\n\n[permissions]\nrequested = []\n\n[storage]\nschema_version = 1\n''',
+        f'''[activity]
+id = "{activity_id}"
+legacy_ids = []
+title_key = "Example Activity"
+version = "{version}"
+icon = "robot"
+languages = ["*"]
+
+[presentation]
+categories = ["play"]
+
+[education]
+categories = ["test"]
+difficulty = 1
+skills = [{{ id = "test.skill", weight = 1 }}]
+events = [{{ id = "probe.completed", kind = "completion" }}]
+
+[runtime]
+type = "{runtime_type}"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "hybrid"
+
+[requirements]
+required_capabilities = [{requirements}]
+optional_capabilities = []
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1
+''',
         encoding="utf-8",
     )
     root.joinpath("main.py").write_text(body, encoding="utf-8")
@@ -253,8 +289,7 @@ class GreiaSimulatorRuntimeTests(unittest.TestCase):
             )
             child_path = captured["sys_path"]
             assert isinstance(child_path, list)
-            trusted_source = str(REPO / "src")
-            self.assertEqual(child_path[0], trusted_source)
+            self.assertEqual(child_path[0], str(REPO / "src"))
             self.assertEqual(child_path[1], str(root))
 
     def test_simulator_does_not_replace_shell_authority_methods(self) -> None:
@@ -304,7 +339,7 @@ class GreiaSimulatorWorkspaceTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             SimulatorWorkspace(REPO, REPO / ".simulator-state")
 
-    def test_workspace_is_bound_to_checkout_and_can_be_explicitly_rebound(self) -> None:
+    def test_workspace_is_bound_to_checkout_and_rebind_requires_writer_lease(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             base = Path(directory)
             state = base / "state"
@@ -313,16 +348,21 @@ class GreiaSimulatorWorkspaceTests(unittest.TestCase):
 
             other_repo = base / "other-greia"
             (other_repo / "runtime").mkdir(parents=True)
-            shutil_source = REPO / "runtime" / "child-runtime.toml"
             (other_repo / "runtime" / "child-runtime.toml").write_bytes(
-                shutil_source.read_bytes()
+                (REPO / "runtime" / "child-runtime.toml").read_bytes()
             )
             second = SimulatorWorkspace(other_repo, state)
             with self.assertRaisesRegex(RuntimeError, "another Greia checkout"):
                 second.ensure()
-            second.ensure(allow_repo_rebind=True)
-            metadata = second.metadata_path.read_text(encoding="utf-8")
-            self.assertIn(str(other_repo.resolve()), metadata)
+            with self.assertRaisesRegex(RuntimeError, "active writer lock"):
+                second.ensure(allow_repo_rebind=True)
+
+            second.acquire_lock(allow_repo_rebind=True)
+            try:
+                metadata = json.loads(second.metadata_path.read_text(encoding="utf-8"))
+                self.assertEqual(metadata["repo_root"], str(other_repo.resolve()))
+            finally:
+                second.release_lock()
 
     def test_workspace_single_writer_lock(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -337,6 +377,22 @@ class GreiaSimulatorWorkspaceTests(unittest.TestCase):
                 first.release_lock()
             second.acquire_lock()
             second.release_lock()
+
+    def test_non_posix_stale_lock_probe_fails_closed_without_pid_probe(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            workspace = SimulatorWorkspace(REPO, Path(directory) / "state")
+            workspace.ensure()
+            workspace.lock_path.write_text(
+                json.dumps({"pid": 12345, "repo_root": str(REPO.resolve())}),
+                encoding="utf-8",
+            )
+            with mock.patch.object(simulator_workspace.os, "name", "nt"), mock.patch.object(
+                simulator_workspace,
+                "_posix_pid_alive",
+            ) as pid_probe:
+                self.assertFalse(workspace._discard_stale_lock())
+                pid_probe.assert_not_called()
+            self.assertTrue(workspace.lock_path.exists())
 
     def test_profile_interface_size_uses_real_store_and_named_profile(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -380,10 +436,9 @@ class GreiaSimulatorWorkspaceTests(unittest.TestCase):
             _write_activity(state / "inside")
             with self.assertRaisesRegex(ValueError, "overlap"):
                 workspace.load_activity(state / "inside")
-            ancestor = base
-            _write_activity(ancestor)
+            _write_activity(base)
             with self.assertRaisesRegex(ValueError, "overlap"):
-                workspace.load_activity(ancestor)
+                workspace.load_activity(base)
 
     @unittest.skipUnless(hasattr(os, "symlink"), "host has no symlink support")
     def test_load_activity_rejects_file_and_directory_symlinks_before_copy(self) -> None:
@@ -398,7 +453,10 @@ class GreiaSimulatorWorkspaceTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "symlinks are forbidden"):
                 workspace.load_activity(file_source)
 
-            dir_source = _write_activity(base / "dir-source", activity_id="org.example.dirlink")
+            dir_source = _write_activity(
+                base / "dir-source",
+                activity_id="org.example.dirlink",
+            )
             target_dir = base / "outside-dir"
             target_dir.mkdir()
             (target_dir / "payload.txt").write_text("outside", encoding="utf-8")
@@ -416,10 +474,7 @@ class GreiaSimulatorWorkspaceTests(unittest.TestCase):
                 handle.truncate(runtime.maximum_activity_bytes + 1)
             with self.assertRaisesRegex(ValueError, "exceeds"):
                 workspace.load_activity(source)
-            self.assertEqual(
-                tuple(workspace.state_root.glob("greia-simulator-load-*")),
-                (),
-            )
+            self.assertEqual(tuple(workspace.state_root.glob("greia-simulator-load-*")), ())
 
     def test_failed_final_publication_restores_previous_valid_activity(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -436,7 +491,7 @@ class GreiaSimulatorWorkspaceTests(unittest.TestCase):
 
             def fail_final(registry_self):
                 calls["count"] += 1
-                if calls["count"] == 3:
+                if calls["count"] == 2:
                     raise ValueError("forced final validation failure")
                 return original(registry_self)
 
@@ -462,10 +517,7 @@ class GreiaSimulatorWorkspaceTests(unittest.TestCase):
             archive = base / "test.greiaactivity"
             archive.write_bytes(b"placeholder")
             receipt = object()
-            with mock.patch.object(
-                package_module,
-                "ActivityPackageService",
-            ) as service_class:
+            with mock.patch.object(package_module, "ActivityPackageService") as service_class:
                 service_class.return_value.install_archive.return_value = receipt
                 self.assertIs(workspace.install_activity_package(archive), receipt)
                 service_class.assert_called_once_with(
@@ -545,12 +597,28 @@ class GreiaSimulatorAuthorityIntegrationTests(unittest.TestCase):
         self.assertEqual(supervisor.force_stop.call_args.args[0], session)
 
     @unittest.skipUnless(
-        importlib.util.find_spec("pygame") is not None,
-        "Pygame is required for real simulator lifecycle integration",
+        os.name == "posix" and importlib.util.find_spec("pygame") is not None,
+        "POSIX + Pygame are required for real simulator broker/lifecycle integration",
     )
     def test_real_python_activity_ready_storage_event_history_and_stop(self) -> None:
         runtime = RuntimeCatalogue.load(REPO / "runtime" / "child-runtime.toml")
-        body = '''from greia_platform.activity_api import (\n    activity_stop_requested, emit_activity_event, get_storage, mark_activity_ready\n)\nimport pygame\nimport time\n\npygame.init()\nscreen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)\nscreen.fill((255, 255, 255))\npygame.display.flip()\nget_storage().kv_set("probe", {"ok": True})\nemit_activity_event("probe.completed", idempotency_key="probe-1")\nmark_activity_ready()\nwhile not activity_stop_requested():\n    time.sleep(0.02)\npygame.quit()\n'''
+        body = '''from greia_platform.activity_api import (
+    activity_stop_requested, emit_activity_event, get_storage, mark_activity_ready
+)
+import pygame
+import time
+
+pygame.init()
+screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+screen.fill((255, 255, 255))
+pygame.display.flip()
+get_storage().kv_set("probe", {"ok": True})
+emit_activity_event("probe.completed", idempotency_key="probe-1")
+mark_activity_ready()
+while not activity_stop_requested():
+    time.sleep(0.02)
+pygame.quit()
+'''
         with tempfile.TemporaryDirectory() as directory:
             base = Path(directory)
             workspace = SimulatorWorkspace(REPO, base / "state")
