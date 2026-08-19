@@ -174,6 +174,18 @@ canonical builders never mint credentials and that the explicit developer
 provisioning path enables the owner-approved `greia` / `greia` login with root
 denied.
 
+> **2026-08-19 reconciliation:** the owner policy requires developer/test
+> installs and the live installer to be reachable as `greia / greia` during
+> active hardware bring-up, and a manual post-build provisioning step proved
+> too easy to miss (a flashed installer once shipped with SSH off). The
+> canonical builders now **detect the `developer-remote` package set in the
+> profile and enable the `greia / greia` SSH login at build time** (unlock/set
+> the `greia` account, rewrite the SSH floor to `AllowUsers greia` with root
+> denied, enable `ssh.service`, and write `/etc/greia-os/developer-remote`).
+> Normal/release profiles remain fail-closed. The explicit
+> `provision_developer_*` tools remain as an additional path but are no longer
+> the only way. See `docs/INSTALLER_IMAGE_CREATION_AND_BOOT.md` §4.
+
 **General lesson:** a base builder must fail closed even if a later developer
 provisioning step is interrupted. Development convenience belongs in an
 explicit privileged provisioning stage, not in the reproducible base image. An

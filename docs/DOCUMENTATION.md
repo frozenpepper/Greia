@@ -116,6 +116,9 @@ For exact currently implemented APIs, schemas, command vocabularies and limits, 
 | canonical boot artwork lineage | `assets/boot/source/`, `assets/boot/static/`, `tools/generate_boot_artwork.py` |
 | launcher-owned boot intro | `src/greia_launcher/boot_intro.py` |
 | one-shot boot chime | `src/greia_launcher/boot_chime.py`, `assets/audio/system/greia-boot-chime.wav` |
+| installed/developer boot kernel-arg policy | `build/overlay/etc/grub.d/10_greia_appliance`, `src/greia_platform/boot_contract.py` |
+| Acer-bootable syslinux/FAT32 live USB | `tools/build-live-usb.sh`, `build/live-syslinux/syslinux.cfg.in` |
+| boot-logistics operating reference | `docs/INSTALLER_IMAGE_CREATION_AND_BOOT.md` |
 
 Documentation may explain these contracts but must not invent a conflicting one. When source intentionally changes, update affected living manuals in the same tranche.
 
