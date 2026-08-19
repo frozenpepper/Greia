@@ -1,22 +1,20 @@
-"""Simulator bootstrap for current Pygame/Python Activities.
+"""Trusted simulator bootstrap for current Pygame/Python Activities.
 
-Production Greia deliberately keeps display ownership below the Activity
-contract. Existing Python Activities still open their SDL/Pygame display
-surface directly while R7 is open. The simulator therefore adapts that one
-renderer call *inside the simulator child process only*: fullscreen/physical
-requests are converted to the selected synthetic viewport. All Greia SDK,
-lifecycle, storage, history and permission behavior remains real.
+The runtime adapter executes this file by absolute Greia-owned path, never via
+an importable module name resolved from Activity content. Existing Python
+Activities still own ``pygame.display.set_mode`` while R7 is open, so this
+bootstrap adapts only that renderer call to the selected synthetic viewport.
+Simulator identity is not part of the Activity environment contract.
 """
 
 from __future__ import annotations
 
+import argparse
 import os
 import runpy
 import sys
 from pathlib import Path
 from typing import Any, Callable
-
-from .device import parse_viewport
 
 
 def normalize_display_request(
@@ -37,6 +35,9 @@ def install_pygame_display_patch(
 ) -> Callable[..., Any]:
     """Install the narrow simulator display adapter and return the original call."""
 
+    # Import before the Activity package is added to sys.path. This prevents a
+    # package-local pygame module from replacing the trusted renderer dependency
+    # used to establish the synthetic surface.
     import pygame
 
     original = pygame.display.set_mode
@@ -69,7 +70,20 @@ def install_pygame_display_patch(
     return original
 
 
-def run_activity(entrypoint: Path) -> None:
+def _parse_target_viewport(value: str) -> tuple[int, int]:
+    """Validate the adapter-owned command argument without importing packages."""
+
+    left, separator, right = value.strip().lower().partition("x")
+    if not separator or not left.isdigit() or not right.isdigit():
+        raise ValueError("trusted simulator viewport must use WIDTHxHEIGHT")
+    width = int(left)
+    height = int(right)
+    if not 320 <= width <= 7680 or not 240 <= height <= 4320:
+        raise ValueError("trusted simulator viewport is outside supported bounds")
+    return width, height
+
+
+def run_activity(entrypoint: Path, *, target_size: tuple[int, int]) -> None:
     root_raw = os.environ.get("GREIA_ACTIVITY_ROOT", "").strip()
     if not root_raw:
         raise RuntimeError("simulated Activity launch has no GREIA_ACTIVITY_ROOT")
@@ -78,8 +92,13 @@ def run_activity(entrypoint: Path) -> None:
     if not path.is_file() or root not in path.parents:
         raise RuntimeError("simulated Activity entrypoint escaped its validated package")
 
-    target = parse_viewport(os.environ.get("GREIA_SIMULATOR_VIEWPORT", "1024x600"))
-    install_pygame_display_patch(target)
+    install_pygame_display_patch(target_size)
+
+    # Defensive cleanup for stale callers/older workspaces. Simulator identity
+    # is private launch plumbing, never an Activity-facing feature flag.
+    for name in tuple(os.environ):
+        if name.startswith("GREIA_SIMULATOR"):
+            os.environ.pop(name, None)
 
     package_path = str(root)
     if package_path not in sys.path:
@@ -88,10 +107,11 @@ def run_activity(entrypoint: Path) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    arguments = list(sys.argv[1:] if argv is None else argv)
-    if len(arguments) != 1:
-        raise SystemExit("usage: python -m greia_simulator.python_activity ENTRYPOINT")
-    run_activity(Path(arguments[0]))
+    parser = argparse.ArgumentParser(description="trusted Greia simulator Python bootstrap")
+    parser.add_argument("--viewport", required=True)
+    parser.add_argument("entrypoint", type=Path)
+    args = parser.parse_args(sys.argv[1:] if argv is None else argv)
+    run_activity(args.entrypoint, target_size=_parse_target_viewport(args.viewport))
     return 0
 
 
