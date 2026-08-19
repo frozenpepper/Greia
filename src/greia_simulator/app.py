@@ -24,7 +24,7 @@ from .workspace import SimulatorWorkspace
 class SimulatorDesktopApp:
     """Small control plane; the child-facing window is the real Greia Shell."""
 
-    def __init__(self, workspace: SimulatorWorkspace):
+    def __init__(self, workspace: SimulatorWorkspace, initial_language: str = "it"):
         import tkinter as tk
         from tkinter import ttk
 
@@ -112,6 +112,30 @@ class SimulatorDesktopApp:
             width=14,
             state="readonly",
         ).pack(side="right")
+
+        self._language_mapping = {
+            "Italiano 🇮🇹 (it)": "it",
+            "English 🇬🇧 (en)": "en",
+            "Español 🇪🇸 (es)": "es",
+            "Deutsch 🇩🇪 (de)": "de",
+            "Français 🇫🇷 (fr)": "fr",
+        }
+        lang_row = ttk.Frame(profile_group)
+        lang_row.pack(fill="x", pady=(8, 0))
+        ttk.Label(lang_row, text="Language / Lingua").pack(side="left")
+        default_lang_label = next(
+            (k for k, v in self._language_mapping.items() if v == initial_language),
+            "Italiano 🇮🇹 (it)",
+        )
+        self.language_choice = tk.StringVar(value=default_lang_label)
+        ttk.Combobox(
+            lang_row,
+            textvariable=self.language_choice,
+            values=tuple(self._language_mapping.keys()),
+            width=18,
+            state="readonly",
+        ).pack(side="right")
+
         self._refresh_profiles()
 
         capability_group = ttk.LabelFrame(
@@ -246,6 +270,10 @@ class SimulatorDesktopApp:
     def _child_environment(self) -> dict[str, str]:
         environment = dict(os.environ)
         environment.update(self.workspace.environment())
+        selected_lang_key = self.language_choice.get()
+        selected_locale = self._language_mapping.get(selected_lang_key, "it")
+        environment["GREIA_PROFILE_LOCALE"] = selected_locale
+        environment["GREIA_DEVICE_LOCALE"] = selected_locale
         source_path = str(self.workspace.repo_root / "src")
         inherited = environment.get("PYTHONPATH", "")
         environment["PYTHONPATH"] = (
@@ -254,12 +282,16 @@ class SimulatorDesktopApp:
         return environment
 
     def _child_command(self, device: SimulatedDeviceProfile) -> list[str]:
+        selected_lang_key = self.language_choice.get()
+        selected_locale = self._language_mapping.get(selected_lang_key, "it")
         command = [
             sys.executable,
             "-m",
             "greia_simulator.child_shell",
             "--viewport",
             device.viewport,
+            "--language",
+            selected_locale,
         ]
         for capability in sorted(device.capabilities):
             command.extend(("--capability", capability))
@@ -466,11 +498,17 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="deliberately bind an existing inactive workspace to this checkout",
     )
+    parser.add_argument(
+        "--language",
+        "--locale",
+        default="it",
+        help="initial system/profile language (e.g. it, en, es)",
+    )
     args = parser.parse_args(argv)
     workspace = SimulatorWorkspace(args.repo_root, args.state_dir)
     workspace.acquire_lock(allow_repo_rebind=args.rebind_state)
     try:
-        app = SimulatorDesktopApp(workspace)
+        app = SimulatorDesktopApp(workspace, initial_language=args.language)
     except Exception:
         workspace.release_lock()
         raise

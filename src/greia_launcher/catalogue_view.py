@@ -26,6 +26,52 @@ _CATEGORY_ICONS = {
 _DEFAULT_CATEGORY_ICON = "backpack"
 
 
+_CATEGORY_TRANSLATIONS: dict[str, dict[str, str]] = {
+    ALL_ACTIVITIES_ID: {
+        "it": "Tutti",
+        "en": "All",
+        "es": "Todos",
+        "de": "Alle",
+        "fr": "Tous",
+    },
+    "create": {
+        "it": "Crea",
+        "en": "Create",
+        "es": "Crea",
+        "de": "Erschaffen",
+        "fr": "Créer",
+    },
+    "play": {
+        "it": "Gioca",
+        "en": "Play",
+        "es": "Jugar",
+        "de": "Spielen",
+        "fr": "Jouer",
+    },
+    "learn": {
+        "it": "Impara",
+        "en": "Learn",
+        "es": "Aprender",
+        "de": "Lernen",
+        "fr": "Apprendre",
+    },
+    "explore": {
+        "it": "Esplora",
+        "en": "Explore",
+        "es": "Explorar",
+        "de": "Entdecken",
+        "fr": "Explorer",
+    },
+    "my_greia": {
+        "it": "Mio Greia",
+        "en": "My Greia",
+        "es": "Mi Greia",
+        "de": "Mein Greia",
+        "fr": "Mon Greia",
+    },
+}
+
+
 @dataclass(frozen=True, slots=True)
 class ActivityCatalogue:
     """Navigation-category projection of the authoritative Activity registry.
@@ -44,7 +90,11 @@ class ActivityCatalogue:
     collections: tuple[Collection[ActivityManifest], ...]
 
     @classmethod
-    def from_activities(cls, activities: Iterable[ActivityManifest]) -> "ActivityCatalogue":
+    def from_activities(
+        cls,
+        activities: Iterable[ActivityManifest],
+        locale: str = "it",
+    ) -> "ActivityCatalogue":
         ordered = tuple(activities)
         buckets: dict[str, list[ActivityManifest]] = {}
         for activity in ordered:
@@ -59,7 +109,7 @@ class ActivityCatalogue:
             Collection(
                 ALL_ACTIVITIES_ID,
                 ordered,
-                title="All",
+                title=_category_title(ALL_ACTIVITIES_ID, locale),
                 icon_id=_category_icon(ALL_ACTIVITIES_ID),
             )
         ]
@@ -68,7 +118,7 @@ class ActivityCatalogue:
                 Collection(
                     category_id,
                     tuple(buckets[category_id]),
-                    title=_category_title(category_id),
+                    title=_category_title(category_id, locale),
                     icon_id=_category_icon(category_id),
                 )
             )
@@ -94,7 +144,14 @@ def _category_sort_key(value: str) -> tuple[int, str]:
     return (_CATEGORY_ORDER.get(value, 100), value)
 
 
-def _category_title(value: str) -> str:
+def _category_title(value: str, locale: str = "it") -> str:
+    lang = locale.split("-")[0].lower() if locale else "it"
+    trans = _CATEGORY_TRANSLATIONS.get(value)
+    if trans:
+        if lang in trans:
+            return trans[lang]
+        if "en" in trans:
+            return trans["en"]
     return value.replace("_", " ").replace("-", " ").strip().title() or "Other"
 
 

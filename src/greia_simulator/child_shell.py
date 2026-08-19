@@ -145,7 +145,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--capability", action="append", default=[])
     parser.add_argument("--remote-port", type=int, default=DEFAULT_REMOTE_PORT)
     parser.add_argument("--no-remote", action="store_true", default=False)
+    parser.add_argument("--language", "--locale", default=None, help="Language code (e.g. it, en, es)")
     args = parser.parse_args(argv)
+
+    if args.language:
+        os.environ["GREIA_PROFILE_LOCALE"] = args.language
+        os.environ["GREIA_DEVICE_LOCALE"] = args.language
 
     if "GREIA_OS_ROOT" not in os.environ:
         from pathlib import Path

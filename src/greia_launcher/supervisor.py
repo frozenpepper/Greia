@@ -856,6 +856,8 @@ class ActivitySupervisor:
                 "GREIA_PROFILE_ID": profile.profile.profile_id,
                 "GREIA_PROFILE_NAME": profile.profile.display_name,
                 "GREIA_PROFILE_AVATAR": profile.profile.avatar_id,
+                "GREIA_PROFILE_LOCALE": getattr(profile.profile, "locale", None) or os.environ.get("GREIA_PROFILE_LOCALE") or os.environ.get("GREIA_DEVICE_LOCALE") or "it",
+                "GREIA_DEVICE_LOCALE": os.environ.get("GREIA_DEVICE_LOCALE") or "it",
                 "GREIA_MEDIA_ROOT": os.environ.get("GREIA_MEDIA_ROOT", "/media/greia"),
                 "GREIA_ACTIVITY_SESSION_ID": session_id,
             }

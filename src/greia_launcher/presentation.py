@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import time
 from pathlib import Path
@@ -23,7 +24,7 @@ from greia_platform.ui_motion import HoverMotion, InteractionVisualState, Launch
 from greia_platform.ui_scroll import ScrollModel
 
 from .activity_icon import ActivityIconError, package_icon_path
-from .catalogue_view import ALL_ACTIVITIES_ID, ActivityCatalogue
+from .catalogue_view import ALL_ACTIVITIES_ID, ActivityCatalogue, _category_title
 from .composition import build_launcher_runtime_services, provisional_installed_display_session
 from .main import (
     HitTarget,
@@ -521,6 +522,12 @@ class GreiaLauncherPresentation(LauncherApplication):
         screen.blit(icon, badge_rect)
         self._targets.append(HitTarget("error_badge_dismiss", 0, badge_rect))
 
+    @property
+    def _active_locale(self) -> str:
+        if self._active_profile is not None and getattr(self._active_profile.profile, "locale", None):
+            return self._active_profile.profile.locale
+        return os.environ.get("GREIA_PROFILE_LOCALE") or os.environ.get("GREIA_DEVICE_LOCALE") or "it"
+
     def _draw_category_bar(self, screen: Any, theme: Any, pygame: Any) -> None:
         if not self._catalogue.category_ids:
             return
@@ -546,7 +553,7 @@ class GreiaLauncherPresentation(LauncherApplication):
         pointer = pygame.mouse.get_pos()
         pointer_active = pygame.mouse.get_focused()
         for collection in collections:
-            label_text = collection.title or collection.collection_id
+            label_text = _category_title(collection.collection_id, self._active_locale)
             font_size = max(18, min(22, height // 2))
             label = self._category_label_surface(label_text, font_size, theme.text, pygame)
             icon_size = max(26, height - 14)
@@ -652,7 +659,7 @@ class GreiaLauncherPresentation(LauncherApplication):
         icon_center = (back_rect.right + 14 + icon_size // 2, back_rect.centery)
         screen.blit(category_icon, category_icon.get_rect(center=icon_center))
 
-        label_text = collection.title or collection.collection_id
+        label_text = _category_title(collection.collection_id, self._active_locale)
         label_size = max(22, min(30, height // 2))
         label = self._category_label_surface(label_text, label_size, theme.text, pygame)
         screen.blit(
@@ -802,7 +809,7 @@ class GreiaLauncherPresentation(LauncherApplication):
             icon.get_rect(center=(tile.centerx, icon_center_y)),
         )
         title = self._render_activity_label(
-            _activity_title(activity),
+            _activity_title(activity, self._active_locale),
             max_width=label_rect.width - 14,
             max_height=label_rect.height - 8,
             pygame=pygame,
@@ -931,7 +938,24 @@ class GreiaLauncherPresentation(LauncherApplication):
             self._ensure_selected_visible(pygame)
 
 
-def _activity_title(activity: ActivityManifest) -> str:
+def _activity_title(activity: ActivityManifest, locale: str = "it") -> str:
+    lang = locale.split("-")[0].lower() if locale else "it"
+    try:
+        loc_dir = Path(activity.root) / "locales"
+        target_file = loc_dir / f"{lang}.json"
+        if not target_file.exists():
+            target_file = loc_dir / "en.json"
+        if target_file.exists():
+            with open(target_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                title = (
+                    data.get("strings", {}).get("activity.title")
+                    or data.get("strings", {}).get(activity.title_key)
+                )
+                if title:
+                    return str(title)
+    except Exception:
+        pass
     candidate = activity.title_key.strip()
     if candidate and "." not in candidate:
         return candidate
