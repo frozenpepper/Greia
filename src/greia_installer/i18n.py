@@ -43,6 +43,8 @@ _ITALIAN: dict[str, str] = {
     "Or press Enter to see the list now.": "Oppure premi Invio per vedere subito l'elenco.",
     "Use Up/Down or click to choose, then Enter to confirm": "Usa Su/Giù o fai clic per scegliere, poi Invio per confermare",
     "Confirm": "Conferma",
+    "US English": "Inglese (USA)",
+    "UK English": "Inglese (UK)",
     "Wi-Fi (optional)": "Wi-Fi (facoltativo)",
     "Connect now, or set it up later in Greia Parents.": "Connettiti ora oppure configuralo più tardi in Greia Parents.",
     "Looking for Wi-Fi networks…": "Ricerca delle reti Wi-Fi…",
@@ -60,9 +62,23 @@ _ITALIAN: dict[str, str] = {
     "Wi-Fi password": "Password Wi-Fi",
     "Connect": "Connetti",
     "Enterprise Wi-Fi can be configured later in Greia Parents.": "Il Wi-Fi Enterprise può essere configurato più tardi in Greia Parents.",
+    "This Wi-Fi network needs enterprise credentials; configure it later in Greia Parents": "Questa rete Wi-Fi richiede credenziali Enterprise; configurala più tardi in Greia Parents",
+    "Open Wi-Fi networks do not use a password": "Le reti Wi-Fi aperte non usano una password",
+    "Wi-Fi scan could not start": "Impossibile avviare la ricerca delle reti Wi-Fi",
+    "Wi-Fi scan results are unavailable": "I risultati della ricerca Wi-Fi non sono disponibili",
+    "Wi-Fi connected but its saved profile could not be read": "Wi-Fi connesso, ma non è stato possibile leggere il profilo salvato",
+    "Could not connect to the selected Wi-Fi network": "Impossibile connettersi alla rete Wi-Fi selezionata",
+    "Wi-Fi device disappeared while connecting": "Il dispositivo Wi-Fi non è più disponibile durante la connessione",
+    "Wi-Fi connection was rejected": "La connessione Wi-Fi è stata rifiutata",
+    "Wi-Fi connection timed out": "Tempo scaduto durante la connessione Wi-Fi",
+    "Wi-Fi scan timed out": "Tempo scaduto durante la ricerca Wi-Fi",
+    "iwd is not available": "Il servizio Wi-Fi iwd non è disponibile",
+    "iwd D-Bus service is unavailable": "Il servizio D-Bus di iwd non è disponibile",
+    "python3-dbus is missing from the system": "Manca python3-dbus nel sistema",
     "Back": "Indietro",
     "Ready": "Pronto",
     "Checking the installation files": "Controllo dei file di installazione",
+    "Checking hardware compatibility": "Controllo della compatibilità hardware",
     "Checking the selected disk": "Controllo del disco selezionato",
     "Preparing the internal disk": "Preparazione del disco interno",
     "Creating the Greia OS filesystem": "Creazione del filesystem Greia OS",
@@ -72,6 +88,15 @@ _ITALIAN: dict[str, str] = {
     "Making the disk bootable": "Preparazione dell'avvio dal disco",
     "Checking the installed system": "Controllo del sistema installato",
     "Installation complete": "Installazione completata",
+    "installation must run as root in the live installer": "L'installazione deve essere eseguita come root nell'ambiente live",
+    "installation payload integrity record is missing": "Manca il record di integrità dei file di installazione",
+    "installation payload integrity record is invalid": "Il record di integrità dei file di installazione non è valido",
+    "installation payload could not be read": "Impossibile leggere i file di installazione",
+    "installation payload is damaged; the disk was not changed": "I file di installazione sono danneggiati; il disco non è stato modificato",
+    "selected disk disappeared": "Il disco selezionato non è più disponibile",
+    "selected disk identity changed; installation stopped": "L'identità del disco selezionato è cambiata; installazione interrotta",
+    "selected disk is no longer an eligible unmounted internal disk": "Il disco selezionato non è più un disco interno idoneo e non montato",
+    "new filesystem has no valid UUID": "Il nuovo filesystem non ha un UUID valido",
     "Strong": "Forte",
     "Good": "Buono",
     "Fair": "Discreto",
@@ -104,7 +129,8 @@ class InstallerTranslator:
             return fixed
 
         # Dynamic child/parent-visible strings keep machine data (SSID, counts,
-        # typed character) verbatim and translate only the surrounding copy.
+        # typed character, battery percentage) verbatim and translate only the
+        # surrounding copy.
         if value.startswith("Press the key that types “") and value.endswith("”"):
             character = value[len("Press the key that types “") : -1]
             return f"Premi il tasto che scrive “{character}”"
@@ -123,6 +149,12 @@ class InstallerTranslator:
             if count.isdigit():
                 noun = "tasto" if count == "1" else "tasti"
                 return f"Dopo altri {count} {noun} mostrerò un elenco da confermare."
+        if value == "Connect the power adapter before installing (battery level could not be read).":
+            return "Collega l'alimentatore prima di installare (impossibile leggere il livello della batteria)."
+        if value.startswith("Connect the power adapter before installing (battery is ") and value.endswith("%)."):
+            percent = value[len("Connect the power adapter before installing (battery is ") : -3]
+            if percent.isdigit():
+                return f"Collega l'alimentatore prima di installare (batteria al {percent}%)."
         return value
 
 
