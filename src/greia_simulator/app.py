@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 from greia_platform.activities import RuntimeCatalogue
+from greia_platform.ui_preferences import UiPreferencesStore
 
 from .device import (
     DEFAULT_CAPABILITIES,
@@ -77,9 +78,10 @@ class SimulatorDesktopApp:
         )
         preset_box.pack(fill="x")
         preset_box.bind("<<ComboboxSelected>>", self._preset_selected)
-        ttk.Label(device_group, text="Viewport presets are geometry only; no CPU/RAM/GPU model is emulated.").pack(
-            anchor="w", pady=(3, 0)
-        )
+        ttk.Label(
+            device_group,
+            text="Viewport presets are geometry only; no CPU/RAM/GPU model is emulated.",
+        ).pack(anchor="w", pady=(3, 0))
 
         self.viewport = tk.StringVar(value="1024x600")
         row = ttk.Frame(device_group)
@@ -156,7 +158,9 @@ class SimulatorDesktopApp:
             side="left", expand=True, fill="x"
         )
 
-        self.status = tk.StringVar(value="Choose viewport/profile/capabilities, then Start / Apply.")
+        self.status = tk.StringVar(
+            value="Choose viewport/profile/capabilities, then Start / Apply."
+        )
         ttk.Label(
             frame,
             textvariable=self.status,
@@ -209,7 +213,9 @@ class SimulatorDesktopApp:
         try:
             profile_id = self._profiles_by_label.get(self.profile_choice.get())
             if profile_id:
-                self.interface_size.set(self.workspace.interface_size(profile_id).value)
+                context = self.workspace.profile_store().context(profile_id)
+                current = UiPreferencesStore(context.customization_dir).read()
+                self.interface_size.set(current.interface_size.value)
         except Exception:
             # A transient profile refresh should not make the control plane fail.
             self.interface_size.set("normal")
@@ -256,6 +262,7 @@ class SimulatorDesktopApp:
 
         try:
             device = self._device()
+            self._refresh_profiles()
             profile_id = self._selected_profile_id()
             self.workspace.set_interface_size(profile_id, self.interface_size.get())
             self.stop()
