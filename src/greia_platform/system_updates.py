@@ -6,6 +6,7 @@ import json
 import os
 import re
 import shutil
+import stat
 import tempfile
 import zipfile
 from dataclasses import dataclass
@@ -303,8 +304,10 @@ class SystemUpdateInbox:
 
     Receiving a bundle is not activation authority. This layer validates archive
     structure and payload integrity, stores the selected candidate by content
-    digest and removes older untrusted inbox candidates. Cryptographic trust and
-    inactive-slot activation are re-established by the privileged
+    digest and removes older untrusted inbox candidates. Network receivers can
+    stage directly inside this inbox and publish the same inode content-addressably
+    so a large update never needs a second full-size local copy. Cryptographic
+    trust and inactive-slot activation are re-established by the privileged
     SystemUpdateService before any system write.
     """
 
@@ -313,13 +316,31 @@ class SystemUpdateInbox:
         self.inbox_dir = self.state_dir / "system-updates" / "inbox"
         self.status_path = self.state_dir / "system-updates" / "status.json"
 
-    def receive(self, bundle_path: Path) -> InspectedUpdateBundle:
-        inspected = inspect_update_bundle(bundle_path)
-        source_digest = sha256_file(bundle_path)
-        incoming_size = bundle_path.stat().st_size
-        self.inbox_dir.mkdir(parents=True, exist_ok=True)
-        os.chmod(self.inbox_dir, 0o700)
-        self._remove_stale_temporaries()
+    def create_receive_staging(self, incoming_size: int) -> Path:
+        """Create one private same-filesystem staging file for streamed input."""
+
+        if isinstance(incoming_size, bool) or incoming_size <= 0 or incoming_size > MAX_BUNDLE_BYTES:
+            raise UpdateBundleError("incoming update size is outside Greia bounds")
+        self._prepare_inbox()
+        self._assert_receive_capacity(incoming_size)
+        descriptor, raw_path = tempfile.mkstemp(
+            prefix=".incoming-",
+            suffix=".tmp",
+            dir=self.inbox_dir,
+        )
+        os.close(descriptor)
+        staging = Path(raw_path)
+        os.chmod(staging, 0o600)
+        return staging
+
+    def receive_staged(self, staged_path: Path) -> InspectedUpdateBundle:
+        """Validate and publish a Greia-owned inbox staging file without copying."""
+
+        staged = Path(staged_path)
+        self._prepare_inbox(clean_temporaries=False)
+        self._require_owned_staging(staged)
+        inspected = inspect_update_bundle(staged)
+        source_digest = sha256_file(staged)
         destination = self.inbox_dir / (
             f"{inspected.manifest.release_id}-{source_digest}{BUNDLE_SUFFIX}"
         )
@@ -327,41 +348,38 @@ class SystemUpdateInbox:
             if not destination.is_file() or sha256_file(destination) != source_digest:
                 raise UpdateBundleError("content-addressed update inbox collision")
         else:
-            free_bytes = shutil.disk_usage(self.inbox_dir).free
-            if free_bytes < incoming_size + MIN_INBOX_FREE_BYTES:
-                raise UpdateBundleError(
-                    "not enough free space to receive update while preserving Greia reserve"
-                )
-            temporary = destination.with_name(f".{destination.name}.{os.getpid()}.tmp")
             try:
-                with bundle_path.open("rb") as source, temporary.open("xb") as target:
-                    shutil.copyfileobj(source, target, length=1024 * 1024)
-                os.chmod(temporary, 0o600)
-                if sha256_file(temporary) != source_digest:
-                    raise UpdateBundleError("queued update copy digest mismatch")
-                try:
-                    # Hard-link publication is atomic and never replaces an
-                    # existing content-addressed artifact. HTTPServer is
-                    # single-threaded today, but this also fails closed if a
-                    # future producer races the same digest into the inbox.
-                    os.link(temporary, destination)
-                except FileExistsError:
-                    if not destination.is_file() or sha256_file(destination) != source_digest:
-                        raise UpdateBundleError("content-addressed update inbox collision")
-                os.chmod(destination, 0o600)
-            finally:
-                temporary.unlink(missing_ok=True)
+                os.link(staged, destination)
+            except FileExistsError:
+                if not destination.is_file() or sha256_file(destination) != source_digest:
+                    raise UpdateBundleError("content-addressed update inbox collision")
+            os.chmod(destination, 0o600)
         self._prune_other_candidates(destination)
-        payload = {
-            "state": UpdateState.RECEIVED.value,
-            "release": inspected.manifest.as_json_dict(),
-            "bundle_path": str(destination),
-            "bundle_sha256": source_digest,
-            "signature_verified": False,
-            "activation_available": False,
-        }
-        _atomic_json(self.status_path, payload)
+        self._record_received(inspected, destination, source_digest)
         return InspectedUpdateBundle(destination, inspected.manifest, inspected.signature)
+
+    def receive(self, bundle_path: Path) -> InspectedUpdateBundle:
+        """Receive a file source through the same staged-publication contract.
+
+        This path is suitable for files arriving from removable media or another
+        filesystem. Network handlers should use ``create_receive_staging`` and
+        ``receive_staged`` so the uploaded bytes are not copied twice locally.
+        """
+
+        source = Path(bundle_path)
+        if not source.is_file():
+            raise UpdateBundleError("update bundle is not a regular file")
+        incoming_size = source.stat().st_size
+        staging = self.create_receive_staging(incoming_size)
+        try:
+            with source.open("rb") as input_handle, staging.open("wb") as output_handle:
+                shutil.copyfileobj(input_handle, output_handle, length=1024 * 1024)
+            os.chmod(staging, 0o600)
+            if staging.stat().st_size != incoming_size:
+                raise UpdateBundleError("queued update copy size mismatch")
+            return self.receive_staged(staging)
+        finally:
+            staging.unlink(missing_ok=True)
 
     def status_payload(self) -> dict[str, object]:
         try:
@@ -383,9 +401,52 @@ class SystemUpdateInbox:
         public.pop("bundle_path", None)
         return public
 
+    def _prepare_inbox(self, *, clean_temporaries: bool = True) -> None:
+        self.inbox_dir.mkdir(parents=True, exist_ok=True)
+        os.chmod(self.inbox_dir, 0o700)
+        if clean_temporaries:
+            self._remove_stale_temporaries()
+
+    def _assert_receive_capacity(self, incoming_size: int) -> None:
+        free_bytes = shutil.disk_usage(self.inbox_dir).free
+        if free_bytes < incoming_size + MIN_INBOX_FREE_BYTES:
+            raise UpdateBundleError(
+                "not enough free space to receive update while preserving Greia reserve"
+            )
+
+    def _require_owned_staging(self, staged: Path) -> None:
+        try:
+            parent = staged.parent.resolve(strict=True)
+            inbox = self.inbox_dir.resolve(strict=True)
+            info = staged.lstat()
+        except OSError as exc:
+            raise UpdateBundleError("update receive staging file is unavailable") from exc
+        if parent != inbox or not stat.S_ISREG(info.st_mode) or stat.S_ISLNK(info.st_mode):
+            raise UpdateBundleError("update receive staging must be a regular inbox file")
+        if not staged.name.startswith(".incoming-") or not staged.name.endswith(".tmp"):
+            raise UpdateBundleError("update receive staging name is invalid")
+        if info.st_size <= 0 or info.st_size > MAX_BUNDLE_BYTES:
+            raise UpdateBundleError("staged update size is outside Greia bounds")
+
+    def _record_received(
+        self,
+        inspected: InspectedUpdateBundle,
+        destination: Path,
+        source_digest: str,
+    ) -> None:
+        payload = {
+            "state": UpdateState.RECEIVED.value,
+            "release": inspected.manifest.as_json_dict(),
+            "bundle_path": str(destination),
+            "bundle_sha256": source_digest,
+            "signature_verified": False,
+            "activation_available": False,
+        }
+        _atomic_json(self.status_path, payload)
+
     def _remove_stale_temporaries(self) -> None:
         try:
-            for candidate in self.inbox_dir.glob(".*.tmp"):
+            for candidate in self.inbox_dir.glob(".incoming-*.tmp"):
                 candidate.unlink(missing_ok=True)
         except OSError as exc:
             raise UpdateBundleError("unable to clean stale update inbox temporary") from exc
