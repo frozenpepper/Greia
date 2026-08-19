@@ -28,6 +28,12 @@ class ParentApiResource:
 
 RESOURCES = (
     ParentApiResource("system", f"{API_BASE}/system", ("GET",)),
+    ParentApiResource("system_update", f"{API_BASE}/system/update", ("GET",)),
+    ParentApiResource(
+        "system_update_bundle",
+        f"{API_BASE}/system/update/bundle",
+        ("POST",),
+    ),
     ParentApiResource("profiles", f"{API_BASE}/profiles", ("GET", "POST")),
     ParentApiResource("activities", f"{API_BASE}/activities", ("GET",)),
     ParentApiResource(
@@ -56,6 +62,17 @@ CAPABILITIES = {
     "settings.input": True,
     "settings.display": True,
     "paired_devices.manage": True,
+    # Update status is a semantic read surface even before a machine has a
+    # production A/B activation backend. It may correctly report unavailable.
+    "system.update.read": True,
+    # Bundle upload is code/system-content delivery over the Parent transport.
+    # Ordinary/release images keep it false while transport remains provisional
+    # HTTP. Developer/owner-enabled images may accept a bounded bundle into the
+    # unprivileged inbox; upload never grants slot-write/reboot authority.
+    "system.update.upload": False,
+    # Activation is intentionally false until the privileged R13B update service
+    # and a proven rollback-capable backend are composed for the machine profile.
+    "system.update.activate": False,
     # The package endpoint is protocol-defined, but ordinary/release images keep
     # it unavailable while Parent transport is still provisional HTTP. The
     # package-aware server may advertise it only in an explicit developer or
