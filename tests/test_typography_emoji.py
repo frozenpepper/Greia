@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 import unittest
 
+from greia_platform.emoji_palette import DEFAULT_EMOJI_CATEGORIES, EmojiPalette
 from greia_platform.typography import (
     GreiaTypography,
     grapheme_boundaries,
@@ -44,7 +45,17 @@ class GraphemeContractTests(unittest.TestCase):
         self.assertEqual(truncate_grapheme_safe(text, len(text)), text)
 
     def test_emoji_classification_covers_required_sequence_families(self) -> None:
-        for cluster in ("🙂", "🚀", "🦄", "❤️", "👍🏽", "👩‍🔬", "🏳️‍🌈", "🇮🇹", "1️⃣"):
+        for cluster in (
+            "🙂",
+            "🚀",
+            "🦄",
+            "❤️",
+            "👍🏽",
+            "👩‍🔬",
+            "🏳️‍🌈",
+            "🇮🇹",
+            "1️⃣",
+        ):
             with self.subTest(cluster=cluster):
                 self.assertTrue(is_emoji_cluster(cluster))
         for cluster in ("A", "é", "e\u0301"):
@@ -52,9 +63,36 @@ class GraphemeContractTests(unittest.TestCase):
                 self.assertFalse(is_emoji_cluster(cluster))
 
 
+class EmojiPaletteTests(unittest.TestCase):
+    def test_default_palette_is_bounded_and_every_item_is_one_emoji_grapheme(self) -> None:
+        palette = EmojiPalette()
+        self.assertEqual(palette.categories, DEFAULT_EMOJI_CATEGORIES)
+        self.assertLessEqual(len(palette.categories), 12)
+        for category in palette.categories:
+            with self.subTest(category=category.category_id):
+                self.assertLessEqual(len(category.emoji), 24)
+                self.assertEqual(len(grapheme_spans(category.icon)), 1)
+                self.assertTrue(is_emoji_cluster(category.icon))
+                for cluster in category.emoji:
+                    self.assertEqual(len(grapheme_spans(cluster)), 1)
+                    self.assertTrue(is_emoji_cluster(cluster))
+
+    def test_category_selection_is_semantic_and_bounded(self) -> None:
+        palette = EmojiPalette()
+        animals = palette.select_id("animals")
+        self.assertEqual(animals.category_id, "animals")
+        self.assertEqual(palette.selected.category_id, "animals")
+        with self.assertRaises(KeyError):
+            palette.select_id("not-a-category")
+        with self.assertRaises(IndexError):
+            palette.select(len(palette.categories))
+
+
 class TypographyCompositionTests(unittest.TestCase):
     def test_missing_emoji_font_is_a_safe_capability_degradation(self) -> None:
-        typography = GreiaTypography(emoji_font_path=Path("/definitely/missing/NotoColorEmoji.ttf"))
+        typography = GreiaTypography(
+            emoji_font_path=Path("/definitely/missing/NotoColorEmoji.ttf")
+        )
         self.assertFalse(typography.emoji_available)
         self.assertEqual(typography.cached_emoji_count, 0)
 
