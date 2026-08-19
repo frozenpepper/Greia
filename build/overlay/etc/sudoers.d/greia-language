@@ -1,0 +1,4 @@
+# Hidden on-device Parent Settings may change only the Greia device language.
+# The helper validates the locale against the product-owned registry and exposes
+# no arbitrary command/filesystem surface.
+greiakid ALL=(root) NOPASSWD: /usr/local/lib/greia-os/greia-languagectl set *
