@@ -5,8 +5,7 @@ from __future__ import annotations
 import argparse
 import signal
 import time
-from contextlib import contextmanager
-from typing import Any, Iterator
+from typing import Any
 
 from greia_launcher.child_shell import GreiaChildShell
 from greia_launcher.lifecycle import ActivityExitReason
@@ -25,7 +24,7 @@ class _SimulatorShutdownRequested(BaseException):
 
 
 class GreiaSimulatorChildShell(GreiaChildShell):
-    """Real Greia child Shell with only HAL/runtime/display host variation."""
+    """Real Greia child Shell with only HAL/runtime/window host variation."""
 
     def __init__(self, device: SimulatedDeviceProfile):
         self.simulated_device = device
@@ -42,6 +41,20 @@ class GreiaSimulatorChildShell(GreiaChildShell):
             ),
         )
 
+    def _initial_display_request(self, pygame: Any) -> tuple[tuple[int, int], int]:
+        return (self.simulated_device.size, pygame.RESIZABLE)
+
+    def _resize_display_request(
+        self, event: Any, pygame: Any
+    ) -> tuple[tuple[int, int], int] | None:
+        del event
+        # Host window drags do not mutate the synthetic physical device. The
+        # normal Shell display/cache path receives the same exact viewport again.
+        return (self.simulated_device.size, pygame.RESIZABLE)
+
+    def _display_caption(self) -> str:
+        return f"Greia Activity Simulator — {self.simulated_device.viewport}"
+
     def run(self) -> int:
         """Run normal Shell code and normalize external Stop/Restart lifecycle."""
 
@@ -55,12 +68,11 @@ class GreiaSimulatorChildShell(GreiaChildShell):
 
         signal.signal(signal.SIGTERM, request_shutdown)
         try:
-            with self._locked_shell_surface():
-                try:
-                    return super().run()
-                except _SimulatorShutdownRequested:
-                    self._shutdown_active_bounded()
-                    return 0
+            try:
+                return super().run()
+            except _SimulatorShutdownRequested:
+                self._shutdown_active_bounded()
+                return 0
         finally:
             signal.signal(signal.SIGTERM, previous)
 
@@ -85,53 +97,6 @@ class GreiaSimulatorChildShell(GreiaChildShell):
         while result is None and time.monotonic() < forced_deadline:
             time.sleep(0.02)
             result = self.supervisor.poll(session)
-
-    @contextmanager
-    def _locked_shell_surface(self) -> Iterator[None]:
-        """Keep the Shell at the synthetic viewport without touching its caches.
-
-        This is temporary desktop SDL compatibility while the shared R7 display
-        backend matures. The ordinary Shell run loop remains responsible for
-        resize observation/cache invalidation; the simulator does not reach into
-        private presentation state.
-        """
-
-        import pygame
-
-        original = pygame.display.set_mode
-        target = self.simulated_device.size
-
-        def locked_set_mode(
-            size=(0, 0),
-            flags=0,
-            depth=0,
-            display=0,
-            vsync=0,
-        ) -> Any:
-            del size
-            normalized_flags = (int(flags) | int(pygame.RESIZABLE)) & ~int(
-                pygame.FULLSCREEN
-            )
-            try:
-                surface = original(
-                    target,
-                    normalized_flags,
-                    depth,
-                    display=display,
-                    vsync=vsync,
-                )
-            except TypeError:
-                surface = original(target, normalized_flags, depth)
-            pygame.display.set_caption(
-                f"Greia Activity Simulator — {self.simulated_device.viewport}"
-            )
-            return surface
-
-        pygame.display.set_mode = locked_set_mode
-        try:
-            yield
-        finally:
-            pygame.display.set_mode = original
 
 
 def _parse_capabilities(values: list[str]) -> frozenset[str]:
