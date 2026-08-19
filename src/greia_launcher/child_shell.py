@@ -9,19 +9,22 @@ context supplied to Activities.
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 import time
-from typing import Any, Mapping
+from typing import Any
 
-from greia_platform.activities import ActivityValidationError
 from greia_platform.customization import CustomizationError, ThemeStore
+from greia_platform.hal import GreiaHAL
 from greia_platform.theme_snapshot import ThemeSnapshotError, encode_theme_snapshot
 from greia_platform.ui_preferences import UiPreferencesStore
 
 from .composition import build_launcher_runtime_services, provisional_installed_display_session
+from .display_session import DisplaySessionCoordinator
 from .main import _development_hal
 from .presentation import GreiaLauncherPresentation, parse_args
-from .supervisor import ActivityLifecycleError, ActivitySupervisor
+from .runtime_adapter import RuntimeLaunchAdapter
+from .supervisor import ActivitySupervisor
 
 
 class ProfileVisualActivitySupervisor(ActivitySupervisor):
@@ -71,10 +74,24 @@ class ProfileVisualActivitySupervisor(ActivitySupervisor):
 
 
 class GreiaChildShell(GreiaLauncherPresentation):
-    """Production child shell with profile-aware visual presentation context."""
+    """Production child shell with profile-aware visual presentation context.
+
+    Synthetic/development variants override only the typed variation hooks
+    below. The authoritative service/supervisor rebuild sequence remains here.
+    """
+
+    def _runtime_hal(self) -> GreiaHAL | None:
+        return None if self._installed_root() else _development_hal()
+
+    def _runtime_adapters(
+        self,
+    ) -> Sequence[RuntimeLaunchAdapter] | Mapping[str, RuntimeLaunchAdapter] | None:
+        return None
+
+    def _display_session_coordinator(self) -> DisplaySessionCoordinator | None:
+        return provisional_installed_display_session() if self._installed_root() else None
 
     def _rebuild_runtime_services(self) -> None:
-        development_hal = None if self._installed_root() else _development_hal()
         runtime_services = build_launcher_runtime_services(
             self.runtime,
             self._activities,
@@ -83,17 +100,17 @@ class GreiaChildShell(GreiaLauncherPresentation):
             storage_policy_path=self.paths.storage_policy,
             history_policy_path=self.paths.history_policy,
             progression_policy_path=self.paths.progression_policy,
-            hal=development_hal,
-        )
-        display_coordinator = (
-            provisional_installed_display_session() if self._installed_root() else None
+            hal=self._runtime_hal(),
+            runtime_adapters=self._runtime_adapters(),
         )
         supervisor = ProfileVisualActivitySupervisor(
             runtime_manager=runtime_services.runtime_manager,
             storage_service=runtime_services.storage_service,
             history_service=runtime_services.history_service,
-            display_coordinator=display_coordinator,
+            display_coordinator=self._display_session_coordinator(),
         )
+        # Publish only the complete matching pair. Subclasses vary inputs, not
+        # the authority graph or publication sequence.
         self.runtime_services = runtime_services
         self.supervisor = supervisor
 
@@ -123,7 +140,12 @@ class GreiaChildShell(GreiaLauncherPresentation):
         overlay.fill((255, 250, 240, 245))
         screen.blit(overlay, (0, 0))
         center = screen.get_rect().center
-        panel = pygame.Rect(0, 0, min(360, max(180, width - 60)), min(170, max(120, height - 40)))
+        panel = pygame.Rect(
+            0,
+            0,
+            min(360, max(180, width - 60)),
+            min(170, max(120, height - 40)),
+        )
         panel.center = center
         pygame.draw.rect(screen, (247, 235, 203), panel, border_radius=24)
         pygame.draw.rect(screen, (61, 44, 31), panel, width=2, border_radius=24)
