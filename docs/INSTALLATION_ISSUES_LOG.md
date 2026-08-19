@@ -36,7 +36,9 @@ rejected.
 not execute the tested USB stick's GRUB MBR reliably. A clean FAT32 active
 partition with syslinux booted successfully. That is a firmware/media-adapter
 compatibility observation, not a reason to make syslinux universal policy for
-all Greia hardware.
+all Greia hardware. The full narrative — every attempt, the antiX toolchain
+analysis, and the final working recipe — is documented separately in
+`INSTALLATION_USB_BOOT_POSTMORTEM.md`.
 
 ---
 
