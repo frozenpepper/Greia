@@ -44,7 +44,15 @@ class UpdateParentApiApplication(PackageParentApiApplication):
         super().__init__(*args, **kwargs)
         self.update_inbox = SystemUpdateInbox(self.state_dir)
         self.system_update_upload_enabled = _system_update_upload_enabled()
-        self.language_store = SystemLanguageStore(self.hardware_settings_dir)
+        self.language_store = SystemLanguageStore(
+            self.hardware_settings_dir,
+            install_record_path=Path(
+                os.environ.get(
+                    "GREIA_INSTALL_RECORD",
+                    "/etc/greia-os/install-record.json",
+                )
+            ),
+        )
 
     def index_payload(self) -> dict[str, object]:
         return api_index_payload(
