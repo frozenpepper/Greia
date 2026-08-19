@@ -121,7 +121,15 @@ class SimulatorWorkspace:
                     )
                 continue
             try:
-                os.write(descriptor, payload)
+                # O_EXCL establishes ownership atomically, but another process can
+                # observe the path before its payload is complete. Write the whole
+                # payload and make malformed/partial lock files fail closed below.
+                remaining = memoryview(payload)
+                while remaining:
+                    written = os.write(descriptor, remaining)
+                    if written <= 0:
+                        raise OSError("could not write simulator workspace lock")
+                    remaining = remaining[written:]
                 os.fsync(descriptor)
                 self._lock_fd = descriptor
                 self.ensure(allow_repo_rebind=allow_repo_rebind)
@@ -348,10 +356,20 @@ class SimulatorWorkspace:
             return False
         try:
             raw = json.loads(self.lock_path.read_text(encoding="utf-8"))
-            pid = int(raw.get("pid", -1)) if isinstance(raw, dict) else -1
         except (OSError, ValueError, TypeError):
-            pid = -1
-        if pid > 0 and _posix_pid_alive(pid):
+            # A newly created lock may be observed before its owner has finished
+            # writing the payload. Corrupt/partial state therefore cannot be
+            # classified as stale safely; fail closed and require explicit repair.
+            return False
+        if not isinstance(raw, dict):
+            return False
+        try:
+            pid = int(raw.get("pid", -1))
+        except (TypeError, ValueError):
+            return False
+        if pid <= 0:
+            return False
+        if _posix_pid_alive(pid):
             return False
         try:
             self.lock_path.unlink()
