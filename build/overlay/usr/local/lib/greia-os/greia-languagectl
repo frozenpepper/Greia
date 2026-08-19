@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+export PYTHONPATH=/opt/greia-os/src
+export GREIA_SYSTEM_SETTINGS_DIR=/var/lib/greia-system-settings
+export GREIA_INSTALL_RECORD=/etc/greia-os/install-record.json
+exec /usr/bin/python3 -m greia_platform.system_language "$@"
