@@ -213,8 +213,20 @@ static int draw(const char *device, const struct ppm_image *image) {
         }
     }
 
-    /* Full physical height is preferred. Only constrain by width when the
-     * current aspect ratio makes full-height artwork impossible. */
+    /* Fit the artwork into the visible area preserving aspect ratio.
+     *
+     * Design: the logo should use essentially the full physical HEIGHT on the
+     * reference panel. We size by height first, then constrain by width, and
+     * finally cap at a small margin so we never touch the edges or overflow.
+     * Guard every division so a degenerate/odd framebuffer geometry (e.g. a
+     * tiny or portrait reporting from some BIOS modes) can never produce a
+     * full-width clipped image or divide-by-zero.
+     */
+    if (image->width == 0 || image->height == 0) {
+        munmap(memory, map_len);
+        close(fd);
+        return 2;
+    }
     dest_h = visible_h;
     dest_w = (uint32_t)(((uint64_t)image->width * visible_h +
                          image->height / 2u) / image->height);
@@ -225,6 +237,26 @@ static int draw(const char *device, const struct ppm_image *image) {
     }
     if (!dest_w) dest_w = 1;
     if (!dest_h) dest_h = 1;
+    /* Keep a margin so artwork never bleeds to the exact screen edge, and cap
+     * to a fraction of the visible area so a degenerate/odd framebuffer
+     * geometry can never produce a full-width-clipped or oversized logo. */
+    uint32_t margin = visible_h / 12u;          /* top/bottom margin */
+    uint32_t max_h = visible_h > 2u * margin ? visible_h - 2u * margin : visible_h;
+    uint32_t max_w = visible_w > 2u * margin ? visible_w - 2u * margin : visible_w;
+    if (dest_h > max_h) {
+        dest_h = max_h;
+        dest_w = (uint32_t)(((uint64_t)image->width * dest_h +
+                             image->height / 2u) / image->height);
+    }
+    if (dest_w > max_w) {
+        dest_w = max_w;
+        dest_h = (uint32_t)(((uint64_t)image->height * dest_w +
+                             image->width / 2u) / image->width);
+    }
+    if (!dest_w) dest_w = 1;
+    if (!dest_h) dest_h = 1;
+    if (dest_h > visible_h) dest_h = visible_h;
+    if (dest_w > visible_w) dest_w = visible_w;
     x0 = (visible_w - dest_w) / 2u;
     y0 = (visible_h - dest_h) / 2u;
 

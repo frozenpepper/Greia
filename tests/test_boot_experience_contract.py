@@ -39,6 +39,21 @@ class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
         self.assertIn("var.bits_per_pixel != 32", source)
         self.assertIn("pack_pixel(&var, 255, 255, 255)", source)
 
+    def test_early_renderer_keeps_logo_inside_visible_area(self) -> None:
+        source = EARLY_SOURCE.read_text(encoding="utf-8")
+        # The logo must never be rendered full-screen-width or clipped: the
+        # sizing must preserve aspect ratio, cap to a margin fraction of the
+        # visible area, and guard degenerate/odd framebuffer geometry. This was
+        # a real installed-OS defect (logo stretched to full width, clipped).
+        self.assertIn("image->width == 0", source)
+        self.assertIn("dest_w > visible_w", source)
+        self.assertIn("dest_h > visible_h", source)
+        self.assertIn("visible_h / 12u", source)
+        self.assertIn("max_h", source)
+        self.assertIn("max_w", source)
+        self.assertIn("x0 = (visible_w - dest_w) / 2u", source)
+        self.assertIn("y0 = (visible_h - dest_h) / 2u", source)
+
     def test_early_renderer_has_no_reference_hardware_geometry(self) -> None:
         source = EARLY_SOURCE.read_text(encoding="utf-8")
         # The renderer must query fbdev geometry at runtime. Guard against
