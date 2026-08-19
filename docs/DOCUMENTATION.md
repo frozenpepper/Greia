@@ -30,14 +30,15 @@ Product documents own explicitly accepted child-facing, parent-facing and ecosys
 - `RESPONSIVE_UI_AND_DISPLAY_LAYOUT.md` — one authored layout, automatic viewport adaptation across Greia-owned surfaces;
 - `MY_GREIA_SETTINGS.md` — child-safe visual personalization/settings scope;
 - `PARENT_MANAGEMENT.md` — Greia Parents onboarding/management/credential UX;
+- `SYSTEM_UPDATES.md` — parent-facing Greia OS update workflow, delivery sources, release-operator expectations and current activation boundary;
 - `ACTIVITY_ECOSYSTEM_AND_DISTRIBUTION.md` — open authoring/distribution and official-catalogue direction;
 - `AWARDS_BADGES_AND_CELEBRATIONS.md` — child-facing award/collection expectations.
 
 ### 2.3 Normative architecture — accepted ADRs
 
-Accepted ADRs own architectural decisions. Current cross-cutting authorities include ADR 0012/0013/0014/0018/0019/0020/0021/0022/0023/0024/0025/0026/0027/0028/0029.
+Accepted ADRs own architectural decisions. Current cross-cutting authorities include ADR 0012/0013/0014/0018/0019/0020/0021/0022/0023/0024/0025/0026/0027/0028/0029/0030.
 
-Of particular relevance to current UI/Activity/developer work:
+Of particular relevance to current UI/Activity/developer/update work:
 
 - ADR 0018 — lightweight semantic UI foundation;
 - ADR 0019 — platform-owned Activity system navigation;
@@ -45,7 +46,8 @@ Of particular relevance to current UI/Activity/developer work:
 - ADR 0026 — resolution-adaptive, single-authoring UI layout;
 - ADR 0027 — Activity coordinate spaces/reference canvas/world camera;
 - ADR 0028 — platform/Activity localization and language context;
-- ADR 0029 — real-runtime Activity Simulator: canonical Greia service composition above synthetic HAL/runtime/display seams, strict non-drift and evidence boundaries.
+- ADR 0029 — real-runtime Activity Simulator: canonical Greia service composition above synthetic HAL/runtime/display seams, strict non-drift and evidence boundaries;
+- ADR 0030 — platform-owned transactional Greia OS updates: signed transport-neutral `.greiaupdate` artifacts, Parent-client authority boundary, inactive-slot/boot-confirmation/rollback semantics, and fail-closed behavior on current single-root layouts.
 
 `docs/architecture/GREIA_ARCHITECTURE.md` is a living synthesis, not a second ADR system.
 
@@ -84,6 +86,9 @@ For exact currently implemented APIs, schemas, command vocabularies and limits, 
 | runtime-neutral localization bundles/locale fallback/string/audio lookup | `src/greia_platform/localization.py` |
 | child + Activity UI/content-language resolution policy | `src/greia_platform/language_context.py` |
 | child-facing language presentation / canonical flag mapping / chooser policy | `src/greia_platform/language_presentation.py` |
+| signed `.greiaupdate` manifest/signature/payload contract, system identity, bounded inbox and privileged update-backend seam | `src/greia_platform/system_updates.py` |
+| Greia system-update release keygen/build/inspect/push/status operator CLI | `tools/greia_update.py` |
+| reserved future system-update verifier dependency set | `build/package-sets/system-update.txt` |
 | launcher category projection/navigation | `src/greia_launcher/catalogue_view.py` |
 | richer launcher presentation/effects/catalogue rendering + shared initial/resize display-policy hooks | `src/greia_launcher/presentation.py` |
 | canonical launcher device/runtime/permission/storage/history service composition | `src/greia_launcher/composition.py` |
@@ -96,6 +101,7 @@ For exact currently implemented APIs, schemas, command vocabularies and limits, 
 | Greia Parent API version/resource/capability vocabulary | `src/greia_parent/protocol.py` |
 | base Greia Parent API routing/domain adaptation | `src/greia_parent/api_server.py` |
 | capability-gated Parent Activity package upload composition | `src/greia_parent/package_api.py` |
+| unprivileged Parent system-update status/bounded upload composition | `src/greia_parent/update_api.py` |
 | per-parent-device credential persistence/revocation | `src/greia_parent/credentials.py` |
 | main Parent password digest + typed change | `src/greia_platform/main_credential.py` |
 | external Parent HTML client | `frozenpepper/Greia-Parent-App-Html`, pinned by `runtime/parent-app-client.toml` + integrity manifest |
@@ -128,6 +134,8 @@ Documentation may explain these contracts but must not invent a conflicting one.
 
 The Activity Simulator is a developer-tooling tranche under ADR 0029. It does **not** move, bypass or close the R7/R8/R9/R10/R14 phase gates. Future HTML/Web simulator support must consume the canonical R9 Web runtime rather than implementing it in parallel.
 
+ADR 0030/R13B update-format and Parent-delivery source may advance as a non-closing cross-cutting tranche, but current single-root profiles do not thereby gain update activation authority. A/B layout, privileged slot staging, boot-health confirmation and rollback remain explicit R13B evidence gates.
+
 ### 2.7 Current branch/evidence state — `HANDOVER.md`
 
 `HANDOVER.md` owns current implementation state, the exact evidence boundary, unproven work, blockers and the next legitimate verification step. Do not promote committed tests into PASS merely because the files exist. Simulator results must be explicitly labeled simulator/developer evidence and cannot be promoted into backend/hardware/security acceptance.
@@ -147,7 +155,7 @@ docs/testing/2026-08-19_ACTIVITY_SIMULATOR_ACCEPTANCE.md
 
 ### 2.9 Agent/developer manuals — `docs/agents/*`, `docs/development/*`, `skills/*`
 
-`docs/agents/GREIA_AGENT_OPERATIONS.md` is the operational entry point for build/test/hardware work. `skills/greia-activity-authoring/SKILL.md` is the living Activity authoring guide. `docs/development/GREIA_ACTIVITY_SIMULATOR.md` is the Activity Simulator developer/operator guide below ADR 0029. All three must preserve the difference between simulator semantic evidence and real image/backend/physical/security evidence.
+`docs/agents/GREIA_AGENT_OPERATIONS.md` is the operational entry point for build/test/hardware work. `skills/greia-activity-authoring/SKILL.md` is the living Activity authoring guide. `docs/development/GREIA_ACTIVITY_SIMULATOR.md` is the Activity Simulator developer/operator guide below ADR 0029. `docs/development/GREIA_SYSTEM_UPDATE_RELEASE_WORKFLOW.md` is the concise release-operator guide for signing, building, inspecting and pushing `.greiaupdate` artifacts below ADR 0030. These manuals must preserve the exact source/evidence/authority boundaries of the systems they explain.
 
 ### 2.10 Governance/licensing — `docs/governance/*`
 
@@ -201,6 +209,11 @@ Architecture examples communicate semantics; they are not automatically current 
 - A bounded ZIP-based `.greiaactivity` **new-install** seam exists; full R10 update/remove/rollback/signature/revocation/save-migration does not.
 - Parent API `POST /api/v1/activities/install` exists, but ordinary/release install capability remains false while Parent transport/security is provisional.
 - Parent-installed packages remain `PARENT_TRUSTED_UNSIGNED`, not built-ins.
+- Signed `.greiaupdate` creation/inspection, bounded Parent status/upload and a fail-closed update-backend seam exist in source under ADR 0030.
+- Current release/development x86 profiles remain `bios-single-ext4`; they do **not** implement A/B slot activation, boot-health confirmation or automatic rollback. `system.update.activate` must remain false on those profiles.
+- Parent `.greiaupdate` receipt verifies bounded archive/payload integrity but deliberately does not constitute trusted-signature verification or system activation; the future privileged updater must re-establish both trust and compatibility before any slot write.
+- The current Parent upload path streams directly into the bounded update-state filesystem and content-addressably publishes the same staged inode, avoiding a second full-size local copy; only one current untrusted candidate is retained.
+- `build/package-sets/system-update.txt` reserves the future verifier dependency but current single-root profiles intentionally do not select it pending C0/resource/backend evidence.
 - `education.categories` and launcher `[presentation].categories` are different semantics.
 - package-owned PNG/WebP Activity icons are implemented; arbitrary host paths are not.
 - ADR 0019 Home/Back remains platform chrome, not Activity widgets.
@@ -246,6 +259,7 @@ The simulator may help reproduce platform-independent Activity/layout/runtime se
 | Activity canvas/world coordinate contract | ADR 0027 + canvas authoring guide + Activity skill + source/tests |
 | Activity/localization/language behavior | ADR 0028 + Activity skill + source/tests + launcher/Parent docs where user-facing |
 | Activity Simulator device/workspace/runtime/control/evidence behavior | ADR 0029 + `docs/development/GREIA_ACTIVITY_SIMULATOR.md` + `docs/testing/2026-08-19_ACTIVITY_SIMULATOR_ACCEPTANCE.md` + simulator tests + Activity/agent manuals when author/operator workflow changes |
+| system-update artifact/trust/delivery/backend/rollback behavior | ADR 0030 + `SYSTEM_UPDATES.md` + `GREIA_SYSTEM_UPDATE_RELEASE_WORKFLOW.md` + update source/tests + Parent docs/client + active plan/HANDOVER |
 | child visual personalization/My Greia scope | `MY_GREIA_SETTINGS.md` + source/tests + Activity skill when author-facing visual context changes |
 | launcher catalogue/category/icon/effects | launcher design + source/tests + Activity skill where author-facing |
 | package install/update/remove/trust | Activity ecosystem docs + Activity skill + active plan + Parent docs where applicable |
@@ -263,7 +277,7 @@ Unless narrower instructions say otherwise:
 
 1. `AGENTS.md`
 2. this documentation map
-3. relevant product docs / accepted ADRs (including ADR 0029 for simulator work)
+3. relevant product docs / accepted ADRs (including ADR 0029 for simulator work and ADR 0030 for system-update work)
 4. `docs/engineering/ENGINEERING_FOUNDATIONS.md`
 5. active plan
 6. `HANDOVER.md`
