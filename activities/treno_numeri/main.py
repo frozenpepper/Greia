@@ -277,8 +277,8 @@ def main() -> int:
                                     "fruit": current_fruit["id"],
                                     "start_x": basket_a_rect.centerx + (i - val_a / 2) * 20,
                                     "start_y": basket_a_rect.centery,
-                                    "target_x": 580 + train_offset_x + (loaded_count + i) * 28,
-                                    "target_y": 320,
+                                    "target_x": 140 + train_offset_x + ((loaded_count + i) % 5) * 44,
+                                    "target_y": 295 + ((loaded_count + i) // 5) * 36,
                                     "t": 0.0,
                                     "speed": 0.05,
                                 })
@@ -292,8 +292,8 @@ def main() -> int:
                                     "fruit": current_fruit["id"],
                                     "start_x": basket_b_rect.centerx + (i - val_b / 2) * 20,
                                     "start_y": basket_b_rect.centery,
-                                    "target_x": 580 + train_offset_x + (loaded_count + i) * 28,
-                                    "target_y": 320,
+                                    "target_x": 140 + train_offset_x + ((loaded_count + i) % 5) * 44,
+                                    "target_y": 295 + ((loaded_count + i) // 5) * 36,
                                     "t": 0.0,
                                     "speed": 0.05,
                                 })
@@ -304,16 +304,16 @@ def main() -> int:
                     else:  # Count mode
                         tree_rect = pygame.Rect(120, 420, 360, 140)
                         if tree_rect.collidepoint(mx, my) and loaded_count < target_count:
-                            loaded_count += 1
                             flying_items.append({
                                 "fruit": current_fruit["id"],
                                 "start_x": mx,
                                 "start_y": my,
-                                "target_x": 580 + train_offset_x + (loaded_count - 1) * 28,
-                                "target_y": 320,
+                                "target_x": 140 + train_offset_x + (loaded_count % 5) * 44,
+                                "target_y": 295 + (loaded_count // 5) * 36,
                                 "t": 0.0,
                                 "speed": 0.06,
                             })
+                            loaded_count += 1
                             sounds.play(f"count_{min(10, loaded_count)}")
 
                     # Check completion
@@ -399,45 +399,58 @@ def main() -> int:
             pygame.draw.circle(alpha_surf, (241, 245, 249, int(p["alpha"])), (int(p["radius"]), int(p["radius"])), int(p["radius"]))
             surf.blit(alpha_surf, (p["x"] - p["radius"], p["y"] - p["radius"]))
 
-        # 3. Train & Wagons
+        # 3. Train & Wagons (Locomotive in Front Leading, Wagon Behind)
         tx = train_offset_x
 
-        # Locomotive (Engine)
-        loco_x = 180 + tx
-        pygame.draw.rect(surf, (59, 130, 246), (loco_x, 220, 140, 150), border_radius=16)
-        pygame.draw.rect(surf, (29, 78, 216), (loco_x, 220, 140, 150), width=4, border_radius=16)
-        pygame.draw.rect(surf, (239, 68, 68), (loco_x + 100, 250, 130, 120), border_radius=18)
-        # Chimney & Cowcatcher
-        pygame.draw.rect(surf, (30, 41, 59), (loco_x + 190, 190, 32, 70), border_radius=6)
-        pygame.draw.polygon(surf, (234, 179, 8), [(loco_x + 180, 190), (loco_x + 232, 190), (loco_x + 206, 170)])
-        pygame.draw.polygon(surf, (234, 179, 8), [(loco_x + 230, 350), (loco_x + 260, 375), (loco_x + 230, 375)])
-        # Cab Window with Friendly Driver
-        pygame.draw.rect(surf, (224, 242, 254), (loco_x + 20, 245, 65, 55), border_radius=12)
-        pygame.draw.circle(surf, (251, 191, 36), (int(loco_x + 52), 275), 18)  # Driver Face
-        # Large Golden Locomotive Wheels
-        for wx in (loco_x + 40, loco_x + 120, loco_x + 190):
-            pygame.draw.circle(surf, (30, 41, 59), (int(wx), 378), 24)
-            pygame.draw.circle(surf, (234, 179, 8), (int(wx), 378), 16)
-            pygame.draw.circle(surf, (255, 255, 255), (int(wx), 378), 6)
-
-        # Wagon
-        wagon_x = 520 + tx
-        pygame.draw.rect(surf, (217, 119, 6), (wagon_x, 260, 240, 110), border_radius=14)
-        pygame.draw.rect(surf, (180, 83, 9), (wagon_x, 260, 240, 110), width=4, border_radius=14)
+        # Cargo Wagon (Behind on Left)
+        wagon_x = 100 + tx
+        pygame.draw.rect(surf, (217, 119, 6), (wagon_x, 260, 260, 110), border_radius=14)
+        pygame.draw.rect(surf, (180, 83, 9), (wagon_x, 260, 260, 110), width=4, border_radius=14)
         # Wagon Slats
         for sl in range(4):
-            pygame.draw.line(surf, (180, 83, 9), (wagon_x + 10, 280 + sl * 22), (wagon_x + 230, 280 + sl * 22), 3)
+            pygame.draw.line(surf, (180, 83, 9), (wagon_x + 10, 280 + sl * 22), (wagon_x + 250, 280 + sl * 22), 3)
         # Wagon Wheels
-        pygame.draw.circle(surf, (30, 41, 59), (int(wagon_x + 50), 378), 20)
-        pygame.draw.circle(surf, (234, 179, 8), (int(wagon_x + 50), 378), 12)
-        pygame.draw.circle(surf, (30, 41, 59), (int(wagon_x + 190), 378), 20)
-        pygame.draw.circle(surf, (234, 179, 8), (int(wagon_x + 190), 378), 12)
+        pygame.draw.circle(surf, (30, 41, 59), (int(wagon_x + 55), 378), 20)
+        pygame.draw.circle(surf, (234, 179, 8), (int(wagon_x + 55), 378), 12)
+        pygame.draw.circle(surf, (30, 41, 59), (int(wagon_x + 205), 378), 20)
+        pygame.draw.circle(surf, (234, 179, 8), (int(wagon_x + 205), 378), 12)
 
         # Draw Loaded Fruits inside Wagon
         for idx in range(loaded_count):
-            fx = wagon_x + 35 + (idx % 5) * 42
+            fx = wagon_x + 40 + (idx % 5) * 44
             fy = 295 + (idx // 5) * 36
             _draw_fruit(surf, current_fruit["id"], int(fx), int(fy), 36)
+
+        # Coupler Hitch
+        pygame.draw.rect(surf, (71, 85, 105), (wagon_x + 258, 320, 44, 16), border_radius=4)
+        pygame.draw.circle(surf, (203, 213, 225), (wagon_x + 280, 328), 6)
+
+        # Locomotive (Engine in Front on Right)
+        loco_x = 400 + tx
+        # Cab (Back of locomotive)
+        pygame.draw.rect(surf, (59, 130, 246), (loco_x, 220, 130, 150), border_radius=16)
+        pygame.draw.rect(surf, (29, 78, 216), (loco_x, 220, 130, 150), width=4, border_radius=16)
+        # Cab Window with Friendly Driver
+        pygame.draw.rect(surf, (224, 242, 254), (loco_x + 25, 245, 65, 55), border_radius=12)
+        pygame.draw.circle(surf, (251, 191, 36), (int(loco_x + 57), 275), 18)  # Driver Face
+        # Boiler (Front of locomotive)
+        pygame.draw.rect(surf, (239, 68, 68), (loco_x + 110, 250, 140, 120), border_radius=18)
+        pygame.draw.rect(surf, (185, 28, 28), (loco_x + 110, 250, 140, 120), width=4, border_radius=18)
+        # Steam Dome
+        pygame.draw.rect(surf, (234, 179, 8), (loco_x + 140, 230, 24, 22), border_radius=6)
+        # Chimney & Funnel
+        pygame.draw.rect(surf, (30, 41, 59), (loco_x + 195, 185, 32, 70), border_radius=6)
+        pygame.draw.polygon(surf, (234, 179, 8), [(loco_x + 185, 185), (loco_x + 237, 185), (loco_x + 211, 165)])
+        # Headlamp & Cowcatcher (Facing Forward Right)
+        pygame.draw.circle(surf, (254, 240, 138), (loco_x + 248, 275), 14)
+        pygame.draw.circle(surf, (234, 179, 8), (loco_x + 248, 275), 14, 3)
+        pygame.draw.polygon(surf, (234, 179, 8), [(loco_x + 245, 345), (loco_x + 280, 375), (loco_x + 245, 375)])
+
+        # Large Golden Locomotive Wheels
+        for wx in (loco_x + 45, loco_x + 125, loco_x + 205):
+            pygame.draw.circle(surf, (30, 41, 59), (int(wx), 378), 24)
+            pygame.draw.circle(surf, (234, 179, 8), (int(wx), 378), 16)
+            pygame.draw.circle(surf, (255, 255, 255), (int(wx), 378), 6)
 
         # 4. Flying Fruits
         for item in flying_items:

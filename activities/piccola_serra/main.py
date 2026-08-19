@@ -241,41 +241,15 @@ def main() -> int:
     while running and not activity_stop_requested():
         t_now = time.time()
 
-        # Update pot growth
-        for idx, pot in enumerate(pots):
-            if pot["stage"] in (1, 2, 3):
-                # Needs water & sun to grow
-                speed = 0.005 + (0.015 if pot["water_level"] > 0 else 0.0)
-                pot["growth"] += speed
-                if pot["water_level"] > 0:
-                    pot["water_level"] = max(0.0, pot["water_level"] - 0.003)
-
-                if pot["growth"] >= 1.0:
-                    pot["growth"] = 0.0
-                    pot["stage"] += 1
-                    if pot["stage"] == 4:
-                        sounds.play("bloom")
-                        try:
-                            emit_activity_event("greenhouse.flower_bloomed", {"plant": pot["plant"]["id"]})
-                        except Exception:
-                            pass
-                        # Sparkle burst
-                        cx, cy = pot_rects[idx].centerx, pot_rects[idx].top + 30
-                        for _ in range(16):
-                            ang = random.uniform(0, 6.28)
-                            spd = random.uniform(2.0, 4.5)
-                            particles.append({
-                                "x": cx,
-                                "y": cy,
-                                "vx": math.cos(ang) * spd,
-                                "vy": math.sin(ang) * spd,
-                                "color": pot["plant"]["flower_color"],
-                                "size": random.uniform(4.0, 7.0),
-                                "life": 1.0,
-                                "decay": 0.03,
-                            })
-                    else:
-                        sounds.play("sprout")
+        # Particles update
+        surviving = []
+        for p in particles:
+            p["x"] += p["vx"]
+            p["y"] += p["vy"]
+            p["life"] -= p["decay"]
+            if p["life"] > 0:
+                surviving.append(p)
+        particles = surviving
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -305,14 +279,14 @@ def main() -> int:
                 # Tool selection buttons (Bottom toolbar)
                 tool_y = REFERENCE_HEIGHT - 85
                 # 0: Seed button
-                if pygame.Rect(120, tool_y, 180, 72).collidepoint(mx, my):
+                if pygame.Rect(100, tool_y, 180, 72).collidepoint(mx, my):
                     if active_tool == 0:
                         selected_plant_type = (selected_plant_type + 1) % len(PLANTS)
                     active_tool = 0
                     continue
 
                 # 1: Water button
-                if pygame.Rect(320, tool_y, 180, 72).collidepoint(mx, my):
+                if pygame.Rect(310, tool_y, 180, 72).collidepoint(mx, my):
                     active_tool = 1
                     continue
 
@@ -322,77 +296,120 @@ def main() -> int:
                     continue
 
                 # 3: Harvest button
-                if pygame.Rect(720, tool_y, 180, 72).collidepoint(mx, my):
+                if pygame.Rect(730, tool_y, 180, 72).collidepoint(mx, my):
                     active_tool = 3
                     continue
 
-                # Pot Interactions
+                # Pot Interactions (Explicit Multi-Step Player Care Required)
                 if not is_victory:
                     for idx, r_pot in enumerate(pot_rects):
                         if r_pot.collidepoint(mx, my):
                             pot = pots[idx]
-                            if active_tool == 0:
-                                # Plant seed
-                                if pot["stage"] == 0:
+                            stage = pot["stage"]
+                            
+                            # Determine what this pot needs
+                            # Stage 0: Needs Seed (0)
+                            # Stage 1: Needs Water (1)
+                            # Stage 2: Needs Sun (2)
+                            # Stage 3: Needs Water (1)
+                            # Stage 4: Needs Harvest (3)
+                            needed_tool = 0 if stage == 0 else (1 if stage == 1 else (2 if stage == 2 else (1 if stage == 3 else 3)))
+
+                            if active_tool == needed_tool:
+                                if stage == 0:
+                                    # 1. Plant Seed
                                     pot["plant"] = PLANTS[selected_plant_type]
                                     pot["stage"] = 1
-                                    pot["growth"] = 0.0
-                                    pot["water_level"] = 0.5
                                     sounds.play("sprout")
+                                    active_tool = 1  # Next prompt: water
+                                    for _ in range(8):
+                                        particles.append({
+                                            "x": r_pot.centerx + random.uniform(-20, 20),
+                                            "y": r_pot.bottom - 40,
+                                            "vx": random.uniform(-1, 1),
+                                            "vy": random.uniform(-2, -0.5),
+                                            "color": (120, 53, 15),
+                                            "size": random.uniform(3, 6),
+                                            "life": 1.0,
+                                            "decay": 0.04,
+                                        })
                                     try:
                                         emit_activity_event("greenhouse.seed_planted", {"plant": pot["plant"]["id"]})
                                     except Exception:
                                         pass
-                            elif active_tool == 1:
-                                # Water plant
-                                if pot["stage"] >= 1:
-                                    pot["water_level"] = 1.0
+
+                                elif stage == 1:
+                                    # 2. Water Seed -> Sprouts!
+                                    pot["stage"] = 2
                                     sounds.play("water")
-                                    # Rain drops
-                                    for _ in range(12):
+                                    active_tool = 2  # Next prompt: sun
+                                    for _ in range(14):
                                         particles.append({
-                                            "x": r_pot.centerx + random.uniform(-40, 40),
-                                            "y": r_pot.top + random.uniform(10, 40),
+                                            "x": r_pot.centerx + random.uniform(-30, 30),
+                                            "y": r_pot.top + random.uniform(20, 50),
                                             "vx": random.uniform(-0.5, 0.5),
-                                            "vy": random.uniform(2.0, 4.0),
+                                            "vy": random.uniform(2.0, 4.5),
                                             "color": (56, 189, 248),
                                             "size": random.uniform(3.0, 5.0),
                                             "life": 1.0,
-                                            "decay": 0.05,
+                                            "decay": 0.04,
                                         })
-                            elif active_tool == 2:
-                                # Sun lamp
-                                if pot["stage"] >= 1:
-                                    pot["growth"] += 0.35
+
+                                elif stage == 2:
+                                    # 3. Sun on Sprout -> Grows tall bud!
+                                    pot["stage"] = 3
                                     sounds.play("sprout")
-                                    # Sun rays
-                                    for _ in range(10):
+                                    active_tool = 1  # Next prompt: water to bloom
+                                    for _ in range(12):
                                         particles.append({
                                             "x": r_pot.centerx + random.uniform(-30, 30),
-                                            "y": r_pot.top + random.uniform(-10, 20),
-                                            "vx": random.uniform(-1.0, 1.0),
-                                            "vy": random.uniform(-1.0, 1.0),
+                                            "y": r_pot.top + random.uniform(0, 30),
+                                            "vx": random.uniform(-1.5, 1.5),
+                                            "vy": random.uniform(-1.5, 1.5),
                                             "color": (254, 240, 138),
                                             "size": random.uniform(4.0, 8.0),
                                             "life": 1.0,
                                             "decay": 0.04,
                                         })
-                            elif active_tool == 3:
-                                # Harvest flower/produce
-                                if pot["stage"] == 4:
+
+                                elif stage == 3:
+                                    # 4. Water Bud -> FULL BLOOM!
+                                    pot["stage"] = 4
+                                    sounds.play("bloom")
+                                    active_tool = 3  # Next prompt: harvest
+                                    for _ in range(18):
+                                        ang = random.uniform(0, 6.28)
+                                        spd = random.uniform(2.0, 4.5)
+                                        particles.append({
+                                            "x": r_pot.centerx,
+                                            "y": r_pot.top + 20,
+                                            "vx": math.cos(ang) * spd,
+                                            "vy": math.sin(ang) * spd,
+                                            "color": pot["plant"]["flower_color"],
+                                            "size": random.uniform(4.0, 7.0),
+                                            "life": 1.0,
+                                            "decay": 0.03,
+                                        })
+                                    try:
+                                        emit_activity_event("greenhouse.flower_bloomed", {"plant": pot["plant"]["id"]})
+                                    except Exception:
+                                        pass
+
+                                elif stage == 4:
+                                    # 5. Harvest Bloomed Flower / Fruit!
                                     pot["stage"] = 0
                                     pot["plant"] = None
                                     harvest_count += 1
                                     sounds.play("harvest")
-                                    # Harvest burst
-                                    for _ in range(16):
+                                    active_tool = 0  # Next prompt: plant new seed
+                                    for _ in range(18):
                                         particles.append({
                                             "x": r_pot.centerx,
-                                            "y": r_pot.top + 30,
+                                            "y": r_pot.top + 20,
                                             "vx": random.uniform(-2.5, 2.5),
                                             "vy": random.uniform(-3.5, -1.0),
                                             "color": (254, 202, 87),
-                                            "size": random.uniform(4.0, 7.0),
+                                            "size": random.uniform(4.0, 8.0),
                                             "life": 1.0,
                                             "decay": 0.03,
                                         })
@@ -404,16 +421,6 @@ def main() -> int:
                                         except Exception:
                                             pass
                             break
-
-        # Update particles
-        surviving = []
-        for p in particles:
-            p["x"] += p["vx"]
-            p["y"] += p["vy"]
-            p["life"] -= p["decay"]
-            if p["life"] > 0:
-                surviving.append(p)
-        particles = surviving
 
         # RENDER TO CANVAS
         surf = canvas.surface
@@ -493,6 +500,44 @@ def main() -> int:
                 # Center core
                 pygame.draw.circle(surf, plant["center_color"], (fx, fy), 18)
                 pygame.draw.circle(surf, (255, 255, 255), (fx - 4, fy - 4), 4)
+
+            # Floating Thought Bubble Showing Required Care Tool
+            if not is_victory:
+                needed_tool = 0 if stage == 0 else (1 if stage == 1 else (2 if stage == 2 else (1 if stage == 3 else 3)))
+                is_matching = (active_tool == needed_tool)
+
+                # Connecting dots
+                bx, by = px, py - 105
+                pygame.draw.circle(surf, (255, 255, 255), (bx, by + 30), 4)
+                pygame.draw.circle(surf, (255, 255, 255), (bx, by + 18), 6)
+
+                # Bubble Card
+                pygame.draw.circle(surf, (255, 255, 255), (bx, by), 24)
+                bubble_border = (234, 179, 8) if is_matching else (203, 213, 225)
+                pygame.draw.circle(surf, bubble_border, (bx, by), 24, 3 if is_matching else 2)
+
+                # Mini Tool Icon in Bubble
+                if needed_tool == 0:
+                    # Seed
+                    pygame.draw.circle(surf, (22, 101, 52), (bx, by + 4), 5)
+                    pygame.draw.ellipse(surf, (34, 197, 94), pygame.Rect(bx - 8, by - 10, 8, 5))
+                    pygame.draw.ellipse(surf, (34, 197, 94), pygame.Rect(bx, by - 10, 8, 5))
+                elif needed_tool == 1:
+                    # Water Droplet
+                    pygame.draw.circle(surf, (56, 189, 248), (bx, by + 3), 7)
+                    pygame.draw.polygon(surf, (56, 189, 248), [(bx - 6, by + 2), (bx + 6, by + 2), (bx, by - 8)])
+                    pygame.draw.circle(surf, (255, 255, 255), (bx - 2, by + 2), 2)
+                elif needed_tool == 2:
+                    # Smiling Sun
+                    pygame.draw.circle(surf, (234, 179, 8), (bx, by), 9)
+                    for sang in (0, 60, 120, 180, 240, 300):
+                        srad = math.radians(sang)
+                        pygame.draw.line(surf, (234, 179, 8), (bx + int(math.cos(srad)*10), by + int(math.sin(srad)*10)), (bx + int(math.cos(srad)*14), by + int(math.sin(srad)*14)), 2)
+                elif needed_tool == 3:
+                    # Harvest Fruit / Sparkle
+                    pygame.draw.circle(surf, (239, 68, 68), (bx, by + 2), 9)
+                    pygame.draw.circle(surf, (254, 240, 138), (bx, by - 6), 3)
+                    pygame.draw.polygon(surf, (34, 197, 94), [(bx - 4, by - 4), (bx + 4, by - 4), (bx, by - 1)])
 
         # 3. Draw Particles
         for p in particles:
