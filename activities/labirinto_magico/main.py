@@ -93,6 +93,8 @@ DIFFICULTIES = [
     {"id": "medium", "label_it": "MEDIO", "label_en": "MEDIUM", "cols": 13, "rows": 9, "stars": 5},
     {"id": "large", "label_it": "GRANDE", "label_en": "LARGE", "cols": 17, "rows": 11, "stars": 7},
     {"id": "giant", "label_it": "GIGANTE", "label_en": "GIANT", "cols": 21, "rows": 13, "stars": 9},
+    {"id": "epic", "label_it": "EPICO", "label_en": "EPIC", "cols": 25, "rows": 15, "stars": 12},
+    {"id": "master", "label_it": "MAESTRO", "label_en": "MASTER", "cols": 29, "rows": 17, "stars": 15},
 ]
 
 
@@ -235,6 +237,7 @@ def _is_safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
 
 def main() -> int:
     pygame.init()
+    pygame.key.set_repeat(160, 80)
     screen = pygame.display.get_surface()
     if screen is None:
         screen = pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.RESIZABLE)
@@ -245,6 +248,9 @@ def main() -> int:
     canvas = PygameReferenceCanvas(screen)
     typography = GreiaTypography()
     sounds = LabyrinthAudio()
+
+    profile_lang = get_profile_locale() or "it"
+    is_italian = profile_lang.startswith("it")
 
     storage = get_storage()
     saved_data = storage.kv_get(STORAGE_KEY) if storage else {}
@@ -339,7 +345,7 @@ def main() -> int:
         avail_h = REFERENCE_HEIGHT - (hud_top + hud_bottom)
         cell_w = avail_w // m_cols
         cell_h = avail_h // m_rows
-        m_cs = max(20, min(cell_w, cell_h, 60))
+        m_cs = max(12, min(cell_w, cell_h, 60))
         maze_w = m_cols * m_cs
         maze_h = m_rows * m_cs
         m_ox = (REFERENCE_WIDTH - maze_w) // 2
@@ -359,6 +365,42 @@ def main() -> int:
                 screen = pygame.display.get_surface() or screen
                 metrics = ChildUiMetrics.for_size(*screen.get_size())
                 canvas = PygameReferenceCanvas(screen)
+            elif event.type == pygame.KEYDOWN:
+                if is_victory:
+                    if event.key in (pygame.K_SPACE, pygame.K_RETURN, pygame.K_r):
+                        start_new_game()
+                        cols, rows, cs, ox, oy = compute_maze_metrics()
+                    continue
+
+                if event.key in (pygame.K_UP, pygame.K_w):
+                    waypoints.clear()
+                    move_step(-1, 0)
+                elif event.key in (pygame.K_DOWN, pygame.K_s):
+                    waypoints.clear()
+                    move_step(1, 0)
+                elif event.key in (pygame.K_LEFT, pygame.K_a):
+                    waypoints.clear()
+                    move_step(0, -1)
+                elif event.key in (pygame.K_RIGHT, pygame.K_d):
+                    waypoints.clear()
+                    move_step(0, 1)
+                elif event.key in (pygame.K_SPACE, pygame.K_h):
+                    path = MazeEngine.solve_bfs(grid, player_r, player_c, exit_pos["r"], exit_pos["c"])
+                    if path:
+                        firefly_active = True
+                        firefly_path = path
+                        firefly_timer = 4.0
+                        firefly_index = 0
+                        firefly_pos = (float(player_c), float(player_r))
+                        sounds.play("star")
+                elif event.key in (pygame.K_TAB, pygame.K_d):
+                    diff_idx = (diff_idx + 1) % len(DIFFICULTIES)
+                    start_new_game()
+                    cols, rows, cs, ox, oy = compute_maze_metrics()
+                elif event.key == pygame.K_e:
+                    hero_idx = (hero_idx + 1) % len(HEROES)
+                elif event.key in (pygame.K_b, pygame.K_m):
+                    biome_idx = (biome_idx + 1) % len(BIOMES)
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 pointer = canvas.pointer(event.pos)
                 if pointer is None:
@@ -550,7 +592,7 @@ def main() -> int:
         hy = hint_btn.centery
         pygame.draw.circle(surf, (251, 191, 36), (hx, hy), 14)
         pygame.draw.circle(surf, (255, 255, 255), (hx, hy), 6)
-        h_txt = typography.render("AIUTO", FontRole.DISPLAY, 18, (180, 83, 9))
+        h_txt = typography.render("AIUTO" if is_italian else "HINT", FontRole.DISPLAY, 18, (180, 83, 9))
         surf.blit(h_txt, (hint_btn.left + 52, hint_btn.centery - h_txt.get_height() // 2))
 
         # 9. Bottom Controls (Giant Chunky 160x64px Buttons with Icon + Text)
@@ -565,7 +607,7 @@ def main() -> int:
         pygame.draw.circle(surf, (244, 114, 182), (h_cx + 8, h_cy - 12), 4)
         pygame.draw.circle(surf, (20, 20, 30), (h_cx - 5, h_cy - 2), 2)
         pygame.draw.circle(surf, (20, 20, 30), (h_cx + 5, h_cy - 2), 2)
-        ht_txt = typography.render("EROE", FontRole.DISPLAY, 18, (30, 41, 59))
+        ht_txt = typography.render("EROE" if is_italian else "HERO", FontRole.DISPLAY, 18, (30, 41, 59))
         surf.blit(ht_txt, (h_btn.left + 60, h_btn.centery - ht_txt.get_height() // 2))
 
         # Biome Button
@@ -577,7 +619,7 @@ def main() -> int:
         pygame.draw.circle(surf, biome["wall"], (b_cx, b_cy), 16)
         pygame.draw.ellipse(surf, biome["wall_top"], pygame.Rect(b_cx - 20, b_cy - 5, 40, 10), 2)
         pygame.draw.circle(surf, (255, 255, 255), (b_cx - 4, b_cy - 4), 4)
-        bt_txt = typography.render("MONDO", FontRole.DISPLAY, 18, (30, 41, 59))
+        bt_txt = typography.render("MONDO" if is_italian else "WORLD", FontRole.DISPLAY, 18, (30, 41, 59))
         surf.blit(bt_txt, (b_btn.left + 58, b_btn.centery - bt_txt.get_height() // 2))
 
         # Difficulty Button
@@ -589,7 +631,8 @@ def main() -> int:
         d_cy = d_btn.centery
         pygame.draw.circle(surf, (234, 179, 8), (d_cx, d_cy), 14)
         pygame.draw.circle(surf, (254, 240, 138), (d_cx, d_cy), 7)
-        dt_txt = typography.render(cur_diff["label_it"], FontRole.DISPLAY, 18, (180, 83, 9))
+        dt_label = cur_diff["label_it"] if is_italian else cur_diff["label_en"]
+        dt_txt = typography.render(dt_label, FontRole.DISPLAY, 18, (180, 83, 9))
         surf.blit(dt_txt, (d_btn.left + 52, d_btn.centery - dt_txt.get_height() // 2))
 
         # 10. Victory Modal
@@ -602,7 +645,7 @@ def main() -> int:
             pygame.draw.rect(surf, (255, 252, 245), card, border_radius=28)
             pygame.draw.rect(surf, (234, 179, 8), card, width=5, border_radius=28)
 
-            v_title = typography.render("LABIRINTO SUPERATO!", FontRole.DISPLAY, 28, (217, 119, 6))
+            v_title = typography.render("LABIRINTO SUPERATO!" if is_italian else "MAZE COMPLETED!", FontRole.DISPLAY, 28, (217, 119, 6))
             surf.blit(v_title, (card.centerx - v_title.get_width() // 2, card.top + 35))
 
             for i in range(5):
@@ -613,7 +656,7 @@ def main() -> int:
 
             again_btn = pygame.Rect(card.centerx - 120, card.bottom - 80, 240, 60)
             pygame.draw.rect(surf, (34, 197, 94), again_btn, border_radius=20)
-            again_lbl = typography.render("🔄 NUOVO LABIRINTO", FontRole.DISPLAY, 20, (255, 255, 255))
+            again_lbl = typography.render("🔄 NUOVO LABIRINTO" if is_italian else "🔄 PLAY AGAIN", FontRole.DISPLAY, 20, (255, 255, 255))
             surf.blit(again_lbl, (again_btn.centerx - again_lbl.get_width() // 2, again_btn.centery - again_lbl.get_height() // 2))
 
         # Present Canvas

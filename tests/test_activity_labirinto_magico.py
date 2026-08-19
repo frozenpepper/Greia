@@ -62,6 +62,16 @@ class LabirintoMagicoTests(unittest.TestCase):
             for star in collectibles:
                 self.assertEqual(grid[star["r"]][star["c"]], 0)
 
+    def test_difficulty_levels_contain_at_least_six_sizes(self) -> None:
+        self.assertGreaterEqual(len(DIFFICULTIES), 6)
+        difficulty_ids = [d["id"] for d in DIFFICULTIES]
+        self.assertIn("small", difficulty_ids)
+        self.assertIn("medium", difficulty_ids)
+        self.assertIn("large", difficulty_ids)
+        self.assertIn("giant", difficulty_ids)
+        self.assertIn("epic", difficulty_ids)
+        self.assertIn("master", difficulty_ids)
+
     def test_biomes_and_heroes_metadata_integrity(self) -> None:
         self.assertEqual(len(BIOMES), 4)
         self.assertEqual(len(HEROES), 6)
