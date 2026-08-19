@@ -43,6 +43,7 @@ class SimulatorWorkspace:
     repo_root: Path
     state_root: Path
     _lock_fd: int | None = field(default=None, init=False, repr=False)
+    _child_pid: int | None = field(default=None, init=False, repr=False)
 
     def __post_init__(self) -> None:
         repo_root = self.repo_root.resolve(strict=True)
@@ -99,19 +100,12 @@ class SimulatorWorkspace:
             self.ensure(allow_repo_rebind=allow_repo_rebind)
             return
 
-        payload = json.dumps(
-            {
-                "pid": os.getpid(),
-                "repo_root": str(self.repo_root),
-                "schema_version": _WORKSPACE_SCHEMA_VERSION,
-            },
-            sort_keys=True,
-        ).encode("utf-8")
+        payload = self._lock_payload()
         for attempt in range(2):
             try:
                 descriptor = os.open(
                     self.lock_path,
-                    os.O_CREAT | os.O_EXCL | os.O_WRONLY,
+                    os.O_CREAT | os.O_EXCL | os.O_RDWR,
                     0o600,
                 )
             except FileExistsError:
@@ -121,16 +115,7 @@ class SimulatorWorkspace:
                     )
                 continue
             try:
-                # O_EXCL establishes ownership atomically, but another process can
-                # observe the path before its payload is complete. Write the whole
-                # payload and make malformed/partial lock files fail closed below.
-                remaining = memoryview(payload)
-                while remaining:
-                    written = os.write(descriptor, remaining)
-                    if written <= 0:
-                        raise OSError("could not write simulator workspace lock")
-                    remaining = remaining[written:]
-                os.fsync(descriptor)
+                self._write_lock_payload(descriptor, payload)
                 self._lock_fd = descriptor
                 self.ensure(allow_repo_rebind=allow_repo_rebind)
             except Exception:
@@ -140,16 +125,37 @@ class SimulatorWorkspace:
                     finally:
                         os.close(descriptor)
                 else:
+                    self._child_pid = None
                     self.release_lock()
                 raise
             return
         raise RuntimeError("could not acquire simulator workspace lock")
 
+    def update_lock_child_pid(self, child_pid: int | None) -> None:
+        """Bind/unbind the owned Shell process to the active writer lease."""
+
+        descriptor = self._lock_fd
+        if descriptor is None:
+            raise RuntimeError("cannot update simulator child ownership without writer lock")
+        if child_pid is not None and (not isinstance(child_pid, int) or child_pid <= 0):
+            raise ValueError("simulator child PID must be a positive integer")
+        if not self._lock_path_is_owned(descriptor):
+            raise RuntimeError("simulator workspace lock ownership was lost")
+        previous = self._child_pid
+        self._child_pid = child_pid
+        try:
+            self._write_lock_payload(descriptor, self._lock_payload())
+        except Exception:
+            self._child_pid = previous
+            raise
+
     def release_lock(self) -> None:
         descriptor = self._lock_fd
-        self._lock_fd = None
         if descriptor is None:
             return
+        if self._child_pid is not None:
+            raise RuntimeError("cannot release simulator workspace while owned Shell is registered")
+        self._lock_fd = None
         try:
             self._unlink_owned_lock(descriptor)
         finally:
@@ -299,6 +305,29 @@ class SimulatorWorkspace:
         )
         return service.install_archive(archive.expanduser())
 
+    def _lock_payload(self) -> bytes:
+        return json.dumps(
+            {
+                "pid": os.getpid(),
+                "child_pid": self._child_pid,
+                "repo_root": str(self.repo_root),
+                "schema_version": _WORKSPACE_SCHEMA_VERSION,
+            },
+            sort_keys=True,
+        ).encode("utf-8")
+
+    @staticmethod
+    def _write_lock_payload(descriptor: int, payload: bytes) -> None:
+        os.lseek(descriptor, 0, os.SEEK_SET)
+        os.ftruncate(descriptor, 0)
+        remaining = memoryview(payload)
+        while remaining:
+            written = os.write(descriptor, remaining)
+            if written <= 0:
+                raise OSError("could not write simulator workspace lock")
+            remaining = remaining[written:]
+        os.fsync(descriptor)
+
     def _ensure_state_directories(self) -> None:
         for path in (
             self.profiles_root,
@@ -357,11 +386,14 @@ class SimulatorWorkspace:
         try:
             raw = json.loads(self.lock_path.read_text(encoding="utf-8"))
         except (OSError, ValueError, TypeError):
-            # A newly created lock may be observed before its owner has finished
-            # writing the payload. Corrupt/partial state therefore cannot be
-            # classified as stale safely; fail closed and require explicit repair.
+            # A newly created/re-written lock may be observed before its owner
+            # has finished the payload. Partial state cannot be classified stale.
             return False
         if not isinstance(raw, dict):
+            return False
+        if raw.get("schema_version") != _WORKSPACE_SCHEMA_VERSION:
+            return False
+        if not isinstance(raw.get("repo_root"), str):
             return False
         try:
             pid = int(raw.get("pid", -1))
@@ -369,7 +401,19 @@ class SimulatorWorkspace:
             return False
         if pid <= 0:
             return False
+        child_raw = raw.get("child_pid")
+        if child_raw is None:
+            child_pid = None
+        else:
+            try:
+                child_pid = int(child_raw)
+            except (TypeError, ValueError):
+                return False
+            if child_pid <= 0:
+                return False
         if _posix_pid_alive(pid):
+            return False
+        if child_pid is not None and _posix_pid_alive(child_pid):
             return False
         try:
             self.lock_path.unlink()
@@ -377,15 +421,16 @@ class SimulatorWorkspace:
             pass
         return True
 
-    def _unlink_owned_lock(self, descriptor: int) -> None:
-        """Remove the lock path only if it still names this descriptor's inode."""
-
+    def _lock_path_is_owned(self, descriptor: int) -> bool:
         try:
             owned = os.fstat(descriptor)
             current = self.lock_path.lstat()
         except FileNotFoundError:
-            return
-        if (owned.st_dev, owned.st_ino) == (current.st_dev, current.st_ino):
+            return False
+        return (owned.st_dev, owned.st_ino) == (current.st_dev, current.st_ino)
+
+    def _unlink_owned_lock(self, descriptor: int) -> None:
+        if self._lock_path_is_owned(descriptor):
             self.lock_path.unlink(missing_ok=True)
 
     def _inspect_development_tree(
