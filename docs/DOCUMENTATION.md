@@ -30,6 +30,7 @@ Product documents own explicitly accepted child-facing, parent-facing and ecosys
 - `RESPONSIVE_UI_AND_DISPLAY_LAYOUT.md` — one authored layout, automatic viewport adaptation across Greia-owned surfaces;
 - `MY_GREIA_SETTINGS.md` — child-safe visual personalization/settings scope;
 - `PARENT_MANAGEMENT.md` — Greia Parents onboarding/management/credential UX;
+- `SYSTEM_LANGUAGE_AND_LOCALIZATION.md` — installer-first device-language selection, Parent controls, canonical language registry/persistence and the explicit boundary between a selectable locale and proven translation/font/RTL coverage;
 - `SYSTEM_UPDATES.md` — parent-facing Greia OS update workflow, delivery sources, release-operator expectations and current activation boundary;
 - `ACTIVITY_ECOSYSTEM_AND_DISTRIBUTION.md` — open authoring/distribution and official-catalogue direction;
 - `AWARDS_BADGES_AND_CELEBRATIONS.md` — child-facing award/collection expectations.
@@ -85,7 +86,9 @@ For exact currently implemented APIs, schemas, command vocabularies and limits, 
 | bounded read-only Activity theme snapshot encoding | `src/greia_platform/theme_snapshot.py` |
 | runtime-neutral localization bundles/locale fallback/string/audio lookup | `src/greia_platform/localization.py` |
 | child + Activity UI/content-language resolution policy | `src/greia_platform/language_context.py` |
-| child-facing language presentation / canonical flag mapping / chooser policy | `src/greia_platform/language_presentation.py` |
+| child-facing Activity language presentation / canonical flag mapping / chooser policy | `src/greia_platform/language_presentation.py` |
+| selectable Greia device-language registry, install-record bootstrap, mutable device-language persistence and narrow typed mutation service | `src/greia_platform/system_language.py` |
+| installer-first device-language chooser and transfer into the real installer request | `src/greia_installer/entrypoint.py`, `src/greia_installer/engine.py` |
 | signed `.greiaupdate` manifest/signature/payload contract, system identity, bounded inbox and privileged update-backend seam | `src/greia_platform/system_updates.py` |
 | Greia system-update release keygen/build/inspect/push/status operator CLI | `tools/greia_update.py` |
 | reserved future system-update verifier dependency set | `build/package-sets/system-update.txt` |
@@ -94,6 +97,7 @@ For exact currently implemented APIs, schemas, command vocabularies and limits, 
 | canonical launcher device/runtime/permission/storage/history service composition | `src/greia_launcher/composition.py` |
 | installed profile-aware child Shell, ordinary Activity visual snapshots and canonical service/supervisor rebuild sequence | `src/greia_launcher/child_shell.py` |
 | launcher profile-theme/wallpaper/UI-size refresh controller | `src/greia_launcher/theme.py` |
+| authenticated hidden Parent Settings language selector | `src/greia_launcher/parent_panel.py` |
 | Activity system Home/Back vocabulary/protected geometry | `src/greia_platform/system_chrome.py` |
 | trusted system-chrome backend lifecycle/lease seam | `src/greia_launcher/system_chrome.py` |
 | Activity storage operations | `src/greia_platform/storage_client.py` |
@@ -101,7 +105,7 @@ For exact currently implemented APIs, schemas, command vocabularies and limits, 
 | Greia Parent API version/resource/capability vocabulary | `src/greia_parent/protocol.py` |
 | base Greia Parent API routing/domain adaptation | `src/greia_parent/api_server.py` |
 | capability-gated Parent Activity package upload composition | `src/greia_parent/package_api.py` |
-| unprivileged Parent system-update status/bounded upload composition | `src/greia_parent/update_api.py` |
+| unprivileged Parent system-update plus typed device-language status/mutation composition | `src/greia_parent/update_api.py` |
 | per-parent-device credential persistence/revocation | `src/greia_parent/credentials.py` |
 | main Parent password digest + typed change | `src/greia_platform/main_credential.py` |
 | external Parent HTML client | `frozenpepper/Greia-Parent-App-Html`, pinned by `runtime/parent-app-client.toml` + integrity manifest |
@@ -135,6 +139,8 @@ Documentation may explain these contracts but must not invent a conflicting one.
 The Activity Simulator is a developer-tooling tranche under ADR 0029. It does **not** move, bypass or close the R7/R8/R9/R10/R14 phase gates. Future HTML/Web simulator support must consume the canonical R9 Web runtime rather than implementing it in parallel.
 
 ADR 0030/R13B update-format and Parent-delivery source may advance as a non-closing cross-cutting tranche, but current single-root profiles do not thereby gain update activation authority. A/B layout, privileged slot staging, boot-health confirmation and rollback remain explicit R13B evidence gates.
+
+ADR 0028 language-selection/persistence work is a cross-cutting product tranche and does not alter R7 ordering. The selected device locale is a platform preference; adding a selectable locale does not certify translation, script-font, shaping or RTL completeness for that locale.
 
 ### 2.7 Current branch/evidence state — `HANDOVER.md`
 
@@ -223,7 +229,9 @@ Architecture examples communicate semantics; they are not automatically current 
 - Shape Garden uses `PygameReferenceCanvas`, maps physical pointer input through the same logical transform and rejects Activity interaction inside protected system chrome.
 - First-party Python Activities publish lifecycle READY only after a frame presentation in the same launch loop.
 - Painting's current editor controls are system-safe, but its durable painting document surface remains coupled to the current editor viewport and still requires a separate resolution-neutral document-model migration.
-- ADR 0028 localization/language policy source exists, but full profile persistence, localized catalogue-title wiring, dynamic launcher flags and pre-launch chooser remain partially integrated/unproven.
+- ADR 0028's device-default selector/persistence path is implemented in source: language is the first installer choice, the install record seeds the initial default, later Parent changes persist through one canonical store, Greia Parents and the hidden Parent panel use the same registry, and Activities inherit the resulting locale context. This source is **UNPROVEN** on the current head until the focused/full gate and rebuilt-installer physical acceptance execute.
+- Current `main` also contains English/Italian localization resources across all 18 first-party Activities. That source presence does not prove every string path or physical rendering without current-head verification, and it does not imply complete coverage for the other selectable locales.
+- Dynamic launcher Activity-language flags, generalized pre-launch Activity language choosers, complete per-profile UI-language persistence/editing, script-font fallback for all selected locales and Arabic RTL/shaping remain separate ADR 0028 work.
 - My Greia semantic interface-size storage/read-only Activity visual snapshots exist in source but require appropriate owner-controlled/current-head verification.
 - ADR 0029's simulator has been hardened so PermissionBroker/storage/history/supervisor ownership remains in canonical launcher/platform composition. The simulator injects only synthetic HAL/runtime/display facts, uses an absolute trusted Python bootstrap, exposes no `GREIA_SIMULATOR*` Activity API, and uses a checkout-bound single-writer workspace with bounded transactional developer-source staging.
 - The hardened simulator regressions are committed but remain **UNPROVEN** until executed on the current head; source presence is not a PASS.
@@ -257,7 +265,7 @@ The simulator may help reproduce platform-independent Activity/layout/runtime se
 | Activity manifest/API/runtime/trust/package flow | Activity authoring skill + relevant product/architecture docs |
 | responsive layout/shared geometry | ADR 0026 + responsive product doc + source/tests + affected author manuals |
 | Activity canvas/world coordinate contract | ADR 0027 + canvas authoring guide + Activity skill + source/tests |
-| Activity/localization/language behavior | ADR 0028 + Activity skill + source/tests + launcher/Parent docs where user-facing |
+| Activity/localization/language behavior | ADR 0028 + `SYSTEM_LANGUAGE_AND_LOCALIZATION.md` + Activity skill + source/tests + launcher/Parent docs where user-facing |
 | Activity Simulator device/workspace/runtime/control/evidence behavior | ADR 0029 + `docs/development/GREIA_ACTIVITY_SIMULATOR.md` + `docs/testing/2026-08-19_ACTIVITY_SIMULATOR_ACCEPTANCE.md` + simulator tests + Activity/agent manuals when author/operator workflow changes |
 | system-update artifact/trust/delivery/backend/rollback behavior | ADR 0030 + `SYSTEM_UPDATES.md` + `GREIA_SYSTEM_UPDATE_RELEASE_WORKFLOW.md` + update source/tests + Parent docs/client + active plan/HANDOVER |
 | child visual personalization/My Greia scope | `MY_GREIA_SETTINGS.md` + source/tests + Activity skill when author-facing visual context changes |
@@ -277,7 +285,7 @@ Unless narrower instructions say otherwise:
 
 1. `AGENTS.md`
 2. this documentation map
-3. relevant product docs / accepted ADRs (including ADR 0029 for simulator work and ADR 0030 for system-update work)
+3. relevant product docs / accepted ADRs (including ADR 0028 for localization/language work, ADR 0029 for simulator work and ADR 0030 for system-update work)
 4. `docs/engineering/ENGINEERING_FOUNDATIONS.md`
 5. active plan
 6. `HANDOVER.md`
