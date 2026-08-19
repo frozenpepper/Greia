@@ -9,6 +9,29 @@ For documentation authority and precedence, read `docs/DOCUMENTATION.md` first.
 
 ## Current manuals
 
+### System update release workflow
+
+`GREIA_SYSTEM_UPDATE_RELEASE_WORKFLOW.md`
+
+Read this when creating, inspecting or pushing a `.greiaupdate` release candidate. It gives the concise operator path for:
+
+- one-time Ed25519 release key generation;
+- deriving target identity from a canonical Greia build profile;
+- building one signed `.greiaupdate` bundle;
+- local signature verification;
+- streaming the bundle to a development Greia through the Parent API;
+- reading update status;
+- understanding why upload is not activation authority;
+- the current single-root/A-B implementation boundary and next R13B step.
+
+Normative architecture is ADR 0030 and product behavior is `docs/product/SYSTEM_UPDATES.md`. Exact implementation is owned by:
+
+```text
+src/greia_platform/system_updates.py
+src/greia_parent/update_api.py
+tools/greia_update.py
+```
+
 ### Activity text, typography and emoji
 
 `GREIA_ACTIVITY_TEXT_TYPOGRAPHY_AND_EMOJI.md`
