@@ -280,12 +280,12 @@ systemctl --root="$LIVE_ROOT" enable greia-installer.service
 systemctl --root="$LIVE_ROOT" mask getty@.service autovt@.service console-getty.service debug-shell.service emergency.service rescue.service console-shell.service kbrequest.target getty@tty1.service getty@tty2.service getty@tty3.service getty@tty4.service getty@tty5.service getty@tty6.service
 systemctl --root="$LIVE_ROOT" set-default graphical.target
 
-# The canonical live-installer builder also fails closed for developer profiles.
-# A developer-remote package set may install SSH/network/test prerequisites, but
-# it does not authorize the builder to create a password or enable a daemon.
-# Remote control of a live installer is a separate explicit post-build/rootfs
-# operation through tools/provision_developer_installer.py, which enables the
-# owner-approved greia/greia development login and keeps root SSH disabled.
+# The canonical live-installer builder fails closed for normal/release profiles:
+# SSH is disabled and no password is minted. For an explicit developer-remote
+# profile the owner policy requires the greia/greia development login to be
+# reachable after boot, so the builder provisions it here (root stays denied).
+# This makes the owner-approved developer installer reproducible instead of
+# depending on a separate manual provisioning step.
 systemctl --root="$LIVE_ROOT" disable ssh.service 2>/dev/null || true
 install -d -m 0755 "$LIVE_ROOT/etc/ssh/sshd_config.d"
 cat > "$LIVE_ROOT/etc/ssh/sshd_config.d/20-greia-parent.conf" <<'SSH'
@@ -297,6 +297,37 @@ X11Forwarding no
 AllowTcpForwarding no
 PermitTunnel no
 SSH
+
+provision_developer_ssh() {
+  local rootfs="$1"
+  # Create the managed greia development account if absent.
+  if ! chroot "$rootfs" /usr/bin/id -u greia >/dev/null 2>&1; then
+    chroot "$rootfs" /usr/sbin/useradd --create-home --home-dir /var/lib/greia \
+      --shell /bin/bash --groups sudo greia
+  fi
+  printf 'greia:greia\n' | chroot "$rootfs" /usr/sbin/chpasswd
+  # Rewrite the shared security floor so the owner-approved greia/greia login
+  # works while root stays denied. This is the dev-image floor from the
+  # provisioning tools, applied at build time for developer profiles.
+  cat > "$rootfs/etc/ssh/sshd_config.d/00-greia-security-floor.conf" <<'FLOOR'
+# Live-installer development security floor (owner-approved greia/greia).
+# Enables the development/test SSH identity greia/greia; root stays denied.
+PasswordAuthentication yes
+KbdInteractiveAuthentication yes
+PermitRootLogin no
+AuthenticationMethods publickey,password
+DenyUsers root
+AllowUsers greia
+FLOOR
+  chmod 0644 "$rootfs/etc/ssh/sshd_config.d/00-greia-security-floor.conf"
+  systemctl --root="$rootfs" enable ssh.service
+}
+
+installer_sets="$(python3 "$PROFILE_TOOL" --package-root "$PACKAGE_SET_ROOT" package-sets "$PROFILE_PATH" --scope installer 2>/dev/null)"
+if [[ "$installer_sets" == *developer-remote* ]]; then
+  echo "Developer installer profile: enabling greia/greia SSH (root denied)."
+  provision_developer_ssh "$LIVE_ROOT"
+fi
 
 # The live installer is a second Debian root, not merely a wrapper around the
 # target payload. Record and audit its exact resolved package/kernel base too.

@@ -115,9 +115,12 @@ class RealHardwareInstallationRegressionTests(unittest.TestCase):
         self.assertIn("_set_x11_input_focus(screen, pygame)", launcher)
         self.assertIn("XSetInputFocus", launcher)
 
-    def test_canonical_builders_never_mint_password_ssh_access(self) -> None:
+    def test_canonical_builders_never_mint_root_or_unguarded_password_ssh(self) -> None:
+        # Root SSH and unguarded password SSH are always forbidden. The
+        # owner-approved greia/greia development login is only minted for
+        # explicit developer-remote profiles, guarded by the profile package
+        # set; normal/release profiles always emit the closed floor.
         forbidden = (
-            "PasswordAuthentication yes",
             "PermitRootLogin yes",
             "AllowUsers greia root",
             "chpasswd -e",
@@ -136,11 +139,18 @@ class RealHardwareInstallationRegressionTests(unittest.TestCase):
                 self.assertIn("AuthenticationMethods publickey", builder)
                 self.assertIn("PermitRootLogin no", builder)
                 self.assertIn("disable ssh.service", builder)
+                # The dev login is guarded by the developer-remote package set.
+                self.assertIn("developer-remote", builder)
+                self.assertIn("provision_developer_ssh", builder)
+                # The dev floor keeps root denied.
+                self.assertIn("DenyUsers root", builder)
+                self.assertIn("AllowUsers greia", builder)
+                self.assertIn("PasswordAuthentication yes", builder)
 
-        # Developer reachability is an explicit provisioning step after the
-        # closed base image exists; a profile/package-set name is not credential
-        # authority by itself. The explicit developer path enables the
-        # owner-approved greia/greia login plus the operator key.
+        # Developer reachability is also available through the explicit
+        # post-build provisioning path; a profile/package-set name is not
+        # credential authority by itself, but the owner-approved greia/greia
+        # login plus the operator key is the accepted dev identity.
         developer_builder = self.read("build/build-developer-image.sh")
         self.assertIn("provision_developer_image.py", developer_builder)
         provisioner = self.read("tools/provision_developer_image.py")

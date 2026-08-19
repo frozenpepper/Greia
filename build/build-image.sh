@@ -315,14 +315,12 @@ systemctl --root="$ROOTFS" mask \
   getty@tty4.service getty@tty5.service getty@tty6.service
 systemctl --root="$ROOTFS" set-default graphical.target
 
-# The base image builder never enables remote access, including when a profile
-# carries the developer-remote package set. That set installs prerequisites; it
-# is not authority to mint credentials. The supported developer path is
-# build/build-developer-image.sh, which post-processes this closed base image
-# through tools/provision_developer_image.py and enables the owner-approved
-# greia/greia development login before turning SSH on. Normal/release images
-# remain closed, and a partially completed developer build therefore fails
-# closed too.
+# The base image builder fails closed: SSH disabled, no password minted, the
+# managed greia account locked. For an explicit developer-remote profile the
+# owner policy requires the greia/greia development login to be reachable after
+# install, so the builder provisions it here (root stays denied). This makes the
+# owner-approved developer image reproducible instead of depending on a separate
+# manual provisioning step. Normal/release profiles remain closed.
 systemctl --root="$ROOTFS" disable ssh.service 2>/dev/null || true
 install -d -m 0755 "$ROOTFS/etc/ssh/sshd_config.d"
 cat > "$ROOTFS/etc/ssh/sshd_config.d/20-greia-parent.conf" <<'SSH'
@@ -334,6 +332,32 @@ X11Forwarding no
 AllowTcpForwarding no
 PermitTunnel no
 SSH
+
+provision_developer_ssh() {
+  local rootfs="$1"
+  # The greia account already exists in build-image.sh (created and locked);
+  # unlock it and set the owner-approved development password.
+  chroot "$rootfs" /usr/sbin/passwd -u greia
+  printf 'greia:greia\n' | chroot "$rootfs" /usr/sbin/chpasswd
+  cat > "$rootfs/etc/ssh/sshd_config.d/00-greia-security-floor.conf" <<'FLOOR'
+# Target development security floor (owner-approved greia/greia).
+# Enables the development/test SSH identity greia/greia; root stays denied.
+PasswordAuthentication yes
+KbdInteractiveAuthentication yes
+PermitRootLogin no
+AuthenticationMethods publickey,password
+DenyUsers root
+AllowUsers greia
+FLOOR
+  chmod 0644 "$rootfs/etc/ssh/sshd_config.d/00-greia-security-floor.conf"
+  systemctl --root="$rootfs" enable ssh.service
+}
+
+target_sets="$(python3 "$PROFILE_TOOL" --package-root "$PACKAGE_SET_ROOT" package-sets "$PROFILE_PATH" --scope target 2>/dev/null)"
+if [[ "$target_sets" == *developer-remote* ]]; then
+  echo "Developer target profile: enabling greia/greia SSH (root denied)."
+  provision_developer_ssh "$ROOTFS"
+fi
 
 # Record the exact package/kernel base actually resolved by APT. Profiles use
 # Debian suite names and meta-packages, so this manifest is the authoritative
