@@ -109,11 +109,16 @@ install -d -m 0755 "$USB_MOUNT/.disk"
 printf '%s\n' "$LIVE_MEDIA_ID" > "$USB_MOUNT/.disk/live-uuid"
 chmod 0644 "$USB_MOUNT/.disk/live-uuid"
 
-# syslinux: VBR on the partition, MBR on the device.
+# syslinux: VBR on the partition, MBR on the device. Stock SYSLINUX prints its
+# own copyright line before config parsing; the form-feed-only DISPLAY file
+# clears that unavoidable line immediately once syslinux.cfg is available.
 install -d -m 0755 "$USB_MOUNT/boot/syslinux"
 if [ -d /usr/lib/syslinux/modules/bios ]; then
   cp /usr/lib/syslinux/modules/bios/*.c32 "$USB_MOUNT/boot/syslinux/" 2>/dev/null || true
 fi
+install -m 0644 \
+  "$PROJECT_ROOT/build/live-syslinux/clear.msg" \
+  "$USB_MOUNT/boot/syslinux/clear.msg"
 sed "s/LIVE_MEDIA_ID/$LIVE_MEDIA_ID/" \
   "$PROJECT_ROOT/build/live-syslinux/syslinux.cfg.in" \
   > "$USB_MOUNT/boot/syslinux/syslinux.cfg"
