@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import importlib.util
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -13,6 +14,7 @@ TOOL_PATH = PROJECT_ROOT / "tools" / "greia_update.py"
 spec = importlib.util.spec_from_file_location("greia_update_tool", TOOL_PATH)
 assert spec is not None and spec.loader is not None
 module = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = module
 spec.loader.exec_module(module)
 
 
