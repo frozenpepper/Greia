@@ -226,6 +226,56 @@ class MazeEngine:
                     queue.append((nr, nc, path + [(nr, nc)]))
         return []
 
+    @staticmethod
+    def compute_slide_path(
+        grid: list[list[int]],
+        start_r: int,
+        start_c: int,
+        dr: int,
+        dc: int,
+        exit_pos: dict[str, int],
+    ) -> list[tuple[int, int]]:
+        rows = len(grid)
+        cols = len(grid[0])
+        curr_r, curr_c = start_r, start_c
+        path: list[tuple[int, int]] = []
+
+        first_r, first_c = curr_r + dr, curr_c + dc
+        if not (0 <= first_r < rows and 0 <= first_c < cols and grid[first_r][first_c] == 0):
+            return []
+
+        perp1 = (-dc, dr)
+        perp2 = (dc, -dr)
+
+        while True:
+            next_r = curr_r + dr
+            next_c = curr_c + dc
+            if not (0 <= next_r < rows and 0 <= next_c < cols and grid[next_r][next_c] == 0):
+                break
+
+            curr_r, curr_c = next_r, next_c
+            path.append((curr_r, curr_c))
+
+            if curr_r == exit_pos["r"] and curr_c == exit_pos["c"]:
+                break
+
+            has_turn_choice = False
+            for pdr, pdc in (perp1, perp2):
+                pr, pc = curr_r + pdr, curr_c + pdc
+                if 0 <= pr < rows and 0 <= pc < cols and grid[pr][pc] == 0:
+                    has_turn_choice = True
+                    break
+
+            if has_turn_choice:
+                break
+
+            fwd_r = curr_r + dr
+            fwd_c = curr_c + dc
+            if not (0 <= fwd_r < rows and 0 <= fwd_c < cols and grid[fwd_r][fwd_c] == 0):
+                break
+
+        return path
+
 
 def _is_safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
     vp = activity_viewport_for_surface(surface)
@@ -339,6 +389,19 @@ def main() -> int:
                     except Exception:
                         pass
 
+    def handle_directional_input(dr: int, dc: int) -> None:
+        nonlocal waypoints
+        if is_victory:
+            return
+        path = MazeEngine.compute_slide_path(grid, player_r, player_c, dr, dc, exit_pos)
+        if path:
+            waypoints.clear()
+            for step in path:
+                waypoints.append(step)
+            if waypoints:
+                next_r, next_c = waypoints.popleft()
+                move_step(next_r - player_r, next_c - player_c)
+
     def compute_maze_metrics() -> tuple[int, int, int, int, int]:
         m_cols = len(grid[0]) if grid else 9
         m_rows = len(grid) if grid else 7
@@ -376,17 +439,13 @@ def main() -> int:
                     continue
 
                 if event.key in (pygame.K_UP, pygame.K_w):
-                    waypoints.clear()
-                    move_step(-1, 0)
+                    handle_directional_input(-1, 0)
                 elif event.key in (pygame.K_DOWN, pygame.K_s):
-                    waypoints.clear()
-                    move_step(1, 0)
+                    handle_directional_input(1, 0)
                 elif event.key in (pygame.K_LEFT, pygame.K_a):
-                    waypoints.clear()
-                    move_step(0, -1)
+                    handle_directional_input(0, -1)
                 elif event.key in (pygame.K_RIGHT, pygame.K_d):
-                    waypoints.clear()
-                    move_step(0, 1)
+                    handle_directional_input(0, 1)
                 elif event.key in (pygame.K_SPACE, pygame.K_h):
                     path = MazeEngine.solve_bfs(grid, player_r, player_c, exit_pos["r"], exit_pos["c"])
                     if path:
@@ -396,7 +455,7 @@ def main() -> int:
                         firefly_index = 0
                         firefly_pos = (float(player_c), float(player_r))
                         sounds.play("star")
-                elif event.key in (pygame.K_TAB, pygame.K_d):
+                elif event.key in (pygame.K_TAB, pygame.K_l):
                     diff_idx = (diff_idx + 1) % len(DIFFICULTIES)
                     start_new_game()
                     cols, rows, cs, ox, oy = compute_maze_metrics()
@@ -471,9 +530,9 @@ def main() -> int:
         dx = target_x - player_x
         dy = target_y - player_y
         dist = math.hypot(dx, dy)
-        if dist > 0.01:
-            player_x += dx * 0.35
-            player_y += dy * 0.35
+        if dist > 0.03:
+            player_x += dx * 0.45
+            player_y += dy * 0.45
         else:
             player_x = target_x
             player_y = target_y

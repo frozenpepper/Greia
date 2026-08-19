@@ -87,6 +87,29 @@ class LabirintoMagicoTests(unittest.TestCase):
             self.assertIn("id", h)
             self.assertIn("color", h)
 
+    def test_compute_slide_path_stops_at_wall_and_decision_points(self) -> None:
+        # 1. Straight corridor: stops at wall/exit
+        grid_straight = [
+            [1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1],
+        ]
+        path = MazeEngine.compute_slide_path(grid_straight, 1, 1, 0, 1, {"r": 1, "c": 5})
+        self.assertEqual(path, [(1, 2), (1, 3), (1, 4), (1, 5)])
+
+        # 2. T-junction: stops at crossing where choice exists
+        grid_junction = [
+            [1, 1, 1, 0, 1, 1, 1],
+            [1, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1],
+        ]
+        path_j = MazeEngine.compute_slide_path(grid_junction, 1, 1, 0, 1, {"r": 1, "c": 5})
+        self.assertEqual(path_j, [(1, 2), (1, 3)])
+
+        # 3. Blocked direction: returns empty
+        path_blocked = MazeEngine.compute_slide_path(grid_straight, 1, 1, -1, 0, {"r": 1, "c": 5})
+        self.assertEqual(path_blocked, [])
+
     def test_audio_synthesizer_initializes(self) -> None:
         audio = LabyrinthAudio()
         self.assertIsNotNone(audio)
