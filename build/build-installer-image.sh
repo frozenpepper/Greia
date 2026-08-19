@@ -320,6 +320,22 @@ DenyUsers root
 AllowUsers greia
 FLOOR
   chmod 0644 "$rootfs/etc/ssh/sshd_config.d/00-greia-security-floor.conf"
+  # Also make the later-sorted 20-greia-parent.conf consistent. sshd_config.d
+  # is included in glob order with first-value-wins; the base builder writes
+  # 20-greia-parent.conf with PasswordAuthentication no / publickey-only, which
+  # would otherwise defeat the developer floor.
+  cat > "$rootfs/etc/ssh/sshd_config.d/20-greia-parent.conf" <<'DEVSSH'
+# Development live-installer SSH policy (owner-approved greia/greia).
+PasswordAuthentication yes
+KbdInteractiveAuthentication yes
+PermitRootLogin no
+AuthenticationMethods publickey,password
+AllowUsers greia
+X11Forwarding no
+AllowTcpForwarding no
+PermitTunnel no
+DEVSSH
+  chmod 0644 "$rootfs/etc/ssh/sshd_config.d/20-greia-parent.conf"
   systemctl --root="$rootfs" enable ssh.service
 }
 

@@ -340,6 +340,11 @@ provision_developer_ssh() {
   # passwordless account is refused by passwd; after chpasswd it is allowed).
   printf 'greia:greia\n' | chroot "$rootfs" /usr/sbin/chpasswd
   chroot "$rootfs" /usr/bin/passwd -u greia
+  # Write BOTH sshd drop-ins consistently. sshd_config.d is included in glob
+  # order and the first value wins; the base builder writes 20-greia-parent.conf
+  # with PasswordAuthentication no / AuthenticationMethods publickey, which
+  # would otherwise defeat the developer floor. The dev floor must be coherent
+  # across every included file so the greia/greia password login works.
   cat > "$rootfs/etc/ssh/sshd_config.d/00-greia-security-floor.conf" <<'FLOOR'
 # Target development security floor (owner-approved greia/greia).
 # Enables the development/test SSH identity greia/greia; root stays denied.
@@ -351,6 +356,18 @@ DenyUsers root
 AllowUsers greia
 FLOOR
   chmod 0644 "$rootfs/etc/ssh/sshd_config.d/00-greia-security-floor.conf"
+  cat > "$rootfs/etc/ssh/sshd_config.d/20-greia-parent.conf" <<'DEVSSH'
+# Development target SSH policy (owner-approved greia/greia).
+PasswordAuthentication yes
+KbdInteractiveAuthentication yes
+PermitRootLogin no
+AuthenticationMethods publickey,password
+AllowUsers greia
+X11Forwarding no
+AllowTcpForwarding no
+PermitTunnel no
+DEVSSH
+  chmod 0644 "$rootfs/etc/ssh/sshd_config.d/20-greia-parent.conf"
   systemctl --root="$rootfs" enable ssh.service
   # Developer marker: keeps the installed boot observable (console=tty1,
   # panic=30) via grub.d/10_greia_appliance and identifies this image as a
