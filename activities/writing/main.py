@@ -22,6 +22,7 @@ from greia_platform.activity_ui import (
     load_icon,
     mix,
 )
+from greia_platform.emoji_palette import EmojiPalette
 from greia_platform.typography import (
     FontRole,
     GreiaTypography,
@@ -71,7 +72,9 @@ class DocumentRepository:
             ):
                 continue
             seen.add(document_id)
-            records.append(DocumentRecord(document_id, truncate_grapheme_safe(preview, 80)))
+            records.append(
+                DocumentRecord(document_id, truncate_grapheme_safe(preview, 80))
+            )
             if len(records) >= MAX_DOCUMENTS:
                 break
         return records
@@ -103,7 +106,9 @@ class DocumentRepository:
         text = clamp_text(text)
         self.storage.file_write_atomic(self._name(document_id), text.encode("utf-8"))
         updated = DocumentRecord(document_id, preview_text(text))
-        others = [item for item in self.list_records() if item.document_id != document_id]
+        others = [
+            item for item in self.list_records() if item.document_id != document_id
+        ]
         self._write_index([updated, *others])
         return updated
 
@@ -168,7 +173,10 @@ class TextBuffer:
     def insert(self, value: str) -> TextEdit | None:
         if not value:
             return None
-        value = truncate_grapheme_safe(value, max(0, MAX_CHARACTERS - len(self.text)))
+        value = truncate_grapheme_safe(
+            value,
+            max(0, MAX_CHARACTERS - len(self.text)),
+        )
         if not value:
             return None
         start = self.cursor
@@ -244,7 +252,10 @@ class UndoHistory:
             return
         self._items.append(edit)
         self._payload_chars += payload
-        while len(self._items) > self.maximum or self._payload_chars > self.max_payload_chars:
+        while (
+            len(self._items) > self.maximum
+            or self._payload_chars > self.max_payload_chars
+        ):
             removed = self._items.pop(0)
             self._payload_chars -= removed.payload_chars
 
@@ -301,10 +312,15 @@ class WritingApp:
         self.typography = GreiaTypography()
         self.font_size = self.metrics.px(42)
         self.small_font_size = self.metrics.px(27)
+        self.emoji_palette = EmojiPalette()
+        self.emoji_picker_open = False
         self.repository = DocumentRepository(get_storage())
         icon_size = self.metrics.px(42)
         self.book_icon = load_icon(get_icon_path("book", 64), icon_size)
-        self.empty_icon = load_icon(get_icon_path("yellow_star", 64), self.metrics.px(46))
+        self.empty_icon = load_icon(
+            get_icon_path("yellow_star", 64),
+            self.metrics.px(46),
+        )
         self.records = self.repository.list_records()
         self.current: DocumentRecord | None = None
         self.buffer = TextBuffer()
@@ -354,6 +370,9 @@ class WritingApp:
 
     def _key(self, event: pygame.event.Event) -> bool:
         if event.key == pygame.K_ESCAPE:
+            if self.emoji_picker_open:
+                self.emoji_picker_open = False
+                return True
             return not self._save()
         if self.mode == "gallery":
             if event.key in {pygame.K_RETURN, pygame.K_SPACE} and self.records:
@@ -386,14 +405,19 @@ class WritingApp:
     def _click(self, pos: tuple[int, int]) -> bool:
         gallery = self.metrics.activity_toolbar_button(0, side="left")
         undo = self.metrics.activity_toolbar_button(1, side="left")
+        emoji = self.metrics.activity_toolbar_button(2, side="left")
         new = self.metrics.activity_toolbar_button(0, side="right")
         if gallery.collidepoint(pos):
             if not self._save():
                 return True
             self.mode = "gallery" if self.mode == "edit" else "edit"
+            self.emoji_picker_open = False
             return True
         if undo.collidepoint(pos) and self.mode == "edit":
             self._undo()
+            return True
+        if emoji.collidepoint(pos) and self.mode == "edit":
+            self.emoji_picker_open = not self.emoji_picker_open
             return True
         if new.collidepoint(pos):
             if self._save():
@@ -404,6 +428,8 @@ class WritingApp:
                 if rect.collidepoint(pos):
                     self._open(record)
                     break
+        elif self.emoji_picker_open:
+            self._click_emoji_picker(pos)
         elif self.editor_rect.collidepoint(pos):
             self._place_cursor(pos)
         return True
@@ -417,8 +443,12 @@ class WritingApp:
         self.current = record
         self.buffer = TextBuffer()
         self.undo_history.clear()
-        self.records = [record, *[item for item in self.records if item.document_id != record.document_id]]
+        self.records = [
+            record,
+            *[item for item in self.records if item.document_id != record.document_id],
+        ]
         self.mode = "edit"
+        self.emoji_picker_open = False
         self.dirty = False
         self.save_error = False
         self.scroll_line = 0
@@ -436,6 +466,7 @@ class WritingApp:
         self.buffer = TextBuffer(text, len(text))
         self.undo_history.clear()
         self.mode = "edit"
+        self.emoji_picker_open = False
         self.dirty = False
         self.save_error = False
         self.scroll_line = 0
@@ -464,19 +495,32 @@ class WritingApp:
         self._layout_text = None
 
     def _autosave(self) -> None:
-        if self.dirty and time.monotonic() - self.last_change >= AUTOSAVE_IDLE_SECONDS:
+        if (
+            self.dirty
+            and time.monotonic() - self.last_change >= AUTOSAVE_IDLE_SECONDS
+        ):
             self._save()
 
     def _save(self) -> bool:
         if not self.dirty or self.current is None:
             return True
         try:
-            updated = self.repository.save_text(self.current.document_id, self.buffer.text)
+            updated = self.repository.save_text(
+                self.current.document_id,
+                self.buffer.text,
+            )
         except (RuntimeError, ValueError):
             self.save_error = True
             return False
         self.current = updated
-        self.records = [updated, *[item for item in self.records if item.document_id != updated.document_id]]
+        self.records = [
+            updated,
+            *[
+                item
+                for item in self.records
+                if item.document_id != updated.document_id
+            ],
+        ]
         self.dirty = False
         self.save_error = False
         return True
@@ -496,7 +540,9 @@ class WritingApp:
         while index < len(spans):
             span = spans[index]
             if span.text == "\n":
-                lines.append(VisualLine(line_start, span.start, text[line_start : span.start]))
+                lines.append(
+                    VisualLine(line_start, span.start, text[line_start : span.start])
+                )
                 line_start = span.end
                 line_width = 0
                 last_space_end = None
@@ -504,7 +550,11 @@ class WritingApp:
                 continue
             cluster_width = max(
                 1,
-                self.typography.measure(span.text, FontRole.BODY, self.font_size).width,
+                self.typography.measure(
+                    span.text,
+                    FontRole.BODY,
+                    self.font_size,
+                ).width,
             )
             if span.text.isspace():
                 last_space_end = span.end
@@ -514,7 +564,13 @@ class WritingApp:
                     if last_space_end is not None and last_space_end > line_start
                     else span.start
                 )
-                lines.append(VisualLine(line_start, wrap, text[line_start:wrap].rstrip("\n")))
+                lines.append(
+                    VisualLine(
+                        line_start,
+                        wrap,
+                        text[line_start:wrap].rstrip("\n"),
+                    )
+                )
                 line_start = wrap
                 line_width = 0
                 last_space_end = None
@@ -537,7 +593,10 @@ class WritingApp:
 
     def _keep_cursor_visible(self) -> None:
         line_height = self.typography.line_height(FontRole.BODY, self.font_size)
-        visible = max(1, (self.editor_rect.height - self.metrics.px(34)) // line_height)
+        visible = max(
+            1,
+            (self.editor_rect.height - self.metrics.px(34)) // line_height,
+        )
         current = self._cursor_line()
         if current < self.scroll_line:
             self.scroll_line = current
@@ -598,10 +657,85 @@ class WritingApp:
             )
         return cards
 
+    def _emoji_picker_layout(
+        self,
+    ) -> tuple[list[pygame.Rect], list[tuple[pygame.Rect, str]]]:
+        area = self.editor_rect.inflate(-self.metrics.px(28), -self.metrics.px(24))
+        gap = self.metrics.px(8)
+        categories = self.emoji_palette.categories
+        category_height = min(
+            self.metrics.px(54),
+            max(self.metrics.px(38), area.height // 6),
+        )
+        category_width = max(
+            self.metrics.px(38),
+            min(
+                self.metrics.px(58),
+                (area.width - gap * (len(categories) - 1)) // len(categories),
+            ),
+        )
+        total_category_width = (
+            category_width * len(categories) + gap * (len(categories) - 1)
+        )
+        category_left = area.centerx - total_category_width // 2
+        category_rects = [
+            pygame.Rect(
+                category_left + index * (category_width + gap),
+                area.top,
+                category_width,
+                category_height,
+            )
+            for index in range(len(categories))
+        ]
+
+        grid_top = area.top + category_height + self.metrics.px(18)
+        grid_height = max(self.metrics.px(120), area.bottom - grid_top)
+        columns = 6
+        rows = 3
+        cell = max(
+            self.metrics.px(40),
+            min(
+                self.metrics.px(72),
+                (area.width - gap * (columns - 1)) // columns,
+                (grid_height - gap * (rows - 1)) // rows,
+            ),
+        )
+        total_width = columns * cell + gap * (columns - 1)
+        grid_left = area.centerx - total_width // 2
+        items: list[tuple[pygame.Rect, str]] = []
+        for index, cluster in enumerate(self.emoji_palette.selected.emoji):
+            row, column = divmod(index, columns)
+            if row >= rows:
+                break
+            items.append(
+                (
+                    pygame.Rect(
+                        grid_left + column * (cell + gap),
+                        grid_top + row * (cell + gap),
+                        cell,
+                        cell,
+                    ),
+                    cluster,
+                )
+            )
+        return category_rects, items
+
+    def _click_emoji_picker(self, pos: tuple[int, int]) -> None:
+        categories, items = self._emoji_picker_layout()
+        for index, rect in enumerate(categories):
+            if rect.collidepoint(pos):
+                self.emoji_palette.select(index)
+                return
+        for rect, cluster in items:
+            if rect.collidepoint(pos):
+                self._apply_edit(lambda cluster=cluster: self.buffer.insert(cluster))
+                return
+
     def _draw(self) -> None:
         self.screen.fill(self.theme.background)
         gallery = self.metrics.activity_toolbar_button(0, side="left")
         undo = self.metrics.activity_toolbar_button(1, side="left")
+        emoji = self.metrics.activity_toolbar_button(2, side="left")
         new = self.metrics.activity_toolbar_button(0, side="right")
         draw_icon_button(
             self.screen,
@@ -618,6 +752,25 @@ class WritingApp:
         )
         draw_icon_button(self.screen, undo, fill=undo_fill)
         draw_undo_symbol(self.screen, undo, self.theme.text)
+        emoji_fill = (
+            self.theme.accent
+            if self.emoji_picker_open and self.mode == "edit"
+            else self.theme.panel
+        )
+        draw_icon_button(
+            self.screen,
+            emoji,
+            fill=emoji_fill,
+            selected=self.emoji_picker_open and self.mode == "edit",
+            outline=self.theme.accent,
+        )
+        smile = self.typography.render(
+            "😊",
+            FontRole.BODY,
+            self.metrics.px(38),
+            self.theme.text,
+        )
+        self.screen.blit(smile, smile.get_rect(center=emoji.center))
         draw_icon_button(self.screen, new, fill=self.theme.accent)
         draw_plus_symbol(self.screen, new, self.theme.accent_text)
         status = (
@@ -635,6 +788,8 @@ class WritingApp:
             self._draw_gallery()
         else:
             self._draw_editor()
+            if self.emoji_picker_open:
+                self._draw_emoji_picker()
 
     def _draw_editor(self) -> None:
         rect = self.editor_rect
@@ -677,6 +832,45 @@ class WritingApp:
                 )
             y += line_height
 
+    def _draw_emoji_picker(self) -> None:
+        panel = self.editor_rect
+        pygame.draw.rect(
+            self.screen,
+            mix(self.theme.panel, (255, 255, 255), 0.18),
+            panel,
+            border_radius=self.metrics.radius,
+        )
+        category_rects, items = self._emoji_picker_layout()
+        for index, rect in enumerate(category_rects):
+            selected = index == self.emoji_palette.selected_index
+            pygame.draw.rect(
+                self.screen,
+                self.theme.accent if selected else self.theme.background,
+                rect,
+                border_radius=max(8, self.metrics.radius // 2),
+            )
+            icon = self.typography.render(
+                self.emoji_palette.categories[index].icon,
+                FontRole.BODY,
+                min(rect.height - self.metrics.px(8), self.metrics.px(34)),
+                self.theme.text,
+            )
+            self.screen.blit(icon, icon.get_rect(center=rect.center))
+        for rect, cluster in items:
+            pygame.draw.rect(
+                self.screen,
+                self.theme.background,
+                rect,
+                border_radius=max(9, self.metrics.radius // 2),
+            )
+            rendered = self.typography.render(
+                cluster,
+                FontRole.BODY,
+                max(self.metrics.px(30), int(rect.height * 0.62)),
+                self.theme.text,
+            )
+            self.screen.blit(rendered, rendered.get_rect(center=rect.center))
+
     def _draw_gallery(self) -> None:
         for rect, record in self._gallery_cards():
             pygame.draw.rect(
@@ -686,13 +880,19 @@ class WritingApp:
                 border_radius=self.metrics.radius,
             )
             if not record.preview:
-                self.screen.blit(self.empty_icon, self.empty_icon.get_rect(center=rect.center))
+                self.screen.blit(
+                    self.empty_icon,
+                    self.empty_icon.get_rect(center=rect.center),
+                )
                 continue
             words = record.preview.split()
             line = ""
             y = rect.top + self.metrics.px(22)
             max_width = rect.width - self.metrics.px(30)
-            line_height = self.typography.line_height(FontRole.BODY, self.small_font_size)
+            line_height = self.typography.line_height(
+                FontRole.BODY,
+                self.small_font_size,
+            )
             for word in words:
                 candidate = f"{line} {word}".strip()
                 if (
