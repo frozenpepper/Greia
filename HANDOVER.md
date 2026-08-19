@@ -6,7 +6,7 @@
 **Canonical/default/development branch:** `main`  
 **Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**  
 **Simulator adversarial review source boundary:** `b4cda82ca18996ad67859976292f0457315052d4`  
-**Simulator hardening source/docs boundary before this handover update:** `701edbf3cc3f181313448bdde85b483eb2316387`  
+**Simulator hardening source/docs boundary before this handover update:** `f1e2ffdb7eaacdb9f6bd938fd917f731f0ef92e3`  
 **Adversarial simulator review:** `docs/reviews/2026-08-19_ACTIVITY_SIMULATOR_ADVERSARIAL_REVIEW.md`  
 **Hardening response:** `docs/reviews/2026-08-19_ACTIVITY_SIMULATOR_HARDENING_RESPONSE.md`  
 **External Parent HTML revision currently pinned by Greia:** `frozenpepper/Greia-Parent-App-Html@e30bcbcab393354b8ffb63d5829c08711d8023bd`
@@ -64,6 +64,7 @@ The hardened Python simulator path uses:
 - a synthetic typed `GreiaHAL` for exact viewport + semantic capability facts;
 - injected runtime adapters through the canonical launcher composition seam;
 - an isolated, checkout-bound, single-writer simulator workspace outside the source checkout;
+- a workspace lease that records both the controller PID and any owned Greia Shell PID so controller crashes cannot silently free live mutable state;
 - a narrow **simulator-only** Python/Pygame child bootstrap that is executed by absolute Greia-owned path and maps current Activity fullscreen display requests to the selected synthetic desktop viewport;
 - shared Shell display request hooks rather than simulator `_draw()`/private-cache manipulation.
 
@@ -81,10 +82,11 @@ Start / Apply
 Restart
 Stop
 unexpected-child-process health reporting
+controller/Shell process-lease ownership
 prominent trusted-code-only safety warning
 ```
 
-`Load Activity Folder…` now inspects a finite lstat/content-fingerprinted source snapshot before managed copying, applies the canonical Activity byte limit, rejects symlinks/special/executable/forbidden content and source/state overlap, validates through the ordinary Greia registry together with built-in identity authority under `DEVELOPER_UNSIGNED` trust, and publishes transactionally while preserving the previous valid Activity on failure.
+`Load Activity Folder…` now inspects a finite lstat/content-fingerprinted source snapshot before managed copying, applies the canonical Activity byte limit, rejects symlinks/special/executable/forbidden content and source/state overlap, validates through the ordinary Greia registry together with built-in identity authority under `DEVELOPER_UNSIGNED` trust, and publishes transactionally while preserving the previous valid Activity on failure. The copy checks exact content digests, not only inode/size/mtime, so same-metadata source mutation is rejected.
 
 `Install Activity Package…` calls the canonical `ActivityPackageService`; there is no simulator-only unzip/install authority. The import is intentionally lazy so non-package simulator functions do not inherit a POSIX package-lock import on hosts where the canonical package service is not available.
 
@@ -133,15 +135,15 @@ PRODUCTION/HARDWARE CLAIMS: NONE
 
 The adversarial findings were addressed by making the simulator thinner, not more special:
 
-1. **One canonical service graph:** `build_launcher_runtime_services()` now accepts typed HAL/runtime-adapter variation while retaining one PermissionBroker/RuntimeManager/storage/history graph; `GreiaChildShell` owns the one runtime-service/supervisor rebuild/publication sequence. The simulator no longer owns `build_simulator_runtime_services` or a simulator supervisor.
-2. **Shared Shell display seam:** `GreiaLauncherPresentation` now owns initial/resize display request + caption hooks. `GreiaSimulatorChildShell` does not replace `_draw()`, private cache behavior or `_rebuild_runtime_services()`.
+1. **One canonical service graph:** `build_launcher_runtime_services()` accepts typed HAL/runtime-adapter variation while retaining one PermissionBroker/RuntimeManager/storage/history graph; `GreiaChildShell` owns the one runtime-service/supervisor rebuild/publication sequence. The simulator no longer owns `build_simulator_runtime_services` or a simulator supervisor.
+2. **Shared Shell display seam:** `GreiaLauncherPresentation` owns initial/resize display request + caption hooks. `GreiaSimulatorChildShell` does not replace `_draw()`, private cache behavior or `_rebuild_runtime_services()`.
 3. **Trusted Python bootstrap:** the simulator runtime adapter wraps the canonical Python command and invokes `python_activity.py` by absolute Greia-owned path. Activity content cannot shadow it through `python -m`; trusted Greia `src/` is restored ahead of Activity content and stale `GREIA_SIMULATOR*` variables are removed before Activity execution.
-4. **Lifecycle-aware Stop/Restart:** control-plane SIGTERM unwinds the simulator Shell, which requests normal supervisor stop, polls boundedly and escalates through `force_stop(... SYSTEM_SHUTDOWN)` before the desktop control plane resorts to process kill.
-5. **Transactional source loading:** preflight is lstat-aware, byte-bounded and content-fingerprinted; symlinks/special/executable/forbidden content and source/state overlap are rejected; copy verifies the inspected file identity/size/content; final registry validation occurs before the previous valid managed Activity is discarded.
-6. **Capability/preset claims corrected:** capability choices are derived from canonical runtime vocabulary; simulator owns only the HAL mapping and fails on unmapped future canonical capabilities. Presets are geometry-only and no longer imply Acer/tablet/CPU/RAM/GPU emulation.
-7. **Workspace authority hardened:** `workspace.json` binds schema and checkout; a single-writer lease is required; rebind is only legal while that lease is held; lock cleanup verifies ownership. POSIX PID probing is not reused on Windows, where `os.kill(pid, 0)` would be unsafe; non-POSIX stale locks fail closed.
+4. **Lifecycle/process-owned Stop/Restart:** control-plane SIGTERM unwinds the simulator Shell, which requests normal supervisor stop, polls boundedly and escalates through `force_stop(... SYSTEM_SHUTDOWN)` before the desktop controller resorts to process kill. The controller retains its `Popen` handle until exit is confirmed, registers the Shell PID in the workspace lease, clears that PID before dropping the dead handle and refuses replacement Start/lease release when ownership cleanup fails.
+5. **Transactional source loading:** preflight is lstat-aware, byte-bounded and content-fingerprinted; symlinks/special/executable/forbidden content and source/state overlap are rejected; copy verifies inspected file identity/size/mtime and exact content digest; final registry validation occurs before the previous valid managed Activity is discarded.
+6. **Capability/preset claims corrected:** capability choices derive from canonical runtime vocabulary; simulator owns only the HAL mapping and fails on unmapped future canonical capabilities. Presets are geometry-only and no longer imply Acer/tablet/CPU/RAM/GPU emulation.
+7. **Workspace authority hardened:** `workspace.json` binds schema and checkout; rebind is legal only under the writer lease. `.workspace.lock` is inode-owned, records controller + Shell PIDs, cannot be released while the child is registered, fails closed on partial/malformed state, retains a workspace when an orphaned Shell still lives, uses POSIX PID probing only on POSIX and fails closed on non-POSIX hosts rather than using unsafe Windows `os.kill(pid, 0)` semantics.
 8. **Profile/UI polish corrected:** the control plane edits the selected real profile rather than always the first, and Start preserves a newly selected interface size instead of rereading stale persisted state first.
-9. **Regression scope expanded:** test source now covers canonical composition injection, shadow resistance, identity absence, display hooks, capability denial, workspace binding/locking/rebind portability, profile persistence, positive/negative source staging, rollback, canonical package delegation, unavailable Web runtime, bounded shutdown and a real local Pygame READY/storage/event/history/STOP integration path.
+9. **Regression scope expanded:** test source covers canonical composition injection, shadow resistance, identity absence, display hooks, capability denial, workspace binding/locking/rebind/process ownership portability, controller Start/Stop lease semantics, profile persistence, positive/negative source staging including content TOCTOU, rollback, canonical package delegation, unavailable Web runtime, bounded shutdown and a real local Pygame READY/storage/event/history/STOP integration path.
 
 The current Python fullscreen wrapper remains temporary R7 compatibility debt; it is **not** promoted into a universal simulator display architecture. Windows/Linux packaged simulator maturity also remains future work. These are explicit open boundaries, not unresolved versions of the adversarial blockers.
 
@@ -197,7 +199,7 @@ tranches:
 - interface-size × resolution safe-geometry regression (`85f60f9`);
 - current operator/authoring/authority documentation (`b01613f`, `bf355fe`, `31c206e`);
 - `0c06f5a` / `d6bed0e` restore Painting/Writing's pre-migration formatting around the new safe-UI calls; these last two commits are intended as **diff-noise cleanup only**, not additional behavior;
-- the 2026-08-19 Activity Simulator implementation, adversarial review, hardening source/test/docs response and shared launcher seams described above.
+- the 2026-08-19 Activity Simulator implementation, adversarial review, shared launcher seams, transactional source hardening, process/workspace lease hardening and expanded regression/docs tranche described above.
 
 Those later source/test changes are **committed but not yet covered by a fresh
 owner-controlled full PASS**. Do not describe 679 PASS as current-head evidence.
@@ -624,13 +626,13 @@ The canonical test-session entrypoint is:
 docs/testing/LOCAL_AGENT_START_HERE.md
 ```
 
-The simulator adversarial source fixes S1–S5 are now committed. **Do not reimplement them as a prerequisite.** First verify them with the focused regression suite:
+The simulator adversarial source fixes S1–S5 are committed. **Do not reimplement them as a prerequisite.** First verify them with the focused regression suite:
 
 ```bash
 PYTHONPATH=src python3 -m unittest tests.test_greia_simulator -v
 ```
 
-If it fails, diagnose the real current-head failure and repair it without weakening the architecture/non-claim contracts. The focused suite includes the real local Pygame READY/storage/event/history/STOP integration when the host has Pygame available.
+If it fails, diagnose the real current-head failure and repair it without weakening the architecture/non-claim contracts. The focused suite includes controller/Shell process-lease ownership, source content-TOCTOU protection and the real local Pygame READY/storage/event/history/STOP integration when the host has Pygame available.
 
 Then run the canonical full source gate:
 
@@ -690,6 +692,7 @@ After current-source tests pass:
 - The simulator's current Python fullscreen wrapper is development compatibility below the runtime-adapter seam, not a production display contract. It should migrate to the stronger shared R7 Activity display/surface seam when that architecture exists rather than grow into broad simulator monkeypatching.
 - Web/HTML Activity simulation is intentionally unavailable until the canonical R9 Web runtime adapter exists.
 - Windows/Linux **packaged simulator maturity** remains open. Core startup no longer requires the canonical package service at import time and stale-lock behavior fails closed on non-POSIX hosts, but complete host packaging/manual acceptance has not been performed.
+- A partial/malformed workspace lease intentionally fails closed. Manual stale-lock recovery must only happen after proving no controller or recorded Shell from that workspace is alive; this is conservative recovery behavior, not a second-writer shortcut.
 - Canonical Activity package install may remain unavailable on hosts that cannot currently import/run the canonical package service. The portability fix belongs in that canonical service; a simulator-only installer remains forbidden.
 - Painting's durable document surface is still viewport-sized and requires a separate resolution-neutral document/save migration with compatibility tests.
 - Full Activity language integration is not complete: profile-language persistence, localized catalogue title resolution, dynamic flag rendering/assets and platform pre-launch chooser still need end-to-end wiring/testing.
