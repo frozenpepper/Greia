@@ -140,16 +140,36 @@ class GreiaLauncherPresentation(LauncherApplication):
         self.runtime_services = runtime_services
         self.supervisor = supervisor
 
+    def _initial_display_request(self, pygame: Any) -> tuple[tuple[int, int], int]:
+        """Return the platform-selected initial shell surface request."""
+
+        return (
+            ((960, 540), pygame.RESIZABLE)
+            if self.windowed
+            else ((0, 0), pygame.FULLSCREEN)
+        )
+
+    def _resize_display_request(
+        self, event: Any, pygame: Any
+    ) -> tuple[tuple[int, int], int] | None:
+        """Translate one host resize event into the authoritative shell request."""
+
+        if not self.windowed:
+            return None
+        return (tuple(event.size), pygame.RESIZABLE)
+
+    def _display_caption(self) -> str:
+        return "Greia OS"
+
     def run(self) -> int:
         import pygame
 
         os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
         pygame.init()
         pygame.font.init()
-        display_flags = pygame.RESIZABLE if self.windowed else pygame.FULLSCREEN
-        default_size = (960, 540) if self.windowed else (0, 0)
+        default_size, display_flags = self._initial_display_request(pygame)
         screen = pygame.display.set_mode(default_size, display_flags)
-        pygame.display.set_caption("Greia OS")
+        pygame.display.set_caption(self._display_caption())
         pygame.mouse.set_visible(False)
         _set_x11_input_focus(screen, pygame)
         clock = pygame.time.Clock()
@@ -186,8 +206,10 @@ class GreiaLauncherPresentation(LauncherApplication):
                         self._handle_click(event.pos, pygame)
                     elif event.type == pygame.MOUSEWHEEL and self._mode == "activities":
                         self._scroll_activity_rows(-event.y, pygame)
-                    elif event.type == pygame.VIDEORESIZE and self.windowed:
-                        screen = pygame.display.set_mode(event.size, pygame.RESIZABLE)
+                    elif event.type == pygame.VIDEORESIZE:
+                        request = self._resize_display_request(event, pygame)
+                        if request is not None:
+                            screen = pygame.display.set_mode(*request)
 
                 current_surface = pygame.display.get_surface()
                 if current_surface is not None:
