@@ -4,7 +4,8 @@ The legacy drawing implementation remains in `activity_ui` until the
 compatibility direction can be flipped in one tested migration. New platform
 and Activity consumers should import this module: it combines lightweight draw
 helpers with Greia's renderer-neutral responsive/canvas contracts through thin
-Pygame adapters, including the platform-owned mixed text/color-emoji renderer.
+Pygame adapters, including the platform-owned mixed text/color-emoji renderer
+and curated child emoji-palette model.
 """
 
 from .activity_ui import (
@@ -20,6 +21,7 @@ from .activity_ui import (
     load_icon,
     mix,
 )
+from .emoji_palette import DEFAULT_EMOJI_CATEGORIES, EmojiCategory, EmojiPalette
 from .pygame_canvas import (
     PygameCanvasMapper,
     PygameReferenceCanvas,
@@ -41,6 +43,9 @@ from .typography import (
 
 __all__ = [
     "ChildUiMetrics",
+    "DEFAULT_EMOJI_CATEGORIES",
+    "EmojiCategory",
+    "EmojiPalette",
     "FontRole",
     "GraphemeSpan",
     "GreiaTypography",
