@@ -17,14 +17,13 @@ except ImportError:  # pragma: no cover - shipping Greia images install python3-
     _regex = None
 
 # Greia default interface typeface: Nunito Sans (SIL OFL 1.1).
-# See GREIA_VISUAL_STYLE_GUIDE.md section 3 and
-# build/trust/nunito-sans-2.3.2.provenance.
+# See GREIA_VISUAL_STYLE_GUIDE.md and build/trust/nunito-sans-2.3.2.provenance.
 #
 # Normal fonts are loaded once per (role, size) and cached; consumers never
 # open raw font paths. Emoji are a platform fallback, not Greia system icons:
 # Noto Color Emoji is rasterized through Pillow's embedded-color path and then
-# composed into ordinary Pygame surfaces. Missing/corrupt fonts degrade safely
-# instead of taking down the child session.
+# composed into ordinary Pygame surfaces. Missing/corrupt fallback resources
+# degrade safely instead of taking down the child session.
 
 DEFAULT_EMOJI_FONT = Path("/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf")
 # Debian 12/bookworm's Noto Color Emoji package is CBDT/CBLC with a 109-pixel
@@ -34,12 +33,10 @@ DEFAULT_EMOJI_NATIVE_STRIKE_PX = 109
 
 if _regex is not None:
     _GRAPHEME_PATTERN = _regex.compile(r"\X")
-    _EMOJI_PATTERN = _regex.compile(
-        r"(?:\p{Extended_Pictographic}|\p{Regional_Indicator}|[0-9#*]\uFE0F?\u20E3)"
-    )
+    _EMOJI_PRESENTATION_PATTERN = _regex.compile(r"\p{Emoji_Presentation}")
 else:  # pragma: no cover - development-host compatibility only
     _GRAPHEME_PATTERN = None
-    _EMOJI_PATTERN = None
+    _EMOJI_PRESENTATION_PATTERN = None
 
 
 class FontRole(StrEnum):
@@ -50,7 +47,6 @@ class FontRole(StrEnum):
     DISPLAY = "display"
 
 
-# Semantic role -> static Nunito Sans weight file.
 _WEIGHT_FILES: dict[FontRole, str] = {
     FontRole.BODY: "NunitoSans-Regular.ttf",
     FontRole.SECONDARY: "NunitoSans-Regular.ttf",
@@ -167,16 +163,22 @@ def truncate_grapheme_safe(text: str, maximum_codepoints: int) -> str:
 
 
 def is_emoji_cluster(cluster: str) -> bool:
-    """Return whether a grapheme cluster requests emoji presentation."""
+    """Return whether a grapheme cluster requests emoji presentation.
 
-    if not cluster:
+    Emoji-capable symbols such as © are not automatically colored: explicit
+    text presentation (VS15) stays text, explicit emoji presentation (VS16),
+    ZWJ/keycap sequences, flags and default Emoji_Presentation characters use
+    the emoji fallback.
+    """
+
+    if not cluster or "\ufe0e" in cluster:
         return False
-    if _EMOJI_PATTERN is not None:
-        return _EMOJI_PATTERN.search(cluster) is not None
     if "\ufe0f" in cluster or "\u200d" in cluster or "\u20e3" in cluster:
         return True
     if sum(_is_regional_indicator(ord(char)) for char in cluster) >= 2:
         return True
+    if _EMOJI_PRESENTATION_PATTERN is not None:
+        return _EMOJI_PRESENTATION_PATTERN.search(cluster) is not None
     return any(_fallback_emoji_codepoint(ord(char)) for char in cluster)
 
 
@@ -202,13 +204,13 @@ class GreiaTypography:
         self._font_dir = Path(font_dir) if font_dir is not None else None
         self._cache: dict[FontSpec, Any] = {}
         self._degraded: bool | None = None
-        self._fallback: Any = None
         self._pygame_font = None
         self._emoji_font_path = Path(emoji_font_path)
         self._emoji_native_strike_px = int(emoji_native_strike_px)
         if self._emoji_native_strike_px < 1:
             raise ValueError("emoji native strike must be positive")
         self._emoji_font: ImageFont.FreeTypeFont | None = None
+        self._emoji_degraded = False
         self._emoji_surfaces: BoundedCache[tuple[str, int], Any] = BoundedCache(
             self._MAX_EMOJI_SURFACES
         )
@@ -227,7 +229,11 @@ class GreiaTypography:
 
     @property
     def emoji_available(self) -> bool:
-        return self._emoji_font_path.is_file()
+        return self._emoji_font_path.is_file() and not self._emoji_degraded
+
+    @property
+    def emoji_degraded(self) -> bool:
+        return self._emoji_degraded
 
     @property
     def cached_emoji_count(self) -> int:
@@ -239,6 +245,7 @@ class GreiaTypography:
         self._cache.clear()
         self._emoji_surfaces.clear()
         self._emoji_font = None
+        self._emoji_degraded = False
 
     def font(self, role: FontRole, size: int) -> Any:
         spec = FontSpec(role, size)
@@ -262,13 +269,14 @@ class GreiaTypography:
             raise ValueError("GreiaTypography.measure accepts one line at a time")
         width = 0
         height = self.line_height(role, size)
+        normal_font = self.font(role, size)
         for emoji, value in self._pieces(text):
-            if emoji and self.emoji_available:
-                surface = self._emoji_surface(value, size)
+            surface = self._safe_emoji_surface(value, size) if emoji else None
+            if surface is not None:
                 width += surface.get_width()
                 height = max(height, surface.get_height())
             else:
-                measured = self.font(role, size).size(value)
+                measured = normal_font.size(value)
                 width += measured[0]
                 height = max(height, measured[1])
         return TypographyMetrics(width, height, max(self.line_height(role, size), height))
@@ -287,12 +295,13 @@ class GreiaTypography:
             raise ValueError("GreiaTypography.render accepts one line at a time")
         pygame = self._ensure_pygame()
         rgb = tuple(max(0, min(255, int(channel))) for channel in color[:3])
+        normal_font = self.font(role, size)
         surfaces: list[Any] = []
         for emoji, value in self._pieces(text):
-            if emoji and self.emoji_available:
-                surfaces.append(self._emoji_surface(value, size))
-            else:
-                surfaces.append(self.font(role, size).render(value, True, rgb))
+            surface = self._safe_emoji_surface(value, size) if emoji else None
+            if surface is None:
+                surface = normal_font.render(value, True, rgb)
+            surfaces.append(surface)
         line_height = self.line_height(role, size)
         if surfaces:
             line_height = max(line_height, *(surface.get_height() for surface in surfaces))
@@ -300,7 +309,10 @@ class GreiaTypography:
         target = pygame.Surface((max(1, width), max(1, line_height)), pygame.SRCALPHA)
         x = 0
         for surface in surfaces:
-            target.blit(surface, (x, max(0, (line_height - surface.get_height()) // 2)))
+            target.blit(
+                surface,
+                (x, max(0, (line_height - surface.get_height()) // 2)),
+            )
             x += surface.get_width()
         return target
 
@@ -325,7 +337,6 @@ class GreiaTypography:
             if candidate.is_file():
                 path = candidate
         if path is None and self._degraded is not True:
-            # Lazily probe the canonical Greia install location.
             canonical = Path("/opt/greia-os/assets/fonts/nunito-sans") / filename
             if canonical.is_file():
                 path = canonical
@@ -336,6 +347,20 @@ class GreiaTypography:
                 pass
         self._degraded = True
         return pygame.font.Font(None, spec.size)
+
+    def _safe_emoji_surface(self, cluster: str, size: int) -> Any | None:
+        if not self.emoji_available:
+            return None
+        try:
+            return self._emoji_surface(cluster, size)
+        except (OSError, ValueError):
+            # A release image should have a verified compatible fallback font,
+            # but a damaged/mismatched local resource must not crash the child
+            # session. Degrade for the remainder of this typography lifetime.
+            self._emoji_degraded = True
+            self._emoji_font = None
+            self._emoji_surfaces.clear()
+            return None
 
     def _emoji_surface(self, cluster: str, size: int) -> Any:
         key = (cluster, int(size))
@@ -357,12 +382,7 @@ class GreiaTypography:
 
     def _render_native_emoji(self, cluster: str) -> Image.Image:
         font = self._pillow_emoji_font()
-        probe = Image.new(
-            "RGBA",
-            (self._emoji_native_strike_px * 4, self._emoji_native_strike_px * 2),
-            (0, 0, 0, 0),
-        )
-        draw = ImageDraw.Draw(probe)
+        draw = ImageDraw.Draw(Image.new("RGBA", (1, 1), (0, 0, 0, 0)))
         bbox = draw.textbbox((0, 0), cluster, font=font, embedded_color=True)
         width = max(1, bbox[2] - bbox[0])
         height = max(1, bbox[3] - bbox[1])
@@ -391,8 +411,8 @@ class GreiaTypography:
         pieces: list[tuple[bool, str]] = []
         for span in grapheme_spans(text):
             # Keep emoji clusters separate so the bounded surface cache is useful
-            # across different strings. Coalesce ordinary text so font kerning is
-            # preserved within the normal run.
+            # across strings. Coalesce ordinary text so normal-font kerning is
+            # preserved within each run.
             if not span.emoji and pieces and not pieces[-1][0]:
                 _, previous = pieces[-1]
                 pieces[-1] = (False, previous + span.text)
@@ -445,9 +465,11 @@ def _is_regional_indicator(codepoint: int) -> bool:
 
 
 def _fallback_emoji_codepoint(codepoint: int) -> bool:
-    return (
-        0x1F000 <= codepoint <= 0x1FAFF
-        or 0x2600 <= codepoint <= 0x27BF
-        or codepoint
-        in {0x00A9, 0x00AE, 0x2122, 0x231A, 0x231B, 0x2328, 0x23F0, 0x23F3}
-    )
+    # Development-host fallback only; shipping classification uses Unicode
+    # Emoji_Presentation through python3-regex.
+    return 0x1F000 <= codepoint <= 0x1FAFF or codepoint in {
+        0x231A,
+        0x231B,
+        0x23F0,
+        0x23F3,
+    }
