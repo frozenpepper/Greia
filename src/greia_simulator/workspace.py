@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import shutil
@@ -9,7 +10,7 @@ import stat
 import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, BinaryIO
 
 from greia_platform.activities import ActivityRegistry, RuntimeCatalogue
 from greia_platform.profiles import ChildProfile, ProfileStore
@@ -31,6 +32,8 @@ class _TreeEntry:
     mode: int
     device: int
     inode: int
+    mtime_ns: int
+    digest: str | None = None
 
 
 @dataclass(slots=True)
@@ -80,23 +83,22 @@ class SimulatorWorkspace:
         return self.state_root / ".workspace.lock"
 
     def ensure(self, *, allow_repo_rebind: bool = False) -> None:
+        """Prepare state; rebind is allowed only while this object holds the lease."""
+
         self.state_root.mkdir(parents=True, exist_ok=True)
+        if allow_repo_rebind and self._lock_fd is None:
+            raise RuntimeError("workspace rebind requires the active writer lock")
         self._ensure_metadata(allow_repo_rebind=allow_repo_rebind)
-        for path in (
-            self.profiles_root,
-            self.run_root,
-            self.developer_root,
-            self.package_root,
-            self.media_root,
-        ):
-            path.mkdir(parents=True, exist_ok=True)
+        self._ensure_state_directories()
 
-    def acquire_lock(self) -> None:
-        """Take the workspace's cross-platform single-writer lease."""
+    def acquire_lock(self, *, allow_repo_rebind: bool = False) -> None:
+        """Take the workspace single-writer lease before any optional rebind."""
 
-        self.ensure()
+        self.state_root.mkdir(parents=True, exist_ok=True)
         if self._lock_fd is not None:
+            self.ensure(allow_repo_rebind=allow_repo_rebind)
             return
+
         payload = json.dumps(
             {
                 "pid": os.getpid(),
@@ -121,22 +123,27 @@ class SimulatorWorkspace:
             try:
                 os.write(descriptor, payload)
                 os.fsync(descriptor)
+                self._lock_fd = descriptor
+                self.ensure(allow_repo_rebind=allow_repo_rebind)
             except Exception:
-                os.close(descriptor)
-                self.lock_path.unlink(missing_ok=True)
+                if self._lock_fd is None:
+                    os.close(descriptor)
+                    self._unlink_owned_lock(descriptor)
+                else:
+                    self.release_lock()
                 raise
-            self._lock_fd = descriptor
             return
         raise RuntimeError("could not acquire simulator workspace lock")
 
     def release_lock(self) -> None:
         descriptor = self._lock_fd
         self._lock_fd = None
-        if descriptor is not None:
-            try:
-                os.close(descriptor)
-            finally:
-                self.lock_path.unlink(missing_ok=True)
+        if descriptor is None:
+            return
+        try:
+            self._unlink_owned_lock(descriptor)
+        finally:
+            os.close(descriptor)
 
     def environment(self) -> dict[str, str]:
         """Return isolated normal-Greia roots for the real child shell."""
@@ -168,15 +175,13 @@ class SimulatorWorkspace:
         profile_id: str,
         value: str | InterfaceSize,
     ) -> InterfaceSize:
-        """Write a named profile's real Greia UI preference."""
-
         store = self.profile_store()
         context = store.context(profile_id)
         preferences = UiPreferencesStore(context.customization_dir).set_interface_size(value)
         return preferences.interface_size
 
     def load_activity(self, source: Path):
-        """Safely stage and atomically publish one developer Activity folder."""
+        """Safely snapshot, validate and atomically publish a developer Activity."""
 
         self.ensure()
         source = source.expanduser().resolve(strict=True)
@@ -207,11 +212,10 @@ class SimulatorWorkspace:
                 source_id="greia-simulator-staging",
             )
             staging_registry = ActivityRegistry((built_in_source, staging_source), runtime)
-            registrations = staging_registry.discover_registrations()
             registration = next(
                 (
                     item
-                    for item in registrations
+                    for item in staging_registry.discover_registrations()
                     if item.manifest.root == staged.resolve()
                 ),
                 None,
@@ -241,11 +245,10 @@ class SimulatorWorkspace:
                     source_id="greia-developer-remote",
                 )
                 final_registry = ActivityRegistry((built_in_source, final_source), runtime)
-                final_registrations = final_registry.discover_registrations()
                 final = next(
                     (
                         item
-                        for item in final_registrations
+                        for item in final_registry.discover_registrations()
                         if item.manifest.root == destination.resolve()
                     ),
                     None,
@@ -260,17 +263,17 @@ class SimulatorWorkspace:
                     os.replace(previous, destination)
                 raise
         finally:
-            if not published and destination is not None and previous.exists() and not destination.exists():
+            if (
+                not published
+                and destination is not None
+                and previous.exists()
+                and not destination.exists()
+            ):
                 os.replace(previous, destination)
             shutil.rmtree(staging_parent, ignore_errors=True)
 
     def install_activity_package(self, archive: Path) -> Any:
-        """Exercise the canonical Parent-approved package transaction locally.
-
-        Import is deliberately lazy so non-package simulator functionality can
-        remain portable on hosts where the canonical package lock backend is not
-        available. There is never a simulator-only extraction fallback.
-        """
+        """Exercise only the canonical Parent-approved package transaction."""
 
         self.ensure()
         try:
@@ -286,6 +289,16 @@ class SimulatorWorkspace:
         )
         return service.install_archive(archive.expanduser())
 
+    def _ensure_state_directories(self) -> None:
+        for path in (
+            self.profiles_root,
+            self.run_root,
+            self.developer_root,
+            self.package_root,
+            self.media_root,
+        ):
+            path.mkdir(parents=True, exist_ok=True)
+
     def _ensure_metadata(self, *, allow_repo_rebind: bool) -> None:
         expected = {
             "schema_version": _WORKSPACE_SCHEMA_VERSION,
@@ -296,7 +309,10 @@ class SimulatorWorkspace:
                 current = json.loads(self.metadata_path.read_text(encoding="utf-8"))
             except (OSError, ValueError, TypeError) as exc:
                 raise RuntimeError("simulator workspace metadata is invalid") from exc
-            if not isinstance(current, dict) or current.get("schema_version") != _WORKSPACE_SCHEMA_VERSION:
+            if (
+                not isinstance(current, dict)
+                or current.get("schema_version") != _WORKSPACE_SCHEMA_VERSION
+            ):
                 raise RuntimeError("simulator workspace schema is incompatible")
             current_root = current.get("repo_root")
             if current_root != str(self.repo_root) and not allow_repo_rebind:
@@ -306,18 +322,34 @@ class SimulatorWorkspace:
                 )
             if current_root == str(self.repo_root):
                 return
-        temporary = self.metadata_path.with_suffix(".tmp")
-        temporary.write_text(json.dumps(expected, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-        os.chmod(temporary, 0o600)
-        os.replace(temporary, self.metadata_path)
+        self._atomic_write_json(self.metadata_path, expected)
+
+    def _atomic_write_json(self, path: Path, value: object) -> None:
+        descriptor, raw = tempfile.mkstemp(prefix=".workspace-", dir=str(self.state_root))
+        temporary = Path(raw)
+        try:
+            with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+                json.dump(value, handle, indent=2, sort_keys=True)
+                handle.write("\n")
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.chmod(temporary, 0o600)
+            os.replace(temporary, path)
+        finally:
+            temporary.unlink(missing_ok=True)
 
     def _discard_stale_lock(self) -> bool:
+        # Python's os.kill(pid, 0) is a harmless existence probe on POSIX, but
+        # on Windows non-console-event signals are implemented via
+        # TerminateProcess. Fail closed there rather than probing/killing a PID.
+        if os.name != "posix":
+            return False
         try:
             raw = json.loads(self.lock_path.read_text(encoding="utf-8"))
             pid = int(raw.get("pid", -1)) if isinstance(raw, dict) else -1
         except (OSError, ValueError, TypeError):
             pid = -1
-        if pid > 0 and _pid_alive(pid):
+        if pid > 0 and _posix_pid_alive(pid):
             return False
         try:
             self.lock_path.unlink()
@@ -325,16 +357,31 @@ class SimulatorWorkspace:
             pass
         return True
 
+    def _unlink_owned_lock(self, descriptor: int) -> None:
+        """Remove the lock path only if it still names this descriptor's inode."""
+
+        try:
+            owned = os.fstat(descriptor)
+            current = self.lock_path.lstat()
+        except FileNotFoundError:
+            return
+        if (owned.st_dev, owned.st_ino) == (current.st_dev, current.st_ino):
+            self.lock_path.unlink(missing_ok=True)
+
     def _inspect_development_tree(
         self,
         source: Path,
         runtime: RuntimeCatalogue,
     ) -> tuple[_TreeEntry, ...]:
-        """Create a finite lstat snapshot before any managed copy occurs."""
+        """Create a finite, content-fingerprinted lstat snapshot before copying."""
 
         entries: list[_TreeEntry] = []
         total = 0
-        for current_raw, dirnames, filenames in os.walk(source, topdown=True, followlinks=False):
+        for current_raw, dirnames, filenames in os.walk(
+            source,
+            topdown=True,
+            followlinks=False,
+        ):
             current = Path(current_raw)
             kept_dirs: list[str] = []
             for name in sorted(dirnames):
@@ -345,20 +392,13 @@ class SimulatorWorkspace:
                 if name in _IGNORED_DEVELOPMENT_NAMES:
                     continue
                 if not stat.S_ISDIR(metadata.st_mode):
-                    raise ValueError(f"Activity source has a non-directory tree entry: {path}")
+                    raise ValueError(
+                        f"Activity source has a non-directory tree entry: {path}"
+                    )
                 if name.casefold() in runtime.forbidden_path_names:
                     raise ValueError(f"forbidden package directory: {name}")
                 kept_dirs.append(name)
-                entries.append(
-                    _TreeEntry(
-                        path.relative_to(source),
-                        True,
-                        0,
-                        metadata.st_mode,
-                        metadata.st_dev,
-                        metadata.st_ino,
-                    )
-                )
+                entries.append(self._entry(path, source, metadata, is_dir=True))
             dirnames[:] = kept_dirs
 
             for name in sorted(filenames):
@@ -382,14 +422,14 @@ class SimulatorWorkspace:
                     raise ValueError(
                         f"Activity source exceeds {runtime.maximum_activity_bytes} bytes"
                     )
+                digest = self._hash_source_file(path, metadata)
                 entries.append(
-                    _TreeEntry(
-                        path.relative_to(source),
-                        False,
-                        metadata.st_size,
-                        metadata.st_mode,
-                        metadata.st_dev,
-                        metadata.st_ino,
+                    self._entry(
+                        path,
+                        source,
+                        metadata,
+                        is_dir=False,
+                        digest=digest,
                     )
                 )
         return tuple(entries)
@@ -407,50 +447,129 @@ class SimulatorWorkspace:
             target = destination / entry.relative
             origin = source / entry.relative
             metadata = origin.lstat()
-            if (
-                metadata.st_dev != entry.device
-                or metadata.st_ino != entry.inode
-                or stat.S_IFMT(metadata.st_mode) != stat.S_IFMT(entry.mode)
-                or (not entry.is_dir and metadata.st_size != entry.size)
-            ):
-                raise ValueError(f"Activity source changed while staging: {origin}")
-            if stat.S_ISLNK(metadata.st_mode):
-                raise ValueError(f"Activity source symlinks are forbidden: {origin}")
+            self._assert_same_entry(origin, metadata, entry)
             if entry.is_dir:
                 target.mkdir(parents=True, exist_ok=False)
                 os.chmod(target, 0o755)
                 continue
 
             target.parent.mkdir(parents=True, exist_ok=True)
-            flags = os.O_RDONLY
-            if hasattr(os, "O_NOFOLLOW"):
-                flags |= os.O_NOFOLLOW
-            descriptor = os.open(origin, flags)
+            descriptor = self._open_source_file(origin)
             try:
                 opened = os.fstat(descriptor)
-                if (
-                    not stat.S_ISREG(opened.st_mode)
-                    or opened.st_dev != entry.device
-                    or opened.st_ino != entry.inode
-                    or opened.st_size != entry.size
-                ):
-                    raise ValueError(f"Activity source changed while staging: {origin}")
-                with os.fdopen(descriptor, "rb", closefd=False) as source_handle, target.open("xb") as sink:
+                self._assert_same_entry(origin, opened, entry)
+                digest = hashlib.sha256()
+                with os.fdopen(descriptor, "rb", closefd=False) as source_handle, target.open(
+                    "xb"
+                ) as sink:
                     remaining = entry.size
                     while remaining:
                         chunk = source_handle.read(min(1024 * 1024, remaining))
                         if not chunk:
-                            raise ValueError(f"Activity source file ended while staging: {origin}")
+                            raise ValueError(
+                                f"Activity source file ended while staging: {origin}"
+                            )
+                        digest.update(chunk)
                         sink.write(chunk)
                         copied += len(chunk)
                         remaining -= len(chunk)
                         if copied > runtime.maximum_activity_bytes:
-                            raise ValueError("Activity source exceeded platform size while staging")
+                            raise ValueError(
+                                "Activity source exceeded platform size while staging"
+                            )
                     if source_handle.read(1):
-                        raise ValueError(f"Activity source file grew while staging: {origin}")
+                        raise ValueError(
+                            f"Activity source file grew while staging: {origin}"
+                        )
+                if digest.hexdigest() != entry.digest:
+                    raise ValueError(f"Activity source changed while staging: {origin}")
+                final_metadata = os.fstat(descriptor)
+                self._assert_same_entry(origin, final_metadata, entry)
                 os.chmod(target, 0o644)
             finally:
                 os.close(descriptor)
+
+    def _hash_source_file(self, path: Path, expected: os.stat_result) -> str:
+        descriptor = self._open_source_file(path)
+        try:
+            opened = os.fstat(descriptor)
+            if not self._stat_matches(opened, expected, is_dir=False):
+                raise ValueError(f"Activity source changed while inspecting: {path}")
+            digest = hashlib.sha256()
+            with os.fdopen(descriptor, "rb", closefd=False) as handle:
+                for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                    digest.update(chunk)
+            final = os.fstat(descriptor)
+            if not self._stat_matches(final, expected, is_dir=False):
+                raise ValueError(f"Activity source changed while inspecting: {path}")
+            return digest.hexdigest()
+        finally:
+            os.close(descriptor)
+
+    @staticmethod
+    def _open_source_file(path: Path) -> int:
+        flags = os.O_RDONLY
+        if hasattr(os, "O_NOFOLLOW"):
+            flags |= os.O_NOFOLLOW
+        return os.open(path, flags)
+
+    @staticmethod
+    def _entry(
+        path: Path,
+        source: Path,
+        metadata: os.stat_result,
+        *,
+        is_dir: bool,
+        digest: str | None = None,
+    ) -> _TreeEntry:
+        return _TreeEntry(
+            relative=path.relative_to(source),
+            is_dir=is_dir,
+            size=0 if is_dir else metadata.st_size,
+            mode=metadata.st_mode,
+            device=metadata.st_dev,
+            inode=metadata.st_ino,
+            mtime_ns=metadata.st_mtime_ns,
+            digest=digest,
+        )
+
+    def _assert_same_entry(
+        self,
+        path: Path,
+        metadata: os.stat_result,
+        entry: _TreeEntry,
+    ) -> None:
+        if not self._stat_matches_entry(metadata, entry):
+            raise ValueError(f"Activity source changed while staging: {path}")
+        if stat.S_ISLNK(metadata.st_mode):
+            raise ValueError(f"Activity source symlinks are forbidden: {path}")
+
+    @staticmethod
+    def _stat_matches_entry(metadata: os.stat_result, entry: _TreeEntry) -> bool:
+        expected_type = stat.S_IFDIR if entry.is_dir else stat.S_IFREG
+        return (
+            stat.S_IFMT(metadata.st_mode) == expected_type
+            and metadata.st_dev == entry.device
+            and metadata.st_ino == entry.inode
+            and metadata.st_mtime_ns == entry.mtime_ns
+            and (entry.is_dir or metadata.st_size == entry.size)
+        )
+
+    @staticmethod
+    def _stat_matches(
+        current: os.stat_result,
+        expected: os.stat_result,
+        *,
+        is_dir: bool,
+    ) -> bool:
+        expected_type = stat.S_IFDIR if is_dir else stat.S_IFREG
+        return (
+            stat.S_IFMT(current.st_mode) == expected_type
+            and current.st_dev == expected.st_dev
+            and current.st_ino == expected.st_ino
+            and current.st_mtime_ns == expected.st_mtime_ns
+            and (is_dir or current.st_size == expected.st_size)
+        )
 
     def _reject_other_developer_collision(
         self,
@@ -465,10 +584,15 @@ class SimulatorWorkspace:
             source_id="greia-developer-remote",
         )
         registry = ActivityRegistry((built_in_source, final_source), runtime)
-        for registration in registry.discover_registrations():
-            if registration.manifest.root == destination.resolve(strict=False):
+        for manifest_path in sorted(self.developer_root.glob("*/activity.toml")):
+            root = manifest_path.parent.resolve()
+            if root == destination.resolve(strict=False):
                 continue
-            identities = {registration.manifest.activity_id, *registration.manifest.legacy_ids}
+            registration = registry.validate_registration(root, final_source)
+            identities = {
+                registration.manifest.activity_id,
+                *registration.manifest.legacy_ids,
+            }
             if activity_id in identities:
                 raise ValueError(f"Activity identity collision: {activity_id}")
 
@@ -484,7 +608,9 @@ class SimulatorWorkspace:
         return left == right or left in right.parents or right in left.parents
 
 
-def _pid_alive(pid: int) -> bool:
+def _posix_pid_alive(pid: int) -> bool:
+    if os.name != "posix":
+        raise RuntimeError("POSIX PID probing is unavailable on this host")
     try:
         os.kill(pid, 0)
     except ProcessLookupError:
