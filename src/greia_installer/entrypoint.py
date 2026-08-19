@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import subprocess
 import threading
+from pathlib import Path
 from typing import Any
 
 from greia_platform.system_language import (
@@ -14,6 +15,7 @@ from greia_platform.typography import FontRole, GreiaTypography
 
 from .composition import provisional_installer_hardware_controller
 from .engine import InstallRequest, InstallationEngine
+from .i18n import LocalizedTypography
 from .main import (
     DemoInstallationEngine,
     InstallerApplication,
@@ -28,6 +30,11 @@ class LanguageFirstInstallerApplication(InstallerApplication):
     def __init__(self, *args: object, locale: str, **kwargs: object) -> None:
         self.locale = system_language(locale).locale
         super().__init__(*args, **kwargs)
+        # Keep the existing installer state/layout implementation intact. All
+        # installer-owned visible copy already flows through this typography
+        # object, so localization belongs at this presentation seam rather than
+        # in disk/network/destructive-install code.
+        self._typography = LocalizedTypography(self._typography, self.locale)
 
     def _start_installation(self) -> None:
         target = self.state.target
@@ -68,7 +75,7 @@ class LanguageFirstInstallerApplication(InstallerApplication):
         self._worker.start()
 
 
-def choose_language(*, windowed: bool, demo: bool) -> str:
+def choose_language(*, root: Path, windowed: bool, demo: bool) -> str:
     """Run the installer's mandatory first flag-first language screen."""
 
     import pygame
@@ -81,8 +88,12 @@ def choose_language(*, windowed: bool, demo: bool) -> str:
     else:
         screen = pygame.display.set_mode((0, 0), flags)
     pygame.display.set_caption("Greia OS Installer — Language")
-    pygame.mouse.set_visible(True)
-    typography = GreiaTypography()
+    # The legacy-X/Acer path does not reliably provide a visible system cursor.
+    # Match the normal installer: hide it and draw Greia's own pointer after
+    # every frame while continuing to use SDL's authoritative mouse position.
+    pygame.mouse.set_visible(False)
+    typography = GreiaTypography(root / "assets" / "fonts" / "nunito-sans")
+    pointer = _load_pointer(root, pygame)
     selected_index = next(
         (
             index
@@ -133,6 +144,7 @@ def choose_language(*, windowed: bool, demo: bool) -> str:
             row_h = max(button_h, available_h // max(1, rows))
             cell_w = (grid_right - grid_left - gap * (columns - 1)) // columns
             hit_targets: list[tuple[int, Any]] = []
+            pointer_position = pygame.mouse.get_pos()
 
             for index, language in enumerate(SUPPORTED_SYSTEM_LANGUAGES):
                 row, column = divmod(index, columns)
@@ -143,9 +155,12 @@ def choose_language(*, windowed: bool, demo: bool) -> str:
                     button_h,
                 )
                 selected = index == selected_index
+                hovered = cell.collidepoint(pointer_position)
                 pygame.draw.rect(
                     screen,
-                    (255, 194, 52) if selected else (247, 235, 203),
+                    (255, 194, 52)
+                    if selected
+                    else ((252, 241, 211) if hovered else (247, 235, 203)),
                     cell,
                     border_radius=16,
                 )
@@ -153,7 +168,7 @@ def choose_language(*, windowed: bool, demo: bool) -> str:
                     screen,
                     (61, 44, 31),
                     cell,
-                    width=3 if selected else 1,
+                    width=3 if selected else (2 if hovered else 1),
                     border_radius=16,
                 )
                 flag = typography.render(
@@ -185,6 +200,7 @@ def choose_language(*, windowed: bool, demo: bool) -> str:
                 (61, 44, 31),
             )
             screen.blit(continue_label, continue_label.get_rect(center=continue_rect.center))
+            _draw_pointer(screen, pygame, pointer)
 
             pygame.display.flip()
             if first_frame:
@@ -223,6 +239,25 @@ def choose_language(*, windowed: bool, demo: bool) -> str:
         pygame.quit()
 
 
+def _load_pointer(root: Path, pygame: Any) -> Any | None:
+    path = root / "assets" / "icons" / "core" / "v1" / "256" / "yellow_star.png"
+    try:
+        image = pygame.image.load(str(path)).convert_alpha()
+        return pygame.transform.smoothscale(image, (34, 34))
+    except (OSError, pygame.error):
+        return None
+
+
+def _draw_pointer(screen: Any, pygame: Any, pointer: Any | None) -> None:
+    x, y = pygame.mouse.get_pos()
+    if pointer is not None:
+        screen.blit(pointer, pointer.get_rect(center=(x, y)))
+        return
+    # Resource failure must not make the first installer screen mouse-invisible.
+    pygame.draw.circle(screen, (255, 194, 52), (x, y), 10)
+    pygame.draw.circle(screen, (61, 44, 31), (x, y), 10, width=2)
+
+
 def _release_boot_cover() -> None:
     helper = "/usr/local/lib/greia-os/release-boot-cover"
     if not os.path.exists(helper):
@@ -243,7 +278,7 @@ def main() -> int:
         raise SystemExit(
             "The live installer must run as root. Use --demo for a safe preview."
         )
-    locale = choose_language(windowed=args.windowed, demo=args.demo)
+    locale = choose_language(root=args.root, windowed=args.windowed, demo=args.demo)
     return LanguageFirstInstallerApplication(
         root=args.root,
         payload=args.payload,
