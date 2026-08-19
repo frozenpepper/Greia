@@ -157,6 +157,7 @@ def main(argv: list[str] | None = None) -> int:
         workspace.ensure()
         for k, v in workspace.environment().items():
             os.environ.setdefault(k, v)
+    os.environ.setdefault("PYTHONDONTWRITEBYTECODE", "1")
 
     width, height = parse_viewport(args.viewport)
     device = SimulatedDeviceProfile(

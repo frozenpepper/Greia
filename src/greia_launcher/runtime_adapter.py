@@ -228,8 +228,15 @@ class PythonRuntimeAdapter:
                     raise RuntimeValidationError(
                         f"Activity package may not shadow curated module {module_name!r}: {path.name}"
                     )
-            for path in manifest.root.rglob("*"):
+            for path in list(manifest.root.rglob("*")):
+                if not path.exists():
+                    continue
                 folded_name = path.name.casefold()
+                if path.is_dir() and folded_name == "__pycache__":
+                    import shutil
+
+                    shutil.rmtree(path, ignore_errors=True)
+                    continue
                 if path.is_dir() and folded_name in policy.forbidden_path_names:
                     raise RuntimeValidationError(
                         f"forbidden Python package directory: {path.name}"
