@@ -4,6 +4,7 @@
 **Architecture authority:** `docs/adr/0029-real-runtime-activity-simulator.md`  
 **Developer guide:** `docs/development/GREIA_ACTIVITY_SIMULATOR.md`  
 **Adversarial review:** `docs/reviews/2026-08-19_ACTIVITY_SIMULATOR_ADVERSARIAL_REVIEW.md`  
+**Hardening response:** `docs/reviews/2026-08-19_ACTIVITY_SIMULATOR_HARDENING_RESPONSE.md`  
 **Evidence class:** **SIMULATOR / developer semantic evidence only**
 
 This protocol validates the hardened Activity Simulator as a thin synthetic-device composition over real Greia owners. It never replaces VM/image, production sandbox/backend or physical-hardware acceptance.
@@ -24,15 +25,16 @@ A PASS requires all of these:
 8. The Python compatibility bootstrap is an absolute Greia-owned path, not Activity-resolved `python -m` content.
 9. No `GREIA_SIMULATOR*`, simulator viewport flag or preset identity is exposed as an Activity API.
 10. Exact viewport sizing goes through shared Shell display-policy hooks and the temporary narrow Python Activity display bootstrap; no simulator `_draw()`/cache clone exists.
-11. Developer-folder acquisition rejects symlinks/special files/oversize/containment overlap before managed copy, then uses real registry validation and transactional last-known-good publication.
+11. Developer-folder acquisition rejects symlinks/special files/oversize/containment overlap before managed copy, content-fingerprints the inspected snapshot, then uses real registry validation and transactional last-known-good publication.
 12. Package install calls only canonical `ActivityPackageService`; no simulator extractor exists.
 13. Workspace state is outside the checkout, checkout-bound and single-writer.
-14. Quick interface-size changes target an explicitly selected real child profile through `UiPreferencesStore`.
-15. Stop/Restart retires an active Activity through `ActivitySupervisor` before the Shell is considered cleanly stopped.
-16. Viewport presets make geometry-only claims; they do not claim Acer/tablet/performance emulation.
-17. The UI/documentation prominently states that source-mode simulator execution is **not an untrusted-code security sandbox**.
-18. Web execution remains unavailable until canonical R9 Web runtime; no host-browser/private-webview substitute is accepted.
-19. Simulator PASS is never promoted into production sandbox/display-session/physical/boot/performance/phase-closure evidence.
+14. The workspace lease records both the controller PID and any owned Shell PID; a controller crash must not make a still-running Shell's workspace reusable.
+15. Quick interface-size changes target an explicitly selected real child profile through `UiPreferencesStore`.
+16. Stop/Restart retires an active Activity through `ActivitySupervisor` before the Shell is considered cleanly stopped, and the desktop controller retains process ownership until exit/lease cleanup is confirmed.
+17. Viewport presets make geometry-only claims; they do not claim Acer/tablet/performance emulation.
+18. The UI/documentation prominently states that source-mode simulator execution is **not an untrusted-code security sandbox**.
+19. Web execution remains unavailable until canonical R9 Web runtime; no host-browser/private-webview substitute is accepted.
+20. Simulator PASS is never promoted into production sandbox/display-session/physical/boot/performance/phase-closure evidence.
 
 Any violation is a **FAIL**, even if an Activity appears to run.
 
@@ -89,12 +91,21 @@ no Activity-visible GREIA_SIMULATOR* identity
 trusted Greia source path ahead of Activity package
 shared exact Shell display hooks
 workspace checkout binding + single writer
+writer-lease-before-rebind ordering
+controller + owned-Shell PID lease ownership
+controller-crash / live-Shell stale-lock retention
+partial/malformed lock fail-closed behavior
+non-POSIX stale-lock fail-closed behavior
+control-plane Start registers Shell PID
+control-plane Stop retains a live handle when termination fails
+control-plane Stop clears child lease before dropping a dead handle
 named-profile UiPreferencesStore persistence
 positive DEVELOPER_UNSIGNED source load
 built-in identity collision rejection
 source/state containment rejection
 file + directory symlink rejection
 oversize rejection before staging
+content-fingerprinted source mutation/TOCTOU rejection
 failed replacement restores previous valid managed Activity
 canonical ActivityPackageService delegation where host supports it
 missing-required-capability denial through real authority
@@ -128,15 +139,21 @@ Verify:
 
 - visible warning says this is not an untrusted-code sandbox;
 - `workspace.json` records this checkout;
+- `.workspace.lock` is present while the control plane owns the workspace;
+- before a Shell is started the lease records the controller and no child PID;
+- after Start the lease records the owned Shell PID;
 - a second simulator pointed at the same state root is rejected while the first is active;
 - state is outside the checkout;
 - ordinary start does not require canonical package-service import on a host where package install is unavailable;
+- normal Stop clears the child PID before the writer lease can be released;
 - control plane remains usable after child Shell exits/stops;
-- unexpected child exit displays its actual exit code.
+- unexpected child exit displays its actual exit code and clears child ownership before allowing another Start.
 
 Do **not** delete a live workspace lock to create two writers.
 
-If deliberately testing checkout rebind, first stop the old simulator and use `--rebind-state`; record that action as part of evidence.
+A malformed/partial lock is intentionally fail-closed. Do not delete one merely to continue the test; first prove that no controller or Shell from that workspace remains alive.
+
+If deliberately testing checkout rebind, first stop the old simulator/Shell and use `--rebind-state`; record that action as part of evidence.
 
 ---
 
@@ -183,11 +200,12 @@ Positive expectations:
 3. allowed VCS/cache residue may be ignored;
 4. no source symlink is dereferenced;
 5. source bytes stay within canonical maximum;
-6. staged package passes real registry validation with built-in identity authority;
-7. registration is `DEVELOPER_UNSIGNED`;
-8. launcher discovers it by normal rescan;
-9. launcher category/title/icon behavior is ordinary Greia behavior;
-10. launch authorization goes through normal permission/runtime/lifecycle authority.
+6. inspected regular files are content-fingerprinted and copied bytes are checked against that fingerprint;
+7. staged package passes real registry validation with built-in identity authority;
+8. registration is `DEVELOPER_UNSIGNED`;
+9. launcher discovers it by normal rescan;
+10. launcher category/title/icon behavior is ordinary Greia behavior;
+11. launch authorization goes through normal permission/runtime/lifecycle authority.
 
 Required negatives:
 
@@ -204,6 +222,7 @@ special file where host supports creating one
 source inside simulator state
 simulator state inside source
 source larger than RuntimeCatalogue.maximum_activity_bytes
+same-inode/same-size/same-mtime content mutation between preflight and copy (automated regression)
 ```
 
 For all preflight failures verify no unbounded staging copy remains.
@@ -286,10 +305,14 @@ This is mandatory:
 2. Press **Restart** (repeat once with **Stop**).
 3. Verify the Activity receives/obeys normal STOP where cooperative.
 4. Verify non-cooperative Activity is escalated through supervisor force-stop.
-5. Verify no Activity process, storage/event broker socket/thread or unfinished live session is left behind after bounded cleanup.
-6. Verify new Shell can start and use the same profile cleanly.
+5. Verify the desktop controller does not discard its Shell handle before exit is confirmed.
+6. Verify the workspace child PID remains registered while the Shell is still alive and is cleared only after confirmed exit.
+7. Verify no Activity process, storage/event broker socket/thread or unfinished live session is left behind after bounded cleanup.
+8. Verify new Shell can start and use the same profile cleanly.
 
 Do not infer cleanup merely because the Activity window disappeared.
+
+The automated focused suite also covers the crash-survival lease rule: a stale controller PID is insufficient to reclaim a workspace when the recorded Shell PID is still alive.
 
 ---
 
@@ -352,6 +375,7 @@ Tk availability
 state-root path and whether --rebind-state was used
 focused simulator suite result including skips
 make verify result
+workspace single-writer / child-PID lease smoke outcome
 viewport/interface-size/capability matrix
 profiles tested
 Activity IDs/versions tested
@@ -404,8 +428,11 @@ Stop and report the first genuine failure if:
 - bootstrap can be shadowed by Activity content;
 - simulator identity leaks into Activity launch context;
 - missing capability is handled only by simulator UI;
-- source loading follows symlinks, copies before finite safety inspection, or destroys last-known-good state on failed replacement;
+- source loading follows symlinks, copies unverified content, or destroys last-known-good state on failed replacement;
 - two control planes can write one workspace concurrently;
+- a controller crash allows a second controller to adopt a workspace while its old Shell is still alive;
+- control plane drops a live Shell handle/lease before confirmed exit;
+- malformed/partial lock state is automatically discarded without proving ownership is dead;
 - package testing requires a simulator extractor;
 - Stop/Restart leaves Activity/session/broker resources alive;
 - Web support needs a private browser path;
