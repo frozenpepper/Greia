@@ -32,7 +32,12 @@ from PIL import Image
 # The dark navy background of the legacy frames. Pixels at or below this
 # brightness belong to the background; brighter pixels form the logo.
 _BACKGROUND_THRESHOLD = 150
-_LOGO_COLOR = (13, 30, 60)  # Greia brand dark navy for a white frame
+# Brand indigo for the white-frame logo. This must render clearly on the
+# reference hardware's 16-bit (RGB565) framebuffer as well as 24/32-bit:
+# (62,70,130) collapses to about RGB(56,68,128) in RGB565, which stays clearly
+# visible on white (the older near-black navy (13,30,60) rendered as black on
+# RGB565 and looked broken).
+_LOGO_COLOR = (62, 70, 130)
 _WHITE = (255, 255, 255)
 
 ROOT = Path(__file__).resolve().parents[1]

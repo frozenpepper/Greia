@@ -150,11 +150,26 @@ class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
                 for corner in ((0, 0), (221, 0), (0, 599), (221, 599)):
                     r, g, b = image.getpixel(corner)
                     self.assertGreaterEqual(min(r, g, b), 250)
-                # The logo foreground is dark (not navy-on-navy); at least one
-                # dark pixel exists (the mascot/wordmark).
+                # The logo foreground is a distinct non-white color, clearly
+                # visible on white and on a 16-bit (RGB565) framebuffer. A
+                # near-black logo (e.g. legacy navy (13,30,60)) collapses to
+                # black in RGB565 and renders as a broken silhouette, so it is
+                # explicitly guarded against.
                 pixels = list(image.getdata())
-                dark = sum(1 for (r, g, b) in pixels if r < 80 and g < 80 and b < 120)
-                self.assertGreater(dark, 1000)
+                colored = [
+                    px
+                    for px in pixels
+                    if not (px[0] > 250 and px[1] > 250 and px[2] > 250)
+                ]
+                self.assertGreater(len(colored), 1000)
+                for r, g, b in colored:
+                    self.assertLessEqual(r, 90)
+                    self.assertLessEqual(g, 100)
+                    self.assertLessEqual(b, 160)
+                    # Not near-black: each channel must survive RGB565 visibly.
+                    self.assertGreaterEqual(r, 40)
+                    self.assertGreaterEqual(g, 45)
+                    self.assertGreaterEqual(b, 90)
 
     def test_boot_ppms_are_p6_and_match_canonical_artwork(self) -> None:
         """Target and installer initramfs PPMs are valid P6 and match the static art."""
@@ -237,6 +252,34 @@ class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
         self.assertIn("boot/grub/greia-boot-logo.png", builder)
         installer = (ROOT / "build/build-installer-image.sh").read_text(encoding="utf-8")
         self.assertIn("background_image /boot/grub/greia-boot-logo.png", installer)
+
+    def test_syslinux_live_usb_boots_straight_to_installer(self) -> None:
+        cfg = (
+            ROOT / "build/live-syslinux/syslinux.cfg.in"
+        ).read_text(encoding="utf-8")
+        # No interactive menu, no countdown: boot straight to the installer.
+        self.assertIn("DEFAULT live", cfg)
+        self.assertNotIn("UI ", cfg)
+        self.assertIn("TIMEOUT 0", cfg)
+        self.assertIn("PROMPT 0", cfg)
+        self.assertIn("LINUX /vmlinuz", cfg)
+        self.assertIn("INITRD /initrd.img", cfg)
+        self.assertIn("greia.live_media_id=LIVE_MEDIA_ID", cfg)
+        self.assertIn("live-media-path=/", cfg)
+
+    def test_live_usb_builder_is_removable_only_and_reproduces_media(self) -> None:
+        builder = (ROOT / "tools/build-live-usb.sh").read_text(encoding="utf-8")
+        self.assertIn("syslinux --install", builder)
+        self.assertIn("mbr.bin", builder)
+        self.assertIn("mkfs.vfat -F 32", builder)
+        self.assertIn("live-uuid", builder)
+        self.assertIn("LIVE_MEDIA_ID", builder)
+        # Safety: only a removable whole disk may be overwritten.
+        self.assertIn('"1"', builder)  # RM check
+        self.assertIn("disk", builder)
+        self.assertIn('"$DEVICE"', builder)
+        builder_path = ROOT / "tools/build-live-usb.sh"
+        self.assertTrue(builder_path.stat().st_mode & 0o111)
 
     def test_launcher_intro_is_bounded_and_monotonic(self) -> None:
         intro = (ROOT / "src/greia_launcher/boot_intro.py").read_text(encoding="utf-8")
