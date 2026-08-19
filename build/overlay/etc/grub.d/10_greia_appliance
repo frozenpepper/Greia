@@ -16,7 +16,7 @@ if [ -f /etc/greia-os/developer-remote ]; then
   console_arg="console=tty1"
   panic_arg="panic=30"
 fi
-logo="/boot/grub/greia-boot-logo.png"
+theme="/boot/grub/greia-theme.txt"
 cat <<EOF
 if loadfont unicode ; then
   set gfxmode=auto
@@ -24,9 +24,10 @@ if loadfont unicode ; then
   insmod gfxterm
   terminal_output gfxterm
 fi
-if [ -f $logo ]; then
+if [ -f $theme ]; then
   insmod png
-  background_image $logo
+  set theme=$theme
+  export theme
 fi
 set timeout=0
 set timeout_style=hidden
