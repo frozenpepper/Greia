@@ -119,7 +119,7 @@ class SystemLanguageTests(unittest.TestCase):
                 "GREIA_INSTALL_RECORD": str(record),
                 "GREIA_PARENT_ACTIVITY_INSTALL": "0",
                 "GREIA_PARENT_SYSTEM_UPDATE_UPLOAD": "0",
-                "GREIA_ACTIVITY_PACKAGE_ROOT": str(root / "packages"),
+                "GREIA_PARENT_ACTIVITY_PACKAGE_ROOT": str(root / "packages"),
             }
             with patch.dict(os.environ, environment, clear=False):
                 app = UpdateParentApiApplication(
@@ -132,7 +132,10 @@ class SystemLanguageTests(unittest.TestCase):
                 )
                 self.assertEqual(app.language_payload()["locale"], "es")
                 self.assertEqual(app.update_language("hi")["locale"], "hi")
-                self.assertEqual(SystemLanguageStore(settings, install_record_path=record).read().locale, "hi")
+                self.assertEqual(
+                    SystemLanguageStore(settings, install_record_path=record).read().locale,
+                    "hi",
+                )
 
     def test_installer_service_uses_language_first_entrypoint_and_helper_is_narrow(self) -> None:
         service = (
@@ -145,14 +148,31 @@ class SystemLanguageTests(unittest.TestCase):
             / "greia-installer.service"
         ).read_text(encoding="utf-8")
         self.assertIn("-m greia_installer.entrypoint", service)
-        entrypoint = (PROJECT_ROOT / "src" / "greia_installer" / "entrypoint.py").read_text(encoding="utf-8")
+        entrypoint = (
+            PROJECT_ROOT / "src" / "greia_installer" / "entrypoint.py"
+        ).read_text(encoding="utf-8")
         self.assertIn("SUPPORTED_SYSTEM_LANGUAGES", entrypoint)
         self.assertIn("locale=self.locale", entrypoint)
         helper_rule = (
-            PROJECT_ROOT / "build" / "overlay" / "etc" / "sudoers.d" / "greia-language"
+            PROJECT_ROOT
+            / "build"
+            / "overlay"
+            / "etc"
+            / "sudoers.d"
+            / "greia-language"
         ).read_text(encoding="utf-8")
         self.assertIn("greia-languagectl set *", helper_rule)
         self.assertNotIn("ALL=(ALL) NOPASSWD: ALL", helper_rule)
+        tmpfiles_rule = (
+            PROJECT_ROOT
+            / "build"
+            / "overlay"
+            / "usr"
+            / "lib"
+            / "tmpfiles.d"
+            / "greia-language-helper.conf"
+        ).read_text(encoding="utf-8")
+        self.assertIn("greia-languagectl 0755 root root", tmpfiles_rule)
 
 
 if __name__ == "__main__":
