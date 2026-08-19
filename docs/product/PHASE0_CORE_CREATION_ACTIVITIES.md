@@ -2,8 +2,9 @@
 
 **Status:** MANDATORY Phase-0 product requirement  
 **Adopted:** 2026-08-10  
+**Updated:** 2026-08-19 — Unicode/color-emoji Writing requirement  
 **Scope:** first-party child-facing creative Activities shipped in the first user-ready Greia image  
-**Implementation state:** **SOURCE-IMPLEMENTED FIRST TRANCHE / UNEXECUTED / HARDWARE-UNPROVEN**
+**Implementation state:** **SOURCE-IMPLEMENTED / CURRENT EMOJI TRANCHE UNEXECUTED / HARDWARE-UNPROVEN**
 
 ---
 
@@ -31,9 +32,9 @@ Treat those IDs as durable identity from this point unless an explicit migration
 
 ---
 
-## 2. Current source snapshot — 2026-08-10
+## 2. Current source snapshot
 
-Source now exists at:
+Core source includes:
 
 ```text
 activities/writing/activity.toml
@@ -41,31 +42,37 @@ activities/writing/main.py
 activities/painting/activity.toml
 activities/painting/main.py
 src/greia_platform/activity_ui.py
+src/greia_platform/typography.py
+src/greia_platform/emoji_palette.py
+src/greia_platform/pygame_ui.py
 ```
 
-Provider-free regression source has been added at:
+Relevant provider-free regression source includes:
 
 ```text
 tests/test_core_creation_activities.py
 tests/test_activity_theme_access.py
 tests/test_activity_ui.py
+tests/test_typography_emoji.py
+tests/test_writing_emoji_editing.py
 ```
 
-The new shared SDK surface is deliberately small. `activity_ui.py` currently provides only reusable 1024×600-first metrics, cached semantic-icon scaling, large rounded icon buttons, a few shared symbols and a bounded RGB helper. It is **not** a general widget framework.
+The shared SDK/UI surface remains deliberately small. Greia does **not** need a general desktop widget framework to provide responsive child controls, semantic typography, Unicode grapheme handling, color emoji and a bounded curated emoji palette.
 
 ### Evidence boundary
 
-The current tranche has been source-reviewed and committed, but the new tests and validators have **not executed in a current real checkout** as part of this work.
+The Unicode/color-emoji tranche is committed in source, but its new focused tests and current aggregate source gate have **not executed in an owner-controlled current checkout as part of this work**.
 
 Do not claim yet:
 
-- standalone Activity validator PASS;
-- integrated `make verify` PASS at the new branch head;
-- real storage-broker/autosave acceptance;
-- screenshot/visual acceptance;
+- current-head standalone Activity validator PASS;
+- current-head integrated `make verify` PASS;
+- installed Noto Color Emoji/package-composition PASS;
+- screenshot/visual emoji acceptance;
+- emoji-picker usability acceptance;
 - touch behavior;
 - installed lifecycle/display-session acceptance;
-- low-end Acer responsiveness/RSS/CPU acceptance.
+- low-end Acer emoji/font responsiveness/RSS/CPU acceptance.
 
 Those remain required before Phase-0 product closure.
 
@@ -98,17 +105,24 @@ A quota/library limit may refuse a new creation, but Greia must **never silently
 
 ## 4. Goal
 
-Writing is a pleasant digital sheet of paper for stories, words, letters, lists and little notes. It must not feel like a reduced desktop word processor.
+Writing is a pleasant digital sheet of paper for stories, words, letters, lists, little notes, symbols and emoji. It must not feel like a reduced desktop word processor.
 
-A child should be able to open it and begin typing almost immediately.
+A child should be able to open it and begin typing almost immediately. Because many young children communicate visually before or alongside fluent writing, **ordinary Unicode emoji are a first-class Writing capability**, not an optional novelty feature.
 
-## 5. Current first-tranche interaction
+## 5. Current interaction
 
 The implemented source currently provides:
 
 - fullscreen child-facing editing;
-- large default body text (approximately 42 px at the 1024×600 reference scale);
+- large Nunito Sans body text through the Greia typography service;
 - Unicode `TEXTINPUT` handling;
+- mixed normal text + color emoji rendering;
+- Noto Color Emoji fallback through the shared platform typography implementation;
+- Unicode extended-grapheme-aware cursor boundaries;
+- whole-grapheme Backspace/Delete so ZWJ, flags, skin tones, keycaps and combining sequences are not torn apart;
+- grapheme-aware wrapping, hit-testing, vertical column movement, previews and length truncation;
+- a large visual emoji button and bounded Greia emoji picker using the shared `EmojiPalette` model;
+- picker insertion as ordinary Unicode text, never proprietary Greia emoji tokens;
 - multiline text;
 - visible insertion caret;
 - click-to-place caret;
@@ -129,6 +143,12 @@ Writing undo stores only the changed fragments and cursor positions for each edi
 
 The source deliberately does **not** contain a formatting ribbon, file dialog or Linux path workflow.
 
+### Emoji product rule
+
+Emoji are expressive text content; they are not replacements for Greia's controlled system iconography. The Writing picker may offer `🏠`, arrows, hearts or other symbols as content a child can insert into a document, but the real Greia Home/Back/audio/settings controls remain semantic Greia UI assets.
+
+The curated picker is intentionally bounded and child-friendly. Rendering is not limited to that curated set: valid emoji received through normal text input or loaded from a saved UTF-8 document should still render through the platform fallback path when the bundled emoji font supports them.
+
 ### Current persistence model
 
 ```text
@@ -136,17 +156,25 @@ KV index:      documents.index.v1
 private files: documents/<uuid>.txt
 encoding:      UTF-8
 library bound: 120 indexed documents
-text bound:    120,000 Unicode code points per document
+text bound:    120,000 Python/Unicode code points, truncated only at a grapheme boundary
 undo bound:    128 recent edit operations
 ```
+
+Emoji remain ordinary UTF-8 Unicode strings in the document. Writing must never persist renderer glyph IDs, font paths, image filenames or private replacement tokens as the authoritative text representation.
 
 The bounds are Activity UX safeguards beneath the platform’s authoritative Storage quota.
 
 ### Still open for product acceptance
 
-The current first tranche still needs executed/visual review for:
+The current source still needs executed/visual review for:
 
 - caret/wrapping behavior with long real child text;
+- required emoji families including simple emoji, variation selectors, skin-tone modifiers, ZWJ sequences, flags and keycaps;
+- no missing/tofu glyphs for the accepted specimen on the installed image;
+- emoji picker fit/readability/click accuracy at 800×600 and 1024×600;
+- acceptable first-emoji and cached-emoji rendering latency;
+- bounded emoji glyph/surface cache behavior;
+- installed disk/RSS impact of the emoji font and grapheme dependency on the C0/Acer floor;
 - selection behavior if it proves necessary for comfortable editing;
 - international keyboard/input-method behavior;
 - autosave failure/quota UX;
@@ -170,7 +198,8 @@ Do not add by default:
 - arbitrary Linux file open/save;
 - cloud documents;
 - spelling/grammar red-underlines as a default child experience;
-- a ribbon full of formatting commands.
+- a ribbon full of formatting commands;
+- a desktop-scale exhaustive emoji browser with thousands of tiny cells.
 
 Future educational writing features can be added after the essential editor is excellent.
 
@@ -261,19 +290,27 @@ Cute stamps/stickers can be considered later only if they remain performant and 
 
 ## 10. These are reference Activities
 
-Writing and Painting are the first serious reference consumers of reusable Greia child-UI primitives.
+Writing and Painting are reference consumers of reusable Greia child-UI primitives.
 
-They already share real needs for:
+They share real needs for:
 
 - large semantic icon buttons;
 - selected/unselected tool state;
 - child-sized toolbar geometry;
-- resolution-aware 1024×600 metrics;
+- automatic viewport scaling/safe geometry;
 - cached semantic icons;
 - simple visual symbols;
 - theme-aware common surfaces.
 
-The extraction rule is evidence-driven:
+Writing additionally proves that common text needs belong in shared platform primitives:
+
+- semantic Nunito font roles;
+- color-emoji fallback;
+- Unicode grapheme segmentation;
+- bounded emoji surface caching;
+- a reusable curated emoji palette model.
+
+The extraction rule remains evidence-driven:
 
 1. build real Activities;
 2. identify genuine duplication;
@@ -287,13 +324,9 @@ Do not invent a speculative retained widget tree, layout DSL, animation framewor
 
 Ordinary Activities must not receive `customization.manage` merely to look like Greia.
 
-Current SDK behavior is intentionally least-privilege:
+Visual theme context is a read-only presentation concern; mutation remains separately privileged. Exact current theme-snapshot/environment behavior is source-owned and documented in the Activity authoring skill/HANDOVER.
 
-- ordinary Activities calling `get_theme()` receive Greia’s canonical default resolved palette;
-- trusted Activities already granted profile customization authority may receive the actual resolved child customization state;
-- ordinary Activities are not given raw access to the child’s wallpaper/customization files for cosmetic consistency.
-
-A future read-only personalized theme snapshot may be added deliberately without widening filesystem authority.
+Typography/emoji likewise does not grant filesystem authority. An Activity uses the shared platform text path; it does not receive permission to crawl `/usr/share/fonts` or alter system fonts.
 
 ---
 
@@ -309,7 +342,7 @@ Both Activities must ultimately:
 - avoid color as the sole indication of important state where practical;
 - never trap the child because an optional input capability is missing.
 
-Writing naturally requires a keyboard for typing. Painting must not require a keyboard for normal drawing.
+Writing naturally requires a keyboard for ordinary typing, while its emoji picker provides a large visual route to common expressive symbols. Painting must not require a keyboard for normal drawing.
 
 Touch is currently declared as an optional capability but remains **UNPROVEN** until real event/input acceptance executes.
 
@@ -339,7 +372,14 @@ Before the first user-ready Phase-0 image can be considered complete, both Activ
 - pass real visual/input acceptance on reference hardware;
 - leave Greia Shell valid after normal exit, crash and forced return.
 
-Writing additionally must default to large readable text and make ordinary writing comfortable.
+Writing additionally must:
+
+- default to large readable text;
+- render ordinary Unicode emoji in color through the Greia fallback stack where supported;
+- keep grapheme clusters atomic for cursor movement, deletion, wrapping and hit testing;
+- preserve emoji as standard UTF-8 data;
+- provide a large, bounded, child-usable common-emoji picker;
+- pass the representative emoji sequence specimen and low-resource measurements.
 
 Painting additionally must provide responsive drawing with bounded undo and no per-frame durable encoding/writes.
 
@@ -347,11 +387,12 @@ Painting additionally must provide responsive drawing with bounded undo and no p
 
 ## 14. Scheduling relative to the active remediation plan
 
-R7 remains the active blocking architecture/evidence phase. This creative-app work does **not** select a compositor, migrate production away from Xorg, weaken the sandbox, or claim hardware acceptance.
+R7 remains the active blocking architecture/evidence phase. This creative-app/typography work does **not** select a compositor, migrate production away from Xorg, weaken the sandbox, or claim hardware acceptance.
 
-The first source tranche can proceed in parallel because it consumes already-established Activity/lifecycle/Storage contracts and gives R7/final certification useful real workloads:
+The source tranche can proceed in parallel because it consumes already-established Activity/lifecycle/Storage/UI contracts and gives R7/final certification useful real workloads:
 
-- sustained keyboard/text input;
+- sustained keyboard/text/emoji input;
+- color-glyph composition and caching;
 - sustained pointer drawing;
 - autosave/checkpoint behavior;
 - Activity lifecycle/forced return;
@@ -367,4 +408,4 @@ No Phase-0 certification is allowed until both the R7 platform requirements and 
 
 Update this document when the accepted Phase-0 product scope changes materially.
 
-Exact manifest IDs, storage schemas, SDK behavior and reusable UI APIs are source-owned and summarized in `skills/greia-activity-authoring/SKILL.md`; this document remains the product/UX requirement and acceptance contract rather than a duplicate implementation specification.
+Exact manifest IDs, storage schemas, typography/grapheme APIs and reusable UI implementation details are source-owned and summarized in `skills/greia-activity-authoring/SKILL.md`; this document remains the product/UX requirement and acceptance contract rather than a duplicate implementation specification.
