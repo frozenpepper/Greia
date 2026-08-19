@@ -62,14 +62,34 @@ def is_background(pixel: tuple[int, int, int]) -> bool:
 
 
 def derive_white_frame(source: Path) -> Image.Image:
-    """Return the canonical logo rendered as dark-on-white from the legacy frame."""
+    """Return the canonical logo rendered as dark-on-white from the legacy frame.
+
+    The legacy animation draws the Greia logo in lighter tones on a dark navy
+    gradient. A simple brightness check over-captures the navy mid-tones and
+    produces a speckled, glitchy logo. Instead we keep pixels that are clearly
+    lighter than the navy floor (luminance > a fixed threshold) and apply a
+    small median filter to remove anti-aliasing/compression speckle so the
+    silhouette is clean at the 222x600 reference size.
+    """
+    from PIL import ImageFilter
+
     image = Image.open(source).convert("RGB")
-    output = Image.new("RGB", image.size, _WHITE)
+    width, height = image.size
     pixels = image.load()
+    mask = Image.new("L", (width, height), 0)
+    mask_px = mask.load()
+    for y in range(height):
+        for x in range(width):
+            r, g, b = pixels[x, y]
+            luminance = (r + g + b) / 3.0
+            if luminance > 90:
+                mask_px[x, y] = 255
+    mask = mask.filter(ImageFilter.MedianFilter(3))
+    output = Image.new("RGB", (width, height), _WHITE)
     out = output.load()
-    for y in range(image.size[1]):
-        for x in range(image.size[0]):
-            if not is_background(pixels[x, y]):
+    for y in range(height):
+        for x in range(width):
+            if mask_px[x, y] > 128:
                 out[x, y] = _LOGO_COLOR
     return output
 
