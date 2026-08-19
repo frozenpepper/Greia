@@ -1,0 +1,204 @@
+from __future__ import annotations
+
+import os
+import tempfile
+from http.server import HTTPServer
+from pathlib import Path
+from urllib.parse import parse_qs, urlparse
+
+from greia_parent.package_api import (
+    PackageParentApiApplication,
+    PackageParentApiRequestHandler,
+)
+from greia_parent.protocol import API_BASE, api_index_payload
+from greia_parent.server import parse_args
+from greia_parent.static_client import ParentStaticClient
+from greia_platform.system_updates import (
+    BUNDLE_MEDIA_TYPE,
+    MAX_BUNDLE_BYTES,
+    SystemUpdateError,
+    SystemUpdateInbox,
+)
+
+
+_ALLOWED_UPDATE_TYPES = frozenset(
+    {
+        BUNDLE_MEDIA_TYPE,
+        "application/zip",
+        "application/octet-stream",
+    }
+)
+
+
+class UpdateParentApiApplication(PackageParentApiApplication):
+    """Parent composition with an unprivileged R13B update-delivery inbox.
+
+    The HTTP process can receive bounded bytes and expose semantic status. It is
+    intentionally not the privileged system updater and cannot write OS slots,
+    select boot targets or reboot the machine.
+    """
+
+    def __init__(self, *args: object, **kwargs: object) -> None:
+        super().__init__(*args, **kwargs)
+        self.update_inbox = SystemUpdateInbox(self.state_dir)
+        self.system_update_upload_enabled = _system_update_upload_enabled()
+
+    def index_payload(self) -> dict[str, object]:
+        return api_index_payload(
+            {
+                "activities.install": self.activity_install_enabled,
+                "system.update.upload": self.system_update_upload_enabled,
+                # No current single-root Greia profile has a proven transactional
+                # slot backend. Do not infer activation from upload availability.
+                "system.update.activate": False,
+            }
+        )
+
+    def system_update_payload(self) -> dict[str, object]:
+        payload = self.update_inbox.status_payload()
+        payload["upload_available"] = self.system_update_upload_enabled
+        payload["activation_available"] = False
+        payload["activation_reason"] = (
+            "A/B system-slot backend is not configured for this image"
+        )
+        return payload
+
+
+class UpdateParentApiRequestHandler(PackageParentApiRequestHandler):
+    @property
+    def app(self) -> UpdateParentApiApplication:
+        return self.server.app  # type: ignore[attr-defined,return-value]
+
+    def do_GET(self) -> None:  # noqa: N802
+        parsed = urlparse(self.path)
+        if parsed.path == API_BASE:
+            query = parse_qs(parsed.query)
+            if not self._require_api_authorization(query):
+                return
+            self._send_json(200, self.app.index_payload())
+            return
+        if parsed.path == f"{API_BASE}/system/update":
+            query = parse_qs(parsed.query)
+            if not self._require_api_authorization(query):
+                return
+            self._send_json(200, self.app.system_update_payload())
+            return
+        super().do_GET()
+
+    def do_POST(self) -> None:  # noqa: N802
+        parsed = urlparse(self.path)
+        if parsed.path != f"{API_BASE}/system/update/bundle":
+            super().do_POST()
+            return
+        query = parse_qs(parsed.query)
+        if not self._require_api_authorization(query):
+            return
+        if not self.app.system_update_upload_enabled:
+            self._send_api_error(
+                403,
+                "capability_unavailable",
+                "System update upload is disabled on this Greia image",
+            )
+            return
+        content_type = self.headers.get("Content-Type", "").split(";", 1)[0].strip().lower()
+        if content_type not in _ALLOWED_UPDATE_TYPES:
+            self._send_api_error(
+                415,
+                "unsupported_update_type",
+                "Upload a .greiaupdate bundle",
+            )
+            return
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+        except ValueError:
+            self._send_api_error(400, "invalid_content_length", "Invalid Content-Length")
+            return
+        if length <= 0 or length > MAX_BUNDLE_BYTES:
+            self._send_api_error(
+                413,
+                "update_too_large",
+                f"Update bundle must be between 1 and {MAX_BUNDLE_BYTES} bytes",
+            )
+            return
+
+        upload: Path | None = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                prefix="greia-parent-update-",
+                suffix=".greiaupdate",
+                delete=False,
+            ) as handle:
+                upload = Path(handle.name)
+                remaining = length
+                while remaining:
+                    chunk = self.rfile.read(min(1024 * 1024, remaining))
+                    if not chunk:
+                        raise SystemUpdateError("system update upload ended unexpectedly")
+                    handle.write(chunk)
+                    remaining -= len(chunk)
+            queued = self.app.update_inbox.receive(upload)
+        except (SystemUpdateError, OSError) as exc:
+            self._send_api_error(400, "system_update_rejected", str(exc))
+            return
+        finally:
+            if upload is not None:
+                upload.unlink(missing_ok=True)
+
+        self._send_json(
+            202,
+            {
+                "received": queued.manifest.as_json_dict(),
+                "signature_verified": False,
+                "activation_available": False,
+                "status": self.app.system_update_payload(),
+            },
+        )
+
+
+class UpdateParentApiHTTPServer(HTTPServer):
+    def __init__(
+        self,
+        address: tuple[str, int],
+        app: UpdateParentApiApplication,
+        *,
+        static_client: ParentStaticClient | None = None,
+    ) -> None:
+        self.app = app
+        self.static_client = static_client or ParentStaticClient.from_environment()
+        HTTPServer.__init__(self, address, UpdateParentApiRequestHandler)
+
+
+def _system_update_upload_enabled() -> bool:
+    explicit = os.environ.get("GREIA_PARENT_SYSTEM_UPDATE_UPLOAD", "").strip().casefold()
+    if explicit in {"1", "true", "yes", "on"}:
+        return True
+    if explicit in {"0", "false", "no", "off"}:
+        return False
+    # Code/system bundle delivery remains disabled on provisional plaintext Parent
+    # transport except on the explicit developer lane. Receiving is still only an
+    # unprivileged inbox operation; privileged activation remains unavailable.
+    marker = Path(
+        os.environ.get(
+            "GREIA_DEVELOPER_REMOTE_MARKER",
+            "/etc/greia-os/developer-remote",
+        )
+    )
+    return marker.is_file()
+
+
+def main() -> int:
+    args = parse_args()
+    app = UpdateParentApiApplication(
+        args.root,
+        args.state_dir,
+        hardware_settings_dir=args.hardware_settings_dir,
+        hardware_status_path=args.hardware_status_path,
+        profiles_dir=args.profiles_dir,
+        active_profile_status_path=args.active_profile_status_path,
+    )
+    UpdateParentApiHTTPServer((args.bind, args.port), app).serve_forever()
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
