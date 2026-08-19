@@ -337,7 +337,7 @@ provision_developer_ssh() {
   local rootfs="$1"
   # The greia account already exists in build-image.sh (created and locked);
   # unlock it and set the owner-approved development password.
-  chroot "$rootfs" /usr/sbin/passwd -u greia
+  chroot "$rootfs" /usr/bin/passwd -u greia
   printf 'greia:greia\n' | chroot "$rootfs" /usr/sbin/chpasswd
   cat > "$rootfs/etc/ssh/sshd_config.d/00-greia-security-floor.conf" <<'FLOOR'
 # Target development security floor (owner-approved greia/greia).
