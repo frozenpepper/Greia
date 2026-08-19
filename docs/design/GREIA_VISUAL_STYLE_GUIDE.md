@@ -1,9 +1,9 @@
 # Greia Visual Style Guide
 
-**Status:** accepted visual-design direction; Nunito typography and initial color-emoji path implemented in source, physical/C0 evidence pending where noted  
+**Status:** accepted visual-design direction; Nunito typography and initial color-emoji/picker path implemented in source, physical/C0 evidence pending where noted  
 **Date:** 2026-08-19  
 **Audience:** Greia Shell designers, platform developers, Activity authors, installer/Parent UI developers, artists, reviewers, and software agents  
-**Related:** `docs/design/GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md`, ADR 0018, ADR 0019, ADR 0025, `runtime/theme-defaults.toml`, `src/greia_platform/typography.py`
+**Related:** `docs/design/GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md`, ADR 0018, ADR 0019, ADR 0025, `runtime/theme-defaults.toml`, `src/greia_platform/typography.py`, `src/greia_platform/emoji_palette.py`
 
 ## 1. Purpose and authority
 
@@ -14,7 +14,7 @@ It complements `GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md`:
 - the **asset requirements** document defines what graphical assets and production artwork Greia needs;
 - this **style guide** defines the visual character and reusable presentation rules those assets and interfaces should follow.
 
-Accepted ADRs remain authoritative for architecture and trust boundaries. Source/runtime declarations remain authoritative for exact implemented theme/UI APIs. The exact current typography implementation is owned by `src/greia_platform/typography.py`; this guide owns the visual intent and cross-product design rules.
+Accepted ADRs remain authoritative for architecture and trust boundaries. Source/runtime declarations remain authoritative for exact implemented theme/UI APIs. The exact current typography implementation is owned by `src/greia_platform/typography.py`; the bounded shared emoji-palette model is owned by `src/greia_platform/emoji_palette.py`; this guide owns the visual intent and cross-product design rules.
 
 ## 2. Visual personality
 
@@ -268,13 +268,21 @@ That keeps child documents portable across CPU architectures, future runtimes, b
 
 On the current Debian 12/bookworm target, the packaged Noto Color Emoji font uses an embedded color-bitmap strike. The current Pygame backend uses Pillow's embedded-color path at the font's supported native strike and scales the resulting RGBA glyph to the requested UI size. That backend-specific fact must remain inside `GreiaTypography`; Activities must not copy it.
 
-The emoji surface cache is hard-bounded. Emoji must never be decoded/rasterized every frame without reuse.
+The emoji surface cache is hard-bounded. Emoji must never be decoded/rasterized every frame without reuse. A present-but-corrupt/incompatible emoji resource degrades through the normal text path rather than crashing the child session; supported release images must nevertheless verify the required emoji package/font rather than treating degradation as successful release support.
 
 ### 10.6 Emoji input / picker
 
-The renderer/editor foundation does **not** by itself mean Greia already has a child-facing emoji picker. A future Greia picker should be a large-tile, controller/touch/pointer-friendly platform component that inserts standard Unicode strings into the active text field.
+Greia now has an **initial source implementation** of child-facing emoji input:
 
-Until such a picker is implemented, normal OS/keyboard text input can still supply emoji where the host/input method supports them. Do not invent Activity-specific private emoji encodings.
+- `src/greia_platform/emoji_palette.py` owns a bounded curated semantic palette;
+- the first-party Writing Activity renders that model as a large visual picker inside its Greia-safe content region;
+- the picker currently provides seven child-friendly categories with eighteen common emoji in each category;
+- the grid derives its rows, columns and cell size from the actual safe viewport rather than assuming one physical resolution;
+- selecting an item inserts the actual standard Unicode grapheme into the document.
+
+This proves the platform model and gives Writing a usable visual route without requiring a desktop emoji keyboard shortcut. It is **not yet a universal platform picker renderer automatically available to every Greia text field or future Web runtime**. A later common picker component should reuse the same semantic palette/Unicode contract rather than inventing a second catalogue.
+
+Normal keyboard/input-method text can still supply emoji beyond the curated picker set. Rendering is not restricted to the palette. Activities must not invent private emoji encodings to extend it.
 
 ### 10.7 Emoji acceptance
 
@@ -297,7 +305,9 @@ Acceptance is not merely “no exception.” It must check:
 - color pixels where color emoji are expected;
 - whole-cluster cursor movement and deletion;
 - correct wrapping/hit-testing around emoji;
+- text/emoji presentation-selector behavior;
 - bounded cache growth;
+- picker containment/legibility at the supported low-resolution viewports;
 - acceptable first-render and cached-render latency;
 - installed-size/RSS impact on the C0/Acer floor.
 
@@ -342,7 +352,7 @@ Shell      → another copy
 Installer  → another copy
 ```
 
-`src/greia_platform/pygame_ui.py` is the platform-wide Pygame import surface for shared renderer helpers and now re-exports the typography/grapheme contract for Pygame consumers.
+`src/greia_platform/pygame_ui.py` is the platform-wide Pygame import surface for shared renderer helpers and now re-exports the typography/grapheme contract and shared emoji-palette model for Pygame consumers.
 
 ## 13. Runtime and low-resource requirements
 
@@ -423,13 +433,14 @@ For platform typography and emoji support, maintain at least:
 4. Unicode extended-grapheme segmentation for editable text;
 5. mixed ordinary-text + emoji rendering without per-Activity font hunting;
 6. first-party text editor deletion/cursor/wrapping/hit-testing that is grapheme-safe;
-7. authoring documentation for the shared contract;
-8. Italian/English glyph and accent verification plus the young-reader/emoji specimen;
-9. provider-free regression tests for segmentation/editing/package composition;
-10. actual 800×600 / 1024×600 visual review and physical Acer-class testing;
-11. installed-size/RAM/first-render/cached-render measurements;
-12. child-safe behavior if a fallback resource becomes unavailable/corrupt;
-13. future platform emoji-picker acceptance when that separate UI feature is implemented.
+7. bounded semantic emoji-palette model plus a large Writing picker using standard Unicode insertion;
+8. authoring documentation for the shared contract;
+9. Italian/English glyph and accent verification plus the young-reader/emoji specimen;
+10. provider-free regression tests for segmentation/editing/palette/package composition;
+11. actual 800×600 / 1024×600 visual review and physical Acer-class testing;
+12. installed-size/RAM/first-render/cached-render measurements;
+13. child-safe behavior if a fallback resource becomes unavailable/corrupt;
+14. future universal/shared picker-renderer acceptance if Greia promotes the Writing proof into a common cross-surface component.
 
 ## 19. Current state
 
@@ -441,11 +452,13 @@ As of 2026-08-19:
 - **bundled Nunito weights:** Regular / SemiBold / Bold / ExtraBold;
 - **semantic typography service:** implemented in `src/greia_platform/typography.py`;
 - **color emoji fallback:** source-implemented with system `Noto Color Emoji` + Pillow embedded-color rendering;
+- **emoji failure behavior:** source-implemented safe degradation rather than child-session failure, without weakening release package verification requirements;
 - **grapheme segmentation:** source-implemented with packaged `python3-regex` Unicode `\X` path plus a development-host fallback;
 - **Python/Pygame package composition:** declares `fonts-noto-color-emoji`, `python3-pil`, `python3-pygame`, and `python3-regex`;
-- **Writing Activity:** migrated to grapheme-safe editing and mixed text/emoji rendering;
+- **shared emoji-palette model:** implemented in `src/greia_platform/emoji_palette.py`;
+- **Writing Activity:** migrated to grapheme-safe editing, mixed text/emoji rendering, and an initial large visual emoji picker whose grid stays inside the actual safe viewport;
 - **provider-free emoji/Writing regressions:** committed, **not yet executed in an owner-controlled checkout at this head**;
-- **child-facing emoji picker:** not yet implemented;
+- **universal cross-surface emoji-picker renderer:** not yet implemented; the Writing implementation is the current reference consumer;
 - **C0/Acer installed-size/RAM/latency/visual acceptance:** pending;
 - **accessibility alternate normal-text family:** extension point required, specific family not yet selected by this guide.
 
