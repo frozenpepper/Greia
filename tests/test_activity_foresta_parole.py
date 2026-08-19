@@ -47,6 +47,26 @@ class ForestaParoleTests(unittest.TestCase):
         audio = SoundManager()
         self.assertIsNotNone(audio)
 
+    def test_render_entities_and_owl(self) -> None:
+        import os
+        import pygame
+        from activities.foresta_parole.main import OwlCompanion, LetterOrb, Particle
+
+        os.environ["SDL_VIDEODRIVER"] = "dummy"
+        pygame.init()
+        surf = pygame.Surface((1024, 600))
+        owl = OwlCompanion(100, 100)
+        owl.draw(surf)
+
+        orb = LetterOrb("A", 200, 200)
+        self.assertTrue(orb.contains(200, 200))
+        orb.wobble()
+        orb.update()
+
+        p = Particle(100, 100, (255, 200, 50))
+        p.update()
+        p.draw(surf)
+
 
 if __name__ == "__main__":
     unittest.main()

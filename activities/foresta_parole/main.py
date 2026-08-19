@@ -47,6 +47,7 @@ CARD_BG = (255, 250, 240)
 CARD_BORDER = (61, 44, 31)
 GOLD = (255, 205, 50)
 WHITE = (255, 255, 255)
+DARK_TEXT = (50, 38, 28)
 # CRITICAL AUDIO / TTS SYNTHESIS INSTRUCTIONS:
 # ============================================
 # When generating audio with TTS (e.g. macOS `say`), ALWAYS pass lowercase strings (.lower()).
