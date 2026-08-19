@@ -8,7 +8,7 @@ import tempfile
 import time
 import unittest
 from pathlib import Path
-from types import SimpleNamespace
+from types import ModuleType, SimpleNamespace
 from unittest import mock
 
 import greia_simulator.workspace as simulator_workspace
@@ -27,6 +27,7 @@ from greia_platform.activities import (
 from greia_platform.permissions import PermissionDecisionError
 from greia_platform.trust import ActivitySource, PackageTrust
 from greia_platform.ui_preferences import UiPreferencesStore
+from greia_simulator.app import SimulatorDesktopApp
 from greia_simulator.child_shell import GreiaSimulatorChildShell
 from greia_simulator.device import (
     DEFAULT_CAPABILITIES,
@@ -378,6 +379,47 @@ class GreiaSimulatorWorkspaceTests(unittest.TestCase):
             second.acquire_lock()
             second.release_lock()
 
+    def test_workspace_release_requires_child_lease_to_be_cleared(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            workspace = SimulatorWorkspace(REPO, Path(directory) / "state")
+            workspace.acquire_lock()
+            workspace.update_lock_child_pid(os.getpid())
+            with self.assertRaisesRegex(RuntimeError, "owned Shell"):
+                workspace.release_lock()
+            workspace.update_lock_child_pid(None)
+            workspace.release_lock()
+
+    def test_stale_lock_is_retained_while_recorded_shell_pid_is_alive(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            workspace = SimulatorWorkspace(REPO, Path(directory) / "state")
+            workspace.ensure()
+            workspace.lock_path.write_text(
+                json.dumps(
+                    {
+                        "pid": 111,
+                        "child_pid": 222,
+                        "repo_root": str(REPO.resolve()),
+                        "schema_version": 1,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            with mock.patch.object(simulator_workspace.os, "name", "posix"), mock.patch.object(
+                simulator_workspace,
+                "_posix_pid_alive",
+                side_effect=(False, True),
+            ):
+                self.assertFalse(workspace._discard_stale_lock())
+            self.assertTrue(workspace.lock_path.exists())
+
+            with mock.patch.object(simulator_workspace.os, "name", "posix"), mock.patch.object(
+                simulator_workspace,
+                "_posix_pid_alive",
+                side_effect=(False, False),
+            ):
+                self.assertTrue(workspace._discard_stale_lock())
+            self.assertFalse(workspace.lock_path.exists())
+
     def test_partial_or_malformed_lock_fails_closed(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             workspace = SimulatorWorkspace(REPO, Path(directory) / "state")
@@ -396,7 +438,14 @@ class GreiaSimulatorWorkspaceTests(unittest.TestCase):
             workspace = SimulatorWorkspace(REPO, Path(directory) / "state")
             workspace.ensure()
             workspace.lock_path.write_text(
-                json.dumps({"pid": 12345, "repo_root": str(REPO.resolve())}),
+                json.dumps(
+                    {
+                        "pid": 12345,
+                        "child_pid": None,
+                        "repo_root": str(REPO.resolve()),
+                        "schema_version": 1,
+                    }
+                ),
                 encoding="utf-8",
             )
             with mock.patch.object(simulator_workspace.os, "name", "nt"), mock.patch.object(
@@ -564,6 +613,74 @@ class GreiaSimulatorWorkspaceTests(unittest.TestCase):
                     built_in_root=REPO / "activities",
                 )
                 service_class.return_value.install_archive.assert_called_once_with(archive)
+
+
+class GreiaSimulatorDesktopOwnershipTests(unittest.TestCase):
+    @staticmethod
+    def _app(process=None):
+        app = object.__new__(SimulatorDesktopApp)
+        app.workspace = mock.Mock()
+        app.workspace.repo_root = REPO
+        app.process = process
+        app._stopping = False
+        app.status = mock.Mock()
+        return app
+
+    def test_start_registers_spawned_shell_pid_in_workspace_lease(self) -> None:
+        app = self._app()
+        app._device = mock.Mock(return_value=SimulatedDeviceProfile())
+        app.interface_size = mock.Mock()
+        app.interface_size.get.return_value = "normal"
+        app._refresh_profiles = mock.Mock()
+        app._selected_profile_id = mock.Mock(return_value="profile-id")
+        app.stop = mock.Mock(return_value=True)
+        app._child_command = mock.Mock(return_value=["child-shell"])
+        app._child_environment = mock.Mock(return_value={})
+        process = mock.Mock(pid=4242)
+
+        tkinter_module = ModuleType("tkinter")
+        messagebox_module = ModuleType("tkinter.messagebox")
+        messagebox_module.showerror = mock.Mock()
+        tkinter_module.messagebox = messagebox_module
+        with mock.patch.dict(
+            sys.modules,
+            {
+                "tkinter": tkinter_module,
+                "tkinter.messagebox": messagebox_module,
+            },
+        ), mock.patch(
+            "greia_simulator.app.subprocess.Popen",
+            return_value=process,
+        ):
+            app.start()
+
+        self.assertIs(app.process, process)
+        app.workspace.update_lock_child_pid.assert_called_once_with(4242)
+
+    def test_stop_clears_child_lease_before_dropping_exited_handle(self) -> None:
+        process = mock.Mock()
+        process.poll.return_value = 0
+        app = self._app(process)
+        self.assertTrue(app.stop())
+        app.workspace.update_lock_child_pid.assert_called_once_with(None)
+        self.assertIsNone(app.process)
+
+    def test_stop_retains_live_handle_when_terminate_fails(self) -> None:
+        process = mock.Mock()
+        process.poll.side_effect = (None, None)
+        process.terminate.side_effect = OSError("terminate failed")
+        app = self._app(process)
+        self.assertFalse(app.stop())
+        self.assertIs(app.process, process)
+        app.workspace.update_lock_child_pid.assert_not_called()
+
+    def test_stop_fails_closed_when_dead_child_lease_cannot_be_cleared(self) -> None:
+        process = mock.Mock()
+        process.poll.return_value = 0
+        app = self._app(process)
+        app.workspace.update_lock_child_pid.side_effect = RuntimeError("lease write failed")
+        self.assertFalse(app.stop())
+        self.assertIs(app.process, process)
 
 
 class GreiaSimulatorAuthorityIntegrationTests(unittest.TestCase):
