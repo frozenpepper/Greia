@@ -12,6 +12,7 @@ from greia_parent.package_api import (
 from greia_parent.protocol import API_BASE, api_index_payload
 from greia_parent.server import parse_args
 from greia_parent.static_client import ParentStaticClient
+from greia_platform.system_language import SystemLanguageError, SystemLanguageStore
 from greia_platform.system_updates import (
     BUNDLE_MEDIA_TYPE,
     MAX_BUNDLE_BYTES,
@@ -31,17 +32,19 @@ _UPDATE_UPLOAD_SOCKET_TIMEOUT_SECONDS = 120.0
 
 
 class UpdateParentApiApplication(PackageParentApiApplication):
-    """Parent composition with an unprivileged R13B update-delivery inbox.
+    """Parent composition with update delivery and device-language settings.
 
-    The HTTP process can receive bounded bytes and expose semantic status. It is
-    intentionally not the privileged system updater and cannot write OS slots,
-    select boot targets or reboot the machine.
+    The HTTP process can receive bounded update bytes and mutate only typed
+    Greia settings such as the device language. It is intentionally not the
+    privileged system updater and cannot write OS slots, select boot targets or
+    reboot the machine.
     """
 
     def __init__(self, *args: object, **kwargs: object) -> None:
         super().__init__(*args, **kwargs)
         self.update_inbox = SystemUpdateInbox(self.state_dir)
         self.system_update_upload_enabled = _system_update_upload_enabled()
+        self.language_store = SystemLanguageStore(self.hardware_settings_dir)
 
     def index_payload(self) -> dict[str, object]:
         return api_index_payload(
@@ -63,6 +66,13 @@ class UpdateParentApiApplication(PackageParentApiApplication):
         )
         return payload
 
+    def language_payload(self) -> dict[str, object]:
+        return self.language_store.as_json_dict()
+
+    def update_language(self, locale: str) -> dict[str, object]:
+        self.language_store.replace(locale)
+        return self.language_store.as_json_dict()
+
 
 class UpdateParentApiRequestHandler(PackageParentApiRequestHandler):
     @property
@@ -83,7 +93,29 @@ class UpdateParentApiRequestHandler(PackageParentApiRequestHandler):
                 return
             self._send_json(200, self.app.system_update_payload())
             return
+        if parsed.path == f"{API_BASE}/settings/language":
+            query = parse_qs(parsed.query)
+            if not self._require_api_authorization(query):
+                return
+            self._send_json(200, self.app.language_payload())
+            return
         super().do_GET()
+
+    def do_PUT(self) -> None:  # noqa: N802
+        parsed = urlparse(self.path)
+        if parsed.path != f"{API_BASE}/settings/language":
+            super().do_PUT()
+            return
+        query = parse_qs(parsed.query)
+        if not self._require_api_authorization(query):
+            return
+        try:
+            body = self._read_json_object()
+            payload = self.app.update_language(self._json_text(body, "locale"))
+        except (SystemLanguageError, OSError, ValueError) as exc:
+            self._send_api_error(400, "invalid_system_language", str(exc))
+            return
+        self._send_json(200, payload)
 
     def do_POST(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
