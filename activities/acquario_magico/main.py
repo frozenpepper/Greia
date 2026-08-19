@@ -477,59 +477,55 @@ def main() -> int:
         s_txt = typography.render(str(len(creatures)), FontRole.DISPLAY, 28, (2, 132, 199))
         surf.blit(s_txt, (star_pill.left + 58, star_pill.centery - s_txt.get_height() // 2))
 
-        # 9. Bottom Toolbar (Giant Chunky 180x72px Pure-Icon Buttons)
+        # 9. Bottom Toolbar (Giant Chunky 180x72px Buttons with Icon + Label)
         tool_y = REFERENCE_HEIGHT - 85
         tools_info = [
-            (100, 180, 0, (34, 197, 94)),
-            (310, 180, 1, (249, 115, 22)),
-            (520, 180, 2, (56, 189, 248)),
-            (730, 180, 3, (168, 85, 247) if glow_mode else (71, 85, 105)),
+            (100, 180, 0, "PESCE", (34, 197, 94)),
+            (310, 180, 1, "CIBO", (249, 115, 22)),
+            (520, 180, 2, "BOLLE", (56, 189, 248)),
+            (730, 180, 3, "LUCE", (168, 85, 247) if glow_mode else (71, 85, 105)),
         ]
 
-        for bx, bw, t_idx, col in tools_info:
+        for bx, bw, t_idx, lbl, col in tools_info:
             b_rect = pygame.Rect(bx, tool_y, bw, 72)
             pygame.draw.rect(surf, col, b_rect, border_radius=20)
             pygame.draw.rect(surf, (255, 255, 255), b_rect, width=3, border_radius=20)
             cx = b_rect.centerx
-            cy = b_rect.centery
+            cy = b_rect.top + 28
 
             if t_idx == 0:
                 # 0: Giant Clownfish Icon
-                # Fish Body
-                pygame.draw.ellipse(surf, (255, 107, 107), pygame.Rect(cx - 26, cy - 14, 40, 28))
-                # Tail
-                pygame.draw.polygon(surf, (255, 107, 107), [(cx + 8, cy), (cx + 26, cy - 12), (cx + 26, cy + 12)])
-                # White stripe
-                pygame.draw.ellipse(surf, (255, 255, 255), pygame.Rect(cx - 8, cy - 14, 10, 28))
-                # Sparkling Eye
-                pygame.draw.circle(surf, (255, 255, 255), (cx - 16, cy - 4), 6)
-                pygame.draw.circle(surf, (15, 23, 42), (cx - 17, cy - 4), 3)
+                pygame.draw.ellipse(surf, (255, 107, 107), pygame.Rect(cx - 22, cy - 12, 34, 24))
+                pygame.draw.polygon(surf, (255, 107, 107), [(cx + 8, cy), (cx + 22, cy - 10), (cx + 22, cy + 10)])
+                pygame.draw.ellipse(surf, (255, 255, 255), pygame.Rect(cx - 6, cy - 12, 8, 24))
+                pygame.draw.circle(surf, (255, 255, 255), (cx - 12, cy - 4), 5)
+                pygame.draw.circle(surf, (15, 23, 42), (cx - 13, cy - 4), 2)
 
             elif t_idx == 1:
                 # 1: Giant Food Shaker Bottle & Pellets
-                # Bottle
-                pygame.draw.rect(surf, (254, 240, 138), pygame.Rect(cx - 18, cy - 16, 24, 30), border_radius=6)
-                pygame.draw.rect(surf, (234, 88, 12), pygame.Rect(cx - 14, cy - 22, 16, 8), border_radius=3)
-                # Falling food pellets
-                pygame.draw.circle(surf, (251, 146, 60), (cx + 14, cy - 8), 5)
-                pygame.draw.circle(surf, (251, 146, 60), (cx + 18, cy + 4), 6)
-                pygame.draw.circle(surf, (251, 146, 60), (cx + 12, cy + 16), 5)
+                pygame.draw.rect(surf, (254, 240, 138), pygame.Rect(cx - 16, cy - 12, 20, 24), border_radius=5)
+                pygame.draw.rect(surf, (234, 88, 12), pygame.Rect(cx - 12, cy - 18, 12, 6), border_radius=2)
+                pygame.draw.circle(surf, (251, 146, 60), (cx + 12, cy - 6), 4)
+                pygame.draw.circle(surf, (251, 146, 60), (cx + 16, cy + 4), 5)
+                pygame.draw.circle(surf, (251, 146, 60), (cx + 10, cy + 12), 4)
 
             elif t_idx == 2:
                 # 2: Giant Bubbles Cluster
-                pygame.draw.circle(surf, (255, 255, 255), (cx - 12, cy + 6), 14, 3)
-                pygame.draw.circle(surf, (255, 255, 255), (cx - 16, cy + 2), 3)
-                pygame.draw.circle(surf, (255, 255, 255), (cx + 12, cy - 8), 18, 3)
-                pygame.draw.circle(surf, (255, 255, 255), (cx + 8, cy - 14), 4)
-                pygame.draw.circle(surf, (255, 255, 255), (cx - 2, cy - 18), 8, 2)
+                pygame.draw.circle(surf, (255, 255, 255), (cx - 10, cy + 4), 11, 2)
+                pygame.draw.circle(surf, (255, 255, 255), (cx + 10, cy - 6), 14, 2)
+                pygame.draw.circle(surf, (255, 255, 255), (cx - 2, cy - 14), 7, 2)
 
             elif t_idx == 3:
                 # 3: Giant Sparkle Wand / Magic Glow Light
-                pygame.draw.circle(surf, (254, 240, 138), (cx, cy), 16)
-                pygame.draw.circle(surf, (255, 255, 255), (cx, cy), 8)
+                pygame.draw.circle(surf, (254, 240, 138), (cx, cy), 13)
+                pygame.draw.circle(surf, (255, 255, 255), (cx, cy), 6)
                 for ang in (0, 45, 90, 135, 180, 225, 270, 315):
                     rad = math.radians(ang)
-                    pygame.draw.line(surf, (254, 240, 138), (cx + int(math.cos(rad)*18), cy + int(math.sin(rad)*18)), (cx + int(math.cos(rad)*24), cy + int(math.sin(rad)*24)), 3)
+                    pygame.draw.line(surf, (254, 240, 138), (cx + int(math.cos(rad)*14), cy + int(math.sin(rad)*14)), (cx + int(math.cos(rad)*19), cy + int(math.sin(rad)*19)), 2)
+
+            # Supporting label underneath
+            lbl_surf = typography.render(lbl, FontRole.DISPLAY, 16, (255, 255, 255))
+            surf.blit(lbl_surf, (cx - lbl_surf.get_width() // 2, b_rect.bottom - 22))
 
         # Present Canvas
         canvas.present(clear=theme.background)

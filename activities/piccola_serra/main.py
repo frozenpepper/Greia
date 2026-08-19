@@ -507,16 +507,16 @@ def main() -> int:
         s_txt = typography.render(f"{harvest_count}/{target_harvest}", FontRole.DISPLAY, 28, (180, 83, 9))
         surf.blit(s_txt, (star_pill.left + 54, star_pill.centery - s_txt.get_height() // 2))
 
-        # 5. Bottom Toolbar (Giant Chunky 180x72px Pure-Icon Buttons)
+        # 7. Bottom Toolbar (Giant Chunky 180x72px Buttons with Icon + Label)
         tool_y = REFERENCE_HEIGHT - 85
         tools_info = [
-            (120, 0, (34, 197, 94)),
-            (320, 1, (56, 189, 248)),
-            (520, 2, (234, 179, 8)),
-            (720, 3, (249, 115, 22)),
+            (100, 0, "SEME", (22, 101, 52)),
+            (310, 1, "ACQUA", (2, 132, 199)),
+            (520, 2, "SOLE", (202, 138, 4)),
+            (730, 3, "RACCOLTA", (194, 65, 12)),
         ]
 
-        for tx, t_idx, col in tools_info:
+        for tx, t_idx, lbl, col in tools_info:
             b_rect = pygame.Rect(tx, tool_y, 180, 72)
             is_sel = active_tool == t_idx
             bg_col = col if is_sel else (255, 255, 255)
@@ -524,53 +524,50 @@ def main() -> int:
             pygame.draw.rect(surf, bg_col, b_rect, border_radius=20)
             pygame.draw.rect(surf, col, b_rect, width=border_w, border_radius=20)
             cx = b_rect.centerx
-            cy = b_rect.centery
+            cy = b_rect.top + 28
 
             if t_idx == 0:
                 # 0: Giant Seed Sprout Icon
                 seed_col = (255, 255, 255) if is_sel else (22, 101, 52)
                 leaf_col = (220, 252, 231) if is_sel else (34, 197, 94)
-                pygame.draw.circle(surf, seed_col, (cx, cy + 8), 10)
-                pygame.draw.line(surf, leaf_col, (cx, cy + 8), (cx, cy - 10), 4)
-                pygame.draw.ellipse(surf, leaf_col, pygame.Rect(cx - 16, cy - 18, 16, 10))
-                pygame.draw.ellipse(surf, leaf_col, pygame.Rect(cx, cy - 18, 16, 10))
+                pygame.draw.circle(surf, seed_col, (cx, cy + 6), 8)
+                pygame.draw.line(surf, leaf_col, (cx, cy + 6), (cx, cy - 8), 3)
+                pygame.draw.ellipse(surf, leaf_col, pygame.Rect(cx - 14, cy - 14, 14, 8))
+                pygame.draw.ellipse(surf, leaf_col, pygame.Rect(cx, cy - 14, 14, 8))
 
             elif t_idx == 1:
                 # 1: Giant Watering Can & Droplets Icon
                 can_col = (255, 255, 255) if is_sel else (2, 132, 199)
                 drop_col = (224, 242, 254) if is_sel else (56, 189, 248)
-                # Can body
-                pygame.draw.rect(surf, can_col, pygame.Rect(cx - 16, cy - 10, 26, 22), border_radius=5)
-                # Spout
-                pygame.draw.line(surf, can_col, (cx + 10, cy - 4), (cx + 24, cy - 14), 5)
-                # Handle
-                pygame.draw.arc(surf, can_col, pygame.Rect(cx - 28, cy - 12, 18, 20), 1.5, 4.7, 4)
-                # Water droplets
-                pygame.draw.circle(surf, drop_col, (cx + 26, cy - 2), 4)
-                pygame.draw.circle(surf, drop_col, (cx + 28, cy + 8), 5)
+                pygame.draw.rect(surf, can_col, pygame.Rect(cx - 14, cy - 8, 22, 18), border_radius=4)
+                pygame.draw.line(surf, can_col, (cx + 8, cy - 3), (cx + 20, cy - 11), 4)
+                pygame.draw.arc(surf, can_col, pygame.Rect(cx - 24, cy - 10, 14, 16), 1.5, 4.7, 3)
+                pygame.draw.circle(surf, drop_col, (cx + 22, cy - 1), 3)
+                pygame.draw.circle(surf, drop_col, (cx + 24, cy + 7), 4)
 
             elif t_idx == 2:
                 # 2: Giant Radiant Sun Icon
                 sun_col = (255, 255, 255) if is_sel else (234, 179, 8)
                 ray_col = (254, 240, 138) if is_sel else (202, 138, 4)
-                pygame.draw.circle(surf, sun_col, (cx, cy), 16)
+                pygame.draw.circle(surf, sun_col, (cx, cy), 13)
                 for ang in (0, 45, 90, 135, 180, 225, 270, 315):
                     rad = math.radians(ang)
-                    pygame.draw.line(surf, ray_col, (cx + int(math.cos(rad)*18), cy + int(math.sin(rad)*18)), (cx + int(math.cos(rad)*24), cy + int(math.sin(rad)*24)), 3)
+                    pygame.draw.line(surf, ray_col, (cx + int(math.cos(rad)*14), cy + int(math.sin(rad)*14)), (cx + int(math.cos(rad)*19), cy + int(math.sin(rad)*19)), 2)
 
             elif t_idx == 3:
-                # 3: Giant Harvest Basket with Fruit & Flower Icon
+                # 3: Giant Harvest Basket
                 bask_col = (255, 255, 255) if is_sel else (194, 65, 12)
                 pygame.draw.polygon(surf, bask_col, [
-                    (cx - 20, cy - 2), (cx + 20, cy - 2),
-                    (cx + 14, cy + 18), (cx - 14, cy + 18)
+                    (cx - 16, cy - 2), (cx + 16, cy - 2),
+                    (cx + 11, cy + 14), (cx - 11, cy + 14)
                 ])
-                # Woven handle
-                pygame.draw.arc(surf, bask_col, pygame.Rect(cx - 16, cy - 20, 32, 24), 0, 3.14, 3)
-                # Red strawberry inside
-                pygame.draw.circle(surf, (239, 68, 68), (cx - 6, cy - 6), 7)
-                # Golden sunflower inside
-                pygame.draw.circle(surf, (250, 204, 21), (cx + 8, cy - 8), 8)
+                pygame.draw.arc(surf, bask_col, pygame.Rect(cx - 13, cy - 16, 26, 20), 0, 3.14, 3)
+                pygame.draw.circle(surf, (239, 68, 68), (cx - 4, cy - 5), 5)
+                pygame.draw.circle(surf, (234, 179, 8), (cx + 5, cy - 5), 5)
+
+            # Supporting label underneath
+            lbl_surf = typography.render(lbl, FontRole.DISPLAY, 16, (255, 255, 255) if is_sel else col)
+            surf.blit(lbl_surf, (cx - lbl_surf.get_width() // 2, b_rect.bottom - 22))
 
         # 6. Victory Modal
         if is_victory:

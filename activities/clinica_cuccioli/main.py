@@ -150,95 +150,193 @@ VetAudio = ClinicAudio
 def _draw_tool_icon(surface: pygame.Surface, tool_id: str, cx: int, cy: int, size: int) -> None:
     r = size // 2
     if tool_id == "stethoscope":
-        pygame.draw.arc(surface, (59, 130, 246), pygame.Rect(cx - r * 3 // 4, cy - r, r * 3 // 2, r * 3 // 2), math.pi, 2 * math.pi, 5)
-        pygame.draw.circle(surface, (148, 163, 184), (cx, cy + r // 2), r // 3)
-        pygame.draw.circle(surface, (59, 130, 246), (cx, cy + r // 2), r // 6)
+        # Stethoscope (Earpieces + Tube + Chest piece)
+        pygame.draw.arc(surface, (37, 99, 235), pygame.Rect(cx - r * 3 // 4, cy - r, r * 3 // 2, r * 3 // 2), 0.8, 2.34, 5)
+        pygame.draw.line(surface, (37, 99, 235), (cx, cy), (cx, cy + r // 2), 5)
+        pygame.draw.circle(surface, (203, 213, 225), (cx, cy + r // 2), r // 3 + 2)
+        pygame.draw.circle(surface, (59, 130, 246), (cx, cy + r // 2), r // 5)
+        pygame.draw.circle(surface, (255, 255, 255), (cx - 2, cy + r // 2 - 2), 2)
     elif tool_id == "bath":
-        pygame.draw.rect(surface, (14, 165, 233), (cx - r * 3 // 4, cy - r // 4, r * 3 // 2, r), border_radius=8)
-        pygame.draw.circle(surface, (224, 242, 254), (cx - r // 3, cy - r // 2), r // 3)
-        pygame.draw.circle(surface, (224, 242, 254), (cx + r // 4, cy - r * 2 // 3), r // 4)
+        # Soap Bar with Frothy White Bubbles
+        pygame.draw.rect(surface, (14, 165, 233), pygame.Rect(cx - r * 3 // 4, cy - r // 4, r * 3 // 2, r * 3 // 4), border_radius=10)
+        pygame.draw.rect(surf:=surface, (56, 189, 248), pygame.Rect(cx - r * 3 // 4 + 4, cy - r // 4 + 3, r * 3 // 2 - 8, r * 3 // 4 - 6), border_radius=6)
+        # Bubbles on top
+        pygame.draw.circle(surface, (255, 255, 255), (cx - r // 3, cy - r // 2), r // 3)
+        pygame.draw.circle(surface, (224, 242, 254), (cx - r // 3, cy - r // 2), r // 3, 2)
+        pygame.draw.circle(surface, (255, 255, 255), (cx + r // 4, cy - r * 2 // 3), r // 4)
+        pygame.draw.circle(surface, (224, 242, 254), (cx + r // 4, cy - r * 2 // 3), r // 4, 2)
+        pygame.draw.circle(surface, (255, 255, 255), (cx + r // 2, cy - r // 3), r // 5)
     elif tool_id == "bandaid":
-        pygame.draw.rect(surface, (244, 114, 182), (cx - r, cy - r // 3, size, r * 2 // 3), border_radius=8)
-        pygame.draw.rect(surface, (255, 255, 255), (cx - r // 4, cy - r // 3, r // 2, r * 2 // 3))
-        pygame.draw.circle(surface, (244, 63, 94), (cx, cy), max(2, r // 6))
+        # Cute Pink Band-Aid with White Pad and Cross
+        pygame.draw.rect(surface, (244, 114, 182), pygame.Rect(cx - r, cy - r // 3, size, r * 2 // 3), border_radius=8)
+        pygame.draw.rect(surface, (251, 207, 232), pygame.Rect(cx - r + 3, cy - r // 3 + 2, size - 6, r * 2 // 3 - 4), border_radius=6)
+        pygame.draw.rect(surface, (255, 255, 255), pygame.Rect(cx - r // 3, cy - r // 3, r * 2 // 3, r * 2 // 3), border_radius=4)
+        # Pink Cross
+        pygame.draw.rect(surface, (236, 72, 153), pygame.Rect(cx - 3, cy - 8, 6, 16), border_radius=2)
+        pygame.draw.rect(surface, (236, 72, 153), pygame.Rect(cx - 8, cy - 3, 16, 6), border_radius=2)
     elif tool_id == "food":
-        pygame.draw.ellipse(surface, (234, 179, 8), pygame.Rect(cx - r, cy - r // 4, size, r))
-        pygame.draw.circle(surface, (180, 83, 9), (cx - r // 4, cy - r // 3), max(2, r // 4))
-        pygame.draw.circle(surface, (180, 83, 9), (cx + r // 4, cy - r // 3), max(2, r // 4))
+        # Food Bowl with Yummy Kibble
+        pygame.draw.ellipse(surface, (234, 179, 8), pygame.Rect(cx - r, cy - r // 4, size, r * 3 // 4))
+        pygame.draw.ellipse(surface, (202, 138, 4), pygame.Rect(cx - r * 4 // 5, cy - r // 6, r * 8 // 5, r // 2))
+        # Kibble treats
+        pygame.draw.circle(surface, (180, 83, 9), (cx - r // 3, cy - r // 8), 6)
+        pygame.draw.circle(surface, (180, 83, 9), (cx, cy - r // 6), 7)
+        pygame.draw.circle(surface, (180, 83, 9), (cx + r // 3, cy - r // 8), 6)
+        pygame.draw.circle(surface, (251, 146, 60), (cx - r // 6, cy + 2), 5)
+        pygame.draw.circle(surface, (251, 146, 60), (cx + r // 6, cy + 2), 5)
     else:  # cuddle
+        # Big Vibrant Heart with Sparkle
         pygame.draw.circle(surface, (239, 68, 68), (cx - r // 3, cy - r // 4), r // 2)
         pygame.draw.circle(surface, (239, 68, 68), (cx + r // 3, cy - r // 4), r // 2)
-        pygame.draw.polygon(surface, (239, 68, 68), [(cx - r * 3 // 4, cy - r // 8), (cx + r * 3 // 4, cy - r // 8), (cx, cy + r * 3 // 4)])
+        pygame.draw.polygon(surface, (239, 68, 68), [(cx - r * 4 // 5, cy - r // 8), (cx + r * 4 // 5, cy - r // 8), (cx, cy + r * 4 // 5)])
+        # Heart Highlight
+        pygame.draw.circle(surface, (254, 202, 202), (cx - r // 3, cy - r // 3), 4)
+        pygame.draw.circle(surface, (255, 255, 255), (cx + r // 4, cy - r // 3), 3)
 
 
-def _draw_patient(surface: pygame.Surface, patient_id: str, cx: int, cy: int, size: int, has_mud: bool, has_scratch: bool) -> None:
-    r = size // 2
-    # Body
+def _draw_patient(surface: pygame.Surface, patient_id: str, cx: int, cy: int, size: int, has_mud: bool, has_scratch: bool, is_happy: bool = False) -> None:
+    # 1. Plush Examination Bed / Cushion
+    bed_w = size * 7 // 4
+    bed_h = size
+    pygame.draw.ellipse(surface, (241, 245, 249), pygame.Rect(cx - bed_w // 2, cy - bed_h // 3, bed_w, bed_h))
+    pygame.draw.ellipse(surface, (203, 213, 225), pygame.Rect(cx - bed_w // 2, cy - bed_h // 3, bed_w, bed_h), 4)
+
+    # 2. Animal Body (Centered, cute plump pose)
+    body_y = cy + 20
+    body_w = size * 5 // 4
+    body_h = size * 3 // 4
+
+    head_y = cy - 40
+    head_r = size * 2 // 5
+
     if patient_id == "dog":
-        pygame.draw.ellipse(surface, (217, 119, 6), pygame.Rect(cx - r, cy - r // 2, size, r * 5 // 4))
-        pygame.draw.ellipse(surface, (254, 243, 199), pygame.Rect(cx - r // 2, cy - r // 4, r, r * 3 // 4))
-        # Head
-        pygame.draw.circle(surface, (217, 119, 6), (cx - r // 2, cy - r // 2), r * 2 // 3)
-        # Floppy Ears
-        pygame.draw.ellipse(surface, (180, 83, 9), pygame.Rect(cx - r - 10, cy - r // 2, r // 2, r))
-        pygame.draw.ellipse(surface, (180, 83, 9), pygame.Rect(cx - r // 3, cy - r // 2, r // 2, r))
-        # Muzzle & Eyes
-        pygame.draw.circle(surface, (254, 243, 199), (cx - r // 2, cy - r // 3), r // 3)
-        pygame.draw.circle(surface, (20, 20, 30), (cx - r // 2, cy - r // 3), 6)  # Nose
-        pygame.draw.circle(surface, (20, 20, 30), (cx - r * 2 // 3, cy - r * 3 // 5), 7)
-        pygame.draw.circle(surface, (20, 20, 30), (cx - r // 3, cy - r * 3 // 5), 7)
-        pygame.draw.circle(surface, (255, 255, 255), (cx - r * 2 // 3 + 2, cy - r * 3 // 5 - 2), 2)
-        pygame.draw.circle(surface, (255, 255, 255), (cx - r // 3 + 2, cy - r * 3 // 5 - 2), 2)
+        body_col = (217, 119, 6)
+        ear_col = (180, 83, 9)
+        muzzle_col = (254, 243, 199)
         # Tail
-        pygame.draw.arc(surface, (217, 119, 6), pygame.Rect(cx + r * 2 // 3, cy - r // 2, r // 2, r // 2), 0.5, 2.8, 8)
+        pygame.draw.arc(surface, body_col, pygame.Rect(cx + body_w // 3, body_y - 30, 60, 50), 0.5, 3.0, 10)
+        # Body
+        pygame.draw.ellipse(surface, body_col, pygame.Rect(cx - body_w // 2, body_y - body_h // 2, body_w, body_h))
+        pygame.draw.ellipse(surface, muzzle_col, pygame.Rect(cx - body_w // 3, body_y - body_h // 3, body_w * 2 // 3, body_h * 2 // 3))
+        # Paws
+        pygame.draw.ellipse(surface, muzzle_col, pygame.Rect(cx - 50, body_y + 30, 36, 24))
+        pygame.draw.ellipse(surface, muzzle_col, pygame.Rect(cx + 14, body_y + 30, 36, 24))
+        # Head
+        pygame.draw.circle(surface, body_col, (cx, head_y), head_r)
+        # Floppy Ears
+        pygame.draw.ellipse(surface, ear_col, pygame.Rect(cx - head_r - 20, head_y - 20, 32, 70))
+        pygame.draw.ellipse(surface, ear_col, pygame.Rect(cx + head_r - 12, head_y - 20, 32, 70))
+        # Muzzle
+        pygame.draw.ellipse(surface, muzzle_col, pygame.Rect(cx - 30, head_y, 60, 44))
+        pygame.draw.circle(surface, (20, 20, 30), (cx, head_y + 10), 9)  # Nose
+        # Eyes
+        pygame.draw.circle(surface, (20, 20, 30), (cx - 24, head_y - 8), 10)
+        pygame.draw.circle(surface, (20, 20, 30), (cx + 24, head_y - 8), 10)
+        pygame.draw.circle(surface, (255, 255, 255), (cx - 27, head_y - 12), 4)
+        pygame.draw.circle(surface, (255, 255, 255), (cx + 21, head_y - 12), 4)
+        # Cheeks
+        pygame.draw.circle(surface, (251, 146, 60), (cx - 36, head_y + 12), 8)
+        pygame.draw.circle(surface, (251, 146, 60), (cx + 36, head_y + 12), 8)
+        # Mouth / Tongue
+        if is_happy:
+            pygame.draw.circle(surface, (244, 114, 182), (cx, head_y + 24), 8)
 
     elif patient_id == "cat":
-        pygame.draw.ellipse(surface, (251, 146, 60), pygame.Rect(cx - r, cy - r // 2, size, r * 5 // 4))
-        pygame.draw.circle(surface, (251, 146, 60), (cx - r // 2, cy - r // 2), r * 2 // 3)
-        # Pointy ears
-        pygame.draw.polygon(surface, (251, 146, 60), [(cx - r, cy - r // 2), (cx - r * 3 // 4, cy - r), (cx - r // 2, cy - r // 2)])
-        pygame.draw.polygon(surface, (244, 114, 182), [(cx - r + 4, cy - r // 2), (cx - r * 3 // 4, cy - r + 8), (cx - r // 2 - 4, cy - r // 2)])
-        pygame.draw.polygon(surface, (251, 146, 60), [(cx - r // 2, cy - r // 2), (cx - r // 4, cy - r), (cx, cy - r // 2)])
-        pygame.draw.polygon(surface, (244, 114, 182), [(cx - r // 2 + 4, cy - r // 2), (cx - r // 4, cy - r + 8), (cx - 4, cy - r // 2)])
-        # Eyes & cute nose
-        pygame.draw.circle(surface, (20, 20, 30), (cx - r * 2 // 3, cy - r * 3 // 5), 7)
-        pygame.draw.circle(surface, (20, 20, 30), (cx - r // 3, cy - r * 3 // 5), 7)
-        pygame.draw.circle(surface, (244, 114, 182), (cx - r // 2, cy - r // 3), 5)
+        body_col = (251, 146, 60)
+        ear_col = (244, 114, 182)
+        muzzle_col = (255, 255, 255)
+        # Tail
+        pygame.draw.arc(surface, body_col, pygame.Rect(cx + body_w // 3, body_y - 30, 50, 60), 0.2, 2.5, 9)
+        # Body
+        pygame.draw.ellipse(surface, body_col, pygame.Rect(cx - body_w // 2, body_y - body_h // 2, body_w, body_h))
+        pygame.draw.ellipse(surface, muzzle_col, pygame.Rect(cx - body_w // 3, body_y - body_h // 3, body_w * 2 // 3, body_h * 2 // 3))
+        # Paws
+        pygame.draw.ellipse(surface, muzzle_col, pygame.Rect(cx - 50, body_y + 30, 34, 22))
+        pygame.draw.ellipse(surface, muzzle_col, pygame.Rect(cx + 16, body_y + 30, 34, 22))
+        # Head
+        pygame.draw.circle(surface, body_col, (cx, head_y), head_r)
+        # Pointy Ears
+        pygame.draw.polygon(surface, body_col, [(cx - head_r + 4, head_y - 10), (cx - head_r - 10, head_y - 65), (cx - 10, head_y - 35)])
+        pygame.draw.polygon(surface, ear_col, [(cx - head_r + 8, head_y - 12), (cx - head_r - 6, head_y - 55), (cx - 16, head_y - 32)])
+        pygame.draw.polygon(surface, body_col, [(cx + head_r - 4, head_y - 10), (cx + head_r + 10, head_y - 65), (cx + 10, head_y - 35)])
+        pygame.draw.polygon(surface, ear_col, [(cx + head_r - 8, head_y - 12), (cx + head_r + 6, head_y - 55), (cx + 16, head_y - 32)])
+        # Muzzle & Whiskers
+        pygame.draw.ellipse(surface, muzzle_col, pygame.Rect(cx - 26, head_y + 2, 52, 36))
+        pygame.draw.polygon(surface, ear_col, [(cx - 7, head_y + 10), (cx + 7, head_y + 10), (cx, head_y + 16)])  # Nose
+        # Whiskers
+        pygame.draw.line(surface, (20, 20, 30), (cx - 30, head_y + 14), (cx - 60, head_y + 10), 2)
+        pygame.draw.line(surface, (20, 20, 30), (cx - 30, head_y + 18), (cx - 60, head_y + 22), 2)
+        pygame.draw.line(surface, (20, 20, 30), (cx + 30, head_y + 14), (cx + 60, head_y + 10), 2)
+        pygame.draw.line(surface, (20, 20, 30), (cx + 30, head_y + 18), (cx + 60, head_y + 22), 2)
+        # Big Emerald Cat Eyes
+        pygame.draw.circle(surface, (16, 185, 129), (cx - 24, head_y - 8), 10)
+        pygame.draw.circle(surface, (16, 185, 129), (cx + 24, head_y - 8), 10)
+        pygame.draw.circle(surface, (20, 20, 30), (cx - 24, head_y - 8), 6)
+        pygame.draw.circle(surface, (20, 20, 30), (cx + 24, head_y - 8), 6)
+        pygame.draw.circle(surface, (255, 255, 255), (cx - 27, head_y - 12), 4)
+        pygame.draw.circle(surface, (255, 255, 255), (cx + 21, head_y - 12), 4)
 
     elif patient_id == "bunny":
-        pygame.draw.ellipse(surface, (248, 250, 252), pygame.Rect(cx - r, cy - r // 2, size, r * 5 // 4))
-        pygame.draw.circle(surface, (248, 250, 252), (cx - r // 2, cy - r // 2), r * 2 // 3)
-        # Long bunny ears
-        pygame.draw.ellipse(surface, (248, 250, 252), pygame.Rect(cx - r * 3 // 4, cy - r * 5 // 4, r // 3, r * 4 // 5))
-        pygame.draw.ellipse(surface, (244, 114, 182), pygame.Rect(cx - r * 3 // 4 + 3, cy - r * 5 // 4 + 6, r // 3 - 6, r * 4 // 5 - 12))
-        pygame.draw.ellipse(surface, (248, 250, 252), pygame.Rect(cx - r // 3, cy - r * 5 // 4, r // 3, r * 4 // 5))
-        pygame.draw.ellipse(surface, (244, 114, 182), pygame.Rect(cx - r // 3 + 3, cy - r * 5 // 4 + 6, r // 3 - 6, r * 4 // 5 - 12))
-        # Eyes & pink nose
-        pygame.draw.circle(surface, (20, 20, 30), (cx - r * 2 // 3, cy - r * 3 // 5), 6)
-        pygame.draw.circle(surface, (20, 20, 30), (cx - r // 3, cy - r * 3 // 5), 6)
-        pygame.draw.circle(surface, (244, 114, 182), (cx - r // 2, cy - r // 3), 4)
+        body_col = (248, 250, 252)
+        ear_col = (244, 114, 182)
+        muzzle_col = (255, 255, 255)
+        # Body
+        pygame.draw.ellipse(surface, body_col, pygame.Rect(cx - body_w // 2, body_y - body_h // 2, body_w, body_h))
+        # Paws & Fluffy Tail
+        pygame.draw.circle(surface, (255, 255, 255), (cx + body_w // 2, body_y), 18)
+        pygame.draw.ellipse(surface, (255, 255, 255), pygame.Rect(cx - 50, body_y + 30, 34, 22))
+        pygame.draw.ellipse(surface, (255, 255, 255), pygame.Rect(cx + 16, body_y + 30, 34, 22))
+        # Tall Bunny Ears
+        pygame.draw.ellipse(surface, body_col, pygame.Rect(cx - 38, head_y - 95, 28, 75))
+        pygame.draw.ellipse(surface, ear_col, pygame.Rect(cx - 32, head_y - 88, 16, 60))
+        pygame.draw.ellipse(surface, body_col, pygame.Rect(cx + 10, head_y - 95, 28, 75))
+        pygame.draw.ellipse(surface, ear_col, pygame.Rect(cx + 16, head_y - 88, 16, 60))
+        # Head
+        pygame.draw.circle(surface, body_col, (cx, head_y), head_r)
+        # Eyes
+        pygame.draw.circle(surface, (20, 20, 30), (cx - 22, head_y - 6), 9)
+        pygame.draw.circle(surface, (20, 20, 30), (cx + 22, head_y - 6), 9)
+        pygame.draw.circle(surface, (255, 255, 255), (cx - 25, head_y - 9), 4)
+        pygame.draw.circle(surface, (255, 255, 255), (cx + 19, head_y - 9), 4)
+        # Pink Nose & Cheeks
+        pygame.draw.circle(surface, ear_col, (cx, head_y + 8), 6)
+        pygame.draw.circle(surface, (251, 113, 133), (cx - 32, head_y + 8), 8)
+        pygame.draw.circle(surface, (251, 113, 133), (cx + 32, head_y + 8), 8)
 
     else:  # bear
-        pygame.draw.ellipse(surface, (146, 64, 14), pygame.Rect(cx - r, cy - r // 2, size, r * 5 // 4))
-        pygame.draw.circle(surface, (146, 64, 14), (cx - r // 2, cy - r // 2), r * 2 // 3)
-        # Round bear ears
-        pygame.draw.circle(surface, (120, 53, 15), (cx - r * 3 // 4, cy - r * 4 // 5), r // 4)
-        pygame.draw.circle(surface, (120, 53, 15), (cx - r // 4, cy - r * 4 // 5), r // 4)
-        pygame.draw.circle(surface, (254, 215, 170), (cx - r // 2, cy - r // 3), r // 3)
-        pygame.draw.circle(surface, (20, 20, 30), (cx - r // 2, cy - r // 3), 6)
-        pygame.draw.circle(surface, (20, 20, 30), (cx - r * 2 // 3, cy - r * 3 // 5), 6)
-        pygame.draw.circle(surface, (20, 20, 30), (cx - r // 3, cy - r * 3 // 5), 6)
+        body_col = (146, 64, 14)
+        ear_col = (120, 53, 15)
+        muzzle_col = (254, 215, 170)
+        # Body
+        pygame.draw.ellipse(surface, body_col, pygame.Rect(cx - body_w // 2, body_y - body_h // 2, body_w, body_h))
+        pygame.draw.ellipse(surface, muzzle_col, pygame.Rect(cx - body_w // 3, body_y - body_h // 3, body_w * 2 // 3, body_h * 2 // 3))
+        # Round Ears
+        pygame.draw.circle(surface, ear_col, (cx - 36, head_y - 36), 20)
+        pygame.draw.circle(surface, muzzle_col, (cx - 36, head_y - 36), 12)
+        pygame.draw.circle(surface, ear_col, (cx + 36, head_y - 36), 20)
+        pygame.draw.circle(surface, muzzle_col, (cx + 36, head_y - 36), 12)
+        # Head
+        pygame.draw.circle(surface, body_col, (cx, head_y), head_r)
+        # Snout
+        pygame.draw.ellipse(surface, muzzle_col, pygame.Rect(cx - 30, head_y, 60, 44))
+        pygame.draw.circle(surface, (20, 20, 30), (cx, head_y + 10), 8)  # Nose
+        # Eyes
+        pygame.draw.circle(surface, (20, 20, 30), (cx - 24, head_y - 8), 9)
+        pygame.draw.circle(surface, (20, 20, 30), (cx + 24, head_y - 8), 9)
+        pygame.draw.circle(surface, (255, 255, 255), (cx - 27, head_y - 11), 3)
+        pygame.draw.circle(surface, (255, 255, 255), (cx + 21, head_y - 11), 3)
 
-    # Mud Spots on Body
+    # 3. Dynamic Mud Splatters
     if has_mud:
-        for m_off in [(cx, cy), (cx + r // 3, cy + r // 4), (cx + r // 2, cy - r // 6)]:
-            pygame.draw.circle(surface, (120, 53, 15), m_off, 14)
-            pygame.draw.circle(surface, (90, 40, 10), m_off, 8)
+        for mx_off, my_off, m_rad in [(cx - 40, body_y - 10, 16), (cx + 35, body_y + 10, 20), (cx - 10, body_y + 20, 14), (cx + 45, head_y + 15, 12)]:
+            pygame.draw.circle(surface, (120, 53, 15), (mx_off, my_off), m_rad)
+            pygame.draw.circle(surface, (90, 40, 10), (mx_off - 2, my_off - 2), m_rad * 2 // 3)
 
-    # Scratch / Boo-boo on Body
+    # 4. Boo-boo Scrapes / Band-aid target
     if has_scratch:
-        pygame.draw.line(surface, (239, 68, 68), (cx + r // 4, cy - r // 4), (cx + r // 2, cy + r // 6), 4)
-        pygame.draw.line(surface, (239, 68, 68), (cx + r // 4, cy + r // 6), (cx + r // 2, cy - r // 4), 4)
+        pygame.draw.rect(surface, (254, 202, 202), pygame.Rect(cx + 20, body_y - 25, 40, 26), border_radius=6)
+        pygame.draw.line(surface, (239, 68, 68), (cx + 25, body_y - 20), (cx + 55, body_y - 8), 4)
+        pygame.draw.line(surface, (239, 68, 68), (cx + 30, body_y - 8), (cx + 50, body_y - 20), 4)
 
 
 def _is_safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
@@ -324,40 +422,66 @@ def main() -> int:
                         setup_patient(0)
                     continue
 
-                # Tool selection from bottom palette
-                palette_y = 475
+                # Tool selection & direct cure from bottom palette
+                palette_y = 480
+                table_rect = pygame.Rect(REFERENCE_WIDTH // 2 - 250, 150, 500, 270)
                 for t_idx, tool in enumerate(TOOLS):
-                    btn_rect = pygame.Rect(80 + t_idx * 175, palette_y, 150, 96)
+                    btn_rect = pygame.Rect(60 + t_idx * 185, palette_y, 165, 96)
                     if btn_rect.collidepoint(mx, my):
                         selected_tool_id = tool["id"]
-                        sounds.play(tool["id"])
+                        if tool["id"] in required_steps and tool["id"] not in completed_steps:
+                            completed_steps.append(tool["id"])
+                            sounds.play(tool["id"])
+                            for _ in range(16):
+                                hearts_and_sparkles.append({
+                                    "x": table_rect.centerx + random.uniform(-50, 50),
+                                    "y": table_rect.centery + random.uniform(-40, 40),
+                                    "vx": random.uniform(-2.5, 2.5),
+                                    "vy": random.uniform(-4.5, -1.0),
+                                    "color": (239, 68, 68) if tool["id"] == "cuddle" else ((56, 189, 248) if tool["id"] == "bath" else (254, 240, 138)),
+                                    "size": random.uniform(6, 12),
+                                    "life": 1.0,
+                                })
+                            rem = [t for t in required_steps if t not in completed_steps]
+                            if rem:
+                                selected_tool_id = rem[0]
+                            else:
+                                sounds.play("win")
+                                total_stars += 1
+                                if storage:
+                                    storage.kv_set(STORAGE_KEY, {"stars": total_stars})
+                                try:
+                                    emit_activity_event("clinic.patient_cured", {"patient": cur_patient["id"], "stars": total_stars})
+                                except Exception:
+                                    pass
+                                patient_idx += 1
+                                if patient_idx >= 5:
+                                    is_victory = True
+                                else:
+                                    setup_patient(patient_idx)
+                        else:
+                            sounds.play(tool["id"])
                         continue
 
                 # Patient exam table tap
-                exam_table = pygame.Rect(REFERENCE_WIDTH // 2 - 240, 160, 480, 280)
-                if exam_table.collidepoint(mx, my) and next_needed is not None:
+                if table_rect.collidepoint(mx, my) and next_needed is not None:
                     if selected_tool_id == next_needed:
                         completed_steps.append(selected_tool_id)
                         sounds.play(selected_tool_id)
-
-                        # Spawn celebration particles
-                        for _ in range(14):
+                        for _ in range(16):
                             hearts_and_sparkles.append({
-                                "x": mx + random.uniform(-20, 20),
-                                "y": my + random.uniform(-20, 20),
-                                "vx": random.uniform(-2, 2),
-                                "vy": random.uniform(-4, -1),
+                                "x": mx + random.uniform(-30, 30),
+                                "y": my + random.uniform(-30, 30),
+                                "vx": random.uniform(-2.5, 2.5),
+                                "vy": random.uniform(-4.5, -1.0),
                                 "color": (239, 68, 68) if selected_tool_id == "cuddle" else (254, 240, 138),
                                 "size": random.uniform(6, 12),
                                 "life": 1.0,
                             })
-
-                        # Auto-select next needed tool
                         rem = [t for t in required_steps if t not in completed_steps]
                         if rem:
                             selected_tool_id = rem[0]
                         else:
-                            # Patient healed!
                             sounds.play("win")
                             total_stars += 1
                             if storage:
@@ -366,9 +490,8 @@ def main() -> int:
                                 emit_activity_event("clinic.patient_cured", {"patient": cur_patient["id"], "stars": total_stars})
                             except Exception:
                                 pass
-
                             patient_idx += 1
-                            if patient_idx >= 4:
+                            if patient_idx >= 5:
                                 is_victory = True
                             else:
                                 setup_patient(patient_idx)
@@ -387,8 +510,7 @@ def main() -> int:
         surf = canvas.surface
 
         # 1. Warm Clinic Wallpaper
-        surf.fill((255, 247, 237))  # Cozy warm cream
-        # Pastel wall stripes
+        surf.fill((255, 247, 237))
         for sx in range(0, REFERENCE_WIDTH, 48):
             pygame.draw.rect(surf, (254, 237, 222), (sx, 0, 24, REFERENCE_HEIGHT))
 
@@ -397,57 +519,70 @@ def main() -> int:
         pygame.draw.line(surf, (217, 119, 6), (0, 420), (REFERENCE_WIDTH, 420), 4)
 
         # 2. Examination Bed
-        table_rect = pygame.Rect(REFERENCE_WIDTH // 2 - 250, 160, 500, 260)
+        table_rect = pygame.Rect(REFERENCE_WIDTH // 2 - 250, 150, 500, 270)
         pygame.draw.rect(surf, (255, 255, 255), table_rect, border_radius=28)
         pygame.draw.rect(surf, (203, 213, 225), table_rect, width=6, border_radius=28)
         pygame.draw.ellipse(surf, (241, 245, 249), pygame.Rect(table_rect.left + 20, table_rect.top + 20, table_rect.width - 40, table_rect.height - 40))
 
-        # 3. Patient Creature (Center of Examination Table)
-        _draw_patient(surf, cur_patient["id"], table_rect.centerx + 20, table_rect.centery + 15, 180, has_mud, has_scratch)
+        # 3. Patient Creature
+        _draw_patient(surf, cur_patient["id"], table_rect.centerx, table_rect.centery + 15, 180, has_mud, has_scratch, is_happy=(next_needed is None))
 
-        # 4. Animated Thought Bubble (Zero-Text Prescription Goal)
-        if next_needed is not None:
-            tb_x = table_rect.left + 70
-            tb_y = table_rect.top + 30
-            # Small bubble dots
-            pygame.draw.circle(surf, (255, 255, 255), (tb_x + 50, tb_y + 45), 8)
-            pygame.draw.circle(surf, (255, 255, 255), (tb_x + 35, tb_y + 30), 12)
-            # Main Thought Bubble
-            pygame.draw.circle(surf, (255, 255, 255), (tb_x, tb_y), 44)
-            pygame.draw.circle(surf, (234, 179, 8), (tb_x, tb_y), 44, 4)
-            # Draw needed tool icon inside bubble
-            _draw_tool_icon(surf, next_needed, tb_x, tb_y, 48)
+        # 4. Prescription Clipboard / Step Badges (Top Center)
+        clip_w = max(260, len(required_steps) * 80 + 40)
+        clip_rect = pygame.Rect(REFERENCE_WIDTH // 2 - clip_w // 2, 14, clip_w, 64)
+        pygame.draw.rect(surf, (255, 255, 255), clip_rect, border_radius=20)
+        pygame.draw.rect(surf, (234, 179, 8), clip_rect, width=3, border_radius=20)
 
-        # 5. Step Progress Badges (Top Center)
-        badge_start_x = REFERENCE_WIDTH // 2 - (len(required_steps) * 45) // 2
+        badge_start_x = clip_rect.left + 45
         for s_idx, step_id in enumerate(required_steps):
-            bx = badge_start_x + s_idx * 50
-            by = 40
+            bx = badge_start_x + s_idx * 75
+            by = clip_rect.centery
             is_done = step_id in completed_steps
-            pygame.draw.circle(surf, (34, 197, 94) if is_done else (255, 255, 255), (bx, by), 20)
-            pygame.draw.circle(surf, (22, 101, 52) if is_done else (203, 213, 225), (bx, by), 20, 3)
-            if is_done:
-                pygame.draw.circle(surf, (254, 240, 138), (bx, by), 8)
-            else:
-                _draw_tool_icon(surf, step_id, bx, by, 22)
+            is_current = (step_id == next_needed)
 
-        # 6. Floating Particles
+            badge_col = (34, 197, 94) if is_done else ((254, 240, 138) if is_current else (241, 245, 249))
+            border_col = (22, 101, 52) if is_done else ((234, 179, 8) if is_current else (203, 213, 225))
+            pygame.draw.circle(surf, badge_col, (bx, by), 24)
+            pygame.draw.circle(surf, border_col, (bx, by), 24, 3 if is_current else 2)
+
+            if is_done:
+                # Big Green Checkmark
+                pygame.draw.circle(surf, (34, 197, 94), (bx, by), 22)
+                pygame.draw.polygon(surf, (255, 255, 255), [(bx - 8, by), (bx - 2, by + 6), (bx + 8, by - 6)], 3)
+            else:
+                _draw_tool_icon(surf, step_id, bx, by, 30)
+
+        # 5. Floating Particles
         for p in hearts_and_sparkles:
             pygame.draw.circle(surf, p["color"], (int(p["x"]), int(p["y"])), int(p["size"]))
 
-        # 7. Bottom Tool Palette (Giant Chunky 150x96px Targets)
-        palette_y = 475
+        # 6. Bottom Tool Palette (Giant Chunky 165x96px Targets with Icon + Text)
+        palette_y = 480
+        tool_labels_it = {
+            "stethoscope": "VISITA",
+            "bath": "BAGNETTO",
+            "bandaid": "CEROTTO",
+            "food": "PAPPA",
+            "cuddle": "COCCOLE",
+        }
         for t_idx, tool in enumerate(TOOLS):
-            btn_rect = pygame.Rect(80 + t_idx * 175, palette_y, 150, 96)
+            btn_rect = pygame.Rect(60 + t_idx * 185, palette_y, 165, 96)
             is_sel = (tool["id"] == selected_tool_id)
             is_active_needed = (tool["id"] == next_needed)
 
             pygame.draw.rect(surf, (255, 255, 255), btn_rect, border_radius=22)
             outline_col = (234, 179, 8) if is_sel else ((34, 197, 94) if is_active_needed else (203, 213, 225))
-            pygame.draw.rect(surf, outline_col, btn_rect, width=5 if is_sel else (4 if is_active_needed else 2), border_radius=22)
-            _draw_tool_icon(surf, tool["id"], btn_rect.centerx, btn_rect.centery, 58)
+            pygame.draw.rect(surf, outline_col, btn_rect, width=5 if (is_sel or is_active_needed) else 2, border_radius=22)
 
-        # 8. Star Pill (Top Left)
+            # Icon at top
+            _draw_tool_icon(surf, tool["id"], btn_rect.centerx, btn_rect.top + 36, 52)
+            # Supporting text underneath
+            lbl = tool_labels_it.get(tool["id"], tool["id"].upper())
+            t_col = (180, 83, 9) if is_sel else ((22, 101, 52) if is_active_needed else (71, 85, 105))
+            lbl_surf = typography.render(lbl, FontRole.DISPLAY, 18, t_col)
+            surf.blit(lbl_surf, (btn_rect.centerx - lbl_surf.get_width() // 2, btn_rect.bottom - 26))
+
+        # 7. Star Pill (Top Left)
         star_pill = pygame.Rect(80, 16, 130, 56)
         pygame.draw.rect(surf, (255, 255, 255), star_pill, border_radius=18)
         pygame.draw.rect(surf, (234, 179, 8), star_pill, width=3, border_radius=18)
@@ -455,7 +590,7 @@ def main() -> int:
         s_txt = typography.render(str(total_stars), FontRole.DISPLAY, 28, (180, 83, 9))
         surf.blit(s_txt, (star_pill.left + 58, star_pill.centery - s_txt.get_height() // 2))
 
-        # 9. Victory Modal
+        # 8. Victory Modal
         if is_victory:
             overlay = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.SRCALPHA)
             overlay.fill((10, 15, 30, 210))

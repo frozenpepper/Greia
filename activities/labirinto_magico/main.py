@@ -89,9 +89,10 @@ HEROES = [
 ]
 
 DIFFICULTIES = [
-    {"id": "small", "cols": 11, "rows": 7, "stars": 3},
-    {"id": "medium", "cols": 15, "rows": 9, "stars": 5},
-    {"id": "large", "cols": 19, "rows": 11, "stars": 7},
+    {"id": "small", "label_it": "FACILE", "label_en": "EASY", "cols": 9, "rows": 7, "stars": 3},
+    {"id": "medium", "label_it": "MEDIO", "label_en": "MEDIUM", "cols": 13, "rows": 9, "stars": 5},
+    {"id": "large", "label_it": "GRANDE", "label_en": "LARGE", "cols": 17, "rows": 11, "stars": 7},
+    {"id": "giant", "label_it": "GIGANTE", "label_en": "GIANT", "cols": 21, "rows": 13, "stars": 9},
 ]
 
 
@@ -370,7 +371,7 @@ def main() -> int:
                     continue
 
                 # Firefly Hint Button
-                hint_btn = pygame.Rect(REFERENCE_WIDTH - 160, 16, 140, 56)
+                hint_btn = pygame.Rect(REFERENCE_WIDTH - 150, 14, 130, 58)
                 if hint_btn.collidepoint(mx, my) and not is_victory:
                     path = MazeEngine.solve_bfs(grid, player_r, player_c, exit_pos["r"], exit_pos["c"])
                     if path:
@@ -383,17 +384,17 @@ def main() -> int:
                     continue
 
                 # Bottom Controls
-                hero_btn = pygame.Rect(REFERENCE_WIDTH // 2 - 240, REFERENCE_HEIGHT - 65, 140, 54)
+                hero_btn = pygame.Rect(REFERENCE_WIDTH // 2 - 270, REFERENCE_HEIGHT - 72, 160, 64)
                 if hero_btn.collidepoint(mx, my):
                     hero_idx = (hero_idx + 1) % len(HEROES)
                     continue
 
-                biome_btn = pygame.Rect(REFERENCE_WIDTH // 2 - 70, REFERENCE_HEIGHT - 65, 140, 54)
+                biome_btn = pygame.Rect(REFERENCE_WIDTH // 2 - 80, REFERENCE_HEIGHT - 72, 160, 64)
                 if biome_btn.collidepoint(mx, my):
                     biome_idx = (biome_idx + 1) % len(BIOMES)
                     continue
 
-                diff_btn = pygame.Rect(REFERENCE_WIDTH // 2 + 100, REFERENCE_HEIGHT - 65, 140, 54)
+                diff_btn = pygame.Rect(REFERENCE_WIDTH // 2 + 110, REFERENCE_HEIGHT - 72, 160, 64)
                 if diff_btn.collidepoint(mx, my):
                     diff_idx = (diff_idx + 1) % len(DIFFICULTIES)
                     start_new_game()
@@ -532,61 +533,55 @@ def main() -> int:
         s_txt = typography.render(str(total_stars), FontRole.DISPLAY, 28, (180, 83, 9))
         surf.blit(s_txt, (star_pill.left + 58, star_pill.centery - s_txt.get_height() // 2))
 
-        # Hint Button (Top Right: Giant Glowing Star/Firefly Icon)
-        hint_btn = pygame.Rect(REFERENCE_WIDTH - 150, 16, 130, 56)
+        # Hint Button (Top Right: Giant Glowing Star/Firefly Icon + Text)
+        hint_btn = pygame.Rect(REFERENCE_WIDTH - 150, 14, 130, 58)
         pygame.draw.rect(surf, (254, 240, 138), hint_btn, border_radius=18)
         pygame.draw.rect(surf, (234, 179, 8), hint_btn, width=3, border_radius=18)
-        hx = hint_btn.centerx
+        hx = hint_btn.left + 30
         hy = hint_btn.centery
-        # Radiant gold glow
-        pygame.draw.circle(surf, (251, 191, 36), (hx, hy), 18)
-        pygame.draw.circle(surf, (255, 255, 255), (hx, hy), 9)
-        # Sparkle rays
-        for ang in (0, 45, 90, 135, 180, 225, 270, 315):
-            rad = math.radians(ang)
-            r1, r2 = 20, 25
-            pygame.draw.line(surf, (234, 179, 8), (hx + int(math.cos(rad)*r1), hy + int(math.sin(rad)*r1)), (hx + int(math.cos(rad)*r2), hy + int(math.sin(rad)*r2)), 3)
+        pygame.draw.circle(surf, (251, 191, 36), (hx, hy), 14)
+        pygame.draw.circle(surf, (255, 255, 255), (hx, hy), 6)
+        h_txt = typography.render("AIUTO", FontRole.DISPLAY, 18, (180, 83, 9))
+        surf.blit(h_txt, (hint_btn.left + 52, hint_btn.centery - h_txt.get_height() // 2))
 
-        # 9. Bottom Controls (Giant Chunky Pure-Icon Buttons)
-        # Hero Button (Giant Portrait Avatar)
-        h_btn = pygame.Rect(REFERENCE_WIDTH // 2 - 240, REFERENCE_HEIGHT - 65, 140, 54)
-        pygame.draw.rect(surf, (255, 255, 255), h_btn, border_radius=18)
-        pygame.draw.rect(surf, hero["color"], h_btn, width=4, border_radius=18)
-        h_cx = h_btn.centerx
+        # 9. Bottom Controls (Giant Chunky 160x64px Buttons with Icon + Text)
+        # Hero Button
+        h_btn = pygame.Rect(REFERENCE_WIDTH // 2 - 270, REFERENCE_HEIGHT - 72, 160, 64)
+        pygame.draw.rect(surf, (255, 255, 255), h_btn, border_radius=20)
+        pygame.draw.rect(surf, hero["color"], h_btn, width=4, border_radius=20)
+        h_cx = h_btn.left + 32
         h_cy = h_btn.centery
-        pygame.draw.circle(surf, hero["color"], (h_cx, h_cy), 18)
-        pygame.draw.circle(surf, (20, 20, 30), (h_cx - 6, h_cy - 2), 3)
-        pygame.draw.circle(surf, (20, 20, 30), (h_cx + 6, h_cy - 2), 3)
-        pygame.draw.circle(surf, (244, 114, 182), (h_cx - 10, h_cy - 14), 5)
-        pygame.draw.circle(surf, (244, 114, 182), (h_cx + 10, h_cy - 14), 5)
+        pygame.draw.circle(surf, hero["color"], (h_cx, h_cy), 16)
+        pygame.draw.circle(surf, (244, 114, 182), (h_cx - 8, h_cy - 12), 4)
+        pygame.draw.circle(surf, (244, 114, 182), (h_cx + 8, h_cy - 12), 4)
+        pygame.draw.circle(surf, (20, 20, 30), (h_cx - 5, h_cy - 2), 2)
+        pygame.draw.circle(surf, (20, 20, 30), (h_cx + 5, h_cy - 2), 2)
+        ht_txt = typography.render("EROE", FontRole.DISPLAY, 18, (30, 41, 59))
+        surf.blit(ht_txt, (h_btn.left + 60, h_btn.centery - ht_txt.get_height() // 2))
 
-        # Biome Button (Giant Elemental Crystal Orb)
-        b_btn = pygame.Rect(REFERENCE_WIDTH // 2 - 70, REFERENCE_HEIGHT - 65, 140, 54)
-        pygame.draw.rect(surf, (255, 255, 255), b_btn, border_radius=18)
-        pygame.draw.rect(surf, biome["wall"], b_btn, width=4, border_radius=18)
-        b_cx = b_btn.centerx
+        # Biome Button
+        b_btn = pygame.Rect(REFERENCE_WIDTH // 2 - 80, REFERENCE_HEIGHT - 72, 160, 64)
+        pygame.draw.rect(surf, (255, 255, 255), b_btn, border_radius=20)
+        pygame.draw.rect(surf, biome["wall"], b_btn, width=4, border_radius=20)
+        b_cx = b_btn.left + 32
         b_cy = b_btn.centery
-        pygame.draw.circle(surf, biome["wall"], (b_cx, b_cy), 18)
-        pygame.draw.ellipse(surf, biome["wall_top"], pygame.Rect(b_cx - 24, b_cy - 6, 48, 12), 3)
-        pygame.draw.circle(surf, (255, 255, 255), (b_cx - 5, b_cy - 5), 5)
+        pygame.draw.circle(surf, biome["wall"], (b_cx, b_cy), 16)
+        pygame.draw.ellipse(surf, biome["wall_top"], pygame.Rect(b_cx - 20, b_cy - 5, 40, 10), 2)
+        pygame.draw.circle(surf, (255, 255, 255), (b_cx - 4, b_cy - 4), 4)
+        bt_txt = typography.render("MONDO", FontRole.DISPLAY, 18, (30, 41, 59))
+        surf.blit(bt_txt, (b_btn.left + 58, b_btn.centery - bt_txt.get_height() // 2))
 
-        # Difficulty Button (1, 2, or 3 Giant Golden Stars)
-        d_btn = pygame.Rect(REFERENCE_WIDTH // 2 + 100, REFERENCE_HEIGHT - 65, 140, 54)
-        pygame.draw.rect(surf, (255, 255, 255), d_btn, border_radius=18)
-        pygame.draw.rect(surf, (234, 179, 8), d_btn, width=4, border_radius=18)
-        num_stars_show = (diff_idx % 3) + 1
-        d_cx = d_btn.centerx
+        # Difficulty Button
+        d_btn = pygame.Rect(REFERENCE_WIDTH // 2 + 110, REFERENCE_HEIGHT - 72, 160, 64)
+        pygame.draw.rect(surf, (255, 255, 255), d_btn, border_radius=20)
+        pygame.draw.rect(surf, (234, 179, 8), d_btn, width=4, border_radius=20)
+        cur_diff = DIFFICULTIES[diff_idx % len(DIFFICULTIES)]
+        d_cx = d_btn.left + 28
         d_cy = d_btn.centery
-        if num_stars_show == 1:
-            pygame.draw.circle(surf, (234, 179, 8), (d_cx, d_cy), 15)
-            pygame.draw.circle(surf, (255, 255, 255), (d_cx, d_cy), 6)
-        elif num_stars_show == 2:
-            pygame.draw.circle(surf, (234, 179, 8), (d_cx - 18, d_cy), 13)
-            pygame.draw.circle(surf, (234, 179, 8), (d_cx + 18, d_cy), 13)
-        else:
-            pygame.draw.circle(surf, (234, 179, 8), (d_cx - 28, d_cy), 11)
-            pygame.draw.circle(surf, (234, 179, 8), (d_cx, d_cy), 13)
-            pygame.draw.circle(surf, (234, 179, 8), (d_cx + 28, d_cy), 11)
+        pygame.draw.circle(surf, (234, 179, 8), (d_cx, d_cy), 14)
+        pygame.draw.circle(surf, (254, 240, 138), (d_cx, d_cy), 7)
+        dt_txt = typography.render(cur_diff["label_it"], FontRole.DISPLAY, 18, (180, 83, 9))
+        surf.blit(dt_txt, (d_btn.left + 52, d_btn.centery - dt_txt.get_height() // 2))
 
         # 10. Victory Modal
         if is_victory:

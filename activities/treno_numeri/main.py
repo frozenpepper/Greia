@@ -524,17 +524,15 @@ def main() -> int:
                 _draw_fruit(surf, current_fruit["id"], int(fx), int(fy), 46)
 
         # 7. Whistle & Station HUD Buttons
-        w_btn = pygame.Rect(REFERENCE_WIDTH - 150, 16, 130, 56)
+        w_btn = pygame.Rect(REFERENCE_WIDTH - 150, 14, 130, 58)
         pygame.draw.rect(surf, (234, 179, 8), w_btn, border_radius=18)
         pygame.draw.rect(surf, (202, 138, 4), w_btn, width=3, border_radius=18)
-        # Giant Whistle Icon with animated pull cord
-        wx = w_btn.centerx
         wy = w_btn.centery
-        pygame.draw.rect(surf, (241, 245, 249), (wx - 32, wy - 8, 44, 16), border_radius=5)
-        pygame.draw.rect(surf, (239, 68, 68), (wx - 20, wy - 18, 14, 12), border_radius=3)
-        pygame.draw.circle(surf, (254, 240, 138), (wx + 18, wy), 8)
-        pygame.draw.circle(surf, (255, 255, 255), (wx + 30, wy - 8), 6)
-        pygame.draw.circle(surf, (255, 255, 255), (wx + 38, wy - 16), 8)
+        # Whistle icon + steam
+        pygame.draw.rect(surf, (241, 245, 249), (w_btn.left + 14, wy - 8, 28, 16), border_radius=4)
+        pygame.draw.rect(surf, (239, 68, 68), (w_btn.left + 22, wy - 16, 10, 10), border_radius=2)
+        w_txt = typography.render("TUUT!", FontRole.DISPLAY, 18, (120, 53, 15))
+        surf.blit(w_txt, (w_btn.left + 48, wy - w_txt.get_height() // 2))
 
         # Station Stars Indicator (Top Left)
         star_pill = pygame.Rect(80, 16, 130, 56)

@@ -433,26 +433,39 @@ def main() -> int:
         for p in particles:
             pygame.draw.circle(surf, p["color"], (int(p["x"]), int(p["y"])), int(p["size"]))
 
-        # 5. Top Center "WANTED ANIMAL" Target Card (Zero-Text Iconographic Goal)
-        target_card = pygame.Rect(REFERENCE_WIDTH // 2 - 130, 14, 260, 94)
+        # 5. Top Center "WANTED ANIMAL" Target Card (Icon + Label)
+        target_card = pygame.Rect(REFERENCE_WIDTH // 2 - 160, 14, 320, 94)
         pygame.draw.rect(surf, (255, 252, 245), target_card, border_radius=24)
         pygame.draw.rect(surf, (234, 179, 8), target_card, width=4, border_radius=24)
 
         # Magnifying glass icon on left
-        pygame.draw.circle(surf, (59, 130, 246), (target_card.left + 45, target_card.centery - 5), 20, 5)
-        pygame.draw.line(surf, (59, 130, 246), (target_card.left + 58, target_card.centery + 8), (target_card.left + 74, target_card.centery + 24), 6)
+        pygame.draw.circle(surf, (59, 130, 246), (target_card.left + 36, target_card.centery - 5), 18, 4)
+        pygame.draw.line(surf, (59, 130, 246), (target_card.left + 48, target_card.centery + 7), (target_card.left + 62, target_card.centery + 21), 5)
 
         # Target Animal Giant Portrait
-        _draw_animal_portrait(surf, target_animal_id, target_card.left + 150, target_card.centery, 72)
+        _draw_animal_portrait(surf, target_animal_id, target_card.left + 115, target_card.centery, 68)
+
+        # Animal Name Text
+        animal_names_it = {
+            "fox": "VOLPE",
+            "bunny": "CONIGLIO",
+            "deer": "CERVO",
+            "owl": "GUFO",
+            "hedgehog": "RICCIO",
+            "squirrel": "SCOIATTOLO",
+        }
+        name_str = animal_names_it.get(target_animal_id, "ANIMALE")
+        n_txt = typography.render(name_str, FontRole.DISPLAY, 18, (180, 83, 9))
+        surf.blit(n_txt, (target_card.left + 160, target_card.centery - n_txt.get_height() // 2))
 
         # Progress Stars on Target Card
         for s in range(total_to_find):
-            st_x = target_card.right - 45 + (s % 2) * 22
+            st_x = target_card.right - 35 + (s % 2) * 18
             st_y = target_card.top + 28 + (s // 2) * 28
             if s < found_count:
-                pygame.draw.circle(surf, (234, 179, 8), (st_x, st_y), 9)
+                pygame.draw.circle(surf, (234, 179, 8), (st_x, st_y), 8)
             else:
-                pygame.draw.circle(surf, (203, 213, 225), (st_x, st_y), 9, 2)
+                pygame.draw.circle(surf, (203, 213, 225), (st_x, st_y), 8, 2)
 
         # 6. Star Pill (Top Left)
         star_pill = pygame.Rect(80, 16, 130, 56)
