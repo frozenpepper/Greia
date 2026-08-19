@@ -45,7 +45,7 @@ Of particular relevance to current UI/Activity/developer work:
 - ADR 0026 — resolution-adaptive, single-authoring UI layout;
 - ADR 0027 — Activity coordinate spaces/reference canvas/world camera;
 - ADR 0028 — platform/Activity localization and language context;
-- ADR 0029 — real-runtime Activity Simulator: real Greia services above synthetic hardware/runtime-adapter seams, strict non-drift and evidence boundaries.
+- ADR 0029 — real-runtime Activity Simulator: canonical Greia service composition above synthetic HAL/runtime/display seams, strict non-drift and evidence boundaries.
 
 `docs/architecture/GREIA_ARCHITECTURE.md` is a living synthesis, not a second ADR system.
 
@@ -85,8 +85,9 @@ For exact currently implemented APIs, schemas, command vocabularies and limits, 
 | child + Activity UI/content-language resolution policy | `src/greia_platform/language_context.py` |
 | child-facing language presentation / canonical flag mapping / chooser policy | `src/greia_platform/language_presentation.py` |
 | launcher category projection/navigation | `src/greia_launcher/catalogue_view.py` |
-| richer launcher presentation/effects/catalogue rendering | `src/greia_launcher/presentation.py` |
-| installed profile-aware launcher composition + ordinary Activity visual snapshots | `src/greia_launcher/child_shell.py` |
+| richer launcher presentation/effects/catalogue rendering + shared initial/resize display-policy hooks | `src/greia_launcher/presentation.py` |
+| canonical launcher device/runtime/permission/storage/history service composition | `src/greia_launcher/composition.py` |
+| installed profile-aware child Shell, ordinary Activity visual snapshots and canonical service/supervisor rebuild sequence | `src/greia_launcher/child_shell.py` |
 | launcher profile-theme/wallpaper/UI-size refresh controller | `src/greia_launcher/theme.py` |
 | Activity system Home/Back vocabulary/protected geometry | `src/greia_platform/system_chrome.py` |
 | trusted system-chrome backend lifecycle/lease seam | `src/greia_launcher/system_chrome.py` |
@@ -104,10 +105,11 @@ For exact currently implemented APIs, schemas, command vocabularies and limits, 
 | first-party child settings UI | `activities/workshop_settings/` (`org.greia.workshop-settings`, child-facing name My Greia) |
 | developer remote client vocabulary | `tools/greia_remote.py` |
 | privileged developer operations | `src/greia_platform/developer_control.py`, `src/greia_platform/developer_input.py` |
-| Activity Simulator synthetic device/HAL facts | `src/greia_simulator/device.py` |
-| Activity Simulator isolated profile/developer/package/media workspace + real registry/package-service loading | `src/greia_simulator/workspace.py` |
-| Activity Simulator runtime/supervisor composition over real Greia services | `src/greia_simulator/runtime.py`, `src/greia_simulator/child_shell.py` |
-| simulator-only current-Pygame exact-viewport bootstrap | `src/greia_simulator/python_activity.py` |
+| Activity Simulator synthetic device/HAL facts + canonical-capability mapping | `src/greia_simulator/device.py` |
+| Activity Simulator checkout-bound/single-writer profile/developer/package/media workspace + bounded transactional developer-source loading | `src/greia_simulator/workspace.py` |
+| Activity Simulator Python runtime variation below the canonical launcher composition seam | `src/greia_simulator/runtime.py` |
+| Activity Simulator synthetic HAL/runtime/display-hook injection + bounded lifecycle-aware Shell shutdown | `src/greia_simulator/child_shell.py` |
+| trusted absolute-path current-Pygame exact-viewport Activity bootstrap; no Activity-visible simulator identity | `src/greia_simulator/python_activity.py` |
 | Activity Simulator desktop control plane / repository entry point | `src/greia_simulator/app.py`, `tools/greia_simulator.py` |
 | image composition | `build/profiles/*.toml`, `build/package-sets/*.txt`, canonical builders/overlays |
 | early-boot framebuffer cover renderer | `build/early-boot/greia-fb-splash.c`, `build/early-boot/README.md` |
@@ -121,27 +123,28 @@ Documentation may explain these contracts but must not invent a conflicting one.
 
 `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md` owns active ordering, prerequisites, closure criteria and append-only progress history while active. It does not turn a source implementation into executed evidence.
 
-The Activity Simulator is a developer-tooling tranche under ADR 0029. It does **not** move, bypass or close the R7/R8/R9/R10/R14 phase gates. In particular, future HTML/Web simulator support must consume the canonical R9 Web runtime rather than implementing it in parallel.
+The Activity Simulator is a developer-tooling tranche under ADR 0029. It does **not** move, bypass or close the R7/R8/R9/R10/R14 phase gates. Future HTML/Web simulator support must consume the canonical R9 Web runtime rather than implementing it in parallel.
 
 ### 2.7 Current branch/evidence state — `HANDOVER.md`
 
-`HANDOVER.md` owns current implementation state, the exact evidence boundary, unproven work, blockers and the next legitimate verification step. Do not promote committed tests into PASS merely because the files exist. Simulator results must be explicitly labeled simulator/developer evidence and cannot be promoted into backend/hardware acceptance.
+`HANDOVER.md` owns current implementation state, the exact evidence boundary, unproven work, blockers and the next legitimate verification step. Do not promote committed tests into PASS merely because the files exist. Simulator results must be explicitly labeled simulator/developer evidence and cannot be promoted into backend/hardware/security acceptance.
 
 ### 2.8 Exact operator procedures — `docs/testing/*`
 
-Named protocols own prerequisites, commands, stop conditions, evidence to preserve and what a PASS does not prove. Current UI procedures include:
+Named protocols own prerequisites, commands, stop conditions, evidence to preserve and what a PASS does not prove. Current UI/developer procedures include:
 
 ```text
 docs/testing/2026-08-18_LOCAL_AGENT_FULL_TEST_AND_FIX_SESSION.md
 docs/testing/2026-08-18_RESPONSIVE_UI_ACCEPTANCE.md
 docs/testing/2026-08-18_MY_GREIA_ACCEPTANCE.md
+docs/testing/2026-08-19_ACTIVITY_SIMULATOR_ACCEPTANCE.md
 ```
 
-`docs/testing/LOCAL_AGENT_START_HERE.md` composes the current mandatory focused gate and evidence boundary, including first-frame Activity readiness and system-safe core-Activity UI regressions.
+`docs/testing/LOCAL_AGENT_START_HERE.md` composes the current mandatory focused gate and evidence boundary for owner-controlled test sessions. The simulator acceptance protocol owns simulator-specific source/manual checks; it does not replace backend/hardware protocols.
 
 ### 2.9 Agent/developer manuals — `docs/agents/*`, `docs/development/*`, `skills/*`
 
-`docs/agents/GREIA_AGENT_OPERATIONS.md` is the operational entry point for build/test/hardware work. `skills/greia-activity-authoring/SKILL.md` is the living Activity authoring guide. `docs/development/GREIA_ACTIVITY_SIMULATOR.md` is the Activity Simulator developer/operator guide below ADR 0029. All three must preserve the difference between simulator semantic evidence and real image/backend/physical evidence.
+`docs/agents/GREIA_AGENT_OPERATIONS.md` is the operational entry point for build/test/hardware work. `skills/greia-activity-authoring/SKILL.md` is the living Activity authoring guide. `docs/development/GREIA_ACTIVITY_SIMULATOR.md` is the Activity Simulator developer/operator guide below ADR 0029. All three must preserve the difference between simulator semantic evidence and real image/backend/physical/security evidence.
 
 ### 2.10 Governance/licensing — `docs/governance/*`
 
@@ -151,11 +154,15 @@ docs/testing/2026-08-18_MY_GREIA_ACCEPTANCE.md
 
 Reviews are dated analysis/evidence snapshots unless promoted into a product requirement, ADR or active plan. Never rewrite historical evidence to pretend a later fix existed earlier.
 
-Current hardware reconciliation:
+Current relevant reviews:
 
 ```text
 docs/reviews/2026-08-18_REAL_HARDWARE_INSTALLATION_AND_LAUNCHER_REVIEW.md
+docs/reviews/2026-08-19_ACTIVITY_SIMULATOR_ADVERSARIAL_REVIEW.md
+docs/reviews/2026-08-19_ACTIVITY_SIMULATOR_HARDENING_RESPONSE.md
 ```
+
+The adversarial simulator review remains historical evidence of what was found. The hardening response records source disposition and does not convert unexecuted regressions into PASS evidence.
 
 ### 2.12 Visual/design manuals — `docs/design/*`
 
@@ -202,8 +209,10 @@ Architecture examples communicate semantics; they are not automatically current 
 - Painting's current editor controls are system-safe, but its durable painting document surface remains coupled to the current editor viewport and still requires a separate resolution-neutral document-model migration.
 - ADR 0028 localization/language policy source exists, but full profile persistence, localized catalogue-title wiring, dynamic launcher flags and pre-launch chooser remain partially integrated/unproven.
 - My Greia semantic interface-size storage/read-only Activity visual snapshots exist in source but require appropriate owner-controlled/current-head verification.
-- ADR 0029 Activity Simulator source exists at/after `c9eac6da7106536629034d2e3e8c5dc2475ab6ac`. Its Python path uses real Greia registry/permission/profile/storage/history/lifecycle services over a synthetic HAL and a simulator-only Pygame display wrapper. This is not production sandbox/display/hardware evidence.
-- HTML/Web simulator execution is **not implemented** merely because the simulator exists; it must wait for and consume the canonical R9 Web runtime adapter.
+- ADR 0029's simulator has been hardened so PermissionBroker/storage/history/supervisor ownership remains in canonical launcher/platform composition. The simulator injects only synthetic HAL/runtime/display facts, uses an absolute trusted Python bootstrap, exposes no `GREIA_SIMULATOR*` Activity API, and uses a checkout-bound single-writer workspace with bounded transactional developer-source staging.
+- The hardened simulator regressions are committed but remain **UNPROVEN** until executed on the current head; source presence is not a PASS.
+- The desktop simulator is **not** an untrusted-code sandbox and cannot establish production Bubblewrap/filesystem/input-containment evidence.
+- HTML/Web simulator execution is **not implemented** merely because a structurally valid Web package can be discovered; current execution must fail as runtime unavailable until the canonical R9 Web adapter exists.
 - R7 remains open; Xorg/xinit is provisional compatibility behavior.
 
 ---
@@ -233,7 +242,7 @@ The simulator may help reproduce platform-independent Activity/layout/runtime se
 | responsive layout/shared geometry | ADR 0026 + responsive product doc + source/tests + affected author manuals |
 | Activity canvas/world coordinate contract | ADR 0027 + canvas authoring guide + Activity skill + source/tests |
 | Activity/localization/language behavior | ADR 0028 + Activity skill + source/tests + launcher/Parent docs where user-facing |
-| Activity Simulator device/workspace/runtime/control/evidence behavior | ADR 0029 + `docs/development/GREIA_ACTIVITY_SIMULATOR.md` + simulator tests + Activity/agent manuals when author/operator workflow changes |
+| Activity Simulator device/workspace/runtime/control/evidence behavior | ADR 0029 + `docs/development/GREIA_ACTIVITY_SIMULATOR.md` + `docs/testing/2026-08-19_ACTIVITY_SIMULATOR_ACCEPTANCE.md` + simulator tests + Activity/agent manuals when author/operator workflow changes |
 | child visual personalization/My Greia scope | `MY_GREIA_SETTINGS.md` + source/tests + Activity skill when author-facing visual context changes |
 | launcher catalogue/category/icon/effects | launcher design + source/tests + Activity skill where author-facing |
 | package install/update/remove/trust | Activity ecosystem docs + Activity skill + active plan + Parent docs where applicable |
