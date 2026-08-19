@@ -153,6 +153,18 @@ class SystemLanguageTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertIn("SUPPORTED_SYSTEM_LANGUAGES", entrypoint)
         self.assertIn("locale=self.locale", entrypoint)
+
+        installer_packages = {
+            line.strip()
+            for line in (
+                PROJECT_ROOT / "build" / "package-sets" / "installer-base.txt"
+            ).read_text(encoding="utf-8").splitlines()
+            if line.strip() and not line.lstrip().startswith("#")
+        }
+        self.assertIn("fonts-noto-color-emoji", installer_packages)
+        self.assertIn("python3-pil", installer_packages)
+        self.assertIn("python3-regex", installer_packages)
+
         helper_rule = (
             PROJECT_ROOT
             / "build"
