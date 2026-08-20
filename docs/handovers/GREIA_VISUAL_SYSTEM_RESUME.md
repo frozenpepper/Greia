@@ -148,9 +148,9 @@ passes in the Activity Simulator.
 
 ---
 
-# 6. Substantial visible shared UI is accepted in simulator
+# 6. Visible shared Shell UI status
 
-The production child Shell now consumes:
+Already accepted in the Activity Simulator:
 
 ```text
 ui.card.activity/default
@@ -158,40 +158,68 @@ ui.card.activity/focused
 ui.panel.base/default
 ```
 
-through:
+New source consumer awaiting simulator acceptance:
+
+```text
+ui.button.primary/default
+ui.button.primary/hover
+```
+
+Implementation:
 
 ```text
 src/greia_launcher/shared_ui_presentation.py
 src/greia_launcher/child_shell.py
 ```
 
-The shared visual path is presentation-only:
+Current behavior:
 
-- `ui.panel.base` frames profile picker and Activity catalogue preserving its authored 640:420 aspect ratio;
-- normal cards use the reviewed default master;
+- `ui.panel.base` frames profile picker and Activity catalogue preserving authored 640:420 aspect ratio;
+- normal Activity cards use the reviewed default master;
 - selected / hovered / launching cards use the focused master;
-- authored 360:430 portrait geometry is preserved instead of stretching into a square;
-- icon and localized title are placed into the authored illustration well and label band;
-- logical launcher hit targets/navigation/lifecycle remain unchanged;
-- existing primitive renderers and background theme provide narrow fail-soft fallbacks.
+- Activity card authored 360:430 portrait geometry is preserved;
+- root Activity-category controls now use `ui.button.primary/default` and `hover` in source;
+- the existing in-category Back/header control deliberately remains on its existing renderer because its square geometry does not match the reviewed wide primary-button asset;
+- category IDs/order/hit targets/navigation remain unchanged;
+- button failure is isolated so accepted shared panels/cards can remain active while category controls fall back to the base renderer.
 
-Validated via Activity Simulator protocols:
+Accepted protocols:
 
 ```text
 docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md
 docs/testing/2026-08-20_V5_SHARED_UI_PANEL_SIMULATOR.md
 ```
 
-Current evidence: **SIMULATOR VISUAL REVIEW** (`ui.shadow.soft`, `ui.card.activity`, `ui.panel.base`).
+Pending protocol:
+
+```text
+docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md
+```
+
+Current evidence:
+
+```text
+ui.shadow.soft       SIMULATOR VISUAL REVIEW
+ui.card.activity     SIMULATOR VISUAL REVIEW
+ui.panel.base        SIMULATOR VISUAL REVIEW
+ui.button.primary    SOURCE, simulator pending
+```
 
 ---
 
 # 7. Current exact next work
 
 ```text
-1. implement Web Activity semantic visual adapter using the same IDs/variants without host path exposure
-2. continue visible Greia Shell integration with existing shared UI families (ui.button.primary)
-3. do not return to new environment-pack production unless a concrete reusable gap appears
+1. sync current main
+2. execute docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md
+3. verify default + hover button states in the real root Activity catalogue
+4. verify category open/back lifecycle
+5. verify corrupt hover-button isolation: primitive category row fallback while panel/cards stay shared
+6. run full responsive matrix + frame-count sanity
+7. fix only shared/root causes
+8. update plan/resume/HANDOVER/LOCAL_AGENT_RESULT.md with exact evidence
+9. commit and push main
+10. after this visible Shell gate, move to the next product-visible shared UI surface or the Web semantic adapter without returning to proof-only Shapes work
 ```
 
 ---
@@ -202,6 +230,7 @@ Current evidence: **SIMULATOR VISUAL REVIEW** (`ui.shadow.soft`, `ui.card.activi
 docs/testing/2026-08-20_V5_ACTIVITY_SHARED_VISUAL_SIMULATOR.md
 docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md
 docs/testing/2026-08-20_V5_SHARED_UI_PANEL_SIMULATOR.md
+docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md
 ```
 
 For owner-directed local-agent runtime/visual/fallback/responsive acceptance, use the Greia Activity Simulator.
@@ -270,17 +299,18 @@ Source-tree summary:
 assets/visual/README.md
 ```
 
-First Shell-consumer execution result:
+Execution/result authority:
 
 ```text
 LOCAL_AGENT_RESULT.md
 ```
 
-Current simulator protocols:
+Current visible-Shell simulator protocols:
 
 ```text
-docs/testing/2026-08-20_V5_ACTIVITY_SHARED_VISUAL_SIMULATOR.md
 docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md
+docs/testing/2026-08-20_V5_SHARED_UI_PANEL_SIMULATOR.md
+docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md
 ```
 
 ---
