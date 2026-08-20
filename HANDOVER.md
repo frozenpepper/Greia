@@ -148,17 +148,15 @@ The target device does not need an SVG renderer.
 
 Provider-free tests cover cache hits, size keys, variants, eviction/reload, clear/reload, dimension/pixel bounds, SVG rejection and unknown catalogue entries/variants.
 
-### V5 gate still open
+### V5 first Shell consumer accepted via Activity Simulator
 
-Do not mark any visual pack runtime-consumed yet. Exact continuation:
-
-1. on an owner-controlled/build checkout with librsvg, run `make visual-assets`;
-2. inspect/validate generated PNGs + `assets/catalog/shared_visuals_v1.toml`;
-3. run focused repository tests covering `test_asset_catalogue.py`, `test_pygame_visual_assets.py` and rendition tooling;
-4. identify one **existing controlled Shell/UI** path and route that path through `AssetCatalogue` + `PygameVisualSurfaceCache`;
-5. verify static/fail-closed fallback and absence of per-frame decode/discovery;
-6. only then expand the same semantic contract toward Python/Web Activities;
-7. collect simulator/physical low-resource evidence before stronger runtime/physical claims.
+`ui.shadow.soft` is integrated as the first real Shell consumer under Activity tiles:
+- `assets/catalog/shared_visuals_v1.toml` generated via `make visual-assets` (`rsvg-convert`);
+- `load_launcher_assets(...)` merges mandatory core icons and optional shared visuals;
+- `PygameVisualSurfaceCache` provides bounded 12-entry LRU caching with fail-soft fallback to primitive `draw_soft_shadow`;
+- Verified via Activity Simulator across 6 responsive viewports (1024×600 normal/large, 1280×800, 1366×768 compact, 1920×1080, 1111×700), selection/hover/launch interaction, and fail-soft fallback tests (missing catalogue, invalid catalogue, corrupt PNG);
+- Frame rate delta sanity check confirmed steady ~29.4 fps over 10.1s;
+- Evidence recorded in `./tmp/v5-simulator-evidence/`. Evidence class: **SIMULATOR VISUAL REVIEW**. (No physical hardware or R7 closure claimed).
 
 ---
 

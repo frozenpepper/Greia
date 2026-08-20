@@ -392,4 +392,17 @@ Committed tests are not PASS merely because they exist. Candidate art in Git is 
 - Added focused validator and launcher-fallback tests.
 - New merge/validator/launcher test files are **SOURCE only** until executed on a current checkout; no false PASS claim is made.
 
-Next exact action: on an owner-controlled/build checkout with librsvg, run `make visual-assets`, then `make visual-assets-check`, then the focused V5 tests. If green, wire `ui.shadow.soft` into the existing launcher activity-tile draw path through the merged catalogue + bounded surface cache, preserving the current primitive tile as fallback.
+## 2026-08-20 — V5 first Shell consumer (ui.shadow.soft) wired and simulator-verified
+- Built explicit runtime visual renditions via `make visual-assets` using `rsvg-convert`.
+- Integrated `load_launcher_assets(...)` into `LauncherApplication.__init__` and `LauncherPaths` to merge mandatory core icons with optional generated shared visuals.
+- Wired `PygameVisualSurfaceCache` into `LauncherApplication` and `GreiaLauncherPresentation`.
+- Integrated `ui.shadow.soft` underneath Activity tiles in `GreiaLauncherPresentation._draw_activity_tile_content`, positioned softly under the card base with motion lift support and fail-soft fallback to `draw_soft_shadow`.
+- Wrapped `tomllib.TOMLDecodeError` in `AssetCatalogueError` in `AssetCatalogue.load` for resilient catalogue error containment.
+- Fixed RGB pixel format capture in `SimulatorRemoteBridge.capture_frame`.
+- Tested and accepted across the full simulator matrix (1024×600 normal & large, 1280×800 normal, 1366×768 compact, 1920×1080 normal, 1111×700 normal).
+- Tested keyboard selection, hover motion, and launch lifecycle in simulator.
+- Tested all fail-soft fallback cases in simulator (missing catalogue, invalid catalogue, missing/corrupt PNG).
+- Frame rate sanity check verified 29.4 fps over 10.1s (~30 fps clock tick, 0 stalls).
+- Evidence recorded under `./tmp/v5-simulator-evidence/`. Evidence class: **SIMULATOR VISUAL REVIEW**. No physical hardware or R7 closure claimed.
+
+Next exact action: Keep `ui.shadow.soft` as the accepted first shared consumer. Evaluate next candidate shared visual asset (`ui.panel.base`, `ui.card.activity`, `ui.button.primary`) for subsequent integration tranches without altering launcher layout geometry.
