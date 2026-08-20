@@ -4,7 +4,7 @@
 **Active art plan:** `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`  
 **Authoring skill:** `skills/greia-visual-authoring/SKILL.md`
 
-This directory is the staging home for the new constraint-native Greia visual library.
+This directory is the staging home for the constraint-native Greia visual library.
 
 The directory exists so art work can become a coherent reusable library instead of accumulating as unrelated files inside individual Activities. **Nothing in this README authorizes runtime filesystem discovery.** Exact runtime catalogue/loader APIs remain source-owned and will be designed only if/when phase A7 reaches that work.
 
@@ -23,6 +23,7 @@ assets/visual/
   environments/
   ui/
   fx/
+  specimens/
   library_v0.1.toml
 ```
 
@@ -51,25 +52,70 @@ Reviewed secondary characters, Activity cast, props and scene variants produced 
 
 One-off decoration/content where style drift cannot undermine system identity or gameplay comprehension. Tier C still needs appropriate provenance/license treatment if committed/distributed.
 
-## Working core cast
+## Approval scope is explicit
 
-The current style-anchor names are:
+The inventory may use `approved`, but that word is never enough by itself. An approved item should record a scope such as:
+
+```text
+design_grammar
+static_style_anchor
+runtime_asset
+release_asset
+physical_acceptance
+```
+
+Do not infer a stronger scope from a weaker one.
+
+For example, the current A1 cast is approved as:
+
+```text
+approval_scope = "static_style_anchor"
+runtime_ready = false
+```
+
+That means the visual direction is accepted; it does not freeze the SVGs as release art or create a runtime character API.
+
+## Current core cast
+
+The first owner-reviewed static style anchors are:
 
 - `lilli` — unicorn Puff;
 - `nino` — owl Bean;
 - `tito` — fox Puff;
-- `momo` — friendly monster fluff/Puff.
+- `momo` — friendly monster Puff.
 
-They are **design anchors, not release-complete assets yet**.
+Accepted character grammar:
 
-## Working archetypes
+```text
+docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md
+```
+
+A1 review source:
+
+```text
+assets/visual/specimens/a1/review.html
+```
+
+## Accepted archetypes
 
 - `puff`
 - `bean`
 - `cutout_critter`
 - `object_friend`
 
-## Base motion seed
+These are approved at `design_grammar` scope.
+
+## A2 expression/motion candidates
+
+Current semantic expression/motion work is intentionally still candidate-level:
+
+```text
+docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md
+assets/visual/specimens/a2/base_motion_v0.1.toml
+assets/visual/specimens/a2/review.html
+```
+
+Base motion set:
 
 - `idle_bounce`
 - `blink`
@@ -78,7 +124,7 @@ They are **design anchors, not release-complete assets yet**.
 - `surprised_wobble`
 - `sleepy_sway`
 
-These are semantic design names. No runtime API is implied by their presence here.
+These are semantic design names. The A2 TOML explicitly declares `runtime_consumed = false`; no runtime API is implied.
 
 ## Provenance
 
@@ -90,7 +136,8 @@ Every canonical distributed visual asset eventually needs enough metadata to ans
 - whether it was generated, contributed or derived;
 - which file is the editable/source master;
 - what raster derivatives were produced from that master;
-- whether it is approved, provisional, rejected or superseded.
+- whether it is approved, provisional, rejected or superseded;
+- what the approval scope actually covers.
 
 Do not delete provenance just because an asset has been rasterized or copied into a build layer.
 
@@ -100,7 +147,7 @@ Use these human-facing states in the library inventory:
 
 - `concept` — design slot only;
 - `candidate` — asset exists and awaits visual review;
-- `approved` — approved canonical visual asset;
+- `approved` — approved for its explicit `approval_scope`;
 - `superseded` — replaced but retained where history/migration needs it;
 - `rejected` — experiment intentionally not used.
 
