@@ -70,6 +70,10 @@ class AssetCatalogue:
         self.root = root.resolve()
         self._icons = dict(icons)
         self._visuals = dict(visuals or {})
+        overlap = self._icons.keys() & self._visuals.keys()
+        if overlap:
+            duplicate = sorted(overlap)[0]
+            raise AssetCatalogueError(f"duplicate asset id: {duplicate}")
 
     @classmethod
     def load(cls, manifest_path: Path) -> "AssetCatalogue":
@@ -126,6 +130,32 @@ class AssetCatalogue:
             )
 
         return cls(root, icons, visuals)
+
+    def merged(self, *catalogues: "AssetCatalogue") -> "AssetCatalogue":
+        """Return one explicit catalogue namespace across compatible manifests.
+
+        Generated visual renditions intentionally live in a separate manifest from
+        the established core-icon catalogue. Consumers merge those catalogues
+        explicitly rather than scanning directories. Every merged catalogue must
+        resolve under the same assets root and IDs remain globally unique.
+        """
+
+        icons = dict(self._icons)
+        visuals = dict(self._visuals)
+        seen_ids = set(icons) | set(visuals)
+        for catalogue in catalogues:
+            if catalogue.root != self.root:
+                raise AssetCatalogueError(
+                    "cannot merge asset catalogues with different roots: "
+                    f"{self.root} != {catalogue.root}"
+                )
+            for asset_id, icon in catalogue._icons.items():
+                _claim_id(asset_id, seen_ids)
+                icons[asset_id] = icon
+            for asset_id, visual in catalogue._visuals.items():
+                _claim_id(asset_id, seen_ids)
+                visuals[asset_id] = visual
+        return AssetCatalogue(self.root, icons, visuals)
 
     def get(self, asset_id: str) -> IconAsset:
         try:
