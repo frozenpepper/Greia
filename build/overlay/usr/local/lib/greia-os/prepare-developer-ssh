@@ -1,0 +1,35 @@
+#!/bin/sh
+set -eu
+
+# Development-only SSH bootstrap.
+#
+# Normal/release Greia images leave ssh.service disabled and the managed greia
+# account password-locked. Developer target images are deliberately reachable
+# with the owner-approved greia/greia login. The sealed image must not carry
+# reusable SSH host keys, so create missing keys on the actual booted machine,
+# immediately before sshd validates its configuration.
+#
+# Historical developer builders also wrote `AuthenticationMethods
+# publickey,password`, which means public key AND password, not either method.
+# Developer images do not preinstall an authorized key, so that made the stated
+# greia/greia recovery login impossible. Correct only explicitly marked dev
+# configurations to OpenSSH's single-method `any` behavior.
+
+is_developer=0
+if [ -f /etc/greia-os/developer-remote ]; then
+    is_developer=1
+elif grep -q '^# Development .*SSH policy' /etc/ssh/sshd_config.d/20-greia-parent.conf 2>/dev/null; then
+    is_developer=1
+fi
+
+[ "$is_developer" -eq 1 ] || exit 0
+
+/usr/bin/ssh-keygen -A
+
+for config in \
+    /etc/ssh/sshd_config.d/00-greia-security-floor.conf \
+    /etc/ssh/sshd_config.d/20-greia-parent.conf
+do
+    [ -f "$config" ] || continue
+    sed -i 's/^AuthenticationMethods[[:space:]]\+publickey,password$/AuthenticationMethods any/' "$config"
+done
