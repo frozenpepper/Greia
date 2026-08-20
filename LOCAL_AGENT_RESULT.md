@@ -100,4 +100,76 @@ Sanity measurement over 10 seconds in simulator:
 
 - **No Physical Hardware / Acer Performance Claim:** Evidence is from local Activity Simulator only (`SIMULATOR VISUAL REVIEW`). No physical Acer Aspire One or Raspberry Pi boot validation is claimed for this commit.
 - **No R7 Architecture Closure:** Display/session architecture R7 remains open; this work does not close R7.
-- **No Blanket Release-Art Approval:** `ui.shadow.soft` is accepted as a first shared visual consumer; other visual packs remain candidate until integrated and proven.
+- **No Blanket Release-Art Approval:** `ui.shadow.soft` and `ui.card.activity` are accepted as shared visual consumers; other visual packs remain candidate until integrated and proven.
+
+---
+
+# Greia V5 Shared Activity Card — Simulator Acceptance Result
+
+**Date:** 2026-08-20  
+**Repository:** `frozenpepper/Greia` (`main`)  
+**Runbook Authority:** `docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md`  
+**Consumer:** `ui.card.activity` (`default`, `focused`, `completed`)  
+**Evidence Class:** `SIMULATOR VISUAL REVIEW`  
+
+---
+
+## 1. Git & Commit Summary
+
+- **Start Base SHA:** `6ba3e440a1964dfa3af01626a51e9800428d7990`
+- **Head SHA:** (Current working tree)
+
+---
+
+## 2. Shared Activity Card Integration Details
+
+- **Semantic Asset ID:** `ui.card.activity`, with variants:
+  - `default = "visual/runtime/v1/ui/activity_card.png"` (neutral state)
+  - `focused = "visual/runtime/v1/ui/activity_card_focused.png"` (selected/hovered/launching state)
+  - `completed = "visual/runtime/v1/ui/activity_card_completed.png"`
+- **Implementation Mixin:** `SharedUiActivityCardMixin` in `src/greia_launcher/shared_ui_presentation.py` mixed into `GreiaChildShell`.
+- **Aspect Ratio & Centering:** Authored 360:430 portrait ratio preserved across all viewports; logical hit target remains unchanged; icons and labels centered in dedicated SVG wells.
+- **Fail-Soft Fallback:** Catch block wraps all cache and asset loading, disabling `_visual_cache` on failure and cleanly falling back to `GreiaLauncherPresentation._draw_activity_tile_content` primitive tile renderer.
+
+---
+
+## 3. Greia Simulator Acceptance Matrix
+
+All acceptance was performed through the Greia Activity Simulator (`http://127.0.0.1:8767`) with isolated state root `$HOME/.greia-simulator-v5-card`:
+
+| Test # | Viewport | Interface Size | Mode | Result | Screenshot Evidence | Status File |
+|---|---|---|---|---|---|---|
+| **01** | 1024x600 | Normal | Baseline Cards | **PASS** | `tmp/v5-card-simulator-evidence/02-cards-1024x600-normal.png` | `01-status-1024x600-normal.json` |
+| **02** | 1024x600 | Normal | Keyboard Selection (RIGHT) | **PASS** | `tmp/v5-card-simulator-evidence/03-selected-right.png` | N/A |
+| **03** | 1024x600 | Normal | Pointer Hover | **PASS** | `tmp/v5-card-simulator-evidence/04-hover.png` | N/A |
+| **04** | 1024x600 | Normal | Return Home & Lifecycle | **PASS** | `tmp/v5-card-simulator-evidence/05-returned-home.png` | mode: activities |
+| **05** | 1024x600 | Normal | Fallback: Missing Catalogue | **PASS** | `tmp/v5-card-simulator-evidence/10-fallback-missing-catalogue.png` | `10-status.json` |
+| **06** | 1024x600 | Normal | Fallback: Malformed Catalogue | **PASS** | `tmp/v5-card-simulator-evidence/11-fallback-malformed-catalogue.png` | `11-status.json` |
+| **07** | 1024x600 | Normal | Fallback: Corrupt Card PNG | **PASS** | `tmp/v5-card-simulator-evidence/12-fallback-corrupt-png.png` | `12-status.json` |
+| **08** | 1024x600 | Normal | Responsive Row 1 | **PASS** | `tmp/v5-card-simulator-evidence/20-1024x600-normal.png` | `20-status.json` |
+| **09** | 1024x600 | Large | Responsive Row 2 | **PASS** | `tmp/v5-card-simulator-evidence/21-1024x600-large.png` | `21-status.json` |
+| **10** | 1280x800 | Normal | Responsive Row 3 | **PASS** | `tmp/v5-card-simulator-evidence/22-1280x800-normal.png` | `22-status.json` |
+| **11** | 1366x768 | Compact | Responsive Row 4 | **PASS** | `tmp/v5-card-simulator-evidence/23-1366x768-compact.png` | `23-status.json` |
+| **12** | 1920x1080 | Normal | Responsive Row 5 | **PASS** | `tmp/v5-card-simulator-evidence/24-1920x1080-normal.png` | `24-status.json` |
+| **13** | 1111x700 | Normal | Responsive Row 6 | **PASS** | `tmp/v5-card-simulator-evidence/25-1111x700-normal.png` | `25-status.json` |
+
+---
+
+## 4. Frame Rate & Performance Sanity
+
+- **Measurement:** 10-second idle measurement in Activity catalogue.
+- **Frames Rendered:** 272 frames across 10.0 seconds (**27.2 FPS**, consistent with Greia 30 FPS clock).
+- **Status Evidence:** `tmp/v5-card-simulator-evidence/frame-before.json` and `frame-after.json`.
+
+---
+
+## 5. Failures Found and Corrected During Verification
+
+1. **Synthetic Pointer Tracking in Headless / Simulator Mode:** Synthetic `MOUSEMOTION` events from the simulator remote bridge were not reflected in `pygame.mouse.get_pos()` on macOS background processes where the OS window lacks native focus. Implemented `_pointer_pos(self, pygame)` and `_is_pointer_active(self, pygame)` in `src/greia_launcher/presentation.py` and handled `pygame.MOUSEMOTION` in `GreiaLauncherPresentation.run()` and `main.py` event loops.
+
+---
+
+## 6. Explicit Non-Claims
+
+- **No Physical Hardware / Acer Performance Claim:** Verified through Activity Simulator only (`SIMULATOR VISUAL REVIEW`).
+- **No R7 Architecture Closure:** Display coordinator and session boundary remain open.

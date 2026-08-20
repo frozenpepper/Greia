@@ -275,6 +275,10 @@ class LauncherApplication:
                     elif event.type == pygame.KEYUP:
                         if self._mode == "profiles":
                             self._parent_chord.handle_key_up(event.key)
+                    elif event.type == pygame.MOUSEMOTION:
+                        self._synthetic_pointer_active = True
+                        if hasattr(event, "pos"):
+                            pygame.mouse.set_pos(event.pos)
                     elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                         self._handle_click(event.pos, pygame)
                     elif event.type == pygame.VIDEORESIZE and self.windowed:

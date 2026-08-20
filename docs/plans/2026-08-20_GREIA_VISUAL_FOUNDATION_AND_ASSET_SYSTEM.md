@@ -177,7 +177,7 @@ This gate remains **SOURCE only** until the Activity Simulator protocol passes:
 docs/testing/2026-08-20_V5_ACTIVITY_SHARED_VISUAL_SIMULATOR.md
 ```
 
-## 4.8 First substantial visible shared UI consumer — SOURCE IMPLEMENTED, SIMULATOR PENDING
+## 4.8 First substantial visible shared UI consumer — ACCEPTED (SIMULATOR VISUAL REVIEW)
 
 The production child Shell now consumes the reviewed `ui.card.activity` artwork through:
 
@@ -195,19 +195,17 @@ Behavior:
 - the existing primitive launcher tile remains the fail-soft fallback when the optional shared card catalogue/PNG/cache path fails;
 - no Activity selection, hit target, catalogue, lifecycle or runtime authority is replaced by this mixin.
 
-This is the first V5 integration intended to produce a **clearly visible launcher change**, not merely prove plumbing.
-
-Required simulator protocol:
+Accepted via Activity Simulator protocol:
 
 ```text
 docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md
 ```
 
-Evidence remains **SOURCE** until that protocol passes.
+All 6 responsive matrix rows, keyboard navigation, hover, return Home lifecycle, fail-soft fallbacks (missing catalogue, malformed catalogue, corrupt PNG), and 27.2 FPS frame sanity check passed with full evidence in `tmp/v5-card-simulator-evidence/`.
 
 ## 4.9 After the current simulator gates
 
-Once Shape Garden and the shared Activity cards pass their simulator protocols:
+Following simulator acceptance of `ui.shadow.soft` and `ui.card.activity`:
 
 1. record the first Python Activity shared-visual seam as **SIMULATOR VISUAL REVIEW**;
 2. record `ui.card.activity` as a substantial visible Shell consumer at **SIMULATOR VISUAL REVIEW** scope;
@@ -222,17 +220,16 @@ Once Shape Garden and the shared Activity cards pass their simulator protocols:
 |---|---|
 | Stable guide | `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` |
 | Resume | `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` |
-| Active focus | **V5 — simulator acceptance of Python semantic reuse + visible shared Activity cards** |
+| Active focus | **V5 — visible shared Activity cards accepted in Activity Simulator** |
 | Environment coverage | V4 complete through Water/Pond; no new pack without concrete gap |
 | Catalogue/renditions | explicit semantic catalogue + generated PNG runtime catalogue present |
 | First Shell consumer | `ui.shadow.soft` accepted at **SIMULATOR VISUAL REVIEW** scope |
-| Visible Shell card consumer | `ui.card.activity/default|focused` implemented in source; simulator pending |
+| Visible Shell card consumer | `ui.card.activity/default|focused` accepted at **SIMULATOR VISUAL REVIEW** scope |
 | Activity API | `get_shared_visual(...)` + `get_shared_visual_path(...)` implemented in source |
 | First Activity consumer | Shape Garden consumes `ui.shadow.soft` in source with optional fallback |
-| Activity acceptance | **not yet claimed** |
-| Card acceptance | **not yet claimed** |
-| Required protocols | `docs/testing/2026-08-20_V5_ACTIVITY_SHARED_VISUAL_SIMULATOR.md`; `docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md` |
-| Next exact action | finish Shape Garden simulator acceptance already in progress; then execute shared-card simulator protocol, fix root causes, and update plan/resume/HANDOVER with exact evidence |
+| Card acceptance | **ACCEPTED (SIMULATOR VISUAL REVIEW)** |
+| Completed protocols | `docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md` |
+| Next exact action | proceed with remaining visible shared UI integration (`ui.panel.base` / category panels or `ui.button.primary`) or Web activity semantic visual adapter |
 
 ---
 

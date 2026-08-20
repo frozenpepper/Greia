@@ -235,6 +235,10 @@ class GreiaLauncherPresentation(LauncherApplication):
                     elif event.type == pygame.KEYUP:
                         if self._mode == "profiles":
                             self._parent_chord.handle_key_up(event.key)
+                    elif event.type == pygame.MOUSEMOTION:
+                        self._synthetic_pointer_active = True
+                        if hasattr(event, "pos"):
+                            self._pointer_position = event.pos
                     elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                         if self._mode == "parent_panel":
                             if not self._parent_panel.handle_click(event.pos):
@@ -446,15 +450,27 @@ class GreiaLauncherPresentation(LauncherApplication):
                     break
         self._activity_scroll_start = 0
 
-    def _draw_activities(self, screen: Any, theme: Any, pygame: Any) -> None:
+    def _is_pointer_active(self, pygame: Any) -> bool:
+        return bool(pygame.mouse.get_focused() or getattr(self, "_synthetic_pointer_active", False))
+
+    def _pointer_pos(self, pygame: Any) -> tuple[int, int]:
+        pos = getattr(self, "_pointer_position", None)
+        return pos if pos is not None else pygame.mouse.get_pos()
+
+    def _draw_activities(
+        self,
+        screen: Any,
+        theme: LauncherThemeSnapshot,
+        pygame: Any,
+    ) -> None:
         width, height = screen.get_size()
         activities = self._presented_activities
         if not activities:
             self._draw_empty(screen, pygame)
             return
 
-        pointer = pygame.mouse.get_pos()
-        pointer_active = pygame.mouse.get_focused()
+        pointer = self._pointer_pos(pygame)
+        pointer_active = self._is_pointer_active(pygame)
 
         hovered_target = None
         if pointer_active and self._cached_activities_targets:
@@ -525,7 +541,7 @@ class GreiaLauncherPresentation(LauncherApplication):
                 fill=theme.panel,
                 outline=theme.accent,
                 state=InteractionVisualState(
-                    hovered=badge.collidepoint(pygame.mouse.get_pos())
+                    hovered=badge.collidepoint(self._pointer_pos(pygame)) and self._is_pointer_active(pygame)
                 ),
                 style=self._DEPTH,
                 cached_shadow=shadow,
@@ -567,8 +583,8 @@ class GreiaLauncherPresentation(LauncherApplication):
         origin_x = (width - total_width) // 2
         origin_y = top + max(0, (available_h - total_height) // 2)
 
-        pointer = pygame.mouse.get_pos()
-        pointer_active = pygame.mouse.get_focused()
+        pointer = self._pointer_pos(pygame)
+        pointer_active = self._is_pointer_active(pygame)
         for local_index, presented_index in enumerate(
             range(window.start, window.stop)
         ):
@@ -598,9 +614,9 @@ class GreiaLauncherPresentation(LauncherApplication):
     def _draw_error_badge(self, screen: Any, pygame: Any) -> None:
         size = max(42, min(56, screen.get_height() // 10))
         icon = self._load_icon("close_button", size, pygame)
-        badge_rect = icon.get_rect(topright=(screen.get_width() - 14, 14))
-        screen.blit(icon, badge_rect)
-        self._targets.append(HitTarget("error_badge_dismiss", 0, badge_rect))
+        rect = pygame.Rect(screen.get_width() - size - 14, 14, size, size)
+        screen.blit(icon, icon.get_rect(center=rect.center))
+        self._targets.append(HitTarget("error_badge_dismiss", None, rect))
 
     @property
     def _active_locale(self) -> str:
@@ -630,8 +646,8 @@ class GreiaLauncherPresentation(LauncherApplication):
         available = max(0, right - left)
         show_labels = available >= len(collections) * 112
         x = left
-        pointer = pygame.mouse.get_pos()
-        pointer_active = pygame.mouse.get_focused()
+        pointer = self._pointer_pos(pygame)
+        pointer_active = self._is_pointer_active(pygame)
         for collection in collections:
             label_text = _category_title(collection.collection_id, self._active_locale)
             font_size = max(18, min(22, height // 2))
@@ -690,7 +706,7 @@ class GreiaLauncherPresentation(LauncherApplication):
         left = 112 if self._active_profile is not None else 20
         height = max(46, min(58, screen.get_height() // 10))
         back_rect = pygame.Rect(left, 16, height, height)
-        hovered = back_rect.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_focused()
+        hovered = back_rect.collidepoint(self._pointer_pos(pygame)) and self._is_pointer_active(pygame)
         back_state = InteractionVisualState(hovered=hovered)
         draw_raised_panel(
             screen,

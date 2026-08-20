@@ -148,9 +148,9 @@ passes in the Activity Simulator.
 
 ---
 
-# 6. Substantial visible shared UI is now in source
+# 6. Substantial visible shared UI is accepted in simulator
 
-The production child Shell now also consumes:
+The production child Shell now consumes:
 
 ```text
 ui.card.activity/default
@@ -164,7 +164,7 @@ src/greia_launcher/shared_ui_presentation.py
 src/greia_launcher/child_shell.py
 ```
 
-The shared card path is intentionally presentation-only:
+The shared card path is presentation-only:
 
 - normal cards use the reviewed default master;
 - selected / hovered / launching cards use the focused master;
@@ -173,46 +173,23 @@ The shared card path is intentionally presentation-only:
 - logical launcher hit targets/navigation/lifecycle remain unchanged;
 - the existing primitive tile renderer is the fail-soft fallback if the optional shared card path fails.
 
-This is intended to be a **visibly different launcher**, not another invisible plumbing proof.
-
-Required simulator protocol:
+Validated via Activity Simulator protocol:
 
 ```text
 docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md
 ```
 
-Current evidence: **SOURCE only**.
+Current evidence: **SIMULATOR VISUAL REVIEW** (6/6 responsive rows, selection/hover, return Home, fallbacks, 27.2 FPS frame sanity).
 
 ---
 
 # 7. Current exact next work
 
-If the Shape Garden simulator run is already in progress, finish it; do not restart from scratch merely because the visible card source landed meanwhile.
-
-Then:
-
 ```text
-1. sync current main
-2. complete/record Shape Garden semantic seam simulator evidence
-3. read docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md
-4. run the real Greia child Shell in the Activity Simulator
-5. verify shared portrait cards are visibly present
-6. verify default/focused states, hover, selection and launch animation
-7. run the 6-row responsive matrix
-8. verify missing/malformed catalogue fallback
-9. verify corrupt shared-card PNG fallback
-10. perform frame-count sanity
-11. fix only shared/root causes
-12. rerun affected simulator cases
-13. update active plan, this resume and HANDOVER with exact evidence
-14. commit/push accepted work to main
+1. implement Web Activity semantic visual adapter using the same IDs/variants without host path exposure
+2. continue visible Greia Shell integration with existing shared UI families (ui.panel.base / category panels, ui.button.primary)
+3. do not return to new environment-pack production unless a concrete reusable gap appears
 ```
-
-After both current simulator gates pass:
-
-1. implement the Web Activity semantic adapter/transport using the same IDs/variants without exposing host paths;
-2. continue **visible** Greia Shell integration with an existing shared UI family only where it materially improves the real product (`ui.panel.base` / category or launch surfaces are the likely next candidates, followed by `ui.button.primary`);
-3. do not return to new environment-pack production unless a concrete reusable gap appears.
 
 ---
 

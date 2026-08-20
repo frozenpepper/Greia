@@ -204,6 +204,10 @@ ui.shadow.soft
 
 `ui.shadow.soft` is integrated under launcher Activity tiles with primitive `draw_soft_shadow` fallback and accepted at **SIMULATOR VISUAL REVIEW** scope.
 
+### Substantial visible Shell consumer — accepted
+
+`ui.card.activity` (`default`, `focused`, `completed`) is integrated into `GreiaChildShell` via `SharedUiActivityCardMixin` preserving authored 360:430 portrait geometry, centering icons/labels, and providing fail-soft fallback. Accepted at **SIMULATOR VISUAL REVIEW** scope via `docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md`.
+
 ### Activity semantic resolver — source implemented
 
 `src/greia_platform/activity_api.py` now exposes:
