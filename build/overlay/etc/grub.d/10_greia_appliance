@@ -6,15 +6,18 @@ root_uuid="$(cat "$uuid_file")"
 case "$root_uuid" in
   *[!0-9A-Fa-f-]*|'') echo "Invalid Pip root filesystem UUID" >&2; exit 1 ;;
 esac
-# Developer/test builds keep the boot observable so a kernel panic prints to
-# tty1 and waits 30 s instead of silently rebooting with console=null panic=5.
-# Normal/release builds stay fully consoleless (see
-# docs/INSTALLED_OS_BOOT_POSTMORTEM.md §16).
+# Normal/release builds remain appliance-like and consoleless. Development
+# builds deliberately keep fatal boot failures on tty1 without an automatic
+# panic reboot. The accepted installed-OS postmortem established that a timed
+# reboot + suppressed console turns root/initramfs failures into an opaque grey
+# loop and destroys the most useful hardware evidence.
 console_arg="console=null"
 panic_arg="panic=5"
+visibility_args="quiet splash loglevel=0 systemd.show_status=false rd.systemd.show_status=false udev.log_priority=3 vt.global_cursor_default=0"
 if [ -f /etc/greia-os/developer-remote ]; then
   console_arg="console=tty1"
-  panic_arg="panic=30"
+  panic_arg="panic=0"
+  visibility_args="loglevel=4 systemd.show_status=true rd.systemd.show_status=true udev.log_priority=4 vt.global_cursor_default=1"
 fi
 logo="/boot/grub/greia-boot-logo.png"
 cat <<EOF
@@ -32,7 +35,7 @@ set timeout=0
 set timeout_style=hidden
 menuentry 'Greia OS' --unrestricted --id greia-os {
   search --no-floppy --fs-uuid --set=root $root_uuid
-  linux /vmlinuz root=UUID=$root_uuid ro quiet splash loglevel=0 $console_arg $panic_arg systemd.show_status=false rd.systemd.show_status=false systemd.crash_shell=no systemd.crash_chvt=0 udev.log_priority=3 vt.global_cursor_default=0 consoleblank=0
+  linux /vmlinuz root=UUID=$root_uuid ro $visibility_args $console_arg $panic_arg systemd.crash_shell=no systemd.crash_chvt=0 consoleblank=0
   initrd /initrd.img
 }
 EOF
