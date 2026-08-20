@@ -10,665 +10,425 @@
 
 ---
 
-## 0. Why this plan exists
+## 0. Purpose
 
-The initial Greia UI and model-generated Activities proved that merely telling a capable coding/model system to “make it cute” does not produce a coherent child product. The Shell has some promising illustration and interaction direction, but individual Activities can still collapse into prototype graphics: flat rectangles, primitive trees, unrelated control styles, empty compositions, weak hierarchy, and characters that look like development placeholders.
+Greia needs a visual system that is beautiful **because it is designed around the project’s real production and hardware constraints**, not one that depends on a professional animation department or fragile automated traditional-character rigging.
 
-A second experiment exposed another important limit: Greia cannot make its default visual architecture depend on generating detailed traditionally proportioned animals and then automatically deriving production-quality articulated animation rigs. Attempts to produce exact sprite sheets or decomposed multi-joint animals were unreliable, and programmatic full-anatomy vector recreation created visually poor results even when the underlying rig mechanics worked.
-
-That failure is useful evidence. Greia should not spend an open-source project’s nonexistent art-department budget fighting the medium. The project should instead develop a **constraint-native visual language** that makes simple, reproducible art look intentional, charming and recognizably Greia.
-
-The accepted direction of this workstream is therefore:
+The accepted working direction is:
 
 > **Simple expressive characters + strong faces + whole-body motion + chunky illustrated props + cozy layered scenes + tactile Greia UI.**
 
-The visual system should turn current limitations into a style advantage rather than treating them as defects to hide.
+This is a constraint-native Greia language, not an imitation of South Park or any other existing property. The useful lesson from economical animation styles is that limits can become a deliberate visual identity.
 
-This is not an instruction to imitate South Park or any other existing show. The useful lesson is only that a memorable visual language can be designed around economical, repeatable construction and animation. Greia must develop its own child-safe visual identity.
+The repeated detailed-unicorn experiments established useful negative evidence: one-shot AI sprite sheets, automatic detailed quadruped decomposition, and after-the-fact recreation of detailed generated art as articulated vectors are not reliable enough to be Greia’s default visual architecture.
 
 ---
 
-# 1. Authority and relationship to existing Greia documentation
+# 1. Authority
 
-This plan owns **sequencing, checkpoints, closure criteria, and append-only progress history for art/visual-system work while it is active**.
+This file owns **art-workstream sequencing, checkpoints, closure criteria, and append-only art progress history while active**.
 
 It does not replace:
 
-- `AGENTS.md` — repository-wide rules;
-- accepted ADRs — architecture/trust/runtime authority;
-- `docs/design/GREIA_VISUAL_STYLE_GUIDE.md` — living cross-product visual-language and typography direction;
-- `docs/design/GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md` — art inventory/production requirements;
-- source/runtime declarations — exact implemented APIs, file formats and runtime behavior;
-- `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md` — blocking platform implementation sequence;
+- `AGENTS.md` — repository-wide contributor rules;
+- accepted ADRs — architecture/runtime/trust authority;
+- `docs/design/GREIA_VISUAL_STYLE_GUIDE.md` — accepted cross-product visual language;
+- `docs/design/GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md` — production-art inventory;
+- source/runtime declarations — exact implemented APIs and file contracts;
+- the blocking architecture plan;
 - `HANDOVER.md` — current continuation/evidence boundary.
 
-When work in this plan settles a reusable visual rule, update the appropriate design authority rather than leaving the decision only in this plan. When it changes an implemented Activity/UI/asset API, update source-owned contracts and the relevant living skills/manuals in the same tranche.
+Current practical visual-authoring guidance:
+
+```text
+skills/greia-visual-authoring/SKILL.md
+```
+
+Current non-runtime visual-library seed:
+
+```text
+assets/visual/README.md
+assets/visual/library_v0.1.toml
+```
+
+Current A1 candidate character grammar:
+
+```text
+docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md
+```
+
+A candidate rule does not become canonical merely because it is committed. Owner review and promotion into the living visual style guide remain explicit gates.
 
 ---
 
 # 2. Multi-session progress protocol
 
-This plan is designed to survive many work sessions and different agents.
-
 ## 2.1 Mutable current checkpoint
 
-The small checkpoint below is the **only intentionally mutable summary** in this document. Keep it short and current.
+This table is the intentionally mutable summary. Keep it short and accurate.
 
 | Field | Current state |
 |---|---|
 | Active art phase | **A1 — Canonical style grammar and archetype specimens** |
-| Current design direction | constraint-native **puff / bean / cutout / object-friend** character language |
-| Working core cast | **Lilli** (unicorn puff), **Nino** (owl bean), **Tito** (fox puff), **Momo** (friendly monster fluff) |
-| Current motion seed | idle bounce, blink, happy hop, celebrate pop, surprised wobble, sleepy sway |
-| Current implementation status | A0 repository wiring complete: active plan, AGENTS registration, documentation authority map, visual-authoring skill, HANDOVER state, and non-runtime visual library seed are committed |
-| Current evidence | DESIGN SPEC + SOURCE only; no release-quality canonical character art, simulator visual acceptance, or C0/physical visual acceptance claimed |
-| Next exact step | begin A1 by defining the static construction/style grammar for Puff, Bean, Cutout Critter and Object Friend, then produce 256/128/64 comparison specimens for owner review before runtime motion APIs |
+| Current design direction | constraint-native **Puff / Bean / Cutout Critter / Object Friend** language |
+| Working core cast | **Lilli** (unicorn Puff), **Nino** (owl Bean), **Tito** (fox Puff), **Momo** (friendly monster Puff) |
+| Current motion seed | `idle_bounce`, `blink`, `happy_hop`, `celebrate_pop`, `surprised_wobble`, `sleepy_sway` |
+| Current implementation status | A1 candidate grammar plus first static SVG specimens are committed; visual library points to them as `candidate`, not approved runtime assets |
+| Current evidence | **DESIGN SPEC + SOURCE + DESKTOP VISUAL REVIEW** at 256/128/64; no simulator, C0/Acer, Pi or release-art acceptance claimed |
+| Current blocker/gate | **owner visual review of Lilli/Nino/Tito/Momo** before the candidate grammar is promoted and A1 closes |
+| Next exact step | inspect `assets/visual/specimens/a1/review.html`; revise/approve/reject the four cast candidates, then promote accepted grammar into `GREIA_VISUAL_STYLE_GUIDE.md` and proceed to A2 |
 
-## 2.2 Append-only progress ledger
+## 2.2 Append-only ledger rule
 
-Every substantive art/visual-system session MUST append a new dated entry under **§15 Progress ledger**. Do not rewrite older entries to make the history look cleaner.
+Every substantive art/visual session MUST append a dated entry under **§10 Progress ledger**. Do not rewrite older entries to make experiments look cleaner.
 
-Each entry records:
+Record:
 
-1. exact date/time or date;
-2. phase worked;
-3. files/artifacts changed;
-4. decisions made;
-5. evidence actually obtained;
-6. failures/rejected directions worth remembering;
-7. next exact action;
-8. relevant commit SHA(s) when known.
+1. phase;
+2. files/artifacts changed;
+3. decisions;
+4. evidence actually obtained;
+5. failures/rejected directions worth retaining;
+6. next exact action;
+7. relevant commit SHA(s).
 
-## 2.3 Session-resume rule
+## 2.3 Resume rule
 
-An agent resuming art work must:
+A later agent resuming visual work must read, in order:
 
-1. read `AGENTS.md`;
-2. read this plan’s **Current checkpoint** and latest ledger entries;
-3. read `docs/design/GREIA_VISUAL_STYLE_GUIDE.md` and `docs/design/GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md`;
-4. read `skills/greia-visual-authoring/SKILL.md` once present;
-5. inspect current source/assets before creating parallel systems;
-6. continue from the first incomplete acceptance item in the active art phase unless the owner explicitly reprioritizes.
+1. `AGENTS.md`;
+2. this checkpoint and latest ledger entry;
+3. `docs/design/GREIA_VISUAL_STYLE_GUIDE.md`;
+4. `docs/design/GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md`;
+5. `skills/greia-visual-authoring/SKILL.md`;
+6. the active phase’s specimen/spec files and current asset inventory.
 
-## 2.4 Evidence labels for art work
+Continue from the first incomplete acceptance item unless the owner explicitly reprioritizes.
 
-Use evidence scope precisely:
+## 2.4 Evidence vocabulary
 
-- **DESIGN SPEC** — documented visual rule or asset contract only;
-- **SOURCE** — committed source/assets exist and parse/validate as applicable;
-- **DESKTOP VISUAL REVIEW** — rendered/inspected on a normal development machine;
-- **SIMULATOR VISUAL REVIEW** — inspected through the Greia Activity Simulator at named synthetic viewports;
+- **DESIGN SPEC** — documented visual rule only;
+- **SOURCE** — committed source/assets exist and parse/render as applicable;
+- **DESKTOP VISUAL REVIEW** — visually inspected on a development machine;
+- **SIMULATOR VISUAL REVIEW** — inspected through Greia Simulator at named viewports;
 - **PHYSICAL VISUAL REVIEW** — inspected on named Greia reference hardware;
-- **REJECTED EXPERIMENT** — deliberately retained lesson, not a candidate asset.
+- **REJECTED EXPERIMENT** — retained lesson, not a candidate asset.
 
-Do not convert a source SVG, screenshot, HTML mock-up, or simulator result into Acer/Pi acceptance without the named physical review.
-
----
-
-# 3. Product constraints that shape the art system
-
-The visual system must be designed around Greia’s actual constraints rather than an imaginary production studio.
-
-1. **Open-source/no-art-department reality.** The default workflow must be viable for maintainers and model-assisted contributors without assuming a team of professional character animators.
-2. **C0 hardware floor.** Static SVG/PNG/sprite use, small bounded animation state and cheap transforms are preferred. Never require heavyweight real-time character software on the child device merely to make the product charming.
-3. **800×600 / 1024×600 readability.** Important silhouettes, expressions, icons and interaction states must survive small/old displays.
-4. **Offline first.** Runtime visuals cannot depend on network generation/CDNs.
-5. **Static meaning first.** Animation may enrich a state but cannot be the only way to understand it.
-6. **Language-light child UX.** Shape, expression, position, symbol, optional speech and motion should communicate before prose when appropriate.
-7. **Platform-owned system chrome remains authoritative.** Art work does not authorize Activities to replace/mimic protected Home/Back or other Greia trust surfaces.
-8. **One coherent world.** Shell, first-party Activities, rewards, profiles and common error/recovery states should feel related even when individual Activities have their own theme.
-9. **Generation must be constrained.** Models should compose within a Greia grammar instead of inventing a new visual system for every Activity.
-10. **Asset provenance/licensing remains mandatory.** Generated/contributed assets need a traceable source/license record appropriate to their origin and Greia governance.
+Never turn a browser/SVG/screenshot result into physical Greia acceptance.
 
 ---
 
-# 4. The new Greia character language
+# 3. Permanent product constraints for this workstream
 
-## 4.1 Default archetypes
+1. **No assumed art department.** The default pipeline must be viable for maintainers and model-assisted contributors.
+2. **C0 matters.** Static SVG/PNG/sprites and cheap bounded transforms are preferred; common charm must not require a heavyweight animation runtime.
+3. **Small displays matter.** Important silhouettes/faces/states must survive 800×600 / 1024×600 contexts and intended 64/128/256 character usages.
+4. **Offline runtime.** Core visuals never require network generation/CDNs.
+5. **Static meaning first.** Animation enriches meaning; it cannot be the only carrier of meaning.
+6. **Language-light child UX.** Shape, expression, position, symbol and optional speech/motion communicate before prose where appropriate.
+7. **Protected Greia chrome stays protected.** Art does not authorize Activities to replace or imitate system Home/Back.
+8. **One coherent world.** Shell, Activities, rewards, profiles and recovery should look related without forbidding Activity-specific themes.
+9. **Generation is constrained by grammar/library.** A model should not invent a new art system for every Activity.
+10. **Provenance remains required.** Generated/contributed/distributed assets need origin/right/status records.
 
-Greia should initially concentrate on a very small family of construction archetypes.
+---
+
+# 4. Working visual foundation
+
+## 4.1 Character archetypes
 
 ### Puff
 
-A soft round/oval main mass with a large face area, zero or tiny feet, optional stub arms/wings, and a few species/identity attachments.
-
-Good for unicorns, foxes, cats, dogs, rabbits, baby animals, monsters and recurring companions.
+One soft round/oval/fluffy primary mass, large face, zero/two tiny feet, optional stub arms, and a small identity-cue budget. Default for many animals/mascots.
 
 ### Bean
 
-A vertical rounded bean/drop body with face on the upper half, tiny feet and optional flap-like arms/wings.
+One vertical rounded/drop mass, face in upper half, tiny feet, optional wing/flap/arm shapes. Good for owl/bird/helper identities.
 
-Good for owls, birds, penguin-like creatures, little helpers and compact character roles.
+### Cutout Critter
 
-### Cutout critter
+Deliberately flat felt/sticker/paper-cut construction with a few large overlapping layers. Flatness is intentional, not missing anatomy.
 
-A deliberately flatter sticker/felt/paper-cut construction with very few layers and a strong silhouette.
+### Object Friend
 
-Good for activity-local characters, simple animals and scenes where flat composition is an asset rather than a compromise.
+The pedagogical object remains the primary silhouette and receives a face/tiny optional appendages. Prefer it when the number/letter/tool/shape itself can carry the role.
 
-### Object friend
+## 4.2 Default complexity discipline
 
-A pedagogical object with a face and very limited appendages: number, letter, block, palette, train wagon, tool, shape, food item, star, cloud, etc.
+Conceptual budget:
 
-Object friends are especially valuable because many Activities do not need an animal cast at all.
+```text
+1 main body mass
+1 face region
+0–2 tiny feet
+0–2 tiny arms/wings/flaps
+0–3 identity attachment groups
+```
 
-## 4.2 Default anatomy rule
+Avoid default dependence on articulated knees/elbows, front/back quadruped limb rigs, complex neck/torso anatomy, many small fur/hair pieces, or details that only work at large sizes.
 
-Unless an Activity has a strong reason and dedicated art, Greia characters should use:
+## 4.3 Working core cast
 
-- one primary body mass;
-- one face region;
-- zero to two tiny feet;
-- zero to two tiny arms/flaps/wings;
-- zero to three identity attachments such as ears, horn, tuft, tail, antennae, bow, hat or marking.
+- **Lilli** — unicorn Puff; wonder, kindness, imagination;
+- **Nino** — owl Bean; observation, books, thoughtfulness;
+- **Tito** — fox Puff; curiosity, exploration, playful cleverness;
+- **Momo** — friendly monster Puff; humor, emotion, experimentation.
 
-Avoid as the default:
+These remain design anchors/candidates until explicitly approved.
 
-- articulated knees/elbows;
-- anatomically realistic quadruped gait;
-- front/back multi-limb rigs;
-- complex neck/torso anatomy;
-- many independently animated hair/fur pieces;
-- detailed body rendering that only looks correct at large sizes.
+## 4.4 Expression seed
 
-A rare bespoke hero asset may exceed these limits, but the reusable Greia architecture must not depend on it.
-
-## 4.3 Recognition rule
-
-Identity should come primarily from:
-
-- silhouette;
-- face;
-- major color blocks;
-- two or three distinctive attachments;
-- personality/motion/sound.
-
-A “unicorn” does not need horse anatomy if a cream puff with a rainbow tuft, horn, tiny hoof cues and expressive face reads instantly as Lilli.
-
-## 4.4 Working core cast
-
-The current simple, internationally pronounceable Italian working names are:
-
-- **Lilli** — unicorn puff; wonder, kindness, imagination;
-- **Nino** — owl bean; observation, books, thoughtfulness;
-- **Tito** — fox puff; curiosity, exploration, playful cleverness;
-- **Momo** — friendly monster fluff; humor, emotion, experimentation.
-
-These names anchor design experiments; their existence does not require every Activity to use them.
-
----
-
-# 5. Expression system
-
-Expression is more important than anatomical articulation in the new style.
-
-## 5.1 Base expression vocabulary
-
-Reusable/hero characters should work toward:
-
-- `neutral`
-- `happy`
-- `excited`
-- `surprised`
-- `sleepy`
-- `sad_gentle`
-- `thinking`
-- `proud`
-- `silly`
+```text
+neutral
+happy
+excited
+surprised
+sleepy
+sad_gentle
+thinking
+proud
+silly
+```
 
 Normal educational mistakes must not use anger, shame or disappointed-at-the-child imagery.
 
-## 5.2 Expression ingredients
+## 4.5 Motion seed
 
-Prefer changing:
+Base Animation Set v0.1:
 
-- eye shape;
-- eyelid state;
-- pupil direction;
-- mouth shape;
-- cheek/blush intensity;
-- tiny ear/tuft/antenna orientation;
-- whole-body tilt/squash;
-- optional small particles.
+- `idle_bounce` — 1.6–2.4 s living/resting loop;
+- `blink` — 0.15–0.30 s micro-life cue;
+- `happy_hop` — 0.7–1.1 s anticipation/squash → hop → settle;
+- `celebrate_pop` — 0.9–1.4 s bigger pop + appendage response + bounded FX;
+- `surprised_wobble` — 0.5–0.9 s recoil/wobble + wide face;
+- `sleepy_sway` — 1.8–2.8 s slow sway/compression.
 
-This should provide emotional range without multiplying body rigs.
+Candidate v0.2 additions remain `think`, `yes_nod`, `no_wobble`, `look_or_point`, `reward_sparkle`, `enter_pop`, `exit_pop`, `listen`.
 
-## 5.3 Readability
+Do not proliferate motion names until v0.1 is demonstrated across multiple archetypes.
 
-Expressions must remain recognizably different at 128 px and should retain the intended emotional cue at 64 px where the character is used that small. Tiny internal linework that disappears at those sizes is not a substitute for expression.
+## 4.6 Scene/prop/FX direction
 
----
+Environment grammar: cozy storybook diorama / felt-board / paper-cut / toy-world layers with a quiet playable center and chunky readable props.
 
-# 6. Base motion vocabulary
+Priority environment families: meadow, forest, workshop, clinic, reading/classroom, night/sky, simple fantasy/castle, water/pond/underwater.
 
-The motion system should be semantic and reusable across compatible simplified characters.
+Priority effects: sparkles, stars, hearts, dust/impact puffs, glow rings, sleepy Zs, discovery rays, confetti. Counts/lifetimes must stay bounded.
 
-## 6.1 Base Animation Set v0.1
+## 4.7 UI visual direction
 
-### `idle_bounce`
-
-Purpose: default living/resting state.  
-Typical ingredients: 1.6–2.4 s gentle bob/breath, tiny sway, occasional blink, optional tail/tuft lag.
-
-### `blink`
-
-Purpose: micro-life and expression support.  
-Typical ingredients: 0.15–0.30 s eye close/open with tiny settle; may be embedded into idle.
-
-### `happy_hop`
-
-Purpose: small success/joy.  
-Typical ingredients: 0.7–1.1 s anticipation squash → short hop → stretch → soft landing → happy face.
-
-### `celebrate_pop`
-
-Purpose: completion/reward/major success.  
-Typical ingredients: 0.9–1.4 s larger pop, arms/flaps/ears reacting, happy/excited face, bounded sparkles/stars/hearts.
-
-### `surprised_wobble`
-
-Purpose: discovery, comic reaction, gentle wrong-choice feedback.  
-Typical ingredients: 0.5–0.9 s recoil/wobble, wide eyes, small settle.
-
-### `sleepy_sway`
-
-Purpose: night/rest/waiting variation.  
-Typical ingredients: 1.8–2.8 s slow sway, closed/half-lid eyes, soft body compression.
-
-## 6.2 Candidate v0.2 additions
-
-- `think`
-- `yes_nod`
-- `no_wobble`
-- `look_or_point`
-- `reward_sparkle`
-- `enter_pop`
-- `exit_pop`
-- `listen`
-
-Do not proliferate animation names before the v0.1 set is tested across multiple archetypes.
-
-## 6.3 Motion implementation principle
-
-A semantic motion should describe intent and normalized phase/transform behavior, not assume a horse knee or human elbow. Character-specific adapters may map the same semantic cue onto arms, wings, ears, tail, antennae or whole-body motion.
-
-The eventual runtime implementation should reuse `src/greia_platform/ui_motion.py` concepts or another accepted source-owned seam rather than creating uncontrolled per-Activity animation engines. Exact APIs are deferred until architecture/source review.
+Existing Screen/Overlay/Panel/Card/Collection/Control architecture remains authoritative. The visual layer should be rounded, tactile, warm, large, soft-depth, and consistent with the same motion language: lift, press/squash, pop, gentle wobble, pulse, sparkle.
 
 ---
 
-# 7. Scene, prop and effects language
+# 5. Asset-library direction
 
-Simpler characters free Greia to place visual richness where it is easier to produce reliably.
-
-## 7.1 Environments
-
-Preferred scene logic:
-
-- storybook diorama;
-- felt-board / paper-cut layering;
-- cozy toy-world composition;
-- large foreground/midground/background shapes;
-- chunky readable decorative props;
-- a quiet enough play area that children can identify interactive objects.
-
-Initial environment families should include at least:
-
-- meadow;
-- forest;
-- workshop;
-- clinic;
-- classroom/reading corner;
-- night/sky;
-- simple fantasy/castle;
-- water/pond/underwater as needed.
-
-## 7.2 Props
-
-Props should usually be more illustrative than raw primitives but simpler than realistic objects. Favor a few strong shapes, soft depth/shadow, recognizable silhouette and limited internal detail.
-
-Initial prop families:
-
-- nature;
-- learning/letters/numbers;
-- making/building;
-- clinic/care;
-- toys;
-- home/workshop furniture;
-- transport;
-- food;
-- rewards/treasure.
-
-## 7.3 Effects
-
-A small effects library can make economical assets feel rich:
-
-- sparkles;
-- stars;
-- hearts;
-- dust puffs;
-- little impact clouds;
-- glow/pulse rings;
-- sleepy Zs;
-- discovery rays;
-- confetti/celebration particles.
-
-Effects must be bounded and cheap; they should not turn every screen into visual noise.
-
----
-
-# 8. UI visual architecture workstream
-
-The existing semantic Screen/Overlay/Panel/Card/Collection/Control architecture remains authoritative. This plan concerns the **visual language and reusable assets/components** layered onto it.
-
-The target UI feeling is:
-
-- rounded and tactile;
-- toy-like without pretending to be a physical toy everywhere;
-- soft shadows/depth;
-- warm palette;
-- clear state hierarchy;
-- large child-sized targets;
-- coherent motion with the character system.
-
-Priority reusable presentation pieces:
-
-1. primary/secondary/icon buttons;
-2. activity card and selected/new/completed states;
-3. profile card/avatar frame;
-4. bottom/tool trays;
-5. speech/thought bubbles;
-6. counters/progress pills;
-7. reward/badge presentation frames;
-8. modal/sheet surfaces;
-9. hint/highlight treatments;
-10. loading/error/recovery illustrations;
-11. scene decorations and category/location portal art.
-
-UI motion should reuse the same vocabulary: small lift, squash/press, pop-in, wobble, pulse, sparkle. It should never interfere with input latency or semantic clarity.
-
----
-
-# 9. Asset library direction
-
-The intended long-term library is organized by semantic purpose, not by ad-hoc filenames discovered at runtime.
-
-Conceptual layout:
+Conceptual semantic families:
 
 ```text
-assets/
+assets/visual/
   characters/
-    heroes/
-    standard/
-    activity_cast/
-    object_friends/
   expressions/
   animations/
   props/
   environments/
   ui/
   fx/
-  icons/
-  catalog/
+  specimens/
+  library_v0.1.toml
 ```
 
-Exact repository paths/catalog schemas become source-owned only when implemented. Do not make a new runtime filesystem-discovery API merely to mirror this conceptual tree.
+This tree is a design/library organization, **not runtime filesystem-discovery authority**.
 
-## 9.1 Asset tiers
+Asset tiers:
 
-### Tier A — canonical shared foundations
+- **Tier A** — carefully reviewed reusable Greia foundations;
+- **Tier B** — guided generated/contributed content reviewed before shared use;
+- **Tier C** — local/disposable content where style drift cannot undermine system identity/gameplay comprehension.
 
-Carefully reviewed reusable assets: core cast, body archetype exemplars, common expressions, common effects, core props, UI visuals.
-
-### Tier B — guided generated/contributed content
-
-Minor characters, Activity cast, secondary props and scene variants created under Greia authoring rules and reviewed before inclusion.
-
-### Tier C — local/disposable content
-
-One-off decorative variants where failure cannot undermine system identity or gameplay comprehension.
-
-## 9.2 Canonical asset rule
-
-Greia should prefer explicit asset IDs/catalogues over “scan this directory and guess what it means.” The existing Core Icons v1 catalogue is precedent for semantic inventory. New character/scene catalogues should follow the same general explicitness once formats are designed and reviewed.
-
----
-
-# 10. Model/agent authoring skills
-
-Model-assisted contribution is a first-class economic constraint of this project. Greia must teach models how to stay inside the visual language.
-
-The living practical guide is:
+Asset review states:
 
 ```text
-skills/greia-visual-authoring/SKILL.md
+concept
+candidate
+approved
+superseded
+rejected
 ```
 
-It covers:
-
-- mandatory project/design context;
-- character archetype selection;
-- silhouette and face rules;
-- species simplification;
-- expression generation;
-- motion selection;
-- scene composition;
-- prop generation;
-- UI illustration rules;
-- use/reuse of the asset library;
-- prohibited complexity/style drift;
-- required small-size checks;
-- evidence/provenance expectations.
-
-The Activity authoring skill should eventually direct Activity models to this visual skill instead of expecting each Activity prompt to rediscover art direction.
+Presence in Git never means `approved`.
 
 ---
 
-# 11. Phased work plan
+# 6. Rejected/default-nonviable approaches
+
+Retain these lessons unless materially new evidence justifies reopening them:
+
+1. one-shot AI 8×8 sprite sheet assumed to be production animation;
+2. automatic detailed traditional quadruped decomposition/rigging as Greia’s default character architecture;
+3. programmatic recreation of a detailed generated animal into unrelated full-anatomy vector geometry;
+4. raw tutorial/debug Pygame geometry as final represented art;
+5. solving visual production by assuming professional artists/animators will appear;
+6. random unrelated visual language per generated Activity.
+
+A donated bespoke high-quality asset is not forbidden; the **reusable default architecture** simply cannot depend on it.
+
+---
+
+# 7. Phased work plan
 
 ## A0 — Workstream foundation **[COMPLETE — DESIGN SPEC/SOURCE]**
 
-Deliverables:
-
-- [x] create this active art plan with multi-session progress protocol;
-- [x] reference it from `AGENTS.md` as the mandatory current art-related workstream plan without superseding the blocking architecture plan;
-- [x] establish `skills/greia-visual-authoring/SKILL.md`;
-- [x] create a starter repository asset-library contract/readme that clearly distinguishes design inventory from runtime API;
-- [x] record the art workstream in `HANDOVER.md` without changing R7 evidence/priority;
-- [x] commit the tranche to `main`.
-
-Closure criterion: another agent can resume art work from repository files alone and knows the exact next visual task, rules, progress location and evidence boundary. **Satisfied at repository/source scope on 2026-08-20.**
+- [x] active art plan + multi-session protocol;
+- [x] `AGENTS.md` registration;
+- [x] `skills/greia-visual-authoring/SKILL.md`;
+- [x] `assets/visual/README.md` and non-runtime inventory seed;
+- [x] HANDOVER/documentation authority registration;
+- [x] coherent work committed to `main`.
 
 ## A1 — Canonical style grammar and archetype specimens **[ACTIVE]**
 
-Deliverables:
+- [ ] promote accepted constraint-native character direction into `GREIA_VISUAL_STYLE_GUIDE.md`;
+- [x] define candidate Puff/Bean/Cutout Critter/Object Friend construction grammar;
+- [x] define candidate outline/shadow/fill/detail/color disciplines;
+- [x] create 256/128/64 static comparison review source;
+- [x] define economical versus placeholder failure patterns;
+- [ ] **owner visual review of Lilli/Nino/Tito/Momo**;
+- [ ] revise/approve/reject candidates and promote accepted rules.
 
-- [ ] promote the constraint-native character direction into the appropriate living design guide;
-- [ ] define Puff, Bean, Cutout Critter and Object Friend construction sheets;
-- [ ] define canonical outline/shadow/fill/detail rules consistent with `runtime/theme-defaults.toml` while allowing themed content palettes;
-- [ ] create comparison specimens at 256/128/64 px;
-- [ ] define “too simple/placeholder” versus “appropriately economical” examples;
-- [ ] owner visual review of at least Lilli, Nino, Tito and Momo in static form.
+Candidate grammar:
 
-Closure criterion: independent contributors/models can make recognizably Greia characters without copying a specific existing character.
+```text
+docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md
+```
+
+Candidate review:
+
+```text
+assets/visual/specimens/a1/review.html
+```
+
+A1 closes only after owner visual review and reconciliation into the canonical living style guide/library statuses.
 
 ## A2 — Expression and motion system
 
-Deliverables:
+- [ ] expression specification and face-state templates;
+- [ ] normalized timing/phase/easing for Base Animation Set v0.1;
+- [ ] demonstrate all six base motions on at least Puff, Bean and Object Friend;
+- [ ] define static fallbacks;
+- [ ] inspect existing `ui_motion`/runtime seams before any implementation; no parallel animation framework;
+- [ ] desktop/simulator clarity/performance evidence.
 
-- [ ] expression spec and face-state templates;
-- [ ] Base Animation Set v0.1 normalized timing/phase/easing rules;
-- [ ] demonstrate all six v0.1 motions on at least Puff, Bean and Object Friend archetypes;
-- [ ] static fallbacks for each semantic reaction;
-- [ ] assess whether any shared runtime motion helper needs extension; do not implement a parallel animation framework without review;
-- [ ] simulator/desktop performance and clarity checks.
+## A3 — Starter character and Object Friend library
 
-Closure criterion: motion looks intentional across multiple simple archetypes without anatomical rigs.
-
-## A3 — Starter character and object-friend library
-
-Deliverables:
-
-- [ ] canonical core cast assets for Lilli/Nino/Tito/Momo after owner approval;
+- [ ] approved Lilli/Nino/Tito/Momo assets;
 - [ ] 8–12 reusable standard creatures;
-- [ ] 10–15 object friends/educational characters;
-- [ ] semantic metadata/catalogue design with explicit provenance;
-- [ ] 64/128/256 variants or vector masters with deterministic raster pipeline where appropriate.
+- [ ] 10–15 Object Friends;
+- [ ] explicit metadata/provenance;
+- [ ] appropriate vector masters and/or deterministic 64/128/256 derivatives.
 
-Closure criterion: Activities can draw from a meaningful shared cast before inventing new characters.
+## A4 — Props, environments and FX
 
-## A4 — Props, environments and FX library
-
-Deliverables:
-
-- [ ] first coherent meadow/forest/workshop/clinic scene families;
-- [ ] 20–30 initial reusable chunky props across priority categories;
+- [ ] first meadow/forest/workshop/clinic scene families;
+- [ ] 20–30 initial reusable props;
 - [ ] common FX pack;
-- [ ] layered scene composition guidance and safe playfield conventions;
-- [ ] low-resolution screenshots showing that scenes are rich without becoming cluttered.
-
-Closure criterion: a simple generated Activity can look substantially better by composing shared assets instead of drawing prototype geometry.
+- [ ] layered scene/safe-playfield guidance;
+- [ ] low-resolution scene review.
 
 ## A5 — UI visual component language
 
-Deliverables:
-
-- [ ] visual variants for existing semantic buttons/cards/panels/trays/progress/bubbles;
-- [ ] hover/focus/press/selected/new/completed/locked/error state treatment;
-- [ ] consistent icon/illustration sizing and depth rules;
-- [ ] reusable child-safe loading/error/recovery art;
-- [ ] interaction-motion mapping to shared semantic motion vocabulary;
+- [ ] reusable visual variants for buttons/cards/panels/trays/progress/bubbles;
+- [ ] hover/focus/press/selected/new/completed/locked/error treatment;
+- [ ] icon/depth sizing rules;
+- [ ] loading/error/recovery illustration system;
+- [ ] shared motion mapping;
 - [ ] 800×600 and 1024×600 reference compositions.
-
-Closure criterion: Greia-owned controls and common first-party Activity UI no longer look like unrelated prototype widgets.
 
 ## A6 — Model authoring/validation pack
 
-Deliverables:
-
-- [ ] mature `greia-visual-authoring` skill with examples and rejection criteria;
-- [ ] update `greia-activity-authoring` to require/reuse the visual skill for relevant work;
-- [ ] define lightweight static validation/checklist for asset dimensions, paths, provenance, missing states and obvious style-contract violations;
-- [ ] explicitly avoid pretending deterministic code can judge subjective beauty;
-- [ ] test instructions with at least one weaker/local model and one stronger model.
-
-Closure criterion: model-assisted contributors reliably reuse the Greia grammar/library instead of starting from raw rectangles or unrelated art styles.
+- [ ] mature visual-authoring skill with approved examples/rejection criteria;
+- [ ] Activity skill points to/reuses visual skill;
+- [ ] lightweight deterministic validation only for objective contracts, never fake subjective beauty scoring;
+- [ ] test the authoring instructions with weaker and stronger models.
 
 ## A7 — Platform/library integration
 
-Prerequisite: source/architecture review for any runtime-facing asset or motion API.
-
-Deliverables:
+Prerequisite: source/architecture review of runtime-facing asset/motion APIs.
 
 - [ ] explicit catalogue/loader contract if needed;
-- [ ] bounded caching and no per-frame decode/I/O;
-- [ ] Python/Pygame shared helpers first where current runtime authority allows;
-- [ ] future Web runtime consumes the same semantics/assets rather than a parallel design system;
-- [ ] asset fallback behavior and package/image composition;
-- [ ] simulator asset preview/gallery tooling if useful.
+- [ ] bounded caching/no per-frame decode or I/O;
+- [ ] Python/Pygame helpers only through accepted platform seams;
+- [ ] future Web runtime uses the same semantic art system;
+- [ ] fallback/package composition;
+- [ ] simulator preview tooling if useful.
 
-Closure criterion: shared art is inexpensive and easy to consume without violating Greia runtime/trust boundaries.
+## A8 — First-party Shell/Activity refit and acceptance
 
-## A8 — First-party Activity/Shell visual refit and acceptance
-
-Deliverables:
-
-- [ ] identify first-party screens/Activities with prototype-art debt;
-- [ ] refit in small reviewable tranches using shared components/assets;
-- [ ] preserve gameplay/input/storage/localization behavior while improving presentation;
+- [ ] inventory prototype-art debt;
+- [ ] refit in small reviewable tranches;
+- [ ] preserve gameplay/input/storage/localization behavior;
 - [ ] simulator review at named viewports;
-- [ ] physical Acer/Pi visual/performance review where relevant;
-- [ ] update screenshots/docs and retire superseded provisional assets intentionally.
-
-Closure criterion: the initial public Greia experience visibly belongs to one product and simple model-generated Activities can meet a useful visual baseline by default.
+- [ ] physical Acer/Pi review where runtime/performance claims require it;
+- [ ] retire superseded provisional assets intentionally.
 
 ---
 
-# 12. Quality gates
+# 8. Quality gates
 
-A candidate visual foundation is not accepted merely because it renders.
+## Character
 
-## 12.1 Character gate
-
-Check:
-
-- silhouette recognizable at 64/128/256;
-- face clear at expected usage sizes;
-- expression states visibly distinct;
-- no unnecessary anatomy/parts;
-- accessory count restrained;
+- silhouette recognizable at intended 64/128/256 uses;
+- face clear and expression distinguishable;
+- no unnecessary anatomy/attachments;
 - color/outline/detail coherent with Greia;
-- neutral static pose works without animation;
-- motion does not expose ugly gaps or require bespoke anatomy to look plausible.
+- neutral static pose works;
+- motion should not require anatomy that the style intentionally removed.
 
-## 12.2 Activity scene gate
+## Scene
 
-Check:
+- gameplay entities separate from decoration;
+- background supports rather than overwhelms play;
+- no accidental giant dead areas;
+- represented props are intentional art, not leftover debug geometry;
+- protected system-safe region clear;
+- 800×600 / 1024×600 readable.
 
-- interactive objects clearly separate from decoration;
-- background does not overpower gameplay;
-- layout has visual hierarchy and no giant accidental dead zones;
-- props look intentional rather than raw debug primitives;
-- system-safe region remains respected;
-- 800×600 / 1024×600 remain legible;
-- no essential meaning depends on subtle animation or color only.
+## UI
 
-## 12.3 UI gate
+- large child targets;
+- states readable by shape/depth/icon/position, not color alone;
+- Greia typography roles;
+- protected system controls unmistakable;
+- effects bounded/cheap.
 
-Check:
+## Runtime/performance
 
-- child hit targets remain large;
-- state changes are clear by shape/depth/icon/position, not color alone;
-- typography follows Greia roles;
-- standard controls look related across Activities;
-- protected system controls remain unmistakably Greia-owned;
-- shadows/effects are bounded and cheap.
-
-## 12.4 Performance gate
-
-Check at the appropriate implementation phase:
-
-- no per-frame asset decode or filesystem access;
-- bounded caches/particles/animation state;
+- no per-frame asset decode/filesystem work;
+- caches, particles and transient animation state bounded;
 - static fallback path;
-- no heavyweight animation runtime required on C0 merely for common mascots;
-- physical evidence before claiming the Acer floor is accepted.
+- no heavyweight character runtime required on C0 merely for common mascots;
+- no physical-hardware claim without physical evidence.
 
 ---
 
-# 13. Explicit rejected/default-nonviable directions
+# 9. Workstream completion
 
-Record these so future sessions do not repeat the same dead ends without new evidence.
+This workstream becomes COMPLETE only when:
 
-1. **One-shot 8×8 AI sprite sheet as the default character pipeline:** rejected as unreliable for temporal identity, loop continuity and exact frame count.
-2. **Automatic detailed traditional quadruped decomposition/rigging as the default Greia character architecture:** currently nonviable; occlusion, face states, limb topology and style preservation create too many failure modes.
-3. **Programmatic vector recreation of a detailed generated animal after the fact:** rejected as a default pipeline; mechanics can work while visual identity collapses.
-4. **“Just draw with Pygame primitives” as production art:** acceptable for prototypes/debug geometry, not a sufficient production aesthetic for represented trees, animals, clinics, rivers, etc.
-5. **Solve the problem by hiring an art/animation department:** not a viable project assumption.
-6. **Random visual style per generated Activity:** explicitly contrary to the Greia product direction.
+- living design authorities contain the accepted visual language;
+- model authoring guidance has been exercised;
+- meaningful reusable character/prop/environment/FX/UI foundations exist with provenance;
+- semantic expression/motion is consumable through accepted bounded architecture;
+- multiple actual Greia surfaces demonstrate the system;
+- desktop/simulator reference-viewport review is recorded;
+- physical low-resource review covers claims that require it;
+- HANDOVER identifies stable extension points and remaining limitations.
 
-These are default architecture conclusions, not a ban on a contributor donating an excellent bespoke asset.
-
----
-
-# 14. Completion definition
-
-This art workstream can be marked COMPLETE only when:
-
-- the Greia character/scene/UI language is documented and reflected in living design authorities;
-- a practical model authoring skill exists and has been exercised;
-- a meaningful shared character/prop/environment/FX/UI asset foundation exists with provenance;
-- the base semantic expression/motion vocabulary is implemented or consumable through an accepted bounded path;
-- multiple first-party Activities/Shell surfaces demonstrate the system rather than isolated mock-ups;
-- 800×600 / 1024×600 simulator/desktop review is recorded;
-- physical low-resource review is recorded for the runtime/rendering claims that require it;
-- HANDOVER and authoring docs identify the resulting stable extension points;
-- this plan’s open acceptance items are either completed or explicitly deferred into a successor plan with owner approval.
-
-When completed, preserve this document as historical evidence and remove/update its active-art-plan references from `AGENTS.md`/HANDOVER.
+When complete or explicitly replaced by the owner, preserve this plan as history and remove/update its active references from `AGENTS.md`/HANDOVER.
 
 ---
 
-# 15. Progress ledger — append only
+# 10. Progress ledger — append only
 
 ## 2026-08-20 — A0 started: constraint-native visual pivot
 
@@ -677,72 +437,96 @@ When completed, preserve this document as historical evidence and remove/update 
 
 ### Decisions
 
-- Abandon detailed traditionally articulated animals as the *default* Greia character architecture.
-- Develop an original Greia visual language around Puff, Bean, Cutout Critter and Object Friend archetypes.
-- Make expression and whole-body motion the primary character-animation tools.
-- Use scene composition, props, tactile UI and small FX to provide richness rather than anatomical complexity.
-- Adopt simple Italian working names that are also easy for foreign children to pronounce: Lilli, Nino, Tito, Momo.
+- Detailed traditionally articulated animals are not the default Greia architecture.
+- Adopt Puff, Bean, Cutout Critter and Object Friend as the initial constrained archetypes.
+- Make face/expression and whole-body motion the primary animation tools.
+- Use scene composition, props, tactile UI and small FX for richness.
+- Adopt the working names Lilli, Nino, Tito and Momo.
 - Seed Base Animation Set v0.1 with idle bounce, blink, happy hop, celebrate pop, surprised wobble and sleepy sway.
-- Make this file the durable multi-session art progress ledger, with a short mutable checkpoint plus append-only dated history.
+- Use a mutable checkpoint plus append-only ledger for multi-session persistence.
 
 ### Lessons retained
 
-- Attractive single character illustrations do not imply reliable generated sprite sheets.
-- Exact articulated part generation/decomposition is substantially harder than producing a coherent simple character.
-- Rig mechanics can be technically acceptable while the artwork remains visibly unacceptable.
-- Greia needs a style designed around reproducibility, not a weaker imitation of a studio-animation style.
+- Attractive single images do not imply reliable generated sprite sheets.
+- Detailed articulated decomposition is materially harder than coherent simple character construction.
+- Technically valid rig mechanics can still produce unacceptable art.
+- Greia needs reproducible charm, not a weak imitation of studio animation.
 
-### Work started
+### Next action
 
-- Active plan created.
-- `AGENTS.md`, visual-authoring skill, starter asset-library contract and HANDOVER registration are the immediate A0 follow-up tranche.
+Complete A0 repository wiring, then begin A1 static grammar/specimens.
 
-### Next exact action
+### Commit
 
-Complete A0 repository wiring, then produce A1 static archetype/style specimens and owner-review them before investing in runtime motion APIs.
-
-### Commits
-
-- Initial plan: `f05dda2d5e7f4dddb4f49eadfb971667591d0ec6`.
+- initial plan: `f05dda2d5e7f4dddb4f49eadfb971667591d0ec6`
 
 ## 2026-08-20 — A0 repository wiring complete; A1 activated
 
 **Phase:** A0 closure → A1 start  
 **Evidence:** DESIGN SPEC / SOURCE
 
-### Files/artifacts established
+### Established
 
-- `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md` — durable art sequencing/checkpoint/ledger;
-- `skills/greia-visual-authoring/SKILL.md` — practical model/contributor visual rules;
-- `assets/visual/README.md` — starter library/provenance/runtime-boundary contract;
-- `assets/visual/library_v0.1.toml` — explicit non-runtime design seed for archetypes, core cast, expressions and base motions;
-- `AGENTS.md` — art plan + visual skill added to mandatory read/update rules;
-- `docs/DOCUMENTATION.md` — blocking-plan versus art-workstream authority clarified;
-- `HANDOVER.md` — current art direction/evidence boundary/next exact step registered without altering R7 priority.
+- active plan;
+- visual-authoring skill;
+- visual-library README/inventory;
+- AGENTS/documentation/HANDOVER registration.
 
-### Decisions/clarifications
+### Boundary
 
-- The architecture-remediation plan remains the only blocking implementation sequence; the art plan is a subordinate cross-cutting visual workstream.
-- The initial visual library inventory deliberately declares `runtime_consumed = false`; this tranche does not invent an asset loader or motion API.
-- Visual evidence remains DESIGN SPEC/SOURCE only. The four working core characters are not release-approved art merely because their conceptual entries now exist.
-- Future substantive art sessions must update the checkpoint plus append-only ledger, so the work can continue reliably across sessions/agents.
-
-### Verification/evidence
-
-- Repository writes completed through the canonical GitHub connector on `main`.
-- No GitHub Actions were used or inspected.
-- No `make verify`, simulator visual acceptance or physical visual acceptance is claimed for this documentation/library-seed tranche.
+- architecture-remediation remains the blocking plan;
+- `runtime_consumed = false` on the visual design seed;
+- no release art, simulator or physical visual acceptance claimed.
 
 ### Commits
 
-- plan creation: `f05dda2d5e7f4dddb4f49eadfb971667591d0ec6`
-- visual-authoring skill: `33e8067b4c5f7b7e5151f7473e30173f36ff9216`
-- asset-library README: `be8f0f788c29b803c2361ec64983565e9243bae7`
-- library seed inventory: `df746e025cc01ebaff45ae6f314767194590e954`
-- `AGENTS.md` registration: `dc41f82e6eeb16e1729d68088f8c59d509d63aba`
-- documentation authority map: `cd6a3fdd6104aceb722f281767396a6627073ffb`
-- HANDOVER registration: `7c3443d04900f38109db197a7a9dabbdb34605b8`
+- plan: `f05dda2d5e7f4dddb4f49eadfb971667591d0ec6`
+- visual skill: `33e8067b4c5f7b7e5151f7473e30173f36ff9216`
+- asset README: `be8f0f788c29b803c2361ec64983565e9243bae7`
+- library seed: `df746e025cc01ebaff45ae6f314767194590e954`
+- AGENTS: `dc41f82e6eeb16e1729d68088f8c59d509d63aba`
+- documentation map: `cd6a3fdd6104aceb722f281767396a6627073ffb`
+- HANDOVER: `7c3443d04900f38109db197a7a9dabbdb34605b8`
+- A0 closure/A1 activation: `3ae3007a6b8631d091b4f983f0847b04a80dfd57`
 
-### Next exact action
+## 2026-08-20 — A1 candidate grammar and static cast specimens
 
-Begin A1. Define the canonical static construction/style grammar for Puff, Bean, Cutout Critter and Object Friend, including outline/shadow/fill/detail limits and positive/negative examples; then build 256/128/64 static specimens for Lilli/Nino/Tito/Momo and seek owner visual review before any runtime animation-system integration.
+**Phase:** A1 — Canonical style grammar and archetype specimens  
+**Evidence:** DESIGN SPEC / SOURCE / DESKTOP VISUAL REVIEW
+
+### Files/artifacts
+
+- `docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md` — candidate numeric/visual construction grammar;
+- `assets/visual/specimens/a1/lilli.svg`;
+- `assets/visual/specimens/a1/nino.svg`;
+- `assets/visual/specimens/a1/tito.svg`;
+- `assets/visual/specimens/a1/momo.svg`;
+- `assets/visual/specimens/a1/cutout_critter.svg`;
+- `assets/visual/specimens/a1/object_friend_3.svg`;
+- `assets/visual/specimens/a1/review.html` — 256/128/64 comparison;
+- `assets/visual/library_v0.1.toml` updated to `0.1.1` and candidate specimen/status references.
+
+### Candidate design rules exercised
+
+- 256×256 reusable-character review artboard;
+- one dominant body mass;
+- large face region;
+- roughly 3–4 px tinted outer contour / 2–3 px secondary contour at 256;
+- broad flat/two-stop fill treatment rather than detailed fur/3D painting;
+- restrained identity-cue and interior-detail budgets;
+- species recognition through horn/ears/tuft, mask/beak/wings, ears/tail/muzzle, antennae/fluff rather than full anatomy;
+- explicit distinction between intentionally economical design and placeholder/debug primitives.
+
+### Desktop review
+
+The six SVG specimens were locally rasterized and visually inspected at 256, 128 and 64 px. The four named characters remained recognizably distinct at the tested sizes. This is **desktop visual review only**; it is not owner approval, simulator acceptance or physical/C0 evidence.
+
+A CSS-authoring error in the first local render (`{{ ... }}` instead of valid `{ ... }` style blocks) temporarily suppressed intended outline styling. It was caught during visual inspection, fixed, re-rendered and the corrected SVG source was committed. Preserve this as a reminder that “it renders” must include inspection of the intended visual treatment, not merely successful SVG parsing.
+
+### Commit
+
+- A1 grammar/specimen source: `b3cf90c109eae14b2013ad62f69c64dccaa12e8a`
+
+### Gate / next exact action
+
+Owner reviews `assets/visual/specimens/a1/review.html` and the four static cast candidates. Record which are approved, revised/superseded or rejected. Do **not** close A1 or implement the shared runtime motion layer before that review. After acceptance, reconcile the accepted grammar into `GREIA_VISUAL_STYLE_GUIDE.md`, update library statuses, close A1, and begin A2.
