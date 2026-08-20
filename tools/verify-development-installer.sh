@@ -10,7 +10,7 @@ usage() {
 IMAGE="$(realpath "$1")"
 [[ -f "$IMAGE" ]] || { echo "Installer image not found: $IMAGE" >&2; exit 1; }
 
-for command_name in losetup mount umount unsquashfs awk grep realpath; do
+for command_name in losetup mount umount mountpoint unsquashfs awk grep realpath; do
   command -v "$command_name" >/dev/null || {
     echo "Missing verifier dependency: $command_name" >&2
     exit 1
@@ -23,6 +23,9 @@ LOOP=""
 mkdir -p "$MOUNT"
 cleanup() {
   local status=$?
+  # INT/TERM cleanup exits, which would otherwise trigger EXIT cleanup again.
+  # Clear traps first so a verifier failure never runs teardown twice.
+  trap - EXIT INT TERM
   set +e
   if mountpoint -q "$MOUNT" 2>/dev/null; then umount "$MOUNT"; fi
   [[ -z "$LOOP" ]] || losetup -d "$LOOP" 2>/dev/null || true
@@ -47,7 +50,7 @@ sqcat() {
 }
 
 sqhas() {
-  unsquashfs -ll "$1" "$2" 2>/dev/null | grep -q -- "$2"
+  unsquashfs -ll "$1" "$2" 2>/dev/null | grep -Fq -- "$2"
 }
 
 check_account() {
@@ -102,7 +105,7 @@ check_ssh_runtime() {
 }
 
 check_network() {
-  local squash="$1" label="$2"
+  local squash="$1" label="$2" path content
   for path in \
     etc/systemd/network/20-greia-wired.network \
     etc/systemd/network/25-greia-wireless.network
