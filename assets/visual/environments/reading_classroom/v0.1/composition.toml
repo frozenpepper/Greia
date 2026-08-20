@@ -1,0 +1,45 @@
+scene_id = "reading_classroom.day.reference.v0.1"
+status = "candidate-composition-proof"
+runtime_authority = false
+source_pack = "assets/visual/environments/reading_classroom/v0.1/"
+notes = "Target-size reference layout. Wall/floor, window/light, furniture and props remain reusable sources. Coordinates are design metadata only."
+
+[viewports."1024x600"]
+calm_center = [330, 245, 650, 410]
+
+[viewports."800x600"]
+calm_center = [250, 255, 510, 415]
+
+[[layers]]
+id = "room_base"
+assets = ["room_wall_base.svg", "room_floor_base.svg"]
+z = 0
+
+[[layers]]
+id = "window_light"
+assets = ["arched_window.svg", "window_light.svg"]
+z = 10
+ambient_motion = "very_slow_light_breathe_optional"
+
+[[layers]]
+id = "background_furniture"
+assets = ["tall_bookcase.svg", "chalkboard.svg"]
+z = 20
+
+[[layers]]
+id = "main_reading_area"
+assets = ["reading_tent.svg", "round_rug.svg"]
+z = 30
+
+[[layers]]
+id = "playfield_props"
+assets = ["beanbag.svg", "reading_chair.svg", "open_storybook.svg", "book_stack.svg", "toy_basket.svg", "floor_cushion.svg"]
+z = 40
+
+[[layers]]
+id = "decor"
+assets = ["bunting.svg", "potted_plant.svg", "hanging_mobile.svg"]
+z = 50
+
+[shared_reuse]
+assets = ["workshop.blocks", "workshop.pencil.cup"]

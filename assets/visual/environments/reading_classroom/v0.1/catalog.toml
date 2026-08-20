@@ -1,0 +1,146 @@
+catalog_id = "greia.environment.reading_classroom.v0.1"
+catalog_version = "0.1.0"
+status = "candidate"
+runtime_consumed = false
+active_plan = "docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md"
+provenance = "programmatic Greia source artwork created in-repo"
+notes = "Reading/classroom individual-asset pack. Reuses existing shared workshop blocks/pencil assets rather than duplicating them."
+
+[[assets]]
+id = "reading.room.wall.base"
+path = "room_wall_base.svg"
+family = "room_base"
+role = "background"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "reading.room.floor.base"
+path = "room_floor_base.svg"
+family = "room_base"
+role = "ground"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "reading.arched.window"
+path = "arched_window.svg"
+family = "furniture"
+role = "mid_background"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "reading.window.light"
+path = "window_light.svg"
+family = "light"
+role = "overlay"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "reading.tall.bookcase"
+path = "tall_bookcase.svg"
+family = "furniture"
+role = "mid_background"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "reading.book.stack"
+path = "book_stack.svg"
+family = "prop"
+role = "playfield"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "reading.open.storybook"
+path = "open_storybook.svg"
+family = "prop"
+role = "playfield"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "reading.reading.tent"
+path = "reading_tent.svg"
+family = "prop"
+role = "playfield"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "reading.round.rug"
+path = "round_rug.svg"
+family = "prop"
+role = "playfield"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "reading.beanbag"
+path = "beanbag.svg"
+family = "prop"
+role = "playfield"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "reading.reading.chair"
+path = "reading_chair.svg"
+family = "prop"
+role = "playfield"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "reading.chalkboard"
+path = "chalkboard.svg"
+family = "furniture"
+role = "mid_background"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "reading.bunting"
+path = "bunting.svg"
+family = "decor"
+role = "foreground"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "reading.potted.plant"
+path = "potted_plant.svg"
+family = "prop"
+role = "playfield"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "reading.toy.basket"
+path = "toy_basket.svg"
+family = "prop"
+role = "playfield"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "reading.hanging.mobile"
+path = "hanging_mobile.svg"
+family = "decor"
+role = "foreground"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "reading.floor.cushion"
+path = "floor_cushion.svg"
+family = "prop"
+role = "playfield"
+status = "candidate"
+alpha = true
+
+[shared_reuse]
+workshop_assets = ["workshop.blocks", "workshop.pencil.cup"]
