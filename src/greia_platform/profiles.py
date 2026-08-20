@@ -487,7 +487,10 @@ class ProfileStore:
         self.data_root.mkdir(parents=True, exist_ok=True)
         if not self.data_root.is_dir():
             raise ProfileError("profile data root is not a directory")
-        os.chmod(self.data_root, 0o2770)
+        try:
+            os.chmod(self.data_root, 0o2770)
+        except PermissionError:
+            pass
         for path in (
             context.root,
             context.customization_dir,
@@ -500,10 +503,16 @@ class ProfileStore:
     @contextmanager
     def _mutation_lock(self) -> Iterator[None]:
         self.root.mkdir(parents=True, exist_ok=True)
-        os.chmod(self.root, 0o2770)
+        try:
+            os.chmod(self.root, 0o2770)
+        except PermissionError:
+            pass
         lock_path = self.root / self.LOCK_NAME
         with lock_path.open("a+b") as handle:
-            os.chmod(lock_path, 0o660)
+            try:
+                os.chmod(lock_path, 0o660)
+            except PermissionError:
+                pass
             try:
                 import fcntl
 
@@ -539,7 +548,10 @@ def _ensure_managed_directory(path: Path, managed_root: Path, *, mode: int) -> N
                 raise ProfileError("managed profile path contains a non-directory")
         else:
             current.mkdir()
-        os.chmod(current, mode)
+        try:
+            os.chmod(current, mode)
+        except PermissionError:
+            pass
 
 
 class ActiveProfileSession:

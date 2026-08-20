@@ -938,29 +938,45 @@ class GreiaLauncherPresentation(LauncherApplication):
             self._ensure_selected_visible(pygame)
 
 
+_ACTIVITY_TITLE_CACHE: dict[tuple[str, str, str], str] = {}
+
+
 def _activity_title(activity: ActivityManifest, locale: str = "it") -> str:
     lang = locale.split("-")[0].lower() if locale else "it"
-    try:
-        loc_dir = Path(activity.root) / "locales"
-        target_file = loc_dir / f"{lang}.json"
-        if not target_file.exists():
-            target_file = loc_dir / "en.json"
-        if target_file.exists():
-            with open(target_file, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                title = (
-                    data.get("strings", {}).get("activity.title")
-                    or data.get("strings", {}).get(activity.title_key)
-                )
-                if title:
-                    return str(title)
-    except Exception:
-        pass
-    candidate = activity.title_key.strip()
-    if candidate and "." not in candidate:
-        return candidate
-    tail = activity.activity_id.rsplit(".", 1)[-1]
-    return tail.replace("-", " ").replace("_", " ").title()
+    root = getattr(activity, "root", None)
+    cache_key = (activity.activity_id, str(root) if root is not None else "", lang)
+    cached = _ACTIVITY_TITLE_CACHE.get(cache_key)
+    if cached is not None:
+        return cached
+
+    result: str | None = None
+    if root is not None:
+        try:
+            loc_dir = Path(root) / "locales"
+            target_file = loc_dir / f"{lang}.json"
+            if not target_file.exists():
+                target_file = loc_dir / "en.json"
+            if target_file.exists():
+                with open(target_file, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    title = (
+                        data.get("strings", {}).get("activity.title")
+                        or data.get("strings", {}).get(activity.title_key)
+                    )
+                    if title:
+                        result = str(title)
+        except Exception:
+            pass
+    if result is None:
+        candidate = activity.title_key.strip()
+        if candidate and "." not in candidate:
+            result = candidate
+        else:
+            tail = activity.activity_id.rsplit(".", 1)[-1]
+            result = tail.replace("-", " ").replace("_", " ").title()
+
+    _ACTIVITY_TITLE_CACHE[cache_key] = result
+    return result
 
 
 def _mix(

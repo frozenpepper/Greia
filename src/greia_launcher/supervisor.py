@@ -838,14 +838,17 @@ class ActivitySupervisor:
             env_customization = profile.customization_dir
             env_avatar_request = avatar_request
 
+        root_path = Path(os.environ.get("GREIA_OS_ROOT", str(PRODUCTION_ROOT))).resolve()
+        python_path = os.environ.get("PYTHONPATH") or str(root_path / "src")
         environment.update(
             {
                 "PATH": "/usr/local/bin:/usr/bin:/bin",
+                "PYTHONPATH": python_path,
                 "HOME": str(env_activity_data),
                 "XDG_CACHE_HOME": str(env_cache),
                 "XDG_CONFIG_HOME": str(env_config),
                 "XDG_DATA_HOME": str(env_data),
-                "GREIA_OS_ROOT": os.environ.get("GREIA_OS_ROOT", str(PRODUCTION_ROOT)),
+                "GREIA_OS_ROOT": str(root_path),
                 "GREIA_ACTIVITY_ID": manifest.activity_id,
                 "GREIA_ACTIVITY_ROOT": str(manifest.root),
                 "GREIA_ACTIVITY_DATA_DIR": str(env_activity_data),
