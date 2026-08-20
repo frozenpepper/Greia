@@ -1,13 +1,17 @@
 ---
 name: greia-visual-authoring
-description: Practical guide for producing reusable Greia visual assets, characters, backgrounds, props, FX and UI in the constraint-native Greia style.
+description: Practical guide for producing and integrating reusable Greia visual assets, characters, backgrounds, props, FX and UI in the constraint-native Greia style.
 ---
 
 # Greia Visual Authoring Skill
 
 **Status:** living derived guide  
 **Reviewed:** 2026-08-20  
-**Active art plan:** `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`
+**Main visual-system guide:** `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`  
+**Active art plan:** `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`  
+**Current resume:** `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md`
+
+Before substantial visual work, read the main visual-system guide. This skill is the practical production checklist; it does not duplicate the full architecture/index.
 
 ## 1. Core production rule
 
@@ -17,7 +21,7 @@ Do not begin by drawing a crude full screen and then calling it a style directio
 
 The production model is:
 
-> **excellent individual assets → coherent packs → layered composition → subtle animation/parallax/light/shadow → Shell/Activity reuse**
+> **excellent individual assets → coherent packs → layered composition → subtle animation/parallax/light/shadow → explicit semantic runtime consumption → Shell/Activity reuse**
 
 HTML/mock screens are review tools only. They are not a substitute for good art.
 
@@ -72,7 +76,7 @@ Hard rules:
 - preserve the same character art across states;
 - `blink` must physically read as closed eyes;
 - do not add fake overlays that degrade the face;
-- character work must not monopolize the visual workstream while the environment/UI library remains empty.
+- character work must not monopolize the visual workstream when current integration work has priority.
 
 ## 4. Environment assets
 
@@ -128,12 +132,12 @@ Do not animate everything. Motion should create life and depth, not noise.
 
 Lighting is a shared visual system.
 
-Create reusable assets/treatments for:
+Create/reuse assets/treatments for:
 
 - contact shadows;
 - cast-shadow decals;
 - warm/cool glows;
-- sun/window shafts;
+- sun/window/moonlight shafts;
 - haze/fog;
 - foreground vignette shadows;
 - reward/discovery light effects.
@@ -142,7 +146,7 @@ A composable asset should normally have a clear plan for grounding and lighting 
 
 ## 7. UI visual assets
 
-Build reusable families for:
+Build/reuse families for:
 
 - primary/secondary/quiet buttons;
 - icon buttons;
@@ -174,35 +178,59 @@ Protected Greia Home/Back chrome remains platform-owned and must not be imitated
 
 For each pack:
 
-1. list the individual assets;
-2. produce the individual high-quality assets;
-3. review each asset on neutral/light/dark backgrounds;
-4. reject or fix weak assets before scene assembly;
-5. record provenance/status;
-6. compose a small reference scene using only accepted pieces;
-7. add parallax/subtle motion where appropriate;
-8. integrate only after the underlying assets are worth reusing.
+1. prove a real reuse/coverage gap exists;
+2. inspect existing shared assets first;
+3. list the individual assets;
+4. produce/revise the individual high-quality assets;
+5. review each asset on representative grounds and at intended size;
+6. reject or fix weak assets before scene assembly;
+7. record provenance/status;
+8. compose a small reference scene using only accepted pieces;
+9. add parallax/subtle motion where appropriate;
+10. integrate only after the underlying assets are worth reusing.
 
 Never hide weak assets inside a busy composition.
 
-## 9. First active pack
+## 9. Current active phase — V5 integration
 
-The current first environment target is the **forest/meadow pack**.
+Broad environment/UI source coverage now exists through Forest/Meadow, Shared UI, Workshop, Clinic/Care, Reading/Classroom, Fantasy/Village/Night and Water/Pond.
 
-Initial tranche:
+**Do not create another environment family by default.** A new pack requires a concrete reusable coverage gap.
 
-- hero tree;
-- secondary tree;
-- bush;
-- grass/ground edge;
-- rock/log cluster;
-- cloud;
-- distant hill/tree-line layer;
-- sunlight/fog overlay;
-- contact shadow;
-- firefly ambient FX.
+The active work is V5 shared consumption/integration. The current first Shell consumer is:
 
-Do not compose another forest/meadow scene until the individual assets are visually reviewable.
+```text
+ui.shadow.soft
+```
+
+The integration architecture is:
+
+```text
+reviewed SVG master
+→ explicit source manifest
+→ build-time PNG rendition
+→ explicit generated runtime catalogue
+→ AssetCatalogue
+→ PygameVisualSurfaceCache
+→ real Shell consumer
+```
+
+Hard integration rules:
+
+- do not scan `assets/visual/` at runtime;
+- do not rasterize SVG on the target;
+- do not create a second catalogue or image cache;
+- do not decode/scale PNGs every frame;
+- keep caches bounded;
+- keep the existing primitive/static visual path as fallback for optional shared artwork during initial integration;
+- do not change launcher geometry merely to prove asset consumption;
+- do not add simulator-specific production code.
+
+Current local-agent protocol:
+
+`docs/testing/2026-08-20_V5_VISUAL_INTEGRATION_SIMULATOR_LOCAL_AGENT.md`
+
+For that current owner-directed tranche, runtime/visual/fallback/responsive acceptance is performed through the Activity Simulator.
 
 ## 10. Evidence and progress
 
@@ -215,9 +243,12 @@ Use accurate labels:
 - PHYSICAL VISUAL REVIEW;
 - REJECTED EXPERIMENT.
 
-After substantive visual work, update the checkpoint/progress log in:
+After substantive visual work:
 
-`docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`
+- update the checkpoint/progress log in `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`;
+- update `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` if the continuation state changed;
+- update `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` if the stable visual architecture/index changed;
+- update `HANDOVER.md` when the project-wide continuation/evidence boundary changed.
 
 ## 11. Explicit failure patterns
 
@@ -231,4 +262,9 @@ Do not repeat without new evidence:
 - primitive mock backgrounds presented as production art;
 - scene-first HTML demos before reusable assets exist;
 - random unrelated art direction per Activity;
-- spending the entire visual effort on mascot mechanics while UI, props, lighting and backgrounds remain untouched.
+- spending the entire visual effort on mascot mechanics while UI, props, lighting and backgrounds remain untouched;
+- adding new environment packs merely to avoid integration work;
+- runtime SVG rendering;
+- arbitrary visual-directory scanning;
+- parallel per-Activity/shared-visual frameworks;
+- unbounded or per-frame image decoding caches.
