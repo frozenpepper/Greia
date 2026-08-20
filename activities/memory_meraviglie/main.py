@@ -451,6 +451,30 @@ def _is_safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
     return True
 
 
+def _compute_grid_layout(grid_cfg: dict[str, Any], card_count: int) -> tuple[int, int, list[pygame.Rect]]:
+    cols = grid_cfg["cols"]
+    rows = grid_cfg["rows"]
+    top_y = 95
+    bottom_y = REFERENCE_HEIGHT - 65
+    avail_w = REFERENCE_WIDTH - 140
+    avail_h = bottom_y - top_y
+
+    card_w = min(170, (avail_w - (cols - 1) * 18) // cols)
+    card_h = min(210, (avail_h - (rows - 1) * 18) // rows)
+    grid_w = cols * card_w + (cols - 1) * 18
+    grid_h = rows * card_h + (rows - 1) * 18
+    grid_ox = (REFERENCE_WIDTH - grid_w) // 2
+    grid_oy = top_y + (avail_h - grid_h) // 2
+
+    rects = []
+    for i in range(card_count):
+        c = i % cols
+        r = i // cols
+        rx = grid_ox + c * (card_w + 18)
+        ry = grid_oy + r * (card_h + 18)
+        rects.append(pygame.Rect(rx, ry, card_w, card_h))
+    return card_w, card_h, rects
+
 def main() -> int:
     pygame.init()
     screen = pygame.display.get_surface()
@@ -532,28 +556,7 @@ def main() -> int:
     while running and not activity_stop_requested():
         theme_cfg = THEMES[theme_idx]
         grid_cfg = GRID_CONFIGS[grid_idx]
-
-        cols = grid_cfg["cols"]
-        rows = grid_cfg["rows"]
-        top_y = 95
-        bottom_y = REFERENCE_HEIGHT - 65
-        avail_w = REFERENCE_WIDTH - 140
-        avail_h = bottom_y - top_y
-
-        card_w = min(170, (avail_w - (cols - 1) * 18) // cols)
-        card_h = min(210, (avail_h - (rows - 1) * 18) // rows)
-        grid_w = cols * card_w + (cols - 1) * 18
-        grid_h = rows * card_h + (rows - 1) * 18
-        grid_ox = (REFERENCE_WIDTH - grid_w) // 2
-        grid_oy = top_y + (avail_h - grid_h) // 2
-
-        card_rects = []
-        for i in range(len(cards)):
-            c = i % cols
-            r = i // cols
-            rx = grid_ox + c * (card_w + 18)
-            ry = grid_oy + r * (card_h + 18)
-            card_rects.append(pygame.Rect(rx, ry, card_w, card_h))
+        card_w, card_h, card_rects = _compute_grid_layout(grid_cfg, len(cards))
 
         if unflip_timer > 0.0:
             unflip_timer -= 0.033
@@ -619,7 +622,8 @@ def main() -> int:
                     continue
 
                 if unflip_timer <= 0.0 and not is_victory:
-                    for idx, rect in enumerate(card_rects):
+                    _, _, active_rects = _compute_grid_layout(GRID_CONFIGS[grid_idx], len(cards))
+                    for idx, rect in enumerate(active_rects):
                         if rect.collidepoint(mx, my):
                             card = cards[idx]
                             if not card["is_revealed"] and not card["is_matched"]:
@@ -677,7 +681,10 @@ def main() -> int:
         particles = surviving
 
         surf = canvas.surface
-        surf.fill(theme_cfg["bg"])
+        surf.fill(THEMES[theme_idx]["bg"])
+        theme_cfg = THEMES[theme_idx]
+        grid_cfg = GRID_CONFIGS[grid_idx]
+        card_w, card_h, card_rects = _compute_grid_layout(grid_cfg, len(cards))
 
         for bx in range(30, REFERENCE_WIDTH, 80):
             for by in range(30, REFERENCE_HEIGHT, 80):
