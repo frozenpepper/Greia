@@ -10,9 +10,20 @@ This tree is the source home for Greia's reusable visual library. Shell and Acti
 
 ## Production rule
 
-> **excellent individual assets → reusable asset packs → layered composition → subtle parallax / ambient motion / light / shadow → shared UI system → Shell/Activity reuse**
+> **excellent individual assets → reusable asset packs → layered composition → subtle parallax / ambient motion / light / shadow → shared UI system → one explicit shared consumption seam → Shell/Activity reuse**
 
 Reuse a suitable shared asset before painting a near-duplicate. A weak primitive does not become production art because it is hidden inside a scene.
+
+## Design inventories
+
+```text
+assets/visual/library_v0.1.toml
+assets/visual/packs_v0.1.toml
+```
+
+`library_v0.1.toml` owns the character/archetype/expression/motion seed inventory. `packs_v0.1.toml` owns the current pack-level design/review inventory and reuse dependencies.
+
+Neither file is a runtime discovery contract.
 
 ## Current source packs
 
@@ -24,55 +35,51 @@ assets/visual/specimens/a1/
 assets/visual/specimens/a2/
 ```
 
-Core cast: Lilli, Nino, Tito, Momo. Character grammar and motion design are useful shared foundations but are not release/runtime/physical approval.
+Core cast: Lilli, Nino, Tito, Momo. Static character anchors and motion/expression candidates retain their explicit review scopes; they are not implied release/runtime/physical approval.
 
 ### Forest / meadow v0.2
 
-```text
-assets/visual/environments/forest_meadow/v0.2/
-```
+`assets/visual/environments/forest_meadow/v0.2/`
 
 27 candidate SVG masters covering trees, foliage, props, distant layers, ground, light/fog, shadows and optional ambient FX. Includes composition metadata, actual-asset parallax proof, and bounded 1024×600 / 800×600 restraint references.
 
 ### Shared UI v0.1
 
-```text
-assets/visual/ui/v0.1/
-```
+`assets/visual/ui/v0.1/`
 
 Candidate shared masters for panels, cards/states, buttons/states, tabs, badges, progress, bubbles, reward/avatar frames, loading/error/empty/portal art, focus, shadows and highlights. Includes independently composed 1024×600 / 800×600 references.
 
 ### Workshop v0.1
 
-```text
-assets/visual/environments/workshop/v0.1/
-```
+`assets/visual/environments/workshop/v0.1/`
 
 19 candidate reusable masters: furniture, creative props, wall/floor bases, window/light and limited composition-critical additions required for layered target-size references.
 
 ### Clinic / care v0.1
 
-```text
-assets/visual/environments/clinic/v0.1/
-```
+`assets/visual/environments/clinic/v0.1/`
 
 17 candidate reusable masters covering warm pretend-care furniture/props, room bases, window/light and restrained care FX. Includes reduced-size and target-size desktop review. No medical labels/dosage-like content are embedded.
 
 ### Reading / classroom v0.1
 
-```text
-assets/visual/environments/reading_classroom/v0.1/
-```
+`assets/visual/environments/reading_classroom/v0.1/`
 
 17 candidate reusable masters covering room bases, arched window/light, bookcase/books, reading tent/rug/seating, chalkboard and restrained decor. Reuses Workshop block/pencil assets by semantic reference rather than duplicating them.
 
 ### Fantasy / village / night v0.1
 
-```text
-assets/visual/environments/fantasy_village_night/v0.1/
-```
+`assets/visual/environments/fantasy_village_night/v0.1/`
 
-15 candidate reusable masters covering night sky/moon, distant village/castle, cottages, castle tower, bridge, lantern, signpost, well, cobblestone and separate light/FX overlays. First desktop review revised weak cottage/tower/lantern/well/cobblestone treatments before commit. Forest vegetation/fireflies remain shared reuse dependencies rather than duplicated night variants.
+15 candidate reusable masters covering night sky/moon, distant village/castle, cottages, castle tower, bridge, lantern, signpost, well, cobblestone and separate light/FX overlays. Forest vegetation/fireflies remain shared reuse dependencies rather than duplicated night variants.
+
+### Water / pond v0.1
+
+`assets/visual/environments/water_pond/v0.1/`
+
+14 water-specific candidate masters covering pond-water/shoreline, lilies/reeds/duckweed, dock/stepping stones, ripple/shimmer/reflection treatment and restrained fish/dragonfly/bubble FX. Its target references reuse canonical Forest distant hills/tree line and the catalog points to Forest generic rocks/log/grass/flowers rather than duplicating them.
+
+Water/Pond includes independent 1024×600 / 800×600 layered references. The individual review corrected weak dock/lily-pad treatments and the target pass strengthened water/reed depth before recording the candidate review.
 
 Key authority/evidence files per environment pack normally include:
 
@@ -120,15 +127,28 @@ Environment/UI families normally progress through:
 
 Do not use a full-screen composition to conceal weak individual assets. Do not replace this workflow with generated scene/concept images.
 
-## Runtime boundary
+## Runtime boundary / next phase
 
-Any future runtime path must remain explicit and bounded:
+Broad candidate environment/UI coverage now exists. Additional environment families require a concrete reusable coverage gap; the next planned work is the V5 shared-consumption seam.
+
+Greia already has explicit platform asset code in:
+
+```text
+src/greia_platform/assets.py
+src/greia_platform/activity_assets.py
+assets/catalog/core_icons_v1.toml
+```
+
+Future shared visual consumption must extend that explicit manifest-driven pattern rather than introduce arbitrary directory scans or a second unrelated asset framework.
+
+Any runtime path must remain explicit and bounded:
 
 - semantic IDs/catalogues rather than arbitrary directory scans;
+- path containment and duplicate-ID rejection;
 - bounded caches;
 - no per-frame file/decode work;
 - static fallbacks for meaningful animated states;
 - no network/CDN dependency for core operation;
-- Python and future Web Activities should ultimately consume the same semantic visual system rather than parallel art libraries.
+- Python and future Web Activities consume the same semantic visual contract rather than parallel art libraries.
 
-All current packs remain `runtime_consumed = false` unless their own catalogue explicitly changes after architecture-reviewed integration.
+All current visual packs remain `runtime_consumed = false` until an architecture-reviewed implementation changes that explicitly.
