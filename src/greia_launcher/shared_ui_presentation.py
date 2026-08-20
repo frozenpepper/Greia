@@ -25,6 +25,117 @@ _SHARED_VISUAL_ERRORS = (
 )
 
 
+class SharedUiCategoryButtonMixin:
+    """Render root Activity-category controls with shared button artwork.
+
+    This changes presentation only. Category IDs, hit rectangles, ordering,
+    navigation and in-category Back behavior remain owned by the base launcher.
+    If the optional button rendition fails, only this category-button treatment
+    is disabled; the independently accepted shared panel/card paths remain live.
+    """
+
+    def _draw_category_bar(self, screen: Any, theme: Any, pygame: Any) -> None:
+        from .catalogue_view import ALL_ACTIVITIES_ID, _category_title
+        from .main import HitTarget
+
+        if (
+            getattr(self, "_shared_category_buttons_disabled", False)
+            or getattr(self, "_visual_cache", None) is None
+        ):
+            super()._draw_category_bar(screen, theme, pygame)
+            return
+        if not self._catalogue.category_ids:
+            return
+        if self._category_id != ALL_ACTIVITIES_ID:
+            super()._draw_category_bar(screen, theme, pygame)
+            return
+
+        collections = tuple(
+            item
+            for item in self._catalogue.collections
+            if item.collection_id != ALL_ACTIVITIES_ID
+        )
+        if not collections:
+            return
+
+        left = 112 if self._active_profile is not None else 20
+        error_active = (
+            (self._last_result and not self._last_result.succeeded)
+            or self._catalogue_error
+        )
+        right = screen.get_width() - (76 if error_active else 20)
+        gap = 9
+        height = max(42, min(52, screen.get_height() // 11))
+        available = max(0, right - left)
+        show_labels = available >= len(collections) * 112
+        x = left
+        pointer = self._pointer_pos(pygame)
+        pointer_active = self._is_pointer_active(pygame)
+        pending_targets: list[Any] = []
+
+        for collection in collections:
+            label_text = _category_title(collection.collection_id, self._active_locale)
+            font_size = max(18, min(22, height // 2))
+            label = self._category_label_surface(
+                label_text, font_size, theme.text, pygame
+            )
+            icon_size = max(26, height - 14)
+            if show_labels:
+                width = min(174, max(88, label.get_width() + icon_size + 32))
+            else:
+                width = height
+            if x + width > right:
+                break
+
+            rect = pygame.Rect(x, 18, width, height)
+            hovered = pointer_active and rect.collidepoint(pointer)
+            try:
+                button_surface = self._visual_cache.get(
+                    "ui.button.primary",
+                    variant="hover" if hovered else "default",
+                    size=rect.size,
+                )
+            except _SHARED_VISUAL_ERRORS:
+                self._shared_category_buttons_disabled = True
+                super()._draw_category_bar(screen, theme, pygame)
+                return
+            except pygame.error:
+                self._shared_category_buttons_disabled = True
+                super()._draw_category_bar(screen, theme, pygame)
+                return
+
+            screen.blit(button_surface, rect)
+            category_icon = self._category_shadowed_icon(
+                collection.icon_id or "backpack",
+                icon_size,
+                shadow_alpha=40,
+                shadow_offset=2,
+                pygame=pygame,
+            )
+            if show_labels:
+                icon_center = (rect.left + 12 + icon_size // 2, rect.centery)
+                screen.blit(
+                    category_icon,
+                    category_icon.get_rect(center=icon_center),
+                )
+                label_rect = label.get_rect(
+                    midleft=(rect.left + 20 + icon_size, rect.centery)
+                )
+                screen.blit(label, label_rect)
+            else:
+                screen.blit(
+                    category_icon,
+                    category_icon.get_rect(center=rect.center),
+                )
+
+            pending_targets.append(
+                HitTarget("activity_category", collection.collection_id, rect)
+            )
+            x += width + gap
+
+        self._targets.extend(pending_targets)
+
+
 class SharedUiShellPanelMixin:
     """Place reviewed shared panel artwork behind real Shell content.
 
@@ -171,9 +282,6 @@ class SharedUiActivityCardMixin:
         )
         target = transformed_rect(rect, motion, pygame)
 
-        # The reviewed shared card is intentionally portrait (360:430). Keep
-        # that authored ratio instead of stretching it into the launcher's
-        # square logical hit target. The surrounding target remains unchanged.
         card_height = max(1, target.height)
         card_width = max(
             1,
@@ -207,8 +315,6 @@ class SharedUiActivityCardMixin:
 
         screen.blit(card_surface, card_rect)
 
-        # Map authored source regions into the scaled card. The SVG reserves a
-        # large illustration well and a dedicated lower label band.
         content_rect = pygame.Rect(
             card_rect.left + round(card_rect.width * 45 / self._CARD_SOURCE_WIDTH),
             card_rect.top + round(card_rect.height * 43 / self._CARD_SOURCE_HEIGHT),
@@ -243,8 +349,6 @@ class SharedUiActivityCardMixin:
         screen.blit(title, title.get_rect(center=label_rect.center))
 
     def _activity_title_for_shared_card(self, activity: Any) -> str:
-        # Keep title resolution in one place without duplicating the launcher's
-        # localization logic or exposing another semantic source of truth.
         from .presentation import _activity_title
 
         return _activity_title(activity, self._active_locale)
