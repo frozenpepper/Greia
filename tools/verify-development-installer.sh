@@ -146,6 +146,79 @@ check_installed_dev_boot_diagnostics() {
   done
 }
 
+check_runtime_directory_contract() {
+  local tmpfiles launcher parent first_boot prepare
+  tmpfiles="$(sqcat "$TARGET" etc/tmpfiles.d/greia-runtime.conf)" || {
+    echo "installed-system payload: recurring Greia tmpfiles policy is missing." >&2
+    exit 1
+  }
+  launcher="$(sqcat "$TARGET" etc/systemd/system/greia-launcher.service)" || exit 1
+  parent="$(sqcat "$TARGET" etc/systemd/system/greia-parent.service)" || exit 1
+  first_boot="$(sqcat "$TARGET" usr/local/lib/greia-os/first-boot)" || exit 1
+  prepare="$(sqcat "$TARGET" usr/local/lib/greia-os/prepare-launcher-vt)" || exit 1
+
+  for required in \
+    'd /run/greia-os       0770 greiakid pipprofiles' \
+    'd /run/greia-hardware 2750 greiakid greiapanel'
+  do
+    printf '%s\n' "$tmpfiles" | grep -Fq "$required" || {
+      echo "installed-system payload: tmpfiles runtime contract missing: $required" >&2
+      exit 1
+    }
+  done
+  for unit_text in "$launcher" "$parent"; do
+    printf '%s\n' "$unit_text" | grep -Fq 'systemd-tmpfiles-setup.service' || {
+      echo "installed-system payload: Greia service is not ordered after recurring tmpfiles setup." >&2
+      exit 1
+    }
+  done
+  if printf '%s\n' "$launcher" | grep -Fq 'RuntimeDirectory=greia-os'; then
+    echo "installed-system payload: launcher still races shared /run ownership via RuntimeDirectory." >&2
+    exit 1
+  fi
+  if printf '%s\n' "$first_boot" | grep -Fq '/run/greia-hardware'; then
+    echo "installed-system payload: one-time first boot still owns volatile /run/greia-hardware." >&2
+    exit 1
+  fi
+  printf '%s\n' "$prepare" | grep -Fq 'Missing Greia runtime root' || {
+    echo "installed-system payload: launcher preflight does not verify recurring runtime roots." >&2
+    exit 1
+  }
+}
+
+check_boot_progress_contract() {
+  local stage path text first_boot prepare intro
+  for stage in 'init-top:15' 'local-premount:30' 'init-bottom:45'; do
+    path="${stage%%:*}"
+    value="${stage##*:}"
+    text="$(sqcat "$TARGET" "etc/initramfs-tools/scripts/$path/greia-early-framebuffer")" || {
+      echo "installed-system payload: boot progress script missing at $path." >&2
+      exit 1
+    }
+    printf '%s\n' "$text" | grep -Fq -- "--progress $value" || {
+      echo "installed-system payload: boot progress milestone $path=$value is missing." >&2
+      exit 1
+    }
+  done
+  first_boot="$(sqcat "$TARGET" usr/local/lib/greia-os/first-boot)" || exit 1
+  for value in 55 65; do
+    printf '%s\n' "$first_boot" | grep -Fq "boot_progress $value" || {
+      echo "installed-system payload: first-boot progress milestone $value is missing." >&2
+      exit 1
+    }
+  done
+  prepare="$(sqcat "$TARGET" usr/local/lib/greia-os/prepare-launcher-vt)" || exit 1
+  printf '%s\n' "$prepare" | grep -Fq -- '--progress 78' || {
+    echo "installed-system payload: final pre-X 78% progress milestone is missing." >&2
+    exit 1
+  }
+  intro="$(sqcat "$TARGET" opt/greia-os/src/greia_launcher/boot_intro.py)" || exit 1
+  printf '%s\n' "$intro" | grep -Fq 'draw_boot_handoff_frame(screen, pygame, progress=92)' || {
+    echo "installed-system payload: launcher 92% X-handoff frame is missing." >&2
+    exit 1
+  }
+}
+
 check_boot_artwork() {
   local live_ppm="$WORK/live-boot.ppm"
   local target_ppm="$WORK/target-boot.ppm"
@@ -189,9 +262,6 @@ pixels = data[len(header):]
 if len(pixels) != 1600 * 900 * 3:
     raise SystemExit("embedded boot PPM raster length is invalid")
 
-# Sample the real raster, not generator source.  The historical bad splash had
-# effectively only white plus brand indigo.  Require broad RGB diversity and
-# explicitly reject that old two-colour signature.
 sampled = {
     tuple(pixels[index:index + 3])
     for index in range(0, len(pixels) - 2, 3 * 97)
@@ -245,6 +315,8 @@ check_account "$TARGET" "installed-system payload"
 check_ssh_runtime "$TARGET" "installed-system payload"
 check_network "$TARGET" "installed-system payload"
 check_installed_dev_boot_diagnostics "$TARGET"
+check_runtime_directory_contract
+check_boot_progress_contract
 check_boot_artwork
 
 TARGET_MARKER="$(sqcat "$TARGET" etc/greia-os/developer-remote)" || {
@@ -265,6 +337,8 @@ printf '%s\n' "Developer installer artifact verification: PASS"
 printf '%s\n' "- live installer: password-enabled greia account, sshd bootstrap, DHCP policy"
 printf '%s\n' "- installed payload: password-enabled greia account, sshd bootstrap, DHCP policy"
 printf '%s\n' "- installed dev boot: tty1 diagnostics, panic=0 (no timed reboot)"
+printf '%s\n' "- runtime roots: recurring tmpfiles ownership verified; one-time/launcher ownership race rejected"
+printf '%s\n' "- boot progress: truthful milestones 15/30/45/55/65/78 + launcher 92 handoff verified"
 printf '%s\n' "- splash: full-colour 1600x900 canvas verified in live PPM, target PPM, GRUB PNG and launcher PNG"
 printf '%s\n' "- GRUB splash: proportional padding + centred; raw stretch path rejected"
 printf '%s\n' "- root SSH remains denied; no operator SSH key is required"
