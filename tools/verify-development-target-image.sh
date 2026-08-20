@@ -81,6 +81,29 @@ for network in 20-greia-wired.network 25-greia-wireless.network; do
   grep -Fq 'DHCP=yes' "$path" || { echo "Developer target: $network lacks DHCP." >&2; exit 1; }
 done
 
+# Hardware-recovery target images must preserve the postmortem diagnostic
+# channel: tty1 visible, no timed panic reboot, and enough kernel/systemd status
+# to identify the failing stage. Normal/release behavior remains conditional in
+# this same generator and is not changed by the development marker.
+GRUB_POLICY="$MOUNT/etc/grub.d/10_greia_appliance"
+[[ -f "$GRUB_POLICY" ]] || {
+  echo "Developer target: Greia GRUB policy is missing." >&2
+  exit 1
+}
+for required in \
+  'developer-remote' \
+  'console_arg="console=tty1"' \
+  'panic_arg="panic=0"' \
+  'loglevel=4' \
+  'systemd.show_status=true' \
+  'rd.systemd.show_status=true'
+do
+  grep -Fq "$required" "$GRUB_POLICY" || {
+    echo "Developer target: boot diagnostic contract is missing: $required" >&2
+    exit 1
+  }
+done
+
 # A raw/cloned image must not carry a server private identity. The runtime
 # bootstrap creates one Ed25519 host key on the actual booted machine.
 if find "$MOUNT/etc/ssh" -maxdepth 1 -type f -name 'ssh_host_*_key' -print -quit | grep -q .; then
@@ -92,4 +115,5 @@ printf '%s\n' "Developer target artifact verification: PASS"
 printf '%s\n' "- password-enabled greia recovery account"
 printf '%s\n' "- ssh.service enabled with runtime effective-policy validation"
 printf '%s\n' "- DHCP policies present; root SSH denied by runtime contract"
+printf '%s\n' "- tty1 diagnostics with panic=0 (no timed reboot)"
 printf '%s\n' "- no cloned SSH host private key"
