@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 420">
+<defs><filter id="s" x="-30%" y="-40%" width="160%" height="200%"><feDropShadow dx="0" dy="7" stdDeviation="6" flood-color="#263A35" flood-opacity=".16"/></filter><linearGradient id="w" x1="0" y1="0" x2=".9" y2="1"><stop offset="0" stop-color="#D29A69"/><stop offset=".62" stop-color="#A56B49"/><stop offset="1" stop-color="#754936"/></linearGradient></defs>
+<ellipse cx="310" cy="376" rx="205" ry="20" fill="#263A35" opacity=".12" filter="url(#s)"/>
+<path d="M92 247 L463 166 L537 252 L159 341 Z" fill="url(#w)" stroke="#65402F" stroke-width="5"/>
+<g fill="none" stroke="#68432F" stroke-width="4" opacity=".55"><path d="M147 234 L218 318"/><path d="M211 219 L283 302"/><path d="M277 205 L349 286"/><path d="M343 190 L416 269"/><path d="M410 176 L481 253"/></g>
+<g fill="none" stroke="#E2AF7D" stroke-width="6" opacity=".35"><path d="M122 240 L468 169"/><path d="M153 273 L498 199"/></g>
+<path d="M149 324 L132 388 M493 260 L510 332" stroke="#70462F" stroke-width="19" stroke-linecap="round"/>
+<path d="M111 244 C191 212 375 177 456 180" fill="none" stroke="#F2C89C" stroke-width="8" opacity=".36" stroke-linecap="round"/>
+<circle cx="129" cy="247" r="7" fill="#5B392C"/><circle cx="469" cy="176" r="7" fill="#5B392C"/>
+</svg>
