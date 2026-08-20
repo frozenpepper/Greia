@@ -63,11 +63,10 @@ If `.local` resolution is unavailable, use the router/DHCP lease table and conne
 
 ## 3. Use the fail-closed development builder
 
-For physical development/testing, prefer:
+For a development installer image without flashing media yet:
 
 ```bash
-sudo bash tools/build-development-installer.sh \
-  build/profiles/acer-aspire-one-i386-nonpae-dev.toml
+sudo bash tools/build-development-installer.sh legacy-x86-i686-dev
 ```
 
 The wrapper refuses to proceed unless `developer-remote` is present in **both** profile scopes:
@@ -77,7 +76,7 @@ target
 installer
 ```
 
-It then runs the canonical installer-image builder and invokes:
+For `legacy-x86`, it deliberately routes through `build/build-legacy-x86-sd-installer.sh`, because that is the physical-hardware front door that regenerates the boot derivatives from the canonical full-color frame before building. It then invokes:
 
 ```text
 tools/verify-development-installer.sh
@@ -91,15 +90,51 @@ The artifact verifier mounts the produced installer image read-only and checks *
 - installed-system payload has a password-enabled `greia` account;
 - `ssh.service` is enabled in both;
 - the Greia sshd pre-start bootstrap is present in both;
-- effective runtime policy is designed to force password-only `greia` authentication;
+- runtime policy forces password-only `greia` authentication;
 - root SSH remains denied;
 - Ed25519 host identity generation is present;
 - DHCP policy exists for wired and wireless interfaces;
 - the target payload is explicitly marked as a development image.
 
+The legacy front door also runs this verifier itself whenever the selected profile is `*-dev`. Therefore bypassing the convenience wrapper does not bypass the SSH artifact gate.
+
 A build that fails these checks is not ready to flash.
 
-The normal canonical builder remains available for non-development/release work, but a local hardware agent should use the wrapper above whenever the owner expects SSH recovery access.
+### Preferred physical Acer workflow: build and flash in one command
+
+To avoid the separate human/agent step that previously allowed a fresh image to be built but an old USB key to remain in use, prefer:
+
+```bash
+sudo bash tools/build-and-flash-development-usb.sh \
+  legacy-x86-i686-dev \
+  /dev/sdX
+```
+
+Replace `/dev/sdX` with the **whole removable USB device** discovered on the build machine. The command destroys that removable device.
+
+This wrapper:
+
+1. refuses a non-removable/non-whole-disk target before starting the long build;
+2. builds the explicit development installer;
+3. runs the live+target SSH artifact verifier;
+4. calls `tools/build-live-usb.sh` to create the Acer-proven Syslinux/FAT32 media rather than raw-flashing the GRUB installer image;
+5. refuses to overwrite a removable device that currently has mounted filesystems;
+6. verifies the final FAT filesystem read-only;
+7. re-mounts the **actual USB key** read-only and byte-compares its kernel, initrd, live squashfs, target payload, Syslinux config, clear-screen message and live-media identifier with the verified source image;
+8. verifies `ldlinux.sys` and the first 440 bytes of the Syslinux MBR bootstrap;
+9. reports success only after the final removable media itself passes read-back.
+
+A successful final run must include:
+
+```text
+Developer installer artifact verification: PASS
+Developer SSH artifact verified: 1
+usb_flash_verification=PASS
+source_artifact_verification=PASS
+usb_flash_readback_verification=PASS
+```
+
+Do not flash the intermediate ext/GRUB installer `.img` directly onto the reference Acer USB and assume that is equivalent. The physically proven Acer removable-media boot path remains Syslinux + active FAT32, produced by `tools/build-live-usb.sh` or the combined wrapper above.
 
 ## 4. Runtime SSH bootstrap contract
 
@@ -141,7 +176,7 @@ AuthenticationMethods publickey,password
 
 was incorrect because the comma requires both methods in sequence. It must never again be treated as the Greia development recovery contract.
 
-Only the machine/server gets an automatically generated host key. The human recovery login remains simply `greia` / `greia`.
+The historical active developer-image helper also generated a separate `greiaadmin` client keypair. That key-based workflow has been removed from the active `build/build-developer-image.sh` path. Active development builders now converge on one recovery model: the `greia` account using the simple development password. Only the server gets an automatically generated host identity.
 
 ## 5. Installer networking is explicit
 
@@ -267,16 +302,20 @@ For an old installation, the cleanest recovery path is normally to boot the curr
 
 ## 10. Evidence boundary
 
-A source-level or artifact-level PASS is not physical evidence. After changing boot/session/SSH behavior, validation still requires a fresh image/install on the target Acer and a second supported machine where applicable.
+A source-level, artifact-level or USB read-back PASS is not physical boot evidence. After changing boot/session/SSH behavior, validation still requires a fresh install on the target Acer and a second supported machine where applicable.
 
 For Acer development acceptance, record at minimum:
 
-- development build wrapper completes artifact verification;
+- development source-artifact verification completes;
+- final Syslinux/FAT32 USB read-back verification completes;
+- language selector is first and its mouse pointer works;
+- selecting Italian makes the following installer flow Italian;
+- corrected full-color/aspect-preserving splash behavior is observed;
 - live installer resolves/replies as `greia-installer.local` or via its DHCP IP;
-- live installer TCP/22 opens and password login succeeds;
+- live installer TCP/22 opens and `greia` password login succeeds;
 - root filesystem reaches the clean line after install;
 - installed `greia-dev.local` resolves or its DHCP IP is found;
-- installed TCP/22 opens and password login succeeds;
+- installed TCP/22 opens and `greia` password login succeeds;
 - `systemctl --failed`;
 - `greia-launcher.service` journal;
 - Xorg log when graphical startup fails;
