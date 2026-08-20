@@ -1,12 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 512">
-<defs>
-
-</defs>
-
-<g fill="#FFF5D6" opacity=".65">
-  <circle cx="96" cy="156" r="3"/><circle cx="166" cy="262" r="2"/><circle cx="243" cy="121" r="3.2"/><circle cx="319" cy="334" r="2.4"/>
-  <circle cx="412" cy="204" r="2.3"/><circle cx="523" cy="102" r="3"/><circle cx="607" cy="281" r="2.8"/><circle cx="699" cy="170" r="2.2"/>
-  <circle cx="786" cy="337" r="3"/><circle cx="901" cy="229" r="2.5"/><circle cx="958" cy="128" r="2"/>
+<defs><radialGradient id="mote"><stop offset="0" stop-color="#FFF9DF" stop-opacity=".9"/><stop offset="1" stop-color="#FFF0B8" stop-opacity="0"/></radialGradient></defs>
+<g>
+  <circle cx="96" cy="156" r="9" fill="url(#mote)"/><circle cx="96" cy="156" r="2.1" fill="#FFF8D8"/>
+  <circle cx="166" cy="262" r="7" fill="url(#mote)"/><circle cx="166" cy="262" r="1.7" fill="#FFF8D8"/>
+  <circle cx="243" cy="121" r="10" fill="url(#mote)"/><circle cx="243" cy="121" r="2.2" fill="#FFF8D8"/>
+  <circle cx="319" cy="334" r="8" fill="url(#mote)"/><circle cx="319" cy="334" r="1.8" fill="#FFF8D8"/>
+  <circle cx="412" cy="204" r="7" fill="url(#mote)"/><circle cx="412" cy="204" r="1.6" fill="#FFF8D8"/>
+  <circle cx="523" cy="102" r="9" fill="url(#mote)"/><circle cx="523" cy="102" r="2" fill="#FFF8D8"/>
+  <circle cx="607" cy="281" r="9" fill="url(#mote)"/><circle cx="607" cy="281" r="2" fill="#FFF8D8"/>
+  <circle cx="699" cy="170" r="7" fill="url(#mote)"/><circle cx="699" cy="170" r="1.7" fill="#FFF8D8"/>
+  <circle cx="786" cy="337" r="9" fill="url(#mote)"/><circle cx="786" cy="337" r="2" fill="#FFF8D8"/>
+  <circle cx="901" cy="229" r="8" fill="url(#mote)"/><circle cx="901" cy="229" r="1.8" fill="#FFF8D8"/>
 </g>
-
 </svg>

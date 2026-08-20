@@ -1,15 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 256">
 <defs>
-
+  <linearGradient id="far" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5DAE72"/><stop offset="1" stop-color="#438D5B"/></linearGradient>
 </defs>
-
-<path d="M0 211 C82 180 152 184 225 203 C301 174 372 179 447 201 C528 169 605 175 687 202 C760 180 836 181 1024 209 L1024 256 L0 256 Z" fill="#4A9E62"/>
-<g fill="#3B8C55" opacity=".88">
-  <path d="M37 213 L66 139 L95 213 Z"/><path d="M91 213 L121 128 L151 213 Z"/><path d="M163 213 L192 145 L221 213 Z"/>
-  <path d="M262 213 L295 119 L328 213 Z"/><path d="M326 213 L358 137 L390 213 Z"/><path d="M418 213 L448 129 L478 213 Z"/>
-  <path d="M520 213 L552 122 L584 213 Z"/><path d="M592 213 L623 139 L654 213 Z"/><path d="M686 213 L717 128 L748 213 Z"/>
-  <path d="M781 213 L813 140 L845 213 Z"/><path d="M846 213 L878 124 L910 213 Z"/><path d="M930 213 L961 143 L992 213 Z"/>
+<path d="M0 220 C83 193 154 190 226 208 C305 183 376 186 451 207 C534 178 610 184 692 208 C770 188 850 188 1024 216 L1024 256 L0 256 Z" fill="#5EAF70"/>
+<g fill="url(#far)">
+  <ellipse cx="58" cy="194" rx="42" ry="30"/><ellipse cx="101" cy="185" rx="50" ry="35"/><ellipse cx="150" cy="193" rx="44" ry="31"/>
+  <ellipse cx="224" cy="190" rx="46" ry="33"/><ellipse cx="272" cy="178" rx="52" ry="38"/><ellipse cx="323" cy="191" rx="46" ry="32"/>
+  <ellipse cx="405" cy="190" rx="44" ry="32"/><ellipse cx="455" cy="176" rx="52" ry="38"/><ellipse cx="506" cy="190" rx="45" ry="32"/>
+  <ellipse cx="588" cy="185" rx="48" ry="34"/><ellipse cx="638" cy="174" rx="52" ry="39"/><ellipse cx="689" cy="191" rx="46" ry="32"/>
+  <ellipse cx="774" cy="190" rx="46" ry="33"/><ellipse cx="824" cy="178" rx="50" ry="37"/><ellipse cx="875" cy="192" rx="46" ry="32"/>
+  <ellipse cx="948" cy="188" rx="46" ry="33"/><ellipse cx="995" cy="195" rx="41" ry="29"/>
 </g>
-<path d="M0 222 C109 196 222 205 326 218 C446 195 579 204 694 220 C816 199 914 203 1024 222 L1024 256 L0 256 Z" fill="#5EAF70" opacity=".84"/>
-
+<g fill="#397D50" opacity=".82">
+  <path d="M122 213 L146 146 L170 213 Z"/><path d="M350 213 L375 143 L400 213 Z"/>
+  <path d="M712 213 L737 145 L762 213 Z"/><path d="M907 213 L931 149 L955 213 Z"/>
+</g>
+<path d="M0 229 C122 207 232 214 337 228 C463 205 590 214 706 229 C825 211 923 213 1024 228 L1024 256 L0 256 Z" fill="#73BE82" opacity=".72"/>
 </svg>
