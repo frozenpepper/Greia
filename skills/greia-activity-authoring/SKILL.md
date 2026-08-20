@@ -6,7 +6,7 @@ description: Canonical agent guide for designing, implementing, packaging, valid
 # Greia Activity Authoring Skill
 
 **Status:** living derived authoring guide  
-**Reviewed:** 2026-08-19
+**Reviewed:** 2026-08-20
 
 This file is practical guidance. Exact implemented APIs/schemas are owned by source/runtime declarations; accepted ADRs own architecture; product docs own child-facing requirements. When this guide disagrees with current source, inspect the authority map and resolve the discrepancy rather than coding to stale prose.
 
@@ -31,6 +31,7 @@ docs/adr/0028-platform-and-activity-localization-language-context.md
 docs/adr/0029-real-runtime-activity-simulator.md
 docs/product/ACTIVITY_INPUT_STANDARDS.md
 docs/product/ACTIVITY_SYSTEM_NAVIGATION.md
+docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md
 docs/product/RESPONSIVE_UI_AND_DISPLAY_LAYOUT.md
 docs/design/GREIA_VISUAL_STYLE_GUIDE.md
 docs/design/GREIA_LAUNCHER_INTERACTION_AND_ACTIVITY_CATALOGUE.md
@@ -99,7 +100,10 @@ An Activity must not:
 - create an unbounded cache/widget/list merely because current sample data is small;
 - open arbitrary system font paths or build a private font-fallback stack for ordinary Greia UI;
 - split user-editable Unicode text by Python codepoint when the child-visible unit is a grapheme cluster;
-- use Unicode emoji as substitutes for protected Greia system controls/icons.
+- use Unicode emoji as substitutes for protected Greia system controls/icons;
+- treat a launcher Collection as a Linux/filesystem folder or encode host paths into presentation metadata;
+- reinterpret `education.difficulty` as an age field;
+- hide itself or other Activities based on private age/difficulty logic instead of Greia's platform discovery/Parent policy.
 
 ## 2.1 Mandatory Child UX, Sizing & Zero-Text Standards (Ages 3–7)
 
@@ -121,7 +125,7 @@ Greia is designed for young children (ages 3–7). The following standards are *
 - **Visible, Animated Hints**: In search/puzzle games, provide active visual clues (e.g. twitching ears, blinking eyes, waving tails, shimmering sparkles) so children don't click at random.
 - **Playful, Non-Punitive Failure Loops**: If a child makes a mistake (e.g. incomplete bridge, wrong tool), provide cheerful, funny visual feedback (e.g. comical wobble onto a bouncy safety trampoline or splash) and an immediate visual cue for how to succeed.
 
-The platform owns lifecycle, profile/session state, package trust, permissions, system chrome, durable progress/history, physical display/input boundaries, the normal child UI-locale authority chain, launcher language presentation, platform-owned pre-launch language chooser, and shared typography/emoji fallback semantics.
+The platform owns lifecycle, profile/session state, package trust, permissions, system chrome, durable progress/history, physical display/input boundaries, the normal child UI-locale authority chain, launcher language presentation, platform-owned pre-launch language chooser, shared typography/emoji fallback semantics, Collection projection/adaptive depth, and per-child audience/visibility policy.
 
 ## 3. Package layout
 
@@ -227,9 +231,52 @@ Do **not** silently invent unsupported manifest tables and assume the current pa
 
 Even before the manifest migration is complete, write Activity code so user-facing strings/audio are isolated behind semantic resource keys and so a second language can be added without rewriting gameplay.
 
-## 5. Launcher navigation categories are NOT education categories
+### 4.5 Difficulty and audience metadata: current versus target
 
-### Child-facing launcher navigation
+Current source already implements:
+
+```toml
+[education]
+difficulty = 1
+```
+
+`src/greia_platform/activities.py` validates `difficulty` as an integer from **1 through 10**. Treat it as the Activity's baseline challenge indicator. Do not encode age into this number.
+
+The accepted product target in `docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md` adds independent optional developmental suitability, conceptually:
+
+```toml
+[education]
+difficulty = 3
+recommended_age_min = 5
+recommended_age_max = 8
+```
+
+Open-ended/creative Activities may omit an upper age bound.
+
+Activities that genuinely adapt their challenge may eventually be able to declare the supported range, conceptually:
+
+```toml
+[education]
+difficulty = 3
+difficulty_min = 1
+difficulty_max = 7
+adaptive_difficulty = true
+recommended_age_min = 5
+recommended_age_max = 10
+```
+
+**Current implementation warning:** as of 2026-08-20 the parser does not yet accept `recommended_age_min`, `recommended_age_max`, `difficulty_min`, `difficulty_max` or `adaptive_difficulty`. These examples document accepted semantics, not current TOML syntax. Do not add them to a package and claim support until parser/runtime/tests are migrated.
+
+Age/development and difficulty answer different questions:
+
+- age/development → who the content is primarily designed for;
+- difficulty → how challenging the Activity is within its domain/audience.
+
+Missing future age metadata must not be interpreted by Activity code as a reason to hide the Activity. Visibility/recommendation belongs to Greia/Parent policy.
+
+## 5. Launcher Collections are NOT education categories or filesystem folders
+
+### Child-facing primary Collections
 
 Use:
 
@@ -248,7 +295,9 @@ explore
 my_greia
 ```
 
-An Activity may appear in more than one launcher category without duplicating installation, permissions, progress or saves.
+An Activity may appear in more than one launcher Collection without duplicating installation, permissions, progress or saves.
+
+Greia Home's accepted target is **Collection-first**: these primary Collections are destinations, not little filter tabs above an `All Activities` wall.
 
 ### Educational taxonomy
 
@@ -259,9 +308,36 @@ Keep learning/progression metadata under:
 categories = ["creativity", "fine_motor", "geometry"]
 ```
 
-These values may be numerous/specific because they are semantic learning tags. Do not add `fine_motor`, `problem_solving`, etc. to `[presentation]` merely to surface educational metadata as launcher tabs.
+These values may be numerous/specific because they are semantic learning tags. Do not add `fine_motor`, `problem_solving`, etc. to `[presentation]` merely to surface educational metadata as launcher navigation.
 
 Older API-0.1 packages with no `[presentation]` table currently fall back to `education.categories` for compatibility. New/updated packages should not rely on that fallback.
+
+### Adaptive Collection depth is platform-owned
+
+Activities do not create their own launcher folders.
+
+Greia decides whether a primary Collection shows Activities directly or inserts one optional semantic sub-Collection layer based on the **effective visible Activity set for the active child**.
+
+Initial product policy:
+
+- 1–10 effective visible Activities → direct Activity list/grid;
+- more than 10 → evaluate whether a useful semantic subdivision exists;
+- no useful subdivision → remain direct and use bounded scrolling/paging;
+- maximum discovery depth → `Home → primary Collection → optional sub-Collection → Activity`.
+
+The platform also uses stability/hysteresis so an install/remove does not cause constant hierarchy flapping.
+
+A future manifest migration may add bounded grouping hints conceptually such as:
+
+```toml
+[presentation]
+categories = ["create", "learn"]
+discovery_tags = ["drawing", "shapes"]
+```
+
+`discovery_tags` is **not currently parsed**. It would describe possible semantic grouping, not a filesystem path and not a command to create a permanent folder.
+
+Do not reuse `education.skills` or `education.categories` automatically as nested launcher levels.
 
 ## 6. Activity icons and dynamic language presentation
 
@@ -665,7 +741,7 @@ Activity events should express semantic facts such as completion/creation/score/
 
 Awards/badges/celebrations are platform-owned architecture under ADR 0025. An Activity should emit supported semantic evidence; it must not mint authoritative awards itself merely by displaying a badge image.
 
-Language and resolution are presentation/context. Do not rewrite semantic score/progress IDs because locale or screen size changes.
+Language, resolution, age recommendation and launcher Collection placement are presentation/context. Do not rewrite semantic score/progress IDs because any of them changes.
 
 ## 14. Packaging as `.greiaactivity`
 
@@ -737,6 +813,8 @@ The launcher can detect the Parent active package source while already running. 
 
 Activity authors should not require a reboot/restart merely to make an otherwise valid new install discoverable, but must not assume package presence implies launch authority before runtime composition succeeds.
 
+After authority rebuild, the launcher may also recompute the active child's effective visibility/ranking/Collection projection. That presentation recomputation must not alter the Activity registration itself.
+
 ## 17. Validation and tests
 
 Before considering Activity source ready, run the repository's canonical owner-controlled validation/test paths.
@@ -766,8 +844,12 @@ For a `.greiaactivity` package, test at least:
 - entrypoint stays inside package;
 - package has no forbidden/symlink/executable artifacts;
 - declared capabilities/permissions exist;
-- launcher categories are sensible high-level navigation metadata;
+- launcher categories are sensible high-level Collection metadata;
 - educational categories remain learning metadata;
+- `education.difficulty` is meaningful as challenge, not age;
+- no future age/discovery/adaptive-difficulty field is claimed as implemented before the parser supports it;
+- future audience metadata, once implemented, uses age/development separately from challenge;
+- future discovery hints, once implemented, are semantic grouping hints rather than filesystem paths;
 - package icon exists and is contained;
 - archive root contains `activity.toml` directly;
 - install rejection leaves no active executable package;
@@ -786,6 +868,8 @@ For a `.greiaactivity` package, test at least:
 - user-editable Unicode text uses grapheme-safe editing where clusters may occur;
 - emoji/mixed text uses the Greia typography fallback rather than direct host-font assumptions where standard Greia text behavior is desired.
 
+When the adaptive discovery implementation lands, launcher tests must additionally cover small direct Collections, >10-Activity coherent and incoherent Collections, maximum one sub-Collection layer, per-child effective counts after Parent policy, hierarchy stability/hysteresis, missing audience metadata, and explicit Parent always-show/always-hide override precedence.
+
 Never claim PASS because a test file exists. Record only commands actually executed and their real output/evidence.
 
 ## 18. Quality checklist for child-facing Activities
@@ -793,6 +877,8 @@ Never claim PASS because a test file exists. Record only commands actually execu
 A good Greia Activity should generally be:
 
 - understandable with little or no reading for its target age where product scope requires it;
+- honest about its intended age/developmental suitability when that metadata is implemented;
+- assigned a sensible baseline difficulty rather than leaving `difficulty` meaningless by habit;
 - visually clear at the 1024×600 reference while automatically adapting to other usable viewports;
 - immediately responsive to input;
 - forgiving of mistakes;
@@ -807,7 +893,8 @@ A good Greia Activity should generally be:
 - easy to localize later even if only one language ships initially;
 - free of per-resolution and per-language coordinate forks;
 - free of Activity-owned fake system navigation and early READY publication;
-- Unicode-safe where child-authored text can contain emoji or composed characters.
+- Unicode-safe where child-authored text can contain emoji or composed characters;
+- compatible with appearing in more than one Greia Collection without assuming a unique folder path.
 
 ## 19. When changing the Activity contract
 
@@ -821,6 +908,8 @@ If author-facing Activity behavior changes, update in the same tranche:
 - active plan progress and `HANDOVER.md` for substantive implementation/evidence changes.
 
 If the change is architectural rather than merely implementation detail, resolve it through the applicable ADR instead of silently extending manifest/API behavior.
+
+Do not convert design-target TOML shown in this guide into accepted package syntax until `src/greia_platform/activities.py` and tests implement it.
 
 ## 20. Real-runtime Activity Simulator workflow
 
