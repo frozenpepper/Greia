@@ -7,80 +7,48 @@
 
 This plan owns the current Greia visual-library workstream.
 
-The production model is:
-
 > **excellent individual assets → reusable asset packs → layered composition → subtle parallax / ambient motion / light / shadow → shared UI system → Shell/Activity reuse**
 
-The project is not making decorative mock screens. Characters are only one part of the shared visual library.
+The project is not making decorative mock screens. Characters are one part of the library, not the workstream bottleneck.
 
 ---
 
-# 1. Non-negotiable direction
+# 1. Non-negotiable production rules
 
-## 1.1 Asset first
+## Asset first
 
-A scene or UI family starts with reusable individual source assets that are worth keeping on their own. Weak primitives do not become acceptable because they are hidden inside a busy composition.
+A scene or UI family starts with reusable source assets that are worth keeping individually. Weak primitives may not be hidden by a busy composition.
 
-Priority reusable families include:
+## Quality target
 
-- trees, bushes, flowers, rocks, logs, clouds, hills, tree lines and ground pieces;
-- workshop / clinic furniture and props;
-- shadow decals, light shafts, fog/haze, fireflies, dust and sparkles;
-- UI panels, cards, buttons, tabs, badges, frames, bubbles, highlights and trims.
-
-## 1.2 Quality target
-
-Assets should aim for polished storybook / toy-diorama quality:
+Aim for polished storybook / toy-diorama quality with:
 
 - attractive silhouette;
-- warm coherent palette;
-- controlled gradients and internal detail;
-- soft local highlights;
-- visible but restrained depth;
+- coherent warm palette;
+- restrained gradients/detail;
+- local highlights and soft depth;
 - clean alpha edges;
-- reusable contact/cast shadow treatment;
-- readable at low resolution;
-- simple enough to remain viable on Greia's low-resource targets.
+- reusable shadows;
+- low-resolution readability;
+- cheap/static fallback viability on Greia's low-resource floor.
 
-Raw tutorial circles/rectangles/polygon scenery are prototype/debug art only.
+Raw tutorial rectangles/circles/polygon scenery are prototype/debug art only.
 
-## 1.3 Layered composition
+## Layered environments
 
-Normal environment composition separates useful planes:
+Use separate sky/base, far background, mid background, playfield, interactive props, foreground, atmosphere/light/shadow/FX, character and protected-UI layers.
 
-1. sky / room base;
-2. far background;
-3. mid background;
-4. ground / playfield;
-5. interactive props;
-6. foreground framing;
-7. atmosphere / light / shadow / FX;
-8. character + protected UI layers.
+## Subtle life
 
-## 1.4 Subtle life
-
-Reusable metadata may describe inexpensive motion such as:
-
-- slow cloud drift;
-- far/mid/near parallax;
-- tiny foliage sway;
-- firefly fade/drift;
-- dust motes;
-- falling leaves;
-- fog drift;
-- very slow light breathing;
-- water shimmer;
-- contact-shadow response.
-
-Static quality and meaning remain primary. No scene requires every effect.
+Allowed design metadata includes cheap cloud drift, far/mid/near parallax, tiny foliage sway, firefly/dust drift, fog movement, slow light breathing, water shimmer and contact-shadow response. Motion enriches good static assets; it does not rescue bad art.
 
 ---
 
-# 2. Character library
+# 2. Character seed
 
-Core cast remains **Lilli, Nino, Tito, Momo**.
+Working core cast remains **Lilli, Nino, Tito, Momo** with the accepted simplified Puff/Bean direction.
 
-Base motions remain:
+Base motion names remain:
 
 ```text
 idle_bounce
@@ -91,141 +59,135 @@ surprised_wobble
 sleepy_sway
 ```
 
-Rules:
-
-- preserve the same character art across states;
-- `blink` must actually blink;
-- expression/motion work may continue, but must not block backgrounds, props, atmosphere, shadows and UI.
+Preserve character identity across states; `blink` must actually blink. Character refinement may continue without blocking environments/UI.
 
 ---
 
-# 3. Forest / meadow environment pack — V2A
+# 3. Forest / meadow — V2A
 
-Canonical candidate pack:
+Canonical pack:
 
 ```text
 assets/visual/environments/forest_meadow/v0.2/
 ```
 
-It contains **27 reusable SVG masters** plus metadata/review/proof source:
+Current source includes **27 reusable SVG masters** across trees, bushes/foliage, mushrooms, rocks/log/stump, clouds/hills/tree line, ground, sunlight/fog, contact shadows and ambient FX.
 
-- 4 trees;
-- 3 bushes;
-- fern / flower / mushroom foliage;
-- 2 rock clusters;
-- fallen log + stump;
-- 2 clouds;
-- distant hills + tree line;
-- grass edge + dirt playfield patch;
-- sunlight + fog;
-- 2 contact shadows;
-- fireflies / dust motes / falling leaves.
-
-Authority/metadata:
+Authority/evidence files:
 
 ```text
-assets/visual/environments/forest_meadow/v0.2/catalog.toml
-assets/visual/environments/forest_meadow/v0.2/REVIEW.md
-assets/visual/environments/forest_meadow/v0.2/composition_day.toml
-assets/visual/environments/forest_meadow/v0.2/parallax_proof.html
+catalog.toml
+REVIEW.md
+composition_day.toml
+parallax_proof.html
 ```
 
-All assets remain **candidate**. `runtime_consumed = false`; the composition/parallax files are design proofs, not a runtime scene framework.
+`runtime_consumed = false`.
 
-## 3.1 Review already performed
+Desktop review corrected weak sapling, distant-tree-line, fog and dust-mote treatments. A 1024×600 static composition was assembled from the real assets, and the committed parallax proof uses the same SVGs with only cheap CSS transforms/opacity changes.
 
-Desktop individual/composition review found and corrected specific weak first-pass assets:
+### Remaining V2A work
 
-- sapling silhouette/detail balance;
-- distant tree line repetitive geometry;
-- fog depth/readability;
-- dust-mote visibility.
-
-A 1024×600 static composition was assembled locally from the real masters to verify that the pieces form a coherent layered family without repainting them into one baked background.
-
-`parallax_proof.html` now exercises the same committed SVGs with only cheap CSS transforms/opacity changes: slow clouds, tiny tree/foliage sway, fog drift, light breathing and firefly drift. It is deliberately isolated design evidence and must not become runtime architecture.
-
-## 3.2 Next V2A work
-
-- check the composition at 800×600 and 1024×600;
-- remove atmosphere/FX that adds noise rather than depth;
-- ensure foreground framing leaves a calm gameplay center;
-- then stop polishing the forest indefinitely and move to the next environment family.
+- 800×600 and 1024×600 restraint/readability pass;
+- remove noisy atmosphere/FX if needed;
+- keep a calm gameplay center;
+- do not polish this pack indefinitely once coherent.
 
 ---
 
-# 4. Shared UI visual kit — V3 **[ACTIVE IN PARALLEL]**
+# 4. Shared UI visual kit — V3
 
-Canonical candidate pack:
+Canonical pack:
 
 ```text
 assets/visual/ui/v0.1/
 ```
 
-Current pack contains reusable masters for:
+Current reusable source now covers:
 
-- panel + sheet;
-- default + focused activity card;
-- primary / secondary / quiet / icon button;
-- default + selected tab pill;
-- new / completed / locked badges;
-- progress track + fill;
-- speech + thought bubbles;
-- reward frame;
-- avatar frame;
-- common focus ring;
-- soft shadow;
-- highlight sheen.
+- panel / sheet;
+- default / focused / completed activity cards;
+- primary / hover / pressed / disabled / secondary / quiet / icon buttons;
+- default / selected tabs;
+- new / done / favorite / locked badges;
+- progress track / fill / complete;
+- speech / thought bubbles;
+- reward and avatar frames;
+- loading orbit;
+- gentle-error cloud;
+- empty basket;
+- category/location portal frame;
+- focus ring, soft shadow and highlight sheen.
+
+Authority/evidence files:
+
+```text
+assets/visual/ui/v0.1/catalog.toml
+assets/visual/ui/v0.1/README.md
+assets/visual/ui/v0.1/REVIEW.md
+```
+
+The pack follows `runtime/theme-defaults.toml`, embeds no child-facing text, and remains `runtime_consumed = false`.
+
+Desktop review has covered representative components on cream, sky and dark grounds plus the expanded static-state tranche.
+
+### Remaining V3 work
+
+- low-resolution 800×600 / 1024×600 component composition using the real masters;
+- check state distinctions after scaling;
+- add only genuinely missing shared launcher/system decorative pieces;
+- owner refinement when a coherent reference composition is ready.
+
+---
+
+# 5. Workshop — V4A **[STARTED]**
+
+Canonical pack:
+
+```text
+assets/visual/environments/workshop/v0.1/
+```
+
+First individual-asset tranche includes:
+
+- workbench;
+- shelf;
+- paint palette;
+- brush bundle;
+- pencil cup;
+- blocks;
+- storage box;
+- paper stack;
+- rug;
+- desk lamp;
+- window;
+- composable window-light overlay;
+- paint jars.
 
 Metadata/review:
 
 ```text
-assets/visual/ui/v0.1/catalog.toml
-assets/visual/ui/v0.1/REVIEW.md
+catalog.toml
+README.md
+REVIEW.md
 ```
 
-The pack is derived from `runtime/theme-defaults.toml` and contains no embedded child-facing text so the same visual pieces can be localized/reused.
+First desktop review found a coherent warm wood/pastel creative-room family. Window/light remain separate composable assets. `runtime_consumed = false`.
 
-## 4.1 Current UI review
+### Next Workshop work
 
-Representative assets were rasterized locally and inspected on:
-
-- Greia cream;
-- Greia sky;
-- dark charcoal.
-
-The panel, focused activity card, primary button, selected tab, speech bubble and reward frame remained visually readable on all three grounds. Focus/selection uses frame/shape cues as well as color.
-
-This is **DESKTOP VISUAL REVIEW only**, not owner approval or runtime integration.
-
-## 4.2 Next UI tranche
-
-Create/refine individual masters for:
-
-- hover / pressed / disabled states where a distinct static treatment helps;
-- favorite badge;
-- progress-complete / reward states;
-- loading, error and empty-state illustration pieces;
-- category/location portal frames;
-- any missing shared icon/decorative trim required by the launcher.
-
-Then create one low-resolution UI composition from these real assets. Do not return to primitive mock-screen drawing.
+- reduced-size review of furniture/large pieces;
+- add only composition-critical missing elements such as stool/chair, wall/floor base or pegboard;
+- make one layered workshop composition from the coherent subset;
+- do not fill the pack with decorative clutter.
 
 ---
 
-# 5. Later environment packs
-
-## Workshop / creative room
-
-- workbench/table;
-- shelves;
-- paper / paint / brush / pencil props;
-- blocks/tools;
-- rug/storage;
-- window/lamp/light assets;
-- wall/base layers.
+# 6. Next environment families
 
 ## Clinic / care room
+
+Planned individual assets:
 
 - bed/cushion;
 - cabinet/shelf;
@@ -239,7 +201,7 @@ Then reading/classroom and later fantasy/village/night/water families as priorit
 
 ---
 
-# 6. Storage and metadata
+# 7. Storage and metadata
 
 Conceptual source organization:
 
@@ -256,162 +218,141 @@ assets/visual/
   catalog/
 ```
 
-Reusable assets record at least:
+Reusable assets record semantic ID, source path, family, review state, provenance/license, intended scale/alpha where relevant, parallax/layer role where relevant, and optional ambient-motion/theme variants.
 
-- semantic ID;
-- source/master path;
-- family;
-- `concept | candidate | approved | superseded | rejected`;
-- provenance/license;
-- intended scale range where relevant;
-- alpha requirement;
-- parallax/layer role where relevant;
-- optional ambient-motion role;
-- optional theme variants.
-
-Presence in Git never means approved.
+Use `concept | candidate | approved | superseded | rejected`. Presence in Git never means approved.
 
 ---
 
-# 7. Production and review loop
+# 8. Review loop
 
-For every asset family:
+For each family:
 
-1. define a bounded asset list;
-2. make individual source assets;
-3. render/review assets individually;
-4. inspect against neutral/light/dark representative grounds;
-5. fix weak assets instead of masking them in a composition;
+1. define a bounded list;
+2. make individual assets;
+3. rasterize/review individually;
+4. inspect on representative grounds/sizes;
+5. fix weak assets instead of masking them;
 6. record metadata/provenance;
-7. approve a coherent subset;
-8. compose a small reference scene/UI only from coherent pieces;
-9. test layering/parallax/subtle motion where relevant;
-10. integrate only through accepted Greia platform seams.
+7. identify a coherent subset;
+8. make a small reference composition only from real pieces;
+9. test restrained layering/parallax/motion where relevant;
+10. integrate later only through accepted Greia platform seams.
 
-HTML/browser files are allowed only as focused proofs using real reusable assets. They are not deliverable "presentations" and do not create platform authority.
+Focused browser/HTML files are allowed only as proofs using real assets; they are not visual "presentations" or runtime authority.
 
 ---
 
-# 8. Current checkpoint
+# 9. Current checkpoint
 
 | Field | Current state |
 |---|---|
-| Active focus | **V2A forest/meadow finishing + V3 shared UI kit in parallel** |
-| Environment pack | `assets/visual/environments/forest_meadow/v0.2/` — 27 reusable SVG masters |
-| Environment proof | `composition_day.toml` + `parallax_proof.html` use the same committed masters |
-| UI pack | `assets/visual/ui/v0.1/` — first shared component/shadow/highlight tranche committed |
-| Evidence | **SOURCE + DESKTOP VISUAL REVIEW** only; all current environment/UI art remains candidate |
-| Current quality rule | individual assets must survive review before composition; compositions may not conceal weak assets |
-| Runtime boundary | both catalogs remain `runtime_consumed = false`; no new loader/framework is authorized here |
-| Next exact action | complete the missing UI state/illustration masters and 800×600/1024×600 UI review, while doing one final restraint/readability pass on the forest composition; then start Workshop v0.1 individual assets |
+| Active focus | **V3 shared UI review + V4A workshop pack; V2A forest in final restraint pass** |
+| Forest | `assets/visual/environments/forest_meadow/v0.2/` — 27 SVG masters + composition/parallax proof |
+| UI | `assets/visual/ui/v0.1/` — expanded component/state/illustration pack |
+| Workshop | `assets/visual/environments/workshop/v0.1/` — first 13 individual masters committed |
+| Evidence | **SOURCE + DESKTOP VISUAL REVIEW** only; current art remains candidate |
+| Runtime boundary | all current visual catalogs remain `runtime_consumed = false`; no loader/compositor architecture invented here |
+| Next exact action | do low-resolution UI + Workshop review/composition-critical refinement, finish forest restraint pass, then begin Clinic individual assets |
 
 ---
 
-# 9. Milestones
+# 10. Milestones
 
 ## V1 — Character/style seed **[SUFFICIENT TO UNBLOCK LIBRARY]**
-
 - [x] simplified character direction;
-- [x] Lilli/Nino/Tito/Momo seed cast;
-- [ ] continue useful expression/motion refinement without blocking wider art.
+- [x] core cast seed;
+- [ ] continue useful character refinement without blocking wider art.
 
-## V2 — Composable environment foundation **[ACTIVE / FIRST PACK SUBSTANTIALLY BUILT]**
-
-- [x] forest/meadow candidate asset pack;
-- [x] light/shadow/atmosphere/FX primitives;
-- [x] semantic metadata/provenance seed;
-- [x] individual visual review + weak-asset revisions;
-- [x] layered composition manifest/proof;
-- [x] cheap parallax/ambient-motion proof source;
-- [ ] final 800×600/1024×600 restraint/readability review;
+## V2 — Forest/meadow composable environment **[SUBSTANTIALLY BUILT]**
+- [x] 27-source-asset candidate pack;
+- [x] light/shadow/atmosphere/FX;
+- [x] metadata + review;
+- [x] layered composition manifest;
+- [x] cheap parallax/ambient-motion proof;
+- [ ] final 800×600 / 1024×600 restraint pass;
 - [ ] owner approval/revision when appropriate.
 
-## V3 — Shared UI visual kit **[ACTIVE]**
-
-- [x] first panels/cards/buttons/tabs/badges/progress/bubbles/frames tranche;
-- [x] common shadow/highlight/focus pieces;
-- [x] first light/sky/dark desktop review;
-- [ ] missing hover/press/disabled/favorite/complete states;
-- [ ] loading/error/empty-state illustration pieces;
+## V3 — Shared UI visual kit **[ACTIVE / SUBSTANTIALLY BUILT]**
+- [x] panels/cards/buttons/tabs/badges/progress/bubbles/frames;
+- [x] focus/hover/press/disabled/completed/favorite states;
+- [x] loading/error/empty/portal art;
+- [x] common shadow/highlight pieces;
+- [x] first multi-ground desktop review;
 - [ ] low-resolution reference composition;
 - [ ] owner approval/revision when appropriate.
 
-## V4 — Additional environment packs
-
-- [ ] workshop;
-- [ ] clinic;
+## V4 — Additional environment packs **[WORKSHOP STARTED]**
+- [x] Workshop first individual-asset tranche;
+- [ ] Workshop composition-critical refinement + reference composition;
+- [ ] Clinic;
 - [ ] reading/classroom;
 - [ ] later fantasy/village/night/water families.
 
 ## V5 — Shared consumption/integration
-
 - [ ] explicit catalog/consumption seam through accepted architecture;
 - [ ] bounded loading/caching;
-- [ ] Shell + Activities reuse the same assets/components;
+- [ ] Shell + Activities reuse same assets/components;
 - [ ] simulator/physical low-resource acceptance where implementation claims require it.
 
 ---
 
-# 10. Failure patterns — do not repeat
+# 11. Failure patterns — do not repeat
 
-- spending the whole workstream on character minutiae;
-- detailed traditional rigs as the default;
+- spending the workstream on character minutiae;
+- detailed traditional rigs as default;
 - one-shot sprite sheets assumed production-ready;
-- degrading approved character art with fake overlays/redraws;
-- calling a non-blinking animation `blink`;
-- crude primitive trees/backgrounds presented as a visual redesign;
-- full-screen mockups before a real asset library exists;
-- decorative HTML that makes weak assets look busier instead of better;
+- degrading accepted character art with overlays/redraws;
+- non-blinking `blink`;
+- crude primitive scenery presented as redesign;
+- full-screen mockups before real assets exist;
+- decorative HTML hiding weak art;
 - inventing new runtime/UI architecture during art production.
 
 ---
 
-# 11. Progress log — append only
+# 12. Progress log — append only
 
 ## 2026-08-20 — constraint-native visual pivot
-
-- Simplified expressive characters established as practical direction.
-- Lilli, Nino, Tito, Momo became the working core cast.
+- Simplified characters established; Lilli/Nino/Tito/Momo became core cast.
 - Detailed quadruped/sprite-sheet/automatic-rig approaches retained as rejected defaults.
 
 ## 2026-08-20 — drift corrected
+- Character work had expanded too far and regressed.
+- Crude UI/background mock was rejected.
+- Workstream corrected to high-quality single assets → composition/parallax/light/shadow/UI.
 
-- Character motion work expanded too far and produced regressions.
-- A crude UI/background HTML prototype was rejected.
-- Workstream corrected to high-quality single assets first, followed by composition/parallax/light/shadow/UI.
+## 2026-08-20 — forest/meadow v0.2
+- 27 reusable SVG masters committed.
+- Catalog/parallax/ambient metadata added.
+- Weak sapling/tree-line/fog/dust treatments revised after desktop review.
+- Composition manifest and actual-asset parallax proof committed.
 
-## 2026-08-20 — forest/meadow v0.2 committed
+Commits:
+- `ee1faa2056156d756d233f01e7b46cdde2c1e4f3`
+- `eefb9db344ab59aa25be0f341e34e4ecb777a517`
+- `70e9980392cb873fc1b4aab1234c75dd18ac4f3e`
+- `873d228c14539da1daf040949431b51ad8ed221a`
 
-**Files:** `assets/visual/environments/forest_meadow/v0.2/`
+## 2026-08-20 — UI v0.1 and Workshop v0.1 advanced
 
-- created 27 reusable SVG masters across trees, foliage, props, background, ground, light/fog, shadows and ambient FX;
-- added semantic catalog with parallax/ambient roles and provenance seed;
-- rendered/inspected the candidate pack;
-- revised weak sapling, distant tree line, fog and dust-mote treatments.
+UI:
+- first broad shared UI source pack committed;
+- expanded with hover/pressed/disabled/completed/favorite/progress-complete states;
+- added loading/error/empty/portal illustration masters;
+- indexed in catalog v0.1.1.
 
-**Evidence:** SOURCE + DESKTOP VISUAL REVIEW only.
+Workshop:
+- first 13 individual creative-room masters committed;
+- catalog/README/review added;
+- assets reviewed together on Greia cream ground before any room composition.
 
-**Commits:**
-- `ee1faa2056156d756d233f01e7b46cdde2c1e4f3` — initial pack
-- `eefb9db344ab59aa25be0f341e34e4ecb777a517` — review refinements
+Evidence: SOURCE + DESKTOP VISUAL REVIEW only.
 
-## 2026-08-20 — composition/parallax proof and shared UI v0.1
+Commits:
+- `e42114e77d2c945e44febffec9b78b6490173504` — expanded UI source + Workshop initial pack
+- `24abd46d4c61671612898730c2dd5deb99e0ea98` — UI catalog v0.1.1
+- `f20cf179966282e763f663806995f10fb0ce9a80` — UI README refresh
+- `d338fbd6170c2fe8d8c6060cb9537c9e8f2540aa` — Workshop review record
 
-**Environment work:**
-- committed `composition_day.toml` with explicit far/mid/near/overlay layer roles;
-- committed `parallax_proof.html` using only real pack SVGs and cheap CSS motion;
-- added `REVIEW.md` recording actual review scope and boundaries.
-
-**UI work:**
-- created first reusable UI pack under `assets/visual/ui/v0.1/`;
-- added panels, cards, buttons, tabs, badges, progress, bubbles, reward/avatar frames, focus, shadow and sheen masters;
-- added semantic catalog and review record;
-- desktop-reviewed representative pieces on cream, sky and dark grounds.
-
-**Evidence:** SOURCE + DESKTOP VISUAL REVIEW only. No runtime/hardware/owner approval claim.
-
-**Commits:**
-- `70e9980392cb873fc1b4aab1234c75dd18ac4f3e` — shared UI pack + scene composition manifest
-- `873d228c14539da1daf040949431b51ad8ed221a` — parallax proof + review records
-
-**Next exact action:** finish missing UI states/illustration pieces and low-resolution review, do one final restraint/readability pass on the forest proof, then start the Workshop v0.1 individual asset pack.
+Next exact action: low-resolution UI/Workshop review and composition-critical refinements, final forest restraint pass, then Clinic individual-asset tranche.
