@@ -1,154 +1,262 @@
 # Greia — Installer Image Creation, USB Media, and Installation Boot
 
-**Status:** accepted operating reference  
-**Date:** 2026-08-19  
-**Audience:** build engineers, agents, release engineering  
-**Purpose:** give the exact, reproducible steps to create a Greia installer image, make a USB key that actually boots on the reference hardware, install, and understand the installed-OS boot path — with the **WHY** behind every step so nobody re-walks the hardware failure path.
+**Status:** accepted operating reference for the reference Acer development path  
+**Date:** 2026-08-20  
+**Audience:** build engineers, agents, release engineering
 
-This is the concise operator reference. The full blow-by-blow is in:
+This document is the concise operating reference for the physical Acer path. Historical failure detail lives in:
 
 ```text
-docs/INSTALLATION_USB_BOOT_POSTMORTEM.md      how the USB key boot was finally made to work
-docs/INSTALLED_OS_BOOT_POSTMORTEM.md          why a freshly installed OS grey-rebooted and the fix
-docs/INSTALLATION_ISSUES_LOG.md               durable invariants
+docs/INSTALLATION_USB_BOOT_POSTMORTEM.md
+docs/INSTALLED_OS_BOOT_POSTMORTEM.md
+docs/INSTALLATION_ISSUES_LOG.md
+docs/reviews/2026-08-20_ACER_INSTALLER_BOOT_REGRESSION.md
+docs/design/GREIA_BOOT_EXPERIENCE.md
 ```
 
----
+## 1. There are three independent contracts
 
-## 1. The two things that must both be right
+Do not merge these into one debugging problem:
 
-There are **two independent boot problems** on the reference Acer-class hardware, and fixing one does not fix the other:
+1. **removable-media boot** — BIOS → Syslinux/FAT32 → live kernel/initramfs;
+2. **installed-system boot** — installed GRUB → kernel/initramfs → systemd → X/launcher;
+3. **boot presentation** — the pixels and geometry shown by GRUB/initramfs/launcher.
 
-1. **Booting the installer medium** (getting from power-on to the Greia graphical installer).
-2. **Booting the installed OS** (getting from the internal disk to the launcher after a successful install).
+A presentation change must not rewrite the proven removable-media mechanics merely because both are visible during boot.
 
-Each has its own root cause and its own fix.
+## 2. Reference Acer removable media: keep the proven Syslinux/FAT32 recipe
 
----
+The reference BIOS reliably boots the antiX-style Syslinux/FAT32 layout:
 
-## 2. Booting the installer medium — WHY syslinux/FAT32
+- one active FAT32 partition;
+- `vmlinuz`, `initrd.img`, `filesystem.squashfs` at the filesystem root;
+- target payload under `payload/`;
+- `.disk/live-uuid` copied from the verified installer image;
+- Syslinux VBR + `mbr.bin` MBR;
+- `TIMEOUT 0`, straight to the installer.
 
-### The problem
+The canonical writer remains:
 
-The reference Acer Aspire One (BIOS-only, no UEFI) **does not reliably execute GRUB's MBR from a USB stick**. It also will not boot its SD readers at all. GRUB's MBR works fine on the *internal disk* but not on this USB stick + firmware combination.
+```text
+tools/build-live-usb.sh
+```
 
-### The proven solution
+Read-back verification remains a **separate** step:
 
-The **antiX-style syslinux/FAT32** live USB boots reliably:
+```text
+tools/verify-live-usb.sh
+```
 
-- one **active FAT32** partition;
-- live files at the partition **root**: `vmlinuz`, `initrd.img`, `filesystem.squashfs`;
-- the installable target under `payload/` and the live-media identity at `.disk/live-uuid`;
-- **syslinux** VBR on the partition + `mbr.bin` MBR on the device;
-- a `syslinux.cfg` that **boots straight to the installer** (no menu, `TIMEOUT 0`).
+Do not fold filesystem repair, probing, artwork generation or unrelated verification back into the firmware-sensitive writer.
 
-### WHY syslinux works
+## 3. Preferred physical development workflow
 
-Syslinux's MBR is a tiny self-contained loader that reads the active partition's VBR with its own minimal BIOS disk code, then loads `ldlinux.sys`. It does not discover modules, search by UUID, or set up graphics — it just hands control to the partition loader. The Acer's BIOS executes that. GRUB's stage-1 needs more elaborate disk reads that this firmware + stick does not complete silently.
-
-### How to build it
+For the reference Acer, use the high-level development front door:
 
 ```bash
-# 1. Build the Greia installer image (target + live installer + payload).
-sudo bash build/build-installer-image.sh legacy-x86-i686-dev /path/to/out
-
-# 2. Make the Acer-bootable syslinux/FAT32 USB from that image.
-#    <device> is the WHOLE removable USB disk (e.g. /dev/sdd). This is DESTRUCTIVE.
-sudo bash tools/build-live-usb.sh \
-  /path/to/out/greia-os-installer-legacy-x86-i686-dev.img \
-  /dev/sdd
+sudo bash tools/build-and-flash-development-usb.sh \
+  legacy-x86-i686-dev \
+  /dev/sdX
 ```
 
-`tools/build-live-usb.sh` refuses to run unless the target is a **removable whole disk** (`RM=1`, `TYPE=disk`), so it cannot be pointed at a system disk by accident. It wipes, partitions FAT32, copies the live files/payload/`.disk`, installs syslinux (VBR + MBR), and writes `syslinux.cfg`.
+`/dev/sdX` is the whole removable USB device and is destroyed.
 
-### Verify before unplugging
+For image-only construction:
 
 ```bash
-# MBR should start with the syslinux bootstrap (33 c0 fa ...).
-sudo dd if=<device> bs=1 count=16 2>/dev/null | xxd
-# The media id must match everywhere.
-cat <mounted>/boot/syslinux/syslinux.cfg | grep live_media_id
-cat <mounted>/.disk/live-uuid
+sudo bash tools/build-development-installer.sh \
+  legacy-x86-i686-dev \
+  ./out
 ```
 
-All three — the `syslinux.cfg` `greia.live_media_id`, `.disk/live-uuid`, and the initramfs `conf/uuid.conf` — must be identical. `tools/build-live-usb.sh` derives them all from the image.
+These commands deliberately route legacy-x86 through:
 
----
+```text
+build/build-legacy-x86-sd-installer.sh
+```
 
-## 3. The installed-OS boot — WHY the regenerated initramfs is the real one
+That wrapper is now responsible for generating and validating the current splash derivatives before the lower-level image builder runs.
 
-### The problem
+### Important: do not bypass the physical front door accidentally
 
-After a **successful** install, the machine grey-screens and reboots in a loop. The disk, GRUB, and UUIDs all check out. The boot hides the failure (`console=null panic=5` → silent reboot).
+`build/build-installer-image.sh` is a lower-level image composer. Calling it directly can intentionally bypass physical-Acer wrapper responsibilities such as the fresh splash-generation gate.
 
-### The root cause
+Therefore this is **not** the recommended command for an Acer acceptance build:
 
-The initramfs that **ships inside the payload squashfs** can look complete, but during install `update-initramfs` **regenerates** the initramfs inside the target chroot. If that regenerated initramfs uses `MODULES=dep` (dependency-based), and the chroot has no Acer SATA controller, it **drops `ahci`/`libata`/`sd_mod`**. The installed kernel then cannot see the internal disk, cannot mount root, panics invisibly, and reboots.
+```bash
+# Lower-level builder — not the physical Acer acceptance front door.
+sudo bash build/build-installer-image.sh legacy-x86-i686-dev ./out
+```
 
-### WHY the source fix works
+The high-level wrapper exists specifically so a build cannot appear fresh while consuming stale generated boot artwork.
 
-The installed target carries:
+## 4. Live-media identity remains a three-way invariant
 
-- `/etc/initramfs-tools/initramfs.conf` → `MODULES=most`;
-- `/etc/initramfs-tools/conf.d/greia-hardware` → `MODULES=most`;
-- an executable `greia-storage-modules` initramfs hook that runs `modinfo -k "$version"` against the **target kernel** and `manual_add_modules` **only when** that kernel provides `ahci`/`libata`/`sd_mod`.
+The following must identify the same live medium:
 
-This means regeneration cannot drop boot-critical drivers regardless of what hardware the build chroot sees. It is architecture-aware (does not force x86 module names onto future ARM profiles).
+```text
+kernel command line greia.live_media_id
+USB /.disk/live-uuid
+initramfs /conf/uuid.conf
+```
 
-**Rule:** never let build-host/chroot hardware be the authority for target boot-critical drivers. Verify the **regenerated** initramfs (`/boot/initrd.img-*` on the installed target), not just the one shipped in the payload.
+The image builder validates the identifier embedded in the final live initramfs after the final `update-initramfs`. The USB writer copies the verified initrd and identity marker, and the read-only USB verifier compares the actual removable media back to the source image.
 
----
+A splash change must never alter this contract.
 
-## 4. Developer/test SSH is built into the canonical builders
+## 5. Installed root/initramfs storage policy
 
-### WHY
+The installed-OS postmortem established the critical rule: the initramfs regenerated inside the target during installation must not infer target storage requirements from build/chroot hardware.
 
-The owner policy requires developer/test installs **and** the live installer to be reachable as `greia / greia` (root denied) during active hardware bring-up. This must be reproducible — not dependent on a manual provisioning step that can be forgotten (a flashed installer once shipped with SSH off).
+The target keeps:
 
-### How
+- `MODULES=most`;
+- the Greia target-kernel storage hook;
+- conditional inclusion of storage modules such as `ahci`, `libata`, `sd_mod` when the target kernel supplies them.
 
-Both canonical builders (`build-image.sh` and `build-installer-image.sh`) detect the `developer-remote` package set in the profile. For dev profiles they:
+Always reason about the **regenerated installed initramfs**, not only the initramfs that happened to exist inside the original payload.
 
-1. unlock/set the `greia` account (`chpasswd` then `passwd -u`);
-2. rewrite **both** `sshd_config.d` drop-ins (`00-greia-security-floor.conf` and `20-greia-parent.conf`) to `AllowUsers greia` (password auth), `DenyUsers root` — so no later-sorted file re-introduces publickey-only and defeats the login;
-3. enable `ssh.service`;
-4. write `/etc/greia-os/developer-remote`, which also switches the installed boot to **observable** mode.
+## 6. Development SSH is a hard invariant
 
-Normal/release profiles stay fail-closed (SSH off, greia locked). Root SSH is always disabled.
+For explicit `*-dev` profiles, both the live installer and installed OS must expose:
 
-> **WHY both drop-ins:** sshd reads `/etc/ssh/sshd_config.d/*.conf` in glob order with first-value-wins. The base builder always writes `20-greia-parent.conf` with `PasswordAuthentication no` / `AuthenticationMethods publickey`. If only `00-` (the dev floor) is rewritten, the `20-` publickey-only value can defeat the developer floor and leave `greia/greia` password SSH rejected. Writing both keeps them coherent.
+```text
+user: greia
+password: greia
+```
 
----
+No operator/client SSH private key is required. No generated 16-character operator password is part of the development workflow. Root SSH remains denied.
 
-## 5. Observable boot — the diagnostic switch
+The build provisions the `greia` account and enables sshd. Immediately before sshd validation/start, the Greia development bootstrap enforces the effective policy:
 
-Normal builds boot consoleless (`console=null panic=5`). This is the appliance intent, but it hides failures (a silent grey-reboot loop).
+```text
+PasswordAuthentication yes
+KbdInteractiveAuthentication no
+AuthenticationMethods password
+PermitRootLogin no
+AllowUsers greia
+```
 
-Developer/test builds use `console=tty1 panic=30` so a kernel panic **prints to the screen and waits 30 s** instead of silently rebooting after 5 s. This is what turns a blind boot loop into a diagnosable failure. It is controlled by `build/overlay/etc/grub.d/10_greia_appliance` (checks `/etc/greia-os/developer-remote`) and enforced by `src/greia_platform/boot_contract.py --developer`.
+It also generates one machine-local Ed25519 **server host key** when needed. That server identity is automatic and is not a credential the operator types or preserves.
 
-**WHY:** you cannot fix what you cannot see. Make the boot observable first, then diagnose.
+The artifact verifier inspects both squashfs roots for this recovery contract before reporting PASS.
 
----
+## 7. Development boot diagnostics
 
-## 6. Splash logo
+During the current Acer recovery gate, development boots intentionally remain observable and non-rebooting on fatal errors:
 
-Two splash defects were found on real hardware:
+```text
+console=tty1
+panic=0
+loglevel=4
+systemd.show_status=true
+rd.systemd.show_status=true
+```
 
-1. **Color glitch ("one color rendered, broken"):** caused by a **noisy logo extraction** (a crude brightness threshold over-captured the navy gradient), not by the renderer. The renderer's pixel packing is verified correct for RGB565/24/32-bit framebuffers.
-2. **Geometry glitch ("full-screen-width, clipped vertically"):** the installed-OS splash could render the logo oversized/clipped when the initramfs framebuffer reported odd/degenerate geometry. Fixed in `build/early-boot/greia-fb-splash.c` to always preserve aspect ratio, cap to a margin fraction of the visible area, and guard every division.
+Normal/release appliance presentation can return to console suppression only after the hardware path is accepted.
 
-- The logo is generated by `tools/generate_boot_artwork.py` (luminance floor + median filter) into the indigo `(62,70,130)` color that survives RGB565.
-- Re-run `python3 tools/generate_boot_artwork.py` whenever the source frame changes.
-- The regression suite (`tests/test_boot_experience_contract.py`) guards the white-frame + logo-color + PPM contract and the geometry invariant.
+If the screen stops on a successful systemd line such as:
 
----
+```text
+Finished systemd-update-utmp-runlevel.service -- Record Runlevel Change in UTMP
+```
 
-## 7. Quick reference — current commands
+that line is not automatically the blocker. It may simply be the last successful unit printed before the graphical target starts. In particular, inspect `greia-launcher.service`/Xorg over the development SSH channel before diagnosing a systemd runlevel hang.
 
-| Task | Command |
-|---|---|
-| Build installer image | `sudo bash build/build-installer-image.sh <profile> <out>` |
-| Build Acer-bootable USB | `sudo bash tools/build-live-usb.sh <image> <device>` |
-| Regenerate boot artwork | `python3 tools/generate_boot_artwork.py` |
-| Focused boot/SSH tests | `PYTHONPATH=src python3 -m unittest tests.test_boot_experience_contract tests.test_boot_contract tests.test_boot_animation_contract tests.test_installation_hardware_regressions tests.test_installer_engine tests.test_launcher_presentation -v` |
-| Full source gate | `make verify` |
+## 8. Splash presentation — current corrected contract
+
+The rejected historical splash pipeline thresholded a noisy legacy frame, median-filtered the result, and repainted it indigo `(62,70,130)` on white. That process intentionally destroyed colour/detail and is the direct reason a successful boot could still show a white/blue broken-looking image.
+
+That pipeline is no longer the accepted design.
+
+Current source:
+
+```text
+assets/boot/source/legacy-plymouth-theme/frames/frame_0051.png
+```
+
+Current generated presentation:
+
+```text
+untouched full-colour 222×600 source
+        ↓
+1600×900 landscape canvas
+  - source centred at native resolution
+  - background extended from source corner palette
+  - no threshold, mask, recolour or quantisation
+        ├─ PNG for installed GRUB + launcher
+        └─ exact P6 PPM for live + installed initramfs
+```
+
+### Early framebuffer geometry
+
+`build/early-boot/greia-fb-splash.c` fits the entire generated landscape canvas proportionally into the detected framebuffer and centres it. It no longer scales the portrait source to nearly the full physical display height.
+
+The renderer uses the canvas background colour for any remaining letterbox pixels and fails soft on unsupported reversed framebuffer bitfields instead of knowingly painting corrupt colours.
+
+### Installed GRUB geometry
+
+The installed GRUB path uses:
+
+```text
+build/overlay/boot/grub/greia-theme.txt
+```
+
+with proportional centred padding. Raw `background_image` stretch in the installed Greia GRUB script is rejected because it was responsible for horizontally stretching the portrait artwork across the Acer panel.
+
+## 9. Why this splash change is different from earlier claimed fixes
+
+A source edit is not accepted as a splash fix.
+
+For a physical legacy build, `build/build-legacy-x86-sd-installer.sh` now:
+
+1. backs up generated derivatives in the checkout;
+2. runs `tools/generate_boot_artwork.py` immediately before image composition;
+3. verifies that the canonical source copy is pixel-identical to the retained full-colour frame;
+4. verifies the 1600×900 canvas and exact P6 encodings;
+5. builds the live and target roots while those generated bytes are present;
+6. restores the checkout generated files afterward;
+7. records splash mode/hashes in the build report.
+
+Then `tools/verify-development-installer.sh` examines the **finished image** and rejects PASS unless:
+
+- live and target embedded PPMs are identical 1600×900 canvases;
+- the raster has real full-colour diversity;
+- the historical white/indigo two-colour signature is absent;
+- installed GRUB PNG and launcher PNG decode to exactly the same RGB canvas;
+- installed GRUB theme uses centred proportional `padding`;
+- the installed GRUB script does not contain an active raw stretch command.
+
+This still requires physical visual acceptance. It simply removes the previous loophole where source looked changed while the booted artifact was unchanged.
+
+## 10. Graphical launcher handoff
+
+The systemd/Xorg service keeps the hardware-proven invariants from the Acer bring-up:
+
+- `RuntimeDirectory=greia-os`;
+- `StandardInput=null`;
+- no desktop-style service namespace blocking Xorg device/path access;
+- the accepted Xwrapper policy;
+- Xorg on VT1.
+
+The newer profile-aware `greia_launcher.child_shell` remains primary. Because it was introduced after the original hardware proof, the X session now falls back once to `greia_launcher.presentation` if the child-shell process exits non-zero. The original error remains in the journal. This protects the graphical boot from a new composition-layer exception without hiding an Xorg failure.
+
+## 11. What a successful physical build must report
+
+The exact wording may grow, but the development build must at minimum complete the artifact and USB gates rather than merely creating an `.img`:
+
+```text
+Developer installer artifact verification: PASS
+Greia live USB read-only verification: PASS
+usb_readback_verification=PASS
+```
+
+The image report must also identify:
+
+```text
+boot_artwork_mode=full-color-landscape-canvas-v1
+boot_artwork_canvas=1600x900
+boot_artwork_grub_scaling=padding-centered
+```
+
+Do not call the splash physically fixed until the Acer itself shows the corrected image.
