@@ -1,60 +1,99 @@
-# Greia Visual Asset Library — Starter Contract
+# Greia Visual Asset Library
 
-**Status:** design/library seed; not a runtime loader contract  
+**Status:** active shared visual-library source; not a runtime loader contract  
 **Active art plan:** `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`  
 **Authoring skill:** `skills/greia-visual-authoring/SKILL.md`
 
-This directory is the staging home for the constraint-native Greia visual library.
+This tree is the staging/source home for Greia's reusable visual library. It exists so Shell and Activities can share a coherent visual world instead of accumulating unrelated private art.
 
-The directory exists so art work can become a coherent reusable library instead of accumulating as unrelated files inside individual Activities. **Nothing in this README authorizes runtime filesystem discovery.** Exact runtime catalogue/loader APIs remain source-owned and will be designed only if/when phase A7 reaches that work.
+**Nothing here authorizes runtime filesystem discovery.** Exact catalogue/loader APIs remain source-owned and require architecture review.
 
-## Intended semantic families
+## Production rule
+
+Greia visual work is asset-first:
+
+> excellent individual assets → reusable asset packs → layered composition → subtle parallax / ambient motion / light / shadow → shared UI system → Shell/Activity reuse
+
+A weak primitive does not become production art because it is hidden inside a scene.
+
+## Current real source packs
+
+### Characters / motion seed
 
 ```text
-assets/visual/
-  characters/
-    heroes/
-    standard/
-    activity_cast/
-    object_friends/
-  expressions/
-  animations/
-  props/
-  environments/
-  ui/
-  fx/
-  specimens/
-  library_v0.1.toml
+assets/visual/characters/
+assets/visual/specimens/a1/
+assets/visual/specimens/a2/
 ```
 
-Folders should be added when real reviewed assets exist; do not create empty directory noise merely to satisfy the conceptual tree.
+Working core cast:
 
-## Asset tiers
+- Lilli — unicorn Puff;
+- Nino — owl Bean;
+- Tito — fox Puff;
+- Momo — friendly monster Puff.
 
-### Tier A — canonical shared foundations
+Accepted character grammar:
 
-Carefully reviewed Greia-owned/repository-approved assets intended for reuse across Shell/Activities.
+```text
+docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md
+```
 
-Examples:
+Character expression/motion design remains separate from release/runtime approval:
 
-- core cast;
-- body archetype exemplars;
-- common face/expression pieces where reusable;
-- common FX;
-- common props;
-- shared UI illustration assets.
+```text
+docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md
+```
 
-### Tier B — guided generated/contributed content
+### Forest / meadow v0.2
 
-Reviewed secondary characters, Activity cast, props and scene variants produced under the Greia visual-authoring skill.
+```text
+assets/visual/environments/forest_meadow/v0.2/
+```
 
-### Tier C — local/disposable content
+Candidate reusable environment pack containing 27 SVG masters across trees, foliage, props, backgrounds, ground, atmosphere, shadows and ambient FX.
 
-One-off decoration/content where style drift cannot undermine system identity or gameplay comprehension. Tier C still needs appropriate provenance/license treatment if committed/distributed.
+Key files:
 
-## Approval scope is explicit
+```text
+catalog.toml
+REVIEW.md
+composition_day.toml
+parallax_proof.html
+```
 
-The inventory may use `approved`, but that word is never enough by itself. An approved item should record a scope such as:
+The pack is candidate/source + desktop-review evidence only. `parallax_proof.html` uses the actual reusable SVGs and exists only to test layered motion; it is not runtime architecture.
+
+### Shared UI v0.1
+
+```text
+assets/visual/ui/v0.1/
+```
+
+Candidate reusable visual masters for panels, cards, buttons, tabs, badges, progress, bubbles, reward/avatar frames, focus, shadows and highlight treatment.
+
+Key files:
+
+```text
+catalog.toml
+REVIEW.md
+```
+
+The UI pack follows `runtime/theme-defaults.toml` but does not replace Greia's accepted semantic UI architecture or protected system chrome.
+
+## Asset states
+
+Use:
+
+- `concept`
+- `candidate`
+- `approved`
+- `superseded`
+- `rejected`
+
+`approved` must always carry meaningful scope when relevant. Presence in Git never means approved.
+
+Examples of approval scopes:
 
 ```text
 design_grammar
@@ -66,104 +105,43 @@ physical_acceptance
 
 Do not infer a stronger scope from a weaker one.
 
-For example, the current A1 cast is approved as:
+## Asset metadata
 
-```text
-approval_scope = "static_style_anchor"
-runtime_ready = false
-```
+Reusable assets should record enough information to establish:
 
-That means the visual direction is accepted; it does not freeze the SVGs as release art or create a runtime character API.
+- semantic ID;
+- editable/source master;
+- family;
+- current state;
+- provenance/license;
+- intended scale range where relevant;
+- alpha/transparency requirements;
+- layer/parallax role where relevant;
+- optional ambient-motion role;
+- optional theme variants.
 
-## Current core cast
+Committed source artwork created directly for Greia should still say so explicitly; provenance is not only for third-party files.
 
-The first owner-reviewed static style anchors are:
+## Review discipline
 
-- `lilli` — unicorn Puff;
-- `nino` — owl Bean;
-- `tito` — fox Puff;
-- `momo` — friendly monster Puff.
+Environment/UI asset families should normally be reviewed in this order:
 
-Accepted character grammar:
+1. individual source assets;
+2. representative light/dark/theme backgrounds;
+3. coherent pack subset;
+4. low-resolution composition;
+5. subtle motion/parallax proof if relevant;
+6. simulator/runtime/hardware evidence only when actual integration reaches that stage.
 
-```text
-docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md
-```
-
-A1 review source:
-
-```text
-assets/visual/specimens/a1/review.html
-```
-
-## Accepted archetypes
-
-- `puff`
-- `bean`
-- `cutout_critter`
-- `object_friend`
-
-These are approved at `design_grammar` scope.
-
-## A2 expression/motion candidates
-
-Current semantic expression/motion work is intentionally still candidate-level:
-
-```text
-docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md
-assets/visual/specimens/a2/base_motion_v0.1.toml
-assets/visual/specimens/a2/review.html
-```
-
-Base motion set:
-
-- `idle_bounce`
-- `blink`
-- `happy_hop`
-- `celebrate_pop`
-- `surprised_wobble`
-- `sleepy_sway`
-
-These are semantic design names. The A2 TOML explicitly declares `runtime_consumed = false`; no runtime API is implied.
-
-## Provenance
-
-Every canonical distributed visual asset eventually needs enough metadata to answer:
-
-- where did it come from;
-- who/what created it;
-- what license/rights apply;
-- whether it was generated, contributed or derived;
-- which file is the editable/source master;
-- what raster derivatives were produced from that master;
-- whether it is approved, provisional, rejected or superseded;
-- what the approval scope actually covers.
-
-Do not delete provenance just because an asset has been rasterized or copied into a build layer.
-
-## Review states
-
-Use these human-facing states in the library inventory:
-
-- `concept` — design slot only;
-- `candidate` — asset exists and awaits visual review;
-- `approved` — approved for its explicit `approval_scope`;
-- `superseded` — replaced but retained where history/migration needs it;
-- `rejected` — experiment intentionally not used.
-
-Do not label an asset `approved` merely because it exists in Git.
-
-## Small-size masters/derivatives
-
-For characters/icons intended to appear small, review at 256/128/64 px as appropriate. Prefer an editable vector/high-resolution master plus deterministic derivatives when that preserves quality and size, but do not make SVG a dogma when a clean raster/sprite asset is more appropriate.
+Do not use a full-screen composition to conceal weak individual assets.
 
 ## Runtime boundary
 
-The future runtime path must remain explicit and bounded:
+Any future runtime path must remain explicit and bounded:
 
 - semantic IDs/catalogues rather than arbitrary directory scans;
 - bounded caches;
 - no per-frame file/decode work;
 - static fallbacks for meaningful animated states;
 - no network/CDN dependency for core operation;
-- future Web runtime should consume the same semantic asset system rather than inventing a separate visual library.
+- Python and future Web Activities should ultimately consume the same semantic visual system rather than maintaining parallel art libraries.
