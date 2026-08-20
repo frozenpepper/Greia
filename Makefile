@@ -1,7 +1,7 @@
 PYTHON ?= python3
 PYTHONPATH := src
 
-.PHONY: verify test validate assets visual-assets footprint shell-check clean-bytecode
+.PHONY: verify test validate assets visual-assets visual-assets-check footprint shell-check clean-bytecode
 
 verify: clean-bytecode test validate shell-check footprint
 	$(MAKE) clean-bytecode
@@ -30,6 +30,9 @@ assets:
 
 visual-assets:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) tools/build_visual_renditions.py
+
+visual-assets-check:
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) tools/validate_visual_renditions.py
 
 shell-check:
 	@find build -type f -perm -0100 -print | while read file; do bash -n "$$file"; done
