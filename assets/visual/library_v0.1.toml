@@ -1,15 +1,17 @@
 catalog_id = "greia.visual-library.seed.v0.1"
-catalog_version = "0.1.1"
+catalog_version = "0.1.2"
 status = "design-seed"
 runtime_consumed = false
 active_plan = "docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md"
 authoring_skill = "skills/greia-visual-authoring/SKILL.md"
-candidate_grammar = "docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md"
-notes = "Human/design inventory only. Presence does not define a runtime API or approve an asset."
+character_grammar = "docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md"
+motion_spec = "docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md"
+notes = "Human/design inventory only. Presence does not define a runtime API. Approved means approved only at the explicit approval_scope."
 
 [[archetypes]]
 id = "puff"
-status = "candidate-grammar"
+status = "approved"
+approval_scope = "design_grammar"
 primary_mass_max = 1
 appendage_budget = 4
 identity_attachment_budget = 3
@@ -17,7 +19,8 @@ motion_bias = "whole_body"
 
 [[archetypes]]
 id = "bean"
-status = "candidate-grammar"
+status = "approved"
+approval_scope = "design_grammar"
 primary_mass_max = 1
 appendage_budget = 4
 identity_attachment_budget = 3
@@ -25,7 +28,8 @@ motion_bias = "whole_body"
 
 [[archetypes]]
 id = "cutout_critter"
-status = "candidate-grammar"
+status = "approved"
+approval_scope = "design_grammar"
 primary_mass_max = 3
 appendage_budget = 4
 identity_attachment_budget = 3
@@ -34,7 +38,8 @@ specimen = "assets/visual/specimens/a1/cutout_critter.svg"
 
 [[archetypes]]
 id = "object_friend"
-status = "candidate-grammar"
+status = "approved"
+approval_scope = "design_grammar"
 primary_mass_max = 1
 appendage_budget = 2
 identity_attachment_budget = 2
@@ -44,7 +49,9 @@ specimen = "assets/visual/specimens/a1/object_friend_3.svg"
 [[characters]]
 id = "lilli"
 name = "Lilli"
-status = "candidate"
+status = "approved"
+approval_scope = "static_style_anchor"
+runtime_ready = false
 tier = "A"
 archetype = "puff"
 identity = "unicorn"
@@ -55,7 +62,9 @@ master_svg = "assets/visual/specimens/a1/lilli.svg"
 [[characters]]
 id = "nino"
 name = "Nino"
-status = "candidate"
+status = "approved"
+approval_scope = "static_style_anchor"
+runtime_ready = false
 tier = "A"
 archetype = "bean"
 identity = "owl"
@@ -66,7 +75,9 @@ master_svg = "assets/visual/specimens/a1/nino.svg"
 [[characters]]
 id = "tito"
 name = "Tito"
-status = "candidate"
+status = "approved"
+approval_scope = "static_style_anchor"
+runtime_ready = false
 tier = "A"
 archetype = "puff"
 identity = "fox"
@@ -77,7 +88,9 @@ master_svg = "assets/visual/specimens/a1/tito.svg"
 [[characters]]
 id = "momo"
 name = "Momo"
-status = "candidate"
+status = "approved"
+approval_scope = "static_style_anchor"
+runtime_ready = false
 tier = "A"
 archetype = "puff"
 identity = "friendly_monster"
@@ -87,99 +100,111 @@ master_svg = "assets/visual/specimens/a1/momo.svg"
 
 [[expressions]]
 id = "neutral"
-status = "design-seed"
+status = "candidate-a2"
 
 [[expressions]]
 id = "happy"
-status = "design-seed"
+status = "candidate-a2"
 
 [[expressions]]
 id = "excited"
-status = "design-seed"
+status = "candidate-a2"
 
 [[expressions]]
 id = "surprised"
-status = "design-seed"
+status = "candidate-a2"
 
 [[expressions]]
 id = "sleepy"
-status = "design-seed"
+status = "candidate-a2"
 
 [[expressions]]
 id = "sad_gentle"
-status = "design-seed"
+status = "candidate-a2"
 
 [[expressions]]
 id = "thinking"
-status = "design-seed"
+status = "candidate-a2"
 
 [[expressions]]
 id = "proud"
-status = "design-seed"
+status = "candidate-a2"
 
 [[expressions]]
 id = "silly"
-status = "design-seed"
+status = "candidate-a2"
 
 [[motions]]
 id = "idle_bounce"
-status = "design-seed"
+status = "candidate-a2"
 loop = true
 duration_min_ms = 1600
 duration_max_ms = 2400
+nominal_duration_ms = 2000
+fallback_expression = "neutral"
 primary_channels = ["translate_y", "rotate_small", "face_blink_optional"]
 
 [[motions]]
 id = "blink"
-status = "design-seed"
+status = "candidate-a2"
 loop = false
 duration_min_ms = 150
 duration_max_ms = 300
+nominal_duration_ms = 220
+fallback_expression = "neutral"
 primary_channels = ["face_eyes"]
 
 [[motions]]
 id = "happy_hop"
-status = "design-seed"
+status = "candidate-a2"
 loop = false
 duration_min_ms = 700
 duration_max_ms = 1100
+nominal_duration_ms = 900
+fallback_expression = "happy"
 primary_channels = ["squash", "translate_y", "stretch", "face_happy"]
 
 [[motions]]
 id = "celebrate_pop"
-status = "design-seed"
+status = "candidate-a2"
 loop = false
 duration_min_ms = 900
 duration_max_ms = 1400
+nominal_duration_ms = 1150
+fallback_expression = "happy"
 primary_channels = ["squash", "translate_y", "appendage_response", "face_happy", "fx_optional"]
 
 [[motions]]
 id = "surprised_wobble"
-status = "design-seed"
+status = "candidate-a2"
 loop = false
 duration_min_ms = 500
 duration_max_ms = 900
+nominal_duration_ms = 720
+fallback_expression = "surprised"
 primary_channels = ["translate_small", "rotate_wobble", "face_surprised"]
 
 [[motions]]
 id = "sleepy_sway"
-status = "design-seed"
+status = "candidate-a2"
 loop = true
 duration_min_ms = 1800
 duration_max_ms = 2800
+nominal_duration_ms = 2400
+fallback_expression = "sleepy"
 primary_channels = ["rotate_small", "translate_y_small", "face_sleepy"]
 
 [[asset_families]]
 id = "characters"
-status = "planned"
+status = "started"
 
 [[asset_families]]
 id = "expressions"
-status = "planned"
+status = "candidate-a2"
 
 [[asset_families]]
 id = "animations"
-status = "planned"
+status = "candidate-a2"
 
 [[asset_families]]
 id = "props"
@@ -199,8 +224,20 @@ status = "planned"
 
 [[review_sets]]
 id = "a1_static_character_candidates"
-status = "candidate"
+status = "approved"
+approval_scope = "static_style_anchor"
 review_html = "assets/visual/specimens/a1/review.html"
 characters = ["lilli", "nino", "tito", "momo"]
 archetype_examples = ["cutout_critter", "object_friend_3"]
+required_owner_review = false
+owner_reviewed_date = "2026-08-20"
+
+[[review_sets]]
+id = "a2_expression_motion_candidates"
+status = "candidate"
+review_html = "assets/visual/specimens/a2/review.html"
+motion_seed = "assets/visual/specimens/a2/base_motion_v0.1.toml"
+characters = ["lilli", "nino"]
+archetype_examples = ["object_friend_3"]
 required_owner_review = true
+runtime_consumed = false
