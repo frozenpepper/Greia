@@ -104,7 +104,13 @@ ui.button.primary    SIMULATOR VISUAL REVIEW
 ui.avatar.frame      SIMULATOR VISUAL REVIEW
 ```
 
-The latest accepted profile-identity run also confirmed profile picker frames, active-profile switcher frame, maximized panel vertical height framing full-scale activity cards (~198-205px), headless test runner via SDL dummy driver, full responsive matrix, and ~27.4 FPS simulator sanity.
+The latest accepted profile-identity run also confirmed:
+
+- the Activity panel is maximized vertically from immediately below the category row while preserving the authored 640:420 ratio;
+- full large Activity cards remain around 198–205 px where geometry permits;
+- `GREIA_SIMULATOR_HEADLESS=1` / `--headless` uses SDL dummy video/audio for non-intrusive simulator execution while preserving real Shell rendering into pixel buffers;
+- the 6-row responsive matrix remains accepted at simulator scope;
+- frame sanity was ~27.4 FPS in that headless run.
 
 No physical Acer/Pi visual-performance claim and no R7 closure.
 
@@ -142,60 +148,74 @@ Implementation:
 ```text
 src/greia_launcher/shared_ui_presentation.py
 src/greia_launcher/profile_chrome_presentation.py
+src/greia_launcher/feedback_presentation.py
 src/greia_launcher/child_shell.py
 assets/catalog/shared_visuals_v1_source.toml
 ```
 
 Already accepted:
 
-- `ui.panel.base` frames the profile picker and Activity catalogue (maximized height `panel_top=52..62`, `bottom_margin=4` with true 640:420 aspect ratio);
-- `ui.card.activity/default|focused` renders full large-scale Activity tiles;
+- `ui.panel.base` frames the profile picker and Activity catalogue; Activity catalogue framing is vertically maximized with `panel_top=52..62`, `bottom_margin=4`, true 640:420 aspect ratio;
+- the Activity grid consumes the panel's authored inner tray so full-size cards fit rather than floating across the frame;
+- `ui.card.activity/default|focused` renders large Activity tiles;
 - `ui.button.primary/default|hover` renders the root category row;
-- `ui.avatar.frame/default` frames profile picker cards and active profile switcher badge;
+- `ui.avatar.frame/default` frames profile picker identities and the active-profile switcher;
 - `ui.shadow.soft` provides shared tile grounding;
-- `child_shell.py` supports `--headless` and `GREIA_SIMULATOR_HEADLESS=1` for non-intrusive headless testing;
 - all remain presentation-only with narrow fail-soft fallback.
+
+Simulator testing should prefer headless mode for routine local-agent visual acceptance so validation does not steal desktop focus.
 
 ---
 
-# 7. Completed gate — shared profile identity frame
+# 7. Current exact gate — shared Shell feedback states
 
-Accepted consumer:
+New explicit runtime-rendition selections:
 
 ```text
-ui.avatar.frame/default
+ui.loading.orbit/default
+ui.error.gentle/default
+ui.empty.basket/default
 ```
 
-Source master:
+Source masters:
 
 ```text
-assets/visual/ui/v0.1/avatar_frame.svg
+assets/visual/ui/v0.1/loading_orbit.svg
+assets/visual/ui/v0.1/error_cloud.svg
+assets/visual/ui/v0.1/empty_basket.svg
 ```
 
-Generated runtime path:
+Expected generated runtime files after `make visual-assets`:
 
 ```text
-assets/visual/runtime/v1/ui/avatar_frame.png
+assets/visual/runtime/v1/ui/loading_orbit.png
+assets/visual/runtime/v1/ui/error_cloud.png
+assets/visual/runtime/v1/ui/empty_basket.png
 ```
 
 Implementation:
 
 ```text
-src/greia_launcher/profile_chrome_presentation.py
+src/greia_launcher/feedback_presentation.py
+src/greia_launcher/child_shell.py
 ```
 
-`SharedUiProfileChromeMixin` overlays the reviewed frame in two real child-Shell locations:
+Current source behavior:
 
-1. each visible profile identity in the profile picker;
-2. the active-profile switcher at the top-left of the Activity catalogue.
+1. normal Activity launch overlay uses `ui.loading.orbit` plus interface-scaled launch text;
+2. launch visual failure falls back to the existing primitive launch overlay without changing lifecycle;
+3. catalogue-error state uses `ui.error.gentle` as the dismissible error affordance;
+4. error visual failure falls back only the error affordance, not the accepted panel/cards/buttons/profile frame;
+5. genuine empty Activity catalogue state uses `ui.empty.basket`; profile-empty state retains its existing Greia identity fallback;
+6. empty visual failure falls back to the previous empty renderer.
 
-Accepted protocol:
+Evidence is **SOURCE only** until the simulator protocol runs:
 
 ```text
-docs/testing/2026-08-21_V5_SHARED_PROFILE_IDENTITY_SIMULATOR.md
+docs/testing/2026-08-21_V5_SHARED_FEEDBACK_SIMULATOR.md
 ```
 
-All 6 responsive matrix viewports, profile picker baseline, active profile switcher, return to profile picker, missing/malformed/corrupt fallback cases, and 27.4 FPS frame sanity passed with evidence in `tmp/v5-profile-simulator-evidence/`.
+If the current normal simulator cannot legitimately reach an empty Activity catalogue, record `ui.empty.basket` as SOURCE / NOT EXERCISED rather than fabricating PASS evidence.
 
 ---
 
@@ -203,14 +223,19 @@ All 6 responsive matrix viewports, profile picker baseline, active profile switc
 
 ```text
 1. sync current main
-2. continue with the next targeted product-visible shared UI surface or Web Activity semantic adapter
-3. preserve headless simulator testing (--headless / GREIA_SIMULATOR_HEADLESS=1) so local work is non-intrusive
-4. run full responsive matrix and fail-soft verification
-5. update plan/resume/HANDOVER/LOCAL_AGENT_RESULT.md
-6. commit and push accepted work to main
+2. run make visual-assets to generate loading/error/empty PNGs + regenerated catalogue
+3. start the Greia Activity Simulator with GREIA_SIMULATOR_HEADLESS=1
+4. execute docs/testing/2026-08-21_V5_SHARED_FEEDBACK_SIMULATOR.md
+5. accept/reject the loading overlay and error state from real simulator screenshots
+6. exercise empty state only if legitimately reachable through normal Greia policy
+7. verify isolated corrupt-PNG fallbacks
+8. run responsive overlay matrix + frame sanity
+9. fix only shared/root causes
+10. update plan/resume/HANDOVER/LOCAL_AGENT_RESULT.md
+11. commit and push accepted work to main
 ```
 
-Do not return to new environment-pack production unless a concrete reusable coverage gap appears.
+After this gate, continue with another coherent product-visible Shell tranche or the Web semantic adapter. Do not return to new environment-pack production unless a concrete reusable coverage gap appears.
 
 ---
 
@@ -225,7 +250,19 @@ docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md
 docs/testing/2026-08-21_V5_SHARED_PROFILE_IDENTITY_SIMULATOR.md
 ```
 
-For owner-directed local-agent runtime/visual/fallback/responsive acceptance, use the Greia Activity Simulator.
+Current pending protocol:
+
+```text
+docs/testing/2026-08-21_V5_SHARED_FEEDBACK_SIMULATOR.md
+```
+
+For owner-directed local-agent runtime/visual/fallback/responsive acceptance, use the Greia Activity Simulator. Prefer:
+
+```bash
+GREIA_SIMULATOR_HEADLESS=1 python3 tools/greia_simulator.py --state-dir <isolated-state>
+```
+
+for non-intrusive automated/local-agent runs.
 
 Do not use GitHub Actions unless the owner explicitly authorizes hosted execution.
 
@@ -283,6 +320,12 @@ Practical production rules:
 
 ```text
 skills/greia-visual-authoring/SKILL.md
+```
+
+Simulator developer authority:
+
+```text
+docs/development/GREIA_ACTIVITY_SIMULATOR.md
 ```
 
 Source-tree summary:
