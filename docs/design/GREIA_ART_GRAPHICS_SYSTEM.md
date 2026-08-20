@@ -1,271 +1,232 @@
 # Greia Art & Graphics System
 
-**Status:** living visual-system architecture and navigation guide  
-**Last reviewed:** 2026-08-20  
-**Audience:** humans, coding agents, Activity authors, visual contributors, reviewers  
+**Status:** stable visual-system architecture and documentation index  
 **Repository:** `frozenpepper/Greia`  
-**Current workstream:** `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`  
-**Current resume file:** `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md`
+**Branch:** `main`  
+**Last architecture review:** 2026-08-20
+
+This is the **main entry point** for humans and agents working on Greia artwork, UI graphics, characters, environments, visual assets, animation, runtime visual consumption, or Activity reuse.
+
+It is intentionally not the progress diary. Use this document to understand the system and find the authority for each detail.
 
 ---
 
-# 1. Purpose
+# 1. Documentation map
 
-This is the **main entry point for Greia's art, graphics, visual-asset, animation, composition and visual-runtime system**.
+Read this file first for visual work, then follow the narrower authority that owns the detail you need.
 
-If you are new to Greia visual work, start here. This document explains:
-
-- the visual-production philosophy;
-- how source artwork is organized;
-- how characters, environments, props, FX and UI fit together;
-- how layered scenes, parallax, light and motion are expected to work;
-- how semantic asset IDs, build-time renditions and runtime caches fit together;
-- how the Shell and Activities are expected to consume the same shared visual system;
-- which files own which details;
-- how to review and extend the system without creating a parallel architecture;
-- where to resume current implementation work.
-
-This document is intentionally a **synthesis and index**, not a replacement for accepted ADRs, exact source contracts or the active implementation plan.
-
-When there is a conflict:
-
-1. `AGENTS.md` owns repository-wide rules;
-2. accepted ADRs own normative platform architecture;
-3. exact source/runtime declarations own currently implemented APIs and schemas;
-4. this guide owns the integrated explanation and navigation of the visual system;
-5. the active visual plan owns sequencing and completion state;
-6. pack-local files own candidate art/review/composition details.
-
----
-
-# 2. The system in one sentence
-
-Greia uses an **asset-first, semantic, composable visual library**:
-
-> **excellent individual source assets → reusable packs → layered composition → subtle light/motion/parallax → explicit build-time runtime renditions → semantic catalogues → bounded renderer caches → shared Shell/Activity consumption**
-
-The system is designed around four realities:
-
-- Greia must look coherent and rich enough to feel like a real child-oriented world;
-- the extreme hardware floor is old and resource-constrained;
-- Activities must not each invent their own unrelated visual infrastructure;
-- graphics architecture must remain renderer/runtime-neutral enough to survive the future move beyond provisional Xorg/Pygame details.
-
----
-
-# 3. Non-negotiable design principles
-
-## 3.1 Asset first
-
-Do not begin with a crude full-screen mock and attempt to hide weak pieces inside it.
-
-A scene, UI family or visual feature should normally progress as:
+## Stable visual architecture / index
 
 ```text
-individual master
-→ individual review
-→ reusable family/pack
-→ target-size composition
-→ restrained motion/light/parallax
-→ explicit runtime selection
-→ real consumer
-→ simulator/physical evidence
+docs/design/GREIA_ART_GRAPHICS_SYSTEM.md
 ```
 
-A weak primitive is not production art merely because several weak primitives are combined.
+This file owns:
 
-## 3.2 Reuse before duplication
+- the system-wide visual architecture;
+- the asset-first production model;
+- source-library organization;
+- semantic runtime asset architecture;
+- build-time rendition model;
+- renderer/cache boundaries;
+- Shell and Activity consumption direction;
+- the documentation map.
 
-Generic objects belong in shared packs.
+## Current sequencing and history
+
+```text
+docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md
+```
+
+Owns:
+
+- current phase;
+- current checkpoint;
+- milestone completion state;
+- exact next action;
+- append-only progress history.
+
+## Fast cross-session resume
+
+```text
+docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md
+```
+
+Owns:
+
+- current accepted direction;
+- current implementation/evidence state;
+- next exact visual task;
+- current testing rule;
+- rejected/stale directions.
+
+## Project-wide continuation state
+
+```text
+HANDOVER.md
+```
+
+## Visual language and art requirements
+
+```text
+docs/design/GREIA_VISUAL_STYLE_GUIDE.md
+docs/design/GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md
+```
+
+## Character architecture
+
+```text
+docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md
+docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md
+```
+
+## Practical production/integration workflow
+
+```text
+skills/greia-visual-authoring/SKILL.md
+```
+
+## Source-tree inventory
+
+```text
+assets/visual/README.md
+assets/visual/library_v0.1.toml
+assets/visual/packs_v0.1.toml
+```
+
+## Current simulator protocols
+
+```text
+docs/testing/2026-08-20_V5_VISUAL_INTEGRATION_SIMULATOR_LOCAL_AGENT.md
+docs/testing/2026-08-20_V5_ACTIVITY_SHARED_VISUAL_SIMULATOR.md
+```
+
+`AGENTS.md` is the repository-wide authority that makes this guide mandatory for visual work.
+
+---
+
+# 2. Product constraints the visual system must respect
+
+Greia is a child-first educational/game Linux appliance, not a desktop theme project.
+
+Visual architecture must remain compatible with:
+
+- no visible Linux shell in the normal child path;
+- Greia Shell as the graphical OS surface;
+- protected platform Home/Back behavior;
+- offline-first use;
+- ARM and x86 support;
+- low-resource hardware;
+- historical 800×600 / 1024×600 constraints and current simulator viewport matrix;
+- static completeness when animation is absent;
+- Activities that may be Python/Pygame today and Web/HTML in parallel/future paths;
+- no dependency on professional per-asset animation labor;
+- no runtime requirement for heavy SVG/3D/vector engines on low-end targets.
+
+Visual richness is welcome. Runtime unpredictability is not.
+
+---
+
+# 3. Core production model
+
+The accepted Greia pipeline is:
+
+> **excellent individual assets → reusable asset packs → layered composition → subtle parallax / ambient motion / light / shadow → shared UI system → explicit semantic runtime consumption → Shell/Activity reuse**
+
+This order matters.
+
+## 3.1 Asset-first means asset-first
+
+Before composing a finished scene, create reusable pieces worth keeping individually.
 
 Examples:
 
 ```text
 tree
 bush
-rock
-log
+rock cluster
+fallen log
+ground edge
 cloud
-shadow
-firefly
-block
-pencil cup
-button treatment
-card treatment
-window-light overlay
+fog strip
+sunlight shaft
+window
+workbench
+shelf
+bookcase
+rug
+lamp
+panel frame
+button frame
+soft shadow
+badge
 ```
 
-If a semantically suitable shared master exists, reference it. Do not repaint a nearly identical private copy for every Activity/environment.
+A scene is not allowed to hide weak source assets.
 
-## 3.3 Richness comes from composition, not runtime heaviness
+## 3.2 Simplification is not cheap art
 
-Greia can look visually rich while remaining cheap to render.
+Constraint-native Greia art may use simplified silhouettes, anatomy and motion. That does **not** mean:
 
-The preferred model is:
+- raw circles as final trees;
+- tutorial rectangles as buildings;
+- generic flat web-app cards;
+- crude full-screen mockups presented as design direction.
 
-- carefully authored static masters;
-- pre-rendered runtime PNGs;
-- layered depth;
-- local contact/cast shadows;
-- subtle highlights;
-- restrained overlays;
-- small transform-based motion;
-- bounded parallax;
-- static fallbacks.
-
-Avoid systems that require large skeletal rigs, continuous SVG rasterization, video backgrounds, shader-heavy rendering, huge texture atlases or per-frame file decoding on the low-end target.
-
-## 3.4 Motion supports good art; it does not rescue bad art
-
-Allowed motion includes:
-
-- slow cloud drift;
-- tiny foliage/reed sway;
-- subtle idle bounce;
-- small hover lift;
-- short launch bounce/squiggle;
-- water shimmer/ripple;
-- light-ray breathing;
-- fog/dust/firefly drift;
-- parallax offsets.
-
-Important meaning must remain understandable in the static state.
-
-## 3.5 One shared visual language
-
-Greia should feel like one world rather than a launcher surrounded by unrelated apps.
-
-Consistency should come from:
-
-- common palette families;
-- shared typography;
-- common shape/depth language;
-- shared characters where appropriate;
-- shared asset semantics;
-- common UI state vocabulary;
-- shared lighting/shadow language;
-- platform-owned protected system chrome.
-
-Activities may have expressive identities, but should not reinvent basic navigation/control grammar.
+The quality target is a polished storybook / felt-board / toy-diorama world with controlled texture, warm local light, soft depth, clean silhouettes and strong low-resolution readability.
 
 ---
 
-# 4. Visual-language authorities
+# 4. Visual language
 
-Use this guide as the index, then follow the narrower authority.
+The narrow palette/type/style details live in `GREIA_VISUAL_STYLE_GUIDE.md` and `runtime/theme-defaults.toml`.
 
-| Topic | Primary file |
-|---|---|
-| overall visual system / architecture / index | `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` |
-| visual personality, palette, typography, contrast | `docs/design/GREIA_VISUAL_STYLE_GUIDE.md` |
-| platform/core artwork inventory and required families | `docs/design/GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md` |
-| constraint-native character construction | `docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md` |
-| character expression + motion vocabulary | `docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md` |
-| launcher interaction/catalogue behavior | `docs/design/GREIA_LAUNCHER_INTERACTION_AND_ACTIVITY_CATALOGUE.md` |
-| Activity spatial/canvas authoring | `docs/design/GREIA_ACTIVITY_CANVAS_AND_VIEWPORT_AUTHORING.md` |
-| practical visual-authoring workflow | `skills/greia-visual-authoring/SKILL.md` |
-| current sequencing / milestones / art ledger | `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md` |
-| current session continuation | `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` |
-| current project-wide evidence / continuation | `HANDOVER.md` |
-| exact documentation authority model | `docs/DOCUMENTATION.md` |
+System-level direction:
 
-Relevant platform architecture:
+- warm, friendly, tactile;
+- rounded but not generic SaaS UI;
+- local highlights and shallow physical depth;
+- clear silhouettes;
+- soft contact/cast shadows;
+- restrained gradients;
+- decoration that supports rather than competes with play;
+- readable at low resolution;
+- child-facing state must never rely on color alone.
 
-```text
-docs/adr/0018-lightweight-ui-foundation.md
-docs/adr/0019-platform-owned-activity-system-navigation.md
-docs/adr/0026-resolution-adaptive-single-authoring-ui.md
-docs/adr/0027-activity-coordinate-spaces-reference-canvas-world-camera.md
-```
+Greia's shared theme palette includes warm cream, sky, mint, lavender, peach, rose, sand and aqua backgrounds plus sunshine/coral/leaf/ocean/grape/raspberry/orange/turquoise accents.
 
-The visual system must remain compatible with the direct/appliance display direction selected by ADR 0014 and must not deepen X11 coupling while R7 remains open.
+Text defaults to the accepted theme typography (currently Nunito Sans in the style authority).
 
 ---
 
-# 5. Source library structure
+# 5. Character system
 
-The reusable visual source library lives under:
-
-```text
-assets/visual/
-```
-
-The important top-level concepts are:
+Core cast:
 
 ```text
-assets/visual/characters/       character expression/state masters
-assets/visual/specimens/        reviewed style anchors / historical experiments
-assets/visual/environments/     reusable environment packs
-assets/visual/ui/               reusable UI artwork families
-assets/visual/library_v0.1.toml character/archetype/expression/motion design inventory
-assets/visual/packs_v0.1.toml   pack-level inventory and reuse relationships
-assets/visual/README.md         source-tree operational summary
+Lilli — unicorn Puff
+Nino  — owl Bean
+Tito  — fox Puff
+Momo  — friendly monster Puff
 ```
 
-Design inventories are **not runtime filesystem-discovery contracts**.
+The character system deliberately avoids detailed anatomical rigs as the default production model.
 
-Runtime code must not recursively scan these directories and guess meaning from filenames.
+## 5.1 Character grammar
 
----
+Identity comes from:
 
-# 6. Current source packs
+- silhouette;
+- color grouping;
+- face;
+- ears/horns/tufts;
+- tails/wings/accessories;
+- sound/behavior;
+- a small number of authored expression states.
 
-Current broad source coverage is sufficient to stop pack proliferation and focus on runtime integration.
+## 5.2 Shared expression states
 
-| Pack | Location | Current role |
-|---|---|---|
-| Forest / Meadow v0.2 | `assets/visual/environments/forest_meadow/v0.2/` | generic outdoor landscape, foliage, props, distant layers, atmosphere |
-| Shared UI v0.1 | `assets/visual/ui/v0.1/` | panels, cards, buttons, tabs, badges, progress, bubbles, reward/help/error/loading/empty/focus/shadow families |
-| Workshop v0.1 | `assets/visual/environments/workshop/v0.1/` | indoor making/creative furniture and props |
-| Clinic / Care v0.1 | `assets/visual/environments/clinic/v0.1/` | warm pretend-care furniture, props and light |
-| Reading / Classroom v0.1 | `assets/visual/environments/reading_classroom/v0.1/` | reading/learning furniture, books, boards, seating |
-| Fantasy / Village / Night v0.1 | `assets/visual/environments/fantasy_village_night/v0.1/` | village architecture, night layers, moon/window light |
-| Water / Pond v0.1 | `assets/visual/environments/water_pond/v0.1/` | water/shoreline/lily/reed/dock/ripple/shimmer families |
-
-Pack-local files normally include some combination of:
-
-```text
-catalog.toml
-README.md
-REVIEW.md
-COMPOSITION.md
-composition*.toml
-reference_1024x600.svg
-reference_800x600.svg
-```
-
-These record candidate source and review state. They do not independently authorize runtime consumption.
-
----
-
-# 7. Characters
-
-The current shared cast is:
-
-- **Lilli** — unicorn Puff;
-- **Nino** — owl Bean;
-- **Tito** — fox Puff;
-- **Momo** — friendly monster Puff.
-
-The character direction is deliberately constraint-native.
-
-## 7.1 Construction grammar
-
-Preferred construction:
-
-- one dominant body mass;
-- large readable face;
-- tiny/optional appendages;
-- identity through silhouette and a few distinctive features;
-- no dependence on realistic anatomy;
-- motion primarily through whole-character translation/rotation/squash/stretch;
-- authored expression variants when the face genuinely changes.
-
-This is not an excuse for low-quality art. Simple geometry must still produce an intentional, polished character.
-
-## 7.2 Shared states
-
-Current shared state vocabulary:
+Current shared vocabulary:
 
 ```text
 neutral
@@ -275,7 +236,9 @@ surprised
 sleepy
 ```
 
-Base motion vocabulary:
+`blink` must visibly close the eyes.
+
+## 5.3 Shared motion vocabulary
 
 ```text
 idle_bounce
@@ -286,160 +249,166 @@ surprised_wobble
 sleepy_sway
 ```
 
-`blink` must visibly close the eyes.
+Motion favors whole-body translate/tilt/squash/stretch/wobble plus authored static face states.
 
-Do not redraw a character into a visibly different character just to animate it.
+Do not make shoulders/elbows/knees/realistic gait prerequisites for normal Greia character animation.
 
 ---
 
-# 8. Environment composition architecture
+# 6. Environment architecture
 
-A Greia scene is a stack of reusable layers, not one baked image by default.
+Scenes are assembled from reusable depth layers.
 
-Typical order:
+Recommended conceptual stack:
 
 ```text
 0  sky / room base
 10 far background
 20 mid background
-30 ground / playfield base
-40 props / interactive assets
+30 playfield / ground
+40 interactive props
 50 foreground framing
-60 atmosphere / light / shadows / FX
-70 characters
-80 Activity UI
-90 protected Greia system chrome
+60 atmosphere / fog
+70 light / shadow / FX
+80 characters
+90 Activity-local UI
+100 protected Greia platform UI/chrome where applicable
 ```
 
-Exact numeric values are composition metadata, not a frozen public API.
+Exact z values are composition-specific; the separation principle is stable.
 
-## 8.1 Why layered source matters
+## 6.1 Parallax
 
-Layering allows:
+Use small, readable depth differences rather than dramatic camera tricks.
 
-- reuse across Activities;
-- independent cropping/recomposition at 4:3 / 16:10 / 16:9;
-- cheap parallax;
-- optional atmosphere;
-- dynamic props;
-- shared lighting/shadows;
-- static fallback;
-- future renderer changes without repainting the visual library.
+Typical intent:
 
-## 8.2 Calm playfield
+```text
+sky                  0.00
+far landscape        0.05–0.10
+mid background       0.10–0.20
+playfield props      0.25–0.35
+foreground framing   0.40–0.55
+```
 
-Environment richness should normally frame or support the gameplay area rather than occupy every pixel.
+Parallax is optional enrichment. Static layout must remain coherent.
 
-A useful composition often has:
+## 6.2 Ambient motion
 
-- richer foreground edges;
-- readable side anchors;
-- a calmer center;
-- clear interactive silhouettes;
-- stable high-contrast regions for text/UI.
+Good candidates:
 
-## 8.3 Independent target compositions
+- slow cloud drift;
+- tiny foliage/reed sway;
+- low-count fireflies/dust;
+- gentle water shimmer/ripples;
+- fog drift;
+- slow light breathing;
+- tiny prop idles.
 
-Do not assume 800×600 is a letterboxed 1024×600 image.
-
-Important reference viewports should be composed deliberately from the same source layers.
-
-The goal is one semantic composition system, not separate painted art for every resolution.
+Motion must be bounded and cheap.
 
 ---
 
-# 9. Parallax, ambient motion and light
+# 7. Lighting and shadow are reusable assets
 
-Parallax is metadata-driven composition behavior, not an excuse for a full game engine.
+Do not bake every depth cue uniquely into every scene.
 
-Typical relative depth behavior:
-
-```text
-sky                0.00
-far hills           0.05–0.10
-far tree line       0.10–0.16
-mid environment     0.20–0.30
-playfield props     0.28–0.38
-foreground framing  0.40–0.55
-overlay light       often 0.00 or scene-specific
-```
-
-These are design ranges, not rigid source constants.
-
-## 9.1 Ambient motion rules
-
-Prefer bounded descriptors such as:
+Reusable families include:
 
 ```text
-none
-slow_drift_x
-very_slow_drift
-subtle_sway
-tiny_water_bob
-very_slow_breathe_alpha
-slow_rise_fade
-expand_fade
-bounded_hover_drift
+soft contact shadow
+cast-shadow decal
+highlight sheen
+window-light shaft
+sunlight shaft
+fog/haze strip
+window glow
+reflection glow
+reward glow
+subtle vignette/framing shadow
 ```
 
-Keep amplitudes small.
-
-Avoid continuous motion on every object.
-
-## 9.2 Lighting system
-
-Reusable visual treatments should include:
-
-- contact shadows;
-- soft cast shadows;
-- warm/cool glows;
-- sunlight/window/moonlight shafts;
-- haze/fog;
-- water reflection/shimmer;
-- reward/discovery sparkle treatments.
-
-Lighting should visually ground assets and establish scene depth without requiring expensive runtime effects.
+Light/shadow overlays should remain independently removable where reuse benefits.
 
 ---
 
-# 10. Shared UI artwork system
+# 8. Current reusable source library
 
-Greia UI architecture remains owned by ADR 0018 and platform source. The visual library supplies reusable appearance, not a second widget framework.
-
-Reusable visual families include:
+Broad environment/UI coverage exists already.
 
 ```text
-panel / sheet
-activity card
-button: primary / secondary / quiet / icon
-tab / selected tab
-badge: new / done / favorite / locked
-progress track / fill / complete
-speech / thought bubble
-reward frame
-avatar frame
+assets/visual/environments/forest_meadow/v0.2/
+assets/visual/ui/v0.1/
+assets/visual/environments/workshop/v0.1/
+assets/visual/environments/clinic/v0.1/
+assets/visual/environments/reading_classroom/v0.1/
+assets/visual/environments/fantasy_village_night/v0.1/
+assets/visual/environments/water_pond/v0.1/
+```
+
+The current active plan forbids creating another environment family merely to keep producing assets. New packs require a concrete reuse gap.
+
+## 8.1 Pack metadata
+
+Each reusable pack should expose explicit metadata such as:
+
+- pack/catalog ID;
+- version;
+- status;
+- provenance;
+- asset semantic ID;
+- file path;
+- family/role;
+- alpha behavior;
+- optional parallax/ambient hints;
+- shared dependencies/reuse notes;
+- runtime-consumed state where relevant.
+
+Pack metadata is a design/review inventory. It is **not** permission for runtime directory discovery.
+
+---
+
+# 9. Shared UI system
+
+Current shared UI source family lives under:
+
+```text
+assets/visual/ui/v0.1/
+```
+
+Families include:
+
+```text
+panel / sheet frame
+activity card frame
+primary button
+button states
+icon button
+pill/tab
+badge
+progress track/fill
+speech/help bubble
 focus ring
+avatar frame
 soft shadow
 highlight sheen
-loading / error / empty-state illustration
-portal / category framing
+loading/error/empty illustration
+portal/category framing
 ```
 
-## 10.1 UI states
+## 9.1 State language
 
-State must not rely on color alone.
-
-Use combinations of:
+A state must combine multiple cues where needed:
 
 - outline/frame thickness;
 - shape;
 - badge/icon;
-- position/lift;
+- lift/depression;
 - local depth;
 - short motion;
-- text where appropriate.
+- text when appropriate.
 
-## 10.2 Motion vocabulary
+## 9.2 Motion vocabulary
 
 ```text
 hover/focus  → tiny lift + depth change
@@ -450,50 +419,52 @@ reward       → pop + restrained sparkle
 gentle error → restrained wobble
 ```
 
-The protected platform Home/Back layer is not Activity artwork and cannot be replaced by this library.
+Protected platform Home/Back controls remain platform-owned and cannot be replaced by Activity artwork.
 
 ---
 
-# 11. Semantic asset architecture
+# 10. Semantic asset architecture
 
-The runtime-facing visual system extends Greia's existing explicit asset catalogue.
+Runtime-facing visuals extend Greia's existing explicit asset catalogue.
 
-Core source owners:
+Core owners:
 
 ```text
 src/greia_platform/assets.py
-src/greia_platform/pygame_visual_assets.py
-src/greia_launcher/visual_assets.py
 assets/catalog/core_icons_v1.toml
 assets/catalog/shared_visuals_v1_source.toml
+assets/catalog/shared_visuals_v1.toml
 ```
 
-## 11.1 One semantic namespace
+## 10.1 One semantic namespace
 
-Icons and shared visuals use one explicit semantic asset namespace.
+Icons and shared visuals share one explicit semantic namespace.
 
-A visual entry carries concepts such as:
+Examples:
+
+```text
+paint
+backpack
+ui.shadow.soft
+ui.panel.base
+ui.card.activity
+ui.button.primary
+```
+
+A shared visual carries:
 
 ```text
 semantic ID
 kind
 role
 explicit variants
-default variant
-explicit source/runtime path
-```
-
-Examples:
-
-```text
-ui.shadow.soft
-ui.card.activity
-ui.button.primary
+required default variant
+explicit resolved asset path
 ```
 
 IDs are product semantics. Filenames are implementation details.
 
-## 11.2 No runtime discovery
+## 10.2 No runtime discovery
 
 Forbidden runtime behavior:
 
@@ -504,37 +475,37 @@ auto-register arbitrary SVGs
 search host directories
 ```
 
-Explicit manifests are required.
+Consumers load explicit catalogues only.
 
 Benefits:
 
 - deterministic content;
 - bounded startup work;
-- provenance/review clarity;
+- review/provenance clarity;
 - duplicate-ID rejection;
 - path containment;
-- renderer independence;
-- predictable package/image composition.
+- predictable image composition;
+- renderer independence at the semantic level.
 
-## 11.3 Catalogue merging
+## 10.3 Catalogue merge contract
 
-The V5 design supports merging explicitly loaded catalogues when they resolve under the same Greia assets root.
+Explicit catalogues may merge only when they resolve under the same assets root.
 
 Important invariants:
 
-- core icons remain mandatory;
-- generated shared visuals are optional at the first launcher bridge;
-- IDs remain globally unique;
+- core icon catalogue remains mandatory;
+- generated shared visual catalogue may be optional for fallback consumers;
+- semantic IDs remain globally unique;
 - mismatched roots fail;
-- missing/invalid optional shared visuals preserve the existing static launcher path.
+- invalid/missing optional shared visual output must not crash otherwise-valid Shell/Activity paths.
 
 ---
 
-# 12. Source artwork versus runtime renditions
+# 11. Source masters versus runtime renditions
 
-Greia keeps high-quality/reviewable masters separate from low-cost runtime images.
+Greia separates high-quality source masters from low-cost runtime files.
 
-Current V5 flow:
+Current V5 pipeline:
 
 ```text
 assets/visual/ui/v0.1/*.svg
@@ -548,158 +519,228 @@ assets/visual/runtime/v1/.../*.png
 assets/catalog/shared_visuals_v1.toml
 ```
 
-The exact generated paths are source/build contracts; inspect the current manifest/tool before changing them.
-
-## 12.1 Why SVG is not rendered on target
-
-The low-end target should not need an SVG renderer.
-
-Benefits of build-time rasterization:
-
-- smaller runtime dependency set;
-- bounded startup behavior;
-- no unexpected SVG parse/render cost;
-- predictable dimensions;
-- easier cache accounting;
-- easier low-resource profiling.
-
-## 12.2 Build authority
-
-Current build tool:
+Current build authority:
 
 ```text
 tools/build_visual_renditions.py
 ```
 
-Current validation tool:
+Current validator:
 
 ```text
 tools/validate_visual_renditions.py
 ```
 
-Current entry points:
+Entry points:
 
 ```text
 make visual-assets
 make visual-assets-check
 ```
 
-The builder is intentionally transactional: a failed rendition must not destroy the previous known-good generated output.
+The builder is transactional: failed generation must not destroy previous good output.
+
+## 11.1 Why SVG is not rendered on low-end target
+
+Benefits of build-time conversion:
+
+- smaller target dependency set;
+- bounded startup cost;
+- predictable dimensions;
+- easier cache accounting;
+- easier low-resource profiling;
+- no surprise SVG parser/render cost during play.
 
 ---
 
-# 13. Pygame runtime adapter
+# 12. Pygame renderer adapter
 
-Current Pygame visual surface adapter:
+Current adapter:
 
 ```text
 src/greia_platform/pygame_visual_assets.py
 ```
 
-`PygameVisualSurfaceCache` is the current renderer-specific realization of the semantic visual contract.
+`PygameVisualSurfaceCache` realizes shared semantic visuals as renderer-ready Pygame surfaces.
 
-Key properties:
+Properties:
 
 - PNG-only runtime paths;
+- semantic ID + variant + requested size key;
 - lazy Pygame import;
-- semantic ID + variant + requested size cache key;
 - one-time decode/scale on cache miss;
 - existing `ui_core.BoundedCache` reuse;
 - default 12-entry LRU;
 - bounded requested surface area;
 - explicit clear;
-- no per-frame filesystem/decode work after a hit.
+- no per-frame filesystem/decode after cache hit.
 
-This cache is a renderer adapter, not the whole visual architecture.
+This is a renderer adapter, not the visual architecture itself.
 
-A future Web/SDL renderer should implement equivalent semantic behavior without requiring Activity authors to know Pygame internals.
+Future Web/SDL adapters should preserve semantic IDs and variant meaning without requiring consumers to know Pygame internals.
 
 ---
 
-# 14. Shell consumption architecture
+# 13. Shell consumption architecture
 
-The first V5 consumer is intentionally small and low-risk.
-
-Current first candidate:
+Current first accepted Shell consumer:
 
 ```text
 ui.shadow.soft
 ```
 
-under existing launcher Activity tiles.
+under launcher Activity tiles.
 
-Why this is first:
-
-- it proves semantic catalogue → runtime PNG → cache → Shell rendering;
-- it does not require a new launcher layout;
-- it is decorative and can fail soft;
-- current primitive/static rendering can remain fallback;
-- it exercises size/caching behavior across viewports.
-
-The first consumer must not:
-
-- change Activity hit geometry;
-- create a second launcher card model;
-- bypass existing presentation/layout code;
-- scan source art;
-- load/scale from disk every frame;
-- crash the Shell because an optional decorative rendition is missing.
-
-After that seam is accepted, the same contract may gradually consume other reviewed UI families.
-
----
-
-# 15. Activity consumption direction
-
-Activities should eventually request shared visuals semantically instead of importing arbitrary Greia source paths.
-
-The intended direction is:
+Source seam:
 
 ```text
-Activity asks for semantic visual
-→ platform resolves allowed asset/variant
-→ runtime adapter obtains renderer-ready rendition
-→ Activity receives renderer-appropriate handle/surface/reference
+src/greia_launcher/visual_assets.py
+src/greia_launcher/main.py
+src/greia_launcher/presentation.py
 ```
 
-The final Activity-facing API is not frozen merely by this design document. Exact source/API must be introduced deliberately when V5 reaches that step.
+The first consumer proves:
 
-Rules:
+```text
+semantic catalogue
+→ generated PNG
+→ bounded Pygame cache
+→ real Shell rendering
+→ fail-soft primitive fallback
+```
 
-- do not expose the entire host assets filesystem;
-- do not expose raw internal catalogue mutation;
-- do not make every Activity maintain its own cache;
-- Python and future Web runtimes should converge on the same semantic IDs;
-- Activity-private art remains allowed for Activity-specific content;
-- shared Greia visuals should be reused when semantically appropriate.
+It preserves Activity tile hit geometry, responsive grid geometry, label-band geometry, selection/hover behavior and launch lifecycle.
+
+Current fallback remains the primitive/static `draw_soft_shadow` path.
+
+Evidence for this consumer is **SIMULATOR VISUAL REVIEW**, recorded in `LOCAL_AGENT_RESULT.md`.
+
+Do not convert this into blanket approval for all UI source assets or physical low-end performance.
 
 ---
 
-# 16. Performance and low-resource rules
+# 14. Activity semantic shared-visual architecture
 
-Visual richness must stay compatible with the extreme low-resource floor.
+The next V5 architecture step is now source-started.
+
+Current Activity API owner:
+
+```text
+src/greia_platform/activity_api.py
+```
+
+The semantic contract is:
+
+```python
+get_shared_visual(asset_id, variant="default")
+get_shared_visual_path(asset_id, variant="default")
+```
+
+`get_shared_visual(...)` returns a read-only `SharedVisualReference` containing:
+
+```text
+asset_id
+kind
+role
+variant
+path   # current Python runtime realization
+```
+
+Important meaning:
+
+- the Activity requests a semantic ID and explicit variant;
+- the Activity cannot provide or traverse an arbitrary host path;
+- the Activity cannot mutate the catalogue;
+- core icons remain available even if optional generated visual catalogue loading fails;
+- unknown shared visual IDs/variants fail narrowly;
+- Activity-private art remains allowed.
+
+The `Path` is the current Python realization, not the permanent cross-renderer API shape. Future Web runtime support should expose the same semantic ID/variant contract through a controlled asset URL/handle rather than host filesystem access.
+
+## 14.1 First Python Activity source consumer
+
+Current source seed:
+
+```text
+activities/shape_garden/main.py
+```
+
+Shape Garden resolves:
+
+```text
+ui.shadow.soft
+```
+
+once at Activity startup, scales it once to a bounded reference size, and reuses the resulting surface while drawing shapes. Missing/invalid optional shared visuals keep the Activity playable.
+
+This is currently **SOURCE only until the dated Activity Simulator protocol passes**.
+
+Do not claim Activity semantic integration complete merely because the source exists.
+
+---
+
+# 15. Web Activity direction
+
+Web Activities must eventually use the same semantic IDs and variant names as Python Activities.
+
+Intended concept:
+
+```text
+Activity semantic request
+→ platform-authorized visual resolver
+→ renderer/runtime adapter
+→ local controlled URL/handle/surface
+```
+
+The Web adapter must not expose arbitrary filesystem paths.
+
+Do not freeze a Web transport merely by copying the Python `Path` API.
+
+---
+
+# 16. Activity-private art versus shared Greia art
+
+Both are valid.
+
+Use Activity-private assets when the image belongs uniquely to that Activity's gameplay/content.
+
+Use shared Greia semantic visuals when the visual is a platform/shared concept such as:
+
+- common panel/button frame;
+- shared shadow;
+- system-wide character/prop where appropriate;
+- cross-Activity environment piece explicitly promoted for reuse;
+- shared FX or decorative family.
+
+Do not force every Activity asset into the global catalogue.
+
+Do not duplicate a shared master privately simply to avoid using the semantic resolver.
+
+---
+
+# 17. Performance rules
 
 Hard direction:
 
-- no runtime SVG rasterization;
+- no target runtime SVG rasterization;
 - no per-frame image file loads;
-- no per-frame font construction where avoidable;
-- no unbounded texture/surface caches;
-- no arbitrary asset-directory scans;
-- no giant mandatory atlases;
-- no full-screen animation dependency for basic UI meaning;
-- keep static fallback valid;
-- perform expensive conversion at build time;
-- decode/scale once per bounded cache key;
-- invalidate/rebuild caches only on meaningful size/theme/state changes.
+- no per-frame directory scanning;
+- no per-frame smoothscale where a bounded cached/prepared surface can be reused;
+- no unbounded image/texture caches;
+- no giant mandatory atlas as a shortcut;
+- no full-screen animation dependency for basic meaning;
+- static fallback remains valid;
+- expensive conversion happens at build time;
+- decode/scale happens once per bounded cache/preparation key;
+- cache invalidation happens only on meaningful size/theme/state changes.
 
-Simulator evidence can catch gross stalls and visual regressions, but does not prove Acer/Pi physical performance.
+Simulator frame-count evidence detects gross regressions but does not prove physical Acer/Pi performance.
 
 ---
 
-# 17. Evidence and approval model
+# 18. Evidence and approval vocabulary
 
-Use precise labels.
+Evidence classes:
 
 ```text
 DESIGN SPEC
@@ -710,7 +751,7 @@ PHYSICAL VISUAL REVIEW
 REJECTED EXPERIMENT
 ```
 
-Artwork state:
+Artwork states:
 
 ```text
 concept
@@ -720,7 +761,7 @@ superseded
 rejected
 ```
 
-`approved` must have scope when ambiguity exists:
+When `approved` could be ambiguous, state scope:
 
 ```text
 design_grammar
@@ -732,221 +773,100 @@ physical_acceptance
 
 Examples:
 
-- an SVG can be a candidate source asset without being runtime-consumed;
-- a character can be an approved static style anchor without being release-approved;
-- simulator review does not prove physical low-end performance;
-- generated runtime PNG presence does not prove successful Shell consumption.
+- an SVG may be candidate source art without runtime consumption;
+- a character may be an approved static style anchor without release approval;
+- generated PNG presence is not proof of consumer integration;
+- simulator acceptance is not physical low-resource acceptance.
 
 ---
 
-# 18. Standard asset-pack workflow
+# 19. Standard source-asset workflow
 
-For a new or extended pack:
+For new/extended source art:
 
 1. state the real reuse gap;
-2. inspect existing packs before drawing;
+2. inspect existing packs first;
 3. list proposed individual masters;
-4. create/revise individual source assets;
-5. review assets individually on representative grounds;
+4. create/revise masters individually;
+5. review individual assets on representative grounds;
 6. correct weak assets before composition;
 7. record metadata/provenance/status;
-8. compose independent target references from the real masters;
-9. add only restrained light/parallax/motion that improves depth;
-10. record cross-pack reuse explicitly;
+8. compose independent target references from actual masters;
+9. add restrained light/parallax/motion only where it improves depth;
+10. record cross-pack reuse;
 11. promote only selected assets into explicit runtime-rendition manifests;
 12. build runtime renditions;
-13. consume through semantic catalogue/cache;
-14. verify through the correct simulator/physical protocol;
-15. update plan, handover and this guide if architecture changed.
-
-Do not create another environment family merely because the previous family is finished. Current V4 coverage is intentionally broad enough; V5 integration has priority.
+13. consume through semantic catalogue/resolver/renderer adapter;
+14. verify through the appropriate simulator/physical protocol;
+15. update plan/resume/guide when contracts change.
 
 ---
 
-# 19. Review checklist for individual assets
+# 20. Standard runtime-integration workflow
 
-Before composition, ask:
+For a shared visual entering a real consumer:
 
-- Is the silhouette readable at intended size?
-- Does it still work at 800×600 / 1024×600 scale?
-- Are alpha edges clean?
-- Does it look intentional rather than tutorial-generated?
-- Is depth coherent with existing Greia assets?
-- Does it require tiny detail to read?
-- Is it semantically reusable?
-- Does a similar shared master already exist?
-- Is the lighting direction compatible with likely scenes?
-- Does it have a plausible grounding/contact-shadow strategy?
-- Can it be used without animation?
-
-Reject or revise before scene assembly if the answer is poor.
+```text
+1. source asset is reviewed enough for the intended scope
+2. semantic ID + variants are explicit
+3. source rendition manifest selects it
+4. build host generates PNG rendition
+5. generated catalogue is validated
+6. consumer requests semantic ID, never scans directories
+7. renderer adapter/preparation caches bounded surfaces/resources
+8. optional visual has a safe fallback where appropriate
+9. simulator validates real consumer behavior
+10. physical testing is added only when the claim requires it
+11. docs/evidence state is updated
+```
 
 ---
 
-# 20. Anti-patterns / rejected directions
+# 21. Anti-patterns / rejected architecture
 
-Do not repeat these without new evidence:
+Do not reintroduce:
 
-- detailed traditional quadruped rigs as the default character system;
-- one-shot AI sprite sheets assumed production-ready;
-- redraws that lose accepted character identity;
-- fake face overlays;
-- a `blink` animation that does not blink;
-- crude primitive backgrounds presented as final direction;
-- HTML/mockup presentations before the actual assets deserve presentation;
-- baked scene-first production that prevents reuse;
-- runtime SVG rendering on old targets;
-- arbitrary directory scanning;
-- parallel per-Activity asset systems;
+- complex quadruped/puppet rig as default character architecture;
+- generated sprite sheets assumed production-ready;
+- degrading accepted characters through redraw/overlay drift;
+- fake expression overlays;
+- a blink state that does not close eyes;
+- crude primitive scenes presented as final direction;
+- full-screen mockups before source assets exist;
+- decorative HTML presentations hiding weak art;
+- one-shot concept scene images as source architecture;
+- runtime SVG rasterization on low-end targets;
+- arbitrary asset-directory discovery;
+- a second visual catalogue/cache system;
+- per-frame PNG decode/scale;
 - unbounded caches;
-- per-frame image decoding/scaling;
-- duplicating generic assets between environment packs;
-- endlessly adding new packs after broad coverage exists;
-- deepening provisional X11 dependency for visual convenience;
-- letting Activity artwork imitate/replace trusted platform Home/Back chrome.
+- simulator-specific branches in production rendering;
+- per-resolution hard-coded UI forks;
+- broad exception swallowing to hide visual failures;
+- endless new environment packs after coverage is already broad;
+- duplicating generic assets instead of using shared masters.
 
 ---
 
-# 21. Current implementation phase — V5
+# 22. Current implementation snapshot
 
-The broad source library exists. The current active work is **shared consumption/integration**.
+This section is deliberately short. The authoritative live checkpoint remains the active plan and resume file.
 
-Current V5 source surface:
+As of 2026-08-20:
 
-```text
-src/greia_platform/assets.py
-src/greia_platform/pygame_visual_assets.py
-src/greia_launcher/visual_assets.py
-assets/catalog/shared_visuals_v1_source.toml
-tools/build_visual_renditions.py
-tools/validate_visual_renditions.py
-Makefile: visual-assets / visual-assets-check
-```
+- V2/V3/V4 source coverage exists through Water/Pond;
+- the runtime SVG→PNG build pipeline exists;
+- generated UI runtime renditions exist;
+- the bounded Pygame visual cache exists;
+- `ui.shadow.soft` is accepted as the first Shell consumer at **SIMULATOR VISUAL REVIEW** scope;
+- `activity_api.get_shared_visual(...)` / `get_shared_visual_path(...)` now provide the first Python semantic Activity resolver source;
+- Shape Garden is the first source Activity consumer and still requires Activity Simulator acceptance before that gate closes;
+- the next architectural target is to prove this Activity seam, then design the future Web equivalent around the same semantic IDs/variants.
 
-Current explicit first runtime selection includes:
-
-```text
-ui.panel.base
-ui.card.activity
-ui.button.primary
-ui.shadow.soft
-```
-
-The first Shell integration target remains:
-
-```text
-ui.shadow.soft
-```
-
-The current local-agent execution protocol is:
-
-```text
-docs/testing/2026-08-20_V5_VISUAL_INTEGRATION_SIMULATOR_LOCAL_AGENT.md
-```
-
-For that current owner-directed local-agent tranche, **runtime/visual/fallback/responsive test acceptance is handled through the Activity Simulator**. `make visual-assets` remains a build-generation prerequisite rather than a PASS claim.
-
-Do not infer from this document that V5 has already passed. Check the resume file, active plan and current `HANDOVER.md`.
-
----
-
-# 22. Where to look by task
-
-## I need to make a new Greia asset
-
-Read:
-
-```text
-docs/design/GREIA_ART_GRAPHICS_SYSTEM.md
-skills/greia-visual-authoring/SKILL.md
-docs/design/GREIA_VISUAL_STYLE_GUIDE.md
-assets/visual/README.md
-relevant pack README/REVIEW/catalog
-```
-
-## I need to add a character state/animation
-
-Read:
-
-```text
-docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md
-docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md
-assets/visual/library_v0.1.toml
-```
-
-## I need to compose a background/scene
-
-Read:
-
-```text
-this guide: sections 8–9
-relevant environment pack COMPOSITION.md / composition.toml
-docs/design/GREIA_ACTIVITY_CANVAS_AND_VIEWPORT_AUTHORING.md
-```
-
-## I need to change shared UI appearance
-
-Read:
-
-```text
-docs/adr/0018-lightweight-ui-foundation.md
-docs/design/GREIA_VISUAL_STYLE_GUIDE.md
-assets/visual/ui/v0.1/
-src/greia_platform/pygame_effects.py
-```
-
-## I need to integrate shared assets into runtime
-
-Read:
-
-```text
-this guide: sections 11–16
-src/greia_platform/assets.py
-src/greia_platform/pygame_visual_assets.py
-src/greia_launcher/visual_assets.py
-assets/catalog/shared_visuals_v1_source.toml
-tools/build_visual_renditions.py
-tools/validate_visual_renditions.py
-```
-
-## I need to continue the current session
-
-Read:
+Resume from:
 
 ```text
 docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md
-docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md
-HANDOVER.md
 ```
 
-## I need to test current V5 integration locally
-
-Read:
-
-```text
-docs/testing/2026-08-20_V5_VISUAL_INTEGRATION_SIMULATOR_LOCAL_AGENT.md
-docs/development/GREIA_ACTIVITY_SIMULATOR.md
-docs/testing/2026-08-19_ACTIVITY_SIMULATOR_ACCEPTANCE.md
-```
-
----
-
-# 23. Documentation maintenance contract
-
-This file should remain the stable visual-system landing page even after the current plan is completed.
-
-Update this guide when any of these materially change:
-
-- source-library structure;
-- semantic visual IDs/catalogue architecture;
-- build-time rendition pipeline;
-- runtime renderer/cache contract;
-- Shell/Activity shared-consumption architecture;
-- layer/parallax/light/motion model;
-- accepted relationship between the visual system and UI architecture;
-- evidence/approval model;
-- visual-system extension points.
-
-Do **not** use this guide as an append-only progress diary. Current chronology belongs in the active plan. Current continuation belongs in the resume file/HANDOVER.
-
-The goal is simple: a new human or agent should be able to read this file, understand the system, and know exactly where to go next without reconstructing the architecture from chat history.
+not from chat history.
