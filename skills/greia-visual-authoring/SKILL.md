@@ -9,7 +9,7 @@ description: Canonical practical guide for model-assisted Greia character, scene
 **Reviewed:** 2026-08-20  
 **Active art plan:** `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`
 
-This skill teaches models and contributors how to create Greia visuals without reinventing the art direction for each Activity. It is practical guidance, not a runtime API. Exact implemented asset/runtime contracts remain source-owned; accepted ADRs own architecture/trust boundaries; `docs/design/GREIA_VISUAL_STYLE_GUIDE.md` owns the overall visual language and typography direction.
+This skill teaches models and contributors how to create Greia visuals without reinventing the art direction for each Activity. It is practical guidance, not a runtime API. Exact implemented asset/runtime contracts remain source-owned; accepted ADRs own architecture/trust boundaries; `docs/design/GREIA_VISUAL_STYLE_GUIDE.md` owns the overall visual language.
 
 ---
 
@@ -23,8 +23,12 @@ docs/DOCUMENTATION.md
 docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md
 docs/design/GREIA_VISUAL_STYLE_GUIDE.md
 docs/design/GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md
+docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md
+docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md
 runtime/theme-defaults.toml
 assets/catalog/core_icons_v1.toml
+assets/visual/library_v0.1.toml
+assets/visual/specimens/a2/base_motion_v0.1.toml
 ```
 
 For Activity visuals also read:
@@ -65,21 +69,21 @@ Use for most cute animal/mascot identities.
 
 Construction target:
 
-- one round/oval primary body mass;
+- one round/oval/fluffy primary body mass;
 - large face area;
 - zero/two tiny feet;
 - zero/two stub arms/flaps;
-- up to three identity attachments.
+- up to three identity attachment groups.
 
-Good species cues: ears, horn, tuft, tail, markings, whiskers, tiny wing, antennae.
+Good species cues: ears, horn, tuft, tail, markings, whisker cue, tiny wing, antennae.
 
 ### Bean
 
-Use for upright compact characters such as owls, penguin-like creatures, little helpers or robots.
+Use for upright compact characters such as owls, penguin-like creatures, helpers or robots.
 
 Construction target:
 
-- one vertical bean/drop mass;
+- one vertical rounded/drop mass;
 - face in upper half;
 - tiny feet;
 - optional flap/wing/arm shapes.
@@ -90,7 +94,7 @@ Use when a flatter sticker/felt/paper-cut visual is appropriate.
 
 Construction target:
 
-- very few large layers;
+- 2–5 large layers;
 - strong silhouette;
 - deliberately flat depth;
 - no fake anatomical complexity.
@@ -112,11 +116,11 @@ Examples:
 - tool;
 - fruit/food item.
 
-Prefer Object Friend over inventing an unnecessary animal mascot when the object itself can carry the interaction.
+The object/glyph remains the primary silhouette. Prefer Object Friend over inventing an unnecessary animal mascot when the object itself can carry the interaction.
 
 ---
 
-## 4. Character complexity limits
+## 4. Character complexity and drawing rules
 
 Default character budget:
 
@@ -125,8 +129,19 @@ Default character budget:
 1 face region
 0–2 tiny feet
 0–2 tiny arms/wings/flaps
-0–3 identity attachments
+0–3 identity attachment groups
 ```
+
+For reusable vector masters, use the accepted 256×256 review convention where appropriate. At 256 px:
+
+- normal primary contour: about 3–4 px;
+- normal secondary contour: about 2–3 px;
+- rounded joins/caps;
+- tinted dark outline related to cocoa/plum/navy rather than pure black;
+- broad flat or restrained two-stop fills;
+- few large interior patches rather than detailed fur/texture.
+
+Review at 128 and 64 px wherever those sizes are supported.
 
 Avoid by default:
 
@@ -148,7 +163,7 @@ If a proposed character requires a complex skeleton to look acceptable, simplify
 
 The face is the primary emotional engine.
 
-### Base face requirements
+### Base semantic expressions
 
 A reusable character should provide a clear path to:
 
@@ -164,7 +179,11 @@ proud
 silly
 ```
 
+`blink` is a transient micro-state rather than a persistent emotion.
+
 Normal educational mistakes must not use anger, shame or disappointed-at-the-child expressions.
+
+**Important face-review lesson:** `sad_gentle` must not use brow angles or eye treatment that can be misread as irritation, accusation or disappointment. Prefer softened/smaller eyes, a shallow sad mouth and low-energy posture.
 
 ### Expression ingredients
 
@@ -175,7 +194,7 @@ Prefer:
 - pupil direction;
 - simple mouth variants;
 - cheeks/blush;
-- brows or brow-like upper-eye shapes where useful;
+- brow-like upper-eye shaping only when it cannot produce an angry reading;
 - tiny ear/tuft/antenna changes;
 - slight whole-body tilt/squash.
 
@@ -187,24 +206,26 @@ At 128 px, the intended expression must remain obvious. At 64 px, the face/silho
 
 ---
 
-## 6. Working core cast anchors
+## 6. Core static style anchors
 
-Use these as **style anchors**, not templates to copy mechanically:
+The owner-reviewed initial style anchors are:
 
-- **Lilli** — unicorn Puff: cream body, rainbow cue, horn, wonder/kindness;
+- **Lilli** — unicorn Puff: cream body, localized rainbow cue, horn, wonder/kindness;
 - **Nino** — owl Bean: observation, books, thoughtfulness;
 - **Tito** — fox Puff: curiosity, exploration, playful cleverness;
-- **Momo** — friendly monster fluff: humor, emotion, experimentation.
+- **Momo** — friendly monster Puff: humor, emotion, experimentation.
 
-The names are intentionally simple Italian names that are also easy for many foreign children to pronounce.
+Their approval scope is **static style anchor / design grammar**. It does not mean their current SVG files are immutable release art or runtime-integrated character packages.
 
-A new character should feel like it belongs beside these anchors without merely recoloring one of them.
+Use them as evidence of the family resemblance, not as templates to copy mechanically. A new character should feel like it belongs beside them without merely recoloring one of them.
+
+The names are intentionally short Italian names that are also easy for many foreign children to pronounce.
 
 ---
 
 ## 7. Motion selection
 
-Use the semantic base motions from the active art plan before inventing bespoke choreography.
+Use the semantic base motions before inventing bespoke choreography.
 
 ### Base Animation Set v0.1
 
@@ -217,6 +238,22 @@ surprised_wobble
 sleepy_sway
 ```
 
+Canonical candidate timing/phase rules live in:
+
+```text
+docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md
+assets/visual/specimens/a2/base_motion_v0.1.toml
+```
+
+Current nominal values:
+
+- `idle_bounce`: 2.0 s loop; vertical <= ~3.5% body height; rotation <= 2°;
+- `blink`: 0.22 s; close 0–35%, hold 35–55%, reopen 55–100%;
+- `happy_hop`: 0.90 s; anticipation 0–18%, launch/apex/fall, settle 78–100%; hop <= ~22%;
+- `celebrate_pop`: 1.15 s; pop + bounded FX; travel <= ~28%;
+- `surprised_wobble`: 0.72 s; recoil + damped alternating rotation <= 7°;
+- `sleepy_sway`: 2.4 s loop; low-energy sway/compression.
+
 These motions should work mostly through:
 
 - whole-body translation/rotation;
@@ -226,7 +263,20 @@ These motions should work mostly through:
 - tail/tuft/antenna lag;
 - bounded particles/effects.
 
-A motion description should not assume a horse knee, human elbow or species-specific skeleton.
+A semantic motion description must not assume a horse knee, human elbow or species-specific skeleton.
+
+### Static fallbacks are mandatory
+
+```text
+idle_bounce      -> neutral
+blink            -> neutral
+happy_hop        -> happy
+celebrate_pop    -> happy or excited
+surprised_wobble -> surprised
+sleepy_sway      -> sleepy
+```
+
+Meaning must remain clear when animation is disabled.
 
 ### Candidate v0.2
 
@@ -241,7 +291,7 @@ exit_pop
 listen
 ```
 
-Do not proliferate names until the base set is validated across multiple archetypes.
+Do not proliferate names until the base set is accepted across multiple archetypes.
 
 ---
 
@@ -249,14 +299,12 @@ Do not proliferate names until the base set is validated across multiple archety
 
 Different characters may express the same semantic motion differently.
 
-Examples:
-
 ### `celebrate_pop`
 
-- Puff: body hop + stub arms up + happy eyes + sparkles;
-- Bean owl: body hop + wings flap + happy eyes;
-- Object Friend: squash/pop + face brighten + stars;
-- Monster: wobble + antenna bounce + arms flap.
+- Puff: body hop + stub arms/ears/tuft response + happy eyes + bounded sparkles;
+- Bean owl: body hop + optional wing-flap response + happy eyes;
+- Object Friend: conservative squash/pop + face brighten + optional stars;
+- Monster: body wobble + antenna response + optional stub-arm flap.
 
 ### `surprised_wobble`
 
@@ -265,11 +313,25 @@ Examples:
 - antennae may spring apart;
 - Object Friend may simply recoil and widen eyes.
 
+### Object Friend distortion rule
+
+Protect the pedagogical silhouette. Rotation and squash/stretch should be **more conservative** than on an ordinary Puff/Bean whenever deformation could make a number, letter or object harder to recognize.
+
 Preserve semantic consistency without forcing identical anatomy.
 
 ---
 
-## 9. Scene design
+## 9. Runtime boundary for motion
+
+`src/greia_platform/ui_motion.py` is the current architectural precedent for cheap renderer-neutral mathematical motion. It uses immutable samples and bounded transforms without a heavyweight retained animation framework.
+
+Do **not** create a parallel per-Activity character animation engine.
+
+The current UI-oriented `MotionSample` does not yet carry character rotation, anisotropic squash/stretch, face state, attachment cues or FX. Any future runtime-facing character-motion seam must be reviewed in the accepted architecture phase and should extend/reuse the same lightweight philosophy rather than silently turning the A2 design harness into runtime authority.
+
+---
+
+## 10. Scene design
 
 Preferred environment logic:
 
@@ -279,8 +341,6 @@ Preferred environment logic:
 - large background/midground/foreground masses;
 - chunky readable props;
 - intentional quiet play area.
-
-### Scene hierarchy
 
 A scene should normally establish:
 
@@ -293,32 +353,11 @@ A scene should normally establish:
 
 Avoid giant accidental empty regions caused by weak composition. Empty space is fine when it deliberately supports focus.
 
-### Do not ship prototype geometry as represented art
-
-Raw rectangles/circles/polygons are acceptable for:
-
-- hitboxes;
-- debug bounds;
-- prototype layout;
-- intentionally geometric pedagogy.
-
-They are not normally sufficient final representations of:
-
-- trees;
-- animals;
-- rivers;
-- clinics;
-- houses;
-- bushes;
-- bridges;
-- furniture;
-- vehicles.
-
-Use shared Greia assets/components or create an intentional simple illustration.
+Raw rectangles/circles/polygons are acceptable for hitboxes, debug bounds, prototype layout and intentionally geometric pedagogy. They are not normally sufficient final representations of trees, animals, rivers, clinics, houses, bushes, bridges, furniture or vehicles.
 
 ---
 
-## 10. Prop design
+## 11. Prop design
 
 Props should use:
 
@@ -335,7 +374,7 @@ Props used as interaction targets must remain distinct from purely decorative sc
 
 ---
 
-## 11. Effects design
+## 12. Effects design
 
 Common Greia effects:
 
@@ -362,7 +401,7 @@ Rules:
 
 ---
 
-## 12. UI illustration rules
+## 13. UI illustration rules
 
 The semantic UI architecture remains platform-owned. Visual authoring should make it feel coherent, not replace its contracts.
 
@@ -389,7 +428,7 @@ Do not restyle or impersonate Greia’s protected system Home/Back controls insi
 
 ---
 
-## 13. Color and detail
+## 14. Color and detail
 
 `runtime/theme-defaults.toml` owns the implemented core theme palette. Character/content art may use thematic colors, but it should remain harmonious with Greia’s warm backgrounds and accents.
 
@@ -404,13 +443,13 @@ dark readable eye/mouth tone
 subtle shadow tone
 ```
 
-Avoid uncontrolled rainbow palettes unless the identity specifically calls for them (for example Lilli’s rainbow cue), and even then keep the rainbow localized rather than covering every surface.
+Avoid uncontrolled rainbow palettes unless the identity specifically calls for them (for example Lilli’s localized rainbow cue).
 
 Prefer large readable detail to tiny texture noise.
 
 ---
 
-## 14. Names and child-facing identity
+## 15. Names and child-facing identity
 
 Recurring Greia character names should generally be:
 
@@ -425,7 +464,7 @@ Do not create dozens of named mascots when a generic reusable creature/object ca
 
 ---
 
-## 15. Asset reuse before creation
+## 16. Asset reuse before creation
 
 Before creating a new character, prop, scene element or effect:
 
@@ -439,9 +478,7 @@ Never create a parallel private copy of a shared asset merely because it is easi
 
 ---
 
-## 16. Evidence/review checklist
-
-For a reusable visual asset, inspect at minimum:
+## 17. Evidence/review checklist
 
 ### Character
 
@@ -453,6 +490,15 @@ For a reusable visual asset, inspect at minimum:
 - [ ] body does not require complex anatomy to animate;
 - [ ] neutral pose works as a static fallback;
 - [ ] color contrast survives the intended scene background.
+
+### Motion
+
+- [ ] semantic meaning is clear on Puff, Bean and Object Friend as applicable;
+- [ ] static fallback communicates the state;
+- [ ] amplitude stays within the shared design bounds unless a documented exception exists;
+- [ ] Object Friend deformation does not damage pedagogical recognition;
+- [ ] `sad_gentle` or wrong-choice feedback cannot read as anger/shame/disappointment;
+- [ ] no anatomy-specific rig was introduced merely to make the animation work.
 
 ### Scene/prop
 
@@ -471,13 +517,11 @@ For a reusable visual asset, inspect at minimum:
 - [ ] depth/shadow does not obscure text/icons;
 - [ ] motion is optional enrichment, not essential meaning.
 
-### Evidence language
-
 Label review accurately as DESIGN SPEC, SOURCE, DESKTOP VISUAL REVIEW, SIMULATOR VISUAL REVIEW or PHYSICAL VISUAL REVIEW. A local HTML mockup is not physical Greia acceptance.
 
 ---
 
-## 17. Explicit failure patterns to avoid
+## 18. Explicit failure patterns to avoid
 
 Do not repeat these default approaches without new evidence:
 
@@ -492,7 +536,7 @@ Do not repeat these default approaches without new evidence:
 
 ---
 
-## 18. Working process for model-assisted art
+## 19. Working process for model-assisted art
 
 When asked to create/refine Greia visuals:
 
