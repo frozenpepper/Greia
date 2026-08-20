@@ -9,43 +9,40 @@ This plan owns the current Greia visual-library workstream.
 
 > **excellent individual assets → reusable asset packs → layered composition → subtle parallax / ambient motion / light / shadow → shared UI system → one explicit shared consumption seam → Shell/Activity reuse**
 
-The project is not making decorative mock screens. Characters are one part of the library, not the workstream bottleneck.
+The broad source-art library now exists. **V5 shared consumption/integration is the active phase.** Do not create more environment families merely to keep producing art.
 
 ---
 
 # 1. Non-negotiable production rules
 
 ## Asset first
-
-A scene or UI family starts with reusable source assets that are worth keeping individually. Weak primitives may not be hidden by a busy composition.
+A scene or UI family starts with reusable source assets worth keeping individually. Weak primitives may not be hidden by a busy composition.
 
 ## Quality target
-
-Aim for polished storybook / toy-diorama quality with attractive silhouette, coherent warm palette, restrained gradients/detail, local highlights and soft depth, clean alpha edges, reusable shadows, low-resolution readability, and cheap/static fallback viability on Greia's low-resource floor.
+Aim for polished storybook / toy-diorama quality with attractive silhouettes, coherent warm palette, restrained gradients/detail, local highlights and soft depth, clean alpha edges, reusable shadows, low-resolution readability, and cheap/static fallback viability on Greia's low-resource floor.
 
 Raw tutorial rectangles/circles/polygon scenery are prototype/debug art only.
 
 ## Layered environments
-
-Use separate sky/base, far background, mid background, playfield, interactive props, foreground, atmosphere/light/shadow/FX, character and protected-UI layers.
+Keep sky/base, far background, mid background, playfield, interactive props, foreground, atmosphere/light/shadow/FX, character and protected-UI layers separate where reuse benefits.
 
 ## Subtle life
-
-Allowed design metadata includes cheap cloud drift, far/mid/near parallax, tiny foliage/reed sway, firefly/dust drift, fog movement, slow light breathing, water shimmer/ripples and contact-shadow response. Motion enriches good static assets; it does not rescue bad art.
+Cheap cloud drift, parallax, tiny foliage/reed sway, firefly/dust drift, fog, slow light breathing, water shimmer/ripples and contact-shadow response may enrich good static assets. Motion must never rescue weak art or carry essential meaning without a static fallback.
 
 ## Reuse before duplication
-
-When an existing pack already contains a suitable tree, bush, rock, log, block, pencil cup, firefly, shadow, distant hill or other generic visual, reference that shared asset rather than repainting a near-duplicate just because a new environment family is being built.
+Reference an existing shared tree, bush, rock, log, block, pencil cup, firefly, shadow, distant hill or other generic asset instead of repainting near-duplicates for each environment.
 
 ## Stop expanding once coverage is good
+Additional environment families now require a concrete reusable coverage gap. V5 integration takes priority over more pack proliferation.
 
-Do not invent more environment families merely to keep producing art. Additional packs now require a concrete reusable coverage gap. The next planned phase is the **shared consumption seam**, not endless asset-family proliferation.
+## Runtime stays cheap and explicit
+Target runtime must not scan visual source directories or rasterize SVG. Runtime consumes explicit pre-rendered PNG renditions through semantic IDs, bounded caches and accepted platform seams.
 
 ---
 
 # 2. Character seed
 
-Working core cast remains **Lilli, Nino, Tito, Momo** with the accepted simplified Puff/Bean direction.
+Core cast remains **Lilli, Nino, Tito, Momo** in the accepted simplified Puff/Bean direction.
 
 Base motion names remain:
 
@@ -58,231 +55,157 @@ surprised_wobble
 sleepy_sway
 ```
 
-Preserve character identity across states; `blink` must actually blink. Character refinement may continue without blocking environments/UI or the shared-library consumption work.
+Preserve character identity across states; `blink` must actually blink. Character refinement may continue without blocking V5.
 
 ---
 
-# 3. Current reusable packs
+# 3. Current reusable library
 
-All current packs are **candidate** unless their own records explicitly say otherwise. All environment/UI catalogs remain `runtime_consumed = false`.
+All current art packs are **candidate** unless their own records explicitly say otherwise.
 
-## V2A — Forest / meadow v0.2
+| Pack | Source | Current desktop scope |
+|---|---|---|
+| Forest / Meadow v0.2 | `assets/visual/environments/forest_meadow/v0.2/` | 27 masters; layered/parallax proof; independent 1024×600 and 800×600 restraint references |
+| Shared UI v0.1 | `assets/visual/ui/v0.1/` | shared panels/cards/buttons/tabs/badges/progress/bubbles/reward/focus/loading/error/empty/portal family + target references |
+| Workshop v0.1 | `assets/visual/environments/workshop/v0.1/` | 19 masters + layered target references |
+| Clinic / Care v0.1 | `assets/visual/environments/clinic/v0.1/` | 17 masters + reduced-size/target review |
+| Reading / Classroom v0.1 | `assets/visual/environments/reading_classroom/v0.1/` | 17 masters; reuses Workshop generic assets |
+| Fantasy / Village / Night v0.1 | `assets/visual/environments/fantasy_village_night/v0.1/` | 15 masters + corrected target references; reuses Forest assets |
+| Water / Pond v0.1 | `assets/visual/environments/water_pond/v0.1/` | 14 water-specific masters + corrected target references; reuses Forest landscape/props |
 
-`assets/visual/environments/forest_meadow/v0.2/`
-
-- **27 reusable SVG masters**;
-- trees, foliage, rocks/log/stump, mushrooms, clouds/hills/tree line, ground, sunlight/fog, shadows and optional ambient FX;
-- composition metadata + actual-asset parallax proof;
-- independent **1024×600 and 800×600** restraint references;
-- default daytime treatment keeps fireflies/dust/leaves optional and protects a calm center.
-
-## V3 — Shared UI v0.1
-
-`assets/visual/ui/v0.1/`
-
-Broad shared family for panels/sheets, activity cards and states, buttons and states, tabs, badges, progress, bubbles, reward/avatar frames, loading/error/empty/portal art, focus, shadow and highlight treatment.
-
-Independent **1024×600 and 800×600** references use the real shared masters.
-
-## V4A — Workshop v0.1
-
-`assets/visual/environments/workshop/v0.1/`
-
-- **19 reusable masters**;
-- warm creative-room furniture/props plus only composition-critical wall/floor, stool, pegboard, easel and pinboard-note additions;
-- window/light remain separate;
-- independent target-size layered references.
-
-## V4B — Clinic / care v0.1
-
-`assets/visual/environments/clinic/v0.1/`
-
-- **17 reusable masters**;
-- warm pretend-care furniture/props, room bases, window/light and restrained care FX;
-- reduced-size + independent target-size desktop review;
-- no medicine labels/dosage-like content.
-
-## V4C — Reading / classroom v0.1
-
-`assets/visual/environments/reading_classroom/v0.1/`
-
-- **17 reusable masters**;
-- room bases, arched window/light, bookcase/books, reading tent/rug/seating, chalkboard and restrained decor;
-- reuses Workshop blocks/pencil-cup assets by reference rather than duplication;
-- weak book-stack, tent and beanbag treatments were revised during desktop review.
-
-## V4D — Fantasy / village / night v0.1
-
-`assets/visual/environments/fantasy_village_night/v0.1/`
-
-- **15 reusable masters**;
-- night sky/moon, distant village/castle, cottages, tower, bridge, lantern, signpost, well, cobblestone and separate light/FX overlays;
-- Forest greenery/fireflies remain shared dependencies;
-- weak cottages/tower/lantern/well/cobblestone were revised before commit;
-- both target references were corrected for cobblestone scale and excessive moonlight dominance.
-
-## V4E — Water / pond v0.1 **[NEW]**
-
-`assets/visual/environments/water_pond/v0.1/`
-
-The first bounded Water/Pond family contains **14 water-specific reusable masters**:
-
-- pond-water base;
-- shoreline/bank edge;
-- lily-pad cluster;
-- water-lily cluster;
-- reeds/cattails;
-- small dock;
-- stepping stones;
-- duckweed;
-- ripple ring;
-- water shimmer;
-- reflection glow;
-- fish shadows;
-- dragonfly FX;
-- bubble FX.
-
-Reuse is explicit: target references use canonical Forest/Meadow distant hills/tree line, and the catalog points to Forest rocks/log/grass/flowers instead of repainting them.
-
-Desktop review corrected weak dock/lily-pad treatments, then strengthened the water base, lily-pad geometry and reed depth before independent **1024×600 and 800×600** composition review.
-
-Authority/evidence:
-
-```text
-catalog.toml
-README.md
-REVIEW.md
-COMPOSITION.md
-composition.toml
-reference_1024x600.svg
-reference_800x600.svg
-```
-
----
-
-# 4. Library inventory / metadata authority
-
-Pack-level design inventory:
-
-```text
-assets/visual/packs_v0.1.toml
-```
-
-Character/archetype/motion seed inventory:
+Design/review inventories:
 
 ```text
 assets/visual/library_v0.1.toml
+assets/visual/packs_v0.1.toml
 ```
 
-`library_v0.1.toml` now points to the pack index and no longer describes environment/UI/FX families as merely planned.
-
-These files are **design/review inventory, not runtime filesystem discovery**.
-
-Reusable assets record semantic ID, source path, family/role, review state, provenance/license, intended alpha/scale where relevant, layer/parallax role and optional ambient-motion metadata.
-
-Use:
-
-```text
-concept | candidate | approved | superseded | rejected
-```
-
-Presence in Git never means approved.
+These inventories are **not** runtime filesystem-discovery contracts.
 
 ---
 
-# 5. Shared consumption seam — V5 direction
+# 4. V5 — Shared consumption/integration
 
-Greia already has platform-owned asset code:
+V5 extends Greia's existing explicit asset architecture rather than creating a second framework.
+
+Existing/implemented source authority:
 
 ```text
 src/greia_platform/assets.py
 src/greia_platform/activity_assets.py
+src/greia_platform/ui_core.py
+src/greia_platform/pygame_visual_assets.py
 assets/catalog/core_icons_v1.toml
+assets/catalog/shared_visuals_v1_source.toml
+tools/build_visual_renditions.py
+Makefile: visual-assets
+tests/test_asset_catalogue.py
+tests/test_pygame_visual_assets.py
 ```
 
-Important existing behavior:
+## 4.1 Catalogue contract — implemented source
 
-- `AssetCatalogue` already provides explicit manifest-driven global icon resolution with path containment;
-- Activity packages may use validated package-owned PNG/WebP launcher icons through `activity_assets.py`;
-- therefore V5 must **extend the accepted explicit catalogue pattern**, not add arbitrary directory scans or a second unrelated asset framework.
+`AssetCatalogue` now retains its existing icon behavior and also supports explicit typed shared visuals:
 
-### V5 first implementation gate
+- semantic visual ID;
+- bounded visual kind;
+- role;
+- explicit named variants with required `default`;
+- one namespace across icons/visuals;
+- duplicate-ID rejection;
+- file existence + asset-root path containment;
+- no directory discovery.
 
-Before runtime consumption is enabled for any visual pack:
+This is lookup only. Decode/cache policy remains separate.
 
-1. inspect current callers/tests of `AssetCatalogue` and Activity asset boundaries;
-2. define the smallest typed extension that can resolve a shared visual asset by semantic ID + variant/role while preserving existing icon behavior;
-3. keep manifest paths explicit and path-contained;
-4. define bounded decode/cache behavior separately from lookup;
-5. preserve static fallback for semantic motion;
-6. add provider-free unit tests for duplicate IDs, missing files, path escape, unsupported kinds/variants and backward compatibility;
-7. integrate **one controlled Shell/UI path first** before claiming general Activity consumption;
-8. keep Web/Python Activities on the same semantic contract rather than creating parallel libraries.
+## 4.2 Build-time rendition contract — implemented source
 
-No V5 runtime implementation is accepted merely because design catalogs exist.
+`assets/catalog/shared_visuals_v1_source.toml` explicitly selects the first reviewed UI masters/variants for runtime rendition.
+
+`tools/build_visual_renditions.py`:
+
+- accepts only explicit SVG sources under the assets root;
+- invokes build-host `rsvg-convert`/librsvg;
+- writes explicit PNG rendition paths;
+- validates path containment, kind/variant names, dimensions, duplicate outputs and generated PNG IHDR dimensions;
+- writes `assets/catalog/shared_visuals_v1.toml` with a source SHA256;
+- never requires SVG rendering on the target device.
+
+`make visual-assets` is now the explicit build entrypoint.
+
+**Current boundary:** this environment does not have `rsvg-convert`, so generated PNG renditions and `assets/catalog/shared_visuals_v1.toml` have not been produced/validated here. Do not claim them as runtime evidence yet.
+
+## 4.3 Bounded Pygame surface cache — implemented source
+
+`src/greia_platform/pygame_visual_assets.py` adds `PygameVisualSurfaceCache` on top of existing `ui_core.BoundedCache`:
+
+- semantic ID + explicit variant + requested size key;
+- PNG-only runtime enforcement;
+- no SVG runtime path;
+- lazy Pygame import;
+- no display-dependent `convert()`/`convert_alpha()` in the loader;
+- one-time scaling on cache miss;
+- default **12-entry** LRU bound;
+- default per-surface pixel ceiling of **1024×600**;
+- no per-frame file/decode work after a cache hit;
+- explicit `clear()`.
+
+Provider-free tests cover hits, scaling keys, variants, LRU eviction/reload, clear/reload, invalid dimensions, pixel ceiling, SVG rejection and unknown catalogue entries/variants.
+
+An isolated local provider-free harness using the exact new cache source passed **9/9** tests. This is not a repository-wide `make test` or `make verify` claim.
+
+## 4.4 V5 gate still open
+
+V5 is **not complete** until all of the following occur:
+
+1. generate the first runtime PNG renditions on an owner-controlled/build checkout with librsvg available;
+2. inspect/validate the generated runtime catalogue + PNGs;
+3. run focused repository tests for `AssetCatalogue`, rendition tooling and `PygameVisualSurfaceCache`;
+4. integrate **one existing controlled Shell/UI path first** through the generated catalogue/cache;
+5. verify no per-frame decode/discovery and retain static/fail-closed fallback;
+6. only then expand the same semantic contract toward Activities/Web;
+7. collect simulator/physical low-resource evidence before stronger runtime/physical claims.
+
+Until step 4 succeeds, source packs remain `runtime_consumed = false`.
 
 ---
 
-# 6. Review loop
-
-For each asset family:
-
-1. define a bounded list;
-2. make individual assets;
-3. rasterize/review individually;
-4. inspect on representative grounds/sizes;
-5. fix weak assets instead of masking them;
-6. record metadata/provenance;
-7. identify a coherent subset;
-8. make a small reference composition only from real pieces;
-9. test restrained layering/parallax/motion where relevant;
-10. integrate later only through accepted Greia platform seams.
-
-Focused browser/HTML files are allowed only as proofs using real assets; they are not visual presentations or runtime authority.
-
-Do **not** replace this process with generated scene/concept imagery.
-
----
-
-# 7. Current checkpoint
+# 5. Current checkpoint
 
 | Field | Current state |
 |---|---|
-| Active focus | **V4 environment coverage complete through Water/Pond; V5 shared-consumption seam is now the next planned work** |
-| Forest | 27 masters + target-size restraint + parallax proof |
-| UI | broad shared component/state pack + target-size references |
-| Workshop | 19 masters + target-size layered references |
-| Clinic | 17 masters + reduced-size + target-size references |
-| Reading/Classroom | 17 masters + review/composition metadata |
-| Fantasy/Village/Night | 15 masters + corrected individual review + target references |
-| Water/Pond | 14 water-specific masters + Forest reuse + corrected target references |
-| Inventory | `assets/visual/packs_v0.1.toml` + refreshed `library_v0.1.toml` |
-| Evidence | **SOURCE + DESKTOP VISUAL REVIEW** only; current art remains candidate |
-| Runtime boundary | all current visual packs remain `runtime_consumed = false` |
-| Next exact action | start **V5 preflight** by tracing current `AssetCatalogue` callers/tests and defining the minimal backwards-compatible explicit visual-asset manifest extension; do not create more environment families without a concrete coverage gap |
+| Active focus | **V5 shared consumption/integration** |
+| Environment coverage | V4 complete through Water/Pond; no new pack without a concrete gap |
+| Catalogue | typed explicit visual variants added without breaking icon contract |
+| Runtime rendition source | first bounded UI selection in `shared_visuals_v1_source.toml` |
+| Build tooling | explicit SVG→PNG build tool + `make visual-assets` target |
+| Runtime cache | bounded PNG-only Pygame surface cache implemented |
+| Test evidence | new provider-free cache harness **9/9 PASS** in isolation; full repo tests not run here |
+| Generated PNG/catalog evidence | **NOT YET GENERATED in this environment**; `rsvg-convert` unavailable here |
+| Actual Shell/Activity consumption | **not yet wired** |
+| Evidence boundary | art: SOURCE + DESKTOP VISUAL REVIEW; V5: SOURCE + isolated provider-free test only |
+| Next exact action | on an owner-controlled checkout with librsvg: run `make visual-assets`, validate generated PNG/catalog outputs and focused tests, then wire one existing Shell/UI component path through `AssetCatalogue` + `PygameVisualSurfaceCache` before any broader Activity integration |
 
 ---
 
-# 8. Milestones
+# 6. Milestones
 
 ## V1 — Character/style seed **[SUFFICIENT TO UNBLOCK LIBRARY]**
 - [x] simplified character direction;
 - [x] core cast seed;
-- [ ] continue useful character refinement without blocking wider art.
+- [ ] continue useful character refinement without blocking wider work.
 
 ## V2 — Forest/meadow composable environment **[DESKTOP CANDIDATE BUILT]**
 - [x] 27-source-asset candidate pack;
 - [x] light/shadow/atmosphere/FX;
-- [x] metadata + review;
-- [x] layered composition/parallax proof;
-- [x] final target-size restraint pass;
+- [x] metadata + layered/parallax proof;
+- [x] target-size restraint pass;
 - [ ] owner approval/revision when appropriate.
 
 ## V3 — Shared UI visual kit **[DESKTOP CANDIDATE BUILT]**
 - [x] core components/states/illustration pieces;
 - [x] common shadow/highlight treatment;
-- [x] multi-ground desktop review;
-- [x] independent target-size reference compositions;
+- [x] independent target-size references;
 - [ ] owner approval/revision when appropriate.
 
 ## V4 — Additional environment packs **[DESKTOP CANDIDATE COVERAGE COMPLETE]**
@@ -294,17 +217,39 @@ Do **not** replace this process with generated scene/concept imagery.
 - [x] pack-level inventory and reuse dependencies;
 - [ ] additional family only when a concrete reusable coverage gap is demonstrated.
 
-## V5 — Shared consumption/integration **[NEXT]**
-- [ ] trace existing catalogue callers/tests;
-- [ ] explicit backwards-compatible visual-asset manifest contract;
-- [ ] bounded lookup/cache/decode boundaries;
+## V5 — Shared consumption/integration **[ACTIVE]**
+- [x] trace existing catalogue/tests and reuse existing architecture;
+- [x] backwards-compatible typed visual-asset manifest extension;
+- [x] explicit build-time SVG→PNG rendition selection/tool;
+- [x] bounded PNG-only Pygame surface cache;
+- [x] provider-free cache test source;
+- [x] explicit `make visual-assets` build target;
+- [ ] generate/validate first runtime PNG catalogue on a build host with librsvg;
+- [ ] focused repository test run on current source;
 - [ ] first controlled Shell/UI consumption path;
-- [ ] shared Python/Web Activity contract;
+- [ ] shared Python/Web Activity semantic contract;
 - [ ] simulator/physical low-resource acceptance where implementation claims require it.
 
 ---
 
-# 9. Failure patterns — do not repeat
+# 7. Evidence vocabulary / review discipline
+
+Use precise scopes:
+
+```text
+DESIGN SPEC
+SOURCE
+DESKTOP VISUAL REVIEW
+SIMULATOR VISUAL REVIEW
+PHYSICAL VISUAL REVIEW
+REJECTED EXPERIMENT
+```
+
+Committed tests are not PASS merely because they exist. Candidate art in Git is not approved. Generated runtime output is not evidence until actually built and checked.
+
+---
+
+# 8. Failure patterns — do not repeat
 
 - spending the workstream on character minutiae;
 - detailed traditional rigs as default;
@@ -315,13 +260,16 @@ Do **not** replace this process with generated scene/concept imagery.
 - full-screen mockups before real assets exist;
 - decorative HTML hiding weak art;
 - inventing a second runtime/UI asset architecture when accepted platform seams exist;
+- runtime SVG rendering on low-end targets;
+- arbitrary visual-directory scanning;
+- unbounded image caches or per-frame decode;
 - replacing asset-first production with generated scene concept images;
 - repainting duplicate generic assets instead of reusing the shared library;
 - continuing to create environment packs after reusable coverage is already broad without a concrete need.
 
 ---
 
-# 10. Progress log — append only
+# 9. Progress log — append only
 
 ## 2026-08-20 — constraint-native visual pivot
 - Simplified characters established; Lilli/Nino/Tito/Momo became core cast.
@@ -371,4 +319,14 @@ Do **not** replace this process with generated scene/concept imagery.
 - Local validation: Water/Pond TOML parse PASS and all Water/Pond SVG XML sources parse PASS.
 - Evidence remains **SOURCE + DESKTOP VISUAL REVIEW** only; no runtime/simulator/hardware acceptance claimed.
 
-Next exact action: V5 preflight against the existing platform asset catalogue and Activity asset boundary; extend the accepted manifest-driven architecture instead of inventing a new one.
+## 2026-08-20 — V5 explicit catalogue/rendition/cache seed
+- Extended the existing `AssetCatalogue` contract with typed explicit visual variants while preserving icon behavior, path containment and one semantic ID namespace.
+- Added provider-free catalogue tests for variants, duplicate IDs, missing paths, path escapes, unsupported kinds and old icon compatibility.
+- Added `assets/catalog/shared_visuals_v1_source.toml` as the first explicit reviewed UI rendition selection.
+- Added `tools/build_visual_renditions.py`; runtime PNGs are build-host products and SVG rasterization is forbidden on the target.
+- Added `PygameVisualSurfaceCache` using existing `ui_core.BoundedCache`, a 12-entry default LRU and a 1024×600 per-surface pixel ceiling.
+- Added provider-free cache tests; isolated local harness passed 9/9.
+- Added `make visual-assets`.
+- `rsvg-convert` is absent in the current execution environment, so generated PNG/catalog output and full repository tests remain unverified here.
+
+Next exact action: generate and validate the first runtime renditions on an owner-controlled/build checkout with librsvg, run focused current-source tests, then integrate one existing Shell/UI path through the explicit catalogue/cache before expanding the contract.
