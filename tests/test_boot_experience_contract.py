@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import runpy
 import struct
 import tempfile
 import unittest
@@ -13,20 +14,10 @@ EARLY_SOURCE = ROOT / "build" / "early-boot" / "greia-fb-splash.c"
 EARLY_README = ROOT / "build" / "early-boot" / "README.md"
 BOOT_DESIGN = ROOT / "docs" / "design" / "GREIA_BOOT_EXPERIENCE.md"
 BOOT_CHIME = ROOT / "assets" / "audio" / "system" / "greia-boot-chime.wav"
-BOOT_SOURCE = ROOT / "assets" / "boot" / "source" / "greia-boot-logo.png"
-BOOT_STATIC = ROOT / "assets" / "boot" / "static" / "greia-boot-logo.png"
-TARGET_PPM = ROOT / "build" / "overlay" / "etc" / "greia-boot" / "boot-logo.ppm"
-INSTALLER_PPM = ROOT / "build" / "installer-overlay" / "etc" / "greia-boot" / "boot-logo.ppm"
 
 
 class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
-    """Guard the hardware-neutral boot scaffold before Linux integration lands.
-
-    The local hardware agent must extend this suite while migrating active build
-    profiles/builders off Plymouth. These checks intentionally do not require
-    that migration yet: current main must not point at a backend that has never
-    been built on the owner-controlled target toolchain.
-    """
+    """Guard the hardware-neutral boot scaffold and physical build contracts."""
 
     def test_early_renderer_queries_runtime_framebuffer_geometry(self) -> None:
         source = EARLY_SOURCE.read_text(encoding="utf-8")
@@ -37,35 +28,26 @@ class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
         self.assertIn("var.bits_per_pixel != 16", source)
         self.assertIn("var.bits_per_pixel != 24", source)
         self.assertIn("var.bits_per_pixel != 32", source)
-        self.assertIn("pack_pixel(&var, 255, 255, 255)", source)
+        self.assertIn("background = pack_pixel", source)
 
-    def test_early_renderer_keeps_logo_inside_visible_area(self) -> None:
+    def test_early_renderer_preserves_canvas_aspect_ratio(self) -> None:
         source = EARLY_SOURCE.read_text(encoding="utf-8")
-        # The logo must never be rendered full-screen-width or clipped: the
-        # sizing must preserve aspect ratio, cap to a margin fraction of the
-        # visible area, and guard degenerate/odd framebuffer geometry. This was
-        # a real installed-OS defect (logo stretched to full width, clipped).
-        self.assertIn("image->width == 0", source)
-        self.assertIn("dest_w > visible_w", source)
+        self.assertIn("dest_w = visible_w", source)
         self.assertIn("dest_h > visible_h", source)
-        self.assertIn("visible_h / 12u", source)
-        self.assertIn("max_h", source)
-        self.assertIn("max_w", source)
         self.assertIn("x0 = (visible_w - dest_w) / 2u", source)
         self.assertIn("y0 = (visible_h - dest_h) / 2u", source)
+        # Visual safe margins belong to the generated landscape composition,
+        # not a second runtime scaling rule tied to physical screen height.
+        self.assertNotIn("visible_h / 12u", source)
+        self.assertNotIn("max_h", source)
+        self.assertNotIn("max_w", source)
 
     def test_early_renderer_has_no_reference_hardware_geometry(self) -> None:
         source = EARLY_SOURCE.read_text(encoding="utf-8")
-        # The renderer must query fbdev geometry at runtime. Guard against
-        # reference-hardware geometry being baked in: a literal 1024x600 display
-        # resolution, Acer model names, or a fixed framebuffer width/height
-        # constant. (Byte-size bounds such as `64 * 1024 * 1024` are resource
-        # limits, not display geometry, so the bare integer is not banned.)
         for forbidden in ("Acer", "Aspire"):
             self.assertNotIn(forbidden, source)
         self.assertNotIn("var.xres =", source)
         self.assertNotIn("var.yres =", source)
-        # No fixed display-resolution literal (1024x600 etc.) may be encoded.
         self.assertNotRegex(source, r"\b1024\s*[xX*]\s*600\b")
 
     def test_early_renderer_remains_nonblocking_and_console_silent(self) -> None:
@@ -86,6 +68,14 @@ class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
         ):
             self.assertNotIn(forbidden, source)
 
+    def test_binary_ppm_separator_is_not_allowed_to_consume_raster(self) -> None:
+        source = EARLY_SOURCE.read_text(encoding="utf-8")
+        self.assertIn("file_data[offset] != '\\n'", source)
+        self.assertNotIn(
+            "while (offset < file_size && file_data[offset] <= ' ') offset++;",
+            source,
+        )
+
     def test_early_renderer_build_contract_is_target_architecture_first(self) -> None:
         text = EARLY_README.read_text(encoding="utf-8")
         self.assertIn("target-architecture", text)
@@ -102,16 +92,13 @@ class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
         self.assertIn("never exceed **1.0 second**", text)
         self.assertIn("Audio also starts here, never in initramfs", text)
 
-    def test_boot_design_requires_continuous_white_consoleless_handoff(self) -> None:
+    def test_boot_design_preserves_diagnostic_recovery_channel(self) -> None:
         text = BOOT_DESIGN.read_text(encoding="utf-8")
-        self.assertIn("white with the Greia logo/artwork", text)
         self.assertIn("There must be no intentional child-visible Linux console", text)
         self.assertIn("Invisible is not the same as unavailable", text)
         self.assertIn("developer SSH", text)
 
     def test_provisional_chime_is_bounded_if_present(self) -> None:
-        """A later binary asset may land independently; validate it if present."""
-
         if not BOOT_CHIME.exists():
             self.skipTest("provisional Greia boot chime has not been committed yet")
         data = BOOT_CHIME.read_bytes()
@@ -119,8 +106,6 @@ class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
         self.assertEqual(data[:4], b"RIFF")
         self.assertEqual(data[8:12], b"WAVE")
 
-        # The committed provisional asset is expected to be canonical PCM WAV.
-        # Parse the fmt/data chunks instead of assuming a fixed 44-byte header.
         offset = 12
         sample_rate = None
         channels = None
@@ -152,64 +137,47 @@ class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
         self.assertGreater(duration_seconds, 0.15)
         self.assertLessEqual(duration_seconds, 1.2)
 
-    def test_canonical_boot_artwork_is_white_frame_derivative(self) -> None:
-        """The canonical static boot frame is white with a dark logo foreground."""
-        for path in (BOOT_SOURCE, BOOT_STATIC):
-            with self.subTest(path=path.name):
-                self.assertTrue(path.is_file())
-                from PIL import Image
+    def _boot_generator_namespace(self) -> dict[str, object]:
+        return runpy.run_path(
+            str(ROOT / "tools" / "generate_boot_artwork.py"),
+            run_name="greia_boot_artwork_test",
+        )
 
-                image = Image.open(path).convert("RGB")
-                self.assertEqual(image.size, (222, 600))
-                # Corners must be pure/near-pure white (not the legacy navy).
-                for corner in ((0, 0), (221, 0), (0, 599), (221, 599)):
-                    r, g, b = image.getpixel(corner)
-                    self.assertGreaterEqual(min(r, g, b), 250)
-                # The logo foreground is a distinct non-white color, clearly
-                # visible on white and on a 16-bit (RGB565) framebuffer. A
-                # near-black logo (e.g. legacy navy (13,30,60)) collapses to
-                # black in RGB565 and renders as a broken silhouette, so it is
-                # explicitly guarded against.
-                pixels = list(image.getdata())
-                colored = [
-                    px
-                    for px in pixels
-                    if not (px[0] > 250 and px[1] > 250 and px[2] > 250)
-                ]
-                self.assertGreater(len(colored), 1000)
-                for r, g, b in colored:
-                    self.assertLessEqual(r, 90)
-                    self.assertLessEqual(g, 100)
-                    self.assertLessEqual(b, 160)
-                    # Not near-black: each channel must survive RGB565 visibly.
-                    self.assertGreaterEqual(r, 40)
-                    self.assertGreaterEqual(g, 45)
-                    self.assertGreaterEqual(b, 90)
+    def test_boot_generator_preserves_source_and_builds_landscape_canvas(self) -> None:
+        namespace = self._boot_generator_namespace()
+        source_path = namespace["SOURCE_FRAME"]
+        source = namespace["canonical_full_color_frame"](source_path)
+        canvas, background = namespace["compose_boot_canvas"](source)
 
-    def test_boot_ppms_are_p6_and_match_canonical_artwork(self) -> None:
-        """Target and installer initramfs PPMs are valid P6 and match the static art."""
-        from PIL import Image
+        self.assertEqual(source.size, (222, 600))
+        self.assertEqual(canvas.size, (1600, 900))
+        self.assertGreaterEqual(len(set(source.getdata())), 128)
+        self.assertEqual(canvas.getpixel((0, 0)), background)
 
-        reference = Image.open(BOOT_STATIC).convert("RGB").tobytes()
-        for path in (TARGET_PPM, INSTALLER_PPM):
-            with self.subTest(path=str(path)):
-                self.assertTrue(path.is_file())
-                data = path.read_bytes()
-                self.assertTrue(data.startswith(b"P6\n222 600\n255\n"))
-                pixel_data = data[data.index(b"\n255\n") + 5 :]
-                self.assertEqual(pixel_data, reference)
+        x = (canvas.width - source.width) // 2
+        y = (canvas.height - source.height) // 2
+        embedded = canvas.crop((x, y, x + source.width, y + source.height))
+        self.assertEqual(embedded.tobytes(), source.tobytes())
+
+    def test_generated_ppm_is_exact_canvas_encoding(self) -> None:
+        namespace = self._boot_generator_namespace()
+        source = namespace["canonical_full_color_frame"](namespace["SOURCE_FRAME"])
+        canvas, _ = namespace["compose_boot_canvas"](source)
+        with tempfile.TemporaryDirectory() as tmp:
+            ppm = Path(tmp) / "boot.ppm"
+            namespace["write_ppm"](canvas, ppm)
+            data = ppm.read_bytes()
+        header = b"P6\n1600 900\n255\n"
+        self.assertTrue(data.startswith(header))
+        self.assertEqual(data[len(header) :], canvas.tobytes())
 
     def test_initramfs_hooks_and_stages_are_present_in_both_overlays(self) -> None:
-        """Both target and installer overlays ship the early-framebuffer hook and stages."""
         for prefix in ("build/overlay", "build/installer-overlay"):
             with self.subTest(prefix=prefix):
                 hook = ROOT / prefix / "etc/initramfs-tools/hooks/greia-early-framebuffer"
                 self.assertTrue(hook.is_file())
                 self.assertTrue(hook.stat().st_mode & 0o111)
                 hook_text = hook.read_text(encoding="utf-8")
-                # The hook is fail-soft: the renderer is compiled after the
-                # kernel package postinst runs update-initramfs, so it copies
-                # the binary only when already present.
                 self.assertIn("copy_exec /usr/lib/greia-boot/greia-fb-splash", hook_text)
                 self.assertIn("[ -f /usr/lib/greia-boot/greia-fb-splash ]", hook_text)
                 self.assertIn("boot-logo.ppm", hook_text)
@@ -225,15 +193,11 @@ class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
                     self.assertTrue(script.is_file(), f"missing stage script {stage}")
                     self.assertTrue(script.stat().st_mode & 0o111)
                     script_text = script.read_text(encoding="utf-8")
-                    # Each stage self-contains the draw attempt so initramfs
-                    # prereq probing (which runs the host copy) never sources a
-                    # missing helper path.
                     self.assertIn("greia-fb-splash", script_text)
                     self.assertIn("[ -c /dev/fb0 ]", script_text)
                     self.assertIn("|| true", script_text)
 
     def test_builders_compile_early_framebuffer_for_target_arch_and_remove_klibc(self) -> None:
-        """Builders compile the cover inside the root and purge the build-only toolchain."""
         for builder_name in ("build/build-image.sh", "build/build-installer-image.sh"):
             with self.subTest(builder=builder_name):
                 builder = (ROOT / builder_name).read_text(encoding="utf-8")
@@ -255,24 +219,40 @@ class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertNotIn("plymouth", package_set.lower())
 
-    def test_grub_uses_canonical_white_boot_logo_in_both_paths(self) -> None:
+    def test_installed_grub_uses_proportional_theme_not_raw_background_stretch(self) -> None:
         grub_script = (ROOT / "build/overlay/etc/grub.d/10_greia_appliance").read_text(
             encoding="utf-8"
         )
-        self.assertIn("background_image", grub_script)
-        self.assertIn("greia-boot-logo.png", grub_script)
-        self.assertIn("insmod png", grub_script)
-        self.assertIn("set timeout=0", grub_script)
+        theme = (ROOT / "build/overlay/boot/grub/greia-theme.txt").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn('theme="/boot/grub/greia-theme.txt"', grub_script)
+        self.assertIn("set theme=$theme", grub_script)
+        self.assertNotRegex(grub_script, r"(?m)^\s*background_image\s")
+        self.assertIn('desktop-image: "greia-boot-logo.png"', theme)
+        self.assertIn('desktop-image-scale-method: "padding"', theme)
+        self.assertIn('desktop-image-h-align: "center"', theme)
+        self.assertIn('desktop-image-v-align: "center"', theme)
         builder = (ROOT / "build/build-image.sh").read_text(encoding="utf-8")
         self.assertIn("boot/grub/greia-boot-logo.png", builder)
-        installer = (ROOT / "build/build-installer-image.sh").read_text(encoding="utf-8")
-        self.assertIn("background_image /boot/grub/greia-boot-logo.png", installer)
+
+    def test_legacy_builder_forces_fresh_boot_artwork_into_image(self) -> None:
+        builder = (ROOT / "build/build-legacy-x86-sd-installer.sh").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("generate_boot_artwork.py", builder)
+        self.assertIn("BOOT_DERIVATIVES", builder)
+        self.assertIn("full-color-landscape-canvas-v1", builder)
+        self.assertIn("P6\\n1600 900\\n255\\n", builder)
+        self.assertIn("restore_boot_derivatives", builder)
+        # Firmware-sensitive removable-media writing remains elsewhere.
+        self.assertNotIn("syslinux --install", builder)
+        self.assertNotIn("mkfs.vfat", builder)
 
     def test_syslinux_live_usb_boots_straight_to_installer(self) -> None:
-        cfg = (
-            ROOT / "build/live-syslinux/syslinux.cfg.in"
-        ).read_text(encoding="utf-8")
-        # No interactive menu, no countdown: boot straight to the installer.
+        cfg = (ROOT / "build/live-syslinux/syslinux.cfg.in").read_text(
+            encoding="utf-8"
+        )
         self.assertIn("DEFAULT live", cfg)
         self.assertNotIn("UI ", cfg)
         self.assertIn("TIMEOUT 0", cfg)
@@ -289,8 +269,7 @@ class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
         self.assertIn("mkfs.vfat -F 32", builder)
         self.assertIn("live-uuid", builder)
         self.assertIn("LIVE_MEDIA_ID", builder)
-        # Safety: only a removable whole disk may be overwritten.
-        self.assertIn('"1"', builder)  # RM check
+        self.assertIn('"1"', builder)
         self.assertIn("disk", builder)
         self.assertIn('"$DEVICE"', builder)
         builder_path = ROOT / "tools/build-live-usb.sh"
@@ -301,12 +280,9 @@ class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
         self.assertIn("MAX_INTRO_SECONDS = 1.0", intro)
         self.assertIn("TARGET_INTRO_SECONDS = 0.85", intro)
         self.assertIn("time.monotonic()", intro)
-        # No per-frame fixed sleep: the animation is elapsed-time driven and
-        # frames are dropped rather than sleeping them out.
         self.assertNotIn("time.sleep(", intro)
         self.assertIn("boot-intro-played", intro)
         self.assertIn("/run/greia-os", intro)
-        # The intro must not load artwork from the removed Plymouth runtime.
         self.assertNotIn("/usr/share/plymouth/", intro)
 
     def test_launcher_intro_plays_once_per_boot(self) -> None:
@@ -334,7 +310,6 @@ class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
                     self.assertFalse(boot_intro.boot_intro_played())
                     boot_intro.run_intro(screen, pygame)
                     self.assertTrue(boot_intro.boot_intro_played())
-                    # A second call is skipped because the marker exists.
                     boot_intro.run_intro(screen, pygame)
         finally:
             pygame.quit()
@@ -356,8 +331,6 @@ class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
                 clear=False,
             ):
                 self.assertFalse(boot_chime.chime_played())
-                # Simulate aplay present and succeeding, then verify the marker
-                # is written exactly once (fail-silent, one-shot).
                 import subprocess
 
                 with mock.patch(
@@ -371,7 +344,6 @@ class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
                 self.assertTrue(boot_chime.chime_played())
                 boot_chime.play_boot_chime()
                 time.sleep(0.1)
-                # Still played exactly once semantics (idempotent marker).
                 self.assertTrue(boot_chime.chime_played())
 
 
