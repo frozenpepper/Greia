@@ -2,18 +2,10 @@
 set -eu
 
 # Development-only SSH bootstrap.
-#
-# Normal/release Greia images leave ssh.service disabled and the managed greia
-# account password-locked. Developer target images are deliberately reachable
-# with the owner-approved greia/greia login. The sealed image must not carry
-# reusable SSH host keys, so create missing keys on the actual booted machine,
-# immediately before sshd validates its configuration.
-#
-# Historical developer builders also wrote `AuthenticationMethods
-# publickey,password`, which means public key AND password, not either method.
-# Developer images do not preinstall an authorized key, so that made the stated
-# greia/greia recovery login impossible. Correct only explicitly marked dev
-# configurations to OpenSSH's single-method `any` behavior.
+# Normal/release images keep ssh.service disabled. Explicit developer images
+# promise the simple owner recovery account provisioned by the image builder.
+# No operator-managed SSH key is required: only the server's local host identity
+# is generated here.
 
 is_developer=0
 if [ -f /etc/greia-os/developer-remote ]; then
@@ -21,15 +13,84 @@ if [ -f /etc/greia-os/developer-remote ]; then
 elif grep -q '^# Development .*SSH policy' /etc/ssh/sshd_config.d/20-greia-parent.conf 2>/dev/null; then
     is_developer=1
 fi
-
 [ "$is_developer" -eq 1 ] || exit 0
 
-/usr/bin/ssh-keygen -A
+/usr/bin/id greia >/dev/null 2>&1 || {
+    echo "Greia developer SSH account is missing" >&2
+    exit 1
+}
+account_status="$(/usr/bin/passwd -S greia 2>/dev/null || true)"
+case "$account_status" in
+    "greia P "*) ;;
+    *)
+        echo "Greia developer SSH account is not password-enabled" >&2
+        exit 1
+        ;;
+esac
 
-for config in \
-    /etc/ssh/sshd_config.d/00-greia-security-floor.conf \
-    /etc/ssh/sshd_config.d/20-greia-parent.conf
-do
-    [ -f "$config" ] || continue
-    sed -i 's/^AuthenticationMethods[[:space:]]\+publickey,password$/AuthenticationMethods any/' "$config"
-done
+# Own the full developer authentication policy at runtime. This repairs older
+# images that accidentally used `publickey,password` (which means both methods)
+# and makes key-only/two-factor drift fail closed before sshd starts.
+cat > /etc/ssh/sshd_config.d/00-greia-security-floor.conf <<'EOF'
+# Development Greia SSH security floor.
+PasswordAuthentication yes
+KbdInteractiveAuthentication no
+UsePAM yes
+PermitEmptyPasswords no
+PermitRootLogin no
+AuthenticationMethods password
+DenyUsers root
+AllowUsers greia
+HostKey /etc/ssh/ssh_host_ed25519_key
+UseDNS no
+EOF
+chmod 0644 /etc/ssh/sshd_config.d/00-greia-security-floor.conf
+
+cat > /etc/ssh/sshd_config.d/20-greia-parent.conf <<'EOF'
+# Development target SSH policy.
+PasswordAuthentication yes
+KbdInteractiveAuthentication no
+UsePAM yes
+PermitEmptyPasswords no
+PermitRootLogin no
+AuthenticationMethods password
+AllowUsers greia
+HostKey /etc/ssh/ssh_host_ed25519_key
+UseDNS no
+X11Forwarding no
+AllowTcpForwarding no
+PermitTunnel no
+EOF
+chmod 0644 /etc/ssh/sshd_config.d/20-greia-parent.conf
+
+# Generate one fast Ed25519 host identity on the actual booted machine. Never
+# trust cloned host keys from a sealed image. Keep the identity across ordinary
+# sshd restarts so the developer does not get needless known_hosts churn.
+identity_dir=/var/lib/greia-os
+identity_marker="$identity_dir/developer-ssh-host-identity-ready"
+install -d -m 0755 "$identity_dir"
+if [ ! -f "$identity_marker" ]; then
+    rm -f /etc/ssh/ssh_host_rsa_key* \
+          /etc/ssh/ssh_host_ecdsa_key* \
+          /etc/ssh/ssh_host_ed25519_key*
+    /usr/bin/ssh-keygen -q -t ed25519 -N '' -f /etc/ssh/ssh_host_ed25519_key
+    chmod 0600 /etc/ssh/ssh_host_ed25519_key
+    chmod 0644 /etc/ssh/ssh_host_ed25519_key.pub
+    : > "$identity_marker"
+    chmod 0644 "$identity_marker"
+fi
+[ -s /etc/ssh/ssh_host_ed25519_key ] || {
+    echo "Greia developer SSH host identity was not created" >&2
+    exit 1
+}
+
+# Syntax checking alone cannot catch first-value-wins mistakes in included
+# sshd configuration. Verify the effective policy that the greia account will
+# actually receive before the service is allowed to continue.
+effective="$(/usr/sbin/sshd -T -C user=greia,host=localhost,addr=127.0.0.1)"
+printf '%s\n' "$effective" | grep -qx 'passwordauthentication yes'
+printf '%s\n' "$effective" | grep -qx 'kbdinteractiveauthentication no'
+printf '%s\n' "$effective" | grep -qx 'permitrootlogin no'
+printf '%s\n' "$effective" | grep -qx 'authenticationmethods password'
+printf '%s\n' "$effective" | grep -qx 'hostkey /etc/ssh/ssh_host_ed25519_key'
+printf '%s\n' "$effective" | grep '^allowusers ' | grep -qw greia
