@@ -21,6 +21,7 @@ from greia_platform.ui_preferences import UiPreferencesStore
 
 from .composition import build_launcher_runtime_services, provisional_installed_display_session
 from .display_session import DisplaySessionCoordinator
+from .feedback_presentation import SharedUiFeedbackMixin
 from .main import _development_hal
 from .presentation import GreiaLauncherPresentation, parse_args
 from .profile_chrome_presentation import SharedUiProfileChromeMixin
@@ -77,6 +78,7 @@ class ProfileVisualActivitySupervisor(ActivitySupervisor):
 
 
 class GreiaChildShell(
+    SharedUiFeedbackMixin,
     SharedUiProfileChromeMixin,
     SharedUiCategoryButtonMixin,
     SharedUiShellPanelMixin,
@@ -137,6 +139,9 @@ class GreiaChildShell(
         return cached
 
     def _draw_launch_overlay(self, pygame: Any, *, text: str) -> None:
+        if self._draw_shared_launch_overlay(pygame, text=text):
+            return
+
         from greia_platform.typography import FontRole
 
         screen = pygame.display.get_surface()
