@@ -3,15 +3,16 @@ set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
+MEDIA_VERIFIER="$PROJECT_ROOT/tools/verify-live-usb.sh"
 
 usage() {
   cat >&2 <<'EOF'
 Usage: sudo bash tools/build-and-flash-development-usb.sh PROFILE USB_DEVICE [OUTPUT_DIR]
 
 Builds an explicit Greia development installer, verifies the live and target
-SSH/network contracts, then writes the Acer-proven Syslinux/FAT32 layout to the
-specified removable whole-disk USB device and verifies the final media by
-read-back.
+SSH/network contracts, writes the physically proven Acer Syslinux/FAT32 layout
+with the unchanged canonical writer, then verifies the finished media through a
+separate read-only verifier.
 
 USB_DEVICE IS DESTROYED. Example: /dev/sdd
 EOF
@@ -27,10 +28,11 @@ OUTPUT_DIR="${3:-$PROJECT_ROOT/out}"
 for command_name in lsblk realpath; do
   command -v "$command_name" >/dev/null || { echo "Missing dependency: $command_name" >&2; exit 1; }
 done
+[[ -x "$MEDIA_VERIFIER" ]] || { echo "Missing executable media verifier: $MEDIA_VERIFIER" >&2; exit 1; }
 
 # Duplicate the most important destructive preflight before spending time on a
-# build. build-live-usb.sh performs the authoritative check again immediately
-# before wiping the device.
+# build. build-live-usb.sh performs the authoritative destructive check again
+# immediately before wiping the device.
 RM="$(lsblk -dn -o RM "$DEVICE" 2>/dev/null | tr -d '[:space:]' || echo 0)"
 TYPE="$(lsblk -dn -o TYPE "$DEVICE" 2>/dev/null | tr -d '[:space:]' || echo part)"
 if [[ "$RM" != "1" || "$TYPE" != "disk" ]]; then
@@ -66,7 +68,11 @@ PY
 IMAGE="$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}.img"
 [[ -f "$IMAGE" ]] || { echo "Verified development installer image is missing: $IMAGE" >&2; exit 1; }
 
+# Do not alter the proven writer to add verification behavior. The postmortem
+# records the exact writer mechanics that boot the reference Acer. Verify only
+# after that writer has finished and synced the media.
 bash "$PROJECT_ROOT/tools/build-live-usb.sh" "$IMAGE" "$DEVICE"
+bash "$MEDIA_VERIFIER" "$IMAGE" "$DEVICE"
 
 cat <<EOF
 
@@ -76,6 +82,8 @@ source_image=$IMAGE
 usb_device=$DEVICE
 source_artifact_verification=PASS
 usb_flash_readback_verification=PASS
+boot_writer=postmortem-proven-syslinux-fat32
+boot_diagnostics=console-tty1
 ssh_user=greia
 ssh_login=simple password; no operator SSH key is required
 EOF
