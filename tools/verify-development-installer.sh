@@ -10,12 +10,18 @@ usage() {
 IMAGE="$(realpath "$1")"
 [[ -f "$IMAGE" ]] || { echo "Installer image not found: $IMAGE" >&2; exit 1; }
 
-for command_name in losetup mount umount mountpoint unsquashfs awk grep realpath; do
+for command_name in losetup mount umount mountpoint unsquashfs awk grep realpath cmp python3; do
   command -v "$command_name" >/dev/null || {
     echo "Missing verifier dependency: $command_name" >&2
     exit 1
   }
 done
+python3 - <<'PY'
+try:
+    from PIL import Image  # noqa: F401
+except ImportError as exc:
+    raise SystemExit("Installer verification requires python3-pil on the build host") from exc
+PY
 
 WORK="$(mktemp -d -p "${TMPDIR:-/tmp}" greia-dev-installer-verify.XXXXXX)"
 MOUNT="$WORK/media"
@@ -140,6 +146,97 @@ check_installed_dev_boot_diagnostics() {
   done
 }
 
+check_boot_artwork() {
+  local live_ppm="$WORK/live-boot.ppm"
+  local target_ppm="$WORK/target-boot.ppm"
+  local grub_png="$WORK/target-grub-boot.png"
+  local launcher_png="$WORK/target-launcher-boot.png"
+  local theme grub
+
+  sqcat "$LIVE" etc/greia-boot/boot-logo.ppm > "$live_ppm" || {
+    echo "live installer: embedded early-boot PPM is missing." >&2
+    exit 1
+  }
+  sqcat "$TARGET" etc/greia-boot/boot-logo.ppm > "$target_ppm" || {
+    echo "installed-system payload: embedded early-boot PPM is missing." >&2
+    exit 1
+  }
+  cmp -s "$live_ppm" "$target_ppm" || {
+    echo "boot artwork mismatch: live and installed PPM canvases differ." >&2
+    exit 1
+  }
+
+  sqcat "$TARGET" boot/grub/greia-boot-logo.png > "$grub_png" || {
+    echo "installed-system payload: GRUB splash PNG is missing." >&2
+    exit 1
+  }
+  sqcat "$TARGET" opt/greia-os/assets/boot/static/greia-boot-logo.png > "$launcher_png" || {
+    echo "installed-system payload: launcher boot PNG is missing." >&2
+    exit 1
+  }
+
+  python3 - "$target_ppm" "$grub_png" "$launcher_png" <<'PY'
+from pathlib import Path
+import sys
+from PIL import Image
+
+ppm_path, grub_path, launcher_path = map(Path, sys.argv[1:])
+data = ppm_path.read_bytes()
+header = b"P6\n1600 900\n255\n"
+if not data.startswith(header):
+    raise SystemExit("embedded boot PPM is not the required 1600x900 P6 canvas")
+pixels = data[len(header):]
+if len(pixels) != 1600 * 900 * 3:
+    raise SystemExit("embedded boot PPM raster length is invalid")
+
+# Sample the real raster, not generator source.  The historical bad splash had
+# effectively only white plus brand indigo.  Require broad RGB diversity and
+# explicitly reject that old two-colour signature.
+sampled = {
+    tuple(pixels[index:index + 3])
+    for index in range(0, len(pixels) - 2, 3 * 97)
+}
+if len(sampled) < 64:
+    raise SystemExit(f"embedded boot artwork lacks full-colour detail ({len(sampled)} sampled colours)")
+old_duotone = {(255, 255, 255), (62, 70, 130)}
+if sampled.issubset(old_duotone):
+    raise SystemExit("embedded boot artwork is still the rejected white/indigo derivative")
+
+for label, path in (("GRUB", grub_path), ("launcher", launcher_path)):
+    image = Image.open(path).convert("RGB")
+    if image.size != (1600, 900):
+        raise SystemExit(f"{label} splash PNG has wrong geometry: {image.size}")
+    if image.tobytes() != pixels:
+        raise SystemExit(f"{label} splash PNG does not match the embedded PPM canvas")
+PY
+
+  theme="$(sqcat "$TARGET" boot/grub/greia-theme.txt)" || {
+    echo "installed-system payload: proportional GRUB theme is missing." >&2
+    exit 1
+  }
+  for required in \
+    'desktop-image: "greia-boot-logo.png"' \
+    'desktop-image-scale-method: "padding"' \
+    'desktop-image-h-align: "center"' \
+    'desktop-image-v-align: "center"'
+  do
+    printf '%s\n' "$theme" | grep -Fq "$required" || {
+      echo "installed-system payload: GRUB theme missing splash contract: $required" >&2
+      exit 1
+    }
+  done
+
+  grub="$(sqcat "$TARGET" etc/grub.d/10_greia_appliance)" || exit 1
+  printf '%s\n' "$grub" | grep -Fq 'set theme=$theme' || {
+    echo "installed-system payload: GRUB script does not activate the proportional theme." >&2
+    exit 1
+  }
+  if printf '%s\n' "$grub" | grep -Eq '^[[:space:]]*background_image[[:space:]]'; then
+    echo "installed-system payload: raw GRUB background_image stretch path is still active." >&2
+    exit 1
+  fi
+}
+
 check_account "$LIVE" "live installer"
 check_ssh_runtime "$LIVE" "live installer"
 check_network "$LIVE" "live installer"
@@ -148,6 +245,7 @@ check_account "$TARGET" "installed-system payload"
 check_ssh_runtime "$TARGET" "installed-system payload"
 check_network "$TARGET" "installed-system payload"
 check_installed_dev_boot_diagnostics "$TARGET"
+check_boot_artwork
 
 TARGET_MARKER="$(sqcat "$TARGET" etc/greia-os/developer-remote)" || {
   echo "installed-system payload: developer marker is missing." >&2
@@ -167,4 +265,6 @@ printf '%s\n' "Developer installer artifact verification: PASS"
 printf '%s\n' "- live installer: password-enabled greia account, sshd bootstrap, DHCP policy"
 printf '%s\n' "- installed payload: password-enabled greia account, sshd bootstrap, DHCP policy"
 printf '%s\n' "- installed dev boot: tty1 diagnostics, panic=0 (no timed reboot)"
+printf '%s\n' "- splash: full-colour 1600x900 canvas verified in live PPM, target PPM, GRUB PNG and launcher PNG"
+printf '%s\n' "- GRUB splash: proportional padding + centred; raw stretch path rejected"
 printf '%s\n' "- root SSH remains denied; no operator SSH key is required"
