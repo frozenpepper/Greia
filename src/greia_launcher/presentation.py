@@ -567,21 +567,43 @@ class GreiaLauncherPresentation(LauncherApplication):
         )
         self._activity_scroll_start = window.start
         rows = 2
-        top = max(116, height // 5)
-        available_h = height - top - 28
-        side_reserve = 86
         gap = max(16, min(25, width // 42))
-        usable_w = max(240, width - side_reserve)
-        tile_size = min(
-            205,
-            (usable_w - gap * (columns - 1)) // columns,
-            (available_h - gap * (rows - 1)) // rows,
+
+        inner_panel = (
+            getattr(self, "_shared_panel_inner_rect", None)
+            if not getattr(self, "_shared_panel_disabled", False)
+            else None
         )
-        tile_size = max(115, tile_size)
-        total_width = columns * tile_size + (columns - 1) * gap
-        total_height = rows * tile_size + (rows - 1) * gap
-        origin_x = (width - total_width) // 2
-        origin_y = top + max(0, (available_h - total_height) // 2)
+        if inner_panel is not None:
+            pad_x = max(16, inner_panel.width // 36)
+            pad_y = max(14, inner_panel.height // 32)
+            avail_w = max(240, inner_panel.width - pad_x * 2)
+            avail_h = max(180, inner_panel.height - pad_y * 2)
+            tile_size = min(
+                205,
+                (avail_w - gap * (columns - 1)) // columns,
+                (avail_h - gap * (rows - 1)) // rows,
+            )
+            tile_size = max(90, tile_size)
+            total_width = columns * tile_size + (columns - 1) * gap
+            total_height = rows * tile_size + (rows - 1) * gap
+            origin_x = inner_panel.centerx - total_width // 2
+            origin_y = inner_panel.centery - total_height // 2
+        else:
+            top = max(116, height // 5)
+            available_h = height - top - 28
+            side_reserve = 86
+            usable_w = max(240, width - side_reserve)
+            tile_size = min(
+                205,
+                (usable_w - gap * (columns - 1)) // columns,
+                (available_h - gap * (rows - 1)) // rows,
+            )
+            tile_size = max(115, tile_size)
+            total_width = columns * tile_size + (columns - 1) * gap
+            total_height = rows * tile_size + (rows - 1) * gap
+            origin_x = (width - total_width) // 2
+            origin_y = top + max(0, (available_h - total_height) // 2)
 
         pointer = self._pointer_pos(pygame)
         pointer_active = self._is_pointer_active(pygame)

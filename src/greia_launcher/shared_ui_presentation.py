@@ -163,12 +163,14 @@ class SharedUiShellPanelMixin:
         super()._render_profile_picker_content(screen, theme, pygame)
 
     def _render_activities_content(self, screen: Any, theme: Any, pygame: Any) -> None:
+        height = screen.get_height()
+        width = screen.get_width()
         self._draw_shared_shell_panel(
             screen,
             pygame,
-            top=max(92, screen.get_height() // 7),
-            bottom_margin=14,
-            max_width=940,
+            top=max(74, min(92, height // 7)),
+            bottom_margin=8,
+            max_width=min(940, max(600, width - 40)),
         )
         super()._render_activities_content(screen, theme, pygame)
 
@@ -181,6 +183,7 @@ class SharedUiShellPanelMixin:
         bottom_margin: int,
         max_width: int,
     ) -> None:
+        self._shared_panel_inner_rect = None
         if getattr(self, "_shared_panel_disabled", False):
             return
         visual_cache = getattr(self, "_visual_cache", None)
@@ -190,7 +193,7 @@ class SharedUiShellPanelMixin:
         width, height = screen.get_size()
         top = max(0, min(top, height - 1))
         available_height = max(1, height - top - max(0, bottom_margin))
-        available_width = max(1, min(width - 52, max_width))
+        available_width = max(1, min(width - 40, max_width))
 
         panel_width = min(
             available_width,
@@ -246,6 +249,11 @@ class SharedUiShellPanelMixin:
             return
 
         screen.blit(panel_surface, panel_rect)
+        inner_left = panel_rect.left + round(panel_rect.width * 34 / self._PANEL_SOURCE_WIDTH)
+        inner_top = panel_rect.top + round(panel_rect.height * 27 / self._PANEL_SOURCE_HEIGHT)
+        inner_width = round(panel_rect.width * 572 / self._PANEL_SOURCE_WIDTH)
+        inner_height = round(panel_rect.height * 339 / self._PANEL_SOURCE_HEIGHT)
+        self._shared_panel_inner_rect = pygame.Rect(inner_left, inner_top, inner_width, inner_height)
 
 
 class SharedUiActivityCardMixin:
