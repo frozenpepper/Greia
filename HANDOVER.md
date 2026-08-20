@@ -1,14 +1,14 @@
 # Greia — Standalone Engineering Handover
 
-**Date:** 2026-08-19  
+**Date:** 2026-08-20  
 **Version family:** `0.13.x` development  
 **Repository:** `frozenpepper/Greia` (private)  
 **Canonical/default/development branch:** `main`  
 **Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**  
-**Current cross-cutting source tranches after the last executed aggregate gate:** **device-language selection/persistence + 18-Activity English/Italian localization + child-UX work + R13B transactional updates + Activity Simulator/emoji/Writing**  
+**Current cross-cutting source tranches after the last executed aggregate gate:** **device-language selection/persistence + 18-Activity English/Italian localization + child-UX work + R13B transactional updates + Activity Simulator/emoji/Writing + active visual-foundation/art workstream**  
 **External Parent HTML runtime revision pinned by Greia:** `frozenpepper/Greia-Parent-App-Html@519651a5931269ed4275324f2a87ad3f0d08a3f6`
 
-This file owns the current continuation/evidence boundary. Historical implementation detail belongs in the append-only active plan and dated reviews. Exact APIs and limits remain source-owned.
+This file owns the current continuation/evidence boundary. Historical implementation detail belongs in append-only active-plan histories and dated reviews. Exact APIs and limits remain source-owned.
 
 ---
 
@@ -18,8 +18,10 @@ This file owns the current continuation/evidence boundary. Historical implementa
 - GitHub is canonical persistence; commit coherent work as it proceeds.
 - Do **not** use, query, trigger, rerun, inspect or download GitHub-hosted Actions without explicit owner authorization for that specific hosted execution.
 - Never convert committed tests into PASS merely because the files exist.
-- Active plan: `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`.
-- R7 remains the first incomplete blocking architecture phase. Cross-cutting product work does not close or skip R7.
+- Blocking active implementation plan: `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`.
+- Current art/visual workstream plan: `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`.
+- R7 remains the first incomplete blocking architecture phase. Cross-cutting product/art work does not close or skip R7.
+- Substantive visual work must update the art plan’s short current checkpoint and append-only progress ledger; accepted reusable visual guidance must be reconciled into the living design docs/visual-authoring skill rather than left only in chat.
 
 ---
 
@@ -35,11 +37,50 @@ footprint & shell check:             PASS
 
 That historical gate covered the then-current Activity Simulator/Remote Bridge, Unicode/color-emoji + Writing work, on-device Parent Settings/Wi-Fi/SSH foundation, UI performance work and six additional first-party Activities.
 
-**The device-language source, later 18-Activity English/Italian localization pass and concurrent child-UX work landed after that gate and are UNPROVEN until a fresh current-head run executes.**
+**The device-language source, later 18-Activity English/Italian localization pass, concurrent child-UX work, and the new visual-foundation repository contracts landed after that gate and are UNPROVEN until a fresh current-head run executes where source verification is relevant.**
 
 No current-head aggregate PASS, language-selector physical PASS, system-update activation/rollback PASS, current-head QEMU A/B PASS or Pi A/B PASS is claimed.
 
 Retained physical evidence from 2026-08-19: a fresh `legacy-x86-i686-dev` syslinux/FAT32 installer booted on the reference Acer Aspire One, installation completed, and the installed OS reached the launcher. Later source—including the new language-first installer—requires a rebuilt image before that physical claim extends to it.
+
+### 2.1 Active Greia visual-foundation workstream
+
+Current art authority/continuity:
+
+```text
+docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md
+skills/greia-visual-authoring/SKILL.md
+assets/visual/README.md
+assets/visual/library_v0.1.toml
+```
+
+Current direction is **constraint-native simplified Greia art**, not detailed traditional articulated animation as the default:
+
+- Puff, Bean, Cutout Critter and Object Friend archetypes;
+- face/expression-first character design;
+- whole-body bounce/squash/wobble/hop motion rather than anatomy-heavy rigs;
+- chunky illustrated props;
+- storybook/felt-board/toy-diorama scene composition;
+- tactile rounded Greia UI and a small reusable FX vocabulary.
+
+Current working style anchors are **Lilli** (unicorn Puff), **Nino** (owl Bean), **Tito** (fox Puff) and **Momo** (friendly monster fluff). The names are intentionally simple Italian names that are also easy for many foreign children to pronounce.
+
+Base semantic motion seed:
+
+```text
+idle_bounce
+blink
+happy_hop
+celebrate_pop
+surprised_wobble
+sleepy_sway
+```
+
+**Evidence scope is currently DESIGN SPEC + SOURCE only.** `assets/visual/library_v0.1.toml` is explicitly a design/library seed with `runtime_consumed = false`; it is not a new runtime asset-loader API. No release-quality canonical character art, simulator visual PASS, Acer visual PASS, or motion-runtime acceptance is claimed.
+
+Important rejected/default-nonviable lessons are preserved in the art plan: one-shot AI animation sheets, automatic detailed quadruped decomposition/rigging, and after-the-fact programmatic vector recreation of detailed generated animals are not the default Greia pipeline without materially new evidence.
+
+**Next exact art step:** close A0 bookkeeping/progress, then begin A1 static style grammar/archetype specimens at 256/128/64 px and owner-review Lilli/Nino/Tito/Momo before designing runtime motion APIs or migrating Activities.
 
 ---
 
@@ -339,7 +380,7 @@ R7 remains the primary blocking platform phase.
 
 Current production path remains provisional **Xorg/xinit**; no compositor is selected. `DisplaySessionCoordinator`, ADR 0019 trusted Home/Back and ADR 0020 platform-owned input/controller semantics remain the mandatory architecture boundary.
 
-Do not deepen X11 or grant Activities raw DRM/input authority as a shortcut for unrelated UI/localization work.
+Do not deepen X11 or grant Activities raw DRM/input authority as a shortcut for unrelated UI/localization/art work.
 
 ---
 
@@ -420,6 +461,7 @@ No PASS is claimed for this sequence yet.
 5. Continue R7 as the first blocking architecture phase.
 6. Continue the separate localization-content tranche: platform string catalogues, script-font coverage, shaping/RTL and responsive translated-text acceptance—without conflating it with the now-implemented selector/persistence.
 7. Continue R13B backend work only after its existing measurements/prerequisites.
+8. In the cross-cutting art workstream, close A0 progress bookkeeping and proceed to A1 static archetype/style specimens; do not invent a runtime motion/asset API before visual grammar is owner-reviewed.
 
 ---
 
@@ -439,6 +481,8 @@ No PASS is claimed for this sequence yet.
 - trusted Home/Back remain outside Activity authority;
 - ordinary Activities do not gain raw `/dev/input` or DRM authority;
 - current single-root profiles keep system-update activation false;
-- source/build/VM/physical evidence scopes remain explicit and honest.
+- source/build/VM/physical evidence scopes remain explicit and honest;
+- art/design work follows `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`, updates its checkpoint/append-only ledger, and does not treat mockups/source assets as simulator/physical acceptance;
+- the current `assets/visual/` seed is not a runtime loader contract and current core-cast entries remain concepts until visually approved.
 
 Resolve the exact current `main` SHA before every owner-controlled verification/build run and record that SHA with the returned evidence.
