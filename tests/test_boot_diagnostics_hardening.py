@@ -64,6 +64,13 @@ class BootDiagnosticsHardeningTests(unittest.TestCase):
                 # One declaration in target_sets and one in installer_sets.
                 self.assertGreaterEqual(text.count('"developer-remote"'), 2)
 
+    def test_developer_remote_package_set_owns_ssh_and_mdns_dependencies(self) -> None:
+        package_set = (
+            ROOT / "build/package-sets/developer-remote.txt"
+        ).read_text(encoding="utf-8")
+        for package in ("openssh-server", "avahi-daemon", "libnss-mdns"):
+            self.assertRegex(package_set, rf"(?m)^{package}$")
+
     def test_live_installer_explicitly_starts_recovery_network_services(self) -> None:
         service = (
             ROOT / "build/installer-overlay/etc/systemd/system/greia-installer.service"
@@ -84,6 +91,37 @@ class BootDiagnosticsHardeningTests(unittest.TestCase):
         self.assertIn("DHCP=yes", wireless.read_text(encoding="utf-8"))
         self.assertIn("MulticastDNS=yes", wired.read_text(encoding="utf-8"))
         self.assertIn("MulticastDNS=yes", wireless.read_text(encoding="utf-8"))
+
+    def test_development_builder_routes_legacy_hardware_through_boot_art_front_door(self) -> None:
+        wrapper = (ROOT / "tools/build-development-installer.sh").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("developer-remote", wrapper)
+        self.assertIn("*-dev", wrapper)
+        self.assertIn("build-legacy-x86-sd-installer.sh", wrapper)
+        self.assertIn('legacy-x86)', wrapper)
+        self.assertIn("verify-development-installer.sh", wrapper)
+        self.assertIn("greia-installer.local", wrapper)
+
+        legacy = (ROOT / "build/build-legacy-x86-sd-installer.sh").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("tools/generate_boot_artwork.py", legacy)
+        self.assertIn("pixel-identical", legacy)
+
+    def test_artifact_verifier_checks_both_squashfs_recovery_contracts(self) -> None:
+        verifier = (ROOT / "tools/verify-development-installer.sh").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("live/filesystem.squashfs", verifier)
+        self.assertIn("payload/pip-rootfs.squashfs", verifier)
+        self.assertIn("etc/shadow", verifier)
+        self.assertIn("multi-user.target.wants/ssh.service", verifier)
+        self.assertIn("prepare-developer-ssh", verifier)
+        self.assertIn("AuthenticationMethods password", verifier)
+        self.assertIn("20-greia-wired.network", verifier)
+        self.assertIn("25-greia-wireless.network", verifier)
+        self.assertIn("developer-remote", verifier)
 
     def test_normal_security_floor_still_disables_password_and_root_ssh(self) -> None:
         security_floor = (
