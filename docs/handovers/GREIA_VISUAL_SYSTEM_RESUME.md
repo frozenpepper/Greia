@@ -1,7 +1,7 @@
 # Greia Visual System — Current Resume File
 
 **Status:** current visual-workstream continuation contract  
-**Last reviewed:** 2026-08-20  
+**Last reviewed:** 2026-08-21  
 **Repository:** `frozenpepper/Greia`  
 **Branch:** `main`  
 **Visual-system guide:** `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`  
@@ -47,7 +47,7 @@ Non-negotiables:
 - no per-frame image decode/scale from disk;
 - runtime image/surface caches stay bounded;
 - visual work must not deepen provisional X11 coupling or bypass protected platform UI/chrome architecture;
-- after the consumption seam is proven, keep converting it into **visible real Greia improvements** rather than endless proof-only plumbing.
+- now that the consumption seam is proven, keep converting it into **visible real Greia improvements** rather than proof-only plumbing.
 
 Core characters remain Lilli, Nino, Tito and Momo in the accepted Puff/Bean direction. Character minutiae do not block V5.
 
@@ -94,22 +94,16 @@ reviewed SVG master
 → real Greia Shell consumer
 ```
 
-`ui.shadow.soft` is simulator-accepted beneath launcher Activity tiles.
-
-Evidence recorded in `LOCAL_AGENT_RESULT.md`:
+Accepted visible/shared Shell consumers:
 
 ```text
-6/6 responsive simulator rows PASS
-selection PASS
-hover PASS
-Activity launch lifecycle PASS
-missing catalogue fallback PASS
-malformed catalogue fallback PASS
-corrupt/missing PNG fallback PASS
-299 frames / 10.165 s = 29.41 FPS sanity
+ui.shadow.soft       SIMULATOR VISUAL REVIEW
+ui.card.activity     SIMULATOR VISUAL REVIEW
+ui.panel.base        SIMULATOR VISUAL REVIEW
+ui.button.primary    SIMULATOR VISUAL REVIEW
 ```
 
-Evidence class: **SIMULATOR VISUAL REVIEW**.
+The latest accepted category-button run also confirmed category open/back navigation, isolated hover-button fallback, full responsive matrix and ~29.6 FPS simulator sanity.
 
 No physical Acer/Pi visual-performance claim and no R7 closure.
 
@@ -117,7 +111,7 @@ No physical Acer/Pi visual-performance claim and no R7 closure.
 
 # 5. Activity semantic seam exists in source
 
-The first Python Activity semantic request/resolution contract is in:
+The Python Activity semantic request/resolution contract is in:
 
 ```text
 src/greia_platform/activity_api.py
@@ -136,49 +130,110 @@ First source consumer:
 activities/shape_garden/main.py
 ```
 
-Shape Garden resolves `ui.shadow.soft` once at startup, scales it once and reuses it. Missing/invalid shared visuals keep the Activity playable.
-
-This Activity seam is still **SOURCE only** until:
-
-```text
-docs/testing/2026-08-20_V5_ACTIVITY_SHARED_VISUAL_SIMULATOR.md
-```
-
-passes in the Activity Simulator.
+Shape Garden remains a non-blocking SOURCE proof. Do not let it displace visible Shell work again. Future Web Activity support must use the same semantic IDs/variants through a controlled URL/handle adapter rather than host path exposure.
 
 ---
 
-# 6. Visible shared Shell UI status
-
-Accepted in the Activity Simulator:
-
-```text
-ui.card.activity/default
-ui.card.activity/focused
-ui.panel.base/default
-ui.button.primary/default
-ui.button.primary/hover
-```
+# 6. Current visible Shell architecture
 
 Implementation:
 
 ```text
 src/greia_launcher/shared_ui_presentation.py
+src/greia_launcher/profile_chrome_presentation.py
 src/greia_launcher/child_shell.py
+assets/catalog/shared_visuals_v1_source.toml
 ```
 
-Current behavior:
+Already accepted:
 
-- `ui.panel.base` frames profile picker and Activity catalogue preserving authored 640:420 aspect ratio;
-- normal Activity cards use the reviewed default master;
-- selected / hovered / launching cards use the focused master;
-- Activity card authored 360:430 portrait geometry is preserved;
-- root Activity-category controls use `ui.button.primary/default` and `hover`;
-- the existing in-category Back/header control deliberately remains on its existing renderer because its square geometry does not match the reviewed wide primary-button asset;
-- category IDs/order/hit targets/navigation remain unchanged;
-- button failure is isolated so accepted shared panels/cards can remain active while category controls fall back to the base renderer.
+- `ui.panel.base` frames the profile picker and Activity catalogue;
+- `ui.card.activity/default|focused` renders Activity tiles;
+- `ui.button.primary/default|hover` renders the root category row;
+- `ui.shadow.soft` provides shared tile grounding;
+- all remain presentation-only with narrow fail-soft fallback.
 
-Accepted protocols:
+A later source fix also aligned the Activity grid to the authored inner region of `ui.panel.base`; preserve that relationship when changing grid/panel geometry.
+
+---
+
+# 7. Current exact gate — shared profile identity frame
+
+New source consumer:
+
+```text
+ui.avatar.frame/default
+```
+
+Source master:
+
+```text
+assets/visual/ui/v0.1/avatar_frame.svg
+```
+
+Source rendition declaration:
+
+```text
+assets/catalog/shared_visuals_v1_source.toml
+```
+
+Expected generated runtime path after `make visual-assets`:
+
+```text
+assets/visual/runtime/v1/ui/avatar_frame.png
+```
+
+Implementation:
+
+```text
+src/greia_launcher/profile_chrome_presentation.py
+```
+
+`SharedUiProfileChromeMixin` overlays the reviewed frame in two real child-Shell locations:
+
+1. each visible profile identity in the profile picker;
+2. the active-profile switcher at the top-left of the Activity catalogue.
+
+It deliberately leaves profile storage, selection, hit targets and lifecycle in the existing launcher. The base primitive profile treatment is already drawn first, so a missing/corrupt frame falls back without replacing profile authority.
+
+Current evidence: **SOURCE only** until the required simulator protocol passes.
+
+Required protocol:
+
+```text
+docs/testing/2026-08-21_V5_SHARED_PROFILE_IDENTITY_SIMULATOR.md
+```
+
+The local agent must regenerate runtime renditions first with `make visual-assets`, then execute all runtime/visual/fallback/responsive acceptance through the Greia Activity Simulator.
+
+---
+
+# 8. Exact continuation sequence
+
+```text
+1. sync current main
+2. read docs/testing/2026-08-21_V5_SHARED_PROFILE_IDENTITY_SIMULATOR.md
+3. run make visual-assets to generate ui.avatar.frame/default PNG + catalogue entry
+4. start the real Greia Activity Simulator
+5. verify profile-picker shared frames
+6. verify active-profile switcher shared frame
+7. verify profile switch lifecycle
+8. verify missing/malformed catalogue fallback
+9. verify corrupt avatar-frame PNG fallback is isolated while panel/cards/buttons remain shared
+10. run full responsive matrix
+11. run frame-count sanity
+12. fix only shared/root causes
+13. update plan/resume/HANDOVER/LOCAL_AGENT_RESULT.md
+14. commit and push accepted work to main
+```
+
+After this gate, continue with another coherent product-visible UI tranche or the Web semantic adapter. Do not return to new environment-pack production unless a concrete reusable coverage gap appears.
+
+---
+
+# 9. Simulator protocols
+
+Accepted visible-Shell protocols:
 
 ```text
 docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md
@@ -186,34 +241,10 @@ docs/testing/2026-08-20_V5_SHARED_UI_PANEL_SIMULATOR.md
 docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md
 ```
 
-Current evidence:
+Current pending protocol:
 
 ```text
-ui.shadow.soft       SIMULATOR VISUAL REVIEW
-ui.card.activity     SIMULATOR VISUAL REVIEW
-ui.panel.base        SIMULATOR VISUAL REVIEW
-ui.button.primary    SIMULATOR VISUAL REVIEW
-```
-
----
-
-# 7. Current exact next work
-
-```text
-1. complete Web Activity semantic visual adapter using the same IDs/variants without host path exposure
-2. continue visible Greia Shell integration with remaining shared UI families
-3. do not return to new environment-pack production unless a concrete reusable gap appears
-```
-
----
-
-# 8. Current simulator protocols
-
-```text
-docs/testing/2026-08-20_V5_ACTIVITY_SHARED_VISUAL_SIMULATOR.md
-docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md
-docs/testing/2026-08-20_V5_SHARED_UI_PANEL_SIMULATOR.md
-docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md
+docs/testing/2026-08-21_V5_SHARED_PROFILE_IDENTITY_SIMULATOR.md
 ```
 
 For owner-directed local-agent runtime/visual/fallback/responsive acceptance, use the Greia Activity Simulator.
@@ -224,7 +255,7 @@ The simulator bridge is local loopback only. No Cloudflare/tunnel/hosted service
 
 ---
 
-# 9. Rejected/drift directions
+# 10. Rejected/drift directions
 
 Do not resume these as current work:
 
@@ -247,7 +278,7 @@ Do not resume these as current work:
 
 ---
 
-# 10. Documentation map
+# 11. Documentation map
 
 Main stable architecture/index:
 
@@ -288,17 +319,9 @@ Execution/result authority:
 LOCAL_AGENT_RESULT.md
 ```
 
-Current visible-Shell simulator protocols:
-
-```text
-docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md
-docs/testing/2026-08-20_V5_SHARED_UI_PANEL_SIMULATOR.md
-docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md
-```
-
 ---
 
-# 11. End-of-session rule
+# 12. End-of-session rule
 
 Update this file whenever any of these changes materially:
 
