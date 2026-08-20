@@ -14,7 +14,7 @@
 
 Greia needs a visual system that is beautiful **because it is designed around the project’s real production and hardware constraints**, not one that depends on a professional animation department or fragile automated traditional-character rigging.
 
-The accepted working direction is:
+The accepted direction is:
 
 > **Simple expressive characters + strong faces + whole-body motion + chunky illustrated props + cozy layered scenes + tactile Greia UI.**
 
@@ -51,13 +51,21 @@ assets/visual/README.md
 assets/visual/library_v0.1.toml
 ```
 
-Current A1 candidate character grammar:
+Accepted character grammar:
 
 ```text
 docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md
 ```
 
-A candidate rule does not become canonical merely because it is committed. Owner review and promotion into the living visual style guide remain explicit gates.
+Current A2 expression/motion design authority:
+
+```text
+docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md
+assets/visual/specimens/a2/base_motion_v0.1.toml
+assets/visual/specimens/a2/review.html
+```
+
+A candidate expression/motion rule does not become a runtime API merely because it is committed. Runtime-facing animation architecture remains a later reviewed phase.
 
 ---
 
@@ -69,14 +77,14 @@ This table is the intentionally mutable summary. Keep it short and accurate.
 
 | Field | Current state |
 |---|---|
-| Active art phase | **A1 — Canonical style grammar and archetype specimens** |
-| Current design direction | constraint-native **Puff / Bean / Cutout Critter / Object Friend** language |
-| Working core cast | **Lilli** (unicorn Puff), **Nino** (owl Bean), **Tito** (fox Puff), **Momo** (friendly monster Puff) |
+| Active art phase | **A2 — Expression and motion system** |
+| Current design direction | approved constraint-native **Puff / Bean / Cutout Critter / Object Friend** character language |
+| Working core cast | **Lilli** (unicorn Puff), **Nino** (owl Bean), **Tito** (fox Puff), **Momo** (friendly monster Puff) — approved as static style anchors, not frozen release assets |
 | Current motion seed | `idle_bounce`, `blink`, `happy_hop`, `celebrate_pop`, `surprised_wobble`, `sleepy_sway` |
-| Current implementation status | A1 candidate grammar plus first static SVG specimens are committed; visual library points to them as `candidate`, not approved runtime assets |
-| Current evidence | **DESIGN SPEC + SOURCE + DESKTOP VISUAL REVIEW** at 256/128/64; no simulator, C0/Acer, Pi or release-art acceptance claimed |
-| Current blocker/gate | **owner visual review of Lilli/Nino/Tito/Momo** before the candidate grammar is promoted and A1 closes |
-| Next exact step | inspect `assets/visual/specimens/a1/review.html`; revise/approve/reject the four cast candidates, then promote accepted grammar into `GREIA_VISUAL_STYLE_GUIDE.md` and proceed to A2 |
+| Current implementation status | A1 grammar is promoted/closed; A2 expression specification, normalized motion seed, static-fallback rules and Puff/Bean/Object Friend review harness are committed; no runtime character-motion API has been added |
+| Current evidence | **OWNER REVIEW + DESIGN SPEC + SOURCE + DESKTOP VISUAL REVIEW** for A1; **DESIGN SPEC + SOURCE + DESKTOP VISUAL REVIEW of A2 expression variants/representative keyframes**; no simulator, C0/Acer, Pi or runtime-motion acceptance claimed |
+| Current blocker/gate | A2 visual review plus simulator/reference-viewport clarity/performance evidence before A2 closure |
+| Next exact step | owner-review `assets/visual/specimens/a2/review.html`; refine expression/motion amplitudes if needed, perform simulator/reference-viewport review without inventing a new runtime engine, then close A2 and begin A3 shared character/Object Friend library expansion |
 
 ## 2.2 Append-only ledger rule
 
@@ -100,8 +108,10 @@ A later agent resuming visual work must read, in order:
 2. this checkpoint and latest ledger entry;
 3. `docs/design/GREIA_VISUAL_STYLE_GUIDE.md`;
 4. `docs/design/GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md`;
-5. `skills/greia-visual-authoring/SKILL.md`;
-6. the active phase’s specimen/spec files and current asset inventory.
+5. `docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md`;
+6. `docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md`;
+7. `skills/greia-visual-authoring/SKILL.md`;
+8. the active phase’s specimen/spec files and current asset inventory.
 
 Continue from the first incomplete acceptance item unless the owner explicitly reprioritizes.
 
@@ -109,6 +119,7 @@ Continue from the first incomplete acceptance item unless the owner explicitly r
 
 - **DESIGN SPEC** — documented visual rule only;
 - **SOURCE** — committed source/assets exist and parse/render as applicable;
+- **OWNER REVIEW** — explicit owner disposition of the visual direction/candidate;
 - **DESKTOP VISUAL REVIEW** — visually inspected on a development machine;
 - **SIMULATOR VISUAL REVIEW** — inspected through Greia Simulator at named viewports;
 - **PHYSICAL VISUAL REVIEW** — inspected on named Greia reference hardware;
@@ -135,7 +146,7 @@ Never turn a browser/SVG/screenshot result into physical Greia acceptance.
 
 # 4. Working visual foundation
 
-## 4.1 Character archetypes
+## 4.1 Accepted character archetypes
 
 ### Puff
 
@@ -167,16 +178,16 @@ Conceptual budget:
 
 Avoid default dependence on articulated knees/elbows, front/back quadruped limb rigs, complex neck/torso anatomy, many small fur/hair pieces, or details that only work at large sizes.
 
-## 4.3 Working core cast
+## 4.3 Static style anchors
 
 - **Lilli** — unicorn Puff; wonder, kindness, imagination;
 - **Nino** — owl Bean; observation, books, thoughtfulness;
 - **Tito** — fox Puff; curiosity, exploration, playful cleverness;
 - **Momo** — friendly monster Puff; humor, emotion, experimentation.
 
-These remain design anchors/candidates until explicitly approved.
+The 2026-08-20 owner review approved these as **static style anchors / design direction**. This does not freeze the current SVGs as release art or imply runtime/physical acceptance.
 
-## 4.4 Expression seed
+## 4.4 Expression vocabulary
 
 ```text
 neutral
@@ -190,22 +201,22 @@ proud
 silly
 ```
 
-Normal educational mistakes must not use anger, shame or disappointed-at-the-child imagery.
+`blink` is a transient micro-state. Normal educational mistakes must not use anger, shame or disappointed-at-the-child imagery. `sad_gentle` must be reviewed specifically so brow/eye cues cannot read as irritation or accusation.
 
-## 4.5 Motion seed
+## 4.5 Base Animation Set v0.1
 
-Base Animation Set v0.1:
+- `idle_bounce` — nominal 2.0 s living/resting loop;
+- `blink` — nominal 0.22 s micro-life cue;
+- `happy_hop` — nominal 0.90 s anticipation/squash → hop → settle;
+- `celebrate_pop` — nominal 1.15 s bigger pop + bounded FX;
+- `surprised_wobble` — nominal 0.72 s recoil/damped wobble;
+- `sleepy_sway` — nominal 2.4 s slow sway/compression.
 
-- `idle_bounce` — 1.6–2.4 s living/resting loop;
-- `blink` — 0.15–0.30 s micro-life cue;
-- `happy_hop` — 0.7–1.1 s anticipation/squash → hop → settle;
-- `celebrate_pop` — 0.9–1.4 s bigger pop + appendage response + bounded FX;
-- `surprised_wobble` — 0.5–0.9 s recoil/wobble + wide face;
-- `sleepy_sway` — 1.8–2.8 s slow sway/compression.
+Exact candidate phases/amplitude limits/static fallbacks are owned by `docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md` and mirrored as non-runtime design data in `assets/visual/specimens/a2/base_motion_v0.1.toml`.
 
 Candidate v0.2 additions remain `think`, `yes_nod`, `no_wobble`, `look_or_point`, `reward_sparkle`, `enter_pop`, `exit_pop`, `listen`.
 
-Do not proliferate motion names until v0.1 is demonstrated across multiple archetypes.
+Do not proliferate motion names until v0.1 closes A2 across multiple archetypes.
 
 ## 4.6 Scene/prop/FX direction
 
@@ -256,7 +267,7 @@ superseded
 rejected
 ```
 
-Presence in Git never means `approved`.
+Presence in Git never means `approved`. `approved` must carry a meaningful scope such as `design_grammar` or `static_style_anchor`; it must not be read as runtime/release/physical acceptance unless explicitly stated.
 
 ---
 
@@ -286,42 +297,51 @@ A donated bespoke high-quality asset is not forbidden; the **reusable default ar
 - [x] HANDOVER/documentation authority registration;
 - [x] coherent work committed to `main`.
 
-## A1 — Canonical style grammar and archetype specimens **[ACTIVE]**
+## A1 — Canonical style grammar and archetype specimens **[COMPLETE — OWNER-REVIEWED DESIGN/STATIC SCOPE]**
 
-- [ ] promote accepted constraint-native character direction into `GREIA_VISUAL_STYLE_GUIDE.md`;
-- [x] define candidate Puff/Bean/Cutout Critter/Object Friend construction grammar;
-- [x] define candidate outline/shadow/fill/detail/color disciplines;
+- [x] promote accepted constraint-native character direction into `GREIA_VISUAL_STYLE_GUIDE.md`;
+- [x] define Puff/Bean/Cutout Critter/Object Friend construction grammar;
+- [x] define outline/shadow/fill/detail/color disciplines;
 - [x] create 256/128/64 static comparison review source;
 - [x] define economical versus placeholder failure patterns;
-- [ ] **owner visual review of Lilli/Nino/Tito/Momo**;
-- [ ] revise/approve/reject candidates and promote accepted rules.
+- [x] owner visual review of Lilli/Nino/Tito/Momo;
+- [x] approve static style-anchor scope and promote accepted rules.
 
-Candidate grammar:
+Accepted grammar:
 
 ```text
 docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md
 ```
 
-Candidate review:
+A1 review:
 
 ```text
 assets/visual/specimens/a1/review.html
 ```
 
-A1 closes only after owner visual review and reconciliation into the canonical living style guide/library statuses.
+A1 closure is a design/static-style decision only; release/runtime/physical character acceptance remains later work.
 
-## A2 — Expression and motion system
+## A2 — Expression and motion system **[ACTIVE]**
 
-- [ ] expression specification and face-state templates;
-- [ ] normalized timing/phase/easing for Base Animation Set v0.1;
-- [ ] demonstrate all six base motions on at least Puff, Bean and Object Friend;
-- [ ] define static fallbacks;
-- [ ] inspect existing `ui_motion`/runtime seams before any implementation; no parallel animation framework;
-- [ ] desktop/simulator clarity/performance evidence.
+- [x] expression specification and face-state templates;
+- [x] normalized timing/phase/easing for Base Animation Set v0.1;
+- [x] demonstrate all six base motions on Puff, Bean and Object Friend in a non-runtime review harness;
+- [x] define static fallbacks;
+- [x] inspect existing `src/greia_platform/ui_motion.py` seam; no parallel animation framework added;
+- [ ] owner visual review/refinement of A2 expression/motion harness;
+- [ ] simulator/reference-viewport clarity and appropriate performance evidence before closure.
+
+A2 sources:
+
+```text
+docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md
+assets/visual/specimens/a2/base_motion_v0.1.toml
+assets/visual/specimens/a2/review.html
+```
 
 ## A3 — Starter character and Object Friend library
 
-- [ ] approved Lilli/Nino/Tito/Momo assets;
+- [ ] canonical/reusable Lilli/Nino/Tito/Momo package assets after A2 state/motion requirements settle;
 - [ ] 8–12 reusable standard creatures;
 - [ ] 10–15 Object Friends;
 - [ ] explicit metadata/provenance;
@@ -383,6 +403,15 @@ Prerequisite: source/architecture review of runtime-facing asset/motion APIs.
 - color/outline/detail coherent with Greia;
 - neutral static pose works;
 - motion should not require anatomy that the style intentionally removed.
+
+## Expression/motion
+
+- semantic state readable across Puff, Bean and Object Friend;
+- `sad_gentle`/wrong-choice feedback does not read as anger/shame/disappointment;
+- static fallback preserves meaning;
+- amplitude remains bounded and appropriate to the archetype;
+- Object Friend deformation preserves pedagogical recognition;
+- no anatomy-specific rig or parallel runtime framework introduced merely for motion.
 
 ## Scene
 
@@ -530,3 +559,63 @@ A CSS-authoring error in the first local render (`{{ ... }}` instead of valid `{
 ### Gate / next exact action
 
 Owner reviews `assets/visual/specimens/a1/review.html` and the four static cast candidates. Record which are approved, revised/superseded or rejected. Do **not** close A1 or implement the shared runtime motion layer before that review. After acceptance, reconcile the accepted grammar into `GREIA_VISUAL_STYLE_GUIDE.md`, update library statuses, close A1, and begin A2.
+
+## 2026-08-20 — A1 owner-approved; grammar promoted; A2 expression/motion harness started
+
+**Phase:** A1 closure → A2 active  
+**Evidence:** OWNER REVIEW / DESIGN SPEC / SOURCE / DESKTOP VISUAL REVIEW
+
+### Owner disposition
+
+After reviewing the A1 direction, the owner explicitly asked to move forward. This is recorded as approval of:
+
+- the constraint-native Puff/Bean/Cutout Critter/Object Friend architecture;
+- Lilli/Nino/Tito/Momo as **static style anchors**;
+- the A1 construction grammar as the default visual direction.
+
+The scope is deliberately bounded. This is not a claim that the current SVGs are final release art, runtime-ready packages, or physically accepted on Greia hardware.
+
+### A1 promotion work
+
+- `docs/design/GREIA_VISUAL_STYLE_GUIDE.md` now contains the accepted constraint-native character language;
+- `docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md` is now accepted rather than candidate;
+- `assets/visual/library_v0.1.toml` is `0.1.2` and records explicit `approval_scope` values while retaining `runtime_consumed = false`;
+- the visual-authoring skill now treats the grammar/static anchors as accepted design guidance.
+
+### A2 work started
+
+Added:
+
+- `docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md`;
+- `assets/visual/specimens/a2/base_motion_v0.1.toml`;
+- `assets/visual/specimens/a2/review.html`;
+- `assets/visual/specimens/a2/README.md`.
+
+A2 defines nine semantic persistent expressions plus transient blink, normalized Base Animation Set v0.1 timing/phases/amplitude limits, static fallbacks and archetype mapping. The review harness demonstrates the six motions on Lilli/Puff, Nino/Bean and an Object Friend without anatomical rigs.
+
+### Desktop review / correction
+
+Local expression variants and representative motion keyframes were rendered and visually inspected. One useful failure was caught: an early Lilli `sad_gentle` brow treatment could read as irritation/disappointment. It was revised to a softer eye/mouth treatment. Preserve this lesson in future model guidance: gentle sadness/wrong-choice feedback must never look angry at the child.
+
+Object Friend rotation/squash was deliberately reduced relative to Puff/Bean so the pedagogical glyph silhouette remains legible.
+
+### Runtime seam review
+
+`src/greia_platform/ui_motion.py` was inspected. Its immutable renderer-neutral mathematical sampling is the preferred architectural precedent, but its present `MotionSample` is UI-control-oriented and lacks character rotation, anisotropic squash/stretch, face state and optional attachment/FX channels.
+
+No runtime extension was made in A2. The design harness is not runtime authority, and no parallel animation framework was introduced.
+
+### Commits
+
+- A2 expression/motion spec: `7a6a741f9bdc5f14157063833af4b55d152ba16f`
+- A2 motion design seed: `12bb4d71b7a046fa6b1e7d1528197d95b1340ec4`
+- A2 README: `006516af4c0a9aef933da87ee77c7b80dbc32347`
+- A2 review harness: `a6871f814105724615c14c09032dbae16088afdf`
+- visual-style promotion: `48f935b328f75b3b1dcda09a93f5d51f8e0e39a9`
+- accepted A1 grammar: `82832e2a3f5087e4da20d5fd38abe48b456af53d`
+- library approval scopes/A2 set: `e15b45e43651e0c91dfc89def07618b9c3618119`
+- visual-authoring skill update: `55cab9339fc5776da4b3b03fa4a0bbad9e5fa824`
+
+### Next exact action
+
+Review/refine the A2 expressions and motion feel using `assets/visual/specimens/a2/review.html`, obtain reference-viewport/simulator evidence appropriate to a design harness, and close A2 only if semantic motion remains charming/readable across Puff, Bean and Object Friend. Runtime animation integration remains deferred to the architecture-reviewed A7 seam.
