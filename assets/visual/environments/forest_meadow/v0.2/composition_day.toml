@@ -1,9 +1,12 @@
-scene_id = "forest_meadow.day.reference.v0.1"
+scene_id = "forest_meadow.day.reference.v0.2"
 status = "candidate-composition-proof"
-viewport = [1024, 600]
 source_pack = "assets/visual/environments/forest_meadow/v0.2/"
 runtime_authority = false
-notes = "Reference composition only. Uses separate reusable asset masters. Parallax ratios are semantic design guidance, not a runtime API."
+notes = "Restrained daytime default. Keeps center calm. Fireflies, dust motes and falling leaves remain optional effects, not default day layers."
+
+[reference_viewports]
+primary = [1024, 600]
+legacy = [800, 600]
 
 [[layers]]
 id = "sky"
@@ -23,61 +26,50 @@ z = 20
 parallax = 0.12
 
 [[layers]]
-id = "cloud_large"
-asset = "cloud_large.svg"
+id = "clouds"
+assets = ["cloud_large.svg", "cloud_small.svg"]
 z = 25
 parallax = 0.05
-ambient_motion = "drift_x"
-amplitude_px = 18
-period_s = 48
+ambient_motion = "slow_drift_x"
+amplitude_px_max = 18
 
 [[layers]]
-id = "cloud_small"
-asset = "cloud_small.svg"
-z = 26
-parallax = 0.04
-ambient_motion = "drift_x"
-amplitude_px = 12
-period_s = 62
-
-[[layers]]
-id = "mid_trees_props"
+id = "side_framing"
+assets = ["tree_hero.svg", "tree_secondary.svg", "bush_round.svg", "bush_flowering.svg"]
 z = 40
 parallax = 0.28
-assets = ["tree_hero.svg", "tree_secondary.svg", "bush_round.svg", "bush_flowering.svg", "rock_cluster_large.svg", "fallen_log.svg", "mushroom_cluster.svg"]
+notes = "Keep central playfield open."
 
 [[layers]]
-id = "foreground_foliage"
+id = "ground_props"
+assets = ["fallen_log.svg", "rock_cluster_large.svg", "mushroom_cluster.svg", "grass_edge.svg"]
+z = 50
+parallax = 0.34
+
+[[layers]]
+id = "foreground_edges"
+assets = ["fern_cluster.svg", "bush_low.svg"]
 z = 60
 parallax = 0.48
-assets = ["fern_cluster.svg", "bush_low.svg", "grass_edge.svg"]
 ambient_motion = "subtle_sway"
-amplitude_deg = 1.2
-period_s = 4.8
+amplitude_deg_max = 1.0
 
 [[layers]]
 id = "fog"
 asset = "fog_strip.svg"
 z = 70
 parallax = 0.16
-ambient_motion = "drift_x"
-amplitude_px = 8
-period_s = 34
+alpha_default = 0.32
+ambient_motion = "very_slow_drift"
 
 [[layers]]
 id = "sunlight"
 asset = "sunlight_rays.svg"
 z = 80
 parallax = 0.0
-ambient_motion = "breathe_alpha"
-alpha_min = 0.46
-alpha_max = 0.56
-period_s = 8.0
+alpha_default = 0.32
+ambient_motion = "very_slow_breathe_alpha"
 
-[[layers]]
-id = "fireflies"
-asset = "fx_fireflies.svg"
-z = 90
-parallax = 0.35
-ambient_motion = "fade_and_drift"
-max_active = 7
+[optional_fx]
+assets = ["fx_fireflies.svg", "fx_dust_motes.svg", "fx_falling_leaves.svg"]
+notes = "Not part of the default daytime composition. Use sparingly for evening/reward/weather beats."

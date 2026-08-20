@@ -2,39 +2,35 @@
 
 **Status:** candidate visual pack; not runtime integration or owner approval.
 
-## Review performed
+## Individual/multi-ground review
 
-The individual SVGs were rasterized locally and reviewed on:
+The individual SVGs were rasterized locally and reviewed on Greia cream, Greia sky, and dark charcoal. Representative panels, focused activity card, primary button, selected tab, speech bubble and reward frame remained readable across the three grounds.
 
-- Greia cream;
-- Greia sky;
-- a dark charcoal ground.
+The pack uses rounded toy-like silhouettes, Greia theme colors, restrained gradients, local sheen instead of heavy gloss, reusable soft shadows, and focus/selection cues using shape/frame/depth in addition to color. Reusable masters contain no child-facing text.
 
-Representative panels, focused activity card, primary button, selected tab, speech bubble and reward frame remained readable on all three grounds.
+## State tranche
 
-## Current direction
+Static state masters include primary default/hover/pressed/disabled; focused/completed activity cards; selected tab; new/done/favorite/locked badges; progress complete; loading, gentle error, empty-state and portal illustrations.
 
-The pack intentionally uses:
+## Target-size composition review
 
-- rounded toy-like silhouettes;
-- Greia theme colors from `runtime/theme-defaults.toml`;
-- restrained vertical gradients;
-- bright local sheen instead of heavy glossy effects;
-- reusable soft shadows;
-- selected/focused states with both shape/frame cues and color;
-- no embedded child-facing text so the same art can be localized/reused.
+Real references were built from the shared masters and existing character anchors:
+
+- `reference_1024x600.svg`
+- `reference_800x600.svg`
+- `LOW_RES_REVIEW.md`
+
+The 800×600 version is independently laid out rather than letterboxed from 1024×600.
+
+Findings: card focused/completed/new/favorite states remain distinct at both sizes; focus is not color-only; the primary action remains clear without a heavy glow; top navigation remains quieter than activity cards; the same reusable masters work at both targets without separate low-resolution redraws.
 
 ## Explicit boundaries
 
 - These files do not replace Greia Screen/Overlay/Panel/Card/Control semantics.
 - They do not create an Activity-owned imitation of protected system Home/Back chrome.
 - `runtime_consumed = false` remains true for the pack.
-- Generic-looking or over-glossy components should be revised before shared adoption.
+- Current evidence is **SOURCE + DESKTOP VISUAL REVIEW** only.
 
 ## Next UI work
 
-1. add hover/pressed/disabled visual-state masters where a static asset is useful;
-2. add favorite and progress-complete/reward variants;
-3. add loading/error/empty-state illustration pieces;
-4. create a low-resolution component composition using only this pack;
-5. define cheap motion deltas separately from the SVG artwork so the same assets remain usable without animation.
+Owner revision should target concrete weak components rather than adding more decorative variants. Cheap hover/press/launch motion deltas remain a later design/runtime seam and should reuse these same static masters.

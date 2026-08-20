@@ -4,55 +4,45 @@
 
 ## Scope reviewed
 
-The reusable SVG masters were rasterized locally and inspected individually and in representative light/dark/sky contexts. A 1024×600 static composition was also assembled from the real masters to verify that the assets form a coherent layer family without repainting them into one baked scene.
+The reusable SVG masters were rasterized locally and inspected individually and in representative light/dark/sky contexts. The pack was then composed at both supported low-resolution references using the real masters rather than a baked scene.
 
 ## First-pass corrections made
 
-The first review found four specific weak treatments and they were revised before this review was recorded:
+Earlier desktop review corrected:
 
-- `tree_sapling.svg` — silhouette/detail balance was weak; revised into a clearer young-tree variant;
-- `distant_treeline.svg` — repetitive geometric tree rhythm looked synthetic; changed to a more organic mixed canopy with only sparse conifer cues;
-- `fog_strip.svg` — single weak band did not create usable depth; changed to two restrained haze layers;
-- `fx_dust_motes.svg` — points were too easy to lose; changed to soft local glow motes while remaining low-count.
+- `tree_sapling.svg` — stronger young-tree silhouette;
+- `distant_treeline.svg` — less synthetic repeated geometry;
+- `fog_strip.svg` — more usable layered haze;
+- `fx_dust_motes.svg` — clearer low-count glow motes.
 
-## Current coherent candidate subset
+## Final restraint pass
 
-Strong enough to use for the first composition/parallax proof, while still remaining candidate assets:
+The bounded 2026-08-20 restraint pass added:
 
-- `tree_hero.svg`
-- `tree_secondary.svg`
-- `tree_sapling.svg`
-- `tree_willow.svg`
-- `bush_round.svg`
-- `bush_flowering.svg`
-- `bush_low.svg`
-- `fern_cluster.svg`
-- `flower_patch.svg`
-- `mushroom_cluster.svg`
-- `rock_cluster_large.svg`
-- `rock_cluster_small.svg`
-- `fallen_log.svg`
-- `stump.svg`
-- `cloud_large.svg`
-- `cloud_small.svg`
-- `distant_hills.svg`
-- `distant_treeline.svg`
-- `grass_edge.svg`
-- `ground_dirt_patch.svg`
-- `sunlight_rays.svg`
-- `fog_strip.svg`
-- both contact-shadow variants
-- fireflies / dust motes / falling leaves.
+- `reference_restraint_1024x600.svg`;
+- `reference_restraint_800x600.svg`;
+- `RESTRAINT_REVIEW.md`;
+- revised `composition_day.toml`.
 
-This is **not** an approval claim. It means the set is coherent enough for the next proof without hiding known primitive failures.
+The default day reference now:
+
+- keeps a calm central playfield;
+- frames the edges with hero/secondary trees and bounded foliage;
+- reduces sunlight and fog opacity;
+- excludes `fx_fireflies.svg`, `fx_dust_motes.svg` and `fx_falling_leaves.svg` from the default simultaneous layer set;
+- treats those three FX as optional event/evening/weather ingredients;
+- composes 800×600 separately instead of letterboxing/scaling the 1024×600 reference.
+
+## Coherent candidate subset
+
+The full 27-master pack remains available. The normal day composition uses only the calmer subset needed for depth and framing.
+
+This is still **candidate SOURCE + DESKTOP VISUAL REVIEW**, not approval.
 
 ## Composition boundary
 
-`composition_day.toml` records the intended layer roles and cheap ambient motion guidance. It is design metadata only. `parallax_proof.html` exists solely to exercise the committed SVG layers with simple CSS transforms; it must not become runtime architecture.
+`composition_day.toml` records intended layer roles and cheap ambient-motion guidance. `parallax_proof.html` exists solely to exercise committed SVG layers with simple CSS transforms. Neither is runtime architecture.
 
 ## Next review
 
-- check the composition at 800×600 and 1024×600;
-- remove any atmosphere/FX that adds noise instead of depth;
-- confirm foreground assets do not steal the gameplay focal area;
-- then start the next environment family rather than endlessly polishing one forest pack.
+The planned forest restraint pass is complete. Do not keep polishing this pack without a concrete visual defect. Next actions are owner revision when useful and, later, simulator/runtime/hardware evidence only after actual integration.

@@ -1,0 +1,128 @@
+catalog_id = "greia.environment.clinic.v0.1"
+catalog_version = "0.1.1"
+status = "candidate"
+runtime_consumed = false
+active_plan = "docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md"
+provenance = "programmatic Greia source artwork created in-repo"
+notes = "Clinic/care-room reusable asset pack. No baked room scene."
+
+[[assets]]
+id = "clinic.plush.bear"
+path = "plush_bear.svg"
+family = "prop"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "clinic.heart.fx"
+path = "heart_fx.svg"
+family = "fx"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "clinic.care.bowl"
+path = "care_bowl.svg"
+family = "prop"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "clinic.cabinet"
+path = "cabinet.svg"
+family = "prop"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "clinic.room.floor.base"
+path = "room_floor_base.svg"
+family = "room_base"
+status = "candidate"
+alpha = false
+
+[[assets]]
+id = "clinic.care.bed"
+path = "care_bed.svg"
+family = "prop"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "clinic.heart.rug"
+path = "heart_rug.svg"
+family = "prop"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "clinic.care.kit"
+path = "care_kit.svg"
+family = "prop"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "clinic.bandage.box"
+path = "bandage_box.svg"
+family = "prop"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "clinic.curtain.pair"
+path = "curtain_pair.svg"
+family = "prop"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "clinic.side.table"
+path = "side_table.svg"
+family = "prop"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "clinic.room.wall.base"
+path = "room_wall_base.svg"
+family = "room_base"
+status = "candidate"
+alpha = false
+
+[[assets]]
+id = "clinic.cushion"
+path = "cushion.svg"
+family = "prop"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "clinic.toy.stethoscope"
+path = "toy_stethoscope.svg"
+family = "prop"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "clinic.bottle.set"
+path = "bottle_set.svg"
+family = "prop"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "clinic.care.window"
+path = "care_window.svg"
+family = "room_feature"
+role = "mid_background"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "clinic.window.light"
+path = "window_light.svg"
+family = "light"
+role = "overlay"
+status = "candidate"
+alpha = true

@@ -2,42 +2,29 @@
 
 **Status:** candidate source/desktop review; not owner-approved release art or runtime integration.
 
-## Current tranche
+## Current pack
 
-The first indoor creative-room pack contains individual reusable masters for:
+The original creative-room tranche contains workbench, shelf, paint/art supplies, storage, rug, lamp, window and a separate window-light overlay. Composition-critical additions now include wall/floor bases, stool, pegboard, easel and pinboard note.
 
-- workbench;
-- shelf;
-- paint palette;
-- brush bundle;
-- pencil cup;
-- blocks;
-- storage box;
-- paper stack;
-- rug;
-- desk lamp;
-- window;
-- window-light overlay;
-- paint jars.
+## Target-size reference review
 
-## Desktop review
+Layered references:
 
-The assets were rasterized together on a Greia cream ground to inspect family resemblance, silhouette and palette consistency.
+- `reference_1024x600.svg`
+- `reference_800x600.svg`
+- `COMPOSITION.md`
 
-Current positives:
+Both references use real source masters and keep room base, window light, furniture and props separate.
 
-- warm wood treatment reads consistently across workbench/shelf/storage;
-- art supplies reuse Greia accent colors without uncontrolled rainbow noise;
-- window and light overlay are separated so lighting can remain optional/composable;
-- most props have independent alpha silhouettes and do not require a baked room background.
+Findings:
 
-Current follow-up before composition:
-
-- check workbench/shelf/rug at reduced size so broad furniture still reads cleanly;
-- keep brush/pencil families semantically distinct in final catalog use;
-- add only composition-critical missing pieces (wall/base, chair/stool, floor edge or pegboard) rather than filling the pack with decoration;
-- then make one layered workshop composition from the coherent subset.
+- workbench, shelf and rug retain readable silhouettes after target-size reduction;
+- warm wood and pastel creative supplies remain coherent;
+- optional window light adds depth without being baked into the window or room;
+- the center/lower-middle remains usable rather than filling every gap;
+- 800×600 is independently composed rather than letterboxed;
+- the added stool/pegboard/easel solve actual composition needs, so further decoration should stop unless a real need appears.
 
 ## Boundary
 
-`runtime_consumed = false`. No room compositor/loader is authorized by this pack.
+`runtime_consumed = false`. No room compositor/loader is authorized. Current evidence is **SOURCE + DESKTOP VISUAL REVIEW** only.
