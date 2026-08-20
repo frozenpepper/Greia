@@ -284,14 +284,43 @@ docs/testing/2026-08-21_V5_SHARED_PROFILE_IDENTITY_SIMULATOR.md
 
 All 6 responsive matrix viewports, profile picker baseline, active profile switcher, return to profile picker, missing/malformed/corrupt fallback cases, and 27.4 FPS frame sanity passed with evidence in `tmp/v5-profile-simulator-evidence/`.
 
-## 4.12 After the profile-identity gate
+## 4.12 Fifth visible shared UI consumer tranche — ACCEPTED (SIMULATOR VISUAL REVIEW)
 
-Following simulator acceptance of `ui.shadow.soft`, `ui.card.activity`, `ui.panel.base`, `ui.button.primary`, and `ui.avatar.frame`:
+The production child Shell consumes:
 
-1. record `ui.avatar.frame` as an accepted visible Shell consumer at **SIMULATOR VISUAL REVIEW** scope;
-2. continue only to another product-visible shared UI surface that materially improves Greia, rather than adding proof-only consumers;
-3. separately complete the Web Activity semantic adapter using the same semantic IDs/variants through a controlled URL/handle transport, not host filesystem exposure;
-4. do not return to new environment-pack production without a demonstrated reusable coverage gap.
+```text
+ui.loading.orbit/default
+ui.error.gentle/default
+ui.empty.basket/default
+```
+
+through `SharedUiFeedbackMixin` in `src/greia_launcher/feedback_presentation.py`.
+
+Behavior:
+
+- during Activity startup, `ui.loading.orbit` renders centered with calm translucent backdrop (`(255, 250, 240, 238)`) and readable status typography (`Starting…`), visibly blocking interaction until the child Activity takes over;
+- on catalogue parse errors, `ui.error.gentle` renders unobtrusively at the top-right and dismisses on click/tap without moving lifecycle/catalogue authority into the visual layer;
+- on an empty Activity catalogue, `ui.empty.basket` renders centered without interfering with profile picker identity treatment;
+- non-intrusive headless simulator execution operates via SDL dummy drivers without stealing window focus;
+- fail-soft isolation cleanly falls back to primitive feedback overlays if PNG files are corrupt or missing.
+
+Accepted via:
+
+```text
+docs/testing/2026-08-21_V5_SHARED_FEEDBACK_SIMULATOR.md
+```
+
+All 4 responsive matrix viewports, launch overlay burst, return Home lifecycle, error cloud appearance & dismissal, corrupt PNG fallback cases, and 27.9 FPS frame sanity passed with evidence in `tmp/v5-feedback-simulator-evidence/`.
+
+## 4.13 After the feedback gate
+
+Following simulator acceptance of `ui.shadow.soft`, `ui.card.activity`, `ui.panel.base`, `ui.button.primary`, `ui.avatar.frame`, `ui.loading.orbit`, and `ui.error.gentle`:
+
+1. record `ui.loading.orbit` and `ui.error.gentle` as accepted visible Shell consumers at **SIMULATOR VISUAL REVIEW** scope;
+2. record `ui.empty.basket` as **SOURCE, NOT EXERCISED**;
+3. continue only to another product-visible shared UI surface that materially improves Greia, rather than adding proof-only consumers;
+4. separately complete the Web Activity semantic adapter using the same semantic IDs/variants through a controlled URL/handle transport, not host filesystem exposure;
+5. do not return to new environment-pack production without a demonstrated reusable coverage gap.
 
 ---
 
@@ -301,7 +330,7 @@ Following simulator acceptance of `ui.shadow.soft`, `ui.card.activity`, `ui.pane
 |---|---|
 | Stable guide | `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` |
 | Resume | `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` |
-| Active focus | **V5 — shared `ui.avatar.frame` profile identity accepted in Activity Simulator** |
+| Active focus | **V5 — shared `ui.loading.orbit` / `ui.error.gentle` feedback accepted in Activity Simulator** |
 | Environment coverage | V4 complete through Water/Pond; no new pack without concrete gap |
 | Catalogue/renditions | explicit semantic catalogue + generated PNG runtime catalogue present |
 | First Shell consumer | `ui.shadow.soft` accepted at **SIMULATOR VISUAL REVIEW** scope |
@@ -309,9 +338,10 @@ Following simulator acceptance of `ui.shadow.soft`, `ui.card.activity`, `ui.pane
 | Visible Shell panel consumer | `ui.panel.base/default` accepted at **SIMULATOR VISUAL REVIEW** scope |
 | Visible category-button consumer | `ui.button.primary/default|hover` accepted at **SIMULATOR VISUAL REVIEW** scope |
 | Visible profile-identity consumer | `ui.avatar.frame/default` accepted at **SIMULATOR VISUAL REVIEW** scope |
+| Visible feedback consumers | `ui.loading.orbit`, `ui.error.gentle` accepted at **SIMULATOR VISUAL REVIEW** scope; `ui.empty.basket` at **SOURCE** |
 | Activity API | `get_shared_visual(...)` + `get_shared_visual_path(...)` implemented in source |
 | First Activity consumer | Shape Garden consumes `ui.shadow.soft` in source with optional fallback; non-blocking simulator proof pending |
-| Completed visible protocols | `docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md`; `docs/testing/2026-08-20_V5_SHARED_UI_PANEL_SIMULATOR.md`; `docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md`; `docs/testing/2026-08-21_V5_SHARED_PROFILE_IDENTITY_SIMULATOR.md` |
+| Completed visible protocols | `docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md`; `docs/testing/2026-08-20_V5_SHARED_UI_PANEL_SIMULATOR.md`; `docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md`; `docs/testing/2026-08-21_V5_SHARED_PROFILE_IDENTITY_SIMULATOR.md`; `docs/testing/2026-08-21_V5_SHARED_FEEDBACK_SIMULATOR.md` |
 | Next exact action | complete Web Activity semantic visual adapter or next targeted product-visible Shell integration |
 
 ---
@@ -366,6 +396,8 @@ Following simulator acceptance of `ui.shadow.soft`, `ui.card.activity`, `ui.pane
 - [x] shared category-button simulator acceptance;
 - [x] shared profile-identity source consumer (`ui.avatar.frame/default`);
 - [x] shared profile-identity simulator acceptance;
+- [x] shared feedback consumers (`ui.loading.orbit`, `ui.error.gentle`, `ui.empty.basket`);
+- [x] shared feedback simulator acceptance;
 - [ ] future Web Activity semantic adapter/transport;
 - [ ] further visible Shell integration using existing shared UI families where materially useful;
 - [ ] physical low-resource evidence where a stronger claim requires it.

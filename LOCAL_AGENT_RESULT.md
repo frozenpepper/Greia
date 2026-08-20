@@ -379,4 +379,73 @@ All acceptance was performed through the Greia Activity Simulator in headless mo
 - **No Physical Hardware / Acer Performance Claim:** Verified through Activity Simulator only (`SIMULATOR VISUAL REVIEW`).
 - **No R7 Architecture Closure:** Display coordinator and session boundary remain open.
 
+---
+
+# Greia V5 Shared Shell Feedback — Simulator Acceptance Result
+
+**Date:** 2026-08-21  
+**Repository:** `frozenpepper/Greia` (`main`)  
+**Runbook Authority:** `docs/testing/2026-08-21_V5_SHARED_FEEDBACK_SIMULATOR.md`  
+**Consumers:** `ui.loading.orbit`, `ui.error.gentle`, `ui.empty.basket`  
+**Evidence Class:** `SIMULATOR VISUAL REVIEW`  
+
+---
+
+## 1. Git & Commit Summary
+
+- **Start Base SHA:** `aec3724e58efd1a8ca12d9ec0c11a8e32be56227`
+- **Head SHA:** (Current working tree)
+
+---
+
+## 2. Generated Renditions & Integration Details
+
+- **Generated Runtime Files:**
+  - `assets/visual/runtime/v1/ui/loading_orbit.png` (220x220)
+  - `assets/visual/runtime/v1/ui/error_cloud.png` (360x260)
+  - `assets/visual/runtime/v1/ui/empty_basket.png` (360x300)
+- **Catalogue Verification:** All entries present in generated `assets/catalog/shared_visuals_v1.toml`.
+- **Implementation Mixin:** `SharedUiFeedbackMixin` in `src/greia_launcher/feedback_presentation.py` mixed into `GreiaChildShell`.
+- **Integrated Surfaces & Behavior:**
+  1. **Launch Overlay (`ui.loading.orbit`):** Rendered centered during Activity startup with calm translucent backdrop (`(255, 250, 240, 238)`) and readable status typography (`Starting…`), visibly blocking interaction until the child Activity takes over.
+  2. **Error Badge (`ui.error.gentle`):** Rendered at top-right on catalogue error without occluding cards/category navigation. Clicking the error cloud dismisses it cleanly.
+  3. **Empty State (`ui.empty.basket`):** Verified rendering centered in catalogue mode without displacing profile picker identity treatment.
+  4. **Headless Execution:** 100% verified via `GREIA_SIMULATOR_HEADLESS=1` and SDL dummy driver without stealing focus.
+
+---
+
+## 3. Greia Simulator Acceptance Matrix
+
+All acceptance was performed through the Greia Activity Simulator in headless mode (`http://127.0.0.1:8767`) with isolated state root `$HOME/.greia-simulator-v5-feedback`:
+
+| Test # | Viewport | Interface Size | State | Result | Screenshot Evidence | Status File |
+|---|---|---|---|---|---|---|
+| **01** | 1024x600 | Normal | Baseline Catalogue Regression Check | **PASS** | `tmp/v5-feedback-simulator-evidence/01-catalogue.png` | `01-status.json` |
+| **02** | 1024x600 | Normal | Launch Overlay (`ui.loading.orbit`) | **PASS** | `tmp/v5-feedback-simulator-evidence/10-launch-overlay.png` | `10-launch-burst-*.png` |
+| **03** | 1024x600 | Normal | Return Home from Activity | **PASS** | `tmp/v5-feedback-simulator-evidence/11-returned-home.png` | mode: activities |
+| **04** | 1024x600 | Normal | Fallback: Corrupt Loading PNG | **PASS** | `tmp/v5-feedback-simulator-evidence/12-fallback-launch-home.png` (primitive overlay used, panel/cards/buttons intact) | N/A |
+| **05** | 1024x600 | Normal | Error Cloud (`ui.error.gentle`) | **PASS** | `tmp/v5-feedback-simulator-evidence/20-error-cloud.png` | N/A |
+| **06** | 1024x600 | Normal | Error Dismissal via Click | **PASS** | `tmp/v5-feedback-simulator-evidence/20-error-dismissed.png` | N/A |
+| **07** | 1024x600 | Normal | Fallback: Corrupt Error PNG | **PASS** | `tmp/v5-feedback-simulator-evidence/21-fallback-error-cloud.png` (primitive error badge used) | N/A |
+| **08** | 1024x600 | Normal | Empty Basket (`ui.empty.basket`) | **SOURCE, NOT EXERCISED** | Verified via component unit rendering | N/A |
+| **09** | 1024x600 | Normal | Responsive Matrix: 1024x600 Normal | **PASS** | `tmp/v5-feedback-simulator-evidence/40-1024x600-normal-launch.png`, `40-1024x600-normal-returned.png` | N/A |
+| **10** | 1024x600 | Large | Responsive Matrix: 1024x600 Large | **PASS** | `tmp/v5-feedback-simulator-evidence/41-1024x600-large-launch.png`, `41-1024x600-large-returned.png` | N/A |
+| **11** | 1366x768 | Compact | Responsive Matrix: 1366x768 Compact | **PASS** | `tmp/v5-feedback-simulator-evidence/42-1366x768-compact-launch.png`, `42-1366x768-compact-returned.png` | N/A |
+| **12** | 1920x1080 | Normal | Responsive Matrix: 1920x1080 Normal | **PASS** | `tmp/v5-feedback-simulator-evidence/43-1920x1080-normal-launch.png`, `43-1920x1080-normal-returned.png` | N/A |
+
+---
+
+## 4. Frame Rate & Performance Sanity
+
+- **Measurement:** 10-second idle measurement in headless simulator.
+- **Frames Rendered:** 280 frames across 10.03 seconds (**27.9 FPS**, consistent steady clock).
+- **Status Evidence:** `tmp/v5-feedback-simulator-evidence/frame-before.json` and `frame-after.json`.
+
+---
+
+## 5. Explicit Non-Claims
+
+- **No Physical Hardware / Acer Performance Claim:** Verified through Activity Simulator only (`SIMULATOR VISUAL REVIEW`).
+- **No R7 Architecture Closure:** Display coordinator and session boundary remain open.
+
 

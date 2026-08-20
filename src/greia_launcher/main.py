@@ -468,6 +468,7 @@ class LauncherApplication:
         self._last_result = activity_session.result
         self._draw_launch_overlay(pygame, text="Starting…")
         pygame.display.flip()
+        self._on_frame_presented(pygame.display.get_surface(), pygame)
         _launch_feedback = time.monotonic()
         while self._last_result is None:
             # The child Activity owns the visible surface while running. Keep
@@ -485,6 +486,7 @@ class LauncherApplication:
                 if not is_ready and time.monotonic() - _launch_feedback > 0.1:
                     self._draw_launch_overlay(pygame, text="Starting…")
                     pygame.display.flip()
+                    self._on_frame_presented(pygame.display.get_surface(), pygame)
                     _launch_feedback = time.monotonic()
                 time.sleep(0.02)
         pygame.mouse.set_visible(False)
@@ -539,6 +541,9 @@ class LauncherApplication:
         self._next_rescan = now + self.RESCAN_SECONDS
         self._rescan_activities()
         self._rescan_profiles()
+
+    def _on_frame_presented(self, screen: Any, pygame: Any) -> None:
+        """Hook called immediately after a frame is presented."""
 
     def _rescan_activities(self) -> None:
         token = self.registry.discovery_token()

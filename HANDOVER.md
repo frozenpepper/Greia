@@ -225,6 +225,7 @@ ui.shadow.soft
 - `ui.panel.base` (`default`): integrated into `GreiaChildShell` via `SharedUiShellPanelMixin` framing profile picker and Activity catalogue (maximized height starting directly below category buttons `panel_top=52..62`, `bottom_margin=4` with true 640:420 aspect ratio framing full-scale cards) with isolated fail-soft fallback. Accepted at **SIMULATOR VISUAL REVIEW** scope via `docs/testing/2026-08-20_V5_SHARED_UI_PANEL_SIMULATOR.md`.
 - `ui.button.primary` (`default`, `hover`): integrated into `GreiaChildShell` via `SharedUiCategoryButtonMixin` for root Activity-category row with isolated fail-soft fallback preserving cards and panel. Accepted at **SIMULATOR VISUAL REVIEW** scope via `docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md`.
 - `ui.avatar.frame` (`default`): integrated into `GreiaChildShell` via `SharedUiProfileChromeMixin` for profile-picker cards and active-profile switcher badge with isolated fail-soft fallback. Accepted at **SIMULATOR VISUAL REVIEW** scope via `docs/testing/2026-08-21_V5_SHARED_PROFILE_IDENTITY_SIMULATOR.md`.
+- `ui.loading.orbit`, `ui.error.gentle`, `ui.empty.basket`: integrated into `GreiaChildShell` via `SharedUiFeedbackMixin` for launch overlay, catalogue error badge, and empty state with isolated fail-soft fallback. Accepted at **SIMULATOR VISUAL REVIEW** scope via `docs/testing/2026-08-21_V5_SHARED_FEEDBACK_SIMULATOR.md`.
 
 ### Activity semantic resolver — source implemented
 

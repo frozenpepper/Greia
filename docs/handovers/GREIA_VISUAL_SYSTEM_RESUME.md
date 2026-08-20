@@ -102,15 +102,19 @@ ui.card.activity     SIMULATOR VISUAL REVIEW
 ui.panel.base        SIMULATOR VISUAL REVIEW
 ui.button.primary    SIMULATOR VISUAL REVIEW
 ui.avatar.frame      SIMULATOR VISUAL REVIEW
+ui.loading.orbit     SIMULATOR VISUAL REVIEW
+ui.error.gentle      SIMULATOR VISUAL REVIEW
+ui.empty.basket      SOURCE (NOT EXERCISED)
 ```
 
-The latest accepted profile-identity run also confirmed:
+The latest accepted feedback run confirmed:
 
-- the Activity panel is maximized vertically from immediately below the category row while preserving the authored 640:420 ratio;
-- full large Activity cards remain around 198–205 px where geometry permits;
-- `GREIA_SIMULATOR_HEADLESS=1` / `--headless` uses SDL dummy video/audio for non-intrusive simulator execution while preserving real Shell rendering into pixel buffers;
-- the 6-row responsive matrix remains accepted at simulator scope;
-- frame sanity was ~27.4 FPS in that headless run.
+- Activity launch overlay with `ui.loading.orbit` centered on calm translucent background and readable status text, visibly blocking interaction during startup;
+- catalogue-error state with `ui.error.gentle` error cloud in top-right dismissible on click;
+- isolated corrupt PNG fail-soft fallbacks;
+- responsive matrix across 4 resolutions (1024x600 normal/large, 1366x768 compact, 1920x1080 normal);
+- `GREIA_SIMULATOR_HEADLESS=1` / `--headless` non-intrusive headless execution;
+- frame sanity of ~28.0 FPS.
 
 No physical Acer/Pi visual-performance claim and no R7 closure.
 
@@ -160,6 +164,8 @@ Already accepted:
 - `ui.card.activity/default|focused` renders large Activity tiles;
 - `ui.button.primary/default|hover` renders the root category row;
 - `ui.avatar.frame/default` frames profile picker identities and the active-profile switcher;
+- `ui.loading.orbit/default` renders during Activity launch overlay;
+- `ui.error.gentle/default` renders dismissible catalogue error badge;
 - `ui.shadow.soft` provides shared tile grounding;
 - all remain presentation-only with narrow fail-soft fallback.
 
@@ -167,14 +173,14 @@ Simulator testing should prefer headless mode for routine local-agent visual acc
 
 ---
 
-# 7. Current exact gate — shared Shell feedback states
+# 7. Completed gate — shared Shell feedback states
 
-New explicit runtime-rendition selections:
+Accepted consumers:
 
 ```text
 ui.loading.orbit/default
 ui.error.gentle/default
-ui.empty.basket/default
+ui.empty.basket/default (source)
 ```
 
 Source masters:
@@ -185,7 +191,7 @@ assets/visual/ui/v0.1/error_cloud.svg
 assets/visual/ui/v0.1/empty_basket.svg
 ```
 
-Expected generated runtime files after `make visual-assets`:
+Generated runtime files:
 
 ```text
 assets/visual/runtime/v1/ui/loading_orbit.png
@@ -200,22 +206,13 @@ src/greia_launcher/feedback_presentation.py
 src/greia_launcher/child_shell.py
 ```
 
-Current source behavior:
-
-1. normal Activity launch overlay uses `ui.loading.orbit` plus interface-scaled launch text;
-2. launch visual failure falls back to the existing primitive launch overlay without changing lifecycle;
-3. catalogue-error state uses `ui.error.gentle` as the dismissible error affordance;
-4. error visual failure falls back only the error affordance, not the accepted panel/cards/buttons/profile frame;
-5. genuine empty Activity catalogue state uses `ui.empty.basket`; profile-empty state retains its existing Greia identity fallback;
-6. empty visual failure falls back to the previous empty renderer.
-
-Evidence is **SOURCE only** until the simulator protocol runs:
+Accepted protocol:
 
 ```text
 docs/testing/2026-08-21_V5_SHARED_FEEDBACK_SIMULATOR.md
 ```
 
-If the current normal simulator cannot legitimately reach an empty Activity catalogue, record `ui.empty.basket` as SOURCE / NOT EXERCISED rather than fabricating PASS evidence.
+All 4 responsive matrix viewports, launch overlay burst, return Home lifecycle, error cloud appearance & dismissal, corrupt PNG fallback cases, and 28.0 FPS frame sanity passed with evidence in `tmp/v5-feedback-simulator-evidence/`.
 
 ---
 
@@ -223,19 +220,14 @@ If the current normal simulator cannot legitimately reach an empty Activity cata
 
 ```text
 1. sync current main
-2. run make visual-assets to generate loading/error/empty PNGs + regenerated catalogue
-3. start the Greia Activity Simulator with GREIA_SIMULATOR_HEADLESS=1
-4. execute docs/testing/2026-08-21_V5_SHARED_FEEDBACK_SIMULATOR.md
-5. accept/reject the loading overlay and error state from real simulator screenshots
-6. exercise empty state only if legitimately reachable through normal Greia policy
-7. verify isolated corrupt-PNG fallbacks
-8. run responsive overlay matrix + frame sanity
-9. fix only shared/root causes
-10. update plan/resume/HANDOVER/LOCAL_AGENT_RESULT.md
-11. commit and push accepted work to main
+2. continue with the next targeted product-visible Shell tranche or Web Activity semantic adapter
+3. preserve headless simulator testing (GREIA_SIMULATOR_HEADLESS=1) so local work is non-intrusive
+4. run full responsive matrix and fail-soft verification
+5. update plan/resume/HANDOVER/LOCAL_AGENT_RESULT.md
+6. commit and push accepted work to main
 ```
 
-After this gate, continue with another coherent product-visible Shell tranche or the Web semantic adapter. Do not return to new environment-pack production unless a concrete reusable coverage gap appears.
+Do not return to new environment-pack production unless a concrete reusable coverage gap appears.
 
 ---
 
@@ -248,11 +240,6 @@ docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md
 docs/testing/2026-08-20_V5_SHARED_UI_PANEL_SIMULATOR.md
 docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md
 docs/testing/2026-08-21_V5_SHARED_PROFILE_IDENTITY_SIMULATOR.md
-```
-
-Current pending protocol:
-
-```text
 docs/testing/2026-08-21_V5_SHARED_FEEDBACK_SIMULATOR.md
 ```
 
