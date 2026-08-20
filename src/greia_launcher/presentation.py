@@ -877,8 +877,7 @@ class GreiaLauncherPresentation(LauncherApplication):
                 pad_y = 12
                 w = rect.width + pad_x * 2
                 h = rect.height + pad_y * 2
-                surf = pygame.Surface((w, h)).convert()
-                surf.fill(theme.background)
+                surf = pygame.Surface((w, h), pygame.SRCALPHA)
                 local_rect = pygame.Rect(pad_x, pad_y, rect.width, rect.height)
                 self._draw_activity_tile_content(
                     surf, local_rect, activity, state, theme, pygame

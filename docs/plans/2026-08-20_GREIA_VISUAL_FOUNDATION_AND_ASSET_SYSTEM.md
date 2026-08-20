@@ -203,14 +203,36 @@ docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md
 
 All 6 responsive matrix rows, keyboard navigation, hover, return Home lifecycle, fail-soft fallbacks (missing catalogue, malformed catalogue, corrupt PNG), and 27.2 FPS frame sanity check passed with full evidence in `tmp/v5-card-simulator-evidence/`.
 
-## 4.9 After the current simulator gates
+## 4.9 Second visible shared UI consumer — ACCEPTED (SIMULATOR VISUAL REVIEW)
 
-Following simulator acceptance of `ui.shadow.soft` and `ui.card.activity`:
+The production child Shell now consumes `ui.panel.base` (`default`) through:
 
-1. record the first Python Activity shared-visual seam as **SIMULATOR VISUAL REVIEW**;
-2. record `ui.card.activity` as a substantial visible Shell consumer at **SIMULATOR VISUAL REVIEW** scope;
-3. design the future Web equivalent around the same semantic IDs/variants through a controlled URL/handle adapter, not host filesystem exposure;
-4. continue visible Greia integration by choosing the next existing shared UI family only where it materially improves the real Shell (likely `ui.panel.base` / category or launch surfaces, then `ui.button.primary`) rather than creating more proof-only consumers.
+```text
+src/greia_launcher/shared_ui_presentation.py
+src/greia_launcher/child_shell.py
+```
+
+Behavior:
+- `ui.panel.base` visually frames both profile picker and Activity catalogue;
+- authored 640:420 aspect ratio is preserved across all viewports;
+- rainbow header, category bar, avatar, and Activity cards remain on top and unclipped;
+- fail-soft isolation disables only panel framing on failure without affecting independent card artwork.
+
+Accepted via Activity Simulator protocol:
+
+```text
+docs/testing/2026-08-20_V5_SHARED_UI_PANEL_SIMULATOR.md
+```
+
+All 6 responsive matrix viewports, profile picker, activity catalogue, return Home lifecycle, 3 fail-soft cases (missing catalogue, malformed catalogue, corrupt panel PNG), and 29.5 FPS frame sanity check passed with full evidence in `tmp/v5-panel-simulator-evidence/`.
+
+## 4.10 After the current simulator gates
+
+Following simulator acceptance of `ui.shadow.soft`, `ui.card.activity`, and `ui.panel.base`:
+
+1. record `ui.panel.base` as an accepted visible Shell consumer at **SIMULATOR VISUAL REVIEW** scope;
+2. design the future Web equivalent around the same semantic IDs/variants through a controlled URL/handle adapter;
+3. continue visible Greia integration by choosing the next existing shared UI family only where it materially improves the real Shell (e.g. `ui.button.primary` or modal surfaces).
 
 ---
 
@@ -220,16 +242,16 @@ Following simulator acceptance of `ui.shadow.soft` and `ui.card.activity`:
 |---|---|
 | Stable guide | `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` |
 | Resume | `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` |
-| Active focus | **V5 — visible shared Activity cards accepted in Activity Simulator** |
+| Active focus | **V5 — visible shared Shell panel + Activity cards accepted in Activity Simulator** |
 | Environment coverage | V4 complete through Water/Pond; no new pack without concrete gap |
 | Catalogue/renditions | explicit semantic catalogue + generated PNG runtime catalogue present |
 | First Shell consumer | `ui.shadow.soft` accepted at **SIMULATOR VISUAL REVIEW** scope |
 | Visible Shell card consumer | `ui.card.activity/default|focused` accepted at **SIMULATOR VISUAL REVIEW** scope |
+| Visible Shell panel consumer | `ui.panel.base/default` accepted at **SIMULATOR VISUAL REVIEW** scope |
 | Activity API | `get_shared_visual(...)` + `get_shared_visual_path(...)` implemented in source |
 | First Activity consumer | Shape Garden consumes `ui.shadow.soft` in source with optional fallback |
-| Card acceptance | **ACCEPTED (SIMULATOR VISUAL REVIEW)** |
-| Completed protocols | `docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md` |
-| Next exact action | proceed with remaining visible shared UI integration (`ui.panel.base` / category panels or `ui.button.primary`) or Web activity semantic visual adapter |
+| Completed protocols | `docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md`; `docs/testing/2026-08-20_V5_SHARED_UI_PANEL_SIMULATOR.md` |
+| Next exact action | proceed with remaining visible shared UI integration (`ui.button.primary`) or Web activity semantic visual adapter |
 
 ---
 

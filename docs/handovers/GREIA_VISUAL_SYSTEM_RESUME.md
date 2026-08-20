@@ -155,6 +155,7 @@ The production child Shell now consumes:
 ```text
 ui.card.activity/default
 ui.card.activity/focused
+ui.panel.base/default
 ```
 
 through:
@@ -164,22 +165,24 @@ src/greia_launcher/shared_ui_presentation.py
 src/greia_launcher/child_shell.py
 ```
 
-The shared card path is presentation-only:
+The shared visual path is presentation-only:
 
+- `ui.panel.base` frames profile picker and Activity catalogue preserving its authored 640:420 aspect ratio;
 - normal cards use the reviewed default master;
 - selected / hovered / launching cards use the focused master;
 - authored 360:430 portrait geometry is preserved instead of stretching into a square;
 - icon and localized title are placed into the authored illustration well and label band;
 - logical launcher hit targets/navigation/lifecycle remain unchanged;
-- the existing primitive tile renderer is the fail-soft fallback if the optional shared card path fails.
+- existing primitive renderers and background theme provide narrow fail-soft fallbacks.
 
-Validated via Activity Simulator protocol:
+Validated via Activity Simulator protocols:
 
 ```text
 docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md
+docs/testing/2026-08-20_V5_SHARED_UI_PANEL_SIMULATOR.md
 ```
 
-Current evidence: **SIMULATOR VISUAL REVIEW** (6/6 responsive rows, selection/hover, return Home, fallbacks, 27.2 FPS frame sanity).
+Current evidence: **SIMULATOR VISUAL REVIEW** (`ui.shadow.soft`, `ui.card.activity`, `ui.panel.base`).
 
 ---
 
@@ -187,7 +190,7 @@ Current evidence: **SIMULATOR VISUAL REVIEW** (6/6 responsive rows, selection/ho
 
 ```text
 1. implement Web Activity semantic visual adapter using the same IDs/variants without host path exposure
-2. continue visible Greia Shell integration with existing shared UI families (ui.panel.base / category panels, ui.button.primary)
+2. continue visible Greia Shell integration with existing shared UI families (ui.button.primary)
 3. do not return to new environment-pack production unless a concrete reusable gap appears
 ```
 
@@ -198,6 +201,7 @@ Current evidence: **SIMULATOR VISUAL REVIEW** (6/6 responsive rows, selection/ho
 ```text
 docs/testing/2026-08-20_V5_ACTIVITY_SHARED_VISUAL_SIMULATOR.md
 docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md
+docs/testing/2026-08-20_V5_SHARED_UI_PANEL_SIMULATOR.md
 ```
 
 For owner-directed local-agent runtime/visual/fallback/responsive acceptance, use the Greia Activity Simulator.

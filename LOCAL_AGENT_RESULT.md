@@ -173,3 +173,77 @@ All acceptance was performed through the Greia Activity Simulator (`http://127.0
 
 - **No Physical Hardware / Acer Performance Claim:** Verified through Activity Simulator only (`SIMULATOR VISUAL REVIEW`).
 - **No R7 Architecture Closure:** Display coordinator and session boundary remain open.
+
+---
+
+# Greia V5 Shared Shell Panel — Simulator Acceptance Result
+
+**Date:** 2026-08-20  
+**Repository:** `frozenpepper/Greia` (`main`)  
+**Runbook Authority:** `docs/testing/2026-08-20_V5_SHARED_UI_PANEL_SIMULATOR.md`  
+**Consumer:** `ui.panel.base` (`default`)  
+**Evidence Class:** `SIMULATOR VISUAL REVIEW`  
+
+---
+
+## 1. Git & Commit Summary
+
+- **Start Base SHA:** `a5d7a38b2512fb0f423dd7d2919dbfc3a802ec8c`
+- **Head SHA:** (Current working tree)
+
+---
+
+## 2. Shared Shell Panel Integration Details
+
+- **Semantic Asset ID:** `ui.panel.base`, variant `default = "visual/runtime/v1/ui/panel_base.png"`
+- **Implementation Mixin:** `SharedUiShellPanelMixin` in `src/greia_launcher/shared_ui_presentation.py` mixed into `GreiaChildShell`.
+- **Aspect Ratio & Composition:** Authored 640:420 aspect ratio maintained across all viewports; panel frames both profile picker and activity catalogue without occluding rainbow header, category bar, avatar, or activity cards.
+- **Fail-Soft Isolation:** Any cache/catalogue/image failure sets `self._shared_panel_disabled = True`, falling back cleanly to the background theme without disabling independent shared card artwork or causing render loops.
+
+---
+
+## 3. Greia Simulator Acceptance Matrix
+
+All acceptance was performed through the Greia Activity Simulator (`http://127.0.0.1:8767`) with isolated state root `$HOME/.greia-simulator-v5-panel`:
+
+| Test # | Viewport | Interface Size | Mode | Result | Screenshot Evidence | Status File |
+|---|---|---|---|---|---|---|
+| **01** | 1024x600 | Normal | Profile Picker Baseline | **PASS** | `tmp/v5-panel-simulator-evidence/01-profile-1024x600-normal.png` | `01-status-profile.json` |
+| **02** | 1024x600 | Normal | Activities Baseline | **PASS** | `tmp/v5-panel-simulator-evidence/02-activities-1024x600-normal.png` | `02-status-activities.json` |
+| **03** | 1024x600 | Normal | Return Home & Lifecycle | **PASS** | `tmp/v5-panel-simulator-evidence/03-returned-home.png` | mode: activities |
+| **04** | 1024x600 | Normal | Fallback: Missing Catalogue Profile | **PASS** | `tmp/v5-panel-simulator-evidence/10-fallback-missing-catalogue-profile.png` | N/A |
+| **05** | 1024x600 | Normal | Fallback: Missing Catalogue Activities | **PASS** | `tmp/v5-panel-simulator-evidence/10-fallback-missing-catalogue-activities.png` | N/A |
+| **06** | 1024x600 | Normal | Fallback: Malformed Catalogue | **PASS** | `tmp/v5-panel-simulator-evidence/11-fallback-malformed-catalogue.png` | N/A |
+| **07** | 1024x600 | Normal | Fallback: Corrupt Panel PNG Profile | **PASS** | `tmp/v5-panel-simulator-evidence/12-fallback-corrupt-panel-profile.png` | N/A |
+| **08** | 1024x600 | Normal | Fallback: Corrupt Panel PNG Activities | **PASS** | `tmp/v5-panel-simulator-evidence/12-fallback-corrupt-panel-activities.png` | N/A |
+| **09** | 1024x600 | Normal | Responsive Row 1 Profile | **PASS** | `tmp/v5-panel-simulator-evidence/20-1024x600-normal-profile.png` | N/A |
+| **10** | 1024x600 | Normal | Responsive Row 1 Activities | **PASS** | `tmp/v5-panel-simulator-evidence/20-1024x600-normal.png` | N/A |
+| **11** | 1024x600 | Large | Responsive Row 2 Profile | **PASS** | `tmp/v5-panel-simulator-evidence/21-1024x600-large-profile.png` | N/A |
+| **12** | 1024x600 | Large | Responsive Row 2 Activities | **PASS** | `tmp/v5-panel-simulator-evidence/21-1024x600-large.png` | N/A |
+| **13** | 1280x800 | Normal | Responsive Row 3 Activities | **PASS** | `tmp/v5-panel-simulator-evidence/22-1280x800-normal.png` | N/A |
+| **14** | 1366x768 | Compact | Responsive Row 4 Activities | **PASS** | `tmp/v5-panel-simulator-evidence/23-1366x768-compact.png` | N/A |
+| **15** | 1920x1080 | Normal | Responsive Row 5 Profile | **PASS** | `tmp/v5-panel-simulator-evidence/24-1920x1080-normal-profile.png` | N/A |
+| **16** | 1920x1080 | Normal | Responsive Row 5 Activities | **PASS** | `tmp/v5-panel-simulator-evidence/24-1920x1080-normal.png` | N/A |
+| **17** | 1111x700 | Normal | Responsive Row 6 Activities | **PASS** | `tmp/v5-panel-simulator-evidence/25-1111x700-normal.png` | N/A |
+
+---
+
+## 4. Frame Rate & Performance Sanity
+
+- **Measurement:** 10-second idle measurement in Activity catalogue.
+- **Frames Rendered:** 295 frames across 10.0 seconds (**29.5 FPS**, consistent with Greia 30 FPS clock, zero starvation).
+- **Status Evidence:** `tmp/v5-panel-simulator-evidence/frame-before.json` and `frame-after.json`.
+
+---
+
+## 5. Failures Found and Corrected During Verification
+
+1. **Opaque Tile Cache Surface Blitting:** `_tile_surface_cache` in `GreiaLauncherPresentation._draw_activity_tile` previously initialized its cached sub-surface with an opaque `theme.background` fill (`Surface.convert().fill(...)`), causing opaque rectangular blocks to overwrite the `ui.panel.base` framing. Fixed by initializing cached tile surfaces with `pygame.Surface((w, h), pygame.SRCALPHA)` to cleanly preserve transparent panel compositing.
+
+---
+
+## 6. Explicit Non-Claims
+
+- **No Physical Hardware / Acer Performance Claim:** Verified through Activity Simulator only (`SIMULATOR VISUAL REVIEW`).
+- **No R7 Architecture Closure:** Display coordinator and session boundary remain open.
+
