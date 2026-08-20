@@ -1,23 +1,26 @@
 #!/usr/bin/env python3
-"""Generate Greia boot artwork derivatives from the canonical source.
+"""Generate Greia boot artwork without destructive colour extraction.
 
-The canonical Greia boot logo is the final frame of the legacy boot
-animation (preserved as historical source material at
-`assets/boot/source/legacy-plymouth-theme/frames/frame_0051.png`), which
-contains the Professor Pip mascot plus the GREIA wordmark drawn in
-cream/white on a dark navy background.
+The retained final legacy frame is the authoritative artwork source.  Earlier
+Greia builds thresholded that frame into a binary mask and repainted the result
+indigo on white.  That intentionally destroyed colour, antialiasing and detail,
+and is the direct source of the white/blue speckled splash seen on hardware.
 
-This tool derives the white-frame boot assets from that source so GRUB,
-the initramfs framebuffer cover and the launcher intro all use the same
-canonical artwork lineage:
+This generator keeps the source RGB pixels intact and places the portrait source
+at native resolution in a landscape presentation canvas.  The canvas supplies
+safe visual margins so GRUB and the early framebuffer renderer can scale the
+whole composition proportionally on displays with different aspect ratios
+without stretching the portrait artwork itself.
 
-- `assets/boot/source/greia-boot-logo.png`   canonical white/dark derivative
-- `assets/boot/static/greia-boot-logo.png`   GRUB-compatible PNG
-- `build/overlay/etc/greia-boot/boot-logo.ppm`        initramfs P6 PPM (target)
-- `build/installer-overlay/etc/greia-boot/boot-logo.ppm`  initramfs P6 PPM (installer)
+Generated derivatives:
 
-The renderer does not decode PNG in initramfs, so the runtime initramfs asset
-is a P6 PPM generated here at build/source time.
+* ``assets/boot/source/greia-boot-logo.png``: exact full-colour source frame;
+* ``assets/boot/static/greia-boot-logo.png``: 1600x900 presentation canvas;
+* target/live ``boot-logo.ppm``: lossless P6 encodings of that same canvas;
+* ``build/overlay/boot/grub/greia-theme.txt``: proportional centred GRUB theme.
+
+Physical builders must regenerate these derivatives immediately before building
+rather than trusting whatever generated copies happen to be checked out.
 """
 
 from __future__ import annotations
@@ -28,17 +31,6 @@ from pathlib import Path
 
 from PIL import Image
 
-
-# The dark navy background of the legacy frames. Pixels at or below this
-# brightness belong to the background; brighter pixels form the logo.
-_BACKGROUND_THRESHOLD = 150
-# Brand indigo for the white-frame logo. This must render clearly on the
-# reference hardware's 16-bit (RGB565) framebuffer as well as 24/32-bit:
-# (62,70,130) collapses to about RGB(56,68,128) in RGB565, which stays clearly
-# visible on white (the older near-black navy (13,30,60) rendered as black on
-# RGB565 and looked broken).
-_LOGO_COLOR = (62, 70, 130)
-_WHITE = (255, 255, 255)
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_FRAME = (
@@ -54,44 +46,57 @@ SOURCE_OUT = ROOT / "assets" / "boot" / "source" / "greia-boot-logo.png"
 STATIC_OUT = ROOT / "assets" / "boot" / "static" / "greia-boot-logo.png"
 TARGET_PPM = ROOT / "build" / "overlay" / "etc" / "greia-boot" / "boot-logo.ppm"
 INSTALLER_PPM = ROOT / "build" / "installer-overlay" / "etc" / "greia-boot" / "boot-logo.ppm"
+GRUB_THEME = ROOT / "build" / "overlay" / "boot" / "grub" / "greia-theme.txt"
+
+EXPECTED_SOURCE_SIZE = (222, 600)
+CANVAS_SIZE = (1600, 900)
+MIN_SOURCE_COLOURS = 128
 
 
-def is_background(pixel: tuple[int, int, int]) -> bool:
-    r, g, b = pixel
-    return r < 35 and g < 55 and b < 95 and (r + g + b) < _BACKGROUND_THRESHOLD
+def canonical_full_color_frame(source: Path) -> Image.Image:
+    """Load the source as RGB without masking, recolouring or quantising it."""
+
+    return Image.open(source).convert("RGB")
 
 
-def derive_white_frame(source: Path) -> Image.Image:
-    """Return the canonical logo rendered as dark-on-white from the legacy frame.
+def _background_colour(image: Image.Image, sample: int = 12) -> tuple[int, int, int]:
+    """Estimate the artwork background from small samples in all four corners.
 
-    The legacy animation draws the Greia logo in lighter tones on a dark navy
-    gradient. A simple brightness check over-captures the navy mid-tones and
-    produces a speckled, glitchy logo. Instead we keep pixels that are clearly
-    lighter than the navy floor (luminance > a fixed threshold) and apply a
-    small median filter to remove anti-aliasing/compression speckle so the
-    silhouette is clean at the 222x600 reference size.
+    The retained frame owns its background palette.  Sampling the corners lets
+    the landscape canvas extend that palette without attempting to segment the
+    foreground, which is exactly the operation that previously created speckle.
     """
-    from PIL import ImageFilter
 
-    image = Image.open(source).convert("RGB")
     width, height = image.size
-    pixels = image.load()
-    mask = Image.new("L", (width, height), 0)
-    mask_px = mask.load()
-    for y in range(height):
-        for x in range(width):
-            r, g, b = pixels[x, y]
-            luminance = (r + g + b) / 3.0
-            if luminance > 90:
-                mask_px[x, y] = 255
-    mask = mask.filter(ImageFilter.MedianFilter(3))
-    output = Image.new("RGB", (width, height), _WHITE)
-    out = output.load()
-    for y in range(height):
-        for x in range(width):
-            if mask_px[x, y] > 128:
-                out[x, y] = _LOGO_COLOR
-    return output
+    sample = min(sample, width, height)
+    pixels: list[tuple[int, int, int]] = []
+    boxes = (
+        (0, 0, sample, sample),
+        (width - sample, 0, width, sample),
+        (0, height - sample, sample, height),
+        (width - sample, height - sample, width, height),
+    )
+    for box in boxes:
+        pixels.extend(image.crop(box).getdata())
+    count = len(pixels)
+    return tuple(sum(pixel[channel] for pixel in pixels) // count for channel in range(3))
+
+
+def compose_boot_canvas(source: Image.Image) -> tuple[Image.Image, tuple[int, int, int]]:
+    """Center the untouched portrait frame inside a stable landscape canvas."""
+
+    if source.size != EXPECTED_SOURCE_SIZE:
+        raise ValueError(
+            f"unexpected canonical source size {source.size}; expected {EXPECTED_SOURCE_SIZE}"
+        )
+    background = _background_colour(source)
+    canvas = Image.new("RGB", CANVAS_SIZE, background)
+    x = (CANVAS_SIZE[0] - source.width) // 2
+    y = (CANVAS_SIZE[1] - source.height) // 2
+    # Paste at native size.  The original RGB pixels remain byte-for-byte intact
+    # inside the canvas; only later whole-canvas display scaling may resample.
+    canvas.paste(source, (x, y))
+    return canvas, background
 
 
 def write_ppm(image: Image.Image, path: Path) -> None:
@@ -104,37 +109,66 @@ def write_ppm(image: Image.Image, path: Path) -> None:
         handle.write(rgb.tobytes())
 
 
+def write_grub_theme(background: tuple[int, int, int], path: Path) -> None:
+    colour = "#%02x%02x%02x" % background
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        "# Generated by tools/generate_boot_artwork.py.\n"
+        "# The desktop image is a landscape composition with safe margins;\n"
+        "# padding preserves its aspect ratio on every GRUB framebuffer.\n"
+        'title-text: ""\n'
+        f'desktop-color: "{colour}"\n'
+        'desktop-image: "greia-boot-logo.png"\n'
+        'desktop-image-scale-method: "padding"\n'
+        'desktop-image-h-align: "center"\n'
+        'desktop-image-v-align: "center"\n',
+        encoding="utf-8",
+    )
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--source",
         type=Path,
         default=SOURCE_FRAME,
-        help="canonical boot logo source frame",
+        help="canonical full-colour boot source frame",
     )
     args = parser.parse_args(argv)
 
     if not args.source.is_file():
         print(f"canonical boot logo source missing: {args.source}", file=sys.stderr)
         return 1
-    image = derive_white_frame(args.source)
-    if image.size != (222, 600):
+
+    source = canonical_full_color_frame(args.source)
+    if source.size != EXPECTED_SOURCE_SIZE:
         print(
-            f"unexpected canonical source size {image.size}; expected (222, 600)",
+            f"unexpected canonical source size {source.size}; expected {EXPECTED_SOURCE_SIZE}",
+            file=sys.stderr,
+        )
+        return 1
+    if len(set(source.getdata())) < MIN_SOURCE_COLOURS:
+        print(
+            "canonical source unexpectedly lacks full-colour detail; refusing to generate splash",
             file=sys.stderr,
         )
         return 1
 
+    canvas, background = compose_boot_canvas(source)
+
     SOURCE_OUT.parent.mkdir(parents=True, exist_ok=True)
-    image.save(SOURCE_OUT)
+    source.save(SOURCE_OUT)
     STATIC_OUT.parent.mkdir(parents=True, exist_ok=True)
-    image.save(STATIC_OUT)
-    write_ppm(image, TARGET_PPM)
-    write_ppm(image, INSTALLER_PPM)
-    print(f"wrote {SOURCE_OUT}")
-    print(f"wrote {STATIC_OUT}")
+    canvas.save(STATIC_OUT)
+    write_ppm(canvas, TARGET_PPM)
+    write_ppm(canvas, INSTALLER_PPM)
+    write_grub_theme(background, GRUB_THEME)
+
+    print(f"wrote {SOURCE_OUT} ({source.width}x{source.height}, full colour)")
+    print(f"wrote {STATIC_OUT} ({canvas.width}x{canvas.height}, proportional canvas)")
     print(f"wrote {TARGET_PPM}")
     print(f"wrote {INSTALLER_PPM}")
+    print(f"wrote {GRUB_THEME}")
     return 0
 
 
