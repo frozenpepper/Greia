@@ -1,12 +1,12 @@
 # Greia Visual Asset Library
 
-**Status:** active shared visual-library source; not a runtime loader contract  
+**Status:** active shared visual-library source + V5 explicit-consumption implementation seed  
 **Active art plan:** `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`  
 **Authoring skill:** `skills/greia-visual-authoring/SKILL.md`
 
 This tree is the source home for Greia's reusable visual library. Shell and Activities should ultimately share this coherent world rather than accumulate unrelated private art.
 
-**Nothing here authorizes runtime filesystem discovery.** Exact catalogue/loader APIs remain source-owned and require architecture review.
+**Nothing here authorizes runtime filesystem discovery.** Runtime consumption is explicit, semantic and bounded.
 
 ## Production rule
 
@@ -21,7 +21,7 @@ assets/visual/library_v0.1.toml
 assets/visual/packs_v0.1.toml
 ```
 
-`library_v0.1.toml` owns the character/archetype/expression/motion seed inventory. `packs_v0.1.toml` owns the current pack-level design/review inventory and reuse dependencies.
+`library_v0.1.toml` owns the character/archetype/expression/motion seed inventory. `packs_v0.1.toml` owns pack-level design/review inventory and reuse dependencies.
 
 Neither file is a runtime discovery contract.
 
@@ -77,7 +77,7 @@ Candidate shared masters for panels, cards/states, buttons/states, tabs, badges,
 
 `assets/visual/environments/water_pond/v0.1/`
 
-14 water-specific candidate masters covering pond-water/shoreline, lilies/reeds/duckweed, dock/stepping stones, ripple/shimmer/reflection treatment and restrained fish/dragonfly/bubble FX. Its target references reuse canonical Forest distant hills/tree line and the catalog points to Forest generic rocks/log/grass/flowers rather than duplicating them.
+14 water-specific candidate masters covering pond-water/shoreline, lilies/reeds/duckweed, dock/stepping stones, ripple/shimmer/reflection treatment and restrained fish/dragonfly/bubble FX. Target references reuse canonical Forest distant hills/tree line and the catalog points to Forest generic rocks/log/grass/flowers rather than duplicating them.
 
 Water/Pond includes independent 1024×600 / 800×600 layered references. The individual review corrected weak dock/lily-pad treatments and the target pass strengthened water/reed depth before recording the candidate review.
 
@@ -107,11 +107,58 @@ physical_acceptance
 
 Presence in Git never means approved and a weaker approval scope does not imply a stronger one.
 
-## Asset metadata
+## V5 explicit runtime-rendition / consumption seed
 
-Reusable assets should record semantic ID, editable/source master, family/role, current state, provenance/license, intended scale where relevant, alpha requirements, layer/parallax role where relevant, and optional ambient-motion/theme variants.
+V5 deliberately extends the existing platform asset catalogue instead of adding directory discovery or a parallel framework.
 
-Committed Greia-created artwork still records provenance explicitly.
+Source authority:
+
+```text
+src/greia_platform/assets.py
+src/greia_platform/pygame_visual_assets.py
+assets/catalog/shared_visuals_v1_source.toml
+tools/build_visual_renditions.py
+Makefile: visual-assets
+tests/test_asset_catalogue.py
+tests/test_pygame_visual_assets.py
+```
+
+### Lookup
+
+`AssetCatalogue` supports explicit shared visuals with semantic ID, bounded kind, role and named variants while preserving the old icon contract. IDs share one namespace; paths are existence-checked and contained inside the assets root.
+
+### Build-time renditions
+
+`shared_visuals_v1_source.toml` is the first explicit selection of reviewed SVG UI masters/variants for runtime PNG generation.
+
+`tools/build_visual_renditions.py` uses build-host `rsvg-convert`/librsvg to generate PNG renditions and an explicit `assets/catalog/shared_visuals_v1.toml`. It validates source/output containment, kinds/variants, dimensions, duplicate output paths and generated PNG dimensions.
+
+The target device does **not** need an SVG renderer.
+
+`make visual-assets` is the explicit generation entrypoint.
+
+### Runtime Pygame cache
+
+`PygameVisualSurfaceCache`:
+
+- consumes only explicit catalogue PNG paths;
+- rejects SVG runtime paths;
+- keys by semantic ID + variant + requested size;
+- reuses `ui_core.BoundedCache`;
+- defaults to a 12-entry LRU;
+- limits each requested cached surface to 1024×600 pixels by default;
+- loads/scales only on a cache miss;
+- imports Pygame lazily and avoids display-dependent `convert()`/`convert_alpha()` in the loader.
+
+Provider-free cache tests are committed. An isolated local harness using the exact new cache source passed 9/9; this is not a repository-wide current-head PASS.
+
+### Current runtime boundary
+
+`rsvg-convert` is not installed in the present execution environment. Therefore the generated runtime PNGs/catalogue have **not** been built or validated here, and no Shell/Activity path has yet been switched to this catalogue/cache.
+
+All source visual packs therefore remain `runtime_consumed = false`.
+
+The next V5 gate is: generate/inspect the first renditions on an owner-controlled build checkout, run focused repository tests, then wire one existing controlled Shell/UI component path before generalizing to Activities/Web.
 
 ## Review discipline
 
@@ -123,32 +170,19 @@ Environment/UI families normally progress through:
 4. coherent pack subset;
 5. low-resolution composition using only real assets;
 6. restrained motion/parallax proof if useful;
-7. simulator/runtime/hardware evidence only after real integration.
+7. explicit build-time runtime renditions where selected;
+8. one bounded real consumer;
+9. simulator/runtime/hardware evidence only after real integration.
 
 Do not use a full-screen composition to conceal weak individual assets. Do not replace this workflow with generated scene/concept images.
 
-## Runtime boundary / next phase
-
-Broad candidate environment/UI coverage now exists. Additional environment families require a concrete reusable coverage gap; the next planned work is the V5 shared-consumption seam.
-
-Greia already has explicit platform asset code in:
-
-```text
-src/greia_platform/assets.py
-src/greia_platform/activity_assets.py
-assets/catalog/core_icons_v1.toml
-```
-
-Future shared visual consumption must extend that explicit manifest-driven pattern rather than introduce arbitrary directory scans or a second unrelated asset framework.
-
-Any runtime path must remain explicit and bounded:
+## Runtime invariants
 
 - semantic IDs/catalogues rather than arbitrary directory scans;
 - path containment and duplicate-ID rejection;
-- bounded caches;
+- pre-render SVG to PNG on build host, never on low-end target;
+- bounded caches and bounded requested surfaces;
 - no per-frame file/decode work;
 - static fallbacks for meaningful animated states;
 - no network/CDN dependency for core operation;
-- Python and future Web Activities consume the same semantic visual contract rather than parallel art libraries.
-
-All current visual packs remain `runtime_consumed = false` until an architecture-reviewed implementation changes that explicitly.
+- Python and future Web Activities ultimately consume the same semantic visual contract rather than parallel art libraries.
