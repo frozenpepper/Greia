@@ -81,6 +81,12 @@ For exact currently implemented APIs, schemas, command vocabularies and limits, 
 | Pygame child-control metrics, semantic interface-size composition and platform-system-safe Activity toolbar/content geometry | `src/greia_platform/activity_ui.py` |
 | platform-wide Pygame UI import surface | `src/greia_platform/pygame_ui.py` |
 | lightweight Pygame depth/shadow/raised-panel effects | `src/greia_platform/pygame_effects.py` |
+| explicit semantic visual/icon catalogue, typed shared visual variants and safe catalogue merge | `src/greia_platform/assets.py` |
+| bounded Pygame shared-visual PNG surface cache | `src/greia_platform/pygame_visual_assets.py` |
+| launcher optional shared-visual catalogue bridge/fallback | `src/greia_launcher/visual_assets.py` |
+| explicit reviewed shared-visual rendition source selection | `assets/catalog/shared_visuals_v1_source.toml` |
+| build-time SVG→PNG shared visual rendition generation | `tools/build_visual_renditions.py` |
+| generated shared visual rendition validation | `tools/validate_visual_renditions.py` |
 | child profile semantic interface-size persistence (`compact/normal/large`) | `src/greia_platform/ui_preferences.py` |
 | child theme/color/wallpaper persistence and bounded media import | `src/greia_platform/customization.py` |
 | bounded read-only Activity theme snapshot encoding | `src/greia_platform/theme_snapshot.py` |
@@ -138,6 +144,10 @@ Documentation may explain these contracts but must not invent a conflicting one.
 
 `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md` owns active **art/visual workstream** sequencing, its short current checkpoint and append-only art progress ledger. It is subordinate to accepted ADRs and the blocking architecture plan: visual/design/library work may advance where it does not bypass platform prerequisites, and it cannot close or reorder R7/R8/R9/R10/R14.
 
+`docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` is the stable visual-system architecture/index. It explains how the design authorities, source library, layered composition, semantic catalogue, build-time rendition pipeline, bounded runtime cache and Shell/Activity reuse direction fit together. It does **not** override ADRs or exact source contracts. Unlike the active plan, it should remain useful after the current workstream is closed.
+
+`docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` is the short current-session visual continuation contract. It should remain concise and be updated when the active visual phase, next exact action, blocker, testing rule or evidence boundary changes.
+
 The Activity Simulator is a developer-tooling tranche under ADR 0029. It does **not** move, bypass or close the R7/R8/R9/R10/R14 phase gates. Future HTML/Web simulator support must consume the canonical R9 Web runtime rather than implementing it in parallel.
 
 ADR 0030/R13B update-format and Parent-delivery source may advance as a non-closing cross-cutting tranche, but current single-root profiles do not thereby gain update activation authority. A/B layout, privileged slot staging, boot-health confirmation and rollback remain explicit R13B evidence gates.
@@ -157,13 +167,14 @@ docs/testing/2026-08-18_LOCAL_AGENT_FULL_TEST_AND_FIX_SESSION.md
 docs/testing/2026-08-18_RESPONSIVE_UI_ACCEPTANCE.md
 docs/testing/2026-08-18_MY_GREIA_ACCEPTANCE.md
 docs/testing/2026-08-19_ACTIVITY_SIMULATOR_ACCEPTANCE.md
+docs/testing/2026-08-20_V5_VISUAL_INTEGRATION_SIMULATOR_LOCAL_AGENT.md
 ```
 
-`docs/testing/LOCAL_AGENT_START_HERE.md` composes the current mandatory focused gate and evidence boundary for owner-controlled test sessions. The simulator acceptance protocol owns simulator-specific source/manual checks; it does not replace backend/hardware protocols.
+`docs/testing/LOCAL_AGENT_START_HERE.md` composes the current mandatory focused gate and evidence boundary for general owner-controlled test sessions. The simulator acceptance protocol owns simulator-specific source/manual checks; it does not replace backend/hardware protocols. The dated V5 visual-integration runbook is the current owner-directed local-agent procedure for the V5 tranche and requires runtime/visual/fallback/responsive acceptance through the Activity Simulator.
 
 ### 2.9 Agent/developer manuals — `docs/agents/*`, `docs/development/*`, `skills/*`
 
-`docs/agents/GREIA_AGENT_OPERATIONS.md` is the operational entry point for build/test/hardware work. `skills/greia-activity-authoring/SKILL.md` is the living Activity authoring guide. `skills/greia-visual-authoring/SKILL.md` is the living practical guide for model-assisted Greia character/scene/prop/FX/UI visual creation under the current art plan. `docs/development/GREIA_ACTIVITY_SIMULATOR.md` is the Activity Simulator developer/operator guide below ADR 0029. `docs/development/GREIA_SYSTEM_UPDATE_RELEASE_WORKFLOW.md` is the concise release-operator guide for signing, building, inspecting and pushing `.greiaupdate` artifacts below ADR 0030. These manuals must preserve the exact source/evidence/authority boundaries of the systems they explain.
+`docs/agents/GREIA_AGENT_OPERATIONS.md` is the operational entry point for build/test/hardware work. `skills/greia-activity-authoring/SKILL.md` is the living Activity authoring guide. `skills/greia-visual-authoring/SKILL.md` is the living practical guide for model-assisted Greia character/scene/prop/FX/UI visual creation and integration; it should point to `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` for the complete system map rather than trying to duplicate that architecture. `docs/development/GREIA_ACTIVITY_SIMULATOR.md` is the Activity Simulator developer/operator guide below ADR 0029. `docs/development/GREIA_SYSTEM_UPDATE_RELEASE_WORKFLOW.md` is the concise release-operator guide for signing, building, inspecting and pushing `.greiaupdate` artifacts below ADR 0030. These manuals must preserve the exact source/evidence/authority boundaries of the systems they explain.
 
 ### 2.10 Governance/licensing — `docs/governance/*`
 
@@ -184,6 +195,8 @@ docs/reviews/2026-08-19_ACTIVITY_SIMULATOR_HARDENING_RESPONSE.md
 The adversarial simulator review remains historical evidence of what was found. The hardening response records source disposition and does not convert unexecuted regressions into PASS evidence.
 
 ### 2.12 Visual/design manuals — `docs/design/*`
+
+`GREIA_ART_GRAPHICS_SYSTEM.md` is the **main visual-system landing page and architecture/index synthesis**. New humans or agents working on Greia visuals should start there. It connects the visual language, source asset library, composition model, semantic runtime catalogues, build-time PNG renditions, bounded runtime caches, Shell/Activity consumption direction and current workstream/resume files.
 
 `GREIA_VISUAL_STYLE_GUIDE.md` owns reusable visual-language direction. `GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md` owns the production-art inventory. The current art plan may sequence/refine candidate visual rules, but accepted reusable direction must be reconciled back into these living design authorities rather than living only in a progress document.
 
@@ -241,7 +254,8 @@ Architecture examples communicate semantics; they are not automatically current 
 - The hardened simulator regressions are committed but remain **UNPROVEN** until executed on the current head; source presence is not a PASS.
 - The desktop simulator is **not** an untrusted-code sandbox and cannot establish production Bubblewrap/filesystem/input-containment evidence.
 - HTML/Web simulator execution is **not implemented** merely because a structurally valid Web package can be discovered; current execution must fail as runtime unavailable until the canonical R9 Web adapter exists.
-- The new `assets/visual/` inventory and `skills/greia-visual-authoring/SKILL.md` are **design/library seed source**, not a runtime asset-loader API and not evidence that any canonical character asset is release-approved.
+- The broad `assets/visual/` source library and visual authoring/design documentation are candidate source/design assets, not proof that every pack is release-approved or runtime-consumed.
+- V5 source now contains an explicit shared-visual catalogue extension, build-time SVG→PNG rendition pipeline, generated-output validator, bounded Pygame visual cache and optional launcher bridge. Until a real Shell/Activity consumer is integrated and accepted through the named V5 protocol, do not claim the visual packs are runtime-consumed.
 - R7 remains open; Xorg/xinit is provisional compatibility behavior.
 
 ---
@@ -275,13 +289,14 @@ The simulator may help reproduce platform-independent Activity/layout/runtime se
 | system-update artifact/trust/delivery/backend/rollback behavior | ADR 0030 + `SYSTEM_UPDATES.md` + `GREIA_SYSTEM_UPDATE_RELEASE_WORKFLOW.md` + update source/tests + Parent docs/client + active plan/HANDOVER |
 | child visual personalization/My Greia scope | `MY_GREIA_SETTINGS.md` + source/tests + Activity skill when author-facing visual context changes |
 | launcher catalogue/category/icon/effects | launcher design + source/tests + Activity skill where author-facing |
-| visual character/scene/prop/FX/UI art direction or shared asset-library work | current art plan checkpoint + append-only art ledger + `skills/greia-visual-authoring/SKILL.md`; reconcile accepted reusable rules into visual style/art-requirements docs and update HANDOVER when continuation/evidence changes |
+| visual character/scene/prop/FX/UI art direction or shared asset-library work | `GREIA_ART_GRAPHICS_SYSTEM.md` if the stable architecture/index changes + current art plan checkpoint + append-only art ledger + `GREIA_VISUAL_SYSTEM_RESUME.md` if continuation changes + `skills/greia-visual-authoring/SKILL.md`; reconcile accepted reusable rules into visual style/art-requirements docs and update HANDOVER when continuation/evidence changes |
+| shared visual catalogue/rendition/cache/Shell-or-Activity consumption architecture | `GREIA_ART_GRAPHICS_SYSTEM.md` + exact source/tests + current art plan + visual resume + HANDOVER + visual skill when contributor workflow changes |
 | package install/update/remove/trust | Activity ecosystem docs + Activity skill + active plan + Parent docs where applicable |
 | installation/build/initramfs/display hardware contract | issue log + review/evidence + operator docs + active plan |
 | Parent UX/credentials/pairing | `PARENT_MANAGEMENT.md` + ADR 0022 if architectural + Parent client/source |
 | architecture decision | ADR + living architecture synthesis |
 | active implementation/progress | blocking active plan append + `HANDOVER.md` |
-| active art/design progress | art plan checkpoint + append-only ledger; `HANDOVER.md` when continuation/evidence changes |
+| active art/design progress | art plan checkpoint + append-only ledger; visual resume + `HANDOVER.md` when continuation/evidence changes |
 | executed verification | `HANDOVER.md` + durable review/evidence when useful |
 
 ---
@@ -294,9 +309,10 @@ Unless narrower instructions say otherwise:
 2. this documentation map
 3. relevant product docs / accepted ADRs (including ADR 0028 for localization/language work, ADR 0029 for simulator work and ADR 0030 for system-update work)
 4. `docs/engineering/ENGINEERING_FOUNDATIONS.md`
-5. the blocking active plan plus the current art plan when the task is visual/art-related
-6. `HANDOVER.md`
-7. relevant operator/agent/Activity/visual/development manual or skill
-8. exact source/runtime contracts being changed
+5. the blocking active plan
+6. for visual/art/graphics work: `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`, the active visual plan and `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md`
+7. `HANDOVER.md`
+8. relevant operator/agent/Activity/visual/development manual or skill
+9. exact source/runtime contracts being changed
 
 When documents conflict, resolve by authority class. If implementation intentionally changed, update derived manuals; if source conflicts with an accepted decision, resolve the architecture rather than quietly documenting the deviation.
