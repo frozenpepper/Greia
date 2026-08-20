@@ -33,7 +33,7 @@ from greia_platform.typography import FontRole, GreiaTypography
 
 REFERENCE_WIDTH = 1024
 REFERENCE_HEIGHT = 600
-STORAGE_KEY = "orchestra_animali.state.v2"
+STORAGE_KEY = "orchestra_animali.state.v3"
 
 # Grand Theater Palette
 STAGE_WALL_TOP = (22, 18, 42)
@@ -45,7 +45,7 @@ STAGE_WOOD_TOP = (180, 115, 60)
 STAGE_WOOD_BOTTOM = (110, 65, 30)
 STAGE_GOLD = (255, 215, 60)
 WHITE = (255, 255, 255)
-DARK_TEXT = (45, 35, 42)
+DARK_TEXT = (30, 41, 59)
 
 RAINBOW_COLORS = [
     (245, 75, 75),    # 1: C (Do) - Red
@@ -70,7 +70,7 @@ def _synth_wav(samples: list[int], rate: int = 22050) -> bytes:
         w.setnchannels(1)
         w.setsampwidth(2)
         w.setframerate(rate)
-        raw = b"".join(struct.pack("<h", max(-32767, min(32767, s))) for s in samples)
+        raw = b"".join(struct.pack("<h", max(-32767, min(32767, int(s)))) for s in samples)
         w.writeframes(raw)
     return buf.getvalue()
 
@@ -89,75 +89,81 @@ class SoundManager:
             self._enabled = False
 
     def _init_sounds(self) -> None:
+        # Piano 8 notes (Rich acoustic timbre)
         for freq in NOTE_FREQS:
             samples = []
             for i in range(8800):
                 t = i / 22050.0
-                env = math.exp(-t * 4.2)
-                val = int((math.sin(2 * math.pi * freq * t) * 0.72 +
-                           math.sin(4 * math.pi * freq * t) * 0.22 +
-                           math.sin(6 * math.pi * freq * t) * 0.06) * env * 15000)
+                env = math.exp(-t * 4.0)
+                val = int((math.sin(2 * math.pi * freq * t) * 0.68 +
+                           math.sin(4 * math.pi * freq * t) * 0.24 +
+                           math.sin(6 * math.pi * freq * t) * 0.08) * env * 15000)
                 samples.append(val)
             self._notes.append(pygame.mixer.Sound(io.BytesIO(_synth_wav(samples))))
 
-        # Drums (Bass + Snare pop)
-        bd_samples = []
-        for i in range(4500):
+        # 1. Grand Piano Chord Arpeggio
+        pn_samples = []
+        chord = [261.63, 329.63, 392.00, 523.25]
+        for i in range(10000):
             t = i / 22050.0
-            freq = max(45.0, 160.0 - t * 450.0)
-            env = math.exp(-t * 10.0)
-            val = int(math.sin(2 * math.pi * freq * t) * env * 18000)
+            env = math.exp(-t * 3.2)
+            v = 0.0
+            for idx, f in enumerate(chord):
+                sub_t = max(0.0, t - idx * 0.04)
+                sub_env = math.exp(-sub_t * 3.5) if t >= idx * 0.04 else 0.0
+                v += (math.sin(2 * math.pi * f * sub_t) * 0.7 + math.sin(4 * math.pi * f * sub_t) * 0.3) * sub_env
+            pn_samples.append(int(v * 0.28 * 16000))
+        self._inst_sounds["piano"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(pn_samples)))
+
+        # 2. Drums (Bass Drum Thump + Snare Crack)
+        bd_samples = []
+        for i in range(5500):
+            t = i / 22050.0
+            freq = max(45.0, 160.0 - t * 480.0)
+            env_bass = math.exp(-t * 12.0)
+            snare_noise = random.uniform(-1, 1) * math.exp(-max(0.0, t - 0.03) * 16.0) if t >= 0.03 else 0.0
+            val = int((math.sin(2 * math.pi * freq * t) * env_bass * 0.7 + snare_noise * 0.3) * 18000)
             bd_samples.append(val)
         self._inst_sounds["drums"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(bd_samples)))
 
-        # Trumpet Fanfare
+        # 3. Trumpet Fanfare
         tr_samples = []
-        for i in range(6500):
+        notes = [523.25, 659.25, 783.99]
+        for i in range(9000):
             t = i / 22050.0
-            f = 587.33 + math.sin(t * 40) * 12
-            env = max(0.0, 1.0 - t / 0.28)
-            val = int((math.sin(2 * math.pi * f * t) * 0.6 + math.sin(4 * math.pi * f * t) * 0.4) * env * 15000)
+            n_idx = min(len(notes) - 1, int(t / 0.08))
+            f = notes[n_idx]
+            env = max(0.0, 1.0 - t / 0.38)
+            val = int((math.sin(2 * math.pi * f * t) * 0.55 +
+                       math.sin(4 * math.pi * f * t) * 0.30 +
+                       math.sin(6 * math.pi * f * t) * 0.15) * env * 15000)
             tr_samples.append(val)
         self._inst_sounds["trumpet"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(tr_samples)))
 
-        # Maracas Shaker
-        mr_samples = []
-        for i in range(3500):
+        # 4. Guitar Pluck / Arpeggio
+        gt_samples = []
+        g_chord = [329.63, 440.00, 554.37, 659.25]
+        for i in range(10000):
             t = i / 22050.0
-            env = max(0.0, 1.0 - t / 0.15)
-            val = int(random.uniform(-1, 1) * env * 12000)
+            v = 0.0
+            for idx, f in enumerate(g_chord):
+                sub_t = max(0.0, t - idx * 0.05)
+                sub_env = math.exp(-sub_t * 4.0) if t >= idx * 0.05 else 0.0
+                v += math.sin(2 * math.pi * f * sub_t) * sub_env
+            gt_samples.append(int(v * 0.28 * 16000))
+        self._inst_sounds["guitar"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(gt_samples)))
+
+        # 5. Maracas Shaker
+        mr_samples = []
+        for i in range(4000):
+            t = i / 22050.0
+            # Double shake pulse
+            p1 = math.exp(-t * 28.0)
+            p2 = math.exp(-max(0.0, t - 0.07) * 24.0) if t >= 0.07 else 0.0
+            env = max(p1, p2)
+            val = int(random.uniform(-1, 1) * env * 14000)
             mr_samples.append(val)
         self._inst_sounds["maracas"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(mr_samples)))
-
-        # Singing Bird Tweet
-        bd_tweet = []
-        for i in range(6000):
-            t = i / 22050.0
-            f = 1046.50 + math.sin(t * 50) * 220
-            env = max(0.0, 1.0 - t / 0.25)
-            val = int(math.sin(2 * math.pi * f * t) * env * 13000)
-            bd_tweet.append(val)
-        self._inst_sounds["bird"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(bd_tweet)))
-
-        # Piano Chime Chord
-        pn_samples = []
-        for i in range(8000):
-            t = i / 22050.0
-            f1, f2 = 523.25, 659.25
-            env = math.exp(-t * 3.5)
-            val = int((math.sin(2 * math.pi * f1 * t) + math.sin(2 * math.pi * f2 * t)) * 0.5 * env * 14000)
-            pn_samples.append(val)
-        self._inst_sounds["piano"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(pn_samples)))
-
-        # Ball bounce boing
-        bn_samples = []
-        for i in range(2500):
-            t = i / 22050.0
-            f = 380.0 + (1.0 - t / 0.12) * 260.0
-            env = max(0.0, 1.0 - t / 0.11)
-            val = int(math.sin(2 * math.pi * f * t) * env * 11000)
-            bn_samples.append(val)
-        self._inst_sounds["bounce"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(bn_samples)))
 
     def play_note(self, index: int) -> None:
         if self._enabled and 0 <= index < len(self._notes):
@@ -180,166 +186,133 @@ class Particle:
         self.y = y
         self.symbol = symbol
         self.color = color
-        angle = random.uniform(0, 2 * math.pi)
-        speed = random.uniform(2.5, 7.0)
+        angle = random.uniform(-math.pi * 0.8, -math.pi * 0.2)
+        speed = random.uniform(3.0, 7.0)
         self.vx = math.cos(angle) * speed
-        self.vy = math.sin(angle) * speed - 1.5
+        self.vy = math.sin(angle) * speed
         self.life = 1.0
-        self.decay = random.uniform(0.025, 0.045)
-        self.size = random.randint(18, 28)
+        self.decay = random.uniform(0.035, 0.06)
+        self.size = random.randint(22, 32)
 
     def update(self) -> bool:
         self.x += self.vx
         self.y += self.vy
-        self.vy += 0.08
+        self.vy += 0.12
         self.life -= self.decay
         return self.life > 0
 
     def draw(self, surface: pygame.Surface, typography: GreiaTypography) -> None:
         if self.life > 0:
-            sz = max(10, int(self.size * self.life))
+            sz = max(12, int(self.size * self.life))
             txt_surf = typography.render(self.symbol, FontRole.BODY, sz, self.color)
             surface.blit(txt_surf, (int(self.x) - txt_surf.get_width() // 2, int(self.y) - txt_surf.get_height() // 2))
 
 
-class AnimalMusician:
-    def __init__(self, mus_id: str, icon: str, name: str, inst_name: str, sound_name: str, x: float, y: float) -> None:
-        self.mus_id = mus_id
+class InstrumentCard:
+    def __init__(self, inst_id: str, icon: str, name_it: str, name_en: str, sound_name: str, x: float, y: float, color: tuple[int, int, int]) -> None:
+        self.inst_id = inst_id
         self.icon = icon
-        self.name = name
-        self.inst_name = inst_name
+        self.name_it = name_it
+        self.name_en = name_en
         self.sound_name = sound_name
         self.x = x
         self.y = y
-        self.radius = 48.0
+        self.radius = 54.0
         self.jump_timer = 0.0
-        self.is_active = False
         self.phase = random.uniform(0, 2 * math.pi)
+        self.color = color
 
     def trigger(self) -> None:
-        self.jump_timer = 1.2
+        self.jump_timer = 1.0
 
     def update(self) -> None:
         self.phase += 0.04
         if self.jump_timer > 0:
-            self.jump_timer -= 0.04
+            self.jump_timer -= 0.05
 
     def contains(self, px: float, py: float) -> bool:
-        return (self.x - px) ** 2 + (self.y - py) ** 2 <= (self.radius + 12) ** 2
+        return (self.x - px) ** 2 + (self.y - py) ** 2 <= (self.radius + 14) ** 2
 
-    def draw(self, surface: pygame.Surface, typography: GreiaTypography) -> None:
+    def draw(self, surface: pygame.Surface, typography: GreiaTypography, is_it: bool) -> None:
         ox = int(self.x)
         oy = int(self.y)
         if self.jump_timer > 0:
-            oy += int(-math.sin(self.jump_timer * math.pi) * 24.0)
+            oy += int(-math.sin(self.jump_timer * math.pi) * 22.0)
         else:
-            oy += int(math.sin(self.phase) * 4.0)
+            oy += int(math.sin(self.phase) * 3.0)
 
-        # Floor shadow
-        pygame.draw.ellipse(surface, (15, 12, 25), (ox - 40, int(self.y) + 38, 80, 20))
+        dark = (30, 41, 59)
 
-        # Spotlight glow
-        spot_surf = pygame.Surface((120, 120), pygame.SRCALPHA)
-        glow_alpha = 140 if self.jump_timer > 0 else 60
-        pygame.draw.circle(spot_surf, (255, 240, 180, glow_alpha), (60, 60), 55)
-        surface.blit(spot_surf, (ox - 60, oy - 60))
+        # Floor Shadow
+        pygame.draw.ellipse(surface, (15, 12, 25), (ox - 48, int(self.y) + 42, 96, 22))
 
-        # Pedestal / Podium
-        pygame.draw.ellipse(surface, (140, 90, 50), (ox - 44, oy + 28, 88, 24))
-        pygame.draw.ellipse(surface, STAGE_GOLD, (ox - 44, oy + 28, 88, 24), width=2)
+        # Pedestal / Golden Stage Stand
+        pygame.draw.ellipse(surface, (180, 115, 60), (ox - 52, oy + 32, 104, 28))
+        pygame.draw.ellipse(surface, STAGE_GOLD, (ox - 52, oy + 32, 104, 28), width=3)
 
-        # Musician Card Avatar
-        avatar_bg = (255, 248, 235)
+        # Instrument Card Avatar
+        avatar_bg = (255, 255, 255)
+        border_col = STAGE_GOLD if self.jump_timer > 0 else self.color
+        border_w = 5 if self.jump_timer > 0 else 3
+
+        # Glow halo if triggered
+        if self.jump_timer > 0:
+            pygame.draw.circle(surface, (254, 240, 138), (ox, oy), int(self.radius + 8), width=4)
+
         pygame.draw.circle(surface, avatar_bg, (ox, oy), int(self.radius))
-        border_col = STAGE_GOLD if self.jump_timer > 0 else (61, 44, 31)
-        border_w = 4 if self.jump_timer > 0 else 3
         pygame.draw.circle(surface, border_col, (ox, oy), int(self.radius), width=border_w)
 
-        # Character Emoji Icon
-        char_surf = typography.render(self.icon, FontRole.DISPLAY, 46, DARK_TEXT)
-        surface.blit(char_surf, (ox - char_surf.get_width() // 2, oy - char_surf.get_height() // 2 - 4))
+        # Giant Dedicated Instrument Icon
+        char_surf = typography.render(self.icon, FontRole.DISPLAY, 54, DARK_TEXT)
+        surface.blit(char_surf, (ox - char_surf.get_width() // 2, oy - char_surf.get_height() // 2 - 6))
 
-        # Instrument badge
-        inst_badge = pygame.Rect(ox - 38, oy + 26, 76, 22)
-        pygame.draw.rect(surface, (30, 24, 45), inst_badge, border_radius=6)
-        pygame.draw.rect(surface, STAGE_GOLD, inst_badge, width=1, border_radius=6)
-        lbl_surf = typography.render(self.inst_name, FontRole.CONTROL, 14, STAGE_GOLD)
-        surface.blit(lbl_surf, (inst_badge.centerx - lbl_surf.get_width() // 2, inst_badge.centery - lbl_surf.get_height() // 2))
+        # Instrument Name Badge underneath
+        lbl_text = self.name_it if is_it else self.name_en
+        lbl_surf = typography.render(lbl_text, FontRole.CONTROL, 14, (255, 255, 255))
+        badge_w = max(80, lbl_surf.get_width() + 16)
+        badge_rect = pygame.Rect(ox - badge_w // 2, oy + 30, badge_w, 24)
+        pygame.draw.rect(surface, (30, 24, 45), badge_rect, border_radius=8)
+        pygame.draw.rect(surface, STAGE_GOLD if self.jump_timer > 0 else (203, 213, 225), badge_rect, width=2, border_radius=8)
+        surface.blit(lbl_surf, (badge_rect.centerx - lbl_surf.get_width() // 2, badge_rect.centery - lbl_surf.get_height() // 2))
 
 
-class BouncyBall:
-    def __init__(self, x: float, y: float) -> None:
-        self.x = x
-        self.y = y
-        self.vx = 4.0
-        self.vy = -3.0
-        self.radius = 22.0
-        self.is_held = False
-        self.trail: list[tuple[float, float]] = []
-        self.last_pos = (x, y)
+def _build_stage_background() -> pygame.Surface:
+    """Pre-renders the theater stage background once to avoid per-frame allocations."""
+    surf = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT))
+    
+    # 1. Theater Wall Gradient
+    for y in range(0, 430, 8):
+        ratio = y / 430.0
+        col = mix(STAGE_WALL_TOP, STAGE_WALL_BOTTOM, ratio)
+        pygame.draw.rect(surf, col, (0, y, REFERENCE_WIDTH, 8))
 
-    def update(self, bounds_rect: pygame.Rect) -> list[str]:
-        events = []
-        if self.is_held:
-            return events
+    # 2. Stage Floor Wood Planks
+    for y in range(430, REFERENCE_HEIGHT, 6):
+        ratio = (y - 430) / float(REFERENCE_HEIGHT - 430)
+        col = mix(STAGE_WOOD_TOP, STAGE_WOOD_BOTTOM, ratio)
+        pygame.draw.rect(surf, col, (0, y, REFERENCE_WIDTH, 6))
 
-        # Apply gravity & air resistance
-        self.vy += 0.45
-        self.vx *= 0.995
+    # Plank Lines
+    for px in range(0, REFERENCE_WIDTH, 120):
+        pygame.draw.line(surf, (80, 45, 20), (px, 430), (px, REFERENCE_HEIGHT), 2)
+    pygame.draw.line(surf, STAGE_GOLD, (0, 430), (REFERENCE_WIDTH, 430), 4)
 
-        self.x += self.vx
-        self.y += self.vy
+    # 3. Velvet Stage Curtains
+    pygame.draw.polygon(surf, STAGE_CURTAIN_DARK, [(0, 0), (140, 0), (90, 440), (0, 440)])
+    pygame.draw.polygon(surf, STAGE_CURTAIN, [(0, 0), (120, 0), (70, 430), (0, 430)])
+    pygame.draw.polygon(surf, STAGE_CURTAIN_DARK, [(REFERENCE_WIDTH, 0), (REFERENCE_WIDTH - 140, 0), (REFERENCE_WIDTH - 90, 440), (REFERENCE_WIDTH, 440)])
+    pygame.draw.polygon(surf, STAGE_CURTAIN, [(REFERENCE_WIDTH, 0), (REFERENCE_WIDTH - 120, 0), (REFERENCE_WIDTH - 70, 430), (REFERENCE_WIDTH, 430)])
 
-        self.trail.append((self.x, self.y))
-        if len(self.trail) > 8:
-            self.trail.pop(0)
+    # Gold Fringe & Ties
+    pygame.draw.line(surf, STAGE_CURTAIN_GOLD, (70, 0), (35, 430), 3)
+    pygame.draw.line(surf, STAGE_CURTAIN_GOLD, (REFERENCE_WIDTH - 70, 0), (REFERENCE_WIDTH - 35, 430), 3)
 
-        # Wall collisions
-        # Left wall
-        if self.x - self.radius < bounds_rect.left:
-            self.x = bounds_rect.left + self.radius
-            self.vx = abs(self.vx) * 0.82
-            events.append("bounce")
-        # Right wall
-        elif self.x + self.radius > bounds_rect.right:
-            self.x = bounds_rect.right - self.radius
-            self.vx = -abs(self.vx) * 0.82
-            events.append("bounce")
+    # Top Valance Swags
+    for vx in range(120, 900, 130):
+        pygame.draw.circle(surf, STAGE_CURTAIN, (vx + 65, 30), 75)
+        pygame.draw.circle(surf, STAGE_CURTAIN_GOLD, (vx + 65, 30), 75, width=3)
 
-        # Ceiling
-        if self.y - self.radius < bounds_rect.top:
-            self.y = bounds_rect.top + self.radius
-            self.vy = abs(self.vy) * 0.82
-            events.append("bounce")
-
-        # Floor (above keyboard)
-        if self.y + self.radius > 580:
-            self.y = 580 - self.radius
-            self.vy = -abs(self.vy) * 0.76
-            events.append("bounce")
-
-        return events
-
-    def draw(self, surface: pygame.Surface) -> None:
-        # Draw motion trail
-        for i, (tx, ty) in enumerate(self.trail):
-            r = max(2, int(self.radius * (i + 1) / len(self.trail) * 0.6))
-            alpha = int(120 * (i + 1) / len(self.trail))
-            t_surf = pygame.Surface((r * 2, r * 2), pygame.SRCALPHA)
-            pygame.draw.circle(t_surf, (255, 140, 50, alpha), (r, r), r)
-            surface.blit(t_surf, (int(tx) - r, int(ty) - r))
-
-        cx, cy = int(self.x), int(self.y)
-        # Glow
-        glow_surf = pygame.Surface((64, 64), pygame.SRCALPHA)
-        pygame.draw.circle(glow_surf, (255, 190, 80, 90), (32, 32), 30)
-        surface.blit(glow_surf, (cx - 32, cy - 32))
-
-        # Ball body with 3D gradient
-        pygame.draw.circle(surface, (255, 90, 40), (cx, cy), int(self.radius))
-        pygame.draw.circle(surface, (255, 180, 80), (cx - 5, cy - 5), int(self.radius * 0.65))
-        pygame.draw.circle(surface, WHITE, (cx - 8, cy - 8), 6)
-        pygame.draw.circle(surface, (60, 30, 20), (cx, cy), int(self.radius), width=2)
+    return surf
 
 
 def _is_safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
@@ -355,7 +328,9 @@ def _is_safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
 
 def main() -> int:
     pygame.init()
-    screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+    screen = pygame.display.get_surface()
+    if screen is None:
+        screen = pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.RESIZABLE)
     pygame.mouse.set_visible(False)
     clock = pygame.time.Clock()
     theme = get_theme()
@@ -363,6 +338,9 @@ def main() -> int:
     canvas = PygameReferenceCanvas(screen)
     typography = GreiaTypography()
     sounds = SoundManager()
+
+    # Pre-render static stage background once (ultra-fast 60 FPS on Intel Atom)
+    bg_surface = _build_stage_background()
 
     try:
         storage = get_storage()
@@ -381,50 +359,42 @@ def main() -> int:
     context = resolve_activity_locale(profile_lang, support)
     resources = LocalizedResources(package_root, context) if context else None
     active_locale = context.selected.language if context else "it"
-    note_labels = NOTE_NAMES_IT if active_locale == "it" else NOTE_NAMES_EN
+    is_it = (active_locale == "it")
+    note_labels = NOTE_NAMES_IT if is_it else NOTE_NAMES_EN
 
-    score = 0
     stars = 0
-
     if storage is not None:
         try:
             saved = storage.kv_get(STORAGE_KEY, {})
             if isinstance(saved, dict):
-                score = int(saved.get("score", 0))
                 stars = int(saved.get("stars", 0))
         except Exception:
             pass
 
-    # 5 Animal Musicians on Stage
-    musicians = [
-        AnimalMusician("cat", "🐱", "Gattina", "Pianoforte", "piano", 190, 230),
-        AnimalMusician("dog", "🐶", "Cagnolino", "Batteria", "drums", 350, 210),
-        AnimalMusician("frog", "🐸", "Ranocchia", "Tromba", "trumpet", 512, 230),
-        AnimalMusician("bear", "🐻", "Orsetto", "Maracas", "maracas", 670, 210),
-        AnimalMusician("bird", "🐦", "Uccellino", "Voce", "bird", 830, 230),
+    # 5 Clear Musical Instruments on Stage (No confusing animals)
+    instruments = [
+        InstrumentCard("piano", "🎹", "Pianoforte", "Piano", "piano", 150, 230, (59, 130, 246)),
+        InstrumentCard("drums", "🥁", "Batteria", "Drums", "drums", 330, 210, (239, 68, 68)),
+        InstrumentCard("trumpet", "🎺", "Tromba", "Trumpet", "trumpet", 512, 230, (234, 179, 8)),
+        InstrumentCard("guitar", "🎸", "Chitarra", "Guitar", "guitar", 694, 210, (249, 115, 22)),
+        InstrumentCard("maracas", "🪇", "Maracas", "Maracas", "maracas", 874, 230, (34, 197, 94)),
     ]
 
     particles: list[Particle] = []
-    ball = BouncyBall(512, 140)
-    stage_bounds = pygame.Rect(40, 100, 944, 480)
-
-    # Piano Key highlight timers
     key_highlight_timers = [0.0] * 8
-    key_pressed = [False] * 8
-
-    feedback_text = ""
-    feedback_timer = 0.0
 
     running = True
     ready_published = False
 
     def trigger_piano_key(k_idx: int):
+        nonlocal stars
         if 0 <= k_idx < 8:
             sounds.play_note(k_idx)
             key_highlight_timers[k_idx] = 1.0
+            stars += 1
             kx = 64 + k_idx * 112
-            for _ in range(12):
-                particles.append(Particle(kx + 52, 460, "🎵", RAINBOW_COLORS[k_idx]))
+            for _ in range(8):
+                particles.append(Particle(kx + 52, 460, random.choice(["🎵", "🎶", "♪", "♫"]), RAINBOW_COLORS[k_idx]))
             safe_emit("instrument.played", f"note-{time.time()}", payload={"note": k_idx})
 
     while running and not activity_stop_requested():
@@ -434,7 +404,7 @@ def main() -> int:
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     running = False
-                # Keyboard shortcuts 1..8 and A..K
+                # Keyboard shortcuts 1..8 and A..K for piano keys
                 key_map = {
                     pygame.K_1: 0, pygame.K_2: 1, pygame.K_3: 2, pygame.K_4: 3,
                     pygame.K_5: 4, pygame.K_6: 5, pygame.K_7: 6, pygame.K_8: 7,
@@ -447,47 +417,25 @@ def main() -> int:
                 screen = pygame.display.get_surface() or screen
                 metrics = ChildUiMetrics.for_size(*screen.get_size())
                 canvas = PygameReferenceCanvas(screen)
-            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if not _is_safe_point(screen, event.pos):
-                    continue
-                logical = canvas.pointer(event.pos)
-                if logical is not None:
-                    lx, ly = logical
-                    # Check grabbing the bouncy ball
-                    if math.hypot(lx - ball.x, ly - ball.y) <= ball.radius + 16:
-                        ball.is_held = True
-                        ball.vx = 0.0
-                        ball.vy = 0.0
             elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                 if is_home_clicked(screen, event.pos):
                     running = False
                     continue
-                if ball.is_held:
-                    ball.is_held = False
-                    # Velocity from flick
-                    if pygame.mouse.get_focused():
-                        mpos = pygame.mouse.get_pos()
-                        plog = canvas.pointer(mpos)
-                        if plog is not None:
-                            dx = plog[0] - ball.last_pos[0]
-                            dy = plog[1] - ball.last_pos[1]
-                            ball.vx = max(-18.0, min(18.0, dx * 0.8))
-                            ball.vy = max(-18.0, min(18.0, dy * 0.8))
-
                 if not _is_safe_point(screen, event.pos):
                     continue
                 logical = canvas.pointer(event.pos)
                 if logical is not None:
                     lx, ly = logical
 
-                    # 1. Animal Musicians direct tap
-                    for m in musicians:
-                        if m.contains(lx, ly):
-                            m.trigger()
-                            sounds.play_inst(m.sound_name)
-                            for _ in range(16):
-                                particles.append(Particle(m.x, m.y - 20, "🎶", STAGE_GOLD))
-                            safe_emit("instrument.played", f"mus-{time.time()}", payload={"musician": m.mus_id})
+                    # 1. Instruments Direct Tap
+                    for inst in instruments:
+                        if inst.contains(lx, ly):
+                            inst.trigger()
+                            sounds.play_inst(inst.sound_name)
+                            stars += 2
+                            for _ in range(12):
+                                particles.append(Particle(inst.x, inst.y - 20, random.choice(["🎵", "🎶", "✨", "⭐"]), STAGE_GOLD))
+                            safe_emit("instrument.played", f"inst-{time.time()}", payload={"instrument": inst.inst_id})
 
                     # 2. Rainbow Piano Keys direct tap (y = 440..570)
                     for k_i in range(8):
@@ -495,55 +443,9 @@ def main() -> int:
                         if kx <= lx <= kx + 104 and 440 <= ly <= 570:
                             trigger_piano_key(k_i)
 
-        # Dragging ball motion
-        if ball.is_held and pygame.mouse.get_focused():
-            mpos = pygame.mouse.get_pos()
-            if _is_safe_point(screen, mpos):
-                plog = canvas.pointer(mpos)
-                if plog is not None:
-                    ball.last_pos = (ball.x, ball.y)
-                    ball.x = max(60.0, min(964.0, plog[0]))
-                    ball.y = max(110.0, min(550.0, plog[1]))
-
-        # Ball physics & Collisions
-        ball_events = ball.update(stage_bounds)
-        if "bounce" in ball_events:
-            sounds.play_inst("bounce")
-
-        if not ball.is_held:
-            # Check collision with animal musicians
-            for m in musicians:
-                dist = math.hypot(ball.x - m.x, ball.y - m.y)
-                if dist < ball.radius + m.radius:
-                    # Bounce ball off musician
-                    nx = (ball.x - m.x) / max(0.1, dist)
-                    ny = (ball.y - m.y) / max(0.1, dist)
-                    ball.vx = nx * 8.5 + random.uniform(-2, 2)
-                    ball.vy = ny * 8.5 - 3.0
-                    ball.x = m.x + nx * (ball.radius + m.radius + 2)
-                    ball.y = m.y + ny * (ball.radius + m.radius + 2)
-
-                    m.trigger()
-                    sounds.play_inst(m.sound_name)
-                    score += 5
-                    stars += 1
-                    for _ in range(16):
-                        particles.append(Particle(m.x, m.y - 20, "✨", STAGE_GOLD))
-                    safe_emit("instrument.played", f"ball-{time.time()}", payload={"musician": m.mus_id})
-
-            # Check collision with piano keys
-            if 435 <= ball.y <= 485:
-                for k_i in range(8):
-                    kx = 64 + k_i * 112
-                    if kx <= ball.x <= kx + 104 and ball.vy > 0:
-                        trigger_piano_key(k_i)
-                        ball.vy = -abs(ball.vy) * 0.85 - 2.5
-                        score += 5
-                        break
-
         # State updates
-        for m in musicians:
-            m.update()
+        for inst in instruments:
+            inst.update()
         for i in range(8):
             if key_highlight_timers[i] > 0:
                 key_highlight_timers[i] -= 0.05
@@ -552,41 +454,18 @@ def main() -> int:
         # --- RENDERING ---
         surf = canvas.surface
 
-        # 1. Grand Theater Stage Background
-        for y in range(0, 430, 8):
-            ratio = y / 430.0
-            col = mix(STAGE_WALL_TOP, STAGE_WALL_BOTTOM, ratio)
-            pygame.draw.rect(surf, col, (0, y, REFERENCE_WIDTH, 8))
+        # 1. Blit Pre-rendered Theater Stage Background (0.05 ms direct copy)
+        surf.blit(bg_surface, (0, 0))
 
-        # Stage Floor with wood plank lines
-        for y in range(430, REFERENCE_HEIGHT, 6):
-            ratio = (y - 430) / float(REFERENCE_HEIGHT - 430)
-            col = mix(STAGE_WOOD_TOP, STAGE_WOOD_BOTTOM, ratio)
-            pygame.draw.rect(surf, col, (0, y, REFERENCE_WIDTH, 6))
+        # 2. Draw 5 Dedicated Instrument Cards on Stage
+        for inst in instruments:
+            inst.draw(surf, typography, is_it)
 
-        # Velvet Stage Curtains along top and sides
-        pygame.draw.polygon(surf, STAGE_CURTAIN_DARK, [(0, 0), (140, 0), (90, 440), (0, 440)])
-        pygame.draw.polygon(surf, STAGE_CURTAIN, [(0, 0), (120, 0), (70, 430), (0, 430)])
-        pygame.draw.polygon(surf, STAGE_CURTAIN_DARK, [(REFERENCE_WIDTH, 0), (REFERENCE_WIDTH - 140, 0), (REFERENCE_WIDTH - 90, 440), (REFERENCE_WIDTH, 440)])
-        pygame.draw.polygon(surf, STAGE_CURTAIN, [(REFERENCE_WIDTH, 0), (REFERENCE_WIDTH - 120, 0), (REFERENCE_WIDTH - 70, 430), (REFERENCE_WIDTH, 430)])
-
-        # Top valance swag
-        for vx in range(120, 900, 130):
-            pygame.draw.circle(surf, STAGE_CURTAIN, (vx + 65, 30), 75)
-            pygame.draw.circle(surf, STAGE_CURTAIN_GOLD, (vx + 65, 30), 75, width=2)
-
-        # 2. Animal Musicians on Stage
-        for m in musicians:
-            m.draw(surf, typography)
-
-        # 3. Interactive Physics Bouncy Ball
-        ball.draw(surf)
-
-        # 4. Particles
+        # 3. Floating Music Note Particles
         for p in particles:
             p.draw(surf, typography)
 
-        # 5. Rainbow Piano Keys with Keyboard Number Badges (y = 440..570)
+        # 4. Rainbow Piano Keys with Keyboard Number Badges (y = 440..570)
         for k_i in range(8):
             kx = 64 + k_i * 112
             key_rect = pygame.Rect(kx, 440, 104, 130)
@@ -600,12 +479,12 @@ def main() -> int:
             fill_col = mix(base_col, WHITE, 0.4) if hl > 0 else base_col
             pygame.draw.rect(surf, fill_col, key_rect, border_radius=14)
             pygame.draw.rect(surf, WHITE, (kx + 8, 446, 88, 14), border_radius=6)  # Bevel highlight
-            pygame.draw.rect(surf, (61, 44, 31), key_rect, width=3, border_radius=14)
+            pygame.draw.rect(surf, (30, 41, 59), key_rect, width=3, border_radius=14)
 
             # Keyboard shortcut badge [ 1 ]
             badge_rect = pygame.Rect(kx + 32, 448, 40, 22)
             pygame.draw.rect(surf, (255, 250, 240), badge_rect, border_radius=6)
-            pygame.draw.rect(surf, (61, 44, 31), badge_rect, width=1, border_radius=6)
+            pygame.draw.rect(surf, (30, 41, 59), badge_rect, width=1, border_radius=6)
             sc_surf = typography.render(KEYBOARD_SHORTCUTS[k_i], FontRole.CONTROL, 14, DARK_TEXT)
             surf.blit(sc_surf, (badge_rect.centerx - sc_surf.get_width() // 2, badge_rect.centery - sc_surf.get_height() // 2))
 
@@ -614,22 +493,22 @@ def main() -> int:
             n_surf = typography.render(note_str, FontRole.DISPLAY, 26, (255, 255, 255) if hl <= 0 else DARK_TEXT)
             surf.blit(n_surf, (kx + 52 - n_surf.get_width() // 2, 490))
 
-        # 6. Top Header & HUD (Clear of Home at x < 120)
+        # 5. Top Header & HUD (Clear of Home at x < 120)
         # Title card (x = 360..664, y = 16..68)
         title_rect = pygame.Rect(360, 16, 304, 52)
         pygame.draw.rect(surf, (255, 250, 240), title_rect, border_radius=14)
-        pygame.draw.rect(surf, (61, 44, 31), title_rect, width=2, border_radius=14)
-        title_str = "🎵 Orchestra degli Animali 🐾" if active_locale == "it" else "🎵 Animal Orchestra 🐾"
+        pygame.draw.rect(surf, (30, 41, 59), title_rect, width=2, border_radius=14)
+        title_str = "🎵 Orchestra Magica 🎶" if is_it else "🎵 Magic Orchestra 🎶"
         t_surf = typography.render(title_str, FontRole.TITLE, 20, DARK_TEXT)
         surf.blit(t_surf, (title_rect.centerx - t_surf.get_width() // 2, title_rect.centery - t_surf.get_height() // 2))
 
-        # HUD Stars & Score (Top Right x=775..1000)
-        hud_rect = pygame.Rect(775, 12, 225, 56)
+        # HUD Star Pill (Top Right x=820..980)
+        hud_rect = pygame.Rect(820, 12, 160, 56)
         pygame.draw.rect(surf, (255, 250, 240), hud_rect, border_radius=16)
-        pygame.draw.rect(surf, (61, 44, 31), hud_rect, width=2, border_radius=16)
-        hud_text = f"⭐ {stars}   🏆 {score}"
-        hud_surf = typography.render(hud_text, FontRole.TITLE, 24, (180, 90, 20))
-        surf.blit(hud_surf, (hud_rect.centerx - hud_surf.get_width() // 2, hud_rect.centery - hud_surf.get_height() // 2))
+        pygame.draw.rect(surf, (234, 179, 8), hud_rect, width=3, border_radius=16)
+        pygame.draw.circle(surf, (234, 179, 8), (hud_rect.left + 30, hud_rect.centery), 16)
+        hud_surf = typography.render(str(stars), FontRole.DISPLAY, 26, (180, 90, 20))
+        surf.blit(hud_surf, (hud_rect.left + 58, hud_rect.centery - hud_surf.get_height() // 2))
 
         canvas.present(clear=theme.background)
         pygame.display.flip()
@@ -637,11 +516,11 @@ def main() -> int:
             mark_activity_ready()
             ready_published = True
 
-        clock.tick(30)
+        clock.tick(60)
 
     if storage is not None:
         try:
-            storage.kv_set(STORAGE_KEY, {"score": score, "stars": stars})
+            storage.kv_set(STORAGE_KEY, {"stars": stars})
         except Exception:
             pass
 
