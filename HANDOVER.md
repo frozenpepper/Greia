@@ -8,7 +8,19 @@
 **Current cross-cutting work:** device-language/localization + child UX + R13B transactional updates + Activity Simulator/emoji/Writing + **asset-first visual library through Water/Pond; V5 shared-consumption source implementation active**  
 **External Parent HTML runtime revision pinned by Greia:** `frozenpepper/Greia-Parent-App-Html@519651a5931269ed4275324f2a87ad3f0d08a3f6`
 
-This file is the current-state continuation contract. Detailed chronology belongs in the active plans/reviews. Exact APIs and limits remain source-owned.
+This file is the current project-wide continuation contract. Detailed chronology belongs in the active plans/reviews. Exact APIs and limits remain source-owned.
+
+For visual/art/graphics work, the stable entry point is now:
+
+```text
+docs/design/GREIA_ART_GRAPHICS_SYSTEM.md
+```
+
+The short new-session visual resume file is:
+
+```text
+docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md
+```
 
 ---
 
@@ -19,7 +31,9 @@ This file is the current-state continuation contract. Detailed chronology belong
 - Do **not** use, query, trigger, rerun, inspect or download GitHub-hosted Actions without explicit owner authorization for that specific hosted execution.
 - Never convert committed tests/assets into PASS/approved evidence merely because files exist.
 - Blocking implementation plan: `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`.
+- Main visual-system/index guide: `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`.
 - Current art/visual plan: `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`.
+- Current visual resume: `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md`.
 - R7 remains the first incomplete blocking architecture phase. Cross-cutting product/art work does not close or skip R7.
 - Substantive visual work updates the art-plan checkpoint + append-only progress log.
 - `skills/greia-visual-authoring/SKILL.md` remains mandatory for Greia visual-asset/art work.
@@ -44,9 +58,18 @@ Current V5-specific evidence is narrower:
 
 - source implementation is committed;
 - provider-free cache source was exercised in an isolated local harness: **9/9 PASS**;
-- full repository `make test` / `make verify` was **not** run here;
-- `rsvg-convert` is absent in this execution environment, so the generated runtime PNG catalogue/renditions were **not** built here;
+- isolated builder harness was previously recorded **3/3 PASS**;
+- full repository `make test` / `make verify` was **not** run for this V5 tranche;
+- the previous execution environment lacked `rsvg-convert`, so the generated runtime PNG catalogue/renditions were **not** built there;
 - no Shell/Activity path is yet accepted as consuming the new shared visual catalogue/cache.
+
+Current owner-directed local-agent V5 acceptance is simulator-based through:
+
+```text
+docs/testing/2026-08-20_V5_VISUAL_INTEGRATION_SIMULATOR_LOCAL_AGENT.md
+```
+
+That protocol requires runtime/visual/fallback/responsive acceptance through the real Greia Shell in the Activity Simulator. Build-generation commands such as `make visual-assets` are prerequisites, not PASS evidence.
 
 ---
 
@@ -55,8 +78,11 @@ Current V5-specific evidence is narrower:
 Canonical continuity:
 
 ```text
+docs/design/GREIA_ART_GRAPHICS_SYSTEM.md
+docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md
 docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md
 docs/design/GREIA_VISUAL_STYLE_GUIDE.md
+docs/design/GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md
 docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md
 docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md
 skills/greia-visual-authoring/SKILL.md
@@ -73,7 +99,20 @@ assets/visual/environments/fantasy_village_night/v0.1/
 assets/visual/environments/water_pond/v0.1/
 ```
 
-## 3.1 Production rule
+## 3.1 Documentation shape
+
+Use the visual documentation by role:
+
+- `GREIA_ART_GRAPHICS_SYSTEM.md` — stable architecture/index and “where do I look?” guide;
+- visual style/art-requirements/character documents — narrower accepted design authorities;
+- active visual plan — sequencing, current checkpoint and append-only history;
+- `GREIA_VISUAL_SYSTEM_RESUME.md` — concise new-session continuation;
+- visual authoring skill — practical production/integration workflow;
+- `HANDOVER.md` — project-wide current evidence and continuation.
+
+Do not force new agents to reconstruct visual architecture from the progress ledger or chat history.
+
+## 3.2 Production rule
 
 The workstream remains explicitly **asset-first**:
 
@@ -85,7 +124,7 @@ Broad environment/UI source coverage is now sufficient. Do not add another envir
 
 The simplified character direction remains valid, but character minutiae do not block V5. Core anchors remain **Lilli, Nino, Tito and Momo**. Static style-anchor approval is not final release/runtime/physical approval.
 
-## 3.2 Current pack status
+## 3.3 Current pack status
 
 - **Forest / meadow v0.2:** 27 masters + bounded 1024×600 / 800×600 restraint references + parallax proof.
 - **Shared UI v0.1:** broad reusable panels/cards/buttons/tabs/badges/progress/bubbles/reward/focus/loading/error/empty/portal family + target references.
@@ -99,7 +138,7 @@ Pack dependencies/review state live in `assets/visual/packs_v0.1.toml`; characte
 
 All current visual packs remain **candidate** and `runtime_consumed = false`. Art evidence remains **SOURCE + DESKTOP VISUAL REVIEW** only unless a narrower file states otherwise.
 
-## 3.3 V5 shared-consumption implementation now present
+## 3.4 V5 shared-consumption implementation now present
 
 V5 reuses Greia's existing explicit asset architecture:
 
@@ -108,12 +147,12 @@ src/greia_platform/assets.py
 src/greia_platform/activity_assets.py
 src/greia_platform/ui_core.py
 src/greia_platform/pygame_visual_assets.py
+src/greia_launcher/visual_assets.py
 assets/catalog/core_icons_v1.toml
 assets/catalog/shared_visuals_v1_source.toml
 tools/build_visual_renditions.py
-Makefile: visual-assets
-tests/test_asset_catalogue.py
-tests/test_pygame_visual_assets.py
+tools/validate_visual_renditions.py
+Makefile: visual-assets / visual-assets-check
 ```
 
 ### Catalogue
@@ -124,7 +163,14 @@ There is still **no arbitrary directory discovery**.
 
 ### Build-time runtime renditions
 
-`assets/catalog/shared_visuals_v1_source.toml` explicitly selects the first reviewed UI masters/variants.
+`assets/catalog/shared_visuals_v1_source.toml` explicitly selects the first reviewed UI masters/variants, including:
+
+```text
+ui.panel.base
+ui.card.activity
+ui.button.primary
+ui.shadow.soft
+```
 
 `tools/build_visual_renditions.py` renders SVG→PNG with build-host librsvg/`rsvg-convert`, verifies containment/dimensions/output PNG structure, and writes the explicit generated runtime catalogue `assets/catalog/shared_visuals_v1.toml` with a source SHA256.
 
@@ -146,19 +192,33 @@ The target device does not need an SVG renderer.
 - explicit clear;
 - no per-frame file/decode after a hit.
 
-Provider-free tests cover cache hits, size keys, variants, eviction/reload, clear/reload, dimension/pixel bounds, SVG rejection and unknown catalogue entries/variants.
+### Launcher bridge
+
+`src/greia_launcher/visual_assets.py` provides the optional shared-visual bridge:
+
+```text
+mandatory core icons
++
+optional generated shared visuals
+=
+one merged AssetCatalogue namespace
+```
+
+Missing/invalid generated visuals must preserve the established launcher/static path.
 
 ### V5 gate still open
 
 Do not mark any visual pack runtime-consumed yet. Exact continuation:
 
 1. on an owner-controlled/build checkout with librsvg, run `make visual-assets`;
-2. inspect/validate generated PNGs + `assets/catalog/shared_visuals_v1.toml`;
-3. run focused repository tests covering `test_asset_catalogue.py`, `test_pygame_visual_assets.py` and rendition tooling;
-4. identify one **existing controlled Shell/UI** path and route that path through `AssetCatalogue` + `PygameVisualSurfaceCache`;
-5. verify static/fail-closed fallback and absence of per-frame decode/discovery;
-6. only then expand the same semantic contract toward Python/Web Activities;
-7. collect simulator/physical low-resource evidence before stronger runtime/physical claims.
+2. inspect generated PNGs + `assets/catalog/shared_visuals_v1.toml`;
+3. wire the existing launcher bridge into normal launcher initialization;
+4. use one launcher-owned `PygameVisualSurfaceCache`;
+5. consume `ui.shadow.soft` beneath existing Activity tiles while retaining current fallback;
+6. run the normal/missing-catalogue/invalid-catalogue/missing-or-corrupt-PNG/hover/selection/launch/responsive matrix through the Activity Simulator using the dated V5 runbook;
+7. verify no obvious repeated decode/discovery stalls and preserve cache bounds;
+8. only then expand the same semantic contract toward Python/Web Activities;
+9. collect physical low-resource evidence later before stronger physical claims.
 
 ---
 
@@ -257,12 +317,13 @@ docs/testing/LOCAL_AGENT_START_HERE.md
 
 ## Visual workstream
 
-1. Keep `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md` as sequencing authority.
-2. **Do not create more environment packs by default.** V5 is active.
-3. Generate/validate first runtime UI renditions on a build checkout with librsvg.
-4. Run the focused current-source V5 tests.
-5. Integrate one existing Shell/UI path through the generated catalogue/cache.
-6. Expand only after evidence; keep Activities/Web on one semantic contract.
+1. Start from `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` and `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md`.
+2. Keep `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md` as sequencing authority.
+3. **Do not create more environment packs by default.** V5 is active.
+4. Generate first runtime UI renditions on a build checkout with librsvg.
+5. Integrate `ui.shadow.soft` through the existing catalogue/cache path with fallback.
+6. Execute the current V5 normal/fallback/interaction/responsive acceptance through the Activity Simulator.
+7. Expand only after evidence; keep Activities/Web on one semantic contract.
 
 ---
 
@@ -281,12 +342,15 @@ docs/testing/LOCAL_AGENT_START_HERE.md
 - system-update activation stays false on current single-root profiles;
 - source/desktop/simulator/physical evidence scopes remain distinct;
 - Greia visual work remains asset-first;
+- `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` remains the stable visual-system entry point;
+- `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` remains the short current visual-session resume contract;
 - candidate files in Git are not automatically approved;
 - static character style-anchor approval is not runtime/release/physical approval;
 - broad visual coverage does not authorize endless new packs;
 - V5 reuses the existing explicit asset-catalogue architecture;
 - runtime does not scan visual directories or rasterize SVG;
 - image caches remain bounded and no per-frame decode is accepted;
-- after each substantive visual session update the active visual plan checkpoint + append-only progress log and this HANDOVER when continuation changes materially.
+- current local-agent V5 runtime/visual/fallback/responsive test acceptance is handled through the Activity Simulator;
+- after each substantive visual session update the active visual plan checkpoint + append-only progress log, visual resume, and this HANDOVER when continuation changes materially.
 
 For visual continuation, start from the **V5 explicit catalogue/rendition/cache implementation gate**, not from rejected character-rig, A2-overlay, crude-scene, generated-concept, or more-pack-by-default work.
