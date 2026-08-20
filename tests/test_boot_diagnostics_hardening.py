@@ -92,7 +92,33 @@ class BootDiagnosticsHardeningTests(unittest.TestCase):
         self.assertIn("MulticastDNS=yes", wired.read_text(encoding="utf-8"))
         self.assertIn("MulticastDNS=yes", wireless.read_text(encoding="utf-8"))
 
-    def test_development_builder_routes_legacy_hardware_through_boot_art_front_door(self) -> None:
+    def test_reference_acer_syslinux_remains_observable_per_postmortem(self) -> None:
+        cfg = (ROOT / "build/live-syslinux/syslinux.cfg.in").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("DEFAULT live", cfg)
+        self.assertIn("PROMPT 0", cfg)
+        self.assertIn("TIMEOUT 0", cfg)
+        self.assertIn("console=tty1", cfg)
+        self.assertIn("panic=30", cfg)
+        self.assertNotIn("console=null", cfg)
+        self.assertNotIn("DISPLAY ", cfg)
+        self.assertNotIn("clear.msg", cfg)
+        self.assertNotIn("NOESCAPE", cfg)
+        self.assertNotIn("NOCOMPLETE", cfg)
+
+    def test_boot_art_generator_stays_on_accepted_rgb565_safe_transform(self) -> None:
+        generator = (ROOT / "tools/generate_boot_artwork.py").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("MedianFilter(3)", generator)
+        self.assertIn("_LOGO_COLOR = (62, 70, 130)", generator)
+        self.assertIn("luminance > 90", generator)
+        self.assertIn("_WHITE = (255, 255, 255)", generator)
+        self.assertNotIn("canonical_full_color_frame", generator)
+        self.assertNotIn("pixel-identical to the canonical full-color frame", generator)
+
+    def test_development_builder_routes_legacy_hardware_through_proven_front_door(self) -> None:
         wrapper = (ROOT / "tools/build-development-installer.sh").read_text(
             encoding="utf-8"
         )
@@ -106,10 +132,11 @@ class BootDiagnosticsHardeningTests(unittest.TestCase):
         legacy = (ROOT / "build/build-legacy-x86-sd-installer.sh").read_text(
             encoding="utf-8"
         )
-        self.assertIn("tools/generate_boot_artwork.py", legacy)
-        self.assertIn("pixel-identical", legacy)
-        self.assertIn("verify-development-installer.sh", legacy)
-        self.assertIn("development_ssh_artifact_verified", legacy)
+        # This file is the physically proven image-builder wrapper. Boot-art
+        # experiments must not be inserted here without another hardware pass.
+        self.assertIn('"$SCRIPT_DIR/build-installer-image.sh" "$PROFILE" "$OUTPUT_DIR"', legacy)
+        self.assertNotIn("canonical-full-color-rgb", legacy)
+        self.assertNotIn("pixel-identical", legacy)
 
     def test_active_direct_developer_builder_does_not_generate_client_keys(self) -> None:
         builder = (ROOT / "build/build-developer-image.sh").read_text(
@@ -145,30 +172,36 @@ class BootDiagnosticsHardeningTests(unittest.TestCase):
         self.assertIn("ssh_host_*_key", target)
         self.assertIn("developer-remote", target)
 
-    def test_usb_writer_verifies_the_media_that_will_actually_boot(self) -> None:
+    def test_proven_usb_writer_is_minimal_and_readback_is_separate(self) -> None:
         writer = (ROOT / "tools/build-live-usb.sh").read_text(encoding="utf-8")
-        self.assertIn("removable whole disk", writer)
-        self.assertIn("MOUNTED_CHILDREN", writer)
-        self.assertIn("--read-only", writer)
-        self.assertIn("ro,noload", writer)
-        self.assertIn("fsck.vfat -n", writer)
-        self.assertIn("ldlinux.sys", writer)
-        self.assertIn("cmp -s", writer)
-        self.assertIn("cmp -n 440", writer)
-        self.assertIn("usb_flash_verification=PASS", writer)
-        self.assertIn("installer-image-profile.json", writer)
-        self.assertIn('case "$DEVICE"', writer)
-        self.assertIn('USB_PART="${DEVICE}p1"', writer)
+        self.assertIn("syslinux --install", writer)
+        self.assertIn("mbr.bin", writer)
+        self.assertIn("mkfs.vfat -F 32", writer)
+        self.assertIn("live-uuid", writer)
+        self.assertIn("LIVE_MEDIA_ID", writer)
+        self.assertNotIn("clear.msg", writer)
+        self.assertNotIn("usb_flash_verification=PASS", writer)
 
-    def test_one_command_dev_workflow_builds_and_flashes_verified_usb(self) -> None:
+        verifier = (ROOT / "tools/verify-live-usb.sh").read_text(encoding="utf-8")
+        self.assertIn("read-only", verifier)
+        self.assertIn("fsck.vfat -n", verifier)
+        self.assertIn("cmp -s", verifier)
+        self.assertIn("cmp -n 440", verifier)
+        self.assertIn("usb_readback_verification=PASS", verifier)
+        self.assertIn("console=tty1", verifier)
+        self.assertIn("console=null", verifier)  # explicit rejection check
+        self.assertIn("DISPLAY .*clear", verifier)
+
+    def test_one_command_dev_workflow_builds_writes_then_verifies(self) -> None:
         workflow = (
             ROOT / "tools/build-and-flash-development-usb.sh"
         ).read_text(encoding="utf-8")
         self.assertIn("build-development-installer.sh", workflow)
         self.assertIn("build-live-usb.sh", workflow)
+        self.assertIn("verify-live-usb.sh", workflow)
         self.assertIn("source_artifact_verification=PASS", workflow)
         self.assertIn("usb_flash_readback_verification=PASS", workflow)
-        self.assertIn("removable whole disk", workflow)
+        self.assertIn("postmortem-proven-syslinux-fat32", workflow)
         self.assertIn("no operator SSH key is required", workflow)
 
     def test_new_development_shell_front_doors_are_bash_syntax_valid(self) -> None:
@@ -176,6 +209,7 @@ class BootDiagnosticsHardeningTests(unittest.TestCase):
             ROOT / "tools/build-development-installer.sh",
             ROOT / "tools/build-and-flash-development-usb.sh",
             ROOT / "tools/build-live-usb.sh",
+            ROOT / "tools/verify-live-usb.sh",
             ROOT / "tools/verify-development-installer.sh",
             ROOT / "tools/verify-development-target-image.sh",
             ROOT / "build/build-developer-image.sh",
