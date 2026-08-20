@@ -1,0 +1,33 @@
+catalog_id = "greia.visual.shared-library.v0.1"
+status = "candidate"
+runtime_consumed = false
+
+[[characters]]
+id = "lilli"
+name = "Lilli"
+neutral = "assets/visual/specimens/a1/lilli.svg"
+blink = "assets/visual/characters/lilli/blink.svg"
+
+[[characters]]
+id = "nino"
+name = "Nino"
+neutral = "assets/visual/specimens/a1/nino.svg"
+blink = "assets/visual/characters/nino/blink.svg"
+
+[[characters]]
+id = "tito"
+name = "Tito"
+neutral = "assets/visual/specimens/a1/tito.svg"
+blink = "assets/visual/characters/tito/blink.svg"
+
+[[characters]]
+id = "momo"
+name = "Momo"
+neutral = "assets/visual/specimens/a1/momo.svg"
+blink = "assets/visual/characters/momo/blink.svg"
+
+[animations]
+catalog = "assets/visual/library/animations.toml"
+
+[artwork]
+next_families = ["props", "environments", "fx", "ui"]
