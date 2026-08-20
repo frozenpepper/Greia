@@ -187,6 +187,8 @@ def render_all(visuals: tuple[VisualSpec, ...], rasterizer: Path) -> None:
     for visual in visuals:
         for variant in visual.variants:
             variant.output.parent.mkdir(parents=True, exist_ok=True)
+            temporary = _temporary_sibling(variant.output)
+            temporary.unlink(missing_ok=True)
             command = [
                 str(rasterizer),
                 "--width",
@@ -194,16 +196,19 @@ def render_all(visuals: tuple[VisualSpec, ...], rasterizer: Path) -> None:
                 "--height",
                 str(variant.height),
                 "--output",
-                str(variant.output),
+                str(temporary),
                 str(variant.source),
             ]
             try:
                 subprocess.run(command, check=True)
+                _verify_png(temporary, variant.width, variant.height)
+                os.replace(temporary, variant.output)
             except subprocess.CalledProcessError as exc:
                 raise VisualRenditionError(
                     f"rasterizer failed for {visual.asset_id!r}/{variant.name!r}"
                 ) from exc
-            _verify_png(variant.output, variant.width, variant.height)
+            finally:
+                temporary.unlink(missing_ok=True)
 
 
 def write_runtime_catalog(
@@ -244,7 +249,7 @@ def write_runtime_catalog(
                 f'{variant.name} = "{_toml_text(variant.output_relative)}"'
             )
         lines.append("")
-    output_catalog.write_text("\n".join(lines), encoding="utf-8")
+    _atomic_write_text(output_catalog, "\n".join(lines))
 
 
 def _resolve_rasterizer(value: str) -> Path:
@@ -297,6 +302,20 @@ def _verify_png(path: Path, width: int, height: int) -> None:
             f"rasterizer output has unexpected dimensions for {path}: "
             f"{actual_width}x{actual_height} != {width}x{height}"
         )
+
+
+def _temporary_sibling(path: Path) -> Path:
+    return path.with_name(f".{path.name}.tmp-{os.getpid()}")
+
+
+def _atomic_write_text(path: Path, content: str) -> None:
+    temporary = _temporary_sibling(path)
+    temporary.unlink(missing_ok=True)
+    try:
+        temporary.write_text(content, encoding="utf-8")
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def _text(entry: Mapping[str, object], key: str) -> str:
