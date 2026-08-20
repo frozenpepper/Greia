@@ -56,13 +56,13 @@ The small checkpoint below is the **only intentionally mutable summary** in this
 
 | Field | Current state |
 |---|---|
-| Active art phase | **A0 — Workstream foundation** |
+| Active art phase | **A1 — Canonical style grammar and archetype specimens** |
 | Current design direction | constraint-native **puff / bean / cutout / object-friend** character language |
 | Working core cast | **Lilli** (unicorn puff), **Nino** (owl bean), **Tito** (fox puff), **Momo** (friendly monster fluff) |
 | Current motion seed | idle bounce, blink, happy hop, celebrate pop, surprised wobble, sleepy sway |
-| Current implementation status | plan and first authoring/library contracts being established; no release-quality canonical character art claimed |
-| Current evidence | design exploration only; no C0/physical visual acceptance claimed |
-| Next exact step | close A0 by landing the visual-authoring skill + starter asset-library contract, then begin A1 canonical style grammar and comparison specimens |
+| Current implementation status | A0 repository wiring complete: active plan, AGENTS registration, documentation authority map, visual-authoring skill, HANDOVER state, and non-runtime visual library seed are committed |
+| Current evidence | DESIGN SPEC + SOURCE only; no release-quality canonical character art, simulator visual acceptance, or C0/physical visual acceptance claimed |
+| Next exact step | begin A1 by defining the static construction/style grammar for Puff, Bean, Cutout Critter and Object Friend, then produce 256/128/64 comparison specimens for owner review before runtime motion APIs |
 
 ## 2.2 Append-only progress ledger
 
@@ -437,13 +437,13 @@ Greia should prefer explicit asset IDs/catalogues over “scan this directory an
 
 Model-assisted contribution is a first-class economic constraint of this project. Greia must teach models how to stay inside the visual language.
 
-The living practical guide is intended to be:
+The living practical guide is:
 
 ```text
 skills/greia-visual-authoring/SKILL.md
 ```
 
-It should cover:
+It covers:
 
 - mandatory project/design context;
 - character archetype selection;
@@ -465,20 +465,20 @@ The Activity authoring skill should eventually direct Activity models to this vi
 
 # 11. Phased work plan
 
-## A0 — Workstream foundation **[ACTIVE]**
+## A0 — Workstream foundation **[COMPLETE — DESIGN SPEC/SOURCE]**
 
 Deliverables:
 
 - [x] create this active art plan with multi-session progress protocol;
-- [ ] reference it from `AGENTS.md` as the mandatory current art-related workstream plan without superseding the blocking architecture plan;
-- [ ] establish `skills/greia-visual-authoring/SKILL.md`;
-- [ ] create a starter repository asset-library contract/readme that clearly distinguishes design inventory from runtime API;
-- [ ] record the art workstream in `HANDOVER.md` without changing R7 evidence/priority;
-- [ ] commit the tranche to `main`.
+- [x] reference it from `AGENTS.md` as the mandatory current art-related workstream plan without superseding the blocking architecture plan;
+- [x] establish `skills/greia-visual-authoring/SKILL.md`;
+- [x] create a starter repository asset-library contract/readme that clearly distinguishes design inventory from runtime API;
+- [x] record the art workstream in `HANDOVER.md` without changing R7 evidence/priority;
+- [x] commit the tranche to `main`.
 
-Closure criterion: another agent can resume art work from repository files alone and knows the exact next visual task, rules, progress location and evidence boundary.
+Closure criterion: another agent can resume art work from repository files alone and knows the exact next visual task, rules, progress location and evidence boundary. **Satisfied at repository/source scope on 2026-08-20.**
 
-## A1 — Canonical style grammar and archetype specimens
+## A1 — Canonical style grammar and archetype specimens **[ACTIVE]**
 
 Deliverables:
 
@@ -703,4 +703,46 @@ Complete A0 repository wiring, then produce A1 static archetype/style specimens 
 
 ### Commits
 
-- This entry is created with the initial plan commit; record later tranche SHAs in subsequent entries rather than rewriting this one.
+- Initial plan: `f05dda2d5e7f4dddb4f49eadfb971667591d0ec6`.
+
+## 2026-08-20 — A0 repository wiring complete; A1 activated
+
+**Phase:** A0 closure → A1 start  
+**Evidence:** DESIGN SPEC / SOURCE
+
+### Files/artifacts established
+
+- `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md` — durable art sequencing/checkpoint/ledger;
+- `skills/greia-visual-authoring/SKILL.md` — practical model/contributor visual rules;
+- `assets/visual/README.md` — starter library/provenance/runtime-boundary contract;
+- `assets/visual/library_v0.1.toml` — explicit non-runtime design seed for archetypes, core cast, expressions and base motions;
+- `AGENTS.md` — art plan + visual skill added to mandatory read/update rules;
+- `docs/DOCUMENTATION.md` — blocking-plan versus art-workstream authority clarified;
+- `HANDOVER.md` — current art direction/evidence boundary/next exact step registered without altering R7 priority.
+
+### Decisions/clarifications
+
+- The architecture-remediation plan remains the only blocking implementation sequence; the art plan is a subordinate cross-cutting visual workstream.
+- The initial visual library inventory deliberately declares `runtime_consumed = false`; this tranche does not invent an asset loader or motion API.
+- Visual evidence remains DESIGN SPEC/SOURCE only. The four working core characters are not release-approved art merely because their conceptual entries now exist.
+- Future substantive art sessions must update the checkpoint plus append-only ledger, so the work can continue reliably across sessions/agents.
+
+### Verification/evidence
+
+- Repository writes completed through the canonical GitHub connector on `main`.
+- No GitHub Actions were used or inspected.
+- No `make verify`, simulator visual acceptance or physical visual acceptance is claimed for this documentation/library-seed tranche.
+
+### Commits
+
+- plan creation: `f05dda2d5e7f4dddb4f49eadfb971667591d0ec6`
+- visual-authoring skill: `33e8067b4c5f7b7e5151f7473e30173f36ff9216`
+- asset-library README: `be8f0f788c29b803c2361ec64983565e9243bae7`
+- library seed inventory: `df746e025cc01ebaff45ae6f314767194590e954`
+- `AGENTS.md` registration: `dc41f82e6eeb16e1729d68088f8c59d509d63aba`
+- documentation authority map: `cd6a3fdd6104aceb722f281767396a6627073ffb`
+- HANDOVER registration: `7c3443d04900f38109db197a7a9dabbdb34605b8`
+
+### Next exact action
+
+Begin A1. Define the canonical static construction/style grammar for Puff, Bean, Cutout Critter and Object Friend, including outline/shadow/fill/detail limits and positive/negative examples; then build 256/128/64 static specimens for Lilli/Nino/Tito/Momo and seek owner visual review before any runtime animation-system integration.
