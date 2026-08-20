@@ -145,9 +145,37 @@ class BootDiagnosticsHardeningTests(unittest.TestCase):
         self.assertIn("ssh_host_*_key", target)
         self.assertIn("developer-remote", target)
 
+    def test_usb_writer_verifies_the_media_that_will_actually_boot(self) -> None:
+        writer = (ROOT / "tools/build-live-usb.sh").read_text(encoding="utf-8")
+        self.assertIn("removable whole disk", writer)
+        self.assertIn("MOUNTED_CHILDREN", writer)
+        self.assertIn("--read-only", writer)
+        self.assertIn("ro,noload", writer)
+        self.assertIn("fsck.vfat -n", writer)
+        self.assertIn("ldlinux.sys", writer)
+        self.assertIn("cmp -s", writer)
+        self.assertIn("cmp -n 440", writer)
+        self.assertIn("usb_flash_verification=PASS", writer)
+        self.assertIn("installer-image-profile.json", writer)
+        self.assertIn('case "$DEVICE"', writer)
+        self.assertIn('USB_PART="${DEVICE}p1"', writer)
+
+    def test_one_command_dev_workflow_builds_and_flashes_verified_usb(self) -> None:
+        workflow = (
+            ROOT / "tools/build-and-flash-development-usb.sh"
+        ).read_text(encoding="utf-8")
+        self.assertIn("build-development-installer.sh", workflow)
+        self.assertIn("build-live-usb.sh", workflow)
+        self.assertIn("source_artifact_verification=PASS", workflow)
+        self.assertIn("usb_flash_readback_verification=PASS", workflow)
+        self.assertIn("removable whole disk", workflow)
+        self.assertIn("no operator SSH key is required", workflow)
+
     def test_new_development_shell_front_doors_are_bash_syntax_valid(self) -> None:
         scripts = (
             ROOT / "tools/build-development-installer.sh",
+            ROOT / "tools/build-and-flash-development-usb.sh",
+            ROOT / "tools/build-live-usb.sh",
             ROOT / "tools/verify-development-installer.sh",
             ROOT / "tools/verify-development-target-image.sh",
             ROOT / "build/build-developer-image.sh",
