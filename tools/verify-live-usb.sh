@@ -123,16 +123,21 @@ LIVE_MEDIA_ID="$(tr -d '\r\n' < "$IMG_MOUNT/.disk/live-uuid" 2>/dev/null || true
 sed "s/LIVE_MEDIA_ID/$LIVE_MEDIA_ID/" \
   "$PROJECT_ROOT/build/live-syslinux/syslinux.cfg.in" > "$EXPECTED_CFG"
 
-# Guard the accepted Acer development diagnostics contract from the postmortem.
-# A future consoleless production path may be introduced separately only after
-# physical acceptance; the current reference-hardware development USB remains
-# observable so early failures are not converted into grey-screen reboot loops.
+# Guard the accepted Acer recovery diagnostics contract from the postmortems.
+# The current hardware-recovery USB must expose tty1, must not auto-reboot a
+# panic, and must not deliberately suppress the early evidence we need to
+# distinguish Syslinux/kernel/initramfs/live-boot failures. Production polish
+# is a separate acceptance step after the reference hardware is healthy again.
 grep -q 'console=tty1' "$EXPECTED_CFG" || {
   echo "Refusing: current Syslinux template is not observable (missing console=tty1)." >&2
   exit 1
 }
-if grep -q 'console=null\|DISPLAY .*clear\.msg' "$EXPECTED_CFG"; then
-  echo "Refusing: current Syslinux template reintroduces the rejected silent/clear-screen experiment." >&2
+grep -q 'panic=0' "$EXPECTED_CFG" || {
+  echo "Refusing: Acer recovery template must use panic=0 so fatal errors remain on screen." >&2
+  exit 1
+}
+if grep -Eq 'console=null|DISPLAY .*clear\.msg|panic=[1-9][0-9]*|(^|[[:space:]])quiet([[:space:]]|$)|(^|[[:space:]])splash([[:space:]]|$)|loglevel=0' "$EXPECTED_CFG"; then
+  echo "Refusing: current Syslinux template reintroduces hidden or auto-rebooting recovery behavior." >&2
   exit 1
 fi
 
@@ -186,3 +191,4 @@ echo "  usb_readback_verification=PASS"
 echo "  bootloader=syslinux (MBR+VBR)"
 echo "  live_media_id=$LIVE_MEDIA_ID"
 echo "  diagnostic_console=tty1"
+echo "  panic_policy=halt-on-panic"
