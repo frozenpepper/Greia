@@ -1,6 +1,6 @@
 [Unit]
 Description=Greia OS child launcher
-After=local-fs.target systemd-logind.service greia-first-boot.service
+After=local-fs.target systemd-tmpfiles-setup.service systemd-logind.service greia-first-boot.service
 Requires=greia-first-boot.service
 Wants=greia-parent.service
 Conflicts=getty@tty1.service
@@ -23,11 +23,9 @@ Environment=GREIA_ACTIVE_PROFILE_STATUS=/run/greia-os/active-profile.json
 Environment=GREIA_MEDIA_ROOT=/media/greia
 Environment=GREIA_SYSTEM_SETTINGS_DIR=/var/lib/greia-system-settings
 Environment=GREIA_HARDWARE_STATUS=/run/greia-hardware/status.json
-# /run is tmpfs and starts empty on every boot. systemd constructs service
-# namespaces before ExecStartPre, so Greia-owned volatile paths must exist
-# before xinit or any helper starts.
-RuntimeDirectory=greia-os
-RuntimeDirectoryMode=0755
+# Volatile Greia runtime roots are created on every boot by
+# /etc/tmpfiles.d/greia-runtime.conf. Do not let an application service chown a
+# shared /run path according to whichever service happens to start first.
 ExecStartPre=+/usr/local/lib/greia-os/prepare-launcher-vt
 ExecStart=/usr/bin/xinit /usr/local/lib/greia-os/greia-x-session -- :0 vt1 -keeptty -novtswitch -background none -quiet -nolisten tcp -noreset
 Restart=always
