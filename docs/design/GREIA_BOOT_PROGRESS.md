@@ -32,15 +32,36 @@ The first implementation intentionally uses a small number of stable ownership b
 | 15% | initramfs `init-top` | Greia acquired a usable framebuffer and early device setup has begun. |
 | 30% | initramfs `local-premount` | device discovery/root preparation has advanced to pre-mount. |
 | 45% | initramfs `init-bottom` | root handoff is ready; Greia is about to enter userspace. |
-| 55% | `greia-first-boot` | installed userspace is alive and persistent/volatile Greia state is being prepared. |
-| 65% | `greia-first-boot` | one-time state initialization completed. |
+| 55% | `greia-first-boot` | installed userspace is alive and one-time persistent Greia state is being prepared. |
+| 65% | `greia-first-boot` | one-time persistent state initialization completed. |
 | 78% | launcher/installer VT preflight | VT/X preflight passed and the graphical server is being started. Every restart remains 78%. |
-| ~92% | first X/Pygame frame | a real graphical surface exists; launcher-owned presentation may continue the same boot visual. |
+| ~92% | first X/Pygame frame | a real graphical surface exists; launcher-owned presentation continues the same boot visual. |
 | 100% | launcher/installer UI | represented by replacement of the boot cover with the interactive Greia surface, not by an artificial final delay. |
 
 The live installer omits the installed-system first-boot milestones; it moves from the initramfs milestones to graphical preflight.
 
 Percentages are product presentation values attached to real milestones. They are not estimates of elapsed wall-clock time.
+
+## Volatile runtime-root invariant
+
+`/run` is tmpfs and starts empty on every boot. Therefore Greia runtime directories must never be owned by the one-time first-boot initializer or created/chowned opportunistically by whichever application service happens to start first.
+
+The installed system uses:
+
+```text
+/etc/tmpfiles.d/greia-runtime.conf
+```
+
+as the recurring authority for:
+
+```text
+/run/greia-os
+/run/greia-hardware
+```
+
+with their final owner/group/mode. Launcher and Parent services are ordered after `systemd-tmpfiles-setup.service`. The launcher preflight verifies the directories exist; it does not race other services by changing shared runtime ownership.
+
+This rule was added after the Acer boot investigation exposed that `/run/greia-hardware` had been created inside a one-time initializer even though the directory disappears on every reboot. Even where that was not proven to be the exact cause of the observed 18 launcher restarts, the lifecycle was structurally invalid and could produce later-boot failures.
 
 ## Rendering architecture
 
@@ -66,7 +87,7 @@ The renderer remains:
 
 The raw framebuffer must remain at the last truthful milestone until a real graphical surface is acquired. `-background none` remains a continuity hint, not proof.
 
-The launcher-side boot presentation should redraw the same canonical canvas before its first display flip, carry a near-complete progress state, then transition into the bounded launcher intro/profile UI.
+The launcher-side boot presentation redraws the same canonical canvas at the start of its bounded intro path, carries the near-complete 92% progress state, then transitions into the launcher/profile UI.
 
 ### After X is available
 
@@ -92,6 +113,8 @@ That incident establishes two independent acceptance requirements:
 1. no successful boot may leave a static Linux status line as the only visible indication of life;
 2. launcher startup must be instrumented and fixed so repeated restarts are not treated as normal boot work.
 
+The current service ordering already places `greia-first-boot.service` before the launcher. Therefore the precise cause of that 18-restart incident must come from captured launcher/X logs; it must not be permanently documented as a first-boot race without evidence.
+
 ## Acceptance
 
 A boot-progress implementation is not accepted from source inspection alone. Physical/video acceptance must demonstrate:
@@ -102,4 +125,5 @@ A boot-progress implementation is not accepted from source inspection alone. Phy
 4. no stale systemd/UTMP line becomes the apparent boot screen after Greia owns the framebuffer;
 5. no black/white interstitial is introduced at the X handoff;
 6. successful launcher acquisition replaces the progress frame with the interactive UI;
-7. normal boot time is measured separately and retry storms are treated as failures, not as acceptable slow-path behavior.
+7. normal boot time is measured separately and retry storms are treated as failures, not as acceptable slow-path behavior;
+8. a second boot after installation recreates `/run/greia-os` and `/run/greia-hardware` with the expected ownership before launcher/Parent startup.
