@@ -5,7 +5,7 @@
 **Repository:** `frozenpepper/Greia` (private)  
 **Canonical/default/development branch:** `main`  
 **Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**  
-**Current cross-cutting work:** device-language/localization + child UX + R13B transactional updates + Activity Simulator/emoji/Writing + **active Greia asset-first visual-library workstream (V2/V3)**  
+**Current cross-cutting work:** device-language/localization + child UX + R13B transactional updates + Activity Simulator/emoji/Writing + **active Greia asset-first visual-library workstream (V2/V3/V4A)**  
 **External Parent HTML runtime revision pinned by Greia:** `frozenpepper/Greia-Parent-App-Html@519651a5931269ed4275324f2a87ad3f0d08a3f6`
 
 This file is the current-state continuation contract. Detailed chronology belongs in the active plans/reviews. Exact APIs and limits remain source-owned.
@@ -42,7 +42,7 @@ Retained physical history from 2026-08-19: a fresh `legacy-x86-i686-dev` syslinu
 
 ---
 
-# 3. Active Greia visual-library workstream — V2/V3
+# 3. Active Greia visual-library workstream — V2/V3/V4A
 
 Canonical continuity:
 
@@ -53,11 +53,13 @@ docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md
 docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md
 skills/greia-visual-authoring/SKILL.md
 runtime/theme-defaults.toml
+assets/visual/README.md
 assets/visual/environments/forest_meadow/v0.2/
 assets/visual/ui/v0.1/
+assets/visual/environments/workshop/v0.1/
 ```
 
-## 3.1 Current production rule
+## 3.1 Production rule
 
 The visual workstream is explicitly **asset-first**:
 
@@ -67,16 +69,9 @@ Do not return to crude full-screen mockups, tutorial geometry, or decorative HTM
 
 The accepted simplified character direction remains valid, but character minutiae no longer block backgrounds, props, atmosphere, shadows or UI.
 
-Core character anchors remain:
+Core character anchors remain **Lilli, Nino, Tito and Momo**. Static style-anchor approval is not final release/runtime/physical approval.
 
-- **Lilli** — unicorn Puff;
-- **Nino** — owl Bean;
-- **Tito** — fox Puff;
-- **Momo** — friendly monster Puff.
-
-Static style-anchor approval does not mean final release/runtime/physical approval.
-
-## 3.2 Forest / meadow candidate pack
+## 3.2 Forest / meadow v0.2
 
 Canonical source:
 
@@ -98,38 +93,22 @@ The pack contains **27 reusable SVG masters** covering:
 - small/wide contact shadows;
 - fireflies, dust motes and falling leaves.
 
-Metadata/review/proof files:
+Metadata/review/proof:
 
 ```text
-assets/visual/environments/forest_meadow/v0.2/catalog.toml
-assets/visual/environments/forest_meadow/v0.2/REVIEW.md
-assets/visual/environments/forest_meadow/v0.2/composition_day.toml
-assets/visual/environments/forest_meadow/v0.2/parallax_proof.html
+catalog.toml
+REVIEW.md
+composition_day.toml
+parallax_proof.html
 ```
 
-The catalog records candidate state, semantic ID, layer/parallax role and ambient-motion guidance. `runtime_consumed = false` remains explicit.
+`runtime_consumed = false` remains explicit.
 
-A first desktop visual-review pass caught and corrected weak treatments rather than hiding them in a composition:
+Desktop review caught and corrected weak sapling, distant-tree-line, fog and dust-mote treatments. A 1024×600 static composition was assembled locally from the actual masters. `parallax_proof.html` uses the committed SVGs with cheap CSS cloud drift, small foliage sway, fog drift, light breathing and firefly movement. It is a design proof, not runtime architecture.
 
-- sapling silhouette/detail balance;
-- repetitive geometric distant tree line;
-- insufficient fog depth;
-- barely visible dust motes.
+Current evidence: **SOURCE + DESKTOP VISUAL REVIEW** only.
 
-A 1024×600 static composition was assembled locally from the actual masters. `composition_day.toml` records far/mid/near/overlay roles and restrained motion parameters. `parallax_proof.html` exercises the committed SVGs with cheap CSS-only cloud drift, small foliage sway, fog drift, light breathing and firefly movement. It is a design proof, **not** a runtime scene framework.
-
-Current environment evidence:
-
-```text
-SOURCE
-DESKTOP VISUAL REVIEW
-```
-
-Not claimed:
-
-- owner-approved release-art status;
-- simulator/runtime acceptance;
-- physical Acer/Pi performance acceptance.
+Remaining forest work is intentionally bounded: one 800×600 / 1024×600 restraint/readability pass, then stop polishing the forest indefinitely.
 
 ## 3.3 Shared UI visual pack v0.1
 
@@ -139,58 +118,81 @@ Canonical source:
 assets/visual/ui/v0.1/
 ```
 
-Current reusable masters include:
+The pack now includes reusable masters for:
 
-- panel + sheet;
-- default + focused activity card;
-- primary / secondary / quiet / icon buttons;
-- default + selected tab pills;
-- new / completed / locked badges;
-- progress track + fill;
-- speech + thought bubbles;
-- reward frame;
-- avatar frame;
-- shared focus ring;
-- soft shadow;
-- highlight sheen.
+- panel/sheet;
+- default/focused/completed activity cards;
+- primary/hover/pressed/disabled/secondary/quiet/icon buttons;
+- default/selected tabs;
+- new/done/favorite/locked badges;
+- progress track/fill/complete;
+- speech/thought bubbles;
+- reward/avatar frames;
+- loading orbit;
+- gentle-error cloud;
+- empty basket;
+- category/location portal frame;
+- focus ring, soft shadow and highlight sheen.
 
 Metadata/review:
 
 ```text
 assets/visual/ui/v0.1/catalog.toml
+assets/visual/ui/v0.1/README.md
 assets/visual/ui/v0.1/REVIEW.md
 ```
 
-The pack is aligned to `runtime/theme-defaults.toml`, keeps child-facing text outside the artwork for localization/reuse, and does not replace Greia Screen/Overlay/Panel/Card/Control semantics.
+The pack is aligned to `runtime/theme-defaults.toml`, embeds no child-facing text, and remains `runtime_consumed = false`.
 
-Representative UI assets were rasterized locally and reviewed on Greia cream, Greia sky and dark charcoal. Focus/selected examples use frame/shape cues in addition to color.
+Representative components have been rasterized and desktop-reviewed on Greia cream, Greia sky and dark charcoal. Focus/selection uses shape/frame cues in addition to color. The expanded static-state tranche was also reviewed together before catalog indexing.
 
-Current UI evidence:
+Current evidence: **SOURCE + DESKTOP VISUAL REVIEW** only.
+
+Next UI work is a real 800×600 / 1024×600 component composition using these assets, followed by any targeted revision; do not redraw a primitive launcher mock.
+
+## 3.4 Workshop v0.1 started
+
+Canonical source:
 
 ```text
-SOURCE
-DESKTOP VISUAL REVIEW
+assets/visual/environments/workshop/v0.1/
 ```
 
-Not claimed:
+First reusable candidate tranche contains:
 
-- owner approval;
-- platform integration;
-- 800×600 / 1024×600 simulator acceptance;
-- physical performance acceptance.
+- workbench;
+- shelf;
+- paint palette;
+- brush bundle;
+- pencil cup;
+- blocks;
+- storage box;
+- paper stack;
+- rug;
+- desk lamp;
+- window;
+- window-light overlay;
+- paint jars.
 
-## 3.4 Exact visual continuation
+Metadata/review:
 
-Continue from the active plan checkpoint, currently:
+```text
+catalog.toml
+README.md
+REVIEW.md
+```
 
-1. finish missing UI visual states: hover/pressed/disabled/favorite/progress-complete/reward;
-2. add loading/error/empty-state illustration pieces and any needed category/location frame art;
-3. create a low-resolution UI reference composition from the **real shared assets**, not replacement primitives;
-4. do one final restraint/readability pass on forest/meadow at 800×600 and 1024×600;
-5. then begin **Workshop v0.1** as individual reusable assets;
-6. Clinic follows Workshop unless the owner reprioritizes.
+Desktop contact review shows a coherent warm wood/pastel creative-room family and keeps the window light separate from the window so lighting remains composable. `runtime_consumed = false`.
 
-Do not invent the runtime asset loader/compositor during this visual-production work. Runtime consumption remains a later architecture-reviewed integration step.
+Before composition: reduced-size review of large furniture, add only composition-critical missing pieces such as a stool/chair, wall/floor base or pegboard, then assemble one layered workshop reference composition.
+
+## 3.5 Exact visual continuation
+
+1. build the low-resolution UI reference composition from the real shared UI assets and revise only specific weak components;
+2. run the final bounded 800×600 / 1024×600 forest restraint/readability pass;
+3. finish Workshop composition-critical assets and one layered workshop composition;
+4. begin Clinic individual assets next unless the owner reprioritizes;
+5. keep all current catalogs non-runtime authority until an explicit architecture-reviewed consumption seam exists.
 
 ---
 
@@ -253,7 +255,7 @@ Mandatory architecture remains:
 - controller ownership/normalization remains platform-owned;
 - ordinary Activities do not gain raw `/dev/input` or DRM authority.
 
-Art/asset work may advance independently where it does not bypass these architecture prerequisites.
+Art/asset work may advance independently where it does not bypass these prerequisites.
 
 ---
 
@@ -289,12 +291,12 @@ docs/testing/LOCAL_AGENT_START_HERE.md
 
 ## Visual workstream
 
-1. Keep `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md` as the sequencing authority.
-2. Finish the first missing V3 UI state/illustration tranche and low-resolution review.
-3. Finish the V2A forest/meadow restraint/readability pass; avoid endless refinement after the pack is coherent.
-4. Start Workshop v0.1 individual assets next.
-5. Keep environment/UI assets reusable and individually reviewable.
-6. Do not create a new runtime scene/UI framework as part of visual production.
+1. Keep `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md` as sequencing authority.
+2. Make the low-resolution UI reference composition from the current V3 masters.
+3. Finish the bounded forest restraint/readability pass.
+4. Complete Workshop composition-critical pieces and a layered reference composition.
+5. Begin Clinic individual assets next.
+6. Keep environment/UI assets reusable and individually reviewable; do not create a new runtime scene/UI framework during art production.
 
 ---
 
@@ -315,6 +317,6 @@ docs/testing/LOCAL_AGENT_START_HERE.md
 - Greia visual work remains asset-first;
 - candidate files in Git are not automatically approved;
 - static character style-anchor approval is not runtime/release/physical approval;
-- after each substantive art session update the active visual plan checkpoint + append-only progress log and this HANDOVER when continuation materially changes.
+- after each substantive art session update the active visual plan checkpoint + append-only progress log and this HANDOVER when continuation changes materially.
 
-For visual continuation, start from the **current V2/V3 asset-library checkpoint**, not from the rejected detailed-unicorn/A2-overlay experiments.
+For visual continuation, start from the **current V2/V3/V4A asset-library checkpoint**, not from the rejected detailed-unicorn/A2-overlay experiments.
