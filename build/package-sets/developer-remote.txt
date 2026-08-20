@@ -2,6 +2,12 @@
 # openssh-server and sudo are repeated deliberately so this package set remains
 # self-describing even if parent-recovery composition changes later. Package
 # resolution de-duplicates the final target list.
+#
+# Avahi is explicit here because the development contract includes predictable
+# .local recovery names for both the live installer and installed OS; do not
+# rely on another package set to pull it in accidentally.
+avahi-daemon
+libnss-mdns
 openssh-server
 python3-pil
 sudo
