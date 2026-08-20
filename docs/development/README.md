@@ -1,13 +1,28 @@
 # Greia Developer Manuals
 
 **Status:** living navigation index  
-**Date:** 2026-08-19
+**Date:** 2026-08-20
 
 This directory contains practical developer/operator manuals below Greia's accepted architecture and source-owned implementation contracts.
 
 For documentation authority and precedence, read `docs/DOCUMENTATION.md` first.
 
 ## Current manuals
+
+### Developer boot diagnostics
+
+`GREIA_DEVELOPER_BOOT_DIAGNOSTICS.md`
+
+Read this when a development Greia image reaches the installed root filesystem but does not reach the child launcher, or when SSH is needed to diagnose a graphical boot failure. It explains:
+
+- why a persistent `PIP_ROOT: clean ...` line does not prove that boot stopped at filesystem checking;
+- the `greia-dev.local` network/SSH probe path;
+- the development-only SSH host-key bootstrap and authentication contract;
+- the exact systemd/journal/Xorg evidence to capture before changing services;
+- the current provisional launcher/Xorg chain;
+- how to reason about older images that predate the SSH bootstrap.
+
+Historical Acer root-mount/service failures remain documented in `docs/INSTALLED_OS_BOOT_POSTMORTEM.md`.
 
 ### System update release workflow
 
