@@ -100,12 +100,30 @@ class BootDiagnosticsHardeningTests(unittest.TestCase):
         self.assertIn("PROMPT 0", cfg)
         self.assertIn("TIMEOUT 0", cfg)
         self.assertIn("console=tty1", cfg)
-        self.assertIn("panic=30", cfg)
+        self.assertIn("panic=0", cfg)
+        self.assertIn("loglevel=4", cfg)
+        self.assertIn("systemd.show_status=true", cfg)
+        self.assertIn("rd.systemd.show_status=true", cfg)
+        self.assertNotIn("panic=30", cfg)
         self.assertNotIn("console=null", cfg)
+        self.assertNotIn(" quiet ", f" {cfg} ")
+        self.assertNotIn(" splash ", f" {cfg} ")
+        self.assertNotIn("loglevel=0", cfg)
         self.assertNotIn("DISPLAY ", cfg)
         self.assertNotIn("clear.msg", cfg)
         self.assertNotIn("NOESCAPE", cfg)
         self.assertNotIn("NOCOMPLETE", cfg)
+
+    def test_developer_installed_boot_is_observable_and_non_rebooting(self) -> None:
+        grub = (
+            ROOT / "build/overlay/etc/grub.d/10_greia_appliance"
+        ).read_text(encoding="utf-8")
+        self.assertIn('console_arg="console=null"', grub)
+        self.assertIn('panic_arg="panic=5"', grub)
+        self.assertIn('console_arg="console=tty1"', grub)
+        self.assertIn('panic_arg="panic=0"', grub)
+        self.assertIn('visibility_args="loglevel=4 systemd.show_status=true', grub)
+        self.assertIn("developer-remote", grub)
 
     def test_boot_art_generator_stays_on_accepted_rgb565_safe_transform(self) -> None:
         generator = (ROOT / "tools/generate_boot_artwork.py").read_text(
@@ -189,6 +207,8 @@ class BootDiagnosticsHardeningTests(unittest.TestCase):
         self.assertIn("cmp -n 440", verifier)
         self.assertIn("usb_readback_verification=PASS", verifier)
         self.assertIn("console=tty1", verifier)
+        self.assertIn("panic=0", verifier)
+        self.assertIn("panic=[1-9]", verifier)
         self.assertIn("console=null", verifier)  # explicit rejection check
         self.assertIn("DISPLAY .*clear", verifier)
 
