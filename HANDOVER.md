@@ -5,7 +5,7 @@
 **Repository:** `frozenpepper/Greia` (private)  
 **Canonical/default/development branch:** `main`  
 **Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**  
-**Current cross-cutting work:** device-language/localization + child UX + R13B transactional updates + Activity Simulator/emoji/Writing + **active asset-first visual-library workstream through V4C Reading/Classroom**  
+**Current cross-cutting work:** device-language/localization + child UX + R13B transactional updates + Activity Simulator/emoji/Writing + **asset-first visual library through Water/Pond; V5 shared-consumption preflight next**  
 **External Parent HTML runtime revision pinned by Greia:** `frozenpepper/Greia-Parent-App-Html@519651a5931269ed4275324f2a87ad3f0d08a3f6`
 
 This file is the current-state continuation contract. Detailed chronology belongs in the active plans/reviews. Exact APIs and limits remain source-owned.
@@ -42,7 +42,7 @@ Retained physical history from 2026-08-19: a fresh `legacy-x86-i686-dev` syslinu
 
 ---
 
-# 3. Active Greia visual-library workstream — V2/V3/V4
+# 3. Active Greia visual-library workstream — V2/V3/V4/V5 preflight
 
 Canonical continuity:
 
@@ -54,37 +54,37 @@ docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md
 skills/greia-visual-authoring/SKILL.md
 runtime/theme-defaults.toml
 assets/visual/README.md
+assets/visual/library_v0.1.toml
+assets/visual/packs_v0.1.toml
 assets/visual/environments/forest_meadow/v0.2/
 assets/visual/ui/v0.1/
 assets/visual/environments/workshop/v0.1/
 assets/visual/environments/clinic/v0.1/
 assets/visual/environments/reading_classroom/v0.1/
+assets/visual/environments/fantasy_village_night/v0.1/
+assets/visual/environments/water_pond/v0.1/
 ```
 
 ## 3.1 Production rule
 
 The workstream remains explicitly **asset-first**:
 
-> excellent individual assets → reusable asset packs → layered composition → subtle parallax / ambient motion / light / shadow → shared UI system → Shell/Activity reuse
+> excellent individual assets → reusable asset packs → layered composition → subtle parallax / ambient motion / light / shadow → shared UI system → one explicit shared consumption seam → Shell/Activity reuse
 
-Do not return to crude full-screen mockups, tutorial geometry, decorative HTML that hides weak assets, or generated scene/concept images as a substitute for reusable source production.
+Do not return to crude full-screen mockups, tutorial geometry, decorative HTML that hides weak assets, generated scene/concept images as a substitute for reusable source production, or duplicate generic assets when a shared master already exists.
 
-The simplified character direction remains valid, but character minutiae do not block backgrounds, props, atmosphere, shadows or UI. Core anchors remain **Lilli, Nino, Tito and Momo**. Static style-anchor approval is not final release/runtime/physical approval.
+The simplified character direction remains valid, but character minutiae do not block backgrounds, props, atmosphere, shadows, UI or V5 consumption work. Core anchors remain **Lilli, Nino, Tito and Momo**. Static style-anchor approval is not final release/runtime/physical approval.
 
 ## 3.2 Current pack status
 
 ### Forest / meadow v0.2
 
-`assets/visual/environments/forest_meadow/v0.2/`
-
 - 27 reusable SVG masters;
 - composition metadata + actual-asset parallax proof;
-- final bounded 1024×600 / 800×600 desktop restraint references;
-- default day treatment keeps fireflies/dust/leaves optional, lowers atmosphere intensity and preserves a calm center.
+- bounded 1024×600 / 800×600 desktop restraint references;
+- default day treatment keeps optional atmosphere subordinate and preserves a calm center.
 
 ### Shared UI v0.1
-
-`assets/visual/ui/v0.1/`
 
 - broad panels/cards/buttons/tabs/badges/progress/bubbles/reward/avatar/focus/loading/error/empty/portal family;
 - static interaction-state masters for focus/hover/press/disabled/completed/favorite;
@@ -92,43 +92,70 @@ The simplified character direction remains valid, but character minutiae do not 
 
 ### Workshop v0.1
 
-`assets/visual/environments/workshop/v0.1/`
-
 - 19 reusable masters;
 - warm creative-room furniture/props plus only composition-critical wall/floor, stool, pegboard, easel and note additions;
-- separate window/light treatment;
-- independent 1024×600 / 800×600 layered references.
+- independent target-size layered references.
 
 ### Clinic / care v0.1
 
-`assets/visual/environments/clinic/v0.1/`
-
 - 17 reusable masters;
 - warm pretend-care furniture/props, room bases, window/light and restrained heart FX;
-- reduced-size + 1024×600 / 800×600 desktop review;
+- reduced-size + target-size desktop review;
 - no medicine labels/dosage-like content.
 
 ### Reading / classroom v0.1
 
-`assets/visual/environments/reading_classroom/v0.1/`
+- 17 reusable masters;
+- room bases, arched window/light, bookcase/books, reading tent/rug/seating, chalkboard and restrained decor;
+- reuses Workshop blocks/pencil-cup assets rather than duplicating them;
+- weak book-stack, tent and beanbag treatments were revised during desktop review.
 
-- 17 reusable masters: room bases, arched window/light, bookcase/books, reading tent/rug/seating, chalkboard and restrained decor;
-- explicitly reuses Workshop `blocks` and `pencil_cup` rather than duplicating those source assets;
-- first desktop review revised weak `book_stack`, `reading_tent` and `beanbag` treatments;
-- `catalog.toml`, `REVIEW.md`, `COMPOSITION.md`, `composition.toml` record source/review/composition boundaries.
+### Fantasy / village / night v0.1
 
-All current packs remain **candidate** and `runtime_consumed = false`.
+- 15 reusable masters;
+- night sky/moon, distant village/castle, cottages, tower, bridge, lantern, signpost, well, cobblestone and separate light/FX overlays;
+- reuses Forest greenery/fireflies;
+- weak cottages/tower/lantern/well/cobblestone and over-dominant composition treatment were corrected before review was recorded.
 
-Current evidence is **SOURCE + DESKTOP VISUAL REVIEW** only. No simulator/runtime/physical-art acceptance is claimed.
+### Water / pond v0.1
 
-## 3.3 Exact visual continuation
+- 14 water-specific reusable masters;
+- pond water/bank, lilies/reeds/duckweed, dock/stepping stones, shimmer/reflection/ripple treatment and restrained fish/dragonfly/bubble FX;
+- target references reuse canonical Forest distant hills/tree line; catalog also points to Forest rocks/log/grass/flowers;
+- dock/lily-pad weaknesses were corrected during individual review; water/lily/reed depth was strengthened before target-size composition review;
+- independent 1024×600 / 800×600 references committed.
 
-1. start the **fantasy/village/night** family with reusable individual masters first;
-2. review weak assets individually before any reference scene is considered evidence;
-3. keep moonlight/window glow/fog/stars/fireflies separate composable layers with optional subtle motion metadata;
-4. reuse existing Forest assets where semantically appropriate rather than creating pointless duplicates;
-5. continue existing pack refinement only for concrete defects or owner feedback;
-6. keep all catalogs non-runtime authority until an explicit architecture-reviewed consumption seam exists.
+Pack-level dependencies/review state now live in `assets/visual/packs_v0.1.toml`; the older character seed inventory was refreshed to reference it.
+
+All current visual packs remain **candidate** and `runtime_consumed = false`. Current evidence is **SOURCE + DESKTOP VISUAL REVIEW** only. No simulator/runtime/physical-art acceptance is claimed.
+
+## 3.3 Exact visual continuation — V5
+
+Broad candidate environment/UI coverage is now sufficient. Do not create another environment family unless a concrete reusable gap is demonstrated.
+
+Greia already has accepted platform asset boundaries:
+
+```text
+src/greia_platform/assets.py
+src/greia_platform/activity_assets.py
+assets/catalog/core_icons_v1.toml
+```
+
+Current source facts:
+
+- `AssetCatalogue` already performs explicit manifest-driven global icon resolution, duplicate-ID rejection and path containment;
+- Activity packages have a separate validated package-owned PNG/WebP icon boundary;
+- V5 must extend the existing explicit catalogue pattern, not invent directory discovery or a parallel asset framework.
+
+Next work:
+
+1. trace `AssetCatalogue` callers/tests and current renderer assumptions;
+2. define the smallest backwards-compatible typed visual-asset manifest extension;
+3. keep lookup/path validation separate from decode/cache policy;
+4. test duplicate IDs, missing files, path escape, unsupported kinds/variants and old icon compatibility;
+5. integrate one controlled Shell/UI consumption path before generalizing to Activities;
+6. keep Python/Web Activities on one semantic contract;
+7. only after real integration collect simulator/physical low-resource evidence.
 
 ---
 
@@ -228,10 +255,11 @@ docs/testing/LOCAL_AGENT_START_HERE.md
 ## Visual workstream
 
 1. Keep `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md` as sequencing authority.
-2. Start fantasy/village/night as the next bounded individual-asset family.
-3. Preserve the asset-first/reuse discipline: no generated scene concept substitutions and no duplicate props when a shared master already exists.
-4. Build reference compositions only from real reviewed assets and keep atmosphere/light/FX separately composable.
-5. Keep environment/UI catalogs candidate/non-runtime until a reviewed platform consumption seam exists.
+2. Start V5 by tracing the existing platform asset catalogue/callers/tests.
+3. Extend the explicit manifest-driven architecture; do not add filesystem scans or another unrelated asset framework.
+4. Use `assets/visual/packs_v0.1.toml` and the per-pack catalogs as design input only until runtime mapping is explicitly reviewed.
+5. Integrate one controlled Shell/UI path first, then expand only with evidence.
+6. Do not create additional environment packs without a demonstrated reusable coverage gap.
 
 ---
 
@@ -252,6 +280,8 @@ docs/testing/LOCAL_AGENT_START_HERE.md
 - Greia visual work remains asset-first;
 - candidate files in Git are not automatically approved;
 - static character style-anchor approval is not runtime/release/physical approval;
+- broad visual coverage does not authorize endless new packs;
+- V5 must reuse the existing explicit asset-catalogue architecture;
 - after each substantive art session update the active visual plan checkpoint + append-only progress log and this HANDOVER when continuation changes materially.
 
-For visual continuation, start from the **current V2/V3/V4 asset-library checkpoint**, not from rejected character-rig, A2-overlay, crude-scene or generated-concept experiments.
+For visual continuation, start from the **Water/Pond-complete candidate library and V5 catalogue preflight**, not from rejected character-rig, A2-overlay, crude-scene or generated-concept experiments.
