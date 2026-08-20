@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import subprocess
 import unittest
 from pathlib import Path
 
@@ -61,7 +62,6 @@ class BootDiagnosticsHardeningTests(unittest.TestCase):
         for profile in profiles:
             with self.subTest(profile=profile.name):
                 text = profile.read_text(encoding="utf-8")
-                # One declaration in target_sets and one in installer_sets.
                 self.assertGreaterEqual(text.count('"developer-remote"'), 2)
 
     def test_developer_remote_package_set_owns_ssh_and_mdns_dependencies(self) -> None:
@@ -108,20 +108,61 @@ class BootDiagnosticsHardeningTests(unittest.TestCase):
         )
         self.assertIn("tools/generate_boot_artwork.py", legacy)
         self.assertIn("pixel-identical", legacy)
+        self.assertIn("verify-development-installer.sh", legacy)
+        self.assertIn("development_ssh_artifact_verified", legacy)
 
-    def test_artifact_verifier_checks_both_squashfs_recovery_contracts(self) -> None:
-        verifier = (ROOT / "tools/verify-development-installer.sh").read_text(
+    def test_active_direct_developer_builder_does_not_generate_client_keys(self) -> None:
+        builder = (ROOT / "build/build-developer-image.sh").read_text(
             encoding="utf-8"
         )
-        self.assertIn("live/filesystem.squashfs", verifier)
-        self.assertIn("payload/pip-rootfs.squashfs", verifier)
-        self.assertIn("etc/shadow", verifier)
-        self.assertIn("multi-user.target.wants/ssh.service", verifier)
-        self.assertIn("prepare-developer-ssh", verifier)
-        self.assertIn("AuthenticationMethods password", verifier)
-        self.assertIn("20-greia-wired.network", verifier)
-        self.assertIn("25-greia-wireless.network", verifier)
-        self.assertIn("developer-remote", verifier)
+        self.assertNotIn("provision_developer_image.py", builder)
+        self.assertNotIn("greiaadmin", builder)
+        self.assertNotIn("greia_remote.py", builder)
+        self.assertIn("verify-development-target-image.sh", builder)
+        self.assertIn("developer-remote", builder)
+        self.assertIn("no operator SSH key file", builder)
+
+    def test_artifact_verifiers_cover_recovery_contract(self) -> None:
+        installer = (ROOT / "tools/verify-development-installer.sh").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("live/filesystem.squashfs", installer)
+        self.assertIn("payload/pip-rootfs.squashfs", installer)
+        self.assertIn("etc/shadow", installer)
+        self.assertIn("multi-user.target.wants/ssh.service", installer)
+        self.assertIn("prepare-developer-ssh", installer)
+        self.assertIn("AuthenticationMethods password", installer)
+        self.assertIn("20-greia-wired.network", installer)
+        self.assertIn("25-greia-wireless.network", installer)
+        self.assertIn("developer-remote", installer)
+
+        target = (ROOT / "tools/verify-development-target-image.sh").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("etc/shadow", target)
+        self.assertIn("multi-user.target.wants/ssh.service", target)
+        self.assertIn("prepare-developer-ssh", target)
+        self.assertIn("ssh_host_*_key", target)
+        self.assertIn("developer-remote", target)
+
+    def test_new_development_shell_front_doors_are_bash_syntax_valid(self) -> None:
+        scripts = (
+            ROOT / "tools/build-development-installer.sh",
+            ROOT / "tools/verify-development-installer.sh",
+            ROOT / "tools/verify-development-target-image.sh",
+            ROOT / "build/build-developer-image.sh",
+            ROOT / "build/build-legacy-x86-sd-installer.sh",
+        )
+        for script in scripts:
+            with self.subTest(script=script.name):
+                completed = subprocess.run(
+                    ["bash", "-n", str(script)],
+                    check=False,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                )
+                self.assertEqual(completed.returncode, 0, completed.stderr)
 
     def test_normal_security_floor_still_disables_password_and_root_ssh(self) -> None:
         security_floor = (
