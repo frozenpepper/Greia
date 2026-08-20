@@ -3,9 +3,11 @@
 **Status:** ACTIVE ART/VISUAL WORKSTREAM  
 **Date:** 2026-08-20  
 **Repository:** `frozenpepper/Greia`  
-**Branch:** `main`
+**Branch:** `main`  
+**Stable system/index guide:** `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`  
+**Current visual resume:** `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md`
 
-This plan owns the current Greia visual-library workstream.
+This plan owns the current Greia visual-library workstream **sequencing, checkpoint and append-only progress history**. The stable architecture/index belongs in `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`; the short cross-session continuation contract belongs in `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md`.
 
 > **excellent individual assets → reusable asset packs → layered composition → subtle parallax / ambient motion / light / shadow → shared UI system → one explicit shared consumption seam → Shell/Activity reuse**
 
@@ -109,6 +111,8 @@ tests/test_validate_visual_renditions.py
 tests/test_launcher_visual_assets.py
 ```
 
+The complete architecture/navigation explanation for these files is in `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`.
+
 ## 4.1 Catalogue contract — source implemented
 
 `AssetCatalogue` retains existing icon behavior and supports typed shared visuals:
@@ -160,7 +164,7 @@ ui.shadow.soft              default
 - PNG signatures;
 - exact expected PNG dimensions.
 
-This is suitable as the pre-image / local-acceptance check once renditions exist.
+This validator remains part of the source/build contract. The current owner-directed local-agent acceptance tranche uses the Activity Simulator for runtime/visual/fallback/responsive testing; direct validator/unit invocations are not the named PASS evidence path for that current local-agent session unless the owner changes the instruction.
 
 ## 4.4 Bounded Pygame surface cache — source implemented
 
@@ -196,23 +200,23 @@ Provider-free tests cover missing optional output, valid merge, invalid generate
 
 ## 4.6 Current evidence / environmental blocker
 
-This execution environment does not provide `rsvg-convert`, so the real `assets/visual/runtime/v1/...` PNGs and `assets/catalog/shared_visuals_v1.toml` cannot be honestly generated/validated here.
+The previous execution environment did not provide `rsvg-convert`, so the real `assets/visual/runtime/v1/...` PNGs and `assets/catalog/shared_visuals_v1.toml` were not honestly generated/validated there.
 
-Committed provider-free test source now covers catalogue merging, cache behavior, transactional generation, generated-output validation and launcher fallback. Only the previously recorded isolated cache harness (9/9) and builder harness (3/3) have actually executed locally. New merge/validator/launcher-bridge tests are committed but **not claimed PASS** until run on a current checkout.
+Committed provider-free test source covers catalogue merging, cache behavior, transactional generation, generated-output validation and launcher fallback. Only the previously recorded isolated cache harness (9/9) and builder harness (3/3) have actually executed locally. Newer focused test files remain **SOURCE only** until executed through an owner-approved procedure.
 
 ## 4.7 V5 gate still open
 
 V5 is **not complete** until all of the following occur:
 
-1. on an owner-controlled/build checkout with librsvg, run `make visual-assets`;
-2. run `make visual-assets-check` and inspect generated PNGs/catalogue;
-3. run focused current-source repository tests for catalogue merge, cache, builder, validator and launcher bridge;
-4. wire one existing controlled Shell/UI path first through the generated catalogue/cache — current first candidate: `ui.shadow.soft` beneath existing activity tiles, with current primitive/static rendering retained as fallback;
-5. verify no per-frame decode/discovery and clear/rebound cache correctly on relevant viewport changes;
+1. on an owner-controlled/build checkout with librsvg, run `make visual-assets` to generate the explicit runtime PNG/catalogue prerequisite;
+2. inspect the generated PNGs/catalogue and preserve the fail-closed build contract;
+3. wire one existing controlled Shell/UI path first through the generated catalogue/cache — current first candidate: `ui.shadow.soft` beneath existing activity tiles, with current primitive/static rendering retained as fallback;
+4. verify no per-frame decode/discovery and clear/rebound cache correctly on relevant viewport changes;
+5. execute the current owner-directed simulator acceptance in `docs/testing/2026-08-20_V5_VISUAL_INTEGRATION_SIMULATOR_LOCAL_AGENT.md`, including normal, fallback, interaction and responsive cases;
 6. only then expand the same semantic contract toward Activities/Web;
-7. collect simulator/physical low-resource evidence before stronger runtime/physical claims.
+7. collect physical low-resource evidence later before stronger physical/runtime claims.
 
-Until step 4 succeeds, source packs remain `runtime_consumed = false`.
+Until step 3 succeeds and simulator acceptance is recorded, source packs remain `runtime_consumed = false`.
 
 ---
 
@@ -220,19 +224,22 @@ Until step 4 succeeds, source packs remain `runtime_consumed = false`.
 
 | Field | Current state |
 |---|---|
+| Stable visual-system/index guide | `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` |
+| Cross-session resume | `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` |
 | Active focus | **V5 shared consumption/integration** |
 | Environment coverage | V4 complete through Water/Pond; no new pack without a concrete gap |
 | Catalogue | typed explicit visuals + safe cross-manifest merge implemented |
-| Runtime rendition source | first bounded UI selection now includes `ui.shadow.soft` |
+| Runtime rendition source | first bounded UI selection includes `ui.shadow.soft` |
 | Build tooling | transactional SVG→PNG tool + `make visual-assets` |
-| Generated-output validation | `make visual-assets-check` implemented |
+| Generated-output validation | `make visual-assets-check` implemented as source/build contract |
 | Runtime cache | bounded PNG-only Pygame surface cache implemented |
 | Launcher preparation | explicit optional shared-visual merge/fallback bridge implemented; `main.py` not yet wired |
-| Test evidence | cache isolated harness 9/9 PASS; builder isolated harness 3/3 PASS; newer focused test files not yet executed on a current checkout |
-| Generated PNG/catalog evidence | **NOT YET GENERATED here**; `rsvg-convert` unavailable |
+| Test evidence | cache isolated harness 9/9 PASS; builder isolated harness 3/3 PASS; newer focused test files remain SOURCE only |
+| Generated PNG/catalog evidence | **not generated in the previous execution environment**; `rsvg-convert` was unavailable there |
 | Actual Shell/Activity consumption | **not yet wired/accepted** |
+| Current local acceptance rule | runtime/visual/fallback/responsive V5 acceptance through the Activity Simulator using the dated V5 local-agent runbook |
 | Evidence boundary | art: SOURCE + DESKTOP VISUAL REVIEW; V5: SOURCE + narrow isolated provider-free evidence only |
-| Next exact action | owner/build checkout: `make visual-assets` → `make visual-assets-check` → focused V5 tests; then wire the launcher activity-tile soft shadow through the merged catalogue/cache and validate fallback/performance |
+| Next exact action | owner/build checkout: install/check librsvg → `make visual-assets` → wire `ui.shadow.soft` through launcher bridge/cache → execute simulator normal/fallback/interaction/responsive matrix → update plan/resume/HANDOVER |
 
 ---
 
@@ -275,11 +282,12 @@ Until step 4 succeeds, source packs remain `runtime_consumed = false`.
 - [x] bounded PNG-only Pygame surface cache;
 - [x] explicit `make visual-assets` + `make visual-assets-check` targets;
 - [x] optional launcher shared-visual merge/fallback bridge;
-- [ ] generate/validate first runtime PNG catalogue on a build host with librsvg;
-- [ ] focused repository test run on current source;
+- [x] stable visual-system architecture/index + cross-session resume documentation;
+- [ ] generate first runtime PNG catalogue on a build host with librsvg;
 - [ ] first controlled Shell/UI consumption path (`ui.shadow.soft` candidate);
+- [ ] simulator normal/fallback/interaction/responsive acceptance for first consumer;
 - [ ] shared Python/Web Activity semantic contract;
-- [ ] simulator/physical low-resource acceptance where implementation claims require it.
+- [ ] physical low-resource acceptance where implementation claims require it.
 
 ---
 
@@ -380,7 +388,7 @@ Committed tests are not PASS merely because they exist. Candidate art in Git is 
 - Added `PygameVisualSurfaceCache` using existing `ui_core.BoundedCache`, a 12-entry default LRU and a 1024×600 per-surface pixel ceiling.
 - Added provider-free cache tests; isolated local harness passed 9/9.
 - Added `make visual-assets`.
-- `rsvg-convert` is absent in the current execution environment, so generated PNG/catalog output and full repository tests remain unverified here.
+- `rsvg-convert` was absent in that execution environment, so generated PNG/catalog output and full repository tests remained unverified there.
 
 ## 2026-08-20 — V5 integration hardening and first-consumer preparation
 - Rendition writes were made transactional: validate temporary PNG first, atomically replace final output, and atomically replace generated catalogue; isolated builder harness previously passed 3/3.
@@ -390,6 +398,13 @@ Committed tests are not PASS merely because they exist. Candidate art in Git is 
 - Added `LauncherAssetSet` / `load_launcher_assets(...)` so mandatory core icons can merge optional generated visuals while invalid/missing visual output falls back to current static behavior.
 - Added `validate_visual_renditions.py` + `make visual-assets-check` to reject stale/mismatched/corrupt generated output before integration/image use.
 - Added focused validator and launcher-fallback tests.
-- New merge/validator/launcher test files are **SOURCE only** until executed on a current checkout; no false PASS claim is made.
+- New merge/validator/launcher test files are **SOURCE only** until executed through an owner-approved procedure; no false PASS claim is made.
 
-Next exact action: on an owner-controlled/build checkout with librsvg, run `make visual-assets`, then `make visual-assets-check`, then the focused V5 tests. If green, wire `ui.shadow.soft` into the existing launcher activity-tile draw path through the merged catalogue + bounded surface cache, preserving the current primitive tile as fallback.
+## 2026-08-20 — visual-system documentation consolidated
+- Added `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` as the stable human/agent visual-system architecture and index.
+- Added `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` as the short cross-session visual continuation contract.
+- Updated `AGENTS.md` and `docs/DOCUMENTATION.md` so visual work starts from the new system guide, then the active plan/resume and narrower authorities.
+- Updated the visual-authoring skill to remove stale “first pack” guidance and focus current work on V5 integration.
+- Current owner-directed V5 local-agent acceptance remains Activity-Simulator based through `docs/testing/2026-08-20_V5_VISUAL_INTEGRATION_SIMULATOR_LOCAL_AGENT.md`.
+
+Next exact action: on an owner-controlled/build checkout with librsvg, run `make visual-assets`, wire `ui.shadow.soft` into the existing launcher activity-tile draw path through the merged catalogue + bounded surface cache, preserve the primitive/static fallback, then execute the full simulator normal/fallback/interaction/responsive acceptance matrix and update this plan/resume/HANDOVER with exact evidence.
