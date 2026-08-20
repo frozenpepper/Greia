@@ -1,0 +1,73 @@
+catalog_id = "greia.visual-motion.base.v0.1"
+catalog_version = "0.1.0"
+status = "candidate-design"
+runtime_consumed = false
+active_plan = "docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md"
+design_spec = "docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md"
+notes = "Semantic authoring data only. This does not define or authorize a runtime animation API."
+
+[[motions]]
+id = "idle_bounce"
+loop = true
+duration_ms = 2000
+fallback_expression = "neutral"
+channels = ["translate_y_small", "rotate_small", "blink_optional"]
+phase_notes = "gentle periodic living motion; no anticipation or dramatic travel"
+max_translate_y_body_fraction = 0.035
+max_rotation_deg = 2.0
+max_scale_delta = 0.025
+
+[[motions]]
+id = "blink"
+loop = false
+duration_ms = 220
+fallback_expression = "neutral"
+channels = ["face_eyes"]
+phase_notes = "close 0-35%, hold 35-55%, reopen 55-100%"
+max_translate_y_body_fraction = 0.0
+max_rotation_deg = 0.0
+max_scale_delta = 0.0
+
+[[motions]]
+id = "happy_hop"
+loop = false
+duration_ms = 900
+fallback_expression = "happy"
+channels = ["squash", "translate_y", "stretch", "face_happy"]
+phase_notes = "anticipation 0-18%; launch 18-42%; apex 42-58%; fall 58-78%; soft landing 78-100%"
+max_translate_y_body_fraction = 0.22
+max_rotation_deg = 2.5
+max_scale_delta = 0.10
+
+[[motions]]
+id = "celebrate_pop"
+loop = false
+duration_ms = 1150
+fallback_expression = "happy"
+channels = ["squash", "translate_y", "rotate_small", "face_happy", "fx_optional"]
+phase_notes = "anticipation 0-14%; pop 14-38%; apex 38-52%; settle 52-82%; tiny rebound 82-100%"
+max_translate_y_body_fraction = 0.28
+max_rotation_deg = 4.0
+max_scale_delta = 0.12
+
+[[motions]]
+id = "surprised_wobble"
+loop = false
+duration_ms = 720
+fallback_expression = "surprised"
+channels = ["recoil", "rotate_wobble", "face_surprised"]
+phase_notes = "recoil 0-20%; overshoot left/right 20-68%; settle 68-100%"
+max_translate_y_body_fraction = 0.05
+max_rotation_deg = 7.0
+max_scale_delta = 0.06
+
+[[motions]]
+id = "sleepy_sway"
+loop = true
+duration_ms = 2400
+fallback_expression = "sleepy"
+channels = ["rotate_small", "translate_y_small", "compress_small", "face_sleepy"]
+phase_notes = "slow sinusoidal sway; deliberately lower energy than idle"
+max_translate_y_body_fraction = 0.025
+max_rotation_deg = 4.0
+max_scale_delta = 0.04
