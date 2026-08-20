@@ -471,12 +471,12 @@ class SimulatorRemoteBridge:
     def capture_frame(self, surface: Any, pygame: Any, mode: str = "profiles") -> None:
         """Capture Pygame screen surface into double-buffered PNG bytes."""
         try:
-            data = pygame.image.tobytes(surface, "RGBA")
+            data = pygame.image.tobytes(surface, "RGB")
             width, height = surface.get_size()
-            # Convert RGBA to PNG via PIL / Pillow or direct Pygame save
+            # Convert RGB to PNG via PIL / Pillow or direct Pygame save
             from PIL import Image
 
-            img = Image.frombytes("RGBA", (width, height), data)
+            img = Image.frombytes("RGB", (width, height), data)
             bio = io.BytesIO()
             img.save(bio, format="PNG", compress_level=1)
             png_bytes = bio.getvalue()

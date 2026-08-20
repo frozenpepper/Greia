@@ -1,0 +1,41 @@
+catalog_id = "greia.shared-visuals.v1"
+catalog_version = "0.1.1"
+source_sha256 = "3d174bdc01b42bff9c04275e7e08a8f1cf9143a4f7850b40d419c71f756a1cad"
+generated_note = "Build-time PNG renditions from explicit reviewed SVG masters; runtime must not discover or rasterize SVG source."
+
+[[visuals]]
+id = "ui.button.primary"
+kind = "ui"
+role = "button"
+
+[visuals.variants]
+default = "visual/runtime/v1/ui/button_primary.png"
+disabled = "visual/runtime/v1/ui/button_primary_disabled.png"
+hover = "visual/runtime/v1/ui/button_primary_hover.png"
+pressed = "visual/runtime/v1/ui/button_primary_pressed.png"
+
+[[visuals]]
+id = "ui.card.activity"
+kind = "ui"
+role = "activity_card"
+
+[visuals.variants]
+completed = "visual/runtime/v1/ui/activity_card_completed.png"
+default = "visual/runtime/v1/ui/activity_card.png"
+focused = "visual/runtime/v1/ui/activity_card_focused.png"
+
+[[visuals]]
+id = "ui.panel.base"
+kind = "ui"
+role = "panel"
+
+[visuals.variants]
+default = "visual/runtime/v1/ui/panel_base.png"
+
+[[visuals]]
+id = "ui.shadow.soft"
+kind = "shadow"
+role = "grounding"
+
+[visuals.variants]
+default = "visual/runtime/v1/ui/soft_shadow.png"

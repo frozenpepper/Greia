@@ -15,7 +15,11 @@ from greia_platform.activities import (
     ActivityValidationError,
     RuntimeCatalogue,
 )
-from greia_platform.assets import AssetCatalogue
+from greia_platform.assets import AssetCatalogue, AssetCatalogueError
+from greia_platform.pygame_visual_assets import (
+    PygameVisualSurfaceCache,
+    VisualSurfaceCacheError,
+)
 from greia_platform.customization import ThemeStore
 from greia_platform.typography import FontRole, GreiaTypography
 from greia_platform.hal import (
@@ -54,6 +58,7 @@ from .lifecycle import ActivityResult
 from .parent_panel import ParentSettingsOverlay
 from .supervisor import ActivitySupervisor
 from .theme import LauncherThemeController
+from .visual_assets import load_launcher_assets
 
 
 @dataclass(frozen=True, slots=True)
@@ -63,6 +68,7 @@ class LauncherPaths:
     developer_activities: Path | None
     runtime_catalogue: Path
     asset_catalogue: Path
+    shared_visual_catalogue: Path
     theme_defaults: Path
     profile_defaults: Path
     permission_policy: Path
@@ -83,6 +89,7 @@ class LauncherPaths:
             ),
             runtime_catalogue=root / "runtime" / "child-runtime.toml",
             asset_catalogue=root / "assets" / "catalog" / "core_icons_v1.toml",
+            shared_visual_catalogue=root / "assets" / "catalog" / "shared_visuals_v1.toml",
             theme_defaults=root / "runtime" / "theme-defaults.toml",
             profile_defaults=root / "runtime" / "profile-defaults.toml",
             permission_policy=root / "runtime" / "permission-policy.toml",
@@ -150,7 +157,17 @@ class LauncherApplication:
         self.paths = LauncherPaths.from_environment()
         self.runtime = RuntimeCatalogue.load(self.paths.runtime_catalogue)
         self.registry = ActivityRegistry(_activity_sources(self.paths), self.runtime)
-        self.assets = AssetCatalogue.load(self.paths.asset_catalogue)
+        self._asset_set = load_launcher_assets(
+            self.paths.asset_catalogue,
+            self.paths.shared_visual_catalogue,
+        )
+        self.assets = self._asset_set.catalogue
+        self.shared_visuals_available = self._asset_set.shared_visuals_available
+        self._visual_cache = (
+            PygameVisualSurfaceCache.for_pygame(self.assets)
+            if self._asset_set.shared_visuals_available
+            else None
+        )
         self.profile_store = ProfileStore.load(
             self.paths.profile_defaults, self.paths.profiles_dir
         )
@@ -271,6 +288,8 @@ class LauncherApplication:
                     self._icon_cache.clear()
                     self._font_cache.clear()
                     self._profile_name_cache.clear()
+                    if self._visual_cache is not None:
+                        self._visual_cache.clear()
                 if self._mode == "profiles":
                     if self._parent_chord.poll(time.monotonic()):
                         self._mode = "parent_panel"

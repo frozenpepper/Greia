@@ -78,8 +78,13 @@ class AssetCatalogue:
     @classmethod
     def load(cls, manifest_path: Path) -> "AssetCatalogue":
         manifest_path = manifest_path.resolve(strict=True)
-        with manifest_path.open("rb") as handle:
-            raw = tomllib.load(handle)
+        try:
+            with manifest_path.open("rb") as handle:
+                raw = tomllib.load(handle)
+        except (tomllib.TOMLDecodeError, OSError) as exc:
+            raise AssetCatalogueError(
+                f"failed to load asset catalogue {manifest_path}: {exc}"
+            ) from exc
 
         icon_entries = raw.get("icons")
         visual_entries = raw.get("visuals")

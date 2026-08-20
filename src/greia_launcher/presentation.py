@@ -12,12 +12,16 @@ from greia_platform.activities import (
     ActivityRegistry,
     ActivityValidationError,
 )
+from greia_platform.assets import AssetCatalogueError
 from greia_platform.pygame_effects import (
     PygameDepthStyle,
     draw_raised_panel,
+    draw_soft_shadow,
     make_rounded_shadow,
     make_shadowed_icon,
+    transformed_rect,
 )
+from greia_platform.pygame_visual_assets import VisualSurfaceCacheError
 from greia_platform.trust import ActivitySource, PackageTrust
 from greia_platform.ui_core import BoundedCache
 from greia_platform.ui_motion import HoverMotion, InteractionVisualState, LaunchMotion
@@ -261,6 +265,8 @@ class GreiaLauncherPresentation(LauncherApplication):
                     self._cached_activities_targets.clear()
                     self._tile_surface_cache.clear()
                     self._activity_scroll_start = 0
+                    if self._visual_cache is not None:
+                        self._visual_cache.clear()
                 if self._mode == "profiles":
                     if self._parent_chord.poll(time.monotonic()):
                         self._mode = "parent_panel"
@@ -851,19 +857,20 @@ class GreiaLauncherPresentation(LauncherApplication):
             )
             cached = self._tile_surface_cache.get(key)
             if cached is None:
-                pad = 8
-                w = rect.width + pad * 2
-                h = rect.height + pad * 2
+                pad_x = 8
+                pad_y = 12
+                w = rect.width + pad_x * 2
+                h = rect.height + pad_y * 2
                 surf = pygame.Surface((w, h)).convert()
                 surf.fill(theme.background)
-                local_rect = pygame.Rect(pad, pad, rect.width, rect.height)
+                local_rect = pygame.Rect(pad_x, pad_y, rect.width, rect.height)
                 self._draw_activity_tile_content(
                     surf, local_rect, activity, state, theme, pygame
                 )
-                self._tile_surface_cache[key] = (surf, pad)
-                cached = (surf, pad)
-            surf, pad = cached
-            screen.blit(surf, (rect.left - pad, rect.top - pad))
+                self._tile_surface_cache[key] = (surf, pad_x, pad_y)
+                cached = (surf, pad_x, pad_y)
+            surf, pad_x, pad_y = cached
+            screen.blit(surf, (rect.left - pad_x, rect.top - pad_y))
             return
 
         self._draw_activity_tile_content(screen, rect, activity, state, theme, pygame)
@@ -887,18 +894,57 @@ class GreiaLauncherPresentation(LauncherApplication):
             if state.emphasized
             else _mix(theme.text, theme.panel, 0.72)
         )
-        shadow = self._shadow_for(rect.size, pygame)
-        tile = draw_raised_panel(
-            screen,
-            rect,
-            pygame,
-            fill=theme.panel,
-            outline=outline,
-            state=state,
-            motion=motion,
-            style=self._DEPTH,
-            cached_shadow=shadow,
-        )
+        target = transformed_rect(rect, motion, pygame)
+        shared_shadow_drawn = False
+        if self._visual_cache is not None:
+            try:
+                shadow_w = max(32, int(round(target.width * 1.06)))
+                shadow_h = max(12, min(64, int(round(shadow_w * 150 / 520))))
+                shadow_surf = self._visual_cache.get(
+                    "ui.shadow.soft",
+                    variant="default",
+                    size=(shadow_w, shadow_h),
+                )
+                shadow_y = (
+                    target.bottom
+                    - max(2, int(round(shadow_h * 0.20)))
+                    + int(round(motion.shadow_lift * 2.0))
+                )
+                shadow_rect = shadow_surf.get_rect(center=(target.centerx, shadow_y))
+                screen.blit(shadow_surf, shadow_rect)
+                shared_shadow_drawn = True
+            except (
+                VisualSurfaceCacheError,
+                AssetCatalogueError,
+                KeyError,
+                FileNotFoundError,
+                OSError,
+                ValueError,
+                pygame.error,
+            ):
+                self._visual_cache = None
+                shared_shadow_drawn = False
+
+        if not shared_shadow_drawn:
+            usable_shadow = (
+                self._shadow_for(rect.size, pygame)
+                if target.size == rect.size
+                else None
+            )
+            draw_soft_shadow(
+                screen,
+                target,
+                pygame,
+                style=self._DEPTH,
+                lift=motion.shadow_lift,
+                cached_shadow=usable_shadow,
+            )
+
+        radius = min(self._DEPTH.radius, target.width // 2, target.height // 2)
+        pygame.draw.rect(screen, theme.panel, target, border_radius=radius)
+        width = 8 if state.emphasized else 3
+        pygame.draw.rect(screen, outline, target, width=max(1, width), border_radius=radius)
+        tile = target
 
         # Reserve a real label band instead of treating the Activity name as an
         # incidental caption. This keeps names legible across icon aspect ratios
