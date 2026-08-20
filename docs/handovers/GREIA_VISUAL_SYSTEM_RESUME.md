@@ -10,28 +10,11 @@
 
 ---
 
-# 1. Why this file exists
+# 1. Purpose
 
-This file is the **fastest safe way to resume the Greia art/graphics work in a new session**.
+This is the fastest safe way to resume Greia art/graphics work in a new session.
 
-It is deliberately shorter than the main visual-system guide and the active plan. It records:
-
-- the accepted direction;
-- what already exists;
-- what is currently active;
-- what is explicitly rejected/stale;
-- the exact next work;
-- the current testing/evidence rule.
-
-At the beginning of a new visual session:
-
-```bash
-git checkout main
-git pull --ff-only origin main
-git rev-parse HEAD
-```
-
-Then read, in order:
+Read, in order:
 
 ```text
 1. AGENTS.md
@@ -40,80 +23,38 @@ Then read, in order:
 4. this file
 5. HANDOVER.md
 6. skills/greia-visual-authoring/SKILL.md
-7. exact source files for the current V5 task
+7. the exact source files for the current V5 task
 ```
 
 Do not resume from chat memory alone.
 
 ---
 
-# 2. Accepted visual direction
+# 2. Accepted production direction
 
-The accepted production pipeline is:
+The visual system remains:
 
 > **excellent individual assets → reusable asset packs → layered composition → subtle parallax / ambient motion / light / shadow → shared UI system → explicit semantic runtime consumption → Shell/Activity reuse**
 
-Core rules:
+Non-negotiables:
 
-- asset-first, never crude scene-first production;
-- polished storybook/toy-diorama feel;
-- low-resolution readability;
-- static assets remain complete without animation;
-- reuse generic assets instead of repainting duplicates;
-- runtime does not scan visual source directories;
-- SVG masters are pre-rendered to PNG on a build host;
-- target runtime caches remain bounded;
-- no per-frame filesystem/decode work;
-- visual work must not deepen provisional X11 coupling or bypass platform UI/system-chrome architecture.
+- asset-first; do not return to crude scene-first mockups;
+- polished storybook/toy-diorama character and environment language;
+- good static readability at low resolution;
+- reuse generic assets rather than repainting duplicates;
+- no runtime SVG rasterization on low-end targets;
+- no arbitrary runtime directory scanning;
+- no per-frame image decode/scale from disk;
+- runtime image/surface caches stay bounded;
+- visual work must not deepen provisional X11 coupling or bypass protected platform UI/chrome architecture.
 
----
-
-# 3. Character direction
-
-Core cast:
-
-```text
-Lilli — unicorn Puff
-Nino  — owl Bean
-Tito  — fox Puff
-Momo  — friendly monster Puff
-```
-
-Shared states:
-
-```text
-neutral
-blink
-happy
-surprised
-sleepy
-```
-
-Shared base motions:
-
-```text
-idle_bounce
-blink
-happy_hop
-celebrate_pop
-surprised_wobble
-sleepy_sway
-```
-
-Rules:
-
-- character identity must remain stable across states;
-- `blink` must visibly close eyes;
-- no complex anatomical rig as the default;
-- do not let character minutiae derail the current V5 integration work.
+Core characters remain Lilli, Nino, Tito and Momo in the accepted Puff/Bean direction. Character minutiae do not block V5.
 
 ---
 
-# 4. Source library already built
+# 3. Source library already exists
 
-Broad source coverage exists. Do not create another environment pack by default.
-
-Current packs:
+Do not create another environment pack by default.
 
 ```text
 assets/visual/environments/forest_meadow/v0.2/
@@ -125,160 +66,89 @@ assets/visual/environments/fantasy_village_night/v0.1/
 assets/visual/environments/water_pond/v0.1/
 ```
 
-Design inventories:
+Inventories:
 
 ```text
 assets/visual/library_v0.1.toml
 assets/visual/packs_v0.1.toml
 ```
 
-All current packs remain candidate unless a narrower file explicitly records a stronger scope.
-
-Broad art evidence remains primarily:
-
-```text
-SOURCE
-DESKTOP VISUAL REVIEW
-```
-
-Do not call candidate pack presence release approval or runtime acceptance.
+Most source packs remain candidate artwork with SOURCE + DESKTOP VISUAL REVIEW evidence. Do not convert pack presence into release approval.
 
 ---
 
-# 5. Active phase: V5 shared consumption/integration
+# 4. V5 architecture now proven in the Shell
 
-V5 is the active visual phase.
+The active visual phase is still **V5 — shared consumption/integration**, but the first Shell-consumer gate is complete.
 
-The objective is not to produce more artwork. The objective is to prove one clean path from reviewed source art to a real Greia consumer.
+Current implemented flow:
 
-Current source architecture already includes:
+```text
+reviewed SVG master
+→ assets/catalog/shared_visuals_v1_source.toml
+→ tools/build_visual_renditions.py / rsvg-convert
+→ assets/visual/runtime/v1/.../*.png
+→ assets/catalog/shared_visuals_v1.toml
+→ AssetCatalogue
+→ PygameVisualSurfaceCache
+→ real Greia Shell consumer
+```
+
+Current source owners:
 
 ```text
 src/greia_platform/assets.py
 src/greia_platform/pygame_visual_assets.py
 src/greia_launcher/visual_assets.py
+src/greia_launcher/main.py
+src/greia_launcher/presentation.py
 assets/catalog/core_icons_v1.toml
 assets/catalog/shared_visuals_v1_source.toml
+assets/catalog/shared_visuals_v1.toml
 tools/build_visual_renditions.py
 tools/validate_visual_renditions.py
-Makefile: visual-assets / visual-assets-check
-```
-
-Implemented design:
-
-```text
-reviewed SVG master
-→ explicit source manifest
-→ build-time PNG rendition
-→ explicit generated runtime catalogue
-→ AssetCatalogue
-→ PygameVisualSurfaceCache
-→ Shell consumer
 ```
 
 Important invariants:
 
-- one semantic namespace for icons + visuals;
-- explicit variants with `default`;
-- no arbitrary directory discovery;
-- file/path containment and duplicate-ID rejection;
-- build-time SVG rasterization only;
-- generated output validation;
-- bounded runtime surface cache;
-- optional generated visuals must fail back to the established static launcher path.
+- core icons and shared visuals use one semantic namespace;
+- variants are explicit and require `default`;
+- catalogue roots and paths remain contained;
+- duplicate IDs fail;
+- generated shared visuals remain optional for launcher startup;
+- one bounded Pygame surface cache performs PNG decode/scale on miss and reuse on hit;
+- generated shared visuals fail soft to the established primitive/static launcher path.
 
 ---
 
-# 6. First V5 runtime consumer
+# 5. Accepted first runtime consumer
 
-The first real Shell integration target remains:
+`ui.shadow.soft` is no longer a candidate. It is the **first accepted shared Shell visual consumer**.
 
-```text
-ui.shadow.soft
-```
+It is consumed beneath existing launcher Activity tiles without changing tile hit geometry, responsive grid geometry, label-band geometry, selection behavior, or Activity launch lifecycle.
 
-under existing launcher Activity tiles.
+Current fallback remains `draw_soft_shadow`.
 
-Why this is first:
+The integration also established:
 
-- low architectural risk;
-- decorative only;
-- proves the full semantic-rendition-cache-consumer pipeline;
-- does not require a launcher redesign;
-- existing primitive/static shadow can remain fallback.
+- generated `assets/visual/runtime/v1/ui/soft_shadow.png`;
+- generated `assets/catalog/shared_visuals_v1.toml`;
+- `load_launcher_assets(...)` integration in `LauncherApplication`;
+- one launcher-owned `PygameVisualSurfaceCache`;
+- display/viewport cache invalidation;
+- malformed optional visual catalogues contained by `AssetCatalogueError`;
+- corrupt/missing optional PNGs contained by the launcher visual fallback;
+- correct RGB simulator frame capture.
 
-Do not jump directly to replacing the full card/button/panel system before this path is accepted.
-
-The consumer must not change:
-
-```text
-tile hit geometry
-responsive grid geometry
-label-band geometry
-selection behavior
-launch lifecycle
-protected system chrome
-```
+Evidence is recorded in `LOCAL_AGENT_RESULT.md`.
 
 ---
 
-# 7. Current local-agent execution rule
+# 6. Simulator acceptance already completed
 
-The current owner-directed V5 local-agent runbook is:
+The first consumer passed the owner-directed Activity Simulator tranche.
 
-```text
-docs/testing/2026-08-20_V5_VISUAL_INTEGRATION_SIMULATOR_LOCAL_AGENT.md
-```
-
-For this current tranche:
-
-> **all runtime/visual/fallback/responsive test acceptance is handled through the Greia Activity Simulator.**
-
-Build generation is allowed outside the simulator:
-
-```bash
-make visual-assets
-```
-
-That command creates prerequisites; it is not itself PASS evidence.
-
-Do not use GitHub Actions.
-
-Do not substitute VM/physical tests for the current local-agent simulator acceptance tranche unless the owner changes the instruction.
-
-Do not invent Cloudflare/tunnels/hosted web dependencies. The simulator bridge is local loopback only.
-
----
-
-# 8. Exact next work
-
-Resume in this order:
-
-```text
-1. sync current main and record SHA
-2. read the current V5 section in the active plan
-3. ensure build host has librsvg / rsvg-convert
-4. run make visual-assets
-5. inspect generated PNGs + assets/catalog/shared_visuals_v1.toml
-6. wire the existing launcher visual bridge into the real launcher initialization
-7. create/use one launcher-owned PygameVisualSurfaceCache
-8. render ui.shadow.soft beneath existing Activity tiles
-9. preserve current primitive/static shadow as fallback
-10. start the Activity Simulator
-11. test normal consumption through simulator
-12. test missing generated catalogue through simulator
-13. test invalid generated catalogue through simulator
-14. test missing/corrupt optional shadow PNG through simulator
-15. test hover, selection and launch behavior through simulator
-16. test the required viewport/interface-size matrix through simulator
-17. inspect gross frame-count/stall behavior through simulator
-18. fix root causes only in shared owners
-19. rerun affected simulator cases
-20. update active plan, this resume file, HANDOVER and visual skill if contracts changed
-21. commit/push coherent work to main
-```
-
-Required viewport/interface-size matrix from the current local-agent protocol:
+Accepted matrix:
 
 ```text
 1024×600  + normal
@@ -289,67 +159,129 @@ Required viewport/interface-size matrix from the current local-agent protocol:
 1111×700  + normal
 ```
 
+Accepted interactions:
+
+```text
+keyboard selection
+pointer hover
+Activity launch lifecycle
+```
+
+Accepted fail-soft cases:
+
+```text
+missing generated shared catalogue
+malformed generated catalogue
+corrupt/missing optional ui.shadow.soft PNG
+```
+
+Frame sanity evidence:
+
+```text
+299 frames / 10.165 s = 29.41 FPS
+```
+
+Evidence class:
+
+```text
+SIMULATOR VISUAL REVIEW
+```
+
+Explicit non-claims:
+
+- no Acer/Raspberry Pi physical visual-performance claim;
+- no R7 architecture closure;
+- no blanket release-art approval for the rest of the visual library.
+
 ---
 
-# 9. Known evidence boundary
+# 7. Current exact next work
 
-Current V5 state:
+Do **not** produce another environment pack and do **not** restyle the whole launcher.
 
-- `make visual-assets` generated `assets/visual/runtime/v1/ui/soft_shadow.png` and `assets/catalog/shared_visuals_v1.toml`;
-- `ui.shadow.soft` is wired and accepted as the first shared visual in the Launcher under Activity tiles;
-- Tested and accepted across 6 responsive viewports, selection/hover/launch interaction, fail-soft fallbacks (missing catalogue, invalid catalogue, corrupt PNG), and steady 29.4 FPS frame rate via Greia Activity Simulator;
-- Evidence recorded in `./tmp/v5-simulator-evidence/` (**SIMULATOR VISUAL REVIEW**);
-- No physical hardware or R7 architecture closure claimed.
+The next V5 tranche is to generalize the proven seam instead of multiplying one-off consumers.
+
+Proceed in this order:
+
+```text
+1. inspect current AssetCatalogue / PygameVisualSurfaceCache / Activity runtime boundaries
+2. define the smallest renderer-neutral semantic shared-visual request contract for Activities
+3. keep Python and future Web Activities converging on the same semantic IDs + explicit variants
+4. do not expose arbitrary host filesystem paths or catalogue mutation to Activities
+5. add the first controlled Activity-facing implementation without creating a second catalogue/cache system
+6. keep Activity-private art supported
+7. prove the Activity-facing path through the Greia Activity Simulator
+8. only after that, decide whether ui.panel.base / ui.card.activity / ui.button.primary need additional Shell consumption
+```
+
+Why this is next:
+
+- the Shell seam is already proven;
+- another launcher-only decorative consumer would add less architectural value;
+- V5 explicitly requires shared Shell/Activity reuse;
+- the Activity contract must be renderer-neutral enough for Python and future Web runtimes.
+
+Do not freeze a broad API prematurely. Start with one semantic request/resolution path and preserve the existing platform boundaries.
 
 ---
 
-# 10. Rejected/drift directions
+# 8. Testing rule for the next V5 tranche
 
-Do not resume any of these as if they were current work:
+For owner-directed local-agent runtime/visual acceptance, use the Greia Activity Simulator.
 
-- complex quadruped/character rig architecture;
-- generated sprite sheets assumed production-ready;
-- redrawing accepted characters into worse variants;
-- fake expression overlays;
-- non-blinking blink animation;
+Relevant current protocol:
+
+```text
+docs/testing/2026-08-20_V5_VISUAL_INTEGRATION_SIMULATOR_LOCAL_AGENT.md
+```
+
+That document describes the completed first-consumer tranche. If the next Activity-facing tranche requires a materially different simulator procedure, update or add the appropriate dated simulator test document before claiming PASS.
+
+Do not use GitHub Actions unless the owner explicitly authorizes that hosted execution.
+
+---
+
+# 9. Rejected/drift directions
+
+Do not resume these as current work:
+
+- complex traditional character rigs as the default;
+- generated sprite sheets treated as production-ready;
+- fake expression overlays / non-blinking blink states;
 - crude full-screen UI/background mockups;
-- decorative HTML presentations used instead of actual asset production;
-- one-shot generated concept scenes used as source architecture;
+- decorative HTML presentations instead of real reusable assets;
+- one-shot concept scenes as source architecture;
 - more environment packs without a concrete reuse gap;
-- runtime SVG rendering on the low-end target;
-- arbitrary asset-directory discovery;
-- a second visual catalogue/cache system;
+- runtime SVG rendering on low-end targets;
+- arbitrary visual-directory discovery;
+- a second visual catalogue or second image-cache framework;
 - per-frame PNG decode/scale;
 - unbounded caches;
 - simulator-specific production launcher code;
 - per-resolution launcher forks;
-- deepening provisional X11 coupling for visual convenience.
+- broad exception swallowing to hide optional-visual failures.
 
 ---
 
-# 11. Documentation map for visual work
+# 10. Documentation map
 
-Stable entry point:
+Main stable architecture/index:
 
 ```text
 docs/design/GREIA_ART_GRAPHICS_SYSTEM.md
 ```
 
-Visual-language details:
+Current sequencing/history:
+
+```text
+docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md
+```
+
+Visual language / inventory / character details:
 
 ```text
 docs/design/GREIA_VISUAL_STYLE_GUIDE.md
-```
-
-Artwork inventory:
-
-```text
 docs/design/GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md
-```
-
-Characters:
-
-```text
 docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md
 docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md
 ```
@@ -360,42 +292,30 @@ Practical production rules:
 skills/greia-visual-authoring/SKILL.md
 ```
 
-Current sequencing/history:
-
-```text
-docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md
-```
-
-Current runtime integration test protocol:
-
-```text
-docs/testing/2026-08-20_V5_VISUAL_INTEGRATION_SIMULATOR_LOCAL_AGENT.md
-```
-
 Source-tree summary:
 
 ```text
 assets/visual/README.md
 ```
 
+First-consumer execution result:
+
+```text
+LOCAL_AGENT_RESULT.md
+```
+
 ---
 
-# 12. End-of-session update rule
+# 11. End-of-session rule
 
-At the end of every substantive visual-system session, update this file if any of these changed:
+Update this file whenever any of these changes materially:
 
-- current active visual phase;
-- current exact next action;
-- first consumer / runtime integration state;
+- active visual phase;
+- next exact action;
+- runtime-consumption state;
 - evidence boundary;
 - blocker;
 - testing rule;
-- major accepted/rejected direction.
+- accepted/rejected architectural direction.
 
-Do not use this file as an append-only diary. Keep it short enough that a new agent can resume quickly.
-
-Chronology belongs in the active plan's append-only progress ledger.
-
-Architecture belongs in `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`.
-
-Project-wide current evidence belongs in `HANDOVER.md`.
+Keep this file concise. Chronology belongs in the active plan's append-only progress ledger; stable architecture belongs in `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`; project-wide state belongs in `HANDOVER.md`.
