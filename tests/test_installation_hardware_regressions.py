@@ -61,10 +61,22 @@ class RealHardwareInstallationRegressionTests(unittest.TestCase):
         engine = self.read("src/greia_installer/engine.py")
         self.assertIn("stdin=subprocess.DEVNULL", engine)
 
-    def test_launcher_runtime_directory_exists_before_namespace_setup(self) -> None:
-        unit = self.read("build/overlay/etc/systemd/system/greia-launcher.service")
-        self.assertIn("RuntimeDirectory=greia-os", unit)
-        self.assertIn("RuntimeDirectoryMode=0755", unit)
+    def test_shared_runtime_directories_are_recreated_before_services_every_boot(self) -> None:
+        tmpfiles = self.read("build/overlay/etc/tmpfiles.d/greia-runtime.conf")
+        launcher = self.read("build/overlay/etc/systemd/system/greia-launcher.service")
+        parent = self.read("build/overlay/etc/systemd/system/greia-parent.service")
+        first_boot = self.read("build/overlay/usr/local/lib/greia-os/first-boot")
+        prepare = self.read("build/overlay/usr/local/lib/greia-os/prepare-launcher-vt")
+
+        self.assertIn("d /run/greia-os       0770 greiakid pipprofiles", tmpfiles)
+        self.assertIn("d /run/greia-hardware 2750 greiakid greiapanel", tmpfiles)
+        self.assertIn("systemd-tmpfiles-setup.service", launcher)
+        self.assertIn("systemd-tmpfiles-setup.service", parent)
+        # Shared runtime ownership must not depend on which app starts first.
+        self.assertNotIn("RuntimeDirectory=greia-os", launcher)
+        self.assertNotIn("/run/greia-hardware", first_boot)
+        self.assertIn("Missing Greia runtime root", prepare)
+        self.assertNotIn("chown greiakid:pipprofiles /run/greia-os", prepare)
 
     def test_parent_activity_root_remains_traversable_without_exposing_private_children(self) -> None:
         first_boot = self.read("build/overlay/usr/local/lib/greia-os/first-boot")
