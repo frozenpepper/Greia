@@ -7,11 +7,11 @@ import pygame
 
 from greia_platform.activity_api import (
     activity_stop_requested,
-    get_icon_path,
+    get_shared_visual_path,
     get_theme,
     mark_activity_ready,
 )
-from greia_platform.activity_ui import ChildUiMetrics, is_home_clicked, load_icon, mix
+from greia_platform.activity_ui import ChildUiMetrics, is_home_clicked, mix
 from greia_platform.pygame_canvas import (
     PygameReferenceCanvas,
     activity_viewport_for_surface,
@@ -23,6 +23,7 @@ REFERENCE_HEIGHT = 600
 SOIL_TOP = 530
 BASE_BACKGROUND = (229, 241, 226)
 BASE_SOIL = (151, 104, 61)
+SHARED_SHADOW_SIZE = (72, 22)
 COLORS = (
     (247, 93, 89),
     (255, 190, 46),
@@ -38,6 +39,22 @@ def _safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
     return safe.x <= x < safe.right and safe.y <= y < safe.bottom
 
 
+def _load_shared_shape_shadow() -> pygame.Surface | None:
+    """Load one optional semantic Greia visual once for the Activity process.
+
+    The Activity never discovers a source directory or constructs a host path.
+    Missing/invalid optional shared visuals keep Shape Garden fully playable.
+    Scaling happens once here, not in the frame loop.
+    """
+
+    try:
+        path = get_shared_visual_path("ui.shadow.soft")
+        source = pygame.image.load(str(path)).convert_alpha()
+        return pygame.transform.smoothscale(source, SHARED_SHADOW_SIZE)
+    except (OSError, ValueError, pygame.error):
+        return None
+
+
 def main() -> int:
     pygame.init()
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
@@ -46,6 +63,7 @@ def main() -> int:
     theme = get_theme()
     metrics = ChildUiMetrics.for_size(*screen.get_size())
     canvas = PygameReferenceCanvas(screen)
+    shared_shape_shadow = _load_shared_shape_shadow()
     shapes: list[tuple[int, int, int, int, int]] = []
     running = True
     ready_published = False
@@ -90,6 +108,7 @@ def main() -> int:
             (0, SOIL_TOP, REFERENCE_WIDTH, REFERENCE_HEIGHT - SOIL_TOP),
         )
         for x, y, size, kind, color_index in shapes[-120:]:
+            draw_shape_shadow(canvas.surface, shared_shape_shadow, x, y, size)
             draw_shape(canvas.surface, x, y, size, kind, COLORS[color_index])
 
         # Flat geometric artwork does not need whole-frame smoothscale. The
@@ -104,6 +123,19 @@ def main() -> int:
 
     pygame.quit()
     return 0
+
+
+def draw_shape_shadow(
+    surface: pygame.Surface,
+    shadow: pygame.Surface | None,
+    x: int,
+    y: int,
+    size: int,
+) -> None:
+    if shadow is None:
+        return
+    center_y = y + max(8, int(round(size * 0.62)))
+    surface.blit(shadow, shadow.get_rect(center=(x, center_y)))
 
 
 def draw_shape(
