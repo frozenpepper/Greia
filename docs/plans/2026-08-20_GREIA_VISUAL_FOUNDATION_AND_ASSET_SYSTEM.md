@@ -73,25 +73,9 @@ assets/visual/environments/forest_meadow/v0.2/
 
 Current source includes **27 reusable SVG masters** across trees, bushes/foliage, mushrooms, rocks/log/stump, clouds/hills/tree line, ground, sunlight/fog, contact shadows and ambient FX.
 
-Authority/evidence files:
-
-```text
-catalog.toml
-REVIEW.md
-composition_day.toml
-parallax_proof.html
-```
+The final desktop restraint pass now has dedicated **1024×600 and 800×600** reference compositions using the real pack assets. Default daytime composition keeps fireflies/dust/leaves optional, reduces fog/light opacity and deliberately protects a calm center.
 
 `runtime_consumed = false`.
-
-Desktop review corrected weak sapling, distant-tree-line, fog and dust-mote treatments. A 1024×600 static composition was assembled from the real assets, and the committed parallax proof uses the same SVGs with only cheap CSS transforms/opacity changes.
-
-### Remaining V2A work
-
-- 800×600 and 1024×600 restraint/readability pass;
-- remove noisy atmosphere/FX if needed;
-- keep a calm gameplay center;
-- do not polish this pack indefinitely once coherent.
 
 ---
 
@@ -103,44 +87,15 @@ Canonical pack:
 assets/visual/ui/v0.1/
 ```
 
-Current reusable source now covers:
+Current reusable source covers panels/sheets, cards and states, buttons and states, tabs, badges, progress, bubbles, reward/avatar frames, loading/error/empty/portal art, focus ring, shared shadow and highlight treatment.
 
-- panel / sheet;
-- default / focused / completed activity cards;
-- primary / hover / pressed / disabled / secondary / quiet / icon buttons;
-- default / selected tabs;
-- new / done / favorite / locked badges;
-- progress track / fill / complete;
-- speech / thought bubbles;
-- reward and avatar frames;
-- loading orbit;
-- gentle-error cloud;
-- empty basket;
-- category/location portal frame;
-- focus ring, soft shadow and highlight sheen.
+The pack now also has independently composed **1024×600 and 800×600** references using the real shared masters. Focus/completed/new/favorite states remain readable after target-size scaling.
 
-Authority/evidence files:
-
-```text
-assets/visual/ui/v0.1/catalog.toml
-assets/visual/ui/v0.1/README.md
-assets/visual/ui/v0.1/REVIEW.md
-```
-
-The pack follows `runtime/theme-defaults.toml`, embeds no child-facing text, and remains `runtime_consumed = false`.
-
-Desktop review has covered representative components on cream, sky and dark grounds plus the expanded static-state tranche.
-
-### Remaining V3 work
-
-- low-resolution 800×600 / 1024×600 component composition using the real masters;
-- check state distinctions after scaling;
-- add only genuinely missing shared launcher/system decorative pieces;
-- owner refinement when a coherent reference composition is ready.
+`runtime_consumed = false`.
 
 ---
 
-# 5. Workshop — V4A **[STARTED]**
+# 5. Workshop — V4A
 
 Canonical pack:
 
@@ -148,75 +103,70 @@ Canonical pack:
 assets/visual/environments/workshop/v0.1/
 ```
 
-First individual-asset tranche includes:
+Workshop now contains **19 reusable masters**, expanding the original prop set only with composition-critical wall/floor, stool, pegboard, easel and pinboard-note assets.
 
-- workbench;
-- shelf;
-- paint palette;
-- brush bundle;
-- pencil cup;
-- blocks;
-- storage box;
-- paper stack;
-- rug;
-- desk lamp;
-- window;
-- composable window-light overlay;
-- paint jars.
+The pack has independently composed **1024×600 and 800×600** layered references. Window/light remain separate assets and the composition retains an uncluttered working/play area.
 
-Metadata/review:
-
-```text
-catalog.toml
-README.md
-REVIEW.md
-```
-
-First desktop review found a coherent warm wood/pastel creative-room family. Window/light remain separate composable assets. `runtime_consumed = false`.
-
-### Next Workshop work
-
-- reduced-size review of furniture/large pieces;
-- add only composition-critical missing elements such as stool/chair, wall/floor base or pegboard;
-- make one layered workshop composition from the coherent subset;
-- do not fill the pack with decorative clutter.
+`runtime_consumed = false`.
 
 ---
 
-# 6. Next environment families
+# 6. Clinic / care — V4B
 
-## Clinic / care room
+Canonical pack:
 
-Planned individual assets:
+```text
+assets/visual/environments/clinic/v0.1/
+```
 
-- bed/cushion;
-- cabinet/shelf;
-- bowls/bottles/bandages/toy-care props;
-- rug;
-- window/light assets;
-- heart/care FX;
-- room-base layers.
+Clinic now contains **17 reusable masters** covering bed/cushion, cabinet/side table, bowl/bottles/bandage box, toy stethoscope, care kit, plush helper, heart rug, curtains, room bases, window/light and restrained heart FX.
 
-Then reading/classroom and later fantasy/village/night/water families as prioritized.
+The tone is deliberately warm pretend-care rather than sterile hospital imagery. It has reduced-size review plus independent **1024×600 and 800×600** references.
+
+`runtime_consumed = false`.
+
+Further Clinic work should now be defect-driven rather than decorative expansion.
 
 ---
 
-# 7. Storage and metadata
+# 7. Reading / classroom — V4C **[CURRENT NEW PACK]**
 
-Conceptual source organization:
+Canonical pack:
 
 ```text
-assets/visual/
-  characters/
-  environments/
-  props/
-  atmosphere/
-  fx/
-  shadows/
-  ui/
-  specimens/
-  catalog/
+assets/visual/environments/reading_classroom/v0.1/
 ```
+
+The first reading/classroom tranche contains **17 reusable masters**:
+
+- room wall + floor bases;
+- arched window + optional window light;
+- tall bookcase;
+- book stack + open storybook;
+- reading tent;
+- round rug;
+- beanbag, reading chair and floor cushion;
+- chalkboard;
+- bunting;
+- potted plant;
+- toy basket;
+- hanging mobile.
+
+The pack explicitly references existing Workshop `blocks` and `pencil_cup` assets rather than duplicating them.
+
+First desktop review corrected three weak pieces before commit:
+
+- `book_stack.svg` — too card-like;
+- `reading_tent.svg` — insufficient fabric/depth treatment;
+- `beanbag.svg` — insufficient volume/seam definition.
+
+`composition.toml` records target-size layer roles and calm-center guidance. The local evidence pack also contains independently composed 1024×600 / 800×600 references.
+
+`runtime_consumed = false`.
+
+---
+
+# 8. Storage and metadata
 
 Reusable assets record semantic ID, source path, family, review state, provenance/license, intended scale/alpha where relevant, parallax/layer role where relevant, and optional ambient-motion/theme variants.
 
@@ -224,7 +174,7 @@ Use `concept | candidate | approved | superseded | rejected`. Presence in Git ne
 
 ---
 
-# 8. Review loop
+# 9. Review loop
 
 For each family:
 
@@ -239,55 +189,57 @@ For each family:
 9. test restrained layering/parallax/motion where relevant;
 10. integrate later only through accepted Greia platform seams.
 
-Focused browser/HTML files are allowed only as proofs using real assets; they are not visual "presentations" or runtime authority.
+Focused browser/HTML files are allowed only as proofs using real assets; they are not visual presentations or runtime authority.
 
 ---
 
-# 9. Current checkpoint
+# 10. Current checkpoint
 
 | Field | Current state |
 |---|---|
-| Active focus | **V3 shared UI review + V4A workshop pack; V2A forest in final restraint pass** |
-| Forest | `assets/visual/environments/forest_meadow/v0.2/` — 27 SVG masters + composition/parallax proof |
-| UI | `assets/visual/ui/v0.1/` — expanded component/state/illustration pack |
-| Workshop | `assets/visual/environments/workshop/v0.1/` — first 13 individual masters committed |
-| Evidence | **SOURCE + DESKTOP VISUAL REVIEW** only; current art remains candidate |
+| Active focus | **V4C Reading/Classroom built; next pack is fantasy/village/night while UI/environment packs remain candidate for owner refinement** |
+| Forest | `assets/visual/environments/forest_meadow/v0.2/` — 27 masters + final target-size restraint pass |
+| UI | `assets/visual/ui/v0.1/` — broad component/state kit + target-size references |
+| Workshop | `assets/visual/environments/workshop/v0.1/` — 19 masters + target-size references |
+| Clinic | `assets/visual/environments/clinic/v0.1/` — 17 masters + reduced-size + target-size references |
+| Reading/Classroom | `assets/visual/environments/reading_classroom/v0.1/` — 17 masters + metadata/review/composition manifest |
+| Evidence | **SOURCE + DESKTOP VISUAL REVIEW** only; all current art remains candidate |
 | Runtime boundary | all current visual catalogs remain `runtime_consumed = false`; no loader/compositor architecture invented here |
-| Next exact action | do low-resolution UI + Workshop review/composition-critical refinement, finish forest restraint pass, then begin Clinic individual assets |
+| Next exact action | start the fantasy/village/night reusable-asset family with individual assets first; continue UI/environment refinement only for concrete defects or owner feedback |
 
 ---
 
-# 10. Milestones
+# 11. Milestones
 
 ## V1 — Character/style seed **[SUFFICIENT TO UNBLOCK LIBRARY]**
 - [x] simplified character direction;
 - [x] core cast seed;
 - [ ] continue useful character refinement without blocking wider art.
 
-## V2 — Forest/meadow composable environment **[SUBSTANTIALLY BUILT]**
+## V2 — Forest/meadow composable environment **[DESKTOP CANDIDATE BUILT]**
 - [x] 27-source-asset candidate pack;
 - [x] light/shadow/atmosphere/FX;
 - [x] metadata + review;
 - [x] layered composition manifest;
 - [x] cheap parallax/ambient-motion proof;
-- [ ] final 800×600 / 1024×600 restraint pass;
+- [x] final 800×600 / 1024×600 restraint pass;
 - [ ] owner approval/revision when appropriate.
 
-## V3 — Shared UI visual kit **[ACTIVE / SUBSTANTIALLY BUILT]**
+## V3 — Shared UI visual kit **[DESKTOP CANDIDATE BUILT]**
 - [x] panels/cards/buttons/tabs/badges/progress/bubbles/frames;
 - [x] focus/hover/press/disabled/completed/favorite states;
 - [x] loading/error/empty/portal art;
 - [x] common shadow/highlight pieces;
-- [x] first multi-ground desktop review;
-- [ ] low-resolution reference composition;
+- [x] multi-ground desktop review;
+- [x] 800×600 / 1024×600 reference compositions;
 - [ ] owner approval/revision when appropriate.
 
-## V4 — Additional environment packs **[WORKSHOP STARTED]**
-- [x] Workshop first individual-asset tranche;
-- [ ] Workshop composition-critical refinement + reference composition;
-- [ ] Clinic;
-- [ ] reading/classroom;
-- [ ] later fantasy/village/night/water families.
+## V4 — Additional environment packs **[ACTIVE]**
+- [x] Workshop asset pack + reference composition;
+- [x] Clinic asset pack + reference composition;
+- [x] Reading/classroom asset pack + composition metadata/review;
+- [ ] fantasy/village/night family;
+- [ ] later water/pond family as prioritized.
 
 ## V5 — Shared consumption/integration
 - [ ] explicit catalog/consumption seam through accepted architecture;
@@ -297,7 +249,7 @@ Focused browser/HTML files are allowed only as proofs using real assets; they ar
 
 ---
 
-# 11. Failure patterns — do not repeat
+# 12. Failure patterns — do not repeat
 
 - spending the workstream on character minutiae;
 - detailed traditional rigs as default;
@@ -307,11 +259,12 @@ Focused browser/HTML files are allowed only as proofs using real assets; they ar
 - crude primitive scenery presented as redesign;
 - full-screen mockups before real assets exist;
 - decorative HTML hiding weak art;
-- inventing new runtime/UI architecture during art production.
+- inventing new runtime/UI architecture during art production;
+- replacing asset-first production with generated scene concept images.
 
 ---
 
-# 12. Progress log — append only
+# 13. Progress log — append only
 
 ## 2026-08-20 — constraint-native visual pivot
 - Simplified characters established; Lilli/Nino/Tito/Momo became core cast.
@@ -328,31 +281,22 @@ Focused browser/HTML files are allowed only as proofs using real assets; they ar
 - Weak sapling/tree-line/fog/dust treatments revised after desktop review.
 - Composition manifest and actual-asset parallax proof committed.
 
-Commits:
-- `ee1faa2056156d756d233f01e7b46cdde2c1e4f3`
-- `eefb9db344ab59aa25be0f341e34e4ecb777a517`
-- `70e9980392cb873fc1b4aab1234c75dd18ac4f3e`
-- `873d228c14539da1daf040949431b51ad8ed221a`
-
 ## 2026-08-20 — UI v0.1 and Workshop v0.1 advanced
+- Shared UI source/state pack expanded and reviewed.
+- Workshop first 13 masters committed and reviewed.
 
-UI:
-- first broad shared UI source pack committed;
-- expanded with hover/pressed/disabled/completed/favorite/progress-complete states;
-- added loading/error/empty/portal illustration masters;
-- indexed in catalog v0.1.1.
+## 2026-08-20 — target-size tranche + Clinic
+- Forest final restraint references created at 1024×600 and 800×600.
+- Shared UI target-size compositions created.
+- Workshop expanded to 19 masters with only composition-critical additions and target-size references.
+- Clinic 17-master pack created with reduced-size and target-size desktop review.
+- Source tranche committed in `869cdc502458d54d667d5ed60d781411be763851`.
 
-Workshop:
-- first 13 individual creative-room masters committed;
-- catalog/README/review added;
-- assets reviewed together on Greia cream ground before any room composition.
+## 2026-08-20 — Reading/Classroom v0.1
+- Built a bounded 17-master reading/classroom source pack.
+- Reused Workshop block/pencil assets by reference instead of duplicating them.
+- Revised weak book-stack, tent and beanbag treatments after direct desktop review.
+- Added `catalog.toml`, `REVIEW.md`, `COMPOSITION.md` and `composition.toml`.
+- Evidence remains **SOURCE + DESKTOP VISUAL REVIEW**; no runtime/simulator/hardware acceptance claimed.
 
-Evidence: SOURCE + DESKTOP VISUAL REVIEW only.
-
-Commits:
-- `e42114e77d2c945e44febffec9b78b6490173504` — expanded UI source + Workshop initial pack
-- `24abd46d4c61671612898730c2dd5deb99e0ea98` — UI catalog v0.1.1
-- `f20cf179966282e763f663806995f10fb0ce9a80` — UI README refresh
-- `d338fbd6170c2fe8d8c6060cb9537c9e8f2540aa` — Workshop review record
-
-Next exact action: low-resolution UI/Workshop review and composition-critical refinements, final forest restraint pass, then Clinic individual-asset tranche.
+Next exact action: begin the fantasy/village/night individual-asset family and keep the same asset-first discipline.
