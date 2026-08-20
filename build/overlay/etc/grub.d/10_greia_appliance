@@ -19,7 +19,7 @@ if [ -f /etc/greia-os/developer-remote ]; then
   panic_arg="panic=0"
   visibility_args="loglevel=4 systemd.show_status=true rd.systemd.show_status=true udev.log_priority=4 vt.global_cursor_default=1"
 fi
-logo="/boot/grub/greia-boot-logo.png"
+theme="/boot/grub/greia-theme.txt"
 cat <<EOF
 if loadfont unicode ; then
   set gfxmode=auto
@@ -27,9 +27,15 @@ if loadfont unicode ; then
   insmod gfxterm
   terminal_output gfxterm
 fi
-if [ -f $logo ]; then
+# Never use raw `background_image` here: its default stretch mode was the
+# reason the portrait Greia artwork became a huge horizontally distorted image
+# on the 1024x600 reference Acer.  The generated theme uses proportional
+# `padding`, centred in both axes, and the artwork generator itself supplies a
+# landscape composition with safe internal margins.
+if [ -f $theme ]; then
   insmod png
-  background_image $logo
+  set theme=$theme
+  export theme
 fi
 set timeout=0
 set timeout_style=hidden
