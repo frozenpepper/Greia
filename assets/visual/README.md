@@ -1,10 +1,14 @@
 # Greia Visual Asset Library
 
 **Status:** active shared visual-library source + V5 explicit-consumption implementation seed  
+**Main visual-system guide:** `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`  
 **Active art plan:** `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`  
+**Current visual resume:** `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md`  
 **Authoring skill:** `skills/greia-visual-authoring/SKILL.md`
 
 This tree is the source home for Greia's reusable visual library. Shell and Activities should ultimately share this coherent world rather than accumulate unrelated private art.
+
+For the complete architecture, production model, runtime rendition/caching flow and documentation index, start with `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`. This README is the source-tree summary.
 
 **Nothing here authorizes runtime filesystem discovery.** Runtime consumption is explicit, semantic and bounded.
 
@@ -116,26 +120,28 @@ Source authority:
 ```text
 src/greia_platform/assets.py
 src/greia_platform/pygame_visual_assets.py
+src/greia_launcher/visual_assets.py
 assets/catalog/shared_visuals_v1_source.toml
 tools/build_visual_renditions.py
-Makefile: visual-assets
-tests/test_asset_catalogue.py
-tests/test_pygame_visual_assets.py
+tools/validate_visual_renditions.py
+Makefile: visual-assets / visual-assets-check
 ```
 
 ### Lookup
 
-`AssetCatalogue` supports explicit shared visuals with semantic ID, bounded kind, role and named variants while preserving the old icon contract. IDs share one namespace; paths are existence-checked and contained inside the assets root.
+`AssetCatalogue` supports explicit shared visuals with semantic ID, bounded kind, role and named variants while preserving the old icon contract. IDs share one namespace; paths are existence-checked and contained inside the assets root. Explicit catalogues may be safely merged only under the same assets root and only with globally unique IDs.
 
 ### Build-time renditions
 
 `shared_visuals_v1_source.toml` is the first explicit selection of reviewed SVG UI masters/variants for runtime PNG generation.
 
-`tools/build_visual_renditions.py` uses build-host `rsvg-convert`/librsvg to generate PNG renditions and an explicit `assets/catalog/shared_visuals_v1.toml`. It validates source/output containment, kinds/variants, dimensions, duplicate output paths and generated PNG dimensions.
+`tools/build_visual_renditions.py` uses build-host `rsvg-convert`/librsvg to generate PNG renditions and an explicit `assets/catalog/shared_visuals_v1.toml`. It validates source/output containment, kinds/variants, dimensions, duplicate output paths and generated PNG dimensions and publishes output transactionally.
 
 The target device does **not** need an SVG renderer.
 
 `make visual-assets` is the explicit generation entrypoint.
+
+`tools/validate_visual_renditions.py` / `make visual-assets-check` owns generated-output freshness/mapping/PNG validation as a source/build contract.
 
 ### Runtime Pygame cache
 
@@ -154,11 +160,25 @@ Provider-free cache tests are committed. An isolated local harness using the exa
 
 ### Current runtime boundary
 
-`rsvg-convert` is not installed in the present execution environment. Therefore the generated runtime PNGs/catalogue have **not** been built or validated here, and no Shell/Activity path has yet been switched to this catalogue/cache.
+The previous execution environment did not provide `rsvg-convert`; therefore the generated runtime PNGs/catalogue were not built there. The explicit launcher bridge exists, but no Shell/Activity path is yet accepted as consuming this catalogue/cache.
 
 All source visual packs therefore remain `runtime_consumed = false`.
 
-The next V5 gate is: generate/inspect the first renditions on an owner-controlled build checkout, run focused repository tests, then wire one existing controlled Shell/UI component path before generalizing to Activities/Web.
+Current first integration candidate:
+
+```text
+ui.shadow.soft
+```
+
+under existing launcher Activity tiles, preserving the current static/primitive fallback.
+
+Current owner-directed local-agent protocol:
+
+```text
+docs/testing/2026-08-20_V5_VISUAL_INTEGRATION_SIMULATOR_LOCAL_AGENT.md
+```
+
+For that tranche, runtime/visual/fallback/responsive acceptance is performed through the real Greia Shell in the Activity Simulator. Check `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` before resuming.
 
 ## Review discipline
 

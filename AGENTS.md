@@ -20,13 +20,15 @@ Before changing implementation or architecture, read:
 12. **`docs/product/ACTIVITY_SYSTEM_NAVIGATION.md` — mandatory universal Home/Back child-navigation requirement**;
 13. **`docs/product/ACTIVITY_INPUT_STANDARDS.md` — mandatory Phase-0 keyboard/pointer/touch/controller interaction standards**;
 14. **`docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md` — MANDATORY ACTIVE IMPLEMENTATION PLAN**;
-15. **`docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md` — MANDATORY CURRENT ART/VISUAL WORKSTREAM PLAN whenever designing, generating, refining, reviewing, integrating, or migrating Greia character art, scenes, props, FX, reusable visual assets, or visual UI treatment**;
-16. `HANDOVER.md`;
-17. **`docs/agents/GREIA_AGENT_OPERATIONS.md` — mandatory project/build/test-hardware operating manual for agents**;
-18. `skills/greia-activity-authoring/SKILL.md` whenever creating, modifying, reviewing, validating, optimizing, packaging, deploying, or testing an Activity;
-19. `skills/greia-visual-authoring/SKILL.md` whenever creating, modifying, reviewing, generating, or integrating Greia visual assets or Activity art;
-20. phase-specific testing/review documents referenced by `HANDOVER.md` or the active plan;
-21. `docs/plans/2026-08-06_PHASE0_BOOTABLE_VERTICAL_SLICE.md` only as historical/supporting Phase-0 context where it is not superseded.
+15. **`docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` — MANDATORY MAIN ENTRY POINT for Greia art/graphics/visual-asset architecture, source-library structure, composition, runtime rendition/caching and documentation navigation whenever the work touches visual assets or visual integration**;
+16. **`docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md` — MANDATORY CURRENT ART/VISUAL WORKSTREAM PLAN whenever designing, generating, refining, reviewing, integrating, or migrating Greia character art, scenes, props, FX, reusable visual assets, or visual UI treatment**;
+17. **`docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` — current visual-workstream resume contract when continuing art/graphics work across sessions**;
+18. `HANDOVER.md`;
+19. **`docs/agents/GREIA_AGENT_OPERATIONS.md` — mandatory project/build/test-hardware operating manual for agents**;
+20. `skills/greia-activity-authoring/SKILL.md` whenever creating, modifying, reviewing, validating, optimizing, packaging, deploying, or testing an Activity;
+21. `skills/greia-visual-authoring/SKILL.md` whenever creating, modifying, reviewing, generating, or integrating Greia visual assets or Activity art;
+22. phase-specific testing/review documents referenced by `HANDOVER.md` or the active plan;
+23. `docs/plans/2026-08-06_PHASE0_BOOTABLE_VERTICAL_SLICE.md` only as historical/supporting Phase-0 context where it is not superseded.
 
 `docs/DOCUMENTATION.md` defines which document class owns which fact. In short:
 
@@ -34,7 +36,9 @@ Before changing implementation or architecture, read:
 - accepted ADRs own normative architecture decisions;
 - source/runtime declarations own exact implemented APIs/schemas/command vocabularies;
 - product requirement documents own explicit child-facing scope/UX requirements where referenced here;
+- `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` is the stable visual-system synthesis/index and points humans/agents to the narrower visual authorities and exact source owners;
 - the active plan owns sequencing and closure criteria;
+- `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` owns the short current visual-session resume path;
 - `HANDOVER.md` owns current branch/evidence state;
 - `docs/testing/*` owns exact named test procedures;
 - agent operations/skills are derived living manuals and must track their implementation owners.
@@ -43,7 +47,7 @@ Do not resolve contradictions by choosing whichever document is convenient. Iden
 
 The architecture-remediation plan is the single active **blocking implementation** plan until its final completion criteria are satisfied. Resume from the first incomplete blocking phase in that plan. Do not create a competing implementation plan or jump ahead to a more visible feature while an earlier authority/safety prerequisite remains open.
 
-The visual-foundation plan is the current **art/visual workstream** plan. It owns art sequencing, checkpoints and append-only art progress while active, but it is subordinate to the blocking architecture plan and accepted ADRs. Art/design/library work may advance where it does not bypass platform prerequisites; a visual task must not be used as justification to deepen provisional X11 coupling, invent a parallel runtime/UI architecture, weaken protected system chrome, or claim hardware/runtime evidence that did not execute.
+The visual-foundation plan is the current **art/visual workstream** plan. It owns art sequencing, checkpoints and append-only art progress while active, but it is subordinate to the blocking architecture plan and accepted ADRs. `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` is the stable visual-system architecture/index and must remain interpretable after the current plan becomes historical. Art/design/library work may advance where it does not bypass platform prerequisites; a visual task must not be used as justification to deepen provisional X11 coupling, invent a parallel runtime/UI architecture, weaken protected system chrome, or claim hardware/runtime evidence that did not execute.
 
 After every substantive **implementation** turn:
 
@@ -61,11 +65,13 @@ After every substantive **art/visual-design** turn:
 
 1. update the short **Current checkpoint** in `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`;
 2. append a dated entry to that plan’s **Progress ledger**; never rewrite earlier art-history entries to make experiments look cleaner;
-3. update `skills/greia-visual-authoring/SKILL.md` when practical model/contributor guidance changes;
-4. update `docs/design/GREIA_VISUAL_STYLE_GUIDE.md` or `docs/design/GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md` when a reusable visual rule/inventory decision becomes accepted rather than merely planned;
-5. update `HANDOVER.md` when the art workstream’s continuation state, accepted direction, evidence boundary, blocker, or next exact step changes materially;
-6. keep visual evidence scoped accurately as DESIGN SPEC, SOURCE, DESKTOP VISUAL REVIEW, SIMULATOR VISUAL REVIEW, PHYSICAL VISUAL REVIEW, or REJECTED EXPERIMENT;
-7. commit coherent accepted/reviewable work to the canonical GitHub repository.
+3. update `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` when the stable visual-system architecture, library structure, runtime consumption seam, composition model or documentation map changes materially;
+4. update `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` when the current visual phase, next exact action, blocker, testing rule or evidence boundary changes;
+5. update `skills/greia-visual-authoring/SKILL.md` when practical model/contributor guidance changes;
+6. update `docs/design/GREIA_VISUAL_STYLE_GUIDE.md` or `docs/design/GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md` when a reusable visual rule/inventory decision becomes accepted rather than merely planned;
+7. update `HANDOVER.md` when the art workstream’s continuation state, accepted direction, evidence boundary, blocker, or next exact step changes materially;
+8. keep visual evidence scoped accurately as DESIGN SPEC, SOURCE, DESKTOP VISUAL REVIEW, SIMULATOR VISUAL REVIEW, PHYSICAL VISUAL REVIEW, or REJECTED EXPERIMENT;
+9. commit coherent accepted/reviewable work to the canonical GitHub repository.
 
 For substantive documentation-only work, update `HANDOVER.md` when the continuation contract changes and preserve a dated review when useful; an implementation-plan progress entry is required only when implementation/phase state actually changes.
 
@@ -75,7 +81,7 @@ The agent operations manual and Activity/visual authoring skills are **living de
 
 When—and only when—the active remediation plan's final completion criteria are all satisfied, the contributor closing it MUST mark the plan complete, append final evidence, update `HANDOVER.md`, and **remove this active-plan reference and these special resume/progress instructions from `AGENTS.md`**. The completed plan remains under `docs/plans/` as historical evidence.
 
-When—and only when—the visual-foundation plan’s completion criteria are satisfied or the owner explicitly replaces it, close/preserve it as history and remove or replace its current-art-plan references here and in `HANDOVER.md`.
+When—and only when—the visual-foundation plan’s completion criteria are satisfied or the owner explicitly replaces it, close/preserve it as history and remove or replace its current-art-plan references here and in `HANDOVER.md`. Keep `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` as the stable visual-system entry point unless the owner explicitly replaces that documentation architecture.
 
 ## GitHub Actions and paid/hosted execution
 
@@ -252,6 +258,6 @@ Every substantive implementation turn should leave:
 - updated engineering foundations when repository-wide implementation/extension rules changed;
 - no build caches, venvs, downloaded package archives, disk images, private keys, or heavyweight transient evidence inside the source tree.
 
-Every substantive art/visual-design turn should additionally leave the current art plan checkpoint/append-only ledger and visual-authoring skill/design authorities consistent with the work actually accepted.
+Every substantive art/visual-design turn should additionally leave the current art plan checkpoint/append-only ledger, `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`, `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md`, and visual-authoring skill/design authorities consistent with the work actually accepted.
 
 The GitHub repository is the canonical long-term source of truth; chat transcripts are not.
