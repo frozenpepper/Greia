@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
+
+usage() {
+  cat >&2 <<'EOF'
+Usage: sudo bash tools/build-and-flash-development-usb.sh PROFILE USB_DEVICE [OUTPUT_DIR]
+
+Builds an explicit Greia development installer, verifies the live and target
+SSH/network contracts, then writes the Acer-proven Syslinux/FAT32 layout to the
+specified removable whole-disk USB device and verifies the final media by
+read-back.
+
+USB_DEVICE IS DESTROYED. Example: /dev/sdd
+EOF
+}
+
+[[ $# -ge 2 && $# -le 3 ]] || { usage; exit 2; }
+[[ ${EUID:-$(id -u)} -eq 0 ]] || { echo "Run as root." >&2; exit 1; }
+PROFILE="$1"
+DEVICE="$2"
+OUTPUT_DIR="${3:-$PROJECT_ROOT/out}"
+
+[[ -b "$DEVICE" ]] || { echo "USB target is not a block device: $DEVICE" >&2; exit 1; }
+for command_name in lsblk realpath; do
+  command -v "$command_name" >/dev/null || { echo "Missing dependency: $command_name" >&2; exit 1; }
+done
+
+# Duplicate the most important destructive preflight before spending time on a
+# build. build-live-usb.sh performs the authoritative check again immediately
+# before wiping the device.
+RM="$(lsblk -dn -o RM "$DEVICE" 2>/dev/null | tr -d '[:space:]' || echo 0)"
+TYPE="$(lsblk -dn -o TYPE "$DEVICE" 2>/dev/null | tr -d '[:space:]' || echo part)"
+if [[ "$RM" != "1" || "$TYPE" != "disk" ]]; then
+  echo "Refusing: $DEVICE is not a removable whole disk (RM=$RM TYPE=$TYPE)." >&2
+  exit 1
+fi
+mapfile -t MOUNTED < <(lsblk -nrpo NAME,MOUNTPOINT "$DEVICE" 2>/dev/null | awk 'NF >= 2 && $2 != "" {print $1 " -> " $2}')
+if (( ${#MOUNTED[@]} > 0 )); then
+  echo "Refusing: USB target has mounted filesystems:" >&2
+  printf '  %s\n' "${MOUNTED[@]}" >&2
+  exit 1
+fi
+
+OUTPUT_DIR="$(mkdir -p "$OUTPUT_DIR" && realpath "$OUTPUT_DIR")"
+
+printf '%s\n' "Greia development build+flash target:"
+lsblk -dn -o NAME,SIZE,MODEL,SERIAL,TRAN,RM,TYPE "$DEVICE" || true
+
+bash "$PROJECT_ROOT/tools/build-development-installer.sh" "$PROFILE" "$OUTPUT_DIR"
+
+PROFILE_PATH="$PROFILE"
+if [[ ! -f "$PROFILE_PATH" ]]; then
+  PROFILE_PATH="$PROJECT_ROOT/build/profiles/${PROFILE%.toml}.toml"
+fi
+[[ -r "$PROFILE_PATH" ]] || { echo "Profile disappeared after build: $PROFILE_PATH" >&2; exit 1; }
+PROFILE_ID="$(python3 - "$PROFILE_PATH" <<'PY'
+import sys, tomllib
+from pathlib import Path
+raw = tomllib.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+print(raw["profile"]["id"])
+PY
+)"
+IMAGE="$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}.img"
+[[ -f "$IMAGE" ]] || { echo "Verified development installer image is missing: $IMAGE" >&2; exit 1; }
+
+bash "$PROJECT_ROOT/tools/build-live-usb.sh" "$IMAGE" "$DEVICE"
+
+cat <<EOF
+
+Greia development installer BUILD + FLASH complete.
+profile=$PROFILE_ID
+source_image=$IMAGE
+usb_device=$DEVICE
+source_artifact_verification=PASS
+usb_flash_readback_verification=PASS
+ssh_user=greia
+ssh_login=simple password; no operator SSH key is required
+EOF
