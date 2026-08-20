@@ -17,7 +17,8 @@
     "btn.new_game": "🔄 Nuovo",
     "btn.play_again": "🎉 Gioca Ancora!",
     "victory.title": "Bravissima! Hai trovato tutte le coppie! 🌟",
-    "victory.subtitle": "Che memoria fantastica!"
+    "victory.subtitle": "Che memoria fantastica!",
+    "grid.giant": "6x3"
   },
   "audio": {}
 }

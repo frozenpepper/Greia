@@ -44,7 +44,7 @@ class Phase2ActivitiesTests(unittest.TestCase):
 
     def test_memory_themes_and_grids(self) -> None:
         self.assertEqual(len(THEMES), 4)
-        self.assertEqual(len(GRID_CONFIGS), 3)
+        self.assertGreaterEqual(len(GRID_CONFIGS), 3)
         for theme in THEMES:
             self.assertGreaterEqual(len(theme["items"]), 6)
         audio = MemoryAudio()

@@ -17,7 +17,8 @@
     "btn.new_game": "🔄 New Game",
     "btn.play_again": "🎉 Play Again!",
     "victory.title": "Awesome! You matched all pairs! 🌟",
-    "victory.subtitle": "What a fantastic memory!"
+    "victory.subtitle": "What a fantastic memory!",
+    "grid.giant": "6x3"
   },
   "audio": {}
 }

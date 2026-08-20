@@ -147,6 +147,8 @@ GRID_CONFIGS = [
     {"id": "small", "label_key": "grid.small", "label": "2x2", "cols": 2, "rows": 2, "pairs": 2},
     {"id": "medium", "label_key": "grid.medium", "label": "3x2", "cols": 3, "rows": 2, "pairs": 3},
     {"id": "large", "label_key": "grid.large", "label": "4x3", "cols": 4, "rows": 3, "pairs": 6},
+    {"id": "xlarge", "label_key": "grid.xlarge", "label": "4x4", "cols": 4, "rows": 4, "pairs": 8},
+    {"id": "giant", "label_key": "grid.giant", "label": "6x3", "cols": 6, "rows": 3, "pairs": 9},
 ]
 
 
@@ -454,15 +456,18 @@ def _is_safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
 def _compute_grid_layout(grid_cfg: dict[str, Any], card_count: int) -> tuple[int, int, list[pygame.Rect]]:
     cols = grid_cfg["cols"]
     rows = grid_cfg["rows"]
-    top_y = 95
+    top_y = 80
     bottom_y = REFERENCE_HEIGHT - 65
-    avail_w = REFERENCE_WIDTH - 140
+    avail_w = REFERENCE_WIDTH - 120
     avail_h = bottom_y - top_y
 
-    card_w = min(170, (avail_w - (cols - 1) * 18) // cols)
-    card_h = min(210, (avail_h - (rows - 1) * 18) // rows)
-    grid_w = cols * card_w + (cols - 1) * 18
-    grid_h = rows * card_h + (rows - 1) * 18
+    gap_x = 12 if cols >= 5 else 16
+    gap_y = 10 if rows >= 4 else 14
+
+    card_w = min(170, (avail_w - (cols - 1) * gap_x) // cols)
+    card_h = min(210, (avail_h - (rows - 1) * gap_y) // rows)
+    grid_w = cols * card_w + (cols - 1) * gap_x
+    grid_h = rows * card_h + (rows - 1) * gap_y
     grid_ox = (REFERENCE_WIDTH - grid_w) // 2
     grid_oy = top_y + (avail_h - grid_h) // 2
 
@@ -470,8 +475,8 @@ def _compute_grid_layout(grid_cfg: dict[str, Any], card_count: int) -> tuple[int
     for i in range(card_count):
         c = i % cols
         r = i // cols
-        rx = grid_ox + c * (card_w + 18)
-        ry = grid_oy + r * (card_h + 18)
+        rx = grid_ox + c * (card_w + gap_x)
+        ry = grid_oy + r * (card_h + gap_y)
         rects.append(pygame.Rect(rx, ry, card_w, card_h))
     return card_w, card_h, rects
 
