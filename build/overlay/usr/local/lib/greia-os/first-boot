@@ -1,5 +1,17 @@
 #!/bin/sh
 set -eu
+
+boot_progress() {
+    value="$1"
+    renderer=/usr/lib/greia-boot/greia-fb-splash
+    if [ -c /dev/fb0 ] && [ -x "$renderer" ]; then
+        "$renderer" --progress "$value" >/dev/null 2>&1 || true
+    fi
+}
+
+# Userspace is alive and Greia is preparing its persistent/volatile state.
+boot_progress 55
+
 # The state-root itself is traversal-only shared infrastructure. Sensitive
 # Parent state remains protected by the permissions of its child directories
 # and files; 0755 here is required so greiakid can reach the read-only
@@ -25,3 +37,7 @@ passwd --lock root >/dev/null 2>&1 || true
 # the child-visible first-boot critical path.
 printf '%s\n' "initialized" > /var/lib/greia-os/initialized
 chown greiapanel:greiapanel /var/lib/greia-os/initialized
+
+# Persistent/volatile Greia state is now ready. The next visible milestone is
+# owned by the launcher VT/X preflight; retries must not fabricate more progress.
+boot_progress 65
