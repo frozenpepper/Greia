@@ -5,10 +5,10 @@
 **Repository:** `frozenpepper/Greia` (private)  
 **Canonical/default/development branch:** `main`  
 **Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**  
-**Current cross-cutting work:** device-language/localization + child UX + R13B transactional updates + Activity Simulator/emoji/Writing + **active Greia visual-foundation workstream (A2)**  
+**Current cross-cutting work:** device-language/localization + child UX + R13B transactional updates + Activity Simulator/emoji/Writing + **active Greia asset-first visual-library workstream (V2/V3)**  
 **External Parent HTML runtime revision pinned by Greia:** `frozenpepper/Greia-Parent-App-Html@519651a5931269ed4275324f2a87ad3f0d08a3f6`
 
-This file is intentionally a **current-state continuation contract**. Detailed chronology belongs in append-only active plans/reviews. Exact APIs and limits remain source-owned.
+This file is the current-state continuation contract. Detailed chronology belongs in the active plans/reviews. Exact APIs and limits remain source-owned.
 
 ---
 
@@ -21,7 +21,7 @@ This file is intentionally a **current-state continuation contract**. Detailed c
 - Blocking implementation plan: `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`.
 - Current art/visual plan: `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`.
 - R7 remains the first incomplete blocking architecture phase. Cross-cutting product/art work does not close or skip R7.
-- Substantive visual work must update the art-plan checkpoint + append-only ledger.
+- Substantive visual work updates the art-plan checkpoint + append-only progress log.
 - `skills/greia-visual-authoring/SKILL.md` is mandatory for Greia visual-asset/art work.
 
 ---
@@ -42,7 +42,7 @@ Retained physical history from 2026-08-19: a fresh `legacy-x86-i686-dev` syslinu
 
 ---
 
-# 3. Active Greia visual-foundation workstream — A2
+# 3. Active Greia visual-library workstream — V2/V3
 
 Canonical continuity:
 
@@ -52,130 +52,145 @@ docs/design/GREIA_VISUAL_STYLE_GUIDE.md
 docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md
 docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md
 skills/greia-visual-authoring/SKILL.md
-assets/visual/README.md
-assets/visual/library_v0.1.toml
-assets/visual/specimens/a1/review.html
-assets/visual/specimens/a2/review.html
-assets/visual/specimens/a2/base_motion_v0.1.toml
+runtime/theme-defaults.toml
+assets/visual/environments/forest_meadow/v0.2/
+assets/visual/ui/v0.1/
 ```
 
-## 3.1 A1 is closed at design/static-style scope
+## 3.1 Current production rule
 
-The owner reviewed the first constraint-native cast direction and explicitly asked to move forward. Record that as approval of:
+The visual workstream is explicitly **asset-first**:
 
-- **Puff** — one soft round/oval/fluffy main mass;
-- **Bean** — one compact upright rounded/drop mass;
-- **Cutout Critter** — intentional felt/sticker/paper-cut layering;
-- **Object Friend** — pedagogical object remains primary and gains a face/tiny optional appendages;
-- face/expression-first character design;
-- whole-body motion rather than anatomy-heavy rigs;
-- Lilli, Nino, Tito and Momo as **static style anchors**.
+> excellent individual assets → reusable asset packs → layered composition → subtle parallax / ambient motion / light / shadow → shared UI system → Shell/Activity reuse
 
-Working anchors:
+Do not return to crude full-screen mockups, tutorial geometry, or decorative HTML that hides weak underlying assets.
+
+The accepted simplified character direction remains valid, but character minutiae no longer block backgrounds, props, atmosphere, shadows or UI.
+
+Core character anchors remain:
 
 - **Lilli** — unicorn Puff;
 - **Nino** — owl Bean;
 - **Tito** — fox Puff;
 - **Momo** — friendly monster Puff.
 
-`docs/design/GREIA_VISUAL_STYLE_GUIDE.md` now contains the accepted constraint-native language. `docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md` is accepted rather than candidate.
+Static style-anchor approval does not mean final release/runtime/physical approval.
 
-The library records explicit approval scope. `assets/visual/library_v0.1.toml` remains:
+## 3.2 Forest / meadow candidate pack
+
+Canonical source:
 
 ```text
-runtime_consumed = false
+assets/visual/environments/forest_meadow/v0.2/
 ```
 
-and the four current masters are approved only as:
+The pack contains **27 reusable SVG masters** covering:
+
+- hero/secondary/sapling/willow trees;
+- round/flowering/low bushes;
+- fern, flower and mushroom clusters;
+- large/small rock clusters;
+- fallen log and stump;
+- large/small clouds;
+- distant hills and distant tree line;
+- grass edge and dirt playfield patch;
+- sunlight and fog overlays;
+- small/wide contact shadows;
+- fireflies, dust motes and falling leaves.
+
+Metadata/review/proof files:
 
 ```text
-approval_scope = "static_style_anchor"
-runtime_ready = false
+assets/visual/environments/forest_meadow/v0.2/catalog.toml
+assets/visual/environments/forest_meadow/v0.2/REVIEW.md
+assets/visual/environments/forest_meadow/v0.2/composition_day.toml
+assets/visual/environments/forest_meadow/v0.2/parallax_proof.html
 ```
 
-This does **not** mean frozen final release art, runtime asset packaging, simulator acceptance or physical/C0 acceptance.
+The catalog records candidate state, semantic ID, layer/parallax role and ambient-motion guidance. `runtime_consumed = false` remains explicit.
 
-## 3.2 A2 expression and semantic-motion foundation
+A first desktop visual-review pass caught and corrected weak treatments rather than hiding them in a composition:
 
-A2 now defines persistent expression semantics:
+- sapling silhouette/detail balance;
+- repetitive geometric distant tree line;
+- insufficient fog depth;
+- barely visible dust motes.
 
-```text
-neutral
-happy
-excited
-surprised
-sleepy
-sad_gentle
-thinking
-proud
-silly
-```
+A 1024×600 static composition was assembled locally from the actual masters. `composition_day.toml` records far/mid/near/overlay roles and restrained motion parameters. `parallax_proof.html` exercises the committed SVGs with cheap CSS-only cloud drift, small foliage sway, fog drift, light breathing and firefly movement. It is a design proof, **not** a runtime scene framework.
 
-plus transient `blink`.
-
-Important emotional rule: ordinary educational mistakes never use anger, shame or disappointed-at-the-child imagery. An early local Lilli `sad_gentle` treatment was revised because brow angles could read as irritation/disappointment; future variants must preserve the softer reading.
-
-Base Animation Set v0.1:
+Current environment evidence:
 
 ```text
-idle_bounce      nominal 2.00 s
-blink            nominal 0.22 s
-happy_hop        nominal 0.90 s
-celebrate_pop    nominal 1.15 s
-surprised_wobble nominal 0.72 s
-sleepy_sway      nominal 2.40 s
-```
-
-Exact phase/amplitude/static-fallback rules are in:
-
-```text
-docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md
-assets/visual/specimens/a2/base_motion_v0.1.toml
-```
-
-The review harness:
-
-```text
-assets/visual/specimens/a2/review.html
-```
-
-demonstrates all six motions on Lilli/Puff, Nino/Bean and Object Friend number 3 using face-state overlays + bounded whole-body transforms. Object Friend deformation is deliberately reduced so the learning glyph remains recognizable.
-
-## 3.3 Runtime boundary retained
-
-`src/greia_platform/ui_motion.py` was inspected before proposing runtime animation. Its cheap immutable renderer-neutral mathematical sampling is the preferred architectural precedent.
-
-The current `MotionSample` remains UI-control-oriented and does not model character rotation, anisotropic squash/stretch, semantic face state or optional attachment/FX channels. **No runtime character-motion API was added in A2.** Do not turn the HTML design harness into runtime authority or create a parallel per-Activity animation framework.
-
-Runtime/library integration remains A7 and requires architecture review.
-
-## 3.4 Current visual evidence and next exact step
-
-Current A1 evidence:
-
-```text
-OWNER REVIEW
-DESIGN SPEC
 SOURCE
-DESKTOP VISUAL REVIEW at 256 / 128 / 64
-```
-
-Current A2 evidence:
-
-```text
-DESIGN SPEC
-SOURCE
-DESKTOP VISUAL REVIEW of expression variants and representative keyframes
+DESKTOP VISUAL REVIEW
 ```
 
 Not claimed:
 
-- A2 owner acceptance;
-- simulator/reference-viewport A2 acceptance;
-- runtime-motion performance acceptance;
-- Acer/Pi physical visual acceptance.
+- owner-approved release-art status;
+- simulator/runtime acceptance;
+- physical Acer/Pi performance acceptance.
 
-**Next exact visual action:** review/refine `assets/visual/specimens/a2/review.html`, obtain appropriate simulator/reference-viewport clarity evidence, then close A2 if the motion/expression semantics remain charming/readable across Puff, Bean and Object Friend. After A2, begin A3 shared character/Object Friend library expansion. Runtime animation integration remains deferred.
+## 3.3 Shared UI visual pack v0.1
+
+Canonical source:
+
+```text
+assets/visual/ui/v0.1/
+```
+
+Current reusable masters include:
+
+- panel + sheet;
+- default + focused activity card;
+- primary / secondary / quiet / icon buttons;
+- default + selected tab pills;
+- new / completed / locked badges;
+- progress track + fill;
+- speech + thought bubbles;
+- reward frame;
+- avatar frame;
+- shared focus ring;
+- soft shadow;
+- highlight sheen.
+
+Metadata/review:
+
+```text
+assets/visual/ui/v0.1/catalog.toml
+assets/visual/ui/v0.1/REVIEW.md
+```
+
+The pack is aligned to `runtime/theme-defaults.toml`, keeps child-facing text outside the artwork for localization/reuse, and does not replace Greia Screen/Overlay/Panel/Card/Control semantics.
+
+Representative UI assets were rasterized locally and reviewed on Greia cream, Greia sky and dark charcoal. Focus/selected examples use frame/shape cues in addition to color.
+
+Current UI evidence:
+
+```text
+SOURCE
+DESKTOP VISUAL REVIEW
+```
+
+Not claimed:
+
+- owner approval;
+- platform integration;
+- 800×600 / 1024×600 simulator acceptance;
+- physical performance acceptance.
+
+## 3.4 Exact visual continuation
+
+Continue from the active plan checkpoint, currently:
+
+1. finish missing UI visual states: hover/pressed/disabled/favorite/progress-complete/reward;
+2. add loading/error/empty-state illustration pieces and any needed category/location frame art;
+3. create a low-resolution UI reference composition from the **real shared assets**, not replacement primitives;
+4. do one final restraint/readability pass on forest/meadow at 800×600 and 1024×600;
+5. then begin **Workshop v0.1** as individual reusable assets;
+6. Clinic follows Workshop unless the owner reprioritizes.
+
+Do not invent the runtime asset loader/compositor during this visual-production work. Runtime consumption remains a later architecture-reviewed integration step.
 
 ---
 
@@ -238,7 +253,7 @@ Mandatory architecture remains:
 - controller ownership/normalization remains platform-owned;
 - ordinary Activities do not gain raw `/dev/input` or DRM authority.
 
-Art/asset work is allowed to advance independently where it does not bypass these architecture prerequisites.
+Art/asset work may advance independently where it does not bypass these architecture prerequisites.
 
 ---
 
@@ -274,12 +289,12 @@ docs/testing/LOCAL_AGENT_START_HERE.md
 
 ## Visual workstream
 
-1. Review/refine A2 expressions/motions using `assets/visual/specimens/a2/review.html`.
-2. Preserve static fallbacks and conservative Object Friend deformation.
-3. Obtain simulator/reference-viewport evidence appropriate to A2 without inventing runtime architecture.
-4. Close A2 only when semantic motion works across Puff, Bean and Object Friend.
-5. Begin A3: reusable standard creatures + Object Friends + metadata/provenance.
-6. Do not implement the runtime character-motion/library layer before the A7 architecture review.
+1. Keep `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md` as the sequencing authority.
+2. Finish the first missing V3 UI state/illustration tranche and low-resolution review.
+3. Finish the V2A forest/meadow restraint/readability pass; avoid endless refinement after the pack is coherent.
+4. Start Workshop v0.1 individual assets next.
+5. Keep environment/UI assets reusable and individually reviewable.
+6. Do not create a new runtime scene/UI framework as part of visual production.
 
 ---
 
@@ -296,9 +311,10 @@ docs/testing/LOCAL_AGENT_START_HERE.md
 - one canonical device-language registry;
 - selectable language is not a translation/font/RTL-completion claim;
 - system-update activation stays false on current single-root profiles;
-- source/simulator/physical evidence scopes remain distinct;
-- Greia character art defaults to the accepted constraint-native visual language unless a bespoke asset has a deliberate reviewed reason to differ;
-- static style-anchor approval is not runtime/release/physical approval;
-- after each substantive art session update the active art-plan checkpoint + append-only ledger.
+- source/desktop/simulator/physical evidence scopes remain distinct;
+- Greia visual work remains asset-first;
+- candidate files in Git are not automatically approved;
+- static character style-anchor approval is not runtime/release/physical approval;
+- after each substantive art session update the active visual plan checkpoint + append-only progress log and this HANDOVER when continuation materially changes.
 
-For visual continuation, start from the **A2 expression/motion review gate**, not from the rejected detailed-unicorn pipeline.
+For visual continuation, start from the **current V2/V3 asset-library checkpoint**, not from the rejected detailed-unicorn/A2-overlay experiments.
