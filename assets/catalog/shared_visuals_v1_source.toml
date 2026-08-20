@@ -1,0 +1,76 @@
+catalog_id = "greia.shared-visuals.v1"
+catalog_version = "0.1.0"
+status = "candidate-runtime-rendition-source"
+runtime_consumed = false
+notes = "Explicit build-time selection of shared SVG masters for raster runtime renditions. This file is not directory discovery."
+
+[[visuals]]
+id = "ui.panel.base"
+kind = "ui"
+role = "panel"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/ui/v0.1/panel_base.svg"
+output = "visual/runtime/v1/ui/panel_base.png"
+width = 640
+height = 420
+
+[[visuals]]
+id = "ui.card.activity"
+kind = "ui"
+role = "activity_card"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/ui/v0.1/activity_card.svg"
+output = "visual/runtime/v1/ui/activity_card.png"
+width = 360
+height = 430
+
+[[visuals.variants]]
+name = "focused"
+source = "visual/ui/v0.1/activity_card_focused.svg"
+output = "visual/runtime/v1/ui/activity_card_focused.png"
+width = 360
+height = 430
+
+[[visuals.variants]]
+name = "completed"
+source = "visual/ui/v0.1/activity_card_completed.svg"
+output = "visual/runtime/v1/ui/activity_card_completed.png"
+width = 360
+height = 430
+
+[[visuals]]
+id = "ui.button.primary"
+kind = "ui"
+role = "button"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/ui/v0.1/button_primary.svg"
+output = "visual/runtime/v1/ui/button_primary.png"
+width = 360
+height = 140
+
+[[visuals.variants]]
+name = "hover"
+source = "visual/ui/v0.1/button_primary_hover.svg"
+output = "visual/runtime/v1/ui/button_primary_hover.png"
+width = 360
+height = 140
+
+[[visuals.variants]]
+name = "pressed"
+source = "visual/ui/v0.1/button_primary_pressed.svg"
+output = "visual/runtime/v1/ui/button_primary_pressed.png"
+width = 360
+height = 140
+
+[[visuals.variants]]
+name = "disabled"
+source = "visual/ui/v0.1/button_disabled.svg"
+output = "visual/runtime/v1/ui/button_primary_disabled.png"
+width = 360
+height = 140
