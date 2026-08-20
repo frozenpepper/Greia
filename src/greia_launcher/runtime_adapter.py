@@ -231,12 +231,9 @@ class PythonRuntimeAdapter:
             for path in list(manifest.root.rglob("*")):
                 if not path.exists():
                     continue
-                folded_name = path.name.casefold()
-                if path.is_dir() and folded_name == "__pycache__":
-                    import shutil
-
-                    shutil.rmtree(path, ignore_errors=True)
+                if "__pycache__" in path.parts:
                     continue
+                folded_name = path.name.casefold()
                 if path.is_dir() and folded_name in policy.forbidden_path_names:
                     raise RuntimeValidationError(
                         f"forbidden Python package directory: {path.name}"

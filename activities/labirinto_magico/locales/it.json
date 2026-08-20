@@ -4,6 +4,7 @@
   "direction": "ltr",
   "strings": {
     "activity.title": "Il Labirinto Magico",
+    "activity.labirinto_magico.title": "Il Labirinto Magico",
     "hud.stars": "★ ",
     "hud.level": "Livello",
     "hud.easy": "Piccolo",

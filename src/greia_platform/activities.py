@@ -216,7 +216,9 @@ class ActivityRegistry:
 
     def _validate_tree(self, root: Path) -> None:
         total = 0
-        for path in root.rglob("*"):
+        for path in sorted(root.rglob("*")):
+            if "__pycache__" in path.parts:
+                continue
             if path.is_symlink():
                 raise ActivityValidationError(f"symlinks are forbidden: {path}")
             name = path.name.casefold()
