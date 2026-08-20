@@ -1,22 +1,13 @@
-# Greia A2 Expression/Motion Specimens
+# Historical A2 experiments
 
-Status: candidate design/evidence harness, not runtime assets.
+This directory is retained only as design history.
 
-Open `review.html` to compare the Base Animation Set v0.1 on Lilli (Puff), Nino (Bean), and an Object Friend.
+The former A2 harness was rejected because it overcomplicated the work and degraded/incorrectly replaced character faces.
 
-The harness uses exact A1 SVG body masters with semantic face replacement/overlays. It applies only bounded whole-body transforms and bounded decorative FX.
+Current active visual-library work is:
 
-Authoritative candidate design spec:
+- `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`
+- `assets/visual/library/`
+- `assets/visual/characters/`
 
-`docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md`
-
-Machine-readable authoring/design seeds:
-
-```text
-assets/visual/specimens/a2/expression_templates_v0.1.toml
-assets/visual/specimens/a2/base_motion_v0.1.toml
-```
-
-The expression template file records the nine persistent semantic face states, transient blink, and explicit rejection cues such as angry/disappointed-at-the-child treatment for `sad_gentle`.
-
-`runtime_consumed = false`: this directory does not define or authorize a Greia runtime animation API.
+Do not use this directory as the current animation/art library.
