@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import os
+from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 
-from .assets import AssetCatalogue
+from .assets import AssetCatalogue, AssetCatalogueError
 from .customization import (
     RemovableImageScanner,
     ResolvedTheme,
@@ -23,6 +24,24 @@ from .theme_snapshot import ThemeSnapshotError, decode_theme_snapshot
 from .ui_preferences import InterfaceSize, UiPreferences, UiPreferencesStore
 
 
+@dataclass(frozen=True, slots=True)
+class SharedVisualReference:
+    """One read-only semantic Greia visual resolved for an Activity.
+
+    Activities request product semantics (asset ID + explicit variant), never an
+    arbitrary host path. ``path`` is the current Python-runtime realization of
+    that semantic reference. Future Web/runtime adapters may expose the same ID
+    and variant through a renderer-appropriate transport without changing the
+    semantic request contract.
+    """
+
+    asset_id: str
+    kind: str
+    role: str
+    variant: str
+    path: Path
+
+
 @lru_cache(maxsize=1)
 def _root() -> Path:
     explicit = os.environ.get("GREIA_OS_ROOT")
@@ -39,7 +58,21 @@ def _root() -> Path:
 
 @lru_cache(maxsize=1)
 def _catalogue() -> AssetCatalogue:
-    return AssetCatalogue.load(_root() / "assets" / "catalog" / "core_icons_v1.toml")
+    """Return the Activity-visible semantic asset catalogue.
+
+    Core icons remain mandatory. Generated shared visuals are optional so an
+    Activity that only uses established platform APIs still starts on a build or
+    installed image where the optional visual rendition catalogue is absent or
+    malformed. Visual requests then fail narrowly as unknown shared visuals.
+    """
+
+    core = AssetCatalogue.load(_root() / "assets" / "catalog" / "core_icons_v1.toml")
+    shared_path = _root() / "assets" / "catalog" / "shared_visuals_v1.toml"
+    try:
+        shared = AssetCatalogue.load(shared_path)
+        return core.merged(shared)
+    except (AssetCatalogueError, FileNotFoundError, OSError, RuntimeError, ValueError):
+        return core
 
 
 @lru_cache(maxsize=1)
@@ -190,6 +223,39 @@ def get_icon_path(asset_id: str, size: int = 128) -> Path:
     if size <= 128:
         return icon.path_128
     return icon.path_256
+
+
+def get_shared_visual(
+    asset_id: str,
+    *,
+    variant: str = "default",
+) -> SharedVisualReference:
+    """Resolve one explicit shared Greia visual for this Activity.
+
+    The request is semantic and read-only. The caller cannot supply a path or
+    mutate the catalogue. Unknown IDs/variants raise ``AssetCatalogueError``;
+    Activities should keep a static/private fallback when a shared visual is
+    optional to their experience.
+    """
+
+    visual = _catalogue().get_visual(asset_id)
+    return SharedVisualReference(
+        asset_id=visual.asset_id,
+        kind=visual.kind,
+        role=visual.role,
+        variant=variant,
+        path=visual.path_for(variant),
+    )
+
+
+def get_shared_visual_path(
+    asset_id: str,
+    *,
+    variant: str = "default",
+) -> Path:
+    """Python-runtime convenience wrapper for ``get_shared_visual``."""
+
+    return get_shared_visual(asset_id, variant=variant).path
 
 
 def get_theme() -> ResolvedTheme:
