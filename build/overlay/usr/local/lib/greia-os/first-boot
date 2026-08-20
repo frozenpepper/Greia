@@ -9,9 +9,12 @@ boot_progress() {
     fi
 }
 
-# Userspace is alive and Greia is preparing its persistent/volatile state.
+# Userspace is alive and Greia is preparing its persistent state.
 boot_progress 55
 
+# Persistent state roots are one-time/install-owned. Volatile /run roots are
+# deliberately absent here: systemd-tmpfiles recreates them on every boot from
+# /etc/tmpfiles.d/greia-runtime.conf.
 # The state-root itself is traversal-only shared infrastructure. Sensitive
 # Parent state remains protected by the permissions of its child directories
 # and files; 0755 here is required so greiakid can reach the read-only
@@ -20,7 +23,6 @@ install -d -m 0755 -o greiapanel -g greiapanel /var/lib/greia-os
 install -d -m 0750 -o greiakid -g greiakid /var/lib/greia-kid
 install -d -m 2770 -o greiakid -g pipprofiles /var/lib/greia-profiles
 install -d -m 2750 -o greiapanel -g pipsettings /var/lib/greia-system-settings
-install -d -m 2750 -o greiakid -g greiapanel /run/greia-hardware
 machine_id="$(cat /etc/machine-id 2>/dev/null || true)"
 [ -n "$machine_id" ] || systemd-machine-id-setup >/dev/null 2>&1
 
@@ -38,6 +40,6 @@ passwd --lock root >/dev/null 2>&1 || true
 printf '%s\n' "initialized" > /var/lib/greia-os/initialized
 chown greiapanel:greiapanel /var/lib/greia-os/initialized
 
-# Persistent/volatile Greia state is now ready. The next visible milestone is
-# owned by the launcher VT/X preflight; retries must not fabricate more progress.
+# Persistent Greia state is now ready. The next visible milestone is owned by
+# the launcher VT/X preflight; retries must not fabricate more progress.
 boot_progress 65
