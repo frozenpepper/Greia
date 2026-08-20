@@ -24,7 +24,11 @@ from .display_session import DisplaySessionCoordinator
 from .main import _development_hal
 from .presentation import GreiaLauncherPresentation, parse_args
 from .runtime_adapter import RuntimeLaunchAdapter
-from .shared_ui_presentation import SharedUiActivityCardMixin, SharedUiShellPanelMixin
+from .shared_ui_presentation import (
+    SharedUiActivityCardMixin,
+    SharedUiCategoryButtonMixin,
+    SharedUiShellPanelMixin,
+)
 from .supervisor import ActivitySupervisor
 
 
@@ -67,14 +71,12 @@ class ProfileVisualActivitySupervisor(ActivitySupervisor):
             theme = ThemeStore.load(defaults, profile.customization_dir).resolve()
             environment["GREIA_THEME_SNAPSHOT"] = encode_theme_snapshot(theme)
         except (OSError, ValueError, CustomizationError, ThemeSnapshotError):
-            # Missing/corrupt presentation state must never turn an otherwise
-            # valid Activity launch into a platform failure. Activity API has a
-            # canonical default-theme fallback when no snapshot is present.
             environment.pop("GREIA_THEME_SNAPSHOT", None)
         return environment
 
 
 class GreiaChildShell(
+    SharedUiCategoryButtonMixin,
     SharedUiShellPanelMixin,
     SharedUiActivityCardMixin,
     GreiaLauncherPresentation,
@@ -116,8 +118,6 @@ class GreiaChildShell(
             history_service=runtime_services.history_service,
             display_coordinator=self._display_session_coordinator(),
         )
-        # Publish only the complete matching pair. Subclasses vary inputs, not
-        # the authority graph or publication sequence.
         self.runtime_services = runtime_services
         self.supervisor = supervisor
 
@@ -135,8 +135,6 @@ class GreiaChildShell(
         return cached
 
     def _draw_launch_overlay(self, pygame: Any, *, text: str) -> None:
-        """Base launch overlay with profile-scaled typography."""
-
         from greia_platform.typography import FontRole
 
         screen = pygame.display.get_surface()
