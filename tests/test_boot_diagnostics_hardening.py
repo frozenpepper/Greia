@@ -125,16 +125,48 @@ class BootDiagnosticsHardeningTests(unittest.TestCase):
         self.assertIn('visibility_args="loglevel=4 systemd.show_status=true', grub)
         self.assertIn("developer-remote", grub)
 
-    def test_boot_art_generator_stays_on_accepted_rgb565_safe_transform(self) -> None:
+    def test_boot_art_generator_preserves_colour_and_builds_safe_canvas(self) -> None:
         generator = (ROOT / "tools/generate_boot_artwork.py").read_text(
             encoding="utf-8"
         )
-        self.assertIn("MedianFilter(3)", generator)
-        self.assertIn("_LOGO_COLOR = (62, 70, 130)", generator)
-        self.assertIn("luminance > 90", generator)
-        self.assertIn("_WHITE = (255, 255, 255)", generator)
-        self.assertNotIn("canonical_full_color_frame", generator)
-        self.assertNotIn("pixel-identical to the canonical full-color frame", generator)
+        self.assertIn("canonical_full_color_frame", generator)
+        self.assertIn("compose_boot_canvas", generator)
+        self.assertIn("CANVAS_SIZE = (1600, 900)", generator)
+        self.assertIn("MIN_SOURCE_COLOURS", generator)
+        self.assertIn("GRUB_THEME", generator)
+        self.assertIn('desktop-image-scale-method: "padding"', generator)
+        self.assertNotIn("MedianFilter", generator)
+        self.assertNotIn("_LOGO_COLOR", generator)
+        self.assertNotIn("luminance > 90", generator)
+        self.assertNotIn("derive_white_frame", generator)
+
+    def test_early_renderer_fits_canvas_and_uses_its_background(self) -> None:
+        renderer = (ROOT / "build/early-boot/greia-fb-splash.c").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("background = pack_pixel", renderer)
+        self.assertIn("image->rgb[0]", renderer)
+        self.assertIn("dest_w = visible_w", renderer)
+        self.assertIn("dest_h > visible_h", renderer)
+        self.assertIn("x0 = (visible_w - dest_w) / 2u", renderer)
+        self.assertIn("y0 = (visible_h - dest_h) / 2u", renderer)
+        self.assertNotIn("visible_h / 12u", renderer)
+        self.assertNotIn("max_h", renderer)
+        self.assertNotIn("max_w", renderer)
+
+    def test_installed_grub_uses_proportional_theme_not_raw_stretch(self) -> None:
+        grub = (ROOT / "build/overlay/etc/grub.d/10_greia_appliance").read_text(
+            encoding="utf-8"
+        )
+        theme = (ROOT / "build/overlay/boot/grub/greia-theme.txt").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn('theme="/boot/grub/greia-theme.txt"', grub)
+        self.assertIn("set theme=$theme", grub)
+        self.assertNotRegex(grub, r"(?m)^\s*background_image\s")
+        self.assertIn('desktop-image-scale-method: "padding"', theme)
+        self.assertIn('desktop-image-h-align: "center"', theme)
+        self.assertIn('desktop-image-v-align: "center"', theme)
 
     def test_development_builder_routes_legacy_hardware_through_proven_front_door(self) -> None:
         wrapper = (ROOT / "tools/build-development-installer.sh").read_text(
@@ -150,11 +182,14 @@ class BootDiagnosticsHardeningTests(unittest.TestCase):
         legacy = (ROOT / "build/build-legacy-x86-sd-installer.sh").read_text(
             encoding="utf-8"
         )
-        # This file is the physically proven image-builder wrapper. Boot-art
-        # experiments must not be inserted here without another hardware pass.
+        # Boot artwork generation may surround the physically proven image
+        # builder, but Syslinux/FAT writer mechanics stay outside this wrapper.
+        self.assertIn("generate_boot_artwork.py", legacy)
+        self.assertIn("full-color-landscape-canvas-v1", legacy)
+        self.assertIn("generated canonical boot source is not pixel-identical", legacy)
         self.assertIn('"$SCRIPT_DIR/build-installer-image.sh" "$PROFILE" "$OUTPUT_DIR"', legacy)
-        self.assertNotIn("canonical-full-color-rgb", legacy)
-        self.assertNotIn("pixel-identical", legacy)
+        self.assertNotIn("syslinux --install", legacy)
+        self.assertNotIn("mkfs.vfat", legacy)
 
     def test_active_direct_developer_builder_does_not_generate_client_keys(self) -> None:
         builder = (ROOT / "build/build-developer-image.sh").read_text(
@@ -167,7 +202,7 @@ class BootDiagnosticsHardeningTests(unittest.TestCase):
         self.assertIn("developer-remote", builder)
         self.assertIn("no operator SSH key file", builder)
 
-    def test_artifact_verifiers_cover_recovery_contract(self) -> None:
+    def test_artifact_verifiers_cover_recovery_and_visual_contract(self) -> None:
         installer = (ROOT / "tools/verify-development-installer.sh").read_text(
             encoding="utf-8"
         )
@@ -180,6 +215,11 @@ class BootDiagnosticsHardeningTests(unittest.TestCase):
         self.assertIn("20-greia-wired.network", installer)
         self.assertIn("25-greia-wireless.network", installer)
         self.assertIn("developer-remote", installer)
+        self.assertIn("P6\\n1600 900\\n255\\n", installer)
+        self.assertIn("old_duotone", installer)
+        self.assertIn("boot/grub/greia-theme.txt", installer)
+        self.assertIn("desktop-image-scale-method", installer)
+        self.assertIn("raw GRUB background_image stretch path", installer)
 
         target = (ROOT / "tools/verify-development-target-image.sh").read_text(
             encoding="utf-8"
