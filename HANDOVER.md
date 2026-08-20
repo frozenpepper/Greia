@@ -5,10 +5,10 @@
 **Repository:** `frozenpepper/Greia` (private)  
 **Canonical/default/development branch:** `main`  
 **Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**  
-**Current cross-cutting work:** device-language/localization + child UX + R13B transactional updates + Activity Simulator/emoji/Writing + **active Greia visual-foundation workstream (A1)**  
+**Current cross-cutting work:** device-language/localization + child UX + R13B transactional updates + Activity Simulator/emoji/Writing + **active Greia visual-foundation workstream (A2)**  
 **External Parent HTML runtime revision pinned by Greia:** `frozenpepper/Greia-Parent-App-Html@519651a5931269ed4275324f2a87ad3f0d08a3f6`
 
-This file is intentionally a **current-state continuation contract**. Detailed chronological implementation history remains in the append-only active plans and dated reviews rather than being duplicated indefinitely here. Exact APIs and limits remain source-owned.
+This file is intentionally a **current-state continuation contract**. Detailed chronology belongs in append-only active plans/reviews. Exact APIs and limits remain source-owned.
 
 ---
 
@@ -18,17 +18,17 @@ This file is intentionally a **current-state continuation contract**. Detailed c
 - GitHub is canonical persistence; commit coherent work as it proceeds.
 - Do **not** use, query, trigger, rerun, inspect or download GitHub-hosted Actions without explicit owner authorization for that specific hosted execution.
 - Never convert committed tests/assets into PASS/approved evidence merely because files exist.
-- Blocking active implementation plan: `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`.
-- Current art/visual workstream plan: `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`.
+- Blocking implementation plan: `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`.
+- Current art/visual plan: `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`.
 - R7 remains the first incomplete blocking architecture phase. Cross-cutting product/art work does not close or skip R7.
-- Substantive visual work must update the art plan checkpoint + append-only ledger.
+- Substantive visual work must update the art-plan checkpoint + append-only ledger.
 - `skills/greia-visual-authoring/SKILL.md` is mandatory for Greia visual-asset/art work.
 
 ---
 
 # 2. Evidence boundary
 
-The latest retained owner-controlled aggregate source gate predating later device-language/localization/art work remains:
+The latest retained owner-controlled aggregate source gate predating later language/localization/art work remains:
 
 ```text
 make verify:                         781 PASS
@@ -36,148 +36,152 @@ project & 10 activities validation:  PASS
 footprint & shell check:             PASS
 ```
 
-Later source is not retroactively covered by that gate. In particular:
+Later source is not retroactively covered by that gate. No current-head aggregate PASS, rebuilt-language-installer physical PASS, R13B activation/rollback PASS, current-head QEMU A/B PASS, Pi A/B PASS, or physical Greia art-performance PASS is claimed here.
 
-- device-language selection/persistence;
-- later English/Italian Activity localization;
-- subsequent child-UX work;
-- current visual-foundation contracts/specimens;
-- later system-update/simulator changes where applicable;
-
-require their own current-head verification before any broad current PASS claim.
-
-No current-head aggregate PASS, rebuilt-language-installer physical PASS, R13B activation/rollback PASS, current-head QEMU A/B PASS, Pi A/B PASS, or physical Greia art-performance PASS is claimed here.
-
-Retained physical history from 2026-08-19: a fresh `legacy-x86-i686-dev` syslinux/FAT32 installer booted on the reference Acer Aspire One, installation completed, and the installed OS reached the launcher. Later source requires a rebuilt image before that physical result extends to it.
+Retained physical history from 2026-08-19: a fresh `legacy-x86-i686-dev` syslinux/FAT32 installer booted on the reference Acer Aspire One, installation completed, and the installed OS reached the launcher. Later source requires a rebuilt image before that result extends to it.
 
 ---
 
-# 3. Active Greia visual-foundation workstream — A1
+# 3. Active Greia visual-foundation workstream — A2
 
 Canonical continuity:
 
 ```text
 docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md
+docs/design/GREIA_VISUAL_STYLE_GUIDE.md
+docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md
+docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md
 skills/greia-visual-authoring/SKILL.md
 assets/visual/README.md
 assets/visual/library_v0.1.toml
+assets/visual/specimens/a1/review.html
+assets/visual/specimens/a2/review.html
+assets/visual/specimens/a2/base_motion_v0.1.toml
 ```
 
-## 3.1 Accepted working direction
+## 3.1 A1 is closed at design/static-style scope
 
-Greia’s default character/art architecture is now **constraint-native**, rather than detailed traditional articulated animals:
+The owner reviewed the first constraint-native cast direction and explicitly asked to move forward. Record that as approval of:
 
-- **Puff** characters — one soft round/oval/fluffy main mass;
-- **Bean** characters — one compact upright rounded mass;
-- **Cutout Critters** — deliberate felt/sticker/paper-cut layering;
-- **Object Friends** — pedagogical objects remain primary and receive faces/tiny optional appendages;
-- face/expression-first design;
-- whole-body squash/bounce/wobble/hop motion rather than anatomy-heavy rigs;
-- chunky illustrated props;
-- cozy storybook/felt-board/toy-diorama scenes;
-- tactile rounded UI and a small shared FX vocabulary.
+- **Puff** — one soft round/oval/fluffy main mass;
+- **Bean** — one compact upright rounded/drop mass;
+- **Cutout Critter** — intentional felt/sticker/paper-cut layering;
+- **Object Friend** — pedagogical object remains primary and gains a face/tiny optional appendages;
+- face/expression-first character design;
+- whole-body motion rather than anatomy-heavy rigs;
+- Lilli, Nino, Tito and Momo as **static style anchors**.
 
-Working style anchors:
+Working anchors:
 
 - **Lilli** — unicorn Puff;
 - **Nino** — owl Bean;
 - **Tito** — fox Puff;
 - **Momo** — friendly monster Puff.
 
-Base semantic motion seed:
+`docs/design/GREIA_VISUAL_STYLE_GUIDE.md` now contains the accepted constraint-native language. `docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md` is accepted rather than candidate.
 
-```text
-idle_bounce
-blink
-happy_hop
-celebrate_pop
-surprised_wobble
-sleepy_sway
-```
-
-The earlier detailed-character experiments remain useful **REJECTED EXPERIMENT** evidence. Do not resume one-shot sprite-sheet generation, automatic detailed quadruped decomposition, or after-the-fact full-anatomy vector recreation as the default pipeline without materially new evidence.
-
-## 3.2 Current A1 source
-
-Candidate grammar:
-
-```text
-docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md
-```
-
-Candidate specimen set:
-
-```text
-assets/visual/specimens/a1/lilli.svg
-assets/visual/specimens/a1/nino.svg
-assets/visual/specimens/a1/tito.svg
-assets/visual/specimens/a1/momo.svg
-assets/visual/specimens/a1/cutout_critter.svg
-assets/visual/specimens/a1/object_friend_3.svg
-assets/visual/specimens/a1/review.html
-```
-
-Inventory state is recorded in:
-
-```text
-assets/visual/library_v0.1.toml
-```
-
-The inventory remains explicitly:
+The library records explicit approval scope. `assets/visual/library_v0.1.toml` remains:
 
 ```text
 runtime_consumed = false
 ```
 
-so this work does **not** introduce or imply a runtime asset-loader API.
-
-## 3.3 Current visual evidence
-
-Evidence scope:
+and the four current masters are approved only as:
 
 ```text
+approval_scope = "static_style_anchor"
+runtime_ready = false
+```
+
+This does **not** mean frozen final release art, runtime asset packaging, simulator acceptance or physical/C0 acceptance.
+
+## 3.2 A2 expression and semantic-motion foundation
+
+A2 now defines persistent expression semantics:
+
+```text
+neutral
+happy
+excited
+surprised
+sleepy
+sad_gentle
+thinking
+proud
+silly
+```
+
+plus transient `blink`.
+
+Important emotional rule: ordinary educational mistakes never use anger, shame or disappointed-at-the-child imagery. An early local Lilli `sad_gentle` treatment was revised because brow angles could read as irritation/disappointment; future variants must preserve the softer reading.
+
+Base Animation Set v0.1:
+
+```text
+idle_bounce      nominal 2.00 s
+blink            nominal 0.22 s
+happy_hop        nominal 0.90 s
+celebrate_pop    nominal 1.15 s
+surprised_wobble nominal 0.72 s
+sleepy_sway      nominal 2.40 s
+```
+
+Exact phase/amplitude/static-fallback rules are in:
+
+```text
+docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md
+assets/visual/specimens/a2/base_motion_v0.1.toml
+```
+
+The review harness:
+
+```text
+assets/visual/specimens/a2/review.html
+```
+
+demonstrates all six motions on Lilli/Puff, Nino/Bean and Object Friend number 3 using face-state overlays + bounded whole-body transforms. Object Friend deformation is deliberately reduced so the learning glyph remains recognizable.
+
+## 3.3 Runtime boundary retained
+
+`src/greia_platform/ui_motion.py` was inspected before proposing runtime animation. Its cheap immutable renderer-neutral mathematical sampling is the preferred architectural precedent.
+
+The current `MotionSample` remains UI-control-oriented and does not model character rotation, anisotropic squash/stretch, semantic face state or optional attachment/FX channels. **No runtime character-motion API was added in A2.** Do not turn the HTML design harness into runtime authority or create a parallel per-Activity animation framework.
+
+Runtime/library integration remains A7 and requires architecture review.
+
+## 3.4 Current visual evidence and next exact step
+
+Current A1 evidence:
+
+```text
+OWNER REVIEW
 DESIGN SPEC
 SOURCE
 DESKTOP VISUAL REVIEW at 256 / 128 / 64
 ```
 
-The SVGs were locally rasterized and visually inspected at those sizes. The four named characters remained distinct/readable in that desktop review. An initial CSS typo that prevented the intended outline rules from applying was caught by inspection, corrected, re-rendered, and corrected source was committed.
-
-This does **not** mean:
-
-- owner visual approval;
-- canonical/release character approval;
-- simulator visual acceptance;
-- Acer/Pi physical visual acceptance;
-- motion runtime acceptance.
-
-## 3.4 Current owner-review gate
-
-A1 is intentionally **not closed**.
-
-Next exact visual action:
-
-1. owner reviews `assets/visual/specimens/a1/review.html`;
-2. record Lilli/Nino/Tito/Momo as approved, revised/superseded, or rejected;
-3. revise the candidate grammar if the visual review exposes weaknesses;
-4. promote accepted rules into `docs/design/GREIA_VISUAL_STYLE_GUIDE.md`;
-5. update visual-library statuses;
-6. close A1;
-7. only then begin A2 expression/motion standardization.
-
-Relevant source commit:
+Current A2 evidence:
 
 ```text
-b3cf90c109eae14b2013ad62f69c64dccaa12e8a  art: add A1 constraint-native character specimens
+DESIGN SPEC
+SOURCE
+DESKTOP VISUAL REVIEW of expression variants and representative keyframes
 ```
 
-The active plan was then updated to record this A1 gate.
+Not claimed:
+
+- A2 owner acceptance;
+- simulator/reference-viewport A2 acceptance;
+- runtime-motion performance acceptance;
+- Acer/Pi physical visual acceptance.
+
+**Next exact visual action:** review/refine `assets/visual/specimens/a2/review.html`, obtain appropriate simulator/reference-viewport clarity evidence, then close A2 if the motion/expression semantics remain charming/readable across Puff, Bean and Object Friend. After A2, begin A3 shared character/Object Friend library expansion. Runtime animation integration remains deferred.
 
 ---
 
 # 4. Device-default language selection / localization
 
-Architecture/product authorities:
+Authorities:
 
 ```text
 docs/adr/0028-platform-and-activity-localization-language-context.md
@@ -185,33 +189,15 @@ docs/product/SYSTEM_LANGUAGE_AND_LOCALIZATION.md
 docs/reviews/2026-08-19_DEVICE_LANGUAGE_SELECTION_AND_PERSISTENCE.md
 ```
 
-Current implemented direction:
-
-```text
-installer first-screen locale choice
-        ↓
-InstallRequest.locale
-        ↓
-/etc/greia-os/install-record.json   initial historical choice
-        ↓
-SystemLanguageStore effective default
-        ↑
-/var/lib/greia-system-settings/language.json   later Parent override
-```
-
-English is default. The canonical selectable registry currently includes:
+Effective device language is selected at install, persisted in the install record, and may later be overridden by `SystemLanguageStore` state. English remains default; canonical selectable registry currently includes:
 
 ```text
 en, it, es, de, fr, zh-CN, pt, ar, hi, id, bn, sw
 ```
 
-`zh` canonicalizes to `zh-CN`.
+`zh` canonicalizes to `zh-CN`. Installer, hidden Parent panel and external Parent client must consume the same Greia-owned registry rather than maintain independent lists.
 
-The installer, hidden Parent panel and external Parent client must consume the same Greia-owned language registry rather than maintain independent lists.
-
-Important evidence distinction: **selectable does not mean fully translated**. English/Italian Activity resources exist in current source; complete translation/font/shaping/RTL acceptance for all selectable languages remains separate work. Arabic in particular requires real RTL/shaping/layout acceptance; CJK/Arabic/Indic/Bengali support requires reviewed platform script-font coverage.
-
-Device-language focused source tests are committed but current-head execution must be recorded before claiming current PASS.
+**Selectable does not mean fully translated.** English/Italian Activity resources exist in current source; complete translation/font/shaping/RTL acceptance for all selectable languages remains separate work. Current-head language tests must execute before claiming current PASS.
 
 ---
 
@@ -234,15 +220,7 @@ bios-single-ext4
 system.update.activate = false
 ```
 
-Therefore these are still not implemented/accepted on the active production layout:
-
-```text
-A/B inactive-slot activation
-boot-health confirmation
-automatic rollback
-```
-
-No in-place active-root fallback is authorized merely for convenience.
+A/B inactive-slot activation, boot-health confirmation and automatic rollback are not implemented/accepted on the current production layout. No in-place active-root fallback is authorized merely for convenience.
 
 ---
 
@@ -296,12 +274,12 @@ docs/testing/LOCAL_AGENT_START_HERE.md
 
 ## Visual workstream
 
-1. **Owner review the current A1 static cast** using `assets/visual/specimens/a1/review.html`.
-2. Record explicit disposition for Lilli/Nino/Tito/Momo.
-3. Revise if needed rather than polishing a rejected construction indefinitely.
-4. Promote approved grammar into the living style guide.
-5. Close A1 and begin A2: expressions + normalized semantic motions across Puff, Bean and Object Friend.
-6. Do not build a runtime motion framework before checking existing Greia motion/runtime seams.
+1. Review/refine A2 expressions/motions using `assets/visual/specimens/a2/review.html`.
+2. Preserve static fallbacks and conservative Object Friend deformation.
+3. Obtain simulator/reference-viewport evidence appropriate to A2 without inventing runtime architecture.
+4. Close A2 only when semantic motion works across Puff, Bean and Object Friend.
+5. Begin A3: reusable standard creatures + Object Friends + metadata/provenance.
+6. Do not implement the runtime character-motion/library layer before the A7 architecture review.
 
 ---
 
@@ -319,8 +297,8 @@ docs/testing/LOCAL_AGENT_START_HERE.md
 - selectable language is not a translation/font/RTL-completion claim;
 - system-update activation stays false on current single-root profiles;
 - source/simulator/physical evidence scopes remain distinct;
-- Greia character art defaults to the constraint-native visual language unless a bespoke asset has a deliberate reviewed reason to differ;
-- committed candidate art is not automatically approved;
-- after each substantive art session update the active art plan checkpoint + append-only ledger.
+- Greia character art defaults to the accepted constraint-native visual language unless a bespoke asset has a deliberate reviewed reason to differ;
+- static style-anchor approval is not runtime/release/physical approval;
+- after each substantive art session update the active art-plan checkpoint + append-only ledger.
 
-For visual continuation, start from the **A1 owner-review gate**, not from the rejected detailed-unicorn pipeline.
+For visual continuation, start from the **A2 expression/motion review gate**, not from the rejected detailed-unicorn pipeline.
