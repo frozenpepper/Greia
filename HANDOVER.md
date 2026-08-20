@@ -5,7 +5,7 @@
 **Repository:** `frozenpepper/Greia` (private)  
 **Canonical/default/development branch:** `main`  
 **Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**  
-**Current cross-cutting work:** device-language/localization + child UX + R13B transactional updates + Activity Simulator/emoji/Writing + **asset-first visual library through Water/Pond; V5 first Shell consumer simulator-accepted; first Python Activity semantic visual seam implemented in source**  
+**Current cross-cutting work:** device-language/localization + child UX + R13B transactional updates + Activity Simulator/emoji/Writing + **collection-first/adaptive Activity discovery design accepted** + **asset-first visual library through Water/Pond; V5 first Shell consumer simulator-accepted; first Python Activity semantic visual seam implemented in source**  
 **External Parent HTML runtime revision pinned by Greia:** `frozenpepper/Greia-Parent-App-Html@519651a5931269ed4275324f2a87ad3f0d08a3f6`
 
 This file is the current project-wide continuation contract. Detailed chronology belongs in the active plans/reviews. Exact APIs and limits remain source-owned.
@@ -20,6 +20,18 @@ The short new-session visual resume file is:
 
 ```text
 docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md
+```
+
+For child Activity discovery/navigation/audience policy, the accepted product authority is:
+
+```text
+docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md
+```
+
+with launcher implementation/design synthesis in:
+
+```text
+docs/design/GREIA_LAUNCHER_INTERACTION_AND_ACTIVITY_CATALOGUE.md
 ```
 
 ---
@@ -37,6 +49,7 @@ docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md
 - R7 remains the first incomplete blocking architecture phase. Cross-cutting product/art work does not close or skip R7.
 - Substantive visual work updates the art-plan checkpoint + append-only progress log.
 - `skills/greia-visual-authoring/SKILL.md` remains mandatory for Greia visual-asset/art work.
+- `skills/greia-activity-authoring/SKILL.md` now includes the accepted Collection-first/adaptive-discovery and audience-metadata authoring contract, while clearly distinguishing target fields from current parser support.
 
 ---
 
@@ -68,6 +81,8 @@ Current V5-specific evidence:
 - first Activity semantic resolver and Shape Garden consumer are now **SOURCE only** pending their dedicated simulator protocol;
 - full repository `make test` / `make verify` was **not** run for this V5 visual tranche;
 - no physical Acer/Pi V5 performance claim is made.
+
+The collection-first/adaptive-discovery work recorded on 2026-08-20 is **DOCUMENTATION / ACCEPTED DESIGN only**. It does not claim that the current launcher source, profile schema, Parent API/client or Activity manifest parser implements the new behavior.
 
 First Shell-consumer result:
 
@@ -279,7 +294,47 @@ A/B inactive-slot activation, boot-health confirmation and automatic rollback ar
 
 ---
 
-# 6. R7 display/session/input boundary
+# 6. Accepted child Activity discovery / audience direction
+
+Authorities:
+
+```text
+docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md
+docs/design/GREIA_LAUNCHER_INTERACTION_AND_ACTIVITY_CATALOGUE.md
+skills/greia-activity-authoring/SKILL.md
+docs/product/PARENT_MANAGEMENT.md
+```
+
+Accepted design direction:
+
+- Greia Home becomes **Collection-first** rather than a flat `All Activities` catalogue with category filters;
+- primary Collections remain `create`, `play`, `learn`, `explore`, `my_greia` unless later product evidence changes the vocabulary;
+- a small primary Collection shows its Activities directly;
+- when the **effective visible per-child** Activity count exceeds 10, Greia evaluates whether one semantic sub-Collection layer would materially simplify discovery;
+- subdivision is not forced merely by count; incoherent catalogues stay direct with bounded scrolling/paging;
+- normal maximum depth is `Home → primary Collection → optional sub-Collection → Activity`;
+- hierarchy must use stability/hysteresis; the initial collapse target is around 8 effective visible Activities;
+- Collections may visually resemble child-friendly shelves/boxes/books/bags/etc. but are not filesystem folders;
+- current `education.difficulty` remains a 1–10 **challenge** field and must not be treated as age;
+- accepted future audience semantics include optional recommended minimum/maximum age/development plus optional adaptive difficulty range;
+- exact DOB is not required merely for discovery; a coarse/approximate Parent-supplied age/development stage is sufficient;
+- Parent can eventually choose per-child policies such as show all / hide probably-too-simple / recommended range / custom, with explicit per-Activity always-show/always-hide overrides;
+- missing future age metadata fails open for ordinary discovery rather than silently hiding a valid Activity;
+- adaptive depth uses the effective visible set **after Parent policy**, not raw installed count.
+
+Current implementation boundary:
+
+- `ActivityCatalogue`, semantic `Collection`, high-level presentation categories, multi-membership, bounded scrolling and `education.difficulty` already exist;
+- the current launcher still uses the `All`-root/filter presentation;
+- current manifest parsing does not yet accept the documented future age/adaptive-difficulty/discovery-tag fields;
+- current `ChildProfile` does not yet store age/development/challenge preference;
+- current Parent API/client does not yet implement the complete per-child audience/visibility policy.
+
+The documentation commits establishing this direction precede this HANDOVER update. No source/runtime/test PASS is implied.
+
+---
+
+# 7. R7 display/session/input boundary
 
 R7 remains the primary blocking platform phase.
 
@@ -297,7 +352,7 @@ Art/asset work may advance independently where it does not bypass these prerequi
 
 ---
 
-# 7. Boot / installer / Acer facts retained
+# 8. Boot / installer / Acer facts retained
 
 - Reference Acer Aspire One is BIOS-only.
 - Proven live USB path is **syslinux/FAT32**.
@@ -317,7 +372,7 @@ docs/testing/LOCAL_AGENT_START_HERE.md
 
 ---
 
-# 8. Current continuation priorities
+# 9. Current continuation priorities
 
 ## Blocking engineering path
 
@@ -326,6 +381,14 @@ docs/testing/LOCAL_AGENT_START_HERE.md
 3. Run required focused/current aggregate source gates on an owner-controlled checkout before claiming current PASS.
 4. Rebuild/physically verify later installer/language source before extending old Acer evidence.
 5. Continue R13B only within its accepted fail-closed/A-B prerequisites.
+
+## Child UX / Activity discovery
+
+1. Treat the Collection-first/adaptive-discovery documents as the accepted target rather than further polishing the old `All + filters` information architecture as if it were final.
+2. Do not add target TOML fields to Activities until `src/greia_platform/activities.py` and tests implement them.
+3. When implementation begins, migrate the launcher projection/profile policy/Parent API in coherent stages while preserving registry/runtime/trust authority.
+4. Base adaptive depth on the effective per-child visible set after Parent policy and keep the maximum one optional sub-Collection layer.
+5. Keep age/development suitability separate from challenge/difficulty and avoid requiring exact DOB.
 
 ## Visual workstream
 
@@ -340,7 +403,7 @@ docs/testing/LOCAL_AGENT_START_HERE.md
 
 ---
 
-# 9. Non-negotiable continuation rules
+# 10. Non-negotiable continuation rules
 
 - `main` only unless the owner changes policy;
 - GitHub is canonical persistence;
@@ -354,6 +417,11 @@ docs/testing/LOCAL_AGENT_START_HERE.md
 - selectable language is not a translation/font/RTL-completion claim;
 - system-update activation stays false on current single-root profiles;
 - source/desktop/simulator/physical evidence scopes remain distinct;
+- Collection-first Home + bounded adaptive one-level subdivision is the accepted child discovery target;
+- adaptive depth uses the effective per-child visible catalogue after Parent policy, not raw installed count;
+- `education.difficulty` is challenge, not age;
+- target age/adaptive-difficulty/discovery-tag manifest examples remain documentation-only until source parser support lands;
+- Greia Collections are semantic child groupings, never exposed filesystem folders;
 - Greia visual work remains asset-first;
 - `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` remains the stable visual-system entry point;
 - `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` remains the short current visual-session resume contract;
