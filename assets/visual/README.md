@@ -12,7 +12,7 @@ This tree is the source home for Greia's reusable visual library. Shell and Acti
 
 > **excellent individual assets → reusable asset packs → layered composition → subtle parallax / ambient motion / light / shadow → shared UI system → Shell/Activity reuse**
 
-A weak primitive does not become production art because it is hidden inside a scene.
+Reuse a suitable shared asset before painting a near-duplicate. A weak primitive does not become production art because it is hidden inside a scene.
 
 ## Current source packs
 
@@ -40,7 +40,7 @@ assets/visual/environments/forest_meadow/v0.2/
 assets/visual/ui/v0.1/
 ```
 
-Candidate shared masters for panels, cards and states, buttons and states, tabs, badges, progress, bubbles, reward/avatar frames, loading/error/empty/portal art, focus, shadows and highlights. Includes independently composed 1024×600 / 800×600 references.
+Candidate shared masters for panels, cards/states, buttons/states, tabs, badges, progress, bubbles, reward/avatar frames, loading/error/empty/portal art, focus, shadows and highlights. Includes independently composed 1024×600 / 800×600 references.
 
 ### Workshop v0.1
 
@@ -48,7 +48,7 @@ Candidate shared masters for panels, cards and states, buttons and states, tabs,
 assets/visual/environments/workshop/v0.1/
 ```
 
-19 candidate reusable masters: furniture, creative props, wall/floor bases, window/light and the limited composition-critical additions needed for layered 1024×600 / 800×600 references.
+19 candidate reusable masters: furniture, creative props, wall/floor bases, window/light and limited composition-critical additions required for layered target-size references.
 
 ### Clinic / care v0.1
 
@@ -64,7 +64,15 @@ assets/visual/environments/clinic/v0.1/
 assets/visual/environments/reading_classroom/v0.1/
 ```
 
-17 candidate reusable masters covering room bases, arched window/light, bookcase/books, reading tent/rug/seating, chalkboard and restrained decor. The pack reuses existing Workshop block/pencil assets by semantic reference rather than drawing duplicates.
+17 candidate reusable masters covering room bases, arched window/light, bookcase/books, reading tent/rug/seating, chalkboard and restrained decor. Reuses Workshop block/pencil assets by semantic reference rather than duplicating them.
+
+### Fantasy / village / night v0.1
+
+```text
+assets/visual/environments/fantasy_village_night/v0.1/
+```
+
+15 candidate reusable masters covering night sky/moon, distant village/castle, cottages, castle tower, bridge, lantern, signpost, well, cobblestone and separate light/FX overlays. First desktop review revised weak cottage/tower/lantern/well/cobblestone treatments before commit. Forest vegetation/fireflies remain shared reuse dependencies rather than duplicated night variants.
 
 Key authority/evidence files per environment pack normally include:
 
@@ -73,6 +81,7 @@ catalog.toml
 README.md
 REVIEW.md
 COMPOSITION.md and/or composition*.toml where relevant
+reference_1024x600.svg / reference_800x600.svg where a target-size composition exists
 ```
 
 ## Asset states
@@ -93,18 +102,7 @@ Presence in Git never means approved and a weaker approval scope does not imply 
 
 ## Asset metadata
 
-Reusable assets should record:
-
-- semantic ID;
-- editable/source master;
-- family;
-- current state;
-- provenance/license;
-- intended scale range where relevant;
-- alpha/transparency requirements;
-- layer/parallax role where relevant;
-- optional ambient-motion role;
-- optional theme variants.
+Reusable assets should record semantic ID, editable/source master, family/role, current state, provenance/license, intended scale where relevant, alpha requirements, layer/parallax role where relevant, and optional ambient-motion/theme variants.
 
 Committed Greia-created artwork still records provenance explicitly.
 
@@ -120,7 +118,7 @@ Environment/UI families normally progress through:
 6. restrained motion/parallax proof if useful;
 7. simulator/runtime/hardware evidence only after real integration.
 
-Do not use a full-screen composition to conceal weak individual assets. Do not replace this workflow with generated scene concept images.
+Do not use a full-screen composition to conceal weak individual assets. Do not replace this workflow with generated scene/concept images.
 
 ## Runtime boundary
 
