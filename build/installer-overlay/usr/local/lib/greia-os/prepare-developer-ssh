@@ -1,0 +1,30 @@
+#!/bin/sh
+set -eu
+
+# Development-only SSH bootstrap for the live installer.
+# Normal/release installer images keep ssh.service disabled. Developer installer
+# profiles intentionally expose the owner-approved greia/greia account. Keep
+# sealed images free of reusable host identity and generate any missing host
+# keys on the actual booted machine before sshd validates its configuration.
+# Also repair historical `publickey,password` developer configuration: the
+# comma requires BOTH methods, while the intended development contract allows
+# one enabled method and supplies no preinstalled authorized key.
+
+is_developer=0
+if [ -f /etc/greia-os/developer-remote ]; then
+    is_developer=1
+elif grep -q '^# Development .*SSH policy' /etc/ssh/sshd_config.d/20-greia-parent.conf 2>/dev/null; then
+    is_developer=1
+fi
+
+[ "$is_developer" -eq 1 ] || exit 0
+
+/usr/bin/ssh-keygen -A
+
+for config in \
+    /etc/ssh/sshd_config.d/00-greia-security-floor.conf \
+    /etc/ssh/sshd_config.d/20-greia-parent.conf
+do
+    [ -f "$config" ] || continue
+    sed -i 's/^AuthenticationMethods[[:space:]]\+publickey,password$/AuthenticationMethods any/' "$config"
+done
