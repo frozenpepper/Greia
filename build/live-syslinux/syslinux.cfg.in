@@ -4,19 +4,14 @@
 # BIOS executes reliably (GRUB's MBR does not work on that firmware+stick
 # combination). See docs/INSTALLATION_USB_BOOT_POSTMORTEM.md.
 #
-# Stock SYSLINUX emits its own copyright line before it can parse this file;
-# that earliest loader output cannot be suppressed by configuration. DISPLAY
-# immediately consumes a form-feed-only file, which clears that line as soon as
-# configuration is available. From there ordinary installer boot stays silent:
-# no menu, prompt, countdown or Linux console output.
-DISPLAY /boot/syslinux/clear.msg
+# The ordinary child/installer boot is straight to the Greia installer:
+# no interactive menu, no countdown. SYSLINUX still prints its loading
+# progress so early boot remains observable on quirky displays.
 DEFAULT live
 PROMPT 0
 TIMEOUT 0
-NOESCAPE 1
-NOCOMPLETE 1
 
 LABEL live
     LINUX /vmlinuz
     INITRD /initrd.img
-    APPEND boot=live components live-media-path=/ live-media-timeout=30 nopersistence noeject overlay-size=128M greia.live_media_id=LIVE_MEDIA_ID quiet splash loglevel=0 console=null panic=30 systemd.show_status=false rd.systemd.show_status=false systemd.crash_shell=no systemd.crash_chvt=0 udev.log_priority=3 vt.global_cursor_default=0 consoleblank=0
+    APPEND boot=live components live-media-path=/ live-media-timeout=30 nopersistence noeject overlay-size=128M greia.live_media_id=LIVE_MEDIA_ID quiet splash loglevel=0 console=tty1 panic=30 systemd.show_status=false rd.systemd.show_status=false systemd.crash_shell=no systemd.crash_chvt=0 udev.log_priority=3 vt.global_cursor_default=0 consoleblank=0

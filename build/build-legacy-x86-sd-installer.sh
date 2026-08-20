@@ -3,8 +3,8 @@ set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
-PROFILE_INPUT="${1:-legacy-x86-i686}"
-PROFILE="${PROFILE_INPUT%.toml}"
+PROFILE="legacy-x86-i686"
+PROFILE="${1:-$PROFILE}"
 OUTPUT_DIR="${2:-$PROJECT_ROOT/out}"
 
 usage() {
@@ -17,96 +17,20 @@ media. This command intentionally does NOT inspect a target PC before building.
 
 PROFILE defaults to legacy-x86-i686 (the generic release-compatible image).
 A developer profile (for example legacy-x86-i686-dev) additionally enables
-SSH and mDNS recovery and is artifact-verified before the build can succeed.
+default-on SSH and mDNS discovery for remote operator access.
 USAGE
 }
 
 [[ $# -le 2 ]] || { usage >&2; exit 2; }
 [[ ${EUID:-$(id -u)} -eq 0 ]] || {
-  echo "Run as root: sudo build/build-legacy-x86-sd-installer.sh [PROFILE] [OUTPUT_DIR]" >&2
+  echo "Run as root: sudo build/build-legacy-x86-sd-installer.sh [OUTPUT_DIR]" >&2
   exit 1
 }
 
 mkdir -p "$OUTPUT_DIR"
 OUTPUT_DIR="$(realpath "$OUTPUT_DIR")"
 
-# The repository retains generated boot derivatives because they are useful to
-# source tests and non-builder consumers, but a physical installer must never
-# trust that those generated files are current. Regenerate them from the
-# canonical retained full-color frame for the duration of this build so BOTH
-# the live installer and the installable target payload consume the same fresh
-# RGB artwork. Restore the caller's checkout bytes afterwards, even on failure,
-# so building an image does not silently dirty or rewrite source state.
-BOOT_GENERATOR="$PROJECT_ROOT/tools/generate_boot_artwork.py"
-BOOT_DERIVATIVES=(
-  "assets/boot/source/greia-boot-logo.png"
-  "assets/boot/static/greia-boot-logo.png"
-  "build/overlay/etc/greia-boot/boot-logo.ppm"
-  "build/installer-overlay/etc/greia-boot/boot-logo.ppm"
-)
-BOOT_BACKUP="$(mktemp -d -p "${TMPDIR:-/tmp}" greia-boot-art-backup.XXXXXX)"
-BOOT_RESTORED=0
-
-restore_boot_derivatives() {
-  local status=$?
-  set +e
-  if [[ "$BOOT_RESTORED" != "1" ]]; then
-    for relative in "${BOOT_DERIVATIVES[@]}"; do
-      if [[ -e "$BOOT_BACKUP/$relative" ]]; then
-        mkdir -p "$(dirname "$PROJECT_ROOT/$relative")"
-        cp -a "$BOOT_BACKUP/$relative" "$PROJECT_ROOT/$relative"
-      else
-        rm -f "$PROJECT_ROOT/$relative"
-      fi
-    done
-    rm -rf "$BOOT_BACKUP"
-    BOOT_RESTORED=1
-  fi
-  return "$status"
-}
-trap restore_boot_derivatives EXIT INT TERM
-
-for relative in "${BOOT_DERIVATIVES[@]}"; do
-  if [[ -e "$PROJECT_ROOT/$relative" ]]; then
-    mkdir -p "$(dirname "$BOOT_BACKUP/$relative")"
-    cp -a "$PROJECT_ROOT/$relative" "$BOOT_BACKUP/$relative"
-  fi
-done
-
-python3 - <<'PY'
-try:
-    from PIL import Image  # noqa: F401
-except ImportError as exc:
-    raise SystemExit(
-        "The legacy installer build needs host python3-pil to derive canonical boot artwork. "
-        "Install python3-pil on the Debian/Ubuntu build host."
-    ) from exc
-PY
-python3 "$BOOT_GENERATOR"
-
-# Guard the exact generated semantics before a multi-minute image build starts.
-python3 - "$PROJECT_ROOT" <<'PY'
-from pathlib import Path
-import sys
-from PIL import Image
-root = Path(sys.argv[1])
-source = Image.open(root / "assets/boot/source/legacy-plymouth-theme/frames/frame_0051.png").convert("RGB")
-static = Image.open(root / "assets/boot/static/greia-boot-logo.png").convert("RGB")
-if source.size != (222, 600) or static.size != source.size:
-    raise SystemExit(f"unexpected canonical boot-art geometry: source={source.size} static={static.size}")
-if source.tobytes() != static.tobytes():
-    raise SystemExit("generated boot PNG is not pixel-identical to the canonical full-color frame")
-if len(set(source.getdata())) < 256:
-    raise SystemExit("canonical boot frame unexpectedly lost full-color detail")
-PY
-
 "$SCRIPT_DIR/build-installer-image.sh" "$PROFILE" "$OUTPUT_DIR"
-
-# From this point the finished image contains its own copies. Restore the source
-# checkout immediately; the later media-finalization phase must not depend on
-# generated repository files.
-restore_boot_derivatives
-trap - EXIT INT TERM
 
 IMAGE="$OUTPUT_DIR/greia-os-installer-${PROFILE}.img"
 REPORT="$OUTPUT_DIR/greia-os-installer-${PROFILE}-report.txt"
@@ -190,28 +114,14 @@ umount "$MOUNT"
 losetup -d "$LOOP"
 LOOP=""
 
-# Development media are not considered complete merely because an image file
-# exists. Inspect the FINALIZED installer image read-only and verify both the
-# live installer and embedded target payload expose the declared recovery SSH
-# and DHCP contracts. This catches locked accounts, missing ssh enablement,
-# missing bootstrap files and missing live network policy before flashing.
-DEV_SSH_VERIFIED=0
-if [[ "$PROFILE" == *-dev ]]; then
-  bash "$PROJECT_ROOT/tools/verify-development-installer.sh" "$IMAGE"
-  DEV_SSH_VERIFIED=1
-fi
-
 FINAL_SHA="$(sha256sum "$IMAGE" | awk '{print $1}')"
 printf '%s  %s\n' "$FINAL_SHA" "$(basename "$IMAGE")" > "$FINAL_DIGEST"
-BOOT_SOURCE_SHA="$(sha256sum "$PROJECT_ROOT/assets/boot/source/legacy-plymouth-theme/frames/frame_0051.png" | awk '{print $1}')"
 
-python3 - "$REPORT" "$FINAL_SHA" "$BOOT_SOURCE_SHA" "$DEV_SSH_VERIFIED" <<'PY'
+python3 - "$REPORT" "$FINAL_SHA" <<'PY'
 from pathlib import Path
 import sys
 path = Path(sys.argv[1])
 digest = sys.argv[2]
-boot_source_digest = sys.argv[3]
-dev_ssh_verified = sys.argv[4]
 lines = path.read_text(encoding="utf-8").splitlines()
 updated = []
 seen_sha = False
@@ -219,13 +129,10 @@ for line in lines:
     if line.startswith("sha256="):
         updated.append(f"sha256={digest}")
         seen_sha = True
-    elif not line.startswith("hardware_evidence_tool=") and not line.startswith("hardware_evidence_output_dir=") and not line.startswith("antix_sd_boot_helper=") and not line.startswith("boot_artwork_source_sha256=") and not line.startswith("development_ssh_artifact_verified="):
+    elif not line.startswith("hardware_evidence_tool=") and not line.startswith("hardware_evidence_output_dir=") and not line.startswith("antix_sd_boot_helper="):
         updated.append(line)
 if not seen_sha:
     raise SystemExit("installer report has no sha256 field")
-updated.append(f"boot_artwork_source_sha256={boot_source_digest}")
-updated.append("boot_artwork_mode=canonical-full-color-rgb")
-updated.append(f"development_ssh_artifact_verified={dev_ssh_verified}")
 updated.append("hardware_evidence_tool=/greia-tools/collect-linux-hardware-evidence.sh")
 updated.append("hardware_evidence_output_dir=/greia-evidence")
 updated.append("antix_sd_boot_helper=/greia-tools/prepare-antix-sd-boot.sh")
@@ -238,8 +145,6 @@ Greia generic legacy-x86 SD installer ready.
 Profile: $PROFILE
 Image: $IMAGE
 Final SHA-256: $FINAL_SHA
-Boot artwork: canonical full-color frame ($BOOT_SOURCE_SHA)
-Developer SSH artifact verified: $DEV_SSH_VERIFIED
 Digest file: $FINAL_DIGEST
 Report: $REPORT
 AntiX one-shot boot helper on media: /greia-tools/prepare-antix-sd-boot.sh

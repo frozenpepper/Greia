@@ -13,19 +13,8 @@ EARLY_SOURCE = ROOT / "build" / "early-boot" / "greia-fb-splash.c"
 EARLY_README = ROOT / "build" / "early-boot" / "README.md"
 BOOT_DESIGN = ROOT / "docs" / "design" / "GREIA_BOOT_EXPERIENCE.md"
 BOOT_CHIME = ROOT / "assets" / "audio" / "system" / "greia-boot-chime.wav"
-CANONICAL_BOOT_FRAME = (
-    ROOT
-    / "assets"
-    / "boot"
-    / "source"
-    / "legacy-plymouth-theme"
-    / "frames"
-    / "frame_0051.png"
-)
 BOOT_SOURCE = ROOT / "assets" / "boot" / "source" / "greia-boot-logo.png"
 BOOT_STATIC = ROOT / "assets" / "boot" / "static" / "greia-boot-logo.png"
-BOOT_GENERATOR = ROOT / "tools" / "generate_boot_artwork.py"
-GRUB_THEME = ROOT / "build" / "overlay" / "boot" / "grub" / "greia-theme.txt"
 TARGET_PPM = ROOT / "build" / "overlay" / "etc" / "greia-boot" / "boot-logo.ppm"
 INSTALLER_PPM = ROOT / "build" / "installer-overlay" / "etc" / "greia-boot" / "boot-logo.ppm"
 
@@ -163,30 +152,42 @@ class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
         self.assertGreater(duration_seconds, 0.15)
         self.assertLessEqual(duration_seconds, 1.2)
 
-    def test_active_legacy_build_preserves_full_color_canonical_boot_frame(self) -> None:
-        """Physical legacy images must never reintroduce the old indigo mask."""
-        from PIL import Image
+    def test_canonical_boot_artwork_is_white_frame_derivative(self) -> None:
+        """The canonical static boot frame is white with a dark logo foreground."""
+        for path in (BOOT_SOURCE, BOOT_STATIC):
+            with self.subTest(path=path.name):
+                self.assertTrue(path.is_file())
+                from PIL import Image
 
-        self.assertTrue(CANONICAL_BOOT_FRAME.is_file())
-        image = Image.open(CANONICAL_BOOT_FRAME).convert("RGB")
-        self.assertEqual(image.size, (222, 600))
-        self.assertGreater(len(set(image.getdata())), 256)
+                image = Image.open(path).convert("RGB")
+                self.assertEqual(image.size, (222, 600))
+                # Corners must be pure/near-pure white (not the legacy navy).
+                for corner in ((0, 0), (221, 0), (0, 599), (221, 599)):
+                    r, g, b = image.getpixel(corner)
+                    self.assertGreaterEqual(min(r, g, b), 250)
+                # The logo foreground is a distinct non-white color, clearly
+                # visible on white and on a 16-bit (RGB565) framebuffer. A
+                # near-black logo (e.g. legacy navy (13,30,60)) collapses to
+                # black in RGB565 and renders as a broken silhouette, so it is
+                # explicitly guarded against.
+                pixels = list(image.getdata())
+                colored = [
+                    px
+                    for px in pixels
+                    if not (px[0] > 250 and px[1] > 250 and px[2] > 250)
+                ]
+                self.assertGreater(len(colored), 1000)
+                for r, g, b in colored:
+                    self.assertLessEqual(r, 90)
+                    self.assertLessEqual(g, 100)
+                    self.assertLessEqual(b, 160)
+                    # Not near-black: each channel must survive RGB565 visibly.
+                    self.assertGreaterEqual(r, 40)
+                    self.assertGreaterEqual(g, 45)
+                    self.assertGreaterEqual(b, 90)
 
-        generator = BOOT_GENERATOR.read_text(encoding="utf-8")
-        self.assertIn('return Image.open(source).convert("RGB")', generator)
-        for forbidden in ("MedianFilter", "_LOGO_COLOR", "_MASK_THRESHOLD", "mask_px"):
-            self.assertNotIn(forbidden, generator)
-
-        legacy_builder = (
-            ROOT / "build/build-legacy-x86-sd-installer.sh"
-        ).read_text(encoding="utf-8")
-        self.assertIn('python3 "$BOOT_GENERATOR"', legacy_builder)
-        self.assertIn("pixel-identical to the canonical full-color frame", legacy_builder)
-        self.assertIn("canonical-full-color-rgb", legacy_builder)
-        self.assertIn("restore_boot_derivatives", legacy_builder)
-
-    def test_checked_in_boot_ppms_are_valid_p6_derivatives(self) -> None:
-        """Checked-in PPMs stay structurally valid; physical builds regenerate them."""
+    def test_boot_ppms_are_p6_and_match_canonical_artwork(self) -> None:
+        """Target and installer initramfs PPMs are valid P6 and match the static art."""
         from PIL import Image
 
         reference = Image.open(BOOT_STATIC).convert("RGB").tobytes()
@@ -254,47 +255,32 @@ class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertNotIn("plymouth", package_set.lower())
 
-    def test_installed_grub_uses_aspect_preserving_centered_theme(self) -> None:
+    def test_grub_uses_canonical_white_boot_logo_in_both_paths(self) -> None:
         grub_script = (ROOT / "build/overlay/etc/grub.d/10_greia_appliance").read_text(
             encoding="utf-8"
         )
-        self.assertIn("greia-theme.txt", grub_script)
-        self.assertIn("set theme=", grub_script)
-        self.assertIn("export theme", grub_script)
-        self.assertNotIn("background_image", grub_script)
+        self.assertIn("background_image", grub_script)
+        self.assertIn("greia-boot-logo.png", grub_script)
+        self.assertIn("insmod png", grub_script)
         self.assertIn("set timeout=0", grub_script)
-
-        theme = GRUB_THEME.read_text(encoding="utf-8")
-        self.assertIn('desktop-image: "greia-boot-logo.png"', theme)
-        self.assertIn('desktop-image-scale-method: "padding"', theme)
-        self.assertIn('desktop-image-h-align: "center"', theme)
-        self.assertIn('desktop-image-v-align: "center"', theme)
-        self.assertIn('desktop-color: "#ffffff"', theme)
-
         builder = (ROOT / "build/build-image.sh").read_text(encoding="utf-8")
         self.assertIn("boot/grub/greia-boot-logo.png", builder)
+        installer = (ROOT / "build/build-installer-image.sh").read_text(encoding="utf-8")
+        self.assertIn("background_image /boot/grub/greia-boot-logo.png", installer)
 
-    def test_syslinux_live_usb_boots_straight_to_installer_and_clears_loader_text(self) -> None:
+    def test_syslinux_live_usb_boots_straight_to_installer(self) -> None:
         cfg = (
             ROOT / "build/live-syslinux/syslinux.cfg.in"
         ).read_text(encoding="utf-8")
-        # Stock SYSLINUX owns its earliest copyright line. Greia must clear it
-        # immediately once configuration is available and emit no later menu,
-        # countdown or Linux console text.
-        self.assertIn("DISPLAY /boot/syslinux/clear.msg", cfg)
+        # No interactive menu, no countdown: boot straight to the installer.
         self.assertIn("DEFAULT live", cfg)
         self.assertNotIn("UI ", cfg)
         self.assertIn("TIMEOUT 0", cfg)
         self.assertIn("PROMPT 0", cfg)
-        self.assertIn("NOESCAPE 1", cfg)
-        self.assertIn("NOCOMPLETE 1", cfg)
-        self.assertIn("console=null", cfg)
-        self.assertNotIn("console=tty1", cfg)
         self.assertIn("LINUX /vmlinuz", cfg)
         self.assertIn("INITRD /initrd.img", cfg)
         self.assertIn("greia.live_media_id=LIVE_MEDIA_ID", cfg)
         self.assertIn("live-media-path=/", cfg)
-        self.assertEqual((ROOT / "build/live-syslinux/clear.msg").read_bytes(), b"\x0c")
 
     def test_live_usb_builder_is_removable_only_and_reproduces_media(self) -> None:
         builder = (ROOT / "tools/build-live-usb.sh").read_text(encoding="utf-8")
@@ -303,7 +289,6 @@ class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
         self.assertIn("mkfs.vfat -F 32", builder)
         self.assertIn("live-uuid", builder)
         self.assertIn("LIVE_MEDIA_ID", builder)
-        self.assertIn("build/live-syslinux/clear.msg", builder)
         # Safety: only a removable whole disk may be overwritten.
         self.assertIn('"1"', builder)  # RM check
         self.assertIn("disk", builder)
