@@ -121,7 +121,9 @@ and removed the unaccepted:
 - `build/live-syslinux/clear.msg`
 - `build/overlay/boot/grub/greia-theme.txt`
 
-The later binary-P6 parser correction in `build/early-boot/greia-fb-splash.c` was intentionally **retained**. It is a valid parser correctness fix: P6 raster bytes are binary and must not be skipped merely because their numeric value is <= ASCII space. The renderer's initramfs invocation is fail-soft.
+The later binary-P6 parser correction in `build/early-boot/greia-fb-splash.c` was intentionally **retained**. It is a parser correctness fix: P6 raster bytes are binary and must not be skipped merely because their numeric value is <= ASCII space. The renderer's initramfs invocation is fail-soft.
+
+The physically proven USB writer was subsequently left unchanged and final-media checking moved to the separate read-only `tools/verify-live-usb.sh`.
 
 ## 5. What was deliberately NOT rolled back
 
@@ -139,16 +141,16 @@ The regression occurred before the installer UI appeared, so unrelated later pro
 
 These components run after or outside the firmware/Syslinux/kernel/live-root transition and are not rolled back merely because they are temporally newer.
 
-## 6. Current safety architecture
+## 6. Current recovery safety architecture
 
-The preferred development flow remains one command, but its responsibilities are now separated:
+The preferred development flow remains one command, but its responsibilities are separated:
 
 ```text
 tools/build-and-flash-development-usb.sh
         |
         +-- build-development-installer.sh
         |      +-- verifies developer-remote in live + target
-        |      +-- builds image
+        |      +-- builds image through the restored legacy front door
         |      +-- verify-development-installer.sh (read-only image check)
         |
         +-- build-live-usb.sh
@@ -158,46 +160,50 @@ tools/build-and-flash-development-usb.sh
                +-- read-only final-media verification
 ```
 
-For the reference Acer, the accepted development Syslinux template must remain observable:
+For the current Acer recovery acceptance, the Syslinux template is deliberately diagnostic rather than cosmetically silent:
 
 ```text
 console=tty1
-panic=30
+panic=0
+loglevel=4
+systemd.show_status=true
+rd.systemd.show_status=true
 ```
 
-and must not contain the rejected recovery-path experiment:
+`panic=0` is intentional: a fatal kernel/initramfs/live-boot failure must remain on screen rather than being destroyed by another timed reboot. The recovery template also does not use `quiet`, `splash`, `loglevel=0`, `console=null`, Syslinux `DISPLAY` clearing, `NOESCAPE`, or `NOCOMPLETE`.
 
-```text
-console=null
-DISPLAY ...clear.msg
-NOESCAPE
-NOCOMPLETE
-```
+Normal/release **installed** Greia remains consoleless. The installed `developer-remote` payload is different by design: its GRUB generator emits tty1-visible diagnostics and `panic=0`, while the normal/release branch retains the appliance console/panic policy. `tools/verify-development-installer.sh` checks the actual embedded target squashfs for this dev-only policy before the installer is considered valid.
 
-until a separate consoleless design receives explicit physical acceptance.
+## 7. Causal assessment
 
-## 7. Evidence boundary
+The looping image crossed four boot-critical boundaries in one tranche after a language-enabled image had physically reached the installer:
 
-No source inspection can prove which specific experimental change caused the physical reboot. At this point we know with high confidence that:
+1. Syslinux output was cleared and the kernel console changed to `console=null`;
+2. the legacy build began injecting a new raw/full-colour initramfs raster automatically;
+3. the firmware-sensitive USB writer itself was expanded and changed;
+4. the installed payload changed GRUB presentation behavior at the same time.
 
-1. the boot-polish tranche materially changed boot-critical inputs after a physically booting language-selector image;
-2. it violated explicit accepted postmortem rules;
-3. it hid the early diagnostic output needed to distinguish live-boot identity, kernel/initramfs, framebuffer and userspace failures;
-4. those boot-critical changes have now been removed/restored behind the accepted boundary.
+Those changes are the **regression cluster** and have been removed from the recovery build path. Source inspection cannot honestly distinguish which individual member caused the physical early reboot because the same tranche also removed the diagnostic channel needed to discriminate them. It is therefore incorrect to invent a single proven cause.
 
-The next Acer boot is therefore a **recovery acceptance test**, not an ordinary feature test.
+Several tempting alternatives have been checked and are not supported by current source:
 
-Do not reintroduce full-colour boot raster, Syslinux clearing, console suppression, new GRUB theme behavior, or writer-mechanics changes before that test.
+- the recovery profile remains `i386` with Debian `linux-image-686`; it was not silently switched to the separate PAE profile;
+- the live builder embeds the generated media ID into initramfs `/conf/uuid.conf` and verifies it after the final `update-initramfs`;
+- the proven USB writer copies that exact initrd plus the same `.disk/live-uuid` marker;
+- target/live initramfs policy remains `MODULES=most` with target-kernel-aware storage-module handling;
+- the SSH hardening adds userspace networking/SSH behavior and does not replace the live kernel or early storage policy.
+
+The recovery therefore fixes the actual unaccepted early-boot delta first, while retaining functional language and SSH work. If the physical Acer still fails, the next boot will now stop on the exact failing stage instead of looping.
 
 ## 8. Required next physical test
 
-Build from the exact current `main` SHA and record it with the artifact evidence. Use the physically proven reference profile:
+Build from the exact current `main` SHA and record it with the artifact evidence. Use:
 
 ```text
 legacy-x86-i686-dev
 ```
 
-The preferred USB command is:
+Preferred command:
 
 ```bash
 sudo bash tools/build-and-flash-development-usb.sh \
@@ -207,7 +213,7 @@ sudo bash tools/build-and-flash-development-usb.sh \
 
 Before booting the Acer, the run must report both installer-artifact verification and final read-only USB verification as PASS.
 
-On the Acer, **do not suppress or ignore early text during this recovery pass**. Record the exact last visible line if boot does not reach the installer. In particular distinguish:
+On the Acer, record the exact last visible stage if boot does not reach the installer. In particular distinguish:
 
 - Syslinux starts / does not start;
 - `Loading /vmlinuz...` appears;
@@ -216,7 +222,9 @@ On the Acer, **do not suppress or ignore early text during this recovery pass**.
 - early Greia framebuffer appears;
 - graphical language chooser appears.
 
-If the language chooser appears, then test the later features independently:
+There should be **no timed reboot** after a fatal kernel/initramfs error on this recovery build. The error should remain visible.
+
+If the language chooser appears, test the later features independently:
 
 1. mouse pointer works on language selector;
 2. select Italian;
@@ -224,7 +232,7 @@ If the language chooser appears, then test the later features independently:
 4. connect networking and confirm `ssh greia@greia-installer.local` with password `greia`;
 5. install;
 6. boot installed OS;
-7. if it does not reach launcher, preserve visible tty1 output and try `ssh greia@greia-dev.local` with password `greia` before modifying anything.
+7. if it does not reach launcher, preserve tty1 output and try `ssh greia@greia-dev.local` with password `greia` before modifying anything.
 
 ## 9. Process rule established by this regression
 
