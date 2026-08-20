@@ -1,6 +1,6 @@
 [Unit]
 Description=Greia OS parent management service
-After=network.target greia-first-boot.service
+After=network.target systemd-tmpfiles-setup.service greia-first-boot.service
 Requires=greia-first-boot.service
 Wants=network.target
 
