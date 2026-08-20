@@ -15,6 +15,125 @@ from greia_platform.pygame_effects import transformed_rect
 from greia_platform.pygame_visual_assets import VisualSurfaceCacheError
 
 
+_SHARED_VISUAL_ERRORS = (
+    VisualSurfaceCacheError,
+    AssetCatalogueError,
+    KeyError,
+    FileNotFoundError,
+    OSError,
+    ValueError,
+)
+
+
+class SharedUiShellPanelMixin:
+    """Place reviewed shared panel artwork behind real Shell content.
+
+    The panel is visual framing only. Existing profile/activity layout, hit
+    targets, category navigation and lifecycle remain authoritative in the base
+    presentation. Missing/corrupt optional artwork falls back to the normal
+    theme background without disabling the independently proven Activity cards.
+    """
+
+    _PANEL_SOURCE_WIDTH = 640
+    _PANEL_SOURCE_HEIGHT = 420
+
+    def _render_profile_picker_content(
+        self, screen: Any, theme: Any, pygame: Any
+    ) -> None:
+        height = screen.get_height()
+        header_size = max(70, min(100, height // 6))
+        self._draw_shared_shell_panel(
+            screen,
+            pygame,
+            top=header_size + 4,
+            bottom_margin=14,
+            max_width=940,
+        )
+        super()._render_profile_picker_content(screen, theme, pygame)
+
+    def _render_activities_content(self, screen: Any, theme: Any, pygame: Any) -> None:
+        self._draw_shared_shell_panel(
+            screen,
+            pygame,
+            top=max(92, screen.get_height() // 7),
+            bottom_margin=14,
+            max_width=940,
+        )
+        super()._render_activities_content(screen, theme, pygame)
+
+    def _draw_shared_shell_panel(
+        self,
+        screen: Any,
+        pygame: Any,
+        *,
+        top: int,
+        bottom_margin: int,
+        max_width: int,
+    ) -> None:
+        if getattr(self, "_shared_panel_disabled", False):
+            return
+        visual_cache = getattr(self, "_visual_cache", None)
+        if visual_cache is None:
+            return
+
+        width, height = screen.get_size()
+        top = max(0, min(top, height - 1))
+        available_height = max(1, height - top - max(0, bottom_margin))
+        available_width = max(1, min(width - 52, max_width))
+
+        panel_width = min(
+            available_width,
+            max(
+                1,
+                int(
+                    round(
+                        available_height
+                        * self._PANEL_SOURCE_WIDTH
+                        / self._PANEL_SOURCE_HEIGHT
+                    )
+                ),
+            ),
+        )
+        panel_height = max(
+            1,
+            int(
+                round(
+                    panel_width
+                    * self._PANEL_SOURCE_HEIGHT
+                    / self._PANEL_SOURCE_WIDTH
+                )
+            ),
+        )
+        if panel_height > available_height:
+            panel_height = available_height
+            panel_width = max(
+                1,
+                int(
+                    round(
+                        panel_height
+                        * self._PANEL_SOURCE_WIDTH
+                        / self._PANEL_SOURCE_HEIGHT
+                    )
+                ),
+            )
+
+        panel_rect = pygame.Rect(0, 0, panel_width, panel_height)
+        panel_rect.centerx = width // 2
+        panel_rect.centery = top + available_height // 2
+
+        try:
+            panel_surface = visual_cache.get(
+                "ui.panel.base",
+                variant="default",
+                size=panel_rect.size,
+            )
+        except (*_SHARED_VISUAL_ERRORS, pygame.error):
+            self._shared_panel_disabled = True
+            return
+
+        screen.blit(panel_surface, panel_rect)
+
+
 class SharedUiActivityCardMixin:
     """Render launcher Activity tiles with the shared Greia card artwork.
 
@@ -70,18 +189,9 @@ class SharedUiActivityCardMixin:
                 variant=variant,
                 size=card_rect.size,
             )
-        except (
-            VisualSurfaceCacheError,
-            AssetCatalogueError,
-            KeyError,
-            FileNotFoundError,
-            OSError,
-            ValueError,
-            pygame.error,
-        ):
-            # Shared visuals are optional presentation. Disable the optional
-            # cache for this process and retain the already-proven primitive
-            # tile path instead of turning one bad PNG into a Shell failure.
+        except (*_SHARED_VISUAL_ERRORS, pygame.error):
+            # Shared cards are optional presentation. Keep the primitive tile
+            # path available if one card rendition is missing or corrupt.
             self._visual_cache = None
             super()._draw_activity_tile_content(
                 screen, rect, activity, state, theme, pygame
