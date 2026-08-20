@@ -24,6 +24,7 @@ from .display_session import DisplaySessionCoordinator
 from .main import _development_hal
 from .presentation import GreiaLauncherPresentation, parse_args
 from .runtime_adapter import RuntimeLaunchAdapter
+from .shared_ui_presentation import SharedUiActivityCardMixin
 from .supervisor import ActivitySupervisor
 
 
@@ -73,11 +74,13 @@ class ProfileVisualActivitySupervisor(ActivitySupervisor):
         return environment
 
 
-class GreiaChildShell(GreiaLauncherPresentation):
+class GreiaChildShell(SharedUiActivityCardMixin, GreiaLauncherPresentation):
     """Production child shell with profile-aware visual presentation context.
 
     Synthetic/development variants override only the typed variation hooks
     below. The authoritative service/supervisor rebuild sequence remains here.
+    Shared visual artwork is presentation-only and preserves the base launcher
+    as a fail-soft fallback.
     """
 
     def _runtime_hal(self) -> GreiaHAL | None:
