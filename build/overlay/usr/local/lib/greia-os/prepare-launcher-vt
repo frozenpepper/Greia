@@ -34,6 +34,15 @@ fi
 # -novtswitch does not suppress that initial activation. Force VT1 every time
 # so service restarts also recover from a parent/recovery VT.
 chvt 1 >/dev/null 2>&1 || true
+
+# This is the final pre-X milestone. It intentionally remains 78% on every
+# launcher restart: a retry is recovery, not progress. The child shell replaces
+# this framebuffer cover only when it has acquired a real graphical surface.
+renderer=/usr/lib/greia-boot/greia-fb-splash
+if [ -c /dev/fb0 ] && [ -x "$renderer" ]; then
+  "$renderer" --progress 78 >/dev/null 2>&1 || true
+fi
+
 # The Greia early-framebuffer cover already owns the frame. Xorg's
 # `-background none` asks the video driver not to paint a root background so
 # the branded frame remains visible until the launcher presents its first real
