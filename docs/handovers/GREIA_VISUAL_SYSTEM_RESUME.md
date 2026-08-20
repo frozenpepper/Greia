@@ -46,7 +46,8 @@ Non-negotiables:
 - no arbitrary runtime directory scanning;
 - no per-frame image decode/scale from disk;
 - runtime image/surface caches stay bounded;
-- visual work must not deepen provisional X11 coupling or bypass protected platform UI/chrome architecture.
+- visual work must not deepen provisional X11 coupling or bypass protected platform UI/chrome architecture;
+- after the consumption seam is proven, keep converting it into **visible real Greia improvements** rather than endless proof-only plumbing.
 
 Core characters remain Lilli, Nino, Tito and Momo in the accepted Puff/Bean direction. Character minutiae do not block V5.
 
@@ -77,11 +78,11 @@ Most source packs remain candidate artwork with SOURCE + DESKTOP VISUAL REVIEW e
 
 ---
 
-# 4. V5 Shell seam is proven
+# 4. V5 proven Shell seam
 
 The active phase remains **V5 — shared consumption/integration**.
 
-Current proven Shell flow:
+Proven Shell flow:
 
 ```text
 reviewed SVG master
@@ -93,7 +94,7 @@ reviewed SVG master
 → real Greia Shell consumer
 ```
 
-`ui.shadow.soft` is the first accepted shared Shell visual consumer beneath launcher Activity tiles.
+`ui.shadow.soft` is simulator-accepted beneath launcher Activity tiles.
 
 Evidence recorded in `LOCAL_AGENT_RESULT.md`:
 
@@ -114,9 +115,9 @@ No physical Acer/Pi visual-performance claim and no R7 closure.
 
 ---
 
-# 5. Activity semantic seam now exists in source
+# 5. Activity semantic seam exists in source
 
-The first Python Activity semantic request/resolution contract is now implemented in:
+The first Python Activity semantic request/resolution contract is in:
 
 ```text
 src/greia_platform/activity_api.py
@@ -129,76 +130,108 @@ get_shared_visual(asset_id, variant="default")
 get_shared_visual_path(asset_id, variant="default")
 ```
 
-`get_shared_visual(...)` returns a read-only `SharedVisualReference` with semantic ID, kind, role, variant and the current Python runtime path realization.
-
-Important invariants:
-
-- Activity requests semantic ID + explicit variant;
-- Activity does not supply an arbitrary host path;
-- Activity cannot mutate the catalogue;
-- core icons remain available when optional generated visuals are absent/invalid;
-- unknown visual IDs/variants fail narrowly;
-- Activity-private art remains supported;
-- this does not freeze the future Web transport as a filesystem path API.
-
 First source consumer:
 
 ```text
 activities/shape_garden/main.py
 ```
 
-Shape Garden resolves `ui.shadow.soft` once at startup, scales it once to a bounded reference size, and reuses that prepared surface while drawing shapes. Missing/invalid shared visuals keep the Activity playable.
+Shape Garden resolves `ui.shadow.soft` once at startup, scales it once and reuses it. Missing/invalid shared visuals keep the Activity playable.
 
-This Activity seam is currently **SOURCE only** until simulator acceptance completes.
-
----
-
-# 6. Current exact next work
-
-Do not create more artwork and do not add another launcher-only decorative consumer yet.
-
-The exact next action is now:
-
-```text
-1. sync current main
-2. read docs/testing/2026-08-20_V5_ACTIVITY_SHARED_VISUAL_SIMULATOR.md
-3. execute Shape Garden through the real Greia Activity Simulator
-4. verify normal semantic visual consumption
-5. verify missing generated catalogue fallback
-6. verify malformed generated catalogue fallback
-7. verify corrupt/missing soft_shadow.png fallback
-8. verify Home/input lifecycle
-9. execute the full responsive simulator matrix
-10. perform frame-count sanity with many shapes present
-11. fix only shared owners/root causes
-12. rerun affected simulator cases
-13. update active plan, this resume and HANDOVER with exact evidence
-14. commit/push accepted work to main
-```
-
-After that gate passes, the next architecture task is the **future Web Activity equivalent** using the same semantic IDs/variant names through a controlled URL/handle adapter rather than host filesystem access.
-
-Only after the Activity reuse seam is established should another Shell-only UI consumer (`ui.panel.base`, `ui.card.activity`, `ui.button.primary`) be considered.
-
----
-
-# 7. Current simulator protocol
-
-Use:
+This Activity seam is still **SOURCE only** until:
 
 ```text
 docs/testing/2026-08-20_V5_ACTIVITY_SHARED_VISUAL_SIMULATOR.md
 ```
 
+passes in the Activity Simulator.
+
+---
+
+# 6. Substantial visible shared UI is now in source
+
+The production child Shell now also consumes:
+
+```text
+ui.card.activity/default
+ui.card.activity/focused
+```
+
+through:
+
+```text
+src/greia_launcher/shared_ui_presentation.py
+src/greia_launcher/child_shell.py
+```
+
+The shared card path is intentionally presentation-only:
+
+- normal cards use the reviewed default master;
+- selected / hovered / launching cards use the focused master;
+- authored 360:430 portrait geometry is preserved instead of stretching into a square;
+- icon and localized title are placed into the authored illustration well and label band;
+- logical launcher hit targets/navigation/lifecycle remain unchanged;
+- the existing primitive tile renderer is the fail-soft fallback if the optional shared card path fails.
+
+This is intended to be a **visibly different launcher**, not another invisible plumbing proof.
+
+Required simulator protocol:
+
+```text
+docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md
+```
+
+Current evidence: **SOURCE only**.
+
+---
+
+# 7. Current exact next work
+
+If the Shape Garden simulator run is already in progress, finish it; do not restart from scratch merely because the visible card source landed meanwhile.
+
+Then:
+
+```text
+1. sync current main
+2. complete/record Shape Garden semantic seam simulator evidence
+3. read docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md
+4. run the real Greia child Shell in the Activity Simulator
+5. verify shared portrait cards are visibly present
+6. verify default/focused states, hover, selection and launch animation
+7. run the 6-row responsive matrix
+8. verify missing/malformed catalogue fallback
+9. verify corrupt shared-card PNG fallback
+10. perform frame-count sanity
+11. fix only shared/root causes
+12. rerun affected simulator cases
+13. update active plan, this resume and HANDOVER with exact evidence
+14. commit/push accepted work to main
+```
+
+After both current simulator gates pass:
+
+1. implement the Web Activity semantic adapter/transport using the same IDs/variants without exposing host paths;
+2. continue **visible** Greia Shell integration with an existing shared UI family only where it materially improves the real product (`ui.panel.base` / category or launch surfaces are the likely next candidates, followed by `ui.button.primary`);
+3. do not return to new environment-pack production unless a concrete reusable gap appears.
+
+---
+
+# 8. Current simulator protocols
+
+```text
+docs/testing/2026-08-20_V5_ACTIVITY_SHARED_VISUAL_SIMULATOR.md
+docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md
+```
+
 For owner-directed local-agent runtime/visual/fallback/responsive acceptance, use the Greia Activity Simulator.
 
-Do not use GitHub Actions unless the owner explicitly authorizes the hosted execution.
+Do not use GitHub Actions unless the owner explicitly authorizes hosted execution.
 
 The simulator bridge is local loopback only. No Cloudflare/tunnel/hosted service belongs in this workflow.
 
 ---
 
-# 8. Rejected/drift directions
+# 9. Rejected/drift directions
 
 Do not resume these as current work:
 
@@ -216,11 +249,12 @@ Do not resume these as current work:
 - unbounded caches;
 - simulator-specific production launcher code;
 - per-resolution launcher forks;
-- broad exception swallowing to hide optional-visual failures.
+- broad exception swallowing to hide optional-visual failures;
+- endless testing of visually irrelevant proof consumers after the architecture seam is already established.
 
 ---
 
-# 9. Documentation map
+# 10. Documentation map
 
 Main stable architecture/index:
 
@@ -261,15 +295,16 @@ First Shell-consumer execution result:
 LOCAL_AGENT_RESULT.md
 ```
 
-Current Activity semantic simulator protocol:
+Current simulator protocols:
 
 ```text
 docs/testing/2026-08-20_V5_ACTIVITY_SHARED_VISUAL_SIMULATOR.md
+docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md
 ```
 
 ---
 
-# 10. End-of-session rule
+# 11. End-of-session rule
 
 Update this file whenever any of these changes materially:
 
