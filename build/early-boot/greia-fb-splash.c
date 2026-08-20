@@ -119,9 +119,7 @@ static int load_ppm(const char *path, struct ppm_image *image) {
     /* Greia's generator writes the canonical P6 header as `...255\n`.
      * Consume exactly that one structural separator. Do NOT skip arbitrary
      * bytes <= ASCII space here: P6 raster data is binary, so perfectly valid
-     * dark RGB channels can have values such as 13 or 30. Treating them as
-     * whitespace used to eat the first dark pixels of full-colour artwork and
-     * then reject/corrupt the raster. */
+     * dark RGB channels can have values such as 13 or 30. */
     if (offset >= file_size || file_data[offset] != '\n') goto bad;
     offset++;
     if (width > SIZE_MAX / height / 3u) goto bad;
@@ -174,7 +172,7 @@ static int draw(const char *device, const struct ppm_image *image) {
     uint8_t *memory;
     size_t map_len;
     unsigned bytes_per_pixel;
-    uint32_t visible_w, visible_h, dest_w, dest_h, x0, y0, white;
+    uint32_t visible_w, visible_h, dest_w, dest_h, x0, y0, background;
 
     if (fd < 0) return 2;
     if (ioctl(fd, FBIOGET_FSCREENINFO, &fix) != 0 ||
@@ -187,11 +185,18 @@ static int draw(const char *device, const struct ppm_image *image) {
         close(fd);
         return 2;
     }
+    /* fbdev can describe reversed bitfields.  The compact renderer deliberately
+     * supports the overwhelmingly common LSB-oriented layouts and fails soft on
+     * an exotic layout rather than painting silently corrupted colours. */
+    if (var.red.msb_right || var.green.msb_right || var.blue.msb_right) {
+        close(fd);
+        return 2;
+    }
 
     bytes_per_pixel = var.bits_per_pixel / 8u;
     visible_w = var.xres;
     visible_h = var.yres;
-    if (!visible_w || !visible_h ||
+    if (!visible_w || !visible_h || !image->width || !image->height || !image->rgb ||
         fix.line_length < visible_w * bytes_per_pixel) {
         close(fd);
         return 2;
@@ -209,61 +214,38 @@ static int draw(const char *device, const struct ppm_image *image) {
         return 2;
     }
 
-    white = pack_pixel(&var, 255, 255, 255);
+    /* The generated landscape canvas extends the source artwork's own corner
+     * colour into its safe margins.  Use that same colour for any letterbox
+     * pixels introduced by a display with a different aspect ratio, so there is
+     * no white flash or visible rectangle around the composition. */
+    background = pack_pixel(&var, image->rgb[0], image->rgb[1], image->rgb[2]);
     for (uint32_t y = 0; y < visible_h; ++y) {
         uint8_t *row = memory +
             (size_t)(y + var.yoffset) * fix.line_length +
             (size_t)var.xoffset * bytes_per_pixel;
         for (uint32_t x = 0; x < visible_w; ++x) {
             write_pixel(row + (size_t)x * bytes_per_pixel,
-                        bytes_per_pixel, white);
+                        bytes_per_pixel, background);
         }
     }
 
-    /* Fit the artwork into the visible area preserving aspect ratio.
-     *
-     * Design: the logo should use essentially the full physical HEIGHT on the
-     * reference panel. We size by height first, then constrain by width, and
-     * finally cap at a small margin so we never touch the edges or overflow.
-     * Guard every division so a degenerate/odd framebuffer geometry (e.g. a
-     * tiny or portrait reporting from some BIOS modes) can never produce a
-     * full-width clipped image or divide-by-zero.
-     */
-    if (image->width == 0 || image->height == 0) {
-        munmap(memory, map_len);
-        close(fd);
-        return 2;
-    }
-    dest_h = visible_h;
-    dest_w = (uint32_t)(((uint64_t)image->width * visible_h +
-                         image->height / 2u) / image->height);
-    if (dest_w > visible_w) {
-        dest_w = visible_w;
-        dest_h = (uint32_t)(((uint64_t)image->height * visible_w +
-                             image->width / 2u) / image->width);
-    }
-    if (!dest_w) dest_w = 1;
-    if (!dest_h) dest_h = 1;
-    /* Keep a margin so artwork never bleeds to the exact screen edge, and cap
-     * to a fraction of the visible area so a degenerate/odd framebuffer
-     * geometry can never produce a full-width-clipped or oversized logo. */
-    uint32_t margin = visible_h / 12u;          /* top/bottom margin */
-    uint32_t max_h = visible_h > 2u * margin ? visible_h - 2u * margin : visible_h;
-    uint32_t max_w = visible_w > 2u * margin ? visible_w - 2u * margin : visible_w;
-    if (dest_h > max_h) {
-        dest_h = max_h;
-        dest_w = (uint32_t)(((uint64_t)image->width * dest_h +
+    /* Proportional `padding` fit.  The artwork generator, not this renderer,
+     * owns visual scale and safe margins inside the landscape composition.
+     * That keeps this runtime adapter resolution-independent and prevents the
+     * old failure where the 222x600 portrait source consumed nearly the entire
+     * physical display height. */
+    dest_w = visible_w;
+    dest_h = (uint32_t)(((uint64_t)image->height * visible_w +
+                         image->width / 2u) / image->width);
+    if (dest_h > visible_h) {
+        dest_h = visible_h;
+        dest_w = (uint32_t)(((uint64_t)image->width * visible_h +
                              image->height / 2u) / image->height);
     }
-    if (dest_w > max_w) {
-        dest_w = max_w;
-        dest_h = (uint32_t)(((uint64_t)image->height * dest_w +
-                             image->width / 2u) / image->width);
-    }
     if (!dest_w) dest_w = 1;
     if (!dest_h) dest_h = 1;
-    if (dest_h > visible_h) dest_h = visible_h;
     if (dest_w > visible_w) dest_w = visible_w;
+    if (dest_h > visible_h) dest_h = visible_h;
     x0 = (visible_w - dest_w) / 2u;
     y0 = (visible_h - dest_h) / 2u;
 
