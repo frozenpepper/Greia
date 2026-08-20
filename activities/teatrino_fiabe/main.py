@@ -168,9 +168,15 @@ class Puppet:
         self.radius = 42.0
         self.is_held = False
         self.wobble = 0.0
+        self.jump_timer = 0.0
+
+    def jump(self) -> None:
+        self.jump_timer = 1.0
 
     def update(self) -> None:
         self.wobble += 0.05
+        if self.jump_timer > 0:
+            self.jump_timer -= 0.04
 
     def contains(self, px: float, py: float) -> bool:
         return (self.x - px) ** 2 + (self.y - py) ** 2 <= (self.radius + 12) ** 2
@@ -178,7 +184,9 @@ class Puppet:
     def draw(self, surface: pygame.Surface, typography: GreiaTypography) -> None:
         px = int(self.x)
         py = int(self.y)
-        if not self.is_held:
+        if self.jump_timer > 0:
+            py += int(-math.sin(self.jump_timer * math.pi) * 26.0)
+        elif not self.is_held:
             py += int(math.sin(self.wobble) * 3.0)
 
         # Drop shadow on stage
@@ -189,8 +197,8 @@ class Puppet:
 
         # Puppet avatar badge
         pygame.draw.circle(surface, (255, 250, 240), (px, py), int(self.radius))
-        border_col = (255, 190, 50) if self.is_held else (61, 44, 31)
-        border_w = 4 if self.is_held else 3
+        border_col = (255, 190, 50) if (self.is_held or self.jump_timer > 0) else (61, 44, 31)
+        border_w = 4 if (self.is_held or self.jump_timer > 0) else 3
         pygame.draw.circle(surface, border_col, (px, py), int(self.radius), width=border_w)
 
         # Puppet Icon Emoji
@@ -403,8 +411,9 @@ def main() -> int:
 
                     # 3. Play Show Button (▶️ Spettacolo)
                     if play_btn_rect.collidepoint(lx, ly):
-                        is_playing_show = True
+                        # Automatically stop recording when pressing play
                         is_recording = False
+                        is_playing_show = True
                         playback_start_time = now
                         sounds.play("trumpet")
                         sounds.play("applause")
@@ -420,7 +429,7 @@ def main() -> int:
                         safe_emit("scene.recorded", f"show-{time.time()}")
                         for _ in range(30):
                             particles.append(Particle(512, 280, "🎉", STAGE_GOLD))
-                            particles.append(Particle(512, 280, "✨", PINK))
+                            particles.append(Particle(512, 280, "✨", (255, 125, 165)))
                         continue
 
                     # 4. Clear Stage Button (🗑️)
