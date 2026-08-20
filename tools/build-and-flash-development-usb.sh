@@ -84,6 +84,7 @@ source_artifact_verification=PASS
 usb_flash_readback_verification=PASS
 boot_writer=postmortem-proven-syslinux-fat32
 boot_diagnostics=console-tty1
+panic_policy=halt-on-panic
 ssh_user=greia
 ssh_login=simple password; no operator SSH key is required
 EOF
