@@ -1,23 +1,15 @@
 #!/usr/bin/env python3
-"""Generate Greia boot artwork derivatives from the canonical source.
+"""Generate Greia boot artwork derivatives with a hardware-safe Acer split.
 
-The canonical Greia boot logo is the final frame of the legacy boot
-animation (preserved as historical source material at
-`assets/boot/source/legacy-plymouth-theme/frames/frame_0051.png`), which
-contains the Professor Pip mascot plus the GREIA wordmark drawn in
-cream/white on a dark navy background.
+The canonical source is the retained full-color final legacy frame. Static PNG
+consumers (notably installed GRUB) receive that full-color source directly.
+The initramfs framebuffer path is deliberately conservative for now: its P6 PPM
+keeps the previously physically booting white/indigo transform after the first
+full-color PPM experiment coincided with an Acer grey-screen/reboot regression.
 
-This tool derives the white-frame boot assets from that source so GRUB,
-the initramfs framebuffer cover and the launcher intro all use the same
-canonical artwork lineage:
-
-- `assets/boot/source/greia-boot-logo.png`   canonical white/dark derivative
-- `assets/boot/static/greia-boot-logo.png`   GRUB-compatible PNG
-- `build/overlay/etc/greia-boot/boot-logo.ppm`        initramfs P6 PPM (target)
-- `build/installer-overlay/etc/greia-boot/boot-logo.ppm`  initramfs P6 PPM (installer)
-
-The renderer does not decode PNG in initramfs, so the runtime initramfs asset
-is a P6 PPM generated here at build/source time.
+This is an explicit temporary hardware-safety boundary, not the desired final
+visual design. Reunifying all boot stages on full-color requires a fresh Acer
+physical acceptance pass first.
 """
 
 from __future__ import annotations
@@ -26,19 +18,12 @@ import argparse
 import sys
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageFilter
 
 
-# The dark navy background of the legacy frames. Pixels at or below this
-# brightness belong to the background; brighter pixels form the logo.
-_BACKGROUND_THRESHOLD = 150
-# Brand indigo for the white-frame logo. This must render clearly on the
-# reference hardware's 16-bit (RGB565) framebuffer as well as 24/32-bit:
-# (62,70,130) collapses to about RGB(56,68,128) in RGB565, which stays clearly
-# visible on white (the older near-black navy (13,30,60) rendered as black on
-# RGB565 and looked broken).
 _LOGO_COLOR = (62, 70, 130)
 _WHITE = (255, 255, 255)
+EXPECTED_SIZE = (222, 600)
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_FRAME = (
@@ -56,22 +41,12 @@ TARGET_PPM = ROOT / "build" / "overlay" / "etc" / "greia-boot" / "boot-logo.ppm"
 INSTALLER_PPM = ROOT / "build" / "installer-overlay" / "etc" / "greia-boot" / "boot-logo.ppm"
 
 
-def is_background(pixel: tuple[int, int, int]) -> bool:
-    r, g, b = pixel
-    return r < 35 and g < 55 and b < 95 and (r + g + b) < _BACKGROUND_THRESHOLD
+def canonical_full_color_frame(source: Path) -> Image.Image:
+    return Image.open(source).convert("RGB")
 
 
-def derive_white_frame(source: Path) -> Image.Image:
-    """Return the canonical logo rendered as dark-on-white from the legacy frame.
-
-    The legacy animation draws the Greia logo in lighter tones on a dark navy
-    gradient. A simple brightness check over-captures the navy mid-tones and
-    produces a speckled, glitchy logo. Instead we keep pixels that are clearly
-    lighter than the navy floor (luminance > a fixed threshold) and apply a
-    small median filter to remove anti-aliasing/compression speckle so the
-    silhouette is clean at the 222x600 reference size.
-    """
-    from PIL import ImageFilter
+def derive_hardware_safe_ppm(source: Path) -> Image.Image:
+    """Return the previously booting white/indigo initramfs artwork."""
 
     image = Image.open(source).convert("RGB")
     width, height = image.size
@@ -81,10 +56,10 @@ def derive_white_frame(source: Path) -> Image.Image:
     for y in range(height):
         for x in range(width):
             r, g, b = pixels[x, y]
-            luminance = (r + g + b) / 3.0
-            if luminance > 90:
+            if (r + g + b) / 3.0 > 90:
                 mask_px[x, y] = 255
     mask = mask.filter(ImageFilter.MedianFilter(3))
+
     output = Image.new("RGB", (width, height), _WHITE)
     out = output.load()
     for y in range(height):
@@ -110,31 +85,35 @@ def main(argv: list[str] | None = None) -> int:
         "--source",
         type=Path,
         default=SOURCE_FRAME,
-        help="canonical boot logo source frame",
+        help="canonical full-color boot source frame",
     )
     args = parser.parse_args(argv)
 
     if not args.source.is_file():
         print(f"canonical boot logo source missing: {args.source}", file=sys.stderr)
         return 1
-    image = derive_white_frame(args.source)
-    if image.size != (222, 600):
+
+    full_color = canonical_full_color_frame(args.source)
+    safe_ppm = derive_hardware_safe_ppm(args.source)
+    if full_color.size != EXPECTED_SIZE or safe_ppm.size != EXPECTED_SIZE:
         print(
-            f"unexpected canonical source size {image.size}; expected (222, 600)",
+            f"unexpected boot-art geometry full={full_color.size} ppm={safe_ppm.size}; "
+            f"expected {EXPECTED_SIZE}",
             file=sys.stderr,
         )
         return 1
 
     SOURCE_OUT.parent.mkdir(parents=True, exist_ok=True)
-    image.save(SOURCE_OUT)
+    full_color.save(SOURCE_OUT)
     STATIC_OUT.parent.mkdir(parents=True, exist_ok=True)
-    image.save(STATIC_OUT)
-    write_ppm(image, TARGET_PPM)
-    write_ppm(image, INSTALLER_PPM)
-    print(f"wrote {SOURCE_OUT}")
-    print(f"wrote {STATIC_OUT}")
-    print(f"wrote {TARGET_PPM}")
-    print(f"wrote {INSTALLER_PPM}")
+    full_color.save(STATIC_OUT)
+    write_ppm(safe_ppm, TARGET_PPM)
+    write_ppm(safe_ppm, INSTALLER_PPM)
+
+    print(f"wrote full-color {SOURCE_OUT}")
+    print(f"wrote full-color {STATIC_OUT}")
+    print(f"wrote hardware-safe PPM {TARGET_PPM}")
+    print(f"wrote hardware-safe PPM {INSTALLER_PPM}")
     return 0
 
 
