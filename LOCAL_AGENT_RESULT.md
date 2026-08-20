@@ -247,3 +247,68 @@ All acceptance was performed through the Greia Activity Simulator (`http://127.0
 - **No Physical Hardware / Acer Performance Claim:** Verified through Activity Simulator only (`SIMULATOR VISUAL REVIEW`).
 - **No R7 Architecture Closure:** Display coordinator and session boundary remain open.
 
+---
+
+# Greia V5 Shared Category Buttons — Simulator Acceptance Result
+
+**Date:** 2026-08-20  
+**Repository:** `frozenpepper/Greia` (`main`)  
+**Runbook Authority:** `docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md`  
+**Consumer:** `ui.button.primary` (`default`, `hover`)  
+**Evidence Class:** `SIMULATOR VISUAL REVIEW`  
+
+---
+
+## 1. Git & Commit Summary
+
+- **Start Base SHA:** `86ec65e618f54ef5c9b7b5ccaacaa45455926af0`
+- **Head SHA:** (Current working tree)
+
+---
+
+## 2. Shared Category Button Integration Details
+
+- **Semantic Asset ID:** `ui.button.primary`, variants `default = "visual/runtime/v1/ui/button_primary.png"`, `hover = "visual/runtime/v1/ui/button_primary_hover.png"`
+- **Implementation Mixin:** `SharedUiCategoryButtonMixin` in `src/greia_launcher/shared_ui_presentation.py` mixed into `GreiaChildShell`.
+- **Composition Hierarchy:** Shared primary-button artwork renders on the root Activity category row behind icons and labels, remaining visually subordinate to Activity cards. In-category Back button retains existing dedicated geometry.
+- **Fail-Soft Isolation:** Any cache/catalogue/PNG failure on button renditions sets `self._shared_category_buttons_disabled = True`, falling back cleanly to the primitive category row while `ui.panel.base` and `ui.card.activity` remain fully active.
+
+---
+
+## 3. Greia Simulator Acceptance Matrix
+
+All acceptance was performed through the Greia Activity Simulator (`http://127.0.0.1:8767`) with isolated state root `$HOME/.greia-simulator-v5-button`:
+
+| Test # | Viewport | Interface Size | Mode | Result | Screenshot Evidence | Status File |
+|---|---|---|---|---|---|---|
+| **01** | 1024x600 | Normal | Baseline Buttons | **PASS** | `tmp/v5-button-simulator-evidence/02-buttons-1024x600-normal.png` | `01-status-1024x600-normal.json` |
+| **02** | 1024x600 | Normal | Button Hover (`ui.button.primary/hover`) | **PASS** | `tmp/v5-button-simulator-evidence/03-button-hover.png` | N/A |
+| **03** | 1024x600 | Normal | Category Open | **PASS** | `tmp/v5-button-simulator-evidence/04-category-open.png` | N/A |
+| **04** | 1024x600 | Normal | Category Return | **PASS** | `tmp/v5-button-simulator-evidence/05-category-returned.png` | N/A |
+| **05** | 1024x600 | Normal | Return Home & Lifecycle | **PASS** | `tmp/v5-button-simulator-evidence/06-returned-home.png` | mode: activities |
+| **06** | 1024x600 | Normal | Fallback: Missing Catalogue | **PASS** | `tmp/v5-button-simulator-evidence/10-fallback-missing-catalogue.png` | N/A |
+| **07** | 1024x600 | Normal | Fallback: Malformed Catalogue | **PASS** | `tmp/v5-button-simulator-evidence/11-fallback-malformed-catalogue.png` | N/A |
+| **08** | 1024x600 | Normal | Fallback: Corrupt Hover PNG | **PASS** | `tmp/v5-button-simulator-evidence/12-fallback-corrupt-hover-button.png` (panel & cards remain active) | N/A |
+| **09** | 1024x600 | Normal | Responsive Row 1 | **PASS** | `tmp/v5-button-simulator-evidence/20-1024x600-normal.png` | `20-status.json` |
+| **10** | 1024x600 | Large | Responsive Row 2 | **PASS** | `tmp/v5-button-simulator-evidence/21-1024x600-large.png` | `21-status.json` |
+| **11** | 1280x800 | Normal | Responsive Row 3 | **PASS** | `tmp/v5-button-simulator-evidence/22-1280x800-normal.png` | `22-status.json` |
+| **12** | 1366x768 | Compact | Responsive Row 4 | **PASS** | `tmp/v5-button-simulator-evidence/23-1366x768-compact.png` | `23-status.json` |
+| **13** | 1920x1080 | Normal | Responsive Row 5 | **PASS** | `tmp/v5-button-simulator-evidence/24-1920x1080-normal.png` | `24-status.json` |
+| **14** | 1111x700 | Normal | Responsive Row 6 | **PASS** | `tmp/v5-button-simulator-evidence/25-1111x700-normal.png` | `25-status.json` |
+
+---
+
+## 4. Frame Rate & Performance Sanity
+
+- **Measurement:** 10-second idle measurement in Activity catalogue.
+- **Frames Rendered:** 296 frames across 10.0 seconds (**29.6 FPS**, consistent with Greia 30 FPS clock, zero starvation).
+- **Status Evidence:** `tmp/v5-button-simulator-evidence/frame-before.json` and `frame-after.json`.
+
+---
+
+## 5. Explicit Non-Claims
+
+- **No Physical Hardware / Acer Performance Claim:** Verified through Activity Simulator only (`SIMULATOR VISUAL REVIEW`).
+- **No R7 Architecture Closure:** Display coordinator and session boundary remain open.
+
+

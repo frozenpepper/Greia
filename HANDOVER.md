@@ -223,6 +223,7 @@ ui.shadow.soft
 
 - `ui.card.activity` (`default`, `focused`, `completed`): integrated into `GreiaChildShell` via `SharedUiActivityCardMixin` preserving authored 360:430 portrait geometry, centering icons/labels, and providing fail-soft fallback. Accepted at **SIMULATOR VISUAL REVIEW** scope via `docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md`.
 - `ui.panel.base` (`default`): integrated into `GreiaChildShell` via `SharedUiShellPanelMixin` framing profile picker and Activity catalogue preserving authored 640:420 aspect ratio with isolated fail-soft fallback. Accepted at **SIMULATOR VISUAL REVIEW** scope via `docs/testing/2026-08-20_V5_SHARED_UI_PANEL_SIMULATOR.md`.
+- `ui.button.primary` (`default`, `hover`): integrated into `GreiaChildShell` via `SharedUiCategoryButtonMixin` for root Activity-category row with isolated fail-soft fallback preserving cards and panel. Accepted at **SIMULATOR VISUAL REVIEW** scope via `docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md`.
 
 ### Activity semantic resolver — source implemented
 

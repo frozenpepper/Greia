@@ -150,17 +150,12 @@ passes in the Activity Simulator.
 
 # 6. Visible shared Shell UI status
 
-Already accepted in the Activity Simulator:
+Accepted in the Activity Simulator:
 
 ```text
 ui.card.activity/default
 ui.card.activity/focused
 ui.panel.base/default
-```
-
-New source consumer awaiting simulator acceptance:
-
-```text
 ui.button.primary/default
 ui.button.primary/hover
 ```
@@ -178,7 +173,7 @@ Current behavior:
 - normal Activity cards use the reviewed default master;
 - selected / hovered / launching cards use the focused master;
 - Activity card authored 360:430 portrait geometry is preserved;
-- root Activity-category controls now use `ui.button.primary/default` and `hover` in source;
+- root Activity-category controls use `ui.button.primary/default` and `hover`;
 - the existing in-category Back/header control deliberately remains on its existing renderer because its square geometry does not match the reviewed wide primary-button asset;
 - category IDs/order/hit targets/navigation remain unchanged;
 - button failure is isolated so accepted shared panels/cards can remain active while category controls fall back to the base renderer.
@@ -188,11 +183,6 @@ Accepted protocols:
 ```text
 docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md
 docs/testing/2026-08-20_V5_SHARED_UI_PANEL_SIMULATOR.md
-```
-
-Pending protocol:
-
-```text
 docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md
 ```
 
@@ -202,7 +192,7 @@ Current evidence:
 ui.shadow.soft       SIMULATOR VISUAL REVIEW
 ui.card.activity     SIMULATOR VISUAL REVIEW
 ui.panel.base        SIMULATOR VISUAL REVIEW
-ui.button.primary    SOURCE, simulator pending
+ui.button.primary    SIMULATOR VISUAL REVIEW
 ```
 
 ---
@@ -210,16 +200,9 @@ ui.button.primary    SOURCE, simulator pending
 # 7. Current exact next work
 
 ```text
-1. sync current main
-2. execute docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md
-3. verify default + hover button states in the real root Activity catalogue
-4. verify category open/back lifecycle
-5. verify corrupt hover-button isolation: primitive category row fallback while panel/cards stay shared
-6. run full responsive matrix + frame-count sanity
-7. fix only shared/root causes
-8. update plan/resume/HANDOVER/LOCAL_AGENT_RESULT.md with exact evidence
-9. commit and push main
-10. after this visible Shell gate, move to the next product-visible shared UI surface or the Web semantic adapter without returning to proof-only Shapes work
+1. complete Web Activity semantic visual adapter using the same IDs/variants without host path exposure
+2. continue visible Greia Shell integration with remaining shared UI families
+3. do not return to new environment-pack production unless a concrete reusable gap appears
 ```
 
 ---

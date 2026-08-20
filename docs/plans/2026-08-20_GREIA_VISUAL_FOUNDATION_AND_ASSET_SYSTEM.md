@@ -230,7 +230,7 @@ docs/testing/2026-08-20_V5_SHARED_UI_PANEL_SIMULATOR.md
 
 All 6 responsive matrix viewports, profile picker, Activity catalogue, return Home lifecycle, missing/malformed/corrupt fallback cases and 29.5 FPS frame sanity passed.
 
-## 4.10 Third visible shared UI consumer — SOURCE IMPLEMENTED, SIMULATOR PENDING
+## 4.10 Third visible shared UI consumer — ACCEPTED (SIMULATOR VISUAL REVIEW)
 
 The root Activity-category row now consumes:
 
@@ -249,19 +249,19 @@ Behavior:
 - the in-category Back/header control deliberately stays on its existing renderer because its geometry does not match the wide reviewed primary-button asset;
 - a button-specific failure disables only the shared category-button treatment and falls back to the proven primitive category renderer while accepted shared panels/cards remain live.
 
-Required simulator protocol:
+Accepted via:
 
 ```text
 docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md
 ```
 
-Evidence remains **SOURCE** until that protocol passes.
+All 6 responsive matrix viewports, baseline buttons, button hover, category open/return navigation, launch/return Home lifecycle, missing/malformed/corrupt-button fallback cases, and 29.6 FPS frame sanity passed with full evidence in `tmp/v5-button-simulator-evidence/`.
 
 ## 4.11 After the category-button gate
 
-After `ui.button.primary` is accepted or rejected by the real Shell simulator evidence:
+Following simulator acceptance of `ui.shadow.soft`, `ui.card.activity`, `ui.panel.base`, and `ui.button.primary`:
 
-1. record the exact visual result and any source/art integration corrections;
+1. record `ui.button.primary` as an accepted visible Shell consumer at **SIMULATOR VISUAL REVIEW** scope;
 2. continue only to another product-visible shared UI surface that materially improves Greia, rather than adding proof-only consumers;
 3. separately complete the Web Activity semantic adapter using the same semantic IDs/variants through a controlled URL/handle transport, not host filesystem exposure;
 4. do not return to new environment-pack production without a demonstrated reusable coverage gap.
@@ -274,18 +274,17 @@ After `ui.button.primary` is accepted or rejected by the real Shell simulator ev
 |---|---|
 | Stable guide | `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` |
 | Resume | `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` |
-| Active focus | **V5 — shared `ui.button.primary` category controls await Activity Simulator acceptance** |
+| Active focus | **V5 — shared `ui.button.primary` category controls accepted in Activity Simulator** |
 | Environment coverage | V4 complete through Water/Pond; no new pack without concrete gap |
 | Catalogue/renditions | explicit semantic catalogue + generated PNG runtime catalogue present |
 | First Shell consumer | `ui.shadow.soft` accepted at **SIMULATOR VISUAL REVIEW** scope |
 | Visible Shell card consumer | `ui.card.activity/default|focused` accepted at **SIMULATOR VISUAL REVIEW** scope |
 | Visible Shell panel consumer | `ui.panel.base/default` accepted at **SIMULATOR VISUAL REVIEW** scope |
-| Visible category-button consumer | `ui.button.primary/default|hover` implemented in source; simulator pending |
+| Visible category-button consumer | `ui.button.primary/default|hover` accepted at **SIMULATOR VISUAL REVIEW** scope |
 | Activity API | `get_shared_visual(...)` + `get_shared_visual_path(...)` implemented in source |
 | First Activity consumer | Shape Garden consumes `ui.shadow.soft` in source with optional fallback; non-blocking simulator proof pending |
-| Completed visible protocols | `docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md`; `docs/testing/2026-08-20_V5_SHARED_UI_PANEL_SIMULATOR.md` |
-| Pending visible protocol | `docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md` |
-| Next exact action | execute the shared-category-button simulator protocol, fix only root causes, then record exact acceptance/rejection evidence |
+| Completed visible protocols | `docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md`; `docs/testing/2026-08-20_V5_SHARED_UI_PANEL_SIMULATOR.md`; `docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md` |
+| Next exact action | complete Web Activity semantic visual adapter or next targeted product-visible Shell integration |
 
 ---
 
