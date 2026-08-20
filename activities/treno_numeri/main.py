@@ -122,18 +122,24 @@ class TrainAudio:
 
 def _draw_fruit(surface: pygame.Surface, fruit_id: str, cx: int, cy: int, size: int) -> None:
     r = size // 2
+    dark = (30, 41, 59)
     if fruit_id == "apple":
         pygame.draw.circle(surface, (239, 68, 68), (cx - r // 4, cy), r * 4 // 5)
         pygame.draw.circle(surface, (220, 38, 38), (cx + r // 4, cy), r * 4 // 5)
+        pygame.draw.circle(surface, dark, (cx - r // 4, cy), r * 4 // 5, 2)
+        pygame.draw.circle(surface, dark, (cx + r // 4, cy), r * 4 // 5, 2)
         pygame.draw.rect(surface, (120, 53, 15), (cx - 2, cy - r, 4, r // 2), border_radius=2)
         pygame.draw.ellipse(surface, (34, 197, 94), pygame.Rect(cx + 2, cy - r + 2, r // 2, r // 3))
+        pygame.draw.ellipse(surface, dark, pygame.Rect(cx + 2, cy - r + 2, r // 2, r // 3), 1)
         pygame.draw.circle(surface, (255, 255, 255), (cx - r // 3, cy - r // 3), max(2, r // 4))
     elif fruit_id == "banana":
+        pygame.draw.arc(surface, dark, pygame.Rect(cx - r - 2, cy - r - 2, r * 2 + 4, r * 2 + 4), 0.6, 2.6, max(6, r // 2 + 4))
         pygame.draw.arc(surface, (234, 179, 8), pygame.Rect(cx - r, cy - r, r * 2, r * 2), 0.6, 2.6, max(4, r // 2))
         pygame.draw.circle(surface, (161, 98, 7), (cx + r * 2 // 3, cy - r // 3), max(2, r // 6))
     elif fruit_id == "carrot":
         pts = [(cx - r // 2, cy - r // 2), (cx + r // 2, cy - r // 2), (cx, cy + r)]
         pygame.draw.polygon(surface, (249, 115, 22), pts)
+        pygame.draw.polygon(surface, dark, pts, 2)
         pygame.draw.polygon(surface, (34, 197, 94), [(cx - 4, cy - r // 2), (cx - 8, cy - r), (cx, cy - r // 2)])
         pygame.draw.polygon(surface, (34, 197, 94), [(cx + 4, cy - r // 2), (cx + 8, cy - r), (cx, cy - r // 2)])
     else:  # strawberry
@@ -141,6 +147,9 @@ def _draw_fruit(surface: pygame.Surface, fruit_id: str, cx: int, cy: int, size: 
         pygame.draw.polygon(surface, (244, 63, 94), pts)
         pygame.draw.circle(surface, (244, 63, 94), (cx - r // 3, cy - r // 3), r // 2)
         pygame.draw.circle(surface, (244, 63, 94), (cx + r // 3, cy - r // 3), r // 2)
+        pygame.draw.polygon(surface, dark, pts, 2)
+        pygame.draw.circle(surface, dark, (cx - r // 3, cy - r // 3), r // 2, 2)
+        pygame.draw.circle(surface, dark, (cx + r // 3, cy - r // 3), r // 2, 2)
         pygame.draw.polygon(surface, (34, 197, 94), [(cx - r // 2, cy - r // 2), (cx + r // 2, cy - r // 2), (cx, cy - r * 3 // 4)])
 
 

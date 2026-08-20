@@ -13,6 +13,7 @@
     "grid.small": "2x2",
     "grid.medium": "3x2",
     "grid.large": "4x3",
+    "grid.xlarge": "4x4",
     "btn.new_game": "🔄 New Game",
     "btn.play_again": "🎉 Play Again!",
     "victory.title": "Awesome! You matched all pairs! 🌟",

@@ -13,6 +13,7 @@
     "grid.small": "2x2",
     "grid.medium": "3x2",
     "grid.large": "4x3",
+    "grid.xlarge": "4x4",
     "btn.new_game": "🔄 Nuovo",
     "btn.play_again": "🎉 Gioca Ancora!",
     "victory.title": "Bravissima! Hai trovato tutte le coppie! 🌟",

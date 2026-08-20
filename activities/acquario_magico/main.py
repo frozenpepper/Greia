@@ -442,14 +442,17 @@ def main() -> int:
             tail_dir = -1 if facing_right else 1
             tail_x = cx + tail_dir * (base_sz + 8)
             tail_sway = math.sin(c["swim_t"] * 3.0) * 8.0
-            pygame.draw.polygon(surf, sp["color"], [
+            tail_pts = [
                 (cx + tail_dir * base_sz, cy),
                 (int(tail_x), int(cy - 12 + tail_sway)),
                 (int(tail_x), int(cy + 12 + tail_sway)),
-            ])
+            ]
+            pygame.draw.polygon(surf, sp["color"], tail_pts)
+            pygame.draw.polygon(surf, (20, 20, 30), tail_pts, 2)
 
             # Body
             pygame.draw.ellipse(surf, sp["color"], (cx - base_sz, cy - base_sz // 2, base_sz * 2, base_sz))
+            pygame.draw.ellipse(surf, (20, 20, 30), (cx - base_sz, cy - base_sz // 2, base_sz * 2, base_sz), 2)
             # Stripe
             pygame.draw.line(surf, sp["stripe"], (cx, cy - base_sz // 2), (cx, cy + base_sz // 2), max(3, base_sz // 5))
 
@@ -457,6 +460,7 @@ def main() -> int:
             eye_x = cx + (base_sz // 2 if facing_right else -base_sz // 2)
             eye_y = cy - base_sz // 6
             pygame.draw.circle(surf, (255, 255, 255), (eye_x, eye_y), max(3, base_sz // 5))
+            pygame.draw.circle(surf, (20, 20, 30), (eye_x, eye_y), max(3, base_sz // 5), 1)
             pygame.draw.circle(surf, (20, 20, 30), (eye_x + (1 if facing_right else -1), eye_y), max(2, base_sz // 8))
 
         # 6. Draw Bubbles

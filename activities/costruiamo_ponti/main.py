@@ -133,32 +133,65 @@ class BridgeAudio:
                 pass
 
 
-def _draw_block_icon(surface: pygame.Surface, block_id: str, cx: int, cy: int, size: int) -> None:
+def _draw_block_icon(surface: pygame.Surface, block_id: str, cx: int, cy: int, size: int, ghost: bool = False) -> None:
     r = size // 2
+    dark = (30, 41, 59)
+    if ghost:
+        # Ghost blueprint watermark style: translucent muted silhouette with dotted contour
+        g_col = (148, 163, 184)
+        if block_id == "wood":
+            pygame.draw.rect(surface, (214, 211, 209), (cx - r, cy - r // 2, size, r), border_radius=6)
+            pygame.draw.rect(surface, g_col, (cx - r, cy - r // 2, size, r), width=2, border_radius=6)
+            pygame.draw.ellipse(surface, g_col, pygame.Rect(cx + r - r // 3, cy - r // 2, r * 2 // 3, r), 2)
+        elif block_id == "stone":
+            pygame.draw.rect(surface, (226, 232, 240), (cx - r, cy - r, size, size), border_radius=8)
+            pygame.draw.rect(surface, g_col, (cx - r, cy - r, size, size), width=2, border_radius=8)
+        elif block_id == "shroom":
+            pygame.draw.ellipse(surface, (254, 202, 202), pygame.Rect(cx - r, cy - r, size, r * 5 // 4))
+            pygame.draw.ellipse(surface, g_col, pygame.Rect(cx - r, cy - r, size, r * 5 // 4), 2)
+            pygame.draw.rect(surface, (241, 245, 249), (cx - r // 4, cy, r // 2, r), border_radius=4)
+        else: # rainbow
+            pygame.draw.arc(surface, g_col, pygame.Rect(cx - r, cy - r, size, size), 0, math.pi, 3)
+            pygame.draw.arc(surface, (203, 213, 225), pygame.Rect(cx - r + 4, cy - r + 4, size - 8, size - 8), 0, math.pi, 2)
+        return
+
+    # Solid rich 3D block
     if block_id == "wood":
-        # 3D Log
-        pygame.draw.rect(surface, (180, 83, 9), (cx - r, cy - r // 2, size, r), border_radius=6)
-        pygame.draw.ellipse(surface, (217, 119, 6), pygame.Rect(cx + r - r // 3, cy - r // 2, r * 2 // 3, r))
+        # 3D Log Plank with rich woodgrain and bevel
+        pygame.draw.rect(surface, (180, 83, 9), (cx - r, cy - r // 2, size, r), border_radius=8)
+        pygame.draw.rect(surface, (217, 119, 6), (cx - r + 3, cy - r // 2 + 2, size - 6, r - 4), border_radius=6)
+        pygame.draw.ellipse(surface, (245, 158, 11), pygame.Rect(cx + r - r // 3, cy - r // 2, r * 2 // 3, r))
         pygame.draw.circle(surface, (146, 64, 14), (cx + r, cy), max(2, r // 4))
+        pygame.draw.rect(surface, dark, (cx - r, cy - r // 2, size, r), width=2, border_radius=8)
+        # Golden nails
+        pygame.draw.circle(surface, (254, 240, 138), (cx - r + 8, cy), 3)
+        pygame.draw.circle(surface, (180, 83, 9), (cx - r + 8, cy), 3, 1)
     elif block_id == "stone":
-        # Heavy stone block with bevel
-        pygame.draw.rect(surface, (100, 116, 139), (cx - r, cy - r, size, size), border_radius=8)
-        pygame.draw.rect(surface, (148, 163, 184), (cx - r + 3, cy - r + 3, size - 6, size // 3), border_radius=4)
-        pygame.draw.rect(surface, (71, 85, 105), (cx - r, cy - r, size, size), width=3, border_radius=8)
+        # Heavy stone block with 3D bevel and mortar
+        pygame.draw.rect(surface, (71, 85, 105), (cx - r, cy - r, size, size), border_radius=10)
+        pygame.draw.rect(surface, (148, 163, 184), (cx - r + 3, cy - r + 3, size - 6, size - 6), border_radius=8)
+        pygame.draw.rect(surface, (203, 213, 225), (cx - r + 5, cy - r + 5, size - 10, size // 3), border_radius=4)
+        pygame.draw.rect(surface, dark, (cx - r, cy - r, size, size), width=2, border_radius=10)
     elif block_id == "shroom":
-        # Bouncy mushroom
+        # Bouncy mushroom cap with spots and highlight
         pygame.draw.rect(surface, (255, 255, 255), (cx - r // 4, cy, r // 2, r), border_radius=4)
+        pygame.draw.rect(surface, dark, (cx - r // 4, cy, r // 2, r), width=2, border_radius=4)
         pygame.draw.ellipse(surface, (239, 68, 68), pygame.Rect(cx - r, cy - r, size, r * 5 // 4))
-        pygame.draw.circle(surface, (255, 255, 255), (cx - r // 2, cy - r // 3), max(2, r // 4))
-        pygame.draw.circle(surface, (255, 255, 255), (cx + r // 2, cy - r // 3), max(2, r // 4))
-        pygame.draw.circle(surface, (255, 255, 255), (cx, cy - r * 2 // 3), max(2, r // 4))
+        pygame.draw.ellipse(surface, dark, pygame.Rect(cx - r, cy - r, size, r * 5 // 4), 2)
+        pygame.draw.circle(surface, (255, 255, 255), (cx - r // 2, cy - r // 3), max(3, r // 4))
+        pygame.draw.circle(surface, (255, 255, 255), (cx + r // 2, cy - r // 3), max(3, r // 4))
+        pygame.draw.circle(surface, (255, 255, 255), (cx, cy - r * 2 // 3), max(3, r // 4))
     else:  # rainbow
         # Glowing rainbow arch
-        colors = [(239, 68, 68), (234, 179, 8), (34, 197, 94), (59, 130, 246), (168, 85, 247)]
+        colors = [(239, 68, 68), (245, 158, 11), (234, 179, 8), (34, 197, 94), (59, 130, 246), (168, 85, 247)]
         for idx, col in enumerate(colors):
-            rad = r - idx * 4
-            if rad > 4:
-                pygame.draw.arc(surface, col, pygame.Rect(cx - rad, cy - rad, rad * 2, rad * 2), 0, math.pi, 5)
+            rad = r - idx * max(2, r // 6)
+            if rad > 2:
+                pygame.draw.arc(surface, col, pygame.Rect(cx - rad, cy - rad, rad * 2, rad * 2), 0, math.pi, max(3, r // 5))
+        pygame.draw.circle(surface, (255, 255, 255), (cx - r * 2 // 3, cy), max(3, r // 4))
+        pygame.draw.circle(surface, (255, 255, 255), (cx + r * 2 // 3, cy), max(3, r // 4))
+        pygame.draw.circle(surface, dark, (cx - r * 2 // 3, cy), max(3, r // 4), 2)
+        pygame.draw.circle(surface, dark, (cx + r * 2 // 3, cy), max(3, r // 4), 2)
 
 
 def _is_safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
@@ -403,22 +436,41 @@ def main() -> int:
         pygame.draw.polygon(surf, (34, 197, 94), [(flag_x + 30, 294), (flag_x + 40, 294), (flag_x + 35, 285)])
 
         # 4. Bridge Slots & Placed Blocks
+        now = time.time()
         for s_idx in range(num_slots):
             sx = bridge_start_x + s_idx * slot_w
             slot_rect = pygame.Rect(sx + 6, bridge_y, slot_w - 12, 60)
             placed = slots[s_idx]
             req_type = required[s_idx]
 
-            # Slot Frame
-            pygame.draw.rect(surf, (255, 255, 255, 180), slot_rect, border_radius=14)
-            pygame.draw.rect(surf, (203, 213, 225), slot_rect, width=3, border_radius=14)
-
             if placed is not None:
-                # Draw placed block
-                _draw_block_icon(surf, placed, slot_rect.centerx, slot_rect.centery, 52)
+                # PLACED STATE: Solid bridge deck plank spanning the slot
+                pygame.draw.rect(surf, (255, 255, 255), slot_rect, border_radius=14)
+                pygame.draw.rect(surf, (34, 197, 94), slot_rect, width=4, border_radius=14)
+                # Bridge rail rope connecting across
+                pygame.draw.line(surf, (146, 64, 14), (slot_rect.left - 6, slot_rect.top + 8), (slot_rect.right + 6, slot_rect.top + 8), 4)
+                # Solid rich 3D block
+                _draw_block_icon(surf, placed, slot_rect.centerx, slot_rect.centery + 2, 54, ghost=False)
+                # Green Checkmark Badge in top-right
+                chk_x = slot_rect.right - 14
+                chk_y = slot_rect.top + 14
+                pygame.draw.circle(surf, (34, 197, 94), (chk_x, chk_y), 10)
+                pygame.draw.circle(surf, (255, 255, 255), (chk_x, chk_y), 10, 2)
+                pygame.draw.polygon(surf, (255, 255, 255), [(chk_x - 4, chk_y), (chk_x - 1, chk_y + 3), (chk_x + 4, chk_y - 3)], 2)
             else:
-                # Draw glowing requirement ghost cue
-                _draw_block_icon(surf, req_type, slot_rect.centerx, slot_rect.centery, 34)
+                # EMPTY GHOST HINT STATE: Blueprint dashed frame + translucent watermark silhouette + pulsing arrow
+                pygame.draw.rect(surf, (241, 245, 249, 180), slot_rect, border_radius=14)
+                pygame.draw.rect(surf, (148, 163, 184), slot_rect, width=2, border_radius=14)
+                # Ghost watermark cue
+                _draw_block_icon(surf, req_type, slot_rect.centerx, slot_rect.centery, 38, ghost=True)
+                # Pulsing hint arrow
+                arrow_bob = int(math.sin(now * 5.0 + s_idx) * 3.0)
+                arrow_y = slot_rect.top + 12 + arrow_bob
+                pygame.draw.polygon(surf, (234, 179, 8), [
+                    (slot_rect.centerx - 6, arrow_y - 4),
+                    (slot_rect.centerx + 6, arrow_y - 4),
+                    (slot_rect.centerx, arrow_y + 4),
+                ])
 
         # 5. Bunny Character
         bx, by = bunny_pos

@@ -194,7 +194,30 @@ def _draw_tool_icon(surface: pygame.Surface, tool_id: str, cx: int, cy: int, siz
         pygame.draw.circle(surface, (255, 255, 255), (cx + r // 4, cy - r // 3), 3)
 
 
-def _draw_patient(surface: pygame.Surface, patient_id: str, cx: int, cy: int, size: int, has_mud: bool, has_scratch: bool, is_happy: bool = False) -> None:
+def _draw_thought_bubble(surface: pygame.Surface, cx: int, cy: int, next_needed: str | None, now: float) -> None:
+    dark = (30, 41, 59)
+    white = (255, 255, 255)
+    pygame.draw.circle(surface, white, (cx - 45, cy + 50), 7)
+    pygame.draw.circle(surface, dark, (cx - 45, cy + 50), 7, 2)
+    pygame.draw.circle(surface, white, (cx - 30, cy + 34), 11)
+    pygame.draw.circle(surface, dark, (cx - 30, cy + 34), 11, 2)
+    pygame.draw.circle(surface, white, (cx - 14, cy + 18), 15)
+    pygame.draw.circle(surface, dark, (cx - 14, cy + 18), 15, 2)
+
+    bob = int(math.sin(now * 4.0) * 3.0)
+    bcy = cy + bob
+    for ox, oy, rad in [(-24, 0, 26), (24, 0, 26), (0, -16, 28), (0, 12, 24), (-14, -14, 22), (14, -14, 22)]:
+        pygame.draw.circle(surface, white, (cx + ox, bcy + oy), rad)
+        pygame.draw.circle(surface, dark, (cx + ox, bcy + oy), rad, 2)
+    for ox, oy, rad in [(-24, 0, 24), (24, 0, 24), (0, -16, 26), (0, 12, 22)]:
+        pygame.draw.circle(surface, white, (cx + ox, bcy + oy), rad)
+
+    if next_needed:
+        _draw_tool_icon(surface, next_needed, cx, bcy, 52)
+    else:
+        _draw_tool_icon(surface, "cuddle", cx, bcy, 48)
+
+def _draw_patient(surface: pygame.Surface, patient_id: str, cx: int, cy: int, size: int, has_mud: bool, has_scratch: bool, completed_steps: list[str] | None = None, is_happy: bool = False) -> None:
     # 1. Plush Examination Bed / Cushion
     bed_w = size * 7 // 4
     bed_h = size
@@ -326,17 +349,34 @@ def _draw_patient(surface: pygame.Surface, patient_id: str, cx: int, cy: int, si
         pygame.draw.circle(surface, (255, 255, 255), (cx - 27, head_y - 11), 3)
         pygame.draw.circle(surface, (255, 255, 255), (cx + 21, head_y - 11), 3)
 
-    # 3. Dynamic Mud Splatters
-    if has_mud:
+    steps = completed_steps or []
+    # 3. Dynamic Mud Splatters & Bath Bubbles
+    if has_mud and "bath" not in steps:
         for mx_off, my_off, m_rad in [(cx - 40, body_y - 10, 16), (cx + 35, body_y + 10, 20), (cx - 10, body_y + 20, 14), (cx + 45, head_y + 15, 12)]:
             pygame.draw.circle(surface, (120, 53, 15), (mx_off, my_off), m_rad)
             pygame.draw.circle(surface, (90, 40, 10), (mx_off - 2, my_off - 2), m_rad * 2 // 3)
+    elif "bath" in steps:
+        for bx_off, by_off, b_rad in [(cx - 30, head_y - 15, 12), (cx + 30, body_y - 15, 14), (cx - 15, body_y - 25, 10)]:
+            pygame.draw.circle(surface, (255, 255, 255), (bx_off, by_off), b_rad)
+            pygame.draw.circle(surface, (186, 230, 253), (bx_off, by_off), b_rad, 2)
 
     # 4. Boo-boo Scrapes / Band-aid target
     if has_scratch:
-        pygame.draw.rect(surface, (254, 202, 202), pygame.Rect(cx + 20, body_y - 25, 40, 26), border_radius=6)
-        pygame.draw.line(surface, (239, 68, 68), (cx + 25, body_y - 20), (cx + 55, body_y - 8), 4)
-        pygame.draw.line(surface, (239, 68, 68), (cx + 30, body_y - 8), (cx + 50, body_y - 20), 4)
+        if "bandaid" in steps:
+            _draw_tool_icon(surface, "bandaid", cx + 38, body_y - 12, 38)
+        else:
+            pygame.draw.rect(surface, (254, 202, 202), pygame.Rect(cx + 18, body_y - 25, 42, 26), border_radius=6)
+            pygame.draw.rect(surface, (244, 114, 182), pygame.Rect(cx + 18, body_y - 25, 42, 26), width=2, border_radius=6)
+            pygame.draw.line(surface, (239, 68, 68), (cx + 25, body_y - 20), (cx + 53, body_y - 8), 4)
+            pygame.draw.line(surface, (239, 68, 68), (cx + 28, body_y - 8), (cx + 50, body_y - 20), 4)
+
+    # 5. Food Bowl on examination bed
+    if "food" in steps:
+        _draw_tool_icon(surface, "food", cx - 75, body_y + 30, 42)
+
+    # 6. Stethoscope on patient
+    if "stethoscope" in steps:
+        _draw_tool_icon(surface, "stethoscope", cx - 35, body_y, 40)
 
 
 def _is_safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
@@ -530,7 +570,10 @@ def main() -> int:
         pygame.draw.ellipse(surf, (241, 245, 249), pygame.Rect(table_rect.left + 20, table_rect.top + 20, table_rect.width - 40, table_rect.height - 40))
 
         # 3. Patient Creature
-        _draw_patient(surf, cur_patient["id"], table_rect.centerx, table_rect.centery + 15, 180, has_mud, has_scratch, is_happy=(next_needed is None))
+        _draw_patient(surf, cur_patient["id"], table_rect.centerx, table_rect.centery + 15, 180, has_mud, has_scratch, completed_steps=completed_steps, is_happy=(next_needed is None))
+
+        # 3b. Thought Bubble showing the exact tool needed above puppy
+        _draw_thought_bubble(surf, table_rect.centerx + 130, table_rect.centery - 85, next_needed, time.time())
 
         # 4. Prescription Clipboard / Step Badges (Top Center)
         clip_w = max(260, len(required_steps) * 80 + 40)

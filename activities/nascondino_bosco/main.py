@@ -121,35 +121,44 @@ class WoodlandAudio:
 
 def _draw_animal_portrait(surface: pygame.Surface, animal_id: str, cx: int, cy: int, size: int) -> None:
     r = size // 2
+    dark = (30, 41, 59)
     if animal_id == "fox":
         pygame.draw.circle(surface, (249, 115, 22), (cx, cy), r)
+        pygame.draw.circle(surface, dark, (cx, cy), r, 2)
         pygame.draw.polygon(surface, (249, 115, 22), [(cx - r, cy - r // 3), (cx - r * 3 // 4, cy - r), (cx - r // 4, cy - r // 2)])
+        pygame.draw.polygon(surface, dark, [(cx - r, cy - r // 3), (cx - r * 3 // 4, cy - r), (cx - r // 4, cy - r // 2)], 2)
         pygame.draw.polygon(surface, (249, 115, 22), [(cx + r, cy - r // 3), (cx + r * 3 // 4, cy - r), (cx + r // 4, cy - r // 2)])
+        pygame.draw.polygon(surface, dark, [(cx + r, cy - r // 3), (cx + r * 3 // 4, cy - r), (cx + r // 4, cy - r // 2)], 2)
         pygame.draw.circle(surface, (255, 237, 213), (cx - r // 3, cy + r // 4), r // 3)
         pygame.draw.circle(surface, (255, 237, 213), (cx + r // 3, cy + r // 4), r // 3)
-        pygame.draw.circle(surface, (20, 20, 30), (cx - r // 3, cy - r // 6), max(2, r // 6))
-        pygame.draw.circle(surface, (20, 20, 30), (cx + r // 3, cy - r // 6), max(2, r // 6))
-        pygame.draw.circle(surface, (20, 20, 30), (cx, cy + r // 5), max(2, r // 7))
+        pygame.draw.circle(surface, dark, (cx - r // 3, cy - r // 6), max(2, r // 6))
+        pygame.draw.circle(surface, dark, (cx + r // 3, cy - r // 6), max(2, r // 6))
+        pygame.draw.circle(surface, dark, (cx, cy + r // 5), max(2, r // 7))
 
     elif animal_id == "bunny":
-        pygame.draw.circle(surface, (255, 255, 255), (cx, cy + r // 4), r * 3 // 4)
         pygame.draw.ellipse(surface, (255, 255, 255), pygame.Rect(cx - r // 2, cy - r, r // 3, r))
+        pygame.draw.ellipse(surface, dark, pygame.Rect(cx - r // 2, cy - r, r // 3, r), 2)
         pygame.draw.ellipse(surface, (244, 114, 182), pygame.Rect(cx - r // 2 + 2, cy - r + 4, r // 3 - 4, r - 8))
         pygame.draw.ellipse(surface, (255, 255, 255), pygame.Rect(cx + r // 6, cy - r, r // 3, r))
+        pygame.draw.ellipse(surface, dark, pygame.Rect(cx + r // 6, cy - r, r // 3, r), 2)
         pygame.draw.ellipse(surface, (244, 114, 182), pygame.Rect(cx + r // 6 + 2, cy - r + 4, r // 3 - 4, r - 8))
-        pygame.draw.circle(surface, (20, 20, 30), (cx - r // 4, cy + r // 6), max(2, r // 7))
-        pygame.draw.circle(surface, (20, 20, 30), (cx + r // 4, cy + r // 6), max(2, r // 7))
+        pygame.draw.circle(surface, (255, 255, 255), (cx, cy + r // 4), r * 3 // 4)
+        pygame.draw.circle(surface, dark, (cx, cy + r // 4), r * 3 // 4, 2)
+        pygame.draw.circle(surface, dark, (cx - r // 4, cy + r // 6), max(2, r // 7))
+        pygame.draw.circle(surface, dark, (cx + r // 4, cy + r // 6), max(2, r // 7))
         pygame.draw.circle(surface, (244, 114, 182), (cx, cy + r // 3), max(2, r // 8))
 
     elif animal_id == "owl":
         pygame.draw.circle(surface, (161, 98, 7), (cx, cy), r)
-        # Giant glowing eyes
+        pygame.draw.circle(surface, dark, (cx, cy), r, 2)
         pygame.draw.circle(surface, (254, 240, 138), (cx - r // 3, cy - r // 6), r // 3)
         pygame.draw.circle(surface, (254, 240, 138), (cx + r // 3, cy - r // 6), r // 3)
-        pygame.draw.circle(surface, (20, 20, 30), (cx - r // 3, cy - r // 6), r // 6)
-        pygame.draw.circle(surface, (20, 20, 30), (cx + r // 3, cy - r // 6), r // 6)
-        # Beak
+        pygame.draw.circle(surface, dark, (cx - r // 3, cy - r // 6), r // 3, 2)
+        pygame.draw.circle(surface, dark, (cx + r // 3, cy - r // 6), r // 3, 2)
+        pygame.draw.circle(surface, dark, (cx - r // 3, cy - r // 6), r // 6)
+        pygame.draw.circle(surface, dark, (cx + r // 3, cy - r // 6), r // 6)
         pygame.draw.polygon(surface, (249, 115, 22), [(cx - 4, cy), (cx + 4, cy), (cx, cy + r // 3)])
+        pygame.draw.polygon(surface, dark, [(cx - 4, cy), (cx + 4, cy), (cx, cy + r // 3)], 1)
 
     elif animal_id == "frog":
         pygame.draw.circle(surface, (34, 197, 94), (cx, cy), r)
@@ -157,23 +166,26 @@ def _draw_animal_portrait(surface: pygame.Surface, animal_id: str, cx: int, cy: 
         pygame.draw.circle(surface, (34, 197, 94), (cx + r // 2, cy - r // 2), r // 3)
         pygame.draw.circle(surface, (255, 255, 255), (cx - r // 2, cy - r // 2), r // 5)
         pygame.draw.circle(surface, (255, 255, 255), (cx + r // 2, cy - r // 2), r // 5)
-        pygame.draw.circle(surface, (20, 20, 30), (cx - r // 2, cy - r // 2), r // 8)
-        pygame.draw.circle(surface, (20, 20, 30), (cx + r // 2, cy - r // 2), r // 8)
-        pygame.draw.arc(surface, (20, 20, 30), pygame.Rect(cx - r // 2, cy - r // 4, r, r // 2), 3.4, 6.0, 3)
+        pygame.draw.circle(surface, dark, (cx - r // 2, cy - r // 2), r // 8)
+        pygame.draw.circle(surface, dark, (cx + r // 2, cy - r // 2), r // 8)
+        pygame.draw.circle(surface, dark, (cx, cy), r, 2)
+        pygame.draw.arc(surface, dark, pygame.Rect(cx - r // 2, cy - r // 4, r, r // 2), 3.4, 6.0, 3)
 
     elif animal_id == "squirrel":
         pygame.draw.circle(surface, (217, 119, 6), (cx, cy), r)
+        pygame.draw.circle(surface, dark, (cx, cy), r, 2)
         pygame.draw.circle(surface, (254, 215, 170), (cx - r // 3, cy + r // 4), r // 3)
         pygame.draw.circle(surface, (254, 215, 170), (cx + r // 3, cy + r // 4), r // 3)
-        pygame.draw.circle(surface, (20, 20, 30), (cx - r // 4, cy - r // 6), max(2, r // 7))
-        pygame.draw.circle(surface, (20, 20, 30), (cx + r // 4, cy - r // 6), max(2, r // 7))
-        pygame.draw.circle(surface, (20, 20, 30), (cx, cy + r // 5), max(2, r // 8))
+        pygame.draw.circle(surface, dark, (cx - r // 4, cy - r // 6), max(2, r // 7))
+        pygame.draw.circle(surface, dark, (cx + r // 4, cy - r // 6), max(2, r // 7))
+        pygame.draw.circle(surface, dark, (cx, cy + r // 5), max(2, r // 8))
 
     else:  # hedgehog
         pygame.draw.circle(surface, (120, 53, 15), (cx, cy), r)
+        pygame.draw.circle(surface, dark, (cx, cy), r, 2)
         pygame.draw.circle(surface, (254, 243, 199), (cx - r // 4, cy + r // 6), r // 2)
-        pygame.draw.circle(surface, (20, 20, 30), (cx - r // 3, cy), max(2, r // 7))
-        pygame.draw.circle(surface, (20, 20, 30), (cx - r * 2 // 3, cy + r // 6), max(2, r // 6))
+        pygame.draw.circle(surface, dark, (cx - r // 3, cy), max(2, r // 7))
+        pygame.draw.circle(surface, dark, (cx - r * 2 // 3, cy + r // 6), max(2, r // 6))
 
 
 def _is_safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:

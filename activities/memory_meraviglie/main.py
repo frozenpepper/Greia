@@ -43,13 +43,24 @@ THEMES = [
         "name_en": "🐾 Animals",
         "bg": (240, 249, 255),
         "card_back": (59, 130, 246),
+        "back_accent": (254, 240, 138),
         "items": [
-            {"id": "lion", "emoji": "🦁", "color": (245, 158, 11), "label_it": "Leoncino", "label_en": "Lion"},
-            {"id": "panda", "emoji": "🐼", "color": (100, 116, 139), "label_it": "Pandino", "label_en": "Panda"},
-            {"id": "fox", "emoji": "🦊", "color": (249, 115, 22), "label_it": "Volpe", "label_en": "Fox"},
-            {"id": "unicorn", "emoji": "🦄", "color": (236, 72, 153), "label_it": "Unicorno", "label_en": "Unicorn"},
-            {"id": "cat", "emoji": "🐱", "color": (234, 179, 8), "label_it": "Gattino", "label_en": "Kitty"},
-            {"id": "frog", "emoji": "🐸", "color": (34, 197, 94), "label_it": "Ranocchia", "label_en": "Frog"},
+            {"id": "lion", "color": (251, 191, 36), "label_it": "Leone", "label_en": "Lion"},
+            {"id": "panda", "color": (226, 232, 240), "label_it": "Panda", "label_en": "Panda"},
+            {"id": "fox", "color": (249, 115, 22), "label_it": "Volpe", "label_en": "Fox"},
+            {"id": "cat", "color": (253, 186, 116), "label_it": "Gatto", "label_en": "Cat"},
+            {"id": "dog", "color": (217, 119, 6), "label_it": "Cane", "label_en": "Dog"},
+            {"id": "bunny", "color": (251, 207, 232), "label_it": "Coniglio", "label_en": "Bunny"},
+            {"id": "frog", "color": (74, 222, 128), "label_it": "Rana", "label_en": "Frog"},
+            {"id": "bear", "color": (180, 83, 9), "label_it": "Orso", "label_en": "Bear"},
+            {"id": "pig", "color": (244, 114, 182), "label_it": "Maialino", "label_en": "Pig"},
+            {"id": "monkey", "color": (161, 98, 7), "label_it": "Scimmia", "label_en": "Monkey"},
+            {"id": "owl", "color": (147, 51, 234), "label_it": "Gufo", "label_en": "Owl"},
+            {"id": "penguin", "color": (51, 65, 85), "label_it": "Pinguino", "label_en": "Penguin"},
+            {"id": "elephant", "color": (148, 163, 184), "label_it": "Elefante", "label_en": "Elephant"},
+            {"id": "unicorn", "color": (236, 72, 153), "label_it": "Unicorno", "label_en": "Unicorn"},
+            {"id": "butterfly", "color": (168, 85, 247), "label_it": "Farfalla", "label_en": "Butterfly"},
+            {"id": "fish", "color": (14, 165, 233), "label_it": "Pesciolino", "label_en": "Fish"},
         ],
     },
     {
@@ -58,13 +69,24 @@ THEMES = [
         "name_en": "🍭 Sweets",
         "bg": (253, 242, 248),
         "card_back": (236, 72, 153),
+        "back_accent": (254, 240, 138),
         "items": [
-            {"id": "cupcake", "emoji": "🧁", "color": (244, 114, 182), "label_it": "Cupcake", "label_en": "Cupcake"},
-            {"id": "icecream", "emoji": "🍦", "color": (251, 146, 60), "label_it": "Gelato", "label_en": "Ice Cream"},
-            {"id": "donut", "emoji": "🍩", "color": (217, 119, 6), "label_it": "Ciambella", "label_en": "Donut"},
-            {"id": "strawberry", "emoji": "🍓", "color": (239, 68, 68), "label_it": "Fragola", "label_en": "Strawberry"},
-            {"id": "cookie", "emoji": "🍪", "color": (180, 83, 9), "label_it": "Biscotto", "label_en": "Cookie"},
-            {"id": "candy", "emoji": "🍬", "color": (168, 85, 247), "label_it": "Caramella", "label_en": "Candy"},
+            {"id": "cupcake", "color": (244, 114, 182), "label_it": "Cupcake", "label_en": "Cupcake"},
+            {"id": "icecream", "color": (251, 146, 60), "label_it": "Gelato", "label_en": "Ice Cream"},
+            {"id": "donut", "color": (217, 119, 6), "label_it": "Ciambella", "label_en": "Donut"},
+            {"id": "strawberry", "color": (239, 68, 68), "label_it": "Fragola", "label_en": "Strawberry"},
+            {"id": "cookie", "color": (180, 83, 9), "label_it": "Biscotto", "label_en": "Cookie"},
+            {"id": "candy", "color": (168, 85, 247), "label_it": "Caramella", "label_en": "Candy"},
+            {"id": "lollipop", "color": (234, 179, 8), "label_it": "Lecca-lecca", "label_en": "Lollipop"},
+            {"id": "cake", "color": (244, 63, 94), "label_it": "Torta", "label_en": "Cake"},
+            {"id": "watermelon", "color": (34, 197, 94), "label_it": "Anguria", "label_en": "Watermelon"},
+            {"id": "apple", "color": (220, 38, 38), "label_it": "Mela", "label_en": "Apple"},
+            {"id": "banana", "color": (234, 179, 8), "label_it": "Banana", "label_en": "Banana"},
+            {"id": "chocolate", "color": (120, 53, 15), "label_it": "Cioccolato", "label_en": "Chocolate"},
+            {"id": "cherry", "color": (225, 29, 72), "label_it": "Ciliegia", "label_en": "Cherry"},
+            {"id": "popsicle", "color": (14, 165, 233), "label_it": "Ghiacciolo", "label_en": "Popsicle"},
+            {"id": "muffin", "color": (202, 138, 4), "label_it": "Muffin", "label_en": "Muffin"},
+            {"id": "honey", "color": (245, 158, 11), "label_it": "Miele", "label_en": "Honey"},
         ],
     },
     {
@@ -73,13 +95,24 @@ THEMES = [
         "name_en": "🚀 Vehicles",
         "bg": (238, 242, 255),
         "card_back": (99, 102, 241),
+        "back_accent": (254, 240, 138),
         "items": [
-            {"id": "rocket", "emoji": "🚀", "color": (239, 68, 68), "label_it": "Razzo", "label_en": "Rocket"},
-            {"id": "train", "emoji": "🚂", "color": (59, 130, 246), "label_it": "Treno", "label_en": "Train"},
-            {"id": "boat", "emoji": "⛵", "color": (14, 165, 233), "label_it": "Barca", "label_en": "Boat"},
-            {"id": "helicopter", "emoji": "🚁", "color": (245, 158, 11), "label_it": "Elicottero", "label_en": "Helicopter"},
-            {"id": "car", "emoji": "🚗", "color": (220, 38, 38), "label_it": "Auto", "label_en": "Car"},
-            {"id": "plane", "emoji": "✈️", "color": (16, 185, 129), "label_it": "Aereo", "label_en": "Plane"},
+            {"id": "rocket", "color": (239, 68, 68), "label_it": "Razzo", "label_en": "Rocket"},
+            {"id": "train", "color": (59, 130, 246), "label_it": "Treno", "label_en": "Train"},
+            {"id": "boat", "color": (14, 165, 233), "label_it": "Barca", "label_en": "Boat"},
+            {"id": "car", "color": (220, 38, 38), "label_it": "Auto", "label_en": "Car"},
+            {"id": "helicopter", "color": (245, 158, 11), "label_it": "Elicottero", "label_en": "Helicopter"},
+            {"id": "plane", "color": (16, 185, 129), "label_it": "Aereo", "label_en": "Plane"},
+            {"id": "tractor", "color": (34, 197, 94), "label_it": "Trattore", "label_en": "Tractor"},
+            {"id": "submarine", "color": (234, 179, 8), "label_it": "Sottomarino", "label_en": "Submarine"},
+            {"id": "fire_truck", "color": (220, 38, 38), "label_it": "Pompieri", "label_en": "Fire Truck"},
+            {"id": "police_car", "color": (37, 99, 235), "label_it": "Polizia", "label_en": "Police"},
+            {"id": "bus", "color": (245, 158, 11), "label_it": "Bus", "label_en": "Bus"},
+            {"id": "bicycle", "color": (168, 85, 247), "label_it": "Bici", "label_en": "Bicycle"},
+            {"id": "balloon", "color": (236, 72, 153), "label_it": "Mongolfiera", "label_en": "Balloon"},
+            {"id": "scooter", "color": (13, 148, 136), "label_it": "Scooter", "label_en": "Scooter"},
+            {"id": "ufo", "color": (99, 102, 241), "label_it": "UFO", "label_en": "UFO"},
+            {"id": "truck", "color": (234, 88, 12), "label_it": "Camion", "label_en": "Truck"},
         ],
     },
     {
@@ -88,21 +121,32 @@ THEMES = [
         "name_en": "🌸 Nature",
         "bg": (240, 253, 244),
         "card_back": (34, 197, 94),
+        "back_accent": (254, 240, 138),
         "items": [
-            {"id": "sunflower", "emoji": "🌻", "color": (234, 179, 8), "label_it": "Girasole", "label_en": "Sunflower"},
-            {"id": "mushroom", "emoji": "🍄", "color": (239, 68, 68), "label_it": "Fungo", "label_en": "Mushroom"},
-            {"id": "rainbow", "emoji": "🌈", "color": (168, 85, 247), "label_it": "Arcobaleno", "label_en": "Rainbow"},
-            {"id": "star", "emoji": "⭐", "color": (254, 202, 87), "label_it": "Stella", "label_en": "Star"},
-            {"id": "clover", "emoji": "🍀", "color": (16, 185, 129), "label_it": "Quadrifoglio", "label_en": "Clover"},
-            {"id": "moon", "emoji": "🌙", "color": (253, 224, 71), "label_it": "Luna", "label_en": "Moon"},
+            {"id": "sunflower", "color": (234, 179, 8), "label_it": "Girasole", "label_en": "Sunflower"},
+            {"id": "mushroom", "color": (239, 68, 68), "label_it": "Fungo", "label_en": "Mushroom"},
+            {"id": "rainbow", "color": (168, 85, 247), "label_it": "Arcobaleno", "label_en": "Rainbow"},
+            {"id": "star", "color": (254, 202, 87), "label_it": "Stella", "label_en": "Star"},
+            {"id": "sun", "color": (245, 158, 11), "label_it": "Sole", "label_en": "Sun"},
+            {"id": "moon", "color": (253, 224, 71), "label_it": "Luna", "label_en": "Moon"},
+            {"id": "flower", "color": (244, 114, 182), "label_it": "Fiore", "label_en": "Flower"},
+            {"id": "clover", "color": (16, 185, 129), "label_it": "Quadrifoglio", "label_en": "Clover"},
+            {"id": "tree", "color": (22, 163, 74), "label_it": "Albero", "label_en": "Tree"},
+            {"id": "cloud", "color": (56, 189, 248), "label_it": "Nuvola", "label_en": "Cloud"},
+            {"id": "leaf", "color": (249, 115, 22), "label_it": "Foglia", "label_en": "Leaf"},
+            {"id": "mountain", "color": (100, 116, 139), "label_it": "Montagna", "label_en": "Mountain"},
+            {"id": "snowflake", "color": (14, 165, 233), "label_it": "Neve", "label_en": "Snowflake"},
+            {"id": "planet", "color": (99, 102, 241), "label_it": "Pianeta", "label_en": "Planet"},
+            {"id": "shell", "color": (251, 146, 60), "label_it": "Conchiglia", "label_en": "Shell"},
+            {"id": "acorn", "color": (180, 83, 9), "label_it": "Ghianda", "label_en": "Acorn"},
         ],
     },
 ]
 
 GRID_CONFIGS = [
-    {"id": "small", "label": "2x2 (4)", "cols": 2, "rows": 2, "pairs": 2},
-    {"id": "medium", "label": "3x2 (6)", "cols": 3, "rows": 2, "pairs": 3},
-    {"id": "large", "label": "4x3 (12)", "cols": 4, "rows": 3, "pairs": 6},
+    {"id": "small", "label_key": "grid.small", "label": "2x2", "cols": 2, "rows": 2, "pairs": 2},
+    {"id": "medium", "label_key": "grid.medium", "label": "3x2", "cols": 3, "rows": 2, "pairs": 3},
+    {"id": "large", "label_key": "grid.large", "label": "4x3", "cols": 4, "rows": 3, "pairs": 6},
 ]
 
 
@@ -132,7 +176,6 @@ class MemoryAudio:
 
     def _init_sounds(self) -> None:
         rate = 22050
-        # Flip sound (card snap)
         flip_samples = []
         for i in range(int(rate * 0.05)):
             t = i / rate
@@ -141,7 +184,6 @@ class MemoryAudio:
             flip_samples.append(int(32767.0 * 0.25 * env * val))
         self._sounds["flip"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(flip_samples)))
 
-        # Match chime (harmonic chord)
         match_samples = []
         for i in range(int(rate * 0.25)):
             t = i / rate
@@ -150,7 +192,6 @@ class MemoryAudio:
             match_samples.append(int(32767.0 * 0.30 * env * val))
         self._sounds["match"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(match_samples)))
 
-        # Mismatch tap
         mismatch_samples = []
         for i in range(int(rate * 0.08)):
             t = i / rate
@@ -159,7 +200,6 @@ class MemoryAudio:
             mismatch_samples.append(int(32767.0 * 0.20 * env * val))
         self._sounds["mismatch"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(mismatch_samples)))
 
-        # Win chime
         win_samples = []
         for i in range(int(rate * 0.45)):
             t = i / rate
@@ -176,6 +216,228 @@ class MemoryAudio:
                 snd.play()
             except Exception:
                 pass
+
+
+def _draw_card_illustration(surface: pygame.Surface, item_id: str, cx: int, cy: int, size: int) -> None:
+    r = size // 2
+    dark = (30, 41, 59)
+    white = (255, 255, 255)
+
+    if item_id == "lion":
+        pygame.draw.circle(surface, (217, 119, 6), (cx, cy), r)
+        pygame.draw.circle(surface, (251, 191, 36), (cx, cy), r * 3 // 4)
+        pygame.draw.circle(surface, (217, 119, 6), (cx - r * 3 // 5, cy - r * 3 // 5), r // 4)
+        pygame.draw.circle(surface, (217, 119, 6), (cx + r * 3 // 5, cy - r * 3 // 5), r // 4)
+        pygame.draw.circle(surface, dark, (cx - r // 4, cy - r // 8), max(2, r // 8))
+        pygame.draw.circle(surface, dark, (cx + r // 4, cy - r // 8), max(2, r // 8))
+        pygame.draw.polygon(surface, (180, 83, 9), [(cx - r // 6, cy + r // 8), (cx + r // 6, cy + r // 8), (cx, cy + r // 4)])
+        pygame.draw.circle(surface, dark, (cx, cy), r, 2)
+
+    elif item_id == "panda":
+        pygame.draw.circle(surface, dark, (cx - r * 3 // 5, cy - r * 3 // 5), r // 3)
+        pygame.draw.circle(surface, dark, (cx + r * 3 // 5, cy - r * 3 // 5), r // 3)
+        pygame.draw.circle(surface, white, (cx, cy), r * 4 // 5)
+        pygame.draw.circle(surface, dark, (cx, cy), r * 4 // 5, 2)
+        pygame.draw.ellipse(surface, dark, pygame.Rect(cx - r // 2, cy - r // 3, r // 3, r // 2))
+        pygame.draw.ellipse(surface, dark, pygame.Rect(cx + r // 6, cy - r // 3, r // 3, r // 2))
+        pygame.draw.circle(surface, white, (cx - r // 3, cy - r // 6), max(2, r // 10))
+        pygame.draw.circle(surface, white, (cx + r // 3, cy - r // 6), max(2, r // 10))
+        pygame.draw.circle(surface, dark, (cx, cy + r // 5), max(2, r // 8))
+
+    elif item_id == "cat":
+        pygame.draw.polygon(surface, (249, 115, 22), [(cx - r * 3 // 4, cy - r // 4), (cx - r * 3 // 4, cy - r * 4 // 5), (cx - r // 4, cy - r // 2)])
+        pygame.draw.polygon(surface, (249, 115, 22), [(cx + r * 3 // 4, cy - r // 4), (cx + r * 3 // 4, cy - r * 4 // 5), (cx + r // 4, cy - r // 2)])
+        pygame.draw.circle(surface, (253, 186, 116), (cx, cy), r * 3 // 4)
+        pygame.draw.circle(surface, dark, (cx, cy), r * 3 // 4, 2)
+        pygame.draw.circle(surface, (16, 185, 129), (cx - r // 4, cy - r // 8), max(2, r // 7))
+        pygame.draw.circle(surface, (16, 185, 129), (cx + r // 4, cy - r // 8), max(2, r // 7))
+        pygame.draw.circle(surface, dark, (cx - r // 4, cy - r // 8), max(1, r // 12))
+        pygame.draw.circle(surface, dark, (cx + r // 4, cy - r // 8), max(1, r // 12))
+        pygame.draw.polygon(surface, (244, 114, 182), [(cx - r // 8, cy + r // 8), (cx + r // 8, cy + r // 8), (cx, cy + r // 4)])
+
+    elif item_id == "dog":
+        pygame.draw.ellipse(surface, (180, 83, 9), pygame.Rect(cx - r * 9 // 10, cy - r // 2, r // 2, r * 9 // 10))
+        pygame.draw.ellipse(surface, (180, 83, 9), pygame.Rect(cx + r * 2 // 5, cy - r // 2, r // 2, r * 9 // 10))
+        pygame.draw.circle(surface, (217, 119, 6), (cx, cy), r * 3 // 4)
+        pygame.draw.circle(surface, dark, (cx, cy), r * 3 // 4, 2)
+        pygame.draw.ellipse(surface, (254, 243, 199), pygame.Rect(cx - r // 3, cy, r * 2 // 3, r // 2))
+        pygame.draw.circle(surface, dark, (cx - r // 4, cy - r // 8), max(2, r // 8))
+        pygame.draw.circle(surface, dark, (cx + r // 4, cy - r // 8), max(2, r // 8))
+        pygame.draw.circle(surface, dark, (cx, cy + r // 6), max(2, r // 7))
+
+    elif item_id == "bunny":
+        pygame.draw.ellipse(surface, white, pygame.Rect(cx - r // 2, cy - r * 9 // 10, r // 3, r * 4 // 5))
+        pygame.draw.ellipse(surface, (244, 114, 182), pygame.Rect(cx - r * 2 // 5, cy - r * 4 // 5, r // 6, r * 3 // 5))
+        pygame.draw.ellipse(surface, white, pygame.Rect(cx + r // 6, cy - r * 9 // 10, r // 3, r * 4 // 5))
+        pygame.draw.ellipse(surface, (244, 114, 182), pygame.Rect(cx + r // 4, cy - r * 4 // 5, r // 6, r * 3 // 5))
+        pygame.draw.circle(surface, white, (cx, cy + r // 6), r * 3 // 5)
+        pygame.draw.circle(surface, dark, (cx, cy + r // 6), r * 3 // 5, 2)
+        pygame.draw.circle(surface, dark, (cx - r // 5, cy + r // 12), max(2, r // 9))
+        pygame.draw.circle(surface, dark, (cx + r // 5, cy + r // 12), max(2, r // 9))
+        pygame.draw.circle(surface, (244, 114, 182), (cx, cy + r // 4), max(2, r // 8))
+
+    elif item_id == "frog":
+        pygame.draw.circle(surface, (74, 222, 128), (cx - r // 2, cy - r // 3), r // 3)
+        pygame.draw.circle(surface, (74, 222, 128), (cx + r // 2, cy - r // 3), r // 3)
+        pygame.draw.circle(surface, white, (cx - r // 2, cy - r // 3), r // 5)
+        pygame.draw.circle(surface, white, (cx + r // 2, cy - r // 3), r // 5)
+        pygame.draw.circle(surface, dark, (cx - r // 2, cy - r // 3), r // 9)
+        pygame.draw.circle(surface, dark, (cx + r // 2, cy - r // 3), r // 9)
+        pygame.draw.ellipse(surface, (74, 222, 128), pygame.Rect(cx - r * 3 // 4, cy - r // 4, r * 3 // 2, r * 4 // 5))
+        pygame.draw.circle(surface, dark, (cx, cy + r // 6), r * 3 // 4, 2)
+        pygame.draw.arc(surface, dark, pygame.Rect(cx - r // 3, cy, r * 2 // 3, r // 3), 3.4, 6.0, 3)
+
+    elif item_id == "cupcake":
+        pygame.draw.polygon(surface, (251, 146, 60), [(cx - r // 2, cy), (cx + r // 2, cy), (cx + r // 3, cy + r * 3 // 4), (cx - r // 3, cy + r * 3 // 4)])
+        pygame.draw.polygon(surface, dark, [(cx - r // 2, cy), (cx + r // 2, cy), (cx + r // 3, cy + r * 3 // 4), (cx - r // 3, cy + r * 3 // 4)], 2)
+        pygame.draw.circle(surface, (244, 114, 182), (cx, cy - r // 5), r // 2)
+        pygame.draw.circle(surface, (244, 114, 182), (cx - r // 3, cy), r // 3)
+        pygame.draw.circle(surface, (244, 114, 182), (cx + r // 3, cy), r // 3)
+        pygame.draw.circle(surface, (239, 68, 68), (cx, cy - r // 2), max(3, r // 5))
+        pygame.draw.circle(surface, dark, (cx, cy - r // 2), max(3, r // 5), 2)
+
+    elif item_id == "icecream":
+        pygame.draw.polygon(surface, (217, 119, 6), [(cx - r // 3, cy), (cx + r // 3, cy), (cx, cy + r * 4 // 5)])
+        pygame.draw.polygon(surface, dark, [(cx - r // 3, cy), (cx + r // 3, cy), (cx, cy + r * 4 // 5)], 2)
+        pygame.draw.circle(surface, (251, 146, 60), (cx, cy - r // 8), r * 2 // 5)
+        pygame.draw.circle(surface, (244, 114, 182), (cx, cy - r // 2), r // 3)
+        pygame.draw.circle(surface, dark, (cx, cy - r // 8), r * 2 // 5, 2)
+        pygame.draw.circle(surface, dark, (cx, cy - r // 2), r // 3, 2)
+
+    elif item_id == "donut":
+        pygame.draw.circle(surface, (217, 119, 6), (cx, cy), r * 4 // 5)
+        pygame.draw.circle(surface, (244, 114, 182), (cx, cy), r * 3 // 4)
+        pygame.draw.circle(surface, white, (cx, cy), r // 3)
+        pygame.draw.circle(surface, dark, (cx, cy), r * 4 // 5, 2)
+        pygame.draw.circle(surface, dark, (cx, cy), r // 3, 2)
+        for dx, dy, col in [(-r // 3, -r // 3, (234, 179, 8)), (r // 3, -r // 3, (56, 189, 248)), (0, r // 2, (34, 197, 94))]:
+            pygame.draw.circle(surface, col, (cx + dx, cy + dy), max(2, r // 8))
+
+    elif item_id == "strawberry":
+        pygame.draw.polygon(surface, (239, 68, 68), [(cx - r * 3 // 5, cy - r // 3), (cx + r * 3 // 5, cy - r // 3), (cx, cy + r * 4 // 5)])
+        pygame.draw.circle(surface, (239, 68, 68), (cx - r // 4, cy - r // 3), r // 3)
+        pygame.draw.circle(surface, (239, 68, 68), (cx + r // 4, cy - r // 3), r // 3)
+        pygame.draw.polygon(surface, dark, [(cx - r * 3 // 5, cy - r // 3), (cx + r * 3 // 5, cy - r // 3), (cx, cy + r * 4 // 5)], 2)
+        pygame.draw.ellipse(surface, (34, 197, 94), pygame.Rect(cx - r // 2, cy - r * 3 // 4, r, r // 3))
+        for dx, dy in [(-r // 5, 0), (r // 5, 0), (0, r // 3)]:
+            pygame.draw.circle(surface, (254, 240, 138), (cx + dx, cy + dy), max(1, r // 10))
+
+    elif item_id == "cookie":
+        pygame.draw.circle(surface, (180, 83, 9), (cx, cy), r * 4 // 5)
+        pygame.draw.circle(surface, dark, (cx, cy), r * 4 // 5, 2)
+        for dx, dy in [(-r // 3, -r // 4), (r // 4, -r // 3), (0, 0), (-r // 4, r // 3), (r // 3, r // 4)]:
+            pygame.draw.circle(surface, (69, 26, 3), (cx + dx, cy + dy), max(2, r // 7))
+
+    elif item_id == "rocket":
+        pygame.draw.polygon(surface, (239, 68, 68), [(cx, cy - r * 4 // 5), (cx + r // 3, cy + r // 3), (cx - r // 3, cy + r // 3)])
+        pygame.draw.polygon(surface, (59, 130, 246), [(cx - r // 3, cy), (cx - r * 3 // 4, cy + r // 2), (cx - r // 3, cy + r // 2)])
+        pygame.draw.polygon(surface, (59, 130, 246), [(cx + r // 3, cy), (cx + r * 3 // 4, cy + r // 2), (cx + r // 3, cy + r // 2)])
+        pygame.draw.circle(surface, (56, 189, 248), (cx, cy - r // 6), r // 4)
+        pygame.draw.circle(surface, dark, (cx, cy - r // 6), r // 4, 2)
+        pygame.draw.polygon(surface, (245, 158, 11), [(cx - r // 4, cy + r // 3), (cx + r // 4, cy + r // 3), (cx, cy + r * 4 // 5)])
+
+    elif item_id == "car":
+        pygame.draw.rect(surface, (220, 38, 38), pygame.Rect(cx - r * 3 // 4, cy - r // 8, r * 3 // 2, r // 2), border_radius=6)
+        pygame.draw.ellipse(surface, (56, 189, 248), pygame.Rect(cx - r // 2, cy - r // 2, r, r // 2))
+        pygame.draw.circle(surface, dark, (cx - r // 2, cy + r * 3 // 8), r // 4)
+        pygame.draw.circle(surface, (148, 163, 184), (cx - r // 2, cy + r * 3 // 8), r // 8)
+        pygame.draw.circle(surface, dark, (cx + r // 2, cy + r * 3 // 8), r // 4)
+        pygame.draw.circle(surface, (148, 163, 184), (cx + r // 2, cy + r * 3 // 8), r // 8)
+        pygame.draw.rect(surface, dark, pygame.Rect(cx - r * 3 // 4, cy - r // 8, r * 3 // 2, r // 2), width=2, border_radius=6)
+
+    elif item_id == "train":
+        pygame.draw.rect(surface, (59, 130, 246), pygame.Rect(cx - r * 3 // 4, cy - r // 4, r * 3 // 2, r // 2), border_radius=4)
+        pygame.draw.rect(surface, (239, 68, 68), pygame.Rect(cx + r // 6, cy - r * 3 // 5, r * 2 // 5, r * 4 // 5), border_radius=4)
+        pygame.draw.rect(surface, dark, pygame.Rect(cx - r // 2, cy - r // 2, r // 4, r // 3))
+        pygame.draw.circle(surface, dark, (cx - r // 2, cy + r // 3), r // 4)
+        pygame.draw.circle(surface, dark, (cx, cy + r // 3), r // 4)
+        pygame.draw.circle(surface, dark, (cx + r // 2, cy + r // 3), r // 4)
+
+    elif item_id == "boat":
+        pygame.draw.polygon(surface, (180, 83, 9), [(cx - r * 3 // 4, cy + r // 8), (cx + r * 3 // 4, cy + r // 8), (cx + r // 2, cy + r // 2), (cx - r // 2, cy + r // 2)])
+        pygame.draw.polygon(surface, dark, [(cx - r * 3 // 4, cy + r // 8), (cx + r * 3 // 4, cy + r // 8), (cx + r // 2, cy + r // 2), (cx - r // 2, cy + r // 2)], 2)
+        pygame.draw.polygon(surface, white, [(cx, cy - r * 3 // 4), (cx + r // 2, cy), (cx, cy)])
+        pygame.draw.polygon(surface, (239, 68, 68), [(cx - r // 2, cy), (cx, cy - r // 2), (cx, cy)])
+
+    elif item_id == "sunflower":
+        for i in range(8):
+            ang = i * math.pi / 4
+            px = cx + int(math.cos(ang) * r * 3 // 5)
+            py = cy + int(math.sin(ang) * r * 3 // 5)
+            pygame.draw.circle(surface, (234, 179, 8), (px, py), r // 3)
+        pygame.draw.circle(surface, (120, 53, 15), (cx, cy), r // 2)
+        pygame.draw.circle(surface, dark, (cx, cy), r // 2, 2)
+
+    elif item_id == "mushroom":
+        pygame.draw.rect(surface, white, pygame.Rect(cx - r // 4, cy, r // 2, r * 3 // 5), border_radius=6)
+        pygame.draw.rect(surface, dark, pygame.Rect(cx - r // 4, cy, r // 2, r * 3 // 5), width=2, border_radius=6)
+        pygame.draw.ellipse(surface, (239, 68, 68), pygame.Rect(cx - r * 4 // 5, cy - r * 3 // 5, r * 8 // 5, r * 4 // 5))
+        pygame.draw.ellipse(surface, dark, pygame.Rect(cx - r * 4 // 5, cy - r * 3 // 5, r * 8 // 5, r * 4 // 5), 2)
+        pygame.draw.circle(surface, white, (cx - r // 3, cy - r // 5), max(2, r // 6))
+        pygame.draw.circle(surface, white, (cx + r // 3, cy - r // 5), max(2, r // 6))
+        pygame.draw.circle(surface, white, (cx, cy - r // 3), max(2, r // 5))
+
+    elif item_id == "rainbow":
+        colors = [(239, 68, 68), (245, 158, 11), (234, 179, 8), (34, 197, 94), (59, 130, 246), (168, 85, 247)]
+        for idx, col in enumerate(colors):
+            rad = r - idx * max(2, r // 8)
+            if rad > 2:
+                pygame.draw.arc(surface, col, pygame.Rect(cx - rad, cy - rad + r // 3, rad * 2, rad * 2), 0.0, math.pi, max(2, r // 8))
+        pygame.draw.circle(surface, white, (cx - r * 2 // 3, cy + r // 3), r // 4)
+        pygame.draw.circle(surface, white, (cx + r * 2 // 3, cy + r // 3), r // 4)
+
+    elif item_id == "star":
+        pts = []
+        for i in range(10):
+            ang = i * math.pi / 5 - math.pi / 2
+            rad = r * 4 // 5 if i % 2 == 0 else r * 2 // 5
+            pts.append((cx + int(math.cos(ang) * rad), cy + int(math.sin(ang) * rad)))
+        pygame.draw.polygon(surface, (254, 202, 87), pts)
+        pygame.draw.polygon(surface, (180, 83, 9), pts, 2)
+        pygame.draw.circle(surface, white, (cx - r // 5, cy - r // 5), max(2, r // 8))
+
+    elif item_id == "sun":
+        for i in range(8):
+            ang = i * math.pi / 4
+            p1 = (cx + int(math.cos(ang) * r * 3 // 5), cy + int(math.sin(ang) * r * 3 // 5))
+            p2 = (cx + int(math.cos(ang) * r * 9 // 10), cy + int(math.sin(ang) * r * 9 // 10))
+            pygame.draw.line(surface, (245, 158, 11), p1, p2, max(2, r // 7))
+        pygame.draw.circle(surface, (234, 179, 8), (cx, cy), r // 2)
+        pygame.draw.circle(surface, (180, 83, 9), (cx, cy), r // 2, 2)
+        pygame.draw.circle(surface, dark, (cx - r // 6, cy - r // 10), max(1, r // 12))
+        pygame.draw.circle(surface, dark, (cx + r // 6, cy - r // 10), max(1, r // 12))
+        pygame.draw.arc(surface, dark, pygame.Rect(cx - r // 5, cy - r // 10, r * 2 // 5, r // 3), 3.4, 6.0, 2)
+
+    elif item_id == "moon":
+        pygame.draw.circle(surface, (253, 224, 71), (cx, cy), r * 3 // 4)
+        pygame.draw.circle(surface, white, (cx + r // 3, cy - r // 4), r * 3 // 5)
+        pygame.draw.circle(surface, (202, 138, 4), (cx, cy), r * 3 // 4, 2)
+
+    elif item_id == "tree":
+        pygame.draw.rect(surface, (120, 53, 15), pygame.Rect(cx - r // 6, cy, r // 3, r * 3 // 4))
+        pygame.draw.circle(surface, (34, 197, 94), (cx, cy - r // 3), r // 2)
+        pygame.draw.circle(surface, (22, 163, 74), (cx - r // 3, cy - r // 8), r * 2 // 5)
+        pygame.draw.circle(surface, (22, 163, 74), (cx + r // 3, cy - r // 8), r * 2 // 5)
+        pygame.draw.circle(surface, (20, 83, 45), (cx, cy - r // 4), r * 3 // 5, 2)
+
+    elif item_id == "butterfly":
+        pygame.draw.circle(surface, (236, 72, 153), (cx - r // 2, cy - r // 3), r // 3)
+        pygame.draw.circle(surface, (236, 72, 153), (cx + r // 2, cy - r // 3), r // 3)
+        pygame.draw.circle(surface, (168, 85, 247), (cx - r // 3, cy + r // 4), r // 4)
+        pygame.draw.circle(surface, (168, 85, 247), (cx + r // 3, cy + r // 4), r // 4)
+        pygame.draw.ellipse(surface, dark, pygame.Rect(cx - r // 8, cy - r // 2, r // 4, r))
+
+    elif item_id == "fish":
+        pygame.draw.ellipse(surface, (249, 115, 22), pygame.Rect(cx - r * 3 // 5, cy - r // 3, r * 6 // 5, r * 2 // 3))
+        pygame.draw.polygon(surface, (249, 115, 22), [(cx + r // 3, cy), (cx + r * 4 // 5, cy - r // 3), (cx + r * 4 // 5, cy + r // 3)])
+        pygame.draw.circle(surface, white, (cx - r // 3, cy - r // 10), max(2, r // 7))
+        pygame.draw.circle(surface, dark, (cx - r // 3, cy - r // 10), max(1, r // 12))
+
+    else:
+        pygame.draw.circle(surface, (244, 114, 182), (cx, cy), r * 3 // 4)
+        pygame.draw.circle(surface, white, (cx, cy), r // 2)
+        pygame.draw.circle(surface, dark, (cx, cy), r * 3 // 4, 2)
+        pygame.draw.circle(surface, (254, 240, 138), (cx, cy), r // 4)
 
 
 def _is_safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
@@ -225,7 +487,7 @@ def main() -> int:
         return default
 
     theme_idx = 0
-    grid_idx = 1  # 3x2 default (6 cards, 3 pairs)
+    grid_idx = 1
 
     cards: list[dict[str, Any]] = []
     flipped_indices: list[int] = []
@@ -240,7 +502,7 @@ def main() -> int:
         nonlocal cards, flipped_indices, pairs_found, total_pairs, moves_count, unflip_timer, particles, is_victory
         theme_cfg = THEMES[theme_idx]
         grid_cfg = GRID_CONFIGS[grid_idx]
-        total_pairs = grid_cfg["pairs"]
+        total_pairs = min(grid_cfg["pairs"], len(theme_cfg["items"]))
         pairs_found = 0
         moves_count = 0
         flipped_indices.clear()
@@ -259,7 +521,7 @@ def main() -> int:
                 "item": item,
                 "is_matched": False,
                 "is_revealed": False,
-                "flip_anim": 0.0,  # 0.0 = face down, 1.0 = face up
+                "flip_anim": 0.0,
             })
 
     start_new_game()
@@ -268,35 +530,31 @@ def main() -> int:
     ready_published = False
 
     while running and not activity_stop_requested():
-        t_now = time.time()
         theme_cfg = THEMES[theme_idx]
         grid_cfg = GRID_CONFIGS[grid_idx]
 
-        # Calculate card grid positions
         cols = grid_cfg["cols"]
         rows = grid_cfg["rows"]
-        top_y = 100
-        bottom_y = REFERENCE_HEIGHT - 70
-        avail_w = REFERENCE_WIDTH - 120
+        top_y = 95
+        bottom_y = REFERENCE_HEIGHT - 65
+        avail_w = REFERENCE_WIDTH - 140
         avail_h = bottom_y - top_y
 
-        card_w = min(170, (avail_w - (cols - 1) * 20) // cols)
-        card_h = min(220, (avail_h - (rows - 1) * 20) // rows)
-        grid_w = cols * card_w + (cols - 1) * 20
-        grid_h = rows * card_h + (rows - 1) * 20
+        card_w = min(170, (avail_w - (cols - 1) * 18) // cols)
+        card_h = min(210, (avail_h - (rows - 1) * 18) // rows)
+        grid_w = cols * card_w + (cols - 1) * 18
+        grid_h = rows * card_h + (rows - 1) * 18
         grid_ox = (REFERENCE_WIDTH - grid_w) // 2
         grid_oy = top_y + (avail_h - grid_h) // 2
 
-        # Card rects calculation
         card_rects = []
         for i in range(len(cards)):
             c = i % cols
             r = i // cols
-            rx = grid_ox + c * (card_w + 20)
-            ry = grid_oy + r * (card_h + 20)
+            rx = grid_ox + c * (card_w + 18)
+            ry = grid_oy + r * (card_h + 18)
             card_rects.append(pygame.Rect(rx, ry, card_w, card_h))
 
-        # Check pending unflip
         if unflip_timer > 0.0:
             unflip_timer -= 0.033
             if unflip_timer <= 0.0:
@@ -305,12 +563,11 @@ def main() -> int:
                         cards[idx]["is_revealed"] = False
                 flipped_indices.clear()
 
-        # Update card flip animation
         for card in cards:
             target_flip = 1.0 if (card["is_revealed"] or card["is_matched"]) else 0.0
             diff = target_flip - card["flip_anim"]
             if abs(diff) > 0.01:
-                card["flip_anim"] += diff * 0.25
+                card["flip_anim"] += diff * 0.28
             else:
                 card["flip_anim"] = target_flip
 
@@ -344,27 +601,23 @@ def main() -> int:
                         start_new_game()
                         continue
 
-                # Top New Game button
-                new_btn = pygame.Rect(REFERENCE_WIDTH - 150, 15, 130, 42)
+                new_btn = pygame.Rect(REFERENCE_WIDTH - 170, 14, 150, 52)
                 if new_btn.collidepoint(mx, my):
                     start_new_game()
                     continue
 
-                # Bottom Theme Button
-                theme_btn = pygame.Rect(REFERENCE_WIDTH // 2 - 140, REFERENCE_HEIGHT - 50, 130, 40)
+                theme_btn = pygame.Rect(REFERENCE_WIDTH // 2 - 150, REFERENCE_HEIGHT - 52, 140, 44)
                 if theme_btn.collidepoint(mx, my):
                     theme_idx = (theme_idx + 1) % len(THEMES)
                     start_new_game()
                     continue
 
-                # Bottom Grid Size Button
-                grid_btn = pygame.Rect(REFERENCE_WIDTH // 2 + 10, REFERENCE_HEIGHT - 50, 130, 40)
+                grid_btn = pygame.Rect(REFERENCE_WIDTH // 2 + 10, REFERENCE_HEIGHT - 52, 140, 44)
                 if grid_btn.collidepoint(mx, my):
                     grid_idx = (grid_idx + 1) % len(GRID_CONFIGS)
                     start_new_game()
                     continue
 
-                # Card Clicks
                 if unflip_timer <= 0.0 and not is_victory:
                     for idx, rect in enumerate(card_rects):
                         if rect.collidepoint(mx, my):
@@ -378,7 +631,6 @@ def main() -> int:
                                     moves_count += 1
                                     idx1, idx2 = flipped_indices[0], flipped_indices[1]
                                     if cards[idx1]["id"] == cards[idx2]["id"]:
-                                        # Match found!
                                         cards[idx1]["is_matched"] = True
                                         cards[idx2]["is_matched"] = True
                                         pairs_found += 1
@@ -387,18 +639,17 @@ def main() -> int:
                                             emit_activity_event("memory.pair_found", {"pairs": pairs_found})
                                         except Exception:
                                             pass
-                                        # Sparkle burst
                                         for cr in [card_rects[idx1], card_rects[idx2]]:
                                             for _ in range(16):
                                                 ang = random.uniform(0, 6.28)
-                                                spd = random.uniform(2.0, 5.0)
+                                                spd = random.uniform(2.0, 5.5)
                                                 particles.append({
                                                     "x": cr.centerx,
                                                     "y": cr.centery,
                                                     "vx": math.cos(ang) * spd,
                                                     "vy": math.sin(ang) * spd,
                                                     "color": (254, 202, 87),
-                                                    "size": random.uniform(4.0, 8.0),
+                                                    "size": random.uniform(4.0, 9.0),
                                                     "life": 1.0,
                                                     "decay": 0.03,
                                                 })
@@ -413,10 +664,9 @@ def main() -> int:
                                                 pass
                                     else:
                                         sounds.play("mismatch")
-                                        unflip_timer = 1.0
+                                        unflip_timer = 0.9
                                 break
 
-        # Update particles
         surviving = []
         for p in particles:
             p["x"] += p["vx"]
@@ -426,73 +676,81 @@ def main() -> int:
                 surviving.append(p)
         particles = surviving
 
-        # RENDER TO CANVAS
         surf = canvas.surface
         surf.fill(theme_cfg["bg"])
 
-        # 1. Draw Cards
+        for bx in range(30, REFERENCE_WIDTH, 80):
+            for by in range(30, REFERENCE_HEIGHT, 80):
+                pygame.draw.circle(surf, (226, 232, 240), (bx, by), 2)
+
         for idx, card in enumerate(cards):
             rect = card_rects[idx]
-            flip = card["flip_anim"]  # 0 = back, 1 = front
+            flip = card["flip_anim"]
             cos_flip = abs(math.cos(flip * math.pi))
-            cur_w = max(4, int(card_w * cos_flip))
+            cur_w = max(6, int(card_w * cos_flip))
             cur_rect = pygame.Rect(rect.centerx - cur_w // 2, rect.top, cur_w, card_h)
 
-            # Shadow
-            pygame.draw.rect(surf, (203, 213, 225), cur_rect.move(3, 4), border_radius=14)
+            pygame.draw.rect(surf, (203, 213, 225), cur_rect.move(3, 5), border_radius=16)
 
             is_front = flip >= 0.5
             if is_front:
-                # Front face
-                pygame.draw.rect(surf, (255, 255, 255), cur_rect, border_radius=18)
-                pygame.draw.rect(surf, (203, 213, 225), cur_rect, width=3, border_radius=18)
-                if cos_flip > 0.4:
-                    item = card["item"]
-                    # Giant colorful emblem
-                    emblem_r = int(card_w * 0.34)
-                    pygame.draw.circle(surf, item["color"], cur_rect.center, emblem_r)
-                    pygame.draw.circle(surf, (255, 255, 255), (cur_rect.centerx - emblem_r // 3, cur_rect.centery - emblem_r // 3), max(3, emblem_r // 3))
-                    pygame.draw.circle(surf, (20, 20, 30), cur_rect.center, emblem_r, 3)
-            else:
-                # Back face
-                pygame.draw.rect(surf, theme_cfg["card_back"], cur_rect, border_radius=18)
-                pygame.draw.rect(surf, (255, 255, 255), cur_rect, width=4, border_radius=18)
-                if cos_flip > 0.4:
-                    pygame.draw.circle(surf, (255, 255, 255), cur_rect.center, int(card_w * 0.22), 4)
-                    pygame.draw.circle(surf, (254, 240, 138), cur_rect.center, int(card_w * 0.14))
+                pygame.draw.rect(surf, (255, 255, 255), cur_rect, border_radius=16)
+                border_col = (34, 197, 94) if card["is_matched"] else (203, 213, 225)
+                border_w = 4 if card["is_matched"] else 2
+                pygame.draw.rect(surf, border_col, cur_rect, width=border_w, border_radius=16)
 
-        # 2. Draw Particles
+                if cos_flip > 0.35:
+                    item = card["item"]
+                    emblem_r = int(min(cur_w, card_h) * 0.34)
+                    emblem_cy = cur_rect.top + int(card_h * 0.42)
+
+                    pygame.draw.circle(surf, item["color"], (cur_rect.centerx, emblem_cy), emblem_r)
+                    pygame.draw.circle(surf, (30, 41, 59), (cur_rect.centerx, emblem_cy), emblem_r, 2)
+
+                    _draw_card_illustration(surf, item["id"], cur_rect.centerx, emblem_cy, int(emblem_r * 1.5))
+
+                    lbl_text = item["label_it"] if active_locale == "it" else item["label_en"]
+                    lbl_surf = typography.render(lbl_text, FontRole.DISPLAY, max(12, min(16, card_h // 12)), (30, 41, 59))
+                    surf.blit(lbl_surf, (cur_rect.centerx - lbl_surf.get_width() // 2, cur_rect.bottom - lbl_surf.get_height() - 8))
+            else:
+                pygame.draw.rect(surf, theme_cfg["card_back"], cur_rect, border_radius=16)
+                pygame.draw.rect(surf, (255, 255, 255), cur_rect, width=3, border_radius=16)
+                if cos_flip > 0.35:
+                    back_r = int(min(cur_w, card_h) * 0.26)
+                    pygame.draw.circle(surf, (255, 255, 255), cur_rect.center, back_r, 3)
+                    pygame.draw.circle(surf, theme_cfg["back_accent"], cur_rect.center, back_r - 4)
+                    _draw_card_illustration(surf, "star", cur_rect.centerx, cur_rect.centery, int(back_r * 1.2))
+
         for p in particles:
             cur_sz = max(2.0, p["size"] * max(0.0, min(1.0, p["life"])))
             pygame.draw.circle(surf, p["color"], (int(p["x"]), int(p["y"])), int(cur_sz))
 
-        # 3. Top HUD (Star Pill & Giant Buttons)
-        star_pill = pygame.Rect(80, 16, 130, 56)
+        star_pill = pygame.Rect(80, 14, 150, 52)
         pygame.draw.rect(surf, (255, 255, 255), star_pill, border_radius=18)
-        pygame.draw.rect(surf, (234, 179, 8), star_pill, width=3, border_radius=18)
-        pygame.draw.circle(surf, (234, 179, 8), (star_pill.left + 30, star_pill.centery), 16)
-        s_txt = typography.render(f"★ {pairs_found}/{total_pairs}", FontRole.DISPLAY, 24, (180, 83, 9))
+        pygame.draw.rect(surf, (180, 83, 9), star_pill, width=3, border_radius=18)
+        _draw_card_illustration(surf, "star", star_pill.left + 28, star_pill.centery, 34)
+        s_txt = typography.render(f"{pairs_found}/{total_pairs}", FontRole.DISPLAY, 24, (180, 83, 9))
         surf.blit(s_txt, (star_pill.left + 54, star_pill.centery - s_txt.get_height() // 2))
 
-        # New Game Button
-        new_btn = pygame.Rect(REFERENCE_WIDTH - 160, 16, 140, 56)
-        pygame.draw.rect(surf, (71, 85, 105), new_btn, border_radius=18)
-        new_txt = typography.render("🔄 NUOVO", FontRole.DISPLAY, 20, (255, 255, 255))
+        new_btn = pygame.Rect(REFERENCE_WIDTH - 170, 14, 150, 52)
+        pygame.draw.rect(surf, (51, 65, 85), new_btn, border_radius=18)
+        pygame.draw.rect(surf, (30, 41, 59), new_btn, width=2, border_radius=18)
+        new_txt = typography.render("🔄 NUOVO", FontRole.DISPLAY, 18, (255, 255, 255))
         surf.blit(new_txt, (new_btn.centerx - new_txt.get_width() // 2, new_btn.centery - new_txt.get_height() // 2))
 
-        # 4. Bottom Selectors
-        theme_btn = pygame.Rect(REFERENCE_WIDTH // 2 - 140, REFERENCE_HEIGHT - 50, 130, 40)
-        pygame.draw.rect(surf, (51, 65, 85), theme_btn, border_radius=10)
+        theme_btn = pygame.Rect(REFERENCE_WIDTH // 2 - 150, REFERENCE_HEIGHT - 52, 140, 44)
+        pygame.draw.rect(surf, (51, 65, 85), theme_btn, border_radius=12)
+        pygame.draw.rect(surf, (30, 41, 59), theme_btn, width=2, border_radius=12)
         t_name = theme_cfg["name_it"] if active_locale == "it" else theme_cfg["name_en"]
         theme_lbl = typography.render(t_name, FontRole.BODY, 15, (255, 255, 255))
         surf.blit(theme_lbl, (theme_btn.centerx - theme_lbl.get_width() // 2, theme_btn.centery - theme_lbl.get_height() // 2))
 
-        grid_btn = pygame.Rect(REFERENCE_WIDTH // 2 + 10, REFERENCE_HEIGHT - 50, 130, 40)
-        pygame.draw.rect(surf, (51, 65, 85), grid_btn, border_radius=10)
+        grid_btn = pygame.Rect(REFERENCE_WIDTH // 2 + 10, REFERENCE_HEIGHT - 52, 140, 44)
+        pygame.draw.rect(surf, (51, 65, 85), grid_btn, border_radius=12)
+        pygame.draw.rect(surf, (30, 41, 59), grid_btn, width=2, border_radius=12)
         grid_lbl = typography.render("📐 " + grid_cfg["label"], FontRole.BODY, 15, (255, 255, 255))
         surf.blit(grid_lbl, (grid_btn.centerx - grid_lbl.get_width() // 2, grid_btn.centery - grid_lbl.get_height() // 2))
 
-        # 5. Victory Modal
         if is_victory:
             overlay = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.SRCALPHA)
             overlay.fill((10, 15, 30, 200))
@@ -511,16 +769,14 @@ def main() -> int:
             for i in range(3):
                 star_x = card.centerx - 50 + i * 50
                 star_y = card.top + 130
-                pygame.draw.circle(surf, (254, 202, 87), (star_x, star_y), 18)
+                _draw_card_illustration(surf, "star", star_x, star_y, 40)
 
             again_btn = pygame.Rect(card.centerx - 110, card.bottom - 65, 220, 46)
             pygame.draw.rect(surf, (34, 197, 94), again_btn, border_radius=14)
             again_lbl = typography.render(t("btn.play_again", "🎉 Gioca Ancora!"), FontRole.CONTROL, 20, (255, 255, 255))
             surf.blit(again_lbl, (again_btn.centerx - again_lbl.get_width() // 2, again_btn.centery - again_lbl.get_height() // 2))
 
-        # Present Canvas
         canvas.present(clear=theme.background)
-
         pygame.display.flip()
 
         if not ready_published:
