@@ -77,171 +77,128 @@ Most source packs remain candidate artwork with SOURCE + DESKTOP VISUAL REVIEW e
 
 ---
 
-# 4. V5 architecture now proven in the Shell
+# 4. V5 Shell seam is proven
 
-The active visual phase is still **V5 — shared consumption/integration**, but the first Shell-consumer gate is complete.
+The active phase remains **V5 — shared consumption/integration**.
 
-Current implemented flow:
+Current proven Shell flow:
 
 ```text
 reviewed SVG master
-→ assets/catalog/shared_visuals_v1_source.toml
-→ tools/build_visual_renditions.py / rsvg-convert
-→ assets/visual/runtime/v1/.../*.png
-→ assets/catalog/shared_visuals_v1.toml
+→ explicit source manifest
+→ build-time PNG rendition
+→ generated runtime catalogue
 → AssetCatalogue
 → PygameVisualSurfaceCache
 → real Greia Shell consumer
 ```
 
-Current source owners:
+`ui.shadow.soft` is the first accepted shared Shell visual consumer beneath launcher Activity tiles.
+
+Evidence recorded in `LOCAL_AGENT_RESULT.md`:
 
 ```text
-src/greia_platform/assets.py
-src/greia_platform/pygame_visual_assets.py
-src/greia_launcher/visual_assets.py
-src/greia_launcher/main.py
-src/greia_launcher/presentation.py
-assets/catalog/core_icons_v1.toml
-assets/catalog/shared_visuals_v1_source.toml
-assets/catalog/shared_visuals_v1.toml
-tools/build_visual_renditions.py
-tools/validate_visual_renditions.py
+6/6 responsive simulator rows PASS
+selection PASS
+hover PASS
+Activity launch lifecycle PASS
+missing catalogue fallback PASS
+malformed catalogue fallback PASS
+corrupt/missing PNG fallback PASS
+299 frames / 10.165 s = 29.41 FPS sanity
 ```
+
+Evidence class: **SIMULATOR VISUAL REVIEW**.
+
+No physical Acer/Pi visual-performance claim and no R7 closure.
+
+---
+
+# 5. Activity semantic seam now exists in source
+
+The first Python Activity semantic request/resolution contract is now implemented in:
+
+```text
+src/greia_platform/activity_api.py
+```
+
+Current API:
+
+```python
+get_shared_visual(asset_id, variant="default")
+get_shared_visual_path(asset_id, variant="default")
+```
+
+`get_shared_visual(...)` returns a read-only `SharedVisualReference` with semantic ID, kind, role, variant and the current Python runtime path realization.
 
 Important invariants:
 
-- core icons and shared visuals use one semantic namespace;
-- variants are explicit and require `default`;
-- catalogue roots and paths remain contained;
-- duplicate IDs fail;
-- generated shared visuals remain optional for launcher startup;
-- one bounded Pygame surface cache performs PNG decode/scale on miss and reuse on hit;
-- generated shared visuals fail soft to the established primitive/static launcher path.
+- Activity requests semantic ID + explicit variant;
+- Activity does not supply an arbitrary host path;
+- Activity cannot mutate the catalogue;
+- core icons remain available when optional generated visuals are absent/invalid;
+- unknown visual IDs/variants fail narrowly;
+- Activity-private art remains supported;
+- this does not freeze the future Web transport as a filesystem path API.
+
+First source consumer:
+
+```text
+activities/shape_garden/main.py
+```
+
+Shape Garden resolves `ui.shadow.soft` once at startup, scales it once to a bounded reference size, and reuses that prepared surface while drawing shapes. Missing/invalid shared visuals keep the Activity playable.
+
+This Activity seam is currently **SOURCE only** until simulator acceptance completes.
 
 ---
 
-# 5. Accepted first runtime consumer
+# 6. Current exact next work
 
-`ui.shadow.soft` is no longer a candidate. It is the **first accepted shared Shell visual consumer**.
+Do not create more artwork and do not add another launcher-only decorative consumer yet.
 
-It is consumed beneath existing launcher Activity tiles without changing tile hit geometry, responsive grid geometry, label-band geometry, selection behavior, or Activity launch lifecycle.
+The exact next action is now:
 
-Current fallback remains `draw_soft_shadow`.
+```text
+1. sync current main
+2. read docs/testing/2026-08-20_V5_ACTIVITY_SHARED_VISUAL_SIMULATOR.md
+3. execute Shape Garden through the real Greia Activity Simulator
+4. verify normal semantic visual consumption
+5. verify missing generated catalogue fallback
+6. verify malformed generated catalogue fallback
+7. verify corrupt/missing soft_shadow.png fallback
+8. verify Home/input lifecycle
+9. execute the full responsive simulator matrix
+10. perform frame-count sanity with many shapes present
+11. fix only shared owners/root causes
+12. rerun affected simulator cases
+13. update active plan, this resume and HANDOVER with exact evidence
+14. commit/push accepted work to main
+```
 
-The integration also established:
+After that gate passes, the next architecture task is the **future Web Activity equivalent** using the same semantic IDs/variant names through a controlled URL/handle adapter rather than host filesystem access.
 
-- generated `assets/visual/runtime/v1/ui/soft_shadow.png`;
-- generated `assets/catalog/shared_visuals_v1.toml`;
-- `load_launcher_assets(...)` integration in `LauncherApplication`;
-- one launcher-owned `PygameVisualSurfaceCache`;
-- display/viewport cache invalidation;
-- malformed optional visual catalogues contained by `AssetCatalogueError`;
-- corrupt/missing optional PNGs contained by the launcher visual fallback;
-- correct RGB simulator frame capture.
-
-Evidence is recorded in `LOCAL_AGENT_RESULT.md`.
+Only after the Activity reuse seam is established should another Shell-only UI consumer (`ui.panel.base`, `ui.card.activity`, `ui.button.primary`) be considered.
 
 ---
 
-# 6. Simulator acceptance already completed
+# 7. Current simulator protocol
 
-The first consumer passed the owner-directed Activity Simulator tranche.
-
-Accepted matrix:
+Use:
 
 ```text
-1024×600  + normal
-1024×600  + large
-1280×800  + normal
-1366×768  + compact
-1920×1080 + normal
-1111×700  + normal
+docs/testing/2026-08-20_V5_ACTIVITY_SHARED_VISUAL_SIMULATOR.md
 ```
 
-Accepted interactions:
+For owner-directed local-agent runtime/visual/fallback/responsive acceptance, use the Greia Activity Simulator.
 
-```text
-keyboard selection
-pointer hover
-Activity launch lifecycle
-```
+Do not use GitHub Actions unless the owner explicitly authorizes the hosted execution.
 
-Accepted fail-soft cases:
-
-```text
-missing generated shared catalogue
-malformed generated catalogue
-corrupt/missing optional ui.shadow.soft PNG
-```
-
-Frame sanity evidence:
-
-```text
-299 frames / 10.165 s = 29.41 FPS
-```
-
-Evidence class:
-
-```text
-SIMULATOR VISUAL REVIEW
-```
-
-Explicit non-claims:
-
-- no Acer/Raspberry Pi physical visual-performance claim;
-- no R7 architecture closure;
-- no blanket release-art approval for the rest of the visual library.
+The simulator bridge is local loopback only. No Cloudflare/tunnel/hosted service belongs in this workflow.
 
 ---
 
-# 7. Current exact next work
-
-Do **not** produce another environment pack and do **not** restyle the whole launcher.
-
-The next V5 tranche is to generalize the proven seam instead of multiplying one-off consumers.
-
-Proceed in this order:
-
-```text
-1. inspect current AssetCatalogue / PygameVisualSurfaceCache / Activity runtime boundaries
-2. define the smallest renderer-neutral semantic shared-visual request contract for Activities
-3. keep Python and future Web Activities converging on the same semantic IDs + explicit variants
-4. do not expose arbitrary host filesystem paths or catalogue mutation to Activities
-5. add the first controlled Activity-facing implementation without creating a second catalogue/cache system
-6. keep Activity-private art supported
-7. prove the Activity-facing path through the Greia Activity Simulator
-8. only after that, decide whether ui.panel.base / ui.card.activity / ui.button.primary need additional Shell consumption
-```
-
-Why this is next:
-
-- the Shell seam is already proven;
-- another launcher-only decorative consumer would add less architectural value;
-- V5 explicitly requires shared Shell/Activity reuse;
-- the Activity contract must be renderer-neutral enough for Python and future Web runtimes.
-
-Do not freeze a broad API prematurely. Start with one semantic request/resolution path and preserve the existing platform boundaries.
-
----
-
-# 8. Testing rule for the next V5 tranche
-
-For owner-directed local-agent runtime/visual acceptance, use the Greia Activity Simulator.
-
-Relevant current protocol:
-
-```text
-docs/testing/2026-08-20_V5_VISUAL_INTEGRATION_SIMULATOR_LOCAL_AGENT.md
-```
-
-That document describes the completed first-consumer tranche. If the next Activity-facing tranche requires a materially different simulator procedure, update or add the appropriate dated simulator test document before claiming PASS.
-
-Do not use GitHub Actions unless the owner explicitly authorizes that hosted execution.
-
----
-
-# 9. Rejected/drift directions
+# 8. Rejected/drift directions
 
 Do not resume these as current work:
 
@@ -263,7 +220,7 @@ Do not resume these as current work:
 
 ---
 
-# 10. Documentation map
+# 9. Documentation map
 
 Main stable architecture/index:
 
@@ -298,15 +255,21 @@ Source-tree summary:
 assets/visual/README.md
 ```
 
-First-consumer execution result:
+First Shell-consumer execution result:
 
 ```text
 LOCAL_AGENT_RESULT.md
 ```
 
+Current Activity semantic simulator protocol:
+
+```text
+docs/testing/2026-08-20_V5_ACTIVITY_SHARED_VISUAL_SIMULATOR.md
+```
+
 ---
 
-# 11. End-of-session rule
+# 10. End-of-session rule
 
 Update this file whenever any of these changes materially:
 
