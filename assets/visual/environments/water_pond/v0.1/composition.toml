@@ -1,0 +1,50 @@
+scene_id = "water_pond.reference.v0.1"
+status = "candidate-composition-proof"
+runtime_authority = false
+source_pack = "assets/visual/environments/water_pond/v0.1/"
+
+[viewports."1024x600"]
+calm_center = [330, 300, 675, 470]
+
+[viewports."800x600"]
+calm_center = [250, 310, 535, 470]
+
+[[layers]]
+id = "water"
+asset = "pond_water_base.svg"
+z = 10
+parallax = 0.05
+ambient_motion = "very_slow_shimmer"
+
+[[layers]]
+id = "bank"
+asset = "pond_bank_edge.svg"
+z = 20
+parallax = 0.12
+
+[[layers]]
+id = "edge_foliage"
+assets = ["reeds_cluster.svg"]
+z = 30
+parallax = 0.28
+ambient_motion = "subtle_sway"
+amplitude_deg_max = 1.0
+
+[[layers]]
+id = "playfield_props"
+assets = ["small_dock.svg", "stepping_stones.svg", "lily_pad_cluster.svg", "water_lily_cluster.svg", "duckweed_patch.svg"]
+z = 40
+parallax = 0.32
+
+[[layers]]
+id = "water_light"
+assets = ["water_shimmer.svg", "reflection_glow.svg", "ripple_ring.svg"]
+z = 50
+ambient_motion = "bounded_water_light"
+
+[optional_fx]
+assets = ["fish_shadows.svg", "dragonfly_fx.svg", "bubble_fx.svg"]
+notes = "Optional low-cost atmosphere. Static scene remains meaningful without it."
+
+[shared_reuse]
+forest_assets = ["hills.distant.01", "treeline.distant.01", "rock.cluster.large.01", "log.fallen.01", "ground.grass_edge.01", "flower.patch.01"]
