@@ -7,6 +7,10 @@ export GREIA_ACTIVE_PROFILE_STATUS=/run/greia-os/active-profile.json
 export GREIA_HARDWARE_STATUS=/run/greia-hardware/status.json
 export PYTHONPATH=/opt/greia-os/src
 
+# Configure pointer acceleration and tap-to-click on session start
+xinput set-prop "SynPS/2 Synaptics TouchPad" "libinput Tapping Enabled" 1 2>/dev/null || true
+xinput set-prop "SynPS/2 Synaptics TouchPad" "libinput Accel Speed" 0.35 2>/dev/null || true
+
 /usr/bin/python3 -m greia_platform.hardware_session \
   --root "$GREIA_OS_ROOT" \
   --state-dir "$GREIA_SYSTEM_SETTINGS_DIR" \

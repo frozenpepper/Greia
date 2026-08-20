@@ -78,6 +78,7 @@ class GreiaLauncherPresentation(LauncherApplication):
         self._cached_activities_surface: Any = None
         self._cached_activities_key: Any = None
         self._cached_activities_targets: list[HitTarget] = []
+        self._tile_surface_cache: BoundedCache[Any, Any] = BoundedCache(64)
 
     def _configure_parent_package_source(self) -> None:
         """Compose parent-installed packages into the same launch authority path."""
@@ -258,6 +259,7 @@ class GreiaLauncherPresentation(LauncherApplication):
                     self._cached_activities_key = None
                     self._cached_activities_surface = None
                     self._cached_activities_targets.clear()
+                    self._tile_surface_cache.clear()
                     self._activity_scroll_start = 0
                 if self._mode == "profiles":
                     if self._parent_chord.poll(time.monotonic()):
@@ -825,6 +827,48 @@ class GreiaLauncherPresentation(LauncherApplication):
             )
 
     def _draw_activity_tile(
+        self,
+        screen: Any,
+        rect: Any,
+        activity: ActivityManifest,
+        state: InteractionVisualState,
+        theme: Any,
+        pygame: Any,
+    ) -> None:
+        if not state.launching:
+            key = (
+                activity.activity_id,
+                activity.version,
+                rect.width,
+                rect.height,
+                state.hovered,
+                state.selected,
+                theme.panel,
+                theme.accent,
+                theme.text,
+                theme.background,
+                self._active_locale,
+            )
+            cached = self._tile_surface_cache.get(key)
+            if cached is None:
+                pad = 8
+                w = rect.width + pad * 2
+                h = rect.height + pad * 2
+                surf = pygame.Surface((w, h)).convert()
+                surf.fill(theme.background)
+                local_rect = pygame.Rect(pad, pad, rect.width, rect.height)
+                self._draw_activity_tile_content(
+                    surf, local_rect, activity, state, theme, pygame
+                )
+                self._tile_surface_cache[key] = (surf, pad)
+                cached = (surf, pad)
+            surf, pad = cached
+            screen.blit(surf, (rect.left - pad, rect.top - pad))
+            return
+
+        self._draw_activity_tile_content(screen, rect, activity, state, theme, pygame)
+
+    def _draw_activity_tile_content(
         self,
         screen: Any,
         rect: Any,
