@@ -5,7 +5,7 @@
 **Repository:** `frozenpepper/Greia` (private)  
 **Canonical/default/development branch:** `main`  
 **Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**  
-**Current cross-cutting work:** device-language/localization + child UX + R13B transactional updates + Activity Simulator/emoji/Writing + **active Greia asset-first visual-library workstream (V2/V3/V4A)**  
+**Current cross-cutting work:** device-language/localization + child UX + R13B transactional updates + Activity Simulator/emoji/Writing + **active asset-first visual-library workstream through V4C Reading/Classroom**  
 **External Parent HTML runtime revision pinned by Greia:** `frozenpepper/Greia-Parent-App-Html@519651a5931269ed4275324f2a87ad3f0d08a3f6`
 
 This file is the current-state continuation contract. Detailed chronology belongs in the active plans/reviews. Exact APIs and limits remain source-owned.
@@ -42,7 +42,7 @@ Retained physical history from 2026-08-19: a fresh `legacy-x86-i686-dev` syslinu
 
 ---
 
-# 3. Active Greia visual-library workstream — V2/V3/V4A
+# 3. Active Greia visual-library workstream — V2/V3/V4
 
 Canonical continuity:
 
@@ -57,142 +57,78 @@ assets/visual/README.md
 assets/visual/environments/forest_meadow/v0.2/
 assets/visual/ui/v0.1/
 assets/visual/environments/workshop/v0.1/
+assets/visual/environments/clinic/v0.1/
+assets/visual/environments/reading_classroom/v0.1/
 ```
 
 ## 3.1 Production rule
 
-The visual workstream is explicitly **asset-first**:
+The workstream remains explicitly **asset-first**:
 
 > excellent individual assets → reusable asset packs → layered composition → subtle parallax / ambient motion / light / shadow → shared UI system → Shell/Activity reuse
 
-Do not return to crude full-screen mockups, tutorial geometry, or decorative HTML that hides weak underlying assets.
+Do not return to crude full-screen mockups, tutorial geometry, decorative HTML that hides weak assets, or generated scene/concept images as a substitute for reusable source production.
 
-The accepted simplified character direction remains valid, but character minutiae no longer block backgrounds, props, atmosphere, shadows or UI.
+The simplified character direction remains valid, but character minutiae do not block backgrounds, props, atmosphere, shadows or UI. Core anchors remain **Lilli, Nino, Tito and Momo**. Static style-anchor approval is not final release/runtime/physical approval.
 
-Core character anchors remain **Lilli, Nino, Tito and Momo**. Static style-anchor approval is not final release/runtime/physical approval.
+## 3.2 Current pack status
 
-## 3.2 Forest / meadow v0.2
+### Forest / meadow v0.2
 
-Canonical source:
+`assets/visual/environments/forest_meadow/v0.2/`
 
-```text
-assets/visual/environments/forest_meadow/v0.2/
-```
+- 27 reusable SVG masters;
+- composition metadata + actual-asset parallax proof;
+- final bounded 1024×600 / 800×600 desktop restraint references;
+- default day treatment keeps fireflies/dust/leaves optional, lowers atmosphere intensity and preserves a calm center.
 
-The pack contains **27 reusable SVG masters** covering:
+### Shared UI v0.1
 
-- hero/secondary/sapling/willow trees;
-- round/flowering/low bushes;
-- fern, flower and mushroom clusters;
-- large/small rock clusters;
-- fallen log and stump;
-- large/small clouds;
-- distant hills and distant tree line;
-- grass edge and dirt playfield patch;
-- sunlight and fog overlays;
-- small/wide contact shadows;
-- fireflies, dust motes and falling leaves.
+`assets/visual/ui/v0.1/`
 
-Metadata/review/proof:
+- broad panels/cards/buttons/tabs/badges/progress/bubbles/reward/avatar/focus/loading/error/empty/portal family;
+- static interaction-state masters for focus/hover/press/disabled/completed/favorite;
+- independently composed 1024×600 / 800×600 references from the real shared assets.
 
-```text
-catalog.toml
-REVIEW.md
-composition_day.toml
-parallax_proof.html
-```
+### Workshop v0.1
 
-`runtime_consumed = false` remains explicit.
+`assets/visual/environments/workshop/v0.1/`
 
-Desktop review caught and corrected weak sapling, distant-tree-line, fog and dust-mote treatments. A 1024×600 static composition was assembled locally from the actual masters. `parallax_proof.html` uses the committed SVGs with cheap CSS cloud drift, small foliage sway, fog drift, light breathing and firefly movement. It is a design proof, not runtime architecture.
+- 19 reusable masters;
+- warm creative-room furniture/props plus only composition-critical wall/floor, stool, pegboard, easel and note additions;
+- separate window/light treatment;
+- independent 1024×600 / 800×600 layered references.
 
-Current evidence: **SOURCE + DESKTOP VISUAL REVIEW** only.
+### Clinic / care v0.1
 
-Remaining forest work is intentionally bounded: one 800×600 / 1024×600 restraint/readability pass, then stop polishing the forest indefinitely.
+`assets/visual/environments/clinic/v0.1/`
 
-## 3.3 Shared UI visual pack v0.1
+- 17 reusable masters;
+- warm pretend-care furniture/props, room bases, window/light and restrained heart FX;
+- reduced-size + 1024×600 / 800×600 desktop review;
+- no medicine labels/dosage-like content.
 
-Canonical source:
+### Reading / classroom v0.1
 
-```text
-assets/visual/ui/v0.1/
-```
+`assets/visual/environments/reading_classroom/v0.1/`
 
-The pack now includes reusable masters for:
+- 17 reusable masters: room bases, arched window/light, bookcase/books, reading tent/rug/seating, chalkboard and restrained decor;
+- explicitly reuses Workshop `blocks` and `pencil_cup` rather than duplicating those source assets;
+- first desktop review revised weak `book_stack`, `reading_tent` and `beanbag` treatments;
+- `catalog.toml`, `REVIEW.md`, `COMPOSITION.md`, `composition.toml` record source/review/composition boundaries.
 
-- panel/sheet;
-- default/focused/completed activity cards;
-- primary/hover/pressed/disabled/secondary/quiet/icon buttons;
-- default/selected tabs;
-- new/done/favorite/locked badges;
-- progress track/fill/complete;
-- speech/thought bubbles;
-- reward/avatar frames;
-- loading orbit;
-- gentle-error cloud;
-- empty basket;
-- category/location portal frame;
-- focus ring, soft shadow and highlight sheen.
+All current packs remain **candidate** and `runtime_consumed = false`.
 
-Metadata/review:
+Current evidence is **SOURCE + DESKTOP VISUAL REVIEW** only. No simulator/runtime/physical-art acceptance is claimed.
 
-```text
-assets/visual/ui/v0.1/catalog.toml
-assets/visual/ui/v0.1/README.md
-assets/visual/ui/v0.1/REVIEW.md
-```
+## 3.3 Exact visual continuation
 
-The pack is aligned to `runtime/theme-defaults.toml`, embeds no child-facing text, and remains `runtime_consumed = false`.
-
-Representative components have been rasterized and desktop-reviewed on Greia cream, Greia sky and dark charcoal. Focus/selection uses shape/frame cues in addition to color. The expanded static-state tranche was also reviewed together before catalog indexing.
-
-Current evidence: **SOURCE + DESKTOP VISUAL REVIEW** only.
-
-Next UI work is a real 800×600 / 1024×600 component composition using these assets, followed by any targeted revision; do not redraw a primitive launcher mock.
-
-## 3.4 Workshop v0.1 started
-
-Canonical source:
-
-```text
-assets/visual/environments/workshop/v0.1/
-```
-
-First reusable candidate tranche contains:
-
-- workbench;
-- shelf;
-- paint palette;
-- brush bundle;
-- pencil cup;
-- blocks;
-- storage box;
-- paper stack;
-- rug;
-- desk lamp;
-- window;
-- window-light overlay;
-- paint jars.
-
-Metadata/review:
-
-```text
-catalog.toml
-README.md
-REVIEW.md
-```
-
-Desktop contact review shows a coherent warm wood/pastel creative-room family and keeps the window light separate from the window so lighting remains composable. `runtime_consumed = false`.
-
-Before composition: reduced-size review of large furniture, add only composition-critical missing pieces such as a stool/chair, wall/floor base or pegboard, then assemble one layered workshop reference composition.
-
-## 3.5 Exact visual continuation
-
-1. build the low-resolution UI reference composition from the real shared UI assets and revise only specific weak components;
-2. run the final bounded 800×600 / 1024×600 forest restraint/readability pass;
-3. finish Workshop composition-critical assets and one layered workshop composition;
-4. begin Clinic individual assets next unless the owner reprioritizes;
-5. keep all current catalogs non-runtime authority until an explicit architecture-reviewed consumption seam exists.
+1. start the **fantasy/village/night** family with reusable individual masters first;
+2. review weak assets individually before any reference scene is considered evidence;
+3. keep moonlight/window glow/fog/stars/fireflies separate composable layers with optional subtle motion metadata;
+4. reuse existing Forest assets where semantically appropriate rather than creating pointless duplicates;
+5. continue existing pack refinement only for concrete defects or owner feedback;
+6. keep all catalogs non-runtime authority until an explicit architecture-reviewed consumption seam exists.
 
 ---
 
@@ -292,11 +228,10 @@ docs/testing/LOCAL_AGENT_START_HERE.md
 ## Visual workstream
 
 1. Keep `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md` as sequencing authority.
-2. Make the low-resolution UI reference composition from the current V3 masters.
-3. Finish the bounded forest restraint/readability pass.
-4. Complete Workshop composition-critical pieces and a layered reference composition.
-5. Begin Clinic individual assets next.
-6. Keep environment/UI assets reusable and individually reviewable; do not create a new runtime scene/UI framework during art production.
+2. Start fantasy/village/night as the next bounded individual-asset family.
+3. Preserve the asset-first/reuse discipline: no generated scene concept substitutions and no duplicate props when a shared master already exists.
+4. Build reference compositions only from real reviewed assets and keep atmosphere/light/FX separately composable.
+5. Keep environment/UI catalogs candidate/non-runtime until a reviewed platform consumption seam exists.
 
 ---
 
@@ -319,4 +254,4 @@ docs/testing/LOCAL_AGENT_START_HERE.md
 - static character style-anchor approval is not runtime/release/physical approval;
 - after each substantive art session update the active visual plan checkpoint + append-only progress log and this HANDOVER when continuation changes materially.
 
-For visual continuation, start from the **current V2/V3/V4A asset-library checkpoint**, not from the rejected detailed-unicorn/A2-overlay experiments.
+For visual continuation, start from the **current V2/V3/V4 asset-library checkpoint**, not from rejected character-rig, A2-overlay, crude-scene or generated-concept experiments.
