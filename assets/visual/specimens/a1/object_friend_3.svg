@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Greia Object Friend number 3 archetype specimen">
+<defs>
+<style>
+  .ol { stroke:#4B372F; stroke-width:3.5; stroke-linecap:round; stroke-linejoin:round; }
+  .ol2 { stroke:#4B372F; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+
+<linearGradient id="three" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0" stop-color="#4A91D8"/>
+  <stop offset="1" stop-color="#44B8AE"/>
+</linearGradient>
+</defs>
+
+<ellipse cx="128" cy="229" rx="52" ry="8" fill="#6A5147" opacity=".10"/>
+<g id="character">
+  <!-- preserve the pedagogical glyph as the primary silhouette -->
+  <path class="ol" fill="url(#three)" d="M86 65
+    C99 52 118 47 137 50
+    C161 53 177 67 177 89
+    C177 105 168 117 154 124
+    C171 131 181 144 180 161
+    C179 191 155 208 124 209
+    C104 209 88 202 77 191
+    L91 171
+    C100 179 111 183 124 182
+    C139 181 149 174 149 162
+    C149 149 138 143 118 143
+    L105 143 L105 119 L119 119
+    C136 119 146 112 146 101
+    C146 90 137 84 124 83
+    C113 82 103 86 95 94 Z"/>
+  <!-- face lives on middle bowl without obscuring number shape -->
+  <ellipse cx="119" cy="129" rx="8" ry="11" fill="#253B59"/>
+  <ellipse cx="145" cy="127" rx="8" ry="11" fill="#253B59"/>
+  <circle cx="122" cy="126" r="2.5" fill="#fff"/>
+  <circle cx="148" cy="124" r="2.5" fill="#fff"/>
+  <path d="M119 149 Q132 159 146 148" stroke="#253B59" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <ellipse cx="105" cy="146" rx="8" ry="5" fill="#F5D6DF" opacity=".75"/>
+  <ellipse cx="159" cy="144" rx="8" ry="5" fill="#F5D6DF" opacity=".75"/>
+  <!-- tiny hands attached without changing glyph recognition -->
+  <circle class="ol2" cx="78" cy="131" r="10" fill="#FFC234"/>
+  <circle class="ol2" cx="181" cy="151" r="10" fill="#FFC234"/>
+</g>
+
+</svg>
