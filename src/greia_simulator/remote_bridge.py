@@ -403,12 +403,15 @@ class RemoteBridgeRequestHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def _send_json(self, data: Mapping[str, Any], status: int = 200) -> None:
-        payload = json.dumps(data).encode("utf-8")
-        self.send_response(status)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Content-Length", str(len(payload)))
-        self.end_headers()
-        self.wfile.write(payload)
+        try:
+            payload = json.dumps(data).encode("utf-8")
+            self.send_response(status)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+        except (BrokenPipeError, ConnectionResetError):
+            pass
 
     def log_message(self, format: str, *args: Any) -> None:  # noqa: A002
         # Suppress noisy HTTP request logging to keep console clean

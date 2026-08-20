@@ -85,8 +85,12 @@ def install_pygame_display_patch(
             return
         last_frame_sent[0] = now
         try:
+            from PIL import Image
+
+            data_rgb = pygame.image.tobytes(surface, "RGB")
+            img = Image.frombytes("RGB", surface.get_size(), data_rgb)
             buf = io.BytesIO()
-            pygame.image.save(surface, buf, "png")
+            img.save(buf, format="PNG", compress_level=1)
             data = buf.getvalue()
             if not frame_queue.full():
                 frame_queue.put_nowait(data)
