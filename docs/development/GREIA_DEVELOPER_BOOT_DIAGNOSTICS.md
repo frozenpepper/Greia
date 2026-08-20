@@ -24,7 +24,7 @@ is an ext filesystem check/status line for the installed root filesystem. It is 
 
 It is **not** evidence that the machine is frozen at filesystem checking.
 
-Development images deliberately use `console=tty1` so a panic can remain observable, while still retaining `quiet`, `systemd.show_status=false` and `rd.systemd.show_status=false`. Therefore, after root mount, systemd may continue starting services without printing ordinary unit progress. If the graphical launcher/Xorg path then fails, VT1 can simply remain showing the last filesystem line indefinitely.
+During the current hardware-recovery phase, development images deliberately use `console=tty1`, `panic=0`, `loglevel=4` and visible systemd status so a fatal boot failure remains readable rather than rebooting. Normal/release images remain consoleless. If a development machine reaches `PIP_ROOT: clean ...` and then continues running without reaching the launcher, SSH and persistent journals are the next authorities for userspace/graphical-session diagnosis.
 
 Treat this symptom as:
 
@@ -96,7 +96,8 @@ The artifact verifier mounts the produced installer image read-only and checks *
 - root SSH remains denied;
 - Ed25519 host identity generation is present;
 - DHCP policy exists for wired and wireless interfaces;
-- the target payload is explicitly marked as a development image.
+- the target payload is explicitly marked as a development image;
+- the embedded installed-system GRUB policy contains the dev-only `console=tty1`, `panic=0`, `loglevel=4` and visible systemd-status contract.
 
 A build that fails these checks is not ready to flash.
 
@@ -122,7 +123,7 @@ This wrapper deliberately separates writing from verification:
 6. the verifier checks the FAT filesystem **read-only**;
 7. it mounts the actual USB key read-only and byte-compares kernel, initrd, live squashfs, target payload, Syslinux config and live-media identifier with the verified source image;
 8. it verifies `ldlinux.sys`, the active partition flag and the first 440 bytes of the Syslinux MBR bootstrap;
-9. it also refuses a Syslinux template that reintroduces `console=null` or the rejected `DISPLAY ... clear.msg` experiment on the current Acer development path;
+9. it refuses a Syslinux template that reintroduces `console=null`, timed panic reboot, `quiet`/`splash`/`loglevel=0`, or the rejected `DISPLAY ... clear.msg` experiment on the current Acer recovery path;
 10. reports success only after the final removable media itself passes read-back.
 
 The reason for keeping verification separate is architectural, not cosmetic: `tools/build-live-usb.sh` is the firmware-sensitive recipe established by `INSTALLATION_USB_BOOT_POSTMORTEM.md`. Safety checks should surround that recipe rather than continuously modifying it.
@@ -135,20 +136,26 @@ Greia live USB read-only verification: PASS
 usb_readback_verification=PASS
 source_artifact_verification=PASS
 usb_flash_readback_verification=PASS
+panic_policy=halt-on-panic
 ```
 
 Do not flash the intermediate ext/GRUB installer `.img` directly onto the reference Acer USB and assume that is equivalent. The physically proven Acer removable-media boot path remains Syslinux + active FAT32, produced by `tools/build-live-usb.sh` or the combined wrapper above.
 
 ### Recovery-pass visibility rule
 
-For the next physical Acer recovery pass, early boot visibility is intentional and required:
+For the current physical Acer recovery pass, early boot visibility is intentional and required:
 
 ```text
 console=tty1
-panic=30
+panic=0
+loglevel=4
+systemd.show_status=true
+rd.systemd.show_status=true
 ```
 
-Do not clear the Syslinux output and do not replace it with `console=null`. The installer USB postmortem explicitly established that observable Syslinux/kernel/live-boot output is what distinguishes a bootloader failure from kernel/initramfs/live-media failure. Child-visible console suppression remains a later release UX goal; it must not remove the diagnostic channel while the reference path is being recovered.
+The recovery Syslinux line intentionally omits `quiet`, `splash` and `loglevel=0`. `panic=0` means a fatal kernel/initramfs/live-boot failure remains on screen instead of rebooting after a timeout. Do not clear Syslinux output and do not replace the console with `console=null`.
+
+This is a development/recovery contract, not the final child-facing presentation design. The installer USB postmortem established that observable Syslinux/kernel/live-boot output is what distinguishes a bootloader failure from kernel/initramfs/live-media failure. Child-visible console suppression remains a later release UX goal and must be reintroduced only as a separately accepted boot-critical change.
 
 ## 4. Runtime SSH bootstrap contract
 
@@ -324,6 +331,7 @@ For the immediate Acer recovery acceptance, record at minimum:
 - development source-artifact verification completes;
 - final Syslinux/FAT32 USB read-only verification completes;
 - visible Syslinux/kernel/live-boot progression or exact last visible line on failure;
+- **no timed reboot on fatal live/install boot failure** (`panic=0` on dev recovery paths);
 - language selector is first and its mouse pointer works;
 - selecting Italian makes the following installer flow Italian;
 - live installer resolves/replies as `greia-installer.local` or via its DHCP IP;
