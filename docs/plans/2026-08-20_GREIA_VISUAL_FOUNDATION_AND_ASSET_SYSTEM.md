@@ -11,7 +11,7 @@ This plan owns **sequencing, current checkpoint, milestone state and append-only
 
 > **excellent individual assets → reusable asset packs → layered composition → subtle parallax / ambient motion / light / shadow → shared UI system → explicit semantic runtime consumption → Shell/Activity reuse**
 
-Broad source-art coverage already exists. **V5 shared consumption/integration remains the active phase.** The first Shell consumer is simulator-accepted, and the first Python Activity semantic consumer is now implemented in source. The next gate is simulator acceptance of that Activity path, not more art-pack production.
+Broad source-art coverage already exists. **V5 shared consumption/integration remains the active phase.** The first Shell shared visual is simulator-accepted, the first Python Activity semantic consumer is implemented in source, and the first substantial visible shared UI card consumer is now also implemented in the production child Shell. The current work is simulator acceptance of those reuse paths, not more art-pack production.
 
 ---
 
@@ -24,6 +24,7 @@ Broad source-art coverage already exists. **V5 shared consumption/integration re
 - **Reuse before duplication:** use shared generic assets instead of repainting them for each environment.
 - **Stop pack proliferation:** a new environment family requires a concrete reusable coverage gap.
 - **Cheap explicit runtime:** no runtime SVG rasterization, source-directory scanning, per-frame file decode/scale, or unbounded image caches.
+- **Visible integration matters:** plumbing gates must lead to actual Greia presentation improvements; do not spend the workstream indefinitely on invisible proof consumers.
 
 ---
 
@@ -82,6 +83,8 @@ src/greia_platform/pygame_visual_assets.py
 src/greia_launcher/visual_assets.py
 src/greia_launcher/main.py
 src/greia_launcher/presentation.py
+src/greia_launcher/shared_ui_presentation.py
+src/greia_launcher/child_shell.py
 activities/shape_garden/main.py
 assets/catalog/core_icons_v1.toml
 assets/catalog/shared_visuals_v1_source.toml
@@ -174,13 +177,42 @@ This gate remains **SOURCE only** until the Activity Simulator protocol passes:
 docs/testing/2026-08-20_V5_ACTIVITY_SHARED_VISUAL_SIMULATOR.md
 ```
 
-## 4.8 After the Python Activity gate
+## 4.8 First substantial visible shared UI consumer — SOURCE IMPLEMENTED, SIMULATOR PENDING
 
-Once Shape Garden passes the simulator protocol:
+The production child Shell now consumes the reviewed `ui.card.activity` artwork through:
+
+```text
+src/greia_launcher/shared_ui_presentation.py
+src/greia_launcher/child_shell.py
+```
+
+Behavior:
+
+- neutral Activity tiles request `ui.card.activity/default`;
+- selected / hovered / launching tiles request `ui.card.activity/focused`;
+- the authored 360:430 portrait ratio is preserved inside the existing logical launcher hit target instead of stretching the artwork into a square;
+- Activity icon and localized title are placed into the card's authored illustration well and lower label band;
+- the existing primitive launcher tile remains the fail-soft fallback when the optional shared card catalogue/PNG/cache path fails;
+- no Activity selection, hit target, catalogue, lifecycle or runtime authority is replaced by this mixin.
+
+This is the first V5 integration intended to produce a **clearly visible launcher change**, not merely prove plumbing.
+
+Required simulator protocol:
+
+```text
+docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md
+```
+
+Evidence remains **SOURCE** until that protocol passes.
+
+## 4.9 After the current simulator gates
+
+Once Shape Garden and the shared Activity cards pass their simulator protocols:
 
 1. record the first Python Activity shared-visual seam as **SIMULATOR VISUAL REVIEW**;
-2. design the future Web equivalent around the same semantic IDs/variants through a controlled URL/handle adapter, not host filesystem exposure;
-3. only then decide whether another Shell-only UI consumer (`ui.panel.base`, `ui.card.activity`, `ui.button.primary`) adds enough value to justify a separate tranche.
+2. record `ui.card.activity` as a substantial visible Shell consumer at **SIMULATOR VISUAL REVIEW** scope;
+3. design the future Web equivalent around the same semantic IDs/variants through a controlled URL/handle adapter, not host filesystem exposure;
+4. continue visible Greia integration by choosing the next existing shared UI family only where it materially improves the real Shell (likely `ui.panel.base` / category or launch surfaces, then `ui.button.primary`) rather than creating more proof-only consumers.
 
 ---
 
@@ -190,15 +222,17 @@ Once Shape Garden passes the simulator protocol:
 |---|---|
 | Stable guide | `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` |
 | Resume | `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` |
-| Active focus | **V5 — first Python Activity shared-visual seam simulator validation** |
+| Active focus | **V5 — simulator acceptance of Python semantic reuse + visible shared Activity cards** |
 | Environment coverage | V4 complete through Water/Pond; no new pack without concrete gap |
 | Catalogue/renditions | explicit semantic catalogue + generated PNG runtime catalogue present |
-| Shell consumer | `ui.shadow.soft` accepted at **SIMULATOR VISUAL REVIEW** scope |
+| First Shell consumer | `ui.shadow.soft` accepted at **SIMULATOR VISUAL REVIEW** scope |
+| Visible Shell card consumer | `ui.card.activity/default|focused` implemented in source; simulator pending |
 | Activity API | `get_shared_visual(...)` + `get_shared_visual_path(...)` implemented in source |
 | First Activity consumer | Shape Garden consumes `ui.shadow.soft` in source with optional fallback |
 | Activity acceptance | **not yet claimed** |
-| Required protocol | `docs/testing/2026-08-20_V5_ACTIVITY_SHARED_VISUAL_SIMULATOR.md` |
-| Next exact action | execute the Shape Garden simulator protocol; fix root causes; update plan/resume/HANDOVER with exact evidence |
+| Card acceptance | **not yet claimed** |
+| Required protocols | `docs/testing/2026-08-20_V5_ACTIVITY_SHARED_VISUAL_SIMULATOR.md`; `docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md` |
+| Next exact action | finish Shape Garden simulator acceptance already in progress; then execute shared-card simulator protocol, fix root causes, and update plan/resume/HANDOVER with exact evidence |
 
 ---
 
@@ -244,7 +278,10 @@ Once Shape Garden passes the simulator protocol:
 - [x] renderer-neutral **semantic request** portion of Activity API (`get_shared_visual`);
 - [x] first Python Activity source consumer (Shape Garden);
 - [ ] Shape Garden Activity Simulator acceptance;
+- [x] first substantial visible Shell shared-card source consumer;
+- [ ] shared Activity card simulator acceptance;
 - [ ] future Web Activity semantic adapter/transport;
+- [ ] further visible Shell integration using existing shared UI families where materially useful;
 - [ ] physical low-resource evidence where a stronger claim requires it.
 
 ---
@@ -281,7 +318,7 @@ Committed source is not PASS by itself. Generated runtime output is not consumer
 - broad exception swallowing;
 - more environment packs without a real gap;
 - duplicating generic shared masters;
-- adding launcher-only decoration instead of completing Shell/Activity reuse.
+- spending the visual workstream indefinitely on invisible plumbing once the seam is already proven.
 
 ---
 
@@ -369,4 +406,12 @@ Committed source is not PASS by itself. Generated runtime output is not consumer
 - Added `docs/testing/2026-08-20_V5_ACTIVITY_SHARED_VISUAL_SIMULATOR.md` as the required Activity Simulator acceptance protocol.
 - Evidence remains **SOURCE** until that protocol executes.
 
-Next exact action: **execute `docs/testing/2026-08-20_V5_ACTIVITY_SHARED_VISUAL_SIMULATOR.md` against Shape Garden, fix only shared/root causes, then record exact simulator evidence and advance toward the Web semantic adapter.**
+## 2026-08-20 — visible shared Activity cards moved into the real child Shell
+- Added `SharedUiActivityCardMixin` as a narrow presentation-only consumer of `ui.card.activity/default|focused`.
+- Production `GreiaChildShell` now composes that mixin above the existing launcher presentation; the Activity Simulator inherits the same real child Shell path.
+- The authored portrait card ratio, illustration well and label band are preserved inside the existing logical tile hit target.
+- Existing primitive tile rendering remains the fail-soft fallback; lifecycle/catalogue/input authority is unchanged.
+- Added `docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md` for simulator-only visual/responsive/fallback acceptance.
+- Evidence remains **SOURCE** until that protocol passes.
+
+Next exact action: **finish the Shape Garden simulator acceptance already in progress, then run `docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md`; fix only shared/root causes and record exact simulator evidence before the next visible UI integration tranche.**
