@@ -1,12 +1,11 @@
 """Launcher-owned Greia boot handoff and short intro.
 
-This module owns the first frame after X/Pygame acquires a real graphical
-surface and the short branded intro that follows it. It is deliberately small
-and bounded:
+This module owns the first branded frame after X/Pygame acquires a real
+graphical surface and the short branded intro that follows it. It is deliberately
+small and bounded:
 
-- the first X frame redraws the canonical boot canvas before the raw framebuffer
-  cover is released, avoiding an uninitialized/black handoff;
-- the first X frame carries a near-complete milestone progress bar;
+- the first launcher-owned frame redraws the canonical boot canvas and a
+  near-complete milestone progress bar;
 - intro timing is driven by ``time.monotonic()``, never by a fake boot timer;
 - intentional intro delay never exceeds 1.0 second;
 - the source canvas background colour is preserved on aspect-ratio letterbox
@@ -136,7 +135,6 @@ def draw_boot_handoff_frame(screen: Any, pygame: Any, *, progress: int = 92) -> 
     """Draw the first X-owned frame and return whether canonical art was available."""
     logo = load_logo()
     if logo is None:
-        # Avoid an uninitialized surface even if the asset is unexpectedly absent.
         screen.fill((13, 30, 60))
         _draw_progress_bar(screen, pygame, progress)
         return False
@@ -146,7 +144,13 @@ def draw_boot_handoff_frame(screen: Any, pygame: Any, *, progress: int = 92) -> 
 
 
 def run_intro(screen: Any, pygame: Any, *, marker: Path | None = None) -> None:
-    """Present the one-shot branded intro if it has not already played."""
+    """Publish the X handoff frame, then play the one-shot intro when enabled."""
+    # Always replace any uninitialized X surface with a real Greia frame before
+    # deciding whether the optional intro should play. The interactive launcher
+    # replaces this frame immediately after the bounded handoff.
+    draw_boot_handoff_frame(screen, pygame, progress=92)
+    pygame.display.flip()
+
     if skip_intro():
         return
     logo = load_logo()
