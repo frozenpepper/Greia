@@ -257,11 +257,38 @@ docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md
 
 All 6 responsive matrix viewports, baseline buttons, button hover, category open/return navigation, launch/return Home lifecycle, missing/malformed/corrupt-button fallback cases, and 29.6 FPS frame sanity passed with full evidence in `tmp/v5-button-simulator-evidence/`.
 
-## 4.11 After the category-button gate
+## 4.11 Fourth visible shared UI consumer — ACCEPTED (SIMULATOR VISUAL REVIEW)
 
-Following simulator acceptance of `ui.shadow.soft`, `ui.card.activity`, `ui.panel.base`, and `ui.button.primary`:
+The production child Shell consumes:
 
-1. record `ui.button.primary` as an accepted visible Shell consumer at **SIMULATOR VISUAL REVIEW** scope;
+```text
+ui.avatar.frame/default
+```
+
+through `SharedUiProfileChromeMixin` in `src/greia_launcher/profile_chrome_presentation.py`.
+
+Behavior:
+
+- profile picker cards overlay the reviewed storybook circular frame over the avatar area with centered icons and clean card backgrounds;
+- the active-profile switcher at the top-left of the Activity catalogue cleanly displays the circular frame badge without underlying square raised panel corners peeking;
+- the main Activity background panel (`ui.panel.base`) maximizes available vertical screen height (starting right under the category row at `panel_top=52..62` down to `bottom_margin=4`) while maintaining authentic 640:420 aspect ratio;
+- activity cards retain their full prominent large scale (~198-205px) comfortably centered within the inner panel tray;
+- non-intrusive headless simulator execution (`--headless` / `GREIA_SIMULATOR_HEADLESS=1`) operates silently via SDL dummy drivers without stealing window focus;
+- fail-soft isolation cleanly falls back to primitive profile treatment if the avatar frame fails while accepted panel, cards, and buttons remain live.
+
+Accepted via:
+
+```text
+docs/testing/2026-08-21_V5_SHARED_PROFILE_IDENTITY_SIMULATOR.md
+```
+
+All 6 responsive matrix viewports, profile picker baseline, active profile switcher, return to profile picker, missing/malformed/corrupt fallback cases, and 27.4 FPS frame sanity passed with evidence in `tmp/v5-profile-simulator-evidence/`.
+
+## 4.12 After the profile-identity gate
+
+Following simulator acceptance of `ui.shadow.soft`, `ui.card.activity`, `ui.panel.base`, `ui.button.primary`, and `ui.avatar.frame`:
+
+1. record `ui.avatar.frame` as an accepted visible Shell consumer at **SIMULATOR VISUAL REVIEW** scope;
 2. continue only to another product-visible shared UI surface that materially improves Greia, rather than adding proof-only consumers;
 3. separately complete the Web Activity semantic adapter using the same semantic IDs/variants through a controlled URL/handle transport, not host filesystem exposure;
 4. do not return to new environment-pack production without a demonstrated reusable coverage gap.
@@ -274,16 +301,17 @@ Following simulator acceptance of `ui.shadow.soft`, `ui.card.activity`, `ui.pane
 |---|---|
 | Stable guide | `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` |
 | Resume | `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` |
-| Active focus | **V5 — shared `ui.button.primary` category controls accepted in Activity Simulator** |
+| Active focus | **V5 — shared `ui.avatar.frame` profile identity accepted in Activity Simulator** |
 | Environment coverage | V4 complete through Water/Pond; no new pack without concrete gap |
 | Catalogue/renditions | explicit semantic catalogue + generated PNG runtime catalogue present |
 | First Shell consumer | `ui.shadow.soft` accepted at **SIMULATOR VISUAL REVIEW** scope |
 | Visible Shell card consumer | `ui.card.activity/default|focused` accepted at **SIMULATOR VISUAL REVIEW** scope |
 | Visible Shell panel consumer | `ui.panel.base/default` accepted at **SIMULATOR VISUAL REVIEW** scope |
 | Visible category-button consumer | `ui.button.primary/default|hover` accepted at **SIMULATOR VISUAL REVIEW** scope |
+| Visible profile-identity consumer | `ui.avatar.frame/default` accepted at **SIMULATOR VISUAL REVIEW** scope |
 | Activity API | `get_shared_visual(...)` + `get_shared_visual_path(...)` implemented in source |
 | First Activity consumer | Shape Garden consumes `ui.shadow.soft` in source with optional fallback; non-blocking simulator proof pending |
-| Completed visible protocols | `docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md`; `docs/testing/2026-08-20_V5_SHARED_UI_PANEL_SIMULATOR.md`; `docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md` |
+| Completed visible protocols | `docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md`; `docs/testing/2026-08-20_V5_SHARED_UI_PANEL_SIMULATOR.md`; `docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md`; `docs/testing/2026-08-21_V5_SHARED_PROFILE_IDENTITY_SIMULATOR.md` |
 | Next exact action | complete Web Activity semantic visual adapter or next targeted product-visible Shell integration |
 
 ---
@@ -335,7 +363,9 @@ Following simulator acceptance of `ui.shadow.soft`, `ui.card.activity`, `ui.pane
 - [x] shared Shell panel source consumer;
 - [x] shared Shell panel simulator acceptance;
 - [x] shared root category-button source consumer (`ui.button.primary/default|hover`);
-- [ ] shared category-button simulator acceptance;
+- [x] shared category-button simulator acceptance;
+- [x] shared profile-identity source consumer (`ui.avatar.frame/default`);
+- [x] shared profile-identity simulator acceptance;
 - [ ] future Web Activity semantic adapter/transport;
 - [ ] further visible Shell integration using existing shared UI families where materially useful;
 - [ ] physical low-resource evidence where a stronger claim requires it.

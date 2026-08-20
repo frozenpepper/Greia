@@ -17,7 +17,7 @@ from .ui_core import BoundedCache
 
 SurfaceT = TypeVar("SurfaceT")
 _MAX_SURFACE_DIMENSION = 2048
-_DEFAULT_MAX_SURFACE_PIXELS = 1024 * 600
+_DEFAULT_MAX_SURFACE_PIXELS = 1920 * 1080
 
 
 class VisualSurfaceCacheError(ValueError):

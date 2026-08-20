@@ -575,8 +575,8 @@ class GreiaLauncherPresentation(LauncherApplication):
             else None
         )
         if inner_panel is not None:
-            pad_x = max(16, inner_panel.width // 36)
-            pad_y = max(14, inner_panel.height // 32)
+            pad_x = max(12, inner_panel.width // 60)
+            pad_y = max(6, inner_panel.height // 50)
             avail_w = max(240, inner_panel.width - pad_x * 2)
             avail_h = max(180, inner_panel.height - pad_y * 2)
             tile_size = min(
@@ -584,7 +584,7 @@ class GreiaLauncherPresentation(LauncherApplication):
                 (avail_w - gap * (columns - 1)) // columns,
                 (avail_h - gap * (rows - 1)) // rows,
             )
-            tile_size = max(90, tile_size)
+            tile_size = max(115, tile_size)
             total_width = columns * tile_size + (columns - 1) * gap
             total_height = rows * tile_size + (rows - 1) * gap
             origin_x = inner_panel.centerx - total_width // 2

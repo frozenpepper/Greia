@@ -311,4 +311,72 @@ All acceptance was performed through the Greia Activity Simulator (`http://127.0
 - **No Physical Hardware / Acer Performance Claim:** Verified through Activity Simulator only (`SIMULATOR VISUAL REVIEW`).
 - **No R7 Architecture Closure:** Display coordinator and session boundary remain open.
 
+---
+
+# Greia V5 Shared Profile Identity Frame — Simulator Acceptance Result
+
+**Date:** 2026-08-21  
+**Repository:** `frozenpepper/Greia` (`main`)  
+**Runbook Authority:** `docs/testing/2026-08-21_V5_SHARED_PROFILE_IDENTITY_SIMULATOR.md`  
+**Consumer:** `ui.avatar.frame` (`default`)  
+**Evidence Class:** `SIMULATOR VISUAL REVIEW`  
+
+---
+
+## 1. Git & Commit Summary
+
+- **Start Base SHA:** `bf336ea`
+- **Head SHA:** (Current working tree)
+
+---
+
+## 2. Shared Profile Identity Integration Details
+
+- **Semantic Asset ID:** `ui.avatar.frame`, variant `default = "visual/runtime/v1/ui/avatar_frame.png"`
+- **Implementation Mixin:** `SharedUiProfileChromeMixin` in `src/greia_launcher/profile_chrome_presentation.py` mixed into `GreiaChildShell`.
+- **Integrated Surfaces:**
+  1. Profile Picker cards: Storybook circular frame replaces avatar well with centered icon, clean card background, and crisp profile name.
+  2. Active-profile switcher in Activity catalogue: Top-left circular badge cleanly frames active profile avatar without square raised panel peeking.
+- **Composition & Panel Sizing:**
+  - Panel (`ui.panel.base`) height maximized (`panel_top=52..62`, `bottom_margin=4`) with authentic 640:420 aspect ratio framing the 3-column activity grid.
+  - Activity cards retain full prominent large scale (~198-205px) comfortably centered within the inner panel tray.
+- **Headless Testing Infrastructure:** Added `--headless` argument and `GREIA_SIMULATOR_HEADLESS=1` support to `greia_simulator/child_shell.py` enabling complete non-intrusive headless simulator execution via SDL dummy drivers without stealing window focus.
+- **Fail-Soft Isolation:** Failure on `ui.avatar.frame` sets `self._shared_profile_frame_disabled = True`, seamlessly falling back to primitive profile treatment while `ui.panel.base`, `ui.card.activity`, and `ui.button.primary` remain 100% active.
+
+---
+
+## 3. Greia Simulator Acceptance Matrix
+
+All acceptance was performed through the Greia Activity Simulator in headless mode (`http://127.0.0.1:8767`) with isolated state root `$HOME/.greia-simulator-v5-profile`:
+
+| Test # | Viewport | Interface Size | Mode | Result | Screenshot Evidence | Status File |
+|---|---|---|---|---|---|---|
+| **01** | 1024x600 | Normal | Baseline Profile Picker | **PASS** | `tmp/v5-profile-simulator-evidence/01-profile-frame-1024x600.png` | `01-status-profile.json` |
+| **02** | 1024x600 | Normal | Active Profile Switcher | **PASS** | `tmp/v5-profile-simulator-evidence/02-active-profile-frame.png` | mode: activities |
+| **03** | 1024x600 | Normal | Return to Profile Picker | **PASS** | `tmp/v5-profile-simulator-evidence/03-returned-profile-picker.png` | mode: profiles |
+| **04** | 1024x600 | Normal | Fallback: Missing Catalogue | **PASS** | `tmp/v5-profile-simulator-evidence/10-fallback-missing-catalogue-profile.png`, `10-fallback-missing-catalogue-activities.png` | N/A |
+| **05** | 1024x600 | Normal | Fallback: Malformed Catalogue | **PASS** | `tmp/v5-profile-simulator-evidence/11-fallback-malformed-catalogue.png` | N/A |
+| **06** | 1024x600 | Normal | Fallback: Corrupt Avatar PNG | **PASS** | `tmp/v5-profile-simulator-evidence/12-fallback-corrupt-avatar-profile.png`, `12-fallback-corrupt-avatar-activities.png` (panel, cards & buttons stay active) | N/A |
+| **07** | 1024x600 | Normal | Responsive Row 1 | **PASS** | `tmp/v5-profile-simulator-evidence/20-1024x600-normal-profile.png`, `20-1024x600-normal-activities.png` | N/A |
+| **08** | 1024x600 | Large | Responsive Row 2 | **PASS** | `tmp/v5-profile-simulator-evidence/21-1024x600-large-profile.png` | N/A |
+| **09** | 1280x800 | Normal | Responsive Row 3 | **PASS** | `tmp/v5-profile-simulator-evidence/22-1280x800-normal-profile.png` | N/A |
+| **10** | 1366x768 | Compact | Responsive Row 4 | **PASS** | `tmp/v5-profile-simulator-evidence/23-1366x768-compact-profile.png`, `23-1366x768-compact-activities.png` | N/A |
+| **11** | 1920x1080 | Normal | Responsive Row 5 | **PASS** | `tmp/v5-profile-simulator-evidence/24-1920x1080-normal-profile.png`, `24-1920x1080-normal-activities.png` | N/A |
+| **12** | 1111x700 | Normal | Responsive Row 6 | **PASS** | `tmp/v5-profile-simulator-evidence/25-1111x700-normal-profile.png` | N/A |
+
+---
+
+## 4. Frame Rate & Performance Sanity
+
+- **Measurement:** 10-second idle measurement in headless simulator.
+- **Frames Rendered:** 274 frames across 10.01 seconds (**27.4 FPS**, steady clock performance).
+- **Status Evidence:** `tmp/v5-profile-simulator-evidence/frame-before.json` and `frame-after.json`.
+
+---
+
+## 5. Explicit Non-Claims
+
+- **No Physical Hardware / Acer Performance Claim:** Verified through Activity Simulator only (`SIMULATOR VISUAL REVIEW`).
+- **No R7 Architecture Closure:** Display coordinator and session boundary remain open.
+
 

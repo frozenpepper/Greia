@@ -145,8 +145,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--capability", action="append", default=[])
     parser.add_argument("--remote-port", type=int, default=DEFAULT_REMOTE_PORT)
     parser.add_argument("--no-remote", action="store_true", default=False)
+    parser.add_argument("--headless", action="store_true", default=False, help="Run without opening a GUI window")
     parser.add_argument("--language", "--locale", default=None, help="Language code (e.g. it, en, es)")
     args = parser.parse_args(argv)
+
+    if args.headless or os.environ.get("GREIA_SIMULATOR_HEADLESS") == "1":
+        os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+        os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
 
     if args.language:
         os.environ["GREIA_PROFILE_LOCALE"] = args.language

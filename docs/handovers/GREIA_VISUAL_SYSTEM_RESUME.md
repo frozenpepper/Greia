@@ -101,9 +101,10 @@ ui.shadow.soft       SIMULATOR VISUAL REVIEW
 ui.card.activity     SIMULATOR VISUAL REVIEW
 ui.panel.base        SIMULATOR VISUAL REVIEW
 ui.button.primary    SIMULATOR VISUAL REVIEW
+ui.avatar.frame      SIMULATOR VISUAL REVIEW
 ```
 
-The latest accepted category-button run also confirmed category open/back navigation, isolated hover-button fallback, full responsive matrix and ~29.6 FPS simulator sanity.
+The latest accepted profile-identity run also confirmed profile picker frames, active-profile switcher frame, maximized panel vertical height framing full-scale activity cards (~198-205px), headless test runner via SDL dummy driver, full responsive matrix, and ~27.4 FPS simulator sanity.
 
 No physical Acer/Pi visual-performance claim and no R7 closure.
 
@@ -147,19 +148,19 @@ assets/catalog/shared_visuals_v1_source.toml
 
 Already accepted:
 
-- `ui.panel.base` frames the profile picker and Activity catalogue;
-- `ui.card.activity/default|focused` renders Activity tiles;
+- `ui.panel.base` frames the profile picker and Activity catalogue (maximized height `panel_top=52..62`, `bottom_margin=4` with true 640:420 aspect ratio);
+- `ui.card.activity/default|focused` renders full large-scale Activity tiles;
 - `ui.button.primary/default|hover` renders the root category row;
+- `ui.avatar.frame/default` frames profile picker cards and active profile switcher badge;
 - `ui.shadow.soft` provides shared tile grounding;
+- `child_shell.py` supports `--headless` and `GREIA_SIMULATOR_HEADLESS=1` for non-intrusive headless testing;
 - all remain presentation-only with narrow fail-soft fallback.
-
-A later source fix also aligned the Activity grid to the authored inner region of `ui.panel.base`; preserve that relationship when changing grid/panel geometry.
 
 ---
 
-# 7. Current exact gate — shared profile identity frame
+# 7. Completed gate — shared profile identity frame
 
-New source consumer:
+Accepted consumer:
 
 ```text
 ui.avatar.frame/default
@@ -171,13 +172,7 @@ Source master:
 assets/visual/ui/v0.1/avatar_frame.svg
 ```
 
-Source rendition declaration:
-
-```text
-assets/catalog/shared_visuals_v1_source.toml
-```
-
-Expected generated runtime path after `make visual-assets`:
+Generated runtime path:
 
 ```text
 assets/visual/runtime/v1/ui/avatar_frame.png
@@ -194,17 +189,13 @@ src/greia_launcher/profile_chrome_presentation.py
 1. each visible profile identity in the profile picker;
 2. the active-profile switcher at the top-left of the Activity catalogue.
 
-It deliberately leaves profile storage, selection, hit targets and lifecycle in the existing launcher. The base primitive profile treatment is already drawn first, so a missing/corrupt frame falls back without replacing profile authority.
-
-Current evidence: **SOURCE only** until the required simulator protocol passes.
-
-Required protocol:
+Accepted protocol:
 
 ```text
 docs/testing/2026-08-21_V5_SHARED_PROFILE_IDENTITY_SIMULATOR.md
 ```
 
-The local agent must regenerate runtime renditions first with `make visual-assets`, then execute all runtime/visual/fallback/responsive acceptance through the Greia Activity Simulator.
+All 6 responsive matrix viewports, profile picker baseline, active profile switcher, return to profile picker, missing/malformed/corrupt fallback cases, and 27.4 FPS frame sanity passed with evidence in `tmp/v5-profile-simulator-evidence/`.
 
 ---
 
@@ -212,22 +203,14 @@ The local agent must regenerate runtime renditions first with `make visual-asset
 
 ```text
 1. sync current main
-2. read docs/testing/2026-08-21_V5_SHARED_PROFILE_IDENTITY_SIMULATOR.md
-3. run make visual-assets to generate ui.avatar.frame/default PNG + catalogue entry
-4. start the real Greia Activity Simulator
-5. verify profile-picker shared frames
-6. verify active-profile switcher shared frame
-7. verify profile switch lifecycle
-8. verify missing/malformed catalogue fallback
-9. verify corrupt avatar-frame PNG fallback is isolated while panel/cards/buttons remain shared
-10. run full responsive matrix
-11. run frame-count sanity
-12. fix only shared/root causes
-13. update plan/resume/HANDOVER/LOCAL_AGENT_RESULT.md
-14. commit and push accepted work to main
+2. continue with the next targeted product-visible shared UI surface or Web Activity semantic adapter
+3. preserve headless simulator testing (--headless / GREIA_SIMULATOR_HEADLESS=1) so local work is non-intrusive
+4. run full responsive matrix and fail-soft verification
+5. update plan/resume/HANDOVER/LOCAL_AGENT_RESULT.md
+6. commit and push accepted work to main
 ```
 
-After this gate, continue with another coherent product-visible UI tranche or the Web semantic adapter. Do not return to new environment-pack production unless a concrete reusable coverage gap appears.
+Do not return to new environment-pack production unless a concrete reusable coverage gap appears.
 
 ---
 
@@ -239,11 +222,6 @@ Accepted visible-Shell protocols:
 docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md
 docs/testing/2026-08-20_V5_SHARED_UI_PANEL_SIMULATOR.md
 docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md
-```
-
-Current pending protocol:
-
-```text
 docs/testing/2026-08-21_V5_SHARED_PROFILE_IDENTITY_SIMULATOR.md
 ```
 

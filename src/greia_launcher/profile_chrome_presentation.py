@@ -52,6 +52,7 @@ class SharedUiProfileChromeMixin:
                 screen,
                 target.rect,
                 target.value,
+                theme,
                 pygame,
             )
 
@@ -72,6 +73,7 @@ class SharedUiProfileChromeMixin:
             screen,
             badge,
             self._active_profile.profile,
+            theme,
             pygame,
         )
 
@@ -97,6 +99,7 @@ class SharedUiProfileChromeMixin:
         screen: Any,
         rect: Any,
         profile: Any,
+        theme: Any,
         pygame: Any,
     ) -> None:
         frame_size = max(
@@ -115,6 +118,24 @@ class SharedUiProfileChromeMixin:
             rect.centerx,
             int(round(rect.top + rect.height * 0.40)),
         )
+
+        selected_idx = getattr(self, "_profile_selected", None)
+        is_selected = False
+        if hasattr(self, "profiles") and selected_idx is not None and 0 <= selected_idx < len(self.profiles):
+            is_selected = self.profiles[selected_idx].profile_id == profile.profile_id
+
+        pygame.draw.rect(screen, theme.panel, rect, border_radius=26)
+        outline_color = theme.accent if is_selected else tuple(
+            int(c1 * 0.72 + c2 * 0.28) for c1, c2 in zip(theme.text[:3], theme.panel[:3])
+        )
+        pygame.draw.rect(
+            screen,
+            outline_color,
+            rect,
+            width=8 if is_selected else 3,
+            border_radius=26,
+        )
+
         screen.blit(frame_surface, frame_rect)
 
         avatar_size = max(30, int(round(frame_size * 0.53)))
@@ -126,17 +147,32 @@ class SharedUiProfileChromeMixin:
         )
         screen.blit(avatar, avatar.get_rect(center=avatar_center))
 
+        font_size = max(23, min(38, rect.height // 6))
+        max_name_width = rect.width - 18
+        name = self._profile_name_surface(
+            profile.display_name, font_size, max_name_width, theme.text, pygame
+        )
+        screen.blit(name, name.get_rect(center=(rect.centerx, rect.bottom - rect.height * 0.15)))
+
+        if profile.has_secret:
+            lock = self._load_icon("yellow_star", max(26, rect.width // 7), pygame)
+            screen.blit(lock, lock.get_rect(topright=(rect.right - 8, rect.top + 8)))
+
     def _overlay_active_profile_frame(
         self,
         screen: Any,
         badge: Any,
         profile: Any,
+        theme: Any,
         pygame: Any,
     ) -> None:
         frame_size = min(badge.width, badge.height)
         frame_surface = self._avatar_frame_surface(frame_size, pygame)
         if frame_surface is None:
             return
+
+        clear_rect = badge.inflate(16, 16)
+        pygame.draw.rect(screen, theme.background, clear_rect)
 
         frame_rect = frame_surface.get_rect(center=badge.center)
         screen.blit(frame_surface, frame_rect)
