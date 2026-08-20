@@ -1,0 +1,74 @@
+catalog_id = "greia.environment.workshop.v0.1"
+catalog_version = "0.1.0"
+status = "candidate"
+runtime_consumed = false
+active_plan = "docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md"
+provenance = "programmatic Greia source artwork created in-repo"
+notes = "First indoor creative/workshop individual-asset tranche. No baked room scene."
+
+[[assets]]
+id = "workshop.workbench"
+path = "workbench.svg"
+status = "candidate"
+alpha = true
+[[assets]]
+id = "workshop.shelf"
+path = "shelf.svg"
+status = "candidate"
+alpha = true
+[[assets]]
+id = "workshop.paint.palette"
+path = "paint_palette.svg"
+status = "candidate"
+alpha = true
+[[assets]]
+id = "workshop.brush.bundle"
+path = "brush_bundle.svg"
+status = "candidate"
+alpha = true
+[[assets]]
+id = "workshop.pencil.cup"
+path = "pencil_cup.svg"
+status = "candidate"
+alpha = true
+[[assets]]
+id = "workshop.blocks"
+path = "blocks.svg"
+status = "candidate"
+alpha = true
+[[assets]]
+id = "workshop.storage.box"
+path = "storage_box.svg"
+status = "candidate"
+alpha = true
+[[assets]]
+id = "workshop.paper.stack"
+path = "paper_stack.svg"
+status = "candidate"
+alpha = true
+[[assets]]
+id = "workshop.rug"
+path = "rug.svg"
+status = "candidate"
+alpha = true
+[[assets]]
+id = "workshop.desk.lamp"
+path = "desk_lamp.svg"
+status = "candidate"
+alpha = true
+[[assets]]
+id = "workshop.window"
+path = "window.svg"
+status = "candidate"
+alpha = true
+[[assets]]
+id = "workshop.window.light"
+path = "window_light.svg"
+status = "candidate"
+alpha = true
+ambient_motion = "very_slow_breathe_optional"
+[[assets]]
+id = "workshop.paint.jars"
+path = "paint_jars.svg"
+status = "candidate"
+alpha = true
