@@ -20,7 +20,7 @@ class BootDiagnosticsHardeningTests(unittest.TestCase):
         )
         self.assertIn("P6 raster data is binary", source)
 
-    def test_target_and_live_installer_prepare_developer_ssh_before_validation(self) -> None:
+    def test_target_and_live_installer_enforce_password_only_developer_ssh(self) -> None:
         for overlay in ("build/overlay", "build/installer-overlay"):
             with self.subTest(overlay=overlay):
                 helper = ROOT / overlay / "usr/local/lib/greia-os/prepare-developer-ssh"
@@ -33,10 +33,19 @@ class BootDiagnosticsHardeningTests(unittest.TestCase):
                 self.assertTrue(dropin.is_file())
 
                 helper_text = helper.read_text(encoding="utf-8")
-                self.assertIn("/usr/bin/ssh-keygen -A", helper_text)
                 self.assertIn("developer-remote", helper_text)
-                self.assertIn("AuthenticationMethods any", helper_text)
-                self.assertIn("publickey,password", helper_text)
+                self.assertIn("AuthenticationMethods password", helper_text)
+                self.assertIn("PasswordAuthentication yes", helper_text)
+                self.assertIn("KbdInteractiveAuthentication no", helper_text)
+                self.assertIn("PermitRootLogin no", helper_text)
+                self.assertIn("AllowUsers greia", helper_text)
+                self.assertIn("passwd -S greia", helper_text)
+                self.assertIn("ssh_host_ed25519_key", helper_text)
+                self.assertIn("ssh-keygen -q -t ed25519", helper_text)
+                self.assertIn("/usr/sbin/sshd -T", helper_text)
+                self.assertIn("passwordauthentication yes", helper_text)
+                self.assertIn("authenticationmethods password", helper_text)
+                self.assertNotIn("AuthenticationMethods any", helper_text)
 
                 unit = dropin.read_text(encoding="utf-8")
                 self.assertIn("ExecStartPre=\n", unit)
@@ -45,6 +54,36 @@ class BootDiagnosticsHardeningTests(unittest.TestCase):
                     unit,
                 )
                 self.assertIn("ExecStartPre=/usr/sbin/sshd -t", unit)
+
+    def test_developer_profiles_include_remote_support_in_both_artifacts(self) -> None:
+        profiles = sorted((ROOT / "build/profiles").glob("*-dev.toml"))
+        self.assertGreaterEqual(len(profiles), 1)
+        for profile in profiles:
+            with self.subTest(profile=profile.name):
+                text = profile.read_text(encoding="utf-8")
+                # One declaration in target_sets and one in installer_sets.
+                self.assertGreaterEqual(text.count('"developer-remote"'), 2)
+
+    def test_live_installer_explicitly_starts_recovery_network_services(self) -> None:
+        service = (
+            ROOT / "build/installer-overlay/etc/systemd/system/greia-installer.service"
+        ).read_text(encoding="utf-8")
+        for unit in (
+            "iwd.service",
+            "systemd-resolved.service",
+            "systemd-networkd.service",
+            "avahi-daemon.service",
+        ):
+            self.assertIn(unit, service)
+
+        wired = ROOT / "build/installer-overlay/etc/systemd/network/20-greia-wired.network"
+        wireless = ROOT / "build/installer-overlay/etc/systemd/network/25-greia-wireless.network"
+        self.assertTrue(wired.is_file())
+        self.assertTrue(wireless.is_file())
+        self.assertIn("DHCP=yes", wired.read_text(encoding="utf-8"))
+        self.assertIn("DHCP=yes", wireless.read_text(encoding="utf-8"))
+        self.assertIn("MulticastDNS=yes", wired.read_text(encoding="utf-8"))
+        self.assertIn("MulticastDNS=yes", wireless.read_text(encoding="utf-8"))
 
     def test_normal_security_floor_still_disables_password_and_root_ssh(self) -> None:
         security_floor = (
