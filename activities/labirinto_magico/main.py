@@ -20,7 +20,7 @@ from greia_platform.activity_api import (
     get_theme,
     mark_activity_ready,
 )
-from greia_platform.activity_ui import ChildUiMetrics
+from greia_platform.activity_ui import ChildUiMetrics, is_home_clicked
 from greia_platform.localization import (
     ActivityLocaleSupport,
     LocalizedResources,
@@ -432,6 +432,9 @@ def main() -> int:
                 metrics = ChildUiMetrics.for_size(*screen.get_size())
                 canvas = PygameReferenceCanvas(screen)
             elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    running = False
+                    continue
                 if is_victory:
                     if event.key in (pygame.K_SPACE, pygame.K_RETURN, pygame.K_r):
                         start_new_game()
@@ -464,6 +467,9 @@ def main() -> int:
                 elif event.key in (pygame.K_b, pygame.K_m):
                     biome_idx = (biome_idx + 1) % len(BIOMES)
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if is_home_clicked(screen, event.pos):
+                    running = False
+                    continue
                 pointer = canvas.pointer(event.pos)
                 if pointer is None:
                     continue
@@ -728,7 +734,7 @@ def main() -> int:
             mark_activity_ready()
             ready_published = True
 
-        clock.tick(60)
+        clock.tick(30)
 
     pygame.quit()
     return 0

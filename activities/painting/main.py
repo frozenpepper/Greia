@@ -17,11 +17,14 @@ from greia_platform.activity_api import (
 )
 from greia_platform.activity_ui import (
     ChildUiMetrics,
+    draw_activity_pointer,
     draw_eraser_symbol,
     draw_grid_symbol,
     draw_icon_button,
     draw_plus_symbol,
+    draw_system_chrome_overlay,
     draw_undo_symbol,
+    is_home_clicked,
     load_icon,
     mix,
 )
@@ -273,6 +276,9 @@ class PaintingApp:
             self._finish_stroke()
             return True
 
+        if is_home_clicked(self.screen, pos):
+            return not self._save()
+
         gallery = self.metrics.activity_toolbar_button(0, side="left")
         undo = self.metrics.activity_toolbar_button(1, side="left")
         new = self.metrics.activity_toolbar_button(0, side="right")
@@ -494,6 +500,8 @@ class PaintingApp:
         else:
             self._draw_canvas()
             self._draw_palette()
+        draw_system_chrome_overlay(self.screen)
+        draw_activity_pointer(self.screen)
 
     def _draw_canvas(self) -> None:
         pygame.draw.rect(self.screen, mix(self.theme.text, self.theme.background, 0.82), self.canvas_rect.inflate(self.metrics.px(4), self.metrics.px(4)), border_radius=self.metrics.radius)

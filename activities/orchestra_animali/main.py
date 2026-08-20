@@ -18,7 +18,7 @@ from greia_platform.activity_api import (
     get_theme,
     mark_activity_ready,
 )
-from greia_platform.activity_ui import ChildUiMetrics, mix
+from greia_platform.activity_ui import ChildUiMetrics, is_home_clicked, mix
 from greia_platform.localization import (
     ActivityLocaleSupport,
     LocalizedResources,
@@ -459,6 +459,9 @@ def main() -> int:
                         ball.vx = 0.0
                         ball.vy = 0.0
             elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                if is_home_clicked(screen, event.pos):
+                    running = False
+                    continue
                 if ball.is_held:
                     ball.is_held = False
                     # Velocity from flick

@@ -20,7 +20,7 @@ from greia_platform.activity_api import (
     get_theme,
     mark_activity_ready,
 )
-from greia_platform.activity_ui import ChildUiMetrics
+from greia_platform.activity_ui import ChildUiMetrics, is_home_clicked
 from greia_platform.localization import (
     ActivityLocaleSupport,
     LocalizedResources,
@@ -227,11 +227,16 @@ def main() -> int:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                running = False
             elif event.type == pygame.VIDEORESIZE:
                 screen = pygame.display.get_surface() or screen
                 metrics = ChildUiMetrics.for_size(*screen.get_size())
                 canvas = PygameReferenceCanvas(screen)
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if is_home_clicked(screen, event.pos):
+                    running = False
+                    continue
                 pointer = canvas.pointer(event.pos)
                 if pointer is None:
                     continue
@@ -630,7 +635,7 @@ def main() -> int:
             mark_activity_ready()
             ready_published = True
 
-        clock.tick(60)
+        clock.tick(30)
 
     pygame.quit()
     return 0

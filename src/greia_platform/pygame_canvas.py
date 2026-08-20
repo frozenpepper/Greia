@@ -210,6 +210,8 @@ class PygameReferenceCanvas:
         *,
         clear: tuple[int, int, int] | tuple[int, int, int, int] | None = None,
         smooth: bool = False,
+        system_chrome: bool = True,
+        pointer: bool = True,
     ) -> None:
         if clear is not None:
             self.target.fill(clear)
@@ -245,6 +247,16 @@ class PygameReferenceCanvas:
             )
         finally:
             self.target.set_clip(previous_clip)
+
+        if system_chrome:
+            from .activity_ui import draw_system_chrome_overlay
+
+            draw_system_chrome_overlay(self.target)
+
+        if pointer:
+            from .activity_ui import draw_activity_pointer
+
+            draw_activity_pointer(self.target)
 
 
 __all__ = [

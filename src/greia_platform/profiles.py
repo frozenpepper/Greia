@@ -605,7 +605,10 @@ class ActiveProfileSession:
 
     @contextmanager
     def _mutation_lock(self) -> Iterator[None]:
-        self.lock_path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            self.lock_path.parent.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            pass
         with self.lock_path.open("a+b") as handle:
             os.chmod(self.lock_path, 0o660)
             try:
@@ -652,7 +655,10 @@ def _validate_profile_id(profile_id: str) -> None:
 
 
 def _atomic_write_json(path: Path, payload: Mapping[str, object]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        pass
     descriptor, temporary_name = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
     temporary = Path(temporary_name)
     try:

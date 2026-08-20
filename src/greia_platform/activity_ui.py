@@ -407,3 +407,119 @@ def mix(
         )
         for channel, target in zip(color, other)
     )
+
+
+def draw_system_chrome_overlay(
+    surface: pygame.Surface,
+    *,
+    back_available: bool = False,
+    outline_color: tuple[int, int, int] = (78, 56, 40),
+    fill_color: tuple[int, int, int] = (255, 252, 245),
+) -> None:
+    """Draw the Greia platform-owned Home (and optional Back) button on the given surface."""
+    w, h = surface.get_size()
+    if w <= 0 or h <= 0:
+        return
+    chrome = ActivitySystemChromeLayout.for_surface(w, h, back_available=back_available)
+    hb = chrome.home_hitbox
+    home_rect = pygame.Rect(hb.x, hb.y, hb.width, hb.height)
+
+    # Drop shadow
+    shadow_rect = home_rect.move(0, 3)
+    shadow_color = (0, 0, 0, 45) if surface.get_flags() & pygame.SRCALPHA else (180, 160, 140)
+    pygame.draw.rect(
+        surface,
+        shadow_color,
+        shadow_rect,
+        border_radius=max(8, home_rect.width // 3),
+    )
+
+    # Warm tactile Home button pill
+    pygame.draw.rect(
+        surface,
+        fill_color,
+        home_rect,
+        border_radius=max(8, home_rect.width // 3),
+    )
+    # Subtle top bevel highlight
+    highlight_rect = pygame.Rect(
+        home_rect.x + 2,
+        home_rect.y + 2,
+        home_rect.width - 4,
+        max(2, home_rect.height // 2),
+    )
+    pygame.draw.rect(
+        surface,
+        (255, 255, 255),
+        highlight_rect,
+        border_top_left_radius=max(6, home_rect.width // 3 - 2),
+        border_top_right_radius=max(6, home_rect.width // 3 - 2),
+    )
+    # Outline
+    pygame.draw.rect(
+        surface,
+        outline_color,
+        home_rect,
+        width=max(2, home_rect.width // 24),
+        border_radius=max(8, home_rect.width // 3),
+    )
+    draw_home_symbol(surface, home_rect, outline_color)
+
+    if chrome.back_available:
+        bb = chrome.back_hitbox
+        back_rect = pygame.Rect(bb.x, bb.y, bb.width, bb.height)
+        back_shadow = back_rect.move(0, 3)
+        pygame.draw.rect(
+            surface,
+            shadow_color,
+            back_shadow,
+            border_radius=max(8, back_rect.width // 3),
+        )
+        pygame.draw.rect(
+            surface,
+            fill_color,
+            back_rect,
+            border_radius=max(8, back_rect.width // 3),
+        )
+        pygame.draw.rect(
+            surface,
+            outline_color,
+            back_rect,
+            width=max(2, back_rect.width // 24),
+            border_radius=max(8, back_rect.width // 3),
+        )
+        draw_back_symbol(surface, back_rect, outline_color)
+
+
+def draw_activity_pointer(
+    surface: pygame.Surface,
+    pos: tuple[int, int] | None = None,
+    *,
+    color: tuple[int, int, int] = (254, 202, 87),
+    inner_color: tuple[int, int, int] = (255, 255, 255),
+    border_color: tuple[int, int, int] = (78, 56, 40),
+    radius: int = 11,
+) -> None:
+    """Draw Greia's high-contrast responsive pointer cursor at the mouse position."""
+    if pos is None:
+        if not pygame.mouse.get_focused():
+            return
+        pos = pygame.mouse.get_pos()
+    x, y = pos
+    if x <= 0 and y <= 0:
+        return
+    pygame.draw.circle(surface, color, pos, radius)
+    pygame.draw.circle(surface, inner_color, pos, max(1, radius // 2))
+    pygame.draw.circle(surface, border_color, pos, radius, max(1, radius // 5))
+
+
+def is_home_clicked(surface: pygame.Surface, pos: tuple[int, int]) -> bool:
+    """Return whether pos is within the platform-owned Home button hitbox."""
+    w, h = surface.get_size()
+    if w <= 0 or h <= 0:
+        return False
+    try:
+        chrome = ActivitySystemChromeLayout.for_surface(w, h)
+        return chrome.home_hitbox.contains(pos[0], pos[1])
+    except (TypeError, ValueError):
+        return False

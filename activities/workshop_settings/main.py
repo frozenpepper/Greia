@@ -23,6 +23,11 @@ from greia_platform.activity_api import (
     set_interface_size,
     set_theme_color,
 )
+from greia_platform.activity_ui import (
+    draw_activity_pointer,
+    draw_system_chrome_overlay,
+    is_home_clicked,
+)
 from greia_platform.activity_viewport import ActivityViewport
 from greia_platform.customization import ColorSwatch, WallpaperCandidate
 from greia_platform.responsive_layout import AdaptiveGridPolicy, UiRect, Viewport
@@ -150,6 +155,9 @@ class MyGreiaSettings:
             self._apply_size(sizes[(current + delta) % len(sizes)])
 
     def _handle_click(self, position: tuple[int, int]) -> None:
+        if is_home_clicked(self.screen, position):
+            self.running = False
+            return
         for target in reversed(self.targets):
             if not target.rect.collidepoint(position):
                 continue
@@ -266,6 +274,7 @@ class MyGreiaSettings:
         else:
             self._draw_avatars()
         self._draw_feedback()
+        draw_system_chrome_overlay(self.screen)
         self._draw_pointer()
 
     def _draw_mode_bar(self) -> None:
@@ -675,13 +684,7 @@ class MyGreiaSettings:
         self._blit_icon("x_mark" if self.feedback_error else "check", rect)
 
     def _draw_pointer(self) -> None:
-        if not pygame.mouse.get_focused():
-            return
-        size = self._viewport().bounded_px(44, minimum=32, maximum=54)
-        icon = pygame.transform.smoothscale(
-            self.icons["yellow_star"], (size, size)
-        )
-        self.screen.blit(icon, icon.get_rect(center=pygame.mouse.get_pos()))
+        draw_activity_pointer(self.screen)
 
     def _blit_icon(self, icon_id: str, rect: pygame.Rect) -> None:
         source = self.icons[icon_id]

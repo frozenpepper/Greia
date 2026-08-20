@@ -215,7 +215,7 @@ chroot "$ROOTFS" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
 chroot "$ROOTFS" groupadd --system pipsettings
 chroot "$ROOTFS" groupadd --system pipprofiles
 chroot "$ROOTFS" useradd --system --create-home --home-dir /var/lib/greia-kid \
-  --shell /usr/sbin/nologin --user-group --groups pipsettings,pipprofiles greiakid
+  --shell /usr/sbin/nologin --user-group --groups pipsettings,pipprofiles,audio greiakid
 chroot "$ROOTFS" useradd --system --create-home --home-dir /var/lib/greia-os \
   --shell /usr/sbin/nologin --user-group --groups pipsettings,pipprofiles greiapanel
 chroot "$ROOTFS" useradd --create-home --home-dir /var/lib/greia-admin \

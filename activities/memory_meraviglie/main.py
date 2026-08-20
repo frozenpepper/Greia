@@ -20,7 +20,7 @@ from greia_platform.activity_api import (
     get_theme,
     mark_activity_ready,
 )
-from greia_platform.activity_ui import ChildUiMetrics
+from greia_platform.activity_ui import ChildUiMetrics, is_home_clicked
 from greia_platform.localization import (
     ActivityLocaleSupport,
     LocalizedResources,
@@ -328,6 +328,9 @@ def main() -> int:
                     start_new_game()
 
             elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                if is_home_clicked(screen, event.pos):
+                    running = False
+                    continue
                 if not _is_safe_point(screen, event.pos):
                     continue
                 logical = canvas.pointer(event.pos)
@@ -517,12 +520,6 @@ def main() -> int:
 
         # Present Canvas
         canvas.present(clear=theme.background)
-
-        # Pointer cursor
-        if pygame.mouse.get_focused():
-            mpos = pygame.mouse.get_pos()
-            pygame.draw.circle(screen, (254, 202, 87), mpos, metrics.px(10))
-            pygame.draw.circle(screen, (255, 255, 255), mpos, metrics.px(5))
 
         pygame.display.flip()
 

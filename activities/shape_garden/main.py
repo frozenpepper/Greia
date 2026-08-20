@@ -11,7 +11,7 @@ from greia_platform.activity_api import (
     get_theme,
     mark_activity_ready,
 )
-from greia_platform.activity_ui import ChildUiMetrics, load_icon, mix
+from greia_platform.activity_ui import ChildUiMetrics, is_home_clicked, load_icon, mix
 from greia_platform.pygame_canvas import (
     PygameReferenceCanvas,
     activity_viewport_for_surface,
@@ -21,7 +21,7 @@ from greia_platform.pygame_canvas import (
 REFERENCE_WIDTH = 1024
 REFERENCE_HEIGHT = 600
 SOIL_TOP = 530
-BASE_BACKGROUND = (239, 248, 218)
+BASE_BACKGROUND = (229, 241, 226)
 BASE_SOIL = (151, 104, 61)
 COLORS = (
     (247, 93, 89),
@@ -46,10 +46,6 @@ def main() -> int:
     theme = get_theme()
     metrics = ChildUiMetrics.for_size(*screen.get_size())
     canvas = PygameReferenceCanvas(screen)
-    cursor_icon = load_icon(
-        get_icon_path("yellow_star", 64),
-        metrics.px(44),
-    )
     shapes: list[tuple[int, int, int, int, int]] = []
     running = True
     ready_published = False
@@ -64,11 +60,10 @@ def main() -> int:
                 screen = pygame.display.get_surface() or screen
                 metrics = ChildUiMetrics.for_size(*screen.get_size())
                 canvas = PygameReferenceCanvas(screen)
-                cursor_icon = load_icon(
-                    get_icon_path("yellow_star", 64),
-                    metrics.px(44),
-                )
             elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                if is_home_clicked(screen, event.pos):
+                    running = False
+                    continue
                 if not _safe_point(screen, event.pos):
                     continue
                 logical = canvas.pointer(event.pos)
@@ -101,9 +96,6 @@ def main() -> int:
         # normal scaler is materially cheaper on low-resource targets while
         # preserving the same Greia reference-canvas transform/aspect contract.
         canvas.present(clear=theme.background)
-        if pygame.mouse.get_focused():
-            screen.blit(cursor_icon, cursor_icon.get_rect(center=pygame.mouse.get_pos()))
-
         pygame.display.flip()
         if not ready_published:
             mark_activity_ready()

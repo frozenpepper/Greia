@@ -4,6 +4,13 @@ mkdir -p /var/lib/greia-kid /run/greia-os
 chown greiakid:greiakid /var/lib/greia-kid
 chown greiakid:pipprofiles /run/greia-os
 chmod 0770 /run/greia-os
+
+# Ensure greiakid is in audio group and ALSA channels are unmuted
+usermod -a -G audio greiakid 2>/dev/null || true
+amixer sset Master 100% unmute 2>/dev/null || true
+amixer sset Speaker 100% unmute 2>/dev/null || true
+amixer sset Headphone 100% unmute 2>/dev/null || true
+amixer sset PCM 100% unmute 2>/dev/null || true
 # Remove only a proven-stale X lock. Deleting a live server's lock/socket can
 # permit a duplicate Xorg instance and destroy the graphical handoff. Malformed
 # lock state fails closed behind the branded cover and is handled by service
