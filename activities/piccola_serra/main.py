@@ -215,10 +215,10 @@ def main() -> int:
     ]
 
     pot_rects = [
-        pygame.Rect(130, 280, 160, 160),
-        pygame.Rect(330, 280, 160, 160),
-        pygame.Rect(530, 280, 160, 160),
-        pygame.Rect(730, 280, 160, 160),
+        pygame.Rect(120, 160, 180, 280),
+        pygame.Rect(320, 160, 180, 280),
+        pygame.Rect(520, 160, 180, 280),
+        pygame.Rect(720, 160, 180, 280),
     ]
 
     particles: list[dict[str, Any]] = []
@@ -327,7 +327,6 @@ def main() -> int:
                                     pot["plant"] = PLANTS[selected_plant_type]
                                     pot["stage"] = 1
                                     sounds.play("sprout")
-                                    active_tool = 1  # Next prompt: water
                                     for _ in range(8):
                                         particles.append({
                                             "x": r_pot.centerx + random.uniform(-20, 20),
@@ -348,7 +347,6 @@ def main() -> int:
                                     # 2. Water Seed -> Sprouts!
                                     pot["stage"] = 2
                                     sounds.play("water")
-                                    active_tool = 2  # Next prompt: sun
                                     for _ in range(14):
                                         particles.append({
                                             "x": r_pot.centerx + random.uniform(-30, 30),
@@ -365,7 +363,6 @@ def main() -> int:
                                     # 3. Sun on Sprout -> Grows tall bud!
                                     pot["stage"] = 3
                                     sounds.play("sprout")
-                                    active_tool = 1  # Next prompt: water to bloom
                                     for _ in range(12):
                                         particles.append({
                                             "x": r_pot.centerx + random.uniform(-30, 30),
@@ -382,7 +379,6 @@ def main() -> int:
                                     # 4. Water Bud -> FULL BLOOM!
                                     pot["stage"] = 4
                                     sounds.play("bloom")
-                                    active_tool = 3  # Next prompt: harvest
                                     for _ in range(18):
                                         ang = random.uniform(0, 6.28)
                                         spd = random.uniform(2.0, 4.5)
@@ -407,7 +403,6 @@ def main() -> int:
                                     pot["plant"] = None
                                     harvest_count += 1
                                     sounds.play("harvest")
-                                    active_tool = 0  # Next prompt: plant new seed
                                     for _ in range(18):
                                         particles.append({
                                             "x": r_pot.centerx,
@@ -507,43 +502,65 @@ def main() -> int:
                 pygame.draw.circle(surf, plant["center_color"], (fx, fy), 18)
                 pygame.draw.circle(surf, (255, 255, 255), (fx - 4, fy - 4), 4)
 
-            # Floating Thought Bubble Showing Required Care Tool
+            # Floating Thought Bubble Showing Required Care Tool (Positioned high in clear sky)
             if not is_victory:
                 needed_tool = 0 if stage == 0 else (1 if stage == 1 else (2 if stage == 2 else (1 if stage == 3 else 3)))
                 is_matching = (active_tool == needed_tool)
 
-                # Connecting dots
-                bx, by = px, py - 105
-                pygame.draw.circle(surf, (255, 255, 255), (bx, by + 30), 4)
-                pygame.draw.circle(surf, (255, 255, 255), (bx, by + 18), 6)
+                # Float high at y=130 in clear sky, well above mature flowers (which end around y=270)
+                bob = int(math.sin(t_now * 4.0 + idx) * 3.0)
+                bx = px
+                by = 130 + bob
 
-                # Bubble Card
-                pygame.draw.circle(surf, (255, 255, 255), (bx, by), 24)
-                bubble_border = (234, 179, 8) if is_matching else (203, 213, 225)
-                pygame.draw.circle(surf, bubble_border, (bx, by), 24, 3 if is_matching else 2)
+                dark = (30, 41, 59)
+                white = (255, 255, 255)
 
-                # Mini Tool Icon in Bubble
+                # Trailing thought dots connecting plant to bubble
+                pygame.draw.circle(surf, white, (bx, by + 45), 5)
+                pygame.draw.circle(surf, dark, (bx, by + 45), 5, 2)
+                pygame.draw.circle(surf, white, (bx, by + 30), 7)
+                pygame.draw.circle(surf, dark, (bx, by + 30), 7, 2)
+
+                # Thought Bubble Cloud Card
+                bubble_border = (34, 197, 94) if is_matching else (203, 213, 225)
+                border_w = 4 if is_matching else 2
+                
+                # Cloud puffs
+                for ox, oy, rad in [(-16, 0, 18), (16, 0, 18), (0, -10, 20), (0, 10, 18)]:
+                    pygame.draw.circle(surf, white, (bx + ox, by + oy), rad)
+                    pygame.draw.circle(surf, bubble_border, (bx + ox, by + oy), rad, border_w)
+                for ox, oy, rad in [(-16, 0, 16), (16, 0, 16), (0, -10, 18), (0, 10, 16)]:
+                    pygame.draw.circle(surf, white, (bx + ox, by + oy), rad)
+
+                # Mini Tool Icon in Bubble (High-contrast, crisp details)
                 if needed_tool == 0:
-                    # Seed
-                    pygame.draw.circle(surf, (22, 101, 52), (bx, by + 4), 5)
-                    pygame.draw.ellipse(surf, (34, 197, 94), pygame.Rect(bx - 8, by - 10, 8, 5))
-                    pygame.draw.ellipse(surf, (34, 197, 94), pygame.Rect(bx, by - 10, 8, 5))
+                    # Seed Grain + Sprout Leaf
+                    pygame.draw.circle(surf, (180, 83, 9), (bx, by + 5), 7)
+                    pygame.draw.circle(surf, dark, (bx, by + 5), 7, 2)
+                    pygame.draw.ellipse(surf, (34, 197, 94), pygame.Rect(bx - 10, by - 12, 10, 7))
+                    pygame.draw.ellipse(surf, (34, 197, 94), pygame.Rect(bx, by - 12, 10, 7))
+                    pygame.draw.ellipse(surf, dark, pygame.Rect(bx - 10, by - 12, 10, 7), 1)
+                    pygame.draw.ellipse(surf, dark, pygame.Rect(bx, by - 12, 10, 7), 1)
                 elif needed_tool == 1:
-                    # Water Droplet
-                    pygame.draw.circle(surf, (56, 189, 248), (bx, by + 3), 7)
-                    pygame.draw.polygon(surf, (56, 189, 248), [(bx - 6, by + 2), (bx + 6, by + 2), (bx, by - 8)])
-                    pygame.draw.circle(surf, (255, 255, 255), (bx - 2, by + 2), 2)
+                    # Blue Water Droplet with Specular Highlight
+                    pygame.draw.circle(surf, (14, 165, 233), (bx, by + 4), 9)
+                    pygame.draw.polygon(surf, (14, 165, 233), [(bx - 8, by + 2), (bx + 8, by + 2), (bx, by - 11)])
+                    pygame.draw.circle(surf, dark, (bx, by + 4), 9, 2)
+                    pygame.draw.circle(surf, (255, 255, 255), (bx - 3, by + 2), 3)
                 elif needed_tool == 2:
-                    # Smiling Sun
-                    pygame.draw.circle(surf, (234, 179, 8), (bx, by), 9)
-                    for sang in (0, 60, 120, 180, 240, 300):
+                    # Radiant Glowing Sun
+                    pygame.draw.circle(surf, (234, 179, 8), (bx, by), 10)
+                    pygame.draw.circle(surf, dark, (bx, by), 10, 2)
+                    for sang in (0, 45, 90, 135, 180, 225, 270, 315):
                         srad = math.radians(sang)
-                        pygame.draw.line(surf, (234, 179, 8), (bx + int(math.cos(srad)*10), by + int(math.sin(srad)*10)), (bx + int(math.cos(srad)*14), by + int(math.sin(srad)*14)), 2)
+                        pygame.draw.line(surf, (217, 119, 6), (bx + int(math.cos(srad)*11), by + int(math.sin(srad)*11)), (bx + int(math.cos(srad)*16), by + int(math.sin(srad)*16)), 3)
                 elif needed_tool == 3:
-                    # Harvest Fruit / Sparkle
-                    pygame.draw.circle(surf, (239, 68, 68), (bx, by + 2), 9)
-                    pygame.draw.circle(surf, (254, 240, 138), (bx, by - 6), 3)
-                    pygame.draw.polygon(surf, (34, 197, 94), [(bx - 4, by - 4), (bx + 4, by - 4), (bx, by - 1)])
+                    # Harvest Basket / Ripe Golden Sparkle Fruit
+                    pygame.draw.circle(surf, (239, 68, 68), (bx, by + 3), 10)
+                    pygame.draw.circle(surf, dark, (bx, by + 3), 10, 2)
+                    pygame.draw.circle(surf, (255, 255, 255), (bx - 3, by), 3)
+                    pygame.draw.ellipse(surf, (34, 197, 94), pygame.Rect(bx - 3, by - 11, 7, 5))
+                    pygame.draw.ellipse(surf, dark, pygame.Rect(bx - 3, by - 11, 7, 5), 1)
 
         # 3. Draw Particles
         for p in particles:
