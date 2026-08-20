@@ -1,9 +1,10 @@
 # Greia Parents — Product and Interaction Requirements
 
 **Status:** accepted product direction; implementation incremental  
-**Date:** 2026-08-18  
+**Date:** 2026-08-20  
 **Architecture owner:** ADR 0022  
-**Initial implementation:** responsive HTML client served by Greia itself
+**Initial implementation:** responsive HTML client served by Greia itself  
+**Related child discovery policy:** `docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md`
 
 > **2026-08-18 owner policy amendment (active):** the main Parent/admin
 > credential is intentionally simple and predictable. The initial login is
@@ -111,9 +112,13 @@ Parents can:
 - choose whether the password is masked while the child types;
 - delete an inactive child profile;
 - reset child appearance/customization;
-- later manage per-child Activity availability and policy.
+- later manage per-child Activity availability and policy;
+- optionally provide a **coarse/approximate age or developmental stage** for Activity discovery without supplying an exact date of birth;
+- later choose a child discovery/challenge preference such as **Automatic**, **Easier**, **Standard**, or **More challenging**.
 
 Child password material is never returned by the API after it is set.
+
+Age/development information exists only to support appropriate Activity discovery/presentation and related Parent policy. Greia does not require a date of birth merely to decide which educational Activities to emphasize.
 
 ### Activities
 
@@ -124,11 +129,47 @@ Parents can eventually:
 - update an Activity;
 - remove an Activity while preserving child data by default;
 - see invalid/incompatible packages clearly;
-- later enable/disable Activities for specific children.
+- enable/disable Activities for specific children;
+- inspect the Activity's declared educational challenge/difficulty and, when implemented, recommended developmental/age range;
+- choose a default per-child visibility policy;
+- override individual Activities as **always show** or **always hide** for a particular child.
 
 The Parent App delegates installation/update/removal to the R10 package-management service. It must not unzip/copy packages itself or run package-manager commands.
 
 The initial API foundation may expose installed Activity inventory while `activities.install` remains unavailable.
+
+### Per-child Activity discovery and visibility
+
+The accepted child discovery contract lives in `docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md`.
+
+Parent policy is stronger than automatic recommendation. The intended controls are equivalent to:
+
+```text
+Show everything
+Hide Activities probably too simple
+Show recommended range only
+Custom
+```
+
+with explicit Activity overrides such as:
+
+```text
+Always show this Activity to this child
+Always hide this Activity from this child
+```
+
+Rules:
+
+- an explicit per-Activity Parent override wins over automatic age/difficulty recommendation;
+- age/developmental suitability and Activity difficulty are separate metadata dimensions;
+- missing age metadata does not automatically hide an otherwise valid Activity;
+- an open-ended creative Activity may legitimately have no upper age bound;
+- Parent visibility changes affect the child's **effective catalogue projection**, not package installation/trust/permissions/saves;
+- adaptive launcher depth is computed from the effective visible Activity set after Parent policy, not raw installed count;
+- Activity code cannot grant itself visibility or hide competing Activities;
+- filtering language should remain neutral and child-positive rather than describing a child as behind, too young, too old or incapable.
+
+As of 2026-08-20, current profile/API/client source does not yet implement the complete age/development/challenge and per-child visibility model. This section is accepted product direction and must not be reported as implemented until source/API/client/tests land together.
 
 ### Input and pointing
 
@@ -253,6 +294,8 @@ maintenance.ssh
 paired_devices.manage
 ```
 
+Future implementation of per-child discovery policy should expose typed semantic capabilities/resources rather than forcing clients to infer support from profile JSON fields or Activity manifest versions.
+
 If a capability is false, the initial HTML interface may show **Not implemented yet** during development. A production client should normally hide or explain unavailable functionality appropriately.
 
 ## 6. Common client protocol
@@ -335,7 +378,7 @@ The first API/client slice is considered useful when it can:
 - list/revoke paired devices;
 - clearly report future capabilities as unavailable.
 
-It does **not** imply that Activity installation, audio management, backups, updates, or production pairing security are finished.
+It does **not** imply that Activity installation, audio management, backups, updates, production pairing security, or per-child audience/visibility policy are finished.
 
 ## 12. On-Device Parent Mode & Key Chord
 
