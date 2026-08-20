@@ -5,7 +5,7 @@
 
 This guide covers development-image diagnosis when an installed Greia machine does not reach the child launcher. It does not change release UX: normal/release Greia must remain consoleless and must not expose development SSH.
 
-Normative boot architecture remains in `docs/design/GREIA_BOOT_EXPERIENCE.md`; the historical Acer investigation is preserved in `docs/INSTALLED_OS_BOOT_POSTMORTEM.md`.
+Normative boot architecture remains in `docs/design/GREIA_BOOT_EXPERIENCE.md`; the historical Acer investigations are preserved in `docs/INSTALLATION_USB_BOOT_POSTMORTEM.md` and `docs/INSTALLED_OS_BOOT_POSTMORTEM.md`. The current 2026-08-20 regression/recovery boundary is recorded in `docs/reviews/2026-08-20_ACER_INSTALLER_BOOT_REGRESSION.md` and takes precedence for the next physical Acer build.
 
 ## 1. Interpreting `PIP_ROOT: clean ...`
 
@@ -76,7 +76,9 @@ target
 installer
 ```
 
-For `legacy-x86`, it deliberately routes through `build/build-legacy-x86-sd-installer.sh`, because that is the physical-hardware front door that regenerates the boot derivatives from the canonical full-color frame before building. It then invokes:
+For `legacy-x86`, it deliberately routes through `build/build-legacy-x86-sd-installer.sh`, because that is the physical-hardware image-builder front door used before the 2026-08-20 regression. The recovery rule is intentionally conservative: do not inject boot-art, Syslinux or installed-GRUB presentation experiments into this path before the next physical acceptance pass.
+
+The wrapper then invokes:
 
 ```text
 tools/verify-development-installer.sh
@@ -96,8 +98,6 @@ The artifact verifier mounts the produced installer image read-only and checks *
 - DHCP policy exists for wired and wireless interfaces;
 - the target payload is explicitly marked as a development image.
 
-The legacy front door also runs this verifier itself whenever the selected profile is `*-dev`. Therefore bypassing the convenience wrapper does not bypass the SSH artifact gate.
-
 A build that fails these checks is not ready to flash.
 
 ### Preferred physical Acer workflow: build and flash in one command
@@ -112,29 +112,43 @@ sudo bash tools/build-and-flash-development-usb.sh \
 
 Replace `/dev/sdX` with the **whole removable USB device** discovered on the build machine. The command destroys that removable device.
 
-This wrapper:
+This wrapper deliberately separates writing from verification:
 
 1. refuses a non-removable/non-whole-disk target before starting the long build;
 2. builds the explicit development installer;
 3. runs the live+target SSH artifact verifier;
-4. calls `tools/build-live-usb.sh` to create the Acer-proven Syslinux/FAT32 media rather than raw-flashing the GRUB installer image;
-5. refuses to overwrite a removable device that currently has mounted filesystems;
-6. verifies the final FAT filesystem read-only;
-7. re-mounts the **actual USB key** read-only and byte-compares its kernel, initrd, live squashfs, target payload, Syslinux config, clear-screen message and live-media identifier with the verified source image;
-8. verifies `ldlinux.sys` and the first 440 bytes of the Syslinux MBR bootstrap;
-9. reports success only after the final removable media itself passes read-back.
+4. calls the unchanged `tools/build-live-usb.sh` to create the Acer-proven Syslinux/FAT32 media rather than raw-flashing the GRUB installer image;
+5. after the writer has finished and synced the stick, calls `tools/verify-live-usb.sh`;
+6. the verifier checks the FAT filesystem **read-only**;
+7. it mounts the actual USB key read-only and byte-compares kernel, initrd, live squashfs, target payload, Syslinux config and live-media identifier with the verified source image;
+8. it verifies `ldlinux.sys`, the active partition flag and the first 440 bytes of the Syslinux MBR bootstrap;
+9. it also refuses a Syslinux template that reintroduces `console=null` or the rejected `DISPLAY ... clear.msg` experiment on the current Acer development path;
+10. reports success only after the final removable media itself passes read-back.
+
+The reason for keeping verification separate is architectural, not cosmetic: `tools/build-live-usb.sh` is the firmware-sensitive recipe established by `INSTALLATION_USB_BOOT_POSTMORTEM.md`. Safety checks should surround that recipe rather than continuously modifying it.
 
 A successful final run must include:
 
 ```text
 Developer installer artifact verification: PASS
-Developer SSH artifact verified: 1
-usb_flash_verification=PASS
+Greia live USB read-only verification: PASS
+usb_readback_verification=PASS
 source_artifact_verification=PASS
 usb_flash_readback_verification=PASS
 ```
 
 Do not flash the intermediate ext/GRUB installer `.img` directly onto the reference Acer USB and assume that is equivalent. The physically proven Acer removable-media boot path remains Syslinux + active FAT32, produced by `tools/build-live-usb.sh` or the combined wrapper above.
+
+### Recovery-pass visibility rule
+
+For the next physical Acer recovery pass, early boot visibility is intentional and required:
+
+```text
+console=tty1
+panic=30
+```
+
+Do not clear the Syslinux output and do not replace it with `console=null`. The installer USB postmortem explicitly established that observable Syslinux/kernel/live-boot output is what distinguishes a bootloader failure from kernel/initramfs/live-media failure. Child-visible console suppression remains a later release UX goal; it must not remove the diagnostic channel while the reference path is being recovered.
 
 ## 4. Runtime SSH bootstrap contract
 
@@ -304,19 +318,23 @@ For an old installation, the cleanest recovery path is normally to boot the curr
 
 A source-level, artifact-level or USB read-back PASS is not physical boot evidence. After changing boot/session/SSH behavior, validation still requires a fresh install on the target Acer and a second supported machine where applicable.
 
-For Acer development acceptance, record at minimum:
+For the immediate Acer recovery acceptance, record at minimum:
 
+- exact source SHA used for the build;
 - development source-artifact verification completes;
-- final Syslinux/FAT32 USB read-back verification completes;
+- final Syslinux/FAT32 USB read-only verification completes;
+- visible Syslinux/kernel/live-boot progression or exact last visible line on failure;
 - language selector is first and its mouse pointer works;
 - selecting Italian makes the following installer flow Italian;
-- corrected full-color/aspect-preserving splash behavior is observed;
 - live installer resolves/replies as `greia-installer.local` or via its DHCP IP;
 - live installer TCP/22 opens and `greia` password login succeeds;
-- root filesystem reaches the clean line after install;
+- installation completes;
+- installed development boot remains observable on tty1 if it fails;
 - installed `greia-dev.local` resolves or its DHCP IP is found;
 - installed TCP/22 opens and `greia` password login succeeds;
 - `systemctl --failed`;
 - `greia-launcher.service` journal;
 - Xorg log when graphical startup fails;
 - final launcher-visible result.
+
+Splash presentation polish is **not** part of the recovery gate. The 2026-08-20 regression demonstrated that full-colour/raw-raster, Syslinux-cleanup and GRUB-theme changes must be reintroduced one narrow stage at a time only after boot viability has been re-proven.
