@@ -1,0 +1,55 @@
+scene_id = "fantasy_village_night.reference.v0.1"
+status = "candidate-composition-proof"
+runtime_authority = false
+source_pack = "assets/visual/environments/fantasy_village_night/v0.1/"
+
+[viewports."1024x600"]
+calm_center = [350, 255, 690, 455]
+
+[viewports."800x600"]
+calm_center = [270, 265, 535, 455]
+
+[[layers]]
+id = "night_sky"
+asset = "night_sky_base.svg"
+z = 0
+parallax = 0.0
+
+[[layers]]
+id = "moon"
+asset = "crescent_moon.svg"
+z = 5
+parallax = 0.02
+
+[[layers]]
+id = "far_architecture"
+assets = ["castle_hill.svg", "distant_village.svg"]
+z = 10
+parallax = 0.08
+
+[[layers]]
+id = "village_props"
+assets = ["cottage_round.svg", "cottage_tall.svg", "lantern_post.svg", "stone_well.svg", "wood_signpost.svg", "cobblestone_edge.svg"]
+z = 30
+parallax = 0.30
+
+[[layers]]
+id = "moonlight"
+asset = "moonlight_rays.svg"
+z = 50
+alpha_default = 0.18
+ambient_motion = "very_slow_breathe_alpha"
+
+[[layers]]
+id = "window_glow"
+asset = "window_glow.svg"
+z = 55
+ambient_motion = "very_slow_breathe_alpha"
+
+[optional_fx]
+assets = ["magic_sparkles.svg"]
+shared_assets = ["fx.fireflies.01"]
+notes = "Optional low-count atmosphere. Static scene remains readable without it."
+
+[shared_reuse]
+forest_assets = ["forest.tree.hero_01", "forest.tree.secondary_01", "forest.bush.01", "fx.fireflies.01"]

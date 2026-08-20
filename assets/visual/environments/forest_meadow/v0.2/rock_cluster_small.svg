@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 256">
+<defs>
+
+<filter id="blur6" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="6"/></filter>
+<linearGradient id="stone" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#CBD4D0"/><stop offset=".55" stop-color="#98A5A4"/><stop offset="1" stop-color="#6C7A7C"/></linearGradient>
+<linearGradient id="stone2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B4C0BC"/><stop offset="1" stop-color="#748285"/></linearGradient>
+
+</defs>
+
+<ellipse cx="254" cy="219" rx="124" ry="17" fill="#3D3631" opacity=".10" filter="url(#blur6)"/>
+<path d="M119 205 L143 154 Q154 129 180 129 L224 139 Q243 145 249 170 L246 205 Z" fill="url(#stone2)"/>
+<path d="M230 205 L254 125 Q262 100 289 103 L334 118 Q355 126 361 152 L358 205 Z" fill="url(#stone)"/>
+<path d="M150 158 Q177 140 215 146 L231 158 Q194 154 163 169 Z" fill="#D6DEDA" opacity=".45"/>
+<path d="M264 130 Q288 114 320 121 L342 136 Q306 130 278 145 Z" fill="#E1E7E3" opacity=".52"/>
+<path d="M208 191 Q228 176 243 182" fill="none" stroke="#59686B" stroke-width="3.5" opacity=".35" stroke-linecap="round"/>
+
+</svg>

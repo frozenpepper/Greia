@@ -1,0 +1,35 @@
+catalog_id = "greia.visual.animations.v0.1"
+status = "candidate"
+runtime_consumed = false
+
+[[motions]]
+id = "idle_bounce"
+duration_ms = 2000
+loop = true
+
+[[motions]]
+id = "blink"
+duration_ms = 220
+loop = false
+state_sequence = ["neutral", "blink", "neutral"]
+
+[[motions]]
+id = "happy_hop"
+duration_ms = 900
+loop = false
+
+[[motions]]
+id = "celebrate_pop"
+duration_ms = 1150
+loop = false
+fx = "sparkle"
+
+[[motions]]
+id = "surprised_wobble"
+duration_ms = 720
+loop = false
+
+[[motions]]
+id = "sleepy_sway"
+duration_ms = 2400
+loop = true

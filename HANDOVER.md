@@ -1,14 +1,14 @@
 # Greia — Standalone Engineering Handover
 
-**Date:** 2026-08-19  
+**Date:** 2026-08-20  
 **Version family:** `0.13.x` development  
 **Repository:** `frozenpepper/Greia` (private)  
 **Canonical/default/development branch:** `main`  
 **Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**  
-**Current cross-cutting source tranches after the last executed aggregate gate:** **device-language selection/persistence + 18-Activity English/Italian localization + child-UX work + R13B transactional updates + Activity Simulator/emoji/Writing**  
+**Current cross-cutting work:** device-language/localization + child UX + R13B transactional updates + Activity Simulator/emoji/Writing + **asset-first visual library through Water/Pond; V5 shared-consumption source implementation active**  
 **External Parent HTML runtime revision pinned by Greia:** `frozenpepper/Greia-Parent-App-Html@519651a5931269ed4275324f2a87ad3f0d08a3f6`
 
-This file owns the current continuation/evidence boundary. Historical implementation detail belongs in the append-only active plan and dated reviews. Exact APIs and limits remain source-owned.
+This file is the current-state continuation contract. Detailed chronology belongs in the active plans/reviews. Exact APIs and limits remain source-owned.
 
 ---
 
@@ -17,15 +17,18 @@ This file owns the current continuation/evidence boundary. Historical implementa
 - `main` is the owner-required development/integration branch. Do not create branches unless the owner explicitly changes policy.
 - GitHub is canonical persistence; commit coherent work as it proceeds.
 - Do **not** use, query, trigger, rerun, inspect or download GitHub-hosted Actions without explicit owner authorization for that specific hosted execution.
-- Never convert committed tests into PASS merely because the files exist.
-- Active plan: `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`.
-- R7 remains the first incomplete blocking architecture phase. Cross-cutting product work does not close or skip R7.
+- Never convert committed tests/assets into PASS/approved evidence merely because files exist.
+- Blocking implementation plan: `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`.
+- Current art/visual plan: `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`.
+- R7 remains the first incomplete blocking architecture phase. Cross-cutting product/art work does not close or skip R7.
+- Substantive visual work updates the art-plan checkpoint + append-only progress log.
+- `skills/greia-visual-authoring/SKILL.md` remains mandatory for Greia visual-asset/art work.
 
 ---
 
-## 2. Current evidence boundary
+# 2. Evidence boundary
 
-The latest recorded owner-controlled aggregate source gate before the new device-language tranche is:
+The latest retained owner-controlled aggregate source gate predating later language/localization/art work remains:
 
 ```text
 make verify:                         781 PASS
@@ -33,282 +36,157 @@ project & 10 activities validation:  PASS
 footprint & shell check:             PASS
 ```
 
-That historical gate covered the then-current Activity Simulator/Remote Bridge, Unicode/color-emoji + Writing work, on-device Parent Settings/Wi-Fi/SSH foundation, UI performance work and six additional first-party Activities.
+Later source is not retroactively covered by that gate. No current-head aggregate PASS, rebuilt-language-installer physical PASS, R13B activation/rollback PASS, current-head QEMU A/B PASS, Pi A/B PASS, or physical Greia art-performance PASS is claimed here.
 
-**The device-language source, later 18-Activity English/Italian localization pass and concurrent child-UX work landed after that gate and are UNPROVEN until a fresh current-head run executes.**
+Retained physical history from 2026-08-19: a fresh `legacy-x86-i686-dev` syslinux/FAT32 installer booted on the reference Acer Aspire One, installation completed, and the installed OS reached the launcher. Later source requires a rebuilt image before that result extends to it.
 
-No current-head aggregate PASS, language-selector physical PASS, system-update activation/rollback PASS, current-head QEMU A/B PASS or Pi A/B PASS is claimed.
+Current V5-specific evidence is narrower:
 
-Retained physical evidence from 2026-08-19: a fresh `legacy-x86-i686-dev` syslinux/FAT32 installer booted on the reference Acer Aspire One, installation completed, and the installed OS reached the launcher. Later source—including the new language-first installer—requires a rebuilt image before that physical claim extends to it.
+- source implementation is committed;
+- provider-free cache source was exercised in an isolated local harness: **9/9 PASS**;
+- full repository `make test` / `make verify` was **not** run here;
+- `rsvg-convert` is absent in this execution environment, so the generated runtime PNG catalogue/renditions were **not** built here;
+- no Shell/Activity path is yet accepted as consuming the new shared visual catalogue/cache.
 
 ---
 
-# 3. 2026-08-19 — Device-default language selection and persistence
+# 3. Active Greia visual-library workstream — V2/V3/V4/V5
 
-Architecture authority remains:
+Canonical continuity:
+
+```text
+docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md
+docs/design/GREIA_VISUAL_STYLE_GUIDE.md
+docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md
+docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md
+skills/greia-visual-authoring/SKILL.md
+runtime/theme-defaults.toml
+assets/visual/README.md
+assets/visual/library_v0.1.toml
+assets/visual/packs_v0.1.toml
+assets/visual/environments/forest_meadow/v0.2/
+assets/visual/ui/v0.1/
+assets/visual/environments/workshop/v0.1/
+assets/visual/environments/clinic/v0.1/
+assets/visual/environments/reading_classroom/v0.1/
+assets/visual/environments/fantasy_village_night/v0.1/
+assets/visual/environments/water_pond/v0.1/
+```
+
+## 3.1 Production rule
+
+The workstream remains explicitly **asset-first**:
+
+> excellent individual assets → reusable asset packs → layered composition → subtle parallax / ambient motion / light / shadow → shared UI system → one explicit shared consumption seam → Shell/Activity reuse
+
+Do not return to crude full-screen mockups, tutorial geometry, decorative HTML that hides weak assets, generated scene/concept images as a substitute for reusable source production, or duplicate generic assets when a shared master already exists.
+
+Broad environment/UI source coverage is now sufficient. Do not add another environment family without a concrete reusable coverage gap.
+
+The simplified character direction remains valid, but character minutiae do not block V5. Core anchors remain **Lilli, Nino, Tito and Momo**. Static style-anchor approval is not final release/runtime/physical approval.
+
+## 3.2 Current pack status
+
+- **Forest / meadow v0.2:** 27 masters + bounded 1024×600 / 800×600 restraint references + parallax proof.
+- **Shared UI v0.1:** broad reusable panels/cards/buttons/tabs/badges/progress/bubbles/reward/focus/loading/error/empty/portal family + target references.
+- **Workshop v0.1:** 19 masters + layered target references.
+- **Clinic / care v0.1:** 17 masters + reduced-size/target review; no dosage/medicine-label content.
+- **Reading / classroom v0.1:** 17 masters; reuses Workshop generic assets.
+- **Fantasy / village / night v0.1:** 15 masters; reuses Forest assets; weak cottage/tower/lantern/well/cobblestone treatment corrected before review.
+- **Water / pond v0.1:** 14 water-specific masters; reuses Forest distant landscape/generic props; independent target references committed.
+
+Pack dependencies/review state live in `assets/visual/packs_v0.1.toml`; character/archetype seed state remains in `assets/visual/library_v0.1.toml`.
+
+All current visual packs remain **candidate** and `runtime_consumed = false`. Art evidence remains **SOURCE + DESKTOP VISUAL REVIEW** only unless a narrower file states otherwise.
+
+## 3.3 V5 shared-consumption implementation now present
+
+V5 reuses Greia's existing explicit asset architecture:
+
+```text
+src/greia_platform/assets.py
+src/greia_platform/activity_assets.py
+src/greia_platform/ui_core.py
+src/greia_platform/pygame_visual_assets.py
+assets/catalog/core_icons_v1.toml
+assets/catalog/shared_visuals_v1_source.toml
+tools/build_visual_renditions.py
+Makefile: visual-assets
+tests/test_asset_catalogue.py
+tests/test_pygame_visual_assets.py
+```
+
+### Catalogue
+
+`AssetCatalogue` keeps the existing icon contract and now also supports typed shared visuals with semantic ID, bounded kind, role and named variants. `default` is mandatory. Icon and visual IDs share one namespace. File existence, duplicate IDs and asset-root path containment remain fail-closed.
+
+There is still **no arbitrary directory discovery**.
+
+### Build-time runtime renditions
+
+`assets/catalog/shared_visuals_v1_source.toml` explicitly selects the first reviewed UI masters/variants.
+
+`tools/build_visual_renditions.py` renders SVG→PNG with build-host librsvg/`rsvg-convert`, verifies containment/dimensions/output PNG structure, and writes the explicit generated runtime catalogue `assets/catalog/shared_visuals_v1.toml` with a source SHA256.
+
+The target device does not need an SVG renderer.
+
+`make visual-assets` is the explicit build entrypoint.
+
+### Runtime Pygame cache
+
+`PygameVisualSurfaceCache` is a small renderer adapter over `AssetCatalogue` + existing `ui_core.BoundedCache`:
+
+- PNG-only runtime paths;
+- semantic ID + variant + requested size cache key;
+- lazy Pygame import;
+- no display-dependent conversion in loader;
+- one-time smooth scaling on cache miss;
+- default 12-entry LRU;
+- default per-surface ceiling 1024×600 pixels;
+- explicit clear;
+- no per-frame file/decode after a hit.
+
+Provider-free tests cover cache hits, size keys, variants, eviction/reload, clear/reload, dimension/pixel bounds, SVG rejection and unknown catalogue entries/variants.
+
+### V5 gate still open
+
+Do not mark any visual pack runtime-consumed yet. Exact continuation:
+
+1. on an owner-controlled/build checkout with librsvg, run `make visual-assets`;
+2. inspect/validate generated PNGs + `assets/catalog/shared_visuals_v1.toml`;
+3. run focused repository tests covering `test_asset_catalogue.py`, `test_pygame_visual_assets.py` and rendition tooling;
+4. identify one **existing controlled Shell/UI** path and route that path through `AssetCatalogue` + `PygameVisualSurfaceCache`;
+5. verify static/fail-closed fallback and absence of per-frame decode/discovery;
+6. only then expand the same semantic contract toward Python/Web Activities;
+7. collect simulator/physical low-resource evidence before stronger runtime/physical claims.
+
+---
+
+# 4. Device-default language selection / localization
+
+Authorities:
 
 ```text
 docs/adr/0028-platform-and-activity-localization-language-context.md
-```
-
-Product/implementation synthesis:
-
-```text
 docs/product/SYSTEM_LANGUAGE_AND_LOCALIZATION.md
-```
-
-Standalone implementation review:
-
-```text
 docs/reviews/2026-08-19_DEVICE_LANGUAGE_SELECTION_AND_PERSISTENCE.md
 ```
 
-## 3.1 Core rule
-
-Greia has one device-default UI locale. It is selected during installation and can later be changed from either Parent-management surface.
+Effective device language is selected at install, persisted in the install record, and may later be overridden by `SystemLanguageStore` state. English remains default; canonical selectable registry currently includes:
 
 ```text
-installer first-screen choice
-        ↓
-InstallRequest.locale
-        ↓
-/etc/greia-os/install-record.json   (historical initial choice)
-        ↓
-current device default
-        ↑
-/var/lib/greia-system-settings/language.json   (later Parent override)
+en, it, es, de, fr, zh-CN, pt, ar, hi, id, bn, sw
 ```
 
-Effective value precedence:
+`zh` canonicalizes to `zh-CN`. Installer, hidden Parent panel and external Parent client must consume the same Greia-owned registry rather than maintain independent lists.
 
-```text
-valid language.json override
-        ↓ otherwise
-valid install-record locale
-        ↓ otherwise
-English
-```
-
-A later Parent change does not rewrite the historical install record.
-
-## 3.2 Canonical selectable-language registry
-
-Exact source owner:
-
-```text
-src/greia_platform/system_language.py
-```
-
-Initial registry:
-
-```text
-en     English              🇬🇧
-it     Italian              🇮🇹
-es     Spanish              🇪🇸
-de     German               🇩🇪
-fr     French               🇫🇷
-zh-CN  Chinese (Simplified) 🇨🇳
-pt     Portuguese           🇵🇹
-ar     Arabic               🇸🇦
-hi     Hindi                🇮🇳
-id     Indonesian           🇮🇩
-bn     Bengali              🇧🇩
-sw     Swahili              🇹🇿
-```
-
-English is the default. `zh` canonicalizes to `zh-CN`.
-
-There must be no installer-only or browser-only copy of this list. The installer and hidden panel import it directly; the Parent browser receives it from Greia through the API.
-
-Flags are presentation cues, not geographic/citizenship authority.
-
-## 3.3 Installer — language is now the first interaction
-
-New entry point:
-
-```text
-src/greia_installer/entrypoint.py
-```
-
-Installed live service now launches:
-
-```text
-python3 -m greia_installer.entrypoint
-```
-
-rather than starting `greia_installer.main` directly.
-
-The new entry point adds only a mandatory flag-first language chooser in front of the existing installer. It does **not** duplicate disk-selection, hardware, Wi-Fi or installation-engine logic.
-
-The selector:
-
-- is the first visible interactive installer screen;
-- uses the canonical registry;
-- defaults to English;
-- supports pointer and keyboard navigation;
-- reflows between three/two columns according to viewport;
-- uses Greia typography/emoji rendering for flags;
-- passes the selected locale into the real `InstallRequest`.
-
-`src/greia_installer/engine.py` already writes `InstallRequest.locale` into the installed `install-record.json`; the previously missing UI binding is now present.
-
-A final composition audit caught a real live-image dependency gap: the installer used the shared color-emoji typography path while `installer-base.txt` did not yet include its rendering dependencies. The live installer package set now explicitly includes:
-
-```text
-fonts-noto-color-emoji
-python3-pil
-python3-regex
-```
-
-and `tests/test_system_language.py` protects that requirement. This prevents a source-correct flag selector from degrading into missing-glyph boxes/import failures on the physical live installer.
-
-## 3.4 Parent API
-
-Canonical semantic route:
-
-```text
-GET /api/v1/settings/language
-PUT /api/v1/settings/language
-settings.language
-```
-
-Implementation:
-
-```text
-src/greia_parent/protocol.py
-src/greia_parent/update_api.py
-```
-
-GET returns current locale, selected-language metadata and the canonical language registry. PUT accepts only a supported locale and atomically persists the device override.
-
-The Parent service remains unprivileged `greiapanel`; this is a typed settings mutation, not a generic shell/filesystem API.
-
-## 3.5 Greia Parents HTML app
-
-Greia pins runtime revision:
-
-```text
-frozenpepper/Greia-Parent-App-Html@519651a5931269ed4275324f2a87ad3f0d08a3f6
-```
-
-with exact per-file integrity in:
-
-```text
-runtime/parent-app-client.toml
-runtime/parent-app-client.manifest.json
-```
-
-New/changed client source:
-
-```text
-src/api.js
-src/language_ui.js
-index.html
-```
-
-The Settings page adds a capability-driven full-width Greia Language card. The browser requests the language rows from Greia and therefore has no independent hard-coded registry. It displays flag + simple name + native name when available and PUTs only the selected locale.
-
-Focused Parent client test:
-
-```text
-tests/language_api.test.js
-```
-
-The async invalid-locale assertion was corrected in the pinned revision. No `npm test` run is claimed in this connector session.
-
-The external Parent repository has later documentation-only commits; Greia intentionally pins the reviewed runtime-source revision because those later docs do not alter staged runtime bytes.
-
-## 3.6 Hidden on-device Parent Settings
-
-Source:
-
-```text
-src/greia_launcher/parent_panel.py
-```
-
-The authenticated hidden Parent Settings panel now opens on **Language** as its first tab, ahead of Wi-Fi, SSH Maintenance and Remote/Pairing.
-
-The panel uses the same canonical registry and highlights the current device locale. Pointer/keyboard selection applies the language immediately.
-
-The child launcher account is **not** granted general write access to system settings. It uses a narrow root helper:
-
-```text
-build/overlay/usr/local/lib/greia-os/greia-languagectl
-build/overlay/etc/sudoers.d/greia-language
-```
-
-The only authorized operation is conceptually:
-
-```text
-set <supported-locale>
-```
-
-The helper validates the locale against the product registry and exposes no generic shell/filesystem operation.
-
-`/var/lib/greia-system-settings` is already a setgid `pipsettings` directory and both `greiapanel` and `greiakid` are members of that group. The language state is mode `0660`, so changes made via the root helper remain writable by the Parent daemon and vice versa.
-
-## 3.7 Activity inheritance
-
-`src/greia_platform/activity_api.py::get_profile_locale()` now resolves:
-
-1. explicit profile override when supplied by Greia;
-2. explicit device locale launch context when supplied;
-3. otherwise the current `SystemLanguageStore` value.
-
-This preserves ADR 0028's chain:
-
-```text
-device default → optional child override → Activity supported-locale fallback
-```
-
-An English-only Activity remains valid on an Italian/Hindi/etc. device and falls back to a language it actually ships.
-
-Current `main` additionally contains English/Italian localization resources across all 18 first-party Activities. That work is later than the 781-test aggregate evidence and must be verified at the current head before being described as a current PASS.
-
-## 3.8 Critical evidence distinction
-
-**Selectable does not mean fully translated.**
-
-The current tranche implements language selection, persistence, API/client control and locale propagation. It does **not** prove that every Greia surface/Activity has translations, glyph coverage, shaping or RTL layout for all twelve selectable locales.
-
-In particular:
-
-- current first-party Activity source has an English/Italian localization pass, but other device-selectable languages remain incomplete;
-- Chinese/Arabic/Hindi/Bengali require a reviewed platform script-font/fallback strategy beyond normal Nunito coverage;
-- Arabic requires real RTL shaping/layout/input acceptance;
-- installer/launcher/Parent string catalogues still need systematic translation work beyond currently implemented strings;
-- individual Activities advertise/fallback according to the translations they actually ship.
-
-Do not describe Greia as “fully translated into 12 languages” until that separate work is complete and evidenced.
-
-## 3.9 Language focused regressions
-
-Greia source:
-
-```text
-tests/test_system_language.py
-```
-
-covers:
-
-- exact canonical product registry and required locale set;
-- `zh` → `zh-CN` canonicalization;
-- install-record bootstrap followed by state override;
-- malformed-state safe fallback;
-- Activity API inheritance;
-- Parent resource/capability and read/update behavior;
-- first-screen installer entry-point contract;
-- narrow sudo helper contract;
-- runtime helper executable-mode tmpfiles contract;
-- live installer typography/color-flag dependency composition.
-
-Related existing tests cover the hidden Parent panel and installer contract. These tests are committed but **not executed in this connector session**.
+**Selectable does not mean fully translated.** English/Italian Activity resources exist in current source; complete translation/font/shaping/RTL acceptance for all selectable languages remains separate work. Current-head language tests must execute before claiming current PASS.
 
 ---
 
-# 4. Transactional Greia system-update foundation
+# 5. Transactional Greia system updates
 
-Architecture/product/operator docs:
+Authority:
 
 ```text
 docs/adr/0030-platform-owned-transactional-system-updates.md
@@ -316,41 +194,45 @@ docs/product/SYSTEM_UPDATES.md
 docs/development/GREIA_SYSTEM_UPDATE_RELEASE_WORKFLOW.md
 ```
 
-Implemented: signed `.greiaupdate` schema, Ed25519 trust helpers, compatibility metadata, bounded/single-copy Parent upload inbox, release CLI and Parent update status/upload UI.
+Implemented source includes signed `.greiaupdate` format/trust helpers, bounded Parent status/upload/inbox behavior and release tooling.
 
-Current x86 profiles remain `bios-single-ext4`; therefore:
+Current x86 profiles remain:
 
 ```text
+bios-single-ext4
 system.update.activate = false
-A/B staging             = not implemented
-boot confirmation       = not implemented
-automatic rollback      = not implemented
 ```
 
-No in-place active-root fallback is authorized.
-
-Next R13B work is still A/B backend/layout measurement/design (RAUC vs minimal Greia backend), canonical slot-payload build, trusted-key provisioning, inactive-slot writer, boot-attempt/health confirmation and rollback evidence.
+A/B inactive-slot activation, boot-health confirmation and automatic rollback are not implemented/accepted on the current production layout. No in-place active-root fallback is authorized merely for convenience.
 
 ---
 
-# 5. R7 / display / input
+# 6. R7 display/session/input boundary
 
 R7 remains the primary blocking platform phase.
 
-Current production path remains provisional **Xorg/xinit**; no compositor is selected. `DisplaySessionCoordinator`, ADR 0019 trusted Home/Back and ADR 0020 platform-owned input/controller semantics remain the mandatory architecture boundary.
+Current production remains provisional **Xorg/xinit compatibility behavior** while the direct/appliance display/session path is resolved. New unrelated visual work must not deepen X11 coupling.
 
-Do not deepen X11 or grant Activities raw DRM/input authority as a shortcut for unrelated UI/localization work.
+Mandatory architecture remains:
+
+- Greia-owned display/session authority;
+- protected platform Home/Back above Activity content;
+- Greia intercepts protected-system input before Activity delivery;
+- controller ownership/normalization remains platform-owned;
+- ordinary Activities do not gain raw `/dev/input` or DRM authority.
+
+Art/asset work may advance independently where it does not bypass these prerequisites.
 
 ---
 
-# 6. Boot / installer / Acer facts retained
+# 7. Boot / installer / Acer facts retained
 
 - Reference Acer Aspire One is BIOS-only.
-- Proven live USB path is **syslinux/FAT32**, not GRUB-MBR USB.
+- Proven live USB path is **syslinux/FAT32**.
 - Canonical USB creator: `tools/build-live-usb.sh`.
-- Installed target initramfs uses target-kernel-aware storage policy; build-host/chroot hardware is not target authority.
+- Installed initramfs must be target-kernel/target-hardware aware; build-host/chroot hardware is not target authority.
 - Developer/test SSH remains owner-approved `greia / greia`, root SSH denied; normal/release remains fail-closed.
-- The earlier 2026-08-19 Acer install/launcher PASS predates the language-first installer and must not be reused as language-selector physical evidence.
+- Earlier Acer install/launcher evidence predates later language/art source and cannot be reused as evidence for those tranches.
 
 Canonical hardware history:
 
@@ -363,82 +245,48 @@ docs/testing/LOCAL_AGENT_START_HERE.md
 
 ---
 
-# 7. Exact verification sequence now
+# 8. Current continuation priorities
 
-On an owner-controlled current Linux checkout, resolve and record the exact current `main` SHA first. Preserve the first failure.
+## Blocking engineering path
 
-### A. Device-language focused gate
+1. Resolve exact current `main` SHA before verification/build work.
+2. Continue R7 from the first incomplete blocking gate in the architecture-remediation plan.
+3. Run required focused/current aggregate source gates on an owner-controlled checkout before claiming current PASS.
+4. Rebuild/physically verify later installer/language source before extending old Acer evidence.
+5. Continue R13B only within its accepted fail-closed/A-B prerequisites.
 
-```bash
-PYTHONPATH=src python3 -m unittest \
-  tests.test_system_language \
-  tests.test_parent_api \
-  tests.test_launcher_parent_panel \
-  tests.test_installer_engine -v
-```
+## Visual workstream
 
-### B. Existing later-tranche focused gates
-
-Run the relevant system-update, emoji/Writing, localization/Activity and simulator focused suites named in their docs/HANDOVER history.
-
-### C. Complete source gate
-
-```bash
-make verify
-```
-
-### D. External Parent client
-
-At Greia's pinned runtime revision or a later revision containing the same runtime source plus docs:
-
-```bash
-npm test
-```
-
-### E. Physical installer/language acceptance
-
-Rebuild the current legacy developer installer and verify on the Acer/reference viewport:
-
-1. language chooser is the first interactive screen;
-2. all twelve choices/flags are visible, legible and reachable;
-3. choose Italian, complete install, reboot, confirm device default is Italian;
-4. change to another locale in Greia Parents, reboot, confirm persistence;
-5. change again through hidden Parent Settings and confirm Parents sees the same current value;
-6. launch a language-aware Activity and confirm inherited locale/fallback behavior;
-7. selecting `ar`, `zh-CN`, `hi` or `bn` never crashes even where complete translation/font acceptance remains pending.
-
-No PASS is claimed for this sequence yet.
-
----
-
-# 8. Immediate continuation priorities
-
-1. Run `tests.test_system_language` and the relevant Parent/installer/localization suites on owner-controlled current `main`.
-2. Run current `make verify`; preserve first failure and record exact SHA.
-3. Run Parent HTML `npm test` at the reviewed language-enabled revision.
-4. Rebuild current installer and physically verify the language-first flow + install transfer on Acer.
-5. Continue R7 as the first blocking architecture phase.
-6. Continue the separate localization-content tranche: platform string catalogues, script-font coverage, shaping/RTL and responsive translated-text acceptance—without conflating it with the now-implemented selector/persistence.
-7. Continue R13B backend work only after its existing measurements/prerequisites.
+1. Keep `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md` as sequencing authority.
+2. **Do not create more environment packs by default.** V5 is active.
+3. Generate/validate first runtime UI renditions on a build checkout with librsvg.
+4. Run the focused current-source V5 tests.
+5. Integrate one existing Shell/UI path through the generated catalogue/cache.
+6. Expand only after evidence; keep Activities/Web on one semantic contract.
 
 ---
 
 # 9. Non-negotiable continuation rules
 
-- `main` only unless owner changes branch policy;
-- GitHub is canonical source truth;
+- `main` only unless the owner changes policy;
+- GitHub is canonical persistence;
 - no unauthorized GitHub Actions use/inspection;
-- no current-head PASS without current-head execution;
-- no visible Linux UI during normal child use;
-- one canonical device-language registry; no browser/installer forks;
-- installer language choice transfers through the real `InstallRequest` into installed Greia state;
-- Parent language changes use typed Greia APIs/services, never shell/locale-file shortcuts;
-- language selection is not a claim of translation/font/RTL completion;
-- Activity fallback remains honest to the translations each Activity actually supplies;
+- no current-head PASS without actual current-head execution;
+- no visible Linux shell/desktop on normal child path;
 - R7 remains open and Xorg/xinit provisional;
-- trusted Home/Back remain outside Activity authority;
-- ordinary Activities do not gain raw `/dev/input` or DRM authority;
-- current single-root profiles keep system-update activation false;
-- source/build/VM/physical evidence scopes remain explicit and honest.
+- protected Home/Back stays outside Activity authority;
+- controller/input/device authority stays platform-owned;
+- one canonical device-language registry;
+- selectable language is not a translation/font/RTL-completion claim;
+- system-update activation stays false on current single-root profiles;
+- source/desktop/simulator/physical evidence scopes remain distinct;
+- Greia visual work remains asset-first;
+- candidate files in Git are not automatically approved;
+- static character style-anchor approval is not runtime/release/physical approval;
+- broad visual coverage does not authorize endless new packs;
+- V5 reuses the existing explicit asset-catalogue architecture;
+- runtime does not scan visual directories or rasterize SVG;
+- image caches remain bounded and no per-frame decode is accepted;
+- after each substantive visual session update the active visual plan checkpoint + append-only progress log and this HANDOVER when continuation changes materially.
 
-Resolve the exact current `main` SHA before every owner-controlled verification/build run and record that SHA with the returned evidence.
+For visual continuation, start from the **V5 explicit catalogue/rendition/cache implementation gate**, not from rejected character-rig, A2-overlay, crude-scene, generated-concept, or more-pack-by-default work.

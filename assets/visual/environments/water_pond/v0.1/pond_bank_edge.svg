@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 260">
+<defs>
+  <filter id="shadow" x="-30%" y="-40%" width="160%" height="200%">
+    <feDropShadow dx="0" dy="7" stdDeviation="6" flood-color="#263A35" flood-opacity=".16"/>
+  </filter>
+  <filter id="glow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="7"/></filter>
+  <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#8FDDF2"/><stop offset=".58" stop-color="#55BFD5"/><stop offset="1" stop-color="#318FAA"/>
+  </linearGradient>
+  <linearGradient id="wood" x1="0" y1="0" x2=".9" y2="1">
+    <stop offset="0" stop-color="#C88A5A"/><stop offset=".6" stop-color="#9A6244"/><stop offset="1" stop-color="#6F4635"/>
+  </linearGradient>
+</defs>
+
+<path d="M0 116 C124 77 238 84 346 119 C470 73 589 82 688 118 C811 82 912 87 1024 119 V260 H0 Z" fill="#5DBD70"/>
+<path d="M0 143 C126 112 234 119 351 150 C476 108 590 117 698 149 C817 117 919 121 1024 151 V260 H0 Z" fill="#74D184"/>
+<path d="M0 193 C166 172 301 182 465 203 C633 175 819 180 1024 205 V260 H0 Z" fill="#4EAD63" opacity=".72"/>
+<g fill="#378E50"><path d="M68 144 L84 92 L93 146 L112 106 L107 151 Z"/><path d="M265 143 L280 89 L290 146 L310 104 L304 150 Z"/><path d="M534 145 L548 91 L559 147 L579 107 L574 151 Z"/><path d="M805 144 L819 91 L829 146 L848 105 L843 150 Z"/></g>
+<g fill="#F7A2BF"><circle cx="184" cy="128" r="6"/><circle cx="646" cy="132" r="6"/></g><g fill="#FFF0A7"><circle cx="195" cy="135" r="5"/><circle cx="657" cy="138" r="5"/></g>
+</svg>

@@ -4,5 +4,5 @@
 # must never delay or break boot.
 
 if [ -c /dev/fb0 ] && [ -x /usr/lib/greia-boot/greia-fb-splash ]; then
-    /usr/lib/greia-boot/greia-fb-splash >/dev/null 2>&1 || true
+    /usr/lib/greia-boot/greia-fb-splash --progress 45 >/dev/null 2>&1 || true
 fi

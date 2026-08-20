@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Greia Cutout Critter archetype specimen">
+<defs>
+<style>
+  .ol { stroke:#4B372F; stroke-width:3.5; stroke-linecap:round; stroke-linejoin:round; }
+  .ol2 { stroke:#4B372F; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</defs>
+
+<ellipse cx="128" cy="226" rx="52" ry="8" fill="#6A5147" opacity=".10"/>
+<g id="character">
+  <!-- deliberately flat layered felt shapes -->
+  <path class="ol" fill="#59B86A" d="M87 90 C92 61 112 48 128 61 C145 47 165 61 170 90 C189 105 190 145 171 165 C167 194 151 211 128 211 C105 211 89 194 84 165 C65 145 67 106 87 90 Z"/>
+  <path class="ol2" fill="#F7EBCB" d="M95 119 C103 101 118 99 128 109 C138 99 153 101 161 119 C165 138 154 155 128 159 C102 155 91 138 95 119 Z"/>
+  <path class="ol2" fill="#FFC234" d="M119 142 L137 142 L128 154 Z"/>
+  <circle cx="111" cy="128" r="8" fill="#30343A"/>
+  <circle cx="145" cy="128" r="8" fill="#30343A"/>
+  <circle cx="114" cy="125" r="2.6" fill="#fff"/>
+  <circle cx="148" cy="125" r="2.6" fill="#fff"/>
+  <path class="ol2" fill="#44B8AE" d="M79 137 C56 145 59 168 84 172 C91 159 89 146 79 137 Z"/>
+  <path class="ol2" fill="#44B8AE" d="M177 137 C200 145 197 168 172 172 C165 159 167 146 177 137 Z"/>
+  <path class="ol2" fill="#F39A38" d="M103 208 Q113 198 122 208 Q113 216 103 208Z"/>
+  <path class="ol2" fill="#F39A38" d="M134 208 Q143 198 153 208 Q143 216 134 208Z"/>
+</g>
+
+</svg>

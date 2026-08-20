@@ -1,0 +1,187 @@
+catalog_id = "greia.environment.water_pond.v0.1"
+catalog_version = "0.1.1"
+status = "candidate"
+runtime_consumed = false
+active_plan = "docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md"
+provenance = "programmatic Greia source artwork created in-repo; shared generic background/prop reuse references Forest/Meadow v0.2"
+license = "project-owned/open-source-compatible pending repository-level final license confirmation"
+notes = "Reusable water/pond-specific SVG masters. Candidate artwork, not runtime authority or owner-approved release art."
+
+[[assets]]
+id = "pond.water.base.01"
+path = "pond_water_base.svg"
+family = "water"
+role = "background"
+status = "candidate"
+alpha = true
+parallax = "far"
+ambient_motion = "very_slow_shimmer"
+min_recommended_px = 128
+max_recommended_px = 1024
+
+[[assets]]
+id = "pond.bank.edge.01"
+path = "pond_bank_edge.svg"
+family = "shoreline"
+role = "mid_background_or_playfield"
+status = "candidate"
+alpha = true
+parallax = "mid"
+ambient_motion = "tiny_sway_optional"
+min_recommended_px = 128
+max_recommended_px = 1024
+
+[[assets]]
+id = "pond.lily_pad.cluster.01"
+path = "lily_pad_cluster.svg"
+family = "water_foliage"
+role = "playfield"
+status = "candidate"
+alpha = true
+parallax = "mid"
+ambient_motion = "tiny_water_bob_optional"
+min_recommended_px = 64
+max_recommended_px = 512
+
+[[assets]]
+id = "pond.reeds.cluster.01"
+path = "reeds_cluster.svg"
+family = "water_foliage"
+role = "foreground_or_playfield_edge"
+status = "candidate"
+alpha = true
+parallax = "near"
+ambient_motion = "subtle_sway"
+min_recommended_px = 64
+max_recommended_px = 512
+
+[[assets]]
+id = "pond.water_lily.cluster.01"
+path = "water_lily_cluster.svg"
+family = "water_foliage"
+role = "playfield"
+status = "candidate"
+alpha = true
+parallax = "mid"
+ambient_motion = "tiny_water_bob_optional"
+min_recommended_px = 64
+max_recommended_px = 512
+
+[[assets]]
+id = "pond.dock.small.01"
+path = "small_dock.svg"
+family = "prop"
+role = "playfield"
+status = "candidate"
+alpha = true
+parallax = "mid"
+ambient_motion = "none"
+min_recommended_px = 96
+max_recommended_px = 768
+
+[[assets]]
+id = "pond.stepping_stones.01"
+path = "stepping_stones.svg"
+family = "prop"
+role = "playfield"
+status = "candidate"
+alpha = true
+parallax = "mid"
+ambient_motion = "none"
+min_recommended_px = 96
+max_recommended_px = 768
+
+[[assets]]
+id = "pond.duckweed.patch.01"
+path = "duckweed_patch.svg"
+family = "water_foliage"
+role = "playfield_or_overlay"
+status = "candidate"
+alpha = true
+parallax = "mid"
+ambient_motion = "very_slow_drift_optional"
+min_recommended_px = 64
+max_recommended_px = 512
+
+[[assets]]
+id = "pond.ripple.ring.01"
+path = "ripple_ring.svg"
+family = "water_fx"
+role = "overlay"
+status = "candidate"
+alpha = true
+parallax = "overlay"
+ambient_motion = "expand_fade_optional"
+min_recommended_px = 64
+max_recommended_px = 768
+
+[[assets]]
+id = "pond.water_shimmer.01"
+path = "water_shimmer.svg"
+family = "water_fx"
+role = "light_overlay"
+status = "candidate"
+alpha = true
+parallax = "overlay"
+ambient_motion = "slow_horizontal_shimmer"
+min_recommended_px = 128
+max_recommended_px = 1024
+
+[[assets]]
+id = "pond.reflection_glow.01"
+path = "reflection_glow.svg"
+family = "water_light"
+role = "light_overlay"
+status = "candidate"
+alpha = true
+parallax = "overlay"
+ambient_motion = "very_slow_breathe_optional"
+min_recommended_px = 128
+max_recommended_px = 1024
+
+[[assets]]
+id = "pond.fish_shadows.01"
+path = "fish_shadows.svg"
+family = "ambient_fx"
+role = "underwater_overlay"
+status = "candidate"
+alpha = true
+parallax = "overlay"
+ambient_motion = "slow_drift"
+min_recommended_px = 64
+max_recommended_px = 768
+
+[[assets]]
+id = "pond.dragonfly.fx.01"
+path = "dragonfly_fx.svg"
+family = "ambient_fx"
+role = "foreground_or_midground"
+status = "candidate"
+alpha = true
+parallax = "overlay"
+ambient_motion = "bounded_hover_drift"
+min_recommended_px = 64
+max_recommended_px = 384
+
+[[assets]]
+id = "pond.bubble.fx.01"
+path = "bubble_fx.svg"
+family = "ambient_fx"
+role = "water_overlay"
+status = "candidate"
+alpha = true
+parallax = "overlay"
+ambient_motion = "slow_rise_fade"
+min_recommended_px = 64
+max_recommended_px = 512
+
+[shared_reuse]
+forest_assets = [
+  "hills.distant.01",
+  "treeline.distant.01",
+  "rock.cluster.large.01",
+  "log.fallen.01",
+  "ground.grass_edge.01",
+  "flower.patch.01"
+]
+notes = "Reference canonical Forest/Meadow background and generic prop masters instead of repainting water-specific duplicates."

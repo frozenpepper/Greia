@@ -4,9 +4,13 @@
 # BIOS executes reliably (GRUB's MBR does not work on that firmware+stick
 # combination). See docs/INSTALLATION_USB_BOOT_POSTMORTEM.md.
 #
-# The ordinary child/installer boot is straight to the Greia installer:
-# no interactive menu, no countdown. SYSLINUX still prints its loading
-# progress so early boot remains observable on quirky displays.
+# RECOVERY ACCEPTANCE MODE (2026-08-20): keep the development/reference Acer
+# path observable until the current installer regression is physically closed.
+# The accepted postmortems explicitly require visible early boot diagnostics.
+# Do not auto-reboot a kernel/initramfs failure: panic=0 leaves the actual
+# failure on tty1. Do not add Syslinux DISPLAY clearing or console=null here.
+# Once the hardware path is re-accepted, presentation silence can be designed
+# and tested as a separate boot-critical change.
 DEFAULT live
 PROMPT 0
 TIMEOUT 0
@@ -14,4 +18,4 @@ TIMEOUT 0
 LABEL live
     LINUX /vmlinuz
     INITRD /initrd.img
-    APPEND boot=live components live-media-path=/ live-media-timeout=30 nopersistence noeject overlay-size=128M greia.live_media_id=LIVE_MEDIA_ID quiet splash loglevel=0 console=tty1 panic=30 systemd.show_status=false rd.systemd.show_status=false systemd.crash_shell=no systemd.crash_chvt=0 udev.log_priority=3 vt.global_cursor_default=0 consoleblank=0
+    APPEND boot=live components live-media-path=/ live-media-timeout=30 nopersistence noeject overlay-size=128M greia.live_media_id=LIVE_MEDIA_ID console=tty1 panic=0 loglevel=4 systemd.show_status=true rd.systemd.show_status=true systemd.crash_shell=no udev.log_priority=4 vt.global_cursor_default=1 consoleblank=0

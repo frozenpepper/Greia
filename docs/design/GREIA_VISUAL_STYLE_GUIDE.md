@@ -1,9 +1,9 @@
 # Greia Visual Style Guide
 
 **Status:** accepted visual-design direction; Nunito typography and initial color-emoji/picker path implemented in source, physical/C0 evidence pending where noted  
-**Date:** 2026-08-19  
+**Date:** 2026-08-20  
 **Audience:** Greia Shell designers, platform developers, Activity authors, installer/Parent UI developers, artists, reviewers, and software agents  
-**Related:** `docs/design/GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md`, ADR 0018, ADR 0019, ADR 0025, `runtime/theme-defaults.toml`, `src/greia_platform/typography.py`, `src/greia_platform/emoji_palette.py`
+**Related:** `docs/design/GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md`, `docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md`, `docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md`, ADR 0018, ADR 0019, ADR 0025, `runtime/theme-defaults.toml`, `src/greia_platform/typography.py`, `src/greia_platform/emoji_palette.py`
 
 ## 1. Purpose and authority
 
@@ -463,3 +463,34 @@ As of 2026-08-19:
 - **accessibility alternate normal-text family:** extension point required, specific family not yet selected by this guide.
 
 Do not convert this source status into a physical/release-support claim until the current tests and low-resource evidence actually execute.
+
+## 20. Constraint-native character and illustration language
+
+As of 2026-08-20, Greia's **default reusable character language** is constraint-native rather than traditionally articulated. The accepted construction grammar is owned in detail by `docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md`.
+
+The default archetypes are:
+
+- **Puff** — one soft round/oval/fluffy mass, large face, tiny or absent limbs, a few identity cues;
+- **Bean** — one compact upright rounded/drop mass, large face, tiny feet and optional wing/flap shapes;
+- **Cutout Critter** — a deliberately flat felt/sticker/paper-cut construction using a few large overlapping layers;
+- **Object Friend** — the pedagogical object remains the primary silhouette and gains a face/tiny optional appendages.
+
+Default character construction should usually remain within:
+
+```text
+1 main body mass
+1 face region
+0–2 tiny feet
+0–2 tiny arms/wings/flaps
+0–3 identity attachment groups
+```
+
+Identity should come from silhouette, face, major color blocks and two or three strong cues rather than realistic anatomy. A unicorn may read through horn + ears + localized rainbow tuft; a fox through ears + muzzle/chest patch + chunky tail; an owl through mask + beak + flaps. If a species only reads after adding a complex jointed skeleton, simplify the design brief instead.
+
+For reusable vector masters, the current accepted review convention is a 256×256 logical artboard with small-size checks at 128 and 64 px where those sizes are supported. At the 256 master, normal primary contours are about 3–4 px and secondary contours about 2–3 px, with rounded joins/caps and tinted darks such as cocoa/plum/navy rather than pure black. Depth should use broad flat or restrained two-stop fills and a small number of large patches rather than detailed fur, glossy 3D rendering or micro-texture.
+
+The face is the primary emotional engine. Large eyes, simple mouths, cheeks and small whole-body posture changes should carry more emotional range than articulated anatomy. Normal educational mistakes must never use anger, shame, or a disappointed-at-the-child expression.
+
+The first approved **static style anchors** are Lilli (unicorn Puff), Nino (owl Bean), Tito (fox Puff), and Momo (friendly monster Puff). Their approval establishes the visual direction and reusable construction grammar; it does **not** claim that the current SVGs are final release assets, runtime-integrated character packages, or physically accepted on C0 hardware. They may continue to receive visual refinement without reopening the architecture decision.
+
+Character motion is being standardized separately in `docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md`. The accepted principle is semantic whole-body motion plus face state and optional bounded identity-cue/FX response. Animation must enrich a state, while a clear static fallback remains sufficient for meaning. Runtime implementation must remain lightweight and architecture-reviewed rather than introducing a parallel animation engine inside Activities.

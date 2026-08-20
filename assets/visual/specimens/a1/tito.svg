@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Tito — Greia fox Puff specimen">
+<defs>
+<style>
+  .ol { stroke:#4B372F; stroke-width:3.5; stroke-linecap:round; stroke-linejoin:round; }
+  .ol2 { stroke:#4B372F; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+
+<linearGradient id="body" x1="0" y1="0" x2=".8" y2="1">
+  <stop offset="0" stop-color="#F7A045"/>
+  <stop offset="1" stop-color="#E77B2D"/>
+</linearGradient>
+</defs>
+
+<ellipse cx="128" cy="228" rx="58" ry="9" fill="#6A5147" opacity=".12"/>
+<g id="character">
+  <!-- tail behind -->
+  <path class="ol" fill="#E98231" d="M179 146 C218 123 229 151 207 179 C195 194 180 196 168 188 C185 180 189 164 179 146 Z"/>
+  <path class="ol2" fill="#FFF4E8" d="M201 160 C214 151 220 158 211 171 C205 180 197 183 189 181 C198 175 202 169 201 160 Z"/>
+  <!-- ears -->
+  <path class="ol" fill="#F18D37" d="M88 82 L76 42 L110 72 Z"/>
+  <path class="ol" fill="#F18D37" d="M148 72 L181 42 L168 82 Z"/>
+  <path fill="#F5B0A4" d="M88 68 L82 51 L101 68 Z"/>
+  <path fill="#F5B0A4" d="M155 68 L175 51 L168 69 Z"/>
+  <!-- puff body -->
+  <path class="ol" fill="url(#body)" d="M128 67
+    C169 67 195 94 196 132
+    C197 164 179 193 153 204
+    C134 212 110 209 94 202
+    C67 190 55 165 59 135
+    C64 96 89 67 128 67 Z"/>
+  <!-- cream chest/muzzle patch -->
+  <path fill="#FFF5E7" d="M94 119
+    C104 104 118 104 128 115
+    C138 104 153 104 163 119
+    C171 134 164 158 151 168
+    C144 174 136 176 128 176
+    C118 176 109 173 102 167
+    C88 155 86 134 94 119 Z"/>
+  <!-- tiny paws -->
+  <ellipse class="ol2" cx="101" cy="207" rx="14" ry="8.5" fill="#FFF5E7"/>
+  <ellipse class="ol2" cx="153" cy="207" rx="14" ry="8.5" fill="#FFF5E7"/>
+  <!-- eyes -->
+  <ellipse cx="108" cy="132" rx="8.5" ry="12" fill="#3C2D33"/>
+  <ellipse cx="148" cy="132" rx="8.5" ry="12" fill="#3C2D33"/>
+  <ellipse cx="111" cy="128" rx="2.8" ry="3.6" fill="#fff"/>
+  <ellipse cx="151" cy="128" rx="2.8" ry="3.6" fill="#fff"/>
+  <!-- cheeks -->
+  <ellipse cx="91" cy="151" rx="9" ry="5.5" fill="#F19A9E" opacity=".48"/>
+  <ellipse cx="165" cy="151" rx="9" ry="5.5" fill="#F19A9E" opacity=".48"/>
+  <!-- nose & smile -->
+  <path class="ol2" fill="#594047" d="M119 147 Q128 141 137 147 Q134 155 128 158 Q122 155 119 147Z"/>
+  <path d="M113 162 Q128 173 143 162" stroke="#6D474D" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+  <!-- brow/forehead identity stripe -->
+  <path d="M128 82 C119 91 116 102 118 114 C124 107 129 103 136 101 C135 93 133 87 128 82 Z" fill="#D96828" opacity=".7"/>
+</g>
+
+</svg>

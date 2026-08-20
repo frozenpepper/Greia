@@ -1,0 +1,90 @@
+index_id = "greia.visual-packs.v0.1"
+index_version = "0.1.0"
+status = "design-inventory"
+runtime_consumed = false
+active_plan = "docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md"
+notes = "Pack-level design/review inventory only. It is not a runtime filesystem-discovery or loader contract."
+
+[[packs]]
+id = "forest_meadow.v0.2"
+kind = "environment"
+path = "assets/visual/environments/forest_meadow/v0.2/"
+catalog = "assets/visual/environments/forest_meadow/v0.2/catalog.toml"
+status = "candidate"
+evidence = ["source", "desktop_visual_review"]
+reference_viewports = ["1024x600", "800x600"]
+dependencies = []
+
+[[packs]]
+id = "ui.v0.1"
+kind = "ui"
+path = "assets/visual/ui/v0.1/"
+catalog = "assets/visual/ui/v0.1/catalog.toml"
+status = "candidate"
+evidence = ["source", "desktop_visual_review"]
+reference_viewports = ["1024x600", "800x600"]
+dependencies = []
+
+[[packs]]
+id = "workshop.v0.1"
+kind = "environment"
+path = "assets/visual/environments/workshop/v0.1/"
+catalog = "assets/visual/environments/workshop/v0.1/catalog.toml"
+status = "candidate"
+evidence = ["source", "desktop_visual_review"]
+reference_viewports = ["1024x600", "800x600"]
+dependencies = []
+
+[[packs]]
+id = "clinic.v0.1"
+kind = "environment"
+path = "assets/visual/environments/clinic/v0.1/"
+catalog = "assets/visual/environments/clinic/v0.1/catalog.toml"
+status = "candidate"
+evidence = ["source", "desktop_visual_review"]
+reference_viewports = ["1024x600", "800x600"]
+dependencies = []
+
+[[packs]]
+id = "reading_classroom.v0.1"
+kind = "environment"
+path = "assets/visual/environments/reading_classroom/v0.1/"
+catalog = "assets/visual/environments/reading_classroom/v0.1/catalog.toml"
+status = "candidate"
+evidence = ["source", "desktop_visual_review"]
+reference_viewports = ["1024x600", "800x600"]
+dependencies = ["workshop.v0.1"]
+reuse_notes = "Reuses Workshop blocks and pencil-cup assets instead of duplicating them."
+
+[[packs]]
+id = "fantasy_village_night.v0.1"
+kind = "environment"
+path = "assets/visual/environments/fantasy_village_night/v0.1/"
+catalog = "assets/visual/environments/fantasy_village_night/v0.1/catalog.toml"
+status = "candidate"
+evidence = ["source", "desktop_visual_review"]
+reference_viewports = ["1024x600", "800x600"]
+dependencies = ["forest_meadow.v0.2"]
+reuse_notes = "Reuses Forest greenery/fireflies where appropriate."
+
+[[packs]]
+id = "water_pond.v0.1"
+kind = "environment"
+path = "assets/visual/environments/water_pond/v0.1/"
+catalog = "assets/visual/environments/water_pond/v0.1/catalog.toml"
+status = "candidate"
+evidence = ["source", "desktop_visual_review"]
+reference_viewports = ["1024x600", "800x600"]
+dependencies = ["forest_meadow.v0.2"]
+reuse_notes = "Reuses Forest distant landscape and generic rock/log/grass/flower assets rather than painting duplicates."
+
+[[packs]]
+id = "character_seed.v0.1"
+kind = "character"
+path = "assets/visual/"
+catalog = "assets/visual/library_v0.1.toml"
+status = "mixed"
+evidence = ["source", "desktop_visual_review", "owner_static_style_anchor_review"]
+reference_viewports = []
+dependencies = []
+reuse_notes = "Lilli, Nino, Tito and Momo are approved only as static style anchors; motion/expression assets remain separately scoped."

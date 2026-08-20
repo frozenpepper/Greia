@@ -1,7 +1,7 @@
 [Unit]
 Description=Greia OS graphical installer
-Wants=iwd.service systemd-resolved.service
-After=local-fs.target systemd-logind.service iwd.service systemd-resolved.service
+Wants=iwd.service systemd-resolved.service systemd-networkd.service avahi-daemon.service
+After=local-fs.target systemd-logind.service iwd.service systemd-resolved.service systemd-networkd.service
 Conflicts=getty@tty1.service
 StartLimitIntervalSec=30
 StartLimitBurst=4

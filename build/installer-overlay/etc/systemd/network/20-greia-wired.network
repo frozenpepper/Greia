@@ -1,0 +1,9 @@
+[Match]
+Name=en* eth*
+
+[Network]
+DHCP=yes
+MulticastDNS=yes
+
+[DHCPv4]
+UseHostname=yes

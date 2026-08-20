@@ -1,0 +1,133 @@
+catalog_id = "greia.environment.workshop.v0.1"
+catalog_version = "0.1.1"
+status = "candidate"
+runtime_consumed = false
+active_plan = "docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md"
+provenance = "programmatic Greia source artwork created in-repo"
+notes = "Indoor creative/workshop reusable asset pack. No baked room scene."
+
+[[assets]]
+id = "workshop.workbench"
+path = "workbench.svg"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "workshop.shelf"
+path = "shelf.svg"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "workshop.paint.palette"
+path = "paint_palette.svg"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "workshop.brush.bundle"
+path = "brush_bundle.svg"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "workshop.pencil.cup"
+path = "pencil_cup.svg"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "workshop.blocks"
+path = "blocks.svg"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "workshop.storage.box"
+path = "storage_box.svg"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "workshop.paper.stack"
+path = "paper_stack.svg"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "workshop.rug"
+path = "rug.svg"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "workshop.desk.lamp"
+path = "desk_lamp.svg"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "workshop.window"
+path = "window.svg"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "workshop.window.light"
+path = "window_light.svg"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "workshop.paint.jars"
+path = "paint_jars.svg"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "workshop.wall.base"
+path = "wall_base.svg"
+family = "room_base"
+role = "background"
+status = "candidate"
+alpha = false
+
+[[assets]]
+id = "workshop.floor.base"
+path = "floor_base.svg"
+family = "room_base"
+role = "ground"
+status = "candidate"
+alpha = false
+
+[[assets]]
+id = "workshop.stool"
+path = "stool.svg"
+family = "furniture"
+role = "playfield"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "workshop.pegboard"
+path = "pegboard.svg"
+family = "furniture"
+role = "mid_background"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "workshop.easel"
+path = "easel.svg"
+family = "creative_prop"
+role = "playfield"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "workshop.pinboard.note"
+path = "pinboard_note.svg"
+family = "decor"
+role = "mid_background"
+status = "candidate"
+alpha = true

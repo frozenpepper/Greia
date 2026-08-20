@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 280">
+<defs>
+  <filter id="shadow" x="-30%" y="-40%" width="160%" height="200%"><feDropShadow dx="0" dy="7" stdDeviation="6" flood-color="#263A35" flood-opacity=".16"/></filter>
+  <filter id="glow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="7"/></filter>
+  <linearGradient id="water" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8FDDF2"/><stop offset=".58" stop-color="#55BFD5"/><stop offset="1" stop-color="#318FAA"/></linearGradient>
+  <linearGradient id="wood" x1="0" y1="0" x2=".9" y2="1"><stop offset="0" stop-color="#C88A5A"/><stop offset=".6" stop-color="#9A6244"/><stop offset="1" stop-color="#6F4635"/></linearGradient>
+</defs>
+<g fill="#79CF7D" stroke="#4DAB5A" stroke-width="2">
+<ellipse cx="93" cy="136" rx="28" ry="16"/><ellipse cx="135" cy="112" rx="24" ry="14"/><ellipse cx="168" cy="148" rx="30" ry="17"/><ellipse cx="219" cy="121" rx="25" ry="14"/><ellipse cx="257" cy="154" rx="29" ry="16"/><ellipse cx="307" cy="117" rx="26" ry="15"/><ellipse cx="348" cy="148" rx="31" ry="17"/><ellipse cx="397" cy="124" rx="24" ry="14"/><ellipse cx="430" cy="156" rx="26" ry="15"/>
+</g>
+<g fill="#A5E5A5" opacity=".55"><ellipse cx="85" cy="130" rx="9" ry="5"/><ellipse cx="211" cy="116" rx="8" ry="4"/><ellipse cx="338" cy="142" rx="9" ry="5"/></g>
+</svg>

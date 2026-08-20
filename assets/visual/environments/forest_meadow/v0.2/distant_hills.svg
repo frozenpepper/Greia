@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 512">
+<defs>
+
+<linearGradient id="hillFar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C6DDD5"/><stop offset="1" stop-color="#9BC9AE"/></linearGradient>
+<linearGradient id="hillMid" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#90CD95"/><stop offset="1" stop-color="#66B979"/></linearGradient>
+
+</defs>
+
+<path d="M0 330 C112 210 230 206 340 322 C445 187 590 179 700 315 C811 223 918 231 1024 332 L1024 512 L0 512 Z" fill="url(#hillFar)"/>
+<path d="M0 390 C109 299 227 299 336 389 C456 276 595 289 708 393 C830 310 928 323 1024 405 L1024 512 L0 512 Z" fill="url(#hillMid)"/>
+<path d="M0 429 C165 373 306 383 437 430 C572 377 717 382 1024 441 L1024 512 L0 512 Z" fill="#5CAB70" opacity=".78"/>
+<path d="M122 300 C162 272 205 267 244 284" fill="none" stroke="#E2F0E8" stroke-width="10" opacity=".28" stroke-linecap="round"/>
+<path d="M478 276 C522 245 570 241 611 258" fill="none" stroke="#E2F0E8" stroke-width="10" opacity=".22" stroke-linecap="round"/>
+
+</svg>

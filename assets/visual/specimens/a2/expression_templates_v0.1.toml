@@ -1,0 +1,89 @@
+catalog_id = "greia.visual-expression.base.v0.1"
+catalog_version = "0.1.0"
+status = "candidate-design"
+runtime_consumed = false
+active_plan = "docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md"
+design_spec = "docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md"
+notes = "Semantic visual-authoring templates. These are not runtime face geometry or an asset API."
+
+[[expressions]]
+id = "neutral"
+energy = "calm"
+eye_cues = ["open_relaxed", "large_readable"]
+mouth_cues = ["small_friendly_curve"]
+body_cues = ["balanced"]
+static_required = true
+
+[[expressions]]
+id = "happy"
+energy = "positive"
+eye_cues = ["closed_happy_or_bright_open"]
+mouth_cues = ["clear_wider_smile"]
+body_cues = ["slight_upward_energy_optional"]
+static_required = true
+
+[[expressions]]
+id = "excited"
+energy = "high_positive"
+eye_cues = ["bright_open", "large_highlights_optional"]
+mouth_cues = ["open_happy_or_large_smile"]
+body_cues = ["upward_energy"]
+static_required = false
+
+[[expressions]]
+id = "surprised"
+energy = "reaction"
+eye_cues = ["wider_rounder"]
+mouth_cues = ["small_o"]
+body_cues = ["recoil_optional"]
+static_required = true
+
+[[expressions]]
+id = "sleepy"
+energy = "low"
+eye_cues = ["closed_or_half_lid"]
+mouth_cues = ["small_relaxed"]
+body_cues = ["soft_compression", "gentle_tilt_optional"]
+static_required = true
+
+[[expressions]]
+id = "sad_gentle"
+energy = "low_gentle"
+eye_cues = ["softened", "slightly_smaller_or_lower"]
+mouth_cues = ["shallow_down_curve"]
+body_cues = ["small_low_energy_tilt_optional"]
+prohibited_cues = ["angry_brows", "accusatory_brows", "glare", "shame", "disappointed_at_child"]
+static_required = false
+
+[[expressions]]
+id = "thinking"
+energy = "focused"
+eye_cues = ["look_up_or_side", "mild_asymmetry_optional"]
+mouth_cues = ["small_side_curve_or_neutral"]
+body_cues = ["tiny_tilt_optional"]
+static_required = false
+
+[[expressions]]
+id = "proud"
+energy = "calm_positive"
+eye_cues = ["relaxed_bright_or_closed_happy"]
+mouth_cues = ["small_upward_smile_or_smirk"]
+body_cues = ["small_lift"]
+static_required = false
+
+[[expressions]]
+id = "silly"
+energy = "playful"
+eye_cues = ["readable_asymmetry", "pupil_offset_optional"]
+mouth_cues = ["playful_open_mouth_or_tongue_optional"]
+body_cues = ["tiny_tilt_optional"]
+prohibited_cues = ["distorted_identity", "scary_face"]
+static_required = false
+
+[[transient_states]]
+id = "blink"
+duration_min_ms = 150
+duration_max_ms = 300
+eye_cues = ["closed"]
+mouth_cues = ["preserve_current_emotion_or_neutral"]
+semantic_meaning_required = false

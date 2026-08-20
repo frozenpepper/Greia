@@ -1,7 +1,7 @@
 # Greia Documentation Map and Authority Model
 
 **Status:** repository-wide documentation contract  
-**Last reviewed:** 2026-08-19  
+**Last reviewed:** 2026-08-20  
 **Audience:** contributors, coding agents, reviewers, test operators, Activity authors
 
 ---
@@ -132,9 +132,11 @@ For exact currently implemented APIs, schemas, command vocabularies and limits, 
 
 Documentation may explain these contracts but must not invent a conflicting one. When source intentionally changes, update affected living manuals in the same tranche.
 
-### 2.6 Active sequencing — active plan
+### 2.6 Active sequencing — blocking implementation plan + art workstream plan
 
-`docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md` owns active ordering, prerequisites, closure criteria and append-only progress history while active. It does not turn a source implementation into executed evidence.
+`docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md` owns active **blocking implementation** ordering, prerequisites, closure criteria and append-only progress history while active. It does not turn a source implementation into executed evidence.
+
+`docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md` owns active **art/visual workstream** sequencing, its short current checkpoint and append-only art progress ledger. It is subordinate to accepted ADRs and the blocking architecture plan: visual/design/library work may advance where it does not bypass platform prerequisites, and it cannot close or reorder R7/R8/R9/R10/R14.
 
 The Activity Simulator is a developer-tooling tranche under ADR 0029. It does **not** move, bypass or close the R7/R8/R9/R10/R14 phase gates. Future HTML/Web simulator support must consume the canonical R9 Web runtime rather than implementing it in parallel.
 
@@ -161,7 +163,7 @@ docs/testing/2026-08-19_ACTIVITY_SIMULATOR_ACCEPTANCE.md
 
 ### 2.9 Agent/developer manuals — `docs/agents/*`, `docs/development/*`, `skills/*`
 
-`docs/agents/GREIA_AGENT_OPERATIONS.md` is the operational entry point for build/test/hardware work. `skills/greia-activity-authoring/SKILL.md` is the living Activity authoring guide. `docs/development/GREIA_ACTIVITY_SIMULATOR.md` is the Activity Simulator developer/operator guide below ADR 0029. `docs/development/GREIA_SYSTEM_UPDATE_RELEASE_WORKFLOW.md` is the concise release-operator guide for signing, building, inspecting and pushing `.greiaupdate` artifacts below ADR 0030. These manuals must preserve the exact source/evidence/authority boundaries of the systems they explain.
+`docs/agents/GREIA_AGENT_OPERATIONS.md` is the operational entry point for build/test/hardware work. `skills/greia-activity-authoring/SKILL.md` is the living Activity authoring guide. `skills/greia-visual-authoring/SKILL.md` is the living practical guide for model-assisted Greia character/scene/prop/FX/UI visual creation under the current art plan. `docs/development/GREIA_ACTIVITY_SIMULATOR.md` is the Activity Simulator developer/operator guide below ADR 0029. `docs/development/GREIA_SYSTEM_UPDATE_RELEASE_WORKFLOW.md` is the concise release-operator guide for signing, building, inspecting and pushing `.greiaupdate` artifacts below ADR 0030. These manuals must preserve the exact source/evidence/authority boundaries of the systems they explain.
 
 ### 2.10 Governance/licensing — `docs/governance/*`
 
@@ -183,7 +185,7 @@ The adversarial simulator review remains historical evidence of what was found. 
 
 ### 2.12 Visual/design manuals — `docs/design/*`
 
-`GREIA_VISUAL_STYLE_GUIDE.md` owns reusable visual-language direction. `GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md` owns the production-art inventory.
+`GREIA_VISUAL_STYLE_GUIDE.md` owns reusable visual-language direction. `GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md` owns the production-art inventory. The current art plan may sequence/refine candidate visual rules, but accepted reusable direction must be reconciled back into these living design authorities rather than living only in a progress document.
 
 `GREIA_LAUNCHER_INTERACTION_AND_ACTIVITY_CATALOGUE.md` owns the current launcher interaction/catalogue synthesis.
 
@@ -201,6 +203,8 @@ The adversarial simulator review remains historical evidence of what was found. 
 - **DEFERRED** — intentionally outside the current phase.
 - **HISTORICAL** — retained provenance, not current instruction.
 - **COMPLETE** — all explicitly named closure criteria satisfied.
+
+For art/visual work, the active art plan additionally scopes evidence as **DESIGN SPEC**, **SOURCE**, **DESKTOP VISUAL REVIEW**, **SIMULATOR VISUAL REVIEW**, **PHYSICAL VISUAL REVIEW**, or **REJECTED EXPERIMENT**.
 
 Never use `PASS`, `accepted`, `complete`, `supported` or `licensed` without naming scope where ambiguity is possible.
 
@@ -237,6 +241,7 @@ Architecture examples communicate semantics; they are not automatically current 
 - The hardened simulator regressions are committed but remain **UNPROVEN** until executed on the current head; source presence is not a PASS.
 - The desktop simulator is **not** an untrusted-code sandbox and cannot establish production Bubblewrap/filesystem/input-containment evidence.
 - HTML/Web simulator execution is **not implemented** merely because a structurally valid Web package can be discovered; current execution must fail as runtime unavailable until the canonical R9 Web adapter exists.
+- The new `assets/visual/` inventory and `skills/greia-visual-authoring/SKILL.md` are **design/library seed source**, not a runtime asset-loader API and not evidence that any canonical character asset is release-approved.
 - R7 remains open; Xorg/xinit is provisional compatibility behavior.
 
 ---
@@ -270,11 +275,13 @@ The simulator may help reproduce platform-independent Activity/layout/runtime se
 | system-update artifact/trust/delivery/backend/rollback behavior | ADR 0030 + `SYSTEM_UPDATES.md` + `GREIA_SYSTEM_UPDATE_RELEASE_WORKFLOW.md` + update source/tests + Parent docs/client + active plan/HANDOVER |
 | child visual personalization/My Greia scope | `MY_GREIA_SETTINGS.md` + source/tests + Activity skill when author-facing visual context changes |
 | launcher catalogue/category/icon/effects | launcher design + source/tests + Activity skill where author-facing |
+| visual character/scene/prop/FX/UI art direction or shared asset-library work | current art plan checkpoint + append-only art ledger + `skills/greia-visual-authoring/SKILL.md`; reconcile accepted reusable rules into visual style/art-requirements docs and update HANDOVER when continuation/evidence changes |
 | package install/update/remove/trust | Activity ecosystem docs + Activity skill + active plan + Parent docs where applicable |
 | installation/build/initramfs/display hardware contract | issue log + review/evidence + operator docs + active plan |
 | Parent UX/credentials/pairing | `PARENT_MANAGEMENT.md` + ADR 0022 if architectural + Parent client/source |
 | architecture decision | ADR + living architecture synthesis |
-| active implementation/progress | active plan append + `HANDOVER.md` |
+| active implementation/progress | blocking active plan append + `HANDOVER.md` |
+| active art/design progress | art plan checkpoint + append-only ledger; `HANDOVER.md` when continuation/evidence changes |
 | executed verification | `HANDOVER.md` + durable review/evidence when useful |
 
 ---
@@ -287,9 +294,9 @@ Unless narrower instructions say otherwise:
 2. this documentation map
 3. relevant product docs / accepted ADRs (including ADR 0028 for localization/language work, ADR 0029 for simulator work and ADR 0030 for system-update work)
 4. `docs/engineering/ENGINEERING_FOUNDATIONS.md`
-5. active plan
+5. the blocking active plan plus the current art plan when the task is visual/art-related
 6. `HANDOVER.md`
-7. relevant operator/agent/Activity/development manual
+7. relevant operator/agent/Activity/visual/development manual or skill
 8. exact source/runtime contracts being changed
 
 When documents conflict, resolve by authority class. If implementation intentionally changed, update derived manuals; if source conflicts with an accepted decision, resolve the architecture rather than quietly documenting the deviation.

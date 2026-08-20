@@ -1,0 +1,120 @@
+catalog_id = "greia.environment.fantasy_village_night.v0.1"
+catalog_version = "0.1.0"
+status = "candidate"
+runtime_consumed = false
+active_plan = "docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md"
+provenance = "programmatic Greia source artwork created in-repo"
+notes = "Night/fantasy village individual-asset tranche. Reuses existing Forest foliage/fog/fireflies where appropriate rather than duplicating them."
+
+[[assets]]
+id = "fantasy.night.sky.base"
+path = "night_sky_base.svg"
+status = "candidate"
+role = "background"
+alpha = false
+
+[[assets]]
+id = "fantasy.crescent.moon"
+path = "crescent_moon.svg"
+status = "candidate"
+role = "far_background"
+alpha = true
+
+[[assets]]
+id = "fantasy.distant.village"
+path = "distant_village.svg"
+status = "candidate"
+role = "far_background"
+alpha = true
+
+[[assets]]
+id = "fantasy.castle.hill"
+path = "castle_hill.svg"
+status = "candidate"
+role = "far_background"
+alpha = true
+
+[[assets]]
+id = "fantasy.cottage.round"
+path = "cottage_round.svg"
+status = "candidate"
+role = "playfield"
+alpha = true
+
+[[assets]]
+id = "fantasy.cottage.tall"
+path = "cottage_tall.svg"
+status = "candidate"
+role = "playfield"
+alpha = true
+
+[[assets]]
+id = "fantasy.castle.tower"
+path = "castle_tower.svg"
+status = "candidate"
+role = "midground"
+alpha = true
+
+[[assets]]
+id = "fantasy.stone.bridge"
+path = "stone_bridge.svg"
+status = "candidate"
+role = "playfield"
+alpha = true
+
+[[assets]]
+id = "fantasy.lantern.post"
+path = "lantern_post.svg"
+status = "candidate"
+role = "playfield"
+alpha = true
+ambient_motion = "very_slow_light_breathe_optional"
+
+[[assets]]
+id = "fantasy.wood.signpost"
+path = "wood_signpost.svg"
+status = "candidate"
+role = "playfield"
+alpha = true
+
+[[assets]]
+id = "fantasy.stone.well"
+path = "stone_well.svg"
+status = "candidate"
+role = "playfield"
+alpha = true
+
+[[assets]]
+id = "fantasy.cobblestone.edge"
+path = "cobblestone_edge.svg"
+status = "candidate"
+role = "ground"
+alpha = true
+
+[[assets]]
+id = "fantasy.window.glow"
+path = "window_glow.svg"
+status = "candidate"
+role = "overlay"
+alpha = true
+ambient_motion = "very_slow_breathe_alpha"
+
+[[assets]]
+id = "fantasy.moonlight.rays"
+path = "moonlight_rays.svg"
+status = "candidate"
+role = "overlay"
+alpha = true
+ambient_motion = "very_slow_breathe_alpha"
+
+[[assets]]
+id = "fantasy.magic.sparkles"
+path = "magic_sparkles.svg"
+status = "candidate"
+role = "optional_fx"
+alpha = true
+ambient_motion = "slow_twinkle"
+
+[shared_reuse]
+forest_assets = ["forest.tree.hero_01", "forest.tree.secondary_01", "forest.bush.01", "fx.fireflies.01"]
+notes = "Use shared Forest vegetation/fireflies when composition needs them; do not create duplicate night foliage merely for color variation."

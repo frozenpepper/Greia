@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 128">
+<defs>
+<filter id="blur" x="-40%" y="-80%" width="180%" height="260%"><feGaussianBlur stdDeviation="9"/></filter>
+</defs>
+<ellipse cx="320" cy="64" rx="235" ry="21" fill="#3D2C1F" opacity=".14" filter="url(#blur)"/><ellipse cx="320" cy="63" rx="194" ry="12" fill="#3D2C1F" opacity=".07"/>
+</svg>

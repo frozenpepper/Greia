@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 360">
+<defs><filter id="s" x="-30%" y="-40%" width="160%" height="200%"><feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#28513A" flood-opacity=".12"/></filter></defs>
+<ellipse cx="280" cy="302" rx="184" ry="18" fill="#28513A" opacity=".07" filter="url(#s)"/>
+<g stroke="#318B49" stroke-width="4" stroke-linejoin="round">
+  <path d="M137 220 L202 201 A74 39 0 1 0 196 241 Z" fill="#59B86A"/>
+  <path d="M286 197 L359 176 A84 45 0 1 0 350 226 Z" fill="#67C978"/>
+  <path d="M412 233 L472 217 A68 36 0 1 0 466 257 Z" fill="#4FAE62"/>
+</g>
+<g fill="#A6E5A9" opacity=".48">
+  <path d="M95 207 C127 187 165 184 195 201 C158 199 128 210 108 230 Z"/>
+  <path d="M235 170 C278 140 329 141 366 168 C320 159 283 173 256 201 Z"/>
+  <path d="M365 219 C397 198 435 197 464 217 C430 213 400 223 379 244 Z"/>
+</g>
+<g transform="translate(295 151)">
+  <g fill="#FFF7F9" stroke="#E7C9D5" stroke-width="2">
+    <ellipse cx="0" cy="-30" rx="18" ry="36"/>
+    <ellipse cx="29" cy="-10" rx="18" ry="36" transform="rotate(57 29 -10)"/>
+    <ellipse cx="18" cy="24" rx="18" ry="36" transform="rotate(122 18 24)"/>
+    <ellipse cx="-18" cy="24" rx="18" ry="36" transform="rotate(-122 -18 24)"/>
+    <ellipse cx="-29" cy="-10" rx="18" ry="36" transform="rotate(-57 -29 -10)"/>
+  </g>
+  <circle r="14" fill="#FFC234"/>
+</g>
+</svg>

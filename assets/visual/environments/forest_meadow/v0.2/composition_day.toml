@@ -1,0 +1,75 @@
+scene_id = "forest_meadow.day.reference.v0.2"
+status = "candidate-composition-proof"
+source_pack = "assets/visual/environments/forest_meadow/v0.2/"
+runtime_authority = false
+notes = "Restrained daytime default. Keeps center calm. Fireflies, dust motes and falling leaves remain optional effects, not default day layers."
+
+[reference_viewports]
+primary = [1024, 600]
+legacy = [800, 600]
+
+[[layers]]
+id = "sky"
+z = 0
+parallax = 0.0
+
+[[layers]]
+id = "far_hills"
+asset = "distant_hills.svg"
+z = 10
+parallax = 0.08
+
+[[layers]]
+id = "far_treeline"
+asset = "distant_treeline.svg"
+z = 20
+parallax = 0.12
+
+[[layers]]
+id = "clouds"
+assets = ["cloud_large.svg", "cloud_small.svg"]
+z = 25
+parallax = 0.05
+ambient_motion = "slow_drift_x"
+amplitude_px_max = 18
+
+[[layers]]
+id = "side_framing"
+assets = ["tree_hero.svg", "tree_secondary.svg", "bush_round.svg", "bush_flowering.svg"]
+z = 40
+parallax = 0.28
+notes = "Keep central playfield open."
+
+[[layers]]
+id = "ground_props"
+assets = ["fallen_log.svg", "rock_cluster_large.svg", "mushroom_cluster.svg", "grass_edge.svg"]
+z = 50
+parallax = 0.34
+
+[[layers]]
+id = "foreground_edges"
+assets = ["fern_cluster.svg", "bush_low.svg"]
+z = 60
+parallax = 0.48
+ambient_motion = "subtle_sway"
+amplitude_deg_max = 1.0
+
+[[layers]]
+id = "fog"
+asset = "fog_strip.svg"
+z = 70
+parallax = 0.16
+alpha_default = 0.32
+ambient_motion = "very_slow_drift"
+
+[[layers]]
+id = "sunlight"
+asset = "sunlight_rays.svg"
+z = 80
+parallax = 0.0
+alpha_default = 0.32
+ambient_motion = "very_slow_breathe_alpha"
+
+[optional_fx]
+assets = ["fx_fireflies.svg", "fx_dust_motes.svg", "fx_falling_leaves.svg"]
+notes = "Not part of the default daytime composition. Use sparingly for evening/reward/weather beats."

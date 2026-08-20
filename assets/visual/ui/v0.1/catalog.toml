@@ -1,0 +1,169 @@
+catalog_id = "greia.ui.visual.v0.1"
+catalog_version = "0.1.1"
+status = "candidate"
+runtime_consumed = false
+active_plan = "docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md"
+theme_source = "runtime/theme-defaults.toml"
+provenance = "programmatic Greia source artwork created in-repo"
+notes = "Reusable UI visual masters only. Semantic UI architecture remains platform-owned."
+
+[[assets]]
+id = "ui.panel.base"
+path = "panel_base.svg"
+family = "panel"
+state = "default"
+[[assets]]
+id = "ui.panel.sheet"
+path = "panel_sheet.svg"
+family = "panel"
+state = "default"
+[[assets]]
+id = "ui.card.activity"
+path = "activity_card.svg"
+family = "card"
+state = "default"
+[[assets]]
+id = "ui.card.activity.focused"
+path = "activity_card_focused.svg"
+family = "card"
+state = "focused"
+[[assets]]
+id = "ui.card.activity.completed"
+path = "activity_card_completed.svg"
+family = "card"
+state = "completed"
+[[assets]]
+id = "ui.button.primary"
+path = "button_primary.svg"
+family = "button"
+state = "default"
+[[assets]]
+id = "ui.button.primary.hover"
+path = "button_primary_hover.svg"
+family = "button"
+state = "hover_or_focus"
+[[assets]]
+id = "ui.button.primary.pressed"
+path = "button_primary_pressed.svg"
+family = "button"
+state = "pressed"
+[[assets]]
+id = "ui.button.disabled"
+path = "button_disabled.svg"
+family = "button"
+state = "disabled"
+[[assets]]
+id = "ui.button.secondary"
+path = "button_secondary.svg"
+family = "button"
+state = "default"
+[[assets]]
+id = "ui.button.quiet"
+path = "button_quiet.svg"
+family = "button"
+state = "default"
+[[assets]]
+id = "ui.button.icon"
+path = "icon_button.svg"
+family = "button"
+state = "default"
+[[assets]]
+id = "ui.tab.pill"
+path = "tab_pill.svg"
+family = "tab"
+state = "default"
+[[assets]]
+id = "ui.tab.pill.selected"
+path = "tab_pill_selected.svg"
+family = "tab"
+state = "selected"
+[[assets]]
+id = "ui.badge.new"
+path = "badge_new.svg"
+family = "badge"
+state = "new"
+[[assets]]
+id = "ui.badge.done"
+path = "badge_done.svg"
+family = "badge"
+state = "completed"
+[[assets]]
+id = "ui.badge.favorite"
+path = "badge_favorite.svg"
+family = "badge"
+state = "favorite"
+[[assets]]
+id = "ui.badge.locked"
+path = "badge_locked.svg"
+family = "badge"
+state = "locked"
+[[assets]]
+id = "ui.progress.track"
+path = "progress_track.svg"
+family = "progress"
+state = "track"
+[[assets]]
+id = "ui.progress.fill"
+path = "progress_fill.svg"
+family = "progress"
+state = "fill"
+[[assets]]
+id = "ui.progress.complete"
+path = "progress_complete.svg"
+family = "progress"
+state = "completed"
+[[assets]]
+id = "ui.bubble.speech"
+path = "speech_bubble.svg"
+family = "bubble"
+state = "default"
+[[assets]]
+id = "ui.bubble.thought"
+path = "thought_bubble.svg"
+family = "bubble"
+state = "default"
+[[assets]]
+id = "ui.reward.frame"
+path = "reward_frame.svg"
+family = "reward"
+state = "default"
+[[assets]]
+id = "ui.avatar.frame"
+path = "avatar_frame.svg"
+family = "avatar"
+state = "default"
+[[assets]]
+id = "ui.focus.ring"
+path = "focus_ring.svg"
+family = "focus"
+state = "focused"
+[[assets]]
+id = "ui.loading.orbit"
+path = "loading_orbit.svg"
+family = "status_illustration"
+state = "loading"
+[[assets]]
+id = "ui.error.cloud"
+path = "error_cloud.svg"
+family = "status_illustration"
+state = "gentle_error"
+[[assets]]
+id = "ui.empty.basket"
+path = "empty_basket.svg"
+family = "status_illustration"
+state = "empty"
+[[assets]]
+id = "ui.portal.frame"
+path = "portal_frame.svg"
+family = "portal"
+state = "default"
+[[assets]]
+id = "ui.shadow.soft"
+path = "soft_shadow.svg"
+family = "shadow"
+state = "default"
+[[assets]]
+id = "ui.highlight.sheen"
+path = "highlight_sheen.svg"
+family = "highlight"
+state = "default"

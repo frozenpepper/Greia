@@ -1,9 +1,17 @@
 #!/bin/sh
 set -eu
-mkdir -p /var/lib/greia-kid /run/greia-os
+
+# Persistent child home may be repaired idempotently here. Volatile shared
+# runtime roots are NOT created/chowned by the launcher: systemd-tmpfiles owns
+# them every boot so launcher/parent/hardware services cannot race ownership.
+mkdir -p /var/lib/greia-kid
 chown greiakid:greiakid /var/lib/greia-kid
-chown greiakid:pipprofiles /run/greia-os
-chmod 0770 /run/greia-os
+for runtime_root in /run/greia-os /run/greia-hardware; do
+  if [ ! -d "$runtime_root" ]; then
+    echo "Missing Greia runtime root: $runtime_root (systemd-tmpfiles setup failed)" >&2
+    exit 1
+  fi
+done
 
 # Ensure greiakid is in audio group and ALSA channels are unmuted
 usermod -a -G audio greiakid 2>/dev/null || true
@@ -11,6 +19,7 @@ amixer sset Master 100% unmute 2>/dev/null || true
 amixer sset Speaker 100% unmute 2>/dev/null || true
 amixer sset Headphone 100% unmute 2>/dev/null || true
 amixer sset PCM 100% unmute 2>/dev/null || true
+
 # Remove only a proven-stale X lock. Deleting a live server's lock/socket can
 # permit a duplicate Xorg instance and destroy the graphical handoff. Malformed
 # lock state fails closed behind the branded cover and is handled by service
@@ -41,6 +50,15 @@ fi
 # -novtswitch does not suppress that initial activation. Force VT1 every time
 # so service restarts also recover from a parent/recovery VT.
 chvt 1 >/dev/null 2>&1 || true
+
+# This is the final pre-X milestone. It intentionally remains 78% on every
+# launcher restart: a retry is recovery, not progress. The child shell replaces
+# this framebuffer cover only when it has acquired a real graphical surface.
+renderer=/usr/lib/greia-boot/greia-fb-splash
+if [ -c /dev/fb0 ] && [ -x "$renderer" ]; then
+  "$renderer" --progress 78 >/dev/null 2>&1 || true
+fi
+
 # The Greia early-framebuffer cover already owns the frame. Xorg's
 # `-background none` asks the video driver not to paint a root background so
 # the branded frame remains visible until the launcher presents its first real
