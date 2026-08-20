@@ -127,7 +127,10 @@ class SharedUiShellPanelMixin:
                 variant="default",
                 size=panel_rect.size,
             )
-        except (*_SHARED_VISUAL_ERRORS, pygame.error):
+        except _SHARED_VISUAL_ERRORS:
+            self._shared_panel_disabled = True
+            return
+        except pygame.error:
             self._shared_panel_disabled = True
             return
 
@@ -189,9 +192,13 @@ class SharedUiActivityCardMixin:
                 variant=variant,
                 size=card_rect.size,
             )
-        except (*_SHARED_VISUAL_ERRORS, pygame.error):
-            # Shared cards are optional presentation. Keep the primitive tile
-            # path available if one card rendition is missing or corrupt.
+        except _SHARED_VISUAL_ERRORS:
+            self._visual_cache = None
+            super()._draw_activity_tile_content(
+                screen, rect, activity, state, theme, pygame
+            )
+            return
+        except pygame.error:
             self._visual_cache = None
             super()._draw_activity_tile_content(
                 screen, rect, activity, state, theme, pygame
