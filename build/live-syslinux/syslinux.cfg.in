@@ -4,13 +4,9 @@
 # BIOS executes reliably (GRUB's MBR does not work on that firmware+stick
 # combination). See docs/INSTALLATION_USB_BOOT_POSTMORTEM.md.
 #
-# IMPORTANT: keep the development/reference Acer path observable until a newer
-# consoleless handoff has its own physical acceptance evidence. A 2026-08-20
-# cleanup attempt added DISPLAY clearing and console=null; when the next physical
-# image regressed into grey-screen/reboot, that also hid the kernel/initramfs
-# failure text. This file therefore restores the exact command-line behavior of
-# the last physically booting Syslinux/FAT32 installer: no interactive menu or
-# countdown, but tty1 remains available for early diagnostics.
+# The ordinary child/installer boot is straight to the Greia installer:
+# no interactive menu, no countdown. SYSLINUX still prints its loading
+# progress so early boot remains observable on quirky displays.
 DEFAULT live
 PROMPT 0
 TIMEOUT 0

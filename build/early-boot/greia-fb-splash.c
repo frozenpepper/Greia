@@ -116,14 +116,7 @@ static int load_ppm(const char *path, struct ppm_image *image) {
     if (!width || !height || width > 4096 || height > 4096 || maxval != 255) {
         goto bad;
     }
-    /* Greia's generator writes the canonical P6 header as `...255\n`.
-     * Consume exactly that one structural separator. Do NOT skip arbitrary
-     * bytes <= ASCII space here: P6 raster data is binary, so perfectly valid
-     * dark RGB channels can have values such as 13 or 30. Treating them as
-     * whitespace used to eat the first dark pixels of full-colour artwork and
-     * then reject/corrupt the raster. */
-    if (offset >= file_size || file_data[offset] != '\n') goto bad;
-    offset++;
+    while (offset < file_size && file_data[offset] <= ' ') offset++;
     if (width > SIZE_MAX / height / 3u) goto bad;
     pixel_bytes = (size_t)width * (size_t)height * 3u;
     if (offset > file_size || file_size - offset != pixel_bytes) goto bad;
