@@ -1,233 +1,62 @@
 ---
 name: greia-visual-authoring
-description: Canonical practical guide for model-assisted Greia character, scene, prop, FX and UI visual design using the constraint-native Greia visual language.
+description: Practical guide for producing reusable Greia visual assets, characters, backgrounds, props, FX and UI in the constraint-native Greia style.
 ---
 
 # Greia Visual Authoring Skill
 
-**Status:** living derived visual-authoring guide  
+**Status:** living derived guide  
 **Reviewed:** 2026-08-20  
 **Active art plan:** `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`
 
-This skill teaches models and contributors how to create Greia visuals without reinventing the art direction for each Activity. It is practical guidance, not a runtime API. Exact implemented asset/runtime contracts remain source-owned; accepted ADRs own architecture/trust boundaries; `docs/design/GREIA_VISUAL_STYLE_GUIDE.md` owns the overall visual language.
+## 1. Core production rule
 
----
+Greia visual work is **asset-first**.
 
-## 1. Mandatory context before visual work
+Do not begin by drawing a crude full screen and then calling it a style direction. Build strong reusable pieces first, review those pieces individually, then compose scenes and UI from them.
 
-Read, as relevant:
+The production model is:
 
-```text
-AGENTS.md
-docs/DOCUMENTATION.md
-docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md
-docs/design/GREIA_VISUAL_STYLE_GUIDE.md
-docs/design/GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md
-docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md
-docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md
-runtime/theme-defaults.toml
-assets/catalog/core_icons_v1.toml
-assets/visual/library_v0.1.toml
-assets/visual/specimens/a2/base_motion_v0.1.toml
-```
+> **excellent individual assets → coherent packs → layered composition → subtle animation/parallax/light/shadow → Shell/Activity reuse**
 
-For Activity visuals also read:
+HTML/mock screens are review tools only. They are not a substitute for good art.
 
-```text
-skills/greia-activity-authoring/SKILL.md
-docs/product/RESPONSIVE_UI_AND_DISPLAY_LAYOUT.md
-docs/design/GREIA_ACTIVITY_CANVAS_AND_VIEWPORT_AUTHORING.md
-```
+## 2. Quality bar
 
-For platform-owned UI, preserve ADR 0018/0019/0026 and the exact current source-owned UI/system-chrome contracts.
+The simplified Greia character language is a constraint solution, not permission to make cheap primitive art.
 
-Do not use chat history as the only authority for art rules.
+Reusable assets should aim for:
 
----
-
-## 2. Core visual principle
-
-Greia does **not** default to detailed traditionally articulated cartoon anatomy.
-
-The default visual grammar is:
-
-> **simple expressive characters + strong faces + whole-body motion + chunky illustrated props + cozy layered scenes + tactile Greia UI**
-
-The style should look intentionally economical, not unfinished.
-
-Greia is allowed to be simple. It is not allowed to look like placeholder/debug art in production.
-
----
-
-## 3. Character archetype selection
-
-Choose the simplest archetype that communicates the role.
-
-### Puff
-
-Use for most cute animal/mascot identities.
-
-Construction target:
-
-- one round/oval/fluffy primary body mass;
-- large face area;
-- zero/two tiny feet;
-- zero/two stub arms/flaps;
-- up to three identity attachment groups.
-
-Good species cues: ears, horn, tuft, tail, markings, whisker cue, tiny wing, antennae.
-
-### Bean
-
-Use for upright compact characters such as owls, penguin-like creatures, helpers or robots.
-
-Construction target:
-
-- one vertical rounded/drop mass;
-- face in upper half;
-- tiny feet;
-- optional flap/wing/arm shapes.
-
-### Cutout Critter
-
-Use when a flatter sticker/felt/paper-cut visual is appropriate.
-
-Construction target:
-
-- 2–5 large layers;
+- polished storybook / toy-diorama quality;
 - strong silhouette;
-- deliberately flat depth;
-- no fake anatomical complexity.
+- controlled texture and internal detail;
+- soft depth and readable form;
+- coherent warm lighting;
+- useful local highlights and cast/contact shadows;
+- clean transparent edges for composable assets;
+- readability at the intended size;
+- compatibility with other Greia assets without looking copy-pasted.
 
-### Object Friend
+Reject final represented art that looks like tutorial circles/rectangles/polygons unless the object is intentionally geometric.
 
-Use when educational content itself can be the character.
+## 3. Characters
 
-Examples:
+Working shared cast:
 
-- number;
-- letter;
-- geometric shape;
-- block;
-- train wagon;
-- paint palette;
-- cloud;
-- star;
-- tool;
-- fruit/food item.
+- Lilli — unicorn Puff;
+- Nino — owl Bean;
+- Tito — fox Puff;
+- Momo — friendly monster Puff.
 
-The object/glyph remains the primary silhouette. Prefer Object Friend over inventing an unnecessary animal mascot when the object itself can carry the interaction.
+Default character grammar:
 
----
+- one dominant body mass;
+- large readable face;
+- tiny/optional appendages;
+- identity through silhouette, ears/horn/tuft/tail/marking/accessory;
+- whole-body motion rather than complex anatomical rigs.
 
-## 4. Character complexity and drawing rules
-
-Default character budget:
-
-```text
-1 main body mass
-1 face region
-0–2 tiny feet
-0–2 tiny arms/wings/flaps
-0–3 identity attachment groups
-```
-
-For reusable vector masters, use the accepted 256×256 review convention where appropriate. At 256 px:
-
-- normal primary contour: about 3–4 px;
-- normal secondary contour: about 2–3 px;
-- rounded joins/caps;
-- tinted dark outline related to cocoa/plum/navy rather than pure black;
-- broad flat or restrained two-stop fills;
-- few large interior patches rather than detailed fur/texture.
-
-Review at 128 and 64 px wherever those sizes are supported.
-
-Avoid by default:
-
-- articulated knees/elbows;
-- realistic quadruped legs;
-- separate near/far multi-limb gait rigs;
-- long detailed neck/torso anatomy;
-- many tiny fur/hair pieces;
-- detailed fingers/toes;
-- anatomy whose correctness depends on one exact pose;
-- ornament that disappears below 128 px;
-- five-plus unrelated accent colors.
-
-If a proposed character requires a complex skeleton to look acceptable, simplify the design before adding a more complex animation system.
-
----
-
-## 5. Face-first design
-
-The face is the primary emotional engine.
-
-### Base semantic expressions
-
-A reusable character should provide a clear path to:
-
-```text
-neutral
-happy
-excited
-surprised
-sleepy
-sad_gentle
-thinking
-proud
-silly
-```
-
-`blink` is a transient micro-state rather than a persistent emotion.
-
-Normal educational mistakes must not use anger, shame or disappointed-at-the-child expressions.
-
-**Important face-review lesson:** `sad_gentle` must not use brow angles or eye treatment that can be misread as irritation, accusation or disappointment. Prefer softened/smaller eyes, a shallow sad mouth and low-energy posture.
-
-### Expression ingredients
-
-Prefer:
-
-- large eye shapes;
-- eyelids;
-- pupil direction;
-- simple mouth variants;
-- cheeks/blush;
-- brow-like upper-eye shaping only when it cannot produce an angry reading;
-- tiny ear/tuft/antenna changes;
-- slight whole-body tilt/squash.
-
-Do not compensate for an unreadable face with tiny decorative lines.
-
-### Small-size test
-
-At 128 px, the intended expression must remain obvious. At 64 px, the face/silhouette must still read where 64 px is a supported usage size.
-
----
-
-## 6. Core static style anchors
-
-The owner-reviewed initial style anchors are:
-
-- **Lilli** — unicorn Puff: cream body, localized rainbow cue, horn, wonder/kindness;
-- **Nino** — owl Bean: observation, books, thoughtfulness;
-- **Tito** — fox Puff: curiosity, exploration, playful cleverness;
-- **Momo** — friendly monster Puff: humor, emotion, experimentation.
-
-Their approval scope is **static style anchor / design grammar**. It does not mean their current SVG files are immutable release art or runtime-integrated character packages.
-
-Use them as evidence of the family resemblance, not as templates to copy mechanically. A new character should feel like it belongs beside them without merely recoloring one of them.
-
-The names are intentionally short Italian names that are also easy for many foreign children to pronounce.
-
----
-
-## 7. Motion selection
-
-Use the semantic base motions before inventing bespoke choreography.
-
-### Base Animation Set v0.1
+Shared base motions:
 
 ```text
 idle_bounce
@@ -238,320 +67,168 @@ surprised_wobble
 sleepy_sway
 ```
 
-Canonical candidate timing/phase rules live in:
+Hard rules:
+
+- preserve the same character art across states;
+- `blink` must physically read as closed eyes;
+- do not add fake overlays that degrade the face;
+- character work must not monopolize the visual workstream while the environment/UI library remains empty.
 
-```text
-docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md
-assets/visual/specimens/a2/base_motion_v0.1.toml
-```
+## 4. Environment assets
 
-Current nominal values:
+Build scenes from reusable assets.
 
-- `idle_bounce`: 2.0 s loop; vertical <= ~3.5% body height; rotation <= 2°;
-- `blink`: 0.22 s; close 0–35%, hold 35–55%, reopen 55–100%;
-- `happy_hop`: 0.90 s; anticipation 0–18%, launch/apex/fall, settle 78–100%; hop <= ~22%;
-- `celebrate_pop`: 1.15 s; pop + bounded FX; travel <= ~28%;
-- `surprised_wobble`: 0.72 s; recoil + damped alternating rotation <= 7°;
-- `sleepy_sway`: 2.4 s loop; low-energy sway/compression.
+Preferred environment asset types:
 
-These motions should work mostly through:
+- hero trees / secondary trees;
+- bushes / foliage clumps;
+- flowers / mushrooms;
+- rocks / logs;
+- grass / ground edges;
+- clouds;
+- distant hills / mountains / tree lines;
+- houses / castles / village pieces;
+- furniture / workshop / clinic props;
+- foreground framing elements;
+- atmosphere/light overlays;
+- shadow assets;
+- ambient FX.
 
-- whole-body translation/rotation;
-- squash/stretch;
-- face state;
-- tiny appendage response;
-- tail/tuft/antenna lag;
-- bounded particles/effects.
+### Layering model
 
-A semantic motion description must not assume a horse knee, human elbow or species-specific skeleton.
+Typical scene order:
 
-### Static fallbacks are mandatory
+1. sky/room base;
+2. far background;
+3. mid background;
+4. ground/playfield;
+5. props/interactive assets;
+6. foreground framing;
+7. atmosphere/light;
+8. characters/UI.
 
-```text
-idle_bounce      -> neutral
-blink            -> neutral
-happy_hop        -> happy
-celebrate_pop    -> happy or excited
-surprised_wobble -> surprised
-sleepy_sway      -> sleepy
-```
+Keep interactive objects visually separable from decoration.
 
-Meaning must remain clear when animation is disabled.
+## 5. Parallax and ambient animation
 
-### Candidate v0.2
+Prefer subtle cheap motion:
 
-```text
-think
-yes_nod
-no_wobble
-look_or_point
-reward_sparkle
-enter_pop
-exit_pop
-listen
-```
+- slow cloud drift;
+- far/mid/foreground parallax ratios;
+- small foliage sway;
+- firefly fade/move;
+- dust/fog drift;
+- water shimmer;
+- gentle light-ray breathing;
+- tiny prop idle movement.
 
-Do not proliferate names until the base set is accepted across multiple archetypes.
+Do not animate everything. Motion should create life and depth, not noise.
 
----
+## 6. Light and shadow
 
-## 8. Motion character mapping
+Lighting is a shared visual system.
 
-Different characters may express the same semantic motion differently.
+Create reusable assets/treatments for:
 
-### `celebrate_pop`
+- contact shadows;
+- cast-shadow decals;
+- warm/cool glows;
+- sun/window shafts;
+- haze/fog;
+- foreground vignette shadows;
+- reward/discovery light effects.
 
-- Puff: body hop + stub arms/ears/tuft response + happy eyes + bounded sparkles;
-- Bean owl: body hop + optional wing-flap response + happy eyes;
-- Object Friend: conservative squash/pop + face brighten + optional stars;
-- Monster: body wobble + antenna response + optional stub-arm flap.
+A composable asset should normally have a clear plan for grounding and lighting in a scene.
 
-### `surprised_wobble`
+## 7. UI visual assets
 
-- ears may rise;
-- owl wings may open slightly;
-- antennae may spring apart;
-- Object Friend may simply recoil and widen eyes.
+Build reusable families for:
 
-### Object Friend distortion rule
+- primary/secondary/quiet buttons;
+- icon buttons;
+- cards;
+- panels/sheets;
+- tabs/category pills;
+- avatar/profile frames;
+- progress bars/pills;
+- status badges;
+- speech/thought/help bubbles;
+- reward/help/error/loading/empty-state pieces;
+- selection/focus/hover/pressed visuals;
+- common shadows/highlights/trims.
 
-Protect the pedagogical silhouette. Rotation and squash/stretch should be **more conservative** than on an ordinary Puff/Bean whenever deformation could make a number, letter or object harder to recognize.
+UI must remain large and readable at 800×600 and 1024×600.
 
-Preserve semantic consistency without forcing identical anatomy.
+UI motion vocabulary:
 
----
+- hover/focus → tiny lift + shadow/highlight;
+- press → small squash/depress;
+- launch → short bounce/squiggle/pop;
+- selected → stronger frame/depth/glow;
+- reward → sparkle + pop;
+- gentle error → restrained wobble.
 
-## 9. Runtime boundary for motion
+Protected Greia Home/Back chrome remains platform-owned and must not be imitated or replaced by Activity artwork.
 
-`src/greia_platform/ui_motion.py` is the current architectural precedent for cheap renderer-neutral mathematical motion. It uses immutable samples and bounded transforms without a heavyweight retained animation framework.
+## 8. Asset review workflow
 
-Do **not** create a parallel per-Activity character animation engine.
+For each pack:
 
-The current UI-oriented `MotionSample` does not yet carry character rotation, anisotropic squash/stretch, face state, attachment cues or FX. Any future runtime-facing character-motion seam must be reviewed in the accepted architecture phase and should extend/reuse the same lightweight philosophy rather than silently turning the A2 design harness into runtime authority.
+1. list the individual assets;
+2. produce the individual high-quality assets;
+3. review each asset on neutral/light/dark backgrounds;
+4. reject or fix weak assets before scene assembly;
+5. record provenance/status;
+6. compose a small reference scene using only accepted pieces;
+7. add parallax/subtle motion where appropriate;
+8. integrate only after the underlying assets are worth reusing.
 
----
+Never hide weak assets inside a busy composition.
 
-## 10. Scene design
+## 9. First active pack
 
-Preferred environment logic:
+The current first environment target is the **forest/meadow pack**.
 
-- storybook diorama;
-- felt-board/paper-cut layering;
-- cozy toy-world composition;
-- large background/midground/foreground masses;
-- chunky readable props;
-- intentional quiet play area.
+Initial tranche:
 
-A scene should normally establish:
+- hero tree;
+- secondary tree;
+- bush;
+- grass/ground edge;
+- rock/log cluster;
+- cloud;
+- distant hill/tree-line layer;
+- sunlight/fog overlay;
+- contact shadow;
+- firefly ambient FX.
 
-1. background atmosphere/sky/wall;
-2. distant simple shapes;
-3. middle scene/ground/playfield;
-4. interactive props/entities;
-5. foreground framing/decorations only where they do not obstruct play;
-6. platform-owned system-safe region untouched.
+Do not compose another forest/meadow scene until the individual assets are visually reviewable.
 
-Avoid giant accidental empty regions caused by weak composition. Empty space is fine when it deliberately supports focus.
+## 10. Evidence and progress
 
-Raw rectangles/circles/polygons are acceptable for hitboxes, debug bounds, prototype layout and intentionally geometric pedagogy. They are not normally sufficient final representations of trees, animals, rivers, clinics, houses, bushes, bridges, furniture or vehicles.
+Use accurate labels:
 
----
+- DESIGN SPEC;
+- SOURCE;
+- DESKTOP VISUAL REVIEW;
+- SIMULATOR VISUAL REVIEW;
+- PHYSICAL VISUAL REVIEW;
+- REJECTED EXPERIMENT.
 
-## 11. Prop design
+After substantive visual work, update the checkpoint/progress log in:
 
-Props should use:
+`docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`
 
-- strong silhouette;
-- few large shapes;
-- rounded/tactile construction where appropriate;
-- restrained internal detail;
-- soft depth/shadow;
-- clear interaction state.
+## 11. Explicit failure patterns
 
-Prefer one well-designed reusable bush/log/bridge/tool over ten slightly different raw geometry versions.
+Do not repeat without new evidence:
 
-Props used as interaction targets must remain distinct from purely decorative scenery.
-
----
-
-## 12. Effects design
-
-Common Greia effects:
-
-```text
-sparkles
-stars
-hearts
-dust_puff
-impact_puff
-glow_ring
-sleepy_z
-discovery_rays
-confetti
-```
-
-Rules:
-
-- bounded count;
-- short lifetime;
-- never required for meaning;
-- do not cover critical controls;
-- do not create constant visual noise;
-- prefer one coherent effect vocabulary across Activities.
-
----
-
-## 13. UI illustration rules
-
-The semantic UI architecture remains platform-owned. Visual authoring should make it feel coherent, not replace its contracts.
-
-Target feel:
-
-- rounded;
-- tactile;
-- warm;
-- large;
-- stable;
-- slightly toy-like;
-- soft depth rather than flat enterprise-dashboard styling.
-
-Use the same family of motion cues as characters:
-
-- hover/focus: tiny lift/glow;
-- press: squash/depress + release;
-- selected: clear border/depth/emphasis;
-- popup: pop-in with restrained overshoot;
-- error/gentle wrong choice: wobble rather than alarming shake;
-- reward: bounce/sparkle.
-
-Do not restyle or impersonate Greia’s protected system Home/Back controls inside Activity content.
-
----
-
-## 14. Color and detail
-
-`runtime/theme-defaults.toml` owns the implemented core theme palette. Character/content art may use thematic colors, but it should remain harmonious with Greia’s warm backgrounds and accents.
-
-Default character color discipline:
-
-```text
-1 main body color
-1–2 identity/accent colors
-optional 1 highlight color
-cheek/blush tone where useful
-dark readable eye/mouth tone
-subtle shadow tone
-```
-
-Avoid uncontrolled rainbow palettes unless the identity specifically calls for them (for example Lilli’s localized rainbow cue).
-
-Prefer large readable detail to tiny texture noise.
-
----
-
-## 15. Names and child-facing identity
-
-Recurring Greia character names should generally be:
-
-- short;
-- easy to hear;
-- easy to pronounce in Italian;
-- reasonably pronounceable by children in other supported languages;
-- not dependent on a difficult English pun;
-- visually/sound-wise distinct from one another.
-
-Do not create dozens of named mascots when a generic reusable creature/object can do the job.
-
----
-
-## 16. Asset reuse before creation
-
-Before creating a new character, prop, scene element or effect:
-
-1. inspect the current Greia asset catalogues/library;
-2. reuse an existing semantic asset if it fits;
-3. recolor/compose only where the asset contract permits it;
-4. create a new asset only when it adds a real semantic/visual need;
-5. record provenance/status according to the library contract.
-
-Never create a parallel private copy of a shared asset merely because it is easier in the moment.
-
----
-
-## 17. Evidence/review checklist
-
-### Character
-
-- [ ] silhouette reads at 256 px;
-- [ ] silhouette/face still reads at 128 px;
-- [ ] 64 px usage is acceptable where required;
-- [ ] face is not dominated by ornament;
-- [ ] expression states are distinguishable;
-- [ ] body does not require complex anatomy to animate;
-- [ ] neutral pose works as a static fallback;
-- [ ] color contrast survives the intended scene background.
-
-### Motion
-
-- [ ] semantic meaning is clear on Puff, Bean and Object Friend as applicable;
-- [ ] static fallback communicates the state;
-- [ ] amplitude stays within the shared design bounds unless a documented exception exists;
-- [ ] Object Friend deformation does not damage pedagogical recognition;
-- [ ] `sad_gentle` or wrong-choice feedback cannot read as anger/shame/disappointment;
-- [ ] no anatomy-specific rig was introduced merely to make the animation work.
-
-### Scene/prop
-
-- [ ] interactive object is recognizable;
-- [ ] decoration does not compete with interaction;
-- [ ] composition works at 800×600 / 1024×600 where applicable;
-- [ ] no accidental giant dead areas;
-- [ ] no final debug/prototype art remains;
-- [ ] safe system region remains clear.
-
-### UI
-
-- [ ] child target remains large;
-- [ ] state is readable without color alone;
-- [ ] typography follows Greia roles;
-- [ ] depth/shadow does not obscure text/icons;
-- [ ] motion is optional enrichment, not essential meaning.
-
-Label review accurately as DESIGN SPEC, SOURCE, DESKTOP VISUAL REVIEW, SIMULATOR VISUAL REVIEW or PHYSICAL VISUAL REVIEW. A local HTML mockup is not physical Greia acceptance.
-
----
-
-## 18. Explicit failure patterns to avoid
-
-Do not repeat these default approaches without new evidence:
-
-- one-shot AI 8×8 sprite sheet assumed to be a usable animation;
-- complex detailed quadruped automatically exploded into precise rig parts;
-- programmatic recreation of a beautiful generated animal into visibly unrelated vector geometry;
-- generic Pygame tutorial art as final production presentation;
-- random new visual language per Activity;
-- solving visual quality by assuming a professional art/animation team will appear later;
-- adding many animation bones merely because a rigging library permits them;
-- judging beauty through deterministic regex/shape-count rules and treating that as a substitute for visual review.
-
----
-
-## 19. Working process for model-assisted art
-
-When asked to create/refine Greia visuals:
-
-1. identify the semantic role;
-2. check asset reuse first;
-3. select archetype/style family;
-4. write a tiny visual brief: silhouette, face, identity cues, palette, required states;
-5. produce the smallest viable component set;
-6. inspect neutral/static quality before animation;
-7. inspect required expression states;
-8. apply existing semantic motions rather than inventing anatomy-specific choreography;
-9. check 256/128/64 where relevant;
-10. check scene composition at reference viewports;
-11. reject visually poor work rather than polishing a broken construction indefinitely;
-12. update the active art plan progress ledger after substantive work;
-13. commit coherent accepted/reviewable work to GitHub.
-
-The goal is not “fewest shapes possible.” The goal is **the smallest construction that still looks charming, intentional and recognizably Greia**.
+- one-shot AI sprite sheets assumed production-ready;
+- complex automatic quadruped rigs as the default solution;
+- vector recreations that visibly lose the source character identity;
+- fake face overlays that make characters worse;
+- non-blinking `blink` animations;
+- primitive mock backgrounds presented as production art;
+- scene-first HTML demos before reusable assets exist;
+- random unrelated art direction per Activity;
+- spending the entire visual effort on mascot mechanics while UI, props, lighting and backgrounds remain untouched.
