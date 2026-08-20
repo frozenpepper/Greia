@@ -15,10 +15,10 @@ Usage: sudo bash tools/build-development-installer.sh PROFILE [OUTPUT_DIR]
 
 Build a Greia development installer only when BOTH the live installer and the
 installed-system payload explicitly include the developer-remote capability.
-Legacy-x86 profiles are routed through the legacy physical-installer front door
-so canonical full-color boot artwork is regenerated before the image build.
-Afterward the finished image and both embedded squashfs artifacts are checked
-for the SSH/network recovery contract.
+Legacy-x86 profiles are routed through the physically proven legacy installer
+builder without changing its boot-critical artwork/media recipe. Afterward the
+finished image and both embedded squashfs artifacts are checked for the
+SSH/network recovery contract.
 EOF
 }
 
@@ -67,14 +67,15 @@ OUTPUT_DIR="$(realpath "$OUTPUT_DIR")"
 printf '%s\n' "Building development installer profile: $PROFILE_ID"
 case "$PLATFORM_FAMILY" in
   legacy-x86)
-    # This is the physical Acer/legacy front door. It regenerates all boot
-    # derivatives from the retained full-color canonical frame, validates pixel
-    # fidelity, builds the installer/target payload, then restores source bytes.
+    # Reference Acer hardware is proven through this legacy builder and the
+    # Syslinux/FAT32 writer documented in INSTALLATION_USB_BOOT_POSTMORTEM.md.
+    # Do not insert boot-art or console-cleanup experiments into this front door
+    # without a new physical acceptance pass.
     bash "$LEGACY_BUILDER" "$PROFILE_ID" "$OUTPUT_DIR"
     ;;
   *)
-    # Other families currently use the generic builder. Their physical boot-art
-    # front door will be unified later; the post-build SSH verifier still runs.
+    # Other families currently use the generic builder. Their physical boot
+    # evidence remains profile-specific; the post-build SSH verifier still runs.
     bash "$CANONICAL_BUILDER" "$PROFILE_PATH" "$OUTPUT_DIR"
     ;;
 esac
