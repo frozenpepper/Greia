@@ -18,12 +18,20 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-# Do not exec the launcher here. The shell must remain alive so its EXIT trap
-# always reaps the hardware watcher when X or the launcher restarts. The child
-# shell composes the authoritative launcher/presentation classes with safe
-# profile visual context; it does not duplicate lifecycle or permission policy.
+# The richer profile-aware child shell replaced the presentation module after
+# the reference Acer Xorg path was physically proven.  Keep it as the primary
+# product entrypoint, but do not let an exception in that newer composition
+# turn a healthy X session into an endless systemd restart loop with only the
+# previous boot-status line visible on VT1.  A single fallback to the simpler
+# presentation entrypoint preserves a usable child UI while the original child
+# shell traceback remains in the journal for diagnosis.
 set +e
 /usr/bin/python3 -m greia_launcher.child_shell
 launcher_status=$?
+if [ "$launcher_status" -ne 0 ]; then
+  echo "Greia profile-aware child shell exited with status $launcher_status; trying presentation fallback" >&2
+  /usr/bin/python3 -m greia_launcher.presentation
+  launcher_status=$?
+fi
 set -e
 exit "$launcher_status"
