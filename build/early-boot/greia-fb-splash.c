@@ -18,7 +18,10 @@
  * - discover framebuffer geometry/pixel layout at runtime;
  * - fail quickly when fbdev is unavailable so boot is never delayed;
  * - consume a deliberately trivial P6 PPM generated from the canonical boot
- *   artwork at build time.
+ *   artwork at build time;
+ * - optionally render an honest milestone progress bar. The percentage is
+ *   supplied by boot-stage owners; this renderer never invents time-based
+ *   progress and never treats service retries as forward progress.
  *
  * Exit codes:
  *   0  frame rendered
@@ -165,7 +168,81 @@ static void write_pixel(uint8_t *dst, unsigned bytes_per_pixel, uint32_t pixel) 
     }
 }
 
-static int draw(const char *device, const struct ppm_image *image) {
+static void fill_rect(uint8_t *memory,
+                      const struct fb_fix_screeninfo *fix,
+                      const struct fb_var_screeninfo *var,
+                      unsigned bytes_per_pixel,
+                      uint32_t x,
+                      uint32_t y,
+                      uint32_t width,
+                      uint32_t height,
+                      uint32_t pixel) {
+    if (x >= var->xres || y >= var->yres) return;
+    if (width > var->xres - x) width = var->xres - x;
+    if (height > var->yres - y) height = var->yres - y;
+    for (uint32_t dy = 0; dy < height; ++dy) {
+        uint8_t *row = memory +
+            (size_t)(y + dy + var->yoffset) * fix->line_length +
+            (size_t)(x + var->xoffset) * bytes_per_pixel;
+        for (uint32_t dx = 0; dx < width; ++dx) {
+            write_pixel(row + (size_t)dx * bytes_per_pixel,
+                        bytes_per_pixel, pixel);
+        }
+    }
+}
+
+static void draw_progress_bar(uint8_t *memory,
+                              const struct fb_fix_screeninfo *fix,
+                              const struct fb_var_screeninfo *var,
+                              unsigned bytes_per_pixel,
+                              unsigned progress) {
+    uint32_t visible_w = var->xres;
+    uint32_t visible_h = var->yres;
+    uint32_t bar_w = (uint32_t)(((uint64_t)visible_w * 52u) / 100u);
+    uint32_t bar_h = visible_h / 48u;
+    uint32_t border;
+    uint32_t x;
+    uint32_t y;
+    uint32_t inner_w;
+    uint32_t inner_h;
+    uint32_t filled_w;
+    uint32_t border_px;
+    uint32_t track_px;
+    uint32_t fill_px;
+
+    if (bar_w < 120u) bar_w = visible_w > 24u ? visible_w - 24u : visible_w;
+    if (bar_h < 8u) bar_h = 8u;
+    if (bar_h > 18u) bar_h = 18u;
+    if (bar_w > visible_w) bar_w = visible_w;
+    if (bar_h > visible_h) bar_h = visible_h;
+    border = bar_h >= 12u ? 2u : 1u;
+    if (bar_w <= 2u * border || bar_h <= 2u * border) return;
+
+    x = (visible_w - bar_w) / 2u;
+    y = (uint32_t)(((uint64_t)visible_h * 88u) / 100u);
+    if (y + bar_h > visible_h) y = visible_h - bar_h;
+    inner_w = bar_w - 2u * border;
+    inner_h = bar_h - 2u * border;
+    filled_w = (uint32_t)(((uint64_t)inner_w * progress + 50u) / 100u);
+    if (filled_w > inner_w) filled_w = inner_w;
+
+    /* Shared Greia UI colours chosen for strong contrast on dark and light
+     * artwork and retained visibility after RGB565 quantization. */
+    border_px = pack_pixel(var, 87, 66, 45);
+    track_px = pack_pixel(var, 255, 247, 226);
+    fill_px = pack_pixel(var, 255, 194, 52);
+
+    fill_rect(memory, fix, var, bytes_per_pixel,
+              x, y, bar_w, bar_h, border_px);
+    fill_rect(memory, fix, var, bytes_per_pixel,
+              x + border, y + border, inner_w, inner_h, track_px);
+    if (filled_w) {
+        fill_rect(memory, fix, var, bytes_per_pixel,
+                  x + border, y + border, filled_w, inner_h, fill_px);
+    }
+}
+
+static int draw(const char *device, const struct ppm_image *image, int progress) {
     int fd = open(device, O_RDWR);
     struct fb_fix_screeninfo fix;
     struct fb_var_screeninfo var;
@@ -185,7 +262,7 @@ static int draw(const char *device, const struct ppm_image *image) {
         close(fd);
         return 2;
     }
-    /* fbdev can describe reversed bitfields.  The compact renderer deliberately
+    /* fbdev can describe reversed bitfields. The compact renderer deliberately
      * supports the overwhelmingly common LSB-oriented layouts and fails soft on
      * an exotic layout rather than painting silently corrupted colours. */
     if (var.red.msb_right || var.green.msb_right || var.blue.msb_right) {
@@ -215,7 +292,7 @@ static int draw(const char *device, const struct ppm_image *image) {
     }
 
     /* The generated landscape canvas extends the source artwork's own corner
-     * colour into its safe margins.  Use that same colour for any letterbox
+     * colour into its safe margins. Use that same colour for any letterbox
      * pixels introduced by a display with a different aspect ratio, so there is
      * no white flash or visible rectangle around the composition. */
     background = pack_pixel(&var, image->rgb[0], image->rgb[1], image->rgb[2]);
@@ -229,7 +306,7 @@ static int draw(const char *device, const struct ppm_image *image) {
         }
     }
 
-    /* Proportional `padding` fit.  The artwork generator, not this renderer,
+    /* Proportional `padding` fit. The artwork generator, not this renderer,
      * owns visual scale and safe margins inside the landscape composition.
      * That keeps this runtime adapter resolution-independent and prevents the
      * old failure where the 222x600 portrait source consumed nearly the entire
@@ -264,6 +341,10 @@ static int draw(const char *device, const struct ppm_image *image) {
         }
     }
 
+    if (progress >= 0) {
+        draw_progress_bar(memory, &fix, &var, bytes_per_pixel, (unsigned)progress);
+    }
+
     munmap(memory, map_len);
     close(fd);
     return 0;
@@ -273,6 +354,7 @@ int main(int argc, char **argv) {
     const char *device = "/dev/fb0";
     const char *image_path = "/etc/greia-boot/boot-logo.ppm";
     struct ppm_image image = {0};
+    int progress = -1;
     int result;
 
     for (int i = 1; i < argc; ++i) {
@@ -280,13 +362,18 @@ int main(int argc, char **argv) {
             device = argv[++i];
         } else if (strcmp(argv[i], "--image") == 0 && i + 1 < argc) {
             image_path = argv[++i];
+        } else if (strcmp(argv[i], "--progress") == 0 && i + 1 < argc) {
+            int ok = 0;
+            unsigned long value = parse_uint(argv[++i], &ok);
+            if (!ok || value > 100u) return 64;
+            progress = (int)value;
         } else {
             return 64;
         }
     }
 
     if (load_ppm(image_path, &image) != 0) return 3;
-    result = draw(device, &image);
+    result = draw(device, &image, progress);
     free(image.rgb);
     return result;
 }
