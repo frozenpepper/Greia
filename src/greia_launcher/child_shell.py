@@ -23,6 +23,7 @@ from .composition import build_launcher_runtime_services, provisional_installed_
 from .display_session import DisplaySessionCoordinator
 from .feedback_presentation import SharedUiFeedbackMixin
 from .main import _development_hal
+from .navigation_chrome_presentation import SharedUiNavigationChromeMixin
 from .presentation import GreiaLauncherPresentation, parse_args
 from .profile_chrome_presentation import SharedUiProfileChromeMixin
 from .runtime_adapter import RuntimeLaunchAdapter
@@ -78,6 +79,7 @@ class ProfileVisualActivitySupervisor(ActivitySupervisor):
 
 
 class GreiaChildShell(
+    SharedUiNavigationChromeMixin,
     SharedUiFeedbackMixin,
     SharedUiProfileChromeMixin,
     SharedUiCategoryButtonMixin,
