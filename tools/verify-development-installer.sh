@@ -23,8 +23,6 @@ LOOP=""
 mkdir -p "$MOUNT"
 cleanup() {
   local status=$?
-  # INT/TERM cleanup exits, which would otherwise trigger EXIT cleanup again.
-  # Clear traps first so a verifier failure never runs teardown twice.
   trap - EXIT INT TERM
   set +e
   if mountpoint -q "$MOUNT" 2>/dev/null; then umount "$MOUNT"; fi
@@ -121,6 +119,27 @@ check_network() {
   done
 }
 
+check_installed_dev_boot_diagnostics() {
+  local squash="$1" grub
+  grub="$(sqcat "$squash" etc/grub.d/10_greia_appliance)" || {
+    echo "installed-system payload: Greia GRUB policy is missing." >&2
+    exit 1
+  }
+  for required in \
+    'developer-remote' \
+    'console_arg="console=tty1"' \
+    'panic_arg="panic=0"' \
+    'loglevel=4' \
+    'systemd.show_status=true' \
+    'rd.systemd.show_status=true'
+  do
+    printf '%s\n' "$grub" | grep -Fq "$required" || {
+      echo "installed-system payload: developer boot diagnostics are missing: $required" >&2
+      exit 1
+    }
+  done
+}
+
 check_account "$LIVE" "live installer"
 check_ssh_runtime "$LIVE" "live installer"
 check_network "$LIVE" "live installer"
@@ -128,6 +147,7 @@ check_network "$LIVE" "live installer"
 check_account "$TARGET" "installed-system payload"
 check_ssh_runtime "$TARGET" "installed-system payload"
 check_network "$TARGET" "installed-system payload"
+check_installed_dev_boot_diagnostics "$TARGET"
 
 TARGET_MARKER="$(sqcat "$TARGET" etc/greia-os/developer-remote)" || {
   echo "installed-system payload: developer marker is missing." >&2
@@ -146,4 +166,5 @@ printf '%s\n' "$TARGET_BUILD_INFO" | grep -Fq 'PIP_BUILD_PROFILE=' || exit 1
 printf '%s\n' "Developer installer artifact verification: PASS"
 printf '%s\n' "- live installer: password-enabled greia account, sshd bootstrap, DHCP policy"
 printf '%s\n' "- installed payload: password-enabled greia account, sshd bootstrap, DHCP policy"
+printf '%s\n' "- installed dev boot: tty1 diagnostics, panic=0 (no timed reboot)"
 printf '%s\n' "- root SSH remains denied; no operator SSH key is required"
