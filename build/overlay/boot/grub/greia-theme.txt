@@ -1,0 +1,10 @@
+# Greia installed-OS boot cover.
+# tools/generate_boot_artwork.py rewrites desktop-color from the canonical
+# artwork when a physical installer is built.  The checked-in value is the
+# retained artwork's navy fallback for direct/non-legacy image builds.
+title-text: ""
+desktop-color: "#0d1e3c"
+desktop-image: "greia-boot-logo.png"
+desktop-image-scale-method: "padding"
+desktop-image-h-align: "center"
+desktop-image-v-align: "center"
