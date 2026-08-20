@@ -30,6 +30,14 @@ fi
 # while -novtswitch only controls switching back during reset/shutdown. Always
 # return to VT1 before starting X.
 chvt 1 >/dev/null 2>&1 || true
+
+# Final pre-X installer milestone. Repeated service attempts repaint the same
+# value because retries are recovery, not forward progress.
+renderer=/usr/lib/greia-boot/greia-fb-splash
+if [ -c /dev/fb0 ] && [ -x "$renderer" ]; then
+  "$renderer" --progress 78 >/dev/null 2>&1 || true
+fi
+
 # The early-framebuffer cover already owns the frame. Xorg's `-background none`
 # asks the video driver not to paint a root background so the branded frame
 # remains visible until the launcher/installer presents its first real frame.
