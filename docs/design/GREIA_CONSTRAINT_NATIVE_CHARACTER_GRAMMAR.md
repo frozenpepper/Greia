@@ -1,14 +1,14 @@
-# Greia Constraint-Native Character Grammar — A1 Candidate
+# Greia Constraint-Native Character Grammar
 
-**Status:** A1 candidate design specification; awaiting owner visual review before promotion into the canonical visual style guide  
+**Status:** accepted visual-design grammar; A1 closed at static/design scope  
 **Date:** 2026-08-20  
 **Active plan:** `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`  
 **Authoring skill:** `skills/greia-visual-authoring/SKILL.md`  
-**Evidence scope:** DESIGN SPEC + SOURCE specimens only
+**Evidence scope:** DESIGN SPEC + SOURCE + DESKTOP VISUAL REVIEW + OWNER REVIEW; no runtime/physical acceptance implied
 
 ## 1. Purpose
 
-This document makes the new Greia character direction concrete enough that another model or contributor can build a recognizably Greia character without inventing a new art language or requiring traditional articulated anatomy.
+This document makes the Greia character direction concrete enough that another model or contributor can build a recognizably Greia character without inventing a new art language or requiring traditional articulated anatomy.
 
 The key rule is:
 
@@ -16,7 +16,7 @@ The key rule is:
 
 The target is not the fewest shapes possible. The target is the **smallest construction that still looks charming, intentional, tactile and alive**.
 
-This document is deliberately a candidate during A1. Owner visual review of the static specimen cast is required before these numeric/style rules are promoted into `GREIA_VISUAL_STYLE_GUIDE.md`.
+The A1 static cast review established this grammar as the accepted default direction. The current specimens are style anchors, not a claim that every present SVG is a frozen release asset.
 
 ## 2. Reference artboard and occupancy
 
@@ -168,6 +168,8 @@ Default mouth treatment:
 - avoid lips, teeth detail, tongue detail except one large readable comic cue;
 - expression must remain readable after downscaling.
 
+For emotion rules and semantic face states, continue into `docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md`.
+
 ## 7. Identity-cue budget
 
 A default Greia character gets **up to three identity attachment groups** beyond its body/face.
@@ -265,9 +267,9 @@ Reject a candidate that is effectively:
 
 **Simple is a style. Unconsidered is a placeholder.**
 
-## 12. A1 working cast briefs
+## 12. Core static style anchors
 
-These are candidate static briefs, not approved canonical art.
+The first owner-reviewed static anchors are:
 
 ### Lilli — unicorn Puff
 
@@ -308,6 +310,8 @@ These are candidate static briefs, not approved canonical art.
 - one tiny tooth allowed as a readable comic cue;
 - personality: humor, emotion, experimentation.
 
+These anchors establish a visual family. Future refinement is expected; they are not a requirement to clone or recolor the same body for every character.
+
 ## 13. Small-size review
 
 For every reusable character candidate:
@@ -343,15 +347,15 @@ Review icon/avatar survival:
 
 If a character fails at 64 px but will never be used that small, document the supported minimum instead of mutilating the larger design.
 
-## 14. A1 specimen set
+## 14. A1 specimen set and approval scope
 
-The current A1 source specimens are stored under:
+The A1 source specimens are stored under:
 
 ```text
 assets/visual/specimens/a1/
 ```
 
-Candidate files:
+Files:
 
 ```text
 lilli.svg
@@ -363,18 +367,22 @@ object_friend_3.svg
 review.html
 ```
 
-The four named cast characters are candidates for owner visual review. `cutout_critter.svg` and `object_friend_3.svg` are archetype examples rather than proposed named cast members.
+Lilli, Nino, Tito and Momo were owner-reviewed and accepted on 2026-08-20 as **static style anchors / design direction**. `cutout_critter.svg` and `object_friend_3.svg` remain archetype examples.
 
-These are **not approved canonical assets** until owner review says so.
+This approval does **not** mean:
+
+- the current SVGs are frozen final release art;
+- a runtime asset-loader contract exists;
+- expression/motion work is complete;
+- simulator or physical C0/Acer/Pi acceptance exists.
 
 ## 15. A1 closure boundary
 
-A1 should not be closed merely because these SVGs exist.
+A1 closed on 2026-08-20 after:
 
-Remaining closure requirements include:
+1. static owner review of Lilli, Nino, Tito and Momo;
+2. acceptance of the constraint-native construction grammar;
+3. promotion of the accepted language into `GREIA_VISUAL_STYLE_GUIDE.md`;
+4. explicit library status update at static-style-anchor scope.
 
-1. owner visual review of Lilli, Nino, Tito and Momo;
-2. accept/revise this grammar based on that review;
-3. promote accepted rules into `GREIA_VISUAL_STYLE_GUIDE.md`;
-4. mark the A1 specimens approved, superseded or rejected explicitly;
-5. only then proceed to A2 expression/motion standardization.
+A2 owns expression and motion standardization. Runtime integration remains a later architecture-reviewed phase.
