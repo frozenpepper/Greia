@@ -1,5 +1,5 @@
 catalog_id = "greia.shared-visuals.v1"
-catalog_version = "0.1.0"
+catalog_version = "0.1.1"
 status = "candidate-runtime-rendition-source"
 runtime_consumed = false
 notes = "Explicit build-time selection of shared SVG masters for raster runtime renditions. This file is not directory discovery."
@@ -74,3 +74,15 @@ source = "visual/ui/v0.1/button_disabled.svg"
 output = "visual/runtime/v1/ui/button_primary_disabled.png"
 width = 360
 height = 140
+
+[[visuals]]
+id = "ui.shadow.soft"
+kind = "shadow"
+role = "grounding"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/ui/v0.1/soft_shadow.svg"
+output = "visual/runtime/v1/ui/soft_shadow.png"
+width = 520
+height = 150
