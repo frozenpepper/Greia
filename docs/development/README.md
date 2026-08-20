@@ -16,11 +16,14 @@ For documentation authority and precedence, read `docs/DOCUMENTATION.md` first.
 Read this when a development Greia image reaches the installed root filesystem but does not reach the child launcher, or when SSH is needed to diagnose a graphical boot failure. It explains:
 
 - why a persistent `PIP_ROOT: clean ...` line does not prove that boot stopped at filesystem checking;
-- the `greia-dev.local` network/SSH probe path;
-- the development-only SSH host-key bootstrap and authentication contract;
+- the simple development SSH contract for both live installer and installed OS;
+- the `greia-installer.local` and `greia-dev.local` network/SSH probe paths;
+- the fail-closed `tools/build-development-installer.sh` build wrapper;
+- artifact-level verification through `tools/verify-development-installer.sh`;
+- the development-only machine-local Ed25519 host identity bootstrap;
 - the exact systemd/journal/Xorg evidence to capture before changing services;
 - the current provisional launcher/Xorg chain;
-- how to reason about older images that predate the SSH bootstrap.
+- how to reason about older images that predate the hardened SSH bootstrap.
 
 Historical Acer root-mount/service failures remain documented in `docs/INSTALLED_OS_BOOT_POSTMORTEM.md`.
 
