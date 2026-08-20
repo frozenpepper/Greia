@@ -215,6 +215,9 @@ class LauncherApplication:
         self._next_rescan = 0.0
         self._catalogue_error = False
         self._targets: list[HitTarget] = []
+        self._cached_profiles_surface: Any = None
+        self._cached_profiles_key: Any = None
+        self._cached_profiles_targets: list[HitTarget] = []
         self._parent_chord = KeyChordTracker({ord("s"), ord("t")}, hold_duration_seconds=5.0)
         self._parent_panel = ParentSettingsOverlay(MainCredentialStore.from_environment())
 
@@ -604,6 +607,58 @@ class LauncherApplication:
         self._draw_pointer(screen, pygame)
 
     def _draw_profile_picker(self, screen: Any, theme: Any, pygame: Any) -> None:
+        width, height = screen.get_size()
+        if not self.profiles:
+            self._draw_empty(screen, pygame)
+            return
+
+        pointer = pygame.mouse.get_pos()
+        pointer_active = pygame.mouse.get_focused()
+
+        hovered_target = None
+        if pointer_active and self._cached_profiles_targets:
+            for target in self._cached_profiles_targets:
+                if target.rect.collidepoint(pointer):
+                    hovered_target = (target.action, target.value)
+                    break
+
+        cache_key = (
+            self._profile_selected,
+            tuple(p.profile_id for p in self.profiles),
+            hovered_target,
+            theme.background,
+            theme.panel,
+            theme.accent,
+            theme.text,
+            (width, height),
+        )
+
+        if self._cached_profiles_key == cache_key and self._cached_profiles_surface is not None:
+            screen.blit(self._cached_profiles_surface, (0, 0))
+            self._targets.extend(self._cached_profiles_targets)
+            return
+
+        if (
+            self._cached_profiles_surface is None
+            or self._cached_profiles_surface.get_size() != (width, height)
+        ):
+            self._cached_profiles_surface = pygame.Surface((width, height)).convert()
+
+        self._cached_profiles_surface.fill(theme.background)
+        saved_targets = self._targets
+        self._targets = []
+
+        self._render_profile_picker_content(self._cached_profiles_surface, theme, pygame)
+
+        self._cached_profiles_key = cache_key
+        self._cached_profiles_targets = list(self._targets)
+        saved_targets.extend(self._targets)
+        self._targets = saved_targets
+        screen.blit(self._cached_profiles_surface, (0, 0))
+
+    def _render_profile_picker_content(
+        self, screen: Any, theme: Any, pygame: Any
+    ) -> None:
         width, height = screen.get_size()
         header_size = max(70, min(100, height // 6))
         header_icon = self._load_icon("rainbow", header_size, pygame)

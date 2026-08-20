@@ -75,6 +75,9 @@ class GreiaLauncherPresentation(LauncherApplication):
         self._activity_scroll_start = 0
         self._launching_activity_id: str | None = None
         self._launch_animation_started = 0.0
+        self._cached_activities_surface: Any = None
+        self._cached_activities_key: Any = None
+        self._cached_activities_targets: list[HitTarget] = []
 
     def _configure_parent_package_source(self) -> None:
         """Compose parent-installed packages into the same launch authority path."""
@@ -252,6 +255,9 @@ class GreiaLauncherPresentation(LauncherApplication):
                     self._label_surface_cache.clear()
                     self._category_label_cache.clear()
                     self._category_icon_cache.clear()
+                    self._cached_activities_key = None
+                    self._cached_activities_surface = None
+                    self._cached_activities_targets.clear()
                     self._activity_scroll_start = 0
                 if self._mode == "profiles":
                     if self._parent_chord.poll(time.monotonic()):
@@ -433,6 +439,72 @@ class GreiaLauncherPresentation(LauncherApplication):
         self._activity_scroll_start = 0
 
     def _draw_activities(self, screen: Any, theme: Any, pygame: Any) -> None:
+        width, height = screen.get_size()
+        activities = self._presented_activities
+        if not activities:
+            self._draw_empty(screen, pygame)
+            return
+
+        pointer = pygame.mouse.get_pos()
+        pointer_active = pygame.mouse.get_focused()
+
+        hovered_target = None
+        if pointer_active and self._cached_activities_targets:
+            for target in self._cached_activities_targets:
+                if target.rect.collidepoint(pointer):
+                    hovered_target = (target.action, target.value)
+                    break
+
+        launch_elapsed = (
+            time.monotonic() - self._launch_animation_started
+            if self._launching_activity_id
+            else None
+        )
+        launch_tick = (
+            int(launch_elapsed * 60) if launch_elapsed is not None else None
+        )
+
+        cache_key = (
+            self._active_profile.profile.profile_id if self._active_profile else None,
+            self._category_id,
+            self._activity_scroll_start,
+            self._selected,
+            hovered_target,
+            self._launching_activity_id,
+            launch_tick,
+            theme.background,
+            theme.panel,
+            theme.accent,
+            theme.text,
+            (width, height),
+            self._active_locale,
+            bool((self._last_result and not self._last_result.succeeded) or self._catalogue_error),
+        )
+
+        if self._cached_activities_key == cache_key and self._cached_activities_surface is not None:
+            screen.blit(self._cached_activities_surface, (0, 0))
+            self._targets.extend(self._cached_activities_targets)
+            return
+
+        if (
+            self._cached_activities_surface is None
+            or self._cached_activities_surface.get_size() != (width, height)
+        ):
+            self._cached_activities_surface = pygame.Surface((width, height)).convert()
+
+        self._cached_activities_surface.fill(theme.background)
+        saved_targets = self._targets
+        self._targets = []
+
+        self._render_activities_content(self._cached_activities_surface, theme, pygame)
+
+        self._cached_activities_key = cache_key
+        self._cached_activities_targets = list(self._targets)
+        saved_targets.extend(self._targets)
+        self._targets = saved_targets
+        screen.blit(self._cached_activities_surface, (0, 0))
+
+    def _render_activities_content(self, screen: Any, theme: Any, pygame: Any) -> None:
         width, height = screen.get_size()
         if self._active_profile is not None:
             badge_size = max(62, min(86, height // 7))
