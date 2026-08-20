@@ -23,9 +23,11 @@ The visual style is the already accepted constraint-native Greia style: simple c
 |---|---|
 | Current milestone | **L1 — character + base animation library** |
 | Core characters | **Lilli, Nino, Tito, Momo** |
-| Current required character states | `neutral`, `blink` first; add shared happy/surprised/sleepy states as the library grows |
+| Current character states | accepted neutral art + **real blink variants for all four** |
 | Base animations | `idle_bounce`, `blink`, `happy_hop`, `celebrate_pop`, `surprised_wobble`, `sleepy_sway` |
+| Current shared library | `assets/visual/library/` + `assets/visual/characters/` |
 | Current rule | animation work MUST reuse the same character art; it must not redraw/degrade the character |
+| Next exact work | add the small useful shared expression set (`happy`, `surprised`, `sleepy`) for Lilli/Nino/Tito/Momo, then keep expanding the same library rather than inventing new architecture |
 | Next milestone | **L2 — props, backgrounds/scenes, FX and UI artwork library** |
 | Later milestone | **L3 — shared runtime consumption helpers/catalogue for all Greia surfaces** |
 
@@ -183,5 +185,32 @@ Retained only so it is not repeated:
 - The workstream drifted into excessive expression/motion architecture and bad review harnesses.
 - One harness degraded character faces; a later correction preserved the art but still failed to implement a real blink.
 - Owner clarified the actual goal: **artwork library + animation library + small character library + one shared system**.
-- The workstream is simplified to L1/L2/L3 above.
-- Next exact action: build the real L1 shared character/animation library from the accepted art, starting with an actual blink and the six shared motions.
+- The workstream was simplified to L1/L2/L3.
+
+## 2026-08-20 — L1 shared library started correctly
+
+- Added a real authored blink variant for **Lilli, Nino, Tito and Momo**, preserving the accepted A1 character artwork.
+- Added `assets/visual/library/README.md`, `catalog.toml`, `animations.toml`, and `review.html`.
+- The shared review now uses the accepted A1 neutral artwork and swaps to the authored blink art for `blink`; it does not redraw faces.
+- Retired the previous bad A2 review harness and marked the old A2 specimen directory historical.
+- Removed the accidental placeholder file.
+
+### Commits
+
+- simplify plan: `d80b8731eeff4c9281803a244834595cb0cdb026`
+- simplify motion spec: `9cf7161b1c438ba152b4e57ac6515a8b7f78aae9`
+- Lilli blink: `91d85950f3c1f4be3a9d65385efb3eb8e9180190`
+- Nino blink: `975e351d1be517c16869a09113a70cc4a5361142`
+- Tito blink: `c47422ea014b0ca499a385c0c3afd872e72fcce4`
+- Momo blink: `64dfc69cdc1baea185830ee1b2d3b6d1a0527d27`
+- shared library seed: `4dbe9c645c578cbbe6c9de85eaad344ebd4f91f9`
+- animation catalog: `0789b77e3777fb00e1fb024457f32e1a6483b665`
+- visual catalog: `c3fac5c87913de2e6b73e4b1b25c2f2d1c91a724`
+- shared review: `06d6812785492e09f47f41542c7a064ee56f3624`
+- retire bad A2 review: `9785cb73940984fdd20c72f56d19d8002332c94e`
+- mark old A2 historical: `30b6a8bfa83e305d54a0f0af915ef7a2b625a7e3`
+- remove obsolete placeholder: `4f1889968a2f3b8b2f98957045b27adade9e7716`
+
+### Next exact action
+
+Add the small reusable `happy`, `surprised`, and `sleepy` expression variants to the same four character packages, visually review them, and then continue directly into reusable props/scenes/FX/UI assets.
