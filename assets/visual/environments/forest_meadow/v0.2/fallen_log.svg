@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 256">
+<defs>
+
+<filter id="blur6" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="6"/></filter>
+<filter id="blur10" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="10"/></filter>
+<linearGradient id="trunk" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0" stop-color="#B27A52"/>
+  <stop offset=".55" stop-color="#8B593D"/>
+  <stop offset="1" stop-color="#623C2B"/>
+</linearGradient>
+<linearGradient id="leafMain" x1="0" y1="0" x2=".8" y2="1">
+  <stop offset="0" stop-color="#79D989"/>
+  <stop offset=".55" stop-color="#52C56A"/>
+  <stop offset="1" stop-color="#319853"/>
+</linearGradient>
+<linearGradient id="leafDark" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0" stop-color="#59C66F"/>
+  <stop offset="1" stop-color="#258949"/>
+</linearGradient>
+<linearGradient id="leafLight" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0" stop-color="#A6EBAA"/>
+  <stop offset="1" stop-color="#74D783"/>
+</linearGradient>
+
+</defs>
+
+<ellipse cx="321" cy="219" rx="228" ry="21" fill="#483429" opacity=".12" filter="url(#blur6)"/>
+<path d="M105 172 C186 141 391 132 526 143 C552 145 568 159 565 180 C562 201 546 212 521 211
+         C363 202 225 209 121 202 C91 200 81 184 105 172 Z" fill="url(#trunk)"/>
+<path d="M131 160 C224 143 389 141 516 151" fill="none" stroke="#D09B72" stroke-width="8" stroke-linecap="round" opacity=".38"/>
+<path d="M178 177 C240 162 306 163 362 172" fill="none" stroke="#70432E" stroke-width="5" stroke-linecap="round" opacity=".48"/>
+<ellipse cx="114" cy="187" rx="43" ry="32" fill="#D0A06F"/><ellipse cx="114" cy="187" rx="31" ry="23" fill="#9B6948"/><ellipse cx="114" cy="187" rx="20" ry="15" fill="#C88F60"/><ellipse cx="114" cy="187" rx="10" ry="7" fill="#E2B989"/>
+<path d="M194 153 C218 134 242 137 258 151 C236 153 217 163 202 177 Z" fill="#4CAF60"/>
+<path d="M423 151 C443 135 464 137 477 151 C458 153 444 162 431 175 Z" fill="#4CAF60"/>
+<path d="M337 142 Q344 111 352 142 Z" fill="#EEDDBA"/><ellipse cx="352" cy="121" rx="21" ry="12" fill="#E36C69"/>
+<circle cx="345" cy="118" r="2.4" fill="#FFF1D4"/><circle cx="356" cy="115" r="2.4" fill="#FFF1D4"/>
+
+</svg>

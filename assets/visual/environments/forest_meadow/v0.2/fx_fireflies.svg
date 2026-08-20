@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 512">
+<defs>
+
+</defs>
+
+<defs>
+  <radialGradient id="g"><stop offset="0" stop-color="#FFF9B2" stop-opacity="1"/><stop offset=".25" stop-color="#FFE76A" stop-opacity=".82"/><stop offset="1" stop-color="#FFE76A" stop-opacity="0"/></radialGradient>
+</defs>
+<g>
+  <circle cx="108" cy="292" r="18" fill="url(#g)"/><circle cx="111" cy="292" r="3.5" fill="#FFF7A1"/>
+  <circle cx="214" cy="181" r="13" fill="url(#g)"/><circle cx="214" cy="181" r="2.8" fill="#FFF7A1"/>
+  <circle cx="377" cy="337" r="17" fill="url(#g)"/><circle cx="377" cy="337" r="3.2" fill="#FFF7A1"/>
+  <circle cx="541" cy="237" r="14" fill="url(#g)"/><circle cx="541" cy="237" r="3" fill="#FFF7A1"/>
+  <circle cx="690" cy="322" r="18" fill="url(#g)"/><circle cx="690" cy="322" r="3.4" fill="#FFF7A1"/>
+  <circle cx="821" cy="194" r="13" fill="url(#g)"/><circle cx="821" cy="194" r="2.7" fill="#FFF7A1"/>
+  <circle cx="905" cy="351" r="16" fill="url(#g)"/><circle cx="905" cy="351" r="3.1" fill="#FFF7A1"/>
+</g>
+
+</svg>

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 220">
+<defs>
+
+<filter id="blur6" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="6"/></filter>
+<linearGradient id="cloudFill" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#FFFFFF"/>
+  <stop offset=".65" stop-color="#F8FCFF"/>
+  <stop offset="1" stop-color="#DDEFF8"/>
+</linearGradient>
+
+</defs>
+
+<ellipse cx="257" cy="180" rx="153" ry="13" fill="#7790A3" opacity=".07" filter="url(#blur6)"/>
+<path d="M94 161 C82 139 98 117 122 113 C132 88 158 76 182 84 C201 61 235 59 256 81
+         C283 70 313 83 321 108 C346 109 364 126 363 148 C384 154 393 171 385 185
+         L119 185 C99 180 86 172 94 161 Z" fill="url(#cloudFill)"/>
+<path d="M121 154 C122 137 135 126 153 126 C161 109 179 101 197 107 C214 91 238 91 254 107
+         C273 99 295 109 300 127 C319 128 332 139 333 155 C348 158 356 168 353 176 L129 176 Z"
+      fill="#EDF7FC" opacity=".82"/>
+
+</svg>

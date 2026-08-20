@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 512">
+<defs>
+
+<linearGradient id="ray" x1="0" y1="0" x2=".8" y2="1">
+  <stop offset="0" stop-color="#FFF5BF" stop-opacity=".58"/>
+  <stop offset=".75" stop-color="#FFE59A" stop-opacity=".16"/>
+  <stop offset="1" stop-color="#FFE59A" stop-opacity="0"/>
+</linearGradient>
+<linearGradient id="fog" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#FFFFFF" stop-opacity="0"/>
+  <stop offset=".45" stop-color="#F7FCFF" stop-opacity=".28"/>
+  <stop offset=".68" stop-color="#F7FCFF" stop-opacity=".50"/>
+  <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+</linearGradient>
+
+</defs>
+
+<path d="M20 0 L237 0 L560 512 L330 512 Z" fill="url(#ray)"/>
+<path d="M236 0 L360 0 L684 512 L558 512 Z" fill="url(#ray)" opacity=".65"/>
+<path d="M0 0 L104 0 L338 512 L218 512 Z" fill="url(#ray)" opacity=".42"/>
+
+</svg>

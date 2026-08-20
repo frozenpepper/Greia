@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 256">
+<defs>
+
+<filter id="blur6" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="6"/></filter>
+<linearGradient id="cloudFill" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#FFFFFF"/>
+  <stop offset=".65" stop-color="#F8FCFF"/>
+  <stop offset="1" stop-color="#DDEFF8"/>
+</linearGradient>
+
+</defs>
+
+<ellipse cx="318" cy="207" rx="205" ry="17" fill="#7790A3" opacity=".08" filter="url(#blur6)"/>
+<path d="M108 186 C94 158 113 130 144 126 C154 90 190 69 224 82 C247 49 298 45 329 78
+         C365 61 408 80 421 118 C454 117 481 139 480 169 C506 176 518 199 506 219
+         L140 219 C112 212 97 199 108 186 Z" fill="url(#cloudFill)"/>
+<path d="M139 177 C136 153 154 137 178 137 C188 112 214 101 238 110 C261 86 297 86 319 109
+         C345 98 374 112 383 137 C406 138 425 153 426 175 C446 179 456 193 451 205 L151 205 C143 195 139 186 139 177 Z"
+      fill="#EAF6FC" opacity=".84"/>
+<path d="M169 145 C215 112 279 109 321 126 C281 123 232 132 192 159 Z" fill="#FFFFFF" opacity=".78"/>
+
+</svg>

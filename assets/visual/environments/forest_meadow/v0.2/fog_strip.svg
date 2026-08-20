@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 256">
+<defs>
+
+<linearGradient id="ray" x1="0" y1="0" x2=".8" y2="1">
+  <stop offset="0" stop-color="#FFF5BF" stop-opacity=".58"/>
+  <stop offset=".75" stop-color="#FFE59A" stop-opacity=".16"/>
+  <stop offset="1" stop-color="#FFE59A" stop-opacity="0"/>
+</linearGradient>
+<linearGradient id="fog" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#FFFFFF" stop-opacity="0"/>
+  <stop offset=".45" stop-color="#F7FCFF" stop-opacity=".28"/>
+  <stop offset=".68" stop-color="#F7FCFF" stop-opacity=".50"/>
+  <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+</linearGradient>
+
+</defs>
+
+<path d="M0 74 C160 43 284 98 421 72 C565 44 706 88 831 67 C908 54 968 60 1024 80
+         L1024 217 C899 201 780 220 657 207 C524 194 383 219 251 207 C158 198 75 205 0 218 Z" fill="url(#fog)"/>
+
+</svg>
