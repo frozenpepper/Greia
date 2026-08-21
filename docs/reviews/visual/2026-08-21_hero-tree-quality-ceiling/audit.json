@@ -1,0 +1,21 @@
+{
+  "benchmark": "VISUAL_HERO_ASSET_QUALITY_CEILING_BENCHMARK",
+  "date": "2026-08-21",
+  "status": "COMPLETED",
+  "candidate_workspace": "assets/visual/authoring_candidates/2026-08-21_hero-tree-quality-ceiling/",
+  "source_representation": "Native 1024x1024 SVG Vector Source Master + High-Resolution Master PNG",
+  "source_files": [
+    "assets/visual/authoring_candidates/2026-08-21_hero-tree-quality-ceiling/tree_woodland_oak_hero.svg",
+    "assets/visual/authoring_candidates/2026-08-21_hero-tree-quality-ceiling/tree_woodland_oak_hero.png"
+  ],
+  "review_sheets": [
+    "01-v03-vs-hero.png",
+    "02-hero-master.png",
+    "03-material-detail.png",
+    "04-runtime-sizes.png",
+    "05-neutral-scene.png",
+    "06-silhouette-value-test.png"
+  ],
+  "v03_comparison_source": "assets/visual/authoring_kit/v0.3-candidate/sources/tree_mature_oak.svg",
+  "provenance_preserved": true
+}
