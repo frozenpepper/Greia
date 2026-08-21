@@ -1,7 +1,7 @@
 # Greia Child Activity Discovery and Audience Requirements
 
 **Status:** accepted product requirement; implementation migration pending where explicitly noted  
-**Date:** 2026-08-20  
+**Date:** 2026-08-21  
 **Scope:** child Shell/Home, Activity catalogue projection, Activity educational/presentation metadata, child-profile discovery preferences, Parent per-child Activity visibility policy  
 **Related:** `docs/adr/0018-lightweight-ui-foundation.md`, `docs/design/GREIA_LAUNCHER_INTERACTION_AND_ACTIVITY_CATALOGUE.md`, `docs/product/PARENT_MANAGEMENT.md`, `docs/product/RESPONSIVE_UI_AND_DISPLAY_LAYOUT.md`, `skills/greia-activity-authoring/SKILL.md`
 
@@ -32,7 +32,7 @@ This hierarchy is a Greia navigation model, not a filesystem model. A Collection
 
 ## 2. Primary Collections are destinations, not filter tabs
 
-The recommended high-level child vocabulary remains:
+The platform-owned high-level child vocabulary is:
 
 ```text
 create
@@ -42,13 +42,42 @@ explore
 my_greia
 ```
 
-These should be presented as major child-facing destinations on Greia Home, using strong semantic icon/art identity and localized titles.
+These are the normal major child-facing destinations on Greia Home, using strong semantic icon/art identity and localized titles.
 
-The normal Home screen should not begin by showing every installed Activity. `All` may remain an internal catalogue projection, fallback, Parent/admin view, search/browse destination or compatibility surface, but **`All` is not the preferred child Home experience**.
+The normal Home screen should not begin by showing every installed Activity. `All` may remain an internal catalogue projection, Parent/admin view, search/browse surface or compatibility mechanism, but **`All` is not the normal child Home experience**.
 
 A child entering `Create` should experience a clear navigation transition into that Collection rather than merely seeing a tab/filter state change.
 
 The Collection identity remains visible while browsing its content, and local Back returns toward Greia Home or the containing Collection.
+
+### 2.1 Packages do not manufacture primary Home destinations
+
+`[presentation].categories` is Activity metadata consumed by a platform-owned projection. It is not authority to extend Greia Home.
+
+A package may declare one or more recognized primary IDs from the vocabulary above. The manifest parser may remain tolerant of other bounded category strings for compatibility or future migration, but an arbitrary package value such as `care`, `art`, `geometry` or `storybook` must **not automatically become another top-level Home portal**.
+
+This distinction matters because:
+
+- Home must remain a small, predictable child mental model;
+- education/content taxonomy can be much richer than navigation taxonomy;
+- third-party/open-source Activities must not be able to reshape the entire OS information architecture merely by inventing a label;
+- future sub-Collections have their own bounded discovery metadata/policy rather than reusing arbitrary primary-category strings.
+
+### 2.2 Unknown-only Activities fail open through bounded Browse/More recovery
+
+Greia must not solve primary-vocabulary control by silently hiding a valid Activity.
+
+If a valid Activity has no recognized primary Collection after compatibility projection, Greia exposes it through one platform-owned bounded recovery destination:
+
+```text
+browse
+```
+
+The current child-facing localization is equivalent to `Altro` / `More`. This destination appears only when required by otherwise-orphaned Activities. It is not a general sixth content taxonomy and packages do not directly own it.
+
+An Activity that has both an unknown metadata category and a valid primary category stays in the valid primary Collection and does not enter Browse merely because the extra metadata exists.
+
+The built-in Clinic Activity is the concrete correction that exposed this rule: caregiving/health remains education taxonomy, while its child-navigation presentation is `play` + `learn`; there is no permanent top-level `Care` Home destination.
 
 ## 3. One Activity may belong to more than one Collection
 
@@ -230,7 +259,7 @@ recommended_age_max = 10
 
 ### Important current implementation boundary
 
-As of 2026-08-20, the current manifest parser implements `education.difficulty` but **does not yet implement** `recommended_age_min`, `recommended_age_max`, `difficulty_min`, `difficulty_max` or `adaptive_difficulty`.
+As of 2026-08-21, the current manifest parser implements `education.difficulty` but **does not yet implement** `recommended_age_min`, `recommended_age_max`, `difficulty_min`, `difficulty_max` or `adaptive_difficulty`.
 
 These names document the accepted target semantics; they must not be placed into packages and described as working until parser/runtime/tests are migrated together.
 
@@ -261,7 +290,7 @@ Greia decides whether a sub-Collection is useful for the current effective catal
 
 `education.categories` and `education.skills` remain learning/progression metadata and must not automatically become child navigation levels.
 
-As of 2026-08-20, `presentation.discovery_tags` is a target semantic example, **not a currently parsed field**.
+As of 2026-08-21, `presentation.discovery_tags` is a target semantic example, **not a currently parsed field**.
 
 ## 10. Child profile audience information
 
@@ -282,7 +311,7 @@ More challenging
 
 This preference affects recommendation/ranking/view selection. It must not rewrite Activity-owned save data or pretend the platform can infer educational mastery from age alone.
 
-As of 2026-08-20, current `ChildProfile` source does not yet contain age/development/challenge fields. This document defines the product requirement for the future profile-policy migration.
+As of 2026-08-21, current `ChildProfile` source does not yet contain age/development/challenge fields. This document defines the product requirement for the future profile-policy migration.
 
 ## 11. Recommendation is not the same as restriction
 
@@ -337,6 +366,7 @@ Rules:
 - no age metadata means **unknown/general**, not automatically unsuitable;
 - creative/open-ended tools may intentionally have no meaningful upper age bound;
 - missing future adaptive-difficulty metadata means Greia uses the ordinary baseline difficulty behavior;
+- unknown/unrecognized primary presentation metadata does not hide a valid Activity; it is recoverable through the bounded Browse/More fallback;
 - Parent explicit hide remains authoritative;
 - invalid manifest fields, once implemented as schema fields, remain package validation errors according to source policy.
 
@@ -373,6 +403,7 @@ The Collection-first model must obey `RESPONSIVE_UI_AND_DISPLAY_LAYOUT.md`.
 In particular:
 
 - Home should contain only a small bounded set of primary Collection choices and should normally require no scrolling;
+- the Browse/More recovery portal appears only when required and does not authorize arbitrary package-defined root destinations;
 - Collection cards/objects reflow from the actual viewport;
 - optional sub-Collections and Activity collections use shared bounded scrolling/paging;
 - the same semantic hierarchy works on the low-resolution Acer reference and larger displays;
@@ -393,14 +424,17 @@ Current source already has:
 - `ActivityCatalogue` as a projection over registry-owned Activities;
 - semantic `Collection` objects;
 - high-level `[presentation].categories`;
-- one Activity in multiple categories;
+- one Activity in multiple recognized primary categories;
 - bounded Activity scrolling;
 - `education.difficulty` validated 1–10;
 - Collection-first Home (`ui.portal.frame` / `CollectionFirstHomeMixin`) replacing the normal `All` landing, accepted via Activity Simulator (`docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md`);
+- a **source-implemented, simulator-pending** bounded primary-vocabulary correction: arbitrary package categories no longer become launcher Collections, and valid Activities with no recognized primary destination project into platform-owned `browse`/More recovery;
+- built-in Clinic navigation corrected to `play` + `learn` while care/health remains education taxonomy;
 - Parent product direction for later per-child Activity availability/policy.
 
 Current source does **not yet implement**:
 
+- simulator acceptance of the new primary-vocabulary/browse correction (`docs/testing/2026-08-21_COLLECTION_PRIMARY_VOCABULARY_SIMULATOR.md` is the current gate);
 - adaptive optional sub-Collections;
 - subdivision discovery tags;
 - age/developmental manifest fields;
@@ -409,23 +443,26 @@ Current source does **not yet implement**:
 - automatic per-child audience ranking/filtering;
 - Parent UI/API controls for these policies.
 
-Implementation must update source, tests, manifest examples, Parent API/client contracts and derived authoring documentation together. Do not claim this requirement as implemented merely because this document exists.
+Implementation must update source, tests, manifest examples, Parent API/client contracts and derived authoring documentation together. Do not claim an unexecuted portion merely because this document exists.
 
 ## 19. Acceptance requirements
 
 When implemented, focused acceptance must cover at least:
 
-1. **small catalogue:** 1–10 visible Activities remain direct;
-2. **large coherent catalogue:** >10 visible Activities can produce useful sub-Collections;
-3. **large incoherent catalogue:** no forced bad subdivision; bounded direct browsing remains usable;
-4. **maximum depth:** no path exceeds Home → primary Collection → optional sub-Collection → Activity;
-5. **multi-membership:** one Activity can appear in several Collections without state duplication;
-6. **per-child count:** adaptive depth uses the effective visible set after Parent policy;
-7. **hysteresis:** small install/remove changes do not cause repeated hierarchy flapping;
-8. **age/difficulty independence:** recommendation logic does not treat age as difficulty or vice versa;
-9. **missing metadata:** ordinary valid Activities remain discoverable unless Parent policy hides them;
-10. **Parent override:** explicit always-show/always-hide wins over automatic recommendation;
-11. **profile privacy:** exact date of birth is not required merely for discovery;
-12. **responsive matrix:** Home/Collections remain usable at required Greia viewport tests;
-13. **input parity:** pointer, keyboard and controller/touch paths share hierarchy and Back semantics;
-14. **authority:** presentation filtering never bypasses registry/runtime/trust/permission authority.
+1. **bounded root vocabulary:** arbitrary package categories cannot manufacture primary Home destinations;
+2. **unknown-category recoverability:** a valid Activity without a recognized primary category remains discoverable through one bounded Browse/More recovery destination;
+3. **mixed metadata:** an Activity with a valid primary category plus extra unknown metadata stays in the valid primary Collection and does not unnecessarily enter Browse;
+4. **small catalogue:** 1–10 visible Activities remain direct;
+5. **large coherent catalogue:** >10 visible Activities can produce useful sub-Collections;
+6. **large incoherent catalogue:** no forced bad subdivision; bounded direct browsing remains usable;
+7. **maximum depth:** no path exceeds Home → primary Collection → optional sub-Collection → Activity;
+8. **multi-membership:** one Activity can appear in several Collections without state duplication;
+9. **per-child count:** adaptive depth uses the effective visible set after Parent policy;
+10. **hysteresis:** small install/remove changes do not cause repeated hierarchy flapping;
+11. **age/difficulty independence:** recommendation logic does not treat age as difficulty or vice versa;
+12. **missing metadata:** ordinary valid Activities remain discoverable unless Parent policy hides them;
+13. **Parent override:** explicit always-show/always-hide wins over automatic recommendation;
+14. **profile privacy:** exact date of birth is not required merely for discovery;
+15. **responsive matrix:** Home/Collections remain usable at required Greia viewport tests;
+16. **input parity:** pointer, keyboard and controller/touch paths share hierarchy and Back semantics;
+17. **authority:** presentation filtering never bypasses registry/runtime/trust/permission authority.
