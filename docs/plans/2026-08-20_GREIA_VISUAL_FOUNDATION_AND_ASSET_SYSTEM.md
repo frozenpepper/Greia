@@ -255,13 +255,23 @@ Behavioral rules:
 - accepted panel/cards/category buttons/profile/feedback visuals remain independent;
 - protected Activity system Home/Back chrome is **not** replaced or restyled by this mixin.
 
-Required local acceptance:
+Accepted via:
 
 ```text
 docs/testing/2026-08-21_V5_SHARED_NAVIGATION_CHROME_SIMULATOR.md
 ```
 
-Current evidence: **SOURCE**. No simulator PASS is claimed yet.
+All 6 responsive matrix viewports, in-category Back default & hover, return to root catalogue, multi-page activity scroll default & hover & navigation, corrupt PNG fallback, and 27.1 FPS frame sanity passed with evidence in `tmp/v5-navigation-simulator-evidence/`.
+
+## 4.14 After the navigation-chrome gate
+
+Following simulator acceptance of `ui.shadow.soft`, `ui.card.activity`, `ui.panel.base`, `ui.button.primary`, `ui.avatar.frame`, `ui.loading.orbit`, `ui.error.gentle`, and `ui.button.icon`:
+
+1. record `ui.button.icon` as an accepted visible Shell consumer at **SIMULATOR VISUAL REVIEW** scope;
+2. record `ui.empty.basket` and profile pagination as **SOURCE, NOT EXERCISED**;
+3. continue only to another product-visible shared UI surface that materially improves Greia, rather than adding proof-only consumers;
+4. separately complete the Web Activity semantic adapter using the same semantic IDs/variants through a controlled URL/handle transport, not host filesystem exposure;
+5. do not return to new environment-pack production without a demonstrated reusable coverage gap.
 
 ---
 
@@ -271,19 +281,19 @@ Current evidence: **SOURCE**. No simulator PASS is claimed yet.
 |---|---|
 | Stable guide | `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` |
 | Resume | `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` |
-| Active focus | **V5 — `ui.button.icon` shared Shell navigation chrome implemented in source; Activity Simulator pending** |
+| Active focus | **V5 — shared `ui.button.icon` navigation chrome accepted in Activity Simulator** |
 | Environment coverage | V4 complete through Water/Pond; no new pack without concrete gap |
-| Catalogue/renditions | source manifest v0.1.4 includes `ui.button.icon`; generated PNG/catalogue regeneration pending for this new entry |
+| Catalogue/renditions | explicit semantic catalogue + generated PNG runtime catalogue present |
 | Activity cards | accepted at **SIMULATOR VISUAL REVIEW** |
 | Shell panel | accepted at **SIMULATOR VISUAL REVIEW** |
 | Root category buttons | accepted at **SIMULATOR VISUAL REVIEW** |
 | Profile identity | accepted at **SIMULATOR VISUAL REVIEW** |
 | Launch/error feedback | accepted at **SIMULATOR VISUAL REVIEW** |
 | Empty basket | **SOURCE / NOT EXERCISED** |
-| Navigation icon button | `ui.button.icon/default` **SOURCE; simulator pending** |
+| Navigation icon button | `ui.button.icon/default` accepted at **SIMULATOR VISUAL REVIEW** |
 | Activity semantic API | implemented in source; Shape Garden proof is non-blocking |
-| Current pending protocol | `docs/testing/2026-08-21_V5_SHARED_NAVIGATION_CHROME_SIMULATOR.md` |
-| Next exact action | `make visual-assets` → headless navigation-chrome simulator protocol → fix only root causes → record evidence → commit/push |
+| Completed visible protocols | `docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md`; `docs/testing/2026-08-20_V5_SHARED_UI_PANEL_SIMULATOR.md`; `docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md`; `docs/testing/2026-08-21_V5_SHARED_PROFILE_IDENTITY_SIMULATOR.md`; `docs/testing/2026-08-21_V5_SHARED_FEEDBACK_SIMULATOR.md`; `docs/testing/2026-08-21_V5_SHARED_NAVIGATION_CHROME_SIMULATOR.md` |
+| Next exact action | complete Web Activity semantic visual adapter or next targeted product-visible Shell integration |
 
 ---
 
@@ -334,7 +344,7 @@ Current evidence: **SOURCE**. No simulator PASS is claimed yet.
 - [x] empty-basket source integration;
 - [ ] empty-basket legitimate runtime exercise;
 - [x] shared Shell navigation icon-button source consumer;
-- [ ] shared Shell navigation chrome simulator acceptance;
+- [x] shared Shell navigation chrome simulator acceptance;
 - [x] renderer-neutral semantic request portion of Activity API;
 - [x] first Python Activity source consumer (Shape Garden);
 - [ ] Shape Garden Activity Simulator acceptance (non-blocking);

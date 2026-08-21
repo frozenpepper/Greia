@@ -208,29 +208,17 @@ ui.empty.basket
 ui.shadow.soft
 ```
 
-### Current navigation-chrome gate
+### Completed navigation-chrome gate — accepted
 
 `SharedUiNavigationChromeMixin` applies `ui.button.icon/default` to Shell-local navigation while retaining existing action IDs and hit rectangles:
 
-- mandatory real consumer: in-category local Back control;
+- in-category local Back control;
 - Activity up/down scroll controls where a real collection requires them;
-- profile previous/next controls where real profile pagination exists.
+- profile previous/next controls where real profile pagination exists (recorded as `SOURCE / NOT EXERCISED` when profile count <= 4).
 
 A missing/corrupt icon-button PNG falls back only those navigation controls to the proven primitive renderer. Existing shared panel/cards/category buttons/profile/feedback visuals remain independent. Protected Activity system Home/Back is not replaced.
 
-Required protocol:
-
-```text
-docs/testing/2026-08-21_V5_SHARED_NAVIGATION_CHROME_SIMULATOR.md
-```
-
-Before the protocol, the local/build checkout must run:
-
-```bash
-make visual-assets
-```
-
-to generate `assets/visual/runtime/v1/ui/icon_button.png` and refresh the generated catalogue.
+Accepted via `docs/testing/2026-08-21_V5_SHARED_NAVIGATION_CHROME_SIMULATOR.md` at **SIMULATOR VISUAL REVIEW** scope.
 
 ### Activity semantic resolver
 

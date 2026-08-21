@@ -1,6 +1,6 @@
 catalog_id = "greia.shared-visuals.v1"
-catalog_version = "0.1.3"
-source_sha256 = "e20e6ee002d665bc06df7c06c58e8e02642e80ef4d336faff0b6482b1785db9b"
+catalog_version = "0.1.4"
+source_sha256 = "6b0a9c2c3ad9ad04adcbc231d780f31e9546af2daba7115027cf5844f246ff98"
 generated_note = "Build-time PNG renditions from explicit reviewed SVG masters; runtime must not discover or rasterize SVG source."
 
 [[visuals]]
@@ -10,6 +10,14 @@ role = "avatar_frame"
 
 [visuals.variants]
 default = "visual/runtime/v1/ui/avatar_frame.png"
+
+[[visuals]]
+id = "ui.button.icon"
+kind = "ui"
+role = "icon_button"
+
+[visuals.variants]
+default = "visual/runtime/v1/ui/icon_button.png"
 
 [[visuals]]
 id = "ui.button.primary"

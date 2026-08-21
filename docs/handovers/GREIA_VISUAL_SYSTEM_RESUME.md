@@ -91,17 +91,18 @@ ui.button.primary    SIMULATOR VISUAL REVIEW
 ui.avatar.frame      SIMULATOR VISUAL REVIEW
 ui.loading.orbit     SIMULATOR VISUAL REVIEW
 ui.error.gentle      SIMULATOR VISUAL REVIEW
-ui.empty.basket      SOURCE / NOT EXERCISED
+ui.button.icon       SIMULATOR VISUAL REVIEW
+ui.empty.basket      SOURCE (NOT EXERCISED)
 ```
 
-The latest accepted feedback run is commit `5d8208883b840318b508b2dddc83c829e826a0e7` and confirmed:
+The latest accepted navigation chrome run confirmed:
 
-- real launch overlay using `ui.loading.orbit`;
-- dismissible catalogue-error cloud using `ui.error.gentle`;
-- isolated corrupt-PNG fallbacks;
+- in-category Back control using circular tactile `ui.button.icon` with clean gold lift/accent on hover;
+- activity collection multi-page up/down scroll controls using `ui.button.icon`;
+- isolated corrupt-PNG fail-soft fallback;
 - headless simulator execution;
-- responsive launch-overlay review;
-- 280 frames / 10.03 s = 27.9 FPS simulator sanity.
+- 6-row responsive matrix review;
+- 271 frames / 10.01 s = 27.1 FPS simulator sanity.
 
 No physical Acer/Pi performance claim and no R7 closure.
 
@@ -115,6 +116,7 @@ Current visual composition owners:
 src/greia_launcher/shared_ui_presentation.py
 src/greia_launcher/profile_chrome_presentation.py
 src/greia_launcher/feedback_presentation.py
+src/greia_launcher/navigation_chrome_presentation.py
 src/greia_launcher/child_shell.py
 ```
 
@@ -127,6 +129,7 @@ Important accepted relationships:
 - root categories use `ui.button.primary/default|hover`;
 - profile-picker identities and the active-profile switcher use `ui.avatar.frame/default`;
 - launch/error feedback is shared artwork with narrow independent fallbacks;
+- Shell-local navigation controls (in-category Back, multi-page scroll) use `ui.button.icon/default`;
 - headless simulator support is `--headless` / `GREIA_SIMULATOR_HEADLESS=1` using SDL dummy video/audio while still capturing the real Shell pixel buffer.
 
 ---
@@ -152,9 +155,9 @@ Future Web Activity support must preserve semantic IDs/variants through a contro
 
 ---
 
-# 6. Current exact gate — shared Shell navigation chrome
+# 6. Completed gate — shared Shell navigation chrome
 
-New source consumer:
+Accepted consumer:
 
 ```text
 ui.button.icon/default
@@ -166,13 +169,7 @@ Source master:
 assets/visual/ui/v0.1/icon_button.svg
 ```
 
-Source rendition declaration:
-
-```text
-assets/catalog/shared_visuals_v1_source.toml
-```
-
-Expected generated runtime file after `make visual-assets`:
+Generated runtime file:
 
 ```text
 assets/visual/runtime/v1/ui/icon_button.png
@@ -187,21 +184,17 @@ src/greia_launcher/child_shell.py
 
 `SharedUiNavigationChromeMixin` reuses the same tactile circular icon-button frame for Shell-local navigation while leaving semantics/hit authority in the existing launcher:
 
-1. **mandatory runtime consumer:** in-category local Back control;
-2. Activity collection up/down scroll controls when a real collection requires scrolling;
-3. profile previous/next page controls when real profile pagination exists.
+1. **in-category local Back control:** circular tactile frame with directional arrow and gold hover lift;
+2. **Activity collection up/down scroll controls:** multi-page scrolling with responsive alignment and hover states;
+3. **profile previous/next page controls:** shared in mixin (recorded as `SOURCE / NOT EXERCISED` when profile count <= 4).
 
-The visual layer keeps the original hit rectangles. Hover is only a tiny visual lift plus accent-arrow treatment. A bad/missing `ui.button.icon` disables only this shared navigation treatment and falls back to the existing primitive controls; panel/cards/categories/profile/feedback remain independent.
-
-This does **not** replace protected Activity system Home/Back chrome.
-
-Current evidence: **SOURCE**. No simulator PASS yet.
-
-Required protocol:
+Accepted protocol:
 
 ```text
 docs/testing/2026-08-21_V5_SHARED_NAVIGATION_CHROME_SIMULATOR.md
 ```
+
+All 6 responsive matrix viewports, in-category Back default/hover/click, activity scroll controls, corrupt PNG fallback, and 27.1 FPS frame sanity passed with evidence in `tmp/v5-navigation-simulator-evidence/`.
 
 ---
 
@@ -209,21 +202,14 @@ docs/testing/2026-08-21_V5_SHARED_NAVIGATION_CHROME_SIMULATOR.md
 
 ```text
 1. sync current main
-2. run make visual-assets
-3. confirm assets/visual/runtime/v1/ui/icon_button.png and generated catalogue entry
-4. start Activity Simulator with GREIA_SIMULATOR_HEADLESS=1 using an isolated state root
-5. run docs/testing/2026-08-21_V5_SHARED_NAVIGATION_CHROME_SIMULATOR.md
-6. mandatory: inspect in-category Back default/hover/click behavior
-7. exercise Activity scroll/profile pagination only if legitimately reachable; otherwise record NOT EXERCISED
-8. verify corrupt icon-button PNG falls back only navigation chrome
-9. run full 6-row responsive matrix for the in-category Back control
-10. record frame-count sanity
-11. fix only shared/root causes
-12. update plan/resume/HANDOVER/LOCAL_AGENT_RESULT.md
-13. commit and push accepted work to canonical main
+2. continue to another coherent product-visible shared surface or the Web semantic adapter
+3. preserve headless simulator testing (GREIA_SIMULATOR_HEADLESS=1) so local work is non-intrusive
+4. run full responsive matrix and fail-soft verification
+5. update plan/resume/HANDOVER/LOCAL_AGENT_RESULT.md
+6. commit and push accepted work to canonical main
 ```
 
-After this gate, continue to another coherent product-visible shared surface or the Web semantic adapter. Do not create a new environment pack without a concrete reusable gap.
+Do not create a new environment pack without a concrete reusable gap.
 
 ---
 
@@ -255,11 +241,6 @@ docs/testing/2026-08-20_V5_SHARED_UI_PANEL_SIMULATOR.md
 docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md
 docs/testing/2026-08-21_V5_SHARED_PROFILE_IDENTITY_SIMULATOR.md
 docs/testing/2026-08-21_V5_SHARED_FEEDBACK_SIMULATOR.md
-```
-
-Current pending protocol:
-
-```text
 docs/testing/2026-08-21_V5_SHARED_NAVIGATION_CHROME_SIMULATOR.md
 ```
 

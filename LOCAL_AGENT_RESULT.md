@@ -448,4 +448,76 @@ All acceptance was performed through the Greia Activity Simulator in headless mo
 - **No Physical Hardware / Acer Performance Claim:** Verified through Activity Simulator only (`SIMULATOR VISUAL REVIEW`).
 - **No R7 Architecture Closure:** Display coordinator and session boundary remain open.
 
+---
+
+# Greia V5 Shared Navigation Chrome — Simulator Acceptance Result
+
+**Date:** 2026-08-21  
+**Repository:** `frozenpepper/Greia` (`main`)  
+**Runbook Authority:** `docs/testing/2026-08-21_V5_SHARED_NAVIGATION_CHROME_SIMULATOR.md`  
+**Consumers:** `ui.button.icon` (`default`)  
+**Evidence Class:** `SIMULATOR VISUAL REVIEW`  
+
+---
+
+## 1. Git & Commit Summary
+
+- **Start Base SHA:** `eac4dcddfa430117b8986ad5f86c16fd299eaa40`
+- **Head SHA:** (Current working tree)
+
+---
+
+## 2. Generated Renditions & Integration Details
+
+- **Generated Runtime Files:**
+  - `assets/visual/runtime/v1/ui/icon_button.png` (180x180)
+- **Catalogue Verification:** Entry present in generated `assets/catalog/shared_visuals_v1.toml`.
+- **Implementation Mixin:** `SharedUiNavigationChromeMixin` in `src/greia_launcher/navigation_chrome_presentation.py` mixed into `GreiaChildShell`.
+- **Integrated Surfaces & Behavior:**
+  1. **In-Category Back Control:** Circular tactile `ui.button.icon` frame housing clear directional back-arrow, aligned beside active-profile switcher and category title without changing hit geometry or replacing protected Home/Back semantics. Hover produces crisp gold lift/accent.
+  2. **Activity Scroll Controls:** Directional `ui.button.icon` frames housing up/down arrows for multi-page catalogue navigation, with hover highlights and responsive positioning.
+  3. **Profile Pagination:** Uses the same `ui.button.icon` family (recorded as `SOURCE, NOT EXERCISED` when profile count $\le 4$).
+  4. **Headless Mode Confirmation:** 100% verified via `GREIA_SIMULATOR_HEADLESS=1` and SDL dummy driver without stealing focus.
+
+---
+
+## 3. Greia Simulator Acceptance Matrix
+
+All acceptance was performed through the Greia Activity Simulator in headless mode (`http://127.0.0.1:8767`) with isolated state root `$HOME/.greia-simulator-v5-navigation`:
+
+| Test # | Viewport | Interface Size | State | Result | Screenshot Evidence | Status File |
+|---|---|---|---|---|---|---|
+| **01** | 1024x600 | Normal | Baseline Catalogue Regression Check | **PASS** | `tmp/v5-navigation-simulator-evidence/01-catalogue.png` | `01-status.json` |
+| **02** | 1024x600 | Normal | In-Category Back Default | **PASS** | `tmp/v5-navigation-simulator-evidence/10-category-back-default.png` | N/A |
+| **03** | 1024x600 | Normal | In-Category Back Hover | **PASS** | `tmp/v5-navigation-simulator-evidence/11-category-back-hover.png` | N/A |
+| **04** | 1024x600 | Normal | Return to Root Catalogue | **PASS** | `tmp/v5-navigation-simulator-evidence/12-returned-catalogue.png` | mode: activities |
+| **05** | 1024x600 | Normal | Activity Scroll: Down Default | **PASS** | `tmp/v5-navigation-simulator-evidence/15-scroll-down-default.png` | N/A |
+| **06** | 1024x600 | Normal | Activity Scroll: Down Hover | **PASS** | `tmp/v5-navigation-simulator-evidence/16-scroll-down-hover.png` | N/A |
+| **07** | 1024x600 | Normal | Activity Scroll: Page 2 (Both Arrows) | **PASS** | `tmp/v5-navigation-simulator-evidence/17-scroll-page-2.png` | N/A |
+| **08** | 1024x600 | Normal | Activity Scroll: Up Hover | **PASS** | `tmp/v5-navigation-simulator-evidence/18-scroll-up-hover.png` | N/A |
+| **09** | 1024x600 | Normal | Activity Scroll: Return to Page 1 | **PASS** | `tmp/v5-navigation-simulator-evidence/19-scroll-page-1.png` | N/A |
+| **10** | 1024x600 | Normal | Fallback: Corrupt Icon-Button PNG | **PASS** | `tmp/v5-navigation-simulator-evidence/20-fallback-corrupt-icon-button.png` (primitive back/scroll controls used, panel/cards/buttons intact) | N/A |
+| **11** | 1024x600 | Normal | Profile Pagination Controls | **SOURCE, NOT EXERCISED** | Code shared in mixin; workspace profile count $\le 4$ | N/A |
+| **12** | 1024x600 | Normal | Responsive Matrix: 1024x600 Normal | **PASS** | `tmp/v5-navigation-simulator-evidence/30-1024x600-normal.png` | N/A |
+| **13** | 1024x600 | Large | Responsive Matrix: 1024x600 Large | **PASS** | `tmp/v5-navigation-simulator-evidence/31-1024x600-large.png` | N/A |
+| **14** | 1280x800 | Normal | Responsive Matrix: 1280x800 Normal | **PASS** | `tmp/v5-navigation-simulator-evidence/32-1280x800-normal.png` | N/A |
+| **15** | 1366x768 | Compact | Responsive Matrix: 1366x768 Compact | **PASS** | `tmp/v5-navigation-simulator-evidence/33-1366x768-compact.png` | N/A |
+| **16** | 1920x1080 | Normal | Responsive Matrix: 1920x1080 Normal | **PASS** | `tmp/v5-navigation-simulator-evidence/34-1920x1080-normal.png` | N/A |
+| **17** | 1111x700 | Normal | Responsive Matrix: 1111x700 Normal | **PASS** | `tmp/v5-navigation-simulator-evidence/35-1111x700-normal.png` | N/A |
+
+---
+
+## 4. Frame Rate & Performance Sanity
+
+- **Measurement:** 10-second idle measurement in in-category screen.
+- **Frames Rendered:** 271 frames across 10.01 seconds (**27.1 FPS**, steady clock performance).
+- **Status Evidence:** `tmp/v5-navigation-simulator-evidence/frame-before.json` and `frame-after.json`.
+
+---
+
+## 5. Explicit Non-Claims
+
+- **No Physical Hardware / Acer Performance Claim:** Verified through Activity Simulator only (`SIMULATOR VISUAL REVIEW`).
+- **No R7 Architecture Closure:** Display coordinator and session boundary remain open.
+
 
