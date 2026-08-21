@@ -31,9 +31,10 @@ class PygameSceneRenderer:
 
     The renderer does not discover assets and does not rasterize source SVGs.
     Each scene node resolves through ``PygameVisualSurfaceCache``. Optional node
-    failures are isolated; required-node failures abort the scene draw so the
-    Activity can retain its own static/private fallback instead of presenting a
-    half-broken interaction surface as success.
+    failures are isolated and remembered for the renderer lifetime so a corrupt
+    decorative PNG does not trigger repeated disk decode/exception work every
+    frame. Required-node failures abort the scene draw so the Activity can retain
+    its own deliberate static/private fallback.
     """
 
     def __init__(
@@ -46,6 +47,7 @@ class PygameSceneRenderer:
         if pygame_module is None:
             import pygame as pygame_module
         self._pygame = pygame_module
+        self._failed_optional: set[tuple[str, str, int, int]] = set()
 
     @classmethod
     def for_activity(
@@ -74,6 +76,7 @@ class PygameSceneRenderer:
 
     def clear(self) -> None:
         self.visual_cache.clear()
+        self._failed_optional.clear()
 
     def draw(
         self,
@@ -118,6 +121,16 @@ class PygameSceneRenderer:
                 culled += 1
                 continue
 
+            optional_failure_key = (
+                node.asset_id,
+                node.variant,
+                rect.width,
+                rect.height,
+            )
+            if node.optional and optional_failure_key in self._failed_optional:
+                skipped += 1
+                continue
+
             try:
                 surface = self.visual_cache.get(
                     node.asset_id,
@@ -134,6 +147,7 @@ class PygameSceneRenderer:
                 self._pygame.error,
             ) as exc:
                 if node.optional:
+                    self._failed_optional.add(optional_failure_key)
                     skipped += 1
                     continue
                 raise SceneRenderError(
