@@ -3,269 +3,339 @@
 **Status:** active architecture clarification  
 **Date:** 2026-08-21  
 **Parent visual authority:** `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`  
-**Practical authoring skill:** `skills/greia-visual-authoring/SKILL.md`
+**Practical user-agent skill:** `skills/greia-visual-authoring/SKILL.md`
 
-## 1. Core correction
+## 1. Purpose
 
-Greia's shared visual system must **not** become a giant runtime warehouse containing every finished tree, cave, bush, hollow, reed cluster, room prop, etc. That would be repetitive, impossible to cover exhaustively, visually boring, and contrary to the original goal.
+This document separates two concerns that must not be conflated:
 
-The shared visual library is primarily an **authoring-time system** for the model/agent creating a Greia Activity.
+1. **maintaining Greia's bundled base art packs**, including deciding who or what creates the best pack artwork;
+2. **teaching arbitrary Activity-authoring agents how to use those packs well**, including when to reuse, compose, adapt, or create original Activity-local artwork.
 
-The authoring agent should be able to:
+The recent local-agent art benchmarks belong only to the first concern. They are **not evidence about the capabilities of arbitrary future user agents**, and their model-specific strengths or weaknesses must not become Greia architecture.
 
-- read Greia's visual style and construction rules;
-- inspect reference assets and examples;
-- reuse primitives and reusable construction pieces;
-- reuse recipes and best practices;
-- reuse a finished shared asset only when it genuinely fits;
-- compose, adapt, derive and create new bespoke artwork for the specific Activity.
+The stable product goal is:
 
-The finished Activity then ships its own composed assets, while the Greia runtime renders them efficiently.
-
-The intended principle is:
-
-> **coherence through shared style, grammar, primitives and recipes — variety through Activity-specific authored assets.**
+> **Greia ships strong, varied, reusable visual art packs; a model-agnostic visual-authoring skill teaches Activity authors how to exploit those packs and how to create coherent original art when the packs do not directly contain what the Activity needs.**
 
 ---
 
-## 2. Four-layer architecture
+## 2. Two separate tracks
 
-### Layer A — Greia Visual Authoring Kit
+### Track A — Base Art Pack Production and Curation
 
-The Authoring Kit is the shared source-level creative toolkit used by Activity-authoring models/agents.
+This is a Greia maintainer/content-production concern.
 
-It should contain:
+Greia needs excellent bundled visual material covering useful recurring domains such as:
 
-- visual style rules and visual grammar;
-- palette families and color-shading guidance;
-- material rules for wood, foliage, bark, water, rock, cloth, light and shadow;
-- excellent example finished assets;
-- reusable source primitives and pieces such as:
-  - trunk sections;
-  - canopy/leaf clusters;
-  - branches;
-  - foliage clumps;
-  - bark patches/details;
-  - hollows/openings;
-  - rock pieces;
-  - flowers/mushrooms;
-  - grass/ground edges;
-  - roof/window/door pieces;
-  - shadows/highlights/glow pieces;
-- composition recipes and best practices such as:
-  - how to build a readable Greia tree;
-  - how to make an interactive hollow tree;
-  - how to make a readable bush hiding spot;
-  - how to build a kid-friendly prop silhouette;
-  - how to construct a scene-safe contact shadow;
-  - how to preserve material richness without visual noise.
+- Forest / Meadow;
+- Workshop;
+- Clinic / Care;
+- Reading / Classroom;
+- Fantasy / Village / Night;
+- Water / Pond;
+- Shared UI;
+- canonical characters, FX, lighting, shadows, and other cross-Activity families.
 
-This layer is primarily an **authoring aid**, not a promise that every piece is directly rendered at runtime.
+The current owner's local agent was benchmarked because it might be able to **re-author these packs at higher visual quality than the earlier baseline**. That experiment answers only questions such as:
 
-### Layer B — Shared Runtime Assets
+- can this maintainer-side agent produce stronger tree, bush, rock, cloud, room-prop, water, UI, or FX masters than the existing ones?
+- is its output worth promoting into Greia's bundled packs?
+- which pack families should be re-authored first?
 
-This is a deliberately small canonical runtime-shared set.
+It does **not** answer:
 
-Appropriate examples:
+- whether other people's Activity-authoring agents can produce the same quality;
+- whether another model will follow the same recipes;
+- whether future agents should be taught the local agent's exact SVG techniques;
+- whether one repeatedly refined hero tree is a useful proxy for general Activity authoring.
 
-- Shell UI assets such as cards, panels, buttons, portal/profile frames, loading/error/empty-state art;
-- canonical recurring characters where a globally recognizable identity is desired;
-- generic FX/support assets such as contact shadows, fog strips, sunlight rays, shimmer and common particle sprites;
-- a limited number of environment support assets that are truly generic.
+Those are different questions.
 
-This set must remain curated. It is not the home for every Activity-specific tree, cave, house or game prop.
+#### 2.1 Pack-production rule
 
-### Layer C — Activity Visual Package
+Base-pack work should be evaluated **pack-by-pack**, not by endlessly optimizing one specimen.
 
-This is bespoke source art created for one Activity.
+A useful maintainer-side pack pass should:
 
-For example, *Nascondino nel Bosco* may need:
+1. preserve the existing pack as provenance/baseline;
+2. recreate or improve the pack's representative masters;
+3. preserve useful role coverage and composability;
+4. provide comparison sheets and representative compositions;
+5. test important runtime sizes;
+6. undergo owner pixel review;
+7. promote only the accepted results.
 
-- a big old hollow tree;
-- a berry hiding bush;
-- a rock/burrow hiding spot;
-- a pond/reed hiding spot;
-- a tall perch tree;
-- bespoke animal visuals;
-- clue/found-state artwork.
+A single asset may receive a correction pass when a clear defect is exposed, but the workstream must not turn into indefinite per-object optimization.
 
-The Activity-authoring agent should:
+---
 
-1. inspect the Authoring Kit;
-2. reuse relevant style, primitives and recipes;
-3. reuse exact finished assets only where they genuinely fit;
-4. create the missing Activity-specific final artwork.
+### Track B — Activity Visual Authoring Skill
 
-Example Activity-local sources:
+This is the **user/developer-facing Greia capability**.
+
+The skill must be useful to a broad range of Activity-authoring agents. It must not assume:
+
+- a specific model family;
+- the owner's local agent;
+- SVG expertise;
+- access to image generation;
+- access to a professional artist;
+- one fixed asset-generation technique.
+
+Instead, it teaches a decision process around the visual resources Greia already ships.
+
+An Activity-authoring agent should be able to:
+
+1. inspect the available art packs and their metadata/previews;
+2. understand the Greia style and runtime constraints;
+3. identify what the Activity visually needs;
+4. reuse a finished pack asset when it genuinely fits;
+5. compose or adapt existing pack pieces when that produces a bespoke result efficiently;
+6. create a new Activity-local asset when no existing asset is a good match;
+7. keep the new art coherent with Greia by following pack references, palette/material guidance, typography, lighting, grounding and interaction-readability rules;
+8. flatten rich authoring-time work into efficient runtime assets;
+9. integrate through Greia's existing package/scene/runtime boundaries rather than inventing a parallel image system;
+10. visually inspect the finished Activity at target sizes.
+
+The skill is therefore about **using the art ecosystem intelligently**, not about turning every future agent into the local agent that happened to create some base-pack masters.
+
+---
+
+## 3. The Greia visual resource model
+
+### 3.1 Bundled Art Packs
+
+These are curated Greia-provided visual resources.
+
+A pack may contain a mixture of:
+
+- polished finished reusable assets;
+- reusable sub-elements/primitives;
+- reference compositions;
+- source masters;
+- material/style notes;
+- semantic role metadata;
+- recommended size/composition/parallax/lighting guidance.
+
+Not every asset is intended to be used literally in every Activity.
+
+Examples:
 
 ```text
-activities/nascondino_bosco/art/src/hollow_tree.svg
-activities/nascondino_bosco/art/src/berry_bush.svg
-activities/nascondino_bosco/art/src/rock_burrow.svg
+hero tree
+secondary tree
+bush
+rock cluster
+fallen log
+cloud
+fog strip
+sunlight shaft
+workbench
+bookcase
+lamp
+window
+pond edge
+reeds
+panel frame
+contact shadow
 ```
 
-Another Activity can create a different tree using the same visual language and some of the same primitive ingredients. This gives Greia coherence without cloning the same scenery everywhere.
+### 3.2 Shared Runtime Assets
 
-### Layer D — Runtime Scene System
+A small subset genuinely benefits from direct canonical runtime reuse, especially:
 
-The runtime consumes both:
+- Shell/UI frames and controls;
+- canonical recurring characters where identity consistency matters;
+- generic shadows, light/atmosphere overlays and FX;
+- other resources whose sameness is desirable rather than boring.
 
-- Shared Runtime Assets;
-- Activity Visual Package assets.
+These use Greia's explicit semantic catalogue/runtime rendition architecture.
 
-through one semantic rendering architecture.
+### 3.3 Activity-local Visual Assets
 
-It handles:
+An Activity is expected to own bespoke art when its design requires it.
 
-- responsive placement;
-- z/layer ordering;
-- parallax;
-- cheap ambient motion;
-- light/atmosphere passes;
-- bounded caching;
-- fail-soft behavior.
-
-The runtime should not care whether the source asset was created entirely from scratch, derived from shared primitives, or directly reused from the shared runtime set.
-
----
-
-## 3. The correct meaning of reuse
-
-Reuse is not only “render the exact same PNG again.”
-
-Greia supports several levels of reuse:
-
-1. **Style reuse** — the same visual language.
-2. **Grammar reuse** — the same construction/readability rules.
-3. **Primitive reuse** — leaf clusters, bark elements, shadows, highlights, etc.
-4. **Recipe reuse** — a proven method for constructing a prop or scene element.
-5. **Finished-asset reuse** — the exact same completed asset, when appropriate.
-
-For environment props, the first four are often more important than literal finished-asset reuse.
-
-For Shell UI, literal finished-asset reuse is normally desirable.
-
-For canonical characters, identity consistency is normally more important than environmental variety.
-
----
-
-## 4. Why this is viable
-
-This architecture combines:
-
-- **variety** — each Activity can have bespoke artwork;
-- **coherence** — all artwork derives from shared Greia rules and ingredients;
-- **scalability** — the project does not need to predict every possible tree or prop;
-- **performance** — target devices consume flattened final renditions, not hundreds of source fragments;
-- **quality** — authoring effort is spent on what the actual Activity needs.
-
-It also avoids the failed middle state where the shared system upgrades only the background while primitive programmer-drawn gameplay assets remain visually incompatible.
-
----
-
-## 5. Authoring-time richness, runtime economy
-
-The authoring process may be compositionally rich:
+Examples:
 
 ```text
-trunk
-+ branch pieces
-+ canopy groups
-+ bark details
-+ hollow
-+ highlights
-+ shadows
+activities/my_activity/assets/hollow_tree.png
+activities/my_activity/assets/special_machine.png
+activities/my_activity/assets/alien_flower.png
+activities/my_activity/assets/animal_fox.png
 ```
 
-but the build process should flatten that authored composition into one or a few efficient runtime renditions.
+The exact source-work area may include SVG, large transparent PNG, or other approved authoring-time representation. Runtime artifacts must follow Greia package and renderer constraints.
+
+Activity-local visual assets are **not automatically promoted** to the shared library.
+
+### 3.4 Authoring references and guidance
+
+The packs and style guides provide visual references and practical rules. They help an agent answer questions such as:
+
+- what color/value language does Greia use?
+- how is wood or rock shaded?
+- how much detail survives at child-facing sizes?
+- how are objects grounded?
+- how should an interactive prop separate from decorative scenery?
+- how much atmosphere is appropriate?
+
+These are guidance, not rigid geometric templates.
+
+---
+
+## 4. The core Activity-authoring decision
+
+For each important visual object, an agent should choose one of three paths.
+
+### A. REUSE
+
+Use an existing finished pack asset directly when it already fits the Activity well.
+
+Examples:
+
+- a generic cloud;
+- a contact shadow;
+- a standard UI card;
+- canonical Lilli;
+- a generic rock cluster that genuinely suits the composition.
+
+### B. COMPOSE / ADAPT
+
+Use available assets or sub-elements as ingredients for a new Activity-specific result.
+
+Examples:
+
+- use a tree/trunk/foliage language from Forest/Meadow to construct a distinct hiding tree;
+- combine generic pond-edge, reeds, rocks and lighting into a bespoke interactive pond area;
+- reuse a workshop shelf form but alter contents, proportions and detail for a science Activity.
+
+This happens at authoring time. The finished result should normally become one or a few efficient Activity-local runtime assets rather than hundreds of separately rendered fragments.
+
+### C. CREATE ORIGINAL
+
+Create a new Activity-local asset when the existing library does not contain a suitable basis.
+
+Examples:
+
+- a telescope mechanism unique to an astronomy game;
+- a fantasy musical machine;
+- a special animal pose;
+- an unusual puzzle prop;
+- an alien plant.
+
+The new asset should use Greia's style references and quality rules, but it does not need to resemble an existing pack object.
+
+The critical rule is:
+
+> **never force an unsuitable shared asset merely to claim reuse, and never keep ugly programmer-drawn primitives merely because the exact finished prop was not already in the pack.**
+
+---
+
+## 5. Coherence without sameness
+
+Greia does not want every forest to contain the same tree or every room to contain the same shelf.
+
+Coherence comes from:
+
+- palette/value relationships;
+- line/edge language;
+- material treatment;
+- lighting direction and softness;
+- grounding/contact behavior;
+- child-readable silhouettes;
+- typography/UI conventions;
+- character language;
+- compatible depth/parallax/motion treatment.
+
+Variety comes from:
+
+- different silhouettes;
+- different proportions;
+- different arrangements;
+- Activity-specific details;
+- newly created assets;
+- selective rather than universal literal reuse.
+
+---
+
+## 6. Authoring-time richness, runtime economy
+
+Greia can tolerate rich source construction on a development machine but must remain cheap on the target appliance.
 
 Therefore:
 
 > **rich composition at authoring time; economical composition at runtime.**
 
-The runtime compositor should handle meaningful scene objects/layers, not hundreds of individual leaf fragments.
+An agent may construct an asset using multiple pieces, layers or source techniques, then flatten it into an efficient runtime PNG/WebP or other approved target representation.
+
+The low-end runtime must not be required to:
+
+- rasterize normal SVG masters;
+- scan source packs dynamically;
+- decode many fragments every frame;
+- run heavyweight composition software;
+- recreate authoring-time layer graphs.
+
+The existing semantic catalogue, bounded visual cache and scene compositor remain the runtime foundation.
 
 ---
 
-## 6. Promotion loop
+## 7. Visual review responsibility
 
-Activity-created artwork must not automatically flood the shared library.
+The producing agent's prose is not visual evidence.
 
-A new local asset or primitive may be promoted only when it proves genuinely general and reusable.
+For meaningful visual work:
 
-Promotion flow:
+- review the actual rendered pixels;
+- inspect important assets individually;
+- inspect the complete Activity composition;
+- test representative child-facing sizes;
+- reject clipping, tiny text, floating objects, bad grounding, inconsistent lighting, obvious style mismatch and broken hierarchy;
+- when owner review is required, package curated PNG evidence into the required transfer ZIP.
+
+The specific evidence contract lives in:
 
 ```text
-Activity-local derived asset
+docs/testing/VISUAL_ACCEPTANCE_EVIDENCE_CONTRACT.md
+```
+
+---
+
+## 8. Promotion loop
+
+An Activity-local asset or newly produced pack candidate may be promoted only when it has demonstrated broad value.
+
+```text
+candidate/local asset
 → visual review
-→ demonstrated general value
-→ deliberate promotion into Authoring Kit or Shared Runtime Assets
+→ demonstrated reusable value
+→ deliberate promotion into a bundled Art Pack or Shared Runtime Assets
 ```
 
-Examples that might deserve promotion:
-
-- a useful generic hollow-opening primitive;
-- a new contact-shadow treatment;
-- a high-value foliage cluster;
-- a reusable decorative frame;
-- a generic interaction highlight.
-
-This lets the library grow organically from real needs.
+Do not automatically turn every Activity-specific object into a global asset.
 
 ---
 
-## 7. Activity-authoring workflow
+## 9. Current maintainer-side benchmark conclusion
 
-For a new or visually migrated Activity, the authoring agent should:
+The 2026-08-21 comparison established one narrow but useful result:
 
-1. identify the important visible objects the Activity genuinely needs;
-2. read the Greia visual style/authoring authorities;
-3. inspect/search the Authoring Kit for relevant finished assets, primitives and recipes;
-4. reuse an exact finished asset only when it truly fits;
-5. otherwise compose/modify primitives and create missing bespoke artwork;
-6. visually review important newly authored assets individually;
-7. assemble the Activity scene from accepted assets;
-8. add suitable depth, grounding, lighting, parallax and ambient motion;
-9. build source art into low-cost runtime renditions;
-10. register those final assets in an Activity-local semantic catalogue/package;
-11. test the complete Activity visually through the Activity Simulator;
-12. promote newly created pieces to the shared kit only if they have demonstrated broad reuse value.
+- the owner's local authoring agent can produce stronger Forest/Meadow source assets than the earlier baseline in several representative cases.
 
-The Activity remains authoritative for game logic, state, hit testing, scoring and progression. The visual authoring/runtime systems provide coherent artwork and presentation infrastructure.
+Subsequent tree/Authoring-Kit iterations became too specimen-focused and are **not architectural evidence about arbitrary future Activity agents**.
 
----
+The correct continuation is:
 
-## 8. Nascondino lesson
+1. stop hero-tree optimization as a workstream;
+2. use the local agent, where helpful, to improve Greia's **base art packs** pack-by-pack;
+3. independently develop and maintain the **model-agnostic Activity visual-authoring skill** in `skills/greia-visual-authoring/SKILL.md`;
+4. validate that skill later with multiple agents/models as a separate compatibility effort.
 
-The first Scene Compositor integration in *Nascondino nel Bosco* proved useful runtime plumbing, but it also exposed the architectural distinction this document formalizes:
-
-- shared environment/background art improved;
-- old primitive gameplay props and animals remained;
-- the result looked like two visual systems glued together.
-
-That is not a complete visual migration.
-
-A proper migration should use the Authoring Kit to create bespoke Nascondino final assets for its hiding spots, animals and other major gameplay visuals, while continuing to use the shared runtime compositor and semantic asset pipeline.
-
----
-
-## 9. Current open question: who should create the base Authoring Kit?
-
-Before expanding the library further, Greia should compare the quality of the current authored base assets against a fresh high-ambition set produced by the local authoring agent.
-
-The immediate benchmark therefore asks the local agent to recreate/reinterpret representative current visual assets at **extremely high quality**, then produce comparative screenshots for independent owner review.
-
-The purpose is not to automatically replace the existing library. It is to learn:
-
-- who produces the stronger base assets;
-- which asset families the local agent handles best;
-- whether its work is suitable for Authoring Kit primitives/references;
-- whether the project should rely more heavily on the local agent for future source-art generation.
-
-Exact runbook:
+Maintainer-side pack plan:
 
 ```text
-docs/testing/2026-08-21_VISUAL_AUTHORING_LIBRARY_COMPARISON.md
+docs/plans/2026-08-21_BASE_ART_PACK_REAUTHORING.md
 ```
 
-No result from that benchmark is accepted until the owner has received the generated visual-review ZIP and independently inspected the pixels.
+The local agent's personal strengths are an implementation detail of pack production, not a dependency of Greia Activity authoring.
