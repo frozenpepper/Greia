@@ -12,16 +12,18 @@
 
 # 1. Resume order
 
-For a new visual-workstream session read:
+Read, in order:
 
 ```text
 1. AGENTS.md
 2. docs/design/GREIA_ART_GRAPHICS_SYSTEM.md
-3. docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md
-4. this file
-5. HANDOVER.md
-6. skills/greia-visual-authoring/SKILL.md
-7. exact source files for the current gate
+3. docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md
+4. docs/design/GREIA_LAUNCHER_INTERACTION_AND_ACTIVITY_CATALOGUE.md
+5. docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md
+6. this file
+7. HANDOVER.md
+8. skills/greia-visual-authoring/SKILL.md
+9. exact source files for the current gate
 ```
 
 Do not resume from chat memory alone.
@@ -48,19 +50,7 @@ Non-negotiables:
 - visual work must not deepen provisional X11 coupling or bypass protected platform Home/Back authority;
 - no new environment pack merely to keep producing assets.
 
-Broad reusable source coverage already exists under:
-
-```text
-assets/visual/environments/forest_meadow/v0.2/
-assets/visual/ui/v0.1/
-assets/visual/environments/workshop/v0.1/
-assets/visual/environments/clinic/v0.1/
-assets/visual/environments/reading_classroom/v0.1/
-assets/visual/environments/fantasy_village_night/v0.1/
-assets/visual/environments/water_pond/v0.1/
-```
-
-Core characters remain Lilli, Nino, Tito and Momo in the accepted Puff/Bean constraint-native direction. Character minutiae do not block V5.
+Broad reusable source coverage already exists under the Forest/Meadow, Shared UI, Workshop, Clinic, Reading/Classroom, Fantasy/Village/Night and Water/Pond packs. Core characters remain Lilli, Nino, Tito and Momo in the accepted Puff/Bean direction. Character minutiae do not block V5.
 
 ---
 
@@ -95,24 +85,90 @@ ui.button.icon       SIMULATOR VISUAL REVIEW
 ui.empty.basket      SOURCE (NOT EXERCISED)
 ```
 
-The latest accepted navigation chrome run confirmed:
-
-- in-category Back control using circular tactile `ui.button.icon` with clean gold lift/accent on hover;
-- activity collection multi-page up/down scroll controls using `ui.button.icon`;
-- isolated corrupt-PNG fail-soft fallback;
-- headless simulator execution;
-- 6-row responsive matrix review;
-- 271 frames / 10.01 s = 27.1 FPS simulator sanity.
-
-No physical Acer/Pi performance claim and no R7 closure.
+Latest accepted navigation-chrome evidence: in-category Back, Activity scroll controls, fail-soft corrupt-PNG fallback, all 6 responsive rows, and 271 frames / 10.01 s = 27.1 FPS in headless Activity Simulator. No physical Acer/Pi claim and no R7 closure.
 
 ---
 
-# 4. Accepted Shell composition details
+# 4. Major product-direction correction now in source
 
-Current visual composition owners:
+The normal child Shell is no longer supposed to keep polishing the temporary **All Activities + category filter row** as the final information architecture.
+
+Accepted product authority is Collection-first:
 
 ```text
+profile
+  → Greia Home
+    → primary Collection
+      → Activity
+```
+
+with at most one future optional sub-Collection layer when a large effective catalogue actually benefits from it.
+
+Current source now begins that migration through:
+
+```text
+src/greia_launcher/collection_home_presentation.py
+src/greia_launcher/child_shell.py
+```
+
+`CollectionFirstHomeMixin` treats `ALL_ACTIVITIES_ID` as an internal projection only. At launcher root it renders the available non-empty primary Collections as large destinations; entering one reuses the already-accepted Activity card/panel/navigation path; local Back returns to Collection Home; root Back returns to profile choice.
+
+The new shared visual candidate is:
+
+```text
+ui.portal.frame/default
+```
+
+from:
+
+```text
+assets/visual/ui/v0.1/portal_frame.svg
+```
+
+with explicit runtime rendition target:
+
+```text
+assets/visual/runtime/v1/ui/portal_frame.png
+```
+
+This Collection-first Home implementation is **SOURCE only** until the dedicated Activity Simulator protocol passes.
+
+---
+
+# 5. Current exact gate
+
+Run:
+
+```text
+docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md
+```
+
+Required sequence:
+
+```text
+1. sync current main
+2. make visual-assets
+3. verify ui.portal.frame exists in generated catalogue
+4. run the protocol with GREIA_SIMULATOR_HEADLESS=1
+5. verify normal Home shows Collections, not the All-Activities wall
+6. verify keyboard/pointer Collection navigation
+7. verify Collection → Activity → return → local Back hierarchy
+8. verify multi-membership where current catalogue permits
+9. corrupt only portal_frame.png and verify Collection-first fallback remains usable
+10. run the full 6-row responsive matrix and 10-second frame sanity
+11. fix only shared/root causes
+12. update result/product/design/plan/resume/HANDOVER
+13. commit and push accepted work to canonical main
+```
+
+Do **not** mark adaptive sub-Collections, age/development policy, Parent per-child visibility, Web semantic transport or physical hardware performance as implemented by this gate.
+
+---
+
+# 6. Current Shell composition owners
+
+```text
+src/greia_launcher/collection_home_presentation.py
 src/greia_launcher/shared_ui_presentation.py
 src/greia_launcher/profile_chrome_presentation.py
 src/greia_launcher/feedback_presentation.py
@@ -120,96 +176,31 @@ src/greia_launcher/navigation_chrome_presentation.py
 src/greia_launcher/child_shell.py
 ```
 
-Important accepted relationships:
+Accepted existing relationships remain:
 
-- `ui.panel.base` uses the available vertical catalogue space beginning immediately below the category row (`panel_top=52..62`, `bottom_margin=4`) while preserving its authored 640:420 aspect ratio;
-- Activity layout consumes the panel's authored inner tray;
-- cards retain a prominent approximately 198–205 px scale where geometry permits;
-- `ui.card.activity/default|focused` preserves its authored 360:430 portrait ratio;
-- root categories use `ui.button.primary/default|hover`;
-- profile-picker identities and the active-profile switcher use `ui.avatar.frame/default`;
-- launch/error feedback is shared artwork with narrow independent fallbacks;
-- Shell-local navigation controls (in-category Back, multi-page scroll) use `ui.button.icon/default`;
-- headless simulator support is `--headless` / `GREIA_SIMULATOR_HEADLESS=1` using SDL dummy video/audio while still capturing the real Shell pixel buffer.
+- `ui.panel.base` provides the large Shell tray;
+- `ui.card.activity/default|focused` renders Activity cards inside Collections;
+- `ui.button.icon/default` provides local Back and scroll chrome;
+- `ui.avatar.frame/default` provides profile identity;
+- launch/error feedback uses shared artwork with narrow isolated fallbacks;
+- headless simulator mode is `--headless` / `GREIA_SIMULATOR_HEADLESS=1` using SDL dummy video/audio while retaining real pixel-buffer capture.
+
+The old `ui.button.primary` root category row remains accepted evidence for the previous presentation but is no longer the intended normal Home architecture once Collection-first Home is accepted.
 
 ---
 
-# 5. Activity semantic seam
+# 7. Activity semantic seam
 
-Python Activity shared-visual source API exists in:
-
-```text
-src/greia_platform/activity_api.py
-```
-
-with:
+Python Activity shared-visual source API remains:
 
 ```python
 get_shared_visual(asset_id, variant="default")
 get_shared_visual_path(asset_id, variant="default")
 ```
 
-`activities/shape_garden/main.py` remains the first source proof. It is **non-blocking** and must not displace visible Shell work again.
+in `src/greia_platform/activity_api.py`.
 
-Future Web Activity support must preserve semantic IDs/variants through a controlled URL/handle transport rather than exposing host filesystem paths.
-
----
-
-# 6. Completed gate — shared Shell navigation chrome
-
-Accepted consumer:
-
-```text
-ui.button.icon/default
-```
-
-Source master:
-
-```text
-assets/visual/ui/v0.1/icon_button.svg
-```
-
-Generated runtime file:
-
-```text
-assets/visual/runtime/v1/ui/icon_button.png
-```
-
-Implementation:
-
-```text
-src/greia_launcher/navigation_chrome_presentation.py
-src/greia_launcher/child_shell.py
-```
-
-`SharedUiNavigationChromeMixin` reuses the same tactile circular icon-button frame for Shell-local navigation while leaving semantics/hit authority in the existing launcher:
-
-1. **in-category local Back control:** circular tactile frame with directional arrow and gold hover lift;
-2. **Activity collection up/down scroll controls:** multi-page scrolling with responsive alignment and hover states;
-3. **profile previous/next page controls:** shared in mixin (recorded as `SOURCE / NOT EXERCISED` when profile count <= 4).
-
-Accepted protocol:
-
-```text
-docs/testing/2026-08-21_V5_SHARED_NAVIGATION_CHROME_SIMULATOR.md
-```
-
-All 6 responsive matrix viewports, in-category Back default/hover/click, activity scroll controls, corrupt PNG fallback, and 27.1 FPS frame sanity passed with evidence in `tmp/v5-navigation-simulator-evidence/`.
-
----
-
-# 7. Exact continuation sequence
-
-```text
-1. sync current main
-2. continue to another coherent product-visible shared surface or the Web semantic adapter
-3. preserve headless simulator testing (GREIA_SIMULATOR_HEADLESS=1) so local work is non-intrusive
-4. run full responsive matrix and fail-soft verification
-5. update plan/resume/HANDOVER/LOCAL_AGENT_RESULT.md
-6. commit and push accepted work to canonical main
-```
-
-Do not create a new environment pack without a concrete reusable gap.
+`activities/shape_garden/main.py` remains a non-blocking source proof. Do not let it displace visible Shell/product work again. Future Web Activity support must preserve semantic IDs/variants through a controlled URL/handle transport rather than exposing host filesystem paths.
 
 ---
 
@@ -217,23 +208,17 @@ Do not create a new environment pack without a concrete reusable gap.
 
 Owner-directed local runtime/visual/fallback/responsive acceptance uses the Greia Activity Simulator.
 
-Prefer non-intrusive local-agent execution:
+Prefer:
 
 ```bash
 GREIA_SIMULATOR_HEADLESS=1 python3 tools/greia_simulator.py --state-dir <isolated-state>
 ```
 
-Remote bridge remains local loopback only:
-
-```text
-http://127.0.0.1:8767
-```
-
-No Cloudflare/tunnel/hosted service belongs in the workflow. Do not query/run GitHub-hosted Actions unless the owner explicitly authorizes that specific use.
+Remote bridge remains local loopback only at `http://127.0.0.1:8767`. No Cloudflare/tunnel/hosted service belongs in this workflow. Do not query/run GitHub-hosted Actions without explicit owner authorization.
 
 ---
 
-# 9. Accepted simulator protocols
+# 9. Accepted protocols so far
 
 ```text
 docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md
@@ -244,18 +229,24 @@ docs/testing/2026-08-21_V5_SHARED_FEEDBACK_SIMULATOR.md
 docs/testing/2026-08-21_V5_SHARED_NAVIGATION_CHROME_SIMULATOR.md
 ```
 
+Current pending protocol:
+
+```text
+docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md
+```
+
 ---
 
 # 10. Rejected/drift directions
 
 Do not resume:
 
+- treating `All + filter tabs` as the final child Home;
+- filesystem-style nested folders;
+- deep taxonomies beyond one optional sub-Collection layer;
 - detailed traditional character rigs as default;
 - generated sprite sheets treated as production-ready;
-- fake expression overlays;
 - crude UI/background mockups;
-- decorative HTML presentations instead of real assets;
-- one-shot scene images as source architecture;
 - more environment packs without a real gap;
 - runtime SVG rendering on target devices;
 - arbitrary visual-directory discovery;
@@ -264,8 +255,7 @@ Do not resume:
 - unbounded caches;
 - simulator-only production branches;
 - per-resolution production forks;
-- broad exception swallowing;
-- proof-only Activities consuming the workstream after the Shell seam is already proven.
+- proof-only Activities consuming the workstream after the Shell seam is proven.
 
 ---
 
@@ -277,7 +267,14 @@ Stable visual architecture/index:
 docs/design/GREIA_ART_GRAPHICS_SYSTEM.md
 ```
 
-Current sequencing/history:
+Collection-first product/design authority:
+
+```text
+docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md
+docs/design/GREIA_LAUNCHER_INTERACTION_AND_ACTIVITY_CATALOGUE.md
+```
+
+Visual sequencing/history:
 
 ```text
 docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md
@@ -287,12 +284,6 @@ Practical visual authoring:
 
 ```text
 skills/greia-visual-authoring/SKILL.md
-```
-
-Simulator developer guide:
-
-```text
-docs/development/GREIA_ACTIVITY_SIMULATOR.md
 ```
 
 Project-wide state:
@@ -311,6 +302,4 @@ LOCAL_AGENT_RESULT.md
 
 # 12. End-of-session rule
 
-Update this file whenever the active visual phase, next action, runtime consumption, evidence boundary, blocker or testing rule materially changes.
-
-Chronology belongs in the active plan's append-only progress ledger. Stable architecture belongs in `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`. Project-wide continuation belongs in `HANDOVER.md`.
+Update this file whenever the active visual phase, next action, runtime consumption, evidence boundary, blocker or testing rule materially changes. Chronology belongs in the active plan; stable architecture belongs in `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`; project-wide continuation belongs in `HANDOVER.md`.
