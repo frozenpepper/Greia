@@ -1,0 +1,46 @@
+{
+  "task": "WORKSHOP_BASE_PACK_REAUTHORING",
+  "date": "2026-08-21",
+  "status": "CANDIDATE_PACK_READY_FOR_OWNER_REVIEW",
+  "baseline_directory": "assets/visual/environments/workshop/v0.1/",
+  "candidate_directory": "assets/visual/pack_candidates/workshop/2026-08-21/",
+  "review_directory": "docs/reviews/visual/2026-08-21_workshop-base-pack-reauthoring/",
+  "role_mappings": {
+    "workshop.workbench": "workbench.svg",
+    "workshop.shelf": "shelf.svg",
+    "workshop.paint.palette": "paint_palette.svg",
+    "workshop.brush.bundle": "brush_bundle.svg",
+    "workshop.pencil.cup": "pencil_cup.svg",
+    "workshop.blocks": "blocks.svg",
+    "workshop.storage.box": "storage_box.svg",
+    "workshop.paper.stack": "paper_stack.svg",
+    "workshop.rug": "rug.svg",
+    "workshop.desk.lamp": "desk_lamp.svg",
+    "workshop.window": "window.svg",
+    "workshop.window.light": "window_light.svg",
+    "workshop.paint.jars": "paint_jars.svg",
+    "workshop.wall.base": "wall_base.svg",
+    "workshop.floor.base": "floor_base.svg",
+    "workshop.stool": "stool.svg",
+    "workshop.pegboard": "pegboard.svg",
+    "workshop.easel": "easel.svg",
+    "workshop.pinboard.note": "pinboard_note.svg"
+  },
+  "ingredients": [
+    "ingredients/ingredient_wood_joint.svg",
+    "ingredients/ingredient_paint_dabs.svg",
+    "ingredients/ingredient_pinned_note.svg",
+    "ingredients/ingredient_light_shaft.svg"
+  ],
+  "review_sheets": [
+    "01-pack-overview-baseline.png",
+    "02-pack-overview-candidate.png",
+    "03-furniture-comparison.png",
+    "04-tools-creative-props-comparison.png",
+    "05-room-light-background-comparison.png",
+    "06-runtime-sizes.png",
+    "07-baseline-composition.png",
+    "08-candidate-composition.png",
+    "09-detail-crops.png"
+  ]
+}

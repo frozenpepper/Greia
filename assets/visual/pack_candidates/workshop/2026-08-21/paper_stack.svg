@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+<defs>
+  <filter id="pap-sh" x="-20%" y="-20%" width="140%" height="140%">
+    <feGaussianBlur stdDeviation="6"/>
+  </filter>
+  <linearGradient id="sheet-grad" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#FFFFFF"/>
+    <stop offset="80%" stop-color="#FAF6EE"/>
+    <stop offset="100%" stop-color="#EDE4D2"/>
+  </linearGradient>
+</defs>
+
+<!-- Ground Shadow -->
+<ellipse cx="200" cy="235" rx="140" ry="30" fill="#241B12" opacity="0.18" filter="url(#pap-sh)"/>
+
+<!-- Bottom Stack Block (Thickness) -->
+<rect x="90" y="115" width="220" height="110" rx="4" fill="#D8CEBD"/>
+
+<!-- Layered Stack Sheets (Offset Lines) -->
+<g stroke="#C0B4A0" stroke-width="1.5">
+  <line x1="90" y1="135" x2="310" y2="135"/>
+  <line x1="90" y1="155" x2="310" y2="155"/>
+  <line x1="90" y1="175" x2="310" y2="175"/>
+  <line x1="90" y1="195" x2="310" y2="195"/>
+  <line x1="90" y1="215" x2="310" y2="215"/>
+</g>
+
+<!-- Top Active Drawing Sheet (Slightly rotated with curled corner) -->
+<g transform="rotate(-3 200 150)">
+  <path d="M 85,90 L 305,90 L 305,205 L 105,205 L 85,185 Z" fill="url(#sheet-grad)" stroke="#D4C8B4" stroke-width="2"/>
+  <!-- Curled Corner Bottom-Left -->
+  <polygon points="85,185 105,205 105,185" fill="#E6DCC8" stroke="#D4C8B4" stroke-width="1.5"/>
+  <!-- Soft Pencil Sketch on top sheet -->
+  <path d="M 140,140 C 160,120 180,160 200,130 C 220,150 240,125 255,145" stroke="#9E9282" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.6"/>
+  <circle cx="160" cy="130" r="10" stroke="#9E9282" stroke-width="2" fill="none" opacity="0.5"/>
+</g>
+</svg>
