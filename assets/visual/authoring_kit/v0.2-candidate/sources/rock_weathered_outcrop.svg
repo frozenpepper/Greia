@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 256">
+<defs>
+  <filter id="rock-sh" x="-20%" y="-20%" width="140%" height="140%">
+    <feGaussianBlur stdDeviation="6"/>
+  </filter>
+  <linearGradient id="granite-lit" x1="0.2" y1="0" x2="0.8" y2="1">
+    <stop offset="0%" stop-color="#D5DFE2"/>
+    <stop offset="45%" stop-color="#A5B5BA"/>
+    <stop offset="100%" stop-color="#708286"/>
+  </linearGradient>
+  <linearGradient id="granite-shade" x1="0.1" y1="0" x2="0.9" y2="1">
+    <stop offset="0%" stop-color="#627478"/>
+    <stop offset="60%" stop-color="#3C4B4F"/>
+    <stop offset="100%" stop-color="#1E2A2C"/>
+  </linearGradient>
+  <linearGradient id="velvet-moss" x1="0.2" y1="0" x2="0.8" y2="1">
+    <stop offset="0%" stop-color="#9AE288"/>
+    <stop offset="50%" stop-color="#52BE55"/>
+    <stop offset="100%" stop-color="#2C8435"/>
+  </linearGradient>
+</defs>
+
+<!-- Ground Contact Shadows -->
+<ellipse cx="256" cy="228" rx="210" ry="18" fill="#1C2324" opacity="0.20" filter="url(#rock-sh)"/>
+<ellipse cx="256" cy="226" rx="170" ry="10" fill="#0F1415" opacity="0.35"/>
+
+<!-- 1. PRIMARY ASYMMETRICAL CRAG (Steep cliff on left, sloping down to low right ledge) -->
+<path d="M 52,226 L 42,165 L 75,95 L 145,45 L 235,38 L 325,65 L 415,115 L 465,175 L 472,226 Z" fill="url(#granite-shade)"/>
+
+<!-- 2. SUNLIT ANGULAR FACETS (Defined light-facing planes) -->
+<!-- Top Crest Plane -->
+<path d="M 75,95 L 145,45 L 235,38 L 325,65 L 305,95 L 210,85 L 125,110 Z" fill="url(#granite-lit)"/>
+<!-- Mid-Right Sloping Shelf Plane -->
+<path d="M 325,65 L 415,115 L 465,175 L 425,185 L 340,145 L 305,95 Z" fill="url(#granite-lit)"/>
+
+<!-- 3. NATURAL FRACTURE LINES & EROSION RIDGES -->
+<path d="M 145,45 L 125,110 L 105,180 L 98,226" stroke="#1E2A2C" stroke-width="2.5" fill="none" opacity="0.75"/>
+<path d="M 235,38 L 210,85 L 225,155 L 245,226" stroke="#1E2A2C" stroke-width="2.2" fill="none" opacity="0.75"/>
+<path d="M 325,65 L 305,95 L 340,145 L 365,226" stroke="#1E2A2C" stroke-width="2.5" fill="none" opacity="0.75"/>
+
+<!-- 4. INTEGRATED VELVET MOSS (Clinging along fractures and moisture ledges) -->
+<g fill="url(#velvet-moss)">
+  <!-- Moss on Top Ridge Peak -->
+  <path d="M 125,52 C 145,40 185,42 205,50 C 190,58 165,58 148,65 C 138,65 130,58 125,52 Z"/>
+  <path d="M 225,44 C 250,38 290,48 312,60 C 295,68 268,64 248,70 C 238,70 230,60 225,44 Z"/>
+  <!-- Moss on Mid Sloping Ledge -->
+  <path d="M 335,95 C 362,105 398,122 418,138 C 398,145 365,138 345,142 C 338,135 332,118 335,95 Z"/>
+  <!-- Moss along Fissure Base -->
+  <path d="M 102,175 C 118,170 142,175 152,185 C 138,190 118,190 108,192 C 102,192 100,185 102,175 Z"/>
+</g>
+</svg>
