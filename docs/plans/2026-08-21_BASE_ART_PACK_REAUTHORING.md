@@ -23,25 +23,48 @@ Do not conflate the two tracks again.
 
 ---
 
-## 2. What the completed work established
+## 2. Current established state
 
-The Forest/Meadow pack-scale comparison established that the local maintainer agent can produce a materially stronger environment toolbox than the earlier baseline overall.
+### Forest / Meadow
 
-Forest/Meadow v0.3 has now been selectively promoted with:
+Forest/Meadow v0.3 is promoted and closed for this content-authoring pass:
 
 ```text
-23 candidate roles
+23 reauthored candidate roles
 + 5 deliberately retained v0.2 roles
 + 2 preferred authoring ingredients
+= 28 promoted semantic roles
 ```
 
-The retained v0.2 roles demonstrate an important promotion rule: **a candidate does not win merely because it is newer.** Owner pixel review determines the strongest role-by-role toolbox.
+The retained legacy roles establish the first permanent promotion rule: **newer does not automatically win**. Owner pixel review determines the strongest role-by-role toolbox.
 
-The later v0.1/v0.2/v0.3/hero-tree experiment remains provenance only. No further hero-tree optimization is a milestone of this plan.
+### Workshop
 
-Workshop pack-scale reauthoring has also now demonstrated a stronger candidate family overall, but it exposed a second important rule: some candidate assets are not true replacements at all. A new open shelf is not the same authoring object as an old cubby shelf; an assembled block house is not the same authoring object as loose blocks.
+Workshop pack-scale reauthoring and bounded finalization are now owner/primary reviewed.
 
-Therefore pack promotion must preserve useful semantic variation instead of forcing replacement percentages.
+Promotion is authorized as:
+
+```text
+24 finished semantic assets
+= 14 direct candidate replacements
++ 5 retained baseline variants
++ 5 candidate coexistence variants
+
+2 preferred authoring ingredients
+0 unresolved roles
+```
+
+The five coexistence pairs establish the second permanent promotion rule: **the strongest toolbox may preserve both old and new assets when they are genuinely different useful objects or scale/use variants.**
+
+Workshop v0.2 still needs mechanical materialization via:
+
+```text
+docs/testing/2026-08-21_WORKSHOP_V02_PROMOTION.md
+```
+
+No more Workshop art refinement is authorized before promotion.
+
+The historical v0.1/v0.2/v0.3/hero-tree experiment remains provenance only. No further hero-tree optimization is a milestone of this plan.
 
 ---
 
@@ -63,13 +86,11 @@ The result should be a better toolbox for future Activity authors, not a giant l
 
 ## 4. Pack order
 
-Work pack-by-pack.
-
 Current order:
 
 1. **Forest / Meadow** — promoted as v0.3; content-authoring pass closed
-2. **Workshop** — reauthored candidate complete; finalization/promotion review active
-3. **Clinic / Care**
+2. **Workshop** — v0.2 promotion authorized; mechanical promotion pending
+3. **Clinic / Care** — next active art-production family
 4. **Reading / Classroom**
 5. **Fantasy / Village / Night**
 6. **Water / Pond**
@@ -81,8 +102,6 @@ Character packs are not part of this environment-pack reauthoring sequence unles
 ---
 
 ## 5. Per-pack workflow
-
-For each pack:
 
 ### 5.1 Preserve baseline
 
@@ -108,24 +127,11 @@ Individual fixes are allowed only for obvious defects discovered during visual r
 
 A pack should provide useful variation where literal reuse would otherwise become repetitive.
 
-Examples:
-
-```text
-more than one tree silhouette
-more than one bush/growth habit
-multiple rock/log/detail forms
-foreground and midground roles
-large and small room props
-quiet support pieces plus hero pieces
-```
-
 Do not manufacture dozens of near-duplicates merely to inflate the catalogue.
 
 ### 5.5 Distinguish replacement from useful coexistence
 
-Do not assume each candidate file must replace exactly one baseline file.
-
-For every old/new pair, decide whether the strongest toolbox outcome is:
+For every old/new relationship, decide whether the strongest toolbox outcome is:
 
 ```text
 CANDIDATE_REPLACES
@@ -134,37 +140,17 @@ KEEP_BOTH_DISTINCT
 UNRESOLVED
 ```
 
-`KEEP_BOTH_DISTINCT` is appropriate when old and new assets represent meaningfully different authoring objects or useful states, for example:
-
-```text
-open shelf vs cubby shelf
-loose blocks vs assembled block house
-simple compact lamp vs articulated studio lamp
-narrow light beam vs wide light shaft
-```
+`KEEP_BOTH_DISTINCT` is appropriate when old and new assets represent meaningfully different authoring objects or useful states/scale roles.
 
 When both survive, give them clear distinct semantic IDs. Do not keep ambiguous duplicate IDs.
 
-The promoted pack may contain more roles than the baseline if the added roles are genuinely useful. This is preferable to deleting useful variety merely to report a high replacement percentage.
+The promoted pack may contain more roles than the baseline if the added roles are genuinely useful.
 
 ### 5.6 Include authoring ingredients where valuable
 
-In addition to polished finished assets, a pack may include reusable source-level ingredients/reference pieces when they materially help Activity authors compose bespoke work.
+A pack may include a small curated set of reusable source-level ingredients/reference pieces when they materially help Activity authors compose bespoke work.
 
-Examples:
-
-- foliage clumps;
-- trunk/branch pieces;
-- stone/moss detail pieces;
-- grass/flower groups;
-- shelf/content pieces;
-- window-light overlays;
-- water/reed groups;
-- generic shadows/FX.
-
-These are authoring resources, not necessarily direct runtime objects.
-
-Promote ingredients selectively. A source fragment does not become useful merely because it was created during the pack pass.
+Promote ingredients selectively. A fragment does not become valuable merely because it was created during the pass.
 
 ### 5.7 Runtime-size review
 
@@ -182,7 +168,7 @@ A composition is evidence of pack coherence, not a substitute for individual ass
 
 ## 6. Visual quality requirement
 
-The local agent must aim high, but the project judges pixels rather than self-description.
+The project judges pixels rather than self-description.
 
 Target:
 
@@ -222,7 +208,7 @@ Required evidence should normally include:
 - representative runtime-size sheet;
 - baseline composition;
 - candidate/proposed composition;
-- explicit role/promotion map;
+- explicit role/promotion map where promotion is being proposed;
 - `REVIEW.md`;
 - machine-readable audit/manifest.
 
@@ -233,8 +219,6 @@ Owner/primary visual review determines promotion.
 ---
 
 ## 8. Promotion
-
-Do not automatically overwrite old packs after a candidate pass.
 
 Promotion flow:
 
@@ -252,17 +236,15 @@ Rejected assets remain provenance but are not exposed as preferred authoring ref
 
 Legacy assets may be copied into the new promoted pack when owner review deliberately retains them for a role or a distinct semantic variant.
 
+Source-pack promotion does not automatically mean every source asset becomes a shared runtime asset.
+
 ---
 
 ## 9. Relationship to the user-agent visual skill
 
 This track produces the **better toolbox**.
 
-The generic skill teaches arbitrary Activity-authoring agents **how to use the toolbox**.
-
-The skill must remain model-agnostic even if the owner's local agent happens to create much of the bundled artwork.
-
-The skill should teach:
+The generic skill teaches arbitrary Activity-authoring agents **how to use the toolbox**:
 
 ```text
 inspect pack
@@ -278,27 +260,17 @@ Do not encode local-agent-specific SVG tricks or benchmark behavior into the use
 
 ---
 
-## 10. Current exact action
+## 10. Current exact actions
 
-Forest/Meadow source promotion is complete as v0.3 and no longer consumes this content-authoring track.
-
-Workshop candidate review is recorded in:
+Execute in order:
 
 ```text
-docs/reviews/visual/2026-08-21_workshop-base-pack-reauthoring/PRIMARY_REVIEW.md
+1. docs/testing/2026-08-21_WORKSHOP_V02_PROMOTION.md
+2. docs/testing/2026-08-21_CLINIC_CARE_BASE_PACK_REAUTHORING.md
 ```
 
-The exact current maintainer-side task is:
+The Workshop task is mechanical promotion only.
 
-```text
-docs/testing/2026-08-21_WORKSHOP_PACK_FINALIZATION.md
-```
+The Clinic / Care task is the next real art-production pass and must work at complete-pack scale across the current 17-role baseline, with warm child-care art direction and the same strongest-toolbox promotion philosophy.
 
-This is one bounded pass to:
-
-- resolve brush bundle, paper stack and desk-lamp decisions;
-- preserve meaningful shelf/blocks/note/light variants;
-- select useful authoring ingredients;
-- produce an exact proposed Workshop v0.2 inventory and owner-review ZIP.
-
-After owner promotion review, materialize Workshop v0.2 and move immediately to Clinic/Care rather than reopening Workshop specimen optimization.
+After Clinic / Care owner review, perform at most one bounded finalization if actually necessary, promote the strongest reviewed toolbox, then move to Reading / Classroom.
