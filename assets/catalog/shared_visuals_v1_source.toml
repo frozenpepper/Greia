@@ -1,8 +1,8 @@
 catalog_id = "greia.shared-visuals.v1"
-catalog_version = "0.1.5"
+catalog_version = "0.2.0"
 status = "candidate-runtime-rendition-source"
 runtime_consumed = false
-notes = "Explicit build-time selection of shared SVG masters for raster runtime renditions. This file is not directory discovery."
+notes = "Explicit build-time selection of reviewed SVG masters for raster runtime renditions. This file is not directory discovery."
 
 [[visuals]]
 id = "ui.panel.base"
@@ -158,3 +158,187 @@ source = "visual/ui/v0.1/soft_shadow.svg"
 output = "visual/runtime/v1/ui/soft_shadow.png"
 width = 520
 height = 150
+
+# First environment/runtime scene family. These IDs are reused from the
+# reviewed Forest/Meadow source catalogue rather than inventing a parallel
+# runtime naming scheme.
+
+[[visuals]]
+id = "hills.distant.01"
+kind = "environment"
+role = "far_background"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/environments/forest_meadow/v0.2/distant_hills.svg"
+output = "visual/runtime/v1/forest_meadow/distant_hills.png"
+width = 1024
+height = 512
+
+[[visuals]]
+id = "treeline.distant.01"
+kind = "environment"
+role = "far_background"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/environments/forest_meadow/v0.2/distant_treeline.svg"
+output = "visual/runtime/v1/forest_meadow/distant_treeline.png"
+width = 1024
+height = 256
+
+[[visuals]]
+id = "cloud.large.01"
+kind = "environment"
+role = "far_background"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/environments/forest_meadow/v0.2/cloud_large.svg"
+output = "visual/runtime/v1/forest_meadow/cloud_large.png"
+width = 640
+height = 256
+
+[[visuals]]
+id = "cloud.small.01"
+kind = "environment"
+role = "far_background"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/environments/forest_meadow/v0.2/cloud_small.svg"
+output = "visual/runtime/v1/forest_meadow/cloud_small.png"
+width = 512
+height = 220
+
+[[visuals]]
+id = "tree.hero.01"
+kind = "environment"
+role = "foreground_framing"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/environments/forest_meadow/v0.2/tree_hero.svg"
+output = "visual/runtime/v1/forest_meadow/tree_hero.png"
+width = 512
+height = 512
+
+[[visuals]]
+id = "tree.secondary.01"
+kind = "environment"
+role = "midground_framing"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/environments/forest_meadow/v0.2/tree_secondary.svg"
+output = "visual/runtime/v1/forest_meadow/tree_secondary.png"
+width = 512
+height = 512
+
+[[visuals]]
+id = "bush.round.01"
+kind = "prop"
+role = "foliage"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/environments/forest_meadow/v0.2/bush_round.svg"
+output = "visual/runtime/v1/forest_meadow/bush_round.png"
+width = 512
+height = 256
+
+[[visuals]]
+id = "bush.flowering.01"
+kind = "prop"
+role = "foliage"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/environments/forest_meadow/v0.2/bush_flowering.svg"
+output = "visual/runtime/v1/forest_meadow/bush_flowering.png"
+width = 512
+height = 256
+
+[[visuals]]
+id = "bush.low.01"
+kind = "prop"
+role = "foreground_framing"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/environments/forest_meadow/v0.2/bush_low.svg"
+output = "visual/runtime/v1/forest_meadow/bush_low.png"
+width = 512
+height = 256
+
+[[visuals]]
+id = "fern.cluster.01"
+kind = "prop"
+role = "foreground_framing"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/environments/forest_meadow/v0.2/fern_cluster.svg"
+output = "visual/runtime/v1/forest_meadow/fern_cluster.png"
+width = 512
+height = 256
+
+[[visuals]]
+id = "log.fallen.01"
+kind = "prop"
+role = "playfield"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/environments/forest_meadow/v0.2/fallen_log.svg"
+output = "visual/runtime/v1/forest_meadow/fallen_log.png"
+width = 640
+height = 256
+
+[[visuals]]
+id = "rock.cluster.large.01"
+kind = "prop"
+role = "playfield"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/environments/forest_meadow/v0.2/rock_cluster_large.svg"
+output = "visual/runtime/v1/forest_meadow/rock_cluster_large.png"
+width = 512
+height = 256
+
+[[visuals]]
+id = "ground.grass_edge.01"
+kind = "environment"
+role = "ground_foreground"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/environments/forest_meadow/v0.2/grass_edge.svg"
+output = "visual/runtime/v1/forest_meadow/grass_edge.png"
+width = 1024
+height = 256
+
+[[visuals]]
+id = "atmosphere.fog_strip.01"
+kind = "atmosphere"
+role = "fog_overlay"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/environments/forest_meadow/v0.2/fog_strip.svg"
+output = "visual/runtime/v1/forest_meadow/fog_strip.png"
+width = 1024
+height = 256
+
+[[visuals]]
+id = "atmosphere.sunlight_rays.01"
+kind = "light"
+role = "light_overlay"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/environments/forest_meadow/v0.2/sunlight_rays.svg"
+output = "visual/runtime/v1/forest_meadow/sunlight_rays.png"
+width = 1024
+height = 512
