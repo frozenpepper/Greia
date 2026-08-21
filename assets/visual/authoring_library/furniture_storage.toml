@@ -2,10 +2,11 @@
 id = "generic.furniture_storage"
 name = "Furniture & Storage"
 description = "Tables, seating, daybeds, shelving, pegboards, cabinets, and storage crates."
-version = "0.1.0"
+version = "0.2.0"
 
 [[assets]]
 id = "furniture.table.workbench.craftsman"
+library_status = "preferred"
 source_pack = "workshop.v0.2"
 source_path = "assets/visual/environments/workshop/v0.2/workbench.svg"
 family = "furniture"
@@ -18,6 +19,7 @@ notes = "Solid craftsman oak workbench with chamfered slab, splayed legs, drawer
 
 [[assets]]
 id = "furniture.seating.stool.turned_wood"
+library_status = "preferred"
 source_pack = "workshop.v0.2"
 source_path = "assets/visual/environments/workshop/v0.2/stool.svg"
 family = "furniture"
@@ -30,6 +32,7 @@ notes = "Turned wood stool with dished round seat and stretchers."
 
 [[assets]]
 id = "furniture.bed.daybed.wooden"
+library_status = "candidate_reference"
 source_pack = "clinic.2026-08-21-candidate"
 source_path = "assets/visual/pack_candidates/clinic/2026-08-21/care_bed.svg"
 family = "furniture"
@@ -42,6 +45,7 @@ notes = "Low child-friendly wooden daybed with heart cutout headboard, pillow, a
 
 [[assets]]
 id = "furniture.table.side.turned_round"
+library_status = "candidate_reference"
 source_pack = "clinic.2026-08-21-candidate"
 source_path = "assets/visual/pack_candidates/clinic/2026-08-21/side_table.svg"
 family = "furniture"
@@ -54,6 +58,7 @@ notes = "Round bedside table with turned oak legs and lower shelf."
 
 [[assets]]
 id = "furniture.storage.shelf.open_bracket"
+library_status = "preferred"
 source_pack = "workshop.v0.2"
 source_path = "assets/visual/environments/workshop/v0.2/shelf_open.svg"
 family = "furniture"
@@ -66,6 +71,7 @@ notes = "Open single-plank wooden bracket shelf with display jars and scroll."
 
 [[assets]]
 id = "furniture.storage.shelf.cubby_cabinet"
+library_status = "preferred"
 source_pack = "workshop.v0.2"
 source_path = "assets/visual/environments/workshop/v0.2/shelf_cubby.svg"
 family = "furniture"
@@ -78,6 +84,7 @@ notes = "Compact closed wall cubby storage unit."
 
 [[assets]]
 id = "furniture.storage.cabinet.apothecary_glass"
+library_status = "candidate_reference"
 source_pack = "clinic.2026-08-21-candidate"
 source_path = "assets/visual/pack_candidates/clinic/2026-08-21/cabinet.svg"
 family = "furniture"
@@ -90,6 +97,7 @@ notes = "Mint milk-paint cabinet with arched glass display doors, interior shelv
 
 [[assets]]
 id = "furniture.storage.crate.plywood_joints"
+library_status = "preferred"
 source_pack = "workshop.v0.2"
 source_path = "assets/visual/environments/workshop/v0.2/storage_box.svg"
 family = "furniture"
@@ -102,6 +110,7 @@ notes = "Plywood craft crate with finger-jointed corners, cutout handholds, and 
 
 [[assets]]
 id = "furniture.display.pegboard.birch"
+library_status = "preferred"
 source_pack = "workshop.v0.2"
 source_path = "assets/visual/environments/workshop/v0.2/pegboard.svg"
 family = "furniture"
@@ -114,6 +123,7 @@ notes = "Perforated birch pegboard with hanging wooden mallet, ruler, and twine.
 
 [[ingredients]]
 id = "furniture.ingredient.wood_joint"
+library_status = "preferred"
 source_pack = "workshop.v0.2"
 source_path = "assets/visual/environments/workshop/v0.2/ingredients/ingredient_wood_joint.svg"
 family = "ingredient"

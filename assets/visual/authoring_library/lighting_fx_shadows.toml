@@ -1,11 +1,12 @@
 [collection]
 id = "generic.lighting_fx_shadows"
 name = "Lighting, Atmosphere, FX & Shadows"
-description = "Directional light shafts, sunlight rays, ambient particles, contact shadows, and feedback accents."
-version = "0.1.0"
+description = "Directional light shafts, sunlight rays, moonbeams, water ripples, ambient particles, contact shadows, and feedback accents."
+version = "0.2.0"
 
 [[assets]]
 id = "light.sunbeam.nature_godrays"
+library_status = "preferred"
 source_pack = "forest_meadow.v0.3"
 source_path = "assets/visual/environments/forest_meadow/v0.3/sunlight_rays.svg"
 family = "atmosphere"
@@ -18,6 +19,7 @@ notes = "Warm golden morning sunlight rays filtering through atmosphere."
 
 [[assets]]
 id = "light.window.beam.wide_motes"
+library_status = "preferred"
 source_pack = "workshop.v0.2"
 source_path = "assets/visual/environments/workshop/v0.2/window_light_wide.svg"
 family = "atmosphere"
@@ -30,6 +32,7 @@ notes = "Broad diagonal sunlight shaft with floating dust motes for room interio
 
 [[assets]]
 id = "light.window.beam.narrow_layered"
+library_status = "preferred"
 source_pack = "workshop.v0.2"
 source_path = "assets/visual/environments/workshop/v0.2/window_light_narrow.svg"
 family = "atmosphere"
@@ -42,6 +45,7 @@ notes = "Focused layered narrow sunlight beam for targeted object highlighting."
 
 [[assets]]
 id = "light.window.beam.gentle_morning"
+library_status = "candidate_reference"
 source_pack = "clinic.2026-08-21-candidate"
 source_path = "assets/visual/pack_candidates/clinic/2026-08-21/window_light.svg"
 family = "atmosphere"
@@ -53,7 +57,34 @@ max_recommended_px = 1024
 notes = "Soft morning sunlight shaft with gentle sparkle motes."
 
 [[assets]]
+id = "light.moonbeam.cool_blue_rays"
+library_status = "candidate_reference"
+source_pack = "fantasy_village_night.v0.1"
+source_path = "assets/visual/environments/fantasy_village_night/v0.1/moonlight_rays.svg"
+family = "atmosphere"
+role = "moonbeam_rays"
+tags = ["lighting", "moonlight", "night", "cool_blue", "overlay"]
+kind = "finished"
+min_recommended_px = 256
+max_recommended_px = 1024
+notes = "Candidate reference: diagonal cool blue moonlight rays."
+
+[[assets]]
+id = "light.window.radial_glow"
+library_status = "candidate_reference"
+source_pack = "fantasy_village_night.v0.1"
+source_path = "assets/visual/environments/fantasy_village_night/v0.1/window_glow.svg"
+family = "atmosphere"
+role = "window_glow"
+tags = ["lighting", "window_glow", "warm", "radial", "evening"]
+kind = "finished"
+min_recommended_px = 64
+max_recommended_px = 512
+notes = "Candidate reference: soft radial warm yellow window glow aura."
+
+[[assets]]
 id = "atmosphere.fog.morning_strip"
+library_status = "preferred"
 source_pack = "forest_meadow.v0.3"
 source_path = "assets/visual/environments/forest_meadow/v0.3/fog_strip.svg"
 family = "atmosphere"
@@ -66,6 +97,7 @@ notes = "Horizontal morning ground mist strip."
 
 [[assets]]
 id = "fx.particles.fireflies"
+library_status = "preferred"
 source_pack = "forest_meadow.v0.3"
 source_path = "assets/visual/environments/forest_meadow/v0.3/fx_fireflies.svg"
 family = "fx"
@@ -78,6 +110,7 @@ notes = "Glowing amber/yellow fireflies particle cluster."
 
 [[assets]]
 id = "fx.particles.dust_motes"
+library_status = "preferred"
 source_pack = "forest_meadow.v0.3"
 source_path = "assets/visual/environments/forest_meadow/v0.3/fx_dust_motes.svg"
 family = "fx"
@@ -90,6 +123,7 @@ notes = "Subtle floating atmospheric dust motes."
 
 [[assets]]
 id = "fx.particles.falling_leaves"
+library_status = "preferred"
 source_pack = "forest_meadow.v0.3"
 source_path = "assets/visual/environments/forest_meadow/v0.3/fx_falling_leaves.svg"
 family = "fx"
@@ -101,7 +135,21 @@ max_recommended_px = 512
 notes = "Drifting autumn/spring leaf particles."
 
 [[assets]]
+id = "fx.particles.magic_sparkles"
+library_status = "candidate_reference"
+source_pack = "fantasy_village_night.v0.1"
+source_path = "assets/visual/environments/fantasy_village_night/v0.1/magic_sparkles.svg"
+family = "fx"
+role = "sparkles"
+tags = ["fx", "particles", "sparkles", "magic", "reward", "stars"]
+kind = "finished"
+min_recommended_px = 48
+max_recommended_px = 384
+notes = "Candidate reference: cluster of bright four-point star sparkles."
+
+[[assets]]
 id = "fx.accent.care_hearts_sparkle"
+library_status = "candidate_reference"
 source_pack = "clinic.2026-08-21-candidate"
 source_path = "assets/visual/pack_candidates/clinic/2026-08-21/heart_fx.svg"
 family = "fx"
@@ -113,7 +161,86 @@ max_recommended_px = 384
 notes = "Floating translucent rose-pink care hearts with sparkle glints."
 
 [[assets]]
+id = "fx.water.ripple_rings"
+library_status = "candidate_reference"
+source_pack = "water_pond.v0.1"
+source_path = "assets/visual/environments/water_pond/v0.1/ripple_ring.svg"
+family = "fx"
+role = "water_ripple"
+tags = ["fx", "water", "ripple", "ring", "splash", "pond"]
+kind = "finished"
+min_recommended_px = 48
+max_recommended_px = 384
+notes = "Candidate reference: concentric circular water ripple ring."
+
+[[assets]]
+id = "fx.water.shimmer_highlights"
+library_status = "candidate_reference"
+source_pack = "water_pond.v0.1"
+source_path = "assets/visual/environments/water_pond/v0.1/water_shimmer.svg"
+family = "fx"
+role = "water_shimmer"
+tags = ["fx", "water", "shimmer", "highlight", "glint", "overlay"]
+kind = "finished"
+min_recommended_px = 64
+max_recommended_px = 512
+notes = "Candidate reference: delicate water surface shimmer highlights."
+
+[[assets]]
+id = "fx.water.reflection_glow"
+library_status = "candidate_reference"
+source_pack = "water_pond.v0.1"
+source_path = "assets/visual/environments/water_pond/v0.1/reflection_glow.svg"
+family = "fx"
+role = "water_reflection"
+tags = ["fx", "water", "reflection", "glow", "sunlight", "overlay"]
+kind = "finished"
+min_recommended_px = 64
+max_recommended_px = 512
+notes = "Candidate reference: soft vertical water reflection glow column."
+
+[[assets]]
+id = "fx.water.fish_shadows"
+library_status = "candidate_reference"
+source_pack = "water_pond.v0.1"
+source_path = "assets/visual/environments/water_pond/v0.1/fish_shadows.svg"
+family = "fx"
+role = "fish_shadows"
+tags = ["fx", "water", "fish", "shadow", "pond_life", "ambient"]
+kind = "finished"
+min_recommended_px = 48
+max_recommended_px = 384
+notes = "Candidate reference: swimming fish shadow silhouettes under water surface."
+
+[[assets]]
+id = "fx.creatures.dragonfly_flutter"
+library_status = "candidate_reference"
+source_pack = "water_pond.v0.1"
+source_path = "assets/visual/environments/water_pond/v0.1/dragonfly_fx.svg"
+family = "fx"
+role = "dragonfly"
+tags = ["fx", "creatures", "dragonfly", "insects", "nature", "flutter"]
+kind = "finished"
+min_recommended_px = 32
+max_recommended_px = 256
+notes = "Candidate reference: blue dragonfly with translucent wings."
+
+[[assets]]
+id = "fx.water.bubbles_rising"
+library_status = "candidate_reference"
+source_pack = "water_pond.v0.1"
+source_path = "assets/visual/environments/water_pond/v0.1/bubble_fx.svg"
+family = "fx"
+role = "bubbles"
+tags = ["fx", "water", "bubbles", "underwater", "particles"]
+kind = "finished"
+min_recommended_px = 32
+max_recommended_px = 256
+notes = "Candidate reference: cluster of floating translucent water bubbles."
+
+[[assets]]
 id = "shadow.contact.ellipse_small"
+library_status = "preferred"
 source_pack = "forest_meadow.v0.3"
 source_path = "assets/visual/environments/forest_meadow/v0.3/shadow_contact_small.svg"
 family = "shadow"
@@ -126,6 +253,7 @@ notes = "Soft radial contact shadow for small props, stones, and creatures."
 
 [[assets]]
 id = "shadow.contact.ellipse_wide"
+library_status = "preferred"
 source_pack = "forest_meadow.v0.3"
 source_path = "assets/visual/environments/forest_meadow/v0.3/shadow_contact_wide.svg"
 family = "shadow"

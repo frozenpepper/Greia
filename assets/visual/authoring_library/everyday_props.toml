@@ -2,10 +2,11 @@
 id = "generic.everyday_props"
 name = "Everyday Props & Containers"
 description = "Broadly reusable household props, desk lamps, cushions, ceramic mugs, jars, bottles, basins, and paper reams."
-version = "0.1.0"
+version = "0.2.0"
 
 [[assets]]
 id = "prop.lighting.lamp.desk_simple"
+library_status = "preferred"
 source_pack = "workshop.v0.2"
 source_path = "assets/visual/environments/workshop/v0.2/desk_lamp_simple.svg"
 family = "prop"
@@ -18,6 +19,7 @@ notes = "Compact goose-neck lamp with high readability at small/icon sizes (down
 
 [[assets]]
 id = "prop.lighting.lamp.desk_articulated"
+library_status = "preferred"
 source_pack = "workshop.v0.2"
 source_path = "assets/visual/environments/workshop/v0.2/desk_lamp_articulated.svg"
 family = "prop"
@@ -30,6 +32,7 @@ notes = "Articulated mint enamel architect lamp with brass joints (recommended f
 
 [[assets]]
 id = "prop.container.pencil_cup.ceramic"
+library_status = "preferred"
 source_pack = "workshop.v0.2"
 source_path = "assets/visual/environments/workshop/v0.2/pencil_cup.svg"
 family = "prop"
@@ -42,6 +45,7 @@ notes = "Glazed teal ceramic studio mug with raw terracotta foot and sharpened c
 
 [[assets]]
 id = "prop.container.paint_jars.glass"
+library_status = "preferred"
 source_pack = "workshop.v0.2"
 source_path = "assets/visual/environments/workshop/v0.2/paint_jars.svg"
 family = "prop"
@@ -54,6 +58,7 @@ notes = "Trio of glass jars with screw lids, transparency, and color liquid fill
 
 [[assets]]
 id = "prop.container.bottles.apothecary_trio"
+library_status = "candidate_reference"
 source_pack = "clinic.2026-08-21-candidate"
 source_path = "assets/visual/pack_candidates/clinic/2026-08-21/bottle_set.svg"
 family = "prop"
@@ -66,6 +71,7 @@ notes = "Trio of pastel glass syrup/tincture bottles with cork bungs and measure
 
 [[assets]]
 id = "prop.container.basin.enamel_sponge"
+library_status = "candidate_reference"
 source_pack = "clinic.2026-08-21-candidate"
 source_path = "assets/visual/pack_candidates/clinic/2026-08-21/care_bowl.svg"
 family = "prop"
@@ -78,6 +84,7 @@ notes = "White enameled wash basin with mint rolled rim, soft water ripples, and
 
 [[assets]]
 id = "prop.paper.stack.heavy_ream"
+library_status = "preferred"
 source_pack = "workshop.v0.2"
 source_path = "assets/visual/environments/workshop/v0.2/paper_stack.svg"
 family = "prop"
@@ -90,6 +97,7 @@ notes = "Heavyweight watercolor paper ream with stepped layer lines and curling 
 
 [[assets]]
 id = "prop.textile.cushion.linen_tufted"
+library_status = "candidate_reference"
 source_pack = "clinic.2026-08-21-candidate"
 source_path = "assets/visual/pack_candidates/clinic/2026-08-21/cushion.svg"
 family = "textile"
@@ -102,6 +110,7 @@ notes = "Plump buttercup-yellow tufted linen cushion with center button."
 
 [[assets]]
 id = "prop.note.cork_tile"
+library_status = "preferred"
 source_pack = "workshop.v0.2"
 source_path = "assets/visual/environments/workshop/v0.2/pinboard_note_cork_tile.svg"
 family = "decor"
@@ -114,6 +123,7 @@ notes = "Framed square cork tile with pinned star drawing."
 
 [[assets]]
 id = "prop.note.pinned_memo"
+library_status = "preferred"
 source_pack = "workshop.v0.2"
 source_path = "assets/visual/environments/workshop/v0.2/pinboard_note_pinned.svg"
 family = "decor"
@@ -126,6 +136,7 @@ notes = "Lightweight yellow sticky memo with pin."
 
 [[ingredients]]
 id = "prop.ingredient.fabric_patch"
+library_status = "candidate_reference"
 source_pack = "clinic.2026-08-21-candidate"
 source_path = "assets/visual/pack_candidates/clinic/2026-08-21/ingredients/ingredient_fabric_patch.svg"
 family = "ingredient"

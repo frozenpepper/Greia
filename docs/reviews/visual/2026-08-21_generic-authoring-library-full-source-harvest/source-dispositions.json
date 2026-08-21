@@ -1,0 +1,316 @@
+{
+  "audit_date": "2026-08-21",
+  "pools_audited": [
+    "assets/visual/environments/reading_classroom/v0.1/",
+    "assets/visual/environments/fantasy_village_night/v0.1/",
+    "assets/visual/environments/water_pond/v0.1/"
+  ],
+  "disposition_counts": {
+    "PREFERRED_GENERIC": 0,
+    "CANDIDATE_GENERIC": 18,
+    "REAUTHOR_GENERIC": 16,
+    "SPECIALIZED_THEME_ONLY": 5,
+    "DUPLICATE_OR_SUPERSEDED": 7,
+    "UNRESOLVED": 0
+  },
+  "reading_classroom_v01": [
+    {
+      "id": "reading.tall.bookcase",
+      "path": "tall_bookcase.svg",
+      "disposition": "REAUTHOR_GENERIC",
+      "notes": "Quality gap: flat vector bookcase; essential generic furniture role."
+    },
+    {
+      "id": "reading.book.stack",
+      "path": "book_stack.svg",
+      "disposition": "REAUTHOR_GENERIC",
+      "notes": "Quality gap: flat 3-book stack; core generic reading prop."
+    },
+    {
+      "id": "reading.open.storybook",
+      "path": "open_storybook.svg",
+      "disposition": "REAUTHOR_GENERIC",
+      "notes": "Quality gap: flat open book; core generic storytelling prop."
+    },
+    {
+      "id": "reading.reading.chair",
+      "path": "reading_chair.svg",
+      "disposition": "REAUTHOR_GENERIC",
+      "notes": "Quality gap: flat front-view armchair; needed soft seating role."
+    },
+    {
+      "id": "reading.potted.plant",
+      "path": "potted_plant.svg",
+      "disposition": "REAUTHOR_GENERIC",
+      "notes": "Quality gap: flat vector potted plant; essential indoor decor."
+    },
+    {
+      "id": "reading.toy.basket",
+      "path": "toy_basket.svg",
+      "disposition": "REAUTHOR_GENERIC",
+      "notes": "Quality gap: flat basket with star cushion; needed woven storage container."
+    },
+    {
+      "id": "reading.chalkboard",
+      "path": "chalkboard.svg",
+      "disposition": "REAUTHOR_GENERIC",
+      "notes": "Quality gap: blackboard with baked ABC text; needs blank/flexible reauthoring."
+    },
+    {
+      "id": "reading.beanbag",
+      "path": "beanbag.svg",
+      "disposition": "REAUTHOR_GENERIC",
+      "notes": "Quality gap: flat green beanbag; soft informal seating."
+    },
+    {
+      "id": "reading.reading.tent",
+      "path": "reading_tent.svg",
+      "disposition": "CANDIDATE_GENERIC",
+      "generic_id": "play.furniture.reading_tent",
+      "notes": "Candidate reference: cozy indoor play teepee."
+    },
+    {
+      "id": "reading.bunting",
+      "path": "bunting.svg",
+      "disposition": "CANDIDATE_GENERIC",
+      "generic_id": "interior.decor.bunting_flags",
+      "notes": "Candidate reference: pastel garland bunting."
+    },
+    {
+      "id": "reading.hanging.mobile",
+      "path": "hanging_mobile.svg",
+      "disposition": "CANDIDATE_GENERIC",
+      "generic_id": "play.decor.hanging_mobile",
+      "notes": "Candidate reference: hanging nursery mobile."
+    },
+    {
+      "id": "reading.floor.cushion",
+      "path": "floor_cushion.svg",
+      "disposition": "DUPLICATE_OR_SUPERSEDED",
+      "notes": "Superseded by Clinic candidate tufted linen cushion."
+    },
+    {
+      "id": "reading.round.rug",
+      "path": "round_rug.svg",
+      "disposition": "DUPLICATE_OR_SUPERSEDED",
+      "notes": "Superseded by Workshop v0.2 braided wool rug."
+    },
+    {
+      "id": "reading.arched.window",
+      "path": "arched_window.svg",
+      "disposition": "DUPLICATE_OR_SUPERSEDED",
+      "notes": "Superseded by Workshop and Clinic arched windows."
+    },
+    {
+      "id": "reading.window.light",
+      "path": "window_light.svg",
+      "disposition": "DUPLICATE_OR_SUPERSEDED",
+      "notes": "Superseded by Workshop window lights."
+    },
+    {
+      "id": "reading.room.wall.base",
+      "path": "room_wall_base.svg",
+      "disposition": "DUPLICATE_OR_SUPERSEDED",
+      "notes": "Superseded by Workshop and Clinic wall bases."
+    },
+    {
+      "id": "reading.room.floor.base",
+      "path": "room_floor_base.svg",
+      "disposition": "DUPLICATE_OR_SUPERSEDED",
+      "notes": "Superseded by Workshop and Clinic floor bases."
+    }
+  ],
+  "fantasy_village_night_v01": [
+    {
+      "id": "fantasy.stone.bridge",
+      "path": "stone_bridge.svg",
+      "disposition": "REAUTHOR_GENERIC",
+      "notes": "Quality gap: flat stone bridge; high-value generic landscape feature."
+    },
+    {
+      "id": "fantasy.lantern.post",
+      "path": "lantern_post.svg",
+      "disposition": "REAUTHOR_GENERIC",
+      "notes": "Quality gap: flat lamppost; high-value outdoor lighting prop."
+    },
+    {
+      "id": "fantasy.wood.signpost",
+      "path": "wood_signpost.svg",
+      "disposition": "REAUTHOR_GENERIC",
+      "notes": "Quality gap: flat signpost; high-value outdoor navigation prop."
+    },
+    {
+      "id": "fantasy.stone.well",
+      "path": "stone_well.svg",
+      "disposition": "REAUTHOR_GENERIC",
+      "notes": "Quality gap: flat stone well; garden/village water prop."
+    },
+    {
+      "id": "fantasy.night.sky.base",
+      "path": "night_sky_base.svg",
+      "disposition": "CANDIDATE_GENERIC",
+      "generic_id": "nature.sky.night.starry_indigo",
+      "notes": "Candidate reference: starry indigo night backdrop."
+    },
+    {
+      "id": "fantasy.crescent.moon",
+      "path": "crescent_moon.svg",
+      "disposition": "CANDIDATE_GENERIC",
+      "generic_id": "nature.sky.moon.crescent",
+      "notes": "Candidate reference: glowing crescent moon."
+    },
+    {
+      "id": "fantasy.moonlight.rays",
+      "path": "moonlight_rays.svg",
+      "disposition": "CANDIDATE_GENERIC",
+      "generic_id": "light.moonbeam.cool_blue_rays",
+      "notes": "Candidate reference: cool blue moonbeams."
+    },
+    {
+      "id": "fantasy.magic.sparkles",
+      "path": "magic_sparkles.svg",
+      "disposition": "CANDIDATE_GENERIC",
+      "generic_id": "fx.particles.magic_sparkles",
+      "notes": "Candidate reference: bright star sparkles."
+    },
+    {
+      "id": "fantasy.window.glow",
+      "path": "window_glow.svg",
+      "disposition": "CANDIDATE_GENERIC",
+      "generic_id": "light.window.radial_glow",
+      "notes": "Candidate reference: warm radial window aura."
+    },
+    {
+      "id": "fantasy.cobblestone.edge",
+      "path": "cobblestone_edge.svg",
+      "disposition": "CANDIDATE_GENERIC",
+      "generic_id": "nature.ground.cobblestone_curb",
+      "notes": "Candidate reference: cobblestone border curb."
+    },
+    {
+      "id": "fantasy.cottage.round",
+      "path": "cottage_round.svg",
+      "disposition": "SPECIALIZED_THEME_ONLY",
+      "notes": "Specialized fantasy mushroom cottage."
+    },
+    {
+      "id": "fantasy.cottage.tall",
+      "path": "cottage_tall.svg",
+      "disposition": "SPECIALIZED_THEME_ONLY",
+      "notes": "Specialized fantasy tall timber cottage."
+    },
+    {
+      "id": "fantasy.castle.tower",
+      "path": "castle_tower.svg",
+      "disposition": "SPECIALIZED_THEME_ONLY",
+      "notes": "Specialized medieval stone tower."
+    },
+    {
+      "id": "fantasy.castle.hill",
+      "path": "castle_hill.svg",
+      "disposition": "SPECIALIZED_THEME_ONLY",
+      "notes": "Specialized far-distance castle horizon."
+    },
+    {
+      "id": "fantasy.distant.village",
+      "path": "distant_village.svg",
+      "disposition": "SPECIALIZED_THEME_ONLY",
+      "notes": "Specialized far-distance village horizon."
+    }
+  ],
+  "water_pond_v01": [
+    {
+      "id": "pond.water.base.01",
+      "path": "pond_water_base.svg",
+      "disposition": "CANDIDATE_GENERIC",
+      "generic_id": "nature.water.surface.pond_base",
+      "notes": "Candidate reference: water surface rectangle."
+    },
+    {
+      "id": "pond.bank.edge.01",
+      "path": "pond_bank_edge.svg",
+      "disposition": "CANDIDATE_GENERIC",
+      "generic_id": "nature.water.shoreline.bank_edge",
+      "notes": "Candidate reference: shoreline grass bank."
+    },
+    {
+      "id": "pond.lily_pad.cluster.01",
+      "path": "lily_pad_cluster.svg",
+      "disposition": "REAUTHOR_GENERIC",
+      "notes": "Quality gap: flat lily pads with flower; core aquatic botanical."
+    },
+    {
+      "id": "pond.reeds.cluster.01",
+      "path": "reeds_cluster.svg",
+      "disposition": "REAUTHOR_GENERIC",
+      "notes": "Quality gap: flat cattails/reeds; core water-edge botanical."
+    },
+    {
+      "id": "pond.water_lily.cluster.01",
+      "path": "water_lily_cluster.svg",
+      "disposition": "DUPLICATE_OR_SUPERSEDED",
+      "notes": "Minor redundant variant of lily_pad_cluster."
+    },
+    {
+      "id": "pond.dock.small.01",
+      "path": "small_dock.svg",
+      "disposition": "REAUTHOR_GENERIC",
+      "notes": "Quality gap: flat pier/dock; needed shoreline structure."
+    },
+    {
+      "id": "pond.stepping_stones.01",
+      "path": "stepping_stones.svg",
+      "disposition": "REAUTHOR_GENERIC",
+      "notes": "Quality gap: flat stones; river/pond crossing prop."
+    },
+    {
+      "id": "pond.duckweed.patch.01",
+      "path": "duckweed_patch.svg",
+      "disposition": "CANDIDATE_GENERIC",
+      "generic_id": "nature.water.plant.duckweed_patch",
+      "notes": "Candidate reference: floating duckweed colony."
+    },
+    {
+      "id": "pond.ripple.ring.01",
+      "path": "ripple_ring.svg",
+      "disposition": "CANDIDATE_GENERIC",
+      "generic_id": "fx.water.ripple_rings",
+      "notes": "Candidate reference: water surface ripple ring."
+    },
+    {
+      "id": "pond.water_shimmer.01",
+      "path": "water_shimmer.svg",
+      "disposition": "CANDIDATE_GENERIC",
+      "generic_id": "fx.water.shimmer_highlights",
+      "notes": "Candidate reference: water shimmer glints."
+    },
+    {
+      "id": "pond.reflection_glow.01",
+      "path": "reflection_glow.svg",
+      "disposition": "CANDIDATE_GENERIC",
+      "generic_id": "fx.water.reflection_glow",
+      "notes": "Candidate reference: water reflection column."
+    },
+    {
+      "id": "pond.fish_shadows.01",
+      "path": "fish_shadows.svg",
+      "disposition": "CANDIDATE_GENERIC",
+      "generic_id": "fx.water.fish_shadows",
+      "notes": "Candidate reference: swimming fish shadow silhouettes."
+    },
+    {
+      "id": "pond.dragonfly.fx.01",
+      "path": "dragonfly_fx.svg",
+      "disposition": "CANDIDATE_GENERIC",
+      "generic_id": "fx.creatures.dragonfly_flutter",
+      "notes": "Candidate reference: blue dragonfly creature FX."
+    },
+    {
+      "id": "pond.bubble.fx.01",
+      "path": "bubble_fx.svg",
+      "disposition": "CANDIDATE_GENERIC",
+      "generic_id": "fx.water.bubbles_rising",
+      "notes": "Candidate reference: rising water bubbles."
+    }
+  ]
+}

@@ -1,11 +1,12 @@
 [collection]
 id = "generic.interiors_architecture"
 name = "Interiors & Architecture"
-description = "Room foundations, walls, flooring, windows, drapery, and rugs for indoor spaces."
-version = "0.1.0"
+description = "Room foundations, walls, flooring, windows, drapery, bunting, and rugs for indoor spaces."
+version = "0.2.0"
 
 [[assets]]
 id = "interior.wall.plaster_wainscot"
+library_status = "preferred"
 source_pack = "workshop.v0.2"
 source_path = "assets/visual/environments/workshop/v0.2/wall_base.svg"
 family = "room_base"
@@ -18,6 +19,7 @@ notes = "Warm cream plaster wall with horizontal wood wainscot chair rail."
 
 [[assets]]
 id = "interior.wall.plaster_mint_beadboard"
+library_status = "candidate_reference"
 source_pack = "clinic.2026-08-21-candidate"
 source_path = "assets/visual/pack_candidates/clinic/2026-08-21/room_wall_base.svg"
 family = "room_base"
@@ -30,6 +32,7 @@ notes = "Cream plaster wall with vertical pastel mint beadboard wainscoting."
 
 [[assets]]
 id = "interior.floor.oak_planks"
+library_status = "preferred"
 source_pack = "workshop.v0.2"
 source_path = "assets/visual/environments/workshop/v0.2/floor_base.svg"
 family = "room_base"
@@ -42,6 +45,7 @@ notes = "Wide golden oak floor planks with subtle butt joints."
 
 [[assets]]
 id = "interior.floor.honey_oak_planks"
+library_status = "candidate_reference"
 source_pack = "clinic.2026-08-21-candidate"
 source_path = "assets/visual/pack_candidates/clinic/2026-08-21/room_floor_base.svg"
 family = "room_base"
@@ -54,6 +58,7 @@ notes = "Warm honey-toned plank flooring."
 
 [[assets]]
 id = "interior.window.arch.meadow"
+library_status = "preferred"
 source_pack = "workshop.v0.2"
 source_path = "assets/visual/environments/workshop/v0.2/window.svg"
 family = "architectural_feature"
@@ -66,6 +71,7 @@ notes = "Arched wooden frame window looking out onto sunny meadow with potted sp
 
 [[assets]]
 id = "interior.window.arch.orchard"
+library_status = "candidate_reference"
 source_pack = "clinic.2026-08-21-candidate"
 source_path = "assets/visual/pack_candidates/clinic/2026-08-21/care_window.svg"
 family = "architectural_feature"
@@ -78,6 +84,7 @@ notes = "Arched window looking onto rolling hills and blooming pink orchard tree
 
 [[assets]]
 id = "interior.window.drapery.curtains"
+library_status = "candidate_reference"
 source_pack = "clinic.2026-08-21-candidate"
 source_path = "assets/visual/pack_candidates/clinic/2026-08-21/curtain_pair.svg"
 family = "decor"
@@ -89,7 +96,21 @@ max_recommended_px = 600
 notes = "Mint draped curtain pair on wooden rod with scalloped valance and pink rosette tie-backs."
 
 [[assets]]
+id = "interior.decor.bunting_flags"
+library_status = "candidate_reference"
+source_pack = "reading_classroom.v0.1"
+source_path = "assets/visual/environments/reading_classroom/v0.1/bunting.svg"
+family = "decor"
+role = "bunting"
+tags = ["interior", "bunting", "flags", "garland", "party", "classroom"]
+kind = "finished"
+min_recommended_px = 64
+max_recommended_px = 512
+notes = "Candidate reference: pastel triangular pennant bunting garland."
+
+[[assets]]
 id = "interior.textile.rug.braided_wool"
+library_status = "preferred"
 source_pack = "workshop.v0.2"
 source_path = "assets/visual/environments/workshop/v0.2/rug.svg"
 family = "textile"
@@ -102,6 +123,7 @@ notes = "Concentric braided wool rag rug with visible perimeter stitch dashes."
 
 [[assets]]
 id = "interior.textile.rug.felt_heart"
+library_status = "candidate_reference"
 source_pack = "clinic.2026-08-21-candidate"
 source_path = "assets/visual/pack_candidates/clinic/2026-08-21/heart_rug.svg"
 family = "textile"

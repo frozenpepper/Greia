@@ -1,0 +1,45 @@
+{
+  "task": "GENERIC_VISUAL_LIBRARY_FULL_SOURCE_HARVEST",
+  "date": "2026-08-21",
+  "status": "FULL_SOURCE_HARVEST_COMPLETE",
+  "library_inventory": {
+    "preferred_finished": 52,
+    "candidate_reference_finished": 32,
+    "total_finished": 84,
+    "ingredients": 5,
+    "total_resources": 89
+  },
+  "harvested_pools_summary": {
+    "reading_classroom_v01": {
+      "total": 17,
+      "candidate_ref": 3,
+      "quality_gap": 8,
+      "superseded": 6
+    },
+    "fantasy_village_night_v01": {
+      "total": 15,
+      "candidate_ref": 6,
+      "quality_gap": 4,
+      "specialized": 5
+    },
+    "water_pond_v01": {
+      "total": 14,
+      "candidate_ref": 9,
+      "quality_gap": 4,
+      "superseded": 1
+    }
+  },
+  "evidence_sheets": [
+    "01-reading-generic-candidates.png",
+    "02-fantasy-generic-candidates.png",
+    "03-water-generic-candidates.png",
+    "04-generic-library-expanded-overview-a.png",
+    "05-generic-library-expanded-overview-b.png",
+    "06-true-gaps-vs-quality-gaps.png"
+  ],
+  "reports": [
+    "FULL_SOURCE_AUDIT.md",
+    "source-dispositions.json",
+    "true-gap-audit.json"
+  ]
+}
