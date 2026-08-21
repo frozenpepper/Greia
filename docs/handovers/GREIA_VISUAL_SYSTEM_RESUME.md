@@ -12,15 +12,15 @@
 
 ---
 
-# 1. Current architectural direction
+# 1. Current architecture
 
-The visual workstream has two separate tracks.
+There are two separate tracks.
 
 ## Track A — maintainer-side generic visual toolbox
 
 The owner's local agent is used to create/improve Greia source art. Its capabilities are not evidence about arbitrary user agents.
 
-Theme/environment bundles are source/provenance pools. The primary Activity-authoring discovery layer is the generic semantic library:
+Theme/source bundles are provenance pools. The primary authoring-discovery layer is the generic semantic library:
 
 ```text
 Nature & Landscape
@@ -40,7 +40,7 @@ The model/tool-agnostic workflow remains:
 ```text
 inventory Activity needs
 → search generic semantic authoring library
-→ prefer reviewed/preferred resources where they genuinely fit
+→ prefer reviewed/preferred resources where they fit
 → inspect candidate/source references as needed
 → REUSE / COMPOSE-ADAPT / CREATE ORIGINAL
 → create Activity-local final art
@@ -55,117 +55,130 @@ Authority:
 
 ---
 
-# 2. Current source-art state
+# 2. Source-art state
 
 ## Forest / Meadow v0.3
 
-Promoted source pool:
-
-```text
-28 semantic roles
-= 23 reauthored roles
-+ 5 retained legacy roles
-+ 2 preferred authoring ingredients
-```
+Promoted source pool: 28 semantic roles = 23 reauthored + 5 retained legacy; 2 preferred authoring ingredients.
 
 ## Workshop v0.2
 
-Promoted source pool:
+Promoted source pool: 24 finished assets = 14 direct replacements + 5 retained baseline variants + 5 coexistence variants; 2 preferred ingredients.
+
+## Clinic / Care candidate
+
+Reviewed source pool only. Generic furniture/interior/comfort/container assets may be indexed; medical-specific props remain specialized. Do not create `clinic/v0.2` merely because the candidate exists.
+
+## Reading / Classroom, Fantasy / Village / Night, Water / Pond
+
+Harvested as source pools. They are not current core theme-pack roadmaps.
+
+---
+
+# 3. Generic library state
+
+`assets/visual/authoring_library/` is the canonical generic discovery/index layer.
+
+Full-source harvest commit `2dcf306` reports:
 
 ```text
-24 finished semantic assets
-= 14 direct reauthored replacements
-+ 5 retained baseline variants
-+ 5 candidate coexistence variants
-+ 2 preferred ingredients
+52 preferred finished assets
+32 candidate-reference finished assets
+5 authoring ingredients
+89 total indexed reusable resources
 ```
 
-## Clinic / Care 2026-08-21 candidate
+The full harvest classified remaining Reading, Fantasy and Water sources and corrected false inventory-gap assumptions.
 
-Useful reviewed source pool. It is not a required core generic pack. Generic furniture/interior/comfort/neutral-container assets may be indexed; strongly medical assets remain specialized.
+Owner review:
 
-No `clinic/v0.2` core-pack promotion is authorized merely because the candidate exists.
+`docs/reviews/visual/2026-08-21_generic-authoring-library-full-source-harvest/PRIMARY_REVIEW.md`
 
----
+Important quality observation from actual screenshots:
 
-# 3. First generic consolidation result
-
-Commit `cc1d7f1` created:
-
-`assets/visual/authoring_library/`
-
-with six semantic collection indexes and harvested Forest/Meadow, Workshop and Clinic candidate resources.
-
-The **structure is useful and retained**.
-
-However, the resulting gap analysis is not authoritative because it omitted existing source pools:
-
-- Reading / Classroom v0.1;
-- Fantasy / Village / Night v0.1;
-- Water / Pond v0.1.
-
-This is a material omission. Reading already contains books, reading chair, beanbag, potted plant, toy basket, bookcase, floor cushion, etc. Water already contains pond/water/reeds/dock/stepping-stone and water FX resources. Fantasy already contains reusable bridge/signpost/well/lantern/cobblestone candidates.
-
-Therefore the previously recommended 16-asset generic batch is **NOT AUTHORIZED YET**.
-
-Primary review:
-
-`docs/reviews/visual/2026-08-21_generic-authoring-library-consolidation/PRIMARY_REVIEW.md`
+- Reading books/chair/plant/basket/bookcase exist but are visibly weak `QUALITY_GAP` sources;
+- Fantasy bridge/sign/well/lantern roles exist but need reauthoring; night sky/moon/light/sparkles can remain candidate references;
+- Water/Pond has useful candidate surface/FX references, while reeds/lily pads/dock/stepping stones are quality gaps;
+- several candidate references are intentionally **not** preferred finished assets.
 
 ---
 
-# 4. Exact current maintainer task
+# 4. Permanent generic-asset rule
+
+The toolbox must not become a giant clip-art noun warehouse.
+
+> **Generic assets encode reusable form; Activity-specific meaning and contents remain separable whenever practical.**
+
+Examples:
+
+- empty plate/bowl as generic bases rather than food permanently baked in;
+- books without readable titles or one fixed story;
+- blank signs/boards where Activity/localization should own text;
+- general mechanical components rather than one narrowly themed mechanism.
+
+This is an authoring/source-art composability rule. Runtime economy remains: rich source work may be flattened into efficient final runtime assets.
+
+---
+
+# 5. Current accepted gap state
+
+Current important gaps include:
+
+```text
+doors / room openings                 TRUE_MISSING
+standard dining/desk chair            TRUE_MISSING
+books / storybooks                    QUALITY_GAP
+soft reading chair / tall bookcase    QUALITY_GAP
+potted plant / woven basket           QUALITY_GAP
+water botanical/structure roles       QUALITY_GAP
+bridge/sign/well/lantern               QUALITY_GAP
+basic neutral tableware               TRUE_MISSING
+mechanical/manipulative components    TRUE_MISSING / materially under-covered
+```
+
+Do not confuse `QUALITY_GAP` with missing inventory.
+
+---
+
+# 6. Exact current maintainer task
 
 Execute:
 
-`docs/testing/2026-08-21_GENERIC_VISUAL_LIBRARY_FULL_SOURCE_HARVEST.md`
+`docs/testing/2026-08-21_GENERIC_CORE_ESSENTIALS_BATCH_A.md`
 
-This is an inventory/classification/review gate, not an art-production gate.
+This is the first authorized new generic art-production batch after full consolidation.
 
-It must:
+It contains 16 finished assets across:
 
-1. inspect all Reading/Classroom v0.1 assets;
-2. inspect all Fantasy/Village/Night v0.1 assets;
-3. inspect all Water/Pond v0.1 assets;
-4. classify every relevant source as:
-   - `PREFERRED_GENERIC`
-   - `CANDIDATE_GENERIC`
-   - `REAUTHOR_GENERIC`
-   - `SPECIALIZED_THEME_ONLY`
-   - `DUPLICATE_OR_SUPERSEDED`
-   - `UNRESOLVED`
-5. update generic indexes without duplicating source files;
-6. distinguish `preferred` resources from `candidate_reference` resources;
-7. generate owner-review screenshots for the newly harvested generic candidates;
-8. recompute gaps as:
-   - `TRUE_MISSING`
-   - `QUALITY_GAP`
-   - `VARIETY_GAP`
-   - `NO_GAP`
-9. only then recommend the next generic art-production batch.
+- doors/openings;
+- standard + soft seating;
+- bookcase/books;
+- plant/basket;
+- **neutral** tableware;
+- generic mechanical components.
 
-No new art should be drawn during this gate.
+It is deliberately cross-category and must not turn into a kitchen/classroom/clinic themed pack.
+
+Owner-review ZIP required:
+
+`GREIA_VISUAL_REVIEW_GENERIC_CORE_ESSENTIALS_BATCH_A_2026-08-21.zip`
 
 ---
 
-# 5. Generic-library admission rule
+# 7. Generic-library admission
 
-The semantic index structure is canonical. Individual assets are not automatically equally canonical/preferred.
-
-Generic entries should expose a simple admission state:
+Index structure is canonical. Individual assets use:
 
 ```text
 preferred
 candidate_reference
 ```
 
-Use preferred assets first for direct REUSE. Candidate references may still support COMPOSE/ADAPT or inspiration.
-
-An existing weak source asset means `QUALITY_GAP`, not `TRUE_MISSING`.
+New Batch A assets must remain `candidate_reference` until actual owner pixel review.
 
 ---
 
-# 6. Stable runtime foundation
+# 8. Stable runtime foundation
 
 Preserve:
 
@@ -181,7 +194,7 @@ SceneActorDefinition / actor_scene_sample
 Runtime rules remain:
 
 - no arbitrary runtime source scanning;
-- no ordinary target SVG rasterization;
+- no normal runtime SVG rasterization;
 - no per-frame disk decode/scale;
 - bounded caches;
 - Activity-local assets remain inside Activity packages;
@@ -189,37 +202,21 @@ Runtime rules remain:
 
 ---
 
-# 7. Nascondino lesson
+# 9. Do not resume drift
 
-Nascondino showed the failure mode where the background is upgraded while gameplay art remains primitive.
-
-The intended Activity workflow remains:
-
-```text
-search generic toolbox
-→ reuse/adapt/create all important visible gameplay art coherently
-→ integrate environment + interactive props + characters + feedback + UI
-```
-
-Do not solve this by globally shipping every possible final prop.
+- no theme-by-theme pack roadmap;
+- no Clinic finalization;
+- no hero-tree optimization;
+- no giant generic noun inventory for its own sake;
+- no baked arbitrary contents/text in generic bases;
+- no treating maintainer-agent performance as user-agent evidence;
+- no second runtime asset system;
+- no background-only Activity polish while gameplay stays primitive.
 
 ---
 
-# 8. Permanent visual rules
+# 10. Platform boundary
 
-- Rich authoring-time composition; economical runtime rendering.
-- Reuse does not mean clone-everywhere reuse.
-- Specialized Activity art is expected to remain Activity-local.
-- Theme bundles are provenance/source pools, not the primary authoring taxonomy.
-- Newer does not automatically replace older.
-- Useful variants can coexist under distinct semantic IDs.
-- Do not create duplicate generic assets before checking all source pools.
-- Producing-agent prose is not visual evidence; inspect actual pixels.
+R7 remains the primary blocking platform phase. Nothing in this visual-content work closes, reorders, or bypasses R7.
 
----
-
-# 9. Platform boundary
-
-R7 remains the primary blocking platform phase. Nothing in this content-authoring work closes, reorders or bypasses R7.
-
-No physical Acer/Pi acceptance should be claimed unless actually performed.
+No physical Acer/Pi acceptance should be claimed without actual hardware evidence.
