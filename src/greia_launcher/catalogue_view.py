@@ -100,9 +100,9 @@ class ActivityCatalogue:
     their education categories for compatibility.
 
     The child Home vocabulary is deliberately platform-owned. Arbitrary package
-    category IDs may remain useful catalogue metadata, but they do not create
-    new top-level child destinations. An Activity with no recognized primary
-    Collection is instead kept discoverable through a bounded platform-owned
+    category IDs are accepted as metadata for compatibility, but they do not
+    manufacture new child navigation levels. An Activity with no recognized
+    primary Collection remains discoverable through a bounded platform-owned
     ``browse`` fallback Collection.
     """
 
@@ -121,21 +121,19 @@ class ActivityCatalogue:
         for activity in ordered:
             launcher_categories = getattr(activity, "launcher_categories", ())
             categories = launcher_categories or activity.categories
-            normalized_categories: list[str] = []
-            for category in categories:
-                normalized = category.strip().casefold()
-                if not normalized:
-                    continue
-                normalized_categories.append(normalized)
-                # ``browse`` is platform-owned fallback state, not a package
-                # namespace. A package spelling it explicitly is still treated
-                # as lacking a recognized primary destination.
-                if normalized != BROWSE_ACTIVITIES_ID:
-                    buckets.setdefault(normalized, []).append(activity)
-            primary_membership[activity.activity_id] = any(
-                category in PRIMARY_COLLECTION_IDS
-                for category in normalized_categories
+            normalized_categories = tuple(
+                category.strip().casefold()
+                for category in categories
+                if category.strip()
             )
+            recognized = tuple(
+                category
+                for category in normalized_categories
+                if category in PRIMARY_COLLECTION_IDS
+            )
+            for category in recognized:
+                buckets.setdefault(category, []).append(activity)
+            primary_membership[activity.activity_id] = bool(recognized)
 
         orphaned = tuple(
             activity
@@ -170,19 +168,12 @@ class ActivityCatalogue:
 
     @property
     def home_collections(self) -> tuple[Collection[ActivityManifest], ...]:
-        """Return only platform-owned child Home destinations.
+        """Return the bounded platform-owned child Home destinations."""
 
-        Unknown package categories never proliferate the Home surface. The
-        platform-owned ``browse`` destination appears only when at least one
-        Activity would otherwise have no recognized primary destination.
-        """
-
-        home_ids = set(PRIMARY_COLLECTION_IDS)
-        home_ids.add(BROWSE_ACTIVITIES_ID)
         return tuple(
             collection
             for collection in self.collections
-            if collection.collection_id in home_ids and collection.items
+            if collection.collection_id != ALL_ACTIVITIES_ID and collection.items
         )
 
     def collection(self, category_id: str) -> Collection[ActivityManifest]:
