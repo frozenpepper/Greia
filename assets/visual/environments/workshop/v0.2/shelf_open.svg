@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 260">
+<defs>
+  <filter id="sh-sh" x="-20%" y="-20%" width="140%" height="140%">
+    <feGaussianBlur stdDeviation="6"/>
+  </filter>
+  <linearGradient id="shelf-wood" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#DCA86C"/>
+    <stop offset="50%" stop-color="#B27A42"/>
+    <stop offset="100%" stop-color="#78481E"/>
+  </linearGradient>
+</defs>
+
+<!-- Wall Cast Shadow -->
+<rect x="70" y="155" width="460" height="35" rx="8" fill="#1C140E" opacity="0.18" filter="url(#sh-sh)"/>
+
+<!-- Wooden Scrollwork Support Brackets -->
+<path d="M 120,150 L 120,235 C 135,215 155,185 160,150 Z" fill="#6A3C18"/>
+<path d="M 480,150 L 480,235 C 465,215 445,185 440,150 Z" fill="#6A3C18"/>
+
+<!-- Shelf Props: Jars, Box & Rolled Scroll -->
+<!-- Storage Box Left -->
+<rect x="90" y="80" width="85" height="55" rx="4" fill="#C68A50" stroke="#683C14" stroke-width="2"/>
+<rect x="85" y="74" width="95" height="12" rx="3" fill="#E2A66C"/>
+<!-- Rolled Scroll -->
+<path d="M 195,115 L 305,115 L 305,135 L 195,135 Z" fill="#F4EDE0" stroke="#C8B89E" stroke-width="1.5"/>
+<ellipse cx="195" cy="125" rx="5" ry="10" fill="#E6D6C0"/>
+<!-- Glass Jars Right -->
+<rect x="340" y="85" width="45" height="50" rx="6" fill="#A8D8EA" fill-opacity="0.6" stroke="#52889A" stroke-width="2"/>
+<rect x="345" y="98" width="35" height="32" rx="3" fill="#E85D5D"/>
+<rect x="342" y="78" width="41" height="10" rx="2" fill="#D4A26A"/>
+
+<rect x="410" y="90" width="40" height="45" rx="6" fill="#A8D8EA" fill-opacity="0.6" stroke="#52889A" stroke-width="2"/>
+<rect x="415" y="102" width="30" height="28" rx="3" fill="#FFC83B"/>
+<rect x="412" y="83" width="36" height="10" rx="2" fill="#D4A26A"/>
+
+<!-- Main Shelf Plank -->
+<rect x="50" y="132" width="500" height="26" rx="6" fill="url(#shelf-wood)" stroke="#5A3212" stroke-width="2"/>
+<line x1="55" y1="134" x2="545" y2="134" stroke="#FFE2A8" stroke-width="2.5" opacity="0.8"/>
+</svg>

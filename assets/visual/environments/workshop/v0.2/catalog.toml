@@ -1,0 +1,240 @@
+catalog_id = "greia.environment.workshop.v0.2"
+catalog_version = "0.2.0"
+status = "promoted"
+runtime_consumed = false
+active_plan = "docs/plans/2026-08-21_BASE_ART_PACK_REAUTHORING.md"
+authority = "docs/reviews/visual/2026-08-21_workshop-pack-finalization/PRIMARY_PROMOTION_REVIEW.md"
+provenance = "Owner-authorized Workshop v0.2 source toolbox consisting of 14 direct candidate replacements, 5 retained baseline variants, 5 candidate coexistence variants (24 total finished assets), and 2 authoring ingredients."
+notes = "Workshop authoring toolbox. Note: desk_lamp_simple is recommended for <=64px runtime icons; desk_lamp_articulated is intended for >=128px scene placement."
+
+[[assets]]
+id = "workshop.workbench"
+path = "workbench.svg"
+family = "furniture"
+role = "playfield_hero"
+status = "promoted"
+provenance = "2026-08-21_candidate"
+alpha = true
+
+[[assets]]
+id = "workshop.stool"
+path = "stool.svg"
+family = "furniture"
+role = "playfield"
+status = "promoted"
+provenance = "2026-08-21_candidate"
+alpha = true
+
+[[assets]]
+id = "workshop.easel"
+path = "easel.svg"
+family = "creative_prop"
+role = "playfield"
+status = "promoted"
+provenance = "2026-08-21_candidate"
+alpha = true
+
+[[assets]]
+id = "workshop.pegboard"
+path = "pegboard.svg"
+family = "furniture"
+role = "mid_background"
+status = "promoted"
+provenance = "2026-08-21_candidate"
+alpha = true
+
+[[assets]]
+id = "workshop.storage.box"
+path = "storage_box.svg"
+family = "furniture"
+role = "floor_or_shelf"
+status = "promoted"
+provenance = "2026-08-21_candidate"
+alpha = true
+
+[[assets]]
+id = "workshop.shelf.open"
+path = "shelf_open.svg"
+family = "furniture"
+role = "mid_background"
+status = "promoted"
+provenance = "2026-08-21_candidate"
+alpha = true
+
+[[assets]]
+id = "workshop.shelf.cubby"
+path = "shelf_cubby.svg"
+family = "furniture"
+role = "mid_background"
+status = "promoted"
+provenance = "legacy_v0.1_retained"
+alpha = true
+
+[[assets]]
+id = "workshop.paint.palette"
+path = "paint_palette.svg"
+family = "creative_prop"
+role = "tabletop_or_held"
+status = "promoted"
+provenance = "2026-08-21_candidate"
+alpha = true
+
+[[assets]]
+id = "workshop.brush.bundle"
+path = "brush_bundle.svg"
+family = "creative_prop"
+role = "tabletop"
+status = "promoted"
+provenance = "2026-08-21_candidate_revised"
+alpha = true
+
+[[assets]]
+id = "workshop.pencil.cup"
+path = "pencil_cup.svg"
+family = "creative_prop"
+role = "tabletop"
+status = "promoted"
+provenance = "2026-08-21_candidate"
+alpha = true
+
+[[assets]]
+id = "workshop.paint.jars"
+path = "paint_jars.svg"
+family = "creative_prop"
+role = "tabletop_or_shelf"
+status = "promoted"
+provenance = "2026-08-21_candidate"
+alpha = true
+
+[[assets]]
+id = "workshop.blocks.house"
+path = "blocks_house.svg"
+family = "toy_prop"
+role = "floor_or_tabletop"
+status = "promoted"
+provenance = "2026-08-21_candidate"
+alpha = true
+
+[[assets]]
+id = "workshop.blocks.loose"
+path = "blocks_loose.svg"
+family = "toy_prop"
+role = "floor_or_tabletop"
+status = "promoted"
+provenance = "legacy_v0.1_retained"
+alpha = true
+
+[[assets]]
+id = "workshop.paper.stack"
+path = "paper_stack.svg"
+family = "creative_prop"
+role = "tabletop"
+status = "promoted"
+provenance = "2026-08-21_candidate_revised"
+alpha = true
+
+[[assets]]
+id = "workshop.note.cork_tile"
+path = "pinboard_note_cork_tile.svg"
+family = "decor"
+role = "mid_background"
+status = "promoted"
+provenance = "2026-08-21_candidate"
+alpha = true
+
+[[assets]]
+id = "workshop.note.pinned"
+path = "pinboard_note_pinned.svg"
+family = "decor"
+role = "mid_background"
+status = "promoted"
+provenance = "legacy_v0.1_retained"
+alpha = true
+
+[[assets]]
+id = "workshop.desk_lamp.articulated"
+path = "desk_lamp_articulated.svg"
+family = "furniture"
+role = "tabletop"
+status = "promoted"
+provenance = "2026-08-21_candidate"
+alpha = true
+
+[[assets]]
+id = "workshop.desk_lamp.simple"
+path = "desk_lamp_simple.svg"
+family = "furniture"
+role = "tabletop"
+status = "promoted"
+provenance = "legacy_v0.1_retained"
+alpha = true
+
+[[assets]]
+id = "workshop.rug"
+path = "rug.svg"
+family = "textile"
+role = "floor"
+status = "promoted"
+provenance = "2026-08-21_candidate"
+alpha = true
+
+[[assets]]
+id = "workshop.window"
+path = "window.svg"
+family = "room_feature"
+role = "wall"
+status = "promoted"
+provenance = "2026-08-21_candidate"
+alpha = true
+
+[[assets]]
+id = "workshop.window_light.wide"
+path = "window_light_wide.svg"
+family = "atmosphere"
+role = "light_overlay"
+status = "promoted"
+provenance = "2026-08-21_candidate"
+alpha = true
+
+[[assets]]
+id = "workshop.window_light.narrow"
+path = "window_light_narrow.svg"
+family = "atmosphere"
+role = "light_overlay"
+status = "promoted"
+provenance = "legacy_v0.1_retained"
+alpha = true
+
+[[assets]]
+id = "workshop.wall.base"
+path = "wall_base.svg"
+family = "room_base"
+role = "background"
+status = "promoted"
+provenance = "2026-08-21_candidate"
+alpha = false
+
+[[assets]]
+id = "workshop.floor.base"
+path = "floor_base.svg"
+family = "room_base"
+role = "ground"
+status = "promoted"
+provenance = "2026-08-21_candidate"
+alpha = false
+
+[[ingredients]]
+id = "ingredient.wood"
+path = "ingredients/ingredient_wood_joint.svg"
+family = "ingredient"
+role = "joinery_detail"
+status = "promoted"
+provenance = "2026-08-21_candidate"
+
+[[ingredients]]
+id = "ingredient.paint"
+path = "ingredients/ingredient_paint_dabs.svg"
+family = "ingredient"
+role = "color_accent"
+status = "promoted"
+provenance = "2026-08-21_candidate"

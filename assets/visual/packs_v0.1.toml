@@ -37,11 +37,22 @@ reference_viewports = ["1024x600", "800x600"]
 dependencies = []
 
 [[packs]]
+id = "workshop.v0.2"
+kind = "environment"
+path = "assets/visual/environments/workshop/v0.2/"
+catalog = "assets/visual/environments/workshop/v0.2/catalog.toml"
+status = "promoted"
+evidence = ["source", "desktop_visual_review", "owner_promotion_review"]
+reference_viewports = ["1024x600", "800x600"]
+dependencies = []
+notes = "Preferred Workshop environment toolbox. 24 finished semantic assets + 2 authoring ingredients."
+
+[[packs]]
 id = "workshop.v0.1"
 kind = "environment"
 path = "assets/visual/environments/workshop/v0.1/"
 catalog = "assets/visual/environments/workshop/v0.1/catalog.toml"
-status = "candidate"
+status = "provenance"
 evidence = ["source", "desktop_visual_review"]
 reference_viewports = ["1024x600", "800x600"]
 dependencies = []
