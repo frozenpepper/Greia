@@ -54,9 +54,10 @@ Future Web Activities must preserve the same scene semantics through a Web rende
 - motion primitives must be cheap and bounded;
 - composition must work from a reference authoring canvas across Greia viewports;
 - critical gameplay stays inside declared safe composition space;
-- visual acceptance requires actual screenshot review under `VISUAL_ACCEPTANCE_EVIDENCE_CONTRACT.md`.
+- visual acceptance requires actual screenshot review under `VISUAL_ACCEPTANCE_EVIDENCE_CONTRACT.md`;
+- numeric visual evidence must agree with source/runtime values rather than being hand-transcribed.
 
-## S1 — Core scene model and Pygame compositor **[ACCEPTED: SIMULATOR VISUAL REVIEW]**
+## S1 — Core scene model and Pygame compositor **[RUNTIME PROVEN IN SIMULATOR; PRIMARY PIXEL REVIEW NOT INDEPENDENTLY CLOSED]**
 
 Current source:
 
@@ -81,13 +82,14 @@ Implemented concepts:
   - `sway_x`;
   - `breathe_alpha`;
 - optional-node fail-soft isolation;
+- optional decode/load failures remembered per renderer realization so a corrupt decorative asset is not retried every frame;
 - required-node scene failure so an Activity can retain a deliberate static/private fallback;
 - split z-range rendering so gameplay may sit between background and foreground/atmosphere passes;
 - shared `PygameVisualSurfaceCache`, not a second image-cache framework.
 
-Unit tests: 10/10 passed (`tests/test_scene.py`).
+Source unit coverage exists in `tests/test_scene.py`. For the owner-directed visual workstream, Activity Simulator evidence remains the acceptance path; committed source tests are not promoted to current PASS merely by existing.
 
-## S2 — First real runtime scene: Forest/Meadow **[ACCEPTED: SIMULATOR VISUAL REVIEW]**
+## S2 — First real runtime scene: Forest/Meadow **[RUNTIME PROVEN IN SIMULATOR]**
 
 First runtime scene manifest:
 
@@ -95,7 +97,7 @@ First runtime scene manifest:
 assets/scenes/forest_meadow_day_v1.toml
 ```
 
-The runtime rendition source manifest now promotes a bounded first environment set using the **same semantic IDs already present in the Forest/Meadow source catalogue**, including:
+The runtime rendition source manifest promotes a bounded first environment set using the **same semantic IDs already present in the Forest/Meadow source catalogue**, including:
 
 ```text
 hills.distant.01
@@ -115,60 +117,100 @@ atmosphere.fog_strip.01
 atmosphere.sunlight_rays.01
 ```
 
-The authored reference scene uses 1024×600 design coordinates and keeps critical gameplay inside the central 800 px safe span so `cover` cropping remains safe on 4:3 displays.
+The authored reference scene uses 1024×600 design coordinates, `fit = "cover"`, and keeps critical gameplay inside the central safe span so centered edge crop remains safe on differing aspect ratios.
 
-## S3 — First Activity acceptance (Nascondino nel Bosco) **[ACCEPTED: SIMULATOR VISUAL REVIEW]**
+## S3 — First Activity integration: Nascondino nel Bosco **[SIMULATOR RUNTIME EVIDENCE RETAINED; EVIDENCE AUDIT CORRECTION OPEN]**
 
-Acceptance protocol:
+Protocol executed:
 
 ```text
 docs/testing/2026-08-21_SCENE_COMPOSITOR_NASCONDINO_SIMULATOR.md
 ```
 
-Accepted outcome:
+Retained runtime facts:
 
 - Nascondino uses the shared Forest/Meadow scene for its world/background;
 - gameplay spots/animals remain interaction-authoritative;
-- background scene renders before gameplay ($z \le 59$);
-- foreground foliage + atmosphere/light render after gameplay ($z \ge 60$) but before Activity UI;
-- subtle parallax/ambient life is visible and calm;
-- motion-off frame is complete;
+- background scene renders before gameplay (`z <= 59`);
+- foreground foliage + atmosphere/light render after gameplay (`z >= 60`) but before Activity UI;
+- subtle parallax/ambient life is active;
+- motion-off frame exists;
 - missing/corrupt required scene art (`distant_hills.png`) triggers the Activity's deliberate legacy forest fallback;
 - optional atmosphere failure (`fog_strip.png`) skips only the affected layer;
-- all six responsive matrix rows passed;
-- FPS/cache behavior remained bounded (~27.5 FPS simulator sanity);
-- curated screenshot set committed under `docs/reviews/visual/2026-08-21_scene-compositor-nascondino/` with `REVIEW.md` and `layout-audit.json`.
+- the six responsive simulator rows were exercised;
+- measured scene run was **258 frames / 10.01 s = 25.8 FPS** simulator sanity;
+- curated screenshots are committed under `docs/reviews/visual/2026-08-21_scene-compositor-nascondino/`.
 
-## S4 — Motion/scene vocabulary expansion **[NEXT]**
+Primary source/evidence cross-check:
 
-Only after S3 is visually accepted, add primitives justified by real callers. Candidate needs:
+```text
+docs/reviews/visual/2026-08-21_scene-compositor-nascondino/PRIMARY_REVIEW.md
+```
 
-- quantized tiny tilt/rotation if foliage still needs it;
-- bounded sprite/face-state swapping for Puff/Bean characters;
-- repeating/tiled water or shimmer where Water/Pond proves the need;
-- simple color/light pulse;
-- scene-local character placement and shared shadow grounding;
-- optional low-count particle emitters only if static SVG FX are insufficient.
+That review found the local-agent visual audit overstated/incorrectly transcribed several facts: target label was 18 px rather than claimed 22 px; recorded target-card geometry disagreed with source; Large-interface scaling was claimed where the fixed HUD did not use that preference; and the scene's `cover` behavior was described as letterbox/pillarbox. These are folded into the next actor/HUD gate instead of starting another isolated micro-cycle.
 
-Do not create generic nodes/components speculatively.
+## S4 — Shared scene actor / first character-state runtime **[SOURCE IMPLEMENTED; SIMULATOR GATE NEXT]**
+
+New renderer-neutral source:
+
+```text
+src/greia_platform/scene_actor.py
+```
+
+Implemented actor semantics:
+
+- semantic character asset ID + explicit state variant;
+- deterministic blink state swap;
+- cheap whole-character vertical idle motion;
+- independently grounded shared contact shadow;
+- scene z/parallax placement;
+- complete `motion_enabled=False` static sample;
+- output remains ordinary `SceneNode` data and therefore reuses `PygameSceneRenderer` / existing cache;
+- no skeletal rig, per-frame raster generation, or second character renderer/cache.
+
+First promoted runtime actor assets:
+
+```text
+character.lilli/default
+character.lilli/blink
+shadow.contact.small.01/default
+```
+
+Build-time outputs:
+
+```text
+assets/visual/runtime/v1/characters/lilli_neutral.png
+assets/visual/runtime/v1/characters/lilli_blink.png
+assets/visual/runtime/v1/shared/shadow_contact_small.png
+```
+
+Exact current gate:
+
+```text
+docs/testing/2026-08-21_SCENE_ACTOR_LILLI_NASCONDINO_SIMULATOR.md
+```
+
+That gate also corrects the Nascondino target HUD so meaningful child text is comfortably above the lower 18 px guardrail, makes the semantic Large/Compact interface preference real on the fixed reference canvas, regenerates runtime-derived layout evidence, verifies actual blink pixels, and re-checks `cover` crop semantics.
 
 ## S5 — Character and reusable FX integration
 
-Use Lilli/Nino/Tito/Momo as scene entities without returning to detailed skeletal rigs.
+After the first Lilli actor gate, extend only from real caller needs.
 
 Target behavior:
 
 - semantic character art/state;
-- whole-character translation/bob/squash/stretch;
+- whole-character translation/bob/squash/stretch where bounded cache behavior remains stable;
 - authored face-state swaps;
 - shared contact shadow;
 - same scene z/parallax model;
 - deterministic idle timing;
 - complete static state.
 
+Candidate additions must be justified by real Activities. Quantized tiny tilt, simple light/color pulse, Water/Pond shimmer or low-count particle emitters are not automatically next merely because they are possible.
+
 ## S6 — Activity authoring adapter
 
-Python Activities should be able to declare/use a scene without recreating cache/loading/parallax machinery.
+Python Activities should be able to declare/use a scene and scene actors without recreating cache/loading/parallax machinery.
 
 The adapter should expose composition semantics, not host paths or Pygame internals where avoidable.
 
@@ -176,7 +218,7 @@ The existing `get_shared_visual(...)` API remains valid for isolated assets. The
 
 ## S7 — Web renderer/transport
 
-After the Python/Pygame scene contract proves stable:
+After the Python/Pygame scene + actor contract proves stable:
 
 ```text
 SceneDefinition semantics
@@ -197,14 +239,14 @@ A later physical gate should measure:
 - memory footprint;
 - resize/re-entry behavior;
 - static-motion-disabled fallback;
-- cache ceilings;
+- aggregate cache ceilings;
 - absence of runtime SVG dependencies.
 
 R7 remains independently open; this graphics tranche does not close display/session/input architecture.
 
 ## Evidence discipline
 
-Visual acceptance now requires committed reviewable screenshots. Local temporary screenshot names in a result report are insufficient because later reviewers cannot inspect their pixels.
+Visual acceptance requires committed reviewable screenshots, but local-agent prose is not assumed correct merely because screenshots exist. The primary/source cross-check must reject numeric or fit-mode claims that disagree with runtime source.
 
 Follow:
 
