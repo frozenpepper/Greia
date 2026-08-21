@@ -42,9 +42,9 @@ The owner's local agent is used only as a maintainer-side art-production tool. I
 Current established content state:
 
 - **Forest/Meadow v0.3 promoted**: 28 semantic roles = 23 reauthored candidate roles + 5 deliberately retained v0.2 roles; 2 preferred authoring ingredients.
-- **Workshop finalization owner-reviewed and promotion authorized**: 24 finished semantic assets = 14 direct candidate replacements + 5 retained baseline variants + 5 candidate coexistence variants; 2 preferred authoring ingredients; 0 unresolved.
-- Workshop still requires exact mechanical v0.2 materialization via `docs/testing/2026-08-21_WORKSHOP_V02_PROMOTION.md`.
-- **Clinic / Care is the next real art-production family** via `docs/testing/2026-08-21_CLINIC_CARE_BASE_PACK_REAUTHORING.md`.
+- **Workshop v0.2 promoted**: 24 finished semantic assets = 14 direct candidate replacements + 5 retained baseline variants + 5 candidate coexistence variants; 2 preferred authoring ingredients; v0.1 preserved as provenance.
+- **Clinic / Care candidate owner-reviewed**: clearly stronger overall than v0.1, but the proposed 17/17 direct replacement is rejected because several old/new pairs are likely useful distinct objects/states.
+- **Clinic / Care bounded finalization is now the exact task** via `docs/testing/2026-08-21_CLINIC_CARE_PACK_FINALIZATION.md`.
 
 No more hero-tree/specimen optimization is a milestone.
 
@@ -89,13 +89,14 @@ Do not create a giant runtime warehouse containing every conceivable final tree,
 
 # 4. Permanent pack-promotion rules now established
 
-Two owner-reviewed pack families have established the promotion policy:
+Owner-reviewed pack work has established the promotion policy:
 
 1. **Newer does not automatically win.** Retain a legacy asset when it is visibly stronger for its role.
 2. **The goal is the strongest toolbox, not the highest replacement percentage.** Preserve old/new variants together when they are genuinely different useful objects or scale/use cases.
 3. Distinct coexisting assets must receive distinct semantic IDs.
-4. Authoring ingredients are promoted selectively, not automatically.
-5. Source-pack promotion does not imply every asset becomes a shared runtime asset.
+4. Useful state variants may coexist when they enable Activity authoring (for example empty versus prepared props).
+5. Authoring ingredients are promoted selectively, not automatically.
+6. Source-pack promotion does not imply every asset becomes a shared runtime asset.
 
 Use these dispositions during review:
 
@@ -125,9 +126,9 @@ assets/visual/library/
 
 Forest/Meadow v0.3 is the current preferred promoted Forest/Meadow authoring pack. v0.2 remains provenance.
 
-Workshop v0.1 remains preserved until the owner-authorized v0.2 mechanical promotion is materialized.
+Workshop v0.2 is the current preferred promoted Workshop authoring pack. v0.1 remains provenance.
 
-Clinic / Care v0.1 remains the baseline for the next candidate pass.
+Clinic / Care v0.1 remains the baseline while the stronger 2026-08-21 candidate undergoes one bounded semantic/evidence finalization.
 
 ---
 
@@ -181,20 +182,24 @@ For meaningful visual work:
 
 ---
 
-# 9. Exact current actions
+# 9. Exact current action
 
-Execute in order:
+Execute:
 
 ```text
-1. docs/testing/2026-08-21_WORKSHOP_V02_PROMOTION.md
-2. docs/testing/2026-08-21_CLINIC_CARE_BASE_PACK_REAUTHORING.md
+docs/testing/2026-08-21_CLINIC_CARE_PACK_FINALIZATION.md
 ```
 
-The first task is mechanical source-pack promotion only.
+This is a bounded semantic/evidence pass only. It must:
 
-The second is the next substantive art pass. Clinic/Care must be reauthored at complete-pack scale across its current 17-role baseline with a warm, playful, reassuring care-room direction rather than sterile/scary medical imagery.
+1. resolve likely coexistence/state pairs for cushion, window, window light, bandage container and basin;
+2. assign distinct semantic IDs where both old/new assets survive;
+3. directly show and evaluate both proposed authoring ingredients;
+4. correct the crowded candidate room-composition evidence without reopening strong assets;
+5. produce an exact promotion map and owner-review ZIP;
+6. stop Clinic/Care work and wait for owner promotion review.
 
-After owner review, perform at most one bounded Clinic finalization if truly necessary, promote the strongest reviewed toolbox, then move to Reading / Classroom.
+After Clinic/Care promotion, move immediately to Reading / Classroom pack reauthoring.
 
 ---
 
