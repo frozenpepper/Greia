@@ -8,29 +8,19 @@
 **Visual-authoring architecture:** `docs/design/GREIA_VISUAL_AUTHORING_ARCHITECTURE.md`  
 **Generic art taxonomy:** `docs/design/GREIA_GENERIC_ART_LIBRARY_TAXONOMY.md`  
 **User-agent skill:** `skills/greia-visual-authoring/SKILL.md`  
-**Maintainer visual-toolbox plan:** `docs/plans/2026-08-21_BASE_ART_PACK_REAUTHORING.md`
+**Maintainer toolbox plan:** `docs/plans/2026-08-21_BASE_ART_PACK_REAUTHORING.md`
 
 ---
 
-# 1. Critical correction
+# 1. Current architectural direction
 
-Do not resume the old themed-pack sequence as though each historical scene family were automatically a core generic pack.
-
-The current architecture has two tracks:
+The visual workstream has two separate tracks.
 
 ## Track A — maintainer-side generic visual toolbox
 
-The owner's local agent is used to create/improve Greia source art. Its abilities are not evidence about arbitrary future user agents.
+The owner's local agent is used to create/improve Greia source art. Its capabilities are not evidence about arbitrary user agents.
 
-Useful reviewed source bundles currently include:
-
-- Forest/Meadow v0.3 — promoted;
-- Workshop v0.2 — promoted;
-- Clinic/Care 2026-08-21 candidate — visually stronger than its baseline in many roles, but **not authorized as a core Clinic pack**.
-
-Themed bundles are source/provenance pools. The primary Activity-authoring interface should be generic semantic collections.
-
-Current generic taxonomy:
+Theme/environment bundles are source/provenance pools. The primary Activity-authoring discovery layer is the generic semantic library:
 
 ```text
 Nature & Landscape
@@ -43,22 +33,17 @@ Shared UI
 Canonical Characters
 ```
 
-Authority:
-
-```text
-docs/design/GREIA_GENERIC_ART_LIBRARY_TAXONOMY.md
-```
-
 ## Track B — arbitrary Activity-authoring agents
 
-The user-facing skill is model/tool agnostic and teaches:
+The model/tool-agnostic workflow remains:
 
 ```text
 inventory Activity needs
 → search generic semantic authoring library
-→ inspect source/reference art as needed
-→ REUSE, COMPOSE/ADAPT, or CREATE ORIGINAL
-→ create Activity-local final art where needed
+→ prefer reviewed/preferred resources where they genuinely fit
+→ inspect candidate/source references as needed
+→ REUSE / COMPOSE-ADAPT / CREATE ORIGINAL
+→ create Activity-local final art
 → flatten/build efficient runtime rendition
 → integrate through existing Greia package/scene boundaries
 → inspect actual pixels
@@ -66,54 +51,26 @@ inventory Activity needs
 
 Authority:
 
-```text
-skills/greia-visual-authoring/SKILL.md
-```
+`skills/greia-visual-authoring/SKILL.md`
 
 ---
 
-# 2. Current exact maintainer task
-
-Do **not** execute Clinic/Care promotion/finalization as the next core-pack action.
-
-Execute:
-
-```text
-docs/testing/2026-08-21_GENERIC_VISUAL_LIBRARY_CONSOLIDATION.md
-```
-
-That task must:
-
-1. create `assets/visual/authoring_library/` generic indexes;
-2. map promoted Forest/Meadow v0.3 into generic collections;
-3. map promoted Workshop v0.2 into generic collections;
-4. classify Clinic candidate assets as `GENERIC_INDEX`, `SPECIALIZED_THEME_ONLY`, or `UNRESOLVED`;
-5. reference assets by source path instead of duplicating files;
-6. produce a generic coverage-gap report;
-7. recommend the next **generic** art-production batch by cross-Activity usefulness.
-
-Do not blindly continue to Reading/Classroom, Fantasy/Village/Night or Water/Pond as core packs.
-
----
-
-# 3. Current source-art state
+# 2. Current source-art state
 
 ## Forest / Meadow v0.3
 
-Promoted source bundle:
+Promoted source pool:
 
 ```text
 28 semantic roles
 = 23 reauthored roles
 + 5 retained legacy roles
-+ 2 preferred ingredients
++ 2 preferred authoring ingredients
 ```
-
-Best understood as a source pool feeding generic Nature/Landscape and lighting/FX collections.
 
 ## Workshop v0.2
 
-Promoted source bundle:
+Promoted source pool:
 
 ```text
 24 finished semantic assets
@@ -123,23 +80,94 @@ Promoted source bundle:
 + 2 preferred ingredients
 ```
 
-Best understood as a source pool feeding generic Interiors, Furniture/Storage, Making/Learning/Play, Everyday Props and Lighting collections.
+## Clinic / Care 2026-08-21 candidate
 
-## Clinic / Care candidate
+Useful reviewed source pool. It is not a required core generic pack. Generic furniture/interior/comfort/neutral-container assets may be indexed; strongly medical assets remain specialized.
 
-The candidate contains strong reusable art, but its theme is too specialized to justify automatic core-pack promotion.
-
-Likely generic harvest candidates include room/furniture/comfort assets such as bed, cabinet, table, cushion, rug, curtains, window, wall/floor bases, plush toy and neutral containers where appropriate.
-
-Strongly medical props such as stethoscope, bandage-specific container and care kit should remain specialized unless repeated real Activity demand justifies a domain extension.
-
-Do not create `clinic/v0.2` during generic consolidation.
+No `clinic/v0.2` core-pack promotion is authorized merely because the candidate exists.
 
 ---
 
-# 4. Stable runtime foundation
+# 3. First generic consolidation result
 
-Preserve the existing runtime architecture:
+Commit `cc1d7f1` created:
+
+`assets/visual/authoring_library/`
+
+with six semantic collection indexes and harvested Forest/Meadow, Workshop and Clinic candidate resources.
+
+The **structure is useful and retained**.
+
+However, the resulting gap analysis is not authoritative because it omitted existing source pools:
+
+- Reading / Classroom v0.1;
+- Fantasy / Village / Night v0.1;
+- Water / Pond v0.1.
+
+This is a material omission. Reading already contains books, reading chair, beanbag, potted plant, toy basket, bookcase, floor cushion, etc. Water already contains pond/water/reeds/dock/stepping-stone and water FX resources. Fantasy already contains reusable bridge/signpost/well/lantern/cobblestone candidates.
+
+Therefore the previously recommended 16-asset generic batch is **NOT AUTHORIZED YET**.
+
+Primary review:
+
+`docs/reviews/visual/2026-08-21_generic-authoring-library-consolidation/PRIMARY_REVIEW.md`
+
+---
+
+# 4. Exact current maintainer task
+
+Execute:
+
+`docs/testing/2026-08-21_GENERIC_VISUAL_LIBRARY_FULL_SOURCE_HARVEST.md`
+
+This is an inventory/classification/review gate, not an art-production gate.
+
+It must:
+
+1. inspect all Reading/Classroom v0.1 assets;
+2. inspect all Fantasy/Village/Night v0.1 assets;
+3. inspect all Water/Pond v0.1 assets;
+4. classify every relevant source as:
+   - `PREFERRED_GENERIC`
+   - `CANDIDATE_GENERIC`
+   - `REAUTHOR_GENERIC`
+   - `SPECIALIZED_THEME_ONLY`
+   - `DUPLICATE_OR_SUPERSEDED`
+   - `UNRESOLVED`
+5. update generic indexes without duplicating source files;
+6. distinguish `preferred` resources from `candidate_reference` resources;
+7. generate owner-review screenshots for the newly harvested generic candidates;
+8. recompute gaps as:
+   - `TRUE_MISSING`
+   - `QUALITY_GAP`
+   - `VARIETY_GAP`
+   - `NO_GAP`
+9. only then recommend the next generic art-production batch.
+
+No new art should be drawn during this gate.
+
+---
+
+# 5. Generic-library admission rule
+
+The semantic index structure is canonical. Individual assets are not automatically equally canonical/preferred.
+
+Generic entries should expose a simple admission state:
+
+```text
+preferred
+candidate_reference
+```
+
+Use preferred assets first for direct REUSE. Candidate references may still support COMPOSE/ADAPT or inspiration.
+
+An existing weak source asset means `QUALITY_GAP`, not `TRUE_MISSING`.
+
+---
+
+# 6. Stable runtime foundation
+
+Preserve:
 
 ```text
 explicit semantic asset catalogues
@@ -152,63 +180,46 @@ SceneActorDefinition / actor_scene_sample
 
 Runtime rules remain:
 
-- no arbitrary runtime source-directory scanning;
+- no arbitrary runtime source scanning;
 - no ordinary target SVG rasterization;
 - no per-frame disk decode/scale;
 - bounded caches;
-- explicit semantic/shared assets;
-- Activity-local assets remain inside the Activity package;
-- extend existing package/scene seams rather than inventing parallel loaders.
-
-The generic authoring indexes are an **authoring/discovery layer**, not a second runtime asset system.
+- Activity-local assets remain inside Activity packages;
+- generic authoring indexes are an authoring/discovery layer, not a second runtime catalogue.
 
 ---
 
-# 5. Permanent authoring principles
+# 7. Nascondino lesson
 
-- Rich composition at authoring time; economical composition at runtime.
-- Reuse does not mean clone-everywhere reuse.
-- The generic library is a toolbox, not a promise to contain every final object.
-- Specialized Activity art is expected and should usually remain Activity-local.
-- A visually good source asset may still be too specialized for the generic core.
-- Newer does not automatically replace older.
-- Useful old/new variants may coexist under distinct semantic IDs.
-- The producing agent's prose is not visual evidence; inspect actual pixels.
+Nascondino showed the failure mode where the background is upgraded while gameplay art remains primitive.
 
----
-
-# 6. Nascondino lesson
-
-Nascondino proved scene-runtime plumbing but exposed the failure mode where a polished background sits behind primitive gameplay art.
-
-The correct future Activity workflow is:
+The intended Activity workflow remains:
 
 ```text
 search generic toolbox
-→ reuse/adapt/create Activity-local art for ALL important visible gameplay roles
-→ compose environment + interactive props + characters + feedback + UI coherently
+→ reuse/adapt/create all important visible gameplay art coherently
+→ integrate environment + interactive props + characters + feedback + UI
 ```
 
-Do not solve this by globally shipping every possible hiding tree, medical prop, machine or animal pose.
+Do not solve this by globally shipping every possible final prop.
 
 ---
 
-# 7. Platform boundary
+# 8. Permanent visual rules
 
-R7 remains the primary blocking platform phase. Nothing in this visual-content correction closes, reorders or bypasses R7.
+- Rich authoring-time composition; economical runtime rendering.
+- Reuse does not mean clone-everywhere reuse.
+- Specialized Activity art is expected to remain Activity-local.
+- Theme bundles are provenance/source pools, not the primary authoring taxonomy.
+- Newer does not automatically replace older.
+- Useful variants can coexist under distinct semantic IDs.
+- Do not create duplicate generic assets before checking all source pools.
+- Producing-agent prose is not visual evidence; inspect actual pixels.
+
+---
+
+# 9. Platform boundary
+
+R7 remains the primary blocking platform phase. Nothing in this content-authoring work closes, reorders or bypasses R7.
 
 No physical Acer/Pi acceptance should be claimed unless actually performed.
-
----
-
-# 8. Do not resume these drift directions
-
-- themed-pack-by-themed-pack reauthoring without asking whether the theme is broadly reusable;
-- endless per-object optimization;
-- treating the local agent as representative of user agents;
-- building a giant shared warehouse of every possible final prop;
-- background-only Activity polish;
-- rigid geometric authoring templates;
-- arbitrary runtime asset discovery;
-- second catalogue/cache frameworks;
-- Shell/category micro-polish as a substitute for the visual-authoring system.
