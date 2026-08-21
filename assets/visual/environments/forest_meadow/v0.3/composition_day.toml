@@ -1,0 +1,45 @@
+composition_id = "greia.environment.forest_meadow.v0.3.day"
+viewport = "1024x600"
+environment_pack = "forest_meadow.v0.3"
+
+[[layers]]
+id = "sky"
+z_index = 0
+elements = [
+  { asset = "cloud_large.svg", x = 140, y = 30, scale = 1.0 },
+  { asset = "cloud_small.svg", x = 680, y = 60, scale = 1.0 }
+]
+
+[[layers]]
+id = "far_background"
+z_index = 10
+elements = [
+  { asset = "distant_hills.svg", x = 0, y = 200, scale = 1.0 },
+  { asset = "distant_treeline.svg", x = 0, y = 260, scale = 1.0 }
+]
+
+[[layers]]
+id = "midground"
+z_index = 20
+elements = [
+  { asset = "tree_hero.svg", x = 140, y = 80, scale = 1.0 },
+  { asset = "tree_secondary.svg", x = 540, y = 175, scale = 1.0 }
+]
+
+[[layers]]
+id = "foreground"
+z_index = 30
+elements = [
+  { asset = "grass_edge.svg", x = 0, y = 360, scale = 1.0 },
+  { asset = "bush_round.svg", x = 50, y = 425, scale = 1.0 },
+  { asset = "flower_patch.svg", x = 410, y = 465, scale = 1.0 },
+  { asset = "ground_dirt_patch.svg", x = 640, y = 470, scale = 1.0 },
+  { asset = "rock_cluster_large.svg", x = 760, y = 415, scale = 1.0 }
+]
+
+[[layers]]
+id = "atmosphere"
+z_index = 40
+elements = [
+  { asset = "sunlight_rays.svg", x = 0, y = 0, scale = 1.0 }
+]
