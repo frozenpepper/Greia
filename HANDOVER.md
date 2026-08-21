@@ -208,31 +208,25 @@ from `assets/visual/ui/v0.1/portal_frame.svg`; generated `portal_frame.png` must
 
 `SharedUiNavigationChromeMixin` applies `ui.button.icon/default` to Shell-local navigation while retaining existing action IDs and hit rectangles. Canonical acceptance commit: `370d96039546178ed2c64366bdaec1b5dc986be2`.
 
-### Current Collection-first Home source gate
+### Completed Collection-first Home gate — accepted
 
-`CollectionFirstHomeMixin` in `src/greia_launcher/collection_home_presentation.py` begins the real migration from the temporary All-Activities root to the accepted child discovery model:
+`CollectionFirstHomeMixin` in `src/greia_launcher/collection_home_presentation.py` realizes the accepted child discovery model:
 
 ```text
 profile → Greia Home → primary Collection → Activity
 ```
 
-Current source behavior:
+Accepted behavior:
 
 - `ALL_ACTIVITIES_ID` remains an internal catalogue projection but is no longer rendered as the normal child Activity wall;
-- only available non-empty primary Collections are presented on Home;
-- Collection destinations use `ui.portal.frame/default` when available;
+- only available non-empty primary Collections are presented on Home (`Crea`, `Gioca`, `Impara`, `Esplora`, `Mio Greia`, `Care`);
+- Collection destinations use `ui.portal.frame/default`;
 - entering a Collection reuses accepted Activity cards/panel/navigation/lifecycle;
 - local Back returns from Collection to Collection Home; root Back returns to profile choice;
 - multi-membership remains projection-only: one Activity may appear in several Collections without duplicated package/state/progress;
 - portal-specific failure falls back to a usable circular Collection destination and does not revert the information architecture to All Activities.
 
-Evidence remains **SOURCE** until:
-
-```text
-docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md
-```
-
-passes through the headless Activity Simulator.
+Accepted via `docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md` at **SIMULATOR VISUAL REVIEW** scope.
 
 ### Activity semantic resolver
 

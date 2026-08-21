@@ -520,4 +520,80 @@ All acceptance was performed through the Greia Activity Simulator in headless mo
 - **No Physical Hardware / Acer Performance Claim:** Verified through Activity Simulator only (`SIMULATOR VISUAL REVIEW`).
 - **No R7 Architecture Closure:** Display coordinator and session boundary remain open.
 
+---
+
+# Greia Collection-first Home — Simulator Acceptance Result
+
+**Date:** 2026-08-21  
+**Repository:** `frozenpepper/Greia` (`main`)  
+**Runbook Authority:** `docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md`  
+**Consumers:** `ui.portal.frame` (`default`) + `CollectionFirstHomeMixin`  
+**Evidence Class:** `SIMULATOR VISUAL REVIEW`  
+
+---
+
+## 1. Git & Commit Summary
+
+- **Start Base SHA:** `594782085f0a8f4f7f20f1354a5300dfb707081d`
+- **Head SHA:** (Current working tree)
+
+---
+
+## 2. Generated Renditions & Integration Details
+
+- **Generated Runtime Files:**
+  - `assets/visual/runtime/v1/ui/portal_frame.png` (520x520)
+- **Catalogue Verification:** Entry present in generated `assets/catalog/shared_visuals_v1.toml`.
+- **Implementation Mixin:** `CollectionFirstHomeMixin` in `src/greia_launcher/collection_home_presentation.py` mixed into `GreiaChildShell`.
+- **Integrated Surfaces & Behavior:**
+  1. **Primary Collection Destinations on Home:** Replaced the old "All Activities + category filter row" landing with large, circular `ui.portal.frame` primary Collection destinations (`Crea`, `Gioca`, `Impara`, `Esplora`, `Mio Greia`, `Care`).
+  2. **Navigation Hierarchy:** `profile -> Greia Home -> primary Collection -> Activity`. Local Back returns cleanly to Collection Home, and Home Back/ESC logs out to the profile picker.
+  3. **Multi-Membership Sanity:** Activities belonging to multiple Collections (e.g. `L'Acquario Magico` in `Crea` and `Esplora`) project cleanly into each Collection without package duplication.
+  4. **Activity Return Origin:** Returning from a launched Activity returns to the originating Collection context.
+  5. **Portal-Specific Fail-Soft Isolation:** Corrupted `portal_frame.png` falls back to circular primitive Collection portals while preserving the entire Collection-first information architecture, panel, cards, and profile badges.
+  6. **Headless Mode Confirmation:** 100% verified via `GREIA_SIMULATOR_HEADLESS=1` and SDL dummy driver without stealing focus.
+
+---
+
+## 3. Greia Simulator Acceptance Matrix
+
+All acceptance was performed through the Greia Activity Simulator in headless mode (`http://127.0.0.1:8767`) with isolated state root `$HOME/.greia-simulator-collection-home`:
+
+| Test # | Viewport | Interface Size | State | Result | Screenshot Evidence | Status File |
+|---|---|---|---|---|---|---|
+| **01** | 1024x600 | Normal | Baseline Collection Home | **PASS** | `tmp/collection-home-simulator-evidence/01-home-1024x600-normal.png` | `01-status.json` |
+| **02** | 1024x600 | Normal | Keyboard Navigation: Focus Next Portal | **PASS** | `tmp/collection-home-simulator-evidence/10-home-keyboard-focus.png` | N/A |
+| **03** | 1024x600 | Normal | Keyboard Navigation: Open Collection | **PASS** | `tmp/collection-home-simulator-evidence/11-collection-open-keyboard.png` | N/A |
+| **04** | 1024x600 | Normal | Pointer Navigation: Hover Portal | **PASS** | `tmp/collection-home-simulator-evidence/12-home-hover.png` | N/A |
+| **05** | 1024x600 | Normal | Pointer Navigation: Open Collection | **PASS** | `tmp/collection-home-simulator-evidence/13-collection-open-pointer.png` | N/A |
+| **06** | 1024x600 | Normal | Local Back Hierarchy: Return to Collection Home | **PASS** | `tmp/collection-home-simulator-evidence/20-returned-collection-home.png` | N/A |
+| **07** | 1024x600 | Normal | Local Back Hierarchy: Root Logout to Profile Picker | **PASS** | `tmp/collection-home-simulator-evidence/21-returned-profile-picker.png` | mode: profiles |
+| **08** | 1024x600 | Normal | Activity Launch & Return Origin: Returned to Collection | **PASS** | `tmp/collection-home-simulator-evidence/30-activity-returned-to-collection.png` | N/A |
+| **09** | 1024x600 | Normal | Activity Launch & Return Origin: Back to Collection Home | **PASS** | `tmp/collection-home-simulator-evidence/31-after-local-back-home.png` | N/A |
+| **10** | 1024x600 | Normal | Multi-Membership: Present in Collection 1 (Crea) | **PASS** | `tmp/collection-home-simulator-evidence/35-multi-membership-create.png` | N/A |
+| **11** | 1024x600 | Normal | Multi-Membership: Present in Collection 2 (Esplora) | **PASS** | `tmp/collection-home-simulator-evidence/36-multi-membership-explore.png` | N/A |
+| **12** | 1024x600 | Normal | Fallback: Corrupt Portal Frame PNG | **PASS** | `tmp/collection-home-simulator-evidence/40-fallback-corrupt-portal.png` (circular primitive portals, Collection hierarchy intact) | N/A |
+| **13** | 1024x600 | Normal | Responsive Matrix: 1024x600 Normal (Home + Collection) | **PASS** | `tmp/collection-home-simulator-evidence/50-1024x600-normal-home.png`, `50-1024x600-normal-collection.png` | N/A |
+| **14** | 1024x600 | Large | Responsive Matrix: 1024x600 Large | **PASS** | `tmp/collection-home-simulator-evidence/51-1024x600-large-home.png` | N/A |
+| **15** | 1280x800 | Normal | Responsive Matrix: 1280x800 Normal | **PASS** | `tmp/collection-home-simulator-evidence/52-1280x800-normal-home.png` | N/A |
+| **16** | 1366x768 | Compact | Responsive Matrix: 1366x768 Compact (Home + Collection) | **PASS** | `tmp/collection-home-simulator-evidence/53-1366x768-compact-home.png`, `53-1366x768-compact-collection.png` | N/A |
+| **17** | 1920x1080 | Normal | Responsive Matrix: 1920x1080 Normal (Home + Collection) | **PASS** | `tmp/collection-home-simulator-evidence/54-1920x1080-normal-home.png`, `54-1920x1080-normal-collection.png` | N/A |
+| **18** | 1111x700 | Normal | Responsive Matrix: 1111x700 Normal | **PASS** | `tmp/collection-home-simulator-evidence/55-1111x700-normal-home.png` | N/A |
+
+---
+
+## 4. Frame Rate & Performance Sanity
+
+- **Measurement:** 10-second idle measurement on Collection Home screen.
+- **Frames Rendered:** 277 frames across 10.01 seconds (**27.7 FPS**, steady clock performance).
+- **Status Evidence:** `tmp/collection-home-simulator-evidence/frame-before.json` and `frame-after.json`.
+
+---
+
+## 5. Explicit Non-Claims
+
+- **No Physical Hardware / Acer Performance Claim:** Verified through Activity Simulator only (`SIMULATOR VISUAL REVIEW`).
+- **No R7 Architecture Closure:** Display coordinator and session boundary remain open.
+- **No Adaptive Sub-Collections / Parent Visibility Claim:** Bounded to primary Collection Home only.
+
 

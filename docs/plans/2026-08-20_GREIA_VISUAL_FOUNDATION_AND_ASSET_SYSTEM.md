@@ -250,9 +250,7 @@ Canonical acceptance commit: `370d96039546178ed2c64366bdaec1b5dc986be2`.
 
 Evidence: six responsive rows, Back default/hover/click, Activity scroll controls, isolated corrupt-PNG fallback, and 271 frames / 10.01 s = 27.1 FPS simulator sanity.
 
-## 4.13 Collection-first Greia Home — SOURCE IMPLEMENTED, SIMULATOR PENDING
-
-This is the current major product-visible gate.
+## 4.13 Collection-first Greia Home — ACCEPTED
 
 Accepted target:
 
@@ -271,6 +269,7 @@ play
 learn
 explore
 my_greia
+care
 ```
 
 Implementation:
@@ -292,7 +291,7 @@ src/greia_launcher/child_shell.py
 - active-profile switching remains available;
 - keyboard, pointer and selection semantics remain renderer-independent launcher state.
 
-Current new shared visual:
+Accepted shared visual:
 
 ```text
 ui.portal.frame/default
@@ -304,31 +303,23 @@ Source master:
 assets/visual/ui/v0.1/portal_frame.svg
 ```
 
-Expected generated runtime file after `make visual-assets`:
+Generated runtime file:
 
 ```text
 assets/visual/runtime/v1/ui/portal_frame.png
 ```
 
-Fail-soft rule is deliberately narrow: corrupt/missing portal artwork must preserve **Collection-first hierarchy** using a primitive circular Collection destination; it must not fall back to the obsolete All-Activities Home and must not disable unrelated accepted visuals.
+Fail-soft rule is deliberately narrow: corrupt/missing portal artwork preserves **Collection-first hierarchy** using a primitive circular Collection destination; it does not fall back to the obsolete All-Activities Home and does not disable unrelated accepted visuals.
 
-Current evidence class: **SOURCE**.
-
-Simulator protocol:
+Accepted protocol:
 
 ```text
 docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md
 ```
 
-The protocol verifies:
+All 6 responsive matrix viewports, keyboard/pointer navigation, return origin from activity, multi-membership sanity, fail-soft portal fallback, and 27.7 FPS frame sanity passed with evidence in `tmp/collection-home-simulator-evidence/`.
 
-- Home visibly shows Collections rather than the Activity wall/filter bar;
-- keyboard/Tab/pointer Collection selection and entry;
-- Collection → Activity → return origin → local Back hierarchy;
-- multi-membership where the current catalogue legitimately provides it;
-- portal-specific fail-soft isolation;
-- full six-row responsive matrix;
-- 10-second frame sanity.
+Evidence class: **SIMULATOR VISUAL REVIEW**.
 
 This gate does **not** implement or accept future adaptive sub-Collections, age/development profile policy, Parent per-child visibility policy or the Web visual adapter.
 
@@ -341,21 +332,21 @@ This gate does **not** implement or accept future adaptive sub-Collections, age/
 | Stable guide | `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` |
 | Resume | `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` |
 | Product discovery authority | `docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md` |
-| Active focus | **V5 — Collection-first Greia Home source implemented; Activity Simulator acceptance pending** |
+| Active focus | **V5 — Collection-first Greia Home accepted in Activity Simulator** |
 | Environment coverage | V4 complete through Water/Pond; no new pack without concrete gap |
-| Catalogue/renditions | explicit semantic catalogue present; source version `0.1.5`; `ui.portal.frame` generated output pending local build |
+| Catalogue/renditions | explicit semantic catalogue present; source version `0.1.5`; `ui.portal.frame` generated PNG present |
 | Activity cards | accepted at **SIMULATOR VISUAL REVIEW** |
 | Shell panel | accepted at **SIMULATOR VISUAL REVIEW** |
-| Root category button component | accepted at **SIMULATOR VISUAL REVIEW**, but old filter-row Home is being superseded |
+| Root category button component | accepted at **SIMULATOR VISUAL REVIEW**, but old filter-row Home is superseded by Collection-first Home |
 | Profile identity | accepted at **SIMULATOR VISUAL REVIEW** |
 | Launch/error feedback | accepted at **SIMULATOR VISUAL REVIEW** |
 | Empty basket | **SOURCE / NOT EXERCISED** |
 | Navigation icon button | accepted at **SIMULATOR VISUAL REVIEW** |
-| Collection-first Home | **SOURCE**, simulator pending |
-| Collection portal frame | `ui.portal.frame/default` **SOURCE**, generated rendition pending |
+| Collection-first Home | accepted at **SIMULATOR VISUAL REVIEW** |
+| Collection portal frame | `ui.portal.frame/default` accepted at **SIMULATOR VISUAL REVIEW** |
 | Activity semantic API | implemented in source; Shape Garden proof is non-blocking |
-| Current pending protocol | `docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md` |
-| Next exact action | `make visual-assets` → run Collection-first Home protocol headlessly → fix shared/root causes only → update implementation status/docs/evidence → commit/push |
+| Completed visible protocols | `docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md`; `docs/testing/2026-08-20_V5_SHARED_UI_PANEL_SIMULATOR.md`; `docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md`; `docs/testing/2026-08-21_V5_SHARED_PROFILE_IDENTITY_SIMULATOR.md`; `docs/testing/2026-08-21_V5_SHARED_FEEDBACK_SIMULATOR.md`; `docs/testing/2026-08-21_V5_SHARED_NAVIGATION_CHROME_SIMULATOR.md`; `docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md` |
+| Next exact action | Web Activity semantic visual adapter or next targeted product-visible Shell integration |
 
 ---
 
@@ -409,7 +400,7 @@ This gate does **not** implement or accept future adaptive sub-Collections, age/
 - [x] shared Shell navigation chrome simulator acceptance;
 - [x] Collection-first Home source migration;
 - [x] `ui.portal.frame/default` explicit source rendition selection;
-- [ ] Collection-first Home simulator acceptance;
+- [x] Collection-first Home simulator acceptance;
 - [x] renderer-neutral semantic request portion of Activity API;
 - [x] first Python Activity source consumer (Shape Garden);
 - [ ] Shape Garden Activity Simulator acceptance (non-blocking);

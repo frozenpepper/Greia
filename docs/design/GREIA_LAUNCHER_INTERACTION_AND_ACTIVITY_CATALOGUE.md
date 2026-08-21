@@ -516,11 +516,11 @@ As of 2026-08-20, source already provides useful foundations:
 - one Activity in multiple categories;
 - bounded scrolling;
 - `education.difficulty` 1–10;
+- Collection-first Home (`ui.portal.frame` / `CollectionFirstHomeMixin`) replacing normal `All` landing, accepted via Activity Simulator (`docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md`);
 - Parent direction for later per-child Activity availability.
 
-Source still needs migration for the accepted target:
+Source still needs migration for the remainder of the target:
 
-- Collection-first Home instead of normal `All` landing;
 - optional adaptive sub-Collections and hysteresis;
 - future discovery-group metadata;
 - age/developmental suitability fields;

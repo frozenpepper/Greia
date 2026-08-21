@@ -1,6 +1,6 @@
 catalog_id = "greia.shared-visuals.v1"
-catalog_version = "0.1.4"
-source_sha256 = "6b0a9c2c3ad9ad04adcbc231d780f31e9546af2daba7115027cf5844f246ff98"
+catalog_version = "0.1.5"
+source_sha256 = "1f7f9d58e5a201228fa0ae819d2cbe762f14a0641875cb3c22f5ca5e8d62aefd"
 generated_note = "Build-time PNG renditions from explicit reviewed SVG masters; runtime must not discover or rasterize SVG source."
 
 [[visuals]]
@@ -71,6 +71,14 @@ role = "panel"
 
 [visuals.variants]
 default = "visual/runtime/v1/ui/panel_base.png"
+
+[[visuals]]
+id = "ui.portal.frame"
+kind = "ui"
+role = "collection_destination"
+
+[visuals.variants]
+default = "visual/runtime/v1/ui/portal_frame.png"
 
 [[visuals]]
 id = "ui.shadow.soft"

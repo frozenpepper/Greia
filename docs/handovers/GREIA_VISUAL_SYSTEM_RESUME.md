@@ -82,18 +82,17 @@ ui.avatar.frame      SIMULATOR VISUAL REVIEW
 ui.loading.orbit     SIMULATOR VISUAL REVIEW
 ui.error.gentle      SIMULATOR VISUAL REVIEW
 ui.button.icon       SIMULATOR VISUAL REVIEW
+ui.portal.frame      SIMULATOR VISUAL REVIEW
 ui.empty.basket      SOURCE (NOT EXERCISED)
 ```
 
-Latest accepted navigation-chrome evidence: in-category Back, Activity scroll controls, fail-soft corrupt-PNG fallback, all 6 responsive rows, and 271 frames / 10.01 s = 27.1 FPS in headless Activity Simulator. No physical Acer/Pi claim and no R7 closure.
+Latest accepted Collection-first Home evidence: primary Collection destinations on Home (`Crea`, `Gioca`, `Impara`, `Esplora`, `Mio Greia`, `Care`), keyboard/pointer navigation, return origin from activity, multi-membership sanity, fail-soft portal fallback, all 6 responsive rows, and 277 frames / 10.01 s = 27.7 FPS in headless Activity Simulator. No physical Acer/Pi claim and no R7 closure.
 
 ---
 
-# 4. Major product-direction correction now in source
+# 4. Accepted Collection-first product architecture
 
-The normal child Shell is no longer supposed to keep polishing the temporary **All Activities + category filter row** as the final information architecture.
-
-Accepted product authority is Collection-first:
+The normal child Shell now uses Collection-first discovery:
 
 ```text
 profile
@@ -104,7 +103,7 @@ profile
 
 with at most one future optional sub-Collection layer when a large effective catalogue actually benefits from it.
 
-Current source now begins that migration through:
+Implementation:
 
 ```text
 src/greia_launcher/collection_home_presentation.py
@@ -113,7 +112,7 @@ src/greia_launcher/child_shell.py
 
 `CollectionFirstHomeMixin` treats `ALL_ACTIVITIES_ID` as an internal projection only. At launcher root it renders the available non-empty primary Collections as large destinations; entering one reuses the already-accepted Activity card/panel/navigation path; local Back returns to Collection Home; root Back returns to profile choice.
 
-The new shared visual candidate is:
+Accepted shared visual:
 
 ```text
 ui.portal.frame/default
@@ -125,40 +124,25 @@ from:
 assets/visual/ui/v0.1/portal_frame.svg
 ```
 
-with explicit runtime rendition target:
+with generated runtime file:
 
 ```text
 assets/visual/runtime/v1/ui/portal_frame.png
 ```
 
-This Collection-first Home implementation is **SOURCE only** until the dedicated Activity Simulator protocol passes.
+Accepted via `docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md` at **SIMULATOR VISUAL REVIEW** scope.
 
 ---
 
-# 5. Current exact gate
-
-Run:
-
-```text
-docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md
-```
-
-Required sequence:
+# 5. Exact continuation sequence
 
 ```text
 1. sync current main
-2. make visual-assets
-3. verify ui.portal.frame exists in generated catalogue
-4. run the protocol with GREIA_SIMULATOR_HEADLESS=1
-5. verify normal Home shows Collections, not the All-Activities wall
-6. verify keyboard/pointer Collection navigation
-7. verify Collection → Activity → return → local Back hierarchy
-8. verify multi-membership where current catalogue permits
-9. corrupt only portal_frame.png and verify Collection-first fallback remains usable
-10. run the full 6-row responsive matrix and 10-second frame sanity
-11. fix only shared/root causes
-12. update result/product/design/plan/resume/HANDOVER
-13. commit and push accepted work to canonical main
+2. continue to Web Activity semantic adapter or next targeted product-visible Shell integration
+3. preserve headless simulator testing (GREIA_SIMULATOR_HEADLESS=1) so local work is non-intrusive
+4. run full responsive matrix and fail-soft verification
+5. update result/product/design/plan/resume/HANDOVER
+6. commit and push accepted work to canonical main
 ```
 
 Do **not** mark adaptive sub-Collections, age/development policy, Parent per-child visibility, Web semantic transport or physical hardware performance as implemented by this gate.
@@ -178,6 +162,7 @@ src/greia_launcher/child_shell.py
 
 Accepted existing relationships remain:
 
+- `ui.portal.frame/default` renders large primary Collection destinations on Home;
 - `ui.panel.base` provides the large Shell tray;
 - `ui.card.activity/default|focused` renders Activity cards inside Collections;
 - `ui.button.icon/default` provides local Back and scroll chrome;
@@ -185,7 +170,7 @@ Accepted existing relationships remain:
 - launch/error feedback uses shared artwork with narrow isolated fallbacks;
 - headless simulator mode is `--headless` / `GREIA_SIMULATOR_HEADLESS=1` using SDL dummy video/audio while retaining real pixel-buffer capture.
 
-The old `ui.button.primary` root category row remains accepted evidence for the previous presentation but is no longer the intended normal Home architecture once Collection-first Home is accepted.
+The old `ui.button.primary` root category row remains accepted evidence for the previous presentation but is superseded by Collection-first Home for normal child discovery.
 
 ---
 
@@ -227,11 +212,6 @@ docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md
 docs/testing/2026-08-21_V5_SHARED_PROFILE_IDENTITY_SIMULATOR.md
 docs/testing/2026-08-21_V5_SHARED_FEEDBACK_SIMULATOR.md
 docs/testing/2026-08-21_V5_SHARED_NAVIGATION_CHROME_SIMULATOR.md
-```
-
-Current pending protocol:
-
-```text
 docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md
 ```
 
