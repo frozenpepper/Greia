@@ -7,7 +7,7 @@ icon = "heart"
 languages = ["it", "en"]
 
 [presentation]
-categories = ["care", "play"]
+categories = ["play", "learn"]
 
 [education]
 categories = ["empathy", "caregiving", "hygiene_and_health"]
