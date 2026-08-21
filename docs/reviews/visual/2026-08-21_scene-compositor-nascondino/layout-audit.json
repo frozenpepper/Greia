@@ -1,0 +1,94 @@
+{
+  "gate": "scene-compositor-nascondino",
+  "date": "2026-08-21",
+  "activity_id": "org.greia.nascondino-bosco",
+  "scene_id": "forest_meadow.day.v1",
+  "viewports": {
+    "reference": {
+      "viewport": [
+        1024,
+        600
+      ],
+      "interface_size": "normal",
+      "target_card": {
+        "rect": [
+          352,
+          24,
+          320,
+          84
+        ],
+        "font_px": 22,
+        "clipped": false
+      },
+      "star_pill": {
+        "rect": [
+          80,
+          28,
+          130,
+          48
+        ],
+        "clipped": false
+      },
+      "home_button": {
+        "rect": [
+          8,
+          16,
+          60,
+          60
+        ],
+        "hit_rect": [
+          8,
+          16,
+          60,
+          60
+        ],
+        "overlap": false
+      },
+      "scene_layers": {
+        "background_z_max": 59,
+        "foreground_z_min": 60,
+        "drawn_background_nodes": 11,
+        "drawn_foreground_nodes": 4,
+        "atmosphere_occlusion": "subtle_and_framing_only"
+      }
+    },
+    "constrained_large": {
+      "viewport": [
+        1024,
+        600
+      ],
+      "interface_size": "large",
+      "target_card": {
+        "rect": [
+          352,
+          24,
+          320,
+          84
+        ],
+        "font_px": 22,
+        "clipped": false
+      },
+      "controls_scaled": true,
+      "overlap": false
+    },
+    "large_1080p": {
+      "viewport": [
+        1920,
+        1080
+      ],
+      "interface_size": "normal",
+      "scaling": "aspect_preserved_pillarboxed",
+      "clipped": false
+    }
+  },
+  "motion": {
+    "camera_parallax": true,
+    "drift_clouds": true,
+    "sway_foliage": true,
+    "fog_drift": true
+  },
+  "fallbacks": {
+    "required_missing_triggers_legacy_draw": true,
+    "optional_missing_fails_soft": true
+  }
+}

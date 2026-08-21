@@ -30,6 +30,8 @@ from greia_platform.pygame_canvas import (
     PygameReferenceCanvas,
     activity_viewport_for_surface,
 )
+from greia_platform.pygame_scene import PygameSceneRenderer, SceneRenderError
+from greia_platform.scene import SceneCamera, load_scene
 from greia_platform.typography import FontRole, GreiaTypography
 
 REFERENCE_WIDTH = 1024
@@ -188,6 +190,22 @@ def _draw_animal_portrait(surface: pygame.Surface, animal_id: str, cx: int, cy: 
         pygame.draw.circle(surface, dark, (cx - r * 2 // 3, cy + r // 6), max(2, r // 6))
 
 
+def _draw_legacy_forest_background(surf: pygame.Surface) -> None:
+    # 1. Forest Sky & Rolling Hills
+    surf.fill((186, 230, 253))  # Soft sky
+    pygame.draw.circle(surf, (254, 240, 138), (140, 90), 45)
+
+    # Pine backdrop trees
+    for bx in range(40, REFERENCE_WIDTH, 140):
+        pygame.draw.polygon(surf, (74, 222, 128), [(bx, 280), (bx + 70, 120), (bx + 140, 280)])
+        pygame.draw.polygon(surf, (34, 197, 94), [(bx + 15, 280), (bx + 70, 160), (bx + 125, 280)])
+
+    # Green ground
+    pygame.draw.rect(surf, (34, 197, 94), (0, 360, REFERENCE_WIDTH, 240))
+    pygame.draw.ellipse(surf, (22, 163, 74), pygame.Rect(-100, 340, 600, 100))
+    pygame.draw.ellipse(surf, (22, 163, 74), pygame.Rect(450, 340, 700, 100))
+
+
 def _is_safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
     vp = activity_viewport_for_surface(surface)
     x, y = position
@@ -211,6 +229,19 @@ def main() -> int:
     canvas = PygameReferenceCanvas(screen)
     typography = GreiaTypography()
     sounds = WoodlandAudio()
+
+    # Shared scene compositor
+    root = Path(__file__).resolve().parents[2]
+    scene = None
+    scene_renderer = None
+    try:
+        scene = load_scene(root / "assets" / "scenes" / "forest_meadow_day_v1.toml")
+        scene_renderer = PygameSceneRenderer.for_activity(max_entries=24)
+    except Exception:
+        scene = None
+        scene_renderer = None
+    scene_started = time.monotonic()
+    scene_failed = scene is None or scene_renderer is None
 
     storage = get_storage()
     saved_data = storage.kv_get(STORAGE_KEY) if storage else {}
@@ -337,20 +368,35 @@ def main() -> int:
 
         # RENDER TO CANVAS
         surf = canvas.surface
+        elapsed = time.monotonic() - scene_started
 
-        # 1. Forest Sky & Rolling Hills
-        surf.fill((186, 230, 253))  # Soft sky
-        pygame.draw.circle(surf, (254, 240, 138), (140, 90), 45)
+        # Camera displacement from pointer or subtle ambient drift
+        mouse_pos = pygame.mouse.get_pos()
+        ptr = canvas.pointer(mouse_pos)
+        if ptr is not None:
+            camera = SceneCamera.from_pointer(ptr, (REFERENCE_WIDTH, REFERENCE_HEIGHT), amplitude=(10.0, 4.0))
+        else:
+            drift_x = math.sin(elapsed * 0.25) * 6.0
+            drift_y = math.cos(elapsed * 0.18) * 2.5
+            camera = SceneCamera(drift_x, drift_y)
 
-        # Pine backdrop trees
-        for bx in range(40, REFERENCE_WIDTH, 140):
-            pygame.draw.polygon(surf, (74, 222, 128), [(bx, 280), (bx + 70, 120), (bx + 140, 280)])
-            pygame.draw.polygon(surf, (34, 197, 94), [(bx + 15, 280), (bx + 70, 160), (bx + 125, 280)])
-
-        # Green ground
-        pygame.draw.rect(surf, (34, 197, 94), (0, 360, REFERENCE_WIDTH, 240))
-        pygame.draw.ellipse(surf, (22, 163, 74), pygame.Rect(-100, 340, 600, 100))
-        pygame.draw.ellipse(surf, (22, 163, 74), pygame.Rect(450, 340, 700, 100))
+        # 1. Background scene pass (z <= 59)
+        if not scene_failed and scene is not None and scene_renderer is not None:
+            try:
+                scene_renderer.draw(
+                    scene,
+                    surf,
+                    elapsed_seconds=elapsed,
+                    camera=camera,
+                    motion_enabled=True,
+                    clear=True,
+                    max_z=59,
+                )
+            except SceneRenderError:
+                scene_failed = True
+                _draw_legacy_forest_background(surf)
+        else:
+            _draw_legacy_forest_background(surf)
 
         # 2. Draw Hiding Spots with Animated Peeking Clues
         for spot in SPOTS:
@@ -450,7 +496,22 @@ def main() -> int:
         for p in particles:
             pygame.draw.circle(surf, p["color"], (int(p["x"]), int(p["y"])), int(p["size"]))
 
-        # 5. Top Center "WANTED ANIMAL" Target Card (Icon + Label)
+        # 5. Foreground & Atmosphere scene pass (z >= 60)
+        if not scene_failed and scene is not None and scene_renderer is not None:
+            try:
+                scene_renderer.draw(
+                    scene,
+                    surf,
+                    elapsed_seconds=elapsed,
+                    camera=camera,
+                    motion_enabled=True,
+                    clear=False,
+                    min_z=60,
+                )
+            except SceneRenderError:
+                pass
+
+        # 6. Top Center "WANTED ANIMAL" Target Card (Icon + Label)
         target_card = pygame.Rect(REFERENCE_WIDTH // 2 - 160, 14, 320, 94)
         pygame.draw.rect(surf, (255, 252, 245), target_card, border_radius=24)
         pygame.draw.rect(surf, (234, 179, 8), target_card, width=4, border_radius=24)
@@ -466,8 +527,8 @@ def main() -> int:
         animal_names_it = {
             "fox": "VOLPE",
             "bunny": "CONIGLIO",
-            "deer": "CERVO",
             "owl": "GUFO",
+            "frog": "RANA",
             "hedgehog": "RICCIO",
             "squirrel": "SCOIATTOLO",
         }
@@ -484,7 +545,7 @@ def main() -> int:
             else:
                 pygame.draw.circle(surf, (203, 213, 225), (st_x, st_y), 8, 2)
 
-        # 6. Star Pill (Top Left)
+        # 7. Star Pill (Top Left)
         star_pill = pygame.Rect(80, 16, 130, 56)
         pygame.draw.rect(surf, (255, 255, 255), star_pill, border_radius=18)
         pygame.draw.rect(surf, (234, 179, 8), star_pill, width=3, border_radius=18)

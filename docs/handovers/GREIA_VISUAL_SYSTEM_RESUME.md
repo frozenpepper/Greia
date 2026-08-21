@@ -71,7 +71,7 @@ reviewed SVG master
 → Activity Simulator acceptance
 ```
 
-Accepted visible/shared Shell consumers:
+Accepted visible/shared Shell & Activity consumers:
 
 ```text
 ui.shadow.soft       SIMULATOR VISUAL REVIEW
@@ -84,9 +84,10 @@ ui.error.gentle      SIMULATOR VISUAL REVIEW
 ui.button.icon       SIMULATOR VISUAL REVIEW
 ui.portal.frame      SIMULATOR VISUAL REVIEW
 ui.empty.basket      SOURCE (NOT EXERCISED)
+forest_meadow_day_v1 SIMULATOR VISUAL REVIEW (Nascondino nel Bosco)
 ```
 
-Collection-first Home with bounded primary vocabulary is accepted through the headless Activity Simulator: portal Home (5 primary destinations), keyboard/pointer navigation, Clinic recoverability in Play & Learn, synthetic unknown-only `Altro`/`More` fallback, Activity return origin, multi-membership, corrupt-portal fallback, all six responsive rows, and 277 frames / 10.01 s = 27.7 FPS simulator sanity.
+Collection-first Home with bounded primary vocabulary is accepted through the headless Activity Simulator. Scene Compositor Runtime (`PygameSceneRenderer` & `SceneCamera`) is accepted in Nascondino nel Bosco with 2-pass rendering, parallax, ambient motion, fail-soft fallbacks, six-row responsive matrix, and 25.8 FPS simulator sanity.
 
 No physical Acer/Pi claim and no R7 closure.
 
@@ -225,12 +226,14 @@ docs/testing/2026-08-21_V5_SHARED_PROFILE_IDENTITY_SIMULATOR.md
 docs/testing/2026-08-21_V5_SHARED_FEEDBACK_SIMULATOR.md
 docs/testing/2026-08-21_V5_SHARED_NAVIGATION_CHROME_SIMULATOR.md
 docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md
+docs/testing/2026-08-21_COLLECTION_PRIMARY_VOCABULARY_SIMULATOR.md
+docs/testing/2026-08-21_SCENE_COMPOSITOR_NASCONDINO_SIMULATOR.md
 ```
 
 Current pending gate:
 
 ```text
-docs/testing/2026-08-21_COLLECTION_PRIMARY_VOCABULARY_SIMULATOR.md
+S4 Motion/Scene Vocabulary Expansion or Web Activity Semantic Adapter
 ```
 
 ---

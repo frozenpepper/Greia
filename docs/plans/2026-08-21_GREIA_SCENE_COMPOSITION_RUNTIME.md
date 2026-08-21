@@ -56,7 +56,7 @@ Future Web Activities must preserve the same scene semantics through a Web rende
 - critical gameplay stays inside declared safe composition space;
 - visual acceptance requires actual screenshot review under `VISUAL_ACCEPTANCE_EVIDENCE_CONTRACT.md`.
 
-## S1 — Core scene model and Pygame compositor **[SOURCE IMPLEMENTED]**
+## S1 — Core scene model and Pygame compositor **[ACCEPTED: SIMULATOR VISUAL REVIEW]**
 
 Current source:
 
@@ -85,9 +85,9 @@ Implemented concepts:
 - split z-range rendering so gameplay may sit between background and foreground/atmosphere passes;
 - shared `PygameVisualSurfaceCache`, not a second image-cache framework.
 
-No simulator/physical PASS is claimed for this source yet.
+Unit tests: 10/10 passed (`tests/test_scene.py`).
 
-## S2 — First real runtime scene: Forest/Meadow **[SOURCE IMPLEMENTED, INTEGRATION GATE NEXT]**
+## S2 — First real runtime scene: Forest/Meadow **[ACCEPTED: SIMULATOR VISUAL REVIEW]**
 
 First runtime scene manifest:
 
@@ -117,9 +117,7 @@ atmosphere.sunlight_rays.01
 
 The authored reference scene uses 1024×600 design coordinates and keeps critical gameplay inside the central 800 px safe span so `cover` cropping remains safe on 4:3 displays.
 
-Next consumer: **Nascondino nel Bosco**, because its current background is precisely the kind of primitive hand-drawn forest the shared scene runtime is intended to replace while leaving its actual hiding/gameplay logic intact.
-
-## S3 — First Activity acceptance **[NEXT]**
+## S3 — First Activity acceptance (Nascondino nel Bosco) **[ACCEPTED: SIMULATOR VISUAL REVIEW]**
 
 Acceptance protocol:
 
@@ -127,21 +125,21 @@ Acceptance protocol:
 docs/testing/2026-08-21_SCENE_COMPOSITOR_NASCONDINO_SIMULATOR.md
 ```
 
-Required outcome:
+Accepted outcome:
 
 - Nascondino uses the shared Forest/Meadow scene for its world/background;
 - gameplay spots/animals remain interaction-authoritative;
-- background scene renders before gameplay;
-- foreground foliage + atmosphere/light render after gameplay but before Activity UI;
-- subtle parallax/ambient life is visible but calm;
+- background scene renders before gameplay ($z \le 59$);
+- foreground foliage + atmosphere/light render after gameplay ($z \ge 60$) but before Activity UI;
+- subtle parallax/ambient life is visible and calm;
 - motion-off frame is complete;
-- missing/corrupt required scene art triggers the Activity's deliberate legacy/static fallback rather than a crash;
-- optional atmosphere failure removes only the affected layer;
-- responsive matrix remains usable;
-- FPS/cache behavior remains bounded;
-- a curated screenshot set is committed and **must be visually reviewed**, not merely reported as PASS.
+- missing/corrupt required scene art (`distant_hills.png`) triggers the Activity's deliberate legacy forest fallback;
+- optional atmosphere failure (`fog_strip.png`) skips only the affected layer;
+- all six responsive matrix rows passed;
+- FPS/cache behavior remained bounded (~27.5 FPS simulator sanity);
+- curated screenshot set committed under `docs/reviews/visual/2026-08-21_scene-compositor-nascondino/` with `REVIEW.md` and `layout-audit.json`.
 
-## S4 — Motion/scene vocabulary expansion **[AFTER FIRST ACCEPTANCE]**
+## S4 — Motion/scene vocabulary expansion **[NEXT]**
 
 Only after S3 is visually accepted, add primitives justified by real callers. Candidate needs:
 

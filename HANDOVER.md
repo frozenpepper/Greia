@@ -63,8 +63,8 @@ ui.error.gentle      SIMULATOR VISUAL REVIEW
 ui.button.icon       SIMULATOR VISUAL REVIEW
 ui.portal.frame      SIMULATOR VISUAL REVIEW
 ui.empty.basket      SOURCE / NOT EXERCISED
-Collection-first Home SIMULATOR VISUAL REVIEW
-bounded primary-vocabulary / Browse correction SOURCE / SIMULATOR PENDING
+Collection-first Home SIMULATOR VISUAL REVIEW (5 primary collections + Altro/More fallback)
+forest_meadow_day_v1 SIMULATOR VISUAL REVIEW (Scene Compositor Runtime in Nascondino nel Bosco)
 ```
 
 Accepted simulator facts include:
@@ -76,18 +76,17 @@ Accepted simulator facts include:
 - profile frame: profile picker + active-profile switcher + six-row matrix/fallback, ~27.4 FPS sanity;
 - headless simulator supports `--headless` / `GREIA_SIMULATOR_HEADLESS=1` using SDL dummy video/audio while preserving real Shell pixel-buffer capture;
 - launch/error shared feedback passed with isolated fallbacks, 27.9 FPS sanity;
-- navigation icon button passed in-category Back, real Activity pagination, corrupt-PNG fallback and six responsive rows, 27.1 FPS sanity; profile pagination remained not exercised because workspace profile count was <=4;
-- Collection-first Home passed portal Home, keyboard/pointer navigation, Collection→Activity→return-origin→Back hierarchy, multi-membership, corrupt portal fallback, six responsive rows, 277 frames / 10.01 s = 27.7 FPS sanity;
+- navigation icon button passed in-category Back, real Activity pagination, corrupt-PNG fallback and six responsive rows, 27.1 FPS sanity;
+- Collection-first Home passed portal Home, bounded 5 primary destinations (`create`, `play`, `learn`, `explore`, `my_greia`), `browse`/`Altro` recovery for unknown categories, Clinic in Play & Learn, corrupt portal fallback, six responsive rows, 27.7 FPS sanity;
+- Scene Compositor Runtime passed in `nascondino_bosco` using `forest_meadow_day_v1.toml`, 2-pass background ($z \le 59$) and foreground/atmosphere ($z \ge 60$) rendering, parallax and ambient motion, corrupt required/optional asset fallbacks, six responsive rows, 25.8 FPS sanity;
 - `ui.empty.basket` remains generated/source-present but not legitimately exercised;
 - first Python Activity semantic resolver + Shape Garden consumer remain SOURCE only and non-blocking;
 - no physical Acer/Pi V5 performance claim is made.
 
-The accepted Collection-first run exposed one product defect: arbitrary Activity category `care` appeared as a sixth top-level Home destination. The current source correction is **not yet simulator-accepted**.
-
-Current acceptance gate:
+Current continuation priority:
 
 ```text
-docs/testing/2026-08-21_COLLECTION_PRIMARY_VOCABULARY_SIMULATOR.md
+S4 Motion/Scene Vocabulary Expansion or Web Activity Semantic Adapter
 ```
 
 ---

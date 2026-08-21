@@ -240,7 +240,9 @@ def _positive_int(entry: Mapping[str, object], key: str) -> int:
 
 
 def _require_within(root: Path, candidate: Path, label: str) -> None:
-    if candidate == root or root not in candidate.parents:
+    root_resolved = root.resolve()
+    candidate_resolved = candidate.resolve()
+    if candidate_resolved == root_resolved or root_resolved not in candidate_resolved.parents:
         raise VisualRenditionValidationError(f"{label} escapes assets root: {candidate}")
 
 

@@ -326,6 +326,35 @@ Evidence class: **SIMULATOR VISUAL REVIEW**.
 
 This gate does **not** implement or accept future adaptive sub-Collections, age/development profile policy, Parent per-child visibility policy or the Web visual adapter.
 
+## 4.14 Scene Composition Runtime & Nascondino nel Bosco — ACCEPTED (SIMULATOR VISUAL REVIEW)
+
+Architecture plan:
+
+```text
+docs/plans/2026-08-21_GREIA_SCENE_COMPOSITION_RUNTIME.md
+```
+
+Accepted components:
+
+1. `SceneDefinition` + `SceneNode` + `SceneCamera` in `src/greia_platform/scene.py`;
+2. `PygameSceneRenderer` with split $z$-range rendering ($z \le 59$ background, $z \ge 60$ foreground/atmosphere) in `src/greia_platform/pygame_scene.py`;
+3. First runtime scene `assets/scenes/forest_meadow_day_v1.toml` with 15 semantic visual nodes;
+4. Integration in `activities/nascondino_bosco/main.py` replacing primitive legacy background while preserving interactive gameplay spots, animal clue animations, and HUD layers;
+5. Required asset corruption (`distant_hills.png`) fail-soft fallback to `_draw_legacy_forest_background`;
+6. Optional atmosphere corruption (`fog_strip.png`) fail-soft soft isolation skipping only the fog node;
+7. Camera parallax + ambient motion (`drift_x`, `sway_x`, `breathe_alpha`);
+8. All six responsive matrix rows (`1024×600` normal/large, `1280×800`, `1366×768`, `1920×1080`, `1111×700`);
+9. Frame performance sanity: 258 frames / 10.01 s = 25.8 FPS;
+10. Curated review set committed in `docs/reviews/visual/2026-08-21_scene-compositor-nascondino/` per `docs/testing/VISUAL_ACCEPTANCE_EVIDENCE_CONTRACT.md`.
+
+Accepted via:
+
+```text
+docs/testing/2026-08-21_SCENE_COMPOSITOR_NASCONDINO_SIMULATOR.md
+```
+
+Evidence class: **SIMULATOR VISUAL REVIEW**.
+
 ---
 
 # 5. Current checkpoint
@@ -335,9 +364,9 @@ This gate does **not** implement or accept future adaptive sub-Collections, age/
 | Stable guide | `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` |
 | Resume | `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` |
 | Product discovery authority | `docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md` |
-| Active focus | **V5 — Bounded primary Collection vocabulary accepted in Activity Simulator** |
-| Environment coverage | V4 complete through Water/Pond; no new pack without concrete gap |
-| Catalogue/renditions | explicit semantic catalogue present; source version `0.1.5`; `ui.portal.frame` generated PNG present |
+| Active focus | **V5 — Scene Composition Runtime & Nascondino nel Bosco accepted in Activity Simulator** |
+| Environment coverage | V4 complete through Water/Pond; first runtime scene `forest_meadow_day_v1.toml` active |
+| Catalogue/renditions | explicit semantic catalogue present; source version `0.2.0`; 15 Forest/Meadow PNG renditions generated |
 | Activity cards | accepted at **SIMULATOR VISUAL REVIEW** |
 | Shell panel | accepted at **SIMULATOR VISUAL REVIEW** |
 | Root category button component | accepted at **SIMULATOR VISUAL REVIEW**, but old filter-row Home is superseded by Collection-first Home |
@@ -347,9 +376,11 @@ This gate does **not** implement or accept future adaptive sub-Collections, age/
 | Navigation icon button | accepted at **SIMULATOR VISUAL REVIEW** |
 | Collection-first Home | accepted at **SIMULATOR VISUAL REVIEW** (5 primary collections) |
 | Collection portal frame | `ui.portal.frame/default` accepted at **SIMULATOR VISUAL REVIEW** |
+| Scene compositor runtime | `PygameSceneRenderer` + `SceneCamera` accepted at **SIMULATOR VISUAL REVIEW** |
+| Nascondino scene integration | `forest_meadow_day_v1.toml` in Nascondino accepted at **SIMULATOR VISUAL REVIEW** |
 | Activity semantic API | implemented in source; Shape Garden proof is non-blocking |
-| Completed visible protocols | `docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md`; `docs/testing/2026-08-20_V5_SHARED_UI_PANEL_SIMULATOR.md`; `docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md`; `docs/testing/2026-08-21_V5_SHARED_PROFILE_IDENTITY_SIMULATOR.md`; `docs/testing/2026-08-21_V5_SHARED_FEEDBACK_SIMULATOR.md`; `docs/testing/2026-08-21_V5_SHARED_NAVIGATION_CHROME_SIMULATOR.md`; `docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md`; `docs/testing/2026-08-21_COLLECTION_PRIMARY_VOCABULARY_SIMULATOR.md` |
-| Next exact action | Web Activity semantic visual adapter or next targeted product-visible Shell integration |
+| Completed visible protocols | `docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md`; `docs/testing/2026-08-20_V5_SHARED_UI_PANEL_SIMULATOR.md`; `docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md`; `docs/testing/2026-08-21_V5_SHARED_PROFILE_IDENTITY_SIMULATOR.md`; `docs/testing/2026-08-21_V5_SHARED_FEEDBACK_SIMULATOR.md`; `docs/testing/2026-08-21_V5_SHARED_NAVIGATION_CHROME_SIMULATOR.md`; `docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md`; `docs/testing/2026-08-21_COLLECTION_PRIMARY_VOCABULARY_SIMULATOR.md`; `docs/testing/2026-08-21_SCENE_COMPOSITOR_NASCONDINO_SIMULATOR.md` |
+| Next exact action | S4 motion/scene vocabulary expansion or Web Activity semantic visual adapter |
 
 ---
 

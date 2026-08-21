@@ -3,3 +3,5 @@ __pycache__/
 *.greiaactivity
 build/test_package_service_state/
 .DS_Store
+tmp/
+

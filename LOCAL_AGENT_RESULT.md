@@ -673,4 +673,81 @@ All acceptance was performed through the Greia Activity Simulator in headless mo
 - **No R7 Architecture Closure:** Display coordinator and session boundary remain open.
 - **No Adaptive Sub-Collections Claim:** Bounded primary vocabulary only.
 
+---
+
+# Part 9: Scene Compositor Runtime & Nascondino nel Bosco Acceptance
+
+**Date:** 2026-08-21  
+**Runbook Authority:** `docs/testing/2026-08-21_SCENE_COMPOSITOR_NASCONDINO_SIMULATOR.md`  
+**Evidence Contract:** `docs/testing/VISUAL_ACCEPTANCE_EVIDENCE_CONTRACT.md`  
+**Evidence Class:** `SIMULATOR VISUAL REVIEW`
+
+---
+
+## 1. Summary of Changes
+
+- **Scene Composition Runtime Engine:**
+  - Implemented `SceneDefinition`, `SceneNode`, and `SceneCamera` in `src/greia_platform/scene.py` with multi-layer depth, transform mapping (`cover`/`contain`), per-node alpha, bounded parallax (0..1), and deterministic ambient motion primitives (`drift_x`, `drift_y`, `float`, `sway_x`, `breathe_alpha`).
+  - Implemented `PygameSceneRenderer` in `src/greia_platform/pygame_scene.py` with bounded surface caching via `PygameVisualSurfaceCache`, fail-soft optional node isolation, and split $z$-range rendering.
+  - Added full test suite in `tests/test_scene.py` (10/10 tests pass).
+- **First Shared Runtime Scene:**
+  - Defined `assets/scenes/forest_meadow_day_v1.toml` mapping 15 semantic visual nodes across background ($z \le 59$) and foreground/atmosphere ($z \ge 60$) passes.
+- **Activity Integration in Nascondino nel Bosco:**
+  - Integrated `PygameSceneRenderer` and `SceneCamera` into `activities/nascondino_bosco/main.py`.
+  - Background pass ($z \le 59$) draws distant hills, treelines, clouds, ground edge, framing trees, bushes, logs, and rock clusters.
+  - Gameplay pass preserves interactive woodland spots (hollow tree, berry bush, cave, reeds, pine tree) and animated animal clues.
+  - Foreground & atmosphere pass ($z \ge 60$) adds corner framing foliage, soft fog, and sunlight rays.
+  - Retained clean HUD and star pills on top of all scene layers.
+  - Added robust legacy forest fallback via `_draw_legacy_forest_background`.
+
+---
+
+## 2. Greia Simulator Acceptance Matrix
+
+All acceptance was performed exclusively through the Greia Activity Simulator in headless mode with isolated state root `$HOME/.greia-simulator-scene-compositor`:
+
+| Test # | Viewport | Interface Size | State / Scenario | Result | Screenshot Evidence | Status File |
+|---|---|---|---|---|---|---|
+| **01** | 1024x600 | Normal | Baseline Scene Composition | **PASS** | `tmp/scene-compositor-nascondino-evidence/01-reference-1024x600.png` | `01-status.json` |
+| **02** | 1024x600 | Normal | Parallax / Motion Displaced | **PASS** | `tmp/scene-compositor-nascondino-evidence/02-motion-displaced.png` | N/A |
+| **03** | 1024x600 | Normal | Static Motion Disabled | **PASS** | `tmp/scene-compositor-nascondino-evidence/03-static-motion-off.png` | N/A |
+| **04** | 1024x600 | Normal | Required Asset Corruption Fallback (`distant_hills.png`) | **PASS** | `tmp/scene-compositor-nascondino-evidence/10-required-fallback.png` | N/A |
+| **05** | 1024x600 | Normal | Optional Atmosphere Isolation (`fog_strip.png`) | **PASS** | `tmp/scene-compositor-nascondino-evidence/11-optional-fog-fallback.png` | N/A |
+| **06** | 1024x600 | Normal | Responsive Matrix: 1024x600 Normal | **PASS** | `tmp/scene-compositor-nascondino-evidence/20-1024x600-normal.png` | N/A |
+| **07** | 1024x600 | Large | Responsive Matrix: 1024x600 Large | **PASS** | `tmp/scene-compositor-nascondino-evidence/21-1024x600-large.png` | N/A |
+| **08** | 1280x800 | Normal | Responsive Matrix: 1280x800 Normal | **PASS** | `tmp/scene-compositor-nascondino-evidence/22-1280x800-normal.png` | N/A |
+| **09** | 1366x768 | Compact | Responsive Matrix: 1366x768 Compact | **PASS** | `tmp/scene-compositor-nascondino-evidence/23-1366x768-compact.png` | N/A |
+| **10** | 1920x1080 | Normal | Responsive Matrix: 1920x1080 Normal | **PASS** | `tmp/scene-compositor-nascondino-evidence/24-1920x1080-normal.png` | N/A |
+| **11** | 1111x700 | Normal | Responsive Matrix: 1111x700 Normal | **PASS** | `tmp/scene-compositor-nascondino-evidence/25-1111x700-normal.png` | N/A |
+
+---
+
+## 3. Frame Rate & Performance Sanity
+
+- **Measurement:** 10-second idle measurement in Nascondino nel Bosco with active multi-layer scene rendering and ambient animations.
+- **Frames Rendered:** 258 frames across 10.01 seconds (**25.8 FPS**, rock-solid performance on low-power dummy driver).
+- **Status Evidence:** `tmp/scene-compositor-nascondino-evidence/frame-before.json` and `frame-after.json`.
+
+---
+
+## 4. Committed Curated Visual Review Artifacts
+
+Per `docs/testing/VISUAL_ACCEPTANCE_EVIDENCE_CONTRACT.md`, curated review files are committed under:
+`docs/reviews/visual/2026-08-21_scene-compositor-nascondino/`:
+- `01-reference.png`
+- `02-motion.png`
+- `03-constrained.png`
+- `04-large.png`
+- `05-fallback.png`
+- `REVIEW.md` (pixel-level visual inspection)
+- `layout-audit.json`
+
+---
+
+## 5. Explicit Non-Claims
+
+- **No Physical Hardware / Acer Performance Claim:** Tested through Activity Simulator only (`SIMULATOR VISUAL REVIEW`).
+- **No R7 Architecture Closure:** Display coordinator and session boundary remain independently open.
+
+
 
