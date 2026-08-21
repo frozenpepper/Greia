@@ -12,6 +12,8 @@ A visual gate is not accepted merely because controls respond, FPS is stable, or
 
 Therefore every visual acceptance gate must leave a **small reviewable screenshot set in Git**, in addition to any larger project-local temporary evidence set.
 
+For owner-driven visual work, that committed set must also be packaged into a **small non-committed transfer ZIP** so the owner can attach the actual PNGs to the primary reviewer when repository tooling cannot display private-repository image bytes directly.
+
 ## Evidence locations
 
 The full run may keep detailed evidence under a project-local temporary directory such as:
@@ -123,9 +125,31 @@ The exact schema may grow, but the intent is stable: make clipping, text size an
 
 For fixed-reference-canvas Activities, distinguish profile `InterfaceSize` scaling from physical viewport scaling. If the Activity canvas already handles physical scaling, do not claim that a HUD responds to `large`/`compact` merely because the final screenshot was resized by the canvas.
 
+## Mandatory owner-transfer archive
+
+When a visual gate is being reviewed through a local agent and a separate primary reviewer, the local agent must create a small transfer archive after the curated review directory is final.
+
+The archive must:
+
+- contain the curated 4–6 PNGs plus `REVIEW.md` and `layout-audit.json`;
+- be created in the Greia project root with a clear name such as `GREIA_VISUAL_REVIEW_<GATE>.zip`;
+- **not** be committed to Git;
+- remain on disk after the agent pushes its source/documentation changes;
+- be reported with an exact project-relative path in the final local-agent response so the owner can attach it directly to ChatGPT or another primary reviewer.
+
+Preferred implementation is Python stdlib `zipfile` so the workflow does not depend on a particular host `zip` utility. The exact gate runbook should provide the ready-to-run packaging command and exact expected archive name.
+
+The final local-agent response for a visual gate must include a line in this form:
+
+```text
+VISUAL REVIEW ZIP FOR OWNER ATTACHMENT: ./GREIA_VISUAL_REVIEW_<GATE>.zip
+```
+
+The purpose is simple: if repository tooling exposes private PNGs only as encoded bytes, the owner can transfer the actual files as an attachment and the primary reviewer can truly inspect the pixels. Do not treat the local agent's textual `PASS` as a substitute for that independent view.
+
 ## Acceptance rule
 
-A visual gate may be recorded as `SIMULATOR VISUAL REVIEW` only when all of the following are true:
+A visual gate may be recorded as `SIMULATOR VISUAL REVIEW` locally only when all of the following are true:
 
 - the simulator/runtime cases passed;
 - the curated screenshots exist in the committed review directory;
@@ -133,9 +157,10 @@ A visual gate may be recorded as `SIMULATOR VISUAL REVIEW` only when all of the 
 - source/runtime cross-checks do not contradict the review/audit;
 - layout audit does not reveal an unaddressed clipping/overlap/text-size defect;
 - fail-soft behavior remains usable where the gate requires it;
-- evidence scope is not overstated as physical-hardware approval.
+- evidence scope is not overstated as physical-hardware approval;
+- the mandatory owner-transfer ZIP has been created and its exact path reported when the gate is owner-driven.
 
-When a subsequent reviewer has repository access, they should review the committed curated screenshots before treating the visual result as closed. If that review environment cannot directly display private-repository PNG bytes, it must say so explicitly and must not relabel the local-agent pixel review as its own independent visual inspection.
+When a subsequent reviewer has repository access, they should review the committed curated screenshots before treating the visual result as closed. If that review environment cannot directly display private-repository PNG bytes, it must say so explicitly and use the owner-transfer ZIP rather than pretending to have independently inspected the pixels.
 
 ## Repository-size rule
 
@@ -144,6 +169,7 @@ Keep this disciplined:
 - commit only the curated 4–6 review images;
 - keep raw/full-matrix evidence project-local unless a specific failure requires preservation;
 - prefer PNG for pixel-exact low-resolution evidence;
+- do not commit the owner-transfer ZIP;
 - do not create a new screenshot directory for every trivial code edit — one directory per substantive visual gate.
 
 The goal is **reviewability**, not evidence-volume inflation.
