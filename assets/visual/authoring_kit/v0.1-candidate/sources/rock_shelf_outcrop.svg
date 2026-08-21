@@ -1,54 +1,45 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 256">
 <defs>
-  <filter id="rock-sh-b" x="-30%" y="-30%" width="160%" height="160%">
+  <filter id="r-sh-b-blur" x="-30%" y="-30%" width="160%" height="160%">
     <feGaussianBlur stdDeviation="6"/>
   </filter>
-  <linearGradient id="shelf-top" x1="0.2" y1="0" x2="0.8" y2="1">
-    <stop offset="0%" stop-color="#D8E2E5"/>
-    <stop offset="50%" stop-color="#ACBCC0"/>
-    <stop offset="100%" stop-color="#76888C"/>
+  <linearGradient id="shelf-top-grad" x1="0.2" y1="0" x2="0.8" y2="1">
+    <stop offset="0%" stop-color="#D6E0E3"/>
+    <stop offset="50%" stop-color="#A5B7BC"/>
+    <stop offset="100%" stop-color="#728488"/>
   </linearGradient>
-  <linearGradient id="shelf-side" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0%" stop-color="#6E8084"/>
-    <stop offset="50%" stop-color="#48565A"/>
-    <stop offset="100%" stop-color="#283234"/>
+  <linearGradient id="shelf-side-grad" x1="0.1" y1="0" x2="0.9" y2="1">
+    <stop offset="0%" stop-color="#647579"/>
+    <stop offset="60%" stop-color="#3E4E52"/>
+    <stop offset="100%" stop-color="#202C2E"/>
   </linearGradient>
-  <linearGradient id="shelf-moss" x1="0.2" y1="0" x2="0.8" y2="1">
-    <stop offset="0%" stop-color="#A2E88E"/>
-    <stop offset="50%" stop-color="#58C45C"/>
-    <stop offset="100%" stop-color="#30883A"/>
+  <linearGradient id="shelf-moss-grad" x1="0.2" y1="0" x2="0.8" y2="1">
+    <stop offset="0%" stop-color="#9AE288"/>
+    <stop offset="50%" stop-color="#52BE55"/>
+    <stop offset="100%" stop-color="#2C8435"/>
   </linearGradient>
 </defs>
 
 <!-- Ground Contact Shadow -->
-<ellipse cx="256" cy="228" rx="220" ry="18" fill="#1C2324" opacity="0.20" filter="url(#rock-sh-b)"/>
-<ellipse cx="256" cy="226" rx="180" ry="10" fill="#0F1415" opacity="0.35"/>
+<ellipse cx="256" cy="228" rx="210" ry="18" fill="#1C2324" opacity="0.20" filter="url(#r-sh-b-blur)"/>
+<ellipse cx="256" cy="226" rx="170" ry="10" fill="#0F1415" opacity="0.35"/>
 
-<!-- Bottom Shelf Tier (Flat Base $y=226$) -->
-<g>
-  <path d="M50 226 L55 175 C58 165 72 160 85 160 L430 160 C445 160 458 168 460 178 L465 226 L50 226 Z" fill="url(#shelf-side)"/>
-  <path d="M55 175 C60 162 75 155 92 155 L425 155 C442 155 455 165 458 175 L425 185 L90 185 Z" fill="url(#shelf-top)"/>
-</g>
+<!-- Base Stone Tier (Flat Base $y=226$) -->
+<path d="M52 226 C50 185 70 162 105 158 C160 150 360 150 410 158 C445 162 462 185 460 226 L52 226 Z" fill="url(#shelf-side-grad)"/>
+<path d="M58 185 C68 165 92 158 120 156 L395 156 C422 158 445 165 452 185 C420 190 85 190 58 185 Z" fill="url(#shelf-top-grad)"/>
 
-<!-- Mid Shelf Tier -->
-<g>
-  <path d="M90 185 L95 125 C98 115 112 110 128 110 L390 110 C405 110 418 118 420 128 L425 185 L90 185 Z" fill="url(#shelf-side)"/>
-  <path d="M95 125 C100 112 115 105 132 105 L385 105 C402 105 415 115 418 125 L385 135 L130 135 Z" fill="url(#shelf-top)"/>
-</g>
+<!-- Middle Stepped Ledge Tier -->
+<path d="M98 185 C95 140 118 112 155 108 C198 102 320 102 360 108 C398 112 418 140 415 185 L98 185 Z" fill="url(#shelf-side-grad)"/>
+<path d="M105 142 C115 122 138 114 168 112 L345 112 C375 114 398 122 408 142 C375 148 135 148 105 142 Z" fill="url(#shelf-top-grad)"/>
 
-<!-- Top Plateau Shelf -->
-<g>
-  <path d="M140 135 L145 75 C148 65 162 60 178 60 L340 60 C355 60 368 68 370 78 L375 135 L140 135 Z" fill="url(#shelf-side)"/>
-  <path d="M145 75 C150 62 165 55 182 55 L335 55 C352 55 365 65 368 75 L335 85 L180 85 Z" fill="url(#shelf-top)"/>
-  <!-- Highlight Rim -->
-  <path d="M160 62 L325 62" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
-</g>
+<!-- Top Natural Rock Plateau -->
+<path d="M148 142 C145 92 172 65 210 60 C242 55 275 55 305 60 C342 65 370 92 368 142 L148 142 Z" fill="url(#shelf-side-grad)"/>
+<path d="M155 98 C168 76 195 66 225 64 L290 64 C320 66 348 76 360 98 C330 104 185 104 155 98 Z" fill="url(#shelf-top-grad)"/>
 
-<!-- Moss Creeping along Shelf Ledges -->
-<g fill="url(#shelf-moss)">
-  <path d="M170 65 C185 58 215 58 230 65 L225 72 C210 70 185 70 175 75 Z"/>
-  <path d="M280 65 C295 58 320 60 330 68 L325 75 C310 70 295 72 285 75 Z"/>
-  <path d="M115 118 C135 110 175 112 195 120 L190 128 C170 124 135 124 120 130 Z"/>
-  <path d="M330 118 C350 110 385 112 405 120 L400 128 C380 124 350 124 335 130 Z"/>
+<!-- Integrated Velvet Moss -->
+<g fill="url(#shelf-moss-grad)">
+  <path d="M190 66 C210 58 240 58 260 66 C245 74 225 74 210 78 C200 78 192 72 190 66 Z"/>
+  <path d="M130 116 C150 108 185 110 205 118 C185 124 152 124 138 130 C132 130 128 122 130 116 Z"/>
+  <path d="M310 116 C330 108 365 110 382 118 C365 124 338 124 322 130 C315 130 312 122 310 116 Z"/>
 </g>
 </svg>

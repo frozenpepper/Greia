@@ -1,52 +1,53 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 256">
 <defs>
-  <filter id="bush-sh-b" x="-30%" y="-30%" width="160%" height="160%">
+  <filter id="b-sh-b-blur" x="-30%" y="-30%" width="160%" height="160%">
     <feGaussianBlur stdDeviation="6"/>
   </filter>
-  <linearGradient id="bramble-sun" x1="0.3" y1="0" x2="0.7" y2="1">
-    <stop offset="0%" stop-color="#AEE882"/>
-    <stop offset="50%" stop-color="#70CE60"/>
-    <stop offset="100%" stop-color="#3EA042"/>
+  <linearGradient id="br-stem-grad" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="#AA8860"/>
+    <stop offset="100%" stop-color="#603B1C"/>
   </linearGradient>
-  <linearGradient id="bramble-mid" x1="0.2" y1="0" x2="0.8" y2="1">
-    <stop offset="0%" stop-color="#64CA5E"/>
-    <stop offset="55%" stop-color="#3CA040"/>
-    <stop offset="100%" stop-color="#207228"/>
+  <linearGradient id="br-sun-grad" x1="0.3" y1="0" x2="0.7" y2="1">
+    <stop offset="0%" stop-color="#AEE87C"/>
+    <stop offset="50%" stop-color="#72CE5E"/>
+    <stop offset="100%" stop-color="#3EA03E"/>
   </linearGradient>
-  <linearGradient id="bramble-dark" x1="0.1" y1="0" x2="0.9" y2="1">
-    <stop offset="0%" stop-color="#308636"/>
-    <stop offset="60%" stop-color="#1C5E24"/>
-    <stop offset="100%" stop-color="#103E16"/>
+  <linearGradient id="br-mid-grad" x1="0.2" y1="0" x2="0.8" y2="1">
+    <stop offset="0%" stop-color="#60C858"/>
+    <stop offset="55%" stop-color="#3AA03E"/>
+    <stop offset="100%" stop-color="#1E7226"/>
+  </linearGradient>
+  <linearGradient id="br-dark-grad" x1="0.1" y1="0" x2="0.9" y2="1">
+    <stop offset="0%" stop-color="#2D8434"/>
+    <stop offset="60%" stop-color="#1A5E22"/>
+    <stop offset="100%" stop-color="#0E3E14"/>
   </linearGradient>
 </defs>
 
 <!-- Ground Contact Shadow -->
-<ellipse cx="256" cy="228" rx="170" ry="18" fill="#2E2015" opacity="0.18" filter="url(#bush-sh-b)"/>
-<ellipse cx="256" cy="226" rx="130" ry="10" fill="#1C120A" opacity="0.30"/>
+<ellipse cx="256" cy="228" rx="180" ry="18" fill="#2E2015" opacity="0.18" filter="url(#b-sh-b-blur)"/>
+<ellipse cx="256" cy="226" rx="140" ry="10" fill="#1C120A" opacity="0.30"/>
 
-<!-- Slender Wooden Bramble Stems at Base -->
-<g stroke="#6E3B1B" stroke-width="4" stroke-linecap="round">
-  <path d="M210 226 C215 190 225 155 240 120"/>
-  <path d="M290 226 C285 190 270 155 255 120"/>
-  <path d="M160 226 C170 195 185 170 200 150"/>
-  <path d="M340 226 C330 195 315 170 300 150"/>
-</g>
+<!-- Under-Shadow Leaf Mass (Flat Ground Base) -->
+<path d="M85 226 C65 175 80 120 130 98 C172 80 220 95 240 128 C265 80 325 72 368 95 C412 118 435 170 420 226 L85 226 Z" fill="url(#br-dark-grad)"/>
 
-<!-- Upright Tiered Foliage Masses (Distinct from Bush A) -->
-<!-- Left Upright Frond -->
-<path d="M120 226 C95 165 115 105 165 85 C200 70 235 92 238 132 C240 172 215 210 185 226 L120 226 Z" fill="url(#bramble-mid)"/>
-<!-- Right Upright Frond -->
-<path d="M380 226 C405 165 385 105 335 85 C300 70 265 92 262 132 C260 172 285 210 315 226 L380 226 Z" fill="url(#bramble-mid)"/>
-<!-- Tall Central Crown -->
-<path d="M185 150 C170 95 210 35 260 30 C305 25 340 75 330 130 C322 170 295 205 255 210 C215 212 195 185 185 150 Z" fill="url(#bramble-sun)"/>
+<!-- Midtone Leafy Bush Body -->
+<path d="M98 226 C80 180 95 130 142 110 C180 92 225 108 242 138 C268 92 322 82 362 105 C402 128 420 178 408 226 L98 226 Z" fill="url(#br-mid-grad)"/>
+<!-- Upright Central Crest -->
+<path d="M165 155 C150 95 195 42 255 36 C310 30 355 82 342 142 C330 185 298 220 255 226 L165 226 Z" fill="url(#br-mid-grad)"/>
 
-<!-- Delicate Golden Meadow Buttercups -->
+<!-- Sunlit Leaves on Upper Billows -->
+<path d="M182 120 C172 75 208 38 258 35 C300 32 335 70 325 115 C315 148 288 178 252 182 C218 182 195 152 182 120 Z" fill="url(#br-sun-grad)"/>
+<path d="M115 175 C102 142 118 112 152 105 C180 98 205 112 212 135 C195 162 168 182 138 185 L115 175 Z" fill="url(#br-sun-grad)"/>
+<path d="M385 175 C398 142 382 112 348 105 C320 98 295 112 288 135 C305 162 332 182 362 185 L385 175 Z" fill="url(#br-sun-grad)"/>
+
+<!-- Meadow Buttercup Blossoms -->
 <g fill="#FFD54F">
-  <circle cx="210" cy="95" r="4.5"/>
-  <circle cx="210" cy="95" r="2.2" fill="#FFFDE7"/>
-  <circle cx="295" cy="85" r="4.5"/>
-  <circle cx="295" cy="85" r="2.2" fill="#FFFDE7"/>
-  <circle cx="255" cy="55" r="4.5"/>
-  <circle cx="255" cy="55" r="2.2" fill="#FFFDE7"/>
+  <circle cx="215" cy="110" r="4.5"/>
+  <circle cx="215" cy="110" r="2.2" fill="#FFFDE7"/>
+  <circle cx="295" cy="100" r="4.5"/>
+  <circle cx="295" cy="100" r="2.2" fill="#FFFDE7"/>
+  <circle cx="258" cy="60" r="4.5"/>
+  <circle cx="258" cy="60" r="2.2" fill="#FFFDE7"/>
 </g>
 </svg>

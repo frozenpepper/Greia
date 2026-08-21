@@ -1,57 +1,56 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 <defs>
-  <filter id="shadow-birch" x="-30%" y="-30%" width="160%" height="160%">
+  <filter id="sh-b" x="-30%" y="-30%" width="160%" height="160%">
     <feGaussianBlur stdDeviation="7"/>
   </filter>
-  <linearGradient id="birch-trunk" x1="0" y1="0" x2="1" y2="0">
-    <stop offset="0%" stop-color="#C59B70"/>
-    <stop offset="35%" stop-color="#A57A50"/>
-    <stop offset="70%" stop-color="#805630"/>
+  <linearGradient id="b-bark" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="#D6BA96"/>
+    <stop offset="35%" stop-color="#B28F6A"/>
+    <stop offset="70%" stop-color="#885F3C"/>
     <stop offset="100%" stop-color="#5E381A"/>
   </linearGradient>
-  <linearGradient id="birch-sun" x1="0.3" y1="0" x2="0.7" y2="1">
-    <stop offset="0%" stop-color="#BAF494"/>
-    <stop offset="50%" stop-color="#7ADB6A"/>
-    <stop offset="100%" stop-color="#46AE48"/>
+  <linearGradient id="b-leaf-back" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#246A28"/>
+    <stop offset="100%" stop-color="#0C3410"/>
   </linearGradient>
-  <linearGradient id="birch-mid" x1="0.2" y1="0" x2="0.8" y2="1">
-    <stop offset="0%" stop-color="#6ED464"/>
-    <stop offset="55%" stop-color="#42AC45"/>
-    <stop offset="100%" stop-color="#247C2B"/>
+  <linearGradient id="b-leaf-mid" x1="0.2" y1="0" x2="0.8" y2="1">
+    <stop offset="0%" stop-color="#64C856"/>
+    <stop offset="50%" stop-color="#40A238"/>
+    <stop offset="100%" stop-color="#1E6C22"/>
   </linearGradient>
-  <linearGradient id="birch-dark" x1="0.1" y1="0" x2="0.9" y2="1">
-    <stop offset="0%" stop-color="#34943A"/>
-    <stop offset="60%" stop-color="#1E6824"/>
-    <stop offset="100%" stop-color="#104415"/>
+  <linearGradient id="b-leaf-sun" x1="0.3" y1="0" x2="0.7" y2="1">
+    <stop offset="0%" stop-color="#B2EA7E"/>
+    <stop offset="50%" stop-color="#76D45C"/>
+    <stop offset="100%" stop-color="#44AE40"/>
   </linearGradient>
 </defs>
 
-<!-- Ground Contact Shadows -->
-<ellipse cx="260" cy="456" rx="110" ry="18" fill="#2E2015" opacity="0.18" filter="url(#shadow-birch)"/>
-<ellipse cx="260" cy="454" rx="80" ry="10" fill="#1C120A" opacity="0.30"/>
+<!-- Ground Contact Shadow -->
+<ellipse cx="256" cy="458" rx="100" ry="16" fill="#2E2015" opacity="0.20" filter="url(#sh-b)"/>
+<ellipse cx="256" cy="455" rx="70" ry="9" fill="#1C120A" opacity="0.35"/>
 
-<!-- Airy Upright Foliage Silhouette (Distinct from Oak) -->
-<!-- High Cluster Left -->
-<path d="M150 180 C130 135 158 90 205 82 C235 78 262 95 272 120 C258 152 225 180 188 182 C168 182 155 178 150 180 Z" fill="url(#birch-mid)"/>
-<!-- High Cluster Right -->
-<path d="M285 160 C278 120 310 88 348 92 C380 95 405 118 402 150 C398 178 370 200 342 202 C315 202 290 185 285 160 Z" fill="url(#birch-mid)"/>
-<!-- Tall Crown Cluster -->
-<path d="M215 105 C200 60 240 22 288 18 C325 15 365 38 375 72 C400 68 430 85 432 118 C435 148 412 178 380 185 C345 192 308 185 282 168 C248 178 215 155 212 122 C210 115 212 108 215 105 Z" fill="url(#birch-sun)"/>
+<!-- 1. DEEP UNDER-CANOPY SHADOW SILHOUETTE -->
+<path d="M125 210 C92 185 98 140 135 120 C162 105 200 115 215 138 C235 95 285 80 330 92 C372 105 398 140 395 178 C425 185 442 218 430 248 C415 278 375 288 340 275 C315 288 275 285 252 265 C230 282 185 285 152 265 C132 250 120 232 125 210 Z" fill="url(#b-leaf-back)"/>
 
-<!-- Slender Graceful Bowed Trunk with Visible Sky Windows -->
-<g>
-  <path d="M205 455 C222 452 238 442 244 395 C248 340 245 285 220 230 C240 245 258 272 265 305 C272 258 285 210 315 165 C300 200 295 240 298 285 C302 342 308 400 318 440 C322 452 338 454 355 455 L205 455 Z" fill="url(#birch-trunk)"/>
-  <path d="M205 455 C218 453 232 448 240 435 C244 415 244 385 244 350" fill="none" stroke="#D8A878" stroke-width="4" stroke-linecap="round" opacity="0.45"/>
-  <path d="M355 455 C342 453 330 448 324 435 C318 415 316 385 314 350" fill="none" stroke="#48240D" stroke-width="4" stroke-linecap="round" opacity="0.45"/>
-  <!-- Slender Branches Framing Crown -->
-  <path d="M238 250 C210 225 178 215 140 215 C172 208 205 210 232 228 Z" fill="#805630"/>
-  <path d="M298 215 C330 190 368 180 405 182 C372 174 336 176 308 195 Z" fill="#5E381A"/>
+<!-- 2. FLUID ORGANIC TRUNK & STRUCTURAL BOUGHS -->
+<g fill="url(#b-bark)">
+  <path d="M225 455 C235 452 242 440 245 390 C248 340 246 295 242 255 C225 235 192 210 152 182 C145 178 150 170 160 172 C192 185 228 208 244 232 C246 210 248 175 252 135 C255 110 258 95 262 85 C268 88 266 102 262 125 C270 148 298 175 345 190 C355 192 355 200 342 198 C302 188 275 168 260 145 C258 185 256 220 256 260 C256 315 256 370 258 420 C262 445 272 453 285 455 L225 455 Z"/>
+  <path d="M178 180 C165 160 155 142 152 135 C156 135 162 145 172 162 Z"/>
+  <path d="M315 178 C332 160 350 148 360 142 C362 146 352 160 335 175 Z"/>
 </g>
 
-<!-- Soft Matte Sunlit Sheen on Crown -->
-<g fill="#E3FED4" opacity="0.45">
-  <ellipse cx="285" cy="48" rx="42" ry="18" transform="rotate(-6 285 48)"/>
-  <ellipse cx="198" cy="112" rx="30" ry="14" transform="rotate(-12 198 112)"/>
-  <ellipse cx="360" cy="102" rx="30" ry="14" transform="rotate(10 360 102)"/>
-</g>
+<!-- 3. FORE FOLIAGE MASSES -->
+<path d="M115 205 C95 175 105 135 142 122 C175 110 215 125 228 155 C238 185 225 225 195 240 C162 255 128 242 115 205 Z" fill="url(#b-leaf-mid)"/>
+<path d="M125 180 C112 152 122 128 152 120 C180 112 210 125 218 148 C205 175 178 198 148 200 L125 180 Z" fill="url(#b-leaf-sun)"/>
+
+<path d="M185 135 C165 80 205 28 265 22 C320 18 365 52 372 98 C378 145 342 188 295 192 C245 195 198 175 185 135 Z" fill="url(#b-leaf-mid)"/>
+<path d="M202 105 C185 62 222 30 270 25 C315 20 352 48 358 85 C362 122 330 155 292 158 C250 160 212 142 202 105 Z" fill="url(#b-leaf-sun)"/>
+
+<path d="M285 205 C268 165 290 125 335 112 C375 98 418 115 428 150 C438 185 418 228 382 242 C342 258 300 242 285 205 Z" fill="url(#b-leaf-mid)"/>
+<path d="M302 180 C288 148 308 120 348 112 C380 105 412 120 420 145 C405 175 375 202 342 205 L302 180 Z" fill="url(#b-leaf-sun)"/>
+
+<!-- Organic Leaf Edge Silhouettes -->
+<path d="M255 22 C265 14 278 15 282 24 C272 26 262 26 255 22 Z" fill="#D6F8C0" opacity="0.6"/>
+<path d="M330 38 C342 30 355 34 358 42 C348 45 338 42 330 38 Z" fill="#D6F8C0" opacity="0.6"/>
+<path d="M142 122 C152 114 165 116 168 125 C158 128 148 126 142 122 Z" fill="#D6F8C0" opacity="0.6"/>
 </svg>
