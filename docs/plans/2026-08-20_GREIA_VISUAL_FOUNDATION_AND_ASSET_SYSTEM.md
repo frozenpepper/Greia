@@ -1,7 +1,7 @@
 # Greia Visual Foundation and Asset System — Active Art Workstream Plan
 
 **Status:** ACTIVE ART/VISUAL WORKSTREAM  
-**Date:** 2026-08-20  
+**Last checkpoint review:** 2026-08-21  
 **Repository:** `frozenpepper/Greia`  
 **Branch:** `main`  
 **Stable system/index guide:** `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`  
@@ -11,7 +11,7 @@ This plan owns **sequencing, current checkpoint, milestone state and append-only
 
 > **excellent individual assets → reusable asset packs → layered composition → subtle parallax / ambient motion / light / shadow → shared UI system → explicit semantic runtime consumption → Shell/Activity reuse**
 
-Broad source-art coverage already exists. **V5 shared consumption/integration remains the active phase.** `ui.shadow.soft`, `ui.card.activity`, and `ui.panel.base` are accepted in the real child Shell at Activity Simulator scope. The next visible shared UI consumer, `ui.button.primary`, is now wired into root Activity-category controls in source and awaits simulator acceptance. The workstream remains focused on real product-visible integration, not more art-pack production.
+Broad source-art coverage already exists. **V5 shared consumption/integration remains active.** Multiple real child-Shell surfaces are now accepted at Activity Simulator scope. The current gate extends the same reviewed visual language to **Shell-local navigation chrome** through `ui.button.icon/default`; source is implemented, runtime rendition must be regenerated on the build host, and simulator acceptance is pending.
 
 ---
 
@@ -20,11 +20,13 @@ Broad source-art coverage already exists. **V5 shared consumption/integration re
 - **Asset first:** reusable individual masters before compositions.
 - **Quality:** polished storybook/toy-diorama silhouettes, warm light, soft depth, clean alpha, low-resolution readability.
 - **Layered scenes:** base/far/mid/playfield/props/foreground/atmosphere/light/character/UI remain separable where reuse benefits.
-- **Subtle life:** cheap parallax, tiny sway, fog, shimmer, light breathing; static fallback remains complete.
+- **Subtle life:** cheap parallax, tiny sway, fog, shimmer and light breathing; static fallback remains complete.
 - **Reuse before duplication:** use shared generic assets instead of repainting them for each environment.
 - **Stop pack proliferation:** a new environment family requires a concrete reusable coverage gap.
 - **Cheap explicit runtime:** no runtime SVG rasterization, source-directory scanning, per-frame file decode/scale, or unbounded image caches.
 - **Visible integration matters:** plumbing gates must lead to actual Greia presentation improvements; do not spend the workstream indefinitely on invisible proof consumers.
+- **Authority stays outside artwork:** shared visuals may restyle existing controls but may not take over Activity lifecycle, navigation, progression, profile or permission authority.
+- **Protected navigation stays protected:** Shell-local category/page controls are not the same thing as protected Activity Home/Back chrome.
 
 ---
 
@@ -49,7 +51,7 @@ Character refinement does not block V5.
 
 # 3. Current reusable library
 
-| Pack | Source | Current desktop scope |
+| Pack | Source | Current scope |
 |---|---|---|
 | Forest / Meadow v0.2 | `assets/visual/environments/forest_meadow/v0.2/` | 27 masters; layered/parallax + target-size review |
 | Shared UI v0.1 | `assets/visual/ui/v0.1/` | panels/cards/buttons/tabs/badges/progress/bubbles/reward/focus/loading/error/empty/portal family |
@@ -66,13 +68,13 @@ assets/visual/library_v0.1.toml
 assets/visual/packs_v0.1.toml
 ```
 
-Most pack art remains **candidate SOURCE + DESKTOP VISUAL REVIEW** unless a narrower record states otherwise.
+Most source-pack art remains **candidate SOURCE + DESKTOP VISUAL REVIEW** unless a narrower record states otherwise. Do not create another environment family merely to keep producing assets.
 
 ---
 
 # 4. V5 — Shared consumption/integration
 
-Current source authority:
+Current source owners:
 
 ```text
 src/greia_platform/assets.py
@@ -80,247 +82,186 @@ src/greia_platform/activity_api.py
 src/greia_platform/activity_assets.py
 src/greia_platform/ui_core.py
 src/greia_platform/pygame_visual_assets.py
+
 src/greia_launcher/visual_assets.py
 src/greia_launcher/main.py
 src/greia_launcher/presentation.py
 src/greia_launcher/shared_ui_presentation.py
+src/greia_launcher/profile_chrome_presentation.py
+src/greia_launcher/feedback_presentation.py
+src/greia_launcher/navigation_chrome_presentation.py
 src/greia_launcher/child_shell.py
-activities/shape_garden/main.py
+
 assets/catalog/core_icons_v1.toml
 assets/catalog/shared_visuals_v1_source.toml
 assets/catalog/shared_visuals_v1.toml
+
 tools/build_visual_renditions.py
 tools/validate_visual_renditions.py
 ```
 
-The architecture/index for these pieces is `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`.
+Stable architecture/index: `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`.
 
 ## 4.1 Explicit catalogue + variants — implemented
 
-`AssetCatalogue` supports semantic shared visuals with kind, role and explicit variants while preserving existing icons. IDs remain globally unique; paths remain contained under the assets root; arbitrary discovery is forbidden.
+`AssetCatalogue` supports semantic shared visuals with kind, role and explicit variants while preserving core icons. IDs are globally unique, paths remain contained under the assets root, and arbitrary discovery is forbidden.
 
 ## 4.2 Build-time SVG→PNG rendition pipeline — implemented and exercised
 
-The explicit source manifest currently promotes:
+The source rendition manifest now selects:
 
 ```text
-ui.panel.base
-ui.card.activity            default / focused / completed
-ui.button.primary           default / hover / pressed / disabled
-ui.shadow.soft              default
+ui.panel.base              default
+ui.card.activity           default / focused / completed
+ui.button.primary          default / hover / pressed / disabled
+ui.button.icon             default              ← current new source gate
+ui.avatar.frame            default
+ui.loading.orbit           default
+ui.error.gentle            default
+ui.empty.basket            default
+ui.shadow.soft             default
 ```
 
-`tools/build_visual_renditions.py` renders through build-host librsvg/`rsvg-convert`, validates dimensions/containment and writes PNG/catalog output transactionally.
+`tools/build_visual_renditions.py` renders through build-host librsvg/`rsvg-convert`, validates dimensions/containment and writes PNG/catalog output transactionally. The target device does not rasterize SVG.
 
-Generated runtime output is committed on canonical `main`, including `assets/catalog/shared_visuals_v1.toml` and `assets/visual/runtime/v1/ui/soft_shadow.png`.
+The generated catalogue currently reflects the last accepted build. Because `ui.button.icon` was just added to the source manifest, the local/build checkout must run `make visual-assets` before the navigation-chrome simulator gate.
 
 ## 4.3 Generated-output validation — implemented
 
-`tools/validate_visual_renditions.py` / `make visual-assets-check` checks source hash, mapping parity, explicit runtime paths, PNG signatures and dimensions.
+`tools/validate_visual_renditions.py` / `make visual-assets-check` checks source digest, mapping parity, explicit runtime paths, PNG signatures and exact dimensions.
 
 ## 4.4 Bounded Pygame cache — implemented and consumed
 
-`PygameVisualSurfaceCache` provides semantic ID + variant + requested-size caching on existing `ui_core.BoundedCache`, with a default 12-entry LRU, a 1024×600 per-surface ceiling, PNG-only runtime enforcement and explicit clear.
+`PygameVisualSurfaceCache` provides semantic ID + variant + requested-size caching over `ui_core.BoundedCache`, with a default 12-entry LRU, bounded surface area, PNG-only runtime enforcement and explicit clear.
 
-## 4.5 Launcher seam — COMPLETE AT SIMULATOR SCOPE
+## 4.5 First Shell seam — ACCEPTED (SIMULATOR VISUAL REVIEW)
 
-`ui.shadow.soft` is the first accepted shared Shell consumer beneath existing Activity tiles.
+`ui.shadow.soft` is accepted beneath launcher Activity tiles. The accepted run covered the full responsive matrix, selection/hover/launch, missing/malformed/corrupt fallbacks and ~29.4 FPS simulator sanity.
 
-Accepted Activity Simulator evidence from `LOCAL_AGENT_RESULT.md`:
+## 4.6 Activity semantic resolver — SOURCE IMPLEMENTED, NON-BLOCKING
 
-```text
-6/6 responsive viewport/interface rows PASS
-keyboard selection PASS
-pointer hover PASS
-Activity launch lifecycle PASS
-missing generated catalogue fallback PASS
-malformed generated catalogue fallback PASS
-corrupt/missing PNG fallback PASS
-299 frames / 10.165 s = 29.41 FPS sanity
-```
-
-Evidence class: **SIMULATOR VISUAL REVIEW**.
-
-No physical Acer/Pi performance claim and no R7 closure.
-
-## 4.6 Activity semantic resolver — SOURCE IMPLEMENTED
-
-The first Activity-facing semantic contract is now in `src/greia_platform/activity_api.py`:
+`src/greia_platform/activity_api.py` exposes:
 
 ```python
 get_shared_visual(asset_id, variant="default")
 get_shared_visual_path(asset_id, variant="default")
 ```
 
-`get_shared_visual(...)` returns a read-only `SharedVisualReference` containing semantic ID, kind, role, requested variant and the current Python runtime path realization.
+`activities/shape_garden/main.py` is the first Python source proof. It is no longer a blocker for visible Shell work. Future Web support must preserve semantic IDs/variants through a controlled URL/handle transport rather than exposing host paths.
 
-Invariants:
+## 4.7 Activity cards — ACCEPTED (SIMULATOR VISUAL REVIEW)
 
-- Activity supplies semantic ID + variant, not a host path;
-- no raw catalogue mutation is exposed;
-- optional generated visual catalogue failure leaves core icons/API available;
-- unknown shared visuals fail narrowly;
-- Activity-private art remains supported;
-- the Python `Path` realization does **not** define the future Web transport.
+`ui.card.activity/default|focused` is consumed through `SharedUiActivityCardMixin`.
 
-## 4.7 First Python Activity consumer — SOURCE IMPLEMENTED, SIMULATOR PENDING
+Accepted behavior:
 
-`activities/shape_garden/main.py` is the first Activity source consumer.
+- authored 360:430 portrait ratio preserved inside logical tile targets;
+- Activity icon and localized title placed into authored card regions;
+- existing selection/hit/catalogue/lifecycle authority preserved;
+- primitive tile remains fail-soft fallback.
 
-It resolves `ui.shadow.soft` once at startup, scales it once to a bounded reference size, and reuses that prepared Pygame surface while drawing shapes. If the optional shared visual cannot be resolved/decoded, Shape Garden remains playable without the shadow.
+The six-row simulator matrix, keyboard navigation, hover, launch/return and fallback cases passed; frame sanity was 27.2 FPS.
 
-No per-frame asset path resolution, file decode or smoothscale was added.
+## 4.8 Shell panel — ACCEPTED (SIMULATOR VISUAL REVIEW)
 
-This gate remains **SOURCE only** until the Activity Simulator protocol passes:
+`ui.panel.base/default` frames profile picker and Activity catalogue through `SharedUiShellPanelMixin`.
 
-```text
-docs/testing/2026-08-20_V5_ACTIVITY_SHARED_VISUAL_SIMULATOR.md
-```
-
-This proof is no longer blocking visible Shell work.
-
-## 4.8 First substantial visible shared UI consumer — ACCEPTED (SIMULATOR VISUAL REVIEW)
-
-The production child Shell consumes the reviewed `ui.card.activity` artwork through:
+Accepted current catalogue composition additionally includes the owner-directed geometry correction:
 
 ```text
-src/greia_launcher/shared_ui_presentation.py
-src/greia_launcher/child_shell.py
+panel_top     = 52..62 px
+bottom_margin = 4 px
+panel ratio   = authored 640:420
+Activity grid = aligned to authored inner tray
+large cards   ≈ 198–205 px where geometry permits
 ```
 
-Behavior:
+This relationship must be preserved. The panel acceptance matrix and isolated fallback cases passed; frame sanity was 29.5 FPS.
 
-- neutral Activity tiles request `ui.card.activity/default`;
-- selected / hovered / launching tiles request `ui.card.activity/focused`;
-- the authored 360:430 portrait ratio is preserved inside the existing logical launcher hit target instead of stretching the artwork into a square;
-- Activity icon and localized title are placed into the card's authored illustration well and lower label band;
-- the existing primitive launcher tile remains the fail-soft fallback when the optional shared card catalogue/PNG/cache path fails;
-- no Activity selection, hit target, catalogue, lifecycle or runtime authority is replaced by this mixin.
+## 4.9 Root category buttons — ACCEPTED (SIMULATOR VISUAL REVIEW)
 
-Accepted via:
+`ui.button.primary/default|hover` styles the root Activity-category row through `SharedUiCategoryButtonMixin`, preserving category IDs/order/hit targets/navigation. The accepted six-row simulator run included hover, category open/back, lifecycle, isolated fallback and 29.6 FPS sanity.
+
+## 4.10 Profile identity — ACCEPTED (SIMULATOR VISUAL REVIEW)
+
+`ui.avatar.frame/default` is consumed through `SharedUiProfileChromeMixin` for:
+
+- profile-picker identities;
+- active-profile switcher in the Activity catalogue.
+
+The owner-directed non-intrusive simulator mode is also accepted infrastructure:
 
 ```text
-docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md
+--headless
+GREIA_SIMULATOR_HEADLESS=1
+SDL dummy video/audio
 ```
 
-All 6 responsive matrix rows, keyboard navigation, hover, return Home lifecycle, fail-soft fallbacks and 27.2 FPS frame sanity passed.
+The profile identity six-row matrix, switching/fallback and ~27.4 FPS simulator sanity passed.
 
-## 4.9 Second visible shared UI consumer — ACCEPTED (SIMULATOR VISUAL REVIEW)
+## 4.11 Shared Shell feedback — ACCEPTED WITH ONE SOURCE-ONLY SUBCASE
 
-The production child Shell consumes `ui.panel.base/default` through:
+`SharedUiFeedbackMixin` consumes:
 
 ```text
-src/greia_launcher/shared_ui_presentation.py
-src/greia_launcher/child_shell.py
+ui.loading.orbit/default    SIMULATOR VISUAL REVIEW
+ui.error.gentle/default     SIMULATOR VISUAL REVIEW
+ui.empty.basket/default     SOURCE / NOT EXERCISED
 ```
 
-Behavior:
+Accepted feedback run (`5d8208883b840318b508b2dddc83c829e826a0e7`):
 
-- the panel frames both profile picker and Activity catalogue;
-- authored 640:420 aspect ratio is preserved across all viewports;
-- rainbow header, category bar, avatar and Activity cards remain on top and unclipped;
-- cached Activity tiles use alpha surfaces so the panel is not obscured by rectangular background cutouts;
-- fail-soft isolation disables only panel framing on panel-specific failure without affecting independent card artwork.
+- launch overlay visually blocks interaction during startup while using the shared orbit;
+- corrupt loading PNG falls back cleanly;
+- catalogue error cloud appears at top-right and dismisses correctly;
+- corrupt error PNG falls back cleanly;
+- four responsive launch-overlay rows passed;
+- 280 frames / 10.03 s = 27.9 FPS simulator sanity.
 
-Accepted via:
+The empty basket is generated/source-present but was not legitimately reached through the production catalogue and therefore remains **SOURCE / NOT EXERCISED**.
+
+## 4.12 Shared Shell navigation chrome — SOURCE IMPLEMENTED, SIMULATOR PENDING
+
+The next visible consumer is:
 
 ```text
-docs/testing/2026-08-20_V5_SHARED_UI_PANEL_SIMULATOR.md
+ui.button.icon/default
 ```
 
-All 6 responsive matrix viewports, profile picker, Activity catalogue, return Home lifecycle, missing/malformed/corrupt fallback cases and 29.5 FPS frame sanity passed.
-
-## 4.10 Third visible shared UI consumer — ACCEPTED (SIMULATOR VISUAL REVIEW)
-
-The root Activity-category row now consumes:
+Source master:
 
 ```text
-ui.button.primary/default
-ui.button.primary/hover
+assets/visual/ui/v0.1/icon_button.svg
 ```
 
-through `SharedUiCategoryButtonMixin` in `src/greia_launcher/shared_ui_presentation.py`.
-
-Behavior:
-
-- existing category IDs, ordering and hit rectangles are preserved;
-- default and hover visual states come from the generated shared button catalogue;
-- category icons and localized labels remain overlaid by existing launcher typography/icon authorities;
-- the in-category Back/header control deliberately stays on its existing renderer because its geometry does not match the wide reviewed primary-button asset;
-- a button-specific failure disables only the shared category-button treatment and falls back to the proven primitive category renderer while accepted shared panels/cards remain live.
-
-Accepted via:
+Implementation:
 
 ```text
-docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md
+src/greia_launcher/navigation_chrome_presentation.py
 ```
 
-All 6 responsive matrix viewports, baseline buttons, button hover, category open/return navigation, launch/return Home lifecycle, missing/malformed/corrupt-button fallback cases, and 29.6 FPS frame sanity passed with full evidence in `tmp/v5-button-simulator-evidence/`.
+`SharedUiNavigationChromeMixin` keeps navigation semantics and hit rectangles in the existing launcher while applying one reviewed tactile circular frame to Shell-local navigation controls:
 
-## 4.11 Fourth visible shared UI consumer — ACCEPTED (SIMULATOR VISUAL REVIEW)
+1. **mandatory real consumer:** in-category local Back control;
+2. Activity collection up/down scroll controls when a real collection requires them;
+3. profile previous/next page controls when real profile pagination exists.
 
-The production child Shell consumes:
+Behavioral rules:
+
+- the original action IDs and target rectangles remain authoritative;
+- hover is only a tiny 2 px visual lift plus accent-arrow treatment;
+- the artwork remains circular rather than stretched;
+- a missing/corrupt icon-button visual disables only this treatment and calls the existing primitive navigation renderer;
+- accepted panel/cards/category buttons/profile/feedback visuals remain independent;
+- protected Activity system Home/Back chrome is **not** replaced or restyled by this mixin.
+
+Required local acceptance:
 
 ```text
-ui.avatar.frame/default
+docs/testing/2026-08-21_V5_SHARED_NAVIGATION_CHROME_SIMULATOR.md
 ```
 
-through `SharedUiProfileChromeMixin` in `src/greia_launcher/profile_chrome_presentation.py`.
-
-Behavior:
-
-- profile picker cards overlay the reviewed storybook circular frame over the avatar area with centered icons and clean card backgrounds;
-- the active-profile switcher at the top-left of the Activity catalogue cleanly displays the circular frame badge without underlying square raised panel corners peeking;
-- the main Activity background panel (`ui.panel.base`) maximizes available vertical screen height (starting right under the category row at `panel_top=52..62` down to `bottom_margin=4`) while maintaining authentic 640:420 aspect ratio;
-- activity cards retain their full prominent large scale (~198-205px) comfortably centered within the inner panel tray;
-- non-intrusive headless simulator execution (`--headless` / `GREIA_SIMULATOR_HEADLESS=1`) operates silently via SDL dummy drivers without stealing window focus;
-- fail-soft isolation cleanly falls back to primitive profile treatment if the avatar frame fails while accepted panel, cards, and buttons remain live.
-
-Accepted via:
-
-```text
-docs/testing/2026-08-21_V5_SHARED_PROFILE_IDENTITY_SIMULATOR.md
-```
-
-All 6 responsive matrix viewports, profile picker baseline, active profile switcher, return to profile picker, missing/malformed/corrupt fallback cases, and 27.4 FPS frame sanity passed with evidence in `tmp/v5-profile-simulator-evidence/`.
-
-## 4.12 Fifth visible shared UI consumer tranche — ACCEPTED (SIMULATOR VISUAL REVIEW)
-
-The production child Shell consumes:
-
-```text
-ui.loading.orbit/default
-ui.error.gentle/default
-ui.empty.basket/default
-```
-
-through `SharedUiFeedbackMixin` in `src/greia_launcher/feedback_presentation.py`.
-
-Behavior:
-
-- during Activity startup, `ui.loading.orbit` renders centered with calm translucent backdrop (`(255, 250, 240, 238)`) and readable status typography (`Starting…`), visibly blocking interaction until the child Activity takes over;
-- on catalogue parse errors, `ui.error.gentle` renders unobtrusively at the top-right and dismisses on click/tap without moving lifecycle/catalogue authority into the visual layer;
-- on an empty Activity catalogue, `ui.empty.basket` renders centered without interfering with profile picker identity treatment;
-- non-intrusive headless simulator execution operates via SDL dummy drivers without stealing window focus;
-- fail-soft isolation cleanly falls back to primitive feedback overlays if PNG files are corrupt or missing.
-
-Accepted via:
-
-```text
-docs/testing/2026-08-21_V5_SHARED_FEEDBACK_SIMULATOR.md
-```
-
-All 4 responsive matrix viewports, launch overlay burst, return Home lifecycle, error cloud appearance & dismissal, corrupt PNG fallback cases, and 27.9 FPS frame sanity passed with evidence in `tmp/v5-feedback-simulator-evidence/`.
-
-## 4.13 After the feedback gate
-
-Following simulator acceptance of `ui.shadow.soft`, `ui.card.activity`, `ui.panel.base`, `ui.button.primary`, `ui.avatar.frame`, `ui.loading.orbit`, and `ui.error.gentle`:
-
-1. record `ui.loading.orbit` and `ui.error.gentle` as accepted visible Shell consumers at **SIMULATOR VISUAL REVIEW** scope;
-2. record `ui.empty.basket` as **SOURCE, NOT EXERCISED**;
-3. continue only to another product-visible shared UI surface that materially improves Greia, rather than adding proof-only consumers;
-4. separately complete the Web Activity semantic adapter using the same semantic IDs/variants through a controlled URL/handle transport, not host filesystem exposure;
-5. do not return to new environment-pack production without a demonstrated reusable coverage gap.
+Current evidence: **SOURCE**. No simulator PASS is claimed yet.
 
 ---
 
@@ -330,19 +271,19 @@ Following simulator acceptance of `ui.shadow.soft`, `ui.card.activity`, `ui.pane
 |---|---|
 | Stable guide | `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` |
 | Resume | `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` |
-| Active focus | **V5 — shared `ui.loading.orbit` / `ui.error.gentle` feedback accepted in Activity Simulator** |
+| Active focus | **V5 — `ui.button.icon` shared Shell navigation chrome implemented in source; Activity Simulator pending** |
 | Environment coverage | V4 complete through Water/Pond; no new pack without concrete gap |
-| Catalogue/renditions | explicit semantic catalogue + generated PNG runtime catalogue present |
-| First Shell consumer | `ui.shadow.soft` accepted at **SIMULATOR VISUAL REVIEW** scope |
-| Visible Shell card consumer | `ui.card.activity/default|focused` accepted at **SIMULATOR VISUAL REVIEW** scope |
-| Visible Shell panel consumer | `ui.panel.base/default` accepted at **SIMULATOR VISUAL REVIEW** scope |
-| Visible category-button consumer | `ui.button.primary/default|hover` accepted at **SIMULATOR VISUAL REVIEW** scope |
-| Visible profile-identity consumer | `ui.avatar.frame/default` accepted at **SIMULATOR VISUAL REVIEW** scope |
-| Visible feedback consumers | `ui.loading.orbit`, `ui.error.gentle` accepted at **SIMULATOR VISUAL REVIEW** scope; `ui.empty.basket` at **SOURCE** |
-| Activity API | `get_shared_visual(...)` + `get_shared_visual_path(...)` implemented in source |
-| First Activity consumer | Shape Garden consumes `ui.shadow.soft` in source with optional fallback; non-blocking simulator proof pending |
-| Completed visible protocols | `docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md`; `docs/testing/2026-08-20_V5_SHARED_UI_PANEL_SIMULATOR.md`; `docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md`; `docs/testing/2026-08-21_V5_SHARED_PROFILE_IDENTITY_SIMULATOR.md`; `docs/testing/2026-08-21_V5_SHARED_FEEDBACK_SIMULATOR.md` |
-| Next exact action | complete Web Activity semantic visual adapter or next targeted product-visible Shell integration |
+| Catalogue/renditions | source manifest v0.1.4 includes `ui.button.icon`; generated PNG/catalogue regeneration pending for this new entry |
+| Activity cards | accepted at **SIMULATOR VISUAL REVIEW** |
+| Shell panel | accepted at **SIMULATOR VISUAL REVIEW** |
+| Root category buttons | accepted at **SIMULATOR VISUAL REVIEW** |
+| Profile identity | accepted at **SIMULATOR VISUAL REVIEW** |
+| Launch/error feedback | accepted at **SIMULATOR VISUAL REVIEW** |
+| Empty basket | **SOURCE / NOT EXERCISED** |
+| Navigation icon button | `ui.button.icon/default` **SOURCE; simulator pending** |
+| Activity semantic API | implemented in source; Shape Garden proof is non-blocking |
+| Current pending protocol | `docs/testing/2026-08-21_V5_SHARED_NAVIGATION_CHROME_SIMULATOR.md` |
+| Next exact action | `make visual-assets` → headless navigation-chrome simulator protocol → fix only root causes → record evidence → commit/push |
 
 ---
 
@@ -383,23 +324,22 @@ Following simulator acceptance of `ui.shadow.soft`, `ui.card.activity`, `ui.pane
 - [x] bounded PNG-only Pygame cache;
 - [x] optional launcher merge/fallback bridge;
 - [x] first generated runtime PNG catalogue;
-- [x] first Shell consumer `ui.shadow.soft`;
-- [x] Shell simulator normal/fallback/interaction/responsive acceptance;
-- [x] renderer-neutral semantic request portion of Activity API (`get_shared_visual`);
+- [x] `ui.shadow.soft` Shell acceptance;
+- [x] Activity card source + simulator acceptance;
+- [x] Shell panel source + simulator acceptance;
+- [x] root category-button source + simulator acceptance;
+- [x] profile-identity source + simulator acceptance;
+- [x] headless simulator support accepted for local visual review;
+- [x] loading/error feedback source + simulator acceptance;
+- [x] empty-basket source integration;
+- [ ] empty-basket legitimate runtime exercise;
+- [x] shared Shell navigation icon-button source consumer;
+- [ ] shared Shell navigation chrome simulator acceptance;
+- [x] renderer-neutral semantic request portion of Activity API;
 - [x] first Python Activity source consumer (Shape Garden);
-- [ ] Shape Garden Activity Simulator acceptance (non-blocking visible-Shell work);
-- [x] shared Activity card source consumer;
-- [x] shared Activity card simulator acceptance;
-- [x] shared Shell panel source consumer;
-- [x] shared Shell panel simulator acceptance;
-- [x] shared root category-button source consumer (`ui.button.primary/default|hover`);
-- [x] shared category-button simulator acceptance;
-- [x] shared profile-identity source consumer (`ui.avatar.frame/default`);
-- [x] shared profile-identity simulator acceptance;
-- [x] shared feedback consumers (`ui.loading.orbit`, `ui.error.gentle`, `ui.empty.basket`);
-- [x] shared feedback simulator acceptance;
+- [ ] Shape Garden Activity Simulator acceptance (non-blocking);
 - [ ] future Web Activity semantic adapter/transport;
-- [ ] further visible Shell integration using existing shared UI families where materially useful;
+- [ ] further visible Shell integration only where materially useful;
 - [ ] physical low-resource evidence where a stronger claim requires it.
 
 ---
@@ -415,7 +355,7 @@ PHYSICAL VISUAL REVIEW
 REJECTED EXPERIMENT
 ```
 
-Committed source is not PASS by itself. Generated runtime output is not consumer evidence until the relevant consumer is exercised.
+Committed source is not PASS by itself. Generated runtime output is not consumer evidence until the relevant real consumer is exercised.
 
 ---
 
@@ -436,11 +376,13 @@ Committed source is not PASS by itself. Generated runtime output is not consumer
 - broad exception swallowing;
 - more environment packs without a real gap;
 - duplicating generic shared masters;
-- spending the visual workstream indefinitely on invisible plumbing once the seam is already proven.
+- proof-only Activities displacing visible product work once the shared seam is established.
 
 ---
 
 # 9. Progress log — append only
+
+The entries below preserve the earlier workstream chronology. Corrections/new state are appended rather than rewriting old experiments into successes.
 
 ## 2026-08-20 — constraint-native visual pivot
 - Simplified characters established; Lilli/Nino/Tito/Momo became core cast.
@@ -513,7 +455,7 @@ Committed source is not PASS by itself. Generated runtime output is not consumer
 - Evidence: **SIMULATOR VISUAL REVIEW**; no physical hardware/R7 claim.
 
 ## 2026-08-20 — V5 canonical state reconciliation
-- Removed stale plan/resume language saying the first Shell consumer was still unwired.
+- Removed stale language saying the first Shell consumer was still unwired.
 - Marked `ui.shadow.soft` Shell gate complete at simulator scope.
 - Redirected V5 toward reusable semantic consumption and visible Shell integration.
 
@@ -532,7 +474,7 @@ Committed source is not PASS by itself. Generated runtime output is not consumer
 
 ## 2026-08-20 — shared Activity cards accepted in simulator
 - `ui.card.activity/default|focused` passed the full 6-row Activity Simulator matrix plus selection, hover, launch/return and missing/malformed/corrupt fallback cases.
-- Synthetic pointer tracking was corrected for headless/simulator MOUSEMOTION.
+- Synthetic pointer tracking was corrected for simulator `MOUSEMOTION`.
 - Frame sanity measured 27.2 FPS against the intentional 30 FPS clock.
 - Evidence class: **SIMULATOR VISUAL REVIEW**.
 
@@ -545,9 +487,38 @@ Committed source is not PASS by itself. Generated runtime output is not consumer
 
 ## 2026-08-20 — shared category buttons moved into the real child Shell
 - Added `SharedUiCategoryButtonMixin` for root Activity-category controls using `ui.button.primary/default|hover`.
-- Preserved existing category ordering, hit targets and navigation; in-category Back/header remains on the existing geometry-specific renderer.
+- Preserved existing category ordering, hit targets and navigation; the wide primary-button asset was not forced onto the geometry-specific in-category Back control.
 - Added isolated fail-soft behavior so button-specific corruption falls back only the category row while accepted panel/card shared visuals remain active.
 - Added `docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md`.
-- Evidence remains **SOURCE** until the simulator protocol passes.
+- Evidence at this historical checkpoint remained **SOURCE** until the simulator protocol ran.
 
-Next exact action: **execute `docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md`; inspect actual button quality, hover, category open/back lifecycle, isolated fallback, responsive matrix and frame sanity; fix only root causes and then record exact simulator evidence.**
+## 2026-08-20 — shared category buttons accepted in simulator
+- `ui.button.primary/default|hover` passed baseline/hover/category open-return/lifecycle/fallback review.
+- Full six-row responsive matrix passed.
+- Isolated corrupt hover-button fallback kept panel/cards active.
+- Frame sanity measured 29.6 FPS.
+- Evidence class: **SIMULATOR VISUAL REVIEW**.
+
+## 2026-08-21 — panel geometry maximized, headless simulator added, profile identity accepted
+- Owner-directed panel geometry was corrected to use the screen vertically while preserving 640:420 aspect ratio and full large Activity cards within the authored tray.
+- Added non-intrusive `--headless` / `GREIA_SIMULATOR_HEADLESS=1` simulator execution through SDL dummy drivers.
+- `ui.avatar.frame/default` was generated and integrated into profile picker identities and active-profile switcher.
+- Six-row responsive/fallback/profile-switch review passed; frame sanity was ~27.4 FPS.
+- Canonical acceptance commit: `7dc5d39df51fd3404d222c762d7b5d48133def9d`.
+
+## 2026-08-21 — shared Shell feedback accepted
+- Generated `ui.loading.orbit`, `ui.error.gentle` and `ui.empty.basket` runtime renditions.
+- Launch overlay and catalogue error cloud were exercised through the real headless Activity Simulator with isolated fallbacks.
+- `ui.empty.basket` remained **SOURCE / NOT EXERCISED** because the production catalogue empty state was not legitimately reached.
+- Responsive overlay review and 27.9 FPS frame sanity passed.
+- Canonical acceptance commit: `5d8208883b840318b508b2dddc83c829e826a0e7`.
+
+## 2026-08-21 — shared Shell navigation chrome source tranche
+- Promoted the existing reviewed `assets/visual/ui/v0.1/icon_button.svg` as semantic runtime source `ui.button.icon/default` in source catalogue version 0.1.4.
+- Added `SharedUiNavigationChromeMixin` for the in-category local Back control and for Activity/profile pagination controls when those controls legitimately exist.
+- Existing action IDs, target rectangles, category identity and scrolling/page authority remain in the launcher.
+- Added isolated fail-soft fallback to the existing primitive navigation controls.
+- Added `docs/testing/2026-08-21_V5_SHARED_NAVIGATION_CHROME_SIMULATOR.md` for headless Activity Simulator acceptance.
+- Evidence remains **SOURCE** until runtime renditions are regenerated and that protocol passes.
+
+**Next exact action:** `make visual-assets` → execute `docs/testing/2026-08-21_V5_SHARED_NAVIGATION_CHROME_SIMULATOR.md` headlessly → inspect mandatory in-category Back default/hover/click + isolated corrupt-PNG fallback + six-row responsive matrix → record conditional scroll/profile-pagination results honestly → update evidence/docs → commit/push.
