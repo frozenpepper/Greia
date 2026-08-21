@@ -1,0 +1,27 @@
+{
+  "task": "FOREST_MEADOW_PACK_FINALIZATION",
+  "date": "2026-08-21",
+  "status": "FINALIZED_FOR_OWNER_PROMOTION_REVIEW",
+  "baseline_directory": "assets/visual/environments/forest_meadow/v0.2/",
+  "candidate_directory": "assets/visual/pack_candidates/forest_meadow/2026-08-21/",
+  "review_directory": "docs/reviews/visual/2026-08-21_forest-meadow-pack-finalization/",
+  "revisions_in_pass": [
+    "tree_willow.svg",
+    "distant_treeline.svg",
+    "flower_patch.svg",
+    "fern_cluster.svg"
+  ],
+  "promoted_candidate_roles": 28,
+  "retained_legacy_roles": 0,
+  "unresolved_roles": 0,
+  "review_sheets": [
+    "01-complete-candidate-inventory-a.png",
+    "02-complete-candidate-inventory-b.png",
+    "03-missing-support-roles-comparison.png",
+    "04-treeline-flower-fern-decision.png",
+    "05-runtime-support-role-sizes.png",
+    "06-final-baseline-composition.png",
+    "07-final-candidate-composition.png",
+    "08-promotion-summary.png"
+  ]
+}

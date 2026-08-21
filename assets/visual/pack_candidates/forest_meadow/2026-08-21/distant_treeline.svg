@@ -1,13 +1,28 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 256">
 <defs>
   <linearGradient id="treeline-grad" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0%" stop-color="#48866E"/>
-    <stop offset="100%" stop-color="#245442"/>
+    <stop offset="0%" stop-color="#4A8E72"/>
+    <stop offset="45%" stop-color="#326B54"/>
+    <stop offset="100%" stop-color="#1A4232"/>
+  </linearGradient>
+  <linearGradient id="treeline-back" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#6CA890"/>
+    <stop offset="100%" stop-color="#3E7560"/>
   </linearGradient>
 </defs>
-<path d="M 0,256 L 0,165 
-         C 40,150 80,155 120,140 C 150,125 190,130 220,145 C 260,130 300,135 340,120
-         C 380,140 420,135 460,150 C 500,130 540,135 580,125 C 620,145 660,140 700,130
-         C 740,145 780,135 820,120 C 860,140 900,135 940,145 C 980,130 1010,135 1024,150
+<!-- Distant Secondary Treeline Peak Ridge -->
+<path d="M 0,256 L 0,135
+         C 30,110 50,140 80,115 C 100,95 120,130 150,105 C 170,85 190,120 220,95
+         C 250,115 280,85 310,110 C 340,90 370,125 400,100 C 430,75 460,115 490,90
+         C 520,110 550,85 580,115 C 610,95 640,125 670,100 C 700,75 730,110 760,85
+         C 790,110 820,90 850,115 C 880,95 910,125 940,100 C 970,75 1000,110 1024,95
+         L 1024,256 Z" fill="url(#treeline-back)" opacity="0.6"/>
+
+<!-- Foreground Rhythmic Crown & Pine Ridge -->
+<path d="M 0,256 L 0,160
+         L 35,130 L 70,165 L 110,125 L 150,160 L 185,115 L 220,155 L 265,130
+         C 290,110 320,145 350,120 L 390,160 L 425,110 L 460,155 L 500,125
+         C 530,105 560,140 590,115 L 630,160 L 665,110 L 700,155 L 740,125
+         C 770,105 800,145 830,120 L 870,160 L 905,115 L 940,155 L 980,125 L 1024,155
          L 1024,256 Z" fill="url(#treeline-grad)"/>
 </svg>
