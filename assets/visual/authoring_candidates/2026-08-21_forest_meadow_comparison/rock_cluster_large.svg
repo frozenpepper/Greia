@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 256">
+<defs>
+  <filter id="rock-shadow" x="-30%" y="-30%" width="160%" height="160%">
+    <feGaussianBlur stdDeviation="6"/>
+  </filter>
+  <linearGradient id="rock-main-lit" x1="0.2" y1="0" x2="0.8" y2="1">
+    <stop offset="0%" stop-color="#D6DFE2"/>
+    <stop offset="45%" stop-color="#A8B8BC"/>
+    <stop offset="100%" stop-color="#708286"/>
+  </linearGradient>
+  <linearGradient id="rock-main-shadow" x1="0.1" y1="0" x2="0.9" y2="1">
+    <stop offset="0%" stop-color="#7B8C90"/>
+    <stop offset="60%" stop-color="#4E5D61"/>
+    <stop offset="100%" stop-color="#2F3B3E"/>
+  </linearGradient>
+  <linearGradient id="rock-sec-lit" x1="0.2" y1="0" x2="0.8" y2="1">
+    <stop offset="0%" stop-color="#C5D1D4"/>
+    <stop offset="50%" stop-color="#93A4A8"/>
+    <stop offset="100%" stop-color="#607175"/>
+  </linearGradient>
+  <linearGradient id="moss-sun" x1="0.2" y1="0" x2="0.8" y2="1">
+    <stop offset="0%" stop-color="#9BE68C"/>
+    <stop offset="50%" stop-color="#55C058"/>
+    <stop offset="100%" stop-color="#2E8838"/>
+  </linearGradient>
+  <linearGradient id="moss-shadow" x1="0.1" y1="0" x2="0.9" y2="1">
+    <stop offset="0%" stop-color="#3FA64C"/>
+    <stop offset="60%" stop-color="#226B2C"/>
+    <stop offset="100%" stop-color="#14461B"/>
+  </linearGradient>
+</defs>
+
+<!-- Ground Contact Shadow -->
+<ellipse cx="258" cy="226" rx="190" ry="20" fill="#222A2B" opacity="0.18" filter="url(#rock-shadow)"/>
+<ellipse cx="258" cy="225" rx="140" ry="12" fill="#13191A" opacity="0.25"/>
+
+<!-- Left Medium Boulder -->
+<g>
+  <!-- Shadow Base -->
+  <path d="M72 216 C68 175 85 135 120 115 C150 98 185 108 208 135 C225 155 228 190 220 216 Z" fill="url(#rock-main-shadow)"/>
+  <!-- Lit Upper Plane -->
+  <path d="M75 212 C72 178 88 140 120 120 C145 105 178 112 195 135 C175 145 145 160 125 185 C108 205 92 210 75 212 Z" fill="url(#rock-sec-lit)"/>
+  <!-- Top Rim Highlight -->
+  <path d="M98 135 C115 118 142 112 168 118 C145 125 122 138 108 152 Z" fill="#E8EEF0" opacity="0.7"/>
+  <!-- Facet Crease -->
+  <path d="M120 120 C142 155 158 180 162 215" fill="none" stroke="#384548" stroke-width="3.5" stroke-linecap="round" opacity="0.45"/>
+</g>
+
+<!-- Right Low Rounding Boulder -->
+<g>
+  <!-- Shadow Base -->
+  <path d="M315 216 C310 168 335 130 375 118 C415 105 455 125 470 160 C480 185 475 208 460 216 Z" fill="url(#rock-main-shadow)"/>
+  <!-- Lit Upper Plane -->
+  <path d="M320 212 C318 175 338 138 375 124 C410 112 445 128 455 155 C435 165 405 175 375 195 C350 210 332 212 320 212 Z" fill="url(#rock-sec-lit)"/>
+  <!-- Top Rim Highlight -->
+  <path d="M352 132 C378 118 412 120 438 132 C412 135 385 145 365 160 Z" fill="#E8EEF0" opacity="0.65"/>
+  <!-- Facet Crease -->
+  <path d="M375 124 C390 152 402 180 405 214" fill="none" stroke="#384548" stroke-width="3" stroke-linecap="round" opacity="0.45"/>
+</g>
+
+<!-- Center Large Majestic Boulder -->
+<g>
+  <!-- Main Shadow Body -->
+  <path d="M178 218 C168 155 200 85 255 62 C305 42 360 75 378 135 C390 175 382 208 365 218 Z" fill="url(#rock-main-shadow)"/>
+  <!-- Front Lit Facet Plane -->
+  <path d="M182 214 C175 158 205 92 255 68 C298 48 345 75 362 125 C335 138 295 155 260 182 C230 205 205 212 182 214 Z" fill="url(#rock-main-lit)"/>
+  <!-- Top Left Sunlit Crest -->
+  <path d="M210 92 C235 65 275 52 312 62 C275 70 240 90 218 118 Z" fill="#F0F5F6" opacity="0.85"/>
+  <!-- Secondary Lit Edge -->
+  <path d="M188 152 C195 122 218 95 248 80 C230 102 218 128 210 158 Z" fill="#DCE5E8" opacity="0.6"/>
+  <!-- Major Sculpted Facet Creases -->
+  <path d="M255 68 C280 115 298 160 305 216" fill="none" stroke="#303C3E" stroke-width="4.5" stroke-linecap="round" opacity="0.55"/>
+  <path d="M280 115 C255 138 230 158 205 175" fill="none" stroke="#303C3E" stroke-width="3.5" stroke-linecap="round" opacity="0.4"/>
+  <!-- Weathering Crack Accent -->
+  <path d="M325 105 C335 122 342 135 348 142" fill="none" stroke="#253032" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+</g>
+
+<!-- Lush Forest Velvet Moss Overgrowth -->
+<g>
+  <!-- Center Boulder Moss Cap -->
+  <g fill="url(#moss-sun)">
+    <path d="M215 90 C235 62 272 50 305 58 C325 64 340 78 335 92 C325 88 310 95 295 90 C275 82 255 95 235 88 C225 85 220 88 215 90 Z"/>
+    <!-- Moss Overhang Droplets -->
+    <circle cx="242" cy="94" r="5"/>
+    <circle cx="270" cy="95" r="6"/>
+    <circle cx="305" cy="96" r="5.5"/>
+  </g>
+  <g fill="url(#moss-shadow)">
+    <path d="M235 96 C255 94 280 98 300 95 C280 102 255 102 235 96 Z"/>
+  </g>
+
+  <!-- Left Boulder Moss Patch -->
+  <g fill="url(#moss-sun)">
+    <path d="M110 128 C125 110 152 108 172 118 C160 125 145 122 132 130 C122 135 115 132 110 128 Z"/>
+    <circle cx="135" cy="132" r="4.5"/>
+    <circle cx="155" cy="128" r="4"/>
+  </g>
+
+  <!-- Right Boulder Moss Patch -->
+  <g fill="url(#moss-sun)">
+    <path d="M355 128 C375 112 405 115 425 128 C410 132 395 130 382 136 C370 140 362 135 355 128 Z"/>
+    <circle cx="388" cy="136" r="4.5"/>
+  </g>
+</g>
+
+<!-- Ground Pebbles at Base -->
+<g fill="#8C9C9F">
+  <ellipse cx="140" cy="222" rx="14" ry="7"/>
+  <ellipse cx="165" cy="225" rx="9" ry="5"/>
+  <ellipse cx="385" cy="224" rx="12" ry="6"/>
+  <ellipse cx="405" cy="226" rx="8" ry="4.5"/>
+</g>
+<g fill="#CFD8DA" opacity="0.6">
+  <ellipse cx="138" cy="220" rx="9" ry="3.5"/>
+  <ellipse cx="383" cy="222" rx="8" ry="3"/>
+</g>
+
+</svg>

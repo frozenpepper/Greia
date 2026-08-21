@@ -221,14 +221,21 @@ A local-agent prose `PASS` is not enough. Numeric text/layout claims must agree 
 
 ---
 
-# 8. What comes after the actor gate
+# 8. Visual Authoring Kit benchmark & continuation sequence
 
-Advance from real caller needs, not speculative engine features.
-
-Likely sequence:
+Current benchmark completed:
 
 ```text
-first Lilli actor accepted
+docs/testing/2026-08-21_VISUAL_AUTHORING_LIBRARY_COMPARISON.md
+```
+
+8 challenger candidates created in `assets/visual/authoring_candidates/2026-08-21_forest_meadow_comparison/`. Comprehensive review artifacts generated in `docs/reviews/visual/2026-08-21_authoring-library-comparison/` and transfer package assembled at `./GREIA_VISUAL_REVIEW_AUTHORING_LIBRARY_COMPARISON_2026-08-21.zip` for owner/ChatGPT pixel inspection.
+
+Likely continuation sequence:
+
+```text
+Visual Authoring Kit benchmark reviewed by owner
+→ promote accepted challenger grammar/assets
 → reusable scene/actor Activity authoring adapter
 → one more real Activity family proving reuse
 → only then add missing motion/FX primitives justified by that caller

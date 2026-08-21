@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<defs>
+  <filter id="c-shadow-sec" x="-30%" y="-30%" width="160%" height="160%">
+    <feGaussianBlur stdDeviation="7"/>
+  </filter>
+  <linearGradient id="sec-trunk-grad" x1="0.2" y1="0" x2="0.8" y2="1">
+    <stop offset="0%" stop-color="#BA7F52"/>
+    <stop offset="40%" stop-color="#935B35"/>
+    <stop offset="80%" stop-color="#6F3F20"/>
+    <stop offset="100%" stop-color="#512A12"/>
+  </linearGradient>
+  <linearGradient id="sec-canopy-sun" x1="0.3" y1="0" x2="0.7" y2="1">
+    <stop offset="0%" stop-color="#B2F298"/>
+    <stop offset="45%" stop-color="#76DC70"/>
+    <stop offset="100%" stop-color="#46AE4D"/>
+  </linearGradient>
+  <linearGradient id="sec-canopy-mid" x1="0.2" y1="0" x2="0.8" y2="1">
+    <stop offset="0%" stop-color="#72D975"/>
+    <stop offset="50%" stop-color="#44B251"/>
+    <stop offset="100%" stop-color="#288138"/>
+  </linearGradient>
+  <linearGradient id="sec-canopy-shadow" x1="0.1" y1="0" x2="0.9" y2="1">
+    <stop offset="0%" stop-color="#3AA34B"/>
+    <stop offset="60%" stop-color="#227231"/>
+    <stop offset="100%" stop-color="#144E20"/>
+  </linearGradient>
+  <radialGradient id="sec-highlight" cx="0.35" cy="0.3" r="0.6">
+    <stop offset="0%" stop-color="#E1FEDC" stop-opacity="0.85"/>
+    <stop offset="60%" stop-color="#B7F8AC" stop-opacity="0.4"/>
+    <stop offset="100%" stop-color="#84E57B" stop-opacity="0"/>
+  </radialGradient>
+</defs>
+
+<!-- Ground Contact Shadow -->
+<ellipse cx="258" cy="466" rx="110" ry="20" fill="#2E2015" opacity="0.16" filter="url(#c-shadow-sec)"/>
+<ellipse cx="258" cy="465" rx="72" ry="12" fill="#1C120A" opacity="0.22"/>
+
+<!-- Back / Under-Canopy Shadow Mass -->
+<g fill="url(#sec-canopy-shadow)">
+  <path d="M165 240 C145 190 170 140 215 130 C235 95 285 85 320 100 C360 85 410 110 415 155 C440 195 425 245 385 265 C345 285 295 280 260 288 C215 298 175 280 165 240 Z"/>
+</g>
+
+<!-- Graceful Slender Trunk & Branch Architecture -->
+<g>
+  <!-- Main Trunk Path -->
+  <path d="M228 456 C236 405 242 355 240 305 C237 258 226 218 206 178 C228 195 245 222 254 252 C262 210 276 172 304 140 C290 170 286 208 288 248 C291 300 298 360 306 410 C310 435 320 450 332 458 C298 454 266 450 228 456 Z" fill="url(#sec-trunk-grad)"/>
+
+  <!-- Roots -->
+  <path d="M228 456 C218 458 200 462 188 464 C205 458 220 448 230 436 Z" fill="#512A12"/>
+  <path d="M320 454 C335 458 355 463 368 465 C350 460 332 448 324 435 Z" fill="#3E1E0B"/>
+
+  <!-- Left Branch Extension -->
+  <path d="M242 272 C215 250 185 242 152 242 C180 234 210 236 235 252 Z" fill="#754323"/>
+  <!-- Right Branch Extension -->
+  <path d="M288 238 C315 215 348 206 382 208 C352 200 320 202 295 220 Z" fill="#62361A"/>
+
+  <!-- Bark Texture & Rim Light -->
+  <path d="M232 448 C240 395 245 345 244 295 C242 255 232 220 215 188" fill="none" stroke="#DCA278" stroke-width="4.5" stroke-linecap="round" opacity="0.45"/>
+  <path d="M298 448 C292 395 288 345 292 295 C295 255 304 220 318 188" fill="none" stroke="#3E1E0B" stroke-width="4" stroke-linecap="round" opacity="0.38"/>
+  <path d="M265 440 C268 390 266 335 270 285" fill="none" stroke="#DCA278" stroke-width="3" stroke-linecap="round" opacity="0.35"/>
+</g>
+
+<!-- Mid-Canopy Billows -->
+<g fill="url(#sec-canopy-mid)">
+  <!-- Left Tier -->
+  <path d="M140 230 C120 195 135 155 170 145 C195 138 225 148 240 168 C255 188 255 215 240 238 C220 260 185 265 160 258 C145 252 140 240 140 230 Z"/>
+  <!-- Right Tier -->
+  <path d="M310 245 C295 215 310 178 345 165 C375 152 412 162 425 190 C438 218 428 250 402 268 C375 285 335 278 310 245 Z"/>
+  <!-- Central Mass -->
+  <path d="M195 185 C175 142 205 98 250 88 C280 82 312 92 330 112 C355 98 390 105 405 135 C422 165 415 200 390 225 C360 250 315 258 275 252 C235 245 208 222 195 185 Z"/>
+</g>
+
+<!-- Fore / Sunlit Canopy Crests -->
+<g fill="url(#sec-canopy-sun)">
+  <!-- Topmost Crown -->
+  <path d="M225 110 C210 72 245 35 288 32 C320 28 355 48 365 78 C388 75 415 90 418 118 C422 145 402 172 375 180 C345 188 308 182 285 168 C255 176 225 158 220 130 C218 122 222 115 225 110 Z"/>
+  <!-- Left Sunlit Bulge -->
+  <path d="M165 165 C150 132 175 100 210 95 C235 92 258 105 268 125 C250 152 225 175 192 178 C175 178 168 172 165 165 Z"/>
+  <!-- Right Sunlit Bulge -->
+  <path d="M305 145 C300 112 328 88 360 90 C388 92 410 112 408 140 C405 162 385 182 360 185 C335 185 312 168 305 145 Z"/>
+</g>
+
+<!-- Volumetric Highlights -->
+<g fill="url(#sec-highlight)">
+  <ellipse cx="288" cy="58" rx="48" ry="26" transform="rotate(-6 288 58)"/>
+  <ellipse cx="205" cy="118" rx="36" ry="20" transform="rotate(-12 205 118)"/>
+  <ellipse cx="360" cy="110" rx="35" ry="18" transform="rotate(10 360 110)"/>
+  <ellipse cx="178" cy="180" rx="30" ry="16" transform="rotate(-15 178 180)"/>
+</g>
+
+<!-- Foliage Leaf Tufts Edge Accents -->
+<g fill="#CEFABD" opacity="0.85">
+  <path d="M280 30 C285 22 295 22 298 29 C294 32 288 32 280 30 Z"/>
+  <path d="M312 26 C318 18 328 20 330 28 C324 30 318 30 312 26 Z"/>
+  <path d="M152 110 C145 106 146 96 154 94 C155 101 155 106 152 110 Z"/>
+  <path d="M125 180 C117 176 118 166 126 164 C128 170 127 176 125 180 Z"/>
+  <path d="M418 100 C426 96 432 102 430 110 C425 108 420 105 418 100 Z"/>
+  <path d="M430 170 C438 166 442 174 438 180 C434 178 430 175 430 170 Z"/>
+</g>
+
+<!-- Depth Crevice Shadows -->
+<g fill="#154E20" opacity="0.5">
+  <path d="M185 170 C210 178 240 175 260 165 C235 180 205 184 180 176 Z"/>
+  <path d="M285 175 C315 182 350 180 375 168 C350 182 315 185 280 178 Z"/>
+</g>
+
+<!-- Gentle Woodland White Star Flowers -->
+<g fill="#FFFFFF" opacity="0.9">
+  <circle cx="218" cy="148" r="3.5"/>
+  <circle cx="214" cy="145" r="3"/>
+  <circle cx="222" cy="145" r="3"/>
+  <circle cx="215" cy="151" r="3"/>
+  <circle cx="221" cy="151" r="3"/>
+  <circle cx="218" cy="148" r="1.8" fill="#FFD54F"/>
+</g>
+<g fill="#FFFFFF" opacity="0.9">
+  <circle cx="345" cy="135" r="3.5"/>
+  <circle cx="341" cy="132" r="3"/>
+  <circle cx="349" cy="132" r="3"/>
+  <circle cx="342" cy="138" r="3"/>
+  <circle cx="348" cy="138" r="3"/>
+  <circle cx="345" cy="135" r="1.8" fill="#FFD54F"/>
+</g>
+
+</svg>

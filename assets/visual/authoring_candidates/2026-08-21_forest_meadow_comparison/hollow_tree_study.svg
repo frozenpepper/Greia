@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<defs>
+  <filter id="hollow-shadow" x="-30%" y="-30%" width="160%" height="160%">
+    <feGaussianBlur stdDeviation="8"/>
+  </filter>
+  <linearGradient id="hollow-trunk-grad" x1="0.2" y1="0" x2="0.8" y2="1">
+    <stop offset="0%" stop-color="#9C5E35"/>
+    <stop offset="40%" stop-color="#7B4522"/>
+    <stop offset="80%" stop-color="#5B2F14"/>
+    <stop offset="100%" stop-color="#3E1D09"/>
+  </linearGradient>
+  <linearGradient id="hollow-interior" x1="0.5" y1="0" x2="0.5" y2="1">
+    <stop offset="0%" stop-color="#1A0C04"/>
+    <stop offset="45%" stop-color="#0E0602"/>
+    <stop offset="100%" stop-color="#050201"/>
+  </linearGradient>
+  <linearGradient id="hollow-canopy-sun" x1="0.3" y1="0" x2="0.7" y2="1">
+    <stop offset="0%" stop-color="#9EEA94"/>
+    <stop offset="45%" stop-color="#5EC86B"/>
+    <stop offset="100%" stop-color="#349A47"/>
+  </linearGradient>
+  <linearGradient id="hollow-canopy-mid" x1="0.2" y1="0" x2="0.8" y2="1">
+    <stop offset="0%" stop-color="#64D071"/>
+    <stop offset="50%" stop-color="#3CA54F"/>
+    <stop offset="100%" stop-color="#227434"/>
+  </linearGradient>
+  <linearGradient id="hollow-canopy-shadow" x1="0.1" y1="0" x2="0.9" y2="1">
+    <stop offset="0%" stop-color="#329043"/>
+    <stop offset="60%" stop-color="#1E652C"/>
+    <stop offset="100%" stop-color="#12441C"/>
+  </linearGradient>
+  <radialGradient id="hollow-canopy-hl" cx="0.35" cy="0.3" r="0.6">
+    <stop offset="0%" stop-color="#D7FCD3" stop-opacity="0.85"/>
+    <stop offset="60%" stop-color="#A8F6A2" stop-opacity="0.4"/>
+    <stop offset="100%" stop-color="#73DC7B" stop-opacity="0"/>
+  </radialGradient>
+</defs>
+
+<!-- Ground Contact Shadow -->
+<ellipse cx="256" cy="466" rx="145" ry="24" fill="#2E2015" opacity="0.18" filter="url(#hollow-shadow)"/>
+<ellipse cx="256" cy="465" rx="105" ry="14" fill="#1C120A" opacity="0.24"/>
+
+<!-- Back Under-Canopy Shadow Mass -->
+<g fill="url(#hollow-canopy-shadow)">
+  <path d="M115 190 C95 145 125 95 170 88 C190 55 240 45 280 58 C320 38 375 55 398 95 C435 105 455 150 442 195 C458 230 435 275 390 288 C355 298 315 288 285 298 C245 308 200 295 165 278 C120 258 102 220 115 190 Z"/>
+</g>
+
+<!-- Gnarly Ancient Trunk Architecture -->
+<g>
+  <!-- Main Outer Trunk -->
+  <path d="M195 456 C202 410 205 355 198 300 C192 250 175 210 148 175 C175 188 200 215 212 245 C222 208 240 168 275 135 C288 115 305 100 324 85 C310 112 305 142 308 172 C312 205 325 230 342 250 C362 222 390 202 422 188 C398 212 380 242 368 275 C358 305 358 345 364 388 C370 422 385 448 398 458 C352 454 310 448 256 448 C235 448 215 452 195 456 Z" fill="url(#hollow-trunk-grad)"/>
+
+  <!-- Spreading Buttress Roots -->
+  <path d="M195 456 C182 458 158 463 142 466 C165 460 185 448 198 434 Z" fill="#3E1D09"/>
+  <path d="M382 454 C402 458 428 464 445 466 C422 460 398 448 388 432 Z" fill="#2E1405"/>
+  <path d="M232 448 C236 456 242 464 246 468 C250 464 254 456 258 448 Z" fill="#2E1405" opacity="0.6"/>
+
+  <!-- Bark Shading Planes & Texture -->
+  <path d="M198 445 C208 395 212 345 208 295 C204 255 190 218 165 185 C178 200 192 222 202 250 C212 280 215 340 210 395 C206 422 202 440 198 445 Z" fill="#B57648" opacity="0.5"/>
+  <path d="M388 450 C375 418 365 380 360 338 C355 295 365 262 378 235 C370 258 365 290 368 332 C372 375 382 418 392 445 Z" fill="#2E1405" opacity="0.6"/>
+  <path d="M228 435 C232 385 230 335 235 285" fill="none" stroke="#B57648" stroke-width="4" stroke-linecap="round" opacity="0.4"/>
+  <path d="M312 438 C318 385 315 330 320 275" fill="none" stroke="#2E1405" stroke-width="4" stroke-linecap="round" opacity="0.4"/>
+
+  <!-- THE INTERACTIVE HOLLOW (Deep Inviting Cavity) -->
+  <!-- Outer Weathered Hollow Lip / Rim Shadow -->
+  <path d="M220 310 C210 335 208 375 220 405 C230 428 275 432 290 410 C302 382 300 338 288 312 C275 292 232 290 220 310 Z" fill="#2B1406"/>
+  <!-- Hollow Interior Deep Shadow -->
+  <path d="M224 315 C215 338 214 372 224 398 C232 420 270 424 284 404 C294 378 292 340 282 318 C270 300 234 298 224 315 Z" fill="url(#hollow-interior)"/>
+  <!-- Hollow Rim Top Wood Highlight -->
+  <path d="M232 300 C250 292 268 294 280 304 C268 300 248 300 236 308 Z" fill="#C48858" opacity="0.8"/>
+  <!-- Hollow Bottom Wood Rim Shelf -->
+  <path d="M224 402 C242 416 268 418 282 406 C268 412 240 410 228 398 Z" fill="#754320" opacity="0.7"/>
+</g>
+
+<!-- Mid-Canopy Masses -->
+<g fill="url(#hollow-canopy-mid)">
+  <path d="M95 225 C75 190 92 152 128 140 C152 132 182 140 200 160 C215 178 218 205 205 228 C192 250 162 265 135 262 C115 260 100 245 95 225 Z"/>
+  <path d="M335 250 C320 220 335 182 370 168 C398 155 435 165 448 192 C462 220 450 252 425 270 C398 288 358 280 335 250 Z"/>
+  <path d="M155 180 C135 135 165 88 215 78 C245 70 278 82 298 102 C325 85 365 90 385 120 C405 148 398 185 375 210 C345 238 298 248 255 242 C210 235 172 215 155 180 Z"/>
+</g>
+
+<!-- Fore Sunlit Crown -->
+<g fill="url(#hollow-canopy-sun)">
+  <path d="M195 102 C180 65 215 30 258 26 C292 22 328 42 338 72 C362 68 390 82 395 110 C400 138 382 165 352 174 C322 182 285 176 262 162 C232 170 200 152 194 124 C192 116 194 108 195 102 Z"/>
+  <path d="M135 145 C120 112 145 80 182 75 C208 72 230 85 240 105 C222 132 195 155 162 158 C145 158 138 152 135 145 Z"/>
+  <path d="M305 118 C298 85 328 60 360 62 C388 65 410 85 408 115 C405 138 385 160 360 162 C332 162 312 142 305 118 Z"/>
+</g>
+
+<!-- Highlights & Leaf Tufts -->
+<g fill="url(#hollow-canopy-hl)">
+  <ellipse cx="260" cy="50" rx="50" ry="26" transform="rotate(-6 260 50)"/>
+  <ellipse cx="178" cy="102" rx="38" ry="20" transform="rotate(-15 178 102)"/>
+  <ellipse cx="355" cy="88" rx="36" ry="18" transform="rotate(10 355 88)"/>
+</g>
+
+<g fill="#B6F8B0" opacity="0.85">
+  <path d="M250 24 C255 16 265 16 268 23 C264 26 258 26 250 24 Z"/>
+  <path d="M285 20 C290 12 300 14 302 22 C296 24 290 24 285 20 Z"/>
+  <path d="M120 95 C112 90 114 80 122 78 C124 85 124 90 120 95 Z"/>
+  <path d="M410 85 C418 80 425 86 422 95 C418 94 412 90 410 85 Z"/>
+</g>
+
+</svg>

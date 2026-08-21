@@ -833,6 +833,42 @@ Per Section 10 of the protocol, the visual review archive for independent owner/
 - **No Independent Primary Review Closed:** Transfer archive created for owner attachment; independent pixel review remains open until owner attaches archive.
 - **No R7 Architecture Closure:** Display coordinator and session boundary remain independently open.
 
+---
+
+# Part 11: Visual Authoring Library Comparison Benchmark
+
+**Date:** 2026-08-21  
+**Runbook Authority:** `docs/testing/2026-08-21_VISUAL_AUTHORING_LIBRARY_COMPARISON.md`  
+**Architecture Authority:** `docs/design/GREIA_VISUAL_AUTHORING_ARCHITECTURE.md`  
+**Evidence Class:** `AUTHORING COMPARISON / OWNER VISUAL REVIEW REQUIRED`
+
+---
+
+## 1. Summary of Accomplishments
+
+- **Authored Candidate Source Assets:**
+  - Created 8 representative challenger SVGs under `assets/visual/authoring_candidates/2026-08-21_forest_meadow_comparison/`:
+    1. `tree_hero.svg` (Hero Oak Tree: multi-tiered billowing canopy, sculpted bark planes, buttress roots, buttercup blossoms & wild berries)
+    2. `tree_secondary.svg` (Secondary Woodland Tree: slender bowed birch/beech, fresh spring apple-green palette, white star flowers)
+    3. `bush_flowering.svg` (Flowering Bush: tiered billow foliage, pink/gold/blue/lavender blossoms, wild red berries)
+    4. `rock_cluster_large.svg` (Large Rock Cluster: faceted river boulders, soft velvet green moss caps, crevice depth)
+    5. `cloud_large.svg` (Large Cumulus Cloud: volumetric spherical billows, golden-white sunlit crest sheen, companion cloudlet)
+    6. `grass_edge.svg` (Meadow Grass Edge: multi-tier rolling turf, organic blade tufts, field daisies/buttercups/clovers)
+    7. `sunlight_rays.svg` (Atmosphere: soft multi-shaft volumetric radiant beams with floating luminous dust motes)
+    8. `hollow_tree_study.svg` (Interactive Study: bespoke ancient hollow tree demonstrating Authoring Kit grammar for Activity gameplay spots)
+
+- **Generated Visual Comparison Artifacts:**
+  - `comparison_contact_sheet.png`: Side-by-side comparison of baseline (v0.2) vs challenger assets.
+  - `comparison_runtime_sizes.png`: Low-resolution readability benchmark at 256px, 128px, and 64px.
+  - `preview_baseline_scene.png` & `preview_challenger_scene.png`: Full 1024×600 forest meadow composition comparison.
+  - `comparison_detail_crops.png`: 2.5x high-magnification close-up crops of canopy volumes, bark grain, rock moss, and flowers.
+  - `audit.json`: Source file metadata, viewBoxes, byte sizes, and features.
+  - `REVIEW.md`: Comprehensive asset-by-asset comparative critique.
+
+- **Assembled Owner Review Transfer Package:**
+  - `./GREIA_VISUAL_REVIEW_AUTHORING_LIBRARY_COMPARISON_2026-08-21.zip` (1.2 MB) containing all comparative review PNGs, `REVIEW.md`, and `audit.json` for owner attachment to ChatGPT for independent pixel inspection.
+
+
 
 
 

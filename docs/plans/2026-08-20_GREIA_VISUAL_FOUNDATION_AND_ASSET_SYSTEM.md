@@ -620,5 +620,11 @@ The entries below preserve the workstream chronology. Corrections/new state are 
 - Steady state simulator performance sanity measured 230 frames / 10.01 s = 23.0 FPS.
 - Curated review set committed in `docs/reviews/visual/2026-08-21_scene-actor-lilli-nascondino/` and review package assembled at `./GREIA_VISUAL_REVIEW_SCENE_ACTOR_LILLI_2026-08-21.zip`.
 
-**Next exact action:** S5 Character & Reusable FX Expansion / Web Scene Transport.
+## 2026-08-21 — Visual Authoring Library Comparison Benchmark
+- Executed quality benchmark against baseline `forest_meadow/v0.2/` per `docs/testing/2026-08-21_VISUAL_AUTHORING_LIBRARY_COMPARISON.md`.
+- Authored 8 candidate challenger assets under `assets/visual/authoring_candidates/2026-08-21_forest_meadow_comparison/` (`tree_hero`, `tree_secondary`, `bush_flowering`, `rock_cluster_large`, `cloud_large`, `grass_edge`, `sunlight_rays`, `hollow_tree_study`).
+- Rendered side-by-side contact sheet, 256/128/64px scaling comparisons, 1024×600 forest meadow scenes, and 2.5x detail crops under `docs/reviews/visual/2026-08-21_authoring-library-comparison/`.
+- Assembled `./GREIA_VISUAL_REVIEW_AUTHORING_LIBRARY_COMPARISON_2026-08-21.zip` for owner/ChatGPT independent pixel inspection.
+
+**Next exact action:** Owner pixel review of Visual Authoring Library transfer ZIP.
 

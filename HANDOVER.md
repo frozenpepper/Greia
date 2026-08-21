@@ -81,7 +81,7 @@ Accepted simulator facts include:
 - Collection-first Home passed portal Home, bounded 5 primary destinations (`create`, `play`, `learn`, `explore`, `my_greia`), `browse`/`Altro` recovery for unknown categories, Clinic in Play & Learn, corrupt portal fallback, six responsive rows, 27.7 FPS sanity;
 - Scene Compositor Runtime passed in `nascondino_bosco` using `forest_meadow_day_v1.toml`, 2-pass background ($z \le 59$) and foreground/atmosphere ($z \ge 60$) rendering, parallax and ambient motion, corrupt required/optional asset fallbacks, six responsive rows, 25.8 FPS sanity;
 - Scene Actor Runtime passed in `nascondino_bosco` using `SceneActorDefinition` and `actor_scene_sample` with `character.lilli/default|blink` and `shadow.contact.small.01/default`, deterministic eye blink, grounded vertical idle oscillation, corrected 24 px / 26 px / 20 px target HUD typography with `SCOIATTOLO` fully fitted, and 230 frames / 10.01 s = 23.0 FPS sanity;
-- Transfer review archive packaged at `./GREIA_VISUAL_REVIEW_SCENE_ACTOR_LILLI_2026-08-21.zip` for owner attachment to ChatGPT for independent pixel inspection;
+- Visual Authoring Library Benchmark completed per `docs/testing/2026-08-21_VISUAL_AUTHORING_LIBRARY_COMPARISON.md`, creating 8 candidate challenger assets under `assets/visual/authoring_candidates/2026-08-21_forest_meadow_comparison/`, comprehensive contact sheets/scaling benchmarks/1024x600 scenes in `docs/reviews/visual/2026-08-21_authoring-library-comparison/`, and transfer package at `./GREIA_VISUAL_REVIEW_AUTHORING_LIBRARY_COMPARISON_2026-08-21.zip`;
 - `ui.empty.basket` remains generated/source-present but not legitimately exercised;
 - first Python Activity semantic resolver + Shape Garden consumer remain SOURCE only and non-blocking;
 - no physical Acer/Pi V5 performance claim is made.
@@ -89,7 +89,9 @@ Accepted simulator facts include:
 Current continuation priority:
 
 ```text
-S5 Character & Reusable FX Expansion / Web Scene Transport
+Owner Review of Visual Authoring Library Comparison Transfer ZIP
+→ Promote Accepted Authoring Grammar & Primitives
+→ S5 Character & Reusable FX Expansion / Web Scene Transport
 ```
 
 ---
