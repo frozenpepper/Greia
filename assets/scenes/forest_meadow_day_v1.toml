@@ -1,0 +1,171 @@
+scene_id = "forest_meadow.day.v1"
+canvas = [1024, 600]
+fit = "cover"
+background = [207, 234, 247]
+
+# Authoring coordinates use the established 1024x600 Greia reference canvas.
+# Critical play remains in the central 800px safe span so COVER scaling may crop
+# edges on 4:3 displays without losing interaction content.
+
+[[nodes]]
+id = "far_hills"
+asset = "hills.distant.01"
+rect = [0, 80, 1024, 512]
+z = 10
+parallax = 0.08
+
+[[nodes]]
+id = "far_treeline"
+asset = "treeline.distant.01"
+rect = [0, 250, 1024, 256]
+z = 20
+parallax = 0.12
+
+[[nodes]]
+id = "cloud_left"
+asset = "cloud.large.01"
+rect = [70, 38, 320, 128]
+z = 24
+parallax = 0.05
+motion = "drift_x"
+motion_amplitude = 18
+motion_period = 30
+motion_phase = 0.0
+optional = true
+
+[[nodes]]
+id = "cloud_right"
+asset = "cloud.small.01"
+rect = [666, 86, 230, 99]
+z = 24
+parallax = 0.05
+motion = "drift_x"
+motion_amplitude = 14
+motion_period = 26
+motion_phase = 0.35
+optional = true
+
+[[nodes]]
+id = "ground_edge"
+asset = "ground.grass_edge.01"
+rect = [0, 405, 1024, 256]
+z = 28
+parallax = 0.26
+
+[[nodes]]
+id = "left_tree"
+asset = "tree.hero.01"
+rect = [-52, 132, 344, 344]
+z = 36
+parallax = 0.30
+motion = "sway_x"
+motion_amplitude = 2.5
+motion_period = 6.5
+motion_phase = 0.1
+optional = true
+
+[[nodes]]
+id = "right_tree"
+asset = "tree.secondary.01"
+rect = [762, 142, 330, 330]
+z = 36
+parallax = 0.28
+motion = "sway_x"
+motion_amplitude = 2.0
+motion_period = 7.0
+motion_phase = 0.55
+optional = true
+
+[[nodes]]
+id = "left_bush"
+asset = "bush.round.01"
+rect = [-42, 394, 286, 143]
+z = 42
+parallax = 0.34
+motion = "sway_x"
+motion_amplitude = 1.8
+motion_period = 5.2
+motion_phase = 0.25
+optional = true
+
+[[nodes]]
+id = "right_bush"
+asset = "bush.flowering.01"
+rect = [796, 392, 286, 143]
+z = 42
+parallax = 0.34
+motion = "sway_x"
+motion_amplitude = 1.5
+motion_period = 5.8
+motion_phase = 0.7
+optional = true
+
+[[nodes]]
+id = "fallen_log"
+asset = "log.fallen.01"
+rect = [360, 455, 250, 100]
+z = 48
+parallax = 0.36
+optional = true
+
+[[nodes]]
+id = "rock_cluster"
+asset = "rock.cluster.large.01"
+rect = [625, 452, 180, 90]
+z = 49
+parallax = 0.35
+optional = true
+
+# z >= 60 is intentionally a foreground/atmosphere pass. Activities may draw
+# gameplay between the two passes so foreground foliage and atmosphere create
+# depth without covering Greia/system UI.
+
+[[nodes]]
+id = "foreground_fern"
+asset = "fern.cluster.01"
+rect = [-26, 490, 304, 152]
+z = 68
+parallax = 0.48
+motion = "sway_x"
+motion_amplitude = 2.0
+motion_period = 5.5
+motion_phase = 0.0
+optional = true
+
+[[nodes]]
+id = "foreground_bush"
+asset = "bush.low.01"
+rect = [770, 486, 310, 155]
+z = 68
+parallax = 0.48
+motion = "sway_x"
+motion_amplitude = 1.8
+motion_period = 6.2
+motion_phase = 0.4
+optional = true
+
+[[nodes]]
+id = "fog"
+asset = "atmosphere.fog_strip.01"
+rect = [0, 370, 1024, 256]
+z = 80
+parallax = 0.16
+alpha = 0.18
+motion = "drift_x"
+motion_amplitude = 10
+motion_period = 36
+motion_phase = 0.15
+optional = true
+
+[[nodes]]
+id = "sunlight"
+asset = "atmosphere.sunlight_rays.01"
+rect = [0, 18, 1024, 512]
+z = 90
+parallax = 0.0
+alpha = 0.22
+motion = "breathe_alpha"
+motion_amplitude = 0.16
+motion_period = 9.0
+motion_phase = 0.1
+optional = true
