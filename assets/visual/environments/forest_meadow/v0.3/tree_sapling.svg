@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<defs>
+  <filter id="sap-sh" x="-20%" y="-20%" width="140%" height="140%">
+    <feGaussianBlur stdDeviation="5"/>
+  </filter>
+  <linearGradient id="sap-bark" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="#B88A58"/>
+    <stop offset="50%" stop-color="#8A5A30"/>
+    <stop offset="100%" stop-color="#543012"/>
+  </linearGradient>
+  <linearGradient id="sap-fol-deep" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#1A5822"/>
+    <stop offset="100%" stop-color="#08280C"/>
+  </linearGradient>
+  <linearGradient id="sap-fol-mid" x1="0.2" y1="0" x2="0.8" y2="1">
+    <stop offset="0%" stop-color="#60C850"/>
+    <stop offset="50%" stop-color="#3EA232"/>
+    <stop offset="100%" stop-color="#1C6C1E"/>
+  </linearGradient>
+  <linearGradient id="sap-fol-sun" x1="0.3" y1="0" x2="0.7" y2="1">
+    <stop offset="0%" stop-color="#B8F07C"/>
+    <stop offset="50%" stop-color="#7ADB5A"/>
+    <stop offset="100%" stop-color="#46AC3A"/>
+  </linearGradient>
+</defs>
+
+<!-- Ground Contact Shadows -->
+<ellipse cx="256" cy="460" rx="70" ry="12" fill="#241B12" opacity="0.20" filter="url(#sap-sh)"/>
+<ellipse cx="256" cy="456" rx="50" ry="7" fill="#140D07" opacity="0.35"/>
+
+<!-- Deep Under-Canopy -->
+<path d="M 357.6,175.0 C 367.3,195.6 354.2,216.8 331.5,217.4 C 344.6,244.5 327.6,272.7 297.5,273.8 C 270.9,297.0 233.8,286.4 223.3,252.8 C 199.1,260.5 177.4,243.0 180.0,217.6 C 153.1,223.2 131.9,201.9 137.6,175.0 C 119.6,154.5 127.5,125.8 153.5,117.5 C 170.5,87.0 208.5,84.4 229.6,112.1 C 236.9,83.3 267.8,72.7 291.3,91.1 C 318.2,72.2 351.5,85.5 358.0,117.7 C 379.8,132.2 379.6,160.8 357.6,175.0 Z" fill="url(#sap-fol-deep)"/>
+
+<!-- Slender Supple Stem & Little Forked Twigs -->
+<path d="M 244,456 C 248,454 252,435 253,380 C 254,320 252,260 248,220 C 235,200 210,180 185,165 C 178,160 182,152 190,154 C 215,162 242,185 252,205 C 254,180 256,150 258,115 C 262,120 262,135 260,155 C 268,175 292,190 320,198 C 328,200 326,208 318,206 C 295,200 272,188 262,172 C 258,220 258,320 260,380 C 262,435 268,454 272,456 Z" fill="url(#sap-bark)"/>
+
+<!-- Bright Young Foliage Billow -->
+<path d="M 345.6,165.0 C 355.9,184.0 344.6,204.7 323.1,206.5 C 325.9,234.5 301.9,253.8 275.2,245.0 C 248.9,259.4 220.1,243.9 217.5,214.1 C 193.9,231.1 164.2,219.7 158.2,191.2 C 138.2,178.1 138.2,151.9 158.3,138.8 C 162.8,110.6 191.4,97.8 215.4,113.2 C 223.4,87.4 251.8,79.3 272.3,97.0 C 295.3,76.0 328.4,84.5 338.4,114.1 C 359.7,124.0 363.3,149.5 345.6,165.0 Z" fill="url(#sap-fol-mid)"/>
+<path d="M 324.4,140.0 C 334.2,156.6 324.8,175.6 305.6,177.9 C 292.8,200.9 264.1,202.9 248.2,182.0 C 227.9,195.3 203.5,184.8 199.4,160.9 C 182.9,150.9 182.1,129.8 197.9,118.6 C 204.2,94.7 230.0,86.2 249.4,101.6 C 263.3,78.1 293.2,76.8 309.2,99.0 C 328.7,103.5 336.2,124.0 324.4,140.0 Z" fill="url(#sap-fol-sun)"/>
+</svg>

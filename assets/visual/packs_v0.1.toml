@@ -6,11 +6,22 @@ active_plan = "docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md
 notes = "Pack-level design/review inventory only. It is not a runtime filesystem-discovery or loader contract."
 
 [[packs]]
+id = "forest_meadow.v0.3"
+kind = "environment"
+path = "assets/visual/environments/forest_meadow/v0.3/"
+catalog = "assets/visual/environments/forest_meadow/v0.3/catalog.toml"
+status = "promoted"
+evidence = ["source", "desktop_visual_review", "owner_promotion_review"]
+reference_viewports = ["1024x600", "800x600"]
+dependencies = []
+notes = "Preferred Forest/Meadow environment pack. Selective hybrid of 23 candidate + 5 legacy v0.2 assets."
+
+[[packs]]
 id = "forest_meadow.v0.2"
 kind = "environment"
 path = "assets/visual/environments/forest_meadow/v0.2/"
 catalog = "assets/visual/environments/forest_meadow/v0.2/catalog.toml"
-status = "candidate"
+status = "provenance"
 evidence = ["source", "desktop_visual_review"]
 reference_viewports = ["1024x600", "800x600"]
 dependencies = []

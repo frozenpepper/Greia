@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<g fill="#E69532" opacity="0.9">
+  <!-- Drifting Leaf 1 -->
+  <path d="M 120,100 C 105,90 95,115 110,130 C 130,125 135,110 120,100 Z" transform="rotate(25 120 100)"/>
+  <!-- Drifting Leaf 2 -->
+  <path d="M 280,180 C 265,170 255,195 270,210 C 290,205 295,190 280,180 Z" fill="#88C442" transform="rotate(-35 280 180)"/>
+  <!-- Drifting Leaf 3 -->
+  <path d="M 390,290 C 375,280 365,305 380,320 C 400,315 405,300 390,290 Z" fill="#D27422" transform="rotate(45 390 290)"/>
+</g>
+</svg>
