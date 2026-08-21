@@ -1,5 +1,5 @@
 catalog_id = "greia.shared-visuals.v1"
-catalog_version = "0.1.4"
+catalog_version = "0.1.5"
 status = "candidate-runtime-rendition-source"
 runtime_consumed = false
 notes = "Explicit build-time selection of shared SVG masters for raster runtime renditions. This file is not directory discovery."
@@ -134,6 +134,18 @@ source = "visual/ui/v0.1/empty_basket.svg"
 output = "visual/runtime/v1/ui/empty_basket.png"
 width = 360
 height = 300
+
+[[visuals]]
+id = "ui.portal.frame"
+kind = "ui"
+role = "collection_destination"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/ui/v0.1/portal_frame.svg"
+output = "visual/runtime/v1/ui/portal_frame.png"
+width = 520
+height = 520
 
 [[visuals]]
 id = "ui.shadow.soft"
