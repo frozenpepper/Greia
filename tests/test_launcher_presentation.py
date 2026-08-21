@@ -6,7 +6,10 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from greia_launcher.activity_icon import ActivityIconError, package_icon_path
-from greia_launcher.catalogue_view import ActivityCatalogue
+from greia_launcher.catalogue_view import (
+    BROWSE_ACTIVITIES_ID,
+    ActivityCatalogue,
+)
 from greia_launcher.presentation import _activity_title
 
 
@@ -79,11 +82,52 @@ class ActivityCatalogueTests(unittest.TestCase):
         self.assertEqual(catalogue.collection("learn").icon_id, "book")
         self.assertEqual(catalogue.collection("my_greia").icon_id, "unicorn")
 
-    def test_old_package_without_presentation_categories_keeps_compatibility(self) -> None:
+    def test_arbitrary_category_does_not_create_a_primary_home_destination(self) -> None:
+        clinic = activity(
+            "org.greia.clinic",
+            launcher_categories=("care", "play"),
+        )
+        catalogue = ActivityCatalogue.from_activities((clinic,))
+        self.assertEqual(catalogue.category_ids, ("all", "play"))
+        self.assertEqual(
+            tuple(item.collection_id for item in catalogue.home_collections),
+            ("play",),
+        )
+        self.assertEqual(catalogue.collection("play").items, (clinic,))
+        self.assertNotIn("care", catalogue.category_ids)
+
+    def test_unknown_only_activity_uses_bounded_browse_fallback(self) -> None:
+        storybook = activity(
+            "org.greia.storybook",
+            launcher_categories=("storybook",),
+        )
+        catalogue = ActivityCatalogue.from_activities((storybook,))
+        self.assertEqual(catalogue.category_ids, ("all", BROWSE_ACTIVITIES_ID))
+        self.assertEqual(catalogue.collection(BROWSE_ACTIVITIES_ID).items, (storybook,))
+        self.assertEqual(
+            tuple(item.collection_id for item in catalogue.home_collections),
+            (BROWSE_ACTIVITIES_ID,),
+        )
+
+    def test_browse_contains_only_activities_without_a_primary_destination(self) -> None:
+        clinic = activity(
+            "org.greia.clinic",
+            launcher_categories=("care", "play"),
+        )
+        odd = activity(
+            "org.greia.odd",
+            launcher_categories=("experimental",),
+        )
+        catalogue = ActivityCatalogue.from_activities((clinic, odd))
+        self.assertEqual(catalogue.collection("play").items, (clinic,))
+        self.assertEqual(catalogue.collection(BROWSE_ACTIVITIES_ID).items, (odd,))
+
+    def test_old_package_without_presentation_categories_keeps_recoverability(self) -> None:
         old = activity("org.greia.old", "creative", "art")
         catalogue = ActivityCatalogue.from_activities((old,))
-        self.assertEqual(catalogue.category_ids, ("all", "art", "creative"))
-        self.assertEqual(catalogue.collection("art").icon_id, "backpack")
+        self.assertEqual(catalogue.category_ids, ("all", BROWSE_ACTIVITIES_ID))
+        self.assertEqual(catalogue.collection(BROWSE_ACTIVITIES_ID).items, (old,))
+        self.assertEqual(catalogue.collection(BROWSE_ACTIVITIES_ID).icon_id, "backpack")
 
     def test_unknown_category_falls_back_to_all(self) -> None:
         catalogue = ActivityCatalogue.from_activities(
