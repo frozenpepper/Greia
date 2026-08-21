@@ -261,7 +261,7 @@ profile
       → Activity
 ```
 
-Current primary Collection vocabulary remains:
+Current primary Collection vocabulary:
 
 ```text
 create
@@ -269,13 +269,13 @@ play
 learn
 explore
 my_greia
-care
 ```
 
 Implementation:
 
 ```text
 src/greia_launcher/collection_home_presentation.py
+src/greia_launcher/catalogue_view.py
 src/greia_launcher/child_shell.py
 ```
 
@@ -283,6 +283,8 @@ src/greia_launcher/child_shell.py
 
 - `ALL_ACTIVITIES_ID` remains available internally but is no longer rendered as the normal child Activity wall;
 - root renders only available non-empty primary Collections as large destinations;
+- arbitrary package categories do not manufacture top-level Home portals;
+- unknown-category Activities are recovered through the bounded `browse`/`Altro` Collection;
 - entering a Collection reuses the already-accepted panel, Activity-card, scroll/navigation and launch paths;
 - local Back from a primary Collection returns to Collection Home;
 - Back/Escape at Collection Home returns to profile choice;
@@ -311,13 +313,14 @@ assets/visual/runtime/v1/ui/portal_frame.png
 
 Fail-soft rule is deliberately narrow: corrupt/missing portal artwork preserves **Collection-first hierarchy** using a primitive circular Collection destination; it does not fall back to the obsolete All-Activities Home and does not disable unrelated accepted visuals.
 
-Accepted protocol:
+Accepted protocols:
 
 ```text
 docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md
+docs/testing/2026-08-21_COLLECTION_PRIMARY_VOCABULARY_SIMULATOR.md
 ```
 
-All 6 responsive matrix viewports, keyboard/pointer navigation, return origin from activity, multi-membership sanity, fail-soft portal fallback, and 27.7 FPS frame sanity passed with evidence in `tmp/collection-home-simulator-evidence/`.
+All 6 responsive matrix viewports, keyboard/pointer navigation, return origin from activity, multi-membership sanity, fail-soft portal fallback, bounded unknown-only fallback, and 27.7 FPS frame sanity passed with evidence in `tmp/collection-home-simulator-evidence/` and `tmp/collection-primary-vocabulary-evidence/`.
 
 Evidence class: **SIMULATOR VISUAL REVIEW**.
 
@@ -332,7 +335,7 @@ This gate does **not** implement or accept future adaptive sub-Collections, age/
 | Stable guide | `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` |
 | Resume | `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` |
 | Product discovery authority | `docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md` |
-| Active focus | **V5 — Collection-first Greia Home accepted in Activity Simulator** |
+| Active focus | **V5 — Bounded primary Collection vocabulary accepted in Activity Simulator** |
 | Environment coverage | V4 complete through Water/Pond; no new pack without concrete gap |
 | Catalogue/renditions | explicit semantic catalogue present; source version `0.1.5`; `ui.portal.frame` generated PNG present |
 | Activity cards | accepted at **SIMULATOR VISUAL REVIEW** |
@@ -342,10 +345,10 @@ This gate does **not** implement or accept future adaptive sub-Collections, age/
 | Launch/error feedback | accepted at **SIMULATOR VISUAL REVIEW** |
 | Empty basket | **SOURCE / NOT EXERCISED** |
 | Navigation icon button | accepted at **SIMULATOR VISUAL REVIEW** |
-| Collection-first Home | accepted at **SIMULATOR VISUAL REVIEW** |
+| Collection-first Home | accepted at **SIMULATOR VISUAL REVIEW** (5 primary collections) |
 | Collection portal frame | `ui.portal.frame/default` accepted at **SIMULATOR VISUAL REVIEW** |
 | Activity semantic API | implemented in source; Shape Garden proof is non-blocking |
-| Completed visible protocols | `docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md`; `docs/testing/2026-08-20_V5_SHARED_UI_PANEL_SIMULATOR.md`; `docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md`; `docs/testing/2026-08-21_V5_SHARED_PROFILE_IDENTITY_SIMULATOR.md`; `docs/testing/2026-08-21_V5_SHARED_FEEDBACK_SIMULATOR.md`; `docs/testing/2026-08-21_V5_SHARED_NAVIGATION_CHROME_SIMULATOR.md`; `docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md` |
+| Completed visible protocols | `docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md`; `docs/testing/2026-08-20_V5_SHARED_UI_PANEL_SIMULATOR.md`; `docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md`; `docs/testing/2026-08-21_V5_SHARED_PROFILE_IDENTITY_SIMULATOR.md`; `docs/testing/2026-08-21_V5_SHARED_FEEDBACK_SIMULATOR.md`; `docs/testing/2026-08-21_V5_SHARED_NAVIGATION_CHROME_SIMULATOR.md`; `docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md`; `docs/testing/2026-08-21_COLLECTION_PRIMARY_VOCABULARY_SIMULATOR.md` |
 | Next exact action | Web Activity semantic visual adapter or next targeted product-visible Shell integration |
 
 ---

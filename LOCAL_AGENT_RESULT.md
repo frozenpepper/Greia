@@ -596,4 +596,81 @@ All acceptance was performed through the Greia Activity Simulator in headless mo
 - **No R7 Architecture Closure:** Display coordinator and session boundary remain open.
 - **No Adaptive Sub-Collections / Parent Visibility Claim:** Bounded to primary Collection Home only.
 
+---
+
+# Greia Primary Collection Vocabulary — Simulator Acceptance Result
+
+**Date:** 2026-08-21  
+**Repository:** `frozenpepper/Greia` (`main`)  
+**Runbook Authority:** `docs/testing/2026-08-21_COLLECTION_PRIMARY_VOCABULARY_SIMULATOR.md`  
+**Target:** `ActivityCatalogue` primary-Collection projection + Collection-first Home  
+**Evidence Class:** `SIMULATOR VISUAL REVIEW`  
+
+---
+
+## 1. Git & Commit Summary
+
+- **Start Base SHA:** `33788734bfb55ff89e497d3910c2c19958742ba8`
+- **Head SHA:** (Current working tree)
+
+---
+
+## 2. Integrated Projection & Behavior
+
+- **Five Platform-Owned Primary Collection IDs:**
+  - `create` (Crea)
+  - `play` (Gioca)
+  - `learn` (Impara)
+  - `explore` (Esplora)
+  - `my_greia` (Mio Greia)
+- **Elimination of Arbitrary Package Categories on Home:**
+  - Package presentation/education tags (such as `care`, `empathy`, `storybook`, etc.) no longer manufacture additional top-level Home portals. The former `Care` portal is eliminated from the built-in Home.
+- **Clinic Recoverability:**
+  - `Clinica dei Cuccioli` is projected into its recognized primary destinations `Gioca` (Play) and `Impara` (Learn) without package duplication or loss of save/identity state.
+- **Bounded `Altro` / `More` Recovery Destination:**
+  - When an otherwise valid package has no recognized primary category, it appears through the bounded `Altro` (`browse`) portal, ensuring unknown-category Activities are never hidden.
+- **Visual Composition & Headless Execution:**
+  - Verified 100% in non-intrusive headless mode with SDL dummy driver at `http://127.0.0.1:8767`.
+
+---
+
+## 3. Greia Simulator Acceptance Matrix
+
+All acceptance was performed through the Greia Activity Simulator in headless mode with isolated state root `$HOME/.greia-simulator-primary-vocabulary`:
+
+| Test # | Viewport | Interface Size | State | Result | Screenshot Evidence | Status File |
+|---|---|---|---|---|---|---|
+| **01** | 1024x600 | Normal | Baseline Built-in Home (5 Primary Portals Only) | **PASS** | `tmp/collection-primary-vocabulary-evidence/01-home-primary-only.png` | `01-status.json` |
+| **02** | 1024x600 | Normal | Clinic Recoverability: Present in Gioca | **PASS** | `tmp/collection-primary-vocabulary-evidence/10-clinic-play.png` | N/A |
+| **03** | 1024x600 | Normal | Clinic Recoverability: Present in Impara | **PASS** | `tmp/collection-primary-vocabulary-evidence/11-clinic-learn.png` | N/A |
+| **04** | 1024x600 | Normal | Synthetic Unknown-Only Fallback: Home with Altro Portal | **PASS** | `tmp/collection-primary-vocabulary-evidence/20-home-with-more.png` | N/A |
+| **05** | 1024x600 | Normal | Synthetic Unknown-Only Fallback: Inside Altro Collection | **PASS** | `tmp/collection-primary-vocabulary-evidence/21-more-open.png` | N/A |
+| **06** | 1024x600 | Normal | Synthetic Unknown-Only Fallback: Back to Home | **PASS** | `tmp/collection-primary-vocabulary-evidence/22-more-back-home.png` | N/A |
+| **07** | 1024x600 | Normal | Multi-Membership Regression: Present in Crea | **PASS** | `tmp/collection-primary-vocabulary-evidence/30-multi-create.png` | N/A |
+| **08** | 1024x600 | Normal | Multi-Membership Regression: Present in Esplora | **PASS** | `tmp/collection-primary-vocabulary-evidence/30-multi-explore.png` | N/A |
+| **09** | 1024x600 | Normal | Navigation Regression: Home Keyboard Cycling | **PASS** | `tmp/collection-primary-vocabulary-evidence/31-home-keyboard.png` | N/A |
+| **10** | 1024x600 | Normal | Navigation Regression: Open Collection Keyboard | **PASS** | `tmp/collection-primary-vocabulary-evidence/32-collection-keyboard.png` | N/A |
+| **11** | 1024x600 | Normal | Responsive Matrix: 1024x600 Normal Home | **PASS** | `tmp/collection-primary-vocabulary-evidence/50-1024x600-normal-home.png` | N/A |
+| **12** | 1024x600 | Large | Responsive Matrix: 1024x600 Large Home | **PASS** | `tmp/collection-primary-vocabulary-evidence/51-1024x600-large-home.png` | N/A |
+| **13** | 1280x800 | Normal | Responsive Matrix: 1280x800 Normal Home | **PASS** | `tmp/collection-primary-vocabulary-evidence/52-1280x800-normal-home.png` | N/A |
+| **14** | 1366x768 | Compact | Responsive Matrix: 1366x768 Compact Home | **PASS** | `tmp/collection-primary-vocabulary-evidence/53-1366x768-compact-home.png` | N/A |
+| **15** | 1920x1080 | Normal | Responsive Matrix: 1920x1080 Normal Home | **PASS** | `tmp/collection-primary-vocabulary-evidence/54-1920x1080-normal-home.png` | N/A |
+| **16** | 1111x700 | Normal | Responsive Matrix: 1111x700 Normal Home | **PASS** | `tmp/collection-primary-vocabulary-evidence/55-1111x700-normal-home.png` | N/A |
+
+---
+
+## 4. Frame Rate & Performance Sanity
+
+- **Measurement:** 10-second idle measurement on built-in Collection Home.
+- **Frames Rendered:** 277 frames across 10.01 seconds (**27.7 FPS**, steady clock performance).
+- **Status Evidence:** `tmp/collection-primary-vocabulary-evidence/frame-before.json` and `frame-after.json`.
+
+---
+
+## 5. Explicit Non-Claims
+
+- **No Physical Hardware / Acer Performance Claim:** Verified through Activity Simulator only (`SIMULATOR VISUAL REVIEW`).
+- **No R7 Architecture Closure:** Display coordinator and session boundary remain open.
+- **No Adaptive Sub-Collections Claim:** Bounded primary vocabulary only.
+
 

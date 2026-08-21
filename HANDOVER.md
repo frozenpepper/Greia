@@ -223,22 +223,12 @@ categories = ["play", "learn"]
 
 while care/health/empathy remain correctly in `[education]` taxonomy.
 
-Source tests cover arbitrary-category suppression, unknown-only Browse recovery, mixed metadata and legacy recoverability, but those committed tests are not acceptance evidence until actually run under the appropriate owner-controlled testing process.
+Accepted via `docs/testing/2026-08-21_COLLECTION_PRIMARY_VOCABULARY_SIMULATOR.md` at **SIMULATOR VISUAL REVIEW** scope:
 
-Current simulator gate:
-
-```text
-docs/testing/2026-08-21_COLLECTION_PRIMARY_VOCABULARY_SIMULATOR.md
-```
-
-It must verify:
-
-- built-in Home has no `Care` or arbitrary package portal;
+- built-in Home has no `Care` or arbitrary package portal (5 primary portals only: `Crea`, `Gioca`, `Impara`, `Esplora`, `Mio Greia`);
 - Clinic remains available through Play + Learn;
-- a disposable unknown-only developer Activity produces one bounded `Altro` / `More` recovery destination instead of being hidden or creating `Storybook` at root;
+- disposable unknown-only developer Activity produces one bounded `Altro` / `More` recovery destination instead of being hidden or creating `Storybook` at root;
 - normal Back hierarchy, multi-membership, six-row responsiveness and frame sanity remain intact.
-
-Do not promote this correction to simulator PASS before that gate executes.
 
 ## 4.3 Adaptive sub-Collections — next architecture tranche, not implemented yet
 

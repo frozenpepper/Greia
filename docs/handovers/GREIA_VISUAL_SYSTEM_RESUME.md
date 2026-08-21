@@ -86,9 +86,7 @@ ui.portal.frame      SIMULATOR VISUAL REVIEW
 ui.empty.basket      SOURCE (NOT EXERCISED)
 ```
 
-Collection-first Home itself is accepted through the headless Activity Simulator: portal Home, keyboard/pointer navigation, Activity return origin, multi-membership, corrupt-portal fallback, all six responsive rows, and 277 frames / 10.01 s = 27.7 FPS simulator sanity.
-
-That acceptance exposed one real product defect: arbitrary presentation category `care` appeared as a sixth top-level `Care` destination. This was not the intended platform-owned primary vocabulary and is the **current correction gate**.
+Collection-first Home with bounded primary vocabulary is accepted through the headless Activity Simulator: portal Home (5 primary destinations), keyboard/pointer navigation, Clinic recoverability in Play & Learn, synthetic unknown-only `Altro`/`More` fallback, Activity return origin, multi-membership, corrupt-portal fallback, all six responsive rows, and 277 frames / 10.01 s = 27.7 FPS simulator sanity.
 
 No physical Acer/Pi claim and no R7 closure.
 
@@ -127,7 +125,7 @@ my_greia
 
 Package metadata may place an Activity in one or more of those Collections, but a package cannot manufacture arbitrary top-level Home destinations merely by inventing another `[presentation].categories` value.
 
-A valid Activity with **no recognized primary Collection** must still fail open for discovery. Current source therefore projects such orphaned Activities into one platform-owned fallback destination:
+A valid Activity with **no recognized primary Collection** still fails open for discovery: it projects into one platform-owned fallback destination:
 
 ```text
 browse
@@ -135,15 +133,9 @@ browse
 
 localized as `Altro` / `More` and shown only when required. `All` remains an internal catalogue projection, not normal child Home.
 
-Current source correction also changes `Clinica dei Cuccioli` from launcher categories `care + play` to `play + learn`; its care/empathy/health concepts remain correctly in `[education]` taxonomy.
+`Clinica dei Cuccioli` belongs to launcher categories `play + learn`; its care/empathy/health concepts remain correctly in `[education]` taxonomy without creating a top-level `Care` destination.
 
-The bounded-vocabulary correction is **SOURCE pending Activity Simulator acceptance** through:
-
-```text
-docs/testing/2026-08-21_COLLECTION_PRIMARY_VOCABULARY_SIMULATOR.md
-```
-
-Do not upgrade this correction to simulator PASS until that protocol actually runs.
+Accepted via `docs/testing/2026-08-21_COLLECTION_PRIMARY_VOCABULARY_SIMULATOR.md` at **SIMULATOR VISUAL REVIEW** scope.
 
 ---
 

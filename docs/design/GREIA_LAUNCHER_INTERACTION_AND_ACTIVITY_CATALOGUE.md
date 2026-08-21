@@ -450,8 +450,7 @@ Current source provides:
 
 Current acceptance boundary:
 
-- Collection-first Home itself: **SIMULATOR VISUAL REVIEW**;
-- bounded primary vocabulary / Browse recovery correction: **SOURCE, SIMULATOR PENDING** via `docs/testing/2026-08-21_COLLECTION_PRIMARY_VOCABULARY_SIMULATOR.md`.
+- Collection-first Home with bounded primary vocabulary & Browse recovery: **SIMULATOR VISUAL REVIEW** via `docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md` and `docs/testing/2026-08-21_COLLECTION_PRIMARY_VOCABULARY_SIMULATOR.md`.
 
 Still not implemented:
 

@@ -428,13 +428,12 @@ Current source already has:
 - bounded Activity scrolling;
 - `education.difficulty` validated 1–10;
 - Collection-first Home (`ui.portal.frame` / `CollectionFirstHomeMixin`) replacing the normal `All` landing, accepted via Activity Simulator (`docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md`);
-- a **source-implemented, simulator-pending** bounded primary-vocabulary correction: arbitrary package categories no longer become launcher Collections, and valid Activities with no recognized primary destination project into platform-owned `browse`/More recovery;
+- bounded primary-vocabulary correction accepted via Activity Simulator (`docs/testing/2026-08-21_COLLECTION_PRIMARY_VOCABULARY_SIMULATOR.md`): arbitrary package categories no longer become launcher Collections, and valid Activities with no recognized primary destination project into platform-owned `browse`/More recovery;
 - built-in Clinic navigation corrected to `play` + `learn` while care/health remains education taxonomy;
 - Parent product direction for later per-child Activity availability/policy.
 
 Current source does **not yet implement**:
 
-- simulator acceptance of the new primary-vocabulary/browse correction (`docs/testing/2026-08-21_COLLECTION_PRIMARY_VOCABULARY_SIMULATOR.md` is the current gate);
 - adaptive optional sub-Collections;
 - subdivision discovery tags;
 - age/developmental manifest fields;
