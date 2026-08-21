@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 256">
+<defs>
+  <filter id="dirt-sh" x="-20%" y="-20%" width="140%" height="140%">
+    <feGaussianBlur stdDeviation="8"/>
+  </filter>
+  <linearGradient id="dirt-grad" x1="0.2" y1="0" x2="0.8" y2="1">
+    <stop offset="0%" stop-color="#C2946A"/>
+    <stop offset="55%" stop-color="#9A6B44"/>
+    <stop offset="100%" stop-color="#644022"/>
+  </linearGradient>
+</defs>
+<ellipse cx="256" cy="140" rx="210" ry="75" fill="#241B12" opacity="0.20" filter="url(#dirt-sh)"/>
+<path d="M 65,140 C 60,105 140,75 256,70 C 375,68 455,95 450,140 C 445,185 365,210 256,212 C 140,210 70,182 65,140 Z" fill="url(#dirt-grad)"/>
+<!-- Little Pebble details -->
+<ellipse cx="180" cy="130" rx="8" ry="5" fill="#7C5232"/>
+<ellipse cx="320" cy="150" rx="10" ry="6" fill="#7C5232"/>
+<ellipse cx="240" cy="165" rx="6" ry="4" fill="#58341A"/>
+</svg>

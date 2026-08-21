@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<defs>
+  <filter id="glow-ff" x="-50%" y="-50%" width="200%" height="200%">
+    <feGaussianBlur stdDeviation="8"/>
+  </filter>
+</defs>
+<g fill="#FFFF77">
+  <!-- Firefly 1 -->
+  <circle cx="120" cy="180" r="16" opacity="0.35" filter="url(#glow-ff)"/>
+  <circle cx="120" cy="180" r="4.5"/>
+  <circle cx="120" cy="180" r="2" fill="#FFFFFF"/>
+  <!-- Firefly 2 -->
+  <circle cx="280" cy="120" r="18" opacity="0.40" filter="url(#glow-ff)"/>
+  <circle cx="280" cy="120" r="5"/>
+  <circle cx="280" cy="120" r="2.2" fill="#FFFFFF"/>
+  <!-- Firefly 3 -->
+  <circle cx="390" cy="260" r="14" opacity="0.30" filter="url(#glow-ff)"/>
+  <circle cx="390" cy="260" r="4"/>
+  <circle cx="390" cy="260" r="1.8" fill="#FFFFFF"/>
+  <!-- Firefly 4 -->
+  <circle cx="210" cy="360" r="16" opacity="0.35" filter="url(#glow-ff)"/>
+  <circle cx="210" cy="360" r="4.5"/>
+  <circle cx="210" cy="360" r="2" fill="#FFFFFF"/>
+</g>
+</svg>

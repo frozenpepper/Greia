@@ -1,0 +1,288 @@
+catalog_id = "greia.environment.forest_meadow.candidate.2026-08-21"
+catalog_version = "0.3.0-candidate"
+status = "candidate"
+runtime_consumed = false
+active_plan = "docs/plans/2026-08-21_BASE_ART_PACK_REAUTHORING.md"
+provenance = "reauthored complete Forest/Meadow base pack at pack scale using maintainer-side storybook craft standards"
+license = "project-owned/open-source-compatible"
+notes = "Complete candidate art pack for Forest/Meadow environment. Replaces v0.2 baseline pending owner review."
+
+[[assets]]
+id = "tree.hero.01"
+path = "tree_hero.svg"
+family = "tree"
+role = "midground_or_foreground"
+status = "candidate"
+alpha = true
+min_recommended_px = 64
+max_recommended_px = 1024
+
+[[assets]]
+id = "tree.secondary.01"
+path = "tree_secondary.svg"
+family = "tree"
+role = "midground"
+status = "candidate"
+alpha = true
+min_recommended_px = 64
+max_recommended_px = 512
+
+[[assets]]
+id = "tree.sapling.01"
+path = "tree_sapling.svg"
+family = "tree"
+role = "playfield_or_midground"
+status = "candidate"
+alpha = true
+min_recommended_px = 64
+max_recommended_px = 512
+
+[[assets]]
+id = "tree.willow.01"
+path = "tree_willow.svg"
+family = "tree"
+role = "midground_or_foreground"
+status = "candidate"
+alpha = true
+min_recommended_px = 64
+max_recommended_px = 1024
+
+[[assets]]
+id = "tree.interactive_hollow.01"
+path = "tree_interactive_hollow.svg"
+family = "tree"
+role = "playfield_hero"
+status = "candidate"
+alpha = true
+min_recommended_px = 128
+max_recommended_px = 1024
+
+[[assets]]
+id = "bush.round.01"
+path = "bush_round.svg"
+family = "foliage"
+role = "playfield_or_midground"
+status = "candidate"
+alpha = true
+min_recommended_px = 64
+max_recommended_px = 512
+
+[[assets]]
+id = "bush.flowering.01"
+path = "bush_flowering.svg"
+family = "foliage"
+role = "playfield_or_midground"
+status = "candidate"
+alpha = true
+min_recommended_px = 64
+max_recommended_px = 512
+
+[[assets]]
+id = "bush.low.01"
+path = "bush_low.svg"
+family = "foliage"
+role = "foreground_or_playfield"
+status = "candidate"
+alpha = true
+min_recommended_px = 64
+max_recommended_px = 512
+
+[[assets]]
+id = "fern.cluster.01"
+path = "fern_cluster.svg"
+family = "foliage"
+role = "foreground"
+status = "candidate"
+alpha = true
+min_recommended_px = 64
+max_recommended_px = 512
+
+[[assets]]
+id = "flower.patch.01"
+path = "flower_patch.svg"
+family = "foliage"
+role = "playfield_or_foreground"
+status = "candidate"
+alpha = true
+min_recommended_px = 64
+max_recommended_px = 512
+
+[[assets]]
+id = "mushroom.cluster.01"
+path = "mushroom_cluster.svg"
+family = "prop"
+role = "playfield"
+status = "candidate"
+alpha = true
+min_recommended_px = 64
+max_recommended_px = 512
+
+[[assets]]
+id = "rock.cluster.large.01"
+path = "rock_cluster_large.svg"
+family = "prop"
+role = "playfield"
+status = "candidate"
+alpha = true
+min_recommended_px = 64
+max_recommended_px = 512
+
+[[assets]]
+id = "rock.cluster.small.01"
+path = "rock_cluster_small.svg"
+family = "prop"
+role = "playfield"
+status = "candidate"
+alpha = true
+min_recommended_px = 64
+max_recommended_px = 512
+
+[[assets]]
+id = "log.fallen.01"
+path = "fallen_log.svg"
+family = "prop"
+role = "playfield"
+status = "candidate"
+alpha = true
+min_recommended_px = 64
+max_recommended_px = 512
+
+[[assets]]
+id = "stump.01"
+path = "stump.svg"
+family = "prop"
+role = "playfield"
+status = "candidate"
+alpha = true
+min_recommended_px = 64
+max_recommended_px = 512
+
+[[assets]]
+id = "cloud.large.01"
+path = "cloud_large.svg"
+family = "sky"
+role = "far_background"
+status = "candidate"
+alpha = true
+min_recommended_px = 64
+max_recommended_px = 512
+
+[[assets]]
+id = "cloud.small.01"
+path = "cloud_small.svg"
+family = "sky"
+role = "far_background"
+status = "candidate"
+alpha = true
+min_recommended_px = 64
+max_recommended_px = 512
+
+[[assets]]
+id = "hills.distant.01"
+path = "distant_hills.svg"
+family = "background_layer"
+role = "far_background"
+status = "candidate"
+alpha = true
+min_recommended_px = 128
+max_recommended_px = 1024
+
+[[assets]]
+id = "treeline.distant.01"
+path = "distant_treeline.svg"
+family = "background_layer"
+role = "far_background"
+status = "candidate"
+alpha = true
+min_recommended_px = 128
+max_recommended_px = 1024
+
+[[assets]]
+id = "ground.grass_edge.01"
+path = "grass_edge.svg"
+family = "ground"
+role = "ground_or_foreground"
+status = "candidate"
+alpha = true
+min_recommended_px = 128
+max_recommended_px = 1024
+
+[[assets]]
+id = "ground.dirt_patch.01"
+path = "ground_dirt_patch.svg"
+family = "ground"
+role = "playfield"
+status = "candidate"
+alpha = true
+min_recommended_px = 64
+max_recommended_px = 512
+
+[[assets]]
+id = "atmosphere.sunlight_rays.01"
+path = "sunlight_rays.svg"
+family = "atmosphere"
+role = "light_overlay"
+status = "candidate"
+alpha = true
+min_recommended_px = 128
+max_recommended_px = 1024
+
+[[assets]]
+id = "atmosphere.fog_strip.01"
+path = "fog_strip.svg"
+family = "atmosphere"
+role = "fog_overlay"
+status = "candidate"
+alpha = true
+min_recommended_px = 128
+max_recommended_px = 1024
+
+[[assets]]
+id = "shadow.contact.small.01"
+path = "shadow_contact_small.svg"
+family = "shadow"
+role = "grounding"
+status = "candidate"
+alpha = true
+min_recommended_px = 64
+max_recommended_px = 512
+
+[[assets]]
+id = "shadow.contact.wide.01"
+path = "shadow_contact_wide.svg"
+family = "shadow"
+role = "grounding"
+status = "candidate"
+alpha = true
+min_recommended_px = 128
+max_recommended_px = 1024
+
+[[assets]]
+id = "fx.fireflies.01"
+path = "fx_fireflies.svg"
+family = "ambient_fx"
+role = "foreground_or_midground"
+status = "candidate"
+alpha = true
+min_recommended_px = 64
+max_recommended_px = 512
+
+[[assets]]
+id = "fx.dust_motes.01"
+path = "fx_dust_motes.svg"
+family = "ambient_fx"
+role = "light_overlay"
+status = "candidate"
+alpha = true
+min_recommended_px = 64
+max_recommended_px = 512
+
+[[assets]]
+id = "fx.falling_leaves.01"
+path = "fx_falling_leaves.svg"
+family = "ambient_fx"
+role = "foreground_or_midground"
+status = "candidate"
+alpha = true
+min_recommended_px = 64
+max_recommended_px = 512

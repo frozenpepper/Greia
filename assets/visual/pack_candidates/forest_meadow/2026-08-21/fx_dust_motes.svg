@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<g fill="#FFFDE7" opacity="0.75">
+  <circle cx="140" cy="120" r="2.5"/>
+  <circle cx="210" cy="180" r="3.2"/>
+  <circle cx="180" cy="290" r="2.2"/>
+  <circle cx="310" cy="150" r="3.5"/>
+  <circle cx="360" cy="240" r="2.8"/>
+  <circle cx="280" cy="340" r="3.0"/>
+  <circle cx="420" cy="190" r="2.0"/>
+  <circle cx="390" cy="380" r="2.6"/>
+</g>
+</svg>

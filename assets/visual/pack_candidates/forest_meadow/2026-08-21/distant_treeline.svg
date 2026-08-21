@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 256">
+<defs>
+  <linearGradient id="treeline-grad" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#48866E"/>
+    <stop offset="100%" stop-color="#245442"/>
+  </linearGradient>
+</defs>
+<path d="M 0,256 L 0,165 
+         C 40,150 80,155 120,140 C 150,125 190,130 220,145 C 260,130 300,135 340,120
+         C 380,140 420,135 460,150 C 500,130 540,135 580,125 C 620,145 660,140 700,130
+         C 740,145 780,135 820,120 C 860,140 900,135 940,145 C 980,130 1010,135 1024,150
+         L 1024,256 Z" fill="url(#treeline-grad)"/>
+</svg>

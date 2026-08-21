@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 256">
+<defs>
+  <filter id="st-sh" x="-20%" y="-20%" width="140%" height="140%">
+    <feGaussianBlur stdDeviation="6"/>
+  </filter>
+  <linearGradient id="st-bark" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="#A56D42"/>
+    <stop offset="50%" stop-color="#6E401E"/>
+    <stop offset="100%" stop-color="#3A1C08"/>
+  </linearGradient>
+  <linearGradient id="st-top" x1="0.2" y1="0" x2="0.8" y2="1">
+    <stop offset="0%" stop-color="#DCA470"/>
+    <stop offset="60%" stop-color="#A56D42"/>
+    <stop offset="100%" stop-color="#6E401E"/>
+  </linearGradient>
+  <linearGradient id="st-moss" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#84CE5A"/>
+    <stop offset="100%" stop-color="#24601A"/>
+  </linearGradient>
+</defs>
+
+<!-- Ground Contact Shadows -->
+<ellipse cx="256" cy="228" rx="160" ry="16" fill="#241B12" opacity="0.20" filter="url(#st-sh)"/>
+<ellipse cx="256" cy="226" rx="120" ry="9" fill="#140D07" opacity="0.35"/>
+
+<!-- Buttress Roots & Trunk Cylinder -->
+<path d="M 160,226 C 180,224 200,205 205,150 C 205,145 305,145 305,150 C 310,205 330,224 350,226 Z" fill="url(#st-bark)"/>
+
+<!-- Cut Top Face -->
+<ellipse cx="256" cy="148" rx="55" ry="24" fill="url(#st-top)"/>
+<!-- Growth Rings -->
+<ellipse cx="256" cy="148" rx="40" ry="17" fill="none" stroke="#582A0E" stroke-width="2"/>
+<ellipse cx="256" cy="148" rx="24" ry="10" fill="none" stroke="#582A0E" stroke-width="1.8"/>
+<circle cx="256" cy="148" r="4" fill="#3A1806"/>
+
+<!-- Bark Fissures & Healed Scar -->
+<g stroke="#240E04" stroke-width="2.5" stroke-linecap="round" fill="none">
+  <path d="M 225,160 C 220,185 210,210 190,226"/>
+  <path d="M 256,168 C 254,190 252,210 250,226"/>
+  <path d="M 285,160 C 290,185 300,210 320,226"/>
+</g>
+
+<!-- Moss Skirt around Base -->
+<path d="M 175,226 C 190,205 220,212 245,215 C 270,210 300,205 335,226 Z" fill="url(#st-moss)"/>
+</svg>

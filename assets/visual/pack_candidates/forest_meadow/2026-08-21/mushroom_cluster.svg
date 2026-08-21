@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 256">
+<defs>
+  <filter id="m-sh" x="-20%" y="-20%" width="140%" height="140%">
+    <feGaussianBlur stdDeviation="5"/>
+  </filter>
+  <linearGradient id="shroom-stem" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="#F5EFE6"/>
+    <stop offset="50%" stop-color="#DDD0BF"/>
+    <stop offset="100%" stop-color="#9E8A75"/>
+  </linearGradient>
+  <linearGradient id="red-cap" x1="0.2" y1="0" x2="0.8" y2="1">
+    <stop offset="0%" stop-color="#FF5252"/>
+    <stop offset="55%" stop-color="#D32F2F"/>
+    <stop offset="100%" stop-color="#7B1010"/>
+  </linearGradient>
+  <linearGradient id="chanterelle-cap" x1="0.2" y1="0" x2="0.8" y2="1">
+    <stop offset="0%" stop-color="#FFD54F"/>
+    <stop offset="55%" stop-color="#FFA000"/>
+    <stop offset="100%" stop-color="#C66900"/>
+  </linearGradient>
+  <linearGradient id="shroom-moss" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#84CE5A"/>
+    <stop offset="100%" stop-color="#24601A"/>
+  </linearGradient>
+</defs>
+
+<!-- Ground Contact Shadows -->
+<ellipse cx="256" cy="228" rx="140" ry="14" fill="#241B12" opacity="0.20" filter="url(#m-sh)"/>
+<ellipse cx="256" cy="226" rx="100" ry="8" fill="#140D07" opacity="0.35"/>
+
+<!-- Base Moss Pillow -->
+<path d="M 175,226 C 185,205 210,195 240,205 C 270,195 305,202 335,226 Z" fill="url(#shroom-moss)"/>
+
+<!-- Center Dominant Red Toadstool -->
+<g id="red-toadstool">
+  <path d="M 240,226 C 244,185 248,150 256,120 C 264,150 268,185 272,226 Z" fill="url(#shroom-stem)"/>
+  <!-- Cap -->
+  <path d="M 185,125 C 190,65 240,45 256,45 C 272,45 322,65 328,125 C 290,132 220,132 185,125 Z" fill="url(#red-cap)"/>
+  <!-- White Speckles -->
+  <g fill="#FFFFFF" opacity="0.9">
+    <circle cx="256" cy="65" r="5"/>
+    <circle cx="225" cy="85" r="4.5"/>
+    <circle cx="285" cy="85" r="4.5"/>
+    <circle cx="210" cy="110" r="4"/>
+    <circle cx="256" cy="105" r="4.5"/>
+    <circle cx="300" cy="110" r="4"/>
+  </g>
+</g>
+
+<!-- Left Golden Chanterelle -->
+<g id="left-chanterelle">
+  <path d="M 170,226 C 172,190 178,165 185,145 C 192,165 196,190 198,226 Z" fill="url(#shroom-stem)"/>
+  <path d="M 145,150 C 150,115 180,105 188,105 C 196,105 220,115 228,150 Z" fill="url(#chanterelle-cap)"/>
+</g>
+
+<!-- Right Little Button Mushroom -->
+<g id="right-button">
+  <path d="M 315,226 C 318,205 322,185 326,170 C 330,185 334,205 338,226 Z" fill="url(#shroom-stem)"/>
+  <path d="M 302,175 C 305,152 322,145 328,145 C 334,145 350,152 354,175 Z" fill="url(#chanterelle-cap)"/>
+</g>
+</svg>

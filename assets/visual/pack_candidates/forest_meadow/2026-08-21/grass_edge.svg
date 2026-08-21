@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 256">
+<defs>
+  <linearGradient id="meadow-turf" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#72D24C"/>
+    <stop offset="45%" stop-color="#4AA830"/>
+    <stop offset="100%" stop-color="#287018"/>
+  </linearGradient>
+</defs>
+<path d="M 0,256 L 0,85 
+         C 45,65 75,95 120,70 C 160,85 195,65 240,80 C 285,60 320,85 365,72
+         C 410,90 445,68 490,82 C 535,62 570,88 615,75 C 660,92 695,70 740,85
+         C 785,65 820,90 865,78 C 910,95 945,72 990,85 C 1010,75 1020,80 1024,85
+         L 1024,256 Z" fill="url(#meadow-turf)"/>
+<!-- Buttercups along meadow edge -->
+<g fill="#FFD54F">
+  <circle cx="120" cy="70" r="5"/><circle cx="120" cy="70" r="2.5" fill="#FFFDE7"/>
+  <circle cx="365" cy="72" r="5.5"/><circle cx="365" cy="72" r="2.8" fill="#FFFDE7"/>
+  <circle cx="615" cy="75" r="5"/><circle cx="615" cy="75" r="2.5" fill="#FFFDE7"/>
+  <circle cx="865" cy="78" r="5.5"/><circle cx="865" cy="78" r="2.8" fill="#FFFDE7"/>
+</g>
+</svg>
