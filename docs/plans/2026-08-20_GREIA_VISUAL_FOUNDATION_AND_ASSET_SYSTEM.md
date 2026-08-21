@@ -11,7 +11,7 @@ This plan owns **sequencing, current checkpoint, milestone state and append-only
 
 > **excellent individual assets → reusable asset packs → layered composition → subtle parallax / ambient motion / light / shadow → shared UI system → explicit semantic runtime consumption → Shell/Activity reuse**
 
-Broad source-art coverage already exists. **V5 shared consumption/integration remains active.** Multiple real child-Shell surfaces are now accepted at Activity Simulator scope. The current gate extends the same reviewed visual language to **Shell-local navigation chrome** through `ui.button.icon/default`; source is implemented, runtime rendition must be regenerated on the build host, and simulator acceptance is pending.
+Broad source-art coverage already exists. **V5 shared consumption/integration remains active.** The reusable runtime seam is now proven across cards, panels, buttons, profile identity, feedback and Shell-local navigation. The current gate is no longer another decoration pass: it begins the accepted **Collection-first Greia Home** migration, replacing the temporary normal-child `All Activities + filter row` landing with large semantic Collection destinations while reusing the already-accepted Activity catalogue inside each Collection.
 
 ---
 
@@ -24,9 +24,11 @@ Broad source-art coverage already exists. **V5 shared consumption/integration re
 - **Reuse before duplication:** use shared generic assets instead of repainting them for each environment.
 - **Stop pack proliferation:** a new environment family requires a concrete reusable coverage gap.
 - **Cheap explicit runtime:** no runtime SVG rasterization, source-directory scanning, per-frame file decode/scale, or unbounded image caches.
-- **Visible integration matters:** plumbing gates must lead to actual Greia presentation improvements; do not spend the workstream indefinitely on invisible proof consumers.
+- **Visible integration matters:** plumbing gates must lead to actual Greia presentation improvements.
 - **Authority stays outside artwork:** shared visuals may restyle existing controls but may not take over Activity lifecycle, navigation, progression, profile or permission authority.
-- **Protected navigation stays protected:** Shell-local category/page controls are not the same thing as protected Activity Home/Back chrome.
+- **Protected navigation stays protected:** Shell-local Collection/page controls are not the same thing as protected Activity Home/Back chrome.
+- **Collection-first means semantic navigation, not filesystem folders:** one Activity may appear in multiple Collections without package/state duplication.
+- **Do not preserve obsolete UI merely because it has already been styled:** `All` remains useful internally, but the accepted normal child Home is Collection-first.
 
 ---
 
@@ -90,6 +92,7 @@ src/greia_launcher/shared_ui_presentation.py
 src/greia_launcher/profile_chrome_presentation.py
 src/greia_launcher/feedback_presentation.py
 src/greia_launcher/navigation_chrome_presentation.py
+src/greia_launcher/collection_home_presentation.py
 src/greia_launcher/child_shell.py
 
 assets/catalog/core_icons_v1.toml
@@ -101,6 +104,13 @@ tools/validate_visual_renditions.py
 ```
 
 Stable architecture/index: `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`.
+
+Collection-first product/design authority:
+
+```text
+docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md
+docs/design/GREIA_LAUNCHER_INTERACTION_AND_ACTIVITY_CATALOGUE.md
+```
 
 ## 4.1 Explicit catalogue + variants — implemented
 
@@ -114,21 +124,22 @@ The source rendition manifest now selects:
 ui.panel.base              default
 ui.card.activity           default / focused / completed
 ui.button.primary          default / hover / pressed / disabled
-ui.button.icon             default              ← current new source gate
+ui.button.icon             default
 ui.avatar.frame            default
 ui.loading.orbit           default
 ui.error.gentle            default
 ui.empty.basket            default
+ui.portal.frame            default      ← current Collection-first Home source gate
 ui.shadow.soft             default
 ```
 
 `tools/build_visual_renditions.py` renders through build-host librsvg/`rsvg-convert`, validates dimensions/containment and writes PNG/catalog output transactionally. The target device does not rasterize SVG.
 
-The generated catalogue currently reflects the last accepted build. Because `ui.button.icon` was just added to the source manifest, the local/build checkout must run `make visual-assets` before the navigation-chrome simulator gate.
+`ui.button.icon` has already been generated and simulator-accepted. `ui.portal.frame` was added to source catalogue version `0.1.5`; its runtime PNG/generated-catalogue entry must be produced by `make visual-assets` before the Collection-first Home simulator gate.
 
 ## 4.3 Generated-output validation — implemented
 
-`tools/validate_visual_renditions.py` / `make visual-assets-check` checks source digest, mapping parity, explicit runtime paths, PNG signatures and exact dimensions.
+`tools/validate_visual_renditions.py` / `make visual-assets-check` checks source digest, mapping parity, explicit runtime paths, PNG signatures and exact dimensions. These build checks are not a substitute for the owner-required Activity Simulator acceptance path.
 
 ## 4.4 Bounded Pygame cache — implemented and consumed
 
@@ -166,7 +177,7 @@ The six-row simulator matrix, keyboard navigation, hover, launch/return and fall
 
 `ui.panel.base/default` frames profile picker and Activity catalogue through `SharedUiShellPanelMixin`.
 
-Accepted current catalogue composition additionally includes the owner-directed geometry correction:
+Accepted current catalogue composition includes the owner-directed geometry correction:
 
 ```text
 panel_top     = 52..62 px
@@ -178,18 +189,17 @@ large cards   ≈ 198–205 px where geometry permits
 
 This relationship must be preserved. The panel acceptance matrix and isolated fallback cases passed; frame sanity was 29.5 FPS.
 
-## 4.9 Root category buttons — ACCEPTED (SIMULATOR VISUAL REVIEW)
+## 4.9 Root category buttons — ACCEPTED HISTORICAL PRESENTATION (SIMULATOR VISUAL REVIEW)
 
-`ui.button.primary/default|hover` styles the root Activity-category row through `SharedUiCategoryButtonMixin`, preserving category IDs/order/hit targets/navigation. The accepted six-row simulator run included hover, category open/back, lifecycle, isolated fallback and 29.6 FPS sanity.
+`ui.button.primary/default|hover` styles the previous root Activity-category row through `SharedUiCategoryButtonMixin`, preserving category IDs/order/hit targets/navigation. The accepted six-row simulator run included hover, category open/back, lifecycle, isolated fallback and 29.6 FPS sanity.
+
+This evidence remains valid for the component. It does **not** mean the filter-row information architecture remains the preferred normal child Home. Collection-first Home now supersedes that root presentation when its simulator gate passes.
 
 ## 4.10 Profile identity — ACCEPTED (SIMULATOR VISUAL REVIEW)
 
-`ui.avatar.frame/default` is consumed through `SharedUiProfileChromeMixin` for:
+`ui.avatar.frame/default` is consumed through `SharedUiProfileChromeMixin` for profile-picker identities and the active-profile switcher.
 
-- profile-picker identities;
-- active-profile switcher in the Activity catalogue.
-
-The owner-directed non-intrusive simulator mode is also accepted infrastructure:
+Owner-directed non-intrusive simulator mode is accepted infrastructure:
 
 ```text
 --headless
@@ -209,51 +219,26 @@ ui.error.gentle/default     SIMULATOR VISUAL REVIEW
 ui.empty.basket/default     SOURCE / NOT EXERCISED
 ```
 
-Accepted feedback run (`5d8208883b840318b508b2dddc83c829e826a0e7`):
+Accepted feedback run (`5d8208883b840318b508b2dddc83c829e826a0e7`) covered launch overlay, catalogue error cloud, isolated corrupt-PNG fallbacks, four responsive rows and 280 frames / 10.03 s = 27.9 FPS simulator sanity.
 
-- launch overlay visually blocks interaction during startup while using the shared orbit;
-- corrupt loading PNG falls back cleanly;
-- catalogue error cloud appears at top-right and dismisses correctly;
-- corrupt error PNG falls back cleanly;
-- four responsive launch-overlay rows passed;
-- 280 frames / 10.03 s = 27.9 FPS simulator sanity.
+The empty basket was not legitimately reached through the production catalogue and therefore remains **SOURCE / NOT EXERCISED**.
 
-The empty basket is generated/source-present but was not legitimately reached through the production catalogue and therefore remains **SOURCE / NOT EXERCISED**.
+## 4.12 Shared Shell navigation chrome — ACCEPTED (SIMULATOR VISUAL REVIEW)
 
-## 4.12 Shared Shell navigation chrome — SOURCE IMPLEMENTED, SIMULATOR PENDING
-
-The next visible consumer is:
-
-```text
-ui.button.icon/default
-```
-
-Source master:
-
-```text
-assets/visual/ui/v0.1/icon_button.svg
-```
-
-Implementation:
+`ui.button.icon/default` is consumed through:
 
 ```text
 src/greia_launcher/navigation_chrome_presentation.py
 ```
 
-`SharedUiNavigationChromeMixin` keeps navigation semantics and hit rectangles in the existing launcher while applying one reviewed tactile circular frame to Shell-local navigation controls:
+Accepted behavior:
 
-1. **mandatory real consumer:** in-category local Back control;
-2. Activity collection up/down scroll controls when a real collection requires them;
-3. profile previous/next page controls when real profile pagination exists.
-
-Behavioral rules:
-
-- the original action IDs and target rectangles remain authoritative;
-- hover is only a tiny 2 px visual lift plus accent-arrow treatment;
-- the artwork remains circular rather than stretched;
-- a missing/corrupt icon-button visual disables only this treatment and calls the existing primitive navigation renderer;
-- accepted panel/cards/category buttons/profile/feedback visuals remain independent;
-- protected Activity system Home/Back chrome is **not** replaced or restyled by this mixin.
+1. in-category local Back control uses the circular tactile frame;
+2. Activity collection up/down controls use the same family when a real collection requires pagination;
+3. profile previous/next controls share the same source path but remain **SOURCE / NOT EXERCISED** when profile count is <=4;
+4. original action IDs and target rectangles remain authoritative;
+5. corrupt `icon_button.png` falls back only the navigation controls while accepted panel/cards/profile/feedback visuals remain active;
+6. protected Activity system Home/Back is not replaced.
 
 Accepted via:
 
@@ -261,17 +246,91 @@ Accepted via:
 docs/testing/2026-08-21_V5_SHARED_NAVIGATION_CHROME_SIMULATOR.md
 ```
 
-All 6 responsive matrix viewports, in-category Back default & hover, return to root catalogue, multi-page activity scroll default & hover & navigation, corrupt PNG fallback, and 27.1 FPS frame sanity passed with evidence in `tmp/v5-navigation-simulator-evidence/`.
+Canonical acceptance commit: `370d96039546178ed2c64366bdaec1b5dc986be2`.
 
-## 4.14 After the navigation-chrome gate
+Evidence: six responsive rows, Back default/hover/click, Activity scroll controls, isolated corrupt-PNG fallback, and 271 frames / 10.01 s = 27.1 FPS simulator sanity.
 
-Following simulator acceptance of `ui.shadow.soft`, `ui.card.activity`, `ui.panel.base`, `ui.button.primary`, `ui.avatar.frame`, `ui.loading.orbit`, `ui.error.gentle`, and `ui.button.icon`:
+## 4.13 Collection-first Greia Home — SOURCE IMPLEMENTED, SIMULATOR PENDING
 
-1. record `ui.button.icon` as an accepted visible Shell consumer at **SIMULATOR VISUAL REVIEW** scope;
-2. record `ui.empty.basket` and profile pagination as **SOURCE, NOT EXERCISED**;
-3. continue only to another product-visible shared UI surface that materially improves Greia, rather than adding proof-only consumers;
-4. separately complete the Web Activity semantic adapter using the same semantic IDs/variants through a controlled URL/handle transport, not host filesystem exposure;
-5. do not return to new environment-pack production without a demonstrated reusable coverage gap.
+This is the current major product-visible gate.
+
+Accepted target:
+
+```text
+profile
+  → Greia Home
+    → primary Collection
+      → Activity
+```
+
+Current primary Collection vocabulary remains:
+
+```text
+create
+play
+learn
+explore
+my_greia
+```
+
+Implementation:
+
+```text
+src/greia_launcher/collection_home_presentation.py
+src/greia_launcher/child_shell.py
+```
+
+`CollectionFirstHomeMixin` now changes the normal launcher root projection without changing package/runtime authority:
+
+- `ALL_ACTIVITIES_ID` remains available internally but is no longer rendered as the normal child Activity wall;
+- root renders only available non-empty primary Collections as large destinations;
+- entering a Collection reuses the already-accepted panel, Activity-card, scroll/navigation and launch paths;
+- local Back from a primary Collection returns to Collection Home;
+- Back/Escape at Collection Home returns to profile choice;
+- one Activity may appear in multiple Collections without duplicate installation, saves, permissions, history or progression;
+- root mouse-wheel activity scrolling is disabled because there is no Activity wall at Home;
+- active-profile switching remains available;
+- keyboard, pointer and selection semantics remain renderer-independent launcher state.
+
+Current new shared visual:
+
+```text
+ui.portal.frame/default
+```
+
+Source master:
+
+```text
+assets/visual/ui/v0.1/portal_frame.svg
+```
+
+Expected generated runtime file after `make visual-assets`:
+
+```text
+assets/visual/runtime/v1/ui/portal_frame.png
+```
+
+Fail-soft rule is deliberately narrow: corrupt/missing portal artwork must preserve **Collection-first hierarchy** using a primitive circular Collection destination; it must not fall back to the obsolete All-Activities Home and must not disable unrelated accepted visuals.
+
+Current evidence class: **SOURCE**.
+
+Simulator protocol:
+
+```text
+docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md
+```
+
+The protocol verifies:
+
+- Home visibly shows Collections rather than the Activity wall/filter bar;
+- keyboard/Tab/pointer Collection selection and entry;
+- Collection → Activity → return origin → local Back hierarchy;
+- multi-membership where the current catalogue legitimately provides it;
+- portal-specific fail-soft isolation;
+- full six-row responsive matrix;
+- 10-second frame sanity.
+
+This gate does **not** implement or accept future adaptive sub-Collections, age/development profile policy, Parent per-child visibility policy or the Web visual adapter.
 
 ---
 
@@ -281,19 +340,22 @@ Following simulator acceptance of `ui.shadow.soft`, `ui.card.activity`, `ui.pane
 |---|---|
 | Stable guide | `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` |
 | Resume | `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` |
-| Active focus | **V5 — shared `ui.button.icon` navigation chrome accepted in Activity Simulator** |
+| Product discovery authority | `docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md` |
+| Active focus | **V5 — Collection-first Greia Home source implemented; Activity Simulator acceptance pending** |
 | Environment coverage | V4 complete through Water/Pond; no new pack without concrete gap |
-| Catalogue/renditions | explicit semantic catalogue + generated PNG runtime catalogue present |
+| Catalogue/renditions | explicit semantic catalogue present; source version `0.1.5`; `ui.portal.frame` generated output pending local build |
 | Activity cards | accepted at **SIMULATOR VISUAL REVIEW** |
 | Shell panel | accepted at **SIMULATOR VISUAL REVIEW** |
-| Root category buttons | accepted at **SIMULATOR VISUAL REVIEW** |
+| Root category button component | accepted at **SIMULATOR VISUAL REVIEW**, but old filter-row Home is being superseded |
 | Profile identity | accepted at **SIMULATOR VISUAL REVIEW** |
 | Launch/error feedback | accepted at **SIMULATOR VISUAL REVIEW** |
 | Empty basket | **SOURCE / NOT EXERCISED** |
-| Navigation icon button | `ui.button.icon/default` accepted at **SIMULATOR VISUAL REVIEW** |
+| Navigation icon button | accepted at **SIMULATOR VISUAL REVIEW** |
+| Collection-first Home | **SOURCE**, simulator pending |
+| Collection portal frame | `ui.portal.frame/default` **SOURCE**, generated rendition pending |
 | Activity semantic API | implemented in source; Shape Garden proof is non-blocking |
-| Completed visible protocols | `docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md`; `docs/testing/2026-08-20_V5_SHARED_UI_PANEL_SIMULATOR.md`; `docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md`; `docs/testing/2026-08-21_V5_SHARED_PROFILE_IDENTITY_SIMULATOR.md`; `docs/testing/2026-08-21_V5_SHARED_FEEDBACK_SIMULATOR.md`; `docs/testing/2026-08-21_V5_SHARED_NAVIGATION_CHROME_SIMULATOR.md` |
-| Next exact action | complete Web Activity semantic visual adapter or next targeted product-visible Shell integration |
+| Current pending protocol | `docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md` |
+| Next exact action | `make visual-assets` → run Collection-first Home protocol headlessly → fix shared/root causes only → update implementation status/docs/evidence → commit/push |
 
 ---
 
@@ -345,11 +407,15 @@ Following simulator acceptance of `ui.shadow.soft`, `ui.card.activity`, `ui.pane
 - [ ] empty-basket legitimate runtime exercise;
 - [x] shared Shell navigation icon-button source consumer;
 - [x] shared Shell navigation chrome simulator acceptance;
+- [x] Collection-first Home source migration;
+- [x] `ui.portal.frame/default` explicit source rendition selection;
+- [ ] Collection-first Home simulator acceptance;
 - [x] renderer-neutral semantic request portion of Activity API;
 - [x] first Python Activity source consumer (Shape Garden);
 - [ ] Shape Garden Activity Simulator acceptance (non-blocking);
 - [ ] future Web Activity semantic adapter/transport;
-- [ ] further visible Shell integration only where materially useful;
+- [ ] future adaptive optional sub-Collection implementation;
+- [ ] future audience/Parent per-child discovery policy implementation;
 - [ ] physical low-resource evidence where a stronger claim requires it.
 
 ---
@@ -386,13 +452,15 @@ Committed source is not PASS by itself. Generated runtime output is not consumer
 - broad exception swallowing;
 - more environment packs without a real gap;
 - duplicating generic shared masters;
-- proof-only Activities displacing visible product work once the shared seam is established.
+- proof-only Activities displacing visible product work once the shared seam is established;
+- continuing to polish the old `All + filters` root after Collection-first Home is the accepted product target;
+- exposing Collections as filesystem folders or building deep taxonomies.
 
 ---
 
 # 9. Progress log — append only
 
-The entries below preserve the earlier workstream chronology. Corrections/new state are appended rather than rewriting old experiments into successes.
+The entries below preserve the workstream chronology. Corrections/new state are appended rather than rewriting old experiments into successes.
 
 ## 2026-08-20 — constraint-native visual pivot
 - Simplified characters established; Lilli/Nino/Tito/Momo became core cast.
@@ -436,7 +504,7 @@ The entries below preserve the earlier workstream chronology. Corrections/new st
 - Built and desktop-reviewed 14 water-specific reusable masters.
 - Revised dock/lily pads, water base and reeds during review.
 - Built independent 1024×600 / 800×600 references reusing canonical Forest distant landscape.
-- Added `assets/visual/packs_v0.1.toml` and refreshed `library_v0.1.toml`.
+- Added pack/library inventories.
 - Evidence remained SOURCE + DESKTOP VISUAL REVIEW.
 
 ## 2026-08-20 — V5 catalogue/rendition/cache seed
@@ -464,71 +532,68 @@ The entries below preserve the earlier workstream chronology. Corrections/new st
 - Passed full 6-row simulator matrix, selection/hover/launch, missing/malformed/corrupt fallback cases and ~29.4 FPS frame sanity.
 - Evidence: **SIMULATOR VISUAL REVIEW**; no physical hardware/R7 claim.
 
-## 2026-08-20 — V5 canonical state reconciliation
-- Removed stale language saying the first Shell consumer was still unwired.
-- Marked `ui.shadow.soft` Shell gate complete at simulator scope.
-- Redirected V5 toward reusable semantic consumption and visible Shell integration.
-
 ## 2026-08-20 — first Python Activity semantic visual source seam
-- Added read-only `SharedVisualReference` plus `get_shared_visual(...)` / `get_shared_visual_path(...)` to `activity_api.py`.
-- Activity requests semantic ID + variant only; optional shared catalogue failure falls back to core catalogue behavior.
-- Added Shape Garden as the first source consumer of `ui.shadow.soft`; the PNG is resolved/decoded/scaled once at Activity startup and reused while drawing.
-- Added `docs/testing/2026-08-20_V5_ACTIVITY_SHARED_VISUAL_SIMULATOR.md`.
-- Evidence remains **SOURCE** until that protocol executes; this proof no longer blocks visible Shell work.
+- Added read-only `SharedVisualReference` plus `get_shared_visual(...)` / `get_shared_visual_path(...)`.
+- Added Shape Garden as the first source consumer of `ui.shadow.soft`.
+- Evidence remains SOURCE; the proof no longer blocks visible Shell work.
 
 ## 2026-08-20 — visible shared Activity cards moved into the real child Shell
-- Added `SharedUiActivityCardMixin` as a narrow presentation-only consumer of `ui.card.activity/default|focused`.
-- Production `GreiaChildShell` composes that mixin above the existing launcher presentation.
-- The authored portrait card ratio, illustration well and label band are preserved inside the existing logical tile hit target.
-- Existing primitive tile rendering remains the fail-soft fallback; lifecycle/catalogue/input authority is unchanged.
+- Added `SharedUiActivityCardMixin` for `ui.card.activity/default|focused`.
+- Existing primitive tile remained fallback; lifecycle/catalogue/input authority stayed unchanged.
 
 ## 2026-08-20 — shared Activity cards accepted in simulator
-- `ui.card.activity/default|focused` passed the full 6-row Activity Simulator matrix plus selection, hover, launch/return and missing/malformed/corrupt fallback cases.
+- Full six-row matrix plus selection, hover, launch/return and fallback cases passed.
 - Synthetic pointer tracking was corrected for simulator `MOUSEMOTION`.
-- Frame sanity measured 27.2 FPS against the intentional 30 FPS clock.
-- Evidence class: **SIMULATOR VISUAL REVIEW**.
+- Frame sanity measured 27.2 FPS.
 
 ## 2026-08-20 — shared Shell panel accepted in simulator
-- `ui.panel.base/default` was integrated behind both profile picker and Activity catalogue.
-- Activity tile cache surfaces were corrected to alpha surfaces so the panel remained visible without rectangular cutouts.
-- Profile/catalogue baseline, return Home, missing/malformed/corrupt-panel fallback and all responsive rows passed.
-- Frame sanity measured 29.5 FPS.
-- Evidence class: **SIMULATOR VISUAL REVIEW**.
+- `ui.panel.base/default` integrated behind profile picker and Activity catalogue.
+- Alpha tile-cache correction removed rectangular cutouts.
+- Six-row matrix/fallback and 29.5 FPS sanity passed.
 
 ## 2026-08-20 — shared category buttons moved into the real child Shell
-- Added `SharedUiCategoryButtonMixin` for root Activity-category controls using `ui.button.primary/default|hover`.
-- Preserved existing category ordering, hit targets and navigation; the wide primary-button asset was not forced onto the geometry-specific in-category Back control.
-- Added isolated fail-soft behavior so button-specific corruption falls back only the category row while accepted panel/card shared visuals remain active.
-- Added `docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md`.
-- Evidence at this historical checkpoint remained **SOURCE** until the simulator protocol ran.
+- Added `SharedUiCategoryButtonMixin` for `ui.button.primary/default|hover`.
+- Preserved category identity/hit/navigation semantics and isolated fallback.
 
 ## 2026-08-20 — shared category buttons accepted in simulator
-- `ui.button.primary/default|hover` passed baseline/hover/category open-return/lifecycle/fallback review.
-- Full six-row responsive matrix passed.
-- Isolated corrupt hover-button fallback kept panel/cards active.
+- Baseline/hover/category open-return/lifecycle/fallback + six-row matrix passed.
 - Frame sanity measured 29.6 FPS.
-- Evidence class: **SIMULATOR VISUAL REVIEW**.
 
 ## 2026-08-21 — panel geometry maximized, headless simulator added, profile identity accepted
 - Owner-directed panel geometry was corrected to use the screen vertically while preserving 640:420 aspect ratio and full large Activity cards within the authored tray.
 - Added non-intrusive `--headless` / `GREIA_SIMULATOR_HEADLESS=1` simulator execution through SDL dummy drivers.
-- `ui.avatar.frame/default` was generated and integrated into profile picker identities and active-profile switcher.
-- Six-row responsive/fallback/profile-switch review passed; frame sanity was ~27.4 FPS.
+- `ui.avatar.frame/default` generated and integrated.
+- Six-row responsive/fallback/profile-switch review passed; frame sanity ~27.4 FPS.
 - Canonical acceptance commit: `7dc5d39df51fd3404d222c762d7b5d48133def9d`.
 
 ## 2026-08-21 — shared Shell feedback accepted
 - Generated `ui.loading.orbit`, `ui.error.gentle` and `ui.empty.basket` runtime renditions.
-- Launch overlay and catalogue error cloud were exercised through the real headless Activity Simulator with isolated fallbacks.
-- `ui.empty.basket` remained **SOURCE / NOT EXERCISED** because the production catalogue empty state was not legitimately reached.
-- Responsive overlay review and 27.9 FPS frame sanity passed.
+- Launch overlay and error cloud exercised through the real headless Activity Simulator with isolated fallbacks.
+- Empty basket remained SOURCE / NOT EXERCISED.
+- Responsive overlay review and 27.9 FPS sanity passed.
 - Canonical acceptance commit: `5d8208883b840318b508b2dddc83c829e826a0e7`.
 
 ## 2026-08-21 — shared Shell navigation chrome source tranche
-- Promoted the existing reviewed `assets/visual/ui/v0.1/icon_button.svg` as semantic runtime source `ui.button.icon/default` in source catalogue version 0.1.4.
-- Added `SharedUiNavigationChromeMixin` for the in-category local Back control and for Activity/profile pagination controls when those controls legitimately exist.
-- Existing action IDs, target rectangles, category identity and scrolling/page authority remain in the launcher.
-- Added isolated fail-soft fallback to the existing primitive navigation controls.
-- Added `docs/testing/2026-08-21_V5_SHARED_NAVIGATION_CHROME_SIMULATOR.md` for headless Activity Simulator acceptance.
-- Evidence remains **SOURCE** until runtime renditions are regenerated and that protocol passes.
+- Promoted `icon_button.svg` as semantic `ui.button.icon/default`.
+- Added `SharedUiNavigationChromeMixin` for local Back and conditional page/scroll controls.
+- Added isolated fail-soft fallback.
 
-**Next exact action:** `make visual-assets` → execute `docs/testing/2026-08-21_V5_SHARED_NAVIGATION_CHROME_SIMULATOR.md` headlessly → inspect mandatory in-category Back default/hover/click + isolated corrupt-PNG fallback + six-row responsive matrix → record conditional scroll/profile-pagination results honestly → update evidence/docs → commit/push.
+## 2026-08-21 — shared Shell navigation chrome accepted
+- Local agent generated `icon_button.png` and exercised the dated navigation protocol headlessly.
+- In-category Back default/hover/click passed.
+- Activity scroll controls default/hover/page transitions passed.
+- Profile pagination remained SOURCE / NOT EXERCISED because the workspace had <=4 profiles.
+- Corrupt icon-button fallback preserved all unrelated shared visuals.
+- Six responsive rows passed; frame sanity was 271 frames / 10.01 s = 27.1 FPS.
+- Canonical acceptance commit: `370d96039546178ed2c64366bdaec1b5dc986be2`.
+
+## 2026-08-21 — Collection-first Home source migration
+- Re-centered the workstream on the accepted child discovery model rather than further polishing `All + filters`.
+- Added `CollectionFirstHomeMixin` so the normal root renders available non-empty primary Collections and treats `ALL_ACTIVITIES_ID` as internal projection state.
+- Entering a Collection reuses the accepted Activity cards/panel/navigation/lifecycle path; local Back returns to Collection Home; root Back returns to profile choice.
+- Added reviewed `ui.portal.frame/default` to source rendition catalogue version `0.1.5`.
+- Portal-specific visual failure preserves Collection-first hierarchy with a primitive circular fallback instead of reverting to an Activity wall.
+- Added `docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md` as the owner/local-agent acceptance protocol.
+- Evidence remains **SOURCE** until `make visual-assets` and the full headless simulator protocol execute.
+
+**Next exact action:** `make visual-assets` → execute `docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md` headlessly → inspect real Collection-first Home, navigation/return origin, portal fallback and six-row responsive matrix → fix only shared/root causes → update product/design implementation status + V5 evidence docs → commit/push.
