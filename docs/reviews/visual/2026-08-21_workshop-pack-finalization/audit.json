@@ -1,0 +1,33 @@
+{
+  "task": "WORKSHOP_PACK_FINALIZATION",
+  "date": "2026-08-21",
+  "status": "FINALIZATION_COMPLETE_PROMOTION_EVIDENCE_READY",
+  "baseline_directory": "assets/visual/environments/workshop/v0.1/",
+  "candidate_directory": "assets/visual/pack_candidates/workshop/2026-08-21/",
+  "review_directory": "docs/reviews/visual/2026-08-21_workshop-pack-finalization/",
+  "metrics": {
+    "direct_candidate_replacements": 14,
+    "baseline_retained_roles": 5,
+    "coexistence_distinct_pairs": 5,
+    "total_finished_assets": 24,
+    "unresolved_roles": 0,
+    "preferred_authoring_ingredients": 2
+  },
+  "review_sheets": [
+    "01-final-inventory-a.png",
+    "02-final-inventory-b.png",
+    "03-distinct-variants.png",
+    "04-brush-paper-lamp-decisions.png",
+    "05-lamp-runtime-sizes.png",
+    "06-light-variants.png",
+    "07-final-baseline-composition.png",
+    "08-final-proposed-v02-composition.png",
+    "09-promotion-summary.png"
+  ],
+  "proposal_documents": [
+    "PROMOTION.md",
+    "promotion-map.json",
+    "REVIEW.md",
+    "audit.json"
+  ]
+}

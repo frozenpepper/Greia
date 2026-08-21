@@ -1,0 +1,219 @@
+{
+  "pack_id": "greia.environment.workshop.v0.2-proposed",
+  "date": "2026-08-21",
+  "status": "PROPOSED_FOR_OWNER_REVIEW",
+  "summary": {
+    "direct_candidate_replacements": 14,
+    "baseline_retained_roles": 5,
+    "coexistence_distinct_pairs": 5,
+    "total_finished_assets": 24,
+    "unresolved_roles": 0,
+    "preferred_authoring_ingredients": 2
+  },
+  "roles": [
+    {
+      "original_role": "workshop.workbench",
+      "proposed_id": "workshop.workbench",
+      "source": "candidate",
+      "status": "CANDIDATE_REPLACES",
+      "asset_file": "workbench.svg",
+      "reason": "Substantially better craftsman timber joinery, chamfered slab, drawer, and grounded splayed legs."
+    },
+    {
+      "original_role": "workshop.stool",
+      "proposed_id": "workshop.stool",
+      "source": "candidate",
+      "status": "CANDIDATE_REPLACES",
+      "asset_file": "stool.svg",
+      "reason": "Turned dished seat with visible mortise stretchers and realistic furniture anatomy."
+    },
+    {
+      "original_role": "workshop.easel",
+      "proposed_id": "workshop.easel",
+      "source": "candidate",
+      "status": "CANDIDATE_REPLACES",
+      "asset_file": "easel.svg",
+      "reason": "Believable A-frame artist mast with height-adjustable canvas tray and painted meadow canvas."
+    },
+    {
+      "original_role": "workshop.pegboard",
+      "proposed_id": "workshop.pegboard",
+      "source": "candidate",
+      "status": "CANDIDATE_REPLACES",
+      "asset_file": "pegboard.svg",
+      "reason": "Perforated birch board with hanging wooden mallet, ruler, and twine loop."
+    },
+    {
+      "original_role": "workshop.storage.box",
+      "proposed_id": "workshop.storage.box",
+      "source": "candidate",
+      "status": "CANDIDATE_REPLACES",
+      "asset_file": "storage_box.svg",
+      "reason": "Sturdy plywood craft crate with finger-joint corners, cutout handholds, and label plate."
+    },
+    {
+      "original_role": "workshop.shelf",
+      "proposed_id": "workshop.shelf.open",
+      "source": "candidate",
+      "status": "KEEP_BOTH_DISTINCT",
+      "asset_file": "shelf.svg",
+      "reason": "Open single-plank bracket shelf with jars and scroll, providing versatile background placement."
+    },
+    {
+      "original_role": "workshop.shelf",
+      "proposed_id": "workshop.shelf.cubby",
+      "source": "baseline_v0_1",
+      "status": "KEEP_BOTH_DISTINCT",
+      "asset_file": "shelf.svg",
+      "reason": "Retained compact closed wall storage cabinet with structured compartments."
+    },
+    {
+      "original_role": "workshop.paint.palette",
+      "proposed_id": "workshop.paint.palette",
+      "source": "candidate",
+      "status": "CANDIDATE_REPLACES",
+      "asset_file": "paint_palette.svg",
+      "reason": "Birch artist palette with volumetric 3D Gouache paint dollops and thumbhole."
+    },
+    {
+      "original_role": "workshop.brush.bundle",
+      "proposed_id": "workshop.brush.bundle",
+      "source": "candidate",
+      "status": "CANDIDATE_REPLACES",
+      "asset_file": "brush_bundle.svg",
+      "reason": "Revised with 5 clustered brushes bound tightly with a leather/twine strap."
+    },
+    {
+      "original_role": "workshop.pencil.cup",
+      "proposed_id": "workshop.pencil.cup",
+      "source": "candidate",
+      "status": "CANDIDATE_REPLACES",
+      "asset_file": "pencil_cup.svg",
+      "reason": "Glazed teal ceramic studio mug with raw terracotta foot and sharpened colored pencils."
+    },
+    {
+      "original_role": "workshop.paint.jars",
+      "proposed_id": "workshop.paint.jars",
+      "source": "candidate",
+      "status": "CANDIDATE_REPLACES",
+      "asset_file": "paint_jars.svg",
+      "reason": "Glass tempera jars with screw lids, transparency, and distinct color fill levels."
+    },
+    {
+      "original_role": "workshop.blocks",
+      "proposed_id": "workshop.blocks.house",
+      "source": "candidate",
+      "status": "KEEP_BOTH_DISTINCT",
+      "asset_file": "blocks.svg",
+      "reason": "Deliberately assembled architectural block construction (arch, cube, prism roof)."
+    },
+    {
+      "original_role": "workshop.blocks",
+      "proposed_id": "workshop.blocks.loose",
+      "source": "baseline_v0_1",
+      "status": "KEEP_BOTH_DISTINCT",
+      "asset_file": "blocks.svg",
+      "reason": "Retained loose playful block stack for casual floor scatter."
+    },
+    {
+      "original_role": "workshop.paper.stack",
+      "proposed_id": "workshop.paper.stack",
+      "source": "candidate",
+      "status": "CANDIDATE_REPLACES",
+      "asset_file": "paper_stack.svg",
+      "reason": "Revised heavy watercolor paper ream with stepped layer lines and curling active top sketch."
+    },
+    {
+      "original_role": "workshop.pinboard.note",
+      "proposed_id": "workshop.note.cork_tile",
+      "source": "candidate",
+      "status": "KEEP_BOTH_DISTINCT",
+      "asset_file": "pinboard_note.svg",
+      "reason": "Cork-backed framed note tile with star doodle."
+    },
+    {
+      "original_role": "workshop.pinboard.note",
+      "proposed_id": "workshop.note.pinned",
+      "source": "baseline_v0_1",
+      "status": "KEEP_BOTH_DISTINCT",
+      "asset_file": "pinboard_note.svg",
+      "reason": "Retained lightweight pinned paper memo."
+    },
+    {
+      "original_role": "workshop.desk.lamp",
+      "proposed_id": "workshop.desk_lamp.articulated",
+      "source": "candidate",
+      "status": "KEEP_BOTH_DISTINCT",
+      "asset_file": "desk_lamp.svg",
+      "reason": "Articulated architect lamp with mint enamel shade and brass joints (for >=128px scenes)."
+    },
+    {
+      "original_role": "workshop.desk.lamp",
+      "proposed_id": "workshop.desk_lamp.simple",
+      "source": "baseline_v0_1",
+      "status": "KEEP_BOTH_DISTINCT",
+      "asset_file": "desk_lamp.svg",
+      "reason": "Retained compact goose-neck lamp with high readability at <=64px runtime icons."
+    },
+    {
+      "original_role": "workshop.rug",
+      "proposed_id": "workshop.rug",
+      "source": "candidate",
+      "status": "CANDIDATE_REPLACES",
+      "asset_file": "rug.svg",
+      "reason": "Concentric braided wool rag rug with visible perimeter stitching and warm tactile palette."
+    },
+    {
+      "original_role": "workshop.window",
+      "proposed_id": "workshop.window",
+      "source": "candidate",
+      "status": "CANDIDATE_REPLACES",
+      "asset_file": "window.svg",
+      "reason": "Arched timber window frame looking onto sunny meadow with terracotta potted plant on sill."
+    },
+    {
+      "original_role": "workshop.window.light",
+      "proposed_id": "workshop.window_light.wide",
+      "source": "candidate",
+      "status": "KEEP_BOTH_DISTINCT",
+      "asset_file": "window_light.svg",
+      "reason": "Broad atmospheric morning sunbeam shaft with floating dust motes."
+    },
+    {
+      "original_role": "workshop.window.light",
+      "proposed_id": "workshop.window_light.narrow",
+      "source": "baseline_v0_1",
+      "status": "KEEP_BOTH_DISTINCT",
+      "asset_file": "window_light.svg",
+      "reason": "Retained narrow layered light beam for targeted focus highlighting."
+    },
+    {
+      "original_role": "workshop.wall.base",
+      "proposed_id": "workshop.wall.base",
+      "source": "candidate",
+      "status": "CANDIDATE_REPLACES",
+      "asset_file": "wall_base.svg",
+      "reason": "Warm plaster studio wall with horizontal wood wainscot chair-rail molding."
+    },
+    {
+      "original_role": "workshop.floor.base",
+      "proposed_id": "workshop.floor.base",
+      "source": "candidate",
+      "status": "CANDIDATE_REPLACES",
+      "asset_file": "floor_base.svg",
+      "reason": "Wide-plank golden oak studio flooring with subtle butt joints."
+    }
+  ],
+  "ingredients": [
+    {
+      "proposed_id": "ingredient.wood",
+      "path": "ingredients/ingredient_wood_joint.svg",
+      "reason": "High-utility craftsman mortise, tenon, and dowel joint modular reference."
+    },
+    {
+      "proposed_id": "ingredient.paint",
+      "path": "ingredients/ingredient_paint_dabs.svg",
+      "reason": "Reusable 3D Gouache glossy paint dollops with specular highlights."
+    }
+  ]
+}
