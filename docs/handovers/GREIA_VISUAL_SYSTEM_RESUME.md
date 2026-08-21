@@ -77,7 +77,7 @@ Accepted visible/shared Shell consumers:
 ui.shadow.soft       SIMULATOR VISUAL REVIEW
 ui.card.activity     SIMULATOR VISUAL REVIEW
 ui.panel.base        SIMULATOR VISUAL REVIEW
-ui.button.primary    SIMULATOR VISUAL REVIEW
+ui.button.primary    SIMULATOR VISUAL REVIEW (superseded on normal Home)
 ui.avatar.frame      SIMULATOR VISUAL REVIEW
 ui.loading.orbit     SIMULATOR VISUAL REVIEW
 ui.error.gentle      SIMULATOR VISUAL REVIEW
@@ -86,13 +86,17 @@ ui.portal.frame      SIMULATOR VISUAL REVIEW
 ui.empty.basket      SOURCE (NOT EXERCISED)
 ```
 
-Latest accepted Collection-first Home evidence: primary Collection destinations on Home (`Crea`, `Gioca`, `Impara`, `Esplora`, `Mio Greia`, `Care`), keyboard/pointer navigation, return origin from activity, multi-membership sanity, fail-soft portal fallback, all 6 responsive rows, and 277 frames / 10.01 s = 27.7 FPS in headless Activity Simulator. No physical Acer/Pi claim and no R7 closure.
+Collection-first Home itself is accepted through the headless Activity Simulator: portal Home, keyboard/pointer navigation, Activity return origin, multi-membership, corrupt-portal fallback, all six responsive rows, and 277 frames / 10.01 s = 27.7 FPS simulator sanity.
+
+That acceptance exposed one real product defect: arbitrary presentation category `care` appeared as a sixth top-level `Care` destination. This was not the intended platform-owned primary vocabulary and is the **current correction gate**.
+
+No physical Acer/Pi claim and no R7 closure.
 
 ---
 
-# 4. Accepted Collection-first product architecture
+# 4. Collection-first product architecture
 
-The normal child Shell now uses Collection-first discovery:
+The normal child Shell uses:
 
 ```text
 profile
@@ -106,31 +110,40 @@ with at most one future optional sub-Collection layer when a large effective cat
 Implementation:
 
 ```text
+src/greia_launcher/catalogue_view.py
 src/greia_launcher/collection_home_presentation.py
 src/greia_launcher/child_shell.py
 ```
 
-`CollectionFirstHomeMixin` treats `ALL_ACTIVITIES_ID` as an internal projection only. At launcher root it renders the available non-empty primary Collections as large destinations; entering one reuses the already-accepted Activity card/panel/navigation path; local Back returns to Collection Home; root Back returns to profile choice.
-
-Accepted shared visual:
+The normal primary Home vocabulary is platform-owned and bounded to:
 
 ```text
-ui.portal.frame/default
+create
+play
+learn
+explore
+my_greia
 ```
 
-from:
+Package metadata may place an Activity in one or more of those Collections, but a package cannot manufacture arbitrary top-level Home destinations merely by inventing another `[presentation].categories` value.
+
+A valid Activity with **no recognized primary Collection** must still fail open for discovery. Current source therefore projects such orphaned Activities into one platform-owned fallback destination:
 
 ```text
-assets/visual/ui/v0.1/portal_frame.svg
+browse
 ```
 
-with generated runtime file:
+localized as `Altro` / `More` and shown only when required. `All` remains an internal catalogue projection, not normal child Home.
+
+Current source correction also changes `Clinica dei Cuccioli` from launcher categories `care + play` to `play + learn`; its care/empathy/health concepts remain correctly in `[education]` taxonomy.
+
+The bounded-vocabulary correction is **SOURCE pending Activity Simulator acceptance** through:
 
 ```text
-assets/visual/runtime/v1/ui/portal_frame.png
+docs/testing/2026-08-21_COLLECTION_PRIMARY_VOCABULARY_SIMULATOR.md
 ```
 
-Accepted via `docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md` at **SIMULATOR VISUAL REVIEW** scope.
+Do not upgrade this correction to simulator PASS until that protocol actually runs.
 
 ---
 
@@ -138,12 +151,16 @@ Accepted via `docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md` at **S
 
 ```text
 1. sync current main
-2. continue to Web Activity semantic adapter or next targeted product-visible Shell integration
-3. preserve headless simulator testing (GREIA_SIMULATOR_HEADLESS=1) so local work is non-intrusive
-4. run full responsive matrix and fail-soft verification
-5. update result/product/design/plan/resume/HANDOVER
-6. commit and push accepted work to canonical main
+2. execute docs/testing/2026-08-21_COLLECTION_PRIMARY_VOCABULARY_SIMULATOR.md headlessly
+3. verify normal built-in Home has no Care/unknown-category portal
+4. verify Clinic remains reachable through Play + Learn
+5. exercise the disposable unknown-only developer Activity and verify bounded Altro/More recovery instead of Storybook becoming a Home portal or the Activity disappearing
+6. run six-row built-in responsive matrix + frame sanity
+7. update result/product/design/plan/resume/HANDOVER
+8. commit and push accepted fixes/results to canonical main
 ```
+
+After this gate, the next architecture tranche should address adaptive optional sub-Collections/discovery metadata coherently, rather than returning to cosmetic root-Home work.
 
 Do **not** mark adaptive sub-Collections, age/development policy, Parent per-child visibility, Web semantic transport or physical hardware performance as implemented by this gate.
 
@@ -152,6 +169,7 @@ Do **not** mark adaptive sub-Collections, age/development policy, Parent per-chi
 # 6. Current Shell composition owners
 
 ```text
+src/greia_launcher/catalogue_view.py
 src/greia_launcher/collection_home_presentation.py
 src/greia_launcher/shared_ui_presentation.py
 src/greia_launcher/profile_chrome_presentation.py
@@ -203,7 +221,9 @@ Remote bridge remains local loopback only at `http://127.0.0.1:8767`. No Cloudfl
 
 ---
 
-# 9. Accepted protocols so far
+# 9. Accepted protocols and current gate
+
+Accepted:
 
 ```text
 docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md
@@ -215,6 +235,12 @@ docs/testing/2026-08-21_V5_SHARED_NAVIGATION_CHROME_SIMULATOR.md
 docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md
 ```
 
+Current pending gate:
+
+```text
+docs/testing/2026-08-21_COLLECTION_PRIMARY_VOCABULARY_SIMULATOR.md
+```
+
 ---
 
 # 10. Rejected/drift directions
@@ -222,6 +248,9 @@ docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md
 Do not resume:
 
 - treating `All + filter tabs` as the final child Home;
+- allowing arbitrary package category IDs to proliferate root Home;
+- silently hiding valid unknown-category Activities;
+- converting educational taxonomy into permanent child navigation;
 - filesystem-style nested folders;
 - deep taxonomies beyond one optional sub-Collection layer;
 - detailed traditional character rigs as default;
