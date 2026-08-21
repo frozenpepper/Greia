@@ -1,5 +1,5 @@
 catalog_id = "greia.shared-visuals.v1"
-catalog_version = "0.2.0"
+catalog_version = "0.3.0"
 status = "candidate-runtime-rendition-source"
 runtime_consumed = false
 notes = "Explicit build-time selection of reviewed SVG masters for raster runtime renditions. This file is not directory discovery."
@@ -342,3 +342,37 @@ source = "visual/environments/forest_meadow/v0.2/sunlight_rays.svg"
 output = "visual/runtime/v1/forest_meadow/sunlight_rays.png"
 width = 1024
 height = 512
+
+# First shared character runtime family. Character state remains semantic and
+# renderer-neutral; the target device consumes build-time PNG renditions.
+
+[[visuals]]
+id = "character.lilli"
+kind = "character"
+role = "shared_mascot"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/specimens/a1/lilli.svg"
+output = "visual/runtime/v1/characters/lilli_neutral.png"
+width = 256
+height = 256
+
+[[visuals.variants]]
+name = "blink"
+source = "visual/characters/lilli/blink.svg"
+output = "visual/runtime/v1/characters/lilli_blink.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "shadow.contact.small.01"
+kind = "shadow"
+role = "character_grounding"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/environments/forest_meadow/v0.2/shadow_contact_small.svg"
+output = "visual/runtime/v1/shared/shadow_contact_small.png"
+width = 512
+height = 128
