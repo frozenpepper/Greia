@@ -40,9 +40,9 @@ The retained legacy roles establish the first permanent promotion rule: **newer 
 
 ### Workshop
 
-Workshop pack-scale reauthoring and bounded finalization are now owner/primary reviewed.
+Workshop v0.2 has now been mechanically promoted and is closed for this content-authoring pass.
 
-Promotion is authorized as:
+Promoted toolbox:
 
 ```text
 24 finished semantic assets
@@ -56,13 +56,27 @@ Promotion is authorized as:
 
 The five coexistence pairs establish the second permanent promotion rule: **the strongest toolbox may preserve both old and new assets when they are genuinely different useful objects or scale/use variants.**
 
-Workshop v0.2 still needs mechanical materialization via:
+### Clinic / Care
+
+Clinic/Care pack-scale reauthoring is complete and owner pixel review has established that the candidate is clearly stronger overall than v0.1.
+
+The producing agent's proposed 17/17 direct replacement is **not accepted**. Owner review identified likely useful coexistence/state pairs for:
 
 ```text
-docs/testing/2026-08-21_WORKSHOP_V02_PROMOTION.md
+heart cushion vs tufted cushion
+compact/square window vs arched window
+layered/narrow window light vs broad window light
+care/first-aid box vs bandage tin
+empty basin vs prepared wash basin
 ```
 
-No more Workshop art refinement is authorized before promotion.
+The current exact task is one bounded Clinic/Care finalization via:
+
+```text
+docs/testing/2026-08-21_CLINIC_CARE_PACK_FINALIZATION.md
+```
+
+That gate must resolve the semantic toolbox map, directly review both proposed authoring ingredients, correct the crowded composition evidence, and then stop Clinic/Care work for owner promotion review.
 
 The historical v0.1/v0.2/v0.3/hero-tree experiment remains provenance only. No further hero-tree optimization is a milestone of this plan.
 
@@ -89,8 +103,8 @@ The result should be a better toolbox for future Activity authors, not a giant l
 Current order:
 
 1. **Forest / Meadow** — promoted as v0.3; content-authoring pass closed
-2. **Workshop** — v0.2 promotion authorized; mechanical promotion pending
-3. **Clinic / Care** — next active art-production family
+2. **Workshop** — promoted as v0.2; content-authoring pass closed
+3. **Clinic / Care** — stronger candidate owner-reviewed; bounded finalization active
 4. **Reading / Classroom**
 5. **Fantasy / Village / Night**
 6. **Water / Pond**
@@ -260,17 +274,20 @@ Do not encode local-agent-specific SVG tricks or benchmark behavior into the use
 
 ---
 
-## 10. Current exact actions
+## 10. Current exact action
 
-Execute in order:
+Execute:
 
 ```text
-1. docs/testing/2026-08-21_WORKSHOP_V02_PROMOTION.md
-2. docs/testing/2026-08-21_CLINIC_CARE_BASE_PACK_REAUTHORING.md
+docs/testing/2026-08-21_CLINIC_CARE_PACK_FINALIZATION.md
 ```
 
-The Workshop task is mechanical promotion only.
+This is a bounded semantic/evidence pass only. It must:
 
-The Clinic / Care task is the next real art-production pass and must work at complete-pack scale across the current 17-role baseline, with warm child-care art direction and the same strongest-toolbox promotion philosophy.
+- resolve the likely cushion/window/light/bandage-container/basin coexistence decisions;
+- directly review both proposed authoring ingredients;
+- correct the crowded Clinic composition evidence;
+- produce an exact promotion map and owner-review ZIP;
+- stop Clinic/Care work for owner promotion review.
 
-After Clinic / Care owner review, perform at most one bounded finalization if actually necessary, promote the strongest reviewed toolbox, then move to Reading / Classroom.
+After owner promotion review, materialize the strongest Clinic/Care v0.2 toolbox and move immediately to Reading / Classroom rather than reopening Clinic specimen optimization.
