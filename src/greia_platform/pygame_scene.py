@@ -47,6 +47,34 @@ class PygameSceneRenderer:
             import pygame as pygame_module
         self._pygame = pygame_module
 
+    @classmethod
+    def for_activity(
+        cls,
+        *,
+        max_entries: int = 24,
+        max_surface_pixels: int = 1920 * 1080,
+        pygame_module: Any | None = None,
+    ) -> "PygameSceneRenderer":
+        """Create one renderer against Greia's Activity-visible catalogue.
+
+        This is an internal Pygame realization of the existing semantic Activity
+        visual contract. Activities still request scene asset IDs; they do not
+        scan source folders or supply host paths. The import is local to avoid a
+        module-level cycle with ``activity_api``.
+        """
+
+        from .activity_api import _catalogue
+
+        cache = PygameVisualSurfaceCache.for_pygame(
+            _catalogue(),
+            max_entries=max_entries,
+            max_surface_pixels=max_surface_pixels,
+        )
+        return cls(cache, pygame_module=pygame_module)
+
+    def clear(self) -> None:
+        self.visual_cache.clear()
+
     def draw(
         self,
         scene: SceneDefinition,
