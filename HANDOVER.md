@@ -65,6 +65,7 @@ ui.portal.frame      SIMULATOR VISUAL REVIEW
 ui.empty.basket      SOURCE / NOT EXERCISED
 Collection-first Home SIMULATOR VISUAL REVIEW (5 primary collections + Altro/More fallback)
 forest_meadow_day_v1 SIMULATOR VISUAL REVIEW (Scene Compositor Runtime in Nascondino nel Bosco)
+character.lilli      SIMULATOR VISUAL REVIEW (Scene Actor Lilli guide + grounded contact shadow in Nascondino)
 ```
 
 Accepted simulator facts include:
@@ -79,6 +80,8 @@ Accepted simulator facts include:
 - navigation icon button passed in-category Back, real Activity pagination, corrupt-PNG fallback and six responsive rows, 27.1 FPS sanity;
 - Collection-first Home passed portal Home, bounded 5 primary destinations (`create`, `play`, `learn`, `explore`, `my_greia`), `browse`/`Altro` recovery for unknown categories, Clinic in Play & Learn, corrupt portal fallback, six responsive rows, 27.7 FPS sanity;
 - Scene Compositor Runtime passed in `nascondino_bosco` using `forest_meadow_day_v1.toml`, 2-pass background ($z \le 59$) and foreground/atmosphere ($z \ge 60$) rendering, parallax and ambient motion, corrupt required/optional asset fallbacks, six responsive rows, 25.8 FPS sanity;
+- Scene Actor Runtime passed in `nascondino_bosco` using `SceneActorDefinition` and `actor_scene_sample` with `character.lilli/default|blink` and `shadow.contact.small.01/default`, deterministic eye blink, grounded vertical idle oscillation, corrected 24 px / 26 px / 20 px target HUD typography with `SCOIATTOLO` fully fitted, and 230 frames / 10.01 s = 23.0 FPS sanity;
+- Transfer review archive packaged at `./GREIA_VISUAL_REVIEW_SCENE_ACTOR_LILLI_2026-08-21.zip` for owner attachment to ChatGPT for independent pixel inspection;
 - `ui.empty.basket` remains generated/source-present but not legitimately exercised;
 - first Python Activity semantic resolver + Shape Garden consumer remain SOURCE only and non-blocking;
 - no physical Acer/Pi V5 performance claim is made.
@@ -86,7 +89,7 @@ Accepted simulator facts include:
 Current continuation priority:
 
 ```text
-S4 Motion/Scene Vocabulary Expansion or Web Activity Semantic Adapter
+S5 Character & Reusable FX Expansion / Web Scene Transport
 ```
 
 ---

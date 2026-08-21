@@ -4,4 +4,5 @@ __pycache__/
 build/test_package_service_state/
 .DS_Store
 tmp/
+*.zip
 

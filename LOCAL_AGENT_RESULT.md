@@ -749,5 +749,90 @@ Per `docs/testing/VISUAL_ACCEPTANCE_EVIDENCE_CONTRACT.md`, curated review files 
 - **No Physical Hardware / Acer Performance Claim:** Tested through Activity Simulator only (`SIMULATOR VISUAL REVIEW`).
 - **No R7 Architecture Closure:** Display coordinator and session boundary remain independently open.
 
+---
+
+# Part 10: Scene Actor Lilli & Nascondino HUD Correction Acceptance
+
+**Date:** 2026-08-21  
+**Runbook Authority:** `docs/testing/2026-08-21_SCENE_ACTOR_LILLI_NASCONDINO_SIMULATOR.md`  
+**Evidence Contract:** `docs/testing/VISUAL_ACCEPTANCE_EVIDENCE_CONTRACT.md`  
+**Evidence Class:** `SIMULATOR VISUAL REVIEW`
+
+---
+
+## 1. Summary of Changes
+
+- **Scene Actor Integration:**
+  - Integrated `SceneActorDefinition` and `actor_scene_sample` from `src/greia_platform/scene_actor.py` into `activities/nascondino_bosco/main.py`.
+  - Placed Lilli in the upper-left clearing (`[50, 105, 150, 150]`) with grounded contact shadow (`[78, 232, 96, 24]`) at $z=56$, parallax $0.28$.
+  - Rendered with existing `PygameSceneRenderer` using bounded `PygameVisualSurfaceCache` without custom loaders or duplicate caches.
+  - Subtle vertical idle oscillation ($\pm 3$ px, 2.4s period) moves the body while the contact shadow remains grounded.
+  - Deterministic eye blink (0.18s duration every 4.8s) visibly swaps variant to `character.lilli/blink`.
+
+- **Nascondino Child HUD Refactor & Typography Correction:**
+  - **Normal Interface:** Target card reflowed to `[337, 14, 350, 94]` with **24 px** animal label font (`FontRole.DISPLAY`), eliminating the previous 18 px lower guardrail violation.
+  - **Large Interface:** Target card genuinely scales to `[322, 10, 380, 104]` with **26 px** font, 76 px animal portrait, and scaled star dots.
+  - **Compact Interface:** Target card sized to `[352, 16, 320, 88]` with **20 px** font (never dropping below 20 px).
+  - **Word Accommodation:** `SCOIATTOLO` (105 px in Normal, 109 px in Large) fits comfortably inside available text spans (148 px in Normal, 161 px in Large) with zero clipping, collision, or ellipsis.
+  - **Zero Chrome Overlap:** Maintained 112 px clear horizontal margin between star pill right edge ($x=210$) and target card left edge ($x=322..337$).
+
+- **Fit Semantics & Layout Audit:**
+  - Corrected description to `fit = "cover"` symmetrical centered cropping across differing aspect ratios while preserving the central safe span `[112, 912]`.
+  - `layout-audit.json` generated directly from runtime layout computations.
+
+---
+
+## 2. Greia Simulator Acceptance Matrix
+
+All acceptance was performed through the Greia Activity Simulator in headless mode with isolated state root `$HOME/.greia-simulator-scene-actor`:
+
+| Test # | Viewport | Interface Size | Scenario / State | Result | Screenshot Evidence | Status File |
+|---|---|---|---|---|---|---|
+| **01** | 1024x600 | Normal | Baseline Scene + Lilli + Corrected HUD | **PASS** | `tmp/scene-actor-lilli-evidence/01-reference-1024x600.png` | `frame-before.json` |
+| **02** | 1024x600 | Normal | Physically Closed-Eye Blink State | **PASS** | `tmp/scene-actor-lilli-evidence/02-blink.png` | N/A |
+| **03** | 1024x600 | Large | Large Interface Scaling (26 px Font, Scaled Card) | **PASS** | `tmp/scene-actor-lilli-evidence/03-large.png` | N/A |
+| **04** | 1366x768 | Compact | Constrained/Compact Responsive State | **PASS** | `tmp/scene-actor-lilli-evidence/04-compact.png` | N/A |
+| **05** | 1920x1080 | Normal | Large Viewport COVER Composition | **PASS** | `tmp/scene-actor-lilli-evidence/05-large-viewport.png` | N/A |
+| **06** | 1024x600 | Normal | Required Scene Asset Corruption Fallback | **PASS** | `tmp/scene-actor-lilli-evidence/06-fallback.png` | N/A |
+| **07** | 1024x600 | Normal | Optional Corrupt Fog Isolation (No Retry Storm) | **PASS** | `tmp/scene-actor-lilli-evidence/08-optional-fog-isolated.png` | N/A |
+
+---
+
+## 3. Frame Rate & Performance Sanity
+
+- **Measurement:** 10-second idle measurement in Nascondino nel Bosco with active scene, Lilli idle motion, and blink timer.
+- **Frames Rendered:** 230 frames across 10.01 seconds (**23.0 FPS**, steady execution on headless SDL dummy driver).
+- **Status Evidence:** `tmp/scene-actor-lilli-evidence/frame-before.json` and `frame-after.json`.
+
+---
+
+## 4. Committed Curated Visual Review Artifacts
+
+Committed under `docs/reviews/visual/2026-08-21_scene-actor-lilli-nascondino/`:
+- `01-reference.png`
+- `02-blink.png`
+- `03-large.png`
+- `04-compact.png`
+- `05-large-viewport.png`
+- `06-fallback.png`
+- `REVIEW.md`
+- `layout-audit.json`
+
+---
+
+## 5. Visual Review Transfer Package for Owner Attachment
+
+Per Section 10 of the protocol, the visual review archive for independent owner/ChatGPT pixel inspection is assembled at:
+`./GREIA_VISUAL_REVIEW_SCENE_ACTOR_LILLI_2026-08-21.zip`
+
+---
+
+## 6. Explicit Non-Claims
+
+- **No Physical Hardware / Acer Performance Claim:** Tested through Activity Simulator only (`SIMULATOR VISUAL REVIEW`).
+- **No Independent Primary Review Closed:** Transfer archive created for owner attachment; independent pixel review remains open until owner attaches archive.
+- **No R7 Architecture Closure:** Display coordinator and session boundary remain independently open.
+
+
 
 

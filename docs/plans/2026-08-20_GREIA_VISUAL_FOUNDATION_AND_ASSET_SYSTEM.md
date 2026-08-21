@@ -612,13 +612,13 @@ The entries below preserve the workstream chronology. Corrections/new state are 
 - Six responsive rows passed; frame sanity was 271 frames / 10.01 s = 27.1 FPS.
 - Canonical acceptance commit: `370d96039546178ed2c64366bdaec1b5dc986be2`.
 
-## 2026-08-21 — Collection-first Home source migration
-- Re-centered the workstream on the accepted child discovery model rather than further polishing `All + filters`.
-- Added `CollectionFirstHomeMixin` so the normal root renders available non-empty primary Collections and treats `ALL_ACTIVITIES_ID` as internal projection state.
-- Entering a Collection reuses the accepted Activity cards/panel/navigation/lifecycle path; local Back returns to Collection Home; root Back returns to profile choice.
-- Added reviewed `ui.portal.frame/default` to source rendition catalogue version `0.1.5`.
-- Portal-specific visual failure preserves Collection-first hierarchy with a primitive circular fallback instead of reverting to an Activity wall.
-- Added `docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md` as the owner/local-agent acceptance protocol.
-- Evidence remains **SOURCE** until `make visual-assets` and the full headless simulator protocol execute.
+## 2026-08-21 — Scene Actor Lilli and Nascondino HUD accepted in simulator
+- Integrated first shared Greia character actor (`character.lilli/default|blink`) and contact shadow (`shadow.contact.small.01/default`) using `SceneActorDefinition` and `actor_scene_sample`.
+- Corrected Nascondino child HUD typography to 24 px in Normal, 26 px in Large, 20 px in Compact (eliminating the 18 px lower guardrail violation and fixing card geometry).
+- Verified deterministic eye blink and grounded vertical idle motion.
+- Six-row responsive matrix, optional corrupt fog isolation, and required scene fallback passed.
+- Steady state simulator performance sanity measured 230 frames / 10.01 s = 23.0 FPS.
+- Curated review set committed in `docs/reviews/visual/2026-08-21_scene-actor-lilli-nascondino/` and review package assembled at `./GREIA_VISUAL_REVIEW_SCENE_ACTOR_LILLI_2026-08-21.zip`.
 
-**Next exact action:** `make visual-assets` → execute `docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md` headlessly → inspect real Collection-first Home, navigation/return origin, portal fallback and six-row responsive matrix → fix only shared/root causes → update product/design implementation status + V5 evidence docs → commit/push.
+**Next exact action:** S5 Character & Reusable FX Expansion / Web Scene Transport.
+

@@ -149,7 +149,7 @@ docs/reviews/visual/2026-08-21_scene-compositor-nascondino/PRIMARY_REVIEW.md
 
 That review found the local-agent visual audit overstated/incorrectly transcribed several facts: target label was 18 px rather than claimed 22 px; recorded target-card geometry disagreed with source; Large-interface scaling was claimed where the fixed HUD did not use that preference; and the scene's `cover` behavior was described as letterbox/pillarbox. These are folded into the next actor/HUD gate instead of starting another isolated micro-cycle.
 
-## S4 — Shared scene actor / first character-state runtime **[SOURCE IMPLEMENTED; SIMULATOR GATE NEXT]**
+## S4 — Shared scene actor / first character-state runtime **[SIMULATOR ACCEPTED; EVIDENCE ZIP PREPARED FOR OWNER REVIEW]**
 
 New renderer-neutral source:
 
@@ -168,7 +168,7 @@ Implemented actor semantics:
 - output remains ordinary `SceneNode` data and therefore reuses `PygameSceneRenderer` / existing cache;
 - no skeletal rig, per-frame raster generation, or second character renderer/cache.
 
-First promoted runtime actor assets:
+Promoted runtime actor assets:
 
 ```text
 character.lilli/default
@@ -184,13 +184,21 @@ assets/visual/runtime/v1/characters/lilli_blink.png
 assets/visual/runtime/v1/shared/shadow_contact_small.png
 ```
 
-Exact current gate:
+Simulator runbook executed:
 
 ```text
 docs/testing/2026-08-21_SCENE_ACTOR_LILLI_NASCONDINO_SIMULATOR.md
 ```
 
-That gate also corrects the Nascondino target HUD so meaningful child text is comfortably above the lower 18 px guardrail, makes the semantic Large/Compact interface preference real on the fixed reference canvas, regenerates runtime-derived layout evidence, verifies actual blink pixels, and re-checks `cover` crop semantics.
+Accepted simulator facts:
+- Scene Actor Lilli guide + grounded contact shadow rendered via existing `PygameSceneRenderer` and bounded surface cache;
+- deterministic blink (eyes closed smiling curve) and subtle vertical idle motion ($\pm 3$ px) verified;
+- Nascondino target HUD corrected with **24 px** animal font in Normal, **26 px** in Large, **20 px** in Compact;
+- `SCOIATTOLO` fits cleanly inside available text spans across all interface sizes without clipping, collision, or ellipsis;
+- 112 px clear horizontal safety margin between star pill ($x=210$) and target card ($x=322..337$);
+- 10-second idle performance sanity: 230 frames / 10.01 s = **23.0 FPS**;
+- Curated screenshot review set committed under `docs/reviews/visual/2026-08-21_scene-actor-lilli-nascondino/`;
+- Transfer archive prepared at project root for independent owner/ChatGPT pixel inspection: `./GREIA_VISUAL_REVIEW_SCENE_ACTOR_LILLI_2026-08-21.zip`.
 
 ## S5 — Character and reusable FX integration
 

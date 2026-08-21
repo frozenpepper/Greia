@@ -1,6 +1,6 @@
 catalog_id = "greia.shared-visuals.v1"
-catalog_version = "0.2.0"
-source_sha256 = "c19451a33688af25203cbb0758a1e14b1af081c92ee413cffd981107a10b26d1"
+catalog_version = "0.3.0"
+source_sha256 = "3e65fd993f413a1ec4aad2eb795a899cdcadba62c65c7a78406da8b572025efc"
 generated_note = "Build-time PNG renditions from explicit reviewed SVG masters; runtime must not discover or rasterize SVG source."
 
 [[visuals]]
@@ -42,6 +42,15 @@ role = "foliage"
 
 [visuals.variants]
 default = "visual/runtime/v1/forest_meadow/bush_round.png"
+
+[[visuals]]
+id = "character.lilli"
+kind = "character"
+role = "shared_mascot"
+
+[visuals.variants]
+blink = "visual/runtime/v1/characters/lilli_blink.png"
+default = "visual/runtime/v1/characters/lilli_neutral.png"
 
 [[visuals]]
 id = "cloud.large.01"
@@ -98,6 +107,14 @@ role = "playfield"
 
 [visuals.variants]
 default = "visual/runtime/v1/forest_meadow/rock_cluster_large.png"
+
+[[visuals]]
+id = "shadow.contact.small.01"
+kind = "shadow"
+role = "character_grounding"
+
+[visuals.variants]
+default = "visual/runtime/v1/shared/shadow_contact_small.png"
 
 [[visuals]]
 id = "tree.hero.01"

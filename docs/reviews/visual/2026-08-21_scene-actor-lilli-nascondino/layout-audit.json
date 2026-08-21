@@ -1,0 +1,353 @@
+{
+  "activity_id": "org.greia.nascondino-bosco",
+  "reference_canvas": [
+    1024,
+    600
+  ],
+  "fit_mode": "cover",
+  "safe_central_span_px": [
+    112,
+    912
+  ],
+  "measured_fps": 23.0,
+  "elapsed_seconds": 10.01,
+  "frame_count": 230,
+  "modes": {
+    "normal": {
+      "interface_size": "normal",
+      "target_card_rect": [
+        337,
+        14,
+        350,
+        94
+      ],
+      "font_size_px": 24,
+      "star_pill_rect": [
+        80,
+        16,
+        130,
+        56
+      ],
+      "home_button_rect": [
+        8,
+        16,
+        60,
+        60
+      ],
+      "actor_body_rect": [
+        50,
+        105,
+        150,
+        150
+      ],
+      "actor_shadow_rect": [
+        78,
+        232,
+        96,
+        24
+      ],
+      "margin_home_to_star_pill_px": 12,
+      "margin_star_pill_to_card_px": 127,
+      "home_star_card_overlap": false,
+      "animal_name_metrics": {
+        "SCOIATTOLO": {
+          "rendered_width_px": 105,
+          "rendered_height_px": 16,
+          "rendered_rect": [
+            499,
+            53,
+            105,
+            16
+          ],
+          "available_span_px": 148,
+          "clipped_or_colliding": false
+        },
+        "CONIGLIO": {
+          "rendered_width_px": 79,
+          "rendered_height_px": 16,
+          "rendered_rect": [
+            499,
+            53,
+            79,
+            16
+          ],
+          "available_span_px": 148,
+          "clipped_or_colliding": false
+        },
+        "VOLPE": {
+          "rendered_width_px": 55,
+          "rendered_height_px": 16,
+          "rendered_rect": [
+            499,
+            53,
+            55,
+            16
+          ],
+          "available_span_px": 148,
+          "clipped_or_colliding": false
+        },
+        "GUFO": {
+          "rendered_width_px": 46,
+          "rendered_height_px": 16,
+          "rendered_rect": [
+            499,
+            53,
+            46,
+            16
+          ],
+          "available_span_px": 148,
+          "clipped_or_colliding": false
+        },
+        "RANA": {
+          "rendered_width_px": 50,
+          "rendered_height_px": 16,
+          "rendered_rect": [
+            499,
+            53,
+            50,
+            16
+          ],
+          "available_span_px": 148,
+          "clipped_or_colliding": false
+        },
+        "RICCIO": {
+          "rendered_width_px": 58,
+          "rendered_height_px": 16,
+          "rendered_rect": [
+            499,
+            53,
+            58,
+            16
+          ],
+          "available_span_px": 148,
+          "clipped_or_colliding": false
+        }
+      },
+      "scoiattolo_clipped": false
+    },
+    "large": {
+      "interface_size": "large",
+      "target_card_rect": [
+        322,
+        10,
+        380,
+        104
+      ],
+      "font_size_px": 26,
+      "star_pill_rect": [
+        80,
+        16,
+        130,
+        56
+      ],
+      "home_button_rect": [
+        8,
+        16,
+        60,
+        60
+      ],
+      "actor_body_rect": [
+        50,
+        105,
+        150,
+        150
+      ],
+      "actor_shadow_rect": [
+        78,
+        232,
+        96,
+        24
+      ],
+      "margin_home_to_star_pill_px": 12,
+      "margin_star_pill_to_card_px": 112,
+      "home_star_card_overlap": false,
+      "animal_name_metrics": {
+        "SCOIATTOLO": {
+          "rendered_width_px": 109,
+          "rendered_height_px": 17,
+          "rendered_rect": [
+            497,
+            54,
+            109,
+            17
+          ],
+          "available_span_px": 161,
+          "clipped_or_colliding": false
+        },
+        "CONIGLIO": {
+          "rendered_width_px": 84,
+          "rendered_height_px": 17,
+          "rendered_rect": [
+            497,
+            54,
+            84,
+            17
+          ],
+          "available_span_px": 161,
+          "clipped_or_colliding": false
+        },
+        "VOLPE": {
+          "rendered_width_px": 56,
+          "rendered_height_px": 17,
+          "rendered_rect": [
+            497,
+            54,
+            56,
+            17
+          ],
+          "available_span_px": 161,
+          "clipped_or_colliding": false
+        },
+        "GUFO": {
+          "rendered_width_px": 48,
+          "rendered_height_px": 17,
+          "rendered_rect": [
+            497,
+            54,
+            48,
+            17
+          ],
+          "available_span_px": 161,
+          "clipped_or_colliding": false
+        },
+        "RANA": {
+          "rendered_width_px": 50,
+          "rendered_height_px": 17,
+          "rendered_rect": [
+            497,
+            54,
+            50,
+            17
+          ],
+          "available_span_px": 161,
+          "clipped_or_colliding": false
+        },
+        "RICCIO": {
+          "rendered_width_px": 62,
+          "rendered_height_px": 17,
+          "rendered_rect": [
+            497,
+            54,
+            62,
+            17
+          ],
+          "available_span_px": 161,
+          "clipped_or_colliding": false
+        }
+      },
+      "scoiattolo_clipped": false
+    },
+    "compact": {
+      "interface_size": "compact",
+      "target_card_rect": [
+        352,
+        16,
+        320,
+        88
+      ],
+      "font_size_px": 20,
+      "star_pill_rect": [
+        80,
+        16,
+        130,
+        56
+      ],
+      "home_button_rect": [
+        8,
+        16,
+        60,
+        60
+      ],
+      "actor_body_rect": [
+        50,
+        105,
+        150,
+        150
+      ],
+      "actor_shadow_rect": [
+        78,
+        232,
+        96,
+        24
+      ],
+      "margin_home_to_star_pill_px": 12,
+      "margin_star_pill_to_card_px": 142,
+      "home_star_card_overlap": false,
+      "animal_name_metrics": {
+        "SCOIATTOLO": {
+          "rendered_width_px": 85,
+          "rendered_height_px": 13,
+          "rendered_rect": [
+            502,
+            54,
+            85,
+            13
+          ],
+          "available_span_px": 134,
+          "clipped_or_colliding": false
+        },
+        "CONIGLIO": {
+          "rendered_width_px": 65,
+          "rendered_height_px": 13,
+          "rendered_rect": [
+            502,
+            54,
+            65,
+            13
+          ],
+          "available_span_px": 134,
+          "clipped_or_colliding": false
+        },
+        "VOLPE": {
+          "rendered_width_px": 45,
+          "rendered_height_px": 13,
+          "rendered_rect": [
+            502,
+            54,
+            45,
+            13
+          ],
+          "available_span_px": 134,
+          "clipped_or_colliding": false
+        },
+        "GUFO": {
+          "rendered_width_px": 37,
+          "rendered_height_px": 13,
+          "rendered_rect": [
+            502,
+            54,
+            37,
+            13
+          ],
+          "available_span_px": 134,
+          "clipped_or_colliding": false
+        },
+        "RANA": {
+          "rendered_width_px": 38,
+          "rendered_height_px": 13,
+          "rendered_rect": [
+            502,
+            54,
+            38,
+            13
+          ],
+          "available_span_px": 134,
+          "clipped_or_colliding": false
+        },
+        "RICCIO": {
+          "rendered_width_px": 47,
+          "rendered_height_px": 13,
+          "rendered_rect": [
+            502,
+            54,
+            47,
+            13
+          ],
+          "available_span_px": 134,
+          "clipped_or_colliding": false
+        }
+      },
+      "scoiattolo_clipped": false
+    }
+  }
+}

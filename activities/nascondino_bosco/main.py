@@ -18,6 +18,7 @@ from greia_platform.activity_api import (
     get_profile_locale,
     get_storage,
     get_theme,
+    get_ui_preferences,
     mark_activity_ready,
 )
 from greia_platform.activity_ui import ChildUiMetrics, is_home_clicked
@@ -32,12 +33,105 @@ from greia_platform.pygame_canvas import (
 )
 from greia_platform.pygame_scene import PygameSceneRenderer, SceneRenderError
 from greia_platform.scene import SceneCamera, load_scene
+from greia_platform.scene_actor import SceneActorDefinition, actor_scene_sample
 from greia_platform.typography import FontRole, GreiaTypography
+from greia_platform.ui_preferences import InterfaceSize
 
 REFERENCE_WIDTH = 1024
 REFERENCE_HEIGHT = 600
 STORAGE_KEY = "nascondino_bosco.progress.v2"
 SEASONS = ["spring", "summer", "autumn"]
+
+LILLI_ACTOR = SceneActorDefinition(
+    actor_id="lilli",
+    asset_id="character.lilli",
+    rect=(50, 105, 150, 150),
+    shadow_asset_id="shadow.contact.small.01",
+    shadow_rect=(78, 232, 96, 24),
+    z=56,
+    parallax=0.28,
+    idle_amplitude=3.0,
+    idle_period_seconds=2.4,
+    blink_period_seconds=4.8,
+    blink_duration_seconds=0.18,
+)
+
+
+def compute_hud_layout(interface_size: str | InterfaceSize = InterfaceSize.NORMAL) -> dict[str, Any]:
+    if isinstance(interface_size, str):
+        try:
+            interface_size = InterfaceSize(interface_size)
+        except ValueError:
+            interface_size = InterfaceSize.NORMAL
+
+    if interface_size == InterfaceSize.LARGE:
+        card_w = 380
+        card_h = 104
+        card_top = 10
+        font_size = 26
+        portrait_size = 76
+        text_offset_x = 175
+        star_radius = 9
+        star_spacing_x = 20
+        star_spacing_y = 30
+        star_offset_right = 40
+        star_offset_top = 28
+        mag_radius = 20
+        mag_thick = 4
+    elif interface_size == InterfaceSize.COMPACT:
+        card_w = 320
+        card_h = 88
+        card_top = 16
+        font_size = 20
+        portrait_size = 64
+        text_offset_x = 150
+        star_radius = 7
+        star_spacing_x = 16
+        star_spacing_y = 24
+        star_offset_right = 32
+        star_offset_top = 24
+        mag_radius = 16
+        mag_thick = 3
+    else:  # NORMAL
+        card_w = 350
+        card_h = 94
+        card_top = 14
+        font_size = 24
+        portrait_size = 68
+        text_offset_x = 162
+        star_radius = 8
+        star_spacing_x = 18
+        star_spacing_y = 28
+        star_offset_right = 36
+        star_offset_top = 26
+        mag_radius = 18
+        mag_thick = 4
+
+    target_card = (REFERENCE_WIDTH // 2 - card_w // 2, card_top, card_w, card_h)
+    star_pill = (80, 16, 130, 56)
+    home_button = (8, 16, 60, 60)
+    actor_body = (50, 105, 150, 150)
+    actor_shadow = (78, 232, 96, 24)
+
+    return {
+        "interface_size": interface_size.value,
+        "target_card_rect": list(target_card),
+        "font_px": font_size,
+        "portrait_size": portrait_size,
+        "text_offset_x": text_offset_x,
+        "star_radius": star_radius,
+        "star_spacing_x": star_spacing_x,
+        "star_spacing_y": star_spacing_y,
+        "star_offset_right": star_offset_right,
+        "star_offset_top": star_offset_top,
+        "mag_radius": mag_radius,
+        "mag_thick": mag_thick,
+        "star_pill_rect": list(star_pill),
+        "home_button_rect": list(home_button),
+        "actor_body_rect": list(actor_body),
+        "actor_shadow_rect": list(actor_shadow),
+    }
+
 
 ANIMALS = [
     {"id": "fox", "color": (249, 115, 22), "belly": (255, 237, 213), "cue": "tail"},
@@ -398,6 +492,27 @@ def main() -> int:
         else:
             _draw_legacy_forest_background(surf)
 
+        # 1b. Scene Actor (Lilli Guide + Contact Shadow)
+        if not scene_failed and scene is not None and scene_renderer is not None:
+            try:
+                lilli_scene = actor_scene_sample(
+                    LILLI_ACTOR,
+                    canvas_size=scene.canvas_size,
+                    elapsed_seconds=elapsed,
+                    fit=scene.fit,
+                    motion_enabled=True,
+                )
+                scene_renderer.draw(
+                    lilli_scene,
+                    surf,
+                    elapsed_seconds=elapsed,
+                    camera=camera,
+                    motion_enabled=True,
+                    clear=False,
+                )
+            except SceneRenderError:
+                pass
+
         # 2. Draw Hiding Spots with Animated Peeking Clues
         for spot in SPOTS:
             sx, sy, sw, sh = spot["x"], spot["y"], spot["w"], spot["h"]
@@ -512,16 +627,19 @@ def main() -> int:
                 pass
 
         # 6. Top Center "WANTED ANIMAL" Target Card (Icon + Label)
-        target_card = pygame.Rect(REFERENCE_WIDTH // 2 - 160, 14, 320, 94)
+        layout = compute_hud_layout(get_ui_preferences().interface_size)
+        target_card = pygame.Rect(layout["target_card_rect"])
         pygame.draw.rect(surf, (255, 252, 245), target_card, border_radius=24)
         pygame.draw.rect(surf, (234, 179, 8), target_card, width=4, border_radius=24)
 
         # Magnifying glass icon on left
-        pygame.draw.circle(surf, (59, 130, 246), (target_card.left + 36, target_card.centery - 5), 18, 4)
-        pygame.draw.line(surf, (59, 130, 246), (target_card.left + 48, target_card.centery + 7), (target_card.left + 62, target_card.centery + 21), 5)
+        mag_r = layout["mag_radius"]
+        mag_th = layout["mag_thick"]
+        pygame.draw.circle(surf, (59, 130, 246), (target_card.left + 36, target_card.centery - 5), mag_r, mag_th)
+        pygame.draw.line(surf, (59, 130, 246), (target_card.left + 48, target_card.centery + 7), (target_card.left + 62, target_card.centery + 21), mag_th + 1)
 
         # Target Animal Giant Portrait
-        _draw_animal_portrait(surf, target_animal_id, target_card.left + 115, target_card.centery, 68)
+        _draw_animal_portrait(surf, target_animal_id, target_card.left + layout["portrait_size"] // 2 + 65, target_card.centery, layout["portrait_size"])
 
         # Animal Name Text
         animal_names_it = {
@@ -533,17 +651,17 @@ def main() -> int:
             "squirrel": "SCOIATTOLO",
         }
         name_str = animal_names_it.get(target_animal_id, "ANIMALE")
-        n_txt = typography.render(name_str, FontRole.DISPLAY, 18, (180, 83, 9))
-        surf.blit(n_txt, (target_card.left + 160, target_card.centery - n_txt.get_height() // 2))
+        n_txt = typography.render(name_str, FontRole.DISPLAY, layout["font_px"], (180, 83, 9))
+        surf.blit(n_txt, (target_card.left + layout["text_offset_x"], target_card.centery - n_txt.get_height() // 2))
 
         # Progress Stars on Target Card
         for s in range(total_to_find):
-            st_x = target_card.right - 35 + (s % 2) * 18
-            st_y = target_card.top + 28 + (s // 2) * 28
+            st_x = target_card.right - layout["star_offset_right"] + (s % 2) * layout["star_spacing_x"]
+            st_y = target_card.top + layout["star_offset_top"] + (s // 2) * layout["star_spacing_y"]
             if s < found_count:
-                pygame.draw.circle(surf, (234, 179, 8), (st_x, st_y), 8)
+                pygame.draw.circle(surf, (234, 179, 8), (st_x, st_y), layout["star_radius"])
             else:
-                pygame.draw.circle(surf, (203, 213, 225), (st_x, st_y), 8, 2)
+                pygame.draw.circle(surf, (203, 213, 225), (st_x, st_y), layout["star_radius"], 2)
 
         # 7. Star Pill (Top Left)
         star_pill = pygame.Rect(80, 16, 130, 56)

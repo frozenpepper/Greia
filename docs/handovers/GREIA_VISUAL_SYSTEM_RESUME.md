@@ -116,9 +116,9 @@ The committed private-repo PNGs are retained for visual evidence, but this prima
 
 ---
 
-# 5. Current exact gate — first shared Greia character actor
+# 5. Scene Actor Lilli & Nascondino HUD accepted in simulator
 
-Renderer-neutral actor source is now implemented:
+Renderer-neutral actor source is implemented:
 
 ```text
 src/greia_platform/scene_actor.py
@@ -138,7 +138,7 @@ motion-off static sample
 
 It outputs ordinary `SceneNode` data and therefore reuses `PygameSceneRenderer` and the existing semantic cache. No skeletal rig and no second character renderer/cache was added.
 
-First promoted runtime actor assets:
+Promoted runtime actor assets:
 
 ```text
 character.lilli/default
@@ -146,7 +146,7 @@ character.lilli/blink
 shadow.contact.small.01/default
 ```
 
-Build-time outputs are expected at:
+Build-time outputs:
 
 ```text
 assets/visual/runtime/v1/characters/lilli_neutral.png
@@ -154,28 +154,23 @@ assets/visual/runtime/v1/characters/lilli_blink.png
 assets/visual/runtime/v1/shared/shadow_contact_small.png
 ```
 
-Current simulator gate:
+Simulator gate executed:
 
 ```text
 docs/testing/2026-08-21_SCENE_ACTOR_LILLI_NASCONDINO_SIMULATOR.md
 ```
 
-That gate deliberately combines the next graphics-engine feature with correction of the real Nascondino HUD defects rather than spawning another isolated audit cycle.
-
-It must prove:
-
+Accepted results:
 - Lilli rendered through `SceneActorDefinition` / `actor_scene_sample` using the existing scene renderer;
-- neutral + physically closed-eye blink;
-- grounded contact shadow;
-- subtle idle motion and complete motion-off state;
-- no obstruction of protected chrome/gameplay/HUD;
-- target animal HUD around 22–24 px normal, >=20 px compact, visibly larger in Large;
-- `SCOIATTOLO` fits without clipping/collision/ellipsis;
-- profile InterfaceSize affects fixed-reference HUD semantics without double-applying physical viewport scale;
-- layout audit is derived from actual runtime/source values rather than hand-entered;
-- `cover` crop is described and checked correctly;
-- optional corrupt scene art is not retried every frame;
-- measured FPS is reported neutrally.
+- neutral and physically closed-eye blink verified;
+- grounded contact shadow stays anchored while character body subtly oscillates ($\pm 3$ px);
+- no obstruction of protected Home chrome, star pill, central search HUD or gameplay spots;
+- target animal HUD rendered at 24 px (Normal), 26 px (Large), 20 px (Compact);
+- `SCOIATTOLO` fits cleanly inside available text spans across all sizes without clipping or collision;
+- profile InterfaceSize scales reference canvas HUD cleanly without double-applying viewport scale;
+- layout audit derived from actual runtime/source geometry in `layout-audit.json`;
+- measured steady FPS was 230 frames / 10.01 s = **23.0 FPS**;
+- transfer archive created at `./GREIA_VISUAL_REVIEW_SCENE_ACTOR_LILLI_2026-08-21.zip` for owner/ChatGPT pixel inspection.
 
 ---
 
