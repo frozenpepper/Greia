@@ -45,15 +45,17 @@ The owner's local agent was benchmarked only to answer:
 
 > can this maintainer-side agent recreate the existing basic art packs at higher quality than the earlier baseline?
 
-The initial Forest/Meadow comparison provided useful evidence that it can improve several environment asset categories.
+That question is now answered positively at pack scale for Forest/Meadow and Workshop: the local maintainer agent is producing materially stronger candidate families overall.
 
 This is **not evidence about arbitrary future user agents** and must not become a model dependency of Greia.
 
 The later v0.1/v0.2/v0.3/hero-tree refinement loop became too specimen-focused. Preserve it as provenance, but **do not continue hero-tree optimization as a milestone**.
 
-Current maintainer-side next action:
+Current maintainer-side state:
 
-> reauthor the complete Forest/Meadow base pack at pack scale, preserve the old pack, produce comparative evidence, obtain owner pixel review, then move to the next pack.
+- Forest/Meadow v0.3 is promoted as the preferred authoring pack using a selective hybrid: 23 candidate roles + 5 retained v0.2 roles + 2 preferred ingredients;
+- Workshop reauthoring candidate is owner-reviewed as stronger overall than v0.1, but direct 19/19 replacement is rejected because some old/new assets are meaningfully different toolbox objects;
+- Workshop is now in one bounded finalization/promotion-candidate gate.
 
 Plan:
 
@@ -117,9 +119,11 @@ assets/visual/ui/
 assets/visual/library/
 ```
 
-The current legacy packs remain provenance/baseline until stronger candidates are independently reviewed and promoted.
+Forest/Meadow v0.3 is now the preferred promoted authoring pack. Its catalogue records 28 promoted roles with explicit source provenance and two promoted authoring ingredients. v0.2 remains historical provenance.
 
-Do not overwrite accepted/current pack sources during candidate creation.
+Workshop v0.1 remains the current baseline while the stronger 2026-08-21 candidate is finalized for a proposed v0.2 toolbox.
+
+Do not overwrite accepted/current pack sources during candidate creation or finalization.
 
 ---
 
@@ -184,37 +188,38 @@ Do not resume Nascondino migration until the base-art/toolbox and user-agent wor
 
 ---
 
-# 7. Local-agent benchmark evidence — correct interpretation
+# 7. Maintainer-agent evidence — correct interpretation
 
-Useful finding:
+Established:
 
-- the owner's local agent can produce stronger representative Forest/Meadow masters than the original baseline in multiple categories.
+- the owner's local maintainer agent can produce stronger environment/room source families than the original baseline at useful pack scale;
+- Forest/Meadow has therefore been selectively promoted to v0.3;
+- Workshop candidate is also stronger overall and is now being finalized as a toolbox rather than forced replacement set.
 
 Not established:
 
 - that arbitrary other agents can do the same;
 - that the owner's agent's exact geometric/SVG techniques should become universal rules;
 - that a repeatedly refined hero tree predicts Activity-authoring performance;
-- that the candidate Authoring Kit versions are final standards.
+- that old assets should be discarded whenever a new drawing exists.
 
-The tree benchmark chain is now closed as a workstream.
-
-Preserve these folders as evidence/provenance only:
+Important promotion lesson:
 
 ```text
-assets/visual/authoring_candidates/
-assets/visual/authoring_kit/*-candidate/
-docs/reviews/visual/2026-08-21_authoring-*/
-docs/reviews/visual/2026-08-21_hero-tree-quality-ceiling/
+newer asset ≠ automatic replacement
 ```
 
-Do not let them become the main architecture.
+When old/new assets depict meaningfully different useful objects, preserve both under distinct semantic IDs. This is now explicit in the base-pack plan.
+
+The tree benchmark chain is closed as a workstream.
+
+Preserve historical candidate/benchmark folders as evidence/provenance; do not let them become the main architecture.
 
 ---
 
 # 8. Generic user-agent authoring workflow
 
-The user-agent skill now owns the stable Activity authoring decision:
+The user-agent skill owns the stable Activity authoring decision:
 
 ### REUSE
 Use a finished art-pack/shared asset directly when it fits.
@@ -258,12 +263,23 @@ Numeric layout claims should come from runtime/source geometry when possible rat
 
 ## Maintainer/content track
 
-1. stop hero-tree work;
-2. reauthor complete Forest/Meadow candidate pack;
-3. produce baseline-vs-candidate pack evidence and owner ZIP;
-4. owner reviews actual pixels;
-5. promote accepted assets;
-6. continue pack-by-pack according to `2026-08-21_BASE_ART_PACK_REAUTHORING.md`.
+Forest/Meadow authoring is closed at promoted v0.3 for this track.
+
+Current exact task:
+
+```text
+docs/testing/2026-08-21_WORKSHOP_PACK_FINALIZATION.md
+```
+
+This bounded gate must:
+
+1. resolve brush bundle, paper stack and desk-lamp decisions;
+2. preserve meaningful shelf/blocks/note/light old/new variants under distinct semantic IDs;
+3. select only useful authoring ingredients;
+4. produce an exact proposed Workshop v0.2 inventory and owner-review ZIP;
+5. stop Workshop authoring and wait for owner promotion review.
+
+After Workshop v0.2 promotion, move immediately to Clinic/Care pack reauthoring.
 
 ## User-agent capability track
 
@@ -276,7 +292,7 @@ Numeric layout claims should come from runtime/source geometry when possible rat
 
 # 11. Platform boundary
 
-R7 remains the primary blocking platform phase. Nothing in this visual authoring correction closes, reorders or bypasses R7.
+R7 remains the primary blocking platform phase. Nothing in this visual authoring/content work closes, reorders or bypasses R7.
 
 No physical Acer/Pi acceptance should be claimed unless actually performed.
 
@@ -288,6 +304,7 @@ No physical Acer/Pi acceptance should be claimed unless actually performed.
 - treating the local agent as representative of user agents;
 - deriving general architecture from one maintainer agent's output quirks;
 - building a giant shared runtime warehouse of every final prop;
+- forced one-for-one pack replacement when old/new assets are meaningfully different;
 - background-only Activity polish while gameplay visuals remain primitive;
 - rigid geometric authoring templates;
 - arbitrary runtime asset discovery;
