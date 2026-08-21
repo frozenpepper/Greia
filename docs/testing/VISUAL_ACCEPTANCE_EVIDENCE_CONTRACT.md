@@ -75,11 +75,15 @@ The local agent must inspect the actual pixels, not only simulator state JSON.
 
 Any visible defect above is a **FAIL to fix**, not a note to ignore because the interaction technically works.
 
+A local-agent `REVIEW.md` is evidence, not authority over the source. A later reviewer must cross-check claims that can be derived objectively from source/runtime state. If the review says `22 px` while source renders `18 px`, or says `pillarbox` while the scene declares `cover`, the evidence is internally inconsistent and the visual gate is not closed until corrected.
+
 ## Typography guardrail
 
 Follow `docs/design/GREIA_VISUAL_STYLE_GUIDE.md`.
 
 At the 1024×600 reference size, meaningful child-facing text should generally not fall below about **18 px**. Primary controls normally target the larger documented control scale. If a rendered screen violates that guidance, `REVIEW.md` must identify the exact reason and the gate must not silently call the result acceptable.
+
+For new or substantially revised child-facing HUD/navigation work, **18 px is a lower emergency floor rather than a design target**. Prefer the documented ~21–24 px ordinary child-text range and larger primary-control scale when geometry permits. Do not shrink important labels merely to preserve an undersized container.
 
 Activity-name ellipsis remains an intentional last-resort behavior where the Activity-card contract allows it. Ordinary button labels must not be silently clipped to make geometry pass.
 
@@ -115,6 +119,10 @@ Where the renderer can expose the information, record at least:
 
 The exact schema may grow, but the intent is stable: make clipping, text size and accidental geometry regressions visible to tooling as well as reviewers.
 
+**Do not hand-transcribe geometry that the program can report.** The audit must be generated from the same runtime/source values that actually produced the captured frame. At minimum, the local agent must show how each recorded font size/control rectangle was obtained. A manually invented audit that disagrees with source invalidates that portion of the evidence.
+
+For fixed-reference-canvas Activities, distinguish profile `InterfaceSize` scaling from physical viewport scaling. If the Activity canvas already handles physical scaling, do not claim that a HUD responds to `large`/`compact` merely because the final screenshot was resized by the canvas.
+
 ## Acceptance rule
 
 A visual gate may be recorded as `SIMULATOR VISUAL REVIEW` only when all of the following are true:
@@ -122,11 +130,12 @@ A visual gate may be recorded as `SIMULATOR VISUAL REVIEW` only when all of the 
 - the simulator/runtime cases passed;
 - the curated screenshots exist in the committed review directory;
 - `REVIEW.md` records an actual pixel-level visual inspection;
+- source/runtime cross-checks do not contradict the review/audit;
 - layout audit does not reveal an unaddressed clipping/overlap/text-size defect;
 - fail-soft behavior remains usable where the gate requires it;
 - evidence scope is not overstated as physical-hardware approval.
 
-When a subsequent reviewer has repository access, they should review the committed curated screenshots before treating the visual result as closed.
+When a subsequent reviewer has repository access, they should review the committed curated screenshots before treating the visual result as closed. If that review environment cannot directly display private-repository PNG bytes, it must say so explicitly and must not relabel the local-agent pixel review as its own independent visual inspection.
 
 ## Repository-size rule
 
