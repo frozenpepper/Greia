@@ -166,6 +166,7 @@ class _FakeCache:
         self.failures = failures or set()
         self.calls: list[tuple[str, str, tuple[int, int]]] = []
         self.surface = _FakeSurface()
+        self.clear_count = 0
 
     def get(self, asset_id: str, *, variant: str, size: tuple[int, int]):
         self.calls.append((asset_id, variant, size))
@@ -174,7 +175,7 @@ class _FakeCache:
         return self.surface
 
     def clear(self) -> None:
-        pass
+        self.clear_count += 1
 
 
 class PygameSceneRendererTests(unittest.TestCase):
@@ -205,11 +206,25 @@ class PygameSceneRendererTests(unittest.TestCase):
         self.assertIsNone(cache.surface.alpha)
         self.assertEqual(stats.drawn_nodes, 1)
 
-    def test_optional_asset_failure_is_isolated(self) -> None:
-        renderer = PygameSceneRenderer(_FakeCache({"asset"}), pygame_module=_FakePygame)
-        stats = renderer.draw(self._scene(optional=True), _FakeTarget())
-        self.assertEqual(stats.skipped_optional_nodes, 1)
-        self.assertEqual(stats.drawn_nodes, 0)
+    def test_optional_asset_failure_is_isolated_and_not_retried_every_frame(self) -> None:
+        cache = _FakeCache({"asset"})
+        renderer = PygameSceneRenderer(cache, pygame_module=_FakePygame)
+        first = renderer.draw(self._scene(optional=True), _FakeTarget())
+        second = renderer.draw(self._scene(optional=True), _FakeTarget())
+        self.assertEqual(first.skipped_optional_nodes, 1)
+        self.assertEqual(second.skipped_optional_nodes, 1)
+        self.assertEqual(first.drawn_nodes, 0)
+        self.assertEqual(second.drawn_nodes, 0)
+        self.assertEqual(cache.calls, [("asset", "default", (200, 100))])
+
+    def test_clear_allows_optional_asset_retry_after_explicit_invalidation(self) -> None:
+        cache = _FakeCache({"asset"})
+        renderer = PygameSceneRenderer(cache, pygame_module=_FakePygame)
+        renderer.draw(self._scene(optional=True), _FakeTarget())
+        renderer.clear()
+        renderer.draw(self._scene(optional=True), _FakeTarget())
+        self.assertEqual(len(cache.calls), 2)
+        self.assertEqual(cache.clear_count, 1)
 
     def test_required_asset_failure_aborts_scene(self) -> None:
         renderer = PygameSceneRenderer(_FakeCache({"asset"}), pygame_module=_FakePygame)
