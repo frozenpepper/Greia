@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" width="100%" height="100%">
+  <defs>
+    <linearGradient id="wickerGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FDE68A" />
+      <stop offset="50%" stop-color="#D97706" />
+      <stop offset="100%" stop-color="#92400E" />
+    </linearGradient>
+    <radialGradient id="basketDrop" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="rgba(15,23,42,0.3)" />
+      <stop offset="100%" stop-color="rgba(15,23,42,0)" />
+    </radialGradient>
+    <filter id="bShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#0F172A" flood-opacity="0.2" />
+    </filter>
+  </defs>
+
+  <ellipse cx="120" cy="165" rx="85" ry="10" fill="url(#basketDrop)" />
+
+  <!-- Side Loop Handles -->
+  <path d="M 35,80 C 15,50 45,35 60,65" fill="none" stroke="#B45309" stroke-width="6" stroke-linecap="round" />
+  <path d="M 205,80 C 225,50 195,35 180,65" fill="none" stroke="#B45309" stroke-width="6" stroke-linecap="round" />
+
+  <!-- Basket Outer Bowl -->
+  <path d="M 40,65 Q 120,80 200,65 L 180,155 Q 120,168 60,155 Z" fill="url(#wickerGrad)" filter="url(#bShadow)" />
+
+  <!-- Interior Cavity (Deep, Empty) -->
+  <ellipse cx="120" cy="65" rx="78" ry="18" fill="#78350F" />
+  <ellipse cx="120" cy="67" rx="72" ry="14" fill="#451A03" />
+
+  <!-- Woven Braided Rim -->
+  <ellipse cx="120" cy="65" rx="80" ry="18" fill="none" stroke="#FBBF24" stroke-width="5" />
+  <ellipse cx="120" cy="65" rx="80" ry="18" fill="none" stroke="#B45309" stroke-width="5" stroke-dasharray="8 6" />
+
+  <!-- Woven Herringbone Lattice Pattern on Front Body -->
+  <!-- Horizontal Weave Bands -->
+  <path d="M 44,85 Q 120,100 196,85" fill="none" stroke="#78350F" stroke-width="2" opacity="0.6" />
+  <path d="M 50,110 Q 120,125 190,110" fill="none" stroke="#78350F" stroke-width="2" opacity="0.6" />
+  <path d="M 56,135 Q 120,148 184,135" fill="none" stroke="#78350F" stroke-width="2" opacity="0.6" />
+
+  <!-- Diagonal Cross Wefts -->
+  <path d="M 50,75 L 75,158 M 80,78 L 105,160 M 110,79 L 135,160 M 140,78 L 165,158 M 170,75 L 185,140" fill="none" stroke="#FEF08A" stroke-width="2.5" opacity="0.7" />
+  <path d="M 190,75 L 165,158 M 160,78 L 135,160 M 130,79 L 105,160 M 100,78 L 75,158 M 70,75 L 55,140" fill="none" stroke="#92400E" stroke-width="2.5" opacity="0.5" />
+</svg>

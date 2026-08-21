@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 360" width="100%" height="100%">
+  <defs>
+    <linearGradient id="oakChair" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#D97706" />
+      <stop offset="50%" stop-color="#B45309" />
+      <stop offset="100%" stop-color="#78350F" />
+    </linearGradient>
+    <linearGradient id="seatBevel" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FDE68A" />
+      <stop offset="40%" stop-color="#D97706" />
+      <stop offset="100%" stop-color="#92400E" />
+    </linearGradient>
+    <radialGradient id="chairShadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="rgba(15,23,42,0.3)" />
+      <stop offset="100%" stop-color="rgba(15,23,42,0)" />
+    </radialGradient>
+    <filter id="drop" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#0F172A" flood-opacity="0.2" />
+    </filter>
+  </defs>
+
+  <ellipse cx="120" cy="345" rx="85" ry="10" fill="url(#chairShadow)" />
+
+  <!-- Back Legs (Darker) -->
+  <polygon points="58,190 52,335 60,335 68,190" fill="#78350F" />
+  <polygon points="182,190 188,335 180,335 172,190" fill="#78350F" />
+
+  <!-- Leg Stretchers / Rungs -->
+  <rect x="54" y="275" width="132" height="7" rx="3" fill="#78350F" />
+  <rect x="65" y="240" width="110" height="6" rx="3" fill="#92400E" />
+
+  <!-- Spindles (5 vertical turned rods) -->
+  <rect x="75" y="45" width="7" height="145" rx="3" fill="url(#oakChair)" />
+  <rect x="95" y="38" width="7" height="152" rx="3" fill="url(#oakChair)" />
+  <rect x="116.5" y="35" width="7" height="155" rx="3" fill="url(#oakChair)" />
+  <rect x="138" y="38" width="7" height="152" rx="3" fill="url(#oakChair)" />
+  <rect x="158" y="45" width="7" height="145" rx="3" fill="url(#oakChair)" />
+
+  <!-- Curved Back Bow / Crest Rail -->
+  <path d="M 45,65 C 60,25 180,25 195,65 C 185,75 175,70 120,48 C 65,70 55,75 45,65 Z" fill="url(#oakChair)" filter="url(#drop)" />
+  <!-- Side Stile Posts -->
+  <polygon points="45,65 52,195 62,195 57,65" fill="url(#oakChair)" />
+  <polygon points="195,65 188,195 178,195 183,65" fill="url(#oakChair)" />
+
+  <!-- Sculpted Wooden Seat (Dished saddle contour) -->
+  <ellipse cx="120" cy="190" rx="78" ry="18" fill="url(#seatBevel)" filter="url(#drop)" />
+  <ellipse cx="120" cy="188" rx="68" ry="12" fill="#D97706" opacity="0.7" />
+  <!-- Front Seat Apron Edge -->
+  <path d="M 44,190 Q 120,206 196,190 L 196,202 Q 120,218 44,202 Z" fill="#92400E" />
+
+  <!-- Front Legs (Turned, Brighter) -->
+  <!-- Left Leg -->
+  <polygon points="62,200 48,340 58,340 72,200" fill="url(#oakChair)" filter="url(#drop)" />
+  <circle cx="59" cy="245" r="5" fill="#F59E0B" />
+  <circle cx="54" cy="295" r="4.5" fill="#F59E0B" />
+
+  <!-- Right Leg -->
+  <polygon points="178,200 192,340 182,340 168,200" fill="url(#oakChair)" filter="url(#drop)" />
+  <circle cx="181" cy="245" r="5" fill="#F59E0B" />
+  <circle cx="186" cy="295" r="4.5" fill="#F59E0B" />
+</svg>

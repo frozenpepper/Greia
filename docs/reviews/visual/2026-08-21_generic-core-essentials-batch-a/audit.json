@@ -1,0 +1,42 @@
+{
+  "task": "GENERIC_CORE_ESSENTIALS_BATCH_A",
+  "date": "2026-08-21",
+  "status": "CANDIDATE_BATCH_READY_FOR_OWNER_REVIEW",
+  "candidate_directory": "assets/visual/pack_candidates/generic_core_essentials/2026-08-21/",
+  "finished_assets_count": 16,
+  "authoring_ingredients_count": 2,
+  "finished_assets": [
+    "door_timber_closed.svg",
+    "door_timber_ajar.svg",
+    "opening_arch_simple.svg",
+    "chair_spindle_wood.svg",
+    "armchair_soft_reading.svg",
+    "bookcase_tall_open.svg",
+    "book_open_picture_book.svg",
+    "books_stack_mixed.svg",
+    "plant_potted_fern.svg",
+    "basket_woven_empty.svg",
+    "plate_ceramic_empty.svg",
+    "bowl_ceramic_empty.svg",
+    "cup_saucer_ceramic.svg",
+    "gear_wooden.svg",
+    "gears_interlocking_pair.svg",
+    "dial_hands_blank.svg"
+  ],
+  "ingredients": [
+    "ingredients/ingredient_door_hinge_handle.svg",
+    "ingredients/ingredient_mechanical_axle_hands.svg"
+  ],
+  "evidence_sheets": [
+    "01-full-candidate-inventory.png",
+    "02-architecture-furniture.png",
+    "03-books-plant-basket.png",
+    "04-neutral-tableware.png",
+    "05-mechanical-components.png",
+    "06-runtime-sizes.png",
+    "07-interior-vignette.png",
+    "08-tabletop-reading-vignette.png",
+    "09-maker-vignette.png",
+    "10-detail-crops.png"
+  ]
+}

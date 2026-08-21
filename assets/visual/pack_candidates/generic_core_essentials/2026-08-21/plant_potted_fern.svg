@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 280" width="100%" height="100%">
+  <defs>
+    <linearGradient id="potTerra" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#EA580C" />
+      <stop offset="60%" stop-color="#C2410C" />
+      <stop offset="100%" stop-color="#9A3412" />
+    </linearGradient>
+    <radialGradient id="plantDropShadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="rgba(15,23,42,0.3)" />
+      <stop offset="100%" stop-color="rgba(15,23,42,0)" />
+    </radialGradient>
+    <filter id="fernShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#0F172A" flood-opacity="0.2" />
+    </filter>
+  </defs>
+
+  <ellipse cx="110" cy="265" rx="65" ry="10" fill="url(#plantDropShadow)" />
+
+  <!-- Saucer Tray -->
+  <ellipse cx="110" cy="255" rx="55" ry="10" fill="#9A3412" />
+  <ellipse cx="110" cy="253" rx="52" ry="8" fill="#C2410C" />
+
+  <!-- Terracotta Pot -->
+  <polygon points="68,175 152,175 142,250 78,250" fill="url(#potTerra)" filter="url(#fernShadow)" />
+  <!-- Pot Rolled Rim -->
+  <rect x="62" y="165" width="96" height="16" rx="4" fill="#EA580C" filter="url(#fernShadow)" />
+  <ellipse cx="110" cy="168" rx="46" ry="6" fill="#7C2D12" />
+
+  <!-- Soil Mound -->
+  <ellipse cx="110" cy="169" rx="42" ry="5" fill="#451A03" />
+
+  <!-- Fern Fronds (Lush Layered Gouache Leaves) -->
+  <!-- Back Fronds (Dark Olive Green) -->
+  <path d="M 110,165 Q 50,110 20,105 Q 45,130 110,165 Z" fill="#14532D" />
+  <path d="M 110,165 Q 170,110 200,105 Q 175,130 110,165 Z" fill="#14532D" />
+  <path d="M 110,165 Q 110,70 110,35 Q 120,70 110,165 Z" fill="#166534" />
+
+  <!-- Mid Fronds (Rich Emerald Green with Scalloped Leaflets) -->
+  <path d="M 110,165 Q 70,80 40,50 Q 80,95 110,165 Z" fill="#15803D" />
+  <path d="M 110,165 Q 150,80 180,50 Q 140,95 110,165 Z" fill="#15803D" />
+
+  <!-- Left Arching Frond -->
+  <path d="M 110,165 Q 30,140 15,160 Q 40,170 110,165 Z" fill="#16A34A" />
+  <!-- Right Arching Frond -->
+  <path d="M 110,165 Q 190,140 205,160 Q 180,170 110,165 Z" fill="#16A34A" />
+
+  <!-- Front Bright Fronds (Vibrant Spring Mint Green) -->
+  <path d="M 110,165 Q 80,120 70,90 Q 95,130 110,165 Z" fill="#22C55E" />
+  <path d="M 110,165 Q 140,120 150,90 Q 125,130 110,165 Z" fill="#22C55E" />
+  <path d="M 110,165 Q 110,110 110,75 Q 116,110 110,165 Z" fill="#4ADE80" />
+
+  <!-- Specular highlights on pot -->
+  <path d="M 70,178 L 78,245 L 88,245 L 80,178 Z" fill="#FDBA74" opacity="0.4" />
+</svg>

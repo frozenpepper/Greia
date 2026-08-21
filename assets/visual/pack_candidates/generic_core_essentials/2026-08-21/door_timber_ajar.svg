@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="frameGradAjar" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#78350F" />
+      <stop offset="100%" stop-color="#92400E" />
+    </linearGradient>
+    <linearGradient id="doorFace" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#B45309" />
+      <stop offset="100%" stop-color="#D97706" />
+    </linearGradient>
+    <linearGradient id="doorEdge" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#78350F" />
+      <stop offset="100%" stop-color="#451A03" />
+    </linearGradient>
+    <linearGradient id="interiorRoom" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FEF3C7" />
+      <stop offset="100%" stop-color="#FDE68A" />
+    </linearGradient>
+    <radialGradient id="shadowAjar" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="rgba(15,23,42,0.35)" />
+      <stop offset="100%" stop-color="rgba(15,23,42,0)" />
+    </radialGradient>
+    <filter id="doorShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="6" dy="8" stdDeviation="6" flood-color="#0F172A" flood-opacity="0.3" />
+    </filter>
+  </defs>
+
+  <ellipse cx="170" cy="485" rx="150" ry="12" fill="url(#shadowAjar)" />
+
+  <!-- Frame Opening -->
+  <rect x="25" y="20" width="250" height="460" rx="8" fill="url(#frameGradAjar)" />
+  <!-- Interior Room Reveal -->
+  <rect x="35" y="30" width="230" height="445" rx="4" fill="url(#interiorRoom)" />
+  
+  <!-- Perspective Floor inside opening -->
+  <polygon points="35,390 265,390 265,475 35,475" fill="#D97706" opacity="0.25" />
+  <!-- Interior baseboard line -->
+  <line x1="35" y1="390" x2="265" y2="390" stroke="#B45309" stroke-width="3" opacity="0.4" />
+
+  <!-- Open Door Leaf in Perspective -->
+  <!-- Cast shadow of open door -->
+  <polygon points="35,470 170,490 190,480 35,450" fill="rgba(15,23,42,0.2)" />
+
+  <!-- Door Leaf Face (Perspective Polygon) -->
+  <polygon points="38,35 175,65 175,475 38,470" fill="url(#doorFace)" filter="url(#doorShadow)" />
+
+  <!-- Door Thickness Edge -->
+  <polygon points="175,65 188,68 188,472 175,475" fill="url(#doorEdge)" />
+
+  <!-- Perspective Panels on Door Face -->
+  <!-- Upper Left -->
+  <polygon points="50,60 100,70 100,230 50,225" fill="#92400E" opacity="0.8" />
+  <polygon points="53,64 97,73 97,226 53,222" fill="#D97706" />
+
+  <!-- Upper Right -->
+  <polygon points="112,72 162,82 162,240 112,232" fill="#92400E" opacity="0.8" />
+  <polygon points="115,76 159,85 159,236 115,229" fill="#D97706" />
+
+  <!-- Lower Left -->
+  <polygon points="50,250 100,258 100,440 50,435" fill="#92400E" opacity="0.8" />
+  <polygon points="53,254 97,261 97,436 53,432" fill="#D97706" />
+
+  <!-- Lower Right -->
+  <polygon points="112,260 162,268 162,450 112,442" fill="#92400E" opacity="0.8" />
+  <polygon points="115,264 159,271 159,446 115,439" fill="#D97706" />
+
+  <!-- Knob on Edge -->
+  <circle cx="180" cy="265" r="7" fill="#FBBF24" stroke="#78350F" stroke-width="1.5" />
+  <circle cx="178" cy="263" r="2.5" fill="#FEF08A" />
+</svg>

@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 380" width="100%" height="100%">
+  <defs>
+    <linearGradient id="fabricGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#86EFAC" />
+      <stop offset="40%" stop-color="#4ADE80" />
+      <stop offset="100%" stop-color="#16A34A" />
+    </linearGradient>
+    <linearGradient id="cushionGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#BBF7D0" />
+      <stop offset="60%" stop-color="#4ADE80" />
+      <stop offset="100%" stop-color="#15803D" />
+    </linearGradient>
+    <linearGradient id="woodFoot" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#78350F" />
+      <stop offset="100%" stop-color="#451A03" />
+    </linearGradient>
+    <radialGradient id="chairFloor" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="rgba(15,23,42,0.3)" />
+      <stop offset="100%" stop-color="rgba(15,23,42,0)" />
+    </radialGradient>
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="6" stdDeviation="5" flood-color="#0F172A" flood-opacity="0.2" />
+    </filter>
+  </defs>
+
+  <ellipse cx="170" cy="362" rx="140" ry="14" fill="url(#chairFloor)" />
+
+  <!-- Wooden Feet -->
+  <polygon points="65,310 50,360 65,360 78,310" fill="url(#woodFoot)" />
+  <polygon points="275,310 290,360 275,360 262,310" fill="url(#woodFoot)" />
+  <polygon points="110,310 100,355 112,355 120,310" fill="#451A03" />
+  <polygon points="230,310 240,355 228,355 220,310" fill="#451A03" />
+
+  <!-- Backrest Tufted Wingback -->
+  <path d="M 60,180 C 45,90 85,25 170,25 C 255,25 295,90 280,180 Z" fill="url(#fabricGrad)" filter="url(#softShadow)" />
+
+  <!-- Tufting Dimples / Buttons on Backrest -->
+  <!-- Row 1 -->
+  <circle cx="130" cy="80" r="4.5" fill="#15803D" />
+  <circle cx="170" cy="80" r="4.5" fill="#15803D" />
+  <circle cx="210" cy="80" r="4.5" fill="#15803D" />
+  <!-- Row 2 -->
+  <circle cx="110" cy="120" r="4.5" fill="#15803D" />
+  <circle cx="150" cy="120" r="4.5" fill="#15803D" />
+  <circle cx="190" cy="120" r="4.5" fill="#15803D" />
+  <circle cx="230" cy="120" r="4.5" fill="#15803D" />
+  <!-- Crease stitch lines -->
+  <line x1="130" y1="80" x2="150" y2="120" stroke="#166534" stroke-width="1.5" opacity="0.6" />
+  <line x1="170" y1="80" x2="190" y2="120" stroke="#166534" stroke-width="1.5" opacity="0.6" />
+  <line x1="170" y1="80" x2="150" y2="120" stroke="#166534" stroke-width="1.5" opacity="0.6" />
+  <line x1="210" y1="80" x2="190" y2="120" stroke="#166534" stroke-width="1.5" opacity="0.6" />
+
+  <!-- Armrests Left & Right (Rolled scrolls) -->
+  <!-- Left Arm -->
+  <path d="M 35,210 C 25,160 70,160 85,210 L 85,280 C 85,300 45,300 35,280 Z" fill="url(#fabricGrad)" filter="url(#softShadow)" />
+  <ellipse cx="58" cy="180" rx="22" ry="14" fill="#BBF7D0" />
+  <circle cx="58" cy="180" r="7" fill="#22C55E" />
+
+  <!-- Right Arm -->
+  <path d="M 305,210 C 315,160 270,160 255,210 L 255,280 C 255,300 295,300 305,280 Z" fill="url(#fabricGrad)" filter="url(#softShadow)" />
+  <ellipse cx="282" cy="180" rx="22" ry="14" fill="#BBF7D0" />
+  <circle cx="282" cy="180" r="7" fill="#22C55E" />
+
+  <!-- Thick Base Cushion -->
+  <path d="M 65,220 Q 170,205 275,220 L 285,290 Q 170,305 55,290 Z" fill="url(#cushionGrad)" filter="url(#softShadow)" />
+  <ellipse cx="170" cy="235" rx="100" ry="20" fill="#BBF7D0" opacity="0.6" />
+  <!-- Welting / Piping Bead -->
+  <path d="M 55,290 Q 170,305 285,290" fill="none" stroke="#15803D" stroke-width="3" />
+</svg>

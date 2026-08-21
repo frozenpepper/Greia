@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="archWood" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#78350F" />
+      <stop offset="30%" stop-color="#B45309" />
+      <stop offset="70%" stop-color="#D97706" />
+      <stop offset="100%" stop-color="#78350F" />
+    </linearGradient>
+    <linearGradient id="archBevel" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FDE68A" />
+      <stop offset="100%" stop-color="#D97706" />
+    </linearGradient>
+    <radialGradient id="archFloorShadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="rgba(15,23,42,0.25)" />
+      <stop offset="100%" stop-color="rgba(15,23,42,0)" />
+    </radialGradient>
+    <filter id="archShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#0F172A" flood-opacity="0.2" />
+    </filter>
+  </defs>
+
+  <ellipse cx="170" cy="485" rx="150" ry="12" fill="url(#archFloorShadow)" />
+
+  <!-- Outer Molded Arch -->
+  <path d="M 20,480 L 20,180 Q 20,20 170,20 Q 320,20 320,180 L 320,480 L 280,480 L 280,180 Q 280,60 170,60 Q 60,60 60,180 L 60,480 Z" fill="url(#archWood)" filter="url(#archShadow)" />
+
+  <!-- Inner Trim & Keystone Accent -->
+  <path d="M 50,480 L 50,180 Q 50,50 170,50 Q 290,50 290,180 L 290,480 L 275,480 L 275,180 Q 275,65 170,65 Q 65,65 65,180 L 65,480 Z" fill="url(#archBevel)" opacity="0.6" />
+
+  <!-- Keystone Center Block -->
+  <polygon points="150,15 190,15 185,55 155,55" fill="url(#archWood)" stroke="#451A03" stroke-width="1.5" />
+  <polygon points="154,19 186,19 182,51 158,51" fill="#F59E0B" opacity="0.4" />
+
+  <!-- Left/Right Base Plinths -->
+  <rect x="15" y="440" width="50" height="40" rx="4" fill="#78350F" stroke="#451A03" stroke-width="1.5" />
+  <rect x="275" y="440" width="50" height="40" rx="4" fill="#78350F" stroke="#451A03" stroke-width="1.5" />
+  <rect x="18" y="443" width="44" height="6" fill="#F59E0B" opacity="0.6" />
+  <rect x="278" y="443" width="44" height="6" fill="#F59E0B" opacity="0.6" />
+
+  <!-- Impost Moldings -->
+  <rect x="15" y="175" width="50" height="14" rx="2" fill="#92400E" stroke="#451A03" stroke-width="1" />
+  <rect x="275" y="175" width="50" height="14" rx="2" fill="#92400E" stroke="#451A03" stroke-width="1" />
+</svg>

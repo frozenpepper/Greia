@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+  <defs>
+    <linearGradient id="brassBezel" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FEF08A" />
+      <stop offset="50%" stop-color="#D97706" />
+      <stop offset="100%" stop-color="#78350F" />
+    </linearGradient>
+    <linearGradient id="dialFaceGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="70%" stop-color="#F8FAFC" />
+      <stop offset="100%" stop-color="#E2E8F0" />
+    </linearGradient>
+    <radialGradient id="dialDrop" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="rgba(15,23,42,0.3)" />
+      <stop offset="100%" stop-color="rgba(15,23,42,0)" />
+    </radialGradient>
+    <filter id="dShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#0F172A" flood-opacity="0.25" />
+    </filter>
+  </defs>
+
+  <ellipse cx="100" cy="105" rx="85" ry="85" fill="url(#dialDrop)" opacity="0.35" />
+
+  <!-- Outer Brass / Timber Bezel -->
+  <circle cx="100" cy="100" r="85" fill="url(#brassBezel)" stroke="#451A03" stroke-width="2.5" filter="url(#dShadow)" />
+  <circle cx="100" cy="100" r="77" fill="#78350F" />
+  <circle cx="100" cy="100" r="74" fill="url(#brassBezel)" />
+
+  <!-- Dial Cream/White Face -->
+  <circle cx="100" cy="100" r="68" fill="url(#dialFaceGrad)" />
+
+  <!-- 12 Radial Tick Marks (Zero numerals/text) -->
+  <!-- 12, 3, 6, 9 Major Hashes -->
+  <line x1="100" y1="36" x2="100" y2="48" stroke="#1E293B" stroke-width="3.5" stroke-linecap="round" />
+  <line x1="100" y1="152" x2="100" y2="164" stroke="#1E293B" stroke-width="3.5" stroke-linecap="round" />
+  <line x1="36" y1="100" x2="48" y2="100" stroke="#1E293B" stroke-width="3.5" stroke-linecap="round" />
+  <line x1="152" y1="100" x2="164" y2="100" stroke="#1E293B" stroke-width="3.5" stroke-linecap="round" />
+
+  <!-- 8 Minor Hashes (30 deg intervals) -->
+  <line x1="132" y1="44.5" x2="126" y2="55" stroke="#64748B" stroke-width="2" stroke-linecap="round" />
+  <line x1="155.5" y1="68" x2="145" y2="74" stroke="#64748B" stroke-width="2" stroke-linecap="round" />
+  <line x1="155.5" y1="132" x2="145" y2="126" stroke="#64748B" stroke-width="2" stroke-linecap="round" />
+  <line x1="132" y1="155.5" x2="126" y2="145" stroke="#64748B" stroke-width="2" stroke-linecap="round" />
+  <line x1="68" y1="155.5" x2="74" y2="145" stroke="#64748B" stroke-width="2" stroke-linecap="round" />
+  <line x1="44.5" y1="132" x2="55" y2="126" stroke="#64748B" stroke-width="2" stroke-linecap="round" />
+  <line x1="44.5" y1="68" x2="55" y2="74" stroke="#64748B" stroke-width="2" stroke-linecap="round" />
+  <line x1="68" y1="44.5" x2="74" y2="55" stroke="#64748B" stroke-width="2" stroke-linecap="round" />
+
+  <!-- Inner Concentric Calibration Track -->
+  <circle cx="100" cy="100" r="54" fill="none" stroke="#CBD5E1" stroke-width="1.5" stroke-dasharray="3 3" />
+
+  <!-- Long Minute Hand (Teardrop pointer, pointing to ~2 o clock) -->
+  <polygon points="100,100 96,102 135,50 138,55" fill="#DC2626" filter="url(#dShadow)" />
+  <circle cx="134" cy="54" r="3.5" fill="#EF4444" />
+
+  <!-- Short Hour Hand (Teardrop pointer, pointing to ~10 o clock) -->
+  <polygon points="100,100 102,103 65,72 68,68" fill="#1E293B" filter="url(#dShadow)" />
+  <circle cx="68" cy="71" r="3" fill="#334155" />
+
+  <!-- Center Brass Cap / Pivot Nut -->
+  <circle cx="100" cy="100" r="10" fill="#FBBF24" stroke="#78350F" stroke-width="1.5" />
+  <circle cx="100" cy="100" r="4" fill="#92400E" />
+  <circle cx="98" cy="98" r="2" fill="#FEF08A" />
+</svg>
