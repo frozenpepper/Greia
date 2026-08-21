@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<defs>
+  <filter id="shadow-oak" x="-30%" y="-30%" width="160%" height="160%">
+    <feGaussianBlur stdDeviation="8"/>
+  </filter>
+  <linearGradient id="oak-trunk" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="#A5683E"/>
+    <stop offset="30%" stop-color="#88502A"/>
+    <stop offset="70%" stop-color="#693717"/>
+    <stop offset="100%" stop-color="#4B240D"/>
+  </linearGradient>
+  <linearGradient id="oak-sun" x1="0.3" y1="0" x2="0.7" y2="1">
+    <stop offset="0%" stop-color="#9EE27E"/>
+    <stop offset="50%" stop-color="#60C254"/>
+    <stop offset="100%" stop-color="#3A9436"/>
+  </linearGradient>
+  <linearGradient id="oak-mid" x1="0.2" y1="0" x2="0.8" y2="1">
+    <stop offset="0%" stop-color="#58BC52"/>
+    <stop offset="55%" stop-color="#349434"/>
+    <stop offset="100%" stop-color="#1E6822"/>
+  </linearGradient>
+  <linearGradient id="oak-dark" x1="0.1" y1="0" x2="0.9" y2="1">
+    <stop offset="0%" stop-color="#287C2C"/>
+    <stop offset="60%" stop-color="#18561C"/>
+    <stop offset="100%" stop-color="#0E3812"/>
+  </linearGradient>
+</defs>
+
+<!-- Ground Contact Shadows -->
+<ellipse cx="256" cy="456" rx="145" ry="20" fill="#2E2015" opacity="0.20" filter="url(#shadow-oak)"/>
+<ellipse cx="256" cy="454" rx="110" ry="11" fill="#1C120A" opacity="0.35"/>
+
+<!-- Back Shadow Canopy -->
+<path d="M140 230 C105 185 125 125 175 110 C195 70 250 55 295 70 C335 45 400 65 415 115 C455 130 465 190 435 240 C450 280 415 325 365 330 C330 335 290 320 260 330 C220 340 170 325 145 295 C120 270 120 245 140 230 Z" fill="url(#oak-dark)"/>
+
+<!-- Heavy Asymmetrical Trunk & Boughs with Outward Root Base -->
+<g>
+  <path d="M165 455 C190 452 215 440 220 390 C225 335 218 285 190 235 C215 250 235 272 245 305 C250 260 265 215 295 170 C308 148 322 132 340 115 C328 142 324 175 326 210 C330 245 342 272 358 295 C378 265 405 242 438 225 C412 255 392 290 376 330 C364 365 362 405 370 440 C375 452 395 454 415 455 L165 455 Z" fill="url(#oak-trunk)"/>
+  <path d="M165 455 C185 453 205 446 218 430 C224 410 222 375 220 340" fill="none" stroke="#B87B4C" stroke-width="5" stroke-linecap="round" opacity="0.45"/>
+  <path d="M415 455 C395 453 378 446 368 428 C360 405 360 370 366 335" fill="none" stroke="#3A1C08" stroke-width="5" stroke-linecap="round" opacity="0.45"/>
+  <path d="M260 455 C264 430 262 385 268 330" fill="none" stroke="#B87B4C" stroke-width="4" stroke-linecap="round" opacity="0.35"/>
+  <path d="M305 455 C308 430 305 385 312 335" fill="none" stroke="#3A1C08" stroke-width="4" stroke-linecap="round" opacity="0.35"/>
+  <path d="M210 270 C180 248 145 238 110 240 C140 230 175 232 205 252 Z" fill="#693717"/>
+  <path d="M345 280 C375 258 410 248 445 250 C415 240 380 242 352 262 Z" fill="#4B240D"/>
+</g>
+
+<!-- Mid-Canopy Broad Spreading Masses -->
+<g fill="url(#oak-mid)">
+  <path d="M110 260 C88 220 105 175 145 158 C175 145 210 155 228 175 C242 195 245 225 232 252 C218 280 180 298 148 295 C122 292 112 278 110 260 Z"/>
+  <path d="M320 288 C305 250 322 205 360 188 C392 172 435 182 452 212 C468 242 458 280 430 305 C398 328 348 320 320 288 Z"/>
+  <path d="M165 215 C142 160 178 102 232 90 C265 82 302 95 325 118 C355 98 400 105 418 140 C435 175 425 220 395 248 C360 280 305 288 258 280 C210 272 178 248 165 215 Z"/>
+</g>
+
+<!-- Sunlit Fore-Crown Masses (Matte Form Shading) -->
+<g fill="url(#oak-sun)">
+  <path d="M210 120 C192 75 230 30 280 25 C320 20 360 42 372 75 C398 70 430 88 435 120 C440 152 415 185 380 195 C345 205 300 198 275 180 C238 190 200 170 198 138 C196 128 202 122 210 120 Z"/>
+  <path d="M145 168 C128 128 158 88 200 82 C228 78 255 92 268 115 C248 148 215 178 178 180 C158 180 148 175 145 168 Z"/>
+  <path d="M325 135 C318 95 352 65 390 68 C422 70 445 95 442 128 C440 155 415 180 388 182 C355 185 330 162 325 135 Z"/>
+</g>
+
+<!-- Soft Matte Sunlit Sheen (No Specular Blobs) -->
+<g fill="#D5F7C8" opacity="0.45">
+  <ellipse cx="275" cy="55" rx="50" ry="22" transform="rotate(-6 275 55)"/>
+  <ellipse cx="190" cy="115" rx="38" ry="16" transform="rotate(-12 190 115)"/>
+  <ellipse cx="380" cy="98" rx="34" ry="15" transform="rotate(10 380 98)"/>
+</g>
+
+<!-- Crevice Shadows -->
+<g fill="#0E3812" opacity="0.45">
+  <path d="M155 192 C185 202 220 198 245 185 C215 202 180 208 150 198 Z"/>
+  <path d="M280 195 C320 205 365 200 395 185 C360 202 315 208 275 198 Z"/>
+</g>
+</svg>

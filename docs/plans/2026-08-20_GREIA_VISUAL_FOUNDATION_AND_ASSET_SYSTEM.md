@@ -622,9 +622,14 @@ The entries below preserve the workstream chronology. Corrections/new state are 
 
 ## 2026-08-21 — Visual Authoring Library Comparison Benchmark
 - Executed quality benchmark against baseline `forest_meadow/v0.2/` per `docs/testing/2026-08-21_VISUAL_AUTHORING_LIBRARY_COMPARISON.md`.
-- Authored 8 candidate challenger assets under `assets/visual/authoring_candidates/2026-08-21_forest_meadow_comparison/` (`tree_hero`, `tree_secondary`, `bush_flowering`, `rock_cluster_large`, `cloud_large`, `grass_edge`, `sunlight_rays`, `hollow_tree_study`).
-- Rendered side-by-side contact sheet, 256/128/64px scaling comparisons, 1024×600 forest meadow scenes, and 2.5x detail crops under `docs/reviews/visual/2026-08-21_authoring-library-comparison/`.
-- Assembled `./GREIA_VISUAL_REVIEW_AUTHORING_LIBRARY_COMPARISON_2026-08-21.zip` for owner/ChatGPT independent pixel inspection.
+- Primary review (`PRIMARY_REVIEW.md`) confirmed local authoring agent superiority over legacy baseline.
+- Assembled `./GREIA_VISUAL_REVIEW_AUTHORING_LIBRARY_COMPARISON_2026-08-21.zip`.
 
-**Next exact action:** Owner pixel review of Visual Authoring Library transfer ZIP.
+## 2026-08-21 — Visual Authoring Kit Variation Benchmark
+- Executed variation & coherence benchmark per `docs/testing/2026-08-21_VISUAL_AUTHORING_KIT_VARIATION_BENCHMARK.md`.
+- Created candidate Authoring Kit at `assets/visual/authoring_kit/v0.1-candidate/` (4 material standards, 4 assembly recipes, 9 candidate proof SVGs).
+- Proved 3 distinct trees (Broad Oak, Slender Birch, Interactive Hollow Tree), 2 bushes (Plump Berry, Tall Bramble), and 2 rocks (Boulder Cluster, Shelf Outcrop) sharing cohesive storybook lighting and palette without formulaic cloning or glossy specular blobs.
+- Rendered 6 curated review artifacts in `docs/reviews/visual/2026-08-21_authoring-kit-variation/` and packaged `./GREIA_VISUAL_REVIEW_AUTHORING_KIT_VARIATION_2026-08-21.zip`.
+
+**Next exact action:** Owner visual review of Authoring Kit Variation transfer ZIP.
 

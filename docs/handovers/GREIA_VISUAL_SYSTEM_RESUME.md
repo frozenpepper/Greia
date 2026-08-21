@@ -221,21 +221,24 @@ A local-agent prose `PASS` is not enough. Numeric text/layout claims must agree 
 
 ---
 
-# 8. Visual Authoring Kit benchmark & continuation sequence
+# 8. Visual Authoring Kit variation benchmark & continuation sequence
 
-Current benchmark completed:
+Authoring benchmarks completed:
 
 ```text
 docs/testing/2026-08-21_VISUAL_AUTHORING_LIBRARY_COMPARISON.md
+docs/testing/2026-08-21_VISUAL_AUTHORING_KIT_VARIATION_BENCHMARK.md
 ```
 
-8 challenger candidates created in `assets/visual/authoring_candidates/2026-08-21_forest_meadow_comparison/`. Comprehensive review artifacts generated in `docs/reviews/visual/2026-08-21_authoring-library-comparison/` and transfer package assembled at `./GREIA_VISUAL_REVIEW_AUTHORING_LIBRARY_COMPARISON_2026-08-21.zip` for owner/ChatGPT pixel inspection.
+- Primary review (`PRIMARY_REVIEW.md`) confirmed local authoring agent superiority over legacy baseline.
+- Variation benchmark executed: created candidate Authoring Kit at `assets/visual/authoring_kit/v0.1-candidate/` (4 material guides, 4 authoring recipes, 9 proof source SVGs) proving 3 distinct trees, 2 bushes, and 2 rock formations from one shared grammar without cloning or glossy specular blobs.
+- Review artifacts committed in `docs/reviews/visual/2026-08-21_authoring-kit-variation/` and transfer ZIP assembled at `./GREIA_VISUAL_REVIEW_AUTHORING_KIT_VARIATION_2026-08-21.zip`.
 
 Likely continuation sequence:
 
 ```text
-Visual Authoring Kit benchmark reviewed by owner
-→ promote accepted challenger grammar/assets
+Owner visual review of Authoring Kit Variation ZIP
+→ promote accepted Authoring Kit standards
 → reusable scene/actor Activity authoring adapter
 → one more real Activity family proving reuse
 → only then add missing motion/FX primitives justified by that caller

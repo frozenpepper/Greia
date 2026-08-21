@@ -81,7 +81,8 @@ Accepted simulator facts include:
 - Collection-first Home passed portal Home, bounded 5 primary destinations (`create`, `play`, `learn`, `explore`, `my_greia`), `browse`/`Altro` recovery for unknown categories, Clinic in Play & Learn, corrupt portal fallback, six responsive rows, 27.7 FPS sanity;
 - Scene Compositor Runtime passed in `nascondino_bosco` using `forest_meadow_day_v1.toml`, 2-pass background ($z \le 59$) and foreground/atmosphere ($z \ge 60$) rendering, parallax and ambient motion, corrupt required/optional asset fallbacks, six responsive rows, 25.8 FPS sanity;
 - Scene Actor Runtime passed in `nascondino_bosco` using `SceneActorDefinition` and `actor_scene_sample` with `character.lilli/default|blink` and `shadow.contact.small.01/default`, deterministic eye blink, grounded vertical idle oscillation, corrected 24 px / 26 px / 20 px target HUD typography with `SCOIATTOLO` fully fitted, and 230 frames / 10.01 s = 23.0 FPS sanity;
-- Visual Authoring Library Benchmark completed per `docs/testing/2026-08-21_VISUAL_AUTHORING_LIBRARY_COMPARISON.md`, creating 8 candidate challenger assets under `assets/visual/authoring_candidates/2026-08-21_forest_meadow_comparison/`, comprehensive contact sheets/scaling benchmarks/1024x600 scenes in `docs/reviews/visual/2026-08-21_authoring-library-comparison/`, and transfer package at `./GREIA_VISUAL_REVIEW_AUTHORING_LIBRARY_COMPARISON_2026-08-21.zip`;
+- Visual Authoring Library Benchmark (`docs/testing/2026-08-21_VISUAL_AUTHORING_LIBRARY_COMPARISON.md`) passed primary review (`PRIMARY_REVIEW.md`), proving local authoring agent superiority;
+- Visual Authoring Kit Variation Benchmark (`docs/testing/2026-08-21_VISUAL_AUTHORING_KIT_VARIATION_BENCHMARK.md`) completed: candidate Authoring Kit created at `assets/visual/authoring_kit/v0.1-candidate/` (4 material standards, 4 assembly recipes, 9 proof SVGs) proving 3 distinct trees, 2 bushes, and 2 rocks from shared grammar without formulaic cloning or glossy specular blobs; review artifacts committed in `docs/reviews/visual/2026-08-21_authoring-kit-variation/` and transfer ZIP at `./GREIA_VISUAL_REVIEW_AUTHORING_KIT_VARIATION_2026-08-21.zip`;
 - `ui.empty.basket` remains generated/source-present but not legitimately exercised;
 - first Python Activity semantic resolver + Shape Garden consumer remain SOURCE only and non-blocking;
 - no physical Acer/Pi V5 performance claim is made.
@@ -89,8 +90,8 @@ Accepted simulator facts include:
 Current continuation priority:
 
 ```text
-Owner Review of Visual Authoring Library Comparison Transfer ZIP
-→ Promote Accepted Authoring Grammar & Primitives
+Owner Review of Authoring Kit Variation Transfer ZIP
+→ Promote Accepted Authoring Kit Standards & Primitives
 → S5 Character & Reusable FX Expansion / Web Scene Transport
 ```
 

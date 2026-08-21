@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 256">
+<defs>
+  <filter id="rock-sh-b" x="-30%" y="-30%" width="160%" height="160%">
+    <feGaussianBlur stdDeviation="6"/>
+  </filter>
+  <linearGradient id="shelf-top" x1="0.2" y1="0" x2="0.8" y2="1">
+    <stop offset="0%" stop-color="#D8E2E5"/>
+    <stop offset="50%" stop-color="#ACBCC0"/>
+    <stop offset="100%" stop-color="#76888C"/>
+  </linearGradient>
+  <linearGradient id="shelf-side" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#6E8084"/>
+    <stop offset="50%" stop-color="#48565A"/>
+    <stop offset="100%" stop-color="#283234"/>
+  </linearGradient>
+  <linearGradient id="shelf-moss" x1="0.2" y1="0" x2="0.8" y2="1">
+    <stop offset="0%" stop-color="#A2E88E"/>
+    <stop offset="50%" stop-color="#58C45C"/>
+    <stop offset="100%" stop-color="#30883A"/>
+  </linearGradient>
+</defs>
+
+<!-- Ground Contact Shadow -->
+<ellipse cx="256" cy="228" rx="220" ry="18" fill="#1C2324" opacity="0.20" filter="url(#rock-sh-b)"/>
+<ellipse cx="256" cy="226" rx="180" ry="10" fill="#0F1415" opacity="0.35"/>
+
+<!-- Bottom Shelf Tier (Flat Base $y=226$) -->
+<g>
+  <path d="M50 226 L55 175 C58 165 72 160 85 160 L430 160 C445 160 458 168 460 178 L465 226 L50 226 Z" fill="url(#shelf-side)"/>
+  <path d="M55 175 C60 162 75 155 92 155 L425 155 C442 155 455 165 458 175 L425 185 L90 185 Z" fill="url(#shelf-top)"/>
+</g>
+
+<!-- Mid Shelf Tier -->
+<g>
+  <path d="M90 185 L95 125 C98 115 112 110 128 110 L390 110 C405 110 418 118 420 128 L425 185 L90 185 Z" fill="url(#shelf-side)"/>
+  <path d="M95 125 C100 112 115 105 132 105 L385 105 C402 105 415 115 418 125 L385 135 L130 135 Z" fill="url(#shelf-top)"/>
+</g>
+
+<!-- Top Plateau Shelf -->
+<g>
+  <path d="M140 135 L145 75 C148 65 162 60 178 60 L340 60 C355 60 368 68 370 78 L375 135 L140 135 Z" fill="url(#shelf-side)"/>
+  <path d="M145 75 C150 62 165 55 182 55 L335 55 C352 55 365 65 368 75 L335 85 L180 85 Z" fill="url(#shelf-top)"/>
+  <!-- Highlight Rim -->
+  <path d="M160 62 L325 62" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+</g>
+
+<!-- Moss Creeping along Shelf Ledges -->
+<g fill="url(#shelf-moss)">
+  <path d="M170 65 C185 58 215 58 230 65 L225 72 C210 70 185 70 175 75 Z"/>
+  <path d="M280 65 C295 58 320 60 330 68 L325 75 C310 70 295 72 285 75 Z"/>
+  <path d="M115 118 C135 110 175 112 195 120 L190 128 C170 124 135 124 120 130 Z"/>
+  <path d="M330 118 C350 110 385 112 405 120 L400 128 C380 124 350 124 335 130 Z"/>
+</g>
+</svg>

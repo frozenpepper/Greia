@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 256">
+<defs>
+  <filter id="bush-sh-b" x="-30%" y="-30%" width="160%" height="160%">
+    <feGaussianBlur stdDeviation="6"/>
+  </filter>
+  <linearGradient id="bramble-sun" x1="0.3" y1="0" x2="0.7" y2="1">
+    <stop offset="0%" stop-color="#AEE882"/>
+    <stop offset="50%" stop-color="#70CE60"/>
+    <stop offset="100%" stop-color="#3EA042"/>
+  </linearGradient>
+  <linearGradient id="bramble-mid" x1="0.2" y1="0" x2="0.8" y2="1">
+    <stop offset="0%" stop-color="#64CA5E"/>
+    <stop offset="55%" stop-color="#3CA040"/>
+    <stop offset="100%" stop-color="#207228"/>
+  </linearGradient>
+  <linearGradient id="bramble-dark" x1="0.1" y1="0" x2="0.9" y2="1">
+    <stop offset="0%" stop-color="#308636"/>
+    <stop offset="60%" stop-color="#1C5E24"/>
+    <stop offset="100%" stop-color="#103E16"/>
+  </linearGradient>
+</defs>
+
+<!-- Ground Contact Shadow -->
+<ellipse cx="256" cy="228" rx="170" ry="18" fill="#2E2015" opacity="0.18" filter="url(#bush-sh-b)"/>
+<ellipse cx="256" cy="226" rx="130" ry="10" fill="#1C120A" opacity="0.30"/>
+
+<!-- Slender Wooden Bramble Stems at Base -->
+<g stroke="#6E3B1B" stroke-width="4" stroke-linecap="round">
+  <path d="M210 226 C215 190 225 155 240 120"/>
+  <path d="M290 226 C285 190 270 155 255 120"/>
+  <path d="M160 226 C170 195 185 170 200 150"/>
+  <path d="M340 226 C330 195 315 170 300 150"/>
+</g>
+
+<!-- Upright Tiered Foliage Masses (Distinct from Bush A) -->
+<!-- Left Upright Frond -->
+<path d="M120 226 C95 165 115 105 165 85 C200 70 235 92 238 132 C240 172 215 210 185 226 L120 226 Z" fill="url(#bramble-mid)"/>
+<!-- Right Upright Frond -->
+<path d="M380 226 C405 165 385 105 335 85 C300 70 265 92 262 132 C260 172 285 210 315 226 L380 226 Z" fill="url(#bramble-mid)"/>
+<!-- Tall Central Crown -->
+<path d="M185 150 C170 95 210 35 260 30 C305 25 340 75 330 130 C322 170 295 205 255 210 C215 212 195 185 185 150 Z" fill="url(#bramble-sun)"/>
+
+<!-- Delicate Golden Meadow Buttercups -->
+<g fill="#FFD54F">
+  <circle cx="210" cy="95" r="4.5"/>
+  <circle cx="210" cy="95" r="2.2" fill="#FFFDE7"/>
+  <circle cx="295" cy="85" r="4.5"/>
+  <circle cx="295" cy="85" r="2.2" fill="#FFFDE7"/>
+  <circle cx="255" cy="55" r="4.5"/>
+  <circle cx="255" cy="55" r="2.2" fill="#FFFDE7"/>
+</g>
+</svg>

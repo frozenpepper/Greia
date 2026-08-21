@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 256">
+<defs>
+  <linearGradient id="turf-sun" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#8CE886"/>
+    <stop offset="35%" stop-color="#56C764"/>
+    <stop offset="100%" stop-color="#2D9A3E"/>
+  </linearGradient>
+  <linearGradient id="turf-mid" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#55C966"/>
+    <stop offset="45%" stop-color="#34A648"/>
+    <stop offset="100%" stop-color="#1E7A31"/>
+  </linearGradient>
+  <linearGradient id="turf-back" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#7EE088"/>
+    <stop offset="60%" stop-color="#4BB95C"/>
+    <stop offset="100%" stop-color="#288C3C"/>
+  </linearGradient>
+</defs>
+
+<path d="M0 135 C85 105 165 120 240 138 C320 105 400 115 480 138 C560 102 645 115 725 138 C800 108 880 115 950 136 C985 118 1005 120 1024 135 L1024 256 L0 256 Z" fill="url(#turf-back)"/>
+<path d="M0 155 C120 128 240 146 360 158 C480 132 600 144 720 158 C820 138 920 144 1024 155 L1024 256 L0 256 Z" fill="url(#turf-mid)"/>
+<path d="M0 172 C90 152 180 168 270 176 C370 150 470 165 570 175 C680 152 790 166 900 176 C950 160 990 165 1024 172 L1024 256 L0 256 Z" fill="url(#turf-sun)"/>
+
+<g fill="#2A9239">
+  <path d="M36 172 C32 142 42 112 52 92 C54 118 56 148 58 172 Z"/>
+  <path d="M142 168 C138 142 146 118 155 102 C158 124 160 148 162 168 Z"/>
+  <path d="M276 174 C272 140 284 108 296 86 C298 115 300 148 302 174 Z"/>
+  <path d="M422 170 C418 144 426 120 435 105 C438 126 440 150 442 170 Z"/>
+  <path d="M572 174 C568 142 578 112 590 90 C592 118 595 148 596 174 Z"/>
+  <path d="M722 170 C718 144 726 120 735 104 C738 126 740 150 742 170 Z"/>
+  <path d="M872 174 C868 140 880 110 892 88 C895 116 896 148 898 174 Z"/>
+</g>
+</svg>

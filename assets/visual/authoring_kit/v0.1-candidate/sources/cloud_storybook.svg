@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 256">
+<defs>
+  <filter id="cloud-ambient" x="-30%" y="-30%" width="160%" height="160%">
+    <feGaussianBlur stdDeviation="8"/>
+  </filter>
+  <linearGradient id="cloud-sun-crest" x1="0.2" y1="0" x2="0.8" y2="1">
+    <stop offset="0%" stop-color="#FFFFFF"/>
+    <stop offset="60%" stop-color="#FAFDFE"/>
+    <stop offset="100%" stop-color="#E2F2FA"/>
+  </linearGradient>
+  <linearGradient id="cloud-body-mid" x1="0.3" y1="0" x2="0.7" y2="1">
+    <stop offset="0%" stop-color="#F2FAFD"/>
+    <stop offset="55%" stop-color="#DAEEF8"/>
+    <stop offset="100%" stop-color="#BADDF0"/>
+  </linearGradient>
+  <linearGradient id="cloud-shadow-base" x1="0.2" y1="0" x2="0.8" y2="1">
+    <stop offset="0%" stop-color="#D0E9F6"/>
+    <stop offset="55%" stop-color="#B2DAEE"/>
+    <stop offset="100%" stop-color="#90C5E2"/>
+  </linearGradient>
+</defs>
+
+<!-- Ambient Shadow -->
+<ellipse cx="320" cy="208" rx="225" ry="20" fill="#6B9CB8" opacity="0.14" filter="url(#cloud-ambient)"/>
+
+<!-- Underbelly Shadow Base -->
+<path d="M115 190 C95 155 118 115 155 110 C170 70 215 50 255 65 C285 30 345 28 382 62 C422 45 470 65 485 105 C520 110 545 140 538 175 C535 205 505 224 475 222 L160 222 C135 222 118 208 115 190 Z" fill="url(#cloud-shadow-base)"/>
+
+<!-- Mid-Layer Domes -->
+<g fill="url(#cloud-body-mid)">
+  <path d="M125 185 C108 155 130 120 162 118 C178 88 215 75 248 88 C270 100 282 120 280 145 C275 180 250 215 205 218 C165 220 135 205 125 185 Z"/>
+  <path d="M375 185 C370 140 405 105 445 108 C472 85 512 95 528 125 C548 152 538 190 512 210 C485 222 440 222 405 215 C385 208 378 198 375 185 Z"/>
+  <path d="M205 160 C185 115 220 68 268 60 C300 52 338 65 358 90 C388 72 430 82 445 115 C462 145 450 185 422 208 C388 225 330 224 285 220 C240 215 215 190 205 160 Z"/>
+</g>
+
+<!-- Fore Sunlit Crests (Soft Matte) -->
+<g fill="url(#cloud-sun-crest)">
+  <path d="M245 118 C230 75 268 38 315 35 C355 30 395 52 405 88 C432 82 462 100 465 130 C468 158 448 185 418 195 C385 205 345 200 320 185 C285 195 248 175 242 142 C240 132 242 124 245 118 Z"/>
+  <path d="M152 160 C138 128 165 95 202 90 C228 85 255 100 262 122 C248 152 220 178 185 180 C165 180 156 172 152 160 Z"/>
+  <path d="M375 145 C368 108 400 82 435 85 C465 88 488 110 485 140 C482 165 460 188 432 190 C405 190 382 172 375 145 Z"/>
+</g>
+</svg>

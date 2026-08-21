@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<defs>
+  <filter id="shadow-hollow" x="-30%" y="-30%" width="160%" height="160%">
+    <feGaussianBlur stdDeviation="8"/>
+  </filter>
+  <linearGradient id="hollow-trunk" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="#9C5E35"/>
+    <stop offset="35%" stop-color="#7B4522"/>
+    <stop offset="70%" stop-color="#5B2F14"/>
+    <stop offset="100%" stop-color="#3E1D09"/>
+  </linearGradient>
+  <linearGradient id="cavity-depth" x1="0.5" y1="0" x2="0.5" y2="1">
+    <stop offset="0%" stop-color="#241005"/>
+    <stop offset="40%" stop-color="#120602"/>
+    <stop offset="100%" stop-color="#040101"/>
+  </linearGradient>
+  <linearGradient id="hollow-sun" x1="0.3" y1="0" x2="0.7" y2="1">
+    <stop offset="0%" stop-color="#9CE27C"/>
+    <stop offset="50%" stop-color="#5CC052"/>
+    <stop offset="100%" stop-color="#369234"/>
+  </linearGradient>
+  <linearGradient id="hollow-mid" x1="0.2" y1="0" x2="0.8" y2="1">
+    <stop offset="0%" stop-color="#56BA4E"/>
+    <stop offset="55%" stop-color="#328E30"/>
+    <stop offset="100%" stop-color="#1A601E"/>
+  </linearGradient>
+  <linearGradient id="hollow-dark" x1="0.1" y1="0" x2="0.9" y2="1">
+    <stop offset="0%" stop-color="#267428"/>
+    <stop offset="60%" stop-color="#164E18"/>
+    <stop offset="100%" stop-color="#0C340E"/>
+  </linearGradient>
+</defs>
+
+<!-- Ground Contact Shadows -->
+<ellipse cx="256" cy="456" rx="150" ry="20" fill="#2E2015" opacity="0.20" filter="url(#shadow-hollow)"/>
+<ellipse cx="256" cy="454" rx="115" ry="11" fill="#1C120A" opacity="0.35"/>
+
+<!-- Back Shadow Canopy -->
+<path d="M135 220 C100 175 125 115 172 102 C192 65 248 50 292 65 C330 42 395 62 410 110 C448 125 458 182 430 230 C445 270 410 312 360 318 C325 322 288 310 258 318 C220 328 170 315 142 285 C118 260 118 235 135 220 Z" fill="url(#hollow-dark)"/>
+
+<!-- Ancient Gnarly Trunk with Integrated Interactive Hollow -->
+<g>
+  <!-- Main Trunk Body Flaring Around Cavity -->
+  <path d="M150 455 C175 452 200 440 205 385 C208 335 198 280 168 230 C195 245 218 270 228 300 C235 255 250 210 282 165 C295 142 310 125 328 110 C315 138 312 168 315 200 C320 235 332 260 348 282 C368 252 395 230 428 212 C402 242 382 278 368 318 C358 355 358 395 365 435 C370 448 390 452 410 455 L150 455 Z" fill="url(#hollow-trunk)"/>
+  
+  <path d="M150 455 C170 453 190 446 202 428 C208 405 206 370 204 335" fill="none" stroke="#B57648" stroke-width="5" stroke-linecap="round" opacity="0.45"/>
+  <path d="M410 455 C390 453 372 446 364 425 C356 400 356 365 362 330" fill="none" stroke="#2E1405" stroke-width="5" stroke-linecap="round" opacity="0.45"/>
+
+  <!-- THE INTERACTIVE HOLLOW (Constructed Architectural Cavity) -->
+  <!-- Outer Wood Lip / Bark Rim Contour -->
+  <path d="M214 310 C202 338 200 380 214 410 C226 432 276 436 292 412 C305 382 302 338 290 312 C276 290 228 288 214 310 Z" fill="#2E1405"/>
+  
+  <!-- Thick Wooden Rim Bevel (Outer Chamfer) -->
+  <path d="M218 314 C208 340 206 378 218 405 C228 428 274 430 288 408 C298 380 296 342 284 318 C272 298 230 296 218 314 Z" fill="#52280E"/>
+  
+  <!-- Deep Inner Cavity (Pitch Black Falloff) -->
+  <path d="M222 320 C214 344 212 374 222 400 C230 420 270 422 282 402 C292 376 290 345 280 322 C268 304 232 302 222 320 Z" fill="url(#cavity-depth)"/>
+  
+  <!-- Top Rim Wood Highlight (Direct Sunlight Rim) -->
+  <path d="M228 304 C248 296 270 298 282 308 C270 304 248 304 234 312 Z" fill="#C88E5E" opacity="0.85"/>
+  <!-- Bottom Rim Shelf (Seating Platform for Hiding Gameplay) -->
+  <path d="M222 400 C242 414 268 416 282 404 C268 410 240 408 226 396 Z" fill="#754320" opacity="0.8"/>
+</g>
+
+<!-- Sheltering Canopy (Mid and Sunlit Volumes Framing the Opening) -->
+<g fill="url(#hollow-mid)">
+  <path d="M105 250 C82 212 100 168 140 152 C170 140 205 150 222 170 C236 190 238 220 225 245 C210 272 172 290 142 285 C118 282 108 268 105 250 Z"/>
+  <path d="M315 278 C300 240 318 198 355 180 C388 165 428 175 445 205 C460 235 450 270 422 295 C392 318 342 310 315 278 Z"/>
+  <path d="M160 205 C138 152 172 95 228 85 C260 78 298 90 320 112 C350 92 392 98 410 132 C428 168 418 210 390 238 C355 270 302 278 255 270 C208 262 175 238 160 205 Z"/>
+</g>
+
+<g fill="url(#hollow-sun)">
+  <path d="M205 112 C188 70 225 25 275 22 C312 18 352 38 365 70 C390 65 422 82 428 115 C432 145 408 178 375 188 C340 198 295 190 270 172 C232 182 196 162 194 130 C192 122 198 115 205 112 Z"/>
+  <path d="M140 160 C122 122 152 82 195 78 C222 74 248 88 260 110 C240 142 208 170 172 172 C152 172 142 168 140 160 Z"/>
+  <path d="M318 128 C312 88 345 58 382 62 C415 65 438 90 435 120 C432 148 408 172 382 175 C350 178 325 155 318 128 Z"/>
+</g>
+
+<!-- Soft Matte Sheen on Crown -->
+<g fill="#D8FCD0" opacity="0.45">
+  <ellipse cx="270" cy="50" rx="48" ry="20" transform="rotate(-6 270 50)"/>
+  <ellipse cx="185" cy="108" rx="36" ry="15" transform="rotate(-12 185 108)"/>
+  <ellipse cx="372" cy="92" rx="32" ry="14" transform="rotate(10 372 92)"/>
+</g>
+</svg>

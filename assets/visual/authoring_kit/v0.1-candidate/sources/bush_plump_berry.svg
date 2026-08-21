@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 256">
+<defs>
+  <filter id="bush-sh-a" x="-30%" y="-30%" width="160%" height="160%">
+    <feGaussianBlur stdDeviation="6"/>
+  </filter>
+  <linearGradient id="bush-a-sun" x1="0.3" y1="0" x2="0.7" y2="1">
+    <stop offset="0%" stop-color="#9AE888"/>
+    <stop offset="50%" stop-color="#56C65E"/>
+    <stop offset="100%" stop-color="#2E9440"/>
+  </linearGradient>
+  <linearGradient id="bush-a-mid" x1="0.2" y1="0" x2="0.8" y2="1">
+    <stop offset="0%" stop-color="#58C862"/>
+    <stop offset="55%" stop-color="#329B42"/>
+    <stop offset="100%" stop-color="#1A6E2C"/>
+  </linearGradient>
+  <linearGradient id="bush-a-dark" x1="0.1" y1="0" x2="0.9" y2="1">
+    <stop offset="0%" stop-color="#288235"/>
+    <stop offset="60%" stop-color="#185A24"/>
+    <stop offset="100%" stop-color="#0E3C16"/>
+  </linearGradient>
+</defs>
+
+<!-- Ground Contact Shadow -->
+<ellipse cx="256" cy="228" rx="200" ry="18" fill="#2E2015" opacity="0.18" filter="url(#bush-sh-a)"/>
+<ellipse cx="256" cy="226" rx="160" ry="10" fill="#1C120A" opacity="0.30"/>
+
+<!-- Back Shadow Mass (Flat Ground Line) -->
+<path d="M65 226 C50 180 68 128 110 112 C135 75 188 68 225 85 C258 60 318 65 350 95 C388 80 438 105 448 152 C462 188 448 215 425 226 L65 226 Z" fill="url(#bush-a-dark)"/>
+
+<!-- Mid-Layer Foliage Billows -->
+<g fill="url(#bush-a-mid)">
+  <path d="M55 226 C42 175 62 125 105 110 C132 100 162 112 178 135 C192 158 190 190 175 215 C165 224 150 226 135 226 L55 226 Z"/>
+  <path d="M335 226 C322 195 335 150 372 130 C405 112 445 125 458 155 C468 185 455 212 430 226 L335 226 Z"/>
+  <path d="M125 226 C105 160 138 95 190 82 C222 75 258 88 278 112 C308 90 350 95 370 128 C388 160 378 200 352 226 L125 226 Z"/>
+</g>
+
+<!-- Sunlit Fore-Crown -->
+<g fill="url(#bush-a-sun)">
+  <path d="M168 125 C152 82 190 45 235 42 C270 38 308 60 318 92 C342 88 370 105 372 135 C375 165 352 192 320 200 C288 208 248 198 225 182 C192 190 162 170 158 140 C155 132 160 126 168 125 Z"/>
+  <path d="M92 168 C78 132 105 98 140 92 C168 90 192 105 202 128 C185 158 158 185 125 188 C105 188 98 178 92 168 Z"/>
+  <path d="M308 155 C300 120 330 92 365 95 C395 98 418 120 412 150 C408 175 385 198 358 200 C330 200 312 180 308 155 Z"/>
+</g>
+
+<!-- Wild Crimson Woodland Berries -->
+<g fill="#E53935">
+  <circle cx="152" cy="142" r="4.5"/>
+  <circle cx="158" cy="146" r="3.5"/>
+  <circle cx="240" cy="115" r="4.8"/>
+  <circle cx="248" cy="118" r="3.8"/>
+  <circle cx="330" cy="148" r="4.5"/>
+  <circle cx="336" cy="152" r="3.5"/>
+</g>
+</svg>

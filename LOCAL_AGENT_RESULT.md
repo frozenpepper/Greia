@@ -868,6 +868,57 @@ Per Section 10 of the protocol, the visual review archive for independent owner/
 - **Assembled Owner Review Transfer Package:**
   - `./GREIA_VISUAL_REVIEW_AUTHORING_LIBRARY_COMPARISON_2026-08-21.zip` (1.2 MB) containing all comparative review PNGs, `REVIEW.md`, and `audit.json` for owner attachment to ChatGPT for independent pixel inspection.
 
+---
+
+# Part 12: Visual Authoring Kit Variation Benchmark
+
+**Date:** 2026-08-21  
+**Runbook Authority:** `docs/testing/2026-08-21_VISUAL_AUTHORING_KIT_VARIATION_BENCHMARK.md`  
+**Parent Architecture Authority:** `docs/design/GREIA_VISUAL_AUTHORING_ARCHITECTURE.md`  
+**Primary Review Authority:** `docs/reviews/visual/2026-08-21_authoring-library-comparison/PRIMARY_REVIEW.md`  
+**Evidence Class:** `AUTHORING VARIATION / OWNER VISUAL REVIEW REQUIRED`
+
+---
+
+## 1. Summary of Accomplishments
+
+- **Authored Candidate Authoring Kit Knowledge Base:**
+  - Created 4 material guidance standards under `assets/visual/authoring_kit/v0.1-candidate/materials/`:
+    - `foliage.md` (matte form shading, zero specular highlight blobs, natural palette families)
+    - `wood_bark.md` (outward root flaring, flat contact grounding, warm 3-tone planar bark)
+    - `rock_moss.md` (flat base seating, soft planar facets, integrated creeping moss)
+    - `cloud_light.md` (volumetric spherical billows, restrained atmosphere opacity)
+  - Created 4 authoring recipes under `assets/visual/authoring_kit/v0.1-candidate/recipes/`:
+    - `tree_construction.md` (step-by-step assembly and species differentiation)
+    - `grounded_bush.md` (flat base seating, plush billows, subtle floral accents)
+    - `interactive_hollow.md` (contour deformation, thick wooden rim bevel, sunlit lip highlight, inner cavity depth, seating floor)
+    - `contact_grounding.md` (outward flare formula, dual-pass contact occlusion)
+
+- **Generated 9 Proof Candidate Source Assets (`assets/visual/authoring_kit/v0.1-candidate/sources/`):**
+  - **Tree A:** `tree_broad_oak.svg` (Broad old oak with heavy asymmetrical trunk, wide buttress root flare, and low sheltering canopy)
+  - **Tree B:** `tree_slender_birch.svg` (Slender young birch with narrow bowed trunk, upright airy foliage masses, and sky windows)
+  - **Tree C:** `tree_interactive_hollow.svg` (Ancient deformed tree with thick wooden rim, sunlit lip highlight, deep dark cavity, and seating floor for hiding gameplay)
+  - **Bush A:** `bush_plump_berry.svg` (Low rounded berry dome with sweet wild red berries)
+  - **Bush B:** `bush_tall_bramble.svg` (Upright tiered fronds with visible woody stems and golden buttercups)
+  - **Rock A:** `rock_boulder_cluster.svg` (Glacial river boulders with soft facets and integrated velvet moss)
+  - **Rock B:** `rock_shelf_outcrop.svg` (Stepped horizontal slab ledge with moss creeping through shelf crevices)
+  - **Cloud:** `cloud_storybook.svg` (Soft volumetric cumulus cloud with gentle sky-blue underbelly)
+  - **Grass:** `grass_meadow_edge.svg` (Multi-tier rolling meadow turf with natural blade tufts)
+
+- **Generated 6 Curated Review Artifacts (`docs/reviews/visual/2026-08-21_authoring-kit-variation/`):**
+  - `01-three-trees.png` (Tree variation proof: Broad Oak, Slender Birch, Interactive Hollow Tree)
+  - `02-bush-rock-variation.png` (Foliage & rock variation proof)
+  - `03-runtime-sizes.png` (256px, 128px, 64px scale legibility matrix)
+  - `04-composed-scene.png` (1024×600 cohesive forest meadow composition)
+  - `05-hollow-closeup.png` (Interactive cavity closeup with authoring grammar callouts)
+  - `06-material-detail.png` (2.5x close-up inspection of matte foliage, root flare, moss, and grounding)
+  - `REVIEW.md` (truthful evaluation of variation, coherence, and matte discipline)
+  - `audit.json` (metadata and byte sizes)
+
+- **Assembled Mandatory Owner Transfer Package:**
+  - `./GREIA_VISUAL_REVIEW_AUTHORING_KIT_VARIATION_2026-08-21.zip` (666 KB) containing all 6 PNGs, `REVIEW.md`, and `audit.json` for owner attachment to ChatGPT for independent pixel inspection.
+
+
 
 
 
