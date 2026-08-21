@@ -5,275 +5,291 @@
 **Repository:** `frozenpepper/Greia`  
 **Branch:** `main`  
 **Visual-system guide:** `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`  
+**Visual-authoring architecture:** `docs/design/GREIA_VISUAL_AUTHORING_ARCHITECTURE.md`  
+**User-agent skill:** `skills/greia-visual-authoring/SKILL.md`  
+**Base-pack reauthoring plan:** `docs/plans/2026-08-21_BASE_ART_PACK_REAUTHORING.md`  
 **Scene-runtime plan:** `docs/plans/2026-08-21_GREIA_SCENE_COMPOSITION_RUNTIME.md`  
-**Parent visual plan:** `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`  
-**Project-wide handover:** `HANDOVER.md`
+**Parent visual plan:** `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`
 
 ---
 
 # 1. Resume order
 
-Read, in order:
+Read:
 
 ```text
 1. AGENTS.md
 2. docs/design/GREIA_ART_GRAPHICS_SYSTEM.md
-3. docs/design/GREIA_SCENE_COMPOSITION_RUNTIME.md
-4. docs/plans/2026-08-21_GREIA_SCENE_COMPOSITION_RUNTIME.md
-5. docs/testing/VISUAL_ACCEPTANCE_EVIDENCE_CONTRACT.md
-6. this file
-7. HANDOVER.md
-8. skills/greia-visual-authoring/SKILL.md
-9. exact source files for the current gate
+3. docs/design/GREIA_VISUAL_AUTHORING_ARCHITECTURE.md
+4. skills/greia-visual-authoring/SKILL.md
+5. docs/plans/2026-08-21_BASE_ART_PACK_REAUTHORING.md
+6. docs/design/GREIA_SCENE_COMPOSITION_RUNTIME.md
+7. docs/testing/VISUAL_ACCEPTANCE_EVIDENCE_CONTRACT.md
+8. this file
+9. HANDOVER.md
 ```
 
 Do not resume from chat memory alone.
 
 ---
 
-# 2. Stable production direction
+# 2. Critical architectural correction — two tracks
 
-Greia visual production remains:
+The visual workstream has two different concerns. They must not be conflated again.
 
-> **excellent individual assets → reusable asset packs → layered composition → subtle parallax / ambient motion / light / shadow → shared UI system → explicit semantic runtime consumption → Shell/Activity reuse**
+## Track A — maintainer-side base art packs
 
-Non-negotiables:
+Goal: improve the bundled Greia art packs themselves.
 
-- asset-first, not crude full-screen mockups;
-- polished storybook/toy-diorama language;
-- readable at low resolution;
-- reuse before duplication;
-- no target runtime SVG rasterization;
-- no arbitrary runtime asset-directory scanning;
-- no per-frame PNG decode/scale;
-- bounded runtime caches;
-- no simulator-specific production rendering;
-- visual work must not deepen provisional X11 coupling or bypass protected platform Home/Back authority;
-- no new environment pack merely to keep producing assets.
+The owner's local agent was benchmarked only to answer:
 
-Broad reusable source coverage already exists under the Forest/Meadow, Shared UI, Workshop, Clinic, Reading/Classroom, Fantasy/Village/Night and Water/Pond packs. Core characters remain Lilli, Nino, Tito and Momo in the accepted Puff/Bean direction.
+> can this maintainer-side agent recreate the existing basic art packs at higher quality than the earlier baseline?
+
+The initial Forest/Meadow comparison provided useful evidence that it can improve several environment asset categories.
+
+This is **not evidence about arbitrary future user agents** and must not become a model dependency of Greia.
+
+The later v0.1/v0.2/v0.3/hero-tree refinement loop became too specimen-focused. Preserve it as provenance, but **do not continue hero-tree optimization as a milestone**.
+
+Current maintainer-side next action:
+
+> reauthor the complete Forest/Meadow base pack at pack scale, preserve the old pack, produce comparative evidence, obtain owner pixel review, then move to the next pack.
+
+Plan:
+
+```text
+docs/plans/2026-08-21_BASE_ART_PACK_REAUTHORING.md
+```
+
+## Track B — generic Activity visual-authoring skill
+
+Goal: teach **arbitrary Activity-authoring agents/models** how to use the Greia visual ecosystem.
+
+The skill must be model/tool agnostic and teach:
+
+```text
+inspect available art packs
+→ identify Activity visual needs
+→ choose REUSE, COMPOSE/ADAPT, or CREATE ORIGINAL
+→ create Activity-local final art where needed
+→ follow Greia style/readability/grounding rules
+→ flatten rich source work into efficient runtime assets
+→ integrate through existing Greia package/scene/runtime boundaries
+→ visually review actual pixels
+```
+
+The skill must not assume the owner's local agent or encode its SVG tricks.
+
+Authority:
+
+```text
+skills/greia-visual-authoring/SKILL.md
+```
 
 ---
 
-# 3. Proven runtime foundation
+# 3. Stable production direction
 
-The V5 asset/runtime seam is proven across real Shell consumers:
+Greia visual production remains asset-first, but `reuse` does not mean literal clone-everywhere reuse.
+
+Coherence comes from shared style, material treatment, lighting, grounding, typography, visual density and runtime conventions. Variety comes from selective reuse, authoring-time composition/adaptation and original Activity-local assets.
+
+Key principle:
+
+> **rich composition at authoring time; economical composition at runtime.**
+
+Do not create a giant runtime warehouse containing every conceivable final tree, cave, shelf, animal pose or puzzle prop.
+
+---
+
+# 4. Current bundled source coverage
+
+Broad source coverage exists under:
 
 ```text
-reviewed SVG master
-→ explicit source rendition manifest
-→ build-time PNG via rsvg-convert
-→ generated runtime catalogue
-→ AssetCatalogue
-→ PygameVisualSurfaceCache
-→ real consumer
+assets/visual/environments/forest_meadow/
+assets/visual/environments/workshop/
+assets/visual/environments/clinic/
+assets/visual/environments/reading_classroom/
+assets/visual/environments/fantasy_village_night/
+assets/visual/environments/water_pond/
+assets/visual/ui/
+assets/visual/library/
 ```
 
-Accepted Shell/product consumers include cards, panels, profile chrome, loading/error feedback, navigation chrome and Collection-first Home.
+The current legacy packs remain provenance/baseline until stronger candidates are independently reviewed and promoted.
 
-The graphics workstream has now advanced beyond Shell decoration into the Scene Composition Runtime.
+Do not overwrite accepted/current pack sources during candidate creation.
 
-Current scene source owners:
+---
+
+# 5. Proven runtime foundation
+
+The runtime side remains useful and should be preserved.
+
+Current architecture includes:
 
 ```text
+explicit semantic asset catalogues
+build-time SVG/source → runtime PNG renditions
+bounded Pygame visual cache
+SceneDefinition / SceneNode / SceneCamera
+PygameSceneRenderer
+SceneActorDefinition / actor_scene_sample
+```
+
+Important source owners include:
+
+```text
+src/greia_platform/assets.py
+src/greia_platform/activity_api.py
+src/greia_platform/pygame_visual_assets.py
 src/greia_platform/scene.py
 src/greia_platform/pygame_scene.py
 src/greia_platform/scene_actor.py
-assets/scenes/forest_meadow_day_v1.toml
 ```
 
-`PygameSceneRenderer` now also remembers failed optional realizations for the renderer lifetime so a corrupt decorative PNG is not retried/decode-failed every frame. Explicit `clear()` resets both visual cache and failure suppression.
+Runtime rules remain:
 
-No physical Acer/Pi scene-performance claim and no R7 closure.
+- no arbitrary runtime source-directory scanning;
+- no ordinary target SVG rasterization;
+- no per-frame disk decode/scale;
+- bounded caches;
+- explicit semantic/shared assets;
+- Activity-local assets remain contained inside the Activity package;
+- extend existing package/scene seams rather than inventing parallel asset loaders.
+
+The runtime architecture is not the current conceptual problem; visual authoring/content organization is.
 
 ---
 
-# 4. First scene integration — retained, but evidence audit corrected
+# 6. Nascondino lesson
 
-Nascondino nel Bosco is the first real Activity using the shared Forest/Meadow scene compositor.
+Nascondino proved scene-runtime plumbing, but also exposed an important visual-authoring failure:
 
-Retained runtime facts from the headless simulator run:
+- the shared background improved;
+- old primitive gameplay assets remained;
+- the result looked like two unrelated visual systems glued together.
 
-- background and foreground/atmosphere split passes;
-- parallax + ambient motion;
-- deliberate legacy background fallback for required scene-art failure;
-- optional atmosphere isolation;
-- six responsive simulator rows;
-- measured **25.8 FPS** over the recorded 10.01 s scene run;
-- curated PNG evidence committed under `docs/reviews/visual/2026-08-21_scene-compositor-nascondino/`.
+The lesson is **not** that Greia must globally ship every possible hollow tree, bush, cave, reed bed or animal asset.
 
-Primary source/evidence cross-check is recorded in:
+The correct lesson is that an Activity-authoring agent should use the art packs and visual skill to:
 
-```text
-docs/reviews/visual/2026-08-21_scene-compositor-nascondino/PRIMARY_REVIEW.md
-```
+- reuse what genuinely fits;
+- compose/adapt useful pack pieces;
+- create original Activity-local gameplay art where the exact object does not exist;
+- integrate all major gameplay visuals into the same visual language.
 
-Important correction: the local-agent `REVIEW.md` / `layout-audit.json` was not numerically trustworthy. It claimed 22 px target text while accepted source rendered 18 px, recorded a different target-card rectangle from source, claimed Large-interface HUD scaling that source did not perform, and described the scene's `cover` fit as letterbox/pillarbox.
-
-Do not carry those claims forward.
-
-The committed private-repo PNGs are retained for visual evidence, but this primary-agent environment currently receives repository PNG bytes through the GitHub connector as base64 rather than a directly viewable image surface. Therefore the primary agent must not pretend it independently pixel-reviewed those PNGs. Source/runtime geometry and local-agent pixel review remain separate evidence layers.
+Do not resume Nascondino migration until the base-art/toolbox and user-agent workflow are ready enough to make that work meaningful.
 
 ---
 
-# 5. Scene Actor Lilli & Nascondino HUD accepted in simulator
+# 7. Local-agent benchmark evidence — correct interpretation
 
-Renderer-neutral actor source is implemented:
+Useful finding:
 
-```text
-src/greia_platform/scene_actor.py
-```
+- the owner's local agent can produce stronger representative Forest/Meadow masters than the original baseline in multiple categories.
 
-It provides:
+Not established:
 
-```text
-semantic character state
-neutral/blink variant selection
-deterministic blink timing
-cheap vertical idle
-shared contact shadow
-scene z/parallax placement
-motion-off static sample
-```
+- that arbitrary other agents can do the same;
+- that the owner's agent's exact geometric/SVG techniques should become universal rules;
+- that a repeatedly refined hero tree predicts Activity-authoring performance;
+- that the candidate Authoring Kit versions are final standards.
 
-It outputs ordinary `SceneNode` data and therefore reuses `PygameSceneRenderer` and the existing semantic cache. No skeletal rig and no second character renderer/cache was added.
+The tree benchmark chain is now closed as a workstream.
 
-Promoted runtime actor assets:
+Preserve these folders as evidence/provenance only:
 
 ```text
-character.lilli/default
-character.lilli/blink
-shadow.contact.small.01/default
+assets/visual/authoring_candidates/
+assets/visual/authoring_kit/*-candidate/
+docs/reviews/visual/2026-08-21_authoring-*/
+docs/reviews/visual/2026-08-21_hero-tree-quality-ceiling/
 ```
 
-Build-time outputs:
-
-```text
-assets/visual/runtime/v1/characters/lilli_neutral.png
-assets/visual/runtime/v1/characters/lilli_blink.png
-assets/visual/runtime/v1/shared/shadow_contact_small.png
-```
-
-Simulator gate executed:
-
-```text
-docs/testing/2026-08-21_SCENE_ACTOR_LILLI_NASCONDINO_SIMULATOR.md
-```
-
-Accepted results:
-- Lilli rendered through `SceneActorDefinition` / `actor_scene_sample` using the existing scene renderer;
-- neutral and physically closed-eye blink verified;
-- grounded contact shadow stays anchored while character body subtly oscillates ($\pm 3$ px);
-- no obstruction of protected Home chrome, star pill, central search HUD or gameplay spots;
-- target animal HUD rendered at 24 px (Normal), 26 px (Large), 20 px (Compact);
-- `SCOIATTOLO` fits cleanly inside available text spans across all sizes without clipping or collision;
-- profile InterfaceSize scales reference canvas HUD cleanly without double-applying viewport scale;
-- layout audit derived from actual runtime/source geometry in `layout-audit.json`;
-- measured steady FPS was 230 frames / 10.01 s = **23.0 FPS**;
-- transfer archive created at `./GREIA_VISUAL_REVIEW_SCENE_ACTOR_LILLI_2026-08-21.zip` for owner/ChatGPT pixel inspection.
+Do not let them become the main architecture.
 
 ---
 
-# 6. Collection-first product state
+# 8. Generic user-agent authoring workflow
 
-Normal child navigation remains:
+The user-agent skill now owns the stable Activity authoring decision:
+
+### REUSE
+Use a finished art-pack/shared asset directly when it fits.
+
+### COMPOSE / ADAPT
+Use pack assets/primitives/style as ingredients for a bespoke Activity-local master.
+
+### CREATE ORIGINAL
+Create new Activity-local art when the library does not provide a good fit.
+
+Then:
 
 ```text
-profile
-  → Greia Home
-    → primary Collection
-      → Activity
+review source asset
+→ flatten/build efficient runtime rendition
+→ integrate through Greia runtime/package seams
+→ inspect complete Activity screenshots
 ```
 
-Primary Home vocabulary is bounded to:
-
-```text
-create
-play
-learn
-explore
-my_greia
-```
-
-Unknown-only valid Activities recover through conditional platform-owned `browse` / `Altro` rather than creating arbitrary Home roots or disappearing. This product work is accepted at simulator scope and is no longer the center of the graphics workstream.
-
-Do not return to category/Home micro-polish unless a real product defect is exposed.
+This is the intended path for people using many different LLMs/agents in the future.
 
 ---
 
-# 7. Simulator/evidence rule
+# 9. Visual evidence rule
 
-Owner-directed local runtime/visual/fallback/responsive acceptance uses the Greia Activity Simulator, preferably:
+For significant visual work, the producing agent's prose is not evidence.
 
-```bash
-GREIA_SIMULATOR_HEADLESS=1 python3 tools/greia_simulator.py --state-dir <isolated-state>
-```
-
-Remote bridge remains local loopback only at `http://127.0.0.1:8767`. Do not query/run GitHub-hosted Actions without explicit owner authorization.
-
-Visual gates must follow:
+Use actual screenshots and follow:
 
 ```text
 docs/testing/VISUAL_ACCEPTANCE_EVIDENCE_CONTRACT.md
 ```
 
-A local-agent prose `PASS` is not enough. Numeric text/layout claims must agree with actual source/runtime values. `layout-audit.json` must not be hand-transcribed when the renderer/layout can report the real geometry.
+Owner-review ZIP packaging remains mandatory where the runbook requests owner/primary pixel review.
+
+Numeric layout claims should come from runtime/source geometry when possible rather than hand transcription.
 
 ---
 
-# 8. Visual Authoring Kit variation benchmark & continuation sequence
+# 10. Current exact next actions
 
-Authoring benchmarks completed:
+## Maintainer/content track
 
-```text
-docs/testing/2026-08-21_VISUAL_AUTHORING_LIBRARY_COMPARISON.md
-docs/testing/2026-08-21_VISUAL_AUTHORING_KIT_VARIATION_BENCHMARK.md
-```
+1. stop hero-tree work;
+2. reauthor complete Forest/Meadow candidate pack;
+3. produce baseline-vs-candidate pack evidence and owner ZIP;
+4. owner reviews actual pixels;
+5. promote accepted assets;
+6. continue pack-by-pack according to `2026-08-21_BASE_ART_PACK_REAUTHORING.md`.
 
-- Primary review (`PRIMARY_REVIEW.md`) confirmed local authoring agent superiority over legacy baseline.
-- Variation benchmark executed: created candidate Authoring Kit at `assets/visual/authoring_kit/v0.1-candidate/` (4 material guides, 4 authoring recipes, 9 proof source SVGs) proving 3 distinct trees, 2 bushes, and 2 rock formations from one shared grammar without cloning or glossy specular blobs.
-- Review artifacts committed in `docs/reviews/visual/2026-08-21_authoring-kit-variation/` and transfer ZIP assembled at `./GREIA_VISUAL_REVIEW_AUTHORING_KIT_VARIATION_2026-08-21.zip`.
+## User-agent capability track
 
-Likely continuation sequence:
-
-```text
-Owner visual review of Authoring Kit Variation ZIP
-→ promote accepted Authoring Kit standards
-→ reusable scene/actor Activity authoring adapter
-→ one more real Activity family proving reuse
-→ only then add missing motion/FX primitives justified by that caller
-→ Web scene renderer/transport after Python semantics stabilize
-→ physical low-resource proof later
-```
-
-Candidate future features such as quantized tilt, Water/Pond shimmer, color/light pulse or low-count particles are not automatic milestones. Add them only when a real scene needs them.
+1. keep `skills/greia-visual-authoring/SKILL.md` model agnostic;
+2. improve pack metadata/previews so arbitrary agents can discover useful assets by role;
+3. make Activity-local visual integration clean where current runtime/package APIs have gaps;
+4. later validate the skill with multiple different agents/models — as a separate compatibility test, not as part of the local-agent pack-production benchmark.
 
 ---
 
-# 9. Rejected/drift directions
+# 11. Platform boundary
 
-Do not resume:
+R7 remains the primary blocking platform phase. Nothing in this visual authoring correction closes, reorders or bypasses R7.
 
-- All+filters as normal child Home;
-- arbitrary package categories creating Home roots;
-- filesystem folders/deep taxonomy;
-- endless Shell-widget restyling after the shared seam is proven;
-- proof-only Shape Garden work displacing real scenes;
-- detailed traditional character rigs;
-- generated sprite sheets treated as production-ready;
-- crude backgrounds/mockups;
-- more environment packs without a demonstrated gap;
-- runtime SVG on target;
-- arbitrary visual-directory discovery;
+No physical Acer/Pi acceptance should be claimed unless actually performed.
+
+---
+
+# 12. Do not resume these drift directions
+
+- endless per-tree/per-object optimization;
+- treating the local agent as representative of user agents;
+- deriving general architecture from one maintainer agent's output quirks;
+- building a giant shared runtime warehouse of every final prop;
+- background-only Activity polish while gameplay visuals remain primitive;
+- rigid geometric authoring templates;
+- arbitrary runtime asset discovery;
 - second visual catalogue/cache framework;
-- per-frame PNG decode/scale;
-- unbounded caches;
-- per-resolution production forks;
-- simulator-specific production branches;
-- hand-written layout audits that disagree with source.
-
----
-
-# 10. End-of-session rule
-
-Update this file whenever the active visual phase, next action, runtime consumption, evidence boundary, blocker or testing rule materially changes. Chronology belongs in the active plan; stable architecture belongs in `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`; project-wide continuation belongs in `HANDOVER.md`.
+- more Shell/category micro-polish as a substitute for the actual visual authoring system.
