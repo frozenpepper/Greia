@@ -1,5 +1,5 @@
 {
-  "benchmark_name": "Greia Visual Authoring Benchmark \u2014 Forest / Meadow",
+  "benchmark_name": "Greia Visual Authoring Benchmark \u2014 Forest / Meadow (Revised Grounding)",
   "date": "2026-08-21",
   "baseline_directory": "assets/visual/environments/forest_meadow/v0.2",
   "challenger_directory": "assets/visual/authoring_candidates/2026-08-21_forest_meadow_comparison",
@@ -14,14 +14,14 @@
   ],
   "assets": [
     {
-      "role": "Hero Oak Tree",
+      "role": "Hero Oak Tree (Grounded Root Base)",
       "baseline_source_path": "assets/visual/environments/forest_meadow/v0.2/tree_hero.svg",
       "challenger_source_path": "assets/visual/authoring_candidates/2026-08-21_forest_meadow_comparison/tree_hero.svg",
       "viewBox": "0 0 512 512",
       "role_category": "Finished Master / Canopy Grammar Candidate",
-      "authoring_kit_concept": "Canopy cluster grammar + sculpted bark plane recipe",
+      "authoring_kit_concept": "Outward-flaring grounded root base + clean billowing canopy mass hierarchy (no decorative clutter)",
       "baseline_byte_size": 3990,
-      "challenger_byte_size": 8600,
+      "challenger_byte_size": 5018,
       "rendered_comparison_sizes_px": [
         256,
         128,
@@ -29,20 +29,20 @@
       ],
       "features": {
         "uses_linear_gradients": true,
-        "uses_radial_gradients": true,
+        "uses_radial_gradients": false,
         "uses_gaussian_blur_filter": true,
         "uses_external_dependencies": false
       }
     },
     {
-      "role": "Secondary Tree",
+      "role": "Secondary Tree (Grounded Base)",
       "baseline_source_path": "assets/visual/environments/forest_meadow/v0.2/tree_secondary.svg",
       "challenger_source_path": "assets/visual/authoring_candidates/2026-08-21_forest_meadow_comparison/tree_secondary.svg",
       "viewBox": "0 0 512 512",
       "role_category": "Finished Master / Slender Branch Grammar",
-      "authoring_kit_concept": "Asymmetrical slender trunk + spring apple-green palette recipe",
+      "authoring_kit_concept": "Grounded outward root base + slender graceful boughs with clear spring-green massing",
       "baseline_byte_size": 2154,
-      "challenger_byte_size": 6073,
+      "challenger_byte_size": 4428,
       "rendered_comparison_sizes_px": [
         256,
         128,
@@ -50,20 +50,20 @@
       ],
       "features": {
         "uses_linear_gradients": true,
-        "uses_radial_gradients": true,
+        "uses_radial_gradients": false,
         "uses_gaussian_blur_filter": true,
         "uses_external_dependencies": false
       }
     },
     {
-      "role": "Flowering Bush",
+      "role": "Flowering Bush (Flat Ground Base)",
       "baseline_source_path": "assets/visual/environments/forest_meadow/v0.2/bush_flowering.svg",
       "challenger_source_path": "assets/visual/authoring_candidates/2026-08-21_forest_meadow_comparison/bush_flowering.svg",
       "viewBox": "0 0 512 256",
       "role_category": "Finished Master / Foliage Layering Primitive",
-      "authoring_kit_concept": "Tiered billow massing + multi-petal blossom / wild berry clusters",
+      "authoring_kit_concept": "Flat grounded base seated directly in contact shadow + clean 3-petal flower accents",
       "baseline_byte_size": 3011,
-      "challenger_byte_size": 5834,
+      "challenger_byte_size": 4019,
       "rendered_comparison_sizes_px": [
         256,
         128,
@@ -71,20 +71,20 @@
       ],
       "features": {
         "uses_linear_gradients": true,
-        "uses_radial_gradients": true,
+        "uses_radial_gradients": false,
         "uses_gaussian_blur_filter": true,
         "uses_external_dependencies": false
       }
     },
     {
-      "role": "Large Rock Cluster",
+      "role": "Large Rock Cluster (Flat Ground Base)",
       "baseline_source_path": "assets/visual/environments/forest_meadow/v0.2/rock_cluster_large.svg",
       "challenger_source_path": "assets/visual/authoring_candidates/2026-08-21_forest_meadow_comparison/rock_cluster_large.svg",
       "viewBox": "0 0 512 256",
       "role_category": "Finished Master / Geological Plane Primitive",
-      "authoring_kit_concept": "Faceted boulder planes + velvet moss overgrowth recipe",
+      "authoring_kit_concept": "Flat grounded boulder base + faceted planar shading and velvet moss caps",
       "baseline_byte_size": 1526,
-      "challenger_byte_size": 5350,
+      "challenger_byte_size": 3717,
       "rendered_comparison_sizes_px": [
         256,
         128,
@@ -164,16 +164,16 @@
       "challenger_source_path": "assets/visual/authoring_candidates/2026-08-21_forest_meadow_comparison/hollow_tree_study.svg",
       "viewBox": "0 0 512 512",
       "role_category": "Bespoke Activity Study / Interactive Gameplay Prop",
-      "authoring_kit_concept": "Activity-derived interactive hiding cavity + knot-hole & buttress root grammar",
+      "authoring_kit_concept": "Activity-derived interactive hiding cavity + grounded outward root base",
       "baseline_byte_size": null,
-      "challenger_byte_size": 5987,
+      "challenger_byte_size": 5022,
       "rendered_comparison_sizes_px": [
         256,
         128
       ],
       "features": {
         "uses_linear_gradients": true,
-        "uses_radial_gradients": true,
+        "uses_radial_gradients": false,
         "uses_gaussian_blur_filter": true,
         "uses_external_dependencies": false
       }

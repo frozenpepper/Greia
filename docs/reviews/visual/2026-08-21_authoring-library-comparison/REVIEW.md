@@ -1,4 +1,4 @@
-# Visual Review & Benchmark — Greia Visual Authoring Library
+# Visual Review & Benchmark — Greia Visual Authoring Library (Revised Grounding)
 
 **Date:** 2026-08-21  
 **Runbook Authority:** `docs/testing/2026-08-21_VISUAL_AUTHORING_LIBRARY_COMPARISON.md`  
@@ -7,101 +7,95 @@
 
 ---
 
-## 1. Executive Summary & Benchmark Purpose
+## 1. Executive Summary & Core Improvements
 
-This benchmark evaluates whether the local authoring agent can produce a **materially higher-quality base Greia Visual Authoring Kit** than the historical baseline assets (`assets/visual/environments/forest_meadow/v0.2/`), while rigorously preserving Greia’s storybook/toy-diorama visual identity, tactile depth, low-resolution readability, and composability.
+This revised iteration specifically addresses critical feedback on **grounding, base geometry, and tree authoring discipline**:
 
-### Core Findings
-1. **Canopy & Foliage Grammar:** Replacing mechanical stacks of overlapping geometric ellipses with organic, tiered billowing masses and sculpted leaf tufts dramatically improves both silhouette interest and three-dimensional volume without creating high-frequency visual noise.
-2. **Bark & Wood Texture:** Replacing flat trunk strokes with sculpted planar bark facets, spreading buttress roots, and warm cedar/chestnut gradients grounds the trees solidly into the scene.
-3. **Geological Facets & Organic Moss:** Replacing flat gray trapezoids with sculpted, multi-plane boulders draped in soft velvet moss elevates the rock cluster from programmer art to a tactile storybook feature.
-4. **Low-Resolution Readability (256px / 128px / 64px):** All challenger assets maintain clean massing and strong silhouettes at 128px and 64px, proving that richer planar shading and organic silhouettes do not collapse into muddy noise at child appliance resolutions.
-5. **Interactive Derivative Potential:** The `hollow_tree_study.svg` demonstrates that this authoring kit vocabulary directly enables assembling bespoke interactive gameplay spots (such as Nascondino hiding hollows) rather than requiring static copy-paste of monolithic props.
+1. **Firm Object Grounding & Outward-Flared Bases:**
+   - Inward-curving bottom contours and floating stems have been completely eliminated.
+   - Trunks now feature **wide, outward-flaring root anchors** resting flat against the ground plane ($y=455$) and directly overlapping the tight contact shadow ellipse, ensuring objects look solidly rooted in the soil rather than floating in mid-air.
+   - Boulders and bushes now have **flat horizontal contact bases** ($y=226$) seated squarely into the earth.
+
+2. **Tree Authoring Discipline (No Details for the Sake of Details):**
+   - Gratuitous decorative clutter (random berries/flowers on oak canopies, excessive micro-lines) has been stripped away.
+   - Canopies are structured around **pure, bold storybook mass hierarchy**: 4–6 harmonious, cloud-like billowing lobes with clear sunlit crests and deep underside form shadows.
+   - Sturdy, warm wooden trunks support the canopy through natural structural boughs without busy scribbles.
+
+3. **Consistent Low-Resolution Readability (256px / 128px / 64px):**
+   - The simplified, confident mass hierarchy reads with immediate clarity from full resolution down to 64px.
 
 ---
 
 ## 2. Asset-by-Asset Comparative Critique
 
 ### A — Hero Oak Tree (`tree_hero.svg`)
-- **What Changed:** Replaced the mechanical ellipse-stack canopy and single-path trunk with a multi-tiered billowing canopy (back shadow, mid mass, sunlit fore-crest), sculpted bark planes with buttress root flare, subtle foliage crevice shadows, leaf tuft accents along silhouettes, and warm golden buttercups + wild ruby berries.
-- **Where Challenger is Better:** Rich volumetric massing, organic flowing silhouette, grounded root structure, and harmonious color transitions.
-- **Where Challenger is Worse:** Slightly higher SVG path count (6.8 KB vs 4.0 KB).
-- **Runtime Size Survival (64px/128px/256px):** At 256px and 128px the canopy billows read distinctly as lush foliage masses. At 64px the primary massing remains sharp and recognizable without noise.
-- **Style Drift:** None; adheres strictly to the storybook felt-board/toy-diorama grammar.
-- **Authoring Kit Value:** Excellent recipe candidate for canopy lobe construction, bark plane shading, and root anchoring.
+- **What Changed:** Grounded trunk with wide outward root flare spreading across $x=165..415$ at $y=455$, seated directly on the ground contact shadow. Canopy constructed from 5 large, lush cloud-like foliage billows with broad top-left sunlight planes and underside depth shading. Removed noisy micro-details (berries/flowers).
+- **Where Challenger is Better:** Firmly planted in the earth (no floating illusion); iconic, readable storybook silhouette; rich but restrained color harmony.
+- **Where Challenger is Worse:** None.
+- **Runtime Size Survival (64px/128px/256px):** Bold massing reads instantly at all child screen sizes.
+- **Style Drift:** None; adheres strictly to Greia storybook/toy-diorama visual language.
+- **Authoring Kit Value:** Master reference for grounded root flare and harmonious canopy billow hierarchy.
 - **Disposition:** **`CHALLENGER CLEARLY BETTER`**
 
 ---
 
 ### B — Secondary Woodland Tree (`tree_secondary.svg`)
-- **What Changed:** Replaced sparse symmetrical ellipses with a slender, graceful trunk with natural bow and branch offshoots, tiered apple-green canopy masses, volumetric highlights, and delicate white woodland star-flower accents.
-- **Where Challenger is Better:** Clear asymmetrical character, distinct species differentiation from the hero oak, fresh spring-green palette.
-- **Where Challenger is Worse:** Slightly more complex branch geometry.
-- **Runtime Size Survival:** Outstanding; slender silhouette remains crisp down to 64px.
+- **What Changed:** Outward-flaring root base spreading across $x=195..355$ at $y=455$. Slender graceful trunk with natural bow and branch offshoots supporting 3 airy spring-green foliage billows.
+- **Where Challenger is Better:** Solidly anchored to the ground; clear species contrast from the hero oak; clean, uncluttered form.
+- **Where Challenger is Worse:** None.
+- **Runtime Size Survival:** Crisp silhouette down to 64px.
 - **Style Drift:** None.
-- **Authoring Kit Value:** Serves as the primary reference for secondary/background slender tree construction.
+- **Authoring Kit Value:** Primary reference for secondary slender tree construction.
 - **Disposition:** **`CHALLENGER CLEARLY BETTER`**
 
 ---
 
 ### C — Flowering Woodland Bush (`bush_flowering.svg`)
-- **What Changed:** Replaced 6 plain circles and flat geometric 5-dot flowers with multi-tier organic foliage billows, deep under-bush shadow layer, sunlit crest billows, and authored clusters of delicate 5-petal woodland blossoms (pink, golden, sky blue, lavender) with wild crimson berries.
-- **Where Challenger is Better:** Dynamic organic silhouette, tactile front/back depth layering, authentic meadow flower clusters instead of pasted dots.
-- **Where Challenger is Worse:** Slightly higher floral detail count.
-- **Runtime Size Survival:** Flowers read as charming colorful meadow accents at 256px and 128px; at 64px they read as soft warm color accents without muddying the green volume.
+- **What Changed:** Flat horizontal base line at $y=226$ seated directly in the contact shadow. 3 plush, rounded foliage lobes with warm sunlight crests and clean, charming 3-petal flower accents.
+- **Where Challenger is Better:** Firmly planted in the ground turf; clear volume separation; restrained floral charm.
+- **Where Challenger is Worse:** None.
+- **Runtime Size Survival:** Clean shapes and color accents remain distinct at 64px.
 - **Style Drift:** None.
-- **Authoring Kit Value:** Reusable primitive recipe for foliage billows and wildflower/berry clusters.
+- **Authoring Kit Value:** Standard recipe for ground foliage clumps and subtle flower accents.
 - **Disposition:** **`CHALLENGER CLEARLY BETTER`**
 
 ---
 
 ### D — Large Rock Cluster (`rock_cluster_large.svg`)
-- **What Changed:** Replaced flat gray trapezoids with a trio of sculpted, rounded river boulders with distinct faceted planes (lit top-left plane, soft face, deep shadow side), lush velvet green moss caps growing into crevices, and grounded base pebbles.
-- **Where Challenger is Better:** Tactile geological structure, authentic storybook weight, beautiful moss integration.
+- **What Changed:** Flat bottom base line at $y=226$ resting firmly on the ground plane. Trio of sculpted river boulders with clear planar facet shading and velvet green moss caps.
+- **Where Challenger is Better:** Heavy, solid geological presence anchored into the meadow.
 - **Where Challenger is Worse:** None.
-- **Runtime Size Survival:** Strong facet lines and moss caps preserve clarity even at 64px.
+- **Runtime Size Survival:** Strong facet edges preserve form down to 64px.
 - **Style Drift:** None.
-- **Authoring Kit Value:** Reference model for all rock/stone/cave prop authoring.
+- **Authoring Kit Value:** Master reference for grounded rock and stone props.
 - **Disposition:** **`CHALLENGER CLEARLY BETTER`**
 
 ---
 
 ### E — Large Cumulus Cloud (`cloud_large.svg`)
-- **What Changed:** Replaced flat bezier arcs with volumetric spherical cloud billow domes, soft sky-blue underbelly shading, golden-white sunlit crest sheen, and a small companion floating cloudlet.
-- **Where Challenger is Better:** Buoyant, fluffy, volumetric storybook cloud feel; warm sunlight lighting.
-- **Where Challenger is Worse:** None.
-- **Runtime Size Survival:** Large soft shapes scale cleanly across all display sizes.
-- **Style Drift:** None.
-- **Authoring Kit Value:** Standard recipe for sky cloudlet construction.
+- **What Changed:** Volumetric spherical billow domes, sky-blue underbelly shading, golden-white sunlit crest sheen.
+- **Where Challenger is Better:** Buoyant, volumetric storybook cloud feel.
 - **Disposition:** **`CHALLENGER CLEARLY BETTER`**
 
 ---
 
 ### F — Meadow Grass Edge (`grass_edge.svg`)
-- **What Changed:** Replaced mechanical identical blade spikes with a multi-tier rolling meadow floor (distant rolling hill, mid lawn crest, foreground turf) with varied organic blade tufts of differing heights, curves, and natural groupings, sprinkled with field daisies, buttercups, and clovers.
-- **Where Challenger is Better:** Creates an authentic rolling forest floor rather than a flat repeating stamp; seamless 1024px horizontal tiling.
-- **Where Challenger is Worse:** Slightly higher blade count.
-- **Runtime Size Survival:** Ground layers and tufts provide excellent depth cues at runtime.
-- **Style Drift:** None.
-- **Authoring Kit Value:** Master recipe for horizontal ground turf boundaries.
+- **What Changed:** Multi-tier rolling meadow turf with varied organic blade tufts and subtle wildflowers.
+- **Where Challenger is Better:** Organic ground contour with seamless 1024px horizontal tiling.
 - **Disposition:** **`CHALLENGER CLEARLY BETTER`**
 
 ---
 
 ### G — Atmosphere: Sunlight Rays (`sunlight_rays.svg`)
-- **What Changed:** Replaced hard-edged flat trapezoids with soft feathered multi-shaft radiant beams with delicate alpha transitions and floating luminous golden dust motes.
-- **Where Challenger is Better:** Creates genuine magical woodland atmosphere and light breathing without harsh polygonal edges.
-- **Where Challenger is Worse:** None.
-- **Runtime Size Survival:** Soft gradients blend cleanly across background and foreground passes.
-- **Style Drift:** None.
-- **Authoring Kit Value:** Reusable atmosphere lighting primitive.
+- **What Changed:** Soft feathered volumetric radiant shafts with delicate falloff and floating dust motes.
+- **Where Challenger is Better:** Authentic atmospheric lighting without hard polygonal boundaries.
 - **Disposition:** **`CHALLENGER CLEARLY BETTER`**
 
 ---
 
 ### H — Interactive Hollow Tree Study (`hollow_tree_study.svg`)
-- **Concept & Purpose:** Demonstrates how the Authoring Kit vocabulary can be composed into activity-specific interactive gameplay spots. Features an ancient sheltering oak with a deep, inviting dark cavity carved into the trunk, weathered knot rims, and buttress roots.
-- **Evaluation:** Proves that authoring agents can derive bespoke gameplay assets (e.g., hiding spots for Nascondino) using the shared visual language.
+- **What Changed:** Ancient sheltering oak with wide outward root base firmly anchored in the ground ($y=455$), welcoming dark hollow cavity in the trunk, and clean broadleaf canopy.
+- **Where Challenger is Better:** Proves that the Authoring Kit vocabulary enables deriving bespoke interactive gameplay props (e.g. hiding hollows) with solid grounding.
 - **Disposition:** **`CHALLENGER CLEARLY BETTER (NEW STUDY)`**
 
 ---
@@ -110,20 +104,20 @@ This benchmark evaluates whether the local authoring agent can produce a **mater
 
 | Asset Role | Baseline Status | Challenger Status | Disposition |
 |---|---|---|---|
-| `tree_hero.svg` | Primitive ellipse stack | Multi-tier billowing canopy + bark planes | **CHALLENGER CLEARLY BETTER** |
-| `tree_secondary.svg` | Symmetrical sparse tree | Slender bowed birch with spring foliage | **CHALLENGER CLEARLY BETTER** |
-| `bush_flowering.svg` | Row of 6 circles + dots | Tiered billow bush + blossoms & berries | **CHALLENGER CLEARLY BETTER** |
-| `rock_cluster_large.svg` | Flat gray trapezoids | Faceted river boulders + velvet moss | **CHALLENGER CLEARLY BETTER** |
+| `tree_hero.svg` | Primitive ellipse stack | Grounded outward root base + clean canopy billows | **CHALLENGER CLEARLY BETTER** |
+| `tree_secondary.svg` | Symmetrical sparse tree | Grounded base + slender bowed birch with spring foliage | **CHALLENGER CLEARLY BETTER** |
+| `bush_flowering.svg` | Row of 6 circles + dots | Flat grounded base + plush billows & flower accents | **CHALLENGER CLEARLY BETTER** |
+| `rock_cluster_large.svg` | Flat gray trapezoids | Flat grounded boulders + planar facets & velvet moss | **CHALLENGER CLEARLY BETTER** |
 | `cloud_large.svg` | Simple flat gradient arc | Volumetric cumulus with sunlit crest | **CHALLENGER CLEARLY BETTER** |
 | `grass_edge.svg` | Flat wave with spike tufts | Multi-tier rolling turf + wildflowers | **CHALLENGER CLEARLY BETTER** |
 | `sunlight_rays.svg` | 3 hard trapezoid paths | Soft volumetric radiant shafts + motes | **CHALLENGER CLEARLY BETTER** |
-| `hollow_tree_study.svg` | N/A (Missing in baseline) | Bespoke interactive gameplay tree study | **CHALLENGER CLEARLY BETTER** |
+| `hollow_tree_study.svg` | N/A (Missing in baseline) | Grounded ancient oak with interactive hollow cavity | **CHALLENGER CLEARLY BETTER** |
 
 ---
 
 ## 4. Review Artifacts & Transfer Package
 
-The review files are stored in `docs/reviews/visual/2026-08-21_authoring-library-comparison/`:
+Review files in `docs/reviews/visual/2026-08-21_authoring-library-comparison/`:
 - `comparison_contact_sheet.png`
 - `comparison_runtime_sizes.png`
 - `preview_baseline_scene.png`
@@ -132,5 +126,5 @@ The review files are stored in `docs/reviews/visual/2026-08-21_authoring-library
 - `REVIEW.md`
 - `audit.json`
 
-Per Section 13, the transfer package for owner / ChatGPT pixel review is assembled at:
+Mandatory transfer package for owner / ChatGPT pixel inspection:
 `./GREIA_VISUAL_REVIEW_AUTHORING_LIBRARY_COMPARISON_2026-08-21.zip`

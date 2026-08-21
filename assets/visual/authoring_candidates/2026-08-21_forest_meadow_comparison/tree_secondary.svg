@@ -3,123 +3,83 @@
   <filter id="c-shadow-sec" x="-30%" y="-30%" width="160%" height="160%">
     <feGaussianBlur stdDeviation="7"/>
   </filter>
-  <linearGradient id="sec-trunk-grad" x1="0.2" y1="0" x2="0.8" y2="1">
-    <stop offset="0%" stop-color="#BA7F52"/>
-    <stop offset="40%" stop-color="#935B35"/>
-    <stop offset="80%" stop-color="#6F3F20"/>
-    <stop offset="100%" stop-color="#512A12"/>
+  <linearGradient id="sec-trunk" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="#B27848"/>
+    <stop offset="35%" stop-color="#955B32"/>
+    <stop offset="70%" stop-color="#76411F"/>
+    <stop offset="100%" stop-color="#552B12"/>
   </linearGradient>
   <linearGradient id="sec-canopy-sun" x1="0.3" y1="0" x2="0.7" y2="1">
-    <stop offset="0%" stop-color="#B2F298"/>
-    <stop offset="45%" stop-color="#76DC70"/>
-    <stop offset="100%" stop-color="#46AE4D"/>
+    <stop offset="0%" stop-color="#B8F492"/>
+    <stop offset="50%" stop-color="#76D868"/>
+    <stop offset="100%" stop-color="#44AB45"/>
   </linearGradient>
   <linearGradient id="sec-canopy-mid" x1="0.2" y1="0" x2="0.8" y2="1">
-    <stop offset="0%" stop-color="#72D975"/>
-    <stop offset="50%" stop-color="#44B251"/>
-    <stop offset="100%" stop-color="#288138"/>
+    <stop offset="0%" stop-color="#6ED062"/>
+    <stop offset="55%" stop-color="#41A843"/>
+    <stop offset="100%" stop-color="#24782A"/>
   </linearGradient>
-  <linearGradient id="sec-canopy-shadow" x1="0.1" y1="0" x2="0.9" y2="1">
-    <stop offset="0%" stop-color="#3AA34B"/>
-    <stop offset="60%" stop-color="#227231"/>
-    <stop offset="100%" stop-color="#144E20"/>
+  <linearGradient id="sec-canopy-dark" x1="0.1" y1="0" x2="0.9" y2="1">
+    <stop offset="0%" stop-color="#35903A"/>
+    <stop offset="60%" stop-color="#1F6625"/>
+    <stop offset="100%" stop-color="#124416"/>
   </linearGradient>
-  <radialGradient id="sec-highlight" cx="0.35" cy="0.3" r="0.6">
-    <stop offset="0%" stop-color="#E1FEDC" stop-opacity="0.85"/>
-    <stop offset="60%" stop-color="#B7F8AC" stop-opacity="0.4"/>
-    <stop offset="100%" stop-color="#84E57B" stop-opacity="0"/>
-  </radialGradient>
 </defs>
 
-<!-- Ground Contact Shadow -->
-<ellipse cx="258" cy="466" rx="110" ry="20" fill="#2E2015" opacity="0.16" filter="url(#c-shadow-sec)"/>
-<ellipse cx="258" cy="465" rx="72" ry="12" fill="#1C120A" opacity="0.22"/>
+<!-- Ground Contact Shadows (Solidly Anchored) -->
+<ellipse cx="260" cy="456" rx="115" ry="18" fill="#2E2015" opacity="0.18" filter="url(#c-shadow-sec)"/>
+<ellipse cx="260" cy="454" rx="85" ry="10" fill="#1C120A" opacity="0.30"/>
 
 <!-- Back / Under-Canopy Shadow Mass -->
-<g fill="url(#sec-canopy-shadow)">
-  <path d="M165 240 C145 190 170 140 215 130 C235 95 285 85 320 100 C360 85 410 110 415 155 C440 195 425 245 385 265 C345 285 295 280 260 288 C215 298 175 280 165 240 Z"/>
-</g>
+<path d="M175 250 C145 200 168 145 215 132 C238 95 290 85 330 100 C370 85 420 112 422 160 C445 202 430 252 388 272 C348 292 295 285 260 292 C215 305 182 285 175 250 Z" fill="url(#sec-canopy-dark)"/>
 
-<!-- Graceful Slender Trunk & Branch Architecture -->
+<!-- Slender Trunk Architecture with Outward-Flared Ground Base -->
 <g>
-  <!-- Main Trunk Path -->
-  <path d="M228 456 C236 405 242 355 240 305 C237 258 226 218 206 178 C228 195 245 222 254 252 C262 210 276 172 304 140 C290 170 286 208 288 248 C291 300 298 360 306 410 C310 435 320 450 332 458 C298 454 266 450 228 456 Z" fill="url(#sec-trunk-grad)"/>
+  <!-- Main Trunk Body -->
+  <path d="M195 455 C215 452 232 442 238 395 C242 345 240 295 212 245 C232 260 248 285 254 315 C262 270 275 225 305 185 C292 215 288 252 290 295 C295 350 302 405 312 440 C318 452 335 454 355 455 L195 455 Z" fill="url(#sec-trunk)"/>
 
-  <!-- Roots -->
-  <path d="M228 456 C218 458 200 462 188 464 C205 458 220 448 230 436 Z" fill="#512A12"/>
-  <path d="M320 454 C335 458 355 463 368 465 C350 460 332 448 324 435 Z" fill="#3E1E0B"/>
+  <!-- Outward Root Anchor Flares -->
+  <path d="M195 455 C210 453 225 448 234 435 C238 415 238 385 238 350" fill="none" stroke="#C88E5E" stroke-width="4.5" stroke-linecap="round" opacity="0.45"/>
+  <path d="M355 455 C340 453 328 448 320 435 C314 415 312 385 310 350" fill="none" stroke="#3A1C08" stroke-width="4.5" stroke-linecap="round" opacity="0.45"/>
+  <path d="M272 455 C274 435 272 395 275 350" fill="none" stroke="#C88E5E" stroke-width="3" stroke-linecap="round" opacity="0.35"/>
 
-  <!-- Left Branch Extension -->
-  <path d="M242 272 C215 250 185 242 152 242 C180 234 210 236 235 252 Z" fill="#754323"/>
-  <!-- Right Branch Extension -->
-  <path d="M288 238 C315 215 348 206 382 208 C352 200 320 202 295 220 Z" fill="#62361A"/>
-
-  <!-- Bark Texture & Rim Light -->
-  <path d="M232 448 C240 395 245 345 244 295 C242 255 232 220 215 188" fill="none" stroke="#DCA278" stroke-width="4.5" stroke-linecap="round" opacity="0.45"/>
-  <path d="M298 448 C292 395 288 345 292 295 C295 255 304 220 318 188" fill="none" stroke="#3E1E0B" stroke-width="4" stroke-linecap="round" opacity="0.38"/>
-  <path d="M265 440 C268 390 266 335 270 285" fill="none" stroke="#DCA278" stroke-width="3" stroke-linecap="round" opacity="0.35"/>
+  <!-- Left Slender Branch -->
+  <path d="M235 275 C210 252 180 245 145 245 C175 238 205 240 230 255 Z" fill="#76411F"/>
+  <!-- Right Slender Branch -->
+  <path d="M288 240 C318 218 352 208 388 210 C358 202 325 205 298 222 Z" fill="#552B12"/>
 </g>
 
 <!-- Mid-Canopy Billows -->
 <g fill="url(#sec-canopy-mid)">
-  <!-- Left Tier -->
-  <path d="M140 230 C120 195 135 155 170 145 C195 138 225 148 240 168 C255 188 255 215 240 238 C220 260 185 265 160 258 C145 252 140 240 140 230 Z"/>
-  <!-- Right Tier -->
-  <path d="M310 245 C295 215 310 178 345 165 C375 152 412 162 425 190 C438 218 428 250 402 268 C375 285 335 278 310 245 Z"/>
-  <!-- Central Mass -->
-  <path d="M195 185 C175 142 205 98 250 88 C280 82 312 92 330 112 C355 98 390 105 405 135 C422 165 415 200 390 225 C360 250 315 258 275 252 C235 245 208 222 195 185 Z"/>
+  <!-- Left Billow -->
+  <path d="M145 240 C122 202 138 160 175 148 C202 140 232 150 248 172 C262 192 262 222 245 245 C225 268 188 275 162 268 C148 262 145 250 145 240 Z"/>
+  <!-- Right Billow -->
+  <path d="M315 255 C298 220 315 182 352 168 C382 155 422 165 435 195 C448 225 438 258 410 278 C382 295 340 288 315 255 Z"/>
+  <!-- Center Main Billow -->
+  <path d="M198 195 C178 150 210 102 258 92 C288 85 322 95 340 118 C368 102 405 110 420 142 C438 175 428 212 402 238 C370 265 322 272 280 265 C238 258 210 232 198 195 Z"/>
 </g>
 
 <!-- Fore / Sunlit Canopy Crests -->
 <g fill="url(#sec-canopy-sun)">
-  <!-- Topmost Crown -->
-  <path d="M225 110 C210 72 245 35 288 32 C320 28 355 48 365 78 C388 75 415 90 418 118 C422 145 402 172 375 180 C345 188 308 182 285 168 C255 176 225 158 220 130 C218 122 222 115 225 110 Z"/>
+  <!-- Top Crown Dome -->
+  <path d="M230 115 C215 75 252 35 298 32 C332 28 368 50 378 82 C402 78 430 95 432 125 C435 152 415 180 385 188 C352 195 315 188 290 172 C258 182 228 162 225 132 C222 125 225 118 230 115 Z"/>
   <!-- Left Sunlit Bulge -->
-  <path d="M165 165 C150 132 175 100 210 95 C235 92 258 105 268 125 C250 152 225 175 192 178 C175 178 168 172 165 165 Z"/>
+  <path d="M170 172 C152 138 180 102 218 98 C245 95 268 108 278 130 C258 158 230 182 198 185 C180 185 172 178 170 172 Z"/>
   <!-- Right Sunlit Bulge -->
-  <path d="M305 145 C300 112 328 88 360 90 C388 92 410 112 408 140 C405 162 385 182 360 185 C335 185 312 168 305 145 Z"/>
+  <path d="M312 152 C305 118 335 92 368 95 C398 98 420 118 418 148 C415 170 392 190 368 192 C340 192 318 175 312 152 Z"/>
 </g>
 
-<!-- Volumetric Highlights -->
-<g fill="url(#sec-highlight)">
-  <ellipse cx="288" cy="58" rx="48" ry="26" transform="rotate(-6 288 58)"/>
-  <ellipse cx="205" cy="118" rx="36" ry="20" transform="rotate(-12 205 118)"/>
-  <ellipse cx="360" cy="110" rx="35" ry="18" transform="rotate(10 360 110)"/>
-  <ellipse cx="178" cy="180" rx="30" ry="16" transform="rotate(-15 178 180)"/>
+<!-- Tactile Volume Sunlight Sheen -->
+<g fill="#E3FED4" opacity="0.65">
+  <ellipse cx="295" cy="58" rx="48" ry="24" transform="rotate(-6 295 58)"/>
+  <ellipse cx="210" cy="122" rx="36" ry="18" transform="rotate(-12 210 122)"/>
+  <ellipse cx="370" cy="112" rx="35" ry="16" transform="rotate(10 370 112)"/>
 </g>
 
-<!-- Foliage Leaf Tufts Edge Accents -->
-<g fill="#CEFABD" opacity="0.85">
-  <path d="M280 30 C285 22 295 22 298 29 C294 32 288 32 280 30 Z"/>
-  <path d="M312 26 C318 18 328 20 330 28 C324 30 318 30 312 26 Z"/>
-  <path d="M152 110 C145 106 146 96 154 94 C155 101 155 106 152 110 Z"/>
-  <path d="M125 180 C117 176 118 166 126 164 C128 170 127 176 125 180 Z"/>
-  <path d="M418 100 C426 96 432 102 430 110 C425 108 420 105 418 100 Z"/>
-  <path d="M430 170 C438 166 442 174 438 180 C434 178 430 175 430 170 Z"/>
-</g>
-
-<!-- Depth Crevice Shadows -->
-<g fill="#154E20" opacity="0.5">
-  <path d="M185 170 C210 178 240 175 260 165 C235 180 205 184 180 176 Z"/>
-  <path d="M285 175 C315 182 350 180 375 168 C350 182 315 185 280 178 Z"/>
-</g>
-
-<!-- Gentle Woodland White Star Flowers -->
-<g fill="#FFFFFF" opacity="0.9">
-  <circle cx="218" cy="148" r="3.5"/>
-  <circle cx="214" cy="145" r="3"/>
-  <circle cx="222" cy="145" r="3"/>
-  <circle cx="215" cy="151" r="3"/>
-  <circle cx="221" cy="151" r="3"/>
-  <circle cx="218" cy="148" r="1.8" fill="#FFD54F"/>
-</g>
-<g fill="#FFFFFF" opacity="0.9">
-  <circle cx="345" cy="135" r="3.5"/>
-  <circle cx="341" cy="132" r="3"/>
-  <circle cx="349" cy="132" r="3"/>
-  <circle cx="342" cy="138" r="3"/>
-  <circle cx="348" cy="138" r="3"/>
-  <circle cx="345" cy="135" r="1.8" fill="#FFD54F"/>
+<!-- Foliage Overlap Shadows -->
+<g fill="#124416" opacity="0.45">
+  <path d="M190 178 C218 188 250 185 272 172 C245 188 212 192 185 184 Z"/>
+  <path d="M292 182 C325 190 362 188 388 175 C360 190 322 194 288 186 Z"/>
 </g>
 
 </svg>

@@ -5,4 +5,5 @@ build/test_package_service_state/
 .DS_Store
 tmp/
 *.zip
+GREIA_VISUAL_REVIEW_*/
 

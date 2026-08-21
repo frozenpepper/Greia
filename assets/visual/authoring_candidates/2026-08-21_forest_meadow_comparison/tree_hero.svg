@@ -3,170 +3,86 @@
   <filter id="c-shadow" x="-30%" y="-30%" width="160%" height="160%">
     <feGaussianBlur stdDeviation="8"/>
   </filter>
-  <linearGradient id="trunk-grad" x1="0.2" y1="0" x2="0.8" y2="1">
-    <stop offset="0%" stop-color="#A5673E"/>
-    <stop offset="35%" stop-color="#844E28"/>
-    <stop offset="70%" stop-color="#643818"/>
-    <stop offset="100%" stop-color="#48240D"/>
-  </linearGradient>
-  <linearGradient id="bark-light" x1="0" y1="0" x2="1" y2="0">
-    <stop offset="0%" stop-color="#C2875A" stop-opacity="0.9"/>
-    <stop offset="100%" stop-color="#C2875A" stop-opacity="0"/>
-  </linearGradient>
-  <linearGradient id="bark-dark" x1="0" y1="0" x2="1" y2="0">
-    <stop offset="0%" stop-color="#3A1C08" stop-opacity="0"/>
-    <stop offset="100%" stop-color="#3A1C08" stop-opacity="0.75"/>
+  <linearGradient id="hero-trunk" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="#A76B41"/>
+    <stop offset="30%" stop-color="#8D532D"/>
+    <stop offset="70%" stop-color="#6E3B1B"/>
+    <stop offset="100%" stop-color="#4E260F"/>
   </linearGradient>
   <linearGradient id="canopy-sun" x1="0.3" y1="0" x2="0.7" y2="1">
-    <stop offset="0%" stop-color="#9DEE94"/>
-    <stop offset="40%" stop-color="#62CE6E"/>
-    <stop offset="100%" stop-color="#369E4A"/>
+    <stop offset="0%" stop-color="#A5E887"/>
+    <stop offset="50%" stop-color="#66C65A"/>
+    <stop offset="100%" stop-color="#3D9B38"/>
   </linearGradient>
   <linearGradient id="canopy-mid" x1="0.2" y1="0" x2="0.8" y2="1">
-    <stop offset="0%" stop-color="#65D272"/>
-    <stop offset="50%" stop-color="#3CAB52"/>
-    <stop offset="100%" stop-color="#237936"/>
+    <stop offset="0%" stop-color="#60C458"/>
+    <stop offset="55%" stop-color="#389B36"/>
+    <stop offset="100%" stop-color="#216E25"/>
   </linearGradient>
-  <linearGradient id="canopy-shadow" x1="0.1" y1="0" x2="0.9" y2="1">
-    <stop offset="0%" stop-color="#349646"/>
-    <stop offset="60%" stop-color="#206B30"/>
-    <stop offset="100%" stop-color="#144C20"/>
+  <linearGradient id="canopy-dark" x1="0.1" y1="0" x2="0.9" y2="1">
+    <stop offset="0%" stop-color="#2D8230"/>
+    <stop offset="60%" stop-color="#1B5B20"/>
+    <stop offset="100%" stop-color="#103E15"/>
   </linearGradient>
-  <radialGradient id="highlight-burst" cx="0.35" cy="0.3" r="0.6">
-    <stop offset="0%" stop-color="#D7FCD3" stop-opacity="0.9"/>
-    <stop offset="50%" stop-color="#A6F4A0" stop-opacity="0.5"/>
-    <stop offset="100%" stop-color="#73DC7B" stop-opacity="0"/>
-  </radialGradient>
 </defs>
 
-<!-- Ground Contact Shadow -->
-<ellipse cx="256" cy="466" rx="140" ry="24" fill="#2E2015" opacity="0.18" filter="url(#c-shadow)"/>
-<ellipse cx="256" cy="465" rx="95" ry="14" fill="#1C120A" opacity="0.24"/>
+<!-- Ground Contact Shadows (Solidly Anchored) -->
+<ellipse cx="256" cy="456" rx="145" ry="20" fill="#2E2015" opacity="0.20" filter="url(#c-shadow)"/>
+<ellipse cx="256" cy="454" rx="110" ry="11" fill="#1C120A" opacity="0.35"/>
 
-<!-- Back / Deep Under-Canopy Layer -->
-<g fill="url(#canopy-shadow)">
-  <path d="M120 220 C100 170 125 120 170 110 C185 80 230 65 270 75 C310 50 370 65 395 105 C435 115 455 165 440 215 C460 255 435 305 385 315 C355 325 310 315 285 325 C245 335 195 325 160 305 C115 285 100 245 120 220 Z"/>
-</g>
+<!-- Back / Deep Under-Canopy Shadow Mass -->
+<path d="M140 230 C105 185 125 125 175 110 C195 70 250 55 295 70 C335 45 400 65 415 115 C455 130 465 190 435 240 C450 280 415 325 365 330 C330 335 290 320 260 330 C220 340 170 325 145 295 C120 270 120 245 140 230 Z" fill="url(#canopy-dark)"/>
 
-<!-- Trunk & Major Structural Branches -->
+<!-- Trunk & Major Structural Boughs -->
 <g>
-  <!-- Main Trunk Body -->
-  <path d="M210 456 C215 410 222 360 218 310 C214 260 196 220 165 185 C190 200 215 225 228 255 C235 220 250 180 282 145 C295 125 312 110 330 95 C318 120 312 150 315 180 C320 215 330 240 345 260 C365 235 390 215 425 200 C398 225 380 255 366 288 C355 315 352 350 358 390 C364 425 378 448 392 458 C350 454 310 448 256 448 C240 448 225 452 210 456 Z" fill="url(#trunk-grad)"/>
+  <!-- Main Trunk Body with Outward-Flaring Grounded Base -->
+  <path d="M165 455 C190 452 215 440 220 390 C225 335 218 285 190 235 C215 250 235 272 245 305 C250 260 265 215 295 170 C308 148 322 132 340 115 C328 142 324 175 326 210 C330 245 342 272 358 295 C378 265 405 242 438 225 C412 255 392 290 376 330 C364 365 362 405 370 440 C375 452 395 454 415 455 L165 455 Z" fill="url(#hero-trunk)"/>
 
-  <!-- Buttress Roots Spread -->
-  <path d="M210 456 C200 458 178 462 165 464 C185 458 202 448 214 435 Z" fill="#48240D"/>
-  <path d="M375 454 C395 458 418 463 435 466 C415 460 392 448 382 432 Z" fill="#3D1D09"/>
-  <path d="M245 448 C248 456 252 464 256 468 C260 464 264 456 268 448 Z" fill="#3D1D09" opacity="0.6"/>
+  <!-- Outward Root Anchor Creases (Left & Right Flaring into Soil) -->
+  <path d="M165 455 C185 453 205 446 218 430 C224 410 222 375 220 340" fill="none" stroke="#B87B4C" stroke-width="5" stroke-linecap="round" opacity="0.45"/>
+  <path d="M415 455 C395 453 378 446 368 428 C360 405 360 370 366 335" fill="none" stroke="#3A1C08" stroke-width="5" stroke-linecap="round" opacity="0.45"/>
+  <path d="M260 455 C264 430 262 385 268 330" fill="none" stroke="#B87B4C" stroke-width="4" stroke-linecap="round" opacity="0.35"/>
+  <path d="M305 455 C308 430 305 385 312 335" fill="none" stroke="#3A1C08" stroke-width="4" stroke-linecap="round" opacity="0.35"/>
 
-  <!-- Left Secondary Branch -->
-  <path d="M220 285 C190 265 160 258 125 260 C155 250 185 252 212 268 Z" fill="#6A3D1C"/>
-  <!-- Right Secondary Branch -->
-  <path d="M335 265 C365 245 400 238 435 242 C405 232 370 234 342 250 Z" fill="#583115"/>
-
-  <!-- Bark Shading Planes & Contours -->
-  <!-- Highlight Stripe Left Edge -->
-  <path d="M214 445 C222 390 228 340 226 295 C223 255 210 220 185 190 C195 202 208 222 218 248 C228 278 232 335 228 390 C225 418 220 438 214 445 Z" fill="url(#bark-light)"/>
-  <!-- Shadow Stripe Right Edge -->
-  <path d="M380 450 C368 420 358 385 354 345 C350 305 358 275 372 245 C364 268 358 298 360 338 C364 380 374 418 385 445 Z" fill="url(#bark-dark)"/>
-
-  <!-- Tactile Bark Grain Ridges -->
-  <path d="M242 435 C246 380 245 320 248 265 C250 230 262 200 285 168" fill="none" stroke="#B87B4C" stroke-width="4.5" stroke-linecap="round" opacity="0.45"/>
-  <path d="M272 438 C278 375 272 315 280 255 C285 215 300 180 320 150" fill="none" stroke="#3A1C08" stroke-width="4.5" stroke-linecap="round" opacity="0.38"/>
-  <path d="M298 436 C304 395 302 345 308 295" fill="none" stroke="#B87B4C" stroke-width="3.5" stroke-linecap="round" opacity="0.35"/>
-  <path d="M256 360 C258 375 264 385 268 382 C272 378 270 365 266 355 Z" fill="#2E1505" opacity="0.7"/>
+  <!-- Left Supporting Bough -->
+  <path d="M210 270 C180 248 145 238 110 240 C140 230 175 232 205 252 Z" fill="#6E3B1B"/>
+  <!-- Right Supporting Bough -->
+  <path d="M345 280 C375 258 410 248 445 250 C415 240 380 242 352 262 Z" fill="#4E260F"/>
 </g>
 
-<!-- Mid-Canopy Billowing Mass Groups -->
+<!-- Mid-Canopy Form Masses (Broad Organic Cloud Billows) -->
 <g fill="url(#canopy-mid)">
-  <!-- Lower Left Foliage Mass -->
-  <path d="M100 250 C80 215 95 175 130 160 C155 150 185 158 205 175 C220 190 225 215 215 240 C205 265 175 285 145 285 C120 285 105 270 100 250 Z"/>
-  <!-- Lower Right Foliage Mass -->
-  <path d="M330 280 C315 245 330 205 365 190 C395 178 435 188 450 215 C465 242 455 275 430 295 C400 315 355 310 330 280 Z"/>
-  <!-- Center Main Canopy Bulge -->
-  <path d="M165 205 C145 155 175 105 225 95 C255 88 288 98 308 118 C335 100 375 105 395 135 C415 165 410 205 385 230 C355 260 305 270 260 265 C215 260 180 240 165 205 Z"/>
+  <!-- Lower-Left Billow -->
+  <path d="M110 260 C88 220 105 175 145 158 C175 145 210 155 228 175 C242 195 245 225 232 252 C218 280 180 298 148 295 C122 292 112 278 110 260 Z"/>
+  <!-- Lower-Right Billow -->
+  <path d="M320 288 C305 250 322 205 360 188 C392 172 435 182 452 212 C468 242 458 280 430 305 C398 328 348 320 320 288 Z"/>
+  <!-- Center Foliage Dome -->
+  <path d="M165 215 C142 160 178 102 232 90 C265 82 302 95 325 118 C355 98 400 105 418 140 C435 175 425 220 395 248 C360 280 305 288 258 280 C210 272 178 248 165 215 Z"/>
 </g>
 
 <!-- Fore / Sunlit Upper-Canopy Form Masses -->
 <g fill="url(#canopy-sun)">
-  <!-- Top Center Crown -->
-  <path d="M205 115 C190 75 225 35 270 30 C305 25 340 45 352 75 C375 70 405 85 412 115 C420 145 398 175 368 185 C335 195 295 190 270 175 C235 185 200 165 195 135 C192 128 198 120 205 115 Z"/>
-  <!-- Upper Left Crest -->
-  <path d="M140 160 C125 125 150 90 190 85 C215 82 240 95 252 115 C235 145 205 170 170 172 C150 172 142 168 140 160 Z"/>
-  <!-- Upper Right Crest -->
-  <path d="M315 130 C310 95 340 68 375 70 C405 72 428 95 428 125 C428 150 405 175 380 178 C350 180 325 160 315 130 Z"/>
+  <!-- Top Center Crown Dome -->
+  <path d="M210 120 C192 75 230 30 280 25 C320 20 360 42 372 75 C398 70 430 88 435 120 C440 152 415 185 380 195 C345 205 300 198 275 180 C238 190 200 170 198 138 C196 128 202 122 210 120 Z"/>
+  <!-- Upper-Left Sunlit Crest -->
+  <path d="M145 168 C128 128 158 88 200 82 C228 78 255 92 268 115 C248 148 215 178 178 180 C158 180 148 175 145 168 Z"/>
+  <!-- Upper-Right Sunlit Crest -->
+  <path d="M325 135 C318 95 352 65 390 68 C422 70 445 95 442 128 C440 155 415 180 388 182 C355 185 330 162 325 135 Z"/>
 </g>
 
-<!-- Tactile Volume Highlights & Sunlight Dapples -->
-<g fill="url(#highlight-burst)">
-  <ellipse cx="270" cy="55" rx="55" ry="30" transform="rotate(-8 270 55)"/>
-  <ellipse cx="185" cy="110" rx="42" ry="24" transform="rotate(-15 185 110)"/>
-  <ellipse cx="370" cy="95" rx="40" ry="22" transform="rotate(12 370 95)"/>
-  <ellipse cx="145" cy="180" rx="35" ry="20" transform="rotate(-20 145 180)"/>
-  <ellipse cx="250" cy="135" rx="50" ry="28" transform="rotate(-5 250 135)"/>
+<!-- Tactile Volume Highlights (Broad Soft Sunlight Sheen on Crown) -->
+<g fill="#D5F7C8" opacity="0.65">
+  <ellipse cx="275" cy="55" rx="55" ry="26" transform="rotate(-6 275 55)"/>
+  <ellipse cx="190" cy="115" rx="42" ry="20" transform="rotate(-12 190 115)"/>
+  <ellipse cx="380" cy="98" rx="38" ry="18" transform="rotate(10 380 98)"/>
+  <ellipse cx="155" cy="190" rx="32" ry="16" transform="rotate(-15 155 190)"/>
 </g>
 
-<!-- Leaf Clump Silhouette Edge Accents (Storybook Leaf Tufts) -->
-<g fill="#B6F8B0" opacity="0.85">
-  <!-- Top Crown Tufts -->
-  <path d="M260 28 C265 20 275 20 280 27 C275 30 268 31 260 28 Z"/>
-  <path d="M295 24 C302 17 312 18 316 26 C310 28 302 28 295 24 Z"/>
-  <path d="M225 42 C228 34 238 35 242 43 C236 45 230 45 225 42 Z"/>
-  <!-- Left Side Tufts -->
-  <path d="M125 105 C118 100 118 90 127 88 C128 95 128 100 125 105 Z"/>
-  <path d="M95 185 C87 182 86 172 95 168 C97 175 97 181 95 185 Z"/>
-  <path d="M88 232 C80 230 80 220 89 217 C90 224 90 229 88 232 Z"/>
-  <!-- Right Side Tufts -->
-  <path d="M420 90 C428 86 436 90 436 99 C430 98 424 95 420 90 Z"/>
-  <path d="M448 145 C456 142 462 148 460 156 C454 154 449 150 448 145 Z"/>
-  <path d="M460 230 C468 228 472 236 468 243 C463 241 460 236 460 230 Z"/>
-</g>
-
-<!-- Organic Foliage Overlap Shadows (Crevice Depth) -->
-<g fill="#165223" opacity="0.55">
-  <path d="M150 185 C175 192 205 190 225 180 C200 195 170 200 145 192 Z"/>
-  <path d="M270 190 C305 198 345 195 375 182 C345 198 305 202 265 195 Z"/>
-  <path d="M205 255 C235 262 270 260 295 250 C265 265 230 268 200 260 Z"/>
-</g>
-
-<!-- Whimsical Forest Meadow Blossoms & Sun Berries -->
-<g>
-  <!-- Warm Golden Buttercup Blossoms -->
-  <g fill="#FFD54F">
-    <circle cx="152" cy="138" r="4.5"/>
-    <circle cx="147" cy="135" r="4"/>
-    <circle cx="157" cy="135" r="4"/>
-    <circle cx="149" cy="143" r="4"/>
-    <circle cx="155" cy="143" r="4"/>
-    <circle cx="152" cy="138" r="2.5" fill="#FFF9C4"/>
-  </g>
-  <g fill="#FFD54F">
-    <circle cx="375" cy="155" r="4.5"/>
-    <circle cx="370" cy="152" r="4"/>
-    <circle cx="380" cy="152" r="4"/>
-    <circle cx="372" cy="160" r="4"/>
-    <circle cx="378" cy="160" r="4"/>
-    <circle cx="375" cy="155" r="2.5" fill="#FFF9C4"/>
-  </g>
-  <g fill="#FFD54F">
-    <circle cx="282" cy="102" r="4"/>
-    <circle cx="278" cy="99" r="3.5"/>
-    <circle cx="286" cy="99" r="3.5"/>
-    <circle cx="279" cy="106" r="3.5"/>
-    <circle cx="285" cy="106" r="3.5"/>
-    <circle cx="282" cy="102" r="2" fill="#FFF9C4"/>
-  </g>
-
-  <!-- Sweet Forest Berries (Ruby Accents) -->
-  <g fill="#E53935">
-    <circle cx="215" cy="195" r="4.5"/>
-    <circle cx="222" cy="199" r="3.5"/>
-    <circle cx="217" cy="193" r="1.5" fill="#FFCDD2" opacity="0.8"/>
-  </g>
-  <g fill="#E53935">
-    <circle cx="325" cy="220" r="4.5"/>
-    <circle cx="332" cy="224" r="3.8"/>
-    <circle cx="327" cy="218" r="1.5" fill="#FFCDD2" opacity="0.8"/>
-  </g>
+<!-- Broad Foliage Overlap Shadows (Clear Front/Back Separation) -->
+<g fill="#103E15" opacity="0.45">
+  <path d="M155 192 C185 202 220 198 245 185 C215 202 180 208 150 198 Z"/>
+  <path d="M280 195 C320 205 365 200 395 185 C360 202 315 208 275 198 Z"/>
+  <path d="M210 270 C245 280 285 275 315 262 C280 280 240 285 205 275 Z"/>
 </g>
 
 </svg>
