@@ -5,30 +5,30 @@
 **Repository:** `frozenpepper/Greia` (private)  
 **Canonical/default/development branch:** `main`  
 **Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**  
-**Current cross-cutting work:** device-language/localization + child UX + R13B transactional updates + Activity Simulator/emoji/Writing + collection-first/adaptive Activity discovery + **asset-first visual library with V5 real-Shell integration through feedback states; shared navigation chrome now implemented in source and pending simulator acceptance**  
+**Current cross-cutting work:** device-language/localization + child UX + R13B transactional updates + Activity Simulator/emoji/Writing + collection-first/adaptive Activity discovery + **asset-first visual library with accepted real-Shell shared UI through navigation chrome; Collection-first Greia Home now implemented in source and awaiting Activity Simulator acceptance**  
 **External Parent HTML runtime revision pinned by Greia:** `frozenpepper/Greia-Parent-App-Html@519651a5931269ed4275324f2a87ad3f0d08a3f6`
 
 This file is the current project-wide continuation contract. Detailed chronology belongs in the active plans/reviews. Exact APIs and limits remain source-owned.
 
-For visual/art/graphics work, the stable entry point is:
+Visual/art/graphics entry point:
 
 ```text
 docs/design/GREIA_ART_GRAPHICS_SYSTEM.md
 ```
 
-The short new-session visual resume file is:
+Short new-session visual resume:
 
 ```text
 docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md
 ```
 
-For child Activity discovery/navigation/audience policy, the accepted product authority is:
+Child Activity discovery/navigation/audience authority:
 
 ```text
 docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md
 ```
 
-with launcher implementation/design synthesis in:
+Launcher implementation/design synthesis:
 
 ```text
 docs/design/GREIA_LAUNCHER_INTERACTION_AND_ACTIVITY_CATALOGUE.md
@@ -77,8 +77,10 @@ ui.button.primary    SIMULATOR VISUAL REVIEW
 ui.avatar.frame      SIMULATOR VISUAL REVIEW
 ui.loading.orbit     SIMULATOR VISUAL REVIEW
 ui.error.gentle      SIMULATOR VISUAL REVIEW
+ui.button.icon       SIMULATOR VISUAL REVIEW
 ui.empty.basket      SOURCE / NOT EXERCISED
-ui.button.icon       SOURCE / SIMULATOR PENDING
+ui.portal.frame      SOURCE / GENERATED RENDITION PENDING
+Collection-first Home SOURCE / SIMULATOR PENDING
 ```
 
 Accepted simulator facts include:
@@ -86,18 +88,17 @@ Accepted simulator facts include:
 - `ui.shadow.soft`: six-row responsive matrix, selection, hover, Activity launch and missing/malformed/corrupt fallback; 299 frames / 10.165 s = 29.41 FPS sanity;
 - `ui.card.activity`: six-row matrix, navigation/hover/launch and fallback; 27.2 FPS sanity;
 - `ui.panel.base`: profile/catalogue framing + six-row matrix + fallback; 29.5 FPS sanity;
-- `ui.button.primary`: root category default/hover/open/back/fallback + six-row matrix; 29.6 FPS sanity;
+- `ui.button.primary`: previous root-category component default/hover/open/back/fallback + six-row matrix; 29.6 FPS sanity;
 - `ui.avatar.frame`: profile picker + active-profile switcher + six-row matrix/fallback; ~27.4 FPS sanity;
-- owner-directed Activity panel geometry now uses the available vertical catalogue space (`panel_top=52..62`, `bottom_margin=4`) with the true 640:420 panel ratio and full prominent Activity cards aligned to the authored inner tray;
+- owner-directed Activity panel geometry uses the available vertical catalogue space (`panel_top=52..62`, `bottom_margin=4`) with the true 640:420 panel ratio and prominent Activity cards aligned to the authored inner tray;
 - owner-directed non-intrusive simulator mode supports `--headless` / `GREIA_SIMULATOR_HEADLESS=1` via SDL dummy video/audio while preserving the real Shell pixel buffer;
 - `ui.loading.orbit` launch overlay and `ui.error.gentle` catalogue-error cloud passed headless simulator review with isolated corrupt-PNG fallback; 280 frames / 10.03 s = 27.9 FPS sanity;
-- `ui.empty.basket` is generated/source-present but the production empty catalogue was not legitimately exercised, so no runtime PASS is claimed;
-- first Python Activity semantic resolver + Shape Garden consumer remain **SOURCE only** and non-blocking;
-- new `ui.button.icon/default` Shell-local navigation chrome is **SOURCE only** until its dated simulator protocol executes;
+- `ui.button.icon` passed in-category Back, real Activity pagination, corrupt-PNG fallback, six responsive rows and 271 frames / 10.01 s = 27.1 FPS; profile pagination remained SOURCE / NOT EXERCISED because the workspace had <=4 profiles;
+- `ui.empty.basket` is generated/source-present but the production empty catalogue was not legitimately exercised;
+- first Python Activity semantic resolver + Shape Garden consumer remain SOURCE only and non-blocking;
+- Collection-first Home + `ui.portal.frame/default` are **SOURCE only** until the dated Collection-first simulator protocol executes;
 - full repository `make test` / `make verify` was not run for these V5 visual tranches;
 - no physical Acer/Pi V5 performance claim is made.
-
-The collection-first/adaptive-discovery work recorded on 2026-08-20 is **DOCUMENTATION / ACCEPTED DESIGN only**. It does not claim that the current launcher source, profile schema, Parent API/client or Activity manifest parser implements the new behavior.
 
 V5 execution results accumulate in:
 
@@ -108,7 +109,7 @@ LOCAL_AGENT_RESULT.md
 Current visual acceptance gate:
 
 ```text
-docs/testing/2026-08-21_V5_SHARED_NAVIGATION_CHROME_SIMULATOR.md
+docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md
 ```
 
 For owner-directed local-agent visual/runtime acceptance, the Activity Simulator is the named evidence path. Build-generation commands such as `make visual-assets` create prerequisites; they are not themselves simulator PASS evidence.
@@ -185,6 +186,7 @@ src/greia_launcher/shared_ui_presentation.py
 src/greia_launcher/profile_chrome_presentation.py
 src/greia_launcher/feedback_presentation.py
 src/greia_launcher/navigation_chrome_presentation.py
+src/greia_launcher/collection_home_presentation.py
 src/greia_launcher/child_shell.py
 assets/catalog/shared_visuals_v1_source.toml
 assets/catalog/shared_visuals_v1.toml
@@ -194,31 +196,43 @@ tools/validate_visual_renditions.py
 
 `AssetCatalogue` uses one explicit semantic namespace. The target runtime does not scan visual directories and does not rasterize SVG. `PygameVisualSurfaceCache` provides bounded PNG surface realization.
 
-Current source rendition manifest is version `0.1.4` and selects:
+Source rendition manifest is now version `0.1.5` and adds:
 
 ```text
-ui.panel.base
-ui.card.activity
-ui.button.primary
-ui.button.icon          ← generated rendition pending current build gate
-ui.avatar.frame
-ui.loading.orbit
-ui.error.gentle
-ui.empty.basket
-ui.shadow.soft
+ui.portal.frame/default
 ```
 
-### Completed navigation-chrome gate — accepted
+from `assets/visual/ui/v0.1/portal_frame.svg`; generated `portal_frame.png` must be produced on the local/build checkout before simulator acceptance.
 
-`SharedUiNavigationChromeMixin` applies `ui.button.icon/default` to Shell-local navigation while retaining existing action IDs and hit rectangles:
+### Completed navigation-chrome gate
 
-- in-category local Back control;
-- Activity up/down scroll controls where a real collection requires them;
-- profile previous/next controls where real profile pagination exists (recorded as `SOURCE / NOT EXERCISED` when profile count <= 4).
+`SharedUiNavigationChromeMixin` applies `ui.button.icon/default` to Shell-local navigation while retaining existing action IDs and hit rectangles. Canonical acceptance commit: `370d96039546178ed2c64366bdaec1b5dc986be2`.
 
-A missing/corrupt icon-button PNG falls back only those navigation controls to the proven primitive renderer. Existing shared panel/cards/category buttons/profile/feedback visuals remain independent. Protected Activity system Home/Back is not replaced.
+### Current Collection-first Home source gate
 
-Accepted via `docs/testing/2026-08-21_V5_SHARED_NAVIGATION_CHROME_SIMULATOR.md` at **SIMULATOR VISUAL REVIEW** scope.
+`CollectionFirstHomeMixin` in `src/greia_launcher/collection_home_presentation.py` begins the real migration from the temporary All-Activities root to the accepted child discovery model:
+
+```text
+profile → Greia Home → primary Collection → Activity
+```
+
+Current source behavior:
+
+- `ALL_ACTIVITIES_ID` remains an internal catalogue projection but is no longer rendered as the normal child Activity wall;
+- only available non-empty primary Collections are presented on Home;
+- Collection destinations use `ui.portal.frame/default` when available;
+- entering a Collection reuses accepted Activity cards/panel/navigation/lifecycle;
+- local Back returns from Collection to Collection Home; root Back returns to profile choice;
+- multi-membership remains projection-only: one Activity may appear in several Collections without duplicated package/state/progress;
+- portal-specific failure falls back to a usable circular Collection destination and does not revert the information architecture to All Activities.
+
+Evidence remains **SOURCE** until:
+
+```text
+docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md
+```
+
+passes through the headless Activity Simulator.
 
 ### Activity semantic resolver
 
@@ -291,30 +305,32 @@ docs/product/PARENT_MANAGEMENT.md
 
 Accepted design direction:
 
-- Greia Home becomes **Collection-first** rather than a flat `All Activities` catalogue with category filters;
-- primary Collections remain `create`, `play`, `learn`, `explore`, `my_greia` unless later product evidence changes the vocabulary;
+- Greia Home is **Collection-first** rather than a flat `All Activities` catalogue with category filters;
+- primary Collections remain `create`, `play`, `learn`, `explore`, `my_greia` unless later product evidence changes vocabulary;
 - a small primary Collection shows its Activities directly;
 - when the **effective visible per-child** Activity count exceeds 10, Greia evaluates whether one semantic sub-Collection layer would materially simplify discovery;
 - subdivision is not forced merely by count; incoherent catalogues stay direct with bounded scrolling/paging;
 - normal maximum depth is `Home → primary Collection → optional sub-Collection → Activity`;
-- hierarchy uses stability/hysteresis; the initial collapse target is around 8 effective visible Activities;
+- hierarchy uses stability/hysteresis; initial collapse target is around 8 effective visible Activities;
 - Collections may visually resemble child-friendly shelves/boxes/books/bags/etc. but are not filesystem folders;
 - current `education.difficulty` remains a 1–10 **challenge** field and must not be treated as age;
-- accepted future audience semantics include optional recommended minimum/maximum age/development plus optional adaptive difficulty range;
-- exact DOB is not required merely for discovery; a coarse/approximate Parent-supplied age/development stage is sufficient;
+- accepted future audience semantics include optional recommended min/max age/development plus optional adaptive difficulty range;
+- exact DOB is not required merely for discovery;
 - Parent can eventually choose per-child visibility policies with explicit per-Activity overrides;
-- missing future age metadata fails open for ordinary discovery rather than silently hiding a valid Activity;
+- missing future age metadata fails open for ordinary discovery;
 - adaptive depth uses the effective visible set **after Parent policy**, not raw installed count.
 
-Current implementation boundary:
+Current implementation boundary has now advanced:
 
-- `ActivityCatalogue`, semantic `Collection`, high-level presentation categories, multi-membership, bounded scrolling and `education.difficulty` already exist;
-- the current launcher still uses the `All`-root/filter presentation;
-- current manifest parsing does not yet accept the documented future age/adaptive-difficulty/discovery-tag fields;
+- semantic `Collection`, multi-membership, bounded scrolling and `education.difficulty` already existed;
+- **first Collection-first launcher root migration is now implemented in source** through `CollectionFirstHomeMixin`;
+- this first source tranche covers `Home → primary Collection → Activity` only and remains simulator-pending;
+- adaptive sub-Collections are not implemented;
+- current manifest parsing does not yet accept future age/adaptive-difficulty/discovery-tag fields;
 - current `ChildProfile` does not yet store age/development/challenge preference;
-- current Parent API/client does not yet implement the complete per-child audience/visibility policy.
+- current Parent API/client does not yet implement complete per-child audience/visibility policy.
 
-This direction remains accepted design, not an implementation PASS.
+Do not upgrade the whole discovery design to implemented merely because the first Home migration exists.
 
 ---
 
@@ -368,24 +384,25 @@ docs/testing/LOCAL_AGENT_START_HERE.md
 
 ## Child UX / Activity discovery
 
-1. Treat the Collection-first/adaptive-discovery documents as the accepted target rather than further polishing the old `All + filters` information architecture as if it were final.
-2. Do not add target TOML fields to Activities until `src/greia_platform/activities.py` and tests implement them.
-3. When implementation begins, migrate launcher projection/profile policy/Parent API in coherent stages while preserving registry/runtime/trust authority.
-4. Base adaptive depth on the effective per-child visible set after Parent policy and keep the maximum one optional sub-Collection layer.
-5. Keep age/development suitability separate from challenge/difficulty and avoid requiring exact DOB.
+1. Treat Collection-first as the accepted target, not `All + filters`.
+2. Current source now implements the first `Home → primary Collection → Activity` migration; validate that through the dated Activity Simulator protocol before promoting it.
+3. Preserve multi-membership without package/state duplication.
+4. Do not implement adaptive sub-Collections merely from raw count; later logic must use the effective per-child visible set after Parent policy.
+5. Do not add target TOML age/adaptive fields until `src/greia_platform/activities.py` and tests support them.
+6. Keep age/development suitability separate from challenge/difficulty and avoid requiring exact DOB.
 
 ## Visual workstream
 
 1. Start from `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` and `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md`.
-2. Keep `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md` as sequencing authority.
+2. Preserve accepted panel/tray/full-card geometry and headless simulator mode.
 3. Do **not** create more environment packs by default.
-4. Preserve the accepted panel/tray/full-card geometry and headless simulator mode.
-5. Current exact gate: run `make visual-assets`, then execute `docs/testing/2026-08-21_V5_SHARED_NAVIGATION_CHROME_SIMULATOR.md` in headless Activity Simulator mode.
-6. Mandatory runtime review is the real in-category Back control using `ui.button.icon/default`; exercise scroll/profile pagination only when legitimately reachable and otherwise record `NOT EXERCISED`.
-7. Verify corrupt `icon_button.png` falls back only Shell-local navigation controls while accepted panel/cards/category/profile/feedback visuals remain live.
-8. Run the six-row responsive matrix and frame-count sanity; fix only shared/root causes.
-9. Keep Shape Garden semantic proof non-blocking.
-10. After this gate, continue to another coherent visible shared surface or the future Web semantic adapter; do not return to proof-only work or pack proliferation.
+4. Navigation chrome is accepted; do not keep decorating the obsolete All/filter root.
+5. Current exact gate: run `make visual-assets`, then execute `docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md` headlessly.
+6. Mandatory product review is that normal child Home visibly shows primary Collection destinations, not the All-Activities wall/filter row.
+7. Verify keyboard/pointer Collection navigation, Collection → Activity → return-origin → local Back hierarchy, and multi-membership where legitimately available.
+8. Corrupt only `portal_frame.png` and verify Collection-first hierarchy survives with a narrow circular fallback while other accepted visuals remain live.
+9. Run the full six-row responsive matrix and frame-count sanity; fix only shared/root causes.
+10. Keep Shape Garden semantic proof non-blocking and keep future Web transport separate.
 
 ---
 
@@ -404,10 +421,12 @@ docs/testing/LOCAL_AGENT_START_HERE.md
 - system-update activation stays false on current single-root profiles;
 - source/desktop/simulator/physical evidence scopes remain distinct;
 - Collection-first Home + bounded adaptive one-level subdivision is the accepted child discovery target;
+- the first Collection-first Home source tranche is not evidence for future adaptive/audience/Parent policy;
 - adaptive depth uses the effective per-child visible catalogue after Parent policy, not raw installed count;
 - `education.difficulty` is challenge, not age;
 - target age/adaptive-difficulty/discovery-tag manifest examples remain documentation-only until source parser support lands;
 - Greia Collections are semantic child groupings, never exposed filesystem folders;
+- multi-membership never duplicates Activity installation/state/progression;
 - Greia visual work remains asset-first;
 - `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` remains the stable visual-system entry point;
 - `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` remains the short current visual-session resume contract;
@@ -422,4 +441,4 @@ docs/testing/LOCAL_AGENT_START_HERE.md
 - Shell-local navigation restyling must not be confused with protected Activity system navigation authority;
 - after each substantive visual session update the active visual-plan checkpoint + append-only progress log, visual resume, main guide if architecture changed, and this HANDOVER when continuation changes materially.
 
-For current visual continuation, start from the **shared Shell navigation chrome simulator gate**, not from rejected character-rig, crude-scene, generated-concept, more-pack-by-default, or proof-only Shape Garden work.
+For current visual continuation, start from the **Collection-first Greia Home simulator gate**, not from the old All/filter root, rejected character-rig/crude-scene/generated-concept work, more-pack-by-default work, or proof-only Shape Garden work.
