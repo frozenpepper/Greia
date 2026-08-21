@@ -23,20 +23,25 @@ Do not conflate the two tracks again.
 
 ---
 
-## 2. What the completed benchmark established
+## 2. What the completed work established
 
-The Forest/Meadow comparison showed that the local maintainer agent can produce noticeably stronger representative environment masters than the earlier baseline in several categories, especially:
+The Forest/Meadow pack-scale comparison established that the local maintainer agent can produce a materially stronger environment toolbox than the earlier baseline overall.
 
-- trees;
-- bushes;
-- rocks;
-- clouds;
-- grass edges;
-- atmosphere/light assets.
+Forest/Meadow v0.3 has now been selectively promoted with:
 
-That is enough to justify using the agent to attempt **pack-level reauthoring**.
+```text
+23 candidate roles
++ 5 deliberately retained v0.2 roles
++ 2 preferred authoring ingredients
+```
 
-The later v0.1/v0.2/v0.3/hero-tree sequence became too specimen-focused. Those files remain provenance/evidence, but **no further hero-tree optimization is a milestone of this plan**.
+The retained v0.2 roles demonstrate an important promotion rule: **a candidate does not win merely because it is newer.** Owner pixel review determines the strongest role-by-role toolbox.
+
+The later v0.1/v0.2/v0.3/hero-tree experiment remains provenance only. No further hero-tree optimization is a milestone of this plan.
+
+Workshop pack-scale reauthoring has also now demonstrated a stronger candidate family overall, but it exposed a second important rule: some candidate assets are not true replacements at all. A new open shelf is not the same authoring object as an old cubby shelf; an assembled block house is not the same authoring object as loose blocks.
+
+Therefore pack promotion must preserve useful semantic variation instead of forcing replacement percentages.
 
 ---
 
@@ -60,10 +65,10 @@ The result should be a better toolbox for future Activity authors, not a giant l
 
 Work pack-by-pack.
 
-Recommended order:
+Current order:
 
-1. **Forest / Meadow**
-2. **Workshop**
+1. **Forest / Meadow** — promoted as v0.3; content-authoring pass closed
+2. **Workshop** — reauthored candidate complete; finalization/promotion review active
 3. **Clinic / Care**
 4. **Reading / Classroom**
 5. **Fantasy / Village / Night**
@@ -81,7 +86,7 @@ For each pack:
 
 ### 5.1 Preserve baseline
 
-Do not overwrite the currently accepted/candidate pack during creation.
+Do not overwrite the current baseline during candidate creation.
 
 Create a new reauthoring candidate directory with clear provenance.
 
@@ -95,7 +100,7 @@ The reauthoring pass should preserve or improve useful coverage rather than mere
 
 Reauthor a coherent representative set in one substantial pass.
 
-Do not spend several iterations perfecting one tree, chair, lamp, shelf, or rock while the rest of the pack remains untouched.
+Do not spend several iterations perfecting one tree, chair, lamp, shelf or rock while the rest of the pack remains untouched.
 
 Individual fixes are allowed only for obvious defects discovered during visual review.
 
@@ -116,7 +121,33 @@ quiet support pieces plus hero pieces
 
 Do not manufacture dozens of near-duplicates merely to inflate the catalogue.
 
-### 5.5 Include authoring ingredients where valuable
+### 5.5 Distinguish replacement from useful coexistence
+
+Do not assume each candidate file must replace exactly one baseline file.
+
+For every old/new pair, decide whether the strongest toolbox outcome is:
+
+```text
+CANDIDATE_REPLACES
+BASELINE_RETAINS
+KEEP_BOTH_DISTINCT
+UNRESOLVED
+```
+
+`KEEP_BOTH_DISTINCT` is appropriate when old and new assets represent meaningfully different authoring objects or useful states, for example:
+
+```text
+open shelf vs cubby shelf
+loose blocks vs assembled block house
+simple compact lamp vs articulated studio lamp
+narrow light beam vs wide light shaft
+```
+
+When both survive, give them clear distinct semantic IDs. Do not keep ambiguous duplicate IDs.
+
+The promoted pack may contain more roles than the baseline if the added roles are genuinely useful. This is preferable to deleting useful variety merely to report a high replacement percentage.
+
+### 5.6 Include authoring ingredients where valuable
 
 In addition to polished finished assets, a pack may include reusable source-level ingredients/reference pieces when they materially help Activity authors compose bespoke work.
 
@@ -133,13 +164,17 @@ Examples:
 
 These are authoring resources, not necessarily direct runtime objects.
 
-### 5.6 Runtime-size review
+Promote ingredients selectively. A source fragment does not become useful merely because it was created during the pack pass.
+
+### 5.7 Runtime-size review
 
 Test representative masters at likely runtime sizes. Fine source detail may disappear; silhouette, value hierarchy and material identity should survive.
 
-### 5.7 Composition proof
+Where a detailed variant has a larger intended minimum display size, state that explicitly instead of pretending every asset must work equally at 64 px.
 
-Produce at least one representative scene/composition using the candidate pack so we can judge whether the assets work together.
+### 5.8 Composition proof
+
+Produce at least one representative scene/composition using the candidate/proposed toolbox so we can judge whether the assets work together.
 
 A composition is evidence of pack coherence, not a substitute for individual asset review.
 
@@ -147,7 +182,7 @@ A composition is evidence of pack coherence, not a substitute for individual ass
 
 ## 6. Visual quality requirement
 
-The local agent must aim high, but the project must judge the pixels rather than self-description.
+The local agent must aim high, but the project judges pixels rather than self-description.
 
 Target:
 
@@ -167,6 +202,8 @@ Reject:
 - obvious floating objects;
 - repetitive inflated/blob formulas;
 - one generic material gradient applied to everything;
+- semantically mislabeled assets merely to preserve one-for-one mapping;
+- useful legacy variants discarded solely because a candidate exists;
 - pack scenes that look like unrelated icons placed together;
 - clipped review evidence;
 - prose claiming quality that the screenshots do not show.
@@ -175,16 +212,17 @@ Reject:
 
 ## 7. Review/evidence contract
 
-Every pack reauthoring pass must produce a curated owner-review package.
+Every pack reauthoring/finalization pass must produce a curated owner-review package.
 
 Required evidence should normally include:
 
 - baseline-vs-candidate contact sheet(s);
-- candidate asset overview;
+- candidate/proposed inventory;
 - representative detail crops;
 - representative runtime-size sheet;
 - baseline composition;
-- candidate composition;
+- candidate/proposed composition;
+- explicit role/promotion map;
 - `REVIEW.md`;
 - machine-readable audit/manifest.
 
@@ -204,12 +242,15 @@ Promotion flow:
 baseline pack
 → reauthored candidate pack
 → owner pixel review
-→ limited correction if needed
-→ accepted assets promoted
+→ one bounded finalization if needed
+→ exact role/variant promotion map
+→ promoted versioned pack
 → manifests/docs updated
 ```
 
 Rejected assets remain provenance but are not exposed as preferred authoring references.
+
+Legacy assets may be copied into the new promoted pack when owner review deliberately retains them for a role or a distinct semantic variant.
 
 ---
 
@@ -237,14 +278,27 @@ Do not encode local-agent-specific SVG tricks or benchmark behavior into the use
 
 ---
 
-## 10. Exact next action
+## 10. Current exact action
 
-Stop all further hero-oak refinement.
+Forest/Meadow source promotion is complete as v0.3 and no longer consumes this content-authoring track.
 
-The next maintainer-side visual-content task is:
+Workshop candidate review is recorded in:
 
-> **Reauthor the complete Forest/Meadow base pack as a coherent candidate pack, using the quality lessons from the comparison benchmark but working at pack scale rather than specimen scale.**
+```text
+docs/reviews/visual/2026-08-21_workshop-base-pack-reauthoring/PRIMARY_REVIEW.md
+```
 
-The run must preserve the current Forest/Meadow pack, produce a complete candidate inventory and prepare an owner-review ZIP.
+The exact current maintainer-side task is:
 
-After Forest/Meadow owner review, move to the next pack rather than returning to indefinite optimization of one asset.
+```text
+docs/testing/2026-08-21_WORKSHOP_PACK_FINALIZATION.md
+```
+
+This is one bounded pass to:
+
+- resolve brush bundle, paper stack and desk-lamp decisions;
+- preserve meaningful shelf/blocks/note/light variants;
+- select useful authoring ingredients;
+- produce an exact proposed Workshop v0.2 inventory and owner-review ZIP.
+
+After owner promotion review, materialize Workshop v0.2 and move immediately to Clinic/Care rather than reopening Workshop specimen optimization.
