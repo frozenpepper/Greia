@@ -8,15 +8,25 @@ from greia_platform.ui_core import Collection
 
 
 ALL_ACTIVITIES_ID = "all"
+BROWSE_ACTIVITIES_ID = "browse"
+PRIMARY_COLLECTION_IDS = (
+    "create",
+    "play",
+    "learn",
+    "explore",
+    "my_greia",
+)
 _CATEGORY_ORDER = {
     "create": 10,
     "play": 20,
     "learn": 30,
     "explore": 40,
     "my_greia": 50,
+    BROWSE_ACTIVITIES_ID: 90,
 }
 _CATEGORY_ICONS = {
     ALL_ACTIVITIES_ID: "backpack",
+    BROWSE_ACTIVITIES_ID: "backpack",
     "create": "palette",
     "play": "puzzle_pieces",
     "learn": "book",
@@ -33,6 +43,13 @@ _CATEGORY_TRANSLATIONS: dict[str, dict[str, str]] = {
         "es": "Todos",
         "de": "Alle",
         "fr": "Tous",
+    },
+    BROWSE_ACTIVITIES_ID: {
+        "it": "Altro",
+        "en": "More",
+        "es": "Más",
+        "de": "Mehr",
+        "fr": "Autres",
     },
     "create": {
         "it": "Crea",
@@ -74,7 +91,7 @@ _CATEGORY_TRANSLATIONS: dict[str, dict[str, str]] = {
 
 @dataclass(frozen=True, slots=True)
 class ActivityCatalogue:
-    """Navigation-category projection of the authoritative Activity registry.
+    """Navigation projection of the authoritative Activity registry.
 
     Activities remain registry-owned objects; this class only builds semantic
     UI Collections. One Activity may appear in multiple launcher categories
@@ -82,9 +99,11 @@ class ActivityCatalogue:
     packages without explicit presentation metadata temporarily fall back to
     their education categories for compatibility.
 
-    Each collection also carries a stable semantic Greia icon. The renderer may
-    use that icon for category choices and for persistent in-category chrome;
-    category identity never depends on a filesystem asset path.
+    The child Home vocabulary is deliberately platform-owned. Arbitrary package
+    category IDs may remain useful catalogue metadata, but they do not create
+    new top-level child destinations. An Activity with no recognized primary
+    Collection is instead kept discoverable through a bounded platform-owned
+    ``browse`` fallback Collection.
     """
 
     collections: tuple[Collection[ActivityManifest], ...]
@@ -97,14 +116,35 @@ class ActivityCatalogue:
     ) -> "ActivityCatalogue":
         ordered = tuple(activities)
         buckets: dict[str, list[ActivityManifest]] = {}
+        primary_membership: dict[str, bool] = {}
+
         for activity in ordered:
             launcher_categories = getattr(activity, "launcher_categories", ())
             categories = launcher_categories or activity.categories
+            normalized_categories: list[str] = []
             for category in categories:
                 normalized = category.strip().casefold()
                 if not normalized:
                     continue
-                buckets.setdefault(normalized, []).append(activity)
+                normalized_categories.append(normalized)
+                # ``browse`` is platform-owned fallback state, not a package
+                # namespace. A package spelling it explicitly is still treated
+                # as lacking a recognized primary destination.
+                if normalized != BROWSE_ACTIVITIES_ID:
+                    buckets.setdefault(normalized, []).append(activity)
+            primary_membership[activity.activity_id] = any(
+                category in PRIMARY_COLLECTION_IDS
+                for category in normalized_categories
+            )
+
+        orphaned = tuple(
+            activity
+            for activity in ordered
+            if not primary_membership.get(activity.activity_id, False)
+        )
+        if orphaned:
+            buckets[BROWSE_ACTIVITIES_ID] = list(orphaned)
+
         collections: list[Collection[ActivityManifest]] = [
             Collection(
                 ALL_ACTIVITIES_ID,
@@ -127,6 +167,23 @@ class ActivityCatalogue:
     @property
     def category_ids(self) -> tuple[str, ...]:
         return tuple(item.collection_id for item in self.collections)
+
+    @property
+    def home_collections(self) -> tuple[Collection[ActivityManifest], ...]:
+        """Return only platform-owned child Home destinations.
+
+        Unknown package categories never proliferate the Home surface. The
+        platform-owned ``browse`` destination appears only when at least one
+        Activity would otherwise have no recognized primary destination.
+        """
+
+        home_ids = set(PRIMARY_COLLECTION_IDS)
+        home_ids.add(BROWSE_ACTIVITIES_ID)
+        return tuple(
+            collection
+            for collection in self.collections
+            if collection.collection_id in home_ids and collection.items
+        )
 
     def collection(self, category_id: str) -> Collection[ActivityManifest]:
         for collection in self.collections:
