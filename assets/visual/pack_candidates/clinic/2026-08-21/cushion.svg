@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 240">
+<defs>
+  <filter id="cu-sh" x="-20%" y="-20%" width="140%" height="140%">
+    <feGaussianBlur stdDeviation="6"/>
+  </filter>
+  <linearGradient id="cush-yellow" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#FEF08A"/>
+    <stop offset="60%" stop-color="#FDE047"/>
+    <stop offset="100%" stop-color="#EAB308"/>
+  </linearGradient>
+</defs>
+
+<!-- Ground Contact Shadow -->
+<ellipse cx="140" cy="205" rx="100" ry="20" fill="#2E1B0E" opacity="0.2" filter="url(#cu-sh)"/>
+<ellipse cx="140" cy="203" rx="75" ry="10" fill="#1A0D05" opacity="0.32"/>
+
+<!-- Cushion Main Rounded Body -->
+<path d="M 40,110 C 35,60 70,35 140,35 C 210,35 245,60 240,110 C 245,160 210,185 140,185 C 70,185 35,160 40,110 Z" fill="url(#cush-yellow)" stroke="#CA8A04" stroke-width="2.5"/>
+
+<!-- Piped Rim Highlight -->
+<path d="M 45,108 C 42,65 74,42 140,42 C 206,42 238,65 235,108" fill="none" stroke="#FEF9C3" stroke-width="2"/>
+
+<!-- Tufted Crease Lines Radiating from Center -->
+<g stroke="#B45309" stroke-width="2" stroke-linecap="round" opacity="0.55">
+  <path d="M 140,110 Q 110,80 80,70"/>
+  <path d="M 140,110 Q 170,80 200,70"/>
+  <path d="M 140,110 Q 105,135 75,145"/>
+  <path d="M 140,110 Q 175,135 205,145"/>
+</g>
+
+<!-- Center Tuft Button -->
+<circle cx="140" cy="110" r="10" fill="#EAB308" stroke="#854D0E" stroke-width="2"/>
+<circle cx="138" cy="108" r="3" fill="#FEF08A"/>
+</svg>

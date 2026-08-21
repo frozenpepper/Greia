@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 220">
+<defs>
+  <filter id="bw-sh" x="-20%" y="-20%" width="140%" height="140%">
+    <feGaussianBlur stdDeviation="6"/>
+  </filter>
+  <linearGradient id="basin-enamel" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#FFFFFF"/>
+    <stop offset="70%" stop-color="#F1F5F9"/>
+    <stop offset="100%" stop-color="#CBD5E1"/>
+  </linearGradient>
+  <linearGradient id="water-blue" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#BAE6FD"/>
+    <stop offset="100%" stop-color="#38BDF8"/>
+  </linearGradient>
+</defs>
+
+<!-- Ground Shadow -->
+<ellipse cx="160" cy="195" rx="110" ry="18" fill="#2E1B0E" opacity="0.22" filter="url(#bw-sh)"/>
+<ellipse cx="160" cy="193" rx="80" ry="9" fill="#1A0D05" opacity="0.35"/>
+
+<!-- Basin Outer Rim Base -->
+<path d="M 40,80 C 40,165 90,195 160,195 C 230,195 280,165 280,80 Z" fill="url(#basin-enamel)" stroke="#64748B" stroke-width="2.5"/>
+
+<!-- Water Infill Ellipse -->
+<ellipse cx="160" cy="80" rx="115" ry="38" fill="url(#water-blue)" stroke="#0284C7" stroke-width="2"/>
+
+<!-- Water Surface Ripple -->
+<ellipse cx="150" cy="80" rx="75" ry="20" fill="none" stroke="#E0F2FE" stroke-width="2.5"/>
+<ellipse cx="145" cy="80" rx="45" ry="12" fill="none" stroke="#FFFFFF" stroke-width="2"/>
+
+<!-- Soft Honeycomb Sponge Floating in Water -->
+<g transform="translate(195, 55) rotate(15)">
+  <ellipse cx="25" cy="20" rx="30" ry="20" fill="#FDE047" stroke="#CA8A04" stroke-width="2"/>
+  <!-- Sponge Pores -->
+  <circle cx="15" cy="15" r="3" fill="#EAB308"/>
+  <circle cx="28" cy="14" r="2.5" fill="#EAB308"/>
+  <circle cx="36" cy="22" r="3.5" fill="#EAB308"/>
+  <circle cx="22" cy="26" r="2" fill="#EAB308"/>
+</g>
+
+<!-- Enameled Mint Rolled Top Rim -->
+<ellipse cx="160" cy="80" rx="120" ry="40" fill="none" stroke="#10B981" stroke-width="4"/>
+</svg>

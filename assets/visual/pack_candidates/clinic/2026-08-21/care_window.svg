@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 360">
+<defs>
+  <linearGradient id="win-frame" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#E2B77E"/>
+    <stop offset="100%" stop-color="#9E6932"/>
+  </linearGradient>
+  <linearGradient id="sky-blue" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#BAE6FD"/>
+    <stop offset="100%" stop-color="#E0F2FE"/>
+  </linearGradient>
+</defs>
+
+<!-- Outer Timber Frame -->
+<path d="M 30,130 C 30,40 290,40 290,130 L 290,320 L 30,320 Z" fill="url(#win-frame)" stroke="#5B3308" stroke-width="3"/>
+
+<!-- Window Sill Slab -->
+<rect x="15" y="315" width="290" height="26" rx="8" fill="url(#win-frame)" stroke="#5B3308" stroke-width="2.5"/>
+
+<!-- Glass Interior Panes (Sky & Landscape) -->
+<path d="M 46,130 C 46,60 274,60 274,130 L 274,315 L 46,315 Z" fill="url(#sky-blue)"/>
+
+<!-- Rolling Meadow Hill Outside -->
+<path d="M 46,260 Q 140,220 274,270 L 274,315 L 46,315 Z" fill="#86EFAC"/>
+<path d="M 46,285 Q 200,250 274,285 L 274,315 L 46,315 Z" fill="#4ADE80"/>
+
+<!-- Distant Blooming Orchard Tree Outside -->
+<circle cx="210" cy="235" r="28" fill="#F472B6" opacity="0.85"/>
+<circle cx="210" cy="235" r="22" fill="#FBCFE8" opacity="0.9"/>
+<rect x="207" y="245" width="6" height="25" fill="#854D0E"/>
+
+<!-- Distant Soft Cloud -->
+<ellipse cx="100" cy="115" rx="30" ry="14" fill="#FFFFFF" opacity="0.8"/>
+<ellipse cx="120" cy="110" rx="20" ry="12" fill="#FFFFFF" opacity="0.8"/>
+
+<!-- Gentle Morning Sun -->
+<circle cx="85" cy="85" r="16" fill="#FDE047" opacity="0.85"/>
+
+<!-- Wooden Window Mullions -->
+<!-- Vertical Center Bar -->
+<rect x="154" y="55" width="12" height="260" fill="url(#win-frame)" stroke="#5B3308" stroke-width="1.5"/>
+<!-- Horizontal Transom Bar -->
+<rect x="46" y="180" width="228" height="12" fill="url(#win-frame)" stroke="#5B3308" stroke-width="1.5"/>
+
+<!-- Potted Sprout on Sill -->
+<g transform="translate(60, 275)">
+  <polygon points="5,40 25,40 28,18 2,18" fill="#FB923C" stroke="#C2410C" stroke-width="1.5"/>
+  <!-- Green Leaves -->
+  <path d="M 15,18 Q 5,5 0,10 Q 10,16 15,18 Z" fill="#22C55E"/>
+  <path d="M 15,18 Q 25,5 30,10 Q 20,16 15,18 Z" fill="#16A34A"/>
+</g>
+</svg>

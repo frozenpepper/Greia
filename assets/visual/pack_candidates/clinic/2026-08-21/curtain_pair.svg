@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 380">
+<defs>
+  <linearGradient id="curt-mint" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="#CCFBF1"/>
+    <stop offset="50%" stop-color="#99F6E4"/>
+    <stop offset="100%" stop-color="#5EEAD4"/>
+  </linearGradient>
+  <linearGradient id="rod-wood" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#DEB07A"/>
+    <stop offset="100%" stop-color="#8F5E28"/>
+  </linearGradient>
+</defs>
+
+<!-- Wooden Curtain Rod & Finials -->
+<rect x="20" y="22" width="400" height="12" rx="4" fill="url(#rod-wood)" stroke="#5B3308" stroke-width="2"/>
+<circle cx="20" cy="28" r="10" fill="url(#rod-wood)" stroke="#5B3308" stroke-width="2"/>
+<circle cx="420" cy="28" r="10" fill="url(#rod-wood)" stroke="#5B3308" stroke-width="2"/>
+
+<!-- Scalloped Top Valance -->
+<path d="M 30,28 L 410,28 L 410,65 Q 365,85 320,65 Q 275,85 230,65 Q 185,85 140,65 Q 95,85 50,65 Q 40,65 30,65 Z" fill="#F0FDFA" stroke="#0D9488" stroke-width="2"/>
+<!-- Valance Scallop Hem Stitch -->
+<path d="M 30,60 Q 50,78 95,58 Q 140,78 185,58 Q 230,78 275,58 Q 320,78 365,58 Q 410,78 410,60" fill="none" stroke="#14B8A6" stroke-width="1.5" stroke-dasharray="3 3"/>
+
+<!-- Left Draped Curtain Panel -->
+<path d="M 35,65 C 55,140 15,200 45,210 C 20,280 30,360 85,360 C 95,360 100,280 85,210 C 95,190 120,120 135,65 Z" fill="url(#curt-mint)" stroke="#0D9488" stroke-width="2"/>
+<!-- Left Tie-Back Ribbon with Rosette -->
+<rect x="25" y="195" width="65" height="14" rx="4" fill="#F472B6" stroke="#DB2777" stroke-width="1.5"/>
+<circle cx="85" cy="202" r="7" fill="#F472B6" stroke="#DB2777" stroke-width="1.5"/>
+
+<!-- Right Draped Curtain Panel -->
+<path d="M 405,65 C 385,140 425,200 395,210 C 420,280 410,360 355,360 C 345,360 340,280 355,210 C 345,190 320,120 305,65 Z" fill="url(#curt-mint)" stroke="#0D9488" stroke-width="2"/>
+<!-- Right Tie-Back Ribbon with Rosette -->
+<rect x="350" y="195" width="65" height="14" rx="4" fill="#F472B6" stroke="#DB2777" stroke-width="1.5"/>
+<circle cx="355" cy="202" r="7" fill="#F472B6" stroke="#DB2777" stroke-width="1.5"/>
+</svg>

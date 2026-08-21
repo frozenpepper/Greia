@@ -1,0 +1,157 @@
+catalog_id = "greia.environment.clinic.2026-08-21-candidate"
+catalog_version = "0.2.0-candidate"
+status = "candidate"
+runtime_consumed = false
+active_plan = "docs/plans/2026-08-21_BASE_ART_PACK_REAUTHORING.md"
+provenance = "Full reauthoring of Clinic/Care base pack using tactile material differentiation, reassuring child-care aesthetic, and soft Gouache daylighting"
+notes = "Candidate pack for Clinic/Care environment. Preserves complete 17-role catalogue coverage + 2 authoring ingredients."
+
+[[assets]]
+id = "clinic.plush.bear"
+path = "plush_bear.svg"
+family = "toy_comfort"
+role = "playfield_hero"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "clinic.care.bed"
+path = "care_bed.svg"
+family = "furniture"
+role = "playfield"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "clinic.cabinet"
+path = "cabinet.svg"
+family = "furniture"
+role = "mid_background"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "clinic.side.table"
+path = "side_table.svg"
+family = "furniture"
+role = "playfield"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "clinic.cushion"
+path = "cushion.svg"
+family = "textile"
+role = "playfield_or_bed"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "clinic.heart.rug"
+path = "heart_rug.svg"
+family = "textile"
+role = "floor"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "clinic.curtain.pair"
+path = "curtain_pair.svg"
+family = "decor"
+role = "wall_or_window"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "clinic.care.window"
+path = "care_window.svg"
+family = "room_feature"
+role = "wall"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "clinic.window.light"
+path = "window_light.svg"
+family = "atmosphere"
+role = "light_overlay"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "clinic.room.wall.base"
+path = "room_wall_base.svg"
+family = "room_base"
+role = "background"
+status = "candidate"
+alpha = false
+
+[[assets]]
+id = "clinic.room.floor.base"
+path = "room_floor_base.svg"
+family = "room_base"
+role = "ground"
+status = "candidate"
+alpha = false
+
+[[assets]]
+id = "clinic.care.kit"
+path = "care_kit.svg"
+family = "pretend_tool"
+role = "tabletop_or_floor"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "clinic.bandage.box"
+path = "bandage_box.svg"
+family = "care_prop"
+role = "tabletop_or_shelf"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "clinic.toy.stethoscope"
+path = "toy_stethoscope.svg"
+family = "pretend_tool"
+role = "tabletop_or_held"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "clinic.bottle.set"
+path = "bottle_set.svg"
+family = "care_prop"
+role = "tabletop_or_shelf"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "clinic.care.bowl"
+path = "care_bowl.svg"
+family = "care_prop"
+role = "tabletop_or_floor"
+status = "candidate"
+alpha = true
+
+[[assets]]
+id = "clinic.heart.fx"
+path = "heart_fx.svg"
+family = "fx"
+role = "floating_accent"
+status = "candidate"
+alpha = true
+
+[[ingredients]]
+id = "ingredient.patch"
+path = "ingredients/ingredient_fabric_patch.svg"
+family = "ingredient"
+role = "textile_accent"
+status = "candidate"
+
+[[ingredients]]
+id = "ingredient.bandage"
+path = "ingredients/ingredient_bandage_strip.svg"
+family = "ingredient"
+role = "care_accent"
+status = "candidate"

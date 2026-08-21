@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 500">
+<defs>
+  <linearGradient id="sun-shaft" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#FEF08A" stop-opacity="0.45"/>
+    <stop offset="45%" stop-color="#FEF9C3" stop-opacity="0.25"/>
+    <stop offset="100%" stop-color="#FEF08A" stop-opacity="0.0"/>
+  </linearGradient>
+</defs>
+
+<!-- Broad Diagonal Sunlight Shaft -->
+<polygon points="80,0 260,0 480,500 240,500" fill="url(#sun-shaft)"/>
+
+<!-- Floating Sparkle Dust Motes -->
+<circle cx="180" cy="140" r="3.5" fill="#FFFFFF" opacity="0.65"/>
+<circle cx="230" cy="220" r="2.5" fill="#FFFFFF" opacity="0.55"/>
+<circle cx="280" cy="180" r="4.0" fill="#FEF08A" opacity="0.75"/>
+<circle cx="320" cy="310" r="3.0" fill="#FFFFFF" opacity="0.6"/>
+<circle cx="250" cy="380" r="2.5" fill="#FEF9C3" opacity="0.5"/>
+<circle cx="380" cy="420" r="3.5" fill="#FFFFFF" opacity="0.65"/>
+</svg>

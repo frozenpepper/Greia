@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160">
+<defs>
+  <filter id="fp-sh" x="-20%" y="-20%" width="140%" height="140%">
+    <feGaussianBlur stdDeviation="3"/>
+  </filter>
+</defs>
+<path d="M 80,35 C 60,8 15,8 10,42 C 0,85 80,140 80,140 C 80,140 160,85 150,42 C 145,8 100,8 80,35 Z" fill="#000000" opacity="0.18" filter="url(#fp-sh)"/>
+<path d="M 80,30 C 60,3 15,3 10,37 C 0,80 80,135 80,135 C 80,135 160,80 150,37 C 145,3 100,3 80,30 Z" fill="#F472B6" stroke="#BE185D" stroke-width="2.5"/>
+<path d="M 80,30 C 60,3 15,3 10,37 C 0,80 80,135 80,135 C 80,135 160,80 150,37 C 145,3 100,3 80,30 Z" fill="none" stroke="#FDF2F8" stroke-width="2" stroke-dasharray="5 5"/>
+</svg>

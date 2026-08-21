@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 460">
+<defs>
+  <filter id="cab-sh" x="-20%" y="-20%" width="140%" height="140%">
+    <feGaussianBlur stdDeviation="8"/>
+  </filter>
+  <linearGradient id="cab-mint" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#A7F3D0"/>
+    <stop offset="50%" stop-color="#6EE7B7"/>
+    <stop offset="100%" stop-color="#34D399"/>
+  </linearGradient>
+  <linearGradient id="cab-wood" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#DEB07A"/>
+    <stop offset="100%" stop-color="#9E6932"/>
+  </linearGradient>
+</defs>
+
+<!-- Ground Shadow -->
+<ellipse cx="190" cy="430" rx="150" ry="20" fill="#2E1B0E" opacity="0.22" filter="url(#cab-sh)"/>
+<ellipse cx="190" cy="428" rx="120" ry="10" fill="#1A0D05" opacity="0.35"/>
+
+<!-- Cabinet Feet -->
+<rect x="45" y="390" width="28" height="35" rx="6" fill="#047857"/>
+<rect x="307" y="390" width="28" height="35" rx="6" fill="#047857"/>
+
+<!-- Main Cabinet Body -->
+<rect x="35" y="40" width="310" height="365" rx="16" fill="url(#cab-mint)" stroke="#059669" stroke-width="3"/>
+
+<!-- Top Crown Molding Slab -->
+<rect x="25" y="25" width="330" height="24" rx="8" fill="url(#cab-wood)" stroke="#784A1A" stroke-width="2.5"/>
+
+<!-- Upper Glass Display Doors -->
+<rect x="55" y="65" width="130" height="220" rx="10" fill="#F0FDF4" stroke="#059669" stroke-width="2"/>
+<rect x="195" y="65" width="130" height="220" rx="10" fill="#F0FDF4" stroke="#059669" stroke-width="2"/>
+
+<!-- Glass Glint Highlights -->
+<polygon points="65,75 145,75 110,275 65,275" fill="#FFFFFF" opacity="0.35"/>
+<polygon points="205,75 285,75 250,275 205,275" fill="#FFFFFF" opacity="0.35"/>
+
+<!-- Interior Wooden Shelves Visible Through Glass -->
+<line x1="60" y1="135" x2="180" y2="135" stroke="#B45309" stroke-width="4"/>
+<line x1="200" y1="135" x2="320" y2="135" stroke="#B45309" stroke-width="4"/>
+<line x1="60" y1="205" x2="180" y2="205" stroke="#B45309" stroke-width="4"/>
+<line x1="200" y1="205" x2="320" y2="205" stroke="#B45309" stroke-width="4"/>
+
+<!-- Friendly Props on Display Inside -->
+<!-- Jar on top shelf -->
+<rect x="80" y="105" width="24" height="30" rx="4" fill="#F472B6" opacity="0.75"/>
+<rect x="108" y="112" width="18" height="23" rx="3" fill="#38BDF8" opacity="0.75"/>
+<!-- Towel stack on middle shelf -->
+<rect x="220" y="180" width="45" height="25" rx="4" fill="#FDE68A" opacity="0.85"/>
+
+<!-- Wooden Door Frame Mullions -->
+<rect x="55" y="65" width="130" height="220" rx="10" fill="none" stroke="#047857" stroke-width="3"/>
+<rect x="195" y="65" width="130" height="220" rx="10" fill="none" stroke="#047857" stroke-width="3"/>
+
+<!-- Wooden Door Knobs -->
+<circle cx="170" cy="175" r="7" fill="url(#cab-wood)" stroke="#5B3308" stroke-width="1.5"/>
+<circle cx="210" cy="175" r="7" fill="url(#cab-wood)" stroke="#5B3308" stroke-width="1.5"/>
+
+<!-- Lower Storage Drawers -->
+<rect x="55" y="300" width="130" height="85" rx="8" fill="#ECFDF5" stroke="#059669" stroke-width="2"/>
+<rect x="195" y="300" width="130" height="85" rx="8" fill="#ECFDF5" stroke="#059669" stroke-width="2"/>
+
+<!-- Drawer Knobs -->
+<circle cx="120" cy="342" r="7" fill="url(#cab-wood)" stroke="#5B3308" stroke-width="1.5"/>
+<circle cx="260" cy="342" r="7" fill="url(#cab-wood)" stroke="#5B3308" stroke-width="1.5"/>
+</svg>

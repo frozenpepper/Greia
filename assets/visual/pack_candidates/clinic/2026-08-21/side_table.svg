@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 320">
+<defs>
+  <filter id="st-sh" x="-20%" y="-20%" width="140%" height="140%">
+    <feGaussianBlur stdDeviation="6"/>
+  </filter>
+  <linearGradient id="table-wood" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#E8C394"/>
+    <stop offset="60%" stop-color="#C58E52"/>
+    <stop offset="100%" stop-color="#8F5E28"/>
+  </linearGradient>
+</defs>
+
+<!-- Ground Shadow -->
+<ellipse cx="150" cy="295" rx="90" ry="16" fill="#2E1B0E" opacity="0.22" filter="url(#st-sh)"/>
+<ellipse cx="150" cy="293" rx="65" ry="8" fill="#1A0D05" opacity="0.35"/>
+
+<!-- Back Legs -->
+<rect x="90" y="85" width="16" height="195" rx="5" fill="#784A1A"/>
+<rect x="194" y="85" width="16" height="195" rx="5" fill="#784A1A"/>
+
+<!-- Lower Round Shelf -->
+<ellipse cx="150" cy="210" rx="68" ry="18" fill="url(#table-wood)" stroke="#784A1A" stroke-width="2"/>
+
+<!-- Front Turned Legs -->
+<rect x="68" y="85" width="18" height="205" rx="6" fill="url(#table-wood)" stroke="#784A1A" stroke-width="2"/>
+<rect x="214" y="85" width="18" height="205" rx="6" fill="url(#table-wood)" stroke="#784A1A" stroke-width="2"/>
+
+<!-- Tabletop Beveled Slab -->
+<ellipse cx="150" cy="85" rx="105" ry="32" fill="url(#table-wood)" stroke="#784A1A" stroke-width="2.5"/>
+<ellipse cx="150" cy="80" rx="98" ry="27" fill="#F5DFC1" stroke="#BA874C" stroke-width="1.5"/>
+</svg>

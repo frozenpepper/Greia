@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 280">
+<defs>
+  <filter id="ck-sh" x="-20%" y="-20%" width="140%" height="140%">
+    <feGaussianBlur stdDeviation="6"/>
+  </filter>
+  <linearGradient id="kit-mint" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#A7F3D0"/>
+    <stop offset="60%" stop-color="#34D399"/>
+    <stop offset="100%" stop-color="#059669"/>
+  </linearGradient>
+  <linearGradient id="wood-handle" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#DEB07A"/>
+    <stop offset="100%" stop-color="#8F5E28"/>
+  </linearGradient>
+</defs>
+
+<!-- Ground Shadow -->
+<ellipse cx="160" cy="255" rx="110" ry="18" fill="#2E1B0E" opacity="0.22" filter="url(#ck-sh)"/>
+<ellipse cx="160" cy="253" rx="85" ry="9" fill="#1A0D05" opacity="0.35"/>
+
+<!-- Wooden Carrying Handle -->
+<path d="M 120,95 C 120,40 200,40 200,95" fill="none" stroke="url(#wood-handle)" stroke-width="14" stroke-linecap="round"/>
+<rect x="110" y="85" width="20" height="15" rx="4" fill="#FFE082" stroke="#B45309" stroke-width="1.5"/>
+<rect x="190" y="85" width="20" height="15" rx="4" fill="#FFE082" stroke="#B45309" stroke-width="1.5"/>
+
+<!-- Main Toolbox Case Body -->
+<rect x="40" y="90" width="240" height="155" rx="18" fill="url(#kit-mint)" stroke="#047857" stroke-width="3"/>
+
+<!-- Lid Seam Line -->
+<line x1="40" y1="135" x2="280" y2="135" stroke="#047857" stroke-width="2.5"/>
+
+<!-- Brass Latches -->
+<rect x="80" y="125" width="24" height="24" rx="5" fill="#FDE047" stroke="#B45309" stroke-width="1.5"/>
+<circle cx="92" cy="137" r="3" fill="#854D0E"/>
+<rect x="216" y="125" width="24" height="24" rx="5" fill="#FDE047" stroke="#B45309" stroke-width="1.5"/>
+<circle cx="228" cy="137" r="3" fill="#854D0E"/>
+
+<!-- Center White Care Emblem with Pink Heart -->
+<circle cx="160" cy="180" r="32" fill="#FFFFFF" stroke="#6EE7B7" stroke-width="2"/>
+<g transform="translate(142, 163)">
+  <path d="M 18,7 C 14,0 4,0 2,8 C 0,17 18,30 18,30 C 18,30 36,17 34,8 C 32,0 22,0 18,7 Z" fill="#F472B6" stroke="#DB2777" stroke-width="1.5"/>
+</g>
+</svg>

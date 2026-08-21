@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 380">
+<defs>
+  <filter id="pb-sh" x="-20%" y="-20%" width="140%" height="140%">
+    <feGaussianBlur stdDeviation="6"/>
+  </filter>
+  <linearGradient id="fur-base" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#DEB07A"/>
+    <stop offset="60%" stop-color="#C58E52"/>
+    <stop offset="100%" stop-color="#9E6932"/>
+  </linearGradient>
+  <linearGradient id="muzzle-cream" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#FFF5E6"/>
+    <stop offset="100%" stop-color="#E8D5BC"/>
+  </linearGradient>
+</defs>
+
+<!-- Ground Shadow -->
+<ellipse cx="160" cy="350" rx="90" ry="18" fill="#2E1B0E" opacity="0.22" filter="url(#pb-sh)"/>
+<ellipse cx="160" cy="348" rx="65" ry="9" fill="#1A0D05" opacity="0.35"/>
+
+<!-- Paws / Legs Back -->
+<ellipse cx="105" cy="315" rx="36" ry="24" fill="#B27B42" stroke="#875322" stroke-width="2"/>
+<ellipse cx="215" cy="315" rx="36" ry="24" fill="#B27B42" stroke="#875322" stroke-width="2"/>
+<!-- Footpads -->
+<ellipse cx="105" cy="315" rx="20" ry="14" fill="url(#muzzle-cream)"/>
+<ellipse cx="215" cy="315" rx="20" ry="14" fill="url(#muzzle-cream)"/>
+
+<!-- Arms -->
+<path d="M 85,180 C 50,195 55,250 85,260 C 105,265 115,225 105,190 Z" fill="url(#fur-base)" stroke="#875322" stroke-width="2"/>
+<path d="M 235,180 C 270,195 265,250 235,260 C 215,265 205,225 215,190 Z" fill="url(#fur-base)" stroke="#875322" stroke-width="2"/>
+
+<!-- Body -->
+<ellipse cx="160" cy="245" rx="72" ry="85" fill="url(#fur-base)" stroke="#875322" stroke-width="2.5"/>
+<!-- Soft Cream Belly -->
+<ellipse cx="160" cy="255" rx="46" ry="56" fill="url(#muzzle-cream)" opacity="0.85"/>
+
+<!-- Stitched Felt Heart Patch on Chest -->
+<g transform="translate(142, 220)">
+  <path d="M 18,7 C 14,0 4,0 2,8 C 0,17 18,30 18,30 C 18,30 36,17 34,8 C 32,0 22,0 18,7 Z" fill="#F472B6" stroke="#DB2777" stroke-width="1.5"/>
+  <!-- Stitch Dashes -->
+  <path d="M 18,7 C 14,0 4,0 2,8 C 0,17 18,30 18,30 C 18,30 36,17 34,8 C 32,0 22,0 18,7 Z" fill="none" stroke="#FDF2F8" stroke-width="1.5" stroke-dasharray="3 3"/>
+</g>
+
+<!-- Ears -->
+<circle cx="105" cy="95" r="30" fill="url(#fur-base)" stroke="#875322" stroke-width="2"/>
+<circle cx="105" cy="95" r="16" fill="url(#muzzle-cream)"/>
+<circle cx="215" cy="95" r="30" fill="url(#fur-base)" stroke="#875322" stroke-width="2"/>
+<circle cx="215" cy="95" r="16" fill="url(#muzzle-cream)"/>
+
+<!-- Head -->
+<ellipse cx="160" cy="135" rx="68" ry="60" fill="url(#fur-base)" stroke="#875322" stroke-width="2.5"/>
+
+<!-- Snout & Muzzle -->
+<ellipse cx="160" cy="152" rx="32" ry="24" fill="url(#muzzle-cream)" stroke="#BA9C7A" stroke-width="1.5"/>
+<!-- Nose -->
+<path d="M 150,140 C 150,135 170,135 170,140 C 170,146 160,150 160,150 C 160,150 150,146 150,140 Z" fill="#4A2E18"/>
+<ellipse cx="156" cy="138" rx="3" ry="1.5" fill="#FFFFFF" opacity="0.6"/>
+<!-- Smile -->
+<path d="M 160,150 L 160,160 M 152,158 C 156,163 164,163 168,158" stroke="#4A2E18" stroke-width="2" stroke-linecap="round" fill="none"/>
+
+<!-- Button Eyes with Specular Sparkle -->
+<circle cx="130" cy="125" r="7.5" fill="#2E1B0E"/>
+<circle cx="128" cy="122" r="2.5" fill="#FFFFFF"/>
+<circle cx="190" cy="125" r="7.5" fill="#2E1B0E"/>
+<circle cx="188" cy="122" r="2.5" fill="#FFFFFF"/>
+
+<!-- Cute Brow Details -->
+<path d="M 124,112 C 128,109 135,110 137,113" stroke="#875322" stroke-width="2" stroke-linecap="round" fill="none"/>
+<path d="M 183,113 C 185,110 192,109 196,112" stroke="#875322" stroke-width="2" stroke-linecap="round" fill="none"/>
+</svg>

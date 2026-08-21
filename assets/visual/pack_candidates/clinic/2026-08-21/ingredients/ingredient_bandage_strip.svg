@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100">
+<defs>
+  <filter id="bg-sh" x="-20%" y="-20%" width="140%" height="140%">
+    <feGaussianBlur stdDeviation="3"/>
+  </filter>
+</defs>
+<rect x="20" y="32" width="160" height="48" rx="24" fill="#000000" opacity="0.18" filter="url(#bg-sh)"/>
+<rect x="20" y="28" width="160" height="48" rx="24" fill="#FBCFE8" stroke="#DB2777" stroke-width="2.5"/>
+<!-- Gauze Pad -->
+<rect x="68" y="33" width="64" height="38" rx="6" fill="#FFFFFF" stroke="#F472B6" stroke-width="1.5"/>
+<!-- Star Motif -->
+<polygon points="100,40 104,49 113,50 106,56 108,65 100,60 92,65 94,56 87,50 96,49" fill="#F472B6"/>
+<!-- Ventilation Dots -->
+<circle cx="45" cy="52" r="3" fill="#DB2777" opacity="0.5"/>
+<circle cx="155" cy="52" r="3" fill="#DB2777" opacity="0.5"/>
+</svg>
