@@ -76,6 +76,13 @@ class CollectionFirstHomeMixin:
         # explicitly invalidate it when keyboard/controller focus changes.
         self._cached_activities_key = None
 
+    def _activate_profile(self, profile: Any, pygame: Any) -> None:
+        """Every profile activation starts at Greia Home, never a stale Collection."""
+
+        super()._activate_profile(profile, pygame)
+        self._home_collection_selected = 0
+        self._set_category(ALL_ACTIVITIES_ID)
+
     def _handle_key(self, key: int, pygame: Any) -> bool:
         if self._mode != "activities" or self._category_id != ALL_ACTIVITIES_ID:
             return super()._handle_key(key, pygame)
@@ -126,7 +133,12 @@ class CollectionFirstHomeMixin:
                 if target.action == "home_collection":
                     self._last_result = None
                     self._catalogue_error = False
-                    self._set_category(str(target.value))
+                    collection_id = str(target.value)
+                    for index, collection in enumerate(self._home_collections()):
+                        if collection.collection_id == collection_id:
+                            self._home_collection_selected = index
+                            break
+                    self._set_category(collection_id)
                     return
         super()._handle_click(position, pygame)
 
@@ -144,7 +156,25 @@ class CollectionFirstHomeMixin:
     def _render_collection_home(self, screen: Any, theme: Any, pygame: Any) -> None:
         width, height = screen.get_size()
 
-        # Keep the same active-profile route available on Home.
+        # Reuse the accepted large Shell tray as framing, but Home content is
+        # Collections rather than Activity cards plus filter controls. Draw it
+        # before profile chrome so the panel can never cover the switcher.
+        panel_top = max(52, min(62, height // 10))
+        draw_panel = getattr(self, "_draw_shared_shell_panel", None)
+        if draw_panel is not None:
+            draw_panel(
+                screen,
+                pygame,
+                top=panel_top,
+                bottom_margin=4,
+                max_width=width - 24,
+            )
+
+        inner = getattr(self, "_shared_panel_inner_rect", None)
+        if inner is None:
+            inner = pygame.Rect(24, panel_top + 18, width - 48, height - panel_top - 42)
+
+        # Keep the same active-profile route available on top of Home framing.
         if self._active_profile is not None:
             badge_size = max(62, min(86, height // 7))
             badge = pygame.Rect(14, 10, badge_size, badge_size)
@@ -166,23 +196,6 @@ class CollectionFirstHomeMixin:
                     theme,
                     pygame,
                 )
-
-        # Reuse the accepted large Shell tray as framing, but Home content is
-        # now Collections rather than Activity cards plus filter controls.
-        panel_top = max(52, min(62, height // 10))
-        draw_panel = getattr(self, "_draw_shared_shell_panel", None)
-        if draw_panel is not None:
-            draw_panel(
-                screen,
-                pygame,
-                top=panel_top,
-                bottom_margin=4,
-                max_width=width - 24,
-            )
-
-        inner = getattr(self, "_shared_panel_inner_rect", None)
-        if inner is None:
-            inner = pygame.Rect(24, panel_top + 18, width - 48, height - panel_top - 42)
 
         collections = self._home_collections()
         if not collections:
