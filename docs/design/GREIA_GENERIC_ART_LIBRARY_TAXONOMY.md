@@ -1,41 +1,35 @@
 # Greia Generic Art Library Taxonomy
 
-**Status:** active design correction  
+**Status:** active design authority  
 **Date:** 2026-08-21  
 **Parent architecture:** `docs/design/GREIA_VISUAL_AUTHORING_ARCHITECTURE.md`  
 **User-agent skill:** `skills/greia-visual-authoring/SKILL.md`
 
 ## 1. Why this exists
 
-Greia's user-facing art library must be broadly useful across many unrelated Activities.
+Greia's Activity-authoring art library must be broadly useful across many unrelated Activities.
 
-A mistake in the current maintainer workflow was to treat earlier environment/theme bundles such as `Clinic / Care`, `Reading / Classroom`, and `Fantasy / Village / Night` as if each were automatically a core generic pack worth reauthoring one-by-one.
-
-That is not the intended product architecture.
-
-A themed bundle can be useful as provenance, a reference composition, or a source pool, but it is not automatically a good generic authoring pack.
+Historical environment/theme bundles such as `Clinic / Care`, `Reading / Classroom`, `Fantasy / Village / Night`, and `Water / Pond` are useful source/provenance pools, but they are not automatically the right user-facing taxonomy.
 
 The core authoring library should answer questions such as:
 
-- I need a tree / rock / ground edge / cloud;
-- I need a table / shelf / window / curtain / rug;
-- I need paper / paint / blocks / books / containers;
+- I need a tree / rock / water edge / cloud;
+- I need a table / chair / shelf / window / curtain;
+- I need paper / books / paint / blocks / containers;
 - I need a shadow / light shaft / fog / particles;
-- I need a comfort object / toy / cushion;
+- I need a toy / cushion / basket / everyday prop.
 
-It should not require an Activity author to guess that a useful generic bowl lives in a medical pack or that a useful cabinet lives in a clinic-themed folder.
+It should not require an Activity author to know which historical theme bundle first contained the object.
 
 ## 2. Core principle
 
-> **Theme bundles are source/provenance pools; generic semantic collections are the primary authoring interface.**
+> **Theme/source bundles are provenance pools; generic semantic collections are the primary authoring interface.**
 
-Generic collections may reference assets from multiple promoted source packs without copying them.
+Generic indexes reference source assets without copying them.
 
-The same source asset may be discoverable through more than one generic semantic collection when appropriate.
+The same source asset may be discoverable through more than one generic semantic collection when useful.
 
-## 3. Generic authoring collections
-
-The initial core taxonomy should be small and broad:
+## 3. Core generic authoring collections
 
 ### 3.1 Nature & Landscape
 
@@ -45,49 +39,49 @@ Examples:
 - bushes, grass, flowers, ferns, reeds;
 - rocks, logs, stumps, mushrooms;
 - ground edges / dirt / terrain;
-- water edges / pond pieces;
+- water bases / pond banks / water foliage;
 - clouds, hills, distant landscape.
 
-Forest/Meadow and Water/Pond source bundles primarily feed this collection.
+Forest/Meadow and Water/Pond source pools primarily feed this collection.
 
 ### 3.2 Interiors & Architecture
 
 Examples:
 
 - wall and floor bases;
-- windows and doors;
-- curtains;
+- windows and doors/openings;
+- curtains and room dividers;
 - rugs;
-- generic room-light relationships;
-- architectural panels / room features.
+- generic architectural panels / room features.
 
-Workshop, Clinic, Reading/Classroom and other room source bundles may contribute here.
+Workshop, Clinic, Reading/Classroom, Fantasy and other room/building source pools may contribute.
 
 ### 3.3 Furniture & Storage
 
 Examples:
 
 - tables / workbenches / side tables;
-- chairs / stools / daybeds;
-- shelves / cubbies;
+- chairs / stools / benches / daybeds;
+- shelves / cubbies / bookcases;
 - cabinets;
-- crates / storage boxes;
+- crates / storage boxes / baskets;
 - pegboards / display boards.
 
-These should be discoverable by object role rather than by the themed room they first came from.
+These are discovered by object role rather than source theme.
 
 ### 3.4 Everyday Props & Containers
 
 Examples:
 
 - bowls / basins;
-- bottles / jars;
+- bottles / jars / cups;
 - boxes / baskets;
-- paper stacks;
+- paper stacks / notebooks;
 - cushions / textiles;
-- simple household / tabletop objects.
+- simple household / tabletop objects;
+- generic lamps and small room props.
 
-Only broadly reusable forms belong here. Highly domain-specific contents remain themed or Activity-local.
+Only broadly reusable forms belong here. Strongly domain-specific contents remain specialized or Activity-local.
 
 ### 3.5 Making, Learning & Play
 
@@ -98,9 +92,8 @@ Examples:
 - easels;
 - blocks and construction toys;
 - books / reading props;
+- chalkboards / learning objects;
 - generic toys / plush comfort objects.
-
-This is broader than a `Workshop` or `Classroom` theme and can support many Activities.
 
 ### 3.6 Lighting, Atmosphere, FX & Shadows
 
@@ -108,95 +101,164 @@ Examples:
 
 - contact shadows;
 - window light shafts;
-- sunlight rays;
+- sunlight / moonlight rays;
 - fog / dust / motes;
-- fireflies / leaves / simple ambient particles;
+- fireflies / leaves / bubbles / ripples / shimmer;
 - generic feedback accents whose meaning is not domain-specific.
 
 ### 3.7 Shared UI
 
-Canonical reusable Greia interface art.
-
-This remains stricter than environment art because exact consistency is often desirable.
+Canonical reusable Greia interface art. Exact consistency is often desirable here, so it remains a stricter family.
 
 ### 3.8 Canonical Characters
 
-Recurring Greia characters and shared identity/state assets.
-
-This is separate from generic environment/prop authoring.
+Recurring Greia characters and shared identity/state assets. This remains separate from generic environment/prop authoring.
 
 ## 4. What is not a core generic pack by default
 
-The following are examples of **specialized theme/domain bundles**, not automatically core generic packs:
+Examples of specialized theme/domain bundles:
 
 - Clinic / Medical;
 - Fantasy Village;
-- specific school/classroom scenes;
-- a bakery;
+- Classroom scene;
+- bakery;
 - astronomy laboratory;
 - pirate ship;
 - dinosaur dig;
 - farm vet room.
 
-They may exist as:
+They may remain:
 
 - historical/source bundles;
 - optional themed extensions;
 - reference compositions;
 - Activity-local art;
-- sources from which genuinely generic assets are harvested into the generic indexes.
+- source pools from which genuinely generic assets are harvested.
 
-A specialized extension should only become a maintained reusable pack when multiple real Activities demonstrate the need.
+A specialized extension should become a maintained reusable pack only when repeated real Activity needs justify it.
 
-## 5. How existing work maps into this model
+## 5. Generic resource admission states
+
+The semantic index structure is canonical; individual resources may have different admission/quality states.
+
+For authoring-library entries use a simple distinction:
+
+```text
+preferred
+candidate_reference
+```
+
+### `preferred`
+
+A broadly reusable asset that is reviewed/accepted strongly enough that Activity agents should consider it first for direct REUSE.
+
+### `candidate_reference`
+
+A broadly reusable source asset that may help COMPOSE/ADAPT work or serve as reference, but is not yet an owner-approved preferred finished resource.
+
+Specialized, rejected, superseded, or known-weak assets should not masquerade as preferred generic resources.
+
+Source status and authoring-library admission status are related but not identical. A theme source pool may remain candidate while selected generic resources from it are still useful references.
+
+## 6. Maintainer classification vocabulary
+
+When harvesting existing source pools, classify every asset as one of:
+
+```text
+PREFERRED_GENERIC
+CANDIDATE_GENERIC
+REAUTHOR_GENERIC
+SPECIALIZED_THEME_ONLY
+DUPLICATE_OR_SUPERSEDED
+UNRESOLVED
+```
+
+- `PREFERRED_GENERIC` → generic index with `library_status = "preferred"`.
+- `CANDIDATE_GENERIC` → generic index with `library_status = "candidate_reference"`.
+- `REAUTHOR_GENERIC` → broad role is useful, but current art is a quality gap; do not pretend the role is missing.
+- `SPECIALIZED_THEME_ONLY` → keep in source/domain bundle.
+- `DUPLICATE_OR_SUPERSEDED` → stronger generic coverage already exists without meaningful extra variation.
+- `UNRESOLVED` → genuine ambiguity remains.
+
+## 7. Full-source harvest before new gap claims
+
+A generic coverage report is authoritative only after Greia's existing source pools have been harvested.
+
+At minimum, current source pools include:
+
+```text
+assets/visual/environments/forest_meadow/
+assets/visual/environments/workshop/
+assets/visual/pack_candidates/clinic/
+assets/visual/environments/reading_classroom/
+assets/visual/environments/fantasy_village_night/
+assets/visual/environments/water_pond/
+```
+
+Shared UI and canonical characters are evaluated separately in their own stricter families.
+
+Do **not** declare an object role missing merely because it is absent from the current generic index. Search the source pools first.
+
+Concrete existing examples include:
+
+- Reading/Classroom already contains book stack, open storybook, reading chair, beanbag, potted plant, toy basket, bookcase, chalkboard and floor cushion.
+- Fantasy/Village/Night already contains a stone bridge, lantern post, signpost, well and cobblestone edge among more specialized assets.
+- Water/Pond already contains water base, bank edge, lily pads, reeds, dock, stepping stones, ripple/shimmer/reflection and water FX.
+
+These may be preferred, candidate, weak, specialized, or superseded — but they are not nonexistent.
+
+## 8. Gap vocabulary
+
+After full harvest, every reported coverage gap must be classified as:
+
+```text
+TRUE_MISSING
+QUALITY_GAP
+VARIETY_GAP
+NO_GAP
+```
+
+### `TRUE_MISSING`
+No suitable source asset exists anywhere in the reviewed pools.
+
+### `QUALITY_GAP`
+A suitable semantic role exists, but current artwork is not strong enough to become a preferred reference.
+
+### `VARIETY_GAP`
+Strong coverage exists, but another meaningfully different form would provide broad reusable value.
+
+### `NO_GAP`
+Existing preferred/candidate resources already provide sufficient useful coverage.
+
+This distinction prevents wasteful duplicate production.
+
+## 9. How existing source work maps into the model
 
 ### Forest / Meadow v0.3
 
-This remains valuable and promoted, but should be understood primarily as a strong source bundle feeding `Nature & Landscape`, plus some cross-cutting lighting/FX roles.
+Promoted source pool feeding Nature/Landscape plus cross-cutting lighting/FX.
 
 ### Workshop v0.2
 
-This remains valuable and promoted, but its assets should be discoverable primarily through:
-
-- `Interiors & Architecture`;
-- `Furniture & Storage`;
-- `Making, Learning & Play`;
-- `Everyday Props & Containers`;
-- `Lighting, Atmosphere, FX & Shadows`.
+Promoted source pool feeding Interiors/Architecture, Furniture/Storage, Everyday Props, Making/Learning/Play and Lighting/FX.
 
 ### Clinic / Care candidate
 
-Do **not** automatically promote a core `Clinic / Care` pack merely because a candidate exists.
+Source pool only. Generic room/furniture/comfort/neutral-container art may be harvested. Strongly medical props remain specialized unless repeated use justifies a domain extension.
 
-Instead, review it as a source pool and classify each useful asset:
+### Reading / Classroom v0.1
 
-Likely generic contributions include things such as:
+Source pool that must be harvested before claiming gaps in books, reading props, chairs, potted plants, bookcases, baskets, cushions or classroom-adjacent generic objects.
 
-- daybed;
-- cabinet;
-- side table;
-- cushion;
-- rug;
-- curtains;
-- window;
-- wall/floor bases;
-- plush toy;
-- generic bottle/container/basin forms where the art is not intrinsically medical.
+### Fantasy / Village / Night v0.1
 
-Likely specialized assets include things such as:
+Source pool that may contribute generic architecture/props/lighting while cottages/castles/village-specific forms remain specialized where appropriate.
 
-- toy stethoscope;
-- bandage-specific container;
-- care/medical kit;
-- other strongly medical props.
+### Water / Pond v0.1
 
-Specialized assets may remain in provenance/reference form or later become an optional domain extension. They should not drive the core generic library.
+Source pool that should substantially feed Nature/Landscape and Lighting/FX after quality/admission review.
 
-## 6. Primary discovery layer
-
-Activity-authoring agents should eventually browse **generic semantic indexes**, not only themed folder names.
-
-Recommended structure:
+## 10. Primary discovery structure
 
 ```text
 assets/visual/authoring_library/
@@ -208,21 +270,20 @@ assets/visual/authoring_library/
   lighting_fx_shadows.toml
 ```
 
-These indexes should reference source assets in promoted packs rather than duplicate files.
-
 Each indexed entry should expose at least:
 
 - semantic ID;
 - source pack/path;
 - broad family;
 - role;
-- useful tags/keywords;
+- tags/keywords;
 - recommended size range where known;
-- alpha/opaque behavior;
-- whether it is a finished reusable asset or authoring ingredient;
+- alpha/opaque behavior where useful;
+- finished-vs-ingredient kind;
+- `library_status` (`preferred` or `candidate_reference`);
 - optional preview/reference path.
 
-## 7. Relationship to Activity-local art
+## 11. Relationship to Activity-local art
 
 The generic library is a toolbox, not a completeness promise.
 
@@ -234,35 +295,26 @@ COMPOSE / ADAPT
 CREATE ORIGINAL
 ```
 
-A medical Activity may create its own unique diagnostic toy, examination prop or character pose even if Greia has generic furniture, bowls, bottles, fabric, lights and UI available.
+A medical Activity may create its own diagnostic toy; an astronomy Activity may create its own telescope; a fantasy Activity may create its own machine. That is expected.
 
-That is expected.
+## 12. Maintainer workflow
 
-## 8. Maintainer workflow correction
+1. preserve good source art already created;
+2. harvest **all existing source pools** into generic classifications;
+3. expose strong generic assets through semantic indexes without duplication;
+4. distinguish preferred resources from candidate references;
+5. recompute true missing roles versus quality/variety gaps;
+6. create the highest-value missing/inadequate generic families at pack scale;
+7. maintain specialized theme packs only when repeated real Activity needs justify them.
 
-Do not continue blindly through the old themed sequence:
+Current full-harvest gate:
 
-```text
-Clinic → Reading/Classroom → Fantasy/Village/Night → Water/Pond
-```
+`docs/testing/2026-08-21_GENERIC_VISUAL_LIBRARY_FULL_SOURCE_HARVEST.md`
 
-as though each theme were a required core pack.
+## 13. Success criterion
 
-Instead:
+A future Activity-authoring agent should be able to ask:
 
-1. preserve the good source art already created;
-2. build generic semantic authoring indexes over promoted/reviewed assets;
-3. harvest generic assets from existing themed candidates where useful;
-4. identify genuine generic coverage gaps;
-5. author missing generic families/assets at pack scale;
-6. only maintain specialized theme packs when repeated real Activity needs justify them.
+> What generic visual resources and references do I have for this thing I need?
 
-## 9. Success criterion
-
-A future Activity-authoring agent should be able to ask, conceptually:
-
-> What generic visual ingredients and references do I have for this thing I need?
-
-and get useful answers without knowing the historical theme bundle in which an asset was originally drawn.
-
-That is the purpose of the generic Greia art library.
+and receive useful results without knowing the historical source theme, while also knowing which assets are preferred for direct reuse and which are merely candidate/adaptation references.
