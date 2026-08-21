@@ -8,46 +8,38 @@
 
 ## 1. Purpose
 
-The owner's local agent is a maintainer-side art-production tool. The goal is to use it where useful to improve Greia's bundled **generic visual toolbox**.
+Use the owner's local maintainer agent, where useful, to improve Greia's bundled **generic visual toolbox**.
 
-Its drawing ability is not a dependency of Greia and is not evidence about arbitrary future Activity-authoring agents.
+Its drawing ability is not a Greia dependency and is not evidence about arbitrary future Activity-authoring agents.
 
-The generic Activity-agent workflow is owned separately by:
+The user/developer-facing workflow remains owned by:
 
-```text
-skills/greia-visual-authoring/SKILL.md
-```
+`skills/greia-visual-authoring/SKILL.md`
 
-## 2. Critical correction
+## 2. Architecture correction already established
 
-The earlier content plan drifted into reauthoring historical themed bundles one-by-one:
+Do not organize future authoring work primarily as themed packs such as Clinic, Classroom, Fantasy Village, or Pond.
 
-```text
-Forest / Meadow
-Workshop
-Clinic / Care
-Reading / Classroom
-Fantasy / Village / Night
-Water / Pond
-```
+Theme/source bundles are provenance pools. The primary Activity-authoring interface is the generic semantic library:
 
-That sequence is no longer authoritative as a core-pack roadmap.
-
-Themed bundles are useful source/provenance pools, but a specialized theme such as `Clinic / Care` is not automatically universal enough to deserve a maintained core pack.
-
-The primary authoring interface must be **generic semantic collections** that can reference assets from many source bundles.
+1. Nature & Landscape
+2. Interiors & Architecture
+3. Furniture & Storage
+4. Everyday Props & Containers
+5. Making, Learning & Play
+6. Lighting, Atmosphere, FX & Shadows
+7. Shared UI
+8. Canonical Characters
 
 Authority:
 
-```text
-docs/design/GREIA_GENERIC_ART_LIBRARY_TAXONOMY.md
-```
+`docs/design/GREIA_GENERIC_ART_LIBRARY_TAXONOMY.md`
 
-## 3. Established source-art results
+## 3. Strong source pools already established
 
 ### Forest / Meadow v0.3
 
-Promoted source bundle:
+Promoted source pool:
 
 ```text
 28 semantic roles
@@ -56,237 +48,165 @@ Promoted source bundle:
 + 2 preferred authoring ingredients
 ```
 
-This is a strong source pool for `Nature & Landscape` and cross-cutting light/FX resources.
-
 ### Workshop v0.2
 
-Promoted source bundle:
+Promoted source pool:
 
 ```text
 24 finished semantic assets
 = 14 direct reauthored replacements
 + 5 retained baseline variants
 + 5 candidate coexistence variants
-
-2 preferred authoring ingredients
++ 2 preferred authoring ingredients
 ```
-
-This is a strong source pool for interiors, furniture, storage, creative/learning props and lighting.
 
 ### Clinic / Care candidate
 
-The 17-role candidate contains useful art, but **Clinic / Care is not authorized as the next core generic pack**.
+Useful reviewed source pool. It is **not** a core generic pack. Broad furniture/interior/comfort/container assets may feed generic indexes; strongly medical props remain specialized.
 
-Treat it as a source pool. Harvest broadly reusable pieces into generic indexes; keep strongly medical assets specialized/provenance-only unless later Activity demand justifies a domain extension.
+## 4. First generic consolidation — structurally useful, coverage incomplete
 
-Do not materialize `clinic/v0.2` merely because the candidate exists.
+Commit `cc1d7f1` created the first six semantic indexes and harvested Forest, Workshop and Clinic.
 
-## 4. Core generic authoring collections
+That structural step is accepted.
 
-The current target taxonomy is:
+However, its gap report is **not authoritative** because it did not harvest existing:
 
-1. **Nature & Landscape**
-2. **Interiors & Architecture**
-3. **Furniture & Storage**
-4. **Everyday Props & Containers**
-5. **Making, Learning & Play**
-6. **Lighting, Atmosphere, FX & Shadows**
-7. **Shared UI**
-8. **Canonical Characters**
+- Reading / Classroom v0.1;
+- Fantasy / Village / Night v0.1;
+- Water / Pond v0.1.
 
-The first six should be exposed through cross-pack semantic indexes under:
+This omission produced false “missing” conclusions. Reading/Classroom already contains books, a reading chair, potted plant, toy basket, bookcase, cushions, etc. Water/Pond already contains reusable water/reed/dock/stepping-stone/FX assets. Fantasy contains reusable bridge/signpost/well/lantern/cobblestone candidates.
 
-```text
-assets/visual/authoring_library/
-```
+Primary review:
 
-These indexes reference source files; they do not duplicate them.
+`docs/reviews/visual/2026-08-21_generic-authoring-library-consolidation/PRIMARY_REVIEW.md`
 
-## 5. Production workflow
+## 5. Mandatory full-source harvest before drawing more
 
-### 5.1 Consolidate before drawing more
+Do **not** start the previously proposed 16-asset Living & Learning batch yet.
 
-Before creating more art:
+Current exact gate:
 
-1. index reviewed/promoted Forest/Meadow assets generically;
-2. index reviewed/promoted Workshop assets generically;
-3. classify Clinic candidate assets as generic vs specialized;
-4. identify actual generic coverage gaps.
+`docs/testing/2026-08-21_GENERIC_VISUAL_LIBRARY_FULL_SOURCE_HARVEST.md`
 
-Current runbook:
+It must inspect all remaining source pools and classify assets as:
 
 ```text
-docs/testing/2026-08-21_GENERIC_VISUAL_LIBRARY_CONSOLIDATION.md
+PREFERRED_GENERIC
+CANDIDATE_GENERIC
+REAUTHOR_GENERIC
+SPECIALIZED_THEME_ONLY
+DUPLICATE_OR_SUPERSEDED
+UNRESOLVED
 ```
 
-### 5.2 Produce missing generic families, not arbitrary themes
-
-After consolidation, create the highest-value missing generic asset batch.
-
-Potential broad gaps may include:
-
-- doors / arches / room dividers;
-- chairs / benches / seating variants;
-- baskets / cups / plates / jars / boxes;
-- books / paper / cards / boards;
-- fabric / blanket / pillow pieces;
-- generic mechanical pieces / knobs / gears;
-- signs / boards without baked text;
-- water-edge / reeds / splashes;
-- toys / play objects;
-- indoor plants;
-- decorative trim;
-- additional light/shadow forms.
-
-Do not choose the next batch from an old theme name. Choose it from broad cross-Activity usefulness.
-
-### 5.3 Preserve source provenance
-
-Do not overwrite source bundles. Generic indexes should point to versioned source files and record provenance.
-
-### 5.4 Keep useful variation
-
-The strongest toolbox may expose several genuinely different assets for the same broad family, for example:
+Then recompute every gap as:
 
 ```text
-open shelf vs cubby shelf
-loose blocks vs block house
-simple lamp vs articulated lamp
-narrow beam vs wide beam
+TRUE_MISSING
+QUALITY_GAP
+VARIETY_GAP
+NO_GAP
 ```
 
-Distinct objects get distinct generic semantic IDs.
+## 6. Generic authoring-library admission state
 
-### 5.5 Promote ingredients selectively
+The semantic index structure is canonical, but individual resources must expose their quality/admission state.
 
-Reusable source fragments are valuable only when they help Activity authors compose bespoke art.
+Use a simple field such as:
 
-Do not promote fragments merely because they were generated.
+```toml
+library_status = "preferred"
+```
 
-### 5.6 Review actual pixels
+or:
 
-For new visual batches:
+```toml
+library_status = "candidate_reference"
+```
 
-- inspect assets individually;
-- test representative child-facing sizes;
-- inspect one or more neutral compositions;
-- use owner ZIP evidence where requested;
-- reject prose-only quality claims.
+Activity agents should try preferred resources first for direct REUSE. Candidate references may still be useful for COMPOSE/ADAPT or inspiration.
 
-## 6. Quality standard
+Do not call all indexed resources equally canonical merely because they are discoverable.
+
+## 7. Production workflow after full harvest
+
+Only after the full source audit:
+
+1. rank `TRUE_MISSING`, `QUALITY_GAP`, and important `VARIETY_GAP` roles;
+2. choose the highest-value cross-Activity batch;
+3. create roughly 12–18 assets at pack scale, unless a smaller batch is clearly better;
+4. review actual pixels and runtime-size readability;
+5. promote only the strongest resources into `preferred` generic status;
+6. preserve source provenance without duplication.
+
+Do not choose a batch because assets happen to belong to one old theme.
+
+## 8. Examples of why harvest comes first
+
+Before producing new books/chairs/plants, inspect:
+
+`assets/visual/environments/reading_classroom/v0.1/`
+
+Before producing new water/reeds/dock/pond FX, inspect:
+
+`assets/visual/environments/water_pond/v0.1/`
+
+Before producing generic bridge/sign/well/lantern/cobblestone resources, inspect:
+
+`assets/visual/environments/fantasy_village_night/v0.1/`
+
+An existing weak asset is a `QUALITY_GAP`, not a `TRUE_MISSING` asset.
+
+## 9. Visual quality standard
 
 Target:
 
 - polished storybook / toy-diorama quality;
 - strong child-readable silhouettes;
-- useful broad semantic roles;
+- broad semantic usefulness;
 - coherent materials and lighting;
-- clean alpha;
-- convincing grounding;
+- clean alpha and convincing grounding;
 - controlled detail;
-- composability;
-- variation without style drift.
+- useful variation without style drift.
 
 Reject:
 
 - crude primitives;
-- assets so theme-specific they are unlikely to help unrelated Activities, unless deliberately kept as an optional specialized extension;
-- duplicate near-identical variants;
+- duplicate production caused by incomplete inventory;
+- specialized assets cluttering the generic core;
 - misleading semantic labels;
-- giant source libraries that require users to know historical scene names;
-- forced one-for-one replacement;
-- arbitrary runtime discovery;
-- local-agent-specific SVG recipes embedded in user-facing architecture.
+- false “missing” claims where an unindexed source already exists;
+- local-agent-specific drawing recipes embedded into user-facing architecture;
+- prose-only quality claims.
 
-## 7. Relationship to themed source bundles
+## 10. Relationship to the user-agent skill
 
-Existing themed folders remain useful for:
+The maintainer track builds the toolbox.
 
-- provenance;
-- visual references;
-- compositions;
-- source files;
-- optional specialized extensions.
-
-They are not deleted.
-
-But future Activity authors should generally discover reusable assets through generic indexes first.
-
-Example:
-
-```text
-historical source:
-assets/visual/environments/clinic/.../cabinet.svg
-
-primary author discovery:
-furniture/storage semantic index → cabinet
-```
-
-Likewise a medical-specific stethoscope may remain specialized rather than entering the core generic toolbox.
-
-## 8. Promotion policy
-
-For source-art review, the permanent dispositions remain useful:
-
-```text
-CANDIDATE_REPLACES
-BASELINE_RETAINS
-KEEP_BOTH_DISTINCT
-UNRESOLVED
-```
-
-For generic-library admission, use:
-
-```text
-GENERIC_INDEX
-SPECIALIZED_THEME_ONLY
-UNRESOLVED
-```
-
-A source asset can be visually good and still be too specialized for the generic core.
-
-## 9. Relationship to the user-agent skill
-
-The maintainer track produces the toolbox.
-
-The generic skill teaches arbitrary agents how to use it:
+Arbitrary Activity agents should conceptually:
 
 ```text
 inventory Activity needs
-→ search generic semantic authoring library
-→ inspect source/reference art
-→ REUSE, COMPOSE/ADAPT, or CREATE ORIGINAL
+→ search generic semantic library
+→ prefer reviewed/preferred assets where they fit
+→ inspect candidate/source references when useful
+→ REUSE / COMPOSE-ADAPT / CREATE ORIGINAL
 → create Activity-local final art
 → flatten/build runtime rendition
 → integrate through Greia package/scene seams
 → visually review
 ```
 
-Do not assume user agents can reproduce maintainer-agent artwork.
+## 11. Exact current action
 
-## 10. Exact current action
+Execute only:
 
-Stop Clinic/Care promotion/finalization as a core-pack task.
+`docs/testing/2026-08-21_GENERIC_VISUAL_LIBRARY_FULL_SOURCE_HARVEST.md`
 
-Execute:
+No new generic asset production is authorized before that audit is complete.
 
-```text
-docs/testing/2026-08-21_GENERIC_VISUAL_LIBRARY_CONSOLIDATION.md
-```
+## 12. Platform boundary
 
-That task must:
-
-- create the generic authoring-library indexes;
-- map Forest/Meadow and Workshop into them;
-- harvest broadly reusable Clinic candidate assets by reference;
-- keep medical-specific assets specialized;
-- produce a generic coverage-gap report;
-- recommend the next **generic** art-production batch.
-
-After that, produce missing generic resources by broad usefulness rather than continuing blindly to Reading/Classroom, Fantasy/Village/Night, or Water/Pond.
-
-## 11. Platform boundary
-
-R7 remains the primary blocking platform phase. Nothing in this visual content track closes, reorders or bypasses R7.
-
-Source-art organization does not authorize physical/runtime claims that have not been tested.
+R7 remains the primary blocking platform phase. Nothing in this visual-content track closes, reorders or bypasses R7.
