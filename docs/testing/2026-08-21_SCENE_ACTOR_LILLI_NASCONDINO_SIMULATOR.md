@@ -306,7 +306,66 @@ Fix the shared/root cause, rerun affected simulator cases, and update the curate
 
 ---
 
-## 10. Return
+## 10. Mandatory transfer ZIP for independent pixel review
+
+The committed PNGs are not sufficient for the primary reviewer because the private-GitHub connector may expose repository PNGs only as encoded bytes rather than a directly viewable image surface.
+
+Therefore this visual gate is **not complete for return to the owner** until you create one small project-root ZIP that the owner can attach directly to ChatGPT for independent pixel inspection.
+
+Create it **after** the curated review set is final and before reporting completion. Do **not** commit this ZIP to Git.
+
+Run from the Greia repository root:
+
+```bash
+python3 - <<'PY'
+from pathlib import Path
+import zipfile
+
+review_dir = Path("docs/reviews/visual/2026-08-21_scene-actor-lilli-nascondino")
+zip_path = Path("GREIA_VISUAL_REVIEW_SCENE_ACTOR_LILLI_2026-08-21.zip")
+
+required = [
+    "01-reference.png",
+    "02-blink.png",
+    "03-large.png",
+    "04-compact.png",
+    "05-large-viewport.png",
+    "06-fallback.png",
+    "REVIEW.md",
+    "layout-audit.json",
+]
+
+missing = [name for name in required if not (review_dir / name).is_file()]
+if missing:
+    raise SystemExit("Cannot package visual review; missing: " + ", ".join(missing))
+
+zip_path.unlink(missing_ok=True)
+with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+    for name in required:
+        source = review_dir / name
+        archive.write(source, arcname=name)
+
+print(zip_path.resolve())
+PY
+```
+
+Then verify the archive exists and is non-empty:
+
+```bash
+ls -lh GREIA_VISUAL_REVIEW_SCENE_ACTOR_LILLI_2026-08-21.zip
+```
+
+The final local-agent report must include this exact line, with the actual project-relative path:
+
+```text
+VISUAL REVIEW ZIP FOR OWNER ATTACHMENT: ./GREIA_VISUAL_REVIEW_SCENE_ACTOR_LILLI_2026-08-21.zip
+```
+
+Do not delete the ZIP after pushing Git changes. The owner will attach it to ChatGPT so the primary reviewer can actually open and inspect the screenshots. A local-agent `PASS`, `REVIEW.md`, or GitHub-hosted PNG alone does **not** substitute for that independent pixel review.
+
+---
+
+## 11. Return
 
 Update:
 
@@ -320,4 +379,10 @@ HANDOVER.md
 
 Commit and push to `origin/main`.
 
-Report the exact commit SHA and the measured FPS. Keep evidence claims at simulator scope only.
+Report:
+
+- the exact commit SHA;
+- the measured FPS;
+- the exact `VISUAL REVIEW ZIP FOR OWNER ATTACHMENT` project-relative path.
+
+Keep evidence claims at simulator scope only. Do not call the visual gate independently reviewed by the primary reviewer until the owner has attached the ZIP and that review has happened.
