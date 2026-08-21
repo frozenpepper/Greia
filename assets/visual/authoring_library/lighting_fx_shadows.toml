@@ -1,0 +1,137 @@
+[collection]
+id = "generic.lighting_fx_shadows"
+name = "Lighting, Atmosphere, FX & Shadows"
+description = "Directional light shafts, sunlight rays, ambient particles, contact shadows, and feedback accents."
+version = "0.1.0"
+
+[[assets]]
+id = "light.sunbeam.nature_godrays"
+source_pack = "forest_meadow.v0.3"
+source_path = "assets/visual/environments/forest_meadow/v0.3/sunlight_rays.svg"
+family = "atmosphere"
+role = "sunlight_godrays"
+tags = ["lighting", "sunlight", "godrays", "nature", "warm", "daylight"]
+kind = "finished"
+min_recommended_px = 256
+max_recommended_px = 1024
+notes = "Warm golden morning sunlight rays filtering through atmosphere."
+
+[[assets]]
+id = "light.window.beam.wide_motes"
+source_pack = "workshop.v0.2"
+source_path = "assets/visual/environments/workshop/v0.2/window_light_wide.svg"
+family = "atmosphere"
+role = "window_sunbeam_wide"
+tags = ["lighting", "window_light", "sunbeam", "dust_motes", "interior"]
+kind = "finished"
+min_recommended_px = 256
+max_recommended_px = 1024
+notes = "Broad diagonal sunlight shaft with floating dust motes for room interiors."
+
+[[assets]]
+id = "light.window.beam.narrow_layered"
+source_pack = "workshop.v0.2"
+source_path = "assets/visual/environments/workshop/v0.2/window_light_narrow.svg"
+family = "atmosphere"
+role = "window_sunbeam_narrow"
+tags = ["lighting", "window_light", "narrow", "focused", "interior"]
+kind = "finished"
+min_recommended_px = 256
+max_recommended_px = 1024
+notes = "Focused layered narrow sunlight beam for targeted object highlighting."
+
+[[assets]]
+id = "light.window.beam.gentle_morning"
+source_pack = "clinic.2026-08-21-candidate"
+source_path = "assets/visual/pack_candidates/clinic/2026-08-21/window_light.svg"
+family = "atmosphere"
+role = "window_sunbeam_gentle"
+tags = ["lighting", "window_light", "soft", "morning", "sparkle_motes"]
+kind = "finished"
+min_recommended_px = 256
+max_recommended_px = 1024
+notes = "Soft morning sunlight shaft with gentle sparkle motes."
+
+[[assets]]
+id = "atmosphere.fog.morning_strip"
+source_pack = "forest_meadow.v0.3"
+source_path = "assets/visual/environments/forest_meadow/v0.3/fog_strip.svg"
+family = "atmosphere"
+role = "fog_mist"
+tags = ["atmosphere", "fog", "mist", "morning", "ground_layer"]
+kind = "finished"
+min_recommended_px = 256
+max_recommended_px = 1024
+notes = "Horizontal morning ground mist strip."
+
+[[assets]]
+id = "fx.particles.fireflies"
+source_pack = "forest_meadow.v0.3"
+source_path = "assets/visual/environments/forest_meadow/v0.3/fx_fireflies.svg"
+family = "fx"
+role = "fireflies"
+tags = ["fx", "particles", "fireflies", "glow", "night_or_shade"]
+kind = "finished"
+min_recommended_px = 64
+max_recommended_px = 512
+notes = "Glowing amber/yellow fireflies particle cluster."
+
+[[assets]]
+id = "fx.particles.dust_motes"
+source_pack = "forest_meadow.v0.3"
+source_path = "assets/visual/environments/forest_meadow/v0.3/fx_dust_motes.svg"
+family = "fx"
+role = "dust_motes"
+tags = ["fx", "particles", "dust_motes", "atmosphere", "ambient"]
+kind = "finished"
+min_recommended_px = 64
+max_recommended_px = 512
+notes = "Subtle floating atmospheric dust motes."
+
+[[assets]]
+id = "fx.particles.falling_leaves"
+source_pack = "forest_meadow.v0.3"
+source_path = "assets/visual/environments/forest_meadow/v0.3/fx_falling_leaves.svg"
+family = "fx"
+role = "falling_leaves"
+tags = ["fx", "particles", "leaves", "wind", "nature"]
+kind = "finished"
+min_recommended_px = 64
+max_recommended_px = 512
+notes = "Drifting autumn/spring leaf particles."
+
+[[assets]]
+id = "fx.accent.care_hearts_sparkle"
+source_pack = "clinic.2026-08-21-candidate"
+source_path = "assets/visual/pack_candidates/clinic/2026-08-21/heart_fx.svg"
+family = "fx"
+role = "hearts_sparkle"
+tags = ["fx", "hearts", "care", "comfort", "reward", "sparkle"]
+kind = "finished"
+min_recommended_px = 48
+max_recommended_px = 384
+notes = "Floating translucent rose-pink care hearts with sparkle glints."
+
+[[assets]]
+id = "shadow.contact.ellipse_small"
+source_pack = "forest_meadow.v0.3"
+source_path = "assets/visual/environments/forest_meadow/v0.3/shadow_contact_small.svg"
+family = "shadow"
+role = "contact_shadow_small"
+tags = ["shadow", "contact_shadow", "grounding", "small"]
+kind = "finished"
+min_recommended_px = 32
+max_recommended_px = 256
+notes = "Soft radial contact shadow for small props, stones, and creatures."
+
+[[assets]]
+id = "shadow.contact.ellipse_wide"
+source_pack = "forest_meadow.v0.3"
+source_path = "assets/visual/environments/forest_meadow/v0.3/shadow_contact_wide.svg"
+family = "shadow"
+role = "contact_shadow_wide"
+tags = ["shadow", "contact_shadow", "grounding", "wide"]
+kind = "finished"
+min_recommended_px = 64
+max_recommended_px = 512
+notes = "Wide elliptical contact shadow for benches, bushes, logs, and daybeds."

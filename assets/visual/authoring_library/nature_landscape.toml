@@ -1,0 +1,277 @@
+[collection]
+id = "generic.nature_landscape"
+name = "Nature & Landscape"
+description = "Broadly reusable botanical, geological, terrain, and atmospheric landscape assets."
+version = "0.1.0"
+
+[[assets]]
+id = "nature.tree.hero.oak"
+source_pack = "forest_meadow.v0.3"
+source_path = "assets/visual/environments/forest_meadow/v0.3/tree_hero.svg"
+family = "botanical"
+role = "hero_tree"
+tags = ["tree", "oak", "nature", "outdoor", "vegetation", "landscape"]
+kind = "finished"
+min_recommended_px = 128
+max_recommended_px = 1024
+notes = "Mature hero oak with rich branch canopy and grounded knothole."
+
+[[assets]]
+id = "nature.tree.birch.secondary"
+source_pack = "forest_meadow.v0.3"
+source_path = "assets/visual/environments/forest_meadow/v0.3/tree_secondary.svg"
+family = "botanical"
+role = "secondary_tree"
+tags = ["tree", "birch", "slender", "woodland", "nature"]
+kind = "finished"
+min_recommended_px = 96
+max_recommended_px = 768
+notes = "Slender woodland birch with leafy tufts and pale bark lenticels."
+
+[[assets]]
+id = "nature.tree.sapling"
+source_pack = "forest_meadow.v0.3"
+source_path = "assets/visual/environments/forest_meadow/v0.3/tree_sapling.svg"
+family = "botanical"
+role = "young_tree"
+tags = ["tree", "sapling", "young", "greenery"]
+kind = "finished"
+min_recommended_px = 64
+max_recommended_px = 512
+notes = "Bright young leafy sapling."
+
+[[assets]]
+id = "nature.tree.willow"
+source_pack = "forest_meadow.v0.3"
+source_path = "assets/visual/environments/forest_meadow/v0.3/tree_willow.svg"
+family = "botanical"
+role = "weeping_tree"
+tags = ["tree", "willow", "weeping", "water_edge", "foliage"]
+kind = "finished"
+min_recommended_px = 96
+max_recommended_px = 768
+notes = "Graceful weeping willow canopy."
+
+[[assets]]
+id = "nature.tree.hollow.interactive"
+source_pack = "forest_meadow.v0.3"
+source_path = "assets/visual/environments/forest_meadow/v0.3/tree_interactive_hollow.svg"
+family = "botanical"
+role = "interactive_tree"
+tags = ["tree", "hollow", "interactive", "creature_home", "playfield"]
+kind = "finished"
+min_recommended_px = 128
+max_recommended_px = 1024
+notes = "Oak tree trunk with accessible living cavity for interactive creatures/props."
+
+[[assets]]
+id = "nature.bush.round"
+source_pack = "forest_meadow.v0.3"
+source_path = "assets/visual/environments/forest_meadow/v0.3/bush_round.svg"
+family = "botanical"
+role = "shrub"
+tags = ["bush", "shrub", "greenery", "foliage"]
+kind = "finished"
+min_recommended_px = 48
+max_recommended_px = 384
+notes = "Round layered shrub with leaf scallops."
+
+[[assets]]
+id = "nature.bush.flowering"
+source_pack = "forest_meadow.v0.3"
+source_path = "assets/visual/environments/forest_meadow/v0.3/bush_flowering.svg"
+family = "botanical"
+role = "flowering_shrub"
+tags = ["bush", "flowers", "buttercup", "shrub"]
+kind = "finished"
+min_recommended_px = 48
+max_recommended_px = 384
+notes = "Shrub accented with yellow meadow buttercup blossoms."
+
+[[assets]]
+id = "nature.bush.low"
+source_pack = "forest_meadow.v0.3"
+source_path = "assets/visual/environments/forest_meadow/v0.3/bush_low.svg"
+family = "botanical"
+role = "low_shrub"
+tags = ["bush", "low", "ground_cover", "greenery"]
+kind = "finished"
+min_recommended_px = 48
+max_recommended_px = 384
+notes = "Wide low hedge/shrub for edge grounding."
+
+[[assets]]
+id = "nature.plant.fern"
+source_pack = "forest_meadow.v0.3"
+source_path = "assets/visual/environments/forest_meadow/v0.3/fern_cluster.svg"
+family = "botanical"
+role = "fern_cluster"
+tags = ["fern", "fronds", "forest_floor", "woodland"]
+kind = "finished"
+min_recommended_px = 32
+max_recommended_px = 256
+notes = "Forest floor frond cluster."
+
+[[assets]]
+id = "nature.plant.flowers"
+source_pack = "forest_meadow.v0.3"
+source_path = "assets/visual/environments/forest_meadow/v0.3/flower_patch.svg"
+family = "botanical"
+role = "flower_patch"
+tags = ["flowers", "blossoms", "meadow", "ground_cover"]
+kind = "finished"
+min_recommended_px = 32
+max_recommended_px = 256
+notes = "Patch of pink, yellow, and blue wildflowers."
+
+[[assets]]
+id = "nature.plant.mushrooms"
+source_pack = "forest_meadow.v0.3"
+source_path = "assets/visual/environments/forest_meadow/v0.3/mushroom_cluster.svg"
+family = "botanical"
+role = "mushroom_cluster"
+tags = ["mushrooms", "toadstools", "fungi", "forest_floor"]
+kind = "finished"
+min_recommended_px = 32
+max_recommended_px = 256
+notes = "Trio of red-capped forest mushrooms."
+
+[[assets]]
+id = "nature.rock.large"
+source_pack = "forest_meadow.v0.3"
+source_path = "assets/visual/environments/forest_meadow/v0.3/rock_cluster_large.svg"
+family = "geological"
+role = "rock_boulder"
+tags = ["rock", "boulder", "stone", "terrain"]
+kind = "finished"
+min_recommended_px = 48
+max_recommended_px = 384
+notes = "Granite boulder with moss crest."
+
+[[assets]]
+id = "nature.rock.small"
+source_pack = "forest_meadow.v0.3"
+source_path = "assets/visual/environments/forest_meadow/v0.3/rock_cluster_small.svg"
+family = "geological"
+role = "pebbles"
+tags = ["rock", "pebbles", "stone", "ground"]
+kind = "finished"
+min_recommended_px = 32
+max_recommended_px = 256
+notes = "Cluster of smooth river pebbles."
+
+[[assets]]
+id = "nature.wood.log"
+source_pack = "forest_meadow.v0.3"
+source_path = "assets/visual/environments/forest_meadow/v0.3/fallen_log.svg"
+family = "terrain_prop"
+role = "fallen_log"
+tags = ["log", "wood", "moss", "forest_floor", "perch"]
+kind = "finished"
+min_recommended_px = 64
+max_recommended_px = 512
+notes = "Fallen mossy birch/oak log."
+
+[[assets]]
+id = "nature.wood.stump"
+source_pack = "forest_meadow.v0.3"
+source_path = "assets/visual/environments/forest_meadow/v0.3/stump.svg"
+family = "terrain_prop"
+role = "tree_stump"
+tags = ["stump", "wood", "growth_rings", "perch"]
+kind = "finished"
+min_recommended_px = 48
+max_recommended_px = 384
+notes = "Weathered stump with growth rings and bark bevel."
+
+[[assets]]
+id = "nature.ground.turf_edge"
+source_pack = "forest_meadow.v0.3"
+source_path = "assets/visual/environments/forest_meadow/v0.3/grass_edge.svg"
+family = "terrain"
+role = "grass_edge"
+tags = ["ground", "grass", "turf", "edge", "foreground"]
+kind = "finished"
+min_recommended_px = 128
+max_recommended_px = 1024
+notes = "Foreground grass turf edge."
+
+[[assets]]
+id = "nature.ground.dirt_clearing"
+source_pack = "forest_meadow.v0.3"
+source_path = "assets/visual/environments/forest_meadow/v0.3/ground_dirt_patch.svg"
+family = "terrain"
+role = "dirt_patch"
+tags = ["ground", "dirt", "path", "clearing"]
+kind = "finished"
+min_recommended_px = 64
+max_recommended_px = 512
+notes = "Organic soil footpath/clearing patch."
+
+[[assets]]
+id = "nature.horizon.distant_hills"
+source_pack = "forest_meadow.v0.3"
+source_path = "assets/visual/environments/forest_meadow/v0.3/distant_hills.svg"
+family = "horizon"
+role = "hills"
+tags = ["horizon", "hills", "meadow", "skyline", "far_background"]
+kind = "finished"
+min_recommended_px = 256
+max_recommended_px = 1024
+notes = "Soft rolling green meadow horizon hills."
+
+[[assets]]
+id = "nature.horizon.distant_treeline"
+source_pack = "forest_meadow.v0.3"
+source_path = "assets/visual/environments/forest_meadow/v0.3/distant_treeline.svg"
+family = "horizon"
+role = "treeline"
+tags = ["horizon", "treeline", "forest_edge", "ridge"]
+kind = "finished"
+min_recommended_px = 256
+max_recommended_px = 1024
+notes = "Distant pine and deciduous woodland ridge rhythm."
+
+[[assets]]
+id = "nature.sky.cloud_large"
+source_pack = "forest_meadow.v0.3"
+source_path = "assets/visual/environments/forest_meadow/v0.3/cloud_large.svg"
+family = "sky"
+role = "cloud_large"
+tags = ["sky", "cloud", "daylight", "atmosphere"]
+kind = "finished"
+min_recommended_px = 96
+max_recommended_px = 768
+notes = "Volumetric cumulus cloud."
+
+[[assets]]
+id = "nature.sky.cloud_small"
+source_pack = "forest_meadow.v0.3"
+source_path = "assets/visual/environments/forest_meadow/v0.3/cloud_small.svg"
+family = "sky"
+role = "cloud_small"
+tags = ["sky", "cloud", "daylight", "atmosphere"]
+kind = "finished"
+min_recommended_px = 64
+max_recommended_px = 512
+notes = "Compact daylight cloud."
+
+[[ingredients]]
+id = "nature.ingredient.bark_knot"
+source_pack = "forest_meadow.v0.3"
+source_path = "assets/visual/environments/forest_meadow/v0.3/ingredients/ingredient_bark_knot.svg"
+family = "ingredient"
+role = "bark_detail"
+tags = ["ingredient", "bark", "wood", "knothole"]
+kind = "ingredient"
+notes = "Source-level healed knothole wood grain accent."
+
+[[ingredients]]
+id = "nature.ingredient.flower_sprig"
+source_pack = "forest_meadow.v0.3"
+source_path = "assets/visual/environments/forest_meadow/v0.3/ingredients/ingredient_flower_sprig.svg"
+family = "ingredient"
+role = "flower_accent"
+tags = ["ingredient", "flower", "buttercup", "blossom"]
+kind = "ingredient"
+notes = "Source-level yellow buttercup sprig accent."

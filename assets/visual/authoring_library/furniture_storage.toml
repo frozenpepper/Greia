@@ -1,0 +1,123 @@
+[collection]
+id = "generic.furniture_storage"
+name = "Furniture & Storage"
+description = "Tables, seating, daybeds, shelving, pegboards, cabinets, and storage crates."
+version = "0.1.0"
+
+[[assets]]
+id = "furniture.table.workbench.craftsman"
+source_pack = "workshop.v0.2"
+source_path = "assets/visual/environments/workshop/v0.2/workbench.svg"
+family = "furniture"
+role = "table"
+tags = ["furniture", "workbench", "table", "oak", "craftsman", "drawer", "hero"]
+kind = "finished"
+min_recommended_px = 128
+max_recommended_px = 800
+notes = "Solid craftsman oak workbench with chamfered slab, splayed legs, drawer, and brass knob."
+
+[[assets]]
+id = "furniture.seating.stool.turned_wood"
+source_pack = "workshop.v0.2"
+source_path = "assets/visual/environments/workshop/v0.2/stool.svg"
+family = "furniture"
+role = "stool"
+tags = ["furniture", "stool", "seating", "wood", "turned_legs"]
+kind = "finished"
+min_recommended_px = 64
+max_recommended_px = 384
+notes = "Turned wood stool with dished round seat and stretchers."
+
+[[assets]]
+id = "furniture.bed.daybed.wooden"
+source_pack = "clinic.2026-08-21-candidate"
+source_path = "assets/visual/pack_candidates/clinic/2026-08-21/care_bed.svg"
+family = "furniture"
+role = "bed"
+tags = ["furniture", "bed", "daybed", "wood", "pillow", "quilt", "comfort"]
+kind = "finished"
+min_recommended_px = 128
+max_recommended_px = 800
+notes = "Low child-friendly wooden daybed with heart cutout headboard, pillow, and folded quilt."
+
+[[assets]]
+id = "furniture.table.side.turned_round"
+source_pack = "clinic.2026-08-21-candidate"
+source_path = "assets/visual/pack_candidates/clinic/2026-08-21/side_table.svg"
+family = "furniture"
+role = "side_table"
+tags = ["furniture", "table", "side_table", "round", "wood", "nightstand"]
+kind = "finished"
+min_recommended_px = 64
+max_recommended_px = 384
+notes = "Round bedside table with turned oak legs and lower shelf."
+
+[[assets]]
+id = "furniture.storage.shelf.open_bracket"
+source_pack = "workshop.v0.2"
+source_path = "assets/visual/environments/workshop/v0.2/shelf_open.svg"
+family = "furniture"
+role = "shelf"
+tags = ["furniture", "shelf", "wall_storage", "wood", "brackets"]
+kind = "finished"
+min_recommended_px = 64
+max_recommended_px = 512
+notes = "Open single-plank wooden bracket shelf with display jars and scroll."
+
+[[assets]]
+id = "furniture.storage.shelf.cubby_cabinet"
+source_pack = "workshop.v0.2"
+source_path = "assets/visual/environments/workshop/v0.2/shelf_cubby.svg"
+family = "furniture"
+role = "shelf_cubby"
+tags = ["furniture", "shelf", "cubby", "wall_storage", "compartments"]
+kind = "finished"
+min_recommended_px = 64
+max_recommended_px = 512
+notes = "Compact closed wall cubby storage unit."
+
+[[assets]]
+id = "furniture.storage.cabinet.apothecary_glass"
+source_pack = "clinic.2026-08-21-candidate"
+source_path = "assets/visual/pack_candidates/clinic/2026-08-21/cabinet.svg"
+family = "furniture"
+role = "cabinet"
+tags = ["furniture", "cabinet", "apothecary", "glass_doors", "mint", "storage"]
+kind = "finished"
+min_recommended_px = 128
+max_recommended_px = 800
+notes = "Mint milk-paint cabinet with arched glass display doors, interior shelves, and bottom drawers."
+
+[[assets]]
+id = "furniture.storage.crate.plywood_joints"
+source_pack = "workshop.v0.2"
+source_path = "assets/visual/environments/workshop/v0.2/storage_box.svg"
+family = "furniture"
+role = "storage_box"
+tags = ["storage", "crate", "box", "finger_joints", "plywood", "container"]
+kind = "finished"
+min_recommended_px = 48
+max_recommended_px = 384
+notes = "Plywood craft crate with finger-jointed corners, cutout handholds, and brass label plate."
+
+[[assets]]
+id = "furniture.display.pegboard.birch"
+source_pack = "workshop.v0.2"
+source_path = "assets/visual/environments/workshop/v0.2/pegboard.svg"
+family = "furniture"
+role = "pegboard"
+tags = ["pegboard", "tools", "birch", "wall_organizer", "craft"]
+kind = "finished"
+min_recommended_px = 64
+max_recommended_px = 512
+notes = "Perforated birch pegboard with hanging wooden mallet, ruler, and twine."
+
+[[ingredients]]
+id = "furniture.ingredient.wood_joint"
+source_pack = "workshop.v0.2"
+source_path = "assets/visual/environments/workshop/v0.2/ingredients/ingredient_wood_joint.svg"
+family = "ingredient"
+role = "wood_joint"
+tags = ["ingredient", "wood", "joinery", "mortise_tenon", "dowel"]
+kind = "ingredient"
+notes = "Craftsman mortise, tenon, and dowel wooden joint construction ingredient."

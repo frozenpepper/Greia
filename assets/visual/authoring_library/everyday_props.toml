@@ -1,0 +1,135 @@
+[collection]
+id = "generic.everyday_props"
+name = "Everyday Props & Containers"
+description = "Broadly reusable household props, desk lamps, cushions, ceramic mugs, jars, bottles, basins, and paper reams."
+version = "0.1.0"
+
+[[assets]]
+id = "prop.lighting.lamp.desk_simple"
+source_pack = "workshop.v0.2"
+source_path = "assets/visual/environments/workshop/v0.2/desk_lamp_simple.svg"
+family = "prop"
+role = "desk_lamp_compact"
+tags = ["lamp", "light", "desk_lamp", "compact", "small_scale"]
+kind = "finished"
+min_recommended_px = 32
+max_recommended_px = 256
+notes = "Compact goose-neck lamp with high readability at small/icon sizes (down to 64px)."
+
+[[assets]]
+id = "prop.lighting.lamp.desk_articulated"
+source_pack = "workshop.v0.2"
+source_path = "assets/visual/environments/workshop/v0.2/desk_lamp_articulated.svg"
+family = "prop"
+role = "desk_lamp_architect"
+tags = ["lamp", "light", "desk_lamp", "articulated", "enamel", "brass"]
+kind = "finished"
+min_recommended_px = 96
+max_recommended_px = 512
+notes = "Articulated mint enamel architect lamp with brass joints (recommended for >=128px scene contexts)."
+
+[[assets]]
+id = "prop.container.pencil_cup.ceramic"
+source_pack = "workshop.v0.2"
+source_path = "assets/visual/environments/workshop/v0.2/pencil_cup.svg"
+family = "prop"
+role = "pencil_cup"
+tags = ["container", "pencil_cup", "ceramic", "mug", "colored_pencils"]
+kind = "finished"
+min_recommended_px = 48
+max_recommended_px = 384
+notes = "Glazed teal ceramic studio mug with raw terracotta foot and sharpened colored pencils."
+
+[[assets]]
+id = "prop.container.paint_jars.glass"
+source_pack = "workshop.v0.2"
+source_path = "assets/visual/environments/workshop/v0.2/paint_jars.svg"
+family = "prop"
+role = "jars_set"
+tags = ["container", "jars", "glass", "paint", "tempera", "liquid"]
+kind = "finished"
+min_recommended_px = 48
+max_recommended_px = 384
+notes = "Trio of glass jars with screw lids, transparency, and color liquid fill levels."
+
+[[assets]]
+id = "prop.container.bottles.apothecary_trio"
+source_pack = "clinic.2026-08-21-candidate"
+source_path = "assets/visual/pack_candidates/clinic/2026-08-21/bottle_set.svg"
+family = "prop"
+role = "bottles_set"
+tags = ["container", "bottles", "glass", "cork", "apothecary", "syrup"]
+kind = "finished"
+min_recommended_px = 48
+max_recommended_px = 384
+notes = "Trio of pastel glass syrup/tincture bottles with cork bungs and measurement labels."
+
+[[assets]]
+id = "prop.container.basin.enamel_sponge"
+source_pack = "clinic.2026-08-21-candidate"
+source_path = "assets/visual/pack_candidates/clinic/2026-08-21/care_bowl.svg"
+family = "prop"
+role = "wash_basin"
+tags = ["container", "basin", "bowl", "enamel", "water", "sponge", "clean"]
+kind = "finished"
+min_recommended_px = 48
+max_recommended_px = 384
+notes = "White enameled wash basin with mint rolled rim, soft water ripples, and floating sea sponge."
+
+[[assets]]
+id = "prop.paper.stack.heavy_ream"
+source_pack = "workshop.v0.2"
+source_path = "assets/visual/environments/workshop/v0.2/paper_stack.svg"
+family = "prop"
+role = "paper_stack"
+tags = ["paper", "stack", "ream", "drawing", "sketch", "stationery"]
+kind = "finished"
+min_recommended_px = 48
+max_recommended_px = 384
+notes = "Heavyweight watercolor paper ream with stepped layer lines and curling active top sketch."
+
+[[assets]]
+id = "prop.textile.cushion.linen_tufted"
+source_pack = "clinic.2026-08-21-candidate"
+source_path = "assets/visual/pack_candidates/clinic/2026-08-21/cushion.svg"
+family = "textile"
+role = "cushion"
+tags = ["cushion", "pillow", "linen", "tufted", "yellow", "comfort"]
+kind = "finished"
+min_recommended_px = 48
+max_recommended_px = 384
+notes = "Plump buttercup-yellow tufted linen cushion with center button."
+
+[[assets]]
+id = "prop.note.cork_tile"
+source_pack = "workshop.v0.2"
+source_path = "assets/visual/environments/workshop/v0.2/pinboard_note_cork_tile.svg"
+family = "decor"
+role = "note_tile"
+tags = ["note", "pinboard", "cork", "tile", "memo"]
+kind = "finished"
+min_recommended_px = 32
+max_recommended_px = 256
+notes = "Framed square cork tile with pinned star drawing."
+
+[[assets]]
+id = "prop.note.pinned_memo"
+source_pack = "workshop.v0.2"
+source_path = "assets/visual/environments/workshop/v0.2/pinboard_note_pinned.svg"
+family = "decor"
+role = "pinned_memo"
+tags = ["note", "memo", "paper", "pinned", "stationery"]
+kind = "finished"
+min_recommended_px = 32
+max_recommended_px = 256
+notes = "Lightweight yellow sticky memo with pin."
+
+[[ingredients]]
+id = "prop.ingredient.fabric_patch"
+source_pack = "clinic.2026-08-21-candidate"
+source_path = "assets/visual/pack_candidates/clinic/2026-08-21/ingredients/ingredient_fabric_patch.svg"
+family = "ingredient"
+role = "fabric_patch"
+tags = ["ingredient", "patch", "fabric", "heart", "embroidery"]
+kind = "ingredient"
+notes = "Stitched pink felt heart patch with visible embroidery border."

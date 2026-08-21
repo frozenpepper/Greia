@@ -1,0 +1,113 @@
+[collection]
+id = "generic.interiors_architecture"
+name = "Interiors & Architecture"
+description = "Room foundations, walls, flooring, windows, drapery, and rugs for indoor spaces."
+version = "0.1.0"
+
+[[assets]]
+id = "interior.wall.plaster_wainscot"
+source_pack = "workshop.v0.2"
+source_path = "assets/visual/environments/workshop/v0.2/wall_base.svg"
+family = "room_base"
+role = "wall"
+tags = ["interior", "wall", "plaster", "wainscot", "chair_rail", "background"]
+kind = "finished"
+min_recommended_px = 256
+max_recommended_px = 1024
+notes = "Warm cream plaster wall with horizontal wood wainscot chair rail."
+
+[[assets]]
+id = "interior.wall.plaster_mint_beadboard"
+source_pack = "clinic.2026-08-21-candidate"
+source_path = "assets/visual/pack_candidates/clinic/2026-08-21/room_wall_base.svg"
+family = "room_base"
+role = "wall"
+tags = ["interior", "wall", "plaster", "mint", "beadboard", "background"]
+kind = "finished"
+min_recommended_px = 256
+max_recommended_px = 1024
+notes = "Cream plaster wall with vertical pastel mint beadboard wainscoting."
+
+[[assets]]
+id = "interior.floor.oak_planks"
+source_pack = "workshop.v0.2"
+source_path = "assets/visual/environments/workshop/v0.2/floor_base.svg"
+family = "room_base"
+role = "floor"
+tags = ["interior", "floor", "wood", "oak", "planks", "ground"]
+kind = "finished"
+min_recommended_px = 256
+max_recommended_px = 1024
+notes = "Wide golden oak floor planks with subtle butt joints."
+
+[[assets]]
+id = "interior.floor.honey_oak_planks"
+source_pack = "clinic.2026-08-21-candidate"
+source_path = "assets/visual/pack_candidates/clinic/2026-08-21/room_floor_base.svg"
+family = "room_base"
+role = "floor"
+tags = ["interior", "floor", "wood", "honey_oak", "planks", "ground"]
+kind = "finished"
+min_recommended_px = 256
+max_recommended_px = 1024
+notes = "Warm honey-toned plank flooring."
+
+[[assets]]
+id = "interior.window.arch.meadow"
+source_pack = "workshop.v0.2"
+source_path = "assets/visual/environments/workshop/v0.2/window.svg"
+family = "architectural_feature"
+role = "window"
+tags = ["interior", "window", "arch", "wood", "meadow_view", "potted_plant"]
+kind = "finished"
+min_recommended_px = 128
+max_recommended_px = 512
+notes = "Arched wooden frame window looking out onto sunny meadow with potted sprout on sill."
+
+[[assets]]
+id = "interior.window.arch.orchard"
+source_pack = "clinic.2026-08-21-candidate"
+source_path = "assets/visual/pack_candidates/clinic/2026-08-21/care_window.svg"
+family = "architectural_feature"
+role = "window"
+tags = ["interior", "window", "arch", "orchard_view", "blooming_tree"]
+kind = "finished"
+min_recommended_px = 128
+max_recommended_px = 512
+notes = "Arched window looking onto rolling hills and blooming pink orchard trees."
+
+[[assets]]
+id = "interior.window.drapery.curtains"
+source_pack = "clinic.2026-08-21-candidate"
+source_path = "assets/visual/pack_candidates/clinic/2026-08-21/curtain_pair.svg"
+family = "decor"
+role = "curtains"
+tags = ["interior", "curtains", "drapery", "mint", "scalloped_valance", "textile"]
+kind = "finished"
+min_recommended_px = 128
+max_recommended_px = 600
+notes = "Mint draped curtain pair on wooden rod with scalloped valance and pink rosette tie-backs."
+
+[[assets]]
+id = "interior.textile.rug.braided_wool"
+source_pack = "workshop.v0.2"
+source_path = "assets/visual/environments/workshop/v0.2/rug.svg"
+family = "textile"
+role = "rug"
+tags = ["interior", "rug", "wool", "braided", "concentric", "floor"]
+kind = "finished"
+min_recommended_px = 128
+max_recommended_px = 600
+notes = "Concentric braided wool rag rug with visible perimeter stitch dashes."
+
+[[assets]]
+id = "interior.textile.rug.felt_heart"
+source_pack = "clinic.2026-08-21-candidate"
+source_path = "assets/visual/pack_candidates/clinic/2026-08-21/heart_rug.svg"
+family = "textile"
+role = "rug"
+tags = ["interior", "rug", "felt", "heart", "coral_pink", "comfort"]
+kind = "finished"
+min_recommended_px = 128
+max_recommended_px = 600
+notes = "Rose-coral stitched felt heart rug with braided trim."

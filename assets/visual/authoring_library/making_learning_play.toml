@@ -1,0 +1,87 @@
+[collection]
+id = "generic.making_learning_play"
+name = "Making, Learning & Play"
+description = "Art tools, easels, paint palettes, building blocks, and plush comfort play objects."
+version = "0.1.0"
+
+[[assets]]
+id = "play.art.easel.studio_aframe"
+source_pack = "workshop.v0.2"
+source_path = "assets/visual/environments/workshop/v0.2/easel.svg"
+family = "creative_prop"
+role = "easel"
+tags = ["art", "easel", "canvas", "painting", "studio", "creative"]
+kind = "finished"
+min_recommended_px = 96
+max_recommended_px = 600
+notes = "A-frame wooden artist easel with adjustable mast, canvas tray, and meadow landscape painting."
+
+[[assets]]
+id = "play.art.palette.birch_gouache"
+source_pack = "workshop.v0.2"
+source_path = "assets/visual/environments/workshop/v0.2/paint_palette.svg"
+family = "creative_prop"
+role = "paint_palette"
+tags = ["art", "palette", "paint", "gouache", "colors", "birch"]
+kind = "finished"
+min_recommended_px = 48
+max_recommended_px = 384
+notes = "Birch artist palette with thumbhole and volumetric glossy 3D paint dollops."
+
+[[assets]]
+id = "play.art.brushes.bundle_five"
+source_pack = "workshop.v0.2"
+source_path = "assets/visual/environments/workshop/v0.2/brush_bundle.svg"
+family = "creative_prop"
+role = "brush_bundle"
+tags = ["art", "brushes", "bundle", "paintbrushes", "tools"]
+kind = "finished"
+min_recommended_px = 48
+max_recommended_px = 384
+notes = "Cluster of five artist brushes bound with leather strap and brass buckle."
+
+[[assets]]
+id = "play.toy.blocks.house_construction"
+source_pack = "workshop.v0.2"
+source_path = "assets/visual/environments/workshop/v0.2/blocks_house.svg"
+family = "toy_prop"
+role = "blocks_house"
+tags = ["toy", "blocks", "building", "house", "arch", "construction"]
+kind = "finished"
+min_recommended_px = 48
+max_recommended_px = 384
+notes = "Assembled architectural wooden block set (arch, cube, cylinder, triangular prism roof)."
+
+[[assets]]
+id = "play.toy.blocks.loose_stack"
+source_pack = "workshop.v0.2"
+source_path = "assets/visual/environments/workshop/v0.2/blocks_loose.svg"
+family = "toy_prop"
+role = "blocks_loose"
+tags = ["toy", "blocks", "loose", "pile", "stack"]
+kind = "finished"
+min_recommended_px = 48
+max_recommended_px = 384
+notes = "Loose playful block stack for casual floor scatter."
+
+[[assets]]
+id = "play.toy.plush.caramel_bear"
+source_pack = "clinic.2026-08-21-candidate"
+source_path = "assets/visual/pack_candidates/clinic/2026-08-21/plush_bear.svg"
+family = "toy_comfort"
+role = "plush_toy"
+tags = ["toy", "plush", "teddy_bear", "comfort", "character", "hug"]
+kind = "finished"
+min_recommended_px = 48
+max_recommended_px = 512
+notes = "Huggable caramel teddy bear with cream snout, button eyes, and stitched felt heart patch."
+
+[[ingredients]]
+id = "play.ingredient.paint_dabs"
+source_pack = "workshop.v0.2"
+source_path = "assets/visual/environments/workshop/v0.2/ingredients/ingredient_paint_dabs.svg"
+family = "ingredient"
+role = "paint_dabs"
+tags = ["ingredient", "paint", "gouache", "color", "accent"]
+kind = "ingredient"
+notes = "Volumetric glossy 3D Gouache paint dollop cluster with specular highlights."
