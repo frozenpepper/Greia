@@ -8,10 +8,13 @@ languages = ["it", "en"]
 
 [presentation]
 categories = ["play", "learn"]
+discovery_tags = ["stories"]
 
 [education]
 categories = ["empathy", "caregiving", "hygiene_and_health"]
-difficulty = 1
+difficulty = 2
+recommended_age_min = 3
+recommended_age_max = 7
 skills = [
   { id = "socioemotional.empathy.caring", weight = 3 },
   { id = "cognition.sequencing.care", weight = 2 },
