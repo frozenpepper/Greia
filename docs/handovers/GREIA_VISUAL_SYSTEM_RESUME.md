@@ -277,7 +277,25 @@ Outcome: **COMPLETE & VERIFIED**
 
 ---
 
-# 11. Drift to avoid
+
+# 11. Completed tranche — FIRST-PARTY ACTIVITY VISUAL AUDIT & BATCH 1 PRODUCTIZATION
+
+Completed runbook:
+
+`docs/testing/2026-08-22_FIRST_PARTY_ACTIVITY_VISUAL_AUDIT_AND_BATCH_1_PRODUCTIZATION.md`
+
+Outcome: **COMPLETE & VERIFIED**
+- Real Simulator-based visual audit executed across all 19 first-party Activities at 1024×600, scored 1–5 on 8 dimensions.
+- 5×4 owner contact sheet: `docs/reviews/visual/2026-08-22_first-party-activity-visual-audit/CONTACT_SHEET.png`.
+- Batch 1 priority targets productized:
+  - `org.greia.treno-numeri` (1.9 → **4.8**): Illustrated steam locomotive, Dani robot conductor mascot, rotating brass wheels, wooden fruit crates, rolling countryside scenery.
+  - `org.greia.labirinto-magico` (1.9 → **4.8**): Tito the Fox adventurer mascot, rotating magical portal goal, 3D faceted crystal stars, beveled 3D walls, tactile arrow D-pad.
+  - `org.greia.acquario-magico` (2.4 → **4.7**): Illustrated tropical species (clownfish, turtle, octopus, dolphin, pufferfish), dual coral reefs, sunlight water caustics, day/night bioluminescence.
+- Full 8-screenshot evidence suite + `AUTHORING_AUDIT.md` for each target under `docs/reviews/visual/2026-08-22_first-party-batch-1/<activity>/`.
+- Review bundle `docs/reviews/visual/2026-08-22_first-party-batch-1/OWNER_RECHECK.md` and root transfer ZIP `GREIA_VISUAL_REVIEW_FIRST_PARTY_ACTIVITY_BATCH_1_2026-08-22.zip`.
+- Generic library gap conclusion: `NO_GAP`. Generic Batch B remains unauthorized.
+
+# 12. Drift to avoid
 
 - no theme-by-theme pack roadmap;
 - no Generic Batch B by inertia;

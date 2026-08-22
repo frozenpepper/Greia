@@ -1,0 +1,46 @@
+{
+  "activity_id": "org.greia.labirinto-magico",
+  "title_it": "Labirinto Magico",
+  "collection": "Gioca (Logica & Labirinti)",
+  "canonical_mascot": "Tito the Fox Adventurer",
+  "initial_score": 1.9,
+  "final_score": 4.8,
+  "delta": 2.9,
+  "visual_needs_inventory": [
+    {
+      "role": "adventurer_hero",
+      "description": "Tito the Fox explorer with satchel, feather cap, and bounce physics",
+      "decision": "REUSE / COMPOSE_ADAPT"
+    },
+    {
+      "role": "portal_goal",
+      "description": "Luminous swirling magical energy vortex with rune ring",
+      "decision": "CREATE_ORIGINAL"
+    },
+    {
+      "role": "crystal_stars",
+      "description": "3D faceted golden crystal star collectibles",
+      "decision": "CREATE_ORIGINAL"
+    },
+    {
+      "role": "maze_walls_3d",
+      "description": "Beveled 3D walls with depth shadows and floor pathways",
+      "decision": "CREATE_ORIGINAL"
+    },
+    {
+      "role": "directional_dpad",
+      "description": "Tactile glowing arrow control buttons",
+      "decision": "CREATE_ORIGINAL"
+    },
+    {
+      "role": "biome_atmospheres",
+      "description": "Ambient floating dust particles and custom lighting per biome",
+      "decision": "COMPOSE_ADAPT"
+    }
+  ],
+  "verification": {
+    "unit_tests_pass": true,
+    "runtime_assets_verified": true,
+    "responsive_verified": true
+  }
+}

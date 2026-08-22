@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" width="240" height="180">
+  <defs>
+    <linearGradient id="coralPink" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f472b6"/>
+      <stop offset="100%" stop-color="#db2777"/>
+    </linearGradient>
+    <linearGradient id="coralTeal" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2dd4bf"/>
+      <stop offset="100%" stop-color="#0f766e"/>
+    </linearGradient>
+    <linearGradient id="coralGold" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fde047"/>
+      <stop offset="100%" stop-color="#ca8a04"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Rock Base -->
+  <ellipse cx="120" cy="155" rx="100" ry="24" fill="#334155" stroke="#1e293b" stroke-width="4"/>
+
+  <!-- Pink Branching Coral -->
+  <path d="M 50,155 L 50,90 Q 30,70 20,40 Q 40,55 52,75 L 58,50 Q 75,30 85,55 L 75,85 L 85,155 Z" fill="url(#coralPink)" stroke="#9d174d" stroke-width="3.5"/>
+
+  <!-- Teal Tube Sponge Coral -->
+  <rect x="105" y="60" width="18" height="95" rx="9" fill="url(#coralTeal)" stroke="#115e59" stroke-width="3"/>
+  <ellipse cx="114" cy="60" rx="9" ry="5" fill="#5eead4"/>
+
+  <rect x="128" y="40" width="22" height="115" rx="11" fill="url(#coralTeal)" stroke="#115e59" stroke-width="3"/>
+  <ellipse cx="139" cy="40" rx="11" ry="6" fill="#5eead4"/>
+
+  <rect x="154" y="75" width="16" height="80" rx="8" fill="url(#coralTeal)" stroke="#115e59" stroke-width="3"/>
+  <ellipse cx="162" cy="75" rx="8" ry="4" fill="#5eead4"/>
+
+  <!-- Golden Sea Anemone -->
+  <path d="M 180,155 Q 170,120 185,105 Q 195,120 195,155 Z" fill="url(#coralGold)" stroke="#854d0e" stroke-width="2.5"/>
+  <path d="M 195,155 Q 200,110 215,100 Q 215,125 210,155 Z" fill="url(#coralGold)" stroke="#854d0e" stroke-width="2.5"/>
+
+  <!-- Pearl Shell -->
+  <ellipse cx="80" cy="160" rx="16" ry="10" fill="#fbcfe8" stroke="#be185d" stroke-width="2"/>
+  <circle cx="80" cy="158" r="5" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+</svg>

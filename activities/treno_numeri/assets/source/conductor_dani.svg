@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="160" height="160">
+  <defs>
+    <linearGradient id="daniBody" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+    <linearGradient id="capGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e3a8a"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="100%" stop-color="#eab308"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Robot Head -->
+  <rect x="35" y="55" width="90" height="80" rx="22" fill="url(#daniBody)" stroke="#0369a1" stroke-width="4"/>
+
+  <!-- Antenna -->
+  <line x1="80" y1="55" x2="80" y2="35" stroke="#0284c7" stroke-width="5"/>
+  <circle cx="80" cy="30" r="8" fill="#facc15" stroke="#ca8a04" stroke-width="2"/>
+
+  <!-- Robot Ears / Bolts -->
+  <rect x="23" y="80" width="14" height="24" rx="4" fill="#94a3b8" stroke="#475569" stroke-width="2"/>
+  <rect x="123" y="80" width="14" height="24" rx="4" fill="#94a3b8" stroke="#475569" stroke-width="2"/>
+
+  <!-- Screen Face -->
+  <rect x="47" y="70" width="66" height="50" rx="12" fill="#0f172a" stroke="#0284c7" stroke-width="3"/>
+
+  <!-- Cheerful Cyan LED Eyes -->
+  <circle cx="63" cy="90" r="9" fill="#38bdf8"/>
+  <circle cx="65" cy="88" r="3" fill="#ffffff"/>
+  <circle cx="97" cy="90" r="9" fill="#38bdf8"/>
+  <circle cx="99" cy="88" r="3" fill="#ffffff"/>
+
+  <!-- Happy Smile -->
+  <path d="M 68,105 Q 80,114 92,105" fill="none" stroke="#38bdf8" stroke-width="3.5" stroke-linecap="round"/>
+
+  <!-- Conductor Cap -->
+  <ellipse cx="80" cy="54" rx="46" ry="12" fill="url(#capGrad)" stroke="#0f172a" stroke-width="3"/>
+  <path d="M 40,54 C 40,32 120,32 120,54 Z" fill="url(#capGrad)" stroke="#0f172a" stroke-width="3"/>
+  <!-- Cap Visor -->
+  <path d="M 38,54 Q 80,68 122,54" fill="none" stroke="#020617" stroke-width="8" stroke-linecap="round"/>
+  <!-- Shiny Gold Conductor Badge -->
+  <circle cx="80" cy="42" r="8" fill="url(#goldGrad)" stroke="#a16207" stroke-width="2"/>
+  <polygon points="80,36 82,41 87,41 83,44 85,49 80,46 75,49 77,44 73,41 78,41" fill="#ffffff"/>
+</svg>

@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <defs>
+    <linearGradient id="boilerGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ef4444"/>
+      <stop offset="50%" stop-color="#dc2626"/>
+      <stop offset="100%" stop-color="#991b1b"/>
+    </linearGradient>
+    <linearGradient id="cabGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="70%" stop-color="#1d4ed8"/>
+      <stop offset="100%" stop-color="#1e3a8a"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="50%" stop-color="#eab308"/>
+      <stop offset="100%" stop-color="#ca8a04"/>
+    </linearGradient>
+    <linearGradient id="steelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#64748b"/>
+      <stop offset="100%" stop-color="#334155"/>
+    </linearGradient>
+    <radialGradient id="lampGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="40%" stop-color="#fef08a"/>
+      <stop offset="100%" stop-color="#eab308"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Chassis Underframe -->
+  <rect x="20" y="210" width="360" height="24" rx="6" fill="url(#steelGrad)" stroke="#1e293b" stroke-width="4"/>
+  <!-- Cowcatcher (Grill) -->
+  <polygon points="340,210 390,230 340,230" fill="url(#goldGrad)" stroke="#854d0e" stroke-width="3"/>
+  <line x1="355" y1="210" x2="365" y2="230" stroke="#713f12" stroke-width="3"/>
+  <line x1="370" y1="210" x2="380" y2="230" stroke="#713f12" stroke-width="3"/>
+
+  <!-- Boiler Body -->
+  <rect x="140" y="90" width="200" height="125" rx="20" fill="url(#boilerGrad)" stroke="#7f1d1d" stroke-width="5"/>
+  <!-- Boiler Brass Bands -->
+  <rect x="180" y="90" width="10" height="125" fill="url(#goldGrad)"/>
+  <rect x="240" y="90" width="10" height="125" fill="url(#goldGrad)"/>
+  <rect x="300" y="90" width="10" height="125" fill="url(#goldGrad)"/>
+
+  <!-- Front Boiler Plate -->
+  <ellipse cx="340" cy="152" rx="16" ry="62" fill="#7f1d1d" stroke="#450a0a" stroke-width="4"/>
+
+  <!-- Brass Steam Dome -->
+  <path d="M 210,92 Q 225,50 240,92 Z" fill="url(#goldGrad)" stroke="#854d0e" stroke-width="3"/>
+  <!-- Whistle -->
+  <rect x="175" y="60" width="8" height="32" fill="url(#goldGrad)" stroke="#854d0e" stroke-width="2"/>
+  <ellipse cx="179" cy="58" rx="7" ry="4" fill="url(#goldGrad)"/>
+
+  <!-- Chimney / Smokestack -->
+  <path d="M 285,92 L 290,30 L 320,30 L 325,92 Z" fill="url(#steelGrad)" stroke="#0f172a" stroke-width="4"/>
+  <ellipse cx="305" cy="30" rx="20" ry="8" fill="url(#goldGrad)" stroke="#854d0e" stroke-width="3"/>
+
+  <!-- Headlamp -->
+  <rect x="348" y="125" width="24" height="36" rx="4" fill="url(#goldGrad)" stroke="#854d0e" stroke-width="3"/>
+  <ellipse cx="372" cy="143" rx="8" ry="14" fill="url(#lampGlow)" stroke="#ca8a04" stroke-width="2"/>
+
+  <!-- Driver Cabin -->
+  <rect x="25" y="45" width="135" height="170" rx="14" fill="url(#cabGrad)" stroke="#172554" stroke-width="5"/>
+  <!-- Cab Curved Roof -->
+  <path d="M 15,48 Q 92,25 170,48" fill="none" stroke="#1e3a8a" stroke-width="12" stroke-linecap="round"/>
+  <path d="M 15,46 Q 92,23 170,46" fill="none" stroke="url(#goldGrad)" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- Cabin Window (Open for Conductor) -->
+  <rect x="45" y="70" width="80" height="70" rx="12" fill="#bfdbfe" stroke="#1d4ed8" stroke-width="4"/>
+  <rect x="49" y="74" width="72" height="62" rx="8" fill="#dbeafe"/>
+</svg>

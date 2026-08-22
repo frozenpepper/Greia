@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="ironGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="brassGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde047"/>
+      <stop offset="100%" stop-color="#a16207"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Outer Iron Tire -->
+  <circle cx="60" cy="60" r="56" fill="url(#ironGrad)" stroke="#020617" stroke-width="4"/>
+  <!-- Brass Inset Ring -->
+  <circle cx="60" cy="60" r="46" fill="#1e293b" stroke="url(#brassGrad)" stroke-width="4"/>
+
+  <!-- Counterweight Crescent -->
+  <path d="M 25,60 A 35,35 0 0,1 95,60 Z" fill="url(#brassGrad)" opacity="0.85"/>
+
+  <!-- Spokes -->
+  <line x1="60" y1="18" x2="60" y2="102" stroke="url(#brassGrad)" stroke-width="5" stroke-linecap="round"/>
+  <line x1="18" y1="60" x2="102" y2="60" stroke="url(#brassGrad)" stroke-width="5" stroke-linecap="round"/>
+  <line x1="30" y1="30" x2="90" y2="90" stroke="url(#brassGrad)" stroke-width="5" stroke-linecap="round"/>
+  <line x1="30" y1="90" x2="90" y2="30" stroke="url(#brassGrad)" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- Center Brass Hubcap -->
+  <circle cx="60" cy="60" r="16" fill="url(#brassGrad)" stroke="#713f12" stroke-width="3"/>
+  <circle cx="60" cy="60" r="6" fill="#ffffff"/>
+</svg>

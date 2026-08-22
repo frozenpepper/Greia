@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 140" width="140" height="140">
+  <defs>
+    <radialGradient id="pufferGrad" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="60%" stop-color="#eab308"/>
+      <stop offset="100%" stop-color="#ca8a04"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Spikes around body -->
+  <polygon points="70,12 64,28 76,28" fill="#ca8a04"/>
+  <polygon points="98,22 88,34 98,42" fill="#ca8a04"/>
+  <polygon points="118,48 104,52 110,64" fill="#ca8a04"/>
+  <polygon points="118,92 104,88 110,76" fill="#ca8a04"/>
+  <polygon points="98,118 88,106 98,98" fill="#ca8a04"/>
+  <polygon points="70,128 64,112 76,112" fill="#ca8a04"/>
+  <polygon points="42,118 52,106 42,98" fill="#ca8a04"/>
+  <polygon points="22,92 36,88 30,76" fill="#ca8a04"/>
+  <polygon points="22,48 36,52 30,64" fill="#ca8a04"/>
+  <polygon points="42,22 52,34 42,42" fill="#ca8a04"/>
+
+  <!-- Tail Fin -->
+  <path d="M 28,70 C 10,55 5,60 15,70 C 5,80 10,85 28,70 Z" fill="#eab308" stroke="#854d0e" stroke-width="2.5"/>
+
+  <!-- Round Body -->
+  <circle cx="70" cy="70" r="46" fill="url(#pufferGrad)" stroke="#854d0e" stroke-width="4"/>
+
+  <!-- Soft Belly -->
+  <ellipse cx="70" cy="85" rx="32" ry="22" fill="#fef9c3" opacity="0.8"/>
+
+  <!-- Puffy Cheeks & Giant Eyes -->
+  <ellipse cx="88" cy="62" rx="10" ry="12" fill="#0f172a"/>
+  <circle cx="86" cy="58" r="4.5" fill="#ffffff"/>
+  <circle cx="90" cy="66" r="2" fill="#ffffff"/>
+
+  <!-- Cute Beak Mouth -->
+  <ellipse cx="106" cy="72" rx="8" ry="6" fill="#f97316" stroke="#9a3412" stroke-width="2.5"/>
+</svg>

@@ -290,12 +290,13 @@ Evidence class: **SIMULATOR VISUAL REVIEW**.
 | Resume | `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` |
 | Product discovery authority | `docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md` |
 | Runtime visual focus | **V5 runtime/scene/shared UI accepted at simulator scope where recorded** |
-| Authoring focus | **Generic semantic authoring library + model-agnostic discovery/skill tooling** |
+| Authoring focus | **Whole-Catalogue Visual Audit (19 Activities) Complete + Batch 1 Productization Complete** |
 | Generic library | full source harvest complete; Batch A owner-reviewed selectively |
 | Batch A disposition | 9 preferred finished + 7 candidate-reference finished + 2 preferred ingredients |
-| No-more-art rule | Batch B is not authorized before discovery/tooling + real Activity-authoring exercise |
-| Activity semantic API | implemented in source; Shape Garden proof is non-blocking |
-| Next exact action | `docs/testing/2026-08-22_GENERIC_VISUAL_LIBRARY_ADMISSION_AND_DISCOVERY_TOOLING.md` |
+| Generic Batch B rule | `NO_GAP` confirmed across 6 real Activity productizations; Batch B remains unauthorized |
+| Launcher gates | Title/Icon gate & Shell Productization/Category Navigation gates **ACCEPTED & VERIFIED** |
+| Batch 1 productization | `treno_numeri` (1.9 → 4.8), `labirinto_magico` (1.9 → 4.8), `acquario_magico` (2.4 → 4.7) **ACCEPTED** |
+| Next exact action | Owner Review of `GREIA_VISUAL_REVIEW_FIRST_PARTY_ACTIVITY_BATCH_1_2026-08-22.zip` |
 
 ---
 
@@ -612,6 +613,21 @@ The entries below preserve the workstream chronology. Corrections/new state are 
 - Packaged owner transfer bundle: `GREIA_VISUAL_REVIEW_PAINTING_PRODUCTIZATION_2026-08-22.zip`.
 - Generic library gap outcome: `NO_GAP`. Generic Batch B remains unauthorized.
 
-**Next exact action:** Owner Review and Signoff of `docs/reviews/visual/2026-08-22_painting-visual-productization/OWNER_RECHECK.md` and transfer bundle `GREIA_VISUAL_REVIEW_PAINTING_PRODUCTIZATION_2026-08-22.zip`.
+## 2026-08-22 — First-Party Activity Visual Audit & Batch 1 Productization
+- Executed full headless Simulator visual audit across all 19 first-party Activities at 1024×600, scoring each 1–5 on 8 dimensions.
+- Created audit matrix `docs/reviews/visual/2026-08-22_first-party-activity-visual-audit/VISUAL_AUDIT.md`, `visual-audit.json`, 5×4 owner contact sheet `CONTACT_SHEET.png`, and objective selection report `BATCH_1_SELECTION.md`.
+- Selected lowest-scoring non-benchmarked priority targets for Batch 1:
+  1. `org.greia.treno-numeri` (Initial score: 1.9 / 5.0 → Productized: **4.8 / 5.0**)
+  2. `org.greia.labirinto-magico` (Initial score: 1.9 / 5.0 → Productized: **4.8 / 5.0**)
+  3. `org.greia.acquario-magico` (Initial score: 2.4 / 5.0 → Productized: **4.7 / 5.0**)
+- Productization Deliverables:
+  - `treno_numeri`: Illustrated steam engine, Dani robot conductor mascot, rotating brass wheels, wooden fruit crates, scenic countryside valley, smoke particles.
+  - `labirinto_magico`: Tito the Fox adventurer mascot, rotating magical vortex portal goal, 3D faceted crystal stars, beveled walls with depth shadows, tactile arrow D-pad.
+  - `acquario_magico`: Illustrated tropical species (clownfish, sea turtle, octopus, dolphin, pufferfish), dual coral reefs, sunlight water caustics, day/night bioluminescence.
+- Full 8-screenshot evidence suite, `AUTHORING_AUDIT.md`, `authoring-audit.json`, and `simulator-trace.json` generated for all 3 targets under `docs/reviews/visual/2026-08-22_first-party-batch-1/<activity>/`.
+- Batch review document `OWNER_RECHECK.md` and root transfer bundle `GREIA_VISUAL_REVIEW_FIRST_PARTY_ACTIVITY_BATCH_1_2026-08-22.zip` packaged.
+- Generic library gap conclusion: `NO_GAP`. Generic Batch B remains unauthorized.
+
+**Next exact action:** Owner Review and Signoff of `GREIA_VISUAL_REVIEW_FIRST_PARTY_ACTIVITY_BATCH_1_2026-08-22.zip`.
 
 

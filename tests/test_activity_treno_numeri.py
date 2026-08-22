@@ -2,13 +2,18 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import sys
 import tomllib
 import unittest
 
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PROJECT_ROOT / "src"))
+sys.path.insert(0, str(PROJECT_ROOT))
+
 from activities.treno_numeri.main import FRUITS, TrainAudio
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
 ACTIVITY_DIR = PROJECT_ROOT / "activities" / "treno_numeri"
+RUNTIME_ASSETS = ACTIVITY_DIR / "assets" / "runtime"
 
 
 class TrenoNumeriTests(unittest.TestCase):
@@ -37,6 +42,27 @@ class TrenoNumeriTests(unittest.TestCase):
     def test_audio_synthesizer_initializes(self) -> None:
         audio = TrainAudio()
         self.assertIsNotNone(audio)
+
+    def test_baked_runtime_assets_exist(self) -> None:
+        required_assets = [
+            "locomotive.png",
+            "wagon.png",
+            "wheel_large.png",
+            "wheel_small.png",
+            "conductor_dani.png",
+            "crate_basket.png",
+            "fruit_apple.png",
+            "fruit_banana.png",
+            "fruit_carrot.png",
+            "fruit_strawberry.png",
+        ]
+        for name in required_assets:
+            p = RUNTIME_ASSETS / name
+            self.assertTrue(p.exists(), f"Missing runtime asset: {name}")
+            self.assertGreater(p.stat().st_size, 100, f"Asset too small: {name}")
+            with p.open("rb") as f:
+                header = f.read(8)
+                self.assertEqual(header, b"\x89PNG\r\n\x1a\n", f"Invalid PNG: {name}")
 
 
 if __name__ == "__main__":

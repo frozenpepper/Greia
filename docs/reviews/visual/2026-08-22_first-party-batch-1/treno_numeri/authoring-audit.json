@@ -1,0 +1,56 @@
+{
+  "activity_id": "org.greia.treno-numeri",
+  "title_it": "Il Treno dei Numeri",
+  "collection": "Impara (Matematica)",
+  "canonical_mascot": "Dani the Robot Conductor",
+  "initial_score": 1.9,
+  "final_score": 4.8,
+  "delta": 2.9,
+  "visual_needs_inventory": [
+    {
+      "role": "locomotive_engine",
+      "description": "Illustrated vintage steam engine with red boiler, gold trim, and headlamp",
+      "decision": "CREATE_ORIGINAL"
+    },
+    {
+      "role": "wagon_hopper",
+      "description": "Rich wooden freight hopper wagon with brass corners",
+      "decision": "CREATE_ORIGINAL"
+    },
+    {
+      "role": "wheels_driving",
+      "description": "Cast-iron and brass wheels with rotating counterweights and steel rod",
+      "decision": "CREATE_ORIGINAL"
+    },
+    {
+      "role": "conductor_mascot",
+      "description": "Dani the Robot Conductor in cab window with conductor cap",
+      "decision": "REUSE / COMPOSE_ADAPT"
+    },
+    {
+      "role": "fruit_items",
+      "description": "High-res vibrant Apple, Banana, Carrot, Strawberry illustrations",
+      "decision": "CREATE_ORIGINAL"
+    },
+    {
+      "role": "crate_basket",
+      "description": "Tactile wooden cargo crates for math equation interaction",
+      "decision": "CREATE_ORIGINAL"
+    },
+    {
+      "role": "countryside_scenery",
+      "description": "Layered rolling emerald hills, cumulus clouds, smiling sun",
+      "decision": "COMPOSE_ADAPT"
+    },
+    {
+      "role": "railway_track",
+      "description": "Grounded gravel ballast bed and wooden ties",
+      "decision": "CREATE_ORIGINAL"
+    }
+  ],
+  "verification": {
+    "unit_tests_pass": true,
+    "runtime_assets_verified": true,
+    "responsive_verified": true
+  }
+}

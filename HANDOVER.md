@@ -1,3 +1,14 @@
+- **First-Party Activity Visual Audit and Batch 1 Productization (2026-08-22)**:
+  - Delivered whole-catalogue visual audit across all 19 first-party Activities and productized Batch 1 priority targets (`docs/testing/2026-08-22_FIRST_PARTY_ACTIVITY_VISUAL_AUDIT_AND_BATCH_1_PRODUCTIZATION.md`):
+    - **Whole-Catalogue Visual Audit (Phase A)**: Headless Simulator visual audit of all 19 first-party Activities at 1024×600, evaluating 8 dimensions (Coherence, Grounding, Entities, UI, Delight, Style, Responsive, Product Readiness). Produced `visual-audit.json`, `VISUAL_AUDIT.md`, 5×4 owner contact sheet `CONTACT_SHEET.png`, and objective selection report `BATCH_1_SELECTION.md`.
+    - **Target 1: Il Treno dei Numeri (`org.greia.treno-numeri`)**: Initial 1.9 → **4.8/5.0** (+2.9). Integrated Dani the Robot conductor mascot (`character.dani`), vintage steam locomotive engine with rotating brass wheels, wooden fruit crates, and scenic green valley countryside.
+    - **Target 2: Labirinto Magico (`org.greia.labirinto-magico`)**: Initial 1.9 → **4.8/5.0** (+2.9). Integrated Tito the Fox adventurer mascot (`character.tito`), rotating magical energy portal goal, 3D faceted crystal stars, beveled walls with depth shadows, and tactile D-pad arrow buttons.
+    - **Target 3: Acquario Magico (`org.greia.acquario-magico`)**: Initial 2.4 → **4.7/5.0** (+2.3). Integrated illustrated tropical marine fauna (clownfish, sea turtle, baby octopus, dolphin, pufferfish), dual coral reefs, sunlight water caustics, and day/night bioluminescence.
+  - Automated tests: `test_activity_treno_numeri.py` (5/5 PASS), `test_activity_labirinto_magico.py` (7/7 PASS), `test_activity_acquario_magico.py` (4/4 PASS), `make validate` (PASS), `make visual-assets-check` (PASS).
+  - Captured complete 8-screenshot evidence suite for all 3 targets under `docs/reviews/visual/2026-08-22_first-party-batch-1/<activity>/` with `AUTHORING_AUDIT.md`, `authoring-audit.json`, `simulator-trace.json`, and `OWNER_RECHECK.md`.
+  - Packaged owner transfer ZIP: `GREIA_VISUAL_REVIEW_FIRST_PARTY_ACTIVITY_BATCH_1_2026-08-22.zip`.
+  - Generic library gap conclusion: `NO_GAP`. Generic Batch B remains unauthorized.
+
 - **Launcher Shell Productization and Category Navigation — Launcher Productization Gate (2026-08-22)**:
   - Delivered comprehensive shell visual polish and intuitive category navigation system (`docs/testing/2026-08-22_LAUNCHER_SHELL_PRODUCTIZATION_AND_CATEGORY_NAVIGATION.md`):
     - **Category Navigation & Switcher Strip**: Persistent Category Switcher Strip in the in-category header showing all 5 primary categories (`Crea`, `Gioca`, `Impara`, `Esplora`, `Mio Greia`). Active category rendered as a highlighted capsule pill with count badge (`Crea (6)`), interactive chips for quick switching, and tactile Back/Home button returning directly to Collection Home.

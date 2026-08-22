@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="160" height="160">
+  <defs>
+    <linearGradient id="foxFur" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="60%" stop-color="#ea580c"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+    <linearGradient id="creamFur" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#fed7aa"/>
+    </linearGradient>
+    <linearGradient id="satchelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#b45309"/>
+      <stop offset="100%" stop-color="#78350f"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Big Fluffy Fox Tail -->
+  <path d="M 30,120 C 5,100 10,65 35,55 C 50,48 55,70 45,95 C 40,108 42,125 30,120 Z" fill="url(#foxFur)" stroke="#9a3412" stroke-width="3.5"/>
+  <path d="M 22,70 C 15,62 30,55 35,55 C 42,55 45,68 38,78 Z" fill="url(#creamFur)"/>
+
+  <!-- Body -->
+  <ellipse cx="80" cy="115" rx="34" ry="28" fill="url(#foxFur)" stroke="#9a3412" stroke-width="4"/>
+  <ellipse cx="80" cy="118" rx="20" ry="20" fill="url(#creamFur)"/>
+
+  <!-- Explorer Satchel Strap & Pouch -->
+  <line x1="60" y1="95" x2="105" y2="132" stroke="#78350f" stroke-width="6" stroke-linecap="round"/>
+  <rect x="92" y="118" width="22" height="18" rx="4" fill="url(#satchelGrad)" stroke="#451a03" stroke-width="2"/>
+  <circle cx="103" cy="125" r="3" fill="#fde047"/>
+
+  <!-- Fox Ears -->
+  <polygon points="45,60 30,18 68,42" fill="url(#foxFur)" stroke="#9a3412" stroke-width="3.5"/>
+  <polygon points="44,52 35,28 60,42" fill="#1e293b"/>
+  <polygon points="115,60 130,18 92,42" fill="url(#foxFur)" stroke="#9a3412" stroke-width="3.5"/>
+  <polygon points="116,52 125,28 100,42" fill="#1e293b"/>
+
+  <!-- Fox Head -->
+  <path d="M 80,40 C 45,40 38,62 48,84 C 55,100 72,108 80,108 C 88,108 105,100 112,84 C 122,62 115,40 80,40 Z" fill="url(#foxFur)" stroke="#9a3412" stroke-width="4"/>
+
+  <!-- White Cheek Tufts -->
+  <path d="M 48,84 C 40,78 42,65 52,62 C 60,78 72,92 80,95 C 70,98 56,96 48,84 Z" fill="url(#creamFur)"/>
+  <path d="M 112,84 C 120,78 118,65 108,62 C 100,78 88,92 80,95 C 90,98 104,96 112,84 Z" fill="url(#creamFur)"/>
+
+  <!-- Snout -->
+  <ellipse cx="80" cy="86" rx="14" ry="10" fill="url(#creamFur)"/>
+  <ellipse cx="80" cy="80" rx="6" ry="4" fill="#0f172a"/>
+
+  <!-- Cheerful Eyes with Sparkles -->
+  <ellipse cx="62" cy="62" rx="7" ry="9" fill="#0f172a"/>
+  <circle cx="60" cy="59" r="3" fill="#ffffff"/>
+  <circle cx="65" cy="65" r="1.5" fill="#ffffff"/>
+  <ellipse cx="98" cy="62" rx="7" ry="9" fill="#0f172a"/>
+  <circle cx="96" cy="59" r="3" fill="#ffffff"/>
+  <circle cx="101" cy="65" r="1.5" fill="#ffffff"/>
+
+  <!-- Happy Smile -->
+  <path d="M 75,90 Q 80,96 85,90" fill="none" stroke="#78350f" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- Little Explorer Feather / Leaf on Head -->
+  <path d="M 80,38 Q 95,20 100,24 Q 92,38 80,38 Z" fill="#22c55e" stroke="#15803d" stroke-width="2"/>
+</svg>

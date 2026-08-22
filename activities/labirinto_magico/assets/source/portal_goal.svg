@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 140" width="140" height="140">
+  <defs>
+    <radialGradient id="portalCore" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="35%" stop-color="#67e8f9"/>
+      <stop offset="70%" stop-color="#a855f7"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </radialGradient>
+    <linearGradient id="runeRing" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde047"/>
+      <stop offset="50%" stop-color="#f43f5e"/>
+      <stop offset="100%" stop-color="#38bdf8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Outer Luminous Aura -->
+  <circle cx="70" cy="70" r="64" fill="#a855f7" opacity="0.25"/>
+  <circle cx="70" cy="70" r="56" fill="#38bdf8" opacity="0.35"/>
+
+  <!-- Outer Rune Ring -->
+  <circle cx="70" cy="70" r="48" fill="none" stroke="url(#runeRing)" stroke-width="4" stroke-dasharray="10 6"/>
+
+  <!-- Swirling Energy Vortex Arms -->
+  <path d="M 70,22 C 95,22 118,45 118,70 C 118,95 95,118 70,118 C 45,118 22,95 22,70 C 22,45 45,22 70,22 Z" fill="url(#portalCore)" stroke="#ffffff" stroke-width="2.5"/>
+
+  <!-- Inner Swirl Stars -->
+  <polygon points="70,42 73,62 93,65 77,77 82,97 68,83 52,95 61,75 47,61 67,61" fill="#ffffff" opacity="0.9"/>
+  <circle cx="70" cy="70" r="12" fill="#ffffff"/>
+</svg>
