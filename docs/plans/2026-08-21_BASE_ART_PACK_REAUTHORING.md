@@ -52,8 +52,6 @@ These remain useful source/provenance pools. Generic resources have been harvest
 
 ## 4. Generic library consolidation — complete enough for current phase
 
-The full source harvest and Core Essentials Batch A are complete.
-
 Current generic authoring indexes after admission/discovery tooling:
 
 ```text
@@ -98,35 +96,66 @@ Candidate commit:
 
 `59336d1c34e119e04c40b32f2c1901e1dbfb1b60`
 
-Candidate source:
-
-`assets/visual/pack_candidates/canonical_characters/2026-08-22/`
-
 Primary review:
 
 `docs/reviews/visual/2026-08-22_canonical-character-cast-reauthoring/PRIMARY_REVIEW.md`
 
-Actual owner-transfer pixels were reviewed.
-
-Accepted as the next-system foundation:
+Accepted foundation:
 
 - complete registered states `neutral`, `blink`, `happy`, `surprised`, `sleepy`;
 - cheap shared motion semantics `idle_bounce`, `blink`, `happy_hop`, `celebrate_pop`, `surprised_wobble`, `sleepy_sway`;
-- source-level semantic groups/components for future authoring;
+- source-level semantic groups/components;
 - complete-state swaps + whole-character transforms rather than skeletal rigs.
 
 Disposition:
 
 ```text
-Lilli → carry forward current candidate
-Tito  → carry forward current candidate
-Momo  → carry forward current candidate
-Nino  → preserve as historical/source provenance; current owl target is Leo
+Lilli → carry forward
+Tito  → carry forward
+Momo  → carry forward
+Nino  → historical/source provenance; current owl target is Leo
 ```
 
-Do not promote the old four-character lineup as the final canonical family.
+## 7. Six-character canonical cast expansion — executed and reviewed
 
-## 7. Current canonical cast design
+Candidate commit:
+
+`cfbb9512723353dd34f6081c174410401e290ca8`
+
+Candidate source:
+
+`assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/`
+
+Primary review:
+
+`docs/reviews/visual/2026-08-22_canonical-cast-expansion/PRIMARY_REVIEW.md`
+
+Actual owner-transfer pixels were reviewed.
+
+Accepted:
+
+```text
+Lilli — unicorn      → creativity / stories / art / imagination
+Leo   — owl+glasses  → learning / reading / language / knowledge
+Dani  — robot        → math / logic / patterns / sequencing
+Tito  — fox          → exploration / nature / discovery / investigation
+Momo  — monster      → emotion / music / silly play / celebration
+```
+
+Flash is structurally accepted as the games/action rabbit:
+
+- silhouette works;
+- ears/tail/posture separate him from Tito and Lilli;
+- five states work;
+- shared motion storyboards work.
+
+One owner-directed identity correction remains before promotion:
+
+> current raspberry fur should become **white/warm-white rabbit fur**, with the action/speed identity moved into a **simple coral/raspberry shirt carrying one large yellow/gold lightning bolt**.
+
+This is a bounded correction, not a cast reopening.
+
+## 8. Current canonical cast design
 
 Authority:
 
@@ -135,12 +164,12 @@ Authority:
 Current target:
 
 ```text
-Lilli — unicorn      → creativity / stories / art / imagination
-Leo   — owl+glasses  → learning / reading / language / knowledge
-Flash — rabbit       → games / speed / action / playful challenge
-Dani  — robot        → math / logic / patterns / sequencing
-Tito  — fox          → exploration / nature / discovery / investigation
-Momo  — monster      → emotion / music / silly play / celebration
+Lilli — unicorn                       → creativity / stories / art / imagination
+Leo   — owl with integrated glasses  → learning / reading / language / knowledge
+Flash — white rabbit + lightning top → games / speed / action / playful challenge
+Dani  — friendly robot               → math / logic / patterns / sequencing
+Tito  — fox                          → exploration / nature / discovery / investigation
+Momo  — monster                      → emotion / music / silly play / celebration
 ```
 
 This is a **soft lead-mascot system**, not exclusive silos.
@@ -157,50 +186,28 @@ my_greia
 
 Natural affinity is allowed (`Create→Lilli`, `Play→Flash`, `Learn→Leo`, `Explore→Tito`), while Dani and Momo remain cross-cutting and `my_greia` remains child/profile-centered.
 
-## 8. Exact current art gate
+## 9. Exact current art gate
 
 Execute:
 
-`docs/testing/2026-08-22_CANONICAL_CAST_EXPANSION_LEO_FLASH_DANI.md`
+`docs/testing/2026-08-22_FLASH_WHITE_RABBIT_IDENTITY_REVISION.md`
 
-This bounded gate must:
+This is the **last intended pure-art correction before canonical cast promotion**.
 
-1. refine the current owl foundation into **Leo** with integrated signature glasses;
-2. create **Flash** as a silhouette-distinct rabbit;
-3. create **Dani** as a cute rounded toy-like robot;
-4. author the same five complete states for Leo/Flash/Dani;
-5. preserve Lilli/Tito/Momo unless a concrete six-cast collision is demonstrated;
-6. prove all-six identity at 256/128/64 px and silhouette-only 128/64;
-7. show shared motion vocabulary across all six at storyboard/design scope;
-8. stop for owner pixel review before runtime promotion or ID migration.
+The gate must:
 
-Candidate workspace:
-
-`assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/`
+1. preserve Flash's current semantic identity, rabbit silhouette, long ears, pom tail, posture and five-state system;
+2. change dominant fur/body to white or warm white;
+3. add a simple coral/raspberry shirt or sleeveless top;
+4. add one large yellow/gold lightning bolt;
+5. preserve Lilli/Leo/Dani/Tito/Momo unchanged;
+6. prove revised Flash at 256/128/64 and directly against Lilli/Tito;
+7. prove the revised six-character ensemble and one shared motion storyboard;
+8. stop for owner pixel review before source promotion/runtime work.
 
 Owner ZIP:
 
-`GREIA_VISUAL_REVIEW_CANONICAL_CAST_EXPANSION_2026-08-22.zip`
-
-## 9. Specific visual risks to control
-
-### Leo
-
-The current owl's large circular eye treatment is already visually dominant. Glasses must be integrated with the eye-mask/eye disks, not stacked on top as extra rings. The old teal badge is optional if glasses provide enough identity.
-
-### Flash
-
-Flash must not become:
-
-- Tito recolored with longer ears;
-- Lilli without horn;
-- a racing-costume mascot with activity-specific props baked into identity.
-
-Silhouette must communicate rabbit + stored speed before color.
-
-### Dani
-
-Dani must not become a generic device icon or dense sci-fi robot. Face/emotion is primary; mechanical detail remains sparse and toy-like. No baked numerals/text.
+`GREIA_VISUAL_REVIEW_FLASH_WHITE_RABBIT_REVISION_2026-08-22.zip`
 
 ## 10. Character production rule
 
@@ -212,19 +219,24 @@ Do not replace this with:
 
 - skeletal/bone animation;
 - runtime body-part composition;
+- runtime clothing/equipment composition;
 - dozens of limb sprites;
 - frame-by-frame sprite explosions;
 - cloned one-body formulas for every cast member.
 
-## 11. What follows owner approval of the six-cast candidate
+Flash's shirt/bolt may be semantic source groups; they are not a runtime wardrobe API.
 
-Only after owner pixel acceptance:
+## 11. What follows owner approval of revised Flash
 
-1. promote approved canonical states under stable source identities;
-2. explicitly migrate historical Nino identity to current `character.leo` where appropriate;
-3. add accepted character states to the explicit build-time rendition manifest;
+After owner pixel acceptance of the bounded Flash revision, **do not create another pure-art cast gate** unless a concrete blocker is identified.
+
+Move directly to:
+
+1. promote the approved six canonical characters/states under stable source identities;
+2. explicitly migrate historical Nino identity to current `character.leo` where appropriate while preserving provenance;
+3. add all accepted character states to the explicit build-time rendition manifest;
 4. extend `SceneActorDefinition` only enough for semantic state/motion selection with whole-character transforms;
-5. exercise runtime/fallback/responsive behavior through the Activity Simulator;
+5. exercise runtime state/motion/fallback/responsive behavior through the Activity Simulator;
 6. then consider optional Activity presentation metadata for lead/supporting canonical characters;
 7. return to exercising the user-facing visual-authoring skill/toolbox in real Activity authoring rather than increasing art counts by inertia.
 
@@ -254,8 +266,9 @@ Do not:
 - redraw every candidate reference until preferred;
 - reopen hero-tree specimen optimization;
 - create six top-level Home destinations from six characters;
-- promote Nino automatically without Leo review;
+- reopen Leo/Dani/Lilli/Tito/Momo during the Flash correction;
 - turn canonical characters into detailed skeletal rigs;
+- create a runtime clothing system for Flash;
 - create a second runtime catalogue/cache architecture;
 - infer arbitrary user-agent capability from the maintainer agent.
 
