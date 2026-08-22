@@ -31,6 +31,9 @@ DISCOVERY_GROUP_IDS = (
     "nature",
     "stories",
     "making",
+    "care",
+    "action",
+    "settings",
 )
 _CATEGORY_ORDER = {
     "create": 10,
@@ -60,6 +63,9 @@ _DISCOVERY_ICONS = {
     "nature": "magnifier",
     "stories": "book",
     "making": "palette",
+    "care": "unicorn",
+    "action": "puzzle_pieces",
+    "settings": "unicorn",
 }
 _DEFAULT_CATEGORY_ICON = "backpack"
 
@@ -127,6 +133,9 @@ _DISCOVERY_TRANSLATIONS: dict[str, dict[str, str]] = {
     "nature": {"it": "Natura", "en": "Nature", "es": "Naturaleza", "de": "Natur", "fr": "Nature"},
     "stories": {"it": "Storie", "en": "Stories", "es": "Historias", "de": "Geschichten", "fr": "Histoires"},
     "making": {"it": "Crea cose", "en": "Making", "es": "Crear", "de": "Gestalten", "fr": "Créer"},
+    "care": {"it": "Prenditi cura", "en": "Caring", "es": "Cuidar", "de": "Kümmern", "fr": "Prendre soin"},
+    "action": {"it": "Azione", "en": "Action", "es": "Acción", "de": "Action", "fr": "Action"},
+    "settings": {"it": "Il mio spazio", "en": "My space", "es": "Mi espacio", "de": "Mein Bereich", "fr": "Mon espace"},
 }
 
 
