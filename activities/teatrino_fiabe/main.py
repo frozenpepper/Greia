@@ -10,7 +10,6 @@ from __future__ import annotations
 import io
 import json
 import math
-import os
 from pathlib import Path
 import random
 import struct
@@ -228,11 +227,8 @@ class MicrophoneRecorder:
 
     def _get_system_gain(self) -> float:
         try:
-            settings_file = (
-                Path(os.environ.get("GREIA_SYSTEM_SETTINGS_DIR", "/var/lib/greia-system-settings"))
-                / "settings.json"
-            )
-            if settings_file.exists():
+            settings_file = Path("/var/lib/greia-system-settings/settings.json")
+            if settings_file.is_file():
                 data = json.loads(settings_file.read_text(encoding="utf-8"))
                 return max(0.5, min(4.0, float(data.get("mic_gain", 2.0))))
         except Exception:
@@ -785,7 +781,6 @@ class AmbientSpark:
 # ============================================================================
 
 def main() -> int:
-    os.environ["SDL_VIDEO_ALLOW_SCALING"] = "1"
     pygame.init()
     pygame.font.init()
 
@@ -1569,5 +1564,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    import sys
-    sys.exit(main())
+    main()
