@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="mermaid_tail" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2DD4BF"/>
+      <stop offset="100%" stop-color="#0F766E"/>
+    </linearGradient>
+    <linearGradient id="mermaid_hair" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FB7185"/>
+      <stop offset="100%" stop-color="#E11D48"/>
+    </linearGradient>
+  </defs>
+  <!-- Flowing Hair Back -->
+  <path d="M 60 70 C 35 110 40 160 55 175 C 45 135 60 100 70 75 Z" fill="url(#mermaid_hair)" stroke="#881337" stroke-width="3"/>
+  <path d="M 140 70 C 165 110 160 160 145 175 C 155 135 140 100 130 75 Z" fill="url(#mermaid_hair)" stroke="#881337" stroke-width="3"/>
+  <!-- Mermaid Shimmering Tail -->
+  <path d="M 85 118 C 85 145 105 160 100 180 C 85 185 75 190 92 195 C 105 190 115 195 112 185 C 115 165 115 145 115 118 Z" fill="url(#mermaid_tail)" stroke="#115E59" stroke-width="3.5"/>
+  <!-- Tail Fin -->
+  <path d="M 92 195 C 80 185 68 195 78 200 C 95 198 100 190 100 190 C 100 190 105 198 122 200 C 132 195 120 185 108 195 Z" fill="#2DD4BF" stroke="#115E59" stroke-width="2.5"/>
+  <!-- Tail Scales -->
+  <path d="M 92 135 Q 100 140 108 135 M 90 148 Q 100 154 110 148 M 94 162 Q 100 166 106 162" stroke="#5EEAD4" stroke-width="2" fill="none"/>
+  <!-- Seashell Top -->
+  <circle cx="90" cy="112" r="8" fill="#F472B6" stroke="#9D174D" stroke-width="2"/>
+  <circle cx="110" cy="112" r="8" fill="#F472B6" stroke="#9D174D" stroke-width="2"/>
+  <!-- Torso & Arms -->
+  <rect x="86" y="94" width="28" height="24" rx="6" fill="#FED7AA"/>
+  <rect x="74" y="100" width="8" height="18" rx="4" fill="#FED7AA"/>
+  <rect x="118" y="100" width="8" height="18" rx="4" fill="#FED7AA"/>
+  <!-- Head -->
+  <ellipse cx="100" cy="74" rx="22" ry="20" fill="#FED7AA" stroke="#881337" stroke-width="2.5"/>
+  <!-- Hair Flower -->
+  <circle cx="120" cy="60" r="7" fill="#FDE047" stroke="#D97706" stroke-width="2"/>
+  <!-- Eyes -->
+  <ellipse cx="92" cy="72" rx="4.5" ry="6" fill="#1E1B4B"/>
+  <ellipse cx="108" cy="72" rx="4.5" ry="6" fill="#1E1B4B"/>
+  <circle cx="93.5" cy="70" r="1.5" fill="#FFFFFF"/>
+  <circle cx="109.5" cy="70" r="1.5" fill="#FFFFFF"/>
+  <!-- Cheeks & Smile -->
+  <circle cx="87" cy="78" r="3" fill="#F43F5E" opacity="0.5"/>
+  <circle cx="113" cy="78" r="3" fill="#F43F5E" opacity="0.5"/>
+  <path d="M 96 80 Q 100 84 104 80" stroke="#881337" stroke-width="2" fill="none" stroke-linecap="round"/>
+</svg>

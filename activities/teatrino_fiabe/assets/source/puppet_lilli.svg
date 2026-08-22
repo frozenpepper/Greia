@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="lilli_horn" x1="0" y1="1" x2="0.8" y2="0">
+      <stop offset="0%" stop-color="#F59E0B"/>
+      <stop offset="50%" stop-color="#FDE047"/>
+      <stop offset="100%" stop-color="#FFFBEB"/>
+    </linearGradient>
+    <linearGradient id="lilli_mane" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F472B6"/>
+      <stop offset="50%" stop-color="#A78BFA"/>
+      <stop offset="100%" stop-color="#38BDF8"/>
+    </linearGradient>
+    <linearGradient id="lilli_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#FEF3C7"/>
+    </linearGradient>
+  </defs>
+  <!-- Mane Back -->
+  <path d="M 60 70 C 40 85 45 130 65 145 C 55 125 55 95 75 80 Z" fill="url(#lilli_mane)"/>
+  <!-- Body & Legs -->
+  <ellipse cx="100" cy="130" rx="46" ry="36" fill="url(#lilli_body)" stroke="#78350F" stroke-width="4"/>
+  <rect x="72" y="145" width="16" height="32" rx="8" fill="url(#lilli_body)" stroke="#78350F" stroke-width="4"/>
+  <rect x="112" y="145" width="16" height="32" rx="8" fill="url(#lilli_body)" stroke="#78350F" stroke-width="4"/>
+  <!-- Pink Hooves -->
+  <path d="M 72 165 L 88 165 C 88 173 88 177 80 177 C 72 177 72 173 72 165 Z" fill="#F472B6"/>
+  <path d="M 112 165 L 128 165 C 128 173 128 177 120 177 C 112 177 112 173 112 165 Z" fill="#F472B6"/>
+  <!-- Tail -->
+  <path d="M 58 135 C 35 140 25 165 45 175 C 38 158 48 145 60 142 Z" fill="url(#lilli_mane)" stroke="#78350F" stroke-width="3"/>
+  <!-- Star Mark on Flank -->
+  <polygon points="76,122 78,127 84,127 79,130 81,136 76,132 71,136 73,130 68,127 74,127" fill="#F59E0B"/>
+  <!-- Head -->
+  <ellipse cx="125" cy="85" rx="34" ry="30" fill="url(#lilli_body)" stroke="#78350F" stroke-width="4"/>
+  <ellipse cx="145" cy="92" rx="18" ry="14" fill="#FFFBEB" stroke="#78350F" stroke-width="3"/>
+  <!-- Horn -->
+  <polygon points="120,60 148,22 134,60" fill="url(#lilli_horn)" stroke="#D97706" stroke-width="3"/>
+  <line x1="126" y1="50" x2="140" y2="40" stroke="#B45309" stroke-width="2"/>
+  <line x1="130" y1="40" x2="144" y2="30" stroke="#B45309" stroke-width="2"/>
+  <!-- Ears -->
+  <path d="M 105 65 C 100 50 115 48 118 62 Z" fill="url(#lilli_body)" stroke="#78350F" stroke-width="3"/>
+  <path d="M 108 62 C 105 54 113 52 115 60 Z" fill="#F472B6"/>
+  <!-- Mane Front Bangs -->
+  <path d="M 115 58 C 128 62 132 75 122 82 C 128 72 138 72 135 60 Z" fill="url(#lilli_mane)"/>
+  <!-- Eye -->
+  <circle cx="132" cy="80" r="7" fill="#1E1B4B"/>
+  <circle cx="134" cy="78" r="2.5" fill="#FFFFFF"/>
+  <circle cx="130" cy="82" r="1.2" fill="#FFFFFF"/>
+  <!-- Cheek & Muzzle -->
+  <ellipse cx="140" cy="92" rx="5" ry="3.5" fill="#F472B6" opacity="0.8"/>
+  <circle cx="152" cy="88" r="2" fill="#78350F"/>
+  <path d="M 148 96 Q 153 100 157 95" stroke="#78350F" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+</svg>

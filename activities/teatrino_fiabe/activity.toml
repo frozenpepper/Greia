@@ -21,6 +21,7 @@ skills = [
 events = [
   { id = "scene.created", kind = "creation" },
   { id = "story.played", kind = "completion" },
+  { id = "story.recorded", kind = "creation" },
 ]
 
 [runtime]

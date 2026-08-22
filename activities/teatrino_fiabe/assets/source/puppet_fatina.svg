@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="fairy_wings" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#E0F2FE" stop-opacity="0.9"/>
+      <stop offset="50%" stop-color="#FBCFE8" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#DDD6FE" stop-opacity="0.9"/>
+    </linearGradient>
+    <linearGradient id="fairy_dress" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#86EFAC"/>
+      <stop offset="100%" stop-color="#22C55E"/>
+    </linearGradient>
+  </defs>
+  <!-- Iridescent Wings -->
+  <ellipse cx="60" cy="90" rx="34" ry="18" fill="url(#fairy_wings)" stroke="#A855F7" stroke-width="2.5" transform="rotate(-30 60 90)"/>
+  <ellipse cx="62" cy="115" rx="24" ry="12" fill="url(#fairy_wings)" stroke="#A855F7" stroke-width="2" transform="rotate(-15 62 115)"/>
+  <ellipse cx="140" cy="90" rx="34" ry="18" fill="url(#fairy_wings)" stroke="#A855F7" stroke-width="2.5" transform="rotate(30 140 90)"/>
+  <ellipse cx="138" cy="115" rx="24" ry="12" fill="url(#fairy_wings)" stroke="#A855F7" stroke-width="2" transform="rotate(15 138 115)"/>
+  <!-- Leaf Petal Dress -->
+  <path d="M 85 110 L 115 110 L 138 168 C 115 178 85 178 62 168 Z" fill="url(#fairy_dress)" stroke="#15803D" stroke-width="3.5"/>
+  <!-- Legs -->
+  <rect x="85" y="160" width="8" height="20" rx="4" fill="#FEE2E2"/>
+  <rect x="107" y="160" width="8" height="20" rx="4" fill="#FEE2E2"/>
+  <!-- Wand with Sparkles -->
+  <line x1="120" y1="120" x2="148" y2="85" stroke="#F59E0B" stroke-width="2.5"/>
+  <circle cx="148" cy="85" r="6" fill="#FDE047" stroke="#D97706" stroke-width="2"/>
+  <!-- Head & Hair -->
+  <circle cx="100" cy="74" r="22" fill="#FEE2E2" stroke="#B45309" stroke-width="2"/>
+  <!-- Hair -->
+  <path d="M 76 74 C 74 50 126 50 124 74 C 115 62 85 62 76 74 Z" fill="#F59E0B" stroke="#B45309" stroke-width="2.5"/>
+  <circle cx="100" cy="54" r="6" fill="#F472B6"/>
+  <!-- Eyes -->
+  <ellipse cx="91" cy="74" rx="4" ry="5.5" fill="#1E1B4B"/>
+  <ellipse cx="109" cy="74" rx="4" ry="5.5" fill="#1E1B4B"/>
+  <circle cx="92.5" cy="72" r="1.5" fill="#FFFFFF"/>
+  <circle cx="110.5" cy="72" r="1.5" fill="#FFFFFF"/>
+  <circle cx="86" cy="80" r="3" fill="#F43F5E" opacity="0.6"/>
+  <circle cx="114" cy="80" r="3" fill="#F43F5E" opacity="0.6"/>
+  <path d="M 96 83 Q 100 86 104 83" stroke="#B45309" stroke-width="2" fill="none" stroke-linecap="round"/>
+</svg>

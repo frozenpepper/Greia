@@ -1,22 +1,50 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
   <defs>
-    <linearGradient id="curtain" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#E53935"/>
-      <stop offset="100%" stop-color="#B71C1C"/>
+    <linearGradient id="bg_sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1E1B4B"/>
+      <stop offset="100%" stop-color="#312E81"/>
+    </linearGradient>
+    <linearGradient id="curtain" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#991B1B"/>
+      <stop offset="50%" stop-color="#DC2626"/>
+      <stop offset="100%" stop-color="#7F1D1D"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FDE047"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </linearGradient>
+    <linearGradient id="stage_wood" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#B45309"/>
+      <stop offset="100%" stop-color="#78350F"/>
     </linearGradient>
   </defs>
-  <!-- Stage Board Base -->
-  <rect x="28" y="196" width="200" height="26" rx="6" fill="#8D6E63" stroke="#5D4037" stroke-width="5"/>
-  <!-- Fairytale Castle in Background -->
-  <rect x="106" y="90" width="44" height="106" fill="#CFD8DC"/>
-  <polygon points="128,42 96,90 160,90" fill="#5C6BC0"/>
-  <rect x="120" y="148" width="16" height="48" rx="8" fill="#37474F"/>
-  <!-- Left & Right Drapery Curtains -->
-  <path d="M28 40 L96 40 C76 80 44 130 28 196 Z" fill="url(#curtain)"/>
-  <path d="M228 40 L160 40 C180 80 212 130 228 196 Z" fill="url(#curtain)"/>
-  <!-- Top Scalloped Valance -->
-  <path d="M28 40 L228 40 L228 66 Q194 82 161 66 Q128 82 95 66 Q61 82 28 66 Z" fill="#D32F2F" stroke="#FFD54F" stroke-width="4"/>
-  <!-- Gold Curtain Tassels -->
-  <circle cx="56" cy="142" r="7" fill="#FFD54F"/>
-  <circle cx="200" cy="142" r="7" fill="#FFD54F"/>
+  <!-- Background Disc with safe padding -->
+  <rect x="16" y="16" width="224" height="224" rx="48" fill="url(#bg_sky)" stroke="#4338CA" stroke-width="4"/>
+  <!-- Stars in background -->
+  <circle cx="60" cy="65" r="2.5" fill="#FDE047"/>
+  <circle cx="196" cy="70" r="2.5" fill="#FDE047"/>
+  <circle cx="128" cy="55" r="3" fill="#FDE047"/>
+  <!-- Stage Floor -->
+  <rect x="24" y="180" width="208" height="48" rx="8" fill="url(#stage_wood)" stroke="#451A03" stroke-width="3"/>
+  <line x1="24" y1="184" x2="232" y2="184" stroke="url(#gold)" stroke-width="3"/>
+  <!-- Center Spotlight Puppet: Star Princess / Lilli -->
+  <!-- Princess Puppet -->
+  <ellipse cx="105" cy="135" rx="26" ry="30" fill="#F472B6" stroke="#831843" stroke-width="3"/>
+  <circle cx="105" cy="98" r="18" fill="#FEE2E2" stroke="#854D0E" stroke-width="2.5"/>
+  <polygon points="94,84 98,72 105,78 112,72 116,84" fill="url(#gold)"/>
+  <!-- Dragon Puppet -->
+  <ellipse cx="160" cy="138" rx="24" ry="26" fill="#34D399" stroke="#064E3B" stroke-width="3"/>
+  <circle cx="155" cy="106" r="16" fill="#34D399" stroke="#064E3B" stroke-width="2.5"/>
+  <polygon points="144,92 138,80 150,88" fill="#FDE047"/>
+  <!-- Puppet Sticks -->
+  <line x1="105" y1="165" x2="105" y2="195" stroke="#78350F" stroke-width="4" stroke-linecap="round"/>
+  <line x1="160" y1="164" x2="160" y2="195" stroke="#78350F" stroke-width="4" stroke-linecap="round"/>
+  <!-- Curtains Left & Right -->
+  <path d="M 20 20 L 70 20 C 50 80 55 150 20 185 Z" fill="url(#curtain)" stroke="#450A0A" stroke-width="3"/>
+  <path d="M 236 20 L 186 20 C 206 80 201 150 236 185 Z" fill="url(#curtain)" stroke="#450A0A" stroke-width="3"/>
+  <!-- Top Curtain Swag -->
+  <path d="M 20 20 Q 75 60 128 35 Q 181 60 236 20 Z" fill="url(#curtain)" stroke="#450A0A" stroke-width="3"/>
+  <path d="M 20 20 Q 75 60 128 35 Q 181 60 236 20" fill="none" stroke="url(#gold)" stroke-width="3"/>
+  <!-- Golden Theater Comedy/Tragedy Masks or Crown at top arch -->
+  <polygon points="128,26 133,36 144,36 135,42 138,52 128,46 118,52 121,42 112,36 123,36" fill="url(#gold)" stroke="#B45309" stroke-width="1.5"/>
 </svg>
