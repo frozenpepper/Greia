@@ -1,0 +1,59 @@
+[pack]
+id = "greia.canonical_characters.2026-08-22-candidate"
+name = "Canonical Character Cast — Reauthoring & State-Set Candidate"
+version = "0.1.0"
+status = "candidate"
+authority = "docs/testing/2026-08-22_CANONICAL_CHARACTER_CAST_REAUTHORING_AND_STATE_SET.md"
+notes = "Candidate full-cast reauthoring with 5 authored states per character (neutral, blink, happy, surprised, sleepy), source masters with semantic grouping, and character-specific authoring components."
+
+[[characters]]
+id = "character.lilli"
+display_name = "Lilli"
+archetype = "unicorn_puff"
+library_status = "candidate"
+logical_artboard = [256, 256]
+min_recommended_px = 64
+max_recommended_px = 512
+identity_cues = ["warm cream body", "golden horn", "3-ribbon rainbow forelock", "pink hooves", "flank star mark"]
+source_master = "lilli/source_master.svg"
+states = { neutral = "lilli/neutral.svg", blink = "lilli/blink.svg", happy = "lilli/happy.svg", surprised = "lilli/surprised.svg", sleepy = "lilli/sleepy.svg" }
+components = ["lilli/components/horn.svg", "lilli/components/forelock.svg", "lilli/components/eyes_blink.svg"]
+
+[[characters]]
+id = "character.nino"
+display_name = "Nino"
+archetype = "owl_bean"
+library_status = "candidate"
+logical_artboard = [256, 256]
+min_recommended_px = 64
+max_recommended_px = 512
+identity_cues = ["warm chestnut bean body", "cream eye-mask & belly", "large expressive white eye disks", "orange beak & feet", "teal feather badge"]
+source_master = "nino/source_master.svg"
+states = { neutral = "nino/neutral.svg", blink = "nino/blink.svg", happy = "nino/happy.svg", surprised = "nino/surprised.svg", sleepy = "nino/sleepy.svg" }
+components = ["nino/components/wings.svg", "nino/components/face_mask.svg", "nino/components/eyes_blink.svg"]
+
+[[characters]]
+id = "character.tito"
+display_name = "Tito"
+archetype = "fox_puff"
+library_status = "candidate"
+logical_artboard = [256, 256]
+min_recommended_px = 64
+max_recommended_px = 512
+identity_cues = ["terracotta orange body", "triangular ears with pink inners", "cream muzzle & chest patch", "chunky tail with cream tip", "white paws"]
+source_master = "tito/source_master.svg"
+states = { neutral = "tito/neutral.svg", blink = "tito/blink.svg", happy = "tito/happy.svg", surprised = "tito/surprised.svg", sleepy = "tito/sleepy.svg" }
+components = ["tito/components/tail.svg", "tito/components/muzzle.svg", "tito/components/eyes_blink.svg"]
+
+[[characters]]
+id = "character.momo"
+display_name = "Momo"
+archetype = "friendly_monster_puff"
+library_status = "candidate"
+logical_artboard = [256, 256]
+min_recommended_px = 64
+max_recommended_px = 512
+identity_cues = ["scalloped purple fluff body", "asymmetric antennae (yellow/coral)", "stub arms", "turquoise feet", "single tooth", "lavender spots"]
+source_master = "momo/source_master.svg"
+states = { neutral = "momo/neutral.svg", blink = "momo/blink.svg", happy = "momo/happy.svg", surprised = "momo/surprised.svg", sleepy = "momo/sleepy.svg" }
+components = ["momo/components/antennae.svg", "momo/components/body_fluff.svg", "momo/components/eyes_blink.svg"]
