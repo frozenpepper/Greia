@@ -331,6 +331,10 @@ class ParentRequestHandler(BaseHTTPRequestHandler):
             self._send_security_headers()
             self.end_headers()
             return
+        if parsed.path == "/favicon.ico":
+            self.send_response(204)
+            self.end_headers()
+            return
         if parsed.path == "/healthz":
             self._send_json(200, {"status": "ok"})
             return
@@ -449,7 +453,8 @@ class ParentRequestHandler(BaseHTTPRequestHandler):
         self.send_header("X-Frame-Options", "DENY")
         self.send_header(
             "Content-Security-Policy",
-            "default-src 'self'; img-src 'self'; style-src 'unsafe-inline'; "
+            "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; "
+            "script-src 'self' 'unsafe-inline'; connect-src 'self'; "
             "form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
         )
 

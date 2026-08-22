@@ -12,7 +12,11 @@
     "creature.turtle": "Sea Turtle 🐢",
     "creature.octopus": "Octopus 🐙",
     "creature.dolphin": "Dolphin 🐬",
-    "creature.puffer": "Pufferfish 🐡"
+    "creature.puffer": "Pufferfish 🐡",
+    "creature.seahorse": "Seahorse 🌿",
+    "creature.jellyfish": "Glowing Jellyfish 🪼",
+    "creature.starfish": "Starfish ⭐",
+    "chest.treasure": "Treasure Chest 💎"
   },
   "audio": {}
 }

@@ -607,10 +607,16 @@ class ActiveProfileSession:
     def _mutation_lock(self) -> Iterator[None]:
         try:
             self.lock_path.parent.mkdir(parents=True, exist_ok=True)
+            handle = self.lock_path.open("a+b")
         except OSError:
-            pass
-        with self.lock_path.open("a+b") as handle:
-            os.chmod(self.lock_path, 0o660)
+            yield
+            return
+
+        with handle:
+            try:
+                os.chmod(self.lock_path, 0o660)
+            except OSError:
+                pass
             try:
                 import fcntl
 

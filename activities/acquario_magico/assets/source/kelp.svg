@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 400" width="120" height="400">
+  <defs>
+    <linearGradient id="kelpStem" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#15803d"/>
+      <stop offset="50%" stop-color="#22c55e"/>
+      <stop offset="100%" stop-color="#166534"/>
+    </linearGradient>
+    <linearGradient id="leafGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4ade80"/>
+      <stop offset="50%" stop-color="#22c55e"/>
+      <stop offset="100%" stop-color="#15803d"/>
+    </linearGradient>
+  </defs>
+  <!-- Central wavy stem -->
+  <path d="M 60,400 C 45,340 75,280 55,220 C 35,160 80,100 60,30" fill="none" stroke="url(#kelpStem)" stroke-width="10" stroke-linecap="round"/>
+  
+  <!-- Leaves on left and right -->
+  <!-- Bottom Right Leaf -->
+  <path d="M 62,350 C 90,340 110,310 95,290 C 80,310 65,335 62,350 Z" fill="url(#leafGrad)" stroke="#14532d" stroke-width="2.5"/>
+  <!-- Bottom Left Leaf -->
+  <path d="M 58,310 C 30,300 10,270 25,250 C 40,270 55,295 58,310 Z" fill="url(#leafGrad)" stroke="#14532d" stroke-width="2.5"/>
+  <!-- Mid Right Leaf -->
+  <path d="M 64,250 C 95,240 115,205 100,185 C 85,205 70,235 64,250 Z" fill="url(#leafGrad)" stroke="#14532d" stroke-width="2.5"/>
+  <!-- Mid Left Leaf -->
+  <path d="M 54,200 C 22,190 5,155 20,135 C 38,155 52,185 54,200 Z" fill="url(#leafGrad)" stroke="#14532d" stroke-width="2.5"/>
+  <!-- Upper Right Leaf -->
+  <path d="M 68,140 C 96,130 112,95 98,80 C 84,98 72,125 68,140 Z" fill="url(#leafGrad)" stroke="#14532d" stroke-width="2.5"/>
+  <!-- Upper Left Leaf -->
+  <path d="M 58,90 C 32,80 18,50 32,35 C 46,52 56,76 58,90 Z" fill="url(#leafGrad)" stroke="#14532d" stroke-width="2.5"/>
+  <!-- Top Tip Leaf -->
+  <path d="M 60,30 C 50,10 70,10 60,30 Z" fill="url(#leafGrad)" stroke="#14532d" stroke-width="2"/>
+</svg>

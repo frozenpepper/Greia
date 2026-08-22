@@ -84,6 +84,7 @@ ul{padding-left:1.2rem}.hidden{display:none}
 <section>
   <h2>Parent password</h2>
   <form id="change-password">
+    <input type="hidden" name="username" value="greia" autocomplete="username">
     <label>Current password<input name="current_password" type="password" autocomplete="current-password"></label>
     <label>New password<input name="new_password" type="password" autocomplete="new-password"></label>
     <button type="submit">Change Parent password</button>
@@ -110,6 +111,23 @@ async function request(path, options={}) {
   if(!response.ok) throw new Error(body?.error?.message || `Request failed (${response.status})`);
   return body;
 }
+function formatUptime(seconds){
+  if(typeof seconds !== "number" || seconds < 0) return "0s";
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+  if(days > 0) return `${days}d ${hours}h ${mins}m`;
+  if(hours > 0) return `${hours}h ${mins}m`;
+  if(mins > 0) return `${mins}m ${secs}s`;
+  return `${secs}s`;
+}
+function formatBytes(bytes){
+  if(!bytes || bytes < 0) return "0 MiB";
+  const mib = bytes / 1048576;
+  if(mib >= 1024) return `${(mib / 1024).toFixed(1)} GiB`;
+  return `${Math.round(mib)} MiB`;
+}
 function text(value){ return String(value ?? ""); }
 function card(title, body){ const el=document.createElement("article"); el.className="card"; const h=document.createElement("h3"); h.textContent=title; el.append(h,body); return el; }
 function lines(items){ const ul=document.createElement("ul"); for(const item of items){const li=document.createElement("li");li.textContent=item;ul.append(li)} return ul; }
@@ -123,10 +141,17 @@ async function load() {
     document.getElementById("connection").textContent=`Connected · Parent API v${index.api_version}`;
 
     const systemBox=document.getElementById("system"); systemBox.replaceChildren();
+    const memAvail = formatBytes(system.memory_available_bytes);
+    const memTotal = formatBytes(system.memory_total_bytes);
+    const memLine = system.memory_total_bytes ? `Memory: ${memAvail} free / ${memTotal}` : `Memory available: ${memAvail}`;
+    const diskFree = formatBytes(system.disk_free_bytes);
+    const diskTotal = formatBytes(system.disk_total_bytes);
+    const diskLine = system.disk_total_bytes ? `Disk: ${diskFree} free / ${diskTotal}` : `Disk free: ${diskFree}`;
+
     const systemLines=[
-      `Uptime: ${text(system.uptime_seconds)} s`,
-      `Memory available: ${Math.round((system.memory_available_bytes||0)/1048576)} MiB`,
-      `Disk free: ${Math.round((system.disk_free_bytes||0)/1048576)} MiB`,
+      `Uptime: ${formatUptime(system.uptime_seconds)}`,
+      memLine,
+      diskLine,
       `Runtime API: ${text(system.runtime_api_version)}`
     ];
     systemBox.append(card("This Greia",lines(systemLines)));

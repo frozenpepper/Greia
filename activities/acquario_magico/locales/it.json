@@ -12,7 +12,11 @@
     "creature.turtle": "Tartaruga 🐢",
     "creature.octopus": "Polipetto 🐙",
     "creature.dolphin": "Delfino 🐬",
-    "creature.puffer": "Pesce Palla 🐡"
+    "creature.puffer": "Pesce Palla 🐡",
+    "creature.seahorse": "Cavalluccio Marino 🌿",
+    "creature.jellyfish": "Medusa Luminosa 🪼",
+    "creature.starfish": "Stella Marina ⭐",
+    "chest.treasure": "Forziere dei Tesori 💎"
   },
   "audio": {}
 }
