@@ -229,43 +229,53 @@ class ParentSettingsOverlay:
 
         return False
 
-    def handle_click(self, pos: tuple[int, int], pygame: Any) -> bool:
+    def handle_click(self, pos: tuple[int, int], pygame: Any = None) -> bool:
         """Handle click input. Returns True if handled, False if overlay closed."""
         for target in reversed(self._targets):
             if not target.rect.collidepoint(pos):
                 continue
 
-            if target.action == "cancel_auth" or target.action == "close_panel":
-                self.close()
-                return False
-            elif target.action == "confirm_auth":
-                self._attempt_auth(pygame)
-                return True
-            elif target.action == "switch_tab":
-                self.active_tab = ParentPanelTab(str(target.value))
-                return True
-            elif target.action == "language_select":
-                self._language_index = int(target.value)
-                self._apply_language(self._language_index)
-                return True
-            elif target.action == "mic_gain_set":
-                self._set_mic_gain(float(target.value))
-                return True
-            elif target.action == "mic_gain_adjust":
-                self._adjust_mic_gain(float(target.value))
-                return True
-            elif target.action == "wifi_refresh":
-                self.wifi_controller.refresh()
-                return True
-            elif target.action == "wifi_select":
-                self.wifi_controller.select(int(target.value))
-                return True
-            elif target.action == "wifi_connect":
-                self.wifi_controller.connect()
-                return True
-            elif target.action == "ssh_toggle":
-                self.ssh_service.toggle()
-                self._ssh_cached_status = None
+            try:
+                if target.action in {"cancel_auth", "close_panel"}:
+                    self.close()
+                    return False
+                elif target.action == "confirm_auth":
+                    self._attempt_auth(pygame)
+                    return True
+                elif target.action == "switch_tab":
+                    if isinstance(target.value, ParentPanelTab):
+                        self.active_tab = target.value
+                    elif isinstance(target.value, str):
+                        val = str(target.value)
+                        for tab in ParentPanelTab:
+                            if tab.value == val or tab.name.lower() == val.lower() or str(tab) == val:
+                                self.active_tab = tab
+                                break
+                    return True
+                elif target.action == "language_select":
+                    self._language_index = int(target.value)
+                    self._apply_language(self._language_index)
+                    return True
+                elif target.action == "mic_gain_set":
+                    self._set_mic_gain(float(target.value))
+                    return True
+                elif target.action == "mic_gain_adjust":
+                    self._adjust_mic_gain(float(target.value))
+                    return True
+                elif target.action == "wifi_refresh":
+                    self.wifi_controller.refresh()
+                    return True
+                elif target.action == "wifi_select":
+                    self.wifi_controller.select(int(target.value))
+                    return True
+                elif target.action == "wifi_connect":
+                    self.wifi_controller.connect()
+                    return True
+                elif target.action == "ssh_toggle":
+                    self.ssh_service.toggle()
+                    self._ssh_cached_status = None
+                    return True
+            except Exception:
                 return True
 
         return True

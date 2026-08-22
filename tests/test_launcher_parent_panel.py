@@ -6,6 +6,7 @@ from pathlib import Path
 from unittest import mock
 
 from greia_launcher.parent_panel import (
+    PanelHitTarget,
     ParentPanelState,
     ParentPanelTab,
     ParentSettingsOverlay,
@@ -29,6 +30,18 @@ class DummyPygame:
     K_RIGHT = 275
     K_LEFT = 276
     K_SPACE = 32
+
+
+class DummyRect:
+    def __init__(self, x: int, y: int, w: int, h: int) -> None:
+        self.x = x
+        self.y = y
+        self.width = w
+        self.height = h
+
+    def collidepoint(self, pos: tuple[int, int]) -> bool:
+        px, py = pos
+        return self.x <= px <= self.x + self.width and self.y <= py <= self.y + self.height
 
 
 class ParentSettingsOverlayTests(unittest.TestCase):
@@ -150,6 +163,58 @@ class ParentSettingsOverlayTests(unittest.TestCase):
         # Press Return to toggle off
         self.overlay.handle_key(DummyPygame.K_RETURN, DummyPygame)
         self.assertFalse(self.ssh_service.get_status().active)
+
+    def test_click_tab_switching_does_not_crash(self) -> None:
+        self.overlay.open()
+        self.overlay.handle_text_input("greia")
+        self.overlay.handle_key(DummyPygame.K_RETURN, DummyPygame)
+        self.assertEqual(self.overlay.state, ParentPanelState.PANEL)
+
+        # Simulate clicking the switch_tab targets
+        self.overlay._targets = [
+            PanelHitTarget("switch_tab", ParentPanelTab.AUDIO, DummyRect(100, 50, 100, 30)),
+            PanelHitTarget("switch_tab", ParentPanelTab.WIFI, DummyRect(210, 50, 100, 30)),
+            PanelHitTarget("switch_tab", ParentPanelTab.SSH, DummyRect(320, 50, 100, 30)),
+            PanelHitTarget("switch_tab", ParentPanelTab.INFO, DummyRect(430, 50, 100, 30)),
+            PanelHitTarget("switch_tab", ParentPanelTab.LANGUAGE, DummyRect(540, 50, 100, 30)),
+        ]
+
+        # Click Audio & Mic tab
+        self.overlay.handle_click((120, 60))
+        self.assertEqual(self.overlay.active_tab, ParentPanelTab.AUDIO)
+
+        # Click Wi-Fi tab
+        self.overlay.handle_click((220, 60))
+        self.assertEqual(self.overlay.active_tab, ParentPanelTab.WIFI)
+
+        # Click SSH tab
+        self.overlay.handle_click((330, 60))
+        self.assertEqual(self.overlay.active_tab, ParentPanelTab.SSH)
+
+        # Click Info tab
+        self.overlay.handle_click((440, 60))
+        self.assertEqual(self.overlay.active_tab, ParentPanelTab.INFO)
+
+        # Click Language tab
+        self.overlay.handle_click((550, 60))
+        self.assertEqual(self.overlay.active_tab, ParentPanelTab.LANGUAGE)
+
+    def test_click_mic_gain_presets(self) -> None:
+        self.overlay.open()
+        self.overlay.handle_text_input("greia")
+        self.overlay.handle_key(DummyPygame.K_RETURN, DummyPygame)
+        self.overlay.active_tab = ParentPanelTab.AUDIO
+
+        self.overlay._targets = [
+            PanelHitTarget("mic_gain_set", 3.0, DummyRect(100, 150, 50, 50)),
+            PanelHitTarget("mic_gain_adjust", -0.25, DummyRect(200, 150, 50, 50)),
+        ]
+
+        self.overlay.handle_click((110, 160))
+        self.assertAlmostEqual(self.overlay._current_mic_gain(), 3.0)
+
+        self.overlay.handle_click((210, 160))
+        self.assertAlmostEqual(self.overlay._current_mic_gain(), 2.75)
 
 
 if __name__ == "__main__":

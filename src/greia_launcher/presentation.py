@@ -233,11 +233,15 @@ class GreiaLauncherPresentation(LauncherApplication):
                         running = False
                     elif event.type == pygame.TEXTINPUT:
                         if self._mode == "parent_panel":
-                            self._parent_panel.handle_text_input(event.text)
+                            if not self._parent_chord.is_holding:
+                                self._parent_panel.handle_text_input(event.text)
+                                _needs_redraw = True
                         elif self._mode == "secret":
                             self._handle_secret_text(event.text)
+                            _needs_redraw = True
                     elif event.type == pygame.KEYDOWN:
                         if self._mode == "parent_panel":
+                            _needs_redraw = True
                             if not self._parent_panel.handle_key(event.key, pygame):
                                 self._mode = "profiles"
                         elif self._mode == "profiles" and self._parent_chord.handle_key_down(
@@ -245,13 +249,17 @@ class GreiaLauncherPresentation(LauncherApplication):
                         ):
                             self._mode = "parent_panel"
                             self._parent_panel.open()
+                            pygame.event.clear(pygame.TEXTINPUT)
+                            pygame.event.clear(pygame.KEYDOWN)
+                            _needs_redraw = True
                         else:
                             running = self._handle_key(event.key, pygame)
+                            _needs_redraw = True
                     elif event.type == pygame.KEYUP:
-                        if self._mode == "profiles":
-                            self._parent_chord.handle_key_up(event.key)
+                        self._parent_chord.handle_key_up(event.key)
                     elif event.type == pygame.MOUSEMOTION:
                         self._synthetic_pointer_active = True
+                        _needs_redraw = True
                         if hasattr(event, "pos"):
                             prev_pos = getattr(self, "_pointer_position", None)
                             self._pointer_position = event.pos
@@ -268,6 +276,7 @@ class GreiaLauncherPresentation(LauncherApplication):
                             self._handle_click(event.pos, pygame)
                     elif event.type == pygame.MOUSEWHEEL and self._mode == "activities":
                         self._scroll_activity_rows(-event.y, pygame)
+                        _needs_redraw = True
                     elif event.type == pygame.VIDEORESIZE:
                         request = self._resize_display_request(event, pygame)
                         if request is not None:
@@ -300,6 +309,8 @@ class GreiaLauncherPresentation(LauncherApplication):
                     if self._parent_chord.poll(time.monotonic()):
                         self._mode = "parent_panel"
                         self._parent_panel.open()
+                        pygame.event.clear(pygame.TEXTINPUT)
+                        pygame.event.clear(pygame.KEYDOWN)
                         _needs_redraw = True
                 elif self._mode == "parent_panel":
                     if self._parent_panel.drain():

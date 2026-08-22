@@ -354,7 +354,7 @@ class HardwareSettingsStore:
         payload = json.dumps(
             settings.as_json_dict(), sort_keys=True, separators=(",", ":")
         ) + "\n"
-        _atomic_write_text(self.settings_path, payload, mode=0o640)
+        _atomic_write_text(self.settings_path, payload, mode=0o664)
 
 
 def read_apply_status(path: Path, fallback: HardwareSettings) -> HardwareApplyStatus:

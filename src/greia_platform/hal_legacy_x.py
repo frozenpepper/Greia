@@ -201,6 +201,12 @@ class LegacyXHardwareSessionController:
                     self._set_if_available(
                         device_id,
                         properties,
+                        "libinput Disable While Typing Enabled",
+                        "0",
+                    ),
+                    self._set_if_available(
+                        device_id,
+                        properties,
                         "libinput Natural Scrolling Enabled",
                         "1" if settings.natural_scrolling else "0",
                     ),

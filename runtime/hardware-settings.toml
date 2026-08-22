@@ -1,10 +1,10 @@
 schema_version = 1
 
 [defaults]
-# Tap-to-click is intentionally disabled. Physical touchpad buttons remain usable.
-touchpad_tap = false
-touchpad_speed = 0.0
-mouse_speed = 0.0
+# Tap-to-click is enabled for responsive navigation.
+touchpad_tap = true
+touchpad_speed = 0.5
+mouse_speed = 0.5
 natural_scrolling = false
 resolution = "auto"
 keyboard_layout = "us"
