@@ -225,36 +225,26 @@ Therefore:
 
 ---
 
-# 8. Exact current visual-authoring gate — PAINTING PRODUCTIZATION
+# 8. Completed visual-authoring gate — PAINTING PRODUCTIZATION
 
-Execute:
+Completed runbook:
 
 `docs/testing/2026-08-22_PAINTING_VISUAL_PRODUCTIZATION_EXERCISE.md`
 
 Target:
 
-`activities/painting/`
+`activities/painting/` (`org.greia.painting`)
 
-Purpose:
+Outcome: **COMPLETE & VERIFIED**
+- Proved authoring workflow on a UI-heavy Phase-0 core creation activity:
+  - `COMPOSE_ADAPT`: Storybook warm cream studio tabletop mat background framing the drawing canvas without eating screen space.
+  - `CREATE_ORIGINAL`: Complete tactile activity-local UI asset family in `activities/painting/assets/` (`tool_gallery.png`, `tool_undo.png`, `tool_new.png`, `tool_eraser.png`, `brush_small.png`, `brush_medium.png`, `brush_large.png`, `canvas_card_frame.png`, `color_well_dish.png`) with clean SVG masters in `source/` and build-time PNGs in `runtime/`.
+  - `KEEP_EXISTING_INTENTIONAL`: 100% preservation of PaintingRepository, StrokeHistory, autosave idle loop, undo limits, and platform Home button integration.
+  - Mascot Decision: Intentionally omitted mascot to ensure the child's drawing canvas remains generous, uncluttered, and unencumbered.
+- Captured complete 12-PNG curated evidence suite in `docs/reviews/visual/2026-08-22_painting-visual-productization/` with `AUTHORING_AUDIT.md`, `authoring-audit.json`, `simulator-trace.json`, and `OWNER_RECHECK.md`.
+- Packaged owner transfer ZIP: `GREIA_VISUAL_REVIEW_PAINTING_PRODUCTIZATION_2026-08-22.zip`.
+- Generic library gap outcome: **`NO_GAP`**. Generic Batch B remains unauthorized.
 
-Use the third real first-party exercise to prove the visual-authoring system on a **UI-heavy core Phase-0 creation Activity**, rather than another scenic game.
-
-The exercise must improve Painting's child-facing polish while preserving:
-
-- simple drawing behavior;
-- large usable canvas;
-- small uncluttered tool set;
-- profile-scoped save/autosave behavior;
-- protected Greia Home/system navigation;
-- low-resource runtime discipline.
-
-A mascot is optional and must not be forced.
-
-Required owner-transfer bundle:
-
-`GREIA_VISUAL_REVIEW_PAINTING_PRODUCTIZATION_2026-08-22.zip`
-
-Do not start another generic art batch during this gate. If Painting exposes a genuine reusable generic gap, document it for owner review instead.
 
 ---
 

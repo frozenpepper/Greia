@@ -1,0 +1,190 @@
+{
+  "activity_id": "org.greia.painting",
+  "baseline_commit": "c2d9b94",
+  "baseline_weaknesses": [
+    "Flat solid beige window background lacking warm storybook studio or creative tabletop atmosphere",
+    "Stark flat white canvas rectangle with zero depth framing, shadow grounding, or paper mat borders",
+    "Flat color circles on a bare strip lacking tactile dish/well beveling or clear radiant active selection state",
+    "Generic black dot radio circles for brush size selection lacking visual charm and brush stroke clarity",
+    "Hard-to-read line glyphs on top toolbar buttons lacking tactile child affordance and depth",
+    "Floating bare status dot without explanatory grounding or child-readable pill container"
+  ],
+  "discovery_queries": [
+    "art",
+    "paint",
+    "color",
+    "easel",
+    "palette",
+    "brush",
+    "canvas",
+    "paper",
+    "studio",
+    "craft",
+    "pencil",
+    "crayon",
+    "wood",
+    "desk",
+    "frame",
+    "light",
+    "shadow",
+    "cloud",
+    "rainbow",
+    "sunlight",
+    "star",
+    "sparkle",
+    "bubble",
+    "drop",
+    "dani",
+    "momo",
+    "flash"
+  ],
+  "candidate_assets_inspected": [
+    "play.art.palette.birch_gouache",
+    "play.art.brushes.bundle",
+    "play.art.easel.timber",
+    "prop.stationery.paper_stack.linen",
+    "prop.stationery.pencil_cup.ceramic",
+    "play.ingredient.paint_dabs",
+    "ui.shadow.soft",
+    "shadow.contact.small.01"
+  ],
+  "visual_role_decisions": {
+    "studio_background": {
+      "decision": "COMPOSE_ADAPT",
+      "derivation": "Storybook warm cream studio tabletop with subtle top-to-bottom warmth and mat horizon line.",
+      "rationale": "Creates a cozy, focused art desk environment without consuming drawing area."
+    },
+    "canvas_paper_framing": {
+      "decision": "CREATE_ORIGINAL",
+      "derivation": "Tactile paper canvas with multi-layered drop shadow, rounded corners, and crisp mat border.",
+      "rationale": "Positions the child's drawing as the hero surface with physical paper grounding."
+    },
+    "palette_and_color_wells": {
+      "decision": "CREATE_ORIGINAL",
+      "assets": [
+        "color_well_dish.png"
+      ],
+      "rationale": "Tactile ceramic color wells with gloss highlights and radiant golden selection rings."
+    },
+    "brush_size_controls": {
+      "decision": "CREATE_ORIGINAL",
+      "assets": [
+        "brush_small.png",
+        "brush_medium.png",
+        "brush_large.png"
+      ],
+      "rationale": "Intuitive droplet brush tip icons indicating fine, medium, and broad wash strokes."
+    },
+    "toolbar_icon_controls": {
+      "decision": "CREATE_ORIGINAL",
+      "assets": [
+        "tool_gallery.png",
+        "tool_undo.png",
+        "tool_new.png",
+        "tool_eraser.png"
+      ],
+      "rationale": "Charming, tactile child-sized buttons for Gallery, Undo, New Canvas, and Eraser with clear active states."
+    },
+    "gallery_sketch_cards": {
+      "decision": "CREATE_ORIGINAL",
+      "assets": [
+        "canvas_card_frame.png"
+      ],
+      "rationale": "Miniature sketch cards with white paper mounts and subtle drop shadows for saved paintings."
+    },
+    "status_pill_badge": {
+      "decision": "CREATE_ORIGINAL",
+      "rationale": "Clean pill badge displaying real-time saving and saved state (Salvo / Salva... / Errore) with green checkmark."
+    },
+    "gameplay_and_persistence": {
+      "decision": "KEEP_EXISTING_INTENTIONAL",
+      "rationale": "100% preservation of PaintingRepository, StrokeHistory, autosave idle loop, undo limits, and platform Home button integration."
+    }
+  },
+  "reuse_resources": [
+    "ui.shadow.soft",
+    "shadow.contact.small.01"
+  ],
+  "compose_adapt_resources_and_derivations": [
+    {
+      "role": "studio_mat_tabletop",
+      "source_language": "Greia storybook workshop/interior palette",
+      "notes": "Warm studio surface framing the canvas"
+    }
+  ],
+  "create_original_resources": [
+    "tool_gallery",
+    "tool_undo",
+    "tool_new",
+    "tool_eraser",
+    "brush_small",
+    "brush_medium",
+    "brush_large",
+    "canvas_card_frame",
+    "color_well_dish"
+  ],
+  "activity_local_source_files": [
+    "activities/painting/assets/source/tool_gallery.svg",
+    "activities/painting/assets/source/tool_undo.svg",
+    "activities/painting/assets/source/tool_new.svg",
+    "activities/painting/assets/source/tool_eraser.svg",
+    "activities/painting/assets/source/brush_small.svg",
+    "activities/painting/assets/source/brush_medium.svg",
+    "activities/painting/assets/source/brush_large.svg",
+    "activities/painting/assets/source/canvas_card_frame.svg",
+    "activities/painting/assets/source/color_well_dish.svg"
+  ],
+  "activity_local_runtime_files": [
+    "activities/painting/assets/runtime/tool_gallery.png",
+    "activities/painting/assets/runtime/tool_undo.png",
+    "activities/painting/assets/runtime/tool_new.png",
+    "activities/painting/assets/runtime/tool_eraser.png",
+    "activities/painting/assets/runtime/brush_small.png",
+    "activities/painting/assets/runtime/brush_medium.png",
+    "activities/painting/assets/runtime/brush_large.png",
+    "activities/painting/assets/runtime/canvas_card_frame.png",
+    "activities/painting/assets/runtime/color_well_dish.png"
+  ],
+  "canonical_character_decision": {
+    "chosen_option": "No mascot (Intentional product restraint)",
+    "rationale": "Painting is a dedicated child-first creative creation canvas. Adding a mascot would clutter the toolbars or reduce drawing surface. A clean, tactile storybook studio atmosphere delivers maximum creative freedom."
+  },
+  "runtime_architecture": {
+    "renderer": "Direct Pygame surface rendering with pre-rasterized build-time PNG icons",
+    "image_loading": "Loaded once on startup, cached by key, zero per-frame disk I/O",
+    "sandbox_compliance": "Zero forbidden imports (no os or sys inside activity package)",
+    "resolution_independence": "ChildUiMetrics responsive scaling across Normal, Large, and Compact viewports"
+  },
+  "focused_tests_and_results": {
+    "test_files": [
+      "tests/test_core_creation_activities.py",
+      "tests/test_painting_contract.py"
+    ],
+    "tests_run": 20,
+    "tests_passed": 20,
+    "coverage": "Painting repository persistence, stroke history bounds, undo limits, manifest compliance, forbidden imports check, and runtime asset integrity."
+  },
+  "simulator_scenarios": [
+    "01-before-1024x600.png",
+    "02-after-empty-1024x600.png",
+    "03-after-drawing-in-progress.png",
+    "04-after-rich-drawing.png",
+    "05-tool-palette-selection.png",
+    "06-best-product-proof.png",
+    "07-responsive-large-1024x600.png",
+    "08-responsive-compact-1366x768.png",
+    "09-responsive-normal-1280x800.png",
+    "10-static-motion-disabled.png",
+    "11-optional-visual-fallback.png",
+    "12-save-resume-or-persistence-proof.png"
+  ],
+  "fault_injection_and_restoration": {
+    "tested": true,
+    "behavior": "When decorative PNG assets are unavailable, activity gracefully falls back to clean procedural geometric renditions without crashing."
+  },
+  "library_gap_analysis": {
+    "status": "NO_GAP",
+    "rationale": "Painting successfully authored its specialized creation toolbars, brushes, and color dishes as Activity-local assets. Generic Batch B remains unauthorized."
+  },
+  "evidence_classification": "COMPLETE_AND_VERIFIED"
+}

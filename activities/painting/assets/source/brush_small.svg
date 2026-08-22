@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+  <!-- Fine brush droplet / point -->
+  <circle cx="64" cy="64" r="10" fill="#334155" filter="url(#shadow)"/>
+  <circle cx="62" cy="62" r="3" fill="#94A3B8"/>
+</svg>

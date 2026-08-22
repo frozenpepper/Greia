@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+  <rect x="16" y="16" width="42" height="42" rx="10" fill="#60A5FA" filter="url(#shadow)"/>
+  <rect x="22" y="22" width="30" height="30" rx="6" fill="#93C5FD"/>
+  <circle cx="32" cy="32" r="5" fill="#FEF08A"/>
+  <path d="M22 46 L34 38 L42 44 L52 34 L52 52 L22 52 Z" fill="#3B82F6"/>
+
+  <rect x="70" y="16" width="42" height="42" rx="10" fill="#F472B6" filter="url(#shadow)"/>
+  <rect x="76" y="22" width="30" height="30" rx="6" fill="#FBCFE8"/>
+  <circle cx="91" cy="37" r="8" fill="#EC4899"/>
+
+  <rect x="16" y="70" width="42" height="42" rx="10" fill="#34D399" filter="url(#shadow)"/>
+  <rect x="22" y="76" width="30" height="30" rx="6" fill="#A7F3D0"/>
+  <path d="M37 82 C30 82 26 90 26 96 C26 102 32 106 37 106 C42 106 48 102 48 96 C48 90 44 82 37 82 Z" fill="#10B981"/>
+
+  <rect x="70" y="70" width="42" height="42" rx="10" fill="#FBBF24" filter="url(#shadow)"/>
+  <rect x="76" y="76" width="30" height="30" rx="6" fill="#FDE68A"/>
+  <polygon points="91,80 95,90 105,91 97,98 100,108 91,102 82,108 85,98 77,91 87,90" fill="#F59E0B"/>
+</svg>

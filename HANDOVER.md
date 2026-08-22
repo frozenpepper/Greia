@@ -1,3 +1,14 @@
+- **Painting — Visual Productization Exercise (2026-08-22)**:
+  - Exercised third real first-party Activity authoring exercise on UI-heavy Phase-0 creation Activity `org.greia.painting` (`activities/painting/`).
+  - Decisions:
+    - `COMPOSE_ADAPT`: Storybook warm cream studio tabletop mat background framing the drawing canvas without eating screen space.
+    - `CREATE_ORIGINAL`: Designed and rendered a complete activity-local UI asset family in `activities/painting/assets/` (`tool_gallery.png`, `tool_undo.png`, `tool_new.png`, `tool_eraser.png`, `brush_small.png`, `brush_medium.png`, `brush_large.png`, `canvas_card_frame.png`, `color_well_dish.png`) with clean SVG masters in `source/` and build-time PNGs in `runtime/`.
+    - `KEEP_EXISTING_INTENTIONAL`: Preserved 100% of PaintingRepository, StrokeHistory, autosave idle loop, undo limits, and platform Home button integration.
+    - Mascot Decision: Intentionally omitted mascot to ensure the child's drawing canvas remains generous, uncluttered, and unencumbered.
+  - Captured complete 12-PNG evidence suite in `docs/reviews/visual/2026-08-22_painting-visual-productization/` with `AUTHORING_AUDIT.md`, `authoring-audit.json`, `simulator-trace.json`, and `OWNER_RECHECK.md`.
+  - Packaged owner transfer ZIP: `GREIA_VISUAL_REVIEW_PAINTING_PRODUCTIZATION_2026-08-22.zip`.
+  - Library-gap result: `NO_GAP`. Generic Batch B remains unauthorized.
+
 - **Costruiamo Ponti — Visual-Authoring Stress Exercise (2026-08-22)**:
   - Exercised second real first-party Activity authoring exercise on `org.greia.costruiamo-ponti` (`activities/costruiamo_ponti/`).
   - Stressed the full authoring spectrum:

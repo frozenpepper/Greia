@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import io
+from pathlib import Path
 import time
 import uuid
 
@@ -18,12 +19,7 @@ from greia_platform.activity_api import (
 from greia_platform.activity_ui import (
     ChildUiMetrics,
     draw_activity_pointer,
-    draw_eraser_symbol,
-    draw_grid_symbol,
-    draw_icon_button,
-    draw_plus_symbol,
     draw_system_chrome_overlay,
-    draw_undo_symbol,
     is_home_clicked,
     load_icon,
     mix,
@@ -35,16 +31,16 @@ MAX_PAINTINGS = 48
 MAX_UNDO_STROKES = 24
 MAX_STROKE_POINTS = 2048
 COLORS = (
-    (42, 45, 54),
-    (239, 77, 83),
-    (250, 145, 54),
-    (252, 202, 62),
-    (77, 180, 96),
-    (51, 163, 211),
-    (92, 113, 224),
-    (159, 94, 211),
-    (239, 104, 170),
-    (133, 91, 61),
+    (42, 45, 54),     # Charcoal Night
+    (239, 77, 83),    # Coral Red
+    (250, 145, 54),   # Bright Orange
+    (252, 202, 62),   # Sunshine Yellow
+    (77, 180, 96),    # Leaf Green
+    (51, 163, 211),   # Sky Blue
+    (92, 113, 224),   # Indigo Periwinkle
+    (159, 94, 211),   # Lavender Purple
+    (239, 104, 170),  # Blossom Pink
+    (133, 91, 61),    # Warm Cocoa Brown
 )
 BRUSH_SIZES = (8, 18, 34)
 
@@ -172,7 +168,6 @@ class PaintingApp:
         self.metrics = ChildUiMetrics.for_size(*self.screen.get_size())
         self.theme = get_theme()
         self.repository = PaintingRepository(get_storage())
-        self.empty_icon = load_icon(get_icon_path("rainbow", 64), self.metrics.px(52))
         self.records = self.repository.list_records()
         self.current: PaintingRecord | None = None
         self.mode = "paint"
@@ -187,13 +182,45 @@ class PaintingApp:
         self.save_error = False
         self.last_change = 0.0
         self.thumbnail_cache: dict[str, pygame.Surface] = {}
-        self.canvas_background = mix(self.theme.panel, (255, 255, 255), 0.72)
+        self.assets: dict[str, pygame.Surface] = {}
+        self._load_assets()
+
+        # Canvas styling: warm crisp white studio paper
+        self.canvas_background = (255, 255, 255)
         self.canvas = self._new_blank_surface()
         self.base_canvas = self.canvas.copy()
         if self.records:
             self._open(self.records[0])
         else:
             self._new()
+
+    def _load_assets(self) -> None:
+        assets_dir = Path(__file__).parent / "assets" / "runtime"
+        asset_names = [
+            "tool_gallery",
+            "tool_undo",
+            "tool_new",
+            "tool_eraser",
+            "brush_small",
+            "brush_medium",
+            "brush_large",
+            "canvas_card_frame",
+            "color_well_dish",
+        ]
+        for name in asset_names:
+            p = assets_dir / f"{name}.png"
+            if p.exists():
+                try:
+                    surf = pygame.image.load(str(p)).convert_alpha()
+                    self.assets[name] = surf
+                except Exception:
+                    pass
+
+        # Load fallback rainbow icon for empty gallery
+        try:
+            self.empty_icon = load_icon(get_icon_path("rainbow", 64), self.metrics.px(52))
+        except Exception:
+            self.empty_icon = pygame.Surface((self.metrics.px(52), self.metrics.px(52)), pygame.SRCALPHA)
 
     @property
     def palette_height(self) -> int:
@@ -480,32 +507,170 @@ class PaintingApp:
         return surface
 
     def _draw(self) -> None:
-        self.screen.fill(self.theme.background)
-        gallery = self.metrics.activity_toolbar_button(0, side="left")
-        undo = self.metrics.activity_toolbar_button(1, side="left")
-        new = self.metrics.activity_toolbar_button(0, side="right")
-        eraser = self.metrics.activity_toolbar_button(1, side="right")
-        draw_icon_button(self.screen, gallery, fill=self.theme.panel, selected=self.mode == "gallery", outline=self.theme.accent)
-        draw_grid_symbol(self.screen, gallery, self.theme.text)
-        draw_icon_button(self.screen, undo, fill=self.theme.panel)
-        draw_undo_symbol(self.screen, undo, self.theme.text)
-        draw_icon_button(self.screen, new, fill=self.theme.accent)
-        draw_plus_symbol(self.screen, new, self.theme.accent_text)
-        draw_icon_button(self.screen, eraser, fill=self.theme.panel, selected=self.eraser, outline=self.theme.accent)
-        draw_eraser_symbol(self.screen, eraser, self.theme.text)
-        status = (210, 76, 76) if self.save_error else ((246, 178, 55) if self.dirty else (87, 174, 104))
-        pygame.draw.circle(self.screen, status, (eraser.left - self.metrics.px(18), eraser.centery), self.metrics.px(6))
+        # 1. Warm studio tabletop background
+        self._draw_studio_background()
+
+        # 2. Toolbar buttons
+        self._draw_toolbar()
+
+        # 3. Canvas or Gallery
         if self.mode == "gallery":
             self._draw_gallery()
         else:
             self._draw_canvas()
             self._draw_palette()
+
+        # 4. System chrome & pointer
         draw_system_chrome_overlay(self.screen)
         draw_activity_pointer(self.screen)
 
+    def _draw_studio_background(self) -> None:
+        # Storybook warm cream studio tabletop with subtle top-to-bottom warmth
+        bg_top = (252, 248, 238)
+        bg_bottom = (245, 238, 224)
+        h = self.screen.get_height()
+        w = self.screen.get_width()
+        self.screen.fill(bg_top)
+        # Gentle studio gradient band
+        band_h = h // 3
+        band_rect = pygame.Rect(0, h - band_h, w, band_h)
+        pygame.draw.rect(self.screen, bg_bottom, band_rect)
+        # Subtle woodgrain/mat top line
+        line_y = self.canvas_rect.top - self.metrics.px(8)
+        if line_y > 0:
+            pygame.draw.line(self.screen, (235, 226, 208), (0, line_y), (w, line_y), 2)
+
+    def _draw_toolbar(self) -> None:
+        gallery = self.metrics.activity_toolbar_button(0, side="left")
+        undo = self.metrics.activity_toolbar_button(1, side="left")
+        new = self.metrics.activity_toolbar_button(0, side="right")
+        eraser = self.metrics.activity_toolbar_button(1, side="right")
+
+        # Gallery button
+        self._draw_tactile_button(
+            gallery,
+            icon_key="tool_gallery",
+            active=self.mode == "gallery",
+            base_color=(255, 255, 255),
+            active_color=(254, 240, 138),
+            fallback_symbol="grid"
+        )
+
+        # Undo button (only active in paint mode)
+        can_undo = self.mode == "paint" and bool(self.history.items)
+        self._draw_tactile_button(
+            undo,
+            icon_key="tool_undo",
+            active=False,
+            base_color=(255, 255, 255) if can_undo else (241, 245, 249),
+            fallback_symbol="undo",
+            disabled=not can_undo
+        )
+
+        # New canvas button (golden delight)
+        self._draw_tactile_button(
+            new,
+            icon_key="tool_new",
+            active=False,
+            base_color=(251, 191, 36),
+            fallback_symbol="plus"
+        )
+
+        # Eraser button
+        self._draw_tactile_button(
+            eraser,
+            icon_key="tool_eraser",
+            active=self.eraser,
+            base_color=(255, 255, 255),
+            active_color=(254, 226, 226),
+            fallback_symbol="eraser"
+        )
+
+        # Status Pill Indicator
+        pill_w = self.metrics.px(72)
+        pill_h = self.metrics.px(28)
+        pill_x = eraser.left - pill_w - self.metrics.px(10)
+        pill_y = eraser.centery - pill_h // 2
+        pill_rect = pygame.Rect(pill_x, pill_y, pill_w, pill_h)
+        pygame.draw.rect(self.screen, (255, 255, 255), pill_rect, border_radius=pill_h // 2)
+        pygame.draw.rect(self.screen, (226, 232, 240), pill_rect, width=2, border_radius=pill_h // 2)
+
+        status_color = (239, 68, 68) if self.save_error else ((245, 158, 11) if self.dirty else (34, 197, 94))
+        pygame.draw.circle(self.screen, status_color, (pill_rect.left + pill_h // 2, pill_rect.centery), self.metrics.px(5))
+        # Mini status check or pulse dot
+        if not self.dirty and not self.save_error:
+            # Green checkmark
+            cx = pill_rect.left + pill_h // 2
+            cy = pill_rect.centery
+            pygame.draw.lines(self.screen, (255, 255, 255), False, [(cx - 3, cy), (cx - 1, cy + 2), (cx + 3, cy - 2)], 2)
+        # Status text
+        status_label = "Salvo" if not self.dirty else "Salva..."
+        if self.save_error:
+            status_label = "Errore"
+        font = pygame.font.Font(None, self.metrics.px(16))
+        txt = font.render(status_label, True, (100, 116, 139))
+        self.screen.blit(txt, (pill_rect.left + pill_h + 2, pill_rect.centery - txt.get_height() // 2))
+
+    def _draw_tactile_button(
+        self,
+        rect: pygame.Rect,
+        icon_key: str,
+        active: bool = False,
+        base_color: tuple[int, int, int] = (255, 255, 255),
+        active_color: tuple[int, int, int] = (254, 240, 138),
+        fallback_symbol: str = "",
+        disabled: bool = False
+    ) -> None:
+        radius = self.metrics.radius
+        shadow_rect = rect.move(0, self.metrics.px(3))
+        pygame.draw.rect(self.screen, (203, 213, 225), shadow_rect, border_radius=radius)
+
+        fill = active_color if active else base_color
+        if disabled:
+            fill = (241, 245, 249)
+        pygame.draw.rect(self.screen, fill, rect, border_radius=radius)
+
+        border_col = (234, 88, 12) if active else (226, 232, 240)
+        border_w = max(2, self.metrics.px(3)) if active else max(1, self.metrics.px(2))
+        pygame.draw.rect(self.screen, border_col, rect, width=border_w, border_radius=radius)
+
+        # Draw icon
+        icon = self.assets.get(icon_key)
+        if icon is not None:
+            icon_sz = self.metrics.px(36)
+            scaled_icon = pygame.transform.smoothscale(icon, (icon_sz, icon_sz))
+            if disabled:
+                scaled_icon.set_alpha(100)
+            self.screen.blit(scaled_icon, scaled_icon.get_rect(center=rect.center))
+        else:
+            # Clean procedural fallback
+            col = (148, 163, 184) if disabled else (51, 65, 85)
+            if fallback_symbol == "grid":
+                for r_idx in range(2):
+                    for c_idx in range(2):
+                        dot_r = pygame.Rect(rect.centerx - 12 + c_idx * 14, rect.centery - 12 + r_idx * 14, 10, 10)
+                        pygame.draw.rect(self.screen, col, dot_r, border_radius=3)
+            elif fallback_symbol == "undo":
+                pygame.draw.circle(self.screen, col, rect.center, 12, width=3)
+            elif fallback_symbol == "plus":
+                pygame.draw.line(self.screen, (255, 255, 255), (rect.centerx, rect.centery - 12), (rect.centerx, rect.centery + 12), 4)
+                pygame.draw.line(self.screen, (255, 255, 255), (rect.centerx - 12, rect.centery), (rect.centerx + 12, rect.centery), 4)
+            elif fallback_symbol == "eraser":
+                pygame.draw.rect(self.screen, col, pygame.Rect(rect.centerx - 12, rect.centery - 8, 24, 16), border_radius=4)
+
     def _draw_canvas(self) -> None:
-        pygame.draw.rect(self.screen, mix(self.theme.text, self.theme.background, 0.82), self.canvas_rect.inflate(self.metrics.px(4), self.metrics.px(4)), border_radius=self.metrics.radius)
-        self.screen.blit(self.canvas, self.canvas_rect)
+        crect = self.canvas_rect
+        # 1. Tactile drop shadow around the paper canvas
+        shadow_rect = crect.inflate(self.metrics.px(8), self.metrics.px(8)).move(0, self.metrics.px(4))
+        pygame.draw.rect(self.screen, (214, 204, 188), shadow_rect, border_radius=self.metrics.radius + 4)
+        # 2. Outer paper rim / mat
+        mat_rect = crect.inflate(self.metrics.px(6), self.metrics.px(6))
+        pygame.draw.rect(self.screen, (250, 246, 238), mat_rect, border_radius=self.metrics.radius + 2)
+        pygame.draw.rect(self.screen, (226, 218, 202), mat_rect, width=2, border_radius=self.metrics.radius + 2)
+        # 3. Canvas surface
+        self.screen.blit(self.canvas, crect)
+        # 4. Subtle inner border on canvas
+        pygame.draw.rect(self.screen, (241, 235, 222), crect, width=1, border_radius=self.metrics.radius)
 
     def _draw_palette(self) -> None:
         safe = self.metrics.activity_safe_rect()
@@ -515,26 +680,79 @@ class PaintingApp:
             safe.width - self.metrics.margin * 2,
             self.palette_height,
         )
-        pygame.draw.rect(self.screen, self.theme.panel, panel, border_radius=self.metrics.radius)
+
+        # Tactile tray shadow & body
+        tray_shadow = panel.move(0, self.metrics.px(3))
+        pygame.draw.rect(self.screen, (214, 204, 188), tray_shadow, border_radius=self.metrics.radius + 4)
+        pygame.draw.rect(self.screen, (255, 255, 255), panel, border_radius=self.metrics.radius)
+        pygame.draw.rect(self.screen, (226, 218, 202), panel, width=2, border_radius=self.metrics.radius)
+
+        # 1. Color wells
+        well_dish = self.assets.get("color_well_dish")
         for rect, index in self._color_buttons():
-            pygame.draw.circle(self.screen, COLORS[index], rect.center, rect.width // 2)
+            dish_sz = rect.width + self.metrics.px(6)
+            dish_rect = pygame.Rect(rect.centerx - dish_sz // 2, rect.centery - dish_sz // 2, dish_sz, dish_sz)
+            if well_dish is not None:
+                scaled_dish = pygame.transform.smoothscale(well_dish, (dish_sz, dish_sz))
+                self.screen.blit(scaled_dish, dish_rect)
+            else:
+                pygame.draw.circle(self.screen, (241, 245, 249), rect.center, dish_sz // 2)
+                pygame.draw.circle(self.screen, (203, 213, 225), rect.center, dish_sz // 2, 2)
+
+            col = COLORS[index]
+            r = rect.width // 2 - self.metrics.px(2)
+            pygame.draw.circle(self.screen, col, rect.center, r)
+            # Gloss highlight
+            pygame.draw.ellipse(self.screen, (255, 255, 255, 120), (rect.centerx - r // 2, rect.centery - r + 3, r, r // 2))
+
+            # Active selection badge
             if index == self.selected_color and not self.eraser:
-                pygame.draw.circle(self.screen, self.theme.text, rect.center, rect.width // 2, max(3, self.metrics.px(4)))
+                # Radiant golden ring
+                glow_r = rect.width // 2 + self.metrics.px(4)
+                pygame.draw.circle(self.screen, (251, 191, 36), rect.center, glow_r, max(2, self.metrics.px(3)))
+                pygame.draw.circle(self.screen, (255, 255, 255), rect.center, glow_r - 2, 1)
+
+        # 2. Separator line between colors and brush sizes
+        first_size_btn = self._size_buttons()[-1][0]
+        sep_x = first_size_btn.left - self.metrics.px(14)
+        pygame.draw.line(self.screen, (226, 232, 240), (sep_x, panel.top + self.metrics.px(10)), (sep_x, panel.bottom - self.metrics.px(10)), 2)
+
+        # 3. Brush size buttons
+        brush_keys = ["brush_small", "brush_medium", "brush_large"]
         for rect, index in self._size_buttons():
-            if index == self.selected_size:
-                pygame.draw.circle(self.screen, self.theme.accent, rect.center, rect.width // 2)
-            dot = self.theme.accent_text if index == self.selected_size else self.theme.text
-            pygame.draw.circle(self.screen, dot, rect.center, max(self.metrics.px(3), self.metrics.px(BRUSH_SIZES[index]) // 2))
+            is_active = (index == self.selected_size)
+            btn_bg = (254, 240, 138) if is_active else (248, 250, 252)
+            pygame.draw.rect(self.screen, btn_bg, rect, border_radius=self.metrics.radius)
+            b_border = (245, 158, 11) if is_active else (226, 232, 240)
+            pygame.draw.rect(self.screen, b_border, rect, width=2, border_radius=self.metrics.radius)
+
+            b_icon = self.assets.get(brush_keys[index])
+            if b_icon is not None:
+                sz = self.metrics.px(34)
+                scaled_b = pygame.transform.smoothscale(b_icon, (sz, sz))
+                self.screen.blit(scaled_b, scaled_b.get_rect(center=rect.center))
+            else:
+                dot_r = max(self.metrics.px(3), self.metrics.px(BRUSH_SIZES[index]) // 2)
+                dot_col = (245, 158, 11) if is_active else (51, 65, 85)
+                pygame.draw.circle(self.screen, dot_col, rect.center, dot_r)
 
     def _draw_gallery(self) -> None:
+        card_frame = self.assets.get("canvas_card_frame")
         for rect, record in self._gallery_cards():
-            pygame.draw.rect(self.screen, self.theme.panel, rect, border_radius=self.metrics.radius)
-            inner = rect.inflate(-self.metrics.px(18), -self.metrics.px(18))
+            if card_frame is not None:
+                scaled_frame = pygame.transform.smoothscale(card_frame, rect.size)
+                self.screen.blit(scaled_frame, rect)
+            else:
+                pygame.draw.rect(self.screen, (255, 255, 255), rect, border_radius=self.metrics.radius)
+                pygame.draw.rect(self.screen, (226, 232, 240), rect, width=2, border_radius=self.metrics.radius)
+
+            inner = rect.inflate(-self.metrics.px(24), -self.metrics.px(24))
             thumb = self._thumbnail(record, inner.size)
             if thumb is None:
                 self.screen.blit(self.empty_icon, self.empty_icon.get_rect(center=rect.center))
             else:
                 self.screen.blit(thumb, inner)
+                pygame.draw.rect(self.screen, (226, 232, 240), inner, width=1, border_radius=self.metrics.radius // 2)
 
     @staticmethod
     def _encode_png(surface: pygame.Surface) -> bytes:
