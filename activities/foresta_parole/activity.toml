@@ -8,10 +8,13 @@ languages = ["it", "en"]
 
 [presentation]
 categories = ["learn", "play"]
+discovery_tags = ["words", "puzzles"]
 
 [education]
 categories = ["language", "phonics", "fine_motor"]
-difficulty = 1
+difficulty = 3
+recommended_age_min = 5
+recommended_age_max = 8
 skills = [
   { id = "language.phonological_awareness", weight = 3 },
   { id = "language.letter_recognition", weight = 3 },
