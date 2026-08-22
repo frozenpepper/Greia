@@ -223,11 +223,16 @@ def main() -> int:
                 pass
 
     bank_surfs: dict[str, pygame.Surface] = {}
+    bank_scaled_surfs: dict[str, tuple[pygame.Surface, pygame.Surface]] = {}
     for world in ["river", "canyon", "space"]:
         p = run_dir / f"bank_{world}.png"
         if p.exists():
             try:
-                bank_surfs[world] = pygame.image.load(str(p)).convert_alpha()
+                raw_b = pygame.image.load(str(p)).convert_alpha()
+                bank_surfs[world] = raw_b
+                l_scaled = pygame.transform.smoothscale(raw_b, (220, 270))
+                r_scaled = pygame.transform.flip(pygame.transform.smoothscale(raw_b, (224, 270)), True, False)
+                bank_scaled_surfs[world] = (l_scaled, r_scaled)
             except Exception:
                 pass
 
@@ -235,7 +240,8 @@ def main() -> int:
     p_tramp = run_dir / "trampoline.png"
     if p_tramp.exists():
         try:
-            trampoline_surf = pygame.image.load(str(p_tramp)).convert_alpha()
+            raw_t = pygame.image.load(str(p_tramp)).convert_alpha()
+            trampoline_surf = pygame.transform.smoothscale(raw_t, (160, 64))
         except Exception:
             pass
 
@@ -243,14 +249,43 @@ def main() -> int:
     p_flag = run_dir / "goal_flag.png"
     if p_flag.exists():
         try:
-            goal_flag_surf = pygame.image.load(str(p_flag)).convert_alpha()
+            raw_f = pygame.image.load(str(p_flag)).convert_alpha()
+            goal_flag_surf = pygame.transform.smoothscale(raw_f, (90, 112))
         except Exception:
             pass
+
+    # Pre-render world abyss gradient surfaces
+    bridge_start_x = 220
+    bridge_end_x = 800
+    bridge_y = 350
+    abyss_w = (bridge_end_x - bridge_start_x) + 20
+    abyss_h = REFERENCE_HEIGHT - bridge_y
+    river_abyss_surf = pygame.Surface((abyss_w, abyss_h))
+    for y in range(abyss_h):
+        ratio = y / max(1, abyss_h)
+        r = int(56 * (1 - ratio) + 14 * ratio)
+        g = int(189 * (1 - ratio) + 116 * ratio)
+        b = int(248 * (1 - ratio) + 144 * ratio)
+        pygame.draw.line(river_abyss_surf, (r, g, b), (0, y), (abyss_w, y))
+
+    canyon_abyss_surf = pygame.Surface((abyss_w, abyss_h))
+    for y in range(abyss_h):
+        ratio = y / max(1, abyss_h)
+        r = int(217 * (1 - ratio) + 69 * ratio)
+        g = int(119 * (1 - ratio) + 26 * ratio)
+        b = int(6 * (1 - ratio) + 3 * ratio)
+        pygame.draw.line(canyon_abyss_surf, (r, g, b), (0, y), (abyss_w, y))
+
+    icon_scale_cache: dict[tuple[str, int], pygame.Surface] = {}
 
     def draw_block_icon(surf: pygame.Surface, block_id: str, cx: int, cy: int, size: int) -> None:
         b_img = block_surfs.get(block_id)
         if b_img is not None:
-            scaled = pygame.transform.smoothscale(b_img, (size, size))
+            cache_key = (block_id, size)
+            scaled = icon_scale_cache.get(cache_key)
+            if scaled is None:
+                scaled = pygame.transform.smoothscale(b_img, (size, size))
+                icon_scale_cache[cache_key] = scaled
             surf.blit(scaled, scaled.get_rect(center=(cx, cy)))
         else:
             _draw_block_icon_procedural(surf, block_id, cx, cy, size)
@@ -389,7 +424,10 @@ def main() -> int:
         # Flash Traveler Crossing & Physics Logic
         if flash_motion == "happy_hop" and flash_state == "happy":
             flash_anim_timer += 0.04
-            target_x = bridge_start_x + (flash_target_step + 0.5) * slot_w - 48
+            if flash_target_step < num_slots:
+                target_x = bridge_start_x + (flash_target_step + 0.5) * slot_w - 48
+            else:
+                target_x = bridge_end_x + 50
             dx = target_x - flash_pos[0]
             if dx > 4:
                 flash_pos[0] += 6.0
@@ -433,18 +471,17 @@ def main() -> int:
                         flash_target_step += 1
                 else:
                     # Reached right cliff!
-                    flash_pos[0] += 6.0
-                    if flash_pos[0] >= bridge_end_x + 30:
-                        flash_state = "happy"
-                        flash_motion = "celebrate_pop"
-                        sounds.play("win")
-                        total_stars += 1
-                        if storage:
-                            storage.kv_set(STORAGE_KEY, {"stars": total_stars})
-                        try:
-                            emit_activity_event("bridge.level_completed", {"level": level_idx + 1, "stars": total_stars})
-                        except Exception:
-                            pass
+                    flash_state = "happy"
+                    flash_motion = "celebrate_pop"
+                    flash_anim_timer = 0.0
+                    sounds.play("win")
+                    total_stars += 1
+                    if storage:
+                        storage.kv_set(STORAGE_KEY, {"stars": total_stars})
+                    try:
+                        emit_activity_event("bridge.level_completed", {"level": level_idx + 1, "stars": total_stars})
+                    except Exception:
+                        pass
 
         elif flash_motion == "surprised_wobble" and flash_state == "surprised":
             flash_anim_timer += 0.04
@@ -463,8 +500,9 @@ def main() -> int:
 
         elif flash_motion == "celebrate_pop":
             flash_anim_timer += 0.04
+            flash_pos[1] = 260.0 - abs(math.sin(flash_anim_timer * 6.0)) * 20.0
             # Victory star celebration particles
-            if len(particles) < 25:
+            if len(particles) < 30:
                 particles.append({
                     "x": flash_pos[0] + random.uniform(10, 80),
                     "y": flash_pos[1] + random.uniform(0, 40),
@@ -474,7 +512,7 @@ def main() -> int:
                     "size": random.uniform(4, 9),
                     "life": 1.2,
                 })
-            if flash_anim_timer > 1.8:
+            if flash_anim_timer > 2.0:
                 level_idx += 1
                 if level_idx >= len(LEVELS):
                     is_victory = True
@@ -542,12 +580,7 @@ def main() -> int:
 
         # 3. World-Specific Gap Abyss Features
         if w_id == "river":
-            for y in range(bridge_y, REFERENCE_HEIGHT):
-                ratio = (y - bridge_y) / (REFERENCE_HEIGHT - bridge_y)
-                r = int(56 * (1 - ratio) + 14 * ratio)
-                g = int(189 * (1 - ratio) + 116 * ratio)
-                b = int(248 * (1 - ratio) + 144 * ratio)
-                pygame.draw.line(surf, (r, g, b), (bridge_start_x - 10, y), (bridge_end_x + 10, y))
+            surf.blit(river_abyss_surf, (bridge_start_x - 10, bridge_y))
             wave_off = math.sin(elapsed * 2.0) * 8.0 if motion_enabled else 0.0
             for wy in range(bridge_y + 20, REFERENCE_HEIGHT - 60, 35):
                 pygame.draw.arc(surf, (186, 230, 253), pygame.Rect(bridge_start_x + 20 + wave_off, wy, 160, 20), 0, 3.14159, 2)
@@ -558,12 +591,7 @@ def main() -> int:
             pygame.draw.polygon(surf, (217, 119, 6), [(0, bridge_y - 80), (140, bridge_y - 140), (280, bridge_y - 80), (0, bridge_y)])
             pygame.draw.polygon(surf, (180, 83, 9), [(200, bridge_y - 60), (380, bridge_y - 160), (560, bridge_y - 70), (200, bridge_y)])
             pygame.draw.polygon(surf, (217, 119, 6), [(500, bridge_y - 90), (700, bridge_y - 150), (900, bridge_y - 75), (500, bridge_y)])
-            for y in range(bridge_y, REFERENCE_HEIGHT):
-                ratio = (y - bridge_y) / (REFERENCE_HEIGHT - bridge_y)
-                r = int(180 * (1 - ratio) + 69 * ratio)
-                g = int(83 * (1 - ratio) + 26 * ratio)
-                b = int(9 * (1 - ratio) + 3 * ratio)
-                pygame.draw.line(surf, (r, g, b), (bridge_start_x - 10, y), (bridge_end_x + 10, y))
+            surf.blit(canyon_abyss_surf, (bridge_start_x - 10, bridge_y))
 
         else:  # space
             for sx, sy, s_rad, s_col in space_stars:
@@ -577,11 +605,10 @@ def main() -> int:
             pygame.draw.rect(surf, (10, 10, 24), pygame.Rect(bridge_start_x - 10, bridge_y, (bridge_end_x - bridge_start_x) + 20, REFERENCE_HEIGHT - bridge_y))
 
         # 4. Cliffs / Banks (Left and Right)
-        b_img = bank_surfs.get(w_id)
-        if b_img is not None:
-            left_bank_scaled = pygame.transform.smoothscale(b_img, (220, 270))
+        b_scaled = bank_scaled_surfs.get(w_id)
+        if b_scaled is not None:
+            left_bank_scaled, right_bank_scaled = b_scaled
             surf.blit(left_bank_scaled, (0, bridge_y - 20))
-            right_bank_scaled = pygame.transform.flip(pygame.transform.smoothscale(b_img, (224, 270)), True, False)
             surf.blit(right_bank_scaled, (bridge_end_x, bridge_y - 20))
         else:
             pygame.draw.rect(surf, cur_lvl["cliff_color"], pygame.Rect(0, bridge_y - 20, bridge_start_x, REFERENCE_HEIGHT - bridge_y + 20), border_top_right_radius=24)
@@ -602,8 +629,7 @@ def main() -> int:
 
         # 6. Safety Trampoline in Gap
         if trampoline_surf is not None:
-            t_scaled = pygame.transform.smoothscale(trampoline_surf, (280, 50))
-            surf.blit(t_scaled, (REFERENCE_WIDTH // 2 - 140, 435))
+            surf.blit(trampoline_surf, (REFERENCE_WIDTH // 2 - 80, 435))
         else:
             tramp_x = (bridge_start_x + bridge_end_x) // 2
             pygame.draw.rect(surf, (239, 68, 68), pygame.Rect(tramp_x - 120, 440, 240, 36), border_radius=18)
@@ -634,15 +660,21 @@ def main() -> int:
             pygame.draw.line(surf, (100, 116, 139), (slot_rect.centerx, cable_y), (slot_rect.centerx, slot_rect.top), 2)
 
             if placed is not None:
+                is_correct = (placed == req_type)
+                border_color = (34, 197, 94) if is_correct else (217, 119, 6)
                 pygame.draw.rect(surf, (255, 255, 255), slot_rect, border_radius=16)
-                pygame.draw.rect(surf, (34, 197, 94), slot_rect, width=4, border_radius=16)
+                pygame.draw.rect(surf, border_color, slot_rect, width=4, border_radius=16)
                 pygame.draw.line(surf, (100, 116, 139), (slot_rect.left - 4, slot_rect.top + 6), (slot_rect.right + 4, slot_rect.top + 6), 3)
                 draw_block_icon(surf, placed, slot_rect.centerx, slot_rect.centery + 2, 54)
                 chk_x = slot_rect.right - 14
                 chk_y = slot_rect.top + 14
-                pygame.draw.circle(surf, (34, 197, 94), (chk_x, chk_y), 11)
-                pygame.draw.circle(surf, (255, 255, 255), (chk_x, chk_y), 11, 2)
-                pygame.draw.polygon(surf, (255, 255, 255), [(chk_x - 4, chk_y), (chk_x - 1, chk_y + 3), (chk_x + 4, chk_y - 3)], 2)
+                if is_correct:
+                    pygame.draw.circle(surf, (34, 197, 94), (chk_x, chk_y), 11)
+                    pygame.draw.circle(surf, (255, 255, 255), (chk_x, chk_y), 11, 2)
+                    pygame.draw.polygon(surf, (255, 255, 255), [(chk_x - 4, chk_y), (chk_x - 1, chk_y + 3), (chk_x + 4, chk_y - 3)], 2)
+                else:
+                    pygame.draw.circle(surf, (217, 119, 6), (chk_x, chk_y), 8)
+                    pygame.draw.circle(surf, (255, 255, 255), (chk_x, chk_y), 8, 2)
             else:
                 pygame.draw.rect(surf, (248, 250, 252), slot_rect, border_radius=16)
                 pygame.draw.rect(surf, (148, 163, 184), slot_rect, width=2, border_radius=16)

@@ -219,9 +219,13 @@ class GreiaLauncherPresentation(LauncherApplication):
             except Exception:  # noqa: BLE001 - never fail boot for presentation
                 pass
 
+        _needs_redraw = True
         try:
             while running:
-                for event in pygame.event.get():
+                events = pygame.event.get()
+                if events:
+                    _needs_redraw = True
+                for event in events:
                     if event.type == pygame.QUIT and self.allow_exit:
                         running = False
                     elif event.type == pygame.TEXTINPUT:
@@ -259,6 +263,7 @@ class GreiaLauncherPresentation(LauncherApplication):
                         request = self._resize_display_request(event, pygame)
                         if request is not None:
                             screen = pygame.display.set_mode(*request)
+                            _needs_redraw = True
 
                 current_surface = pygame.display.get_surface()
                 if current_surface is not None:
@@ -279,19 +284,27 @@ class GreiaLauncherPresentation(LauncherApplication):
                     self._activity_scroll_start = 0
                     if self._visual_cache is not None:
                         self._visual_cache.clear()
+                    _needs_redraw = True
                 if self._mode == "profiles":
                     if self._parent_chord.poll(time.monotonic()):
                         self._mode = "parent_panel"
                         self._parent_panel.open()
+                        _needs_redraw = True
                 elif self._mode == "parent_panel":
                     self._parent_panel.drain()
                 self._rescan_if_due()
-                self._draw(screen, pygame)
-                pygame.display.flip()
-                self._on_frame_presented(screen, pygame)
-                if not self._first_frame_released:
-                    self._release_boot_cover()
-                clock.tick(30)
+
+                is_animating = bool(self._launching_activity_id is not None)
+                if _needs_redraw or is_animating or not self._first_frame_released:
+                    self._draw(screen, pygame)
+                    pygame.display.flip()
+                    self._on_frame_presented(screen, pygame)
+                    if not self._first_frame_released:
+                        self._release_boot_cover()
+                    _needs_redraw = False
+                    clock.tick(30)
+                else:
+                    clock.tick(10)
         finally:
             self.session.clear()
             pygame.key.stop_text_input()

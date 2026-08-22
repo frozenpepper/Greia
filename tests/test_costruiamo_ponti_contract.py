@@ -46,6 +46,12 @@ class CostruiamoPontiContractTests(unittest.TestCase):
         self.assertIn("SceneActorDefinition", source)
         self.assertIn("character.flash", source)
 
+    def test_crossing_reaches_right_cliff_and_celebrates(self) -> None:
+        source = (ACTIVITY / "main.py").read_text(encoding="utf-8")
+        self.assertIn("target_x = bridge_end_x + 50", source)
+        self.assertIn("flash_motion = \"celebrate_pop\"", source)
+        self.assertIn("flash_anim_timer = 0.0", source)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -34,7 +34,10 @@ class LauncherBootFallbackTests(unittest.TestCase):
         unit = (
             ROOT / "build/overlay/etc/systemd/system/greia-launcher.service"
         ).read_text(encoding="utf-8")
-        self.assertIn("RuntimeDirectory=greia-os", unit)
+        tmpfiles = (
+            ROOT / "build/overlay/etc/tmpfiles.d/greia-runtime.conf"
+        ).read_text(encoding="utf-8")
+        self.assertIn("greia-os", tmpfiles)
         self.assertIn("StandardInput=null", unit)
         self.assertIn("/usr/bin/xinit", unit)
         self.assertIn(":0 vt1", unit)
