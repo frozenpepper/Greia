@@ -25,6 +25,7 @@ class SceneRenderStats:
     drawn_nodes: int
     culled_nodes: int
     skipped_optional_nodes: int
+    fallback_nodes: int = 0
 
 
 class PygameSceneRenderer:
@@ -111,6 +112,7 @@ class PygameSceneRenderer:
         drawn = 0
         culled = 0
         skipped = 0
+        fallback_nodes = 0
 
         cache_error_types: list[type[BaseException]] = [
             VisualSurfaceCacheError,
@@ -152,6 +154,7 @@ class PygameSceneRenderer:
             )
 
             surface = None
+            used_fallback = False
             fallback_variant = getattr(node, "fallback_variant", None)
             use_fallback_directly = (
                 primary_key in self._failed_renditions
@@ -173,6 +176,8 @@ class PygameSceneRenderer:
                             variant=fallback_variant,
                             size=rect.size,
                         )
+                        if surface is not None:
+                            used_fallback = True
                     except cache_errors:
                         self._failed_renditions[fallback_key] = True
                         surface = None
@@ -200,6 +205,8 @@ class PygameSceneRenderer:
                                     variant=fallback_variant,
                                     size=rect.size,
                                 )
+                                if surface is not None:
+                                    used_fallback = True
                             except cache_errors:
                                 self._failed_renditions[fallback_key] = True
                                 surface = None
@@ -212,6 +219,9 @@ class PygameSceneRenderer:
                     f"required scene visual failed: {scene.scene_id}/{node.node_id} "
                     f"({node.asset_id}/{node.variant})"
                 )
+
+            if used_fallback:
+                fallback_nodes += 1
 
             previous_alpha = None
             alpha_changed = sample.alpha < 0.999
@@ -229,4 +239,5 @@ class PygameSceneRenderer:
             drawn_nodes=drawn,
             culled_nodes=culled,
             skipped_optional_nodes=skipped,
+            fallback_nodes=fallback_nodes,
         )

@@ -269,9 +269,9 @@ No physical Acer/Pi acceptance should be claimed without actual hardware evidenc
 
 ---
 
-### Canonical Cast v0.1 Runtime Acceptance Recheck (2026-08-22)
+### Canonical Cast v0.1 Final Capture Integrity & Acceptance Recheck (2026-08-22)
 
-- **Bounded Failed-Rendition Caching:** Added bounded negative caching (`BoundedCache[tuple[str, str, int, int], bool]`, max 64 entries) to `PygameSceneRenderer` to eliminate retry storms when PNGs fail or are corrupt, reset cleanly upon `renderer.clear()`.
-- **Default Rendition Failure Proof:** Verified Activity-level graceful safe fallback (`Activity Visual Safe Fallback Mode`) when required default rendition fails cold, with no uncaught exceptions or tracebacks.
-- **Authentic Simulator Provenance:** Captured all 10 review PNGs directly via the real Activity Simulator remote bridge with full developer UI controls rendered on `PygameReferenceCanvas`.
-- **Curated Deliverables:** Formatted `docs/reviews/visual/2026-08-22_canonical-cast-v01-runtime-recheck/` containing `OWNER_RECHECK.md`, `runtime-audit.json`, `simulator-trace.json`, and packaged `GREIA_VISUAL_REVIEW_CANONICAL_CAST_V01_RUNTIME_RECHECK_2026-08-22.zip` (strictly 10 PNGs + 3 metadata files).
+- **3-Phase Scenario Isolation:** Executed strict 3-phase execution model separating clean normal baseline evidence (Phase A) from single-fault state fallback (Phase B, `flash_happy.png`) and required-default safe fallback error screen (Phase C, `dani_neutral.png`).
+- **Self-Proving On-Screen Diagnostic Readouts:** Added live 2-line diagnostic overlay onto fixture canvas displaying requested variant, rendered variant, fallback status (`YES (default)` vs `NO`), reference canvas, outer viewport, and active interface-size setting (`NORMAL`, `LARGE`, `COMPACT`).
+- **Renderer Fallback Node Tracking:** Enhanced `SceneRenderStats` and `PygameSceneRenderer` to increment `fallback_nodes` upon fallback resolution.
+- **Verified Bundle Deliverables:** Curated `docs/reviews/visual/2026-08-22_canonical-cast-v01-final-capture/` and generated root `GREIA_VISUAL_REVIEW_CANONICAL_CAST_V01_FINAL_CAPTURE_2026-08-22.zip` containing strictly 10 PNGs + `OWNER_FINAL_RECHECK.md` + `runtime-audit.json` + `simulator-trace.json`.

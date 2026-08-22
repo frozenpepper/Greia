@@ -6,6 +6,7 @@ import pygame
 
 from greia_platform.activity_api import (
     activity_stop_requested,
+    get_ui_preferences,
     mark_activity_ready,
 )
 from greia_platform.activity_ui import is_home_clicked
@@ -101,6 +102,7 @@ def main() -> int:
     font_ui = pygame.font.SysFont("Arial", 13, bold=True)
     font_small = pygame.font.SysFont("Arial", 11)
 
+    ui_prefs = get_ui_preferences()
     clock = pygame.time.Clock()
     renderer = PygameSceneRenderer.for_activity(max_entries=32)
 
@@ -141,6 +143,20 @@ def main() -> int:
                     current_state = CharacterState.SURPRISED
                 elif event.key == pygame.K_z:
                     current_state = CharacterState.SLEEPY
+                elif event.key == pygame.K_i:
+                    current_motion = CharacterMotion.IDLE_BOUNCE
+                elif event.key == pygame.K_k:
+                    current_motion = CharacterMotion.BLINK
+                elif event.key == pygame.K_o:
+                    current_motion = CharacterMotion.HAPPY_HOP
+                elif event.key == pygame.K_p:
+                    current_motion = CharacterMotion.CELEBRATE_POP
+                elif event.key == pygame.K_w:
+                    current_motion = CharacterMotion.SURPRISED_WOBBLE
+                elif event.key == pygame.K_y:
+                    current_motion = CharacterMotion.SLEEPY_SWAY
+                elif event.key == pygame.K_x:
+                    current_motion = CharacterMotion.NONE
                 elif event.key == pygame.K_m:
                     motion_enabled = not motion_enabled
                 elif event.key == pygame.K_SPACE:
@@ -237,10 +253,15 @@ def main() -> int:
         )
 
         render_failed = False
+        # Capture render stats
+        render_failed = False
         render_err_msg = ""
+        render_stats = None
 
         try:
-            renderer.draw(scene, canvas.surface, elapsed_seconds=elapsed, motion_enabled=motion_enabled, clear=True)
+            render_stats = renderer.draw(
+                scene, canvas.surface, elapsed_seconds=elapsed, motion_enabled=motion_enabled, clear=True
+            )
         except SceneRenderError as err:
             render_failed = True
             render_err_msg = str(err)
@@ -256,13 +277,23 @@ def main() -> int:
         # Render Fixture Developer Controls directly onto canvas.surface
         # Title
         t_surf = font_title.render("Greia Canonical Cast Showcase (v0.1)", True, (15, 23, 42))
-        canvas.surface.blit(t_surf, (80, 20))
+        canvas.surface.blit(t_surf, (80, 14))
 
-        # Status
+        # Developer Diagnostic Readout
         screen_w, screen_h = screen.get_size()
-        status_str = f"Mode: {view_mode.upper()} | State: {current_state.value.upper()} | Motion: {effective_motion.value.upper()} | Res: {screen_w}x{screen_h}"
-        st_surf = font_small.render(status_str, True, (71, 85, 105))
-        canvas.surface.blit(st_surf, (440, 24))
+        cid, asset_id, name = CHARACTERS[selected_char_idx]
+        req_variant = "default" if current_state == CharacterState.NEUTRAL else current_state.value
+        fallback_used = (render_stats is not None and render_stats.fallback_nodes > 0)
+        rendered_variant = "default" if (fallback_used or req_variant == "default") else req_variant
+        fallback_str = "YES (default)" if fallback_used else "NO"
+        ui_size_str = ui_prefs.interface_size.value.upper()
+
+        line1 = f"Char: {asset_id} | State: {current_state.value.upper()} | Motion: {effective_motion.value.upper()} | UI: {ui_size_str}"
+        line2 = f"Req: {req_variant} | Rendered: {rendered_variant} | Fallback: {fallback_str} | Canvas: {CANVAS_WIDTH}x{CANVAS_HEIGHT} | Screen: {screen_w}x{screen_h}"
+        st_surf1 = font_small.render(line1, True, (51, 65, 85))
+        st_surf2 = font_small.render(line2, True, (71, 85, 105))
+        canvas.surface.blit(st_surf1, (440, 12))
+        canvas.surface.blit(st_surf2, (440, 30))
 
         # Character Selector Buttons
         for idx, (cid, _, name) in enumerate(CHARACTERS):

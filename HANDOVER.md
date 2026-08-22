@@ -1,9 +1,9 @@
-- **Canonical Cast v0.1 — Runtime Acceptance Recheck (2026-08-22)**:
-  - Resolved all 6 review blockers from `docs/reviews/visual/2026-08-22_canonical-cast-v01-runtime-simulator/OWNER_REVIEW.md`.
-  - Implemented bounded negative caching in `PygameSceneRenderer` (`BoundedCache[tuple[str, str, int, int], bool]`, max 64 entries) to eliminate retry storms on corrupt or missing PNGs, reset on `renderer.clear()`.
-  - Injected cold default failure into `dani_neutral.png` and verified Activity-level safe fallback screen with zero tracebacks exposed.
-  - Verified authentic Activity Simulator provenance and full developer UI across all 6 characters, 5 states, and 6 motions on `PygameReferenceCanvas`.
-  - Curated clean transfer bundle `GREIA_VISUAL_REVIEW_CANONICAL_CAST_V01_RUNTIME_RECHECK_2026-08-22.zip` containing strictly 10 PNGs + `OWNER_RECHECK.md` + `runtime-audit.json` + `simulator-trace.json`.
+- **Canonical Cast v0.1 — Final Capture Integrity & Acceptance Recheck (2026-08-22)**:
+  - Resolved all 8 review blockers from `docs/reviews/visual/2026-08-22_canonical-cast-v01-runtime-recheck/OWNER_REVIEW_CAPTURE_INTEGRITY.md`.
+  - Implemented strict 3-phase capture architecture isolating clean baseline evidence (Phase A) from single-target non-default fallback (Phase B, `flash_happy.png`) and default failure safe fallback screen (Phase C, `dani_neutral.png`).
+  - Added on-screen developer diagnostic readout proving requested vs rendered variant, node fallback flag, outer viewport, and active interface-size setting directly on the fixture canvas.
+  - Enhanced `PygameSceneRenderer` with fallback node tracking (`stats.fallback_nodes`).
+  - Generated verified transfer bundle `GREIA_VISUAL_REVIEW_CANONICAL_CAST_V01_FINAL_CAPTURE_2026-08-22.zip` containing strictly 10 PNGs + `OWNER_FINAL_RECHECK.md` + `runtime-audit.json` + `simulator-trace.json`.
 
 
 # Greia — Standalone Engineering Handover

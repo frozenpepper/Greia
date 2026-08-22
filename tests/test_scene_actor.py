@@ -226,6 +226,7 @@ class SceneActorTests(unittest.TestCase):
         for i in range(3):
             stats = renderer.draw(scene, mock_target, clear=False)
             self.assertEqual(stats.drawn_nodes, 1)
+            self.assertEqual(stats.fallback_nodes, 1)
 
         # 'happy' must be attempted exactly ONCE across all 3 frames!
         self.assertEqual(happy_attempts, 1)
@@ -236,6 +237,7 @@ class SceneActorTests(unittest.TestCase):
         renderer.clear()
         stats = renderer.draw(scene, mock_target, clear=False)
         self.assertEqual(stats.drawn_nodes, 1)
+        self.assertEqual(stats.fallback_nodes, 1)
         self.assertEqual(happy_attempts, 2)
         self.assertEqual(default_attempts, 4)
 
