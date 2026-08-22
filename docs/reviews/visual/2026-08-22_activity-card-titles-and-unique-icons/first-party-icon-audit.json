@@ -1,0 +1,331 @@
+{
+  "timestamp": "2026-08-22T16:00:00Z",
+  "total_first_party_activities": 19,
+  "all_package_owned": true,
+  "all_unique": true,
+  "activities": [
+    {
+      "activity_id": "org.greia.acquario-magico",
+      "activity_dir": "activities/acquario_magico",
+      "current_icon_declaration": "package:assets/icon.png",
+      "icon_type": "package_owned",
+      "source_master": "activities/acquario_magico/assets/source/icon.svg",
+      "runtime_rendition": "activities/acquario_magico/assets/icon.png",
+      "dimensions": [
+        256,
+        256
+      ],
+      "file_size_bytes": 27989,
+      "unique_silhouette": true,
+      "safe_padding_percent": 12,
+      "visible_clipping_issue": false,
+      "migration_action": "AUTHORED_UNIQUE_PACKAGE_ICON"
+    },
+    {
+      "activity_id": "org.greia.clinica-cuccioli",
+      "activity_dir": "activities/clinica_cuccioli",
+      "current_icon_declaration": "package:assets/icon.png",
+      "icon_type": "package_owned",
+      "source_master": "activities/clinica_cuccioli/assets/source/icon.svg",
+      "runtime_rendition": "activities/clinica_cuccioli/assets/icon.png",
+      "dimensions": [
+        256,
+        256
+      ],
+      "file_size_bytes": 12477,
+      "unique_silhouette": true,
+      "safe_padding_percent": 12,
+      "visible_clipping_issue": false,
+      "migration_action": "AUTHORED_UNIQUE_PACKAGE_ICON"
+    },
+    {
+      "activity_id": "org.greia.costruiamo-ponti",
+      "activity_dir": "activities/costruiamo_ponti",
+      "current_icon_declaration": "package:assets/icon.png",
+      "icon_type": "package_owned",
+      "source_master": "activities/costruiamo_ponti/assets/source/icon.svg",
+      "runtime_rendition": "activities/costruiamo_ponti/assets/icon.png",
+      "dimensions": [
+        256,
+        256
+      ],
+      "file_size_bytes": 7577,
+      "unique_silhouette": true,
+      "safe_padding_percent": 12,
+      "visible_clipping_issue": false,
+      "migration_action": "AUTHORED_UNIQUE_PACKAGE_ICON"
+    },
+    {
+      "activity_id": "org.greia.cucciolo-mio",
+      "activity_dir": "activities/cucciolo_mio",
+      "current_icon_declaration": "package:assets/icon.png",
+      "icon_type": "package_owned",
+      "source_master": "activities/cucciolo_mio/assets/source/icon.svg",
+      "runtime_rendition": "activities/cucciolo_mio/assets/icon.png",
+      "dimensions": [
+        256,
+        256
+      ],
+      "file_size_bytes": 11880,
+      "unique_silhouette": true,
+      "safe_padding_percent": 12,
+      "visible_clipping_issue": false,
+      "migration_action": "AUTHORED_UNIQUE_PACKAGE_ICON"
+    },
+    {
+      "activity_id": "org.greia.foresta-parole",
+      "activity_dir": "activities/foresta_parole",
+      "current_icon_declaration": "package:assets/icon.png",
+      "icon_type": "package_owned",
+      "source_master": "activities/foresta_parole/assets/source/icon.svg",
+      "runtime_rendition": "activities/foresta_parole/assets/icon.png",
+      "dimensions": [
+        256,
+        256
+      ],
+      "file_size_bytes": 13143,
+      "unique_silhouette": true,
+      "safe_padding_percent": 12,
+      "visible_clipping_issue": false,
+      "migration_action": "AUTHORED_UNIQUE_PACKAGE_ICON"
+    },
+    {
+      "activity_id": "org.greia.labirinto-magico",
+      "activity_dir": "activities/labirinto_magico",
+      "current_icon_declaration": "package:assets/icon.png",
+      "icon_type": "package_owned",
+      "source_master": "activities/labirinto_magico/assets/source/icon.svg",
+      "runtime_rendition": "activities/labirinto_magico/assets/icon.png",
+      "dimensions": [
+        256,
+        256
+      ],
+      "file_size_bytes": 9444,
+      "unique_silhouette": true,
+      "safe_padding_percent": 12,
+      "visible_clipping_issue": false,
+      "migration_action": "AUTHORED_UNIQUE_PACKAGE_ICON"
+    },
+    {
+      "activity_id": "org.greia.memory-meraviglie",
+      "activity_dir": "activities/memory_meraviglie",
+      "current_icon_declaration": "package:assets/icon.png",
+      "icon_type": "package_owned",
+      "source_master": "activities/memory_meraviglie/assets/source/icon.svg",
+      "runtime_rendition": "activities/memory_meraviglie/assets/icon.png",
+      "dimensions": [
+        256,
+        256
+      ],
+      "file_size_bytes": 13477,
+      "unique_silhouette": true,
+      "safe_padding_percent": 12,
+      "visible_clipping_issue": false,
+      "migration_action": "AUTHORED_UNIQUE_PACKAGE_ICON"
+    },
+    {
+      "activity_id": "org.greia.nascondino-bosco",
+      "activity_dir": "activities/nascondino_bosco",
+      "current_icon_declaration": "package:assets/icon.png",
+      "icon_type": "package_owned",
+      "source_master": "activities/nascondino_bosco/assets/source/icon.svg",
+      "runtime_rendition": "activities/nascondino_bosco/assets/icon.png",
+      "dimensions": [
+        256,
+        256
+      ],
+      "file_size_bytes": 11146,
+      "unique_silhouette": true,
+      "safe_padding_percent": 12,
+      "visible_clipping_issue": false,
+      "migration_action": "AUTHORED_UNIQUE_PACKAGE_ICON"
+    },
+    {
+      "activity_id": "org.greia.orchestra-animali",
+      "activity_dir": "activities/orchestra_animali",
+      "current_icon_declaration": "package:assets/icon.png",
+      "icon_type": "package_owned",
+      "source_master": "activities/orchestra_animali/assets/source/icon.svg",
+      "runtime_rendition": "activities/orchestra_animali/assets/icon.png",
+      "dimensions": [
+        256,
+        256
+      ],
+      "file_size_bytes": 9989,
+      "unique_silhouette": true,
+      "safe_padding_percent": 12,
+      "visible_clipping_issue": false,
+      "migration_action": "AUTHORED_UNIQUE_PACKAGE_ICON"
+    },
+    {
+      "activity_id": "org.greia.painting",
+      "activity_dir": "activities/painting",
+      "current_icon_declaration": "package:assets/icon.png",
+      "icon_type": "package_owned",
+      "source_master": "activities/painting/assets/source/icon.svg",
+      "runtime_rendition": "activities/painting/assets/icon.png",
+      "dimensions": [
+        256,
+        256
+      ],
+      "file_size_bytes": 18939,
+      "unique_silhouette": true,
+      "safe_padding_percent": 12,
+      "visible_clipping_issue": false,
+      "migration_action": "AUTHORED_UNIQUE_PACKAGE_ICON"
+    },
+    {
+      "activity_id": "org.greia.pasticceria-magica",
+      "activity_dir": "activities/pasticceria_magica",
+      "current_icon_declaration": "package:assets/icon.png",
+      "icon_type": "package_owned",
+      "source_master": "activities/pasticceria_magica/assets/source/icon.svg",
+      "runtime_rendition": "activities/pasticceria_magica/assets/icon.png",
+      "dimensions": [
+        256,
+        256
+      ],
+      "file_size_bytes": 7603,
+      "unique_silhouette": true,
+      "safe_padding_percent": 12,
+      "visible_clipping_issue": false,
+      "migration_action": "AUTHORED_UNIQUE_PACKAGE_ICON"
+    },
+    {
+      "activity_id": "org.greia.piccola-serra",
+      "activity_dir": "activities/piccola_serra",
+      "current_icon_declaration": "package:assets/icon.png",
+      "icon_type": "package_owned",
+      "source_master": "activities/piccola_serra/assets/source/icon.svg",
+      "runtime_rendition": "activities/piccola_serra/assets/icon.png",
+      "dimensions": [
+        256,
+        256
+      ],
+      "file_size_bytes": 17137,
+      "unique_silhouette": true,
+      "safe_padding_percent": 12,
+      "visible_clipping_issue": false,
+      "migration_action": "AUTHORED_UNIQUE_PACKAGE_ICON"
+    },
+    {
+      "activity_id": "org.greia.shape-garden",
+      "activity_dir": "activities/shape_garden",
+      "current_icon_declaration": "package:assets/icon.png",
+      "icon_type": "package_owned",
+      "source_master": "activities/shape_garden/assets/source/icon.svg",
+      "runtime_rendition": "activities/shape_garden/assets/icon.png",
+      "dimensions": [
+        256,
+        256
+      ],
+      "file_size_bytes": 11030,
+      "unique_silhouette": true,
+      "safe_padding_percent": 12,
+      "visible_clipping_issue": false,
+      "migration_action": "AUTHORED_UNIQUE_PACKAGE_ICON"
+    },
+    {
+      "activity_id": "org.greia.sillabe-magiche",
+      "activity_dir": "activities/sillabe_magiche",
+      "current_icon_declaration": "package:assets/icon.png",
+      "icon_type": "package_owned",
+      "source_master": "activities/sillabe_magiche/assets/source/icon.svg",
+      "runtime_rendition": "activities/sillabe_magiche/assets/icon.png",
+      "dimensions": [
+        256,
+        256
+      ],
+      "file_size_bytes": 8475,
+      "unique_silhouette": true,
+      "safe_padding_percent": 12,
+      "visible_clipping_issue": false,
+      "migration_action": "AUTHORED_UNIQUE_PACKAGE_ICON"
+    },
+    {
+      "activity_id": "org.greia.teatrino-fiabe",
+      "activity_dir": "activities/teatrino_fiabe",
+      "current_icon_declaration": "package:assets/icon.png",
+      "icon_type": "package_owned",
+      "source_master": "activities/teatrino_fiabe/assets/source/icon.svg",
+      "runtime_rendition": "activities/teatrino_fiabe/assets/icon.png",
+      "dimensions": [
+        256,
+        256
+      ],
+      "file_size_bytes": 6155,
+      "unique_silhouette": true,
+      "safe_padding_percent": 12,
+      "visible_clipping_issue": false,
+      "migration_action": "AUTHORED_UNIQUE_PACKAGE_ICON"
+    },
+    {
+      "activity_id": "org.greia.treno-numeri",
+      "activity_dir": "activities/treno_numeri",
+      "current_icon_declaration": "package:assets/icon.png",
+      "icon_type": "package_owned",
+      "source_master": "activities/treno_numeri/assets/source/icon.svg",
+      "runtime_rendition": "activities/treno_numeri/assets/icon.png",
+      "dimensions": [
+        256,
+        256
+      ],
+      "file_size_bytes": 9468,
+      "unique_silhouette": true,
+      "safe_padding_percent": 12,
+      "visible_clipping_issue": false,
+      "migration_action": "AUTHORED_UNIQUE_PACKAGE_ICON"
+    },
+    {
+      "activity_id": "org.greia.volo-draghetto",
+      "activity_dir": "activities/volo_draghetto",
+      "current_icon_declaration": "package:assets/icon.png",
+      "icon_type": "package_owned",
+      "source_master": "activities/volo_draghetto/assets/source/icon.svg",
+      "runtime_rendition": "activities/volo_draghetto/assets/icon.png",
+      "dimensions": [
+        256,
+        256
+      ],
+      "file_size_bytes": 10523,
+      "unique_silhouette": true,
+      "safe_padding_percent": 12,
+      "visible_clipping_issue": false,
+      "migration_action": "AUTHORED_UNIQUE_PACKAGE_ICON"
+    },
+    {
+      "activity_id": "org.greia.workshop-settings",
+      "activity_dir": "activities/workshop_settings",
+      "current_icon_declaration": "package:assets/icon.png",
+      "icon_type": "package_owned",
+      "source_master": "activities/workshop_settings/assets/source/icon.svg",
+      "runtime_rendition": "activities/workshop_settings/assets/icon.png",
+      "dimensions": [
+        256,
+        256
+      ],
+      "file_size_bytes": 8769,
+      "unique_silhouette": true,
+      "safe_padding_percent": 12,
+      "visible_clipping_issue": false,
+      "migration_action": "AUTHORED_UNIQUE_PACKAGE_ICON"
+    },
+    {
+      "activity_id": "org.greia.writing",
+      "activity_dir": "activities/writing",
+      "current_icon_declaration": "package:assets/icon.png",
+      "icon_type": "package_owned",
+      "source_master": "activities/writing/assets/source/icon.svg",
+      "runtime_rendition": "activities/writing/assets/icon.png",
+      "dimensions": [
+        256,
+        256
+      ],
+      "file_size_bytes": 8621,
+      "unique_silhouette": true,
+      "safe_padding_percent": 12,
+      "visible_clipping_issue": false,
+      "migration_action": "AUTHORED_UNIQUE_PACKAGE_ICON"
+    }
+  ]
+}

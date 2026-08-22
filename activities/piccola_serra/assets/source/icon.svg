@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <radialGradient id="glass" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#E0F2F1" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#80CBC4" stop-opacity="0.6"/>
+    </radialGradient>
+  </defs>
+  <!-- Wooden Greenhouse Tray -->
+  <rect x="52" y="200" width="152" height="24" rx="8" fill="#8D6E63" stroke="#5D4037" stroke-width="5"/>
+  <!-- Glass Bell Dome -->
+  <path d="M68 200 L68 130 C68 70 188 70 188 130 L188 200 Z" fill="url(#glass)" stroke="#B2DFDB" stroke-width="6"/>
+  <circle cx="128" cy="56" r="14" fill="#80CBC4" stroke="#4DB6AC" stroke-width="4"/>
+  <!-- Glass Glare Highlight -->
+  <path d="M84 190 L84 130 C84 94 114 84 128 82" fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" opacity="0.8"/>
+  <!-- Terracotta Pot Inside -->
+  <polygon points="106,170 150,170 144,196 112,196" fill="#FF7043"/>
+  <rect x="102" y="162" width="52" height="10" rx="3" fill="#E64A19"/>
+  <!-- Growing Plant Stem & Leaves -->
+  <path d="M128 162 Q128 128 128 116" fill="none" stroke="#388E3C" stroke-width="6" stroke-linecap="round"/>
+  <!-- Leaves -->
+  <path d="M128 142 Q106 136 112 126 Q126 128 128 142" fill="#4CAF50"/>
+  <path d="M128 136 Q150 130 144 120 Q130 122 128 136" fill="#66BB6A"/>
+  <!-- Flower Blossom -->
+  <circle cx="128" cy="112" r="10" fill="#FFCA28"/>
+  <circle cx="128" cy="98" r="7" fill="#FF4081"/>
+  <circle cx="140" cy="106" r="7" fill="#FF4081"/>
+  <circle cx="136" cy="120" r="7" fill="#FF4081"/>
+  <circle cx="120" cy="120" r="7" fill="#FF4081"/>
+  <circle cx="116" cy="106" r="7" fill="#FF4081"/>
+</svg>

@@ -3,7 +3,7 @@ id = "org.greia.cucciolo-mio"
 legacy_ids = []
 title_key = "activity.cucciolo_mio.title"
 version = "0.1.0"
-icon = "unicorn"
+icon = "package:assets/icon.png"
 languages = ["it", "en"]
 
 [presentation]

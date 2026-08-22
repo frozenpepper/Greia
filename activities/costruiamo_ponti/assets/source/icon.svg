@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="water_ponti" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#4FC3F7"/>
+      <stop offset="100%" stop-color="#0288D1"/>
+    </linearGradient>
+    <linearGradient id="arch" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FF7043"/>
+      <stop offset="50%" stop-color="#FFCA28"/>
+      <stop offset="100%" stop-color="#42A5F5"/>
+    </linearGradient>
+  </defs>
+  <!-- River Background Band -->
+  <path d="M28 175 C70 160 186 160 228 175 L228 220 C186 210 70 210 28 220 Z" fill="url(#water_ponti)"/>
+  <!-- Left & Right Island Cliffs -->
+  <path d="M24 135 L68 135 L76 225 L24 225 Z" fill="#8D6E63"/>
+  <path d="M20 130 L72 130 C72 130 68 145 20 145 Z" fill="#66BB6A"/>
+  <path d="M188 135 L232 135 L232 225 L180 225 Z" fill="#8D6E63"/>
+  <path d="M184 130 L236 130 C236 130 232 145 184 145 Z" fill="#66BB6A"/>
+  <!-- Bridge Arch Structure -->
+  <path d="M56 142 C85 85 171 85 200 142" fill="none" stroke="#D7CCC8" stroke-width="20" stroke-linecap="round"/>
+  <path d="M56 136 C85 80 171 80 200 136" fill="none" stroke="url(#arch)" stroke-width="14" stroke-linecap="round"/>
+  <!-- Planks / Railings -->
+  <line x1="88" y1="102" x2="88" y2="148" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
+  <line x1="128" y1="88" x2="128" y2="152" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
+  <line x1="168" y1="102" x2="168" y2="148" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
+  <!-- Goal Flag -->
+  <g transform="translate(196, 68)">
+    <line x1="0" y1="0" x2="0" y2="64" stroke="#455A64" stroke-width="5" stroke-linecap="round"/>
+    <polygon points="0,4 32,16 0,28" fill="#FF5252"/>
+    <circle cx="0" cy="0" r="5" fill="#FFD700"/>
+  </g>
+</svg>

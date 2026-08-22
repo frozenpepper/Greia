@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Front Left Block (A) -->
+  <g transform="translate(42, 110)">
+    <rect x="0" y="0" width="76" height="76" rx="14" fill="#FF5252" stroke="#D32F2F" stroke-width="6"/>
+    <text x="38" y="54" font-family="Arial, sans-serif" font-weight="900" font-size="46" fill="#FFFFFF" text-anchor="middle">A</text>
+  </g>
+  <!-- Back Center High Block (BA) -->
+  <g transform="translate(90, 42)">
+    <rect x="0" y="0" width="80" height="80" rx="14" fill="#42A5F5" stroke="#1976D2" stroke-width="6"/>
+    <text x="40" y="54" font-family="Arial, sans-serif" font-weight="900" font-size="36" fill="#FFFFFF" text-anchor="middle">BA</text>
+  </g>
+  <!-- Front Right Block (MA) -->
+  <g transform="translate(138, 110)">
+    <rect x="0" y="0" width="76" height="76" rx="14" fill="#FFCA28" stroke="#FFA000" stroke-width="6"/>
+    <text x="38" y="54" font-family="Arial, sans-serif" font-weight="900" font-size="34" fill="#5D4037" text-anchor="middle">MA</text>
+  </g>
+  <!-- Magic Wand & Sparkles -->
+  <g transform="translate(180, 40) rotate(-35)">
+    <rect x="0" y="0" width="10" height="70" rx="4" fill="#795548"/>
+    <rect x="0" y="0" width="10" height="18" rx="3" fill="#ECEFF1"/>
+    <polygon points="5,-14 9,-4 19,-4 11,2 14,12 5,6 -4,12 -1,2 -9,-4 1,-4" fill="#FFD54F"/>
+  </g>
+  <polygon points="70,36 73,43 80,43 75,48 77,55 70,51 63,55 65,48 60,43 67,43" fill="#FFD54F"/>
+</svg>

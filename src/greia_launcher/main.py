@@ -921,10 +921,10 @@ class LauncherApplication:
         return image
 
     def _font(self, size: int, pygame: Any) -> Any:
-        size = max(18, size)
+        size = max(10, size)
         font = self._font_cache.get(size)
         if font is None:
-            font = self._typography.font(FontRole.BODY, size)
+            font = self._typography.font(FontRole.TITLE, size)
             self._font_cache[size] = font
         return font
 

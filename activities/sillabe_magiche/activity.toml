@@ -1,0 +1,42 @@
+[activity]
+id = "org.greia.sillabe-magiche"
+legacy_ids = []
+title_key = "activity.sillabe_magiche.title"
+version = "0.1.0"
+icon = "package:assets/icon.png"
+languages = ["it", "en"]
+
+[presentation]
+categories = ["learn", "play"]
+
+[education]
+categories = ["language", "phonics", "fine_motor"]
+difficulty = 1
+skills = [
+  { id = "language.phonological_awareness", weight = 3 },
+  { id = "language.letter_recognition", weight = 3 },
+  { id = "motor.pointer.precision", weight = 2 },
+]
+events = [
+  { id = "syllable.explored", kind = "milestone" },
+  { id = "syllable.matched", kind = "milestone" },
+  { id = "word.completed", kind = "completion" },
+]
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "pointer"
+
+[requirements]
+required_capabilities = ["display", "pointer", "audio.basic"]
+optional_capabilities = ["touch", "keyboard"]
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1

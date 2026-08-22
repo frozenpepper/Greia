@@ -1,3 +1,12 @@
+- **Activity Card Titles and Unique Icons — Launcher Productization Gate (2026-08-22)**:
+  - Delivered full title legibility and unique, package-owned visual identity across all 19 first-party Greia OS activities (`docs/testing/2026-08-22_ACTIVITY_CARD_TITLES_AND_UNIQUE_ICONS.md`):
+    - **Title Presentation Contract**: Two-line title presentation for normal Activity cards (max 2 visible lines, word-aware wrapping with safe Unicode grapheme cluster fallback, centered). Defensive card display cap of 48 grapheme clusters before ellipsis (`…`). Full localized title disclosed on pointer hover and keyboard focus via floating callout pill avoiding protected Home/Profile controls. Separate, bounded caches.
+    - **Icon Rendering & Contain-Fit Contract**: Contain-fit scaling preserving aspect ratio in square canvas with 10–12% safe padding around artwork before launcher shadow treatment. Zero shadow/artwork clipping. Fail-soft fallback to robot icon.
+    - **First-Party Icon Migration**: Migrated all 19 first-party Activities to distinct package-owned icons (`package:assets/icon.png`), authored via clean SVG masters and baked to 256x256 RGBA PNGs. Zero duplicate icons across the platform catalogue.
+  - Automated tests: `tests/test_launcher_title_and_icon_contract.py` passing (58/58 test suite passing).
+  - Captured complete 12-PNG curated evidence suite in `docs/reviews/visual/2026-08-22_activity-card-titles-and-unique-icons/` with `first-party-icon-audit.json`, `runtime-audit.json`, `simulator-trace.json`, and `OWNER_RECHECK.md`.
+  - Packaged owner transfer ZIP: `GREIA_VISUAL_REVIEW_ACTIVITY_CARD_TITLES_UNIQUE_ICONS_2026-08-22.zip`.
+
 - **Painting — Visual Productization Exercise (2026-08-22)**:
   - Exercised third real first-party Activity authoring exercise on UI-heavy Phase-0 creation Activity `org.greia.painting` (`activities/painting/`).
   - Decisions:

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="lens" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#E1F5FE" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#81D4FA" stop-opacity="0.6"/>
+    </linearGradient>
+  </defs>
+  <!-- Forest Tree Base & Layers -->
+  <rect x="74" y="170" width="24" height="46" rx="6" fill="#795548"/>
+  <polygon points="86,60 36,130 136,130" fill="#43A047"/>
+  <polygon points="86,100 24,180 148,180" fill="#2E7D32"/>
+  <!-- Peek-a-boo Creature Eyes in Tree -->
+  <circle cx="76" cy="148" r="6" fill="#FFFFFF"/>
+  <circle cx="75" cy="148" r="3" fill="#212121"/>
+  <circle cx="96" cy="148" r="6" fill="#FFFFFF"/>
+  <circle cx="95" cy="148" r="3" fill="#212121"/>
+  <!-- Magnifying Glass -->
+  <g transform="translate(100, 70)">
+    <!-- Handle -->
+    <rect x="80" y="80" width="22" height="68" rx="8" fill="#8D6E63" stroke="#5D4037" stroke-width="4" transform="rotate(45 80 80)"/>
+    <!-- Glass Rim & Lens -->
+    <circle cx="50" cy="50" r="48" fill="url(#lens)" stroke="#FFD54F" stroke-width="10"/>
+    <path d="M22 28 C34 18 58 18 76 28" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0.8"/>
+    <!-- Magnified Eye Inside Lens -->
+    <circle cx="52" cy="52" r="16" fill="#FFFFFF"/>
+    <circle cx="54" cy="52" r="9" fill="#0288D1"/>
+    <circle cx="50" cy="48" r="4" fill="#FFFFFF"/>
+  </g>
+</svg>

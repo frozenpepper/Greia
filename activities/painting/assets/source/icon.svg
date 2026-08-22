@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="wood_palette" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE0B2"/>
+      <stop offset="100%" stop-color="#D7CCC8"/>
+    </linearGradient>
+  </defs>
+  <!-- Wooden Palette -->
+  <path d="M128 34 C64 34 32 80 32 144 C32 208 80 226 136 226 C168 226 190 206 190 186 C190 166 172 156 182 136 C192 116 224 126 224 94 C224 54 186 34 128 34 Z" fill="url(#wood_palette)" stroke="#A1887F" stroke-width="8"/>
+  <!-- Thumb Hole -->
+  <ellipse cx="172" cy="180" rx="14" ry="18" fill="#FBF7EE" stroke="#A1887F" stroke-width="5"/>
+  <!-- Paint Dabs -->
+  <circle cx="74" cy="80" r="16" fill="#E53935"/>
+  <circle cx="70" cy="76" r="5" fill="#FFCDD2" opacity="0.8"/>
+  <circle cx="114" cy="60" r="16" fill="#FB8C00"/>
+  <circle cx="110" cy="56" r="5" fill="#FFE0B2" opacity="0.8"/>
+  <circle cx="162" cy="68" r="16" fill="#FDD835"/>
+  <circle cx="158" cy="64" r="5" fill="#FFF9C4" opacity="0.8"/>
+  <circle cx="62" cy="132" r="16" fill="#43A047"/>
+  <circle cx="58" cy="128" r="5" fill="#C8E6C9" opacity="0.8"/>
+  <circle cx="82" cy="180" r="16" fill="#1E88E5"/>
+  <circle cx="78" cy="176" r="5" fill="#BBDEFB" opacity="0.8"/>
+  <circle cx="130" cy="192" r="16" fill="#8E24AA"/>
+  <circle cx="126" cy="188" r="5" fill="#E1BEE7" opacity="0.8"/>
+  <!-- Paintbrush Across Palette -->
+  <g transform="rotate(-35 128 128)">
+    <rect x="122" y="30" width="12" height="150" rx="5" fill="#8D6E63"/>
+    <rect x="120" y="174" width="16" height="24" rx="3" fill="#CFD8DC"/>
+    <path d="M120 198 C120 220 136 220 136 198 Z" fill="#3949AB"/>
+    <circle cx="128" cy="226" r="6" fill="#3949AB"/>
+  </g>
+</svg>

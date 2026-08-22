@@ -3,7 +3,7 @@ id = "org.greia.pasticceria-magica"
 legacy_ids = []
 title_key = "activity.pasticceria_magica.title"
 version = "0.1.0"
-icon = "potions"
+icon = "package:assets/icon.png"
 languages = ["it", "en"]
 
 [presentation]

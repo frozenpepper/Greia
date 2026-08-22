@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="card_front" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#F5F5F5"/>
+    </linearGradient>
+  </defs>
+  <!-- Back Card Shadow & Body -->
+  <rect x="90" y="38" width="118" height="150" rx="20" fill="#42A5F5" stroke="#1E88E5" stroke-width="6" transform="rotate(14 149 113)"/>
+  <circle cx="149" cy="113" r="32" fill="#E3F2FD" transform="rotate(14 149 113)"/>
+  <polygon points="149,95 153,106 164,106 156,113 159,124 149,117 139,124 142,113 134,106 145,106" fill="#1E88E5" transform="rotate(14 149 113)"/>
+  <!-- Front Overlapping Matching Card -->
+  <rect x="42" y="64" width="118" height="150" rx="20" fill="url(#card_front)" stroke="#FFB300" stroke-width="6" transform="rotate(-8 101 139)"/>
+  <!-- Inner Star Emblem -->
+  <g transform="rotate(-8 101 139)">
+    <circle cx="101" cy="139" r="36" fill="#FFF8E1" stroke="#FFD54F" stroke-width="4"/>
+    <!-- Smiling Golden Star -->
+    <polygon points="101,115 106,129 121,129 110,138 114,152 101,143 88,152 92,138 81,129 96,129" fill="#FFC107"/>
+    <!-- Star Face -->
+    <circle cx="97" cy="135" r="2.5" fill="#5D4037"/>
+    <circle cx="105" cy="135" r="2.5" fill="#5D4037"/>
+    <path d="M98 140 Q101 144 104 140" fill="none" stroke="#5D4037" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <!-- Sparkles -->
+  <polygon points="186,40 190,48 198,48 192,54 194,62 186,57 178,62 180,54 174,48 182,48" fill="#FFD54F"/>
+</svg>

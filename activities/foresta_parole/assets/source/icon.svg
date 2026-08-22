@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="owl_body" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#7E57C2"/>
+      <stop offset="100%" stop-color="#512DA8"/>
+    </linearGradient>
+    <linearGradient id="owl_tummy" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#EDE7F6"/>
+      <stop offset="100%" stop-color="#D1C4E9"/>
+    </linearGradient>
+  </defs>
+  <!-- Oak Branch -->
+  <path d="M24 190 Q120 170 232 195" fill="none" stroke="#795548" stroke-width="14" stroke-linecap="round"/>
+  <circle cx="68" cy="180" r="14" fill="#66BB6A"/>
+  <circle cx="82" cy="172" r="10" fill="#81C784"/>
+  <circle cx="188" cy="185" r="14" fill="#66BB6A"/>
+  <!-- Owl Body -->
+  <ellipse cx="128" cy="120" rx="58" ry="64" fill="url(#owl_body)"/>
+  <!-- Ear Tufts -->
+  <polygon points="80,72 88,38 108,65" fill="#512DA8"/>
+  <polygon points="176,72 168,38 148,65" fill="#512DA8"/>
+  <!-- Belly -->
+  <ellipse cx="128" cy="138" rx="38" ry="40" fill="url(#owl_tummy)"/>
+  <!-- Belly Feather Scallops -->
+  <path d="M116 126 Q128 132 140 126 M110 142 Q128 150 146 142 M116 158 Q128 164 140 158" fill="none" stroke="#9575CD" stroke-width="3" stroke-linecap="round"/>
+  <!-- Big Eyes -->
+  <circle cx="102" cy="98" r="22" fill="#FFF59D"/>
+  <circle cx="102" cy="98" r="16" fill="#FFA000"/>
+  <circle cx="102" cy="98" r="10" fill="#212121"/>
+  <circle cx="98" cy="94" r="4" fill="#FFFFFF"/>
+  <circle cx="154" cy="98" r="22" fill="#FFF59D"/>
+  <circle cx="154" cy="98" r="16" fill="#FFA000"/>
+  <circle cx="154" cy="98" r="10" fill="#212121"/>
+  <circle cx="150" cy="94" r="4" fill="#FFFFFF"/>
+  <!-- Beak -->
+  <polygon points="120,108 136,108 128,124" fill="#FF7043"/>
+  <!-- Letter Sparkles -->
+  <text x="180" y="68" font-family="Arial, sans-serif" font-weight="bold" font-size="28" fill="#FFD54F">A</text>
+  <text x="52" y="78" font-family="Arial, sans-serif" font-weight="bold" font-size="24" fill="#80D8FF">B</text>
+  <!-- Feet Claws -->
+  <ellipse cx="114" cy="184" rx="8" ry="4" fill="#FF7043"/>
+  <ellipse cx="142" cy="184" rx="8" ry="4" fill="#FF7043"/>
+</svg>

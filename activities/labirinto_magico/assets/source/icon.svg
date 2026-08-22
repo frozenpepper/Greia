@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="maze_bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8F5E9"/>
+      <stop offset="100%" stop-color="#C8E6C9"/>
+    </linearGradient>
+  </defs>
+  <!-- Maze Ground Plate -->
+  <rect x="28" y="28" width="200" height="200" rx="36" fill="url(#maze_bg)" stroke="#81C784" stroke-width="8"/>
+  <!-- Labyrinth Wall Paths -->
+  <path d="M60 60 L196 60 L196 196 L60 196 Z" fill="none" stroke="#2E7D32" stroke-width="12" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M60 128 L160 128 L160 96 L96 96 L96 164 L160 164" fill="none" stroke="#43A047" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Path Opening Gaps -->
+  <circle cx="60" cy="96" r="10" fill="#E8F5E9"/>
+  <!-- Golden Goal Star at Center -->
+  <g transform="translate(128, 128)">
+    <circle cx="0" cy="0" r="22" fill="#FFD54F" stroke="#FFA000" stroke-width="4"/>
+    <polygon points="0,-15 4,-4 15,-4 7,3 10,14 0,7 -10,14 -7,3 -15,-4 -4,-4" fill="#D84315"/>
+  </g>
+  <!-- Flag / Start Indicator -->
+  <circle cx="60" cy="60" r="8" fill="#FF5252"/>
+</svg>

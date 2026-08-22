@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="toolbox" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#8D6E63"/>
+      <stop offset="100%" stop-color="#5D4037"/>
+    </linearGradient>
+    <linearGradient id="gear" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFD54F"/>
+      <stop offset="100%" stop-color="#FF8F00"/>
+    </linearGradient>
+  </defs>
+  <!-- Wooden Toolbox Body -->
+  <rect x="42" y="112" width="172" height="106" rx="16" fill="url(#toolbox)" stroke="#3E2723" stroke-width="6"/>
+  <!-- Metal Corner Brackets -->
+  <rect x="42" y="112" width="20" height="20" fill="#CFD8DC"/>
+  <rect x="194" y="112" width="20" height="20" fill="#CFD8DC"/>
+  <rect x="42" y="198" width="20" height="20" fill="#CFD8DC"/>
+  <rect x="194" y="198" width="20" height="20" fill="#CFD8DC"/>
+  <!-- Wooden Handle Bar -->
+  <rect x="68" y="52" width="120" height="16" rx="8" fill="#D7CCC8" stroke="#5D4037" stroke-width="4"/>
+  <rect x="68" y="52" width="16" height="64" rx="4" fill="#8D6E63"/>
+  <rect x="172" y="52" width="16" height="64" rx="4" fill="#8D6E63"/>
+  <!-- Large Golden Gear Emerging From Toolbox -->
+  <g transform="translate(128, 128)">
+    <circle cx="0" cy="0" r="44" fill="url(#gear)" stroke="#E65100" stroke-width="5"/>
+    <circle cx="0" cy="0" r="16" fill="#5D4037"/>
+    <!-- Cog Teeth -->
+    <rect x="-8" y="-54" width="16" height="14" rx="3" fill="#FFCA28"/>
+    <rect x="-8" y="40" width="16" height="14" rx="3" fill="#FFCA28"/>
+    <rect x="-54" y="-8" width="14" height="16" rx="3" fill="#FFCA28"/>
+    <rect x="40" y="-8" width="14" height="16" rx="3" fill="#FFCA28"/>
+    <rect x="-40" y="-40" width="16" height="14" rx="3" fill="#FFCA28" transform="rotate(45 -32 -33)"/>
+    <rect x="24" y="24" width="16" height="14" rx="3" fill="#FFCA28" transform="rotate(45 32 31)"/>
+    <rect x="-40" y="24" width="16" height="14" rx="3" fill="#FFCA28" transform="rotate(-45 -32 31)"/>
+    <rect x="24" y="-40" width="16" height="14" rx="3" fill="#FFCA28" transform="rotate(-45 32 -33)"/>
+  </g>
+  <!-- Sliders / Tool Accent -->
+  <line x1="80" y1="184" x2="176" y2="184" stroke="#42A5F5" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="140" cy="184" r="10" fill="#FFFFFF" stroke="#1E88E5" stroke-width="4"/>
+</svg>

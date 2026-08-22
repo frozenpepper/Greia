@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "locale": "it",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Sillabe Magiche",
+    "mode.explorer": "Sillabario",
+    "mode.catcher": "Acchiappa",
+    "mode.builder": "Crea Parole",
+    "prompt.explore": "Tocca una consonante e scopri le sillabe!",
+    "prompt.catch": "Ascolta e tocca la sillaba giusta!",
+    "prompt.build": "Componi la parola con le due sillabe!",
+    "feedback.correct": "Bravissima!",
+    "feedback.fantastic": "Fantastico!",
+    "feedback.super": "Super!",
+    "feedback.word_complete": "Parola completata!",
+    "ui.replay_audio": "Riascolta suono",
+    "ui.stars": "Stelle"
+  }
+}

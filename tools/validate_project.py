@@ -46,8 +46,11 @@ def main() -> int:
     progression = ProgressionPolicy.load(
         root / "runtime" / "progression-policy.toml", activities
     )
+    from greia_platform.activity_assets import package_icon_path
+
     for activity in activities:
-        assets.get(activity.icon_id)
+        if package_icon_path(activity) is None:
+            assets.get(activity.icon_id)
 
     package_root = root / "build" / "package-sets"
     image_profiles = []

@@ -3,7 +3,7 @@ id = "org.greia.treno-numeri"
 legacy_ids = []
 title_key = "activity.treno_numeri.title"
 version = "0.1.0"
-icon = "train_blocks"
+icon = "package:assets/icon.png"
 languages = ["it", "en"]
 
 [presentation]

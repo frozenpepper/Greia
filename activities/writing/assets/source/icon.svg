@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="page" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#F5F5F5"/>
+    </linearGradient>
+    <linearGradient id="pencil" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFD54F"/>
+      <stop offset="50%" stop-color="#FFCA28"/>
+      <stop offset="100%" stop-color="#FFA000"/>
+    </linearGradient>
+  </defs>
+  <!-- Lined Notebook Page -->
+  <rect x="42" y="38" width="172" height="180" rx="16" fill="url(#page)" stroke="#CFD8DC" stroke-width="6"/>
+  <!-- Red Margin Line -->
+  <line x1="76" y1="38" x2="76" y2="218" stroke="#EF5350" stroke-width="3" opacity="0.7"/>
+  <!-- Blue Ruled Lines -->
+  <line x1="48" y1="78" x2="208" y2="78" stroke="#90CAF9" stroke-width="2"/>
+  <line x1="48" y1="114" x2="208" y2="114" stroke="#90CAF9" stroke-width="2"/>
+  <line x1="48" y1="150" x2="208" y2="150" stroke="#90CAF9" stroke-width="2"/>
+  <line x1="48" y1="186" x2="208" y2="186" stroke="#90CAF9" stroke-width="2"/>
+  <!-- Cursive / ABC Loops -->
+  <path d="M88 114 Q100 94 112 114 Q124 134 136 114 Q148 94 160 114" fill="none" stroke="#1565C0" stroke-width="4" stroke-linecap="round"/>
+  <!-- Yellow Drafting Pencil -->
+  <g transform="translate(142, 64) rotate(42)">
+    <!-- Eraser & Ferrule -->
+    <rect x="-10" y="-80" width="20" height="24" rx="4" fill="#FF8A80"/>
+    <rect x="-11" y="-58" width="22" height="12" rx="2" fill="#B0BEC5"/>
+    <!-- Pencil Body -->
+    <rect x="-10" y="-46" width="20" height="96" fill="url(#pencil)"/>
+    <!-- Wood Sharpened Cone -->
+    <polygon points="-10,50 10,50 0,78" fill="#D7CCC8"/>
+    <!-- Graphite Lead Tip -->
+    <polygon points="-4,68 4,68 0,78" fill="#37474F"/>
+  </g>
+</svg>

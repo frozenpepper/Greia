@@ -308,15 +308,15 @@ class SharedUiActivityCardMixin:
 
         content_rect = pygame.Rect(
             card_rect.left + round(card_rect.width * 45 / self._CARD_SOURCE_WIDTH),
-            card_rect.top + round(card_rect.height * 43 / self._CARD_SOURCE_HEIGHT),
+            card_rect.top + round(card_rect.height * 32 / self._CARD_SOURCE_HEIGHT),
             max(1, round(card_rect.width * 270 / self._CARD_SOURCE_WIDTH)),
-            max(1, round(card_rect.height * 236 / self._CARD_SOURCE_HEIGHT)),
+            max(1, round(card_rect.height * 224 / self._CARD_SOURCE_HEIGHT)),
         )
         label_rect = pygame.Rect(
-            card_rect.left + round(card_rect.width * 48 / self._CARD_SOURCE_WIDTH),
-            card_rect.top + round(card_rect.height * 300 / self._CARD_SOURCE_HEIGHT),
-            max(1, round(card_rect.width * 264 / self._CARD_SOURCE_WIDTH)),
-            max(1, round(card_rect.height * 57 / self._CARD_SOURCE_HEIGHT)),
+            card_rect.left + round(card_rect.width * 36 / self._CARD_SOURCE_WIDTH),
+            card_rect.top + round(card_rect.height * 260 / self._CARD_SOURCE_HEIGHT),
+            max(1, round(card_rect.width * 288 / self._CARD_SOURCE_WIDTH)),
+            max(1, round(card_rect.height * 96 / self._CARD_SOURCE_HEIGHT)),
         )
 
         icon_size = max(
@@ -331,11 +331,11 @@ class SharedUiActivityCardMixin:
 
         title = self._render_activity_label(
             self._activity_title_for_shared_card(activity),
-            max_width=max(28, label_rect.width - 12),
-            max_height=max(22, label_rect.height - 8),
+            max_width=max(28, label_rect.width - 8),
+            max_height=max(22, label_rect.height - 6),
             pygame=pygame,
             color=theme.text,
-            preferred_size=max(16, min(24, card_rect.height // 8)),
+            preferred_size=max(15, min(20, card_rect.height // 9)),
         )
         screen.blit(title, title.get_rect(center=label_rect.center))
 

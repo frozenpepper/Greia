@@ -39,6 +39,7 @@ class ActivityContractTests(unittest.TestCase):
                 "org.greia.pasticceria-magica",
                 "org.greia.piccola-serra",
                 "org.greia.shape-garden",
+                "org.greia.sillabe-magiche",
                 "org.greia.teatrino-fiabe",
                 "org.greia.treno-numeri",
                 "org.greia.volo-draghetto",
@@ -48,7 +49,7 @@ class ActivityContractTests(unittest.TestCase):
         )
         by_id = {activity.activity_id: activity for activity in activities}
         self.assertEqual(by_id["org.greia.shape-garden"].legacy_ids, ("shape_garden",))
-        self.assertEqual(by_id["org.greia.shape-garden"].icon_id, "garden")
+        self.assertEqual(by_id["org.greia.shape-garden"].icon_id, "package:assets/icon.png")
         self.assertEqual(
             by_id["org.greia.shape-garden"].launcher_categories,
             ("create", "learn"),

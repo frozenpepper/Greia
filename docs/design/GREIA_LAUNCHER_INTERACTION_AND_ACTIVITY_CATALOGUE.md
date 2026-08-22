@@ -79,26 +79,14 @@ src/greia_launcher/child_shell.py
 
 An Activity tile has two explicit visual regions:
 
-1. artwork/icon region;
-2. reserved readable name band.
+1. **Artwork/icon region**: contain-fitted in a square frame preserving original aspect ratio with **10–12% safe padding** around artwork, topped with soft launcher shadow treatment.
+2. **Reserved readable name band**: supports **two-line centered presentation** (max 2 visible lines, word-aware wrapping with safe Unicode grapheme cluster fallback). A defensive display cap of **48 grapheme clusters** is enforced before card ellipsis (`…`).
 
-Text fitting may reduce font size and, only as a final fallback, ellipsize. Glyphs are not geometrically squashed. The icon remains visually dominant without making the title disappear.
+### Hover, focus, and full-title disclosure
 
-### Primary Collection anatomy
+Hovered/selected Activities and Collections use a small lift/scale and stronger emphasis.
 
-Primary Collections are stronger destinations than filter controls. Current real Shell uses the shared `ui.portal.frame/default` destination treatment. A Collection may visually resemble a box/book/bag/portal/shelf/room, but the semantic object is not a filesystem directory.
-
-Each destination needs:
-
-- stable semantic icon/art identity;
-- localized title where useful;
-- large child-sized target;
-- clear selected/hovered state;
-- bounded ambient treatment only when it does not obscure choice or add unbounded cost.
-
-### Hover and selection
-
-Hovered/selected Activities and Collections use a small lift/scale and stronger emphasis. The effect remains subtle; selection must be obvious without a pointer.
+Additionally, hovering with a pointer or selecting via keyboard discloses the **full uncapped localized title** in a small, Greia-native floating callout pill. The disclosure pill is bounded to the visible screen area and strictly avoids overlapping the top-left Home/Profile control region. Static tile surface caches remain separate and are never poisoned by dynamic disclosure state.
 
 ### Activity launch sequence
 

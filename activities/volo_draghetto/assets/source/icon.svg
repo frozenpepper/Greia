@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="dragon_body" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4CAF50"/>
+      <stop offset="100%" stop-color="#2E7D32"/>
+    </linearGradient>
+  </defs>
+  <!-- Clouds -->
+  <circle cx="64" cy="192" r="28" fill="#E1F5FE"/>
+  <circle cx="104" cy="180" r="38" fill="#E1F5FE"/>
+  <circle cx="150" cy="192" r="30" fill="#E1F5FE"/>
+  <circle cx="196" cy="198" r="24" fill="#E1F5FE"/>
+  <!-- Dragon Body -->
+  <ellipse cx="120" cy="132" rx="48" ry="40" fill="url(#dragon_body)"/>
+  <!-- Yellow Belly -->
+  <path d="M96 142 C104 162 136 162 144 142 Z" fill="#FFF59D"/>
+  <!-- Head -->
+  <circle cx="156" cy="98" r="34" fill="url(#dragon_body)"/>
+  <!-- Cute Horns & Back Spikes -->
+  <polygon points="172,74 186,52 164,68" fill="#FFCA28"/>
+  <polygon points="152,70 160,46 142,66" fill="#FFCA28"/>
+  <polygon points="110,94 100,78 116,92" fill="#FFA000"/>
+  <polygon points="94,106 82,92 100,104" fill="#FFA000"/>
+  <!-- Wings -->
+  <path d="M110 120 Q90 50 142 62 Q128 88 126 120 Z" fill="#FF7043" stroke="#D84315" stroke-width="4"/>
+  <!-- Big Eye & Smile -->
+  <circle cx="170" cy="92" r="10" fill="#FFFFFF"/>
+  <circle cx="173" cy="92" r="5" fill="#212121"/>
+  <circle cx="169" cy="89" r="2" fill="#FFFFFF"/>
+  <path d="M168 108 Q176 116 182 108" fill="none" stroke="#1B5E20" stroke-width="3" stroke-linecap="round"/>
+  <!-- Rosy Cheek -->
+  <circle cx="154" cy="106" r="6" fill="#FF8A80" opacity="0.7"/>
+</svg>

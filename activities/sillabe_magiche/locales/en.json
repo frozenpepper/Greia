@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "locale": "en",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Magic Syllables",
+    "mode.explorer": "Syllabary",
+    "mode.catcher": "Catch",
+    "mode.builder": "Word Builder",
+    "prompt.explore": "Tap a consonant and discover the syllables!",
+    "prompt.catch": "Listen and find the right syllable!",
+    "prompt.build": "Build the word with the two syllables!",
+    "feedback.correct": "Great job!",
+    "feedback.fantastic": "Fantastic!",
+    "feedback.super": "Super!",
+    "feedback.word_complete": "Word completed!",
+    "ui.replay_audio": "Replay sound",
+    "ui.stars": "Stars"
+  }
+}

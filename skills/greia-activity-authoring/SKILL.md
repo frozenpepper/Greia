@@ -352,29 +352,31 @@ icon = "palette"
 
 ### Package-owned icon
 
-Portable Activities may carry their own visual identity:
+All first-party and portable Activities carry their own distinct visual identity:
 
 ```toml
 [activity]
 icon = "package:assets/icon.png"
 ```
 
-Current package-owned icon rules are owned by `src/greia_platform/activity_assets.py`:
+Current package-owned icon rules are owned by `src/greia_platform/activity_assets.py` and `src/greia_launcher/title_presentation.py`:
 
 - PNG or WebP;
 - relative path only;
 - no `.`/`..` traversal;
 - bounded depth/length;
-- must resolve to a regular file strictly inside the validated package root.
+- must resolve to a regular file strictly inside the validated package root;
+- authoring with clean SVG masters in `assets/source/icon.svg` baked to 256x256 RGBA PNGs;
+- contain-fit with 10–12% safe outer padding around artwork to avoid shadow/frame clipping;
+- zero duplicate icon identities across first-party packages.
 
-Recommended visual authoring:
+### Activity card titles and full-title disclosure
 
-- square source canvas;
-- transparent background where appropriate;
-- clear silhouette at launcher scale;
-- important detail away from the outer 8–10%;
-- no required text inside the icon;
-- expect launcher shadow/depth treatment.
+Activity Card Title rules:
+- Maximum 2 visible lines, word-aware wrapping with safe Unicode grapheme cluster fallback, centered;
+- Defensive display cap of 48 grapheme clusters on card tiles before ellipsis (`…`);
+- Full localized title disclosed on pointer hover and keyboard focus in a native floating callout pill;
+- Floating disclosure pill respects safe boundaries and never covers top-left Home/Profile controls.
 
 ### Do not bake language into the Activity icon
 
@@ -694,6 +696,28 @@ Translations vary in length. Let ADR 0026 responsive layout absorb the differenc
 Do not create an Italian coordinate table and an English coordinate table.
 
 For canvas/world games, put translated HUD/instructions in fluid/safe UI layers where practical. If localized text belongs inside a fixed logical scene, give it logical bounds that shared text-fitting/wrapping can use.
+
+### 10.11 Mandatory Audio Sequencing & Non-Overlapping Spoken Prompts
+
+In early childhood Activities (ages 3–7), clear voice pronunciation and feedback are essential pedagogical anchors. Spoken phrases, phonetic syllables, praise words, and instructions must **never play concurrently or collide over one another**.
+
+To ensure clear, intelligible speech and avoid cacophony:
+
+1. **Explicit Audio Delay & State Sequencing**:
+   - When a child solves a task or pops/matches a target, do not immediately play congratulations and next-round prompt simultaneously.
+   - Use a sequential timer / state machine:
+     - **Step 1 (Immediate)**: Play the item/syllable/object sound effect or voice (e.g. *"BA!"* or pop chime).
+     - **Step 2 (Praise Delay ~0.4s to 0.6s)**: After the primary clip finishes, trigger the celebratory praise (e.g. *"Bravissima!"* / *"Great job!"*).
+     - **Step 3 (Next Round Delay ~0.8s to 1.2s)**: Once praise playback completes, advance to the new round and speak the next target prompt (e.g. *"Trova: ME!"*).
+2. **Startup & Lifecycle Silence**:
+   - Never trigger multiple voice prompts during initial module import or inside the initialization phase before the first frame is presented.
+   - Initial instruction/greeting audio should only trigger after `mark_activity_ready()` and a small initial stabilization interval (~0.3s–0.5s).
+3. **Phonetic / Syllabic Breakdown Pacing**:
+   - When spelling or pronouncing multi-syllable words (e.g. *"CA"* ... *"SA"*), enforce a dedicated pause interval (0.35s–0.5s) between syllables rather than firing clips in rapid succession.
+4. **Input Gating During Critical Spoken Feedback**:
+   - Temporarily gate rapid spam clicking during transition celebrations so spoken rewards and corrective prompts are clearly heard and processed by the child.
+5. **No Concurrent Synthetic SFX Over Spoken Voice**:
+   - Never play transient sound effects (e.g. click pops, swooshes, boings, spring wobbles) at the exact moment a spoken phoneme, syllable, or word clip begins. The synthetic sound clips over the initial consonants and degrades phonetic intelligibility for early literacy learners.
 
 ## 11. Scrolling collections
 

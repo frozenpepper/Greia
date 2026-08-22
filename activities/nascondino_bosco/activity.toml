@@ -3,7 +3,7 @@ id = "org.greia.nascondino-bosco"
 legacy_ids = []
 title_key = "activity.nascondino_bosco.title"
 version = "0.1.0"
-icon = "magnifier"
+icon = "package:assets/icon.png"
 languages = ["it", "en"]
 
 [presentation]

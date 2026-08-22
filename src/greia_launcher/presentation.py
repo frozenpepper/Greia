@@ -30,6 +30,14 @@ from greia_platform.ui_scroll import ScrollModel
 from .activity_icon import ActivityIconError, package_icon_path
 from .catalogue_view import ALL_ACTIVITIES_ID, ActivityCatalogue, _category_title
 from .composition import build_launcher_runtime_services, provisional_installed_display_session
+from .title_presentation import (
+    CARD_TITLE_DISPLAY_CAP,
+    cap_title_for_card,
+    contain_fit_icon_surface,
+    render_activity_card_label,
+    render_full_title_disclosure_surface,
+    split_title_two_lines,
+)
 from .main import (
     HitTarget,
     LauncherApplication,
@@ -527,6 +535,85 @@ class GreiaLauncherPresentation(LauncherApplication):
         saved_targets.extend(self._targets)
         self._targets = saved_targets
         screen.blit(self._cached_activities_surface, (0, 0))
+        self._draw_activity_title_disclosure(screen, theme, pygame)
+
+    def _draw_activity_title_disclosure(
+        self, screen: Any, theme: LauncherThemeSnapshot, pygame: Any
+    ) -> None:
+        try:
+            activities = self._presented_activities
+            if not activities:
+                return
+            pointer = self._pointer_pos(pygame)
+            pointer_active = self._is_pointer_active(pygame)
+
+            target_activity = None
+            target_rect = None
+
+            if pointer_active and self._cached_activities_targets:
+                for target in self._cached_activities_targets:
+                    if target.action == "presented_activity" and target.rect.collidepoint(pointer):
+                        if 0 <= target.value < len(activities):
+                            target_activity = activities[target.value]
+                            target_rect = target.rect
+                            break
+
+            if target_activity is None and self._cached_activities_targets:
+                if 0 <= self._selected < len(activities):
+                    for target in self._cached_activities_targets:
+                        if target.action == "presented_activity" and target.value == self._selected:
+                            target_activity = activities[self._selected]
+                            target_rect = target.rect
+                            break
+
+            if target_activity is None or target_rect is None:
+                return
+
+            full_title = _activity_title(target_activity, self._active_locale)
+            if not full_title:
+                return
+
+            font = self._font(16, pygame)
+            width, height = screen.get_size()
+            max_w = min(340, width - 40)
+            pill = render_full_title_disclosure_surface(
+                full_title,
+                font=font,
+                theme=theme,
+                max_width=max_w,
+                pygame=pygame,
+            )
+
+            pw, ph = pill.get_size()
+            px = target_rect.centerx - pw // 2
+            px = max(16, min(width - pw - 16, px))
+
+            # Avoid top-left Home/Profile buttons area (0, 0, 110, 110)
+            if px < 112 and target_rect.top < 110:
+                px = 114
+
+            if target_rect.centery < height // 2:
+                py = target_rect.bottom + 6
+                if py + ph > height - 16:
+                    py = max(80, target_rect.top - ph - 6)
+            else:
+                py = target_rect.top - ph - 6
+                if py < 80:
+                    py = target_rect.bottom + 6
+
+            # Render soft shadow under disclosure pill
+            shadow_offset = 3
+            shadow_surf = pygame.Surface((pw + shadow_offset, ph + shadow_offset), pygame.SRCALPHA)
+            pygame.draw.rect(
+                shadow_surf,
+                (0, 0, 0, 48),
+                pygame.Rect(shadow_offset, shadow_offset, pw, ph),
+                border_radius=12,
+            )
+            screen.blit(shadow_surf, (px, py))
+            screen.blit(pill, (px, py))
+        except Exception:
+            pass
 
     def _render_activities_content(self, screen: Any, theme: Any, pygame: Any) -> None:
         width, height = screen.get_size()
@@ -986,10 +1073,10 @@ class GreiaLauncherPresentation(LauncherApplication):
         # Reserve a real label band instead of treating the Activity name as an
         # incidental caption. This keeps names legible across icon aspect ratios
         # and makes every Activity identifiable even when its artwork is novel.
-        label_height = max(32, min(48, int(tile.height * 0.24)))
+        label_height = max(38, min(56, int(tile.height * 0.28)))
         label_rect = pygame.Rect(
             tile.left + 8,
-            tile.bottom - label_height - 7,
+            tile.bottom - label_height - 6,
             tile.width - 16,
             label_height,
         )
@@ -999,8 +1086,8 @@ class GreiaLauncherPresentation(LauncherApplication):
             label_rect,
             border_radius=max(12, label_height // 3),
         )
-        icon_room = max(54, label_rect.top - tile.top - 20)
-        icon_size = max(52, min(int(tile.width * 0.54), icon_room))
+        icon_room = max(48, label_rect.top - tile.top - 16)
+        icon_size = max(48, min(int(tile.width * 0.54), icon_room))
         icon = self._activity_icon(activity, icon_size, pygame)
         icon_center_y = tile.top + max(12, (label_rect.top - tile.top) // 2)
         screen.blit(
@@ -1009,11 +1096,11 @@ class GreiaLauncherPresentation(LauncherApplication):
         )
         title = self._render_activity_label(
             _activity_title(activity, self._active_locale),
-            max_width=label_rect.width - 14,
-            max_height=label_rect.height - 8,
+            max_width=label_rect.width - 10,
+            max_height=label_rect.height - 4,
             pygame=pygame,
             color=theme.text,
-            preferred_size=max(18, min(25, tile.height // 8)),
+            preferred_size=max(16, min(24, tile.height // 8)),
         )
         screen.blit(title, title.get_rect(center=label_rect.center))
 
@@ -1027,31 +1114,23 @@ class GreiaLauncherPresentation(LauncherApplication):
         color: tuple[int, int, int],
         preferred_size: int,
     ) -> Any:
-        """Fit one Activity name without geometrically distorting glyphs."""
+        """Fit one Activity name without geometrically distorting glyphs using at most two lines."""
 
         cache_key = (text, max_width, max_height, color, preferred_size)
         cached = self._label_surface_cache.get(cache_key)
         if cached is not None:
             return cached
 
-        result = None
-        for size in range(preferred_size, 15, -1):
-            rendered = self._font(size, pygame).render(text, True, color)
-            if rendered.get_width() <= max_width and rendered.get_height() <= max_height:
-                result = rendered
-                break
-        if result is None:
-            shortened = text.strip()
-            font = self._font(16, pygame)
-            while len(shortened) > 3:
-                shortened = shortened[:-2].rstrip()
-                rendered = font.render(shortened + "…", True, color)
-                if rendered.get_width() <= max_width:
-                    result = rendered
-                    break
-            if result is None:
-                result = font.render(shortened or "Activity", True, color)
-
+        result = render_activity_card_label(
+            text,
+            max_width=max_width,
+            max_height=max_height,
+            font_provider=lambda sz: self._font(sz, pygame),
+            color=color,
+            preferred_size=preferred_size,
+            pygame=pygame,
+            min_size=14,
+        )
         self._label_surface_cache[cache_key] = result
         return result
 
@@ -1065,13 +1144,15 @@ class GreiaLauncherPresentation(LauncherApplication):
         try:
             package_path = package_icon_path(activity)
             if package_path is not None:
-                source = pygame.image.load(str(package_path)).convert_alpha()
-                source = pygame.transform.smoothscale(source, (size, size))
+                raw_source = pygame.image.load(str(package_path)).convert_alpha()
+                source = contain_fit_icon_surface(raw_source, size, pygame)
             else:
-                source = self._load_icon(activity.icon_id, size, pygame)
+                raw_source = self._load_icon(activity.icon_id, size, pygame)
+                source = contain_fit_icon_surface(raw_source, size, pygame)
         except (ActivityIconError, OSError, ValueError, pygame.error):
             self._catalogue_error = True
-            source = self._load_icon("robot", size, pygame)
+            raw_source = self._load_icon("robot", size, pygame)
+            source = contain_fit_icon_surface(raw_source, size, pygame)
         decorated = make_shadowed_icon(
             source,
             pygame,

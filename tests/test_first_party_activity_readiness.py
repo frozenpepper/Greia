@@ -134,6 +134,7 @@ class FirstPartyActivityReadinessTests(unittest.TestCase):
                 "pasticceria_magica",
                 "piccola_serra",
                 "shape_garden",
+                "sillabe_magiche",
                 "teatrino_fiabe",
                 "treno_numeri",
                 "volo_draghetto",

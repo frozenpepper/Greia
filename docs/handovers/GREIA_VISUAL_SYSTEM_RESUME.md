@@ -248,7 +248,22 @@ Outcome: **COMPLETE & VERIFIED**
 
 ---
 
-# 9. Drift to avoid
+# 9. Completed launcher gate — ACTIVITY CARD TITLES & UNIQUE ICONS
+
+Completed runbook:
+
+`docs/testing/2026-08-22_ACTIVITY_CARD_TITLES_AND_UNIQUE_ICONS.md`
+
+Outcome: **COMPLETE & VERIFIED**
+- Two-line centered title wrapping with safe Unicode grapheme cluster fallback and 48-grapheme cluster defensive cap.
+- Full uncapped localized title disclosure on pointer hover and keyboard selection via floating callout pill avoiding protected controls.
+- Aspect-ratio preserving contain-fit icon scaling with 10–12% safe padding around artwork.
+- 100% unique package-owned icon migration (`package:assets/icon.png`) with clean SVG masters and baked PNGs across all 19 first-party Activities.
+- 12 curated Simulator captures in `docs/reviews/visual/2026-08-22_activity-card-titles-and-unique-icons/`, `runtime-audit.json`, `OWNER_RECHECK.md`, and root review archive `GREIA_VISUAL_REVIEW_ACTIVITY_CARD_TITLES_UNIQUE_ICONS_2026-08-22.zip`.
+
+---
+
+# 10. Drift to avoid
 
 - no theme-by-theme pack roadmap;
 - no Generic Batch B by inertia;

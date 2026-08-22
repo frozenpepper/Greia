@@ -249,6 +249,14 @@ Avoid as final represented art unless intentionally appropriate:
 - text baked into decorative art where localization should own it;
 - excessive micro-detail that disappears at runtime size.
 
+### Activity Icon Authoring & Contain-Fit Contract
+
+When authoring package-owned Activity icons (`package:assets/icon.png`):
+- Author clean SVG masters under `assets/source/icon.svg` and bake to 256x256 RGBA PNGs;
+- Maintain **10–12% safe padding** around artwork inside the 256x256 square canvas to avoid card edge/shadow clipping;
+- Design strong, distinct silhouettes so every Activity has an instantly recognizable identity at small launcher scales;
+- Do not bake language flags or text inside icons (Greia owns localization badges and titles).
+
 ---
 
 ## 7. Coherence without sameness

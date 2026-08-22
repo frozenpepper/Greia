@@ -3,7 +3,7 @@ id = "org.greia.labirinto-magico"
 legacy_ids = []
 title_key = "activity.labirinto_magico.title"
 version = "0.1.0"
-icon = "map"
+icon = "package:assets/icon.png"
 languages = ["it", "en"]
 
 [presentation]

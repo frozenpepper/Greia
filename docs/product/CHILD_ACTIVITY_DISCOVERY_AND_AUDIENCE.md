@@ -430,6 +430,7 @@ Current source already has:
 - Collection-first Home (`ui.portal.frame` / `CollectionFirstHomeMixin`) replacing the normal `All` landing, accepted via Activity Simulator (`docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md`);
 - bounded primary-vocabulary correction accepted via Activity Simulator (`docs/testing/2026-08-21_COLLECTION_PRIMARY_VOCABULARY_SIMULATOR.md`): arbitrary package categories no longer become launcher Collections, and valid Activities with no recognized primary destination project into platform-owned `browse`/More recovery;
 - built-in Clinic navigation corrected to `play` + `learn` while care/health remains education taxonomy;
+- Activity Card Titles and Unique Icons contract (`docs/testing/2026-08-22_ACTIVITY_CARD_TITLES_AND_UNIQUE_ICONS.md`): 2-line title wrapping, 48-grapheme defensive card cap, full-title hover/focus disclosure pill, 10–12% safe contain-fit icon padding, and 100% unique package-owned icons across all 19 first-party Activities;
 - Parent product direction for later per-child Activity availability/policy.
 
 Current source does **not yet implement**:

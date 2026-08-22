@@ -3,7 +3,7 @@ id = "org.greia.volo-draghetto"
 legacy_ids = []
 title_key = "activity.volo_draghetto.title"
 version = "0.1.0"
-icon = "dinosaur"
+icon = "package:assets/icon.png"
 languages = ["it", "en"]
 
 [presentation]

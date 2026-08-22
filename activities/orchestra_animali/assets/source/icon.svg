@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="brass" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE082"/>
+      <stop offset="50%" stop-color="#FFCA28"/>
+      <stop offset="100%" stop-color="#FF8F00"/>
+    </linearGradient>
+  </defs>
+  <!-- Drum Base -->
+  <ellipse cx="128" cy="200" rx="72" ry="22" fill="#E53935"/>
+  <rect x="56" y="156" width="144" height="44" fill="#E53935"/>
+  <ellipse cx="128" cy="156" rx="72" ry="22" fill="#FFF9C4" stroke="#FFE082" stroke-width="6"/>
+  <!-- Drum Zigzag Rim -->
+  <path d="M56 164 L80 196 L104 164 L128 196 L152 164 L176 196 L200 164" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/>
+  <!-- Brass Trumpet / Horn -->
+  <path d="M68 116 L120 116 L174 72 L174 136 L120 116 Z" fill="url(#brass)"/>
+  <ellipse cx="174" cy="104" rx="14" ry="32" fill="#FF8F00" stroke="#FFE082" stroke-width="4"/>
+  <!-- Trumpet Valves & Piping -->
+  <path d="M68 116 Q48 116 48 96 Q48 76 68 76 L110 76" fill="none" stroke="#FFCA28" stroke-width="8" stroke-linecap="round"/>
+  <rect x="88" y="64" width="8" height="20" rx="3" fill="#FFE082"/>
+  <rect x="102" y="64" width="8" height="20" rx="3" fill="#FFE082"/>
+  <!-- Floating Music Notes -->
+  <g fill="#9C27B0">
+    <circle cx="196" cy="62" r="9"/>
+    <circle cx="218" cy="52" r="9"/>
+    <rect x="203" y="24" width="6" height="38"/>
+    <rect x="225" y="14" width="6" height="38"/>
+    <polygon points="203,24 231,14 231,24 203,34"/>
+  </g>
+  <circle cx="186" cy="144" r="7" fill="#4CAF50"/>
+  <rect x="191" y="118" width="5" height="26" fill="#4CAF50"/>
+</svg>

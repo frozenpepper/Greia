@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="curtain" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#E53935"/>
+      <stop offset="100%" stop-color="#B71C1C"/>
+    </linearGradient>
+  </defs>
+  <!-- Stage Board Base -->
+  <rect x="28" y="196" width="200" height="26" rx="6" fill="#8D6E63" stroke="#5D4037" stroke-width="5"/>
+  <!-- Fairytale Castle in Background -->
+  <rect x="106" y="90" width="44" height="106" fill="#CFD8DC"/>
+  <polygon points="128,42 96,90 160,90" fill="#5C6BC0"/>
+  <rect x="120" y="148" width="16" height="48" rx="8" fill="#37474F"/>
+  <!-- Left & Right Drapery Curtains -->
+  <path d="M28 40 L96 40 C76 80 44 130 28 196 Z" fill="url(#curtain)"/>
+  <path d="M228 40 L160 40 C180 80 212 130 228 196 Z" fill="url(#curtain)"/>
+  <!-- Top Scalloped Valance -->
+  <path d="M28 40 L228 40 L228 66 Q194 82 161 66 Q128 82 95 66 Q61 82 28 66 Z" fill="#D32F2F" stroke="#FFD54F" stroke-width="4"/>
+  <!-- Gold Curtain Tassels -->
+  <circle cx="56" cy="142" r="7" fill="#FFD54F"/>
+  <circle cx="200" cy="142" r="7" fill="#FFD54F"/>
+</svg>

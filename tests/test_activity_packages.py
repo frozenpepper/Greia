@@ -201,7 +201,7 @@ class ActivityPackageServiceTests(unittest.TestCase):
                 PAINTING,
                 archive,
                 manifest_transform=lambda text: text.replace(
-                    'icon = "palette"',
+                    'icon = "package:assets/icon.png"',
                     'icon = "package:assets/missing.png"',
                 ),
             )

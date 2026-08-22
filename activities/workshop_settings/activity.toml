@@ -3,7 +3,7 @@ id = "org.greia.workshop-settings"
 legacy_ids = ["workshop_settings"]
 title_key = "My Greia"
 version = "0.2.0"
-icon = "palette"
+icon = "package:assets/icon.png"
 languages = ["it", "en"]
 
 [presentation]

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Grassy Soil Mound -->
+  <ellipse cx="128" cy="216" rx="88" ry="20" fill="#43A047"/>
+  <ellipse cx="128" cy="212" rx="84" ry="16" fill="#66BB6A"/>
+  <!-- Left Stem & Triangle Blossom -->
+  <path d="M78 205 Q74 150 82 118" fill="none" stroke="#2E7D32" stroke-width="6" stroke-linecap="round"/>
+  <polygon points="82,74 54,122 110,122" fill="#FF5252" stroke="#D32F2F" stroke-width="5" stroke-linejoin="round"/>
+  <circle cx="82" cy="104" r="8" fill="#FFEB3B"/>
+  <!-- Center Stem & Circle Blossom -->
+  <path d="M128 200 L128 96" fill="none" stroke="#2E7D32" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="128" cy="74" r="30" fill="#FFCA28" stroke="#FFA000" stroke-width="6"/>
+  <circle cx="128" cy="74" r="14" fill="#FF7043"/>
+  <circle cx="124" cy="70" r="4" fill="#FFFFFF"/>
+  <!-- Right Stem & Square / Diamond Blossom -->
+  <path d="M178 205 Q182 150 174 118" fill="none" stroke="#2E7D32" stroke-width="6" stroke-linecap="round"/>
+  <rect x="150" y="74" width="48" height="48" rx="8" fill="#42A5F5" stroke="#1976D2" stroke-width="5" transform="rotate(45 174 98)"/>
+  <circle cx="174" cy="98" r="8" fill="#E1F5FE"/>
+  <!-- Sprout Leaves -->
+  <path d="M128 160 Q108 152 114 142 Q126 146 128 160" fill="#81C784"/>
+  <path d="M128 146 Q148 138 142 128 Q130 132 128 146" fill="#81C784"/>
+</svg>

@@ -3,7 +3,7 @@ id = "org.greia.piccola-serra"
 legacy_ids = []
 title_key = "activity.piccola_serra.title"
 version = "0.1.0"
-icon = "garden"
+icon = "package:assets/icon.png"
 languages = ["it", "en"]
 
 [presentation]

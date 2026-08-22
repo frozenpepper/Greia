@@ -3,7 +3,7 @@ id = "org.greia.writing"
 legacy_ids = []
 title_key = "activity.writing.title"
 version = "0.1.0"
-icon = "abc_board"
+icon = "package:assets/icon.png"
 languages = ["it", "en"]
 
 [presentation]

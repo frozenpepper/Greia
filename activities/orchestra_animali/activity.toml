@@ -3,7 +3,7 @@ id = "org.greia.orchestra-animali"
 legacy_ids = []
 title_key = "activity.orchestra_animali.title"
 version = "0.1.0"
-icon = "music_star"
+icon = "package:assets/icon.png"
 languages = ["it", "en"]
 
 [presentation]
