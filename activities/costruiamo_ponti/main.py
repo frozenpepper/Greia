@@ -338,6 +338,7 @@ def main() -> int:
     start_time = time.time()
 
     while running and not activity_stop_requested():
+        frame_start = time.monotonic()
         cur_lvl = LEVELS[level_idx % len(LEVELS)]
         required = cur_lvl["required"]
         num_slots = len(required)
@@ -799,7 +800,9 @@ def main() -> int:
             mark_activity_ready()
             ready_published = True
 
-        clock.tick(30)
+        elapsed_frame = time.monotonic() - frame_start
+        delay = max(0.002, (1.0 / 30.0) - elapsed_frame)
+        time.sleep(delay)
 
     pygame.quit()
     return 0
