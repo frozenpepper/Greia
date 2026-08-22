@@ -1,55 +1,100 @@
 # Launcher / Activity Pacing Performance Changes — Owner Review
 
 **Date:** 2026-08-22  
-**Status:** **PROMISING SOURCE CHANGES — PERFORMANCE ACCEPTANCE NOT YET CLOSED**
+**Status:** **IMPLEMENTATION PROMISING — ACCEPTANCE EVIDENCE RECHECK REQUIRED**
 
 ## Reviewed commits
 
 - `b9953c77072e9ce2670387417a293ab256206d9a` — dirty-aware launcher presentation plus Costruiamo Ponti caching/pre-rendering work
 - `11b7ba4209416665092fad12fe820e1de47973c9` — manual `time.sleep` frame pacing
+- `59d6f5d911c904bb2ef0b424bcebe0adff81225f` — attempted performance acceptance gate completion
 
-## What looks good
+## Source-level disposition
 
-The general direction of the first performance commit is sound:
+The **dirty-aware rendering direction is accepted as the current candidate architecture**. Do not revert it merely because the evidence package needs correction.
 
-- static launcher frames no longer need to be redrawn/flipped continuously when nothing visible changed;
-- Costruiamo Ponti avoids repeated scaling of stable PNGs;
-- block icon scaling is cached;
-- stable world gradients are pre-rendered rather than rebuilt line-by-line every frame;
-- the crossing correctness fix is useful independently of the performance work.
+The following changes are directionally sound and worth preserving unless the recheck finds a concrete bug:
 
-These are appropriate optimizations for Greia's low-resource target philosophy because they remove unnecessary work rather than lowering visual quality.
+- no continuous full launcher redraw when nothing visible changed;
+- explicit redraw signals for Activity/profile rescans and parent-panel asynchronous updates;
+- mouse-motion filtering by hit-target boundary rather than every motion packet;
+- bounded presentation caches;
+- Costruiamo Ponti pre-scaling, stable gradient pre-rendering and block-icon scaling cache;
+- Costruiamo Ponti single-completion crossing fix.
 
-## What is not yet accepted
+## Why the gate cannot be marked accepted yet
 
-### 1. The `Clock.tick()` premise is not established
+The submitted evidence contradicts both the runbook and itself in several places.
 
-The follow-up commit describes `pygame.time.Clock.tick()` as busy-spin pacing. That is not a safe premise: Pygame distinguishes ordinary `tick()` from the explicitly CPU-hungry `tick_busy_loop()` path.
+### 1. Required idle sample duration was not met
 
-Manual `time.sleep()` may still be the better choice on Greia's target environment, but that must be demonstrated by measurements rather than assumed from the API name.
+The gate explicitly required **at least 15 seconds after warm-up** for B1 and B2.
 
-### 2. Dirty redraw introduces invalidation correctness risk
+`measurement-samples.json` records approximately **4 seconds** per baseline/candidate idle sample (`4.00–4.05 s`). Those samples are useful diagnostics, but they do not satisfy the acceptance protocol.
 
-`GreiaLauncherPresentation.run()` now redraws only when `_needs_redraw`, launch animation, or first-frame state says it should.
+### 2. Launch-animation evidence explicitly says continuity failed
 
-That is a good optimization only if every visible asynchronous change invalidates the frame.
+`performance-audit.json` records:
 
-Current source calls paths such as `_rescan_if_due()` and parent-panel draining without an obvious dirty/change signal. A parent-installed Activity appearing, asynchronous parent-panel state changing, or another non-input-visible transition could therefore leave stale pixels until a later user event.
+- `frames_rendered_in_400ms: 15`
+- `effective_fps: 37.5`
+- `is_continuous: false`
 
-This must be tested explicitly and repaired through clear invalidation contracts where necessary.
+The same report nevertheless concludes `PERFORMANCE_PACING_DIRTY_REDRAW_ACCEPTED` and describes the animation as smooth/continuous. The gate requires continuous launch motion as a hard acceptance condition. This contradiction must be resolved with a correct measurement, not prose.
 
-### 3. No owner-grade performance evidence yet
+### 3. Memory reporting is internally inconsistent
 
-Source-level plausibility is not enough for performance claims. We need before/after measurements covering idle Shell load, active animation, event responsiveness, frame pacing and at least one representative Activity.
+The summary claims RSS remained approximately **45 MB / constant**, but the stored B1 candidate sample records **63.42 MB** versus **44.97 MB** baseline. B2 candidate is **44.8 MB**.
 
-## Disposition
+This may simply be a warm-cache/transient measurement artifact, but it cannot be described as constant until measured and explained correctly.
 
-Do **not** revert the work merely because it is unaccepted. Keep it as the current candidate implementation and run the focused acceptance gate.
+### 4. The pacing comparison does not demonstrate that manual sleep is superior
 
-No broad additional performance refactor should begin until this gate establishes:
+The recorded controlled comparison is approximately:
 
-1. that the dirty-aware renderer actually reduces idle work;
-2. that all visible state changes invalidate correctly;
-3. that the chosen pacing mechanism is measurably appropriate;
-4. that interaction latency and animation smoothness remain acceptable;
-5. that the Activity-side caching improvements do not change gameplay semantics.
+- `Clock.tick(30)`: **0.26% CPU**, **27.88 fps**
+- manual `time.sleep`: **0.25% CPU**, **27.05 fps**
+
+That is effectively a tie in CPU, with `Clock.tick()` slightly closer to the intended active cadence in that sample. The dramatic idle saving comes from **dirty redraw / not drawing**, not from evidence that manual active-frame pacing itself is superior.
+
+Dirty redraw and active-frame pacing remain separate decisions. The recheck should choose the simplest active pacing strategy actually supported by longer measurements.
+
+### 5. Input-latency measurement appears to exclude the idle wait interval
+
+The stored interaction values are around **0.11–0.21 ms**. With a clean idle loop sleeping for 50 ms, those numbers almost certainly represent handler/render execution after wake-up rather than true event-injection-to-presented-frame wall-clock latency.
+
+That is useful implementation timing, but it is not the end-to-end responsiveness metric requested by the gate. The recheck must include the idle wait/wake path.
+
+### 6. Rescan cache evidence conflicts with the source/report
+
+The current `GreiaLauncherPresentation._rescan_activities()` does clear `_tile_surface_cache` and `_backdrop_cache`, but `correctness-trace.json` records `cleared_backdrop_cache: false` while the narrative says cache invalidation passed.
+
+This looks like evidence/instrumentation drift rather than a source bug, but it must be made self-consistent.
+
+### 7. The launch-animation test is too weak for the claimed contract
+
+`test_launch_animation_keeps_animating_flag_true` only proves that assigning a non-`None` `_launching_activity_id` makes a boolean true. It does **not** prove repeated frame production, cadence, full animation duration, or completion behavior.
+
+The recheck should replace or supplement this with a behavioral pacing/redraw test.
+
+## What is already credibly demonstrated
+
+Even with the evidence defects above, the collected data strongly suggests that dirty redraw is valuable:
+
+- idle launcher draw calls fall to zero when static;
+- host CPU drops substantially in the candidate samples;
+- the source now has explicit invalidation paths for rescan and parent-panel drain;
+- Costruiamo Ponti stable rendering work has moved out of the hot loop;
+- focused launcher/Ponti tests and project validation pass.
+
+This is why the current source should remain the candidate rather than being reverted.
+
+## Required next step
+
+Execute the narrow evidence-integrity recheck:
+
+`docs/testing/2026-08-22_PERFORMANCE_PACING_DIRTY_REDRAW_EVIDENCE_RECHECK.md`
+
+Do **not** start another broad optimization pass and do **not** start Visual Batch 2 until the recheck closes.
+
+The recheck is expected to be mostly measurement, instrumentation and focused test correction. Change runtime code only if the corrected measurements expose a real issue.
