@@ -8,10 +8,12 @@ languages = ["it", "en"]
 
 [presentation]
 categories = ["create"]
+discovery_tags = ["drawing", "making"]
 
 [education]
 categories = ["creativity", "art", "fine_motor"]
 difficulty = 1
+recommended_age_min = 3
 skills = [
   { id = "creativity.visual_expression", weight = 3 },
   { id = "motor.pointer.control", weight = 2 },
