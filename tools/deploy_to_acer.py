@@ -53,17 +53,24 @@ def main() -> int:
     child.expect(r"greia-dev:.*")
 
     print("Extracting to /opt/greia-os...")
-    child.sendline(f"echo {ACER_PASS} | sudo -S tar -xzf /dev/shm/greia_update.tar.gz -C /opt/greia-os")
-    child.expect(r"greia-dev:.*", timeout=120)
-
-    child.sendline(f"echo {ACER_PASS} | sudo -S rm -f /dev/shm/greia_update.tar.gz")
+    extract_chain = (
+        f"echo {ACER_PASS} | sudo -S tar --no-same-owner -xzf /dev/shm/greia_update.tar.gz -C /opt/greia-os "
+        f"&& rm -f /dev/shm/greia_update.tar.gz "
+        f"&& echo {ACER_PASS} | sudo -S chown -R greiakid:greiakid /opt/greia-os "
+        f"&& echo {ACER_PASS} | sudo -S find /opt/greia-os -name '._*' -delete "
+        f"&& echo DEPLOY_EXTRACT_DONE"
+    )
+    child.sendline(extract_chain)
+    child.expect("DEPLOY_EXTRACT_DONE", timeout=180)
     child.expect(r"greia-dev:.*")
 
-    child.sendline(f"echo {ACER_PASS} | sudo -S find /opt/greia-os -name '._*' -delete")
-    child.expect(r"greia-dev:.*")
-
-    print("Restarting greia-launcher service...")
-    child.sendline(f"echo {ACER_PASS} | sudo -S systemctl restart greia-launcher.service")
+    print("Restarting services on Acer...")
+    restart_chain = (
+        f"echo {ACER_PASS} | sudo -S systemctl restart greia-parent.service greia-launcher.service "
+        f"&& echo DEPLOY_RESTART_DONE"
+    )
+    child.sendline(restart_chain)
+    child.expect("DEPLOY_RESTART_DONE", timeout=60)
     child.expect(r"greia-dev:.*")
 
     print("Validating activity package on Acer...")
