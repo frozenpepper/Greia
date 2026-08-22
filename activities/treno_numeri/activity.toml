@@ -8,10 +8,13 @@ languages = ["it", "en"]
 
 [presentation]
 categories = ["learn", "play"]
+discovery_tags = ["numbers", "puzzles"]
 
 [education]
 categories = ["early_math", "counting", "fine_motor"]
-difficulty = 1
+difficulty = 2
+recommended_age_min = 4
+recommended_age_max = 7
 skills = [
   { id = "math.counting.cardinality", weight = 3 },
   { id = "math.matching.quantity", weight = 2 },
