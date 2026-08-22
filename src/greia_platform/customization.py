@@ -35,23 +35,66 @@ class ThemePalette:
     texts: tuple[ColorSwatch, ...]
 
     @classmethod
-    def load(cls, path: Path) -> "ThemePalette":
-        with path.resolve(strict=True).open("rb") as handle:
-            raw = tomllib.load(handle)
-        defaults = _mapping(raw, "defaults")
-        palette = cls(
-            schema_version=_integer(raw, "schema_version", minimum=1),
-            default_background=_text(defaults, "background"),
-            default_accent=_text(defaults, "accent"),
-            default_text=_text(defaults, "text"),
-            backgrounds=_swatches(raw, "backgrounds"),
-            accents=_swatches(raw, "accents"),
-            texts=_swatches(raw, "texts"),
+    def default_safe(cls) -> "ThemePalette":
+        """Built-in immutable fallback palette for theme presentation."""
+        return cls(
+            schema_version=1,
+            default_background="cream",
+            default_accent="sunshine",
+            default_text="cocoa",
+            backgrounds=(
+                ColorSwatch("cream", (247, 235, 203)),
+                ColorSwatch("sky", (207, 234, 247)),
+                ColorSwatch("mint", (217, 242, 208)),
+                ColorSwatch("lavender", (232, 221, 247)),
+                ColorSwatch("peach", (248, 216, 189)),
+                ColorSwatch("rose", (245, 214, 223)),
+                ColorSwatch("sand", (238, 221, 186)),
+                ColorSwatch("aqua", (207, 237, 231)),
+            ),
+            accents=(
+                ColorSwatch("sunshine", (255, 194, 52)),
+                ColorSwatch("coral", (244, 111, 97)),
+                ColorSwatch("leaf", (89, 184, 106)),
+                ColorSwatch("ocean", (74, 145, 216)),
+                ColorSwatch("grape", (148, 100, 201)),
+                ColorSwatch("raspberry", (216, 86, 131)),
+                ColorSwatch("orange", (243, 154, 56)),
+                ColorSwatch("turquoise", (68, 184, 174)),
+            ),
+            texts=(
+                ColorSwatch("cocoa", (61, 44, 31)),
+                ColorSwatch("navy", (37, 59, 89)),
+                ColorSwatch("forest", (40, 81, 58)),
+                ColorSwatch("plum", (86, 58, 100)),
+                ColorSwatch("charcoal", (48, 52, 58)),
+                ColorSwatch("burgundy", (106, 48, 64)),
+            ),
         )
-        palette.background(palette.default_background)
-        palette.accent(palette.default_accent)
-        palette.text(palette.default_text)
-        return palette
+
+    @classmethod
+    def load(cls, path: Path) -> "ThemePalette":
+        try:
+            if not path.is_file() or path.stat().st_size == 0:
+                return cls.default_safe()
+            with path.resolve(strict=True).open("rb") as handle:
+                raw = tomllib.load(handle)
+            defaults = _mapping(raw, "defaults")
+            palette = cls(
+                schema_version=_integer(raw, "schema_version", minimum=1),
+                default_background=_text(defaults, "background"),
+                default_accent=_text(defaults, "accent"),
+                default_text=_text(defaults, "text"),
+                backgrounds=_swatches(raw, "backgrounds"),
+                accents=_swatches(raw, "accents"),
+                texts=_swatches(raw, "texts"),
+            )
+            palette.background(palette.default_background)
+            palette.accent(palette.default_accent)
+            palette.text(palette.default_text)
+            return palette
+        except Exception:
+            return cls.default_safe()
 
     def background(self, swatch_id: str) -> ColorSwatch:
         return _find_swatch(self.backgrounds, swatch_id, "background")

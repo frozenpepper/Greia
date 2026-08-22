@@ -32,7 +32,13 @@ def sample_theme() -> SimpleNamespace:
     )
 
 
-def sample_activity(activity_id: str, title: str, *categories: str, launcher_categories: tuple[str, ...] = ("create",)) -> SimpleNamespace:
+def sample_activity(
+    activity_id: str,
+    title: str,
+    *categories: str,
+    launcher_categories: tuple[str, ...] = ("create",),
+    discovery_tags: tuple[str, ...] = (),
+) -> SimpleNamespace:
     return SimpleNamespace(
         activity_id=activity_id,
         version="1.0.0",
@@ -41,6 +47,11 @@ def sample_activity(activity_id: str, title: str, *categories: str, launcher_cat
         icon_id="palette",
         categories=categories,
         launcher_categories=launcher_categories,
+        discovery_tags=discovery_tags,
+        difficulty=1,
+        recommended_age_min=None,
+        recommended_age_max=None,
+        adaptive_difficulty=False,
     )
 
 

@@ -51,46 +51,79 @@ class HardwareDefaults:
     maximum_mic_gain: float = 4.0
 
     @classmethod
+    def default_safe(cls) -> "HardwareDefaults":
+        """Built-in immutable fallback policy for hardware settings."""
+        return cls(
+            schema_version=1,
+            touchpad_tap=True,
+            touchpad_speed=0.35,
+            mouse_speed=0.0,
+            natural_scrolling=False,
+            resolution="auto",
+            keyboard_layout="us",
+            minimum_speed=-1.0,
+            maximum_speed=1.0,
+            mic_gain=2.0,
+            minimum_mic_gain=0.5,
+            maximum_mic_gain=4.0,
+        )
+
+    @classmethod
     def load(cls, path: Path) -> "HardwareDefaults":
-        data = tomllib.loads(path.read_text(encoding="utf-8"))
+        if not path.is_file() or path.stat().st_size == 0:
+            return cls.default_safe()
+        try:
+            data = tomllib.loads(path.read_text(encoding="utf-8"))
+        except (OSError, tomllib.TOMLDecodeError):
+            return cls.default_safe()
         defaults = data.get("defaults")
         limits = data.get("limits")
         if not isinstance(defaults, dict) or not isinstance(limits, dict):
-            raise HardwareSettingsError("hardware defaults file is missing required tables")
+            return cls.default_safe()
         try:
             loaded = cls(
-                schema_version=int(data["schema_version"]),
-                touchpad_tap=_strict_bool(defaults["touchpad_tap"], "touchpad_tap"),
-                touchpad_speed=float(defaults["touchpad_speed"]),
-                mouse_speed=float(defaults["mouse_speed"]),
+                schema_version=int(data.get("schema_version", 1)),
+                touchpad_tap=_strict_bool(defaults.get("touchpad_tap", True), "touchpad_tap"),
+                touchpad_speed=float(defaults.get("touchpad_speed", 0.35)),
+                mouse_speed=float(defaults.get("mouse_speed", 0.0)),
                 natural_scrolling=_strict_bool(
-                    defaults["natural_scrolling"], "natural_scrolling"
+                    defaults.get("natural_scrolling", False), "natural_scrolling"
                 ),
-                resolution=str(defaults["resolution"]),
+                resolution=str(defaults.get("resolution", "auto")),
                 # Older target payloads predate the keyboard_layout setting;
                 # default it to "us" so installs still work against them.
                 keyboard_layout=str(defaults.get("keyboard_layout", "us")),
-                minimum_speed=float(limits["minimum_speed"]),
-                maximum_speed=float(limits["maximum_speed"]),
+                minimum_speed=float(limits.get("minimum_speed", -1.0)),
+                maximum_speed=float(limits.get("maximum_speed", 1.0)),
                 mic_gain=float(defaults.get("mic_gain", 2.0)),
                 minimum_mic_gain=float(limits.get("minimum_mic_gain", 0.5)),
                 maximum_mic_gain=float(limits.get("maximum_mic_gain", 4.0)),
             )
-        except (KeyError, TypeError, ValueError) as exc:
-            raise HardwareSettingsError(f"invalid hardware defaults: {exc}") from exc
+        except (KeyError, TypeError, ValueError):
+            return cls.default_safe()
         if loaded.schema_version != 1:
-            raise HardwareSettingsError("unsupported hardware settings schema")
-        loaded.validate_keyboard_layout(loaded.keyboard_layout)
-        if loaded.minimum_speed < -1.0 or loaded.maximum_speed > 1.0:
-            raise HardwareSettingsError("speed limits must remain within libinput range")
-        if loaded.minimum_speed >= loaded.maximum_speed:
-            raise HardwareSettingsError("hardware speed range is invalid")
+            return cls.default_safe()
+        try:
+            loaded.validate_keyboard_layout(loaded.keyboard_layout)
+        except HardwareSettingsError:
+            loaded = cls(
+                schema_version=loaded.schema_version,
+                touchpad_tap=loaded.touchpad_tap,
+                touchpad_speed=loaded.touchpad_speed,
+                mouse_speed=loaded.mouse_speed,
+                natural_scrolling=loaded.natural_scrolling,
+                resolution=loaded.resolution,
+                keyboard_layout="us",
+                minimum_speed=loaded.minimum_speed,
+                maximum_speed=loaded.maximum_speed,
+                mic_gain=loaded.mic_gain,
+                minimum_mic_gain=loaded.minimum_mic_gain,
+                maximum_mic_gain=loaded.maximum_mic_gain,
+            )
+        if loaded.minimum_speed < -1.0 or loaded.maximum_speed > 1.0 or loaded.minimum_speed >= loaded.maximum_speed:
+            return cls.default_safe()
         if loaded.minimum_mic_gain <= 0.0 or loaded.minimum_mic_gain >= loaded.maximum_mic_gain:
-            raise HardwareSettingsError("hardware mic gain range is invalid")
-        loaded.validate_speed(loaded.touchpad_speed, "touchpad_speed")
-        loaded.validate_speed(loaded.mouse_speed, "mouse_speed")
-        loaded.validate_mic_gain(loaded.mic_gain)
-        _validate_resolution_id(loaded.resolution)
+            return cls.default_safe()
         return loaded
 
     def validate_speed(self, value: float, name: str) -> float:

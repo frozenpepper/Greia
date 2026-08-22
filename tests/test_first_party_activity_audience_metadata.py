@@ -5,6 +5,7 @@ from pathlib import Path
 
 from greia_launcher.catalogue_view import DISCOVERY_GROUP_IDS
 from greia_platform.activities import ActivityRegistry, RuntimeCatalogue
+from greia_platform.trust import ActivitySource, PackageTrust
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -14,7 +15,7 @@ class FirstPartyActivityAudienceMetadataTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.manifests = ActivityRegistry(
-            [PROJECT_ROOT / "activities"],
+            [ActivitySource(PROJECT_ROOT / "activities", PackageTrust.BUILT_IN, "first-party")],
             RuntimeCatalogue.load(PROJECT_ROOT / "runtime" / "child-runtime.toml"),
         ).discover()
 

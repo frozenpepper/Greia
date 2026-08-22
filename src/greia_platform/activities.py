@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import logging
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
@@ -8,6 +9,8 @@ from typing import Mapping, Sequence
 
 from .input_core import InteractionProfile, SUPPORTED_INTERACTION_PROFILES
 from .trust import ActivitySource, PackageTrust
+
+logger = logging.getLogger(__name__)
 
 
 class ActivityValidationError(ValueError):
@@ -86,31 +89,85 @@ class RuntimeCatalogue:
     maximum_activity_bytes: int
 
     @classmethod
+    def default_safe(cls) -> "RuntimeCatalogue":
+        """Built-in immutable fallback policy used if on-disk config is empty or unreadable."""
+        return cls(
+            api_version="0.1",
+            forbidden_file_names=frozenset({".ds_store", "thumbs.db"}),
+            forbidden_path_names=frozenset(
+                {".git", ".hg", ".svn", "node_modules", "vendor", "vendored"}
+            ),
+            forbidden_suffixes=frozenset({
+                ".app",
+                ".bash",
+                ".bin",
+                ".class",
+                ".dll",
+                ".dylib",
+                ".exe",
+                ".jar",
+                ".run",
+                ".sh",
+                ".so",
+                ".tar",
+                ".zip",
+            }),
+            allowed_capabilities=frozenset({
+                "audio.basic",
+                "controller",
+                "display",
+                "keyboard",
+                "network",
+                "pointer",
+                "power.controlled_shutdown",
+                "removable_media",
+                "touch",
+            }),
+            allowed_permissions=frozenset({
+                "customization.manage",
+                "profile.manage_own",
+                "removable_media.read",
+            }),
+            maximum_activity_bytes=52428800,
+        )
+
+    @classmethod
     def load(cls, path: Path) -> "RuntimeCatalogue":
         try:
+            if not path.is_file() or path.stat().st_size == 0:
+                logger.warning(
+                    "Runtime catalogue %s is missing or empty; using default safe policy",
+                    path,
+                )
+                return cls.default_safe()
             with path.open("rb") as handle:
                 raw = tomllib.load(handle)
-        except (OSError, tomllib.TOMLDecodeError) as exc:
-            raise ActivityValidationError(f"invalid runtime catalogue {path}: {exc}") from exc
-        runtime = _table(raw, "runtime")
-        validation = _table(raw, "validation")
-        capabilities = _table(raw, "capabilities")
-        permissions = _table(raw, "permissions")
-        result = cls(
-            api_version=_text(runtime, "api_version"),
-            forbidden_file_names=_folded(validation, "forbidden_file_names"),
-            forbidden_path_names=_folded(validation, "forbidden_path_names"),
-            forbidden_suffixes=_folded(validation, "forbidden_suffixes"),
-            allowed_capabilities=frozenset(_texts(capabilities, "allowed")),
-            allowed_permissions=frozenset(_texts(permissions, "allowed")),
-            maximum_activity_bytes=_integer(validation, "maximum_activity_bytes", 1),
-        )
-        overlap = result.allowed_capabilities & result.allowed_permissions
-        if overlap:
-            raise ActivityValidationError(
-                "capability and permission vocabularies overlap: " + ", ".join(sorted(overlap))
+            runtime = _table(raw, "runtime")
+            validation = _table(raw, "validation")
+            capabilities = _table(raw, "capabilities")
+            permissions = _table(raw, "permissions")
+            result = cls(
+                api_version=_text(runtime, "api_version"),
+                forbidden_file_names=_folded(validation, "forbidden_file_names"),
+                forbidden_path_names=_folded(validation, "forbidden_path_names"),
+                forbidden_suffixes=_folded(validation, "forbidden_suffixes"),
+                allowed_capabilities=frozenset(_texts(capabilities, "allowed")),
+                allowed_permissions=frozenset(_texts(permissions, "allowed")),
+                maximum_activity_bytes=_integer(validation, "maximum_activity_bytes", 1),
             )
-        return result
+            overlap = result.allowed_capabilities & result.allowed_permissions
+            if overlap:
+                raise ActivityValidationError(
+                    "capability and permission vocabularies overlap: " + ", ".join(sorted(overlap))
+                )
+            return result
+        except Exception as exc:
+            logger.warning(
+                "Failed loading runtime catalogue %s: %s; falling back to default safe policy",
+                path,
+                exc,
+            )
+            return cls.default_safe()
 
 
 class ActivityRegistry:
@@ -120,6 +177,8 @@ class ActivityRegistry:
         self,
         activity_roots: Sequence[Path | ActivitySource],
         runtime: RuntimeCatalogue,
+        *,
+        fail_closed: bool = True,
     ):
         sources: list[ActivitySource] = []
         for index, value in enumerate(activity_roots):
@@ -136,30 +195,52 @@ class ActivityRegistry:
         self._sources = tuple(sources)
         self._roots = tuple(source.root for source in sources)
         self._runtime = runtime
+        self._fail_closed = fail_closed
         self._issued: dict[int, ActivityRegistration] = {}
+        self._unvalidated_activities: dict[str, str] = {}
 
-    def discover(self) -> tuple[ActivityManifest, ...]:
-        return tuple(item.manifest for item in self.discover_registrations())
+    @property
+    def unvalidated_activities(self) -> Mapping[str, str]:
+        """Maps skipped activity root paths to their validation error message."""
+        return dict(self._unvalidated_activities)
 
-    def discover_registrations(self) -> tuple[ActivityRegistration, ...]:
+    def discover(self, *, fail_closed: bool | None = None) -> tuple[ActivityManifest, ...]:
+        return tuple(item.manifest for item in self.discover_registrations(fail_closed=fail_closed))
+
+    def discover_registrations(
+        self, *, fail_closed: bool | None = None
+    ) -> tuple[ActivityRegistration, ...]:
+        strict = self._fail_closed if fail_closed is None else bool(fail_closed)
         registrations: list[ActivityRegistration] = []
         identities: dict[str, str] = {}
         self._issued.clear()
+        self._unvalidated_activities.clear()
         for source in self._sources:
             if not source.root.exists():
                 continue
             for path in sorted(source.root.glob("*/activity.toml")):
-                registration = self.validate_registration(path.parent, source)
-                manifest = registration.manifest
-                for identity in (manifest.activity_id, *manifest.legacy_ids):
-                    if identity in identities:
-                        raise ActivityValidationError(
-                            f"Activity identity/alias collision {identity!r}: "
-                            f"{identities[identity]} and {manifest.activity_id}"
-                        )
-                    identities[identity] = manifest.activity_id
-                registrations.append(registration)
-                self._issued[id(manifest)] = registration
+                try:
+                    registration = self.validate_registration(path.parent, source)
+                    manifest = registration.manifest
+                    for identity in (manifest.activity_id, *manifest.legacy_ids):
+                        if identity in identities:
+                            raise ActivityValidationError(
+                                f"Activity identity/alias collision {identity!r}: "
+                                f"{identities[identity]} and {manifest.activity_id}"
+                            )
+                        identities[identity] = manifest.activity_id
+                    registrations.append(registration)
+                    self._issued[id(manifest)] = registration
+                except Exception as exc:
+                    if strict:
+                        raise
+                    logger.warning(
+                        "Skipping invalid/corrupted activity package at %s: %s",
+                        path.parent,
+                        exc,
+                    )
+                    self._unvalidated_activities[str(path.parent.resolve())] = str(exc)
+                    continue
         return tuple(registrations)
 
     def registration_for(self, manifest: ActivityManifest) -> ActivityRegistration:

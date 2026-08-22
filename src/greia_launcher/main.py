@@ -156,7 +156,9 @@ class LauncherApplication:
     def __init__(self, *, windowed: bool = False, allow_exit: bool = False):
         self.paths = LauncherPaths.from_environment()
         self.runtime = RuntimeCatalogue.load(self.paths.runtime_catalogue)
-        self.registry = ActivityRegistry(_activity_sources(self.paths), self.runtime)
+        self.registry = ActivityRegistry(
+            _activity_sources(self.paths), self.runtime, fail_closed=False
+        )
         self._asset_set = load_launcher_assets(
             self.paths.asset_catalogue,
             self.paths.shared_visual_catalogue,

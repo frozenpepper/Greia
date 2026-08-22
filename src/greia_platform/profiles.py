@@ -36,25 +36,54 @@ class ProfilePolicy:
     avatars: tuple[str, ...]
 
     @classmethod
-    def load(cls, path: Path) -> "ProfilePolicy":
-        with path.resolve(strict=True).open("rb") as handle:
-            raw = tomllib.load(handle)
-        policy = cls(
-            schema_version=_integer(raw, "schema_version", minimum=1),
-            max_profiles=_integer(raw, "max_profiles", minimum=1, maximum=16),
-            max_name_characters=_integer(raw, "max_name_characters", minimum=1, maximum=64),
-            max_secret_characters=_integer(raw, "max_secret_characters", minimum=1, maximum=128),
-            secret_iterations=_integer(raw, "secret_iterations", minimum=10_000, maximum=2_000_000),
-            default_name=_text(raw, "default_name"),
-            default_avatar=_text(raw, "default_avatar"),
-            default_mask_secret=_boolean(raw, "default_mask_secret"),
-            avatars=tuple(_string_list(raw, "avatars")),
+    def default_safe(cls) -> "ProfilePolicy":
+        """Built-in immutable fallback policy for profile defaults."""
+        return cls(
+            schema_version=1,
+            max_profiles=8,
+            max_name_characters=16,
+            max_secret_characters=32,
+            secret_iterations=100_000,
+            default_name="Greia",
+            default_avatar="rainbow",
+            default_mask_secret=True,
+            avatars=(
+                "rainbow",
+                "yellow_star",
+                "green_leaf",
+                "blue_droplet",
+                "pink_heart",
+                "orange_sun",
+                "purple_flower",
+                "red_apple",
+            ),
         )
-        if len(set(policy.avatars)) != len(policy.avatars):
-            raise ProfileError("profile avatar identifiers must be unique")
-        policy.validate_avatar(policy.default_avatar)
-        policy.validate_name(policy.default_name)
-        return policy
+
+    @classmethod
+    def load(cls, path: Path) -> "ProfilePolicy":
+        try:
+            if not path.is_file() or path.stat().st_size == 0:
+                return cls.default_safe()
+            with path.resolve(strict=True).open("rb") as handle:
+                raw = tomllib.load(handle)
+            policy = cls(
+                schema_version=_integer(raw, "schema_version", minimum=1),
+                max_profiles=_integer(raw, "max_profiles", minimum=1, maximum=16),
+                max_name_characters=_integer(raw, "max_name_characters", minimum=1, maximum=64),
+                max_secret_characters=_integer(raw, "max_secret_characters", minimum=1, maximum=128),
+                secret_iterations=_integer(raw, "secret_iterations", minimum=10_000, maximum=2_000_000),
+                default_name=_text(raw, "default_name"),
+                default_avatar=_text(raw, "default_avatar"),
+                default_mask_secret=_boolean(raw, "default_mask_secret"),
+                avatars=tuple(_string_list(raw, "avatars")),
+            )
+            if len(set(policy.avatars)) != len(policy.avatars):
+                return cls.default_safe()
+            policy.validate_avatar(policy.default_avatar)
+            policy.validate_name(policy.default_name)
+            return policy
+        except Exception:
+            return cls.default_safe()
 
     def validate_avatar(self, avatar_id: str) -> str:
         if avatar_id not in self.avatars:
