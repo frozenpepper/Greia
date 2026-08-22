@@ -1,6 +1,7 @@
 # Greia Shared Animation Library v0.1
 
-**Active plan:** `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`
+**Active plan:** `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`  
+**Canonical cast system:** `docs/design/GREIA_CANONICAL_CAST_SYSTEM.md`
 
 This is a small shared animation vocabulary for Greia characters and compatible visual assets.
 
@@ -21,9 +22,10 @@ The system is deliberately simple.
 2. Expression changes use authored variants of the same character.
 3. Whole-body translate/rotate/squash/stretch is enough for the base library.
 4. No detailed rig is required.
-5. All motions are shared semantic motions; individual characters may vary slightly in amplitude.
+5. All motions are shared semantic motions; individual characters may vary slightly in amplitude/timing so personality survives.
 6. Animation is optional. Static art remains valid without motion.
 7. `blink` is not accepted unless the eyes visibly close.
+8. A motion storyboard is design evidence only; runtime/simulator acceptance requires the actual renderer path to be exercised later.
 
 ## Current character states
 
@@ -39,6 +41,23 @@ sleepy
 
 Add more only when a real Greia use requires them.
 
+## Current target cast
+
+The current design target is the six-character family defined by `GREIA_CANONICAL_CAST_SYSTEM.md`:
+
+```text
+Lilli
+Leo
+Flash
+Dani
+Tito
+Momo
+```
+
+The previous `Nino` owl source remains historical provenance until the Leo visual candidate and later ID migration are explicitly approved.
+
+All six should share the semantic state/motion names without being forced into identical geometry. For example, Flash may use a more energetic `happy_hop`, Leo a compact thoughtful hop, and Momo a broader comic pop.
+
 ## Shared-library location
 
 ```text
@@ -46,4 +65,6 @@ assets/visual/library/
 assets/visual/characters/
 ```
 
-This is currently design/source artwork. Runtime consumption is handled later through the single shared Greia asset path defined by the active plan.
+Candidate/source art may also live under reviewed candidate workspaces until promotion.
+
+This document defines design/source semantics. Runtime consumption must continue through the single explicit Greia asset/scene path rather than a new character renderer or body-part rig.
