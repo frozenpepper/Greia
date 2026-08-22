@@ -2,17 +2,21 @@
 id = "org.greia.fixture.canonical-cast-showcase"
 title_key = "activity.canonical_cast_showcase.title"
 version = "0.1.0"
-icon = "mascot"
+icon = "garden"
 languages = ["*"]
 
 [presentation]
-categories = ["learn", "play"]
+categories = ["learn", "create"]
 
 [education]
 categories = ["development", "inspection"]
 difficulty = 1
-skills = []
-events = []
+skills = [
+  { id = "motor.pointer.control", weight = 1 },
+]
+events = [
+  { id = "inspection.completed", kind = "creation" },
+]
 
 [runtime]
 type = "python"

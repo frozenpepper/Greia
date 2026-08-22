@@ -157,14 +157,18 @@ Current primary type choice is Nunito Sans.
 
 # 5. Character system
 
-Core cast:
+Canonical 6-member cast (Authority: `docs/design/GREIA_CANONICAL_CAST_SYSTEM.md`):
 
 ```text
-Lilli — unicorn Puff
-Nino  — owl Bean
-Tito  — fox Puff
-Momo  — friendly monster Puff
+Lilli — unicorn Puff (creative / arts)
+Leo   — owl Bean (logic / thinking, signature teal glasses)
+Flash — white rabbit Puff (speed / agility, coral shirt & gold lightning bolt)
+Dani  — friendly robot (technology / mechanics, sky casing & antenna)
+Tito  — fox Puff (playful / adventure)
+Momo  — friendly monster Puff (gentle / curiosity)
 ```
+
+*(Historical note: `Leo` supersedes the earlier candidate identity `Nino` for the owl; historical candidate provenance is preserved in archive documentation).*
 
 The character architecture intentionally avoids traditional detailed quadruped rigs as the default.
 

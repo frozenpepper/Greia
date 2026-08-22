@@ -177,15 +177,21 @@ class SceneActorTests(unittest.TestCase):
                 out_path = Path("assets") / vdata["output"]
                 self.assertTrue(out_path.exists(), f"Rendition file missing: {out_path}")
 
-    def test_renderer_fallback_variant_resolves_when_non_default_variant_missing(self) -> None:
+    def test_renderer_fallback_variant_resolves_and_does_not_retry_failed_variant(self) -> None:
         # Mock visual cache where 'happy' fails but 'default' succeeds
         mock_cache = MagicMock()
         mock_surface_default = MagicMock()
 
+        happy_attempts = 0
+        default_attempts = 0
+
         def mock_get(asset_id, variant="default", size=(100, 100)):
+            nonlocal happy_attempts, default_attempts
             if variant == "happy":
+                happy_attempts += 1
                 raise KeyError("happy variant missing")
             if variant == "default":
+                default_attempts += 1
                 return mock_surface_default
             raise KeyError(variant)
 
@@ -199,7 +205,7 @@ class SceneActorTests(unittest.TestCase):
             colliderect=lambda r: True, width=100, height=100, size=(100, 100)
         )
 
-        renderer = PygameSceneRenderer(mock_cache, pygame_module=mock_pygame)
+        renderer = PygameSceneRenderer(mock_cache, max_failed_entries=64, pygame_module=mock_pygame)
 
         scene = SceneDefinition(
             scene_id="test_fallback",
@@ -216,10 +222,68 @@ class SceneActorTests(unittest.TestCase):
             ),
         )
 
+        # Draw 3 times consecutively
+        for i in range(3):
+            stats = renderer.draw(scene, mock_target, clear=False)
+            self.assertEqual(stats.drawn_nodes, 1)
+
+        # 'happy' must be attempted exactly ONCE across all 3 frames!
+        self.assertEqual(happy_attempts, 1)
+        # 'default' is used on all 3 frames
+        self.assertEqual(default_attempts, 3)
+
+        # Now clear renderer and draw again -> failure memory is reset, so happy is attempted once more
+        renderer.clear()
         stats = renderer.draw(scene, mock_target, clear=False)
         self.assertEqual(stats.drawn_nodes, 1)
-        mock_cache.get.assert_any_call("character.flash", variant="happy", size=(100, 100))
-        mock_cache.get.assert_any_call("character.flash", variant="default", size=(100, 100))
+        self.assertEqual(happy_attempts, 2)
+        self.assertEqual(default_attempts, 4)
+
+    def test_required_default_failure_avoids_repeated_decode_work(self) -> None:
+        # Mock visual cache where required 'default' fails
+        mock_cache = MagicMock()
+        default_attempts = 0
+
+        def mock_get(asset_id, variant="default", size=(100, 100)):
+            nonlocal default_attempts
+            default_attempts += 1
+            raise KeyError("dani default missing")
+
+        mock_cache.get.side_effect = mock_get
+
+        mock_pygame = MagicMock()
+        mock_target = MagicMock()
+        mock_target.get_size.return_value = (1024, 600)
+        mock_target.get_rect.return_value = MagicMock(colliderect=lambda r: True)
+        mock_pygame.Rect.return_value = MagicMock(
+            colliderect=lambda r: True, width=100, height=100, size=(100, 100)
+        )
+
+        renderer = PygameSceneRenderer(mock_cache, max_failed_entries=64, pygame_module=mock_pygame)
+
+        scene = SceneDefinition(
+            scene_id="test_default_failure",
+            canvas_size=(1024, 600),
+            background=(0, 0, 0),
+            nodes=(
+                SceneNode(
+                    node_id="dani.body",
+                    asset_id="character.dani",
+                    variant="default",
+                    rect=(100, 100, 100, 100),
+                ),
+            ),
+        )
+
+        # Draw 1: raises SceneRenderError and records failure
+        with self.assertRaises(SceneRenderError):
+            renderer.draw(scene, mock_target, clear=False)
+        self.assertEqual(default_attempts, 1)
+
+        # Draw 2: raises SceneRenderError immediately without calling mock_cache.get!
+        with self.assertRaises(SceneRenderError):
+            renderer.draw(scene, mock_target, clear=False)
+        self.assertEqual(default_attempts, 1)
 
 
 if __name__ == "__main__":

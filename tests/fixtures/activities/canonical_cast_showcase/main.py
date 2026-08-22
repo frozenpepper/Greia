@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import math
-import sys
 import time
 import pygame
 
@@ -10,7 +9,8 @@ from greia_platform.activity_api import (
     mark_activity_ready,
 )
 from greia_platform.activity_ui import is_home_clicked
-from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
+from greia_platform.activity_viewport import CanvasFitMode, ReferenceCanvasSpec
+from greia_platform.pygame_canvas import PygameReferenceCanvas
 from greia_platform.pygame_scene import PygameSceneRenderer, SceneRenderError
 from greia_platform.scene import SceneDefinition, SceneFit, SceneNode
 from greia_platform.scene_actor import (
@@ -53,8 +53,6 @@ MOTIONS = [
 
 def create_ensemble_actors() -> list[SceneActorDefinition]:
     actors = []
-    # 6 characters placed evenly across 1024 width
-    # usable width: ~80 to 944 -> step ~144
     for idx, (cid, asset_id, name) in enumerate(CHARACTERS):
         cx = 90 + idx * 144
         cy = 210
@@ -94,15 +92,20 @@ def main() -> int:
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
     pygame.font.init()
 
-    font_title = pygame.font.SysFont("Arial", 20, bold=True)
-    font_ui = pygame.font.SysFont("Arial", 14, bold=True)
-    font_small = pygame.font.SysFont("Arial", 12)
+    canvas = PygameReferenceCanvas(
+        screen,
+        ReferenceCanvasSpec(width=CANVAS_WIDTH, height=CANVAS_HEIGHT, fit=CanvasFitMode.CONTAIN),
+    )
+
+    font_title = pygame.font.SysFont("Arial", 18, bold=True)
+    font_ui = pygame.font.SysFont("Arial", 13, bold=True)
+    font_small = pygame.font.SysFont("Arial", 11)
 
     clock = pygame.time.Clock()
     renderer = PygameSceneRenderer.for_activity(max_entries=32)
 
-    selected_char_idx = 0  # 0 to 5
-    view_mode = "ensemble"  # "ensemble" or "hero"
+    selected_char_idx = 0
+    view_mode = "ensemble"
     current_state = CharacterState.NEUTRAL
     current_motion = CharacterMotion.IDLE_BOUNCE
     motion_enabled = True
@@ -116,8 +119,6 @@ def main() -> int:
     while not activity_stop_requested():
         elapsed = time.monotonic() - start_time
         target_size = screen.get_size()
-        viewport = activity_viewport_for_surface(screen)
-        safe_rect = viewport.safe_ui_rect()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -143,7 +144,6 @@ def main() -> int:
                 elif event.key == pygame.K_m:
                     motion_enabled = not motion_enabled
                 elif event.key == pygame.K_SPACE:
-                    # cycle motions
                     m_idx = [m[0] for m in MOTIONS].index(current_motion)
                     current_motion = MOTIONS[(m_idx + 1) % len(MOTIONS)][0]
             elif event.type in (pygame.MOUSEBUTTONDOWN, pygame.FINGERDOWN):
@@ -155,55 +155,47 @@ def main() -> int:
                 if is_home_clicked(screen, mpos):
                     return 0
 
-                # Map click to reference canvas coords (1024x600)
-                # Viewport transform is COVER/CONTAIN
-                scale_x = target_size[0] / CANVAS_WIDTH
-                scale_y = target_size[1] / CANVAS_HEIGHT
-                scale = min(scale_x, scale_y)
-                ox = (target_size[0] - CANVAS_WIDTH * scale) / 2
-                oy = (target_size[1] - CANVAS_HEIGHT * scale) / 2
-                canv_x = (mpos[0] - ox) / scale
-                canv_y = (mpos[1] - oy) / scale
+                logical_pos = canvas.pointer(mpos)
+                if logical_pos is not None:
+                    canv_x, canv_y = logical_pos
 
-                # Check Character Selector Buttons (top-left: y 60 to 92)
-                for idx, (cid, _, name) in enumerate(CHARACTERS):
-                    bx = 80 + idx * 85
-                    if bx <= canv_x <= bx + 75 and 60 <= canv_y <= 92:
-                        selected_char_idx = idx
-                        hero_actor = create_hero_actor(selected_char_idx)
-
-                # Check View Mode toggle button (x 600, y 60 to 92)
-                if 600 <= canv_x <= 720 and 60 <= canv_y <= 92:
-                    view_mode = "hero" if view_mode == "ensemble" else "ensemble"
-
-                # Check Motion On/Off toggle (x 740, y 60 to 92)
-                if 740 <= canv_x <= 860 and 60 <= canv_y <= 92:
-                    motion_enabled = not motion_enabled
-
-                # Check State Buttons (bottom bar: y 450 to 482)
-                for idx, (st, sname) in enumerate(STATES):
-                    bx = 80 + idx * 110
-                    if bx <= canv_x <= bx + 100 and 450 <= canv_y <= 482:
-                        current_state = st
-
-                # Check Motion Buttons (bottom bar: y 500 to 532)
-                for idx, (mot, mname) in enumerate(MOTIONS):
-                    bx = 80 + idx * 80
-                    if bx <= canv_x <= bx + 72 and 500 <= canv_y <= 532:
-                        current_motion = mot
-
-                # Direct Character Click in Ensemble mode
-                if view_mode == "ensemble":
-                    for idx, actor in enumerate(ensemble_actors):
-                        rx, ry, rw, rh = actor.rect
-                        if rx <= canv_x <= rx + rw and ry <= canv_y <= ry + rh:
+                    # Character selector buttons (y: 54 to 84)
+                    for idx, (cid, _, name) in enumerate(CHARACTERS):
+                        bx = 80 + idx * 84
+                        if bx <= canv_x <= bx + 76 and 54 <= canv_y <= 84:
                             selected_char_idx = idx
                             hero_actor = create_hero_actor(selected_char_idx)
 
+                    # View Mode button (x: 600, y: 54 to 84)
+                    if 600 <= canv_x <= 720 and 54 <= canv_y <= 84:
+                        view_mode = "hero" if view_mode == "ensemble" else "ensemble"
+
+                    # Motion toggle button (x: 740, y: 54 to 84)
+                    if 740 <= canv_x <= 860 and 54 <= canv_y <= 84:
+                        motion_enabled = not motion_enabled
+
+                    # State buttons (y: 460 to 488)
+                    for idx, (st, sname) in enumerate(STATES):
+                        bx = 80 + idx * 105
+                        if bx <= canv_x <= bx + 95 and 460 <= canv_y <= 488:
+                            current_state = st
+
+                    # Motion buttons (y: 504 to 532)
+                    for idx, (mot, mname) in enumerate(MOTIONS):
+                        bx = 80 + idx * 78
+                        if bx <= canv_x <= bx + 70 and 504 <= canv_y <= 532:
+                            current_motion = mot
+
+                    # Direct character click in ensemble mode
+                    if view_mode == "ensemble":
+                        for idx, actor in enumerate(ensemble_actors):
+                            rx, ry, rw, rh = actor.rect
+                            if rx <= canv_x <= rx + rw and ry <= canv_y <= ry + rh:
+                                selected_char_idx = idx
+                                hero_actor = create_hero_actor(selected_char_idx)
+
         # Build Scene Nodes
         nodes = []
-
-        # Background decorative meadow strip
         nodes.append(
             SceneNode(
                 node_id="bg.ground_edge",
@@ -214,15 +206,16 @@ def main() -> int:
             )
         )
 
+        effective_motion = current_motion if motion_enabled else CharacterMotion.NONE
+
         if view_mode == "ensemble":
             for idx, actor in enumerate(ensemble_actors):
-                # Sample actor with active state & motion
                 sample = sample_scene_actor(
                     actor,
                     elapsed_seconds=elapsed,
                     motion_enabled=motion_enabled,
                     state=current_state,
-                    motion=current_motion,
+                    motion=effective_motion,
                 )
                 nodes.extend(sample.nodes)
         else:
@@ -231,93 +224,97 @@ def main() -> int:
                 elapsed_seconds=elapsed,
                 motion_enabled=motion_enabled,
                 state=current_state,
-                motion=current_motion,
+                motion=effective_motion,
             )
             nodes.extend(sample.nodes)
 
         scene = SceneDefinition(
             scene_id="canonical_cast_showcase",
             canvas_size=(CANVAS_WIDTH, CANVAS_HEIGHT),
-            background=(238, 246, 255),  # Soft pleasant storybook sky
+            background=(238, 246, 255),
             nodes=tuple(nodes),
             fit=SceneFit.CONTAIN,
         )
 
-        # Render Scene
+        render_failed = False
+        render_err_msg = ""
+
         try:
-            renderer.draw(scene, screen, elapsed_seconds=elapsed, motion_enabled=motion_enabled, clear=True)
+            renderer.draw(scene, canvas.surface, elapsed_seconds=elapsed, motion_enabled=motion_enabled, clear=True)
         except SceneRenderError as err:
-            # Safe Activity-level fallback
-            screen.fill((238, 246, 255))
-            err_surf = font_title.render(f"Visual Fallback Mode: {err}", True, (180, 40, 40))
-            screen.blit(err_surf, (80, 260))
+            render_failed = True
+            render_err_msg = str(err)
+            canvas.surface.fill((238, 246, 255))
+            err_box = pygame.Rect(120, 220, 784, 120)
+            pygame.draw.rect(canvas.surface, (254, 242, 242), err_box, border_radius=12)
+            pygame.draw.rect(canvas.surface, (239, 68, 68), err_box, width=2, border_radius=12)
+            err_title = font_title.render("Activity Visual Safe Fallback Mode", True, (185, 28, 28))
+            err_detail = font_ui.render(f"Required rendition failed: {render_err_msg}", True, (127, 29, 29))
+            canvas.surface.blit(err_title, (150, 245))
+            canvas.surface.blit(err_detail, (150, 285))
 
-        # Render Fixture UI Controls onto screen (mapped to display surface)
-        scale_x = target_size[0] / CANVAS_WIDTH
-        scale_y = target_size[1] / CANVAS_HEIGHT
-        scale = min(scale_x, scale_y)
-        ox = (target_size[0] - CANVAS_WIDTH * scale) / 2
-        oy = (target_size[1] - CANVAS_HEIGHT * scale) / 2
-
-        def to_screen(rx, ry, rw, rh):
-            return pygame.Rect(int(ox + rx * scale), int(oy + ry * scale), int(rw * scale), int(rh * scale))
-
+        # Render Fixture Developer Controls directly onto canvas.surface
         # Title
         t_surf = font_title.render("Greia Canonical Cast Showcase (v0.1)", True, (15, 23, 42))
-        screen.blit(t_surf, (int(ox + 80 * scale), int(oy + 24 * scale)))
+        canvas.surface.blit(t_surf, (80, 20))
 
-        # Mode & Status Indicator
-        status_str = f"Mode: {view_mode.upper()} | State: {current_state.value.upper()} | Motion: {current_motion.value.upper()} ({'ON' if motion_enabled else 'OFF'})"
+        # Status
+        screen_w, screen_h = screen.get_size()
+        status_str = f"Mode: {view_mode.upper()} | State: {current_state.value.upper()} | Motion: {effective_motion.value.upper()} | Res: {screen_w}x{screen_h}"
         st_surf = font_small.render(status_str, True, (71, 85, 105))
-        screen.blit(st_surf, (int(ox + 500 * scale), int(oy + 28 * scale)))
+        canvas.surface.blit(st_surf, (440, 24))
 
-        # Character Buttons
+        # Character Selector Buttons
         for idx, (cid, _, name) in enumerate(CHARACTERS):
-            r = to_screen(80 + idx * 85, 60, 75, 28)
+            r = pygame.Rect(80 + idx * 84, 54, 76, 28)
             is_sel = (idx == selected_char_idx)
             bg_col = (14, 116, 144) if is_sel else (255, 255, 255)
             fg_col = (255, 255, 255) if is_sel else (15, 23, 42)
-            pygame.draw.rect(screen, bg_col, r, border_radius=6)
-            pygame.draw.rect(screen, (203, 213, 225), r, width=1, border_radius=6)
+            pygame.draw.rect(canvas.surface, bg_col, r, border_radius=6)
+            pygame.draw.rect(canvas.surface, (203, 213, 225), r, width=1, border_radius=6)
             btn_txt = font_ui.render(name, True, fg_col)
-            screen.blit(btn_txt, btn_txt.get_rect(center=r.center))
+            canvas.surface.blit(btn_txt, btn_txt.get_rect(center=r.center))
 
         # Mode Button
-        r_mode = to_screen(600, 60, 120, 28)
-        pygame.draw.rect(screen, (241, 245, 249), r_mode, border_radius=6)
-        pygame.draw.rect(screen, (148, 163, 184), r_mode, width=1, border_radius=6)
+        r_mode = pygame.Rect(600, 54, 110, 28)
+        pygame.draw.rect(canvas.surface, (241, 245, 249), r_mode, border_radius=6)
+        pygame.draw.rect(canvas.surface, (148, 163, 184), r_mode, width=1, border_radius=6)
         txt_m = font_ui.render(f"View: {view_mode.capitalize()}", True, (15, 23, 42))
-        screen.blit(txt_m, txt_m.get_rect(center=r_mode.center))
+        canvas.surface.blit(txt_m, txt_m.get_rect(center=r_mode.center))
 
         # Motion Toggle Button
-        r_mot = to_screen(740, 60, 120, 28)
-        pygame.draw.rect(screen, (220, 252, 231) if motion_enabled else (254, 226, 226), r_mot, border_radius=6)
-        pygame.draw.rect(screen, (134, 239, 172) if motion_enabled else (252, 165, 165), r_mot, width=1, border_radius=6)
+        r_mot = pygame.Rect(720, 54, 110, 28)
+        bg_mot = (220, 252, 231) if motion_enabled else (254, 226, 226)
+        bd_mot = (134, 239, 172) if motion_enabled else (252, 165, 165)
+        pygame.draw.rect(canvas.surface, bg_mot, r_mot, border_radius=6)
+        pygame.draw.rect(canvas.surface, bd_mot, r_mot, width=1, border_radius=6)
         txt_mot = font_ui.render(f"Motion: {'ON' if motion_enabled else 'OFF'}", True, (15, 23, 42))
-        screen.blit(txt_mot, txt_mot.get_rect(center=r_mot.center))
+        canvas.surface.blit(txt_mot, txt_mot.get_rect(center=r_mot.center))
 
         # State Buttons
         for idx, (st, sname) in enumerate(STATES):
-            r = to_screen(80 + idx * 110, 450, 100, 28)
+            r = pygame.Rect(80 + idx * 105, 460, 95, 28)
             is_cur = (st == current_state)
             bg_col = (13, 148, 136) if is_cur else (255, 255, 255)
             fg_col = (255, 255, 255) if is_cur else (15, 23, 42)
-            pygame.draw.rect(screen, bg_col, r, border_radius=6)
-            pygame.draw.rect(screen, (203, 213, 225), r, width=1, border_radius=6)
+            pygame.draw.rect(canvas.surface, bg_col, r, border_radius=6)
+            pygame.draw.rect(canvas.surface, (203, 213, 225), r, width=1, border_radius=6)
             txt_s = font_ui.render(sname, True, fg_col)
-            screen.blit(txt_s, txt_s.get_rect(center=r.center))
+            canvas.surface.blit(txt_s, txt_s.get_rect(center=r.center))
 
         # Motion Buttons
         for idx, (mot, mname) in enumerate(MOTIONS):
-            r = to_screen(80 + idx * 80, 500, 72, 28)
+            r = pygame.Rect(80 + idx * 78, 504, 70, 28)
             is_cur = (mot == current_motion)
             bg_col = (79, 70, 229) if is_cur else (255, 255, 255)
             fg_col = (255, 255, 255) if is_cur else (15, 23, 42)
-            pygame.draw.rect(screen, bg_col, r, border_radius=6)
-            pygame.draw.rect(screen, (203, 213, 225), r, width=1, border_radius=6)
+            pygame.draw.rect(canvas.surface, bg_col, r, border_radius=6)
+            pygame.draw.rect(canvas.surface, (203, 213, 225), r, width=1, border_radius=6)
             txt_mot_b = font_ui.render(mname, True, fg_col)
-            screen.blit(txt_mot_b, txt_mot_b.get_rect(center=r.center))
+            canvas.surface.blit(txt_mot_b, txt_mot_b.get_rect(center=r.center))
 
+        # Present canvas onto physical screen
+        canvas.present(clear=(238, 246, 255), smooth=True)
         pygame.display.flip()
         clock.tick(30)
 
@@ -326,4 +323,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()

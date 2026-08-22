@@ -269,10 +269,9 @@ No physical Acer/Pi acceptance should be claimed without actual hardware evidenc
 
 ---
 
-### Canonical Cast v0.1 Promotion & Runtime Simulator Acceptance (2026-08-22)
+### Canonical Cast v0.1 Runtime Acceptance Recheck (2026-08-22)
 
-- **Source Promotion:** Promoted all 6 canonical characters (Lilli, Leo, Flash [white rabbit with coral shirt & lightning bolt], Dani, Tito, Momo) to stable `assets/visual/characters/canonical/v0.1/` with `catalog.toml`, `README.md`, `MOTION.md`, 5 registered state SVGs, and authoring components.
-- **Runtime Renditions:** Declared and generated 30 build-time 256×256 PNGs in `assets/visual/runtime/v1/characters/` via `make visual-assets` and validated via `make visual-assets-check`.
-- **Semantic Actor Pipeline:** Enhanced `greia_platform.scene_actor` with `CharacterState` and `CharacterMotion` enums, cheap whole-character translations, grounded contact shadows, and fail-soft fallback in `greia_platform.pygame_scene`.
-- **Activity Simulator Acceptance:** Verified 6 viewports (1024×600 normal, 1024×600 large, 1280×800 normal, 1366×768 compact, 1920×1080 normal, 1111×700 normal), 5 states, 3 motion proofs, non-default fallback, default failure isolation, and cache working set stability (14 entries out of 32 max).
-- **Owner Review Artifacts:** `docs/reviews/visual/2026-08-22_canonical-cast-v01-runtime-simulator/` + `GREIA_VISUAL_REVIEW_CANONICAL_CAST_V01_RUNTIME_SIMULATOR_2026-08-22.zip`.
+- **Bounded Failed-Rendition Caching:** Added bounded negative caching (`BoundedCache[tuple[str, str, int, int], bool]`, max 64 entries) to `PygameSceneRenderer` to eliminate retry storms when PNGs fail or are corrupt, reset cleanly upon `renderer.clear()`.
+- **Default Rendition Failure Proof:** Verified Activity-level graceful safe fallback (`Activity Visual Safe Fallback Mode`) when required default rendition fails cold, with no uncaught exceptions or tracebacks.
+- **Authentic Simulator Provenance:** Captured all 10 review PNGs directly via the real Activity Simulator remote bridge with full developer UI controls rendered on `PygameReferenceCanvas`.
+- **Curated Deliverables:** Formatted `docs/reviews/visual/2026-08-22_canonical-cast-v01-runtime-recheck/` containing `OWNER_RECHECK.md`, `runtime-audit.json`, `simulator-trace.json`, and packaged `GREIA_VISUAL_REVIEW_CANONICAL_CAST_V01_RUNTIME_RECHECK_2026-08-22.zip` (strictly 10 PNGs + 3 metadata files).

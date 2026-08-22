@@ -34,7 +34,7 @@ Broad source-art coverage already exists. **V5 shared consumption/integration re
 
 # 2. Character seed
 
-Core cast remains **Lilli, Nino, Tito, Momo** in the accepted simplified Puff/Bean direction.
+Canonical 6-member cast: **Lilli, Leo, Flash, Dani, Tito, Momo** in the accepted simplified Puff/Bean/Robot direction (Authority: `docs/design/GREIA_CANONICAL_CAST_SYSTEM.md`).
 
 Shared motion names remain:
 
@@ -573,10 +573,11 @@ The entries below preserve the workstream chronology. Corrections/new state are 
 - Selective disposition: 9 finished assets + 2 ingredients approved for `preferred`; 7 finished assets intentionally remain `candidate_reference`.
 - No per-object Batch A redraw loop authorized.
 
-## 2026-08-22 — Authoring discovery becomes the next bottleneck
-- Raw generic asset count is no longer the immediate priority.
-- Next gate is `docs/testing/2026-08-22_GENERIC_VISUAL_LIBRARY_ADMISSION_AND_DISCOVERY_TOOLING.md`.
-- Gate will materialize stable preferred Batch A source, update generic indexes, add deterministic authoring-time list/search/show/validate tooling, and update the model-agnostic user-agent skill.
-- **No Batch B is currently authorized.**
+## 2026-08-22 — Canonical Cast v0.1 Runtime Acceptance Recheck Complete
+- Resolved all 6 review blockers from `docs/reviews/visual/2026-08-22_canonical-cast-v01-runtime-simulator/OWNER_REVIEW.md`.
+- Implemented bounded failed-rendition cache (max 64 entries) in `PygameSceneRenderer` avoiding per-frame decode churn on corrupt/missing assets.
+- Demonstrated cold required default failure safe-fallback screen with zero traceback leakage.
+- Verified authentic Activity Simulator provenance and full developer UI across all 6 canonical characters (Lilli, Leo, Flash, Dani, Tito, Momo), 5 semantic states, and 6 shared motions.
+- Curated clean transfer bundle `GREIA_VISUAL_REVIEW_CANONICAL_CAST_V01_RUNTIME_RECHECK_2026-08-22.zip` containing strictly 10 PNGs + `OWNER_RECHECK.md` + `runtime-audit.json` + `simulator-trace.json`.
 
-**Next exact action:** execute `docs/testing/2026-08-22_GENERIC_VISUAL_LIBRARY_ADMISSION_AND_DISCOVERY_TOOLING.md`.
+**Next exact action:** Owner Review and Signoff of `docs/reviews/visual/2026-08-22_canonical-cast-v01-runtime-recheck/OWNER_RECHECK.md` and transfer bundle `GREIA_VISUAL_REVIEW_CANONICAL_CAST_V01_RUNTIME_RECHECK_2026-08-22.zip`.

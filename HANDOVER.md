@@ -1,10 +1,9 @@
-- **Canonical Cast v0.1 — Promotion, Runtime Integration & Activity Simulator Acceptance (2026-08-22)**:
-  - Promoted 6 canonical mascots (Lilli, Leo, Flash, Dani, Tito, Momo) into stable source path `assets/visual/characters/canonical/v0.1/` with 5 states each.
-  - Historical Nino provenance documented; zero runtime aliasing.
-  - Generated and validated all 30 runtime 256×256 PNGs in `assets/visual/runtime/v1/characters/`.
-  - Added typed semantic states (`neutral`, `blink`, `happy`, `surprised`, `sleepy`) and motions (`idle_bounce`, `blink`, `happy_hop`, `celebrate_pop`, `surprised_wobble`, `sleepy_sway`) with fail-soft fallback to `greia_platform.scene_actor` and `greia_platform.pygame_scene`.
-  - Verified showcase fixture across 6 responsive viewports, fault-injection cases, and cache stability.
-  - Packaged uncommitted owner review bundle: `GREIA_VISUAL_REVIEW_CANONICAL_CAST_V01_RUNTIME_SIMULATOR_2026-08-22.zip`.
+- **Canonical Cast v0.1 — Runtime Acceptance Recheck (2026-08-22)**:
+  - Resolved all 6 review blockers from `docs/reviews/visual/2026-08-22_canonical-cast-v01-runtime-simulator/OWNER_REVIEW.md`.
+  - Implemented bounded negative caching in `PygameSceneRenderer` (`BoundedCache[tuple[str, str, int, int], bool]`, max 64 entries) to eliminate retry storms on corrupt or missing PNGs, reset on `renderer.clear()`.
+  - Injected cold default failure into `dani_neutral.png` and verified Activity-level safe fallback screen with zero tracebacks exposed.
+  - Verified authentic Activity Simulator provenance and full developer UI across all 6 characters, 5 states, and 6 motions on `PygameReferenceCanvas`.
+  - Curated clean transfer bundle `GREIA_VISUAL_REVIEW_CANONICAL_CAST_V01_RUNTIME_RECHECK_2026-08-22.zip` containing strictly 10 PNGs + `OWNER_RECHECK.md` + `runtime-audit.json` + `simulator-trace.json`.
 
 
 # Greia — Standalone Engineering Handover

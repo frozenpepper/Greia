@@ -13,6 +13,7 @@ from .scene import (
     SceneViewportTransform,
     sample_scene_node,
 )
+from .ui_core import BoundedCache
 
 
 class SceneRenderError(RuntimeError):
@@ -30,24 +31,27 @@ class PygameSceneRenderer:
     """Draw explicit semantic scene nodes through the shared bounded cache.
 
     The renderer does not discover assets and does not rasterize source SVGs.
-    Each scene node resolves through ``PygameVisualSurfaceCache``. Optional node
-    failures are isolated and remembered for the renderer lifetime so a corrupt
-    decorative PNG does not trigger repeated disk decode/exception work every
-    frame. Required-node failures abort the scene draw so the Activity can retain
-    its own deliberate static/private fallback.
+    Each scene node resolves through ``PygameVisualSurfaceCache``. Optional and
+    fallback node failures are remembered in a bounded cache for the renderer
+    lifetime so a corrupt PNG does not trigger repeated disk decode/exception work
+    every frame. Required-node failures abort the scene draw so the Activity can
+    retain its own deliberate static/private fallback.
     """
 
     def __init__(
         self,
         visual_cache: PygameVisualSurfaceCache[Any],
         *,
+        max_failed_entries: int = 64,
         pygame_module: Any | None = None,
     ) -> None:
         self.visual_cache = visual_cache
         if pygame_module is None:
             import pygame as pygame_module
         self._pygame = pygame_module
-        self._failed_optional: set[tuple[str, str, int, int]] = set()
+        self._failed_renditions: BoundedCache[tuple[str, str, int, int], bool] = (
+            BoundedCache(max_entries=max_failed_entries)
+        )
 
     @classmethod
     def for_activity(
@@ -55,6 +59,7 @@ class PygameSceneRenderer:
         *,
         max_entries: int = 24,
         max_surface_pixels: int = 1920 * 1080,
+        max_failed_entries: int = 64,
         pygame_module: Any | None = None,
     ) -> "PygameSceneRenderer":
         """Create one renderer against Greia's Activity-visible catalogue.
@@ -72,11 +77,15 @@ class PygameSceneRenderer:
             max_entries=max_entries,
             max_surface_pixels=max_surface_pixels,
         )
-        return cls(cache, pygame_module=pygame_module)
+        return cls(
+            cache,
+            max_failed_entries=max_failed_entries,
+            pygame_module=pygame_module,
+        )
 
     def clear(self) -> None:
         self.visual_cache.clear()
-        self._failed_optional.clear()
+        self._failed_renditions.clear()
 
     def draw(
         self,
@@ -135,26 +144,29 @@ class PygameSceneRenderer:
                 culled += 1
                 continue
 
-            optional_failure_key = (
+            primary_key = (
                 node.asset_id,
                 node.variant,
                 rect.width,
                 rect.height,
             )
-            if node.optional and optional_failure_key in self._failed_optional:
-                skipped += 1
-                continue
 
-            try:
-                surface = self.visual_cache.get(
+            surface = None
+            fallback_variant = getattr(node, "fallback_variant", None)
+            use_fallback_directly = (
+                primary_key in self._failed_renditions
+                and fallback_variant is not None
+                and fallback_variant != node.variant
+            )
+
+            if use_fallback_directly:
+                fallback_key = (
                     node.asset_id,
-                    variant=node.variant,
-                    size=rect.size,
+                    fallback_variant,
+                    rect.width,
+                    rect.height,
                 )
-            except cache_errors as exc:
-                surface = None
-                fallback_variant = getattr(node, "fallback_variant", None)
-                if fallback_variant and fallback_variant != node.variant:
+                if fallback_key not in self._failed_renditions:
                     try:
                         surface = self.visual_cache.get(
                             node.asset_id,
@@ -162,17 +174,44 @@ class PygameSceneRenderer:
                             size=rect.size,
                         )
                     except cache_errors:
+                        self._failed_renditions[fallback_key] = True
                         surface = None
+            elif primary_key not in self._failed_renditions:
+                try:
+                    surface = self.visual_cache.get(
+                        node.asset_id,
+                        variant=node.variant,
+                        size=rect.size,
+                    )
+                except cache_errors as exc:
+                    self._failed_renditions[primary_key] = True
+                    surface = None
+                    if fallback_variant and fallback_variant != node.variant:
+                        fallback_key = (
+                            node.asset_id,
+                            fallback_variant,
+                            rect.width,
+                            rect.height,
+                        )
+                        if fallback_key not in self._failed_renditions:
+                            try:
+                                surface = self.visual_cache.get(
+                                    node.asset_id,
+                                    variant=fallback_variant,
+                                    size=rect.size,
+                                )
+                            except cache_errors:
+                                self._failed_renditions[fallback_key] = True
+                                surface = None
 
-                if surface is None:
-                    if node.optional:
-                        self._failed_optional.add(optional_failure_key)
-                        skipped += 1
-                        continue
-                    raise SceneRenderError(
-                        f"required scene visual failed: {scene.scene_id}/{node.node_id} "
-                        f"({node.asset_id}/{node.variant})"
-                    ) from exc
+            if surface is None:
+                if node.optional:
+                    skipped += 1
+                    continue
+                raise SceneRenderError(
+                    f"required scene visual failed: {scene.scene_id}/{node.node_id} "
+                    f"({node.asset_id}/{node.variant})"
+                )
 
             previous_alpha = None
             alpha_changed = sample.alpha < 0.999
