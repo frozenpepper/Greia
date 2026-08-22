@@ -64,7 +64,10 @@ class ParentSettingsOverlay:
         hardware_store: HardwareSettingsStore | None = None,
     ) -> None:
         self.credential_store = credential_store
-        self.credential_store.ensure_initialized()
+        try:
+            self.credential_store.ensure_initialized()
+        except Exception:
+            pass
 
         if wifi_backend is None:
             backend = (
@@ -289,7 +292,11 @@ class ParentSettingsOverlay:
     def _attempt_auth(self, pygame: Any) -> None:
         if time.monotonic() < self.password_error_until:
             return
-        if self.credential_store.verify(self.password_text):
+        try:
+            verified = bool(self.credential_store.verify(self.password_text))
+        except Exception:
+            verified = False
+        if verified:
             self.state = ParentPanelState.PANEL
             self.password_text = ""
             self._sync_language_selection()

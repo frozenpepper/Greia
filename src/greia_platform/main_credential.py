@@ -174,9 +174,9 @@ class MainCredentialStore:
                 handle.write(encoded)
                 handle.flush()
                 os.fsync(handle.fileno())
-            os.chmod(temporary, 0o600)
+            os.chmod(temporary, 0o644)
             os.replace(temporary, self.path)
-            os.chmod(self.path, 0o600)
+            os.chmod(self.path, 0o644)
         except BaseException:
             temporary.unlink(missing_ok=True)
             raise
