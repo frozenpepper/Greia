@@ -9,32 +9,23 @@
       <stop offset="100%" stop-color="#FDE68A"/>
     </linearGradient>
   </defs>
-  <!-- Ear Tufts -->
   <polygon points="62,60 50,30 80,48" fill="#92400E" stroke="#451A03" stroke-width="4"/>
   <polygon points="138,60 150,30 120,48" fill="#92400E" stroke="#451A03" stroke-width="4"/>
-  <!-- Main Body -->
   <ellipse cx="100" cy="115" rx="52" ry="62" fill="url(#leo_body)" stroke="#451A03" stroke-width="4"/>
-  <!-- Belly -->
   <ellipse cx="100" cy="130" rx="34" ry="40" fill="url(#leo_belly)" stroke="#451A03" stroke-width="3"/>
   <path d="M 88 120 Q 100 126 112 120 M 86 135 Q 100 142 114 135 M 90 150 Q 100 156 110 150" stroke="#D97706" stroke-width="3" fill="none" stroke-linecap="round"/>
-  <!-- Wings -->
   <path d="M 50 90 C 35 115 40 145 56 160 C 46 140 48 110 60 92 Z" fill="#78350F" stroke="#451A03" stroke-width="3"/>
   <path d="M 150 90 C 165 115 160 145 144 160 C 154 140 152 110 140 92 Z" fill="#78350F" stroke="#451A03" stroke-width="3"/>
-  <!-- Feet -->
   <ellipse cx="85" cy="176" rx="10" ry="6" fill="#F59E0B" stroke="#451A03" stroke-width="3"/>
   <ellipse cx="115" cy="176" rx="10" ry="6" fill="#F59E0B" stroke="#451A03" stroke-width="3"/>
-  <!-- Face Mask Disc -->
   <circle cx="76" cy="84" r="22" fill="#FEF3C7" stroke="#451A03" stroke-width="3"/>
   <circle cx="124" cy="84" r="22" fill="#FEF3C7" stroke="#451A03" stroke-width="3"/>
-  <!-- Glasses -->
   <rect x="56" y="66" width="38" height="36" rx="12" fill="#38BDF8" fill-opacity="0.25" stroke="#0284C7" stroke-width="4.5"/>
   <rect x="106" y="66" width="38" height="36" rx="12" fill="#38BDF8" fill-opacity="0.25" stroke="#0284C7" stroke-width="4.5"/>
   <line x1="94" y1="84" x2="106" y2="84" stroke="#0284C7" stroke-width="4.5"/>
-  <!-- Eyes -->
   <circle cx="75" cy="84" r="10" fill="#1E1B4B"/>
   <circle cx="125" cy="84" r="10" fill="#1E1B4B"/>
   <circle cx="77" cy="81" r="3.5" fill="#FFFFFF"/>
   <circle cx="127" cy="81" r="3.5" fill="#FFFFFF"/>
-  <!-- Beak -->
   <polygon points="94,88 106,88 100,104" fill="#F59E0B" stroke="#B45309" stroke-width="2.5"/>
 </svg>

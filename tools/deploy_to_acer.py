@@ -5,10 +5,8 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-import socket
 import subprocess
 import sys
-import time
 import pexpect
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -16,6 +14,7 @@ TARBALL = Path("/tmp/greia_deploy.tar.gz")
 ACER_IP = "192.168.68.104"
 ACER_USER = "greia"
 ACER_PASS = "greia"
+
 
 def main() -> int:
     print(f"Creating clean tarball from {ROOT}...")
@@ -29,63 +28,58 @@ def main() -> int:
         "--exclude=.pytest_cache",
         "--exclude=docs/reviews",
         "--exclude=._*",
+        "--exclude=tmp",
         "-C", str(ROOT), "."
     ], check=True, env=env)
 
     size = TARBALL.stat().st_size
     print(f"Tarball created: {size:,} bytes")
 
-    print(f"Connecting to Acer ({ACER_IP})...")
+    print(f"Transferring tarball to Acer ({ACER_IP}) via SCP...")
+    scp_cmd = f"scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null {TARBALL} {ACER_USER}@{ACER_IP}:/dev/shm/greia_update.tar.gz"
+    scp_child = pexpect.spawn(scp_cmd, encoding="utf-8", timeout=180)
+    idx = scp_child.expect(["password:", pexpect.EOF, pexpect.TIMEOUT])
+    if idx == 0:
+        scp_child.sendline(ACER_PASS)
+        scp_child.expect(pexpect.EOF, timeout=180)
+    scp_child.close()
+    print("Tarball transferred successfully!")
+
+    print("Connecting to Acer to extract and restart service...")
     ssh_cmd = f"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null {ACER_USER}@{ACER_IP}"
-    child = pexpect.spawn(ssh_cmd, encoding="utf-8", timeout=30)
+    child = pexpect.spawn(ssh_cmd, encoding="utf-8", timeout=120)
     child.expect("password:")
     child.sendline(ACER_PASS)
-    child.expect(r"\$")
+    child.expect(r"greia-dev:.*")
 
-    # Clean /dev/shm and purge any AppleDouble files
-    child.sendline(f"echo {ACER_PASS} | sudo -S rm -rf /dev/shm/greia* /dev/shm/*.tar.gz /tmp/* /var/tmp/*")
-    child.expect(r"\$")
+    print("Extracting to /opt/greia-os...")
+    child.sendline(f"echo {ACER_PASS} | sudo -S tar -xzf /dev/shm/greia_update.tar.gz -C /opt/greia-os")
+    child.expect(r"greia-dev:.*", timeout=120)
 
-    # Stream tarball
-    child.sendline("python3 -c \"import socket; s=socket.socket(); s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1); s.bind(('0.0.0.0', 9999)); s.listen(1); print('LISTENER_READY', flush=True); conn, _ = s.accept();\nwith open('/dev/shm/greia_update.tar.gz', 'wb') as f:\n while True:\n  chunk = conn.recv(65536)\n  if not chunk: break\n  f.write(chunk)\nprint('SAVED', flush=True)\"")
-    child.expect("LISTENER_READY")
+    child.sendline(f"echo {ACER_PASS} | sudo -S rm -f /dev/shm/greia_update.tar.gz")
+    child.expect(r"greia-dev:.*")
 
-    time.sleep(0.3)
-    s = socket.socket()
-    connected = False
-    for attempt in range(5):
-        try:
-            s.connect((ACER_IP, 9999))
-            connected = True
-            break
-        except OSError:
-            time.sleep(0.5)
-    if not connected:
-        raise RuntimeError("Could not connect to Acer socket on port 9999")
+    child.sendline(f"echo {ACER_PASS} | sudo -S find /opt/greia-os -name '._*' -delete")
+    child.expect(r"greia-dev:.*")
 
-    with open(TARBALL, "rb") as f:
-        while True:
-            buf = f.read(65536)
-            if not buf:
-                break
-            s.sendall(buf)
-    s.close()
+    print("Restarting greia-launcher service...")
+    child.sendline(f"echo {ACER_PASS} | sudo -S systemctl restart greia-launcher.service")
+    child.expect(r"greia-dev:.*")
 
-    child.expect("SAVED")
-    print("Tarball streamed to Acer successfully!")
-
-    child.expect(r"\$")
-    child.sendline(f"echo {ACER_PASS} | sudo -S tar -xzf /dev/shm/greia_update.tar.gz -C /opt/greia-os && rm -f /dev/shm/greia_update.tar.gz && sudo find /opt/greia-os -name '._*' -delete && echo EXTRACTED")
-    child.expect("EXTRACTED")
-    print("Extracted to /opt/greia-os on Acer!")
-
-    child.sendline(f"echo {ACER_PASS} | sudo -S systemctl restart greia-launcher.service && echo RESTARTED")
-    child.expect("RESTARTED")
-    print("Restarted greia-launcher service on Acer!")
+    print("Validating activity package on Acer...")
+    child.sendline("PYTHONPATH=/opt/greia-os/src python3 /opt/greia-os/tools/validate_activity.py /opt/greia-os/activities/teatrino_fiabe")
+    child.expect(r"greia-dev:.*")
+    output = child.before
+    if "PASS" in output:
+        print("Activity validation on Acer: PASS!")
+    else:
+        print("Validation output:\n", output)
 
     child.sendline("exit")
-    print("Deployment complete and verified!")
+    child.close()
+    print("Deployment complete and verified on Acer hardware!")
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())

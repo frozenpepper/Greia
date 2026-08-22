@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="bear_fur" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#B45309"/>
+      <stop offset="100%" stop-color="#78350F"/>
+    </linearGradient>
+  </defs>
+  <!-- Round Ears -->
+  <circle cx="68" cy="52" r="16" fill="url(#bear_fur)" stroke="#451A03" stroke-width="3.5"/>
+  <circle cx="68" cy="52" r="8" fill="#FDE68A"/>
+  <circle cx="132" cy="52" r="16" fill="url(#bear_fur)" stroke="#451A03" stroke-width="3.5"/>
+  <circle cx="132" cy="52" r="8" fill="#FDE68A"/>
+  <!-- Body -->
+  <ellipse cx="100" cy="135" rx="46" ry="42" fill="url(#bear_fur)" stroke="#451A03" stroke-width="4"/>
+  <!-- Belly -->
+  <ellipse cx="100" cy="142" rx="28" ry="26" fill="#FEF3C7"/>
+  <!-- Honey Pot in Paws -->
+  <ellipse cx="140" cy="140" rx="16" ry="18" fill="#F59E0B" stroke="#B45309" stroke-width="2.5"/>
+  <ellipse cx="140" cy="126" rx="12" ry="4" fill="#FEF08A"/>
+  <!-- Paws & Feet -->
+  <ellipse cx="74" cy="176" rx="15" ry="10" fill="#FEF3C7" stroke="#451A03" stroke-width="3"/>
+  <ellipse cx="126" cy="176" rx="15" ry="10" fill="#FEF3C7" stroke="#451A03" stroke-width="3"/>
+  <!-- Head -->
+  <circle cx="100" cy="85" r="36" fill="url(#bear_fur)" stroke="#451A03" stroke-width="4"/>
+  <!-- Muzzle -->
+  <ellipse cx="100" cy="94" rx="18" ry="14" fill="#FEF3C7" stroke="#451A03" stroke-width="2"/>
+  <ellipse cx="100" cy="88" rx="7" ry="5" fill="#451A03"/>
+  <path d="M 95 96 Q 100 102 105 96" stroke="#451A03" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- Eyes -->
+  <circle cx="84" cy="76" r="4.5" fill="#1E1B4B"/>
+  <circle cx="116" cy="76" r="4.5" fill="#1E1B4B"/>
+  <circle cx="85.5" cy="74" r="1.5" fill="#FFFFFF"/>
+  <circle cx="117.5" cy="74" r="1.5" fill="#FFFFFF"/>
+</svg>

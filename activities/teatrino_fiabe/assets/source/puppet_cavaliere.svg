@@ -5,27 +5,18 @@
       <stop offset="100%" stop-color="#94A3B8"/>
     </linearGradient>
   </defs>
-  <!-- Red Feather Plume -->
   <path d="M 100 35 C 100 12 135 15 130 35 C 120 30 110 32 100 35 Z" fill="#EF4444" stroke="#991B1B" stroke-width="2.5"/>
-  <!-- Body Armor -->
   <rect x="68" y="108" width="64" height="52" rx="10" fill="url(#armor)" stroke="#334155" stroke-width="4"/>
-  <!-- Golden Crest on Chest -->
   <polygon points="100,120 106,128 116,128 108,134 111,144 100,138 89,144 92,134 84,128 94,128" fill="#F59E0B"/>
-  <!-- Legs -->
   <rect x="74" y="158" width="18" height="20" rx="6" fill="#64748B" stroke="#334155" stroke-width="3"/>
   <rect x="108" y="158" width="18" height="20" rx="6" fill="#64748B" stroke="#334155" stroke-width="3"/>
-  <!-- Shield on Left -->
   <path d="M 44 108 L 68 108 L 68 135 C 68 152 44 162 44 162 C 44 162 20 152 20 135 L 20 108 Z" fill="#3B82F6" stroke="#1E3A8A" stroke-width="3" transform="rotate(-10 44 135)"/>
   <polygon points="42,124 45,130 52,130 46,134 48,140 42,136 36,140 38,134 32,130 39,130" fill="#FDE047" transform="rotate(-10 44 135)"/>
-  <!-- Wooden Sword on Right -->
   <line x1="140" y1="150" x2="168" y2="105" stroke="#94A3B8" stroke-width="6" stroke-linecap="round"/>
   <line x1="136" y1="142" x2="148" y2="150" stroke="#B45309" stroke-width="5" stroke-linecap="round"/>
   <circle cx="133" cy="155" r="4" fill="#F59E0B"/>
-  <!-- Helmet & Head -->
   <ellipse cx="100" cy="74" rx="34" ry="32" fill="url(#armor)" stroke="#334155" stroke-width="4"/>
-  <!-- Helmet Visor Slot & Friendly Face -->
   <rect x="72" y="66" width="56" height="24" rx="8" fill="#FEE2E2" stroke="#334155" stroke-width="3"/>
-  <!-- Eyes -->
   <circle cx="86" cy="78" r="4.5" fill="#1E1B4B"/>
   <circle cx="114" cy="78" r="4.5" fill="#1E1B4B"/>
   <circle cx="87.5" cy="76" r="1.5" fill="#FFFFFF"/>

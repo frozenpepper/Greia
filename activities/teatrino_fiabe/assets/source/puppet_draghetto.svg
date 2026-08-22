@@ -5,34 +5,25 @@
       <stop offset="100%" stop-color="#059669"/>
     </linearGradient>
   </defs>
-  <!-- Wings -->
   <path d="M 70 85 C 35 60 25 95 55 115 Z" fill="#C084FC" stroke="#581C87" stroke-width="3"/>
   <path d="M 130 85 C 165 60 175 95 145 115 Z" fill="#C084FC" stroke="#581C87" stroke-width="3"/>
-  <!-- Tail -->
   <path d="M 130 145 C 160 150 172 170 160 180 C 150 172 142 165 130 160 Z" fill="url(#drag_scale)" stroke="#064E3B" stroke-width="3.5"/>
   <polygon points="162,175 174,178 168,186" fill="#FDE047"/>
-  <!-- Body -->
   <ellipse cx="100" cy="135" rx="42" ry="42" fill="url(#drag_scale)" stroke="#064E3B" stroke-width="4"/>
-  <!-- Yellow Belly Plates -->
   <ellipse cx="100" cy="142" rx="26" ry="28" fill="#FEF08A" stroke="#064E3B" stroke-width="2.5"/>
   <line x1="82" y1="130" x2="118" y2="130" stroke="#CA8A04" stroke-width="2"/>
   <line x1="78" y1="144" x2="122" y2="144" stroke="#CA8A04" stroke-width="2"/>
   <line x1="82" y1="158" x2="118" y2="158" stroke="#CA8A04" stroke-width="2"/>
-  <!-- Feet -->
   <ellipse cx="76" cy="176" rx="14" ry="9" fill="#059669" stroke="#064E3B" stroke-width="3"/>
   <ellipse cx="124" cy="176" rx="14" ry="9" fill="#059669" stroke="#064E3B" stroke-width="3"/>
-  <!-- Little Horns -->
   <polygon points="80,55 72,32 90,48" fill="#FDE047" stroke="#854D0E" stroke-width="2.5"/>
   <polygon points="120,55 128,32 110,48" fill="#FDE047" stroke="#854D0E" stroke-width="2.5"/>
-  <!-- Head -->
   <ellipse cx="100" cy="85" rx="36" ry="30" fill="url(#drag_scale)" stroke="#064E3B" stroke-width="4"/>
   <ellipse cx="100" cy="94" rx="22" ry="14" fill="#6EE7B7"/>
-  <!-- Snout Nostrils & Smoke Spark -->
   <circle cx="94" cy="94" r="2.5" fill="#064E3B"/>
   <circle cx="106" cy="94" r="2.5" fill="#064E3B"/>
   <circle cx="118" cy="90" r="3" fill="#F97316" opacity="0.8"/>
   <circle cx="125" cy="86" r="2" fill="#FDE047" opacity="0.9"/>
-  <!-- Big Eyes -->
   <circle cx="82" cy="76" r="10" fill="#1E1B4B"/>
   <circle cx="118" cy="76" r="10" fill="#1E1B4B"/>
   <circle cx="84" cy="74" r="3.5" fill="#FFFFFF"/>

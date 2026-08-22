@@ -12,7 +12,7 @@ discovery_tags = ["words", "puzzles"]
 
 [education]
 categories = ["language", "phonics", "fine_motor"]
-difficulty = 3
+difficulty = 1
 recommended_age_min = 5
 recommended_age_max = 8
 skills = [

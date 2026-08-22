@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="bebe_onesie" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#BAE6FD"/>
+      <stop offset="100%" stop-color="#7DD3FC"/>
+    </linearGradient>
+  </defs>
+  <!-- Onesie Body -->
+  <ellipse cx="100" cy="138" rx="42" ry="38" fill="url(#bebe_onesie)" stroke="#0369A1" stroke-width="4"/>
+  <!-- Baby Bib -->
+  <path d="M 80 108 C 80 132 120 132 120 108 Z" fill="#FFFFFF" stroke="#0369A1" stroke-width="2.5"/>
+  <circle cx="100" cy="120" r="3.5" fill="#F43F5E"/>
+  <!-- Onesie Feet -->
+  <ellipse cx="78" cy="172" rx="14" ry="10" fill="#E0F2FE" stroke="#0369A1" stroke-width="3"/>
+  <ellipse cx="122" cy="172" rx="14" ry="10" fill="#E0F2FE" stroke="#0369A1" stroke-width="3"/>
+  <!-- Baby Rattle in Hand -->
+  <line x1="140" y1="130" x2="158" y2="105" stroke="#F59E0B" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="160" cy="100" r="10" fill="#F472B6" stroke="#DB2777" stroke-width="2.5"/>
+  <circle cx="160" cy="100" r="4" fill="#FDE047"/>
+  <!-- Baby Head -->
+  <circle cx="100" cy="74" r="32" fill="#FEE2E2" stroke="#854D0E" stroke-width="3.5"/>
+  <!-- Cute Hair Curl on Top -->
+  <path d="M 100 42 C 94 30 112 30 108 42 Z" fill="#F59E0B" stroke="#B45309" stroke-width="2"/>
+  <!-- Rosy Big Cheeks -->
+  <circle cx="76" cy="82" r="7" fill="#F43F5E" opacity="0.6"/>
+  <circle cx="124" cy="82" r="7" fill="#F43F5E" opacity="0.6"/>
+  <!-- Big Wonder Eyes -->
+  <circle cx="86" cy="72" r="6" fill="#1E1B4B"/>
+  <circle cx="114" cy="72" r="6" fill="#1E1B4B"/>
+  <circle cx="88" cy="70" r="2.5" fill="#FFFFFF"/>
+  <circle cx="116" cy="70" r="2.5" fill="#FFFFFF"/>
+  <!-- Cute Pacifier or Sweet Smile -->
+  <ellipse cx="100" cy="84" rx="8" ry="6" fill="#FDE047" stroke="#D97706" stroke-width="2"/>
+  <circle cx="100" cy="84" r="3" fill="#F59E0B"/>
+</svg>
