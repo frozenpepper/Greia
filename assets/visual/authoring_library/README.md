@@ -16,7 +16,7 @@ The Generic Visual Authoring Library is the primary discovery interface for Acti
 
 Every indexed asset explicitly declares its `library_status`:
 
-- `library_status = "preferred"` (55 finished assets, 7 ingredients): Fully owner-reviewed and promoted assets (from Forest/Meadow v0.3, Workshop v0.2, and Core Essentials v0.1). **Use these first for direct `REUSE`.**
+- `library_status = "preferred"` (57 finished assets, 7 ingredients): Fully owner-reviewed and promoted assets (from Forest/Meadow v0.3, Workshop v0.2, and Core Essentials v0.1). **Use these first for direct `REUSE`.**
 - `library_status = "candidate_reference"` (37 finished assets, 0 ingredients): High-value candidate references (from Core Essentials Batch A candidates, Clinic candidate, Water/Pond v0.1, Reading v0.1, and Fantasy v0.1). Useful for `COMPOSE / ADAPT` and provisional composition.
 
 > [!NOTE]
@@ -28,8 +28,17 @@ Every indexed asset explicitly declares its `library_status`:
 2. [`interiors_architecture.toml`](interiors_architecture.toml) — Walls, floors, windows, archways, doors, drapes, rugs, and room bunting (6 preferred, 5 candidate references, 1 ingredient).
 3. [`furniture_storage.toml`](furniture_storage.toml) — Tables, seating, daybeds, shelving, pegboards, cabinets, bookcases, and storage crates (8 preferred, 4 candidate references, 1 ingredient).
 4. [`everyday_props.toml`](everyday_props.toml) — Tools, storage baskets, jars, tableware, books, containers, botanicals, and small items (7 preferred, 7 candidate references, 1 ingredient).
-5. [`making_learning_play.toml`](making_learning_play.toml) — Art supplies, manipulative toys, mechanisms, clocks, plushies, and play structures (4 preferred, 4 candidate references, 2 ingredients).
+5. [`making_learning_play.toml`](making_learning_play.toml) — Art supplies, manipulative toys, mechanisms, clocks, plushies, and play structures (6 preferred, 4 candidate references, 2 ingredients).
 6. [`lighting_fx_shadows.toml`](lighting_fx_shadows.toml) — Sunbeams, moonbeams, window light, water ripples, ambient particles, contact shadows, and feedback FX (9 preferred, 11 candidate references, 0 ingredients).
+
+Totals:
+
+```text
+57 preferred finished assets
+37 candidate-reference finished assets
+7 preferred authoring ingredients
+101 indexed reusable visual resources
+```
 
 ## Source Pools Referenced
 - **Core Essentials v0.1:** `assets/visual/generic/core_essentials/v0.1/` (promoted preferred)
