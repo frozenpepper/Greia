@@ -35,6 +35,11 @@ RESOURCES = (
         ("POST",),
     ),
     ParentApiResource("profiles", f"{API_BASE}/profiles", ("GET", "POST")),
+    ParentApiResource(
+        "profile_activity_policy",
+        f"{API_BASE}/profiles/{{profile_id}}/activity-policy",
+        ("GET", "PUT"),
+    ),
     ParentApiResource("activities", f"{API_BASE}/activities", ("GET",)),
     ParentApiResource(
         "activity_install",
@@ -69,6 +74,7 @@ RESOURCES = (
 CAPABILITIES = {
     "profiles.manage": True,
     "activities.read": True,
+    "activities.policy": True,
     "progress.read": True,
     "settings.input": True,
     "settings.display": True,
