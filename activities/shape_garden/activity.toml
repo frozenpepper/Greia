@@ -8,10 +8,12 @@ languages = ["*"]
 
 [presentation]
 categories = ["create", "learn"]
+discovery_tags = ["drawing", "making"]
 
 [education]
 categories = ["creativity", "geometry", "fine_motor"]
-difficulty = 1
+difficulty = 2
+recommended_age_min = 3
 skills = [
   { id = "motor.pointer.control", weight = 3 },
   { id = "math.geometry.shape_recognition", weight = 2 },
