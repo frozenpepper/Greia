@@ -16,6 +16,8 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Iterator, Mapping
 
+from .activity_discovery import ChallengePreference
+
 
 class ProfileError(ValueError):
     """Raised when child-profile data violates the bounded platform contract."""
@@ -84,6 +86,25 @@ class ProfilePolicy:
             raise ProfileError("profile secret contains unsupported characters")
         return secret
 
+    @staticmethod
+    def validate_approximate_age(value: int | None) -> int | None:
+        if value is None:
+            return None
+        if not isinstance(value, int) or isinstance(value, bool) or not 1 <= value <= 18:
+            raise ProfileError("approximate child age must be an integer from 1 through 18")
+        return value
+
+    @staticmethod
+    def validate_challenge_preference(
+        value: ChallengePreference | str,
+    ) -> ChallengePreference:
+        if isinstance(value, ChallengePreference):
+            return value
+        try:
+            return ChallengePreference(value)
+        except (TypeError, ValueError) as exc:
+            raise ProfileError("unsupported child challenge preference") from exc
+
 
 @dataclass(frozen=True, slots=True)
 class SecretDigest:
@@ -128,6 +149,8 @@ class ChildProfile:
     avatar_id: str
     secret_digest: SecretDigest | None
     mask_secret: bool
+    approximate_age: int | None = None
+    challenge_preference: ChallengePreference = ChallengePreference.AUTOMATIC
 
     @property
     def has_secret(self) -> bool:
@@ -140,6 +163,8 @@ class ChildProfile:
             "avatar_id": self.avatar_id,
             "has_secret": self.has_secret,
             "mask_secret": self.mask_secret,
+            "approximate_age": self.approximate_age,
+            "challenge_preference": self.challenge_preference.value,
         }
 
     def storage_dict(self) -> dict[str, object]:
@@ -158,6 +183,10 @@ class ProfileContext:
     activities_dir: Path
     storage_dir: Path
     progress_dir: Path
+
+    @property
+    def activity_discovery_policy_path(self) -> Path:
+        return self.root / "activity-discovery.json"
 
     def activity_data_dir(self, activity_id: str) -> Path:
         if not activity_id or any(character not in "abcdefghijklmnopqrstuvwxyz0123456789._-" for character in activity_id):
@@ -248,6 +277,8 @@ class ProfileStore:
         *,
         secret: str = "",
         mask_secret: bool | None = None,
+        approximate_age: int | None = None,
+        challenge_preference: ChallengePreference | str = ChallengePreference.AUTOMATIC,
     ) -> ChildProfile:
         with self._mutation_lock():
             profiles = self._read_unlocked()
@@ -258,6 +289,8 @@ class ProfileStore:
                 avatar_id,
                 secret,
                 self.policy.default_mask_secret if mask_secret is None else bool(mask_secret),
+                approximate_age=approximate_age,
+                challenge_preference=challenge_preference,
             )
             updated = (*profiles, profile)
             self._write_unlocked(updated)
@@ -273,10 +306,15 @@ class ProfileStore:
         secret_action: str = "keep",
         secret: str = "",
         mask_secret: bool | None = None,
+        approximate_age: int | None = None,
+        clear_approximate_age: bool = False,
+        challenge_preference: ChallengePreference | str | None = None,
     ) -> ChildProfile:
         _validate_profile_id(profile_id)
         if secret_action not in {"keep", "set", "clear"}:
             raise ProfileError("secret action must be keep, set, or clear")
+        if clear_approximate_age and approximate_age is not None:
+            raise ProfileError("cannot set and clear approximate age in one update")
         with self._mutation_lock():
             profiles = list(self._read_unlocked())
             for index, current in enumerate(profiles):
@@ -290,6 +328,17 @@ class ProfileStore:
                     digest = SecretDigest.create(validated_secret, self.policy.secret_iterations)
                 elif secret_action == "clear":
                     digest = None
+                if clear_approximate_age:
+                    resolved_age = None
+                elif approximate_age is not None:
+                    resolved_age = self.policy.validate_approximate_age(approximate_age)
+                else:
+                    resolved_age = current.approximate_age
+                resolved_challenge = (
+                    self.policy.validate_challenge_preference(challenge_preference)
+                    if challenge_preference is not None
+                    else current.challenge_preference
+                )
                 updated = replace(
                     current,
                     display_name=(
@@ -304,6 +353,8 @@ class ProfileStore:
                     ),
                     secret_digest=digest,
                     mask_secret=(current.mask_secret if mask_secret is None else bool(mask_secret)),
+                    approximate_age=resolved_age,
+                    challenge_preference=resolved_challenge,
                 )
                 profiles[index] = updated
                 self._write_unlocked(tuple(profiles))
@@ -372,6 +423,9 @@ class ProfileStore:
         avatar_id: str,
         secret: str,
         mask_secret: bool,
+        *,
+        approximate_age: int | None = None,
+        challenge_preference: ChallengePreference | str = ChallengePreference.AUTOMATIC,
     ) -> ChildProfile:
         name = self.policy.validate_name(display_name)
         avatar = self.policy.validate_avatar(avatar_id)
@@ -381,7 +435,15 @@ class ProfileStore:
             if validated_secret
             else None
         )
-        return ChildProfile(uuid.uuid4().hex, name, avatar, digest, bool(mask_secret))
+        return ChildProfile(
+            uuid.uuid4().hex,
+            name,
+            avatar,
+            digest,
+            bool(mask_secret),
+            self.policy.validate_approximate_age(approximate_age),
+            self.policy.validate_challenge_preference(challenge_preference),
+        )
 
     def _read_unlocked(self) -> tuple[ChildProfile, ...]:
         try:
@@ -413,6 +475,10 @@ class ProfileStore:
         display_name = raw.get("display_name")
         avatar_id = raw.get("avatar_id")
         mask_secret = raw.get("mask_secret", self.policy.default_mask_secret)
+        approximate_age = raw.get("approximate_age")
+        challenge_preference = raw.get(
+            "challenge_preference", ChallengePreference.AUTOMATIC.value
+        )
         if not isinstance(profile_id, str):
             raise ProfileError("profile identifier must be text")
         _validate_profile_id(profile_id)
@@ -455,6 +521,8 @@ class ProfileStore:
             self.policy.validate_avatar(avatar_id),
             digest,
             mask_secret,
+            self.policy.validate_approximate_age(approximate_age),
+            self.policy.validate_challenge_preference(challenge_preference),
         )
 
     def _write_unlocked(self, profiles: tuple[ChildProfile, ...]) -> None:
@@ -600,7 +668,15 @@ class ActiveProfileSession:
             return None
         return {
             key: raw.get(key)
-            for key in ("profile_id", "display_name", "avatar_id", "has_secret", "mask_secret")
+            for key in (
+                "profile_id",
+                "display_name",
+                "avatar_id",
+                "has_secret",
+                "mask_secret",
+                "approximate_age",
+                "challenge_preference",
+            )
         }
 
     @contextmanager
