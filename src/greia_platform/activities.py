@@ -52,6 +52,15 @@ class ActivityManifest:
     # Empty means an older package that should temporarily fall back to
     # education.categories for compatibility.
     launcher_categories: tuple[str, ...] = ()
+    # Optional semantic hints may help Greia form one bounded sub-Collection
+    # layer. They never command a filesystem path or create a root destination.
+    discovery_tags: tuple[str, ...] = ()
+    # Developmental suitability is independent from challenge/difficulty.
+    recommended_age_min: int | None = None
+    recommended_age_max: int | None = None
+    difficulty_min: int | None = None
+    difficulty_max: int | None = None
+    adaptive_difficulty: bool = False
 
     @property
     def launch_path(self) -> Path:
@@ -260,8 +269,12 @@ class ActivityRegistry:
         raw_presentation = raw.get("presentation")
         if raw_presentation is None:
             launcher_categories: tuple[str, ...] = ()
+            discovery_tags: tuple[str, ...] = ()
         elif isinstance(raw_presentation, dict):
             launcher_categories = _texts(raw_presentation, "categories")
+            discovery_tags = _texts(
+                raw_presentation, "discovery_tags", allow_empty=True
+            )
         else:
             raise ActivityValidationError("presentation must be a table")
 
@@ -316,6 +329,18 @@ class ActivityRegistry:
             root=root,
             input_profile=input_profile,
             launcher_categories=launcher_categories,
+            discovery_tags=discovery_tags,
+            recommended_age_min=_optional_integer(
+                education, "recommended_age_min", 1, 18
+            ),
+            recommended_age_max=_optional_integer(
+                education, "recommended_age_max", 1, 18
+            ),
+            difficulty_min=_optional_integer(education, "difficulty_min", 1, 10),
+            difficulty_max=_optional_integer(education, "difficulty_max", 1, 10),
+            adaptive_difficulty=_optional_boolean(
+                education, "adaptive_difficulty", default=False
+            ),
         )
 
     def _validate_manifest(self, manifest: ActivityManifest, source: ActivitySource) -> None:
@@ -350,6 +375,7 @@ class ActivityRegistry:
         _unique("activity.languages", manifest.languages)
         _unique("education.categories", manifest.categories)
         _unique("presentation.categories", manifest.launcher_categories)
+        _unique("presentation.discovery_tags", manifest.discovery_tags)
         if len(manifest.launcher_categories) > 4:
             raise ActivityValidationError(
                 "presentation.categories may contain at most four launcher categories"
@@ -360,6 +386,44 @@ class ActivityRegistry:
             raise ActivityValidationError(
                 "presentation.categories contains an invalid launcher category id"
             )
+        if len(manifest.discovery_tags) > 8:
+            raise ActivityValidationError(
+                "presentation.discovery_tags may contain at most eight semantic hints"
+            )
+        if any(not _bounded_id(value, 64) for value in manifest.discovery_tags):
+            raise ActivityValidationError(
+                "presentation.discovery_tags contains an invalid semantic hint"
+            )
+        if (
+            manifest.recommended_age_min is not None
+            and manifest.recommended_age_max is not None
+            and manifest.recommended_age_min > manifest.recommended_age_max
+        ):
+            raise ActivityValidationError(
+                "education.recommended_age_min must not exceed recommended_age_max"
+            )
+        difficulty_range = (manifest.difficulty_min, manifest.difficulty_max)
+        if (difficulty_range[0] is None) != (difficulty_range[1] is None):
+            raise ActivityValidationError(
+                "education.difficulty_min and difficulty_max must be declared together"
+            )
+        if manifest.adaptive_difficulty and difficulty_range[0] is None:
+            raise ActivityValidationError(
+                "education.adaptive_difficulty requires difficulty_min and difficulty_max"
+            )
+        if not manifest.adaptive_difficulty and difficulty_range[0] is not None:
+            raise ActivityValidationError(
+                "education difficulty range requires adaptive_difficulty = true"
+            )
+        if difficulty_range[0] is not None and difficulty_range[1] is not None:
+            if difficulty_range[0] > difficulty_range[1]:
+                raise ActivityValidationError(
+                    "education.difficulty_min must not exceed difficulty_max"
+                )
+            if not difficulty_range[0] <= manifest.difficulty <= difficulty_range[1]:
+                raise ActivityValidationError(
+                    "education.difficulty must fall inside the adaptive difficulty range"
+                )
         _unique("education.skills ids", tuple(item.skill_id for item in manifest.skills))
         _unique("education.events ids", tuple(item.event_id for item in manifest.events))
         _unique("requirements.required_capabilities", manifest.required_capabilities)
@@ -499,4 +563,21 @@ def _integer(
         raise ActivityValidationError(f"{key} must be an integer")
     if value < minimum or (maximum is not None and value > maximum):
         raise ActivityValidationError(f"{key} is outside its allowed range")
+    return value
+
+
+def _optional_integer(
+    container: Mapping[str, object], key: str, minimum: int, maximum: int | None = None
+) -> int | None:
+    if key not in container:
+        return None
+    return _integer(container, key, minimum, maximum)
+
+
+def _optional_boolean(
+    container: Mapping[str, object], key: str, *, default: bool
+) -> bool:
+    value = container.get(key, default)
+    if not isinstance(value, bool):
+        raise ActivityValidationError(f"{key} must be a boolean")
     return value
