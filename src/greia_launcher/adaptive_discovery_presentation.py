@@ -9,7 +9,7 @@ from greia_platform.activity_discovery import (
     ActivityDiscoveryService,
 )
 from greia_platform.assets import AssetCatalogueError
-from greia_platform.visual_primitives import VisualSurfaceCacheError
+from greia_platform.pygame_visual_assets import VisualSurfaceCacheError
 
 from .catalogue_view import ALL_ACTIVITIES_ID, ActivityCatalogue
 from .main import HitTarget

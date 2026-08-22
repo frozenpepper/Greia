@@ -437,7 +437,7 @@ class DeveloperRemoteTests(unittest.TestCase):
         self.assertIn(
             '"$SCRIPT_DIR/build-image.sh" "$PROFILE" "$OUTPUT_DIR"', wrapper
         )
-        self.assertIn("tools/provision_developer_image.py", wrapper)
+        self.assertNotIn("tools/provision_developer_image.py", wrapper)
         self.assertNotIn("debootstrap", wrapper)
 
 

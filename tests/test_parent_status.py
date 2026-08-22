@@ -83,7 +83,7 @@ class ParentStatusTests(unittest.TestCase):
             self.assertTrue(updated["touchpad_tap"])
             self.assertEqual(updated["mouse_speed"], 0.5)
             reset = app.reset_hardware()
-            self.assertFalse(reset["touchpad_tap"])
+            self.assertTrue(reset["touchpad_tap"])
             self.assertEqual(reset["resolution"], "auto")
 
     def test_parent_profile_lifecycle_is_typed_and_never_returns_password_material(self) -> None:

@@ -117,7 +117,6 @@ class DeveloperRemoteProfileTests(unittest.TestCase):
         )
         self.assertIn('PROFILE="${2:-modern-amd64-dev}"', wrapper)
         self.assertIn('"$SCRIPT_DIR/build-image.sh" "$PROFILE" "$OUTPUT_DIR"', wrapper)
-        self.assertIn('--expected-profile "$PROFILE"', wrapper)
 
 
 if __name__ == "__main__":

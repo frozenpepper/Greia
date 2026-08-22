@@ -4,8 +4,8 @@ set -Eeuo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 OUTPUT_DIR="${1:-$PROJECT_ROOT/out}"
-PROFILE_INPUT="${2:-modern-amd64-dev}"
-PROFILE_ID="${PROFILE_INPUT%.toml}"
+PROFILE="${2:-modern-amd64-dev}"
+PROFILE="${PROFILE%.toml}"
 PROFILE_TOOL="$PROJECT_ROOT/tools/build_profile.py"
 PACKAGE_ROOT="$PROJECT_ROOT/build/package-sets"
 
@@ -14,10 +14,10 @@ PACKAGE_ROOT="$PROJECT_ROOT/build/package-sets"
   exit 1
 }
 
-PROFILE_PATH="$PROJECT_ROOT/build/profiles/${PROFILE_ID}.toml"
+PROFILE_PATH="$PROJECT_ROOT/build/profiles/${PROFILE}.toml"
 [[ -r "$PROFILE_PATH" ]] || { echo "Developer profile not found: $PROFILE_PATH" >&2; exit 1; }
-[[ "$PROFILE_ID" == *-dev ]] || {
-  echo "Refusing developer build for a non-dev profile: $PROFILE_ID" >&2
+[[ "$PROFILE" == *-dev ]] || {
+  echo "Refusing developer build for a non-dev profile: $PROFILE" >&2
   exit 1
 }
 python3 "$PROFILE_TOOL" --package-root "$PACKAGE_ROOT" validate "$PROFILE_PATH" >/dev/null
@@ -35,20 +35,20 @@ OUTPUT_DIR="$(realpath "$OUTPUT_DIR")"
 # greiaadmin keypair and a second authentication model that is no longer part of
 # Greia development. The target builder already provisions the simple greia
 # password account and runtime sshd bootstrap for explicit developer profiles.
-"$SCRIPT_DIR/build-image.sh" "$PROFILE_ID" "$OUTPUT_DIR"
-image="$OUTPUT_DIR/greia-os-${PROFILE_ID}.img"
+"$SCRIPT_DIR/build-image.sh" "$PROFILE" "$OUTPUT_DIR"
+image="$OUTPUT_DIR/greia-os-${PROFILE}.img"
 
 bash "$PROJECT_ROOT/tools/verify-development-target-image.sh" "$image"
 
 # Remove stale key artifacts from the retired workflow so an old file in out/
 # cannot be mistaken for a credential required by the newly built image.
-rm -f "$OUTPUT_DIR/greia-os-${PROFILE_ID}-ssh-key" \
-      "$OUTPUT_DIR/greia-os-${PROFILE_ID}-ssh-key.pub"
+rm -f "$OUTPUT_DIR/greia-os-${PROFILE}-ssh-key" \
+      "$OUTPUT_DIR/greia-os-${PROFILE}-ssh-key.pub"
 
 cat <<EOF
 
 Greia developer image ready.
-Profile: $PROFILE_ID
+Profile: $PROFILE
 Image: $image
 SSH user: greia
 Host hint after first boot: greia-dev.local

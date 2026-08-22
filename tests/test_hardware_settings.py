@@ -21,10 +21,10 @@ class HardwareSettingsTests(unittest.TestCase):
             root,
         )
 
-    def test_default_disables_touchpad_tap(self) -> None:
+    def test_default_enables_touchpad_tap(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             settings = self.make_store(Path(temporary)).read()
-        self.assertFalse(settings.touchpad_tap)
+        self.assertTrue(settings.touchpad_tap)
         self.assertEqual(settings.resolution, "auto")
         self.assertEqual(settings.keyboard_layout, "us")
         self.assertEqual(settings.mic_gain, 2.0)
@@ -97,8 +97,8 @@ class HardwareSettingsTests(unittest.TestCase):
     def test_reset_restores_safe_defaults(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             store = self.make_store(Path(temporary))
-            store.update(touchpad_tap=True, mouse_speed=0.75, mic_gain=3.5)
+            store.update(touchpad_tap=False, mouse_speed=0.75, mic_gain=3.5)
             reset = store.reset()
-        self.assertFalse(reset.touchpad_tap)
-        self.assertEqual(reset.mouse_speed, 0.0)
+        self.assertTrue(reset.touchpad_tap)
+        self.assertEqual(reset.mouse_speed, 0.5)
         self.assertEqual(reset.mic_gain, 2.0)

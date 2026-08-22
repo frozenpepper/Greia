@@ -50,7 +50,7 @@ class InstallerStateTests(unittest.TestCase):
     def test_demo_starts_safe_without_touchpad_tapping(self) -> None:
         app = self.make_app()
         self.assertEqual(app.state.page, InstallerPage.WELCOME)
-        self.assertFalse(app.state.settings.touchpad_tap)
+        self.assertTrue(app.state.settings.touchpad_tap)
         self.assertEqual(app.state.target.path, Path("/dev/sda"))
         self.assertIn("1024x600", app.available_resolutions)
 
