@@ -114,16 +114,22 @@ class ShowRepository:
 
     def __init__(self, storage) -> None:
         self.storage = storage
+        self._mem_index: list[dict] = []
+        self._mem_files: dict[str, bytes] = {}
 
     def list_shows(self) -> list[dict]:
-        raw = self.storage.kv_get(SHOWS_INDEX_KEY, [])
-        if not isinstance(raw, list):
-            return []
-        cleaned: list[dict] = []
-        for item in raw:
-            if isinstance(item, dict) and "id" in item:
-                cleaned.append(item)
-        return cleaned[:MAX_SAVED_SHOWS]
+        if self.storage is not None:
+            try:
+                raw = self.storage.kv_get(SHOWS_INDEX_KEY, [])
+                if isinstance(raw, list):
+                    cleaned: list[dict] = []
+                    for item in raw:
+                        if isinstance(item, dict) and "id" in item:
+                            cleaned.append(item)
+                    return cleaned[:MAX_SAVED_SHOWS]
+            except Exception:
+                pass
+        return list(self._mem_index[:MAX_SAVED_SHOWS])
 
     def save_show(
         self,
@@ -152,46 +158,62 @@ class ShowRepository:
             "sfx_events": sfx_events,
         }
 
-        # Save companion JSON and audio files atomically
         json_bytes = json.dumps(show_payload).encode("utf-8")
-        self.storage.file_write_atomic(f"show_{show_id}.json", json_bytes)
+        self._mem_files[f"show_{show_id}.json"] = json_bytes
         if audio_wav_bytes:
-            self.storage.file_write_atomic(f"show_{show_id}.wav", audio_wav_bytes)
+            self._mem_files[f"show_{show_id}.wav"] = audio_wav_bytes
+        self._mem_index = [show_meta, *[s for s in self._mem_index if s.get("id") != show_id]][:MAX_SAVED_SHOWS]
 
-        # Update index
-        shows = self.list_shows()
-        new_shows = [show_meta, *shows][:MAX_SAVED_SHOWS]
-        self.storage.kv_set(SHOWS_INDEX_KEY, new_shows)
+        if self.storage is not None:
+            try:
+                self.storage.file_write_atomic(f"show_{show_id}.json", json_bytes)
+                if audio_wav_bytes:
+                    self.storage.file_write_atomic(f"show_{show_id}.wav", audio_wav_bytes)
+                shows = self.list_shows()
+                new_shows = [show_meta, *[s for s in shows if s.get("id") != show_id]][:MAX_SAVED_SHOWS]
+                self.storage.kv_set(SHOWS_INDEX_KEY, new_shows)
+            except Exception:
+                pass
+
         return show_meta
 
     def load_show(self, show_id: str) -> tuple[dict | None, bytes | None]:
-        try:
-            raw_json = self.storage.file_read(f"show_{show_id}.json")
-            if not raw_json:
-                return None, None
-            show_data = json.loads(raw_json.decode("utf-8"))
-        except Exception:
-            return None, None
+        json_bytes = self._mem_files.get(f"show_{show_id}.json")
+        wav_bytes = self._mem_files.get(f"show_{show_id}.wav")
 
-        audio_bytes = None
-        try:
-            audio_bytes = self.storage.file_read(f"show_{show_id}.wav")
-        except Exception:
-            pass
+        if json_bytes is None and self.storage is not None:
+            try:
+                json_bytes = self.storage.file_read(f"show_{show_id}.json")
+            except Exception:
+                json_bytes = None
 
-        return show_data, audio_bytes
+        if wav_bytes is None and self.storage is not None:
+            try:
+                wav_bytes = self.storage.file_read(f"show_{show_id}.wav")
+            except Exception:
+                wav_bytes = None
+
+        show_data = None
+        if json_bytes:
+            try:
+                show_data = json.loads(json_bytes.decode("utf-8"))
+            except Exception:
+                show_data = None
+
+        return show_data, wav_bytes
 
     def delete_show(self, show_id: str) -> None:
-        shows = [s for s in self.list_shows() if s.get("id") != show_id]
-        self.storage.kv_set(SHOWS_INDEX_KEY, shows)
-        try:
-            self.storage.file_delete(f"show_{show_id}.json")
-        except Exception:
-            pass
-        try:
-            self.storage.file_delete(f"show_{show_id}.wav")
-        except Exception:
-            pass
+        self._mem_index = [s for s in self._mem_index if s.get("id") != show_id]
+        self._mem_files.pop(f"show_{show_id}.json", None)
+        self._mem_files.pop(f"show_{show_id}.wav", None)
+        if self.storage is not None:
+            try:
+                shows = [s for s in self.list_shows() if s.get("id") != show_id]
+                self.storage.kv_set(SHOWS_INDEX_KEY, shows)
+                self.storage.file_delete(f"show_{show_id}.json")
+                self.storage.file_delete(f"show_{show_id}.wav")
+            except Exception:
+                pass
 
 
 # ============================================================================
@@ -258,8 +280,10 @@ class MicrophoneRecorder:
                     pass
 
         try:
+            names = sdl2_audio.get_audio_device_names(True)
+            dev_name = names[0] if names else ""
             self._dev = sdl2_audio.AudioDevice(
-                "",
+                dev_name,
                 True,
                 self.sample_rate,
                 sdl2_audio.AUDIO_S16LSB,
@@ -776,6 +800,42 @@ class AmbientSpark:
         surface.blit(spark_surf, (int(self.x - self.size), int(self.y - self.size)))
 
 
+def get_library_modal_layout(page: int, total_shows: int) -> dict:
+    box_rect = pygame.Rect(80, 36, 864, 528)
+    close_rect = pygame.Rect(box_rect.right - 56, box_rect.y + 14, 42, 42)
+    header_rect = pygame.Rect(box_rect.x, box_rect.y + 14, box_rect.width, 38)
+
+    cards_per_page = 4
+    cards = []
+    start_idx = page * cards_per_page
+    end_idx = min(total_shows, (page + 1) * cards_per_page)
+
+    for local_idx in range(end_idx - start_idx):
+        card_y = box_rect.y + 64 + local_idx * 98
+        card_rect = pygame.Rect(box_rect.x + 30, card_y, box_rect.width - 60, 86)
+        play_btn = pygame.Rect(card_rect.right - 190, card_rect.centery - 24, 115, 48)
+        del_btn = pygame.Rect(card_rect.right - 62, card_rect.centery - 24, 50, 48)
+        cards.append({
+            "card_rect": card_rect,
+            "play_btn": play_btn,
+            "del_btn": del_btn,
+            "show_index": start_idx + local_idx,
+        })
+
+    prev_btn = pygame.Rect(box_rect.x + 30, box_rect.bottom - 50, 120, 38)
+    next_btn = pygame.Rect(box_rect.right - 150, box_rect.bottom - 50, 120, 38)
+
+    return {
+        "box": box_rect,
+        "close": close_rect,
+        "header": header_rect,
+        "cards": cards,
+        "prev_btn": prev_btn,
+        "next_btn": next_btn,
+        "cards_per_page": cards_per_page,
+    }
+
+
 # ============================================================================
 # MAIN ENTRYPOINT & SCENE LOOP
 # ============================================================================
@@ -867,6 +927,7 @@ def main() -> int:
     rec_start_time = 0.0
     recorded_frames: list[dict] = []
     recorded_sfx: list[dict] = []
+    last_recorded_wav: bytes | None = None
     feedback_text = ""
     feedback_timer = 0.0
 
@@ -926,6 +987,7 @@ def main() -> int:
                 # Max duration reached -> Auto save show to library!
                 is_recording = False
                 wav_bytes = mic_recorder.stop_recording()
+                last_recorded_wav = wav_bytes
                 saved_meta = show_repo.save_show(
                     active_bg_id,
                     [{"id": p.puppet_id, "name": p.name} for p in puppets_on_stage],
@@ -1031,30 +1093,39 @@ def main() -> int:
                 # MODE: LIBRARY GALLERY MODAL
                 # ============================================================
                 if app_mode == "library":
-                    # Close Button [❌] (x: 880..930, y: 70..120)
-                    if 870 <= rx <= 930 and 70 <= ry <= 130:
+                    modal_layout = get_library_modal_layout(library_page, len(library_shows))
+                    if modal_layout["close"].collidepoint(rx, ry):
                         sound_mgr.play("pop")
                         app_mode = "stage"
                         continue
 
-                    # Card interactions
-                    cards_per_page = 4
-                    visible_shows = library_shows[library_page * cards_per_page : (library_page + 1) * cards_per_page]
-                    for s_idx, show_item in enumerate(visible_shows):
-                        card_y = 150 + s_idx * 90
-                        # Play Show Button [▶️ Guarda] (x: 670..770, y: card_y + 16 .. card_y + 68)
-                        if 670 <= rx <= 770 and card_y + 12 <= ry <= card_y + 68:
+                    if modal_layout["prev_btn"].collidepoint(rx, ry) and library_page > 0:
+                        sound_mgr.play("pop")
+                        library_page -= 1
+                        continue
+
+                    if modal_layout["next_btn"].collidepoint(rx, ry) and (library_page + 1) * modal_layout["cards_per_page"] < len(library_shows):
+                        sound_mgr.play("pop")
+                        library_page += 1
+                        continue
+
+                    for card_info in modal_layout["cards"]:
+                        s_idx = card_info["show_index"]
+                        if s_idx >= len(library_shows):
+                            continue
+                        show_item = library_shows[s_idx]
+
+                        if card_info["play_btn"].collidepoint(rx, ry):
                             show_data, wav_bytes = show_repo.load_show(show_item["id"])
                             if show_data:
                                 sound_mgr.play("trumpet")
-                                # Setup Viewer Mode
                                 app_mode = "viewer"
                                 is_playing_show = True
                                 play_start_time = time.time()
                                 playback_show_meta = show_item
                                 playback_frames = show_data.get("frames", [])
                                 playback_sfx = list(show_data.get("sfx_events", []))
-                                playback_duration = show_item.get("duration", 10.0)
+                                playback_duration = max(1.0, float(show_item.get("duration", 5.0)))
 
                                 # Set backdrop
                                 saved_bg = show_item.get("backdrop", "cottage")
@@ -1075,19 +1146,27 @@ def main() -> int:
                                     puppets_on_stage.append(p_obj)
 
                                 # Play audio track
-                                if wav_bytes:
+                                if playback_audio_channel:
                                     try:
-                                        snd = pygame.mixer.Sound(io.BytesIO(wav_bytes))
-                                        snd.play()
+                                        playback_audio_channel.stop()
                                     except Exception:
                                         pass
+                                    playback_audio_channel = None
+
+                                if wav_bytes and len(wav_bytes) > 44:
+                                    try:
+                                        snd = pygame.mixer.Sound(io.BytesIO(wav_bytes))
+                                        playback_audio_channel = snd.play()
+                                    except Exception:
+                                        playback_audio_channel = None
                             break
 
-                        # Delete Show Button [🗑️] (x: 785..845, y: card_y + 12 .. card_y + 68)
-                        if 785 <= rx <= 845 and card_y + 12 <= ry <= card_y + 68:
+                        if card_info["del_btn"].collidepoint(rx, ry):
                             sound_mgr.play("boing")
                             show_repo.delete_show(show_item["id"])
                             library_shows = show_repo.list_shows()
+                            if library_page * modal_layout["cards_per_page"] >= len(library_shows) and library_page > 0:
+                                library_page -= 1
                             break
 
                     continue
@@ -1099,26 +1178,39 @@ def main() -> int:
                     # Exit Viewer Button [⏹️ Esci] (x: 140..250, y: 16..68)
                     if 140 <= rx <= 250 and 16 <= ry <= 68:
                         sound_mgr.play("pop")
+                        if playback_audio_channel:
+                            try:
+                                playback_audio_channel.stop()
+                            except Exception:
+                                pass
+                            playback_audio_channel = None
                         is_playing_show = False
                         app_mode = "stage"
                         continue
 
-                    # Replay Button [🔁 Rivedi] (x: 270..380, y: 16..68)
-                    if 270 <= rx <= 380 and 16 <= ry <= 68:
+                    # Replay Button [🔁 Rivedi] (x: 265..385, y: 16..68)
+                    if 265 <= rx <= 385 and 16 <= ry <= 68:
                         if playback_show_meta:
                             sound_mgr.play("trumpet")
+                            if playback_audio_channel:
+                                try:
+                                    playback_audio_channel.stop()
+                                except Exception:
+                                    pass
+                                playback_audio_channel = None
                             is_playing_show = True
                             play_start_time = time.time()
                             show_data, wav_bytes = show_repo.load_show(playback_show_meta["id"])
                             if show_data:
                                 playback_frames = show_data.get("frames", [])
                                 playback_sfx = list(show_data.get("sfx_events", []))
-                                if wav_bytes:
+                                playback_duration = max(1.0, float(playback_show_meta.get("duration", 5.0)))
+                                if wav_bytes and len(wav_bytes) > 44:
                                     try:
                                         snd = pygame.mixer.Sound(io.BytesIO(wav_bytes))
-                                        snd.play()
+                                        playback_audio_channel = snd.play()
                                     except Exception:
-                                        pass
+                                        playback_audio_channel = None
                         continue
 
                 # ============================================================
@@ -1157,6 +1249,7 @@ def main() -> int:
                         is_recording = False
                         elapsed = max(0.5, time.time() - rec_start_time)
                         wav_bytes = mic_recorder.stop_recording()
+                        last_recorded_wav = wav_bytes
                         saved_meta = show_repo.save_show(
                             active_bg_id,
                             [{"id": p.puppet_id, "name": p.name} for p in puppets_on_stage],
@@ -1184,6 +1277,18 @@ def main() -> int:
                         feedback_text = f"▶️ {ui_strings.get('playing_show', 'Spettacolo in corso! Evviva!')}"
                         feedback_timer = 3.0
                         sound_mgr.play("trumpet")
+                        if playback_audio_channel:
+                            try:
+                                playback_audio_channel.stop()
+                            except Exception:
+                                pass
+                            playback_audio_channel = None
+                        if last_recorded_wav and len(last_recorded_wav) > 44:
+                            try:
+                                snd = pygame.mixer.Sound(io.BytesIO(last_recorded_wav))
+                                playback_audio_channel = snd.play()
+                            except Exception:
+                                playback_audio_channel = None
                     else:
                         # Play built-in show demo
                         is_playing_show = True
@@ -1404,6 +1509,22 @@ def main() -> int:
             rep_s = typography.render(f"🔁 {ui_strings.get('replay_story', 'Rivedi')}", FontRole.TITLE, 15, DARK_TEXT)
             surf.blit(rep_s, (rep_rect.centerx - rep_s.get_width() // 2, rep_rect.centery - rep_s.get_height() // 2))
 
+            # Viewer Title & Progress Bar
+            prog_bg = pygame.Rect(410, 24, 360, 34)
+            pygame.draw.rect(surf, (20, 16, 30), prog_bg, border_radius=10)
+            pygame.draw.rect(surf, STAGE_GOLD, prog_bg, width=2, border_radius=10)
+
+            play_elapsed = time.time() - play_start_time if is_playing_show else playback_duration
+            ratio = min(1.0, max(0.0, play_elapsed / max(0.1, playback_duration)))
+            if ratio > 0.0:
+                prog_fill = pygame.Rect(prog_bg.x + 3, prog_bg.y + 3, int((prog_bg.width - 6) * ratio), prog_bg.height - 6)
+                pygame.draw.rect(surf, STAGE_GOLD, prog_fill, border_radius=8)
+
+            t_title = playback_show_meta.get("title", "Storia") if playback_show_meta else "Spettacolo"
+            time_str = f"🎬 {t_title} ({min(int(playback_duration), int(play_elapsed))}s / {int(playback_duration)}s)"
+            t_s = typography.render(time_str, FontRole.CONTROL, 12, (255, 250, 240))
+            surf.blit(t_s, (prog_bg.centerx - t_s.get_width() // 2, prog_bg.centery - t_s.get_height() // 2))
+
         # --------------------------------------------------------------------
         # 6. RIGHT SIDEBAR: MAGIC DECK (Scene on Top, then Sound FX)
         # --------------------------------------------------------------------
@@ -1475,17 +1596,17 @@ def main() -> int:
             modal_overlay.fill((10, 8, 20, 220))
             surf.blit(modal_overlay, (0, 0))
 
-            # Modal Box
-            box_rect = pygame.Rect(100, 50, 824, 500)
+            modal_layout = get_library_modal_layout(library_page, len(library_shows))
+            box_rect = modal_layout["box"]
             pygame.draw.rect(surf, (255, 250, 240), box_rect, border_radius=20)
             pygame.draw.rect(surf, STAGE_GOLD, box_rect, width=4, border_radius=20)
 
             # Header
             hdr_surf = typography.render(f"🎬 {ui_strings.get('stories', 'Storie Magiche')}", FontRole.DISPLAY, 26, DARK_TEXT)
-            surf.blit(hdr_surf, (box_rect.centerx - hdr_surf.get_width() // 2, box_rect.y + 20))
+            surf.blit(hdr_surf, (box_rect.centerx - hdr_surf.get_width() // 2, box_rect.y + 16))
 
             # Close [❌] Button
-            cls_rect = pygame.Rect(box_rect.right - 55, box_rect.y + 15, 40, 40)
+            cls_rect = modal_layout["close"]
             pygame.draw.rect(surf, (254, 226, 226), cls_rect, border_radius=10)
             pygame.draw.rect(surf, (220, 38, 38), cls_rect, width=2, border_radius=10)
             cx, cy = cls_rect.center
@@ -1497,11 +1618,15 @@ def main() -> int:
                 no_s = typography.render(ui_strings.get("no_stories", "Nessuna storia salvata! Registra uno spettacolo!"), FontRole.TITLE, 18, (140, 100, 60))
                 surf.blit(no_s, (box_rect.centerx - no_s.get_width() // 2, box_rect.centery - 20))
             else:
-                cards_per_page = 4
-                visible_shows = library_shows[library_page * cards_per_page : (library_page + 1) * cards_per_page]
-                for s_idx, show_item in enumerate(visible_shows):
-                    card_y = 100 + s_idx * 95
-                    c_rect = pygame.Rect(box_rect.x + 30, card_y, box_rect.width - 60, 82)
+                for card_info in modal_layout["cards"]:
+                    s_idx = card_info["show_index"]
+                    if s_idx >= len(library_shows):
+                        continue
+                    show_item = library_shows[s_idx]
+                    c_rect = card_info["card_rect"]
+                    ply_btn_rect = card_info["play_btn"]
+                    del_btn_rect = card_info["del_btn"]
+
                     pygame.draw.rect(surf, (248, 240, 225), c_rect, border_radius=14)
                     pygame.draw.rect(surf, (180, 140, 90), c_rect, width=2, border_radius=14)
 
@@ -1521,27 +1646,41 @@ def main() -> int:
                         surf.blit(micro, (c_rect.x + 70 + a_idx * 34, c_rect.centery - 19))
 
                     # Title & Duration Badge
-                    title_s = typography.render(show_item.get("title", "Storia"), FontRole.TITLE, 18, DARK_TEXT)
-                    surf.blit(title_s, (c_rect.x + 200, c_rect.y + 14))
+                    title_s = typography.render(show_item.get("title", f"Storia {s_idx + 1}"), FontRole.TITLE, 18, DARK_TEXT)
+                    surf.blit(title_s, (c_rect.x + 190, c_rect.y + 16))
 
                     mic_indicator = "🎙️ " if show_item.get("has_audio") else ""
                     dur_text = f"{mic_indicator}{show_item.get('duration', 0)}s"
                     dur_s = typography.render(dur_text, FontRole.CONTROL, 13, (120, 60, 20))
-                    surf.blit(dur_s, (c_rect.x + 200, c_rect.y + 44))
+                    surf.blit(dur_s, (c_rect.x + 190, c_rect.y + 46))
 
                     # Play Button [▶️ Guarda]
-                    ply_btn_rect = pygame.Rect(c_rect.right - 200, c_rect.centery - 24, 110, 48)
                     pygame.draw.rect(surf, (220, 255, 225), ply_btn_rect, border_radius=12)
                     pygame.draw.rect(surf, MIC_GREEN, ply_btn_rect, width=2, border_radius=12)
                     ply_btn_s = typography.render(f"▶️ {ui_strings.get('play_story', 'Guarda')}", FontRole.TITLE, 15, (20, 100, 40))
                     surf.blit(ply_btn_s, (ply_btn_rect.centerx - ply_btn_s.get_width() // 2, ply_btn_rect.centery - ply_btn_s.get_height() // 2))
 
                     # Delete Button [🗑️]
-                    del_btn_rect = pygame.Rect(c_rect.right - 70, c_rect.centery - 24, 50, 48)
                     pygame.draw.rect(surf, (255, 230, 230), del_btn_rect, border_radius=12)
                     pygame.draw.rect(surf, (220, 38, 38), del_btn_rect, width=2, border_radius=12)
                     del_btn_s = typography.render("🗑️", FontRole.TITLE, 18, (185, 28, 28))
                     surf.blit(del_btn_s, (del_btn_rect.centerx - del_btn_s.get_width() // 2, del_btn_rect.centery - del_btn_s.get_height() // 2))
+
+                # Pagination Arrows (if > 4 shows)
+                if len(library_shows) > modal_layout["cards_per_page"]:
+                    if library_page > 0:
+                        prev_rect = modal_layout["prev_btn"]
+                        pygame.draw.rect(surf, (255, 250, 240), prev_rect, border_radius=10)
+                        pygame.draw.rect(surf, STAGE_GOLD, prev_rect, width=2, border_radius=10)
+                        p_txt = typography.render("◀ Indietro", FontRole.CONTROL, 12, DARK_TEXT)
+                        surf.blit(p_txt, (prev_rect.centerx - p_txt.get_width() // 2, prev_rect.centery - p_txt.get_height() // 2))
+
+                    if (library_page + 1) * modal_layout["cards_per_page"] < len(library_shows):
+                        next_rect = modal_layout["next_btn"]
+                        pygame.draw.rect(surf, (255, 250, 240), next_rect, border_radius=10)
+                        pygame.draw.rect(surf, STAGE_GOLD, next_rect, width=2, border_radius=10)
+                        n_txt = typography.render("Avanti ▶", FontRole.CONTROL, 12, DARK_TEXT)
+                        surf.blit(n_txt, (next_rect.centerx - n_txt.get_width() // 2, next_rect.centery - n_txt.get_height() // 2))
 
         # --------------------------------------------------------------------
         # 9. FEEDBACK BANNER (Floating Center Notification)

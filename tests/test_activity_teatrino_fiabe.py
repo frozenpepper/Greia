@@ -128,6 +128,37 @@ class TeatrinoFiabeIteration2Tests(unittest.TestCase):
             self.assertEqual(rec.toggle(), not initial)
             rec.toggle()
 
+    def test_microphone_recorder_multiple_cycles(self) -> None:
+        rec = TEATRINO.MicrophoneRecorder()
+        for _ in range(4):
+            rec.start_recording()
+            self.assertTrue(rec.is_recording)
+            wav_bytes = rec.stop_recording()
+            self.assertFalse(rec.is_recording)
+
+    def test_show_repository_in_memory_fallback_when_storage_is_none(self) -> None:
+        repo = TEATRINO.ShowRepository(None)
+        self.assertEqual(repo.list_shows(), [])
+        meta = repo.save_show("forest", [{"id": "cavaliere", "name": "Cavaliere"}], [], [], 3.5, b"RIFFWAVE")
+        self.assertEqual(len(repo.list_shows()), 1)
+        loaded_data, loaded_audio = repo.load_show(meta["id"])
+        self.assertIsNotNone(loaded_data)
+        self.assertEqual(loaded_audio, b"RIFFWAVE")
+        repo.delete_show(meta["id"])
+        self.assertEqual(repo.list_shows(), [])
+
+    def test_library_modal_layout_geometry(self) -> None:
+        layout = TEATRINO.get_library_modal_layout(0, 6)
+        self.assertIn("box", layout)
+        self.assertIn("close", layout)
+        self.assertIn("cards", layout)
+        self.assertEqual(len(layout["cards"]), 4)
+        for c in layout["cards"]:
+            self.assertTrue(layout["box"].contains(c["card_rect"]))
+            self.assertTrue(c["card_rect"].contains(c["play_btn"]))
+            self.assertTrue(c["card_rect"].contains(c["del_btn"]))
+            self.assertFalse(c["play_btn"].colliderect(c["del_btn"]))
+
 
 if __name__ == "__main__":
     unittest.main()
