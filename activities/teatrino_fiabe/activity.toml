@@ -8,10 +8,12 @@ languages = ["it", "en"]
 
 [presentation]
 categories = ["create", "play"]
+discovery_tags = ["stories", "making"]
 
 [education]
 categories = ["creativity", "storytelling", "visual_composition"]
-difficulty = 1
+difficulty = 2
+recommended_age_min = 3
 skills = [
   { id = "creativity.narrative_expression", weight = 3 },
   { id = "creativity.visual_composition", weight = 2 },
