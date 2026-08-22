@@ -8,10 +8,12 @@ languages = ["it", "en"]
 
 [presentation]
 categories = ["create", "learn"]
+discovery_tags = ["writing", "stories"]
 
 [education]
 categories = ["creativity", "writing", "language"]
-difficulty = 1
+difficulty = 3
+recommended_age_min = 5
 skills = [
   { id = "creativity.written_expression", weight = 3 },
   { id = "literacy.keyboard_fluency", weight = 2 },
