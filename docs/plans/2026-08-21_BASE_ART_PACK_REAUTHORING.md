@@ -1,6 +1,6 @@
 # Greia Generic Visual Toolbox Production — Maintainer-Side Plan
 
-**Status:** ACTIVE CONTENT-PRODUCTION / AUTHORING-TOOLING / CANONICAL-CHARACTER TRACK  
+**Status:** ACTIVE AUTHORING-TOOLING / CANONICAL-CAST RUNTIME TRACK  
 **Date:** 2026-08-22  
 **Architecture:** `docs/design/GREIA_VISUAL_AUTHORING_ARCHITECTURE.md`  
 **Generic taxonomy:** `docs/design/GREIA_GENERIC_ART_LIBRARY_TAXONOMY.md`  
@@ -36,21 +36,9 @@ Shared UI and Canonical Characters are separate stronger-consistency families.
 
 Canonical characters are not interchangeable generic props; identity consistency matters.
 
-## 3. Established generic source state
+## 3. Generic source/toolbox state
 
-### Forest / Meadow v0.3
-
-Promoted source pool with 28 semantic roles: 23 reauthored + 5 retained legacy + 2 preferred ingredients.
-
-### Workshop v0.2
-
-Promoted source pool with 24 finished semantic assets: 14 direct replacements + 5 retained baseline variants + 5 candidate coexistence variants + 2 preferred ingredients.
-
-### Clinic / Reading / Fantasy / Water
-
-These remain useful source/provenance pools. Generic resources have been harvested/classified; specialized theme-specific art is not a reason to resume theme-by-theme pack production.
-
-## 4. Generic library consolidation — complete enough for current phase
+Promoted/reviewed source pools include Forest/Meadow v0.3 and Workshop v0.2. Clinic/Reading/Fantasy/Water remain useful source/provenance pools where appropriate; theme-by-theme production is not the roadmap.
 
 Current generic authoring indexes after admission/discovery tooling:
 
@@ -71,7 +59,7 @@ Focused tests:
 
 No generic Batch B is authorized merely to increase counts.
 
-## 5. Permanent generic rules
+## 4. Permanent generic rules
 
 Coverage questions distinguish:
 
@@ -90,7 +78,9 @@ The library must not become a giant clip-art noun warehouse.
 
 Runtime remains economical: rich source work may be flattened into efficient final runtime assets.
 
-## 6. Four-character canonical reauthoring — completed and reviewed
+## 5. Canonical cast source-art history
+
+### Four-character reauthoring
 
 Candidate commit:
 
@@ -100,68 +90,52 @@ Primary review:
 
 `docs/reviews/visual/2026-08-22_canonical-character-cast-reauthoring/PRIMARY_REVIEW.md`
 
-Accepted foundation:
+Established the reusable five-state/source-component/motion-design foundation.
 
-- complete registered states `neutral`, `blink`, `happy`, `surprised`, `sleepy`;
-- cheap shared motion semantics `idle_bounce`, `blink`, `happy_hop`, `celebrate_pop`, `surprised_wobble`, `sleepy_sway`;
-- source-level semantic groups/components;
-- complete-state swaps + whole-character transforms rather than skeletal rigs.
-
-Disposition:
-
-```text
-Lilli → carry forward
-Tito  → carry forward
-Momo  → carry forward
-Nino  → historical/source provenance; current owl target is Leo
-```
-
-## 7. Six-character canonical cast expansion — executed and reviewed
+### Six-character expansion
 
 Candidate commit:
 
 `cfbb9512723353dd34f6081c174410401e290ca8`
 
-Candidate source:
-
-`assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/`
-
 Primary review:
 
 `docs/reviews/visual/2026-08-22_canonical-cast-expansion/PRIMARY_REVIEW.md`
 
-Actual owner-transfer pixels were reviewed.
+Established Leo, Flash and Dani beside Lilli/Tito/Momo, with Leo's glasses integration and Dani's friendly-robot identity accepted. Flash's rabbit structure/state/motion system was accepted, but owner review requested one bounded identity correction.
 
-Accepted:
+### Flash white-rabbit correction
 
-```text
-Lilli — unicorn      → creativity / stories / art / imagination
-Leo   — owl+glasses  → learning / reading / language / knowledge
-Dani  — robot        → math / logic / patterns / sequencing
-Tito  — fox          → exploration / nature / discovery / investigation
-Momo  — monster      → emotion / music / silly play / celebration
-```
+Candidate commit:
 
-Flash is structurally accepted as the games/action rabbit:
+`fba60ff31c8bb7e825163bb349e349bd1b72d0f3`
 
-- silhouette works;
-- ears/tail/posture separate him from Tito and Lilli;
-- five states work;
-- shared motion storyboards work.
+Owner primary review:
 
-One owner-directed identity correction remains before promotion:
+`docs/reviews/visual/2026-08-22_flash-white-rabbit-identity-revision/PRIMARY_REVIEW.md`
 
-> current raspberry fur should become **white/warm-white rabbit fur**, with the action/speed identity moved into a **simple coral/raspberry shirt carrying one large yellow/gold lightning bolt**.
+Actual owner-transfer pixels were inspected.
 
-This is a bounded correction, not a cast reopening.
+**Result: ACCEPTED.**
 
-## 8. Current canonical cast design
+Flash is now the accepted white/warm-white rabbit with:
+
+- tall pink-inner ears;
+- coral/raspberry torso shirt;
+- one gold/yellow lightning bolt;
+- pom tail;
+- spring-loaded/action posture;
+- five registered source states.
+
+This closes the intended pure-art cast loop.
+
+## 6. Accepted current canonical cast
 
 Authority:
 
 `docs/design/GREIA_CANONICAL_CAST_SYSTEM.md`
 
-Current target:
+Current six:
 
 ```text
 Lilli — unicorn                       → creativity / stories / art / imagination
@@ -174,7 +148,7 @@ Momo  — monster                      → emotion / music / silly play / celebr
 
 This is a **soft lead-mascot system**, not exclusive silos.
 
-Do not create six Home categories. Existing platform-owned Collections remain:
+Existing platform-owned Collections remain:
 
 ```text
 create
@@ -186,34 +160,13 @@ my_greia
 
 Natural affinity is allowed (`Create→Lilli`, `Play→Flash`, `Learn→Leo`, `Explore→Tito`), while Dani and Momo remain cross-cutting and `my_greia` remains child/profile-centered.
 
-## 9. Exact current art gate
+Historical Nino remains provenance; the current owl identity is Leo.
 
-Execute:
-
-`docs/testing/2026-08-22_FLASH_WHITE_RABBIT_IDENTITY_REVISION.md`
-
-This is the **last intended pure-art correction before canonical cast promotion**.
-
-The gate must:
-
-1. preserve Flash's current semantic identity, rabbit silhouette, long ears, pom tail, posture and five-state system;
-2. change dominant fur/body to white or warm white;
-3. add a simple coral/raspberry shirt or sleeveless top;
-4. add one large yellow/gold lightning bolt;
-5. preserve Lilli/Leo/Dani/Tito/Momo unchanged;
-6. prove revised Flash at 256/128/64 and directly against Lilli/Tito;
-7. prove the revised six-character ensemble and one shared motion storyboard;
-8. stop for owner pixel review before source promotion/runtime work.
-
-Owner ZIP:
-
-`GREIA_VISUAL_REVIEW_FLASH_WHITE_RABBIT_REVISION_2026-08-22.zip`
-
-## 10. Character production rule
+## 7. Character production/runtime rule
 
 Use:
 
-> **full authored state SVGs + semantic source layers/components for authoring + simple whole-body transforms for runtime motion.**
+> **full authored state SVGs + semantic source layers/components for authoring + build-time PNG renditions + simple whole-character runtime transforms.**
 
 Do not replace this with:
 
@@ -222,27 +175,65 @@ Do not replace this with:
 - runtime clothing/equipment composition;
 - dozens of limb sprites;
 - frame-by-frame sprite explosions;
-- cloned one-body formulas for every cast member.
+- continuously varying raster sizes for animation;
+- a second runtime catalogue/cache architecture.
 
-Flash's shirt/bolt may be semantic source groups; they are not a runtime wardrobe API.
+The shared source states remain:
 
-## 11. What follows owner approval of revised Flash
+```text
+neutral
+blink
+happy
+surprised
+sleepy
+```
 
-After owner pixel acceptance of the bounded Flash revision, **do not create another pure-art cast gate** unless a concrete blocker is identified.
+The semantic motion vocabulary remains:
 
-Move directly to:
+```text
+idle_bounce
+blink
+happy_hop
+celebrate_pop
+surprised_wobble
+sleepy_sway
+```
 
-1. promote the approved six canonical characters/states under stable source identities;
-2. explicitly migrate historical Nino identity to current `character.leo` where appropriate while preserving provenance;
-3. add all accepted character states to the explicit build-time rendition manifest;
-4. extend `SceneActorDefinition` only enough for semantic state/motion selection with whole-character transforms;
-5. exercise runtime state/motion/fallback/responsive behavior through the Activity Simulator;
-6. then consider optional Activity presentation metadata for lead/supporting canonical characters;
-7. return to exercising the user-facing visual-authoring skill/toolbox in real Activity authoring rather than increasing art counts by inertia.
+For the first runtime pass, fixed-size state swaps + bounded x/y whole-character translation are sufficient. Do not mechanically reproduce storyboard rotation/squash if that would create per-frame allocation/cache churn.
 
-## 12. Relationship to arbitrary Activity-authoring agents
+## 8. Exact current gate
 
-Maintainer-side character production does not define arbitrary-agent capability.
+Execute:
+
+`docs/testing/2026-08-22_CANONICAL_CAST_V01_PROMOTION_RUNTIME_SIMULATOR.md`
+
+This gate owns:
+
+1. stable source promotion under `assets/visual/characters/canonical/v0.1/`;
+2. six current semantic IDs with historical Nino provenance preserved;
+3. 30 build-time runtime renditions (6 characters × 5 states);
+4. minimal typed/validated renderer-neutral expression + motion semantics;
+5. bounded non-default-state fallback to neutral/default;
+6. developer-only Activity fixture using the real semantic character path;
+7. all runtime/visual/fallback/responsive acceptance through the Greia Activity Simulator;
+8. owner-transfer evidence ZIP.
+
+No additional pure-art cast gate comes before this unless implementation exposes a concrete source defect.
+
+## 9. What follows runtime acceptance
+
+Only after the canonical cast runtime simulator gate is owner-reviewed/accepted:
+
+1. consider optional Activity presentation metadata for lead/supporting canonical characters;
+2. exercise the model-agnostic Activity visual-authoring skill/toolbox in real Activity authoring;
+3. use actual Activity demand to justify any further generic art quality/variety work;
+4. do not resume asset-count production by inertia.
+
+Potential future metadata remains presentation-only and must not alter package trust, permissions, saves, progression or Collection membership.
+
+## 10. Relationship to arbitrary Activity-authoring agents
+
+Maintainer-side character/art production does not define arbitrary-agent capability.
 
 Activity authors should eventually be able to:
 
@@ -257,7 +248,7 @@ inventory Activity visual needs
 → visually review
 ```
 
-## 13. Explicit drift to avoid
+## 11. Explicit drift to avoid
 
 Do not:
 
@@ -266,12 +257,14 @@ Do not:
 - redraw every candidate reference until preferred;
 - reopen hero-tree specimen optimization;
 - create six top-level Home destinations from six characters;
-- reopen Leo/Dani/Lilli/Tito/Momo during the Flash correction;
+- reopen accepted Lilli/Leo/Flash/Dani/Tito/Momo art without a concrete blocker;
 - turn canonical characters into detailed skeletal rigs;
 - create a runtime clothing system for Flash;
-- create a second runtime catalogue/cache architecture;
+- create a second runtime asset system;
 - infer arbitrary user-agent capability from the maintainer agent.
 
-## 14. Platform boundary
+## 12. Platform boundary
 
-R7 remains the primary blocking platform phase. Nothing in this visual-content/authoring-tooling/character-art track closes, reorders, or bypasses R7.
+R7 remains the primary blocking platform phase. Nothing in this visual-content/authoring-tooling/canonical-character track closes, reorders, or bypasses R7.
+
+No physical Acer/Pi acceptance should be claimed without actual hardware evidence.
