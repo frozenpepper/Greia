@@ -8,10 +8,13 @@ languages = ["it", "en"]
 
 [presentation]
 categories = ["explore", "create"]
+discovery_tags = ["nature", "making"]
 
 [education]
 categories = ["nature_cycles", "gardening", "cause_and_effect"]
-difficulty = 1
+difficulty = 2
+recommended_age_min = 4
+recommended_age_max = 9
 skills = [
   { id = "nature.plant_growth.cycles", weight = 3 },
   { id = "motor.pointer.target_selection", weight = 2 },
