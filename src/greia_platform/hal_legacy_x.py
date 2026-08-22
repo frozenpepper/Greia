@@ -115,6 +115,11 @@ class LegacyXHardwareSessionController:
         if keyboard_messages:
             messages.extend(keyboard_messages)
 
+        audio_messages, audio_success = self._apply_audio(settings)
+        success = success and audio_success
+        if audio_messages:
+            messages.extend(audio_messages)
+
         input_messages, input_success = self._apply_input(settings)
         success = success and input_success
         if input_messages:
@@ -163,6 +168,19 @@ class LegacyXHardwareSessionController:
         if completed.returncode != 0:
             return (f"Keyboard layout could not be applied ({settings.keyboard_layout}).",), False
         return (f"Keyboard layout set to {settings.keyboard_layout}.",), True
+
+    def _apply_audio(
+        self, settings: HardwareSettings
+    ) -> tuple[tuple[str, ...], bool]:
+        pct = min(100, max(0, int((settings.mic_gain / 2.0) * 100)))
+        commands = [
+            ["amixer", "-q", "set", "Capture", f"{pct}%", "unmute"],
+            ["amixer", "-q", "set", "Mic", f"{pct}%", "unmute"],
+            ["amixer", "-q", "set", "Internal Mic", f"{pct}%", "unmute"],
+        ]
+        for cmd in commands:
+            self.runner.run(cmd)
+        return (f"Microphone gain set to {int(settings.mic_gain * 100)}%.",), True
 
     def _apply_input(self, settings: HardwareSettings) -> tuple[tuple[str, ...], bool]:
         devices = self._list_pointer_devices()

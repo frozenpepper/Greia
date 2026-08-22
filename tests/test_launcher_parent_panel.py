@@ -10,9 +10,12 @@ from greia_launcher.parent_panel import (
     ParentPanelTab,
     ParentSettingsOverlay,
 )
+from greia_platform.hardware import HardwareSettingsStore
 from greia_platform.main_credential import MainCredentialStore
 from greia_platform.ssh_maintenance import MockSshMaintenanceProvider, SshMaintenanceService
 from greia_platform.wifi import DemoWifiBackend, WifiNetwork, WifiSecurity
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 class DummyPygame:
@@ -23,6 +26,8 @@ class DummyPygame:
     K_TAB = 9
     K_UP = 273
     K_DOWN = 274
+    K_RIGHT = 275
+    K_LEFT = 276
     K_SPACE = 32
 
 
@@ -33,6 +38,10 @@ class ParentSettingsOverlayTests(unittest.TestCase):
         self.credential_store = MainCredentialStore(self.cred_path)
         self.credential_store.ensure_initialized()
 
+        self.hardware_store = HardwareSettingsStore.load(
+            PROJECT_ROOT / "runtime" / "hardware-settings.toml",
+            Path(self.temp_dir.name),
+        )
         self.wifi_backend = DemoWifiBackend([
             WifiNetwork("HomeNetwork", WifiSecurity.PERSONAL, -45.0, "/net/connman/iwd/demo/1"),
             WifiNetwork("GuestOpen", WifiSecurity.OPEN, -60.0, "/net/connman/iwd/demo/2"),
@@ -44,6 +53,7 @@ class ParentSettingsOverlayTests(unittest.TestCase):
             self.credential_store,
             wifi_backend=self.wifi_backend,
             ssh_service=self.ssh_service,
+            hardware_store=self.hardware_store,
         )
 
     def tearDown(self) -> None:
@@ -89,6 +99,10 @@ class ParentSettingsOverlayTests(unittest.TestCase):
         self.assertEqual(self.overlay.state, ParentPanelState.PANEL)
         self.assertEqual(self.overlay.active_tab, ParentPanelTab.LANGUAGE)
 
+        # Tab -> AUDIO
+        self.overlay.handle_key(DummyPygame.K_TAB, DummyPygame)
+        self.assertEqual(self.overlay.active_tab, ParentPanelTab.AUDIO)
+
         # Tab -> WIFI
         self.overlay.handle_key(DummyPygame.K_TAB, DummyPygame)
         self.assertEqual(self.overlay.active_tab, ParentPanelTab.WIFI)
@@ -104,6 +118,23 @@ class ParentSettingsOverlayTests(unittest.TestCase):
         # Tab -> LANGUAGE
         self.overlay.handle_key(DummyPygame.K_TAB, DummyPygame)
         self.assertEqual(self.overlay.active_tab, ParentPanelTab.LANGUAGE)
+
+    def test_audio_gain_adjustment_in_audio_tab(self) -> None:
+        self.overlay.open()
+        self.overlay.handle_text_input("greia")
+        self.overlay.handle_key(DummyPygame.K_RETURN, DummyPygame)
+        self.overlay.active_tab = ParentPanelTab.AUDIO
+
+        # Initial gain is default 2.0
+        self.assertAlmostEqual(self.overlay._current_mic_gain(), 2.0)
+
+        # Right key increases gain
+        self.overlay.handle_key(DummyPygame.K_RIGHT, DummyPygame)
+        self.assertAlmostEqual(self.overlay._current_mic_gain(), 2.25)
+
+        # Left key decreases gain
+        self.overlay.handle_key(DummyPygame.K_LEFT, DummyPygame)
+        self.assertAlmostEqual(self.overlay._current_mic_gain(), 2.0)
 
     def test_ssh_toggle_in_ssh_tab(self) -> None:
         self.overlay.open()

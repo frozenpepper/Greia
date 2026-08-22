@@ -55,12 +55,13 @@ ul{padding-left:1.2rem}.hidden{display:none}
 </section>
 
 <section>
-  <h2>Mouse, touchpad and display</h2>
+  <h2>Mouse, touchpad, display and audio</h2>
   <form id="hardware">
     <div class="grid">
       <label>Mouse speed<input type="range" name="mouse_speed" min="-1" max="1" step=".25"></label>
       <label>Touchpad speed<input type="range" name="touchpad_speed" min="-1" max="1" step=".25"></label>
       <label>Resolution<select name="resolution" id="resolution"></select></label>
+      <label>Microphone gain (<span id="mic-gain-label">200%</span>)<input type="range" name="mic_gain" id="mic-gain" min="0.5" max="4.0" step="0.25"></label>
     </div>
     <div class="row">
       <label><input type="checkbox" name="touchpad_tap"> Tap touchpad to click</label>
@@ -200,6 +201,10 @@ function renderHardware(hardware){
   form.touchpad_speed.value=desired.touchpad_speed ?? 0;
   form.touchpad_tap.checked=!!desired.touchpad_tap;
   form.natural_scrolling.checked=!!desired.natural_scrolling;
+  form.mic_gain.value=desired.mic_gain ?? 2.0;
+  const updateMic=val=>{ const el=document.getElementById("mic-gain-label"); if(el) el.textContent=`${Math.round(val*100)}% (${val}x Boost)`; };
+  updateMic(form.mic_gain.value);
+  form.mic_gain.oninput=e=>updateMic(e.target.value);
   const select=document.getElementById("resolution"); select.replaceChildren();
   const choices=["auto",...(hardware.display_modes||[]).map(item=>item.id).filter(Boolean)];
   const unique=[...new Set(choices)];
@@ -258,7 +263,8 @@ document.getElementById("hardware").addEventListener("submit",async event=>{
   try{
     await request("/settings/hardware",{method:"PUT",body:JSON.stringify({
       mouse_speed:Number(form.get("mouse_speed")),touchpad_speed:Number(form.get("touchpad_speed")),
-      resolution:form.get("resolution"),touchpad_tap:form.get("touchpad_tap")==="on",natural_scrolling:form.get("natural_scrolling")==="on"
+      resolution:form.get("resolution"),touchpad_tap:form.get("touchpad_tap")==="on",natural_scrolling:form.get("natural_scrolling")==="on",
+      mic_gain:Number(form.get("mic_gain"))||2.0
     })});
     await load();
   }catch(error){showError(error)}

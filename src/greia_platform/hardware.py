@@ -46,6 +46,9 @@ class HardwareDefaults:
     keyboard_layout: str
     minimum_speed: float
     maximum_speed: float
+    mic_gain: float = 2.0
+    minimum_mic_gain: float = 0.5
+    maximum_mic_gain: float = 4.0
 
     @classmethod
     def load(cls, path: Path) -> "HardwareDefaults":
@@ -69,6 +72,9 @@ class HardwareDefaults:
                 keyboard_layout=str(defaults.get("keyboard_layout", "us")),
                 minimum_speed=float(limits["minimum_speed"]),
                 maximum_speed=float(limits["maximum_speed"]),
+                mic_gain=float(defaults.get("mic_gain", 2.0)),
+                minimum_mic_gain=float(limits.get("minimum_mic_gain", 0.5)),
+                maximum_mic_gain=float(limits.get("maximum_mic_gain", 4.0)),
             )
         except (KeyError, TypeError, ValueError) as exc:
             raise HardwareSettingsError(f"invalid hardware defaults: {exc}") from exc
@@ -79,8 +85,11 @@ class HardwareDefaults:
             raise HardwareSettingsError("speed limits must remain within libinput range")
         if loaded.minimum_speed >= loaded.maximum_speed:
             raise HardwareSettingsError("hardware speed range is invalid")
+        if loaded.minimum_mic_gain <= 0.0 or loaded.minimum_mic_gain >= loaded.maximum_mic_gain:
+            raise HardwareSettingsError("hardware mic gain range is invalid")
         loaded.validate_speed(loaded.touchpad_speed, "touchpad_speed")
         loaded.validate_speed(loaded.mouse_speed, "mouse_speed")
+        loaded.validate_mic_gain(loaded.mic_gain)
         _validate_resolution_id(loaded.resolution)
         return loaded
 
@@ -89,6 +98,14 @@ class HardwareDefaults:
         if not self.minimum_speed <= value <= self.maximum_speed:
             raise HardwareSettingsError(
                 f"{name} must be between {self.minimum_speed} and {self.maximum_speed}"
+            )
+        return value
+
+    def validate_mic_gain(self, value: float) -> float:
+        value = round(float(value), 2)
+        if not self.minimum_mic_gain <= value <= self.maximum_mic_gain:
+            raise HardwareSettingsError(
+                f"mic_gain must be between {self.minimum_mic_gain} and {self.maximum_mic_gain}"
             )
         return value
 
@@ -111,6 +128,7 @@ class HardwareSettings:
     natural_scrolling: bool
     resolution: str
     keyboard_layout: str
+    mic_gain: float = 2.0
 
     def as_json_dict(self) -> dict[str, object]:
         return asdict(self)
@@ -160,6 +178,7 @@ class HardwareSettingsStore:
             natural_scrolling=self.defaults.natural_scrolling,
             resolution=self.defaults.resolution,
             keyboard_layout=self.defaults.keyboard_layout,
+            mic_gain=self.defaults.mic_gain,
         )
 
     def read(self) -> HardwareSettings:
@@ -196,6 +215,9 @@ class HardwareSettingsStore:
                 keyboard_layout=str(
                     raw.get("keyboard_layout", default.keyboard_layout)
                 ),
+                mic_gain=self.defaults.validate_mic_gain(
+                    float(raw.get("mic_gain", default.mic_gain))
+                ),
             )
             self.validate(settings)
             return settings
@@ -211,6 +233,7 @@ class HardwareSettingsStore:
         natural_scrolling: bool | None = None,
         resolution: str | None = None,
         keyboard_layout: str | None = None,
+        mic_gain: float | None = None,
         allowed_resolutions: Iterable[str] | None = None,
     ) -> HardwareSettings:
         current = self.read()
@@ -237,6 +260,11 @@ class HardwareSettingsStore:
                 current.keyboard_layout
                 if keyboard_layout is None
                 else self.defaults.validate_keyboard_layout(keyboard_layout)
+            ),
+            mic_gain=(
+                current.mic_gain
+                if mic_gain is None
+                else self.defaults.validate_mic_gain(mic_gain)
             ),
         )
         self.validate(updated, allowed_resolutions=allowed_resolutions)
@@ -276,6 +304,7 @@ class HardwareSettingsStore:
         self.defaults.validate_speed(settings.mouse_speed, "mouse_speed")
         _validate_resolution_id(settings.resolution)
         self.defaults.validate_keyboard_layout(settings.keyboard_layout)
+        self.defaults.validate_mic_gain(settings.mic_gain)
         if allowed_resolutions is not None:
             allowed = {"auto", *allowed_resolutions}
             if settings.resolution not in allowed:

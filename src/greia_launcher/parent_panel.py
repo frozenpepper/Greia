@@ -1,11 +1,11 @@
-from __future__ import annotations
-
+import os
 import time
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 from typing import Any, Callable
 
+from greia_platform.hardware import HardwareSettingsStore
 from greia_platform.main_credential import MainCredentialStore
 from greia_platform.ssh_maintenance import SshMaintenanceService, SshStatus
 from greia_platform.system_language import (
@@ -32,6 +32,7 @@ class ParentPanelState(StrEnum):
 
 class ParentPanelTab(StrEnum):
     LANGUAGE = "language"
+    AUDIO = "audio"
     WIFI = "wifi"
     SSH = "ssh"
     INFO = "info"
@@ -48,7 +49,7 @@ class ParentSettingsOverlay:
     """On-device Parent Settings Panel for physical Greia devices.
 
     Accessible from the user selection screen via a protected hidden key combination.
-    Provides immediate on-device access to the device language, Wi-Fi
+    Provides immediate on-device access to the device language, audio & mic gain, Wi-Fi
     configuration, SSH maintenance, and remote pairing diagnostics without
     exposing a Linux shell.
     """
@@ -60,6 +61,7 @@ class ParentSettingsOverlay:
         wifi_backend: WifiBackend | None = None,
         ssh_service: SshMaintenanceService | None = None,
         language_service: SystemLanguageService | None = None,
+        hardware_store: HardwareSettingsStore | None = None,
     ) -> None:
         self.credential_store = credential_store
         self.credential_store.ensure_initialized()
@@ -77,6 +79,26 @@ class ParentSettingsOverlay:
         self.ssh_service = ssh_service or SshMaintenanceService()
         self.language_service = language_service or SystemLanguageService.from_environment()
 
+        if hardware_store is None:
+            defaults_path = (
+                Path(os.environ.get("GREIA_OS_ROOT", "/opt/greia-os"))
+                / "runtime"
+                / "hardware-settings.toml"
+            )
+            if not defaults_path.exists():
+                repo_root = Path(__file__).resolve().parents[2]
+                defaults_path = repo_root / "runtime" / "hardware-settings.toml"
+            system_settings_dir = Path(
+                os.environ.get("GREIA_SYSTEM_SETTINGS_DIR", "/var/lib/greia-system-settings")
+            )
+            self.hardware_store: HardwareSettingsStore | None = (
+                HardwareSettingsStore.load(defaults_path, system_settings_dir)
+                if defaults_path.exists()
+                else None
+            )
+        else:
+            self.hardware_store = hardware_store
+
         self.state = ParentPanelState.CLOSED
         self.active_tab = ParentPanelTab.LANGUAGE
         self.password_text = ""
@@ -86,6 +108,7 @@ class ParentSettingsOverlay:
         self._last_ssh_poll = 0.0
         self._language_index = 0
         self._language_message = ""
+        self._audio_message = ""
         self._sync_language_selection()
 
     def open(self) -> None:
@@ -153,6 +176,7 @@ class ParentSettingsOverlay:
             if key == pygame.K_TAB:
                 tabs = [
                     ParentPanelTab.LANGUAGE,
+                    ParentPanelTab.AUDIO,
                     ParentPanelTab.WIFI,
                     ParentPanelTab.SSH,
                     ParentPanelTab.INFO,
@@ -172,6 +196,13 @@ class ParentSettingsOverlay:
                     ) % len(SUPPORTED_SYSTEM_LANGUAGES)
                 elif key in {pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_SPACE}:
                     self._apply_language(self._language_index)
+                return True
+
+            if self.active_tab == ParentPanelTab.AUDIO:
+                if key in {pygame.K_LEFT, pygame.K_DOWN}:
+                    self._adjust_mic_gain(-0.25)
+                elif key in {pygame.K_RIGHT, pygame.K_UP}:
+                    self._adjust_mic_gain(0.25)
                 return True
 
             if self.active_tab == ParentPanelTab.WIFI:
@@ -212,6 +243,12 @@ class ParentSettingsOverlay:
                 self._language_index = int(target.value)
                 self._apply_language(self._language_index)
                 return True
+            elif target.action == "mic_gain_set":
+                self._set_mic_gain(float(target.value))
+                return True
+            elif target.action == "mic_gain_adjust":
+                self._adjust_mic_gain(float(target.value))
+                return True
             elif target.action == "wifi_refresh":
                 self.wifi_controller.refresh()
                 return True
@@ -227,6 +264,27 @@ class ParentSettingsOverlay:
                 return True
 
         return True
+
+    def _current_mic_gain(self) -> float:
+        if self.hardware_store is not None:
+            try:
+                return float(self.hardware_store.read().mic_gain)
+            except Exception:
+                pass
+        return 2.0
+
+    def _set_mic_gain(self, value: float) -> None:
+        if self.hardware_store is not None:
+            try:
+                val = max(0.5, min(4.0, round(value, 2)))
+                self.hardware_store.update(mic_gain=val)
+                self._audio_message = f"Microphone gain set to {int(val * 100)}% ({val:.2f}x Boost)."
+            except Exception as exc:
+                self._audio_message = f"Could not update mic gain: {exc}"
+
+    def _adjust_mic_gain(self, delta: float) -> None:
+        current = self._current_mic_gain()
+        self._set_mic_gain(current + delta)
 
     def _attempt_auth(self, pygame: Any) -> None:
         if time.monotonic() < self.password_error_until:
@@ -375,16 +433,17 @@ class ParentSettingsOverlay:
         tab_y = header_rect.bottom + 8
         tabs = [
             (ParentPanelTab.LANGUAGE, "Language"),
+            (ParentPanelTab.AUDIO, "Audio & Mic"),
             (ParentPanelTab.WIFI, "Wi-Fi"),
-            (ParentPanelTab.SSH, "SSH Maintenance"),
+            (ParentPanelTab.SSH, "SSH"),
             (ParentPanelTab.INFO, "Remote & Pairing"),
         ]
         tab_x = panel_rect.left + 24
-        font_tab = typography.font(FontRole.CONTROL, 18)
+        font_tab = typography.font(FontRole.CONTROL, 16)
 
         for tab_id, label in tabs:
             is_active = self.active_tab == tab_id
-            tab_w = 160
+            tab_w = 145
             tab_rect = pygame.Rect(tab_x, tab_y, tab_w, 38)
             bg = (241, 185, 35) if is_active else (246, 236, 209)
             pygame.draw.rect(screen, bg, tab_rect, border_radius=12)
@@ -393,7 +452,7 @@ class ParentSettingsOverlay:
             txt = font_tab.render(label, True, (61, 44, 31))
             screen.blit(txt, txt.get_rect(center=tab_rect.center))
             self._targets.append(PanelHitTarget("switch_tab", tab_id, tab_rect))
-            tab_x += tab_w + 12
+            tab_x += tab_w + 10
 
         content_rect = pygame.Rect(
             panel_rect.left + 24,
@@ -404,6 +463,8 @@ class ParentSettingsOverlay:
 
         if self.active_tab == ParentPanelTab.LANGUAGE:
             self._draw_language_tab(screen, content_rect, typography, pygame)
+        elif self.active_tab == ParentPanelTab.AUDIO:
+            self._draw_audio_tab(screen, content_rect, typography, pygame)
         elif self.active_tab == ParentPanelTab.WIFI:
             self._draw_wifi_tab(screen, content_rect, typography, pygame, load_icon_fn)
         elif self.active_tab == ParentPanelTab.SSH:
@@ -478,6 +539,90 @@ class ParentSettingsOverlay:
                 (181, 46, 46) if self._language_message.startswith("Could not") else (47, 117, 81),
             )
             screen.blit(message, (card.left + 20, card.bottom - 26))
+
+    def _draw_audio_tab(
+        self,
+        screen: Any,
+        rect: Any,
+        typography: GreiaTypography,
+        pygame: Any,
+    ) -> None:
+        font_title = typography.font(FontRole.TITLE, 22)
+        font_body = typography.font(FontRole.BODY, 16)
+        font_bold = typography.font(FontRole.CONTROL, 18)
+
+        card = pygame.Rect(rect.left, rect.top, rect.width, rect.height)
+        pygame.draw.rect(screen, (246, 236, 209), card, border_radius=16)
+
+        title = font_title.render("Microphone Input Gain (Guadagno Microfono)", True, (61, 44, 31))
+        screen.blit(title, (card.left + 24, card.top + 16))
+
+        note = font_body.render(
+            "Controls the microphone recording volume for puppet theater storytelling and voice activities.",
+            True,
+            (118, 104, 93),
+        )
+        screen.blit(note, (card.left + 24, card.top + 46))
+
+        current_gain = self._current_mic_gain()
+        pct = int(round(current_gain * 100))
+
+        # Current Gain Display Badge
+        badge_rect = pygame.Rect(card.left + 24, card.top + 84, 300, 48)
+        pygame.draw.rect(screen, (255, 250, 240), badge_rect, border_radius=14)
+        pygame.draw.rect(screen, (241, 185, 35), badge_rect, width=2, border_radius=14)
+        
+        lbl_current = font_bold.render(f"🎙️ Livello: {pct}% ({current_gain:.1f}x Boost)", True, (61, 44, 31))
+        screen.blit(lbl_current, lbl_current.get_rect(center=badge_rect.center))
+
+        # Fine Adjust [-25%] and [+25%] buttons
+        btn_minus = pygame.Rect(badge_rect.right + 16, card.top + 84, 95, 48)
+        pygame.draw.rect(screen, (255, 250, 240), btn_minus, border_radius=14)
+        pygame.draw.rect(screen, (61, 44, 31), btn_minus, width=1, border_radius=14)
+        lbl_m = font_bold.render("➖ 25%", True, (61, 44, 31))
+        screen.blit(lbl_m, lbl_m.get_rect(center=btn_minus.center))
+        self._targets.append(PanelHitTarget("mic_gain_adjust", -0.25, btn_minus))
+
+        btn_plus = pygame.Rect(btn_minus.right + 12, card.top + 84, 95, 48)
+        pygame.draw.rect(screen, (255, 250, 240), btn_plus, border_radius=14)
+        pygame.draw.rect(screen, (61, 44, 31), btn_plus, width=1, border_radius=14)
+        lbl_p = font_bold.render("➕ 25%", True, (61, 44, 31))
+        screen.blit(lbl_p, lbl_p.get_rect(center=btn_plus.center))
+        self._targets.append(PanelHitTarget("mic_gain_adjust", 0.25, btn_plus))
+
+        # Preset Quick Select Cards
+        lbl_presets = font_bold.render("Preset rapidi consigliati:", True, (61, 44, 31))
+        screen.blit(lbl_presets, (card.left + 24, card.top + 150))
+
+        presets = [
+            (1.0, "100%", "Normale (1.0x)"),
+            (1.5, "150%", "Medio (1.5x)"),
+            (2.0, "200%", "Alto (2.0x) ⭐"),
+            (3.0, "300%", "Forte (3.0x)"),
+            (4.0, "400%", "Massimo (4.0x)"),
+        ]
+
+        card_y = card.top + 182
+        card_w = (card.width - 48 - (len(presets) - 1) * 10) // len(presets)
+        card_h = 72
+
+        for idx, (val, p_pct, p_desc) in enumerate(presets):
+            p_rect = pygame.Rect(card.left + 24 + idx * (card_w + 10), card_y, card_w, card_h)
+            is_active = abs(current_gain - val) < 0.05
+            pygame.draw.rect(screen, (241, 185, 35) if is_active else (255, 250, 240), p_rect, border_radius=14)
+            pygame.draw.rect(screen, (61, 44, 31), p_rect, width=3 if is_active else 1, border_radius=14)
+
+            txt_p = font_bold.render(p_pct, True, (61, 44, 31))
+            screen.blit(txt_p, txt_p.get_rect(center=(p_rect.centerx, p_rect.top + 24)))
+
+            txt_d = font_body.render(p_desc, True, (90, 80, 70))
+            screen.blit(txt_d, txt_d.get_rect(center=(p_rect.centerx, p_rect.top + 50)))
+
+            self._targets.append(PanelHitTarget("mic_gain_set", val, p_rect))
+
+        if self._audio_message:
+            msg = font_body.render(self._audio_message, True, (47, 117, 81))
+            screen.blit(msg, (card.left + 24, card.bottom - 26))
 
     def _draw_wifi_tab(
         self,

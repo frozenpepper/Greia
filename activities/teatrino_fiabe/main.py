@@ -222,12 +222,27 @@ class MicrophoneRecorder:
         self.enabled = not self.enabled
         return self.enabled
 
+    def _get_system_gain(self) -> float:
+        try:
+            settings_file = (
+                Path(os.environ.get("GREIA_SYSTEM_SETTINGS_DIR", "/var/lib/greia-system-settings"))
+                / "settings.json"
+            )
+            if settings_file.exists():
+                data = json.loads(settings_file.read_text(encoding="utf-8"))
+                return max(0.5, min(4.0, float(data.get("mic_gain", 2.0))))
+        except Exception:
+            pass
+        return 2.0
+
     def start_recording(self) -> None:
         self.recorded_pcm.clear()
         self.current_volume = 0.0
         if not self.enabled or not self.has_hardware or sdl2_audio is None:
             self.is_recording = True
             return
+
+        gain = self._get_system_gain()
 
         def _audio_callback(dev, data: bytes):
             if not self.is_recording:
@@ -237,7 +252,7 @@ class MicrophoneRecorder:
                 try:
                     num_samples = len(data) // 2
                     samples = struct.unpack(f"<{num_samples}h", data[: num_samples * 2])
-                    peak = max(abs(s) for s in samples[::8])
+                    peak = max(abs(s) for s in samples[::8]) * gain
                     self.current_volume = min(1.0, peak / 18000.0)
                 except Exception:
                     pass
@@ -274,13 +289,29 @@ class MicrophoneRecorder:
         if not self.recorded_pcm:
             return None
 
+        gain = self._get_system_gain()
+        raw_pcm = bytes(self.recorded_pcm)
+
+        # Apply digital gain boost with soft clipping protection
+        if len(raw_pcm) >= 2 and gain != 1.0:
+            try:
+                num_samples = len(raw_pcm) // 2
+                samples = struct.unpack(f"<{num_samples}h", raw_pcm[: num_samples * 2])
+                boosted = [
+                    int(max(-32767, min(32767, s * gain)))
+                    for s in samples
+                ]
+                raw_pcm = struct.pack(f"<{num_samples}h", *boosted)
+            except Exception:
+                pass
+
         out_io = io.BytesIO()
         try:
             with wave.open(out_io, "wb") as wf:
                 wf.setnchannels(1)
                 wf.setsampwidth(2)
                 wf.setframerate(self.sample_rate)
-                wf.writeframes(bytes(self.recorded_pcm))
+                wf.writeframes(raw_pcm)
             return out_io.getvalue()
         except Exception:
             return None
@@ -850,7 +881,7 @@ def main() -> int:
     library_page = 0
     library_shows = show_repo.list_shows()
 
-    mark_activity_ready()
+    ready_published = False
 
     def _is_safe_point(s: pygame.Surface, pos: tuple[int, int]) -> bool:
         w, h = s.get_size()
@@ -1510,6 +1541,9 @@ def main() -> int:
 
         canvas.present(clear=theme.background)
         pygame.display.flip()
+        if not ready_published:
+            mark_activity_ready()
+            ready_published = True
 
     pygame.quit()
     return 0

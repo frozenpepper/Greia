@@ -27,6 +27,7 @@ class HardwareSettingsTests(unittest.TestCase):
         self.assertFalse(settings.touchpad_tap)
         self.assertEqual(settings.resolution, "auto")
         self.assertEqual(settings.keyboard_layout, "us")
+        self.assertEqual(settings.mic_gain, 2.0)
 
     def test_keyboard_layout_can_be_updated_and_validated(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -51,6 +52,7 @@ class HardwareSettingsTests(unittest.TestCase):
             )
             defaults = HardwareDefaults.load(legacy)
             self.assertEqual(defaults.keyboard_layout, "us")
+            self.assertEqual(defaults.mic_gain, 2.0)
 
     def test_parent_update_is_atomic_and_bounded(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -61,12 +63,27 @@ class HardwareSettingsTests(unittest.TestCase):
                 touchpad_speed=-0.25,
                 natural_scrolling=True,
                 resolution="1024x600",
+                mic_gain=2.5,
                 allowed_resolutions=("800x600", "1024x600"),
             )
             reread = store.read()
         self.assertEqual(updated, reread)
         self.assertTrue(reread.touchpad_tap)
         self.assertEqual(reread.mouse_speed, 0.5)
+        self.assertEqual(reread.mic_gain, 2.5)
+
+    def test_mic_gain_update_and_limits(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            store = self.make_store(Path(temporary))
+            updated = store.update(mic_gain=3.0)
+            self.assertEqual(updated.mic_gain, 3.0)
+            self.assertEqual(store.read().mic_gain, 3.0)
+
+            with self.assertRaisesRegex(HardwareSettingsError, "mic_gain must be between"):
+                store.update(mic_gain=0.1)
+
+            with self.assertRaisesRegex(HardwareSettingsError, "mic_gain must be between"):
+                store.update(mic_gain=5.0)
 
     def test_rejects_unsupported_resolution(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -80,7 +97,8 @@ class HardwareSettingsTests(unittest.TestCase):
     def test_reset_restores_safe_defaults(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             store = self.make_store(Path(temporary))
-            store.update(touchpad_tap=True, mouse_speed=0.75)
+            store.update(touchpad_tap=True, mouse_speed=0.75, mic_gain=3.5)
             reset = store.reset()
         self.assertFalse(reset.touchpad_tap)
         self.assertEqual(reset.mouse_speed, 0.0)
+        self.assertEqual(reset.mic_gain, 2.0)

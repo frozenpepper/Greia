@@ -8,7 +8,10 @@ mouse_speed = 0.0
 natural_scrolling = false
 resolution = "auto"
 keyboard_layout = "us"
+mic_gain = 2.0
 
 [limits]
 minimum_speed = -1.0
 maximum_speed = 1.0
+minimum_mic_gain = 0.5
+maximum_mic_gain = 4.0

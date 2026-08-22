@@ -505,6 +505,7 @@ class ParentApiRequestHandler(ParentRequestHandler):
                     str(body.get("touchpad_speed", current["touchpad_speed"]))
                 ],
                 "resolution": [str(body.get("resolution", current["resolution"]))],
+                "mic_gain": [str(body.get("mic_gain", current["mic_gain"]))],
             }
             if bool(body.get("touchpad_tap", current["touchpad_tap"])):
                 form["touchpad_tap"] = ["on"]

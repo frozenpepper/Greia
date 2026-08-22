@@ -295,6 +295,11 @@ class ParentStatusApplication:
                 if "keyboard_layout" in form
                 else None
             ),
+            mic_gain=(
+                _form_float(form, "mic_gain")
+                if "mic_gain" in form
+                else None
+            ),
             allowed_resolutions=allowed_modes or None,
         )
         return updated.as_json_dict()
