@@ -1,0 +1,113 @@
+schema_version = 1
+registry_version = "v0.1"
+status = "owner-approved private-project canonical voice registry"
+created = "2026-08-22"
+renderer_family = "MOSS-TTS-Nano"
+preferred_apple_silicon_backend = "mlx-community/MOSS-TTS-Nano-100M"
+portable_fallback_backend = "OpenMOSS upstream ONNX CPU"
+source_method = "synthetic voice-design recordings supplied by project owner"
+production_anchor_derivation = "lossless FLAC of source master from 0.000 through 12.000 seconds"
+public_redistribution_license_status = "pending explicit project asset-license decision"
+
+[[voice]]
+character = "lilli"
+voice_id = "greia.lilli.v1"
+production = "cloned_reference"
+production_anchor = "lilli-reference-v1.flac"
+purpose = "warm wonder, creativity, stories and imagination"
+anchor_sha256 = "a77a2380106ec64c58977cc6fd30b3f1c7f2bc370d41c86b9dd84c4ccf1adaf5"
+anchor_bytes = 361900
+anchor_duration_seconds = 12.0
+anchor_sample_rate_hz = 24000
+anchor_channels = 1
+anchor_sample_width_bits = 16
+anchor_container = "flac"
+anchor_codec = "flac"
+source_master = "assets/source/audio/character-voice-masters/v0.1/lilli-source-v1.wav"
+source_sha256 = "332d4073ee585b299f87899247f2660bce6d20c845170bd8a648f1705699b6f1"
+source_bytes = 2926634
+source_duration_seconds = 60.970625
+
+[[voice]]
+character = "leo"
+voice_id = "greia.leo.v1"
+production = "cloned_reference"
+production_anchor = "leo-reference-v1.flac"
+purpose = "warm oldish savvy storyteller and thoughtful guidance"
+anchor_sha256 = "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34"
+anchor_bytes = 357068
+anchor_duration_seconds = 12.0
+anchor_sample_rate_hz = 24000
+anchor_channels = 1
+anchor_sample_width_bits = 16
+anchor_container = "flac"
+anchor_codec = "flac"
+source_master = "assets/source/audio/character-voice-masters/v0.1/leo-source-v1.wav"
+source_sha256 = "db509b7d6ff9e8b9166ffcb51d59ec526ca7f13406b19f712dd3f1c2ddfc2de1"
+source_bytes = 3203114
+source_duration_seconds = 66.730625
+
+[[voice]]
+character = "flash"
+voice_id = "greia.flash.v1"
+production = "cloned_reference"
+production_anchor = "flash-reference-v1.flac"
+purpose = "bright quick playful action and friendly challenge"
+anchor_sha256 = "a6dc67a66b644311c0c889d28ab50b579fd410e0cfcfcfe455dcf244270cae17"
+anchor_bytes = 369451
+anchor_duration_seconds = 12.0
+anchor_sample_rate_hz = 24000
+anchor_channels = 1
+anchor_sample_width_bits = 16
+anchor_container = "flac"
+anchor_codec = "flac"
+source_master = "assets/source/audio/character-voice-masters/v0.1/flash-source-v1.wav"
+source_sha256 = "d6523c961d3e0a0af27cfd6d00148c0c5127153f1da554f8a4f9d1abd507d156"
+source_bytes = 2427434
+source_duration_seconds = 50.570625
+
+[[voice]]
+character = "tito"
+voice_id = "greia.tito.v1"
+production = "cloned_reference"
+production_anchor = "tito-reference-v1.flac"
+purpose = "warm adventurous discovery, nature and investigation"
+anchor_sha256 = "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7"
+anchor_bytes = 338239
+anchor_duration_seconds = 12.0
+anchor_sample_rate_hz = 24000
+anchor_channels = 1
+anchor_sample_width_bits = 16
+anchor_container = "flac"
+anchor_codec = "flac"
+source_master = "assets/source/audio/character-voice-masters/v0.1/tito-source-v1.wav"
+source_sha256 = "7354070b0e5ba8bff92f6d38a149ca07d1c8158eae8bcbf52c0e4a335ab29a58"
+source_bytes = 2684714
+source_duration_seconds = 55.930625
+
+[[voice]]
+character = "momo"
+voice_id = "greia.momo.v1"
+production = "cloned_reference"
+production_anchor = "momo-reference-v1.flac"
+purpose = "musical unusual playful emotion and celebration"
+anchor_sha256 = "6aaf8032201138561243a4864d8dcef93546e05720da2fbbc4912860154e5782"
+anchor_bytes = 336713
+anchor_duration_seconds = 12.0
+anchor_sample_rate_hz = 24000
+anchor_channels = 1
+anchor_sample_width_bits = 16
+anchor_container = "flac"
+anchor_codec = "flac"
+source_master = "assets/source/audio/character-voice-masters/v0.1/momo-source-v1.wav"
+source_sha256 = "60afa2098410a6957a8ee6e5e81a131ab1ae9722626dd42ba27f3010b9b96ba5"
+source_bytes = 2600234
+source_duration_seconds = 54.170625
+
+[[voice]]
+character = "dani"
+voice_id = "greia.dani.system-v1"
+production = "greia_os_tts"
+production_anchor = ""
+purpose = "fun, clearly robotic logic, patterns and concise confirmations"
+reason = "No reviewed cloning reference preserved a sufficiently robotic identity."
