@@ -397,12 +397,10 @@ class ParentSettingsOverlay:
         pygame.draw.rect(screen, (255, 250, 240), card, border_radius=24)
         pygame.draw.rect(screen, (61, 44, 31), card, width=3, border_radius=24)
 
-        font_title = typography.font(FontRole.TITLE, 28)
-        title = font_title.render("Parent Settings", True, (61, 44, 31))
+        title = self._get_text("Parent Settings", FontRole.TITLE, 28, (61, 44, 31), typography)
         screen.blit(title, title.get_rect(center=(card.centerx, card.top + 36)))
 
-        font_body = typography.font(FontRole.BODY, 18)
-        subtitle = font_body.render("Enter Parent Password", True, (118, 104, 93))
+        subtitle = self._get_text("Enter Parent Password", FontRole.BODY, 18, (118, 104, 93), typography)
         screen.blit(subtitle, subtitle.get_rect(center=(card.centerx, card.top + 70)))
 
         input_rect = pygame.Rect(card.left + 30, card.top + 106, card_w - 60, 52)
@@ -411,8 +409,7 @@ class ParentSettingsOverlay:
         pygame.draw.rect(screen, border_col, input_rect, width=3, border_radius=14)
 
         masked = "•" * len(self.password_text) or "…"
-        font_input = typography.font(FontRole.CONTROL, 24)
-        text_surf = font_input.render(masked, True, (61, 44, 31))
+        text_surf = self._get_text(masked, FontRole.CONTROL, 24, (61, 44, 31), typography)
         screen.blit(text_surf, text_surf.get_rect(midleft=(input_rect.left + 16, input_rect.centery)))
 
         btn_w = (card_w - 80) // 2
@@ -423,12 +420,12 @@ class ParentSettingsOverlay:
         confirm_rect = pygame.Rect(card.right - 30 - btn_w, btn_y, btn_w, btn_h)
 
         pygame.draw.rect(screen, (230, 220, 205), cancel_rect, border_radius=14)
-        lbl_cancel = font_body.render("Cancel", True, (61, 44, 31))
+        lbl_cancel = self._get_text("Cancel", FontRole.BODY, 18, (61, 44, 31), typography)
         screen.blit(lbl_cancel, lbl_cancel.get_rect(center=cancel_rect.center))
         self._targets.append(PanelHitTarget("cancel_auth", None, cancel_rect))
 
         pygame.draw.rect(screen, (241, 185, 35), confirm_rect, border_radius=14)
-        lbl_confirm = font_body.render("Unlock", True, (61, 44, 31))
+        lbl_confirm = self._get_text("Unlock", FontRole.BODY, 18, (61, 44, 31), typography)
         screen.blit(lbl_confirm, lbl_confirm.get_rect(center=confirm_rect.center))
         self._targets.append(PanelHitTarget("confirm_auth", None, confirm_rect))
 

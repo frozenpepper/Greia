@@ -311,7 +311,7 @@ class LauncherApplication:
                 pygame.display.flip()
                 if not self._first_frame_released:
                     self._release_boot_cover()
-                clock.tick(30)
+                clock.tick(60)
         finally:
             self.session.clear()
             pygame.key.stop_text_input()

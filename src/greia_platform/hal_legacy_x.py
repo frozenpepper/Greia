@@ -216,6 +216,12 @@ class LegacyXHardwareSessionController:
                         "libinput Accel Speed",
                         f"{settings.touchpad_speed:.2f}",
                     ),
+                    self._set_if_available(
+                        device_id,
+                        properties,
+                        "Coordinate Transformation Matrix",
+                        "2.4 0 0 0 2.4 0 0 0 1",
+                    ),
                 )
                 device_success = all(outcome is not False for outcome in outcomes)
                 success = success and device_success

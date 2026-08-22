@@ -326,11 +326,9 @@ class GreiaLauncherPresentation(LauncherApplication):
                     if not self._first_frame_released:
                         self._release_boot_cover()
                     _needs_redraw = False
-                    elapsed = time.monotonic() - frame_start
-                    delay = max(0.002, (1.0 / 30.0) - elapsed)
-                    time.sleep(delay)
+                    clock.tick(60)
                 else:
-                    time.sleep(0.05)
+                    time.sleep(0.008)
         finally:
             self.session.clear()
             pygame.key.stop_text_input()
