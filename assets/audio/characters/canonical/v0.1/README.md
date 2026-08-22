@@ -2,7 +2,9 @@
 
 This directory owns the reviewed **production-anchor registry** used by the local Activity voice-generation workflow.
 
-The binary FLAC anchors are distributed in the authorized owner voice-asset pack and materialized into this path on development checkouts. `manifest.toml` is the integrity authority. They are not ordinary Activity playback assets and must not be copied into every `.greiaactivity` package.
+The binary FLAC anchors are canonical private-project repository assets and belong in this directory beside `manifest.toml`. They are not ordinary Activity playback assets and must not be copied into every `.greiaactivity` package.
+
+A fresh authorized checkout is not voice-production ready when the registered FLAC files are absent. Do not replace that missing state with an undocumented side pack or silently regenerate different references. Restore the exact reviewed bytes and verify them against `manifest.toml`.
 
 ## Registry
 
@@ -24,7 +26,7 @@ The current designed Dani candidates did not sound clearly robotic. A generic na
 
 ## Source masters and derivation
 
-The full owner-supplied WAV source recordings are materialized at:
+The full owner-supplied WAV source recordings belong at:
 
 ```text
 assets/source/audio/character-voice-masters/v0.1/
@@ -47,6 +49,7 @@ Do not modify source masters or production anchors in place. Any replacement or 
 Read:
 
 ```text
+SETUP.md
 docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md
 docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md
 skills/greia-activity-authoring/VOICE_GENERATION.md
@@ -58,4 +61,4 @@ Keep model weights, caches, environments and generated scratch output outside th
 
 The project owner supplied the source recordings as synthetically generated character-voice candidates. No real-person cloning is intended.
 
-They are accepted for the current private Greia project workflow. Before public redistribution, record the final asset-license decision in the project's governance/licensing authority rather than inventing a license here.
+They are accepted for the current private Greia project workflow. Before public redistribution, record the final asset-license decision in the project's governance/licensing authority rather than inventing a license here. Public-release licensing uncertainty does not require omitting the canonical bytes from the current private repository.
