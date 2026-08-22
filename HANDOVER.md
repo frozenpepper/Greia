@@ -1,9 +1,13 @@
+- **Shape Garden — Real Visual-Authoring Workflow Exercise (2026-08-22)**:
+  - Exercised full end-to-end visual authoring workflow on first-party Activity `org.greia.shape-garden` (`activities/shape_garden/`).
+  - Executed discovery queries via `tools/visual_authoring_library.py`, selecting preferred generic Pack A assets (`ground.grass_edge.01`, `atmosphere.sunlight_rays.01`, `hills.distant.01`, `cloud.large.01`, `cloud.small.01`, `bush.flowering.01`, `ui.shadow.soft`).
+  - Integrated canonical geometry companion Dani (`character.dani`) via `SceneActorDefinition`, positioned non-intrusively in bottom-right corner with happy reaction to shape creation and clean static neutral state when animations are disabled.
+  - Enhanced shape grounding with organic green sprout stems and growth pop spawn delight while preserving 100% of the core educational geometry interaction.
+  - Captured complete 10-PNG evidence suite across all 4 responsive viewports (1024x600 normal, 1024x600 large, 1366x768 compact, 1280x800 normal), motion-disabled mode, and fail-soft optional node resilience.
+  - Created review package `docs/reviews/visual/2026-08-22_shape-garden-visual-authoring-workflow/` and transfer bundle `GREIA_VISUAL_REVIEW_SHAPE_GARDEN_AUTHORING_WORKFLOW_2026-08-22.zip`.
+
 - **Canonical Cast v0.1 — Final Capture Integrity & Acceptance Recheck (2026-08-22)**:
-  - Resolved all 8 review blockers from `docs/reviews/visual/2026-08-22_canonical-cast-v01-runtime-recheck/OWNER_REVIEW_CAPTURE_INTEGRITY.md`.
-  - Implemented strict 3-phase capture architecture isolating clean baseline evidence (Phase A) from single-target non-default fallback (Phase B, `flash_happy.png`) and default failure safe fallback screen (Phase C, `dani_neutral.png`).
-  - Added on-screen developer diagnostic readout proving requested vs rendered variant, node fallback flag, outer viewport, and active interface-size setting directly on the fixture canvas.
-  - Enhanced `PygameSceneRenderer` with fallback node tracking (`stats.fallback_nodes`).
-  - Generated verified transfer bundle `GREIA_VISUAL_REVIEW_CANONICAL_CAST_V01_FINAL_CAPTURE_2026-08-22.zip` containing strictly 10 PNGs + `OWNER_FINAL_RECHECK.md` + `runtime-audit.json` + `simulator-trace.json`.
+  - Owner review `docs/reviews/visual/2026-08-22_canonical-cast-v01-final-capture/OWNER_REVIEW.md` formally accepted canonical cast v0.1 and closed the simulator runtime gate.
 
 
 # Greia — Standalone Engineering Handover

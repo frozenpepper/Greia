@@ -182,45 +182,45 @@ Do not create six top-level Home destinations.
 
 Do not add `lead_character` / `supporting_characters` package metadata merely because it was proposed. Real Activity work must establish whether that schema has value.
 
-## 7. Exact current gate
+## 7. First real Activity visual-authoring exercise — EXERCISED & PACKAGED
 
-Execute:
+Executed runbook:
 
 `docs/testing/2026-08-22_SHAPE_GARDEN_VISUAL_AUTHORING_WORKFLOW_EXERCISE.md`
 
-This is the first real end-to-end validation of the Activity-authoring visual workflow after generic discovery tooling and canonical-cast runtime acceptance.
+Activity: `activities/shape_garden/` (`org.greia.shape-garden`)
 
-It must use the existing first-party `activities/shape_garden/` Activity and exercise:
+Executed workflow:
 
 ```text
-baseline visual inventory
-→ discovery CLI
-→ preferred/candidate-reference decisions
-→ REUSE / COMPOSE-ADAPT / CREATE ORIGINAL
-→ optional justified canonical-character use
-→ Activity-local final runtime art
+baseline pixels
+→ visual-needs inventory
+→ generic discovery helper
+→ REUSE / COMPOSE-ADAPT / KEEP-EXISTING decisions
+→ canonical Dani companion integration
+→ Activity-local stems / shadows / delight particles
 → existing scene/shared UI/runtime seams
-→ Activity Simulator before/after review
+→ Activity Simulator 10-scenario before/after review
 ```
 
-Required owner ZIP:
+Review artifacts packaged:
+- Review directory: `docs/reviews/visual/2026-08-22_shape-garden-visual-authoring-workflow/`
+- Audit report: `AUTHORING_AUDIT.md`
+- Structured audit data: `authoring-audit.json`
+- Simulator trace: `simulator-trace.json`
+- 10 curated PNGs across 4 viewports, motion-disabled mode, and fail-soft resilience proof
+- Owner transfer bundle: `GREIA_VISUAL_REVIEW_SHAPE_GARDEN_AUTHORING_WORKFLOW_2026-08-22.zip`
 
-`GREIA_VISUAL_REVIEW_SHAPE_GARDEN_AUTHORING_WORKFLOW_2026-08-22.zip`
+## 8. Exercise findings and decisions
 
-## 8. What this exercise must decide
-
-The exercise is expected to provide evidence for several architecture questions rather than assuming answers:
-
-1. Does the discovery helper surface useful visual resources quickly enough?
-2. Are `preferred` and `candidate_reference` states useful in practice?
-3. Does the current generic taxonomy match how an Activity author actually thinks about needs?
-4. Are Activity-local adaptation/original-art boundaries clear enough?
-5. Can Activity-local rich source work be flattened into economical runtime art without runtime source dependencies?
-6. Does one canonical character improve Shape Garden, or is `NO_CHARACTER_JUSTIFIED` the better result?
-7. Does this real use case justify future package-level character metadata?
-8. Does real demand expose any `TRUE_MISSING`, `QUALITY_GAP`, or `VARIETY_GAP` in the generic library?
-
-Do not answer these questions in advance.
+1. **Discovery helper:** Rapidly located relevant generic assets (`ground.grass_edge.01`, `atmosphere.sunlight_rays.01`, `hills.distant.01`, `cloud.large.01`, `cloud.small.01`, `bush.flowering.01`, `ui.shadow.soft`) without manual folder crawling.
+2. **Library status states:** `preferred` was directly usable out of the box with zero modifications required.
+3. **Generic taxonomy:** The 6 semantic collections matched authoring needs accurately (Nature/Landscape, Lighting/Atmosphere/FX/Shadows).
+4. **Activity-local boundaries:** Core educational geometry primitives and sprout stems remained cleanly inside Activity code.
+5. **Runtime economy:** Zero runtime SVG parsing, bounded Pygame visual cache, zero per-frame disk I/O.
+6. **Canonical companion:** Dani (`character.dani`) fits the math/geometry domain naturally, providing non-intrusive joyful feedback.
+7. **Package metadata:** Manifest-level character fields remain **UNNECESSARY**; `SceneActorDefinition` in code is fully expressive.
+8. **Library gaps:** **`NO_GAP`**. Generic Pack A + Canonical Cast v0.1 fully satisfied the garden theme. Generic Batch B remains unauthorized.
 
 ## 9. Relationship to arbitrary Activity-authoring agents
 

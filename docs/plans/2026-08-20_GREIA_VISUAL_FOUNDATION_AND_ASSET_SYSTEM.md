@@ -573,11 +573,20 @@ The entries below preserve the workstream chronology. Corrections/new state are 
 - Selective disposition: 9 finished assets + 2 ingredients approved for `preferred`; 7 finished assets intentionally remain `candidate_reference`.
 - No per-object Batch A redraw loop authorized.
 
-## 2026-08-22 — Canonical Cast v0.1 Runtime Acceptance Recheck Complete
-- Resolved all 6 review blockers from `docs/reviews/visual/2026-08-22_canonical-cast-v01-runtime-simulator/OWNER_REVIEW.md`.
-- Implemented bounded failed-rendition cache (max 64 entries) in `PygameSceneRenderer` avoiding per-frame decode churn on corrupt/missing assets.
-- Demonstrated cold required default failure safe-fallback screen with zero traceback leakage.
-- Verified authentic Activity Simulator provenance and full developer UI across all 6 canonical characters (Lilli, Leo, Flash, Dani, Tito, Momo), 5 semantic states, and 6 shared motions.
-- Curated clean transfer bundle `GREIA_VISUAL_REVIEW_CANONICAL_CAST_V01_RUNTIME_RECHECK_2026-08-22.zip` containing strictly 10 PNGs + `OWNER_RECHECK.md` + `runtime-audit.json` + `simulator-trace.json`.
+## 2026-08-22 — Canonical Cast v0.1 Runtime Acceptance Recheck & Final Integrity Closure
+- Resolved all review blockers from `OWNER_REVIEW.md` and `OWNER_REVIEW_CAPTURE_INTEGRITY.md`.
+- Implemented bounded failed-rendition cache (max 64 entries) in `PygameSceneRenderer` avoiding per-frame decode churn.
+- Demonstrated cold required default failure safe-fallback screen and isolated single-target non-default fallback (`flash_happy.png`).
+- Direct on-screen developer diagnostics proved active variant, fallback state, outer viewport, and UI scale.
+- Formally accepted and closed via `docs/reviews/visual/2026-08-22_canonical-cast-v01-final-capture/OWNER_REVIEW.md`.
 
-**Next exact action:** Owner Review and Signoff of `docs/reviews/visual/2026-08-22_canonical-cast-v01-runtime-recheck/OWNER_RECHECK.md` and transfer bundle `GREIA_VISUAL_REVIEW_CANONICAL_CAST_V01_RUNTIME_RECHECK_2026-08-22.zip`.
+## 2026-08-22 — Shape Garden Real Visual-Authoring Workflow Exercise
+- Exercised full end-to-end authoring workflow on first-party Activity `org.greia.shape-garden` (`activities/shape_garden/`).
+- Discovered and reused generic Pack A resources (`ground.grass_edge.01`, `atmosphere.sunlight_rays.01`, `hills.distant.01`, `cloud.large.01`, `cloud.small.01`, `bush.flowering.01`, `ui.shadow.soft`).
+- Integrated canonical geometry companion Dani (`character.dani`) with happy reaction on shape creation.
+- Preserved 100% educational geometry mechanics, added organic green sprout stems, grounded shadows, and spawn growth delight.
+- Verified responsive presentation across 4 viewports (1024x600 normal, 1024x600 large, 1366x768 compact, 1280x800 normal), motion-disabled mode, and fail-soft optional node resilience.
+- Curated review folder `docs/reviews/visual/2026-08-22_shape-garden-visual-authoring-workflow/` and transfer bundle `GREIA_VISUAL_REVIEW_SHAPE_GARDEN_AUTHORING_WORKFLOW_2026-08-22.zip`.
+- Generic library gap outcome: `NO_GAP`. Generic Batch B remains unauthorized.
+
+**Next exact action:** Owner Review and Signoff of `docs/reviews/visual/2026-08-22_shape-garden-visual-authoring-workflow/AUTHORING_AUDIT.md` and transfer bundle `GREIA_VISUAL_REVIEW_SHAPE_GARDEN_AUTHORING_WORKFLOW_2026-08-22.zip`.

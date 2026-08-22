@@ -187,37 +187,34 @@ Do **not** implement `lead_character` / `supporting_characters` package metadata
 
 ---
 
-# 6. Exact current visual-authoring gate
+# 6. Exact current visual-authoring gate — EXERCISED & PACKAGED FOR OWNER REVIEW
 
-Execute:
+Completed execution:
 
 `docs/testing/2026-08-22_SHAPE_GARDEN_VISUAL_AUTHORING_WORKFLOW_EXERCISE.md`
 
-This gate uses the real first-party `activities/shape_garden/` Activity to exercise the complete authoring workflow:
+This gate used the real first-party `activities/shape_garden/` Activity to exercise the complete authoring workflow:
 
 ```text
 baseline pixels
 → visual-needs inventory
 → generic discovery helper
-→ REUSE / COMPOSE-ADAPT / CREATE ORIGINAL decisions
-→ optional justified canonical-character use
-→ Activity-local final runtime art
+→ REUSE / COMPOSE-ADAPT / KEEP-EXISTING decisions
+→ justified canonical-character use (Dani geometry companion)
+→ Activity-local stems / shadows / delight particles
 → existing Greia scene/UI/runtime seams
-→ Activity Simulator before/after acceptance
+→ Activity Simulator 10-scenario before/after acceptance
 ```
 
-Required owner ZIP:
+Packaged review artifacts:
+- Directory: `docs/reviews/visual/2026-08-22_shape-garden-visual-authoring-workflow/`
+- Audit report: `AUTHORING_AUDIT.md`
+- Structured audit data: `authoring-audit.json`
+- Simulator trace: `simulator-trace.json`
+- 10 curated PNGs across 4 viewports, motion-disabled mode, and fail-soft resilience proof
+- Transfer bundle: `GREIA_VISUAL_REVIEW_SHAPE_GARDEN_AUTHORING_WORKFLOW_2026-08-22.zip`
 
-`GREIA_VISUAL_REVIEW_SHAPE_GARDEN_AUTHORING_WORKFLOW_2026-08-22.zip`
-
-The purpose is not merely to make Shape Garden prettier. It is to test whether Greia's visual-authoring architecture actually helps an Activity author create a coherent, economical, polished result.
-
-The exercise must also record whether discovered library shortcomings are:
-
-```text
-TRUE_MISSING
-QUALITY_GAP
-VARIETY_GAP
+Library gap outcome: **`NO_GAP`**. The generic library and canonical cast v0.1 fully satisfied the garden theme requirements without requiring a speculative Batch B.
 NO_GAP
 ```
 

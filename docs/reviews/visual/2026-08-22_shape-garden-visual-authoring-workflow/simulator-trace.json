@@ -1,0 +1,94 @@
+[
+  {
+    "file": "01-before-1024x600.png",
+    "scenario": "baseline_before_authoring",
+    "viewport": "1024x600",
+    "interface_size": "normal",
+    "shapes_count": 12,
+    "description": "Pre-authoring baseline: solid flat beige background and brown rectangle bar",
+    "timestamp": "2026-08-22T05:11:49.826531+00:00"
+  },
+  {
+    "file": "02-after-empty-1024x600.png",
+    "scenario": "after_authoring_empty_state",
+    "viewport": "1024x600",
+    "interface_size": "normal",
+    "shapes_count": 0,
+    "description": "Clean garden environment: soft sky, hills, clouds, sunlight, grass, soil bed, and Dani companion",
+    "timestamp": "2026-08-22T05:11:59.090717+00:00"
+  },
+  {
+    "file": "03-after-active-1024x600.png",
+    "scenario": "after_authoring_active_garden",
+    "viewport": "1024x600",
+    "interface_size": "normal",
+    "shapes_count": 6,
+    "description": "Active garden with 6 geometric flowers growing from soil with organic stems and sprout leaves",
+    "timestamp": "2026-08-22T05:12:01.122781+00:00"
+  },
+  {
+    "file": "04-after-many-shapes-1024x600.png",
+    "scenario": "after_authoring_many_shapes",
+    "viewport": "1024x600",
+    "interface_size": "normal",
+    "shapes_count": 14,
+    "description": "Rich flourishing shape garden with layered flowers and floating geometric shapes",
+    "timestamp": "2026-08-22T05:12:03.677718+00:00"
+  },
+  {
+    "file": "05-character-or-no-character-proof.png",
+    "scenario": "canonical_companion_delight_proof",
+    "viewport": "1024x600",
+    "interface_size": "normal",
+    "companion": "character.dani",
+    "companion_state": "happy",
+    "companion_motion": "happy_hop",
+    "description": "Dani canonical geometry companion lifted in happy_hop with happy face upon shape creation",
+    "timestamp": "2026-08-22T05:12:04.598443+00:00"
+  },
+  {
+    "file": "06-large-1024x600.png",
+    "scenario": "responsive_1024x600_large",
+    "viewport": "1024x600",
+    "interface_size": "large",
+    "shapes_count": 5,
+    "description": "1024x600 viewport with LARGE interface scale setting",
+    "timestamp": "2026-08-22T05:12:15.505225+00:00"
+  },
+  {
+    "file": "07-compact-1366x768.png",
+    "scenario": "responsive_1366x768_compact",
+    "viewport": "1366x768",
+    "interface_size": "compact",
+    "shapes_count": 5,
+    "description": "1366x768 widescreen viewport with COMPACT interface scale setting in centered 1024x600 container",
+    "timestamp": "2026-08-22T05:12:26.501468+00:00"
+  },
+  {
+    "file": "08-normal-1280x800.png",
+    "scenario": "responsive_1280x800_normal",
+    "viewport": "1280x800",
+    "interface_size": "normal",
+    "shapes_count": 5,
+    "description": "1280x800 (16:10) viewport with NORMAL interface scale setting",
+    "timestamp": "2026-08-22T05:12:37.343810+00:00"
+  },
+  {
+    "file": "09-motion-disabled.png",
+    "scenario": "motion_disabled_proof",
+    "viewport": "1024x600",
+    "interface_size": "normal",
+    "animations_disabled": true,
+    "description": "Motion-disabled mode: all graphics and Dani companion remain 100% complete and fully playable in static presentation",
+    "timestamp": "2026-08-22T05:12:47.765227+00:00"
+  },
+  {
+    "file": "10-runtime-fallback.png",
+    "scenario": "optional_node_fail_soft_proof",
+    "viewport": "1024x600",
+    "interface_size": "normal",
+    "fault_target": "bush.flowering.01",
+    "description": "Fail-soft resilience proof: corrupt optional scenery node is safely skipped by PygameSceneRenderer while garden gameplay and Dani companion continue uninterrupted",
+    "timestamp": "2026-08-22T05:12:58.598308+00:00"
+  }
+]
