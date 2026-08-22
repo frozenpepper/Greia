@@ -8,10 +8,12 @@ languages = ["it", "en"]
 
 [presentation]
 categories = ["explore", "create"]
+discovery_tags = ["nature"]
 
 [education]
 categories = ["marine_life", "sensory_calm", "observation"]
 difficulty = 1
+recommended_age_min = 3
 skills = [
   { id = "sensory.visual_tracking.motion", weight = 3 },
   { id = "lexicon.nature.marine", weight = 2 },
