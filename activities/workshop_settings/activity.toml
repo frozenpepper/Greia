@@ -8,10 +8,12 @@ languages = ["it", "en"]
 
 [presentation]
 categories = ["my_greia"]
+discovery_tags = ["settings"]
 
 [education]
 categories = ["creativity", "self_expression", "digital_literacy"]
 difficulty = 1
+recommended_age_min = 3
 skills = [
   { id = "independence.choice_making", weight = 2 },
   { id = "creativity.visual_design", weight = 2 },
