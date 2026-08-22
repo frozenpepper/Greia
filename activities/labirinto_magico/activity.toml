@@ -8,10 +8,16 @@ languages = ["it", "en"]
 
 [presentation]
 categories = ["play", "explore"]
+discovery_tags = ["puzzles"]
 
 [education]
 categories = ["spatial_awareness", "problem_solving", "fine_motor"]
-difficulty = 1
+difficulty = 3
+recommended_age_min = 4
+recommended_age_max = 10
+difficulty_min = 1
+difficulty_max = 6
+adaptive_difficulty = true
 skills = [
   { id = "cognitive.spatial.navigation", weight = 3 },
   { id = "cognitive.planning.pathfinding", weight = 2 },
