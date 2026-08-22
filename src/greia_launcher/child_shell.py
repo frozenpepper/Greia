@@ -19,6 +19,7 @@ from greia_platform.hal import GreiaHAL
 from greia_platform.theme_snapshot import ThemeSnapshotError, encode_theme_snapshot
 from greia_platform.ui_preferences import UiPreferencesStore
 
+from .adaptive_discovery_presentation import AdaptiveActivityDiscoveryMixin
 from .collection_home_presentation import CollectionFirstHomeMixin
 from .composition import build_launcher_runtime_services, provisional_installed_display_session
 from .display_session import DisplaySessionCoordinator
@@ -80,6 +81,7 @@ class ProfileVisualActivitySupervisor(ActivitySupervisor):
 
 
 class GreiaChildShell(
+    AdaptiveActivityDiscoveryMixin,
     CollectionFirstHomeMixin,
     SharedUiNavigationChromeMixin,
     SharedUiFeedbackMixin,
