@@ -8,9 +8,21 @@ from greia_platform.activity_discovery import (
     ActivityDiscoveryPolicyStore,
     ActivityDiscoveryService,
 )
+from greia_platform.assets import AssetCatalogueError
+from greia_platform.visual_primitives import VisualSurfaceCacheError
 
 from .catalogue_view import ALL_ACTIVITIES_ID, ActivityCatalogue
 from .main import HitTarget
+
+
+_ADAPTIVE_VISUAL_ERRORS = (
+    VisualSurfaceCacheError,
+    AssetCatalogueError,
+    KeyError,
+    FileNotFoundError,
+    OSError,
+    ValueError,
+)
 
 
 class AdaptiveActivityDiscoveryMixin:
@@ -326,7 +338,7 @@ class AdaptiveActivityDiscoveryMixin:
                     surface = visual_cache.get(
                         "ui.portal.frame", variant="default", size=drawn.size
                     )
-                except Exception:
+                except (_ADAPTIVE_VISUAL_ERRORS + (pygame.error,)):
                     surface = None
             if surface is not None:
                 screen.blit(surface, drawn)
