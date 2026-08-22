@@ -1,7 +1,7 @@
 # Greia Visual System — Current Resume File
 
 **Status:** current visual-workstream continuation contract  
-**Last reviewed:** 2026-08-21  
+**Last reviewed:** 2026-08-22  
 **Repository:** `frozenpepper/Greia`  
 **Branch:** `main`  
 **Visual-system guide:** `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`  
@@ -35,11 +35,11 @@ Canonical Characters
 
 ## Track B — arbitrary Activity-authoring agents
 
-The model/tool-agnostic workflow remains:
+The model/tool-agnostic workflow is:
 
 ```text
 inventory Activity needs
-→ search generic semantic authoring library
+→ query/search generic semantic authoring library
 → prefer reviewed/preferred resources where they fit
 → inspect candidate/source references as needed
 → REUSE / COMPOSE-ADAPT / CREATE ORIGINAL
@@ -75,11 +75,11 @@ Harvested as source pools. They are not current core theme-pack roadmaps.
 
 ---
 
-# 3. Generic library state
+# 3. Generic library state before Batch A admission
 
 `assets/visual/authoring_library/` is the canonical generic discovery/index layer.
 
-Full-source harvest commit `2dcf306` reports:
+Full-source harvest commit `2dcf306` reported:
 
 ```text
 52 preferred finished assets
@@ -88,97 +88,116 @@ Full-source harvest commit `2dcf306` reports:
 89 total indexed reusable resources
 ```
 
-The full harvest classified remaining Reading, Fantasy and Water sources and corrected false inventory-gap assumptions.
-
-Owner review:
+Full-harvest owner review:
 
 `docs/reviews/visual/2026-08-21_generic-authoring-library-full-source-harvest/PRIMARY_REVIEW.md`
 
-Important quality observation from actual screenshots:
-
-- Reading books/chair/plant/basket/bookcase exist but are visibly weak `QUALITY_GAP` sources;
-- Fantasy bridge/sign/well/lantern roles exist but need reauthoring; night sky/moon/light/sparkles can remain candidate references;
-- Water/Pond has useful candidate surface/FX references, while reeds/lily pads/dock/stepping stones are quality gaps;
-- several candidate references are intentionally **not** preferred finished assets.
-
----
-
-# 4. Permanent generic-asset rule
-
-The toolbox must not become a giant clip-art noun warehouse.
+Permanent rule:
 
 > **Generic assets encode reusable form; Activity-specific meaning and contents remain separable whenever practical.**
-
-Examples:
-
-- empty plate/bowl as generic bases rather than food permanently baked in;
-- books without readable titles or one fixed story;
-- blank signs/boards where Activity/localization should own text;
-- general mechanical components rather than one narrowly themed mechanism.
-
-This is an authoring/source-art composability rule. Runtime economy remains: rich source work may be flattened into efficient final runtime assets.
-
----
-
-# 5. Current accepted gap state
-
-Current important gaps include:
-
-```text
-doors / room openings                 TRUE_MISSING
-standard dining/desk chair            TRUE_MISSING
-books / storybooks                    QUALITY_GAP
-soft reading chair / tall bookcase    QUALITY_GAP
-potted plant / woven basket           QUALITY_GAP
-water botanical/structure roles       QUALITY_GAP
-bridge/sign/well/lantern               QUALITY_GAP
-basic neutral tableware               TRUE_MISSING
-mechanical/manipulative components    TRUE_MISSING / materially under-covered
-```
 
 Do not confuse `QUALITY_GAP` with missing inventory.
 
 ---
 
-# 6. Exact current maintainer task
+# 4. Generic Core Essentials Batch A — completed and owner-reviewed
+
+Candidate commit:
+
+`574f19530ee292a81225ff14c09ad8b35f6cf933`
+
+The actual owner-transfer ZIP PNGs were inspected.
+
+Primary review:
+
+`docs/reviews/visual/2026-08-21_generic-core-essentials-batch-a/PRIMARY_REVIEW.md`
+
+Owner disposition:
+
+```text
+9 finished assets → preferred
+7 finished assets → candidate_reference
+2 authoring ingredients → preferred
+```
+
+Preferred finished assets:
+
+```text
+interior.door.timber.closed
+interior.opening.arch.simple
+furniture.seating.chair.spindle_wood
+furniture.storage.bookcase.tall_open
+prop.storage.basket.woven_empty
+prop.tableware.bowl.ceramic_empty
+prop.tableware.cup_saucer.ceramic
+component.mechanical.gears.interlocking_pair
+component.mechanical.dial_hands.blank
+```
+
+Preferred ingredients:
+
+```text
+ingredient.hardware.door_hinge_handle
+ingredient.mechanical.axle_hands
+```
+
+Keep as candidate references without redraw:
+
+```text
+interior.door.timber.ajar
+furniture.seating.armchair.soft_reading
+prop.book.open.picture_book
+prop.books.stack.mixed
+prop.decor.plant.potted_fern
+prop.tableware.plate.ceramic_empty
+component.mechanical.gear.wooden
+```
+
+Important visual observations:
+
+- armchair still reads as smooth enlarged-vector/icon furniture;
+- potted "fern" is too sparse/spiky to close the botanical quality gap;
+- books are useful but still comparatively flat/icon-like;
+- plate is semantically correct but too pale at small size;
+- single gear's claimed wooden material is not convincing;
+- ajar door has useful perspective but a less composition-neutral built-in room reveal.
+
+Do **not** run a Batch A redraw/finalization loop.
+
+---
+
+# 5. Exact current maintainer task
 
 Execute:
 
-`docs/testing/2026-08-21_GENERIC_CORE_ESSENTIALS_BATCH_A.md`
+`docs/testing/2026-08-22_GENERIC_VISUAL_LIBRARY_ADMISSION_AND_DISCOVERY_TOOLING.md`
 
-This is the first authorized new generic art-production batch after full consolidation.
+This is an admission + authoring-tooling gate, not an art-production gate.
 
-It contains 16 finished assets across:
+It must:
 
-- doors/openings;
-- standard + soft seating;
-- bookcase/books;
-- plant/basket;
-- **neutral** tableware;
-- generic mechanical components.
+1. materialize exactly the 9 preferred finished assets + 2 preferred ingredients as stable generic source;
+2. keep the 7 weaker Batch A assets as candidate references;
+3. update the six generic semantic indexes;
+4. add a small deterministic authoring-time discovery helper (`list/search/show/validate` + JSON output);
+5. update the visual-authoring skill to use the helper when available;
+6. preserve the runtime boundary.
 
-It is deliberately cross-category and must not turn into a kitchen/classroom/clinic themed pack.
-
-Owner-review ZIP required:
-
-`GREIA_VISUAL_REVIEW_GENERIC_CORE_ESSENTIALS_BATCH_A_2026-08-21.zip`
+**No Batch B is currently authorized.**
 
 ---
 
-# 7. Generic-library admission
+# 6. Why tooling comes before more art
 
-Index structure is canonical. Individual assets use:
+The generic toolbox now has enough breadth that raw asset count is no longer the immediate bottleneck.
 
-```text
-preferred
-candidate_reference
-```
+An arbitrary Activity-authoring agent should not have to know historical theme folders or manually grep six TOMLs. The next product value is making the existing library discoverable by semantic need and exposing which resources are preferred versus candidate references.
 
-New Batch A assets must remain `candidate_reference` until actual owner pixel review.
+After the admission/discovery gate, the next milestone is to exercise the user-facing visual-authoring skill/toolbox in a real Activity-authoring workflow. That future exercise must not be misrepresented as proof that all arbitrary agents have the same drawing capability as the maintainer's local agent.
 
 ---
 
-# 8. Stable runtime foundation
+# 7. Stable runtime foundation
 
 Preserve:
 
@@ -198,16 +217,18 @@ Runtime rules remain:
 - no per-frame disk decode/scale;
 - bounded caches;
 - Activity-local assets remain inside Activity packages;
-- generic authoring indexes are an authoring/discovery layer, not a second runtime catalogue.
+- generic authoring indexes/tooling are authoring-time facilities, not a second runtime catalogue.
 
 ---
 
-# 9. Do not resume drift
+# 8. Do not resume drift
 
 - no theme-by-theme pack roadmap;
 - no Clinic finalization;
 - no hero-tree optimization;
-- no giant generic noun inventory for its own sake;
+- no Batch B merely to increase counts;
+- no per-object redraw loop for every candidate reference;
+- no giant generic noun warehouse;
 - no baked arbitrary contents/text in generic bases;
 - no treating maintainer-agent performance as user-agent evidence;
 - no second runtime asset system;
@@ -215,8 +236,8 @@ Runtime rules remain:
 
 ---
 
-# 10. Platform boundary
+# 9. Platform boundary
 
-R7 remains the primary blocking platform phase. Nothing in this visual-content work closes, reorders, or bypasses R7.
+R7 remains the primary blocking platform phase. Nothing in this visual-content/authoring-tooling work closes, reorders, or bypasses R7.
 
 No physical Acer/Pi acceptance should be claimed without actual hardware evidence.
