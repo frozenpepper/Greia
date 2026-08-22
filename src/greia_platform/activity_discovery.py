@@ -6,7 +6,7 @@ import tempfile
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Iterable, Mapping, Sequence
+from typing import Iterable, Sequence
 
 from .activities import ActivityManifest
 
@@ -103,6 +103,11 @@ class ActivityDiscoveryPolicyStore:
     The file is intentionally separate from the profile identity registry. A
     malformed policy must fail closed as invalid policy data rather than mutate
     profile identity, while a missing file simply means the safe default policy.
+
+    Profile data is shared between the child Shell and the constrained Parent
+    service through the same managed group boundary as the profile registry, so
+    policy files deliberately use group-readable/writable ``0660`` mode rather
+    than a private owner-only mode.
     """
 
     SCHEMA_VERSION = 1
@@ -153,7 +158,7 @@ class ActivityDiscoveryPolicyStore:
                 handle.write(encoded)
                 handle.flush()
                 os.fsync(handle.fileno())
-            os.chmod(temp_path, 0o600)
+            os.chmod(temp_path, 0o660)
             os.replace(temp_path, self.path)
         except Exception:
             temp_path.unlink(missing_ok=True)
