@@ -8,10 +8,13 @@ languages = ["it", "en"]
 
 [presentation]
 categories = ["learn", "play"]
+discovery_tags = ["puzzles"]
 
 [education]
 categories = ["working_memory", "visual_matching", "lexicon"]
-difficulty = 1
+difficulty = 2
+recommended_age_min = 3
+recommended_age_max = 8
 skills = [
   { id = "cognition.working_memory.visual", weight = 3 },
   { id = "cognition.matching.pairs", weight = 3 },
