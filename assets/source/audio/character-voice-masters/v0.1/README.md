@@ -6,6 +6,10 @@ The five full WAV source masters are private owner-supplied project assets. Thei
 assets/audio/characters/canonical/v0.1/manifest.toml
 ```
 
-They are distributed in the owner voice-asset pack and materialized into this directory on an authorized development checkout. They are not Activity playback assets and must never be copied into `.greiaactivity` packages.
+The exact reviewed WAV files are canonical private-project repository assets and belong in this directory. They are not Activity playback assets and must never be copied into `.greiaactivity` packages.
+
+A checkout missing these files is incomplete for canonical voice production. Do not substitute an undocumented external asset pack, regenerate approximate replacements, or claim readiness from the manifest alone. Restore the authorized bytes and verify every file against the registered SHA-256 and metadata.
 
 Do not substitute, edit or regenerate them in place. A replacement requires a new version, explicit provenance and human review.
+
+Public-release redistribution rights remain a separate governance decision. That pending decision does not require omitting the canonical private-project bytes from the current private repository.
