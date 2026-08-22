@@ -4,6 +4,7 @@
 **Date:** 2026-08-22  
 **Architecture:** `docs/design/GREIA_VISUAL_AUTHORING_ARCHITECTURE.md`  
 **Generic taxonomy:** `docs/design/GREIA_GENERIC_ART_LIBRARY_TAXONOMY.md`  
+**Canonical cast system:** `docs/design/GREIA_CANONICAL_CAST_SYSTEM.md`  
 **Character grammar:** `docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md`  
 **Character motion vocabulary:** `docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md`  
 **User-agent skill:** `skills/greia-visual-authoring/SKILL.md`
@@ -22,7 +23,7 @@ The user/developer-facing workflow remains owned by:
 
 Do not organize toolbox work primarily as themed packs such as Clinic, Classroom, Fantasy Village, or Pond.
 
-Theme/source bundles are provenance pools. The primary authoring interface is the generic semantic library:
+Theme/source bundles are provenance pools. Generic authoring discovery is organized by semantic need:
 
 1. Nature & Landscape
 2. Interiors & Architecture
@@ -30,120 +31,30 @@ Theme/source bundles are provenance pools. The primary authoring interface is th
 4. Everyday Props & Containers
 5. Making, Learning & Play
 6. Lighting, Atmosphere, FX & Shadows
-7. Shared UI
-8. Canonical Characters
 
-Canonical Characters are intentionally **separate** from the six generic object/environment collections because identity consistency matters more than open-ended semantic interchangeability.
+Shared UI and Canonical Characters are separate stronger-consistency families.
 
-Authority:
+Canonical characters are not interchangeable generic props; identity consistency matters.
 
-`docs/design/GREIA_GENERIC_ART_LIBRARY_TAXONOMY.md`
-
-## 3. Established source pools
+## 3. Established generic source state
 
 ### Forest / Meadow v0.3
 
-Promoted source pool with 28 semantic roles: 23 reauthored roles + 5 retained legacy roles + 2 preferred ingredients.
+Promoted source pool with 28 semantic roles: 23 reauthored + 5 retained legacy + 2 preferred ingredients.
 
 ### Workshop v0.2
 
-Promoted source pool with 24 finished semantic assets: 14 direct reauthored replacements + 5 retained baseline variants + 5 candidate coexistence variants + 2 preferred ingredients.
+Promoted source pool with 24 finished semantic assets: 14 direct replacements + 5 retained baseline variants + 5 candidate coexistence variants + 2 preferred ingredients.
 
-### Clinic / Care candidate
+### Clinic / Reading / Fantasy / Water
 
-Useful reviewed source pool. It is **not** a core generic pack. Generic furniture/interior/comfort/container assets are harvested by reference; strongly medical props remain specialized.
+These remain useful source/provenance pools. Generic resources have been harvested/classified; specialized theme-specific art is not a reason to resume theme-by-theme pack production.
 
-### Reading / Classroom, Fantasy / Village / Night, Water / Pond
+## 4. Generic library consolidation — complete enough for current phase
 
-These remain source/provenance pools. Their generic assets have been harvested/classified rather than treated as required theme packs.
+The full source harvest and Core Essentials Batch A are complete.
 
-## 4. Generic library consolidation and full source harvest
-
-Commit `cc1d7f1` created the first six semantic indexes under:
-
-`assets/visual/authoring_library/`
-
-Commit `2dcf306` completed the full source harvest across Reading/Classroom, Fantasy/Village/Night and Water/Pond.
-
-Harvest state before Batch A admission:
-
-```text
-52 preferred finished assets
-32 candidate-reference finished assets
-5 authoring ingredients
-89 total indexed reusable resources
-```
-
-Owner review:
-
-`docs/reviews/visual/2026-08-21_generic-authoring-library-full-source-harvest/PRIMARY_REVIEW.md`
-
-## 5. Accepted gap model
-
-Every coverage question must distinguish:
-
-```text
-TRUE_MISSING
-QUALITY_GAP
-VARIETY_GAP
-NO_GAP
-```
-
-An existing weak asset is a quality gap, not missing inventory.
-
-## 6. Permanent composability rule
-
-The generic library must not become an encyclopedia of arbitrary pre-finished clip-art nouns.
-
-> **Generic assets should encode reusable form; Activity-specific meaning and contents should remain separable whenever practical.**
-
-Examples:
-
-- empty plate/bowl rather than food permanently baked in;
-- books without readable titles or one fixed story;
-- blank signs/boards where Activity/localization owns text;
-- reusable gear/dial/lever components rather than one narrowly themed machine;
-- source-level ingredients only when they genuinely improve authoring leverage.
-
-Runtime remains economical: rich source work may be flattened into efficient runtime assets.
-
-## 7. Generic authoring-library admission state
-
-The semantic index structure is canonical. Individual resources expose:
-
-```text
-preferred
-candidate_reference
-```
-
-- `preferred` → strong enough to consider first for direct REUSE.
-- `candidate_reference` → useful for COMPOSE/ADAPT/reference, but not owner-approved first-choice direct-use art.
-
-The purpose of these states is to avoid endless redraw loops merely to force every useful source into `preferred`.
-
-## 8. Generic Core Essentials Batch A — reviewed and admitted
-
-Candidate commit:
-
-`574f19530ee292a81225ff14c09ad8b35f6cf933`
-
-Primary review:
-
-`docs/reviews/visual/2026-08-21_generic-core-essentials-batch-a/PRIMARY_REVIEW.md`
-
-Owner disposition:
-
-```text
-9 finished assets → preferred
-7 finished assets → candidate_reference
-2 authoring ingredients → preferred
-```
-
-Admission/discovery implementation commit:
-
-`de37aad978c57b3de88a64ffb1f6cf70c5a89c5b`
-
-Current generic indexes contain:
+Current generic authoring indexes after admission/discovery tooling:
 
 ```text
 57 preferred finished assets
@@ -160,120 +71,193 @@ Focused tests:
 
 `tests/test_visual_authoring_library.py`
 
-No Batch B is authorized merely to increase asset count.
+No generic Batch B is authorized merely to increase counts.
 
-## 9. Why Canonical Characters are now a justified maintainer-side art gate
+## 5. Permanent generic rules
 
-The generic-object toolbox has reached useful breadth and now has discovery tooling. A separate, high-value weakness remains: Greia's recurring canonical cast is still only partially productized.
+Coverage questions distinguish:
 
-Current repository facts:
+```text
+TRUE_MISSING
+QUALITY_GAP
+VARIETY_GAP
+NO_GAP
+```
 
-- A1 neutral characters live under `assets/visual/specimens/a1/` as accepted **style anchors**, not frozen release art;
-- `assets/visual/library/catalog.toml` still describes the shared character library as `candidate` and `runtime_consumed = false`;
-- each of Lilli, Nino, Tito and Momo currently has only a separately authored `blink.svg` under `assets/visual/characters/<name>/`;
-- the design vocabulary already names `neutral`, `blink`, `happy`, `surprised`, and `sleepy` states plus six shared motions;
-- only Lilli currently has a narrow `default`/`blink` runtime rendition in `assets/catalog/shared_visuals_v1_source.toml`;
-- `SceneActorDefinition` currently implements cheap whole-character idle + blink rather than a detailed rig.
+An existing weak asset is a quality gap, not missing inventory.
 
-This makes canonical character production a much more justified next maintainer-art task than another generic prop batch.
+The library must not become a giant clip-art noun warehouse.
 
-## 10. Exact current character-art gate
+> **Generic assets encode reusable form; Activity-specific meaning and contents remain separable whenever practical.**
+
+Runtime remains economical: rich source work may be flattened into efficient final runtime assets.
+
+## 6. Four-character canonical reauthoring — completed and reviewed
+
+Candidate commit:
+
+`59336d1c34e119e04c40b32f2c1901e1dbfb1b60`
+
+Candidate source:
+
+`assets/visual/pack_candidates/canonical_characters/2026-08-22/`
+
+Primary review:
+
+`docs/reviews/visual/2026-08-22_canonical-character-cast-reauthoring/PRIMARY_REVIEW.md`
+
+Actual owner-transfer pixels were reviewed.
+
+Accepted as the next-system foundation:
+
+- complete registered states `neutral`, `blink`, `happy`, `surprised`, `sleepy`;
+- cheap shared motion semantics `idle_bounce`, `blink`, `happy_hop`, `celebrate_pop`, `surprised_wobble`, `sleepy_sway`;
+- source-level semantic groups/components for future authoring;
+- complete-state swaps + whole-character transforms rather than skeletal rigs.
+
+Disposition:
+
+```text
+Lilli → carry forward current candidate
+Tito  → carry forward current candidate
+Momo  → carry forward current candidate
+Nino  → preserve as historical/source provenance; current owl target is Leo
+```
+
+Do not promote the old four-character lineup as the final canonical family.
+
+## 7. Current canonical cast design
+
+Authority:
+
+`docs/design/GREIA_CANONICAL_CAST_SYSTEM.md`
+
+Current target:
+
+```text
+Lilli — unicorn      → creativity / stories / art / imagination
+Leo   — owl+glasses  → learning / reading / language / knowledge
+Flash — rabbit       → games / speed / action / playful challenge
+Dani  — robot        → math / logic / patterns / sequencing
+Tito  — fox          → exploration / nature / discovery / investigation
+Momo  — monster      → emotion / music / silly play / celebration
+```
+
+This is a **soft lead-mascot system**, not exclusive silos.
+
+Do not create six Home categories. Existing platform-owned Collections remain:
+
+```text
+create
+play
+learn
+explore
+my_greia
+```
+
+Natural affinity is allowed (`Create→Lilli`, `Play→Flash`, `Learn→Leo`, `Explore→Tito`), while Dani and Momo remain cross-cutting and `my_greia` remains child/profile-centered.
+
+## 8. Exact current art gate
 
 Execute:
 
-`docs/testing/2026-08-22_CANONICAL_CHARACTER_CAST_REAUTHORING_AND_STATE_SET.md`
+`docs/testing/2026-08-22_CANONICAL_CAST_EXPANSION_LEO_FLASH_DANI.md`
 
-This gate asks the local maintainer agent to attempt:
+This bounded gate must:
 
-```text
-4 canonical characters
-× 5 complete authored states
-= 20 finished state SVGs
-```
+1. refine the current owl foundation into **Leo** with integrated signature glasses;
+2. create **Flash** as a silhouette-distinct rabbit;
+3. create **Dani** as a cute rounded toy-like robot;
+4. author the same five complete states for Leo/Flash/Dani;
+5. preserve Lilli/Tito/Momo unless a concrete six-cast collision is demonstrated;
+6. prove all-six identity at 256/128/64 px and silhouette-only 128/64;
+7. show shared motion vocabulary across all six at storyboard/design scope;
+8. stop for owner pixel review before runtime promotion or ID migration.
 
-States:
+Candidate workspace:
 
-```text
-neutral
-blink
-happy
-surprised
-sleepy
-```
+`assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/`
 
-It also requires source-level semantic groups/components and storyboard proof against the existing motion vocabulary:
+Owner ZIP:
 
-```text
-idle_bounce
-blink
-happy_hop
-celebrate_pop
-surprised_wobble
-sleepy_sway
-```
+`GREIA_VISUAL_REVIEW_CANONICAL_CAST_EXPANSION_2026-08-22.zip`
 
-### Boundary
+## 9. Specific visual risks to control
 
-This first gate is **art/state/motion-design evidence only**.
+### Leo
 
-Do not modify runtime manifests, Activities, or `SceneActorDefinition` before owner pixel review. After the candidate cast is accepted, a separate runtime gate may:
+The current owl's large circular eye treatment is already visually dominant. Glasses must be integrated with the eye-mask/eye disks, not stacked on top as extra rings. The old teal badge is optional if glasses provide enough identity.
 
-1. promote approved canonical state art;
-2. add all four characters/states to the explicit build-time visual manifest;
-3. extend renderer-neutral SceneActor semantic motion support without skeletal rigs;
-4. exercise the resulting motion/state behavior through the Activity Simulator.
+### Flash
 
-## 11. Character production rule
+Flash must not become:
 
-Canonical character identity and authoring flexibility both matter.
+- Tito recolored with longer ears;
+- Lilli without horn;
+- a racing-costume mascot with activity-specific props baked into identity.
+
+Silhouette must communicate rabbit + stored speed before color.
+
+### Dani
+
+Dani must not become a generic device icon or dense sci-fi robot. Face/emotion is primary; mechanical detail remains sparse and toy-like. No baked numerals/text.
+
+## 10. Character production rule
 
 Use:
 
-> **full authored state SVGs for finished reusable states + semantic source layers/components for future authoring; simple whole-body transforms for runtime motion.**
+> **full authored state SVGs + semantic source layers/components for authoring + simple whole-body transforms for runtime motion.**
 
 Do not replace this with:
 
 - skeletal/bone animation;
-- dozens of body-part runtime sprites;
+- runtime body-part composition;
+- dozens of limb sprites;
 - frame-by-frame sprite explosions;
-- identical generic face stamps across all four characters.
+- cloned one-body formulas for every cast member.
 
-The accepted grammar remains: identity from silhouette + face + a few strong cues; life from expression + whole-body motion.
+## 11. What follows owner approval of the six-cast candidate
 
-## 12. Relationship to the user-agent skill
+Only after owner pixel acceptance:
 
-The maintainer track builds and curates the toolbox and canonical cast.
+1. promote approved canonical states under stable source identities;
+2. explicitly migrate historical Nino identity to current `character.leo` where appropriate;
+3. add accepted character states to the explicit build-time rendition manifest;
+4. extend `SceneActorDefinition` only enough for semantic state/motion selection with whole-character transforms;
+5. exercise runtime/fallback/responsive behavior through the Activity Simulator;
+6. then consider optional Activity presentation metadata for lead/supporting canonical characters;
+7. return to exercising the user-facing visual-authoring skill/toolbox in real Activity authoring rather than increasing art counts by inertia.
 
-Arbitrary Activity agents should conceptually:
+## 12. Relationship to arbitrary Activity-authoring agents
+
+Maintainer-side character production does not define arbitrary-agent capability.
+
+Activity authors should eventually be able to:
 
 ```text
-inventory Activity needs
-→ query the generic semantic library
-→ reuse canonical Greia characters by stable identity/state when appropriate
-→ prefer reviewed/preferred generic assets where they fit
-→ inspect candidate/source references when useful
+inventory Activity visual needs
+→ query generic authoring library
+→ choose canonical cast lead/support when appropriate
 → REUSE / COMPOSE-ADAPT / CREATE ORIGINAL
-→ create Activity-local final art where needed
-→ flatten/build runtime rendition
+→ keep specialized art Activity-local
+→ flatten/build economical runtime renditions
 → integrate through Greia package/scene seams
 → visually review
 ```
-
-After the canonical-character candidate and runtime gates, return to exercising this user-facing workflow in real Activity authoring. Do not treat maintainer-agent character quality as arbitrary-agent capability evidence.
 
 ## 13. Explicit drift to avoid
 
 Do not:
 
 - return to theme-by-theme pack production;
-- immediately create generic Batch B merely to increase counts;
-- redraw every candidate reference until it becomes preferred;
-- create a giant noun warehouse;
-- bake arbitrary food/text/story meaning into generic bases;
-- infer arbitrary user-agent capability from the maintainer agent;
+- create generic Batch B merely to increase counts;
+- redraw every candidate reference until preferred;
 - reopen hero-tree specimen optimization;
+- create six top-level Home destinations from six characters;
+- promote Nino automatically without Leo review;
 - turn canonical characters into detailed skeletal rigs;
-- create a second runtime catalogue/cache architecture.
+- create a second runtime catalogue/cache architecture;
+- infer arbitrary user-agent capability from the maintainer agent.
 
 ## 14. Platform boundary
 
