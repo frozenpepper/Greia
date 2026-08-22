@@ -8,10 +8,13 @@ languages = ["it", "en"]
 
 [presentation]
 categories = ["play", "explore"]
+discovery_tags = ["action"]
 
 [education]
 categories = ["fine_motor", "reaction_time", "spatial_awareness"]
-difficulty = 1
+difficulty = 3
+recommended_age_min = 4
+recommended_age_max = 9
 skills = [
   { id = "motor.coordination.hand_eye", weight = 3 },
   { id = "motor.pointer.continuous_tracking", weight = 2 },
