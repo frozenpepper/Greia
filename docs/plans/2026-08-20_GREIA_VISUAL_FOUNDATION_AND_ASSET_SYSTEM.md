@@ -1,7 +1,7 @@
 # Greia Visual Foundation and Asset System — Active Art Workstream Plan
 
 **Status:** ACTIVE ART/VISUAL WORKSTREAM  
-**Last checkpoint review:** 2026-08-21  
+**Last checkpoint review:** 2026-08-22  
 **Repository:** `frozenpepper/Greia`  
 **Branch:** `main`  
 **Stable system/index guide:** `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`  
@@ -11,7 +11,7 @@ This plan owns **sequencing, current checkpoint, milestone state and append-only
 
 > **excellent individual assets → reusable asset packs → layered composition → subtle parallax / ambient motion / light / shadow → shared UI system → explicit semantic runtime consumption → Shell/Activity reuse**
 
-Broad source-art coverage already exists. **V5 shared consumption/integration remains active.** The reusable runtime seam is now proven across cards, panels, buttons, profile identity, feedback and Shell-local navigation. The current gate is no longer another decoration pass: it begins the accepted **Collection-first Greia Home** migration, replacing the temporary normal-child `All Activities + filter row` landing with large semantic Collection destinations while reusing the already-accepted Activity catalogue inside each Collection.
+Broad source-art coverage already exists. **V5 shared consumption/integration remains active.** The reusable runtime seam is now proven across cards, panels, buttons, profile identity, feedback and Shell-local navigation. The current source-authoring gate is no longer more themed art production: Greia is consolidating a generic semantic authoring toolbox and the model-agnostic discovery/skill workflow that arbitrary Activity-authoring agents can use.
 
 ---
 
@@ -53,24 +53,23 @@ Character refinement does not block V5.
 
 # 3. Current reusable library
 
-| Pack | Source | Current scope |
+| Pack / layer | Source | Current scope |
 |---|---|---|
-| Forest / Meadow v0.2 | `assets/visual/environments/forest_meadow/v0.2/` | 27 masters; layered/parallax + target-size review |
+| Forest / Meadow v0.3 | `assets/visual/environments/forest_meadow/v0.3/` | promoted source pool feeding generic Nature/Landscape + FX |
+| Workshop v0.2 | `assets/visual/environments/workshop/v0.2/` | promoted source pool feeding generic interiors/furniture/props/play/light |
+| Generic authoring library | `assets/visual/authoring_library/` | canonical semantic discovery indexes over promoted/reviewed source pools |
 | Shared UI v0.1 | `assets/visual/ui/v0.1/` | panels/cards/buttons/tabs/badges/progress/bubbles/reward/focus/loading/error/empty/portal family |
-| Workshop v0.1 | `assets/visual/environments/workshop/v0.1/` | 19 masters + target references |
-| Clinic / Care v0.1 | `assets/visual/environments/clinic/v0.1/` | 17 masters + reduced-size/target review |
-| Reading / Classroom v0.1 | `assets/visual/environments/reading_classroom/v0.1/` | 17 masters; reuses Workshop assets |
-| Fantasy / Village / Night v0.1 | `assets/visual/environments/fantasy_village_night/v0.1/` | 15 masters + target references; reuses Forest assets |
-| Water / Pond v0.1 | `assets/visual/environments/water_pond/v0.1/` | 14 water-specific masters + target references; reuses Forest assets |
+| Historical source pools | Clinic / Reading / Fantasy / Water folders | provenance/reference pools harvested into generic admission states |
 
 Inventories:
 
 ```text
 assets/visual/library_v0.1.toml
 assets/visual/packs_v0.1.toml
+assets/visual/authoring_library/
 ```
 
-Most source-pack art remains **candidate SOURCE + DESKTOP VISUAL REVIEW** unless a narrower record states otherwise. Do not create another environment family merely to keep producing assets.
+Themed source pools remain provenance/reference material. The generic semantic authoring library is the primary Activity-author discovery layer. Do not create another environment family merely to keep producing assets.
 
 ---
 
@@ -129,13 +128,11 @@ ui.avatar.frame            default
 ui.loading.orbit           default
 ui.error.gentle            default
 ui.empty.basket            default
-ui.portal.frame            default      ← current Collection-first Home source gate
+ui.portal.frame            default
 ui.shadow.soft             default
 ```
 
 `tools/build_visual_renditions.py` renders through build-host librsvg/`rsvg-convert`, validates dimensions/containment and writes PNG/catalog output transactionally. The target device does not rasterize SVG.
-
-`ui.button.icon` has already been generated and simulator-accepted. `ui.portal.frame` was added to source catalogue version `0.1.5`; its runtime PNG/generated-catalogue entry must be produced by `make visual-assets` before the Collection-first Home simulator gate.
 
 ## 4.3 Generated-output validation — implemented
 
@@ -158,7 +155,7 @@ get_shared_visual(asset_id, variant="default")
 get_shared_visual_path(asset_id, variant="default")
 ```
 
-`activities/shape_garden/main.py` is the first Python source proof. It is no longer a blocker for visible Shell work. Future Web support must preserve semantic IDs/variants through a controlled URL/handle transport rather than exposing host paths.
+`activities/shape_garden/main.py` is the first source proof. Future Web support must preserve semantic IDs/variants through a controlled URL/handle transport rather than exposing host paths.
 
 ## 4.7 Activity cards — ACCEPTED (SIMULATOR VISUAL REVIEW)
 
@@ -193,7 +190,7 @@ This relationship must be preserved. The panel acceptance matrix and isolated fa
 
 `ui.button.primary/default|hover` styles the previous root Activity-category row through `SharedUiCategoryButtonMixin`, preserving category IDs/order/hit targets/navigation. The accepted six-row simulator run included hover, category open/back, lifecycle, isolated fallback and 29.6 FPS sanity.
 
-This evidence remains valid for the component. It does **not** mean the filter-row information architecture remains the preferred normal child Home. Collection-first Home now supersedes that root presentation when its simulator gate passes.
+This evidence remains valid for the component. It does **not** mean the filter-row information architecture remains the preferred normal child Home.
 
 ## 4.10 Profile identity — ACCEPTED (SIMULATOR VISUAL REVIEW)
 
@@ -221,34 +218,15 @@ ui.empty.basket/default     SOURCE / NOT EXERCISED
 
 Accepted feedback run (`5d8208883b840318b508b2dddc83c829e826a0e7`) covered launch overlay, catalogue error cloud, isolated corrupt-PNG fallbacks, four responsive rows and 280 frames / 10.03 s = 27.9 FPS simulator sanity.
 
-The empty basket was not legitimately reached through the production catalogue and therefore remains **SOURCE / NOT EXERCISED**.
-
 ## 4.12 Shared Shell navigation chrome — ACCEPTED (SIMULATOR VISUAL REVIEW)
 
-`ui.button.icon/default` is consumed through:
-
-```text
-src/greia_launcher/navigation_chrome_presentation.py
-```
-
-Accepted behavior:
-
-1. in-category local Back control uses the circular tactile frame;
-2. Activity collection up/down controls use the same family when a real collection requires pagination;
-3. profile previous/next controls share the same source path but remain **SOURCE / NOT EXERCISED** when profile count is <=4;
-4. original action IDs and target rectangles remain authoritative;
-5. corrupt `icon_button.png` falls back only the navigation controls while accepted panel/cards/profile/feedback visuals remain active;
-6. protected Activity system Home/Back is not replaced.
+`ui.button.icon/default` is consumed through `src/greia_launcher/navigation_chrome_presentation.py`.
 
 Accepted via:
 
-```text
-docs/testing/2026-08-21_V5_SHARED_NAVIGATION_CHROME_SIMULATOR.md
-```
+`docs/testing/2026-08-21_V5_SHARED_NAVIGATION_CHROME_SIMULATOR.md`
 
 Canonical acceptance commit: `370d96039546178ed2c64366bdaec1b5dc986be2`.
-
-Evidence: six responsive rows, Back default/hover/click, Activity scroll controls, isolated corrupt-PNG fallback, and 271 frames / 10.01 s = 27.1 FPS simulator sanity.
 
 ## 4.13 Collection-first Greia Home — ACCEPTED
 
@@ -279,40 +257,6 @@ src/greia_launcher/catalogue_view.py
 src/greia_launcher/child_shell.py
 ```
 
-`CollectionFirstHomeMixin` now changes the normal launcher root projection without changing package/runtime authority:
-
-- `ALL_ACTIVITIES_ID` remains available internally but is no longer rendered as the normal child Activity wall;
-- root renders only available non-empty primary Collections as large destinations;
-- arbitrary package categories do not manufacture top-level Home portals;
-- unknown-category Activities are recovered through the bounded `browse`/`Altro` Collection;
-- entering a Collection reuses the already-accepted panel, Activity-card, scroll/navigation and launch paths;
-- local Back from a primary Collection returns to Collection Home;
-- Back/Escape at Collection Home returns to profile choice;
-- one Activity may appear in multiple Collections without duplicate installation, saves, permissions, history or progression;
-- root mouse-wheel activity scrolling is disabled because there is no Activity wall at Home;
-- active-profile switching remains available;
-- keyboard, pointer and selection semantics remain renderer-independent launcher state.
-
-Accepted shared visual:
-
-```text
-ui.portal.frame/default
-```
-
-Source master:
-
-```text
-assets/visual/ui/v0.1/portal_frame.svg
-```
-
-Generated runtime file:
-
-```text
-assets/visual/runtime/v1/ui/portal_frame.png
-```
-
-Fail-soft rule is deliberately narrow: corrupt/missing portal artwork preserves **Collection-first hierarchy** using a primitive circular Collection destination; it does not fall back to the obsolete All-Activities Home and does not disable unrelated accepted visuals.
-
 Accepted protocols:
 
 ```text
@@ -320,38 +264,19 @@ docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md
 docs/testing/2026-08-21_COLLECTION_PRIMARY_VOCABULARY_SIMULATOR.md
 ```
 
-All 6 responsive matrix viewports, keyboard/pointer navigation, return origin from activity, multi-membership sanity, fail-soft portal fallback, bounded unknown-only fallback, and 27.7 FPS frame sanity passed with evidence in `tmp/collection-home-simulator-evidence/` and `tmp/collection-primary-vocabulary-evidence/`.
-
 Evidence class: **SIMULATOR VISUAL REVIEW**.
-
-This gate does **not** implement or accept future adaptive sub-Collections, age/development profile policy, Parent per-child visibility policy or the Web visual adapter.
 
 ## 4.14 Scene Composition Runtime & Nascondino nel Bosco — ACCEPTED (SIMULATOR VISUAL REVIEW)
 
 Architecture plan:
 
-```text
-docs/plans/2026-08-21_GREIA_SCENE_COMPOSITION_RUNTIME.md
-```
+`docs/plans/2026-08-21_GREIA_SCENE_COMPOSITION_RUNTIME.md`
 
-Accepted components:
-
-1. `SceneDefinition` + `SceneNode` + `SceneCamera` in `src/greia_platform/scene.py`;
-2. `PygameSceneRenderer` with split $z$-range rendering ($z \le 59$ background, $z \ge 60$ foreground/atmosphere) in `src/greia_platform/pygame_scene.py`;
-3. First runtime scene `assets/scenes/forest_meadow_day_v1.toml` with 15 semantic visual nodes;
-4. Integration in `activities/nascondino_bosco/main.py` replacing primitive legacy background while preserving interactive gameplay spots, animal clue animations, and HUD layers;
-5. Required asset corruption (`distant_hills.png`) fail-soft fallback to `_draw_legacy_forest_background`;
-6. Optional atmosphere corruption (`fog_strip.png`) fail-soft soft isolation skipping only the fog node;
-7. Camera parallax + ambient motion (`drift_x`, `sway_x`, `breathe_alpha`);
-8. All six responsive matrix rows (`1024×600` normal/large, `1280×800`, `1366×768`, `1920×1080`, `1111×700`);
-9. Frame performance sanity: 258 frames / 10.01 s = 25.8 FPS;
-10. Curated review set committed in `docs/reviews/visual/2026-08-21_scene-compositor-nascondino/` per `docs/testing/VISUAL_ACCEPTANCE_EVIDENCE_CONTRACT.md`.
+Accepted components include `SceneDefinition`, `SceneNode`, `SceneCamera`, `PygameSceneRenderer`, the `forest_meadow_day_v1.toml` scene, Nascondino integration, required/optional fail-soft behavior, parallax/ambient motion and the six-row responsive matrix.
 
 Accepted via:
 
-```text
-docs/testing/2026-08-21_SCENE_COMPOSITOR_NASCONDINO_SIMULATOR.md
-```
+`docs/testing/2026-08-21_SCENE_COMPOSITOR_NASCONDINO_SIMULATOR.md`
 
 Evidence class: **SIMULATOR VISUAL REVIEW**.
 
@@ -364,23 +289,13 @@ Evidence class: **SIMULATOR VISUAL REVIEW**.
 | Stable guide | `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` |
 | Resume | `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` |
 | Product discovery authority | `docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md` |
-| Active focus | **V5 — Scene Composition Runtime & Nascondino nel Bosco accepted in Activity Simulator** |
-| Environment coverage | V4 complete through Water/Pond; first runtime scene `forest_meadow_day_v1.toml` active |
-| Catalogue/renditions | explicit semantic catalogue present; source version `0.2.0`; 15 Forest/Meadow PNG renditions generated |
-| Activity cards | accepted at **SIMULATOR VISUAL REVIEW** |
-| Shell panel | accepted at **SIMULATOR VISUAL REVIEW** |
-| Root category button component | accepted at **SIMULATOR VISUAL REVIEW**, but old filter-row Home is superseded by Collection-first Home |
-| Profile identity | accepted at **SIMULATOR VISUAL REVIEW** |
-| Launch/error feedback | accepted at **SIMULATOR VISUAL REVIEW** |
-| Empty basket | **SOURCE / NOT EXERCISED** |
-| Navigation icon button | accepted at **SIMULATOR VISUAL REVIEW** |
-| Collection-first Home | accepted at **SIMULATOR VISUAL REVIEW** (5 primary collections) |
-| Collection portal frame | `ui.portal.frame/default` accepted at **SIMULATOR VISUAL REVIEW** |
-| Scene compositor runtime | `PygameSceneRenderer` + `SceneCamera` accepted at **SIMULATOR VISUAL REVIEW** |
-| Nascondino scene integration | `forest_meadow_day_v1.toml` in Nascondino accepted at **SIMULATOR VISUAL REVIEW** |
+| Runtime visual focus | **V5 runtime/scene/shared UI accepted at simulator scope where recorded** |
+| Authoring focus | **Generic semantic authoring library + model-agnostic discovery/skill tooling** |
+| Generic library | full source harvest complete; Batch A owner-reviewed selectively |
+| Batch A disposition | 9 preferred finished + 7 candidate-reference finished + 2 preferred ingredients |
+| No-more-art rule | Batch B is not authorized before discovery/tooling + real Activity-authoring exercise |
 | Activity semantic API | implemented in source; Shape Garden proof is non-blocking |
-| Completed visible protocols | `docs/testing/2026-08-20_V5_SHARED_UI_CARD_SIMULATOR.md`; `docs/testing/2026-08-20_V5_SHARED_UI_PANEL_SIMULATOR.md`; `docs/testing/2026-08-20_V5_SHARED_UI_CATEGORY_BUTTON_SIMULATOR.md`; `docs/testing/2026-08-21_V5_SHARED_PROFILE_IDENTITY_SIMULATOR.md`; `docs/testing/2026-08-21_V5_SHARED_FEEDBACK_SIMULATOR.md`; `docs/testing/2026-08-21_V5_SHARED_NAVIGATION_CHROME_SIMULATOR.md`; `docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md`; `docs/testing/2026-08-21_COLLECTION_PRIMARY_VOCABULARY_SIMULATOR.md`; `docs/testing/2026-08-21_SCENE_COMPOSITOR_NASCONDINO_SIMULATOR.md` |
-| Next exact action | S4 motion/scene vocabulary expansion or Web Activity semantic visual adapter |
+| Next exact action | `docs/testing/2026-08-22_GENERIC_VISUAL_LIBRARY_ADMISSION_AND_DISCOVERY_TOOLING.md` |
 
 ---
 
@@ -391,26 +306,26 @@ Evidence class: **SIMULATOR VISUAL REVIEW**.
 - [x] core cast seed;
 - [ ] useful refinement may continue without blocking integration.
 
-## V2 — Forest/meadow **[DESKTOP CANDIDATE BUILT]**
+## V2 — Forest/meadow **[PROMOTED SOURCE POOL]**
 - [x] source pack;
 - [x] metadata/composition/parallax proof;
 - [x] target-size review;
-- [ ] owner approval/revision when appropriate.
+- [x] v0.3 selective promotion.
 
-## V3 — Shared UI kit **[DESKTOP CANDIDATE BUILT]**
+## V3 — Shared UI kit **[DESKTOP CANDIDATE BUILT / RUNTIME SUBSET ACCEPTED]**
 - [x] shared components/states;
 - [x] shadow/highlight treatment;
 - [x] target references;
-- [ ] owner approval/revision when appropriate.
+- [x] multiple runtime consumers accepted at simulator scope.
 
-## V4 — Additional environment coverage **[DESKTOP CANDIDATE COVERAGE COMPLETE]**
+## V4 — Additional environment/source coverage **[SOURCE COVERAGE COMPLETE; THEMES NOW PROVENANCE POOLS]**
 - [x] Workshop;
 - [x] Clinic;
 - [x] Reading/classroom;
 - [x] Fantasy/village/night;
 - [x] Water/pond;
-- [x] pack inventory/reuse dependencies;
-- [ ] new family only for a demonstrated gap.
+- [x] full source harvest into generic taxonomy;
+- [ ] new family only for a demonstrated generic gap.
 
 ## V5 — Shared consumption/integration **[ACTIVE]**
 - [x] typed visual asset catalogue + variants;
@@ -439,9 +354,18 @@ Evidence class: **SIMULATOR VISUAL REVIEW**.
 - [x] first Python Activity source consumer (Shape Garden);
 - [ ] Shape Garden Activity Simulator acceptance (non-blocking);
 - [ ] future Web Activity semantic adapter/transport;
-- [ ] future adaptive optional sub-Collection implementation;
-- [ ] future audience/Parent per-child discovery policy implementation;
 - [ ] physical low-resource evidence where a stronger claim requires it.
+
+## V6 — Generic Activity-authoring toolbox **[ACTIVE]**
+- [x] generic semantic taxonomy established;
+- [x] six authoring-library indexes established;
+- [x] full source harvest across Forest/Workshop/Clinic/Reading/Fantasy/Water;
+- [x] preferred vs candidate-reference admission states;
+- [x] Core Essentials Batch A created and owner-reviewed;
+- [ ] Batch A selective stable admission;
+- [ ] deterministic authoring discovery helper;
+- [ ] skill update to use discovery helper;
+- [ ] real Activity-authoring exercise using the generic toolbox/skill.
 
 ---
 
@@ -479,7 +403,10 @@ Committed source is not PASS by itself. Generated runtime output is not consumer
 - duplicating generic shared masters;
 - proof-only Activities displacing visible product work once the shared seam is established;
 - continuing to polish the old `All + filters` root after Collection-first Home is the accepted product target;
-- exposing Collections as filesystem folders or building deep taxonomies.
+- exposing Collections as filesystem folders or building deep taxonomies;
+- treating themed source bundles as the generic authoring taxonomy;
+- redrawing every candidate-reference asset until it becomes preferred;
+- expanding asset count by inertia before making the toolbox discoverable to user agents.
 
 ---
 
@@ -614,22 +541,42 @@ The entries below preserve the workstream chronology. Corrections/new state are 
 
 ## 2026-08-21 — Scene Actor Lilli and Nascondino HUD accepted in simulator
 - Integrated first shared Greia character actor (`character.lilli/default|blink`) and contact shadow (`shadow.contact.small.01/default`) using `SceneActorDefinition` and `actor_scene_sample`.
-- Corrected Nascondino child HUD typography to 24 px in Normal, 26 px in Large, 20 px in Compact (eliminating the 18 px lower guardrail violation and fixing card geometry).
+- Corrected Nascondino child HUD typography to 24 px in Normal, 26 px in Large, 20 px in Compact.
 - Verified deterministic eye blink and grounded vertical idle motion.
 - Six-row responsive matrix, optional corrupt fog isolation, and required scene fallback passed.
 - Steady state simulator performance sanity measured 230 frames / 10.01 s = 23.0 FPS.
-- Curated review set committed in `docs/reviews/visual/2026-08-21_scene-actor-lilli-nascondino/` and review package assembled at `./GREIA_VISUAL_REVIEW_SCENE_ACTOR_LILLI_2026-08-21.zip`.
 
 ## 2026-08-21 — Visual Authoring Library Comparison Benchmark
-- Executed quality benchmark against baseline `forest_meadow/v0.2/` per `docs/testing/2026-08-21_VISUAL_AUTHORING_LIBRARY_COMPARISON.md`.
-- Primary review (`PRIMARY_REVIEW.md`) confirmed local authoring agent superiority over legacy baseline.
-- Assembled `./GREIA_VISUAL_REVIEW_AUTHORING_LIBRARY_COMPARISON_2026-08-21.zip`.
+- Executed quality benchmark against baseline `forest_meadow/v0.2/`.
+- Primary review confirmed the owner's local authoring agent could produce stronger source art than the legacy baseline.
+- This conclusion applies only to maintainer-side art production, not arbitrary future user agents.
 
 ## 2026-08-21 — Visual Authoring Kit Variation Benchmark
-- Executed variation & coherence benchmark per `docs/testing/2026-08-21_VISUAL_AUTHORING_KIT_VARIATION_BENCHMARK.md`.
-- Created candidate Authoring Kit at `assets/visual/authoring_kit/v0.1-candidate/` (4 material standards, 4 assembly recipes, 9 candidate proof SVGs).
-- Proved 3 distinct trees (Broad Oak, Slender Birch, Interactive Hollow Tree), 2 bushes (Plump Berry, Tall Bramble), and 2 rocks (Boulder Cluster, Shelf Outcrop) sharing cohesive storybook lighting and palette without formulaic cloning or glossy specular blobs.
-- Rendered 6 curated review artifacts in `docs/reviews/visual/2026-08-21_authoring-kit-variation/` and packaged `./GREIA_VISUAL_REVIEW_AUTHORING_KIT_VARIATION_2026-08-21.zip`.
+- Created candidate Authoring Kit experiments.
+- Subsequent owner review rejected treating those specimen/recipe iterations as a universal user-agent architecture and stopped the hero-tree/parametric-kit rabbit hole.
 
-**Next exact action:** Owner visual review of Authoring Kit Variation transfer ZIP.
+## 2026-08-21 — Generic semantic authoring-library correction
+- Separated themed source/provenance pools from the user-facing generic semantic taxonomy.
+- Established `assets/visual/authoring_library/` as the primary authoring discovery layer.
+- Core generic collections: Nature/Landscape, Interiors/Architecture, Furniture/Storage, Everyday Props/Containers, Making/Learning/Play, Lighting/Atmosphere/FX/Shadows.
+- `skills/greia-visual-authoring/SKILL.md` remains model/tool agnostic and teaches REUSE vs COMPOSE/ADAPT vs CREATE ORIGINAL.
 
+## 2026-08-21 — Full source harvest
+- Harvested Reading/Classroom, Fantasy/Village/Night and Water/Pond before declaring new gaps.
+- Corrected false missing-role assumptions into `TRUE_MISSING`, `QUALITY_GAP`, `VARIETY_GAP`, and `NO_GAP`.
+- Full-harvest commit: `2dcf306589efb721db4cac6bca7233c342fcfaa1`.
+
+## 2026-08-21 — Generic Core Essentials Batch A
+- Created 16 cross-category generic candidate assets + 2 authoring ingredients in `assets/visual/pack_candidates/generic_core_essentials/2026-08-21/`.
+- Candidate commit: `574f19530ee292a81225ff14c09ad8b35f6cf933`.
+- Owner reviewed the actual 10-sheet transfer ZIP.
+- Selective disposition: 9 finished assets + 2 ingredients approved for `preferred`; 7 finished assets intentionally remain `candidate_reference`.
+- No per-object Batch A redraw loop authorized.
+
+## 2026-08-22 — Authoring discovery becomes the next bottleneck
+- Raw generic asset count is no longer the immediate priority.
+- Next gate is `docs/testing/2026-08-22_GENERIC_VISUAL_LIBRARY_ADMISSION_AND_DISCOVERY_TOOLING.md`.
+- Gate will materialize stable preferred Batch A source, update generic indexes, add deterministic authoring-time list/search/show/validate tooling, and update the model-agnostic user-agent skill.
+- **No Batch B is currently authorized.**
+
+**Next exact action:** execute `docs/testing/2026-08-22_GENERIC_VISUAL_LIBRARY_ADMISSION_AND_DISCOVERY_TOOLING.md`.
