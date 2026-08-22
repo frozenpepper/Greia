@@ -302,8 +302,10 @@ class GreiaLauncherPresentation(LauncherApplication):
                         self._parent_panel.open()
                         _needs_redraw = True
                 elif self._mode == "parent_panel":
-                    self._parent_panel.drain()
-                self._rescan_if_due()
+                    if self._parent_panel.drain():
+                        _needs_redraw = True
+                if self._rescan_if_due():
+                    _needs_redraw = True
 
                 is_animating = bool(self._launching_activity_id is not None)
                 if _needs_redraw or is_animating or not self._first_frame_released:
@@ -468,10 +470,10 @@ class GreiaLauncherPresentation(LauncherApplication):
         self._selected = 0
         self._activity_scroll_start = 0
 
-    def _rescan_activities(self) -> None:
+    def _rescan_activities(self) -> bool:
         token = self.registry.discovery_token()
         if token == self._activity_discovery_token:
-            return
+            return False
         self._activity_discovery_token = token
         current = self._presented_activities
         selected_id = (
@@ -482,8 +484,9 @@ class GreiaLauncherPresentation(LauncherApplication):
         try:
             discovered = self.registry.discover()
         except ActivityValidationError:
+            changed = not self._catalogue_error
             self._catalogue_error = True
-            return
+            return changed
         # Runtime authority must be rebuilt before the newly discovered manifest
         # is published into the child-facing catalogue. If that construction
         # fails, the last known-good service/catalogue pair remains authoritative.
@@ -493,8 +496,9 @@ class GreiaLauncherPresentation(LauncherApplication):
             self._rebuild_runtime_services()
         except (ActivityValidationError, OSError, ValueError):
             self._activities = previous_activities
+            changed = not self._catalogue_error
             self._catalogue_error = True
-            return
+            return changed
         self._catalogue_error = False
         self._catalogue = ActivityCatalogue.from_activities(discovered)
         self._category_id = self._catalogue.nearest_category(self._category_id)
@@ -506,6 +510,10 @@ class GreiaLauncherPresentation(LauncherApplication):
                     self._selected = index
                     break
         self._activity_scroll_start = 0
+        self._tile_surface_cache.clear()
+        self._backdrop_cache.clear()
+        self._cached_activities_key = None
+        return True
 
     def _is_pointer_active(self, pygame: Any) -> bool:
         return bool(pygame.mouse.get_focused() or getattr(self, "_synthetic_pointer_active", False))

@@ -107,8 +107,18 @@ class ParentSettingsOverlay:
     def is_open(self) -> bool:
         return self.state != ParentPanelState.CLOSED
 
-    def drain(self) -> None:
-        self.wifi_controller.drain()
+    def drain(self) -> bool:
+        wifi_changed = self.wifi_controller.drain()
+        ssh_changed = False
+        if self.state == ParentPanelState.PANEL and self.active_tab == ParentPanelTab.SSH:
+            now = time.monotonic()
+            if now - self._last_ssh_poll > 2.0:
+                self._last_ssh_poll = now
+                latest = self.ssh_service.status()
+                if latest != self._ssh_cached_status:
+                    self._ssh_cached_status = latest
+                    ssh_changed = True
+        return wifi_changed or ssh_changed
 
     def handle_text_input(self, text: str) -> None:
         if self.state == ParentPanelState.AUTH:

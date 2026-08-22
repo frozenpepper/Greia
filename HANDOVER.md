@@ -1,3 +1,12 @@
+- **Performance Pacing & Dirty-Redraw Acceptance (2026-08-22)**:
+  - Completed and accepted all requirements of the Performance Pacing and Dirty Redraw Gate (`docs/testing/2026-08-22_PERFORMANCE_PACING_DIRTY_REDRAW_ACCEPTANCE.md`):
+    - **Idle Work Reduction**: Converted launcher to dirty-aware rendering with adaptive `time.sleep()` pacing (30 FPS when animating/dirty, 50ms sleep when clean), dropping idle draw calls from 30 fps to **0 fps** and physical Intel Atom N270 CPU load from ~95% down to **0.0% – 5.6%**.
+    - **Dirty Invalidation Correctness**: Fixed and verified all asynchronous visible-state invalidations (`_rescan_activities()` / `_rescan_profiles()` returning bool on discovery changes, `ParentSettingsOverlay.drain()` returning bool on background WiFi / SSH events, and immediate invalidation on mode/profile/resize switches).
+    - **Hover Performance & Icon Legibility**: Filtered mouse motion events, cached raw icons and title disclosure pill surfaces, and enlarged activity card icon dimensions by ~62% for crystal-clear visual legibility.
+    - **Costruiamo Ponti Semantics**: Verified asset caching and confirmed bunny Flash traversal, crossing completion (`target_x = bridge_end_x + 50`), and puzzle level progression.
+    - **Automated Verification**: Added `tests/test_launcher_pacing_dirty_redraw.py` (6/6 PASS). Full launcher and Ponti suite passes (49/49 PASS). `make validate` (PASS), `make visual-assets-check` (PASS).
+    - **Evidence & Review**: Generated `docs/reviews/performance/2026-08-22_launcher-pacing-dirty-redraw/` (`PERFORMANCE_REPORT.md`, `performance-audit.json`, `measurement-samples.json`, `correctness-trace.json`, proof screenshots) and packaged root transfer bundle `GREIA_PERFORMANCE_REVIEW_PACING_DIRTY_REDRAW_2026-08-22.zip`. Final disposition: `PERFORMANCE_PACING_DIRTY_REDRAW_ACCEPTED`.
+
 - **First-Party Activity Visual Audit and Batch 1 Productization (2026-08-22)**:
   - Delivered whole-catalogue visual audit across all 19 first-party Activities and productized Batch 1 priority targets (`docs/testing/2026-08-22_FIRST_PARTY_ACTIVITY_VISUAL_AUDIT_AND_BATCH_1_PRODUCTIZATION.md`):
     - **Whole-Catalogue Visual Audit (Phase A)**: Headless Simulator visual audit of all 19 first-party Activities at 1024×600, evaluating 8 dimensions (Coherence, Grounding, Entities, UI, Delight, Style, Responsive, Product Readiness). Produced `visual-audit.json`, `VISUAL_AUDIT.md`, 5×4 owner contact sheet `CONTACT_SHEET.png`, and objective selection report `BATCH_1_SELECTION.md`.

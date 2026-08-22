@@ -534,21 +534,22 @@ class LauncherApplication:
     def _installed_root(self) -> bool:
         return self.paths.root == Path("/opt/greia-os")
 
-    def _rescan_if_due(self) -> None:
+    def _rescan_if_due(self) -> bool:
         now = time.monotonic()
         if now < self._next_rescan:
-            return
+            return False
         self._next_rescan = now + self.RESCAN_SECONDS
-        self._rescan_activities()
-        self._rescan_profiles()
+        changed_act = self._rescan_activities()
+        changed_prof = self._rescan_profiles()
+        return bool(changed_act or changed_prof)
 
     def _on_frame_presented(self, screen: Any, pygame: Any) -> None:
         """Hook called immediately after a frame is presented."""
 
-    def _rescan_activities(self) -> None:
+    def _rescan_activities(self) -> bool:
         token = self.registry.discovery_token()
         if token == self._activity_discovery_token:
-            return
+            return False
         # Remember even a broken/incomplete package state so the Acer does not
         # reparse the same invalid tree every two seconds. A later file/directory
         # change produces another token and retries validation.
@@ -561,9 +562,11 @@ class LauncherApplication:
         try:
             discovered = self.registry.discover()
         except ActivityValidationError:
+            changed = not self._catalogue_error
             self._catalogue_error = True
-            return
+            return changed
         self._catalogue_error = False
+        previous = self._activities
         self._activities = discovered
         self._selected = 0
         if selected_id:
@@ -571,12 +574,16 @@ class LauncherApplication:
                 if activity.activity_id == selected_id:
                     self._selected = index
                     break
+        return previous != discovered
 
-    def _rescan_profiles(self) -> None:
+    def _rescan_profiles(self) -> bool:
         try:
             profiles = self.profile_store.list_profiles()
         except ProfileError:
-            return
+            return False
+        previous = self.profiles
+        if profiles == previous:
+            return False
         selected_id = (
             self.profiles[self._profile_selected].profile_id
             if self.profiles and self._profile_selected < len(self.profiles)
@@ -619,6 +626,7 @@ class LauncherApplication:
                     self._active_profile = None
                     self._mode = "profiles"
                     self.theme_controller = self.selector_theme
+        return True
 
     def _draw(self, screen: Any, pygame: Any) -> None:
         self._targets.clear()

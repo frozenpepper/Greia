@@ -520,7 +520,8 @@ class WifiSetupController:
         self._passphrase = ""
         self._error = ""
 
-    def drain(self) -> None:
+    def drain(self) -> bool:
+        changed = False
         while True:
             try:
                 generation, kind, payload = self._results.get_nowait()
@@ -528,6 +529,7 @@ class WifiSetupController:
                 break
             if generation != self._generation:
                 continue
+            changed = True
             if kind == "scan":
                 if isinstance(payload, tuple):
                     self._networks = payload
@@ -546,6 +548,7 @@ class WifiSetupController:
                 else:
                     self._phase = WifiSetupPhase.ERROR
                     self._error = str(payload)
+        return changed
 
     def _run_scan(self, generation: int) -> None:
         try:
