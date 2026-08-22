@@ -63,7 +63,7 @@ Focused tests:
 
 `tests/test_visual_authoring_library.py`
 
-The visual-authoring skill already instructs Activity authors to use the helper before manually browsing source folders.
+The visual-authoring skill instructs Activity authors to use the helper before manually browsing source folders.
 
 Permanent rules:
 
@@ -71,7 +71,7 @@ Permanent rules:
 - `candidate_reference` is primarily adaptation/reference material;
 - generic assets encode reusable form while Activity-specific meaning stays separable where practical;
 - absence of a perfect asset does not automatically authorize new generic production;
-- **Generic Batch B remains unauthorized** until real Activity demand demonstrates a concrete gap.
+- **Generic Batch B remains unauthorized** until real Activity demand demonstrates a concrete generic gap.
 
 ---
 
@@ -183,46 +183,84 @@ Dani and Momo remain cross-cutting. `my_greia` remains child/profile-centered.
 
 Do not create six top-level Home Collections.
 
-Do **not** implement `lead_character` / `supporting_characters` package metadata merely because it was previously listed as a possible follow-up. Let real Activity-authoring demand establish whether that schema is useful.
+Do **not** implement `lead_character` / `supporting_characters` package metadata merely because character presentation is available. Let real Activity-authoring demand establish whether that schema is useful.
 
 ---
 
-# 6. Exact current visual-authoring gate — EXERCISED & PACKAGED FOR OWNER REVIEW
+# 6. Shape Garden authoring workflow — OWNER ACCEPTED
 
-Completed execution:
+Executed gate:
 
 `docs/testing/2026-08-22_SHAPE_GARDEN_VISUAL_AUTHORING_WORKFLOW_EXERCISE.md`
 
-This gate used the real first-party `activities/shape_garden/` Activity to exercise the complete authoring workflow:
+Implementation/evidence commit:
+
+`072004174237ca15727283dc19850e8a1765c6e3`
+
+Owner review:
+
+`docs/reviews/visual/2026-08-22_shape-garden-visual-authoring-workflow/OWNER_REVIEW.md`
+
+Disposition: **ACCEPTED — SIMULATOR VISUAL REVIEW**.
+
+The real first-party `activities/shape_garden/` exercise proved:
 
 ```text
 baseline pixels
 → visual-needs inventory
 → generic discovery helper
-→ REUSE / COMPOSE-ADAPT / KEEP-EXISTING decisions
-→ justified canonical-character use (Dani geometry companion)
-→ Activity-local stems / shadows / delight particles
+→ explicit reuse/adaptation decisions
+→ justified canonical-character use (Dani)
+→ Activity-local stems / spawn delight / composition
 → existing Greia scene/UI/runtime seams
-→ Activity Simulator 10-scenario before/after acceptance
+→ real Activity Simulator before/after acceptance
 ```
 
-Packaged review artifacts:
-- Directory: `docs/reviews/visual/2026-08-22_shape-garden-visual-authoring-workflow/`
-- Audit report: `AUTHORING_AUDIT.md`
-- Structured audit data: `authoring-audit.json`
-- Simulator trace: `simulator-trace.json`
-- 10 curated PNGs across 4 viewports, motion-disabled mode, and fail-soft resilience proof
-- Transfer bundle: `GREIA_VISUAL_REVIEW_SHAPE_GARDEN_AUTHORING_WORKFLOW_2026-08-22.zip`
+Library-gap result: **NO_GAP**.
 
-Library gap outcome: **`NO_GAP`**. The generic library and canonical cast v0.1 fully satisfied the garden theme requirements without requiring a speculative Batch B.
-NO_GAP
-```
+Shape Garden primarily proved direct `REUSE` plus light Activity-local adaptation. It did not strongly stress substantial `COMPOSE_ADAPT` and `CREATE_ORIGINAL` work for unique gameplay-critical visual objects.
 
-Only actual demand may justify a future generic asset tranche.
+Therefore:
+
+- no Generic Batch B is authorized;
+- no character manifest metadata is authorized;
+- no further Shape Garden proof rerun is required;
+- the next exercise deliberately targets the harder authoring paths.
 
 ---
 
-# 7. Drift to avoid
+# 7. Exact current visual-authoring gate — COSTRUIAMO PONTI STRESS EXERCISE
+
+Execute:
+
+`docs/testing/2026-08-22_COSTRUIAMO_PONTI_VISUAL_AUTHORING_STRESS_EXERCISE.md`
+
+Target:
+
+`activities/costruiamo_ponti/` (`org.greia.costruiamo-ponti`)
+
+Why this Activity:
+
+- three distinct worlds: River / Canyon / Space;
+- four gameplay-critical bridge material identities;
+- traveler/crossing animation and success/failure feedback;
+- clear opportunity for genuine Activity-local authored art;
+- current visual treatment contains significant programmer-drawn gameplay visuals;
+- it can stress `COMPOSE_ADAPT` and `CREATE_ORIGINAL` without inventing another framework.
+
+The gate must preserve gameplay, localization, storage, events, audio, hybrid input and protected Home behavior.
+
+It must use generic semantic discovery first, but must not force unsuitable shared art merely to maximize reuse.
+
+Unique bridge-game objects should normally remain Activity-local rather than becoming a generic-library tranche.
+
+Required owner transfer ZIP when complete:
+
+`GREIA_VISUAL_REVIEW_COSTRUIAMO_PONTI_AUTHORING_STRESS_2026-08-22.zip`
+
+---
+
+# 8. Drift to avoid
 
 - no theme-by-theme pack roadmap;
 - no Generic Batch B by inertia;
@@ -235,11 +273,13 @@ Only actual demand may justify a future generic asset tranche.
 - no treating maintainer-agent drawing ability as arbitrary-agent evidence;
 - no second runtime asset system;
 - no proof-only Activity when a real first-party Activity can exercise the system;
-- no package character metadata before a real use case demonstrates value.
+- no package character metadata before a real use case demonstrates value;
+- no relabeling of untouched shared assets as `COMPOSE_ADAPT`;
+- no promotion of bridge-specific objects into the generic library without demonstrated cross-Activity value.
 
 ---
 
-# 8. Platform boundary
+# 9. Platform boundary
 
 R7 remains the primary blocking platform phase. Nothing in this visual/content work closes, reorders, or bypasses R7.
 
