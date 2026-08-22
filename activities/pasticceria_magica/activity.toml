@@ -8,10 +8,13 @@ languages = ["it", "en"]
 
 [presentation]
 categories = ["learn", "create"]
+discovery_tags = ["numbers", "making"]
 
 [education]
 categories = ["math", "counting", "problem_solving", "creativity"]
-difficulty = 1
+difficulty = 3
+recommended_age_min = 4
+recommended_age_max = 8
 skills = [
   { id = "math.counting.quantities_to_10", weight = 3 },
   { id = "math.logic.patterns", weight = 2 },
