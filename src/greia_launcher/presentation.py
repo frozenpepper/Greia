@@ -91,6 +91,8 @@ class GreiaLauncherPresentation(LauncherApplication):
         self._cached_activities_key: Any = None
         self._cached_activities_targets: list[HitTarget] = []
         self._tile_surface_cache: BoundedCache[Any, Any] = BoundedCache(64)
+        self._backdrop_cache: BoundedCache[Any, Any] = BoundedCache(16)
+        self._disclosure_cache: BoundedCache[Any, Any] = BoundedCache(32)
 
     def _configure_parent_package_source(self) -> None:
         """Compose parent-installed packages into the same launch authority path."""
@@ -251,8 +253,14 @@ class GreiaLauncherPresentation(LauncherApplication):
                     elif event.type == pygame.MOUSEMOTION:
                         self._synthetic_pointer_active = True
                         if hasattr(event, "pos"):
+                            prev_pos = getattr(self, "_pointer_position", None)
                             self._pointer_position = event.pos
+                            prev_target = self._target_at(prev_pos) if prev_pos else None
+                            new_target = self._target_at(event.pos)
+                            if prev_target != new_target:
+                                _needs_redraw = True
                     elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                        _needs_redraw = True
                         if self._mode == "parent_panel":
                             if not self._parent_panel.handle_click(event.pos):
                                 self._mode = "profiles"
@@ -282,6 +290,8 @@ class GreiaLauncherPresentation(LauncherApplication):
                     self._cached_activities_surface = None
                     self._cached_activities_targets.clear()
                     self._tile_surface_cache.clear()
+                    self._backdrop_cache.clear()
+                    self._disclosure_cache.clear()
                     self._activity_scroll_start = 0
                     if self._visual_cache is not None:
                         self._visual_cache.clear()
@@ -504,6 +514,15 @@ class GreiaLauncherPresentation(LauncherApplication):
         pos = getattr(self, "_pointer_position", None)
         return pos if pos is not None else pygame.mouse.get_pos()
 
+    def _target_at(self, pos: tuple[int, int] | None) -> tuple[str, Any] | None:
+        if pos is None:
+            return None
+        targets = getattr(self, "_cached_activities_targets", None) or self._targets
+        for target in targets:
+            if target.rect.collidepoint(pos):
+                return (target.action, target.value)
+        return None
+
     def _draw_activities(
         self,
         screen: Any,
@@ -555,6 +574,7 @@ class GreiaLauncherPresentation(LauncherApplication):
         if self._cached_activities_key == cache_key and self._cached_activities_surface is not None:
             screen.blit(self._cached_activities_surface, (0, 0))
             self._targets.extend(self._cached_activities_targets)
+            self._draw_activity_title_disclosure(screen, theme, pygame)
             return
 
         if (
@@ -597,14 +617,6 @@ class GreiaLauncherPresentation(LauncherApplication):
                             target_rect = target.rect
                             break
 
-            if target_activity is None and self._cached_activities_targets:
-                if 0 <= self._selected < len(activities):
-                    for target in self._cached_activities_targets:
-                        if target.action == "presented_activity" and target.value == self._selected:
-                            target_activity = activities[self._selected]
-                            target_rect = target.rect
-                            break
-
             if target_activity is None or target_rect is None:
                 return
 
@@ -612,9 +624,9 @@ class GreiaLauncherPresentation(LauncherApplication):
             if not full_title:
                 return
 
-            font = self._font(16, pygame)
+            font = self._font(15, pygame)
             width, height = screen.get_size()
-            max_w = min(340, width - 40)
+            max_w = min(320, width - 40)
             pill = render_full_title_disclosure_surface(
                 full_title,
                 font=font,
@@ -627,28 +639,24 @@ class GreiaLauncherPresentation(LauncherApplication):
             px = target_rect.centerx - pw // 2
             px = max(16, min(width - pw - 16, px))
 
-            # Avoid top-left Home/Profile buttons area (0, 0, 110, 110)
-            if px < 112 and target_rect.top < 110:
-                px = 114
-
-            if target_rect.centery < height // 2:
+            # Smart placement: above the card if possible, otherwise below
+            py = target_rect.top - ph - 6
+            if py < 65:
                 py = target_rect.bottom + 6
-                if py + ph > height - 16:
-                    py = max(80, target_rect.top - ph - 6)
-            else:
-                py = target_rect.top - ph - 6
-                if py < 80:
-                    py = target_rect.bottom + 6
 
-            # Render soft shadow under disclosure pill
             shadow_offset = 3
-            shadow_surf = pygame.Surface((pw + shadow_offset, ph + shadow_offset), pygame.SRCALPHA)
-            pygame.draw.rect(
-                shadow_surf,
-                (0, 0, 0, 48),
-                pygame.Rect(shadow_offset, shadow_offset, pw, ph),
-                border_radius=12,
-            )
+            shadow_key = ("disclosure_shadow", pw, ph)
+            shadow_surf = self._disclosure_cache.get(shadow_key)
+            if shadow_surf is None:
+                shadow_surf = pygame.Surface((pw + shadow_offset, ph + shadow_offset), pygame.SRCALPHA)
+                pygame.draw.rect(
+                    shadow_surf,
+                    (0, 0, 0, 40),
+                    pygame.Rect(shadow_offset, shadow_offset, pw, ph),
+                    border_radius=12,
+                )
+                self._disclosure_cache[shadow_key] = shadow_surf
+
             screen.blit(shadow_surf, (px, py))
             screen.blit(pill, (px, py))
         except Exception:
@@ -1282,8 +1290,8 @@ class GreiaLauncherPresentation(LauncherApplication):
             label_rect,
             border_radius=max(12, label_height // 3),
         )
-        icon_room = max(48, label_rect.top - tile.top - 16)
-        icon_size = max(48, min(int(tile.width * 0.54), icon_room))
+        icon_room = max(48, label_rect.top - tile.top - 14)
+        icon_size = max(52, min(int(tile.width * 0.76), icon_room))
         icon = self._activity_icon(activity, icon_size, pygame)
         icon_center_y = tile.top + max(12, (label_rect.top - tile.top) // 2)
         screen.blit(
@@ -1362,18 +1370,22 @@ class GreiaLauncherPresentation(LauncherApplication):
         cached = self._decorated_icon_cache.get(key)
         if cached is not None:
             return cached
-        try:
-            package_path = package_icon_path(activity)
-            if package_path is not None:
-                raw_source = pygame.image.load(str(package_path)).convert_alpha()
-                source = contain_fit_icon_surface(raw_source, size, pygame)
-            else:
-                raw_source = self._load_icon(activity.icon_id, size, pygame)
-                source = contain_fit_icon_surface(raw_source, size, pygame)
-        except (ActivityIconError, OSError, ValueError, pygame.error):
-            self._catalogue_error = True
-            raw_source = self._load_icon("robot", size, pygame)
-            source = contain_fit_icon_surface(raw_source, size, pygame)
+
+        raw_key = ("raw_icon", activity.activity_id, activity.version)
+        raw_source = self._icon_cache.get(raw_key)
+        if raw_source is None:
+            try:
+                package_path = package_icon_path(activity)
+                if package_path is not None:
+                    raw_source = pygame.image.load(str(package_path)).convert_alpha()
+                else:
+                    raw_source = self._load_icon(activity.icon_id, size, pygame)
+            except (ActivityIconError, OSError, ValueError, pygame.error):
+                self._catalogue_error = True
+                raw_source = self._load_icon("robot", size, pygame)
+            self._icon_cache[raw_key] = raw_source
+
+        source = contain_fit_icon_surface(raw_source, size, pygame, safe_padding_ratio=0.03)
         decorated = make_shadowed_icon(
             source,
             pygame,

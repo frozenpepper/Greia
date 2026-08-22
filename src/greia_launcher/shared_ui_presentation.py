@@ -307,10 +307,10 @@ class SharedUiActivityCardMixin:
         screen.blit(card_surface, card_rect)
 
         content_rect = pygame.Rect(
-            card_rect.left + round(card_rect.width * 45 / self._CARD_SOURCE_WIDTH),
-            card_rect.top + round(card_rect.height * 28 / self._CARD_SOURCE_HEIGHT),
-            max(1, round(card_rect.width * 270 / self._CARD_SOURCE_WIDTH)),
-            max(1, round(card_rect.height * 220 / self._CARD_SOURCE_HEIGHT)),
+            card_rect.left + round(card_rect.width * 30 / self._CARD_SOURCE_WIDTH),
+            card_rect.top + round(card_rect.height * 20 / self._CARD_SOURCE_HEIGHT),
+            max(1, round(card_rect.width * 300 / self._CARD_SOURCE_WIDTH)),
+            max(1, round(card_rect.height * 238 / self._CARD_SOURCE_HEIGHT)),
         )
         label_rect = pygame.Rect(
             card_rect.left + round(card_rect.width * 28 / self._CARD_SOURCE_WIDTH),
@@ -320,10 +320,10 @@ class SharedUiActivityCardMixin:
         )
 
         icon_size = max(
-            44,
+            56,
             min(
-                int(round(content_rect.width * 0.64)),
-                int(round(content_rect.height * 0.66)),
+                int(round(content_rect.width * 0.92)),
+                int(round(content_rect.height * 0.92)),
             ),
         )
         icon = self._activity_icon(activity, icon_size, pygame)

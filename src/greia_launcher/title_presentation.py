@@ -164,7 +164,7 @@ def contain_fit_icon_surface(
     size: int,
     pygame: Any,
     *,
-    safe_padding_ratio: float = 0.11,
+    safe_padding_ratio: float = 0.03,
 ) -> Any:
     """Contain-fit source icon in a square surface reserving safe outer padding."""
     size = max(16, size)
@@ -185,6 +185,9 @@ def contain_fit_icon_surface(
     return target
 
 
+_DISCLOSURE_SURFACES: dict[tuple[str, int, tuple[int, int, int], tuple[int, int, int], tuple[int, int, int]], Any] = {}
+
+
 def render_full_title_disclosure_surface(
     full_title: str,
     *,
@@ -197,6 +200,16 @@ def render_full_title_disclosure_surface(
     full_title = full_title.strip()
     if not full_title:
         return pygame.Surface((1, 1), pygame.SRCALPHA)
+
+    cache_key = (
+        full_title,
+        max_width,
+        getattr(theme, "text", (30, 30, 30)),
+        getattr(theme, "panel", (255, 255, 255)),
+        getattr(theme, "accent", (66, 133, 244)),
+    )
+    if cache_key in _DISCLOSURE_SURFACES:
+        return _DISCLOSURE_SURFACES[cache_key]
 
     # Word wrap for tooltip if title is very long
     words = full_title.split()
@@ -251,4 +264,8 @@ def render_full_title_disclosure_surface(
         ty = pad_y + i * line_h
         pill.blit(ts, (tx, ty))
 
+    if len(_DISCLOSURE_SURFACES) > 64:
+        _DISCLOSURE_SURFACES.clear()
+    _DISCLOSURE_SURFACES[cache_key] = pill
     return pill
+
