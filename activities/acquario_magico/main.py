@@ -485,14 +485,51 @@ def main() -> int:
                 for r, t_idx, _ in tool_rects:
                     if r.collidepoint(mx, my):
                         clicked_tool = True
+                        active_tool = t_idx
                         if t_idx == 3:  # Day/Night toggle
                             glow_mode = not glow_mode
                             sounds.play("glow")
-                        else:
-                            if active_tool == t_idx and t_idx == 0:
-                                # Cycle to next creature species
-                                spawn_selector_idx = (spawn_selector_idx + 1) % len(SPECIES)
-                            active_tool = t_idx
+                        elif t_idx == 1:  # Drop food immediately on button click!
+                            for _ in range(6):
+                                food_pellets.append({
+                                    "x": float(random.uniform(160, REFERENCE_WIDTH - 160)),
+                                    "y": float(random.uniform(60, 130)),
+                                    "vx": random.uniform(-0.4, 0.4),
+                                    "vy": random.uniform(0.9, 1.5),
+                                    "size": random.uniform(5.5, 8.0),
+                                    "color": (245, 158, 11),
+                                })
+                            sounds.play("nibble")
+                            # Spawn sparkle indicator
+                            for _ in range(8):
+                                particles.append({
+                                    "x": float(r.centerx + random.uniform(-20, 20)),
+                                    "y": float(r.top - 10),
+                                    "vx": random.uniform(-1.5, 1.5),
+                                    "vy": random.uniform(-2.0, -4.0),
+                                    "color": (253, 224, 71),
+                                    "size": random.uniform(4, 7),
+                                    "life": 0.8,
+                                    "decay": 0.05,
+                                })
+                        elif t_idx == 0:  # Add creature immediately and cycle to next!
+                            spawn_creature(
+                                random.uniform(200, REFERENCE_WIDTH - 200),
+                                random.uniform(150, tool_y - 120),
+                                spawn_selector_idx,
+                                1 if random.random() < 0.5 else -1,
+                            )
+                            spawn_selector_idx = (spawn_selector_idx + 1) % len(SPECIES)
+                            sounds.play("splash")
+                        elif t_idx == 2:  # Blow big bubble stream!
+                            for _ in range(16):
+                                bubbles.append({
+                                    "x": float(random.uniform(100, REFERENCE_WIDTH - 100)),
+                                    "y": float(random.uniform(tool_y - 50, tool_y + 10)),
+                                    "vx": random.uniform(-0.8, 0.8),
+                                    "vy": random.uniform(-2.5, -5.5),
+                                    "size": random.uniform(10, 26),
+                                })
                             sounds.play("bubble")
                         break
 
@@ -580,16 +617,16 @@ def main() -> int:
                             })
                     elif active_tool == 1:
                         # Drop Food Pellets
-                        for ox in [-16, 0, 16]:
+                        for ox in [-14, 0, 14]:
                             food_pellets.append({
                                 "x": float(mx + ox + random.uniform(-4, 4)),
                                 "y": float(my + random.uniform(-5, 5)),
-                                "vx": random.uniform(-0.2, 0.2),
-                                "vy": random.uniform(1.2, 1.8),
-                                "size": random.uniform(4.5, 6.5),
+                                "vx": random.uniform(-0.3, 0.3),
+                                "vy": random.uniform(0.9, 1.5),
+                                "size": random.uniform(5.0, 7.5),
                                 "color": (245, 158, 11),
                             })
-                        sounds.play("bubble")
+                        sounds.play("nibble")
                     elif active_tool == 2:
                         # Blow Bubble Stream
                         for _ in range(8):
