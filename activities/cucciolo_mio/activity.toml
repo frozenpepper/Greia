@@ -8,10 +8,13 @@ languages = ["it", "en"]
 
 [presentation]
 categories = ["play", "create"]
+discovery_tags = ["stories"]
 
 [education]
 categories = ["empathy", "daily_routines", "fine_motor", "creativity"]
-difficulty = 1
+difficulty = 2
+recommended_age_min = 3
+recommended_age_max = 7
 skills = [
   { id = "emotional.empathy_caregiving", weight = 3 },
   { id = "habits.hygiene_and_nutrition", weight = 2 },
