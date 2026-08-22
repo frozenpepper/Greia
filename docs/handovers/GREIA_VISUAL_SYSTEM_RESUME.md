@@ -166,22 +166,18 @@ Do **not** run a Batch A redraw/finalization loop.
 
 ---
 
-# 5. Exact current maintainer task
+# 5. Exact maintainer task state
 
-Execute:
+`docs/testing/2026-08-22_GENERIC_VISUAL_LIBRARY_ADMISSION_AND_DISCOVERY_TOOLING.md` is **EXECUTED**.
 
-`docs/testing/2026-08-22_GENERIC_VISUAL_LIBRARY_ADMISSION_AND_DISCOVERY_TOOLING.md`
+Delivered:
 
-This is an admission + authoring-tooling gate, not an art-production gate.
-
-It must:
-
-1. materialize exactly the 9 preferred finished assets + 2 preferred ingredients as stable generic source;
-2. keep the 7 weaker Batch A assets as candidate references;
-3. update the six generic semantic indexes;
-4. add a small deterministic authoring-time discovery helper (`list/search/show/validate` + JSON output);
-5. update the visual-authoring skill to use the helper when available;
-6. preserve the runtime boundary.
+1. Materialized exactly the 9 preferred finished assets + 2 preferred ingredients as stable generic source under `assets/visual/generic/core_essentials/v0.1/`;
+2. Kept the 7 weaker Batch A assets as candidate references pointing to `assets/visual/pack_candidates/generic_core_essentials/2026-08-21/`;
+3. Updated the six generic semantic indexes under `assets/visual/authoring_library/` (totaling 55 preferred finished assets, 37 candidate references, and 7 preferred ingredients = 99 reusable visual resources);
+4. Added the deterministic authoring-time discovery helper `tools/visual_authoring_library.py` supporting `collections`, `list`, `search`, `show`, and `validate` with `--json`;
+5. Added unit/integration tests under `tests/test_visual_authoring_library.py`;
+6. Updated `skills/greia-visual-authoring/SKILL.md` to teach arbitrary Activity-authoring agents how to use the discovery helper and respect admission states.
 
 **No Batch B is currently authorized.**
 

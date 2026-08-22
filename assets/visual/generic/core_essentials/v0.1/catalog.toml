@@ -1,0 +1,121 @@
+catalog_id = "greia.generic.core_essentials.v0.1"
+catalog_version = "0.1.0"
+status = "preferred"
+runtime_consumed = false
+provenance = "Core Essentials v0.1: Promoted preferred cross-Activity generic assets from Batch A candidate gate (2026-08-22 authority)."
+notes = "Stable preferred source pool for essential architecture, seating, storage, tableware, manipulatives, and ingredients."
+
+[[assets]]
+id = "interior.door.timber.closed"
+path = "door_timber_closed.svg"
+family = "room_feature"
+role = "interior_door"
+library_status = "preferred"
+alpha = true
+min_recommended_px = 128
+max_recommended_px = 1024
+notes = "Paneled honey-oak interior door (closed state) with brass hardware and zero baked text."
+
+[[assets]]
+id = "interior.opening.arch.simple"
+path = "opening_arch_simple.svg"
+family = "room_feature"
+role = "archway_portal"
+library_status = "preferred"
+alpha = true
+min_recommended_px = 128
+max_recommended_px = 1024
+notes = "Molded timber archway portal for room-to-room transitions and spatial framing."
+
+[[assets]]
+id = "furniture.seating.chair.spindle_wood"
+path = "chair_spindle_wood.svg"
+family = "furniture"
+role = "chair"
+library_status = "preferred"
+alpha = true
+min_recommended_px = 64
+max_recommended_px = 512
+notes = "Craftsman 4-leg wooden spindle-back chair for desk, dining, or craft scenes."
+
+[[assets]]
+id = "furniture.storage.bookcase.tall_open"
+path = "bookcase_tall_open.svg"
+family = "furniture"
+role = "bookcase"
+library_status = "preferred"
+alpha = true
+min_recommended_px = 128
+max_recommended_px = 800
+notes = "Craftsman tall open bookcase with crown molding, beadboard backing, and shelf volumes."
+
+[[assets]]
+id = "prop.storage.basket.woven_empty"
+path = "basket_woven_empty.svg"
+family = "storage_prop"
+role = "basket"
+library_status = "preferred"
+alpha = true
+min_recommended_px = 64
+max_recommended_px = 384
+notes = "Empty braided wicker storage basket with side loop handles and visible interior depth."
+
+[[assets]]
+id = "prop.tableware.bowl.ceramic_empty"
+path = "bowl_ceramic_empty.svg"
+family = "tableware"
+role = "bowl"
+library_status = "preferred"
+alpha = true
+min_recommended_px = 64
+max_recommended_px = 384
+notes = "Glazed ceramic bowl with deep empty well, foot ring, and specular highlights."
+
+[[assets]]
+id = "prop.tableware.cup_saucer.ceramic"
+path = "cup_saucer_ceramic.svg"
+family = "tableware"
+role = "cup_saucer"
+library_status = "preferred"
+alpha = true
+min_recommended_px = 64
+max_recommended_px = 384
+notes = "Pastel mint glazed ceramic teacup on matching saucer with loop handle."
+
+[[assets]]
+id = "component.mechanical.gears.interlocking_pair"
+path = "gears_interlocking_pair.svg"
+family = "component"
+role = "gears_pair"
+library_status = "preferred"
+alpha = true
+min_recommended_px = 64
+max_recommended_px = 512
+notes = "Pair of meshing amber/teal wooden gears mounted on baseplate with brass center rivets."
+
+[[assets]]
+id = "component.mechanical.dial_hands.blank"
+path = "dial_hands_blank.svg"
+family = "component"
+role = "dial_gauge"
+library_status = "preferred"
+alpha = true
+min_recommended_px = 64
+max_recommended_px = 512
+notes = "Brass instrument gauge face with 12 radial hash tick marks and 2 pointer hands (zero numerals/text)."
+
+[[ingredients]]
+id = "ingredient.hardware.door_hinge_handle"
+path = "ingredients/ingredient_door_hinge_handle.svg"
+family = "ingredient"
+role = "hardware_detail"
+library_status = "preferred"
+notes = "Brass door escutcheon plate with knob, keyhole, and butterfly hinge."
+
+[[ingredients]]
+id = "ingredient.mechanical.axle_hands"
+path = "ingredients/ingredient_mechanical_axle_hands.svg"
+family = "ingredient"
+role = "pointer_hands"
+library_status = "preferred"
+notes = "Teardrop pointer hands, needle, and brass pivot nut for clock/gauge customization."

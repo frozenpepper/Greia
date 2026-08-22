@@ -1,146 +1,198 @@
 [collection]
 id = "generic.everyday_props"
 name = "Everyday Props & Containers"
-description = "Broadly reusable household props, desk lamps, cushions, ceramic mugs, jars, bottles, basins, and paper reams."
-version = "0.2.0"
+description = "Tools, storage baskets, jars, tableware, books, containers, botanicals, and small items."
+version = "0.3.0"
 
 [[assets]]
-id = "prop.lighting.lamp.desk_simple"
+id = "prop.stationery.paper_stack.linen"
 library_status = "preferred"
 source_pack = "workshop.v0.2"
-source_path = "assets/visual/environments/workshop/v0.2/desk_lamp_simple.svg"
-family = "prop"
-role = "desk_lamp_compact"
-tags = ["lamp", "light", "desk_lamp", "compact", "small_scale"]
+source_path = "assets/visual/environments/workshop/v0.2/paper_stack.svg"
+family = "stationery"
+role = "paper_stack"
+tags = ["stationery", "paper", "stack", "sheets", "craft", "writing"]
 kind = "finished"
-min_recommended_px = 32
-max_recommended_px = 256
-notes = "Compact goose-neck lamp with high readability at small/icon sizes (down to 64px)."
+min_recommended_px = 48
+max_recommended_px = 384
+notes = "Stack of cream/linen drawing and writing paper sheets with curled edge."
 
 [[assets]]
-id = "prop.lighting.lamp.desk_articulated"
-library_status = "preferred"
-source_pack = "workshop.v0.2"
-source_path = "assets/visual/environments/workshop/v0.2/desk_lamp_articulated.svg"
-family = "prop"
-role = "desk_lamp_architect"
-tags = ["lamp", "light", "desk_lamp", "articulated", "enamel", "brass"]
-kind = "finished"
-min_recommended_px = 96
-max_recommended_px = 512
-notes = "Articulated mint enamel architect lamp with brass joints (recommended for >=128px scene contexts)."
-
-[[assets]]
-id = "prop.container.pencil_cup.ceramic"
+id = "prop.stationery.pencil_cup.ceramic"
 library_status = "preferred"
 source_pack = "workshop.v0.2"
 source_path = "assets/visual/environments/workshop/v0.2/pencil_cup.svg"
-family = "prop"
+family = "stationery"
 role = "pencil_cup"
-tags = ["container", "pencil_cup", "ceramic", "mug", "colored_pencils"]
+tags = ["stationery", "pencil_cup", "ceramic", "pencils", "desk"]
 kind = "finished"
 min_recommended_px = 48
 max_recommended_px = 384
-notes = "Glazed teal ceramic studio mug with raw terracotta foot and sharpened colored pencils."
+notes = "Glazed ceramic desk cup holding drawing pencils and ruler."
 
 [[assets]]
-id = "prop.container.paint_jars.glass"
+id = "prop.container.glass_jars.trio"
 library_status = "preferred"
 source_pack = "workshop.v0.2"
 source_path = "assets/visual/environments/workshop/v0.2/paint_jars.svg"
-family = "prop"
-role = "jars_set"
-tags = ["container", "jars", "glass", "paint", "tempera", "liquid"]
+family = "container"
+role = "jars"
+tags = ["prop", "container", "glass_jars", "cork", "pigments", "storage"]
 kind = "finished"
 min_recommended_px = 48
 max_recommended_px = 384
-notes = "Trio of glass jars with screw lids, transparency, and color liquid fill levels."
+notes = "Cluster of three apothecary glass jars with cork stoppers and colored pigment contents."
+
+[[assets]]
+id = "prop.decor.pinboard_note.cork_tile"
+library_status = "preferred"
+source_pack = "workshop.v0.2"
+source_path = "assets/visual/environments/workshop/v0.2/pinboard_note_cork_tile.svg"
+family = "decor"
+role = "pinboard_note"
+tags = ["prop", "decor", "pinboard", "cork", "memo", "pinned_note"]
+kind = "finished"
+min_recommended_px = 48
+max_recommended_px = 384
+notes = "Framed cork tile with pinned memo note and pushpins."
+
+[[assets]]
+id = "prop.storage.basket.woven_empty"
+library_status = "preferred"
+source_pack = "generic.core_essentials.v0.1"
+source_path = "assets/visual/generic/core_essentials/v0.1/basket_woven_empty.svg"
+family = "storage_prop"
+role = "basket"
+tags = ["prop", "storage", "basket", "wicker", "woven", "handles", "empty", "container"]
+kind = "finished"
+min_recommended_px = 64
+max_recommended_px = 384
+notes = "Empty braided wicker storage basket with side loop handles and visible interior depth."
+
+[[assets]]
+id = "prop.tableware.bowl.ceramic_empty"
+library_status = "preferred"
+source_pack = "generic.core_essentials.v0.1"
+source_path = "assets/visual/generic/core_essentials/v0.1/bowl_ceramic_empty.svg"
+family = "tableware"
+role = "bowl"
+tags = ["prop", "tableware", "bowl", "ceramic", "glazed", "empty", "kitchen", "dining"]
+kind = "finished"
+min_recommended_px = 64
+max_recommended_px = 384
+notes = "Glazed ceramic bowl with deep empty well, foot ring, and specular highlights."
+
+[[assets]]
+id = "prop.tableware.cup_saucer.ceramic"
+library_status = "preferred"
+source_pack = "generic.core_essentials.v0.1"
+source_path = "assets/visual/generic/core_essentials/v0.1/cup_saucer_ceramic.svg"
+family = "tableware"
+role = "cup_saucer"
+tags = ["prop", "tableware", "cup", "saucer", "ceramic", "glazed", "mint", "tea", "empty"]
+kind = "finished"
+min_recommended_px = 64
+max_recommended_px = 384
+notes = "Pastel mint glazed ceramic teacup on matching saucer with loop handle."
 
 [[assets]]
 id = "prop.container.bottles.apothecary_trio"
 library_status = "candidate_reference"
 source_pack = "clinic.2026-08-21-candidate"
 source_path = "assets/visual/pack_candidates/clinic/2026-08-21/bottle_set.svg"
-family = "prop"
-role = "bottles_set"
-tags = ["container", "bottles", "glass", "cork", "apothecary", "syrup"]
+family = "container"
+role = "bottles"
+tags = ["prop", "container", "bottles", "glass", "tincture", "apothecary"]
 kind = "finished"
 min_recommended_px = 48
 max_recommended_px = 384
-notes = "Trio of pastel glass syrup/tincture bottles with cork bungs and measurement labels."
+notes = "Trio of pastel glass apothecary bottles with corks and dropper."
 
 [[assets]]
-id = "prop.container.basin.enamel_sponge"
+id = "prop.container.box.bandage_metal"
+library_status = "candidate_reference"
+source_pack = "clinic.2026-08-21-candidate"
+source_path = "assets/visual/pack_candidates/clinic/2026-08-21/bandage_box.svg"
+family = "container"
+role = "tin_box"
+tags = ["prop", "container", "tin_box", "metal", "storage", "vintage"]
+kind = "finished"
+min_recommended_px = 48
+max_recommended_px = 384
+notes = "Vintage mint metal first-aid tin storage box with latch."
+
+[[assets]]
+id = "prop.container.basin.care_ceramic"
 library_status = "candidate_reference"
 source_pack = "clinic.2026-08-21-candidate"
 source_path = "assets/visual/pack_candidates/clinic/2026-08-21/care_bowl.svg"
-family = "prop"
+family = "container"
 role = "wash_basin"
-tags = ["container", "basin", "bowl", "enamel", "water", "sponge", "clean"]
+tags = ["prop", "container", "basin", "bowl", "ceramic", "washing"]
 kind = "finished"
 min_recommended_px = 48
 max_recommended_px = 384
-notes = "White enameled wash basin with mint rolled rim, soft water ripples, and floating sea sponge."
+notes = "Ceramic wash basin bowl with rolled rim and water surface."
 
 [[assets]]
-id = "prop.paper.stack.heavy_ream"
-library_status = "preferred"
-source_pack = "workshop.v0.2"
-source_path = "assets/visual/environments/workshop/v0.2/paper_stack.svg"
-family = "prop"
-role = "paper_stack"
-tags = ["paper", "stack", "ream", "drawing", "sketch", "stationery"]
-kind = "finished"
-min_recommended_px = 48
-max_recommended_px = 384
-notes = "Heavyweight watercolor paper ream with stepped layer lines and curling active top sketch."
-
-[[assets]]
-id = "prop.textile.cushion.linen_tufted"
+id = "prop.tableware.plate.ceramic_empty"
 library_status = "candidate_reference"
-source_pack = "clinic.2026-08-21-candidate"
-source_path = "assets/visual/pack_candidates/clinic/2026-08-21/cushion.svg"
-family = "textile"
-role = "cushion"
-tags = ["cushion", "pillow", "linen", "tufted", "yellow", "comfort"]
+source_pack = "generic_core_essentials.2026-08-21-candidate"
+source_path = "assets/visual/pack_candidates/generic_core_essentials/2026-08-21/plate_ceramic_empty.svg"
+family = "tableware"
+role = "plate"
+tags = ["prop", "tableware", "plate", "ceramic", "glazed", "empty", "dining"]
 kind = "finished"
-min_recommended_px = 48
+min_recommended_px = 64
 max_recommended_px = 384
-notes = "Plump buttercup-yellow tufted linen cushion with center button."
+notes = "Glazed ceramic dinner plate with rolled lip rim, teal accent ring, and ceramic gloss."
 
 [[assets]]
-id = "prop.note.cork_tile"
-library_status = "preferred"
-source_pack = "workshop.v0.2"
-source_path = "assets/visual/environments/workshop/v0.2/pinboard_note_cork_tile.svg"
-family = "decor"
-role = "note_tile"
-tags = ["note", "pinboard", "cork", "tile", "memo"]
+id = "prop.decor.plant.potted_fern"
+library_status = "candidate_reference"
+source_pack = "generic_core_essentials.2026-08-21-candidate"
+source_path = "assets/visual/pack_candidates/generic_core_essentials/2026-08-21/plant_potted_fern.svg"
+family = "decor_prop"
+role = "indoor_plant"
+tags = ["prop", "decor", "plant", "fern", "terracotta", "houseplant", "botanical"]
 kind = "finished"
-min_recommended_px = 32
-max_recommended_px = 256
-notes = "Framed square cork tile with pinned star drawing."
+min_recommended_px = 64
+max_recommended_px = 384
+notes = "Parlor fern fronds in rolled terracotta pot with matching saucer."
 
 [[assets]]
-id = "prop.note.pinned_memo"
-library_status = "preferred"
-source_pack = "workshop.v0.2"
-source_path = "assets/visual/environments/workshop/v0.2/pinboard_note_pinned.svg"
-family = "decor"
-role = "pinned_memo"
-tags = ["note", "memo", "paper", "pinned", "stationery"]
+id = "prop.book.open.picture_book"
+library_status = "candidate_reference"
+source_pack = "generic_core_essentials.2026-08-21-candidate"
+source_path = "assets/visual/pack_candidates/generic_core_essentials/2026-08-21/book_open_picture_book.svg"
+family = "reading_prop"
+role = "open_book"
+tags = ["prop", "book", "reading", "storybook", "open", "pages", "illustration"]
 kind = "finished"
-min_recommended_px = 32
-max_recommended_px = 256
-notes = "Lightweight yellow sticky memo with pin."
+min_recommended_px = 64
+max_recommended_px = 512
+notes = "Open illustrated picture book lying flat with ribbon marker and abstract pastel picture shapes."
+
+[[assets]]
+id = "prop.books.stack.mixed"
+library_status = "candidate_reference"
+source_pack = "generic_core_essentials.2026-08-21-candidate"
+source_path = "assets/visual/pack_candidates/generic_core_essentials/2026-08-21/books_stack_mixed.svg"
+family = "reading_prop"
+role = "book_stack"
+tags = ["prop", "book", "reading", "stack", "hardcover", "leather", "ribbon"]
+kind = "finished"
+min_recommended_px = 64
+max_recommended_px = 384
+notes = "Stack of 4 mixed-binding hardcover books with gold spine bands and ribbon tail."
 
 [[ingredients]]
-id = "prop.ingredient.fabric_patch"
-library_status = "candidate_reference"
+id = "prop.ingredient.bandage_strip"
+library_status = "preferred"
 source_pack = "clinic.2026-08-21-candidate"
-source_path = "assets/visual/pack_candidates/clinic/2026-08-21/ingredients/ingredient_fabric_patch.svg"
+source_path = "assets/visual/pack_candidates/clinic/2026-08-21/ingredients/ingredient_bandage_strip.svg"
 family = "ingredient"
-role = "fabric_patch"
-tags = ["ingredient", "patch", "fabric", "heart", "embroidery"]
+role = "fabric_strip"
+tags = ["ingredient", "fabric", "tape", "adhesive", "bandage"]
 kind = "ingredient"
-notes = "Stitched pink felt heart patch with visible embroidery border."
+notes = "Perforated cloth adhesive strip ingredient."

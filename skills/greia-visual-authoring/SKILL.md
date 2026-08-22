@@ -73,24 +73,43 @@ Do not let existing assets dictate the game design merely because something conv
 
 ---
 
-## 3. Search the generic authoring library first
+## 3. Search the generic authoring library with discovery tooling
 
-The primary discovery layer is intended to live under:
+The canonical generic authoring index lives under:
 
 ```text
 assets/visual/authoring_library/
 ```
 
-Generic collections include:
+### Discovery Helper (`tools/visual_authoring_library.py`)
 
-```text
-Nature & Landscape
-Interiors & Architecture
-Furniture & Storage
-Everyday Props & Containers
-Making, Learning & Play
-Lighting, Atmosphere, FX & Shadows
+When working in the repository environment, use the discovery CLI helper to search and inspect library assets rather than manually grepping TOML files or scanning directories:
+
+```bash
+# List all 6 generic collections and counts
+python tools/visual_authoring_library.py collections
+
+# Search for assets across semantic ID, tags, roles, and notes
+python tools/visual_authoring_library.py search chair
+python tools/visual_authoring_library.py search "book storage" --status preferred
+
+# Inspect full metadata, recommended sizes, and exact source path for an asset
+python tools/visual_authoring_library.py show furniture.seating.chair.spindle_wood
+
+# Machine-readable JSON output (ideal for subagents and scripts)
+python tools/visual_authoring_library.py search tableware --json
 ```
+
+### Admission Status Rules
+
+The library explicitly distinguishes between two asset states:
+
+1. **`library_status = "preferred"` (Use First for Direct `REUSE`):**
+   - Fully reviewed, high-craft, structurally sound assets.
+   - Recommended as first-choice direct reuse art for Activity scenes.
+2. **`library_status = "candidate_reference"` (Use for `COMPOSE / ADAPT`):**
+   - Useful reference or adaptation material; provisional staging assets.
+   - Use these as inspiration, base geometry, or material reference for Activity-local adaptations rather than direct final art.
 
 Shared UI and canonical characters remain their own stronger-consistency families.
 

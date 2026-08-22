@@ -163,18 +163,17 @@ Important: **do not run a Batch A per-object finalization loop.** The weaker ite
 
 ## 9. Current exact gate
 
-Execute:
+`docs/testing/2026-08-22_GENERIC_VISUAL_LIBRARY_ADMISSION_AND_DISCOVERY_TOOLING.md` is **EXECUTED**.
 
-`docs/testing/2026-08-22_GENERIC_VISUAL_LIBRARY_ADMISSION_AND_DISCOVERY_TOOLING.md`
+Accomplished:
 
-This gate must:
-
-1. materialize the 9+2 owner-authorized preferred Batch A resources under stable generic source provenance;
-2. leave the 7 weaker resources as candidate references;
-3. update the generic semantic indexes;
-4. add a small deterministic authoring-time discovery helper over the indexes;
-5. update the visual-authoring skill to use that helper when available;
-6. avoid all new art and runtime consumer changes.
+1. Materialized the 9+2 owner-authorized preferred Batch A resources under stable generic source provenance (`assets/visual/generic/core_essentials/v0.1/`);
+2. Kept the 7 weaker resources as candidate references (`assets/visual/pack_candidates/generic_core_essentials/2026-08-21/`);
+3. Updated the six generic semantic indexes under `assets/visual/authoring_library/`;
+4. Added the deterministic authoring-time discovery helper `tools/visual_authoring_library.py` (`collections`, `list`, `search`, `show`, `validate`);
+5. Tested discovery tooling with pytest in `tests/test_visual_authoring_library.py`;
+6. Updated `skills/greia-visual-authoring/SKILL.md` to guide arbitrary Activity-authoring agents;
+7. Preserved runtime architecture boundaries (no new runtime consumers or catalogue changes).
 
 No Batch B is currently authorized.
 

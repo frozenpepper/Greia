@@ -1,10 +1,11 @@
 # Greia Generic Visual Authoring Library
 
 **Status:** Canonical Authoring-Library Index  
-**Date:** 2026-08-21  
+**Date:** 2026-08-22  
 **Parent Architecture:** `docs/design/GREIA_VISUAL_AUTHORING_ARCHITECTURE.md`  
 **Taxonomy Reference:** `docs/design/GREIA_GENERIC_ART_LIBRARY_TAXONOMY.md`  
-**Audit Reference:** `docs/reviews/visual/2026-08-21_generic-authoring-library-full-source-harvest/FULL_SOURCE_AUDIT.md`  
+**Audit Reference:** `docs/reviews/visual/2026-08-21_generic-core-essentials-batch-a/PRIMARY_REVIEW.md`  
+**Discovery Tooling:** `tools/visual_authoring_library.py`  
 **User-Agent Guidance:** `skills/greia-visual-authoring/SKILL.md`
 
 ## Overview
@@ -15,25 +16,46 @@ The Generic Visual Authoring Library is the primary discovery interface for Acti
 
 Every indexed asset explicitly declares its `library_status`:
 
-- `library_status = "preferred"`: Fully owner-reviewed and promoted assets (from Forest/Meadow v0.3 and Workshop v0.2). **Use these first for direct `REUSE`.**
-- `library_status = "candidate_reference"`: High-value candidate references (from Clinic candidate, Water/Pond v0.1, Reading v0.1, and Fantasy v0.1). Useful for `COMPOSE / ADAPT` and provisional composition.
+- `library_status = "preferred"` (55 finished assets, 7 ingredients): Fully owner-reviewed and promoted assets (from Forest/Meadow v0.3, Workshop v0.2, and Core Essentials v0.1). **Use these first for direct `REUSE`.**
+- `library_status = "candidate_reference"` (37 finished assets, 0 ingredients): High-value candidate references (from Core Essentials Batch A candidates, Clinic candidate, Water/Pond v0.1, Reading v0.1, and Fantasy v0.1). Useful for `COMPOSE / ADAPT` and provisional composition.
 
 > [!NOTE]
 > Specialized themed props (medical tools, fantasy castles, specialized cottage architecture) and legacy assets identified as Quality Gaps (`REAUTHOR_GENERIC`) remain in their source bundles and are not indexed as preferred generic library assets.
 
 ## Collections
 
-1. [`nature_landscape.toml`](nature_landscape.toml) — Botanical, terrain, water, night sky, and outdoor horizon assets.
-2. [`interiors_architecture.toml`](interiors_architecture.toml) — Walls, floors, windows, drapery, rugs, and room bunting.
-3. [`furniture_storage.toml`](furniture_storage.toml) — Tables, seating, daybeds, shelving, pegboards, and storage crates.
-4. [`everyday_props.toml`](everyday_props.toml) — Lamps, cushions, containers, bottles, basins, paper stacks, and notes.
-5. [`making_learning_play.toml`](making_learning_play.toml) — Easels, palettes, brushes, toy blocks, plush comfort toys, play tents, and hanging mobiles.
-6. [`lighting_fx_shadows.toml`](lighting_fx_shadows.toml) — Sunbeams, moonbeams, window light, water ripples, ambient particles, contact shadows, and feedback FX.
+1. [`nature_landscape.toml`](nature_landscape.toml) — Botanical, terrain, water, night sky, and outdoor horizon assets (21 preferred, 6 candidate references, 2 ingredients).
+2. [`interiors_architecture.toml`](interiors_architecture.toml) — Walls, floors, windows, archways, doors, drapes, rugs, and room bunting (6 preferred, 5 candidate references, 1 ingredient).
+3. [`furniture_storage.toml`](furniture_storage.toml) — Tables, seating, daybeds, shelving, pegboards, cabinets, bookcases, and storage crates (8 preferred, 4 candidate references, 1 ingredient).
+4. [`everyday_props.toml`](everyday_props.toml) — Tools, storage baskets, jars, tableware, books, containers, botanicals, and small items (7 preferred, 7 candidate references, 1 ingredient).
+5. [`making_learning_play.toml`](making_learning_play.toml) — Art supplies, manipulative toys, mechanisms, clocks, plushies, and play structures (4 preferred, 4 candidate references, 2 ingredients).
+6. [`lighting_fx_shadows.toml`](lighting_fx_shadows.toml) — Sunbeams, moonbeams, window light, water ripples, ambient particles, contact shadows, and feedback FX (9 preferred, 11 candidate references, 0 ingredients).
 
-## Source Bundles Referenced
+## Source Pools Referenced
+- **Core Essentials v0.1:** `assets/visual/generic/core_essentials/v0.1/` (promoted preferred)
 - **Forest / Meadow v0.3:** `assets/visual/environments/forest_meadow/v0.3/` (promoted preferred)
 - **Workshop v0.2:** `assets/visual/environments/workshop/v0.2/` (promoted preferred)
-- **Clinic / Care 2026-08-21 Candidate:** `assets/visual/pack_candidates/clinic/2026-08-21/` (reviewed candidate references)
+- **Core Essentials Batch A Candidates:** `assets/visual/pack_candidates/generic_core_essentials/2026-08-21/` (candidate references)
+- **Clinic / Care Candidate:** `assets/visual/pack_candidates/clinic/2026-08-21/` (reviewed candidate references)
 - **Water / Pond v0.1:** `assets/visual/environments/water_pond/v0.1/` (candidate references)
 - **Fantasy / Village / Night v0.1:** `assets/visual/environments/fantasy_village_night/v0.1/` (candidate references)
 - **Reading / Classroom v0.1:** `assets/visual/environments/reading_classroom/v0.1/` (candidate references)
+
+## Discovery CLI Tooling
+
+Use `tools/visual_authoring_library.py` to search and inspect library assets:
+
+```bash
+# List all collections
+python tools/visual_authoring_library.py collections
+
+# Search for assets
+python tools/visual_authoring_library.py search chair
+python tools/visual_authoring_library.py search "book storage" --status preferred
+
+# Show full metadata for an asset
+python tools/visual_authoring_library.py show furniture.seating.chair.spindle_wood
+
+# Validate structure across all library TOMLs
+python tools/visual_authoring_library.py validate
+```

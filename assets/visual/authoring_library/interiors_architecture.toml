@@ -1,112 +1,47 @@
 [collection]
 id = "generic.interiors_architecture"
 name = "Interiors & Architecture"
-description = "Room foundations, walls, flooring, windows, drapery, bunting, and rugs for indoor spaces."
-version = "0.2.0"
+description = "Walls, floors, windows, archways, doors, drapes, rugs, and room bunting."
+version = "0.3.0"
 
 [[assets]]
 id = "interior.wall.plaster_wainscot"
 library_status = "preferred"
 source_pack = "workshop.v0.2"
 source_path = "assets/visual/environments/workshop/v0.2/wall_base.svg"
-family = "room_base"
-role = "wall"
-tags = ["interior", "wall", "plaster", "wainscot", "chair_rail", "background"]
+family = "room_shell"
+role = "wall_base"
+tags = ["interior", "wall", "plaster", "wainscot", "room_shell", "oak"]
 kind = "finished"
 min_recommended_px = 256
-max_recommended_px = 1024
-notes = "Warm cream plaster wall with horizontal wood wainscot chair rail."
-
-[[assets]]
-id = "interior.wall.plaster_mint_beadboard"
-library_status = "candidate_reference"
-source_pack = "clinic.2026-08-21-candidate"
-source_path = "assets/visual/pack_candidates/clinic/2026-08-21/room_wall_base.svg"
-family = "room_base"
-role = "wall"
-tags = ["interior", "wall", "plaster", "mint", "beadboard", "background"]
-kind = "finished"
-min_recommended_px = 256
-max_recommended_px = 1024
-notes = "Cream plaster wall with vertical pastel mint beadboard wainscoting."
+max_recommended_px = 1920
+notes = "Warm cream plaster wall with horizontal oak wainscot chair rail."
 
 [[assets]]
 id = "interior.floor.oak_planks"
 library_status = "preferred"
 source_pack = "workshop.v0.2"
 source_path = "assets/visual/environments/workshop/v0.2/floor_base.svg"
-family = "room_base"
-role = "floor"
-tags = ["interior", "floor", "wood", "oak", "planks", "ground"]
+family = "room_shell"
+role = "floor_base"
+tags = ["interior", "floor", "wood", "oak", "planks", "room_shell"]
 kind = "finished"
 min_recommended_px = 256
-max_recommended_px = 1024
-notes = "Wide golden oak floor planks with subtle butt joints."
-
-[[assets]]
-id = "interior.floor.honey_oak_planks"
-library_status = "candidate_reference"
-source_pack = "clinic.2026-08-21-candidate"
-source_path = "assets/visual/pack_candidates/clinic/2026-08-21/room_floor_base.svg"
-family = "room_base"
-role = "floor"
-tags = ["interior", "floor", "wood", "honey_oak", "planks", "ground"]
-kind = "finished"
-min_recommended_px = 256
-max_recommended_px = 1024
-notes = "Warm honey-toned plank flooring."
+max_recommended_px = 1920
+notes = "Staggered warm oak tongue-and-groove floor planks with bevel lines."
 
 [[assets]]
 id = "interior.window.arch.meadow"
 library_status = "preferred"
 source_pack = "workshop.v0.2"
 source_path = "assets/visual/environments/workshop/v0.2/window.svg"
-family = "architectural_feature"
+family = "room_feature"
 role = "window"
-tags = ["interior", "window", "arch", "wood", "meadow_view", "potted_plant"]
+tags = ["interior", "window", "arch", "wood_frame", "meadow_view", "muntins"]
 kind = "finished"
 min_recommended_px = 128
-max_recommended_px = 512
-notes = "Arched wooden frame window looking out onto sunny meadow with potted sprout on sill."
-
-[[assets]]
-id = "interior.window.arch.orchard"
-library_status = "candidate_reference"
-source_pack = "clinic.2026-08-21-candidate"
-source_path = "assets/visual/pack_candidates/clinic/2026-08-21/care_window.svg"
-family = "architectural_feature"
-role = "window"
-tags = ["interior", "window", "arch", "orchard_view", "blooming_tree"]
-kind = "finished"
-min_recommended_px = 128
-max_recommended_px = 512
-notes = "Arched window looking onto rolling hills and blooming pink orchard trees."
-
-[[assets]]
-id = "interior.window.drapery.curtains"
-library_status = "candidate_reference"
-source_pack = "clinic.2026-08-21-candidate"
-source_path = "assets/visual/pack_candidates/clinic/2026-08-21/curtain_pair.svg"
-family = "decor"
-role = "curtains"
-tags = ["interior", "curtains", "drapery", "mint", "scalloped_valance", "textile"]
-kind = "finished"
-min_recommended_px = 128
-max_recommended_px = 600
-notes = "Mint draped curtain pair on wooden rod with scalloped valance and pink rosette tie-backs."
-
-[[assets]]
-id = "interior.decor.bunting_flags"
-library_status = "candidate_reference"
-source_pack = "reading_classroom.v0.1"
-source_path = "assets/visual/environments/reading_classroom/v0.1/bunting.svg"
-family = "decor"
-role = "bunting"
-tags = ["interior", "bunting", "flags", "garland", "party", "classroom"]
-kind = "finished"
-min_recommended_px = 64
-max_recommended_px = 512
-notes = "Candidate reference: pastel triangular pennant bunting garland."
+max_recommended_px = 800
+notes = "Arched multi-pane wooden window looking out to meadow horizon."
 
 [[assets]]
 id = "interior.textile.rug.braided_wool"
@@ -115,21 +50,110 @@ source_pack = "workshop.v0.2"
 source_path = "assets/visual/environments/workshop/v0.2/rug.svg"
 family = "textile"
 role = "rug"
-tags = ["interior", "rug", "wool", "braided", "concentric", "floor"]
+tags = ["interior", "rug", "textile", "wool", "braided", "carpet", "floor_decor"]
 kind = "finished"
-min_recommended_px = 128
-max_recommended_px = 600
-notes = "Concentric braided wool rag rug with visible perimeter stitch dashes."
+min_recommended_px = 96
+max_recommended_px = 800
+notes = "Concentric braided wool rug in mustard and sage."
 
 [[assets]]
-id = "interior.textile.rug.felt_heart"
+id = "interior.door.timber.closed"
+library_status = "preferred"
+source_pack = "generic.core_essentials.v0.1"
+source_path = "assets/visual/generic/core_essentials/v0.1/door_timber_closed.svg"
+family = "room_feature"
+role = "interior_door"
+tags = ["interior", "door", "timber", "wood", "closed", "panels", "brass_hardware"]
+kind = "finished"
+min_recommended_px = 128
+max_recommended_px = 1024
+notes = "Paneled honey-oak interior door (closed state) with brass hardware and zero baked text."
+
+[[assets]]
+id = "interior.opening.arch.simple"
+library_status = "preferred"
+source_pack = "generic.core_essentials.v0.1"
+source_path = "assets/visual/generic/core_essentials/v0.1/opening_arch_simple.svg"
+family = "room_feature"
+role = "archway_portal"
+tags = ["interior", "arch", "opening", "doorway", "portal", "timber", "room_transition"]
+kind = "finished"
+min_recommended_px = 128
+max_recommended_px = 1024
+notes = "Molded timber archway portal for room-to-room transitions and spatial framing."
+
+[[assets]]
+id = "interior.door.timber.ajar"
+library_status = "candidate_reference"
+source_pack = "generic_core_essentials.2026-08-21-candidate"
+source_path = "assets/visual/pack_candidates/generic_core_essentials/2026-08-21/door_timber_ajar.svg"
+family = "room_feature"
+role = "interior_door_ajar"
+tags = ["interior", "door", "timber", "wood", "ajar", "open", "perspective", "room_reveal"]
+kind = "finished"
+min_recommended_px = 128
+max_recommended_px = 1024
+notes = "Perspective timber door standing ajar showing edge thickness and interior room reveal."
+
+[[assets]]
+id = "interior.window.curtains.linen"
+library_status = "candidate_reference"
+source_pack = "clinic.2026-08-21-candidate"
+source_path = "assets/visual/pack_candidates/clinic/2026-08-21/curtain_pair.svg"
+family = "room_feature"
+role = "window_curtains"
+tags = ["interior", "window", "curtains", "drapes", "linen", "coral"]
+kind = "finished"
+min_recommended_px = 128
+max_recommended_px = 800
+notes = "Arched multi-pane window flanked by gathered coral linen drapery with wooden rod."
+
+[[assets]]
+id = "interior.textile.cushion.linen_tufted"
+library_status = "candidate_reference"
+source_pack = "clinic.2026-08-21-candidate"
+source_path = "assets/visual/pack_candidates/clinic/2026-08-21/cushion.svg"
+family = "textile"
+role = "cushion"
+tags = ["interior", "cushion", "pillow", "linen", "tufted", "seating", "soft"]
+kind = "finished"
+min_recommended_px = 48
+max_recommended_px = 384
+notes = "Plump mustard linen floor cushion with center button tuft and piped welt edge."
+
+[[assets]]
+id = "interior.textile.rug.heart_woven"
 library_status = "candidate_reference"
 source_pack = "clinic.2026-08-21-candidate"
 source_path = "assets/visual/pack_candidates/clinic/2026-08-21/heart_rug.svg"
 family = "textile"
-role = "rug"
-tags = ["interior", "rug", "felt", "heart", "coral_pink", "comfort"]
+role = "rug_heart"
+tags = ["interior", "rug", "textile", "heart", "woven", "comfort", "playroom"]
 kind = "finished"
-min_recommended_px = 128
-max_recommended_px = 600
-notes = "Rose-coral stitched felt heart rug with braided trim."
+min_recommended_px = 64
+max_recommended_px = 512
+notes = "Woven warm pink/peach heart-shaped accent rug."
+
+[[assets]]
+id = "interior.decor.bunting_flags"
+library_status = "candidate_reference"
+source_pack = "reading_classroom.v0.1"
+source_path = "assets/visual/environments/reading_classroom/v0.1/bunting.svg"
+family = "decor"
+role = "bunting"
+tags = ["interior", "decor", "bunting", "flags", "garland", "festive", "playroom"]
+kind = "finished"
+min_recommended_px = 48
+max_recommended_px = 512
+notes = "Hanging string garland of pastel triangular party pennant flags."
+
+[[ingredients]]
+id = "ingredient.hardware.door_hinge_handle"
+library_status = "preferred"
+source_pack = "generic.core_essentials.v0.1"
+source_path = "assets/visual/generic/core_essentials/v0.1/ingredients/ingredient_door_hinge_handle.svg"
+family = "ingredient"
+role = "hardware_detail"
+tags = ["ingredient", "hardware", "door", "knob", "hinge", "brass"]
+kind = "ingredient"
+notes = "Brass door escutcheon plate with knob, keyhole, and butterfly hinge."

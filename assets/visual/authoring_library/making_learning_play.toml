@@ -1,112 +1,138 @@
 [collection]
 id = "generic.making_learning_play"
 name = "Making, Learning & Play"
-description = "Art tools, easels, paint palettes, building blocks, play tents, mobiles, and plush comfort objects."
-version = "0.2.0"
-
-[[assets]]
-id = "play.art.easel.studio_aframe"
-library_status = "preferred"
-source_pack = "workshop.v0.2"
-source_path = "assets/visual/environments/workshop/v0.2/easel.svg"
-family = "creative_prop"
-role = "easel"
-tags = ["art", "easel", "canvas", "painting", "studio", "creative"]
-kind = "finished"
-min_recommended_px = 96
-max_recommended_px = 600
-notes = "A-frame wooden artist easel with adjustable mast, canvas tray, and meadow landscape painting."
+description = "Art supplies, manipulative toys, mechanisms, clocks, plushies, and play structures."
+version = "0.3.0"
 
 [[assets]]
 id = "play.art.palette.birch_gouache"
 library_status = "preferred"
 source_pack = "workshop.v0.2"
 source_path = "assets/visual/environments/workshop/v0.2/paint_palette.svg"
-family = "creative_prop"
-role = "paint_palette"
-tags = ["art", "palette", "paint", "gouache", "colors", "birch"]
+family = "art_supplies"
+role = "palette"
+tags = ["art", "palette", "paint", "gouache", "birch", "colors", "creative"]
 kind = "finished"
-min_recommended_px = 48
-max_recommended_px = 384
-notes = "Birch artist palette with thumbhole and volumetric glossy 3D paint dollops."
+min_recommended_px = 64
+max_recommended_px = 512
+notes = "Kidney-shaped birch artist palette with dollops of gouache paint and thumb hole."
 
 [[assets]]
-id = "play.art.brushes.bundle_five"
+id = "play.art.brushes.bundle"
 library_status = "preferred"
 source_pack = "workshop.v0.2"
 source_path = "assets/visual/environments/workshop/v0.2/brush_bundle.svg"
-family = "creative_prop"
-role = "brush_bundle"
-tags = ["art", "brushes", "bundle", "paintbrushes", "tools"]
+family = "art_supplies"
+role = "brushes"
+tags = ["art", "brushes", "tools", "bundle", "paint", "creative"]
 kind = "finished"
 min_recommended_px = 48
 max_recommended_px = 384
-notes = "Cluster of five artist brushes bound with leather strap and brass buckle."
+notes = "Bundle of wooden-handled paintbrushes with brass ferrules and bristles."
 
 [[assets]]
-id = "play.toy.blocks.house_construction"
+id = "play.art.easel.timber"
+library_status = "preferred"
+source_pack = "workshop.v0.2"
+source_path = "assets/visual/environments/workshop/v0.2/easel.svg"
+family = "art_supplies"
+role = "easel"
+tags = ["art", "easel", "studio", "painting", "timber", "canvas_stand"]
+kind = "finished"
+min_recommended_px = 128
+max_recommended_px = 800
+notes = "Craftsman wooden studio A-frame easel with shelf tray."
+
+[[assets]]
+id = "play.toy.blocks.house_set"
 library_status = "preferred"
 source_pack = "workshop.v0.2"
 source_path = "assets/visual/environments/workshop/v0.2/blocks_house.svg"
-family = "toy_prop"
-role = "blocks_house"
-tags = ["toy", "blocks", "building", "house", "arch", "construction"]
+family = "toy"
+role = "building_blocks"
+tags = ["play", "toy", "blocks", "wood", "geometric", "house", "building"]
 kind = "finished"
-min_recommended_px = 48
-max_recommended_px = 384
-notes = "Assembled architectural wooden block set (arch, cube, cylinder, triangular prism roof)."
+min_recommended_px = 64
+max_recommended_px = 512
+notes = "Painted wooden building blocks assembled into a house structure."
 
 [[assets]]
-id = "play.toy.blocks.loose_stack"
+id = "component.mechanical.gears.interlocking_pair"
 library_status = "preferred"
-source_pack = "workshop.v0.2"
-source_path = "assets/visual/environments/workshop/v0.2/blocks_loose.svg"
-family = "toy_prop"
-role = "blocks_loose"
-tags = ["toy", "blocks", "loose", "pile", "stack"]
+source_pack = "generic.core_essentials.v0.1"
+source_path = "assets/visual/generic/core_essentials/v0.1/gears_interlocking_pair.svg"
+family = "component"
+role = "gears_pair"
+tags = ["mechanical", "component", "gears", "interlocking", "wood", "puzzle", "mechanism"]
 kind = "finished"
-min_recommended_px = 48
-max_recommended_px = 384
-notes = "Loose playful block stack for casual floor scatter."
+min_recommended_px = 64
+max_recommended_px = 512
+notes = "Pair of meshing amber/teal wooden gears mounted on baseplate with brass center rivets."
+
+[[assets]]
+id = "component.mechanical.dial_hands.blank"
+library_status = "preferred"
+source_pack = "generic.core_essentials.v0.1"
+source_path = "assets/visual/generic/core_essentials/v0.1/dial_hands_blank.svg"
+family = "component"
+role = "dial_gauge"
+tags = ["mechanical", "component", "dial", "clock", "gauge", "hands", "blank", "timer"]
+kind = "finished"
+min_recommended_px = 64
+max_recommended_px = 512
+notes = "Brass instrument gauge face with 12 radial hash tick marks and 2 pointer hands (zero numerals/text)."
 
 [[assets]]
 id = "play.toy.plush.caramel_bear"
 library_status = "candidate_reference"
 source_pack = "clinic.2026-08-21-candidate"
 source_path = "assets/visual/pack_candidates/clinic/2026-08-21/plush_bear.svg"
-family = "toy_comfort"
-role = "plush_toy"
-tags = ["toy", "plush", "teddy_bear", "comfort", "character", "hug"]
+family = "toy"
+role = "plush_bear"
+tags = ["play", "toy", "plush", "teddy_bear", "comfort", "stitched"]
 kind = "finished"
-min_recommended_px = 48
+min_recommended_px = 64
 max_recommended_px = 512
-notes = "Huggable caramel teddy bear with cream snout, button eyes, and stitched felt heart patch."
+notes = "Sitting caramel plush teddy bear with hand-stitched felt belly patch and embroidered nose."
 
 [[assets]]
 id = "play.furniture.reading_tent"
 library_status = "candidate_reference"
 source_pack = "reading_classroom.v0.1"
 source_path = "assets/visual/environments/reading_classroom/v0.1/reading_tent.svg"
-family = "furniture"
+family = "play_furniture"
 role = "play_tent"
-tags = ["play", "tent", "teepee", "reading_nook", "comfort"]
+tags = ["play", "furniture", "tent", "teepee", "cozy", "fabric", "nook"]
 kind = "finished"
-min_recommended_px = 128
-max_recommended_px = 600
-notes = "Candidate reference: cozy indoor fabric teepee play tent with cushions."
+min_recommended_px = 96
+max_recommended_px = 800
+notes = "Four-pole fabric teepee play tent with tied flap opening and internal cushion."
 
 [[assets]]
 id = "play.decor.hanging_mobile"
 library_status = "candidate_reference"
 source_pack = "reading_classroom.v0.1"
 source_path = "assets/visual/environments/reading_classroom/v0.1/hanging_mobile.svg"
-family = "decor"
-role = "hanging_mobile"
-tags = ["decor", "mobile", "hanging", "nursery", "stars", "moon"]
+family = "play_decor"
+role = "mobile"
+tags = ["play", "decor", "mobile", "hanging", "wooden", "shapes", "nursery"]
 kind = "finished"
 min_recommended_px = 48
 max_recommended_px = 384
-notes = "Candidate reference: wooden crib/room hanging mobile with stars and moon."
+notes = "Hanging wooden crossbar nursery mobile with suspended colorful geometric shapes."
+
+[[assets]]
+id = "component.mechanical.gear.wooden"
+library_status = "candidate_reference"
+source_pack = "generic_core_essentials.2026-08-21-candidate"
+source_path = "assets/visual/pack_candidates/generic_core_essentials/2026-08-21/gear_wooden.svg"
+family = "component"
+role = "gear"
+tags = ["mechanical", "component", "gear", "cog", "wood", "toy", "mechanism"]
+kind = "finished"
+min_recommended_px = 64
+max_recommended_px = 384
+notes = "8-tooth birch plywood wooden gear with weight cutouts and center axle."
 
 [[ingredients]]
 id = "play.ingredient.paint_dabs"
@@ -115,6 +141,17 @@ source_pack = "workshop.v0.2"
 source_path = "assets/visual/environments/workshop/v0.2/ingredients/ingredient_paint_dabs.svg"
 family = "ingredient"
 role = "paint_dabs"
-tags = ["ingredient", "paint", "gouache", "color", "accent"]
+tags = ["ingredient", "art", "paint", "gouache", "color_accent"]
 kind = "ingredient"
-notes = "Volumetric glossy 3D Gouache paint dollop cluster with specular highlights."
+notes = "Assorted circular gouache paint dab accents."
+
+[[ingredients]]
+id = "ingredient.mechanical.axle_hands"
+library_status = "preferred"
+source_pack = "generic.core_essentials.v0.1"
+source_path = "assets/visual/generic/core_essentials/v0.1/ingredients/ingredient_mechanical_axle_hands.svg"
+family = "ingredient"
+role = "pointer_hands"
+tags = ["ingredient", "mechanical", "hands", "clock", "needle", "pointer", "pivot"]
+kind = "ingredient"
+notes = "Teardrop pointer hands, needle, and brass pivot nut for clock/gauge customization."

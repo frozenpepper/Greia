@@ -1,8 +1,8 @@
 [collection]
 id = "generic.furniture_storage"
 name = "Furniture & Storage"
-description = "Tables, seating, daybeds, shelving, pegboards, cabinets, and storage crates."
-version = "0.2.0"
+description = "Tables, seating, daybeds, shelving, pegboards, cabinets, bookcases, and storage crates."
+version = "0.3.0"
 
 [[assets]]
 id = "furniture.table.workbench.craftsman"
@@ -18,6 +18,19 @@ max_recommended_px = 800
 notes = "Solid craftsman oak workbench with chamfered slab, splayed legs, drawer, and brass knob."
 
 [[assets]]
+id = "furniture.seating.chair.spindle_wood"
+library_status = "preferred"
+source_pack = "generic.core_essentials.v0.1"
+source_path = "assets/visual/generic/core_essentials/v0.1/chair_spindle_wood.svg"
+family = "furniture"
+role = "chair"
+tags = ["furniture", "chair", "seating", "wood", "spindle", "dining", "desk", "craftsman"]
+kind = "finished"
+min_recommended_px = 64
+max_recommended_px = 512
+notes = "Craftsman 4-leg wooden spindle-back chair for desk, dining, or craft scenes."
+
+[[assets]]
 id = "furniture.seating.stool.turned_wood"
 library_status = "preferred"
 source_pack = "workshop.v0.2"
@@ -31,30 +44,17 @@ max_recommended_px = 384
 notes = "Turned wood stool with dished round seat and stretchers."
 
 [[assets]]
-id = "furniture.bed.daybed.wooden"
-library_status = "candidate_reference"
-source_pack = "clinic.2026-08-21-candidate"
-source_path = "assets/visual/pack_candidates/clinic/2026-08-21/care_bed.svg"
+id = "furniture.storage.bookcase.tall_open"
+library_status = "preferred"
+source_pack = "generic.core_essentials.v0.1"
+source_path = "assets/visual/generic/core_essentials/v0.1/bookcase_tall_open.svg"
 family = "furniture"
-role = "bed"
-tags = ["furniture", "bed", "daybed", "wood", "pillow", "quilt", "comfort"]
+role = "bookcase"
+tags = ["furniture", "bookcase", "storage", "shelves", "books", "library", "craftsman"]
 kind = "finished"
 min_recommended_px = 128
 max_recommended_px = 800
-notes = "Low child-friendly wooden daybed with heart cutout headboard, pillow, and folded quilt."
-
-[[assets]]
-id = "furniture.table.side.turned_round"
-library_status = "candidate_reference"
-source_pack = "clinic.2026-08-21-candidate"
-source_path = "assets/visual/pack_candidates/clinic/2026-08-21/side_table.svg"
-family = "furniture"
-role = "side_table"
-tags = ["furniture", "table", "side_table", "round", "wood", "nightstand"]
-kind = "finished"
-min_recommended_px = 64
-max_recommended_px = 384
-notes = "Round bedside table with turned oak legs and lower shelf."
+notes = "Craftsman tall open bookcase with crown molding, beadboard backing, and shelf volumes."
 
 [[assets]]
 id = "furniture.storage.shelf.open_bracket"
@@ -83,19 +83,6 @@ max_recommended_px = 512
 notes = "Compact closed wall cubby storage unit."
 
 [[assets]]
-id = "furniture.storage.cabinet.apothecary_glass"
-library_status = "candidate_reference"
-source_pack = "clinic.2026-08-21-candidate"
-source_path = "assets/visual/pack_candidates/clinic/2026-08-21/cabinet.svg"
-family = "furniture"
-role = "cabinet"
-tags = ["furniture", "cabinet", "apothecary", "glass_doors", "mint", "storage"]
-kind = "finished"
-min_recommended_px = 128
-max_recommended_px = 800
-notes = "Mint milk-paint cabinet with arched glass display doors, interior shelves, and bottom drawers."
-
-[[assets]]
 id = "furniture.storage.crate.plywood_joints"
 library_status = "preferred"
 source_pack = "workshop.v0.2"
@@ -120,6 +107,58 @@ kind = "finished"
 min_recommended_px = 64
 max_recommended_px = 512
 notes = "Perforated birch pegboard with hanging wooden mallet, ruler, and twine."
+
+[[assets]]
+id = "furniture.seating.armchair.soft_reading"
+library_status = "candidate_reference"
+source_pack = "generic_core_essentials.2026-08-21-candidate"
+source_path = "assets/visual/pack_candidates/generic_core_essentials/2026-08-21/armchair_soft_reading.svg"
+family = "furniture"
+role = "armchair"
+tags = ["furniture", "armchair", "seating", "upholstered", "tufted", "soft", "reading"]
+kind = "finished"
+min_recommended_px = 96
+max_recommended_px = 600
+notes = "Tufted sage/mint upholstered reading armchair with plump cushion and dark feet."
+
+[[assets]]
+id = "furniture.bed.daybed.wooden"
+library_status = "candidate_reference"
+source_pack = "clinic.2026-08-21-candidate"
+source_path = "assets/visual/pack_candidates/clinic/2026-08-21/care_bed.svg"
+family = "furniture"
+role = "bed"
+tags = ["furniture", "bed", "daybed", "wood", "pillow", "quilt", "comfort"]
+kind = "finished"
+min_recommended_px = 128
+max_recommended_px = 800
+notes = "Low child-friendly wooden daybed with heart cutout headboard, pillow, and folded quilt."
+
+[[assets]]
+id = "furniture.table.side.turned_round"
+library_status = "candidate_reference"
+source_pack = "clinic.2026-08-21-candidate"
+source_path = "assets/visual/pack_candidates/clinic/2026-08-21/side_table.svg"
+family = "furniture"
+role = "side_table"
+tags = ["furniture", "table", "side_table", "round", "wood", "nightstand"]
+kind = "finished"
+min_recommended_px = 64
+max_recommended_px = 384
+notes = "Round bedside table with turned oak legs and lower shelf."
+
+[[assets]]
+id = "furniture.storage.cabinet.apothecary_glass"
+library_status = "candidate_reference"
+source_pack = "clinic.2026-08-21-candidate"
+source_path = "assets/visual/pack_candidates/clinic/2026-08-21/cabinet.svg"
+family = "furniture"
+role = "cabinet"
+tags = ["furniture", "cabinet", "apothecary", "glass_doors", "mint", "storage"]
+kind = "finished"
+min_recommended_px = 128
+max_recommended_px = 800
+notes = "Mint milk-paint cabinet with arched glass display doors, interior shelves, and bottom drawers."
 
 [[ingredients]]
 id = "furniture.ingredient.wood_joint"
