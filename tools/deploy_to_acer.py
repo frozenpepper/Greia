@@ -8,6 +8,7 @@ from pathlib import Path
 import socket
 import subprocess
 import sys
+import time
 import pexpect
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -46,11 +47,22 @@ def main() -> int:
     child.expect(r"\$")
 
     # Stream tarball
-    child.sendline("python3 -c \"import socket; s=socket.socket(); s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1); s.bind(('0.0.0.0', 9999)); s.listen(1); print('READY', flush=True); conn, _ = s.accept();\nwith open('/dev/shm/greia_update.tar.gz', 'wb') as f:\n while True:\n  chunk = conn.recv(65536)\n  if not chunk: break\n  f.write(chunk)\nprint('SAVED', flush=True)\"")
-    child.expect("READY")
+    child.sendline("python3 -c \"import socket; s=socket.socket(); s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1); s.bind(('0.0.0.0', 9999)); s.listen(1); print('LISTENER_READY', flush=True); conn, _ = s.accept();\nwith open('/dev/shm/greia_update.tar.gz', 'wb') as f:\n while True:\n  chunk = conn.recv(65536)\n  if not chunk: break\n  f.write(chunk)\nprint('SAVED', flush=True)\"")
+    child.expect("LISTENER_READY")
 
+    time.sleep(0.3)
     s = socket.socket()
-    s.connect((ACER_IP, 9999))
+    connected = False
+    for attempt in range(5):
+        try:
+            s.connect((ACER_IP, 9999))
+            connected = True
+            break
+        except OSError:
+            time.sleep(0.5)
+    if not connected:
+        raise RuntimeError("Could not connect to Acer socket on port 9999")
+
     with open(TARBALL, "rb") as f:
         while True:
             buf = f.read(65536)
