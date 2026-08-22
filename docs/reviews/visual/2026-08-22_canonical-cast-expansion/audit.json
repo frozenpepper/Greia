@@ -1,0 +1,129 @@
+{
+  "pack_id": "greia.canonical_cast_expansion.2026-08-22-candidate",
+  "version": "0.1.0",
+  "status": "candidate",
+  "date": "2026-08-22",
+  "authority": "docs/testing/2026-08-22_CANONICAL_CAST_EXPANSION_LEO_FLASH_DANI.md",
+  "logical_artboard": [
+    256,
+    256
+  ],
+  "new_characters": {
+    "character.leo": {
+      "name": "Leo",
+      "archetype": "owl_bean",
+      "primary_domain": "learning / reading / language / knowledge",
+      "palette": [
+        "#D97706",
+        "#B45309",
+        "#78350F",
+        "#FFFBEB",
+        "#FEF3C7",
+        "#F59E0B",
+        "#0D9488",
+        "#5EEAD4",
+        "#342C35",
+        "#4B372F"
+      ],
+      "states": {
+        "neutral": "assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/leo/neutral.svg",
+        "blink": "assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/leo/blink.svg",
+        "happy": "assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/leo/happy.svg",
+        "surprised": "assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/leo/surprised.svg",
+        "sleepy": "assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/leo/sleepy.svg"
+      },
+      "source_master": "assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/leo/source_master.svg",
+      "components": [
+        "assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/leo/components/glasses.svg",
+        "assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/leo/components/face_mask.svg",
+        "assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/leo/components/eyes_blink.svg"
+      ],
+      "min_recommended_px": 64,
+      "max_recommended_px": 512
+    },
+    "character.flash": {
+      "name": "Flash",
+      "archetype": "rabbit_puff",
+      "primary_domain": "games / action / reflex / playful challenge",
+      "palette": [
+        "#FB7185",
+        "#F43F5E",
+        "#E11D48",
+        "#BE123C",
+        "#FFFBEB",
+        "#FDA4AF",
+        "#10B981",
+        "#3C2D33",
+        "#4B372F"
+      ],
+      "states": {
+        "neutral": "assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/flash/neutral.svg",
+        "blink": "assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/flash/blink.svg",
+        "happy": "assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/flash/happy.svg",
+        "surprised": "assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/flash/surprised.svg",
+        "sleepy": "assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/flash/sleepy.svg"
+      },
+      "source_master": "assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/flash/source_master.svg",
+      "components": [
+        "assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/flash/components/ears.svg",
+        "assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/flash/components/tail_muzzle.svg",
+        "assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/flash/components/eyes_blink.svg"
+      ],
+      "min_recommended_px": 64,
+      "max_recommended_px": 512
+    },
+    "character.dani": {
+      "name": "Dani",
+      "archetype": "friendly_robot",
+      "primary_domain": "math / logic / patterns / sequencing",
+      "palette": [
+        "#38BDF8",
+        "#0284C7",
+        "#0369A1",
+        "#F8FAFC",
+        "#FEF08A",
+        "#FBBF24",
+        "#F59E0B",
+        "#FDA4AF",
+        "#7DD3FC",
+        "#4B372F"
+      ],
+      "states": {
+        "neutral": "assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/dani/neutral.svg",
+        "blink": "assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/dani/blink.svg",
+        "happy": "assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/dani/happy.svg",
+        "surprised": "assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/dani/surprised.svg",
+        "sleepy": "assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/dani/sleepy.svg"
+      },
+      "source_master": "assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/dani/source_master.svg",
+      "components": [
+        "assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/dani/components/face_display.svg",
+        "assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/dani/components/antennae_light.svg",
+        "assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/dani/components/eyes_blink.svg"
+      ],
+      "min_recommended_px": 64,
+      "max_recommended_px": 512
+    }
+  },
+  "ensemble_anchors": {
+    "character.lilli": "assets/visual/pack_candidates/canonical_characters/2026-08-22/lilli/",
+    "character.tito": "assets/visual/pack_candidates/canonical_characters/2026-08-22/tito/",
+    "character.momo": "assets/visual/pack_candidates/canonical_characters/2026-08-22/momo/"
+  },
+  "review_sheets": [
+    "docs/reviews/visual/2026-08-22_canonical-cast-expansion/01-four-character-anchor.png",
+    "docs/reviews/visual/2026-08-22_canonical-cast-expansion/02-six-character-neutral-ensemble.png",
+    "docs/reviews/visual/2026-08-22_canonical-cast-expansion/03-nino-to-leo-refinement.png",
+    "docs/reviews/visual/2026-08-22_canonical-cast-expansion/04-leo-state-matrix.png",
+    "docs/reviews/visual/2026-08-22_canonical-cast-expansion/05-flash-state-matrix.png",
+    "docs/reviews/visual/2026-08-22_canonical-cast-expansion/06-dani-state-matrix.png",
+    "docs/reviews/visual/2026-08-22_canonical-cast-expansion/07-six-character-multiscale.png",
+    "docs/reviews/visual/2026-08-22_canonical-cast-expansion/08-six-character-silhouettes.png",
+    "docs/reviews/visual/2026-08-22_canonical-cast-expansion/09-new-character-expression-small-size.png",
+    "docs/reviews/visual/2026-08-22_canonical-cast-expansion/10-role-map.png",
+    "docs/reviews/visual/2026-08-22_canonical-cast-expansion/11-happy-hop-all-six.png",
+    "docs/reviews/visual/2026-08-22_canonical-cast-expansion/12-secondary-motion-all-six.png",
+    "docs/reviews/visual/2026-08-22_canonical-cast-expansion/13-new-source-component-structure.png",
+    "docs/reviews/visual/2026-08-22_canonical-cast-expansion/14-detail-crops.png"
+  ]
+}

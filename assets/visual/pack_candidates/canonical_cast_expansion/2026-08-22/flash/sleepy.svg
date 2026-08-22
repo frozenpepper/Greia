@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="100%" height="100%">
+  <defs>
+    <linearGradient id="flashBody" x1="0%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#FB7185"/>
+      <stop offset="50%" stop-color="#F43F5E"/>
+      <stop offset="100%" stop-color="#BE123C"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Ground Contact Shadow -->
+  <g id="shadow">
+    <ellipse cx="128" cy="227" rx="58" ry="9" fill="#6A5147" opacity="0.14"/>
+  </g>
+
+  <g id="character">
+    <!-- Small Round Rabbit Pom-Pom Tail behind -->
+    <g id="tail">
+      <circle cx="184" cy="178" r="15" fill="#FFFBEB" stroke="#4B372F" stroke-width="3"/>
+    </g>
+
+    <!-- Long Rabbit Ears -->
+    <g id="ears">
+      <path d="M90 85 C68 55 52 35 68 28 C84 22 96 48 100 82 Z" fill="#F43F5E" stroke="#4B372F" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M86 75 C72 54 62 40 72 35 C82 30 89 48 93 72 Z" fill="#FDA4AF"/>
+        <path d="M156 82 C160 48 172 22 188 28 C204 35 188 55 166 85 Z" fill="#F43F5E" stroke="#4B372F" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M163 72 C167 48 174 30 184 35 C194 40 184 54 170 75 Z" fill="#FDA4AF"/>
+    </g>
+
+    <!-- Main Puff Body (slightly spring-loaded oval) -->
+    <g id="body">
+      <path d="M128 68 C168 68 194 94 195 131 C196 163 178 192 153 203 C134 211 110 208 94 201 C67 189 55 164 59 134 C64 95 89 68 128 68 Z" fill="url(#flashBody)" stroke="#4B372F" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+
+    <!-- Cream Muzzle & Chest Patch -->
+    <g id="muzzle">
+      <path d="M96 118 C106 104 118 104 128 114 C138 104 150 104 160 118 C168 132 162 155 150 165 C143 171 135 173 128 173 C119 173 111 170 104 164 C91 152 89 132 96 118 Z" fill="#FFFBEB"/>
+    </g>
+
+    <!-- Rabbit Paws -->
+    <g id="paws">
+      <ellipse cx="102" cy="207" rx="13" ry="8.5" fill="#FFFBEB" stroke="#4B372F" stroke-width="2.5"/>
+      <ellipse cx="154" cy="207" rx="13" ry="8.5" fill="#FFFBEB" stroke="#4B372F" stroke-width="2.5"/>
+    </g>
+
+    <!-- Face Features -->
+    <g id="face">
+      <!-- Rosy Cheeks -->
+      <g id="cheeks">
+        <ellipse cx="91" cy="148" rx="8.5" ry="5.5" fill="#FDA4AF" opacity="0.6"/>
+        <ellipse cx="165" cy="148" rx="8.5" ry="5.5" fill="#FDA4AF" opacity="0.6"/>
+      </g>
+
+      <!-- Eyes -->
+      <g id="eyes">
+        <path d="M96 131 Q106 137 116 131" stroke="#3C2D33" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+        <path d="M140 131 Q150 137 160 131" stroke="#3C2D33" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+        <circle cx="106" cy="133" r="2.5" fill="#3C2D33" opacity="0.6"/>
+        <circle cx="150" cy="133" r="2.5" fill="#3C2D33" opacity="0.6"/>
+      </g>
+
+      <!-- Nose & Mouth -->
+      <g id="mouth">
+        <path d="M123 145 Q128 141 133 145 Q130 152 128 154 Q126 152 123 145Z" fill="#BE123C"/>
+        <path d="M118 159 Q128 164 138 159" stroke="#7B4E58" stroke-width="2" stroke-linecap="round" fill="none"/>
+      </g>
+    </g>
+
+    <!-- Mint Micro-Accent (Energetic head tuft cue) -->
+    <g id="accent">
+      <path d="M128 67 C124 57 129 52 133 54 C136 60 133 65 128 67 Z" fill="#10B981"/>
+    </g>
+  </g>
+</svg>
