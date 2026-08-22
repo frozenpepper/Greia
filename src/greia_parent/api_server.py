@@ -25,6 +25,14 @@ from greia_parent.server import (
 )
 from greia_parent.static_client import ParentStaticClient, StaticClientAsset
 from greia_parent.web_client import render_parent_web_app
+from greia_platform.activity_discovery import (
+    ActivityDiscoveryError,
+    ActivityDiscoveryPolicyStore,
+    ActivityDiscoveryService,
+    ActivityVisibilityMode,
+    ActivityVisibilityOverride,
+    ChallengePreference,
+)
 from greia_platform.hardware import HardwareSettingsError
 from greia_platform.main_credential import MainCredentialError, MainCredentialStore
 from greia_platform.profiles import ProfileError
@@ -58,6 +66,7 @@ class ParentApiApplication(ParentStatusApplication):
             IwdWifiBackend() if Path("/var/lib/iwd").exists() else DemoWifiBackend()
         )
         self.ssh_service: SshMaintenanceService = ssh_service or SshMaintenanceService()
+        self.activity_discovery = ActivityDiscoveryService()
 
     def authorized(
         self,
@@ -144,12 +153,76 @@ class ParentApiApplication(ParentStatusApplication):
                 "title_key": manifest.title_key,
                 "icon_id": manifest.icon_id,
                 "categories": list(manifest.categories),
+                "presentation_categories": list(manifest.launcher_categories),
+                "discovery_tags": list(manifest.discovery_tags),
                 "difficulty": manifest.difficulty,
+                "difficulty_min": manifest.difficulty_min,
+                "difficulty_max": manifest.difficulty_max,
+                "adaptive_difficulty": manifest.adaptive_difficulty,
+                "recommended_age_min": manifest.recommended_age_min,
+                "recommended_age_max": manifest.recommended_age_max,
                 "languages": list(manifest.languages),
                 "input_profile": manifest.input_profile,
             }
             for manifest in self.registry.discover()
         ]
+
+    def activity_policy_payload(self, profile_id: str) -> dict[str, object]:
+        context = self.profile_store.context(profile_id)
+        store = ActivityDiscoveryPolicyStore(context.activity_discovery_policy_path)
+        policy = store.read()
+        activities = self.registry.discover()
+        effective = self.activity_discovery.effective_activities(
+            activities,
+            approximate_age=context.profile.approximate_age,
+            challenge_preference=context.profile.challenge_preference,
+            policy=policy,
+        )
+        return {
+            "profile_id": profile_id,
+            "visibility_mode": policy.visibility_mode.value,
+            "overrides": {
+                activity_id: override.value
+                for activity_id, override in policy.overrides
+            },
+            "effective_activity_ids": [item.activity_id for item in effective],
+        }
+
+    def update_activity_policy(
+        self,
+        profile_id: str,
+        *,
+        visibility_mode: object,
+        overrides: object,
+    ) -> dict[str, object]:
+        context = self.profile_store.context(profile_id)
+        store = ActivityDiscoveryPolicyStore(context.activity_discovery_policy_path)
+        policy = store.read()
+        try:
+            mode = ActivityVisibilityMode(visibility_mode)
+        except (TypeError, ValueError) as exc:
+            raise ActivityDiscoveryError("invalid Activity visibility mode") from exc
+        if not isinstance(overrides, dict):
+            raise ActivityDiscoveryError("Activity visibility overrides must be an object")
+        known_ids = {manifest.activity_id for manifest in self.registry.discover()}
+        updated = policy.with_visibility_mode(mode)
+        for activity_id, raw_value in overrides.items():
+            if not isinstance(activity_id, str) or activity_id not in known_ids:
+                raise ActivityDiscoveryError(
+                    f"unknown Activity visibility override: {activity_id!r}"
+                )
+            if raw_value is None or raw_value == "default":
+                value = None
+            else:
+                try:
+                    value = ActivityVisibilityOverride(raw_value)
+                except (TypeError, ValueError) as exc:
+                    raise ActivityDiscoveryError(
+                        f"invalid visibility override for {activity_id}"
+                    ) from exc
+            updated = updated.with_override(activity_id, value)
+        store.write(updated)
+        return self.activity_policy_payload(profile_id)
 
     def api_meta_payload(self) -> dict[str, object]:
         return {
@@ -240,6 +313,20 @@ class ParentApiRequestHandler(ParentRequestHandler):
                 return
             self._send_json(200, self.app.activities_payload())
             return
+        policy_profile_id = self._profile_policy_id(parsed.path)
+        if policy_profile_id is not None:
+            if not self._require_api_authorization(query):
+                return
+            try:
+                payload = self.app.activity_policy_payload(policy_profile_id)
+            except ProfileError:
+                self._send_api_error(404, "profile_not_found", "Profile not found")
+                return
+            except ActivityDiscoveryError as exc:
+                self._send_api_error(400, "invalid_activity_policy", str(exc))
+                return
+            self._send_json(200, payload)
+            return
         if parsed.path == f"{API_BASE}/settings/hardware":
             if not self._require_api_authorization(query):
                 return
@@ -321,15 +408,20 @@ class ParentApiRequestHandler(ParentRequestHandler):
                 return
             try:
                 body = self._read_json_object()
-                form = {
-                    "display_name": [self._json_text(body, "display_name")],
-                    "avatar_id": [self._json_text(body, "avatar_id")],
-                    "secret": [self._json_text(body, "secret", default="")],
-                }
-                if bool(body.get("mask_secret", False)):
-                    form["mask_secret"] = ["on"]
-                payload = self.app.create_profile(form)
-            except (ProfileError, ValueError) as exc:
+                approximate_age = self._json_optional_int(body, "approximate_age")
+                challenge = ChallengePreference(
+                    body.get("challenge_preference", ChallengePreference.AUTOMATIC.value)
+                )
+                profile = self.app.profile_store.create(
+                    self._json_text(body, "display_name"),
+                    self._json_text(body, "avatar_id"),
+                    secret=self._json_text(body, "secret", default=""),
+                    mask_secret=bool(body.get("mask_secret", False)),
+                    approximate_age=approximate_age,
+                    challenge_preference=challenge,
+                )
+                payload = profile.public_dict()
+            except (ProfileError, TypeError, ValueError) as exc:
                 self._send_api_error(400, "invalid_profile", str(exc))
                 return
             self._send_json(201, payload)
@@ -349,6 +441,28 @@ class ParentApiRequestHandler(ParentRequestHandler):
     def do_PUT(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
         query = parse_qs(parsed.query)
+        policy_profile_id = self._profile_policy_id(parsed.path)
+        if policy_profile_id is not None:
+            if not self._require_api_authorization(query):
+                return
+            try:
+                body = self._read_json_object()
+                current = self.app.activity_policy_payload(policy_profile_id)
+                payload = self.app.update_activity_policy(
+                    policy_profile_id,
+                    visibility_mode=body.get(
+                        "visibility_mode", current["visibility_mode"]
+                    ),
+                    overrides=body.get("overrides", current["overrides"]),
+                )
+            except ProfileError:
+                self._send_api_error(404, "profile_not_found", "Profile not found")
+                return
+            except (ActivityDiscoveryError, ValueError) as exc:
+                self._send_api_error(400, "invalid_activity_policy", str(exc))
+                return
+            self._send_json(200, payload)
+            return
         if parsed.path == f"{API_BASE}/maintenance/ssh":
             if not self._require_api_authorization(query):
                 return
@@ -414,21 +528,34 @@ class ParentApiRequestHandler(ParentRequestHandler):
         try:
             body = self._read_json_object()
             current = next(
-                item
-                for item in self.app.profiles_payload()
-                if item.get("profile_id") == profile_id
+                profile
+                for profile in self.app.profile_store.list_profiles()
+                if profile.profile_id == profile_id
             )
-            form = {
-                "profile_id": [profile_id],
-                "display_name": [str(body.get("display_name", current["display_name"]))],
-                "avatar_id": [str(body.get("avatar_id", current["avatar_id"]))],
-                "secret_action": [str(body.get("secret_action", "keep"))],
-                "secret": [self._json_text(body, "secret", default="")],
-            }
-            mask_secret = body.get("mask_secret", current.get("mask_secret", False))
-            if bool(mask_secret):
-                form["mask_secret"] = ["on"]
-            payload = self.app.update_profile(form)
+            approximate_age_present = "approximate_age" in body
+            approximate_age = (
+                self._json_optional_int(body, "approximate_age")
+                if approximate_age_present
+                else None
+            )
+            raw_challenge = body.get(
+                "challenge_preference", current.challenge_preference.value
+            )
+            challenge = ChallengePreference(raw_challenge)
+            profile = self.app.profile_store.update(
+                profile_id,
+                display_name=str(body.get("display_name", current.display_name)),
+                avatar_id=str(body.get("avatar_id", current.avatar_id)),
+                secret_action=str(body.get("secret_action", "keep")),
+                secret=self._json_text(body, "secret", default=""),
+                mask_secret=bool(body.get("mask_secret", current.mask_secret)),
+                approximate_age=approximate_age,
+                clear_approximate_age=(
+                    approximate_age_present and body.get("approximate_age") is None
+                ),
+                challenge_preference=challenge,
+            )
+            payload = profile.public_dict()
         except StopIteration:
             self._send_api_error(404, "profile_not_found", "Profile not found")
             return
@@ -502,10 +629,30 @@ class ParentApiRequestHandler(ParentRequestHandler):
         return value
 
     @staticmethod
+    def _json_optional_int(body: dict[str, object], key: str) -> int | None:
+        value = body.get(key)
+        if value is None:
+            return None
+        if not isinstance(value, int) or isinstance(value, bool):
+            raise ValueError(f"{key} must be an integer or null")
+        return value
+
+    @staticmethod
     def _resource_id(path: str, prefix: str) -> str | None:
         if not path.startswith(prefix):
             return None
         value = path[len(prefix) :]
+        if not value or "/" in value:
+            return None
+        return value
+
+    @staticmethod
+    def _profile_policy_id(path: str) -> str | None:
+        prefix = f"{API_BASE}/profiles/"
+        suffix = "/activity-policy"
+        if not path.startswith(prefix) or not path.endswith(suffix):
+            return None
+        value = path[len(prefix) : -len(suffix)]
         if not value or "/" in value:
             return None
         return value
