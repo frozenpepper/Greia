@@ -359,7 +359,7 @@ def main() -> int:
         is_victory = False
 
     start_game()
-    mark_activity_ready()
+    first_frame_ready = False
 
     for _ in range(25):
         ambient_particles.append({
@@ -654,6 +654,10 @@ def main() -> int:
 
         canvas.present()
         pygame.display.flip()
+
+        if not first_frame_ready:
+            mark_activity_ready()
+            first_frame_ready = True
 
     return 0
 

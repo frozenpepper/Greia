@@ -256,7 +256,7 @@ def main() -> int:
             val_b = 0
 
     setup_station(0)
-    mark_activity_ready()
+    first_frame_ready = False
 
     running = True
     while running and not activity_stop_requested():
@@ -696,6 +696,10 @@ def main() -> int:
 
         canvas.present()
         pygame.display.flip()
+
+        if not first_frame_ready:
+            mark_activity_ready()
+            first_frame_ready = True
 
     return 0
 
