@@ -103,6 +103,20 @@ class PygameSceneRenderer:
         culled = 0
         skipped = 0
 
+        cache_error_types: list[type[BaseException]] = [
+            VisualSurfaceCacheError,
+            AssetCatalogueError,
+            KeyError,
+            FileNotFoundError,
+            OSError,
+            ValueError,
+        ]
+        if isinstance(getattr(self._pygame, "error", None), type) and issubclass(
+            self._pygame.error, BaseException
+        ):
+            cache_error_types.append(self._pygame.error)
+        cache_errors = tuple(cache_error_types)
+
         for node in scene.nodes:
             if min_z is not None and node.z < min_z:
                 continue
@@ -137,23 +151,28 @@ class PygameSceneRenderer:
                     variant=node.variant,
                     size=rect.size,
                 )
-            except (
-                VisualSurfaceCacheError,
-                AssetCatalogueError,
-                KeyError,
-                FileNotFoundError,
-                OSError,
-                ValueError,
-                self._pygame.error,
-            ) as exc:
-                if node.optional:
-                    self._failed_optional.add(optional_failure_key)
-                    skipped += 1
-                    continue
-                raise SceneRenderError(
-                    f"required scene visual failed: {scene.scene_id}/{node.node_id} "
-                    f"({node.asset_id}/{node.variant})"
-                ) from exc
+            except cache_errors as exc:
+                surface = None
+                fallback_variant = getattr(node, "fallback_variant", None)
+                if fallback_variant and fallback_variant != node.variant:
+                    try:
+                        surface = self.visual_cache.get(
+                            node.asset_id,
+                            variant=fallback_variant,
+                            size=rect.size,
+                        )
+                    except cache_errors:
+                        surface = None
+
+                if surface is None:
+                    if node.optional:
+                        self._failed_optional.add(optional_failure_key)
+                        skipped += 1
+                        continue
+                    raise SceneRenderError(
+                        f"required scene visual failed: {scene.scene_id}/{node.node_id} "
+                        f"({node.asset_id}/{node.variant})"
+                    ) from exc
 
             previous_alpha = None
             alpha_changed = sample.alpha < 0.999

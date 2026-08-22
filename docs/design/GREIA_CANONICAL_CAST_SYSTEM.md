@@ -1,11 +1,11 @@
 # Greia Canonical Cast System
 
-**Status:** six-character source design accepted; runtime promotion/integration pending  
+**Status:** promoted to stable v0.1 source (`assets/visual/characters/canonical/v0.1/`) & runtime simulator accepted  
 **Date:** 2026-08-22  
 **Character construction grammar:** `docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md`  
 **Expression/motion vocabulary:** `docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md`  
 **Current source-art authority:** `docs/reviews/visual/2026-08-22_flash-white-rabbit-identity-revision/PRIMARY_REVIEW.md`  
-**Current runtime gate:** `docs/testing/2026-08-22_CANONICAL_CAST_V01_PROMOTION_RUNTIME_SIMULATOR.md`
+**Runtime status:** Promoted & integrated via `docs/testing/2026-08-22_CANONICAL_CAST_V01_PROMOTION_RUNTIME_SIMULATOR.md` (30 runtime PNGs in `assets/visual/runtime/v1/characters/`)
 
 ## 1. Purpose
 

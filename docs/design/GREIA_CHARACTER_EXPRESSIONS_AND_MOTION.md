@@ -68,3 +68,26 @@ assets/visual/characters/
 Candidate/source art may also live under reviewed candidate workspaces until promotion.
 
 This document defines design/source semantics. Runtime consumption must continue through the single explicit Greia asset/scene path rather than a new character renderer or body-part rig.
+
+## Runtime Semantic States and Motion API (v0.1)
+
+Promoted and verified under `docs/testing/2026-08-22_CANONICAL_CAST_V01_PROMOTION_RUNTIME_SIMULATOR.md`:
+
+### 1. Semantic States (`CharacterState`)
+- `neutral`: Maps to runtime variant `default` (standard authored calm/friendly expression).
+- `blink`: Maps to `blink` (closed eyes, neutral mouth).
+- `happy`: Maps to `happy` (upturned joyful eyes, open happy smile).
+- `surprised`: Maps to `surprised` (wide round eyes, open rounded 'o' mouth).
+- `sleepy`: Maps to `sleepy` (curved resting eyes, peaceful gentle mouth).
+
+### 2. Semantic Motions (`CharacterMotion`)
+- `idle_bounce`: Neutral state with periodic eye blink and subtle breathing vertical lift.
+- `blink`: Bounded closed-eye state swap (~0.18s) with settle.
+- `happy_hop`: Joyful state swap + vertical parabolic hop with grounded contact shadow.
+- `celebrate_pop`: High-energy pop with celebratory happy state.
+- `surprised_wobble`: Surprised state swap + recoil horizontal oscillation.
+- `sleepy_sway`: Sleepy state swap + slow gentle lateral sway.
+
+### 3. Fail-Soft Architecture
+- If a requested non-default state rendition is unavailable/corrupt, `PygameSceneRenderer` cleanly falls back once to `node.fallback_variant` (`default` neutral) without raising an exception.
+- If the default required rendition fails, `SceneRenderError` is raised cleanly to allow Activity-level fallback.

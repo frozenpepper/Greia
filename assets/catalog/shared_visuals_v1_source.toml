@@ -343,8 +343,9 @@ output = "visual/runtime/v1/forest_meadow/sunlight_rays.png"
 width = 1024
 height = 512
 
-# First shared character runtime family. Character state remains semantic and
-# renderer-neutral; the target device consumes build-time PNG renditions.
+# Shared canonical character runtime family (v0.1).
+# Character state remains semantic and renderer-neutral; the target device consumes
+# build-time 256x256 PNG renditions.
 
 [[visuals]]
 id = "character.lilli"
@@ -353,15 +354,236 @@ role = "shared_mascot"
 
 [[visuals.variants]]
 name = "default"
-source = "visual/specimens/a1/lilli.svg"
+source = "visual/characters/canonical/v0.1/lilli/neutral.svg"
 output = "visual/runtime/v1/characters/lilli_neutral.png"
 width = 256
 height = 256
 
 [[visuals.variants]]
 name = "blink"
-source = "visual/characters/lilli/blink.svg"
+source = "visual/characters/canonical/v0.1/lilli/blink.svg"
 output = "visual/runtime/v1/characters/lilli_blink.png"
+width = 256
+height = 256
+
+[[visuals.variants]]
+name = "happy"
+source = "visual/characters/canonical/v0.1/lilli/happy.svg"
+output = "visual/runtime/v1/characters/lilli_happy.png"
+width = 256
+height = 256
+
+[[visuals.variants]]
+name = "surprised"
+source = "visual/characters/canonical/v0.1/lilli/surprised.svg"
+output = "visual/runtime/v1/characters/lilli_surprised.png"
+width = 256
+height = 256
+
+[[visuals.variants]]
+name = "sleepy"
+source = "visual/characters/canonical/v0.1/lilli/sleepy.svg"
+output = "visual/runtime/v1/characters/lilli_sleepy.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "character.leo"
+kind = "character"
+role = "shared_mascot"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/characters/canonical/v0.1/leo/neutral.svg"
+output = "visual/runtime/v1/characters/leo_neutral.png"
+width = 256
+height = 256
+
+[[visuals.variants]]
+name = "blink"
+source = "visual/characters/canonical/v0.1/leo/blink.svg"
+output = "visual/runtime/v1/characters/leo_blink.png"
+width = 256
+height = 256
+
+[[visuals.variants]]
+name = "happy"
+source = "visual/characters/canonical/v0.1/leo/happy.svg"
+output = "visual/runtime/v1/characters/leo_happy.png"
+width = 256
+height = 256
+
+[[visuals.variants]]
+name = "surprised"
+source = "visual/characters/canonical/v0.1/leo/surprised.svg"
+output = "visual/runtime/v1/characters/leo_surprised.png"
+width = 256
+height = 256
+
+[[visuals.variants]]
+name = "sleepy"
+source = "visual/characters/canonical/v0.1/leo/sleepy.svg"
+output = "visual/runtime/v1/characters/leo_sleepy.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "character.flash"
+kind = "character"
+role = "shared_mascot"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/characters/canonical/v0.1/flash/neutral.svg"
+output = "visual/runtime/v1/characters/flash_neutral.png"
+width = 256
+height = 256
+
+[[visuals.variants]]
+name = "blink"
+source = "visual/characters/canonical/v0.1/flash/blink.svg"
+output = "visual/runtime/v1/characters/flash_blink.png"
+width = 256
+height = 256
+
+[[visuals.variants]]
+name = "happy"
+source = "visual/characters/canonical/v0.1/flash/happy.svg"
+output = "visual/runtime/v1/characters/flash_happy.png"
+width = 256
+height = 256
+
+[[visuals.variants]]
+name = "surprised"
+source = "visual/characters/canonical/v0.1/flash/surprised.svg"
+output = "visual/runtime/v1/characters/flash_surprised.png"
+width = 256
+height = 256
+
+[[visuals.variants]]
+name = "sleepy"
+source = "visual/characters/canonical/v0.1/flash/sleepy.svg"
+output = "visual/runtime/v1/characters/flash_sleepy.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "character.dani"
+kind = "character"
+role = "shared_mascot"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/characters/canonical/v0.1/dani/neutral.svg"
+output = "visual/runtime/v1/characters/dani_neutral.png"
+width = 256
+height = 256
+
+[[visuals.variants]]
+name = "blink"
+source = "visual/characters/canonical/v0.1/dani/blink.svg"
+output = "visual/runtime/v1/characters/dani_blink.png"
+width = 256
+height = 256
+
+[[visuals.variants]]
+name = "happy"
+source = "visual/characters/canonical/v0.1/dani/happy.svg"
+output = "visual/runtime/v1/characters/dani_happy.png"
+width = 256
+height = 256
+
+[[visuals.variants]]
+name = "surprised"
+source = "visual/characters/canonical/v0.1/dani/surprised.svg"
+output = "visual/runtime/v1/characters/dani_surprised.png"
+width = 256
+height = 256
+
+[[visuals.variants]]
+name = "sleepy"
+source = "visual/characters/canonical/v0.1/dani/sleepy.svg"
+output = "visual/runtime/v1/characters/dani_sleepy.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "character.tito"
+kind = "character"
+role = "shared_mascot"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/characters/canonical/v0.1/tito/neutral.svg"
+output = "visual/runtime/v1/characters/tito_neutral.png"
+width = 256
+height = 256
+
+[[visuals.variants]]
+name = "blink"
+source = "visual/characters/canonical/v0.1/tito/blink.svg"
+output = "visual/runtime/v1/characters/tito_blink.png"
+width = 256
+height = 256
+
+[[visuals.variants]]
+name = "happy"
+source = "visual/characters/canonical/v0.1/tito/happy.svg"
+output = "visual/runtime/v1/characters/tito_happy.png"
+width = 256
+height = 256
+
+[[visuals.variants]]
+name = "surprised"
+source = "visual/characters/canonical/v0.1/tito/surprised.svg"
+output = "visual/runtime/v1/characters/tito_surprised.png"
+width = 256
+height = 256
+
+[[visuals.variants]]
+name = "sleepy"
+source = "visual/characters/canonical/v0.1/tito/sleepy.svg"
+output = "visual/runtime/v1/characters/tito_sleepy.png"
+width = 256
+height = 256
+
+[[visuals]]
+id = "character.momo"
+kind = "character"
+role = "shared_mascot"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/characters/canonical/v0.1/momo/neutral.svg"
+output = "visual/runtime/v1/characters/momo_neutral.png"
+width = 256
+height = 256
+
+[[visuals.variants]]
+name = "blink"
+source = "visual/characters/canonical/v0.1/momo/blink.svg"
+output = "visual/runtime/v1/characters/momo_blink.png"
+width = 256
+height = 256
+
+[[visuals.variants]]
+name = "happy"
+source = "visual/characters/canonical/v0.1/momo/happy.svg"
+output = "visual/runtime/v1/characters/momo_happy.png"
+width = 256
+height = 256
+
+[[visuals.variants]]
+name = "surprised"
+source = "visual/characters/canonical/v0.1/momo/surprised.svg"
+output = "visual/runtime/v1/characters/momo_surprised.png"
+width = 256
+height = 256
+
+[[visuals.variants]]
+name = "sleepy"
+source = "visual/characters/canonical/v0.1/momo/sleepy.svg"
+output = "visual/runtime/v1/characters/momo_sleepy.png"
 width = 256
 height = 256
 

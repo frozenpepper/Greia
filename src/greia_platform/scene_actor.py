@@ -14,8 +14,47 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from enum import Enum
 
 from .scene import SceneDefinition, SceneError, SceneFit, SceneNode
+
+
+class CharacterState(str, Enum):
+    NEUTRAL = "neutral"
+    BLINK = "blink"
+    HAPPY = "happy"
+    SURPRISED = "surprised"
+    SLEEPY = "sleepy"
+
+
+class CharacterMotion(str, Enum):
+    NONE = "none"
+    IDLE_BOUNCE = "idle_bounce"
+    BLINK = "blink"
+    HAPPY_HOP = "happy_hop"
+    CELEBRATE_POP = "celebrate_pop"
+    SURPRISED_WOBBLE = "surprised_wobble"
+    SLEEPY_SWAY = "sleepy_sway"
+
+
+_VALID_STATES = {
+    "neutral",
+    "blink",
+    "happy",
+    "surprised",
+    "sleepy",
+    "default",
+}
+
+_VALID_MOTIONS = {
+    "none",
+    "idle_bounce",
+    "blink",
+    "happy_hop",
+    "celebrate_pop",
+    "surprised_wobble",
+    "sleepy_sway",
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -43,6 +82,9 @@ class SceneActorDefinition:
     blink_duration_seconds: float = 0.18
     blink_phase: float = 0.0
     shadow_alpha: float = 0.42
+    state: CharacterState | str = CharacterState.NEUTRAL
+    motion: CharacterMotion | str = CharacterMotion.IDLE_BOUNCE
+    motion_intensity: float = 1.0
 
     def __post_init__(self) -> None:
         actor_id = self.actor_id.strip()
@@ -89,6 +131,18 @@ class SceneActorDefinition:
         if not 0.0 <= shadow_alpha <= 1.0:
             raise SceneError("scene actor shadow_alpha must be between 0 and 1")
 
+        raw_state = self.state.value if isinstance(self.state, CharacterState) else str(self.state).strip().lower()
+        if raw_state not in _VALID_STATES:
+            raise SceneError(f"unknown scene actor state: {self.state!r}")
+
+        raw_motion = self.motion.value if isinstance(self.motion, CharacterMotion) else str(self.motion).strip().lower()
+        if raw_motion not in _VALID_MOTIONS:
+            raise SceneError(f"unknown scene actor motion: {self.motion!r}")
+
+        motion_intensity = _finite(self.motion_intensity, "motion_intensity")
+        if not 0.0 <= motion_intensity <= 4.0:
+            raise SceneError("scene actor motion_intensity must be between 0.0 and 4.0")
+
         object.__setattr__(self, "actor_id", actor_id)
         object.__setattr__(self, "asset_id", asset_id)
         object.__setattr__(self, "shadow_asset_id", shadow_asset_id)
@@ -105,6 +159,9 @@ class SceneActorDefinition:
         object.__setattr__(self, "blink_duration_seconds", blink_duration)
         object.__setattr__(self, "blink_phase", blink_phase)
         object.__setattr__(self, "shadow_alpha", shadow_alpha)
+        object.__setattr__(self, "state", raw_state)
+        object.__setattr__(self, "motion", raw_motion)
+        object.__setattr__(self, "motion_intensity", motion_intensity)
 
 
 @dataclass(frozen=True, slots=True)
@@ -119,46 +176,116 @@ def sample_scene_actor(
     *,
     elapsed_seconds: float,
     motion_enabled: bool = True,
+    state: CharacterState | str | None = None,
+    motion: CharacterMotion | str | None = None,
+    intensity: float | None = None,
 ) -> SceneActorSample:
     """Sample one actor as contact-shadow + body scene nodes.
 
     The contact shadow remains grounded while the body performs a very small
-    vertical idle. Blink is a bounded semantic variant swap and therefore warms
-    at most one additional cached surface size; it does not create per-frame
-    raster variants.
+    vertical/horizontal motion. Semantic state selection and shared motion
+    transforms are renderer-neutral.
     """
 
     elapsed = _finite(elapsed_seconds, "elapsed_seconds")
-    idle_offset = 0.0
-    if motion_enabled and actor.idle_amplitude:
-        idle_angle = math.tau * (
-            elapsed / actor.idle_period_seconds + actor.idle_phase
-        )
-        idle_offset = math.sin(idle_angle) * actor.idle_amplitude
 
-    state = actor.neutral_variant
-    if motion_enabled:
+    if state is not None:
+        raw_state = state.value if isinstance(state, CharacterState) else str(state).strip().lower()
+        if raw_state not in _VALID_STATES:
+            raise SceneError(f"unknown scene actor state: {state!r}")
+    else:
+        raw_state = actor.state
+
+    if motion is not None:
+        raw_motion = motion.value if isinstance(motion, CharacterMotion) else str(motion).strip().lower()
+        if raw_motion not in _VALID_MOTIONS:
+            raise SceneError(f"unknown scene actor motion: {motion!r}")
+    else:
+        raw_motion = actor.motion
+
+    if intensity is not None:
+        eff_intensity = _finite(intensity, "intensity")
+        if not 0.0 <= eff_intensity <= 4.0:
+            raise SceneError("intensity must be between 0.0 and 4.0")
+    else:
+        eff_intensity = actor.motion_intensity
+
+    dx = 0.0
+    dy = 0.0
+    active_state = raw_state
+
+    if not motion_enabled or raw_motion == "none":
+        active_state = raw_state
+        dx = 0.0
+        dy = 0.0
+    elif raw_motion == "idle_bounce":
+        if actor.idle_amplitude:
+            idle_angle = math.tau * (
+                elapsed / actor.idle_period_seconds + actor.idle_phase
+            )
+            dy = math.sin(idle_angle) * actor.idle_amplitude * eff_intensity
         blink_clock = (
             elapsed + actor.blink_phase * actor.blink_period_seconds
         ) % actor.blink_period_seconds
-        if blink_clock < actor.blink_duration_seconds:
-            state = actor.blink_variant
+        if blink_clock < actor.blink_duration_seconds and raw_state in ("neutral", "default"):
+            active_state = "blink"
+        else:
+            active_state = raw_state
+    elif raw_motion == "blink":
+        active_state = "blink"
+    elif raw_motion == "happy_hop":
+        period = 0.8
+        phase = (elapsed + actor.idle_phase * period) % period / period
+        if phase < 0.7:
+            hop_sin = math.sin(math.pi * (phase / 0.7))
+            dy = -hop_sin * 16.0 * eff_intensity
+        else:
+            dy = 0.0
+        active_state = "happy" if raw_state in ("neutral", "default") else raw_state
+    elif raw_motion == "celebrate_pop":
+        period = 0.9
+        phase = (elapsed + actor.idle_phase * period) % period / period
+        if phase < 0.7:
+            pop_sin = math.sin(math.pi * (phase / 0.7))
+            dy = -pop_sin * 24.0 * eff_intensity
+        else:
+            dy = 0.0
+        active_state = "happy" if raw_state in ("neutral", "default") else raw_state
+    elif raw_motion == "surprised_wobble":
+        decay_t = elapsed % 1.5
+        wobble = math.sin(math.tau * elapsed * 3.5) * math.exp(-2.5 * decay_t)
+        dx = wobble * 6.0 * eff_intensity
+        active_state = "surprised" if raw_state in ("neutral", "default") else raw_state
+    elif raw_motion == "sleepy_sway":
+        sway = math.sin(math.tau * (elapsed / 3.2 + actor.idle_phase))
+        dx = sway * 4.0 * eff_intensity
+        active_state = "sleepy" if raw_state in ("neutral", "default") else raw_state
+
+    # Map semantic state to runtime rendition variant name
+    if active_state in ("neutral", "default"):
+        variant = actor.neutral_variant
+    elif active_state == "blink":
+        variant = actor.blink_variant
+    else:
+        variant = active_state
 
     x, y, width, height = actor.rect
     body = SceneNode(
         node_id=f"{actor.actor_id}.body",
         asset_id=actor.asset_id,
-        variant=state,
-        rect=(x, y + idle_offset, width, height),
+        variant=variant,
+        fallback_variant=actor.neutral_variant,
+        rect=(x + dx, y + dy, width, height),
         z=actor.z,
         parallax=actor.parallax,
     )
 
     shadow_alpha = actor.shadow_alpha
-    if motion_enabled and actor.idle_amplitude:
-        # A tiny inverse opacity change reinforces lift without changing shadow
-        # geometry or creating continuously varying cached sizes.
-        normalized_lift = max(0.0, idle_offset / max(actor.idle_amplitude, 1e-9))
+    if motion_enabled and dy < 0.0:
+        lift_ratio = min(1.0, abs(dy) / 24.0)
+        shadow_alpha *= 1.0 - 0.25 * lift_ratio
+    elif motion_enabled and dy > 0.0 and actor.idle_amplitude:
+        normalized_lift = max(0.0, dy / max(actor.idle_amplitude, 1e-9))
         shadow_alpha *= 1.0 - 0.12 * normalized_lift
 
     shadow = SceneNode(
@@ -170,7 +297,7 @@ def sample_scene_actor(
         alpha=shadow_alpha,
         optional=True,
     )
-    return SceneActorSample(actor.actor_id, state, (shadow, body))
+    return SceneActorSample(actor.actor_id, active_state, (shadow, body))
 
 
 def actor_scene_sample(
@@ -180,6 +307,9 @@ def actor_scene_sample(
     elapsed_seconds: float,
     fit: SceneFit = SceneFit.COVER,
     motion_enabled: bool = True,
+    state: CharacterState | str | None = None,
+    motion: CharacterMotion | str | None = None,
+    intensity: float | None = None,
 ) -> SceneDefinition:
     """Return a tiny scene suitable for ``PygameSceneRenderer.draw(clear=False)``.
 
@@ -192,6 +322,9 @@ def actor_scene_sample(
         actor,
         elapsed_seconds=elapsed_seconds,
         motion_enabled=motion_enabled,
+        state=state,
+        motion=motion,
+        intensity=intensity,
     )
     return SceneDefinition(
         scene_id=f"actor.{actor.actor_id}.sample",
@@ -221,6 +354,8 @@ def _finite(value: float, label: str) -> float:
 
 
 __all__ = [
+    "CharacterMotion",
+    "CharacterState",
     "SceneActorDefinition",
     "SceneActorSample",
     "actor_scene_sample",

@@ -1,0 +1,33 @@
+[activity]
+id = "org.greia.fixture.canonical-cast-showcase"
+title_key = "activity.canonical_cast_showcase.title"
+version = "0.1.0"
+icon = "mascot"
+languages = ["*"]
+
+[presentation]
+categories = ["learn", "play"]
+
+[education]
+categories = ["development", "inspection"]
+difficulty = 1
+skills = []
+events = []
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "pointer"
+
+[requirements]
+required_capabilities = ["display", "pointer"]
+optional_capabilities = []
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1

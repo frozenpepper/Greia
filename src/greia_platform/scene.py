@@ -81,6 +81,7 @@ class SceneNode:
     rect: tuple[float, float, float, float]
     z: int = 0
     variant: str = "default"
+    fallback_variant: str | None = None
     parallax: float = 0.0
     alpha: float = 1.0
     motion: SceneMotion = SceneMotion()
@@ -90,12 +91,19 @@ class SceneNode:
         node_id = self.node_id.strip()
         asset_id = self.asset_id.strip()
         variant = self.variant.strip()
+        fallback_variant = (
+            self.fallback_variant.strip()
+            if self.fallback_variant is not None
+            else None
+        )
         if not node_id:
             raise SceneError("scene node_id must not be empty")
         if not asset_id:
             raise SceneError(f"scene node {node_id!r} asset_id must not be empty")
         if not variant:
             raise SceneError(f"scene node {node_id!r} variant must not be empty")
+        if fallback_variant == "":
+            fallback_variant = None
         if len(self.rect) != 4:
             raise SceneError(f"scene node {node_id!r} rect must contain x/y/w/h")
         x, y, width, height = (float(value) for value in self.rect)
@@ -112,6 +120,7 @@ class SceneNode:
         object.__setattr__(self, "node_id", node_id)
         object.__setattr__(self, "asset_id", asset_id)
         object.__setattr__(self, "variant", variant)
+        object.__setattr__(self, "fallback_variant", fallback_variant)
         object.__setattr__(self, "rect", (x, y, width, height))
         object.__setattr__(self, "z", int(self.z))
         object.__setattr__(self, "parallax", parallax)

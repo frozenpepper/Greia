@@ -1,0 +1,95 @@
+[pack]
+id = "greia.characters.canonical.v0.1"
+name = "Greia Canonical Character Cast"
+version = "0.1.0"
+status = "stable-source"
+authority = "docs/testing/2026-08-22_CANONICAL_CAST_V01_PROMOTION_RUNTIME_SIMULATOR.md"
+notes = "Promoted stable source masters, registered 5-state vector sets, and authoring components for Greia's six canonical mascots."
+
+[provenance]
+canonical_ensemble = ["character.lilli", "character.leo", "character.flash", "character.dani", "character.tito", "character.momo"]
+historical_nino_provenance = "assets/visual/pack_candidates/canonical_characters/2026-08-22/nino/ (Nino owl base refined to Leo with signature glasses; preserved for provenance only)"
+
+[[characters]]
+id = "character.lilli"
+display_name = "Lilli"
+archetype = "unicorn_puff"
+species = "unicorn"
+logical_artboard = [256, 256]
+min_recommended_px = 64
+max_recommended_px = 512
+primary_domain = "creativity / stories / art / imagination"
+provenance = "assets/visual/pack_candidates/canonical_characters/2026-08-22/lilli/"
+source_master = "lilli/source_master.svg"
+states = { neutral = "lilli/neutral.svg", blink = "lilli/blink.svg", happy = "lilli/happy.svg", surprised = "lilli/surprised.svg", sleepy = "lilli/sleepy.svg" }
+components = ["lilli/components/horn.svg", "lilli/components/forelock.svg", "lilli/components/eyes_blink.svg"]
+
+[[characters]]
+id = "character.leo"
+display_name = "Leo"
+archetype = "owl_bean"
+species = "owl"
+logical_artboard = [256, 256]
+min_recommended_px = 64
+max_recommended_px = 512
+primary_domain = "learning / reading / language / knowledge"
+provenance = "assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/leo/"
+source_master = "leo/source_master.svg"
+states = { neutral = "leo/neutral.svg", blink = "leo/blink.svg", happy = "leo/happy.svg", surprised = "leo/surprised.svg", sleepy = "leo/sleepy.svg" }
+components = ["leo/components/glasses.svg", "leo/components/face_mask.svg", "leo/components/eyes_blink.svg"]
+
+[[characters]]
+id = "character.flash"
+display_name = "Flash"
+archetype = "white_rabbit_puff"
+species = "rabbit"
+logical_artboard = [256, 256]
+min_recommended_px = 64
+max_recommended_px = 512
+primary_domain = "games / speed / action / reflex / playful challenge"
+provenance = "assets/visual/pack_candidates/flash_identity_revision/2026-08-22/flash/"
+source_master = "flash/source_master.svg"
+states = { neutral = "flash/neutral.svg", blink = "flash/blink.svg", happy = "flash/happy.svg", surprised = "flash/surprised.svg", sleepy = "flash/sleepy.svg" }
+components = ["flash/components/shirt_bolt.svg", "flash/components/ears.svg", "flash/components/eyes_blink.svg"]
+
+[[characters]]
+id = "character.dani"
+display_name = "Dani"
+archetype = "friendly_robot"
+species = "robot"
+logical_artboard = [256, 256]
+min_recommended_px = 64
+max_recommended_px = 512
+primary_domain = "math / logic / patterns / sequencing"
+provenance = "assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/dani/"
+source_master = "dani/source_master.svg"
+states = { neutral = "dani/neutral.svg", blink = "dani/blink.svg", happy = "dani/happy.svg", surprised = "dani/surprised.svg", sleepy = "dani/sleepy.svg" }
+components = ["dani/components/face_display.svg", "dani/components/antennae_light.svg", "dani/components/eyes_blink.svg"]
+
+[[characters]]
+id = "character.tito"
+display_name = "Tito"
+archetype = "fox_puff"
+species = "fox"
+logical_artboard = [256, 256]
+min_recommended_px = 64
+max_recommended_px = 512
+primary_domain = "exploration / nature / discovery / investigation"
+provenance = "assets/visual/pack_candidates/canonical_characters/2026-08-22/tito/"
+source_master = "tito/source_master.svg"
+states = { neutral = "tito/neutral.svg", blink = "tito/blink.svg", happy = "tito/happy.svg", surprised = "tito/surprised.svg", sleepy = "tito/sleepy.svg" }
+components = ["tito/components/tail.svg", "tito/components/muzzle.svg", "tito/components/eyes_blink.svg"]
+
+[[characters]]
+id = "character.momo"
+display_name = "Momo"
+archetype = "friendly_monster_puff"
+species = "monster"
+logical_artboard = [256, 256]
+min_recommended_px = 64
+max_recommended_px = 512
+primary_domain = "emotion / music / silly play / celebration"
+provenance = "assets/visual/pack_candidates/canonical_characters/2026-08-22/momo/"
+source_master = "momo/source_master.svg"
+states = { neutral = "momo/neutral.svg", blink = "momo/blink.svg", happy = "momo/happy.svg", surprised = "momo/surprised.svg", sleepy = "momo/sleepy.svg" }
+components = ["momo/components/antennae.svg", "momo/components/body_fluff.svg", "momo/components/eyes_blink.svg"]

@@ -1,6 +1,6 @@
 catalog_id = "greia.shared-visuals.v1"
 catalog_version = "0.3.0"
-source_sha256 = "3e65fd993f413a1ec4aad2eb795a899cdcadba62c65c7a78406da8b572025efc"
+source_sha256 = "4bcfee8b43540a6599d9b30de5a226b58de353fa8f3ecbae207bf36f18474d93"
 generated_note = "Build-time PNG renditions from explicit reviewed SVG masters; runtime must not discover or rasterize SVG source."
 
 [[visuals]]
@@ -44,6 +44,42 @@ role = "foliage"
 default = "visual/runtime/v1/forest_meadow/bush_round.png"
 
 [[visuals]]
+id = "character.dani"
+kind = "character"
+role = "shared_mascot"
+
+[visuals.variants]
+blink = "visual/runtime/v1/characters/dani_blink.png"
+default = "visual/runtime/v1/characters/dani_neutral.png"
+happy = "visual/runtime/v1/characters/dani_happy.png"
+sleepy = "visual/runtime/v1/characters/dani_sleepy.png"
+surprised = "visual/runtime/v1/characters/dani_surprised.png"
+
+[[visuals]]
+id = "character.flash"
+kind = "character"
+role = "shared_mascot"
+
+[visuals.variants]
+blink = "visual/runtime/v1/characters/flash_blink.png"
+default = "visual/runtime/v1/characters/flash_neutral.png"
+happy = "visual/runtime/v1/characters/flash_happy.png"
+sleepy = "visual/runtime/v1/characters/flash_sleepy.png"
+surprised = "visual/runtime/v1/characters/flash_surprised.png"
+
+[[visuals]]
+id = "character.leo"
+kind = "character"
+role = "shared_mascot"
+
+[visuals.variants]
+blink = "visual/runtime/v1/characters/leo_blink.png"
+default = "visual/runtime/v1/characters/leo_neutral.png"
+happy = "visual/runtime/v1/characters/leo_happy.png"
+sleepy = "visual/runtime/v1/characters/leo_sleepy.png"
+surprised = "visual/runtime/v1/characters/leo_surprised.png"
+
+[[visuals]]
 id = "character.lilli"
 kind = "character"
 role = "shared_mascot"
@@ -51,6 +87,33 @@ role = "shared_mascot"
 [visuals.variants]
 blink = "visual/runtime/v1/characters/lilli_blink.png"
 default = "visual/runtime/v1/characters/lilli_neutral.png"
+happy = "visual/runtime/v1/characters/lilli_happy.png"
+sleepy = "visual/runtime/v1/characters/lilli_sleepy.png"
+surprised = "visual/runtime/v1/characters/lilli_surprised.png"
+
+[[visuals]]
+id = "character.momo"
+kind = "character"
+role = "shared_mascot"
+
+[visuals.variants]
+blink = "visual/runtime/v1/characters/momo_blink.png"
+default = "visual/runtime/v1/characters/momo_neutral.png"
+happy = "visual/runtime/v1/characters/momo_happy.png"
+sleepy = "visual/runtime/v1/characters/momo_sleepy.png"
+surprised = "visual/runtime/v1/characters/momo_surprised.png"
+
+[[visuals]]
+id = "character.tito"
+kind = "character"
+role = "shared_mascot"
+
+[visuals.variants]
+blink = "visual/runtime/v1/characters/tito_blink.png"
+default = "visual/runtime/v1/characters/tito_neutral.png"
+happy = "visual/runtime/v1/characters/tito_happy.png"
+sleepy = "visual/runtime/v1/characters/tito_sleepy.png"
+surprised = "visual/runtime/v1/characters/tito_surprised.png"
 
 [[visuals]]
 id = "cloud.large.01"

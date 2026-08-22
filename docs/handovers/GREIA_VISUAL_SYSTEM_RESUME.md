@@ -266,3 +266,13 @@ After the canonical cast v0.1 runtime/simulator evidence is owner-reviewed and a
 R7 remains the primary blocking platform phase. Nothing in this visual/cast work closes, reorders, or bypasses R7.
 
 No physical Acer/Pi acceptance should be claimed without actual hardware evidence.
+
+---
+
+### Canonical Cast v0.1 Promotion & Runtime Simulator Acceptance (2026-08-22)
+
+- **Source Promotion:** Promoted all 6 canonical characters (Lilli, Leo, Flash [white rabbit with coral shirt & lightning bolt], Dani, Tito, Momo) to stable `assets/visual/characters/canonical/v0.1/` with `catalog.toml`, `README.md`, `MOTION.md`, 5 registered state SVGs, and authoring components.
+- **Runtime Renditions:** Declared and generated 30 build-time 256×256 PNGs in `assets/visual/runtime/v1/characters/` via `make visual-assets` and validated via `make visual-assets-check`.
+- **Semantic Actor Pipeline:** Enhanced `greia_platform.scene_actor` with `CharacterState` and `CharacterMotion` enums, cheap whole-character translations, grounded contact shadows, and fail-soft fallback in `greia_platform.pygame_scene`.
+- **Activity Simulator Acceptance:** Verified 6 viewports (1024×600 normal, 1024×600 large, 1280×800 normal, 1366×768 compact, 1920×1080 normal, 1111×700 normal), 5 states, 3 motion proofs, non-default fallback, default failure isolation, and cache working set stability (14 entries out of 32 max).
+- **Owner Review Artifacts:** `docs/reviews/visual/2026-08-22_canonical-cast-v01-runtime-simulator/` + `GREIA_VISUAL_REVIEW_CANONICAL_CAST_V01_RUNTIME_SIMULATOR_2026-08-22.zip`.

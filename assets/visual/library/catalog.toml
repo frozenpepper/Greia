@@ -1,33 +1,79 @@
 catalog_id = "greia.visual.shared-library.v0.1"
-status = "candidate"
+status = "stable-source"
 runtime_consumed = false
+notes = "Source-library authoring reference catalog for Greia's six canonical characters. Generated runtime renditions are defined in assets/catalog/shared_visuals_v1_source.toml."
+
+[provenance]
+historical_nino_note = "Nino owl base was refined to Leo (with signature glasses) per 2026-08-22 owner review. Nino remains provenance evidence only."
 
 [[characters]]
 id = "lilli"
 name = "Lilli"
-neutral = "assets/visual/specimens/a1/lilli.svg"
-blink = "assets/visual/characters/lilli/blink.svg"
+archetype = "unicorn_puff"
+source_root = "assets/visual/characters/canonical/v0.1/lilli"
+neutral = "assets/visual/characters/canonical/v0.1/lilli/neutral.svg"
+blink = "assets/visual/characters/canonical/v0.1/lilli/blink.svg"
+happy = "assets/visual/characters/canonical/v0.1/lilli/happy.svg"
+surprised = "assets/visual/characters/canonical/v0.1/lilli/surprised.svg"
+sleepy = "assets/visual/characters/canonical/v0.1/lilli/sleepy.svg"
 
 [[characters]]
-id = "nino"
-name = "Nino"
-neutral = "assets/visual/specimens/a1/nino.svg"
-blink = "assets/visual/characters/nino/blink.svg"
+id = "leo"
+name = "Leo"
+archetype = "owl_bean"
+source_root = "assets/visual/characters/canonical/v0.1/leo"
+neutral = "assets/visual/characters/canonical/v0.1/leo/neutral.svg"
+blink = "assets/visual/characters/canonical/v0.1/leo/blink.svg"
+happy = "assets/visual/characters/canonical/v0.1/leo/happy.svg"
+surprised = "assets/visual/characters/canonical/v0.1/leo/surprised.svg"
+sleepy = "assets/visual/characters/canonical/v0.1/leo/sleepy.svg"
+
+[[characters]]
+id = "flash"
+name = "Flash"
+archetype = "white_rabbit_puff"
+source_root = "assets/visual/characters/canonical/v0.1/flash"
+neutral = "assets/visual/characters/canonical/v0.1/flash/neutral.svg"
+blink = "assets/visual/characters/canonical/v0.1/flash/blink.svg"
+happy = "assets/visual/characters/canonical/v0.1/flash/happy.svg"
+surprised = "assets/visual/characters/canonical/v0.1/flash/surprised.svg"
+sleepy = "assets/visual/characters/canonical/v0.1/flash/sleepy.svg"
+
+[[characters]]
+id = "dani"
+name = "Dani"
+archetype = "friendly_robot"
+source_root = "assets/visual/characters/canonical/v0.1/dani"
+neutral = "assets/visual/characters/canonical/v0.1/dani/neutral.svg"
+blink = "assets/visual/characters/canonical/v0.1/dani/blink.svg"
+happy = "assets/visual/characters/canonical/v0.1/dani/happy.svg"
+surprised = "assets/visual/characters/canonical/v0.1/dani/surprised.svg"
+sleepy = "assets/visual/characters/canonical/v0.1/dani/sleepy.svg"
 
 [[characters]]
 id = "tito"
 name = "Tito"
-neutral = "assets/visual/specimens/a1/tito.svg"
-blink = "assets/visual/characters/tito/blink.svg"
+archetype = "fox_puff"
+source_root = "assets/visual/characters/canonical/v0.1/tito"
+neutral = "assets/visual/characters/canonical/v0.1/tito/neutral.svg"
+blink = "assets/visual/characters/canonical/v0.1/tito/blink.svg"
+happy = "assets/visual/characters/canonical/v0.1/tito/happy.svg"
+surprised = "assets/visual/characters/canonical/v0.1/tito/surprised.svg"
+sleepy = "assets/visual/characters/canonical/v0.1/tito/sleepy.svg"
 
 [[characters]]
 id = "momo"
 name = "Momo"
-neutral = "assets/visual/specimens/a1/momo.svg"
-blink = "assets/visual/characters/momo/blink.svg"
+archetype = "friendly_monster_puff"
+source_root = "assets/visual/characters/canonical/v0.1/momo"
+neutral = "assets/visual/characters/canonical/v0.1/momo/neutral.svg"
+blink = "assets/visual/characters/canonical/v0.1/momo/blink.svg"
+happy = "assets/visual/characters/canonical/v0.1/momo/happy.svg"
+surprised = "assets/visual/characters/canonical/v0.1/momo/surprised.svg"
+sleepy = "assets/visual/characters/canonical/v0.1/momo/sleepy.svg"
 
 [animations]
 catalog = "assets/visual/library/animations.toml"
 
 [artwork]
-next_families = ["props", "environments", "fx", "ui"]
+families = ["characters", "props", "environments", "fx", "ui"]

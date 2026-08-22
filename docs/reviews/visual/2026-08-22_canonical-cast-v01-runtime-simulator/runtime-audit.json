@@ -1,0 +1,81 @@
+{
+  "gate": "docs/testing/2026-08-22_CANONICAL_CAST_V01_PROMOTION_RUNTIME_SIMULATOR.md",
+  "date": "2026-08-22",
+  "status": "PASS",
+  "evidence_classification": "SIMULATOR VISUAL REVIEW",
+  "promoted_source_root": "assets/visual/characters/canonical/v0.1/",
+  "canonical_character_ids": [
+    "character.lilli",
+    "character.leo",
+    "character.flash",
+    "character.dani",
+    "character.tito",
+    "character.momo"
+  ],
+  "source_states_count": 30,
+  "runtime_renditions_count": 30,
+  "runtime_renditions_directory": "assets/visual/runtime/v1/characters/",
+  "provenance_notes": {
+    "nino": "Historical Nino owl preserved in candidate provenance; refined to Leo with signature glasses in canonical v0.1 without runtime aliasing."
+  },
+  "test_suite_results": {
+    "focused_scene_actor_tests": "11/11 passed",
+    "scene_and_visual_tests": "29/29 passed"
+  },
+  "responsive_matrix_results": [
+    {
+      "viewport": "1024x600",
+      "interface_size": "normal",
+      "result": "PASS"
+    },
+    {
+      "viewport": "1024x600",
+      "interface_size": "large",
+      "result": "PASS"
+    },
+    {
+      "viewport": "1280x800",
+      "interface_size": "normal",
+      "result": "PASS"
+    },
+    {
+      "viewport": "1366x768",
+      "interface_size": "compact",
+      "result": "PASS"
+    },
+    {
+      "viewport": "1920x1080",
+      "interface_size": "normal",
+      "result": "PASS"
+    },
+    {
+      "viewport": "1111x700",
+      "interface_size": "normal",
+      "result": "PASS"
+    }
+  ],
+  "fail_soft_verification": {
+    "non_default_state_fallback": "PASS (flash_happy.png missing -> fell back to flash_neutral.png without exception)",
+    "default_rendition_failure": "PASS (dani_neutral.png missing -> SceneRenderError caught and handled at Activity boundary)",
+    "all_assets_restored": true
+  },
+  "cache_and_motion_sanity": {
+    "frames_observed": 300,
+    "seconds_observed": 10.0,
+    "max_cache_entries_limit": 32,
+    "observed_working_set_entries": 14,
+    "continuous_raster_churn": false
+  },
+  "curated_review_sheets": [
+    "docs/reviews/visual/2026-08-22_canonical-cast-v01-runtime-simulator/01-ensemble.png",
+    "docs/reviews/visual/2026-08-22_canonical-cast-v01-runtime-simulator/02-five-states.png",
+    "docs/reviews/visual/2026-08-22_canonical-cast-v01-runtime-simulator/03-happy-hop.png",
+    "docs/reviews/visual/2026-08-22_canonical-cast-v01-runtime-simulator/04-surprised-wobble.png",
+    "docs/reviews/visual/2026-08-22_canonical-cast-v01-runtime-simulator/05-sleepy-sway.png",
+    "docs/reviews/visual/2026-08-22_canonical-cast-v01-runtime-simulator/06-constrained.png",
+    "docs/reviews/visual/2026-08-22_canonical-cast-v01-runtime-simulator/07-large.png",
+    "docs/reviews/visual/2026-08-22_canonical-cast-v01-runtime-simulator/08-state-fallback.png",
+    "docs/reviews/visual/2026-08-22_canonical-cast-v01-runtime-simulator/09-default-fallback.png",
+    "docs/reviews/visual/2026-08-22_canonical-cast-v01-runtime-simulator/10-motion-disabled.png"
+  ]
+}
