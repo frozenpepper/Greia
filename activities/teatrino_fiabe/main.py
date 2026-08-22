@@ -230,15 +230,24 @@ class MicrophoneRecorder:
         self.recorded_pcm = bytearray()
         self.current_volume = 0.0
         self._dev = None
-        self.has_hardware = False
 
+    def _ensure_audio_init(self) -> None:
+        if not pygame.mixer.get_init():
+            try:
+                pygame.mixer.init()
+            except Exception:
+                pass
+
+    @property
+    def has_hardware(self) -> bool:
+        self._ensure_audio_init()
         if sdl2_audio is not None:
             try:
                 names = sdl2_audio.get_audio_device_names(True)
-                if names:
-                    self.has_hardware = True
+                return bool(names)
             except Exception:
-                self.has_hardware = False
+                return False
+        return False
 
     def toggle(self) -> bool:
         if not self.has_hardware:
@@ -260,6 +269,7 @@ class MicrophoneRecorder:
     def start_recording(self) -> None:
         self.recorded_pcm.clear()
         self.current_volume = 0.0
+        self._ensure_audio_init()
         if not self.enabled or not self.has_hardware or sdl2_audio is None:
             self.is_recording = True
             return
