@@ -8,10 +8,13 @@ languages = ["it", "en"]
 
 [presentation]
 categories = ["explore", "play"]
+discovery_tags = ["nature", "puzzles"]
 
 [education]
 categories = ["visual_attention", "nature_lexicon", "observation"]
-difficulty = 1
+difficulty = 2
+recommended_age_min = 3
+recommended_age_max = 7
 skills = [
   { id = "cognition.observation.visual_search", weight = 3 },
   { id = "lexicon.nature.animals", weight = 2 },
