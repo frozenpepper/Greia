@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="rainbow_red" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#F87171"/><stop offset="100%" stop-color="#EF4444"/>
+    </linearGradient>
+    <filter id="rainbow_shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#1E1B4B" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  
+  <g filter="url(#rainbow_shadow)">
+    <!-- Rainbow Arcs -->
+    <!-- Red (R=92) -->
+    <path d="M 36 170 A 92 92 0 0 1 220 170" fill="none" stroke="#EF4444" stroke-width="16" stroke-linecap="round"/>
+    <!-- Orange (R=77) -->
+    <path d="M 51 170 A 77 77 0 0 1 205 170" fill="none" stroke="#F97316" stroke-width="15" stroke-linecap="round"/>
+    <!-- Yellow (R=63) -->
+    <path d="M 65 170 A 63 63 0 0 1 191 170" fill="none" stroke="#EAB308" stroke-width="14" stroke-linecap="round"/>
+    <!-- Green (R=50) -->
+    <path d="M 78 170 A 50 50 0 0 1 178 170" fill="none" stroke="#22C55E" stroke-width="13" stroke-linecap="round"/>
+    <!-- Blue (R=38) -->
+    <path d="M 90 170 A 38 38 0 0 1 166 170" fill="none" stroke="#3B82F6" stroke-width="12" stroke-linecap="round"/>
+    <!-- Purple (R=27) -->
+    <path d="M 101 170 A 27 27 0 0 1 155 170" fill="none" stroke="#A855F7" stroke-width="11" stroke-linecap="round"/>
+    
+    <!-- Crisp Outer Boundary Stroke -->
+    <path d="M 28 170 A 100 100 0 0 1 228 170" fill="none" stroke="#0F172A" stroke-width="4.5" stroke-linecap="round"/>
+    
+    <!-- Left Fluffy Cloud Footing -->
+    <g>
+      <path d="M 24 185 C 24 165, 48 150, 64 162 C 76 150, 96 160, 96 185 C 96 195, 24 195, 24 185 Z" fill="#FFFFFF" stroke="#0F172A" stroke-width="4.5"/>
+      <circle cx="48" cy="180" r="14" fill="#F8FAFC"/>
+      <circle cx="68" cy="174" r="16" fill="#F8FAFC"/>
+    </g>
+    
+    <!-- Right Fluffy Cloud Footing -->
+    <g>
+      <path d="M 160 185 C 160 160, 180 150, 192 162 C 208 150, 232 165, 232 185 C 232 195, 160 195, 160 185 Z" fill="#FFFFFF" stroke="#0F172A" stroke-width="4.5"/>
+      <circle cx="188" cy="174" r="16" fill="#F8FAFC"/>
+      <circle cx="208" cy="180" r="14" fill="#F8FAFC"/>
+    </g>
+    
+    <!-- Golden Magic Sparkles -->
+    <polygon points="128,40 132,50 142,54 132,58 128,68 124,58 114,54 124,50" fill="#FDE047" stroke="#CA8A04" stroke-width="1.5"/>
+    <polygon points="75,80 77,86 83,88 77,90 75,96 73,90 67,88 73,86" fill="#FDE047" stroke="#CA8A04" stroke-width="1.5"/>
+    <polygon points="181,80 183,86 189,88 183,90 181,96 179,90 173,88 179,86" fill="#FDE047" stroke="#CA8A04" stroke-width="1.5"/>
+  </g>
+</svg>

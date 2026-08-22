@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 400" width="512" height="400">
+  <defs>
+    <linearGradient id="canyon_top" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F59E0B"/>
+      <stop offset="40%" stop-color="#D97706"/>
+      <stop offset="100%" stop-color="#B45309"/>
+    </linearGradient>
+    <linearGradient id="canyon_mid" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#B45309"/>
+      <stop offset="50%" stop-color="#92400E"/>
+      <stop offset="100%" stop-color="#78350F"/>
+    </linearGradient>
+    <linearGradient id="canyon_deep" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#78350F"/>
+      <stop offset="100%" stop-color="#451A03"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Solid Background Strata Fill -->
+  <rect x="0" y="0" width="512" height="400" fill="url(#canyon_mid)"/>
+  
+  <!-- Bottom Strata Band -->
+  <rect x="0" y="220" width="512" height="180" fill="url(#canyon_deep)"/>
+  
+  <!-- Middle Terraced Rock Band -->
+  <path d="M 0 60 Q 140 45 280 75 T 512 55 L 512 240 L 0 240 Z" fill="url(#canyon_mid)"/>
+  <path d="M 0 60 Q 140 45 280 75 T 512 55" fill="none" stroke="#451A03" stroke-width="4.5"/>
+  
+  <!-- Top Sandstone Shelf Rim -->
+  <path d="M 0 0 L 512 0 L 512 55 Q 420 70 330 50 Q 220 72 120 52 Q 60 68 0 55 Z" fill="url(#canyon_top)"/>
+  <path d="M 0 0 L 512 0 L 512 55 Q 420 70 330 50 Q 220 72 120 52 Q 60 68 0 55 Z" fill="none" stroke="#451A03" stroke-width="4"/>
+  <path d="M 0 6 L 512 6" fill="none" stroke="#FEF3C7" stroke-width="3" opacity="0.8"/>
+  
+  <!-- Chiseled Geological Strata Lines -->
+  <line x1="40" y1="140" x2="480" y2="140" stroke="#451A03" stroke-width="3" stroke-dasharray="25 15"/>
+  <line x1="80" y1="185" x2="440" y2="185" stroke="#451A03" stroke-width="3" stroke-dasharray="35 20"/>
+  <line x1="20" y1="290" x2="490" y2="290" stroke="#291102" stroke-width="4" stroke-dasharray="40 25"/>
+</svg>

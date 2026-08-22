@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="wood_top" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#D97706"/>
+      <stop offset="30%" stop-color="#B45309"/>
+      <stop offset="100%" stop-color="#92400E"/>
+    </linearGradient>
+    <linearGradient id="wood_bevel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FBBF24"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </linearGradient>
+    <radialGradient id="wood_end" cx="0.4" cy="0.4" r="0.6">
+      <stop offset="0%" stop-color="#FDE68A"/>
+      <stop offset="60%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#B45309"/>
+    </radialGradient>
+    <filter id="wood_shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#1E293B" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  
+  <g filter="url(#wood_shadow)">
+    <!-- Main Log Plank -->
+    <rect x="24" y="68" width="208" height="120" rx="28" fill="url(#wood_top)" stroke="#451A03" stroke-width="6"/>
+    
+    <!-- Top Highlight Bevel -->
+    <rect x="30" y="74" width="196" height="32" rx="16" fill="url(#wood_bevel)"/>
+    
+    <!-- Wood Grain Lines -->
+    <path d="M 44 116 Q 100 110 160 118 T 220 114" fill="none" stroke="#78350F" stroke-width="4" stroke-linecap="round" opacity="0.65"/>
+    <path d="M 52 144 Q 110 138 170 146 T 212 142" fill="none" stroke="#78350F" stroke-width="4" stroke-linecap="round" opacity="0.65"/>
+    <path d="M 40 162 Q 90 158 150 164" fill="none" stroke="#78350F" stroke-width="3" stroke-linecap="round" opacity="0.45"/>
+    
+    <!-- Right End Log Ring Cross-Section -->
+    <ellipse cx="204" cy="128" rx="22" ry="46" fill="url(#wood_end)" stroke="#451A03" stroke-width="5"/>
+    <ellipse cx="204" cy="128" rx="14" ry="30" fill="none" stroke="#92400E" stroke-width="3"/>
+    <ellipse cx="204" cy="128" rx="6" ry="14" fill="none" stroke="#78350F" stroke-width="2.5"/>
+    <circle cx="204" cy="128" r="3" fill="#451A03"/>
+    
+    <!-- Golden Brass Rivets / Binding Nails -->
+    <g>
+      <circle cx="48" cy="100" r="10" fill="#FACC15" stroke="#451A03" stroke-width="3.5"/>
+      <circle cx="46" cy="98" r="3.5" fill="#FEF08A"/>
+      
+      <circle cx="48" cy="156" r="10" fill="#FACC15" stroke="#451A03" stroke-width="3.5"/>
+      <circle cx="46" cy="154" r="3.5" fill="#FEF08A"/>
+    </g>
+  </g>
+</svg>

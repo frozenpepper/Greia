@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 400" width="512" height="400">
+  <defs>
+    <linearGradient id="space_metal_top" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="40%" stop-color="#334155"/>
+      <stop offset="100%" stop-color="#1E293B"/>
+    </linearGradient>
+    <linearGradient id="space_metal_sub" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Heavy Titanium Support Chassis -->
+  <rect x="0" y="0" width="512" height="400" fill="url(#space_metal_sub)"/>
+  
+  <!-- Futuristic Girder Truss Pattern -->
+  <path d="M 40 70 L 120 190 L 200 70 L 280 190 L 360 70 L 440 190 L 512 70" fill="none" stroke="#06B6D4" stroke-width="3.5" opacity="0.35"/>
+  <path d="M 40 190 L 120 310 L 200 190 L 280 310 L 360 190 L 440 310 L 512 190" fill="none" stroke="#06B6D4" stroke-width="3.5" opacity="0.25"/>
+  
+  <!-- Top Metallic Landing Deck -->
+  <rect x="0" y="0" width="512" height="50" fill="url(#space_metal_top)"/>
+  
+  <!-- Glowing Luminescent Cyan Energy Trim -->
+  <rect x="0" y="46" width="512" height="6" fill="#06B6D4"/>
+  <rect x="0" y="47" width="512" height="2" fill="#E0F2FE"/>
+  
+  <!-- Neon Landing Beacon Lights -->
+  <circle cx="60" cy="24" r="6" fill="#FACC15" stroke="#713F12" stroke-width="2"/>
+  <circle cx="60" cy="24" r="3" fill="#FEF08A"/>
+  
+  <circle cx="180" cy="24" r="6" fill="#38BDF8" stroke="#0369A1" stroke-width="2"/>
+  <circle cx="180" cy="24" r="3" fill="#E0F2FE"/>
+  
+  <circle cx="300" cy="24" r="6" fill="#FACC15" stroke="#713F12" stroke-width="2"/>
+  <circle cx="300" cy="24" r="3" fill="#FEF08A"/>
+  
+  <circle cx="420" cy="24" r="6" fill="#38BDF8" stroke="#0369A1" stroke-width="2"/>
+  <circle cx="420" cy="24" r="3" fill="#E0F2FE"/>
+  
+  <!-- Outer Hull Panel Outlines -->
+  <rect x="0" y="0" width="512" height="50" fill="none" stroke="#0F172A" stroke-width="3.5"/>
+</svg>

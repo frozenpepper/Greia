@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 400" width="512" height="400">
+  <defs>
+    <linearGradient id="grass_top" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4ADE80"/>
+      <stop offset="35%" stop-color="#22C55E"/>
+      <stop offset="100%" stop-color="#15803D"/>
+    </linearGradient>
+    <linearGradient id="soil_layer" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#854D0E"/>
+      <stop offset="40%" stop-color="#713F12"/>
+      <stop offset="100%" stop-color="#451A03"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Soil Base Mass -->
+  <rect x="0" y="0" width="512" height="400" fill="url(#soil_layer)"/>
+  
+  <!-- Soil Texture Pebbles -->
+  <circle cx="80" cy="120" r="8" fill="#A16207" opacity="0.7"/>
+  <circle cx="220" cy="180" r="10" fill="#451A03" opacity="0.6"/>
+  <circle cx="380" cy="140" r="7" fill="#CA8A04" opacity="0.6"/>
+  <circle cx="150" cy="260" r="12" fill="#361502" opacity="0.7"/>
+  <circle cx="440" cy="280" r="9" fill="#A16207" opacity="0.6"/>
+  <circle cx="290" cy="320" r="11" fill="#451A03" opacity="0.6"/>
+  
+  <!-- Layered Grass Overhang -->
+  <path d="M 0 0 L 512 0 L 512 45 Q 460 65 410 40 Q 360 68 300 42 Q 240 66 180 40 Q 120 68 60 42 Q 30 60 0 45 Z" fill="url(#grass_top)"/>
+  <path d="M 0 0 L 512 0 L 512 45 Q 460 65 410 40 Q 360 68 300 42 Q 240 66 180 40 Q 120 68 60 42 Q 30 60 0 45 Z" fill="none" stroke="#14532D" stroke-width="4"/>
+  
+  <!-- Edge Rock Support Anchor -->
+  <path d="M 460 38 Q 490 38 505 60 Q 512 85 485 95 Q 455 90 450 65 Z" fill="#64748B" stroke="#0F172A" stroke-width="3.5"/>
+  <path d="M 466 48 Q 485 46 496 60" fill="none" stroke="#94A3B8" stroke-width="2"/>
+</svg>

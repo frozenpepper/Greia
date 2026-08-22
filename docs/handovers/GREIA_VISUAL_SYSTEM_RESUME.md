@@ -229,9 +229,9 @@ Therefore:
 
 ---
 
-# 7. Exact current visual-authoring gate — COSTRUIAMO PONTI STRESS EXERCISE
+# 7. Completed visual-authoring gate — COSTRUIAMO PONTI STRESS EXERCISE
 
-Execute:
+Completed runbook:
 
 `docs/testing/2026-08-22_COSTRUIAMO_PONTI_VISUAL_AUTHORING_STRESS_EXERCISE.md`
 
@@ -239,24 +239,17 @@ Target:
 
 `activities/costruiamo_ponti/` (`org.greia.costruiamo-ponti`)
 
-Why this Activity:
+Outcome: **COMPLETE & VERIFIED**
+- Full authoring spectrum exercised:
+  - `REUSE`: `character.flash`, `hills.distant.01`, `cloud.large.01`, `cloud.small.01`, `atmosphere.sunlight_rays.01`, `bush.flowering.01`, `rock.cluster.large.01`, `shadow.contact.small.01`, `ui.shadow.soft`.
+  - `COMPOSE_ADAPT`: 3 distinct world terrain environments (`bank_river.png`, `bank_canyon.png`, `bank_space.png`) with distinct storybook diorama geology across River, Canyon, and Space worlds.
+  - `CREATE_ORIGINAL`: 4 bridge materials (`block_wood.png`, `block_stone.png`, `block_shroom.png`, `block_rainbow.png`), safety net (`trampoline.png`), and reward goal flag (`goal_flag.png`) with clean SVG masters and runtime PNGs.
+  - `KEEP_EXISTING_INTENTIONAL`: 100% of puzzle mechanics, 4-material requirements, sound synthesis, storage persistence, event emissions, platform Home button.
+- Integrated canonical traveler Flash (`character.flash`) with `neutral` idle, `happy` walking hop, spring bounce, and `surprised` trampoline rebound.
+- Captured complete 13-PNG curated evidence suite in `docs/reviews/visual/2026-08-22_costruiamo-ponti-visual-authoring-stress/` with `authoring-audit.json`, `simulator-trace.json`, and `OWNER_RECHECK.md`.
+- Packaged owner transfer ZIP: `GREIA_VISUAL_REVIEW_COSTRUIAMO_PONTI_AUTHORING_STRESS_2026-08-22.zip`.
+- Library-gap result: **NO_GAP**. Generic Batch B remains unauthorized.
 
-- three distinct worlds: River / Canyon / Space;
-- four gameplay-critical bridge material identities;
-- traveler/crossing animation and success/failure feedback;
-- clear opportunity for genuine Activity-local authored art;
-- current visual treatment contains significant programmer-drawn gameplay visuals;
-- it can stress `COMPOSE_ADAPT` and `CREATE_ORIGINAL` without inventing another framework.
-
-The gate must preserve gameplay, localization, storage, events, audio, hybrid input and protected Home behavior.
-
-It must use generic semantic discovery first, but must not force unsuitable shared art merely to maximize reuse.
-
-Unique bridge-game objects should normally remain Activity-local rather than becoming a generic-library tranche.
-
-Required owner transfer ZIP when complete:
-
-`GREIA_VISUAL_REVIEW_COSTRUIAMO_PONTI_AUTHORING_STRESS_2026-08-22.zip`
 
 ---
 

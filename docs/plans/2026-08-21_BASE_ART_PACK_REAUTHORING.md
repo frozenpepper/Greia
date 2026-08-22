@@ -222,6 +222,19 @@ Review artifacts packaged:
 7. **Package metadata:** Manifest-level character fields remain **UNNECESSARY**; `SceneActorDefinition` in code is fully expressive.
 8. **Library gaps:** **`NO_GAP`**. Generic Pack A + Canonical Cast v0.1 fully satisfied the garden theme. Generic Batch B remains unauthorized.
 
+### Costruiamo Ponti Stress Exercise Summary
+
+- Target: `activities/costruiamo_ponti/` (`org.greia.costruiamo-ponti`).
+- Decisions:
+  - `REUSE`: `character.flash`, `hills.distant.01`, `cloud.large.01`, `cloud.small.01`, `atmosphere.sunlight_rays.01`, `bush.flowering.01`, `rock.cluster.large.01`, `shadow.contact.small.01`, `ui.shadow.soft`.
+  - `COMPOSE_ADAPT`: 3 distinct world terrain environments (`bank_river.png`, `bank_canyon.png`, `bank_space.png`) with distinct geology across River, Canyon, and Space.
+  - `CREATE_ORIGINAL`: 4 bridge materials (`block_wood.png`, `block_stone.png`, `block_shroom.png`, `block_rainbow.png`), safety net (`trampoline.png`), and reward goal flag (`goal_flag.png`).
+  - `KEEP_EXISTING_INTENTIONAL`: Puzzle mechanics, 4-material requirements, sound synthesis, storage persistence, event emissions, platform Home button.
+- Companion: Canonical Flash (`character.flash`) with `neutral` idle, `happy` walking hop, spring bounce, and `surprised` trampoline rebound.
+- Evidence: 13 curated simulator PNGs in `docs/reviews/visual/2026-08-22_costruiamo-ponti-visual-authoring-stress/` + transfer bundle `GREIA_VISUAL_REVIEW_COSTRUIAMO_PONTI_AUTHORING_STRESS_2026-08-22.zip`.
+- Gap outcome: `NO_GAP`. Generic Batch B remains unauthorized.
+
+
 ## 9. Relationship to arbitrary Activity-authoring agents
 
 The intended workflow remains:

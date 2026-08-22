@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="shroom_cap" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F87171"/>
+      <stop offset="35%" stop-color="#EF4444"/>
+      <stop offset="100%" stop-color="#991B1B"/>
+    </linearGradient>
+    <linearGradient id="shroom_stem" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="70%" stop-color="#F1F5F9"/>
+      <stop offset="100%" stop-color="#CBD5E1"/>
+    </linearGradient>
+    <filter id="shroom_shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#450A0A" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  
+  <g filter="url(#shroom_shadow)">
+    <!-- Springy Stem Base -->
+    <path d="M 96 140 L 90 200 Q 90 218 128 218 Q 166 218 166 200 L 160 140 Z" fill="url(#shroom_stem)" stroke="#0F172A" stroke-width="5.5"/>
+    
+    <!-- Stem Accordion Ridge (Bouncy spring cue) -->
+    <path d="M 94 175 Q 128 185 162 175" fill="none" stroke="#94A3B8" stroke-width="4" stroke-linecap="round"/>
+    <path d="M 92 195 Q 128 205 164 195" fill="none" stroke="#94A3B8" stroke-width="4" stroke-linecap="round"/>
+    
+    <!-- Mushroom Cap Dome -->
+    <path d="M 28 140 C 28 65, 228 65, 228 140 C 228 160, 28 160, 28 140 Z" fill="url(#shroom_cap)" stroke="#0F172A" stroke-width="6"/>
+    
+    <!-- Cap Underbelly Trim -->
+    <ellipse cx="128" cy="142" rx="96" ry="14" fill="#FEF2F2" stroke="#0F172A" stroke-width="4.5"/>
+    <ellipse cx="128" cy="142" rx="90" ry="10" fill="#FEE2E2"/>
+    
+    <!-- Bright White Polka Dots (Contained inside dome) -->
+    <circle cx="128" cy="98" r="14" fill="#FFFFFF"/>
+    <circle cx="72" cy="116" r="13" fill="#FFFFFF"/>
+    <circle cx="184" cy="116" r="13" fill="#FFFFFF"/>
+    <circle cx="128" cy="126" r="9" fill="#FFFFFF"/>
+    <circle cx="46" cy="132" r="7" fill="#FFFFFF"/>
+    <circle cx="210" cy="132" r="7" fill="#FFFFFF"/>
+    
+    <!-- Glossy Specular Highlight -->
+    <ellipse cx="100" cy="82" rx="20" ry="7" transform="rotate(-15 100 82)" fill="#FFFFFF" opacity="0.6"/>
+  </g>
+</svg>

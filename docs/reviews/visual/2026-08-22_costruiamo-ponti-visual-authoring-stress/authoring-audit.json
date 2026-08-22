@@ -1,0 +1,225 @@
+{
+  "activity_id": "org.greia.costruiamo-ponti",
+  "baseline_commit": "2d46e344e138a0f8bf1eeae4b3046d3e8e2098d5",
+  "baseline_weaknesses": [
+    "Flat solid sky rectangles with no outdoor depth or atmosphere",
+    "Raw rectangular cliff blocks lacking organic contours and geological stratification",
+    "Crude 2D geometric bridge material squares lacking tactile affordance and material identity",
+    "Geometric procedural bunny circle with ear twitches instead of canonical Greia character companion",
+    "Missing bridge suspension cables, anchor piers, and tactile structural framing",
+    "Identical layout across levels differentiated only by backdrop color fills"
+  ],
+  "discovery_queries": [
+    "river",
+    "water",
+    "rock",
+    "canyon",
+    "desert",
+    "hill",
+    "cloud",
+    "star",
+    "space",
+    "light",
+    "shadow",
+    "wood",
+    "stone",
+    "mushroom",
+    "rainbow",
+    "sparkle",
+    "ground",
+    "nature",
+    "prop",
+    "tree",
+    "bush",
+    "flower",
+    "cliff",
+    "flash"
+  ],
+  "candidate_assets_inspected": [
+    "character.flash",
+    "hills.distant.01",
+    "cloud.large.01",
+    "cloud.small.01",
+    "atmosphere.sunlight_rays.01",
+    "bush.flowering.01",
+    "rock.cluster.large.01",
+    "shadow.contact.small.01",
+    "ui.shadow.soft",
+    "prop.flower.orange.01",
+    "prop.mushroom.red.01"
+  ],
+  "visual_role_decisions": {
+    "traveler_character": {
+      "decision": "REUSE",
+      "asset_id": "character.flash",
+      "rationale": "Flash is Greia's canonical energetic bunny mascot, perfectly suited for bridge crossing, jumping, and trampoline rebound mechanics without inventing an uncoordinated mascot."
+    },
+    "river_backdrop": {
+      "decision": "REUSE",
+      "asset_ids": [
+        "hills.distant.01",
+        "cloud.large.01",
+        "cloud.small.01",
+        "atmosphere.sunlight_rays.01",
+        "bush.flowering.01",
+        "rock.cluster.large.01"
+      ],
+      "rationale": "Canonical generic library assets provide rich storybook meadow layers and lighting."
+    },
+    "canyon_backdrop": {
+      "decision": "COMPOSE_ADAPT",
+      "asset_ids": [
+        "cloud.large.01",
+        "atmosphere.sunlight_rays.01"
+      ],
+      "derivation": "Warm amber sky with atmospheric sunlight rays and layered polygonal sandstone mesas in background.",
+      "rationale": "Creates a distinct desert chasm environment while reusing canonical sky elements."
+    },
+    "space_backdrop": {
+      "decision": "COMPOSE_ADAPT",
+      "derivation": "Deep cosmic indigo sky with twinkling multi-point starfield, cratered celestial moon, and beacon-lit launch platforms.",
+      "rationale": "Unmistakably non-terrestrial cosmic setting without dense sci-fi UI clutter."
+    },
+    "banks_and_cliffs": {
+      "decision": "COMPOSE_ADAPT",
+      "assets": [
+        "bank_river.png",
+        "bank_canyon.png",
+        "bank_space.png"
+      ],
+      "derivation": "Authored SVG masters with rounded storybook grass/dirt layers, canyon strata with sandstone ledges, and space titanium hulls with cyan energy lines.",
+      "rationale": "Provides tactile physical abutments for suspension bridge anchors across all 3 distinct worlds."
+    },
+    "bridge_materials": {
+      "decision": "CREATE_ORIGINAL",
+      "assets": [
+        "block_wood.png",
+        "block_stone.png",
+        "block_shroom.png",
+        "block_rainbow.png"
+      ],
+      "rationale": "The 4 materials (wood, stone, shroom, rainbow) are gameplay-critical tactile construction elements unique to Costruiamo Ponti requiring identical recognition in palette, empty slot hints, and placed bridge decks."
+    },
+    "safety_trampoline": {
+      "decision": "CREATE_ORIGINAL",
+      "assets": [
+        "trampoline.png"
+      ],
+      "rationale": "Friendly safety bounce net located in the gap to rebound Flash safely on structural failure."
+    },
+    "goal_flag": {
+      "decision": "CREATE_ORIGINAL",
+      "assets": [
+        "goal_flag.png"
+      ],
+      "rationale": "Golden pennant and carrot reward marker on the right bank."
+    },
+    "gameplay_and_navigation": {
+      "decision": "KEEP_EXISTING_INTENTIONAL",
+      "rationale": "All core puzzle logic, 4-material requirements, sound synthesis, event emission, storage persistence, and platform Home button integration preserved 100%."
+    }
+  },
+  "reuse_resources": [
+    "character.flash",
+    "hills.distant.01",
+    "cloud.large.01",
+    "cloud.small.01",
+    "atmosphere.sunlight_rays.01",
+    "bush.flowering.01",
+    "rock.cluster.large.01",
+    "shadow.contact.small.01",
+    "ui.shadow.soft"
+  ],
+  "compose_adapt_resources_and_derivations": [
+    {
+      "role": "river_cliff_banks",
+      "source_language": "Greia storybook diorama terrain",
+      "runtime_file": "activities/costruiamo_ponti/assets/runtime/bank_river.png"
+    },
+    {
+      "role": "canyon_cliff_banks",
+      "source_language": "Greia warm sandstone canyon geology",
+      "runtime_file": "activities/costruiamo_ponti/assets/runtime/bank_canyon.png"
+    },
+    {
+      "role": "space_cliff_banks",
+      "source_language": "Greia cosmic launch deck titanium platforms",
+      "runtime_file": "activities/costruiamo_ponti/assets/runtime/bank_space.png"
+    }
+  ],
+  "create_original_resources": [
+    "block_wood",
+    "block_stone",
+    "block_shroom",
+    "block_rainbow",
+    "trampoline",
+    "goal_flag"
+  ],
+  "activity_local_source_files": [
+    "activities/costruiamo_ponti/assets/source/block_wood.svg",
+    "activities/costruiamo_ponti/assets/source/block_stone.svg",
+    "activities/costruiamo_ponti/assets/source/block_shroom.svg",
+    "activities/costruiamo_ponti/assets/source/block_rainbow.svg",
+    "activities/costruiamo_ponti/assets/source/trampoline.svg",
+    "activities/costruiamo_ponti/assets/source/goal_flag.svg",
+    "activities/costruiamo_ponti/assets/source/bank_river.svg",
+    "activities/costruiamo_ponti/assets/source/bank_canyon.svg",
+    "activities/costruiamo_ponti/assets/source/bank_space.svg"
+  ],
+  "activity_local_runtime_files": [
+    "activities/costruiamo_ponti/assets/runtime/block_wood.png",
+    "activities/costruiamo_ponti/assets/runtime/block_stone.png",
+    "activities/costruiamo_ponti/assets/runtime/block_shroom.png",
+    "activities/costruiamo_ponti/assets/runtime/block_rainbow.png",
+    "activities/costruiamo_ponti/assets/runtime/trampoline.png",
+    "activities/costruiamo_ponti/assets/runtime/goal_flag.png",
+    "activities/costruiamo_ponti/assets/runtime/bank_river.png",
+    "activities/costruiamo_ponti/assets/runtime/bank_canyon.png",
+    "activities/costruiamo_ponti/assets/runtime/bank_space.png"
+  ],
+  "traveler_character_decision": {
+    "chosen_option": "Option A - Canonical Flash (character.flash)",
+    "rationale": "Flash brings dynamic personality to the crossing sequence with seamless support for neutral idle bounce, happy hopping across planks, and surprised expressions during trampoline bounces without creating a redundant ad-hoc character."
+  },
+  "three_world_visual_strategy": {
+    "river": "Friendly natural meadow with distant hills, rippling blue river water, flowering bushes, and organic green turf banks.",
+    "canyon": "Warm amber canyon with layered mesa geology, terracotta chasm, and sandstone cliff ledges.",
+    "space": "Deep cosmic indigo sky, multi-point twinkling starfield, cratered celestial moon, and beacon-lit titanium launch decks."
+  },
+  "runtime_architecture": {
+    "renderer": "PygameSceneRenderer with SceneDefinition and SceneActorDefinition",
+    "image_loading": "Package-contained build-time PNGs loaded on startup with fail-soft vector fallbacks",
+    "sandbox_compliance": "Zero forbidden imports (no os/sys in activity package)",
+    "resolution_independence": "PygameReferenceCanvas 1024x600 logical coordinate space with contained letterboxing/pillarboxing"
+  },
+  "focused_tests_and_results": {
+    "test_file": "tests/test_costruiamo_ponti_contract.py",
+    "tests_run": 4,
+    "tests_passed": 4,
+    "coverage": "Manifest interaction profile, reference canvas compliance, runtime asset existence, and bounded semantic geometry."
+  },
+  "simulator_scenarios": [
+    "01-before-river-1024x600.png",
+    "02-before-canyon-1024x600.png",
+    "03-before-space-1024x600.png",
+    "04-after-river-1024x600.png",
+    "05-after-canyon-1024x600.png",
+    "06-after-space-1024x600.png",
+    "07-material-family-and-selection.png",
+    "08-crossing-success.png",
+    "09-crossing-failure-or-bounce-feedback.png",
+    "10-responsive-large-1024x600.png",
+    "11-responsive-compact-1366x768.png",
+    "12-static-motion-disabled.png",
+    "13-optional-visual-fallback.png"
+  ],
+  "fault_injection_and_restoration": {
+    "tested": true,
+    "behavior": "When decorative PNG assets are unavailable, activity gracefully falls back to clean procedural geometric renditions without crashing."
+  },
+  "library_gap_analysis": {
+    "status": "NO_GAP",
+    "rationale": "Costruiamo Ponti successfully leveraged existing generic assets (Flash, hills, clouds, sunlight rays, bushes, rocks) and authored activity-specific bridge materials package-locally without requiring Generic Batch B."
+  },
+  "evidence_classification": "COMPLETE_AND_VERIFIED"
+}

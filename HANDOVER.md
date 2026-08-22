@@ -1,3 +1,15 @@
+- **Costruiamo Ponti — Visual-Authoring Stress Exercise (2026-08-22)**:
+  - Exercised second real first-party Activity authoring exercise on `org.greia.costruiamo-ponti` (`activities/costruiamo_ponti/`).
+  - Stressed the full authoring spectrum:
+    - `REUSE`: Canonical generic library assets (`character.flash`, `hills.distant.01`, `cloud.large.01`, `cloud.small.01`, `atmosphere.sunlight_rays.01`, `bush.flowering.01`, `rock.cluster.large.01`, `shadow.contact.small.01`, `ui.shadow.soft`).
+    - `COMPOSE_ADAPT`: Authored 3 world terrain environments (`bank_river.png`, `bank_canyon.png`, `bank_space.png`) with distinct storybook diorama geology across River, Canyon, and Space worlds.
+    - `CREATE_ORIGINAL`: Designed and rendered a coherent activity-local material family in `activities/costruiamo_ponti/assets/` (`block_wood.png`, `block_stone.png`, `block_shroom.png`, `block_rainbow.png`, `trampoline.png`, `goal_flag.png`) with clean SVG masters in `source/` and runtime PNGs in `runtime/`.
+    - `KEEP_EXISTING_INTENTIONAL`: Preserved 100% of puzzle mechanics, 4-material requirements, sound synthesis, storage persistence, event emissions, platform Home button.
+  - Integrated canonical traveler Flash (`character.flash`) with `neutral` idle, `happy` walking hop, spring bounce, and `surprised` trampoline rebound.
+  - Captured complete 13-PNG evidence suite in `docs/reviews/visual/2026-08-22_costruiamo-ponti-visual-authoring-stress/` with `authoring-audit.json`, `simulator-trace.json`, and `OWNER_RECHECK.md`.
+  - Packaged owner transfer ZIP: `GREIA_VISUAL_REVIEW_COSTRUIAMO_PONTI_AUTHORING_STRESS_2026-08-22.zip`.
+  - Library-gap result: `NO_GAP`. Generic Batch B remains unauthorized.
+
 - **Shape Garden — Real Visual-Authoring Workflow Exercise (2026-08-22)**:
   - Exercised full end-to-end visual authoring workflow on first-party Activity `org.greia.shape-garden` (`activities/shape_garden/`).
   - Executed discovery queries via `tools/visual_authoring_library.py`, selecting preferred generic Pack A assets (`ground.grass_edge.01`, `atmosphere.sunlight_rays.01`, `hills.distant.01`, `cloud.large.01`, `cloud.small.01`, `bush.flowering.01`, `ui.shadow.soft`).
