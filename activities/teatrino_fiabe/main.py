@@ -40,6 +40,10 @@ from greia_platform.activity_ui import (
     is_home_clicked,
     mix,
 )
+from greia_platform.pygame_canvas import (
+    PygameReferenceCanvas,
+    activity_viewport_for_surface,
+)
 from greia_platform.typography import FontRole, GreiaTypography
 
 REFERENCE_WIDTH = 1024
@@ -785,10 +789,10 @@ def main() -> int:
     pygame.init()
     pygame.font.init()
 
-    canvas = ChildUiMetrics.create_reference_canvas(REFERENCE_WIDTH, REFERENCE_HEIGHT)
-    screen = pygame.display.get_surface()
-    if screen is None:
-        screen = pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT))
+    screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+    pygame.mouse.set_visible(False)
+    metrics = ChildUiMetrics.for_size(*screen.get_size())
+    canvas = PygameReferenceCanvas(screen)
 
     pygame.display.set_caption("Teatrino delle Fiabe")
     clock = pygame.time.Clock()
@@ -884,9 +888,14 @@ def main() -> int:
     ready_published = False
 
     def _is_safe_point(s: pygame.Surface, pos: tuple[int, int]) -> bool:
-        w, h = s.get_size()
-        r = ChildUiMetrics.safe_region(w, h)
-        return r.collidepoint(pos)
+        vp = activity_viewport_for_surface(s)
+        x, y = pos
+        if not (0 <= x < vp.surface.width and 0 <= y < vp.surface.height):
+            return False
+        for protected in vp.protected_regions:
+            if protected.x <= x < protected.right and protected.y <= y < protected.bottom:
+                return False
+        return True
 
     # ========================================================================
     # MAIN LOOP
@@ -1009,11 +1018,16 @@ def main() -> int:
                 break
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                mouse_pos = event.pos
-                if not _is_safe_point(screen, mouse_pos):
+                if is_home_clicked(screen, event.pos):
+                    running = False
+                    continue
+                if not _is_safe_point(screen, event.pos):
                     continue
 
-                rx, ry = canvas.to_reference(mouse_pos)
+                logical = canvas.pointer(event.pos)
+                if logical is None:
+                    continue
+                rx, ry = int(logical[0]), int(logical[1])
 
                 # ============================================================
                 # MODE: LIBRARY GALLERY MODAL
@@ -1262,9 +1276,11 @@ def main() -> int:
 
             elif event.type == pygame.MOUSEMOTION:
                 if held_puppet is not None:
-                    rx, ry = canvas.to_reference(event.pos)
-                    held_puppet.x = max(180, min(840, rx + held_offset_x))
-                    held_puppet.y = max(160, min(360, ry + held_offset_y))
+                    logical = canvas.pointer(event.pos)
+                    if logical is not None:
+                        rx, ry = int(logical[0]), int(logical[1])
+                        held_puppet.x = max(180, min(840, rx + held_offset_x))
+                        held_puppet.y = max(160, min(360, ry + held_offset_y))
 
             elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                 if held_puppet is not None:
