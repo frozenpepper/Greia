@@ -17,13 +17,11 @@
 
 # 1. Architecture
 
-There are two separate visual-authoring tracks.
+Greia has two distinct visual-authoring tracks.
 
 ## Track A — maintainer-side source/toolbox/canonical-cast production
 
 The owner's local maintainer agent may create/improve Greia source art. Its drawing ability is not a product dependency and is not evidence about arbitrary future Activity-authoring agents.
-
-Generic object/environment discovery uses six semantic authoring-library indexes. Shared UI and Canonical Characters remain stronger-consistency families.
 
 ## Track B — arbitrary Activity-authoring agents
 
@@ -42,9 +40,11 @@ inventory Activity needs
 → inspect actual pixels
 ```
 
+Theme/source bundles are provenance pools. Generic semantic collections are the primary discovery interface.
+
 ---
 
-# 2. Generic toolbox state
+# 2. Generic toolbox state — DISCOVERY TOOLING AVAILABLE
 
 Current indexed state:
 
@@ -59,29 +59,42 @@ Discovery helper:
 
 `tools/visual_authoring_library.py`
 
-No generic Batch B is authorized merely to increase counts.
+Focused tests:
 
-Permanent rule:
+`tests/test_visual_authoring_library.py`
 
-> **Generic assets encode reusable form; Activity-specific meaning and contents remain separable whenever practical.**
+The visual-authoring skill already instructs Activity authors to use the helper before manually browsing source folders.
+
+Permanent rules:
+
+- `preferred` is the first-choice direct-reuse state;
+- `candidate_reference` is primarily adaptation/reference material;
+- generic assets encode reusable form while Activity-specific meaning stays separable where practical;
+- absence of a perfect asset does not automatically authorize new generic production;
+- **Generic Batch B remains unauthorized** until real Activity demand demonstrates a concrete gap.
 
 ---
 
-# 3. Canonical cast source-art state — ACCEPTED
+# 3. Canonical cast v0.1 — ACCEPTED AT SIMULATOR RUNTIME SCOPE
 
-The pure-art cast loop is now complete at owner pixel-review scope.
+Current cast:
 
-## Four-character state-system foundation
+```text
+Lilli — unicorn                        → creativity / stories / art / imagination
+Leo   — owl with integrated glasses   → learning / reading / language / knowledge
+Flash — white rabbit + lightning top  → games / speed / action / playful challenge
+Dani  — friendly robot                → math / logic / patterns / sequencing
+Tito  — fox                            → exploration / nature / discovery / investigation
+Momo  — monster                        → emotion / music / silly play / celebration
+```
 
-Candidate commit:
+Historical Nino remains provenance. Current owl identity is Leo.
 
-`59336d1c34e119e04c40b32f2c1901e1dbfb1b60`
+Stable source:
 
-Primary review:
+`assets/visual/characters/canonical/v0.1/`
 
-`docs/reviews/visual/2026-08-22_canonical-character-cast-reauthoring/PRIMARY_REVIEW.md`
-
-Established the five source states:
+Accepted states:
 
 ```text
 neutral
@@ -91,7 +104,7 @@ surprised
 sleepy
 ```
 
-and shared design/motion vocabulary:
+Accepted semantic motions:
 
 ```text
 idle_bounce
@@ -102,122 +115,42 @@ surprised_wobble
 sleepy_sway
 ```
 
-## Six-character expansion
+Runtime architecture:
 
-Candidate commit:
+> **complete authored state art + authoring-time semantic source components + build-time PNG renditions + simple whole-character fixed-size runtime transforms**
 
-`cfbb9512723353dd34f6081c174410401e290ca8`
+Do not replace this with skeletal rigs, runtime body-part composition, continuously varying raster sizes, or a second runtime asset/cache architecture.
 
-Primary review:
+Final owner acceptance:
 
-`docs/reviews/visual/2026-08-22_canonical-cast-expansion/PRIMARY_REVIEW.md`
+`docs/reviews/visual/2026-08-22_canonical-cast-v01-final-capture/OWNER_REVIEW.md`
 
-Leo and Dani were accepted; Flash's structure/state/motion design worked but required one identity correction.
+Evidence class: **SIMULATOR VISUAL REVIEW**.
 
-## Flash white-rabbit revision
+The final pass directly proved:
 
-Candidate commit:
+- six-character clean ensemble;
+- all five authored states across all six characters;
+- correct state/motion pairings;
+- non-default state fallback to neutral/default;
+- bounded failed-rendition memory;
+- deliberate Activity-level safe surface for required-default failure;
+- 1024×600 Normal and Large plus 1366×768 Compact simulator presentation;
+- structured Simulator provenance.
 
-`fba60ff31c8bb7e825163bb349e349bd1b72d0f3`
+No further cast proof fixture or pure-art cast pass is currently required.
 
-Owner primary review:
-
-`docs/reviews/visual/2026-08-22_flash-white-rabbit-identity-revision/PRIMARY_REVIEW.md`
-
-Actual owner-transfer pixels were inspected.
-
-**Result: ACCEPTED.**
-
-The accepted current cast is:
-
-```text
-Lilli — unicorn                        → creativity / stories / art / imagination
-Leo   — owl with integrated glasses   → learning / reading / language / knowledge
-Flash — white rabbit + lightning top  → games / speed / action / playful challenge
-Dani  — friendly robot                → math / logic / patterns / sequencing
-Tito  — fox                           → exploration / nature / discovery / investigation
-Momo  — monster                       → emotion / music / silly play / celebration
-```
-
-Historical Nino remains provenance. Current owl identity is Leo.
-
-No further pure-art cast pass is authorized before runtime integration unless a concrete source defect is exposed.
+No physical Acer/Pi performance claim is implied.
 
 ---
 
-# 4. Character architecture rule
-
-Use:
-
-> **complete authored state art + authoring-time semantic source components + build-time PNG renditions + simple whole-character runtime transforms**
-
-Avoid:
-
-- skeletal/bone rigs;
-- runtime limb/body-part composition;
-- runtime clothing systems;
-- frame-by-frame sprite explosions;
-- continuously varying raster sizes for motion;
-- a second runtime asset/cache system.
-
-For the first runtime pass, fixed-size state swaps + bounded x/y translation are sufficient for the semantic motion vocabulary. Do not reproduce storyboard rotation/squash literally if that causes per-frame allocation/cache churn.
-
----
-
-# 5. Exact current maintainer task
-
-Execute:
-
-```text
-docs/testing/2026-08-22_CANONICAL_CAST_V01_PROMOTION_RUNTIME_SIMULATOR.md
-```
-
-This gate owns:
-
-1. stable six-character source promotion under `assets/visual/characters/canonical/v0.1/`;
-2. explicit current Leo identity with historical Nino provenance preserved;
-3. all 30 build-time runtime renditions (6 × 5 states);
-4. minimal typed/validated semantic expression + motion support in the existing scene-actor path;
-5. bounded non-default-state fallback to neutral/default;
-6. a developer-only test Activity fixture loaded through the real Simulator source-loader path;
-7. runtime/visual/fallback/responsive acceptance through the Greia Activity Simulator;
-8. owner-transfer ZIP containing curated runtime evidence.
-
-Required owner ZIP:
-
-```text
-GREIA_VISUAL_REVIEW_CANONICAL_CAST_V01_RUNTIME_SIMULATOR_2026-08-22.zip
-```
-
-Do not count `make visual-assets`, `make visual-assets-check`, pytest, or direct Activity execution as visual acceptance. They are prerequisites/source evidence only.
-
----
-
-# 6. Platform relationship
-
-The soft lead-mascot model remains:
-
-```text
-create  → Lilli often leads
-play    → Flash often leads
-learn   → Leo often leads
-explore → Tito often leads
-```
-
-Dani and Momo are cross-cutting. `my_greia` remains child/profile-centered.
-
-Do not create six top-level Home Collections.
-
-Optional Activity metadata such as `lead_character` / `supporting_characters` remains a **later** gate after runtime character acceptance.
-
----
-
-# 7. Stable runtime foundation to preserve
+# 4. Stable runtime foundation to preserve
 
 ```text
 explicit semantic asset catalogues
 build-time SVG/source → runtime PNG renditions
 bounded Pygame visual cache
+bounded failed-rendition memory
 SceneDefinition / SceneNode / SceneCamera
 PygameSceneRenderer
 SceneActorDefinition / actor_scene_sample
@@ -230,48 +163,87 @@ Runtime rules remain:
 - no normal runtime SVG rasterization;
 - no per-frame disk decode/scale;
 - bounded caches;
-- Activity-local assets remain inside Activity packages;
-- generic authoring indexes/tooling remain authoring-time facilities, not a second runtime catalogue.
+- Activity-local assets stay inside Activity packages;
+- generic authoring indexes/tooling are authoring-time facilities, not a second runtime catalogue.
 
 ---
 
-# 8. What follows successful runtime owner review
+# 5. Platform relationship
 
-After the canonical cast v0.1 runtime/simulator evidence is owner-reviewed and accepted:
+Soft lead-mascot affinities remain:
 
-1. consider optional Activity lead/supporting-character presentation metadata;
-2. exercise the model-agnostic visual-authoring skill/toolbox in a real Activity-authoring workflow;
-3. let actual Activity demand drive any further generic art work;
-4. do not resume art-count production by inertia.
+```text
+create  → Lilli often leads
+play    → Flash often leads
+learn   → Leo often leads
+explore → Tito often leads
+```
+
+Dani and Momo remain cross-cutting. `my_greia` remains child/profile-centered.
+
+Do not create six top-level Home Collections.
+
+Do **not** implement `lead_character` / `supporting_characters` package metadata merely because it was previously listed as a possible follow-up. Let real Activity-authoring demand establish whether that schema is useful.
 
 ---
 
-# 9. Drift to avoid
+# 6. Exact current visual-authoring gate
+
+Execute:
+
+`docs/testing/2026-08-22_SHAPE_GARDEN_VISUAL_AUTHORING_WORKFLOW_EXERCISE.md`
+
+This gate uses the real first-party `activities/shape_garden/` Activity to exercise the complete authoring workflow:
+
+```text
+baseline pixels
+→ visual-needs inventory
+→ generic discovery helper
+→ REUSE / COMPOSE-ADAPT / CREATE ORIGINAL decisions
+→ optional justified canonical-character use
+→ Activity-local final runtime art
+→ existing Greia scene/UI/runtime seams
+→ Activity Simulator before/after acceptance
+```
+
+Required owner ZIP:
+
+`GREIA_VISUAL_REVIEW_SHAPE_GARDEN_AUTHORING_WORKFLOW_2026-08-22.zip`
+
+The purpose is not merely to make Shape Garden prettier. It is to test whether Greia's visual-authoring architecture actually helps an Activity author create a coherent, economical, polished result.
+
+The exercise must also record whether discovered library shortcomings are:
+
+```text
+TRUE_MISSING
+QUALITY_GAP
+VARIETY_GAP
+NO_GAP
+```
+
+Only actual demand may justify a future generic asset tranche.
+
+---
+
+# 7. Drift to avoid
 
 - no theme-by-theme pack roadmap;
-- no generic Batch B merely to increase counts;
-- no hero-tree optimization;
-- no Clinic finalization;
-- no further Flash/cast redesign loop absent a concrete blocker;
+- no Generic Batch B by inertia;
+- no redraw of every candidate reference;
+- no hero-tree/specimen rabbit hole;
+- no further Lilli/Leo/Flash/Dani/Tito/Momo redesign absent a concrete defect;
 - no detailed skeletal character rig;
 - no runtime wardrobe system;
 - no six-character → six-Home-category mapping;
 - no treating maintainer-agent drawing ability as arbitrary-agent evidence;
-- no second runtime asset system.
+- no second runtime asset system;
+- no proof-only Activity when a real first-party Activity can exercise the system;
+- no package character metadata before a real use case demonstrates value.
 
 ---
 
-# 10. Platform boundary
+# 8. Platform boundary
 
-R7 remains the primary blocking platform phase. Nothing in this visual/cast work closes, reorders, or bypasses R7.
+R7 remains the primary blocking platform phase. Nothing in this visual/content work closes, reorders, or bypasses R7.
 
 No physical Acer/Pi acceptance should be claimed without actual hardware evidence.
-
----
-
-### Canonical Cast v0.1 Final Capture Integrity & Acceptance Recheck (2026-08-22)
-
-- **3-Phase Scenario Isolation:** Executed strict 3-phase execution model separating clean normal baseline evidence (Phase A) from single-fault state fallback (Phase B, `flash_happy.png`) and required-default safe fallback error screen (Phase C, `dani_neutral.png`).
-- **Self-Proving On-Screen Diagnostic Readouts:** Added live 2-line diagnostic overlay onto fixture canvas displaying requested variant, rendered variant, fallback status (`YES (default)` vs `NO`), reference canvas, outer viewport, and active interface-size setting (`NORMAL`, `LARGE`, `COMPACT`).
-- **Renderer Fallback Node Tracking:** Enhanced `SceneRenderStats` and `PygameSceneRenderer` to increment `fallback_nodes` upon fallback resolution.
-- **Verified Bundle Deliverables:** Curated `docs/reviews/visual/2026-08-22_canonical-cast-v01-final-capture/` and generated root `GREIA_VISUAL_REVIEW_CANONICAL_CAST_V01_FINAL_CAPTURE_2026-08-22.zip` containing strictly 10 PNGs + `OWNER_FINAL_RECHECK.md` + `runtime-audit.json` + `simulator-trace.json`.
