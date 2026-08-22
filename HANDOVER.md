@@ -1,11 +1,11 @@
 # Greia — Standalone Engineering Handover
 
-**Date:** 2026-08-21  
+**Date:** 2026-08-22  
 **Version family:** `0.13.x` development  
 **Repository:** `frozenpepper/Greia` (private)  
 **Canonical/default/development branch:** `main`  
 **Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**  
-**Current cross-cutting work:** device-language/localization + child UX + R13B transactional updates + Activity Simulator/emoji/Writing + Collection-first/adaptive Activity discovery + asset-first visual library with real-Shell integration  
+**Current cross-cutting work:** device-language/localization + child UX + R13B transactional updates + Activity Simulator/emoji/Writing + Collection-first/adaptive Activity discovery + generic visual-authoring toolbox/discovery tooling + real-Shell visual integration  
 **External Parent HTML runtime revision pinned by Greia:** `frozenpepper/Greia-Parent-App-Html@519651a5931269ed4275324f2a87ad3f0d08a3f6`
 
 This file is the project-wide continuation contract. Chronology belongs in plans/reviews; exact APIs/limits remain source-owned.
@@ -14,6 +14,9 @@ Key entry points:
 
 ```text
 docs/design/GREIA_ART_GRAPHICS_SYSTEM.md
+docs/design/GREIA_VISUAL_AUTHORING_ARCHITECTURE.md
+docs/design/GREIA_GENERIC_ART_LIBRARY_TAXONOMY.md
+skills/greia-visual-authoring/SKILL.md
 docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md
 docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md
 docs/design/GREIA_LAUNCHER_INTERACTION_AND_ACTIVITY_CATALOGUE.md
@@ -53,19 +56,19 @@ Retained physical history: on 2026-08-19 a fresh `legacy-x86-i686-dev` syslinux/
 Current V5 visual evidence:
 
 ```text
-ui.shadow.soft       SIMULATOR VISUAL REVIEW
-ui.card.activity     SIMULATOR VISUAL REVIEW
-ui.panel.base        SIMULATOR VISUAL REVIEW
-ui.button.primary    SIMULATOR VISUAL REVIEW (previous root presentation)
-ui.avatar.frame      SIMULATOR VISUAL REVIEW
-ui.loading.orbit     SIMULATOR VISUAL REVIEW
-ui.error.gentle      SIMULATOR VISUAL REVIEW
-ui.button.icon       SIMULATOR VISUAL REVIEW
-ui.portal.frame      SIMULATOR VISUAL REVIEW
-ui.empty.basket      SOURCE / NOT EXERCISED
-Collection-first Home SIMULATOR VISUAL REVIEW (5 primary collections + Altro/More fallback)
-forest_meadow_day_v1 SIMULATOR VISUAL REVIEW (Scene Compositor Runtime in Nascondino nel Bosco)
-character.lilli      SIMULATOR VISUAL REVIEW (Scene Actor Lilli guide + grounded contact shadow in Nascondino)
+ui.shadow.soft        SIMULATOR VISUAL REVIEW
+ui.card.activity      SIMULATOR VISUAL REVIEW
+ui.panel.base         SIMULATOR VISUAL REVIEW
+ui.button.primary     SIMULATOR VISUAL REVIEW (previous root presentation)
+ui.avatar.frame       SIMULATOR VISUAL REVIEW
+ui.loading.orbit      SIMULATOR VISUAL REVIEW
+ui.error.gentle       SIMULATOR VISUAL REVIEW
+ui.button.icon        SIMULATOR VISUAL REVIEW
+ui.portal.frame       SIMULATOR VISUAL REVIEW
+ui.empty.basket       SOURCE / NOT EXERCISED
+Collection-first Home SIMULATOR VISUAL REVIEW
+forest_meadow_day_v1  SIMULATOR VISUAL REVIEW
+character.lilli       SIMULATOR VISUAL REVIEW
 ```
 
 Accepted simulator facts include:
@@ -78,22 +81,38 @@ Accepted simulator facts include:
 - headless simulator supports `--headless` / `GREIA_SIMULATOR_HEADLESS=1` using SDL dummy video/audio while preserving real Shell pixel-buffer capture;
 - launch/error shared feedback passed with isolated fallbacks, 27.9 FPS sanity;
 - navigation icon button passed in-category Back, real Activity pagination, corrupt-PNG fallback and six responsive rows, 27.1 FPS sanity;
-- Collection-first Home passed portal Home, bounded 5 primary destinations (`create`, `play`, `learn`, `explore`, `my_greia`), `browse`/`Altro` recovery for unknown categories, Clinic in Play & Learn, corrupt portal fallback, six responsive rows, 27.7 FPS sanity;
-- Scene Compositor Runtime passed in `nascondino_bosco` using `forest_meadow_day_v1.toml`, 2-pass background ($z \le 59$) and foreground/atmosphere ($z \ge 60$) rendering, parallax and ambient motion, corrupt required/optional asset fallbacks, six responsive rows, 25.8 FPS sanity;
-- Scene Actor Runtime passed in `nascondino_bosco` using `SceneActorDefinition` and `actor_scene_sample` with `character.lilli/default|blink` and `shadow.contact.small.01/default`, deterministic eye blink, grounded vertical idle oscillation, corrected 24 px / 26 px / 20 px target HUD typography with `SCOIATTOLO` fully fitted, and 230 frames / 10.01 s = 23.0 FPS sanity;
-- Visual Authoring Library Benchmark (`docs/testing/2026-08-21_VISUAL_AUTHORING_LIBRARY_COMPARISON.md`) passed primary review (`PRIMARY_REVIEW.md`), proving local authoring agent superiority;
-- Visual Authoring Kit Variation Benchmark (`docs/testing/2026-08-21_VISUAL_AUTHORING_KIT_VARIATION_BENCHMARK.md`) completed: candidate Authoring Kit created at `assets/visual/authoring_kit/v0.1-candidate/` (4 material standards, 4 assembly recipes, 9 proof SVGs) proving 3 distinct trees, 2 bushes, and 2 rocks from shared grammar without formulaic cloning or glossy specular blobs; review artifacts committed in `docs/reviews/visual/2026-08-21_authoring-kit-variation/` and transfer ZIP at `./GREIA_VISUAL_REVIEW_AUTHORING_KIT_VARIATION_2026-08-21.zip`;
+- Collection-first Home passed bounded primary destinations, unknown-category Browse/More recovery, Clinic in Play & Learn, corrupt portal fallback, six responsive rows, 27.7 FPS sanity;
+- Scene Compositor Runtime passed in `nascondino_bosco` using `forest_meadow_day_v1.toml`, split background/foreground rendering, parallax/ambient motion, fail-soft required/optional asset behavior, six responsive rows, 25.8 FPS sanity;
+- Scene Actor Runtime passed in `nascondino_bosco` with `character.lilli/default|blink`, grounded contact shadow, deterministic blink/idle motion, corrected child-facing HUD typography and 23.0 FPS sanity;
 - `ui.empty.basket` remains generated/source-present but not legitimately exercised;
 - first Python Activity semantic resolver + Shape Garden consumer remain SOURCE only and non-blocking;
 - no physical Acer/Pi V5 performance claim is made.
 
-Current continuation priority:
+Visual authoring evidence is now tracked separately from runtime acceptance:
+
+- the owner's local maintainer agent was proven capable of producing stronger source art than the earlier Forest/Meadow baseline; this does **not** generalize to arbitrary user agents;
+- themed environment/source bundles are now provenance pools, not the primary user-facing authoring taxonomy;
+- `assets/visual/authoring_library/` is the generic semantic discovery layer;
+- full source harvest commit `2dcf306589efb721db4cac6bca7233c342fcfaa1` indexed/triaged Reading, Fantasy and Water source pools before new gap claims;
+- Generic Core Essentials Batch A commit `574f19530ee292a81225ff14c09ad8b35f6cf933` created 16 cross-category generic candidates + 2 ingredients;
+- owner pixel review of the actual Batch A transfer ZIP approved **9 finished assets + 2 ingredients for preferred admission** and intentionally retained **7 finished assets as candidate references**;
+- Batch A owner review: `docs/reviews/visual/2026-08-21_generic-core-essentials-batch-a/PRIMARY_REVIEW.md`;
+- no Batch A redraw loop is authorized.
+
+Current visual-authoring continuation priority:
 
 ```text
-Owner Review of Authoring Kit Variation Transfer ZIP
-→ Promote Accepted Authoring Kit Standards & Primitives
-→ S5 Character & Reusable FX Expansion / Web Scene Transport
+Batch A selective stable admission
+→ deterministic generic authoring-library discovery helper
+→ update model-agnostic visual-authoring skill to use it
+→ real Activity-authoring exercise using the toolbox/skill
 ```
+
+Exact gate:
+
+`docs/testing/2026-08-22_GENERIC_VISUAL_LIBRARY_ADMISSION_AND_DISCOVERY_TOOLING.md`
+
+**No Batch B is currently authorized.**
 
 ---
 
@@ -105,30 +124,76 @@ Stable visual architecture/index:
 docs/design/GREIA_ART_GRAPHICS_SYSTEM.md
 ```
 
-Production rule:
-
-> excellent individual assets → reusable asset packs → layered composition → subtle parallax / ambient motion / light / shadow → shared UI system → explicit semantic runtime consumption → Shell/Activity reuse
-
-Do not return to crude full-screen mocks, detailed traditional rigs as default, generated sprite sheets as production truth, runtime SVG rasterization, arbitrary visual-directory scanning, per-frame decode/scale, unbounded caches, simulator-only production branches or new environment-pack proliferation without a real reusable gap.
-
-Current reusable source coverage:
-
-- Forest/Meadow v0.2;
-- Shared UI v0.1;
-- Workshop v0.1;
-- Clinic/Care v0.1;
-- Reading/Classroom v0.1;
-- Fantasy/Village/Night v0.1;
-- Water/Pond v0.1.
-
-Core character direction remains Lilli/Nino/Tito/Momo in the accepted simplified Puff/Bean grammar. Character minutiae do not block integration.
-
-Current shared visual pipeline:
+Visual-authoring authorities:
 
 ```text
-reviewed SVG master
+docs/design/GREIA_VISUAL_AUTHORING_ARCHITECTURE.md
+docs/design/GREIA_GENERIC_ART_LIBRARY_TAXONOMY.md
+skills/greia-visual-authoring/SKILL.md
+assets/visual/authoring_library/
+```
+
+The architecture has two separate visual-authoring tracks:
+
+1. **maintainer-side source-art/toolbox production** — the owner's local agent may be used where it produces better art;
+2. **arbitrary Activity-authoring agents** — must use a model/tool-agnostic workflow and may have very different capabilities.
+
+Do not infer arbitrary agent capability from maintainer-agent benchmarks.
+
+Generic authoring principle:
+
+> **Theme/source bundles are provenance pools; generic semantic collections are the primary authoring interface.**
+
+Current generic collections:
+
+```text
+Nature & Landscape
+Interiors & Architecture
+Furniture & Storage
+Everyday Props & Containers
+Making, Learning & Play
+Lighting, Atmosphere, FX & Shadows
+Shared UI
+Canonical Characters
+```
+
+Generic composability rule:
+
+> **Generic assets encode reusable form; Activity-specific meaning and contents remain separable whenever practical.**
+
+Examples: empty bowl/plate rather than food baked in; books without readable titles; blank boards/dials where Activity meaning is layered later.
+
+Current promoted/reviewed source pools include Forest/Meadow v0.3 and Workshop v0.2. Clinic, Reading, Fantasy and Water folders remain source/provenance/reference pools whose generic entries may be preferred, candidate, weak, specialized or superseded.
+
+Generic admission states:
+
+```text
+preferred
+candidate_reference
+```
+
+`preferred` means a resource is strong enough to consider first for direct reuse. `candidate_reference` means it remains useful for composition/adaptation/reference but is not first-choice owner-approved direct-use art. Do not redraw every candidate merely to force it into preferred.
+
+User-agent workflow:
+
+```text
+inventory Activity visual needs
+→ query/search generic semantic library
+→ prefer reviewed/preferred resources where they genuinely fit
+→ inspect candidate/source references when useful
+→ REUSE / COMPOSE-ADAPT / CREATE ORIGINAL
+→ create Activity-local final art where needed
+→ flatten/build efficient runtime rendition
+→ integrate through existing Greia package/scene boundaries
+→ inspect actual pixels
+```
+
+Current shared runtime pipeline remains:
+
+```text
+reviewed SVG/source master
 → explicit source rendition manifest
-→ build-host rsvg-convert PNG
+→ build-host PNG
 → generated runtime catalogue
 → AssetCatalogue
 → bounded PygameVisualSurfaceCache
@@ -136,36 +201,7 @@ reviewed SVG master
 → Activity Simulator acceptance
 ```
 
-Current Shell presentation owners:
-
-```text
-src/greia_launcher/catalogue_view.py
-src/greia_launcher/collection_home_presentation.py
-src/greia_launcher/shared_ui_presentation.py
-src/greia_launcher/profile_chrome_presentation.py
-src/greia_launcher/feedback_presentation.py
-src/greia_launcher/navigation_chrome_presentation.py
-src/greia_launcher/child_shell.py
-```
-
-Accepted panel/card composition relationship remains:
-
-```text
-panel_top     = 52..62 px
-bottom_margin = 4 px
-panel ratio   = authored 640:420
-Activity grid = authored inner tray
-large cards   ≈ 198–205 px where geometry permits
-```
-
-Activity semantic visual API exists in `src/greia_platform/activity_api.py`:
-
-```python
-get_shared_visual(asset_id, variant="default")
-get_shared_visual_path(asset_id, variant="default")
-```
-
-Activities request semantic IDs/variants rather than arbitrary host paths. Future Web transport must provide a controlled URL/handle realization, not expose host filesystem paths.
+The generic authoring indexes and future discovery helper are **authoring-time facilities**, not a second runtime asset catalogue/cache.
 
 ---
 
@@ -178,9 +214,7 @@ docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md
 docs/design/GREIA_LAUNCHER_INTERACTION_AND_ACTIVITY_CATALOGUE.md
 ```
 
-## 4.1 Accepted Collection-first Home
-
-Normal child flow is now:
+Normal child flow is accepted as:
 
 ```text
 profile
@@ -189,19 +223,7 @@ profile
       → Activity
 ```
 
-`ALL_ACTIVITIES_ID` remains an internal catalogue projection but is no longer normal child Home. `CollectionFirstHomeMixin` renders large primary destinations using `ui.portal.frame/default`; entering a Collection reuses accepted card/panel/navigation/lifecycle paths; local Back returns Home; Home Back returns profile choice.
-
-This first Home migration is accepted at **SIMULATOR VISUAL REVIEW** scope via:
-
-```text
-docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md
-```
-
-## 4.2 Current correction: platform-owned primary vocabulary
-
-The first accepted Home run showed `Care` as an extra root portal. That happened because arbitrary `[presentation].categories` values were still projected as top-level Collections.
-
-Current source now defines the normal primary Home vocabulary as platform-owned:
+Current primary vocabulary is platform-owned:
 
 ```text
 create
@@ -211,43 +233,9 @@ explore
 my_greia
 ```
 
-`src/greia_launcher/catalogue_view.py` now:
+Arbitrary package category strings do not manufacture top-level child Home destinations. Valid otherwise-orphaned Activities recover through bounded Browse/More fallback. Multi-membership reuses one installed Activity/state/progression record.
 
-- recognizes only those primary IDs as normal launcher Collections;
-- does not let arbitrary package category strings manufacture new Home destinations;
-- keeps valid otherwise-orphaned Activities discoverable through one platform-owned `browse` fallback (`Altro` / `More`) shown only when necessary;
-- retains `All` internally without exposing it as normal child Home;
-- preserves multi-membership across recognized primary Collections.
-
-Built-in `Clinica dei Cuccioli` now uses:
-
-```toml
-[presentation]
-categories = ["play", "learn"]
-```
-
-while care/health/empathy remain correctly in `[education]` taxonomy.
-
-Accepted via `docs/testing/2026-08-21_COLLECTION_PRIMARY_VOCABULARY_SIMULATOR.md` at **SIMULATOR VISUAL REVIEW** scope:
-
-- built-in Home has no `Care` or arbitrary package portal (5 primary portals only: `Crea`, `Gioca`, `Impara`, `Esplora`, `Mio Greia`);
-- Clinic remains available through Play + Learn;
-- disposable unknown-only developer Activity produces one bounded `Altro` / `More` recovery destination instead of being hidden or creating `Storybook` at root;
-- normal Back hierarchy, multi-membership, six-row responsiveness and frame sanity remain intact.
-
-## 4.3 Adaptive sub-Collections — next architecture tranche, not implemented yet
-
-Accepted target:
-
-- 1–10 effective visible Activities in a primary Collection → direct Activities;
-- >10 → evaluate whether one useful semantic sub-Collection layer helps;
-- no forced bad subdivision;
-- useful grouping roughly 2–5 recognizable groups;
-- max depth `Home → primary Collection → optional sub-Collection → Activity`;
-- hysteresis target around enter >10 / collapse around 8;
-- future count is based on the effective per-child visible set after Parent policy, not raw installed count.
-
-Future grouping metadata concept `presentation.discovery_tags` is not currently parsed. Age/development/adaptive-difficulty target fields are also not currently parsed. Current `education.difficulty` remains 1–10 challenge, not age.
+Adaptive optional sub-Collections remain future architecture, not current accepted implementation.
 
 ---
 
@@ -341,26 +329,26 @@ docs/testing/LOCAL_AGENT_START_HERE.md
 4. Rebuild/physically verify later installer/language source before extending old Acer evidence.
 5. Continue R13B only within accepted fail-closed/A-B prerequisites.
 
-## Child UX / discovery current gate
+## Child UX / discovery
+
+- Collection-first Home baseline and platform-owned primary vocabulary are already accepted at simulator scope.
+- Do not return to the old All/filter child Home.
+- Future discovery work should advance adaptive optional sub-Collections/Parent per-child visibility deliberately rather than cosmetic root churn.
+
+## Visual authoring workstream — current exact gate
 
 1. Sync current `main`.
-2. Execute `docs/testing/2026-08-21_COLLECTION_PRIMARY_VOCABULARY_SIMULATOR.md` headlessly.
-3. Verify normal Home contains only recognized non-empty primary destinations; specifically no `Care` portal.
-4. Verify Clinic remains reachable through Play + Learn.
-5. Exercise the disposable unknown-only developer fixture and verify bounded `Altro` / `More` recovery without arbitrary root proliferation or silent hiding.
-6. Verify multi-membership, Back hierarchy, six-row responsive matrix and simulator frame sanity.
-7. Update `LOCAL_AGENT_RESULT.md`, product/design docs, visual plan/resume and this HANDOVER with actual evidence.
-8. Commit/push accepted fixes/results to `main`.
-9. After acceptance, advance to adaptive optional sub-Collection/discovery metadata architecture rather than another cosmetic root-Home tranche.
+2. Execute `docs/testing/2026-08-22_GENERIC_VISUAL_LIBRARY_ADMISSION_AND_DISCOVERY_TOOLING.md`.
+3. Materialize exactly the owner-authorized Batch A preferred subset as stable generic source.
+4. Keep the 7 weaker Batch A resources as candidate references without redraw.
+5. Update the six generic semantic indexes.
+6. Add the deterministic authoring-time discovery helper (`collections/list/search/show/validate`, with JSON output).
+7. Update `skills/greia-visual-authoring/SKILL.md` to use the helper when available while remaining model/tool agnostic.
+8. Run only focused relevant tests and report actual results.
+9. Commit/push coherent work to `main`.
+10. After this gate, exercise the visual-authoring skill/toolbox in a real Activity-authoring workflow before authorizing another generic art batch.
 
-## Visual workstream
-
-- preserve accepted panel/tray/card geometry;
-- preserve headless simulator workflow;
-- do not create more environment packs by default;
-- do not return to old All/filter Home;
-- do not let proof-only Shape Garden/Web plumbing displace visible product architecture;
-- keep Web semantic visual transport separate and controlled.
+Do **not** create Batch B merely to increase generic asset count.
 
 ---
 
@@ -383,15 +371,17 @@ docs/testing/LOCAL_AGENT_START_HERE.md
 - valid unknown-only Activities fail open through bounded Browse/More recovery rather than disappearing;
 - education taxonomy remains separate from navigation taxonomy;
 - multi-membership never duplicates Activity installation/state/progression;
-- adaptive depth must eventually use effective per-child visible catalogue after Parent policy, not raw installed count;
-- `education.difficulty` is challenge, not age;
-- target age/adaptive-difficulty/discovery-tag fields remain documentation-only until parser/source support lands;
 - Greia Collections are semantic child groupings, never filesystem folders;
 - Greia visual work remains asset-first;
+- theme/source bundles are provenance pools, not the primary authoring taxonomy;
+- generic assets should preserve reusable form and avoid arbitrary baked Activity meaning;
+- candidate references are allowed to remain candidate references;
+- arbitrary Activity-authoring agents must not be assumed to have the maintainer local agent's drawing capability;
 - runtime does not scan visual directories or rasterize SVG;
 - image caches remain bounded with no per-frame decode/scale;
 - Activity shared visuals are requested semantically;
 - current visual/fallback/responsive acceptance runs through Activity Simulator, preferably headlessly;
+- authoring-library discovery tooling stays development-time and must not become a second runtime catalogue;
 - after substantive visual/discovery work update stable/current documentation and this HANDOVER.
 
-**Resume current work from the bounded primary-Collection vocabulary simulator gate, not from the already-accepted Collection-first baseline, old All/filter root, rejected character-rig/crude-scene work, more-pack-by-default work, or proof-only Shape Garden work.**
+**Resume visual authoring from `docs/testing/2026-08-22_GENERIC_VISUAL_LIBRARY_ADMISSION_AND_DISCOVERY_TOOLING.md`, not from the old themed-pack sequence, Clinic finalization, hero-tree/specimen optimization, Batch A redraw, or an automatic Batch B.**
