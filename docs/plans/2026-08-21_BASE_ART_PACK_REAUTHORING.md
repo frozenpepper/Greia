@@ -1,14 +1,16 @@
 # Greia Generic Visual Toolbox Production — Maintainer-Side Plan
 
-**Status:** ACTIVE CONTENT-PRODUCTION / AUTHORING-TOOLING TRACK  
+**Status:** ACTIVE CONTENT-PRODUCTION / AUTHORING-TOOLING / CANONICAL-CHARACTER TRACK  
 **Date:** 2026-08-22  
 **Architecture:** `docs/design/GREIA_VISUAL_AUTHORING_ARCHITECTURE.md`  
 **Generic taxonomy:** `docs/design/GREIA_GENERIC_ART_LIBRARY_TAXONOMY.md`  
+**Character grammar:** `docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md`  
+**Character motion vocabulary:** `docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md`  
 **User-agent skill:** `skills/greia-visual-authoring/SKILL.md`
 
 ## 1. Purpose
 
-Use the owner's local maintainer agent, where useful, to improve Greia's bundled **generic visual toolbox** and its authoring-time discoverability.
+Use the owner's local maintainer agent, where useful, to improve Greia's bundled **generic visual toolbox**, authoring-time discoverability, and the separate canonical character family.
 
 The maintainer agent's drawing ability is not a Greia dependency and is not evidence about arbitrary future Activity-authoring agents.
 
@@ -30,6 +32,8 @@ Theme/source bundles are provenance pools. The primary authoring interface is th
 6. Lighting, Atmosphere, FX & Shadows
 7. Shared UI
 8. Canonical Characters
+
+Canonical Characters are intentionally **separate** from the six generic object/environment collections because identity consistency matters more than open-ended semantic interchangeability.
 
 Authority:
 
@@ -117,13 +121,11 @@ candidate_reference
 
 The purpose of these states is to avoid endless redraw loops merely to force every useful source into `preferred`.
 
-## 8. Generic Core Essentials Batch A — reviewed
+## 8. Generic Core Essentials Batch A — reviewed and admitted
 
 Candidate commit:
 
 `574f19530ee292a81225ff14c09ad8b35f6cf933`
-
-Actual owner-transfer PNGs were inspected.
 
 Primary review:
 
@@ -137,93 +139,142 @@ Owner disposition:
 2 authoring ingredients → preferred
 ```
 
-Preferred finished assets:
+Admission/discovery implementation commit:
 
-- closed timber door;
-- simple timber arch opening;
-- spindle-back chair;
-- tall open bookcase;
-- empty woven basket;
-- empty ceramic bowl;
-- ceramic cup/saucer;
-- interlocking gear pair;
-- blank radial dial/hands.
+`de37aad978c57b3de88a64ffb1f6cf70c5a89c5b`
 
-Candidate references retained without redraw:
+Current generic indexes contain:
 
-- ajar door;
-- soft armchair;
-- open picture book;
-- mixed book stack;
-- potted fern;
-- empty ceramic plate;
-- single `wooden` gear.
+```text
+57 preferred finished assets
+37 candidate-reference finished assets
+7 preferred authoring ingredients
+101 indexed reusable visual resources
+```
 
-Important: **do not run a Batch A per-object finalization loop.** The weaker items are still useful references and can be reauthored later only when actual Activity demand justifies it.
+Discovery helper:
 
-## 9. Current exact gate
+`tools/visual_authoring_library.py`
 
-`docs/testing/2026-08-22_GENERIC_VISUAL_LIBRARY_ADMISSION_AND_DISCOVERY_TOOLING.md` is **EXECUTED**.
+Focused tests:
 
-Accomplished:
+`tests/test_visual_authoring_library.py`
 
-1. Materialized the 9+2 owner-authorized preferred Batch A resources under stable generic source provenance (`assets/visual/generic/core_essentials/v0.1/`);
-2. Kept the 7 weaker resources as candidate references (`assets/visual/pack_candidates/generic_core_essentials/2026-08-21/`);
-3. Updated the six generic semantic indexes under `assets/visual/authoring_library/`;
-4. Added the deterministic authoring-time discovery helper `tools/visual_authoring_library.py` (`collections`, `list`, `search`, `show`, `validate`);
-5. Tested discovery tooling with pytest in `tests/test_visual_authoring_library.py`;
-6. Updated `skills/greia-visual-authoring/SKILL.md` to guide arbitrary Activity-authoring agents;
-7. Preserved runtime architecture boundaries (no new runtime consumers or catalogue changes).
+No Batch B is authorized merely to increase asset count.
 
-No Batch B is currently authorized.
+## 9. Why Canonical Characters are now a justified maintainer-side art gate
 
-## 10. Why discovery tooling comes next
+The generic-object toolbox has reached useful breadth and now has discovery tooling. A separate, high-value weakness remains: Greia's recurring canonical cast is still only partially productized.
 
-The toolbox now has enough breadth that the bottleneck is no longer raw asset count.
+Current repository facts:
 
-An arbitrary Activity-authoring agent should not need to:
+- A1 neutral characters live under `assets/visual/specimens/a1/` as accepted **style anchors**, not frozen release art;
+- `assets/visual/library/catalog.toml` still describes the shared character library as `candidate` and `runtime_consumed = false`;
+- each of Lilli, Nino, Tito and Momo currently has only a separately authored `blink.svg` under `assets/visual/characters/<name>/`;
+- the design vocabulary already names `neutral`, `blink`, `happy`, `surprised`, and `sleepy` states plus six shared motions;
+- only Lilli currently has a narrow `default`/`blink` runtime rendition in `assets/catalog/shared_visuals_v1_source.toml`;
+- `SceneActorDefinition` currently implements cheap whole-character idle + blink rather than a detailed rig.
 
-- know historical theme folder names;
-- manually grep six TOMLs;
-- guess which source is preferred versus merely a candidate reference.
+This makes canonical character production a much more justified next maintainer-art task than another generic prop batch.
 
-The next product value is a simple authoring-time query/list/show interface exposing semantic ID, collection, status, source path, tags/role and notes.
+## 10. Exact current character-art gate
 
-This tooling must remain deterministic, local and separate from Greia runtime architecture.
+Execute:
 
-## 11. Relationship to the user-agent skill
+`docs/testing/2026-08-22_CANONICAL_CHARACTER_CAST_REAUTHORING_AND_STATE_SET.md`
 
-The maintainer track builds and curates the toolbox.
+This gate asks the local maintainer agent to attempt:
+
+```text
+4 canonical characters
+× 5 complete authored states
+= 20 finished state SVGs
+```
+
+States:
+
+```text
+neutral
+blink
+happy
+surprised
+sleepy
+```
+
+It also requires source-level semantic groups/components and storyboard proof against the existing motion vocabulary:
+
+```text
+idle_bounce
+blink
+happy_hop
+celebrate_pop
+surprised_wobble
+sleepy_sway
+```
+
+### Boundary
+
+This first gate is **art/state/motion-design evidence only**.
+
+Do not modify runtime manifests, Activities, or `SceneActorDefinition` before owner pixel review. After the candidate cast is accepted, a separate runtime gate may:
+
+1. promote approved canonical state art;
+2. add all four characters/states to the explicit build-time visual manifest;
+3. extend renderer-neutral SceneActor semantic motion support without skeletal rigs;
+4. exercise the resulting motion/state behavior through the Activity Simulator.
+
+## 11. Character production rule
+
+Canonical character identity and authoring flexibility both matter.
+
+Use:
+
+> **full authored state SVGs for finished reusable states + semantic source layers/components for future authoring; simple whole-body transforms for runtime motion.**
+
+Do not replace this with:
+
+- skeletal/bone animation;
+- dozens of body-part runtime sprites;
+- frame-by-frame sprite explosions;
+- identical generic face stamps across all four characters.
+
+The accepted grammar remains: identity from silhouette + face + a few strong cues; life from expression + whole-body motion.
+
+## 12. Relationship to the user-agent skill
+
+The maintainer track builds and curates the toolbox and canonical cast.
 
 Arbitrary Activity agents should conceptually:
 
 ```text
 inventory Activity needs
 → query the generic semantic library
-→ prefer reviewed/preferred assets where they fit
+→ reuse canonical Greia characters by stable identity/state when appropriate
+→ prefer reviewed/preferred generic assets where they fit
 → inspect candidate/source references when useful
 → REUSE / COMPOSE-ADAPT / CREATE ORIGINAL
-→ create Activity-local final art
+→ create Activity-local final art where needed
 → flatten/build runtime rendition
 → integrate through Greia package/scene seams
 → visually review
 ```
 
-The toolbox helps; it does not remove the expectation that specialized Activity art may need to be created locally.
+After the canonical-character candidate and runtime gates, return to exercising this user-facing workflow in real Activity authoring. Do not treat maintainer-agent character quality as arbitrary-agent capability evidence.
 
-## 12. Explicit drift to avoid
+## 13. Explicit drift to avoid
 
 Do not:
 
 - return to theme-by-theme pack production;
-- immediately create Batch B merely to increase asset count;
+- immediately create generic Batch B merely to increase counts;
 - redraw every candidate reference until it becomes preferred;
 - create a giant noun warehouse;
 - bake arbitrary food/text/story meaning into generic bases;
 - infer arbitrary user-agent capability from the maintainer agent;
 - reopen hero-tree specimen optimization;
+- turn canonical characters into detailed skeletal rigs;
 - create a second runtime catalogue/cache architecture.
 
-## 13. Platform boundary
+## 14. Platform boundary
 
-R7 remains the primary blocking platform phase. Nothing in this visual-content/authoring-tooling track closes, reorders, or bypasses R7.
+R7 remains the primary blocking platform phase. Nothing in this visual-content/authoring-tooling/character-art track closes, reorders, or bypasses R7.
