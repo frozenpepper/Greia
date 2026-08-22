@@ -63,8 +63,6 @@ Focused tests:
 
 `tests/test_visual_authoring_library.py`
 
-The visual-authoring skill instructs Activity authors to use the helper before manually browsing source folders.
-
 Permanent rules:
 
 - `preferred` is the first-choice direct-reuse state;
@@ -127,20 +125,7 @@ Final owner acceptance:
 
 Evidence class: **SIMULATOR VISUAL REVIEW**.
 
-The final pass directly proved:
-
-- six-character clean ensemble;
-- all five authored states across all six characters;
-- correct state/motion pairings;
-- non-default state fallback to neutral/default;
-- bounded failed-rendition memory;
-- deliberate Activity-level safe surface for required-default failure;
-- 1024×600 Normal and Large plus 1366×768 Compact simulator presentation;
-- structured Simulator provenance.
-
 No further cast proof fixture or pure-art cast pass is currently required.
-
-No physical Acer/Pi performance claim is implied.
 
 ---
 
@@ -203,57 +188,77 @@ Owner review:
 
 Disposition: **ACCEPTED — SIMULATOR VISUAL REVIEW**.
 
-The real first-party `activities/shape_garden/` exercise proved:
-
-```text
-baseline pixels
-→ visual-needs inventory
-→ generic discovery helper
-→ explicit reuse/adaptation decisions
-→ justified canonical-character use (Dani)
-→ Activity-local stems / spawn delight / composition
-→ existing Greia scene/UI/runtime seams
-→ real Activity Simulator before/after acceptance
-```
-
-Library-gap result: **NO_GAP**.
-
-Shape Garden primarily proved direct `REUSE` plus light Activity-local adaptation. It did not strongly stress substantial `COMPOSE_ADAPT` and `CREATE_ORIGINAL` work for unique gameplay-critical visual objects.
-
-Therefore:
-
-- no Generic Batch B is authorized;
-- no character manifest metadata is authorized;
-- no further Shape Garden proof rerun is required;
-- the next exercise deliberately targets the harder authoring paths.
+Shape Garden primarily proved disciplined direct `REUSE`, light Activity-local adaptation, and justified Dani companion use. Library-gap result: **NO_GAP**.
 
 ---
 
-# 7. Completed visual-authoring gate — COSTRUIAMO PONTI STRESS EXERCISE
+# 7. Costruiamo Ponti authoring stress exercise — OWNER ACCEPTED
 
-Completed runbook:
+Executed gate:
 
 `docs/testing/2026-08-22_COSTRUIAMO_PONTI_VISUAL_AUTHORING_STRESS_EXERCISE.md`
 
-Target:
+Implementation/evidence commit:
 
-`activities/costruiamo_ponti/` (`org.greia.costruiamo-ponti`)
+`cf349b7`
 
-Outcome: **COMPLETE & VERIFIED**
-- Full authoring spectrum exercised:
-  - `REUSE`: `character.flash`, `hills.distant.01`, `cloud.large.01`, `cloud.small.01`, `atmosphere.sunlight_rays.01`, `bush.flowering.01`, `rock.cluster.large.01`, `shadow.contact.small.01`, `ui.shadow.soft`.
-  - `COMPOSE_ADAPT`: 3 distinct world terrain environments (`bank_river.png`, `bank_canyon.png`, `bank_space.png`) with distinct storybook diorama geology across River, Canyon, and Space worlds.
-  - `CREATE_ORIGINAL`: 4 bridge materials (`block_wood.png`, `block_stone.png`, `block_shroom.png`, `block_rainbow.png`), safety net (`trampoline.png`), and reward goal flag (`goal_flag.png`) with clean SVG masters and runtime PNGs.
-  - `KEEP_EXISTING_INTENTIONAL`: 100% of puzzle mechanics, 4-material requirements, sound synthesis, storage persistence, event emissions, platform Home button.
-- Integrated canonical traveler Flash (`character.flash`) with `neutral` idle, `happy` walking hop, spring bounce, and `surprised` trampoline rebound.
-- Captured complete 13-PNG curated evidence suite in `docs/reviews/visual/2026-08-22_costruiamo-ponti-visual-authoring-stress/` with `authoring-audit.json`, `simulator-trace.json`, and `OWNER_RECHECK.md`.
-- Packaged owner transfer ZIP: `GREIA_VISUAL_REVIEW_COSTRUIAMO_PONTI_AUTHORING_STRESS_2026-08-22.zip`.
-- Library-gap result: **NO_GAP**. Generic Batch B remains unauthorized.
+Owner review:
 
+`docs/reviews/visual/2026-08-22_costruiamo-ponti-visual-authoring-stress/OWNER_REVIEW.md`
+
+Disposition: **ACCEPTED — SIMULATOR VISUAL REVIEW**.
+
+This second real first-party exercise proved the harder authoring paths:
+
+- `REUSE` of generic scenery/character resources;
+- `COMPOSE_ADAPT` across materially distinct River / Canyon / Space worlds;
+- `CREATE_ORIGINAL` for gameplay-critical bridge-material and prop art;
+- preservation of puzzle mechanics, storage, events, audio, and platform navigation.
+
+Library-gap result: **NO_GAP**.
+
+Therefore:
+
+- Generic Batch B remains unauthorized;
+- no new character package metadata is justified;
+- no further Costruiamo Ponti acceptance rerun is required.
 
 ---
 
-# 8. Drift to avoid
+# 8. Exact current visual-authoring gate — PAINTING PRODUCTIZATION
+
+Execute:
+
+`docs/testing/2026-08-22_PAINTING_VISUAL_PRODUCTIZATION_EXERCISE.md`
+
+Target:
+
+`activities/painting/`
+
+Purpose:
+
+Use the third real first-party exercise to prove the visual-authoring system on a **UI-heavy core Phase-0 creation Activity**, rather than another scenic game.
+
+The exercise must improve Painting's child-facing polish while preserving:
+
+- simple drawing behavior;
+- large usable canvas;
+- small uncluttered tool set;
+- profile-scoped save/autosave behavior;
+- protected Greia Home/system navigation;
+- low-resource runtime discipline.
+
+A mascot is optional and must not be forced.
+
+Required owner-transfer bundle:
+
+`GREIA_VISUAL_REVIEW_PAINTING_PRODUCTIZATION_2026-08-22.zip`
+
+Do not start another generic art batch during this gate. If Painting exposes a genuine reusable generic gap, document it for owner review instead.
+
+---
+
+# 9. Drift to avoid
 
 - no theme-by-theme pack roadmap;
 - no Generic Batch B by inertia;
@@ -267,12 +272,13 @@ Outcome: **COMPLETE & VERIFIED**
 - no second runtime asset system;
 - no proof-only Activity when a real first-party Activity can exercise the system;
 - no package character metadata before a real use case demonstrates value;
-- no relabeling of untouched shared assets as `COMPOSE_ADAPT`;
-- no promotion of bridge-specific objects into the generic library without demonstrated cross-Activity value.
+- no relabeling untouched shared assets as `COMPOSE_ADAPT`;
+- no promotion of Activity-specific art into the generic library without demonstrated cross-Activity value;
+- no turning Painting into a desktop-class graphics editor.
 
 ---
 
-# 9. Platform boundary
+# 10. Platform boundary
 
 R7 remains the primary blocking platform phase. Nothing in this visual/content work closes, reorders, or bypasses R7.
 
