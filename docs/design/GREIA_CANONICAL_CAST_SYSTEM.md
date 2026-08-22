@@ -1,85 +1,108 @@
 # Greia Canonical Cast System
 
-**Status:** accepted six-character design direction; bounded Flash identity revision pending before promotion  
+**Status:** six-character source design accepted; runtime promotion/integration pending  
 **Date:** 2026-08-22  
 **Character construction grammar:** `docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md`  
 **Expression/motion vocabulary:** `docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md`  
-**Current visual review:** `docs/reviews/visual/2026-08-22_canonical-cast-expansion/PRIMARY_REVIEW.md`
+**Current source-art authority:** `docs/reviews/visual/2026-08-22_flash-white-rabbit-identity-revision/PRIMARY_REVIEW.md`  
+**Current runtime gate:** `docs/testing/2026-08-22_CANONICAL_CAST_V01_PROMOTION_RUNTIME_SIMULATOR.md`
 
 ## 1. Purpose
 
-Greia's recurring characters are not decorative stickers attached arbitrarily to Activities. They are a small shared cast that gives children recognizable social anchors across the OS and Activities.
-
-The cast should help a child anticipate the **kind of experience** they are entering without turning characters into rigid content silos.
+Greia's recurring characters are a small shared cast that gives children recognizable social anchors across the OS and Activities.
 
 The core rule is:
 
 > **Each character may have a primary home turf, but the cast belongs to one shared world. Activities may have a lead mascot, not an exclusive mascot.**
 
-## 2. Current target cast
+Characters are presentation/identity semantics. They do not own permissions, trust, progression, package authority or top-level navigation taxonomy.
+
+## 2. Accepted current cast
 
 | Character | Form | Primary meaning |
 |---|---|---|
 | **Lilli** | unicorn Puff | wonder, creativity, stories, art, imagination |
 | **Leo** | owl Bean with glasses | learning, reading, language, knowledge, thoughtful guidance |
-| **Flash** | white rabbit with lightning shirt | games, speed, action, reflex, playful challenge |
-| **Dani** | friendly robot | math, logic, patterns, sequencing, structured problem solving |
+| **Flash** | white rabbit with coral shirt + lightning bolt | games, speed, action, reflex, playful challenge |
+| **Dani** | friendly toy robot | math, logic, patterns, sequencing, structured problem solving |
 | **Tito** | fox Puff | exploration, nature, discovery, investigation, adventure |
 | **Momo** | friendly monster Puff | emotion, music, silliness, experimentation, celebration |
 
-The set is deliberately varied in silhouette, material language and personality while retaining the common Greia face/state/motion grammar.
+The six-character source ensemble was owner-reviewed at pixel level on 2026-08-22. Flash's final source direction is the later white-rabbit revision, not the earlier raspberry-bodied candidate.
 
-## 3. Naming and migration
+No further pure-art cast pass is currently authorized before runtime promotion/integration.
+
+## 3. Naming and provenance
 
 ### Lilli, Tito, Momo
 
-Current names remain.
+Names remain current.
 
 ### Leo
 
-`Leo` replaces the previous owl display name `Nino` in the current cast direction. The name is short, child-friendly and internationally pronounceable, with a light Leonardo/Leonardo da Vinci association supporting the curious/knowledge identity.
+`Leo` supersedes the earlier owl identity/name `Nino` for the current product cast.
 
-Historical `Nino` source art and IDs remain provenance until a later explicit promotion/migration gate. Do not silently rewrite historical review evidence.
-
-Current target semantic identity:
+Current semantic ID:
 
 ```text
 character.leo
 ```
 
+Historical Nino candidate/source/review evidence remains provenance. Do not silently rewrite history or delete it.
+
 ### Flash
 
-Current semantic identity:
+Current semantic ID:
 
 ```text
 character.flash
 ```
 
-The name carries immediate playful speed/action meaning. The accepted target identity is now **white/warm-white rabbit + simple coral/raspberry shirt + one gold/yellow lightning bolt**. The bolt is a broad speed/energy cue, not a commitment to one specific game genre.
+Accepted identity cues:
+
+- white/warm-white rabbit fur;
+- tall pink-inner ears;
+- simple coral/raspberry torso shirt;
+- one bold golden lightning-bolt emblem;
+- small round pom tail;
+- spring-loaded/action posture.
+
+The shirt/bolt is a broad speed/energy identity cue, not a commitment to racing or one specific game type.
 
 ### Dani
 
-Current semantic identity:
+Current semantic ID:
 
 ```text
 character.dani
 ```
 
-The name is intentionally warm and human-friendly, with only a light Daneel/Asimov naming echo. Dani must read as a friend first and a machine second.
+Dani remains cute/friendly first and robotic second.
 
 ## 4. Soft specialization, not hard silos
 
-The cast may guide Activity identity and discovery, but character assignment is **presentation semantics**, not package authority.
+Useful default lead affinities:
+
+```text
+Lilli  → creativity / stories / art / imagination
+Leo    → learning / reading / language / knowledge
+Flash  → games / speed / action / playful challenge
+Dani   → math / logic / patterns / sequencing
+Tito   → exploration / nature / discovery / investigation
+Momo   → emotion / music / silly play / celebration
+```
+
+These are soft lead-mascot semantics.
 
 Good examples:
 
-- Leo leads a reading Activity while Lilli appears in a celebration;
-- Dani leads a pattern puzzle that appears in both `learn` and `play`;
+- Leo leads a reading Activity while Lilli appears in celebration feedback;
+- Dani leads a pattern puzzle listed in both `learn` and `play`;
 - Flash leads a reaction game with Tito as a supporting challenger;
 - Momo leads a rhythm Activity while Leo briefly explains a rule;
 - ensemble scenes use several characters together.
 
-Do not make a rule such as "Leo can appear only in Learn" or "Dani means the Activity must be Math".
+Do not make rules such as "Leo can appear only in Learn" or "Dani means the Activity must be Math".
 
 ## 5. Relationship to Collection-first Home
 
@@ -95,28 +118,22 @@ my_greia
 
 Characters do not create new top-level Collections.
 
-Useful default affinities are:
+Natural affinities are:
 
 ```text
-create  → Lilli
-play    → Flash
-learn   → Leo
-explore → Tito
+create  → Lilli often leads
+play    → Flash often leads
+learn   → Leo often leads
+explore → Tito often leads
 ```
 
-Dani and Momo are intentionally cross-cutting:
-
-- Dani commonly leads logic/math/pattern experiences within `learn`, `play`, or both;
-- Momo commonly leads music/emotion/silly-play/celebration experiences across appropriate Collections;
-- `my_greia` remains child/profile-centered and may use the child identity or an ensemble rather than a permanently assigned mascot.
-
-This keeps the five-destination child mental model stable while allowing richer character semantics inside Collections and Activities.
+Dani and Momo are deliberately cross-cutting. `my_greia` remains child/profile-centered rather than permanently assigned to a mascot.
 
 ## 6. Visual identity rules
 
 ### Lilli
 
-Preserve the strong current anchors:
+Preserve:
 
 - warm cream body;
 - golden horn;
@@ -124,84 +141,58 @@ Preserve the strong current anchors:
 - pink hoof cues;
 - optional small flank star when it survives the intended size.
 
-Do not redesign Lilli merely to make her match another character.
-
 ### Leo
 
-Accepted current direction:
+Preserve:
 
 - upright compact owl/Bean silhouette;
-- warm chestnut/brown + cream family;
-- readable eye-mask/belly relationship;
+- chestnut/brown + cream family;
 - side wing flaps;
 - small beak/feet;
-- integrated teal rounded glasses as the primary identity addition.
+- **integrated teal rounded glasses** as the signature cue.
 
-Glasses requirements:
-
-- rounded-square or rounded-oval;
-- medium-weight;
-- legible at 64/128 px;
-- friendly, not severe or elderly;
-- integrated with the eye-mask design rather than stacked over redundant eye rings.
-
-The old teal feather/badge is superseded by the cleaner glasses-led identity.
+Do not recreate the earlier circular-eye-ring + glasses double-ring/goggle treatment.
 
 ### Flash
 
-Flash must read immediately as a rabbit and as an energetic/playful cast member.
+Preserve the owner-accepted white-rabbit revision:
 
-Accepted target identity:
+- white/warm-white fur mass;
+- tall unmistakable rabbit ears with pink inners;
+- slightly more directional/spring-loaded posture than Lilli/Tito;
+- coral/raspberry torso garment;
+- one large golden lightning bolt;
+- small round pom tail;
+- readable face at 64/128 px.
 
-- **white or warm-white fur/body**;
-- long unmistakable rabbit ears;
-- clearly pink inner ears;
-- compact spring-loaded/directional posture;
-- simple **coral/raspberry shirt or sleeveless top**;
-- one large **yellow/gold lightning bolt** on the shirt;
-- small round pom-pom tail;
-- large readable face.
+Do not add racing numbers, controllers, stopwatches, helmets, shoes, shorts, gloves, headbands, capes or permanent speed trails as default identity.
 
-The shirt/bolt is a canonical identity cue, not an Activity-specific costume system. It is accepted because lightning broadly communicates speed/energy/action without encoding a specific game, sport, controller, number or text.
-
-Do not add racing numbers, stopwatch props, controllers, headbands, gloves, shoes, shorts, helmets, permanent speed trails or other costume clutter.
-
-Flash must remain distinct from both:
-
-```text
-Lilli → warm cream magical Puff + horn + rainbow forelock + soft/wonder posture
-Tito  → orange fox + triangular ears + massive bushy tail + explorer stance
-```
-
-At small sizes, ears + shirt color mass + posture should carry more identity than fine detail.
+Do not reopen the art merely to make the Puff-scale torso garment anatomically literal.
 
 ### Dani
 
-Dani should be **cute first, robot second**.
-
-Accepted direction:
+Preserve:
 
 - rounded toy-like geometry;
-- simple emotionally readable face/display area;
-- one or two mechanical signature cues only;
-- compact body with clear feet/base;
-- sky/cyan/teal-blue family + pale faceplate + restrained warm accent;
-- no tiny panels, wires, pseudo-realistic robotics or dense sci-fi detail;
-- no baked numerals/text/icons required to understand the character.
+- clear cream/ice face/display area;
+- sky/cyan/teal body family;
+- one top antenna/light cue;
+- simple feet/base;
+- emotionally readable face before mechanical detail.
 
-Dani must remain a character at 64 px, not collapse into a generic device icon.
+No dense panels, wires, tiny sci-fi markings or baked numerals/text.
 
 ### Tito
 
-Preserve the accepted orange fox identity, triangular ears, cream muzzle/chest and chunky tail. Flash's rabbit identity must not erode this separation.
+Preserve the accepted orange fox identity, triangular ears, cream muzzle/chest and large chunky tail.
 
 ### Momo
 
-Preserve the purple scalloped body, asymmetric antennae, turquoise feet and comic single-tooth cue where readable.
+Preserve the purple scalloped/fluffy silhouette, asymmetric antennae, turquoise feet and comic single-tooth cue where readable.
 
 ## 7. Shared expression-state contract
 
-The first canonical reusable state set remains:
+The first canonical reusable source state set is:
 
 ```text
 neutral
@@ -211,21 +202,15 @@ surprised
 sleepy
 ```
 
-All six characters should support the same semantic names while retaining character-specific facial personality.
+All six support the same semantic state names while retaining character-specific expression geometry.
 
-This is not a demand for identical facial geometry.
+For runtime catalogue compatibility, the neutral source state may be exposed as runtime variant `default`; the semantic expression remains `neutral`.
 
-Examples:
-
-- Leo surprise emphasizes owl-eye expansion behind glasses;
-- Flash happy is especially energetic;
-- Dani happy reads as satisfying "solved it" delight without text;
-- Momo surprise may be broader/comic;
-- Lilli happy remains warm rather than hyperactive.
+At 64 px, identity and broad emotional readability are the main contract. Fine distinctions such as blink versus sleepy may be naturally weaker than at 128/256 px.
 
 ## 8. Shared motion contract
 
-The current motion vocabulary remains:
+The semantic vocabulary remains:
 
 ```text
 idle_bounce
@@ -236,20 +221,21 @@ surprised_wobble
 sleepy_sway
 ```
 
-Character life should come from:
+The first runtime implementation should prioritize resource economy:
 
 - complete authored state swaps;
-- whole-body translation;
-- small rotation;
-- modest squash/stretch where supported;
-- small character-specific amplitude/timing differences;
-- optional shared FX.
+- fixed-size whole-character x/y translation;
+- bounded timing/amplitude;
+- shared contact-shadow grounding;
+- optional small per-character intensity/timing variation.
 
-Do not introduce a skeletal rig merely because the cast expanded.
+Do not require literal reproduction of every storyboard transform. In particular, do not introduce per-frame rotated-surface allocation or continuously varying raster sizes merely to imitate storyboard rotation/squash.
+
+The semantic result matters more than mechanically copying the sketch.
 
 ## 9. Authoring components
 
-Source masters may expose semantic groups such as:
+Canonical source masters may expose semantic groups such as:
 
 ```text
 body
@@ -262,20 +248,29 @@ accent
 
 plus a few character-specific groups.
 
-Useful standalone components may be kept for authoring, for example:
+Standalone authoring components remain source-authoring aids, not a runtime body-part API.
 
-- Lilli horn/forelock;
-- Leo glasses/wing/face-mask treatment;
-- Flash ears, shirt+bolt treatment, tail/muzzle treatment;
-- Dani face-display/antenna/light treatment;
-- Tito tail/muzzle;
-- Momo antennae/fluff.
+Examples include Lilli horn/forelock, Leo glasses/face treatment, Flash ears/shirt-bolt treatment, Dani face-display/antenna treatment, Tito tail/muzzle and Momo antennae/fluff.
 
-These are **authoring-time source resources**, not a runtime body-part or clothing API.
+## 10. Source promotion target
 
-## 10. Future Activity metadata concept
+The first stable current source family should be materialized under:
 
-After the six-character art family and semantic IDs are accepted and promoted, Greia may add optional Activity presentation metadata conceptually equivalent to:
+```text
+assets/visual/characters/canonical/v0.1/
+```
+
+with exactly the six current semantic IDs and all five source states.
+
+Promotion/runtime acceptance is owned by:
+
+`docs/testing/2026-08-22_CANONICAL_CAST_V01_PROMOTION_RUNTIME_SIMULATOR.md`
+
+Source promotion is not the same as runtime acceptance.
+
+## 11. Future Activity metadata concept
+
+After the six-character runtime family is actually accepted, Greia may add optional Activity presentation metadata conceptually equivalent to:
 
 ```toml
 [presentation]
@@ -283,33 +278,41 @@ lead_character = "leo"
 supporting_characters = ["dani", "lilli"]
 ```
 
-This is a future design target, not current parser/runtime authority.
+This remains a future design target, not current parser/runtime authority.
 
-Rules when implemented:
+When implemented:
 
-- optional, never mandatory for an Activity;
+- optional, never mandatory;
 - presentation-only;
-- does not alter permissions, trust, saves, progression or Collection membership;
+- no effect on permissions/trust/saves/progression/Collection membership;
 - one lead plus a small bounded supporting list;
-- unknown/unavailable character IDs fail soft;
-- package authors may request canonical cast use but may not replace platform character identity assets with arbitrary lookalikes under canonical IDs.
+- unknown/unavailable IDs fail soft;
+- package authors may request canonical identities but may not replace platform canonical art under those IDs.
 
-## 11. Current evidence boundary and next gate
+## 12. Current evidence boundary
 
-The 2026-08-22 six-character expansion candidate established at owner pixel-review scope:
+Accepted at **source/design pixel-review** scope:
 
-- Leo's glasses/eye-mask treatment works;
-- Dani reads as a friendly character rather than a device icon;
-- Flash's rabbit silhouette and five-state structure work;
-- all six form a coherent ensemble;
-- shared `happy_hop` / `surprised_wobble` storyboard semantics remain coherent across the expanded cast.
+- six-character ensemble identity;
+- Leo glasses treatment;
+- revised white-rabbit Flash identity;
+- Dani character/device separation;
+- five registered source states;
+- storyboard compatibility with the shared motion vocabulary;
+- authoring-time semantic source groups/components.
 
-One bounded owner-directed identity correction remains before promotion:
+Not yet accepted:
 
-> revise Flash from raspberry fur to white/warm-white fur with a simple colored shirt and one lightning-bolt chest cue.
+- stable promoted source package;
+- all 30 generated runtime PNG renditions;
+- semantic runtime expression/motion behavior;
+- variant fallback behavior;
+- runtime cache/frame behavior;
+- responsive Activity integration;
+- physical Acer/Pi performance;
+- Web runtime support;
+- Activity lead/support metadata.
 
-Current exact gate:
+The current exact gate is:
 
-`docs/testing/2026-08-22_FLASH_WHITE_RABBIT_IDENTITY_REVISION.md`
-
-After owner pixel acceptance of that revision, do not run another pure-art cast pass unless a concrete blocker is identified. Move directly to canonical source promotion, build-time runtime renditions, semantic state/motion integration, and Activity Simulator acceptance.
+`docs/testing/2026-08-22_CANONICAL_CAST_V01_PROMOTION_RUNTIME_SIMULATOR.md`
