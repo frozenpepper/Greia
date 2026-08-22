@@ -173,5 +173,41 @@
     "contact_shadows_enabled": true,
     "developer_diagnostic_readout": true
   },
-  "audit_passed": true
+  "audit_passed": true,
+  "canonical_source_root": "assets/visual/characters/canonical/v0.1/",
+  "canonical_ids": [
+    "character.lilli",
+    "character.leo",
+    "character.flash",
+    "character.dani",
+    "character.tito",
+    "character.momo"
+  ],
+  "semantic_states": [
+    "neutral",
+    "blink",
+    "happy",
+    "surprised",
+    "sleepy"
+  ],
+  "runtime_neutral_variant": "default",
+  "generated_runtime_png_count": 30,
+  "negative_cache": {
+    "owner": "PygameSceneRenderer._failed_renditions",
+    "implementation": "BoundedCache",
+    "max_entries": 64,
+    "reset": "renderer.clear()"
+  },
+  "verification": {
+    "commands": [
+      "make visual-assets",
+      "make visual-assets-check",
+      "PYTHONPATH=src pytest tests/test_scene*.py tests/test_visual*.py"
+    ],
+    "reported_results": {
+      "visual_assets_check": "PASS",
+      "pytest": "30 passed in 0.56s"
+    }
+  },
+  "evidence_classification": "SIMULATOR VISUAL REVIEW"
 }
