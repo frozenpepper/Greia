@@ -798,7 +798,10 @@ def main() -> int:
     clock = pygame.time.Clock()
     theme = get_theme()
     typography = GreiaTypography()
-    storage = get_storage("org.greia.teatrino-fiabe")
+    try:
+        storage = get_storage()
+    except Exception:
+        storage = None
     show_repo = ShowRepository(storage)
 
     # 1. Load Localizations
