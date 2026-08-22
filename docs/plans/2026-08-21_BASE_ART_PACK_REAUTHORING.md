@@ -1,16 +1,16 @@
 # Greia Generic Visual Toolbox Production — Maintainer-Side Plan
 
-**Status:** ACTIVE CONTENT-PRODUCTION TRACK  
-**Date:** 2026-08-21  
+**Status:** ACTIVE CONTENT-PRODUCTION / AUTHORING-TOOLING TRACK  
+**Date:** 2026-08-22  
 **Architecture:** `docs/design/GREIA_VISUAL_AUTHORING_ARCHITECTURE.md`  
 **Generic taxonomy:** `docs/design/GREIA_GENERIC_ART_LIBRARY_TAXONOMY.md`  
 **User-agent skill:** `skills/greia-visual-authoring/SKILL.md`
 
 ## 1. Purpose
 
-Use the owner's local maintainer agent, where useful, to improve Greia's bundled **generic visual toolbox**.
+Use the owner's local maintainer agent, where useful, to improve Greia's bundled **generic visual toolbox** and its authoring-time discoverability.
 
-This maintainer agent's drawing ability is not a Greia dependency and is not evidence about arbitrary future Activity-authoring agents.
+The maintainer agent's drawing ability is not a Greia dependency and is not evidence about arbitrary future Activity-authoring agents.
 
 The user/developer-facing workflow remains owned by:
 
@@ -18,7 +18,7 @@ The user/developer-facing workflow remains owned by:
 
 ## 2. Authoring architecture
 
-Do not organize future toolbox work primarily as themed packs such as Clinic, Classroom, Fantasy Village, or Pond.
+Do not organize toolbox work primarily as themed packs such as Clinic, Classroom, Fantasy Village, or Pond.
 
 Theme/source bundles are provenance pools. The primary authoring interface is the generic semantic library:
 
@@ -51,7 +51,7 @@ Useful reviewed source pool. It is **not** a core generic pack. Generic furnitur
 
 ### Reading / Classroom, Fantasy / Village / Night, Water / Pond
 
-These remain source/provenance pools. Their generic assets have now been harvested/classified rather than treated as required theme packs.
+These remain source/provenance pools. Their generic assets have been harvested/classified rather than treated as required theme packs.
 
 ## 4. Generic library consolidation and full source harvest
 
@@ -59,11 +59,9 @@ Commit `cc1d7f1` created the first six semantic indexes under:
 
 `assets/visual/authoring_library/`
 
-The first consolidation was incomplete because it omitted Reading/Classroom, Fantasy/Village/Night, and Water/Pond.
+Commit `2dcf306` completed the full source harvest across Reading/Classroom, Fantasy/Village/Night and Water/Pond.
 
-Commit `2dcf306` completed the full source harvest across those remaining environment/theme pools.
-
-Current indexed state reported by the harvest:
+Harvest state before Batch A admission:
 
 ```text
 52 preferred finished assets
@@ -72,7 +70,7 @@ Current indexed state reported by the harvest:
 89 total indexed reusable resources
 ```
 
-The full harvest is owner-reviewed in:
+Owner review:
 
 `docs/reviews/visual/2026-08-21_generic-authoring-library-full-source-harvest/PRIMARY_REVIEW.md`
 
@@ -87,96 +85,122 @@ VARIETY_GAP
 NO_GAP
 ```
 
-The current audit supports these important findings:
-
-- doors / room openings — `TRUE_MISSING`;
-- standard dining/desk chair — `TRUE_MISSING`;
-- books/storybooks — `QUALITY_GAP`;
-- soft reading chair / bookcase — `QUALITY_GAP`;
-- potted plant / basket — `QUALITY_GAP`;
-- water botanical/structure roles — `QUALITY_GAP`;
-- generic bridge/sign/well/lantern — `QUALITY_GAP`;
-- basic tableware — `TRUE_MISSING`;
-- generic mechanical/manipulative components — materially under-covered / `TRUE_MISSING` at component level.
+An existing weak asset is a quality gap, not missing inventory.
 
 ## 6. Permanent composability rule
 
 The generic library must not become an encyclopedia of arbitrary pre-finished clip-art nouns.
 
-Prioritize **cross-Activity authoring leverage**.
-
 > **Generic assets should encode reusable form; Activity-specific meaning and contents should remain separable whenever practical.**
 
 Examples:
 
-- empty plate rather than plate-with-toast as the only plate;
-- empty bowl rather than cereal permanently baked in;
+- empty plate/bowl rather than food permanently baked in;
 - books without readable titles or one fixed story;
-- blank sign/board surfaces where text is Activity/localization-owned;
-- generic gear/dial/lever components rather than one narrowly themed machine;
-- source-level ingredients where they genuinely help agents compose bespoke Activity art.
+- blank signs/boards where Activity/localization owns text;
+- reusable gear/dial/lever components rather than one narrowly themed machine;
+- source-level ingredients only when they genuinely improve authoring leverage.
 
-This does not mean runtime fragment explosion. Source art may be composable during authoring and flattened for efficient runtime use.
+Runtime remains economical: rich source work may be flattened into efficient runtime assets.
 
 ## 7. Generic authoring-library admission state
 
-The semantic index structure is canonical. Individual resources expose quality/admission state:
+The semantic index structure is canonical. Individual resources expose:
 
 ```text
 preferred
 candidate_reference
 ```
 
-- `preferred` resources are reviewed strongly enough to be tried first for direct REUSE.
-- `candidate_reference` resources may support COMPOSE/ADAPT or inspiration, but are not owner-approved preferred finished assets.
+- `preferred` → strong enough to consider first for direct REUSE.
+- `candidate_reference` → useful for COMPOSE/ADAPT/reference, but not owner-approved first-choice direct-use art.
 
-Newly produced generic assets start as `candidate_reference` until owner pixel review.
+The purpose of these states is to avoid endless redraw loops merely to force every useful source into `preferred`.
 
-## 8. Production workflow
+## 8. Generic Core Essentials Batch A — reviewed
 
-For future generic batches:
+Candidate commit:
 
-1. start from the full inventory/gap audit;
-2. rank cross-Activity usefulness and composability, not theme completeness;
-3. mix categories when that creates a stronger toolbox;
-4. create roughly 12–18 assets at pack scale unless a smaller set is more coherent;
-5. prefer semantically neutral/reusable forms over baked one-off contents;
-6. create source-level ingredients only when they materially help Activity authors;
-7. inspect actual pixels and representative child-facing sizes;
-8. promote only the strongest resources into `preferred` status;
-9. preserve source provenance without duplication;
-10. do not touch runtime architecture merely to prove source art.
+`574f19530ee292a81225ff14c09ad8b35f6cf933`
 
-## 9. Current exact production gate
+Actual owner-transfer PNGs were inspected.
 
-The full source harvest is complete.
+Primary review:
+
+`docs/reviews/visual/2026-08-21_generic-core-essentials-batch-a/PRIMARY_REVIEW.md`
+
+Owner disposition:
+
+```text
+9 finished assets → preferred
+7 finished assets → candidate_reference
+2 authoring ingredients → preferred
+```
+
+Preferred finished assets:
+
+- closed timber door;
+- simple timber arch opening;
+- spindle-back chair;
+- tall open bookcase;
+- empty woven basket;
+- empty ceramic bowl;
+- ceramic cup/saucer;
+- interlocking gear pair;
+- blank radial dial/hands.
+
+Candidate references retained without redraw:
+
+- ajar door;
+- soft armchair;
+- open picture book;
+- mixed book stack;
+- potted fern;
+- empty ceramic plate;
+- single `wooden` gear.
+
+Important: **do not run a Batch A per-object finalization loop.** The weaker items are still useful references and can be reauthored later only when actual Activity demand justifies it.
+
+## 9. Current exact gate
 
 Execute:
 
-`docs/testing/2026-08-21_GENERIC_CORE_ESSENTIALS_BATCH_A.md`
+`docs/testing/2026-08-22_GENERIC_VISUAL_LIBRARY_ADMISSION_AND_DISCOVERY_TOOLING.md`
 
-This is the first authorized **new generic source-art batch** after consolidation.
+This gate must:
 
-It deliberately targets high-leverage gaps across:
+1. materialize the 9+2 owner-authorized preferred Batch A resources under stable generic source provenance;
+2. leave the 7 weaker resources as candidate references;
+3. update the generic semantic indexes;
+4. add a small deterministic authoring-time discovery helper over the indexes;
+5. update the visual-authoring skill to use that helper when available;
+6. avoid all new art and runtime consumer changes.
 
-- doors/openings;
-- standard/soft seating;
-- bookcase/books;
-- plant/basket;
-- neutral tableware;
-- generic mechanical components.
+No Batch B is currently authorized.
 
-It is not a kitchen/classroom/clinic theme pack.
+## 10. Why discovery tooling comes next
 
-## 10. Relationship to the user-agent skill
+The toolbox now has enough breadth that the bottleneck is no longer raw asset count.
 
-The maintainer track builds the toolbox.
+An arbitrary Activity-authoring agent should not need to:
+
+- know historical theme folder names;
+- manually grep six TOMLs;
+- guess which source is preferred versus merely a candidate reference.
+
+The next product value is a simple authoring-time query/list/show interface exposing semantic ID, collection, status, source path, tags/role and notes.
+
+This tooling must remain deterministic, local and separate from Greia runtime architecture.
+
+## 11. Relationship to the user-agent skill
+
+The maintainer track builds and curates the toolbox.
 
 Arbitrary Activity agents should conceptually:
 
 ```text
 inventory Activity needs
-→ search generic semantic library
+→ query the generic semantic library
 → prefer reviewed/preferred assets where they fit
 → inspect candidate/source references when useful
 → REUSE / COMPOSE-ADAPT / CREATE ORIGINAL
@@ -186,21 +210,21 @@ inventory Activity needs
 → visually review
 ```
 
-The generic toolbox helps; it does not remove the expectation that specialized Activity art may need to be created locally.
+The toolbox helps; it does not remove the expectation that specialized Activity art may need to be created locally.
 
-## 11. Explicit drift to avoid
+## 12. Explicit drift to avoid
 
 Do not:
 
 - return to theme-by-theme pack production;
-- create a giant noun warehouse merely to increase counts;
-- bake arbitrary food/text/story meaning into otherwise generic resources;
-- duplicate weak old assets without a quality reason;
-- treat candidate references as preferred merely because they are indexed;
+- immediately create Batch B merely to increase asset count;
+- redraw every candidate reference until it becomes preferred;
+- create a giant noun warehouse;
+- bake arbitrary food/text/story meaning into generic bases;
 - infer arbitrary user-agent capability from the maintainer agent;
 - reopen hero-tree specimen optimization;
 - create a second runtime catalogue/cache architecture.
 
-## 12. Platform boundary
+## 13. Platform boundary
 
-R7 remains the primary blocking platform phase. Nothing in this visual-content track closes, reorders, or bypasses R7.
+R7 remains the primary blocking platform phase. Nothing in this visual-content/authoring-tooling track closes, reorders, or bypasses R7.
