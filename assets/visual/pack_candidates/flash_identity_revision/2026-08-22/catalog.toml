@@ -1,0 +1,67 @@
+[pack]
+id = "greia.flash_identity_revision.2026-08-22-candidate"
+name = "Flash White-Rabbit Identity Revision — Pre-Promotion Art Gate"
+version = "0.1.0"
+status = "candidate"
+authority = "docs/testing/2026-08-22_FLASH_WHITE_RABBIT_IDENTITY_REVISION.md"
+notes = "Candidate visual revision for Flash (character.flash). Updates primary body to warm white fur with a permanent coral/raspberry shirt and a single golden lightning-bolt emblem, preserving tall rabbit ears, pom-pom tail, and 5-state registration."
+
+[[characters]]
+id = "character.flash"
+display_name = "Flash"
+archetype = "white_rabbit_puff"
+library_status = "candidate"
+logical_artboard = [256, 256]
+min_recommended_px = 64
+max_recommended_px = 512
+primary_domain = "games / speed / action / reflex / playful challenge"
+identity_cues = ["warm white fur body", "tall rabbit ears with pink inners", "coral/raspberry shirt", "golden lightning bolt emblem", "round pom-pom tail", "mint head-tuft micro-accent"]
+source_master = "flash/source_master.svg"
+states = { neutral = "flash/neutral.svg", blink = "flash/blink.svg", happy = "flash/happy.svg", surprised = "flash/surprised.svg", sleepy = "flash/sleepy.svg" }
+components = ["flash/components/shirt_bolt.svg", "flash/components/ears.svg", "flash/components/eyes_blink.svg"]
+
+# Ensemble Reference Anchors
+[[characters]]
+id = "character.lilli"
+display_name = "Lilli"
+archetype = "unicorn_puff"
+library_status = "reviewed_anchor"
+logical_artboard = [256, 256]
+primary_domain = "creativity / stories / art / imagination"
+source_reference = "assets/visual/pack_candidates/canonical_characters/2026-08-22/lilli/neutral.svg"
+
+[[characters]]
+id = "character.leo"
+display_name = "Leo"
+archetype = "owl_bean"
+library_status = "reviewed_anchor"
+logical_artboard = [256, 256]
+primary_domain = "learning / reading / language / knowledge"
+source_reference = "assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/leo/neutral.svg"
+
+[[characters]]
+id = "character.dani"
+display_name = "Dani"
+archetype = "friendly_robot"
+library_status = "reviewed_anchor"
+logical_artboard = [256, 256]
+primary_domain = "math / logic / patterns / sequencing"
+source_reference = "assets/visual/pack_candidates/canonical_cast_expansion/2026-08-22/dani/neutral.svg"
+
+[[characters]]
+id = "character.tito"
+display_name = "Tito"
+archetype = "fox_puff"
+library_status = "reviewed_anchor"
+logical_artboard = [256, 256]
+primary_domain = "exploration / nature / discovery / investigation"
+source_reference = "assets/visual/pack_candidates/canonical_characters/2026-08-22/tito/neutral.svg"
+
+[[characters]]
+id = "character.momo"
+display_name = "Momo"
+archetype = "friendly_monster_puff"
+library_status = "reviewed_anchor"
+logical_artboard = [256, 256]
+primary_domain = "emotion / music / silly play / celebration"
+source_reference = "assets/visual/pack_candidates/canonical_characters/2026-08-22/momo/neutral.svg"
