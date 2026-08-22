@@ -240,21 +240,22 @@ class MicrophoneRecorder:
 
     @property
     def has_hardware(self) -> bool:
-        self._ensure_audio_init()
-        if sdl2_audio is not None:
-            try:
+        try:
+            self._ensure_audio_init()
+            if sdl2_audio is not None:
                 names = sdl2_audio.get_audio_device_names(True)
                 return bool(names)
-            except Exception:
-                return False
+        except Exception:
+            return False
         return False
 
     def toggle(self) -> bool:
-        if not self.has_hardware:
+        try:
+            self.enabled = not self.enabled
+            return self.enabled
+        except Exception:
             self.enabled = False
             return False
-        self.enabled = not self.enabled
-        return self.enabled
 
     def _get_system_gain(self) -> float:
         try:
@@ -269,8 +270,12 @@ class MicrophoneRecorder:
     def start_recording(self) -> None:
         self.recorded_pcm.clear()
         self.current_volume = 0.0
-        self._ensure_audio_init()
-        if not self.enabled or not self.has_hardware or sdl2_audio is None:
+        try:
+            self._ensure_audio_init()
+        except Exception:
+            pass
+
+        if not self.enabled or sdl2_audio is None:
             self.is_recording = True
             return
 
@@ -279,26 +284,26 @@ class MicrophoneRecorder:
         def _audio_callback(dev, data: bytes):
             if not self.is_recording:
                 return
-            self.recorded_pcm.extend(data)
-            if len(data) >= 128:
-                try:
+            try:
+                self.recorded_pcm.extend(data)
+                if len(data) >= 128:
                     num_samples = len(data) // 2
                     samples = struct.unpack(f"<{num_samples}h", data[: num_samples * 2])
                     peak = max(abs(s) for s in samples[::8]) * gain
                     self.current_volume = min(1.0, peak / 18000.0)
-                except Exception:
-                    pass
+            except Exception:
+                pass
 
         try:
             names = sdl2_audio.get_audio_device_names(True)
-            dev_name = names[0] if names else ""
+            dev_name = names[0] if names else None
             self._dev = sdl2_audio.AudioDevice(
                 dev_name,
                 True,
                 self.sample_rate,
                 sdl2_audio.AUDIO_S16LSB,
                 1,
-                1024,
+                2048,
                 0,
                 _audio_callback,
             )
@@ -447,6 +452,27 @@ class SoundManager:
 # INTERACTIVE MARIONETTE PUPPET
 # ============================================================================
 
+_SHADOW_SURFACES: dict[int, pygame.Surface] = {}
+_GLOW_SURFACES: dict[int, pygame.Surface] = {}
+
+def get_shadow_surface(size: int) -> pygame.Surface:
+    cached = _SHADOW_SURFACES.get(size)
+    if cached is None:
+        cached = pygame.Surface((size, 20), pygame.SRCALPHA)
+        pygame.draw.ellipse(cached, (0, 0, 0, 85), (0, 0, size, 20))
+        _SHADOW_SURFACES[size] = cached
+    return cached
+
+def get_glow_surface(size: int) -> pygame.Surface:
+    cached = _GLOW_SURFACES.get(size)
+    if cached is None:
+        dim = size + 30
+        cached = pygame.Surface((dim, dim), pygame.SRCALPHA)
+        pygame.draw.circle(cached, (254, 240, 138, 80), (dim // 2, dim // 2), (size + 20) // 2)
+        _GLOW_SURFACES[size] = cached
+    return cached
+
+
 class Puppet:
     """An interactive theatrical puppet with wooden rod and physics."""
 
@@ -496,9 +522,7 @@ class Puppet:
         # Floor drop shadow
         shadow_rect = pygame.Rect(0, 0, self.shadow_size, 20)
         shadow_rect.center = (int(self.x), 430)
-        shadow_surf = pygame.Surface((self.shadow_size, 20), pygame.SRCALPHA)
-        pygame.draw.ellipse(shadow_surf, (0, 0, 0, 85), (0, 0, self.shadow_size, 20))
-        surface.blit(shadow_surf, shadow_rect.topleft)
+        surface.blit(get_shadow_surface(self.shadow_size), shadow_rect.topleft)
 
         # Wooden Marionette Control Rod
         rod_top_y = int(self.y + 20)
@@ -514,7 +538,7 @@ class Puppet:
         img = sprite_img
         if self.flip_x:
             img = pygame.transform.flip(img, True, False)
-        if abs(self.tilt_angle) > 0.8:
+        if abs(self.tilt_angle) > 1.5:
             img = pygame.transform.rotate(img, self.tilt_angle)
 
         img_rect = img.get_rect(center=(int(self.x), int(render_y)))
@@ -522,9 +546,8 @@ class Puppet:
 
         # Selection / Interaction Glow
         if self.is_held or self.talk_timer > 0.0:
-            glow_surf = pygame.Surface((self.size + 30, self.size + 30), pygame.SRCALPHA)
-            pygame.draw.circle(glow_surf, (254, 240, 138, 80), ((self.size + 30) // 2, (self.size + 30) // 2), (self.size + 20) // 2)
-            surface.blit(glow_surf, (int(self.x - (self.size + 30) // 2), int(render_y - (self.size + 30) // 2)))
+            glow = get_glow_surface(self.size)
+            surface.blit(glow, (int(self.x - glow.get_width() // 2), int(render_y - glow.get_height() // 2)))
 
 
 # ============================================================================
@@ -899,6 +922,29 @@ def main() -> int:
         fb_s = pygame.Surface((110, 110), pygame.SRCALPHA)
         pygame.draw.circle(fb_s, (244, 114, 182), (55, 55), 45)
         puppet_sprites["lilli"] = fb_s
+
+    # Pre-scale thumbnails once at launch to eliminate 180 smoothscale ops/sec
+    puppet_thumbs: dict[str, pygame.Surface] = {
+        p_id: pygame.transform.smoothscale(spr, (52, 52))
+        for p_id, spr in puppet_sprites.items()
+    }
+    puppet_micro_thumbs: dict[str, pygame.Surface] = {
+        p_id: pygame.transform.smoothscale(spr, (38, 38))
+        for p_id, spr in puppet_sprites.items()
+    }
+
+    # Text Surface Cache to eliminate per-frame typography allocations
+    text_cache: dict[tuple, pygame.Surface] = {}
+
+    def get_text(text: str, role: FontRole, size: int, color: tuple) -> pygame.Surface:
+        key = (text, role, size, color)
+        res = text_cache.get(key)
+        if res is None:
+            res = typography.render(text, role, size, color)
+            if len(text_cache) > 256:
+                text_cache.clear()
+            text_cache[key] = res
+        return res
 
     # 3. Pre-render & Cache All 5 Storybook Backdrops
     cached_backdrops: dict[str, pygame.Surface] = {}
@@ -1451,7 +1497,7 @@ def main() -> int:
             pygame.draw.rect(surf, mic_bg, mic_rect, border_radius=14)
             pygame.draw.rect(surf, mic_border, mic_rect, width=3, border_radius=14)
             mic_label = f"🎙️ {ui_strings.get('mic_on', 'ON')}" if mic_recorder.enabled else f"🔇 {ui_strings.get('mic_off', 'OFF')}"
-            mic_s = typography.render(mic_label, FontRole.TITLE, 14, mic_border)
+            mic_s = get_text(mic_label, FontRole.TITLE, 14, mic_border)
             surf.blit(mic_s, (mic_rect.centerx - mic_s.get_width() // 2, mic_rect.centery - mic_s.get_height() // 2))
 
             # B) Show Library Button [🎬 Storie (N)]
@@ -1460,7 +1506,7 @@ def main() -> int:
             pygame.draw.rect(surf, (61, 44, 31), lib_rect, width=2, border_radius=14)
             num_saved = len(library_shows)
             lib_label = f"🎬 {ui_strings.get('stories', 'Storie')} ({num_saved})"
-            lib_s = typography.render(lib_label, FontRole.TITLE, 14, DARK_TEXT)
+            lib_s = get_text(lib_label, FontRole.TITLE, 14, DARK_TEXT)
             surf.blit(lib_s, (lib_rect.centerx - lib_s.get_width() // 2, lib_rect.centery - lib_s.get_height() // 2))
 
             # CENTER DECK: Record & Play (x: 415..690) - Separated with 70px gap!
@@ -1470,7 +1516,7 @@ def main() -> int:
                 pygame.draw.rect(surf, (255, 210, 210), rec_rect, border_radius=14)
                 pygame.draw.rect(surf, REC_RED, rec_rect, width=3, border_radius=14)
                 rec_label = f"⏹️ {ui_strings.get('stop', 'STOP')}"
-                rec_s = typography.render(rec_label, FontRole.TITLE, 16, REC_RED)
+                rec_s = get_text(rec_label, FontRole.TITLE, 16, REC_RED)
                 surf.blit(rec_s, (rec_rect.centerx - rec_s.get_width() // 2, rec_rect.centery - rec_s.get_height() // 2))
 
                 # Live Voice Waveform Sound Meter
@@ -1481,13 +1527,13 @@ def main() -> int:
                     bar_h = int(4 + math.sin(time.time() * 12 + bar_idx * 1.5) * 8 * vol + vol * 14)
                     pygame.draw.rect(surf, REC_RED, (meter_x + bar_idx * 6, meter_y + (20 - bar_h) // 2, 4, bar_h), border_radius=2)
                 t_str = f"{int(time.time() - rec_start_time)}s / {int(MAX_RECORDING_SECONDS)}s"
-                t_surf = typography.render(t_str, FontRole.CONTROL, 11, REC_RED)
+                t_surf = get_text(t_str, FontRole.CONTROL, 11, REC_RED)
                 surf.blit(t_surf, (meter_x + 36, meter_y + 3))
             else:
                 pygame.draw.rect(surf, (255, 250, 240), rec_rect, border_radius=14)
                 pygame.draw.rect(surf, (61, 44, 31), rec_rect, width=2, border_radius=14)
                 rec_label = f"🔴 {ui_strings.get('rec', 'REC')}"
-                rec_s = typography.render(rec_label, FontRole.TITLE, 16, DARK_TEXT)
+                rec_s = get_text(rec_label, FontRole.TITLE, 16, DARK_TEXT)
                 surf.blit(rec_s, (rec_rect.centerx - rec_s.get_width() // 2, rec_rect.centery - rec_s.get_height() // 2))
 
             # D) Play Show Button [▶️ SHOW]
@@ -1495,14 +1541,14 @@ def main() -> int:
             pygame.draw.rect(surf, (255, 250, 240), play_rect, border_radius=14)
             pygame.draw.rect(surf, (61, 44, 31), play_rect, width=2, border_radius=14)
             play_label = f"▶️ {ui_strings.get('show', 'SHOW')}"
-            ply_s = typography.render(play_label, FontRole.TITLE, 16, DARK_TEXT)
+            ply_s = get_text(play_label, FontRole.TITLE, 16, DARK_TEXT)
             surf.blit(ply_s, (play_rect.centerx - ply_s.get_width() // 2, play_rect.centery - ply_s.get_height() // 2))
 
             # RIGHT DECK: Clear Stage Button [🗑️]
             clear_rect = pygame.Rect(740, 16, 65, 52)
             pygame.draw.rect(surf, (255, 250, 240), clear_rect, border_radius=14)
             pygame.draw.rect(surf, (61, 44, 31), clear_rect, width=2, border_radius=14)
-            clr_s = typography.render("🗑️", FontRole.TITLE, 22, DARK_TEXT)
+            clr_s = get_text("🗑️", FontRole.TITLE, 22, DARK_TEXT)
             surf.blit(clr_s, (clear_rect.centerx - clr_s.get_width() // 2, clear_rect.centery - clr_s.get_height() // 2))
 
         elif app_mode == "viewer":
@@ -1510,13 +1556,13 @@ def main() -> int:
             exit_rect = pygame.Rect(140, 16, 110, 52)
             pygame.draw.rect(surf, (255, 230, 230), exit_rect, border_radius=14)
             pygame.draw.rect(surf, (220, 38, 38), exit_rect, width=2, border_radius=14)
-            exit_s = typography.render(f"⏹️ {ui_strings.get('exit_viewer', 'Esci')}", FontRole.TITLE, 15, (185, 28, 28))
+            exit_s = get_text(f"⏹️ {ui_strings.get('exit_viewer', 'Esci')}", FontRole.TITLE, 15, (185, 28, 28))
             surf.blit(exit_s, (exit_rect.centerx - exit_s.get_width() // 2, exit_rect.centery - exit_s.get_height() // 2))
 
             rep_rect = pygame.Rect(265, 16, 120, 52)
             pygame.draw.rect(surf, (255, 250, 240), rep_rect, border_radius=14)
             pygame.draw.rect(surf, (61, 44, 31), rep_rect, width=2, border_radius=14)
-            rep_s = typography.render(f"🔁 {ui_strings.get('replay_story', 'Rivedi')}", FontRole.TITLE, 15, DARK_TEXT)
+            rep_s = get_text(f"🔁 {ui_strings.get('replay_story', 'Rivedi')}", FontRole.TITLE, 15, DARK_TEXT)
             surf.blit(rep_s, (rep_rect.centerx - rep_s.get_width() // 2, rep_rect.centery - rep_s.get_height() // 2))
 
             # Viewer Title & Progress Bar
@@ -1532,7 +1578,7 @@ def main() -> int:
 
             t_title = playback_show_meta.get("title", "Storia") if playback_show_meta else "Spettacolo"
             time_str = f"🎬 {t_title} ({min(int(playback_duration), int(play_elapsed))}s / {int(playback_duration)}s)"
-            t_s = typography.render(time_str, FontRole.CONTROL, 12, (255, 250, 240))
+            t_s = get_text(time_str, FontRole.CONTROL, 12, (255, 250, 240))
             surf.blit(t_s, (prog_bg.centerx - t_s.get_width() // 2, prog_bg.centery - t_s.get_height() // 2))
 
         # --------------------------------------------------------------------
@@ -1544,9 +1590,9 @@ def main() -> int:
             sc_rect = pygame.Rect(915, 24, 70, 54)
             pygame.draw.rect(surf, (255, 250, 240), sc_rect, border_radius=14)
             pygame.draw.rect(surf, STAGE_GOLD, sc_rect, width=3, border_radius=14)
-            sc_s = typography.render(sc_icon, FontRole.DISPLAY, 26, DARK_TEXT)
+            sc_s = get_text(sc_icon, FontRole.DISPLAY, 26, DARK_TEXT)
             surf.blit(sc_s, (sc_rect.centerx - sc_s.get_width() // 2, sc_rect.centery - sc_s.get_height() // 2 - 4))
-            sc_lbl = typography.render(ui_strings.get("scene", "Scena"), FontRole.CONTROL, 10, DARK_TEXT)
+            sc_lbl = get_text(ui_strings.get("scene", "Scena"), FontRole.CONTROL, 10, DARK_TEXT)
             surf.blit(sc_lbl, (sc_rect.centerx - sc_lbl.get_width() // 2, sc_rect.bottom - 13))
 
             # 6 Sound Effect Buttons Underneath (y: 88..440)
@@ -1555,7 +1601,7 @@ def main() -> int:
                 fx_rect = pygame.Rect(915, fy, 70, 50)
                 pygame.draw.rect(surf, (255, 250, 240), fx_rect, border_radius=14)
                 pygame.draw.rect(surf, STAGE_GOLD, fx_rect, width=2, border_radius=14)
-                fx_s = typography.render(fx_sym, FontRole.DISPLAY, 26, DARK_TEXT)
+                fx_s = get_text(fx_sym, FontRole.DISPLAY, 26, DARK_TEXT)
                 surf.blit(fx_s, (fx_rect.centerx - fx_s.get_width() // 2, fx_rect.centery - fx_s.get_height() // 2))
 
         # --------------------------------------------------------------------
@@ -1587,14 +1633,14 @@ def main() -> int:
                 pygame.draw.rect(surf, (255, 250, 240), card_rect, border_radius=14)
                 pygame.draw.rect(surf, (61, 44, 31), card_rect, width=2, border_radius=14)
 
-                # Thumbnail Sprite
-                spr = puppet_sprites.get(p_id, puppet_sprites["lilli"])
-                thumb = pygame.transform.smoothscale(spr, (52, 52))
-                surf.blit(thumb, (card_rect.centerx - 26, card_rect.y + 6))
+                # Thumbnail Sprite (pre-scaled)
+                thumb = puppet_thumbs.get(p_id, puppet_thumbs.get("lilli"))
+                if thumb is not None:
+                    surf.blit(thumb, (card_rect.centerx - 26, card_rect.y + 6))
 
                 # Localized Puppet Name
                 loc_name = puppet_names.get(p_id, p_name)
-                name_s = typography.render(loc_name, FontRole.CONTROL, 11, DARK_TEXT)
+                name_s = get_text(loc_name, FontRole.CONTROL, 11, DARK_TEXT)
                 surf.blit(name_s, (card_rect.centerx - name_s.get_width() // 2, card_rect.y + 63))
 
         # --------------------------------------------------------------------
@@ -1612,7 +1658,7 @@ def main() -> int:
             pygame.draw.rect(surf, STAGE_GOLD, box_rect, width=4, border_radius=20)
 
             # Header
-            hdr_surf = typography.render(f"🎬 {ui_strings.get('stories', 'Storie Magiche')}", FontRole.DISPLAY, 26, DARK_TEXT)
+            hdr_surf = get_text(f"🎬 {ui_strings.get('stories', 'Storie Magiche')}", FontRole.DISPLAY, 26, DARK_TEXT)
             surf.blit(hdr_surf, (box_rect.centerx - hdr_surf.get_width() // 2, box_rect.y + 16))
 
             # Close [❌] Button
@@ -1625,7 +1671,7 @@ def main() -> int:
 
             # Saved Shows List
             if not library_shows:
-                no_s = typography.render(ui_strings.get("no_stories", "Nessuna storia salvata! Registra uno spettacolo!"), FontRole.TITLE, 18, (140, 100, 60))
+                no_s = get_text(ui_strings.get("no_stories", "Nessuna storia salvata! Registra uno spettacolo!"), FontRole.TITLE, 18, (140, 100, 60))
                 surf.blit(no_s, (box_rect.centerx - no_s.get_width() // 2, box_rect.centery - 20))
             else:
                 for card_info in modal_layout["cards"]:
@@ -1646,34 +1692,34 @@ def main() -> int:
                         if b_id == show_item.get("backdrop"):
                             bg_sym = b_sym
                             break
-                    bg_icon_s = typography.render(bg_sym, FontRole.DISPLAY, 32, DARK_TEXT)
+                    bg_icon_s = get_text(bg_sym, FontRole.DISPLAY, 32, DARK_TEXT)
                     surf.blit(bg_icon_s, (c_rect.x + 18, c_rect.centery - bg_icon_s.get_height() // 2))
 
-                    # Actor miniature sprites
+                    # Actor miniature sprites (pre-scaled)
                     for a_idx, actor_id in enumerate(show_item.get("actors", [])[:3]):
-                        spr = puppet_sprites.get(actor_id, puppet_sprites["lilli"])
-                        micro = pygame.transform.smoothscale(spr, (38, 38))
-                        surf.blit(micro, (c_rect.x + 70 + a_idx * 34, c_rect.centery - 19))
+                        micro = puppet_micro_thumbs.get(actor_id, puppet_micro_thumbs.get("lilli"))
+                        if micro is not None:
+                            surf.blit(micro, (c_rect.x + 70 + a_idx * 34, c_rect.centery - 19))
 
                     # Title & Duration Badge
-                    title_s = typography.render(show_item.get("title", f"Storia {s_idx + 1}"), FontRole.TITLE, 18, DARK_TEXT)
+                    title_s = get_text(show_item.get("title", f"Storia {s_idx + 1}"), FontRole.TITLE, 18, DARK_TEXT)
                     surf.blit(title_s, (c_rect.x + 190, c_rect.y + 16))
 
                     mic_indicator = "🎙️ " if show_item.get("has_audio") else ""
                     dur_text = f"{mic_indicator}{show_item.get('duration', 0)}s"
-                    dur_s = typography.render(dur_text, FontRole.CONTROL, 13, (120, 60, 20))
+                    dur_s = get_text(dur_text, FontRole.CONTROL, 13, (120, 60, 20))
                     surf.blit(dur_s, (c_rect.x + 190, c_rect.y + 46))
 
                     # Play Button [▶️ Guarda]
                     pygame.draw.rect(surf, (220, 255, 225), ply_btn_rect, border_radius=12)
                     pygame.draw.rect(surf, MIC_GREEN, ply_btn_rect, width=2, border_radius=12)
-                    ply_btn_s = typography.render(f"▶️ {ui_strings.get('play_story', 'Guarda')}", FontRole.TITLE, 15, (20, 100, 40))
+                    ply_btn_s = get_text(f"▶️ {ui_strings.get('play_story', 'Guarda')}", FontRole.TITLE, 15, (20, 100, 40))
                     surf.blit(ply_btn_s, (ply_btn_rect.centerx - ply_btn_s.get_width() // 2, ply_btn_rect.centery - ply_btn_s.get_height() // 2))
 
                     # Delete Button [🗑️]
                     pygame.draw.rect(surf, (255, 230, 230), del_btn_rect, border_radius=12)
                     pygame.draw.rect(surf, (220, 38, 38), del_btn_rect, width=2, border_radius=12)
-                    del_btn_s = typography.render("🗑️", FontRole.TITLE, 18, (185, 28, 28))
+                    del_btn_s = get_text("🗑️", FontRole.TITLE, 18, (185, 28, 28))
                     surf.blit(del_btn_s, (del_btn_rect.centerx - del_btn_s.get_width() // 2, del_btn_rect.centery - del_btn_s.get_height() // 2))
 
                 # Pagination Arrows (if > 4 shows)
@@ -1682,21 +1728,21 @@ def main() -> int:
                         prev_rect = modal_layout["prev_btn"]
                         pygame.draw.rect(surf, (255, 250, 240), prev_rect, border_radius=10)
                         pygame.draw.rect(surf, STAGE_GOLD, prev_rect, width=2, border_radius=10)
-                        p_txt = typography.render("◀ Indietro", FontRole.CONTROL, 12, DARK_TEXT)
+                        p_txt = get_text("◀ Indietro", FontRole.CONTROL, 12, DARK_TEXT)
                         surf.blit(p_txt, (prev_rect.centerx - p_txt.get_width() // 2, prev_rect.centery - p_txt.get_height() // 2))
 
                     if (library_page + 1) * modal_layout["cards_per_page"] < len(library_shows):
                         next_rect = modal_layout["next_btn"]
                         pygame.draw.rect(surf, (255, 250, 240), next_rect, border_radius=10)
                         pygame.draw.rect(surf, STAGE_GOLD, next_rect, width=2, border_radius=10)
-                        n_txt = typography.render("Avanti ▶", FontRole.CONTROL, 12, DARK_TEXT)
+                        n_txt = get_text("Avanti ▶", FontRole.CONTROL, 12, DARK_TEXT)
                         surf.blit(n_txt, (next_rect.centerx - n_txt.get_width() // 2, next_rect.centery - n_txt.get_height() // 2))
 
         # --------------------------------------------------------------------
         # 9. FEEDBACK BANNER (Floating Center Notification)
         # --------------------------------------------------------------------
         if feedback_text and app_mode == "stage":
-            fb_surf = typography.render(feedback_text, FontRole.TITLE, 19, STAGE_GOLD)
+            fb_surf = get_text(feedback_text, FontRole.TITLE, 19, STAGE_GOLD)
             fb_bg = pygame.Rect(REFERENCE_WIDTH // 2 - fb_surf.get_width() // 2 - 20, 100, fb_surf.get_width() + 40, 42)
             pygame.draw.rect(surf, (20, 16, 32), fb_bg, border_radius=12)
             pygame.draw.rect(surf, STAGE_GOLD, fb_bg, width=2, border_radius=12)

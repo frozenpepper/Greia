@@ -112,6 +112,8 @@ class ParentSettingsOverlay:
         self._language_index = 0
         self._language_message = ""
         self._audio_message = ""
+        self._backdrop_surface: Any = None
+        self._text_surface_cache: dict[tuple[Any, ...], Any] = {}
         self._sync_language_selection()
 
     def open(self) -> None:
@@ -335,6 +337,16 @@ class ParentSettingsOverlay:
         except (SystemLanguageError, OSError, IndexError) as exc:
             self._language_message = f"Could not change language: {exc}"
 
+    def _get_text(self, text: str, role: FontRole, size: int, color: tuple[int, int, int], typography: GreiaTypography) -> Any:
+        key = (text, role, size, color)
+        cached = self._text_surface_cache.get(key)
+        if cached is None:
+            cached = typography.font(role, size).render(text, True, color)
+            if len(self._text_surface_cache) > 128:
+                self._text_surface_cache.clear()
+            self._text_surface_cache[key] = cached
+        return cached
+
     def draw(
         self,
         screen: Any,
@@ -346,9 +358,10 @@ class ParentSettingsOverlay:
         self._targets.clear()
         width, height = screen.get_size()
 
-        backdrop = pygame.Surface((width, height), pygame.SRCALPHA)
-        backdrop.fill((30, 24, 20, 210))
-        screen.blit(backdrop, (0, 0))
+        if self._backdrop_surface is None or self._backdrop_surface.get_size() != (width, height):
+            self._backdrop_surface = pygame.Surface((width, height), pygame.SRCALPHA)
+            self._backdrop_surface.fill((30, 24, 20, 210))
+        screen.blit(self._backdrop_surface, (0, 0))
 
         if self.state == ParentPanelState.AUTH:
             self._draw_auth_dialog(screen, theme, typography, pygame, load_icon_fn)

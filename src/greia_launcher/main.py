@@ -263,7 +263,8 @@ class LauncherApplication:
                         running = False
                     elif event.type == pygame.TEXTINPUT:
                         if self._mode == "parent_panel":
-                            self._parent_panel.handle_text_input(event.text)
+                            if not self._parent_chord.is_holding:
+                                self._parent_panel.handle_text_input(event.text)
                         elif self._mode == "secret":
                             self._handle_secret_text(event.text)
                     elif event.type == pygame.KEYDOWN:
@@ -272,11 +273,12 @@ class LauncherApplication:
                         ):
                             self._mode = "parent_panel"
                             self._parent_panel.open()
+                            pygame.event.clear(pygame.TEXTINPUT)
+                            pygame.event.clear(pygame.KEYDOWN)
                         else:
                             running = self._handle_key(event.key, pygame)
                     elif event.type == pygame.KEYUP:
-                        if self._mode == "profiles":
-                            self._parent_chord.handle_key_up(event.key)
+                        self._parent_chord.handle_key_up(event.key)
                     elif event.type == pygame.MOUSEMOTION:
                         self._synthetic_pointer_active = True
                         if hasattr(event, "pos"):
@@ -300,6 +302,8 @@ class LauncherApplication:
                     if self._parent_chord.poll(time.monotonic()):
                         self._mode = "parent_panel"
                         self._parent_panel.open()
+                        pygame.event.clear(pygame.TEXTINPUT)
+                        pygame.event.clear(pygame.KEYDOWN)
                 elif self._mode == "parent_panel":
                     self._parent_panel.drain()
                 self._rescan_if_due()
