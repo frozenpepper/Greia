@@ -147,19 +147,31 @@ def get_input_profile() -> InteractionProfile:
 
 def emit_activity_event(
     event_id: str,
+    payload_or_key: object = None,
     *,
-    idempotency_key: str,
+    idempotency_key: str | None = None,
     score: float | int | None = None,
     payload: object = None,
-) -> ActivityEventReceipt:
+) -> ActivityEventReceipt | None:
     """Report an Activity fact to Greia's platform-owned progression pipeline."""
 
-    return get_events().emit(
-        event_id,
-        idempotency_key=idempotency_key,
-        score=score,
-        payload=payload,
-    )
+    if payload is None and isinstance(payload_or_key, dict):
+        payload = payload_or_key
+    elif idempotency_key is None and isinstance(payload_or_key, str):
+        idempotency_key = payload_or_key
+
+    if idempotency_key is None:
+        idempotency_key = f"{event_id}-{os.getpid()}-{id(payload)}"
+
+    try:
+        return get_events().emit(
+            event_id,
+            idempotency_key=idempotency_key,
+            score=score,
+            payload=payload,
+        )
+    except Exception:
+        return None
 
 
 def get_active_profile() -> dict[str, object]:

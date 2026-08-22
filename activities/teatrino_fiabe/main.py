@@ -1055,7 +1055,14 @@ def main() -> int:
                 library_shows = show_repo.list_shows()
                 feedback_text = f"🎉 {ui_strings.get('recording_saved', 'Spettacolo salvato nella libreria!')}"
                 feedback_timer = 4.0
-                emit_activity_event("story.recorded", {"duration": round(elapsed, 1), "id": saved_meta["id"]})
+                try:
+                    emit_activity_event(
+                        "story.recorded",
+                        idempotency_key=f"rec-{saved_meta['id']}",
+                        payload={"duration": round(elapsed, 1), "id": saved_meta["id"]},
+                    )
+                except Exception:
+                    pass
                 sound_mgr.play("applause")
             else:
                 # Capture frame snapshot (timestamp, positions, flips, jump/talk timers)
@@ -1317,7 +1324,14 @@ def main() -> int:
                         library_shows = show_repo.list_shows()
                         feedback_text = f"🎉 {ui_strings.get('recording_saved', 'Spettacolo salvato nella libreria!')}"
                         feedback_timer = 3.5
-                        emit_activity_event("story.recorded", {"duration": round(elapsed, 1), "id": saved_meta["id"]})
+                        try:
+                            emit_activity_event(
+                                "story.recorded",
+                                idempotency_key=f"rec-{saved_meta['id']}",
+                                payload={"duration": round(elapsed, 1), "id": saved_meta["id"]},
+                            )
+                        except Exception:
+                            pass
                         sound_mgr.play("applause")
                     continue
 
