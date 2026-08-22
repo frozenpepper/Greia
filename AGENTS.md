@@ -4,6 +4,8 @@ This repository implements a child-first educational Linux appliance/platform. T
 
 ## Authoritative read order and active plan
 
+Before installing or configuring any Greia toolchain, repository skill, simulator dependency, Parent App checkout, voice backend, developer remote-control environment or OS/image build host, read **`SETUP.md`**. It is the canonical setup index and readiness ledger; the narrower documents it references remain authoritative for their exact procedures.
+
 Before changing implementation or architecture, read:
 
 1. `README.md`;
