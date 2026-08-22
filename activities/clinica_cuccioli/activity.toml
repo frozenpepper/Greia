@@ -8,7 +8,7 @@ languages = ["it", "en"]
 
 [presentation]
 categories = ["play", "learn"]
-discovery_tags = ["stories"]
+discovery_tags = ["care"]
 
 [education]
 categories = ["empathy", "caregiving", "hygiene_and_health"]
