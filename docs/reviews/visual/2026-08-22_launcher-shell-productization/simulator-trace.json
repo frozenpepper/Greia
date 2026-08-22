@@ -1,0 +1,70 @@
+{
+  "session_id": "sim-launcher-shell-20260822-193000",
+  "environment": {
+    "os": "Greia OS 0.1.0",
+    "theme": "day",
+    "default_locale": "it",
+    "profile": "bimba_1"
+  },
+  "events": [
+    {
+      "step": 1,
+      "action": "boot",
+      "state": "profiles",
+      "duration_ms": 120
+    },
+    {
+      "step": 2,
+      "action": "select_profile",
+      "state": "home_portals",
+      "duration_ms": 80
+    },
+    {
+      "step": 3,
+      "action": "enter_category_create",
+      "state": "category_grid",
+      "active_category": "create",
+      "items_count": 6
+    },
+    {
+      "step": 4,
+      "action": "hover_gioca_chip",
+      "target": "activity_category:play",
+      "feedback": "highlight_accent"
+    },
+    {
+      "step": 5,
+      "action": "overflow_pagination_test",
+      "total_pages": 2,
+      "current_page": 0,
+      "controls": [
+        "prev",
+        "next",
+        "dots"
+      ]
+    },
+    {
+      "step": 6,
+      "action": "hover_card_0",
+      "target": "org.greia.painting",
+      "feedback": "elevation_lift_shadow_title_disclosure"
+    },
+    {
+      "step": 7,
+      "action": "launch_activity",
+      "target": "org.greia.painting",
+      "feedback": "launching_badge_active"
+    },
+    {
+      "step": 8,
+      "action": "key_pagedown",
+      "target_page": 1,
+      "selected": 6
+    },
+    {
+      "step": 9,
+      "action": "back_to_home",
+      "state": "home_portals"
+    }
+  ]
+}

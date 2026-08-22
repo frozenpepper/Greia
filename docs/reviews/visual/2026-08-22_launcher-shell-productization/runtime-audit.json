@@ -1,0 +1,71 @@
+{
+  "timestamp": "2026-08-22T19:30:00+02:00",
+  "gate": "launcher-shell-productization",
+  "status": "PASS",
+  "categories": [
+    {
+      "id": "create",
+      "title": "Crea",
+      "icon": "palette",
+      "count": 6
+    },
+    {
+      "id": "play",
+      "title": "Gioca",
+      "icon": "puzzle_pieces",
+      "count": 6
+    },
+    {
+      "id": "learn",
+      "title": "Impara",
+      "icon": "book",
+      "count": 4
+    },
+    {
+      "id": "explore",
+      "title": "Esplora",
+      "icon": "search",
+      "count": 2
+    },
+    {
+      "id": "my_greia",
+      "title": "Mio Greia",
+      "icon": "unicorn",
+      "count": 1
+    }
+  ],
+  "shell_features": {
+    "category_switcher_strip": true,
+    "tactile_back_button": true,
+    "active_category_pill": true,
+    "activity_count_badge": true,
+    "floating_side_arrows": true,
+    "bottom_pagination_capsule": true,
+    "pageup_pagedown_keys": true,
+    "hover_elevation": true,
+    "golden_star_focus_badge": true,
+    "launching_feedback_badge": true,
+    "title_disclosure_pill": true
+  },
+  "responsive_profiles_tested": [
+    {
+      "viewport": "1024x600",
+      "interface_size": "large",
+      "columns": 3,
+      "rows": 2
+    },
+    {
+      "viewport": "1280x800",
+      "interface_size": "normal",
+      "columns": 3,
+      "rows": 2
+    },
+    {
+      "viewport": "1366x768",
+      "interface_size": "compact",
+      "columns": 3,
+      "rows": 2
+    }
+  ],
+  "evidence_captures_count": 12
+}

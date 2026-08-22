@@ -341,6 +341,10 @@ class GreiaLauncherPresentation(LauncherApplication):
                 delta = columns
             self._selected = min(max(0, self._selected + delta), len(activities) - 1)
             self._ensure_selected_visible(pygame)
+        elif activities and key == pygame.K_PAGEUP:
+            self._scroll_activity_rows(-1, pygame)
+        elif activities and key == pygame.K_PAGEDOWN:
+            self._scroll_activity_rows(1, pygame)
         elif key in {pygame.K_RETURN, pygame.K_SPACE}:
             self._launch_selected(pygame)
         elif key == pygame.K_BACKSPACE and self._category_id != ALL_ACTIVITIES_ID:
@@ -371,6 +375,25 @@ class GreiaLauncherPresentation(LauncherApplication):
                 self._last_result = None
                 self._catalogue_error = False
                 self._set_category(ALL_ACTIVITIES_ID)
+                return
+            if target.action == "presented_activity_page_prev":
+                self._last_result = None
+                self._catalogue_error = False
+                self._scroll_activity_rows(-1, pygame)
+                return
+            if target.action == "presented_activity_page_next":
+                self._last_result = None
+                self._catalogue_error = False
+                self._scroll_activity_rows(1, pygame)
+                return
+            if target.action == "presented_activity_page":
+                self._last_result = None
+                self._catalogue_error = False
+                page_idx = int(target.value)
+                columns = self._columns(pygame)
+                page_cap = columns * 2
+                self._selected = min(page_idx * page_cap, len(self._presented_activities) - 1)
+                self._ensure_selected_visible(pygame)
                 return
             if target.action == "presented_activity_select":
                 self._last_result = None
@@ -647,46 +670,51 @@ class GreiaLauncherPresentation(LauncherApplication):
             return
 
         columns = self._columns(pygame)
-        page_capacity = columns * 2
+        rows = 2
+        page_capacity = columns * rows
         scroll = ScrollModel(capacity=page_capacity, step=page_capacity)
         window = scroll.window(
             len(activities), self._selected, self._activity_scroll_start
         )
         self._activity_scroll_start = window.start
-        rows = 2
-        gap = max(16, min(25, width // 42))
+        gap = max(14, min(22, width // 48))
 
         inner_panel = (
             getattr(self, "_shared_panel_inner_rect", None)
             if not getattr(self, "_shared_panel_disabled", False)
             else None
         )
+
+        has_pagination = (len(activities) > page_capacity)
+
         if inner_panel is not None:
-            pad_x = max(12, inner_panel.width // 60)
-            pad_y = max(6, inner_panel.height // 50)
+            pad_x = max(14, inner_panel.width // 45)
+            pad_y = max(8, inner_panel.height // 40)
+            pagination_reserve = 38 if has_pagination else 0
             avail_w = max(240, inner_panel.width - pad_x * 2)
-            avail_h = max(180, inner_panel.height - pad_y * 2)
+            avail_h = max(180, inner_panel.height - pad_y * 2 - pagination_reserve)
             tile_size = min(
-                205,
+                210,
                 (avail_w - gap * (columns - 1)) // columns,
                 (avail_h - gap * (rows - 1)) // rows,
             )
-            tile_size = max(115, tile_size)
+            tile_size = max(120, tile_size)
             total_width = columns * tile_size + (columns - 1) * gap
             total_height = rows * tile_size + (rows - 1) * gap
             origin_x = inner_panel.centerx - total_width // 2
-            origin_y = inner_panel.centery - total_height // 2
+            origin_y = inner_panel.top + pad_y + max(0, (avail_h - total_height) // 2)
         else:
             top = max(116, height // 5)
-            available_h = height - top - 28
+            pagination_reserve = 38 if has_pagination else 0
+            available_h = height - top - 28 - pagination_reserve
             side_reserve = 86
             usable_w = max(240, width - side_reserve)
             tile_size = min(
-                205,
+                210,
                 (usable_w - gap * (columns - 1)) // columns,
                 (available_h - gap * (rows - 1)) // rows,
             )
-            tile_size = max(115, tile_size)
+            tile_size = max(120, tile_size)
             total_width = columns * tile_size + (columns - 1) * gap
             total_height = rows * tile_size + (rows - 1) * gap
             origin_x = (width - total_width) // 2
@@ -716,7 +744,7 @@ class GreiaLauncherPresentation(LauncherApplication):
                 HitTarget("presented_activity", presented_index, rect)
             )
 
-        self._draw_scroll_controls(screen, theme, pygame, window, columns)
+        self._draw_pagination_and_overflow(screen, theme, pygame, window, columns, inner_panel)
         if (self._last_result and not self._last_result.succeeded) or self._catalogue_error:
             self._draw_error_badge(screen, pygame)
 
@@ -811,9 +839,13 @@ class GreiaLauncherPresentation(LauncherApplication):
     def _draw_category_header(self, screen: Any, theme: Any, pygame: Any) -> None:
         """Draw persistent in-category identity and a local return-to-All control."""
 
-        collection = self._catalogue.collection(self._category_id)
+        collections = tuple(
+            item
+            for item in self._catalogue.collections
+            if item.collection_id != ALL_ACTIVITIES_ID
+        )
         left = 112 if self._active_profile is not None else 20
-        height = max(46, min(58, screen.get_height() // 10))
+        height = max(46, min(56, screen.get_height() // 10))
         back_rect = pygame.Rect(left, 16, height, height)
         hovered = back_rect.collidepoint(self._pointer_pos(pygame)) and self._is_pointer_active(pygame)
         back_state = InteractionVisualState(hovered=hovered)
@@ -833,14 +865,14 @@ class GreiaLauncherPresentation(LauncherApplication):
         arrow_right = back_rect.right - arrow_inset
         pygame.draw.line(
             screen,
-            theme.text,
+            theme.accent if hovered else theme.text,
             (arrow_tip_x, back_rect.centery),
             (arrow_right, back_rect.centery),
             width=max(3, height // 12),
         )
         pygame.draw.lines(
             screen,
-            theme.text,
+            theme.accent if hovered else theme.text,
             False,
             (
                 (arrow_x + height // 8, back_rect.centery - height // 6),
@@ -853,24 +885,63 @@ class GreiaLauncherPresentation(LauncherApplication):
             HitTarget("activity_category_back", ALL_ACTIVITIES_ID, back_rect)
         )
 
-        icon_size = max(38, height - 2)
-        category_icon = self._category_shadowed_icon(
-            collection.icon_id or "backpack",
-            icon_size,
-            shadow_alpha=48,
-            shadow_offset=max(2, icon_size // 24),
-            pygame=pygame,
-        )
-        icon_center = (back_rect.right + 14 + icon_size // 2, back_rect.centery)
-        screen.blit(category_icon, category_icon.get_rect(center=icon_center))
+        # Category Switcher Strip
+        x = back_rect.right + 14
+        error_active = (self._last_result and not self._last_result.succeeded) or self._catalogue_error
+        right = screen.get_width() - (76 if error_active else 20)
+        gap = 8
+        pointer = self._pointer_pos(pygame)
+        pointer_active = self._is_pointer_active(pygame)
 
-        label_text = _category_title(collection.collection_id, self._active_locale)
-        label_size = max(22, min(30, height // 2))
-        label = self._category_label_surface(label_text, label_size, theme.text, pygame)
-        screen.blit(
-            label,
-            label.get_rect(midleft=(icon_center[0] + icon_size // 2 + 12, back_rect.centery)),
-        )
+        for col in collections:
+            is_active = (col.collection_id == self._category_id)
+            label_text = _category_title(col.collection_id, self._active_locale)
+            count = len(col.items)
+            display_text = f"{label_text} ({count})" if is_active else label_text
+            font_size = max(15, min(19, height // 2))
+            label = self._category_label_surface(display_text, font_size, theme.text, pygame)
+            icon_size = max(24, height - 16)
+
+            if is_active:
+                chip_width = min(220, max(110, label.get_width() + icon_size + 28))
+            else:
+                chip_width = min(150, max(46, label.get_width() + icon_size + 24)) if (right - x > len(collections) * 80) else height
+
+            if x + chip_width > right:
+                break
+
+            chip_rect = pygame.Rect(x, 16, chip_width, height)
+            h_chip = pointer_active and chip_rect.collidepoint(pointer)
+
+            bg_color = _mix(theme.panel, theme.accent, 0.12) if is_active else theme.panel
+            outline_color = theme.accent if (is_active or h_chip) else _mix(theme.text, theme.panel, 0.75)
+            outline_width = 3 if is_active else (2 if h_chip else 1)
+
+            pygame.draw.rect(screen, bg_color, chip_rect, border_radius=height // 2)
+            pygame.draw.rect(screen, outline_color, chip_rect, width=outline_width, border_radius=height // 2)
+
+            cat_icon = self._category_shadowed_icon(
+                col.icon_id or "backpack",
+                icon_size,
+                shadow_alpha=48 if is_active else 30,
+                shadow_offset=2,
+                pygame=pygame,
+            )
+
+            if chip_width > height:
+                icon_center = (chip_rect.left + 12 + icon_size // 2, chip_rect.centery)
+                screen.blit(cat_icon, cat_icon.get_rect(center=icon_center))
+                label_rect = label.get_rect(midleft=(chip_rect.left + 16 + icon_size, chip_rect.centery))
+                screen.blit(label, label_rect)
+            else:
+                screen.blit(cat_icon, cat_icon.get_rect(center=chip_rect.center))
+
+            if not is_active:
+                self._targets.append(
+                    HitTarget("activity_category", col.collection_id, chip_rect)
+                )
+
+            x += chip_width + gap
 
     def _category_label_surface(
         self, text: str, size: int, color: tuple[int, int, int], pygame: Any
@@ -905,6 +976,157 @@ class GreiaLauncherPresentation(LauncherApplication):
         self._category_icon_cache[key] = shadowed
         return shadowed
 
+    def _draw_pagination_and_overflow(
+        self,
+        screen: Any,
+        theme: Any,
+        pygame: Any,
+        window: Any,
+        columns: int,
+        inner_panel: Any = None,
+    ) -> None:
+        activities = self._presented_activities
+        if not activities:
+            return
+        page_capacity = columns * 2
+        total_items = len(activities)
+        total_pages = (total_items + page_capacity - 1) // page_capacity
+        if total_pages <= 1:
+            return
+
+        current_page = window.start // page_capacity
+        width, height = screen.get_size()
+        pointer = self._pointer_pos(pygame)
+        pointer_active = self._is_pointer_active(pygame)
+
+        # 1. Floating side arrows on left and right edges
+        arrow_size = max(44, min(54, height // 11))
+        center_y = inner_panel.centery if inner_panel else height // 2 + 20
+
+        if inner_panel:
+            left_arrow_rect = pygame.Rect(
+                inner_panel.left - arrow_size // 2 - 4,
+                center_y - arrow_size // 2,
+                arrow_size,
+                arrow_size,
+            )
+            right_arrow_rect = pygame.Rect(
+                inner_panel.right - arrow_size // 2 + 4,
+                center_y - arrow_size // 2,
+                arrow_size,
+                arrow_size,
+            )
+        else:
+            left_arrow_rect = pygame.Rect(16, center_y - arrow_size // 2, arrow_size, arrow_size)
+            right_arrow_rect = pygame.Rect(width - arrow_size - 16, center_y - arrow_size // 2, arrow_size, arrow_size)
+
+        # Left arrow button
+        if window.can_scroll_backward:
+            h_left = pointer_active and left_arrow_rect.collidepoint(pointer)
+            pygame.draw.rect(screen, theme.panel, left_arrow_rect, border_radius=arrow_size // 2)
+            pygame.draw.rect(
+                screen,
+                theme.accent if h_left else _mix(theme.text, theme.panel, 0.7),
+                left_arrow_rect,
+                width=3 if h_left else 2,
+                border_radius=arrow_size // 2,
+            )
+            inset = arrow_size // 3
+            pts = (
+                (left_arrow_rect.right - inset, left_arrow_rect.top + inset - 2),
+                (left_arrow_rect.left + inset, left_arrow_rect.centery),
+                (left_arrow_rect.right - inset, left_arrow_rect.bottom - inset + 2),
+            )
+            pygame.draw.lines(
+                screen,
+                theme.accent if h_left else theme.text,
+                False,
+                pts,
+                width=max(3, arrow_size // 12),
+            )
+            self._targets.append(
+                HitTarget("presented_activity_page_prev", -1, left_arrow_rect)
+            )
+
+        # Right arrow button
+        if window.can_scroll_forward:
+            h_right = pointer_active and right_arrow_rect.collidepoint(pointer)
+            pygame.draw.rect(screen, theme.panel, right_arrow_rect, border_radius=arrow_size // 2)
+            pygame.draw.rect(
+                screen,
+                theme.accent if h_right else _mix(theme.text, theme.panel, 0.7),
+                right_arrow_rect,
+                width=3 if h_right else 2,
+                border_radius=arrow_size // 2,
+            )
+            inset = arrow_size // 3
+            pts = (
+                (right_arrow_rect.left + inset, right_arrow_rect.top + inset - 2),
+                (right_arrow_rect.right - inset, right_arrow_rect.centery),
+                (right_arrow_rect.left + inset, right_arrow_rect.bottom - inset + 2),
+            )
+            pygame.draw.lines(
+                screen,
+                theme.accent if h_right else theme.text,
+                False,
+                pts,
+                width=max(3, arrow_size // 12),
+            )
+            self._targets.append(
+                HitTarget("presented_activity_page_next", 1, right_arrow_rect)
+            )
+
+        # 2. Bottom Pagination Capsule Pill (Page Dots + Counter)
+        pill_h = 30
+        dot_spacing = 14
+        dots_w = (total_pages - 1) * dot_spacing + 24
+        label_text = f"{current_page + 1} / {total_pages}"
+        font = self._font(14, pygame)
+        label_surf = font.render(label_text, True, _mix(theme.text, theme.panel, 0.4))
+        pill_w = dots_w + label_surf.get_width() + 28
+        pill_x = (inner_panel.centerx if inner_panel else width // 2) - pill_w // 2
+        pill_y = (inner_panel.bottom - pill_h - 4) if inner_panel else height - pill_h - 10
+        pill_rect = pygame.Rect(pill_x, pill_y, pill_w, pill_h)
+
+        pygame.draw.rect(
+            screen,
+            _mix(theme.panel, theme.accent, 0.08),
+            pill_rect,
+            border_radius=pill_h // 2,
+        )
+        pygame.draw.rect(
+            screen,
+            _mix(theme.text, theme.panel, 0.8),
+            pill_rect,
+            width=1,
+            border_radius=pill_h // 2,
+        )
+
+        dots_start_x = pill_rect.left + 14
+        for p in range(total_pages):
+            dot_cx = dots_start_x + p * dot_spacing
+            dot_cy = pill_rect.centery
+            is_active = (p == current_page)
+            if is_active:
+                dot_r = pygame.Rect(dot_cx - 8, dot_cy - 4, 16, 8)
+                pygame.draw.rect(screen, theme.accent, dot_r, border_radius=4)
+            else:
+                pygame.draw.circle(
+                    screen,
+                    _mix(theme.text, theme.panel, 0.5),
+                    (dot_cx, dot_cy),
+                    4,
+                )
+            dot_hit = pygame.Rect(dot_cx - 8, dot_cy - 12, 16, 24)
+            self._targets.append(HitTarget("presented_activity_page", p, dot_hit))
+
+        screen.blit(
+            label_surf,
+            label_surf.get_rect(
+                midleft=(dots_start_x + total_pages * dot_spacing + 6, pill_rect.centery)
+            ),
+        )
+
     def _draw_scroll_controls(
         self,
         screen: Any,
@@ -913,49 +1135,7 @@ class GreiaLauncherPresentation(LauncherApplication):
         window: Any,
         columns: int,
     ) -> None:
-        if not window.can_scroll_backward and not window.can_scroll_forward:
-            return
-        size = max(48, min(62, screen.get_height() // 9))
-        x = screen.get_width() - size - 12
-        center_y = screen.get_height() // 2 + 36
-        controls = (
-            (
-                -1,
-                pygame.Rect(x, center_y - size - 8, size, size),
-                window.can_scroll_backward,
-            ),
-            (
-                1,
-                pygame.Rect(x, center_y + 8, size, size),
-                window.can_scroll_forward,
-            ),
-        )
-        for direction, rect, enabled in controls:
-            if not enabled:
-                continue
-            pygame.draw.rect(screen, theme.panel, rect, border_radius=18)
-            pygame.draw.rect(screen, theme.accent, rect, width=4, border_radius=18)
-            inset = max(12, rect.width // 4)
-            if direction < 0:
-                points = (
-                    (rect.left + inset, rect.bottom - inset),
-                    (rect.centerx, rect.top + inset),
-                    (rect.right - inset, rect.bottom - inset),
-                )
-            else:
-                points = (
-                    (rect.left + inset, rect.top + inset),
-                    (rect.centerx, rect.bottom - inset),
-                    (rect.right - inset, rect.top + inset),
-                )
-            pygame.draw.polygon(screen, theme.text, points)
-            target = min(
-                max(0, self._selected + direction * columns),
-                len(self._presented_activities) - 1,
-            )
-            self._targets.append(
-                HitTarget("presented_activity_select", target, rect)
-            )
+        self._draw_pagination_and_overflow(screen, theme, pygame, window, columns)
 
     def _draw_activity_tile(
         self,
@@ -1103,6 +1283,31 @@ class GreiaLauncherPresentation(LauncherApplication):
             preferred_size=max(16, min(24, tile.height // 8)),
         )
         screen.blit(title, title.get_rect(center=label_rect.center))
+
+        if state.selected:
+            star_size = max(20, min(28, tile.width // 6))
+            star_rect = pygame.Rect(tile.right - star_size - 6, tile.top + 6, star_size, star_size)
+            cx, cy = star_rect.center
+            r_out = star_size // 2
+            r_in = r_out * 0.45
+            star_pts = []
+            for i in range(10):
+                angle = i * math.pi / 5 - math.pi / 2
+                r = r_out if i % 2 == 0 else r_in
+                star_pts.append((cx + r * math.cos(angle), cy + r * math.sin(angle)))
+            pygame.draw.polygon(screen, (255, 193, 7), star_pts)
+            pygame.draw.polygon(screen, (255, 160, 0), star_pts, width=2)
+
+        if state.launching:
+            badge_h = max(26, min(34, tile.height // 7))
+            badge_w = min(tile.width - 16, 140)
+            badge_rect = pygame.Rect(0, 0, badge_w, badge_h)
+            badge_rect.center = (tile.centerx, icon_center_y)
+            pygame.draw.rect(screen, (239, 77, 83), badge_rect, border_radius=badge_h // 2)
+            pygame.draw.rect(screen, (255, 255, 255), badge_rect, width=2, border_radius=badge_h // 2)
+            font_launch = self._font(max(13, min(17, badge_h // 2)), pygame)
+            launch_text = font_launch.render("Avvio...", True, (255, 255, 255))
+            screen.blit(launch_text, launch_text.get_rect(center=badge_rect.center))
 
     def _render_activity_label(
         self,

@@ -263,7 +263,21 @@ Outcome: **COMPLETE & VERIFIED**
 
 ---
 
-# 10. Drift to avoid
+# 10. Completed launcher gate — LAUNCHER SHELL PRODUCTIZATION & CATEGORY NAVIGATION
+
+Completed runbook:
+
+`docs/testing/2026-08-22_LAUNCHER_SHELL_PRODUCTIZATION_AND_CATEGORY_NAVIGATION.md`
+
+Outcome: **COMPLETE & VERIFIED**
+- Full Category Switcher Strip in the in-category header with active category pill (`Crea (6)`), interactive chips for other categories, and tactile Back/Home button returning to Collection Home.
+- Responsive pagination controls when activities exceed 3x2 grid capacity: bottom pagination capsule pill (`● ○`, `1 / 2`), floating tactile side arrows (`[ < ]` and `[ > ]`), and `PAGE_UP` / `PAGE_DOWN` keyboard support.
+- Rich selection, hover, and launching visual polish: card hover elevation (-3px lift, soft shadow, accent outline), distinct keyboard focus ring with golden star badge (`⭐`), and animated launching badge (`Avvio...` coral pill with white border).
+- 12 curated Simulator captures in `docs/reviews/visual/2026-08-22_launcher-shell-productization/`, `runtime-audit.json`, `simulator-trace.json`, `OWNER_RECHECK.md`, and root transfer archive `GREIA_VISUAL_REVIEW_LAUNCHER_SHELL_PRODUCTIZATION_2026-08-22.zip`.
+
+---
+
+# 11. Drift to avoid
 
 - no theme-by-theme pack roadmap;
 - no Generic Batch B by inertia;

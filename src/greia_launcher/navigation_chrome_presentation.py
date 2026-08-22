@@ -139,83 +139,21 @@ class SharedUiNavigationChromeMixin:
         window: Any,
         columns: int,
     ) -> None:
-        if not window.can_scroll_backward and not window.can_scroll_forward:
-            return
-
-        size = max(48, min(62, screen.get_height() // 9))
-        frame = self._icon_button_surface(size, pygame)
-        if frame is None:
-            super()._draw_scroll_controls(
-                screen,
-                theme,
-                pygame,
-                window,
-                columns,
-            )
-            return
-
-        from .main import HitTarget
-
-        x = screen.get_width() - size - 12
-        center_y = screen.get_height() // 2 + 36
-        controls = (
-            (
-                -1,
-                pygame.Rect(x, center_y - size - 8, size, size),
-                window.can_scroll_backward,
-            ),
-            (
-                1,
-                pygame.Rect(x, center_y + 8, size, size),
-                window.can_scroll_forward,
-            ),
-        )
-        pointer = self._pointer_pos(pygame)
-        pointer_active = self._is_pointer_active(pygame)
-
-        for direction, rect, enabled in controls:
-            if not enabled:
-                continue
-            hovered = pointer_active and rect.collidepoint(pointer)
-            drawn = rect.move(0, -2 if hovered else 0)
-            screen.blit(frame, drawn)
-            inset = max(12, drawn.width // 4)
-            if direction < 0:
-                points = (
-                    (drawn.left + inset, drawn.bottom - inset),
-                    (drawn.centerx, drawn.top + inset),
-                    (drawn.right - inset, drawn.bottom - inset),
-                )
-            else:
-                points = (
-                    (drawn.left + inset, drawn.top + inset),
-                    (drawn.centerx, drawn.bottom - inset),
-                    (drawn.right - inset, drawn.top + inset),
-                )
-            pygame.draw.polygon(
-                screen,
-                theme.accent if hovered else theme.text,
-                points,
-            )
-            target = min(
-                max(0, self._selected + direction * columns),
-                len(self._presented_activities) - 1,
-            )
-            self._targets.append(
-                HitTarget("presented_activity_select", target, rect)
-            )
+        super()._draw_scroll_controls(screen, theme, pygame, window, columns)
 
     def _draw_category_header(self, screen: Any, theme: Any, pygame: Any) -> None:
         from .catalogue_view import ALL_ACTIVITIES_ID, _category_title
         from .main import HitTarget
+        from .presentation import _mix
 
-        collection = self._catalogue.collection(self._category_id)
+        collections = tuple(
+            item
+            for item in self._catalogue.collections
+            if item.collection_id != ALL_ACTIVITIES_ID
+        )
         left = 112 if self._active_profile is not None else 20
-        height = max(46, min(58, screen.get_height() // 10))
+        height = max(46, min(56, screen.get_height() // 10))
         frame = self._icon_button_surface(height, pygame)
-        if frame is None:
-            super()._draw_category_header(screen, theme, pygame)
-            return
 
         back_rect = pygame.Rect(left, 16, height, height)
         hovered = (
@@ -223,7 +161,18 @@ class SharedUiNavigationChromeMixin:
             and self._is_pointer_active(pygame)
         )
         drawn = back_rect.move(0, -2 if hovered else 0)
-        screen.blit(frame, drawn)
+
+        if frame is not None:
+            screen.blit(frame, drawn)
+        else:
+            pygame.draw.rect(screen, theme.panel, drawn, border_radius=height // 2)
+            pygame.draw.rect(
+                screen,
+                theme.accent if hovered else _mix(theme.text, theme.panel, 0.72),
+                drawn,
+                width=3 if hovered else 2,
+                border_radius=height // 2,
+            )
 
         arrow_inset = max(12, drawn.height // 4)
         arrow_x = drawn.left + arrow_inset
@@ -252,31 +201,63 @@ class SharedUiNavigationChromeMixin:
             HitTarget("activity_category_back", ALL_ACTIVITIES_ID, back_rect)
         )
 
-        icon_size = max(38, height - 2)
-        category_icon = self._category_shadowed_icon(
-            collection.icon_id or "backpack",
-            icon_size,
-            shadow_alpha=48,
-            shadow_offset=max(2, icon_size // 24),
-            pygame=pygame,
+        # Category Switcher Strip
+        x = back_rect.right + 14
+        error_active = (
+            (self._last_result and not self._last_result.succeeded)
+            or self._catalogue_error
         )
-        icon_center = (back_rect.right + 14 + icon_size // 2, back_rect.centery)
-        screen.blit(category_icon, category_icon.get_rect(center=icon_center))
+        right = screen.get_width() - (76 if error_active else 20)
+        gap = 8
+        pointer = self._pointer_pos(pygame)
+        pointer_active = self._is_pointer_active(pygame)
 
-        label_text = _category_title(collection.collection_id, self._active_locale)
-        label_size = max(22, min(30, height // 2))
-        label = self._category_label_surface(
-            label_text,
-            label_size,
-            theme.text,
-            pygame,
-        )
-        screen.blit(
-            label,
-            label.get_rect(
-                midleft=(
-                    icon_center[0] + icon_size // 2 + 12,
-                    back_rect.centery,
+        for col in collections:
+            is_active = (col.collection_id == self._category_id)
+            label_text = _category_title(col.collection_id, self._active_locale)
+            count = len(col.items)
+            display_text = f"{label_text} ({count})" if is_active else label_text
+            font_size = max(15, min(19, height // 2))
+            label = self._category_label_surface(display_text, font_size, theme.text, pygame)
+            icon_size = max(24, height - 16)
+
+            if is_active:
+                chip_width = min(220, max(110, label.get_width() + icon_size + 28))
+            else:
+                chip_width = min(150, max(46, label.get_width() + icon_size + 24)) if (right - x > len(collections) * 80) else height
+
+            if x + chip_width > right:
+                break
+
+            chip_rect = pygame.Rect(x, 16, chip_width, height)
+            h_chip = pointer_active and chip_rect.collidepoint(pointer)
+
+            bg_color = _mix(theme.panel, theme.accent, 0.12) if is_active else theme.panel
+            outline_color = theme.accent if (is_active or h_chip) else _mix(theme.text, theme.panel, 0.75)
+            outline_width = 3 if is_active else (2 if h_chip else 1)
+
+            pygame.draw.rect(screen, bg_color, chip_rect, border_radius=height // 2)
+            pygame.draw.rect(screen, outline_color, chip_rect, width=outline_width, border_radius=height // 2)
+
+            cat_icon = self._category_shadowed_icon(
+                col.icon_id or "backpack",
+                icon_size,
+                shadow_alpha=48 if is_active else 30,
+                shadow_offset=2,
+                pygame=pygame,
+            )
+
+            if chip_width > height:
+                icon_center = (chip_rect.left + 12 + icon_size // 2, chip_rect.centery)
+                screen.blit(cat_icon, cat_icon.get_rect(center=icon_center))
+                label_rect = label.get_rect(midleft=(chip_rect.left + 16 + icon_size, chip_rect.centery))
+                screen.blit(label, label_rect)
+            else:
+                screen.blit(cat_icon, cat_icon.get_rect(center=chip_rect.center))
+
+            if not is_active:
+                self._targets.append(
+                    HitTarget("activity_category", col.collection_id, chip_rect)
                 )
-            ),
-        )
+
+            x += chip_width + gap
