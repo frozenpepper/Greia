@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import tempfile
 import unittest
+from pathlib import Path
 
 import pygame
 
+from greia_platform.achievement_art import ActivityAchievementEmblem
 from greia_platform.achievements import (
     AchievementDefinition,
     AchievementEntry,
@@ -22,6 +25,7 @@ def _entry(
     tier: str = "gold",
     secret: bool = False,
     achievement_id: str = "greia.test.badge",
+    activity_emblem: ActivityAchievementEmblem | None = None,
 ) -> AchievementEntry:
     definition = AchievementDefinition(
         achievement_id=achievement_id,
@@ -33,6 +37,7 @@ def _entry(
         description=_text("Description"),
         locked_hint=_text("Hint"),
         criteria=(),
+        activity_emblem=activity_emblem,
     )
     return AchievementEntry(
         definition=definition,
@@ -114,8 +119,6 @@ class AchievementBadgeRendererTests(unittest.TestCase):
         self.assertEqual(medal.get_size(), (96, 96))
         self.assertEqual(trophy.get_size(), (96, 96))
         self.assertEqual(special.get_size(), (96, 96))
-        # The tier frames must not accidentally collapse back to one identical
-        # cached/surface representation.
         self.assertIsNot(medal, trophy)
         self.assertIsNot(trophy, special)
 
@@ -135,6 +138,37 @@ class AchievementBadgeRendererTests(unittest.TestCase):
         self.assertIs(first, second)
         self.assertEqual(provider.calls, 1)
         self.assertEqual(first.get_size(), (110, 110))
+
+    def test_admitted_activity_emblem_replaces_fallback_icon_and_is_cached(self) -> None:
+        provider = _IconProvider()
+        renderer = PygameAchievementBadgeRenderer(provider, max_entries=4)
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "emblem.png"
+            source = pygame.Surface((64, 64), pygame.SRCALPHA)
+            source.fill((0, 0, 0, 0))
+            pygame.draw.circle(source, (42, 190, 110), (32, 32), 24)
+            pygame.image.save(source, path)
+            emblem = ActivityAchievementEmblem(
+                activity_id="org.greia.test-activity",
+                emblem_id="activity",
+                asset_path=path,
+                width=64,
+                height=64,
+                byte_size=path.stat().st_size,
+            )
+            entry = _entry(
+                unlocked=True,
+                tier="silver",
+                achievement_id="greia.test.activity-art",
+                activity_emblem=emblem,
+            )
+
+            first = renderer.render(entry, 96)
+            second = renderer.render(entry, 96)
+
+        self.assertIs(first, second)
+        self.assertEqual(provider.calls, 0)
+        self.assertEqual(first.get_size(), (96, 96))
 
 
 if __name__ == "__main__":
