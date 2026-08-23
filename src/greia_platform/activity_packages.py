@@ -53,21 +53,44 @@ class ActivityInstallReceipt:
         }
 
 
+@dataclass(frozen=True, slots=True)
+class ActivityUninstallReceipt:
+    """Result of deactivating one parent-installed Activity package.
+
+    Child/profile data is deliberately outside the package state tree and is
+    never touched by uninstall. This typed result makes that product contract
+    explicit to Parent clients.
+    """
+
+    activity_id: str
+    version: str
+    package_digest: str
+    source_id: str
+    profile_data_preserved: bool = True
+
+    def as_json_dict(self) -> dict[str, str | bool]:
+        return {
+            "activity_id": self.activity_id,
+            "version": self.version,
+            "package_digest": self.package_digest,
+            "source_id": self.source_id,
+            "profile_data_preserved": self.profile_data_preserved,
+        }
+
+
 class ActivityPackageService:
-    """Single bounded authority for parent-approved local Activity packages.
+    """Bounded authority for parent-approved local Activity packages.
 
-    This tranche intentionally supports *new installs only*. It establishes the
-    R10 safety/transaction seams without pretending update/signature policy is
-    solved: bounded acquisition, archive containment, normal ActivityRegistry
-    validation, immutable version storage, atomic activation and typed parent
-    provenance. Updates/removal remain separate future operations.
+    The service owns installation and removal of the *parent package source*.
+    Built-in Activities remain outside this state tree and cannot be removed by
+    this service. Uninstall removes package code while deliberately preserving
+    all profile-scoped Activity data. In-place package update/replacement and
+    rollback remain separate R10 work.
 
-    Installation is serialized twice: a small in-process lock avoids redundant
-    contenders inside one service object, while a private ``flock`` file under
-    the package state root serializes separate package-service processes that
-    share the same authoritative store. Receipt preparation and active-tree
-    publication therefore cannot race merely because HTTP/process composition
-    changes later.
+    Package mutations are serialized twice: a small in-process lock avoids
+    redundant contenders inside one service object, while a private ``flock``
+    file under the package state root serializes separate package-service
+    processes that share the same authoritative store.
     """
 
     SOURCE_ID = "greia-parent-package-service"
@@ -117,6 +140,28 @@ class ActivityPackageService:
             with self._install_lock:
                 with self._process_install_lock():
                     return self._install_archive_serialized(archive_path)
+        except ActivityPackageError:
+            raise
+        except OSError as exc:
+            raise ActivityPackageError(
+                f"could not establish Activity package transaction lock: {exc}"
+            ) from exc
+
+    def uninstall(self, activity_id: str) -> ActivityUninstallReceipt:
+        """Remove one parent-installed Activity package, preserving child data.
+
+        Identity is resolved through the validated parent-package registry rather
+        than interpolated into a filesystem path from the request. Built-in
+        Activities therefore never enter this removal path.
+        """
+
+        if not isinstance(activity_id, str) or not activity_id.strip():
+            raise ActivityPackageError("Activity id is required")
+        try:
+            self._ensure_roots()
+            with self._install_lock:
+                with self._process_install_lock():
+                    return self._uninstall_serialized(activity_id.strip())
         except ActivityPackageError:
             raise
         except OSError as exc:
@@ -182,8 +227,6 @@ class ActivityPackageService:
             immutable.parent.mkdir(parents=True, exist_ok=True)
             os.chmod(immutable.parent, 0o700)
             if immutable.exists():
-                # Recover an immutable version left by an interrupted attempt.
-                # Its digest-addressed path is not trusted by name alone.
                 if not immutable.is_dir() or package_digest(immutable) != digest:
                     raise ActivityPackageError(
                         "stored immutable Activity version does not match its package digest"
@@ -196,9 +239,6 @@ class ActivityPackageService:
             activation = self.active_root / f".{manifest.activity_id}.activating-{digest[:12]}"
             if activation.exists():
                 shutil.rmtree(activation)
-            # Hard links keep the active view cheap while remaining a real tree:
-            # ActivityRegistry never follows a package-root symlink and future
-            # updates can atomically swap one active directory for another.
             shutil.copytree(immutable, activation, copy_function=os.link)
             self._make_tree_read_only(activation)
             receipt = ActivityInstallReceipt(
@@ -209,11 +249,6 @@ class ActivityPackageService:
                 source_id=self.SOURCE_ID,
             )
 
-            # The active-directory rename is the install commit point. Write the
-            # audit receipt first, so any error that reaches the caller occurs
-            # before executable code becomes visible. A crash in this narrow
-            # pre-commit window can leave an orphan receipt/immutable version,
-            # both of which are safe and recoverable on retry.
             self._write_receipt(receipt)
             try:
                 os.rename(activation, final_active)
@@ -235,12 +270,62 @@ class ActivityPackageService:
         ) as exc:
             raise ActivityPackageError(str(exc)) from exc
         finally:
-            # The stage tree and any non-committed activation residue are private
-            # to this attempt. A receipt failure (or any error before the atomic
-            # rename) must not leave a launch-visible active entry behind.
             self._discard_private_tree(stage_parent)
             if activation is not None:
                 self._discard_private_tree(activation)
+
+    def _uninstall_serialized(self, activity_id: str) -> ActivityUninstallReceipt:
+        registry = ActivityRegistry(
+            (
+                ActivitySource(
+                    self.active_root,
+                    PackageTrust.PARENT_TRUSTED_UNSIGNED,
+                    self.SOURCE_ID,
+                ),
+            ),
+            self.runtime,
+        )
+        try:
+            registration = next(
+                item
+                for item in registry.discover_registrations()
+                if item.manifest.activity_id == activity_id
+            )
+        except StopIteration as exc:
+            raise ActivityPackageError(
+                f"Activity {activity_id} is not a removable parent-installed Activity"
+            ) from exc
+        except ActivityValidationError as exc:
+            raise ActivityPackageError(str(exc)) from exc
+
+        active = registration.manifest.root.resolve()
+        if active.parent != self.active_root.resolve():
+            raise ActivityPackageError("installed Activity path is outside the package source")
+        digest = registration.package_digest
+        tombstone = self.staging_root / f"remove-{activity_id}-{digest[:12]}"
+        if tombstone.exists():
+            self._discard_private_tree(tombstone)
+
+        # Moving the active directory is the uninstall commit point. Child saves
+        # live under profile-scoped storage elsewhere and are never part of this
+        # transaction. After this rename the launcher can no longer discover the
+        # package even if best-effort cleanup is interrupted.
+        try:
+            os.rename(active, tombstone)
+        except FileNotFoundError as exc:
+            raise ActivityPackageError(
+                f"Activity {activity_id} is no longer installed"
+            ) from exc
+
+        self._receipt_path(activity_id).unlink(missing_ok=True)
+        self._discard_private_tree(tombstone)
+        self._discard_private_tree(self.versions_root / activity_id)
+        return ActivityUninstallReceipt(
+            activity_id=activity_id,
+            version=registration.manifest.version,
+            package_digest=digest,
+            source_id=self.SOURCE_ID,
+        )
 
     def _ensure_roots(self) -> None:
         self.state_root.mkdir(parents=True, exist_ok=True)
@@ -373,24 +458,14 @@ class ActivityPackageService:
             raise ActivityPackageError(
                 "staged Activity did not validate as one installable package"
             )
-        # Package-owned presentation assets are part of install validity, not a
-        # launcher-time best-effort concern. A malformed icon reference must be
-        # rejected before the package becomes visible.
         package_icon_path(staged.manifest)
 
-        # A staged package may never shadow a built-in identity. Discovery of the
-        # built-in source happens here, so a fresh package colliding with a
-        # built-in is reported clearly.
         staged_id = staged.manifest.activity_id
         if self.active_root is not None and (self.active_root / staged_id).exists():
             raise ActivityPackageError(
                 f"Activity {staged_id} is already installed; update is not enabled yet"
             )
 
-        # The staged package must not collide (including legacy aliases) with any
-        # already installed parent package. Discovery of the active source is done
-        # separately so the already-installed case above wins with the clearer
-        # message rather than a registry collision.
         if self.active_root.exists():
             combined = ActivityRegistry(
                 (
@@ -420,13 +495,7 @@ class ActivityPackageService:
 
     @staticmethod
     def _discard_private_tree(root: Path) -> None:
-        """Remove a private service tree that may contain read-only entries.
-
-        ``shutil.rmtree`` alone cannot delete directories whose mode bits were
-        cleared by ``_make_tree_read_only``, so restore write permission before
-        removing. Only private staging/activation trees are passed here; the
-        committed immutable/active trees are never discarded this way.
-        """
+        """Remove a service-owned tree that may contain read-only entries."""
 
         if not root.exists():
             return
