@@ -4,16 +4,18 @@
 **Audience:** Activity authors, coding agents, reviewers  
 **Reviewed:** 2026-08-23
 
-This companion translates Greia's repository-wide engineering and measured-performance rules into a practical Activity-development protocol.
+This companion translates Greia's repository-wide engineering, runtime and measured-performance rules into a practical Activity-development protocol.
 
-Authority remains, in order, with accepted ADRs and exact source/runtime declarations. The two primary engineering authorities behind this guide are:
+Authority remains, in order, with accepted ADRs and exact source/runtime declarations. Primary engineering authorities:
 
 ```text
 docs/engineering/ENGINEERING_FOUNDATIONS.md
 docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md
+runtime/child-runtime.toml
+src/greia_launcher/runtime_adapter.py
 ```
 
-This file does not create a second Activity API. Before naming or extending a Greia class, protocol or helper, inspect the current source owner and use the implemented API.
+This file does not create a second Activity API or runtime policy. Before naming or extending a Greia class, protocol or helper, inspect the current source owner and use the implemented contract.
 
 ---
 
@@ -29,33 +31,35 @@ The target is not maximal abstraction. The target is:
 - purposeful polymorphism at genuine variation points;
 - composition instead of deep inheritance;
 - reuse of Greia platform services and shared primitives;
+- module decomposition that the **real Greia runtime and repository tooling actually support**;
 - bounded resource use on the Acer-class floor;
 - rendering/input loops with no accidental heavyweight work;
 - comments/docstrings that explain ownership, invariants and non-obvious decisions;
-- tests around semantic behavior and performance-sensitive equivalence.
+- tests around semantic behavior, runtime contracts and performance-sensitive equivalence.
 
-A feature is not complete merely because it works on a modern development machine.
+A feature is not complete merely because it looks architecturally clean or works when launched directly on a developer machine.
 
 ---
 
 ## 2. `main.py` is a composition root, not the Activity
 
-For new first-party Activities and substantive rewrites, `main.py` MUST remain a thin bootstrap/composition boundary.
+For new first-party Activities and substantive rewrites, `main.py` should remain a thin bootstrap/composition boundary.
 
 It may reasonably:
 
-1. obtain the Greia/runtime context;
+1. obtain Greia/runtime context;
 2. construct shared resources/adapters/services;
 3. construct the Activity/application object;
-4. enter its run/lifecycle method;
-5. translate an unrecoverable top-level failure into the expected Activity exit/lifecycle behavior.
+4. retain a small compatibility export surface when established repository consumers require it;
+5. enter the Activity lifecycle;
+6. perform top-level cleanup.
 
-It should NOT own:
+It should not own:
 
 - game rules;
 - round generation;
 - scoring/progression semantics;
-- widget/layout implementations;
+- large widget/layout implementations;
 - scene rendering details;
 - asset decoding/scaling policy;
 - audio sequencing policy;
@@ -63,7 +67,7 @@ It should NOT own:
 - controller/device mapping;
 - large event-dispatch trees;
 - localization tables;
-- hundreds of constants for unrelated subsystems.
+- unrelated subsystem constants.
 
 A several-hundred/thousand-line `main.py` is an architecture defect even when it works.
 
@@ -73,10 +77,28 @@ These are decomposition triggers, not automatic build failures:
 
 - `main.py` above roughly **150 lines**: explain why bootstrap needs that size or split it;
 - `main.py` above **250 lines**: normally reject for first-party code until responsibilities are extracted;
-- any implementation module above roughly **500 lines**: review whether it owns more than one reason to change;
+- an implementation module above roughly **500 lines**: review whether it owns more than one reason to change;
 - a method above roughly **60–80 lines**: review for mixed state transition, IO, rendering or policy concerns.
 
 Do not evade these thresholds by creating meaningless tiny files. Split by ownership and reason-to-change.
+
+### Critical qualification: decomposition must be launchable
+
+The thin-entrypoint rule does **not** authorize authors to assume Python's ordinary import environment is Greia's entire runtime contract.
+
+When code moves into sibling modules, the Activity must still satisfy:
+
+```text
+Greia PythonRuntimeAdapter validation
+runtime/script import semantics
+repository/package import semantics
+READY/STOP lifecycle verification
+existing legitimate import/export consumers
+project validation
+actual Simulator/launcher startup
+```
+
+If any of those fail, the modularization is incomplete even if the OOP structure is better.
 
 ---
 
@@ -87,32 +109,32 @@ There is no mandatory filename taxonomy, but a non-trivial Python Activity shoul
 ```text
 activities/my_activity/
 ├── activity.toml
-├── main.py                 # composition/bootstrap only
+├── main.py                 # composition/bootstrap + narrow compatibility only
 ├── app.py                  # Activity lifecycle / top-level state machine
 ├── model.py                # domain state and invariants
 ├── rounds.py               # challenge/round generation where applicable
 ├── presentation.py         # renderer/view composition
 ├── input.py                # semantic Activity actions, not physical devices
-├── resources.py            # Activity-owned asset/resource preparation
+├── resources.py            # Activity-owned resource preparation
 ├── audio.py                # Activity audio sequencing where genuinely needed
-├── persistence.py          # Activity-owned profile state mapping where needed
+├── persistence.py          # Activity-owned state mapping where needed
 ├── locales/
 └── assets/
 ```
 
-Small Activities may combine several of these responsibilities. The rule is cohesion, not file multiplication.
+Small Activities may combine several responsibilities. The rule is cohesion, not file multiplication.
 
-Good examples of things worth modeling as classes/dataclasses:
+Good object candidates include:
 
 - an Activity lifecycle/state machine;
 - round/challenge state with invariants;
-- a scene/presentation object that owns cached presentation resources;
-- an audio sequencer that owns non-overlap/cancellation state;
-- an Activity-specific repository over the Greia storage API when persistence is non-trivial;
+- a scene/presentation owner with cached prepared resources;
+- an audio sequencer with non-overlap/cancellation state;
+- an Activity-specific repository over Greia storage when persistence is non-trivial;
 - a generator/strategy when multiple challenge-generation behaviors are genuinely substitutable;
-- a bounded asset/cache owner with an explicit invalidation lifecycle.
+- a bounded asset/cache owner with explicit invalidation lifecycle.
 
-Keep tiny calculations and transformations as pure functions when an object would add no ownership or substitutability.
+Keep tiny calculations and stateless drawing/transformation helpers as functions when an object would add no ownership or substitutability.
 
 ---
 
@@ -133,19 +155,17 @@ Do not create `SomethingManager` merely because several functions need a namespa
 
 ### 4.2 Prefer composition
 
-An Activity application typically composes domain state, renderer/presentation, semantic input handling, audio and persistence collaborators.
-
 Prefer:
 
 ```text
 ActivityApp
-  has RoundModel
+  has DomainModel
   has Presentation
   has AudioSequencer
   has PersistencePort
 ```
 
-over a deep inheritance tree such as:
+over:
 
 ```text
 BaseActivity -> AnimatedActivity -> AudioActivity -> GameActivity -> MyActivity
@@ -169,29 +189,107 @@ ActivityClock
 
 Do not invent an interface for every class. A single concrete implementation with no meaningful substitution need not have an ABC merely for style.
 
-If repeated branches appear across the Activity like:
-
-```text
-if mode == ...
-elif mode == ...
-elif mode == ...
-```
-
-ask whether the branches represent a genuine strategy/state object. If they are just a small local state transition, an explicit enum/state machine may be clearer than polymorphism.
+If repeated mode branches appear, ask whether they represent a genuine strategy/state object. A small local transition may be clearer as an enum/state machine.
 
 ### 4.4 Dependencies are explicit
 
-Inject collaborators into the object that owns them. Avoid mutable global singletons for renderer state, random generators, storage clients, clocks, audio state or caches.
+Inject collaborators into the object that owns them. Avoid mutable global singletons for renderer state, randomness, storage, clocks, audio state or caches.
 
-Test seams should usually be the same seams production code uses, not special `if testing:` branches.
+Test seams should normally be the same seams production uses, not `if testing:` branches.
+
+### 4.5 Do not promote abstractions after one example
+
+An Activity-local abstraction becomes a platform candidate only after the same **semantics** recur across multiple Activities.
+
+Before moving something into `greia_platform`:
+
+1. compare at least one or two additional Activities;
+2. identify the stable semantic contract;
+3. ensure the platform really owns that responsibility;
+4. provide a narrow API and tests;
+5. migrate consumers deliberately.
+
+Shared-looking filenames alone are not evidence of a reusable abstraction.
 
 ---
 
-## 5. Reuse Greia before writing Activity-local infrastructure
+## 5. Python module and runtime compatibility
 
-Before adding a helper/framework/service, inspect the canonical platform owners.
+This section is mandatory for modular Python Activities.
 
-Common shared areas include:
+### 5.1 Greia validates every Activity Python source
+
+`PythonRuntimeAdapter` parses Activity Python files and enforces the curated runtime policy from `runtime/child-runtime.toml`.
+
+The intended security distinction is:
+
+```text
+forbidden external/import root
+    reject
+
+package-local module or package inside manifest.root
+    Activity code; allow
+
+curated external import root
+    allow
+
+unknown external import root
+    reject
+```
+
+Package decomposition must **not** require adding Activity-specific module names to the global `allowed_import_roots` list.
+
+Forbidden imports remain forbidden even when decomposition is convenient. Platform anti-shadowing rules must also remain intact so an Activity cannot replace a curated module with a local lookalike.
+
+### 5.2 Support both legitimate import contexts
+
+Greia runs the manifest entrypoint as a script from the Activity root, while repository tests/tools may import it through `activities.<name>...`.
+
+A modular Activity must work in both contexts.
+
+Preferred pattern for new code:
+
+```python
+if __package__:
+    from .model import ActivityModel
+    from .presentation import ActivityPresentation
+else:
+    from model import ActivityModel
+    from presentation import ActivityPresentation
+```
+
+A verified `try`/relative-import fallback may be retained where already established, but broad `except ImportError` can mask an ImportError raised *inside* the imported module. Avoid using broad exception handling as the default architecture.
+
+Do not scatter `sys.path` manipulation through Activities.
+
+### 5.3 Public compatibility exports matter
+
+Before moving/renaming symbols, search repository tests and tools for imports from the old module.
+
+If legitimate consumers exist, either:
+
+- keep a small compatibility alias/export at the old location; or
+- migrate all consumers coherently in the same tranche.
+
+A thin `main.py` may therefore contain a few compatibility aliases. That does not make it a monolith.
+
+### 5.4 Lifecycle ownership may move, semantics may not
+
+`mark_activity_ready()` should live where the Activity knows the first usable frame has been presented. That may be in `app.py` rather than `main.py`.
+
+The contract is semantic:
+
+```text
+present first usable frame -> publish READY exactly once
+```
+
+Repository verification must not accidentally freeze the old file layout. Likewise the Activity must prove the real launch path reaches READY.
+
+---
+
+## 6. Reuse Greia before writing Activity-local infrastructure
+
+Inspect shared owners before adding a helper/framework/service:
 
 ```text
 src/greia_platform/activity_api.py
@@ -207,9 +305,9 @@ src/greia_platform/emoji_palette.py
 src/greia_platform/pygame_visual_assets.py
 ```
 
-Performance-oriented shared patterns currently include `BoundedCache`, shared motion/effect primitives and `PygameVisualSurfaceCache`; inspect current source for the exact import/API before use.
+Performance-oriented shared patterns include bounded caches and shared visual/motion primitives; inspect current source for exact APIs before use.
 
-Do NOT build Activity-local replacements for:
+Do not build Activity-local replacements for:
 
 - Greia storage/profile scoping;
 - progression/reward authority;
@@ -222,107 +320,95 @@ Do NOT build Activity-local replacements for:
 - shared font/emoji fallback;
 - system update/install behavior.
 
-If several Activities need the same general helper and the behavior is platform-neutral, propose/extract it into the appropriate shared Greia layer with tests/documentation rather than copy/pasting it into Activity folders.
-
 ---
 
-## 6. Performance is an Activity correctness contract
+## 7. Performance is an Activity correctness contract
 
-Greia's extreme reference floor is approximately a first-generation Acer Aspire One class machine: ~1 GHz single-core Atom, software-rendered Pygame/SDL, 1024×600 and <=1 GiB RAM.
+Greia's extreme reference floor is approximately a first-generation Acer Aspire One: ~1 GHz single-core Atom, software-rendered Pygame/SDL, 1024×600, <=1 GiB RAM.
 
-The current measured manual establishes several important facts:
+Measured platform work has established that:
 
 - large per-pixel-alpha blends can dominate a frame;
 - opaque full-screen copies are comparatively cheap;
-- `smoothscale` and image decode are far too expensive for hot loops;
-- idle wake frequency has a measurable CPU cost;
-- cached steady frames can already be very cheap if dynamic changes do not force a full rebuild.
+- `smoothscale` and image decode are too expensive for hot loops;
+- idle wake frequency has measurable CPU cost;
+- cached steady frames can be cheap if small dynamics do not force full reconstruction.
 
-Treat these as design inputs, not as a cleanup checklist after the Activity is finished.
+Treat these as design inputs, not cleanup tasks after the Activity is finished.
 
-### 6.1 Forbidden in a normal frame/event hot path
+### 7.1 Forbidden in a normal hot path
 
 Do not repeatedly:
 
 - `pygame.image.load()` or equivalent decode;
-- `smoothscale`/large scale operations;
+- `smoothscale` or other large reusable transforms;
 - construct fonts;
-- render stable text that could be cached;
-- allocate large Surfaces/overlays for unchanged content;
-- generate static gradients/patterns/scenery;
-- flip/transform sprites when the transformed state is reusable;
-- perform filesystem walks/stat storms/package scans;
+- render stable text that can be cached;
+- allocate large unchanged Surfaces/overlays;
+- regenerate static gradients/patterns/scenery;
+- flip/transform sprites when reusable;
+- walk/stat package filesystems;
 - enumerate devices/controllers;
 - launch subprocesses;
-- parse configuration files;
+- parse configuration;
 - write durable storage/autosaves.
 
-If a frame needs any of those, move the work to load/preparation, a bounded cache miss, a state transition, a throttled/background owner, or an idle/level boundary as appropriate.
+Move such work to preparation, a bounded cache miss, a semantic state transition, a throttled/background owner, or an appropriate level/idle boundary.
 
-### 6.2 Cache correctly, not infinitely
+### 7.2 Cache correctly, not infinitely
 
 Every cache needs:
 
 - a clear owner;
 - an explicit bound or demonstrated natural bound;
-- a key containing every fact that changes its pixels/value;
-- an invalidation/re-key story for resize, locale, theme/resource revision or Activity state as applicable;
-- a graceful slow/correct fallback when the fast path cannot be used.
+- a key containing every fact that changes its result;
+- invalidation/re-key behavior for resize, locale, theme/resource revision or state as applicable;
+- a correct fallback when the fast path cannot be used.
 
-A cache without invalidation is a stale-state bug. A cache smaller than its measured working set can be a performance regression. An unbounded cache is not acceptable on Greia.
+A cache without invalidation is a stale-state bug. An unbounded cache is unacceptable on Greia.
 
-### 6.3 Bake static presentation
-
-If scenery cannot change during a scene/round, render it once.
+### 7.3 Bake static presentation
 
 Prefer:
 
 ```text
-static backdrop -> one reusable opaque surface
-small changing objects -> redraw only when needed
+static scene -> reusable opaque backdrop
+small changing objects -> redraw as needed
 transient alpha FX -> small bounded areas
 ```
 
-over rebuilding a large RGBA scene because one pointer/character changed.
+over rebuilding a large RGBA scene because one object changed.
 
-For sprites with reusable transforms, cache by semantic transform state such as:
+Cache reusable transforms by semantic transform state rather than scaling/flipping every frame.
 
-```text
-(asset_id, width, height, facing_or_state)
-```
+### 7.4 Dirty/invalidation rendering
 
-rather than scaling/flipping every frame.
+Static or turn-based Activities should not repaint continuously while nothing changes.
 
-### 6.4 Dirty/invalidation rendering
-
-Static or turn-based Activities should not burn a continuous redraw loop while nothing is changing.
-
-Maintain explicit invalidation/dirty state. Redraw when:
+Redraw when:
 
 - input changes visible state;
 - a bounded animation is active;
 - an async result changes presentation;
-- a timed semantic event genuinely requires it;
-- the viewport/resource context changed.
+- a genuine timed semantic event requires it;
+- viewport/resource context changed.
 
-When idle/static, wait/sleep at a cadence that preserves input responsiveness instead of repainting unchanged pixels.
+When static, retain input/stop responsiveness without repainting unchanged pixels unnecessarily.
 
-### 6.5 Animation rules
+### 7.5 Animation rules
 
 Animations should be:
 
 - sampled from monotonic time;
-- math/state driven rather than frame-count dependent;
+- math/state-driven rather than frame-count-dependent;
 - bounded in duration/amplitude;
-- allocation-light in the hot path;
-- quantized/cached where visual equivalence permits;
-- guaranteed to settle exactly to a neutral/end state.
+- allocation-light;
+- quantized/cached where visually safe;
+- guaranteed to settle to a neutral/end state.
 
-Do not introduce a heavyweight retained animation framework for a few hover/bounce effects.
+Do not introduce a heavyweight animation framework for a few simple effects.
 
-### 6.6 Working targets
-
-Current Activity-facing performance targets are:
+### 7.6 Working targets
 
 ```text
 smooth gameplay target: ~30 fps on Atom-class floor
@@ -330,128 +416,157 @@ added input latency:     <= 50 ms
 static/paused idle CPU:  near zero where architecture permits
 ```
 
-These are engineering targets, not proof obtained from a desktop. Hardware claims require named physical evidence.
+These are engineering targets. Hardware claims require named physical evidence.
 
 ---
 
-## 7. Correctness comes before the fast path
-
-A performance optimization must preserve semantic and visual behavior.
+## 8. Correctness comes before the fast path
 
 For cache/dirty-region/repair optimizations:
 
-1. keep a simple correct path or an equivalent oracle where practical;
+1. keep a simple correct path or equivalent oracle where practical;
 2. make the fast path an accelerator, not the sole correctness implementation;
-3. test optimized output against the naive/full path under identical inputs;
-4. freeze time/randomness when required for deterministic comparison;
-5. include boundary states such as hover enter/exit, resize, locale change, round reset and animation completion.
+3. compare optimized output under identical inputs;
+4. freeze time/randomness when needed;
+5. include boundary states such as resize, locale change, round reset and animation completion.
 
-Pixel-equivalence or targeted image-region equivalence is strongly preferred for rendering optimizations where practical.
+Pixel/region equivalence is strongly preferred for rendering optimizations where practical.
 
-Game rules need independent contract tests so a visual optimization cannot silently change scoring, collision, completion or progression events.
+Game rules need independent contract tests so visual optimization cannot silently change scoring, collision, completion or progression.
 
 ---
 
-## 8. Audio engineering boundaries
+## 9. Audio engineering boundaries
 
 Speech policy is defined by `VOICE_GENERATION.md`; microphone architecture is platform-owned.
 
-Activity code must keep audio responsibilities narrow:
+Activity code must:
 
-- request/use semantic audio cues rather than hard-coded host filenames where Greia resources own them;
+- request/use semantic audio cues where Greia resources own them;
 - use shared character utterance families before duplicating generic praise/retry clips;
 - use deterministic/system speech when the sound itself is educational truth;
 - never enumerate/select microphone hardware or implement per-Activity denoising;
 - obtain capture routing from `get_audio_capture_device()` when microphone access is granted;
-- keep audio sequencing/cancellation state in one explicit owner when an Activity can overlap cues.
+- keep non-trivial audio sequencing/cancellation state in one explicit owner.
 
-Loading/decoding a sound on every playback is the audio equivalent of loading an image every frame. Prepare/cache bounded reusable playback resources according to the runtime's supported pattern.
+Loading/decoding a sound on every playback is the audio equivalent of loading an image every frame. Prepare bounded reusable playback resources.
 
 ---
 
-## 9. Commenting and docstring standard
+## 10. Commenting and docstring standard
 
-Comments are required where they preserve architectural intent, not where they narrate syntax.
+Comments preserve architectural intent; they do not narrate syntax.
 
-Public Activity-specific extension classes/protocols and non-obvious state owners should document:
+Public/non-obvious Activity extension classes, protocols and state owners should document:
 
 - responsibility;
 - ownership/lifecycle;
 - important invariants;
 - dependencies;
 - resource bounds where relevant;
-- why a non-obvious performance/correctness choice exists.
+- why a non-obvious performance/correctness/compatibility choice exists.
 
-Good comment:
+Good:
+
+```text
+# Keep this alias in main.py because Phase-4 compatibility tests and older
+# maintainer tooling import it from the historical entrypoint.
+```
+
+Good:
 
 ```text
 # Restore from the precomposited backdrop before drawing the lifted card;
 # clearing to a flat color would corrupt wallpaper pixels around the tile.
 ```
 
-Bad comment:
+Bad:
 
 ```text
 # Increment x by one.
 x += 1
 ```
 
-Do not leave unexplained magic timing/cache-size constants. Name them and link the measurement/product reason when it is not obvious.
+Do not leave unexplained timing/cache-size constants. Name them and preserve the measurement/product reason where non-obvious.
 
-If an Activity establishes a reusable pattern other Activities should follow, update this skill or the appropriate shared engineering/design document rather than relying on comments in one package.
+If an Activity establishes a reusable pattern, update the relevant skill/design document instead of relying on one package's comments.
 
 ---
 
-## 10. Testing protocol for Activity implementation
+## 11. Testing and launch protocol
 
-At minimum, test the narrowest useful contracts for:
+At minimum, cover the narrowest useful semantic contracts:
 
 - domain/state transitions;
 - round/challenge generation invariants;
 - scoring/completion event emission;
-- persistence serialization/migration when present;
-- responsive/layout calculations where custom logic exists;
-- semantic input behavior without binding tests to controller brands;
+- persistence serialization/migration;
+- responsive/layout calculations where custom;
+- semantic input behavior;
 - cache bounds/invalidation;
-- animation settle/end behavior;
-- audio sequencing state where non-trivial;
-- optimized renderer equivalence for performance-sensitive paths.
+- animation settle behavior;
+- audio sequencing where non-trivial;
+- optimized renderer equivalence where performance-sensitive.
 
-Then use the real Greia Activity Simulator for integration facts it can establish.
+For **modular Python Activities**, add runtime/tooling coverage too:
 
-Do not claim the simulator proves Acer/Pi performance, physical controller behavior, trusted system chrome, real microphone quality or production display/session architecture.
+- package-local imports pass `PythonRuntimeAdapter` under the real runtime policy;
+- forbidden/unknown external imports remain rejected;
+- entrypoint works as the Greia script launch expects;
+- repository package imports succeed;
+- expected compatibility exports still exist or were deliberately migrated;
+- readiness verification follows the lifecycle owner rather than assuming it is in `main.py`.
 
-For performance work, report before/after measurements for the actual interaction being improved. Physical performance claims must identify the machine and exact source SHA.
+Then run the canonical validation/integration ladder. Current project commands include:
+
+```bash
+PYTHONPATH=src:tools python3 tools/validate_project.py
+make verify
+```
+
+After source gates, **actually launch the Activity through the Greia Activity Simulator/launcher path** and exercise representative child interactions.
+
+A successful `python main.py`, import, AST scan, or unit suite alone does not prove Greia launchability.
+
+Do not claim the Simulator proves Acer/Pi performance, physical controller behavior, trusted system chrome, real microphone quality or production display/session architecture.
+
+For performance work, report before/after measurements for the actual interaction and exact hardware/source scope claimed.
 
 ---
 
-## 11. Activity engineering review gate
+## 12. Activity engineering review gate
 
 Before calling substantive Activity work complete, ask:
 
-1. Is `main.py` still only bootstrap/composition?
+1. Is `main.py` only bootstrap/composition plus deliberately retained compatibility exports?
 2. Does each module/class have one coherent ownership reason?
 3. Is there already a Greia platform primitive/service that should own any new helper?
 4. Are classes modeling state/lifecycle/invariants rather than being decorative wrappers?
-5. Are genuine variation points polymorphic instead of repeated type/mode conditionals?
+5. Are genuine variation points polymorphic instead of repeated mode/type conditionals?
 6. Is composition preferred over deep inheritance?
 7. Are dependencies explicit and testable?
-8. Are long-lived resources and caches bounded and cleaned up?
+8. Are long-lived resources/caches bounded and cleaned up?
 9. Is image/font/text/scale/IO/device/storage work absent from hot loops?
 10. Does static presentation render only on invalidation where practical?
-11. Does every cache have a complete key and invalidation story?
+11. Does every cache have a complete key/invalidation story?
 12. Does a rendering fast path fail back to a correct path?
 13. Are gameplay semantics covered independently from presentation optimizations?
-14. Are comments/docstrings explaining ownership, invariants and non-obvious `why` decisions?
-15. Could a new contributor find the correct extension point without reading a monolithic file?
-16. Does the Activity still obey platform ownership of Home/Back, input devices, microphone routing, storage, progression, localization and trust?
-17. Were performance claims measured at the scope actually claimed?
+14. Are comments/docstrings explaining ownership, invariants and non-obvious why/compatibility decisions?
+15. Could a new contributor find the correct extension point without reading a monolith?
+16. Does the Activity obey platform ownership of Home/Back, input devices, microphone routing, storage, progression, localization and trust?
+17. If modular, does the real runtime validator accept package-local imports without widening external authority?
+18. Does it work in both runtime/script and repository/package import contexts?
+19. Were legacy/public consumers searched before symbols moved?
+20. Is READY still published exactly once after the first usable frame even if lifecycle code moved files?
+21. Did project validation and required focused/full tests actually execute?
+22. Did the Activity actually launch through the Greia Simulator/launcher path?
+23. Were performance claims measured only at the scope actually tested?
 
-If several answers are no, refactor before adding more features.
+If runtime validation or Simulator launch has not happened, describe the Activity as **integration-unverified**, not working/complete.
 
 ---
 
-## 12. What not to do
+## 13. What not to do
 
 Reject these patterns in new/substantively changed first-party Activities:
 
@@ -461,11 +576,17 @@ Reject these patterns in new/substantively changed first-party Activities:
 - Activity-local copies of Greia storage/input/audio/localization/platform services;
 - unbounded dicts used as caches;
 - per-frame filesystem/device/subprocess/config work;
-- per-frame image decode/scale/flip/static gradient generation;
+- per-frame image decode/scale/flip/static scenery generation;
 - deep `BaseGame -> ... -> MyGame` inheritance stacks;
 - interfaces invented for every concrete helper with no substitution need;
-- device/model/simulator checks scattered through Activity semantics;
-- performance fixes that change pixels/gameplay with no equivalence/contract proof;
-- undocumented magic constants whose values came from hardware tuning.
+- Activity-specific module names added to the global runtime dependency allowlist;
+- `sys.path` hacks scattered through Activity code;
+- decomposition that works only as `python main.py` but breaks package imports;
+- moving established exports without searching repository consumers;
+- forcing lifecycle code back into `main.py` to satisfy a stale file-layout test instead of correcting the verifier's invariant;
+- weakening forbidden-import/security rules to make modularization convenient;
+- source-only testing followed by a claim that the Activity launches;
+- performance fixes that change pixels/gameplay without equivalence/contract proof;
+- undocumented hardware-tuned magic constants.
 
-The intended result is simple code with strong seams—not enterprise ceremony.
+The intended result is simple, launchable code with strong seams—not enterprise ceremony and not architecture that exists only on paper.
