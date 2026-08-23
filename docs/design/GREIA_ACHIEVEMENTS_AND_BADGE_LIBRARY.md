@@ -1,8 +1,14 @@
 # Greia Achievements and Badge Library
 
 **Status:** active shared design and implementation contract  
-**Date:** 2026-08-23  
+**Updated:** 2026-08-24  
 **Audience:** Greia platform maintainers, Activity authors, simulator/test authors
+
+Companion art-admission contract:
+
+```text
+docs/design/GREIA_ACTIVITY_ACHIEVEMENT_ART.md
+```
 
 ## 1. Purpose
 
@@ -30,6 +36,8 @@ Celebrations
 ```
 
 An Activity must never manufacture any of these authorities itself.
+
+An Activity may optionally contribute **decorative emblem artwork** for Greia to place inside a trusted achievement frame. Decorative contribution is not authority.
 
 ---
 
@@ -125,7 +133,23 @@ Shell
 
 The Activity receives no writable achievement store, no badge policy path, and no `award_badge()` authority.
 
-An Activity event receipt may report `achievement_unlocks` because that is a **trusted platform result**, not an Activity request. Current Shell presentation waits for the Activity/display handoff before celebrating. A future R7/compositor presentation can surface that trusted result immediately without changing achievement truth or Activity permissions.
+An Activity event receipt may report `achievement_unlocks` because that is a **trusted platform result**, not an Activity request. Current Shell presentation waits for the Activity/display handoff before celebrating. A future compositor can surface that trusted result immediately without changing achievement truth or Activity permissions.
+
+### Decorative Activity art is a separate one-way input
+
+An Activity may declare optional package-local achievement emblems. Those declarations are inert until `runtime/achievement-policy.toml` explicitly admits one. The art never enters history, criteria evaluation, reward economics or profile state.
+
+```text
+Activity optional emblem declaration
+        ↓
+Greia safety validation
+        ↓
+explicit platform-policy admission
+        ↓
+Greia medal/trophy/rosette frame + Activity emblem
+```
+
+This preserves Activity personality without allowing installed content to manufacture global progression.
 
 ---
 
@@ -215,6 +239,18 @@ Multiple criteria on one achievement are **all-of**.
 
 Do not add generic Python snippets, boolean expression strings, regexes or arbitrary payload queries to the policy. Add another typed criterion only when a reusable semantic need is demonstrated.
 
+### Optional Activity art admission
+
+A definition may also admit one decorative Activity emblem:
+
+```toml
+art = { activity_id = "org.greia.example", emblem_id = "first-rescue" }
+```
+
+This is presentation metadata only. `icon_id` remains mandatory as the stable Greia fallback.
+
+The Activity-side declaration and complete validation rules are defined in `GREIA_ACTIVITY_ACHIEVEMENT_ART.md`.
+
 ---
 
 ## 6. Definition metadata
@@ -226,6 +262,7 @@ id
 category
 tier
 icon_id
+optional admitted Activity emblem
 secret
 localized title
 localized description
@@ -237,7 +274,8 @@ Rules:
 
 - IDs are stable and lower-case. Never reuse an old ID for a different meaning.
 - Category is semantic organization, not a filesystem path.
-- Icon IDs refer to Greia-owned visual vocabulary.
+- `icon_id` refers to Greia-owned visual vocabulary and remains the fail-soft fallback.
+- Activity emblems are optional decorative content admitted explicitly by platform policy.
 - English is the safe platform fallback locale; additional localized copy is preferred.
 - A normal locked badge needs a useful, non-spoiling hint.
 - A secret badge still has a hint in policy for future/admin tooling, but child UI hides the badge until unlocked.
@@ -310,6 +348,8 @@ confetti.spawned            presentation detail; never achievement input
 
 A manifest/source event-ID mismatch is a contract bug. The broker rejects undeclared events and achievement policy must never paper over that drift.
 
+Optional art contribution is independent of events. An Activity can offer an emblem even if no current platform badge uses it; that does not create progression behavior.
+
 ---
 
 ## 9. Child Badge Library
@@ -324,9 +364,9 @@ Current Shell behavior:
 - six badges are shown per page in a 3×2 grid at the 1024×600 reference floor;
 - normal locked badges show a lock medallion and positive hint;
 - secret locked badges are omitted entirely;
-- unlocked badges show their Greia icon and tier medallion;
-- newly unlocked/unreviewed badges carry a `NEW` / `NUOVO` marker;
-- selecting a badge shows its title and description/hint;
+- unlocked badges show their Greia award frame with an admitted Activity emblem or Greia fallback icon;
+- newly unlocked/unreviewed badges carry a localized NEW marker;
+- selecting a badge shows its localized title and description/hint;
 - keyboard/pointer navigation is supported;
 - leaving the library marks the achievements that were available for review as seen.
 
@@ -366,25 +406,35 @@ If Greia crashes after the event was accepted but before presentation, the achie
 
 ## 11. Visual language
 
-Shared Pygame medallion renderer:
+Shared Pygame award renderer:
 
 ```text
 src/greia_platform/pygame_achievements.py
 ```
 
-Visual structure:
+Current frame families:
 
 ```text
-small soft shadow
-outer tier ring
-cream inner medallion
-semantic Greia icon OR geometric lock
-small tier-colored ribbon
+bronze / silver -> medal + ribbons
+gold            -> trophy cup
+special/secret  -> rosette / constellation treatment
 ```
 
-Tier uses color, but **locked/unlocked state never depends on color alone**: locked badges visibly use a lock glyph/geometry, unlocked badges use their semantic icon.
+The center of an unlocked award is either:
 
-The shared badge renderer is intentionally independent of Activity art. Activities do not redraw or fork badge assets.
+```text
+an explicitly admitted Activity emblem
+OR
+its Greia-owned semantic icon_id fallback
+```
+
+Locked badges use Greia lock geometry and therefore do not reveal Activity art before unlock.
+
+This is the intended visual split:
+
+> The Activity creates the content symbol. Greia creates the award object.
+
+Activity-specific source art remains inside the Activity package. Shared Greia frame source masters remain under `assets/source/achievements/`.
 
 ---
 
@@ -392,15 +442,21 @@ The shared badge renderer is intentionally independent of Activity art. Activiti
 
 This subsystem must respect the same Acer-class rules established by launcher/terminal rendering work.
 
-### Badge medallions
+### Badge awards
 
 `PygameAchievementBadgeRenderer`:
 
 - creates only small badge-sized alpha surfaces;
-- bounds requested size to 48–220 px;
-- uses a bounded LRU cache;
-- keys cache by semantic identity, tier, icon, locked state and size;
+- bounds final requested size to 48–220 px;
+- uses a bounded cache;
+- keys cache by semantic identity, tier, fallback icon, optional Activity-art identity, locked state and size;
+- decodes an admitted Activity PNG only while preparing a new cached badge surface;
+- scales that emblem into the small cached award once;
+- does not decode Activity art every frame;
+- does not execute Activity drawing code or runtime SVG;
 - does not allocate a full-screen alpha surface.
+
+Activity emblem validation additionally bounds compressed file size and source dimensions. Recommended Activity emblem size is 256×256 even though the safety ceiling is higher.
 
 Small alpha artwork is acceptable. The measured problem is large changing alpha area.
 
@@ -428,11 +484,16 @@ write global Star balances
 read another profile's achievements/history
 invent a trusted event outside its manifest
 claim a different live Activity/session identity
+automatically add its own global achievements by being installed
 ```
 
-The Event Broker validates session token, Activity identity, manifest event declarations, payload bounds and idempotency before history/progression/achievement evaluation.
+An Activity may offer bounded decorative emblems, but those are inert unless platform policy admits a specific `(activity_id, emblem_id)` pair.
 
-Parent-installed content must not be allowed to flood the global child badge library merely by shipping its own badge definitions. If third-party achievement proposals are supported later, they require an explicit trusted package/policy admission model rather than automatic merge into global policy.
+The art loader accepts only bounded package-local square PNGs. It does not execute Activity vector scripts, Python render hooks, arbitrary shaders or custom popup logic.
+
+The Event Broker continues to validate session token, Activity identity, manifest event declarations, payload bounds and idempotency before history/progression/achievement evaluation.
+
+Parent-installed content must not be allowed to flood the global child badge library merely by shipping its own badge definitions or emblem declarations. Third-party achievement proposals require an explicit trusted package/policy admission model rather than automatic merge into global policy.
 
 ---
 
@@ -453,10 +514,12 @@ If achievement state cannot be written:
 - its Star reward remains valid;
 - later history refresh can re-derive earned milestones.
 
-If a badge icon is missing:
+If admitted Activity emblem art cannot decode while rendering:
 
-- shared presentation falls back to the Greia star icon;
+- shared presentation falls back to the Greia `icon_id`;
 - achievement truth is unaffected.
+
+If the fallback icon also fails, the renderer retains the existing Greia star fallback behavior.
 
 ---
 
@@ -476,6 +539,11 @@ Provider-free source tests should cover at least:
 - concurrent metadata update serialization;
 - policy rejection of unknown Activity/event and non-score best-score criteria;
 - event receipt achievement-unlock parsing;
+- Activity-emblem path/type/size/dimension validation;
+- platform rejection of unknown Activity/emblem art references;
+- admitted Activity emblem rendering;
+- fail-soft fallback to `icon_id` when Activity art cannot decode;
+- locked badge not revealing Activity art;
 - bounded badge surface/cache behavior;
 - library pointer/keyboard navigation;
 - secret count non-disclosure;
@@ -490,12 +558,14 @@ Physical/simulator acceptance must additionally verify:
 4. dismissing celebration does not mark the badge reviewed;
 5. library shows the badge as NEW;
 6. opening/reviewing and leaving the library clears NEW;
-7. normal locked badge remains visible with a hint;
+7. normal locked badge remains visible with a hint and does not reveal the Activity emblem;
 8. secret locked badge is absent and does not affect the visible denominator;
-9. switching profiles shows independent badge state;
-10. restart preserves earned badges;
-11. library and static celebration do not create a 30 Hz idle CPU loop;
-12. no fullscreen `SRCALPHA` completion/achievement presentation is introduced.
+9. themed Clinic / Memory / Bridges achievements visibly retain Greia frame consistency;
+10. changing language changes achievement text without requiring alternate emblem artwork;
+11. switching profiles shows independent badge state;
+12. restart preserves earned badges;
+13. library and static celebration do not create a 30 Hz idle CPU loop;
+14. no fullscreen `SRCALPHA` completion/achievement presentation is introduced.
 
 Hardware performance claims require the exact source SHA and named machine.
 
@@ -505,13 +575,16 @@ Hardware performance claims require the exact source SHA and named machine.
 
 ```text
 runtime/achievement-policy.toml
-    platform achievement catalogue
+    platform achievement catalogue + explicit Activity-art admission
 
 runtime/progression-policy.toml
     Greia Star economics
 
+src/greia_platform/achievement_art.py
+    Activity contribution parsing + package-local PNG safety validation
+
 src/greia_platform/achievements.py
-    policy validation, trusted evaluation, durable profile metadata
+    policy validation, Activity-art admission, trusted evaluation, durable metadata
 
 src/greia_platform/history.py
     authoritative event counts, best scores, reward balances
@@ -523,7 +596,10 @@ src/greia_platform/event_client.py
     trusted receipt including reward_deltas + achievement_unlocks
 
 src/greia_platform/pygame_achievements.py
-    shared bounded medallion renderer
+    shared bounded medal/trophy/rosette renderer + admitted Activity emblem
+
+src/greia_launcher/achievement_localization.py
+    active Greia locale + localized achievement Shell chrome
 
 src/greia_launcher/achievement_presentation.py
     child library + post-Activity celebration
@@ -534,16 +610,27 @@ src/greia_launcher/child_shell.py
 
 ---
 
-## 17. Deliberate future extensions
+## 17. Activity-local collections are separate
+
+Global achievements should not become the only reward vocabulary.
+
+A future Activity-local collection/album subsystem may support much freer content such as stickers, postcards, saved patients, discoveries, creations, characters and blueprints. Because those rewards are scoped to the Activity, they can grant the Activity more visual ownership than the global Greia Badge Library.
+
+That future system needs its own storage, portability, trust and presentation contract rather than being smuggled through global achievement metadata.
+
+---
+
+## 18. Deliberate future extensions
 
 Good candidates after current acceptance evidence:
 
+- purpose-made Activity achievement emblems rather than reusing launcher icons;
 - category browsing once the library is large enough;
 - a platform-owned notification sound/chime for badge unlocks;
-- richer but still bounded medallion art from the Greia asset library;
 - immediate system-compositor celebration after R7 can safely own overlays above an Activity;
 - additional typed criteria such as distinct-Activity count or category breadth;
 - Parent read-only view of a child's achievements if useful;
-- explicit achievement-policy migration/versioning when semantics genuinely evolve.
+- explicit achievement-policy migration/versioning when semantics genuinely evolve;
+- the separate Activity-local collections/treasures system described above.
 
-Do **not** add these by making Activities more powerful. Extend the trusted platform contract instead.
+Future extensions may broaden **safe decorative contribution** without broadening Activity authority over global progression.
