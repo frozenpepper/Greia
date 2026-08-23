@@ -9,8 +9,12 @@ import pygame
 from greia_platform.localization import LocalizedResources
 from greia_platform.typography import FontRole, GreiaTypography
 
-from clinic_art import draw_patient, draw_thought_bubble, draw_tool_icon
-from clinic_model import ClinicSession, TOOL_IDS
+try:
+    from clinic_art import draw_patient, draw_thought_bubble, draw_tool_icon
+    from clinic_model import ClinicSession, TOOL_IDS
+except ImportError:
+    from .clinic_art import draw_patient, draw_thought_bubble, draw_tool_icon
+    from .clinic_model import ClinicSession, TOOL_IDS
 
 
 REFERENCE_WIDTH: Final = 1024

@@ -8,10 +8,16 @@ from greia_platform.activity_api import activity_stop_requested, mark_activity_r
 from greia_platform.activity_ui import is_home_clicked
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 
-from clinic_audio import ClinicAudioPort
-from clinic_model import ClinicSession, TreatmentResult
-from clinic_renderer import ClinicRenderer, TABLE_RECT
-from clinic_services import ClinicEventPort, ClinicProgressPort
+try:
+    from clinic_audio import ClinicAudioPort
+    from clinic_model import ClinicSession, TreatmentResult
+    from clinic_renderer import ClinicRenderer, TABLE_RECT
+    from clinic_services import ClinicEventPort, ClinicProgressPort
+except ImportError:
+    from .clinic_audio import ClinicAudioPort
+    from .clinic_model import ClinicSession, TreatmentResult
+    from .clinic_renderer import ClinicRenderer, TABLE_RECT
+    from .clinic_services import ClinicEventPort, ClinicProgressPort
 
 
 class ClinicActivity:

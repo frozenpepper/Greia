@@ -27,6 +27,7 @@ except ImportError:
 from greia_platform.activity_api import (
     activity_stop_requested,
     emit_activity_event,
+    get_audio_capture_device,
     get_icon_path,
     get_storage,
     get_theme,
@@ -242,6 +243,11 @@ class MicrophoneRecorder:
     def has_hardware(self) -> bool:
         try:
             self._ensure_audio_init()
+            # The platform-owned route is authoritative: a Greia-selected
+            # capture endpoint means microphone capture is available without
+            # enumerating host devices (ADR 0031).
+            if get_audio_capture_device() is not None:
+                return True
             if sdl2_audio is not None:
                 names = sdl2_audio.get_audio_device_names(True)
                 return bool(names)
@@ -295,8 +301,10 @@ class MicrophoneRecorder:
                 pass
 
         try:
-            names = sdl2_audio.get_audio_device_names(True)
-            dev_name = names[0] if names else None
+            # Open Greia's platform-selected capture route (ADR 0031).
+            # None means the development/simulator default endpoint; the
+            # Activity must never enumerate or choose a physical device.
+            dev_name = get_audio_capture_device()
             self._dev = sdl2_audio.AudioDevice(
                 dev_name,
                 True,

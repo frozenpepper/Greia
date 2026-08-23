@@ -4,7 +4,10 @@ from typing import Protocol
 
 from greia_platform.activity_api import emit_activity_event, get_storage
 
-from clinic_model import TreatmentResult
+try:
+    from clinic_model import TreatmentResult
+except ImportError:
+    from .clinic_model import TreatmentResult
 
 
 STORAGE_KEY = "clinica_cuccioli.progress.v2"

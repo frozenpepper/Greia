@@ -6,4 +6,5 @@ build/test_package_service_state/
 tmp/
 *.zip
 GREIA_VISUAL_REVIEW_*/
+.agents/
 

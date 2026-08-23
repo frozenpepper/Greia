@@ -106,6 +106,24 @@ class RuntimeManagerTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeValidationError, "forbidden Python import"):
                 self._manager({"display", "pointer"}).validate_package(manifest)
 
+    def test_python_adapter_permits_package_local_module_imports(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            activities = Path(temporary) / "activities"
+            activities.mkdir()
+            copied = activities / "modular_activity"
+            shutil.copytree(PROJECT_ROOT / "activities" / "shape_garden", copied)
+            (copied / "helper.py").write_text("VALUE = 42\n", encoding="utf-8")
+            (copied / "main.py").write_text(
+                "import helper\nfrom helper import VALUE\n",
+                encoding="utf-8",
+            )
+            manifest = ActivityRegistry(
+                [ActivitySource(activities, PackageTrust.BUILT_IN, "greia-system-test")],
+                self.catalogue,
+            ).discover()[0]
+
+            self._manager({"display", "pointer"}).validate_package(manifest)
+
     def test_python_adapter_rejects_dynamic_imports(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             activities = Path(temporary) / "activities"

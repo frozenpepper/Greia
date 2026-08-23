@@ -256,7 +256,7 @@ class PythonRuntimeAdapter:
                 root_name: str | None = None
                 if isinstance(node, ast.Import):
                     for alias in node.names:
-                        self._validate_import_root(alias.name.split(".", 1)[0], path)
+                        self._validate_import_root(alias.name.split(".", 1)[0], path, manifest)
                 elif isinstance(node, ast.ImportFrom):
                     if node.level:
                         continue
@@ -267,9 +267,11 @@ class PythonRuntimeAdapter:
                         f"dynamic Python imports are forbidden: {path}:{node.lineno}"
                     )
                 if root_name:
-                    self._validate_import_root(root_name, path)
+                    self._validate_import_root(root_name, path, manifest)
 
-    def _validate_import_root(self, root_name: str, path: Path) -> None:
+    def _validate_import_root(
+        self, root_name: str, path: Path, manifest: ActivityManifest
+    ) -> None:
         policy = self._policy
         if policy is None:
             # Unit/development fallback preserves syntax and dynamic-import
@@ -278,6 +280,8 @@ class PythonRuntimeAdapter:
             return
         if root_name in policy.forbidden_import_roots:
             raise RuntimeValidationError(f"forbidden Python import {root_name!r} in {path}")
+        if (manifest.root / f"{root_name}.py").is_file() or (manifest.root / root_name).is_dir():
+            return
         if root_name not in policy.allowed_import_roots:
             raise RuntimeValidationError(
                 f"Python import {root_name!r} is outside the curated child runtime in {path}"

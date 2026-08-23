@@ -54,11 +54,22 @@ def _nearest_parent(
 class FirstPartyActivityReadinessTests(unittest.TestCase):
     def test_ready_is_published_only_after_a_frame_presentation(self) -> None:
         checked: list[str] = []
-        for path in _entrypoints():
-            source = path.read_text(encoding="utf-8")
-            if "mark_activity_ready" not in source:
+        for entrypoint in _entrypoints():
+            candidate_paths = [entrypoint] + [
+                p for p in sorted(entrypoint.parent.glob("*.py")) if p != entrypoint
+            ]
+            ready_path = next(
+                (
+                    p
+                    for p in candidate_paths
+                    if "mark_activity_ready" in p.read_text(encoding="utf-8")
+                ),
+                None,
+            )
+            if ready_path is None:
                 continue
-            tree = ast.parse(source, filename=str(path))
+            source = ready_path.read_text(encoding="utf-8")
+            tree = ast.parse(source, filename=str(ready_path))
             parents: dict[ast.AST, ast.AST] = {}
             for parent in ast.walk(tree):
                 for child in ast.iter_child_nodes(parent):
@@ -73,7 +84,7 @@ class FirstPartyActivityReadinessTests(unittest.TestCase):
             self.assertEqual(
                 len(ready_calls),
                 1,
-                f"{path.relative_to(ROOT)} must publish READY exactly once in source",
+                f"{ready_path.relative_to(ROOT)} must publish READY exactly once in source",
             )
             ready = ready_calls[0]
 
@@ -84,14 +95,14 @@ class FirstPartyActivityReadinessTests(unittest.TestCase):
             )
             self.assertIsNotNone(
                 function,
-                f"{path.relative_to(ROOT)} READY call must live inside its launch function",
+                f"{ready_path.relative_to(ROOT)} READY call must live inside its launch function",
             )
             assert isinstance(function, (ast.FunctionDef, ast.AsyncFunctionDef))
 
             ready_loop = _nearest_parent(ready, parents, (ast.While, ast.For, ast.AsyncFor))
             self.assertIsNotNone(
                 ready_loop,
-                f"{path.relative_to(ROOT)} READY call must be tied to its presentation loop",
+                f"{ready_path.relative_to(ROOT)} READY call must be tied to its presentation loop",
             )
 
             presentations = [
@@ -109,14 +120,14 @@ class FirstPartyActivityReadinessTests(unittest.TestCase):
             ]
             self.assertTrue(
                 presentations,
-                f"{path.relative_to(ROOT)} publishes READY without presenting in the same loop",
+                f"{ready_path.relative_to(ROOT)} publishes READY without presenting in the same loop",
             )
             self.assertLess(
                 min(node.lineno for node in presentations),
                 ready.lineno,
-                f"{path.relative_to(ROOT)} must present its first usable frame before READY",
+                f"{ready_path.relative_to(ROOT)} must present its first usable frame before READY",
             )
-            checked.append(path.parent.name)
+            checked.append(entrypoint.parent.name)
 
         self.assertEqual(
             set(checked),
