@@ -170,6 +170,30 @@ class AchievementBadgeRendererTests(unittest.TestCase):
         self.assertEqual(provider.calls, 0)
         self.assertEqual(first.get_size(), (96, 96))
 
+    def test_broken_activity_emblem_falls_back_to_platform_icon(self) -> None:
+        provider = _IconProvider()
+        renderer = PygameAchievementBadgeRenderer(provider)
+        emblem = ActivityAchievementEmblem(
+            activity_id="org.greia.test-activity",
+            emblem_id="broken",
+            asset_path=Path("/definitely/missing/greia-achievement-emblem.png"),
+            width=64,
+            height=64,
+            byte_size=128,
+        )
+        badge = renderer.render(
+            _entry(
+                unlocked=True,
+                tier="bronze",
+                achievement_id="greia.test.broken-art",
+                activity_emblem=emblem,
+            ),
+            96,
+        )
+
+        self.assertEqual(provider.calls, 1)
+        self.assertEqual(badge.get_size(), (96, 96))
+
 
 if __name__ == "__main__":
     unittest.main()
