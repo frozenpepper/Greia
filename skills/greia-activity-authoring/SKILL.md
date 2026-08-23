@@ -1,6 +1,6 @@
 ---
 name: greia-activity-authoring
-description: Canonical agent guide for designing, implementing, refactoring, packaging, validating and testing Greia Activities, including clean OOP structure, measured low-resource performance, low-cost terminal/victory rendering, discovery/audience metadata, optional canonical character speech, deterministic pedagogical speech, shared character utterances, child grammatical agreement, and platform-owned microphone routing.
+description: Canonical agent guide for designing, implementing, refactoring, packaging, validating and testing Greia Activities, including clean OOP structure, measured low-resource performance, low-cost terminal/victory rendering, trusted achievement/reward event design, discovery/audience metadata, optional canonical character speech, deterministic pedagogical speech, shared character utterances, child grammatical agreement, and platform-owned microphone routing.
 ---
 
 # Greia Activity Authoring Skill
@@ -16,14 +16,15 @@ This skill is intentionally split so small local agents do not have to load unre
 2. Read `ENGINEERING.md` whenever creating, modifying, reviewing, optimizing or substantially refactoring Activity implementation code. For new/substantively changed first-party Activities it is mandatory: it owns the practical clean-code/OOP/decomposition/performance protocol, including the rule that `main.py` is a thin composition root rather than the Activity implementation.
 3. Read `REFACTORING.md` completely whenever structurally refactoring an existing Activity. It owns the behavior/manifest contract inventory, structural-vs-behavior change classification, recommended extraction order, semantic-action unification, and refactor-specific test/review protocol calibrated on a real first-party Activity.
 4. Read `TERMINAL_RENDERING.md` completely whenever an Activity has or adds a victory, completion, results, session-finished, Play Again or Continue screen. It owns the required terminal-state lifecycle and the shared low-cost `PygameCompletionScreen` path. A terminal screen must not keep the live game updating/rendering underneath a fullscreen alpha modal.
-5. Read `DISCOVERY.md` whenever creating or editing `activity.toml`, launcher categories, audience/age metadata, difficulty/adaptive difficulty, discovery tags, or reasoning about how an Activity appears for a child.
-6. When packaging or exporting an Activity, also read `docs/architecture/GREIA_ACTIVITY_PACKAGE_FORMAT.md`. Parent-facing distribution uses the `.greiaactivity` ZIP contract; the extension is a UX/routing signal, never package validation or trust.
-7. When the Activity speaks, produces localized audio, uses shared Greia character utterances, teaches pronunciation, uses a Greia character voice, changes Activity Designer audio tooling, or needs child-directed grammatical agreement, also read `VOICE_GENERATION.md` completely and `docs/adr/0032-profile-presentation-and-grammatical-agreement.md` where agreement is relevant.
-8. When the Activity records from or listens to the microphone, also read `docs/adr/0031-platform-owned-microphone-processing.md` and `docs/architecture/GREIA_AUDIO_SERVICE.md`.
-9. Follow every narrower repository `AGENTS.md` that applies to the files being changed.
-10. Exact implemented APIs/schemas remain owned by source/runtime declarations; accepted ADRs own architecture; product docs own child-facing requirements.
+5. Read `ACHIEVEMENTS.md` completely whenever creating/changing completion, creation, milestone or score events; participating in Greia Stars; or designing Activity facts that may drive badges/achievements. Activities report facts; only trusted Greia policy awards Stars or achievements.
+6. Read `DISCOVERY.md` whenever creating or editing `activity.toml`, launcher categories, audience/age metadata, difficulty/adaptive difficulty, discovery tags, or reasoning about how an Activity appears for a child.
+7. When packaging or exporting an Activity, also read `docs/architecture/GREIA_ACTIVITY_PACKAGE_FORMAT.md`. Parent-facing distribution uses the `.greiaactivity` ZIP contract; the extension is a UX/routing signal, never package validation or trust.
+8. When the Activity speaks, produces localized audio, uses shared Greia character utterances, teaches pronunciation, uses a Greia character voice, changes Activity Designer audio tooling, or needs child-directed grammatical agreement, also read `VOICE_GENERATION.md` completely and `docs/adr/0032-profile-presentation-and-grammatical-agreement.md` where agreement is relevant.
+9. When the Activity records from or listens to the microphone, also read `docs/adr/0031-platform-owned-microphone-processing.md` and `docs/architecture/GREIA_AUDIO_SERVICE.md`.
+10. Follow every narrower repository `AGENTS.md` that applies to the files being changed.
+11. Exact implemented APIs/schemas remain owned by source/runtime declarations; accepted ADRs own architecture; product docs own child-facing requirements.
 
-Do not treat this index as permission to skip `CORE.md` or, for implementation work, `ENGINEERING.md`. Structural refactors also require `REFACTORING.md`; completion/victory work requires `TERMINAL_RENDERING.md`.
+Do not treat this index as permission to skip `CORE.md` or, for implementation work, `ENGINEERING.md`. Structural refactors also require `REFACTORING.md`; completion/victory work requires `TERMINAL_RENDERING.md`; achievement/reward event work requires `ACHIEVEMENTS.md`.
 
 ## Implementation engineering decision summary
 
@@ -95,6 +96,31 @@ from greia_platform.pygame_completion import (
 
 The shared owner produces a prepared opaque terminal frame; the Activity remains responsible for completion truth, persistence/events and restart semantics. Full rules and the cross-Activity evidence are in `TERMINAL_RENDERING.md`.
 
+### Achievements and Greia Stars are platform decisions
+
+An Activity may emit stable, declared facts such as a completed round, healed patient, creation, milestone or score. It must not award a global badge or mutate the Greia Star balance itself.
+
+Canonical flow:
+
+```text
+Activity semantic event
+    -> trusted Event Broker / History
+    -> Greia progression + achievement policy
+    -> trusted reward/unlock result
+    -> Shell celebration + profile badge library
+```
+
+Every emitted event ID must match `activity.toml` exactly. Score events must use `kind = "score"`, declare `score_order`, and pass the numeric score through the event API. Do not encode badge IDs, global reward writes, daily streak mechanics, rank/comparison logic or click-grind reward loops in Activity code.
+
+Full achievement/reward authoring contract:
+
+```text
+skills/greia-activity-authoring/ACHIEVEMENTS.md
+docs/design/GREIA_ACHIEVEMENTS_AND_BADGE_LIBRARY.md
+runtime/progression-policy.toml
+runtime/achievement-policy.toml
+```
+
 Current Activity working targets:
 
 ```text
@@ -111,6 +137,7 @@ Full implementation/refactoring protocol and measured rationale:
 skills/greia-activity-authoring/ENGINEERING.md
 skills/greia-activity-authoring/REFACTORING.md
 skills/greia-activity-authoring/TERMINAL_RENDERING.md
+skills/greia-activity-authoring/ACHIEVEMENTS.md
 docs/engineering/ENGINEERING_FOUNDATIONS.md
 docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md
 ```
