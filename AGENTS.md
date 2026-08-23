@@ -2,6 +2,15 @@
 
 This repository implements a child-first educational Linux appliance/platform. These rules apply repository-wide.
 
+## Branch policy
+
+- Work directly on `main` by default.
+- Do not create feature, review, merge, temporary, safety, or work branches unless the repository owner explicitly asks for a branch.
+- An existing historical branch is not permission to continue branch-based development.
+- Before substantive writes, refresh the current `main` head so concurrent work is preserved.
+- If concurrent work has advanced `main`, reconcile the intended changes with that current history and commit the result back to `main`; do not solve divergence by creating another branch unless explicitly instructed.
+- Pull requests or branch-based review workflows are used only when the repository owner explicitly requests them.
+
 ## Authoritative read order and active plan
 
 Before installing or configuring any Greia toolchain, repository skill, simulator dependency, Parent App checkout, voice backend, developer remote-control environment or OS/image build host, read **`SETUP.md`**. It is the canonical setup index and readiness ledger; the narrower documents it references remain authoritative for their exact procedures.
