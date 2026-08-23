@@ -1,6 +1,6 @@
 # Greia — Standalone Engineering Handover
 
-**Date:** 2026-08-23  
+**Date:** 2026-08-24  
 **Version family:** `0.13.x` development  
 **Repository:** `frozenpepper/Greia` (private)  
 **Canonical/default/development branch:** `main`  
@@ -129,7 +129,7 @@ Physical verification sequence: injected 5 s chord → auth dialog → typed dot
 
 ## Achievement presentation, Activity victory contracts & progression simulator acceptance (2026-08-23)
 
-The complete interactive acceptance protocol from `Greia_Achievement_Activity_Simulator_Acceptance_2026-08-23.md` was executed and **ACCEPTED**.
+The complete interactive acceptance protocol from `Greia_Achievement_Activity_Simulator_Acceptance_2026-08-23.md` was executed and **ACCEPTED** at the then-tested source state (`850bf6d` reported by the local-agent completion tranche).
 
 Evidence captured in `./tmp/greia-achievement-simulator-acceptance/` includes:
 - **Test A:** Empty Badge Library and collection routes (0/6 unlocked, 6 locked, secret `greia.stars.constellation` hidden).
@@ -144,16 +144,88 @@ Evidence captured in `./tmp/greia-achievement-simulator-acceptance/` includes:
 
 Full Acceptance Ledger recorded in `tmp/greia-achievement-simulator-acceptance/results.md`.
 
-## Current source-test boundary
+## Achievement localization and Activity-themed art — post-acceptance source tranche (2026-08-24)
 
-All unit tests and contract tests across the repository are green:
+After the accepted simulator run, the owner identified that an Italian simulated Greia still opened the Badge Library with English Shell chrome. Root cause: the achievement presentation path could successfully read an empty installed-language store and receive its English default before consulting the simulator's explicit `GREIA_PROFILE_LOCALE` / `GREIA_DEVICE_LOCALE` context.
+
+That presentation bug has been repaired through:
+
+```text
+src/greia_launcher/achievement_localization.py
+src/greia_launcher/achievement_presentation.py
+```
+
+The achievement Shell now resolves explicit launch locale before installed-store fallback and owns localized Badge Library/celebration chrome for the current Greia language registry rather than using `if Italian else English` presentation branches.
+
+The visual award renderer has also moved from one generic medallion shape to a coherent Greia family:
+
+```text
+bronze / silver -> medal + ribbons
+gold            -> trophy cup
+special/secret  -> rosette / constellation treatment
+```
+
+The owner then chose a layered Activity-art model: Activities may optionally contribute content-specific artwork while Greia retains global achievement authority.
+
+Implemented contract:
+
+```text
+src/greia_platform/achievement_art.py
+    bounded package-local Activity emblem declarations and validation
+
+activities/*/activity.toml [achievement_art]
+    optional decorative contribution only
+
+runtime/achievement-policy.toml art = {...}
+    explicit Greia admission of one Activity emblem into one platform achievement
+
+src/greia_platform/achievements.py
+    trusted policy admission; no Activity unlock authority
+
+src/greia_platform/pygame_achievements.py
+    Greia frame + admitted Activity emblem, with icon_id fail-soft fallback
+```
+
+V1 Activity emblems are static square PNGs, max 512 KiB, 32–1024 px, recommended 256×256, package-local, non-symlink and text-free. A SHA-256 content fingerprint participates in badge cache identity so updated artwork at the same package path invalidates prepared presentation cleanly.
+
+Clinic, Memory and Bridges now opt in using their existing package icons as initial `activity` emblems, and the platform achievement policy explicitly admits those contributions for their Activity-specific badges. Greia-wide Star achievements remain platform-art-only. The infrastructure supports multiple purpose-made emblem IDs per Activity; future Activity authoring should generate dedicated content-specific emblems where they improve the result rather than treating launcher-icon reuse as the final art ceiling.
+
+Authority remains:
+
+> Activities report facts and may offer art. Greia decides rewards, achievements, tier/frame, localization, persistence, visibility and celebration.
+
+Parent-installed content does not automatically add global badges merely by declaring artwork.
+
+Durable contracts/review:
+
+```text
+docs/design/GREIA_ACTIVITY_ACHIEVEMENT_ART.md
+docs/design/GREIA_ACHIEVEMENTS_AND_BADGE_LIBRARY.md
+skills/greia-activity-authoring/ACHIEVEMENTS.md
+docs/reviews/2026-08-24_ACTIVITY_THEMED_ACHIEVEMENT_ART.md
+```
+
+### Current source-test boundary
+
+The earlier local-agent result remains:
 
 ```text
 Ran 1110 tests in 20.284s
 OK (0 failures, 0 errors)
 ```
 
-No hosted GitHub Actions were queried or run.
+That is retained evidence for the earlier accepted source state. **It is not automatically evidence for the newer localization / award-art / Activity-emblem commits.**
+
+New provider-free tests have been authored in:
+
+```text
+tests/test_achievement_localization.py
+tests/test_achievement_art.py
+tests/test_achievement_emblem_cache.py
+tests/test_pygame_achievements.py
+```
+
+They have not been executed in the GitHub editing environment. Current-head PASS requires local execution. No hosted GitHub Actions were queried or run.
 
 ---
 
@@ -521,7 +593,7 @@ Mandatory architecture remains:
 - controller ownership/normalization platform-owned;
 - ordinary Activities do not gain raw `/dev/input` or DRM authority.
 
-Recent launcher performance work and the microphone service are useful platform work but are **not** R7 display/session closure.
+Recent launcher performance work, achievement presentation/art work and microphone service are useful platform work but are **not** R7 display/session closure.
 
 ---
 
@@ -555,12 +627,16 @@ docs/design/GREIA_ART_GRAPHICS_SYSTEM.md
 docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md
 docs/design/GREIA_VISUAL_AUTHORING_ARCHITECTURE.md
 docs/design/GREIA_GENERIC_ART_LIBRARY_TAXONOMY.md
+docs/design/GREIA_ACTIVITY_ACHIEVEMENT_ART.md
 skills/greia-visual-authoring/SKILL.md
+skills/greia-activity-authoring/ACHIEVEMENTS.md
 docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md
 docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md
 ```
 
 Theme/source bundles remain provenance pools; the generic semantic authoring library is the primary authoring interface. Generic authoring tooling stays development-time and does not become a second runtime catalogue.
+
+For global achievements, Activity-generated art is now a supported **decorative contribution**: Greia owns award frames and achievement authority, while explicitly admitted Activity emblems may supply the center artwork. Purpose-made Activity emblem generation should remain inside the Activity's own art/source workflow and obey the bounded PNG contract.
 
 Do not infer arbitrary Activity-authoring-agent drawing capability from the owner's stronger maintainer-side agent.
 
@@ -568,13 +644,31 @@ Do not infer arbitrary Activity-authoring-agent drawing capability from the owne
 
 # 11. Next exact steps
 
+## Immediate achievement-art verification
+
+1. Record current `main` SHA before testing.
+2. Run:
+   ```bash
+   PYTHONPATH=src python3 -m unittest \
+     tests.test_achievement_art \
+     tests.test_achievement_emblem_cache \
+     tests.test_achievements \
+     tests.test_pygame_achievements \
+     tests.test_achievement_localization \
+     tests.test_activity_contract \
+     -v
+   ```
+3. Run the checkout's normal complete local unit/validation gate; preserve the first real failure rather than repairing around it during acceptance.
+4. In the Activity Simulator, do only the focused visual recheck documented in `docs/reviews/2026-08-24_ACTIVITY_THEMED_ACHIEVEMENT_ART.md`: Italian Badge Library localization, unlocked Clinic/Memory/Bridge Activity-derived centers inside Greia frames, locked-art non-disclosure, Greia-wide Star badge remaining platform art, and idle repaint sanity.
+5. Treat this as simulator/developer evidence only; no Acer performance claim follows without hardware measurement.
+
 ## Blocking engineering
 
 1. Resolve current `main` before each new implementation tranche.
 2. Read `skills/greia-os-work/SKILL.md` for substantive OS/platform work and the Activity skill's `ENGINEERING.md` for substantive Activity implementation; structural Activity refactors additionally require `REFACTORING.md`. Keep the derived skills synchronized when their governed contracts change.
 3. Owner disposition: reconcile the four stale boot-contract tests (`panic=30`) with the accepted postmortem/source direction (`panic=5`).
 4. Re-run the current aggregate verification only after that disposition; preserve genuine failures.
-5. Continue R7 from its first incomplete blocking gate; do not treat launcher performance optimization, microphone processing or the Activity calibration as display/session closure.
+5. Continue R7 from its first incomplete blocking gate; do not treat launcher performance optimization, microphone processing, achievements or the Activity calibration as display/session closure.
 6. Preserve the current Acer performance measurements in the engineering performance manual as future UI/render work is added.
 
 ## Clinica Cuccioli calibration verification
@@ -623,6 +717,8 @@ Do not infer arbitrary Activity-authoring-agent drawing capability from the owne
 - structural Activity refactors additionally consume `skills/greia-activity-authoring/REFACTORING.md` and inventory declaration/behavior contracts before moving code;
 - Activity `main.py` is a composition/bootstrap boundary rather than a monolithic application implementation;
 - multiple input paths for one semantic child action delegate to one domain rule rather than duplicating correctness/scoring policy;
+- Activities may offer bounded language-neutral achievement emblems, but global achievement IDs/criteria/tier/frame/localization/state/rewards remain Greia-owned and require explicit platform-policy admission;
+- parent-installed Activity emblem declarations never auto-create global Badge Library entries;
 - no visible Linux shell/desktop in normal child path;
 - R7 remains open and Xorg/xinit provisional;
 - protected Home/Back stays outside Activity authority;
@@ -647,4 +743,4 @@ Do not infer arbitrary Activity-authoring-agent drawing capability from the owne
 - visual/runtime/Activity caches remain bounded with explicit invalidation and avoid per-frame decode/scale/IO;
 - performance claims require measurement on the claimed execution scope.
 
-**Resume the blocking platform path from R7 in `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`. In parallel, the Clinica Cuccioli calibration must be verified through its focused source + simulator checklist before being treated as an accepted runtime refactor, and the microphone tranche may be physically finalized only through its dedicated Acer protocol; do not report source architecture as hardware acceptance.**
+**Resume the blocking platform path from R7 in `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`. In parallel, verify the post-acceptance achievement localization/Activity-art tranche through its focused source + simulator checks before calling current head green; the microphone tranche may be physically finalized only through its dedicated Acer protocol. Do not report source architecture as hardware acceptance.**
