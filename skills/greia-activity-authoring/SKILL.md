@@ -1,6 +1,6 @@
 ---
 name: greia-activity-authoring
-description: Canonical agent guide for designing, implementing, refactoring, packaging, validating and testing Greia Activities, including clean OOP structure, measured low-resource performance, discovery/audience metadata, optional canonical character speech, deterministic pedagogical speech, shared character utterances, child grammatical agreement, and platform-owned microphone routing.
+description: Canonical agent guide for designing, implementing, refactoring, packaging, validating and testing Greia Activities, including clean OOP structure, measured low-resource performance, low-cost terminal/victory rendering, discovery/audience metadata, optional canonical character speech, deterministic pedagogical speech, shared character utterances, child grammatical agreement, and platform-owned microphone routing.
 ---
 
 # Greia Activity Authoring Skill
@@ -15,14 +15,15 @@ This skill is intentionally split so small local agents do not have to load unre
 1. Read `CORE.md` completely for the canonical general Activity-authoring contract.
 2. Read `ENGINEERING.md` whenever creating, modifying, reviewing, optimizing or substantially refactoring Activity implementation code. For new/substantively changed first-party Activities it is mandatory: it owns the practical clean-code/OOP/decomposition/performance protocol, including the rule that `main.py` is a thin composition root rather than the Activity implementation.
 3. Read `REFACTORING.md` completely whenever structurally refactoring an existing Activity. It owns the behavior/manifest contract inventory, structural-vs-behavior change classification, recommended extraction order, semantic-action unification, and refactor-specific test/review protocol calibrated on a real first-party Activity.
-4. Read `DISCOVERY.md` whenever creating or editing `activity.toml`, launcher categories, audience/age metadata, difficulty/adaptive difficulty, discovery tags, or reasoning about how an Activity appears for a child.
-5. When packaging or exporting an Activity, also read `docs/architecture/GREIA_ACTIVITY_PACKAGE_FORMAT.md`. Parent-facing distribution uses the `.greiaactivity` ZIP contract; the extension is a UX/routing signal, never package validation or trust.
-6. When the Activity speaks, produces localized audio, uses shared Greia character utterances, teaches pronunciation, uses a Greia character voice, changes Activity Designer audio tooling, or needs child-directed grammatical agreement, also read `VOICE_GENERATION.md` completely and `docs/adr/0032-profile-presentation-and-grammatical-agreement.md` where agreement is relevant.
-7. When the Activity records from or listens to the microphone, also read `docs/adr/0031-platform-owned-microphone-processing.md` and `docs/architecture/GREIA_AUDIO_SERVICE.md`.
-8. Follow every narrower repository `AGENTS.md` that applies to the files being changed.
-9. Exact implemented APIs/schemas remain owned by source/runtime declarations; accepted ADRs own architecture; product docs own child-facing requirements.
+4. Read `TERMINAL_RENDERING.md` completely whenever an Activity has or adds a victory, completion, results, session-finished, Play Again or Continue screen. It owns the required terminal-state lifecycle and the shared low-cost `PygameCompletionScreen` path. A terminal screen must not keep the live game updating/rendering underneath a fullscreen alpha modal.
+5. Read `DISCOVERY.md` whenever creating or editing `activity.toml`, launcher categories, audience/age metadata, difficulty/adaptive difficulty, discovery tags, or reasoning about how an Activity appears for a child.
+6. When packaging or exporting an Activity, also read `docs/architecture/GREIA_ACTIVITY_PACKAGE_FORMAT.md`. Parent-facing distribution uses the `.greiaactivity` ZIP contract; the extension is a UX/routing signal, never package validation or trust.
+7. When the Activity speaks, produces localized audio, uses shared Greia character utterances, teaches pronunciation, uses a Greia character voice, changes Activity Designer audio tooling, or needs child-directed grammatical agreement, also read `VOICE_GENERATION.md` completely and `docs/adr/0032-profile-presentation-and-grammatical-agreement.md` where agreement is relevant.
+8. When the Activity records from or listens to the microphone, also read `docs/adr/0031-platform-owned-microphone-processing.md` and `docs/architecture/GREIA_AUDIO_SERVICE.md`.
+9. Follow every narrower repository `AGENTS.md` that applies to the files being changed.
+10. Exact implemented APIs/schemas remain owned by source/runtime declarations; accepted ADRs own architecture; product docs own child-facing requirements.
 
-Do not treat this index as permission to skip `CORE.md` or, for implementation work, `ENGINEERING.md`. Structural refactors also require `REFACTORING.md`.
+Do not treat this index as permission to skip `CORE.md` or, for implementation work, `ENGINEERING.md`. Structural refactors also require `REFACTORING.md`; completion/victory work requires `TERMINAL_RENDERING.md`.
 
 ## Implementation engineering decision summary
 
@@ -68,6 +69,32 @@ Performance is a correctness concern on Greia's Acer-class floor. In normal fram
 
 Required performance patterns include bounded caches with complete keys/invalidation, pre-rendered static scenes, dirty/invalidation-driven redraw where practical, bounded monotonic-time animations, fail-soft optimized paths, and semantic/pixel-equivalence testing for rendering optimizations.
 
+### Terminal/victory state is not an overlay effect
+
+For Pygame Activities with completion/results state:
+
+```text
+ACTIVE
+    update + render active game
+
+TERMINAL
+    freeze active simulation
+    prepare terminal presentation once
+    repaint only on invalidation
+    keep input/STOP responsive
+```
+
+Do **not** keep a 30 Hz active game running under `pygame.Surface((1024, 600), pygame.SRCALPHA)` or recreate stable terminal labels every frame. Standard Pygame terminal presentation should use:
+
+```python
+from greia_platform.pygame_completion import (
+    CompletionContent,
+    PygameCompletionScreen,
+)
+```
+
+The shared owner produces a prepared opaque terminal frame; the Activity remains responsible for completion truth, persistence/events and restart semantics. Full rules and the cross-Activity evidence are in `TERMINAL_RENDERING.md`.
+
 Current Activity working targets:
 
 ```text
@@ -83,6 +110,7 @@ Full implementation/refactoring protocol and measured rationale:
 ```text
 skills/greia-activity-authoring/ENGINEERING.md
 skills/greia-activity-authoring/REFACTORING.md
+skills/greia-activity-authoring/TERMINAL_RENDERING.md
 docs/engineering/ENGINEERING_FOUNDATIONS.md
 docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md
 ```
