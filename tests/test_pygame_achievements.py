@@ -16,13 +16,19 @@ def _text(value: str) -> LocalizedAchievementText:
     return LocalizedAchievementText((("en", value),), "en")
 
 
-def _entry(*, unlocked: bool) -> AchievementEntry:
+def _entry(
+    *,
+    unlocked: bool,
+    tier: str = "gold",
+    secret: bool = False,
+    achievement_id: str = "greia.test.badge",
+) -> AchievementEntry:
     definition = AchievementDefinition(
-        achievement_id="greia.test.badge",
+        achievement_id=achievement_id,
         category="test",
-        tier="gold",
+        tier=tier,
         icon_id="yellow_star",
-        secret=False,
+        secret=secret,
         title=_text("Badge"),
         description=_text("Description"),
         locked_hint=_text("Hint"),
@@ -86,6 +92,49 @@ class AchievementBadgeRendererTests(unittest.TestCase):
         badge = renderer.render(_entry(unlocked=True), 10_000)
         self.assertEqual(badge.get_size(), (220, 220))
         self.assertTrue(badge.get_flags() & pygame.SRCALPHA)
+
+    def test_each_unlocked_award_family_uses_semantic_icon_once(self) -> None:
+        provider = _IconProvider()
+        renderer = PygameAchievementBadgeRenderer(provider)
+
+        medal = renderer.render(
+            _entry(unlocked=True, tier="silver", achievement_id="greia.test.medal"),
+            96,
+        )
+        trophy = renderer.render(
+            _entry(unlocked=True, tier="gold", achievement_id="greia.test.trophy"),
+            96,
+        )
+        special = renderer.render(
+            _entry(unlocked=True, tier="special", achievement_id="greia.test.special"),
+            96,
+        )
+
+        self.assertEqual(provider.calls, 3)
+        self.assertEqual(medal.get_size(), (96, 96))
+        self.assertEqual(trophy.get_size(), (96, 96))
+        self.assertEqual(special.get_size(), (96, 96))
+        # The tier frames must not accidentally collapse back to one identical
+        # cached/surface representation.
+        self.assertIsNot(medal, trophy)
+        self.assertIsNot(trophy, special)
+
+    def test_secret_gold_uses_special_family_but_keeps_bounded_cache(self) -> None:
+        provider = _IconProvider()
+        renderer = PygameAchievementBadgeRenderer(provider, max_entries=4)
+        entry = _entry(
+            unlocked=True,
+            tier="gold",
+            secret=True,
+            achievement_id="greia.test.constellation",
+        )
+
+        first = renderer.render(entry, 110)
+        second = renderer.render(entry, 110)
+
+        self.assertIs(first, second)
+        self.assertEqual(provider.calls, 1)
+        self.assertEqual(first.get_size(), (110, 110))
 
 
 if __name__ == "__main__":
