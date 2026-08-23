@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import io
 import math
 from dataclasses import dataclass
 from typing import Any, Protocol
@@ -65,11 +67,11 @@ class PygameAchievementBadgeRenderer:
     the platform semantic icon remains the fallback.
 
     Alpha is intentionally confined to the badge-sized surface. Activity emblem
-    files are bounded during policy loading and decoded only while preparing a
-    new cached badge surface. Repeated draws are cache hits; content fingerprints
-    invalidate the cache when an Activity updates art in place. No runtime SVG
-    rasterization or fullscreen translucent surface is introduced on the
-    low-resource hardware floor.
+    files are bounded/fingerprinted during policy loading. The renderer verifies
+    those exact bytes on first use, decodes one shared source surface per emblem,
+    and prepares bounded final award surfaces from it. Repeated draws are cache
+    hits; content fingerprints invalidate stale art. No runtime SVG rasterization
+    or fullscreen translucent surface is introduced on the low-resource floor.
     """
 
     def __init__(
@@ -81,10 +83,14 @@ class PygameAchievementBadgeRenderer:
     ) -> None:
         self._icon_provider = icon_provider
         self._cache: BoundedCache[tuple[object, ...], Any] = BoundedCache(max_entries)
+        self._emblem_sources: BoundedCache[tuple[str, str], Any] = BoundedCache(
+            max(4, min(24, max_entries))
+        )
         self._style = style
 
     def clear(self) -> None:
         self._cache.clear()
+        self._emblem_sources.clear()
 
     def render(
         self,
@@ -410,7 +416,7 @@ class PygameAchievementBadgeRenderer:
         emblem = entry.definition.activity_emblem
         if emblem is not None:
             try:
-                loaded = pygame_module.image.load(str(emblem.asset_path))
+                loaded = self._load_activity_emblem(emblem, pygame_module)
                 icon = pygame_module.transform.smoothscale(
                     loaded,
                     (icon_size, icon_size),
@@ -432,6 +438,31 @@ class PygameAchievementBadgeRenderer:
         except Exception:
             icon = self._icon_provider("yellow_star", icon_size, pygame_module)
         surface.blit(icon, icon.get_rect(center=center))
+
+    def _load_activity_emblem(self, emblem: Any, pygame_module: Any) -> Any:
+        source_key = (str(emblem.asset_path), emblem.content_digest)
+        cached = self._emblem_sources.get(source_key)
+        if cached is not None:
+            return cached
+
+        # Read no more than the exact number of bytes admitted by policy. This
+        # keeps the runtime bounded and detects an in-place package mutation
+        # between policy loading and first presentation.
+        with emblem.asset_path.open("rb") as handle:
+            data = handle.read(emblem.byte_size + 1)
+        if len(data) != emblem.byte_size:
+            raise ValueError("Activity achievement emblem changed after policy admission")
+        if emblem.content_digest:
+            digest = hashlib.sha256(data).hexdigest()
+            if digest != emblem.content_digest:
+                raise ValueError("Activity achievement emblem fingerprint changed")
+
+        loaded = pygame_module.image.load(
+            io.BytesIO(data),
+            emblem.asset_path.name,
+        )
+        self._emblem_sources[source_key] = loaded
+        return loaded
 
     @staticmethod
     def _draw_lock(
