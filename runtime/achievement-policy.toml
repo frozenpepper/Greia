@@ -1,9 +1,10 @@
 schema_version = 1
-default_locale = "it"
+default_locale = "en"
 
 # Achievements are Greia-owned milestones derived from trusted history.
 # Activities only emit factual events declared in activity.toml; they never
-# unlock a badge directly or write this policy/state.
+# unlock a badge directly or write this policy/state. English is the safe
+# platform fallback until a catalogue entry has copy for another device locale.
 
 [[achievements]]
 id = "greia.care.first-friend"
@@ -68,6 +69,22 @@ type = "event_count"
 activity_id = "org.greia.memory-meraviglie"
 event_id = "memory.game_completed"
 threshold = 5
+
+[[achievements]]
+id = "greia.building.bridge-builder"
+category = "building"
+tier = "silver"
+icon_id = "rainbow"
+secret = false
+title = { it = "Costruttore di ponti", en = "Bridge Builder" }
+description = { it = "Hai completato tre attraversamenti costruendo i ponti giusti.", en = "You completed three crossings by building the right bridges." }
+locked_hint = { it = "Costruisci ponti sicuri e aiuta Flash ad attraversare.", en = "Build safe bridges and help Flash cross." }
+
+[[achievements.criteria]]
+type = "event_count"
+activity_id = "org.greia.costruiamo-ponti"
+event_id = "bridge.level_completed"
+threshold = 3
 
 [[achievements]]
 id = "greia.stars.handful"
