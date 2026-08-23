@@ -2,7 +2,7 @@
 
 **Status:** accepted product direction; core local Parent API/client implementation active, with production pairing/security and some management domains still incremental  
 **Date:** 2026-08-23  
-**Architecture owner:** ADR 0022  
+**Architecture owner:** ADR 0022; microphone-processing extension ADR 0031  
 **Initial implementation:** responsive HTML client served by Greia itself  
 **Related child discovery policy:** `docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md`
 
@@ -173,9 +173,10 @@ Parents can control supported semantic hardware settings such as:
 - tap-to-click;
 - natural scrolling;
 - microphone input gain when the current hardware payload exposes `desired.mic_gain`;
+- platform-owned microphone cleanup when `settings.audio` is advertised;
 - later controller mappings/policies where the common input model permits them.
 
-Current microphone gain is owned by the typed hardware settings service:
+Current microphone gain remains owned by the typed hardware settings service for compatibility:
 
 ```text
 minimum 0.5× / 50%
@@ -183,7 +184,16 @@ default 2.0× / 200%
 maximum 4.0× / 400%
 ```
 
-The on-device Parent panel and rebuilt HTML client both expose this control. It is intentionally separate from a future general-purpose Audio Service.
+Microphone **processing** is now owned separately by the typed Audio Service defined in ADR 0031. Its product defaults are:
+
+```text
+Improve microphone sound = ON
+Enhanced noise reduction = OFF
+```
+
+The normal path is deliberately the cheapest useful processor. Greia does not benchmark hardware or silently promote to advanced processing. A parent may turn processing off, and the stronger option appears only when the platform reports a real advanced endpoint.
+
+The network Parent client exposes these controls through `/api/v1/settings/audio`. The exact Acer processor remains subject to the physical acceptance protocol in `docs/testing/2026-08-23_ACER_MICROPHONE_PROCESSING_ACCEPTANCE.md`; until an endpoint is truly ready the service reports fallback rather than pretending cleanup is active.
 
 Controls appear only when Greia reports the relevant capability/data contract.
 
@@ -199,15 +209,24 @@ Brightness remains future work where supported by a typed platform path.
 
 ### Sound
 
-The broader intended parent audio surface still includes:
+The implemented Audio Service currently owns the bounded **microphone-processing** surface, not general speaker administration.
+
+Current Parent microphone controls are:
+
+- improve microphone sound (lightweight desired default);
+- disable microphone processing for raw capture/troubleshooting;
+- enhanced noise reduction only when the OS advertises a proven advanced endpoint;
+- effective/fallback status.
+
+Broader intended parent audio controls remain future work:
 
 - output volume;
 - mute;
 - selected output when Greia exposes more than one appropriate target.
 
-Those general audio controls remain unavailable until a typed Audio Service path exists. `settings.audio` therefore remains false today.
+`settings.audio` is therefore true in the concrete audio-aware Parent composition, but clients must not infer that every possible audio control exists. The resource schema defines the currently supported microphone fields.
 
-The implemented **microphone input gain** control above is a narrower hardware setting and is not evidence that general ALSA/Pulse/PipeWire control has been exposed. The HTML client must never invent shell-based audio control.
+The existing **microphone input gain** remains a narrower hardware setting. Neither the HTML client nor an Activity may invent shell-based ALSA/Pulse/PipeWire control.
 
 ### Network
 
@@ -275,6 +294,8 @@ backup.manage
 Per-child discovery policy is exposed through typed profile Activity-policy resources; clients do not infer support from manifest versions.
 
 If a capability is false, production-oriented client behavior is to omit or clearly explain the unavailable control rather than build a dashboard of engineering backlog states.
+
+For `settings.audio`, the resource remains capability/data driven inside the surface as well: `available.advanced = false` means the enhanced-processing control is omitted.
 
 ## 6. Common client protocol
 
@@ -348,6 +369,8 @@ The parent service is present on the low-resource Acer class, so:
 - bounded paired-device count;
 - no expensive persistent write on every authenticated request.
 
+The microphone-processing policy follows the same rule: lightweight is deterministic/default, advanced is explicit and optional, and no background benchmarking loop exists.
+
 Resource behavior must be measured before adding heavyweight dependencies. Follow `docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md` for measured performance work.
 
 ## 11. Current implementation slice
@@ -362,6 +385,7 @@ The current local Parent foundation can:
 - list installed Activities and audience/challenge metadata;
 - read/update per-child Activity visibility policy and explicit overrides;
 - read/update input/display hardware settings, including microphone gain where present;
+- read/update/reset typed microphone-processing preferences and report effective/available mode;
 - read progress summaries;
 - read/change Greia language;
 - scan/connect Wi-Fi;
@@ -371,7 +395,9 @@ The current local Parent foundation can:
 - read system-update status and upload only when capability permits;
 - install Activity packages only when capability permits.
 
-This does **not** imply that production pairing/encryption, general audio management, backups, complete Activity update/removal lifecycle, production system-update activation, or all future native-client UX is finished.
+The separately maintained HTML client source includes the capability-gated microphone cleanup controls. The exact Greia pin/integrity manifest must always point to the reviewed Parent revision used in a build; see the physical acceptance runbook for repin verification.
+
+This does **not** imply that production pairing/encryption, general speaker/output audio management, backups, complete Activity update/removal lifecycle, production system-update activation, or all future native-client UX is finished. It also does not claim that the Acer lightweight DSP backend is physically proven before its dedicated hardware protocol passes.
 
 ## 12. On-Device Parent Mode & Key Chord
 
@@ -382,7 +408,7 @@ Greia physical devices provide an on-device Parent Settings Panel directly on th
 - **Parent authentication gate:** Opening the panel requires entering the main Parent password (`greia` by default, validated via `MainCredentialStore`).
 - **On-device capabilities:**
   1. **Language:** choose the Greia system language through the typed language service.
-  2. **Audio & Mic:** inspect and adjust the bounded microphone input gain through `HardwareSettingsStore`.
+  2. **Audio & Mic:** inspect and adjust the bounded microphone input gain through `HardwareSettingsStore`. Microphone-processing mode is currently managed through the typed Parent API/HTML client; an on-device presentation may be added later without changing the Audio Service contract.
   3. **Wi-Fi Manager:** scan nearby SSIDs, select a network, enter a passphrase with on-screen masking, and connect via the platform Wi-Fi service.
   4. **SSH Maintenance Switch:** on-demand toggle to enable or disable SSH with connection guidance.
   5. **Remote Companion Diagnostics:** display device LAN IP, mDNS status, and instructions for connecting via browser at `http://<ip>:8766` during the provisional HTTP phase.
