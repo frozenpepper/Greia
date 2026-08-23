@@ -7,6 +7,7 @@ from typing import Final
 import pygame
 
 from greia_platform.localization import LocalizedResources
+from greia_platform.pygame_completion import CompletionContent, PygameCompletionScreen
 from greia_platform.typography import FontRole, GreiaTypography
 
 try:
@@ -47,11 +48,10 @@ class Particle:
 class ClinicRenderer:
     """Own Clinic Pygame presentation, geometry and bounded transient effects.
 
-    Stable scenery and finite text resources are prepared once. Frame invalidation
-    belongs to ``ClinicActivity``: a static victory state is rendered only when it
-    becomes dirty, so this renderer deliberately avoids a redundant full-frame
-    victory cache. Terminal rendering also has its own path rather than feeding a
-    completed session through active-treatment presentation assumptions.
+    Active treatment and terminal completion are intentionally different render
+    modes. The terminal mode uses Greia's shared opaque prepared completion screen:
+    no live clinic scene is rendered underneath it, no full-screen alpha blend is
+    performed, and repeated terminal draws are one opaque blit.
     """
 
     def __init__(self, typography: GreiaTypography, resources: LocalizedResources) -> None:
@@ -62,24 +62,16 @@ class ClinicRenderer:
         self._star_value: int | None = None
         self._star_surface: pygame.Surface | None = None
         self._particles: list[Particle] = []
-
-        # Victory resources are finite and known at construction time. Preparing
-        # them here avoids first-use font/surface work on the terminal transition.
-        self._victory_overlay = pygame.Surface(
-            (REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.SRCALPHA
+        self._completion = PygameCompletionScreen(
+            typography,
+            width=REFERENCE_WIDTH,
+            height=REFERENCE_HEIGHT,
+            primary_rect=PLAY_AGAIN_RECT,
         )
-        self._victory_overlay.fill((10, 15, 30, 210))
-        self._victory_title = self._typography.render(
-            self._resources.text("victory.all_patients"),
-            FontRole.DISPLAY,
-            30,
-            (217, 119, 6),
-        )
-        self._play_again_label = self._typography.render(
-            self._resources.text("btn.play_again"),
-            FontRole.DISPLAY,
-            22,
-            (255, 255, 255),
+        self._completion_content = CompletionContent(
+            title=self._resources.text("victory.all_patients"),
+            primary_label=self._resources.text("btn.play_again"),
+            achievement_count=5,
         )
 
     @property
@@ -88,6 +80,7 @@ class ClinicRenderer:
 
     def reset_transients(self) -> None:
         self._particles.clear()
+        self._completion.clear()
 
     def update(self, dt: float) -> None:
         if not self._particles:
@@ -139,19 +132,16 @@ class ClinicRenderer:
     def patient_contains(point: tuple[int, int]) -> bool:
         return TABLE_RECT.collidepoint(point)
 
-    @staticmethod
-    def play_again_contains(point: tuple[int, int]) -> bool:
-        return PLAY_AGAIN_RECT.collidepoint(point)
+    def play_again_contains(self, point: tuple[int, int]) -> bool:
+        return self._completion.primary_contains(point)
 
     def render(self, surface: pygame.Surface, session: ClinicSession, now: float) -> None:
-        surface.blit(self._backdrop, (0, 0))
-
         if session.is_victory:
-            self._draw_completed_patient(surface, session)
-            self._draw_star_pill(surface, session.total_stars)
-            self._draw_victory(surface)
+            self._completion.prepare(self._completion_content)
+            self._completion.draw(surface)
             return
 
+        surface.blit(self._backdrop, (0, 0))
         self._draw_patient(surface, session, now)
         self._draw_prescription(surface, session)
         self._draw_particles(surface)
@@ -202,25 +192,6 @@ class ClinicRenderer:
             TABLE_RECT.centery - 85,
             session.next_needed,
             now,
-        )
-
-    def _draw_completed_patient(
-        self,
-        surface: pygame.Surface,
-        session: ClinicSession,
-    ) -> None:
-        """Render the last healed patient without active-treatment assumptions."""
-
-        draw_patient(
-            surface,
-            session.patient_id,
-            TABLE_RECT.centerx,
-            TABLE_RECT.centery + 15,
-            180,
-            has_mud=False,
-            has_scratch=False,
-            completed_steps=tuple(session.required_steps),
-            is_happy=True,
         )
 
     def _draw_prescription(self, surface: pygame.Surface, session: ClinicSession) -> None:
@@ -323,35 +294,4 @@ class ClinicRenderer:
         surface.blit(
             self._star_surface,
             (rect.left + 58, rect.centery - self._star_surface.get_height() // 2),
-        )
-
-    def _draw_victory(self, surface: pygame.Surface) -> None:
-        # The application invalidation loop calls this only when the static victory
-        # state becomes dirty, so one alpha blit is enough; no full-frame copy/cache.
-        surface.blit(self._victory_overlay, (0, 0))
-
-        card = pygame.Rect(
-            REFERENCE_WIDTH // 2 - 250,
-            REFERENCE_HEIGHT // 2 - 160,
-            500,
-            320,
-        )
-        pygame.draw.rect(surface, (255, 252, 245), card, border_radius=28)
-        pygame.draw.rect(surface, (234, 179, 8), card, width=5, border_radius=28)
-        surface.blit(
-            self._victory_title,
-            (card.centerx - self._victory_title.get_width() // 2, card.top + 35),
-        )
-        for index in range(5):
-            x = card.centerx - 100 + index * 50
-            y = card.top + 130
-            pygame.draw.circle(surface, (234, 179, 8), (x, y), 22)
-            pygame.draw.circle(surface, (254, 240, 138), (x, y), 10)
-        pygame.draw.rect(surface, (34, 197, 94), PLAY_AGAIN_RECT, border_radius=20)
-        surface.blit(
-            self._play_again_label,
-            (
-                PLAY_AGAIN_RECT.centerx - self._play_again_label.get_width() // 2,
-                PLAY_AGAIN_RECT.centery - self._play_again_label.get_height() // 2,
-            ),
         )
