@@ -65,7 +65,9 @@ class ChildShellVisualContextTests(unittest.TestCase):
                 {"GREIA_OS_ROOT": str(ROOT)},
                 clear=False,
             ):
-                environment = ProfileVisualActivitySupervisor._sanitized_environment(
+                supervisor = object.__new__(ProfileVisualActivitySupervisor)
+                supervisor._audio_service = None
+                environment = supervisor._sanitized_environment(
                     manifest,
                     profile,
                     _Authority(),

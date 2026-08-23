@@ -13,12 +13,21 @@ from greia_platform.boot_contract import (
 from greia_platform.grub_security import RECOVERY_USER
 
 
-GOOD_LINE = (
+GOOD_RELEASE_LINE = (
     "linux /vmlinuz root=UUID=12345678-1234-5678-9abc-def012345678 ro "
     "quiet splash loglevel=0 console=null panic=5 "
     "systemd.show_status=false rd.systemd.show_status=false "
     "systemd.crash_shell=no systemd.crash_chvt=0 "
     "udev.log_priority=3 vt.global_cursor_default=0 consoleblank=0"
+)
+GOOD_LINE = GOOD_RELEASE_LINE
+
+GOOD_DEVELOPER_LINE = (
+    "linux /vmlinuz root=UUID=12345678-1234-5678-9abc-def012345678 ro "
+    "loglevel=4 console=tty1 panic=0 "
+    "systemd.show_status=true rd.systemd.show_status=true "
+    "systemd.crash_shell=no systemd.crash_chvt=0 "
+    "udev.log_priority=4 vt.global_cursor_default=1 consoleblank=0"
 )
 AUTH = (
     'set superusers="greia-recovery"\n'
@@ -46,17 +55,35 @@ class BootContractTests(unittest.TestCase):
 
     def test_developer_mode_keeps_boot_observable(self) -> None:
         # Developer/test builds must keep the boot visible: a kernel panic
-        # prints to tty1 and waits 30 s instead of silently rebooting with
-        # console=null panic=5 (see INSTALLED_OS_BOOT_POSTMORTEM.md §16).
-        dev_line = GOOD_LINE.replace("console=null", "console=tty1").replace("panic=5", "panic=30")
-        entries = validate_grub_text(config(dev_line), developer=True)
+        # prints to tty1 and does not auto-reboot (panic=0) so failure state
+        # remains observable. Normal/release builds stay fully silent and consoleless.
+        entries = validate_grub_text(config(GOOD_DEVELOPER_LINE), developer=True)
         self.assertEqual(len(entries), 1)
         # The release consoleless line must NOT validate as developer mode.
         with self.assertRaises(GrubContractError):
-            validate_grub_text(config(), developer=True)
+            validate_grub_text(config(GOOD_RELEASE_LINE), developer=True)
         # And the dev line must NOT validate as a normal (release) build.
         with self.assertRaises(GrubContractError):
-            validate_grub_text(config(dev_line))
+            validate_grub_text(config(GOOD_DEVELOPER_LINE))
+
+    def test_developer_mode_rejects_conflicting_or_stale_arguments(self) -> None:
+        for bad_arg, good_arg in (
+            ("panic=30", "panic=0"),
+            ("panic=5", "panic=0"),
+            ("console=null", "console=tty1"),
+            ("quiet", None),
+            ("splash", None),
+            ("systemd.show_status=false", "systemd.show_status=true"),
+            ("rd.systemd.show_status=false", "rd.systemd.show_status=true"),
+            ("loglevel=0", "loglevel=4"),
+        ):
+            with self.subTest(bad_arg=bad_arg):
+                if good_arg:
+                    bad_line = GOOD_DEVELOPER_LINE.replace(good_arg, bad_arg)
+                else:
+                    bad_line = GOOD_DEVELOPER_LINE + f" {bad_arg}"
+                with self.assertRaises(GrubContractError):
+                    validate_grub_text(config(bad_line), developer=True)
 
     def test_developer_marker_flips_appliance_grub_args(self) -> None:
         script_path = (
@@ -69,10 +96,14 @@ class BootContractTests(unittest.TestCase):
         )
         script = script_path.read_text(encoding="utf-8")
         self.assertIn("developer-remote", script)
-        self.assertIn("console=tty1", script)
-        self.assertIn("panic=30", script)
-        self.assertIn("console=null", script)
-        self.assertIn("panic=5", script)
+        self.assertIn('console_arg="console=null"', script)
+        self.assertIn('panic_arg="panic=5"', script)
+        self.assertIn('console_arg="console=tty1"', script)
+        self.assertIn('panic_arg="panic=0"', script)
+        self.assertIn("loglevel=4", script)
+        self.assertIn("systemd.show_status=true", script)
+        self.assertIn("rd.systemd.show_status=true", script)
+        self.assertNotIn("panic=30", script)
 
     def test_checked_in_grub_auth_generator_matches_recovery_identity(self) -> None:
         script_path = (

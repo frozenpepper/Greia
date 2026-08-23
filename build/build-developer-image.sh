@@ -31,10 +31,10 @@ mkdir -p "$OUTPUT_DIR"
 OUTPUT_DIR="$(realpath "$OUTPUT_DIR")"
 
 # The dev profile itself owns the recovery SSH contract. Do NOT run the old
-# provision_developer_image.py client-key workflow: it created a separate
-# greiaadmin keypair and a second authentication model that is no longer part of
-# Greia development. The target builder already provisions the simple greia
-# password account and runtime sshd bootstrap for explicit developer profiles.
+# client-key provisioning workflow: it created a separate admin keypair and a
+# second authentication model that is no longer part of Greia development. The
+# target builder already provisions the simple greia password account and
+# runtime sshd bootstrap for explicit developer profiles.
 "$SCRIPT_DIR/build-image.sh" "$PROFILE" "$OUTPUT_DIR"
 image="$OUTPUT_DIR/greia-os-${PROFILE}.img"
 

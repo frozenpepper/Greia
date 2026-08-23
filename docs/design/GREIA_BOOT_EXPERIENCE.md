@@ -177,7 +177,7 @@ During current Acer recovery, explicit development profiles intentionally use vi
 
 Do not solve consolelessness by deleting diagnostics. **Invisible is not the same as unavailable.**
 
-Developer/test installs must remain reachable over SSH according to the owner-approved development contract:
+Developer/test installs must remain reachable over developer SSH according to the owner-approved development contract:
 
 ```text
 user: greia

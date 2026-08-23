@@ -16,7 +16,13 @@ from typing import Sequence
 
 
 _LINUX_COMMANDS = {"linux", "linux16", "linuxefi"}
-_REQUIRED_ARGUMENTS = {
+
+COMMON_REQUIRED_ARGUMENTS = {
+    "systemd.crash_shell=no",
+    "systemd.crash_chvt=0",
+    "consoleblank=0",
+}
+RELEASE_REQUIRED_ARGUMENTS = {
     "quiet",
     "splash",
     "loglevel=0",
@@ -24,13 +30,19 @@ _REQUIRED_ARGUMENTS = {
     "panic=5",
     "systemd.show_status=false",
     "rd.systemd.show_status=false",
-    "systemd.crash_shell=no",
-    "systemd.crash_chvt=0",
     "udev.log_priority=3",
     "vt.global_cursor_default=0",
-    "consoleblank=0",
 }
-_LIVE_REQUIRED_ARGUMENTS = {
+DEVELOPER_REQUIRED_ARGUMENTS = {
+    "loglevel=4",
+    "console=tty1",
+    "panic=0",
+    "systemd.show_status=true",
+    "rd.systemd.show_status=true",
+    "udev.log_priority=4",
+    "vt.global_cursor_default=1",
+}
+LIVE_REQUIRED_ARGUMENTS = {
     "boot=live",
     "components",
     "live-media-path=/live",
@@ -40,6 +52,32 @@ _LIVE_REQUIRED_ARGUMENTS = {
     "silent",
     "overlay-size=128M",
 }
+
+RELEASE_FORBIDDEN_ARGUMENTS = {
+    "console=tty1",
+    "panic=0",
+    "panic=30",
+    "loglevel=4",
+    "systemd.show_status=true",
+    "rd.systemd.show_status=true",
+    "udev.log_priority=4",
+    "vt.global_cursor_default=1",
+}
+DEVELOPER_FORBIDDEN_ARGUMENTS = {
+    "quiet",
+    "splash",
+    "console=null",
+    "panic=5",
+    "panic=30",
+    "loglevel=0",
+    "systemd.show_status=false",
+    "rd.systemd.show_status=false",
+}
+
+# Compatibility aliases
+_REQUIRED_ARGUMENTS = COMMON_REQUIRED_ARGUMENTS | RELEASE_REQUIRED_ARGUMENTS
+_LIVE_REQUIRED_ARGUMENTS = LIVE_REQUIRED_ARGUMENTS
+
 _SINGLE_VALUE_PREFIXES = (
     "console=",
     "panic=",
@@ -182,46 +220,40 @@ def _line_errors(line: KernelCommandLine, *, live_installer: bool, developer: bo
     args = line.arguments
 
     # Developer/test builds deliberately keep the boot observable: a kernel
-    # panic prints to tty1 and the machine waits 30 s instead of silently
-    # rebooting after 5 s with console=null. Normal/release builds stay fully
-    # consoleless. See docs/INSTALLED_OS_BOOT_POSTMORTEM.md §16.
+    # panic prints to tty1 and does not auto-reboot (panic=0) so failure state
+    # remains observable. Normal/release builds stay fully silent and consoleless.
+    # See docs/INSTALLED_OS_BOOT_POSTMORTEM.md §16.
+    required_pool = set(COMMON_REQUIRED_ARGUMENTS)
     if developer:
-        required_console = "console=tty1"
-        required_panic = "panic=30"
+        required_pool |= DEVELOPER_REQUIRED_ARGUMENTS
+        profile_forbidden = DEVELOPER_FORBIDDEN_ARGUMENTS
     else:
-        required_console = "console=null"
-        required_panic = "panic=5"
+        required_pool |= RELEASE_REQUIRED_ARGUMENTS
+        profile_forbidden = RELEASE_FORBIDDEN_ARGUMENTS
+
+    if live_installer:
+        required_pool |= LIVE_REQUIRED_ARGUMENTS
 
     for prefix in _SINGLE_VALUE_PREFIXES:
         matching = [argument for argument in args if argument.startswith(prefix)]
-        required_pool = _REQUIRED_ARGUMENTS | (_LIVE_REQUIRED_ARGUMENTS if live_installer else set())
         required = [argument for argument in required_pool if argument.startswith(prefix)]
-        # console= and panic= are developer-mode aware; substitute the active
-        # value before comparing.
-        if prefix == "console=":
-            required = [required_console]
-        elif prefix == "panic=":
-            required = [required_panic]
         if required and matching != required:
             errors.append(
                 f"line {line.line_number}: expected exactly {required!r} for {prefix}; found {matching!r}"
             )
 
-    for required in sorted(_REQUIRED_ARGUMENTS):
-        if required in {"console=null", "panic=5"}:
-            # Replaced by the developer-mode-aware console/panic above.
-            expected = required_console if required.startswith("console=") else required_panic
-            if expected not in args:
-                errors.append(f"line {line.line_number}: missing required argument {expected}")
-            continue
+    for required in sorted(required_pool):
         if required not in args:
             errors.append(f"line {line.line_number}: missing required argument {required}")
+
+    for argument in args:
+        if argument in profile_forbidden:
+            mode_name = "developer" if developer else "release"
+            errors.append(
+                f"line {line.line_number}: forbidden {mode_name} argument {argument}"
+            )
+
     if live_installer:
-        for required in sorted(_LIVE_REQUIRED_ARGUMENTS):
-            if required not in args:
-                errors.append(
-                    f"line {line.line_number}: live installer is missing required argument {required}"
-                )
         media_ids = [
             argument.partition("=")[2]
             for argument in args
@@ -306,7 +338,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--developer",
         action="store_true",
-        help="developer/test build: keep boot observable (console=tty1, panic=30)",
+        help="developer/test build: keep boot observable (console=tty1, panic=0)",
     )
     return parser
 

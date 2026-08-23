@@ -8,7 +8,7 @@
 # path observable until the current installer regression is physically closed.
 # The accepted postmortems explicitly require visible early boot diagnostics.
 # Do not auto-reboot a kernel/initramfs failure: panic=0 leaves the actual
-# failure on tty1. Do not add Syslinux DISPLAY clearing or console=null here.
+# failure on tty1. Do not add Syslinux display clearing or null console here.
 # Once the hardware path is re-accepted, presentation silence can be designed
 # and tested as a separate boot-critical change.
 DEFAULT live

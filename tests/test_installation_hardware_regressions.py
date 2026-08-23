@@ -170,7 +170,7 @@ class RealHardwareInstallationRegressionTests(unittest.TestCase):
         # credential authority by itself, but the owner-approved greia/greia
         # login plus the operator key is the accepted dev identity.
         developer_builder = self.read("build/build-developer-image.sh")
-        self.assertIn("provision_developer_image.py", developer_builder)
+        self.assertIn("verify-development-target-image.sh", developer_builder)
         provisioner = self.read("tools/provision_developer_image.py")
         self.assertIn('"ed25519"', provisioner)
         self.assertIn("AUTHORIZED_KEYS", provisioner)

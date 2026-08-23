@@ -310,6 +310,8 @@ class ActivityPackageService:
         # live under profile-scoped storage elsewhere and are never part of this
         # transaction. After this rename the launcher can no longer discover the
         # package even if best-effort cleanup is interrupted.
+        if active.is_dir() and not os.access(active, os.W_OK):
+            os.chmod(active, 0o700)
         try:
             os.rename(active, tombstone)
         except FileNotFoundError as exc:
