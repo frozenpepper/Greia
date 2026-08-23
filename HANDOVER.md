@@ -44,16 +44,30 @@ On-device visual verification covered Collection Home, category grid, hover lift
 
 `docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md` is now the single accumulating performance manual for measured device cost, cache/alpha/invalidation rules, evidence discipline and case studies. The microphone tranche does not supersede or modify that performance work.
 
+## Parent Settings overlay tranche (2026-08-23, `3c3e91f`)
+
+The chord-opened (hold S+T) on-device Parent Settings panel had two owner-reported defects, both fixed and verified on the reference Acer:
+
+- **Password field dead**: SDL delivers `TEXTINPUT` only while text input is active, and parent-panel entry never activated it — typed characters vanished while Enter/Backspace still worked. Entry/exit now flows through `_enter_parent_panel`/`_exit_parent_panel`, which manage text input and clear stale input events at every transition site in both production and legacy run loops.
+- **UI-thread stalls**: SSH status (two systemctl subprocesses + route probe per call) was invoked per-frame by the Info tab, blocked mid-draw every ~2 s on the SSH tab and was double-polled by `drain()`. Status refreshes now run on a worker thread into a queue drained exactly like Wi-Fi results; tabs render cached snapshots with honest placeholders; toggles cache their returned status; Audio mic-gain reads are throttled; the full-screen dim is composited once per picker-state change (`ParentSettingsOverlay.dim_surface()` + `draw_backdrop=False`) instead of alpha-blended every redraw.
+
+Physical verification sequence: injected 5 s chord → auth dialog → typed dots visible → unlock → Language/SSH/Remote-and-Pairing tabs all render (device IP shown from cached status) → close restores the picker. Info/SSH tabs idle at **6–9 % launcher CPU** (previously subprocess-per-frame). Tests: `tests/test_parent_panel_input_lifecycle.py` (4 PASS).
+
 ## Current source-test boundary
 
 Focused launcher/performance suites associated with the Acer tranche passed. The last recorded aggregate discover remains **not green**:
 
 ```text
-1028 discovered tests
-4 failures
+1042 discovered tests
+5 non-passing
 ```
 
-All four failures were pre-existing boot-contract/diagnostic expectation drift around `panic=30` versus the accepted postmortem `panic=5` direction and reproduced on the pre-hover reference baseline. They were not caused by the Parent/discovery work.
+All five reproduce on the clean pre-parent-panel baseline:
+
+- 4 boot-contract/diagnostic expectation drifts around `panic=30` versus the accepted postmortem `panic=5` direction;
+- 1 stale call-signature in `tests/test_child_shell_visual_context.py` (`ProfileVisualActivitySupervisor._sanitized_environment` gained a required `session_id` without the test being updated).
+
+They were not caused by the hover or Parent-panel tranches. Owner disposition remains required before an aggregate green claim.
 
 The new microphone-processing source tests and new Parent HTML tests are **authored but not claimed executed in this remote source-edit environment**. They must run locally before the physical Acer tranche is promoted.
 

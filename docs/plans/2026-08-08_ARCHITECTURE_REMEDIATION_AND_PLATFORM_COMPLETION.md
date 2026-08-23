@@ -837,6 +837,15 @@ Do not rewrite old entries; append corrections.
 - Next exact step: owner decides boot-test expectation direction (`panic=30` vs accepted postmortem `panic=5`), then re-run `make verify` on current head; continue R7 from its first incomplete blocking gate.
 - Commit(s): `68899e9` on `main`.
 
+## 2026-08-23 — Parent Settings overlay password/input repair and UI-thread stall removal (non-closing)
+
+- Implemented (commit `3c3e91f`): the chord-opened on-device Parent Settings panel could not receive typed passwords because parent-panel mode never activated SDL text input (`pygame.key.start_text_input()`), so `TEXTINPUT` events never arrived while bare KEYDOWN keys still worked. Entry/exit is now centralized in `_enter_parent_panel`/`_exit_parent_panel`, which manage text input and clear stale input events at every transition site in both the production and legacy run loops. Separately, `SystemSshMaintenanceProvider.status()` (two systemctl subprocesses plus a route probe) was called per-frame by the Info tab, blocked mid-draw every ~2 s on the SSH tab and was double-polled by `drain()`; SSH status now refreshes on a worker thread into a queue drained exactly like Wi-Fi scan results, tabs render only cached snapshots with honest placeholders, toggles cache their returned status, Audio-tab mic-gain reads are throttled, and the full-screen translucent dim is composited once per picker-state change (`dim_surface()` + `draw_backdrop=False`) instead of alpha-blended every redraw.
+- Tests/evidence: new `tests/test_parent_panel_input_lifecycle.py` (4 PASS: text-input lifecycle across entry/exit, non-blocking throttled refresh returning before slow providers complete, toggle caching without extra polls, mic-gain read throttle). Physical Acer verification via injected 5 s chord through the developer remote surface: auth dialog renders, typed dots appear, unlock succeeds, all five tabs render with device IP from cached status, Info/SSH tabs idle at 6–9 % launcher CPU (previously subprocess-per-frame), close restores the picker. Full discover 1042 tests with only the five pre-existing failures reproduced on clean HEAD (4 boot-contract `panic=30` drifts + stale `_sanitized_environment` signature in `test_child_shell_visual_context`). Case study appended to `docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md`.
+- Decisions: text-input lifecycle belongs to the mode-transition seam rather than individual widgets; status/subprocess work is background-per-second, never per-frame; modal dim uses an opaque cached composite keyed by the underlying picker state.
+- Remaining blockers: owner disposition of the five pre-existing test failures before any aggregate `make verify` PASS claim.
+- Next exact step: continue R7 from its first incomplete blocking gate.
+- Commit(s): `3c3e91f` on `main`.
+
 ---
 
 # 9. Final completion criteria

@@ -188,6 +188,16 @@ Low idle CPU must not cost perceptible input lag. Previously accepted tolerance:
 - **Result:** hover 26.6 ms (37.6 fps); full rebuild 81.8 ms; steady 3.34 ms; idle CPU ~11%→~6%; sweep CPU ~32%→~16%; RSS unchanged (~153 MB). Verified visually on device; no ghosting.
 - **Tests:** `tests/test_launcher_hover_scene_performance.py` (pixel equivalence, frozen-clock determinism).
 
+### 2026-08-23 — Parent Settings overlay: dead text input + UI-thread stalls (commit `3c3e91f`)
+
+- **Symptoms:** the chord-opened (hold S+T) Parent Settings panel was "super slow" and its password field accepted no characters.
+- **Diagnosis:** two independent defect classes:
+  - *Input:* SDL delivers `TEXTINPUT` only while `pygame.key.start_text_input()` is active; nothing activated it for parent-panel mode, so typed characters never arrived (KEYDOWN-only keys like Enter/Backspace still worked — classic mixed-delivery symptom).
+  - *Stalls:* `SshMaintenanceProvider.status()` shells out to systemctl twice plus a route probe; the Info tab called it **every frame**, the SSH tab blocked mid-draw every ~2 s and `drain()` double-polled. Additionally the full-screen translucent dim was alpha-blended on every redraw (~100 ms class per keystroke), and the Audio tab parsed its TOML store per frame.
+- **Fixes:** centralized `_enter_parent_panel`/`_exit_parent_panel` transitions managing text input + event clearing (P10-style explicit lifecycle); SSH status moved to a worker thread + queue consumed by `drain()` with cached-snapshot rendering and honest placeholders (Wi-Fi controller pattern reused); dim composited once per picker-state change into an opaque surface (`dim_surface()` + `draw_backdrop=False`, P4/P2); mic gain served from a throttled cache (P7).
+- **Result (physical Acer):** chord → auth dialog → typed password dots visible → unlock → all five tabs render; Info/SSH tabs idle at **6–9 % launcher CPU** (previously subprocess-per-frame); close restores the picker cleanly.
+- **Lesson:** input delivery and rendering cost live at different layers — a field can render correctly yet receive no events; verify both pipelines when a widget "stops working". Subprocess/status calls are per-second background work, never per-frame work (P7).
+
 ### 2026-08-22 — Launcher pacing & dirty-redraw gate (accepted)
 
 - Dirty-aware launcher rendering; replaced unconditional redraw with event-driven invalidation plus verified async invalidation paths (rescan, parent-panel drain). Idle draw calls 30 fps → 0; physical idle CPU ~95% → ~0–6%. Protocol: `docs/testing/2026-08-22_PERFORMANCE_PACING_DIRTY_REDRAW_ACCEPTANCE.md`; includes the folklore correction (§2.1).
