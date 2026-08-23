@@ -249,6 +249,7 @@ class LauncherApplication:
         self._parent_panel = ParentSettingsOverlay(MainCredentialStore.from_environment())
         self._dimmed_underlay: Any = None
         self._dimmed_underlay_key: Any = None
+        self._parent_panel_opened_monotonic = 0.0
 
     def _enter_parent_panel(self, pygame: Any) -> None:
         """Open the hidden Parent Settings overlay with active text input.
@@ -261,9 +262,22 @@ class LauncherApplication:
 
         self._mode = "parent_panel"
         self._parent_panel.open()
+        self._parent_panel_opened_monotonic = time.monotonic()
         pygame.event.clear(pygame.TEXTINPUT)
         pygame.event.clear(pygame.KEYDOWN)
         pygame.key.start_text_input()
+
+    def _parent_panel_accepts_text(self, now: float) -> bool:
+        """Whether typed characters may reach the Parent password field now.
+
+        While the opening chord is still physically held (or within a short
+        settle window after open), SDL keeps delivering auto-repeat text from
+        the held S/T keys; those characters must never leak into the field.
+        """
+
+        if self._parent_chord.is_holding:
+            return False
+        return now - self._parent_panel_opened_monotonic >= 0.35
 
     def _exit_parent_panel(self, pygame: Any) -> None:
         """Close the overlay and restore the profile picker input state."""
@@ -319,7 +333,7 @@ class LauncherApplication:
                         running = False
                     elif event.type == pygame.TEXTINPUT:
                         if self._mode == "parent_panel":
-                            if not self._parent_chord.is_holding:
+                            if self._parent_panel_accepts_text(time.monotonic()):
                                 self._parent_panel.handle_text_input(event.text)
                         elif self._mode == "secret":
                             self._handle_secret_text(event.text)
@@ -357,6 +371,9 @@ class LauncherApplication:
                     if self._parent_chord.poll(time.monotonic()):
                         self._enter_parent_panel(pygame)
                 elif self._mode == "parent_panel":
+                    if self._parent_chord.is_holding:
+                        # Drain chord auto-repeat while the keys are down.
+                        pygame.event.clear(pygame.TEXTINPUT)
                     self._parent_panel.drain()
                 self._rescan_if_due()
                 self._draw(screen, pygame)
@@ -699,6 +716,8 @@ class LauncherApplication:
                 pygame,
                 self._load_icon,
                 draw_backdrop=False,
+                base_surface=self._dimmed_underlay,
+                base_key=self._dimmed_underlay_key,
             )
         elif self._mode == "profiles":
             self._draw_profile_picker(screen, theme, pygame)
@@ -718,7 +737,17 @@ class LauncherApplication:
         pointer_active = pygame.mouse.get_focused()
 
         hovered_target = None
-        if pointer_active and self._cached_profiles_targets:
+        if (
+            self._mode != "parent_panel"
+            and pointer_active
+            and self._cached_profiles_targets
+        ):
+            # While the Parent Settings modal is open its dim layer covers the
+            # picker: hover there is invisible and clicks go to the overlay.
+            # Computing it anyway changed the cache key whenever the pointer
+            # crossed a hidden tile (e.g. beneath the password field) and
+            # forced a full picker rebuild plus a full-screen dim recomposite
+            # on an Atom-class CPU.
             for target in self._cached_profiles_targets:
                 if target.rect.collidepoint(pointer):
                     hovered_target = (target.action, target.value)

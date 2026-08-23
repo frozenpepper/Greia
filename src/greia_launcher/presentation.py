@@ -258,7 +258,7 @@ class GreiaLauncherPresentation(LauncherApplication):
                         running = False
                     elif event.type == pygame.TEXTINPUT:
                         if self._mode == "parent_panel":
-                            if not self._parent_chord.is_holding:
+                            if self._parent_panel_accepts_text(time.monotonic()):
                                 self._parent_panel.handle_text_input(event.text)
                                 _needs_redraw = True
                         elif self._mode == "secret":
@@ -333,6 +333,9 @@ class GreiaLauncherPresentation(LauncherApplication):
                         self._enter_parent_panel(pygame)
                         _needs_redraw = True
                 elif self._mode == "parent_panel":
+                    if self._parent_chord.is_holding:
+                        # Drain chord auto-repeat while the keys are down.
+                        pygame.event.clear(pygame.TEXTINPUT)
                     if self._parent_panel.drain():
                         _needs_redraw = True
                 if self._rescan_if_due():

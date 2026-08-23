@@ -178,5 +178,130 @@ class MicGainReadThrottleTests(unittest.TestCase):
         self.assertLessEqual(counter["reads"], 2)
 
 
+class ChordRepeatGateTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        # Event draining in _enter_parent_panel requires an initialized
+        # display; this class may otherwise run before any other does.
+        pygame.init()
+        pygame.font.init()
+        pygame.display.set_mode((320, 240))
+
+    def test_text_rejected_while_chord_held_and_during_settle_window(self) -> None:
+        shell = GreiaChildShell(windowed=True)
+        shell._enter_parent_panel(pygame)
+
+        now = shell._parent_panel_opened_monotonic + 0.05
+
+        class HeldChord:
+            is_holding = True
+
+        original_chord = shell._parent_chord
+        shell._parent_chord = HeldChord()
+        try:
+            self.assertFalse(shell._parent_panel_accepts_text(now))
+        finally:
+            shell._parent_chord = original_chord
+
+        # Released, but still inside the settle window.
+        self.assertFalse(shell._parent_panel_accepts_text(now))
+
+        # Released and settled.
+        self.assertTrue(
+            shell._parent_panel_accepts_text(
+                shell._parent_panel_opened_monotonic + 0.4
+            )
+        )
+        shell._exit_parent_panel(pygame)
+
+
+class TypographyRenderPipelineTests(unittest.TestCase):
+    def test_get_text_uses_shared_render_with_caching(self) -> None:
+        provider = MockSshMaintenanceProvider()
+        overlay = _overlay(SshMaintenanceService(provider))
+        typography = mock.MagicMock()
+        sentinel = object()
+        typography.render.return_value = sentinel
+
+        first = overlay._get_text("🎙️ gain", __import__("greia_platform.typography", fromlist=["FontRole"]).FontRole.CONTROL, 18, (1, 2, 3), typography)
+        second = overlay._get_text("🎙️ gain", __import__("greia_platform.typography", fromlist=["FontRole"]).FontRole.CONTROL, 18, (1, 2, 3), typography)
+
+        self.assertIs(first, sentinel)
+        self.assertIs(second, sentinel)
+        self.assertEqual(typography.render.call_count, 1)
+        typography.font.assert_not_called()
+
+
+class MaskedPasswordTests(unittest.TestCase):
+    def test_long_password_display_is_capped(self) -> None:
+        provider = MockSshMaintenanceProvider()
+        overlay = _overlay(SshMaintenanceService(provider))
+        overlay.password_text = "x" * 80
+        self.assertEqual(overlay._masked_password(20), "•" * 20)
+        overlay.password_text = "abc"
+        self.assertEqual(overlay._masked_password(20), "•••")
+        overlay.password_text = ""
+        self.assertEqual(overlay._masked_password(20), "")
+
+
+class ModalHoverSuppressionTests(unittest.TestCase):
+    """Picker hover must not invalidate while the Parent modal covers it."""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        pygame.init()
+        pygame.font.init()
+
+    def test_pointer_over_hidden_tile_does_not_invalidate_picker(self) -> None:
+        from greia_launcher.child_shell import GreiaChildShell
+
+        shell = GreiaChildShell(windowed=True)
+        shell.profiles = shell.profile_store.ensure_initialized()
+        screen = pygame.display.set_mode((1024, 600))
+        shell._synthetic_pointer_active = True
+
+        # Prime the picker cache with the pointer away from any target.
+        shell._mode = "profiles"
+        with mock.patch.object(
+            pygame.mouse, "get_pos", return_value=(5, 590)
+        ), mock.patch.object(pygame.mouse, "get_focused", return_value=True):
+            shell._draw(screen, pygame)
+        baseline_key = shell._cached_profiles_key
+        self.assertIsNotNone(baseline_key)
+
+        tile = next(
+            (
+                target
+                for target in shell._cached_profiles_targets
+                if target.action == "profile"
+            ),
+            None,
+        )
+        if tile is None:
+            self.skipTest("no profile hit target available")
+        center = tuple(tile.rect.center)
+
+        # Open the modal; the pointer now sits on the hidden tile beneath it.
+        shell._enter_parent_panel(pygame)
+        with mock.patch.object(
+            pygame.mouse, "get_pos", return_value=center
+        ), mock.patch.object(pygame.mouse, "get_focused", return_value=True):
+            shell._draw(screen, pygame)
+        self.assertEqual(
+            shell._cached_profiles_key,
+            baseline_key,
+            "hidden picker hover invalidated the cache under the modal",
+        )
+
+        # Sanity: in normal profiles mode the same pointer position DOES
+        # invalidate (hover feedback is real there).
+        shell._exit_parent_panel(pygame)
+        with mock.patch.object(
+            pygame.mouse, "get_pos", return_value=center
+        ), mock.patch.object(pygame.mouse, "get_focused", return_value=True):
+            shell._draw(screen, pygame)
+        self.assertNotEqual(shell._cached_profiles_key, baseline_key)
+
+
 if __name__ == "__main__":
     unittest.main()

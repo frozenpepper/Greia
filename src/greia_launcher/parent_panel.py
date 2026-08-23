@@ -16,6 +16,7 @@ from greia_platform.system_language import (
     SystemLanguageService,
 )
 from greia_platform.typography import FontRole, GreiaTypography
+from greia_platform.ui_core import BoundedCache
 from greia_platform.wifi import (
     DemoWifiBackend,
     IwdWifiBackend,
@@ -123,8 +124,87 @@ class ParentSettingsOverlay:
         self._backdrop_surface: Any = None
         self._cached_mic_gain: float | None = None
         self._mic_gain_read_at = 0.0
+        # Software rounded rects (pygame.draw.rect with border_radius) cost
+        # several milliseconds EACH on Atom-class CPUs; a tab rendering ~25 of
+        # them per frame ran at 10-15 fps. Chips render each fill+outline
+        # combination once into an opaque surface whose corners carry the
+        # known backdrop color, so every later frame is one fast opaque blit.
+        self._chip_cache: BoundedCache[tuple[Any, ...], Any] = BoundedCache(128)
+        # The AUTH card and the main panel sit on the launcher's dimmed
+        # underlay whose pixels are not a single solid color, so they cannot be
+        # chips with a baked backdrop. They are instead composed once, on top
+        # of a copy of that underlay, into `_panel_base` (keyed by the underlay
+        # identity, state and size) and presented with one opaque blit.
+        self._panel_base: Any = None
+        self._panel_base_key: Any = None
         self._text_surface_cache: dict[tuple[Any, ...], Any] = {}
         self._sync_language_selection()
+
+    def auth_card_rect(self, size: tuple[int, int]) -> Any:
+        """Return the centered Parent-password card rectangle."""
+
+        import pygame
+
+        width, height = size
+        card_w = min(480, width - 40)
+        card_h = min(320, height - 40)
+        card = pygame.Rect(0, 0, card_w, card_h)
+        card.center = (width // 2, height // 2)
+        return card
+
+    def _rounded_card(
+        self,
+        size: tuple[int, int],
+        radius: int,
+        backdrop: tuple[int, int, int],
+        fill: tuple[int, int, int],
+        outline: tuple[int, int, int] | None = None,
+        width: int = 0,
+        pygame: Any = None,
+    ) -> Any:
+        """Return a cached opaque rounded chip matching `size`.
+
+        The chip bakes `backdrop` into its corners so blitting it over the
+        surface it was cut for is pixel-identical to drawing the rounded rect
+        in place, without per-frame software corner geometry.
+        """
+
+        key = (size, radius, backdrop, fill, outline, width)
+        cached = self._chip_cache.get(key)
+        if cached is not None:
+            return cached
+        chip = pygame.Surface(size).convert()
+        chip.fill(backdrop)
+        rect = chip.get_rect()
+        pygame.draw.rect(chip, fill, rect, border_radius=radius)
+        if outline is not None and width > 0:
+            pygame.draw.rect(chip, outline, rect, width=width, border_radius=radius)
+        self._chip_cache[key] = chip
+        return chip
+
+    def _blit_rounded_card(
+        self,
+        screen: Any,
+        rect: Any,
+        backdrop: tuple[int, int, int],
+        fill: tuple[int, int, int],
+        pygame: Any,
+        outline: tuple[int, int, int] | None = None,
+        width: int = 0,
+        radius: int | None = None,
+    ) -> None:
+        if radius is None:
+            radius = 12
+        chip = self._rounded_card(
+            (rect.width, rect.height),
+            radius,
+            backdrop,
+            fill,
+            outline,
+            width,
+            pygame,
+        )
+        screen.blit(chip, rect.topleft)
 
     def open(self) -> None:
         self.state = ParentPanelState.AUTH
@@ -415,14 +495,32 @@ class ParentSettingsOverlay:
             self._language_message = f"Could not change language: {exc}"
 
     def _get_text(self, text: str, role: FontRole, size: int, color: tuple[int, int, int], typography: GreiaTypography) -> Any:
+        """Render one label through the shared Greia typography service.
+
+        ``GreiaTypography.render`` owns Nunito Sans roles AND the Noto Color
+        Emoji fallback (flags, 🎙️, 🔒, ⭐ …) with bounded surface caching.
+        Rendering through ``typography.font(...).render(...)`` instead produced
+        tofu boxes for every emoji on device and skipped that shared cache.
+        """
+
         key = (text, role, size, color)
         cached = self._text_surface_cache.get(key)
         if cached is None:
-            cached = typography.font(role, size).render(text, True, color)
+            cached = typography.render(text, role, size, color)
             if len(self._text_surface_cache) > 128:
                 self._text_surface_cache.clear()
             self._text_surface_cache[key] = cached
         return cached
+
+    def _masked_password(self, max_visible: int) -> str:
+        """Mask the typed password to at most `max_visible` dots."""
+
+        if not self.password_text:
+            return ""
+        visible = max(1, int(max_visible))
+        if len(self.password_text) <= visible:
+            return "•" * len(self.password_text)
+        return "•" * visible
 
     def dim_surface(self, size: tuple[int, int], pygame: Any) -> Any:
         """Return the cached translucent dim layer for `size`."""
@@ -445,25 +543,93 @@ class ParentSettingsOverlay:
         load_icon_fn: Callable[[str, int, Any], Any],
         *,
         draw_backdrop: bool = True,
+        base_surface: Any = None,
+        base_key: Any = None,
     ) -> None:
         """Draw the overlay content onto `screen`.
 
         When the calling launcher composites the dim itself (the fast opaque
-        path), pass ``draw_backdrop=False``; blending a full-screen translucent
-        layer here on every redraw otherwise dominates frame time on
-        Atom-class devices.
+        path) it passes ``draw_backdrop=False`` plus the cached dimmed
+        underlay as ``base_surface``/``base_key``; this overlay then composes
+        its large rounded chrome (AUTH card or main panel + header) onto one
+        copy of that base exactly once per state change and presents it with
+        a single fast blit. Blending a full-screen translucent layer here on
+        every redraw otherwise dominates frame time on low-resource devices.
         """
 
         self._targets.clear()
         width, height = screen.get_size()
 
-        if draw_backdrop:
+        chrome_in_base = base_surface is not None and base_key is not None
+        if chrome_in_base:
+            self._ensure_panel_base(
+                screen, theme, typography, pygame, load_icon_fn, base_surface, base_key
+            )
+            screen.blit(self._panel_base, (0, 0))
+        elif draw_backdrop:
             screen.blit(self.dim_surface((width, height), pygame), (0, 0))
 
         if self.state == ParentPanelState.AUTH:
-            self._draw_auth_dialog(screen, theme, typography, pygame, load_icon_fn)
+            self._draw_auth_dialog(
+                screen, theme, typography, pygame, load_icon_fn, chrome_in_base
+            )
         elif self.state == ParentPanelState.PANEL:
-            self._draw_panel(screen, theme, typography, pygame, load_icon_fn)
+            self._draw_panel(
+                screen, theme, typography, pygame, load_icon_fn, chrome_in_base
+            )
+
+    def _ensure_panel_base(
+        self,
+        screen: Any,
+        theme: Any,
+        typography: GreiaTypography,
+        pygame: Any,
+        load_icon_fn: Callable[[str, int, Any], Any],
+        base_surface: Any,
+        base_key: Any,
+    ) -> None:
+        """Compose dim + large rounded chrome once per state change."""
+
+        size = screen.get_size()
+        key = (base_key, self.state, size)
+        if (
+            self._panel_base is not None
+            and self._panel_base_key == key
+            and self._panel_base.get_size() == size
+        ):
+            return
+
+        base = base_surface.copy()
+        if self.state == ParentPanelState.AUTH:
+            card = self.auth_card_rect(size)
+            pygame.draw.rect(base, (255, 250, 240), card, border_radius=24)
+            pygame.draw.rect(base, (61, 44, 31), card, width=3, border_radius=24)
+        else:
+            panel_rect = pygame.Rect(20, 20, size[0] - 40, size[1] - 40)
+            pygame.draw.rect(base, (255, 250, 240), panel_rect, border_radius=24)
+            pygame.draw.rect(base, (61, 44, 31), panel_rect, width=3, border_radius=24)
+
+            # Static header identity: title text and the close control.
+            title = typography.render(
+                "Parent Settings", FontRole.TITLE, 24, (61, 44, 31)
+            )
+            base.blit(title, (panel_rect.left + 24, panel_rect.top + 16))
+            close_btn = pygame.Rect(
+                panel_rect.right - 50, panel_rect.top + 10, 36, 36
+            )
+            pygame.draw.rect(base, (246, 236, 209), close_btn, border_radius=10)
+            pygame.draw.rect(base, (61, 44, 31), close_btn, width=2, border_radius=10)
+            icon_close = load_icon_fn("close_button", 22, pygame)
+            base.blit(icon_close, icon_close.get_rect(center=close_btn.center))
+
+        self._panel_base = base.convert()
+        self._panel_base_key = key
+
+    @staticmethod
+    def _panel_close_button_rect(size: tuple[int, int]) -> Any:
+        import pygame
+
+        return pygame.Rect(size[0] - 70, 30, 36, 36)
 
     def _draw_auth_dialog(
         self,
@@ -472,17 +638,19 @@ class ParentSettingsOverlay:
         typography: GreiaTypography,
         pygame: Any,
         load_icon_fn: Callable[[str, int, Any], Any],
+        chrome_in_base: bool = False,
     ) -> None:
         width, height = screen.get_size()
-        center = (width // 2, height // 2)
 
-        card_w = min(480, width - 40)
-        card_h = min(320, height - 40)
-        card = pygame.Rect(0, 0, card_w, card_h)
-        card.center = center
-
-        pygame.draw.rect(screen, (255, 250, 240), card, border_radius=24)
-        pygame.draw.rect(screen, (61, 44, 31), card, width=3, border_radius=24)
+        # Card chrome (rounded fill + border) is baked into the composed
+        # base when the launcher provides one.
+        card = self.auth_card_rect((width, height))
+        card_w = card.width
+        if not chrome_in_base:
+            self._blit_rounded_card(
+                screen, card, theme.background, (255, 250, 240),
+                pygame, (61, 44, 31), 3, radius=24,
+            )
 
         title = self._get_text("Parent Settings", FontRole.TITLE, 28, (61, 44, 31), typography)
         screen.blit(title, title.get_rect(center=(card.centerx, card.top + 36)))
@@ -491,11 +659,10 @@ class ParentSettingsOverlay:
         screen.blit(subtitle, subtitle.get_rect(center=(card.centerx, card.top + 70)))
 
         input_rect = pygame.Rect(card.left + 30, card.top + 106, card_w - 60, 52)
-        pygame.draw.rect(screen, (246, 236, 209), input_rect, border_radius=14)
         border_col = (181, 46, 46) if time.monotonic() < self.password_error_until else (241, 185, 35)
-        pygame.draw.rect(screen, border_col, input_rect, width=3, border_radius=14)
+        self._blit_rounded_card(screen, input_rect, (255, 250, 240), (246, 236, 209), pygame, border_col, 3, radius=14)
 
-        masked = "•" * len(self.password_text) or "…"
+        masked = self._masked_password(max(3, (input_rect.width - 32) // 14)) or "…"
         text_surf = self._get_text(masked, FontRole.CONTROL, 24, (61, 44, 31), typography)
         screen.blit(text_surf, text_surf.get_rect(midleft=(input_rect.left + 16, input_rect.centery)))
 
@@ -506,12 +673,12 @@ class ParentSettingsOverlay:
         cancel_rect = pygame.Rect(card.left + 30, btn_y, btn_w, btn_h)
         confirm_rect = pygame.Rect(card.right - 30 - btn_w, btn_y, btn_w, btn_h)
 
-        pygame.draw.rect(screen, (230, 220, 205), cancel_rect, border_radius=14)
+        self._blit_rounded_card(screen, cancel_rect, (255, 250, 240), (230, 220, 205), pygame, radius=14)
         lbl_cancel = self._get_text("Cancel", FontRole.BODY, 18, (61, 44, 31), typography)
         screen.blit(lbl_cancel, lbl_cancel.get_rect(center=cancel_rect.center))
         self._targets.append(PanelHitTarget("cancel_auth", None, cancel_rect))
 
-        pygame.draw.rect(screen, (241, 185, 35), confirm_rect, border_radius=14)
+        self._blit_rounded_card(screen, confirm_rect, (255, 250, 240), (241, 185, 35), pygame, radius=14)
         lbl_confirm = self._get_text("Unlock", FontRole.BODY, 18, (61, 44, 31), typography)
         screen.blit(lbl_confirm, lbl_confirm.get_rect(center=confirm_rect.center))
         self._targets.append(PanelHitTarget("confirm_auth", None, confirm_rect))
@@ -523,26 +690,36 @@ class ParentSettingsOverlay:
         typography: GreiaTypography,
         pygame: Any,
         load_icon_fn: Callable[[str, int, Any], Any],
+        chrome_in_base: bool = False,
     ) -> None:
         width, height = screen.get_size()
         panel_rect = pygame.Rect(20, 20, width - 40, height - 40)
 
-        pygame.draw.rect(screen, (255, 250, 240), panel_rect, border_radius=24)
-        pygame.draw.rect(screen, (61, 44, 31), panel_rect, width=3, border_radius=24)
-
         header_h = 56
         header_rect = pygame.Rect(panel_rect.left, panel_rect.top, panel_rect.width, header_h)
 
-        font_title = typography.font(FontRole.TITLE, 24)
-        title = font_title.render("Parent Settings", True, (61, 44, 31))
-        screen.blit(title, (header_rect.left + 24, header_rect.top + 16))
+        if not chrome_in_base:
+            # Standalone rendering (no composed base): draw all chrome here.
+            self._blit_rounded_card(
+                screen, panel_rect, theme.background, (255, 250, 240),
+                pygame, (61, 44, 31), 3, radius=24,
+            )
 
-        close_btn = pygame.Rect(header_rect.right - 50, header_rect.top + 10, 36, 36)
-        pygame.draw.rect(screen, (246, 236, 209), close_btn, border_radius=10)
-        pygame.draw.rect(screen, (61, 44, 31), close_btn, width=2, border_radius=10)
-        icon_close = load_icon_fn("close_button", 22, pygame)
-        screen.blit(icon_close, icon_close.get_rect(center=close_btn.center))
-        self._targets.append(PanelHitTarget("close_panel", None, close_btn))
+            title = self._get_text("Parent Settings", FontRole.TITLE, 24, (61, 44, 31), typography)
+            screen.blit(title, (header_rect.left + 24, header_rect.top + 16))
+
+            close_btn = self._panel_close_button_rect((width, height))
+            self._blit_rounded_card(screen, close_btn, (255, 250, 240), (246, 236, 209), pygame, (61, 44, 31), 2, radius=10)
+            icon_close = load_icon_fn("close_button", 22, pygame)
+            screen.blit(icon_close, icon_close.get_rect(center=close_btn.center))
+
+        # The close control's pixels live in the composed base when present;
+        # its hit target must exist on every frame either way.
+        self._targets.append(
+            PanelHitTarget(
+                "close_panel", None, self._panel_close_button_rect((width, height))
+            )
+        )
 
         tab_y = header_rect.bottom + 8
         tabs = [
@@ -553,17 +730,18 @@ class ParentSettingsOverlay:
             (ParentPanelTab.INFO, "Remote & Pairing"),
         ]
         tab_x = panel_rect.left + 24
-        font_tab = typography.font(FontRole.CONTROL, 16)
 
         for tab_id, label in tabs:
             is_active = self.active_tab == tab_id
             tab_w = 145
             tab_rect = pygame.Rect(tab_x, tab_y, tab_w, 38)
             bg = (241, 185, 35) if is_active else (246, 236, 209)
-            pygame.draw.rect(screen, bg, tab_rect, border_radius=12)
-            pygame.draw.rect(screen, (61, 44, 31), tab_rect, width=2 if is_active else 1, border_radius=12)
+            self._blit_rounded_card(
+                screen, tab_rect, (255, 250, 240), bg, pygame,
+                (61, 44, 31), 2 if is_active else 1, radius=12,
+            )
 
-            txt = font_tab.render(label, True, (61, 44, 31))
+            txt = self._get_text(label, FontRole.CONTROL, 16, (61, 44, 31), typography)
             screen.blit(txt, txt.get_rect(center=tab_rect.center))
             self._targets.append(PanelHitTarget("switch_tab", tab_id, tab_rect))
             tab_x += tab_w + 10
@@ -593,16 +771,17 @@ class ParentSettingsOverlay:
         typography: GreiaTypography,
         pygame: Any,
     ) -> None:
-        font_title = typography.font(FontRole.TITLE, 22)
-        font_body = typography.font(FontRole.BODY, 16)
+        font_body_size = 16
         card = pygame.Rect(rect.left, rect.top, rect.width, rect.height)
-        pygame.draw.rect(screen, (246, 236, 209), card, border_radius=16)
-        title = font_title.render("Greia language", True, (61, 44, 31))
+        self._blit_rounded_card(screen, card, (255, 250, 240), (246, 236, 209), pygame, radius=16)
+        title = self._get_text("Greia language", FontRole.TITLE, 22, (61, 44, 31), typography)
         screen.blit(title, (card.left + 20, card.top + 14))
-        note = font_body.render(
+        note = self._get_text(
             "This changes the device default. Activities use their own supported-language fallback.",
-            True,
+            FontRole.BODY,
+            font_body_size,
             (118, 104, 93),
+            typography,
         )
         screen.blit(note, (card.left + 20, card.top + 44))
 
@@ -622,35 +801,29 @@ class ParentSettingsOverlay:
                 cell_h,
             )
             selected = index == self._language_index
-            pygame.draw.rect(
+            self._blit_rounded_card(
                 screen,
+                cell,
+                (246, 236, 209),
                 (241, 185, 35) if selected else (255, 250, 240),
-                cell,
-                border_radius=12,
-            )
-            pygame.draw.rect(
-                screen,
+                pygame,
                 (61, 44, 31),
-                cell,
-                width=3 if selected else 1,
-                border_radius=12,
+                3 if selected else 1,
+                radius=12,
             )
-            flag = typography.render(
-                language.flag,
-                FontRole.DISPLAY,
-                28,
-                (61, 44, 31),
-            )
+            flag = self._get_text(language.flag, FontRole.DISPLAY, 28, (61, 44, 31), typography)
             screen.blit(flag, flag.get_rect(midleft=(cell.left + 10, cell.centery)))
-            label = font_body.render(language.name, True, (61, 44, 31))
+            label = self._get_text(language.name, FontRole.BODY, font_body_size, (61, 44, 31), typography)
             screen.blit(label, label.get_rect(midleft=(cell.left + 54, cell.centery)))
             self._targets.append(PanelHitTarget("language_select", index, cell))
 
         if self._language_message:
-            message = font_body.render(
+            message = self._get_text(
                 self._language_message,
-                True,
+                FontRole.BODY,
+                font_body_size,
                 (181, 46, 46) if self._language_message.startswith("Could not") else (47, 117, 81),
+                typography,
             )
             screen.blit(message, (card.left + 20, card.bottom - 26))
 
@@ -661,20 +834,18 @@ class ParentSettingsOverlay:
         typography: GreiaTypography,
         pygame: Any,
     ) -> None:
-        font_title = typography.font(FontRole.TITLE, 22)
-        font_body = typography.font(FontRole.BODY, 16)
-        font_bold = typography.font(FontRole.CONTROL, 18)
-
         card = pygame.Rect(rect.left, rect.top, rect.width, rect.height)
-        pygame.draw.rect(screen, (246, 236, 209), card, border_radius=16)
+        self._blit_rounded_card(screen, card, (255, 250, 240), (246, 236, 209), pygame, radius=16)
 
-        title = font_title.render("Microphone Input Gain (Guadagno Microfono)", True, (61, 44, 31))
+        title = self._get_text("Microphone Input Gain (Guadagno Microfono)", FontRole.TITLE, 22, (61, 44, 31), typography)
         screen.blit(title, (card.left + 24, card.top + 16))
 
-        note = font_body.render(
+        note = self._get_text(
             "Controls the microphone recording volume for puppet theater storytelling and voice activities.",
-            True,
+            FontRole.BODY,
+            16,
             (118, 104, 93),
+            typography,
         )
         screen.blit(note, (card.left + 24, card.top + 46))
 
@@ -683,29 +854,28 @@ class ParentSettingsOverlay:
 
         # Current Gain Display Badge
         badge_rect = pygame.Rect(card.left + 24, card.top + 84, 300, 48)
-        pygame.draw.rect(screen, (255, 250, 240), badge_rect, border_radius=14)
-        pygame.draw.rect(screen, (241, 185, 35), badge_rect, width=2, border_radius=14)
+        self._blit_rounded_card(screen, badge_rect, (246, 236, 209), (255, 250, 240), pygame, (241, 185, 35), 2, radius=14)
         
-        lbl_current = font_bold.render(f"🎙️ Livello: {pct}% ({current_gain:.1f}x Boost)", True, (61, 44, 31))
+        lbl_current = self._get_text(
+            f"🎙️ Livello: {pct}% ({current_gain:.1f}x Boost)", FontRole.CONTROL, 18, (61, 44, 31), typography
+        )
         screen.blit(lbl_current, lbl_current.get_rect(center=badge_rect.center))
 
         # Fine Adjust [-25%] and [+25%] buttons
         btn_minus = pygame.Rect(badge_rect.right + 16, card.top + 84, 95, 48)
-        pygame.draw.rect(screen, (255, 250, 240), btn_minus, border_radius=14)
-        pygame.draw.rect(screen, (61, 44, 31), btn_minus, width=1, border_radius=14)
-        lbl_m = font_bold.render("➖ 25%", True, (61, 44, 31))
+        self._blit_rounded_card(screen, btn_minus, (246, 236, 209), (255, 250, 240), pygame, (61, 44, 31), 1, radius=14)
+        lbl_m = self._get_text("➖ 25%", FontRole.CONTROL, 18, (61, 44, 31), typography)
         screen.blit(lbl_m, lbl_m.get_rect(center=btn_minus.center))
         self._targets.append(PanelHitTarget("mic_gain_adjust", -0.25, btn_minus))
 
         btn_plus = pygame.Rect(btn_minus.right + 12, card.top + 84, 95, 48)
-        pygame.draw.rect(screen, (255, 250, 240), btn_plus, border_radius=14)
-        pygame.draw.rect(screen, (61, 44, 31), btn_plus, width=1, border_radius=14)
-        lbl_p = font_bold.render("➕ 25%", True, (61, 44, 31))
+        self._blit_rounded_card(screen, btn_plus, (246, 236, 209), (255, 250, 240), pygame, (61, 44, 31), 1, radius=14)
+        lbl_p = self._get_text("➕ 25%", FontRole.CONTROL, 18, (61, 44, 31), typography)
         screen.blit(lbl_p, lbl_p.get_rect(center=btn_plus.center))
         self._targets.append(PanelHitTarget("mic_gain_adjust", 0.25, btn_plus))
 
         # Preset Quick Select Cards
-        lbl_presets = font_bold.render("Preset rapidi consigliati:", True, (61, 44, 31))
+        lbl_presets = self._get_text("Preset rapidi consigliati:", FontRole.CONTROL, 18, (61, 44, 31), typography)
         screen.blit(lbl_presets, (card.left + 24, card.top + 150))
 
         presets = [
@@ -723,19 +893,27 @@ class ParentSettingsOverlay:
         for idx, (val, p_pct, p_desc) in enumerate(presets):
             p_rect = pygame.Rect(card.left + 24 + idx * (card_w + 10), card_y, card_w, card_h)
             is_active = abs(current_gain - val) < 0.05
-            pygame.draw.rect(screen, (241, 185, 35) if is_active else (255, 250, 240), p_rect, border_radius=14)
-            pygame.draw.rect(screen, (61, 44, 31), p_rect, width=3 if is_active else 1, border_radius=14)
+            self._blit_rounded_card(
+                screen,
+                p_rect,
+                (246, 236, 209),
+                (241, 185, 35) if is_active else (255, 250, 240),
+                pygame,
+                (61, 44, 31),
+                3 if is_active else 1,
+                radius=14,
+            )
 
-            txt_p = font_bold.render(p_pct, True, (61, 44, 31))
+            txt_p = self._get_text(p_pct, FontRole.CONTROL, 18, (61, 44, 31), typography)
             screen.blit(txt_p, txt_p.get_rect(center=(p_rect.centerx, p_rect.top + 24)))
 
-            txt_d = font_body.render(p_desc, True, (90, 80, 70))
+            txt_d = self._get_text(p_desc, FontRole.BODY, 16, (90, 80, 70), typography)
             screen.blit(txt_d, txt_d.get_rect(center=(p_rect.centerx, p_rect.top + 50)))
 
             self._targets.append(PanelHitTarget("mic_gain_set", val, p_rect))
 
         if self._audio_message:
-            msg = font_body.render(self._audio_message, True, (47, 117, 81))
+            msg = self._get_text(self._audio_message, FontRole.BODY, 16, (47, 117, 81), typography)
             screen.blit(msg, (card.left + 24, card.bottom - 26))
 
     def _draw_wifi_tab(
@@ -746,9 +924,11 @@ class ParentSettingsOverlay:
         pygame: Any,
         load_icon_fn: Callable[[str, int, Any], Any],
     ) -> None:
-        font_body = typography.font(FontRole.BODY, 18)
-        font_bold = typography.font(FontRole.CONTROL, 18)
         snapshot = self.wifi_controller.snapshot
+        def _body(text, color=(61, 44, 31)):
+            return self._get_text(text, FontRole.BODY, 18, color, typography)
+        def _bold(text, color=(61, 44, 31)):
+            return self._get_text(text, FontRole.CONTROL, 18, color, typography)
 
         top_bar = pygame.Rect(rect.left, rect.top, rect.width, 42)
         status_text = f"Status: {snapshot.phase.value.title()}"
@@ -757,74 +937,78 @@ class ParentSettingsOverlay:
         if snapshot.error:
             status_text = f"Error: {snapshot.error}"
 
-        status_surf = font_body.render(status_text, True, (181, 46, 46) if snapshot.error else (61, 44, 31))
+        status_surf = _body(status_text, (181, 46, 46) if snapshot.error else (61, 44, 31))
         screen.blit(status_surf, (top_bar.left, top_bar.top + 10))
 
         refresh_btn = pygame.Rect(top_bar.right - 110, top_bar.top, 100, 36)
-        pygame.draw.rect(screen, (246, 236, 209), refresh_btn, border_radius=10)
-        pygame.draw.rect(screen, (61, 44, 31), refresh_btn, width=1, border_radius=10)
-        lbl_refresh = font_body.render("Scan", True, (61, 44, 31))
+        self._blit_rounded_card(screen, refresh_btn, (255, 250, 240), (246, 236, 209), pygame, (61, 44, 31), 1, radius=10)
+        lbl_refresh = _body("Scan")
         screen.blit(lbl_refresh, lbl_refresh.get_rect(center=refresh_btn.center))
         self._targets.append(PanelHitTarget("wifi_refresh", None, refresh_btn))
 
         list_rect = pygame.Rect(rect.left, top_bar.bottom + 10, rect.width // 2 - 10, rect.height - 52)
-        pygame.draw.rect(screen, (246, 236, 209), list_rect, border_radius=16)
-        pygame.draw.rect(screen, (220, 210, 190), list_rect, width=1, border_radius=16)
+        self._blit_rounded_card(screen, list_rect, (255, 250, 240), (246, 236, 209), pygame, (220, 210, 190), 1, radius=16)
 
         item_y = list_rect.top + 8
         for idx, network in enumerate(snapshot.networks[:6]):
             item_rect = pygame.Rect(list_rect.left + 8, item_y, list_rect.width - 16, 40)
             is_selected = idx == snapshot.selected_index
             bg = (241, 185, 35) if is_selected else (255, 250, 240)
-            pygame.draw.rect(screen, bg, item_rect, border_radius=10)
-            pygame.draw.rect(screen, (61, 44, 31), item_rect, width=2 if is_selected else 1, border_radius=10)
+            self._blit_rounded_card(
+                screen,
+                item_rect,
+                (246, 236, 209),
+                bg,
+                pygame,
+                (61, 44, 31),
+                2 if is_selected else 1,
+                radius=10,
+            )
 
             label = network.ssid
             if network.security == WifiSecurity.PERSONAL:
                 label += " 🔒"
             elif network.security == WifiSecurity.ENTERPRISE:
                 label += " (Enterprise)"
-            txt_surf = font_body.render(label, True, (61, 44, 31))
+            txt_surf = _body(label)
             screen.blit(txt_surf, (item_rect.left + 12, item_rect.top + 10))
 
             self._targets.append(PanelHitTarget("wifi_select", idx, item_rect))
             item_y += 46
 
         if not snapshot.networks:
-            no_nets = font_body.render("No networks found. Click Scan.", True, (118, 104, 93))
+            no_nets = _body("No networks found. Click Scan.", (118, 104, 93))
             screen.blit(no_nets, no_nets.get_rect(center=list_rect.center))
 
         form_rect = pygame.Rect(list_rect.right + 20, top_bar.bottom + 10, rect.width // 2 - 10, rect.height - 52)
-        pygame.draw.rect(screen, (246, 236, 209), form_rect, border_radius=16)
+        self._blit_rounded_card(screen, form_rect, (255, 250, 240), (246, 236, 209), pygame, radius=16)
 
         selected = snapshot.selected_network
         if selected is not None:
-            lbl_title = font_bold.render(f"Network: {selected.ssid}", True, (61, 44, 31))
+            lbl_title = _bold(f"Network: {selected.ssid}")
             screen.blit(lbl_title, (form_rect.left + 16, form_rect.top + 16))
 
-            lbl_sec = font_body.render(f"Security: {selected.security.value.upper()}", True, (118, 104, 93))
+            lbl_sec = _body(f"Security: {selected.security.value.upper()}", (118, 104, 93))
             screen.blit(lbl_sec, (form_rect.left + 16, form_rect.top + 46))
 
             if selected.security == WifiSecurity.PERSONAL:
-                pwd_label = font_body.render("Password:", True, (61, 44, 31))
+                pwd_label = _body("Password:")
                 screen.blit(pwd_label, (form_rect.left + 16, form_rect.top + 80))
 
                 pwd_box = pygame.Rect(form_rect.left + 16, form_rect.top + 106, form_rect.width - 32, 44)
-                pygame.draw.rect(screen, (255, 250, 240), pwd_box, border_radius=10)
-                pygame.draw.rect(screen, (61, 44, 31), pwd_box, width=1, border_radius=10)
+                self._blit_rounded_card(screen, pwd_box, (246, 236, 209), (255, 250, 240), pygame, (61, 44, 31), 1, radius=10)
 
                 masked = "•" * len(snapshot.passphrase) or "Type password…"
-                txt = font_body.render(masked, True, (61, 44, 31) if snapshot.passphrase else (150, 140, 130))
+                txt = _body(masked, (61, 44, 31) if snapshot.passphrase else (150, 140, 130))
                 screen.blit(txt, (pwd_box.left + 12, pwd_box.top + 12))
 
             connect_btn = pygame.Rect(form_rect.left + 16, form_rect.bottom - 60, form_rect.width - 32, 44)
-            pygame.draw.rect(screen, (241, 185, 35), connect_btn, border_radius=12)
-            pygame.draw.rect(screen, (61, 44, 31), connect_btn, width=2, border_radius=12)
-            lbl_conn = font_bold.render("Connect", True, (61, 44, 31))
+            self._blit_rounded_card(screen, connect_btn, (246, 236, 209), (241, 185, 35), pygame, (61, 44, 31), 2, radius=12)
+            lbl_conn = _bold("Connect")
             screen.blit(lbl_conn, lbl_conn.get_rect(center=connect_btn.center))
             self._targets.append(PanelHitTarget("wifi_connect", None, connect_btn))
         else:
-            hint = font_body.render("Select a Wi-Fi network from the list", True, (118, 104, 93))
+            hint = _body("Select a Wi-Fi network from the list", (118, 104, 93))
             screen.blit(hint, hint.get_rect(center=form_rect.center))
 
     def _draw_ssh_tab(
@@ -840,35 +1024,33 @@ class ParentSettingsOverlay:
         # refresh it on a worker thread.
         self.request_ssh_status_refresh()
         status = self._ssh_cached_status
-        font_title = typography.font(FontRole.TITLE, 22)
-        font_body = typography.font(FontRole.BODY, 18)
 
         card = pygame.Rect(rect.left, rect.top, rect.width, rect.height)
-        pygame.draw.rect(screen, (246, 236, 209), card, border_radius=16)
+        self._blit_rounded_card(screen, card, (255, 250, 240), (246, 236, 209), pygame, radius=16)
 
-        title = font_title.render("SSH Maintenance Switch", True, (61, 44, 31))
+        title = self._get_text("SSH Maintenance Switch", FontRole.TITLE, 22, (61, 44, 31), typography)
         screen.blit(title, (card.left + 24, card.top + 20))
 
         if status is None:
-            waiting = font_body.render(
-                "Checking SSH status…", True, (118, 104, 93)
-            )
+            waiting = self._get_text("Checking SSH status…", FontRole.BODY, 18, (118, 104, 93), typography)
             screen.blit(waiting, (card.left + 24, card.top + 70))
             return
 
-        font_bold = typography.font(FontRole.CONTROL, 18)
+        def _body(text, color=(61, 44, 31)):
+            return self._get_text(text, FontRole.BODY, 18, color, typography)
+        def _bold(text, color=(61, 44, 31)):
+            return self._get_text(text, FontRole.CONTROL, 18, color, typography)
 
         is_on = status.active or status.enabled
         badge_rect = pygame.Rect(card.left + 24, card.top + 58, 140, 36)
         badge_bg = (47, 117, 81) if is_on else (181, 46, 46)
-        pygame.draw.rect(screen, badge_bg, badge_rect, border_radius=10)
-        lbl_status = font_bold.render("ENABLED" if is_on else "DISABLED", True, (255, 255, 255))
+        self._blit_rounded_card(screen, badge_rect, (246, 236, 209), badge_bg, pygame, radius=10)
+        lbl_status = _bold("ENABLED" if is_on else "DISABLED", (255, 255, 255))
         screen.blit(lbl_status, lbl_status.get_rect(center=badge_rect.center))
 
         toggle_btn = pygame.Rect(badge_rect.right + 20, card.top + 58, 160, 36)
-        pygame.draw.rect(screen, (241, 185, 35), toggle_btn, border_radius=10)
-        pygame.draw.rect(screen, (61, 44, 31), toggle_btn, width=2, border_radius=10)
-        lbl_toggle = font_bold.render("Turn OFF" if is_on else "Turn ON", True, (61, 44, 31))
+        self._blit_rounded_card(screen, toggle_btn, (246, 236, 209), (241, 185, 35), pygame, (61, 44, 31), 2, radius=10)
+        lbl_toggle = _bold("Turn OFF" if is_on else "Turn ON")
         screen.blit(lbl_toggle, lbl_toggle.get_rect(center=toggle_btn.center))
         self._targets.append(PanelHitTarget("ssh_toggle", None, toggle_btn))
 
@@ -880,14 +1062,13 @@ class ParentSettingsOverlay:
             f"Connection command: ssh {status.username}@{status.host_ip}",
         ]
         for line in lines:
-            line_surf = font_body.render(line, True, (61, 44, 31))
+            line_surf = _body(line)
             screen.blit(line_surf, (card.left + 24, y))
             y += 28
 
         note_y = card.bottom - 48
-        note = font_body.render(
+        note = _body(
             "Note: SSH allows administrative terminal access. Keep disabled when not in use.",
-            True,
             (118, 104, 93),
         )
         screen.blit(note, (card.left + 24, note_y))
@@ -900,9 +1081,6 @@ class ParentSettingsOverlay:
         pygame: Any,
         load_icon_fn: Callable[[str, int, Any], Any],
     ) -> None:
-        font_title = typography.font(FontRole.TITLE, 22)
-        font_body = typography.font(FontRole.BODY, 18)
-
         # The Info tab used to resolve host_ip through the SSH service on
         # EVERY frame (two systemctl subprocesses per redraw) and made this
         # tab unusable. Only the cached snapshot is read here.
@@ -911,9 +1089,9 @@ class ParentSettingsOverlay:
         host_ip = cached_status.host_ip if cached_status is not None else "…"
 
         card = pygame.Rect(rect.left, rect.top, rect.width, rect.height)
-        pygame.draw.rect(screen, (246, 236, 209), card, border_radius=16)
+        self._blit_rounded_card(screen, card, (255, 250, 240), (246, 236, 209), pygame, radius=16)
 
-        title = font_title.render("Remote Parent Companion & Pairing", True, (61, 44, 31))
+        title = self._get_text("Remote Parent Companion & Pairing", FontRole.TITLE, 22, (61, 44, 31), typography)
         screen.blit(title, (card.left + 24, card.top + 20))
 
         y = card.top + 64
@@ -925,6 +1103,6 @@ class ParentSettingsOverlay:
             "4. Main Parent login: username 'greia', default password 'greia'.",
         ]
         for line in lines:
-            surf = font_body.render(line, True, (61, 44, 31))
+            surf = self._get_text(line, FontRole.BODY, 18, (61, 44, 31), typography)
             screen.blit(surf, (card.left + 24, y))
             y += 32
