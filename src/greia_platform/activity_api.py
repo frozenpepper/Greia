@@ -145,6 +145,29 @@ def get_input_profile() -> InteractionProfile:
     return parse_interaction_profile(raw)
 
 
+def get_audio_capture_device() -> str | None:
+    """Return Greia's selected capture endpoint for this Activity launch.
+
+    Activities with ``audio.basic`` must use this semantic platform route rather
+    than enumerating physical microphones and selecting a card/device themselves.
+    ``None`` means use the runtime's normal default capture endpoint, which is
+    also the correct development/simulator fallback when no production route was
+    injected.
+    """
+
+    _require_capability("audio.basic")
+    value = os.environ.get("GREIA_AUDIO_CAPTURE_DEVICE", "").strip()
+    return value or None
+
+
+def get_audio_processing_mode() -> str:
+    """Return the descriptive microphone processing mode for this launch."""
+
+    _require_capability("audio.basic")
+    value = os.environ.get("GREIA_AUDIO_PROCESSING_MODE", "off").strip().casefold()
+    return value if value in {"off", "lightweight", "advanced"} else "off"
+
+
 def emit_activity_event(
     event_id: str,
     payload_or_key: object = None,
