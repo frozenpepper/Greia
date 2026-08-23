@@ -10,6 +10,11 @@ languages = ["it", "en"]
 categories = ["play", "learn"]
 discovery_tags = ["care"]
 
+[achievement_art]
+emblems = [
+  { id = "activity", asset = "assets/icon.png" },
+]
+
 [education]
 categories = ["empathy", "caregiving", "hygiene_and_health"]
 difficulty = 2
