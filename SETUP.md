@@ -149,11 +149,11 @@ make visual-assets-check
 
 ### 5.3 Speech support — standard versus optional
 
-Speech now has separate setup surfaces.
+Speech has separate setup surfaces.
 
 #### A. Shared Greia character utterances
 
-No local cloning model is required for an Activity author once the shared runtime assets are implemented.
+No local cloning model is required for an ordinary Activity author once shared runtime assets are implemented.
 
 Read:
 
@@ -162,7 +162,17 @@ docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md
 skills/greia-activity-authoring/VOICE_GENERATION.md
 ```
 
-These cover generic praise/encouragement/start cues such as `praise.great_work` and `encourage.try_again`.
+Activities request semantic families such as:
+
+```text
+praise.general
+celebrate.success
+encourage.retry
+encourage.progress
+ready.go
+```
+
+They do not select concrete phrases or files. A resolved family owns a reviewed file array: one file is always used; multiple files are randomly selected by Greia for presentation variety.
 
 #### B. Pedagogical/system speech
 
@@ -203,6 +213,18 @@ Preferred Apple-Silicon path is currently the MLX Audio conversion documented by
 FFmpeg/ffprobe are the preferred cross-platform audio inspection/trim/conversion tools for this optional production profile.
 
 Current canonical binary voice references may still be absent from a fresh GitHub checkout until the reviewed WAV/FLAC asset commit is materialized. A manifest alone is not voice-production readiness; verify actual files and hashes before use.
+
+#### D. Shared utterance library producer — optional `voice` profile
+
+Use this only when producing/extending Greia's OS-owned shared reaction library itself.
+
+Read and follow:
+
+```text
+docs/agents/GREIA_SHARED_CHARACTER_UTTERANCE_RECORDING.md
+```
+
+The complete v0.1 target is 180 reviewed clips: 150 Chatterbox clips for Lilli/Leo/Flash/Tito/Momo plus 30 future Dani system-TTS clips. A family does not require all three planned variants to function: one reviewed file is already a valid non-empty array; additional reviewed files add variety.
 
 ### 5.4 Parent App developer — separate client repository
 
@@ -307,6 +329,7 @@ Do not put destructive disk/removable-media writes into a generic setup helper.
 | Visual architecture | `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` |
 | Speech/voice policy | `docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md` |
 | Shared character utterances | `docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md` |
+| Shared utterance recording | `docs/agents/GREIA_SHARED_CHARACTER_UTTERANCE_RECORDING.md` |
 | Optional custom character-voice setup | `docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md` |
 | Parent App source/staging | `docs/architecture/PARENT_APP_SOURCE_INTEGRATION.md` |
 | Parent management/API | `docs/architecture/GREIA_PARENT_MANAGEMENT.md` |
@@ -327,7 +350,7 @@ Do not put destructive disk/removable-media writes into a generic setup helper.
 | Parent App image staging | Integrity-checked stager exists; full canonical image-build wiring remains implementation-owned |
 | Developer remote control | Implemented for explicit developer images only |
 | Pedagogical/system speech abstraction | Policy accepted; unified provider implementation pending |
-| Shared character utterance library | Inventory/design accepted; audio assets/runtime resolver pending |
+| Shared character utterance library | Five variant-aware families accepted; 180-clip audio/runtime resolver still pending |
 | Custom Chatterbox character production | **Optional**; setup documented; never required for ordinary Activity authoring |
 | One-command role-based workstation bootstrap | **Not implemented yet** |
 | One-command setup verification report | **Not implemented yet** |
