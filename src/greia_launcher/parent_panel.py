@@ -1,4 +1,6 @@
 import os
+import queue
+import threading
 import time
 from dataclasses import dataclass
 from enum import StrEnum
@@ -109,10 +111,18 @@ class ParentSettingsOverlay:
         self._targets: list[PanelHitTarget] = []
         self._ssh_cached_status: SshStatus | None = None
         self._last_ssh_poll = 0.0
+        # SSH status comes from systemctl subprocesses; polling it on the UI
+        # thread froze the panel (the Info tab used to call it every frame).
+        # Refreshes therefore run on a short-lived worker and are consumed by
+        # drain(), mirroring the Wi-Fi controller pattern.
+        self._ssh_results: "queue.Queue[SshStatus]" = queue.Queue()
+        self._ssh_refresh_in_flight = False
         self._language_index = 0
         self._language_message = ""
         self._audio_message = ""
         self._backdrop_surface: Any = None
+        self._cached_mic_gain: float | None = None
+        self._mic_gain_read_at = 0.0
         self._text_surface_cache: dict[tuple[Any, ...], Any] = {}
         self._sync_language_selection()
 
@@ -125,6 +135,7 @@ class ParentSettingsOverlay:
         self._sync_language_selection()
         self._targets.clear()
         self.wifi_controller.begin()
+        self.request_ssh_status_refresh(force=True)
 
     def close(self) -> None:
         self.state = ParentPanelState.CLOSED
@@ -138,15 +149,56 @@ class ParentSettingsOverlay:
     def drain(self) -> bool:
         wifi_changed = self.wifi_controller.drain()
         ssh_changed = False
-        if self.state == ParentPanelState.PANEL and self.active_tab == ParentPanelTab.SSH:
-            now = time.monotonic()
-            if now - self._last_ssh_poll > 2.0:
-                self._last_ssh_poll = now
-                latest = self.ssh_service.status()
-                if latest != self._ssh_cached_status:
-                    self._ssh_cached_status = latest
-                    ssh_changed = True
+        while True:
+            try:
+                status = self._ssh_results.get_nowait()
+            except queue.Empty:
+                break
+            if status != self._ssh_cached_status:
+                ssh_changed = True
+            self._ssh_cached_status = status
+        if self.state == ParentPanelState.PANEL and self.active_tab in {
+            ParentPanelTab.SSH,
+            ParentPanelTab.INFO,
+        }:
+            self.request_ssh_status_refresh()
         return wifi_changed or ssh_changed
+
+    def request_ssh_status_refresh(self, *, force: bool = False) -> None:
+        """Start one non-blocking SSH status refresh, throttled to ~2 seconds.
+
+        The status requires systemctl subprocesses; running those on the UI
+        thread made the SSH/Info tabs visibly freeze on Atom-class devices.
+        """
+
+        if self._ssh_refresh_in_flight:
+            return
+        now = time.monotonic()
+        if not force and now - self._last_ssh_poll < 2.0:
+            return
+        self._last_ssh_poll = now
+        self._ssh_refresh_in_flight = True
+        threading.Thread(
+            target=self._run_ssh_status_refresh,
+            name="greia-ssh-status",
+            daemon=True,
+        ).start()
+
+    def _run_ssh_status_refresh(self) -> None:
+        try:
+            status = self.ssh_service.get_status()
+        except Exception:
+            status = None
+        finally:
+            self._ssh_refresh_in_flight = False
+            if status is not None:
+                self._ssh_results.put(status)
+
+    @property
+    def ssh_status(self) -> SshStatus | None:
+        """Last known cached SSH status without any blocking work."""
+
+        return self._ssh_cached_status
 
     def handle_text_input(self, text: str) -> None:
         if self.state == ParentPanelState.AUTH:
@@ -222,8 +274,7 @@ class ParentSettingsOverlay:
 
             elif self.active_tab == ParentPanelTab.SSH:
                 if key in {pygame.K_RETURN, pygame.K_SPACE}:
-                    self.ssh_service.toggle()
-                    self._ssh_cached_status = None
+                    self._toggle_ssh()
 
             return True
 
@@ -272,27 +323,43 @@ class ParentSettingsOverlay:
                     self.wifi_controller.connect()
                     return True
                 elif target.action == "ssh_toggle":
-                    self.ssh_service.toggle()
-                    self._ssh_cached_status = None
+                    self._toggle_ssh()
                     return True
             except Exception:
                 return True
 
         return True
 
+    def _toggle_ssh(self) -> None:
+        """Apply one user-initiated SSH toggle and cache its returned status."""
+
+        try:
+            self._ssh_cached_status = self.ssh_service.toggle()
+        except Exception:
+            self.request_ssh_status_refresh(force=True)
+
     def _current_mic_gain(self) -> float:
-        if self.hardware_store is not None:
-            try:
-                return float(self.hardware_store.read().mic_gain)
-            except Exception:
-                pass
-        return 2.0
+        # The hardware store parses a TOML file on read; never do that per
+        # frame. Serve the cached value and refresh it at most once a second.
+        now = time.monotonic()
+        if self._cached_mic_gain is None or now - self._mic_gain_read_at > 1.0:
+            value = 2.0
+            if self.hardware_store is not None:
+                try:
+                    value = float(self.hardware_store.read().mic_gain)
+                except Exception:
+                    pass
+            self._cached_mic_gain = value
+            self._mic_gain_read_at = now
+        return self._cached_mic_gain
 
     def _set_mic_gain(self, value: float) -> None:
         if self.hardware_store is not None:
             try:
                 val = max(0.5, min(4.0, round(value, 2)))
                 self.hardware_store.update(mic_gain=val)
+                self._cached_mic_gain = float(val)
+                self._mic_gain_read_at = time.monotonic()
                 self._audio_message = f"Microphone gain set to {int(val * 100)}% ({val:.2f}x Boost)."
             except Exception as exc:
                 self._audio_message = f"Could not update mic gain: {exc}"
@@ -357,6 +424,18 @@ class ParentSettingsOverlay:
             self._text_surface_cache[key] = cached
         return cached
 
+    def dim_surface(self, size: tuple[int, int], pygame: Any) -> Any:
+        """Return the cached translucent dim layer for `size`."""
+
+        width, height = size
+        if (
+            self._backdrop_surface is None
+            or self._backdrop_surface.get_size() != (width, height)
+        ):
+            self._backdrop_surface = pygame.Surface((width, height), pygame.SRCALPHA)
+            self._backdrop_surface.fill((30, 24, 20, 210))
+        return self._backdrop_surface
+
     def draw(
         self,
         screen: Any,
@@ -364,14 +443,22 @@ class ParentSettingsOverlay:
         typography: GreiaTypography,
         pygame: Any,
         load_icon_fn: Callable[[str, int, Any], Any],
+        *,
+        draw_backdrop: bool = True,
     ) -> None:
+        """Draw the overlay content onto `screen`.
+
+        When the calling launcher composites the dim itself (the fast opaque
+        path), pass ``draw_backdrop=False``; blending a full-screen translucent
+        layer here on every redraw otherwise dominates frame time on
+        Atom-class devices.
+        """
+
         self._targets.clear()
         width, height = screen.get_size()
 
-        if self._backdrop_surface is None or self._backdrop_surface.get_size() != (width, height):
-            self._backdrop_surface = pygame.Surface((width, height), pygame.SRCALPHA)
-            self._backdrop_surface.fill((30, 24, 20, 210))
-        screen.blit(self._backdrop_surface, (0, 0))
+        if draw_backdrop:
+            screen.blit(self.dim_surface((width, height), pygame), (0, 0))
 
         if self.state == ParentPanelState.AUTH:
             self._draw_auth_dialog(screen, theme, typography, pygame, load_icon_fn)
@@ -748,21 +835,28 @@ class ParentSettingsOverlay:
         pygame: Any,
         load_icon_fn: Callable[[str, int, Any], Any],
     ) -> None:
-        now = time.monotonic()
-        if self._ssh_cached_status is None or now - self._last_ssh_poll > 2.0:
-            self._ssh_cached_status = self.ssh_service.get_status()
-            self._last_ssh_poll = now
-
+        # Never call the service from here: status needs systemctl subprocesses
+        # and froze this tab. Draw the last cached snapshot and let drain()
+        # refresh it on a worker thread.
+        self.request_ssh_status_refresh()
         status = self._ssh_cached_status
         font_title = typography.font(FontRole.TITLE, 22)
         font_body = typography.font(FontRole.BODY, 18)
-        font_bold = typography.font(FontRole.CONTROL, 18)
 
         card = pygame.Rect(rect.left, rect.top, rect.width, rect.height)
         pygame.draw.rect(screen, (246, 236, 209), card, border_radius=16)
 
         title = font_title.render("SSH Maintenance Switch", True, (61, 44, 31))
         screen.blit(title, (card.left + 24, card.top + 20))
+
+        if status is None:
+            waiting = font_body.render(
+                "Checking SSH status…", True, (118, 104, 93)
+            )
+            screen.blit(waiting, (card.left + 24, card.top + 70))
+            return
+
+        font_bold = typography.font(FontRole.CONTROL, 18)
 
         is_on = status.active or status.enabled
         badge_rect = pygame.Rect(card.left + 24, card.top + 58, 140, 36)
@@ -809,6 +903,13 @@ class ParentSettingsOverlay:
         font_title = typography.font(FontRole.TITLE, 22)
         font_body = typography.font(FontRole.BODY, 18)
 
+        # The Info tab used to resolve host_ip through the SSH service on
+        # EVERY frame (two systemctl subprocesses per redraw) and made this
+        # tab unusable. Only the cached snapshot is read here.
+        self.request_ssh_status_refresh()
+        cached_status = self._ssh_cached_status
+        host_ip = cached_status.host_ip if cached_status is not None else "…"
+
         card = pygame.Rect(rect.left, rect.top, rect.width, rect.height)
         pygame.draw.rect(screen, (246, 236, 209), card, border_radius=16)
 
@@ -819,7 +920,7 @@ class ParentSettingsOverlay:
         lines = [
             "Greia Parents is accessible from any browser on this home network.",
             "1. Connect your phone or laptop to the same Wi-Fi network.",
-            f"2. Open http://{self.ssh_service.get_status().host_ip}:8766 in your browser.",
+            f"2. Open http://{host_ip}:8766 in your browser.",
             "3. mDNS Service: _greia-parent._tcp (Bonjour / Avahi auto-discovery).",
             "4. Main Parent login: username 'greia', default password 'greia'.",
         ]

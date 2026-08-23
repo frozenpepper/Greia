@@ -268,14 +268,11 @@ class GreiaLauncherPresentation(LauncherApplication):
                         if self._mode == "parent_panel":
                             _needs_redraw = True
                             if not self._parent_panel.handle_key(event.key, pygame):
-                                self._mode = "profiles"
+                                self._exit_parent_panel(pygame)
                         elif self._mode == "profiles" and self._parent_chord.handle_key_down(
                             event.key, time.monotonic()
                         ):
-                            self._mode = "parent_panel"
-                            self._parent_panel.open()
-                            pygame.event.clear(pygame.TEXTINPUT)
-                            pygame.event.clear(pygame.KEYDOWN)
+                            self._enter_parent_panel(pygame)
                             _needs_redraw = True
                         else:
                             running = self._handle_key(event.key, pygame)
@@ -296,7 +293,7 @@ class GreiaLauncherPresentation(LauncherApplication):
                         _needs_redraw = True
                         if self._mode == "parent_panel":
                             if not self._parent_panel.handle_click(event.pos):
-                                self._mode = "profiles"
+                                self._exit_parent_panel(pygame)
                         else:
                             self._handle_click(event.pos, pygame)
                     elif event.type == pygame.MOUSEWHEEL and self._mode == "activities":
@@ -325,17 +322,15 @@ class GreiaLauncherPresentation(LauncherApplication):
                     self._cached_activities_targets.clear()
                     self._tile_surface_cache.clear()
                     self._backdrop_cache.clear()
-                    self._disclosure_cache.clear()
+                    self._dimmed_underlay = None
+                    self._dimmed_underlay_key = None
                     self._activity_scroll_start = 0
                     if self._visual_cache is not None:
                         self._visual_cache.clear()
                     _needs_redraw = True
                 if self._mode == "profiles":
                     if self._parent_chord.poll(time.monotonic()):
-                        self._mode = "parent_panel"
-                        self._parent_panel.open()
-                        pygame.event.clear(pygame.TEXTINPUT)
-                        pygame.event.clear(pygame.KEYDOWN)
+                        self._enter_parent_panel(pygame)
                         _needs_redraw = True
                 elif self._mode == "parent_panel":
                     if self._parent_panel.drain():

@@ -247,6 +247,54 @@ class LauncherApplication:
         self._cached_profiles_targets: list[HitTarget] = []
         self._parent_chord = KeyChordTracker({ord("s"), ord("t")}, hold_duration_seconds=5.0)
         self._parent_panel = ParentSettingsOverlay(MainCredentialStore.from_environment())
+        self._dimmed_underlay: Any = None
+        self._dimmed_underlay_key: Any = None
+
+    def _enter_parent_panel(self, pygame: Any) -> None:
+        """Open the hidden Parent Settings overlay with active text input.
+
+        SDL delivers ``TEXTINPUT`` events only while text input is active.
+        Without starting it here the Parent password field can never receive
+        typed characters (the profile secret screen is the only other consumer
+        of text input and stops it on exit).
+        """
+
+        self._mode = "parent_panel"
+        self._parent_panel.open()
+        pygame.event.clear(pygame.TEXTINPUT)
+        pygame.event.clear(pygame.KEYDOWN)
+        pygame.key.start_text_input()
+
+    def _exit_parent_panel(self, pygame: Any) -> None:
+        """Close the overlay and restore the profile picker input state."""
+
+        self._parent_panel.close()
+        pygame.key.stop_text_input()
+        self._mode = "profiles"
+
+    def _draw_dimmed_parent_underlay(self, screen: Any, pygame: Any) -> None:
+        """Present the profile picker dimmed through one opaque composite.
+
+        Blending a full-screen translucent dim onto the visible surface costs
+        more than the rest of the frame combined on Atom-class devices. The
+        dimmed copy is therefore rebuilt only when the underlying picker state
+        changes and is presented with a fast opaque blit otherwise.
+        """
+
+        size = screen.get_size()
+        key = (self._cached_profiles_key, size)
+        if (
+            self._dimmed_underlay is not None
+            and self._dimmed_underlay_key == key
+            and self._dimmed_underlay.get_size() == size
+        ):
+            screen.blit(self._dimmed_underlay, (0, 0))
+            return
+        dimmed = screen.copy()
+        dimmed.blit(self._parent_panel.dim_surface(size, pygame), (0, 0))
+        self._dimmed_underlay = dimmed.convert()
+        self._dimmed_underlay_key = key
+        screen.blit(self._dimmed_underlay, (0, 0))
 
     def run(self) -> int:
         import pygame
@@ -279,10 +327,7 @@ class LauncherApplication:
                         if self._mode == "profiles" and self._parent_chord.handle_key_down(
                             event.key, time.monotonic()
                         ):
-                            self._mode = "parent_panel"
-                            self._parent_panel.open()
-                            pygame.event.clear(pygame.TEXTINPUT)
-                            pygame.event.clear(pygame.KEYDOWN)
+                            self._enter_parent_panel(pygame)
                         else:
                             running = self._handle_key(event.key, pygame)
                     elif event.type == pygame.KEYUP:
@@ -304,14 +349,13 @@ class LauncherApplication:
                     self._icon_cache.clear()
                     self._font_cache.clear()
                     self._profile_name_cache.clear()
+                    self._dimmed_underlay = None
+                    self._dimmed_underlay_key = None
                     if self._visual_cache is not None:
                         self._visual_cache.clear()
                 if self._mode == "profiles":
                     if self._parent_chord.poll(time.monotonic()):
-                        self._mode = "parent_panel"
-                        self._parent_panel.open()
-                        pygame.event.clear(pygame.TEXTINPUT)
-                        pygame.event.clear(pygame.KEYDOWN)
+                        self._enter_parent_panel(pygame)
                 elif self._mode == "parent_panel":
                     self._parent_panel.drain()
                 self._rescan_if_due()
@@ -330,7 +374,7 @@ class LauncherApplication:
         if self._mode == "parent_panel":
             running = self._parent_panel.handle_key(key, pygame)
             if not self._parent_panel.is_open:
-                self._mode = "profiles"
+                self._exit_parent_panel(pygame)
             return running
 
         if self._mode == "profiles":
@@ -381,7 +425,7 @@ class LauncherApplication:
     def _handle_click(self, position: tuple[int, int], pygame: Any) -> None:
         if self._mode == "parent_panel":
             if not self._parent_panel.handle_click(position, pygame):
-                self._mode = "profiles"
+                self._exit_parent_panel(pygame)
             return
         for target in reversed(self._targets):
             if not target.rect.collidepoint(position):
@@ -647,7 +691,15 @@ class LauncherApplication:
         theme = self.theme_controller.draw_background(screen, pygame)
         if self._mode == "parent_panel":
             self._draw_profile_picker(screen, theme, pygame)
-            self._parent_panel.draw(screen, theme, self._typography, pygame, self._load_icon)
+            self._draw_dimmed_parent_underlay(screen, pygame)
+            self._parent_panel.draw(
+                screen,
+                theme,
+                self._typography,
+                pygame,
+                self._load_icon,
+                draw_backdrop=False,
+            )
         elif self._mode == "profiles":
             self._draw_profile_picker(screen, theme, pygame)
         elif self._mode == "secret":
