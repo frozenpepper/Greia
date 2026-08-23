@@ -1,7 +1,7 @@
 # Greia Child Activity Discovery and Audience Requirements
 
-**Status:** accepted product requirement; implementation migration pending where explicitly noted  
-**Date:** 2026-08-21  
+**Status:** accepted product requirement; foundational manifest/profile/discovery/adaptive-Collection implementation active  
+**Date:** 2026-08-23  
 **Scope:** child Shell/Home, Activity catalogue projection, Activity educational/presentation metadata, child-profile discovery preferences, Parent per-child Activity visibility policy  
 **Related:** `docs/adr/0018-lightweight-ui-foundation.md`, `docs/design/GREIA_LAUNCHER_INTERACTION_AND_ACTIVITY_CATALOGUE.md`, `docs/product/PARENT_MANAGEMENT.md`, `docs/product/RESPONSIVE_UI_AND_DISPLAY_LAYOUT.md`, `skills/greia-activity-authoring/SKILL.md`
 
@@ -9,9 +9,9 @@
 
 Greia must remain easy to navigate when a device contains four Activities and when it contains dozens of Activities.
 
-The child Shell therefore uses a **Collection-first discovery model** rather than treating the normal Home screen as a flat application catalogue with category filters.
+The child Shell therefore uses a **Collection-first discovery model** rather than treating normal Home as a flat application catalogue with category filters.
 
-The normal child mental model is:
+Normal child mental model:
 
 ```text
 Greia Home
@@ -19,7 +19,7 @@ Greia Home
     → Activity
 ```
 
-When a primary Collection becomes too dense to browse comfortably, Greia may introduce exactly one additional semantic grouping layer:
+When a primary Collection becomes too dense and a coherent semantic partition exists, Greia may introduce exactly one additional grouping layer:
 
 ```text
 Greia Home
@@ -28,7 +28,7 @@ Greia Home
       → Activity
 ```
 
-This hierarchy is a Greia navigation model, not a filesystem model. A Collection may visually resemble a shelf, box, book, bag, art case, toy box, room or other child-friendly object, but it does not expose Linux directories or paths.
+This is a Greia navigation model, not a filesystem model. A Collection may visually resemble a shelf, box, book, bag, art case, toy box, room or other child-friendly object, but it never exposes Linux directories or paths.
 
 ## 2. Primary Collections are destinations, not filter tabs
 
@@ -42,48 +42,39 @@ explore
 my_greia
 ```
 
-These are the normal major child-facing destinations on Greia Home, using strong semantic icon/art identity and localized titles.
+These are normal major child-facing destinations on Greia Home, using strong semantic icon/art identity and localized titles.
 
-The normal Home screen should not begin by showing every installed Activity. `All` may remain an internal catalogue projection, Parent/admin view, search/browse surface or compatibility mechanism, but **`All` is not the normal child Home experience**.
+`All` remains an internal catalogue projection, Parent/admin/search/browse compatibility surface; **`All` is not normal child Home**.
 
-A child entering `Create` should experience a clear navigation transition into that Collection rather than merely seeing a tab/filter state change.
-
-The Collection identity remains visible while browsing its content, and local Back returns toward Greia Home or the containing Collection.
+A child entering `Create` experiences a navigation transition into that Collection. Collection identity remains visible while browsing, and local Back returns toward the containing Collection/Home.
 
 ### 2.1 Packages do not manufacture primary Home destinations
 
 `[presentation].categories` is Activity metadata consumed by a platform-owned projection. It is not authority to extend Greia Home.
 
-A package may declare one or more recognized primary IDs from the vocabulary above. The manifest parser may remain tolerant of other bounded category strings for compatibility or future migration, but an arbitrary package value such as `care`, `art`, `geometry` or `storybook` must **not automatically become another top-level Home portal**.
+A package may declare recognized primary IDs from the vocabulary above. Other bounded strings may remain tolerated metadata for compatibility, but arbitrary values such as `care`, `art`, `geometry` or `storybook` do **not** automatically become root Home portals.
 
-This distinction matters because:
+This keeps Home small and predictable and prevents packages from reshaping the OS information architecture by inventing labels.
 
-- Home must remain a small, predictable child mental model;
-- education/content taxonomy can be much richer than navigation taxonomy;
-- third-party/open-source Activities must not be able to reshape the entire OS information architecture merely by inventing a label;
-- future sub-Collections have their own bounded discovery metadata/policy rather than reusing arbitrary primary-category strings.
+### 2.2 Unknown-only Activities fail open through Browse/More
 
-### 2.2 Unknown-only Activities fail open through bounded Browse/More recovery
+A valid Activity with no recognized primary Collection must not disappear.
 
-Greia must not solve primary-vocabulary control by silently hiding a valid Activity.
-
-If a valid Activity has no recognized primary Collection after compatibility projection, Greia exposes it through one platform-owned bounded recovery destination:
+Greia projects such Activities into one platform-owned bounded recovery destination:
 
 ```text
 browse
 ```
 
-The current child-facing localization is equivalent to `Altro` / `More`. This destination appears only when required by otherwise-orphaned Activities. It is not a general sixth content taxonomy and packages do not directly own it.
+Current child-facing localization is equivalent to `Altro` / `More`. It appears only when needed and is not a sixth package-owned taxonomy.
 
-An Activity that has both an unknown metadata category and a valid primary category stays in the valid primary Collection and does not enter Browse merely because the extra metadata exists.
-
-The built-in Clinic Activity is the concrete correction that exposed this rule: caregiving/health remains education taxonomy, while its child-navigation presentation is `play` + `learn`; there is no permanent top-level `Care` Home destination.
+An Activity with at least one valid primary category stays in its valid primary Collection(s) even if it also declares extra unknown metadata.
 
 ## 3. One Activity may belong to more than one Collection
 
 Collection membership is presentation metadata, not package/storage identity.
 
-An Activity may legitimately appear in more than one place, for example:
+For example:
 
 ```text
 Shape Garden
@@ -91,54 +82,42 @@ Shape Garden
   → Learn
 ```
 
-This never duplicates:
+This never duplicates installation, Activity ID, saves, permissions, session history, progression or Awards.
 
-- installation;
-- Activity ID;
-- saves;
-- permissions;
-- session history;
-- progression;
-- Awards.
-
-For this reason Greia must not teach the primary/sub-Collection model as literal filesystem folders containing unique copies of files.
+Therefore Collections/sub-Collections must never be taught as literal filesystem folders containing unique copies of files.
 
 ## 4. Adaptive Collection depth
 
 Greia does not force every primary Collection to contain sub-Collections.
 
-A small Collection is easier to understand when its Activities are shown directly. An extra navigation layer is justified only when it materially reduces choice density.
+### 4.1 Density policy
 
-### 4.1 Initial density policy
+Current platform policy is:
 
-The accepted initial policy is:
+- **1–8 effective visible Activities:** direct presentation; any previous subdivision collapses;
+- **9–10 effective visible Activities:** remain direct unless the Collection was already validly subdivided;
+- **more than 10 effective visible Activities:** evaluate a semantic one-level subdivision;
+- crossing the threshold alone never forces subdivision;
+- if no complete, useful semantic partition exists, retain direct bounded browsing.
 
-- **1–10 effective visible Activities:** present Activities directly;
-- **more than 10 effective visible Activities:** evaluate whether one semantic sub-Collection layer would simplify discovery;
-- **subdivision is not automatic merely because the count crossed 10**;
-- if no good semantic partition exists, keep the Activities direct and use the normal bounded scrolling/paging model.
-
-The exact threshold is platform-owned policy, not Activity metadata. Future user testing may tune it without changing Activity package identity.
+The implementation expresses this as `enter_threshold = 10` and `collapse_threshold = 8`.
 
 ### 4.2 Semantic-quality requirement
 
-A sub-Collection layer should be introduced only when Greia can form a small number of useful, recognizable groups.
+A useful subdivision normally has:
 
-A useful partition normally has properties such as:
+- 2–5 platform-recognized child-understandable groups;
+- at least two Activities in each retained group;
+- no stranded Activities;
+- no fabricated giant `Other` bucket;
+- material reduction in simultaneous choice density;
+- stable localized semantic labels/icons.
 
-- approximately 2–5 child-understandable sub-Collections;
-- more than one Activity in a meaningful group where practical;
-- no requirement for a large meaningless `Other` bucket merely to satisfy the threshold;
-- a measurable reduction in the number of simultaneous choices;
-- stable semantic labels/icons that can be localized and understood without reading where possible.
-
-For example, a large `Create` collection may eventually expose concepts such as drawing, writing/storytelling, music or building when the installed catalogue actually supports those groups.
-
-Greia must not create deep taxonomies simply because Activity metadata contains many educational tags.
+`AdaptiveCollectionPlanner` currently requires the semantic grouping to cover the Collection cleanly. If Activities remain unassigned or the grouping is otherwise poor, it returns the direct Collection instead.
 
 ### 4.3 Maximum depth
 
-Normal child Activity discovery has a hard conceptual depth limit:
+Hard conceptual depth remains:
 
 ```text
 Home → primary Collection → optional sub-Collection → Activity
@@ -150,24 +129,17 @@ Do not build filesystem-like trees such as:
 Home → Create → Art → Drawing → Painting → Activity
 ```
 
-If the catalogue cannot be made usable within the allowed depth, improve grouping, ranking, search/browse support or collection presentation rather than adding another nested level.
+If the catalogue cannot be made usable within the allowed depth, improve grouping, ranking, bounded browse/search or Collection presentation instead of nesting deeper.
 
 ### 4.4 Stability / hysteresis
 
-Installing or removing one Activity should not make the child's navigation structure flap back and forth unnecessarily.
+Navigation should not flap when one Activity is installed/removed.
 
-The implementation must use a stability policy. The initial design target is:
-
-- crossing above 10 triggers subdivision evaluation;
-- once a useful subdivided presentation has been adopted, do not collapse it merely because the effective visible count falls by one or two items;
-- a lower collapse threshold around **8 effective visible Activities** is the initial target;
-- the exact enter/collapse thresholds and persistence mechanism are platform-owned policy.
-
-The goal is predictable navigation, not mathematical cleverness.
+`ActivityDiscoveryPolicy` stores bounded platform-owned `subdivided_collections` state separately from Parent visibility intent, and the adaptive planner applies the 10/8 enter/collapse thresholds. This state is UI stability memory, not package authority and not a Parent preference.
 
 ## 5. Effective catalogue count is per child
 
-Adaptive depth is based on the **effective visible Activity set for the active child**, not simply the raw installed Activity count.
+Adaptive depth uses the **effective visible Activity set for the active child**, not raw installed count.
 
 Conceptually:
 
@@ -176,22 +148,20 @@ validated installed registry
   ↓
 Parent per-child visibility policy / explicit overrides
   ↓
-child/profile audience and challenge presentation policy
-  ↓
-current child discovery view where applicable
+profile audience and challenge presentation policy
   ↓
 effective visible Activities
   ↓
-Collection projection + adaptive depth decision
+Collection projection + adaptive-depth decision
 ```
 
-Example: if 22 Activities are installed under `Learn` but Parent policy hides 14 for a particular child, Greia should reason about the 8 effective visible Activities rather than create unnecessary sub-Collections based on 22.
+Example: if 22 Activities are installed under `Learn` but Parent policy leaves 8 visible for a child, Greia reasons about those 8 rather than creating hierarchy from the raw 22.
 
-No presentation filter may upgrade package trust or bypass registry/runtime authority.
+Presentation filtering never upgrades package trust or bypasses registry/runtime authority.
 
-## 6. Age/developmental suitability and difficulty are different concepts
+## 6. Age/developmental suitability and difficulty are independent
 
-Greia must not overload one number to mean both developmental suitability and challenge.
+Greia never overloads one number to mean both developmental suitability and challenge.
 
 ### Age/developmental suitability answers
 
@@ -201,34 +171,24 @@ Greia must not overload one number to mean both developmental suitability and ch
 
 > How challenging is this Activity within its intended audience/content domain?
 
-Examples:
+A preschool Activity can be challenging for preschoolers while still being elementary for an older child. An open-ended creative tool can be easy to enter while remaining worthwhile at many ages.
 
-- a preschool counting Activity may be difficult for its intended audience while still being too elementary for an older child;
-- Painting may be mechanically easy to enter but remain worthwhile for many ages;
-- two Activities aimed at the same age range may intentionally have very different challenge levels.
+Filtering/ranking therefore treats audience age and difficulty as separate dimensions.
 
-Therefore filtering/ranking must treat age/developmental suitability and difficulty as independent dimensions.
+## 7. Baseline challenge: `education.difficulty`
 
-## 7. Current manifest fact: `education.difficulty`
-
-Current source already requires:
+Current source requires:
 
 ```toml
 [education]
-difficulty = 1
+difficulty = 3
 ```
 
-and `src/greia_platform/activities.py` validates `difficulty` as an integer from **1 through 10**.
+`src/greia_platform/activities.py` validates `difficulty` as an integer **1 through 10**. It is the baseline challenge indicator and must not be reinterpreted as age.
 
-This field is the current baseline challenge indicator. It must not be reinterpreted as the child's age.
+## 8. Audience and adaptive-difficulty metadata — implemented
 
-The current built-in Activities largely use `difficulty = 1`; those values are not evidence that a complete calibrated difficulty taxonomy already exists. Calibration should be reviewed as the Activity catalogue grows.
-
-## 8. Target audience metadata
-
-Greia should extend Activity educational metadata with optional developmental/audience facts.
-
-The accepted semantic target is equivalent to:
+Current Activity manifests support optional audience fields:
 
 ```toml
 [education]
@@ -237,7 +197,13 @@ recommended_age_min = 5
 recommended_age_max = 8
 ```
 
-An open-ended Activity may omit an upper bound:
+Bounds:
+
+- `recommended_age_min`: optional integer 1–18;
+- `recommended_age_max`: optional integer 1–18;
+- when both are present, min must not exceed max.
+
+Open-ended Activities may omit one bound, for example:
 
 ```toml
 [education]
@@ -245,7 +211,7 @@ difficulty = 1
 recommended_age_min = 3
 ```
 
-An Activity whose challenge can genuinely adapt should eventually be able to declare the supported challenge span separately from its default/baseline difficulty, conceptually:
+Current source also supports a true adaptive challenge span:
 
 ```toml
 [education]
@@ -257,26 +223,21 @@ recommended_age_min = 5
 recommended_age_max = 10
 ```
 
-### Important current implementation boundary
+Rules:
 
-As of 2026-08-21, the current manifest parser implements `education.difficulty` but **does not yet implement** `recommended_age_min`, `recommended_age_max`, `difficulty_min`, `difficulty_max` or `adaptive_difficulty`.
+- `difficulty_min` / `difficulty_max` are optional integers 1–10;
+- they must be declared together;
+- the lower value must not exceed the upper value;
+- a difficulty range requires `adaptive_difficulty = true`;
+- `adaptive_difficulty = true` requires a declared range.
 
-These names document the accepted target semantics; they must not be placed into packages and described as working until parser/runtime/tests are migrated together.
+The exact parser/validation contract is source-owned by `src/greia_platform/activities.py` and its tests.
 
-When the schema is implemented, exact field names, bounds and compatibility behavior become source-owned by `src/greia_platform/activities.py` and its tests.
-
-## 9. Discovery/sub-Collection metadata
+## 9. Discovery/sub-Collection metadata — implemented
 
 High-level launcher Collections remain separate from educational taxonomy.
 
-Current metadata:
-
-```toml
-[presentation]
-categories = ["create", "learn"]
-```
-
-A future manifest migration may add bounded semantic discovery/grouping hints for optional sub-Collections. Conceptually:
+Current presentation metadata supports:
 
 ```toml
 [presentation]
@@ -284,42 +245,36 @@ categories = ["create", "learn"]
 discovery_tags = ["drawing", "shapes"]
 ```
 
-These hints describe what the Activity can sensibly be grouped with. They do **not** command Greia to create a permanent folder and do not define a filesystem path.
+`discovery_tags` are bounded semantic grouping hints. They do **not** command Greia to create a folder or root destination.
 
-Greia decides whether a sub-Collection is useful for the current effective catalogue.
+The launcher owns a bounded recognized sub-Collection vocabulary (`DISCOVERY_GROUP_IDS`). Packages may contribute recognized hints, but cannot manufacture arbitrary child navigation labels.
 
-`education.categories` and `education.skills` remain learning/progression metadata and must not automatically become child navigation levels.
+`education.categories` and `education.skills` remain learning/progression metadata and do not automatically become navigation levels.
 
-As of 2026-08-21, `presentation.discovery_tags` is a target semantic example, **not a currently parsed field**.
+## 10. Child profile audience information — implemented
 
-## 10. Child profile audience information
-
-Greia should be able to use optional per-child audience information to improve discovery.
-
-The product does **not** need a child's exact date of birth for this feature.
-
-A Parent may provide a coarse/approximate age or developmental stage sufficient for discovery policy. The exact profile storage/UI representation should minimize unnecessary personal data.
-
-Greia may also support a child challenge preference such as:
+`ChildProfile` contains:
 
 ```text
-Automatic
-Easier
-Standard
-More challenging
+approximate_age: optional integer 1–18
+challenge_preference: automatic / easier / standard / harder
 ```
 
-This preference affects recommendation/ranking/view selection. It must not rewrite Activity-owned save data or pretend the platform can infer educational mastery from age alone.
+No exact date of birth is required.
 
-As of 2026-08-21, current `ChildProfile` source does not yet contain age/development/challenge fields. This document defines the product requirement for the future profile-policy migration.
+Challenge preference affects discovery ordering:
 
-## 11. Recommendation is not the same as restriction
+- Automatic and Standard preserve age relevance ordering;
+- Easier prefers lower baseline difficulty among otherwise similarly ranked visible Activities;
+- Harder prefers higher baseline difficulty.
 
-Audience metadata should normally help Greia decide what to emphasize, not act as an inflexible gate.
+It does not rewrite Activity save data and is not a mastery assessment.
 
-Default behavior should favor relevant Activities while remaining forgiving of imperfect metadata.
+## 11. Recommendation is not restriction
 
-Possible child-facing discovery views may include icon-led equivalents of:
+Audience metadata primarily improves emphasis/order. It is deliberately forgiving of incomplete metadata.
+
+Potential child-facing discovery views may later use neutral equivalents of:
 
 ```text
 For me
@@ -328,49 +283,53 @@ Harder
 All
 ```
 
-These are discovery views, not grades or judgments about the child.
+Such labels are views, not grades. Greia avoids messages describing a child as too young, too old, bad or behind.
 
-Greia should avoid messaging that labels a child as "too young", "too old", "bad" or "behind".
+## 12. Parent per-child visibility policy — implemented
 
-## 12. Parent per-child visibility policy
+Parent authority may apply stronger rules through a profile-scoped `ActivityDiscoveryPolicy`.
 
-Parent authority may apply stronger per-child rules.
-
-The intended Parent controls include policies equivalent to:
+Implemented modes:
 
 ```text
-Show everything
-Hide Activities probably too simple
-Show recommended range only
-Custom
+show_all
+hide_too_simple
+recommended_only
+custom
 ```
 
-Parents must also be able to override individual Activities, for example:
+Implemented individual overrides:
 
 ```text
-Always show this Activity to Gaia
-Always hide this Activity from Gaia
+always_show
+always_hide
 ```
 
-An explicit per-Activity Parent override wins over automatic age/difficulty recommendation policy.
+An explicit Activity override is evaluated before automatic age-based policy:
 
-This extends the existing Parent requirement for per-child Activity availability/policy; it does not give Activities authority to hide competitors or modify another Activity's visibility.
+- `always_hide` hides;
+- `always_show` shows;
+- missing age or missing audience metadata fails open in automatic policy;
+- `hide_too_simple` only hides when a declared upper recommended age is below the child's approximate age;
+- `recommended_only` respects declared min/max while unknown/general metadata remains visible.
 
-## 13. Missing/incomplete metadata fails open for ordinary discovery
+The Parent API exposes `GET/PUT /api/v1/profiles/{profile_id}/activity-policy`, and the rebuilt HTML Parent client renders and mutates this typed policy.
 
-Missing audience metadata must not silently make an otherwise valid Activity disappear.
+Visibility policy affects catalogue presentation only; it does not mutate package trust, installation, permissions, saves or Activity identity.
+
+## 13. Missing/incomplete metadata fails open
 
 Rules:
 
 - no `recommended_age_max` means no declared upper age bound;
 - no age metadata means **unknown/general**, not automatically unsuitable;
-- creative/open-ended tools may intentionally have no meaningful upper age bound;
-- missing future adaptive-difficulty metadata means Greia uses the ordinary baseline difficulty behavior;
-- unknown/unrecognized primary presentation metadata does not hide a valid Activity; it is recoverable through the bounded Browse/More fallback;
+- creative/open-ended tools may intentionally have no meaningful upper bound;
+- no adaptive difficulty range means ordinary baseline difficulty behavior;
+- unknown/unrecognized primary presentation metadata does not hide a valid Activity; it is recoverable through Browse/More;
 - Parent explicit hide remains authoritative;
-- invalid manifest fields, once implemented as schema fields, remain package validation errors according to source policy.
+- invalid declared schema fields remain package validation errors according to source policy.
 
-Third-party/open-source metadata may be imperfect. Greia should prefer transparent unknown state to confident but invented classification.
+Greia prefers transparent unknown state to invented classification.
 
 ## 14. Age metadata is not a content-safety rating
 
@@ -378,91 +337,87 @@ Third-party/open-source metadata may be imperfect. Greia should prefer transpare
 
 It is not an ESRB/PEGI/legal content rating, parental-consent mechanism or permission boundary.
 
-Greia's package curation, permissions, trust model and child-safety requirements remain separate controls.
+Package curation, permissions, trust and child-safety controls remain separate.
 
-## 15. Ranking and recent/favorite shortcuts
+## 15. Ranking and bounded shortcuts
 
-Collection-first navigation does not forbid lightweight shortcuts.
+Collection-first navigation does not forbid lightweight `Continue`, recent or favorite shortcuts.
 
-A future Home or Collection screen may expose a small bounded `Continue`, recent or favorite Activity area so a frequently used Activity does not become harder to reach merely because the installed catalogue grew.
-
-Such shortcuts must:
+Any such extension must:
 
 - remain bounded;
-- obey Parent visibility policy;
+- obey effective Parent visibility policy;
 - never duplicate package/state authority;
-- not reintroduce a giant flat application wall;
-- not make engagement/streak mechanics the primary discovery system.
+- not recreate a giant flat application wall;
+- not make streak/engagement mechanics the primary discovery system.
 
-This is an optional extension, not required for the first collection-first implementation.
+This remains optional product extension work.
 
 ## 16. Responsive behavior
 
-The Collection-first model must obey `RESPONSIVE_UI_AND_DISPLAY_LAYOUT.md`.
+The Collection-first model obeys `RESPONSIVE_UI_AND_DISPLAY_LAYOUT.md`:
 
-In particular:
-
-- Home should contain only a small bounded set of primary Collection choices and should normally require no scrolling;
-- the Browse/More recovery portal appears only when required and does not authorize arbitrary package-defined root destinations;
-- Collection cards/objects reflow from the actual viewport;
-- optional sub-Collections and Activity collections use shared bounded scrolling/paging;
-- the same semantic hierarchy works on the low-resolution Acer reference and larger displays;
-- no device-specific category layout tables are allowed.
+- Home contains a small bounded set of primary choices and normally requires no scrolling;
+- Browse/More appears only when needed;
+- Collection cards reflow from actual viewport;
+- optional sub-Collections and Activity lists use bounded shared presentation;
+- the same hierarchy works on the low-resolution Acer reference and larger displays;
+- no device-specific category layout tables.
 
 ## 17. Input parity
 
-Pointer, keyboard, touch and controller must operate on the same semantic navigation state.
+Pointer, keyboard, touch and controller operate on the same semantic navigation state.
 
-The adaptive hierarchy must not exist only for pointer users. Focus movement, Back behavior, launch origin and return destination must remain coherent for controller/keyboard navigation.
+Adaptive hierarchy is not pointer-only. Focus, Back, launch origin and return destination remain coherent across input paths.
 
-## 18. Implementation migration status
+## 18. Current implementation status
 
-This document is an **accepted target product requirement**. It deliberately distinguishes current source from accepted future behavior.
+Current source implements the foundational contract described above:
 
-Current source already has:
-
-- `ActivityCatalogue` as a projection over registry-owned Activities;
-- semantic `Collection` objects;
-- high-level `[presentation].categories`;
-- one Activity in multiple recognized primary categories;
+- registry-owned Activity catalogue projection;
+- Collection-first Home;
+- bounded platform-owned root Collection vocabulary plus Browse/More recovery;
+- one Activity in multiple Collections without state duplication;
 - bounded Activity scrolling;
-- `education.difficulty` validated 1–10;
-- Collection-first Home (`ui.portal.frame` / `CollectionFirstHomeMixin`) replacing the normal `All` landing, accepted via Activity Simulator (`docs/testing/2026-08-21_COLLECTION_FIRST_HOME_SIMULATOR.md`);
-- bounded primary-vocabulary correction accepted via Activity Simulator (`docs/testing/2026-08-21_COLLECTION_PRIMARY_VOCABULARY_SIMULATOR.md`): arbitrary package categories no longer become launcher Collections, and valid Activities with no recognized primary destination project into platform-owned `browse`/More recovery;
-- built-in Clinic navigation corrected to `play` + `learn` while care/health remains education taxonomy;
-- Activity Card Titles and Unique Icons contract (`docs/testing/2026-08-22_ACTIVITY_CARD_TITLES_AND_UNIQUE_ICONS.md`): 2-line title wrapping, 48-grapheme defensive card cap, full-title hover/focus disclosure pill, 10–12% safe contain-fit icon padding, and 100% unique package-owned icons across all 19 first-party Activities;
-- Parent product direction for later per-child Activity availability/policy.
+- baseline `education.difficulty` 1–10;
+- `recommended_age_min/max` audience fields;
+- `difficulty_min/max` plus `adaptive_difficulty` validation;
+- `presentation.discovery_tags`;
+- optional profile `approximate_age` and `challenge_preference`;
+- profile-scoped atomic Activity discovery policy storage;
+- fail-open audience filtering and challenge-aware ordering;
+- explicit Parent visibility overrides with override precedence;
+- effective per-child catalogue computation before launcher projection;
+- adaptive optional sub-Collections with bounded platform-owned discovery vocabulary;
+- 10/8 enter/collapse hysteresis model and stored subdivision state;
+- Parent API resources for Activity inventory and per-child policy;
+- rebuilt responsive Parent HTML controls for child age/challenge and Activity policy;
+- Collection-first, bounded-vocabulary and adaptive catalogue simulator acceptance recorded in the repository testing documentation.
 
-Current source does **not yet implement**:
+The Activity Card Titles and Unique Icons contract also remains active: two-line title wrapping, defensive title cap/full-title disclosure, contain-fit icon padding and unique first-party package icons are separate presentation requirements and are not changed by adaptive discovery.
 
-- adaptive optional sub-Collections;
-- subdivision discovery tags;
-- age/developmental manifest fields;
-- adaptive difficulty range metadata;
-- age/development/challenge profile fields;
-- automatic per-child audience ranking/filtering;
-- Parent UI/API controls for these policies.
-
-Implementation must update source, tests, manifest examples, Parent API/client contracts and derived authoring documentation together. Do not claim an unexecuted portion merely because this document exists.
+Still-open/future work includes product calibration/user testing of thresholds and metadata quality, optional richer bounded recent/favorite discovery surfaces, and any future expansion of the recognized semantic group vocabulary. Those extensions must preserve the authority/depth/fail-open rules in this document.
 
 ## 19. Acceptance requirements
 
-When implemented, focused acceptance must cover at least:
+Focused acceptance for this architecture covers:
 
 1. **bounded root vocabulary:** arbitrary package categories cannot manufacture primary Home destinations;
-2. **unknown-category recoverability:** a valid Activity without a recognized primary category remains discoverable through one bounded Browse/More recovery destination;
-3. **mixed metadata:** an Activity with a valid primary category plus extra unknown metadata stays in the valid primary Collection and does not unnecessarily enter Browse;
-4. **small catalogue:** 1–10 visible Activities remain direct;
-5. **large coherent catalogue:** >10 visible Activities can produce useful sub-Collections;
-6. **large incoherent catalogue:** no forced bad subdivision; bounded direct browsing remains usable;
+2. **unknown-category recoverability:** valid unknown-only Activities remain discoverable through Browse/More;
+3. **mixed metadata:** valid primary membership is preserved despite extra unknown metadata;
+4. **small catalogue:** direct presentation remains usable;
+5. **large coherent catalogue:** useful one-level subdivision can occur;
+6. **large incoherent catalogue:** no forced bad subdivision;
 7. **maximum depth:** no path exceeds Home → primary Collection → optional sub-Collection → Activity;
-8. **multi-membership:** one Activity can appear in several Collections without state duplication;
+8. **multi-membership:** no Activity-state duplication;
 9. **per-child count:** adaptive depth uses the effective visible set after Parent policy;
-10. **hysteresis:** small install/remove changes do not cause repeated hierarchy flapping;
-11. **age/difficulty independence:** recommendation logic does not treat age as difficulty or vice versa;
-12. **missing metadata:** ordinary valid Activities remain discoverable unless Parent policy hides them;
+10. **hysteresis:** minor catalogue changes do not repeatedly reshape navigation;
+11. **age/difficulty independence:** age is never treated as difficulty;
+12. **missing metadata:** valid Activities fail open unless Parent policy explicitly hides them;
 13. **Parent override:** explicit always-show/always-hide wins over automatic recommendation;
-14. **profile privacy:** exact date of birth is not required merely for discovery;
-15. **responsive matrix:** Home/Collections remain usable at required Greia viewport tests;
-16. **input parity:** pointer, keyboard and controller/touch paths share hierarchy and Back semantics;
+14. **profile privacy:** exact DOB is not required;
+15. **responsive matrix:** hierarchy remains usable at required Greia viewports;
+16. **input parity:** pointer, keyboard and controller/touch share hierarchy and Back semantics;
 17. **authority:** presentation filtering never bypasses registry/runtime/trust/permission authority.
+
+Do not infer completion of unrelated package-management, pairing-security or education-assessment work merely because this discovery architecture is implemented.
