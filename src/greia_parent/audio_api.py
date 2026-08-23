@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from http.server import HTTPServer
+from typing import cast
 from urllib.parse import parse_qs, urlparse
 
 from greia_parent.protocol import API_BASE
@@ -17,12 +18,14 @@ class AudioParentApiApplication(UpdateParentApiApplication):
     """Top-level Parent composition with typed microphone processing settings."""
 
     def __init__(self, *args: object, **kwargs: object) -> None:
-        audio_backend = kwargs.pop("audio_backend", None)
+        audio_backend = cast(
+            AudioProcessingBackend | None, kwargs.pop("audio_backend", None)
+        )
         super().__init__(*args, **kwargs)
         self.audio_service = AudioService.load(
             self.root / "runtime" / "audio-settings.toml",
             self.hardware_settings_dir,
-            backend=audio_backend if isinstance(audio_backend, AudioProcessingBackend) else None,
+            backend=audio_backend,
         )
 
     def index_payload(self) -> dict[str, object]:
