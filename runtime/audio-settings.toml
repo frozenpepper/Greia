@@ -1,0 +1,7 @@
+schema_version = 1
+
+[defaults]
+# The C0 baseline is always the lightweight path when that backend is present.
+# Greia never benchmarks the machine and silently promotes this to advanced.
+microphone_processing_enabled = true
+advanced_noise_reduction = false
