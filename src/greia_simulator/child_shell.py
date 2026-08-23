@@ -78,10 +78,13 @@ class GreiaSimulatorChildShell(GreiaChildShell):
         bridge_info = f" • Web: {self.remote_url}" if self.remote_url else ""
         return f"Greia Activity Simulator — {self.simulated_device.viewport}{bridge_info}"
 
-    def _on_frame_presented(self, screen: Any, pygame: Any) -> None:
+    def _poll_input_hooks(self, pygame: Any) -> None:
         if getattr(self, "_remote_bridge", None) is not None:
             for ev in self._remote_bridge.poll_events(pygame):
                 pygame.event.post(ev)
+
+    def _on_frame_presented(self, screen: Any, pygame: Any) -> None:
+        if getattr(self, "_remote_bridge", None) is not None:
             self._remote_bridge.capture_frame(screen, pygame, mode=self._mode)
 
     def run(self) -> int:

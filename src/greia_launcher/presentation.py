@@ -249,6 +249,7 @@ class GreiaLauncherPresentation(LauncherApplication):
         try:
             while running:
                 frame_start = time.monotonic()
+                self._poll_input_hooks(pygame)
                 events = pygame.event.get()
                 if events:
                     _needs_redraw = True
@@ -362,6 +363,9 @@ class GreiaLauncherPresentation(LauncherApplication):
             pygame.key.stop_text_input()
             pygame.quit()
         return 0
+
+    def _poll_input_hooks(self, pygame: Any) -> None:
+        """Optional hook called before polling pygame events each frame."""
 
     def _on_frame_presented(self, screen: Any, pygame: Any) -> None:
         """Optional presentation hook called immediately after each frame is flipped."""
@@ -558,6 +562,14 @@ class GreiaLauncherPresentation(LauncherApplication):
     def _pointer_pos(self, pygame: Any) -> tuple[int, int]:
         pos = getattr(self, "_pointer_position", None)
         return pos if pos is not None else pygame.mouse.get_pos()
+
+    def _draw_pointer(self, screen: Any, pygame: Any) -> None:
+        if not self._is_pointer_active(pygame):
+            return
+        from greia_platform.activity_ui import draw_activity_pointer
+
+        pos = self._pointer_pos(pygame)
+        draw_activity_pointer(screen, pos)
 
     def _target_at(self, pos: tuple[int, int] | None) -> tuple[str, Any] | None:
         if pos is None:
@@ -792,15 +804,36 @@ class GreiaLauncherPresentation(LauncherApplication):
             font = self._font(15, pygame)
             width, height = screen.get_size()
             max_w = min(320, width - 40)
-            pill = render_full_title_disclosure_surface(
-                full_title,
-                font=font,
-                theme=theme,
-                max_width=max_w,
-                pygame=pygame,
-            )
 
-            pw, ph = pill.get_size()
+            # Word wrap for tooltip if title is very long
+            words = full_title.strip().split()
+            lines: list[str] = []
+            current_line = ""
+            usable_w = max(60, max_w - 24)
+
+            for word in words:
+                test = f"{current_line} {word}".strip() if current_line else word
+                if font.size(test)[0] <= usable_w:
+                    current_line = test
+                else:
+                    if current_line:
+                        lines.append(current_line)
+                    current_line = word
+            if current_line:
+                lines.append(current_line)
+            if not lines:
+                lines = [full_title]
+
+            line_h = font.get_linesize()
+            text_surfaces = [font.render(line, True, theme.text) for line in lines]
+            text_w = max(s.get_width() for s in text_surfaces)
+            text_h = len(text_surfaces) * line_h
+
+            pad_x = 12
+            pad_y = 7
+            pw = text_w + pad_x * 2
+            ph = text_h + pad_y * 2
+
             px = target_rect.centerx - pw // 2
             px = max(16, min(width - pw - 16, px))
 
@@ -809,21 +842,25 @@ class GreiaLauncherPresentation(LauncherApplication):
             if py < 65:
                 py = target_rect.bottom + 6
 
-            shadow_offset = 3
-            shadow_key = ("disclosure_shadow", pw, ph)
-            shadow_surf = self._disclosure_cache.get(shadow_key)
-            if shadow_surf is None:
-                shadow_surf = pygame.Surface((pw + shadow_offset, ph + shadow_offset), pygame.SRCALPHA)
-                pygame.draw.rect(
-                    shadow_surf,
-                    (0, 0, 0, 40),
-                    pygame.Rect(shadow_offset, shadow_offset, pw, ph),
-                    border_radius=12,
-                )
-                self._disclosure_cache[shadow_key] = shadow_surf
+            # 1. Tactile shadow
+            shadow_rect = pygame.Rect(px + 2, py + 3, pw, ph)
+            pygame.draw.rect(screen, (203, 213, 225), shadow_rect, border_radius=12)
 
-            screen.blit(shadow_surf, (px, py))
-            screen.blit(pill, (px, py))
+            # 2. Pill background
+            pill_rect = pygame.Rect(px, py, pw, ph)
+            bg_color = (
+                min(255, getattr(theme, "panel", (255, 255, 255))[0] + 12),
+                min(255, getattr(theme, "panel", (255, 255, 255))[1] + 12),
+                min(255, getattr(theme, "panel", (255, 255, 255))[2] + 12),
+            )
+            pygame.draw.rect(screen, bg_color, pill_rect, border_radius=12)
+            pygame.draw.rect(screen, theme.accent, pill_rect, width=2, border_radius=12)
+
+            # 3. Text lines
+            for i, ts in enumerate(text_surfaces):
+                tx = px + (pw - ts.get_width()) // 2
+                ty = py + pad_y + i * line_h
+                screen.blit(ts, (tx, ty))
         except Exception:
             pass
 
@@ -860,7 +897,9 @@ class GreiaLauncherPresentation(LauncherApplication):
 
         columns = self._columns(pygame)
         rows = 2
-        page_capacity = columns * rows
+        page_capacity = max(1, columns * rows)
+        self._selected = max(0, min(self._selected, max(0, len(activities) - 1)))
+        self._activity_scroll_start = max(0, min(self._activity_scroll_start, max(0, len(activities) - 1)))
         scroll = ScrollModel(capacity=page_capacity, step=page_capacity)
         window = scroll.window(
             len(activities), self._selected, self._activity_scroll_start
@@ -1048,28 +1087,10 @@ class GreiaLauncherPresentation(LauncherApplication):
             style=self._DEPTH,
             cached_shadow=self._shadow_for(back_rect.size, pygame),
         )
-        arrow_inset = max(12, height // 4)
-        arrow_x = back_rect.left + arrow_inset
-        arrow_tip_x = back_rect.left + height // 3
-        arrow_right = back_rect.right - arrow_inset
-        pygame.draw.line(
-            screen,
-            theme.accent if hovered else theme.text,
-            (arrow_tip_x, back_rect.centery),
-            (arrow_right, back_rect.centery),
-            width=max(3, height // 12),
-        )
-        pygame.draw.lines(
-            screen,
-            theme.accent if hovered else theme.text,
-            False,
-            (
-                (arrow_x + height // 8, back_rect.centery - height // 6),
-                (arrow_tip_x, back_rect.centery),
-                (arrow_x + height // 8, back_rect.centery + height // 6),
-            ),
-            width=max(3, height // 12),
-        )
+        from greia_platform.activity_ui import draw_back_symbol
+
+        arrow_color = theme.accent if hovered else theme.text
+        draw_back_symbol(screen, drawn, arrow_color)
         self._targets.append(
             HitTarget("activity_category_back", ALL_ACTIVITIES_ID, back_rect)
         )
@@ -1415,7 +1436,6 @@ class GreiaLauncherPresentation(LauncherApplication):
                 ValueError,
                 pygame.error,
             ):
-                self._visual_cache = None
                 shared_shadow_drawn = False
 
         if not shared_shadow_drawn:
@@ -1448,12 +1468,6 @@ class GreiaLauncherPresentation(LauncherApplication):
             tile.bottom - label_height - 6,
             tile.width - 16,
             label_height,
-        )
-        pygame.draw.rect(
-            screen,
-            _mix(theme.panel, theme.accent, 0.07),
-            label_rect,
-            border_radius=max(12, label_height // 3),
         )
         icon_room = max(48, label_rect.top - tile.top - 14)
         icon_size = max(52, min(int(tile.width * 0.76), icon_room))

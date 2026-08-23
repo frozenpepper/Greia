@@ -1060,10 +1060,10 @@ class LauncherApplication:
     def _draw_pointer(self, screen: Any, pygame: Any) -> None:
         if not pygame.mouse.get_focused():
             return
-        size = max(34, min(54, screen.get_height() // 12))
-        icon = self._load_icon("yellow_star", size, pygame)
-        x, y = pygame.mouse.get_pos()
-        screen.blit(icon, icon.get_rect(center=(x, y)))
+        from greia_platform.activity_ui import draw_activity_pointer
+
+        pos = pygame.mouse.get_pos()
+        draw_activity_pointer(screen, pos)
 
     def _draw_empty(self, screen: Any, pygame: Any) -> None:
         self._boot_logo(screen, pygame, screen.get_rect().center)

@@ -252,12 +252,12 @@ class AdaptiveActivityDiscoveryMixin:
         self._cached_activities_key = None
 
     def _draw_activities(self, screen: Any, theme: Any, pygame: Any) -> None:
-        if self._group_chooser_active():
-            self._render_subcollection_chooser(screen, theme, pygame)
-            return
         super()._draw_activities(screen, theme, pygame)
 
     def _render_activities_content(self, screen: Any, theme: Any, pygame: Any) -> None:
+        if self._group_chooser_active():
+            self._render_subcollection_chooser(screen, theme, pygame)
+            return
         super()._render_activities_content(screen, theme, pygame)
         if self._subcollection_id is not None:
             self._draw_subcollection_identity(screen, theme, pygame)

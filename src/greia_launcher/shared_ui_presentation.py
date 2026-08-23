@@ -342,13 +342,11 @@ class SharedUiActivityCardMixin:
                 size=card_rect.size,
             )
         except _SHARED_VISUAL_ERRORS:
-            self._visual_cache = None
             super()._draw_activity_tile_content(
                 screen, rect, activity, state, theme, pygame
             )
             return
         except pygame.error:
-            self._visual_cache = None
             super()._draw_activity_tile_content(
                 screen, rect, activity, state, theme, pygame
             )
@@ -363,10 +361,10 @@ class SharedUiActivityCardMixin:
             max(1, round(card_rect.height * 236 / self._CARD_SOURCE_HEIGHT)),
         )
         label_rect = pygame.Rect(
-            card_rect.left + round(card_rect.width * 32 / self._CARD_SOURCE_WIDTH),
-            card_rect.top + round(card_rect.height * 280 / self._CARD_SOURCE_HEIGHT),
-            max(1, round(card_rect.width * 296 / self._CARD_SOURCE_WIDTH)),
-            max(1, round(card_rect.height * 105 / self._CARD_SOURCE_HEIGHT)),
+            card_rect.left + round(card_rect.width * 28 / self._CARD_SOURCE_WIDTH),
+            card_rect.top + round(card_rect.height * 272 / self._CARD_SOURCE_HEIGHT),
+            max(1, round(card_rect.width * 304 / self._CARD_SOURCE_WIDTH)),
+            max(1, round(card_rect.height * 118 / self._CARD_SOURCE_HEIGHT)),
         )
 
         icon_size = max(
@@ -381,11 +379,11 @@ class SharedUiActivityCardMixin:
 
         title = self._render_activity_label(
             self._activity_title_for_shared_card(activity),
-            max_width=max(28, label_rect.width - 8),
-            max_height=max(22, label_rect.height - 6),
+            max_width=max(28, label_rect.width - 6),
+            max_height=max(22, label_rect.height - 4),
             pygame=pygame,
             color=theme.text,
-            preferred_size=max(13, min(17, card_rect.height // 10)),
+            preferred_size=max(13, min(16, card_rect.height // 10)),
         )
         screen.blit(title, title.get_rect(center=label_rect.center))
 

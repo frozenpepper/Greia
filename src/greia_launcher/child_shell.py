@@ -167,7 +167,7 @@ class GreiaChildShell(
 
     def _font(self, size: int, pygame: Any) -> Any:
         effective = max(
-            18,
+            12,
             min(160, int(round(size * self.theme_controller.interface_scale))),
         )
         cached = self._font_cache.get(effective)

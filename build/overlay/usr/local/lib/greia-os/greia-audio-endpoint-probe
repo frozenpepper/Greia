@@ -1,0 +1,33 @@
+#!/bin/sh
+# Greia audio endpoint availability probe (ADR 0031).
+#
+# Probes each platform-owned logical capture endpoint with a real open and a
+# one-second capture, then reflects current-boot truth under /run/greia-audio.
+# A readiness marker is created ONLY when the endpoint genuinely works; the
+# AudioService reports raw fallback with a truthful reason otherwise.
+#
+# /run is tmpfs, so markers are cleared by every boot and can never become
+# stale persistent state under /var.
+set -u
+
+RUN_DIR=/run/greia-audio
+mkdir -p "$RUN_DIR"
+
+probe() {
+	endpoint="$1"
+	marker="$2"
+	if arecord -D "$endpoint" -f S16_LE -r 16000 -c 1 -d 1 \
+		--dump-hw-params >/dev/null 2>&1 </dev/null; then
+		: >"$marker"
+	else
+		rm -f "$marker"
+	fi
+}
+
+# Lightweight cleanup endpoint (SpeexDSP ExtPlug; see
+# src/greia_platform/audio_alsa/).
+probe greia_mic_light "$RUN_DIR/lightweight-ready"
+
+# The advanced endpoint is intentionally not provisioned on current reference
+# hardware. Remove any impossible marker so availability stays truthful.
+rm -f "$RUN_DIR/advanced-ready"

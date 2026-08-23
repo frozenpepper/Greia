@@ -241,21 +241,16 @@ def choose_language(*, root: Path, windowed: bool, demo: bool) -> str:
 
 def _load_pointer(root: Path, pygame: Any) -> Any | None:
     path = root / "assets" / "icons" / "core" / "v1" / "256" / "yellow_star.png"
-    try:
-        image = pygame.image.load(str(path)).convert_alpha()
-        return pygame.transform.smoothscale(image, (34, 34))
-    except (OSError, pygame.error):
-        return None
+    return None
 
 
-def _draw_pointer(screen: Any, pygame: Any, pointer: Any | None) -> None:
-    x, y = pygame.mouse.get_pos()
-    if pointer is not None:
-        screen.blit(pointer, pointer.get_rect(center=(x, y)))
+def _draw_pointer(screen: Any, pygame: Any, pointer: Any | None = None) -> None:
+    if not pygame.mouse.get_focused():
         return
-    # Resource failure must not make the first installer screen mouse-invisible.
-    pygame.draw.circle(screen, (255, 194, 52), (x, y), 10)
-    pygame.draw.circle(screen, (61, 44, 31), (x, y), 10, width=2)
+    from greia_platform.activity_ui import draw_activity_pointer
+
+    pos = pygame.mouse.get_pos()
+    draw_activity_pointer(screen, pos)
 
 
 def _release_boot_cover() -> None:

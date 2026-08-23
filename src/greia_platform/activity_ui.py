@@ -369,19 +369,20 @@ def draw_back_symbol(
     scale = sz / 48.0
 
     # Arrow Head Points (Left-pointing rounded triangle)
-    tip_x = cx - int(14 * scale)
+    tip_x = cx - int(13 * scale)
     tip_y = cy
-    top_x = cx - int(2 * scale)
-    top_y = cy - int(12 * scale)
-    bot_x = cx - int(2 * scale)
-    bot_y = cy + int(12 * scale)
+    top_x = cx - int(1 * scale)
+    top_y = cy - int(11 * scale)
+    bot_x = cx - int(1 * scale)
+    bot_y = cy + int(11 * scale)
 
     # Arrow Shaft (chunky rectangle extending to right)
     shaft_x = cx - int(4 * scale)
     shaft_y = cy - int(5 * scale)
-    shaft_w = int(17 * scale)
+    shaft_w = int(16 * scale)
     shaft_h = int(10 * scale)
 
+    corner_r = max(1, int(2.5 * scale))
     pygame.draw.rect(
         surface,
         color,
@@ -389,6 +390,9 @@ def draw_back_symbol(
         border_radius=max(2, int(3 * scale)),
     )
     pygame.draw.polygon(surface, color, [(tip_x, tip_y), (top_x, top_y), (bot_x, bot_y)])
+    pygame.draw.circle(surface, color, (tip_x, tip_y), corner_r)
+    pygame.draw.circle(surface, color, (top_x, top_y), corner_r)
+    pygame.draw.circle(surface, color, (bot_x, bot_y), corner_r)
 
 
 def mix(
@@ -416,7 +420,7 @@ def draw_system_chrome_overlay(
     outline_color: tuple[int, int, int] = (78, 56, 40),
     fill_color: tuple[int, int, int] = (255, 252, 245),
 ) -> None:
-    """Draw the Greia platform-owned Home (and optional Back) button on the given surface."""
+    """Draw the platform-owned Home (and optional Back) button on top of any Activity frame."""
     w, h = surface.get_size()
     if w <= 0 or h <= 0:
         return
@@ -424,12 +428,11 @@ def draw_system_chrome_overlay(
     hb = chrome.home_hitbox
     home_rect = pygame.Rect(hb.x, hb.y, hb.width, hb.height)
 
-    # Drop shadow
+    # Tactile drop shadow
     shadow_rect = home_rect.move(0, 3)
-    shadow_color = (0, 0, 0, 45) if surface.get_flags() & pygame.SRCALPHA else (180, 160, 140)
     pygame.draw.rect(
         surface,
-        shadow_color,
+        (203, 213, 225),
         shadow_rect,
         border_radius=max(8, home_rect.width // 3),
     )
@@ -471,7 +474,7 @@ def draw_system_chrome_overlay(
         back_shadow = back_rect.move(0, 3)
         pygame.draw.rect(
             surface,
-            shadow_color,
+            (203, 213, 225),
             back_shadow,
             border_radius=max(8, back_rect.width // 3),
         )

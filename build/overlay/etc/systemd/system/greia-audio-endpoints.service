@@ -1,0 +1,13 @@
+[Unit]
+Description=Greia platform-owned audio endpoint availability probe
+Documentation=https://github.com/frozenpepper/Greia
+After=systemd-udevd.service sound.target
+Wants=sound.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/lib/greia-os/greia-audio-endpoint-probe
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

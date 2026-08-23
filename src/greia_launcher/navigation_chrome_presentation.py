@@ -174,29 +174,11 @@ class SharedUiNavigationChromeMixin:
                 border_radius=height // 2,
             )
 
-        arrow_inset = max(12, drawn.height // 4)
-        arrow_x = drawn.left + arrow_inset
-        arrow_tip_x = drawn.left + drawn.height // 3
-        arrow_right = drawn.right - arrow_inset
+        from greia_platform.activity_ui import draw_back_symbol
+
         arrow_color = theme.accent if hovered else theme.text
-        pygame.draw.line(
-            screen,
-            arrow_color,
-            (arrow_tip_x, drawn.centery),
-            (arrow_right, drawn.centery),
-            width=max(3, drawn.height // 12),
-        )
-        pygame.draw.lines(
-            screen,
-            arrow_color,
-            False,
-            (
-                (arrow_x + drawn.height // 8, drawn.centery - drawn.height // 6),
-                (arrow_tip_x, drawn.centery),
-                (arrow_x + drawn.height // 8, drawn.centery + drawn.height // 6),
-            ),
-            width=max(3, drawn.height // 12),
-        )
+        symbol_rect = drawn.move(0, -2 if frame is not None else 0)
+        draw_back_symbol(screen, symbol_rect, arrow_color)
         self._targets.append(
             HitTarget("activity_category_back", ALL_ACTIVITIES_ID, back_rect)
         )

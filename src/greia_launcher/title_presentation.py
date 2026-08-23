@@ -241,21 +241,16 @@ def render_full_title_disclosure_surface(
     pill_h = text_h + pad_y * 2
 
     pill = pygame.Surface((pill_w, pill_h), pygame.SRCALPHA)
+    pill.fill((0, 0, 0, 0))
     rect = pygame.Rect(0, 0, pill_w, pill_h)
 
     # Pill background
     bg_color = (
-        min(255, theme.panel[0] + 12),
-        min(255, theme.panel[1] + 12),
-        min(255, theme.panel[2] + 12),
-        248,
+        min(255, getattr(theme, "panel", (255, 255, 255))[0] + 12),
+        min(255, getattr(theme, "panel", (255, 255, 255))[1] + 12),
+        min(255, getattr(theme, "panel", (255, 255, 255))[2] + 12),
     )
-    border_color = (
-        max(0, theme.accent[0] - 20),
-        max(0, theme.accent[1] - 20),
-        max(0, theme.accent[2] - 20),
-        180,
-    )
+    border_color = getattr(theme, "accent", (66, 133, 244))
     pygame.draw.rect(pill, bg_color, rect, border_radius=12)
     pygame.draw.rect(pill, border_color, rect, width=2, border_radius=12)
 
