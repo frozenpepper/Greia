@@ -78,6 +78,45 @@ def _summary(count: int) -> HistorySummary:
     )
 
 
+class AchievementCriterionTests(unittest.TestCase):
+    def test_reward_balance_threshold(self) -> None:
+        criterion = AchievementCriterion(
+            kind="reward_balance",
+            reward_id="star",
+            threshold=5.0,
+        )
+        summary = HistorySummary(
+            reward_balances=(("star", 5),),
+            event_counts=(),
+            best_scores=(),
+            recent_sessions=(),
+        )
+        self.assertTrue(criterion.is_met(summary))
+
+    def test_lower_is_better_best_score_can_use_at_most(self) -> None:
+        criterion = AchievementCriterion(
+            kind="best_score",
+            activity_id="org.greia.test",
+            event_id="race.finished",
+            threshold=60.0,
+            comparison="at_most",
+        )
+        fast = HistorySummary(
+            reward_balances=(),
+            event_counts=(),
+            best_scores=(("org.greia.test:race.finished", 58.4),),
+            recent_sessions=(),
+        )
+        slow = HistorySummary(
+            reward_balances=(),
+            event_counts=(),
+            best_scores=(("org.greia.test:race.finished", 61.0),),
+            recent_sessions=(),
+        )
+        self.assertTrue(criterion.is_met(fast))
+        self.assertFalse(criterion.is_met(slow))
+
+
 class AchievementServiceTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temp = tempfile.TemporaryDirectory()
@@ -118,7 +157,10 @@ class AchievementServiceTests(unittest.TestCase):
         service = self._service(_summary(1), definition)
 
         first = service.refresh(self.profile)
-        self.assertEqual([entry.definition.achievement_id for entry in first.newly_unlocked], ["greia.test.first"])
+        self.assertEqual(
+            [entry.definition.achievement_id for entry in first.newly_unlocked],
+            ["greia.test.first"],
+        )
         self.assertEqual(first.unlocked_count, 1)
         self.assertEqual(first.entries[0].unlocked_at, 100.0)
 
