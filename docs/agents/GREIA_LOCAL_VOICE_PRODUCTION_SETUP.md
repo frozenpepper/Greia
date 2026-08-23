@@ -1,80 +1,136 @@
 # Greia Local Voice Production Setup for Agents
 
-**Status:** local developer/Activity Designer setup procedure  
-**Date:** 2026-08-22  
-**Purpose:** install only the lightweight local production renderer used to turn approved Greia reference voices into Activity audio  
-**Does not install:** Qwen VoiceDesign, MOSS-VoiceGenerator, cloud voice tools, or any child-device runtime model
+**Status:** optional local developer/Activity Designer setup procedure  
+**Date:** 2026-08-23  
+**Purpose:** configure local custom Greia character speech production when the owner explicitly wants it  
+**Not required for:** ordinary Activity authoring, shared Greia character utterances, pedagogical/system speech, or child-runtime playback
 
 ## 1. Read first
 
-Before doing voice-production work, read:
+Before custom character-voice production, read:
 
 ```text
 AGENTS.md
-docs/DOCUMENTATION.md
+SETUP.md
 docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md
+docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md
 skills/greia-activity-authoring/SKILL.md
-assets/audio/characters/canonical/v0.1/README.md
+skills/greia-activity-authoring/VOICE_GENERATION.md
 assets/audio/characters/canonical/v0.1/manifest.toml
 ```
 
-The canonical character references are repository assets. Model weights, virtual environments, caches and generated review output are **not** repository assets.
+## 2. Opt-in rule
 
-## 2. Scope and stop conditions
+**Do not install this toolchain automatically.**
 
-This procedure is for a developer Mac or other owner-approved authoring machine.
+A normal Activity authoring environment does not need a cloning model.
 
-Stop and report instead of improvising when:
-
-- the machine architecture is not known;
-- the reference file hash differs from `manifest.toml`;
-- the requested voice ID is not registered;
-- generation would require uploading project references or child data to a cloud service;
-- the model/backend version cannot be identified;
-- a dependency asks for broad system privileges;
-- output contains repeated/omitted text, wrong language, corruption or obvious voice-identity drift.
-
-Do not install any package into the Greia OS image or an Activity package.
-
-## 3. Preferred Apple Silicon path: MLX Audio
-
-Use this on an `arm64` M1/M2/M3/M4/M5-class Mac. It is the preferred path because MLX uses Apple Silicon and unified memory directly.
-
-### 3.1 Verify host
-
-```bash
-uname -s
-uname -m
-python3 --version
-```
-
-Expected:
+Before installing anything, determine whether the Activity can use:
 
 ```text
-Darwin
-arm64
-Python 3.10 or newer
+shared Greia character utterance
+or
+deterministic pedagogical/system speech
+or
+visual/text feedback without custom dialogue
 ```
 
-If `uname -m` is `x86_64`, skip to the ONNX fallback section.
+Only configure Chatterbox when the owner explicitly requests custom canonical character dialogue or has already opted into the `voice` setup profile.
 
-### 3.2 Install small host prerequisites
+If the toolchain is absent and the user has not requested installation, return `UNAVAILABLE` to the authoring workflow and let the Activity skill drop optional custom character speech.
 
-Use Homebrew only for tools that are genuinely missing:
+## 3. Current renderer policy
+
+Current custom character renderer:
+
+```text
+Chatterbox Multilingual V3
+upstream: Resemble AI Chatterbox
+license: MIT
+Italian: supported
+purpose: reviewed zero-shot cloning for normal character speech
+```
+
+Rejected paths:
+
+```text
+MOSS-TTS-Nano                       REJECTED — production quality unsuitable
+repeated "ma. ma. ma." generation  REJECTED — local test worsened results
+Chatterbox for phonics/syllables    REJECTED — pronunciation inconsistency
+```
+
+For pronunciation-authoritative teaching audio, use the pedagogical/system path defined by the voice design document.
+
+## 4. Canonical reference integrity
+
+Use the manifest; do not guess filenames or replace references locally.
+
+Current cloning IDs:
+
+```text
+greia.lilli.v1
+greia.leo.v1
+greia.flash.v1
+greia.tito.v1
+greia.momo.v1
+```
+
+Dani is not cloned:
+
+```text
+greia.dani.system-v1
+```
+
+Verify source/anchor hashes against:
+
+```text
+assets/audio/characters/canonical/v0.1/manifest.toml
+```
+
+A hash mismatch is a stop condition.
+
+## 5. Cross-platform audio prerequisite
+
+Use FFmpeg + ffprobe for authoring-time inspection, bounded trimming and package conversion.
+
+Verify:
 
 ```bash
-command -v brew >/dev/null 2>&1 || {
-  echo "Homebrew is required by this procedure for ffmpeg/uv. Ask the owner before installing it."
-  exit 1
-}
-
-brew list uv >/dev/null 2>&1 || brew install uv
-brew list ffmpeg >/dev/null 2>&1 || brew install ffmpeg
+ffmpeg -version
+ffprobe -version
 ```
 
-`ffmpeg` is used for final OGG/WAV conversion and inspection. It is not required to preserve the canonical source masters or production anchors.
+These are authoring tools. Do not put FFmpeg binaries into an Activity package merely because they were used during production.
 
-### 3.3 Create one shared authoring environment outside the repository
+Typical host installation, only with owner approval:
+
+### macOS
+
+```bash
+brew install ffmpeg
+```
+
+### Windows
+
+Use an existing trusted FFmpeg install or an owner-approved package-manager install.
+
+### Debian/Ubuntu
+
+```bash
+sudo apt-get install ffmpeg
+```
+
+## 6. Preferred Apple Silicon path: MLX Audio
+
+On Apple Silicon, the preferred current path is the MLX conversion:
+
+```text
+mlx-community/chatterbox-multilingual-v3
+```
+
+Keep the environment and model cache outside the Greia checkout.
+
+Example setup:
 
 ```bash
 export GREIA_VOICE_HOME="${HOME}/Library/Application Support/Greia/voice-production"
@@ -84,217 +140,134 @@ export HF_HUB_DISABLE_TELEMETRY=1
 
 mkdir -p "${GREIA_VOICE_HOME}" "${GREIA_VOICE_CACHE}" "${HF_HOME}"
 
-uv venv "${GREIA_VOICE_HOME}/venv" --python 3.12
+python3 -m venv "${GREIA_VOICE_HOME}/venv"
 source "${GREIA_VOICE_HOME}/venv/bin/activate"
-
-uv pip install --upgrade pip
-uv pip install "mlx-audio"
+python -m pip install -U pip mlx-audio
 ```
 
-Do not create `.venv` inside an Activity, `assets/`, or the Greia repository.
+Do not create the environment inside an Activity or repository directory.
 
-Record installed versions:
+The first model use may download weights. Do not trigger that download unless the owner has opted into custom voice generation.
 
-```bash
-python - <<'PY'
-import importlib.metadata
-for package in ("mlx", "mlx-audio"):
-    try:
-        print(package, importlib.metadata.version(package))
-    except importlib.metadata.PackageNotFoundError:
-        print(package, "NOT INSTALLED")
-PY
-```
-
-### 3.4 Pre-warm the model cache
-
-From the Greia repository root:
+Example Italian smoke test:
 
 ```bash
-source "${GREIA_VOICE_HOME}/venv/bin/activate"
-
-python -m mlx_audio.tts.generate \
-  --model mlx-community/MOSS-TTS-Nano-100M \
-  --text "Hello from Greia." \
+mlx_audio.tts.generate \
+  --model mlx-community/chatterbox-multilingual-v3 \
+  --text "Ciao! Giochiamo insieme?" \
   --ref_audio assets/audio/characters/canonical/v0.1/lilli-reference-v1.flac \
-  --output_path "${GREIA_VOICE_CACHE}/smoke-output"
+  --lang_code it
 ```
 
-The first run downloads model/tokenizer assets into `HF_HOME`. Do not move that cache into Git.
+Listen to the result. Process success is not audio acceptance.
 
-Confirm that an audio file was created and is readable:
+## 7. Upstream/PyTorch path
 
-```bash
-find "${GREIA_VOICE_CACHE}/smoke-output" -type f -print
-for file in "${GREIA_VOICE_CACHE}/smoke-output/"*.wav; do
-  [ -e "${file}" ] || continue
-  ffprobe -v error -show_entries stream=codec_name,sample_rate,channels \
-    -of default=noprint_wrappers=1 \
-    "${file}"
-done
-```
+On a supported non-MLX authoring machine, use the official Resemble AI Chatterbox package/repository and record the exact version/device backend.
 
-Listen to the output. A successful process exit is not sufficient quality evidence.
+The current upstream package exposes `chatterbox-tts`; follow the upstream version's installation instructions rather than copying an old Greia command blindly.
 
-## 4. Efficient batch production
-
-For one or two smoke clips, the CLI is acceptable. For an Activity voice set, do not reload the model once per cue.
-
-Activity Designer or a local batch script should keep one Python process alive:
-
-```python
-from pathlib import Path
-
-from mlx_audio.audio_io import write as audio_write
-from mlx_audio.tts import load
-
-model = load("mlx-community/MOSS-TTS-Nano-100M")
-
-jobs = [
-    {
-        "text": "Ciao! Giochiamo insieme?",
-        "reference": Path(
-            "assets/audio/characters/canonical/v0.1/lilli-reference-v1.flac"
-        ),
-        "output": Path("build/voice-review/it/welcome.wav"),
-    },
-]
-
-for job in jobs:
-    result = next(
-        model.generate(
-            text=job["text"],
-            ref_audio=str(job["reference"]),
-        )
-    )
-    job["output"].parent.mkdir(parents=True, exist_ok=True)
-    audio_write(str(job["output"]), result.audio, result.sample_rate)
-```
-
-This code is illustrative until a Greia-owned compiler/worker is implemented. Do not duplicate it across Activities as a runtime dependency.
-
-Recommended grouping:
+Keep:
 
 ```text
-one model load
-→ one voice/reference at a time
-→ all cues for that voice/locale
-→ next voice/locale
+virtual environment
+model weights/cache
+generation scratch
 ```
 
-Use a content-addressed cache. Never infer cache identity only from `welcome.wav`.
+outside the repository.
 
-## 5. Portable fallback: upstream ONNX CPU
+Do not make CUDA, PyTorch or Chatterbox an Activity dependency.
 
-Use this only when MLX is unavailable or the owner needs parity with a non-Apple authoring machine.
+## 8. Non-mutating availability probe
 
-The upstream project provides an ONNX CPU backend:
+Before an Activity authoring agent attempts custom dialogue, it should check the already-configured environment rather than installing one.
 
-```bash
-moss-tts-nano generate \
-  --backend onnx \
-  --prompt-speech <reference.flac> \
-  --text "<text>" \
-  --output <output.wav>
-```
-
-Current upstream packaging may install more dependencies than the pure inference path needs. Follow the upstream repository's pinned instructions rather than deleting imports or inventing an unreviewed “minimal” dependency set.
-
-Keep it isolated outside the Greia repository:
-
-```bash
-export GREIA_VOICE_HOME="${HOME}/.local/share/greia/voice-production"
-export GREIA_VOICE_CACHE="${HOME}/.cache/greia/voice-production"
-mkdir -p "${GREIA_VOICE_HOME}" "${GREIA_VOICE_CACHE}"
-```
-
-Clone/pin the upstream source under `${GREIA_VOICE_HOME}/sources/`, create a dedicated environment, record the exact commit, and keep model downloads in `${GREIA_VOICE_CACHE}`.
-
-The ONNX backend is a production fallback, not a reason to add PyTorch or model weights to an Activity package.
-
-## 6. Canonical voice lookup
-
-Use the manifest; do not guess filenames.
-
-Current mapping:
+A successful probe should establish:
 
 ```text
-greia.lilli.v1 → lilli-reference-v1.flac
-greia.leo.v1   → leo-reference-v1.flac
-greia.flash.v1 → flash-reference-v1.flac
-greia.tito.v1  → tito-reference-v1.flac
-greia.momo.v1  → momo-reference-v1.flac
+configured Python/environment exists
+Chatterbox implementation imports/starts
+configured multilingual V3 model is known
+canonical reference assets exist and hash correctly
+ffmpeg/ffprobe exist when trimming is required
 ```
 
-Dani has no reference file:
+Do not treat network access or `pip` availability as a successful voice-toolchain probe.
+
+If no configured environment is found, return `UNAVAILABLE` and let the Activity skill continue without optional custom voice.
+
+A future `tools/greia_setup.py --profile voice --check` should own this probe centrally; do not proliferate incompatible ad-hoc probes once that tool exists.
+
+## 9. Generation scope
+
+Use Chatterbox for:
 
 ```text
-greia.dani.system-v1 → Greia OS TTS policy
+normal character dialogue
+narration spoken by a canonical character
+character instructions/reactions
+reviewed short character exclamations
 ```
 
-Do not generate Dani through another character reference. Do not use arbitrary macOS `say` voices as the canonical policy unless the platform implementation explicitly adopts one.
-
-## 7. Verify reference integrity before a batch
-
-From the repository root:
-
-```bash
-shasum -a 256 assets/audio/characters/canonical/v0.1/*-reference-v1.flac
-```
-
-Compare each result with `manifest.toml`.
-
-Also inspect:
-
-```bash
-for file in assets/audio/characters/canonical/v0.1/*-reference-v1.flac; do
-  echo "== ${file}"
-  ffprobe -v error \
-    -show_entries format=duration:stream=codec_name,sample_rate,channels,bits_per_raw_sample \
-    -of default=noprint_wrappers=1 \
-    "${file}"
-done
-```
-
-Expected production anchors are mono, 24 kHz, 16-bit lossless FLAC, each exactly 12 seconds and derived from the source master recorded in `manifest.toml`. Do not “repair” them in place.
-
-## 8. Work and output directories
-
-Use ignored/rebuildable directories, for example:
+Do not use it for:
 
 ```text
-build/voice-review/
-build/voice-cache/
+letters as teaching targets
+syllables as teaching targets
+phonics
+spelling/pronunciation authority
+foreign-language target pronunciation when exact sound is being taught
 ```
 
-or the external cache configured above.
+Those use the pedagogical/system speech path.
 
-Final accepted Activity assets go to:
+## 10. Short character clips
+
+Ultra-short Chatterbox generation can append unwanted sounds.
+
+For short **character dialogue**, a local production worker may use:
 
 ```text
-activities/<activity>/locales/<locale>/audio/
+bounded max output tokens
+→ inspect generated WAV
+→ ffmpeg/ffprobe analysis
+→ bounded tail/edge trimming if the intended utterance itself is correct
+→ human review
 ```
 
-Only after human review and post-processing.
+Do not use trimming to repair a wrong pronunciation or invented sound inside the intended utterance.
 
-Do not commit:
+Do not use repeated prompt padding. The repeated-middle experiment is rejected.
+
+## 11. Shared utterances require no local cloning setup
+
+Generic reactions should preferably use Greia's shared character library:
 
 ```text
-model weights
-Hugging Face cache
-venv/site-packages
-raw generation scratch
-rejected variants
-temporary service logs
+praise.congratulations
+praise.great_work
+praise.well_done
+celebrate.you_did_it
+encourage.try_again
+ready.lets_go
 ```
 
-The five full source masters and five lossless production anchors are deliberate shared source assets under `assets/source/audio/character-voice-masters/v0.1/` and `assets/audio/characters/canonical/v0.1/`; they are never copied into Activity packages.
+See:
 
-## 9. Post-process accepted WAV masters
+```text
+docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md
+```
 
-Keep generation masters as WAV during review. Convert only accepted clips.
+Once those assets are implemented in Greia, Activity authors consume them through the shared semantic resolver and do not need Chatterbox locally.
 
-Example OGG Vorbis package output:
+## 12. Review masters and package conversion
+
+Keep generated review masters as WAV.
+
+For an accepted non-pronunciation-critical custom clip, OGG Vorbis is generally appropriate under current localized audio policy.
+
+Example conversion:
 
 ```bash
 ffmpeg -hide_banner -nostdin -y \
@@ -305,22 +278,13 @@ ffmpeg -hide_banner -nostdin -y \
   activities/<activity>/locales/it/audio/welcome.ogg
 ```
 
-For pronunciation-critical or extremely short clips, retaining WAV may be preferable.
+Listen again after conversion.
 
-Always listen after conversion. Verify:
+Do not normalize or overwrite canonical reference masters.
 
-```bash
-ffprobe -v error \
-  -show_entries format=duration:stream=codec_name,sample_rate,channels \
-  -of default=noprint_wrappers=1 \
-  activities/<activity>/locales/it/audio/welcome.ogg
-```
+## 13. Generation receipt
 
-Do not normalize the canonical source masters or production anchors. Post-processing applies to generated Activity playback assets.
-
-## 10. Required generation receipt
-
-Until Greia implements a receipt schema, preserve at least this information in local build evidence:
+For custom character speech preserve at least:
 
 ```text
 Activity ID
@@ -328,65 +292,49 @@ cue ID
 locale
 exact text
 voice ID
-voice-manifest version
+voice/reference manifest version
 reference SHA-256
-renderer/model ID
-model revision when available
-mlx-audio or upstream version
-backend
+Chatterbox implementation/model ID
+model/package revision
+backend/device
 generation parameters
-post-processing profile
+max token limit if used
+post-processing/trimming parameters
 output SHA-256
 human reviewer/disposition
 ```
 
-Do not put secrets, machine usernames or absolute private paths into portable Activity source.
+No secrets or private absolute user paths belong in portable source metadata.
 
-## 11. Human review gate
+## 14. Human review gate
 
-For every accepted cue:
+Every accepted custom character line must be listened to for:
 
-1. listen from beginning to end;
-2. confirm exact words and locale;
-3. confirm the intended character;
-4. check repeated/omitted words;
-5. check pronunciation and pacing;
-6. check clipping, noise and excessive silence;
-7. play through laptop/small-speaker output;
-8. play it in the actual Activity sequence;
-9. confirm no speech overlap;
-10. confirm caption/string parity.
-
-For literacy, phoneme, spelling or foreign-language teaching audio, require a fluent human/educator review.
-
-## 12. Cleanup and upgrades
-
-The shared environment and model cache are intentionally reusable.
-
-To remove only generated review output:
-
-```bash
-rm -rf "${GREIA_VOICE_CACHE}/smoke-output"
-rm -rf build/voice-review build/voice-cache
+```text
+exact words
+correct language
+canonical character identity
+no repeated/invented words or tail sounds
+acceptable pronunciation
+appropriate emotion
+unclipped onset/ending
+small-speaker intelligibility
+no overlap with surrounding Activity speech
 ```
 
-Do not wipe the shared model cache at the end of every task; that wastes bandwidth and time.
+If the clip is pronunciation-authoritative, it should not have been routed through Chatterbox in the first place.
 
-Before upgrading `mlx-audio`, the model revision, or the post-processing profile:
+## 15. Child/package boundary
 
-- record the previous versions;
-- generate a small fixed regression set for all five voices;
-- compare identity, pronunciation, speed and artifacts;
-- do not invalidate accepted audio merely because a newer package exists;
-- update the Greia voice documentation/manifest policy if output authority changes.
+Never package:
 
-## 13. Source references
+```text
+Chatterbox weights
+model caches
+MLX/PyTorch environment
+canonical voice references
+FFmpeg binaries solely for authoring
+rejected generations
+```
 
-Primary implementation references:
-
-- OpenMOSS MOSS-TTS-Nano repository: `https://github.com/OpenMOSS/MOSS-TTS-Nano`
-- upstream model: `OpenMOSS-Team/MOSS-TTS-Nano-100M`
-- MLX Audio: `https://github.com/Blaizzy/mlx-audio`
-- MLX model: `mlx-community/MOSS-TTS-Nano-100M`
-
-These are development dependencies, not child-runtime dependencies.
+The child receives only final reviewed Activity-owned audio or resolves Greia shared/system speech through platform-owned interfaces.
