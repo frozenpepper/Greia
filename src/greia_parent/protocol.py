@@ -52,6 +52,16 @@ RESOURCES = (
         ("GET", "PUT"),
     ),
     ParentApiResource(
+        "audio_settings",
+        f"{API_BASE}/settings/audio",
+        ("GET", "PUT"),
+    ),
+    ParentApiResource(
+        "audio_settings_reset",
+        f"{API_BASE}/settings/audio/reset",
+        ("POST",),
+    ),
+    ParentApiResource(
         "language_settings",
         f"{API_BASE}/settings/language",
         ("GET", "PUT"),
@@ -97,6 +107,8 @@ CAPABILITIES = {
     # owner-enabled environment; clients must always honor this capability.
     "activities.install": False,
     "backup.manage": False,
+    # The resource is protocol-defined, but only the top-level audio-aware Parent
+    # composition advertises it. Older/base compositions remain fail-closed.
     "settings.audio": False,
     "network.manage": True,
     "maintenance.ssh": True,
