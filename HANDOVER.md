@@ -216,6 +216,8 @@ Stable visual architecture/index:
 
 ```text
 docs/design/GREIA_ART_GRAPHICS_SYSTEM.md
+docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md
+docs/design/GREIA_VISUAL_AUTHORING_ARCHITECTURE.md
 ```
 
 Visual-authoring authorities:

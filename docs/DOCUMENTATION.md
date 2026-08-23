@@ -1,7 +1,7 @@
 # Greia Documentation Map and Authority Model
 
 **Status:** repository-wide documentation contract  
-**Last reviewed:** 2026-08-20  
+**Last reviewed:** 2026-08-23  
 **Audience:** contributors, coding agents, reviewers, test operators, Activity authors
 
 ---
@@ -52,9 +52,11 @@ Of particular relevance to current UI/Activity/developer/update work:
 
 `docs/architecture/GREIA_ARCHITECTURE.md` is a living synthesis, not a second ADR system.
 
-### 2.4 Engineering guidance — `docs/engineering/ENGINEERING_FOUNDATIONS.md`
+### 2.4 Engineering guidance — `docs/engineering/*`
 
-This guide owns repository-wide implementation guidance for OOP structure, purposeful polymorphism, dependency direction, explicit ownership/lifecycle, bounded-resource engineering, documentation and testability. It does not override an accepted ADR or exact source contract.
+`ENGINEERING_FOUNDATIONS.md` owns repository-wide implementation guidance for OOP structure, purposeful polymorphism, dependency direction, explicit ownership/lifecycle, bounded-resource engineering, documentation and testability. It does not override an accepted ADR or exact source contract.
+
+`GREIA_PERFORMANCE_BEST_PRACTICES.md` is the living measured-performance manual: device cost model, optimization principles (P1–P14), instruments/evidence discipline, append-only case studies and the Activity-facing rules destined for the authoring skill. It operationalizes the foundations' low-resource rules; it adds no new authority beyond them.
 
 ### 2.5 Exact implemented contracts — source/runtime declarations
 
@@ -298,6 +300,7 @@ The simulator may help reproduce platform-independent Activity/layout/runtime se
 | active implementation/progress | blocking active plan append + `HANDOVER.md` |
 | active art/design progress | art plan checkpoint + append-only ledger; visual resume + `HANDOVER.md` when continuation/evidence changes |
 | executed verification | `HANDOVER.md` + durable review/evidence when useful |
+| measured performance behavior / frame-loop or cache architecture | `docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md` case-study append + cost-model/principle refresh + `HANDOVER.md`; Activity skill when author-facing rules change |
 
 ---
 
@@ -308,7 +311,7 @@ Unless narrower instructions say otherwise:
 1. `AGENTS.md`
 2. this documentation map
 3. relevant product docs / accepted ADRs (including ADR 0028 for localization/language work, ADR 0029 for simulator work and ADR 0030 for system-update work)
-4. `docs/engineering/ENGINEERING_FOUNDATIONS.md`
+4. `docs/engineering/ENGINEERING_FOUNDATIONS.md`; for frame-loop/rendering/cache/pacing work also `docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md`
 5. the blocking active plan
 6. for visual/art/graphics work: `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`, the active visual plan and `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md`
 7. `HANDOVER.md`
