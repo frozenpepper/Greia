@@ -5,6 +5,7 @@ import math
 import os
 import shutil
 import tempfile
+import threading
 import time
 import tomllib
 from dataclasses import dataclass, replace
@@ -122,7 +123,7 @@ class AchievementPolicy:
         if not isinstance(raw, dict):
             raise AchievementPolicyError("achievement policy must be a TOML table")
         schema_version = _required_int(raw, "schema_version", minimum=1, maximum=1)
-        default_locale = _locale_id(raw.get("default_locale", "it"), "default_locale")
+        default_locale = _locale_id(raw.get("default_locale", "en"), "default_locale")
         raw_defs = raw.get("achievements", [])
         if not isinstance(raw_defs, list) or not all(isinstance(item, dict) for item in raw_defs):
             raise AchievementPolicyError("achievements must be an array of tables")
@@ -248,6 +249,8 @@ class ProfileAchievementService:
     Activity packages never receive this service and never write achievement state.
     Achievement truth is derived from ``PlatformHistoryService`` aggregates; the
     profile-local JSON file stores only first-unlock and presentation timestamps.
+    The service serializes metadata mutations because the event broker can process
+    more than one request thread for the same profile.
     """
 
     STATE_NAME = "achievements.json"
@@ -263,6 +266,10 @@ class ProfileAchievementService:
         self.policy = policy
         self.history_service = history_service
         self._clock = clock
+        self._state_lock = threading.RLock()
+        self._known_ids = frozenset(
+            definition.achievement_id for definition in self.policy.achievements
+        )
 
     @classmethod
     def load(
@@ -275,20 +282,21 @@ class ProfileAchievementService:
 
     def refresh(self, profile: ProfileContext) -> AchievementSnapshot:
         summary = self.history_service.open(profile).summary()
-        state = self._read_state(profile)
-        now = _timestamp(self._clock())
-        changed = False
-        newly_ids: list[str] = []
-        for definition in self.policy.achievements:
-            if definition.achievement_id in state:
-                continue
-            if all(criterion.is_met(summary) for criterion in definition.criteria):
-                state[definition.achievement_id] = AchievementRecord(unlocked_at=now)
-                newly_ids.append(definition.achievement_id)
-                changed = True
-        if changed:
-            self._write_state(profile, state)
-        entries = self._entries(state)
+        with self._state_lock:
+            state = self._read_state(profile)
+            now = _timestamp(self._clock())
+            changed = False
+            newly_ids: list[str] = []
+            for definition in self.policy.achievements:
+                if definition.achievement_id in state:
+                    continue
+                if all(criterion.is_met(summary) for criterion in definition.criteria):
+                    state[definition.achievement_id] = AchievementRecord(unlocked_at=now)
+                    newly_ids.append(definition.achievement_id)
+                    changed = True
+            if changed:
+                self._write_state(profile, state)
+            entries = self._entries(state)
         newly = tuple(
             entry for entry in entries if entry.definition.achievement_id in newly_ids
         )
@@ -298,23 +306,25 @@ class ProfileAchievementService:
         return self.refresh(profile)
 
     def mark_announced(self, profile: ProfileContext, achievement_id: str) -> None:
-        self._update_timestamp(profile, achievement_id, announced=True)
+        with self._state_lock:
+            self._update_timestamp(profile, achievement_id, announced=True)
 
     def mark_seen(self, profile: ProfileContext, achievement_ids: Iterable[str]) -> None:
         wanted = set(achievement_ids)
         if not wanted:
             return
-        state = self._read_state(profile)
-        now = _timestamp(self._clock())
-        changed = False
-        for achievement_id in wanted:
-            record = state.get(achievement_id)
-            if record is None or record.seen_at is not None:
-                continue
-            state[achievement_id] = replace(record, seen_at=now)
-            changed = True
-        if changed:
-            self._write_state(profile, state)
+        with self._state_lock:
+            state = self._read_state(profile)
+            now = _timestamp(self._clock())
+            changed = False
+            for achievement_id in wanted:
+                record = state.get(achievement_id)
+                if record is None or record.seen_at is not None:
+                    continue
+                state[achievement_id] = replace(record, seen_at=now)
+                changed = True
+            if changed:
+                self._write_state(profile, state)
 
     def _update_timestamp(
         self,
@@ -372,6 +382,15 @@ class ProfileAchievementService:
                 continue
         return {}
 
+    def _valid_state_file(self, path: Path) -> bool:
+        if not path.is_file():
+            return False
+        try:
+            _decode_state(json.loads(path.read_text(encoding="utf-8")))
+            return True
+        except (OSError, ValueError, TypeError, AchievementError):
+            return False
+
     def _write_state(
         self,
         profile: ProfileContext,
@@ -387,7 +406,7 @@ class ProfileAchievementService:
                     "seen_at": record.seen_at,
                 }
                 for achievement_id, record in sorted(state.items())
-                if achievement_id in {d.achievement_id for d in self.policy.achievements}
+                if achievement_id in self._known_ids
             },
         }
         encoded = json.dumps(
@@ -396,13 +415,19 @@ class ProfileAchievementService:
             sort_keys=True,
             separators=(",", ":"),
         ) + "\n"
-        if state_path.is_file():
+
+        # Preserve only a known-good primary as rollback material. A corrupt
+        # primary must never overwrite a valid backup before atomic replacement.
+        if self._valid_state_file(state_path):
             try:
                 shutil.copy2(state_path, backup_path)
                 os.chmod(backup_path, 0o660)
             except OSError:
                 pass
-        fd, temp_name = tempfile.mkstemp(prefix=".achievements-", dir=str(state_path.parent))
+
+        fd, temp_name = tempfile.mkstemp(
+            prefix=".achievements-", dir=str(state_path.parent)
+        )
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as handle:
                 handle.write(encoded)
