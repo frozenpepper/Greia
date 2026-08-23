@@ -4,7 +4,7 @@ import os
 import tempfile
 from http.server import HTTPServer
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 from greia_parent.api_server import (
     ParentApiApplication,
@@ -37,16 +37,23 @@ _ALLOWED_PACKAGE_TYPES = frozenset(
 
 
 class PackageParentApiApplication(ParentApiApplication):
-    """Parent API composition with the typed R10 new-install package seam."""
+    """Parent API composition with bounded local Activity package management."""
 
     def __init__(self, *args: object, **kwargs: object) -> None:
         super().__init__(*args, **kwargs)
         self.package_service = ActivityPackageService.from_environment()
         self.activity_install_enabled = _activity_install_enabled()
+        # Install and remove are both package-code mutations and therefore share
+        # the same explicit owner/developer enablement boundary while transport
+        # remains provisional HTTP.
+        self.activity_remove_enabled = self.activity_install_enabled
 
     def index_payload(self) -> dict[str, object]:
         return api_index_payload(
-            {"activities.install": self.activity_install_enabled}
+            {
+                "activities.install": self.activity_install_enabled,
+                "activities.remove": self.activity_remove_enabled,
+            }
         )
 
     def activities_payload(self) -> list[dict[str, object]]:
@@ -71,19 +78,26 @@ class PackageParentApiApplication(ParentApiApplication):
                 "version": registration.manifest.version,
                 "title_key": registration.manifest.title_key,
                 "icon_id": registration.manifest.icon_id,
-                # Educational taxonomy and launcher navigation are intentionally
-                # separate client concepts. Do not force Parents UI to infer one
-                # from the other.
                 "categories": list(registration.manifest.categories),
                 "launcher_categories": list(
                     registration.manifest.launcher_categories
                     or registration.manifest.categories
                 ),
+                "discovery_tags": list(registration.manifest.discovery_tags),
                 "difficulty": registration.manifest.difficulty,
+                "difficulty_min": registration.manifest.difficulty_min,
+                "difficulty_max": registration.manifest.difficulty_max,
+                "adaptive_difficulty": registration.manifest.adaptive_difficulty,
+                "recommended_age_min": registration.manifest.recommended_age_min,
+                "recommended_age_max": registration.manifest.recommended_age_max,
                 "languages": list(registration.manifest.languages),
                 "input_profile": registration.manifest.input_profile,
                 "package_trust": registration.package_trust.value,
                 "source_id": registration.source_id,
+                "removable": (
+                    registration.package_trust == PackageTrust.PARENT_TRUSTED_UNSIGNED
+                    and registration.source_id == self.package_service.SOURCE_ID
+                ),
             }
             for registration in registry.discover_registrations()
         ]
@@ -164,6 +178,34 @@ class PackageParentApiRequestHandler(ParentApiRequestHandler):
                 upload.unlink(missing_ok=True)
         self._send_json(201, {"installed": receipt.as_json_dict()})
 
+    def do_DELETE(self) -> None:  # noqa: N802
+        parsed = urlparse(self.path)
+        prefix = f"{API_BASE}/activities/"
+        if not parsed.path.startswith(prefix):
+            super().do_DELETE()
+            return
+        query = parse_qs(parsed.query)
+        if not self._require_api_authorization(query):
+            return
+        if not self.app.activity_remove_enabled:
+            self._send_api_error(
+                403,
+                "capability_unavailable",
+                "Activity removal is disabled on this Greia image",
+            )
+            return
+        encoded_id = parsed.path[len(prefix) :]
+        if not encoded_id or "/" in encoded_id:
+            self._send_api_error(404, "not_found", "Not found")
+            return
+        activity_id = unquote(encoded_id)
+        try:
+            receipt = self.app.package_service.uninstall(activity_id)
+        except (ActivityPackageError, ActivityValidationError, OSError) as exc:
+            self._send_api_error(400, "activity_remove_rejected", str(exc))
+            return
+        self._send_json(200, {"removed": receipt.as_json_dict()})
+
 
 class PackageParentApiHTTPServer(ParentApiHTTPServer):
     def __init__(
@@ -184,9 +226,6 @@ def _activity_install_enabled() -> bool:
         return True
     if explicit in {"0", "false", "no", "off"}:
         return False
-    # The current Parent transport is provisional HTTP, so code installation is
-    # not enabled on ordinary/release images. Explicit developer images already
-    # carry this root-only marker and are the safe current lane for live testing.
     marker = Path(
         os.environ.get(
             "GREIA_DEVELOPER_REMOTE_MARKER",
