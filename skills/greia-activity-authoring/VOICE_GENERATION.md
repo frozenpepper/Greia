@@ -10,10 +10,11 @@ docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md
 docs/adr/0032-profile-presentation-and-grammatical-agreement.md
 ```
 
-For optional local character-voice setup:
+For optional local character-voice setup and field troubleshooting:
 
 ```text
 docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md
+docs/agents/GREIA_CHATTERBOX_PRODUCTION_FIELD_GUIDE.md
 ```
 
 For producing the shared character-reaction library:

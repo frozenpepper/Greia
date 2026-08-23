@@ -23,6 +23,7 @@ If producing/extending the OS-owned shared utterance library, also read:
 
 ```text
 docs/agents/GREIA_SHARED_CHARACTER_UTTERANCE_RECORDING.md
+docs/agents/GREIA_CHATTERBOX_PRODUCTION_FIELD_GUIDE.md
 ```
 
 ## 2. Opt-in rule
