@@ -138,18 +138,8 @@ def load_activity_achievement_emblems(
                 "achievement emblem asset must be a file inside its Activity package"
             )
 
-        try:
-            byte_size = asset_path.stat().st_size
-        except OSError as exc:
-            raise ActivityAchievementArtError(
-                f"cannot inspect achievement emblem asset: {relative.as_posix()}"
-            ) from exc
-        if byte_size <= 0 or byte_size > _MAX_EMBLEM_BYTES:
-            raise ActivityAchievementArtError(
-                f"achievement emblem asset must be 1..{_MAX_EMBLEM_BYTES} bytes"
-            )
-
-        width, height = _png_dimensions(asset_path)
+        data = _read_bounded_png(asset_path, relative)
+        width, height = _png_dimensions(data)
         if width != height:
             raise ActivityAchievementArtError(
                 "achievement emblem PNG must be square"
@@ -163,13 +153,6 @@ def load_activity_achievement_emblems(
                 f"{_MIN_EMBLEM_DIMENSION} and {_MAX_EMBLEM_DIMENSION} pixels"
             )
 
-        try:
-            digest = hashlib.sha256(asset_path.read_bytes()).hexdigest()
-        except OSError as exc:
-            raise ActivityAchievementArtError(
-                f"cannot fingerprint achievement emblem asset: {relative.as_posix()}"
-            ) from exc
-
         result.append(
             ActivityAchievementEmblem(
                 activity_id=manifest.activity_id,
@@ -177,8 +160,8 @@ def load_activity_achievement_emblems(
                 asset_path=asset_path,
                 width=width,
                 height=height,
-                byte_size=byte_size,
-                content_digest=digest,
+                byte_size=len(data),
+                content_digest=hashlib.sha256(data).hexdigest(),
             )
         )
 
@@ -193,12 +176,23 @@ def emblem_map(
     }
 
 
-def _png_dimensions(path: Path) -> tuple[int, int]:
+def _read_bounded_png(path: Path, relative: Path) -> bytes:
     try:
         with path.open("rb") as handle:
-            header = handle.read(24)
+            data = handle.read(_MAX_EMBLEM_BYTES + 1)
     except OSError as exc:
-        raise ActivityAchievementArtError(f"cannot read achievement emblem PNG: {path}") from exc
+        raise ActivityAchievementArtError(
+            f"cannot read achievement emblem asset: {relative.as_posix()}"
+        ) from exc
+    if not data or len(data) > _MAX_EMBLEM_BYTES:
+        raise ActivityAchievementArtError(
+            f"achievement emblem asset must be 1..{_MAX_EMBLEM_BYTES} bytes"
+        )
+    return data
+
+
+def _png_dimensions(data: bytes) -> tuple[int, int]:
+    header = data[:24]
     if len(header) < 24 or header[:8] != _PNG_SIGNATURE or header[12:16] != b"IHDR":
         raise ActivityAchievementArtError("achievement emblem asset is not a valid PNG")
     width, height = struct.unpack(">II", header[16:24])
