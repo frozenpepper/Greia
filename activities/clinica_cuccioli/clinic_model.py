@@ -41,15 +41,15 @@ class ClinicSession:
     """Own the deterministic gameplay state for one Little Vet Clinic session.
 
     Rendering, audio, storage and Greia event publication deliberately live outside
-    this class. That keeps the educational sequencing rules testable without SDL or
-    platform services and makes alternate renderers possible without duplicating
-    gameplay state.
+    this class. The child-facing interaction is intentionally two-step: choose a
+    tool, then apply it to the patient. Successful treatment clears the selection
+    so every prescription step requires an explicit child choice.
     """
 
     total_stars: int = 0
     rng: RandomSource = field(default_factory=random.Random, repr=False)
     patient_index: int = 0
-    selected_tool_id: str = "stethoscope"
+    selected_tool_id: str | None = None
     required_steps: list[str] = field(default_factory=list)
     completed_steps: list[str] = field(default_factory=list)
     is_victory: bool = False
@@ -57,13 +57,15 @@ class ClinicSession:
     def __post_init__(self) -> None:
         if self.total_stars < 0:
             self.total_stars = 0
+        if self.selected_tool_id is not None:
+            self._require_tool(self.selected_tool_id)
         if not self.required_steps:
             self._prepare_patient()
 
     @property
     def patient_id(self) -> str:
         # On victory ``patient_index`` points one past the final patient. Keep the
-        # patient just healed visible behind the completion card instead of wrapping.
+        # patient just healed available to the terminal renderer instead of wrapping.
         index = self.patient_index - 1 if self.is_victory else self.patient_index
         return PATIENT_IDS[index % len(PATIENT_IDS)]
 
@@ -83,20 +85,22 @@ class ClinicSession:
         return "bandaid" in self.required_steps and "bandaid" not in self.completed_steps
 
     def select_tool(self, tool_id: str) -> None:
+        """Select a tool without applying treatment to the patient."""
+
         self._require_tool(tool_id)
-        self.selected_tool_id = tool_id
+        if not self.is_victory:
+            self.selected_tool_id = tool_id
 
     def use_tool(self, tool_id: str) -> TreatmentResult:
-        """Select and, when correct for the current sequence, apply one tool.
+        """Apply one explicit tool attempt to the current patient.
 
-        The previous monolithic implementation let a palette click silently apply
-        any later prescription step out of order while table taps enforced order.
-        The domain model intentionally removes that inconsistency: both paths now
-        teach the same visible left-to-right treatment sequence.
+        This method owns treatment truth but does not choose a tool for the child.
+        The application normally calls :meth:`select_tool` from the palette and
+        :meth:`use_selected_tool` from the patient hit target. Direct calls remain
+        useful for provider-free domain tests and alternate semantic input routes.
         """
 
         self._require_tool(tool_id)
-        self.selected_tool_id = tool_id
         patient_id = self.patient_id
 
         if self.is_victory or tool_id != self.next_needed:
@@ -110,6 +114,9 @@ class ClinicSession:
             )
 
         self.completed_steps.append(tool_id)
+        # Never auto-arm the next answer. The child must explicitly choose a tool
+        # for each treatment step before another patient tap can make progress.
+        self.selected_tool_id = None
         healed = self.next_needed is None
         session_complete = False
 
@@ -121,9 +128,6 @@ class ClinicSession:
                 self.is_victory = True
             else:
                 self._prepare_patient()
-        else:
-            assert self.next_needed is not None
-            self.selected_tool_id = self.next_needed
 
         return TreatmentResult(
             tool_id=tool_id,
@@ -134,7 +138,11 @@ class ClinicSession:
             total_stars=self.total_stars,
         )
 
-    def use_selected_tool(self) -> TreatmentResult:
+    def use_selected_tool(self) -> TreatmentResult | None:
+        """Apply the child's current selection, or do nothing when none is armed."""
+
+        if self.selected_tool_id is None:
+            return None
         return self.use_tool(self.selected_tool_id)
 
     def restart(self) -> None:
@@ -149,7 +157,7 @@ class ClinicSession:
         step_count = self.rng.choice((2, 2, 3, 3, 4))
         self.required_steps = self.rng.sample(TOOL_IDS, step_count)
         self.completed_steps = []
-        self.selected_tool_id = self.required_steps[0]
+        self.selected_tool_id = None
 
     @staticmethod
     def _require_tool(tool_id: str) -> None:
