@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import struct
 import tomllib
 from dataclasses import dataclass
@@ -35,6 +36,7 @@ class ActivityAchievementEmblem:
     width: int
     height: int
     byte_size: int
+    content_digest: str = ""
 
 
 def load_activity_achievement_emblems(
@@ -112,10 +114,9 @@ def load_activity_achievement_emblems(
             )
 
         unresolved = manifest.root / relative
-        # Check the package entry itself before resolve(): resolving first would
-        # erase the information that the entry was a symlink. ActivityRegistry
-        # already rejects package symlinks globally, but this art boundary must
-        # remain safe when called independently in tests/tooling too.
+        # Check before resolve(): resolving first would erase evidence that the
+        # package entry itself was a symlink. ActivityRegistry also rejects
+        # symlinks globally, but this boundary stays safe when called directly.
         try:
             if unresolved.is_symlink():
                 raise ActivityAchievementArtError(
@@ -162,6 +163,13 @@ def load_activity_achievement_emblems(
                 f"{_MIN_EMBLEM_DIMENSION} and {_MAX_EMBLEM_DIMENSION} pixels"
             )
 
+        try:
+            digest = hashlib.sha256(asset_path.read_bytes()).hexdigest()
+        except OSError as exc:
+            raise ActivityAchievementArtError(
+                f"cannot fingerprint achievement emblem asset: {relative.as_posix()}"
+            ) from exc
+
         result.append(
             ActivityAchievementEmblem(
                 activity_id=manifest.activity_id,
@@ -170,6 +178,7 @@ def load_activity_achievement_emblems(
                 width=width,
                 height=height,
                 byte_size=byte_size,
+                content_digest=digest,
             )
         )
 
