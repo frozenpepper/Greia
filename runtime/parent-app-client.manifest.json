@@ -1,51 +1,55 @@
 {
   "files": {
     "index.html": {
-      "bytes": 2418,
-      "sha256": "bb4e908478721aca0ff106431dd7b2eff1202d1d7ca3dab627884052bd344bea"
-    },
-    "src/activity_install_ui.js": {
-      "bytes": 4069,
-      "sha256": "5862a57de90b9bf921fd2a0d6d03061c38d41ed95f04dff38b5779746329dca4"
-    },
-    "src/activity_policy_ui.js": {
-      "bytes": 10321,
-      "sha256": "639c813e47714c79513821c83af26653a8aad5f922d314fc86477b5fe2af4f88"
+      "bytes": 2288,
+      "sha256": "5d6825db73b55b30af5fa339e75a629ef6cc75f794716e50303f815e41ae26ac"
     },
     "src/api.js": {
-      "bytes": 6993,
-      "sha256": "7973b9f553b248c32245f60e4f8c35c320262ead1eb3ea68b4faa329d3fb2ef4"
+      "bytes": 6907,
+      "sha256": "6afd9c5ace3a5b1233a84e0d0d154166636694ab6fbb1f0bbcbc171e562041f6"
     },
     "src/app.js": {
-      "bytes": 28382,
-      "sha256": "199f0974a086293503cc89cee712e6dc6ccb9297d40453853589c2e157dc2292"
+      "bytes": 7272,
+      "sha256": "0b5bc30710f7f735bcf9125ac881eb02f733ccbf5e0c327bfe2ef164d0cc759a"
     },
     "src/credential_store.js": {
-      "bytes": 650,
-      "sha256": "65e34451ae04bd5cf42f2a5fd6d3a161e8a0c6a828b60f6c35bc8179e157ed41"
+      "bytes": 607,
+      "sha256": "4970efc33e50523e0698a182990a5bbd38d3f20bc1fcfa2c5dd62a3b1a466adc"
     },
     "src/demo_api.js": {
-      "bytes": 9912,
-      "sha256": "e8c9373dd10f2b6ea6db24ca1387046492a9344655c94e509fc5a33cefbd7dc3"
-    },
-    "src/language_ui.js": {
-      "bytes": 5160,
-      "sha256": "f30e106a9e9a98a9732194430dc7fab49043494ed1d3459dc34d94d489387d03"
+      "bytes": 14642,
+      "sha256": "da7b4cdf94988e1dab382e9e158e0a688d0f0b24e712d7fb860161b651a02129"
     },
     "src/state.js": {
-      "bytes": 2581,
-      "sha256": "691d9590b9e747ba518c82ca3f6b19ef031624da8725906bdc34ddef280a7511"
+      "bytes": 5975,
+      "sha256": "e556630c840c2ffd519a03bf09eadaa161303f75182ae9881cf693399e7bb369"
     },
-    "src/system_update_ui.js": {
-      "bytes": 6086,
-      "sha256": "9453bb00a5702cf62b4d3359b0746522c0f572efcf7d697bb2c94672da402d51"
+    "src/ui.js": {
+      "bytes": 6361,
+      "sha256": "3c4f4a2085e708a00d464b2d3ddc4c511e27cc4efca0cebb53fc6cebbfdf5f4c"
+    },
+    "src/views_activities.js": {
+      "bytes": 6241,
+      "sha256": "9340180b59346456b9bd082142b4a50df4b557a602ed4f19c492bb4589de72d5"
+    },
+    "src/views_device.js": {
+      "bytes": 17021,
+      "sha256": "e4aed210c2b0e5d36af0e214ef9c73978b98581c97d8aeec31adc6644dd634cf"
+    },
+    "src/views_helpers.js": {
+      "bytes": 2830,
+      "sha256": "518ece44c02b73c25dcb0864bddf43ff1fcb6aa9629b20c6a92dfcdc8e2ec550"
+    },
+    "src/views_home_children.js": {
+      "bytes": 9156,
+      "sha256": "a2b2833b41b8694877d7baf49e5e599a3117ed5508601d3234d36787d3992229"
     },
     "styles/app.css": {
-      "bytes": 12646,
-      "sha256": "99d4e079823cef20e303da182463cf1846f2d204ecd546053cee144759b42dec"
+      "bytes": 17105,
+      "sha256": "8920730fac34becd6c072f049c680610c2d57c2ba9f941bcaf98fdf741384280"
     }
   },
   "repository": "frozenpepper/Greia-Parent-App-Html",
-  "revision": "d019af39119f19043b08d0de9c892fe54f152614",
+  "revision": "7ff7e318eb246618dab26939ba086999864538ce",
   "schema_version": 1
 }
