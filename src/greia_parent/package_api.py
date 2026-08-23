@@ -15,6 +15,7 @@ from greia_parent.protocol import API_BASE, api_index_payload
 from greia_parent.server import parse_args
 from greia_parent.static_client import ParentStaticClient
 from greia_platform.activities import ActivityRegistry, ActivityValidationError
+from greia_platform.activity_package_format import ACTIVITY_PACKAGE_MEDIA_TYPE
 from greia_platform.activity_packages import (
     MAX_ARCHIVE_BYTES,
     ActivityPackageError,
@@ -25,9 +26,12 @@ from greia_platform.trust import ActivitySource, PackageTrust
 
 _ALLOWED_PACKAGE_TYPES = frozenset(
     {
+        ACTIVITY_PACKAGE_MEDIA_TYPE,
+        # The raw upload protocol carries no original filename. Generic ZIP and
+        # octet-stream remain transport compatibility values only; neither is
+        # treated as evidence that the bytes are a valid Greia Activity package.
         "application/zip",
         "application/octet-stream",
-        "application/vnd.greia.activity+zip",
     }
 )
 
