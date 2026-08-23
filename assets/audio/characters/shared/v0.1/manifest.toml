@@ -1,0 +1,1506 @@
+schema_version = 1
+registry_version = "v0.1"
+status = "owner-approved shared character reactions library"
+created = "2026-08-23"
+character_renderer_family = "Chatterbox Multilingual V3"
+total_clips = 150
+
+[[utterance]]
+character = "lilli"
+locale = "it"
+family = "praise.general"
+variant = 1
+text = "Complimenti!"
+file = "lilli/it/lilli__it__praise.general__01.wav"
+sha256 = "2c6d022c24aa807fbd08c57ac2b8c1735b8df7498ff9a2d02307902a4df6fed9"
+bytes = 49724
+
+[[utterance]]
+character = "lilli"
+locale = "it"
+family = "praise.general"
+variant = 2
+text = "Ottimo lavoro!"
+file = "lilli/it/lilli__it__praise.general__02.wav"
+sha256 = "4745062dae24c4560d8aaea62ea0e3adc9c0b4afea3956170eec2be2d0f817a8"
+bytes = 12284
+
+[[utterance]]
+character = "lilli"
+locale = "it"
+family = "praise.general"
+variant = 3
+text = "Ben fatto!"
+file = "lilli/it/lilli__it__praise.general__03.wav"
+sha256 = "b538b99b227c0468781af544d28d9f0ad9fbcb983972f58d64d6d932f2201de2"
+bytes = 17324
+
+[[utterance]]
+character = "lilli"
+locale = "it"
+family = "celebrate.success"
+variant = 1
+text = "Ce l'hai fatta!"
+file = "lilli/it/lilli__it__celebrate.success__01.wav"
+sha256 = "003089f6f0bf06279b6b75ae109813ea195d74dca823c6c282fc413ef36ca6e2"
+bytes = 29086
+
+[[utterance]]
+character = "lilli"
+locale = "it"
+family = "celebrate.success"
+variant = 2
+text = "Evviva!"
+file = "lilli/it/lilli__it__celebrate.success__02.wav"
+sha256 = "73fbc0fbe08198b768cf32aff9e79c4aea8e305f89b1bdcbe0598f24fa155031"
+bytes = 54284
+
+[[utterance]]
+character = "lilli"
+locale = "it"
+family = "celebrate.success"
+variant = 3
+text = "Che meraviglia!"
+file = "lilli/it/lilli__it__celebrate.success__03.wav"
+sha256 = "06a829c0eb15df3269a18b5942266f38df69ed8a33fb4cae414197b0577ff349"
+bytes = 56444
+
+[[utterance]]
+character = "lilli"
+locale = "it"
+family = "encourage.retry"
+variant = 1
+text = "Riproviamo!"
+file = "lilli/it/lilli__it__encourage.retry__01.wav"
+sha256 = "6c38976ec6d77968891b38325dd19dd62d86c7486ddf0782a1ddc24c1dbb6c92"
+bytes = 51644
+
+[[utterance]]
+character = "lilli"
+locale = "it"
+family = "encourage.retry"
+variant = 2
+text = "Quasi! Proviamo ancora!"
+file = "lilli/it/lilli__it__encourage.retry__02.wav"
+sha256 = "7c89db2128ceae1970801034f1f9605d08b683fe49e4d4804c531544cc6d9f3b"
+bytes = 44204
+
+[[utterance]]
+character = "lilli"
+locale = "it"
+family = "encourage.retry"
+variant = 3
+text = "Ancora una volta!"
+file = "lilli/it/lilli__it__encourage.retry__03.wav"
+sha256 = "3b49d4b86199ce7186dcd02c04555b5804ef8bcd66bbcf00e495ce9581be5b14"
+bytes = 65086
+
+[[utterance]]
+character = "lilli"
+locale = "it"
+family = "encourage.progress"
+variant = 1
+text = "Continua così!"
+file = "lilli/it/lilli__it__encourage.progress__01.wav"
+sha256 = "c07c3b162ae8f1257ff7d32bffa28ace5e2b1ffd49cbe22c4b94d278be779787"
+bytes = 72766
+
+[[utterance]]
+character = "lilli"
+locale = "it"
+family = "encourage.progress"
+variant = 2
+text = "Ci sei quasi!"
+file = "lilli/it/lilli__it__encourage.progress__02.wav"
+sha256 = "4d74e8c23133cbb98fd9eed1a8eced7f9377b1407e531018a0237374cd833ec8"
+bytes = 82846
+
+[[utterance]]
+character = "lilli"
+locale = "it"
+family = "encourage.progress"
+variant = 3
+text = "Vai avanti!"
+file = "lilli/it/lilli__it__encourage.progress__03.wav"
+sha256 = "fef2efe68532b8695cf35c142b9994c1e5c7d0507e2491be750022b3cb15acd9"
+bytes = 53564
+
+[[utterance]]
+character = "lilli"
+locale = "it"
+family = "ready.go"
+variant = 1
+text = "Forza, andiamo!"
+file = "lilli/it/lilli__it__ready.go__01.wav"
+sha256 = "bd4e7d96e3329b128633a0d2c4b2ac4d83ee9af28db19f6d7bacb2bac61c0414"
+bytes = 41566
+
+[[utterance]]
+character = "lilli"
+locale = "it"
+family = "ready.go"
+variant = 2
+text = "Ci siamo? Via!"
+file = "lilli/it/lilli__it__ready.go__02.wav"
+sha256 = "fc00c87e718574f2ea8b2cb63e377800a0876930ff444e0d90287bf8651b4cf4"
+bytes = 40604
+
+[[utterance]]
+character = "lilli"
+locale = "it"
+family = "ready.go"
+variant = 3
+text = "Si parte!"
+file = "lilli/it/lilli__it__ready.go__03.wav"
+sha256 = "4e3789ecde05e9d3940dd5f6610eee086dfce42c34dc089305cd24f5216a04dc"
+bytes = 45886
+
+[[utterance]]
+character = "lilli"
+locale = "en"
+family = "praise.general"
+variant = 1
+text = "Congratulations!"
+file = "lilli/en/lilli__en__praise.general__01.wav"
+sha256 = "63ed3d3668ea5cba74791daa1b5d8114ce56e4428d6fbf573d4edd5d63899b15"
+bytes = 62684
+
+[[utterance]]
+character = "lilli"
+locale = "en"
+family = "praise.general"
+variant = 2
+text = "Great work!"
+file = "lilli/en/lilli__en__praise.general__02.wav"
+sha256 = "c7546de43874094c4d7938e87d89fecd1529eb9aa88fdd3b9b1403ce7d8df250"
+bytes = 46364
+
+[[utterance]]
+character = "lilli"
+locale = "en"
+family = "praise.general"
+variant = 3
+text = "Well done!"
+file = "lilli/en/lilli__en__praise.general__03.wav"
+sha256 = "5b4a3858688508519ebb3eae928083ed9f2979bb57b1e85f5b88a5652781c408"
+bytes = 18524
+
+[[utterance]]
+character = "lilli"
+locale = "en"
+family = "celebrate.success"
+variant = 1
+text = "You did it!"
+file = "lilli/en/lilli__en__celebrate.success__01.wav"
+sha256 = "796408f296d12cf7acfba1630f76802583cde64624e692de379abb0ff58307f7"
+bytes = 17084
+
+[[utterance]]
+character = "lilli"
+locale = "en"
+family = "celebrate.success"
+variant = 2
+text = "Hooray!"
+file = "lilli/en/lilli__en__celebrate.success__02.wav"
+sha256 = "5f92fe3dad4ea4f6edf0e7f339cea7bb50118be6c2d9d69faaf971619914374f"
+bytes = 40606
+
+[[utterance]]
+character = "lilli"
+locale = "en"
+family = "celebrate.success"
+variant = 3
+text = "Wonderful!"
+file = "lilli/en/lilli__en__celebrate.success__03.wav"
+sha256 = "44c2e83560064d9d1f32ae6fe385265387f75a06fe412676fe6f389bb0cc62ca"
+bytes = 51166
+
+[[utterance]]
+character = "lilli"
+locale = "en"
+family = "encourage.retry"
+variant = 1
+text = "Let's try again!"
+file = "lilli/en/lilli__en__encourage.retry__01.wav"
+sha256 = "b96c207e6e71b2ca6d79316414486bff1bb531a137bdb3b9d84a5e19be962d2f"
+bytes = 71804
+
+[[utterance]]
+character = "lilli"
+locale = "en"
+family = "encourage.retry"
+variant = 2
+text = "Almost! Let's try again!"
+file = "lilli/en/lilli__en__encourage.retry__02.wav"
+sha256 = "77e88f218e9b9d50c456be46b78041d57f9a56dc0e119ccebf20abcee7e81ed7"
+bytes = 43004
+
+[[utterance]]
+character = "lilli"
+locale = "en"
+family = "encourage.retry"
+variant = 3
+text = "One more time!"
+file = "lilli/en/lilli__en__encourage.retry__03.wav"
+sha256 = "9661fb4fe7cd40f5abef8cd9471e53db89081b6065a7800d4850e590376b7bf6"
+bytes = 73004
+
+[[utterance]]
+character = "lilli"
+locale = "en"
+family = "encourage.progress"
+variant = 1
+text = "Keep going!"
+file = "lilli/en/lilli__en__encourage.progress__01.wav"
+sha256 = "68cdab85f1feb42ecd88b9e3c810a31c4a1c3e4a0afee83126584fbe4d695c4e"
+bytes = 16604
+
+[[utterance]]
+character = "lilli"
+locale = "en"
+family = "encourage.progress"
+variant = 2
+text = "Almost there!"
+file = "lilli/en/lilli__en__encourage.progress__02.wav"
+sha256 = "a333f65db2f81b037a5f246cc4f4c53460f8779b036d9cd0e29378189de58abb"
+bytes = 32926
+
+[[utterance]]
+character = "lilli"
+locale = "en"
+family = "encourage.progress"
+variant = 3
+text = "You're doing great!"
+file = "lilli/en/lilli__en__encourage.progress__03.wav"
+sha256 = "de5801684414e62f19e23aca6199e888f0a845da122cb0bd6b4ef3a33428d6cd"
+bytes = 54764
+
+[[utterance]]
+character = "lilli"
+locale = "en"
+family = "ready.go"
+variant = 1
+text = "Come on, let's go!"
+file = "lilli/en/lilli__en__ready.go__01.wav"
+sha256 = "f40e66cbee97e28ba44a0befef37ffb09457b5d3224e255999b806dfcc1d2e3e"
+bytes = 26204
+
+[[utterance]]
+character = "lilli"
+locale = "en"
+family = "ready.go"
+variant = 2
+text = "Ready? Go!"
+file = "lilli/en/lilli__en__ready.go__02.wav"
+sha256 = "de0121b26ca9ca4b5e9f9ecc56807fcae78df056afa3df43624d203ec7ccf984"
+bytes = 20204
+
+[[utterance]]
+character = "lilli"
+locale = "en"
+family = "ready.go"
+variant = 3
+text = "Here we go!"
+file = "lilli/en/lilli__en__ready.go__03.wav"
+sha256 = "e5a251c696f6a32e208e9f0c647e83be28da7496529ccc47a01b2f3182739773"
+bytes = 67486
+
+[[utterance]]
+character = "leo"
+locale = "it"
+family = "praise.general"
+variant = 1
+text = "Complimenti!"
+file = "leo/it/leo__it__praise.general__01.wav"
+sha256 = "eff0537268709c8031a9d53828fe96404b9a963ed8adaaec7f93ed0377673e24"
+bytes = 55486
+
+[[utterance]]
+character = "leo"
+locale = "it"
+family = "praise.general"
+variant = 2
+text = "Ottimo lavoro!"
+file = "leo/it/leo__it__praise.general__02.wav"
+sha256 = "396dfd9137ac5d159659c3a810f72b69a2929ff08f22179c8bc4e76839decf0e"
+bytes = 48284
+
+[[utterance]]
+character = "leo"
+locale = "it"
+family = "praise.general"
+variant = 3
+text = "Ben fatto!"
+file = "leo/it/leo__it__praise.general__03.wav"
+sha256 = "eb755c212d71b575e336f23d8fb53bca493a2fd206944dc67da0e8617eda9d84"
+bytes = 25724
+
+[[utterance]]
+character = "leo"
+locale = "it"
+family = "celebrate.success"
+variant = 1
+text = "Ce l'hai fatta!"
+file = "leo/it/leo__it__celebrate.success__01.wav"
+sha256 = "08b78510ad2a12c7c254089d45ea161c5417c92c89d3272a7c46854b04ebe42c"
+bytes = 34366
+
+[[utterance]]
+character = "leo"
+locale = "it"
+family = "celebrate.success"
+variant = 2
+text = "Evviva!"
+file = "leo/it/leo__it__celebrate.success__02.wav"
+sha256 = "062b28b809101a6f4fc9073af8cff942fbfe073e179800b77989948d050491e2"
+bytes = 40124
+
+[[utterance]]
+character = "leo"
+locale = "it"
+family = "celebrate.success"
+variant = 3
+text = "Che meraviglia!"
+file = "leo/it/leo__it__celebrate.success__03.wav"
+sha256 = "e7fb4d0e4064be51d334adb93987b5581cbcd6fa13c46d78a66c90d9251e5842"
+bytes = 53084
+
+[[utterance]]
+character = "leo"
+locale = "it"
+family = "encourage.retry"
+variant = 1
+text = "Riproviamo!"
+file = "leo/it/leo__it__encourage.retry__01.wav"
+sha256 = "05a62f48a6cb9d0d36c94b0ccc90cc6448430fce7d7c0f16f1d7c292da22ceb5"
+bytes = 60766
+
+[[utterance]]
+character = "leo"
+locale = "it"
+family = "encourage.retry"
+variant = 2
+text = "Quasi! Proviamo ancora!"
+file = "leo/it/leo__it__encourage.retry__02.wav"
+sha256 = "a7d6d2acdee2d85e48b6b27bd218b9ed894dad45af0de6f5d4147ef7d46ae907"
+bytes = 35806
+
+[[utterance]]
+character = "leo"
+locale = "it"
+family = "encourage.retry"
+variant = 3
+text = "Ancora una volta!"
+file = "leo/it/leo__it__encourage.retry__03.wav"
+sha256 = "bff587907dddec1b4700fda11d9efa0ea09cdedfff883024606479240618a812"
+bytes = 56926
+
+[[utterance]]
+character = "leo"
+locale = "it"
+family = "encourage.progress"
+variant = 1
+text = "Continua così!"
+file = "leo/it/leo__it__encourage.progress__01.wav"
+sha256 = "028a417138f872a7ab487d5b4a9caa7876864027250aa54e418f488e106945c7"
+bytes = 51644
+
+[[utterance]]
+character = "leo"
+locale = "it"
+family = "encourage.progress"
+variant = 2
+text = "Ci sei quasi!"
+file = "leo/it/leo__it__encourage.progress__02.wav"
+sha256 = "88219e4e72f68bbcc700d41cb648d0664c17eae89d9ec5e635f3cd3658ceb3d5"
+bytes = 57164
+
+[[utterance]]
+character = "leo"
+locale = "it"
+family = "encourage.progress"
+variant = 3
+text = "Vai avanti!"
+file = "leo/it/leo__it__encourage.progress__03.wav"
+sha256 = "0efa0f28e2e143ca92d04e4c92cc2572c9374347e28339707e369fe9a44f0ba6"
+bytes = 43966
+
+[[utterance]]
+character = "leo"
+locale = "it"
+family = "ready.go"
+variant = 1
+text = "Forza, andiamo!"
+file = "leo/it/leo__it__ready.go__01.wav"
+sha256 = "b9902cd5d47183011ae948c6802cefc36baff07e5dea365fe1375fb56b3e701c"
+bytes = 35806
+
+[[utterance]]
+character = "leo"
+locale = "it"
+family = "ready.go"
+variant = 2
+text = "Ci siamo? Via!"
+file = "leo/it/leo__it__ready.go__02.wav"
+sha256 = "3a99bf0edaafc2e15638f66eee35cf1b03c91387d0349f009c0d028e70b5e2cf"
+bytes = 34846
+
+[[utterance]]
+character = "leo"
+locale = "it"
+family = "ready.go"
+variant = 3
+text = "Si parte!"
+file = "leo/it/leo__it__ready.go__03.wav"
+sha256 = "a9f0d3489399ca40fe68b025042f8f148e811795bfa21c82742dfd38fbd2f88c"
+bytes = 37964
+
+[[utterance]]
+character = "leo"
+locale = "en"
+family = "praise.general"
+variant = 1
+text = "Congratulations!"
+file = "leo/en/leo__en__praise.general__01.wav"
+sha256 = "1bf1dfe5d132ca5ec387b38a0409da6f06c17eb277fd84ff4b931e643bfa1eb0"
+bytes = 73724
+
+[[utterance]]
+character = "leo"
+locale = "en"
+family = "praise.general"
+variant = 2
+text = "Great work!"
+file = "leo/en/leo__en__praise.general__02.wav"
+sha256 = "1df4b105e09e7278b1c734766d75e5c8cf5c9836aceae80f466a18897f28ce42"
+bytes = 43484
+
+[[utterance]]
+character = "leo"
+locale = "en"
+family = "praise.general"
+variant = 3
+text = "Well done!"
+file = "leo/en/leo__en__praise.general__03.wav"
+sha256 = "7016829482e008aae2bca97eb0c9e88d712c5ebbb70f6ea7215f73766aee5f0c"
+bytes = 39404
+
+[[utterance]]
+character = "leo"
+locale = "en"
+family = "celebrate.success"
+variant = 1
+text = "You did it!"
+file = "leo/en/leo__en__celebrate.success__01.wav"
+sha256 = "955f623bb9fa584364bfb8bfafad8609f15cdd28470f1d6a26d5a3b8dfb61b97"
+bytes = 46604
+
+[[utterance]]
+character = "leo"
+locale = "en"
+family = "celebrate.success"
+variant = 2
+text = "Hooray!"
+file = "leo/en/leo__en__celebrate.success__02.wav"
+sha256 = "898aee47841023efad91ecf5a02e73998755eaa31ef940ad0efdce65a0dd6488"
+bytes = 35324
+
+[[utterance]]
+character = "leo"
+locale = "en"
+family = "celebrate.success"
+variant = 3
+text = "Wonderful!"
+file = "leo/en/leo__en__celebrate.success__03.wav"
+sha256 = "9e2b5325243508c23e55aedc00df1a86da64b1484ef460971c36f4732dfe9026"
+bytes = 62204
+
+[[utterance]]
+character = "leo"
+locale = "en"
+family = "encourage.retry"
+variant = 1
+text = "Let's try again!"
+file = "leo/en/leo__en__encourage.retry__01.wav"
+sha256 = "ed102ff0ff64236a5336b8814ee515431866a336b90fc65b90f98c33873ad419"
+bytes = 34844
+
+[[utterance]]
+character = "leo"
+locale = "en"
+family = "encourage.retry"
+variant = 2
+text = "Almost! Let's try again!"
+file = "leo/en/leo__en__encourage.retry__02.wav"
+sha256 = "65399dba4953cc9efd3dcc7e4d89ede971bebc56287b997f545fbbd9e8f198f1"
+bytes = 35804
+
+[[utterance]]
+character = "leo"
+locale = "en"
+family = "encourage.retry"
+variant = 3
+text = "One more time!"
+file = "leo/en/leo__en__encourage.retry__03.wav"
+sha256 = "09366d3375762897384de17368f76b9c8526c773b23ed3022ae928d9503c08b0"
+bytes = 48524
+
+[[utterance]]
+character = "leo"
+locale = "en"
+family = "encourage.progress"
+variant = 1
+text = "Keep going!"
+file = "leo/en/leo__en__encourage.progress__01.wav"
+sha256 = "8cee53214560f8018bc3ad7950f57ca21cb982825e7da1d7f409f1c5717c452e"
+bytes = 40124
+
+[[utterance]]
+character = "leo"
+locale = "en"
+family = "encourage.progress"
+variant = 2
+text = "Almost there!"
+file = "leo/en/leo__en__encourage.progress__02.wav"
+sha256 = "9840f16204910f582b6daf04505235065b25c50f77b6ec130168876823c89e4b"
+bytes = 51166
+
+[[utterance]]
+character = "leo"
+locale = "en"
+family = "encourage.progress"
+variant = 3
+text = "You're doing great!"
+file = "leo/en/leo__en__encourage.progress__03.wav"
+sha256 = "50cc9ad09fd7d0f2acddda9c6924bad6ea73dc3c70cca0c075684e646901dd28"
+bytes = 55964
+
+[[utterance]]
+character = "leo"
+locale = "en"
+family = "ready.go"
+variant = 1
+text = "Come on, let's go!"
+file = "leo/en/leo__en__ready.go__01.wav"
+sha256 = "90967e19f57380b7a42823e60ded231b74b1bda49fc6130cb62813e039348f2b"
+bytes = 46846
+
+[[utterance]]
+character = "leo"
+locale = "en"
+family = "ready.go"
+variant = 2
+text = "Ready? Go!"
+file = "leo/en/leo__en__ready.go__02.wav"
+sha256 = "b701862794b95700a3fa60e65170f852dbba4dd30f742044bd7c612d1eefef95"
+bytes = 19486
+
+[[utterance]]
+character = "leo"
+locale = "en"
+family = "ready.go"
+variant = 3
+text = "Here we go!"
+file = "leo/en/leo__en__ready.go__03.wav"
+sha256 = "71487d76c716b484bf69b3213a665de11aad76077af5d99a9c394c03179a29df"
+bytes = 36524
+
+[[utterance]]
+character = "flash"
+locale = "it"
+family = "praise.general"
+variant = 1
+text = "Complimenti!"
+file = "flash/it/flash__it__praise.general__01.wav"
+sha256 = "a71599dd2e4455b360d9892860f1f3a16d07a2719174ade28c0c54fcbbdacd52"
+bytes = 42046
+
+[[utterance]]
+character = "flash"
+locale = "it"
+family = "praise.general"
+variant = 2
+text = "Ottimo lavoro!"
+file = "flash/it/flash__it__praise.general__02.wav"
+sha256 = "ea59f33e98efa440ce1dd68b67464613704fa9b81d7db6284864a1e65fe59943"
+bytes = 48286
+
+[[utterance]]
+character = "flash"
+locale = "it"
+family = "praise.general"
+variant = 3
+text = "Ben fatto!"
+file = "flash/it/flash__it__praise.general__03.wav"
+sha256 = "f5e7e2bc2c49b9b494952812fc477fe43bc54a7b8c2758d67262d08e44db4753"
+bytes = 28124
+
+[[utterance]]
+character = "flash"
+locale = "it"
+family = "celebrate.success"
+variant = 1
+text = "Ce l'hai fatta!"
+file = "flash/it/flash__it__celebrate.success__01.wav"
+sha256 = "642c897c0a9fde73afc3f2eb1d83689f63c243a664518488adcfe976a68f177f"
+bytes = 31484
+
+[[utterance]]
+character = "flash"
+locale = "it"
+family = "celebrate.success"
+variant = 2
+text = "Evviva!"
+file = "flash/it/flash__it__celebrate.success__02.wav"
+sha256 = "8c430ce54619ae90c964646fad3274a49c7c18eff690d78d2ed9925dc98e6e1d"
+bytes = 40844
+
+[[utterance]]
+character = "flash"
+locale = "it"
+family = "celebrate.success"
+variant = 3
+text = "Che meraviglia!"
+file = "flash/it/flash__it__celebrate.success__03.wav"
+sha256 = "d26cd0740e3f70b408fff63c851ffd803dcf2f31fb2b48b52492f21bccbf07cb"
+bytes = 50204
+
+[[utterance]]
+character = "flash"
+locale = "it"
+family = "encourage.retry"
+variant = 1
+text = "Riproviamo!"
+file = "flash/it/flash__it__encourage.retry__01.wav"
+sha256 = "a35cf8703aa204cdcf6e30ee45008fea35e8765f0880bb91d60af02479ffebed"
+bytes = 42044
+
+[[utterance]]
+character = "flash"
+locale = "it"
+family = "encourage.retry"
+variant = 2
+text = "Quasi! Proviamo ancora!"
+file = "flash/it/flash__it__encourage.retry__02.wav"
+sha256 = "0c4896b69722c6763d7ccd0787b060b0810fd370c08e6e4b422024b9d6d700c2"
+bytes = 32444
+
+[[utterance]]
+character = "flash"
+locale = "it"
+family = "encourage.retry"
+variant = 3
+text = "Ancora una volta!"
+file = "flash/it/flash__it__encourage.retry__03.wav"
+sha256 = "dd22c10162ba2fbbe907c8b84be32eed750a04beaa34ec47a8642b1c8b697427"
+bytes = 55486
+
+[[utterance]]
+character = "flash"
+locale = "it"
+family = "encourage.progress"
+variant = 1
+text = "Continua così!"
+file = "flash/it/flash__it__encourage.progress__01.wav"
+sha256 = "f7ab307760e312faf48f09f73fc9e56aeb35100848e145ff4f8e72bbbc6d8845"
+bytes = 50686
+
+[[utterance]]
+character = "flash"
+locale = "it"
+family = "encourage.progress"
+variant = 2
+text = "Ci sei quasi!"
+file = "flash/it/flash__it__encourage.progress__02.wav"
+sha256 = "6327a80483495af1f0f215c90609908b5d64f9678d454290b29360fcbdc6cc10"
+bytes = 56926
+
+[[utterance]]
+character = "flash"
+locale = "it"
+family = "encourage.progress"
+variant = 3
+text = "Vai avanti!"
+file = "flash/it/flash__it__encourage.progress__03.wav"
+sha256 = "41fe9336c529870461257a8692213f3b094bfd603d97f382bd5b2e35c96d246a"
+bytes = 41086
+
+[[utterance]]
+character = "flash"
+locale = "it"
+family = "ready.go"
+variant = 1
+text = "Forza, andiamo!"
+file = "flash/it/flash__it__ready.go__01.wav"
+sha256 = "09755df1a46f77c2be7aea2d6e3f31b2b5b75f6b7ec94e7caa8dd8dff234d977"
+bytes = 65084
+
+[[utterance]]
+character = "flash"
+locale = "it"
+family = "ready.go"
+variant = 2
+text = "Ci siamo? Via!"
+file = "flash/it/flash__it__ready.go__02.wav"
+sha256 = "b228dc3911dcfb3e0e6fe2428e80d62e3d78f3204654eb583730c02731503853"
+bytes = 32926
+
+[[utterance]]
+character = "flash"
+locale = "it"
+family = "ready.go"
+variant = 3
+text = "Si parte!"
+file = "flash/it/flash__it__ready.go__03.wav"
+sha256 = "1f9c0f4856bc7eda8992891645a03f8017a431f3a83ef36501fc10ae6c0ca3d1"
+bytes = 37244
+
+[[utterance]]
+character = "flash"
+locale = "en"
+family = "praise.general"
+variant = 1
+text = "Congratulations!"
+file = "flash/en/flash__en__praise.general__01.wav"
+sha256 = "0768ec305916ac69a7dd2cdddd5db29c39c74627be1a2ea641dac2584670094f"
+bytes = 55486
+
+[[utterance]]
+character = "flash"
+locale = "en"
+family = "praise.general"
+variant = 2
+text = "Great work!"
+file = "flash/en/flash__en__praise.general__02.wav"
+sha256 = "1697616b1995832c369ba36d2c83980e3257b49766ad7432002a5e746ba099ec"
+bytes = 43966
+
+[[utterance]]
+character = "flash"
+locale = "en"
+family = "praise.general"
+variant = 3
+text = "Well done!"
+file = "flash/en/flash__en__praise.general__03.wav"
+sha256 = "db3f38d2a3333dcee632a6a37fb5318444b2d6a17321b4a043af292d5bc625a7"
+bytes = 36284
+
+[[utterance]]
+character = "flash"
+locale = "en"
+family = "celebrate.success"
+variant = 1
+text = "You did it!"
+file = "flash/en/flash__en__celebrate.success__01.wav"
+sha256 = "09e6ef9ac52426d00b1ee57f026996878e535fe404df9ed913e705195f201643"
+bytes = 13724
+
+[[utterance]]
+character = "flash"
+locale = "en"
+family = "celebrate.success"
+variant = 2
+text = "Hooray!"
+file = "flash/en/flash__en__celebrate.success__02.wav"
+sha256 = "d391c3f82a7b923bd3a9b3608e03505589e651b78719c39df97c1fd6825cc882"
+bytes = 40606
+
+[[utterance]]
+character = "flash"
+locale = "en"
+family = "celebrate.success"
+variant = 3
+text = "Wonderful!"
+file = "flash/en/flash__en__celebrate.success__03.wav"
+sha256 = "6d70c270b413b1bda5ef11fb56c9f73855ac037cda807ca6302d81a47d1d0b99"
+bytes = 54046
+
+[[utterance]]
+character = "flash"
+locale = "en"
+family = "encourage.retry"
+variant = 1
+text = "Let's try again!"
+file = "flash/en/flash__en__encourage.retry__01.wav"
+sha256 = "b0c02827dfb083efd5892b3b73fdf60a2ae844982b0c0538fee41eca1c1ec549"
+bytes = 53566
+
+[[utterance]]
+character = "flash"
+locale = "en"
+family = "encourage.retry"
+variant = 2
+text = "Almost! Let's try again!"
+file = "flash/en/flash__en__encourage.retry__02.wav"
+sha256 = "74adde6c7ff4bfbaab391f64dd52fb1a06c69b1b3adc8c6c57b6025b06fbab4b"
+bytes = 39166
+
+[[utterance]]
+character = "flash"
+locale = "en"
+family = "encourage.retry"
+variant = 3
+text = "One more time!"
+file = "flash/en/flash__en__encourage.retry__03.wav"
+sha256 = "daf22cdc9cef44978e45a562919e007190bb883689fc12d67f65c03487a019a4"
+bytes = 39646
+
+[[utterance]]
+character = "flash"
+locale = "en"
+family = "encourage.progress"
+variant = 1
+text = "Keep going!"
+file = "flash/en/flash__en__encourage.progress__01.wav"
+sha256 = "f0af5c45244d361faea4837801069831203921d38fb8aaf0b7b77f6dcebdaaa2"
+bytes = 27164
+
+[[utterance]]
+character = "flash"
+locale = "en"
+family = "encourage.progress"
+variant = 2
+text = "Almost there!"
+file = "flash/en/flash__en__encourage.progress__02.wav"
+sha256 = "7c22b6211a3497de45d2c0c142c98eeaf1786528b55da4a1c6b2b98d8a3c0f8d"
+bytes = 46364
+
+[[utterance]]
+character = "flash"
+locale = "en"
+family = "encourage.progress"
+variant = 3
+text = "You're doing great!"
+file = "flash/en/flash__en__encourage.progress__03.wav"
+sha256 = "acfdd2cf51924fc6907726782c9c521efddb86ac958d8a3710b0b32a9f721fe0"
+bytes = 58366
+
+[[utterance]]
+character = "flash"
+locale = "en"
+family = "ready.go"
+variant = 1
+text = "Come on, let's go!"
+file = "flash/en/flash__en__ready.go__01.wav"
+sha256 = "4e5accd7898604da78bc10f39e1adb922a710f5a78ab07bd85610152b65e5160"
+bytes = 23806
+
+[[utterance]]
+character = "flash"
+locale = "en"
+family = "ready.go"
+variant = 2
+text = "Ready? Go!"
+file = "flash/en/flash__en__ready.go__02.wav"
+sha256 = "65c4709f9e5c9fe6147cededaf89a94d7d57fc730312609719365ffa30c30080"
+bytes = 19486
+
+[[utterance]]
+character = "flash"
+locale = "en"
+family = "ready.go"
+variant = 3
+text = "Here we go!"
+file = "flash/en/flash__en__ready.go__03.wav"
+sha256 = "eae00a839aa3a7fb49bc2a26231e293bd4227e71c71da3bb646aae4d669364b8"
+bytes = 43484
+
+[[utterance]]
+character = "tito"
+locale = "it"
+family = "praise.general"
+variant = 1
+text = "Complimenti!"
+file = "tito/it/tito__it__praise.general__01.wav"
+sha256 = "cbb91b7659319e291f6f51ddafd87d0882c18deefbf389b5ed8e0f2a475d3a4a"
+bytes = 51166
+
+[[utterance]]
+character = "tito"
+locale = "it"
+family = "praise.general"
+variant = 2
+text = "Ottimo lavoro!"
+file = "tito/it/tito__it__praise.general__02.wav"
+sha256 = "b4be337fc8ce77f492d86c9f3cfdf16bb996409d3cc19f1331ab2d3e21034e8f"
+bytes = 45406
+
+[[utterance]]
+character = "tito"
+locale = "it"
+family = "praise.general"
+variant = 3
+text = "Ben fatto!"
+file = "tito/it/tito__it__praise.general__03.wav"
+sha256 = "1eb6f6d8b453607c62cfb1255374e4e0875be95a80aafabbe73365dd62d34cdb"
+bytes = 23084
+
+[[utterance]]
+character = "tito"
+locale = "it"
+family = "celebrate.success"
+variant = 1
+text = "Ce l'hai fatta!"
+file = "tito/it/tito__it__celebrate.success__01.wav"
+sha256 = "42ef46b4e63680ecbcbf88ddb4f3ea6d4601c74b5f9f28c340b2e0c36364447b"
+bytes = 32444
+
+[[utterance]]
+character = "tito"
+locale = "it"
+family = "celebrate.success"
+variant = 2
+text = "Evviva!"
+file = "tito/it/tito__it__celebrate.success__02.wav"
+sha256 = "56671dea7c83f1e1d72b82ba8535d48357bfb99e3bb383cfbbc4db7f92de8c69"
+bytes = 51164
+
+[[utterance]]
+character = "tito"
+locale = "it"
+family = "celebrate.success"
+variant = 3
+text = "Che meraviglia!"
+file = "tito/it/tito__it__celebrate.success__03.wav"
+sha256 = "eae24df2bc0e5988beac64a6592869f34c797cb6702183abdc9ec8420742236f"
+bytes = 41564
+
+[[utterance]]
+character = "tito"
+locale = "it"
+family = "encourage.retry"
+variant = 1
+text = "Riproviamo!"
+file = "tito/it/tito__it__encourage.retry__01.wav"
+sha256 = "15b6795ec4fb61591ecac2ad4764e2c21a91388d35de1a5c3b86df1be8388611"
+bytes = 39646
+
+[[utterance]]
+character = "tito"
+locale = "it"
+family = "encourage.retry"
+variant = 2
+text = "Quasi! Proviamo ancora!"
+file = "tito/it/tito__it__encourage.retry__02.wav"
+sha256 = "ba5cf4ea6e61c0cacf9503799a678b8c26f3e898b496ddde6e71e2f5c298cafd"
+bytes = 28124
+
+[[utterance]]
+character = "tito"
+locale = "it"
+family = "encourage.retry"
+variant = 3
+text = "Ancora una volta!"
+file = "tito/it/tito__it__encourage.retry__03.wav"
+sha256 = "0289b1dbf6c23b9890fe9ad6f435701b43943c6c05d41a4720e2bb8be5f6260d"
+bytes = 57886
+
+[[utterance]]
+character = "tito"
+locale = "it"
+family = "encourage.progress"
+variant = 1
+text = "Continua così!"
+file = "tito/it/tito__it__encourage.progress__01.wav"
+sha256 = "fa6f89749f5d6134a471dcb0cefc44859bb8146329066f54d66d3d739967f80a"
+bytes = 63166
+
+[[utterance]]
+character = "tito"
+locale = "it"
+family = "encourage.progress"
+variant = 2
+text = "Ci sei quasi!"
+file = "tito/it/tito__it__encourage.progress__02.wav"
+sha256 = "0599f940c3c1edf9ecc62278204864b539a488048b63fe0d5edc428c147e008f"
+bytes = 61724
+
+[[utterance]]
+character = "tito"
+locale = "it"
+family = "encourage.progress"
+variant = 3
+text = "Vai avanti!"
+file = "tito/it/tito__it__encourage.progress__03.wav"
+sha256 = "5e0b95dcd4fdc2590e7c3ea24def4d45ad8c1caead941aa9858622ea400a13ab"
+bytes = 50204
+
+[[utterance]]
+character = "tito"
+locale = "it"
+family = "ready.go"
+variant = 1
+text = "Forza, andiamo!"
+file = "tito/it/tito__it__ready.go__01.wav"
+sha256 = "5871a5b810caf17897a4fb3f030c8ce54c9d0b904eaa460748648554b499b679"
+bytes = 34364
+
+[[utterance]]
+character = "tito"
+locale = "it"
+family = "ready.go"
+variant = 2
+text = "Ci siamo? Via!"
+file = "tito/it/tito__it__ready.go__02.wav"
+sha256 = "7c21b606d0ca93882e990f8b1b5866514f2a735489e6cde1401618b425b353cf"
+bytes = 28604
+
+[[utterance]]
+character = "tito"
+locale = "it"
+family = "ready.go"
+variant = 3
+text = "Si parte!"
+file = "tito/it/tito__it__ready.go__03.wav"
+sha256 = "c3f65d833cfcd93271785aa8b42e6dc3ee70f7b0f3849798fe57bb8874e27f40"
+bytes = 41564
+
+[[utterance]]
+character = "tito"
+locale = "en"
+family = "praise.general"
+variant = 1
+text = "Congratulations!"
+file = "tito/en/tito__en__praise.general__01.wav"
+sha256 = "55bb40249bf3cbcaa6bcc4da658fa070d335d1105288d80a33e548686235fa0e"
+bytes = 65566
+
+[[utterance]]
+character = "tito"
+locale = "en"
+family = "praise.general"
+variant = 2
+text = "Great work!"
+file = "tito/en/tito__en__praise.general__02.wav"
+sha256 = "92f626b24a935e27f8796bd91d97e7ee11388cc51efabe329bb8127e8d889164"
+bytes = 42284
+
+[[utterance]]
+character = "tito"
+locale = "en"
+family = "praise.general"
+variant = 3
+text = "Well done!"
+file = "tito/en/tito__en__praise.general__03.wav"
+sha256 = "bc86b7946e77cd3c9078a7b4db37976bc1e288f9a6c5d588107c390bf082ccc9"
+bytes = 31244
+
+[[utterance]]
+character = "tito"
+locale = "en"
+family = "celebrate.success"
+variant = 1
+text = "You did it!"
+file = "tito/en/tito__en__celebrate.success__01.wav"
+sha256 = "af4dbf1467b72849106974420f6bcb472b2045dfa7c79c68892ab0af2a9203e4"
+bytes = 39166
+
+[[utterance]]
+character = "tito"
+locale = "en"
+family = "celebrate.success"
+variant = 2
+text = "Hooray!"
+file = "tito/en/tito__en__celebrate.success__02.wav"
+sha256 = "ba839ad004a2a6877cbfb34756238372553615dfdd0b3bbc080c6139c9e6b1fa"
+bytes = 34604
+
+[[utterance]]
+character = "tito"
+locale = "en"
+family = "celebrate.success"
+variant = 3
+text = "Wonderful!"
+file = "tito/en/tito__en__celebrate.success__03.wav"
+sha256 = "724958b515ccfa68acf3e026ade70b855addaa5cb6d76074f0fb5a1ff24ba5a8"
+bytes = 29804
+
+[[utterance]]
+character = "tito"
+locale = "en"
+family = "encourage.retry"
+variant = 1
+text = "Let's try again!"
+file = "tito/en/tito__en__encourage.retry__01.wav"
+sha256 = "14c2c9245045d8a75956760b612798152beadaa5c9d01c16fb4da0ba8fb24bdc"
+bytes = 43724
+
+[[utterance]]
+character = "tito"
+locale = "en"
+family = "encourage.retry"
+variant = 2
+text = "Almost! Let's try again!"
+file = "tito/en/tito__en__encourage.retry__02.wav"
+sha256 = "286e06f8ff187ea173c0608a22759055759c9cd4f3bfe0178c236ebb24bb2a88"
+bytes = 29804
+
+[[utterance]]
+character = "tito"
+locale = "en"
+family = "encourage.retry"
+variant = 3
+text = "One more time!"
+file = "tito/en/tito__en__encourage.retry__03.wav"
+sha256 = "7d23d332be82442846e28321d1994711f996ab769c9c8926c44d095883058692"
+bytes = 37484
+
+[[utterance]]
+character = "tito"
+locale = "en"
+family = "encourage.progress"
+variant = 1
+text = "Keep going!"
+file = "tito/en/tito__en__encourage.progress__01.wav"
+sha256 = "2fdcabd15af0124f80bec17f9aa2adde0540c92168bd259175033b2180699a1e"
+bytes = 30526
+
+[[utterance]]
+character = "tito"
+locale = "en"
+family = "encourage.progress"
+variant = 2
+text = "Almost there!"
+file = "tito/en/tito__en__encourage.progress__02.wav"
+sha256 = "657b305012eb7012fddeb2045e8ab0fcf9da8a0f60effdf58351fbfd92f80060"
+bytes = 37246
+
+[[utterance]]
+character = "tito"
+locale = "en"
+family = "encourage.progress"
+variant = 3
+text = "You're doing great!"
+file = "tito/en/tito__en__encourage.progress__03.wav"
+sha256 = "fad97b66baa74a9eff761994063a74b534819745e0f8221b65d6e9e51941b86f"
+bytes = 56684
+
+[[utterance]]
+character = "tito"
+locale = "en"
+family = "ready.go"
+variant = 1
+text = "Come on, let's go!"
+file = "tito/en/tito__en__ready.go__01.wav"
+sha256 = "d9036a5a90b0d68b405772059e0a3afed173282d667b50b06fb8ad9febfa3f9f"
+bytes = 46366
+
+[[utterance]]
+character = "tito"
+locale = "en"
+family = "ready.go"
+variant = 2
+text = "Ready? Go!"
+file = "tito/en/tito__en__ready.go__02.wav"
+sha256 = "0f6a79197b51d0166ed6e77a0b2374d34b14d65453041121aaf8cdbc22cc6e68"
+bytes = 23326
+
+[[utterance]]
+character = "tito"
+locale = "en"
+family = "ready.go"
+variant = 3
+text = "Here we go!"
+file = "tito/en/tito__en__ready.go__03.wav"
+sha256 = "a40d66dab40649045f763131f4394b05bd5397d736bbf185ce9f8578934aeab2"
+bytes = 23324
+
+[[utterance]]
+character = "momo"
+locale = "it"
+family = "praise.general"
+variant = 1
+text = "Complimenti!"
+file = "momo/it/momo__it__praise.general__01.wav"
+sha256 = "d783bb8eb591ae726a388cfe75a59ea6d12455095c7e03a35546ec0404719f1a"
+bytes = 33884
+
+[[utterance]]
+character = "momo"
+locale = "it"
+family = "praise.general"
+variant = 2
+text = "Ottimo lavoro!"
+file = "momo/it/momo__it__praise.general__02.wav"
+sha256 = "ad9efadd22bbef97e5a47518604ee797e345c9d6055892028029bfa6b9849a95"
+bytes = 9886
+
+[[utterance]]
+character = "momo"
+locale = "it"
+family = "praise.general"
+variant = 3
+text = "Ben fatto!"
+file = "momo/it/momo__it__praise.general__03.wav"
+sha256 = "5dafee9c336cb2ba5c2f739d025d4782e1931adef4f578085fe32eb1d6222555"
+bytes = 57644
+
+[[utterance]]
+character = "momo"
+locale = "it"
+family = "celebrate.success"
+variant = 1
+text = "Ce l'hai fatta!"
+file = "momo/it/momo__it__celebrate.success__01.wav"
+sha256 = "1cadfb24135e36dde21f1eadb4d399fbba82d401ddfd491d1cb784a80402febb"
+bytes = 31004
+
+[[utterance]]
+character = "momo"
+locale = "it"
+family = "celebrate.success"
+variant = 2
+text = "Evviva!"
+file = "momo/it/momo__it__celebrate.success__02.wav"
+sha256 = "d08a980583f538636a85c61ed35ef6d47e74cf85d567169d37bc26ea6ab2e04b"
+bytes = 50684
+
+[[utterance]]
+character = "momo"
+locale = "it"
+family = "celebrate.success"
+variant = 3
+text = "Che meraviglia!"
+file = "momo/it/momo__it__celebrate.success__03.wav"
+sha256 = "fbf165080c224f43d232fbdeaf4ea565547778ac04a50f71798f32d3b433e63c"
+bytes = 55966
+
+[[utterance]]
+character = "momo"
+locale = "it"
+family = "encourage.retry"
+variant = 1
+text = "Riproviamo!"
+file = "momo/it/momo__it__encourage.retry__01.wav"
+sha256 = "d723973456f74e414f73b62225d78f348b03f92ab4a12c217c3c907ceca94c73"
+bytes = 51644
+
+[[utterance]]
+character = "momo"
+locale = "it"
+family = "encourage.retry"
+variant = 2
+text = "Quasi! Proviamo ancora!"
+file = "momo/it/momo__it__encourage.retry__02.wav"
+sha256 = "7388f93a8a6d28cf2e00f3629d11066bf505186bfca2c48e517009366875fcef"
+bytes = 53084
+
+[[utterance]]
+character = "momo"
+locale = "it"
+family = "encourage.retry"
+variant = 3
+text = "Ancora una volta!"
+file = "momo/it/momo__it__encourage.retry__03.wav"
+sha256 = "b60eab1ff1ee7a5f5317c9bd94379b7f51780ef12f10298756247d86804d8565"
+bytes = 59326
+
+[[utterance]]
+character = "momo"
+locale = "it"
+family = "encourage.progress"
+variant = 1
+text = "Continua così!"
+file = "momo/it/momo__it__encourage.progress__01.wav"
+sha256 = "c1e08c205e27d61a374d4b59ba382bfc79c485c7ba9eed2ad2d7494e929b60a1"
+bytes = 58846
+
+[[utterance]]
+character = "momo"
+locale = "it"
+family = "encourage.progress"
+variant = 2
+text = "Ci sei quasi!"
+file = "momo/it/momo__it__encourage.progress__02.wav"
+sha256 = "5737a8af52bbbe03355126ed9fe08a5fb320cc046ce2233c7f536ec786d8735c"
+bytes = 23804
+
+[[utterance]]
+character = "momo"
+locale = "it"
+family = "encourage.progress"
+variant = 3
+text = "Vai avanti!"
+file = "momo/it/momo__it__encourage.progress__03.wav"
+sha256 = "1500087646448fbaf5e227c557cda645a5fc1e2d45ca5bc1bf7c59fb3d17892a"
+bytes = 61246
+
+[[utterance]]
+character = "momo"
+locale = "it"
+family = "ready.go"
+variant = 1
+text = "Forza, andiamo!"
+file = "momo/it/momo__it__ready.go__01.wav"
+sha256 = "3840736ff5c59228d73361582f1ec196eae80fbb304d9a854cc9307c6ecb91c0"
+bytes = 29564
+
+[[utterance]]
+character = "momo"
+locale = "it"
+family = "ready.go"
+variant = 2
+text = "Ci siamo? Via!"
+file = "momo/it/momo__it__ready.go__02.wav"
+sha256 = "4125e9906e62f34cf2901e3e1813f733df6442450bc67a46fa1e980a92b7d758"
+bytes = 37244
+
+[[utterance]]
+character = "momo"
+locale = "it"
+family = "ready.go"
+variant = 3
+text = "Si parte!"
+file = "momo/it/momo__it__ready.go__03.wav"
+sha256 = "640ebb2e89bdcb5033869de60113c2edd3e794dd4c03ce11d2f08b6967d05918"
+bytes = 24284
+
+[[utterance]]
+character = "momo"
+locale = "en"
+family = "praise.general"
+variant = 1
+text = "Congratulations!"
+file = "momo/en/momo__en__praise.general__01.wav"
+sha256 = "d454c4a4029e6dca6b2b97be854fc39cf02d1f0228ac970110c1d45e567c9eb4"
+bytes = 67006
+
+[[utterance]]
+character = "momo"
+locale = "en"
+family = "praise.general"
+variant = 2
+text = "Great work!"
+file = "momo/en/momo__en__praise.general__02.wav"
+sha256 = "c36f80e9bf1fdf4bc9bc209f432df2f499ce37e596939a9cb677ed73f253b8bc"
+bytes = 39646
+
+[[utterance]]
+character = "momo"
+locale = "en"
+family = "praise.general"
+variant = 3
+text = "Well done!"
+file = "momo/en/momo__en__praise.general__03.wav"
+sha256 = "0a53a3f13ea4c01f3c7ed68fa5cf26cc6076506e4ff089f315a25ebff80d0452"
+bytes = 18526
+
+[[utterance]]
+character = "momo"
+locale = "en"
+family = "celebrate.success"
+variant = 1
+text = "You did it!"
+file = "momo/en/momo__en__celebrate.success__01.wav"
+sha256 = "33df190c080900173190bfa80eed106953d51c678413fcd7f98fefa8fc9960b6"
+bytes = 14444
+
+[[utterance]]
+character = "momo"
+locale = "en"
+family = "celebrate.success"
+variant = 2
+text = "Hooray!"
+file = "momo/en/momo__en__celebrate.success__02.wav"
+sha256 = "3539c7b395d1d6148e4f6e9c059951be97e998b8c260520e3f891c2b4c6a752c"
+bytes = 42284
+
+[[utterance]]
+character = "momo"
+locale = "en"
+family = "celebrate.success"
+variant = 3
+text = "Wonderful!"
+file = "momo/en/momo__en__celebrate.success__03.wav"
+sha256 = "0d571b3869fffad2540e55ffff2ebe0614465e8a0d9591d80abf6dd39ee987d1"
+bytes = 28126
+
+[[utterance]]
+character = "momo"
+locale = "en"
+family = "encourage.retry"
+variant = 1
+text = "Let's try again!"
+file = "momo/en/momo__en__encourage.retry__01.wav"
+sha256 = "fcbc68c83c1ab5a206dce2623fe978069a16785d530b9bd445108be25d0dc160"
+bytes = 57404
+
+[[utterance]]
+character = "momo"
+locale = "en"
+family = "encourage.retry"
+variant = 2
+text = "Almost! Let's try again!"
+file = "momo/en/momo__en__encourage.retry__02.wav"
+sha256 = "612137e1f83747c3644724e1c6498efe5c5b59864ce6d4ea10ea001fc8ce00c1"
+bytes = 28124
+
+[[utterance]]
+character = "momo"
+locale = "en"
+family = "encourage.retry"
+variant = 3
+text = "One more time!"
+file = "momo/en/momo__en__encourage.retry__03.wav"
+sha256 = "458e887952c60e3788b73b65441f8a5dc148a0a8b5a2b1a3e64eecd763186f8d"
+bytes = 73964
+
+[[utterance]]
+character = "momo"
+locale = "en"
+family = "encourage.progress"
+variant = 1
+text = "Keep going!"
+file = "momo/en/momo__en__encourage.progress__01.wav"
+sha256 = "74e613d971decbf47fcdce5f1590660387ee78cf986a09f1c56e456d8d89ee66"
+bytes = 10846
+
+[[utterance]]
+character = "momo"
+locale = "en"
+family = "encourage.progress"
+variant = 2
+text = "Almost there!"
+file = "momo/en/momo__en__encourage.progress__02.wav"
+sha256 = "af07c5a2307825c47d1fc5869d194edd7bc68deee9674a035e3b9593420faea5"
+bytes = 27884
+
+[[utterance]]
+character = "momo"
+locale = "en"
+family = "encourage.progress"
+variant = 3
+text = "You're doing great!"
+file = "momo/en/momo__en__encourage.progress__03.wav"
+sha256 = "53a2d20eb4fc73f2c87f9e3f9c0ad37e3b8c1c3c7b8974e99f6e16918bf5c6e5"
+bytes = 49484
+
+[[utterance]]
+character = "momo"
+locale = "en"
+family = "ready.go"
+variant = 1
+text = "Come on, let's go!"
+file = "momo/en/momo__en__ready.go__01.wav"
+sha256 = "4f7e6240b522dee8b82e22ad70a71028a11e9ae85cbae2023d8b738d846e6789"
+bytes = 35324
+
+[[utterance]]
+character = "momo"
+locale = "en"
+family = "ready.go"
+variant = 2
+text = "Ready? Go!"
+file = "momo/en/momo__en__ready.go__02.wav"
+sha256 = "6c488c948b22443d748754531d4b40747b90804e13bd51b7ae871523460b1dab"
+bytes = 28364
+
+[[utterance]]
+character = "momo"
+locale = "en"
+family = "ready.go"
+variant = 3
+text = "Here we go!"
+file = "momo/en/momo__en__ready.go__03.wav"
+sha256 = "059018bb409122d4609948d409b5712ed9f1a82554b18636d28651717317a947"
+bytes = 29566
