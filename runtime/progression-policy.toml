@@ -1,11 +1,38 @@
 schema_version = 1
 
 # Global reward economics are Greia-owned policy. Activity packages only declare
-# factual events. This initial rule exists to prove the authority boundary.
+# factual events. Greia Stars are deliberately awarded at most once per Activity
+# session for a meaningful completion/creation fact: they reward participation
+# and breadth, not repeated clicks or high-frequency event farming.
+
 [[rules]]
 id = "shape-garden-creation-star"
 activity_id = "org.greia.shape-garden"
 event_id = "creation.completed"
+once_per_session = true
+reward_id = "star"
+reward_delta = 1
+
+[[rules]]
+id = "clinic-care-star"
+activity_id = "org.greia.clinica-cuccioli"
+event_id = "vet.patient_healed"
+once_per_session = true
+reward_id = "star"
+reward_delta = 1
+
+[[rules]]
+id = "memory-completion-star"
+activity_id = "org.greia.memory-meraviglie"
+event_id = "memory.game_completed"
+once_per_session = true
+reward_id = "star"
+reward_delta = 1
+
+[[rules]]
+id = "bridges-completion-star"
+activity_id = "org.greia.costruiamo-ponti"
+event_id = "bridge.level_completed"
 once_per_session = true
 reward_id = "star"
 reward_delta = 1
