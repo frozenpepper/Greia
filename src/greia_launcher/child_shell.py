@@ -10,10 +10,12 @@ from __future__ import annotations
 
 import os
 from collections.abc import Mapping, Sequence
+from functools import partial
 from pathlib import Path
 import time
 from typing import Any
 
+from greia_platform.achievements import ProfileAchievementService
 from greia_platform.audio import AudioService
 from greia_platform.customization import CustomizationError, ThemeStore
 from greia_platform.hal import GreiaHAL
@@ -26,6 +28,7 @@ from .achievement_presentation import AchievementLibraryMixin
 from .collection_home_presentation import CollectionFirstHomeMixin
 from .composition import build_launcher_runtime_services, provisional_installed_display_session
 from .display_session import DisplaySessionCoordinator
+from .event_broker import ActivityEventBroker
 from .feedback_presentation import SharedUiFeedbackMixin
 from .main import _development_hal
 from .navigation_chrome_presentation import SharedUiNavigationChromeMixin
@@ -41,14 +44,20 @@ from .supervisor import ActivitySupervisor
 
 
 class ProfileVisualActivitySupervisor(ActivitySupervisor):
-    """Add safe profile presentation and platform-selected microphone routing."""
+    """Add profile visuals, audio routing and trusted achievement evaluation."""
 
     def __init__(
         self,
         *args: object,
         audio_service: AudioService | None = None,
+        achievement_service: ProfileAchievementService | None = None,
         **kwargs: object,
     ) -> None:
+        if achievement_service is not None and "event_broker_factory" not in kwargs:
+            kwargs["event_broker_factory"] = partial(
+                ActivityEventBroker.start,
+                achievement_service=achievement_service,
+            )
         super().__init__(*args, **kwargs)
         self._audio_service = audio_service
 
@@ -161,6 +170,7 @@ class GreiaChildShell(
             runtime_manager=runtime_services.runtime_manager,
             storage_service=runtime_services.storage_service,
             history_service=runtime_services.history_service,
+            achievement_service=runtime_services.achievement_service,
             display_coordinator=self._display_session_coordinator(),
             audio_service=audio_service,
         )
