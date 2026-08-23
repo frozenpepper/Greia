@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import math
-import os
 import time
 from dataclasses import dataclass
 from typing import Any
@@ -12,9 +11,12 @@ from greia_platform.achievements import (
     AchievementSnapshot,
 )
 from greia_platform.pygame_achievements import PygameAchievementBadgeRenderer
-from greia_platform.system_language import SystemLanguageStore
 from greia_platform.typography import FontRole
 
+from .achievement_localization import (
+    achievement_ui_strings,
+    resolve_achievement_locale,
+)
 from .main import HitTarget
 
 
@@ -48,21 +50,23 @@ class AchievementLibraryMixin:
         self._achievement_queue: list[AchievementEntry] = []
         self._achievement_celebration: _AchievementCelebration | None = None
         self._achievement_badges = PygameAchievementBadgeRenderer(self._load_icon)
-        try:
-            self._achievement_locale = (
-                SystemLanguageStore.from_environment().read().locale
-            )
-        except Exception:
-            self._achievement_locale = os.environ.get("GREIA_DEVICE_LOCALE", "en") or "en"
+        self._achievement_locale = resolve_achievement_locale()
 
     @property
     def _achievement_service(self) -> Any | None:
         services = getattr(self, "runtime_services", None)
         return None if services is None else getattr(services, "achievement_service", None)
 
+    def _refresh_achievement_locale(self) -> str:
+        """Refresh presentation locale at explicit Shell transition boundaries."""
+
+        self._achievement_locale = resolve_achievement_locale()
+        return self._achievement_locale
+
     def _activate_profile(self, profile: Any, pygame: Any) -> None:
         super()._activate_profile(profile, pygame)
         self._achievement_selected = 0
+        self._refresh_achievement_locale()
         # Do not replay historical/reconstructed achievements as a popup storm.
         self._refresh_achievements()
 
@@ -87,6 +91,7 @@ class AchievementLibraryMixin:
         super()._launch_selected(pygame)
         if self._active_profile is None:
             return
+        self._refresh_achievement_locale()
         snapshot = self._refresh_achievements()
         if snapshot is None:
             return
@@ -173,6 +178,7 @@ class AchievementLibraryMixin:
         self._refresh_achievements()
 
     def _open_achievement_library(self) -> None:
+        self._refresh_achievement_locale()
         snapshot = self._refresh_achievements()
         if snapshot is None:
             return
@@ -333,6 +339,7 @@ class AchievementLibraryMixin:
         snapshot = self._refresh_achievements()
         entries = () if snapshot is None else snapshot.visible_entries
         width, height = screen.get_size()
+        copy = achievement_ui_strings(self._achievement_locale)
 
         back_size = max(54, min(68, height // 9))
         back = pygame.Rect(14, 12, back_size, back_size)
@@ -346,11 +353,9 @@ class AchievementLibraryMixin:
         pygame.draw.lines(screen, theme.text, False, points, width=6)
         self._targets.append(HitTarget("achievement_back", None, back))
 
-        italian = self._achievement_locale.casefold().startswith("it")
-        title_text = "I MIEI DISTINTIVI" if italian else "MY BADGES"
         title = self._typography.font(
             FontRole.TITLE, max(26, min(38, height // 15))
-        ).render(title_text, True, theme.text)
+        ).render(copy.library_title, True, theme.text)
         screen.blit(title, title.get_rect(center=(width // 2, back.centery)))
 
         if snapshot is not None:
@@ -363,14 +368,9 @@ class AchievementLibraryMixin:
             screen.blit(counter, counter.get_rect(midright=(width - 18, back.centery)))
 
         if not entries:
-            empty_text = (
-                "I distintivi arriveranno esplorando Greia."
-                if italian
-                else "Badges will appear as you explore Greia."
-            )
             empty = self._typography.font(
                 FontRole.BODY, max(20, height // 24)
-            ).render(empty_text, True, theme.text)
+            ).render(copy.empty_library, True, theme.text)
             screen.blit(empty, empty.get_rect(center=screen.get_rect().center))
             return
 
@@ -432,9 +432,8 @@ class AchievementLibraryMixin:
                 label.get_rect(center=(rect.centerx, rect.bottom - 18)),
             )
             if entry.is_new:
-                new_text = "NUOVO" if italian else "NEW"
                 new = self._typography.font(FontRole.CONTROL, 12).render(
-                    new_text, True, theme.accent_text
+                    copy.new_label, True, theme.accent_text
                 )
                 new_rect = pygame.Rect(
                     0,
@@ -551,6 +550,7 @@ class AchievementLibraryMixin:
             return
         theme = self.theme_controller.theme
         entry = celebration.entry
+        copy = achievement_ui_strings(self._achievement_locale)
         width, height = screen.get_size()
         panel_w = min(520, width - 70)
         panel_h = min(310, height - 70)
@@ -589,10 +589,8 @@ class AchievementLibraryMixin:
 
         badge = self._achievement_badges.render(entry, 126, pygame)
         screen.blit(badge, badge.get_rect(center=(cx, cy)))
-        italian = self._achievement_locale.casefold().startswith("it")
-        eyebrow_text = "NUOVO DISTINTIVO!" if italian else "NEW BADGE!"
         eyebrow = self._typography.font(FontRole.CONTROL, 19).render(
-            eyebrow_text, True, theme.accent
+            copy.new_badge, True, theme.accent
         )
         screen.blit(
             eyebrow,
