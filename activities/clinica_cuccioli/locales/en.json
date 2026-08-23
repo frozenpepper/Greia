@@ -13,9 +13,16 @@
     "tool.sponge": "🧼 Bath",
     "tool.snack": "🥣 Treat",
     "tool.cuddle": "💖 Cuddles",
+    "tool.stethoscope.short": "CHECKUP",
+    "tool.bath.short": "BATH",
+    "tool.bandaid.short": "BANDAGE",
+    "tool.food.short": "TREAT",
+    "tool.cuddle.short": "CUDDLES",
     "victory.title": "The puppy is healthy and happy! 🐶💖",
     "victory.subtitle": "You are a wonderful vet doctor!",
-    "btn.next_patient": "🐾 Next Patient!"
+    "victory.all_patients": "PUPPIES CARED FOR!",
+    "btn.next_patient": "🐾 Next Patient!",
+    "btn.play_again": "PLAY AGAIN"
   },
   "audio": {}
 }
