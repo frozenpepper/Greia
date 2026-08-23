@@ -7,6 +7,7 @@ Read first:
 ```text
 docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md
 docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md
+docs/adr/0032-profile-presentation-and-grammatical-agreement.md
 ```
 
 For optional local character-voice setup:
@@ -190,7 +191,55 @@ The Activity must not duplicate the shared audio into its package.
 
 If a shared cue is unavailable on the target platform version, fail soft to visual feedback.
 
-## 9. Writing custom character lines
+## 9. Child-directed grammatical agreement
+
+Greia exposes a small semantic grammatical selector for the active child:
+
+```text
+neutral
+masculine
+feminine
+```
+
+This selector exists only so localization can choose wording that addresses the child correctly. It must not select Activities, subjects, difficulty, rewards, interests, characters, permissions, or gameplay.
+
+Prefer a natural neutral base phrase whenever possible. Create masculine/feminine variants only where the target language genuinely benefits from them.
+
+Italian example:
+
+```text
+feedback.correct             → "Ottimo lavoro!"
+feedback.correct.masculine   → "Bravo!"
+feedback.correct.feminine    → "Brava!"
+```
+
+The base semantic cue is the required same-locale neutral fallback. Masculine/feminine entries are optional.
+
+If a cue is both displayed and spoken, text and audio must resolve through the **same** variant. For Activity-owned static audio, generate each supported wording with the same canonical speaker voice:
+
+```text
+feedback.correct             → locales/it/audio/feedback-correct-neutral.ogg
+feedback.correct.masculine   → locales/it/audio/feedback-correct-masculine.ogg
+feedback.correct.feminine    → locales/it/audio/feedback-correct-feminine.ogg
+```
+
+At runtime:
+
+```python
+from greia_platform.activity_api import get_profile_grammatical_gender
+
+variant = get_profile_grammatical_gender().value
+caption = resources.text("feedback.correct", variant=variant)
+voice = resources.audio_cue("feedback.correct", variant=variant)
+```
+
+Do not hand-code Italian logic such as `if boy: "bravo"` inside gameplay. Localization owns language-specific words; Greia provides only the semantic selector.
+
+The selector does not change the speaker. If Lilli says `Bravo!` or `Brava!`, both versions remain Lilli. For Dani/system speech, resolve the localized text with the same selector before passing it to the approved system-TTS path.
+
+Keep this selector deliberately small. If a future language needs richer plural/case/select semantics, extend localization deliberately rather than inventing Activity-specific suffix vocabularies.
+
+## 10. Writing custom character lines
 
 For custom Chatterbox generation:
 
@@ -198,18 +247,20 @@ For custom Chatterbox generation:
 semantic cue ID
 → exact localized text
 → canonical character
-→ generate review WAV
+→ decide whether grammatical variants are genuinely needed
+→ generate review WAV(s)
 → listen and review
 → regenerate/reject as needed
 → bounded post-process
 → package final OGG/WAV
+→ verify text/audio variant parity where variants exist
 ```
 
 Prefer complete natural utterances over concatenated fragments.
 
 Do not generate pronunciation-authoritative fragments as character dialogue merely to preserve mascot voice.
 
-## 10. Human audio gate
+## 11. Human audio gate
 
 Reject custom character speech for:
 
@@ -224,9 +275,11 @@ Reject custom character speech for:
 
 Reject pedagogical speech for any incorrect or ambiguous target sound even if the voice sounds pleasant.
 
+For grammatical variant sets, also reject the set if delivery, pacing or energy differs enough that masculine/feminine selection sounds like a different character performance rather than the same cue with different wording.
+
 A successful model/process exit is never audio acceptance.
 
-## 11. Audio analysis
+## 12. Audio analysis
 
 FFmpeg/ffprobe are the preferred cross-platform authoring primitives for:
 
@@ -242,7 +295,7 @@ Audio analysis is transport/post-processing, not semantic repair.
 
 Keep generated masters as WAV during review. Package reviewed WAV when phonetic detail/very short duration justify it; otherwise use the current supported OGG path.
 
-## 12. Activity degradation behavior
+## 13. Activity degradation behavior
 
 When custom voice generation is unavailable:
 
@@ -268,7 +321,7 @@ Bad:
 
 If custom character speech is an explicit owner requirement rather than an optional enhancement, report the missing toolchain and use the setup guide.
 
-## 13. Package boundary
+## 14. Package boundary
 
 Never package:
 

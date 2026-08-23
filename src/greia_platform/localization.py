@@ -2,8 +2,9 @@
 
 This module deliberately uses JSON localization bundles so Python Activities and
 future Web runtimes can share one package format.  It owns locale normalization,
-fallback selection, bounded string/audio catalogue loading, and semantic lookup.
-It does not own Parent/profile persistence or renderer-specific text layout.
+fallback selection, bounded string/audio catalogue loading, semantic lookup and
+small semantic resource variants.  It does not own Parent/profile persistence or
+renderer-specific text layout.
 """
 
 from __future__ import annotations
@@ -21,6 +22,7 @@ MAX_STRING_ENTRIES = 1024
 MAX_AUDIO_ENTRIES = 256
 MAX_STRING_CHARS = 8192
 MAX_KEY_CHARS = 160
+MAX_VARIANT_CHARS = 48
 _ALLOWED_AUDIO_SUFFIXES = frozenset({".ogg", ".wav"})
 
 
@@ -188,8 +190,6 @@ def resolve_activity_locale(
         if candidate.value in supported and supported[candidate.value] not in candidates:
             candidates.append(supported[candidate.value])
     if not candidates:
-        # __post_init__ guarantees the exact default locale is supported, so
-        # this is defensive against later refactors rather than normal control.
         raise LocalizationError("Activity locale declaration has no usable fallback")
 
     selected = candidates[0]
@@ -241,7 +241,17 @@ class LocalizationBundle:
 
 
 class LocalizedResources:
-    """Per-launch semantic string/audio resolver with per-key locale fallback."""
+    """Per-launch semantic string/audio resolver with per-key locale fallback.
+
+    A caller may provide a small semantic ``variant`` such as ``masculine`` or
+    ``feminine``.  The bundle continues to use ordinary semantic keys: Greia
+    first tries ``<key>.<variant>`` inside each preferred locale, then the base
+    key in that same locale.  This ordering matters: an Italian neutral phrase
+    is preferred over an English gendered phrase when Italian lacks a variant.
+
+    The mechanism is deliberately generic and bounded.  It is not a full
+    grammatical-message language and it must not be used to fragment gameplay.
+    """
 
     def __init__(
         self,
@@ -255,11 +265,21 @@ class LocalizedResources:
             for locale in context.fallback_chain
         )
 
-    def text(self, key: str, variables: Mapping[str, object] | None = None) -> str:
+    def text(
+        self,
+        key: str,
+        variables: Mapping[str, object] | None = None,
+        *,
+        variant: str | None = None,
+    ) -> str:
         key = _resource_key(key)
+        lookup_keys = _variant_keys(key, variant)
         value: str | None = None
         for bundle in self._bundles:
-            value = bundle.strings.get(key)
+            for lookup_key in lookup_keys:
+                value = bundle.strings.get(lookup_key)
+                if value is not None:
+                    break
             if value is not None:
                 break
         if value is None:
@@ -282,13 +302,44 @@ class LocalizedResources:
                 f"localized string {key!r} has an unresolved/invalid placeholder"
             ) from exc
 
-    def audio_cue(self, key: str) -> LocalizedAudioCue:
+    def audio_cue(
+        self,
+        key: str,
+        *,
+        variant: str | None = None,
+    ) -> LocalizedAudioCue:
         key = _resource_key(key)
+        lookup_keys = _variant_keys(key, variant)
         for bundle in self._bundles:
-            cue = bundle.audio.get(key)
-            if cue is not None:
-                return cue
+            for lookup_key in lookup_keys:
+                cue = bundle.audio.get(lookup_key)
+                if cue is not None:
+                    return cue
         raise LocalizationError(f"missing localized audio cue: {key}")
+
+
+def _variant_keys(key: str, variant: str | None) -> tuple[str, ...]:
+    if variant is None:
+        return (key,)
+    normalized = _variant_id(variant)
+    variant_key = f"{key}.{normalized}"
+    if len(variant_key) > MAX_KEY_CHARS:
+        raise LocalizationError("localized variant key exceeds length limit")
+    return (variant_key, key)
+
+
+def _variant_id(raw: object) -> str:
+    if not isinstance(raw, str):
+        raise LocalizationError("localized resource variant must be text")
+    value = raw.strip()
+    if not value or len(value) > MAX_VARIANT_CHARS:
+        raise LocalizationError("localized resource variant length is invalid")
+    allowed = "abcdefghijklmnopqrstuvwxyz0123456789_-"
+    if value != value.lower() or any(character not in allowed for character in value):
+        raise LocalizationError(
+            "localized resource variant must be a lower-case semantic ID"
+        )
+    return value
 
 
 def _direction_for(

@@ -17,6 +17,7 @@ from typing import Any
 from greia_platform.audio import AudioService
 from greia_platform.customization import CustomizationError, ThemeStore
 from greia_platform.hal import GreiaHAL
+from greia_platform.profile_presentation import ProfilePresentationStore
 from greia_platform.theme_snapshot import ThemeSnapshotError, encode_theme_snapshot
 from greia_platform.ui_preferences import UiPreferencesStore
 
@@ -39,7 +40,7 @@ from .supervisor import ActivitySupervisor
 
 
 class ProfileVisualActivitySupervisor(ActivitySupervisor):
-    """Add safe profile visuals and platform-selected microphone routing."""
+    """Add safe profile presentation and platform-selected microphone routing."""
 
     def __init__(
         self,
@@ -79,6 +80,12 @@ class ProfileVisualActivitySupervisor(ActivitySupervisor):
 
         preferences = UiPreferencesStore(profile.customization_dir).read()
         environment["GREIA_INTERFACE_SIZE"] = preferences.interface_size.value
+
+        presentation = ProfilePresentationStore(profile.customization_dir).read()
+        environment["GREIA_PROFILE_PRESENTATION"] = presentation.presentation.value
+        environment["GREIA_PROFILE_GRAMMATICAL_GENDER"] = (
+            presentation.grammatical_gender.value
+        )
 
         root = Path(os.environ.get("GREIA_OS_ROOT", "/opt/greia-os")).resolve()
         defaults = root / "runtime" / "theme-defaults.toml"

@@ -1,8 +1,9 @@
 # Greia Activity Ecosystem and Distribution — Product Requirements
 
-**Status:** accepted product direction; implementation future/incremental  
-**Date:** 2026-08-17  
+**Status:** accepted product direction; independent new-install/package seam partly implemented, broader catalogue/update lifecycle incremental  
+**Date:** 2026-08-23  
 **Architecture owner:** ADR 0023  
+**Package-format contract:** `docs/architecture/GREIA_ACTIVITY_PACKAGE_FORMAT.md`  
 **Licensing owner:** ADR 0024 and `docs/governance/LICENSING_AND_TRADEMARK.md`
 
 ## 1. Product purpose
@@ -33,7 +34,7 @@ run locally/development environment
   ↓
 validate
   ↓
-package
+package as .greiaactivity
   ↓
 share independently OR submit to official catalogue
 ```
@@ -85,7 +86,19 @@ Documentation should be useful to humans and structured enough that coding agent
 
 ## 4. Independent Activity installation
 
-Parents must retain a supported way to install a compatible Activity obtained outside the official catalogue once R10 package installation exists.
+Parents must retain a supported way to install a compatible Activity obtained outside the official catalogue.
+
+The normal parent-facing distribution file is now defined:
+
+```text
+<activity-name>.greiaactivity
+```
+
+A `.greiaactivity` file is an ordinary ZIP archive containing the Activity package tree directly at archive root, including root `activity.toml`. Its media type is `application/vnd.greia.activity+zip`.
+
+The custom extension exists so Parent clients and operating-system file pickers can isolate Activity packages from ordinary files. It is a **UX/routing signal only**. Greia never treats the extension, browser-supplied media type, or filename as proof that a package is valid or trusted.
+
+The authoritative format/security details live in `docs/architecture/GREIA_ACTIVITY_PACKAGE_FORMAT.md`.
 
 The user experience must not expose Linux paths/package-manager concepts and must never autorun removable code.
 
@@ -98,7 +111,7 @@ parent chooses Install Activity / inserts media
   ↓
 Greia scans bounded package metadata
   ↓
-Greia validates format + compatibility + provenance/trust
+Greia validates archive + Activity format + compatibility + provenance/trust
   ↓
 parent sees clear source/trust information
   ↓
@@ -108,6 +121,14 @@ transactional package service installs or rejects
 ```
 
 Independent installation does not bypass sandboxing, permissions, package validation, system Home/Back or standard input rules.
+
+### Current implementation boundary
+
+The canonical bounded new-install service and Parent upload seam now exist, and the HTML Parent client can restrict its picker to `.greiaactivity` files when the capability is available.
+
+This does **not** close the full R10 lifecycle. In-place Activity update/replacement, migrations, rollback/recovery, richer provenance/signature handling and final trust UX remain separate work and must not be inferred merely because the container format is now named.
+
+Developer/simulator tools may continue to accept unpacked Activity directories and raw `.zip` inputs for convenience. Those are development inputs, not the normal parent-facing distribution type.
 
 ## 5. Official Greia Catalogue
 
@@ -143,7 +164,7 @@ Greia must distinguish at least these semantic questions, even if final UI label
 
 These must not collapse into one vague “trusted/untrusted” boolean.
 
-Exact package trust-state identifiers belong to future R10 source/ADR work.
+The current package service has explicit trust/source states for implemented sources. Future R10 provenance/signing work may extend those states but must preserve these semantic distinctions.
 
 ## 7. Child-facing commerce policy
 
@@ -221,7 +242,7 @@ An official `Greia Approved` label or equivalent must mean a defined review leve
 
 Every distributable Activity should ultimately carry machine-readable and human-readable license information sufficient for Greia Parents/catalogue UI to show the parent what applies.
 
-This may eventually include an SPDX-compatible license expression and packaged notice/license files, but the exact manifest fields are not frozen until R10 package schema work.
+This may eventually include an SPDX-compatible license expression and packaged notice/license files, but the exact manifest fields are not frozen until the relevant R10 package-schema tranche.
 
 Activity authors retain licensing choice as specified by ADR 0024.
 
