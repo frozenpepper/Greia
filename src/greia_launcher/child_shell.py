@@ -14,6 +14,7 @@ from pathlib import Path
 import time
 from typing import Any
 
+from greia_platform.audio import AudioService
 from greia_platform.customization import CustomizationError, ThemeStore
 from greia_platform.hal import GreiaHAL
 from greia_platform.theme_snapshot import ThemeSnapshotError, encode_theme_snapshot
@@ -38,10 +39,19 @@ from .supervisor import ActivitySupervisor
 
 
 class ProfileVisualActivitySupervisor(ActivitySupervisor):
-    """Adds safe, read-only child visual context to ordinary Activity launches."""
+    """Add safe profile visuals and platform-selected microphone routing."""
 
-    @staticmethod
+    def __init__(
+        self,
+        *args: object,
+        audio_service: AudioService | None = None,
+        **kwargs: object,
+    ) -> None:
+        super().__init__(*args, **kwargs)
+        self._audio_service = audio_service
+
     def _sanitized_environment(
+        self,
         manifest,
         profile,
         authority,
@@ -77,6 +87,12 @@ class ProfileVisualActivitySupervisor(ActivitySupervisor):
             environment["GREIA_THEME_SNAPSHOT"] = encode_theme_snapshot(theme)
         except (OSError, ValueError, CustomizationError, ThemeSnapshotError):
             environment.pop("GREIA_THEME_SNAPSHOT", None)
+
+        if self._audio_service is not None and authority.has_capability("audio.basic"):
+            for name, value in self._audio_service.session_environment():
+                if name in environment:
+                    raise ValueError(f"audio session environment collides with {name!r}")
+                environment[name] = value
         return environment
 
 
@@ -122,11 +138,22 @@ class GreiaChildShell(
             hal=self._runtime_hal(),
             runtime_adapters=self._runtime_adapters(),
         )
+        root = Path(os.environ.get("GREIA_OS_ROOT", "/opt/greia-os")).resolve()
+        audio_service = AudioService.load(
+            root / "runtime" / "audio-settings.toml",
+            Path(
+                os.environ.get(
+                    "GREIA_SYSTEM_SETTINGS_DIR",
+                    "/var/lib/greia-system-settings",
+                )
+            ),
+        )
         supervisor = ProfileVisualActivitySupervisor(
             runtime_manager=runtime_services.runtime_manager,
             storage_service=runtime_services.storage_service,
             history_service=runtime_services.history_service,
             display_coordinator=self._display_session_coordinator(),
+            audio_service=audio_service,
         )
         self.runtime_services = runtime_services
         self.supervisor = supervisor
