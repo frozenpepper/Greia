@@ -1,6 +1,6 @@
 ---
 name: greia-activity-authoring
-description: Canonical agent guide for designing, implementing, packaging, validating and testing Greia Activities, including discovery/audience metadata, localized canonical character-voice generation, and platform-owned microphone routing.
+description: Canonical agent guide for designing, implementing, packaging, validating and testing Greia Activities, including discovery/audience metadata, optional canonical character speech, deterministic pedagogical speech, shared character utterances, and platform-owned microphone routing.
 ---
 
 # Greia Activity Authoring Skill
@@ -13,8 +13,8 @@ This skill is intentionally split so small local agents do not have to load unre
 ## Mandatory reading order
 
 1. Read `CORE.md` completely for the canonical general Activity-authoring contract.
-2. Read `DISCOVERY.md` whenever creating or editing `activity.toml`, launcher categories, audience/age metadata, difficulty/adaptive difficulty, discovery tags, or reasoning about how an Activity appears for a child. The discovery schema migration is now implemented; `DISCOVERY.md` is the current source-aligned correction to older prose that still labels those fields as future.
-3. When the Activity speaks, produces localized audio, uses a Greia character voice, or changes Activity Designer audio tooling, also read `VOICE_GENERATION.md` completely.
+2. Read `DISCOVERY.md` whenever creating or editing `activity.toml`, launcher categories, audience/age metadata, difficulty/adaptive difficulty, discovery tags, or reasoning about how an Activity appears for a child.
+3. When the Activity speaks, produces localized audio, uses shared Greia character utterances, teaches pronunciation, uses a Greia character voice, or changes Activity Designer audio tooling, also read `VOICE_GENERATION.md` completely.
 4. When the Activity records from or listens to the microphone, also read `docs/adr/0031-platform-owned-microphone-processing.md` and `docs/architecture/GREIA_AUDIO_SERVICE.md`.
 5. Follow every narrower repository `AGENTS.md` that applies to the files being changed.
 6. Exact implemented APIs/schemas remain owned by source/runtime declarations; accepted ADRs own architecture; product docs own child-facing requirements.
@@ -87,41 +87,105 @@ src/greia_platform/audio.py
 src/greia_platform/activity_api.py
 ```
 
-## Voice-generation decision summary
+## Speech/voice decision summary
 
-Greia's current Activity-authoring direction is build-time/local voice production:
-
-```text
-semantic localized cue
-→ canonical character voice policy
-→ MOSS-TTS-Nano local rendering for Lilli/Leo/Flash/Tito/Momo
-→ Greia OS TTS policy for Dani
-→ human-reviewed WAV master
-→ bounded OGG/WAV package asset
-→ ordinary localization audio cue
-```
-
-The production model, Python environment, model cache, canonical voice references and generation scratch files are developer tooling. They do not belong in `.greiaactivity` packages and do not become a child-runtime dependency.
-
-Current canonical voice IDs:
+Greia now distinguishes four semantic speech jobs:
 
 ```text
-greia.lilli.v1       warm wonder, stories, art and imagination
-greia.leo.v1         warm oldish savvy storyteller and patient guidance
-greia.flash.v1       bright quick playful action and friendly challenge
-greia.tito.v1        warm adventurous exploration and discovery
-greia.momo.v1        musical unusual emotion, silliness and celebration
-greia.dani.system-v1 clearly robotic Greia OS text-to-speech
+character_dialogue
+shared_character_utterance
+pedagogical_speech
+dani_system_speech
 ```
 
-Dani intentionally has no cloned reference in v0.1. A natural cloned voice that does not sound robotic is a worse character match than the platform's clearly synthetic voice. Activities address `greia.dani.system-v1`; they must not select an arbitrary macOS/Linux voice by name.
+The governing rule is:
 
-Every line must remain a semantic localization cue, be reviewed by a human in every shipped language, and obey the non-overlap/sequencing requirements in `CORE.md`.
+> If the sound itself is the educational truth being taught, use pedagogical/system speech. If speech communicates content through a character, use character speech.
 
-Full voice policy and workflow:
+### Character dialogue
+
+Lilli, Leo, Flash, Tito and Momo may use optional build-time/local **Chatterbox Multilingual V3** generation from the canonical reference voices. Every generated line is human-reviewed and packaged as an ordinary localized playback asset.
+
+MOSS-TTS-Nano is **rejected** for Greia production quality. The repeated `ma. ma. ma.` / middle-extraction experiment is also **rejected**.
+
+For ultra-short character reactions only, bounded Chatterbox output plus FFmpeg analysis/trim may be used when the final clip is reviewed. Do not use that technique to make Chatterbox a phonics/pronunciation engine.
+
+### Pedagogical speech
+
+Letters, letter names, syllables, phonics, spelling units and pronunciation targets use a deterministic/native/system TTS path. Correctness and consistency outrank mascot voice identity.
+
+Do not pretend a mascot is speaking a teaching sample when the pedagogical voice is noticeably different; present it as a neutral educational audio object between character prompts/reactions.
+
+### Shared character utterances
+
+Before generating custom dialogue for generic feedback, prefer Greia's shared semantic character utterances such as:
+
+```text
+praise.congratulations
+praise.great_work
+praise.well_done
+celebrate.you_did_it
+encourage.try_again
+ready.lets_go
+```
+
+The Italian/English v0.1 inventory, six-character coverage target and canonical animation associations are defined in:
+
+```text
+docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md
+```
+
+These are platform/shared assets, not duplicated into every Activity package.
+
+### Dani
+
+Dani remains:
+
+```text
+greia.dani.system-v1
+```
+
+A clearly robotic system voice is intentional. Do not clone Dani from another character or replace him with a natural cheerful voice.
+
+## Voice toolchain capability rule
+
+**Custom character voice generation is optional. Do not install it automatically.**
+
+When custom character speech would be useful:
+
+1. first check whether a shared Greia utterance satisfies the need;
+2. if the sound is pedagogical, route to the deterministic/system speech path;
+3. only then perform a non-mutating check for an already configured Chatterbox toolchain;
+4. if Chatterbox is unavailable and the user did not explicitly request its installation, omit optional custom character dialogue and continue the Activity;
+5. preserve captions/visual feedback and all essential instructions;
+6. never substitute an arbitrary host voice for Lilli/Leo/Flash/Tito/Momo.
+
+A missing optional voice toolchain must not make an otherwise valid Activity fail to build.
+
+If the user explicitly requires custom canonical character dialogue and the toolchain is missing, follow the opt-in setup guide rather than silently downloading models:
+
+```text
+docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md
+```
+
+Current canonical IDs:
+
+```text
+greia.lilli.v1
+greia.leo.v1
+greia.flash.v1
+greia.tito.v1
+greia.momo.v1
+greia.dani.system-v1
+```
+
+Every custom/static line must remain a semantic localization cue, be reviewed in every shipped language, and obey the non-overlap/sequencing requirements in `CORE.md`.
+
+Full speech policy and workflow:
 
 ```text
 docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md
+docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md
 docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md
 skills/greia-activity-authoring/VOICE_GENERATION.md
 ```
