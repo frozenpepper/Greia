@@ -10,6 +10,11 @@ languages = ["it", "en"]
 categories = ["create", "play"]
 discovery_tags = ["building", "puzzles"]
 
+[achievement_art]
+emblems = [
+  { id = "activity", asset = "assets/icon.png" },
+]
+
 [education]
 categories = ["spatial_reasoning", "physics_intuition", "construction"]
 difficulty = 4
