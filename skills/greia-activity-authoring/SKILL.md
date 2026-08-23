@@ -1,6 +1,6 @@
 ---
 name: greia-activity-authoring
-description: Canonical agent guide for designing, implementing, packaging, validating and testing Greia Activities, including discovery/audience metadata, optional canonical character speech, deterministic pedagogical speech, shared character utterances, child grammatical agreement, and platform-owned microphone routing.
+description: Canonical agent guide for designing, implementing, packaging, validating and testing Greia Activities, including clean OOP structure, measured low-resource performance, discovery/audience metadata, optional canonical character speech, deterministic pedagogical speech, shared character utterances, child grammatical agreement, and platform-owned microphone routing.
 ---
 
 # Greia Activity Authoring Skill
@@ -13,14 +13,75 @@ This skill is intentionally split so small local agents do not have to load unre
 ## Mandatory reading order
 
 1. Read `CORE.md` completely for the canonical general Activity-authoring contract.
-2. Read `DISCOVERY.md` whenever creating or editing `activity.toml`, launcher categories, audience/age metadata, difficulty/adaptive difficulty, discovery tags, or reasoning about how an Activity appears for a child.
-3. When packaging or exporting an Activity, also read `docs/architecture/GREIA_ACTIVITY_PACKAGE_FORMAT.md`. Parent-facing distribution uses the `.greiaactivity` ZIP contract; the extension is a UX/routing signal, never package validation or trust.
-4. When the Activity speaks, produces localized audio, uses shared Greia character utterances, teaches pronunciation, uses a Greia character voice, changes Activity Designer audio tooling, or needs child-directed grammatical agreement, also read `VOICE_GENERATION.md` completely and `docs/adr/0032-profile-presentation-and-grammatical-agreement.md` where agreement is relevant.
-5. When the Activity records from or listens to the microphone, also read `docs/adr/0031-platform-owned-microphone-processing.md` and `docs/architecture/GREIA_AUDIO_SERVICE.md`.
-6. Follow every narrower repository `AGENTS.md` that applies to the files being changed.
-7. Exact implemented APIs/schemas remain owned by source/runtime declarations; accepted ADRs own architecture; product docs own child-facing requirements.
+2. Read `ENGINEERING.md` whenever creating, modifying, reviewing, optimizing or substantially refactoring Activity implementation code. For new/substantively changed first-party Activities it is mandatory: it owns the practical clean-code/OOP/decomposition/performance protocol, including the rule that `main.py` is a thin composition root rather than the Activity implementation.
+3. Read `DISCOVERY.md` whenever creating or editing `activity.toml`, launcher categories, audience/age metadata, difficulty/adaptive difficulty, discovery tags, or reasoning about how an Activity appears for a child.
+4. When packaging or exporting an Activity, also read `docs/architecture/GREIA_ACTIVITY_PACKAGE_FORMAT.md`. Parent-facing distribution uses the `.greiaactivity` ZIP contract; the extension is a UX/routing signal, never package validation or trust.
+5. When the Activity speaks, produces localized audio, uses shared Greia character utterances, teaches pronunciation, uses a Greia character voice, changes Activity Designer audio tooling, or needs child-directed grammatical agreement, also read `VOICE_GENERATION.md` completely and `docs/adr/0032-profile-presentation-and-grammatical-agreement.md` where agreement is relevant.
+6. When the Activity records from or listens to the microphone, also read `docs/adr/0031-platform-owned-microphone-processing.md` and `docs/architecture/GREIA_AUDIO_SERVICE.md`.
+7. Follow every narrower repository `AGENTS.md` that applies to the files being changed.
+8. Exact implemented APIs/schemas remain owned by source/runtime declarations; accepted ADRs own architecture; product docs own child-facing requirements.
 
-Do not treat this index as permission to skip `CORE.md`.
+Do not treat this index as permission to skip `CORE.md` or, for implementation work, `ENGINEERING.md`.
+
+## Implementation engineering decision summary
+
+Greia Activities are supervised content, not miniature standalone applications. Their code should expose obvious, reusable responsibilities instead of accumulating everything in one script.
+
+For non-trivial Python Activities:
+
+```text
+main.py
+    thin composition/bootstrap boundary
+
+app/lifecycle owner
+    top-level Activity state/transitions
+
+domain/model objects
+    round/game/content state + invariants
+
+presentation/renderer
+    drawing/layout + bounded prepared resources
+
+optional collaborators
+    challenge generation, semantic input, audio sequencing,
+    persistence mapping, Activity-owned resource preparation
+```
+
+Exact filenames are not mandated; cohesive ownership is.
+
+Strong defaults:
+
+- model stable state/lifecycle/invariants with classes/dataclasses;
+- use narrow Protocol/ABC seams only for genuine substitutable behavior;
+- prefer composition over deep inheritance;
+- inject dependencies rather than discover mutable global services;
+- reuse Greia platform APIs/primitives instead of Activity-local copies;
+- keep `main.py` bootstrap-only (roughly >150 lines triggers review; >250 normally requires decomposition for first-party code);
+- review modules above roughly 500 lines and methods above roughly 60–80 lines for mixed ownership rather than gaming line counts;
+- public/non-obvious extension objects document responsibility, lifecycle, invariants and resource bounds;
+- comments explain architectural/performance **why**, not obvious syntax.
+
+Performance is a correctness concern on Greia's Acer-class floor. In normal frame/event hot paths, do not decode images, large-scale/flip reusable sprites, construct fonts, render stable text repeatedly, allocate large unchanged Surfaces, regenerate static scenery, walk/stat the filesystem, enumerate devices, launch subprocesses, parse configuration or write durable storage.
+
+Required performance patterns include bounded caches with complete keys/invalidation, pre-rendered static scenes, dirty/invalidation-driven redraw where practical, bounded monotonic-time animations, fail-soft optimized paths, and semantic/pixel-equivalence testing for rendering optimizations.
+
+Current Activity working targets:
+
+```text
+smooth gameplay:       ~30 fps on Atom-class floor
+added input latency:   <= 50 ms
+static/paused idle:    near-zero CPU where architecture permits
+```
+
+Desktop/simulator timing is diagnostic only. Claims about Acer/Pi performance require named physical hardware and exact source SHA.
+
+Full implementation protocol and measured rationale:
+
+```text
+skills/greia-activity-authoring/ENGINEERING.md
+docs/engineering/ENGINEERING_FOUNDATIONS.md
+docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md
+```
 
 ## Package decision summary
 
