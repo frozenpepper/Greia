@@ -2,7 +2,7 @@
 
 **Status:** mandatory specialist Activity guidance  
 **Audience:** Activity authors, coding agents, reviewers  
-**Reviewed:** 2026-08-23
+**Reviewed:** 2026-08-24
 
 Read this file completely whenever an Activity adds/changes completion, milestone or score events; participates in Greia Stars; or is being designed with badges/achievements in mind.
 
@@ -10,10 +10,12 @@ Primary design authority:
 
 ```text
 docs/design/GREIA_ACHIEVEMENTS_AND_BADGE_LIBRARY.md
+docs/design/GREIA_ACTIVITY_ACHIEVEMENT_ART.md
 runtime/achievement-policy.toml
 runtime/progression-policy.toml
 src/greia_platform/history.py
 src/greia_platform/achievements.py
+src/greia_platform/achievement_art.py
 src/greia_launcher/achievement_localization.py
 ```
 
@@ -32,6 +34,8 @@ Activity code must never:
 - infer another child's/profile's progress.
 
 There is intentionally no Activity `award_badge()` API.
+
+An Activity **may optionally contribute decorative achievement emblems**. This does not grant achievement authority. Greia policy must explicitly admit each emblem before it appears in a global badge.
 
 ## 2. Design good semantic events
 
@@ -175,7 +179,7 @@ Prefer curiosity, care, creativity, exploration, persistence and real mastery.
 
 ## 10. Presentation belongs to Greia
 
-An Activity may show its own immediate local success feedback, but global badge art/library state is platform-owned.
+An Activity may show its own immediate local success feedback, but global badge library state and presentation behavior are platform-owned.
 
 Current system celebration is shown after the Activity returns to the Shell. A future trusted compositor may surface it immediately above an Activity. Do not create a second Activity-local achievement popup framework to work around that lifecycle.
 
@@ -210,15 +214,87 @@ Rules:
 - explicit Simulator/device launch locale must not be lost merely because an installed-language store is absent;
 - use the platform fallback locale only when a requested translation is genuinely unavailable;
 - raw localization keys must never reach the child UI;
-- changing locale must not change achievement identity, unlock state, criteria or Star economics.
+- changing locale must not change achievement identity, unlock state, criteria or Star economics;
+- **never bake words into an Activity-contributed badge emblem**: the emblem must remain language-neutral artwork.
 
-The current seed achievement catalogue has complete Italian and English title/description/hint copy. When adding a new seed definition, preserve parity for those currently product-supported catalogue languages rather than silently adding English-only copy.
+## 12. Optional Activity-generated achievement art
 
-## 12. Award visual language
+Activities that want stronger visual identity may ship one or more **decorative emblems** based on their own characters, objects, environments or visual language.
 
-The achievement frame is Greia-owned reusable presentation, separate from achievement meaning.
+V1 manifest syntax:
 
-Current frame families are:
+```toml
+[achievement_art]
+emblems = [
+  { id = "activity", asset = "assets/icon.png" },
+  { id = "first-rescue", asset = "assets/achievements/first-rescue.png" },
+]
+```
+
+This declaration means only:
+
+> “This package offers these safe pieces of artwork if Greia chooses to use them.”
+
+It does **not** create achievements.
+
+The platform-owned policy must explicitly admit the artwork:
+
+```toml
+[[achievements]]
+id = "greia.care.first-friend"
+category = "care"
+tier = "bronze"
+icon_id = "pink_heart" # trusted fallback
+art = { activity_id = "org.greia.clinica-cuccioli", emblem_id = "activity" }
+# localized copy + trusted criteria follow
+```
+
+### V1 emblem requirements
+
+- PNG only;
+- square;
+- 32–1024 px on each side;
+- at most 512 KiB compressed;
+- transparent background strongly preferred;
+- **256×256 is the recommended production size**;
+- no child-facing text baked into the image;
+- no badge tier words/numbers/rank claims;
+- no animation;
+- no executable/vector-script content;
+- no path outside the Activity package;
+- no symlink;
+- artwork should read clearly when reduced to roughly 30–100 px.
+
+The Activity creation workflow is encouraged to generate a purpose-made emblem from its own content rather than simply reusing its launcher icon when good art-generation tooling is available. Good examples include a recognizable patient/paw from Clinic, a bridge silhouette from Bridges, or a distinctive Memory card motif.
+
+### What Greia still owns
+
+Even when Activity art is admitted, Greia still owns:
+
+```text
+achievement ID and meaning
+unlock criteria
+trusted event/history evaluation
+bronze/silver/gold/special tier
+medal/trophy/rosette frame
+locked silhouette
+secret visibility
+localized title/description/hint
+NEW/review state
+celebration behavior
+profile persistence
+library layout
+```
+
+An Activity cannot choose a giant card, fullscreen image, custom popup, custom frame implementation or global reward behavior.
+
+### Fail-soft rendering
+
+`icon_id` remains mandatory as a trusted semantic fallback. If admitted Activity artwork cannot decode at presentation time, Greia renders the platform icon and achievement truth remains unchanged.
+
+## 13. Award visual language
+
+The Greia frame stays reusable and coherent across Activities:
 
 ```text
 bronze / silver -> medal + ribbons
@@ -226,17 +302,41 @@ gold            -> trophy cup
 special/secret  -> richer rosette / constellation treatment
 ```
 
-The semantic `icon_id` remains the centre symbol. Do not bake the meaning of every achievement into a bespoke full-screen image or make Activities ship global badge artwork.
+Activity art lives **inside** that Greia frame. This gives the child both signals at once:
 
-Runtime award art must stay bounded and cached. Source masters live under:
+```text
+“This came from Clinica Cuccioli”
+AND
+“This is a Greia achievement”
+```
+
+Runtime award art must stay bounded and cached. Greia source masters live under:
 
 ```text
 assets/source/achievements/
 ```
 
-Do not decode large source SVG/PNG artwork every frame on low-resource devices.
+Activity-specific source art belongs in that Activity's own asset tree.
 
-## 13. Review checklist
+## 14. Activity-local collectibles are a separate future concept
+
+Do not overload global Greia achievements with every reward an Activity may want.
+
+A future Activity-local collection/album system may support much freer things such as:
+
+```text
+stickers
+postcards
+saved patients
+creations
+characters discovered
+blueprints
+scene souvenirs
+```
+
+Those are not global Greia achievement authority and should have their own storage/presentation contract when implemented.
+
+## 15. Review checklist
 
 Before accepting achievement-relevant Activity or platform changes, verify:
 
@@ -252,7 +352,12 @@ Before accepting achievement-relevant Activity or platform changes, verify:
 - [ ] achievement policy, if changed, references a real declared event/score/reward;
 - [ ] achievement title/description/hint have required locale parity;
 - [ ] Badge Library and celebration use the active Greia locale rather than hardcoded English;
+- [ ] Activity achievement art is optional and decorative only;
+- [ ] Activity emblem PNG passes path/type/size/dimension validation;
+- [ ] Activity emblem contains no localized words;
+- [ ] global policy explicitly admits the Activity emblem;
+- [ ] platform `icon_id` fallback remains valid;
 - [ ] child-facing reward design avoids grind/comparison/manipulation;
 - [ ] award rendering remains bounded/cached and does not add fullscreen alpha work;
-- [ ] provider-free tests cover the factual event transition;
-- [ ] Simulator acceptance verifies the event occurs at the child-visible semantic moment.
+- [ ] provider-free tests cover factual events and art admission boundaries;
+- [ ] Simulator acceptance verifies the child-visible semantic moment and themed artwork.
