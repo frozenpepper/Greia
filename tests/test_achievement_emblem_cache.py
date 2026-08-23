@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import tempfile
 import unittest
 from pathlib import Path
@@ -39,6 +40,11 @@ def _entry(emblem: ActivityAchievementEmblem) -> AchievementEntry:
     )
 
 
+def _metadata(path: Path) -> tuple[int, str]:
+    data = path.read_bytes()
+    return len(data), hashlib.sha256(data).hexdigest()
+
+
 class _IconProvider:
     def __init__(self) -> None:
         self.calls = 0
@@ -62,31 +68,37 @@ class AchievementEmblemCacheTests(unittest.TestCase):
         renderer = PygameAchievementBadgeRenderer(provider, max_entries=4)
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "emblem.png"
+
             source = pygame.Surface((64, 64), pygame.SRCALPHA)
             source.fill((20, 140, 210, 255))
             pygame.image.save(source, path)
-
+            first_size, first_digest = _metadata(path)
             first_emblem = ActivityAchievementEmblem(
                 activity_id="org.greia.test",
                 emblem_id="activity",
                 asset_path=path,
                 width=64,
                 height=64,
-                byte_size=path.stat().st_size,
-                content_digest="first",
+                byte_size=first_size,
+                content_digest=first_digest,
             )
+
+            first = renderer.render(_entry(first_emblem), 96)
+            repeated = renderer.render(_entry(first_emblem), 96)
+
+            source.fill((30, 190, 90, 255))
+            pygame.image.save(source, path)
+            second_size, second_digest = _metadata(path)
+            self.assertNotEqual(first_digest, second_digest)
             second_emblem = ActivityAchievementEmblem(
                 activity_id="org.greia.test",
                 emblem_id="activity",
                 asset_path=path,
                 width=64,
                 height=64,
-                byte_size=path.stat().st_size,
-                content_digest="second",
+                byte_size=second_size,
+                content_digest=second_digest,
             )
-
-            first = renderer.render(_entry(first_emblem), 96)
-            repeated = renderer.render(_entry(first_emblem), 96)
             changed = renderer.render(_entry(second_emblem), 96)
 
         self.assertIs(first, repeated)
