@@ -1,7 +1,7 @@
 # Greia Parents — Product and Interaction Requirements
 
-**Status:** accepted product direction; implementation incremental  
-**Date:** 2026-08-20  
+**Status:** accepted product direction; core local Parent API/client implementation active, with production pairing/security and some management domains still incremental  
+**Date:** 2026-08-23  
 **Architecture owner:** ADR 0022  
 **Initial implementation:** responsive HTML client served by Greia itself  
 **Related child discovery policy:** `docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md`
@@ -52,9 +52,9 @@ Normal intended flow:
 
 mDNS is convenience only. Pairing/QR data must allow a client to reach the Greia if multicast discovery is unavailable.
 
-### Prototype allowance
+### Current prototype boundary
 
-The current shared pairing-token mechanism may be used temporarily to bootstrap the early HTML/API work. It must be visibly treated as provisional and replaced by short-lived, locally confirmed pairing before production release.
+The shared pairing-token/bootstrap mechanism is still provisional. Per-device credentials and revocation exist, but the release pairing flow above still requires short-lived challenges, device-local Allow/Deny and authenticated encrypted transport before production acceptance.
 
 ## 3. Parent devices
 
@@ -72,11 +72,9 @@ Family tablet          paired Sunday
 [ Revoke ]
 ```
 
-Each device has its own credential.
+Each device has its own credential. Revoking one device must not sign every other parent out. No pairing secret or bearer token is shown in ordinary device lists.
 
-Revoking one device must not sign every other parent out.
-
-No pairing secret or bearer token is shown in ordinary device lists.
+The current Parent API and rebuilt HTML client list and revoke individual paired devices.
 
 ## 4. Primary management areas
 
@@ -92,18 +90,15 @@ password = greia     (initial, changeable from Greia Parents)
 Requirements:
 
 - only a bounded PBKDF2 digest is persisted; no plaintext password file;
-- changing it is a typed Greia-owned operation that requires the current
-  password;
+- changing it is a typed Greia-owned operation that requires the current password;
 - API responses never return the stored password or its digest;
 - Greia Parents exposes a clear **Change Parent password** control;
-- the main Parent password is distinct from per-device bearer credentials used
-  by paired parent clients; pairing credentials remain individually revocable;
-- during active development/test, the main Parent password intentionally owns
-  the development SSH login on developer images; root SSH login stays disabled.
+- the main Parent password is distinct from per-device bearer credentials used by paired parent clients;
+- during active development/test, the main Parent password intentionally owns the development SSH login on developer images; root SSH login stays disabled.
 
 ### Children
 
-Parents can:
+Parents can currently:
 
 - create child profiles;
 - rename profiles;
@@ -111,38 +106,36 @@ Parents can:
 - set, replace, or remove the child's simple password;
 - choose whether the password is masked while the child types;
 - delete an inactive child profile;
-- reset child appearance/customization;
-- later manage per-child Activity availability and policy;
-- optionally provide a **coarse/approximate age or developmental stage** for Activity discovery without supplying an exact date of birth;
-- later choose a child discovery/challenge preference such as **Automatic**, **Easier**, **Standard**, or **More challenging**.
+- provide an optional **coarse/approximate age** from 1 through 18 for Activity discovery without supplying a date of birth;
+- choose a discovery/challenge preference: **Automatic**, **Easier**, **Standard**, or **More challenging**;
+- manage per-child Activity visibility policy and individual Activity overrides through the Parent API/client.
 
 Child password material is never returned by the API after it is set.
 
-Age/development information exists only to support appropriate Activity discovery/presentation and related Parent policy. Greia does not require a date of birth merely to decide which educational Activities to emphasize.
+Approximate age exists only to support appropriate Activity discovery/presentation and Parent policy. Greia does not require a date of birth merely to decide which educational Activities to emphasize.
+
+Appearance/customization reset remains a separate Greia-owned operation and must not be conflated with profile identity or Activity policy.
 
 ### Activities
 
-Parents can eventually:
+Parents can currently:
 
-- see installed Activities and versions;
-- install a `.greiaactivity`;
-- update an Activity;
-- remove an Activity while preserving child data by default;
-- see invalid/incompatible packages clearly;
-- enable/disable Activities for specific children;
-- inspect the Activity's declared educational challenge/difficulty and, when implemented, recommended developmental/age range;
-- choose a default per-child visibility policy;
-- override individual Activities as **always show** or **always hide** for a particular child.
+- see installed Activities and their declared metadata;
+- inspect baseline challenge/difficulty and optional recommended age range;
+- inspect adaptive-difficulty declarations where present;
+- select one child and configure a default visibility policy;
+- override an individual Activity as **Always show** or **Always hide** for that child;
+- install a `.greiaactivity` only when the Greia API advertises `activities.install`.
 
-The Parent App delegates installation/update/removal to the R10 package-management service. It must not unzip/copy packages itself or run package-manager commands.
+Still incremental/future package-management work includes explicit Activity update/remove product flows and the complete R10 lifecycle. The Parent App delegates package mutation to the Greia package-management service; it must not unzip/copy packages itself or run package-manager commands.
 
-The initial API foundation may expose installed Activity inventory while `activities.install` remains unavailable.
+Ordinary/release images currently keep `activities.install` unavailable while the Parent transport remains provisional HTTP. Developer/owner-enabled environments may advertise it through the typed capability.
 
 ### Per-child Activity discovery and visibility
 
-The accepted child discovery contract lives in `docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md`.
+The authoritative child discovery contract lives in `docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md`.
 
-Parent policy is stronger than automatic recommendation. The intended controls are equivalent to:
+The implemented Parent policy modes are:
 
 ```text
 Show everything
@@ -151,7 +144,7 @@ Show recommended range only
 Custom
 ```
 
-with explicit Activity overrides such as:
+with explicit Activity overrides:
 
 ```text
 Always show this Activity to this child
@@ -167,21 +160,32 @@ Rules:
 - Parent visibility changes affect the child's **effective catalogue projection**, not package installation/trust/permissions/saves;
 - adaptive launcher depth is computed from the effective visible Activity set after Parent policy, not raw installed count;
 - Activity code cannot grant itself visibility or hide competing Activities;
-- filtering language should remain neutral and child-positive rather than describing a child as behind, too young, too old or incapable.
+- filtering language remains neutral and child-positive rather than describing a child as behind, too young, too old or incapable.
 
-As of 2026-08-20, current profile/API/client source does not yet implement the complete age/development/challenge and per-child visibility model. This section is accepted product direction and must not be reported as implemented until source/API/client/tests land together.
+Current source/API/client implementation includes profile age/challenge fields, per-profile discovery policy persistence, effective-catalogue computation, Parent policy endpoints and the integrated HTML controls. This is no longer a future-only contract.
 
-### Input and pointing
+### Input, microphone and pointing
 
-Parents can control supported semantic settings such as:
+Parents can control supported semantic hardware settings such as:
 
 - mouse speed;
 - touchpad speed;
 - tap-to-click;
 - natural scrolling;
+- microphone input gain when the current hardware payload exposes `desired.mic_gain`;
 - later controller mappings/policies where the common input model permits them.
 
-Controls appear only when Greia reports the relevant capability.
+Current microphone gain is owned by the typed hardware settings service:
+
+```text
+minimum 0.5× / 50%
+default 2.0× / 200%
+maximum 4.0× / 400%
+```
+
+The on-device Parent panel and rebuilt HTML client both expose this control. It is intentionally separate from a future general-purpose Audio Service.
+
+Controls appear only when Greia reports the relevant capability/data contract.
 
 ### Display
 
@@ -189,114 +193,88 @@ Parents can:
 
 - use automatic/native resolution;
 - choose supported resolutions;
-- later manage brightness where supported;
 - inspect degraded/unavailable display states without seeing Xorg/DRM implementation details.
+
+Brightness remains future work where supported by a typed platform path.
 
 ### Sound
 
-The intended parent surface includes:
+The broader intended parent audio surface still includes:
 
 - output volume;
 - mute;
-- selected output when Greia exposes more than one appropriate target;
-- microphone/input policy where product requirements need it.
+- selected output when Greia exposes more than one appropriate target.
 
-This functionality remains unavailable until the typed Audio Service path exists. The HTML client must not invent ALSA/Pulse/PipeWire shell control.
+Those general audio controls remain unavailable until a typed Audio Service path exists. `settings.audio` therefore remains false today.
+
+The implemented **microphone input gain** control above is a narrower hardware setting and is not evidence that general ALSA/Pulse/PipeWire control has been exposed. The HTML client must never invent shell-based audio control.
 
 ### Network
 
-The intended parent surface includes:
+Current typed Parent networking includes:
 
-- current network status;
+- Wi-Fi scan/status;
 - Wi-Fi connection management;
-- forget/change network;
-- hostname/friendly device name where supported;
-- diagnostics suitable for a parent.
+- parent-suitable connection errors.
 
-The API exposes semantic networking, never `iwd` command lines or raw system files.
+Future extensions may include forget/change-network UX, friendly device naming and richer bounded diagnostics. The API exposes semantic networking, never `iwd` command lines or raw system files.
 
 ### System and diagnostics
 
-Parents can inspect:
+Parents can inspect current bounded health information including uptime, free storage, memory state and update status where the typed service advertises it.
 
-- Greia OS version;
-- uptime/health;
-- free disk space;
-- memory status where useful;
-- installed Activity health;
-- update availability later;
-- bounded diagnostic/recovery information.
-
-Parents can eventually request safe restart/shutdown/recovery actions through typed services.
+Future product work includes broader safe restart/shutdown/recovery operations through typed services. Raw system administration is never the Parent API contract.
 
 ### Backup and restore
 
-Portable profile backup/restore is part of the eventual Parent App, backed by `.greiabackup` / R11.
+Portable profile backup/restore is part of the eventual Parent App, backed by `.greiabackup` / R11. The web client does not implement an independent backup format.
 
-The web client does not implement an independent backup format.
 ### SSH maintenance
 
 Normal Greia ships with SSH **off**.
 
-A parent can eventually deliberately enable it from Maintenance:
-
-```text
-SSH maintenance                  OFF
-
-Allows administrative shell access from another computer on
-this local network. Greia Parents does not require SSH.
-
-Authentication
-  SSH public key: [ Add / replace key ]
-
-Root login                       Disabled
-Remote user                      greia
-```
-
-When disabled, the SSH service is not listening.
-
-When enabled:
+Current Parent surfaces can deliberately enable/disable SSH maintenance through the typed service. When enabled:
 
 - the managed `greia` account is the administrative shell user;
 - root login is disabled;
 - a public key may be added as an additional automation path;
-- passwordless privilege escalation stays behind the bounded Greia-owned
-  `greia-devctl` control, not generic passwordless sudo/root APIs;
-- host connection details are shown after success;
-- parent can disable SSH and revoke/replace key material.
+- passwordless privilege escalation stays behind bounded Greia-owned controls, not generic passwordless sudo/root APIs;
+- host connection details may be shown after success;
+- the parent can disable SSH and revoke/replace key material through supported typed operations.
 
-During active development, developer/test images additionally provision the
-`greia` / `greia` login as described in `docs/agents/GREIA_AGENT_OPERATIONS.md`
-so the owner-controlled test agent can continue working after install and
-reboot. This development convenience is not a release security claim; final
-release SSH policy is a separate question.
+During active development, developer/test images additionally provision the `greia` / `greia` login as described in `docs/agents/GREIA_AGENT_OPERATIONS.md` so the owner-controlled test agent can continue working after install and reboot. This development convenience is not a release security claim.
 
-Developer-image remote control remains separate from this release maintenance
-switch.
+Developer-image remote control remains separate from this release maintenance switch.
 
 ## 5. Capability-driven client UI
 
-The Parent API reports semantic capabilities. Clients must use those facts rather than guessing from model/architecture.
+The Parent API reports semantic capabilities. Clients use those facts rather than guessing from model/architecture.
 
-Examples:
+Current examples include:
 
 ```text
 profiles.manage
 activities.read
+activities.policy
 activities.install
 progress.read
 settings.input
 settings.display
+settings.language
 settings.audio
 network.manage
-backup.manage
 maintenance.ssh
 paired_devices.manage
+parent.password
+system.update.read
+system.update.upload
+system.update.activate
+backup.manage
 ```
 
-Future implementation of per-child discovery policy should expose typed semantic capabilities/resources rather than forcing clients to infer support from profile JSON fields or Activity manifest versions.
+Per-child discovery policy is exposed through typed profile Activity-policy resources; clients do not infer support from manifest versions.
 
-If a capability is false, the initial HTML interface may show **Not implemented yet** during development. A production client should normally hide or explain unavailable functionality appropriately.
+If a capability is false, production-oriented client behavior is to omit or clearly explain the unavailable control rather than build a dashboard of engineering backlog states.
 
 ## 6. Common client protocol
 
@@ -320,9 +298,18 @@ The Greia-served HTML application communicates through `/api/v1`.
 
 It must not call Python objects directly, depend on filesystem locations, or encode Linux-specific system commands.
 
-This rule keeps the HTML interface honest: if the browser cannot perform an operation through the public Parent API, a future phone app cannot either.
+This keeps the HTML interface honest: if the browser cannot perform an operation through the public Parent API, a future phone app cannot either.
 
 A legacy server-rendered troubleshooting view may remain temporarily during migration, but it is not the target product contract.
+
+The separately maintained HTML client is source-pinned by Greia through:
+
+```text
+runtime/parent-app-client.toml
+runtime/parent-app-client.manifest.json
+```
+
+The current pin is an integrity-checked build input and is still marked `source-pinned-not-yet-vendored`; runtime JavaScript must never be fetched from moving repository `main`.
 
 ## 8. Privilege and safety
 
@@ -354,31 +341,37 @@ No secret belongs in mDNS TXT records.
 The parent service is present on the low-resource Acer class, so:
 
 - no large web framework is required for the first implementation;
-- static HTML/CSS/JavaScript should remain small;
+- static HTML/CSS/JavaScript remains small;
 - the server may remain single-request-at-a-time if interaction remains responsive;
 - no background polling storm;
 - bounded request sizes;
 - bounded paired-device count;
 - no expensive persistent write on every authenticated request.
 
-Resource behavior must be measured before adding heavyweight dependencies.
+Resource behavior must be measured before adding heavyweight dependencies. Follow `docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md` for measured performance work.
 
-## 11. Initial implementation slice
+## 11. Current implementation slice
 
-The first API/client slice is considered useful when it can:
+The current local Parent foundation can:
 
-- discover/identify the service;
-- pair through the current provisional bootstrap;
-- use a per-device credential;
+- identify the service and expose API metadata;
+- pair through the current provisional bootstrap and use per-device credentials;
 - load system status;
 - list/create/update/delete child profiles;
-- list installed Activities;
-- read/update current input/display settings;
+- persist optional approximate age and challenge preference;
+- list installed Activities and audience/challenge metadata;
+- read/update per-child Activity visibility policy and explicit overrides;
+- read/update input/display hardware settings, including microphone gain where present;
 - read progress summaries;
+- read/change Greia language;
+- scan/connect Wi-Fi;
+- enable/disable SSH maintenance;
+- change the main Parent password;
 - list/revoke paired devices;
-- clearly report future capabilities as unavailable.
+- read system-update status and upload only when capability permits;
+- install Activity packages only when capability permits.
 
-It does **not** imply that Activity installation, audio management, backups, updates, production pairing security, or per-child audience/visibility policy are finished.
+This does **not** imply that production pairing/encryption, general audio management, backups, complete Activity update/removal lifecycle, production system-update activation, or all future native-client UX is finished.
 
 ## 12. On-Device Parent Mode & Key Chord
 
@@ -388,6 +381,10 @@ Greia physical devices provide an on-device Parent Settings Panel directly on th
 - **Accidental-activation resistance:** If either key is released before 5.0 seconds have elapsed, the hold timer resets immediately without disturbing ordinary child navigation.
 - **Parent authentication gate:** Opening the panel requires entering the main Parent password (`greia` by default, validated via `MainCredentialStore`).
 - **On-device capabilities:**
-  1. **Wi-Fi Manager:** Scan nearby SSIDs, select network, input passphrase with on-screen masking, and connect via `iwd` platform service.
-  2. **SSH Maintenance Switch:** On-demand toggle to enable or disable `ssh.service` with connection guidance (`ssh greia@<ip>`).
-  3. **Remote Companion Diagnostics:** Displays device LAN IP, mDNS status, and instructions for connecting via browser at `http://<ip>:8766`.
+  1. **Language:** choose the Greia system language through the typed language service.
+  2. **Audio & Mic:** inspect and adjust the bounded microphone input gain through `HardwareSettingsStore`.
+  3. **Wi-Fi Manager:** scan nearby SSIDs, select a network, enter a passphrase with on-screen masking, and connect via the platform Wi-Fi service.
+  4. **SSH Maintenance Switch:** on-demand toggle to enable or disable SSH with connection guidance.
+  5. **Remote Companion Diagnostics:** display device LAN IP, mDNS status, and instructions for connecting via browser at `http://<ip>:8766` during the provisional HTTP phase.
+
+The on-device panel and network client are two presentations over Greia-owned typed services; neither is allowed to become a parallel Linux administration surface.
