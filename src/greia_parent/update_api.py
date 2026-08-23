@@ -14,6 +14,12 @@ from greia_parent.protocol import API_BASE, api_index_payload
 from greia_parent.server import parse_args
 from greia_parent.static_client import ParentStaticClient
 from greia_platform.audio import AudioProcessingBackend, AudioService, AudioSettingsError
+from greia_platform.customization import ThemeStore
+from greia_platform.profile_presentation import (
+    ProfilePresentationError,
+    ProfilePresentationStore,
+)
+from greia_platform.profiles import ProfileError
 from greia_platform.system_language import SystemLanguageError, SystemLanguageStore
 from greia_platform.system_updates import (
     BUNDLE_MEDIA_TYPE,
@@ -37,9 +43,10 @@ class UpdateParentApiApplication(PackageParentApiApplication):
     """Top-level Parent composition for typed settings and bounded delivery.
 
     The HTTP process can receive bounded update bytes and mutate only typed
-    Greia settings such as language and microphone processing preferences. It is
-    intentionally not a privileged updater/audio daemon and cannot install DSP
-    code, write OS slots, select boot targets or reboot the machine.
+    Greia settings such as language, microphone processing and profile-scoped
+    presentation preferences. It is intentionally not a privileged updater/audio
+    daemon and cannot install DSP code, write OS slots, select boot targets or
+    reboot the machine.
     """
 
     def __init__(self, *args: object, **kwargs: object) -> None:
@@ -74,8 +81,53 @@ class UpdateParentApiApplication(PackageParentApiApplication):
                 "system.update.activate": False,
                 # This concrete top-level composition owns the typed AudioService.
                 "settings.audio": True,
+                "profiles.presentation": True,
             }
         )
+
+    def profiles_payload(self) -> list[dict[str, object]]:
+        profiles = super().profiles_payload()
+        for payload in profiles:
+            profile_id = payload.get("profile_id")
+            if not isinstance(profile_id, str) or not profile_id:
+                continue
+            preferences = ProfilePresentationStore(
+                self.profile_store.context(profile_id).customization_dir
+            ).read()
+            payload["presentation"] = preferences.presentation.value
+            payload["grammatical_gender"] = preferences.grammatical_gender.value
+        return profiles
+
+    def profile_presentation_payload(self, profile_id: str) -> dict[str, object]:
+        context = self.profile_store.context(profile_id)
+        preferences = ProfilePresentationStore(context.customization_dir).read()
+        return {
+            "profile_id": profile_id,
+            **preferences.as_json_dict(),
+        }
+
+    def update_profile_presentation(
+        self,
+        profile_id: str,
+        *,
+        presentation: str,
+        seed_theme_if_unset: bool,
+    ) -> dict[str, object]:
+        context = self.profile_store.context(profile_id)
+        store = ProfilePresentationStore(context.customization_dir)
+        preferences = store.set(presentation)
+        theme_seeded = False
+        if seed_theme_if_unset:
+            theme = ThemeStore.load(
+                self.root / "runtime" / "theme-defaults.toml",
+                context.customization_dir,
+            )
+            theme_seeded = store.seed_theme_if_unset(theme, preferences)
+        return {
+            "profile_id": profile_id,
+            **preferences.as_json_dict(),
+            "theme_seeded": theme_seeded,
+        }
 
     def system_update_payload(self) -> dict[str, object]:
         payload = self.update_inbox.status_payload()
@@ -124,6 +176,20 @@ class UpdateParentApiRequestHandler(PackageParentApiRequestHandler):
                 return
             self._send_json(200, self.app.index_payload())
             return
+        presentation_profile_id = _profile_presentation_id(parsed.path)
+        if presentation_profile_id is not None:
+            query = parse_qs(parsed.query)
+            if not self._require_api_authorization(query):
+                return
+            try:
+                payload = self.app.profile_presentation_payload(
+                    presentation_profile_id
+                )
+            except ProfileError:
+                self._send_api_error(404, "profile_not_found", "Profile not found")
+                return
+            self._send_json(200, payload)
+            return
         if parsed.path == f"{API_BASE}/system/update":
             query = parse_qs(parsed.query)
             if not self._require_api_authorization(query):
@@ -146,6 +212,29 @@ class UpdateParentApiRequestHandler(PackageParentApiRequestHandler):
 
     def do_PUT(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
+        presentation_profile_id = _profile_presentation_id(parsed.path)
+        if presentation_profile_id is not None:
+            query = parse_qs(parsed.query)
+            if not self._require_api_authorization(query):
+                return
+            try:
+                body = self._read_json_object()
+                seed_theme_if_unset = body.get("seed_theme_if_unset", False)
+                if not isinstance(seed_theme_if_unset, bool):
+                    raise ValueError("seed_theme_if_unset must be boolean")
+                payload = self.app.update_profile_presentation(
+                    presentation_profile_id,
+                    presentation=self._json_text(body, "presentation"),
+                    seed_theme_if_unset=seed_theme_if_unset,
+                )
+            except ProfileError:
+                self._send_api_error(404, "profile_not_found", "Profile not found")
+                return
+            except (ProfilePresentationError, OSError, ValueError) as exc:
+                self._send_api_error(400, "invalid_profile_presentation", str(exc))
+                return
+            self._send_json(200, payload)
+            return
         if parsed.path == f"{API_BASE}/settings/audio":
             query = parse_qs(parsed.query)
             if not self._require_api_authorization(query):
@@ -271,6 +360,17 @@ class UpdateParentApiHTTPServer(HTTPServer):
         self.app = app
         self.static_client = static_client or ParentStaticClient.from_environment()
         HTTPServer.__init__(self, address, UpdateParentApiRequestHandler)
+
+
+def _profile_presentation_id(path: str) -> str | None:
+    prefix = f"{API_BASE}/profiles/"
+    suffix = "/presentation"
+    if not path.startswith(prefix) or not path.endswith(suffix):
+        return None
+    value = path[len(prefix) : -len(suffix)]
+    if not value or "/" in value:
+        return None
+    return value
 
 
 def _system_update_upload_enabled() -> bool:
