@@ -30,6 +30,7 @@ from greia_platform.pygame_canvas import (
     PygameReferenceCanvas,
     activity_viewport_for_surface,
 )
+from greia_platform.pygame_completion import CompletionContent, PygameCompletionScreen
 from greia_platform.typography import FontRole, GreiaTypography
 
 REFERENCE_WIDTH = 1024
@@ -480,6 +481,7 @@ def _compute_grid_layout(grid_cfg: dict[str, Any], card_count: int) -> tuple[int
         rects.append(pygame.Rect(rx, ry, card_w, card_h))
     return card_w, card_h, rects
 
+
 def main() -> int:
     pygame.init()
     screen = pygame.display.get_surface()
@@ -515,6 +517,21 @@ def main() -> int:
                 pass
         return default
 
+    play_again_rect = pygame.Rect(REFERENCE_WIDTH // 2 - 120, REFERENCE_HEIGHT // 2 + 80, 240, 52)
+    completion = PygameCompletionScreen(
+        typography,
+        width=REFERENCE_WIDTH,
+        height=REFERENCE_HEIGHT,
+        primary_rect=play_again_rect,
+    )
+    completion_content = CompletionContent(
+        title=t("victory.title", "Bravissima! Coppie trovate! 🌟"),
+        body_lines=(t("victory.subtitle", "Che memoria fantastica!"),),
+        primary_label=t("btn.play_again", "🎉 Gioca Ancora!"),
+        achievement_count=3,
+    )
+    completion_presented = False
+
     theme_idx = 0
     grid_idx = 1
 
@@ -528,7 +545,7 @@ def main() -> int:
     is_victory = False
 
     def start_new_game() -> None:
-        nonlocal cards, flipped_indices, pairs_found, total_pairs, moves_count, unflip_timer, particles, is_victory
+        nonlocal cards, flipped_indices, pairs_found, total_pairs, moves_count, unflip_timer, particles, is_victory, completion_presented
         theme_cfg = THEMES[theme_idx]
         grid_cfg = GRID_CONFIGS[grid_idx]
         total_pairs = min(grid_cfg["pairs"], len(theme_cfg["items"]))
@@ -538,6 +555,8 @@ def main() -> int:
         unflip_timer = 0.0
         particles.clear()
         is_victory = False
+        completion.clear()
+        completion_presented = False
 
         selected_items = random.sample(theme_cfg["items"], total_pairs)
         deck_items = selected_items * 2
@@ -563,21 +582,22 @@ def main() -> int:
         grid_cfg = GRID_CONFIGS[grid_idx]
         card_w, card_h, card_rects = _compute_grid_layout(grid_cfg, len(cards))
 
-        if unflip_timer > 0.0:
-            unflip_timer -= 0.033
-            if unflip_timer <= 0.0:
-                for idx in flipped_indices:
-                    if not cards[idx]["is_matched"]:
-                        cards[idx]["is_revealed"] = False
-                flipped_indices.clear()
+        if not is_victory:
+            if unflip_timer > 0.0:
+                unflip_timer -= 0.033
+                if unflip_timer <= 0.0:
+                    for idx in flipped_indices:
+                        if not cards[idx]["is_matched"]:
+                            cards[idx]["is_revealed"] = False
+                    flipped_indices.clear()
 
-        for card in cards:
-            target_flip = 1.0 if (card["is_revealed"] or card["is_matched"]) else 0.0
-            diff = target_flip - card["flip_anim"]
-            if abs(diff) > 0.01:
-                card["flip_anim"] += diff * 0.28
-            else:
-                card["flip_anim"] = target_flip
+            for card in cards:
+                target_flip = 1.0 if (card["is_revealed"] or card["is_matched"]) else 0.0
+                diff = target_flip - card["flip_anim"]
+                if abs(diff) > 0.01:
+                    card["flip_anim"] += diff * 0.28
+                else:
+                    card["flip_anim"] = target_flip
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -586,6 +606,7 @@ def main() -> int:
                 screen = pygame.display.get_surface() or screen
                 metrics = ChildUiMetrics.for_size(*screen.get_size())
                 canvas = PygameReferenceCanvas(screen)
+                completion_presented = False
             elif event.type == pygame.KEYDOWN:
                 if event.key in (pygame.K_SPACE, pygame.K_RETURN) and is_victory:
                     start_new_game()
@@ -604,10 +625,10 @@ def main() -> int:
                 mx, my = logical
 
                 if is_victory:
-                    btn_rect = pygame.Rect(REFERENCE_WIDTH // 2 - 120, REFERENCE_HEIGHT // 2 + 80, 240, 52)
-                    if btn_rect.collidepoint(mx, my):
+                    if completion.primary_contains((int(mx), int(my))):
                         start_new_game()
-                        continue
+                    # Terminal input must not fall through into controls underneath.
+                    continue
 
                 new_btn = pygame.Rect(REFERENCE_WIDTH - 170, 14, 150, 52)
                 if new_btn.collidepoint(mx, my):
@@ -626,7 +647,7 @@ def main() -> int:
                     start_new_game()
                     continue
 
-                if unflip_timer <= 0.0 and not is_victory:
+                if unflip_timer <= 0.0:
                     _, _, active_rects = _compute_grid_layout(GRID_CONFIGS[grid_idx], len(cards))
                     for idx, rect in enumerate(active_rects):
                         if rect.collidepoint(mx, my):
@@ -666,6 +687,7 @@ def main() -> int:
 
                                         if pairs_found >= total_pairs:
                                             is_victory = True
+                                            completion_presented = False
                                             sounds.play("win")
                                             try:
                                                 emit_activity_event("memory.game_completed", {"moves": moves_count})
@@ -675,6 +697,19 @@ def main() -> int:
                                         sounds.play("mismatch")
                                         unflip_timer = 0.9
                                 break
+
+        if is_victory:
+            if not completion_presented:
+                completion.prepare(completion_content)
+                completion.draw(canvas.surface)
+                canvas.present(clear=theme.background)
+                pygame.display.flip()
+                completion_presented = True
+                if not ready_published:
+                    mark_activity_ready()
+                    ready_published = True
+            clock.tick(25)
+            continue
 
         surviving = []
         for p in particles:
@@ -762,31 +797,6 @@ def main() -> int:
         pygame.draw.rect(surf, (30, 41, 59), grid_btn, width=2, border_radius=12)
         grid_lbl = typography.render("📐 " + grid_cfg["label"], FontRole.BODY, 15, (255, 255, 255))
         surf.blit(grid_lbl, (grid_btn.centerx - grid_lbl.get_width() // 2, grid_btn.centery - grid_lbl.get_height() // 2))
-
-        if is_victory:
-            overlay = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.SRCALPHA)
-            overlay.fill((10, 15, 30, 200))
-            surf.blit(overlay, (0, 0))
-
-            card = pygame.Rect(REFERENCE_WIDTH // 2 - 220, REFERENCE_HEIGHT // 2 - 140, 440, 280)
-            pygame.draw.rect(surf, (30, 41, 59), card, border_radius=20)
-            pygame.draw.rect(surf, (254, 202, 87), card, width=3, border_radius=20)
-
-            v_title = typography.render(t("victory.title", "Bravissima! Coppie trovate! 🌟"), FontRole.DISPLAY, 22, (254, 202, 87))
-            surf.blit(v_title, (card.centerx - v_title.get_width() // 2, card.top + 30))
-
-            v_sub = typography.render(t("victory.subtitle", "Che memoria fantastica!"), FontRole.BODY, 18, (241, 245, 249))
-            surf.blit(v_sub, (card.centerx - v_sub.get_width() // 2, card.top + 75))
-
-            for i in range(3):
-                star_x = card.centerx - 50 + i * 50
-                star_y = card.top + 130
-                _draw_card_illustration(surf, "star", star_x, star_y, 40)
-
-            again_btn = pygame.Rect(card.centerx - 110, card.bottom - 65, 220, 46)
-            pygame.draw.rect(surf, (34, 197, 94), again_btn, border_radius=14)
-            again_lbl = typography.render(t("btn.play_again", "🎉 Gioca Ancora!"), FontRole.CONTROL, 20, (255, 255, 255))
-            surf.blit(again_lbl, (again_btn.centerx - again_lbl.get_width() // 2, again_btn.centery - again_lbl.get_height() // 2))
 
         canvas.present(clear=theme.background)
         pygame.display.flip()
