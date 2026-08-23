@@ -17,6 +17,12 @@ from .customization import (
 )
 from .event_client import ActivityEventClient, ActivityEventReceipt
 from .input_core import InteractionProfile, parse_interaction_profile
+from .profile_presentation import (
+    GrammaticalGender,
+    ProfilePresentation,
+    ProfilePresentationPreferences,
+    ProfilePresentationStore,
+)
 from .profiles import ProfilePolicy, write_avatar_request
 from .storage_client import ActivityStorageClient
 from .system_language import SystemLanguageStore
@@ -94,6 +100,15 @@ def _ui_preferences_store() -> UiPreferencesStore:
         state_dir = str(Path.home() / ".greia-simulator" / "dev-customization")
         Path(state_dir).mkdir(parents=True, exist_ok=True)
     return UiPreferencesStore(Path(state_dir))
+
+
+@lru_cache(maxsize=1)
+def _profile_presentation_store() -> ProfilePresentationStore:
+    state_dir = os.environ.get("GREIA_CUSTOMIZATION_DIR")
+    if not state_dir:
+        state_dir = str(Path.home() / ".greia-simulator" / "dev-customization")
+        Path(state_dir).mkdir(parents=True, exist_ok=True)
+    return ProfilePresentationStore(Path(state_dir))
 
 
 @lru_cache(maxsize=1)
@@ -229,6 +244,48 @@ def get_profile_locale() -> str:
     if device_locale:
         return device_locale
     return _system_language_store().read().locale
+
+
+def get_profile_presentation() -> ProfilePresentation:
+    """Return the child's bounded presentation hint for this launch.
+
+    The value is descriptive only.  Activities must not use it to hide content,
+    change permissions, alter difficulty or otherwise partition the product.
+    Trusted customization Activities may read the profile-local store directly;
+    ordinary Activities receive only the Shell-injected semantic value.
+    """
+
+    if os.environ.get("GREIA_CUSTOMIZATION_DIR"):
+        return _profile_presentation_store().read().presentation
+    raw = os.environ.get(
+        "GREIA_PROFILE_PRESENTATION",
+        ProfilePresentation.NEUTRAL.value,
+    ).strip().casefold()
+    try:
+        return ProfilePresentation(raw)
+    except ValueError:
+        return ProfilePresentation.NEUTRAL
+
+
+def get_profile_grammatical_gender() -> GrammaticalGender:
+    """Return the localization agreement selector for child-directed language.
+
+    This is intentionally a tiny grammar hint rather than a general identity
+    model.  Use it only when a localized utterance genuinely requires agreement,
+    e.g. Italian ``bravo``/``brava``. Prefer a neutral complete phrase whenever
+    that sounds natural.
+    """
+
+    if os.environ.get("GREIA_CUSTOMIZATION_DIR"):
+        return _profile_presentation_store().read().grammatical_gender
+    raw = os.environ.get("GREIA_PROFILE_GRAMMATICAL_GENDER", "").strip().casefold()
+    try:
+        return GrammaticalGender(raw)
+    except ValueError:
+        presentation = ProfilePresentationPreferences(
+            presentation=get_profile_presentation()
+        )
+        return presentation.grammatical_gender
 
 
 def get_profile_avatar_choices() -> tuple[str, ...]:
