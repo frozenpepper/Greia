@@ -120,7 +120,15 @@ CAPABILITIES = {
 def api_index_payload(
     capability_overrides: Mapping[str, bool] | None = None,
 ) -> dict[str, object]:
-    """Return the versioned protocol index without leaking host implementation details."""
+    """Return the versioned protocol index without leaking host implementation details.
+
+    While Parent package mutation still sits behind the same explicit
+    owner/developer enablement lane, install and removal are one capability
+    family. A wrapper composition that overrides installation therefore inherits
+    the same value for removal unless it explicitly supplies a removal override.
+    This prevents top-level API compositions from accidentally exposing only
+    half of the package-management surface.
+    """
 
     capabilities = dict(CAPABILITIES)
     if capability_overrides:
@@ -129,9 +137,10 @@ def api_index_payload(
             raise ValueError(
                 "unknown Parent API capability override: " + ", ".join(sorted(unknown))
             )
-        capabilities.update(
-            {name: bool(enabled) for name, enabled in capability_overrides.items()}
-        )
+        normalized = {name: bool(enabled) for name, enabled in capability_overrides.items()}
+        if "activities.install" in normalized and "activities.remove" not in normalized:
+            normalized["activities.remove"] = normalized["activities.install"]
+        capabilities.update(normalized)
     return {
         "api_version": API_VERSION,
         "api_base": API_BASE,
