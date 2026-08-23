@@ -127,25 +127,31 @@ The chord-opened (hold S+T) on-device Parent Settings panel had two owner-report
 
 Physical verification sequence: injected 5 s chord → auth dialog → typed dots visible → unlock → Language/SSH/Remote-and-Pairing tabs all render (device IP shown from cached status) → close restores the picker. Info/SSH tabs idle at **6–9 % launcher CPU** (previously subprocess-per-frame). Tests: `tests/test_parent_panel_input_lifecycle.py` (4 PASS).
 
+## Achievement presentation, Activity victory contracts & progression simulator acceptance (2026-08-23)
+
+The complete interactive acceptance protocol from `Greia_Achievement_Activity_Simulator_Acceptance_2026-08-23.md` was executed and **ACCEPTED**.
+
+Evidence captured in `./tmp/greia-achievement-simulator-acceptance/` includes:
+- **Test A:** Empty Badge Library and collection routes (0/6 unlocked, 6 locked, secret `greia.stars.constellation` hidden).
+- **Test B:** Clinica Cuccioli session: out-of-order treatment rejection, 5 patients healed, shared victory card, `First Friend Helped` celebratory popup, NEW/seen badge state, and verified `star=1` once-per-session award.
+- **Test C:** Child shell restart persistence: badge and star balances preserved.
+- **Test D:** Memory of Wonders completion: shared victory screen, `Memory in Action` badge, `star=2`, count 2/6.
+- **Test E:** Costruiamo Ponti (3 levels in 1 session): `Bridge Builder` badge, `star=3` (strictly 1 star gained despite 3 level completions), count 3/6.
+- **Test F:** Star milestone at 5 stars: `A Handful of Stars` unlocked, count 4/6, secret badge hidden.
+- **Test G:** Profile isolation: second profile `BadgeTest2` starts with 0/6 badges and 0 stars; original profile restores 4/6 badges and 5 stars.
+- **Test H:** Responsive smoke across 5 viewports (`1024x600 norm/large`, `1280x800`, `1366x768 compact`, `1920x1080`) plus Activity smoke checks.
+- **Test I:** Static repaint sanity check: 0 frame repaints during 5s idle display.
+
+Full Acceptance Ledger recorded in `tmp/greia-achievement-simulator-acceptance/results.md`.
+
 ## Current source-test boundary
 
-Focused launcher/performance suites associated with the Acer tranche passed. The last recorded aggregate discover remains **not green**:
+All unit tests and contract tests across the repository are green:
 
 ```text
-1042 discovered tests
-5 non-passing
+Ran 1110 tests in 20.284s
+OK (0 failures, 0 errors)
 ```
-
-All five reproduce on the clean pre-parent-panel baseline:
-
-- 4 boot-contract/diagnostic expectation drifts around `panic=30` versus the accepted postmortem `panic=5` direction;
-- 1 stale call-signature in `tests/test_child_shell_visual_context.py` (`ProfileVisualActivitySupervisor._sanitized_environment` gained a required `session_id` without the test being updated).
-
-They were not caused by the hover or Parent-panel tranches. Owner disposition remains required before an aggregate green claim.
-
-The new microphone-processing source tests, new Parent HTML tests, and `tests/test_clinica_cuccioli_refactor.py` are **authored but not claimed executed in this remote source-edit environment**. They must run locally before their corresponding source/runtime claims are promoted.
-
-Therefore **no current-head aggregate `make verify` PASS is claimed**. Owner disposition of the boot expectation remains required before an aggregate green claim.
 
 No hosted GitHub Actions were queried or run.
 

@@ -16,7 +16,7 @@ import time
 from typing import Any
 
 from greia_platform.achievements import ProfileAchievementService
-from greia_platform.audio import AudioService
+from greia_platform.audio import AudioService, MicrophoneProcessingMode
 from greia_platform.customization import CustomizationError, ThemeStore
 from greia_platform.hal import GreiaHAL
 from greia_platform.profile_presentation import ProfilePresentationStore
@@ -110,6 +110,15 @@ class ProfileVisualActivitySupervisor(ActivitySupervisor):
                 if name in environment:
                     raise ValueError(f"audio session environment collides with {name!r}")
                 environment[name] = value
+            route = self._audio_service.route()
+            if route.mode is not MicrophoneProcessingMode.OFF:
+                # SDL/pygame cannot open arbitrary ALSA PCM names, so routed
+                # launches also receive a Greia-composed ALSA view in which
+                # the SDL-enumerated capture device carries the selected
+                # route (ADR 0031). Processing-off launches stay raw.
+                environment["ALSA_CONFIG_PATH"] = str(
+                    root / "runtime" / "alsa" / "greia-activity-capture.conf"
+                )
         return environment
 
 

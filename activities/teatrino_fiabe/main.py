@@ -29,6 +29,7 @@ from greia_platform.activity_api import (
     emit_activity_event,
     get_audio_capture_device,
     get_icon_path,
+    get_sdl_capture_device,
     get_storage,
     get_theme,
     mark_activity_ready,
@@ -243,12 +244,14 @@ class MicrophoneRecorder:
     def has_hardware(self) -> bool:
         try:
             self._ensure_audio_init()
-            # The platform-owned route is authoritative: a Greia-selected
-            # capture endpoint means microphone capture is available without
-            # enumerating host devices (ADR 0031).
-            if get_audio_capture_device() is not None:
+            # The platform-owned route is authoritative: a Greia-designated
+            # capture device means microphone capture is available without
+            # enumerating host devices here (ADR 0031).
+            if get_sdl_capture_device() is not None:
                 return True
-            if sdl2_audio is not None:
+            if get_audio_capture_device() is None and sdl2_audio is not None:
+                # Development/simulator fallback only: Greia injected no
+                # production route, so normal SDL default behavior applies.
                 names = sdl2_audio.get_audio_device_names(True)
                 return bool(names)
         except Exception:
@@ -301,10 +304,14 @@ class MicrophoneRecorder:
                 pass
 
         try:
-            # Open Greia's platform-selected capture route (ADR 0031).
-            # None means the development/simulator default endpoint; the
-            # Activity must never enumerate or choose a physical device.
-            dev_name = get_audio_capture_device()
+            # Open the capture device Greia designated for this launch
+            # (ADR 0031). None means development/simulator fallback where
+            # normal SDL default behavior applies; this Activity must never
+            # enumerate and choose a physical device on Greia.
+            dev_name = get_sdl_capture_device()
+            if dev_name is None and get_audio_capture_device() is None:
+                names = sdl2_audio.get_audio_device_names(True)
+                dev_name = names[0] if names else None
             self._dev = sdl2_audio.AudioDevice(
                 dev_name,
                 True,

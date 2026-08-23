@@ -97,8 +97,10 @@ class HistoryTests(unittest.TestCase):
 
     def test_policy_loads_against_canonical_activity_catalogue(self) -> None:
         self.assertEqual(self.history_policy.max_sessions_per_profile, 2000)
-        self.assertEqual(len(self.progression.rules), 1)
-        rule = self.progression.rules[0]
+        self.assertEqual(len(self.progression.rules), 4)
+        rule_map = {rule.rule_id: rule for rule in self.progression.rules}
+        self.assertIn("shape-garden-creation-star", rule_map)
+        rule = rule_map["shape-garden-creation-star"]
         self.assertEqual(rule.activity_id, "org.greia.shape-garden")
         self.assertEqual(rule.event_id, "creation.completed")
         self.assertEqual((rule.reward_id, rule.reward_delta), ("star", 1))

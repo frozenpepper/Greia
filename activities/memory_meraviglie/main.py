@@ -705,9 +705,6 @@ def main() -> int:
                 canvas.present(clear=theme.background)
                 pygame.display.flip()
                 completion_presented = True
-                if not ready_published:
-                    mark_activity_ready()
-                    ready_published = True
             clock.tick(25)
             continue
 

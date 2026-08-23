@@ -183,6 +183,34 @@ def get_audio_processing_mode() -> str:
     return value if value in {"off", "lightweight", "advanced"} else "off"
 
 
+def get_sdl_capture_device() -> str | None:
+    """Return the SDL-openable capture device designated by Greia's route.
+
+    SDL/pygame cannot open arbitrary ALSA PCM names, so when Greia injects a
+    production microphone route the launcher also composes this Activity's
+    ALSA view (``ALSA_CONFIG_PATH``) in which the SDL-enumerated capture
+    device carries the selected route. This accessor designates that device
+    so the Activity never enumerates and chooses hardware itself; the
+    selection is platform-owned (ADR 0031).
+
+    ``None`` means no production route was injected (development/simulator):
+    the caller may use its normal SDL default/enumeration fallback.
+    """
+
+    _require_capability("audio.basic")
+    if not os.environ.get("GREIA_AUDIO_CAPTURE_DEVICE", "").strip():
+        return None
+    try:
+        from pygame._sdl2 import audio as sdl2_audio
+    except ImportError:  # pragma: no cover - non-SDL development context
+        return None
+    try:
+        names = sdl2_audio.get_audio_device_names(True)
+    except Exception:
+        return None
+    return names[0] if names else None
+
+
 def emit_activity_event(
     event_id: str,
     payload_or_key: object = None,
