@@ -5,8 +5,9 @@
 **Repository:** `frozenpepper/Greia` (private)  
 **Canonical/default/development branch:** `main`  
 **Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**  
-**External Parent HTML runtime revision pinned by Greia:** `frozenpepper/Greia-Parent-App-Html@7ff7e318eb246618dab26939ba086999864538ce`  
-**Parent client integration state:** `source-pinned-not-yet-vendored`
+**External Parent HTML runtime revision currently pinned by Greia:** `frozenpepper/Greia-Parent-App-Html@7ff7e318eb246618dab26939ba086999864538ce`  
+**Newer reviewed-source candidate containing microphone-processing UI:** `frozenpepper/Greia-Parent-App-Html@cdea281a1848d1372a18822a559dc15494e749b0`  
+**Parent client integration state:** `source-pinned-not-yet-vendored`; microphone UI repin still requires local test/integrity regeneration
 
 This file is the project-wide **current continuation contract**. Chronology belongs in plans/reviews; exact APIs/limits remain source-owned.
 
@@ -41,28 +42,30 @@ launcher RSS: ~153 MB → ~153 MB
 
 On-device visual verification covered Collection Home, category grid, hover lift/title disclosure, focus/selection badge, pagination and rapid cross-card traversal without ghosting.
 
-`docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md` is now the single accumulating performance manual for measured device cost, cache/alpha/invalidation rules, evidence discipline and case studies. This Parent/discovery tranche does not supersede or modify that performance work.
+`docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md` is now the single accumulating performance manual for measured device cost, cache/alpha/invalidation rules, evidence discipline and case studies. The microphone tranche does not supersede or modify that performance work.
 
 ## Current source-test boundary
 
-Focused launcher/performance suites associated with the Acer tranche passed. The current aggregate discover remains **not green**:
+Focused launcher/performance suites associated with the Acer tranche passed. The last recorded aggregate discover remains **not green**:
 
 ```text
 1028 discovered tests
 4 failures
 ```
 
-All four failures are pre-existing boot-contract/diagnostic expectation drift around `panic=30` versus the accepted postmortem `panic=5` direction and reproduce on the pre-hover reference baseline. They were not caused by the Parent/discovery work in this handover.
+All four failures were pre-existing boot-contract/diagnostic expectation drift around `panic=30` versus the accepted postmortem `panic=5` direction and reproduced on the pre-hover reference baseline. They were not caused by the Parent/discovery work.
 
-Therefore **no current-head aggregate `make verify` PASS is claimed**. Owner disposition of that boot expectation remains required before an aggregate green claim.
+The new microphone-processing source tests and new Parent HTML tests are **authored but not claimed executed in this remote source-edit environment**. They must run locally before the physical Acer tranche is promoted.
+
+Therefore **no current-head aggregate `make verify` PASS is claimed**. Owner disposition of the boot expectation remains required before an aggregate green claim.
 
 No hosted GitHub Actions were queried or run.
 
 ---
 
-# 2. Parent HTML client — rebuilt and repinned
+# 2. Parent HTML client — runtime pin retained, microphone candidate ready for local repin
 
-Greia now pins the rebuilt external Parent client at:
+Greia still pins the previously tested external Parent client at:
 
 ```text
 repository: frozenpepper/Greia-Parent-App-Html
@@ -78,7 +81,7 @@ runtime/parent-app-client.toml
 runtime/parent-app-client.manifest.json
 ```
 
-The integrity manifest now contains exactly the rebuilt **12 runtime files**:
+That integrity manifest contains the established 12 runtime files:
 
 ```text
 index.html
@@ -95,9 +98,33 @@ src/views_activities.js
 src/views_device.js
 ```
 
-Deleted observer-era modules are no longer listed or loaded.
+The Parent source repository now has a newer microphone-processing candidate at:
 
-Verification performed before repin:
+```text
+cdea281a1848d1372a18822a559dc15494e749b0
+```
+
+It adds:
+
+- `GET/PUT /settings/audio` and reset client methods;
+- capability-gated audio state loading/refresh;
+- a **Microphone cleanup** card;
+- **Improve microphone sound** as the normal/default control;
+- **Enhanced noise reduction** only when `available.advanced` is true;
+- explicit UI text that Greia never auto-enables the advanced path;
+- demo behavior and focused tests.
+
+This newer revision is intentionally **not yet written into Greia's runtime pin** because its `npm test`, syntax checks and exact 12-file SHA-256 manifest regeneration still need to execute on a real local checkout. Do not bypass that integrity boundary.
+
+Greia now includes:
+
+```text
+tools/update_parent_client_pin.py
+```
+
+Use it from a clean exact Parent checkout after tests to regenerate both the revision and the exact byte/SHA-256 manifest. The tool refuses dirty or revision-mismatched Parent checkouts.
+
+The previously pinned Parent revision had been verified as:
 
 ```text
 Parent npm test:                  28 / 28 PASS
@@ -107,7 +134,9 @@ Greia manifest vs Parent runtime: 12 / 12 byte-count + SHA-256 PASS
 Greia pin TOML parse/revision:     PASS
 ```
 
-Manual desktop/mobile browser visual acceptance remains open because the current execution environment could not provide a normal owner-controlled browser session. Source/unit/integrity evidence is not being reported as visual-browser acceptance.
+Those results apply to `7ff7e318...`, not automatically to `cdea281...`.
+
+Manual desktop/mobile browser visual acceptance also remains required for the newer microphone UI.
 
 ## Parent product architecture
 
@@ -132,6 +161,7 @@ Implemented typed surfaces include:
 - language;
 - mouse/touchpad/display settings;
 - microphone input gain when Greia exposes it;
+- typed microphone-processing preferences in the newer source candidate;
 - Parent password change;
 - SSH maintenance enable/disable;
 - paired-device list/revoke;
@@ -142,11 +172,79 @@ The client remains API-first. It does not gain shell/filesystem/package-manager 
 
 ---
 
-# 3. Connected microphone-gain work reconciled
+# 3. Platform-owned microphone processing — semantic architecture implemented, Acer DSP backend still PHYSICAL-UNPROVEN
 
-A latest-commit review before repinning found that Greia had added microphone input gain after the older Parent-client pin.
+Architecture authority:
 
-Current platform hardware contract:
+```text
+docs/adr/0031-platform-owned-microphone-processing.md
+docs/architecture/GREIA_AUDIO_SERVICE.md
+```
+
+Physical finalization protocol:
+
+```text
+docs/testing/2026-08-23_ACER_MICROPHONE_PROCESSING_ACCEPTANCE.md
+```
+
+## Product decision
+
+The microphone-processing policy is now explicit:
+
+```text
+lightweight cleanup desired by default
+advanced cleanup OFF by default
+parent may disable all processing
+parent may explicitly enable advanced only when a real endpoint exists
+NO automatic benchmark/model/load-based processor selection
+```
+
+This is separate from the existing microphone input-gain setting.
+
+## Source implementation
+
+Implemented:
+
+```text
+src/greia_platform/audio.py
+runtime/audio-settings.toml
+src/greia_parent/protocol.py
+src/greia_parent/update_api.py
+src/greia_launcher/child_shell.py
+src/greia_platform/activity_api.py
+```
+
+The typed `AudioService` owns desired state, backend availability, effective route and truthful fallback. The provisional ALSA adapter names stable logical endpoints:
+
+```text
+raw/default:   default
+lightweight:   greia_mic_light
+advanced:      greia_mic_advanced
+```
+
+Current route readiness is adapter-fed from current-boot markers under `/run/greia-audio/`; markers must never be created unless the corresponding endpoint really works.
+
+An Activity granted `audio.basic` receives the resolved microphone route through its sanitized launch context. Python Activities obtain it through:
+
+```python
+from greia_platform.activity_api import get_audio_capture_device
+```
+
+Activities must not enumerate physical microphones and choose the first host device.
+
+Focused source tests now cover the default/no-auto-promotion policy, explicit advanced opt-in, unavailable-backend handling, processing-off route, Activity environment projection and Parent API settings semantics. They require local execution before a PASS is claimed.
+
+## Honest physical boundary
+
+No current claim is made that `greia_mic_light` already exists on the Acer. Until the real backend is installed and its readiness marker is valid, `AudioService` intentionally resolves the desired lightweight policy to raw capture with `lightweight_unavailable` rather than pretending denoising is active.
+
+The first physical candidate is SpeexDSP preprocessor denoising because it is a tiny voice-oriented DSP library available for Debian i386. A gate/high-pass chain may be measured as an even cheaper candidate, but it only qualifies if it materially improves the real Acer signal during speech and does not clip/pump. Advanced processing (for example RNNoise) is optional and must be evaluated only after the lightweight path is stable.
+
+The local Acer agent must also migrate any remaining first-party capture code that still chooses the first SDL/ALSA device; Teatrino was known to do this at protocol creation time.
+
+## Existing microphone gain retained
+
+Current hardware gain contract remains:
 
 ```text
 desired.mic_gain
@@ -155,13 +253,7 @@ default: 2.0× / 200%
 maximum: 4.0× / 400%
 ```
 
-The setting is implemented in `HardwareSettingsStore`, the Parent hardware API payload/update path and the on-device Parent settings panel.
-
-The rebuilt external HTML client now exposes the same bounded control **only when** the returned hardware payload contains `desired.mic_gain`. Older payloads therefore remain fail-soft compatible.
-
-This does **not** mean general audio management is complete. `settings.audio` remains false; microphone input gain is currently a typed hardware setting while general output volume/mute/device-selection awaits the Audio Service contract.
-
-The Parent demo adapter mirrors the real 0.5×–4.0× bounds/default and rejects out-of-range values. New hardware-audio tests are included in the 28/28 Parent result.
+It remains in `HardwareSettingsStore` for compatibility. Do not conflate it with denoising mode or silently move gain/AGC ownership without measured migration of existing consumers.
 
 ---
 
@@ -335,7 +427,7 @@ Mandatory architecture remains:
 - controller ownership/normalization platform-owned;
 - ordinary Activities do not gain raw `/dev/input` or DRM authority.
 
-Recent launcher performance work is valuable physical evidence but is **not** R7 display/session closure.
+Recent launcher performance work and the microphone service are useful platform work but are **not** R7 display/session closure.
 
 ---
 
@@ -355,6 +447,7 @@ docs/INSTALLATION_ISSUES_LOG.md
 docs/INSTALLATION_USB_BOOT_POSTMORTEM.md
 docs/INSTALLED_OS_BOOT_POSTMORTEM.md
 docs/testing/LOCAL_AGENT_START_HERE.md
+docs/testing/2026-08-23_ACER_MICROPHONE_PROCESSING_ACCEPTANCE.md
 ```
 
 ---
@@ -386,15 +479,26 @@ Do not infer arbitrary Activity-authoring-agent drawing capability from the owne
 1. Resolve current `main` before each new implementation tranche.
 2. Owner disposition: reconcile the four stale boot-contract tests (`panic=30`) with the accepted postmortem/source direction (`panic=5`).
 3. Re-run the current aggregate verification only after that disposition; preserve genuine failures.
-4. Continue R7 from its first incomplete blocking gate; do not treat launcher performance optimization as display/session closure.
+4. Continue R7 from its first incomplete blocking gate; do not treat launcher performance optimization or microphone processing as display/session closure.
 5. Preserve the current Acer performance measurements in the engineering performance manual as future UI/render work is added.
+
+## Microphone physical finalization
+
+1. Follow `docs/testing/2026-08-23_ACER_MICROPHONE_PROCESSING_ACCEPTANCE.md` exactly on the owner-controlled Acer lane.
+2. Run the new focused Greia source tests before touching hardware.
+3. Implement/prove `greia_mic_light` with the smallest real denoiser that materially helps the Acer signal; prefer on-demand SpeexDSP evaluation before heavyweight architecture.
+4. Migrate remaining first-party microphone consumers away from host-device enumeration to `get_audio_capture_device()`.
+5. Measure raw vs lightweight CPU/RSS/quality/dropouts; leave readiness absent on failure.
+6. Evaluate advanced processing only after lightweight is stable; it is acceptable for Acer to report `advanced = false`.
+7. Update this handover with exact PHYSICAL evidence only after it exists.
 
 ## Parent
 
-1. On an owner-controlled browser checkout, run `npm test`, serve the Parent client and visually exercise desktop + mobile/narrow layouts including microphone gain.
-2. Preserve the exact `7ff7e318...` runtime pin until a newer Parent runtime is reviewed and its integrity manifest regenerated.
-3. Decide/implement the separate vendoring/release-image composition tranche; do not runtime-fetch moving Parent `main`.
-4. Continue production pairing/encrypted-transport work before enabling ordinary release mutation capabilities.
+1. In a clean owner-controlled `Greia-Parent-App-Html` checkout at `cdea281a1848d1372a18822a559dc15494e749b0`, run `npm test` and JS syntax checks, then visually exercise desktop + mobile/narrow layouts including the new microphone card.
+2. If that revision passes, run `tools/update_parent_client_pin.py --parent-root <clean-parent-checkout> --revision cdea281a1848d1372a18822a559dc15494e749b0` from Greia and validate the regenerated exact 12-file integrity manifest.
+3. Commit the Greia repin as a distinct coherent commit; do not runtime-fetch moving Parent `main`.
+4. Decide/implement the separate vendoring/release-image composition tranche later.
+5. Continue production pairing/encrypted-transport work before enabling ordinary release mutation capabilities.
 
 ## Child discovery
 
@@ -415,6 +519,10 @@ Do not infer arbitrary Activity-authoring-agent drawing capability from the owne
 - R7 remains open and Xorg/xinit provisional;
 - protected Home/Back stays outside Activity authority;
 - controller/input/device authority stays platform-owned;
+- microphone capture routing is platform-owned for Activities with `audio.basic`;
+- lightweight microphone cleanup is desired default; advanced is explicit Parent opt-in only;
+- no automatic microphone processor selection/benchmark promotion;
+- no readiness marker without a real working endpoint;
 - one canonical device-language registry;
 - selectable language is not translation/font/RTL completion;
 - system-update activation stays false on current single-root profiles;
@@ -431,4 +539,4 @@ Do not infer arbitrary Activity-authoring-agent drawing capability from the owne
 - visual runtime caches remain bounded and avoid per-frame decode/scale;
 - performance claims require measurement on the claimed execution scope.
 
-**Resume the blocking platform path from R7 in `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`. Preserve the Parent pin/discovery implementation documented above; do not re-open them as hypothetical future design.**
+**Resume the blocking platform path from R7 in `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`. In parallel, the microphone tranche may be physically finalized only through its dedicated Acer protocol; do not report source architecture as hardware acceptance.**
