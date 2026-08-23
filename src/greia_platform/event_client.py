@@ -17,6 +17,7 @@ class ActivityEventReceipt:
     event_record_id: int
     duplicate: bool
     reward_deltas: tuple[tuple[str, int], ...]
+    achievement_unlocks: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -64,12 +65,15 @@ class ActivityEventClient:
         record_id = response.get("event_record_id")
         duplicate = response.get("duplicate")
         rewards_raw = response.get("reward_deltas", [])
+        achievements_raw = response.get("achievement_unlocks", [])
         if not isinstance(record_id, int) or isinstance(record_id, bool) or record_id < 1:
             raise ActivityEventClientError("event broker returned invalid event record ID")
         if not isinstance(duplicate, bool):
             raise ActivityEventClientError("event broker returned invalid duplicate flag")
         if not isinstance(rewards_raw, list):
             raise ActivityEventClientError("event broker returned invalid reward deltas")
+        if not isinstance(achievements_raw, list):
+            raise ActivityEventClientError("event broker returned invalid achievement unlocks")
         rewards: list[tuple[str, int]] = []
         for item in rewards_raw:
             if (
@@ -81,4 +85,16 @@ class ActivityEventClient:
             ):
                 raise ActivityEventClientError("event broker returned invalid reward delta")
             rewards.append((item[0], item[1]))
-        return ActivityEventReceipt(record_id, duplicate, tuple(rewards))
+        achievement_unlocks: list[str] = []
+        for item in achievements_raw:
+            if not isinstance(item, str) or not item:
+                raise ActivityEventClientError(
+                    "event broker returned invalid achievement unlock ID"
+                )
+            achievement_unlocks.append(item)
+        return ActivityEventReceipt(
+            record_id,
+            duplicate,
+            tuple(rewards),
+            tuple(achievement_unlocks),
+        )
