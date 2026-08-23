@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 from http.server import HTTPServer
 from pathlib import Path
+from typing import cast
 from urllib.parse import parse_qs, urlparse
 
 from greia_parent.package_api import (
@@ -12,6 +13,7 @@ from greia_parent.package_api import (
 from greia_parent.protocol import API_BASE, api_index_payload
 from greia_parent.server import parse_args
 from greia_parent.static_client import ParentStaticClient
+from greia_platform.audio import AudioProcessingBackend, AudioService, AudioSettingsError
 from greia_platform.system_language import SystemLanguageError, SystemLanguageStore
 from greia_platform.system_updates import (
     BUNDLE_MEDIA_TYPE,
@@ -32,15 +34,18 @@ _UPDATE_UPLOAD_SOCKET_TIMEOUT_SECONDS = 120.0
 
 
 class UpdateParentApiApplication(PackageParentApiApplication):
-    """Parent composition with update delivery and device-language settings.
+    """Top-level Parent composition for typed settings and bounded delivery.
 
     The HTTP process can receive bounded update bytes and mutate only typed
-    Greia settings such as the device language. It is intentionally not the
-    privileged system updater and cannot write OS slots, select boot targets or
-    reboot the machine.
+    Greia settings such as language and microphone processing preferences. It is
+    intentionally not a privileged updater/audio daemon and cannot install DSP
+    code, write OS slots, select boot targets or reboot the machine.
     """
 
     def __init__(self, *args: object, **kwargs: object) -> None:
+        audio_backend = cast(
+            AudioProcessingBackend | None, kwargs.pop("audio_backend", None)
+        )
         super().__init__(*args, **kwargs)
         self.update_inbox = SystemUpdateInbox(self.state_dir)
         self.system_update_upload_enabled = _system_update_upload_enabled()
@@ -53,6 +58,11 @@ class UpdateParentApiApplication(PackageParentApiApplication):
                 )
             ),
         )
+        self.audio_service = AudioService.load(
+            self.root / "runtime" / "audio-settings.toml",
+            self.hardware_settings_dir,
+            backend=audio_backend,
+        )
 
     def index_payload(self) -> dict[str, object]:
         return api_index_payload(
@@ -62,6 +72,8 @@ class UpdateParentApiApplication(PackageParentApiApplication):
                 # No current single-root Greia profile has a proven transactional
                 # slot backend. Do not infer activation from upload availability.
                 "system.update.activate": False,
+                # This concrete top-level composition owns the typed AudioService.
+                "settings.audio": True,
             }
         )
 
@@ -80,6 +92,23 @@ class UpdateParentApiApplication(PackageParentApiApplication):
     def update_language(self, locale: str) -> dict[str, object]:
         self.language_store.replace(locale)
         return self.language_store.as_json_dict()
+
+    def audio_payload(self) -> dict[str, object]:
+        return self.audio_service.payload()
+
+    def update_audio(
+        self,
+        *,
+        microphone_processing_enabled: object | None = None,
+        advanced_noise_reduction: object | None = None,
+    ) -> dict[str, object]:
+        return self.audio_service.update(
+            microphone_processing_enabled=microphone_processing_enabled,
+            advanced_noise_reduction=advanced_noise_reduction,
+        )
+
+    def reset_audio(self) -> dict[str, object]:
+        return self.audio_service.reset()
 
 
 class UpdateParentApiRequestHandler(PackageParentApiRequestHandler):
@@ -107,10 +136,33 @@ class UpdateParentApiRequestHandler(PackageParentApiRequestHandler):
                 return
             self._send_json(200, self.app.language_payload())
             return
+        if parsed.path == f"{API_BASE}/settings/audio":
+            query = parse_qs(parsed.query)
+            if not self._require_api_authorization(query):
+                return
+            self._send_json(200, self.app.audio_payload())
+            return
         super().do_GET()
 
     def do_PUT(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
+        if parsed.path == f"{API_BASE}/settings/audio":
+            query = parse_qs(parsed.query)
+            if not self._require_api_authorization(query):
+                return
+            try:
+                body = self._read_json_object()
+                payload = self.app.update_audio(
+                    microphone_processing_enabled=body.get(
+                        "microphone_processing_enabled"
+                    ),
+                    advanced_noise_reduction=body.get("advanced_noise_reduction"),
+                )
+            except (AudioSettingsError, OSError, TypeError, ValueError) as exc:
+                self._send_api_error(400, "invalid_audio_settings", str(exc))
+                return
+            self._send_json(200, payload)
+            return
         if parsed.path != f"{API_BASE}/settings/language":
             super().do_PUT()
             return
@@ -127,6 +179,17 @@ class UpdateParentApiRequestHandler(PackageParentApiRequestHandler):
 
     def do_POST(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
+        if parsed.path == f"{API_BASE}/settings/audio/reset":
+            query = parse_qs(parsed.query)
+            if not self._require_api_authorization(query):
+                return
+            try:
+                payload = self.app.reset_audio()
+            except (AudioSettingsError, OSError, TypeError, ValueError) as exc:
+                self._send_api_error(400, "audio_reset_failed", str(exc))
+                return
+            self._send_json(200, payload)
+            return
         if parsed.path != f"{API_BASE}/system/update/bundle":
             super().do_POST()
             return
