@@ -27,10 +27,10 @@ if loadfont unicode ; then
   insmod gfxterm
   terminal_output gfxterm
 fi
-# Never use raw `background_image` here: its default stretch mode was the
+# Never use raw background_image here: its default stretch mode was the
 # reason the portrait Greia artwork became a huge horizontally distorted image
 # on the 1024x600 reference Acer.  The generated theme uses proportional
-# `padding`, centred in both axes, and the artwork generator itself supplies a
+# padding, centred in both axes, and the artwork generator itself supplies a
 # landscape composition with safe internal margins.
 if [ -f $theme ]; then
   insmod png
