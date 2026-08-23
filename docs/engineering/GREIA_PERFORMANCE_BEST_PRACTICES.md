@@ -17,9 +17,9 @@ This document is the single accumulating home for:
 - repeatable optimization principles and patterns;
 - the measurement instruments and evidence discipline;
 - per-tranche case studies (appended, never rewritten);
-- the Activity-facing rules destined for the authoring skill.
+- the Activity-facing rules consumed by the Activity authoring skill.
 
-Growth rule: after every substantive performance tranche, **append** a case study, refresh the cost model/principles if measurements changed them, and keep the Activity-rules section aligned so the authoring skill can consume it directly.
+Growth rule: after every substantive performance tranche, **append** a case study, refresh the cost model/principles if measurements changed them, and keep the Activity-facing summary aligned with `skills/greia-activity-authoring/ENGINEERING.md`.
 
 ---
 
@@ -209,38 +209,48 @@ Low idle CPU must not cost perceptible input lag. Previously accepted tolerance:
 
 ---
 
-## 6. Activity-facing rules (skill-bound)
+## 6. Activity-facing rules
 
-Activities run inside the same supervised runtime and share the same hardware floor. The following rules are the Activity-authored subset of the principles above and are the intended source for extending `skills/greia-activity-authoring` (see §7). Until integrated there, treat this section as advisory for reviewers and authoritative direction for new first-party Activities.
+The canonical practical Activity implementation rules now live in:
 
-Frame-loop prohibitions (mirror P7):
+```text
+skills/greia-activity-authoring/ENGINEERING.md
+```
 
-1. decode/load images, construct fonts, or render text without caches;
-2. create Surfaces per frame (including overlays/gradient fills) — pre-render at load;
-3. rescale/flip sprites per frame — cache by `(asset, size, orientation/state)`;
-4. regenerate static scenery per frame — bake backgrounds once;
-5. perform storage writes, package scans, or filesystem walks mid-frame — autosave on idle/level boundaries through Greia Storage only.
+That skill companion is mandatory for new/substantively changed first-party Activity implementation and is indexed by `skills/greia-activity-authoring/SKILL.md`.
 
-Required patterns:
+The measured rationale remains here. The synchronized Activity subset is:
 
-6. dirty-flag/event-driven redraw; sleep or wait when nothing changed (P9);
-7. bounded math animations sampled from monotonic time; settle exactly to neutral (P13);
-8. explicit cache bounds + invalidation on resize/theme/locale (P6/P10);
-9. target budgets: smooth gameplay ≈30 fps on the Atom-class floor; added input latency ≤50 ms (P14); idle CPU near zero when paused/static;
-10. use platform helpers (`BoundedCache`, `ui_motion`, `pygame_effects` cached shadows, `activity_ui` metrics, `PygameVisualSurfaceCache` where shared visuals apply) instead of private reimplementations — parallel copies are forbidden by engineering foundations.
+1. no image decode/load, uncached font construction/stable text rendering, reusable sprite scale/flip, large unchanged Surface allocation, static scenery regeneration, filesystem/device/subprocess/config parsing or durable storage writes in normal frame/event hot paths;
+2. pre-render static scene layers and cache reusable transforms by semantic state;
+3. use dirty/invalidation-driven redraw for static/turn-based presentation where practical;
+4. keep every cache bounded with a complete key and explicit invalidation/re-key path;
+5. make optimized paths fail-soft with a correct fallback;
+6. use bounded monotonic-time animations that settle exactly to a neutral/end state;
+7. test visual fast paths against the correct/naive path and protect gameplay semantics with independent contract tests;
+8. working targets remain ~30 fps on Atom-class hardware, <=50 ms added input latency and near-zero idle CPU for static/paused Activities where architecture permits;
+9. reuse shared Greia resource/cache/motion/UI primitives rather than copying local infrastructure;
+10. desktop/simulator timing remains diagnostic; named hardware + exact SHA is required for physical performance claims.
 
-Measurement expectations for Activity tranches: headless simulator timings are diagnostics; claims about device behavior need the named-hardware protocol (§2.2), and semantic regressions need contract tests like the Ponti crossing-once test.
+The Activity engineering companion additionally owns code-structure/OOP/decomposition rules because performance and maintainability share the same ownership/reuse concerns.
 
 ---
 
-## 7. Authoring-skill integration plan (roadmap)
+## 7. Activity-skill integration status
 
-The Activity authoring skill (`skills/greia-activity-authoring/SKILL.md` + `CORE.md`) currently contains no dedicated performance contract. Planned integration, to execute as its own reviewed tranche (do not edit the skill casually in passing):
+**Completed 2026-08-23.**
 
-1. Add a `PERFORMANCE.md` companion to the skill that restates §6 in author workflow form, referencing this document for rationale instead of duplicating it.
-2. Extend `CORE.md` frame-loop guidance with the prohibitions/patterns checklist and the budget numbers.
-3. Add reviewer/validation hooks: a packaging-time static scan for obvious per-frame offenders (e.g., `pygame.image.load` outside load paths, `pygame.transform.smoothscale` inside loop constructs) is a candidate tooling task; decide scope there, not here.
-4. After the first skill tranche lands, move §6’s normative home to the skill and leave a pointer here.
+The integration tranche created:
+
+```text
+skills/greia-activity-authoring/ENGINEERING.md
+```
+
+and updated the Activity skill index so implementation work must consume it.
+
+The completed integration deliberately chose a dedicated engineering companion rather than bloating `CORE.md` with repeated performance rationale. `CORE.md` remains the general Activity contract; `ENGINEERING.md` owns practical code structure, OOP/polymorphism, `main.py` decomposition, hot-loop rules, performance targets, cache/invalidation discipline, comments/docstrings and engineering review gates.
+
+Potential future tooling remains separate from the documentation contract. A static linter for obvious hot-loop offenders may be useful, but it must be designed against real code structure and must not substitute simplistic regex enforcement for review/profiling.
 
 ---
 
@@ -248,5 +258,6 @@ The Activity authoring skill (`skills/greia-activity-authoring/SKILL.md` + `CORE
 
 - Append case studies; never rewrite earlier ones (matches the repository append-only history rule).
 - When a tranche invalidates a cost-model number or principle, update §3/§4 and cite the tranche in the change.
+- Keep §6 aligned with `skills/greia-activity-authoring/ENGINEERING.md` whenever Activity-facing performance guidance changes.
 - Source owners referenced here (e.g., `pygame_visual_assets.py`, `shared_ui_presentation.py`, `ui_motion.py`) are declared in `docs/DOCUMENTATION.md`; if ownership moves, update both files in the same tranche.
 - This manual does not replace `ENGINEERING_FOUNDATIONS.md` §5 (low-resource rules); it operationalizes them with measurements and patterns.
