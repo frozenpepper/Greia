@@ -61,6 +61,23 @@ The OS work skill is the practical contributor router for architecture ownership
 
 `AGENTS.md` now requires the OS skill for substantive platform/Shell/Parent/installer/simulator/build/runtime/hardware-service work and requires future changes to keep it synchronized. The performance manual records Activity-skill integration as complete. Durable review: `docs/reviews/2026-08-23_ENGINEERING_SKILLS_INTEGRATION.md`.
 
+## Acer boot contract and boot screen physical acceptance (2026-08-23)
+
+The physical Acer Aspire One boot contract reconciliation and boot screen test protocol (`GREIA_ACER_BOOT_CONTRACT_AND_BOOT_SCREEN_TEST_PROTOCOL.md`) has been fully executed and accepted on hardware.
+
+- **Target host:** Acer Aspire One (`greia-dev.local`, `legacy-x86-i686-dev`, Linux `6.1.0-52-686 i686`).
+- **Source contract reconciliation:** `src/greia_platform/boot_contract.py` now enforces the postmortem contract: developer builds require `panic=0` (no reboot loop on failure), `console=tty1`, `loglevel=4`, `systemd.show_status=true`, `rd.systemd.show_status=true`, `udev.log_priority=4`, `vt.global_cursor_default=1`, and forbid release arguments (`quiet`, `splash`, `loglevel=0`, `console=null`, `panic=5`, `systemd.show_status=false`, `rd.systemd.show_status=false`, `udev.log_priority=3`, `vt.global_cursor_default=0`).
+- **Pre-change state & backup:** Full backup created at `/var/lib/greia/boot-acceptance-backup-20260823-160333` containing previous `10_greia_appliance`, `grub.cfg`, `greia-theme.txt`, `greia-boot-logo.png`, `boot-logo.ppm`, and `greia-fb-splash`.
+- **Initramfs storage module preservation:** Verified `/boot/initrd.img-6.1.0-52-686` retains critical storage drivers before and after regeneration: `ahci.ko`, `libahci.ko`, `libata.ko`, `acard-ahci.ko`, `sd_mod.ko`.
+- **Target compilation:** `greia-fb-splash.c` compiled directly on target using `klcc -static -Os -s` producing a native i386 ELF32 executable installed to `/usr/lib/greia-boot/greia-fb-splash` and packaged into the initramfs hooks (`init-top`, `local-premount`, `init-bottom`).
+- **GRUB generation & contract validation:** GRUB configuration generated via `update-grub` on the Acer and validated remotely with `PYTHONPATH=src python3 -m greia_platform.boot_contract ... --developer` passing 1 kernel command line. Running kernel command line verified:
+  ```text
+  BOOT_IMAGE=/vmlinuz root=UUID=cdc4dc87-acde-4bf9-bad1-0ac2b413446f ro loglevel=4 systemd.show_status=true rd.systemd.show_status=true udev.log_priority=4 vt.global_cursor_default=1 console=tty1 panic=0 systemd.crash_shell=no systemd.crash_chvt=0 consoleblank=0
+  ```
+- **Safety gates & automatic SSH recovery:** Mandatory SSH recovery gate passed prior to reboot; second independent fresh SSH connection confirmed (`GREIA_SSH_PRE_REBOOT_OK`). Machine rebooted cleanly with `systemctl reboot`. Automatic SSH password login (`greia/greia`) succeeded on attempt 1 post-boot (`GREIA_SSH_POST_BOOT_OK`).
+- **Launcher & services:** `greia-launcher.service` active with 0 failed units. Service restarted cleanly and verified reachable via SSH (`GREIA_SSH_AFTER_LAUNCHER_RESTART_OK`). Developer remote marker `/etc/greia-os/developer-remote` preserved throughout.
+- **Verification evidence:** 73/73 focused boot tests PASSED (`test_boot_contract`, `test_boot_diagnostics_hardening`, `test_boot_animation_contract`, `test_boot_experience_contract`, `test_boot_progress_contract`, `test_launcher_boot_fallback`, `test_grub_security`). Full repository gate `make verify` PASSED (1,089 unit tests OK, 19/19 activities valid). Stored evidence in `tmp/boot-contract-acer-acceptance/`.
+
 ## Clinica Cuccioli Activity architecture calibration (2026-08-23)
 
 `activities/clinica_cuccioli` is the first real calibration of the strengthened Activity engineering rules. It was deliberately selected because it required **no new generated character voices** while its previous ~33.5 KB `main.py` mixed gameplay state, random treatment generation, persistence, event publication, procedural SFX synthesis, input, particles and all rendering.
