@@ -44,6 +44,25 @@ On-device visual verification covered Collection Home, category grid, hover lift
 
 `docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md` is now the single accumulating performance manual for measured device cost, cache/alpha/invalidation rules, evidence discipline and case studies. The microphone tranche does not supersede or modify that performance work.
 
+## Contributor engineering skills integration (2026-08-23)
+
+The measured performance lessons and existing OOP/polymorphism foundations are now integrated into the contributor-facing skills rather than remaining specialist documentation only.
+
+Created:
+
+```text
+skills/greia-activity-authoring/ENGINEERING.md
+skills/greia-os-work/SKILL.md
+```
+
+The Activity engineering companion is mandatory for new/substantively changed first-party Activity implementation. It makes `main.py` a thin composition/bootstrap boundary, defines pragmatic module/class decomposition and OOP/polymorphism/reuse protocols, and operationalizes the Acer performance rules: no heavyweight IO/decode/scale/font/device/subprocess/config/storage work in hot loops, bounded caches with invalidation, pre-rendered static presentation, dirty rendering, bounded animations and fast-path equivalence testing.
+
+The OS work skill is the practical contributor router for architecture ownership, extension seams, reusable class placement, OOP/polymorphism, low-resource performance, UI/display/input authority, audio/microphone boundaries, simulator policy, install/update/trust, comments/docstrings, documentation maintenance and evidence discipline.
+
+`AGENTS.md` now requires the OS skill for substantive platform/Shell/Parent/installer/simulator/build/runtime/hardware-service work and requires future changes to keep it synchronized. The performance manual records Activity-skill integration as complete. Durable review: `docs/reviews/2026-08-23_ENGINEERING_SKILLS_INTEGRATION.md`.
+
+This was documentation/skill work only: no runtime/source behavior changed and no new runtime PASS is claimed.
+
 ## Parent Settings overlay tranche (2026-08-23, `3c3e91f`)
 
 The chord-opened (hold S+T) on-device Parent Settings panel had two owner-reported defects, both fixed and verified on the reference Acer:
@@ -491,10 +510,11 @@ Do not infer arbitrary Activity-authoring-agent drawing capability from the owne
 ## Blocking engineering
 
 1. Resolve current `main` before each new implementation tranche.
-2. Owner disposition: reconcile the four stale boot-contract tests (`panic=30`) with the accepted postmortem/source direction (`panic=5`).
-3. Re-run the current aggregate verification only after that disposition; preserve genuine failures.
-4. Continue R7 from its first incomplete blocking gate; do not treat launcher performance optimization or microphone processing as display/session closure.
-5. Preserve the current Acer performance measurements in the engineering performance manual as future UI/render work is added.
+2. Read `skills/greia-os-work/SKILL.md` for substantive OS/platform work and the Activity skill's `ENGINEERING.md` for substantive Activity implementation; keep both synchronized when their governed contracts change.
+3. Owner disposition: reconcile the four stale boot-contract tests (`panic=30`) with the accepted postmortem/source direction (`panic=5`).
+4. Re-run the current aggregate verification only after that disposition; preserve genuine failures.
+5. Continue R7 from its first incomplete blocking gate; do not treat launcher performance optimization or microphone processing as display/session closure.
+6. Preserve the current Acer performance measurements in the engineering performance manual as future UI/render work is added.
 
 ## Microphone physical finalization
 
@@ -529,6 +549,9 @@ Do not infer arbitrary Activity-authoring-agent drawing capability from the owne
 - GitHub is canonical persistence;
 - no unauthorized GitHub Actions use/inspection;
 - no current-head PASS without current-head execution;
+- substantive OS/platform work consumes `skills/greia-os-work/SKILL.md`;
+- substantive Activity implementation consumes `skills/greia-activity-authoring/ENGINEERING.md` through the Activity skill;
+- Activity `main.py` is a composition/bootstrap boundary rather than a monolithic application implementation;
 - no visible Linux shell/desktop in normal child path;
 - R7 remains open and Xorg/xinit provisional;
 - protected Home/Back stays outside Activity authority;
@@ -550,7 +573,7 @@ Do not infer arbitrary Activity-authoring-agent drawing capability from the owne
 - explicit Parent Activity overrides win over automatic recommendation;
 - adaptive discovery never exceeds one sub-Collection layer;
 - Collections are semantic child groupings, never filesystem folders;
-- visual runtime caches remain bounded and avoid per-frame decode/scale;
+- visual/runtime/Activity caches remain bounded with explicit invalidation and avoid per-frame decode/scale/IO;
 - performance claims require measurement on the claimed execution scope.
 
 **Resume the blocking platform path from R7 in `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`. In parallel, the microphone tranche may be physically finalized only through its dedicated Acer protocol; do not report source architecture as hardware acceptance.**
