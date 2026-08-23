@@ -144,7 +144,7 @@ Current prototype `runtime.capabilities` mixes ordinary requirements (`display`,
 
 A manifest request must never equal a grant, and an external package must not obtain system privilege by claiming a reserved ID.
 
-**Required:** a platform `PermissionBroker` computes effective session grants from package trust/origin, manifest request, runtime/hardware capability, build policy, parent policy, and platform security policy. Built-in/system privilege is tied to trusted package identity/origin, not title or Activity ID alone.
+**Required:** a platform `PermissionBroker` computes effective session grants from package trust/origin, manifest request, runtime capability, hardware capability, build policy, parent policy, and platform security policy. Built-in/system privilege is tied to trusted package identity/origin, not title or Activity ID alone.
 
 ## F-19 — Stable Activity IDs must be finalized before durable services — HIGH
 
@@ -378,7 +378,7 @@ Complete the runtime-adapter protocol begun minimally in R2 for runtime-specific
 
 Work:
 
-- inventory `DISPLAY`, Xauthority, XShm, `xinput`, `xrandr`, Xorg package/service assumptions;
+- inventory `DISPLAY`, Xauthority, XShm, `xinput`, `xrandr`, Xorg package/config/service assumptions;
 - typed Display/Input implementations behind R6 interfaces;
 - prototype SDL direct DRM/KMS/KMSDRM path;
 - preserve ADR 0019 trusted Home/Back above Activity rendering and consume protected system input before Activity delivery;
@@ -867,3 +867,14 @@ This plan may be marked complete only when:
 - `make verify` passes;
 - `HANDOVER.md` is current;
 - the active-plan reference is removed from `AGENTS.md` as the final administrative action.
+
+---
+
+## 2026-08-23 — R12 preparatory Parent-client repin and implemented discovery reconciliation (non-closing)
+
+- Implemented: re-resolved both repository heads before integration and preserved the concurrent reference-Acer launcher/performance work plus the new engineering performance manual. Detected a connected microphone-gain tranche already present in Greia (`HardwareSettings.mic_gain`, 0.5×–4.0×, default 2.0×) that the rebuilt external Parent client had not yet exposed; added a fail-soft microphone-level control to the rebuilt HTML client, aligned its deterministic demo adapter with the real Greia bounds/default, and added dedicated hardware-audio tests. Froze the coherent Parent runtime/test revision at `7ff7e318eb246618dab26939ba086999864538ce`. Advanced `runtime/parent-app-client.toml` and `runtime/parent-app-client.manifest.json` to that revision and replaced the old observer-era integrity set with the exact rebuilt 12-file runtime. Reconciled `PARENT_MANAGEMENT.md` and `CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md` with current source: audience/adaptive-difficulty manifest fields, `presentation.discovery_tags`, profile age/challenge fields, per-child discovery policy/API, fail-open ranking/filtering, explicit Parent overrides and adaptive one-level sub-Collections are implemented foundations rather than future-only design. Refreshed root `HANDOVER.md` as the current continuation contract while retaining the measured Acer/R7 evidence boundary.
+- Tests/evidence: external Parent client exact changed blobs were byte-compared with the local tested copies; `node --check src/views_device.js` PASS; `node --check src/demo_api.js` PASS; `npm test` **28/28 PASS**. The regenerated Greia Parent-client manifest was checked locally against the exact Parent runtime bytes: **12/12 byte-count + SHA-256 PASS**; the TOML pin parsed successfully and its revision matched the manifest. No hosted GitHub Actions were queried/run. No current Greia aggregate PASS is claimed: the retained current discover evidence remains 1028 tests with 4 pre-existing boot-contract/diagnostics failures around stale `panic=30` expectations versus accepted `panic=5` source/postmortem direction.
+- Decisions: the Parent HTML client remains one API-first product renderer; deleted MutationObserver-era modules stay deleted. Microphone gain is currently a typed hardware setting and does not imply the broader `settings.audio` capability is complete. Parent runtime JavaScript remains exact-revision/integrity pinned and is never fetched from moving repository `main`. Adaptive child discovery remains bounded to Home → primary → optional sub-Collection → Activity; primary/group vocabularies are platform-owned; effective catalogue is per child after Parent policy; missing audience metadata fails open; explicit Parent overrides win. This cross-cutting R12 preparatory work does not close/skip R7 or production Parent pairing/encrypted transport.
+- Remaining blockers: owner disposition of the four stale boot-contract tests before a current aggregate green claim; R7 direct graphics/session/input remains the first blocking architecture phase; Parent manual desktop/mobile visual acceptance remains open; Parent client is still source-pinned-not-yet-vendored; production pairing needs short-lived challenge + local Allow/Deny + authenticated encrypted transport; complete R10/R11/R12 privileged/package/backup work remains governed by the dependency map.
+- Next exact step: preserve `7ff7e318...` as the Parent runtime pin unless a newer reviewed runtime is intentionally accepted; on an owner-controlled browser checkout perform desktop/narrow visual acceptance including mic gain; separately resolve the `panic=30` vs `panic=5` boot-test direction, rerun current aggregate verification, then continue R7 from its first incomplete gate without conflating launcher-render performance with display/session closure.
+- Commit(s): Parent `08da3d0e442bb7fab51b52c4c0642905757733bd`, `bf47c9a1056c9223aabb81402a3071d56cd22027`, `7ff7e318eb246618dab26939ba086999864538ce`; Greia `e9576fdbab37cc5c2a134743c39d9238ef288c95`, `31ea8afab5d43fde5a994dee274b43c6eef63ec8`, `e8802c5130434fb9ec05ea42adaa06854d7893a3`, `43cbd012298284c1605c3eae7403462e8505cea8`, `5fa3452329b49ca71b9f95533b64591e285faa58`; this plan-append commit follows.
