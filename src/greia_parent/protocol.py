@@ -40,6 +40,11 @@ RESOURCES = (
         f"{API_BASE}/profiles/{{profile_id}}/activity-policy",
         ("GET", "PUT"),
     ),
+    ParentApiResource(
+        "profile_presentation",
+        f"{API_BASE}/profiles/{{profile_id}}/presentation",
+        ("GET", "PUT"),
+    ),
     ParentApiResource("activities", f"{API_BASE}/activities", ("GET",)),
     ParentApiResource(
         "activity_install",
@@ -83,6 +88,9 @@ RESOURCES = (
 
 CAPABILITIES = {
     "profiles.manage": True,
+    # The profile-presentation resource is protocol-defined but only concrete
+    # compositions that own the profile customization store may advertise it.
+    "profiles.presentation": False,
     "activities.read": True,
     "activities.policy": True,
     "progress.read": True,
