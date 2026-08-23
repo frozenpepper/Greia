@@ -81,7 +81,7 @@ content SHA-256 fingerprint
 
 Recommended Activity-authoring target is 256×256 transparent PNG with no embedded text and strong readability at small sizes.
 
-The content digest is retained in the immutable emblem metadata so a changed Activity image at the same path invalidates the prepared badge cache rather than reusing stale artwork.
+The art boundary reads at most 512 KiB + 1, validates dimensions from those bounded bytes and fingerprints those exact bytes. The content digest is retained in immutable emblem metadata so a changed Activity image at the same path invalidates the prepared badge cache rather than reusing stale artwork.
 
 ---
 
@@ -123,21 +123,26 @@ For an **unlocked** achievement:
 
 ```text
 if platform admitted Activity emblem:
-    decode emblem while preparing a new cached award
-    scale once into the small badge surface
+    read at most admitted byte_size + 1
+    verify byte count + SHA-256 against policy-admitted metadata
+    decode one shared source surface from those verified bytes
+    scale into the small prepared badge surface
 else:
     use Greia icon_id
 ```
 
-If Activity image decode fails, the renderer falls back to `icon_id`; if the normal icon provider also fails, its existing yellow-star fallback remains.
+The source-surface cache is bounded separately from the final badge cache, so two Clinic achievements that use the same Clinic emblem do not repeatedly decode the same PNG.
 
-For a **locked** achievement, Greia renders the lock and does not decode/reveal Activity art.
+If the Activity bytes no longer match the admitted fingerprint, or image decode otherwise fails, the renderer refuses those bytes and falls back to `icon_id`; if the normal icon provider also fails, its existing yellow-star fallback remains.
+
+For a **locked** achievement, Greia renders the lock and does not read/decode/reveal Activity art at all.
 
 Performance constraints remain:
 
 ```text
 final award surface: 48..220 px
-bounded cache
+bounded final badge cache
+bounded shared Activity-emblem source cache
 small alpha area only
 no per-frame Activity-art decode
 no runtime SVG
@@ -145,7 +150,7 @@ no Activity rendering callback
 no fullscreen alpha overlay
 ```
 
-The cache identity includes the Activity asset path and its content fingerprint.
+Both source and final cache identity include Activity path + content fingerprint.
 
 ---
 
@@ -190,6 +195,8 @@ Updated:
 ```text
 docs/design/GREIA_ACHIEVEMENTS_AND_BADGE_LIBRARY.md
 skills/greia-activity-authoring/ACHIEVEMENTS.md
+skills/greia-os-work/SKILL.md
+HANDOVER.md
 ```
 
 The authoring skill now makes explicit that:
@@ -200,6 +207,8 @@ The authoring skill now makes explicit that:
 - Greia still owns frame/localization/unlock/state;
 - purpose-made Activity emblems are encouraged;
 - Activity-local stickers/collections/treasures should become a separate future subsystem rather than being forced into global achievements.
+
+The OS work skill now routes progression/achievement work to the shared owners and explicitly rejects Activity-local global reward/achievement mutation or automatic Badge Library admission.
 
 ---
 
@@ -232,6 +241,8 @@ Authored coverage includes:
 - unknown/undeclared policy emblem rejection;
 - Activity emblem used instead of platform icon when available;
 - Activity-art decode failure falling back to platform icon;
+- locked badge never touching/revealing Activity art;
+- post-admission byte mutation falling back instead of displaying unverified art;
 - prepared badge cache reuse;
 - content-digest change invalidating same-path cached art.
 
