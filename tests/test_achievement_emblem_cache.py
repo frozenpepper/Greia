@@ -20,10 +20,15 @@ def _text(value: str) -> LocalizedAchievementText:
     return LocalizedAchievementText((("en", value),), "en")
 
 
-def _entry(emblem: ActivityAchievementEmblem) -> AchievementEntry:
+def _entry(
+    emblem: ActivityAchievementEmblem,
+    *,
+    unlocked: bool = True,
+    achievement_id: str = "greia.test.emblem-update",
+) -> AchievementEntry:
     return AchievementEntry(
         definition=AchievementDefinition(
-            achievement_id="greia.test.emblem-update",
+            achievement_id=achievement_id,
             category="test",
             tier="silver",
             icon_id="yellow_star",
@@ -34,7 +39,7 @@ def _entry(emblem: ActivityAchievementEmblem) -> AchievementEntry:
             criteria=(),
             activity_emblem=emblem,
         ),
-        unlocked_at=1.0,
+        unlocked_at=1.0 if unlocked else None,
         announced_at=None,
         seen_at=None,
     )
@@ -104,6 +109,62 @@ class AchievementEmblemCacheTests(unittest.TestCase):
         self.assertIs(first, repeated)
         self.assertIsNot(first, changed)
         self.assertEqual(provider.calls, 0)
+
+    def test_locked_badge_never_reads_or_reveals_activity_emblem(self) -> None:
+        provider = _IconProvider()
+        renderer = PygameAchievementBadgeRenderer(provider)
+        emblem = ActivityAchievementEmblem(
+            activity_id="org.greia.test",
+            emblem_id="private-until-earned",
+            asset_path=Path("/missing/locked-emblem.png"),
+            width=64,
+            height=64,
+            byte_size=100,
+            content_digest="not-used-while-locked",
+        )
+
+        badge = renderer.render(
+            _entry(
+                emblem,
+                unlocked=False,
+                achievement_id="greia.test.locked-art",
+            ),
+            96,
+        )
+
+        self.assertEqual(provider.calls, 0)
+        self.assertEqual(badge.get_size(), (96, 96))
+
+    def test_unadmitted_changed_bytes_fail_soft_to_platform_icon(self) -> None:
+        provider = _IconProvider()
+        renderer = PygameAchievementBadgeRenderer(provider)
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "emblem.png"
+            source = pygame.Surface((64, 64), pygame.SRCALPHA)
+            source.fill((20, 140, 210, 255))
+            pygame.image.save(source, path)
+            admitted_size, admitted_digest = _metadata(path)
+            emblem = ActivityAchievementEmblem(
+                activity_id="org.greia.test",
+                emblem_id="activity",
+                asset_path=path,
+                width=64,
+                height=64,
+                byte_size=admitted_size,
+                content_digest=admitted_digest,
+            )
+
+            # Mutate the package after policy admission without presenting a new
+            # fingerprint. The renderer must refuse these bytes and use icon_id.
+            source.fill((220, 80, 70, 255))
+            pygame.image.save(source, path)
+            badge = renderer.render(
+                _entry(emblem, achievement_id="greia.test.mutated-art"),
+                96,
+            )
+
+        self.assertEqual(provider.calls, 1)
+        self.assertEqual(badge.get_size(), (96, 96))
 
 
 if __name__ == "__main__":
