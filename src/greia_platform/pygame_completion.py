@@ -1,8 +1,8 @@
 """Prepared opaque completion presentation for low-resource Pygame Activities.
 
 Victory/completion is a terminal Activity state, not a translucent overlay that
-should keep the live game simulating and repainting underneath.  This module
-owns the reusable Pygame presentation half of that contract:
+should keep the live game simulating and repainting underneath. This module owns
+the reusable Pygame presentation half of that contract:
 
 * the full logical frame is opaque;
 * finite text and geometry are prepared only when content changes;
@@ -91,6 +91,7 @@ class PygameCompletionScreen:
         width: int = DEFAULT_WIDTH,
         height: int = DEFAULT_HEIGHT,
         palette: CompletionPalette = CompletionPalette(),
+        primary_rect: pygame.Rect | None = None,
     ) -> None:
         if width <= 0 or height <= 0:
             raise ValueError("completion dimensions must be positive")
@@ -100,7 +101,11 @@ class PygameCompletionScreen:
         self._palette = palette
         self._content: CompletionContent | None = None
         self._frame: pygame.Surface | None = None
-        self._primary_rect = self._compute_primary_rect()
+        self._primary_rect = (
+            primary_rect.copy() if primary_rect is not None else self._compute_primary_rect()
+        )
+        if not pygame.Rect(0, 0, self._width, self._height).contains(self._primary_rect):
+            raise ValueError("completion primary_rect must fit inside logical frame")
 
     @property
     def is_prepared(self) -> bool:
