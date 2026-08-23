@@ -33,3 +33,12 @@ if [ -f /etc/greia-boot/boot-logo.ppm ]; then
     cp /etc/greia-boot/boot-logo.ppm "$DESTDIR/etc/greia-boot/boot-logo.ppm"
     chmod 0644 "$DESTDIR/etc/greia-boot/boot-logo.ppm"
 fi
+
+# Ensure early KMS graphics driver is available in initramfs when provided by
+# the target kernel so /dev/fb0 is active before root filesystem mount.
+for module in i915 intel_agp; do
+    if modinfo -k "${version:-$(uname -r)}" "$module" >/dev/null 2>&1; then
+        manual_add_modules "$module"
+    fi
+done
+
