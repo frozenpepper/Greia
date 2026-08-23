@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from greia_platform.activities import ActivityManifest, RuntimeCatalogue
+from greia_platform.achievements import ProfileAchievementService
 from greia_platform.device_capabilities import (
     DeviceCapabilityService,
     HALDeviceCapabilityProbe,
@@ -44,6 +45,7 @@ class LauncherRuntimeServices:
     runtime_manager: RuntimeManager
     storage_service: ActivityStorageService
     history_service: PlatformHistoryService
+    achievement_service: ProfileAchievementService | None = None
 
 
 def provisional_installed_hal() -> GreiaHAL:
@@ -105,17 +107,22 @@ def build_launcher_runtime_services(
     storage_policy_path: Path,
     history_policy_path: Path,
     progression_policy_path: Path,
+    achievement_policy_path: Path | None = None,
     hal: GreiaHAL | None = None,
     python_executable: Path | None = None,
     runtime_adapters: (
         Sequence[RuntimeLaunchAdapter] | Mapping[str, RuntimeLaunchAdapter] | None
     ) = None,
 ) -> LauncherRuntimeServices:
-    """Build the single shared device/runtime/permission/history authority path.
+    """Build the shared device/runtime/permission/history/achievement authorities.
 
     ``hal`` and ``runtime_adapters`` are deliberate variation seams. Callers
     must inject only those missing-machine/runtime facts; they must not rebuild
-    PermissionBroker, storage or history composition in parallel.
+    PermissionBroker, storage, history or achievement composition in parallel.
+
+    Achievement policy is sibling runtime configuration by default. Missing or
+    invalid optional policy fails soft at this composition edge so Activity
+    launch/history remain available even if the child badge library cannot load.
     """
 
     device_capabilities = DeviceCapabilityService(
@@ -139,10 +146,29 @@ def build_launcher_runtime_services(
     history_service = PlatformHistoryService.load(
         history_policy_path, progression_policy_path, activities
     )
+
+    resolved_achievement_policy = (
+        achievement_policy_path
+        if achievement_policy_path is not None
+        else history_policy_path.parent / "achievement-policy.toml"
+    )
+    achievement_service: ProfileAchievementService | None = None
+    try:
+        achievement_service = ProfileAchievementService.load(
+            resolved_achievement_policy,
+            activities,
+            history_service,
+        )
+    except (OSError, RuntimeError, ValueError):
+        # Achievements are child-facing enrichment, not a launch/safety authority.
+        # Fail closed for the badge feature without taking down the launcher.
+        achievement_service = None
+
     return LauncherRuntimeServices(
         device_capabilities=device_capabilities,
         permission_broker=permission_broker,
         runtime_manager=runtime_manager,
         storage_service=storage_service,
         history_service=history_service,
+        achievement_service=achievement_service,
     )
