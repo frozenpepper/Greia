@@ -62,7 +62,10 @@ class ClinicSession:
 
     @property
     def patient_id(self) -> str:
-        return PATIENT_IDS[self.patient_index % len(PATIENT_IDS)]
+        # On victory ``patient_index`` points one past the final patient. Keep the
+        # patient just healed visible behind the completion card instead of wrapping.
+        index = self.patient_index - 1 if self.is_victory else self.patient_index
+        return PATIENT_IDS[index % len(PATIENT_IDS)]
 
     @property
     def next_needed(self) -> str | None:
