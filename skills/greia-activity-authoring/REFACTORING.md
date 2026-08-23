@@ -3,11 +3,11 @@
 **Status:** mandatory companion for substantive Activity refactors  
 **Audience:** coding agents, maintainers, reviewers  
 **First calibrated on:** `activities/clinica_cuccioli` (2026-08-23)  
-**Calibration correction:** the first structural pass was architecturally cleaner but **did not launch** until runtime/tooling contracts were repaired. This document deliberately preserves that lesson.
+**Calibration correction:** the first structural pass was architecturally cleaner but **did not launch** until runtime/tooling contracts were repaired. A second local pass then proved that **launching is still not acceptance**: child interaction semantics and the complete-session/end-screen path must also be exercised. This document deliberately preserves both lessons.
 
 Use this companion together with `CORE.md` and `ENGINEERING.md` whenever an existing Activity is being structurally refactored rather than merely receiving a tiny isolated fix.
 
-A refactor is not successful because the code is cleaner, imports on one developer path, or has newly authored unit tests. It is successful only when the Activity still satisfies its **product, package, runtime, lifecycle, compatibility and launch contracts** and has actually passed the appropriate integration gate.
+A refactor is not successful because the code is cleaner, imports on one developer path, launches once, or has newly authored unit tests. It is successful only when the Activity still satisfies its **product, package, runtime, lifecycle, compatibility, interaction and terminal-state contracts** and has actually passed the appropriate integration gate.
 
 ---
 
@@ -21,8 +21,10 @@ Record, from source, `activity.toml`, repository tests and tooling:
 - supported UI/content locales and the actual localized resources used at runtime;
 - external/shared Greia services consumed;
 - audio jobs and whether they are speech, pedagogical audio or simple effects;
-- main gameplay states and transitions;
+- main gameplay states and transitions, including completion/restart;
 - child input paths that can cause the same semantic action;
+- what each child gesture is supposed to mean: select, apply, confirm, navigate, retry, etc.;
+- any default/automatic selection state and whether it represents a real child choice or merely internal knowledge of the correct answer;
 - renderer/static scenery/animation ownership;
 - caches/resources and their lifecycle;
 - READY/STOP lifecycle behavior and where `mark_activity_ready()` is reached;
@@ -64,7 +66,12 @@ But the first pass also missed integration contracts and therefore **did not lau
 - established `PATIENTS`, `TOOLS` and `VetAudio` exports disappeared from `main.py`;
 - the readiness verifier assumed `mark_activity_ready()` must live directly in the runtime entrypoint.
 
-A good refactoring protocol has to catch both categories.
+After those launch failures were repaired and the Simulator could start the Activity, a second acceptance pass found two more product/runtime defects:
+
+- `ClinicSession` automatically selected the first correct tool and automatically armed the next correct tool after every successful treatment, so tapping the animal could effectively perform the answer for the child;
+- the terminal victory path crashed after a complete session, while startup and ordinary treatment still worked.
+
+A good refactoring protocol has to catch all three categories: source architecture, launch/runtime compatibility, and the actual child-facing state machine from first interaction through completion and restart.
 
 ---
 
@@ -265,7 +272,7 @@ Do not promote an Activity-local abstraction into `greia_platform` after seeing 
 
 ---
 
-## 7. One semantic action must have one rule
+## 7. One semantic action must have one rule — and child choice must remain child choice
 
 When multiple input routes trigger the same child action (pointer palette, patient tap, keyboard/controller activation, touch, etc.), translate them into one domain operation.
 
@@ -282,10 +289,37 @@ controller branch later implements a third interpretation
 Good:
 
 ```text
-input route -> semantic tool/action -> ClinicSession.use_tool(...)
+input route -> semantic tool/action -> domain rule
 ```
 
 The input layer chooses *what action the child attempted*; the domain owner decides *what that action means*.
+
+### Do not confuse known answer with selected answer
+
+The domain often knows the correct/current answer (`next_needed`, target shape, correct number, etc.). That internal truth must not silently become the child's selected input unless the product explicitly intends auto-selection.
+
+For a two-step interaction such as:
+
+```text
+choose tool -> use tool on patient
+```
+
+keep those states separate:
+
+```text
+next_needed          pedagogical/domain truth
+selected_tool_id     actual child choice, possibly None
+```
+
+After a successful application, clear the child selection if the next step is supposed to require another explicit choice. Do **not** automatically set:
+
+```python
+selected_tool_id = next_needed
+```
+
+merely because the domain knows what comes next.
+
+This applies beyond clinic games: selection/focus/drag source/answer candidate must represent the child's action, not a convenience mirror of the correct solution.
 
 ---
 
@@ -334,8 +368,29 @@ Useful patterns from the Clinica Cuccioli calibration:
 - finite tool labels/states -> finite cached text surfaces;
 - generated sound effects -> synthesize once when the audio owner is constructed;
 - particle effects -> explicit bounded owner/list;
-- full-screen translucent victory modal -> compose once, freeze to an opaque frame while static;
-- static victory state -> stop repainting unchanged pixels; retain bounded polling for stop/input latency.
+- finite terminal overlay/labels -> prepare once with the presentation owner;
+- static victory state -> stop repainting unchanged pixels while retaining bounded polling for stop/input latency.
+
+### Do not stack caches on top of an invalidation system without a measured reason
+
+The first refactor added a second optimization to the victory screen: after composing the terminal frame, it copied the full 1024×600 surface into a reusable cache. But `ClinicActivity` already used dirty rendering and did not repaint the unchanged victory state. The full-frame cache therefore duplicated ownership, added memory/allocation/state complexity on the final transition, and had no normal-frame reuse job to perform.
+
+Prefer:
+
+```text
+state changes -> renderer draws once -> dirty becomes false -> no repaint
+```
+
+over:
+
+```text
+state changes -> renderer draws once -> copy whole frame -> cache it
+-> app also stops repainting anyway
+```
+
+A cache must solve repeated measured/obvious work. If the caller already prevents that work from recurring, an extra cache is usually not an optimization.
+
+Likewise, terminal/end screens should have an explicit render path when active-game assumptions no longer hold. Prepare finite resources up front where practical so completion is not the first time a font, large alpha surface or other known resource is created.
 
 Do not generalize these exact caches to every Activity. Apply the principle to the measured/obvious working set and preserve an invalidation story.
 
@@ -355,9 +410,11 @@ Cover:
 
 - domain transition/invariant tests;
 - each intentional behavior fix;
+- selection/input state separately from correct-answer/domain state where relevant;
 - manifest-to-event consistency where events exist;
 - persistence mapping when migration/state shape changes;
-- cache/render equivalence where a performance path changed.
+- cache/render equivalence where a performance path changed;
+- completion and restart transitions.
 
 ### 10.2 Runtime/package validation
 
@@ -381,7 +438,7 @@ make verify
 
 Do not wave away failures as "legacy tests" until you have established whether they represent an intentional compatibility contract. Preserve aliases or deliberately migrate consumers.
 
-### 10.4 Actual Activity Simulator launch
+### 10.4 Actual Activity Simulator acceptance
 
 Launch the Activity through the real Greia Activity Simulator/launcher path.
 
@@ -390,11 +447,26 @@ Do not substitute:
 - `python main.py` alone;
 - importing the module alone;
 - AST/source tests alone;
-- a successful package validator alone.
+- a successful package validator alone;
+- seeing the first frame alone.
 
-A refactor that passes all source tests but the Simulator refuses to launch is failed acceptance.
+A refactor that passes all source tests but the Simulator refuses to launch is failed acceptance. A refactor that launches but has broken child interactions or crashes at completion is also failed acceptance.
 
-Exercise the important child interactions after launch, not only startup.
+For a stateful Activity, exercise the **complete happy path**, not a two-click smoke test. At minimum cover the applicable sequence:
+
+```text
+launch
+-> first meaningful child action
+-> wrong/alternate action where relevant
+-> repeated normal progress
+-> score/progression update
+-> final round/patient/challenge
+-> terminal/victory/completion screen
+-> terminal input such as Play Again / Continue
+-> restart or clean exit
+```
+
+Also exercise any materially different input route the Activity claims to support.
 
 ### 10.5 Physical evidence when relevant
 
@@ -409,41 +481,24 @@ Before calling an Activity refactor complete, answer **yes** to the relevant que
 1. Can gameplay rules be understood without opening the renderer/event loop?
 2. Can renderer changes be made without editing scoring/persistence rules?
 3. Do all input routes delegate semantic truth to the same domain operation?
-4. Does `main.py` only compose/start/clean up plus deliberately retained compatibility exports?
-5. Do platform side effects live behind narrow owners/adapters?
-6. Do emitted event IDs match the manifest?
-7. Does declared localization correspond to actual localized runtime presentation?
-8. Are caches/transient collections bounded with clear lifecycle/invalidation?
-9. Did the refactor remove obvious hot-loop IO/decode/render-allocation work without inventing performance claims?
-10. Are intentional behavior fixes distinguished from structural preservation and tested?
-11. Were old imports/exports searched and either preserved or deliberately migrated?
-12. Does the current runtime validator accept the decomposed package without widening external dependency authority?
-13. Does the Activity work both in runtime/script and repository/package import contexts?
-14. Does READY still publish once after the first usable presented frame even if lifecycle ownership moved modules?
-15. Did `tools/validate_project.py` (or the current canonical validator) pass on the refactored package?
-16. Did the required focused and full repository tests actually execute and pass, or are any failures explicitly unresolved?
-17. Did the Activity actually launch through the Greia Simulator and survive representative interaction?
-18. Is there a clear candidate for platform extraction only if the same semantics appear in other Activities?
-19. Did documentation/skill guidance get refined when the refactor taught a reusable lesson?
+4. Does actual child selection remain separate from the domain's knowledge of the correct answer?
+5. Does `main.py` only compose/start/clean up plus deliberately retained compatibility exports?
+6. Do platform side effects live behind narrow owners/adapters?
+7. Do emitted event IDs match the manifest?
+8. Does declared localization correspond to actual localized runtime presentation?
+9. Are caches/transient collections bounded with clear lifecycle/invalidation?
+10. Does every cache remove recurring work that is not already eliminated by caller invalidation/dirty rendering?
+11. Did the refactor remove obvious hot-loop IO/decode/render-allocation work without inventing performance claims?
+12. Are intentional behavior fixes distinguished from structural preservation and tested?
+13. Were old imports/exports searched and either preserved or deliberately migrated?
+14. Does the current runtime validator accept the decomposed package without widening external dependency authority?
+15. Does the Activity work both in runtime/script and repository/package import contexts?
+16. Does READY still publish once after the first usable presented frame even if lifecycle ownership moved modules?
+17. Did `tools/validate_project.py` (or the current canonical validator) pass on the refactored package?
+18. Did the required focused and full repository tests actually execute and pass, or are any failures explicitly unresolved?
+19. Did the Activity actually launch through the Greia Simulator and survive the complete representative child flow through completion?
+20. Did the terminal/victory screen render successfully and did Continue/Play Again/restart or exit behave correctly?
+21. Is there a clear candidate for platform extraction only if the same semantics appear in other Activities?
+22. Did documentation/skill guidance get refined when the refactor taught a reusable lesson?
 
-If the runtime or Simulator gate has not run, label the work **source-refactored / integration-unverified**, not complete or working.
-
----
-
-## 12. Failure lessons from the first calibration
-
-The first Clinica Cuccioli refactor is intentionally retained as a warning against architecture-only confidence.
-
-The initial code split looked substantially better and had useful domain tests, yet the Activity could not launch because the broader repository still encoded monolithic assumptions. The resolution required both Activity and platform/test changes:
-
-- `PythonRuntimeAdapter` learned that validated package-local modules are Activity code rather than external dependencies;
-- the Activity gained compatible sibling imports for both script and package contexts;
-- established `PATIENTS`, `TOOLS` and `VetAudio` exports were restored;
-- readiness verification became package-aware rather than entrypoint-file-only;
-- runtime-manager coverage was added for package-local imports.
-
-The reusable principle is:
-
-> **When architecture changes, audit the validators, launchers, tests and public compatibility surfaces that encode the old architecture.**
-
-Do not force good code back into a monolith to satisfy stale tooling. Do not weaken security to satisfy decomposition. Evolve the tooling so it verifies the real invariant.
+If the runtime or Simulator gate has not run through the relevant terminal/restart path, label the work **source-refactored / integration-unverified**, not complete or working.
