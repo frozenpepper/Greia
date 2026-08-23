@@ -165,7 +165,7 @@ src/greia_platform/activity_api.py
 
 ## Speech/voice decision summary
 
-Greia now distinguishes four semantic speech jobs:
+Greia distinguishes four semantic speech jobs:
 
 ```text
 character_dialogue
@@ -194,24 +194,38 @@ Do not pretend a mascot is speaking a teaching sample when the pedagogical voice
 
 ### Shared character utterances
 
-Before generating custom dialogue for generic feedback, prefer Greia's shared semantic character utterances such as:
+Before generating custom dialogue for generic feedback, prefer the Greia shared semantic families:
 
 ```text
-praise.congratulations
-praise.great_work
-praise.well_done
-celebrate.you_did_it
-encourage.try_again
-ready.lets_go
+praise.general
+celebrate.success
+encourage.retry
+encourage.progress
+ready.go
 ```
 
-The Italian/English v0.1 inventory, six-character coverage target and canonical animation associations are defined in:
+Each family resolves to an array of reviewed files for the selected character/locale. The Activity never chooses an exact phrase or filename.
+
+```text
+one available file  → always that file
+multiple files       → Greia randomly chooses one reviewed variant
+```
+
+The random choice is presentation-only; gameplay, scoring, correctness, rewards and difficulty must not depend on it.
+
+The Italian/English variants, 180-clip complete target, random-picker contract, and canonical animation associations are defined in:
 
 ```text
 docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md
 ```
 
 These are platform/shared assets, not duplicated into every Activity package.
+
+When producing the library itself, use:
+
+```text
+docs/agents/GREIA_SHARED_CHARACTER_UTTERANCE_RECORDING.md
+```
 
 ### Dani
 
@@ -229,8 +243,8 @@ A clearly robotic system voice is intentional. Do not clone Dani from another ch
 
 When custom character speech would be useful:
 
-1. first check whether a shared Greia utterance satisfies the need;
-2. if the sound is pedagogical, route to the deterministic/system speech path;
+1. first check whether a shared Greia utterance family satisfies the need;
+2. if the sound is pedagogical, route to deterministic/system speech;
 3. only then perform a non-mutating check for an already configured Chatterbox toolchain;
 4. if Chatterbox is unavailable and the user did not explicitly request its installation, omit optional custom character dialogue and continue the Activity;
 5. preserve captions/visual feedback and all essential instructions;
@@ -263,5 +277,6 @@ Full speech policy and workflow:
 docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md
 docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md
 docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md
+docs/agents/GREIA_SHARED_CHARACTER_UTTERANCE_RECORDING.md
 skills/greia-activity-authoring/VOICE_GENERATION.md
 ```
