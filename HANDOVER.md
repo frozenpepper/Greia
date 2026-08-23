@@ -61,7 +61,45 @@ The OS work skill is the practical contributor router for architecture ownership
 
 `AGENTS.md` now requires the OS skill for substantive platform/Shell/Parent/installer/simulator/build/runtime/hardware-service work and requires future changes to keep it synchronized. The performance manual records Activity-skill integration as complete. Durable review: `docs/reviews/2026-08-23_ENGINEERING_SKILLS_INTEGRATION.md`.
 
-This was documentation/skill work only: no runtime/source behavior changed and no new runtime PASS is claimed.
+## Clinica Cuccioli Activity architecture calibration (2026-08-23)
+
+`activities/clinica_cuccioli` is the first real calibration of the strengthened Activity engineering rules. It was deliberately selected because it required **no new generated character voices** while its previous ~33.5 KB `main.py` mixed gameplay state, random treatment generation, persistence, event publication, procedural SFX synthesis, input, particles and all rendering.
+
+The refactor now separates:
+
+```text
+main.py                 thin composition root
+clinic_model.py         ClinicSession / TreatmentResult domain invariants
+clinic_app.py           lifecycle + semantic input orchestration
+clinic_renderer.py      prepared/cached presentation + bounded transient FX
+clinic_art.py           stateless procedural drawing helpers
+clinic_audio.py         prepared procedural SFX owner behind ClinicAudioPort
+clinic_services.py      Greia storage/event adapters behind narrow ports
+```
+
+The calibration also found and intentionally repaired real contract/behavior drift hidden inside the monolith:
+
+- `activity.toml` declared `vet.treatment_applied` / `vet.patient_healed`, while the old code emitted undeclared `clinic.patient_cured`; event publication now uses only the manifest-declared IDs;
+- palette clicks could complete a later treatment out of order while patient taps enforced the next visible step; all input paths now delegate to one `ClinicSession.use_tool(...)` rule;
+- the Activity declared Italian + English and carried localization bundles, but tool/victory UI remained hard-coded Italian; those visible labels now resolve through `LocalizedResources`.
+
+Source-level performance structure now includes a pre-rendered opaque clinic backdrop, finite cached localized tool labels, current-value star text caching, a 96-particle explicit bound, one-time procedural SFX synthesis, and a victory modal that pays the full-screen alpha composition once then freezes to an opaque reusable frame. These are **SOURCE architecture improvements only**; no Acer/Pi speedup is claimed without measurement.
+
+New provider-free tests are authored in `tests/test_clinica_cuccioli_refactor.py` for domain sequencing/session completion and manifest-to-event consistency. They have **not executed in this GitHub editing environment**. The durable review and exact simulator/local verification checklist are in:
+
+```text
+docs/reviews/2026-08-23_CLINICA_CUCCIOLI_ARCHITECTURE_CALIBRATION.md
+```
+
+The real refactor exposed reusable lessons, so the Activity skill now also contains:
+
+```text
+skills/greia-activity-authoring/REFACTORING.md
+```
+
+Structural refactors must inventory manifest/runtime/storage/event/localization/input/audio behavior before moving code, classify intentional changes as structural preservation / contract repair / behavior fix / performance structure, and normally extract pure domain truth before platform adapters, presentation ownership, application coordination and finally the thin composition root.
+
+R7 remains the blocking platform phase; this parallel Activity-quality calibration does not change R7 status.
 
 ## Parent Settings overlay tranche (2026-08-23, `3c3e91f`)
 
@@ -88,7 +126,7 @@ All five reproduce on the clean pre-parent-panel baseline:
 
 They were not caused by the hover or Parent-panel tranches. Owner disposition remains required before an aggregate green claim.
 
-The new microphone-processing source tests and new Parent HTML tests are **authored but not claimed executed in this remote source-edit environment**. They must run locally before the physical Acer tranche is promoted.
+The new microphone-processing source tests, new Parent HTML tests, and `tests/test_clinica_cuccioli_refactor.py` are **authored but not claimed executed in this remote source-edit environment**. They must run locally before their corresponding source/runtime claims are promoted.
 
 Therefore **no current-head aggregate `make verify` PASS is claimed**. Owner disposition of the boot expectation remains required before an aggregate green claim.
 
@@ -510,11 +548,19 @@ Do not infer arbitrary Activity-authoring-agent drawing capability from the owne
 ## Blocking engineering
 
 1. Resolve current `main` before each new implementation tranche.
-2. Read `skills/greia-os-work/SKILL.md` for substantive OS/platform work and the Activity skill's `ENGINEERING.md` for substantive Activity implementation; keep both synchronized when their governed contracts change.
+2. Read `skills/greia-os-work/SKILL.md` for substantive OS/platform work and the Activity skill's `ENGINEERING.md` for substantive Activity implementation; structural Activity refactors additionally require `REFACTORING.md`. Keep the derived skills synchronized when their governed contracts change.
 3. Owner disposition: reconcile the four stale boot-contract tests (`panic=30`) with the accepted postmortem/source direction (`panic=5`).
 4. Re-run the current aggregate verification only after that disposition; preserve genuine failures.
-5. Continue R7 from its first incomplete blocking gate; do not treat launcher performance optimization or microphone processing as display/session closure.
+5. Continue R7 from its first incomplete blocking gate; do not treat launcher performance optimization, microphone processing or the Activity calibration as display/session closure.
 6. Preserve the current Acer performance measurements in the engineering performance manual as future UI/render work is added.
+
+## Clinica Cuccioli calibration verification
+
+1. Run `PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_clinica_cuccioli_refactor.py' -v` in a real checkout.
+2. Run `make verify`; preserve the known aggregate baseline failures separately from any new regression.
+3. Load `activities/clinica_cuccioli` in the real Activity Simulator and execute the Italian/English, sequence-consistency, five-patient, Play Again/persistence, resize and protected-Home checks in `docs/reviews/2026-08-23_CLINICA_CUCCIOLI_ARCHITECTURE_CALIBRATION.md`.
+4. Only after simulator/source verification, compare the same Activity on the reference Acer if a performance claim is desired.
+5. Do not yet extract the Clinic app-loop/particle/progress/render helpers into `greia_platform`; inspect at least one or two more Activities first and extract only genuinely shared semantics.
 
 ## Microphone physical finalization
 
@@ -551,7 +597,9 @@ Do not infer arbitrary Activity-authoring-agent drawing capability from the owne
 - no current-head PASS without current-head execution;
 - substantive OS/platform work consumes `skills/greia-os-work/SKILL.md`;
 - substantive Activity implementation consumes `skills/greia-activity-authoring/ENGINEERING.md` through the Activity skill;
+- structural Activity refactors additionally consume `skills/greia-activity-authoring/REFACTORING.md` and inventory declaration/behavior contracts before moving code;
 - Activity `main.py` is a composition/bootstrap boundary rather than a monolithic application implementation;
+- multiple input paths for one semantic child action delegate to one domain rule rather than duplicating correctness/scoring policy;
 - no visible Linux shell/desktop in normal child path;
 - R7 remains open and Xorg/xinit provisional;
 - protected Home/Back stays outside Activity authority;
@@ -576,4 +624,4 @@ Do not infer arbitrary Activity-authoring-agent drawing capability from the owne
 - visual/runtime/Activity caches remain bounded with explicit invalidation and avoid per-frame decode/scale/IO;
 - performance claims require measurement on the claimed execution scope.
 
-**Resume the blocking platform path from R7 in `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`. In parallel, the microphone tranche may be physically finalized only through its dedicated Acer protocol; do not report source architecture as hardware acceptance.**
+**Resume the blocking platform path from R7 in `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`. In parallel, the Clinica Cuccioli calibration must be verified through its focused source + simulator checklist before being treated as an accepted runtime refactor, and the microphone tranche may be physically finalized only through its dedicated Acer protocol; do not report source architecture as hardware acceptance.**
