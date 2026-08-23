@@ -3,7 +3,7 @@
 **Date:** 2026-08-23  
 **Activity:** `org.greia.clinica-cuccioli`  
 **Purpose:** first real calibration of the strengthened Activity engineering/refactoring skill  
-**Evidence scope:** SOURCE / authored tests only; no simulator or physical performance claim in this tranche
+**Final disposition:** **INITIAL REFACTOR FAILED LAUNCH ACCEPTANCE; FOLLOW-UP FIX VERIFIED LOCALLY**
 
 ---
 
@@ -22,62 +22,23 @@
 - particle state;
 - all animal/tool drawing;
 - full scene rendering;
-- localization imports that were not actually used for the visible controls;
+- localization imports not actually used by some visible controls;
 - lifecycle/READY handling.
 
-It does **not** require new Greia character voice generation. Its audio is small procedural sound effects, making it suitable for an architecture calibration without adding a voice-production dependency.
+It does **not** require new Greia character voice generation. Its audio is simple procedural effects, so it was suitable for an architecture calibration without adding a voice-production dependency.
 
 ---
 
-## 2. Contract/behavior inventory findings
+## 2. Structural result of the first pass
 
-The refactor immediately found defects that a file-splitting exercise alone could have missed.
-
-### 2.1 Event contract drift
-
-`activity.toml` declares:
-
-```text
-vet.treatment_applied
-vet.patient_healed
-```
-
-The old monolith emitted:
-
-```text
-clinic.patient_cured
-```
-
-The new `GreiaClinicEvents` adapter publishes only the declared IDs and a provider-free test compares emitted IDs against the manifest.
-
-### 2.2 Inconsistent sequencing semantics
-
-The UI presented an ordered prescription, but two input paths had different rules:
-
-- clicking a palette tool applied any still-required treatment, even if it was a later step;
-- tapping the patient applied treatment only when the selected tool was the exact next step.
-
-The extracted `ClinicSession` now owns one rule: only the visible next prescription step applies. All input paths delegate to that same domain operation.
-
-This is recorded as an intentional **BEHAVIOR FIX**, not disguised as structural preservation.
-
-### 2.3 Multilingual declaration versus runtime UI
-
-The package declares Italian and English and already carried both locale bundles, but the tool palette and victory UI were hard-coded in Italian inside the render loop.
-
-The composition root now resolves `LocalizedResources` from `get_profile_locale()`, and the renderer consumes semantic localized short-label keys. No new spoken assets were introduced.
-
----
-
-## 3. New responsibility structure
+The first pass decomposed the monolith into:
 
 ```text
 main.py
-    composition root only
+    thin composition root
 
 clinic_model.py
-    ClinicSession
-    TreatmentResult
+    ClinicSession / TreatmentResult
     prescription/gameplay invariants
 
 clinic_app.py
@@ -95,8 +56,7 @@ clinic_art.py
     stateless procedural animal/tool drawing helpers
 
 clinic_audio.py
-    ClinicAudioPort
-    PygameClinicAudio
+    ClinicAudioPort / PygameClinicAudio
     one-time procedural SFX preparation
 
 clinic_services.py
@@ -104,133 +64,272 @@ clinic_services.py
     ClinicEventPort / GreiaClinicEvents
 ```
 
-This deliberately demonstrates that strong OOP does **not** mean every helper becomes a class. Stateful/lifecycle/resource owners are objects; stateless drawing calculations remain functions.
+That responsibility split remains directionally correct. Strong OOP did not mean forcing stateless drawing helpers into classes: state/lifecycle/resource owners became objects; pure drawing stayed functional.
 
-The new `main.py` is approximately 2 KB and now only resolves localization/runtime collaborators, constructs the owners and runs the application.
-
----
-
-## 4. OOP/polymorphism lessons
-
-Useful seams discovered through real work:
-
-- `ClinicSession` is a domain object because it owns treatment invariants and mutable session state.
-- `ClinicRenderer` is an object because it owns prepared surfaces, finite text caches, geometry and transient visual state.
-- `PygameClinicAudio` is an object because it owns mixer resources and a prepared sound bank.
-- `ClinicActivity` is an application/lifecycle coordinator rather than a god `Game` class.
-- audio, progress and event Protocols are justified because the application should be testable with substitutes and should not encode platform IO directly.
-- procedural animal/tool drawing remains functional because there is no useful object lifecycle or substitution seam there.
-
-This balance is now captured in `skills/greia-activity-authoring/REFACTORING.md`.
+However, **clean structure was not sufficient**. The first pass had not been executed through the real Greia runtime/Simulator acceptance path and the Activity did not launch.
 
 ---
 
-## 5. Performance-structure improvements
+## 3. Semantic/product defects correctly found in the first pass
 
-These are source-architecture improvements only; no physical speedup is claimed until measured.
+The initial refactor did reveal legitimate problems hidden by the monolith.
 
-Old hot-loop behavior included:
+### 3.1 Event contract drift
 
-- rebuilding wallpaper stripes/floor/table every frame;
-- rendering the same five tool labels every frame;
-- allocating and alpha-blending a full-screen victory overlay every victory frame;
-- keeping particle state as untyped dictionaries inside the main loop;
-- all sound synthesis embedded in the same monolith.
-
-New structure:
-
-- static clinic scenery is pre-rendered once to one opaque backdrop;
-- finite tool/state labels are cached with a naturally bounded working set;
-- star text keeps only the current rendered value;
-- particles are typed and explicitly capped at 96;
-- procedural sound effects are synthesized once by the audio owner;
-- the victory modal pays the large alpha composition once, then freezes the composed result to an opaque cached frame;
-- while the victory frame is unchanged the app continues bounded input/stop polling but does not repaint unchanged pixels.
-
-Active treatment remains intentionally animated at ~30 Hz because the thought bubble bobs and success particles move.
-
----
-
-## 6. Tests authored
-
-Added:
+`activity.toml` declares:
 
 ```text
-tests/test_clinica_cuccioli_refactor.py
+vet.treatment_applied
+vet.patient_healed
 ```
 
-Coverage includes:
+The old monolith emitted:
 
-- deterministic prescription generation through an injected random source;
-- one ordered treatment rule;
-- successful treatment/heal transitions;
-- five-patient completion;
-- star persistence across in-session restart semantics;
-- final healed-patient identity at victory;
-- event adapter IDs checked against `activity.toml`;
-- rejection of the stale `clinic.patient_cured` event identity.
+```text
+clinic.patient_cured
+```
 
-These tests are **AUTHORED, NOT EXECUTED** in the GitHub editing environment used for this tranche.
+The refactored `GreiaClinicEvents` adapter publishes the manifest-declared IDs, and provider-free coverage compares emitted IDs with the manifest.
 
-Required local verification:
+### 3.2 Inconsistent sequencing semantics
+
+The UI presented an ordered prescription, but the old implementation had two rules:
+
+- palette clicks could apply any still-required treatment, including a later step;
+- patient taps accepted only the exact next step.
+
+`ClinicSession` now owns one treatment-sequencing rule and all input paths delegate to it. This was an intentional **behavior fix**, not structural preservation.
+
+### 3.3 Declared localization was not fully consumed
+
+The package declares Italian and English and already had locale bundles, but visible palette/victory text was partly hard-coded Italian. The renderer now consumes `LocalizedResources` for those visible labels. No new generated speech was introduced.
+
+---
+
+# 4. Initial launch failure — calibration correction
+
+The first refactor was initially described as a coherent source state with authored tests, but **it was not a working Greia Activity**. Local integration exposed four separate failures.
+
+This is the most important lesson of the calibration.
+
+## 4.1 PythonRuntimeAdapter rejected package-local sibling modules
+
+Greia's Python runtime validates every Activity Python file through AST inspection and the curated policy in:
+
+```text
+runtime/child-runtime.toml
+src/greia_launcher/runtime_adapter.py
+```
+
+Before the fix, import validation distinguished only:
+
+```text
+allowed external root
+forbidden/unknown root
+```
+
+It did not distinguish **Python modules physically contained inside the already validated Activity package**.
+
+After decomposition, imports such as:
+
+```python
+from clinic_audio import ClinicAudioPort
+from clinic_model import ClinicSession
+```
+
+were therefore rejected with an error equivalent to:
+
+```text
+RuntimeValidationError: Python import 'clinic_audio' is outside the curated child runtime
+```
+
+### Correct architectural fix
+
+Commit:
+
+```text
+d0aa76a003e397128326a3f932e4a2b7248058ae
+```
+
+updated `PythonRuntimeAdapter` so import authority is evaluated in this order:
+
+```text
+forbidden import root
+    reject
+
+module/package present under manifest.root
+    allow as package-local Activity code
+
+curated external import root
+    allow
+
+unknown external root
+    reject
+```
+
+This preserves the security model. Activity-specific module names were **not** added to the global external allowlist.
+
+A runtime-manager regression test now explicitly validates package-local imports.
+
+## 4.2 Direct-script and repository-package imports differed
+
+Greia executes the Activity entrypoint as a script from the Activity root. Repository tests may instead import:
+
+```python
+from activities.clinica_cuccioli.main import ...
+```
+
+Top-level sibling imports worked in the first context but failed in the second because the Activity directory was not independently added to `sys.path`.
+
+The follow-up fix added compatible sibling import handling in:
+
+```text
+main.py
+clinic_app.py
+clinic_renderer.py
+clinic_services.py
+```
+
+This established a reusable requirement: modular Activities must be tested both as runtime scripts and as repository package imports.
+
+Future new code should prefer an explicit `__package__`-aware import branch where practical so an unrelated `ImportError` inside an imported module is not accidentally hidden by a broad fallback handler.
+
+## 4.3 Established exports disappeared
+
+Historical Phase-4 tests legitimately imported:
+
+```text
+PATIENTS
+TOOLS
+VetAudio
+```
+
+from `activities.clinica_cuccioli.main`.
+
+The refactor moved/renamed the underlying implementation without first inventorying those consumers. The follow-up restored narrow compatibility exports in `main.py`.
+
+This does **not** invalidate the thin-composition-root principle. A thin entrypoint may retain a few documented compatibility aliases. The lesson is to search repository consumers before moving established symbols.
+
+## 4.4 Readiness verification encoded the old file layout
+
+`tests/test_first_party_activity_readiness.py` correctly wants to verify the semantic invariant:
+
+```text
+present first usable frame -> mark Activity READY exactly once
+```
+
+But the old test only inspected the manifest entrypoint file. Once the lifecycle moved to `clinic_app.py`, the verifier could no longer see the READY call.
+
+The fix made readiness verification inspect candidate Python modules inside the Activity package while retaining the actual semantic check that frame presentation precedes READY.
+
+The correct response was **not** to move lifecycle logic back into `main.py`. Tooling had encoded a monolithic implementation detail and needed to become architecture-aware.
+
+---
+
+# 5. Follow-up verification reported by the local owner-controlled lane
+
+After the follow-up fixes, the user reported the following local results for the corrected tranche:
+
+### Project validator
 
 ```bash
-PYTHONPATH=src python3 -m unittest discover \
-  -s tests -p 'test_clinica_cuccioli_refactor.py' -v
-
-make verify
+PYTHONPATH=src:tools python3 tools/validate_project.py
 ```
 
-Then load `activities/clinica_cuccioli` through the real Activity Simulator and verify at least:
+Reported result:
 
-1. Italian profile: palette/victory labels are Italian.
-2. English profile: palette/victory labels are English.
-3. Selecting a later prescription tool does not mark that later treatment complete.
-4. The visible next treatment succeeds from the palette and from selected-tool patient interaction.
-5. Each correct treatment produces its effect and treatment event; each healed patient awards exactly one star/heal event.
-6. Five patients reach the victory screen and Play Again preserves total stars.
-7. resize/viewport mapping remains usable;
-8. Greia Home/protected-region behavior remains intact;
-9. no Linux/browser/desktop surface is exposed.
+```text
+PASS runtime_api=0.1 activities=19 ... image_profiles=10 runtimes=python
+```
 
-Physical Acer performance may be measured later, but source inspection alone must not create before/after CPU or frame-time claims.
+### Full test suite
+
+Reported result:
+
+```text
+1096 passed, 9 warnings in 52.84s
+```
+
+### Activity Simulator
+
+Reported result:
+
+```text
+Clinica Cuccioli validates cleanly and launches directly from the Simulator UI.
+```
+
+These results are the evidence that converts the Activity from an architecture-only refactor into a locally accepted integration result. They should not be extrapolated into Acer/Pi performance claims.
 
 ---
 
-## 7. Skill refinements made from this calibration
+# 6. Performance-structure changes retained
 
-Created:
+The refactor's source-level performance improvements remain useful:
+
+- static clinic scenery is pre-rendered once to an opaque backdrop;
+- finite localized tool labels are cached;
+- star text caches the current rendered value;
+- particles are typed and explicitly bounded;
+- procedural SFX are synthesized once by the audio owner;
+- the victory modal pays the large alpha composition once then reuses an opaque composed frame;
+- a static victory state need not repaint unchanged pixels while still polling input/STOP responsively.
+
+Active treatment remains intentionally animated around 30 Hz for the thought bubble and transient effects.
+
+No physical frame-time/CPU improvement is claimed without hardware measurement.
+
+---
+
+# 7. Skill changes produced by the failed acceptance
+
+The first version of the Activity engineering guidance was too focused on internal source quality. It now explicitly treats **runtime/tooling compatibility as part of architecture correctness**.
+
+Updated:
 
 ```text
+skills/greia-activity-authoring/ENGINEERING.md
 skills/greia-activity-authoring/REFACTORING.md
 ```
 
-and wired it into the main Activity-authoring skill.
+New mandatory lessons include:
 
-New reusable guidance includes:
-
-- inventory behavior + manifest/platform contracts before structural edits;
-- classify changes as structural preservation, contract repair, behavior fix or performance structure;
-- prefer extraction order: pure domain -> platform adapters -> presentation/resources -> app coordinator -> thin `main.py`;
-- multiple input paths for one semantic action must delegate to one domain rule;
-- compare emitted events directly with manifest declarations;
-- verify declared localization is actually consumed at runtime;
-- do not force stateless helpers into classes merely to appear object-oriented;
-- use Protocols at real substitution/test seams;
-- refactor tests should guard semantic contracts, not arbitrary file counts;
-- source-level performance cleanup is not physical evidence.
+1. Search existing repository imports/exports before structural movement.
+2. Inspect the real runtime validator and policy before decomposing Python code.
+3. Package-local modules are Activity code, not external dependencies; do not solve local-import failures by widening the global dependency allowlist.
+4. Support and test both runtime/script and repository/package import contexts.
+5. Preserve compatibility aliases or migrate all legitimate consumers coherently.
+6. Verification should enforce semantic lifecycle invariants rather than incidental file placement.
+7. `mark_activity_ready()` may live in the lifecycle owner rather than the entrypoint as long as the real launch path reaches it after first usable presentation.
+8. Modular Activity work requires real runtime/package validation, not only pure unit tests.
+9. Run the canonical project validator and full repository gate.
+10. **Actually launch the Activity through the Greia Simulator/launcher path before calling it working or complete.**
+11. If Simulator/runtime validation has not run, label the state `integration-unverified`.
+12. When an architecture change exposes stale tooling, evolve the tooling to verify the real invariant; do not force good code back into a monolith and do not weaken security.
 
 ---
 
-## 8. Open follow-up after local execution
+# 8. Broader architecture lesson
 
-Do not treat this calibration as final until the focused test + aggregate gate + simulator smoke have run.
+The most useful conclusion is not specific to Clinica Cuccioli:
 
-If they expose defects, fix the architecture rather than restoring the monolith. After the first successful simulator/device comparison, decide whether any of the following deserve shared Greia extraction:
+> **A refactor changes more than source files. It changes assumptions made by validators, launchers, tests and compatibility consumers. Those assumptions are part of the architecture and must be audited in the same tranche.**
 
-- a reusable small Activity application-loop owner;
-- a shared bounded particle/effect owner;
-- a standard Activity-local progress/event adapter pattern;
-- a reusable reference-canvas static-backdrop presentation helper.
+This is especially important in Greia because Activities execute inside a deliberately curated/supervised runtime rather than a generic unconstrained Python environment.
 
-Do **not** extract those globally merely because one Activity now has them. First look for the same need in at least one or two additional Activities and compare semantics.
+The desired architecture remains modular and OOP-clean. The corrected standard simply requires that the platform/tooling be capable of supporting that architecture before we call the work complete.
+
+---
+
+# 9. Next calibration step
+
+Before promoting any Clinic-local abstractions into `greia_platform`, refactor or deeply review at least one or two Activities with different mechanics and compare actual recurring semantics.
+
+Candidates worth comparing include:
+
+- application/event-loop coordination;
+- bounded transient FX ownership;
+- progress/event adapter shape;
+- static reference-canvas backdrop preparation;
+- common runtime/package import conventions.
+
+Do not extract a universal framework from a single example.
