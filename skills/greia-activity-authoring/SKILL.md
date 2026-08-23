@@ -1,6 +1,6 @@
 ---
 name: greia-activity-authoring
-description: Canonical agent guide for designing, implementing, packaging, validating and testing Greia Activities, including discovery/audience metadata, localized canonical character-voice generation, and platform-owned microphone routing.
+description: Canonical agent guide for designing, implementing, packaging, validating and testing Greia Activities, including discovery/audience metadata, localized canonical character-voice generation, child grammatical agreement, and platform-owned microphone routing.
 ---
 
 # Greia Activity Authoring Skill
@@ -14,12 +14,41 @@ This skill is intentionally split so small local agents do not have to load unre
 
 1. Read `CORE.md` completely for the canonical general Activity-authoring contract.
 2. Read `DISCOVERY.md` whenever creating or editing `activity.toml`, launcher categories, audience/age metadata, difficulty/adaptive difficulty, discovery tags, or reasoning about how an Activity appears for a child. The discovery schema migration is now implemented; `DISCOVERY.md` is the current source-aligned correction to older prose that still labels those fields as future.
-3. When the Activity speaks, produces localized audio, uses a Greia character voice, or changes Activity Designer audio tooling, also read `VOICE_GENERATION.md` completely.
-4. When the Activity records from or listens to the microphone, also read `docs/adr/0031-platform-owned-microphone-processing.md` and `docs/architecture/GREIA_AUDIO_SERVICE.md`.
-5. Follow every narrower repository `AGENTS.md` that applies to the files being changed.
-6. Exact implemented APIs/schemas remain owned by source/runtime declarations; accepted ADRs own architecture; product docs own child-facing requirements.
+3. When packaging or exporting an Activity, also read `docs/architecture/GREIA_ACTIVITY_PACKAGE_FORMAT.md`. Parent-facing distribution uses the `.greiaactivity` ZIP contract; the extension is a UX/routing signal, never package validation or trust.
+4. When the Activity speaks, produces localized audio, uses a Greia character voice, or changes Activity Designer audio tooling, also read `VOICE_GENERATION.md` completely. For child-directed grammatical agreement also read ADR 0032.
+5. When the Activity records from or listens to the microphone, also read `docs/adr/0031-platform-owned-microphone-processing.md` and `docs/architecture/GREIA_AUDIO_SERVICE.md`.
+6. Follow every narrower repository `AGENTS.md` that applies to the files being changed.
+7. Exact implemented APIs/schemas remain owned by source/runtime declarations; accepted ADRs own architecture; product docs own child-facing requirements.
 
 Do not treat this index as permission to skip `CORE.md`.
+
+## Package decision summary
+
+Normal parent-facing Activity distribution is one file:
+
+```text
+<activity-name>.greiaactivity
+```
+
+It is an ordinary ZIP whose Activity contents are stored directly at archive root, with `activity.toml` at root. Do not wrap the Activity in an extra directory.
+
+The canonical media type is:
+
+```text
+application/vnd.greia.activity+zip
+```
+
+The extension/media type help file pickers and humans identify the package. They are **not** evidence of safety or trust. A renamed ZIP still has to pass `ActivityPackageService` and normal Activity validation before Greia activates it.
+
+Developer/simulator tools may accept an unpacked Activity directory or raw `.zip` as convenience inputs. Do not present generic ZIP as the normal Parent install format.
+
+Full package contract:
+
+```text
+docs/architecture/GREIA_ACTIVITY_PACKAGE_FORMAT.md
+src/greia_platform/activity_package_format.py
+src/greia_platform/activity_packages.py
+```
 
 ## Discovery decision summary
 
@@ -49,6 +78,53 @@ docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md
 src/greia_platform/activities.py
 src/greia_platform/activity_discovery.py
 src/greia_launcher/catalogue_view.py
+```
+
+## Child presentation and grammatical agreement summary
+
+A child's optional presentation preference is deliberately small:
+
+```text
+neutral → neutral
+boy     → masculine
+girl    → feminine
+```
+
+This is **not** a gameplay or content classification. Never use it to hide Activities, choose subjects, alter challenge, change rewards/progression, select permissions, or infer interests.
+
+Python Activities that genuinely need child-directed grammatical agreement should use:
+
+```python
+from greia_platform.activity_api import get_profile_grammatical_gender
+
+variant = get_profile_grammatical_gender().value
+```
+
+and pass the same variant to both localized text and localized audio:
+
+```python
+caption = resources.text("feedback.correct", variant=variant)
+voice = resources.audio_cue("feedback.correct", variant=variant)
+```
+
+Use a natural neutral base cue and optional semantic variants only when needed. Italian example:
+
+```text
+feedback.correct             = "Ottimo lavoro!"
+feedback.correct.masculine   = "Bravo!"
+feedback.correct.feminine    = "Brava!"
+```
+
+Do not write language-specific `if boy`/`if girl` branches in gameplay. Localization owns the words; Greia supplies only the semantic agreement selector.
+
+Full contract:
+
+```text
+docs/adr/0032-profile-presentation-and-grammatical-agreement.md
+skills/greia-activity-authoring/VOICE_GENERATION.md
+src/greia_platform/profile_presentation.py
+src/greia_platform/localization.py
+src/greia_platform/activity_api.py
 ```
 
 ## Microphone decision summary
@@ -94,6 +170,7 @@ Greia's current Activity-authoring direction is build-time/local voice productio
 ```text
 semantic localized cue
 → canonical character voice policy
+→ optional neutral/masculine/feminine wording variants where required
 → MOSS-TTS-Nano local rendering for Lilli/Leo/Flash/Tito/Momo
 → Greia OS TTS policy for Dani
 → human-reviewed WAV master
@@ -116,7 +193,7 @@ greia.dani.system-v1 clearly robotic Greia OS text-to-speech
 
 Dani intentionally has no cloned reference in v0.1. A natural cloned voice that does not sound robotic is a worse character match than the platform's clearly synthetic voice. Activities address `greia.dani.system-v1`; they must not select an arbitrary macOS/Linux voice by name.
 
-Every line must remain a semantic localization cue, be reviewed by a human in every shipped language, and obey the non-overlap/sequencing requirements in `CORE.md`.
+Every line must remain a semantic localization cue, be reviewed by a human in every shipped language, preserve text/audio grammatical-variant parity, and obey the non-overlap/sequencing requirements in `CORE.md`.
 
 Full voice policy and workflow:
 
