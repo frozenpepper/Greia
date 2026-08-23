@@ -1,0 +1,100 @@
+schema_version = 1
+default_locale = "it"
+
+# Achievements are Greia-owned milestones derived from trusted history.
+# Activities only emit factual events declared in activity.toml; they never
+# unlock a badge directly or write this policy/state.
+
+[[achievements]]
+id = "greia.care.first-friend"
+category = "care"
+tier = "bronze"
+icon_id = "pink_heart"
+secret = false
+title = { it = "Primo amico curato", en = "First Friend Helped" }
+description = { it = "Hai aiutato il tuo primo cucciolo a stare meglio.", en = "You helped your first little patient feel better." }
+locked_hint = { it = "Aiuta un cucciolo nella Clinica dei Cuccioli.", en = "Help a patient in Puppy Clinic." }
+
+[[achievements.criteria]]
+type = "event_count"
+activity_id = "org.greia.clinica-cuccioli"
+event_id = "vet.patient_healed"
+threshold = 1
+
+[[achievements]]
+id = "greia.care.gentle-helper"
+category = "care"
+tier = "silver"
+icon_id = "pink_heart"
+secret = false
+title = { it = "Aiutante gentile", en = "Gentle Helper" }
+description = { it = "Hai curato dieci cuccioli con attenzione.", en = "You cared for ten little patients." }
+locked_hint = { it = "Continua a prenderti cura dei cuccioli.", en = "Keep caring for little patients." }
+
+[[achievements.criteria]]
+type = "event_count"
+activity_id = "org.greia.clinica-cuccioli"
+event_id = "vet.patient_healed"
+threshold = 10
+
+[[achievements]]
+id = "greia.memory.first-finish"
+category = "puzzles"
+tier = "bronze"
+icon_id = "yellow_star"
+secret = false
+title = { it = "Memoria in azione", en = "Memory in Action" }
+description = { it = "Hai completato la tua prima partita di Memory delle Meraviglie.", en = "You completed your first Memory of Wonders game." }
+locked_hint = { it = "Completa una partita di Memory delle Meraviglie.", en = "Complete one Memory of Wonders game." }
+
+[[achievements.criteria]]
+type = "event_count"
+activity_id = "org.greia.memory-meraviglie"
+event_id = "memory.game_completed"
+threshold = 1
+
+[[achievements]]
+id = "greia.memory.persistent-matcher"
+category = "puzzles"
+tier = "silver"
+icon_id = "purple_flower"
+secret = false
+title = { it = "Cercatore di coppie", en = "Pair Finder" }
+description = { it = "Hai completato cinque partite di Memory delle Meraviglie.", en = "You completed five Memory of Wonders games." }
+locked_hint = { it = "Continua a cercare le coppie.", en = "Keep finding matching pairs." }
+
+[[achievements.criteria]]
+type = "event_count"
+activity_id = "org.greia.memory-meraviglie"
+event_id = "memory.game_completed"
+threshold = 5
+
+[[achievements]]
+id = "greia.stars.handful"
+category = "greia"
+tier = "bronze"
+icon_id = "yellow_star"
+secret = false
+title = { it = "Una manciata di stelle", en = "A Handful of Stars" }
+description = { it = "Hai raccolto cinque Stelle Greia.", en = "You collected five Greia Stars." }
+locked_hint = { it = "Esplora le attività e raccogli Stelle Greia.", en = "Explore activities and collect Greia Stars." }
+
+[[achievements.criteria]]
+type = "reward_balance"
+reward_id = "star"
+threshold = 5
+
+[[achievements]]
+id = "greia.stars.constellation"
+category = "greia"
+tier = "gold"
+icon_id = "yellow_star"
+secret = true
+title = { it = "Costellazione Greia", en = "Greia Constellation" }
+description = { it = "Hai raccolto venti Stelle Greia: una piccola costellazione tutta tua.", en = "You collected twenty Greia Stars: your own little constellation." }
+locked_hint = { it = "Continua a esplorare Greia.", en = "Keep exploring Greia." }
+
+[[achievements.criteria]]
+type = "reward_balance"
+reward_id = "star"
+threshold = 20
