@@ -1,13 +1,13 @@
 ---
 name: greia-os-work
-description: Canonical derived guide for substantive Greia OS/platform engineering, including architecture navigation, OOP/polymorphism, extension seams, low-resource performance, UI/input/display ownership, audio, documentation, testing and evidence discipline.
+description: Canonical derived guide for substantive Greia OS/platform engineering, including architecture navigation, OOP/polymorphism, extension seams, low-resource performance, UI/input/display ownership, progression/achievements, audio, documentation, testing and evidence discipline.
 ---
 
 # Greia OS Work Skill
 
 **Status:** living derived OS/platform engineering guide  
 **Audience:** coding agents, maintainers, contributors, reviewers  
-**Reviewed:** 2026-08-23
+**Reviewed:** 2026-08-24
 
 This skill exists to make Greia OS work faster to start, harder to accidentally fragment, and easier for different contributors to continue consistently.
 
@@ -101,6 +101,22 @@ src/greia_platform/localization.py
 src/greia_platform/language_presentation.py
 ```
 
+### Progression / achievements / child Badge Library
+
+```text
+docs/design/GREIA_ACHIEVEMENTS_AND_BADGE_LIBRARY.md
+docs/design/GREIA_ACTIVITY_ACHIEVEMENT_ART.md
+runtime/progression-policy.toml
+runtime/achievement-policy.toml
+src/greia_platform/history.py
+src/greia_platform/achievements.py
+src/greia_platform/achievement_art.py
+src/greia_launcher/event_broker.py
+src/greia_launcher/achievement_presentation.py
+```
+
+Activity-authored art is decorative only: platform policy explicitly admits bounded Activity emblems, while Greia retains achievement/reward authority, tier/frame, localization, profile state, visibility and celebration behavior.
+
 ### Activity Simulator
 
 ```text
@@ -180,9 +196,13 @@ Platform-owned concerns stay platform-owned:
 - Home/Back system chrome;
 - physical input/controller ownership;
 - microphone route/processing policy;
-- storage/progression/history;
+- storage/history;
+- global progression/reward/achievement truth;
+- achievement localization/library/celebration behavior;
 - install/update authority;
 - hardware capability facts.
+
+Activities may report factual events and may offer explicitly bounded decorative achievement emblems, but they do not gain writable global reward/achievement authority.
 
 A library being technically capable of bypassing Greia is not permission to do so.
 
@@ -611,13 +631,25 @@ Greia distinguishes character dialogue, shared character utterances, pedagogical
 
 ---
 
-## 13. Storage, progression and portable state
+## 13. Storage, progression, achievements and portable state
 
 Child durable state must remain architecture-neutral and profile-scoped.
 
-Activities write only through their Activity-owned Greia storage scope. They report events/facts; platform progression/reward services own global interpretation.
+Activities write only through their Activity-owned Greia storage scope. They report factual events; platform history/progression/reward/achievement services own global interpretation.
 
-Do not duplicate storage/progression/history implementations in:
+Canonical progression split:
+
+```text
+Activity declared factual events
+  -> trusted HistorySummary owns aggregates/personal bests
+  -> runtime/progression-policy.toml owns repeatable Greia reward economics
+  -> runtime/achievement-policy.toml + ProfileAchievementService own one-time milestones
+  -> Greia Shell owns Badge Library / celebration presentation
+```
+
+Activities may optionally offer language-neutral decorative achievement emblems through the bounded `[achievement_art]` contract. Those declarations are not progress state and are inert unless the platform achievement policy explicitly admits them.
+
+Do not duplicate storage/progression/history/achievement implementations in:
 
 - launcher;
 - simulator;
@@ -625,9 +657,11 @@ Do not duplicate storage/progression/history implementations in:
 - individual Activities;
 - runtime adapters.
 
+Never let an Activity write global Star balances, `achievements.json`, global achievement definitions or unlock state.
+
 Uninstall and child-data deletion remain separate semantics.
 
-Keep histories, caches and queues explicitly bounded.
+Keep histories, caches and queues explicitly bounded. Achievement presentation caches must include complete semantic/art identity and invalidate when admitted Activity artwork changes.
 
 ---
 
@@ -645,6 +679,8 @@ System updates are platform-owned transactional artifacts. Current single-root p
 
 Do not expose package managers, arbitrary shell commands or privileged mutation APIs to Activities.
 
+Optional Activity achievement artwork is content, not trust evidence. Parent-installed Activity art must never auto-register global achievements merely because the package is valid or installed.
+
 ---
 
 ## 15. Simulator rule: vary facts, not Greia policy
@@ -657,7 +693,8 @@ If simulator work needs to reimplement:
 - permissions;
 - profiles;
 - storage;
-- progression/history;
+- progression/history/achievement evaluation;
+- achievement-art admission;
 - launcher catalogue;
 - localization;
 - responsive transforms;
@@ -759,6 +796,9 @@ Activity author-facing contract changed
 OS/platform contributor workflow changed
   -> this skill and/or docs/agents/GREIA_AGENT_OPERATIONS.md
 
+achievement/reward authority or Badge Library contract changed
+  -> GREIA_ACHIEVEMENTS_AND_BADGE_LIBRARY + relevant Activity/OS skills
+
 visual system changed
   -> GREIA_ART_GRAPHICS_SYSTEM + visual skill/current visual workstream docs
 
@@ -848,11 +888,12 @@ Before calling a substantive platform change complete, ask:
 13. Does the change preserve the Acer floor and architecture neutrality?
 14. Does it preserve protected Home/Back and input authority?
 15. Does it preserve platform-owned microphone routing and Parent policy?
-16. Does the simulator still consume shared Greia policy rather than clone it?
-17. Is a monolithic file/class growing where responsibilities should be split?
-18. Are public extension points documented with ownership/lifecycle/invariants?
-19. Were the correct owning docs/skill/handover updated?
-20. Is the evidence scope stated honestly?
+16. Does it preserve platform-owned progression/reward/achievement authority while keeping optional Activity art decorative and explicitly admitted?
+17. Does the simulator still consume shared Greia policy rather than clone it?
+18. Is a monolithic file/class growing where responsibilities should be split?
+19. Are public extension points documented with ownership/lifecycle/invariants?
+20. Were the correct owning docs/skill/handover updated?
+21. Is the evidence scope stated honestly?
 
 ---
 
@@ -869,6 +910,9 @@ Before calling a substantive platform change complete, ask:
 - unbounded caches/queues/history/device registries;
 - per-frame image decode/scale/font creation/filesystem IO/device enumeration/subprocess/config parsing;
 - Activity-drawn trusted Home/Back;
+- Activity-local global Star/achievement mutation or an `award_badge()` bypass;
+- automatically importing global Badge Library definitions merely because an Activity declares art/content;
+- embedding localized child-facing words in Activity badge emblem images;
 - raw `/dev/input` grants to solve controller support;
 - Activity-local microphone device selection/denoising;
 - fake readiness markers or stored preference presented as hardware truth;
