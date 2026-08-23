@@ -51,9 +51,24 @@ class AchievementArtContractTests(unittest.TestCase):
         bridges = policy.get("greia.building.bridge-builder")
         global_star = policy.get("greia.stars.handful")
 
-        self.assertEqual(clinic.activity_emblem.activity_id, "org.greia.clinica-cuccioli")
-        self.assertEqual(memory.activity_emblem.activity_id, "org.greia.memory-meraviglie")
-        self.assertEqual(bridges.activity_emblem.activity_id, "org.greia.costruiamo-ponti")
+        self.assertIsNotNone(clinic.activity_emblem)
+        self.assertIsNotNone(memory.activity_emblem)
+        self.assertIsNotNone(bridges.activity_emblem)
+        assert clinic.activity_emblem is not None
+        assert memory.activity_emblem is not None
+        assert bridges.activity_emblem is not None
+        self.assertEqual(
+            clinic.activity_emblem.activity_id,
+            "org.greia.clinica-cuccioli",
+        )
+        self.assertEqual(
+            memory.activity_emblem.activity_id,
+            "org.greia.memory-meraviglie",
+        )
+        self.assertEqual(
+            bridges.activity_emblem.activity_id,
+            "org.greia.costruiamo-ponti",
+        )
         self.assertIsNone(global_star.activity_emblem)
 
     def test_activity_emblem_path_escape_is_rejected_at_art_boundary(self) -> None:
@@ -78,22 +93,23 @@ class AchievementArtContractTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "achievement-policy.toml"
             path.write_text(
-                '''schema_version = 1\ndefault_locale = "en"\n\n'
-                '[[achievements]]\n'
-                'id = "greia.test.bad-art"\n'
-                'category = "test"\n'
-                'tier = "bronze"\n'
-                'icon_id = "yellow_star"\n'
-                'secret = false\n'
-                'art = { activity_id = "org.greia.clinica-cuccioli", emblem_id = "missing" }\n'
-                'title = { en = "Test" }\n'
-                'description = { en = "Test" }\n'
-                'locked_hint = { en = "Test" }\n\n'
-                '[[achievements.criteria]]\n'
-                'type = "event_count"\n'
-                'activity_id = "org.greia.clinica-cuccioli"\n'
-                'event_id = "vet.patient_healed"\n'
-                'threshold = 1\n''',
+                "schema_version = 1\n"
+                "default_locale = \"en\"\n\n"
+                "[[achievements]]\n"
+                "id = \"greia.test.bad-art\"\n"
+                "category = \"test\"\n"
+                "tier = \"bronze\"\n"
+                "icon_id = \"yellow_star\"\n"
+                "secret = false\n"
+                "art = { activity_id = \"org.greia.clinica-cuccioli\", emblem_id = \"missing\" }\n"
+                "title = { en = \"Test\" }\n"
+                "description = { en = \"Test\" }\n"
+                "locked_hint = { en = \"Test\" }\n\n"
+                "[[achievements.criteria]]\n"
+                "type = \"event_count\"\n"
+                "activity_id = \"org.greia.clinica-cuccioli\"\n"
+                "event_id = \"vet.patient_healed\"\n"
+                "threshold = 1\n",
                 encoding="utf-8",
             )
             with self.assertRaisesRegex(
