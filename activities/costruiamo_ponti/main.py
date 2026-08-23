@@ -32,6 +32,7 @@ from greia_platform.pygame_canvas import (
     PygameReferenceCanvas,
     activity_viewport_for_surface,
 )
+from greia_platform.pygame_completion import CompletionContent, PygameCompletionScreen
 from greia_platform.pygame_scene import PygameSceneRenderer
 from greia_platform.scene import (
     SceneDefinition,
@@ -205,6 +206,20 @@ def main() -> int:
     typography = GreiaTypography()
     sounds = BridgeAudio()
 
+    play_again_rect = pygame.Rect(REFERENCE_WIDTH // 2 - 120, REFERENCE_HEIGHT // 2 + 70, 240, 60)
+    completion = PygameCompletionScreen(
+        typography,
+        width=REFERENCE_WIDTH,
+        height=REFERENCE_HEIGHT,
+        primary_rect=play_again_rect,
+    )
+    completion_content = CompletionContent(
+        title="BRAVISSIMA!",
+        primary_label="GIOCA ANCORA",
+        achievement_count=5,
+    )
+    completion_presented = False
+
     # Shared scene renderer
     try:
         scene_renderer = PygameSceneRenderer.for_activity()
@@ -360,6 +375,7 @@ def main() -> int:
                 screen = pygame.display.get_surface() or screen
                 metrics = ChildUiMetrics.for_size(*screen.get_size())
                 canvas = PygameReferenceCanvas(screen)
+                completion_presented = False
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if is_home_clicked(screen, event.pos):
                     running = False
@@ -373,11 +389,12 @@ def main() -> int:
                     continue
 
                 if is_victory:
-                    play_again_btn = pygame.Rect(REFERENCE_WIDTH // 2 - 120, REFERENCE_HEIGHT // 2 + 70, 240, 60)
-                    if play_again_btn.collidepoint(mx, my):
+                    if completion.primary_contains((mx, my)):
                         is_victory = False
                         level_idx = 0
                         setup_level(0)
+                        completion.clear()
+                        completion_presented = False
                     continue
 
                 # Material Palette Selection (Bottom)
@@ -421,6 +438,20 @@ def main() -> int:
                 if clear_btn.collidepoint(mx, my) and flash_state in ("neutral", "blink"):
                     slots = [None for _ in required]
                     sounds.play("place")
+
+        if is_victory:
+            if not completion_presented:
+                completion.prepare(completion_content)
+                completion.draw(canvas.surface)
+                canvas.present()
+                pygame.display.flip()
+                completion_presented = True
+                if not ready_published:
+                    mark_activity_ready()
+                    ready_published = True
+            # Terminal state remains responsive without running or repainting the game.
+            time.sleep(0.04)
+            continue
 
         # Flash Traveler Crossing & Physics Logic
         if flash_motion == "happy_hop" and flash_state == "happy":
@@ -517,6 +548,7 @@ def main() -> int:
                 level_idx += 1
                 if level_idx >= len(LEVELS):
                     is_victory = True
+                    completion_presented = False
                 else:
                     setup_level(level_idx)
 
@@ -767,30 +799,6 @@ def main() -> int:
         go_txt = typography.render("VAI!", FontRole.DISPLAY, 24, (255, 255, 255))
         surf.blit(go_txt, (go_btn.left + 54, go_btn.centery - go_txt.get_height() // 2))
         pygame.draw.polygon(surf, (255, 255, 255), [(go_btn.right - 35, go_btn.centery - 12), (go_btn.right - 15, go_btn.centery), (go_btn.right - 35, go_btn.centery + 12)])
-
-        # 13. Victory Modal
-        if is_victory:
-            overlay = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.SRCALPHA)
-            overlay.fill((10, 15, 30, 210))
-            surf.blit(overlay, (0, 0))
-
-            card = pygame.Rect(REFERENCE_WIDTH // 2 - 250, REFERENCE_HEIGHT // 2 - 160, 500, 320)
-            pygame.draw.rect(surf, (255, 252, 245), card, border_radius=28)
-            pygame.draw.rect(surf, (234, 179, 8), card, width=5, border_radius=28)
-
-            v_title = typography.render("BRAVISSIMA!", FontRole.DISPLAY, 32, (217, 119, 6))
-            surf.blit(v_title, (card.centerx - v_title.get_width() // 2, card.top + 35))
-
-            for i in range(5):
-                sx = card.centerx - 100 + i * 50
-                sy = card.top + 130
-                pygame.draw.circle(surf, (234, 179, 8), (sx, sy), 22)
-                pygame.draw.circle(surf, (254, 240, 138), (sx, sy), 10)
-
-            again_btn = pygame.Rect(card.centerx - 120, card.bottom - 80, 240, 60)
-            pygame.draw.rect(surf, (34, 197, 94), again_btn, border_radius=20)
-            again_lbl = typography.render("GIOCA ANCORA", FontRole.DISPLAY, 22, (255, 255, 255))
-            surf.blit(again_lbl, (again_btn.centerx - again_lbl.get_width() // 2, again_btn.centery - again_lbl.get_height() // 2))
 
         # Present Canvas
         canvas.present()
