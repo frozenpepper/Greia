@@ -118,9 +118,9 @@ def resolve_achievement_locale() -> str:
         try:
             return system_language(explicit).locale
         except SystemLanguageError:
-            # An invalid process-local override must never hide a valid installed
-            # setting. Fall through to the trusted system-language store.
-            break
+            # A malformed higher-priority process-local value must not hide a
+            # valid lower-priority launch value or installed device setting.
+            continue
 
     try:
         return SystemLanguageStore.from_environment().read().locale
