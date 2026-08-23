@@ -111,8 +111,23 @@ def load_activity_achievement_emblems(
                 "achievement emblem asset must be a PNG file"
             )
 
+        unresolved = manifest.root / relative
+        # Check the package entry itself before resolve(): resolving first would
+        # erase the information that the entry was a symlink. ActivityRegistry
+        # already rejects package symlinks globally, but this art boundary must
+        # remain safe when called independently in tests/tooling too.
         try:
-            asset_path = (manifest.root / relative).resolve(strict=True)
+            if unresolved.is_symlink():
+                raise ActivityAchievementArtError(
+                    "achievement emblem asset cannot be a symlink"
+                )
+        except OSError as exc:
+            raise ActivityAchievementArtError(
+                f"cannot inspect achievement emblem asset: {relative.as_posix()}"
+            ) from exc
+
+        try:
+            asset_path = unresolved.resolve(strict=True)
         except OSError as exc:
             raise ActivityAchievementArtError(
                 f"achievement emblem asset does not exist: {relative.as_posix()}"
@@ -121,8 +136,6 @@ def load_activity_achievement_emblems(
             raise ActivityAchievementArtError(
                 "achievement emblem asset must be a file inside its Activity package"
             )
-        if asset_path.is_symlink():
-            raise ActivityAchievementArtError("achievement emblem asset cannot be a symlink")
 
         try:
             byte_size = asset_path.stat().st_size
