@@ -2,11 +2,17 @@
 
 Date: 2026-08-23
 
-Branch: `work/profile-addressing-activity-format-20260823`
+Current branch: `main`
 
-Base: `1c93880c834d25ef6549d597b3eb733ad026c140`
+Original work branch: `work/profile-addressing-activity-format-20260823`
 
-Status: **source implementation and permanent docs authored; local execution/physical UI review still required before merge/release claims**
+Original base: `1c93880c834d25ef6549d597b3eb733ad026c140`
+
+Merge commit: `a1f9b031817fbde7e47b4a77fb748b0fa8b22483`
+
+Status: **source implementation and permanent docs are merged into `main`; local execution/physical UI review is still required before release/verification claims**
+
+Repository policy now requires direct `main` development unless the owner explicitly asks for a branch.
 
 ## Why this tranche exists
 
@@ -78,6 +84,19 @@ feminine  = Brava!
 
 High-quality character variants are generated at authoring/build time with the same canonical speaker voice. The child selector changes the wording addressed to the child; it never changes which character voice speaks.
 
+## Merge reconciliation with newer `main`
+
+While this tranche was on its work branch, `main` received eight newer voice/tooling commits. The merge therefore preserved the newer `main` voice architecture instead of overwriting it.
+
+The only overlapping files were:
+
+```text
+skills/greia-activity-authoring/SKILL.md
+skills/greia-activity-authoring/VOICE_GENERATION.md
+```
+
+They were reconciled so the merged `main` keeps the newer Chatterbox/pedagogical/shared-utterance direction **and** the `.greiaactivity`/grammatical-agreement guidance. Obsolete MOSS production guidance from the work branch was not restored.
+
 ## Core Greia source added/changed
 
 Added:
@@ -116,7 +135,7 @@ Changed:
 - `skills/greia-activity-authoring/VOICE_GENERATION.md`
 - `docs/product/ACTIVITY_ECOSYSTEM_AND_DISTRIBUTION.md`
 
-## Parent HTML candidate
+## Parent HTML state
 
 Separate repository:
 
@@ -124,13 +143,7 @@ Separate repository:
 frozenpepper/Greia-Parent-App-Html
 ```
 
-Candidate branch:
-
-```text
-work/profile-presentation-activity-picker-20260823
-```
-
-Based on external main `cdea281a1848d1372a18822a559dc15494e749b0`.
+The former candidate branch `work/profile-presentation-activity-picker-20260823` has been fast-forwarded into its `main`. Subsequent documentation commits on Parent `main` record the direct-main branch policy and merged handover state.
 
 Changes there:
 
@@ -168,11 +181,11 @@ Authored tests cover:
 
 **These newly added tests have not been executed in this session.** No hosted GitHub Actions execution was requested or used.
 
-The pre-existing repository baseline at the branch base was already not fully green according to root `HANDOVER.md`: 1042 discovered tests with 5 known non-passing cases (four boot-diagnostic expectation drift plus one stale `test_child_shell_visual_context.py` signature expectation). Do not attribute those existing failures to this tranche without rerunning and comparing evidence.
+The pre-existing repository baseline at the original branch base was already not fully green according to root `HANDOVER.md`: 1042 discovered tests with 5 known non-passing cases (four boot-diagnostic expectation drift plus one stale `test_child_shell_visual_context.py` signature expectation). Do not attribute those existing failures to this tranche without rerunning and comparing evidence.
 
-## Required local verification before merge/release claims
+## Required local verification before release claims
 
-Core checkout:
+Core checkout on current `main`:
 
 1. run the focused new tests:
 
@@ -190,7 +203,7 @@ python -m unittest \
 4. classify any failures against the documented pre-existing baseline rather than hiding them;
 5. manually verify that a customized theme is never overwritten by changing presentation.
 
-External Parent HTML checkout:
+External Parent HTML checkout on current `main`:
 
 ```bash
 npm test
