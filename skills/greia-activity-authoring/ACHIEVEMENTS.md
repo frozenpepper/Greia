@@ -14,6 +14,7 @@ runtime/achievement-policy.toml
 runtime/progression-policy.toml
 src/greia_platform/history.py
 src/greia_platform/achievements.py
+src/greia_launcher/achievement_localization.py
 ```
 
 ## 1. Non-negotiable authority rule
@@ -180,9 +181,64 @@ Current system celebration is shown after the Activity returns to the Shell. A f
 
 In particular, do not reintroduce the performance anti-pattern of a live 30 Hz game underneath a full-screen translucent badge/victory overlay.
 
-## 11. Review checklist
+## 11. Localization is mandatory for child-facing achievement copy
 
-Before accepting achievement-relevant Activity changes, verify:
+Achievement/event identifiers are stable machine identifiers and remain language-neutral. Human-facing achievement presentation does not.
+
+Platform achievement definitions must keep localized child-facing fields together:
+
+```text
+title
+description
+locked_hint
+```
+
+The Shell owns localized achievement-library chrome such as:
+
+```text
+My Badges / I miei distintivi
+New / Nuovo
+New Badge! / Nuovo distintivo!
+empty-library/help copy
+```
+
+Rules:
+
+- never hardcode English badge/library strings in an Activity;
+- never use `if Italian else English` as the platform localization architecture;
+- resolve badge copy from the active Greia profile/device locale;
+- explicit Simulator/device launch locale must not be lost merely because an installed-language store is absent;
+- use the platform fallback locale only when a requested translation is genuinely unavailable;
+- raw localization keys must never reach the child UI;
+- changing locale must not change achievement identity, unlock state, criteria or Star economics.
+
+The current seed achievement catalogue has complete Italian and English title/description/hint copy. When adding a new seed definition, preserve parity for those currently product-supported catalogue languages rather than silently adding English-only copy.
+
+## 12. Award visual language
+
+The achievement frame is Greia-owned reusable presentation, separate from achievement meaning.
+
+Current frame families are:
+
+```text
+bronze / silver -> medal + ribbons
+gold            -> trophy cup
+special/secret  -> richer rosette / constellation treatment
+```
+
+The semantic `icon_id` remains the centre symbol. Do not bake the meaning of every achievement into a bespoke full-screen image or make Activities ship global badge artwork.
+
+Runtime award art must stay bounded and cached. Source masters live under:
+
+```text
+assets/source/achievements/
+```
+
+Do not decode large source SVG/PNG artwork every frame on low-resource devices.
+
+## 13. Review checklist
+
+Before accepting achievement-relevant Activity or platform changes, verify:
 
 - [ ] emitted IDs exist in manifest exactly;
 - [ ] event kind matches semantics;
@@ -194,6 +250,9 @@ Before accepting achievement-relevant Activity changes, verify:
 - [ ] event identity is language-independent;
 - [ ] progression policy, if changed, references a real declared event;
 - [ ] achievement policy, if changed, references a real declared event/score/reward;
+- [ ] achievement title/description/hint have required locale parity;
+- [ ] Badge Library and celebration use the active Greia locale rather than hardcoded English;
 - [ ] child-facing reward design avoids grind/comparison/manipulation;
+- [ ] award rendering remains bounded/cached and does not add fullscreen alpha work;
 - [ ] provider-free tests cover the factual event transition;
 - [ ] Simulator acceptance verifies the event occurs at the child-visible semantic moment.
