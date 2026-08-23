@@ -66,7 +66,8 @@ class PygameAchievementBadgeRenderer:
 
     Alpha is intentionally confined to the badge-sized surface. Activity emblem
     files are bounded during policy loading and decoded only while preparing a
-    new cached badge surface. Repeated draws are cache hits; no runtime SVG
+    new cached badge surface. Repeated draws are cache hits; content fingerprints
+    invalidate the cache when an Activity updates art in place. No runtime SVG
     rasterization or fullscreen translucent surface is introduced on the
     low-resource hardware floor.
     """
@@ -98,7 +99,12 @@ class PygameAchievementBadgeRenderer:
             definition.achievement_id,
             definition.tier,
             definition.icon_id,
-            None if activity_emblem is None else str(activity_emblem.asset_path),
+            None
+            if activity_emblem is None
+            else (
+                str(activity_emblem.asset_path),
+                activity_emblem.content_digest,
+            ),
             definition.secret,
             entry.unlocked,
             size,
