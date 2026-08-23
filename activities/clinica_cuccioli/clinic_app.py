@@ -11,12 +11,12 @@ from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewpor
 try:
     from clinic_audio import ClinicAudioPort
     from clinic_model import ClinicSession, TreatmentResult
-    from clinic_renderer import ClinicRenderer, TABLE_RECT
+    from clinic_renderer import ClinicRenderer
     from clinic_services import ClinicEventPort, ClinicProgressPort
 except ImportError:
     from .clinic_audio import ClinicAudioPort
     from .clinic_model import ClinicSession, TreatmentResult
-    from .clinic_renderer import ClinicRenderer, TABLE_RECT
+    from .clinic_renderer import ClinicRenderer
     from .clinic_services import ClinicEventPort, ClinicProgressPort
 
 
@@ -118,20 +118,24 @@ class ClinicActivity:
 
         tool_id = self._renderer.tool_at(point)
         if tool_id is not None:
-            result = self._session.use_tool(tool_id)
-            # Preserve the playful sound on every palette selection, including a
-            # wrong choice; only successful treatment publishes progression facts.
-            self._audio.play(tool_id)
-            if result.applied:
-                self._finish_treatment(result, TABLE_RECT.center)
+            # Palette interaction only chooses a tool. Treatment is applied only
+            # when the child subsequently uses that selection on the patient.
+            self._session.select_tool(tool_id)
             return True
 
-        if self._renderer.patient_contains(point) and self._session.next_needed is not None:
+        if self._renderer.patient_contains(point):
             result = self._session.use_selected_tool()
+            if result is None:
+                # No implicit/default answer: touching the animal without first
+                # choosing a tool is intentionally a no-op.
+                return False
+
+            # Tool sounds represent use on the patient, not merely palette focus.
+            self._audio.play(result.tool_id)
             if result.applied:
-                self._audio.play(result.tool_id)
                 self._finish_treatment(result, point)
-                return True
+            return True
+
         return False
 
     def _finish_treatment(
