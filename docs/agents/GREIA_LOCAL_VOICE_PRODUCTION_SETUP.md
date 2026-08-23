@@ -19,6 +19,12 @@ skills/greia-activity-authoring/VOICE_GENERATION.md
 assets/audio/characters/canonical/v0.1/manifest.toml
 ```
 
+If producing/extending the OS-owned shared utterance library, also read:
+
+```text
+docs/agents/GREIA_SHARED_CHARACTER_UTTERANCE_RECORDING.md
+```
+
 ## 2. Opt-in rule
 
 **Do not install this toolchain automatically.**
@@ -240,17 +246,18 @@ Do not use trimming to repair a wrong pronunciation or invented sound inside the
 
 Do not use repeated prompt padding. The repeated-middle experiment is rejected.
 
-## 11. Shared utterances require no local cloning setup
+For shared reactions, preserve the punctuation in the canonical recording runbook. In particular, exclamation marks are intentional and should not be silently replaced with periods to make generation calmer.
 
-Generic reactions should preferably use Greia's shared character library:
+## 11. Shared utterances require no local cloning setup for Activity authors
+
+Generic reactions should preferably request Greia's shared semantic families:
 
 ```text
-praise.congratulations
-praise.great_work
-praise.well_done
-celebrate.you_did_it
-encourage.try_again
-ready.lets_go
+praise.general
+celebrate.success
+encourage.retry
+encourage.progress
+ready.go
 ```
 
 See:
@@ -259,7 +266,22 @@ See:
 docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md
 ```
 
+A family resolves to the currently available reviewed file array for character + locale (+ grammatical agreement where applicable):
+
+```text
+one file      → always selected
+multiple files→ random reviewed variant
+```
+
+Activity code does not choose exact phrase text, filenames or variant numbers.
+
 Once those assets are implemented in Greia, Activity authors consume them through the shared semantic resolver and do not need Chatterbox locally.
+
+To produce or extend the shared library itself, follow:
+
+```text
+docs/agents/GREIA_SHARED_CHARACTER_UTTERANCE_RECORDING.md
+```
 
 ## 12. Review masters and package conversion
 
