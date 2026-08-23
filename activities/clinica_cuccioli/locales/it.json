@@ -13,9 +13,16 @@
     "tool.sponge": "🧼 Bagnetto",
     "tool.snack": "🥣 Pappa",
     "tool.cuddle": "💖 Coccole",
+    "tool.stethoscope.short": "VISITA",
+    "tool.bath.short": "BAGNETTO",
+    "tool.bandaid.short": "CEROTTO",
+    "tool.food.short": "PAPPA",
+    "tool.cuddle.short": "COCCOLE",
     "victory.title": "Il cucciolo è guarito ed è felice! 🐶💖",
-    "victory.subtitle": "Sei una dottoressa fantastica!",
-    "btn.next_patient": "🐾 Prossimo Paziente!"
+    "victory.subtitle": "Sei un veterinario fantastico!",
+    "victory.all_patients": "CUCCIOLI CURATI!",
+    "btn.next_patient": "🐾 Prossimo Paziente!",
+    "btn.play_again": "GIOCA ANCORA"
   },
   "audio": {}
 }
