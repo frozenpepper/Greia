@@ -208,20 +208,23 @@ class CollectionFirstHomeMixin:
 
         columns = min(self._home_columns(pygame), len(collections))
         rows = (len(collections) + columns - 1) // columns
-        gap_x = max(16, min(30, inner.width // 26))
-        gap_y = max(12, min(24, inner.height // 24))
-        label_height = max(30, min(44, inner.height // 9))
-        cell_width = max(1, (inner.width - gap_x * (columns - 1)) // columns)
-        cell_height = max(1, (inner.height - gap_y * (rows - 1)) // rows)
+        gap_x = max(20, min(44, inner.width // 20))
+        gap_y = max(14, min(24, inner.height // 20))
+        label_size = max(17, min(23, inner.height // 18))
+        label_gap = max(4, min(8, inner.height // 60))
+        label_approx_h = label_size + 4
+
+        avail_cell_w = max(1, (inner.width - gap_x * (columns - 1)) // columns)
+        avail_cell_h = max(1, (inner.height - gap_y * (rows - 1)) // rows)
         portal_size = max(
-            88,
+            76,
             min(
-                190,
-                cell_width - 8,
-                cell_height - label_height - 4,
+                136,
+                avail_cell_w - 12,
+                avail_cell_h - label_gap - label_approx_h - 12,
             ),
         )
-        item_height = portal_size + label_height
+        item_height = portal_size + label_gap + label_approx_h
         total_height = rows * item_height + gap_y * (rows - 1)
         origin_y = inner.top + max(0, (inner.height - total_height) // 2)
 
@@ -297,14 +300,13 @@ class CollectionFirstHomeMixin:
             screen.blit(icon, icon.get_rect(center=(target.centerx, target.centery - 2)))
 
             label_text = _category_title(collection.collection_id, self._active_locale)
-            label_size = max(18, min(28, label_height * 2 // 3))
             label = self._category_label_surface(
                 label_text,
                 label_size,
                 theme.text,
                 pygame,
             )
-            max_label_width = max(40, portal_size + gap_x // 2)
+            max_label_width = max(40, portal_size + gap_x - 4)
             if label.get_width() > max_label_width:
                 label = pygame.transform.smoothscale(
                     label,
@@ -313,9 +315,10 @@ class CollectionFirstHomeMixin:
                         max(1, round(label.get_height() * max_label_width / label.get_width())),
                     ),
                 )
+            label_y = y + portal_size + label_gap + label.get_height() // 2
             screen.blit(
                 label,
-                label.get_rect(center=(portal_rect.centerx, y + portal_size + label_height // 2)),
+                label.get_rect(center=(portal_rect.centerx, label_y)),
             )
             self._targets.append(
                 HitTarget("home_collection", collection.collection_id, hit_rect)
