@@ -36,10 +36,11 @@ Before changing implementation or architecture, read:
 17. **`docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` — current visual-workstream resume contract when continuing art/graphics work across sessions**;
 18. `HANDOVER.md`;
 19. **`docs/agents/GREIA_AGENT_OPERATIONS.md` — mandatory project/build/test-hardware operating manual for agents**;
-20. `skills/greia-activity-authoring/SKILL.md` whenever creating, modifying, reviewing, validating, optimizing, packaging, deploying, or testing an Activity;
-21. `skills/greia-visual-authoring/SKILL.md` whenever creating, modifying, reviewing, generating, or integrating Greia visual assets or Activity art;
-22. phase-specific testing/review documents referenced by `HANDOVER.md` or the active plan;
-23. `docs/plans/2026-08-06_PHASE0_BOOTABLE_VERTICAL_SLICE.md` only as historical/supporting Phase-0 context where it is not superseded.
+20. **`skills/greia-os-work/SKILL.md` whenever creating, modifying, reviewing, refactoring, optimizing, testing or documenting Greia OS/platform/Shell/Parent/installer/simulator/build/runtime/hardware-service implementation**;
+21. `skills/greia-activity-authoring/SKILL.md` whenever creating, modifying, reviewing, validating, optimizing, packaging, deploying, or testing an Activity;
+22. `skills/greia-visual-authoring/SKILL.md` whenever creating, modifying, reviewing, generating, or integrating Greia visual assets or Activity art;
+23. phase-specific testing/review documents referenced by `HANDOVER.md` or the active plan;
+24. `docs/plans/2026-08-06_PHASE0_BOOTABLE_VERTICAL_SLICE.md` only as historical/supporting Phase-0 context where it is not superseded.
 
 `docs/DOCUMENTATION.md` defines which document class owns which fact. In short:
 
@@ -52,7 +53,7 @@ Before changing implementation or architecture, read:
 - `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` owns the short current visual-session resume path;
 - `HANDOVER.md` owns current branch/evidence state;
 - `docs/testing/*` owns exact named test procedures;
-- agent operations/skills are derived living manuals and must track their implementation owners.
+- agent operations/OS work/Activity/visual skills are derived living manuals and must track their implementation owners.
 
 Do not resolve contradictions by choosing whichever document is convenient. Identify the owner of the fact and correct stale derived documentation.
 
@@ -66,11 +67,12 @@ After every substantive **implementation** turn:
 2. update `HANDOVER.md` with the exact current phase, implemented work, verification/evidence, blockers, and next exact step;
 3. run the verification required by the active phase before claiming it complete;
 4. update `docs/agents/GREIA_AGENT_OPERATIONS.md` if repository/build/test-hardware/remote-control procedure changed;
-5. update `skills/greia-activity-authoring/SKILL.md` in the same tranche whenever the Activity manifest/API/runtime policy/trust model/shared assets or UI/input canon/performance requirements/validation or deployment workflow changed;
-6. update `docs/DOCUMENTATION.md` when documentation ownership/precedence/freshness rules change;
-7. update the applicable `docs/product/*` requirement when accepted child-facing product scope or UX changes materially;
-8. update `docs/engineering/ENGINEERING_FOUNDATIONS.md` when repository-wide implementation/extension rules change materially;
-9. commit coherent work to the canonical GitHub repository.
+5. update `skills/greia-os-work/SKILL.md` whenever OS/platform architecture navigation, extension seams, engineering practice, performance guidance, audio/platform ownership, testing/evidence or contributor workflow changed materially;
+6. update `skills/greia-activity-authoring/SKILL.md` in the same tranche whenever the Activity manifest/API/runtime policy/trust model/shared assets or UI/input canon/performance requirements/validation or deployment workflow changed;
+7. update `docs/DOCUMENTATION.md` when documentation ownership/precedence/freshness rules change;
+8. update the applicable `docs/product/*` requirement when accepted child-facing product scope or UX changes materially;
+9. update `docs/engineering/ENGINEERING_FOUNDATIONS.md` when repository-wide implementation/extension rules change materially;
+10. commit coherent work to the canonical GitHub repository.
 
 After every substantive **art/visual-design** turn:
 
@@ -88,7 +90,7 @@ For substantive documentation-only work, update `HANDOVER.md` when the continuat
 
 Do not rewrite earlier progress entries to make history appear cleaner. Append corrections explicitly.
 
-The agent operations manual and Activity/visual authoring skills are **living derived contracts**. A source or accepted-design change that makes one materially wrong is not completely documented until the affected manual/skill is corrected.
+The agent operations manual and OS work/Activity/visual authoring skills are **living derived contracts**. A source or accepted-design change that makes one materially wrong is not completely documented until the affected manual/skill is corrected.
 
 When—and only when—the active remediation plan's final completion criteria are all satisfied, the contributor closing it MUST mark the plan complete, append final evidence, update `HANDOVER.md`, and **remove this active-plan reference and these special resume/progress instructions from `AGENTS.md`**. The completed plan remains under `docs/plans/` as historical evidence.
 
@@ -186,7 +188,7 @@ Mandatory rules:
 - Architecture and code organization must make it easy for outside contributors to locate the correct extension point without tracing unrelated subsystems.
 - Clean architecture never excuses wasteful runtime behavior. On Greia, explicit ownership, bounded structures and reusable services are also performance requirements.
 
-`docs/engineering/ENGINEERING_FOUNDATIONS.md` is mandatory implementation guidance for these rules. ADR 0018 applies them specifically to the lightweight UI foundation; ADR 0019 applies them to trusted Activity navigation chrome; ADR 0020 applies them to runtime-neutral input and controller ownership.
+`docs/engineering/ENGINEERING_FOUNDATIONS.md` is mandatory implementation guidance for these rules. `skills/greia-os-work/SKILL.md` operationalizes them for OS/platform work. ADR 0018 applies them specifically to the lightweight UI foundation; ADR 0019 applies them to trusted Activity navigation chrome; ADR 0020 applies them to runtime-neutral input and controller ownership.
 
 ## Engineering rules
 
@@ -265,7 +267,7 @@ Every substantive implementation turn should leave:
 - updated `HANDOVER.md`;
 - updated active plan/ADRs where implementation state or decisions changed;
 - updated product requirements when accepted child-facing scope changed;
-- updated agent operations/Activity skill when their governed contracts changed;
+- updated agent operations/OS work/Activity skill when their governed contracts changed;
 - updated engineering foundations when repository-wide implementation/extension rules changed;
 - no build caches, venvs, downloaded package archives, disk images, private keys, or heavyweight transient evidence inside the source tree.
 
