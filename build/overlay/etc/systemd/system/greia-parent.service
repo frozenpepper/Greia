@@ -23,17 +23,16 @@ StateDirectory=greia-os
 # state is secured by tighter child-directory/file modes. StateDirectoryMode
 # also migrates an existing 0750 state root on upgraded developer machines.
 StateDirectoryMode=0755
-# audio_api is the top-level typed Parent composition. It preserves package and
-# system-update delivery, adds device-language settings, and exposes only the
-# bounded AudioService preferences/status surface. It is not a privileged audio
-# daemon and cannot install processors or select arbitrary host devices.
-ExecStart=/usr/bin/python3 -m greia_parent.audio_api --bind 0.0.0.0 --port 8766
+# update_api is the top-level typed Parent composition: package delivery,
+# system-update inbox/status, language and bounded AudioService preferences.
+# It remains unprivileged: no processor installation, slot-write or reboot API.
+ExecStart=/usr/bin/python3 -m greia_parent.update_api --bind 0.0.0.0 --port 8766
 Restart=on-failure
 RestartSec=2
 NoNewPrivileges=yes
 PrivateTmp=yes
 ProtectHome=yes
-ReadOnlyPaths=/run/greia-hardware /run/greia-audio
+ReadOnlyPaths=/run/greia-hardware
 ProtectSystem=strict
 ReadWritePaths=/var/lib/greia-os /var/lib/greia-profiles /var/lib/greia-system-settings /run/greia-os
 ProtectKernelTunables=yes
