@@ -172,7 +172,14 @@ class SharedUiProfileChromeMixin:
             return
 
         clear_rect = badge.inflate(16, 16)
-        pygame.draw.rect(screen, theme.background, clear_rect)
+        # Restore the exact composed scene behind the badge when available so
+        # wallpaper themes keep correct pixels; plain background otherwise.
+        backdrop = getattr(self, "_last_scene_backdrop", None)
+        if backdrop is not None:
+            restore = clear_rect.clip(backdrop.get_rect())
+            screen.blit(backdrop, restore.topleft, restore)
+        else:
+            pygame.draw.rect(screen, theme.background, clear_rect)
 
         frame_rect = frame_surface.get_rect(center=badge.center)
         screen.blit(frame_surface, frame_rect)

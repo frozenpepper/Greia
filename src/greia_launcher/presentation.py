@@ -50,6 +50,23 @@ from .supervisor import ActivitySupervisor
 
 PARENT_ACTIVITY_SOURCE_ID = "greia-parent-package-service"
 
+_IDLE_ACTIVE_SLEEP_SECONDS = 0.008
+_IDLE_RELAXED_SLEEP_SECONDS = 0.04
+
+
+def idle_sleep_seconds(idle_seconds: float) -> float:
+    """Return the idle-loop sleep for how long no input has been observed.
+
+    The launcher is input-driven: frames render only when something changes.
+    Immediately after interaction the loop polls quickly so added input latency
+    stays imperceptible; after a short quiet period it relaxes to a slower wake
+    cadence that keeps idle CPU low on Atom-class reference devices.
+    """
+
+    if idle_seconds < 1.0:
+        return _IDLE_ACTIVE_SLEEP_SECONDS
+    return _IDLE_RELAXED_SLEEP_SECONDS
+
 
 class GreiaLauncherPresentation(LauncherApplication):
     """Child-facing presentation specialization for the launcher core.
@@ -87,9 +104,16 @@ class GreiaLauncherPresentation(LauncherApplication):
         self._activity_scroll_start = 0
         self._launching_activity_id: str | None = None
         self._launch_animation_started = 0.0
+        self._last_input_monotonic = 0.0
         self._cached_activities_surface: Any = None
         self._cached_activities_key: Any = None
         self._cached_activities_targets: list[HitTarget] = []
+        # Dynamic per-frame aspects of the activities scene (pointer hover and
+        # launch-animation tick) are tracked separately from the static cache
+        # key so hover transitions repair only the affected tiles instead of
+        # rebuilding the whole 1024x600 surface on an Atom-class CPU.
+        self._activities_hover_signature: tuple[str, Any] | None = None
+        self._activities_launch_tick: int | None = None
         self._tile_surface_cache: BoundedCache[Any, Any] = BoundedCache(64)
         self._backdrop_cache: BoundedCache[Any, Any] = BoundedCache(16)
         self._disclosure_cache: BoundedCache[Any, Any] = BoundedCache(32)
@@ -228,6 +252,7 @@ class GreiaLauncherPresentation(LauncherApplication):
                 events = pygame.event.get()
                 if events:
                     _needs_redraw = True
+                    self._last_input_monotonic = frame_start
                 for event in events:
                     if event.type == pygame.QUIT and self.allow_exit:
                         running = False
@@ -328,7 +353,12 @@ class GreiaLauncherPresentation(LauncherApplication):
                     _needs_redraw = False
                     clock.tick(60)
                 else:
-                    time.sleep(0.008)
+                    # Adaptive idle pacing: poll quickly right after interaction
+                    # so input latency stays imperceptible, then relax the wake
+                    # cadence to keep idle CPU low on Atom-class devices.
+                    time.sleep(
+                        idle_sleep_seconds(frame_start - self._last_input_monotonic)
+                    )
         finally:
             self.session.clear()
             pygame.key.stop_text_input()
@@ -571,14 +601,12 @@ class GreiaLauncherPresentation(LauncherApplication):
             int(launch_elapsed * 60) if launch_elapsed is not None else None
         )
 
-        cache_key = (
+        static_key = (
             self._active_profile.profile.profile_id if self._active_profile else None,
             self._category_id,
             self._activity_scroll_start,
             self._selected,
-            hovered_target,
             self._launching_activity_id,
-            launch_tick,
             theme.background,
             theme.panel,
             theme.accent,
@@ -588,11 +616,32 @@ class GreiaLauncherPresentation(LauncherApplication):
             bool((self._last_result and not self._last_result.succeeded) or self._catalogue_error),
         )
 
-        if self._cached_activities_key == cache_key and self._cached_activities_surface is not None:
-            screen.blit(self._cached_activities_surface, (0, 0))
-            self._targets.extend(self._cached_activities_targets)
-            self._draw_activity_title_disclosure(screen, theme, pygame)
-            return
+        surface_ready = (
+            self._cached_activities_surface is not None
+            and self._cached_activities_surface.get_size() == (width, height)
+        )
+        if self._cached_activities_key == static_key and surface_ready:
+            prev_hover = self._activities_hover_signature
+            prev_tick = self._activities_launch_tick
+            if hovered_target == prev_hover and launch_tick == prev_tick:
+                self._present_cached_activities(screen, theme, pygame)
+                return
+            if self._repair_dynamic_activities(
+                screen,
+                theme,
+                pygame,
+                activities,
+                prev_hover=prev_hover,
+                new_hover=hovered_target,
+                prev_tick=prev_tick,
+                new_tick=launch_tick,
+                pointer=pointer,
+                pointer_active=pointer_active,
+            ):
+                self._activities_hover_signature = hovered_target
+                self._activities_launch_tick = launch_tick
+                self._present_cached_activities(screen, theme, pygame)
+                return
 
         if (
             self._cached_activities_surface is None
@@ -606,12 +655,113 @@ class GreiaLauncherPresentation(LauncherApplication):
 
         self._render_activities_content(self._cached_activities_surface, theme, pygame)
 
-        self._cached_activities_key = cache_key
+        self._cached_activities_key = static_key
+        self._activities_hover_signature = hovered_target
+        self._activities_launch_tick = launch_tick
         self._cached_activities_targets = list(self._targets)
         saved_targets.extend(self._targets)
         self._targets = saved_targets
         screen.blit(self._cached_activities_surface, (0, 0))
         self._draw_activity_title_disclosure(screen, theme, pygame)
+
+    def _present_cached_activities(
+        self, screen: Any, theme: Any, pygame: Any
+    ) -> None:
+        """Present the cached activities scene and refresh frame hit targets."""
+
+        screen.blit(self._cached_activities_surface, (0, 0))
+        self._targets.extend(self._cached_activities_targets)
+        self._draw_activity_title_disclosure(screen, theme, pygame)
+
+    def _repair_dynamic_activities(
+        self,
+        screen: Any,
+        theme: Any,
+        pygame: Any,
+        activities: tuple[ActivityManifest, ...],
+        *,
+        prev_hover: tuple[str, Any] | None,
+        new_hover: tuple[str, Any] | None,
+        prev_tick: int | None,
+        new_tick: int | None,
+        pointer: tuple[int, int],
+        pointer_active: bool,
+    ) -> bool:
+        """Repair only hover/launch-affected activity tiles inside the cache.
+
+        The cached scene surface is an opaque copy of the composed backdrop plus
+        every card. When only pointer-hover or the launch-animation tick
+        changes, restoring those tiles' padded regions from the pre-composited
+        backdrop and re-blitting just those cards avoids a full-scene rebuild.
+        Returns False whenever any aspect exceeds tile-level dynamics so the
+        caller falls back to the proven full rebuild.
+        """
+
+        backdrop = getattr(self, "_last_scene_backdrop", None)
+        cached_surface = self._cached_activities_surface
+        if backdrop is None or cached_surface is None:
+            return False
+
+        def _is_tile(signature: tuple[str, Any] | None) -> bool:
+            return signature is not None and signature[0] == "presented_activity"
+
+        # Chrome controls (chips, arrows, badge) own their own hover artwork;
+        # repairing only tiles would leave them stale, so defer to full render.
+        if not (prev_hover is None or _is_tile(prev_hover)):
+            return False
+        if not (new_hover is None or _is_tile(new_hover)):
+            return False
+
+        rects_by_index = {
+            target.value: target.rect.copy()
+            for target in self._cached_activities_targets
+            if target.action == "presented_activity"
+        }
+
+        damage: dict[int, Any] = {}
+        for signature in (prev_hover, new_hover):
+            if not _is_tile(signature):
+                continue
+            rect = rects_by_index.get(signature[1])
+            if rect is None:
+                return False
+            damage[int(signature[1])] = rect
+
+        launching_changed = new_tick != prev_tick and self._launching_activity_id
+        if launching_changed:
+            for target in self._cached_activities_targets:
+                if target.action != "presented_activity":
+                    continue
+                index = int(target.value)
+                if 0 <= index < len(activities) and (
+                    activities[index].activity_id == self._launching_activity_id
+                ):
+                    damage[index] = target.rect.copy()
+                    break
+
+        if not damage:
+            return False
+
+        backdrop_rect = backdrop.get_rect()
+        for index, rect in sorted(damage.items()):
+            if not 0 <= index < len(activities):
+                return False
+            # Cover every extent the dynamic states can reach: the tile-surface
+            # padding plus hover lift/scale and the bounded launch wiggle/bounce
+            # amplitudes. The extra margin stays within inter-tile transparent
+            # padding, so neighbours' visible pixels are never touched.
+            restore = rect.inflate(34, 40).clip(backdrop_rect)
+            cached_surface.blit(backdrop, restore.topleft, restore)
+
+        for index, rect in sorted(damage.items()):
+            activity = activities[index]
+            state = InteractionVisualState(
+                hovered=pointer_active and rect.collidepoint(pointer),
+                selected=index == self._selected,
+                launching=activity.activity_id == self._launching_activity_id,
+            )
+            self._draw_activity_tile(cached_surface, rect, activity, state, theme, pygame)
+        return True
 
     def _draw_activity_title_disclosure(
         self, screen: Any, theme: LauncherThemeSnapshot, pygame: Any

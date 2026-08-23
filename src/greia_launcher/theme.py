@@ -73,10 +73,28 @@ class LauncherThemeController:
         screen.fill(theme.background)
         if theme.wallpaper_path is None:
             return theme
-        surface = self._scaled_wallpaper(theme.wallpaper_path, screen.get_size(), pygame)
+        surface = self.wallpaper_for(theme, screen.get_size(), pygame)
         if surface is not None:
             screen.blit(surface, (0, 0))
         return theme
+
+    def wallpaper_for(
+        self,
+        theme: ResolvedTheme,
+        size: tuple[int, int],
+        pygame: Any,
+    ) -> Any | None:
+        """Return the display-sized cached wallpaper for `size`, or None.
+
+        Shared by direct background painting and the launcher's pre-composited
+        scene backdrop so both paths observe one decoded/scaled surface.
+        Presentation stubs may omit ``wallpaper_path`` entirely.
+        """
+
+        wallpaper_path = getattr(theme, "wallpaper_path", None)
+        if wallpaper_path is None:
+            return None
+        return self._scaled_wallpaper(wallpaper_path, size, pygame)
 
     def _scaled_wallpaper(
         self,

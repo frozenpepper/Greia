@@ -159,6 +159,7 @@ class SharedUiShellPanelMixin:
             top=header_size + 4,
             bottom_margin=14,
             max_width=940,
+            theme=theme,
         )
         super()._render_profile_picker_content(screen, theme, pygame)
 
@@ -172,6 +173,7 @@ class SharedUiShellPanelMixin:
             top=panel_top,
             bottom_margin=4,
             max_width=width - 24,
+            theme=theme,
         )
         super()._render_activities_content(screen, theme, pygame)
 
@@ -183,8 +185,20 @@ class SharedUiShellPanelMixin:
         top: int,
         bottom_margin: int,
         max_width: int,
+        theme: Any = None,
     ) -> None:
+        """Blit the pre-composited scene backdrop behind real Shell content.
+
+        The backdrop (background fill + optional wallpaper + shared panel
+        artwork) is composed once per theme/geometry and reused as one opaque,
+        fast-blitting surface. This keeps per-frame cost independent of the
+        large alpha-blended panel artwork on low-resource devices, and exposes
+        the composed surface for incremental tile repairs. Panel identity,
+        layout and hit targets remain owned by the base launcher.
+        """
+
         self._shared_panel_inner_rect = None
+        self._last_scene_backdrop = None
         if getattr(self, "_shared_panel_disabled", False):
             return
         visual_cache = getattr(self, "_visual_cache", None)
@@ -218,20 +232,56 @@ class SharedUiShellPanelMixin:
         panel_rect.centerx = width // 2
         panel_rect.top = top + (available_height - panel_height) // 2
 
-        try:
-            panel_surface = visual_cache.get(
-                "ui.panel.base",
-                variant="default",
-                size=panel_rect.size,
-            )
-        except _SHARED_VISUAL_ERRORS:
-            self._shared_panel_disabled = True
-            return
-        except pygame.error:
-            self._shared_panel_disabled = True
-            return
+        if theme is None:
+            theme = self.theme_controller.theme
 
-        screen.blit(panel_surface, panel_rect)
+        wallpaper_token = None
+        wallpaper_path = getattr(theme, "wallpaper_path", None)
+        if wallpaper_path is not None:
+            try:
+                stat = wallpaper_path.stat()
+                wallpaper_token = (str(wallpaper_path), stat.st_mtime_ns)
+            except OSError:
+                return
+
+        backdrop_key = (
+            "scene",
+            theme.background,
+            wallpaper_token,
+            int(top),
+            int(bottom_margin),
+            int(max_width),
+            width,
+            height,
+        )
+        backdrop = self._backdrop_cache.get(backdrop_key)
+        if backdrop is None:
+            try:
+                panel_surface = visual_cache.get(
+                    "ui.panel.base",
+                    variant="default",
+                    size=panel_rect.size,
+                )
+            except _SHARED_VISUAL_ERRORS:
+                self._shared_panel_disabled = True
+                return
+            except pygame.error:
+                self._shared_panel_disabled = True
+                return
+
+            backdrop = pygame.Surface((width, height)).convert()
+            backdrop.fill(theme.background)
+            wallpaper = self.theme_controller.wallpaper_for(
+                theme, (width, height), pygame
+            )
+            if wallpaper is not None:
+                backdrop.blit(wallpaper, (0, 0))
+            backdrop.blit(panel_surface, panel_rect)
+            self._backdrop_cache[backdrop_key] = backdrop
+
+        screen.blit(backdrop, (0, 0))
+        self._last_scene_backdrop = backdrop
+
         inner_left = panel_rect.left + round(panel_rect.width * 34 / self._PANEL_SOURCE_WIDTH)
         inner_top = panel_rect.top + round(panel_rect.height * 27 / self._PANEL_SOURCE_HEIGHT)
         inner_width = round(panel_rect.width * 572 / self._PANEL_SOURCE_WIDTH)

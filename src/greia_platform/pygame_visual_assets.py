@@ -47,6 +47,7 @@ class PygameVisualSurfaceCache(Generic[SurfaceT]):
         image_scaler: Callable[[SurfaceT, tuple[int, int]], SurfaceT],
         max_entries: int = 12,
         max_surface_pixels: int = _DEFAULT_MAX_SURFACE_PIXELS,
+        display_converter: Callable[[SurfaceT], SurfaceT] | None = None,
     ) -> None:
         if max_entries < 1:
             raise ValueError("max_entries must be positive")
@@ -55,6 +56,10 @@ class PygameVisualSurfaceCache(Generic[SurfaceT]):
         self.catalogue = catalogue
         self._image_loader = image_loader
         self._image_scaler = image_scaler
+        # Optional one-time conversion applied to freshly loaded surfaces so
+        # display-backed consumers never pay the slow generic blit path on
+        # every frame. Provider-free consumers simply leave it as None.
+        self._display_converter = display_converter
         self.max_surface_pixels = int(max_surface_pixels)
         self._surfaces: BoundedCache[VisualSurfaceKey, SurfaceT] = BoundedCache(
             max_entries
@@ -67,12 +72,15 @@ class PygameVisualSurfaceCache(Generic[SurfaceT]):
         *,
         max_entries: int = 12,
         max_surface_pixels: int = _DEFAULT_MAX_SURFACE_PIXELS,
+        display_converter: Callable[[object], object] | None = None,
     ) -> "PygameVisualSurfaceCache[object]":
         """Create a cache using Pygame's PNG loader and one-time smooth scaler.
 
         Pygame is imported lazily so importing this module remains safe in
         provider-free tooling/tests. The loader deliberately does not call
-        `convert()`/`convert_alpha()`, which would require an initialized display.
+        `convert()`/`convert_alpha()`, which would require an initialized
+        display; pass `display_converter` when a live display exists so cached
+        surfaces are converted exactly once before first use.
         """
 
         import pygame
@@ -87,6 +95,7 @@ class PygameVisualSurfaceCache(Generic[SurfaceT]):
             ),
             max_entries=max_entries,
             max_surface_pixels=max_surface_pixels,
+            display_converter=display_converter,
         )
 
     @property
@@ -123,11 +132,42 @@ class PygameVisualSurfaceCache(Generic[SurfaceT]):
 
         surface = self._image_loader(path)
         surface = self._image_scaler(surface, normalized_size)
+        if self._display_converter is not None:
+            try:
+                converted = self._display_converter(surface)
+            except Exception:
+                # A converter failure must never make shared artwork fatal; the
+                # unconverted surface remains usable through the slow path.
+                converted = surface
+            surface = converted
         self._surfaces[key] = surface
         return surface
 
     def clear(self) -> None:
         self._surfaces.clear()
+
+
+def pygame_display_converter() -> Callable[[object], object]:
+    """Return a display-format converter for cached visual surfaces.
+
+    Conversion happens once per cached surface at fetch time. Opaque surfaces
+    become plain display surfaces (fast opaque blits) and alpha surfaces become
+    display-alpha surfaces (hardware-friendly blended blits). The returned
+    callable never raises for valid pygame surfaces.
+    """
+
+    import pygame
+
+    def convert(surface: object) -> object:
+        get_bitsize = getattr(surface, "get_bitsize", None)
+        get_flags = getattr(surface, "get_flags", None)
+        if not callable(get_bitsize) or not callable(get_flags):
+            return surface
+        if get_flags() & pygame.SRCALPHA:
+            return surface.convert_alpha()
+        return surface.convert()
+
+    return convert
 
 
 def _validate_size(

@@ -280,6 +280,7 @@ class AdaptiveActivityDiscoveryMixin:
                 top=panel_top,
                 bottom_margin=4,
                 max_width=width - 24,
+                theme=theme,
             )
         self._draw_active_profile_badge(screen, theme, pygame)
         self._draw_category_header(screen, theme, pygame)

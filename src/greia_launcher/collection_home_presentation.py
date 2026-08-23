@@ -168,6 +168,7 @@ class CollectionFirstHomeMixin:
                 top=panel_top,
                 bottom_margin=4,
                 max_width=width - 24,
+                theme=theme,
             )
 
         inner = getattr(self, "_shared_panel_inner_rect", None)

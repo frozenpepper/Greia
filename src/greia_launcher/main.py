@@ -19,6 +19,7 @@ from greia_platform.assets import AssetCatalogue, AssetCatalogueError
 from greia_platform.pygame_visual_assets import (
     PygameVisualSurfaceCache,
     VisualSurfaceCacheError,
+    pygame_display_converter,
 )
 from greia_platform.customization import ThemeStore
 from greia_platform.typography import FontRole, GreiaTypography
@@ -166,7 +167,14 @@ class LauncherApplication:
         self.assets = self._asset_set.catalogue
         self.shared_visuals_available = self._asset_set.shared_visuals_available
         self._visual_cache = (
-            PygameVisualSurfaceCache.for_pygame(self.assets)
+            PygameVisualSurfaceCache.for_pygame(
+                self.assets,
+                max_entries=96,
+                # Convert decoded PNG renditions to display-native surfaces once
+                # so every later frame blit uses pygame's fast paths instead of
+                # the generic per-pixel fallback on low-resource devices.
+                display_converter=pygame_display_converter(),
+            )
             if self._asset_set.shared_visuals_available
             else None
         )
