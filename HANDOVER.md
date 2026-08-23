@@ -1,3 +1,14 @@
+- **Launcher Hover-Transition Frame-Drop Elimination on Reference Acer (2026-08-23)**:
+  - On-device profiling (`greia-dev.local`, legacy-x86-i686 dev image at `387ba8d`) found every pointer hover transition rebuilt the full 1024×600 scene: **189.6 ms/frame (~5 fps)**, dominated by alpha-blitting the large unconverted shared panel artwork (~104 ms) plus six card surfaces. Steady cached frames were already fast (3.46 ms).
+  - Fixes (commit `68899e9`, pushed):
+    - One-time display-format conversion of cached shared visuals (`PygameVisualSurfaceCache(display_converter=...)`), bounded entry count raised to the real working set (96);
+    - Pre-composited opaque scene backdrop (background + wallpaper + `ui.panel.base`), blitted once per rebuild instead of per-frame RGBA panel blending;
+    - Activities cache key split into static scene vs dynamic hover/launch-tick; hover transitions and the launch animation now repair only affected tiles from the backdrop; chrome hover keeps the proven full-rebuild path;
+    - Profile badge overlay restores from the composed backdrop (fixes wallpaper-era artifacts);
+    - Adaptive idle pacing: 8 ms polls for 1 s after interaction, then relaxed 40 ms wake cadence.
+  - Physical Acer measurements after fix: hover transition **26.6 ms (37.6 fps, 7.1× faster)**, full rebuild 81.8 ms, steady frame 3.34 ms, idle launcher CPU ~5–8% (was ~10–11%), card-sweep CPU avg ~16% (was ~32%), RSS unchanged ~153 MB. Visual verification on device: Home, category grid, hover pill, selection star, pagination, rapid cross-card traversal — no ghosting.
+  - New instruments/tests: `tools/profile_launcher_draw.py` (draw-path profiler), `tests/test_launcher_hover_scene_performance.py` (repair-path pixel equivalence, 6/6 PASS). Focused launcher suites PASS. Full discover: 1028 tests, 4 pre-existing boot-contract failures that reproduce identically on clean `387ba8d` (stale `panic=30` expectation vs accepted `panic=5` postmortem decision) — owner disposition required before a current-head aggregate `make verify` PASS can be claimed.
+
 - **Acquario Magico Overhaul, Performance Optimization, Steering AI, and Persistence (2026-08-22)**:
   - Addressed and resolved all reported defects in `org.greia.acquario-magico`:
     - **Performance & 100x Speedup**: Pre-rendered static daylight ocean and night abyss backgrounds into `_BG_CACHE`, eliminating per-frame gradient rectangle and kelp/coral draws (<0.15ms per frame render on Atom N270). Removed per-frame transparent surface allocations and cached bidirectional scaled sprites in `_SCALE_CACHE[(filename, w, h, facing_right)]` to eliminate per-frame `pygame.transform.flip()` overhead.
@@ -83,7 +94,7 @@
 
 # Greia — Standalone Engineering Handover
 
-**Date:** 2026-08-22  
+**Date:** 2026-08-23  
 **Version family:** `0.13.x` development  
 **Repository:** `frozenpepper/Greia` (private)  
 **Canonical/default/development branch:** `main`  
