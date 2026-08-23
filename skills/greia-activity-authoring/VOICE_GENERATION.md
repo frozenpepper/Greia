@@ -1,110 +1,284 @@
 # Voice Generation for Greia Activities
 
-This file is a focused companion to `SKILL.md`. Read the canonical design first:
+This is the focused speech companion to `SKILL.md`.
+
+Read first:
 
 ```text
 docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md
+docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md
 ```
 
-For installation and local production commands:
+For optional local character-voice setup:
 
 ```text
 docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md
 ```
 
-## Mandatory authoring rules
+## 1. Mandatory speech classification
 
-1. Speech is optional. Visual communication remains sufficient for the target age where the product contract requires it.
-2. Use semantic cue IDs and localization bundles; never bind gameplay to model commands or generated filenames.
-3. Generate ordinary character speech at build/authoring time.
-4. Package only reviewed OGG/WAV playback assets.
-5. Never package models, caches, Python environments or the canonical source masters or production anchors inside an Activity.
-6. Do not create a new character voice per Activity.
-7. Do not upload Greia reference voices to a cloud service without explicit owner authorization.
-8. A generation command exiting zero is not audio acceptance.
+Before generating or adding speech, classify the cue by **semantic purpose**:
 
-## Canonical voice choice
+```text
+character_dialogue
+shared_character_utterance
+pedagogical_speech
+dani_system_speech
+```
 
-| Speaker | Voice ID | Use when | Why |
-|---|---|---|---|
-| Lilli | `greia.lilli.v1` | wonder, creativity, stories, art, gentle encouragement | Lilli is Greia's warm imaginative guide |
-| Leo | `greia.leo.v1` | reading, language, patient explanation, reflective hints | Leo is warm, oldish and savvy—not a young schoolteacher |
-| Flash | `greia.flash.v1` | action, speed, games, lively retries | Flash communicates kinetic playful energy |
-| Tito | `greia.tito.v1` | exploration, nature, investigation, adventure | Tito invites children to look, discover and investigate |
-| Momo | `greia.momo.v1` | music, emotion, silliness, experimentation, celebration | Momo provides distinctive musical and expressive play |
-| Dani | `greia.dani.system-v1` | logic, patterns, numbers, concise robot feedback | Dani must remain obviously robotic; use Greia OS TTS until a reviewed robotic reference exists |
+Do not choose the production path from text length alone.
 
-Soft specialization applies. A character may support another character's Activity, but the voice must remain that character's canonical voice.
+Examples:
 
-## Writing and generation workflow
+```text
+"Vai!"          → character_dialogue
+"ma"            → pedagogical_speech when the syllable itself is taught
+"Ottimo lavoro!"→ shared_character_utterance when generic praise is sufficient
+Dani explanation→ dani_system_speech
+```
 
-For each spoken cue:
+The governing rule is:
+
+> If the sound itself is the educational truth being taught, use pedagogical/system speech. If speech communicates content through a character, use character speech.
+
+## 2. Voice support is optional
+
+A normal Activity authoring environment is **not required** to have Chatterbox or any cloning model installed.
+
+When creating or modifying an Activity:
+
+1. decide whether speech genuinely improves the Activity;
+2. prefer a Greia shared character utterance when a generic cue is enough;
+3. route letters/syllables/phonics/pronunciation to the pedagogical/system path;
+4. only consider custom cloned character dialogue after those checks;
+5. probe the local custom-voice toolchain without installing anything;
+6. if it is unavailable and the user did not explicitly ask for voice-toolchain setup, **drop optional custom character voice support** and continue building the Activity;
+7. preserve visual/text interaction so the Activity remains complete without custom character audio.
+
+Do not silently install models, create a multi-gigabyte environment, or download weights because a character could say a line.
+
+Do not block Activity creation merely because custom voice generation is unavailable.
+
+## 3. Non-mutating toolchain probe
+
+There is not yet one canonical Greia provider-probe command. Until one exists, inspect the environment that the user/agent already uses and perform only non-mutating checks.
+
+Examples may include:
+
+```text
+- the configured Chatterbox virtual environment exists;
+- its Python can import the installed Chatterbox/MLX implementation;
+- the configured model/checkpoint is already available or the user has explicitly authorized its download;
+- ffmpeg and ffprobe are available if short-clip analysis/post-processing is required;
+- canonical Greia reference files exist and match the voice manifest.
+```
+
+Do not treat `pip` being available as evidence that Chatterbox is installed.
+
+If no previously configured Chatterbox environment can be identified, classify custom character generation as `UNAVAILABLE`, not as an invitation to install it.
+
+If the user explicitly requests installation/configuration, follow:
+
+```text
+docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md
+```
+
+## 4. Canonical character speech
+
+Current character voice IDs:
+
+| Speaker | Voice ID | Use when |
+|---|---|---|
+| Lilli | `greia.lilli.v1` | wonder, creativity, stories, art, gentle encouragement |
+| Leo | `greia.leo.v1` | reading, language, patient explanation, reflective hints |
+| Flash | `greia.flash.v1` | action, speed, games, lively retries |
+| Tito | `greia.tito.v1` | exploration, nature, investigation, adventure |
+| Momo | `greia.momo.v1` | music, emotion, silliness, experimentation, celebration |
+| Dani | `greia.dani.system-v1` | logic, patterns, numbers and clearly robotic feedback |
+
+For Lilli/Leo/Flash/Tito/Momo, the current optional local renderer is **Chatterbox Multilingual V3**.
+
+For Dani, use the Greia system-TTS policy. Dani intentionally has no cloning anchor in v0.1.
+
+Never use arbitrary host system TTS to impersonate Lilli, Leo, Flash, Tito or Momo.
+
+## 5. MOSS and triple repetition are rejected
+
+Do not use MOSS-TTS-Nano for Greia production character speech. Local evaluation found its quality unsuitable.
+
+Do not use the `ma. ma. ma.` / repeated-generation-middle-extraction technique for micro speech. Local testing made output worse.
+
+These are retained lessons, not fallback choices.
+
+## 6. Short character dialogue
+
+Chatterbox can produce extra tail sounds on ultra-short character utterances.
+
+For short **character dialogue only**, a production worker may use:
+
+```text
+bounded output-token limit
++ audio analysis
++ bounded leading/trailing trim
++ mandatory human review
+```
+
+This may be appropriate for lines such as:
+
+```text
+"Vai!"
+"Wow!"
+"Ancora!"
+```
+
+It is **not** a way to make Chatterbox trustworthy for teaching syllables or phonemes.
+
+If the intended sound is internally wrong, reject it. Do not cut/splice the waveform until it appears correct.
+
+## 7. Pedagogical speech
+
+Use deterministic/native/system TTS when teaching:
+
+```text
+letters
+letter names
+syllables
+phonics
+spelling units
+pronunciation
+foreign-language target sounds
+```
+
+Correctness and consistency outrank natural character identity.
+
+The future abstraction is `PedagogicalSpeechProvider`; Activity code must not hard-code macOS, Windows, Linux or individual host voice names.
+
+For static assets, Activity Designer may render through an approved native/system provider and package the reviewed result. Dynamic child-runtime TTS, when implemented, must remain a Greia platform service.
+
+A fluent speaker/educator must review pronunciation-critical outputs.
+
+## 8. Shared character utterances: prefer these first
+
+When the Activity needs generic feedback, use the Greia shared utterance library instead of generating a new custom line.
+
+Initial semantic cues:
+
+```text
+praise.congratulations
+praise.great_work
+praise.well_done
+celebrate.you_did_it
+encourage.try_again
+ready.lets_go
+```
+
+Italian/English wording and animation mappings are defined in:
+
+```text
+docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md
+```
+
+Target behavior:
+
+```text
+Activity requests character + semantic utterance + locale
+→ Greia resolves shared audio
+→ Greia presents the matching canonical expression/motion
+```
+
+The Activity must not duplicate the shared audio into its package.
+
+If a shared cue is unavailable on the target platform version, fail soft to visual feedback.
+
+## 9. Writing custom character lines
+
+For custom Chatterbox generation:
 
 ```text
 semantic cue ID
 → exact localized text
-→ intended character
+→ canonical character
 → generate review WAV
 → listen and review
-→ regenerate if needed
-→ convert accepted output to OGG/WAV
-→ reference from locale bundle
-→ test sequencing in the Activity
+→ regenerate/reject as needed
+→ bounded post-process
+→ package final OGG/WAV
 ```
 
-Prefer short, complete utterances. Do not concatenate translated fragments. Preserve text/caption parity.
+Prefer complete natural utterances over concatenated fragments.
 
-Example bundle entry:
+Do not generate pronunciation-authoritative fragments as character dialogue merely to preserve mascot voice.
 
-```json
-"audio": {
-  "feedback.correct": {
-    "path": "locales/it/audio/feedback-correct.ogg",
-    "caption_key": "feedback.correct"
-  }
-}
-```
+## 10. Human audio gate
 
-## Dani policy
+Reject custom character speech for:
 
-Dani has no canonical cloning anchor in v0.1. This is intentional.
-
-Do not:
-
-- clone Dani from another character;
-- use a natural cheerful voice and call it robotic;
-- choose a developer-machine voice by arbitrary host name;
-- fall back to system TTS for the other five characters.
-
-Address Dani through `greia.dani.system-v1`; the platform/Designer owns the eventual approved system-TTS profile.
-
-## Audio review
-
-Reject and regenerate when there is:
-
-- wrong or drifting speaker identity;
+- wrong/drifting character identity;
 - wrong language;
-- omitted, repeated or invented words;
+- omitted, repeated or invented words/sounds;
 - bad stress/pronunciation;
-- clipped beginnings/endings;
-- noise, reverb or distortion;
-- excessive silence;
-- an emotionally inappropriate delivery.
+- clipped start/end;
+- unwanted generated tail;
+- noise/distortion;
+- inappropriate delivery.
 
-Test spoken cues with the Activity's sound effects and the sequencing rules in `SKILL.md`. Never overlap prompts, praise and the next instruction.
+Reject pedagogical speech for any incorrect or ambiguous target sound even if the voice sounds pleasant.
 
-## Local production
+A successful model/process exit is never audio acceptance.
 
-On Apple Silicon, use MLX Audio with:
+## 11. Audio analysis
 
-```text
-mlx-community/MOSS-TTS-Nano-100M
-```
-
-For other machines, use the approved upstream ONNX CPU path. Voice-design models are not installed for production.
-
-Exact setup and smoke-test commands live in:
+FFmpeg/ffprobe are the preferred cross-platform authoring primitives for:
 
 ```text
-docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md
+metadata inspection
+silence/tail analysis
+bounded trim
+loudness/clipping inspection
+package conversion
 ```
+
+Audio analysis is transport/post-processing, not semantic repair.
+
+Keep generated masters as WAV during review. Package reviewed WAV when phonetic detail/very short duration justify it; otherwise use the current supported OGG path.
+
+## 12. Activity degradation behavior
+
+When custom voice generation is unavailable:
+
+Good:
+
+```text
+- use shared Greia praise/reaction clips;
+- use deterministic pedagogical speech for teaching sounds;
+- keep captions/visual instructions;
+- omit optional custom mascot dialogue;
+- finish and validate the Activity normally.
+```
+
+Bad:
+
+```text
+- auto-install Chatterbox;
+- silently download model weights;
+- use a random OS voice as Lilli/Leo/Flash/Tito/Momo;
+- remove essential instructional information because speech could not be generated;
+- fail the Activity build solely because optional character audio is absent.
+```
+
+If custom character speech is an explicit owner requirement rather than an optional enhancement, report the missing toolchain and use the setup guide.
+
+## 13. Package boundary
+
+Never package:
+
+```text
+Chatterbox/model weights
+model caches
+Python/MLX/PyTorch environments
+canonical reference masters
+FFmpeg binaries merely because authoring used them
+voice-design models
+```
+
+Package only reviewed Activity-owned playback assets. Shared Greia character utterances remain platform assets.
