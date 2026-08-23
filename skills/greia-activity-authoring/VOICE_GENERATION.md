@@ -16,6 +16,12 @@ For optional local character-voice setup:
 docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md
 ```
 
+For producing the shared character-reaction library:
+
+```text
+docs/agents/GREIA_SHARED_CHARACTER_UTTERANCE_RECORDING.md
+```
+
 ## 1. Mandatory speech classification
 
 Before generating or adding speech, classify the cue by **semantic purpose**:
@@ -32,10 +38,10 @@ Do not choose the production path from text length alone.
 Examples:
 
 ```text
-"Vai!"          → character_dialogue
-"ma"            → pedagogical_speech when the syllable itself is taught
-"Ottimo lavoro!"→ shared_character_utterance when generic praise is sufficient
-Dani explanation→ dani_system_speech
+"Vai!"           → character_dialogue
+"ma"             → pedagogical_speech when the syllable itself is taught
+"Ottimo lavoro!" → shared_character_utterance when generic praise is sufficient
+Dani explanation → dani_system_speech
 ```
 
 The governing rule is:
@@ -158,38 +164,54 @@ For static assets, Activity Designer may render through an approved native/syste
 
 A fluent speaker/educator must review pronunciation-critical outputs.
 
-## 8. Shared character utterances: prefer these first
+## 8. Shared character utterances: prefer semantic families first
 
 When the Activity needs generic feedback, use the Greia shared utterance library instead of generating a new custom line.
 
-Initial semantic cues:
+Initial semantic families:
 
 ```text
-praise.congratulations
-praise.great_work
-praise.well_done
-celebrate.you_did_it
-encourage.try_again
-ready.lets_go
+praise.general
+celebrate.success
+encourage.retry
+encourage.progress
+ready.go
 ```
 
-Italian/English wording and animation mappings are defined in:
+Each character/locale/family resolves to a **non-empty array of reviewed recordings**. Activities never choose a concrete phrase, filename, or variant number.
+
+Conceptually:
+
+```text
+Activity requests character + semantic family + locale
+→ Greia resolves locale/agreement fallback
+→ Greia gets the reviewed variant array
+→ one file: use it
+→ multiple files: randomly choose one
+→ Greia presents the family-level canonical expression/motion
+```
+
+The v0.1 source wording provides three neutral Italian and three English variants per family. Exact wording, the 180-clip full target, random-picker rules, and animation mappings are defined in:
 
 ```text
 docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md
 ```
 
-Target behavior:
+Rules for Activity authors/agents:
+
+- request the **family**, not `01`, `02`, `03`, text, or filename;
+- do not reproduce the same shared files inside an Activity package;
+- do not assume three recordings exist: one accepted variant is sufficient;
+- do not branch gameplay based on which random variant is selected;
+- random selection is presentation-only and must never change scoring, rewards, correctness, difficulty, or progression;
+- if a shared family is unavailable on the target platform version, fail soft to visual feedback;
+- if generic shared feedback is sufficient, do not generate custom Chatterbox dialogue merely to get different wording.
+
+If producing or extending the shared library itself, follow:
 
 ```text
-Activity requests character + semantic utterance + locale
-→ Greia resolves shared audio
-→ Greia presents the matching canonical expression/motion
+docs/agents/GREIA_SHARED_CHARACTER_UTTERANCE_RECORDING.md
 ```
-
-The Activity must not duplicate the shared audio into its package.
-
-If a shared cue is unavailable on the target platform version, fail soft to visual feedback.
 
 ## 9. Child-directed grammatical agreement
 
@@ -215,7 +237,9 @@ feedback.correct.feminine    → "Brava!"
 
 The base semantic cue is the required same-locale neutral fallback. Masculine/feminine entries are optional.
 
-If a cue is both displayed and spoken, text and audio must resolve through the **same** variant. For Activity-owned static audio, generate each supported wording with the same canonical speaker voice:
+For future gender-aware shared utterance arrays, resolve the grammatical form **before** random phrase selection. Never put masculine, feminine and neutral recordings into the same random array.
+
+If a cue is both displayed and spoken, text and audio must resolve through the **same** wording/grammatical variant. For Activity-owned static audio, generate each supported wording with the same canonical speaker voice:
 
 ```text
 feedback.correct             → locales/it/audio/feedback-correct-neutral.ogg
@@ -275,6 +299,8 @@ Reject custom character speech for:
 
 Reject pedagogical speech for any incorrect or ambiguous target sound even if the voice sounds pleasant.
 
+For shared utterance libraries, reject only the bad recording from the family array when the other reviewed variants remain valid. Never keep a broken file as an empty/random slot.
+
 For grammatical variant sets, also reject the set if delivery, pacing or energy differs enough that masculine/feminine selection sounds like a different character performance rather than the same cue with different wording.
 
 A successful model/process exit is never audio acceptance.
@@ -302,7 +328,7 @@ When custom voice generation is unavailable:
 Good:
 
 ```text
-- use shared Greia praise/reaction clips;
+- use shared Greia praise/reaction families;
 - use deterministic pedagogical speech for teaching sounds;
 - keep captions/visual instructions;
 - omit optional custom mascot dialogue;
