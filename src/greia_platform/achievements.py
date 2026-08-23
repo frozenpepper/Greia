@@ -12,6 +12,11 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Iterable, Mapping
 
+from .achievement_art import (
+    ActivityAchievementArtError,
+    ActivityAchievementEmblem,
+    emblem_map,
+)
 from .activities import ActivityManifest
 from .history import HistorySummary, PlatformHistoryService
 from .profiles import ProfileContext
@@ -90,7 +95,12 @@ class AchievementCriterion:
 
 @dataclass(frozen=True, slots=True)
 class AchievementDefinition:
-    """Platform-owned immutable meaning and presentation metadata for one badge."""
+    """Platform-owned immutable meaning and presentation metadata for one badge.
+
+    ``activity_emblem`` is decorative only. The platform policy must explicitly
+    admit an Activity contribution; the Activity never creates or unlocks this
+    achievement and never chooses the global frame/tier/library behavior.
+    """
 
     achievement_id: str
     category: str
@@ -101,6 +111,7 @@ class AchievementDefinition:
     description: LocalizedAchievementText
     locked_hint: LocalizedAchievementText
     criteria: tuple[AchievementCriterion, ...]
+    activity_emblem: ActivityAchievementEmblem | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -129,6 +140,7 @@ class AchievementPolicy:
             raise AchievementPolicyError("achievements must be an array of tables")
 
         manifests = {item.activity_id: item for item in activities}
+        emblem_cache: dict[str, Mapping[str, ActivityAchievementEmblem]] = {}
         definitions: list[AchievementDefinition] = []
         seen: set[str] = set()
         for raw_def in raw_defs:
@@ -158,6 +170,12 @@ class AchievementPolicy:
                 default_locale,
                 "locked_hint",
             )
+            activity_emblem = _activity_emblem(
+                raw_def.get("art"),
+                manifests,
+                emblem_cache,
+                achievement_id,
+            )
             raw_criteria = raw_def.get("criteria", [])
             if not isinstance(raw_criteria, list) or not raw_criteria:
                 raise AchievementPolicyError(
@@ -183,6 +201,7 @@ class AchievementPolicy:
                     description=description,
                     locked_hint=locked_hint,
                     criteria=criteria,
+                    activity_emblem=activity_emblem,
                 )
             )
         return cls(schema_version, default_locale, tuple(definitions))
@@ -459,6 +478,48 @@ def _decode_state(raw: object) -> dict[str, AchievementRecord]:
             seen_at=_optional_timestamp(item.get("seen_at")),
         )
     return result
+
+
+def _activity_emblem(
+    raw: object,
+    manifests: Mapping[str, ActivityManifest],
+    cache: dict[str, Mapping[str, ActivityAchievementEmblem]],
+    achievement_id: str,
+) -> ActivityAchievementEmblem | None:
+    if raw is None:
+        return None
+    if not isinstance(raw, dict):
+        raise AchievementPolicyError(
+            f"achievement {achievement_id!r} art must be a table"
+        )
+    unknown = set(raw) - {"activity_id", "emblem_id"}
+    if unknown:
+        raise AchievementPolicyError(
+            f"achievement {achievement_id!r} art has unsupported keys: "
+            + ", ".join(sorted(unknown))
+        )
+
+    activity_id = _bounded_id(raw.get("activity_id"), "achievement art activity_id")
+    emblem_id = _bounded_id(raw.get("emblem_id"), "achievement art emblem_id")
+    manifest = manifests.get(activity_id)
+    if manifest is None:
+        raise AchievementPolicyError(
+            f"achievement {achievement_id!r} art references unknown Activity {activity_id!r}"
+        )
+
+    if activity_id not in cache:
+        try:
+            cache[activity_id] = emblem_map(manifest)
+        except ActivityAchievementArtError as exc:
+            raise AchievementPolicyError(
+                f"achievement {achievement_id!r} cannot admit Activity art: {exc}"
+            ) from exc
+    emblem = cache[activity_id].get(emblem_id)
+    if emblem is None:
+        raise AchievementPolicyError(
+            f"achievement {achievement_id!r} references undeclared Activity emblem {emblem_id!r}"
+        )
+    return emblem
 
 
 def _criterion(
