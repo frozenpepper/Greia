@@ -282,10 +282,10 @@ class SharedUiShellPanelMixin:
         screen.blit(backdrop, (0, 0))
         self._last_scene_backdrop = backdrop
 
-        inner_left = panel_rect.left + round(panel_rect.width * 34 / self._PANEL_SOURCE_WIDTH)
-        inner_top = panel_rect.top + round(panel_rect.height * 27 / self._PANEL_SOURCE_HEIGHT)
-        inner_width = round(panel_rect.width * 572 / self._PANEL_SOURCE_WIDTH)
-        inner_height = round(panel_rect.height * 339 / self._PANEL_SOURCE_HEIGHT)
+        inner_left = panel_rect.left + round(panel_rect.width * 58 / self._PANEL_SOURCE_WIDTH)
+        inner_top = panel_rect.top + round(panel_rect.height * 52 / self._PANEL_SOURCE_HEIGHT)
+        inner_width = round(panel_rect.width * 524 / self._PANEL_SOURCE_WIDTH)
+        inner_height = round(panel_rect.height * 288 / self._PANEL_SOURCE_HEIGHT)
         self._shared_panel_inner_rect = pygame.Rect(inner_left, inner_top, inner_width, inner_height)
 
 
@@ -357,16 +357,16 @@ class SharedUiActivityCardMixin:
         screen.blit(card_surface, card_rect)
 
         content_rect = pygame.Rect(
-            card_rect.left + round(card_rect.width * 30 / self._CARD_SOURCE_WIDTH),
-            card_rect.top + round(card_rect.height * 20 / self._CARD_SOURCE_HEIGHT),
-            max(1, round(card_rect.width * 300 / self._CARD_SOURCE_WIDTH)),
-            max(1, round(card_rect.height * 238 / self._CARD_SOURCE_HEIGHT)),
+            card_rect.left + round(card_rect.width * 45 / self._CARD_SOURCE_WIDTH),
+            card_rect.top + round(card_rect.height * 43 / self._CARD_SOURCE_HEIGHT),
+            max(1, round(card_rect.width * 270 / self._CARD_SOURCE_WIDTH)),
+            max(1, round(card_rect.height * 236 / self._CARD_SOURCE_HEIGHT)),
         )
         label_rect = pygame.Rect(
-            card_rect.left + round(card_rect.width * 28 / self._CARD_SOURCE_WIDTH),
-            card_rect.top + round(card_rect.height * 262 / self._CARD_SOURCE_HEIGHT),
-            max(1, round(card_rect.width * 304 / self._CARD_SOURCE_WIDTH)),
-            max(1, round(card_rect.height * 128 / self._CARD_SOURCE_HEIGHT)),
+            card_rect.left + round(card_rect.width * 32 / self._CARD_SOURCE_WIDTH),
+            card_rect.top + round(card_rect.height * 280 / self._CARD_SOURCE_HEIGHT),
+            max(1, round(card_rect.width * 296 / self._CARD_SOURCE_WIDTH)),
+            max(1, round(card_rect.height * 105 / self._CARD_SOURCE_HEIGHT)),
         )
 
         icon_size = max(
