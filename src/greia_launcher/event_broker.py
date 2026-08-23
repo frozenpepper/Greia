@@ -9,6 +9,7 @@ import threading
 from dataclasses import dataclass
 from pathlib import Path
 
+from greia_platform.achievements import AchievementError, ProfileAchievementService
 from greia_platform.activities import ActivityManifest
 from greia_platform.event_protocol import EventProtocolError, receive_message, send_message
 from greia_platform.history import (
@@ -103,12 +104,14 @@ class _EventUnixServer(socketserver.ThreadingMixIn, socketserver.UnixStreamServe
         progression: ProgressionPolicy,
         session_id: str,
         session_token: str,
+        achievement_service: ProfileAchievementService | None = None,
     ):
         self.store = store
         self.manifest = manifest
         self.progression = progression
         self.session_id = session_id
         self.session_token = session_token
+        self.achievement_service = achievement_service
         self.max_message_bytes = min(
             64 * 1024,
             store.policy.max_event_payload_bytes + 8 * 1024,
@@ -148,10 +151,27 @@ class _EventUnixServer(socketserver.ThreadingMixIn, socketserver.UnixStreamServe
             score=score,
             payload=payload,
         )
+
+        # Achievement evaluation is trusted platform work after the history fact
+        # has been accepted. Failure is fail-soft: the event/reward receipt stays
+        # valid and a later refresh can reconstruct missing unlock metadata from
+        # authoritative history.
+        achievement_unlocks: list[str] = []
+        if self.achievement_service is not None:
+            try:
+                snapshot = self.achievement_service.refresh(self.store.profile)
+                achievement_unlocks = [
+                    entry.definition.achievement_id
+                    for entry in snapshot.newly_unlocked
+                ]
+            except (AchievementError, OSError, ValueError):
+                achievement_unlocks = []
+
         return {
             "event_record_id": receipt.event_record_id,
             "duplicate": receipt.duplicate,
             "reward_deltas": [list(item) for item in receipt.reward_deltas],
+            "achievement_unlocks": achievement_unlocks,
         }
 
 
@@ -177,6 +197,7 @@ class ActivityEventBroker:
         *,
         runtime_root: Path | None = None,
         sandboxed: bool,
+        achievement_service: ProfileAchievementService | None = None,
     ) -> "ActivityEventBroker":
         base = (runtime_root or _default_runtime_root()).resolve(strict=False)
         if base.is_symlink():
@@ -197,6 +218,7 @@ class ActivityEventBroker:
                 progression,
                 session_id,
                 token,
+                achievement_service,
             )
         except Exception:
             shutil.rmtree(host_root, ignore_errors=True)
