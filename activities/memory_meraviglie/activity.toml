@@ -10,6 +10,11 @@ languages = ["it", "en"]
 categories = ["learn", "play"]
 discovery_tags = ["puzzles"]
 
+[achievement_art]
+emblems = [
+  { id = "activity", asset = "assets/icon.png" },
+]
+
 [education]
 categories = ["working_memory", "visual_matching", "lexicon"]
 difficulty = 2
