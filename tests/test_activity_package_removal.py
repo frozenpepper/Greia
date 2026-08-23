@@ -5,7 +5,7 @@ import unittest
 import zipfile
 from pathlib import Path
 
-from greia_parent.protocol import API_BASE, CAPABILITIES, RESOURCES
+from greia_parent.protocol import API_BASE, CAPABILITIES, RESOURCES, api_index_payload
 from greia_platform.activity_packages import ActivityPackageError, ActivityPackageService
 
 
@@ -48,8 +48,6 @@ class ActivityPackageRemovalTests(unittest.TestCase):
             self.assertFalse(service._receipt_path(installed.activity_id).exists())
             self.assertEqual(profile_data.read_text(encoding="utf-8"), '{"drawing":"kept"}\n')
 
-            # A removed package can be installed again; uninstall is not a
-            # hidden permanent ban or a child-data deletion operation.
             reinstalled = service.install_archive(archive)
             self.assertEqual(reinstalled.activity_id, installed.activity_id)
 
@@ -70,6 +68,14 @@ class ActivityPackageRemovalTests(unittest.TestCase):
         resource = next(item for item in RESOURCES if item.name == "activity_package")
         self.assertEqual(resource.path, f"{API_BASE}/activities/{{activity_id}}")
         self.assertEqual(resource.methods, ("DELETE",))
+
+    def test_install_override_carries_matching_remove_capability(self) -> None:
+        enabled = api_index_payload({"activities.install": True})["capabilities"]
+        disabled = api_index_payload({"activities.install": False})["capabilities"]
+        self.assertTrue(enabled["activities.install"])
+        self.assertTrue(enabled["activities.remove"])
+        self.assertFalse(disabled["activities.install"])
+        self.assertFalse(disabled["activities.remove"])
 
 
 if __name__ == "__main__":
