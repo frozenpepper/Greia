@@ -5,6 +5,10 @@ default_locale = "en"
 # Activities only emit factual events declared in activity.toml; they never
 # unlock a badge directly or write this policy/state. English is the safe
 # platform fallback until a catalogue entry has copy for another device locale.
+#
+# Optional `art` admits one Activity-owned emblem declared in that Activity's
+# [achievement_art] table. The Activity still does not choose the tier/frame,
+# unlock semantics, localization, library behavior or profile state.
 
 [[achievements]]
 id = "greia.care.first-friend"
@@ -12,6 +16,7 @@ category = "care"
 tier = "bronze"
 icon_id = "pink_heart"
 secret = false
+art = { activity_id = "org.greia.clinica-cuccioli", emblem_id = "activity" }
 title = { it = "Primo amico curato", en = "First Friend Helped" }
 description = { it = "Hai aiutato il tuo primo cucciolo a stare meglio.", en = "You helped your first little patient feel better." }
 locked_hint = { it = "Aiuta un cucciolo nella Clinica dei Cuccioli.", en = "Help a patient in Puppy Clinic." }
@@ -28,6 +33,7 @@ category = "care"
 tier = "silver"
 icon_id = "pink_heart"
 secret = false
+art = { activity_id = "org.greia.clinica-cuccioli", emblem_id = "activity" }
 title = { it = "Aiutante gentile", en = "Gentle Helper" }
 description = { it = "Hai curato dieci cuccioli con attenzione.", en = "You cared for ten little patients." }
 locked_hint = { it = "Continua a prenderti cura dei cuccioli.", en = "Keep caring for little patients." }
@@ -44,6 +50,7 @@ category = "puzzles"
 tier = "bronze"
 icon_id = "yellow_star"
 secret = false
+art = { activity_id = "org.greia.memory-meraviglie", emblem_id = "activity" }
 title = { it = "Memoria in azione", en = "Memory in Action" }
 description = { it = "Hai completato la tua prima partita di Memory delle Meraviglie.", en = "You completed your first Memory of Wonders game." }
 locked_hint = { it = "Completa una partita di Memory delle Meraviglie.", en = "Complete one Memory of Wonders game." }
@@ -60,6 +67,7 @@ category = "puzzles"
 tier = "silver"
 icon_id = "purple_flower"
 secret = false
+art = { activity_id = "org.greia.memory-meraviglie", emblem_id = "activity" }
 title = { it = "Cercatore di coppie", en = "Pair Finder" }
 description = { it = "Hai completato cinque partite di Memory delle Meraviglie.", en = "You completed five Memory of Wonders games." }
 locked_hint = { it = "Continua a cercare le coppie.", en = "Keep finding matching pairs." }
@@ -76,6 +84,7 @@ category = "building"
 tier = "silver"
 icon_id = "rainbow"
 secret = false
+art = { activity_id = "org.greia.costruiamo-ponti", emblem_id = "activity" }
 title = { it = "Costruttore di ponti", en = "Bridge Builder" }
 description = { it = "Hai completato tre attraversamenti costruendo i ponti giusti.", en = "You completed three crossings by building the right bridges." }
 locked_hint = { it = "Costruisci ponti sicuri e aiuta Flash ad attraversare.", en = "Build safe bridges and help Flash cross." }
