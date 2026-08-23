@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import shutil
+import struct
 import tempfile
 import unittest
 from pathlib import Path
@@ -17,6 +18,15 @@ from greia_platform.trust import ActivitySource, PackageTrust
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 RUNTIME_PATH = PROJECT_ROOT / "runtime" / "child-runtime.toml"
 ACHIEVEMENT_POLICY = PROJECT_ROOT / "runtime" / "achievement-policy.toml"
+
+
+def _fake_png_header(width: int, height: int) -> bytes:
+    return (
+        b"\x89PNG\r\n\x1a\n"
+        + b"\x00\x00\x00\x0d"
+        + b"IHDR"
+        + struct.pack(">II", width, height)
+    )
 
 
 class AchievementArtContractTests(unittest.TestCase):
@@ -72,9 +82,7 @@ class AchievementArtContractTests(unittest.TestCase):
         self.assertIsNone(global_star.activity_emblem)
 
     def test_activity_emblem_path_escape_is_rejected_at_art_boundary(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary) / "clinica_cuccioli"
-            shutil.copytree(PROJECT_ROOT / "activities" / "clinica_cuccioli", root)
+        with self._copy_clinic() as root:
             manifest_path = root / "activity.toml"
             text = manifest_path.read_text(encoding="utf-8").replace(
                 'asset = "assets/icon.png"',
@@ -87,6 +95,103 @@ class AchievementArtContractTests(unittest.TestCase):
                 ActivityAchievementArtError,
                 "safe relative path",
             ):
+                load_activity_achievement_emblems(manifest)
+
+    def test_activity_emblem_must_be_png_by_extension(self) -> None:
+        with self._copy_clinic() as root:
+            manifest_path = root / "activity.toml"
+            manifest_path.write_text(
+                manifest_path.read_text(encoding="utf-8").replace(
+                    'asset = "assets/icon.png"',
+                    'asset = "assets/emblem.jpg"',
+                ),
+                encoding="utf-8",
+            )
+            (root / "assets" / "emblem.jpg").write_bytes(b"not an image")
+            manifest = ActivityRegistry([root.parent], self.runtime).validate_package(root)
+            with self.assertRaisesRegex(ActivityAchievementArtError, "PNG file"):
+                load_activity_achievement_emblems(manifest)
+
+    def test_activity_emblem_png_signature_is_validated(self) -> None:
+        with self._copy_clinic() as root:
+            manifest_path = root / "activity.toml"
+            manifest_path.write_text(
+                manifest_path.read_text(encoding="utf-8").replace(
+                    'asset = "assets/icon.png"',
+                    'asset = "assets/broken.png"',
+                ),
+                encoding="utf-8",
+            )
+            (root / "assets" / "broken.png").write_bytes(b"definitely not png")
+            manifest = ActivityRegistry([root.parent], self.runtime).validate_package(root)
+            with self.assertRaisesRegex(ActivityAchievementArtError, "valid PNG"):
+                load_activity_achievement_emblems(manifest)
+
+    def test_activity_emblem_dimensions_are_bounded(self) -> None:
+        with self._copy_clinic() as root:
+            manifest_path = root / "activity.toml"
+            manifest_path.write_text(
+                manifest_path.read_text(encoding="utf-8").replace(
+                    'asset = "assets/icon.png"',
+                    'asset = "assets/tiny.png"',
+                ),
+                encoding="utf-8",
+            )
+            (root / "assets" / "tiny.png").write_bytes(_fake_png_header(16, 16))
+            manifest = ActivityRegistry([root.parent], self.runtime).validate_package(root)
+            with self.assertRaisesRegex(ActivityAchievementArtError, "dimensions"):
+                load_activity_achievement_emblems(manifest)
+
+    def test_activity_emblem_must_be_square(self) -> None:
+        with self._copy_clinic() as root:
+            manifest_path = root / "activity.toml"
+            manifest_path.write_text(
+                manifest_path.read_text(encoding="utf-8").replace(
+                    'asset = "assets/icon.png"',
+                    'asset = "assets/wide.png"',
+                ),
+                encoding="utf-8",
+            )
+            (root / "assets" / "wide.png").write_bytes(_fake_png_header(64, 48))
+            manifest = ActivityRegistry([root.parent], self.runtime).validate_package(root)
+            with self.assertRaisesRegex(ActivityAchievementArtError, "square"):
+                load_activity_achievement_emblems(manifest)
+
+    def test_duplicate_activity_emblem_ids_are_rejected(self) -> None:
+        with self._copy_clinic() as root:
+            manifest_path = root / "activity.toml"
+            text = manifest_path.read_text(encoding="utf-8").replace(
+                'emblems = [\n  { id = "activity", asset = "assets/icon.png" },\n]',
+                'emblems = [\n'
+                '  { id = "activity", asset = "assets/icon.png" },\n'
+                '  { id = "activity", asset = "assets/icon.png" },\n'
+                ']',
+            )
+            manifest_path.write_text(text, encoding="utf-8")
+            manifest = ActivityRegistry([root.parent], self.runtime).validate_package(root)
+            with self.assertRaisesRegex(ActivityAchievementArtError, "duplicate"):
+                load_activity_achievement_emblems(manifest)
+
+    def test_activity_emblem_symlink_is_rejected_by_art_boundary(self) -> None:
+        with self._copy_clinic() as root:
+            # Obtain a valid issued manifest before adding the symlink so this
+            # test exercises achievement_art independently of the registry's
+            # broader package-wide symlink rejection.
+            manifest = ActivityRegistry([root.parent], self.runtime).validate_package(root)
+            link = root / "assets" / "linked-emblem.png"
+            try:
+                link.symlink_to(root / "assets" / "icon.png")
+            except OSError:
+                self.skipTest("symlinks unavailable")
+            manifest_path = root / "activity.toml"
+            manifest_path.write_text(
+                manifest_path.read_text(encoding="utf-8").replace(
+                    'asset = "assets/icon.png"',
+                    'asset = "assets/linked-emblem.png"',
+                ),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ActivityAchievementArtError, "symlink"):
                 load_activity_achievement_emblems(manifest)
 
     def test_platform_policy_cannot_reference_undeclared_activity_emblem(self) -> None:
@@ -117,6 +222,20 @@ class AchievementArtContractTests(unittest.TestCase):
                 "undeclared Activity emblem",
             ):
                 AchievementPolicy.load(path, self.activities)
+
+    def _copy_clinic(self):
+        temporary = tempfile.TemporaryDirectory()
+        root = Path(temporary.name) / "clinica_cuccioli"
+        shutil.copytree(PROJECT_ROOT / "activities" / "clinica_cuccioli", root)
+
+        class Context:
+            def __enter__(self_nonlocal):
+                return root
+
+            def __exit__(self_nonlocal, *args: object):
+                temporary.cleanup()
+
+        return Context()
 
 
 if __name__ == "__main__":
