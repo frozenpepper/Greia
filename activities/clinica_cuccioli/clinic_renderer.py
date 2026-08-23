@@ -47,10 +47,11 @@ class Particle:
 class ClinicRenderer:
     """Own Clinic Pygame presentation, geometry and bounded transient effects.
 
-    Stable wallpaper/floor/table pixels are pre-rendered once. Text rendering is
-    cached by the finite tool/state vocabulary, and the victory screen is frozen
-    to an opaque frame after its first composition so a full-screen alpha blend is
-    not repeated at 30 Hz on the Atom-class reference floor.
+    Stable scenery and finite text resources are prepared once. Frame invalidation
+    belongs to ``ClinicActivity``: a static victory state is rendered only when it
+    becomes dirty, so this renderer deliberately avoids a redundant full-frame
+    victory cache. Terminal rendering also has its own path rather than feeding a
+    completed session through active-treatment presentation assumptions.
     """
 
     def __init__(self, typography: GreiaTypography, resources: LocalizedResources) -> None:
@@ -60,8 +61,26 @@ class ClinicRenderer:
         self._tool_labels: dict[tuple[str, str], pygame.Surface] = {}
         self._star_value: int | None = None
         self._star_surface: pygame.Surface | None = None
-        self._victory_frame: pygame.Surface | None = None
         self._particles: list[Particle] = []
+
+        # Victory resources are finite and known at construction time. Preparing
+        # them here avoids first-use font/surface work on the terminal transition.
+        self._victory_overlay = pygame.Surface(
+            (REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.SRCALPHA
+        )
+        self._victory_overlay.fill((10, 15, 30, 210))
+        self._victory_title = self._typography.render(
+            self._resources.text("victory.all_patients"),
+            FontRole.DISPLAY,
+            30,
+            (217, 119, 6),
+        )
+        self._play_again_label = self._typography.render(
+            self._resources.text("btn.play_again"),
+            FontRole.DISPLAY,
+            22,
+            (255, 255, 255),
+        )
 
     @property
     def has_active_animation(self) -> bool:
@@ -69,7 +88,6 @@ class ClinicRenderer:
 
     def reset_transients(self) -> None:
         self._particles.clear()
-        self._victory_frame = None
 
     def update(self, dt: float) -> None:
         if not self._particles:
@@ -126,23 +144,19 @@ class ClinicRenderer:
         return PLAY_AGAIN_RECT.collidepoint(point)
 
     def render(self, surface: pygame.Surface, session: ClinicSession, now: float) -> None:
-        if session.is_victory and self._victory_frame is not None:
-            surface.blit(self._victory_frame, (0, 0))
-            return
-        if not session.is_victory:
-            self._victory_frame = None
-
         surface.blit(self._backdrop, (0, 0))
-        self._draw_patient(surface, session)
+
+        if session.is_victory:
+            self._draw_completed_patient(surface, session)
+            self._draw_star_pill(surface, session.total_stars)
+            self._draw_victory(surface)
+            return
+
+        self._draw_patient(surface, session, now)
         self._draw_prescription(surface, session)
         self._draw_particles(surface)
         self._draw_palette(surface, session)
         self._draw_star_pill(surface, session.total_stars)
-
-        if session.is_victory:
-            self._draw_victory(surface)
-            # The result is now opaque and safe to replay cheaply until restart.
-            self._victory_frame = surface.copy()
 
     def _build_backdrop(self) -> pygame.Surface:
         surface = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT))
@@ -165,7 +179,12 @@ class ClinicRenderer:
         )
         return surface
 
-    def _draw_patient(self, surface: pygame.Surface, session: ClinicSession) -> None:
+    def _draw_patient(
+        self,
+        surface: pygame.Surface,
+        session: ClinicSession,
+        now: float,
+    ) -> None:
         draw_patient(
             surface,
             session.patient_id,
@@ -175,14 +194,33 @@ class ClinicRenderer:
             has_mud=session.has_mud,
             has_scratch=session.has_scratch,
             completed_steps=session.completed_steps,
-            is_happy=session.next_needed is None,
+            is_happy=False,
         )
         draw_thought_bubble(
             surface,
             TABLE_RECT.centerx + 130,
             TABLE_RECT.centery - 85,
             session.next_needed,
-            pygame.time.get_ticks() / 1000.0,
+            now,
+        )
+
+    def _draw_completed_patient(
+        self,
+        surface: pygame.Surface,
+        session: ClinicSession,
+    ) -> None:
+        """Render the last healed patient without active-treatment assumptions."""
+
+        draw_patient(
+            surface,
+            session.patient_id,
+            TABLE_RECT.centerx,
+            TABLE_RECT.centery + 15,
+            180,
+            has_mud=False,
+            has_scratch=False,
+            completed_steps=tuple(session.required_steps),
+            is_happy=True,
         )
 
     def _draw_prescription(self, surface: pygame.Surface, session: ClinicSession) -> None:
@@ -197,8 +235,16 @@ class ClinicRenderer:
             y = clip_rect.centery
             is_done = step_id in session.completed_steps
             is_current = step_id == session.next_needed
-            badge_color = (34, 197, 94) if is_done else ((254, 240, 138) if is_current else (241, 245, 249))
-            border_color = (22, 101, 52) if is_done else ((234, 179, 8) if is_current else (203, 213, 225))
+            badge_color = (
+                (34, 197, 94)
+                if is_done
+                else ((254, 240, 138) if is_current else (241, 245, 249))
+            )
+            border_color = (
+                (22, 101, 52)
+                if is_done
+                else ((234, 179, 8) if is_current else (203, 213, 225))
+            )
             pygame.draw.circle(surface, badge_color, (x, y), 24)
             pygame.draw.circle(surface, border_color, (x, y), 24, 3 if is_current else 2)
             if is_done:
@@ -229,8 +275,18 @@ class ClinicRenderer:
             is_needed = tool_id == session.next_needed
             state = "selected" if is_selected else ("needed" if is_needed else "default")
             pygame.draw.rect(surface, (255, 255, 255), rect, border_radius=22)
-            outline = (234, 179, 8) if is_selected else ((34, 197, 94) if is_needed else (203, 213, 225))
-            pygame.draw.rect(surface, outline, rect, width=5 if (is_selected or is_needed) else 2, border_radius=22)
+            outline = (
+                (234, 179, 8)
+                if is_selected
+                else ((34, 197, 94) if is_needed else (203, 213, 225))
+            )
+            pygame.draw.rect(
+                surface,
+                outline,
+                rect,
+                width=5 if (is_selected or is_needed) else 2,
+                border_radius=22,
+            )
             draw_tool_icon(surface, tool_id, rect.centerx, rect.top + 36, 52)
             label = self._tool_label(tool_id, state)
             surface.blit(label, (rect.centerx - label.get_width() // 2, rect.bottom - 26))
@@ -270,34 +326,32 @@ class ClinicRenderer:
         )
 
     def _draw_victory(self, surface: pygame.Surface) -> None:
-        # Full-screen alpha is paid once; the composed result is then cached opaque.
-        overlay = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.SRCALPHA)
-        overlay.fill((10, 15, 30, 210))
-        surface.blit(overlay, (0, 0))
+        # The application invalidation loop calls this only when the static victory
+        # state becomes dirty, so one alpha blit is enough; no full-frame copy/cache.
+        surface.blit(self._victory_overlay, (0, 0))
 
-        card = pygame.Rect(REFERENCE_WIDTH // 2 - 250, REFERENCE_HEIGHT // 2 - 160, 500, 320)
+        card = pygame.Rect(
+            REFERENCE_WIDTH // 2 - 250,
+            REFERENCE_HEIGHT // 2 - 160,
+            500,
+            320,
+        )
         pygame.draw.rect(surface, (255, 252, 245), card, border_radius=28)
         pygame.draw.rect(surface, (234, 179, 8), card, width=5, border_radius=28)
-        title = self._typography.render(
-            self._resources.text("victory.all_patients"),
-            FontRole.DISPLAY,
-            30,
-            (217, 119, 6),
+        surface.blit(
+            self._victory_title,
+            (card.centerx - self._victory_title.get_width() // 2, card.top + 35),
         )
-        surface.blit(title, (card.centerx - title.get_width() // 2, card.top + 35))
         for index in range(5):
             x = card.centerx - 100 + index * 50
             y = card.top + 130
             pygame.draw.circle(surface, (234, 179, 8), (x, y), 22)
             pygame.draw.circle(surface, (254, 240, 138), (x, y), 10)
         pygame.draw.rect(surface, (34, 197, 94), PLAY_AGAIN_RECT, border_radius=20)
-        label = self._typography.render(
-            self._resources.text("btn.play_again"),
-            FontRole.DISPLAY,
-            22,
-            (255, 255, 255),
-        )
         surface.blit(
-            label,
-            (PLAY_AGAIN_RECT.centerx - label.get_width() // 2, PLAY_AGAIN_RECT.centery - label.get_height() // 2),
+            self._play_again_label,
+            (
+                PLAY_AGAIN_RECT.centerx - self._play_again_label.get_width() // 2,
+                PLAY_AGAIN_RECT.centery - self._play_again_label.get_height() // 2,
+            ),
         )
