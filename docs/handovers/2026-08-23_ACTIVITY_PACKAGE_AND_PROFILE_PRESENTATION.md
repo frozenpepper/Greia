@@ -1,68 +1,78 @@
-# Handover — `.greiaactivity` distribution + profile presentation/grammar tranche
+# Handover — `.greiaactivity`, profile presentation, and Parent management integration
 
 Date: 2026-08-23
 
-Current branch: `main`
+Canonical branch: `main`
 
-Original work branch: `work/profile-addressing-activity-format-20260823`
+Status: **feature source is merged on `main`; the redesigned Parent HTML runtime is reviewed and pinned from Greia `main`. Continue all work directly on `main` unless the owner explicitly requests a branch.**
 
-Original base: `1c93880c834d25ef6549d597b3eb733ad026c140`
+## Scope
 
-Merge commit: `a1f9b031817fbde7e47b4a77fb748b0fa8b22483`
+This tranche established three connected product seams:
 
-Status: **source implementation and permanent docs are merged into `main`; local execution/physical UI review is still required before release/verification claims**
+1. a recognizable single-file Activity distribution format for Parent clients;
+2. a small optional child presentation preference for theme seeding and grammatical agreement;
+3. the browser Parent management surface required to install/remove Activities and manage the presentation preference.
 
-Repository policy now requires direct `main` development unless the owner explicitly asks for a branch.
+## `.greiaactivity` package contract
 
-## Why this tranche exists
+Canonical Parent-facing format:
 
-Two related product needs were requested:
+```text
+extension:  .greiaactivity
+container:  ZIP
+media type: application/vnd.greia.activity+zip
+manifest:   activity.toml at archive root
+```
 
-1. make a Greia Activity distributable as an easily identifiable single file for Parent clients; and
-2. give a child profile a small optional boy/girl presentation preference that can seed a light first theme and solve occasional grammatical agreement such as Italian `bravo` / `brava`, including prerecorded Activity voices.
+Activity contents live directly at ZIP root with no wrapping directory.
 
-The implementation deliberately avoids turning boy/girl into a gameplay/content taxonomy.
+Extension and MIME are UX/file-routing hints only. They never establish validity or trust. `ActivityPackageService` remains authoritative for bounded extraction, path checks, manifest validation, runtime compatibility, collision handling, trust source, and activation.
 
-## Decisions
+Parent-installed packages are distinct from built-ins. The Parent API exposes package origin/removability so the client does not infer it from names or filesystem paths.
 
-### Activity file
+### Removal
 
-- canonical parent-facing extension: `.greiaactivity`
-- container: ordinary ZIP
-- media type: `application/vnd.greia.activity+zip`
-- root manifest: `activity.toml`
-- Activity contents live directly at ZIP root; no wrapping folder
-- extension/MIME are file-picker/routing hints only, never validation/trust
-- the existing hardened `ActivityPackageService` remains authoritative for bounded archive inspection, Activity validation and atomic new install
-- R10 replacement/update/rollback remains open; naming the container does not close R10
+`ActivityPackageService.uninstall(activity_id)` removes only Parent-installed package code. Built-in Activities are not removable through this service. Profile-scoped child saves/progress are outside the package transaction and are deliberately preserved.
 
-Normative explanation: `docs/architecture/GREIA_ACTIVITY_PACKAGE_FORMAT.md`.
+Package update/replacement/rollback remains separate R10 work.
 
-### Child presentation
+Normative package documentation:
 
-Persist a customization-side `neutral | boy | girl` presentation hint, separate from the core profile record and all security/progression state.
+- `docs/architecture/GREIA_ACTIVITY_PACKAGE_FORMAT.md`
+- `docs/product/ACTIVITY_ECOSYSTEM_AND_DISTRIBUTION.md`
 
-Derive localization agreement:
+## Child presentation and grammatical agreement
 
-- neutral -> neutral
-- boy -> masculine
-- girl -> feminine
+Presentation is a customization-side preference:
 
-This value must never alter Activity eligibility, discovery, difficulty, permissions, progression, rewards or inferred interests.
+```text
+neutral
+boy
+girl
+```
 
-Theme seed is initial-only:
+Derived grammatical selector:
 
-- neutral -> normal Greia defaults, no redundant theme file
-- boy -> `sky / turquoise / navy`
-- girl -> `lavender / raspberry / plum`
+```text
+neutral -> neutral
+boy     -> masculine
+girl    -> feminine
+```
 
-A seed is written only if no saved theme preference exists. Changing presentation later never overwrites a chosen theme.
+It must never alter Activity eligibility, discovery, difficulty, permissions, progression, rewards, or inferred interests.
 
-Normative explanation: `docs/adr/0032-profile-presentation-and-grammatical-agreement.md`.
+Theme seeding is initial-only:
 
-### Localized text/audio
+```text
+neutral -> normal default, no redundant theme file
+boy     -> sky / turquoise / navy
+girl    -> lavender / raspberry / plum
+```
 
-Localization bundles remain schema v1. Optional semantic variants use suffixes:
+A seed is written only when no saved theme exists. Changing presentation later never overwrites a customized theme.
+
+Localization supports bounded semantic variants such as:
 
 ```text
 feedback.correct
@@ -70,161 +80,100 @@ feedback.correct.masculine
 feedback.correct.feminine
 ```
 
-Resolution is **per locale**: requested variant first, then same-locale base, then next locale. This intentionally makes an Italian neutral fallback beat an English gendered variant.
+Resolution is per locale: requested variant, then same-locale base, then locale fallback. Text and prerecorded audio for one cue use the same resolved variant. Neutral natural wording remains the preferred baseline where practical.
 
-Text and prerecorded audio for one cue must use the same variant.
+Normative presentation documentation:
 
-Neutral wording is preferred when natural. Italian example:
-
-```text
-base      = Ottimo lavoro!
-masculine = Bravo!
-feminine  = Brava!
-```
-
-High-quality character variants are generated at authoring/build time with the same canonical speaker voice. The child selector changes the wording addressed to the child; it never changes which character voice speaks.
-
-## Merge reconciliation with newer `main`
-
-While this tranche was on its work branch, `main` received eight newer voice/tooling commits. The merge therefore preserved the newer `main` voice architecture instead of overwriting it.
-
-The only overlapping files were:
-
-```text
-skills/greia-activity-authoring/SKILL.md
-skills/greia-activity-authoring/VOICE_GENERATION.md
-```
-
-They were reconciled so the merged `main` keeps the newer Chatterbox/pedagogical/shared-utterance direction **and** the `.greiaactivity`/grammatical-agreement guidance. Obsolete MOSS production guidance from the work branch was not restored.
-
-## Core Greia source added/changed
-
-Added:
-
-- `src/greia_platform/activity_package_format.py`
-- `src/greia_platform/profile_presentation.py`
-- `tests/test_activity_package_format.py`
-- `tests/test_profile_presentation.py`
-- `tests/test_localization_variants.py`
-- `tests/test_activity_profile_presentation_api.py`
-- `tests/test_profile_presentation_parent_protocol.py`
 - `docs/adr/0032-profile-presentation-and-grammatical-agreement.md`
-- `docs/architecture/GREIA_ACTIVITY_PACKAGE_FORMAT.md`
-- this handover
 
-Changed:
+## Parent API integration
 
-- `src/greia_platform/localization.py`
-  - bounded optional semantic `variant=` lookup for text and audio
-- `src/greia_platform/activity_api.py`
-  - `get_profile_presentation()`
-  - `get_profile_grammatical_gender()`
-- `src/greia_launcher/child_shell.py`
-  - injects only resolved presentation/grammatical semantic values into ordinary Activity launches
-- `src/greia_parent/protocol.py`
-  - declares profile-presentation resource
-  - adds fail-closed `profiles.presentation` capability
-- `src/greia_parent/update_api.py`
-  - top-level composition advertises presentation capability
-  - enriches profile payloads with presentation/grammar
-  - GET/PUT profile presentation route
-  - optional one-time theme seed
-- `src/greia_parent/package_api.py`
-  - imports canonical Activity package media type
-- `skills/greia-activity-authoring/SKILL.md`
-- `skills/greia-activity-authoring/VOICE_GENERATION.md`
-- `docs/product/ACTIVITY_ECOSYSTEM_AND_DISTRIBUTION.md`
+The Parent protocol defines:
 
-## Parent HTML state
+```text
+GET/PUT /api/v1/profiles/{profile_id}/presentation
+DELETE  /api/v1/activities/{activity_id}
+```
 
-Separate repository:
+Relevant capabilities remain fail-closed in the base protocol and are enabled only by concrete compositions that own the implementation:
+
+```text
+profiles.presentation
+activities.install
+activities.remove
+```
+
+Install/remove share the same explicit package-mutation enablement boundary while provisional Parent HTTP transport remains in development.
+
+## Parent HTML application
+
+Canonical repository:
 
 ```text
 frozenpepper/Greia-Parent-App-Html
 ```
 
-The former candidate branch `work/profile-presentation-activity-picker-20260823` has been fast-forwarded into its `main`. Subsequent documentation commits on Parent `main` record the direct-main branch policy and merged handover state.
+Canonical development branch:
 
-Changes there:
-
-- Parent API client GET/PUT profile presentation methods
-- child editor `Style & wording` selector with Neutral/Boy/Girl
-- child cards display the selected style when capability exists
-- new/edit profile flow applies presentation after the core profile mutation and requests initial theme seeding
-- Activity file picker accepts only `.greiaactivity` + vendor media type
-- UI rejects generic `.zip` filenames before upload
-- API client also rejects a named non-`.greiaactivity` file
-- source tests added for presentation route/payload and package-extension handling
-
-**Do not repin Greia's vendored/served Parent HTML source yet.** External AGENTS requires local `npm test` before source-complete claims, followed by the Greia vendoring/integrity/source tests and physical/loopback review appropriate to the Parent client. Those have not been executed in this connector-only session.
-
-## Important integration defect already caught
-
-The first Parent API draft attempted to advertise `profiles.presentation` only from `UpdateParentApiApplication`. `api_index_payload()` intentionally rejects unknown capability overrides, so that would have crashed index construction.
-
-This was corrected properly in `src/greia_parent/protocol.py`: the resource/capability is protocol-defined, defaults fail-closed, and only the concrete top-level composition enables it.
-
-Do not remove that fail-closed pattern.
-
-## Verification state
-
-Authored tests cover:
-
-- presentation defaults and corrupt-state fallback
-- boy/girl -> masculine/feminine derivation
-- one-time theme seeding and non-overwrite
-- `.greiaactivity` naming helpers/constants
-- localized text/audio variant resolution and same-locale neutral fallback
-- ordinary Activity launch-context API fallback
-- Parent protocol resource and fail-closed capability declaration
-- external Parent client route/body/filename behavior
-
-**These newly added tests have not been executed in this session.** No hosted GitHub Actions execution was requested or used.
-
-The pre-existing repository baseline at the original branch base was already not fully green according to root `HANDOVER.md`: 1042 discovered tests with 5 known non-passing cases (four boot-diagnostic expectation drift plus one stale `test_child_shell_visual_context.py` signature expectation). Do not attribute those existing failures to this tranche without rerunning and comparing evidence.
-
-## Required local verification before release claims
-
-Core checkout on current `main`:
-
-1. run the focused new tests:
-
-```bash
-python -m unittest \
-  tests.test_activity_package_format \
-  tests.test_profile_presentation \
-  tests.test_localization_variants \
-  tests.test_activity_profile_presentation_api \
-  tests.test_profile_presentation_parent_protocol
+```text
+main
 ```
 
-2. run repository syntax/compile/source validation using the repository's current canonical commands;
-3. run the broader relevant Parent/localization/launcher/package suites;
-4. classify any failures against the documented pre-existing baseline rather than hiding them;
-5. manually verify that a customized theme is never overwritten by changing presentation.
+The Parent browser app is now a four-job management application:
 
-External Parent HTML checkout on current `main`:
-
-```bash
-npm test
+```text
+Home
+Children
+Activities
+This Greia
 ```
 
-Then use the existing Greia Parent-client pin/integrity workflow; do not hand-edit generated integrity artifacts. Exercise the actual HTML UI against a local Greia API instance before considering a runtime pin.
+Desktop uses a persistent left rail; mobile uses a bottom navigation. Activities provides search/filtering, per-child visibility, `.greiaactivity` installation, and removal of Parent-installed packages. Children exposes capability-gated Neutral/Boy/Girl Style & wording. This Greia groups the existing typed device controls into System, Network & language, Input/display/sound, and Security & access.
 
-## Useful manual acceptance scenarios
+### Reviewed runtime
 
-1. Existing child with no presentation file -> neutral; existing theme unchanged.
-2. New child -> select Girl -> lavender/raspberry/plum seed appears if no theme existed.
-3. Customize that theme manually -> change presentation to Boy -> customized theme remains untouched.
-4. Italian Activity cue with all variants -> girl hears/sees `Brava!`, boy `Bravo!`, neutral `Ottimo lavoro!`.
-5. Italian bundle with only neutral base -> every presentation gets the Italian neutral base, not another-language variant.
-6. Parent Activity picker shows/selects `.greiaactivity`, not generic ZIP.
-7. Rename malformed ZIP to `.greiaactivity` -> server still rejects it through canonical archive/Activity validation.
-8. Valid `.greiaactivity` root has `activity.toml`; same package wrapped one directory too deep is rejected.
+Reviewed Parent runtime revision:
 
-## Future follow-ups, not blockers for this source tranche
+```text
+f64067b093c222fd9e659589617ff867c207572c
+```
 
-- Activity Simulator should eventually expose presentation/grammar alongside viewport, locale and interface-size simulation so authors can switch variants without editing state manually.
-- Activity Designer/voice tooling can add a small “generate agreement set” authoring affordance that takes one semantic cue plus neutral/masculine/feminine localized texts and renders each with the same canonical voice. This should wrap the documented semantic convention, not invent another manifest format.
-- R10 should add the official package export/validation command if one does not already exist in the relevant tranche; it should emit `.greiaactivity` and run normal Activity/package validation.
-- If future languages need plural/case/select semantics beyond this small addressing requirement, design that extension deliberately rather than proliferating Activity-specific suffixes.
+Validation completed for that runtime:
+
+```text
+npm test: 45 / 45 PASS
+browser console/page errors: 0
+horizontal overflow: 0 at desktop and phone widths
+```
+
+Browser interactions exercised Activity install, list refresh, search/filter, removal confirmation/removal, and the child presentation editor.
+
+Core Greia `main` pins that exact reviewed revision through:
+
+```text
+runtime/parent-app-client.toml
+runtime/parent-app-client.manifest.json
+```
+
+The pin generator derives the complete transitive runtime closure from `index.html` and local ES-module/style references, rather than reusing a stale file inventory. Remote runtime dependencies are rejected.
+
+## Important architectural rules
+
+- `main` is the source of truth; historical work branches are not development authority.
+- Do not hand-edit generated Parent integrity data when an exact checkout/pin flow is available.
+- The browser never becomes a Linux administration layer.
+- Greia remains authoritative for package validation/trust and profile storage.
+- Child presentation remains presentation/grammar only, never content stereotyping or eligibility logic.
+- Parent Activity removal preserves child data.
+- No hosted GitHub Actions should be triggered or queried without explicit owner authorization.
+
+## Remaining work
+
+Separate future work includes:
+
+- package update/replacement/rollback;
+- signed/provenance-rich Activity catalogue flows;
+- production encrypted Parent transport and final pairing security;
+- backup/restore management;
+- richer Activity detail/provenance views;
+- optional future native Parent companion clients.
