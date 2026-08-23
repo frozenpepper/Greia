@@ -52,6 +52,11 @@ RESOURCES = (
         ("POST",),
     ),
     ParentApiResource(
+        "activity_package",
+        f"{API_BASE}/activities/{{activity_id}}",
+        ("DELETE",),
+    ),
+    ParentApiResource(
         "hardware_settings",
         f"{API_BASE}/settings/hardware",
         ("GET", "PUT"),
@@ -88,8 +93,6 @@ RESOURCES = (
 
 CAPABILITIES = {
     "profiles.manage": True,
-    # The profile-presentation resource is protocol-defined but only concrete
-    # compositions that own the profile customization store may advertise it.
     "profiles.presentation": False,
     "activities.read": True,
     "activities.policy": True,
@@ -98,31 +101,18 @@ CAPABILITIES = {
     "settings.display": True,
     "settings.language": True,
     "paired_devices.manage": True,
-    # Update status is a semantic read surface even before a machine has a
-    # production A/B activation backend. It may correctly report unavailable.
     "system.update.read": True,
-    # Bundle upload is code/system-content delivery over the Parent transport.
-    # Ordinary/release images keep it false while transport remains provisional
-    # HTTP. Developer/owner-enabled images may accept a bounded bundle into the
-    # unprivileged inbox; upload never grants slot-write/reboot authority.
     "system.update.upload": False,
-    # Activation is intentionally false until the privileged R13B update service
-    # and a proven rollback-capable backend are composed for the machine profile.
     "system.update.activate": False,
-    # The package endpoint is protocol-defined, but ordinary/release images keep
-    # it unavailable while Parent transport is still provisional HTTP. The
-    # package-aware server may advertise it only in an explicit developer or
-    # owner-enabled environment; clients must always honor this capability.
+    # Package code mutation remains fail-closed on normal/release images while
+    # Parent transport is provisional HTTP. Package-aware compositions enable
+    # install/remove together only in an explicit developer/owner-approved lane.
     "activities.install": False,
+    "activities.remove": False,
     "backup.manage": False,
-    # The resource is protocol-defined, but only the top-level audio-aware Parent
-    # composition advertises it. Older/base compositions remain fail-closed.
     "settings.audio": False,
     "network.manage": True,
     "maintenance.ssh": True,
-    # The main Parent password is a typed Greia-owned credential. It is
-    # manageable from the HTML client whenever the Parent API is reachable; it
-    # must never be confused with per-device bearer credentials.
     "parent.password": True,
 }
 
