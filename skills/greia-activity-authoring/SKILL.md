@@ -1,6 +1,6 @@
 ---
 name: greia-activity-authoring
-description: Canonical agent guide for designing, implementing, packaging, validating and testing Greia Activities, including clean OOP structure, measured low-resource performance, discovery/audience metadata, optional canonical character speech, deterministic pedagogical speech, shared character utterances, child grammatical agreement, and platform-owned microphone routing.
+description: Canonical agent guide for designing, implementing, refactoring, packaging, validating and testing Greia Activities, including clean OOP structure, measured low-resource performance, discovery/audience metadata, optional canonical character speech, deterministic pedagogical speech, shared character utterances, child grammatical agreement, and platform-owned microphone routing.
 ---
 
 # Greia Activity Authoring Skill
@@ -14,14 +14,15 @@ This skill is intentionally split so small local agents do not have to load unre
 
 1. Read `CORE.md` completely for the canonical general Activity-authoring contract.
 2. Read `ENGINEERING.md` whenever creating, modifying, reviewing, optimizing or substantially refactoring Activity implementation code. For new/substantively changed first-party Activities it is mandatory: it owns the practical clean-code/OOP/decomposition/performance protocol, including the rule that `main.py` is a thin composition root rather than the Activity implementation.
-3. Read `DISCOVERY.md` whenever creating or editing `activity.toml`, launcher categories, audience/age metadata, difficulty/adaptive difficulty, discovery tags, or reasoning about how an Activity appears for a child.
-4. When packaging or exporting an Activity, also read `docs/architecture/GREIA_ACTIVITY_PACKAGE_FORMAT.md`. Parent-facing distribution uses the `.greiaactivity` ZIP contract; the extension is a UX/routing signal, never package validation or trust.
-5. When the Activity speaks, produces localized audio, uses shared Greia character utterances, teaches pronunciation, uses a Greia character voice, changes Activity Designer audio tooling, or needs child-directed grammatical agreement, also read `VOICE_GENERATION.md` completely and `docs/adr/0032-profile-presentation-and-grammatical-agreement.md` where agreement is relevant.
-6. When the Activity records from or listens to the microphone, also read `docs/adr/0031-platform-owned-microphone-processing.md` and `docs/architecture/GREIA_AUDIO_SERVICE.md`.
-7. Follow every narrower repository `AGENTS.md` that applies to the files being changed.
-8. Exact implemented APIs/schemas remain owned by source/runtime declarations; accepted ADRs own architecture; product docs own child-facing requirements.
+3. Read `REFACTORING.md` completely whenever structurally refactoring an existing Activity. It owns the behavior/manifest contract inventory, structural-vs-behavior change classification, recommended extraction order, semantic-action unification, and refactor-specific test/review protocol calibrated on a real first-party Activity.
+4. Read `DISCOVERY.md` whenever creating or editing `activity.toml`, launcher categories, audience/age metadata, difficulty/adaptive difficulty, discovery tags, or reasoning about how an Activity appears for a child.
+5. When packaging or exporting an Activity, also read `docs/architecture/GREIA_ACTIVITY_PACKAGE_FORMAT.md`. Parent-facing distribution uses the `.greiaactivity` ZIP contract; the extension is a UX/routing signal, never package validation or trust.
+6. When the Activity speaks, produces localized audio, uses shared Greia character utterances, teaches pronunciation, uses a Greia character voice, changes Activity Designer audio tooling, or needs child-directed grammatical agreement, also read `VOICE_GENERATION.md` completely and `docs/adr/0032-profile-presentation-and-grammatical-agreement.md` where agreement is relevant.
+7. When the Activity records from or listens to the microphone, also read `docs/adr/0031-platform-owned-microphone-processing.md` and `docs/architecture/GREIA_AUDIO_SERVICE.md`.
+8. Follow every narrower repository `AGENTS.md` that applies to the files being changed.
+9. Exact implemented APIs/schemas remain owned by source/runtime declarations; accepted ADRs own architecture; product docs own child-facing requirements.
 
-Do not treat this index as permission to skip `CORE.md` or, for implementation work, `ENGINEERING.md`.
+Do not treat this index as permission to skip `CORE.md` or, for implementation work, `ENGINEERING.md`. Structural refactors also require `REFACTORING.md`.
 
 ## Implementation engineering decision summary
 
@@ -61,6 +62,8 @@ Strong defaults:
 - public/non-obvious extension objects document responsibility, lifecycle, invariants and resource bounds;
 - comments explain architectural/performance **why**, not obvious syntax.
 
+When refactoring an existing monolith, do **not** start by inventing filenames. First inventory manifest/runtime/event/storage/localization/input/audio contracts and the child-visible state transitions. Classify every intentional change as structural preservation, contract repair, behavior fix, or performance structure. Then extract pure domain truth first, platform adapters second, presentation/resource ownership third, application coordination fourth, and reduce `main.py` last. `REFACTORING.md` owns the complete protocol.
+
 Performance is a correctness concern on Greia's Acer-class floor. In normal frame/event hot paths, do not decode images, large-scale/flip reusable sprites, construct fonts, render stable text repeatedly, allocate large unchanged Surfaces, regenerate static scenery, walk/stat the filesystem, enumerate devices, launch subprocesses, parse configuration or write durable storage.
 
 Required performance patterns include bounded caches with complete keys/invalidation, pre-rendered static scenes, dirty/invalidation-driven redraw where practical, bounded monotonic-time animations, fail-soft optimized paths, and semantic/pixel-equivalence testing for rendering optimizations.
@@ -75,10 +78,11 @@ static/paused idle:    near-zero CPU where architecture permits
 
 Desktop/simulator timing is diagnostic only. Claims about Acer/Pi performance require named physical hardware and exact source SHA.
 
-Full implementation protocol and measured rationale:
+Full implementation/refactoring protocol and measured rationale:
 
 ```text
 skills/greia-activity-authoring/ENGINEERING.md
+skills/greia-activity-authoring/REFACTORING.md
 docs/engineering/ENGINEERING_FOUNDATIONS.md
 docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md
 ```
