@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
-"""Regenerate Greia's exact Parent HTML client pin from a local reviewed checkout.
+"""Regenerate Greia's exact Parent HTML client pin from a reviewed checkout.
 
-This tool never fetches moving repository state. The caller supplies a local
-Parent checkout and the exact commit SHA that was reviewed/tested. The existing
-Greia runtime manifest defines the bounded runtime file set; every listed file
-must exist and is re-hashed from exact bytes before the pin is rewritten.
+The caller supplies a local clean Parent checkout and the exact commit SHA that
+was reviewed/tested. Runtime files are discovered from the actual ``index.html``
+module/style graph, then every discovered file is hashed from exact bytes.
+
+This deliberately avoids a stale hand-maintained file list: adding a new local
+ES module or stylesheet to the Parent app automatically adds it to the generated
+integrity manifest, while unreferenced source/tests/docs remain outside the
+runtime payload.
 """
 
 from __future__ import annotations
@@ -14,14 +18,40 @@ import hashlib
 import json
 import re
 import subprocess
-from pathlib import Path
+from html.parser import HTMLParser
+from pathlib import Path, PurePosixPath
+from urllib.parse import urlsplit
 
 
 REVISION_LINE = re.compile(r'^revision = "[0-9a-f]{40}"$', re.MULTILINE)
+STATIC_IMPORT = re.compile(
+    r"(?:^|\n)\s*(?:import|export)\s+(?:[^;\n]*?\s+from\s+)?[\"']([^\"']+)[\"']",
+    re.MULTILINE,
+)
+CSS_IMPORT = re.compile(r"@import\s+(?:url\()?\s*[\"']([^\"']+)[\"']\s*\)?", re.IGNORECASE)
+CSS_URL = re.compile(r"url\(\s*[\"']?([^\"')]+)[\"']?\s*\)", re.IGNORECASE)
 
 
 class PinError(RuntimeError):
     pass
+
+
+class _RuntimeHtmlParser(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.references: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        values = {name.casefold(): value for name, value in attrs}
+        tag = tag.casefold()
+        if tag == "script" and values.get("src"):
+            self.references.append(str(values["src"]))
+        elif tag == "link" and values.get("href"):
+            rel = str(values.get("rel") or "").casefold().split()
+            if "stylesheet" in rel:
+                self.references.append(str(values["href"]))
+        elif tag in {"img", "source"} and values.get("src"):
+            self.references.append(str(values["src"]))
 
 
 def _git(parent_root: Path, *args: str) -> str:
@@ -49,26 +79,109 @@ def _validate_parent_checkout(parent_root: Path, revision: str) -> None:
         raise PinError("Parent checkout is dirty; commit/review changes before pinning")
 
 
-def _load_manifest(path: Path) -> dict[str, object]:
+def _load_manifest_metadata(path: Path) -> dict[str, object]:
     try:
         document = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise PinError(f"invalid existing Parent manifest: {exc}") from exc
-    files = document.get("files")
-    if document.get("schema_version") != 1 or not isinstance(files, dict) or not files:
-        raise PinError("Parent manifest must be schema 1 with a non-empty files object")
-    for relative in files:
-        if not isinstance(relative, str) or relative.startswith("/") or ".." in Path(relative).parts:
-            raise PinError(f"unsafe runtime manifest path: {relative!r}")
+    if document.get("schema_version") != 1:
+        raise PinError("Parent manifest must use schema 1")
     return document
+
+
+def _local_reference(base: PurePosixPath, reference: str) -> PurePosixPath | None:
+    """Resolve one same-package relative reference or return None for fragments/data."""
+
+    reference = reference.strip()
+    if not reference or reference.startswith(("#", "data:")):
+        return None
+    parsed = urlsplit(reference)
+    if parsed.scheme or parsed.netloc:
+        raise PinError(f"remote Parent runtime dependency is forbidden: {reference}")
+    raw_path = parsed.path
+    if not raw_path:
+        return None
+    if raw_path.startswith("/"):
+        raise PinError(f"Parent runtime reference must be package-relative: {reference}")
+    combined = base.parent.joinpath(PurePosixPath(raw_path))
+    parts: list[str] = []
+    for part in combined.parts:
+        if part in {"", "."}:
+            continue
+        if part == "..":
+            if not parts:
+                raise PinError(f"Parent runtime reference escapes checkout: {reference}")
+            parts.pop()
+        else:
+            parts.append(part)
+    if not parts:
+        raise PinError(f"invalid Parent runtime reference: {reference}")
+    resolved = PurePosixPath(*parts)
+    if any(part.startswith(".") for part in resolved.parts):
+        raise PinError(f"hidden Parent runtime path is not supported: {resolved}")
+    return resolved
+
+
+def _references_for(relative: PurePosixPath, data: bytes) -> list[PurePosixPath]:
+    suffix = relative.suffix.casefold()
+    if suffix not in {".html", ".js", ".css"}:
+        return []
+    try:
+        text = data.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise PinError(f"Parent runtime source is not UTF-8: {relative}") from exc
+
+    raw: list[str] = []
+    if suffix == ".html":
+        parser = _RuntimeHtmlParser()
+        parser.feed(text)
+        raw.extend(parser.references)
+    elif suffix == ".js":
+        raw.extend(match.group(1) for match in STATIC_IMPORT.finditer(text))
+    else:
+        raw.extend(match.group(1) for match in CSS_IMPORT.finditer(text))
+        raw.extend(match.group(1) for match in CSS_URL.finditer(text))
+
+    output: list[PurePosixPath] = []
+    for reference in raw:
+        resolved = _local_reference(relative, reference)
+        if resolved is not None:
+            output.append(resolved)
+    return output
+
+
+def _discover_runtime_files(parent_root: Path) -> list[str]:
+    """Return the exact transitive runtime closure rooted at ``index.html``."""
+
+    checkout = parent_root.resolve()
+    pending = [PurePosixPath("index.html")]
+    visited: set[PurePosixPath] = set()
+    while pending:
+        relative = pending.pop()
+        if relative in visited:
+            continue
+        path = (checkout / Path(*relative.parts)).resolve()
+        try:
+            path.relative_to(checkout)
+        except ValueError as exc:
+            raise PinError(f"runtime file escapes Parent checkout: {relative}") from exc
+        if not path.is_file():
+            raise PinError(f"referenced Parent runtime file is missing: {relative}")
+        data = path.read_bytes()
+        visited.add(relative)
+        for dependency in _references_for(relative, data):
+            if dependency not in visited:
+                pending.append(dependency)
+    return [path.as_posix() for path in sorted(visited, key=lambda value: value.as_posix())]
 
 
 def _hash_runtime_files(parent_root: Path, relative_paths: list[str]) -> dict[str, dict[str, object]]:
     output: dict[str, dict[str, object]] = {}
+    checkout = parent_root.resolve()
     for relative in relative_paths:
-        path = (parent_root / relative).resolve()
+        path = (checkout / relative).resolve()
         try:
-            path.relative_to(parent_root.resolve())
+            path.relative_to(checkout)
         except ValueError as exc:
             raise PinError(f"runtime file escapes Parent checkout: {relative}") from exc
         if not path.is_file():
@@ -88,11 +201,8 @@ def update_pin(greia_root: Path, parent_root: Path, revision: str) -> tuple[Path
 
     config_path = greia_root / "runtime" / "parent-app-client.toml"
     manifest_path = greia_root / "runtime" / "parent-app-client.manifest.json"
-    manifest = _load_manifest(manifest_path)
-    files = manifest["files"]
-    assert isinstance(files, dict)
-    relative_paths = list(files)
-
+    manifest = _load_manifest_metadata(manifest_path)
+    relative_paths = _discover_runtime_files(parent_root)
     hashed = _hash_runtime_files(parent_root, relative_paths)
     rewritten_manifest = {
         "files": hashed,
@@ -110,7 +220,6 @@ def update_pin(greia_root: Path, parent_root: Path, revision: str) -> tuple[Path
         raise PinError("Parent pin config must contain exactly one exact revision line")
     rewritten_config = REVISION_LINE.sub(f'revision = "{revision}"', config, count=1)
 
-    # Build both complete outputs before touching either authority file.
     manifest_text = json.dumps(rewritten_manifest, indent=2, ensure_ascii=False) + "\n"
     config_tmp = config_path.with_name(f".{config_path.name}.tmp")
     manifest_tmp = manifest_path.with_name(f".{manifest_path.name}.tmp")
