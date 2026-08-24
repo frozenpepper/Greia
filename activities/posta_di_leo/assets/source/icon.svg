@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#b45309" />
+    </linearGradient>
+    <linearGradient id="envelope" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#fef3c7" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="12" stdDeviation="8" flood-color="#000000" flood-opacity="0.25" />
+    </filter>
+  </defs>
+
+  <!-- Background Squircle -->
+  <rect x="32" y="32" width="448" height="448" rx="96" fill="url(#bg)" stroke="#fde047" stroke-width="12" />
+
+  <!-- Envelope Card -->
+  <rect x="80" y="140" width="352" height="250" rx="24" fill="url(#envelope)" stroke="#d97706" stroke-width="8" filter="url(#shadow)" />
+
+  <!-- Envelope Flap Lines -->
+  <path d="M 84 144 L 256 270 L 428 144" fill="none" stroke="#f59e0b" stroke-width="8" stroke-linejoin="round" stroke-linecap="round" />
+
+  <!-- Postage Stamp in Top Right (Heart Stamp) -->
+  <rect x="340" y="160" width="72" height="84" rx="8" fill="#fecdd3" stroke="#e11d48" stroke-width="4" stroke-dasharray="8 4" />
+  <path d="M 376 215 C 376 215 352 195 352 182 C 352 173 359 166 368 166 C 373 166 376 170 376 170 C 376 170 379 166 384 166 C 393 166 400 173 400 182 C 400 195 376 215 376 215 Z" fill="#e11d48" />
+
+  <!-- Address Lines -->
+  <line x1="220" y1="310" x2="390" y2="310" stroke="#94a3b8" stroke-width="6" stroke-linecap="round" />
+  <line x1="220" y1="340" x2="350" y2="340" stroke="#94a3b8" stroke-width="6" stroke-linecap="round" />
+
+  <!-- Pencil / Feather Quill on bottom-left -->
+  <path d="M 120 370 L 160 250 L 180 270 L 140 390 Z" fill="#38bdf8" stroke="#0284c7" stroke-width="4" />
+  <polygon points="120,370 140,390 110,400" fill="#fde047" stroke="#ca8a04" stroke-width="2" />
+  <polygon points="110,400 114,396 116,394" fill="#0f172a" />
+  <rect x="156" y="246" width="28" height="12" rx="4" fill="#f43f5e" />
+</svg>

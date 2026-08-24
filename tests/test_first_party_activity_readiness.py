@@ -150,6 +150,7 @@ class FirstPartyActivityReadinessTests(unittest.TestCase):
                 "painting",
                 "pasticceria_magica",
                 "piccola_serra",
+                "posta_di_leo",
                 "shape_garden",
                 "sillabe_magiche",
                 "specchi_magici",

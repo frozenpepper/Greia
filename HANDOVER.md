@@ -140,8 +140,25 @@ On-device visual verification covered Collection Home, category grid, hover lift
   - `tests/test_activity_officina_dei_suoni.py`: 11/11 focused tests passing (corpora completeness, factory determinism across 3 modes, bounded speech queue, round session invariants, adaptation, storage recovery, manifest, app hybrid keyboard/pointer integration, simulator supervisor lifecycle).
   - Platform contract tests reconciled: `test_activity_contract.py`, `test_first_party_activity_audience_metadata.py` (26 built-in activities), `test_first_party_activity_readiness.py`.
   - Full test suite `make verify`: **1,257 unit tests PASS**, project validation PASS, all 26 activities valid, footprint and shell checks green.
-  - Package validation digest: `sha256 f5a2b8ce18e298a281affcd917a5570f5b1d92779bfc5ec4dd52a7d9d570fd9c`.
-  - Visual review executed for Italian and English locales and all game modes (Level 1, Level 2, Level 3, Completion, English).
+## Early-learning Activity expansion: Posta di Leo acceptance (2026-08-24)
+
+`activities/posta_di_leo` (Posta di Leo / Leo's Post) meaningful emergent writing and postcard creator Activity is fully implemented, verified, and accepted following `docs/agents/GREIA_EARLY_LEARNING_ACTIVITY_IMPLEMENTATION_RUNBOOK.md` and `skills/greia-activity-authoring/SKILL.md`.
+
+- Architecture:
+  - `postcard_content.py`: 6 canonical character recipients (`momo`, `dani`, `lilli`, `leo`, `pina`, `tito`) and 6 picture stamps (`heart`, `sun`, `star`, `rainbow`, `flower`, `butterfly`).
+  - `postcard_model.py`: Grapheme-safe Unicode cursor editing (atomic emoji ZWJ/skin tone/flags, Backspace/Delete, left/right arrow navigation, max 80 graphemes), `SavedPostcard` immutable records, and `PostcardLibrary` strictly capped at 20 cards without auto-eviction.
+  - `postcard_services.py`: Storage adapter for `posta_di_leo.library.v1` (bounded at 20 cards, strict schema sanitization) and privacy-preserving `GreiaPostcardEvents` emitting `postcard.created` with `{"recipient": r_id, "stamp": stamp_id}` and `idempotency_key=f"posta-di-leo:{card_id}"` (strictly no child message text in event payload!).
+  - `postcard_audio.py`: Procedural nonverbal tones for typing clicks, stamp thud, sending fanfare, delete swoop, and selection blip.
+  - `postcard_art.py`: Warm wooden post office desk backdrop, circular character avatars, perforated scalloped stamps, and lined cream postcard paper.
+  - `postcard_renderer.py`: 1024x600 composer layout (top recipient bar, left ruled writing canvas with blinking cursor, right stamp tray + address lines, bottom send/gallery/clear toolbar), gallery grid viewer, card preview modal, and polite full-mailbox sheet.
+  - `postcard_app.py`: Text input orchestrator (`TEXTINPUT`, `KEYDOWN`, pointer/touch, home/ESC), save-before-event write invariant, gallery deletion confirmation modal, and ready state publication.
+- Evidence & Verification:
+  - `tests/test_activity_posta_di_leo.py`: 11/11 focused tests passing (atomic emoji/grapheme editing, 80-grapheme ceiling, empty-text stamp validity, 20-card library cap & no auto-eviction, storage recovery, manifest, app integration with privacy proof, full-dialog and gallery delete flow, simulator supervisor lifecycle).
+  - Platform contract tests reconciled: `test_activity_contract.py`, `test_first_party_activity_audience_metadata.py` (27 built-in activities, open-ended creative list), `test_first_party_activity_readiness.py`.
+  - Full test suite `make verify`: **1,268 unit tests PASS**, project validation PASS, all 27 activities valid, footprint and shell checks green.
+  - Package validation digest: `sha256 5aed54a0341ffe240abcb804f86fdab127fab5e1ac73b9fffad42a6ed3f717fe`.
+  - Visual review executed for Italian and English locales (Editor empty, Editor typed with rainbow emoji, Gallery grid, Card preview modal, Full mailbox dialog, English editor).
+
 
 
 

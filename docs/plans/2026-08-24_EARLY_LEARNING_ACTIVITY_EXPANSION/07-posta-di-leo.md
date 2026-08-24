@@ -79,3 +79,12 @@ Expected: exit 0 with seven portfolio suites and named contracts green.
 ## Handoff
 
 Return standard packet plus storage schema examples, 20-card/full/delete proofs, Unicode cases, event privacy proof, asset hashes, and SOURCE label.
+
+## Implementation Checkpoint (2026-08-24)
+
+- **Status:** COMPLETED & VERIFIED
+- **Activity:** `org.greia.posta-di-leo` (0.1.0)
+- **Validation:** `PASS org.greia.posta-di-leo 0.1.0` (sha256 `5aed54a0341ffe240abcb804f86fdab127fab5e1ac73b9fffad42a6ed3f717fe`)
+- **Tests:** 11/11 tests pass in `tests/test_activity_posta_di_leo.py`, cumulative 136 tests pass, full `make verify` (1,268 tests) passes.
+- **Evidence:** DESKTOP VISUAL REVIEW passed with 6 rendered frames in `build/review/posta_di_leo/`.
+

@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "locale": "en",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Leo's Post",
+    "activity.posta_di_leo.title": "Leo's Post",
+    "activity.posta_di_leo.description": "Write and send illustrated postcards to your friends with Leo!",
+    "prompt.recipient": "Who do you want to write to?",
+    "prompt.stamp": "Choose a stamp!",
+    "prompt.message": "Write your message here...",
+    "prompt.to": "To:",
+    "button.send": "SEND 💌",
+    "button.saved": "MY POSTCARDS 📬",
+    "button.write": "NEW POSTCARD ✏️",
+    "button.clear": "CLEAR 🗑️",
+    "button.delete": "DELETE",
+    "button.cancel": "CANCEL",
+    "dialog.full_title": "Mailbox Full!",
+    "dialog.full_body": "You have 20 postcards saved.\nDelete an older postcard to save a new one.",
+    "dialog.delete_confirm": "Do you want to delete this postcard?",
+    "recipient.momo": "Momo",
+    "recipient.dani": "Dani",
+    "recipient.lilli": "Lilli",
+    "recipient.leo": "Leo",
+    "recipient.pina": "Pina",
+    "recipient.tito": "Tito"
+  },
+  "audio": {}
+}

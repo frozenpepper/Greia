@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "locale": "it",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "La Posta di Leo",
+    "activity.posta_di_leo.title": "La Posta di Leo",
+    "activity.posta_di_leo.description": "Scrivi e invia cartoline illustrate ai tuoi amici con Leo!",
+    "prompt.recipient": "A chi vuoi scrivere?",
+    "prompt.stamp": "Scegli un francobollo!",
+    "prompt.message": "Scrivi il tuo messaggio qui...",
+    "prompt.to": "Per:",
+    "button.send": "SPEDISCI 💌",
+    "button.saved": "I MIEI MESSAGGI 📬",
+    "button.write": "NUOVA CARTOLINA ✏️",
+    "button.clear": "CANCELLA 🗑️",
+    "button.delete": "ELIMINA",
+    "button.cancel": "ANNULLA",
+    "dialog.full_title": "Cassetta delle lettere piena!",
+    "dialog.full_body": "Hai già 20 cartoline salvate.\nElimina una cartolina vecchia per salvarne una nuova.",
+    "dialog.delete_confirm": "Vuoi eliminare questa cartolina?",
+    "recipient.momo": "Momo",
+    "recipient.dani": "Dani",
+    "recipient.lilli": "Lilli",
+    "recipient.leo": "Leo",
+    "recipient.pina": "Pina",
+    "recipient.tito": "Tito"
+  },
+  "audio": {}
+}

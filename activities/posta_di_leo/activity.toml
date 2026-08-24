@@ -1,0 +1,42 @@
+[activity]
+id = "org.greia.posta-di-leo"
+legacy_ids = []
+title_key = "activity.posta_di_leo.title"
+version = "0.1.0"
+icon = "package:assets/icon.png"
+languages = ["it", "en"]
+
+[presentation]
+categories = ["create", "learn"]
+discovery_tags = ["writing", "stories"]
+
+[education]
+categories = ["writing", "print_concepts", "creative_expression"]
+difficulty = 2
+recommended_age_min = 5
+skills = [
+  { id = "language.emergent_writing", weight = 3 },
+  { id = "language.print_concepts", weight = 2 },
+  { id = "creativity.visual_composition", weight = 2 },
+]
+events = [
+  { id = "postcard.created", kind = "creation" },
+]
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "text"
+
+[requirements]
+required_capabilities = ["display", "keyboard"]
+optional_capabilities = ["pointer", "touch"]
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1

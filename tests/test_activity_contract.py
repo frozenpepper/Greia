@@ -44,6 +44,7 @@ class ActivityContractTests(unittest.TestCase):
                 "org.greia.painting",
                 "org.greia.pasticceria-magica",
                 "org.greia.piccola-serra",
+                "org.greia.posta-di-leo",
                 "org.greia.shape-garden",
                 "org.greia.sillabe-magiche",
                 "org.greia.specchi-magici",
