@@ -94,7 +94,23 @@ On-device visual verification covered Collection Home, category grid, hover lift
   - Platform contract tests reconciled: `test_activity_contract.py`, `test_first_party_activity_audience_metadata.py` (23 built-in activities), `test_first_party_activity_readiness.py`.
   - Full test suite `make verify`: **1,219 unit tests PASS**, project validation PASS, all 23 activities valid, footprint and shell checks green.
   - Package validation digest: `sha256 4e7bde50746d1cfdad347b5e663fc95df658c67b367dcd16354112c5b8500bee`.
-  - Visual review executed for Italian and English locales and multiple game modes (Compare, Order, Measure, Shelf, Completion).
+## Early-learning Activity expansion: Specchi Magici acceptance (2026-08-24)
+
+`activities/specchi_magici` (Specchi Magici / Magic Mirrors) geometric symmetry and spatial reflection Activity is fully implemented, verified, and accepted following `docs/agents/GREIA_EARLY_LEARNING_ACTIVITY_IMPLEMENTATION_RUNBOOK.md` and `skills/greia-activity-authoring/SKILL.md`.
+
+- Architecture:
+  - `mirror_model.py`: Discrete 8x6 board model with vertical reflection axis between columns 3 and 4 (`mirror_col(c) = 7 - c`), shape reflection rules (`reflect_piece`) for `CIRCLE, SQUARE, TRIANGLE, SEMICIRCLE` ensuring exact involution (`reflect(reflect(p)) == p`), deterministic factory generating 6 unique puzzles per set across L1–L5, between-set bounded adaptation, and one-shot `mirror.mosaic_completed` (milestone) and `mirror.gallery_completed` (completion) events.
+  - `mirror_app.py`: Pointer/touch interaction orchestrator with fail-closed system safe region validation, piece tray selection and placement, Activity-owned undo support, brief wobble/shimmer states, and completion restart.
+  - `mirror_renderer.py`: 1024x600 enchanted chamber presentation with dual-tint 8x6 grid, glowing crystal mirror axis beam, bottom piece tray with selection halo, Undo button, and Lilli mascot.
+  - `mirror_art.py`: Ambient crystal chamber backdrop, Lilli character loader (`character.lilli`), and crisp geometric shape renderers.
+  - `mirror_audio.py`: Prepared nonverbal procedural synthesis (`place`, `correct`, `retry`, `complete`).
+  - `mirror_services.py`: Storage adapter for `specchi_magici.progress.v1` (bounded history <= 8) and event publisher.
+- Evidence & Verification:
+  - `tests/test_activity_specchi_magici.py`: 12/12 focused tests passing (model determinism, reflection involution, rotation invariants, tray placement and undo, adaptation, storage recovery, manifest, app pointer integration, simulator supervisor lifecycle).
+  - Platform contract tests reconciled: `test_activity_contract.py`, `test_first_party_activity_audience_metadata.py` (24 built-in activities), `test_first_party_activity_readiness.py`.
+  - Full test suite `make verify`: **1,231 unit tests PASS**, project validation PASS, all 24 activities valid, footprint and shell checks green.
+  - Package validation digest: `sha256 97ad0c0171209b908b4423a6ab3632f68cffa183c5eb0c3de5e3b532f1ebd374`.
+  - Visual review executed for Italian and English locales and multiple game modes (Level 1, Level 2, Level 3, Level 5, Completion).
 
 ## Contributor engineering skills integration (2026-08-23)
 

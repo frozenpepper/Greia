@@ -44,6 +44,7 @@ class ActivityContractTests(unittest.TestCase):
                 "org.greia.piccola-serra",
                 "org.greia.shape-garden",
                 "org.greia.sillabe-magiche",
+                "org.greia.specchi-magici",
                 "org.greia.teatrino-fiabe",
                 "org.greia.treno-numeri",
                 "org.greia.volo-draghetto",

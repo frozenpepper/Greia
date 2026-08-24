@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "locale": "it",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Specchi Magici",
+    "activity.specchi_magici.title": "Specchi Magici",
+    "prompt.place": "Rifletti il disegno sullo specchio magico!",
+    "prompt.hint": "Guarda come si riflette ogni forma!",
+    "button.undo": "ANNULLA",
+    "button.play_again": "GIOCA ANCORA",
+    "victory.title": "Galleria Splendente!",
+    "victory.subtitle": "Tutti i mosaici riflettono la magia con Lilli!"
+  },
+  "audio": {}
+}

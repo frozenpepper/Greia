@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "locale": "en",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Magic Mirrors",
+    "activity.specchi_magici.title": "Magic Mirrors",
+    "prompt.place": "Mirror the pattern on the magic mirror!",
+    "prompt.hint": "Look how each shape is reflected!",
+    "button.undo": "UNDO",
+    "button.play_again": "PLAY AGAIN",
+    "victory.title": "Shining Gallery!",
+    "victory.subtitle": "All mosaics reflect their magic with Lilli!"
+  },
+  "audio": {}
+}

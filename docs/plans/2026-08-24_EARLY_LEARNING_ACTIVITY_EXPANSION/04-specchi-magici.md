@@ -8,6 +8,37 @@
 
 `org.greia.specchi-magici` delivers six deterministic mirrored mosaics using shape composition, orientation, and exact vertical reflection, distinct from Shape Garden.
 
+## Implementation checkpoint — 2026-08-24
+
+The source implementation is complete, verified, and accepted:
+
+Current source shape:
+
+```text
+activities/specchi_magici/
+  activity.toml
+  main.py
+  mirror_model.py
+  mirror_services.py
+  mirror_audio.py
+  mirror_art.py
+  mirror_renderer.py
+  mirror_app.py
+  locales/{it,en}.json
+  assets/source/icon.svg
+  assets/icon.png
+tests/test_activity_specchi_magici.py
+```
+
+Evidence:
+- 12/12 focused unit and integration tests passing (`tests/test_activity_specchi_magici.py`).
+- Cumulative test suite passing: 103 tests green across early learning and platform contracts.
+- Repository-wide `make verify` completely passing: 1,231 unit tests green, all 24 activities valid, footprint and shell checks green.
+- Package validation digest: `sha256 97ad0c0171209b908b4423a6ab3632f68cffa183c5eb0c3de5e3b532f1ebd374`.
+- Visual review executed for Italian and English locales and multiple game modes (Level 1 circles/squares, Level 2 triangles, Level 3 mixed rotations, Level 5 two-sided symmetry, Shining Gallery completion). Exact vertical axis reflection and piece tray selection ring.
+- Audio: Prepared procedural tones (`place`, `correct`, `retry`, `complete`).
+- Simulator integration: Supervisor launch and lifecycle tested cleanly.
+
 ## Preconditions
 
 - Pull current `main`; verify prior cumulative gate.

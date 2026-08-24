@@ -1,0 +1,47 @@
+[activity]
+id = "org.greia.specchi-magici"
+legacy_ids = []
+title_key = "activity.specchi_magici.title"
+version = "0.1.0"
+icon = "package:assets/icon.png"
+languages = ["it", "en"]
+
+[presentation]
+categories = ["learn", "create"]
+discovery_tags = ["puzzles", "making"]
+
+[education]
+categories = ["geometry", "spatial_reasoning", "symmetry"]
+difficulty = 3
+recommended_age_min = 5
+recommended_age_max = 7
+difficulty_min = 1
+difficulty_max = 5
+adaptive_difficulty = true
+skills = [
+  { id = "math.geometry.symmetry", weight = 3 },
+  { id = "math.geometry.shape_recognition", weight = 3 },
+  { id = "cognition.spatial_rotation", weight = 2 },
+]
+events = [
+  { id = "mirror.mosaic_completed", kind = "milestone" },
+  { id = "mirror.gallery_completed", kind = "completion" },
+]
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "pointer"
+
+[requirements]
+required_capabilities = ["display", "pointer", "audio.basic"]
+optional_capabilities = ["touch"]
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1

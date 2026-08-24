@@ -150,6 +150,7 @@ class FirstPartyActivityReadinessTests(unittest.TestCase):
                 "piccola_serra",
                 "shape_garden",
                 "sillabe_magiche",
+                "specchi_magici",
                 "teatrino_fiabe",
                 "treno_numeri",
                 "volo_draghetto",
