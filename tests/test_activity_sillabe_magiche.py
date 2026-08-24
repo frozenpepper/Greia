@@ -78,7 +78,7 @@ class SillabeMagicheTests(unittest.TestCase):
                     self.assertTrue(find_wav.is_file(), f"Missing {find_wav}")
 
             # Verify praises
-            self.assertTrue((audio_dir / "bravissima.wav" if loc == "it" else audio_dir / "great_job.wav").is_file())
+            self.assertTrue((audio_dir / "esatto.wav" if loc == "it" else audio_dir / "great_job.wav").is_file())
 
     def test_sound_manager_initializes_and_synthesizes(self) -> None:
         sm = SoundManager()

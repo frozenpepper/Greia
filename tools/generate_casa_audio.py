@@ -3,7 +3,7 @@
 
 Generates 22050Hz LEI16 mono WAV audio assets for:
 - Italian and English challenge instruction prompts (compose 1..10, add, take away, missing part)
-- Positive verbal reinforcement clips ("Bravissimo!", "Esatto!", "Ottimo!", "Great job!", "You got it!")
+- Positive verbal reinforcement clips ("Ben fatto!", "Esatto!", "Ottimo!", "Great job!", "You got it!")
 - Encouraging retry verbal clips ("Quasi, riprova!", "Conta bene e riprova!", "Almost, try again!")
 """
 
@@ -34,7 +34,7 @@ PROMPTS_IT = [
     ("prompt_add", "Quante luci accese ci sono in tutto?"),
     ("prompt_take_away", "Quante luci restano accese?"),
     ("prompt_missing_part", "Quante luci mancano da accendere?"),
-    ("correct_1", "Bravissimo!"),
+    ("correct_1", "Ben fatto!"),
     ("correct_2", "Esatto!"),
     ("correct_3", "Ottimo lavoro!"),
     ("retry_1", "Quasi, riprova!"),

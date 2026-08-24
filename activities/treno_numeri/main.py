@@ -231,7 +231,7 @@ def main() -> int:
     )
     completion_content = CompletionContent(
         title=t("victory.title", "Evviva! Il treno è arrivato al capolinea! 🚂🌟"),
-        body_lines=(t("victory.subtitle", "Bravissima! Hai completato tutte le stazioni!"),),
+        body_lines=(t("victory.subtitle", "Ottimo lavoro! Hai completato tutte le stazioni!"),),
         primary_label=t("btn.play_again", "🎉 Gioca Ancora!"),
         achievement_count=5,
     )

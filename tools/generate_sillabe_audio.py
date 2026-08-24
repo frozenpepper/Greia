@@ -73,7 +73,7 @@ WORDS_DATA_EN = [
 ]
 
 PRAISES_IT = [
-    ("bravissima", "bravissima"),
+    ("esatto", "esatto"),
     ("fantastico", "fantastico"),
     ("super", "super"),
     ("magnifico", "magnifico"),

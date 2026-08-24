@@ -650,7 +650,7 @@ Example:
   "direction": "ltr",
   "strings": {
     "activity.title": "Scriviamo!",
-    "feedback.correct": "Bravissima!"
+    "feedback.correct": "Ottimo lavoro!"
   },
   "audio": {
     "feedback.correct": {
@@ -707,7 +707,7 @@ To ensure clear, intelligible speech and avoid cacophony:
    - When a child solves a task or pops/matches a target, do not immediately play congratulations and next-round prompt simultaneously.
    - Use a sequential timer / state machine:
      - **Step 1 (Immediate)**: Play the item/syllable/object sound effect or voice (e.g. *"BA!"* or pop chime).
-     - **Step 2 (Praise Delay ~0.4s to 0.6s)**: After the primary clip finishes, trigger the celebratory praise (e.g. *"Bravissima!"* / *"Great job!"*).
+     - **Step 2 (Praise Delay ~0.4s to 0.6s)**: After the primary clip finishes, trigger the celebratory praise (e.g. *"Ottimo lavoro!"* / *"Great job!"*).
      - **Step 3 (Next Round Delay ~0.8s to 1.2s)**: Once praise playback completes, advance to the new round and speak the next target prompt (e.g. *"Trova: ME!"*).
 2. **Startup & Lifecycle Silence**:
    - Never trigger multiple voice prompts during initial module import or inside the initialization phase before the first frame is presented.

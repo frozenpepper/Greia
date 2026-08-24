@@ -207,7 +207,7 @@ class SoundManager:
             self.play("chime")
 
     def play_praise(self, locale: str = "it") -> None:
-        praise_keys = ["bravissima", "fantastico", "ottimo"] if locale == "it" else ["great_job", "wonderful", "you_did_it"]
+        praise_keys = ["ben_fatto", "fantastico", "ottimo"] if locale == "it" else ["great_job", "wonderful", "you_did_it"]
         chosen = random.choice(praise_keys)
         key = f"{locale}:{chosen}"
         if key in self._sounds:
@@ -516,7 +516,7 @@ def main() -> int:
                                 for _ in range(35):
                                     particles.append(Particle(512, 300, GOLD))
                             else:
-                                feedback_text = resources.text("feedback.correct") if resources else "Bravissima! ✨"
+                                feedback_text = resources.text("feedback.correct") if resources else "Ottimo lavoro! ✨"
                                 feedback_timer = 1.8
                         else:
                             hit_orb.wobble()

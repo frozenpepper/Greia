@@ -37,7 +37,7 @@ def generate_all() -> None:
         make_wav(letter, "Alice", 175, it_dir / f"{letter_id}.wav")
         make_wav(word_display, "Alice", 175, it_dir / f"{word_stem}.wav")
 
-    make_wav("Bravissima!", "Alice", 180, it_dir / "bravissima.wav")
+    make_wav("Ben fatto!", "Alice", 180, it_dir / "ben_fatto.wav")
     make_wav("Fantastico!", "Alice", 180, it_dir / "fantastico.wav")
     make_wav("Ottimo!", "Alice", 180, it_dir / "ottimo.wav")
 

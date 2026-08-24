@@ -86,6 +86,20 @@ Dani: "Quanti ne hai visti?"
 
 Keep spoken instructions short. Prefer one idea at a time.
 
+### 4.1 Gender-Neutral Spoken & Written Praise (MANDATORY)
+
+**Never use gender-specific adjectives in Italian (or any other language)** such as *"Bravissimo!"*, *"Bravissima!"*, *"Bravo!"*, or *"Brava!"*. 
+
+Always use universal, inclusive gender-neutral praise:
+- `Ottimo lavoro!` ("Great job!")
+- `Ben fatto!` ("Well done!")
+- `Esatto!` ("Exactly right!")
+- `Fantastico!` ("Fantastic!")
+- `Evviva!` ("Hooray!")
+- `Perfetto!` ("Perfect!")
+- `Super!` ("Super!")
+- `Che meraviglia!` ("Wonderful!")
+
 Do not narrate every interaction. A good pattern is:
 
 ```text

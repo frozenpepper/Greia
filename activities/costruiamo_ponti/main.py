@@ -214,7 +214,7 @@ def main() -> int:
         primary_rect=play_again_rect,
     )
     completion_content = CompletionContent(
-        title="BRAVISSIMA!",
+        title="OTTIMO LAVORO!",
         primary_label="GIOCA ANCORA",
         achievement_count=5,
     )

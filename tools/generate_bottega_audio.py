@@ -3,7 +3,7 @@
 
 Generates 22050Hz LEI16 mono WAV audio assets for:
 - Italian and English challenge instruction prompts (compare longer/shorter/taller/lower, order, measure, shelf)
-- Positive verbal reinforcement clips ("Bravissimo!", "Esatto!", "Ottimo lavoro!", "Great job!", "You got it!")
+- Positive verbal reinforcement clips ("Ben fatto!", "Esatto!", "Ottimo lavoro!", "Great job!", "You got it!")
 - Encouraging retry verbal clips ("Riprova!", "Quasi, riprova!", "Try again!")
 """
 
@@ -29,7 +29,7 @@ PROMPTS_IT = [
     ("prompt_order_height", "Metti i pacchi in ordine, dal più basso al più alto!"),
     ("prompt_measure", "Conta quanti blocchi è lungo il pacco e tocca il numero!"),
     ("prompt_shelf", "Quale pacco entra nello scaffale?"),
-    ("correct_1", "Bravissimo!"),
+    ("correct_1", "Ben fatto!"),
     ("correct_2", "Esatto!"),
     ("correct_3", "Ottimo lavoro!"),
     ("retry_1", "Riprova!"),

@@ -525,7 +525,7 @@ def main() -> int:
         primary_rect=play_again_rect,
     )
     completion_content = CompletionContent(
-        title=t("victory.title", "Bravissima! Coppie trovate! 🌟"),
+        title=t("victory.title", "Ottimo lavoro! Coppie trovate! 🌟"),
         body_lines=(t("victory.subtitle", "Che memoria fantastica!"),),
         primary_label=t("btn.play_again", "🎉 Gioca Ancora!"),
         achievement_count=3,

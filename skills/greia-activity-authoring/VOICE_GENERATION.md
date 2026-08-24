@@ -337,19 +337,21 @@ feedback.correct.feminine    -> locales/it/audio/feedback-correct-feminine.ogg
 
 At runtime:
 
-```python
-from greia_platform.activity_api import get_profile_grammatical_gender
+### 11.1 Gender-Neutral Spoken & Written Praise (MANDATORY)
 
-variant = get_profile_grammatical_gender().value
-caption = resources.text("feedback.correct", variant=variant)
-voice = resources.audio_cue("feedback.correct", variant=variant)
-```
+**Never use gender-specific adjectives for verbal or written praise in Italian (or any other language)** such as *"Bravissimo!"*, *"Bravissima!"*, *"Bravo!"*, or *"Brava!"*. 
 
-Do not hand-code Italian logic such as `if boy: "bravo"` inside gameplay. Localization owns language-specific words; Greia provides only the semantic selector.
+Always use universal, inclusive gender-neutral praise:
+- `Ottimo lavoro!` ("Great job!")
+- `Ben fatto!` ("Well done!")
+- `Esatto!` ("Exactly right!")
+- `Fantastico!` ("Fantastic!")
+- `Evviva!` ("Hooray!")
+- `Perfetto!` ("Perfect!")
+- `Super!` ("Super!")
+- `Che meraviglia!` ("Wonderful!")
 
-The selector does not change the speaker. If Lilli says `Bravo!` or `Brava!`, both versions remain Lilli. For Dani/system speech, resolve the localized text with the same selector before passing it to the approved system-TTS path.
-
-Keep this selector deliberately small. If a future language needs richer plural/case/select semantics, extend localization deliberately rather than inventing Activity-specific suffix vocabularies.
+This ensures every child feels welcomed and encouraged without requiring gendered grammar branches or incorrect gendered adjectives.
 
 ## 12. Writing custom character lines
 

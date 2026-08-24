@@ -235,7 +235,7 @@ class SoundManager:
             self.play("pop")
 
     def play_praise(self, locale: str = "it") -> None:
-        praises = ["bravissima", "fantastico", "super", "magnifico", "ottimo", "ben_fatto"] if locale == "it" else ["great_job", "wonderful", "you_did_it", "fantastic", "super", "well_done"]
+        praises = ["esatto", "fantastico", "super", "magnifico", "ottimo", "ben_fatto"] if locale == "it" else ["great_job", "wonderful", "you_did_it", "fantastic", "super", "well_done"]
         chosen = random.choice(praises)
         key = f"{locale}:{chosen}"
         if self._get_sound(key) is not None:

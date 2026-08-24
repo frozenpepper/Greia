@@ -8,7 +8,7 @@
     "mode.word_builder": "Componi la Parola",
     "prompt.catch_letter": "Trova la lettera $letter come $word!",
     "prompt.spell_word": "Componi: $word",
-    "feedback.correct": "Bravissima! ✨",
+    "feedback.correct": "Ottimo lavoro! ✨",
     "feedback.try_again": "Quasi! Riprova 💕",
     "feedback.word_complete": "Parola magica completata! 🌟",
     "hud.score": "Punti: $score",
