@@ -46,6 +46,7 @@ else:
 class AppState(StrEnum):
     PLAYING = "playing"
     WOBBLE = "wobble"
+    CELEBRATION = "celebration"
     TRANSITION = "transition"
     TERMINAL = "terminal"
 
@@ -92,6 +93,8 @@ class TenHouseActivity:
         self._hovered_room: int | None = None
         self._hovered_choice: int | None = None
         self._hovered_confirm = False
+        self._hovered_replay = False
+        self._spoken_challenge_id: str | None = None
 
         self.completion = PygameCompletionScreen(
             typography,
@@ -108,6 +111,17 @@ class TenHouseActivity:
             ),
         )
 
+    def _get_prompt_cue(self, challenge: TenHouseChallenge) -> str:
+        if challenge.mode == OperationMode.COMPOSE:
+            return f"prompt_compose_{challenge.target}"
+        elif challenge.mode == OperationMode.ADD:
+            return "prompt_add"
+        elif challenge.mode == OperationMode.TAKE_AWAY:
+            return "prompt_take_away"
+        elif challenge.mode == OperationMode.MISSING_PART:
+            return "prompt_missing_part"
+        return "prompt_compose_1"
+
     def run(self) -> int:
         ticker = pygame.time.Clock()
         while self._running and not activity_stop_requested():
@@ -123,7 +137,7 @@ class TenHouseActivity:
                 if not self._ready_published:
                     mark_activity_ready()
                     self._ready_published = True
-            ticker.tick(30 if self.state in {AppState.WOBBLE, AppState.TRANSITION} else 20)
+            ticker.tick(30 if self.state in {AppState.WOBBLE, AppState.CELEBRATION, AppState.TRANSITION} else 20)
         return 0
 
     def _handle_event(self, event: pygame.event.Event) -> None:
@@ -159,14 +173,17 @@ class TenHouseActivity:
                 new_room = self.renderer.room_at(point)
                 new_choice = self.renderer.choice_index_at(point, current) if current else None
                 new_confirm = self.renderer.confirm_contains(point) if (current and current.mode == OperationMode.COMPOSE) else False
+                new_replay = self.renderer.replay_contains(point)
                 if (
                     new_room != self._hovered_room
                     or new_choice != self._hovered_choice
                     or new_confirm != self._hovered_confirm
+                    or new_replay != self._hovered_replay
                 ):
                     self._hovered_room = new_room
                     self._hovered_choice = new_choice
                     self._hovered_confirm = new_confirm
+                    self._hovered_replay = new_replay
                     self._dirty = True
             return
 
@@ -192,7 +209,13 @@ class TenHouseActivity:
         if current is None:
             return False
 
-        # 1. Room clicks
+        # 1. Replay voice button click
+        if self.renderer.replay_contains(point):
+            cue = self._get_prompt_cue(current)
+            self.audio.play_speech(cue)
+            return True
+
+        # 2. Room clicks
         room_idx = self.renderer.room_at(point)
         if room_idx is not None:
             if current.mode == OperationMode.COMPOSE:
@@ -203,11 +226,11 @@ class TenHouseActivity:
                     return True
             return False
 
-        # 2. Confirm button click (Compose mode)
+        # 3. Confirm button click (Compose mode)
         if current.mode == OperationMode.COMPOSE and self.renderer.confirm_contains(point):
             return self._perform_confirm()
 
-        # 3. Choice button click (Operation modes)
+        # 4. Choice button click (Operation modes)
         val = self.renderer.choice_at(point, current)
         if val is not None:
             return self._perform_choice(val)
@@ -276,12 +299,12 @@ class TenHouseActivity:
 
     def _process_result(self, result) -> bool:
         if not result.correct:
-            self.audio.play("retry")
+            self.audio.play_feedback(False)
             self.state = AppState.WOBBLE
             self.state_started = self.clock()
             return True
 
-        self.audio.play("correct")
+        self.audio.play_feedback(True)
         milestone = self.session.consume_milestone()
         if milestone is not None:
             self.events.room_completed(self.session_id, milestone)
@@ -289,19 +312,32 @@ class TenHouseActivity:
         if result.session_complete:
             self._finish_session()
         else:
-            self.state = AppState.TRANSITION
+            self.state = AppState.CELEBRATION
             self.state_started = self.clock()
         return True
 
     def _advance_state(self) -> bool:
+        # Automatic voice prompt at start of each challenge
+        current = self.session.current_challenge
+        if current is not None and current.challenge_id != self._spoken_challenge_id:
+            self._spoken_challenge_id = current.challenge_id
+            cue = self._get_prompt_cue(current)
+            self.audio.play_speech(cue)
+
         elapsed = self.clock() - self.state_started
         if self.state == AppState.WOBBLE:
-            if elapsed >= 0.28:
+            if elapsed >= 0.35:
                 self.state = AppState.PLAYING
                 return True
             return True
+        if self.state == AppState.CELEBRATION:
+            if elapsed >= 0.55:
+                self.state = AppState.TRANSITION
+                self.state_started = self.clock()
+                return True
+            return True
         if self.state == AppState.TRANSITION:
-            if elapsed >= 0.35:
+            if elapsed >= 0.20:
                 self.state = AppState.PLAYING
                 return True
             return False
@@ -314,9 +350,10 @@ class TenHouseActivity:
 
         wobble_x = 0
         highlight_rooms = False
-        if self.state is AppState.WOBBLE:
+        is_celebrating = (self.state == AppState.CELEBRATION)
+        if self.state == AppState.WOBBLE:
             elapsed = self.clock() - self.state_started
-            wobble_x = int(8 * ((1 - elapsed / 0.28) * ((int(elapsed * 40) % 2) * 2 - 1)))
+            wobble_x = int(8 * ((1 - elapsed / 0.35) * ((int(elapsed * 40) % 2) * 2 - 1)))
             highlight_rooms = True
 
         self.renderer.draw_scene(
@@ -327,6 +364,8 @@ class TenHouseActivity:
             hovered_room=self._hovered_room,
             hovered_choice=self._hovered_choice,
             hovered_confirm=self._hovered_confirm,
+            hovered_replay=self._hovered_replay,
+            is_celebrating=is_celebrating,
         )
 
     def _finish_session(self) -> None:

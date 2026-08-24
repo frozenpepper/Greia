@@ -57,6 +57,8 @@ def main() -> int:
     session = TenHouseSession(factory.build_set(saved.level), level=saved.level, history=saved.history)
     session_id = f"{int(time.time())}-{rng.randrange(1_000_000):06d}"
 
+    package_root = Path(__file__).resolve().parent
+    locale_lang = resources.context.selected.language if hasattr(resources.context, "selected") else "it"
     app = TenHouseActivity(
         screen=screen,
         canvas=canvas,
@@ -67,7 +69,7 @@ def main() -> int:
         resources=resources,
         progress=progress,
         events=GreiaTenHouseEvents(),
-        audio=TenHouseAudio(),
+        audio=TenHouseAudio(package_root, locale=locale_lang),
         rng=rng,
         session_id=session_id,
     )

@@ -39,6 +39,9 @@ CHOICE_RECTS: Final[tuple[pygame.Rect, ...]] = (
 # Confirm button for Compose mode
 CONFIRM_RECT: Final[pygame.Rect] = pygame.Rect(402, 480, 220, 84)
 
+# Replay voice speech bubble beside Dani
+REPLAY_RECT: Final[pygame.Rect] = pygame.Rect(125, 420, 140, 44)
+
 
 class TenHouseRenderer:
     """Render the 10-room townhouse, Dani guide, prompt, and interactive controls."""
@@ -55,21 +58,13 @@ class TenHouseRenderer:
 
         # Cache numbers 0..10
         self._number_surfaces = {
-            value: typography.render(str(value), FontRole.DISPLAY, 50, (255, 255, 255))
+            value: typography.render(str(value), FontRole.DISPLAY, 46, (255, 255, 255))
             for value in range(11)
         }
         self._small_numbers = {
             value: typography.render(str(value), FontRole.TITLE, 16, (180, 83, 9))
             for value in range(1, 11)
         }
-
-        # Cache Confirm label
-        self._confirm_label = typography.render(
-            resources.text("button.confirm"),
-            FontRole.TITLE,
-            24,
-            (255, 255, 255),
-        )
 
     def draw_scene(
         self,
@@ -81,15 +76,23 @@ class TenHouseRenderer:
         hovered_room: int | None = None,
         hovered_choice: int | None = None,
         hovered_confirm: bool = False,
+        hovered_replay: bool = False,
+        is_celebrating: bool = False,
     ) -> None:
         target.blit(self._art.background, (0, 0))
         self._draw_dani(target)
+
+        # 1. Replay Voice button beside Dani
+        self._draw_replay_button(target, is_hovered=hovered_replay)
+
+        # 2. Progress badge (top right)
+        self._draw_progress_badge(target, session)
 
         current = session.current_challenge
         if current is None:
             return
 
-        # 1. Draw 10 Rooms
+        # 3. Draw 10 Rooms
         for idx, (rect, is_lit) in enumerate(zip(ROOM_RECTS, session.room_states)):
             is_focused = (not session.focus_in_choices and session.focused_room == idx)
             is_hovered = (idx == hovered_room)
@@ -100,15 +103,15 @@ class TenHouseRenderer:
                 idx + 1,
                 is_focused=is_focused,
                 is_hovered=is_hovered,
-                highlight=highlight_rooms,
+                highlight=highlight_rooms or is_celebrating,
             )
 
-        # 2. Draw Prompt / Equation
+        # 4. Draw Prompt / Equation
         self._draw_prompt(target, current, session)
 
-        # 3. Draw Controls (Choices or Confirm)
+        # 5. Draw Controls (Choices or Confirm)
         if current.mode == OperationMode.COMPOSE:
-            self._draw_confirm_button(target, session, is_hovered=hovered_confirm)
+            self._draw_confirm_button(target, session, is_hovered=hovered_confirm, wobble_x=wobble_x)
         else:
             self._draw_choice_buttons(
                 target,
@@ -118,8 +121,9 @@ class TenHouseRenderer:
                 hovered_idx=hovered_choice,
             )
 
-        # 4. Progress badge (e.g. 1/6 .. 6/6)
-        self._draw_progress_badge(target, session)
+        # 6. Celebration vector checkmark
+        if is_celebrating:
+            self._draw_celebration_badge(target)
 
     def room_at(self, point: tuple[int, int]) -> int | None:
         for idx, rect in enumerate(ROOM_RECTS):
@@ -145,6 +149,41 @@ class TenHouseRenderer:
 
     def confirm_contains(self, point: tuple[int, int]) -> bool:
         return CONFIRM_RECT.collidepoint(point)
+
+    def replay_contains(self, point: tuple[int, int]) -> bool:
+        return REPLAY_RECT.collidepoint(point)
+
+    def _draw_replay_button(self, target: pygame.Surface, *, is_hovered: bool = False) -> None:
+        r_draw = REPLAY_RECT.move(0, -4) if is_hovered else REPLAY_RECT
+        pygame.draw.rect(target, (10, 15, 25), REPLAY_RECT.move(0, 4), border_radius=18)
+
+        btn_col = (2, 132, 199) if is_hovered else (14, 116, 144)
+        border_col = (56, 189, 248) if is_hovered else (254, 240, 138)
+
+        # Speech bubble tail pointing to Dani
+        tail_pts = [
+            (r_draw.left, r_draw.centery - 2),
+            (r_draw.left - 10, r_draw.centery + 6),
+            (r_draw.left, r_draw.centery + 12),
+        ]
+        pygame.draw.polygon(target, btn_col, tail_pts)
+        pygame.draw.lines(target, border_col, False, tail_pts, 3)
+
+        pygame.draw.rect(target, btn_col, r_draw, border_radius=18)
+        pygame.draw.rect(target, border_col, r_draw, width=3, border_radius=18)
+
+        # Highlight
+        hl = r_draw.inflate(-16, -r_draw.height + 8).move(0, -r_draw.height // 2 + 8)
+        pygame.draw.rect(target, (186, 230, 253, 100), hl, border_radius=4)
+
+        label = self._typography.render("🔊 ASCOLTA", FontRole.TITLE, 18, (255, 255, 255))
+        target.blit(
+            label,
+            (
+                r_draw.centerx - label.get_width() // 2,
+                r_draw.centery - label.get_height() // 2,
+            ),
+        )
 
     def _draw_room(
         self,
@@ -189,7 +228,7 @@ class TenHouseRenderer:
         if num_surf:
             target.blit(num_surf, (badge_rect.centerx - num_surf.get_width() // 2, badge_rect.centery - num_surf.get_height() // 2))
 
-        # Highlight on retry
+        # Highlight on retry / celebration
         if highlight and is_lit:
             pygame.draw.rect(target, (234, 179, 8), rect.inflate(6, 6), width=4, border_radius=14)
 
@@ -201,9 +240,8 @@ class TenHouseRenderer:
     ) -> None:
         p_y = 412
         if challenge.mode == OperationMode.COMPOSE:
-            # Giant visual target number + live counter pill
-            target_str = f"🎯 {challenge.target}"
-            t_surf = self._typography.render(target_str, FontRole.DISPLAY, 36, (254, 240, 138))
+            target_str = f"🎯 ACCENDI {challenge.target} 💡"
+            t_surf = self._typography.render(target_str, FontRole.DISPLAY, 30, (254, 240, 138))
 
             count_str = f"💡 {session.lit_count} / {challenge.target}"
             match_col = (134, 239, 172) if session.lit_count == challenge.target else (255, 255, 255)
@@ -216,25 +254,25 @@ class TenHouseRenderer:
             b_col = (34, 197, 94) if session.lit_count == challenge.target else (217, 119, 6)
             pygame.draw.rect(target, b_col, banner, width=3, border_radius=20)
 
-            target.blit(t_surf, (p_x, p_y + 2))
+            target.blit(t_surf, (p_x, p_y + 4))
             target.blit(c_surf, (p_x + t_surf.get_width() + 32, p_y + 8))
             return
 
         elif challenge.mode == OperationMode.ADD:
-            text = f"{challenge.starting_lit} 💡 + {challenge.delta} 💡 = ❓"
+            text = f"🎯 {challenge.starting_lit} 💡 + {challenge.delta} 💡 = ❓"
         elif challenge.mode == OperationMode.TAKE_AWAY:
-            text = f"{challenge.starting_lit} 💡 - {challenge.delta} 💡 = ❓"
+            text = f"🎯 {challenge.starting_lit} 💡 - {challenge.delta} 💡 = ❓"
         elif challenge.mode == OperationMode.MISSING_PART:
-            text = f"{challenge.starting_lit} 💡 + ❓ = {challenge.target} 💡"
+            text = f"🎯 {challenge.starting_lit} 💡 + ❓ = {challenge.target} 💡"
         else:
             text = f"🎯 {challenge.target}"
 
-        prompt_surf = self._typography.render(text, FontRole.DISPLAY, 34, (254, 240, 138))
+        prompt_surf = self._typography.render(text, FontRole.DISPLAY, 32, (254, 240, 138))
         p_x = REFERENCE_WIDTH // 2 - prompt_surf.get_width() // 2
         banner = pygame.Rect(p_x - 24, p_y - 6, prompt_surf.get_width() + 48, prompt_surf.get_height() + 12)
         pygame.draw.rect(target, (15, 23, 42, 220), banner, border_radius=20)
         pygame.draw.rect(target, (217, 119, 6), banner, width=3, border_radius=20)
-        target.blit(prompt_surf, (p_x, p_y))
+        target.blit(prompt_surf, (p_x, p_y + 2))
 
     def _draw_confirm_button(
         self,
@@ -242,16 +280,17 @@ class TenHouseRenderer:
         session: TenHouseSession,
         *,
         is_hovered: bool = False,
+        wobble_x: int = 0,
     ) -> None:
         is_focused = (session.focus_in_choices and session.focused_choice == 0)
         is_ready = session.lit_count > 0
-        draw_rect = CONFIRM_RECT.move(0, -4) if (is_hovered or is_focused) else CONFIRM_RECT
+        draw_rect = CONFIRM_RECT.move(wobble_x, -4 if (is_hovered or is_focused) else 0)
 
         # Shadow
         pygame.draw.rect(target, (10, 20, 30), CONFIRM_RECT.move(0, 6), border_radius=22)
 
         bg_col = (22, 163, 74) if is_ready else (71, 85, 105)
-        border_col = (56, 189, 248) if (is_focused or is_hovered) else (134, 239, 172) if is_ready else (100, 116, 139)
+        border_col = (56, 189, 248) if (is_focused or is_hovered) else ((134, 239, 172) if is_ready else (100, 116, 139))
 
         pygame.draw.rect(target, bg_col, draw_rect, border_radius=22)
         pygame.draw.rect(target, border_col, draw_rect, width=4, border_radius=22)
@@ -261,15 +300,16 @@ class TenHouseRenderer:
             hl = draw_rect.inflate(-16, -draw_rect.height + 8).move(0, -draw_rect.height // 2 + 8)
             pygame.draw.rect(target, (187, 247, 208, 120), hl, border_radius=4)
 
-        # Big OK Checkmark label
-        confirm_surf = self._typography.render("OK ✅", FontRole.TITLE, 30, (255, 255, 255))
-        target.blit(
-            confirm_surf,
-            (
-                draw_rect.centerx - confirm_surf.get_width() // 2,
-                draw_rect.centery - confirm_surf.get_height() // 2,
-            ),
-        )
+        # OK label + vector checkmark
+        confirm_surf = self._typography.render("OK", FontRole.DISPLAY, 32, (255, 255, 255))
+        c_x = draw_rect.centerx - 16
+        target.blit(confirm_surf, (c_x - confirm_surf.get_width() // 2, draw_rect.centery - confirm_surf.get_height() // 2))
+
+        # Vector checkmark
+        check_cx = draw_rect.centerx + 36
+        check_cy = draw_rect.centery
+        check_pts = [(check_cx - 10, check_cy), (check_cx - 3, check_cy + 8), (check_cx + 10, check_cy - 7)]
+        pygame.draw.lines(target, (255, 255, 255), False, check_pts, 4)
 
     def _draw_choice_buttons(
         self,
@@ -299,15 +339,23 @@ class TenHouseRenderer:
             hl = draw_rect.inflate(-16, -draw_rect.height + 8).move(0, -draw_rect.height // 2 + 8)
             pygame.draw.rect(target, (186, 230, 253, 100), hl, border_radius=4)
 
-            num_surf = self._number_surfaces.get(val)
-            if num_surf:
-                target.blit(
-                    num_surf,
-                    (
-                        draw_rect.centerx - num_surf.get_width() // 2,
-                        draw_rect.centery - num_surf.get_height() // 2,
-                    ),
-                )
+            # Number + Lightbulb icon
+            val_surf = self._typography.render(f"{val} 💡", FontRole.DISPLAY, 36, (255, 255, 255))
+            target.blit(
+                val_surf,
+                (
+                    draw_rect.centerx - val_surf.get_width() // 2,
+                    draw_rect.centery - val_surf.get_height() // 2,
+                ),
+            )
+
+    def _draw_celebration_badge(self, target: pygame.Surface) -> None:
+        cx, cy = REFERENCE_WIDTH // 2, 70
+        pygame.draw.circle(target, (10, 20, 30), (cx, cy + 3), 28)
+        pygame.draw.circle(target, (34, 197, 94), (cx, cy), 28)
+        pygame.draw.circle(target, (255, 255, 255), (cx, cy), 28, 4)
+        check_pts = [(cx - 12, cy), (cx - 4, cy + 10), (cx + 12, cy - 9)]
+        pygame.draw.lines(target, (255, 255, 255), False, check_pts, 5)
 
     def _draw_dani(self, target: pygame.Surface) -> None:
         if self._art.dani is not None:
@@ -324,3 +372,4 @@ class TenHouseRenderer:
             txt_surf,
             (badge_rect.centerx - txt_surf.get_width() // 2, badge_rect.centery - txt_surf.get_height() // 2),
         )
+
