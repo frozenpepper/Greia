@@ -1,6 +1,6 @@
 ---
 name: greia-os-work
-description: Canonical derived guide for substantive Greia OS/platform engineering, including architecture navigation, OOP/polymorphism, extension seams, low-resource performance, UI/input/display ownership, progression/achievements, audio, documentation, testing and evidence discipline.
+description: Canonical derived guide for substantive Greia OS/platform engineering, including architecture navigation, OOP/polymorphism, extension seams, boot/recovery safety, low-resource performance, UI/input/display ownership, progression/achievements, audio, documentation, testing and evidence discipline.
 ---
 
 # Greia OS Work Skill
@@ -48,15 +48,21 @@ Do not use chat history as the architecture source of truth.
 
 Read these additional authorities when relevant.
 
-### Build/image/composition/install
+### Build/image/composition/install/boot/recovery
 
 ```text
 docs/adr/0013-image-composition-and-package-architecture.md   # inspect exact filename if ownership moved
 docs/adr/0014-greia-identity-arm-parity-and-direct-graphics-direction.md
+docs/engineering/BOOT_PIPELINE_AGENT_GUIDE.md
 docs/INSTALLATION_ISSUES_LOG.md
 docs/INSTALLATION_USB_BOOT_POSTMORTEM.md
 docs/INSTALLED_OS_BOOT_POSTMORTEM.md
+docs/design/GREIA_BOOT_EXPERIENCE.md
+docs/design/GREIA_BOOT_PROGRESS.md
+skills/greia-os-work/BOOT.md
 ```
+
+`skills/greia-os-work/BOOT.md` is a **mandatory companion** for any substantive GRUB, Syslinux, kernel-command-line, initramfs, first-boot, Xorg-startup, image-builder or physical boot-recovery work. It encodes the recovered Acer lessons: deterministic owner recovery, developer SSH continuity, non-looping diagnostics, change-scoped initramfs/GRUB regeneration, exact first-boot idempotency, pre-reboot artifact validation and physical evidence boundaries.
 
 The exact accepted ADR/source owner wins if a filename above has moved; use `docs/DOCUMENTATION.md` to resolve it rather than creating another guide.
 
@@ -539,6 +545,8 @@ Therefore:
 
 The stable semantic design should survive replacement of the current compatibility backend.
 
+Boot work that touches VT ownership, Xorg startup, console policy or display handoff must additionally follow `skills/greia-os-work/BOOT.md`; current Xorg requirements are compatibility-backend facts and must not be generalized into the future R7 architecture.
+
 ---
 
 ## 11. Input and controllers
@@ -681,6 +689,8 @@ Do not expose package managers, arbitrary shell commands or privileged mutation 
 
 Optional Activity achievement artwork is content, not trust evidence. Parent-installed Activity art must never auto-register global achievements merely because the package is valid or installed.
 
+For image/install/boot mutations, also follow `skills/greia-os-work/BOOT.md`: identify the exact executing artifact, do not regenerate initramfs or reinstall GRUB by ritual, preserve developer recovery before reboot, and validate generated artifacts before touching physical hardware.
+
 ---
 
 ## 15. Simulator rule: vary facts, not Greia policy
@@ -796,6 +806,9 @@ Activity author-facing contract changed
 OS/platform contributor workflow changed
   -> this skill and/or docs/agents/GREIA_AGENT_OPERATIONS.md
 
+boot/recovery workflow or evidence rule changed
+  -> skills/greia-os-work/BOOT.md + owning boot guide/postmortem/source tests
+
 achievement/reward authority or Badge Library contract changed
   -> GREIA_ACHIEVEMENTS_AND_BADGE_LIBRARY + relevant Activity/OS skills
 
@@ -843,6 +856,8 @@ Does not automatically prove physical reference hardware.
 
 Required for claims about actual Acer/Pi CPU/RAM/display/input/audio/network/device behavior.
 
+Boot work has an additional artifact boundary: a source test cannot prove the generated installed initramfs, GRUB configuration, or exact flashed image. Follow the evidence ladder in `skills/greia-os-work/BOOT.md` before claiming a physical boot fix.
+
 Always classify evidence honestly and record the exact source SHA.
 
 Do not query/run GitHub Actions as an execution/evidence service without explicit owner authorization.
@@ -864,6 +879,8 @@ For substantive OS work:
 9. run the verification appropriate to the touched subsystem;
 10. update owning docs/skills/handover as required;
 11. commit coherent work to canonical `main` unless the owner explicitly asked for another branch workflow.
+
+For boot/image/recovery changes, `skills/greia-os-work/BOOT.md` adds mandatory pre-reboot recovery and generated-artifact checks. Do not reboot physical development hardware until the applicable gate is satisfied.
 
 For code changes, run the repository's required verification from current instructions before claiming a green state. Do not claim a test you did not execute.
 
@@ -894,6 +911,7 @@ Before calling a substantive platform change complete, ask:
 19. Are public extension points documented with ownership/lifecycle/invariants?
 20. Were the correct owning docs/skill/handover updated?
 21. Is the evidence scope stated honestly?
+22. If this touches boot, did the contributor identify the executing artifact, avoid unnecessary initramfs/GRUB mutation, preserve `greia / greia` developer recovery, prevent timed panic loops, validate generated artifacts, and establish a recovery path before reboot?
 
 ---
 
@@ -920,6 +938,13 @@ Before calling a substantive platform change complete, ask:
 - arbitrary shell command construction at privileged boundaries;
 - comments that narrate syntax while architectural `why` remains undocumented;
 - magic hardware-tuning constants with no measurement provenance;
-- documentation that contradicts the current source owner.
+- documentation that contradicts the current source owner;
+- random default GRUB owner secrets or reintroduction of `greia-recovery`;
+- developer SSH that requires both public key and password instead of preserving owner-approved password recovery;
+- timed panic reboot on developer/test hardware;
+- blanket `update-initramfs -u` or `grub-install` as a generic boot troubleshooting ritual;
+- validating a payload/source initrd while assuming it proves the installed regenerated initrd;
+- rebooting physical development hardware after boot-stack mutation without a verified independent recovery path;
+- manually repairing one Acer while leaving builders, tests and living docs on the old contract.
 
-The Greia standard is: **small strong abstractions, explicit ownership, purposeful polymorphism, reusable platform services, measured low-resource behavior and documentation that keeps the next contributor out of archaeology.**
+The Greia standard is: **small strong abstractions, explicit ownership, purposeful polymorphism, reusable platform services, measured low-resource behavior, recoverable boot mutations and documentation that keeps the next contributor out of archaeology.**
