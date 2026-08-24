@@ -89,8 +89,24 @@ class OrcaBayActivity:
         elif tool_idx == 3:
             # Play first chime note
             self.audio.play("bell_0")
+        elif tool_idx == 5:
+            # Tito Spoken Orca Facts
+            fact_key = self.pod.trigger_fact()
+            self.audio.play("aurora")
+            loc = getattr(self.renderer.resources, "locale", "it")
+            self.audio.play_voice(fact_key, loc)
+            self.events.record_fact_discovered(fact_key)
 
     def handle_pointer_down(self, mx: float, my: float) -> None:
+        # 0. Check Tito Fact Banner Clicks (advance to next fact)
+        if self.pod.active_fact is not None and self.renderer.fact_banner_rect.collidepoint(int(mx), int(my)):
+            fact_key = self.pod.trigger_fact()
+            self.audio.play("aurora")
+            loc = getattr(self.renderer.resources, "locale", "it")
+            self.audio.play_voice(fact_key, loc)
+            self.events.record_fact_discovered(fact_key)
+            return
+
         # 1. Check Bottom Toolbar Clicks
         for rect, tool_idx, _, _, _ in self.renderer.tool_rects:
             if rect.collidepoint(int(mx), int(my)):

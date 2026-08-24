@@ -25,22 +25,40 @@ def _synth_wav(samples: list[int], rate: int = 22050) -> bytes:
     return buf.getvalue()
 
 
+from pathlib import Path
+
+AUDIO_DIR = Path(__file__).parent / "assets" / "audio"
+
+
 class OrcaAudio(Protocol):
     """Protocol for Activity audio playback."""
 
     def play(self, name: str) -> None:
         ...
 
+    def play_voice(self, key: str, locale: str = "it") -> None:
+        ...
+
+    def stop_voice(self) -> None:
+        ...
+
 
 class PygameOrcaAudio:
-    """Synthesizes and caches cute, realistic, non-blocking marine and orca sound effects."""
+    """Synthesizes and caches cute, realistic, non-blocking marine sounds and Tito character voice clips."""
 
     def __init__(self) -> None:
         self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._voice_cache: dict[tuple[str, str], pygame.mixer.Sound] = {}
+        self._voice_channel: pygame.mixer.Channel | None = None
         self._enabled = False
         try:
             if not pygame.mixer.get_init():
-                pygame.mixer.init(frequency=22050, size=-16, channels=1, buffer=512)
+                pygame.mixer.init(frequency=22050, size=-16, channels=2, buffer=512)
+            try:
+                pygame.mixer.set_num_channels(8)
+                self._voice_channel = pygame.mixer.Channel(0)
+            except Exception:
+                self._voice_channel = None
             self._init_sounds()
             self._enabled = True
         except Exception:
@@ -154,5 +172,36 @@ class PygameOrcaAudio:
         if snd is not None:
             try:
                 snd.play()
+            except Exception:
+                pass
+
+    def play_voice(self, key: str, locale: str = "it") -> None:
+        if not self._enabled:
+            return
+        loc = "it" if locale.startswith("it") else "en"
+        cache_key = (key, loc)
+        snd = self._voice_cache.get(cache_key)
+        if snd is None:
+            p = AUDIO_DIR / loc / f"tito_{key}.wav"
+            if p.exists():
+                try:
+                    snd = pygame.mixer.Sound(str(p))
+                    self._voice_cache[cache_key] = snd
+                except Exception:
+                    pass
+        if snd is not None:
+            try:
+                if self._voice_channel is not None:
+                    self._voice_channel.stop()
+                    self._voice_channel.play(snd)
+                else:
+                    snd.play()
+            except Exception:
+                pass
+
+    def stop_voice(self) -> None:
+        if self._enabled and self._voice_channel is not None:
+            try:
+                self._voice_channel.stop()
             except Exception:
                 pass

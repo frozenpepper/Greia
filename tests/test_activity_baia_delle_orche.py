@@ -256,6 +256,39 @@ class BaiaDelleOrcheTests(unittest.TestCase):
         app.handle_tool_click(4)
         self.assertTrue(pod.night_mode)
 
+        # Test Tito fact trigger (Tool 5)
+        app.handle_tool_click(5)
+        self.assertEqual(pod.active_tool, 5)
+        self.assertIsNotNone(pod.active_fact)
+        first_fact = pod.active_fact
+        self.assertIn(first_fact, pod.discovered_facts)
+
+        # Test clicking on the fact banner advances to next fact
+        banner_rect = renderer.fact_banner_rect
+        app.handle_pointer_down(float(banner_rect.centerx), float(banner_rect.centery))
+        self.assertIsNotNone(pod.active_fact)
+        self.assertNotEqual(pod.active_fact, first_fact)
+
+    def test_tito_voice_playback_and_lifecycle(self) -> None:
+        audio = PygameOrcaAudio()
+        for fact_key in ("fact_breach", "fact_swallow", "fact_sleep", "fact_song", "fact_pod", "fact_fin"):
+            audio.play_voice(fact_key, "it")
+            audio.play_voice(fact_key, "en")
+        audio.stop_voice()
+
+    def test_tito_fact_banner_rendering(self) -> None:
+        support = ActivityLocaleSupport.localized(("it", "en"), default_ui_locale="it")
+        context = resolve_activity_locale("it", support)
+        assert context is not None
+        resources = LocalizedResources(ACTIVITY_DIR, context)
+        renderer = OrcaRenderer(GreiaTypography(), resources)
+
+        surf = pygame.Surface((1024, 600))
+        pod = OrcaPod()
+        pod.trigger_fact("fact_breach")
+        renderer.render_frame(surf, pod)
+        self.assertEqual(surf.get_size(), (1024, 600))
+
 
 if __name__ == "__main__":
     unittest.main()

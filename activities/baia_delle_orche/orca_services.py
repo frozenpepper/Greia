@@ -52,3 +52,9 @@ class GreiaOrcaEvents:
             "orca.song_completed",
             {"notes_count": notes_count},
         )
+
+    def record_fact_discovered(self, fact_id: str) -> None:
+        emit_activity_event(
+            "orca.fact_discovered",
+            {"fact_id": fact_id},
+        )

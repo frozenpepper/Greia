@@ -13,7 +13,20 @@
     "tool.play": "GIOCHI",
     "tool.sing": "CANTO",
     "tool.aurora": "NOTTE",
-    "tool.day": "GIORNO"
+    "tool.day": "GIORNO",
+    "tool.tito": "TITO",
+    "fact.fact_breach.title": "I Salti nell'Aria",
+    "fact.fact_breach.body": "I grandi salti fuori dall'acqua si chiamano breaching. Quando l'orca ricade fa un gran rumore, che può aiutare a mandare un segnale alle altre orche anche da lontano!",
+    "fact.fact_swallow.title": "I Pesciolini Interi",
+    "fact.fact_swallow.body": "Le orche non masticano il cibo: usano i denti per afferrare i pesciolini e poi li inghiottono tutti interi!",
+    "fact.fact_sleep.title": "Dormire a Metà",
+    "fact.fact_sleep.body": "Le orche dormono con un occhio aperto e metà cervello sveglio per ricordarsi di salire a respirare l'aria!",
+    "fact.fact_song.title": "I Canti del Branco",
+    "fact.fact_song.body": "Ogni famiglia di orche ha fischi speciali e una propria canzone unica, diversa da tutte le altre!",
+    "fact.fact_pod.title": "Sempre Insieme",
+    "fact.fact_pod.body": "I cuccioli di orca restano sempre vicini alla loro mamma e al loro branco per tutta la vita!",
+    "fact.fact_fin.title": "La Pinna Dorsale",
+    "fact.fact_fin.body": "La grande pinna sulla schiena dell'orca si chiama pinna dorsale e aiuta a nuotare dritti come frecce nell'acqua!"
   },
   "audio": {}
 }

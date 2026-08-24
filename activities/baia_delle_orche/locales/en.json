@@ -13,7 +13,20 @@
     "tool.play": "PLAY",
     "tool.sing": "SONG",
     "tool.aurora": "NIGHT",
-    "tool.day": "DAY"
+    "tool.day": "DAY",
+    "tool.tito": "TITO",
+    "fact.fact_breach.title": "Air Leaps (Breaching)",
+    "fact.fact_breach.body": "Big jumps out of the water are called breaching. When the orca splashes down it makes a huge sound, which helps send a signal to other orcas far away!",
+    "fact.fact_swallow.title": "Swallowing Fish Whole",
+    "fact.fact_swallow.body": "Orcas don't chew their food: they use their teeth to catch fish and then swallow them whole!",
+    "fact.fact_sleep.title": "Sleeping with One Eye Open",
+    "fact.fact_sleep.body": "Orcas sleep with one eye open and half their brain awake so they remember to surface and breathe air!",
+    "fact.fact_song.title": "Family Songs",
+    "fact.fact_song.body": "Every orca family has special whistles and its own unique song, different from all the others!",
+    "fact.fact_pod.title": "Family Pods",
+    "fact.fact_pod.body": "Orca calves stay close to their mother and their pod for their entire lives!",
+    "fact.fact_fin.title": "The Dorsal Fin",
+    "fact.fact_fin.body": "The big fin on an orca's back is called the dorsal fin, and it helps them swim straight like arrows in the water!"
   },
   "audio": {}
 }

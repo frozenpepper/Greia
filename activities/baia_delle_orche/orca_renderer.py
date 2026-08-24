@@ -146,12 +146,14 @@ class OrcaRenderer:
         self._tool_font = typography.font(FontRole.TITLE, 13)
         self._badge_font = typography.font(FontRole.DISPLAY, 18)
         self._note_font = typography.font(FontRole.DISPLAY, 16)
+        self._fact_title_font = typography.font(FontRole.TITLE, 14)
+        self._fact_body_font = typography.font(FontRole.BODY, 12)
         self._time_counter = 0.0
 
-        # Pre-calculated toolbar buttons (5 large child buttons at bottom)
-        btn_w, btn_h = 165, 72
-        spacing = 15
-        start_x = (REFERENCE_WIDTH - (5 * btn_w + 4 * spacing)) // 2
+        # Pre-calculated toolbar buttons (6 large child buttons at bottom)
+        btn_w, btn_h = 138, 72
+        spacing = 14
+        start_x = (REFERENCE_WIDTH - (6 * btn_w + 5 * spacing)) // 2
         btn_y = REFERENCE_HEIGHT - 82
 
         self.tool_rects: list[tuple[pygame.Rect, int, tuple[int, int, int], str, str]] = [
@@ -160,7 +162,11 @@ class OrcaRenderer:
             (pygame.Rect(start_x + 2 * (btn_w + spacing), btn_y, btn_w, btn_h), 2, (56, 189, 248), "play", "tool.play"),
             (pygame.Rect(start_x + 3 * (btn_w + spacing), btn_y, btn_w, btn_h), 3, (168, 85, 247), "sing", "tool.sing"),
             (pygame.Rect(start_x + 4 * (btn_w + spacing), btn_y, btn_w, btn_h), 4, (16, 185, 129), "aurora", "tool.aurora"),
+            (pygame.Rect(start_x + 5 * (btn_w + spacing), btn_y, btn_w, btn_h), 5, (234, 179, 8), "tito", "tool.tito"),
         ]
+
+        # Tito Fact Banner Rect (positioned between Home button and Top-Right HUD)
+        self.fact_banner_rect = pygame.Rect(96, 12, 700, 96)
 
         # 4 Floating musical bells on water surface
         bell_spacing = 110
@@ -425,6 +431,12 @@ class OrcaRenderer:
                 _draw_vector_music(surface, rect.centerx, icon_cy, 22, (255, 255, 255))
             elif icon_kind == "aurora":
                 _draw_vector_moon(surface, rect.centerx, icon_cy, 12, (254, 240, 138))
+            elif icon_kind == "tito":
+                tito_avatar = _get_scaled_asset("tito_avatar.png", 34, 34, facing_right=True, angle_deg=0)
+                if tito_avatar is not None:
+                    surface.blit(tito_avatar, (rect.centerx - 17, icon_cy - 17))
+                else:
+                    pygame.draw.circle(surface, (253, 224, 71), (rect.centerx, icon_cy), 12)
 
             # Text label in bottom half
             label_text = self.resources.text(label_key) if label_key else ""
@@ -451,6 +463,63 @@ class OrcaRenderer:
         _draw_vector_heart(surface, badge_x + 118, badge_y + 24, 18, (244, 63, 94))
         cuddle_txt = self._badge_font.render(str(pod.total_cuddled), True, (255, 255, 255))
         surface.blit(cuddle_txt, (badge_x + 134, badge_y + 24 - cuddle_txt.get_height() // 2))
+
+    def draw_fact_banner(self, surface: pygame.Surface, pod: OrcaPod) -> None:
+        """Render Tito's floating fact bubble banner at top center when a fact is active."""
+        if pod.active_fact is None:
+            return
+
+        fact_key = pod.active_fact
+        rect = self.fact_banner_rect
+
+        # Semi-transparent dark frosted panel with warm golden border
+        banner_surf = pygame.Surface((rect.width, rect.height), pygame.SRCALPHA)
+        pygame.draw.rect(banner_surf, (15, 23, 42, 238), (0, 0, rect.width, rect.height), border_radius=20)
+        pygame.draw.rect(banner_surf, (250, 204, 21), (0, 0, rect.width, rect.height), width=2, border_radius=20)
+        surface.blit(banner_surf, (rect.x, rect.y))
+
+        # Circular Tito avatar on left with gentle talking bounce
+        bounce = int(math.sin(self._time_counter * 8.0) * 2.0)
+        tito_avatar = _get_scaled_asset("tito_avatar.png", 68, 68, facing_right=True, angle_deg=0)
+        avatar_x = rect.x + 16
+        avatar_y = rect.y + 14 + bounce
+        if tito_avatar is not None:
+            pygame.draw.circle(surface, (250, 204, 21), (avatar_x + 34, avatar_y + 34), 36)
+            surface.blit(tito_avatar, (avatar_x, avatar_y))
+        else:
+            pygame.draw.circle(surface, (250, 204, 21), (avatar_x + 34, avatar_y + 34), 34)
+
+        # Title Text (Gold)
+        title_text = self.resources.text(f"fact.{fact_key}.title")
+        title_surf = self._fact_title_font.render(title_text, True, (253, 224, 71))
+        surface.blit(title_surf, (rect.x + 96, rect.y + 12))
+
+        # Body Text (Wrapped lines in crisp white)
+        body_text = self.resources.text(f"fact.{fact_key}.body")
+        words = body_text.split()
+        line1_words: list[str] = []
+        line2_words: list[str] = []
+        for w in words:
+            if len(" ".join(line1_words + [w])) <= 58:
+                line1_words.append(w)
+            else:
+                line2_words.append(w)
+
+        line1_surf = self._fact_body_font.render(" ".join(line1_words), True, (255, 255, 255))
+        surface.blit(line1_surf, (rect.x + 96, rect.y + 38))
+        if line2_words:
+            line2_surf = self._fact_body_font.render(" ".join(line2_words), True, (226, 232, 240))
+            surface.blit(line2_surf, (rect.x + 96, rect.y + 60))
+
+        # Pulsing Sound Waves on the right
+        speaker_x = rect.right - 32
+        speaker_y = rect.y + 24
+        wave_pulse = int((self._time_counter * 5.0) % 3)
+        pygame.draw.circle(surface, (250, 204, 21), (speaker_x, speaker_y), 5)
+        if wave_pulse >= 1:
+            pygame.draw.arc(surface, (250, 204, 21), (speaker_x - 10, speaker_y - 10, 20, 20), -0.7, 0.7, 2)
+        if wave_pulse >= 2:
+            pygame.draw.arc(surface, (250, 204, 21), (speaker_x - 16, speaker_y - 16, 32, 32), -0.7, 0.7, 2)
 
     def render_frame(self, canvas_surface: pygame.Surface, pod: OrcaPod) -> None:
         """Compose all layers into a complete, beautiful presentable frame."""
@@ -481,3 +550,6 @@ class OrcaRenderer:
 
         # 7. UI Toolbar & HUD Counters
         self.draw_ui(canvas_surface, pod.active_tool, pod)
+
+        # 8. Tito Fact Banner (when active)
+        self.draw_fact_banner(canvas_surface, pod)

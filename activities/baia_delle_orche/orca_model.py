@@ -433,8 +433,22 @@ class OrcaPod:
         self.particles: list[ParticleEntity] = []
 
         self.night_mode = False
-        self.active_tool = 0  # 0: Feed, 1: Cuddle, 2: Play/Tricks, 3: Song, 4: Night/Day
+        self.active_tool = 0  # 0: Feed, 1: Cuddle, 2: Play/Tricks, 3: Song, 4: Night/Day, 5: Tito Facts
         self.selected_food_idx = 0
+
+        # Tito Spoken Orca Facts
+        self.FACT_KEYS: tuple[str, ...] = (
+            "fact_breach",
+            "fact_swallow",
+            "fact_sleep",
+            "fact_song",
+            "fact_pod",
+            "fact_fin",
+        )
+        self.active_fact: str | None = None
+        self.fact_timer: float = 0.0
+        self.current_fact_idx: int = 0
+        self.discovered_facts: set[str] = set()
 
         # Persistent activity stats
         self.total_fed = 0
@@ -448,6 +462,7 @@ class OrcaPod:
         self.total_acrobatics = int(data.get("total_acrobatics", 0))
         self.total_songs = int(data.get("total_songs", 0))
         self.night_mode = bool(data.get("night_mode", False))
+        self.discovered_facts = set(data.get("discovered_facts", []))
 
     def export_progress(self) -> dict[str, Any]:
         return {
@@ -456,7 +471,21 @@ class OrcaPod:
             "total_acrobatics": self.total_acrobatics,
             "total_songs": self.total_songs,
             "night_mode": self.night_mode,
+            "discovered_facts": sorted(list(self.discovered_facts)),
         }
+
+    def trigger_fact(self, key: str | None = None) -> str:
+        if key is None:
+            key = self.FACT_KEYS[self.current_fact_idx % len(self.FACT_KEYS)]
+            self.current_fact_idx += 1
+        self.active_fact = key
+        self.fact_timer = 9.5
+        self.discovered_facts.add(key)
+        return key
+
+    def dismiss_fact(self) -> None:
+        self.active_fact = None
+        self.fact_timer = 0.0
 
     def spawn_food(self, x: float, y: float, kind: FoodType | None = None) -> FoodEntity:
         k = kind.value if kind is not None else list(FoodType)[self.selected_food_idx % len(FoodType)].value
@@ -537,5 +566,11 @@ class OrcaPod:
 
         # Update particles
         self.particles = [p for p in self.particles if p.update(dt)]
+
+        # Update Tito fact speech timer
+        if self.fact_timer > 0.0:
+            self.fact_timer -= dt
+            if self.fact_timer <= 0.0:
+                self.active_fact = None
 
         return all_events
