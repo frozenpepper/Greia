@@ -4,21 +4,18 @@
   "direction": "ltr",
   "strings": {
     "activity.title": "Woodland Hide & Seek",
+    "activity.nascondino_bosco.title": "Woodland Hide & Seek",
     "hud.found": "Found: {found}/{total}",
     "hud.stars": "★ {stars}",
-    "season.spring": "🌱 Spring",
-    "season.autumn": "🍂 Autumn",
-    "season.night": "🌙 Magic Night",
-    "btn.new_round": "🔄 New Round",
-    "btn.play_again": "🎉 Play Again!",
-    "victory.title": "Awesome! You found everyone! 🌲🐾",
+    "btn.play_again": "PLAY AGAIN",
+    "victory.title": "FOUND THEM ALL!",
     "victory.subtitle": "All the woodland animals are happy!",
-    "animal.fox": "Fox 🦊",
-    "animal.bunny": "Bunny 🐰",
-    "animal.owl": "Owl 🦉",
-    "animal.hedgehog": "Hedgehog 🦔",
-    "animal.squirrel": "Squirrel 🐿️",
-    "animal.frog": "Frog 🐸"
+    "animal.fox": "FOX",
+    "animal.bunny": "BUNNY",
+    "animal.owl": "OWL",
+    "animal.hedgehog": "HEDGEHOG",
+    "animal.squirrel": "SQUIRREL",
+    "animal.frog": "FROG"
   },
   "audio": {}
 }

@@ -4,21 +4,18 @@
   "direction": "ltr",
   "strings": {
     "activity.title": "Nascondino nel Bosco",
+    "activity.nascondino_bosco.title": "Nascondino nel Bosco",
     "hud.found": "Trovati: {found}/{total}",
     "hud.stars": "★ {stars}",
-    "season.spring": "🌱 Primavera",
-    "season.autumn": "🍂 Autunno",
-    "season.night": "🌙 Notte Magica",
-    "btn.new_round": "🔄 Nuovo Giro",
-    "btn.play_again": "🎉 Gioca Ancora!",
-    "victory.title": "Bravissima! Li hai trovati tutti! 🌲🐾",
+    "btn.play_again": "GIOCA ANCORA",
+    "victory.title": "TROVATI TUTTI!",
     "victory.subtitle": "Tutti gli animaletti sono felici!",
-    "animal.fox": "Volpina 🦊",
-    "animal.bunny": "Coniglietto 🐰",
-    "animal.owl": "Gufo 🦉",
-    "animal.hedgehog": "Riccio 🦔",
-    "animal.squirrel": "Scoiattolo 🐿️",
-    "animal.frog": "Ranocchia 🐸"
+    "animal.fox": "VOLPE",
+    "animal.bunny": "CONIGLIO",
+    "animal.owl": "GUFO",
+    "animal.hedgehog": "RICCIO",
+    "animal.squirrel": "SCOIATTOLO",
+    "animal.frog": "RANA"
   },
   "audio": {}
 }

@@ -118,6 +118,29 @@ Structural refactors must inventory manifest/runtime/storage/event/localization/
 
 R7 remains the blocking platform phase; this parallel Activity-quality calibration does not change R7 status.
 
+## Nascondino nel Bosco Activity refactoring & physical Acer performance calibration (2026-08-24)
+
+`activities/nascondino_bosco` (Woodland Hide & Seek) had critical performance and visual composition defects on physical hardware:
+- **Root cause 1 (performance)**: Re-rendered 15 SVG/PNG scene layers from scratch twice every frame at 30 Hz with software alpha blending (including 1024×512 sunlight rays and 1024×256 fog strips), resulting in physical Acer Atom execution at **505.35 ms/frame (2.0 fps)**.
+- **Root cause 2 (visual composition)**: Hardcoded spot coordinates (such as a pine tree at `y=210` in the sky) and drew crude procedural shapes on top of the vector scene instead of grounding hiding spots to natural scene props.
+- **Root cause 3 (architecture)**: 714-line monolith executing dynamic font rendering and per-frame fullscreen alpha blending on victory.
+
+The refactor separated the Activity into clean, cohesive modules:
+```text
+main.py                 thin composition root + test compatibility exports (ANIMALS, SEASONS, WoodlandAudio, SPOTS)
+woodland_model.py       AnimalDefinition / HidingSpotDefinition / WoodlandGameState domain invariants
+woodland_app.py         lifecycle + semantic input + PygameCompletionScreen terminal victory integration
+woodland_renderer.py    one-pass active game compositor + responsive HUD layout (normal/large/compact)
+woodland_art.py         pre-rendered background baking + cached animal portraits + grounded clue animations
+woodland_audio.py       synthesized PCM sound effects (rustle, pop, win)
+```
+
+**Measured physical Acer Aspire One results:**
+- Pre-rendered background blit: **1.88 ms** (530 fps capability)
+- Active frame render time: **505.35 ms → 9.05 ms** (**55× speedup**, locked at 30 fps with ~27% CPU margin)
+- Grounded scene spots: 5 natural spots (hero oak tree hollow `x=110, y=350`, left round bush `x=125, y=475`, center fallen log `x=485, y=485`, right rock cluster `x=715, y=480`, right flowering bush `x=890, y=470`); all flying trees/floating shapes eliminated.
+- Test suite: `tests/test_activity_nascondino_bosco.py` (8/8 PASS locally and on physical Acer); full suite **1,141 tests PASS**, 19/19 activities valid.
+
 ## Parent Settings overlay tranche (2026-08-23, `3c3e91f`)
 
 The chord-opened (hold S+T) on-device Parent Settings panel had two owner-reported defects, both fixed and verified on the reference Acer:
