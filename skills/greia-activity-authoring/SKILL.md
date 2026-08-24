@@ -34,6 +34,8 @@ An `ImportError`, `ModuleNotFoundError`, startup exception, immediate exit, dead
 
 ### Creating a new Activity or changing Activity code
 
+If the Activity is governed by a current named product/design/implementation plan, read that Activity-specific specification first for **what the Activity must do**. Then use this skill for **how one Greia Activity must be engineered, integrated and accepted**. Do not copy project/portfolio sequencing into the Activity skill.
+
 Read:
 
 ```text
