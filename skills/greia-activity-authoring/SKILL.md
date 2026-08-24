@@ -1,30 +1,66 @@
 ---
 name: greia-activity-authoring
-description: Canonical agent guide for designing, implementing, refactoring, packaging, validating and testing Greia Activities, including clean OOP structure, measured low-resource performance, low-cost terminal/victory rendering, trusted achievement/reward event design, discovery/audience metadata, optional canonical character speech, deterministic pedagogical speech, shared character utterances, child grammatical agreement, and platform-owned microphone routing.
+description: Canonical agent guide for designing, implementing, refactoring, packaging, validating and testing Greia Activities, including mandatory real-simulator launch acceptance, clean OOP structure, measured low-resource performance, low-cost terminal/victory rendering, trusted achievement/reward event design, discovery/audience metadata, optional canonical character speech, deterministic pedagogical speech, shared character utterances, child grammatical agreement, and platform-owned microphone routing.
 ---
 
 # Greia Activity Authoring Skill
 
 **Status:** living derived authoring guide  
-**Reviewed:** 2026-08-23
+**Reviewed:** 2026-08-24
 
 This skill is intentionally split so small local agents do not have to load unrelated specialist guidance for every task.
+
+## NON-NEGOTIABLE COMPLETION GATE — ACTUALLY LAUNCH THE ACTIVITY
+
+For every new Activity and every substantive runtime-relevant Activity change, **source/tests are not the definition of done**.
+
+> **The final runtime-relevant source state MUST be loaded through the real Greia Activity Simulator/launcher path, launched from Greia, present a usable first frame, remain alive for at least 10 seconds after that frame, survive at least one meaningful child interaction, and return cleanly to the Shell before the work may be called done, complete, working, fixed, ready, accepted, launchable or finished.**
+
+This is mandatory even when all of the following pass:
+
+```text
+unit tests
+make verify
+project validation
+PythonRuntimeAdapter validation
+repository/package imports
+python main.py
+AST/source checks
+package creation/install validation
+```
+
+None of those substitutes for a real Greia simulator launch.
+
+`ImportError`, `ModuleNotFoundError`, startup traceback, missing startup asset/resource, immediate exit, dead first frame, failure to reach READY, first-interaction crash, or failure to return to the Shell is a **FAILED Activity acceptance**, not a minor issue that can be handed off while calling the Activity complete.
+
+Simulator evidence applies only to the exact runtime-relevant source state that was launched. **Any runtime-relevant edit after a PASS invalidates that PASS and requires another simulator launch.**
+
+If the current execution environment cannot run the simulator, the agent may preserve/commit the work, but MUST report it as `INTEGRATION-UNVERIFIED` or `SOURCE-VERIFIED / SIMULATOR-UNVERIFIED`. Lack of simulator access does not weaken this completion gate.
+
+The exact mandatory procedure, evidence fields, failure handling and strict status vocabulary are owned by:
+
+```text
+skills/greia-activity-authoring/LAUNCH_ACCEPTANCE.md
+```
+
+Reviewers must reject substantive Activity work that has no concrete final-source simulator launch evidence.
 
 ## Mandatory reading order
 
 1. Read `CORE.md` completely for the canonical general Activity-authoring contract.
-2. Read `ENGINEERING.md` whenever creating, modifying, reviewing, optimizing or substantially refactoring Activity implementation code. For new/substantively changed first-party Activities it is mandatory: it owns the practical clean-code/OOP/decomposition/performance protocol, including the rule that `main.py` is a thin composition root rather than the Activity implementation.
-3. Read `REFACTORING.md` completely whenever structurally refactoring an existing Activity. It owns the behavior/manifest contract inventory, structural-vs-behavior change classification, recommended extraction order, semantic-action unification, and refactor-specific test/review protocol calibrated on a real first-party Activity.
-4. Read `TERMINAL_RENDERING.md` completely whenever an Activity has or adds a victory, completion, results, session-finished, Play Again or Continue screen. It owns the required terminal-state lifecycle and the shared low-cost `PygameCompletionScreen` path. A terminal screen must not keep the live game updating/rendering underneath a fullscreen alpha modal.
-5. Read `ACHIEVEMENTS.md` completely whenever creating/changing completion, creation, milestone or score events; participating in Greia Stars; or designing Activity facts that may drive badges/achievements. Activities report facts; only trusted Greia policy awards Stars or achievements.
-6. Read `DISCOVERY.md` whenever creating or editing `activity.toml`, launcher categories, audience/age metadata, difficulty/adaptive difficulty, discovery tags, or reasoning about how an Activity appears for a child.
-7. When packaging or exporting an Activity, also read `docs/architecture/GREIA_ACTIVITY_PACKAGE_FORMAT.md`. Parent-facing distribution uses the `.greiaactivity` ZIP contract; the extension is a UX/routing signal, never package validation or trust.
-8. When the Activity speaks, produces localized audio, uses shared Greia character utterances, teaches pronunciation, uses a Greia character voice, changes Activity Designer audio tooling, or needs child-directed grammatical agreement, also read `VOICE_GENERATION.md` completely and `docs/adr/0032-profile-presentation-and-grammatical-agreement.md` where agreement is relevant.
-9. When the Activity records from or listens to the microphone, also read `docs/adr/0031-platform-owned-microphone-processing.md` and `docs/architecture/GREIA_AUDIO_SERVICE.md`.
-10. Follow every narrower repository `AGENTS.md` that applies to the files being changed.
-11. Exact implemented APIs/schemas remain owned by source/runtime declarations; accepted ADRs own architecture; product docs own child-facing requirements.
+2. Read `LAUNCH_ACCEPTANCE.md` completely for **every new Activity and every substantive Activity creation, modification, refactor, optimization, review or test task**. It owns the hard simulator launch/survival definition of done.
+3. Read `ENGINEERING.md` whenever creating, modifying, reviewing, optimizing or substantially refactoring Activity implementation code. For new/substantively changed first-party Activities it is mandatory: it owns the practical clean-code/OOP/decomposition/performance protocol, including the rule that `main.py` is a thin composition root rather than the Activity implementation.
+4. Read `REFACTORING.md` completely whenever structurally refactoring an existing Activity. It owns the behavior/manifest contract inventory, structural-vs-behavior change classification, recommended extraction order, semantic-action unification, and refactor-specific test/review protocol calibrated on a real first-party Activity.
+5. Read `TERMINAL_RENDERING.md` completely whenever an Activity has or adds a victory, completion, results, session-finished, Play Again or Continue screen. It owns the required terminal-state lifecycle and the shared low-cost `PygameCompletionScreen` path. A terminal screen must not keep the live game updating/rendering underneath a fullscreen alpha modal.
+6. Read `ACHIEVEMENTS.md` completely whenever creating/changing completion, creation, milestone or score events; participating in Greia Stars; or designing Activity facts that may drive badges/achievements. Activities report facts; only trusted Greia policy awards Stars or achievements.
+7. Read `DISCOVERY.md` whenever creating or editing `activity.toml`, launcher categories, audience/age metadata, difficulty/adaptive difficulty, discovery tags, or reasoning about how an Activity appears for a child.
+8. When packaging or exporting an Activity, also read `docs/architecture/GREIA_ACTIVITY_PACKAGE_FORMAT.md`. Parent-facing distribution uses the `.greiaactivity` ZIP contract; the extension is a UX/routing signal, never package validation or trust.
+9. When the Activity speaks, produces localized audio, uses shared Greia character utterances, teaches pronunciation, uses a Greia character voice, changes Activity Designer audio tooling, or needs child-directed grammatical agreement, also read `VOICE_GENERATION.md` completely and `docs/adr/0032-profile-presentation-and-grammatical-agreement.md` where agreement is relevant.
+10. When the Activity records from or listens to the microphone, also read `docs/adr/0031-platform-owned-microphone-processing.md` and `docs/architecture/GREIA_AUDIO_SERVICE.md`.
+11. Follow every narrower repository `AGENTS.md` that applies to the files being changed.
+12. Exact implemented APIs/schemas remain owned by source/runtime declarations; accepted ADRs own architecture; product docs own child-facing requirements.
 
-Do not treat this index as permission to skip `CORE.md` or, for implementation work, `ENGINEERING.md`. Structural refactors also require `REFACTORING.md`; completion/victory work requires `TERMINAL_RENDERING.md`; achievement/reward event work requires `ACHIEVEMENTS.md`.
+Do not treat this index as permission to skip `CORE.md` or `LAUNCH_ACCEPTANCE.md` or, for implementation work, `ENGINEERING.md`. Structural refactors also require `REFACTORING.md`; completion/victory work requires `TERMINAL_RENDERING.md`; achievement/reward event work requires `ACHIEVEMENTS.md`.
 
 ## Implementation engineering decision summary
 
@@ -134,6 +170,7 @@ Desktop/simulator timing is diagnostic only. Claims about Acer/Pi performance re
 Full implementation/refactoring protocol and measured rationale:
 
 ```text
+skills/greia-activity-authoring/LAUNCH_ACCEPTANCE.md
 skills/greia-activity-authoring/ENGINEERING.md
 skills/greia-activity-authoring/REFACTORING.md
 skills/greia-activity-authoring/TERMINAL_RENDERING.md
