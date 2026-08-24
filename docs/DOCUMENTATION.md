@@ -1,7 +1,7 @@
 # Greia Documentation Map and Authority Model
 
 **Status:** repository-wide documentation contract  
-**Last reviewed:** 2026-08-23  
+**Last reviewed:** 2026-08-24  
 **Audience:** contributors, coding agents, reviewers, test operators, Activity authors
 
 ---
@@ -58,7 +58,7 @@ Of particular relevance to current UI/Activity/developer/update work:
 
 `GREIA_PERFORMANCE_BEST_PRACTICES.md` is the living measured-performance manual: device cost model, optimization principles (P1–P14), instruments/evidence discipline, append-only case studies and the Activity-facing rules destined for the authoring skill. It operationalizes the foundations' low-resource rules; it adds no new authority beyond them.
 
-`BOOT_PIPELINE_AGENT_GUIDE.md` is the authoritative operational guide for the boot pipeline, resolution-independent display composition, initramfs framebuffer splash, non-root Xorg wrapper contracts, and systemd hardware lifecycle.
+`BOOT_PIPELINE_AGENT_GUIDE.md` is the **mandatory derived operating guide** for the boot pipeline, generated boot artifacts, initramfs/framebuffer handling, GRUB recovery, Xorg compatibility constraints, first-boot/systemd lifecycle and physical recovery. It does not override exact source/runtime contracts. Boot contributors must also read `skills/greia-os-work/BOOT.md`, which turns the recovered hardware lessons into contributor stop conditions and pre-reboot gates.
 
 ### 2.5 Exact implemented contracts — source/runtime declarations
 
@@ -132,11 +132,14 @@ For exact currently implemented APIs, schemas, command vocabularies and limits, 
 | trusted absolute-path current-Pygame exact-viewport Activity bootstrap; no Activity-visible simulator identity | `src/greia_simulator/python_activity.py` |
 | Activity Simulator desktop control plane / repository entry point | `src/greia_simulator/app.py`, `tools/greia_simulator.py` |
 | image composition | `build/profiles/*.toml`, `build/package-sets/*.txt`, canonical builders/overlays |
+| GRUB owner credential/default provisioning | `src/greia_platform/grub_security.py`, `build/overlay/etc/grub.d/01_greia_auth` |
+| installed/developer boot kernel-arg policy | `build/overlay/etc/grub.d/10_greia_appliance`, `src/greia_platform/boot_contract.py` |
+| first-boot recurring dependency/idempotency | `build/overlay/etc/systemd/system/greia-first-boot.service`, `build/overlay/usr/local/lib/greia-os/first-boot` |
+| developer SSH recovery bootstrap/effective policy | `build/overlay/usr/local/lib/greia-os/prepare-developer-ssh`, `build/overlay/etc/systemd/system/ssh.service.d/10-greia-developer-bootstrap.conf` |
 | early-boot framebuffer cover renderer | `build/early-boot/greia-fb-splash.c`, `build/early-boot/README.md` |
 | canonical boot artwork lineage | `assets/boot/source/`, `assets/boot/static/`, `tools/generate_boot_artwork.py` |
 | launcher-owned boot intro | `src/greia_launcher/boot_intro.py` |
 | one-shot boot chime | `src/greia_launcher/boot_chime.py`, `assets/audio/system/greia-boot-chime.wav` |
-| installed/developer boot kernel-arg policy | `build/overlay/etc/grub.d/10_greia_appliance`, `src/greia_platform/boot_contract.py` |
 | Acer-bootable syslinux/FAT32 live USB | `tools/build-live-usb.sh`, `build/live-syslinux/syslinux.cfg.in` |
 | boot-logistics operating reference | `docs/INSTALLER_IMAGE_CREATION_AND_BOOT.md` |
 
@@ -178,7 +181,7 @@ docs/testing/2026-08-20_V5_VISUAL_INTEGRATION_SIMULATOR_LOCAL_AGENT.md
 
 ### 2.9 Agent/developer manuals — `docs/agents/*`, `docs/development/*`, `skills/*`
 
-`docs/agents/GREIA_AGENT_OPERATIONS.md` is the operational entry point for build/test/hardware work. `skills/greia-activity-authoring/SKILL.md` is the living Activity authoring guide. `skills/greia-visual-authoring/SKILL.md` is the living practical guide for model-assisted Greia character/scene/prop/FX/UI visual creation and integration; it should point to `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` for the complete system map rather than trying to duplicate that architecture. `docs/development/GREIA_ACTIVITY_SIMULATOR.md` is the Activity Simulator developer/operator guide below ADR 0029. `docs/development/GREIA_SYSTEM_UPDATE_RELEASE_WORKFLOW.md` is the concise release-operator guide for signing, building, inspecting and pushing `.greiaupdate` artifacts below ADR 0030. These manuals must preserve the exact source/evidence/authority boundaries of the systems they explain.
+`docs/agents/GREIA_AGENT_OPERATIONS.md` is the operational entry point for build/test/hardware work. `skills/greia-os-work/SKILL.md` is the living derived OS/platform engineering guide; `skills/greia-os-work/BOOT.md` is its mandatory boot/recovery companion. `skills/greia-activity-authoring/SKILL.md` is the living Activity authoring guide. `skills/greia-visual-authoring/SKILL.md` is the living practical guide for model-assisted Greia character/scene/prop/FX/UI visual creation and integration; it should point to `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` for the complete system map rather than trying to duplicate that architecture. `docs/development/GREIA_ACTIVITY_SIMULATOR.md` is the Activity Simulator developer/operator guide below ADR 0029. `docs/development/GREIA_SYSTEM_UPDATE_RELEASE_WORKFLOW.md` is the concise release-operator guide for signing, building, inspecting and pushing `.greiaupdate` artifacts below ADR 0030. These manuals must preserve the exact source/evidence/authority boundaries of the systems they explain.
 
 ### 2.10 Governance/licensing — `docs/governance/*`
 
@@ -296,7 +299,7 @@ The simulator may help reproduce platform-independent Activity/layout/runtime se
 | visual character/scene/prop/FX/UI art direction or shared asset-library work | `GREIA_ART_GRAPHICS_SYSTEM.md` if the stable architecture/index changes + current art plan checkpoint + append-only art ledger + `GREIA_VISUAL_SYSTEM_RESUME.md` if continuation changes + `skills/greia-visual-authoring/SKILL.md`; reconcile accepted reusable rules into visual style/art-requirements docs and update HANDOVER when continuation/evidence changes |
 | shared visual catalogue/rendition/cache/Shell-or-Activity consumption architecture | `GREIA_ART_GRAPHICS_SYSTEM.md` + exact source/tests + current art plan + visual resume + HANDOVER + visual skill when contributor workflow changes |
 | package install/update/remove/trust | Activity ecosystem docs + Activity skill + active plan + Parent docs where applicable |
-| installation/build/initramfs/display hardware contract | issue log + review/evidence + operator docs + active plan |
+| installation/build/initramfs/display hardware/boot/recovery contract | issue log + review/evidence + operator docs + `skills/greia-os-work/SKILL.md` + `skills/greia-os-work/BOOT.md` + active plan/HANDOVER |
 | Parent UX/credentials/pairing | `PARENT_MANAGEMENT.md` + ADR 0022 if architectural + Parent client/source |
 | architecture decision | ADR + living architecture synthesis |
 | active implementation/progress | blocking active plan append + `HANDOVER.md` |
@@ -317,7 +320,7 @@ Unless narrower instructions say otherwise:
 5. the blocking active plan
 6. for visual/art/graphics work: `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`, the active visual plan and `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md`
 7. `HANDOVER.md`
-8. relevant operator/agent/Activity/visual/development manual or skill
+8. relevant operator/agent/Activity/visual/development manual or skill; for boot/recovery this includes `docs/engineering/BOOT_PIPELINE_AGENT_GUIDE.md` and `skills/greia-os-work/BOOT.md`
 9. exact source/runtime contracts being changed
 
 When documents conflict, resolve by authority class. If implementation intentionally changed, update derived manuals; if source conflicts with an accepted decision, resolve the architecture rather than quietly documenting the deviation.
