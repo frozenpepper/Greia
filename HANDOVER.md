@@ -175,8 +175,20 @@ On-device visual verification covered Collection Home, category grid, hover lift
   - Visual review executed for Italian and English locales (Sequence stage, Sequence hint, Caption stage with preset selection, Gallery grid, Story modal reader, English custom caption).
 
 
+## Built-in Activity Refinement: Baia delle Orche Visual Overhaul & Night Bioluminescence (2026-08-24)
 
+`activities/baia_delle_orche` (Baia delle Orche / Orca Bay) cetacean sanctuary and creation/nurture Activity has undergone full visual redesign and physical orientation polish:
 
+- Architecture:
+  - `orca_model.py`: 3-member pod model (`kiko` baby, `luna` acrobat, `oskar` elder) with dynamic pitch tracking, parabolic breach physics with natural dive curves ($-20^\circ \rightarrow +20^\circ$), gentle cuddle rocking ($\pm 6^\circ$), and food/toy interactions.
+  - `orca_renderer.py`: Layered Arctic fjord presentation, high-contrast bioluminescent night ocean with cyan caustics, and cached anti-aliased sprite blitting with quantized rotozoom rotation.
+  - `assets/runtime/`: 12 high-resolution, anti-aliased, storybook character sprites (`orca_{baby|acrobat|elder}_{day|night|happy}.png`) with sleek proportioned white underbellies, curved falcate dorsal fins, rounded cetacean flukes, and electric-cyan night rim lighting (`#38d7ff`).
+  - `orca_audio.py`: Procedural cetacean harmonics, chimes, purrs, splashes, and bubbles.
+  - `orca_services.py`: Profile-scoped storage and milestone event publisher.
+- Evidence & Verification:
+  - `tests/test_activity_baia_delle_orche.py`: 12/12 focused tests passing.
+  - Package validation digest: `PASS org.greia.baia-delle-orche 0.1.0`.
+  - Visual verification in simulator across Day, Night, Feed, Cuddle, Leap, and Song modes.
 
 ## Contributor engineering skills integration (2026-08-23)
 
