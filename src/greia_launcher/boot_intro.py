@@ -117,7 +117,7 @@ def _background_rgb(logo: Any) -> tuple[int, int, int]:
         pixel = logo.get_at((0, 0))
         return (int(pixel[0]), int(pixel[1]), int(pixel[2]))
     except Exception:  # noqa: BLE001
-        return (2, 5, 18)
+        return (255, 255, 255)
 
 
 def _draw_canvas(
@@ -198,7 +198,7 @@ def draw_boot_handoff_frame(screen: Any, pygame: Any, *, progress: int = 92) -> 
     """Draw the first X-owned frame and return whether canonical art was available."""
     logo = load_logo()
     if logo is None:
-        screen.fill((2, 5, 18))
+        screen.fill(_background_rgb(logo))
         return False
     _draw_canvas(screen, pygame, logo, scale=1.0)
     return True

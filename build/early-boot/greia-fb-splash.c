@@ -196,48 +196,11 @@ static void draw_progress_bar(uint8_t *memory,
                               const struct fb_var_screeninfo *var,
                               unsigned bytes_per_pixel,
                               unsigned progress) {
-    uint32_t visible_w = var->xres;
-    uint32_t visible_h = var->yres;
-    uint32_t bar_w = (uint32_t)(((uint64_t)visible_w * 16u) / 100u);
-    uint32_t bar_h = 4u;
-    uint32_t border = 1u;
-    uint32_t x;
-    uint32_t y;
-    uint32_t inner_w;
-    uint32_t inner_h;
-    uint32_t filled_w;
-    uint32_t border_px;
-    uint32_t track_px;
-    uint32_t fill_px;
-
-    if (bar_w < 120u) bar_w = 120u;
-    if (bar_w > 180u) bar_w = 180u;
-    if (bar_w > visible_w) bar_w = visible_w;
-    if (bar_h > visible_h) bar_h = visible_h;
-    if (bar_w <= 2u * border || bar_h <= 2u * border) return;
-
-    x = (visible_w - bar_w) / 2u;
-    y = (uint32_t)(((uint64_t)visible_h * 92u) / 100u);
-    if (y + bar_h > visible_h) y = visible_h - bar_h;
-    inner_w = bar_w - 2u * border;
-    inner_h = bar_h - 2u * border;
-    filled_w = (uint32_t)(((uint64_t)inner_w * progress + 50u) / 100u);
-    if (filled_w > inner_w) filled_w = inner_w;
-
-    /* Shared Greia UI colours chosen for strong contrast on dark and light
-     * artwork and retained visibility after RGB565 quantization. */
-    border_px = pack_pixel(var, 87, 66, 45);
-    track_px = pack_pixel(var, 255, 247, 226);
-    fill_px = pack_pixel(var, 255, 194, 52);
-
-    fill_rect(memory, fix, var, bytes_per_pixel,
-              x, y, bar_w, bar_h, border_px);
-    fill_rect(memory, fix, var, bytes_per_pixel,
-              x + border, y + border, inner_w, inner_h, track_px);
-    if (filled_w) {
-        fill_rect(memory, fix, var, bytes_per_pixel,
-                  x + border, y + border, filled_w, inner_h, fill_px);
-    }
+    (void)memory;
+    (void)fix;
+    (void)var;
+    (void)bytes_per_pixel;
+    (void)progress;
 }
 
 static int draw(const char *device, const struct ppm_image *image, int progress) {
