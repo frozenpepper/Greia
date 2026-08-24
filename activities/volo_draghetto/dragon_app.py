@@ -228,10 +228,7 @@ class DragonFlightApp:
 
             # 4. Composite Frame onto Reference Canvas
             surf = canvas.surface
-            feedback_msg = ""
-            if self.world.feedback_text_key and self._resources:
-                feedback_msg = self._resources.text(self.world.feedback_text_key)
-            self.renderer.render_world(surf, self.world, feedback_msg)
+            self.renderer.render_world(surf, self.world)
 
             # 5. Present Canvas to Screen
             canvas.present(clear=theme.background)

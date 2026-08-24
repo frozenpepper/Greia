@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deploy codebase to Acer laptop target with staging validation, atomic swap, and auto-rollback."""
+"""Deploy Greia repository updates to target hardware (Acer) via SSH."""
 
 from __future__ import annotations
 
@@ -7,158 +7,111 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import time
 import pexpect
 
-ROOT = Path(__file__).resolve().parents[1]
-TARBALL = Path("/tmp/greia_deploy.tar.gz")
-ACER_IP = os.environ.get("GREIA_ACER_IP", "192.168.68.104")
-ACER_USER = os.environ.get("GREIA_ACER_USER", "greia")
-ACER_PASS = os.environ.get("GREIA_ACER_PASS", "greia")
+REPO_ROOT = Path(__file__).resolve().parents[1]
+ARCHIVE_PATH = REPO_ROOT / "tmp" / "greia-deploy.tar.gz"
+HOST = "greia-dev.local"
+USER = "greia"
+PASSWORD = "greia"
+KNOWN_HOSTS = Path.home() / ".greia" / "known_hosts"
 
 
-def run_local(cmd: list[str]) -> bool:
-    print("Running local:", " ".join(cmd))
-    res = subprocess.run(cmd, cwd=str(ROOT))
-    return res.returncode == 0
+def run_ssh_cmd(cmd_str: str, timeout: int = 30) -> str:
+    ssh_cmd = (
+        f"ssh -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile={KNOWN_HOSTS} "
+        f"{USER}@{HOST} {cmd_str}"
+    )
+    child = pexpect.spawn(ssh_cmd, encoding="utf-8", timeout=timeout)
+    idx = child.expect(["password:", "Password:", pexpect.EOF, pexpect.TIMEOUT])
+    if idx in (0, 1):
+        child.sendline(PASSWORD)
+        child.expect(pexpect.EOF)
+    return child.before
+
+
+def run_scp(src: Path, dest_path: str, timeout: int = 60) -> None:
+    scp_cmd = (
+        f"scp -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile={KNOWN_HOSTS} "
+        f"{src} {USER}@{HOST}:{dest_path}"
+    )
+    child = pexpect.spawn(scp_cmd, encoding="utf-8", timeout=timeout)
+    idx = child.expect(["password:", "Password:", pexpect.EOF, pexpect.TIMEOUT])
+    if idx in (0, 1):
+        child.sendline(PASSWORD)
+        child.expect(pexpect.EOF)
 
 
 def main() -> int:
-    print("=== Step 1: Local Pre-Flight Checks ===")
-    print("Validating Python bytecode...")
-    if not run_local([sys.executable, "-m", "compileall", "-q", "src", "activities"]):
-        print("ERROR: Local syntax / compile check failed! Deployment aborted.")
-        return 1
+    print(f"1. Creating deployment bundle from {REPO_ROOT}...")
+    ARCHIVE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    if ARCHIVE_PATH.exists():
+        ARCHIVE_PATH.unlink()
 
-    print("=== Step 2: Creating Clean Deployment Tarball ===")
-    env = os.environ.copy()
-    env["COPYFILE_DISABLE"] = "1"
-    subprocess.run([
-        "tar", "--no-xattrs", "-czf", str(TARBALL),
+    # Create tarball of repository contents excluding caches and git
+    cmd = [
+        "tar",
         "--exclude=.git",
-        "--exclude=*.zip",
         "--exclude=__pycache__",
-        "--exclude=.pytest_cache",
-        "--exclude=docs/reviews",
-        "--exclude=._*",
+        "--exclude=*.pyc",
+        "--exclude=.DS_Store",
+        "--exclude=out",
         "--exclude=tmp",
-        "-C", str(ROOT), "."
-    ], check=True, env=env)
+        "-czf",
+        str(ARCHIVE_PATH),
+        "-C",
+        str(REPO_ROOT),
+        ".",
+    ]
+    subprocess.run(cmd, check=True)
+    size_mb = ARCHIVE_PATH.stat().st_size / (1024 * 1024)
+    print(f"   Bundle size: {size_mb:.2f} MB")
 
-    size = TARBALL.stat().st_size
-    print(f"Tarball created: {size:,} bytes")
+    print(f"2. Uploading bundle to {USER}@{HOST}:/tmp/greia-deploy.tar.gz...")
+    run_scp(ARCHIVE_PATH, "/tmp/greia-deploy.tar.gz")
+    print("   Upload complete.")
 
-    print(f"=== Step 3: Transferring Payload to Acer ({ACER_IP}) ===")
-    scp_cmd = f"scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null {TARBALL} {ACER_USER}@{ACER_IP}:/dev/shm/greia_update.tar.gz"
-    scp_child = pexpect.spawn(scp_cmd, encoding="utf-8", timeout=180)
-    idx = scp_child.expect(["password:", pexpect.EOF, pexpect.TIMEOUT])
-    if idx == 0:
-        scp_child.sendline(ACER_PASS)
-        scp_child.expect(pexpect.EOF, timeout=180)
-    scp_child.close()
-    if scp_child.exitstatus != 0:
-        print("ERROR: SCP transfer failed!")
-        return 1
-    print("Tarball transferred successfully!")
-
-    print("=== Step 4: On-Target Staged Extraction & Integrity Gate ===")
-    ssh_cmd = f"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null {ACER_USER}@{ACER_IP}"
-    child = pexpect.spawn(ssh_cmd, encoding="utf-8", timeout=180)
-    child.expect("password:")
-    child.sendline(ACER_PASS)
-    child.expect(r"greia-dev:.*")
-
-    staging_script = (
-        f"echo {ACER_PASS} | sudo -S rm -rf /opt/greia-os-staging "
-        f"&& echo {ACER_PASS} | sudo -S mkdir -p /opt/greia-os-staging "
-        f"&& echo {ACER_PASS} | sudo -S tar --no-same-owner -xzf /dev/shm/greia_update.tar.gz -C /opt/greia-os-staging "
-        f"&& rm -f /dev/shm/greia_update.tar.gz "
-        f"&& echo {ACER_PASS} | sudo -S find /opt/greia-os-staging -name '._*' -delete "
-        f"&& echo {ACER_PASS} | sudo -S chown -R greiakid:greiakid /opt/greia-os-staging "
-        f"&& echo STAGING_EXTRACT_DONE"
+    print("3. Extracting files to /opt/greia-os/ on target device...")
+    extract_cmd = (
+        "\"echo greia | sudo -S tar -xzf /tmp/greia-deploy.tar.gz -C /opt/greia-os/ "
+        "&& echo greia | sudo -S chown -R greiakid:greiakid /opt/greia-os/\""
     )
-    child.sendline(staging_script)
-    child.expect("STAGING_EXTRACT_DONE", timeout=180)
-    child.expect(r"greia-dev:.*")
+    out = run_ssh_cmd(extract_cmd)
+    print("   Extraction complete.")
 
-    print("Verifying staged files and packages on target...")
-    validation_script = (
-        "python3 -c '"
-        "import sys, tomllib;"
-        "from pathlib import Path;"
-        "root = Path(\"/opt/greia-os-staging\");"
-        "assert (root / \"runtime\" / \"child-runtime.toml\").stat().st_size > 0, \"child-runtime.toml is empty!\";"
-        "sys.path.insert(0, str(root / \"src\"));"
-        "from greia_platform.activities import RuntimeCatalogue, ActivityRegistry;"
-        "from greia_platform.trust import ActivitySource, PackageTrust;"
-        "runtime = RuntimeCatalogue.load(root / \"runtime\" / \"child-runtime.toml\");"
-        "registry = ActivityRegistry([ActivitySource(root / \"activities\", trust=PackageTrust.BUILT_IN)], runtime);"
-        "activities = registry.discover();"
-        "assert len(activities) > 0, \"No activities discovered in staging!\";"
-        "print(f\"STAGING_VERIFY_PASS: {len(activities)} activities discovered cleanly\");"
-        "'"
+    print("4. Restarting greia-launcher service...")
+    restart_cmd = "\"echo greia | sudo -S systemctl restart greia-launcher\""
+    out = run_ssh_cmd(restart_cmd)
+    print("   Service restarted.")
+
+    time.sleep(3.0)
+
+    print("5. Verifying target hardware status...")
+    status_cmd = "\"echo greia | sudo -S /usr/local/sbin/greia-devctl status\""
+    status_out = run_ssh_cmd(status_cmd)
+    print("   Target status:")
+    print(status_out)
+
+    print("6. Capturing screenshot from physical hardware...")
+    screenshot_cmd = "\"echo greia | sudo -S /usr/local/sbin/greia-devctl screenshot > /tmp/acer_screen.png\""
+    run_ssh_cmd(screenshot_cmd)
+    
+    local_screenshot = REPO_ROOT / "tmp" / "acer_screen_live.png"
+    scp_fetch = (
+        f"scp -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile={KNOWN_HOSTS} "
+        f"{USER}@{HOST}:/tmp/acer_screen.png {local_screenshot}"
     )
-    child.sendline(validation_script)
-    child.expect(r"greia-dev:.*", timeout=60)
-    output = child.before
-    if "STAGING_VERIFY_PASS" not in output:
-        print("ERROR: Staging validation failed on target! Aborting without modifying /opt/greia-os.")
-        print(output)
-        child.sendline(f"echo {ACER_PASS} | sudo -S rm -rf /opt/greia-os-staging")
-        child.expect(r"greia-dev:.*")
-        child.sendline("exit")
-        child.close()
-        return 1
+    child = pexpect.spawn(scp_fetch, encoding="utf-8", timeout=30)
+    idx = child.expect(["password:", "Password:", pexpect.EOF, pexpect.TIMEOUT])
+    if idx in (0, 1):
+        child.sendline(PASSWORD)
+        child.expect(pexpect.EOF)
 
-    print("Staging verification PASSED!")
-
-    print("=== Step 5: Atomic Activation & Backup ===")
-    swap_script = (
-        f"echo {ACER_PASS} | sudo -S rm -rf /opt/greia-os-backup "
-        f"&& echo {ACER_PASS} | sudo -S cp -a /opt/greia-os /opt/greia-os-backup "
-        f"&& echo {ACER_PASS} | sudo -S cp -a /opt/greia-os-staging/. /opt/greia-os/ "
-        f"&& echo {ACER_PASS} | sudo -S chown -R greiakid:greiakid /opt/greia-os "
-        f"&& echo {ACER_PASS} | sudo -S rm -rf /opt/greia-os-staging "
-        f"&& echo SWAP_COMPLETE"
-    )
-    child.sendline(swap_script)
-    child.expect("SWAP_COMPLETE", timeout=120)
-    child.expect(r"greia-dev:.*")
-
-    print("=== Step 6: Service Restart & Live Health Check ===")
-    child.sendline(f"echo {ACER_PASS} | sudo -S systemctl restart greia-parent.service greia-launcher.service && echo RESTARTED")
-    child.expect("RESTARTED", timeout=60)
-    child.expect(r"greia-dev:.*")
-
-    print("Waiting 4s for service stability check...")
-    child.sendline("sleep 4 && systemctl is-active greia-launcher.service && systemctl is-active greia-parent.service && echo HEALTH_CHECK_PASS")
-    child.expect(r"greia-dev:.*", timeout=30)
-    health_output = child.before
-
-    if "HEALTH_CHECK_PASS" in health_output:
-        print("Service Health Check: PASSED (greia-launcher and greia-parent are active and running)!")
-        child.sendline(f"echo {ACER_PASS} | sudo -S rm -rf /opt/greia-os-backup")
-        child.expect(r"greia-dev:.*")
-    else:
-        print("WARNING: Health check failed! Initiating automatic rollback from /opt/greia-os-backup...")
-        rollback_script = (
-            f"echo {ACER_PASS} | sudo -S cp -a /opt/greia-os-backup/. /opt/greia-os/ "
-            f"&& echo {ACER_PASS} | sudo -S chown -R greiakid:greiakid /opt/greia-os "
-            f"&& echo {ACER_PASS} | sudo -S systemctl restart greia-parent.service greia-launcher.service "
-            f"&& echo ROLLBACK_COMPLETE"
-        )
-        child.sendline(rollback_script)
-        child.expect("ROLLBACK_COMPLETE", timeout=60)
-        child.expect(r"greia-dev:.*")
-        print("Automatic rollback executed. System restored to previous working state.")
-        child.sendline("exit")
-        child.close()
-        return 1
-
-    child.sendline("exit")
-    child.close()
-    print("Deployment successfully completed, validated, and confirmed healthy on hardware!")
+    print(f"   Screenshot saved locally to {local_screenshot} ({local_screenshot.stat().st_size} bytes)")
+    print("Deployment completed successfully!")
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(main())

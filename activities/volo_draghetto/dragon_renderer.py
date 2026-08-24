@@ -133,13 +133,12 @@ class DragonRenderer:
                     surface.blit(p_sprite, (psx - pw // 2, psy - ph // 2))
 
         # 8. HUD Overlays (Pills for Stars, Score, Accessory)
-        self._render_hud(surface, world, feedback_message)
+        self._render_hud(surface, world)
 
     def _render_hud(
         self,
         surface: pygame.Surface,
         world: FlightWorldState,
-        feedback_message: str = "",
     ) -> None:
         # Accessory Button (Top Right: x=580..710, y=14..58)
         acc_box = pygame.Rect(580, 14, 136, 44)
@@ -157,11 +156,3 @@ class DragonRenderer:
         star_str = f"⭐ {world.total_stars}   🏆 {world.score}"
         hud_label = self._render_cached_text(star_str, FontRole.TITLE, 22, (180, 85, 15))
         surface.blit(hud_label, hud_label.get_rect(center=hud_box.center))
-
-        # Feedback Toast Banner (Center Top)
-        if feedback_message:
-            f_rect = pygame.Rect(262, 70, 500, 44)
-            pygame.draw.rect(surface, WHITE, f_rect, border_radius=14)
-            pygame.draw.rect(surface, PINK, f_rect, width=3, border_radius=14)
-            msg_label = self._render_cached_text(feedback_message, FontRole.TITLE, 22, DARK_TEXT)
-            surface.blit(msg_label, msg_label.get_rect(center=f_rect.center))

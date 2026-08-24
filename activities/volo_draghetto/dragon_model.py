@@ -175,8 +175,6 @@ class FlightWorldState:
 
     # Chunk generation tracking
     last_spawn_x: float = 400.0
-    feedback_text_key: str = ""
-    feedback_timer: float = 0.0
 
     def start_flight(self) -> None:
         """Initialize or reset flight world state for endless flight."""
@@ -187,8 +185,6 @@ class FlightWorldState:
         self.particles.clear()
         self.round_stars = 0
         self.last_spawn_x = 400.0
-        self.feedback_text_key = ""
-        self.feedback_timer = 0.0
 
         # Pre-seed initial track chunk
         self._spawn_world_chunk(400.0, 3200.0)
@@ -224,8 +220,6 @@ class FlightWorldState:
                 # Milestone fanfare every 10 stars without stopping the flight
                 if self.total_stars % 10 == 0:
                     events.append("star_milestone")
-                    self.feedback_text_key = "msg.star_milestone"
-                    self.feedback_timer = 2.0
 
         # Collision: Rainbow Gates (Super Turbo Boost!)
         for gate in self.rainbow_gates:
@@ -235,8 +229,6 @@ class FlightWorldState:
                 self.score += 30
                 self.round_stars += 1
                 self.total_stars += 1
-                self.feedback_text_key = "msg.rainbow_dash"
-                self.feedback_timer = 2.5
                 events.append("rainbow_boost")
                 self._spawn_rainbow_burst(gate.x, gate.y - 30.0)
 
@@ -256,12 +248,6 @@ class FlightWorldState:
         self.stars = [s for s in self.stars if s.x > cam_x - 300.0]
         self.rainbow_gates = [g for g in self.rainbow_gates if g.x > cam_x - 300.0]
         self.clouds = [c for c in self.clouds if c.x > cam_x - 300.0]
-
-        # Decay feedback message timer
-        if self.feedback_timer > 0.0:
-            self.feedback_timer = max(0.0, self.feedback_timer - dt)
-            if self.feedback_timer == 0.0:
-                self.feedback_text_key = ""
 
         return events
 
