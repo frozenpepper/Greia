@@ -79,3 +79,12 @@ Expected: exit 0 with eight portfolio suites and named contracts green.
 ## Handoff
 
 Return standard packet plus all eight order fixtures, content/art hash map, storage/event privacy proof, audio fallback result, cache bounds, and SOURCE label.
+
+## Implementation Checkpoint (2026-08-24)
+
+- **Status:** COMPLETED & VERIFIED
+- **Activity:** `org.greia.tre-carte-una-storia` (0.1.0)
+- **Validation:** `PASS org.greia.tre-carte-una-storia 0.1.0` (sha256 `c077724e4806a7bc9266789074b5abbc867449ef8ccb56278c0cbb815e0410a6`)
+- **Tests:** 9/9 tests pass in `tests/test_activity_tre_carte_una_storia.py`, cumulative 145 tests pass, full `make verify` (1,284 tests) passes.
+- **Evidence:** DESKTOP VISUAL REVIEW passed with 6 rendered frames in `build/review/tre_carte_una_storia/`.
+

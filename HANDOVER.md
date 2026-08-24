@@ -155,9 +155,25 @@ On-device visual verification covered Collection Home, category grid, hover lift
 - Evidence & Verification:
   - `tests/test_activity_posta_di_leo.py`: 11/11 focused tests passing (atomic emoji/grapheme editing, 80-grapheme ceiling, empty-text stamp validity, 20-card library cap & no auto-eviction, storage recovery, manifest, app integration with privacy proof, full-dialog and gallery delete flow, simulator supervisor lifecycle).
   - Platform contract tests reconciled: `test_activity_contract.py`, `test_first_party_activity_audience_metadata.py` (27 built-in activities, open-ended creative list), `test_first_party_activity_readiness.py`.
-  - Full test suite `make verify`: **1,268 unit tests PASS**, project validation PASS, all 27 activities valid, footprint and shell checks green.
-  - Package validation digest: `sha256 5aed54a0341ffe240abcb804f86fdab127fab5e1ac73b9fffad42a6ed3f717fe`.
-  - Visual review executed for Italian and English locales (Editor empty, Editor typed with rainbow emoji, Gallery grid, Card preview modal, Full mailbox dialog, English editor).
+## Early-learning Activity expansion: Tre Carte, Una Storia acceptance (2026-08-24)
+
+`activities/tre_carte_una_storia` (Tre Carte, Una Storia / Three Cards, One Story) narrative sequencing and story caption Activity is fully implemented, verified, and accepted following `docs/agents/GREIA_EARLY_LEARNING_ACTIVITY_IMPLEMENTATION_RUNBOOK.md` and `skills/greia-activity-authoring/SKILL.md`.
+
+- Architecture:
+  - `story_cards_content.py`: 8 bilingual story seeds (`drawing`, `rain`, `kite`, `picnic`, `postcard`, `tower`, `cloud`, `spill`), each with 3 distinct card symbols and 3 narrative step captions.
+  - `story_cards_model.py`: `StorySeed`, `StoryRound` with guaranteed non-solved initial shuffle, drag/tap/keyboard slot swapping, hint display on slot 0 after 2 errors, and `StoryLibrary` capped at 12 stories with strict no-auto-eviction policy.
+  - `story_cards_services.py`: Storage adapter for `tre_carte_una_storia.library.v1` (bounded at 12 stories, strict deserialization validation) and privacy-preserving `GreiaStoryEvents` emitting `story.sequence_completed` milestone and `story.created` creation event with `{"seed": seed_id, "mode": caption_mode}` (strictly no child caption text in event payload!).
+  - `story_cards_audio.py`: Procedural nonverbal tones for card swapping, correct sequence fanfare, hint wobble, and storybook save.
+  - `story_cards_art.py`: Enchanted twilight meadow backdrop, open storybook slots (`Prima`, `Poi`, `Infine`), high-contrast picture card illustrations, and pre-scaled Lilli mascot (`character.lilli`).
+  - `story_cards_renderer.py`: 1024x600 logical presentation (3 large card frames in puzzle stage, 3 top mini cards + 3 preset rows + custom text input box in caption stage, gallery grid viewer with modal reader and delete confirmation dialog, polite full-library limit sheet).
+  - `story_cards_app.py`: Hybrid input orchestrator (Keyboard Left/Right/Space/1/2/3 navigation, typing in caption mode, Pointer/Touch clicks; Home/ESC lifecycle), save-before-event write invariant, and ready state publication.
+- Evidence & Verification:
+  - `tests/test_activity_tre_carte_una_storia.py`: 9/9 focused tests passing (8 valid story seeds, non-trivial initial shuffle, swap mechanics, error hint activation after 2 wrong checks, 12-story library cap & no auto-eviction, storage recovery, manifest, app integration with sequence event and privacy proof, simulator supervisor lifecycle).
+  - Platform contract tests reconciled: `test_activity_contract.py`, `test_first_party_activity_audience_metadata.py` (28 built-in activities, open-ended creative list), `test_first_party_activity_readiness.py`.
+  - Full test suite `make verify`: **1,284 unit tests PASS**, project validation PASS, all 28 activities valid, footprint and shell checks green.
+  - Package validation digest: `sha256 c077724e4806a7bc9266789074b5abbc867449ef8ccb56278c0cbb815e0410a6`.
+  - Visual review executed for Italian and English locales (Sequence stage, Sequence hint, Caption stage with preset selection, Gallery grid, Story modal reader, English custom caption).
+
 
 
 

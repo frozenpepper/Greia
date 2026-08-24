@@ -155,6 +155,7 @@ class FirstPartyActivityReadinessTests(unittest.TestCase):
                 "sillabe_magiche",
                 "specchi_magici",
                 "teatrino_fiabe",
+                "tre_carte_una_storia",
                 "treno_numeri",
                 "volo_draghetto",
                 "workshop_settings",

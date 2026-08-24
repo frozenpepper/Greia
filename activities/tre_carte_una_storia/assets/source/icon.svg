@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4f46e5" />
+      <stop offset="100%" stop-color="#1e1b4b" />
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#fef3c7" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="10" stdDeviation="8" flood-color="#000000" flood-opacity="0.3" />
+    </filter>
+  </defs>
+
+  <!-- Background Squircle -->
+  <rect x="32" y="32" width="448" height="448" rx="96" fill="url(#bg)" stroke="#a5b4fc" stroke-width="12" />
+
+  <!-- Card 1 (Tilted Left) -->
+  <g transform="translate(140, 260) rotate(-14) translate(-75, -110)" filter="url(#shadow)">
+    <rect x="0" y="0" width="150" height="220" rx="18" fill="url(#cardGrad)" stroke="#f59e0b" stroke-width="6" />
+    <circle cx="75" cy="80" r="40" fill="#fde047" />
+    <text x="75" y="180" font-family="sans-serif" font-size="36" font-weight="bold" fill="#d97706" text-anchor="middle">1</text>
+    <!-- Seedling / sprout symbol -->
+    <path d="M 75 95 L 75 70 C 75 70 60 65 60 55 C 60 45 75 50 75 50 C 75 50 90 45 90 55 C 90 65 75 70 75 70" fill="#22c55e" stroke="#15803d" stroke-width="3" />
+  </g>
+
+  <!-- Card 2 (Center, Higher) -->
+  <g transform="translate(256, 230) translate(-75, -110)" filter="url(#shadow)">
+    <rect x="0" y="0" width="150" height="220" rx="18" fill="url(#cardGrad)" stroke="#38bdf8" stroke-width="6" />
+    <circle cx="75" cy="80" r="40" fill="#bae6fd" />
+    <text x="75" y="180" font-family="sans-serif" font-size="36" font-weight="bold" fill="#0284c7" text-anchor="middle">2</text>
+    <!-- Water can / rain symbol -->
+    <path d="M 75 60 C 65 75 60 85 60 92 C 60 100 67 106 75 106 C 83 106 90 100 90 92 C 90 85 85 75 75 60 Z" fill="#0284c7" />
+  </g>
+
+  <!-- Card 3 (Tilted Right) -->
+  <g transform="translate(372, 260) rotate(14) translate(-75, -110)" filter="url(#shadow)">
+    <rect x="0" y="0" width="150" height="220" rx="18" fill="url(#cardGrad)" stroke="#f43f5e" stroke-width="6" />
+    <circle cx="75" cy="80" r="40" fill="#fecdd3" />
+    <text x="75" y="180" font-family="sans-serif" font-size="36" font-weight="bold" fill="#e11d48" text-anchor="middle">3</text>
+    <!-- Blooming flower symbol -->
+    <circle cx="75" cy="80" r="14" fill="#fde047" />
+    <circle cx="75" cy="60" r="10" fill="#e11d48" />
+    <circle cx="95" cy="80" r="10" fill="#e11d48" />
+    <circle cx="75" cy="100" r="10" fill="#e11d48" />
+    <circle cx="55" cy="80" r="10" fill="#e11d48" />
+  </g>
+
+  <!-- Magic Sparkles on top -->
+  <path d="M 256 80 L 262 95 L 277 101 L 262 107 L 256 122 L 250 107 L 235 101 L 250 95 Z" fill="#fde047" />
+  <path d="M 120 120 L 124 130 L 134 134 L 124 138 L 120 148 L 116 138 L 106 134 L 116 130 Z" fill="#fde047" />
+  <path d="M 390 110 L 394 120 L 404 124 L 394 128 L 390 138 L 386 128 L 376 124 L 386 120 Z" fill="#fde047" />
+</svg>

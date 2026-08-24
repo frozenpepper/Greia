@@ -150,6 +150,13 @@ src/greia_platform/trust.py
 
 Use the Simulator's canonical package-install path for package acceptance; then follow `LAUNCH_ACCEPTANCE.md`.
 
+Developer-image built-in replacement is a separate platform control path, not
+an Activity package shortcut. The privileged owner resolves an installed
+target only from one validated canonical manifest identity through the shared
+Activity registry, preserving exact path safety, backup/restore state and the
+`BUILT_IN` versus `DEVELOPER_UNSIGNED` trust distinction. Never infer a target
+from a title, slug, legacy alias or directory name.
+
 ### Localization, language or grammatical agreement
 
 Read:

@@ -55,7 +55,7 @@ tests/test_activity_luci_di_momo.py
 
 The source was authored against the current Activity skill and current platform APIs. The handoff author locally exercised the pure/domain/storage tests in an isolated stubbed platform context and stress-generated 1,000 seeds at each of four levels. **That is not Greia repository validation or Simulator evidence.**
 
-Luci di Momo (`activities/luci_di_momo`), Casa del Dieci (`activities/casa_del_dieci`), Bottega delle Misure (`activities/bottega_delle_misure`), Specchi Magici (`activities/specchi_magici`), Festa delle Rime (`activities/festa_delle_rime`), Officina dei Suoni (`activities/officina_dei_suoni`), and Posta di Leo (`activities/posta_di_leo`) source implementations, platform contract integrations, visual reviews, and test gates are **COMPLETE & ACCEPTED**.
+Luci di Momo (`activities/luci_di_momo`), Casa del Dieci (`activities/casa_del_dieci`), Bottega delle Misure (`activities/bottega_delle_misure`), Specchi Magici (`activities/specchi_magici`), Festa delle Rime (`activities/festa_delle_rime`), Officina dei Suoni (`activities/officina_dei_suoni`), Posta di Leo (`activities/posta_di_leo`), and Tre Carte Una Storia (`activities/tre_carte_una_storia`) source implementations, platform contract integrations, visual reviews, and test gates are **COMPLETE & ACCEPTED**.
 
 Status:
 ```text
@@ -66,10 +66,11 @@ SPECCHI MAGICI: ACCEPTED (12/12 tests, package valid, visual review complete)
 FESTA DELLE RIME: ACCEPTED (11/11 tests, 64 audio clips reviewed, package valid, visual review complete)
 OFFICINA DEI SUONI: ACCEPTED (11/11 tests, 70 audio clips reviewed, package valid, visual review complete)
 POSTA DI LEO: ACCEPTED (11/11 tests, package valid, visual review complete)
-GREIA SOURCE & PLATFORM VALIDATION: PASS (27/27 activities valid, 1268 unit tests green)
+TRE CARTE UNA STORIA: ACCEPTED (9/9 tests, package valid, visual review complete)
+GREIA SOURCE & PLATFORM VALIDATION: PASS (28/28 activities valid, 1284 unit tests green)
 ```
 
-Next Activity: `activities/tre_carte_una_storia` (`08-tre-carte-una-storia.md`).
+Next Activity: `activities/nanna_delle_nuvolette` (`09-nanna-delle-nuvolette.md`).
 
 ---
 

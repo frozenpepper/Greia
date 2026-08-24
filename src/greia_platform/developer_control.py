@@ -188,6 +188,7 @@ class DeveloperControl:
                 if replace_system
                 else PackageTrust.DEVELOPER_UNSIGNED
             )
+            runtime = RuntimeCatalogue.load(RUNTIME_CATALOGUE)
             registry = ActivityRegistry(
                 [
                     ActivitySource(
@@ -196,7 +197,7 @@ class DeveloperControl:
                         source_id="greia-developer-upload",
                     )
                 ],
-                RuntimeCatalogue.load(RUNTIME_CATALOGUE),
+                runtime,
             )
             manifest = registry.validate_package(stage)
             if not replace_system and manifest.requested_permissions:
@@ -205,13 +206,20 @@ class DeveloperControl:
                     "use --replace-system only for deliberate built-in testing"
                 )
 
-            system_target = SYSTEM_ACTIVITY_ROOT / manifest.activity_id
+            system_target = self._resolve_system_activity_target(
+                manifest.activity_id,
+                runtime,
+            )
             developer_target = DEVELOPER_ACTIVITY_ROOT / manifest.activity_id
             state = self._load_state()
             existing = state.get(manifest.activity_id)
             original_backup: str | None = None
 
             if replace_system:
+                if system_target is None:
+                    raise DeveloperControlError(
+                        f"{manifest.activity_id!r} is not an installed system Activity"
+                    )
                 if developer_target.exists() or (
                     existing is not None and existing.get("kind") == "developer"
                 ):
@@ -237,7 +245,7 @@ class DeveloperControl:
                         f"{manifest.activity_id!r} is not an installed system Activity"
                     )
             else:
-                if system_target.exists():
+                if system_target is not None:
                     raise DeveloperControlError(
                         f"{manifest.activity_id!r} is an installed system Activity; "
                         "use --replace-system for deliberate built-in testing"
@@ -310,18 +318,124 @@ class DeveloperControl:
         backup_text = record.get("original_backup")
         if not isinstance(backup_text, str) or not backup_text:
             raise DeveloperControlError("system replacement record has no original backup")
+        backup_root = BACKUP_ROOT.resolve(strict=False)
         backup = Path(backup_text)
-        if BACKUP_ROOT.resolve() not in backup.resolve().parents or not backup.is_dir():
+        if backup.is_symlink():
+            raise DeveloperControlError(
+                "original Activity backup must not be a symlink"
+            )
+        try:
+            resolved_backup = backup.resolve(strict=True)
+        except OSError as exc:
+            raise DeveloperControlError(
+                "original Activity backup is missing or outside backup root"
+            ) from exc
+        if (
+            resolved_backup.parent != backup_root
+            or not resolved_backup.is_dir()
+        ):
             raise DeveloperControlError(
                 "original Activity backup is missing or outside backup root"
             )
-        target = SYSTEM_ACTIVITY_ROOT / activity_id
+        runtime = RuntimeCatalogue.load(RUNTIME_CATALOGUE)
+        try:
+            backup_registry = ActivityRegistry(
+                [
+                    ActivitySource(
+                        backup_root,
+                        trust=PackageTrust.BUILT_IN,
+                        source_id="greia-developer-backup",
+                    )
+                ],
+                runtime,
+            )
+            backup_registration = backup_registry.validate_registration(
+                resolved_backup
+            )
+        except (ActivityValidationError, OSError, ValueError) as exc:
+            raise DeveloperControlError(
+                f"original Activity backup is invalid: {exc}"
+            ) from exc
+        if backup_registration.manifest.activity_id != activity_id:
+            raise DeveloperControlError(
+                "original Activity backup identity does not match requested Activity"
+            )
+
+        target = self._resolve_system_activity_target(activity_id, runtime)
+        if target is None:
+            raise DeveloperControlError(
+                f"{activity_id!r} is not an installed system Activity"
+            )
         if target.exists():
             shutil.rmtree(target)
-        backup.rename(target)
+        resolved_backup.rename(target)
         state.pop(activity_id, None)
         self._write_state(state)
         self.restart_launcher()
+
+    def _resolve_system_activity_target(
+        self,
+        activity_id: str,
+        runtime: RuntimeCatalogue,
+    ) -> Path | None:
+        """Resolve one installed built-in package through registry identity.
+
+        Built-in directories are implementation paths and may not match the
+        canonical manifest ID.  The registry/parser is the only authority used
+        here: an exact canonical-ID match is required, while missing, duplicate
+        or unsafe/invalid registrations fail closed.  No title, slug, legacy
+        alias or directory-name inference is allowed.
+        """
+        system_root = SYSTEM_ACTIVITY_ROOT.resolve(strict=False)
+        if not system_root.exists():
+            if SYSTEM_ACTIVITY_ROOT.is_symlink():
+                raise DeveloperControlError(
+                    "configured system Activity root is an unsafe symlink"
+                )
+            return None
+        if not system_root.is_dir():
+            raise DeveloperControlError(
+                "configured system Activity root is not a directory"
+            )
+        source = ActivitySource(
+            system_root,
+            trust=PackageTrust.BUILT_IN,
+            source_id="greia-built-in-activities",
+        )
+        try:
+            registry = ActivityRegistry([source], runtime, fail_closed=True)
+            registrations = registry.discover_registrations(fail_closed=True)
+        except (ActivityValidationError, OSError, ValueError) as exc:
+            raise DeveloperControlError(
+                f"cannot resolve built-in Activity identity {activity_id!r}: {exc}"
+            ) from exc
+
+        matches = [
+            registration
+            for registration in registrations
+            if registration.manifest.activity_id == activity_id
+        ]
+        if len(matches) > 1:
+            raise DeveloperControlError(
+                f"cannot resolve built-in Activity identity {activity_id!r}: "
+                "multiple validated manifest matches"
+            )
+        if not matches:
+            return None
+
+        try:
+            target = matches[0].manifest.root.resolve(strict=True)
+        except OSError as exc:
+            raise DeveloperControlError(
+                f"cannot resolve built-in Activity identity {activity_id!r}: "
+                f"validated package path is unavailable ({exc})"
+            ) from exc
+        if target.parent != system_root or target == system_root:
+            raise DeveloperControlError(
+                f"cannot resolve built-in Activity identity {activity_id!r}: "
+                "validated package path is outside the configured system root"
+            )
+        return target
 
     def _ensure_state_dirs(self) -> None:
         for path, mode in (

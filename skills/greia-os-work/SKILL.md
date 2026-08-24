@@ -157,6 +157,13 @@ For Activity implementation itself, switch to:
 skills/greia-activity-authoring/SKILL.md
 ```
 
+Explicit developer-image built-in replacement remains a platform-owned,
+fail-closed operation. `greia-devctl --replace-system` resolves the target by
+an exact validated canonical manifest identity through `ActivityRegistry`; it
+must not derive a path from a display title, slug, legacy alias or directory
+name. Use the same owner for replacement backup/state/restore and preserve the
+`BUILT_IN` versus `DEVELOPER_UNSIGNED` trust boundary.
+
 ### Activity Simulator
 
 Read:
