@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+    <linearGradient id="roof" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f43f5e"/>
+      <stop offset="100%" stop-color="#be123c"/>
+    </linearGradient>
+    <linearGradient id="house" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fef3c7"/>
+      <stop offset="100%" stop-color="#fde68a"/>
+    </linearGradient>
+  </defs>
+  <!-- Background rounded card -->
+  <rect width="256" height="256" rx="48" fill="url(#bg)"/>
+  
+  <!-- Roof -->
+  <polygon points="128,36 32,100 224,100" fill="url(#roof)"/>
+  <polygon points="128,48 48,100 208,100" fill="#fb7185" opacity="0.4"/>
+  
+  <!-- House Body -->
+  <rect x="46" y="100" width="164" height="120" rx="12" fill="url(#house)" stroke="#b45309" stroke-width="4"/>
+  
+  <!-- 2x5 Ten-Frame Windows -->
+  <!-- Top Row (5 windows) -->
+  <rect x="58" y="112" width="22" height="34" rx="4" fill="#fbbf24" stroke="#d97706" stroke-width="2"/>
+  <rect x="88" y="112" width="22" height="34" rx="4" fill="#fbbf24" stroke="#d97706" stroke-width="2"/>
+  <rect x="117" y="112" width="22" height="34" rx="4" fill="#fbbf24" stroke="#d97706" stroke-width="2"/>
+  <rect x="146" y="112" width="22" height="34" rx="4" fill="#fbbf24" stroke="#d97706" stroke-width="2"/>
+  <rect x="176" y="112" width="22" height="34" rx="4" fill="#475569" stroke="#334155" stroke-width="2"/>
+  
+  <!-- Bottom Row (5 windows) -->
+  <rect x="58" y="160" width="22" height="34" rx="4" fill="#fbbf24" stroke="#d97706" stroke-width="2"/>
+  <rect x="88" y="160" width="22" height="34" rx="4" fill="#fbbf24" stroke="#d97706" stroke-width="2"/>
+  <rect x="117" y="160" width="22" height="34" rx="4" fill="#475569" stroke="#334155" stroke-width="2"/>
+  <rect x="146" y="160" width="22" height="34" rx="4" fill="#475569" stroke="#334155" stroke-width="2"/>
+  <rect x="176" y="160" width="22" height="34" rx="4" fill="#475569" stroke="#334155" stroke-width="2"/>
+  
+  <!-- Chimney -->
+  <rect x="180" y="44" width="20" height="36" fill="#b91c1c" rx="3"/>
+  <circle cx="190" cy="34" r="5" fill="#e2e8f0" opacity="0.8"/>
+  <circle cx="196" cy="24" r="7" fill="#e2e8f0" opacity="0.6"/>
+</svg>

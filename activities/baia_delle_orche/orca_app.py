@@ -203,6 +203,24 @@ class OrcaBayActivity:
 
                     self.handle_pointer_down(pointer[0], pointer[1])
 
+                elif event.type in (pygame.MOUSEMOTION, pygame.FINGERMOTION):
+                    buttons = getattr(event, "buttons", (0, 0, 0))
+                    if (buttons and buttons[0]) or event.type == pygame.FINGERMOTION:
+                        pos = getattr(event, "pos", None)
+                        if pos is None and hasattr(event, "x") and hasattr(event, "y"):
+                            w, h = self.screen.get_size()
+                            pos = (int(event.x * w), int(event.y * h))
+                        if pos is not None:
+                            pointer = self.canvas.pointer(pos)
+                            if pointer is not None and self.pod.active_tool == 1:
+                                mx, my = pointer[0], pointer[1]
+                                for orca in self.pod.orcas:
+                                    if orca.hit_test(mx, my) and orca.state == OrcaState.SWIMMING:
+                                        orca.trigger_cuddle()
+                                        self.audio.play("purr")
+                                        self.pod.spawn_heart_particles(orca.x, orca.y - 15.0, count=3)
+                                        self.pod.total_cuddled += 1
+
             # Update Domain Physics and State
             events = self.pod.update(dt)
             for ev in events:

@@ -55,19 +55,16 @@ tests/test_activity_luci_di_momo.py
 
 The source was authored against the current Activity skill and current platform APIs. The handoff author locally exercised the pure/domain/storage tests in an isolated stubbed platform context and stress-generated 1,000 seeds at each of four levels. **That is not Greia repository validation or Simulator evidence.**
 
-Luci di Momo (`activities/luci_di_momo`) source implementation, platform contract integration, visual review, and test gates are **COMPLETE & ACCEPTED**.
+Luci di Momo (`activities/luci_di_momo`) and Casa del Dieci (`activities/casa_del_dieci`) source implementations, platform contract integrations, visual reviews, and test gates are **COMPLETE & ACCEPTED**.
 
 Status:
 ```text
-IMPLEMENTED
-LOCAL DOMAIN & INTEGRATION TESTS PASS (10/10)
-GREIA SOURCE & PLATFORM VALIDATION PASS (21/21 activities valid, 1198 unit tests green)
-VISUAL REVIEW COMPLETE (vector reload arrow, 1024x600 + multi-res review)
-AUDIO: Nonverbal synthesis prepared
-SIMULATOR SUPERVISOR PASS
+LUCI DI MOMO: ACCEPTED (10/10 tests, package valid, visual review complete)
+CASA DEL DIECI: ACCEPTED (11/11 tests, package valid, visual review complete)
+GREIA SOURCE & PLATFORM VALIDATION: PASS (22/22 activities valid, 1209 unit tests green)
 ```
 
-Next Activity: `activities/casa_del_dieci` (`02-casa-del-dieci.md`).
+Next Activity: `activities/bottega_delle_misure` (`03-bottega-delle-misure.md`).
 
 ---
 

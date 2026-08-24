@@ -57,10 +57,28 @@ On-device visual verification covered Collection Home, category grid, hover lift
   - `firefly_services.py`: Storage adapter for `luci_di_momo.progress.v1` (bounded to 8 history summaries) and event emitter.
 - Evidence & Verification:
   - `tests/test_activity_luci_di_momo.py`: 10/10 focused tests passing (model determinism, level bounds, round session invariants, adaptation, storage recovery, manifest declarations, app integration lifecycle/hints/restart, simulator supervisor start/stop).
-  - Platform contract tests reconciled: `test_activity_contract.py`, `test_first_party_activity_audience_metadata.py` (21 built-in activities), `test_first_party_activity_readiness.py`.
-  - Full test suite `make verify`: **1,198 unit tests PASS**, project validation PASS, all 21 activities valid, footprint and shell checks green.
+  - Platform contract tests reconciled: `test_activity_contract.py`, `test_first_party_activity_audience_metadata.py`, `test_first_party_activity_readiness.py`.
+  - Full test suite `make verify`: PASS.
   - Package validation digest: `sha256 45f5ea72e154fa62773633608c0f100abdba91d263fc3560cadf7b69c1c54348`.
-  - Visual review executed and verified across Italian and English locales and multiple viewports (1024x600, 1280x800, 800x480, 1366x768).
+  - Visual review executed and verified across Italian and English locales and multiple viewports.
+
+## Early-learning Activity expansion: Casa del Dieci acceptance (2026-08-24)
+
+`activities/casa_del_dieci` (La Casa del Dieci / The Ten House) number bonds Activity is fully implemented, verified, and accepted following `docs/agents/GREIA_EARLY_LEARNING_ACTIVITY_IMPLEMENTATION_RUNBOOK.md` and `skills/greia-activity-authoring/SKILL.md`.
+
+- Architecture:
+  - `ten_house_model.py`: Concrete 2x5 ten-frame representation with `OperationMode(COMPOSE, ADD, TAKE_AWAY, MISSING_PART)`, immutable `TenHouseChallenge`, deterministic factory with 6 unique challenges per set across L1–L5, between-set bounded adaptation, and one-shot `ten_house.room_completed` (milestone) and `ten_house.house_completed` (completion) events.
+  - `ten_house_app.py`: Hybrid input orchestrator (Keyboard Left/Right/Up/Down navigation across 2x5 rooms and choices, Space/Enter activation; Pointer/Touch clicks; Home/ESC lifecycle), low-allocation state machine with brief wobble/transition states, and completion restart.
+  - `ten_house_renderer.py`: 1024x600 cozy two-story house presentation with 10 large clickable rooms (glowing golden yellow when lit, slate blue when dark), Dani robot guide, dynamic prompt / equation bar, high-contrast choice cards and confirm button.
+  - `ten_house_art.py`: Nighttime facade backdrop with stars/chimney, pre-scaled Dani character integration (`character.dani`).
+  - `ten_house_audio.py`: Prepared nonverbal procedural synthesis (`toggle`, `correct`, `retry`, `complete`).
+  - `ten_house_services.py`: Storage adapter for `casa_del_dieci.progress.v1` (bounded history <= 8) and event publisher.
+- Evidence & Verification:
+  - `tests/test_activity_casa_del_dieci.py`: 11/11 focused tests passing (model determinism, arithmetic invariants, room toggles, operation choices, adaptation, storage recovery, manifest, app keyboard/pointer integration, simulator supervisor lifecycle).
+  - Platform contract tests reconciled: `test_activity_contract.py`, `test_first_party_activity_audience_metadata.py` (22 built-in activities), `test_first_party_activity_readiness.py`.
+  - Full test suite `make verify`: **1,209 unit tests PASS**, project validation PASS, all 22 activities valid, footprint and shell checks green.
+  - Package validation digest: `sha256 ea81b746fbc2d493d36fac1032ec8ed41b73dbef6bd14c04d2db63940a69dd8e`.
+  - Visual review executed for Italian and English locales and multiple game modes (Compose, Add, Missing-Part, Take-Away, Completion).
 
 ## Contributor engineering skills integration (2026-08-23)
 

@@ -26,6 +26,7 @@ class FoodType(Enum):
     HERRING = "herring"
     SALMON = "salmon"
     SQUID = "squid"
+    SHRIMP = "shrimp"
     ICE = "ice"
 
 
@@ -54,6 +55,10 @@ class OrcaEntity:
         self.target_vx = self.vx
         self.target_vy = 0.0
         self.facing = 1 if self.vx >= 0 else -1
+        self.angle = 0.0
+        self.target_angle = 0.0
+        self.fluke_angle = 0.0
+        self.mouth_open = 0.0
         self.swim_phase = random.random() * 6.28
         self.blink_timer = random.uniform(2.0, 4.5)
         self.is_blinking = False
@@ -62,6 +67,7 @@ class OrcaEntity:
         self.state_timer = 0.0
         self.jump_origin_y = y
         self.jump_peak_h = 160.0 * scale
+        self.jump_flip_angle = 0.0
         self.cuddle_happiness = 0.0
         self.craved_food = random.choice(list(FoodType))
         self.jump_target_x = x
@@ -75,36 +81,40 @@ class OrcaEntity:
         return 75.0 * self.scale
 
     def hit_test(self, px: float, py: float) -> bool:
-        w = self.width * 1.15
-        h = self.height * 1.15
+        w = self.width * 1.25
+        h = self.height * 1.25
         return (self.x - w / 2 <= px <= self.x + w / 2) and (self.y - h / 2 <= py <= self.y + h / 2)
 
     def trigger_cuddle(self) -> None:
         self.state = OrcaState.CUDDLE_BELLY
-        self.state_timer = 2.4
-        self.cuddle_happiness = min(1.0, self.cuddle_happiness + 0.35)
+        self.state_timer = 2.8
+        self.cuddle_happiness = min(1.0, self.cuddle_happiness + 0.4)
         self.vy = -1.2
+        self.target_angle = 15.0 * (1 if random.random() < 0.5 else -1)
 
     def trigger_breach(self, jump_x: float, height_bonus: float = 0.0) -> None:
         self.state = OrcaState.BREACHING
         self.state_timer = 0.0
         self.jump_origin_y = max(WATER_SURFACE_Y + 40.0, self.y)
         self.jump_target_x = jump_x
-        self.jump_peak_h = (150.0 + height_bonus) * self.scale
+        self.jump_peak_h = (155.0 + height_bonus) * self.scale
         self.facing = 1 if jump_x >= self.x else -1
+        self.jump_flip_angle = 0.0
 
     def trigger_ring_jump(self, ring_x: float) -> None:
         self.state = OrcaState.RING_LEAP
         self.state_timer = 0.0
         self.jump_origin_y = max(WATER_SURFACE_Y + 40.0, self.y)
         self.jump_target_x = ring_x
-        self.jump_peak_h = 180.0 * self.scale
+        self.jump_peak_h = 185.0 * self.scale
         self.facing = 1 if ring_x >= self.x else -1
+        self.jump_flip_angle = 0.0
 
     def trigger_sing(self, note_idx: int) -> None:
         self.state = OrcaState.SINGING
-        self.state_timer = 1.5
+        self.state_timer = 1.6
         self.vy = -1.5
+        self.mouth_open = 1.0
 
     def update(self, dt: float, foods: list[FoodEntity], toys: list[ToyEntity], night_mode: bool) -> list[str]:
         """Update orca physics, animation timers and state transitions. Returns event cues to trigger."""
@@ -127,13 +137,21 @@ class OrcaEntity:
         elif not night_mode and self.state == OrcaState.SLEEPING:
             self.state = OrcaState.SWIMMING
 
+        # Natural tail fluke oscillation
+        self.fluke_angle = math.sin(self.swim_phase) * 18.0
+
+        # Mouth closing interpolation
+        if self.state not in (OrcaState.EATING, OrcaState.SINGING):
+            self.mouth_open = max(0.0, self.mouth_open - dt * 3.0)
+
         # State Machine Dispatch
         if self.state == OrcaState.SLEEPING:
-            # Gentle rhythmic bobbing near surface
+            # Gentle rhythmic bobbing near surface with resting angle
             self.vx *= 0.94
             self.vy = math.sin(self.swim_phase * 0.5) * 0.4
             self.y += self.vy
             self.x += self.vx
+            self.angle += (0.0 - self.angle) * 0.05
             return events
 
         elif self.state == OrcaState.CUDDLE_BELLY:
@@ -141,6 +159,7 @@ class OrcaEntity:
             self.vx *= 0.90
             self.vy = math.sin(self.swim_phase * 1.5) * 0.6
             self.y = max(WATER_SURFACE_Y - 5.0, min(WATER_SURFACE_Y + 40.0, self.y + self.vy))
+            self.angle += (self.target_angle - self.angle) * 0.1
             if self.state_timer <= 0:
                 self.state = OrcaState.SWIMMING
             return events
@@ -149,6 +168,8 @@ class OrcaEntity:
             self.state_timer -= dt
             self.vx *= 0.92
             self.y += math.sin(self.swim_phase * 2.0) * 0.8
+            self.mouth_open = min(1.0, self.mouth_open + dt * 4.0)
+            self.angle += (-15.0 * self.facing - self.angle) * 0.12
             if self.state_timer <= 0:
                 self.state = OrcaState.SWIMMING
             return events
@@ -157,6 +178,7 @@ class OrcaEntity:
             self.state_timer -= dt
             self.vx *= 0.85
             self.y += math.sin(self.swim_phase * 2.5) * 0.5
+            self.mouth_open = min(1.0, self.mouth_open + dt * 5.0)
             if self.state_timer <= 0:
                 self.craved_food = random.choice(list(FoodType))
                 self.state = OrcaState.SWIMMING
@@ -170,12 +192,18 @@ class OrcaEntity:
                 # Upward and downward parabolic arc
                 h = math.sin(progress * math.pi) * self.jump_peak_h
                 self.y = self.jump_origin_y - h
-                # Smooth lateral leap towards jump_target_x
+                # Dynamic leap pitch angle
+                self.angle = (-38.0 + progress * 76.0) * self.facing
+                if self.state == OrcaState.RING_LEAP:
+                    # Barrel roll spin
+                    self.jump_flip_angle += 360.0 * dt * 1.5
                 self.x += (self.jump_target_x - self.x) * 0.08 + (self.facing * self.base_speed * 1.8)
             else:
                 # Water Reentry Splashdown!
                 self.y = WATER_SURFACE_Y + 30.0
                 self.vy = 2.0
+                self.angle = 0.0
+                self.jump_flip_angle = 0.0
                 self.state = OrcaState.SWIMMING
                 events.append("splash")
                 events.append("whistle")
@@ -238,6 +266,10 @@ class OrcaEntity:
                 self.target_vy = random.uniform(-0.5, 0.5)
             if random.random() < 0.008:
                 self.target_vx = -self.target_vx
+
+        # Natural pitch angle derived from 2D velocity vector
+        calc_pitch = math.degrees(math.atan2(self.vy, max(0.5, abs(self.vx)))) * (1 if self.facing >= 0 else -1)
+        self.angle += (max(-25.0, min(25.0, calc_pitch)) - self.angle) * 0.08
 
         # Apply position update
         self.x += self.vx

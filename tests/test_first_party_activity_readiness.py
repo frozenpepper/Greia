@@ -134,6 +134,7 @@ class FirstPartyActivityReadinessTests(unittest.TestCase):
             {
                 "acquario_magico",
                 "baia_delle_orche",
+                "casa_del_dieci",
                 "clinica_cuccioli",
                 "costruiamo_ponti",
                 "cucciolo_mio",

@@ -1,0 +1,48 @@
+[activity]
+id = "org.greia.casa-del-dieci"
+legacy_ids = []
+title_key = "activity.casa_del_dieci.title"
+version = "0.1.0"
+icon = "package:assets/icon.png"
+languages = ["it", "en"]
+
+[presentation]
+categories = ["learn", "play"]
+discovery_tags = ["numbers", "puzzles"]
+
+[education]
+categories = ["early_math", "number_composition", "operations"]
+difficulty = 3
+recommended_age_min = 5
+recommended_age_max = 7
+difficulty_min = 1
+difficulty_max = 5
+adaptive_difficulty = true
+skills = [
+  { id = "math.operations.addition", weight = 3 },
+  { id = "math.operations.subtraction", weight = 3 },
+  { id = "math.quantity.number_bonds", weight = 3 },
+  { id = "cognition.part_whole_reasoning", weight = 2 },
+]
+events = [
+  { id = "ten_house.room_completed", kind = "milestone" },
+  { id = "ten_house.house_completed", kind = "completion" },
+]
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "hybrid"
+
+[requirements]
+required_capabilities = ["display", "pointer", "audio.basic"]
+optional_capabilities = ["keyboard", "touch"]
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1

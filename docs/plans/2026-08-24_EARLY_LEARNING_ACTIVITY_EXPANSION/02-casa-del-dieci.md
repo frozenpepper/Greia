@@ -8,6 +8,37 @@
 
 `org.greia.casa-del-dieci` provides six concrete ten-room challenges progressing from composition to add, take-away, and missing-part reasoning within ten.
 
+## Implementation checkpoint — 2026-08-24
+
+The source implementation is complete, verified, and accepted:
+
+Current source shape:
+
+```text
+activities/casa_del_dieci/
+  activity.toml
+  main.py
+  ten_house_model.py
+  ten_house_services.py
+  ten_house_audio.py
+  ten_house_art.py
+  ten_house_renderer.py
+  ten_house_app.py
+  locales/{it,en}.json
+  assets/source/icon.svg
+  assets/icon.png
+tests/test_activity_casa_del_dieci.py
+```
+
+Evidence:
+- 11/11 focused unit and integration tests passing (`tests/test_activity_casa_del_dieci.py`).
+- Cumulative test suite passing: 81 tests green across early learning and platform contracts.
+- Repository-wide `make verify` completely passing: 1,209 unit tests green, all 22 activities valid, footprint and shell checks green.
+- Package validation digest: `sha256 ea81b746fbc2d493d36fac1032ec8ed41b73dbef6bd14c04d2db63940a69dd8e`.
+- Visual review executed for Italian and English locales and multiple game modes (Compose, Add, Missing-Part, Take-Away, Completion). 10-room 2x5 ten-frame layout with high-contrast glowing rooms and keyboard focus ring.
+- Audio: Prepared procedural tones (`toggle`, `correct`, `retry`, `complete`).
+- Simulator integration: Supervisor launch and lifecycle tested cleanly.
+
 ## Preconditions
 
 - Pull current `main`; verify the prior handoff/gate.
