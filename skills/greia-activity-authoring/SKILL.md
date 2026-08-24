@@ -1,233 +1,73 @@
 ---
 name: greia-activity-authoring
-description: Canonical agent guide for designing, implementing, refactoring, packaging, validating and testing Greia Activities, including mandatory real-simulator launch acceptance, clean OOP structure, measured low-resource performance, low-cost terminal/victory rendering, trusted achievement/reward event design, discovery/audience metadata, optional canonical character speech, deterministic pedagogical speech, shared character utterances, child grammatical agreement, and platform-owned microphone routing.
+description: Task router for creating, modifying, refactoring, validating, packaging and testing Greia Activities. Load only the task-specific local docs required for the work.
 ---
 
-# Greia Activity Authoring Skill
+# Greia Activity Authoring — task router
 
-**Status:** living derived authoring guide  
+**Status:** living derived contributor router  
 **Reviewed:** 2026-08-24
 
-This skill is intentionally split so small local agents do not have to load unrelated specialist guidance for every task.
+Keep this file small. It tells an agent **what to read for the task**; it is not a duplicate Activity manual.
 
-## NON-NEGOTIABLE COMPLETION GATE — ACTUALLY LAUNCH THE ACTIVITY
+## Universal rules
 
-For every new Activity and every substantive runtime-relevant Activity change, **source/tests are not the definition of done**.
+These apply to all substantive Activity work:
 
-> **The final runtime-relevant source state MUST be loaded through the real Greia Activity Simulator/launcher path, launched from Greia, present a usable first frame, remain alive for at least 10 seconds after that frame, survive at least one meaningful child interaction, and return cleanly to the Shell before the work may be called done, complete, working, fixed, ready, accepted, launchable or finished.**
+1. An Activity runs under Greia platform authority. Do not bypass platform lifecycle, storage, permissions, progression, Home/Back, input or runtime policy.
+2. First-party implementation must remain maintainable: thin `main.py`, cohesive modules/classes, composition over procedural sprawl, reuse Greia platform primitives before inventing local frameworks.
+3. Do not widen security/runtime policy merely to make one Activity convenient. Package-local code is Activity code; unknown external dependencies remain forbidden unless platform policy deliberately changes.
+4. **A new or substantively changed Activity is not done until the final runtime-relevant source state passes the real Greia Simulator launch/survival gate.** Source validation, imports, unit tests, `make verify`, `python main.py`, or package validation do not replace this.
+5. Simulator launch evidence becomes stale after any runtime-relevant edit. Relaunch the final state.
+6. If the simulator cannot be run, report `INTEGRATION-UNVERIFIED` / `SOURCE-VERIFIED / SIMULATOR-UNVERIFIED`; do not call the Activity complete or working.
+7. Claim only evidence that actually executed. Simulator evidence is not physical Acer/Pi evidence.
 
-This is mandatory even when all of the following pass:
-
-```text
-unit tests
-make verify
-project validation
-PythonRuntimeAdapter validation
-repository/package imports
-python main.py
-AST/source checks
-package creation/install validation
-```
-
-None of those substitutes for a real Greia simulator launch.
-
-`ImportError`, `ModuleNotFoundError`, startup traceback, missing startup asset/resource, immediate exit, dead first frame, failure to reach READY, first-interaction crash, or failure to return to the Shell is a **FAILED Activity acceptance**, not a minor issue that can be handed off while calling the Activity complete.
-
-Simulator evidence applies only to the exact runtime-relevant source state that was launched. **Any runtime-relevant edit after a PASS invalidates that PASS and requires another simulator launch.**
-
-If the current execution environment cannot run the simulator, the agent may preserve/commit the work, but MUST report it as `INTEGRATION-UNVERIFIED` or `SOURCE-VERIFIED / SIMULATOR-UNVERIFIED`. Lack of simulator access does not weaken this completion gate.
-
-The exact mandatory procedure, evidence fields, failure handling and strict status vocabulary are owned by:
+For the exact mandatory launch procedure and failure criteria, read:
 
 ```text
 skills/greia-activity-authoring/LAUNCH_ACCEPTANCE.md
 ```
 
-Reviewers must reject substantive Activity work that has no concrete final-source simulator launch evidence.
+An `ImportError`, `ModuleNotFoundError`, startup exception, immediate exit, dead first frame, first-interaction crash, or failure to return cleanly to the Shell is **failed Activity acceptance**.
 
-## Mandatory reading order
+## Read by task
 
-1. Read `CORE.md` completely for the canonical general Activity-authoring contract.
-2. Read `LAUNCH_ACCEPTANCE.md` completely for **every new Activity and every substantive Activity creation, modification, refactor, optimization, review or test task**. It owns the hard simulator launch/survival definition of done.
-3. Read `ENGINEERING.md` whenever creating, modifying, reviewing, optimizing or substantially refactoring Activity implementation code. For new/substantively changed first-party Activities it is mandatory: it owns the practical clean-code/OOP/decomposition/performance protocol, including the rule that `main.py` is a thin composition root rather than the Activity implementation.
-4. Read `REFACTORING.md` completely whenever structurally refactoring an existing Activity. It owns the behavior/manifest contract inventory, structural-vs-behavior change classification, recommended extraction order, semantic-action unification, and refactor-specific test/review protocol calibrated on a real first-party Activity.
-5. Read `TERMINAL_RENDERING.md` completely whenever an Activity has or adds a victory, completion, results, session-finished, Play Again or Continue screen. It owns the required terminal-state lifecycle and the shared low-cost `PygameCompletionScreen` path. A terminal screen must not keep the live game updating/rendering underneath a fullscreen alpha modal.
-6. Read `ACHIEVEMENTS.md` completely whenever creating/changing completion, creation, milestone or score events; participating in Greia Stars; or designing Activity facts that may drive badges/achievements. Activities report facts; only trusted Greia policy awards Stars or achievements.
-7. Read `DISCOVERY.md` whenever creating or editing `activity.toml`, launcher categories, audience/age metadata, difficulty/adaptive difficulty, discovery tags, or reasoning about how an Activity appears for a child.
-8. When packaging or exporting an Activity, also read `docs/architecture/GREIA_ACTIVITY_PACKAGE_FORMAT.md`. Parent-facing distribution uses the `.greiaactivity` ZIP contract; the extension is a UX/routing signal, never package validation or trust.
-9. When the Activity speaks, produces localized audio, uses shared Greia character utterances, teaches pronunciation, uses a Greia character voice, changes Activity Designer audio tooling, or needs child-directed grammatical agreement, also read `VOICE_GENERATION.md` completely and `docs/adr/0032-profile-presentation-and-grammatical-agreement.md` where agreement is relevant.
-10. When the Activity records from or listens to the microphone, also read `docs/adr/0031-platform-owned-microphone-processing.md` and `docs/architecture/GREIA_AUDIO_SERVICE.md`.
-11. Follow every narrower repository `AGENTS.md` that applies to the files being changed.
-12. Exact implemented APIs/schemas remain owned by source/runtime declarations; accepted ADRs own architecture; product docs own child-facing requirements.
+### Creating a new Activity or changing Activity code
 
-Do not treat this index as permission to skip `CORE.md` or `LAUNCH_ACCEPTANCE.md` or, for implementation work, `ENGINEERING.md`. Structural refactors also require `REFACTORING.md`; completion/victory work requires `TERMINAL_RENDERING.md`; achievement/reward event work requires `ACHIEVEMENTS.md`.
-
-## Implementation engineering decision summary
-
-Greia Activities are supervised content, not miniature standalone applications. Their code should expose obvious, reusable responsibilities instead of accumulating everything in one script.
-
-For non-trivial Python Activities:
+Read:
 
 ```text
-main.py
-    thin composition/bootstrap boundary
-
-app/lifecycle owner
-    top-level Activity state/transitions
-
-domain/model objects
-    round/game/content state + invariants
-
-presentation/renderer
-    drawing/layout + bounded prepared resources
-
-optional collaborators
-    challenge generation, semantic input, audio sequencing,
-    persistence mapping, Activity-owned resource preparation
-```
-
-Exact filenames are not mandated; cohesive ownership is.
-
-Strong defaults:
-
-- model stable state/lifecycle/invariants with classes/dataclasses;
-- use narrow Protocol/ABC seams only for genuine substitutable behavior;
-- prefer composition over deep inheritance;
-- inject dependencies rather than discover mutable global services;
-- reuse Greia platform APIs/primitives instead of Activity-local copies;
-- keep `main.py` bootstrap-only (roughly >150 lines triggers review; >250 normally requires decomposition for first-party code);
-- review modules above roughly 500 lines and methods above roughly 60–80 lines for mixed ownership rather than gaming line counts;
-- public/non-obvious extension objects document responsibility, lifecycle, invariants and resource bounds;
-- comments explain architectural/performance **why**, not obvious syntax.
-
-When refactoring an existing monolith, do **not** start by inventing filenames. First inventory manifest/runtime/event/storage/localization/input/audio contracts and the child-visible state transitions. Classify every intentional change as structural preservation, contract repair, behavior fix, or performance structure. Then extract pure domain truth first, platform adapters second, presentation/resource ownership third, application coordination fourth, and reduce `main.py` last. `REFACTORING.md` owns the complete protocol.
-
-Performance is a correctness concern on Greia's Acer-class floor. In normal frame/event hot paths, do not decode images, large-scale/flip reusable sprites, construct fonts, render stable text repeatedly, allocate large unchanged Surfaces, regenerate static scenery, walk/stat the filesystem, enumerate devices, launch subprocesses, parse configuration or write durable storage.
-
-Required performance patterns include bounded caches with complete keys/invalidation, pre-rendered static scenes, dirty/invalidation-driven redraw where practical, bounded monotonic-time animations, fail-soft optimized paths, and semantic/pixel-equivalence testing for rendering optimizations.
-
-### Terminal/victory state is not an overlay effect
-
-For Pygame Activities with completion/results state:
-
-```text
-ACTIVE
-    update + render active game
-
-TERMINAL
-    freeze active simulation
-    prepare terminal presentation once
-    repaint only on invalidation
-    keep input/STOP responsive
-```
-
-Do **not** keep a 30 Hz active game running under `pygame.Surface((1024, 600), pygame.SRCALPHA)` or recreate stable terminal labels every frame. Standard Pygame terminal presentation should use:
-
-```python
-from greia_platform.pygame_completion import (
-    CompletionContent,
-    PygameCompletionScreen,
-)
-```
-
-The shared owner produces a prepared opaque terminal frame; the Activity remains responsible for completion truth, persistence/events and restart semantics. Full rules and the cross-Activity evidence are in `TERMINAL_RENDERING.md`.
-
-### Achievements and Greia Stars are platform decisions
-
-An Activity may emit stable, declared facts such as a completed round, healed patient, creation, milestone or score. It must not award a global badge or mutate the Greia Star balance itself.
-
-Canonical flow:
-
-```text
-Activity semantic event
-    -> trusted Event Broker / History
-    -> Greia progression + achievement policy
-    -> trusted reward/unlock result
-    -> Shell celebration + profile badge library
-```
-
-Every emitted event ID must match `activity.toml` exactly. Score events must use `kind = "score"`, declare `score_order`, and pass the numeric score through the event API. Do not encode badge IDs, global reward writes, daily streak mechanics, rank/comparison logic or click-grind reward loops in Activity code.
-
-Full achievement/reward authoring contract:
-
-```text
-skills/greia-activity-authoring/ACHIEVEMENTS.md
-docs/design/GREIA_ACHIEVEMENTS_AND_BADGE_LIBRARY.md
-runtime/progression-policy.toml
-runtime/achievement-policy.toml
-```
-
-Current Activity working targets:
-
-```text
-smooth gameplay:       ~30 fps on Atom-class floor
-added input latency:   <= 50 ms
-static/paused idle:    near-zero CPU where architecture permits
-```
-
-Desktop/simulator timing is diagnostic only. Claims about Acer/Pi performance require named physical hardware and exact source SHA.
-
-Full implementation/refactoring protocol and measured rationale:
-
-```text
-skills/greia-activity-authoring/LAUNCH_ACCEPTANCE.md
 skills/greia-activity-authoring/ENGINEERING.md
+skills/greia-activity-authoring/LAUNCH_ACCEPTANCE.md
+docs/architecture/GREIA_ACTIVITY_ECOSYSTEM.md
+docs/product/ACTIVITY_SYSTEM_NAVIGATION.md
+docs/product/ACTIVITY_INPUT_STANDARDS.md
+```
+
+For Python/runtime/import work also inspect current source authority:
+
+```text
+runtime/child-runtime.toml
+src/greia_launcher/runtime_adapter.py
+src/greia_platform/activity_api.py
+src/greia_platform/activities.py
+```
+
+### Refactoring or splitting an existing Activity
+
+Read:
+
+```text
 skills/greia-activity-authoring/REFACTORING.md
-skills/greia-activity-authoring/TERMINAL_RENDERING.md
-skills/greia-activity-authoring/ACHIEVEMENTS.md
-docs/engineering/ENGINEERING_FOUNDATIONS.md
-docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md
+skills/greia-activity-authoring/ENGINEERING.md
+skills/greia-activity-authoring/LAUNCH_ACCEPTANCE.md
 ```
 
-## Package decision summary
+The launch gate is mandatory after the **final** refactor edit. A clean architecture that fails in the Simulator is a failed refactor.
 
-Normal parent-facing Activity distribution is one file:
+### Manifest, Collection, age/difficulty or discovery work
 
-```text
-<activity-name>.greiaactivity
-```
-
-It is an ordinary ZIP whose Activity contents are stored directly at archive root, with `activity.toml` at root. Do not wrap the Activity in an extra directory.
-
-The canonical media type is:
-
-```text
-application/vnd.greia.activity+zip
-```
-
-The extension/media type help file pickers and humans identify the package. They are **not** evidence of safety or trust. A renamed ZIP still has to pass `ActivityPackageService` and normal Activity validation before Greia activates it.
-
-Developer/simulator tools may accept an unpacked Activity directory or raw `.zip` as convenience inputs. Do not present generic ZIP as the normal Parent install format.
-
-Full package contract:
-
-```text
-docs/architecture/GREIA_ACTIVITY_PACKAGE_FORMAT.md
-src/greia_platform/activity_package_format.py
-src/greia_platform/activity_packages.py
-```
-
-## Discovery decision summary
-
-Current Activity manifests may declare independent launcher, grouping, audience and challenge facts:
-
-```toml
-[presentation]
-categories = ["play", "learn"]
-discovery_tags = ["puzzles", "numbers"]
-
-[education]
-difficulty = 4
-recommended_age_min = 5
-recommended_age_max = 8
-difficulty_min = 2
-difficulty_max = 7
-adaptive_difficulty = true
-```
-
-Do not reinterpret difficulty as age. Do not invent upper-age limits for open-ended creative Activities. Discovery tags are semantic hints from Greia's platform-owned grouping vocabulary; they are not filesystem folders and do not command a sub-Collection to exist. Greia/Parent policy owns per-child visibility, and missing age metadata fails open.
-
-Full current manifest/discovery guidance:
+Read:
 
 ```text
 skills/greia-activity-authoring/DISCOVERY.md
@@ -237,211 +77,150 @@ src/greia_platform/activity_discovery.py
 src/greia_launcher/catalogue_view.py
 ```
 
-## Child presentation and grammatical agreement summary
-
-A child's optional presentation preference is deliberately small:
+If runtime-relevant manifest data changed, also run:
 
 ```text
-neutral → neutral
-boy     → masculine
-girl    → feminine
+skills/greia-activity-authoring/LAUNCH_ACCEPTANCE.md
 ```
 
-This is **not** a gameplay or content classification. Never use it to hide Activities, choose subjects, alter challenge, change rewards/progression, select permissions, or infer interests.
+### UI, layout, canvas, responsive or input work
 
-Python Activities that genuinely need child-directed grammatical agreement should use:
-
-```python
-from greia_platform.activity_api import get_profile_grammatical_gender
-
-variant = get_profile_grammatical_gender().value
-```
-
-and pass the same variant to both localized text and localized audio:
-
-```python
-caption = resources.text("feedback.correct", variant=variant)
-voice = resources.audio_cue("feedback.correct", variant=variant)
-```
-
-Use a natural neutral base cue and optional semantic variants only when needed. Italian example:
+Read:
 
 ```text
-feedback.correct             = "Ottimo lavoro!"
-feedback.correct.masculine   = "Bravo!"
-feedback.correct.feminine    = "Brava!"
+docs/adr/0018-lightweight-ui-foundation.md
+docs/adr/0019-platform-owned-activity-system-navigation.md
+docs/adr/0020-runtime-neutral-input-profiles-and-controller-support.md
+docs/adr/0026-resolution-adaptive-ui-layout.md
+docs/adr/0027-activity-coordinate-spaces-canvas-and-world-camera.md
+docs/product/ACTIVITY_SYSTEM_NAVIGATION.md
+docs/product/ACTIVITY_INPUT_STANDARDS.md
+docs/design/GREIA_ACTIVITY_CANVAS_AND_VIEWPORT_AUTHORING.md
 ```
 
-Do not write language-specific `if boy`/`if girl` branches in gameplay. Localization owns the words; Greia supplies only the semantic agreement selector.
-
-Full contract:
+For Pygame Activities inspect the current shared primitives instead of copying launcher code:
 
 ```text
+src/greia_platform/pygame_ui.py
+src/greia_platform/pygame_canvas.py
+src/greia_platform/activity_ui.py
+src/greia_platform/activity_viewport.py
+src/greia_platform/responsive_layout.py
+```
+
+Runtime-relevant UI/input work must finish with `LAUNCH_ACCEPTANCE.md`.
+
+### Victory, completion, results, Continue or Play Again work
+
+Read:
+
+```text
+skills/greia-activity-authoring/TERMINAL_RENDERING.md
+skills/greia-activity-authoring/LAUNCH_ACCEPTANCE.md
+```
+
+Exercise the completion/restart path, not just startup.
+
+### Achievements, Stars, score or completion events
+
+Read:
+
+```text
+skills/greia-activity-authoring/ACHIEVEMENTS.md
+docs/design/GREIA_ACHIEVEMENTS_AND_BADGE_LIBRARY.md
+runtime/progression-policy.toml
+runtime/achievement-policy.toml
+```
+
+If event-emitting runtime code changed, also run `LAUNCH_ACCEPTANCE.md` and exercise the event-producing path.
+
+### Packaging, install or `.greiaactivity` work
+
+Read:
+
+```text
+docs/architecture/GREIA_ACTIVITY_PACKAGE_FORMAT.md
+src/greia_platform/activity_package_format.py
+src/greia_platform/activity_packages.py
+src/greia_platform/activity_assets.py
+src/greia_platform/trust.py
+```
+
+Use the Simulator's canonical package-install path for package acceptance; then follow `LAUNCH_ACCEPTANCE.md`.
+
+### Localization, language or grammatical agreement
+
+Read:
+
+```text
+docs/adr/0028-platform-and-activity-localization-language-context.md
 docs/adr/0032-profile-presentation-and-grammatical-agreement.md
-skills/greia-activity-authoring/VOICE_GENERATION.md
-src/greia_platform/profile_presentation.py
 src/greia_platform/localization.py
-src/greia_platform/activity_api.py
+src/greia_platform/language_presentation.py
+src/greia_platform/profile_presentation.py
 ```
 
-## Microphone decision summary
+If visible/runtime resources changed, finish with `LAUNCH_ACCEPTANCE.md` in the materially affected locale/profile configuration.
 
-Microphone cleanup is a **Greia platform responsibility**, not an Activity DSP feature.
+### Character speech, pedagogical speech or voice generation
 
-An Activity that captures microphone audio must declare/receive `audio.basic` through the normal capability path and obtain the platform-selected capture endpoint through:
+Read:
 
-```python
-from greia_platform.activity_api import get_audio_capture_device
-
-capture_device = get_audio_capture_device()
+```text
+skills/greia-activity-authoring/VOICE_GENERATION.md
+docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md
+docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md
 ```
 
-For SDL/pygame capture (pygame._sdl2 AudioDevice), open the platform-designated SDL device instead — SDL cannot open arbitrary ALSA PCM names, so Greia injects a composed ALSA view and designates the SDL-enumerated device that carries the route:
+Only read the local production setup when actual custom voice production is requested:
 
-```python
-from greia_platform.activity_api import get_sdl_capture_device
-
-sdl_device = get_sdl_capture_device()
+```text
+docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md
 ```
 
-`get_sdl_capture_device()` returns `None` in a development/simulator composition; then use the runtime's normal default capture/enumeration behavior. On a production Greia launch it always returns the platform's route — open it directly and never fall back to choosing a device yourself.
+### Microphone/capture work
 
-Do **not**:
-
-- enumerate host capture devices and select the first one;
-- hard-code ALSA card/device names or `/dev/snd` nodes;
-- add per-Activity denoising, AGC or noise-gate policy;
-- inspect CPU/model/hardware and choose lightweight versus advanced processing;
-- bypass Greia because a raw physical microphone appears to work locally.
-
-Greia defaults to its lightweight processor when the concrete backend is available. A parent may disable processing, and advanced processing is an explicit Parent opt-in that is only exposed when the platform reports a real advanced endpoint. Activities should not care which DSP library realizes those modes.
-
-Use `get_audio_processing_mode()` only for narrow diagnostics/presentation when genuinely needed; game/educational behavior must not depend on a particular DSP implementation.
-
-Full microphone architecture and physical acceptance:
+Read:
 
 ```text
 docs/adr/0031-platform-owned-microphone-processing.md
 docs/architecture/GREIA_AUDIO_SERVICE.md
-docs/testing/2026-08-23_ACER_MICROPHONE_PROCESSING_ACCEPTANCE.md
 src/greia_platform/audio.py
 src/greia_platform/activity_api.py
 ```
 
-## Speech/voice decision summary
+Do not implement Activity-local device selection or DSP policy.
 
-Greia distinguishes four semantic speech jobs:
+### Performance optimization
 
-```text
-character_dialogue
-shared_character_utterance
-pedagogical_speech
-dani_system_speech
-```
-
-The governing rule is:
-
-> If the sound itself is the educational truth being taught, use pedagogical/system speech. If speech communicates content through a character, use character speech.
-
-### Character dialogue
-
-Lilli, Leo, Flash, Tito and Momo may use optional build-time/local **Chatterbox Multilingual V3** generation from the canonical reference voices. Every generated line is human-reviewed and packaged as an ordinary localized playback asset.
-
-MOSS-TTS-Nano is **rejected** for Greia production quality. The repeated `ma. ma. ma.` / middle-extraction experiment is also **rejected**.
-
-For ultra-short character reactions only, bounded Chatterbox output plus FFmpeg analysis/trim may be used when the final clip is reviewed. Do not use that technique to make Chatterbox a phonics/pronunciation engine.
-
-### Pedagogical speech
-
-Letters, letter names, syllables, phonics, spelling units and pronunciation targets use a deterministic/native/system TTS path. Correctness and consistency outrank mascot voice identity.
-
-Do not pretend a mascot is speaking a teaching sample when the pedagogical voice is noticeably different; present it as a neutral educational audio object between character prompts/reactions.
-
-### Shared character utterances
-
-Before generating custom dialogue for generic feedback, prefer the Greia shared semantic families:
+Read:
 
 ```text
-praise.general
-celebrate.success
-encourage.retry
-encourage.progress
-ready.go
+skills/greia-activity-authoring/ENGINEERING.md
+docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md
 ```
 
-Each family resolves to an array of reviewed files for the selected character/locale. The Activity never chooses an exact phrase or filename.
+Then rerun `LAUNCH_ACCEPTANCE.md` because an optimized Activity that no longer launches is not an optimization. Hardware performance claims require named physical hardware and exact source SHA.
+
+### Broad cross-cutting Activity work
+
+Only when the task genuinely spans several of the areas above, use the broad synthesis reference:
 
 ```text
-one available file  → always that file
-multiple files       → Greia randomly chooses one reviewed variant
+skills/greia-activity-authoring/CORE.md
 ```
 
-The random choice is presentation-only; gameplay, scoring, correctness, rewards and difficulty must not depend on it.
+`CORE.md` is **not mandatory first reading for every Activity task**. Prefer the narrower files above so agents load only relevant context.
 
-The Italian/English variants, 180-clip complete target, random-picker contract, and canonical animation associations are defined in:
+## Completion check
+
+Before saying substantive Activity work is done, answer all four:
 
 ```text
-docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md
+1. Which task-specific docs above were read?
+2. Which source/test validation actually ran?
+3. What exact final source SHA/state was launched through Greia Simulator?
+4. Did it reach a usable frame, survive >=10s, survive meaningful input, and return cleanly to Shell?
 ```
 
-These are platform/shared assets, not duplicated into every Activity package.
-
-When producing the library itself, use:
-
-```text
-docs/agents/GREIA_SHARED_CHARACTER_UTTERANCE_RECORDING.md
-```
-
-### Dani
-
-Dani remains:
-
-```text
-greia.dani.system-v1
-```
-
-A clearly robotic system voice is intentional. Do not clone Dani from another character or replace him with a natural cheerful voice.
-
-## Voice toolchain capability rule
-
-**Custom character voice generation is optional. Do not install it automatically.**
-
-When custom character speech would be useful:
-
-1. first check whether a shared Greia utterance family satisfies the need;
-2. if the sound is pedagogical, route to deterministic/system speech;
-3. only then perform a non-mutating check for an already configured Chatterbox toolchain;
-4. if Chatterbox is unavailable and the user did not explicitly request its installation, omit optional custom character dialogue and continue the Activity;
-5. preserve captions/visual feedback and all essential instructions;
-6. never substitute an arbitrary host voice for Lilli/Leo/Flash/Tito/Momo.
-
-A missing optional voice toolchain must not make an otherwise valid Activity fail to build.
-
-If the user explicitly requires custom canonical character dialogue and the toolchain is missing, follow the opt-in setup guide rather than silently downloading models:
-
-```text
-docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md
-```
-
-Current canonical IDs:
-
-```text
-greia.lilli.v1
-greia.leo.v1
-greia.flash.v1
-greia.tito.v1
-greia.momo.v1
-greia.dani.system-v1
-```
-
-Every custom/static line must remain a semantic localization cue, be reviewed in every shipped language, preserve text/audio grammatical-variant parity where variants are used, and obey the non-overlap/sequencing requirements in `CORE.md`.
-
-Full speech policy and workflow:
-
-```text
-docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md
-docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md
-docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md
-docs/agents/GREIA_SHARED_CHARACTER_UTTERANCE_RECORDING.md
-skills/greia-activity-authoring/VOICE_GENERATION.md
-```
+If #3 or #4 has no successful evidence, the correct status is **integration-unverified**, not complete.
