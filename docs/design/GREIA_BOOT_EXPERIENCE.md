@@ -1,14 +1,21 @@
 # Greia Boot Experience
 
-**Status:** active architecture; exact full-colour presentation requires physical re-acceptance  
-**Date:** 2026-08-20  
-**Authority:** this document defines the child-visible boot UX; build profiles/source remain authoritative for what is actually implemented.
+**Status:** active architecture; exact full-colour presentation requires physical acceptance for each materially changed boot path  
+**Date:** 2026-08-24  
+**Authority:** this document defines the child-visible boot UX; exact build profiles/source remain authoritative for what is actually implemented.
+
+For implementation/recovery procedure, also read:
+
+```text
+docs/engineering/BOOT_PIPELINE_AGENT_GUIDE.md
+skills/greia-os-work/BOOT.md
+```
 
 ## 1. Product requirement
 
 Greia must feel like a children's appliance, not a Linux desktop that happens to launch an application.
 
-For a normal boot the child-visible sequence is:
+For a normal successful boot the child-visible sequence is:
 
 ```text
 firmware
@@ -18,13 +25,13 @@ firmware
   → profile picker
 ```
 
-There must be no intentional child-visible Linux console, blinking text cursor, kernel/service log stream, getty, shell prompt, boot menu or black interstitial introduced by Greia in the release path.
+There must be no intentional child-visible Linux console, blinking text cursor, ordinary kernel/service log stream, getty, shell prompt, boot menu or black interstitial introduced by Greia in the successful release path.
 
-The Greia-owned boot artwork is **full colour**. It must never be reduced to a binary mask, thresholded into a two-colour silhouette, recoloured as a single foreground colour, or stretched to match the physical display. The composition must remain proportional and centred on every supported aspect ratio.
+The Greia-owned boot artwork is **full colour**. It must never be reduced to a binary mask, thresholded into a two-colour silhouette, recoloured as a single foreground colour, or stretched to match the physical display. The composition must remain proportional and centred.
 
-During an open physical-hardware recovery gate, explicit `*-dev` profiles may intentionally keep tty1/status output visible. Diagnostic visibility is temporary development policy and does not redefine the child-facing release UX.
+During an open physical-hardware recovery gate, explicit `*-dev` profiles intentionally keep tty1/status output available. Diagnostic visibility is development policy and does not redefine the normal child-facing release UX.
 
-Greia should reach an interactive profile picker as quickly as the hardware permits. Branding must not become a reason to add seconds of artificial delay.
+Greia should reach an interactive profile picker as quickly as the hardware permits. Branding must not become a reason to add unbounded or arbitrary delay.
 
 ## 2. Ownership boundaries
 
@@ -43,58 +50,62 @@ Bootloader responsibilities are only:
 3. load the kernel/initramfs immediately;
 4. preserve diagnostics or graphics according to the currently accepted profile policy.
 
-For installed GRUB, the static image must be rendered through a theme using proportional `padding` and centred horizontal/vertical alignment. Raw `background_image` stretch is forbidden for Greia artwork.
+For installed GRUB, the static image is rendered through a theme using proportional `padding` and centred horizontal/vertical alignment. Raw `background_image` stretch is forbidden for Greia artwork.
+
+The normal Greia menu entry is automatic and `--unrestricted`. Editing/command access is protected separately by the canonical owner credential; normal child boot must not require a password.
 
 ### Kernel/initramfs
 
 Plymouth is not part of the target Greia architecture.
 
-As soon as a writable fbdev framebuffer exists, a tiny Greia-owned early renderer paints the same static composition directly. It must be architecture-safe, nonblocking, fail-soft and independent from high-level graphics runtimes.
+As soon as a writable fbdev framebuffer exists, a tiny Greia-owned early renderer paints the canonical static composition directly. It must be architecture-safe, nonblocking, fail-soft and independent from high-level graphics runtimes.
+
+Initramfs regeneration is **not** part of every boot/presentation change. It is required only when an initramfs-owned input changes; see the boot operating guide/skill for the mandatory generated-artifact checks before a physical reboot.
 
 ### Graphical session / launcher
 
-The launcher owns the actual intro animation. Animation starts only after Greia has a real graphical surface. The launcher first presents a continuation of the static artwork, then animates it briefly before revealing the profile picker.
+The launcher owns the actual intro animation. Animation starts only after Greia has a real graphical surface. The launcher first presents a continuation of the static artwork, then animates it before revealing the profile picker.
 
 Audio also starts here, never in initramfs.
 
 ## 3. Canonical artwork and generated presentation canvas
 
-The retained final legacy frame is currently the authoritative raw artwork source:
+The retained final legacy frame is the authoritative raw artwork source:
 
 ```text
 assets/boot/frames/frame_0051.png
 ```
 
-It is source material, not a runtime Plymouth dependency.
-
-The generation contract is:
+Current source contract in `tools/generate_boot_artwork.py`:
 
 ```text
-untouched full-colour source frame
+untouched full-colour source frame (222×600)
         ↓
-1600×900 landscape presentation canvas
+canonical 1024×600 white presentation canvas
   - source centred at native resolution
-  - surrounding canvas extends the source background palette
+  - pure-white surrounding background
   - no mask / threshold / recolour / quantisation
-        ├─ GRUB / launcher PNG
+        ├─ GRUB/static launcher PNG
         └─ initramfs P6 PPM
 ```
 
-The landscape canvas intentionally owns visual scale and safe margins. Runtime adapters then fit that **whole canvas** proportionally to their viewport. This prevents a portrait source from becoming either a huge narrow full-height object or a horizontally stretched full-screen image.
+The generated 1024×600 canvas is one current shared intermediate composition, not a request to bake separate files for every display. GRUB and the early framebuffer renderer fit that whole composition proportionally to the actual viewport. The launcher animation owns its own viewport centering/fitting behavior.
 
-The physical legacy installer builder must regenerate these derivatives immediately before composing the live and target filesystems. A successful source-tree edit is not evidence that an image contains the new splash.
+This corrects older living prose that described a 1600×900 generated canvas; source now uses `CANVAS_SIZE = (1024, 600)`.
 
-## 4. Why the old white/indigo derivative is rejected
+The physical legacy installer builder must regenerate derivatives immediately before composing the live and target filesystems. A successful source-tree edit is not evidence that an image contains the new splash.
 
-The historical generator attempted to extract the light foreground from a dark legacy frame using luminance thresholds and a median filter, then repainted the result as indigo `(62,70,130)` on white.
+## 4. Why destructive artwork extraction is rejected
 
-That design is now explicitly rejected because it:
+The historical generator attempted to extract a light foreground from a dark legacy frame using luminance thresholds and a median filter, then repainted the result as indigo on white.
+
+That design is rejected because it:
 
 - discards the source colours;
 - destroys antialiasing and fine detail;
 - can turn noisy source/background transitions into visible speckle and broken silhouettes;
 - creates a result that can look like corrupted framebuffer output even when pixel packing is correct;
-- made source-level tests encode the visual defect as an invariant.
+- made source-level tests encode a visual defect as an invariant.
 
 RGB565 compatibility must be solved in the renderer/pixel-format adapter and by validating the real artwork on hardware, **not by destructively flattening the artwork into two colours**.
 
@@ -136,10 +147,11 @@ The helper:
 - discovers screen geometry and colour layout from fbdev ioctls;
 - supports common 16/24/32-bit true-colour layouts;
 - rejects unsupported reversed bitfields fail-soft rather than painting known-bad colours;
-- uses the generated composition's own background colour for any letterboxing;
-- fits the entire landscape canvas proportionally and centres it;
+- uses the generated composition background for any letterboxing;
+- fits the entire generated canvas proportionally and centres it;
 - emits no boot-console output of its own;
-- never waits for a framebuffer.
+- never waits for a framebuffer;
+- currently accepts explicit real milestone progress through `--progress` as defined by `GREIA_BOOT_PROGRESS.md`.
 
 The P6 parser consumes exactly the one structural newline after `maxval`; it must never skip arbitrary low-valued raster bytes as if binary pixel data were whitespace.
 
@@ -149,17 +161,26 @@ Initramfs invokes the idempotent draw attempt at natural stages rather than poll
 
 The framebuffer composition must not be deliberately cleared to black immediately before the launcher appears.
 
-The current Xorg path uses `-background none`, requesting that the video driver preserve the previous framebuffer where possible. Physical hardware decides whether that is sufficient for a seamless transition. If a driver cannot preserve it, fallback presentation should use the same composition/background palette rather than a black flash.
+The current Xorg path uses `-background none`, requesting that the video driver preserve the previous framebuffer where possible. Physical hardware decides whether that is sufficient for a seamless transition. If a driver cannot preserve it, fallback presentation should use the same composition/background rather than a black flash.
+
+The current compatibility backend launches Xorg on `vt1`. Console/VT policy therefore cannot be changed in isolation from Xorg acquisition and physical acceptance. R7 remains the authority for replacing this provisional display architecture.
 
 ### Stage D — launcher intro
 
 The launcher owns a real intro. It is distinct from the static early-boot cover.
 
+Current source timing in `src/greia_launcher/boot_intro.py` is:
+
+```text
+TARGET_INTRO_SECONDS = 2.2
+MAX_INTRO_SECONDS = 2.5
+```
+
 Requirements:
 
-- first frame visually matches the static boot composition;
-- target duration **0.75–0.95 seconds**;
-- never exceed **1.0 second** of intentional delay before the profile picker;
+- first frame visually continues the boot presentation;
+- target duration follows the source timing above until intentionally changed and re-accepted;
+- never exceed the source maximum intentional intro duration;
 - driven from monotonic elapsed time, not `sleep()` per frame;
 - frames may be dropped if rendering/decoding is slow;
 - automatically fit to the real viewport without distorting artwork;
@@ -167,13 +188,15 @@ Requirements:
 - play once per machine boot, not on every launcher restart;
 - a development/test escape hatch may skip it, but release UX defaults to enabled.
 
-## 6. Console and diagnostic policy
+This supersedes the older living-doc timing of `0.75–0.95 seconds / <=1.0 second`, which no longer matched current source after the 2026-08-24 accepted intro change.
+
+## 6. Console, diagnostics and owner recovery
 
 Console suppression is independent from splash implementation.
 
-Normal/release Greia intends to suppress ordinary console presentation on the child-visible VT while preserving diagnostics through the journal and authorized maintenance paths.
+Normal/release Greia intends to suppress ordinary child-visible console presentation while preserving diagnostics through the journal and authorized maintenance paths. Exact current release kernel arguments are source-owned by `10_greia_appliance` + `boot_contract.py` and must not be copied from stale prose.
 
-During current Acer recovery, explicit development profiles intentionally use visible diagnostics, including tty1 and non-rebooting panic behavior. This is required so a failure is not reduced to an unexplained frozen or grey screen.
+During current Acer development/recovery, explicit development profiles intentionally use visible diagnostics, including tty1 and non-rebooting panic behavior. Current developer source requires `panic=0`, so a fatal kernel/initramfs error remains observable instead of automatically rebooting into an evidence-destroying loop.
 
 Do not solve consolelessness by deleting diagnostics. **Invisible is not the same as unavailable.**
 
@@ -184,6 +207,15 @@ user: greia
 password: greia
 ```
 
+GRUB edit/command recovery uses the same owner identity:
+
+```text
+user: greia
+password: greia
+```
+
+The target stores only the GRUB PBKDF2 hash. The historical default `greia-recovery` identity/random per-install secret is no longer the current default contract.
+
 Root SSH remains disabled. The server may generate its own machine-local host identity automatically; that is not an operator credential.
 
 ## 7. Graphical-session resilience
@@ -192,15 +224,27 @@ The current installed path remains provisional Xorg on the reference hardware.
 
 The hardware-proven systemd/Xorg service invariants include:
 
-- `RuntimeDirectory=greia-os` exists before launcher startup;
+- volatile runtime roots exist before launcher startup through their systemd/tmpfiles owner;
 - `StandardInput=null` prevents GUI children from being SIGTTIN-stopped;
-- the Xorg-owning launcher service is not wrapped in the desktop-style namespace restrictions that previously blocked VT/DRM/input access;
+- the Xorg-owning launcher service is not wrapped in desktop-style namespace restrictions that block VT/DRM/input/runtime/log access;
 - Xwrapper policy matches the appliance session;
 - VT1 is deliberately owned by the graphical session.
 
 The richer profile-aware `greia_launcher.child_shell` was introduced after the original physical Xorg proof. It remains the primary entrypoint, but a failure in that composition must not turn an otherwise healthy display session into a blind restart loop. The X session therefore has a one-shot fallback to the simpler presentation entrypoint while preserving the original failure in the journal.
 
 This fallback does not hide Xorg failure: if the display server itself cannot start, neither Python entrypoint can present a frame.
+
+### First-boot dependency invariant
+
+`greia-launcher.service` requires `greia-first-boot.service`. Therefore first boot must remain a successful/satisfiable oneshot on later boots rather than being skipped by a unit-level marker condition.
+
+The script owns exact idempotency using:
+
+```text
+/var/lib/greia-os/initialized
+```
+
+Do not use a wildcard marker such as `init*`.
 
 ## 8. Boot sound
 
@@ -223,23 +267,33 @@ For the legacy development installer, the build must:
 
 1. regenerate splash derivatives from the retained full-colour source immediately before image composition;
 2. prove the canonical source copy is pixel-identical to the retained source frame;
-3. prove the generated canvas is 1600×900 and contains the untouched source at its centre;
+3. prove the generated canvas uses the current source-declared geometry and contains the untouched source at its centre;
 4. prove both PPMs are exact P6 encodings of that canvas;
 5. build the installer and installed payload while those generated derivatives are present;
 6. restore generated source-tree files afterward so the checkout is not dirtied merely by a build;
-7. inspect the **finished live and target squashfs artifacts** before reporting PASS.
+7. inspect the **finished live and target artifacts** before reporting PASS.
 
 The artifact verifier must reject:
 
 - the historical white/indigo two-colour signature;
 - insufficient colour diversity;
 - live/target PPM mismatch;
-- GRUB or launcher PNG bytes that do not match the PPM canvas;
-- missing/wrong 1600×900 canvas geometry;
+- GRUB or static PNG bytes that do not match the intended generated composition;
+- geometry that disagrees with the current generator contract;
 - missing proportional GRUB theme;
 - any active raw `background_image` stretch command in the installed Greia GRUB script.
 
 A source test passing is not enough. A build report must identify the actual generated splash mode and hashes used for the produced image.
+
+### Change-scoped boot regeneration
+
+Do not add `update-initramfs -u`, `update-grub` or `grub-install` to a verification checklist as generic rituals.
+
+- regenerate initramfs only for initramfs-owned changes, then inspect the newly generated target initrd before reboot;
+- regenerate GRUB only for GRUB-owned changes, then run `grub-script-check` and the Greia boot contract against generated `grub.cfg`;
+- run `grub-install` only when bootloader installation itself is the evidenced change/problem.
+
+See `skills/greia-os-work/BOOT.md` for the physical pre-reboot recovery gate.
 
 ## 10. Boot speed rules
 
@@ -253,36 +307,8 @@ Forbidden on the normal boot critical path:
 - runtime PNG/JPEG decoding inside initramfs;
 - network waits before profile picker;
 - waiting for Parent HTML/network services before showing the child shell;
-- replaying every legacy animation frame at a fixed rate;
 - synchronous audio initialization before the first launcher frame.
 
 Measure with systemd/journal timestamps and physical video. Any service blocking launcher start without being a true prerequisite must be challenged.
 
-## 11. Installer
-
-The live installer uses the same generated full-colour PPM composition in its Linux-owned early framebuffer stage as the installed system.
-
-On the reference Acer, the removable-media bootloader path remains the physically proven Syslinux/FAT32 implementation. Presentation changes must not be smuggled into Syslinux partitioning, MBR/VBR installation, live-media identity, kernel selection or storage-module policy.
-
-During recovery builds, early text may intentionally remain visible. Release console suppression is reintroduced only after the boot path and graphical handoff are physically accepted.
-
-## 12. Acceptance definition
-
-Source existence does not constitute acceptance.
-
-For the current full-colour/proportional splash tranche, acceptance requires all of the following on the exact built SHA:
-
-1. source/regression checks are coherent with the full-colour contract;
-2. physical builder reports `boot_artwork_mode=full-color-landscape-canvas-v1`;
-3. finished-artifact verification PASS explicitly confirms full-colour 1600×900 live + target PPM and matching target PNGs;
-4. installed GRUB artifact uses centred `padding` and no raw stretch path;
-5. reference Acer installer still boots through the unchanged Syslinux/FAT32 media path;
-6. installer early splash is visibly full-colour, clean and proportionally composed;
-7. installed GRUB splash is visibly proportional and centred;
-8. installed early-framebuffer splash is visibly clean/full-colour and does not change geometry unexpectedly;
-9. launcher reaches a graphical frame or leaves actionable SSH/journal evidence;
-10. development `greia / greia` SSH remains reachable;
-11. no new kernel/initramfs/storage/live-media regression is introduced;
-12. at least one second x86 target/VM eventually verifies the design contains no Acer-only geometry assumptions.
-
-Only physical observation can close the visual acceptance gate.
+The launcher intro is currently an intentional bounded 2.2-second target animation. That is a product/presentation choice, not permission for hidden service stalls or unbounded retry time.
