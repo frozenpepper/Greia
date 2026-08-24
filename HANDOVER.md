@@ -201,6 +201,29 @@ Overhauled `org.greia.labirinto-magico` (Magical Labyrinth):
 - **Endless Flight & Clean HUD**: Removed the 20-star victory interruption and all distracting text toast banners. The dragon flies endlessly with cumulative stars (`⭐ 228 🏆 3495`), 10-star fanfare audio cues, and continuous scenery/obstacle streaming.
 - **Decomposition**: Modular architecture across `dragon_model.py`, `dragon_art.py`, `dragon_audio.py`, `dragon_renderer.py`, `dragon_app.py`, and thin `main.py`. Tests: `tests/test_activity_volo_draghetto.py` (10/10 PASS). Full suite `make verify`: **1,167 tests PASS**. Deployed and verified on physical Acer hardware (`greia-dev.local`).
 
+## Baia delle Orche Activity creation (2026-08-24)
+
+Created the first-party Activity `activities/baia_delle_orche` (**Baia delle Orche / Orca Bay**, `org.greia.baia-delle-orche`):
+- **Core Experience**: A delightful Arctic fjord marine cove featuring 3 lovable orcas (baby pup *Kiko*, agile acrobat *Luna*, and gentle elder *Oskar*) with zero-text child interaction across 5 rich modes:
+  1. 🐟 **Nutri & Lancia**: Toss and feed delicious silver herring, pink salmon, glowing squid, and ice treats; orcas breach and dive to catch them with crisp nibbles.
+  2. ❤️ **Coccole & Cura**: Stroke/brush and tickle orca bellies; orcas roll onto their white tummies, blush, wag flukes, and spray mist hearts from their blowholes with happy purrs and whistles.
+  3. 🎪 **Giochi & Acrobazie**: Bouncy floating beach ball physics (orcas bump and tail-flick it across the bay) and rainbow jump rings for high graceful acrobatic breaches.
+  4. 🎶 **Canto delle Orche**: 4 floating musical sea bells / crystal chimes with melodic call-and-response from the orcas using synthesized cetacean whistles and echolocation click bursts.
+  5. 🌌 **Giorno & Aurora Notte**: Toggle between sunny crystal fjord and magical Northern Lights (Aurora Borealis) night with glowing bioluminescence and peaceful bedtime breathing.
+- **Clean OOP Decomposition**:
+  - `main.py`: Thin composition root (< 70 lines).
+  - `orca_app.py`: Top-level lifecycle, input routing, display presentation, authoritative `mark_activity_ready()` after first frame.
+  - `orca_model.py`: Domain entities (`OrcaEntity`, `FoodEntity`, `ToyEntity`, `ParticleEntity`, `OrcaPod`) with full state machines and buoyant physics.
+  - `orca_renderer.py`: Bounded static scenery caches, 1024×600 reference canvas, layered composition, high-contrast child UI toolbar ($\ge 80\times 72\text{px}$).
+  - `orca_audio.py`: Pure synthetic audio generation for orca whistles, clicks, splashes, nibbles, purrs, bounces, and chimes.
+  - `orca_services.py`: Storage progress adapter and platform milestone event emitter (`orca.fed`, `orca.cuddled`, `orca.acrobatics_performed`, `orca.song_completed`).
+- **Validation & Tests**:
+  - `tools/validate_activity.py activities/baia_delle_orche` PASS.
+  - `tools/validate_project.py` PASS (`activities=20`).
+  - `tests/test_activity_baia_delle_orche.py` (12/12 PASS).
+  - `tests/test_first_party_activity_readiness.py` & `tests/test_first_party_activity_audience_metadata.py` PASS.
+  - Full test suite: **1,187/1,187 tests PASS**.
+
 ## Parent Settings overlay tranche (2026-08-23, `3c3e91f`)
 
 The chord-opened (hold S+T) on-device Parent Settings panel had two owner-reported defects, both fixed and verified on the reference Acer:

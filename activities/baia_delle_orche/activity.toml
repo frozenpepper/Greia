@@ -1,0 +1,52 @@
+[activity]
+id = "org.greia.baia-delle-orche"
+legacy_ids = []
+title_key = "activity.baia_delle_orche.title"
+version = "0.1.0"
+icon = "package:assets/icon.png"
+languages = ["it", "en"]
+
+[presentation]
+categories = ["play", "explore", "learn"]
+discovery_tags = ["nature", "care", "music"]
+
+[achievement_art]
+emblems = [
+  { id = "activity", asset = "assets/icon.png" },
+]
+
+[education]
+categories = ["marine_life", "empathy", "coordination", "rhythm_and_music"]
+difficulty = 1
+recommended_age_min = 3
+recommended_age_max = 7
+skills = [
+  { id = "nature.marine_life.observation", weight = 3 },
+  { id = "socioemotional.empathy.caring", weight = 2 },
+  { id = "motor.pointer.target_selection", weight = 2 },
+  { id = "sensory.auditory.rhythm", weight = 2 },
+]
+events = [
+  { id = "orca.fed", kind = "milestone" },
+  { id = "orca.cuddled", kind = "milestone" },
+  { id = "orca.acrobatics_performed", kind = "milestone" },
+  { id = "orca.song_completed", kind = "milestone" },
+]
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "pointer"
+
+[requirements]
+required_capabilities = ["display", "pointer", "audio.basic"]
+optional_capabilities = ["touch", "keyboard"]
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1

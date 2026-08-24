@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <!-- Background Ocean Disc -->
+    <radialGradient id="disc_grad" cx="50%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="45%" stop-color="#0284C7"/>
+      <stop offset="100%" stop-color="#0369A1"/>
+    </radialGradient>
+    <!-- Orca Body Gradient -->
+    <linearGradient id="orca_body" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0%" stop-color="#334155"/>
+      <stop offset="30%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+    <!-- Wave Splash Gradient -->
+    <linearGradient id="wave_grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="30%" stop-color="#BAE6FD"/>
+      <stop offset="100%" stop-color="#38BDF8"/>
+    </linearGradient>
+    <!-- Heart Mist Gradient -->
+    <linearGradient id="heart_grad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FDA4AF"/>
+      <stop offset="100%" stop-color="#F43F5E"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Circular Portal Backdrop (with 14px safe padding) -->
+  <circle cx="128" cy="128" r="108" fill="url(#disc_grad)" stroke="#FFFFFF" stroke-width="6"/>
+
+  <!-- Distant Glacier Silhouette in Disc -->
+  <polygon points="40,150 75,100 110,150" fill="#E0F2FE" opacity="0.6"/>
+  <polygon points="95,150 140,85 185,150" fill="#F0F9FF" opacity="0.7"/>
+  <polygon points="160,150 195,110 225,150" fill="#E0F2FE" opacity="0.5"/>
+
+  <!-- Water Surface Layer in Disc -->
+  <path d="M 22 145 Q 75 135 128 145 Q 181 155 234 145 L 234 236 Q 128 244 22 236 Z" fill="#0284C7" opacity="0.85"/>
+
+  <!-- Leaping Orca Pup -->
+  <!-- Tail Fluke -->
+  <g transform="translate(68, 155) rotate(-35)">
+    <path d="M 0 0 C -15 -18 -32 -16 -38 -4 C -34 6 -12 4 0 0 Z" fill="url(#orca_body)"/>
+    <path d="M 0 0 C -15 18 -32 16 -38 4 C -34 -6 -12 -4 0 0 Z" fill="url(#orca_body)"/>
+  </g>
+
+  <!-- Orca Curved Body -->
+  <path d="M 72 152 C 85 120 115 82 165 92 C 195 98 206 122 195 145 C 180 168 145 178 108 172 C 86 168 76 160 72 152 Z" fill="url(#orca_body)"/>
+
+  <!-- Dorsal Fin -->
+  <path d="M 125 96 C 122 70 138 64 148 76 C 145 88 142 97 140 100 Z" fill="url(#orca_body)"/>
+
+  <!-- Side Pectoral Flipper -->
+  <path d="M 148 148 C 142 168 152 178 165 172 C 168 160 162 148 156 144 Z" fill="url(#orca_body)"/>
+
+  <!-- White Belly & Chin Patch -->
+  <path d="M 194 136 C 188 155 160 166 125 162 C 105 160 90 156 82 152 C 92 142 110 138 128 140 C 158 144 182 142 194 136 Z" fill="#FFFFFF"/>
+
+  <!-- White Oval Eye Patch -->
+  <ellipse cx="178" cy="112" rx="14" ry="8" transform="rotate(-15, 178, 112)" fill="#FFFFFF"/>
+
+  <!-- Saddle Patch (Grey patch behind dorsal fin) -->
+  <path d="M 112 108 C 118 104 126 105 130 112 C 124 116 116 115 112 108 Z" fill="#94A3B8" opacity="0.7"/>
+
+  <!-- Cute Eye -->
+  <circle cx="185" cy="118" r="5" fill="#0F172A"/>
+  <circle cx="186.5" cy="116.5" r="1.8" fill="#FFFFFF"/>
+
+  <!-- Cheerful Smile -->
+  <path d="M 188 130 Q 194 133 198 128" stroke="#0F172A" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+
+  <!-- Cute Rosy Cheek -->
+  <ellipse cx="176" cy="126" rx="6" ry="4" fill="#FDA4AF" opacity="0.75"/>
+
+  <!-- Blowhole Mist Hearts -->
+  <!-- Large Heart -->
+  <path d="M 152 64 C 152 56 142 52 136 58 C 130 52 120 56 120 64 C 120 74 136 84 136 84 C 136 84 152 74 152 64 Z" fill="url(#heart_grad)" transform="translate(24, -10) scale(0.65)"/>
+  <!-- Small Heart -->
+  <path d="M 152 64 C 152 56 142 52 136 58 C 130 52 120 56 120 64 C 120 74 136 84 136 84 C 136 84 152 74 152 64 Z" fill="url(#heart_grad)" transform="translate(48, -22) scale(0.4)"/>
+
+  <!-- Dynamic Water Wave & Foam Splash at base -->
+  <path d="M 45 185 C 65 165 85 168 105 182 C 125 195 155 175 185 188 C 205 196 215 185 225 192 L 225 225 C 175 240 85 240 45 225 Z" fill="url(#wave_grad)"/>
+
+  <!-- Water Splash Drops -->
+  <circle cx="85" cy="155" r="5" fill="#BAE6FD"/>
+  <circle cx="68" cy="140" r="3.5" fill="#E0F2FE"/>
+  <circle cx="102" cy="148" r="4" fill="#FFFFFF"/>
+  <circle cx="205" cy="165" r="4.5" fill="#BAE6FD"/>
+  <circle cx="218" cy="152" r="3" fill="#FFFFFF"/>
+  <circle cx="155" cy="72" r="3" fill="#BAE6FD" opacity="0.8"/>
+  <circle cx="168" cy="62" r="2.2" fill="#E0F2FE" opacity="0.8"/>
+</svg>

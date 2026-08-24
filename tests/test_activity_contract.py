@@ -27,6 +27,7 @@ class ActivityContractTests(unittest.TestCase):
             [activity.activity_id for activity in activities],
             [
                 "org.greia.acquario-magico",
+                "org.greia.baia-delle-orche",
                 "org.greia.clinica-cuccioli",
                 "org.greia.costruiamo-ponti",
                 "org.greia.cucciolo-mio",

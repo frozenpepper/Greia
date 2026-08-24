@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "locale": "en",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Orca Bay",
+    "activity.baia_delle_orche.title": "Orca Bay",
+    "orca.kiko": "Kiko (Baby)",
+    "orca.luna": "Luna (Acrobat)",
+    "orca.oskar": "Oskar (Elder)",
+    "tool.feed": "🐟 FEED",
+    "tool.cuddle": "❤️ CUDDLE",
+    "tool.play": "🎪 PLAY",
+    "tool.sing": "🎶 SONG",
+    "tool.aurora": "🌌 NIGHT",
+    "tool.day": "☀️ DAY"
+  },
+  "audio": {}
+}

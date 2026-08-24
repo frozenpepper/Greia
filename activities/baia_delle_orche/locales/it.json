@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "locale": "it",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Baia delle Orche",
+    "activity.baia_delle_orche.title": "Baia delle Orche",
+    "orca.kiko": "Kiko (Cucciolo)",
+    "orca.luna": "Luna (Acrobata)",
+    "orca.oskar": "Oskar (Grande)",
+    "tool.feed": "🐟 PAPPA",
+    "tool.cuddle": "❤️ COCCOLE",
+    "tool.play": "🎪 GIOCHI",
+    "tool.sing": "🎶 CANTO",
+    "tool.aurora": "🌌 NOTTE",
+    "tool.day": "☀️ GIORNO"
+  },
+  "audio": {}
+}
