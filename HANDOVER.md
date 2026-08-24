@@ -138,7 +138,12 @@ woodland_audio.py       synthesized PCM sound effects (rustle, pop, win)
 **Measured physical Acer Aspire One results:**
 - Pre-rendered background blit: **1.88 ms** (530 fps capability)
 - Active frame render time: **505.35 ms → 9.05 ms** (**55× speedup**, locked at 30 fps with ~27% CPU margin)
-- Test suite: `tests/test_activity_nascondino_bosco.py` (9/9 PASS); full suite **1,142 tests PASS**, 19/19 activities valid.
+- Test suite: `tests/test_activity_nascondino_bosco.py` (9/9 PASS); full suite **1,142 tests PASS**
+- **Physical Hardware Live Deployment (`greia-dev.local`)**:
+  - Successfully deployed all updated source and activities to Acer Aspire One (`greia-dev.local`).
+  - Corrected tree hollow alignment in `woodland_art.py` and `woodland_model.py`: centered the illustrated hollow directly onto the brown oak trunk geometry (`cx=146, cy=398`), with warm wooden rim chamfer, bark collar shadow, and deep interior cavity.
+  - Verified live on physical Acer display: Profile Picker (Explorer) -> Collection Home -> Esplora -> Nascondino nel Bosco launch. Live screenshot confirms animal peeking directly from the centered tree hollow with zero visual disconnect, smooth 30 FPS rendering, and full interactivity.
+  - All 1,153 unit tests passing (`make verify` PASS).
 - **Simulator End-to-End Verification**: Tested via `greia_simulator.child_shell` and `greia_simulator_ctl.py` at 1024×600 in Italian:
   1. Selected profile Explorer → navigated Collection Home → opened `Esplora` → launched `Nascondino nel Bosco`.
   2. Verified active gameplay rendering: mascot on tree bough, target animal HUD ("SCOIATTOLO", "VOLPE"), 5 grounded spots with peeking animations, responsive star score increments upon discovering animals.

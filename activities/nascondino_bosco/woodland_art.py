@@ -141,10 +141,16 @@ class WoodlandArtLibrary:
         if not baked_cleanly:
             _draw_legacy_forest_background(bg)
 
-        # Cut the dark hollow into the left hero oak tree trunk at (110, 350)
-        # to create a natural, grounded hiding nook
-        pygame.draw.ellipse(bg, (30, 18, 12), pygame.Rect(75, 305, 70, 90))
-        pygame.draw.ellipse(bg, (20, 10, 6), pygame.Rect(80, 315, 60, 70))
+        # Cut the dark hollow directly into the left hero oak tree trunk centered at (146, 398)
+        # 1. Outer Dark Bark Collar / Shadow Rim
+        pygame.draw.ellipse(bg, (42, 22, 12), pygame.Rect(118, 364, 56, 68))
+        # 2. Wooden rim chamfer
+        pygame.draw.ellipse(bg, (80, 44, 24), pygame.Rect(121, 367, 50, 62))
+        # 3. Deep dark hollow aperture
+        pygame.draw.ellipse(bg, (22, 10, 5), pygame.Rect(124, 370, 44, 56))
+        pygame.draw.ellipse(bg, (10, 4, 2), pygame.Rect(127, 374, 38, 48))
+        # 4. Sunlit upper lip highlight
+        pygame.draw.arc(bg, (190, 130, 80), pygame.Rect(121, 366, 50, 24), 0.2, 2.9, 2)
 
         return bg
 

@@ -99,7 +99,7 @@ class HidingSpotDefinition:
 
 
 # Grounded scene spot anchors matching forest_meadow_day_v1 geometry:
-# 1. tree.hero.01 hollow at left trunk (x=110, y=350)
+# 1. tree.hero.01 hollow at left trunk (x=146, y=398)
 # 2. bush.round.01 on left ground (x=125, y=475)
 # 3. log.fallen.01 in center meadow (x=485, y=485)
 # 4. rock.cluster.large.01 on right ground (x=715, y=480)
@@ -108,10 +108,10 @@ GROUNDED_SPOTS: Final[tuple[HidingSpotDefinition, ...]] = (
     HidingSpotDefinition(
         spot_id="hero_tree_hollow",
         kind="tree_hollow",
-        cx=110,
-        cy=350,
-        width=130,
-        height=130,
+        cx=146,
+        cy=398,
+        width=70,
+        height=80,
     ),
     HidingSpotDefinition(
         spot_id="left_round_bush",

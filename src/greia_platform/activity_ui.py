@@ -83,21 +83,8 @@ class ChildUiMetrics:
         """Return the usable Activity rectangle outside trusted Home/Back chrome."""
 
         chrome = ActivitySystemChromeLayout.for_surface(self.width, self.height)
-        protected = chrome.protected_region
-        viewport = ActivityViewport.for_size(
-            self.width,
-            self.height,
-            protected_regions=(
-                UiRect(
-                    protected.x,
-                    protected.y,
-                    protected.width,
-                    protected.height,
-                ),
-            ),
-        )
-        safe = viewport.safe_ui_rect()
-        return pygame.Rect(safe.x, safe.y, safe.width, safe.height)
+        top_bar_height = max(self.toolbar_height, chrome.protected_region.height)
+        return pygame.Rect(0, top_bar_height, self.width, max(0, self.height - top_bar_height))
 
     def activity_toolbar_button(
         self,
@@ -105,23 +92,34 @@ class ChildUiMetrics:
         *,
         side: str = "left",
     ) -> pygame.Rect:
-        """Return one Activity toolbar button inside the platform-safe region."""
+        """Return one Activity toolbar button inside the top bar outside platform chrome."""
 
         if index < 0:
             raise ValueError("button index must be non-negative")
-        safe = self.activity_safe_rect()
-        y = safe.top + self.margin + max(
-            0, (self.toolbar_height - self.button_size) // 2
-        )
+        chrome = ActivitySystemChromeLayout.for_surface(self.width, self.height)
+        protected = chrome.protected_region
+        top_bar_height = max(self.toolbar_height, protected.height)
+        y = max(0, (top_bar_height - self.button_size) // 2)
         step = self.button_size + self.gap
         if side == "left":
-            x = safe.left + self.margin + index * step
+            x = protected.right + self.gap + index * step
         elif side == "right":
-            x = safe.right - self.margin - self.button_size - index * step
+            x = self.width - self.margin - self.button_size - index * step
         else:
             raise ValueError("side must be left or right")
         rect = pygame.Rect(x, y, self.button_size, self.button_size)
-        if not safe.contains(rect):
+        if (
+            rect.left < 0
+            or rect.top < 0
+            or rect.right > self.width
+            or rect.bottom > self.height
+            or (
+                rect.right > protected.x
+                and protected.right > rect.left
+                and rect.bottom > protected.y
+                and protected.bottom > rect.top
+            )
+        ):
             raise ValueError("Activity toolbar does not fit inside safe UI region")
         return rect
 
@@ -140,11 +138,12 @@ class ChildUiMetrics:
 
         if bottom_reserve < 0:
             raise ValueError("bottom reserve must not be negative")
-        safe = self.activity_safe_rect()
-        top = safe.top + self.margin + self.toolbar_height + self.px(top_gap)
-        bottom = safe.bottom - self.margin - bottom_reserve
-        left = safe.left + self.margin
-        right = safe.right - self.margin
+        chrome = ActivitySystemChromeLayout.for_surface(self.width, self.height)
+        top_bar_height = max(self.toolbar_height, chrome.protected_region.height)
+        top = top_bar_height + self.px(top_gap)
+        bottom = self.height - self.margin - bottom_reserve
+        left = self.margin
+        right = self.width - self.margin
         if right <= left or bottom <= top:
             raise ValueError("Activity safe UI region is too small for requested content")
         return pygame.Rect(left, top, right - left, bottom - top)
