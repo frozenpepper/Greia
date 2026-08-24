@@ -90,6 +90,50 @@ def _draw_vector_moon(surf: pygame.Surface, cx: int, cy: int, r: int, col: tuple
     pygame.draw.polygon(surf, (255, 255, 255), [(sx, sy - 4), (sx + 1, sy - 1), (sx + 4, sy), (sx + 1, sy + 1), (sx, sy + 4), (sx - 1, sy + 1), (sx - 4, sy), (sx - 1, sy - 1)])
 
 
+from pathlib import Path
+
+ASSETS_DIR = Path(__file__).parent / "assets" / "runtime"
+_IMAGE_CACHE: dict[str, pygame.Surface | None] = {}
+_SCALE_CACHE: dict[tuple[str, int, int, bool, int], pygame.Surface | None] = {}
+
+
+def _load_asset(filename: str) -> pygame.Surface | None:
+    if filename not in _IMAGE_CACHE:
+        p = ASSETS_DIR / filename
+        if p.exists():
+            try:
+                if pygame.display.get_surface() is not None:
+                    _IMAGE_CACHE[filename] = pygame.image.load(str(p)).convert_alpha()
+                else:
+                    _IMAGE_CACHE[filename] = pygame.image.load(str(p))
+            except Exception:
+                try:
+                    _IMAGE_CACHE[filename] = pygame.image.load(str(p))
+                except Exception:
+                    _IMAGE_CACHE[filename] = None
+        else:
+            _IMAGE_CACHE[filename] = None
+    return _IMAGE_CACHE[filename]
+
+
+def _get_scaled_asset(filename: str, width: int, height: int, facing_right: bool = True, angle_deg: int = 0) -> pygame.Surface | None:
+    # Quantize angle to nearest 2 degrees for cache efficiency
+    quant_angle = int(round(angle_deg / 2.0) * 2) % 360
+    key = (filename, width, height, facing_right, quant_angle)
+    if key not in _SCALE_CACHE:
+        orig = _load_asset(filename)
+        if orig is not None:
+            scaled = pygame.transform.smoothscale(orig, (width, height))
+            if not facing_right:
+                scaled = pygame.transform.flip(scaled, True, False)
+            if quant_angle != 0:
+                scaled = pygame.transform.rotozoom(scaled, quant_angle, 1.0)
+            _SCALE_CACHE[key] = scaled
+        else:
+            _SCALE_CACHE[key] = None
+    return _SCALE_CACHE[key]
+
+
 class OrcaRenderer:
     """Draws the rich Arctic fjord bay, orca pod, interactive toys, food, and UI."""
 
@@ -136,12 +180,12 @@ class OrcaRenderer:
         sky_h = int(WATER_SURFACE_Y)
 
         if night_mode:
-            # Polar Night: Deep Velvet Midnight Sky
+            # Polar Night: Deep Velvet Midnight Sky with Aurora borealis hints
             for y in range(sky_h):
                 r = y / max(1, sky_h)
-                cr = int(10 + (16 - 10) * r)
-                cg = int(15 + (42 - 15) * r)
-                cb = int(35 + (62 - 35) * r)
+                cr = int(8 + (18 - 8) * r)
+                cg = int(14 + (36 - 14) * r)
+                cb = int(32 + (68 - 32) * r)
                 pygame.draw.line(surf, (cr, cg, cb), (0, y), (REFERENCE_WIDTH, y))
 
             # Twinkling Stars
@@ -154,7 +198,7 @@ class OrcaRenderer:
                 pygame.draw.circle(surf, (255, 255, 255), (sx, sy), 2)
                 pygame.draw.circle(surf, (186, 230, 253), (sx, sy), 3, 1)
 
-            # Crescent Moon
+            # Glowing Golden Crescent Moon
             _draw_vector_moon(surf, 870, 75, 22, (254, 240, 138))
 
         else:
@@ -173,9 +217,9 @@ class OrcaRenderer:
                 pygame.draw.circle(surf, (255, 255, 255), (cx - 18, cy - 8), 20)
                 pygame.draw.circle(surf, (255, 255, 255), (cx + 12, cy - 12), 24)
 
-        # Distant Majestic Mountain Range
-        m_col_far = (40, 55, 85) if night_mode else (175, 195, 215)
-        snow_col_far = (120, 140, 175) if night_mode else (240, 248, 255)
+        # Distant Mountain Range
+        m_col_far = (30, 45, 72) if night_mode else (175, 195, 215)
+        snow_col_far = (130, 160, 205) if night_mode else (240, 248, 255)
         far_mountains = [
             ([(0, sky_h), (110, 110), (250, sky_h)], [(110, 110), (140, 150), (80, 150)]),
             ([(190, sky_h), (370, 70), (560, sky_h)], [(370, 70), (415, 125), (320, 125)]),
@@ -186,9 +230,9 @@ class OrcaRenderer:
             pygame.draw.polygon(surf, m_col_far, base_pts)
             pygame.draw.polygon(surf, snow_col_far, snow_pts)
 
-        # Near Craggy Fjord Mountains
-        m_col_near = (28, 42, 65) if night_mode else (145, 165, 185)
-        snow_col_near = (140, 165, 200) if night_mode else (255, 255, 255)
+        # Near Fjord Mountains
+        m_col_near = (22, 34, 56) if night_mode else (145, 165, 185)
+        snow_col_near = (160, 195, 235) if night_mode else (255, 255, 255)
         near_mountains = [
             ([(0, sky_h), (180, 130), (380, sky_h)], [(180, 130), (220, 175), (140, 175)]),
             ([(310, sky_h), (540, 105), (770, sky_h)], [(540, 105), (590, 155), (490, 155)]),
@@ -199,35 +243,36 @@ class OrcaRenderer:
             pygame.draw.polygon(surf, snow_col_near, snow_pts)
 
         # Floating Iceberg on Horizon
-        ice_col = (56, 189, 248) if not night_mode else (30, 58, 138)
+        ice_col = (56, 189, 248) if not night_mode else (38, 78, 140)
         ice_pts = [(740, sky_h), (765, sky_h - 22), (810, sky_h - 18), (835, sky_h)]
         pygame.draw.polygon(surf, (240, 249, 255), ice_pts)
         pygame.draw.polygon(surf, ice_col, [(750, sky_h), (765, sky_h - 22), (790, sky_h)])
 
-        # Deep Ocean Gradient
+        # High-Contrast Glowing Ocean Gradient
         ocean_h = REFERENCE_HEIGHT - sky_h
         for y_off in range(ocean_h):
             y = sky_h + y_off
             r = y_off / max(1, ocean_h)
             if night_mode:
-                cr = int(6 + (14 - 6) * r)
-                cg = int(18 + (24 - 18) * r)
-                cb = int(48 + (60 - 48) * r)
+                # Vibrant bioluminescent sapphire water with cyan undertone
+                cr = int(14 + (8 - 14) * r)
+                cg = int(55 + (35 - 55) * r)
+                cb = int(105 + (70 - 105) * r)
             else:
                 cr = int(2 + (3 - 2) * r)
                 cg = int(132 + (105 - 132) * r)
                 cb = int(199 + (161 - 199) * r)
             pygame.draw.line(surf, (cr, cg, cb), (0, y), (REFERENCE_WIDTH, y))
 
-        # Sandy Seafloor
+        # Seafloor
         sand_h = 70
         sand_y = REFERENCE_HEIGHT - sand_h
-        sand_col = (18, 22, 38) if night_mode else (253, 230, 138)
+        sand_col = (16, 32, 54) if night_mode else (253, 230, 138)
         pygame.draw.rect(surf, sand_col, (0, sand_y, REFERENCE_WIDTH, sand_h))
-        pygame.draw.line(surf, (30, 41, 59) if night_mode else (217, 119, 6), (0, sand_y), (REFERENCE_WIDTH, sand_y), 3)
+        pygame.draw.line(surf, (56, 189, 248) if night_mode else (217, 119, 6), (0, sand_y), (REFERENCE_WIDTH, sand_y), 3 if night_mode else 3)
 
         # Pebbles & Starfish on sand
-        pebble_col = (71, 85, 105) if night_mode else (244, 114, 182)
+        pebble_col = (56, 189, 248) if night_mode else (244, 114, 182)
         for sx in (120, 290, 470, 680, 890):
             pygame.draw.ellipse(surf, pebble_col, (sx, sand_y + 18, 24, 14))
             pygame.draw.circle(surf, (255, 255, 255), (sx + 8, sand_y + 22), 3)
@@ -236,122 +281,48 @@ class OrcaRenderer:
         return surf
 
     def draw_orca(self, surface: pygame.Surface, orca: OrcaEntity, night_mode: bool) -> None:
-        """Render a cute, expressive orca with smooth posture, fins, patches and facial expressions."""
+        """Render a cute, expressive orca with storybook artwork, smooth posture, and animations."""
         cx = int(orca.x)
         cy = int(orca.y)
         sc = orca.scale
-        f = orca.facing
+        facing_right = orca.facing > 0
         state = orca.state
 
-        # High-contrast colors
-        body_col = (20, 28, 48) if not night_mode else (12, 18, 34)
-        highlight_col = (55, 78, 118) if not night_mode else (30, 45, 75)
-        white_col = (255, 255, 255)
-        saddle_col = (110, 130, 155) if not night_mode else (60, 75, 95)
+        # Base sprite dimensions (scaled proportionally)
+        if orca.id == "kiko":
+            base_w, base_h = int(140 * sc), int(88 * sc)
+            kind = "baby"
+        elif orca.id == "oskar":
+            base_w, base_h = int(240 * sc), int(150 * sc)
+            kind = "elder"
+        else:  # luna
+            base_w, base_h = int(200 * sc), int(125 * sc)
+            kind = "acrobat"
 
-        # Tail fluke oscillation
-        wag = math.sin(orca.swim_phase) * (14.0 * sc)
+        # Determine state-dependent sprite
+        is_happy = state in (OrcaState.CUDDLE_BELLY, OrcaState.SINGING) or orca.is_happy
+        if night_mode:
+            sprite_name = f"orca_{kind}_night_happy.png" if is_happy else f"orca_{kind}_night.png"
+        else:
+            sprite_name = f"orca_{kind}_happy.png" if is_happy else f"orca_{kind}_day.png"
 
-        # 1. Tail Fluke (Graceful curved dual lobes behind body)
-        fluke_base_x = cx - int(f * 54 * sc)
-        fluke_base_y = cy + int(wag * 0.35)
-        fluke_span = int(32 * sc)
-        fluke_pts = [
-            (fluke_base_x, fluke_base_y),
-            (fluke_base_x - int(f * 28 * sc), fluke_base_y - fluke_span),
-            (fluke_base_x - int(f * 20 * sc), fluke_base_y),
-            (fluke_base_x - int(f * 28 * sc), fluke_base_y + fluke_span),
-        ]
-        pygame.draw.polygon(surface, body_col, fluke_pts)
+        # Angle rotation: in Pygame rotozoom, positive is counterclockwise.
+        # If facing right: -angle (radians to degrees)
+        # If facing left: angle
+        rot_deg = int(-math.degrees(orca.angle)) if facing_right else int(math.degrees(orca.angle))
 
-        # 2. Main Sleek Torpedo Body (Smooth Ellipse with upper specular highlight)
-        body_w = int(122 * sc)
-        body_h = int(68 * sc)
-        body_rect = pygame.Rect(cx - body_w // 2, cy - body_h // 2, body_w, body_h)
-        pygame.draw.ellipse(surface, body_col, body_rect)
-
-        # Upper body glossy highlight arc
-        pygame.draw.arc(surface, highlight_col, (cx - body_w // 2 + 4, cy - body_h // 2 + 2, body_w - 8, body_h - 10), 0.2, math.pi - 0.2, max(2, int(4 * sc)))
-
-        # 3. Majestic Dorsal Fin (Top Spine)
-        fin_base_x = cx - int(f * 8 * sc)
-        fin_tip_x = cx - int(f * 22 * sc) if orca.id != "kiko" else cx - int(f * 12 * sc)
-        fin_h = int(48 * sc) if orca.id == "oskar" else (int(34 * sc) if orca.id == "luna" else int(22 * sc))
-        fin_pts = [
-            (fin_base_x, cy - int(26 * sc)),
-            (fin_tip_x, cy - int(26 * sc) - fin_h),
-            (fin_base_x + int(f * 22 * sc), cy - int(26 * sc)),
-        ]
-        pygame.draw.polygon(surface, body_col, fin_pts)
-        pygame.draw.line(surface, highlight_col, fin_pts[0], fin_pts[1], max(1, int(2 * sc)))
-
-        # 4. Grey Saddle Patch (Behind dorsal fin)
-        saddle_rect = pygame.Rect(cx - int(f * 22 * sc) - int(14 * sc), cy - int(22 * sc), int(28 * sc), int(16 * sc))
-        pygame.draw.ellipse(surface, saddle_col, saddle_rect)
-
-        # 5. Iconic White Markings (Tummy, Throat & Flank blaze)
+        # If cuddle belly roll: roll on belly (+180 deg)
         if state == OrcaState.CUDDLE_BELLY:
-            tummy_w = int(82 * sc)
-            tummy_h = int(40 * sc)
-            pygame.draw.ellipse(surface, white_col, (cx - tummy_w // 2, cy - tummy_h // 2 + int(4 * sc), tummy_w, tummy_h))
-        else:
-            belly_w = int(78 * sc)
-            belly_h = int(26 * sc)
-            pygame.draw.ellipse(surface, white_col, (cx + int(f * 8 * sc) - belly_w // 2, cy + int(14 * sc), belly_w, belly_h))
-            flank_pts = [
-                (cx - int(f * 12 * sc), cy + int(10 * sc)),
-                (cx - int(f * 38 * sc), cy + int(14 * sc)),
-                (cx - int(f * 20 * sc), cy + int(24 * sc)),
-            ]
-            pygame.draw.polygon(surface, white_col, flank_pts)
+            rot_deg += 180
 
-        # 6. Pectoral Flipper (Shoulder Fin)
-        flip_x = cx + int(f * 14 * sc)
-        flip_pts = [
-            (flip_x, cy + int(16 * sc)),
-            (flip_x + int(f * 20 * sc), cy + int(38 * sc)),
-            (flip_x - int(f * 4 * sc), cy + int(34 * sc)),
-        ]
-        pygame.draw.polygon(surface, body_col, flip_pts)
+        sprite = _get_scaled_asset(sprite_name, base_w, base_h, facing_right=facing_right, angle_deg=rot_deg)
+        if sprite is not None:
+            rect = sprite.get_rect(center=(cx, cy))
+            surface.blit(sprite, rect)
 
-        # 7. Iconic White Eye Patch (Oval tilted above and behind eye)
-        patch_x = cx + int(f * 24 * sc)
-        patch_y = cy - int(12 * sc)
-        pygame.draw.ellipse(surface, white_col, (patch_x - int(13 * sc), patch_y - int(8 * sc), int(26 * sc), int(16 * sc)))
-
-        # 8. Expressive Anime Eyes & Catchlights
-        eye_x = cx + int(f * 38 * sc)
-        eye_y = cy - int(2 * sc)
-
-        if orca.is_blinking or state in (OrcaState.CUDDLE_BELLY, OrcaState.SLEEPING):
-            pygame.draw.arc(surface, (255, 255, 255) if not night_mode else (226, 232, 240), (eye_x - int(8 * sc), eye_y - int(7 * sc), int(16 * sc), int(14 * sc)), 0, math.pi, max(2, int(3 * sc)))
-        else:
-            eye_r = max(4, int(7 * sc))
-            pygame.draw.circle(surface, (12, 16, 28), (eye_x, eye_y), eye_r)
-            pygame.draw.circle(surface, (255, 255, 255), (eye_x, eye_y), eye_r, 1)
-            pygame.draw.circle(surface, (255, 255, 255), (eye_x + int(f * 2 * sc), eye_y - int(2 * sc)), max(2, int(2.5 * sc)))
-            pygame.draw.circle(surface, (255, 255, 255), (eye_x - int(f * 2 * sc), eye_y + int(2 * sc)), max(1, int(1.2 * sc)))
-
-        # Kawaii Rosy Blushing Cheek
-        pygame.draw.ellipse(surface, (251, 113, 133), (eye_x - int(f * 5 * sc) - int(7 * sc), eye_y + int(9 * sc) - int(5 * sc), int(14 * sc), int(10 * sc)))
-
-        # 9. Mouth / Smile
-        mouth_x = cx + int(f * 46 * sc)
-        mouth_y = cy + int(10 * sc)
-        if orca.mouth_open > 0.1:
-            open_h = int(12 * sc * orca.mouth_open)
-            pygame.draw.ellipse(surface, (244, 63, 94), (mouth_x - int(8 * sc), mouth_y - open_h // 2, int(16 * sc), open_h))
-            pygame.draw.ellipse(surface, (15, 23, 42), (mouth_x - int(8 * sc), mouth_y - open_h // 2, int(16 * sc), open_h), 2)
-        else:
-            pygame.draw.arc(surface, (15, 23, 42), (mouth_x - int(10 * sc), mouth_y - int(6 * sc), int(20 * sc), int(12 * sc)), 0, math.pi, 2)
-
-        # 10. Blowhole on Top of Head
-        blow_x = cx + int(f * 16 * sc)
-        blow_y = cy - int(30 * sc)
-        pygame.draw.ellipse(surface, (15, 23, 42), (blow_x - 3, blow_y - 2, 6, 4))
-
-        # 11. Thought Bubble (Craved Food)
+        # Draw thought bubble when hungry/craving food
         if state == OrcaState.SWIMMING and cy > WATER_SURFACE_Y + 25:
+            f = orca.facing
             bubble_x = cx + int(f * 38 * sc)
             bubble_y = cy - int(64 * sc)
             pygame.draw.circle(surface, (255, 255, 255), (cx + int(f * 20 * sc), cy - int(40 * sc)), 4)

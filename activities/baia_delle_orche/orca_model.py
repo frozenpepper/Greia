@@ -80,6 +80,14 @@ class OrcaEntity:
     def height(self) -> float:
         return 75.0 * self.scale
 
+    @property
+    def is_happy(self) -> bool:
+        return (
+            self.cuddle_happiness > 0.05
+            or self.state in (OrcaState.CUDDLE_BELLY, OrcaState.SINGING)
+            or self.is_blinking
+        )
+
     def hit_test(self, px: float, py: float) -> bool:
         w = self.width * 1.25
         h = self.height * 1.25
