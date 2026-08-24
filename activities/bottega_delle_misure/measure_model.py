@@ -304,6 +304,8 @@ class MeasureSession:
 
         # Interactive state
         self.placed_blocks = 0
+        if self._challenges and self._challenges[0].mode in {MeasureMode.MEASURE, MeasureMode.SHELF}:
+            self.placed_blocks = self._challenges[0].unit_capacity
         self.selected_order_ids: list[str] = []
 
     @property
@@ -414,6 +416,13 @@ class MeasureSession:
         }
 
         self._index += 1
+        self.selected_order_ids.clear()
+        next_c = self.current_challenge
+        if next_c is not None and next_c.mode in {MeasureMode.MEASURE, MeasureMode.SHELF}:
+            self.placed_blocks = next_c.unit_capacity
+        else:
+            self.placed_blocks = 0
+
         session_complete = self.is_complete
         result = AttemptResult(
             correct=True,
