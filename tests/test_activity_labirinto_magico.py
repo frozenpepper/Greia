@@ -114,6 +114,78 @@ class LabirintoMagicoTests(unittest.TestCase):
         audio = LabyrinthAudio()
         self.assertIsNotNone(audio)
 
+    def test_resolve_click_direction_cardinal_and_fallbacks(self) -> None:
+        # 1. Straight horizontal corridor
+        grid = [
+            [1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1],
+        ]
+        exit_pos = {"r": 1, "c": 5}
+        # Player at (1, 1), clicks at (1, 4) -> should resolve to (0, 1) (Right)
+        dr, dc = MazeEngine.resolve_click_direction(grid, 1, 1, 1, 4, exit_pos)
+        self.assertEqual((dr, dc), (0, 1))
+
+        # Player at (1, 4), clicks at (1, 1) -> should resolve to (0, -1) (Left)
+        dr, dc = MazeEngine.resolve_click_direction(grid, 1, 4, 1, 1, exit_pos)
+        self.assertEqual((dr, dc), (0, -1))
+
+        # Click on same cell -> (0, 0)
+        dr, dc = MazeEngine.resolve_click_direction(grid, 1, 1, 1, 1, exit_pos)
+        self.assertEqual((dr, dc), (0, 0))
+
+        # 2. Corner: player at (1, 1), right is blocked by wall, but down is open
+        grid_corner = [
+            [1, 1, 1, 1],
+            [1, 0, 1, 1],
+            [1, 0, 0, 1],
+            [1, 1, 1, 1],
+        ]
+        # Click at (1, 3) (Rightwards, but right is blocked -> falls back to Down (1, 0))
+        dr, dc = MazeEngine.resolve_click_direction(grid_corner, 1, 1, 1, 3, {"r": 2, "c": 2})
+        self.assertEqual((dr, dc), (1, 0))
+
+    def test_largest_difficulty_grid_size_and_complexity(self) -> None:
+        infinite = next(d for d in DIFFICULTIES if d["id"] == "infinite")
+        self.assertGreaterEqual(infinite["cols"], 89)
+        self.assertGreaterEqual(infinite["rows"], 41)
+        self.assertGreaterEqual(infinite["stars"], 30)
+
+    def test_maze_renderer_computes_fullscreen_viewport(self) -> None:
+        from greia_platform.activity_ui import ChildUiMetrics
+        from activities.labirinto_magico.maze_renderer import MazeRenderer
+
+        renderer = MazeRenderer()
+        metrics = ChildUiMetrics.for_size(1024, 600)
+        # Small maze
+        cs, ox, oy, rect = renderer.compute_maze_viewport(1024, 600, 13, 9, metrics)
+        self.assertGreaterEqual(cs, 50)
+        self.assertGreater(rect.width, 600)
+        self.assertGreater(rect.height, 400)
+        self.assertGreaterEqual(rect.top, 76)  # Below platform chrome
+
+        # Infinite maze
+        infinite = next(d for d in DIFFICULTIES if d["id"] == "infinite")
+        cs_inf, ox_inf, oy_inf, rect_inf = renderer.compute_maze_viewport(
+            1024, 600, infinite["cols"], infinite["rows"], metrics
+        )
+        self.assertGreaterEqual(cs_inf, 10)
+        self.assertGreater(rect_inf.width, 900)
+        self.assertGreater(rect_inf.height, 400)
+
+    def test_bake_static_maze_creates_surface(self) -> None:
+        import pygame
+        from activities.labirinto_magico.maze_art import MazeArt
+
+        pygame.init()
+        grid = [
+            [1, 1, 1, 1, 1],
+            [1, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1],
+        ]
+        surf = MazeArt.bake_static_maze(grid, BIOMES[0], cs=20, maze_w=5, maze_h=3)
+        self.assertEqual(surf.get_size(), (100, 60))
+
 
 if __name__ == "__main__":
     unittest.main()

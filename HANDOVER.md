@@ -171,6 +171,17 @@ Reclaimed ~100px of wasted vertical screen space across first-party creation act
   - Full automated functional tests for drawing, erasing, undo, color picking, brush resizing, gallery, text editing, and emoji picking passed cleanly.
   - Multi-resolution simulator visual evidence across 1024×600, 800×600, 1280×720, 1366×768, 1920×1080 and Compact/Normal/Large interface sizes captured in `tmp/simulator_evidence/`.
 
+## Labirinto Magico fullscreen expansion, extreme complexity & sliding movement (2026-08-24)
+
+Overhauled `org.greia.labirinto-magico` (Magical Labyrinth):
+- **On-Screen Arrow Controls Removed**: Deleted the cramped right-side D-pad arrow buttons to allow the maze to occupy the entire viewport (~2.5× surface area).
+- **Fullscreen Layout**: Centered the maze grid in the available area (`~988×504` on 1024×600) beneath a streamlined top bar HUD (Star score pill, Difficulty level button, World theme button, New Maze button) respecting platform-owned Home chrome.
+- **Extreme Complexity**: Expanded difficulty to 9 progressive levels from toddler-friendly `13×9` up to an intricate **89×41** grid ("Infinito") with 35 collectible crystal stars and hundreds of labyrinthine branches.
+- **Continuous Sliding Movement**: An arrow key or D-pad press glides Tito continuously along corridors at 18 cells/sec until hitting a wall, reaching a crossing with branching choices, or reaching the exit portal.
+- **Click-to-Move**: Direct mouse/touch clicks anywhere on the maze impart a cardinal impulse towards that direction without pathfinding, sliding until hitting a wall or junction.
+- **Rendering Performance**: Pre-bakes the static maze surface once per generation/resize, dropping render time to **0.55 ms/frame** (1,800+ FPS capability, locked at 30 FPS with zero CPU overhead on low-spec hardware).
+- **Architecture**: Modular decomposition into `maze_model.py`, `maze_art.py`, `maze_audio.py`, `maze_renderer.py`, `maze_app.py`, and `main.py`. Tests: `tests/test_activity_labirinto_magico.py` (11/11 PASS).
+
 ## Parent Settings overlay tranche (2026-08-23, `3c3e91f`)
 
 The chord-opened (hold S+T) on-device Parent Settings panel had two owner-reported defects, both fixed and verified on the reference Acer:

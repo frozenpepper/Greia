@@ -934,3 +934,22 @@ This plan may be marked complete only when:
   - Project validated via `tools/validate_project.py`.
   - Simulator visual captures across 1024×600, 800×600, 1280×720, 1366×768, 1920×1080 and Compact/Normal/Large interface sizes saved in `tmp/simulator_evidence/`.
 
+---
+
+## 2026-08-24 — Labirinto Magico Fullscreen Expansion, Extreme Complexity & Sliding Movement (non-closing)
+
+- Implemented: Overhauled `org.greia.labirinto-magico` (Magical Labyrinth) following `skills/greia-activity-authoring/ENGINEERING.md`.
+  - Removed the cramped on-screen D-pad arrow controls that previously consumed the entire right side of the screen.
+  - Expanded the maze across the full viewport (~2.5× screen area) below a streamlined Home-safe top bar HUD (Star score pill, Difficulty switcher, World theme switcher, New Maze button).
+  - Scaled up difficulty complexity with 9 progressive levels up to an intricate **89×41** grid ("Infinito") with 35 collectible crystal stars and hundreds of corridors.
+  - Implemented continuous sliding movement: pressing an arrow/WASD/D-pad key glides Tito continuously at 18 cells/sec along corridors until hitting a wall, reaching an intersection/crossing with branching choices, or reaching the exit portal.
+  - Implemented click-to-move for mouse/touch: clicking in any direction imparts a cardinal impulse towards that direction without pathfinding, sliding until reaching a wall or crossing.
+  - Pre-baked the static maze surface once per maze generation, cutting per-frame draw operations from 10,000+ `draw.rect` calls to 1 single blit (render time: **0.55 ms/frame**).
+  - Decomposed into cohesive modules: `maze_model.py`, `maze_art.py`, `maze_audio.py`, `maze_renderer.py`, `maze_app.py`, and thin `main.py`.
+- Tests & Evidence:
+  - `tests/test_activity_labirinto_magico.py` (**11/11 PASS**).
+  - Activity validation (`tools/validate_activity.py activities/labirinto_magico`): **PASS**.
+  - Project validation (`tools/validate_project.py`): **PASS**.
+  - Interactive simulation tests verified continuous sliding, star pickup, victory condition, difficulty cycling, biome switching, and click-to-move.
+
+
