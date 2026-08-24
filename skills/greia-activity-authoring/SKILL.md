@@ -17,12 +17,19 @@ These apply to all substantive Activity work:
 1. An Activity runs under Greia platform authority. Do not bypass platform lifecycle, storage, permissions, progression, Home/Back, input or runtime policy.
 2. First-party implementation must remain maintainable: thin `main.py`, cohesive modules/classes, composition over procedural sprawl, reuse Greia platform primitives before inventing local frameworks.
 3. Do not widen security/runtime policy merely to make one Activity convenient. Package-local code is Activity code; unknown external dependencies remain forbidden unless platform policy deliberately changes.
-4. **Every new Activity must explicitly decide its child-facing presenter/character and speech plan.** Greia's recurring cast should normally be considered as social anchors, guides, reactions and curiosity hosts; omission must be deliberate, not accidental.
-5. **Subject-rich Activities must explicitly consider an optional researched curiosity/facts interaction.** When appropriate, use short, well-sourced, child-safe facts delivered through multilingual-ready semantic cues and, where voice is part of the feature, reviewed localized speech.
-6. **A new or substantively changed Activity is not done until the final runtime-relevant source state passes the real Greia Simulator launch/survival gate.** Source validation, imports, unit tests, `make verify`, `python main.py`, or package validation do not replace this.
-7. Simulator launch evidence becomes stale after any runtime-relevant edit. Relaunch the final state.
-8. If the simulator cannot be run, report `INTEGRATION-UNVERIFIED` / `SOURCE-VERIFIED / SIMULATOR-UNVERIFIED`; do not call the Activity complete or working.
-9. Claim only evidence that actually executed. Simulator evidence is not physical Acer/Pi evidence.
+4. **Assume the target child may not be able to read. Core gameplay instructions, retry guidance, navigation and completion must not depend on written text.** Design the Activity so the next action is visually obvious; use large icons/pictures/numbers, short visual demonstrations and reviewed spoken cues when language is useful. Text is secondary support, not the primary instruction channel.
+5. **Every new Activity must explicitly decide its child-facing presenter/character and speech plan.** Greia's recurring cast should normally be considered as social anchors, guides, reactions and curiosity hosts; omission must be deliberate, not accidental.
+6. **Subject-rich Activities must explicitly consider an optional researched curiosity/facts interaction.** When appropriate, use short, well-sourced, child-safe facts delivered through multilingual-ready semantic cues and reviewed localized speech.
+7. **A new or substantively changed Activity is not done until the final runtime-relevant source state passes the real Greia Simulator launch/survival gate.** Source validation, imports, unit tests, `make verify`, `python main.py`, or package validation do not replace this.
+8. Simulator launch evidence becomes stale after any runtime-relevant edit. Relaunch the final state.
+9. If the simulator cannot be run, report `INTEGRATION-UNVERIFIED` / `SOURCE-VERIFIED / SIMULATOR-UNVERIFIED`; do not call the Activity complete or working.
+10. Claim only evidence that actually executed. Simulator evidence is not physical Acer/Pi evidence.
+
+For child-facing pre-reader design, read:
+
+```text
+skills/greia-activity-authoring/PRE_READER_UX.md
+```
 
 For presenter/voice/fact design, read:
 
@@ -47,6 +54,7 @@ If the Activity is governed by a current named product/design/implementation pla
 
 ```text
 skills/greia-activity-authoring/ENGINEERING.md
+skills/greia-activity-authoring/PRE_READER_UX.md
 skills/greia-activity-authoring/PRESENTERS_AND_CURIOSITY.md
 skills/greia-activity-authoring/VOICE_GENERATION.md
 skills/greia-activity-authoring/LAUNCH_ACCEPTANCE.md
@@ -59,13 +67,14 @@ docs/design/GREIA_CANONICAL_CAST_SYSTEM.md
 A new Activity design must record:
 
 ```text
+pre-reader instruction strategy
 lead presenter/mascot or deliberate none
 speech/shared-utterance plan
 whether optional curiosity facts fit the subject
 supported locales / multilingual speech plan
 ```
 
-Do not treat voice as something to consider only after the Activity is otherwise finished.
+Do not treat text instructions, voice, presenter design or localization as things to bolt on after gameplay is otherwise finished.
 
 For Python/runtime/import work also inspect current source authority:
 
@@ -85,7 +94,13 @@ skills/greia-activity-authoring/ENGINEERING.md
 skills/greia-activity-authoring/LAUNCH_ACCEPTANCE.md
 ```
 
-If the change affects character presence, speech, audio, knowledge/facts, localization or child-facing presentation, also read:
+If the change affects child-facing instructions, controls, feedback, layout or completion, also read:
+
+```text
+skills/greia-activity-authoring/PRE_READER_UX.md
+```
+
+If it affects character presence, speech, audio, knowledge/facts, localization or child-facing presentation, also read:
 
 ```text
 skills/greia-activity-authoring/PRESENTERS_AND_CURIOSITY.md
@@ -103,6 +118,8 @@ skills/greia-activity-authoring/LAUNCH_ACCEPTANCE.md
 ```
 
 The launch gate is mandatory after the **final** refactor edit. A clean architecture that fails in the Simulator is a failed refactor.
+
+If the refactor changes child-visible flow or controls, rerun the pre-reader UX pass too.
 
 ### Manifest, Collection, age/difficulty or discovery work
 
@@ -123,6 +140,7 @@ If runtime-relevant manifest data changed, also run `LAUNCH_ACCEPTANCE.md`.
 Read:
 
 ```text
+skills/greia-activity-authoring/PRE_READER_UX.md
 docs/adr/0018-lightweight-ui-foundation.md
 docs/adr/0019-platform-owned-activity-system-navigation.md
 docs/adr/0020-runtime-neutral-input-profiles-and-controller-support.md
@@ -143,18 +161,19 @@ src/greia_platform/activity_viewport.py
 src/greia_platform/responsive_layout.py
 ```
 
-Runtime-relevant UI/input work must finish with `LAUNCH_ACCEPTANCE.md`.
+Runtime-relevant UI/input work must finish with `LAUNCH_ACCEPTANCE.md` and, when the child-facing flow changed, a no-reading UX pass from `PRE_READER_UX.md`.
 
 ### Victory, completion, results, Continue or Play Again work
 
 Read:
 
 ```text
+skills/greia-activity-authoring/PRE_READER_UX.md
 skills/greia-activity-authoring/TERMINAL_RENDERING.md
 skills/greia-activity-authoring/LAUNCH_ACCEPTANCE.md
 ```
 
-Exercise the completion/restart path, not just startup.
+Exercise the completion/restart path, not just startup. Continue/Replay must be understandable without requiring the child to read the label.
 
 ### Achievements, Stars, score or completion events
 
@@ -206,6 +225,7 @@ If visible/runtime resources changed, finish with `LAUNCH_ACCEPTANCE.md` in the 
 Read:
 
 ```text
+skills/greia-activity-authoring/PRE_READER_UX.md
 skills/greia-activity-authoring/PRESENTERS_AND_CURIOSITY.md
 skills/greia-activity-authoring/VOICE_GENERATION.md
 docs/design/GREIA_CANONICAL_CAST_SYSTEM.md
@@ -260,10 +280,13 @@ Before saying substantive Activity work is done, answer:
 
 ```text
 1. Which task-specific docs above were read?
-2. For a new Activity: what presenter/speech/curiosity-fact decision was made?
-3. Which source/test validation actually ran?
-4. What exact final source SHA/state was launched through Greia Simulator?
-5. Did it reach a usable frame, survive >=10s, survive meaningful input, and return cleanly to Shell?
+2. For new/child-facing work: did the no-reading UX pass succeed? Is any core instruction text-dependent?
+3. For a new Activity: what presenter/speech/curiosity-fact decision was made?
+4. Which source/test validation actually ran?
+5. What exact final source SHA/state was launched through Greia Simulator?
+6. Did it reach a usable frame, survive >=10s, survive meaningful input, and return cleanly to Shell?
 ```
 
-If #4 or #5 has no successful evidence, the correct status is **integration-unverified**, not complete.
+If the Activity requires reading for its ordinary core instructions, the child-facing UX is failed even if the code launches and tests pass.
+
+If #5 or #6 has no successful evidence, the correct status is **integration-unverified**, not complete.
