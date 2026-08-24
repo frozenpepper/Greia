@@ -306,14 +306,16 @@ class OrcaRenderer:
         else:
             sprite_name = f"orca_{kind}_happy.png" if is_happy else f"orca_{kind}_day.png"
 
-        # Angle rotation: in Pygame rotozoom, positive is counterclockwise.
-        # If facing right: -angle (radians to degrees)
-        # If facing left: angle
-        rot_deg = int(-math.degrees(orca.angle)) if facing_right else int(math.degrees(orca.angle))
+        # Angle rotation: orca.angle is in degrees.
+        # In Pygame rotozoom, positive is counter-clockwise.
+        # When facing right: pitch angle (-pitch tilts head down/up)
+        # When facing left: inverted pitch angle
+        pitch = -orca.angle if facing_right else orca.angle
+        rot_deg = int(max(-32.0, min(32.0, pitch)))
 
-        # If cuddle belly roll: roll on belly (+180 deg)
+        # If cuddle belly roll: gentle rhythmic rocking with happy sprite
         if state == OrcaState.CUDDLE_BELLY:
-            rot_deg += 180
+            rot_deg = int(math.sin(orca.swim_phase * 2.0) * 6.0)
 
         sprite = _get_scaled_asset(sprite_name, base_w, base_h, facing_right=facing_right, angle_deg=rot_deg)
         if sprite is not None:

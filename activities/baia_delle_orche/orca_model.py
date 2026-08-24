@@ -193,23 +193,20 @@ class OrcaEntity:
             return events
 
         elif self.state in (OrcaState.BREACHING, OrcaState.RING_LEAP):
-            self.state_timer += dt * 1.35
+            self.state_timer += dt * 1.2
             # Parabolic trajectory arc (0.0 to 1.0)
             progress = self.state_timer
             if progress < 1.0:
                 # Upward and downward parabolic arc
                 h = math.sin(progress * math.pi) * self.jump_peak_h
                 self.y = self.jump_origin_y - h
-                # Dynamic leap pitch angle
-                self.angle = (-38.0 + progress * 76.0) * self.facing
-                if self.state == OrcaState.RING_LEAP:
-                    # Barrel roll spin
-                    self.jump_flip_angle += 360.0 * dt * 1.5
-                self.x += (self.jump_target_x - self.x) * 0.08 + (self.facing * self.base_speed * 1.8)
+                # Smooth, graceful leap pitch: -20 deg upward -> +20 deg dive
+                self.angle = (-20.0 + progress * 40.0) * self.facing
+                self.x += (self.jump_target_x - self.x) * 0.05 + (self.facing * self.base_speed * 1.4)
             else:
                 # Water Reentry Splashdown!
                 self.y = WATER_SURFACE_Y + 30.0
-                self.vy = 2.0
+                self.vy = 1.5
                 self.angle = 0.0
                 self.jump_flip_angle = 0.0
                 self.state = OrcaState.SWIMMING
@@ -275,13 +272,14 @@ class OrcaEntity:
             if random.random() < 0.008:
                 self.target_vx = -self.target_vx
 
-        # Natural pitch angle derived from 2D velocity vector
-        calc_pitch = math.degrees(math.atan2(self.vy, max(0.5, abs(self.vx)))) * (1 if self.facing >= 0 else -1)
-        self.angle += (max(-25.0, min(25.0, calc_pitch)) - self.angle) * 0.08
+        # Natural pitch angle derived from 2D velocity vector with smooth damping
+        calc_pitch = math.degrees(math.atan2(self.vy, max(0.8, abs(self.vx)))) * (1.0 if self.facing >= 0 else -1.0)
+        target_p = max(-14.0, min(14.0, calc_pitch))
+        self.angle += (target_p - self.angle) * 0.08
 
         # Apply position update
         self.x += self.vx
-        self.y += self.vy + math.sin(self.swim_phase * 2.0) * 0.7
+        self.y += self.vy + math.sin(self.swim_phase * 2.0) * 0.5
 
         # Update facing direction with strong hysteresis
         if self.vx > 0.4:
