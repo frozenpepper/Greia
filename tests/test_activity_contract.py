@@ -28,6 +28,7 @@ class ActivityContractTests(unittest.TestCase):
             [
                 "org.greia.acquario-magico",
                 "org.greia.baia-delle-orche",
+                "org.greia.bottega-delle-misure",
                 "org.greia.casa-del-dieci",
                 "org.greia.clinica-cuccioli",
                 "org.greia.costruiamo-ponti",
