@@ -78,7 +78,23 @@ On-device visual verification covered Collection Home, category grid, hover lift
   - Platform contract tests reconciled: `test_activity_contract.py`, `test_first_party_activity_audience_metadata.py` (22 built-in activities), `test_first_party_activity_readiness.py`.
   - Full test suite `make verify`: **1,209 unit tests PASS**, project validation PASS, all 22 activities valid, footprint and shell checks green.
   - Package validation digest: `sha256 ea81b746fbc2d493d36fac1032ec8ed41b73dbef6bd14c04d2db63940a69dd8e`.
-  - Visual review executed for Italian and English locales and multiple game modes (Compose, Add, Missing-Part, Take-Away, Completion).
+## Early-learning Activity expansion: Bottega delle Misure acceptance (2026-08-24)
+
+`activities/bottega_delle_misure` (La Bottega delle Misure / The Measurement Workshop) comparison and non-standard unit measurement Activity is fully implemented, verified, and accepted following `docs/agents/GREIA_EARLY_LEARNING_ACTIVITY_IMPLEMENTATION_RUNBOOK.md` and `skills/greia-activity-authoring/SKILL.md`.
+
+- Architecture:
+  - `measure_model.py`: Domain comparison and unit measurement invariants (`Attribute(LENGTH, HEIGHT)`, `MeasureMode(COMPARE, ORDER, MEASURE, SHELF)`), immutable `MeasureItem` and `MeasureChallenge`, deterministic factory with 5 unique challenges per set across L1–L5, between-set bounded adaptation, and one-shot `measure.parcel_completed` (milestone) and `measure.delivery_completed` (completion) events.
+  - `measure_app.py`: Pointer/touch interaction orchestrator with fail-closed system safe region validation, gentle wobble baseline assistance on errors, low-allocation state machine, and completion restart.
+  - `measure_renderer.py`: 1024x600 workshop presentation with baseline-grounded parcels, measuring rail with numbered unit slots, Dani mascot, prompt text, and high-contrast numeric choice cards.
+  - `measure_art.py`: Artisan workshop backdrop with back-wall tool shelf and wooden counter bench.
+  - `measure_audio.py`: Prepared nonverbal procedural synthesis (`snap`, `correct`, `retry`, `complete`).
+  - `measure_services.py`: Storage adapter for `bottega_delle_misure.progress.v1` (bounded history <= 8) and event publisher.
+- Evidence & Verification:
+  - `tests/test_activity_bottega_delle_misure.py`: 10/10 focused tests passing (model determinism, arithmetic invariants, compare/order/measure modes, adaptation, storage recovery, manifest, app pointer integration, simulator supervisor lifecycle).
+  - Platform contract tests reconciled: `test_activity_contract.py`, `test_first_party_activity_audience_metadata.py` (23 built-in activities), `test_first_party_activity_readiness.py`.
+  - Full test suite `make verify`: **1,219 unit tests PASS**, project validation PASS, all 23 activities valid, footprint and shell checks green.
+  - Package validation digest: `sha256 4e7bde50746d1cfdad347b5e663fc95df658c67b367dcd16354112c5b8500bee`.
+  - Visual review executed for Italian and English locales and multiple game modes (Compare, Order, Measure, Shelf, Completion).
 
 ## Contributor engineering skills integration (2026-08-23)
 

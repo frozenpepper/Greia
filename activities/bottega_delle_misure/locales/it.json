@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "locale": "it",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "La Bottega delle Misure",
+    "activity.bottega_delle_misure.title": "La Bottega delle Misure",
+    "prompt.compare_longer": "Tocca il pacco più lungo!",
+    "prompt.compare_shorter": "Tocca il pacco più corto!",
+    "prompt.compare_taller": "Tocca il pacco più alto!",
+    "prompt.compare_shorter_h": "Tocca il pacco più basso!",
+    "prompt.order_length": "Ordina i pacchi dal più corto al più lungo!",
+    "prompt.order_height": "Ordina i pacchi dal più basso al più alto!",
+    "prompt.measure": "Misura il pacco con i blocchetti di legno!",
+    "prompt.shelf": "Quanti blocchetti misura questo ripiano?",
+    "button.confirm": "CONFERMA",
+    "button.play_again": "GIOCA ANCORA",
+    "victory.title": "Bottega Pronta!",
+    "victory.subtitle": "Tutti i pacchi sono stati misurati e consegnati con Dani!"
+  },
+  "audio": {}
+}

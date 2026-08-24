@@ -8,6 +8,37 @@
 
 `org.greia.bottega-delle-misure` teaches comparison, ordering, and repeated-unit measurement through five parcel challenges with exact no-gap/no-overlap rules.
 
+## Implementation checkpoint — 2026-08-24
+
+The source implementation is complete, verified, and accepted:
+
+Current source shape:
+
+```text
+activities/bottega_delle_misure/
+  activity.toml
+  main.py
+  measure_model.py
+  measure_services.py
+  measure_audio.py
+  measure_art.py
+  measure_renderer.py
+  measure_app.py
+  locales/{it,en}.json
+  assets/source/icon.svg
+  assets/icon.png
+tests/test_activity_bottega_delle_misure.py
+```
+
+Evidence:
+- 10/10 focused unit and integration tests passing (`tests/test_activity_bottega_delle_misure.py`).
+- Cumulative test suite passing: 91 tests green across early learning and platform contracts.
+- Repository-wide `make verify` completely passing: 1,219 unit tests green, all 23 activities valid, footprint and shell checks green.
+- Package validation digest: `sha256 4e7bde50746d1cfdad347b5e663fc95df658c67b367dcd16354112c5b8500bee`.
+- Visual review executed for Italian and English locales and multiple game modes (Compare, Order, Measure, Shelf, Completion). Authoritative unit-based parcel scaling, counter baseline resting geometry, and clear wooden measuring rail.
+- Audio: Prepared procedural tones (`snap`, `correct`, `retry`, `complete`).
+- Simulator integration: Supervisor launch and lifecycle tested cleanly.
+
 ## Preconditions
 
 - Pull current `main`; verify prior cumulative gate.

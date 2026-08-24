@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "locale": "en",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "The Measurement Workshop",
+    "activity.bottega_delle_misure.title": "The Measurement Workshop",
+    "prompt.compare_longer": "Tap the longest parcel!",
+    "prompt.compare_shorter": "Tap the shortest parcel!",
+    "prompt.compare_taller": "Tap the tallest parcel!",
+    "prompt.compare_shorter_h": "Tap the shortest parcel!",
+    "prompt.order_length": "Order the parcels from shortest to longest!",
+    "prompt.order_height": "Order the parcels from shortest to tallest!",
+    "prompt.measure": "Measure the parcel with wooden unit blocks!",
+    "prompt.shelf": "How many blocks fit on this shelf?",
+    "button.confirm": "CONFIRM",
+    "button.play_again": "PLAY AGAIN",
+    "victory.title": "Workshop Ready!",
+    "victory.subtitle": "All parcels have been measured and delivered with Dani!"
+  },
+  "audio": {}
+}
