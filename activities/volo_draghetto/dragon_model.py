@@ -59,6 +59,11 @@ class DragonPlayer:
     def trigger_dash(self, duration: float = 3.5) -> None:
         self.dash_timer = max(self.dash_timer, duration)
 
+    def move_altitude(self, delta: float) -> None:
+        """Immediately update target and current altitude for snappy keyboard/controller flight."""
+        self.target_y = max(MIN_FLIGHT_Y, min(MAX_FLIGHT_Y, self.target_y + delta))
+        self.y = max(MIN_FLIGHT_Y, min(MAX_FLIGHT_Y, self.y + delta * 0.75))
+
     def cycle_accessory(self) -> str:
         idx = ACCESSORIES.index(self.accessory) if self.accessory in ACCESSORIES else 0
         self.accessory = ACCESSORIES[(idx + 1) % len(ACCESSORIES)]
@@ -70,7 +75,7 @@ class DragonPlayer:
 
         # Smooth vertical tracking with spring-damper inertia
         dy = self.target_y - self.y
-        self.vertical_velocity = dy * 0.16
+        self.vertical_velocity = dy * 0.22
         self.y += self.vertical_velocity
         self.y = max(MIN_FLIGHT_Y, min(MAX_FLIGHT_Y, self.y))
 
@@ -163,12 +168,10 @@ class FlightWorldState:
     clouds: list[BouncyCloud] = field(default_factory=list)
     particles: list[VisualParticle] = field(default_factory=list)
 
-    # Score and round progression
+    # Score and continuous flight progression
     round_stars: int = 0
     total_stars: int = 0
     score: int = 0
-    round_star_target: int = ROUND_STAR_TARGET
-    is_victory: bool = False
 
     # Chunk generation tracking
     last_spawn_x: float = 400.0
@@ -176,14 +179,13 @@ class FlightWorldState:
     feedback_timer: float = 0.0
 
     def start_flight(self) -> None:
-        """Initialize or reset flight world state for a new round."""
+        """Initialize or reset flight world state for endless flight."""
         self.dragon = DragonPlayer(x=200.0, y=300.0)
         self.stars.clear()
         self.rainbow_gates.clear()
         self.clouds.clear()
         self.particles.clear()
         self.round_stars = 0
-        self.is_victory = False
         self.last_spawn_x = 400.0
         self.feedback_text_key = ""
         self.feedback_timer = 0.0
@@ -195,8 +197,6 @@ class FlightWorldState:
     def update(self, dt: float = 1.0 / 30.0) -> list[str]:
         """Advance world simulation by dt and return triggered event IDs."""
         events: list[str] = []
-        if self.is_victory:
-            return events
 
         # Update dragon
         self.dragon.update(dt)
@@ -221,10 +221,11 @@ class FlightWorldState:
                 events.append("star_collected")
                 self._spawn_star_burst(star.x, star.effective_y)
 
-                # Check round victory target
-                if self.round_stars >= self.round_star_target and not self.is_victory:
-                    self.is_victory = True
-                    events.append("round_completed")
+                # Milestone fanfare every 10 stars without stopping the flight
+                if self.total_stars % 10 == 0:
+                    events.append("star_milestone")
+                    self.feedback_text_key = "msg.star_milestone"
+                    self.feedback_timer = 2.0
 
         # Collision: Rainbow Gates (Super Turbo Boost!)
         for gate in self.rainbow_gates:

@@ -73,13 +73,14 @@ class DragonRenderer:
         # 1. Sky Background Blit (1.8 ms fast blit)
         surface.blit(self._art.get_sky_background(), (0, 0))
 
-        # 2. Distant Parallax Clouds
-        cloud_strip = self._art.get_distant_cloud_strip()
-        strip_w = cloud_strip.get_width()
-        cloud_offset = int(cam_x * 0.22) % strip_w
-        surface.blit(cloud_strip, (-cloud_offset, 60))
-        if strip_w - cloud_offset < REFERENCE_WIDTH:
-            surface.blit(cloud_strip, (strip_w - cloud_offset, 60))
+        # 2. Distant Parallax Clouds (0.2 ms ultra-fast colorkey blits)
+        c1, c2, c3 = self._art.get_distant_clouds()
+        x1 = int(140 - cam_x * 0.12) % (REFERENCE_WIDTH + 200) - 100
+        surface.blit(c1, (x1, 70))
+        x2 = int(540 - cam_x * 0.20) % (REFERENCE_WIDTH + 260) - 130
+        surface.blit(c2, (x2, 100))
+        x3 = int(920 - cam_x * 0.16) % (REFERENCE_WIDTH + 220) - 110
+        surface.blit(c3, (x3, 65))
 
         # 3. Clouds (Bouncy Obstacles)
         cloud_sprite = self._art.get_cloud_obstacle_sprite()
@@ -97,7 +98,7 @@ class DragonRenderer:
             sx = int(gate.x - cam_x)
             sy = int(gate.y)
             if -gw <= sx <= REFERENCE_WIDTH + gw:
-                surface.blit(gate_sprite, (sx - gw // 2, sy - gh + 30))
+                surface.blit(gate_sprite, (sx - gw // 2, sy - gh + 35))
 
         # 5. Collectible Stars
         star_sprite = self._art.get_star_sprite()
@@ -152,8 +153,8 @@ class DragonRenderer:
         pygame.draw.rect(surface, WHITE, hud_box, border_radius=14)
         pygame.draw.rect(surface, (245, 180, 30), hud_box, width=2, border_radius=14)
 
-        # Star count badge with goal indicator
-        star_str = f"⭐ {world.round_stars}/{world.round_star_target}   🏆 {world.score}"
+        # Star count badge with continuous total stars
+        star_str = f"⭐ {world.total_stars}   🏆 {world.score}"
         hud_label = self._render_cached_text(star_str, FontRole.TITLE, 22, (180, 85, 15))
         surface.blit(hud_label, hud_label.get_rect(center=hud_box.center))
 

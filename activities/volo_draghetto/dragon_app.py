@@ -39,6 +39,8 @@ try:
         FlightWorldState,
         MIN_FLIGHT_Y,
         MAX_FLIGHT_Y,
+        REFERENCE_HEIGHT,
+        REFERENCE_WIDTH,
         STORAGE_KEY,
     )
     from dragon_renderer import DragonRenderer
@@ -49,6 +51,8 @@ except ImportError:
         FlightWorldState,
         MIN_FLIGHT_Y,
         MAX_FLIGHT_Y,
+        REFERENCE_HEIGHT,
+        REFERENCE_WIDTH,
         STORAGE_KEY,
     )
     from .dragon_renderer import DragonRenderer
@@ -69,6 +73,14 @@ class DragonFlightApp:
     """Main application coordinator for Il Volo del Draghetto."""
 
     def __init__(self) -> None:
+        screen = pygame.display.get_surface()
+        if screen is None:
+            pygame.init()
+            screen = pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.FULLSCREEN)
+        self.screen = screen
+        self.canvas = PygameReferenceCanvas(screen)
+        pygame.mouse.set_visible(False)
+
         self.world = FlightWorldState()
         self.art = DragonArtLibrary()
         self.audio = DragonAudio()
@@ -126,20 +138,21 @@ class DragonFlightApp:
 
     def run(self) -> int:
         """Run the main application lifecycle loop."""
-        pygame.init()
-        screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-        pygame.mouse.set_visible(False)
+        screen = self.screen
+        canvas = self.canvas
         clock = pygame.time.Clock()
         theme = get_theme()
-        canvas = PygameReferenceCanvas(screen)
 
         self._start_new_round()
 
         running = True
         ready_published = False
+        previous_time = time.monotonic()
 
         while running and not activity_stop_requested():
-            dt = 1.0 / 30.0
+            now = time.monotonic()
+            dt = min(0.1, max(0.001, now - previous_time))
+            previous_time = now
 
             # 1. Event Handling
             for event in pygame.event.get():
@@ -148,17 +161,18 @@ class DragonFlightApp:
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         running = False
-                    elif event.key == pygame.K_SPACE:
-                        if self.world.is_victory:
-                            self._start_new_round()
-                        else:
-                            self.world.dragon.trigger_dash(4.0)
-                            self.audio.play("whoosh")
-                    elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
-                        if self.world.is_victory:
-                            self._start_new_round()
+                    elif event.key in (pygame.K_UP, pygame.K_w):
+                        self.world.dragon.move_altitude(-24.0)
+                    elif event.key in (pygame.K_DOWN, pygame.K_s):
+                        self.world.dragon.move_altitude(24.0)
+                    elif event.key in (pygame.K_RIGHT, pygame.K_d, pygame.K_SPACE, pygame.K_RETURN, pygame.K_KP_ENTER):
+                        self.world.dragon.trigger_dash(3.5)
+                        self.audio.play("whoosh")
+                    elif event.key in (pygame.K_TAB, pygame.K_l):
+                        self.world.dragon.cycle_accessory()
+                        self.audio.play("pop")
                 elif event.type == pygame.MOUSEMOTION:
-                    if not self.world.is_victory and _is_safe_point(screen, event.pos):
+                    if _is_safe_point(screen, event.pos):
                         plog = canvas.pointer(event.pos)
                         if plog is not None:
                             self.world.dragon.target_y = max(MIN_FLIGHT_Y, min(MAX_FLIGHT_Y, plog[1]))
@@ -174,72 +188,50 @@ class DragonFlightApp:
                     logical = canvas.pointer(event.pos)
                     if logical is not None:
                         lx, ly = logical
-                        if self.world.is_victory:
-                            # Play again clicked
-                            self._start_new_round()
+                        # Accessory Button hit (x=580..716, y=14..58)
+                        if 580 <= lx <= 716 and 14 <= ly <= 58:
+                            self.world.dragon.cycle_accessory()
+                            self.audio.play("pop")
                         else:
-                            # Accessory Button hit (x=580..716, y=14..58)
-                            if 580 <= lx <= 716 and 14 <= ly <= 58:
-                                self.world.dragon.cycle_accessory()
-                                self.audio.play("pop")
+                            # Click anywhere in flight triggers a dash burst!
+                            self.world.dragon.trigger_dash(3.0)
+                            self.audio.play("whoosh")
 
             # 2. Continuous Keyboard & Controller Altitude Control
-            if not self.world.is_victory:
-                keys = pygame.key.get_pressed()
-                if keys[pygame.K_UP] or keys[pygame.K_w]:
-                    self.world.dragon.target_y = max(MIN_FLIGHT_Y, self.world.dragon.target_y - 9.0)
-                elif keys[pygame.K_DOWN] or keys[pygame.K_s]:
-                    self.world.dragon.target_y = min(MAX_FLIGHT_Y, self.world.dragon.target_y + 9.0)
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_UP] or keys[pygame.K_w]:
+                self.world.dragon.move_altitude(-12.0)
+            elif keys[pygame.K_DOWN] or keys[pygame.K_s]:
+                self.world.dragon.move_altitude(12.0)
+
+            if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+                self.world.dragon.trigger_dash(2.0)
 
             # 3. Update World Simulation
             events = self.world.update(dt)
             for ev in events:
                 if ev == "star_collected":
                     self.audio.play("star")
-                elif ev == "rainbow_boost":
-                    self.audio.play("whoosh")
+                elif ev == "star_milestone":
                     self.audio.play("star")
+                    self.audio.play("victory")
+                    self._save_storage()
                     try:
                         emit_activity_event("flight.star_milestone", idempotency_key=f"milestone-{time.time()}")
                     except Exception:
                         pass
+                elif ev == "rainbow_boost":
+                    self.audio.play("whoosh")
+                    self.audio.play("star")
                 elif ev == "cloud_bounce":
                     self.audio.play("boing")
-                elif ev == "round_completed":
-                    self.audio.play("victory")
-                    self._save_storage()
-                    try:
-                        emit_activity_event("flight.completed", idempotency_key=f"completed-{time.time()}")
-                    except Exception:
-                        pass
 
             # 4. Composite Frame onto Reference Canvas
             surf = canvas.surface
-            if self.world.is_victory:
-                # Terminal Completion Presentation
-                if self._completion_screen is None:
-                    self._completion_screen = PygameCompletionScreen(
-                        typography=self.typography,
-                        width=1024,
-                        height=600,
-                    )
-                if not self._completion_screen.is_prepared:
-                    content = CompletionContent(
-                        title="VOLO COMPLETATO! 🌟",
-                        primary_label="GIOCA ANCORA 🚀",
-                        body_lines=(
-                            "Hai raccolto tutte le 20 stelle magiche!",
-                            f"Punti totali: {self.world.score}",
-                        ),
-                        achievement_count=1,
-                    )
-                    self._completion_screen.prepare(content)
-                self._completion_screen.draw(surf)
-            else:
-                feedback_msg = ""
-                if self.world.feedback_text_key and self._resources:
-                    feedback_msg = self._resources.text(self.world.feedback_text_key)
-                self.renderer.render_world(surf, self.world, feedback_msg)
+            feedback_msg = ""
+            if self.world.feedback_text_key and self._resources:
+                feedback_msg = self._resources.text(self.world.feedback_text_key)
+            self.renderer.render_world(surf, self.world, feedback_msg)
 
             # 5. Present Canvas to Screen
             canvas.present(clear=theme.background)
