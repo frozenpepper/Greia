@@ -479,7 +479,7 @@ class OrcaPod:
             key = self.FACT_KEYS[self.current_fact_idx % len(self.FACT_KEYS)]
             self.current_fact_idx += 1
         self.active_fact = key
-        self.fact_timer = 9.5
+        self.fact_timer = 12.0
         self.discovered_facts.add(key)
         return key
 

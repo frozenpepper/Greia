@@ -16,6 +16,11 @@ import sys
 import tempfile
 import time
 
+try:
+    import numpy as np
+except ImportError:
+    np = None
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 TITO_REF = PROJECT_ROOT / "assets" / "audio" / "characters" / "canonical" / "v0.1" / "tito-reference-v1.flac"
 OUTPUT_DIR = PROJECT_ROOT / "activities" / "baia_delle_orche" / "assets" / "audio"
@@ -87,9 +92,43 @@ def _write_wav_stub(dest_wav: Path) -> None:
         w.writeframes(b"\x00\x00" * 4410)
 
 
+def trim_speech_ends(
+    audio: np.ndarray,
+    sr: int,
+    noise_db: float = -38.0,
+    pad_leading_ms: float = 40.0,
+    pad_trailing_ms: float = 180.0,
+) -> np.ndarray:
+    """Trim silence only from the beginning and end of the audio, preserving all internal pauses between sentences."""
+    frame_len = int(0.010 * sr)  # 10ms
+    num_frames = len(audio) // frame_len
+    if num_frames == 0:
+        return audio
+
+    frames = audio[: num_frames * frame_len].reshape(num_frames, frame_len)
+    frame_rms = np.sqrt(np.mean(frames**2, axis=1))
+    peak_rms = np.max(frame_rms)
+    if peak_rms < 1e-4:
+        return audio
+
+    threshold = max(0.005, peak_rms * (10 ** (noise_db / 20.0)))
+    active = np.where(frame_rms > threshold)[0]
+    if len(active) == 0:
+        return audio
+
+    first_frame = active[0]
+    last_frame = active[-1]
+
+    start_s = max(0.0, (first_frame * 0.010) - (pad_leading_ms / 1000.0))
+    end_s = min(len(audio) / sr, ((last_frame + 1) * 0.010) + (pad_trailing_ms / 1000.0))
+
+    start_samp = int(start_s * sr)
+    end_samp = int(end_s * sr)
+    return audio[start_samp:end_samp]
+
+
 def generate_with_chatterbox(dest_dir: Path) -> bool:
     try:
-        import numpy as np
         import soundfile as sf
         from mlx_audio.tts import load
     except ImportError as err:
@@ -119,7 +158,8 @@ def generate_with_chatterbox(dest_dir: Path) -> bool:
             print(f"Generating [{locale}] {key}...", flush=True)
 
             word_count = len(text.split())
-            max_tokens = max(80, min(250, word_count * 8))
+            # Headroom: 25 tokens/s + buffer
+            max_tokens = max(500, word_count * 28)
 
             try:
                 res = next(model.generate(
@@ -132,9 +172,11 @@ def generate_with_chatterbox(dest_dir: Path) -> bool:
                 raw_audio = np.array(res.audio)
                 sr = res.sample_rate
 
+                clean_audio = trim_speech_ends(raw_audio, sr)
+
                 with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_f:
                     tmp_wav = Path(tmp_f.name)
-                sf.write(str(tmp_wav), raw_audio, sr)
+                sf.write(str(tmp_wav), clean_audio, sr)
 
                 converted = False
                 for cmd in [
@@ -149,7 +191,7 @@ def generate_with_chatterbox(dest_dir: Path) -> bool:
                         continue
 
                 if not converted:
-                    sf.write(str(dest_wav), raw_audio, sr)
+                    sf.write(str(dest_wav), clean_audio, sr)
 
                 if tmp_wav.exists():
                     tmp_wav.unlink()

@@ -82,12 +82,32 @@ def _draw_vector_music(surf: pygame.Surface, cx: int, cy: int, size: int, col: t
     pygame.draw.line(surf, col, (cx - size // 3 + nr * 2 - 1, cy - size // 3), (cx + size // 6 + nr * 2 - 1, cy - size // 2), 3)
 
 
-def _draw_vector_moon(surf: pygame.Surface, cx: int, cy: int, r: int, col: tuple[int, int, int]) -> None:
+def _draw_vector_moon(
+    surf: pygame.Surface,
+    cx: int,
+    cy: int,
+    r: int,
+    col: tuple[int, int, int],
+    bg_col: tuple[int, int, int] = (15, 23, 42),
+) -> None:
     """Draw a glowing crescent moon and twinkling star at (cx, cy)."""
     pygame.draw.circle(surf, col, (cx, cy), r)
-    pygame.draw.circle(surf, (15, 23, 42), (cx + r // 2, cy - r // 3), int(r * 0.85))
-    sx, sy = cx + r // 2 + 4, cy + r // 3
-    pygame.draw.polygon(surf, (255, 255, 255), [(sx, sy - 4), (sx + 1, sy - 1), (sx + 4, sy), (sx + 1, sy + 1), (sx, sy + 4), (sx - 1, sy + 1), (sx - 4, sy), (sx - 1, sy - 1)])
+    pygame.draw.circle(surf, bg_col, (cx + r // 2, cy - r // 3), int(r * 0.85))
+    sx, sy = cx + r // 2 + 3, cy + r // 3
+    pygame.draw.polygon(
+        surf,
+        (255, 255, 255),
+        [
+            (sx, sy - 5),
+            (sx + 2, sy - 1),
+            (sx + 5, sy),
+            (sx + 2, sy + 1),
+            (sx, sy + 5),
+            (sx - 2, sy + 1),
+            (sx - 5, sy),
+            (sx - 2, sy - 1),
+        ],
+    )
 
 
 from pathlib import Path
@@ -151,10 +171,10 @@ class OrcaRenderer:
         self._time_counter = 0.0
 
         # Pre-calculated toolbar buttons (6 large child buttons at bottom)
-        btn_w, btn_h = 138, 72
-        spacing = 14
+        btn_w, btn_h = 142, 74
+        spacing = 12
         start_x = (REFERENCE_WIDTH - (6 * btn_w + 5 * spacing)) // 2
-        btn_y = REFERENCE_HEIGHT - 82
+        btn_y = REFERENCE_HEIGHT - 84
 
         self.tool_rects: list[tuple[pygame.Rect, int, tuple[int, int, int], str, str]] = [
             (pygame.Rect(start_x + 0 * (btn_w + spacing), btn_y, btn_w, btn_h), 0, (249, 115, 22), "feed", "tool.feed"),
@@ -165,8 +185,8 @@ class OrcaRenderer:
             (pygame.Rect(start_x + 5 * (btn_w + spacing), btn_y, btn_w, btn_h), 5, (234, 179, 8), "tito", "tool.tito"),
         ]
 
-        # Tito Fact Banner Rect (positioned between Home button and Top-Right HUD)
-        self.fact_banner_rect = pygame.Rect(96, 12, 700, 96)
+        # Tito Animated Comic Bubble Click Rect
+        self.fact_banner_rect = pygame.Rect(76, 14, 180, 84)
 
         # 4 Floating musical bells on water surface
         bell_spacing = 110
@@ -420,30 +440,30 @@ class OrcaRenderer:
             pygame.draw.rect(surface, (255, 255, 255), rect, width=3, border_radius=16)
 
             # Draw crisp vector icon in top half of button
-            icon_cy = rect.top + 24
+            icon_cy = rect.top + 28
             if icon_kind == "feed":
-                _draw_vector_fish(surface, rect.centerx, icon_cy, 28, (255, 255, 255))
+                _draw_vector_fish(surface, rect.centerx, icon_cy, 46, (255, 255, 255))
             elif icon_kind == "cuddle":
-                _draw_vector_heart(surface, rect.centerx, icon_cy, 22, (255, 255, 255))
+                _draw_vector_heart(surface, rect.centerx, icon_cy, 36, (255, 255, 255))
             elif icon_kind == "play":
-                _draw_vector_ball(surface, rect.centerx, icon_cy, 12)
+                _draw_vector_ball(surface, rect.centerx, icon_cy, 18)
             elif icon_kind == "sing":
-                _draw_vector_music(surface, rect.centerx, icon_cy, 22, (255, 255, 255))
+                _draw_vector_music(surface, rect.centerx, icon_cy, 36, (255, 255, 255))
             elif icon_kind == "aurora":
-                _draw_vector_moon(surface, rect.centerx, icon_cy, 12, (254, 240, 138))
+                _draw_vector_moon(surface, rect.centerx, icon_cy, 18, (254, 240, 138), btn_col)
             elif icon_kind == "tito":
-                tito_avatar = _get_scaled_asset("tito_avatar.png", 34, 34, facing_right=True, angle_deg=0)
+                tito_avatar = _get_scaled_asset("tito_avatar.png", 46, 46, facing_right=True, angle_deg=0)
                 if tito_avatar is not None:
-                    surface.blit(tito_avatar, (rect.centerx - 17, icon_cy - 17))
+                    surface.blit(tito_avatar, (rect.centerx - 23, icon_cy - 23))
                 else:
-                    pygame.draw.circle(surface, (253, 224, 71), (rect.centerx, icon_cy), 12)
+                    pygame.draw.circle(surface, (253, 224, 71), (rect.centerx, icon_cy), 18)
 
             # Text label in bottom half
             label_text = self.resources.text(label_key) if label_key else ""
             lbl_surf = self._tool_font.render(label_text, True, (255, 255, 255))
             surface.blit(
                 lbl_surf,
-                (rect.centerx - lbl_surf.get_width() // 2, rect.bottom - lbl_surf.get_height() - 8),
+                (rect.centerx - lbl_surf.get_width() // 2, rect.bottom - lbl_surf.get_height() - 6),
             )
 
         # Top Right Activity Badges (Fed & Cuddled counters)
@@ -455,71 +475,65 @@ class OrcaRenderer:
         surface.blit(badge_surf, (badge_x, badge_y))
 
         # Fish counter
-        _draw_vector_fish(surface, badge_x + 28, badge_y + 24, 22, (249, 115, 22))
+        _draw_vector_fish(surface, badge_x + 28, badge_y + 24, 26, (249, 115, 22))
         fed_txt = self._badge_font.render(str(pod.total_fed), True, (255, 255, 255))
         surface.blit(fed_txt, (badge_x + 46, badge_y + 24 - fed_txt.get_height() // 2))
 
         # Heart counter
-        _draw_vector_heart(surface, badge_x + 118, badge_y + 24, 18, (244, 63, 94))
+        _draw_vector_heart(surface, badge_x + 118, badge_y + 24, 20, (244, 63, 94))
         cuddle_txt = self._badge_font.render(str(pod.total_cuddled), True, (255, 255, 255))
         surface.blit(cuddle_txt, (badge_x + 134, badge_y + 24 - cuddle_txt.get_height() // 2))
 
     def draw_fact_banner(self, surface: pygame.Surface, pod: OrcaPod) -> None:
-        """Render Tito's floating fact bubble banner at top center when a fact is active."""
+        """Render Tito's compact animated comic speech bubble while he speaks."""
         if pod.active_fact is None:
             return
 
-        fact_key = pod.active_fact
-        rect = self.fact_banner_rect
+        # Gentle talking bounce animation
+        bounce = int(math.sin(self._time_counter * 9.0) * 3.0)
+        avatar_cx = 114
+        avatar_cy = 48 + bounce
 
-        # Semi-transparent dark frosted panel with warm golden border
-        banner_surf = pygame.Surface((rect.width, rect.height), pygame.SRCALPHA)
-        pygame.draw.rect(banner_surf, (15, 23, 42, 238), (0, 0, rect.width, rect.height), border_radius=20)
-        pygame.draw.rect(banner_surf, (250, 204, 21), (0, 0, rect.width, rect.height), width=2, border_radius=20)
-        surface.blit(banner_surf, (rect.x, rect.y))
+        # Warm golden circular glow halo behind Tito
+        pygame.draw.circle(surface, (250, 204, 21), (avatar_cx, avatar_cy), 36)
+        pygame.draw.circle(surface, (255, 255, 255), (avatar_cx, avatar_cy), 34)
 
-        # Circular Tito avatar on left with gentle talking bounce
-        bounce = int(math.sin(self._time_counter * 8.0) * 2.0)
-        tito_avatar = _get_scaled_asset("tito_avatar.png", 68, 68, facing_right=True, angle_deg=0)
-        avatar_x = rect.x + 16
-        avatar_y = rect.y + 14 + bounce
+        # Tito circular portrait avatar
+        tito_avatar = _get_scaled_asset("tito_avatar.png", 64, 64, facing_right=True, angle_deg=0)
         if tito_avatar is not None:
-            pygame.draw.circle(surface, (250, 204, 21), (avatar_x + 34, avatar_y + 34), 36)
-            surface.blit(tito_avatar, (avatar_x, avatar_y))
+            surface.blit(tito_avatar, (avatar_cx - 32, avatar_cy - 32))
         else:
-            pygame.draw.circle(surface, (250, 204, 21), (avatar_x + 34, avatar_y + 34), 34)
+            pygame.draw.circle(surface, (234, 179, 8), (avatar_cx, avatar_cy), 30)
 
-        # Title Text (Gold)
-        title_text = self.resources.text(f"fact.{fact_key}.title")
-        title_surf = self._fact_title_font.render(title_text, True, (253, 224, 71))
-        surface.blit(title_surf, (rect.x + 96, rect.y + 12))
+        # Cute small comic speech bubble pointing to Tito's mouth
+        bubble_x = 158
+        bubble_y = 26 + bounce
+        bubble_w = 84
+        bubble_h = 44
+        bubble_rect = pygame.Rect(bubble_x, bubble_y, bubble_w, bubble_h)
 
-        # Body Text (Wrapped lines in crisp white)
-        body_text = self.resources.text(f"fact.{fact_key}.body")
-        words = body_text.split()
-        line1_words: list[str] = []
-        line2_words: list[str] = []
-        for w in words:
-            if len(" ".join(line1_words + [w])) <= 58:
-                line1_words.append(w)
-            else:
-                line2_words.append(w)
+        # Draw white comic bubble with rounded corners and warm gold border
+        pygame.draw.rect(surface, (255, 255, 255), bubble_rect, border_radius=18)
+        pygame.draw.rect(surface, (250, 204, 21), bubble_rect, width=3, border_radius=18)
 
-        line1_surf = self._fact_body_font.render(" ".join(line1_words), True, (255, 255, 255))
-        surface.blit(line1_surf, (rect.x + 96, rect.y + 38))
-        if line2_words:
-            line2_surf = self._fact_body_font.render(" ".join(line2_words), True, (226, 232, 240))
-            surface.blit(line2_surf, (rect.x + 96, rect.y + 60))
+        # Comic pointer tail pointing at Tito
+        tail_points = [
+            (bubble_x + 2, bubble_y + 16),
+            (bubble_x - 12, bubble_y + 22),
+            (bubble_x + 2, bubble_y + 28),
+        ]
+        pygame.draw.polygon(surface, (255, 255, 255), tail_points)
+        pygame.draw.line(surface, (250, 204, 21), (bubble_x + 2, bubble_y + 16), (bubble_x - 12, bubble_y + 22), 3)
+        pygame.draw.line(surface, (250, 204, 21), (bubble_x - 12, bubble_y + 22), (bubble_x + 2, bubble_y + 28), 3)
 
-        # Pulsing Sound Waves on the right
-        speaker_x = rect.right - 32
-        speaker_y = rect.y + 24
-        wave_pulse = int((self._time_counter * 5.0) % 3)
-        pygame.draw.circle(surface, (250, 204, 21), (speaker_x, speaker_y), 5)
-        if wave_pulse >= 1:
-            pygame.draw.arc(surface, (250, 204, 21), (speaker_x - 10, speaker_y - 10, 20, 20), -0.7, 0.7, 2)
-        if wave_pulse >= 2:
-            pygame.draw.arc(surface, (250, 204, 21), (speaker_x - 16, speaker_y - 16, 32, 32), -0.7, 0.7, 2)
+        # Inside the comic bubble: 3 playful talking dots bouncing rhythmically
+        dot1_dy = int(math.sin(self._time_counter * 12.0) * 5.0)
+        dot2_dy = int(math.sin(self._time_counter * 12.0 + 1.2) * 5.0)
+        dot3_dy = int(math.sin(self._time_counter * 12.0 + 2.4) * 5.0)
+
+        pygame.draw.circle(surface, (239, 68, 68), (bubble_x + 22, bubble_y + 22 + dot1_dy), 5)
+        pygame.draw.circle(surface, (234, 179, 8), (bubble_x + 42, bubble_y + 22 + dot2_dy), 6)
+        pygame.draw.circle(surface, (59, 130, 246), (bubble_x + 62, bubble_y + 22 + dot3_dy), 5)
 
     def render_frame(self, canvas_surface: pygame.Surface, pod: OrcaPod) -> None:
         """Compose all layers into a complete, beautiful presentable frame."""
