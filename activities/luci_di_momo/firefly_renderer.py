@@ -48,7 +48,6 @@ class FireflyRenderer:
             28,
             (255, 248, 215),
         )
-        self._replay = typography.render("↻", FontRole.DISPLAY, 52, (255, 255, 255))
 
     def draw_reveal(
         self,
@@ -82,13 +81,16 @@ class FireflyRenderer:
                 numeral,
                 (rect.centerx - numeral.get_width() // 2, rect.centery - numeral.get_height() // 2),
             )
-        pygame.draw.circle(target, (67, 110, 128), REPLAY_RECT.center, REPLAY_RECT.width // 2)
-        target.blit(
-            self._replay,
-            (
-                REPLAY_RECT.centerx - self._replay.get_width() // 2,
-                REPLAY_RECT.centery - self._replay.get_height() // 2,
-            ),
+        cx, cy = REPLAY_RECT.center
+        pygame.draw.circle(target, (67, 110, 128), (cx, cy), REPLAY_RECT.width // 2)
+        pygame.draw.circle(target, (255, 255, 255), (cx, cy), REPLAY_RECT.width // 2, width=3)
+        # Circular reload arrow
+        arc_rect = pygame.Rect(cx - 20, cy - 20, 40, 40)
+        pygame.draw.arc(target, (255, 255, 255), arc_rect, 0.6, 5.8, width=4)
+        pygame.draw.polygon(
+            target,
+            (255, 255, 255),
+            [(cx + 16, cy - 14), (cx + 6, cy - 24), (cx + 18, cy - 24)],
         )
 
     def choice_at(self, point: tuple[int, int], round_: FireflyRound) -> int | None:
@@ -108,7 +110,7 @@ class FireflyRenderer:
             pygame.draw.circle(target, (238, 151, 192), (115, 425), 65)
             pygame.draw.circle(target, (45, 44, 57), (92, 410), 5)
             pygame.draw.circle(target, (45, 44, 57), (138, 410), 5)
-            pygame.draw.arc(target, (45, 44, 57), (91, 412, 48, 34), 0.2, 2.9, 4)
+            pygame.draw.arc(target, (45, 44, 57), (91, 412, 48, 34), 3.4, 6.0, 4)
 
     @staticmethod
     def _draw_lantern(target: pygame.Surface, *, awake: bool) -> None:

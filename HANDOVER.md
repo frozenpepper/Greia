@@ -44,6 +44,24 @@ On-device visual verification covered Collection Home, category grid, hover lift
 
 `docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md` is now the single accumulating performance manual for measured device cost, cache/alpha/invalidation rules, evidence discipline and case studies. The microphone tranche does not supersede or modify that performance work.
 
+## Early-learning Activity expansion: Luci di Momo acceptance (2026-08-24)
+
+`activities/luci_di_momo` (Luci di Momo / Momo's Fireflies) subitizing Activity is fully implemented, verified, and accepted following `docs/agents/GREIA_EARLY_LEARNING_ACTIVITY_IMPLEMENTATION_RUNBOOK.md` and `skills/greia-activity-authoring/SKILL.md`.
+
+- Architecture:
+  - `firefly_model.py`: Immutable 5-round quantity challenge generator (L1: 1-3, L2: 1-4, L3: 1-5, L4: 1-5 with varied radius/spacing), deterministic seeding, bounded between-set adaptation, one-shot `firefly.garden_completed` payload.
+  - `firefly_app.py`: Lifecycle, timed phase state machine (REVEAL, CHOOSE, HINT, TERMINAL), low-allocation dirty redraw pacing without continuous idle redraws, safe-viewport pointer routing, and completion screen restart.
+  - `firefly_renderer.py`: 1024x600 reference presentation, three 104x104 choice cards, vector circular reload arrow for replay button, animated sleeping vs awake lanterns, fireflies with wings and soft glow, fail-soft Momo smile fallback.
+  - `firefly_art.py`: Pre-baked garden night backdrop, semantic shared `character.momo` asset preparation.
+  - `firefly_audio.py`: Prepared nonverbal procedural sine tone synthesis (`reveal`, `correct`, `retry`, `complete`); no custom voice required.
+  - `firefly_services.py`: Storage adapter for `luci_di_momo.progress.v1` (bounded to 8 history summaries) and event emitter.
+- Evidence & Verification:
+  - `tests/test_activity_luci_di_momo.py`: 10/10 focused tests passing (model determinism, level bounds, round session invariants, adaptation, storage recovery, manifest declarations, app integration lifecycle/hints/restart, simulator supervisor start/stop).
+  - Platform contract tests reconciled: `test_activity_contract.py`, `test_first_party_activity_audience_metadata.py` (21 built-in activities), `test_first_party_activity_readiness.py`.
+  - Full test suite `make verify`: **1,198 unit tests PASS**, project validation PASS, all 21 activities valid, footprint and shell checks green.
+  - Package validation digest: `sha256 45f5ea72e154fa62773633608c0f100abdba91d263fc3560cadf7b69c1c54348`.
+  - Visual review executed and verified across Italian and English locales and multiple viewports (1024x600, 1280x800, 800x480, 1366x768).
+
 ## Contributor engineering skills integration (2026-08-23)
 
 The measured performance lessons and existing OOP/polymorphism foundations are now integrated into the contributor-facing skills rather than remaining specialist documentation only.

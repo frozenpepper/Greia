@@ -170,16 +170,23 @@ class FireflyActivity:
         if current is None:
             return False
         elapsed_ms = int((self.clock() - self.phase_started) * 1000)
-        if self.phase is PresentationPhase.REVEAL and elapsed_ms >= current.reveal_ms:
-            self.phase = PresentationPhase.CHOOSE
-            return True
+        if self.phase is PresentationPhase.REVEAL:
+            if elapsed_ms >= current.reveal_ms:
+                self.phase = PresentationPhase.CHOOSE
+                return True
+            return False
         if self.phase is PresentationPhase.HINT:
             total = current.quantity * self.HINT_STEP_MS + 360
             if elapsed_ms >= total:
                 self.phase = PresentationPhase.CHOOSE
+                self._last_hint_step = None
                 return True
-            return True
-        return self.phase is PresentationPhase.REVEAL
+            step = min(current.quantity, 1 + elapsed_ms // self.HINT_STEP_MS)
+            if getattr(self, "_last_hint_step", None) != step:
+                self._last_hint_step = step
+                return True
+            return False
+        return False
 
     def _render(self) -> None:
         if self.phase is PresentationPhase.TERMINAL:

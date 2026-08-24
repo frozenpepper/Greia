@@ -6,6 +6,8 @@ import sys
 import tomllib
 import unittest
 
+import pygame
+
 
 ROOT = Path(__file__).resolve().parents[1]
 ACTIVITY_ROOT = ROOT / "activities" / "luci_di_momo"
@@ -144,6 +146,238 @@ class ManifestTests(unittest.TestCase):
             manifest["education"]["events"],
             [{"id": "firefly.garden_completed", "kind": "completion"}],
         )
+
+
+class _MockEvents:
+    def __init__(self) -> None:
+        self.emitted: list[tuple[str, dict[str, int]]] = []
+
+    def garden_completed(self, session_id: str, payload: dict[str, int]) -> None:
+        self.emitted.append((session_id, payload))
+
+
+class _MockAudio:
+    def __init__(self) -> None:
+        self.played: list[str] = []
+
+    def play(self, cue: str) -> None:
+        self.played.append(cue)
+
+
+class FireflyAppIntegrationTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        import os
+        os.environ["SDL_VIDEODRIVER"] = "dummy"
+        os.environ["SDL_AUDIODRIVER"] = "dummy"
+        pygame.init()
+        if pygame.display.get_surface() is None:
+            pygame.display.set_mode((1024, 600))
+
+    def _build_app(self, level: int = 1):
+        from firefly_app import FireflyActivity, PresentationPhase
+        from firefly_art import FireflyArt
+        from firefly_renderer import FireflyRenderer
+        from greia_platform.localization import ActivityLocaleSupport, LocalizedResources, resolve_activity_locale
+        from greia_platform.pygame_canvas import PygameReferenceCanvas
+        from greia_platform.typography import GreiaTypography
+
+        screen = pygame.display.get_surface()
+        assert screen is not None
+        support = ActivityLocaleSupport.localized(("it", "en"), default_ui_locale="it")
+        context = resolve_activity_locale("it", support)
+        assert context is not None
+        resources = LocalizedResources(ACTIVITY_ROOT, context)
+        typography = GreiaTypography()
+        canvas = PygameReferenceCanvas(screen)
+        art = FireflyArt(1024, 600)
+        renderer = FireflyRenderer(art, typography, resources)
+        storage = _Storage({"schema_version": 1, "level": level, "history": []})
+        progress = GreiaFireflyProgress(storage)
+        events = _MockEvents()
+        audio = _MockAudio()
+        rng = random.Random(42)
+        factory = FireflyRoundFactory(rng)
+        session = FireflySession(factory.build_set(level), level=level)
+
+        simulated_time = [100.0]
+
+        def clock() -> float:
+            return simulated_time[0]
+
+        app = FireflyActivity(
+            screen=screen,
+            canvas=canvas,
+            session=session,
+            factory=factory,
+            renderer=renderer,
+            typography=typography,
+            resources=resources,
+            progress=progress,
+            events=events,
+            audio=audio,
+            rng=rng,
+            session_id="test-session-1",
+            clock=clock,
+        )
+        return app, simulated_time, events, audio, progress
+
+    def test_presentation_cycle_and_wrong_choice_hint(self) -> None:
+        from firefly_app import PresentationPhase
+        from firefly_renderer import CHOICE_RECTS
+
+        app, sim_time, events, audio, _ = self._build_app(level=1)
+        self.assertEqual(app.phase, PresentationPhase.REVEAL)
+
+        # Render first frame
+        app._render()
+        self.assertFalse(app._advance_timed_phase())
+
+        # Advance past reveal duration (1600ms for L1)
+        sim_time[0] += 1.7
+        self.assertTrue(app._advance_timed_phase())
+        self.assertEqual(app.phase, PresentationPhase.CHOOSE)
+
+        # Render choice screen
+        app._render()
+
+        # Click wrong answer
+        current = app.session.current_round
+        assert current is not None
+        wrong_idx = next(
+            i for i, val in enumerate(current.choice_values) if val != current.quantity
+        )
+        rect = CHOICE_RECTS[wrong_idx]
+        handled = app._handle_pointer((rect.centerx, rect.centery))
+        self.assertTrue(handled)
+        self.assertEqual(app.phase, PresentationPhase.HINT)
+        self.assertIn("retry", audio.played)
+
+        # Step through hint
+        sim_time[0] += 0.5
+        app._render()
+        # Finish hint phase
+        sim_time[0] += 2.0
+        self.assertTrue(app._advance_timed_phase())
+        self.assertEqual(app.phase, PresentationPhase.CHOOSE)
+
+    def test_five_rounds_to_terminal_and_restart(self) -> None:
+        from firefly_app import PresentationPhase
+        from firefly_renderer import CHOICE_RECTS
+
+        app, sim_time, events, audio, progress = self._build_app(level=1)
+
+        for round_num in range(5):
+            sim_time[0] += 2.0
+            app._advance_timed_phase()
+            self.assertEqual(app.phase, PresentationPhase.CHOOSE)
+
+            current = app.session.current_round
+            assert current is not None
+            correct_idx = next(
+                i for i, val in enumerate(current.choice_values) if val == current.quantity
+            )
+            rect = CHOICE_RECTS[correct_idx]
+            handled = app._handle_pointer((rect.centerx, rect.centery))
+            self.assertTrue(handled)
+
+        self.assertEqual(app.phase, PresentationPhase.TERMINAL)
+        self.assertEqual(len(events.emitted), 1)
+        session_id, payload = events.emitted[0]
+        self.assertEqual(session_id, "test-session-1")
+        self.assertEqual(payload["level"], 1)
+        self.assertEqual(payload["first_attempt_count"], 5)
+
+        # Render terminal screen
+        app._render()
+
+        # Click Play Again (primary button in completion screen)
+        handled = app._handle_pointer((app.completion._primary_rect.centerx, app.completion._primary_rect.centery))
+        self.assertTrue(handled)
+        self.assertEqual(app.phase, PresentationPhase.REVEAL)
+        self.assertEqual(app.session.round_index, 0)
+        self.assertFalse(app.session.is_complete)
+
+
+class SimulatorSupervisorTests(unittest.TestCase):
+    def test_simulator_supervises_luci_di_momo(self) -> None:
+        import os
+        import tempfile
+        import time
+        from greia_launcher.child_shell import ProfileVisualActivitySupervisor
+        from greia_launcher.runtime_adapter import PythonRuntimePolicy
+        from greia_platform.activities import ActivityRegistry, RuntimeCatalogue
+        from greia_platform.trust import ActivitySource, PackageTrust
+        from greia_simulator.device import DEFAULT_CAPABILITIES, SimulatedDeviceProfile
+        from greia_simulator.runtime import SimulatorPythonRuntimeAdapter
+        from greia_simulator.workspace import SimulatorWorkspace
+        from greia_launcher.composition import build_launcher_runtime_services
+
+        runtime = RuntimeCatalogue.load(ROOT / "runtime" / "child-runtime.toml")
+        with tempfile.TemporaryDirectory(dir="/tmp") as directory:
+            base = Path(directory)
+            workspace = SimulatorWorkspace(ROOT, base / "state")
+            device = SimulatedDeviceProfile(1024, 600, DEFAULT_CAPABILITIES)
+            adapter = SimulatorPythonRuntimeAdapter(
+                device,
+                policy=PythonRuntimePolicy.load(ROOT / "runtime" / "child-runtime.toml"),
+            )
+            source = ActivitySource(ROOT / "activities", PackageTrust.BUILT_IN, "builtin")
+            registrations = ActivityRegistry([source], runtime).discover_registrations()
+            registration = next(r for r in registrations if r.manifest.activity_id == "org.greia.luci-di-momo")
+            manifest = registration.manifest
+
+            services = build_launcher_runtime_services(
+                runtime,
+                tuple(r.manifest for r in registrations),
+                runtime_policy_path=ROOT / "runtime" / "child-runtime.toml",
+                permission_policy_path=ROOT / "runtime" / "permission-policy.toml",
+                storage_policy_path=ROOT / "runtime" / "storage-policy.toml",
+                history_policy_path=ROOT / "runtime" / "history-policy.toml",
+                progression_policy_path=ROOT / "runtime" / "progression-policy.toml",
+                hal=device.to_hal(),
+                runtime_adapters=(adapter,),
+            )
+            profile = workspace.profile_store().context(workspace.profiles()[0].profile_id)
+            authority = services.permission_broker.issue(registration)
+            supervisor = ProfileVisualActivitySupervisor(
+                runtime_manager=services.runtime_manager,
+                storage_service=services.storage_service,
+                history_service=services.history_service,
+                display_coordinator=None,
+            )
+            environment = workspace.environment()
+            environment.update(
+                {
+                    "SDL_VIDEODRIVER": "dummy",
+                    "SDL_AUDIODRIVER": "dummy",
+                    "PYGAME_HIDE_SUPPORT_PROMPT": "1",
+                }
+            )
+            import unittest.mock as mock
+            with mock.patch.dict(os.environ, environment, clear=False):
+                session = supervisor.start(manifest, profile, authority)
+                deadline = time.monotonic() + 10.0
+                while (
+                    session.result is None
+                    and session.ready_at is None
+                    and time.monotonic() < deadline
+                ):
+                    supervisor.poll(session)
+                    time.sleep(0.02)
+                self.assertIsNone(session.result, session.result)
+                self.assertIsNotNone(session.ready_at)
+
+                # Request stop
+                result = supervisor.request_stop(session)
+                deadline = time.monotonic() + 5.0
+                while result is None and time.monotonic() < deadline:
+                    time.sleep(0.02)
+                    result = supervisor.poll(session)
+                self.assertIsNotNone(result)
+                assert result is not None
+                self.assertTrue(result.ready)
+                self.assertTrue(result.succeeded)
 
 
 if __name__ == "__main__":

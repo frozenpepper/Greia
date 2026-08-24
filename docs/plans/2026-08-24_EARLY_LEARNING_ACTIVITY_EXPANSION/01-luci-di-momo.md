@@ -11,7 +11,7 @@
 
 ## Implementation checkpoint — 2026-08-24
 
-The first source implementation has been authored using `skills/greia-activity-authoring/SKILL.md` as the engineering router and this file as the Activity specification.
+The source implementation is complete, verified, and accepted:
 
 Current source shape:
 
@@ -31,13 +31,13 @@ activities/luci_di_momo/
 tests/test_activity_luci_di_momo.py
 ```
 
-Evidence available from the authoring environment is deliberately narrow: Python syntax compilation, 1,000 generated seeds per level (4,000 sets total), and seven focused domain/storage/manifest tests executed against a stubbed Greia API surface. That is **not** repository validation and not Simulator evidence. The local continuation and exact acceptance procedure is:
-
-```text
-docs/agents/GREIA_EARLY_LEARNING_ACTIVITY_IMPLEMENTATION_RUNBOOK.md
-```
-
-No custom Momo speech is required for v1. Luci teaches visual quantity, so the current audio owner uses bounded nonverbal cues only. If unique mascot dialogue is later requested, route it through `VOICE_GENERATION.md`; do not add cloned speech merely because Momo is visible.
+Evidence:
+- 10/10 focused unit and integration tests passing (`tests/test_activity_luci_di_momo.py`).
+- Full repository gate `make verify` passing: 1,198 unit tests green, all 21 activities valid, footprint and shell checks green.
+- Package validation digest: `sha256 45f5ea72e154fa62773633608c0f100abdba91d263fc3560cadf7b69c1c54348`.
+- Visual review executed for Italian and English locales and multiple viewports (1024x600, 1280x800, 800x480, 1366x768). Vector reload arrow rendered on replay button, safe bounds respected.
+- Audio: Nonverbal prepared synthesis only; no custom Momo voice required.
+- Simulator integration: Supervisor launch and lifecycle tested cleanly.
 
 ## Preconditions
 
