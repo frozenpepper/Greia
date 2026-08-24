@@ -914,3 +914,23 @@ This plan may be marked complete only when:
 - Physical Acer performance evidence: Pre-rendered static scenery once onto an opaque 1024×600 surface (`1.88 ms` blit time) and cached all font and animal portrait surfaces. Physical measurement on Acer Aspire One (Intel Atom N270 1.6 GHz, 32-bit Debian 12) demonstrated frame render time dropping from **505.35 ms (2.0 FPS)** to **9.05 ms (110.5 FPS capability, locked at 30 FPS)** — a **55× speedup** in per-frame rendering time.
 - Tests/evidence: Added `tests/test_activity_nascondino_bosco.py` (9/9 PASS). Full test suite executed: **1,142 tests PASS**, project validation PASS, all 19 first-party activities validated cleanly. Deployed and verified on physical Acer hardware (`greia-dev.local`). Tested interactive end-to-end flow in the simulator (`greia_simulator.child_shell`): profile login, category navigation to `Esplora`, launch of `Nascondino nel Bosco`, 4 animal discoveries, `PygameCompletionScreen` terminal victory presentation ("TROVATI TUTTI!", "GIOCA ANCORA"), restart round via `primary_contains`, and clean return to Shell via protected Home button `(36, 36)`. Fixed `primary_action_rect` to canonical `primary_contains` on `PygameCompletionScreen`.
 
+---
+
+## 2026-08-24 — Activity Top Space Reclamation and Painting Performance Optimization (non-closing)
+
+- Implemented: Reclaimed ~100px of wasted vertical screen space across first-party creation activities by integrating Activity toolbar buttons directly into the top bar (`ChildUiMetrics.activity_toolbar_button`) alongside platform-owned Home/Back system chrome, and starting activity content (`ChildUiMetrics.activity_content_rect`) immediately below the top bar (~80px instead of ~178px).
+- Vertical space gains on 1024×600:
+  - Painting (Drawing) canvas height: **326px → 420px (+28.8% usable canvas)**
+  - Writing editor height: **404px → 498px (+23.3% usable editor)**
+- Painting performance optimization:
+  - Pre-scaled and cached all tool button icons, color dish wells, brush size buttons, and gallery card frames on initialization, completely eliminating all 17 per-frame `pygame.transform.smoothscale()` calls (over 510 software bilinear rescales/second on CPU).
+  - Pre-rendered static studio background onto a dedicated display-format Surface.
+  - Pre-instantiated status fonts and pre-rendered status label surfaces (`"Salvo"`, `"Salva..."`, `"Errore"`).
+  - Frame render time dropped significantly, eliminating CPU hotspots on Atom/Pi class hardware.
+- Tests & Evidence:
+  - `test_activity_ui.py` (8/8 PASS): verified all toolbar buttons and content rectangles across compact, normal, large sizes and resolutions (640×480 to 4K) remain strictly non-overlapping with system chrome protected region.
+  - `test_core_activity_system_safe_ui.py` (3/3 PASS) and `test_core_creation_activities.py` (16/16 PASS).
+  - All 19 activities validated cleanly via `tools/validate_activity.py`.
+  - Project validated via `tools/validate_project.py`.
+  - Simulator visual captures across 1024×600, 800×600, 1280×720, 1366×768, 1920×1080 and Compact/Normal/Large interface sizes saved in `tmp/simulator_evidence/`.
+

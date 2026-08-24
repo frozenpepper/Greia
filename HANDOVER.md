@@ -151,6 +151,26 @@ woodland_audio.py       synthesized PCM sound effects (rustle, pop, win)
   4. Verified restart & exit: clicking "GIOCA ANCORA" (`primary_contains`) immediately starts a fresh round with new animal positions and accumulated star score; clicking protected Home button (`(36, 36)`) returns cleanly to the Launcher shell.
   5. Fixed `primary_action_rect` attribute error on `PygameCompletionScreen` by replacing it with canonical `primary_contains((mx, my))`.
 
+## Activity top space reclamation and painting performance optimization (2026-08-24)
+
+Reclaimed ~100px of wasted vertical screen space across first-party creation activities and massively boosted Painting (Drawing) render performance:
+- **Geometry & Top Bar Integration**:
+  - `ChildUiMetrics.activity_toolbar_button` now embeds Activity toolbar buttons directly into the top bar alongside platform-owned Home/Back system chrome (`x >= chrome.protected_region.right + gap`), vertically centered in the top bar (`y = (top_bar_height - button_size) // 2`).
+  - `ChildUiMetrics.activity_content_rect` starts content immediately below the top bar (~80px instead of ~178px).
+  - Reclaimed ~98px of vertical drawing/writing space on 1024×600 screens:
+    - Painting (Drawing) canvas height: **326px → 420px (+28.8% usable canvas)**
+    - Writing editor height: **404px → 498px (+23.3% usable editor)**
+- **Painting Performance Optimization**:
+  - Pre-scaled and cached all tool button icons, color dish wells, brush size buttons, and gallery card frames on initialization / size updates, completely eliminating all 17 per-frame `pygame.transform.smoothscale()` calls (over 510 software bilinear rescales/second on CPU).
+  - Pre-rendered static studio background onto a dedicated display-format Surface.
+  - Pre-instantiated status fonts and pre-rendered status label surfaces (`"Salvo"`, `"Salva..."`, `"Errore"`).
+  - Benchmarked render time: dropped from **2.28 ms/frame to 1.20 ms/frame on macOS** (and eliminating heavy CPU utilization on Atom/ARM floor).
+- **Tests & Simulator Verification**:
+  - `test_activity_ui.py` (8/8 PASS): verified zero overlap with system chrome protected region across all resolutions and interface sizes.
+  - `test_core_activity_system_safe_ui.py` (3/3 PASS) and `test_core_creation_activities.py` (16/16 PASS).
+  - Full automated functional tests for drawing, erasing, undo, color picking, brush resizing, gallery, text editing, and emoji picking passed cleanly.
+  - Multi-resolution simulator visual evidence across 1024×600, 800×600, 1280×720, 1366×768, 1920×1080 and Compact/Normal/Large interface sizes captured in `tmp/simulator_evidence/`.
+
 ## Parent Settings overlay tranche (2026-08-23, `3c3e91f`)
 
 The chord-opened (hold S+T) on-device Parent Settings panel had two owner-reported defects, both fixed and verified on the reference Acer:
