@@ -124,9 +124,25 @@ On-device visual verification covered Collection Home, category grid, hover lift
 - Evidence & Verification:
   - `tests/test_activity_festa_delle_rime.py`: 11/11 focused tests passing (corpora completeness, factory determinism across 4 modes, bounded speech queue, round session invariants, adaptation, storage recovery, manifest, app integration, simulator supervisor lifecycle).
   - Platform contract tests reconciled: `test_activity_contract.py`, `test_first_party_activity_audience_metadata.py` (25 built-in activities), `test_first_party_activity_readiness.py`.
-  - Full test suite `make verify`: **1,246 unit tests PASS**, project validation PASS, all 25 activities valid, footprint and shell checks green.
-  - Package validation digest: `sha256 cff15575de8a452f29c294ae1475c30cbb5ea91956e6932a137ccd2b31c52b37`.
-  - Visual review executed for Italian and English locales and all game modes (Level 1, Level 2, Level 3, Level 4, Completion, English).
+## Early-learning Activity expansion: Officina dei Suoni acceptance (2026-08-24)
+
+`activities/officina_dei_suoni` (Officina dei Suoni / Sound Workshop) phoneme-grapheme association and word building Activity is fully implemented, verified, and accepted following `docs/agents/GREIA_EARLY_LEARNING_ACTIVITY_IMPLEMENTATION_RUNBOOK.md` and `skills/greia-activity-authoring/SKILL.md`.
+
+- Architecture:
+  - `sound_content.py`: Bilingual phonological corpora (Italian and English phonemes, uppercase/lowercase graphemes, and word structures) matching `docs/reviews/2026-08-24_OFFICINA_DEI_SUONI_AUDIO_REVIEW.md` without string length inference.
+  - `sound_workshop_model.py`: 6 balanced challenges per set across L1 (find sound with 3 picture choices), L2 (initial letter selection with 3 letter tile choices), and L3 (build word with connected sound boxes `[ ? ][ E ][ L ][ A ]` and 3 letter tile choices), non-repeating items, between-set bounded adaptation, and one-shot `sound.word_completed` (milestone) and `sound.workshop_completed` (completion) events.
+  - `sound_audio.py`: Bounded `SpeechQueue` (maxlen $\le 4$, non-overlapping, distinct SFX and speech channels, cancellation on round change or stop), loading 70 reviewed LEI16 mono 22050Hz WAV assets and synthetic nonverbal chimes.
+  - `sound_art.py`: Acoustic workshop interior with glowing sound beads on rail, workbench, and pre-scaled Leo mascot (`character.leo`).
+  - `sound_renderer.py`: 1024x600 workshop presentation with top replay button `[ 🔊 ASCOLTA ]`, target speaker / picture card, connected sound boxes, chunky wooden letter tiles, Leo mascot, and progress badge.
+  - `sound_app.py`: Hybrid input orchestrator (Keyboard Left/Right/A/D navigation, Space/Enter activation, R replay; Pointer/Touch clicks; Home/ESC lifecycle), timed wobble on retry, celebration chime on success, terminal completion screen with 6 achievements.
+  - `sound_services.py`: Storage adapter for `officina_dei_suoni.progress.v1` (bounded history <= 8) and event publisher.
+- Evidence & Verification:
+  - `tests/test_activity_officina_dei_suoni.py`: 11/11 focused tests passing (corpora completeness, factory determinism across 3 modes, bounded speech queue, round session invariants, adaptation, storage recovery, manifest, app hybrid keyboard/pointer integration, simulator supervisor lifecycle).
+  - Platform contract tests reconciled: `test_activity_contract.py`, `test_first_party_activity_audience_metadata.py` (26 built-in activities), `test_first_party_activity_readiness.py`.
+  - Full test suite `make verify`: **1,257 unit tests PASS**, project validation PASS, all 26 activities valid, footprint and shell checks green.
+  - Package validation digest: `sha256 f5a2b8ce18e298a281affcd917a5570f5b1d92779bfc5ec4dd52a7d9d570fd9c`.
+  - Visual review executed for Italian and English locales and all game modes (Level 1, Level 2, Level 3, Completion, English).
+
 
 
 ## Contributor engineering skills integration (2026-08-23)

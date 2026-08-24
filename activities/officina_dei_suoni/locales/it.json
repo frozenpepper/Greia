@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "locale": "it",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Officina dei Suoni",
+    "activity.officina_dei_suoni.title": "Officina dei Suoni",
+    "prompt.find_sound": "Ascolta il suono e trova l'immagine!",
+    "prompt.first_sound": "Qual è il suono iniziale?",
+    "prompt.build_word": "Metti la lettera per formare la parola!",
+    "button.listen": "ASCOLTA",
+    "button.play_again": "GIOCA ANCORA",
+    "victory.title": "Officina delle Parole!",
+    "victory.subtitle": "Tutti i suoni e le parole sono completi con Leo!"
+  },
+  "audio": {}
+}

@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "locale": "en",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Sound Workshop",
+    "activity.officina_dei_suoni.title": "Sound Workshop",
+    "prompt.find_sound": "Listen to the sound and find the picture!",
+    "prompt.first_sound": "What is the beginning sound?",
+    "prompt.build_word": "Place the letter to build the word!",
+    "button.listen": "LISTEN",
+    "button.play_again": "PLAY AGAIN",
+    "victory.title": "Word Workshop!",
+    "victory.subtitle": "All sounds and words are complete with Leo!"
+  },
+  "audio": {}
+}

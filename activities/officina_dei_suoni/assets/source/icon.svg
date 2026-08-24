@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+    <linearGradient id="tile_grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="100%" stop-color="#fde047" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background Squircle -->
+  <rect x="32" y="32" width="448" height="448" rx="96" fill="url(#bg)" stroke="#38bdf8" stroke-width="12" />
+
+  <!-- Workshop Gear / Machine Cog in background -->
+  <circle cx="256" cy="240" r="160" fill="#0369a1" opacity="0.5" />
+  <circle cx="256" cy="240" r="120" fill="#075985" />
+
+  <!-- Connecting Sound Rail -->
+  <rect x="100" y="226" width="312" height="28" rx="14" fill="#334155" />
+  <circle cx="160" cy="240" r="16" fill="#ec4899" filter="url(#glow)" />
+  <circle cx="256" cy="240" r="16" fill="#eab308" filter="url(#glow)" />
+  <circle cx="352" cy="240" r="16" fill="#22c55e" filter="url(#glow)" />
+
+  <!-- Central Wooden / Golden Letter Tile [ M ] -->
+  <rect x="180" y="270" width="152" height="152" rx="28" fill="url(#tile_grad)" stroke="#ca8a04" stroke-width="8" />
+  <text x="256" y="380" font-family="system-ui, -apple-system, sans-serif" font-size="100" font-weight="900" text-anchor="middle" fill="#854d0e">M</text>
+
+  <!-- Sound Waves / Music Note -->
+  <path d="M 370 140 Q 410 180 370 220" fill="none" stroke="#38bdf8" stroke-width="10" stroke-linecap="round" />
+  <path d="M 395 120 Q 450 180 395 240" fill="none" stroke="#bae6fd" stroke-width="10" stroke-linecap="round" />
+</svg>

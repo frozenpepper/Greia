@@ -55,7 +55,7 @@ tests/test_activity_luci_di_momo.py
 
 The source was authored against the current Activity skill and current platform APIs. The handoff author locally exercised the pure/domain/storage tests in an isolated stubbed platform context and stress-generated 1,000 seeds at each of four levels. **That is not Greia repository validation or Simulator evidence.**
 
-Luci di Momo (`activities/luci_di_momo`), Casa del Dieci (`activities/casa_del_dieci`), Bottega delle Misure (`activities/bottega_delle_misure`), Specchi Magici (`activities/specchi_magici`), and Festa delle Rime (`activities/festa_delle_rime`) source implementations, platform contract integrations, visual reviews, and test gates are **COMPLETE & ACCEPTED**.
+Luci di Momo (`activities/luci_di_momo`), Casa del Dieci (`activities/casa_del_dieci`), Bottega delle Misure (`activities/bottega_delle_misure`), Specchi Magici (`activities/specchi_magici`), Festa delle Rime (`activities/festa_delle_rime`), and Officina dei Suoni (`activities/officina_dei_suoni`) source implementations, platform contract integrations, visual reviews, and test gates are **COMPLETE & ACCEPTED**.
 
 Status:
 ```text
@@ -64,10 +64,11 @@ CASA DEL DIECI: ACCEPTED (11/11 tests, package valid, visual review complete)
 BOTTEGA DELLE MISURE: ACCEPTED (10/10 tests, package valid, visual review complete)
 SPECCHI MAGICI: ACCEPTED (12/12 tests, package valid, visual review complete)
 FESTA DELLE RIME: ACCEPTED (11/11 tests, 64 audio clips reviewed, package valid, visual review complete)
-GREIA SOURCE & PLATFORM VALIDATION: PASS (25/25 activities valid, 1246 unit tests green)
+OFFICINA DEI SUONI: ACCEPTED (11/11 tests, 70 audio clips reviewed, package valid, visual review complete)
+GREIA SOURCE & PLATFORM VALIDATION: PASS (26/26 activities valid, 1257 unit tests green)
 ```
 
-Next Activity: `activities/officina_dei_suoni` (`06-officina-dei-suoni.md`).
+Next Activity: `activities/posta_di_leo` (`07-posta-di-leo.md`).
 
 ---
 

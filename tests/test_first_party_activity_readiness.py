@@ -145,6 +145,7 @@ class FirstPartyActivityReadinessTests(unittest.TestCase):
                 "luci_di_momo",
                 "memory_meraviglie",
                 "nascondino_bosco",
+                "officina_dei_suoni",
                 "orchestra_animali",
                 "painting",
                 "pasticceria_magica",
