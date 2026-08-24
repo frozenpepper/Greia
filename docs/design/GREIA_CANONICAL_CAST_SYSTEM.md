@@ -1,7 +1,7 @@
 # Greia Canonical Cast System
 
 **Status:** promoted to stable v0.1 source (`assets/visual/characters/canonical/v0.1/`) & runtime simulator accepted  
-**Date:** 2026-08-22  
+**Date:** 2026-08-24  
 **Character construction grammar:** `docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md`  
 **Expression/motion vocabulary:** `docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md`  
 **Current source-art authority:** `docs/reviews/visual/2026-08-22_flash-white-rabbit-identity-revision/PRIMARY_REVIEW.md`  
@@ -103,6 +103,37 @@ Good examples:
 - ensemble scenes use several characters together.
 
 Do not make rules such as "Leo can appear only in Learn" or "Dani means the Activity must be Math".
+
+### 4.1 Activity presenter convention
+
+The cast is not only decorative branding. In Activity authoring it should often provide a recognizable **presenter/guide role**.
+
+Every new Activity design must explicitly decide whether it has:
+
+```text
+one lead presenter/mascot
+small supporting character presence
+or a deliberate no-presenter choice
+```
+
+A fitting lead may:
+
+- welcome/frame the Activity briefly;
+- visually demonstrate or orient the first interaction;
+- give one short contextual instruction or hint;
+- react through shared utterance families;
+- celebrate completion;
+- host an optional curiosity/facts affordance;
+- narrate short researched real-world facts when the Activity subject supports it.
+
+Do not force a mascot into every screen or turn Greia into a talking tutorial. The child should still spend most of the time acting, exploring and playing.
+
+Presenter/speech/factual authoring rules live in:
+
+```text
+skills/greia-activity-authoring/PRESENTERS_AND_CURIOSITY.md
+skills/greia-activity-authoring/VOICE_GENERATION.md
+```
 
 ## 5. Relationship to Collection-first Home
 
@@ -288,6 +319,8 @@ When implemented:
 - one lead plus a small bounded supporting list;
 - unknown/unavailable IDs fail soft;
 - package authors may request canonical identities but may not replace platform canonical art under those IDs.
+
+The absence of current manifest metadata does **not** mean Activity authors should ignore presenter design. Until metadata exists, presenter ownership remains an Activity design/runtime composition decision.
 
 ## 12. Current evidence boundary
 
