@@ -103,7 +103,7 @@ if raw.size != (222, 600) or source.size != raw.size:
     raise SystemExit(f"unexpected canonical boot source geometry: raw={raw.size} generated={source.size}")
 if source.tobytes() != raw.tobytes():
     raise SystemExit("generated canonical boot source is not pixel-identical to retained full-colour source")
-if canvas.size != (1600, 900):
+if canvas.size != (1024, 600):
     raise SystemExit(f"unexpected boot presentation canvas geometry: {canvas.size}")
 if len(set(source.getdata())) < 128:
     raise SystemExit("boot source has lost full-colour detail")
@@ -119,7 +119,7 @@ for relative in (
     "build/installer-overlay/etc/greia-boot/boot-logo.ppm",
 ):
     data = (root / relative).read_bytes()
-    header = b"P6\n1600 900\n255\n"
+    header = b"P6\n1024 600\n255\n"
     if not data.startswith(header) or data[len(header):] != reference:
         raise SystemExit(f"{relative} is not an exact P6 encoding of the boot canvas")
 

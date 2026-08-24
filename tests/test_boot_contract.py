@@ -15,7 +15,7 @@ from greia_platform.grub_security import RECOVERY_USER
 
 GOOD_RELEASE_LINE = (
     "linux /vmlinuz root=UUID=12345678-1234-5678-9abc-def012345678 ro "
-    "quiet splash loglevel=0 console=null panic=5 "
+    "quiet splash loglevel=0 console=null panic=0 "
     "systemd.show_status=false rd.systemd.show_status=false "
     "systemd.crash_shell=no systemd.crash_chvt=0 "
     "udev.log_priority=3 vt.global_cursor_default=0 consoleblank=0"
@@ -97,7 +97,7 @@ class BootContractTests(unittest.TestCase):
         script = script_path.read_text(encoding="utf-8")
         self.assertIn("developer-remote", script)
         self.assertIn('console_arg="console=null"', script)
-        self.assertIn('panic_arg="panic=5"', script)
+        self.assertIn('panic_arg="panic=0"', script)
         self.assertIn('console_arg="console=tty1"', script)
         self.assertIn('panic_arg="panic=0"', script)
         self.assertIn("loglevel=4", script)
@@ -167,7 +167,7 @@ class BootContractTests(unittest.TestCase):
 
     def test_rejects_missing_or_conflicting_silent_arguments(self) -> None:
         for required in (
-            "panic=5",
+            "panic=0",
             "quiet",
             "splash",
             "systemd.show_status=false",

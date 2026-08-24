@@ -119,11 +119,9 @@ class BootDiagnosticsHardeningTests(unittest.TestCase):
             ROOT / "build/overlay/etc/grub.d/10_greia_appliance"
         ).read_text(encoding="utf-8")
         self.assertIn('console_arg="console=null"', grub)
-        self.assertIn('panic_arg="panic=5"', grub)
-        self.assertIn('console_arg="console=tty1"', grub)
         self.assertIn('panic_arg="panic=0"', grub)
+        self.assertIn('console_arg="console=tty1"', grub)
         self.assertIn('visibility_args="loglevel=4 systemd.show_status=true', grub)
-        self.assertIn("developer-remote", grub)
 
     def test_boot_art_generator_preserves_colour_and_builds_safe_canvas(self) -> None:
         generator = (ROOT / "tools/generate_boot_artwork.py").read_text(
@@ -131,7 +129,7 @@ class BootDiagnosticsHardeningTests(unittest.TestCase):
         )
         self.assertIn("canonical_full_color_frame", generator)
         self.assertIn("compose_boot_canvas", generator)
-        self.assertIn("CANVAS_SIZE = (1600, 900)", generator)
+        self.assertIn("CANVAS_SIZE = (1024, 600)", generator)
         self.assertIn("MIN_SOURCE_COLOURS", generator)
         self.assertIn("GRUB_THEME", generator)
         self.assertIn('desktop-image-scale-method: "padding"', generator)
@@ -215,7 +213,7 @@ class BootDiagnosticsHardeningTests(unittest.TestCase):
         self.assertIn("20-greia-wired.network", installer)
         self.assertIn("25-greia-wireless.network", installer)
         self.assertIn("developer-remote", installer)
-        self.assertIn("P6\\n1600 900\\n255\\n", installer)
+        self.assertIn("P6\\n1024 600\\n255\\n", installer)
         self.assertIn("old_duotone", installer)
         self.assertIn("boot/grub/greia-theme.txt", installer)
         self.assertIn("desktop-image-scale-method", installer)

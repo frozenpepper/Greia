@@ -255,11 +255,11 @@ from PIL import Image
 
 ppm_path, grub_path, launcher_path = map(Path, sys.argv[1:])
 data = ppm_path.read_bytes()
-header = b"P6\n1600 900\n255\n"
+header = b"P6\n1024 600\n255\n"
 if not data.startswith(header):
-    raise SystemExit("embedded boot PPM is not the required 1600x900 P6 canvas")
+    raise SystemExit("embedded boot PPM is not the required 1024x600 P6 canvas")
 pixels = data[len(header):]
-if len(pixels) != 1600 * 900 * 3:
+if len(pixels) != 1024 * 600 * 3:
     raise SystemExit("embedded boot PPM raster length is invalid")
 
 sampled = {
@@ -274,7 +274,7 @@ if sampled.issubset(old_duotone):
 
 for label, path in (("GRUB", grub_path), ("launcher", launcher_path)):
     image = Image.open(path).convert("RGB")
-    if image.size != (1600, 900):
+    if image.size != (1024, 600):
         raise SystemExit(f"{label} splash PNG has wrong geometry: {image.size}")
     if image.tobytes() != pixels:
         raise SystemExit(f"{label} splash PNG does not match the embedded PPM canvas")
@@ -339,6 +339,6 @@ printf '%s\n' "- installed payload: password-enabled greia account, sshd bootstr
 printf '%s\n' "- installed dev boot: tty1 diagnostics, panic=0 (no timed reboot)"
 printf '%s\n' "- runtime roots: recurring tmpfiles ownership verified; one-time/launcher ownership race rejected"
 printf '%s\n' "- boot progress: truthful milestones 15/30/45/55/65/78 + launcher 92 handoff verified"
-printf '%s\n' "- splash: full-colour 1600x900 canvas verified in live PPM, target PPM, GRUB PNG and launcher PNG"
+printf '%s\n' "- splash: full-colour 1024x600 canvas verified in live PPM, target PPM, GRUB PNG and launcher PNG"
 printf '%s\n' "- GRUB splash: proportional padding + centred; raw stretch path rejected"
 printf '%s\n' "- root SSH remains denied; no operator SSH key is required"

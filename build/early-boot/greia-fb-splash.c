@@ -198,9 +198,9 @@ static void draw_progress_bar(uint8_t *memory,
                               unsigned progress) {
     uint32_t visible_w = var->xres;
     uint32_t visible_h = var->yres;
-    uint32_t bar_w = (uint32_t)(((uint64_t)visible_w * 52u) / 100u);
-    uint32_t bar_h = visible_h / 48u;
-    uint32_t border;
+    uint32_t bar_w = (uint32_t)(((uint64_t)visible_w * 16u) / 100u);
+    uint32_t bar_h = 4u;
+    uint32_t border = 1u;
     uint32_t x;
     uint32_t y;
     uint32_t inner_w;
@@ -210,16 +210,14 @@ static void draw_progress_bar(uint8_t *memory,
     uint32_t track_px;
     uint32_t fill_px;
 
-    if (bar_w < 120u) bar_w = visible_w > 24u ? visible_w - 24u : visible_w;
-    if (bar_h < 8u) bar_h = 8u;
-    if (bar_h > 18u) bar_h = 18u;
+    if (bar_w < 120u) bar_w = 120u;
+    if (bar_w > 180u) bar_w = 180u;
     if (bar_w > visible_w) bar_w = visible_w;
     if (bar_h > visible_h) bar_h = visible_h;
-    border = bar_h >= 12u ? 2u : 1u;
     if (bar_w <= 2u * border || bar_h <= 2u * border) return;
 
     x = (visible_w - bar_w) / 2u;
-    y = (uint32_t)(((uint64_t)visible_h * 88u) / 100u);
+    y = (uint32_t)(((uint64_t)visible_h * 92u) / 100u);
     if (y + bar_h > visible_h) y = visible_h - bar_h;
     inner_w = bar_w - 2u * border;
     inner_h = bar_h - 2u * border;

@@ -27,7 +27,7 @@ RELEASE_REQUIRED_ARGUMENTS = {
     "splash",
     "loglevel=0",
     "console=null",
-    "panic=5",
+    "panic=0",
     "systemd.show_status=false",
     "rd.systemd.show_status=false",
     "udev.log_priority=3",
@@ -55,8 +55,8 @@ LIVE_REQUIRED_ARGUMENTS = {
 
 RELEASE_FORBIDDEN_ARGUMENTS = {
     "console=tty1",
-    "panic=0",
     "panic=30",
+    "panic=5",
     "loglevel=4",
     "systemd.show_status=true",
     "rd.systemd.show_status=true",

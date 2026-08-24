@@ -199,10 +199,8 @@ def draw_boot_handoff_frame(screen: Any, pygame: Any, *, progress: int = 92) -> 
     logo = load_logo()
     if logo is None:
         screen.fill((2, 5, 18))
-        _draw_progress_bar(screen, pygame, progress)
         return False
     _draw_canvas(screen, pygame, logo, scale=1.0)
-    _draw_progress_bar(screen, pygame, progress)
     return True
 
 

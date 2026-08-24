@@ -150,7 +150,7 @@ class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
         canvas, background = namespace["compose_boot_canvas"](source)
 
         self.assertEqual(source.size, (222, 600))
-        self.assertEqual(canvas.size, (1600, 900))
+        self.assertEqual(canvas.size, (1024, 600))
         self.assertGreaterEqual(len(set(source.getdata())), 128)
         self.assertEqual(canvas.getpixel((0, 0)), background)
 
@@ -167,7 +167,7 @@ class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
             ppm = Path(tmp) / "boot.ppm"
             namespace["write_ppm"](canvas, ppm)
             data = ppm.read_bytes()
-        header = b"P6\n1600 900\n255\n"
+        header = b"P6\n1024 600\n255\n"
         self.assertTrue(data.startswith(header))
         self.assertEqual(data[len(header) :], canvas.tobytes())
 
@@ -243,7 +243,7 @@ class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
         self.assertIn("generate_boot_artwork.py", builder)
         self.assertIn("BOOT_DERIVATIVES", builder)
         self.assertIn("full-color-landscape-canvas-v1", builder)
-        self.assertIn("P6\\n1600 900\\n255\\n", builder)
+        self.assertIn("P6\\n1024 600\\n255\\n", builder)
         self.assertIn("restore_boot_derivatives", builder)
         # Firmware-sensitive removable-media writing remains elsewhere.
         self.assertNotIn("syslinux --install", builder)

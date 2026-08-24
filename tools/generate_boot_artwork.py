@@ -47,7 +47,7 @@ INSTALLER_PPM = ROOT / "build" / "installer-overlay" / "etc" / "greia-boot" / "b
 GRUB_THEME = ROOT / "build" / "overlay" / "boot" / "grub" / "greia-theme.txt"
 
 EXPECTED_SOURCE_SIZE = (222, 600)
-CANVAS_SIZE = (1600, 900)
+CANVAS_SIZE = (1024, 600)
 MIN_SOURCE_COLOURS = 128
 
 

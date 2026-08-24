@@ -12,7 +12,7 @@ esac
 # reboot + suppressed console turns root/initramfs failures into an opaque grey
 # loop and destroys the most useful hardware evidence.
 console_arg="console=null"
-panic_arg="panic=5"
+panic_arg="panic=0"
 visibility_args="quiet splash loglevel=0 systemd.show_status=false rd.systemd.show_status=false udev.log_priority=3 vt.global_cursor_default=0"
 if [ -f /etc/greia-os/developer-remote ]; then
   console_arg="console=tty1"
