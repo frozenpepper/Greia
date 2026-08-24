@@ -1,0 +1,42 @@
+[activity]
+id = "org.greia.nanna-delle-nuvolette"
+legacy_ids = []
+title_key = "activity.nanna_delle_nuvolette.title"
+version = "0.1.0"
+icon = "package:assets/icon.png"
+languages = ["it", "en"]
+
+[presentation]
+categories = ["play", "explore"]
+discovery_tags = ["care", "nature"]
+
+[education]
+categories = ["sequencing", "cause_and_effect", "color_shape_matching"]
+difficulty = 1
+recommended_age_min = 3
+skills = [
+  { id = "sensory.calm_engagement", weight = 3 },
+  { id = "cognitive.cause_and_effect", weight = 3 },
+  { id = "math.small_sets", weight = 2 },
+]
+events = [
+  { id = "cloud.rest_completed", kind = "completion" },
+]
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "pointer"
+
+[requirements]
+required_capabilities = ["display", "pointer"]
+optional_capabilities = ["touch", "audio.basic"]
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1

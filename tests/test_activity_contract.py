@@ -38,6 +38,8 @@ class ActivityContractTests(unittest.TestCase):
                 "org.greia.labirinto-magico",
                 "org.greia.luci-di-momo",
                 "org.greia.memory-meraviglie",
+                "org.greia.morbidi-mostriciattoli",
+                "org.greia.nanna-delle-nuvolette",
                 "org.greia.nascondino-bosco",
                 "org.greia.officina-dei-suoni",
                 "org.greia.orchestra-animali",

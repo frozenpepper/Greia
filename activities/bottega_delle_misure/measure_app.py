@@ -89,6 +89,8 @@ class BottegaActivity:
         self._running = True
         self._ready_published = False
         self._dirty = True
+        self._hovered_item: str | None = None
+        self._hovered_choice_idx: int | None = None
 
         self.completion = PygameCompletionScreen(
             typography,
@@ -143,6 +145,19 @@ class BottegaActivity:
             return
 
         if self.state is not AppState.PLAYING:
+            return
+
+        if event.type == pygame.MOUSEMOTION:
+            logical = self.canvas.pointer(event.pos)
+            if logical is not None:
+                point = (int(logical[0]), int(logical[1]))
+                current = self.session.current_challenge
+                new_item = self.renderer.item_at(point, current) if current else None
+                new_choice = self.renderer.choice_index_at(point, current) if current else None
+                if new_item != self._hovered_item or new_choice != self._hovered_choice_idx:
+                    self._hovered_item = new_item
+                    self._hovered_choice_idx = new_choice
+                    self._dirty = True
             return
 
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -233,6 +248,8 @@ class BottegaActivity:
             self.session,
             wobble_x=wobble_x,
             show_baseline=show_baseline,
+            hovered_item_id=self._hovered_item,
+            hovered_choice_idx=self._hovered_choice_idx,
         )
 
     def _finish_session(self) -> None:

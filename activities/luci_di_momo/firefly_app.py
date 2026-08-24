@@ -74,6 +74,8 @@ class FireflyActivity:
         self._running = True
         self._ready_published = False
         self._dirty = True
+        self._hovered_choice: int | None = None
+        self._hovered_replay = False
         self.completion = PygameCompletionScreen(
             typography,
             width=REFERENCE_WIDTH,
@@ -114,6 +116,18 @@ class FireflyActivity:
             self.screen = pygame.display.get_surface() or self.screen
             self.canvas = PygameReferenceCanvas(self.screen)
             self._dirty = True
+            return
+        if event.type == pygame.MOUSEMOTION:
+            logical = self.canvas.pointer(event.pos)
+            if logical is not None:
+                point = (int(logical[0]), int(logical[1]))
+                current = self.session.current_round
+                new_choice = self.renderer.choice_at(point, current) if current else None
+                new_replay = self.renderer.replay_contains(point)
+                if new_choice != self._hovered_choice or new_replay != self._hovered_replay:
+                    self._hovered_choice = new_choice
+                    self._hovered_replay = new_replay
+                    self._dirty = True
             return
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if self._handle_pointer(event.pos):
@@ -196,7 +210,12 @@ class FireflyActivity:
         if current is None:
             return
         if self.phase is PresentationPhase.CHOOSE:
-            self.renderer.draw_choices(self.canvas.surface, current)
+            self.renderer.draw_choices(
+                self.canvas.surface,
+                current,
+                hovered_value=self._hovered_choice,
+                hovered_replay=self._hovered_replay,
+            )
             return
         visible_count = None
         if self.phase is PresentationPhase.HINT:

@@ -1,4 +1,4 @@
-"""Presentation renderer for Festa delle Rime."""
+"""High-polish presentation renderer for Festa delle Rime."""
 
 from __future__ import annotations
 
@@ -19,8 +19,8 @@ else:
     from rhyme_model import REFERENCE_WIDTH, RhymeChallenge, RhymeSession
 
 
-REPLAY_RECT: Final[pygame.Rect] = pygame.Rect(80, 24, 160, 44)
-TARGET_RECT: Final[pygame.Rect] = pygame.Rect(452, 90, 120, 140)
+REPLAY_RECT: Final[pygame.Rect] = pygame.Rect(80, 24, 180, 48)
+TARGET_RECT: Final[pygame.Rect] = pygame.Rect(442, 85, 140, 150)
 
 
 class RhymeRenderer:
@@ -50,6 +50,9 @@ class RhymeRenderer:
         *,
         wobble_x: int = 0,
         highlight_index: int | None = None,
+        hovered_choice_idx: int | None = None,
+        hovered_replay: bool = False,
+        hovered_target: bool = False,
     ) -> None:
         target.blit(self._art.background, (0, 0))
         self._draw_leo(target)
@@ -67,20 +70,27 @@ class RhymeRenderer:
                 color_idx=0,
                 is_lit=True,
                 is_highlighted=True,
+                is_hovered=hovered_target,
             )
 
         # 2. Prompt Text
         self._draw_prompt(target, current)
 
         # 3. Choice Lanterns
-        self._draw_choices(target, current, wobble_x=wobble_x, highlight_index=highlight_index)
+        self._draw_choices(
+            target,
+            current,
+            wobble_x=wobble_x,
+            highlight_index=highlight_index,
+            hovered_choice_idx=hovered_choice_idx,
+        )
 
         # 4. Top Controls
-        self._draw_top_bar(target, session)
+        self._draw_top_bar(target, session, is_replay_hovered=hovered_replay)
 
     def choice_rect_at(self, challenge: RhymeChallenge, index: int) -> pygame.Rect:
         count = len(challenge.choices)
-        w, h = 150, 180
+        w, h = 154, 184
         y = 310
         if count == 2:
             cx = 360 if index == 0 else 664
@@ -109,10 +119,12 @@ class RhymeRenderer:
         *,
         wobble_x: int = 0,
         highlight_index: int | None = None,
+        hovered_choice_idx: int | None = None,
     ) -> None:
         for idx, item in enumerate(challenge.choices):
             rect = self.choice_rect_at(challenge, idx)
-            draw_rect = rect.move(wobble_x, 0) if wobble_x != 0 else rect
+            is_hovered = (idx == hovered_choice_idx)
+            draw_rect = rect.move(0, -6) if is_hovered else (rect.move(wobble_x, 0) if wobble_x != 0 else rect)
             is_highlighted = (highlight_index == idx)
             self._art.draw_lantern(
                 target,
@@ -121,6 +133,7 @@ class RhymeRenderer:
                 color_idx=idx + 1,
                 is_lit=True,
                 is_highlighted=is_highlighted,
+                is_hovered=is_hovered,
             )
 
     def _draw_prompt(self, target: pygame.Surface, challenge: RhymeChallenge) -> None:
@@ -133,24 +146,45 @@ class RhymeRenderer:
 
         text = self._resources.text(key)
         y = 250 if challenge.target_item is not None else 180
-        surf = self._typography.render(text, FontRole.TITLE, 24, (254, 240, 138))
-        target.blit(surf, (REFERENCE_WIDTH // 2 - surf.get_width() // 2, y))
+        surf = self._typography.render(text, FontRole.TITLE, 26, (254, 240, 138))
+        p_x = REFERENCE_WIDTH // 2 - surf.get_width() // 2
+        banner = pygame.Rect(p_x - 24, y - 6, surf.get_width() + 48, surf.get_height() + 12)
+        pygame.draw.rect(target, (15, 23, 42, 200), banner, border_radius=16)
+        pygame.draw.rect(target, (217, 119, 6), banner, width=2, border_radius=16)
+        target.blit(surf, (p_x, y))
 
-    def _draw_top_bar(self, target: pygame.Surface, session: RhymeSession) -> None:
-        # Replay button
-        pygame.draw.rect(target, (3, 105, 161), REPLAY_RECT, border_radius=22)
-        pygame.draw.rect(target, (56, 189, 248), REPLAY_RECT, width=2, border_radius=22)
+    def _draw_top_bar(
+        self,
+        target: pygame.Surface,
+        session: RhymeSession,
+        *,
+        is_replay_hovered: bool = False,
+    ) -> None:
+        # Replay button with 3D bevel and hover lift
+        r_draw = REPLAY_RECT.move(0, -4) if is_replay_hovered else REPLAY_RECT
+        pygame.draw.rect(target, (10, 15, 25), REPLAY_RECT.move(0, 6), border_radius=22)
+
+        btn_col = (2, 132, 199) if is_replay_hovered else (3, 105, 161)
+        border_col = (56, 189, 248) if is_replay_hovered else (255, 255, 255)
+
+        pygame.draw.rect(target, btn_col, r_draw, border_radius=22)
+        pygame.draw.rect(target, border_col, r_draw, width=3, border_radius=22)
+
+        # Highlight
+        hl = r_draw.inflate(-16, -r_draw.height + 8).move(0, -r_draw.height // 2 + 8)
+        pygame.draw.rect(target, (186, 230, 253, 100), hl, border_radius=4)
+
         target.blit(
             self._replay_label,
             (
-                REPLAY_RECT.centerx - self._replay_label.get_width() // 2,
-                REPLAY_RECT.centery - self._replay_label.get_height() // 2,
+                r_draw.centerx - self._replay_label.get_width() // 2,
+                r_draw.centery - self._replay_label.get_height() // 2,
             ),
         )
 
         # Progress badge
         badge_rect = pygame.Rect(870, 24, 130, 44)
-        pygame.draw.rect(target, (15, 23, 42, 180), badge_rect, border_radius=22)
+        pygame.draw.rect(target, (15, 23, 42, 200), badge_rect, border_radius=22)
         pygame.draw.rect(target, (254, 240, 138), badge_rect, width=2, border_radius=22)
 
         txt = f"{session.challenge_index + 1} / 8"
@@ -162,10 +196,4 @@ class RhymeRenderer:
 
     def _draw_leo(self, target: pygame.Surface) -> None:
         if self._art.leo is not None:
-            target.blit(self._art.leo, (30, 390))
-        else:
-            cx, cy = 90, 480
-            pygame.draw.rect(target, (2, 132, 199), (cx - 40, cy - 40, 80, 80), border_radius=16)
-            pygame.draw.circle(target, (255, 255, 255), (cx - 16, cy - 10), 10)
-            pygame.draw.circle(target, (255, 255, 255), (cx + 16, cy - 10), 10)
-            pygame.draw.arc(target, (255, 255, 255), (cx - 20, cy + 2, 40, 24), 3.4, 6.0, 4)
+            target.blit(self._art.leo, (30, 385))

@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "locale": "en",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Cloud Bedtime",
+    "activity.nanna_delle_nuvolette.title": "Cloud Bedtime",
+    "activity.nanna_delle_nuvolette.description": "Help three sweet little clouds get ready for bedtime with cozy blankets and twinkling stars.",
+    "prompt.scene": "Give each cloud a blanket and stars, then tap to tuck them in!",
+    "basket.label": "Little Stars ⭐",
+    "button.new_night": "NEW NIGHT 🌙",
+    "cloud.1": "Pink Cloud",
+    "cloud.2": "Blue Cloud",
+    "cloud.3": "Purple Cloud",
+    "blanket.rose": "Pink Blanket",
+    "blanket.amber": "Yellow Blanket",
+    "blanket.mint": "Green Blanket",
+    "blanket.sky": "Sky Blanket",
+    "blanket.lavender": "Lavender Blanket",
+    "blanket.peach": "Peach Blanket"
+  },
+  "audio": {}
+}

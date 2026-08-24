@@ -20,7 +20,7 @@ class FirstPartyActivityAudienceMetadataTests(unittest.TestCase):
         ).discover()
 
     def test_every_first_party_activity_has_audience_and_discovery_metadata(self) -> None:
-        self.assertEqual(len(self.manifests), 28)
+        self.assertEqual(len(self.manifests), 30)
         allowed = set(DISCOVERY_GROUP_IDS)
         for manifest in self.manifests:
             with self.subTest(activity=manifest.activity_id):
@@ -40,6 +40,8 @@ class FirstPartyActivityAudienceMetadataTests(unittest.TestCase):
             "org.greia.orchestra-animali",
             "org.greia.posta-di-leo",
             "org.greia.tre-carte-una-storia",
+            "org.greia.morbidi-mostriciattoli",
+            "org.greia.nanna-delle-nuvolette",
         ):
             with self.subTest(activity=activity_id):
                 self.assertIsNone(by_id[activity_id].recommended_age_max)

@@ -89,6 +89,9 @@ class TenHouseActivity:
         self._running = True
         self._ready_published = False
         self._dirty = True
+        self._hovered_room: int | None = None
+        self._hovered_choice: int | None = None
+        self._hovered_confirm = False
 
         self.completion = PygameCompletionScreen(
             typography,
@@ -146,6 +149,25 @@ class TenHouseActivity:
             return
 
         if self.state is not AppState.PLAYING:
+            return
+
+        if event.type == pygame.MOUSEMOTION:
+            logical = self.canvas.pointer(event.pos)
+            if logical is not None:
+                point = (int(logical[0]), int(logical[1]))
+                current = self.session.current_challenge
+                new_room = self.renderer.room_at(point)
+                new_choice = self.renderer.choice_index_at(point, current) if current else None
+                new_confirm = self.renderer.confirm_contains(point) if (current and current.mode == OperationMode.COMPOSE) else False
+                if (
+                    new_room != self._hovered_room
+                    or new_choice != self._hovered_choice
+                    or new_confirm != self._hovered_confirm
+                ):
+                    self._hovered_room = new_room
+                    self._hovered_choice = new_choice
+                    self._hovered_confirm = new_confirm
+                    self._dirty = True
             return
 
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -302,6 +324,9 @@ class TenHouseActivity:
             self.session,
             wobble_x=wobble_x,
             highlight_rooms=highlight_rooms,
+            hovered_room=self._hovered_room,
+            hovered_choice=self._hovered_choice,
+            hovered_confirm=self._hovered_confirm,
         )
 
     def _finish_session(self) -> None:

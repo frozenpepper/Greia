@@ -87,6 +87,9 @@ class MirrorActivity:
         self._running = True
         self._ready_published = False
         self._dirty = True
+        self._hovered_cell: tuple[int, int] | None = None
+        self._hovered_tray_idx: int | None = None
+        self._hovered_undo = False
 
         self.completion = PygameCompletionScreen(
             typography,
@@ -141,6 +144,20 @@ class MirrorActivity:
             return
 
         if self.state is not AppState.PLAYING:
+            return
+
+        if event.type == pygame.MOUSEMOTION:
+            logical = self.canvas.pointer(event.pos)
+            if logical is not None:
+                point = (int(logical[0]), int(logical[1]))
+                new_cell = self.renderer.cell_at(point)
+                new_tray = self.renderer.tray_item_at(point, self.session)
+                new_undo = self.renderer.undo_contains(point)
+                if new_cell != self._hovered_cell or new_tray != self._hovered_tray_idx or new_undo != self._hovered_undo:
+                    self._hovered_cell = new_cell
+                    self._hovered_tray_idx = new_tray
+                    self._hovered_undo = new_undo
+                    self._dirty = True
             return
 
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -240,6 +257,9 @@ class MirrorActivity:
             self.session,
             wobble_x=wobble_x,
             shimmer=shimmer,
+            hovered_cell=self._hovered_cell,
+            hovered_tray_idx=self._hovered_tray_idx,
+            hovered_undo=self._hovered_undo,
         )
 
     def _finish_session(self) -> None:

@@ -54,7 +54,7 @@ def main() -> int:
     screen = pygame.display.get_surface()
     if screen is None:
         screen = pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.RESIZABLE)
-    pygame.mouse.set_visible(False)
+    pygame.mouse.set_visible(True)
 
     locale, resources = _locale_and_resources()
     typography = GreiaTypography()

@@ -87,10 +87,13 @@ class RhymeActivity:
 
         self.state = AppState.PLAYING
         self.state_started = clock()
+        self._highlight_choice: int | None = None
         self._running = True
         self._ready_published = False
         self._dirty = True
-        self._highlight_choice: int | None = None
+        self._hovered_choice: int | None = None
+        self._hovered_replay = False
+        self._hovered_target = False
 
         self.completion = PygameCompletionScreen(
             typography,
@@ -169,6 +172,21 @@ class RhymeActivity:
             return
 
         if self.state is not AppState.PLAYING:
+            return
+
+        if event.type == pygame.MOUSEMOTION:
+            logical = self.canvas.pointer(event.pos)
+            if logical is not None:
+                point = (int(logical[0]), int(logical[1]))
+                current = self.session.current_challenge
+                new_choice = self.renderer.choice_at(point, current) if current else None
+                new_replay = self.renderer.replay_contains(point)
+                new_target = self.renderer.target_contains(point) if (current and current.target_item) else False
+                if new_choice != self._hovered_choice or new_replay != self._hovered_replay or new_target != self._hovered_target:
+                    self._hovered_choice = new_choice
+                    self._hovered_replay = new_replay
+                    self._hovered_target = new_target
+                    self._dirty = True
             return
 
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -260,6 +278,9 @@ class RhymeActivity:
             self.session,
             wobble_x=wobble_x,
             highlight_index=self._highlight_choice,
+            hovered_choice_idx=self._hovered_choice,
+            hovered_replay=self._hovered_replay,
+            hovered_target=self._hovered_target,
         )
 
     def _finish_session(self) -> None:

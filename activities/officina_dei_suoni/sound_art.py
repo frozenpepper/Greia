@@ -10,9 +10,9 @@ from greia_platform.activity_api import get_shared_visual_path
 from greia_platform.typography import FontRole, GreiaTypography
 
 
-TILE_BG: Final = (254, 240, 138)
-TILE_BORDER: Final = (202, 138, 4)
-TILE_TEXT: Final = (133, 77, 14)
+TILE_BG: Final = (254, 243, 199)
+TILE_BORDER: Final = (217, 119, 6)
+TILE_TEXT: Final = (120, 53, 15)
 
 
 class SoundWorkshopArt:
@@ -38,25 +38,47 @@ class SoundWorkshopArt:
     @staticmethod
     def _build_background(width: int, height: int) -> pygame.Surface:
         surface = pygame.Surface((width, height))
-        surface.fill((15, 23, 42))  # Slate dark workshop
 
-        # Background workshop arches
-        pygame.draw.circle(surface, (30, 41, 59), (width // 2, -100), 480)
-        pygame.draw.circle(surface, (15, 23, 42), (width // 2, -100), 400)
+        # Deep twilight acoustic room gradient
+        for y in range(height):
+            t = y / height
+            r = int(24 * (1 - t) + 18 * t)
+            g = int(32 * (1 - t) + 24 * t)
+            b = int(58 * (1 - t) + 42 * t)
+            pygame.draw.line(surface, (r, g, b), (0, y), (width, y))
 
-        # Workshop counter workbench
-        pygame.draw.rect(surface, (51, 65, 85), (0, 390, width, height - 390))
-        pygame.draw.rect(surface, (71, 85, 105), (0, 390, width, 14))
+        # Acoustic pegboard panel in background
+        pygame.draw.rect(surface, (15, 20, 35), (80, 20, width - 160, 360), border_radius=20)
+        pygame.draw.rect(surface, (45, 55, 80), (80, 20, width - 160, 360), width=3, border_radius=20)
 
-        # Acoustic sound rail across the middle
-        pygame.draw.rect(surface, (30, 58, 138), (80, 190, width - 160, 12), border_radius=6)
+        # Pegboard acoustic holes
+        for hx in range(120, width - 120, 48):
+            for hy in range(50, 360, 48):
+                pygame.draw.circle(surface, (10, 14, 26), (hx, hy), 4)
 
-        # Colorful glowing sound beads on the rail
-        bead_colors = [(236, 72, 153), (234, 179, 8), (34, 197, 94), (56, 189, 248), (168, 85, 247)]
+        # Brass musical pipes & acoustic resonator tubes
+        for px, ph, pw in [(160, 140, 12), (200, 110, 12), (240, 160, 12), (780, 150, 12), (820, 120, 12), (860, 170, 12)]:
+            pygame.draw.rect(surface, (10, 8, 6), (px - 2, 40, pw + 4, ph), border_radius=6)
+            pygame.draw.rect(surface, (245, 158, 11), (px, 40, pw, ph), border_radius=6)
+            pygame.draw.rect(surface, (254, 243, 199), (px + 2, 44, pw - 4, 4), border_radius=2)
+
+        # Polished wooden synthesizer workbench
+        pygame.draw.rect(surface, (10, 8, 6), (0, 385, width, 12))
+        pygame.draw.rect(surface, (120, 75, 42), (0, 390, width, height - 390))
+        pygame.draw.rect(surface, (160, 105, 60), (0, 390, width, 16))
+        pygame.draw.line(surface, (78, 48, 26), (0, 406), (width, 406), 4)
+
+        # Brass acoustic track rail across middle
+        pygame.draw.rect(surface, (217, 119, 6), (120, 210, width - 240, 14), border_radius=7)
+        pygame.draw.rect(surface, (254, 240, 138), (120, 212, width - 240, 3), border_radius=2)
+
+        # Glowing harmonic beads on rail
+        bead_colors = [(244, 63, 94), (251, 191, 36), (34, 197, 94), (56, 189, 248), (168, 85, 247), (236, 72, 153)]
         for i, col in enumerate(bead_colors):
-            bx = 140 + i * ((width - 280) // (len(bead_colors) - 1))
-            pygame.draw.circle(surface, col, (bx, 196), 14)
-            pygame.draw.circle(surface, (255, 255, 255), (bx - 3, 193), 4)
+            bx = 180 + i * ((width - 360) // (len(bead_colors) - 1))
+            pygame.draw.circle(surface, (10, 8, 6), (bx, 217), 18)
+            pygame.draw.circle(surface, col, (bx, 217), 16)
+            pygame.draw.circle(surface, (255, 255, 255), (bx - 4, 213), 5)
 
         return surface
 
@@ -68,32 +90,48 @@ class SoundWorkshopArt:
         *,
         is_highlighted: bool = False,
         is_empty_target: bool = False,
+        is_hovered: bool = False,
     ) -> None:
-        """Render a chunky wooden/golden letter tile or target box."""
+        """Render a chunky 3D wooden letter tile or drop target box."""
+        draw_rect = rect.move(0, -6) if is_hovered else rect
+
         if is_empty_target:
-            pygame.draw.rect(target, (30, 41, 59), rect, border_radius=18)
-            pygame.draw.rect(target, (56, 189, 248), rect, width=3, border_radius=18)
-            # Question mark inside empty target box
-            q_surf = self._get_rendered_text("?", FontRole.DISPLAY, 40, (148, 163, 184))
+            pygame.draw.rect(target, (15, 23, 42), rect.move(0, 4), border_radius=18)
+            pygame.draw.rect(target, (30, 41, 59), draw_rect, border_radius=18)
+            border_c = (56, 189, 248) if is_hovered else (94, 234, 212)
+            pygame.draw.rect(target, border_c, draw_rect, width=3, border_radius=18)
+            q_surf = self._get_rendered_text("?", FontRole.DISPLAY, 42, (148, 163, 184))
             target.blit(
                 q_surf,
-                (rect.centerx - q_surf.get_width() // 2, rect.centery - q_surf.get_height() // 2),
+                (draw_rect.centerx - q_surf.get_width() // 2, draw_rect.centery - q_surf.get_height() // 2),
             )
             return
 
-        pygame.draw.rect(target, TILE_BG, rect, border_radius=18)
-        if is_highlighted:
-            pygame.draw.rect(target, (255, 255, 255), rect, width=4, border_radius=18)
-        else:
-            pygame.draw.rect(target, TILE_BORDER, rect, width=3, border_radius=18)
+        # 3D Drop shadow
+        pygame.draw.rect(target, (10, 8, 6, 90), rect.move(0, 8), border_radius=18)
 
-        # Bottom bevel / shadow
-        pygame.draw.rect(target, TILE_BORDER, (rect.left + 4, rect.bottom - 8, rect.width - 8, 4), border_radius=2)
+        # Wooden tile body
+        pygame.draw.rect(target, TILE_BG, draw_rect, border_radius=18)
+
+        # Border styling
+        if is_hovered:
+            pygame.draw.rect(target, (56, 189, 248), draw_rect, width=5, border_radius=18)
+        elif is_highlighted:
+            pygame.draw.rect(target, (251, 191, 36), draw_rect, width=5, border_radius=18)
+        else:
+            pygame.draw.rect(target, TILE_BORDER, draw_rect, width=3, border_radius=18)
+
+        # Gloss highlight on top edge
+        hl = draw_rect.inflate(-8, -draw_rect.height + 6).move(0, -draw_rect.height // 2 + 6)
+        pygame.draw.rect(target, (255, 255, 255, 160), hl, border_radius=3)
+
+        # Bottom wooden bevel
+        pygame.draw.rect(target, (217, 119, 6), (draw_rect.left + 4, draw_rect.bottom - 8, draw_rect.width - 8, 4), border_radius=2)
 
         txt_surf = self._get_rendered_text(letter, FontRole.DISPLAY, 46, TILE_TEXT)
         target.blit(
             txt_surf,
-            (rect.centerx - txt_surf.get_width() // 2, rect.centery - txt_surf.get_height() // 2),
+            (draw_rect.centerx - txt_surf.get_width() // 2, draw_rect.centery - txt_surf.get_height() // 2),
         )
 
     def draw_picture_card(
@@ -102,24 +140,27 @@ class SoundWorkshopArt:
         rect: pygame.Rect,
         symbol: str,
         *,
-        is_highlighted: bool = False,
-        bg_col: tuple[int, int, int] = (255, 255, 255),
+        is_hovered: bool = False,
     ) -> None:
-        """Render a large picture card."""
-        pygame.draw.rect(target, bg_col, rect, border_radius=22)
-        if is_highlighted:
-            pygame.draw.rect(target, (56, 189, 248), rect, width=4, border_radius=22)
-        else:
-            pygame.draw.rect(target, (203, 213, 225), rect, width=3, border_radius=22)
+        """Render a large picture card with drop shadow."""
+        draw_rect = rect.move(0, -4) if is_hovered else rect
+        pygame.draw.rect(target, (10, 8, 6, 80), rect.move(0, 8), border_radius=24)
+        pygame.draw.rect(target, (255, 251, 235), draw_rect, border_radius=24)
+        border_c = (56, 189, 248) if is_hovered else (217, 119, 6)
+        pygame.draw.rect(target, border_c, draw_rect, width=4, border_radius=24)
 
-        sym_surf = self._get_rendered_text(symbol, FontRole.DISPLAY, 56, (255, 255, 255))
+        sym_surf = self._get_rendered_text(symbol, FontRole.DISPLAY, 72, (255, 255, 255))
         target.blit(
             sym_surf,
-            (rect.centerx - sym_surf.get_width() // 2, rect.centery - sym_surf.get_height() // 2),
+            (draw_rect.centerx - sym_surf.get_width() // 2, draw_rect.centery - sym_surf.get_height() // 2),
         )
 
     def _get_rendered_text(
-        self, text: str, role: FontRole, size: int, color: tuple[int, int, int]
+        self,
+        text: str,
+        role: FontRole,
+        size: int,
+        color: tuple[int, int, int],
     ) -> pygame.Surface:
         key = (text, size, color)
         if key not in self._text_cache:

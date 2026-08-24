@@ -1,4 +1,4 @@
-"""Low-allocation Pygame presentation for Luci di Momo."""
+"""Low-allocation, high-polish presentation for Luci di Momo."""
 
 from __future__ import annotations
 
@@ -18,12 +18,12 @@ else:
 
 
 CHOICE_RECTS: Final = (
-    pygame.Rect(394, 430, 104, 104),
-    pygame.Rect(530, 430, 104, 104),
-    pygame.Rect(666, 430, 104, 104),
+    pygame.Rect(394, 430, 108, 108),
+    pygame.Rect(530, 430, 108, 108),
+    pygame.Rect(666, 430, 108, 108),
 )
-REPLAY_RECT: Final = pygame.Rect(850, 430, 88, 88)
-LANTERN_CENTER: Final = (215, 286)
+REPLAY_RECT: Final = pygame.Rect(840, 430, 96, 96)
+LANTERN_CENTER: Final = (215, 275)
 
 
 class FireflyRenderer:
@@ -39,14 +39,14 @@ class FireflyRenderer:
         self._typography = typography
         self._resources = resources
         self._number_surfaces = {
-            value: typography.render(str(value), FontRole.DISPLAY, 56, (55, 43, 27))
+            value: typography.render(str(value), FontRole.DISPLAY, 58, (120, 53, 15))
             for value in range(1, 6)
         }
         self._prompt = typography.render(
             resources.text("prompt.choose"),
             FontRole.TITLE,
-            28,
-            (255, 248, 215),
+            26,
+            (254, 240, 138),
         )
 
     def draw_reveal(
@@ -58,39 +58,78 @@ class FireflyRenderer:
         visible_count: int | None = None,
     ) -> None:
         self._draw_base(target)
-        self._draw_lantern(target, awake=True)
+        self._art.draw_lantern(target, LANTERN_CENTER[0], LANTERN_CENTER[1], awake=True)
         count = round_.quantity if visible_count is None else max(0, min(round_.quantity, visible_count))
-        radius = 15
+        radius = 16
         if level == 4:
             radius += sum(ord(ch) for ch in round_.round_id) % 6
         for x, y in round_.positions[:count]:
-            self._draw_firefly(target, x, y, radius)
+            self._art.draw_firefly(target, x, y, radius)
 
-    def draw_choices(self, target: pygame.Surface, round_: FireflyRound) -> None:
+    def draw_choices(
+        self,
+        target: pygame.Surface,
+        round_: FireflyRound,
+        *,
+        hovered_value: int | None = None,
+        hovered_replay: bool = False,
+    ) -> None:
         self._draw_base(target)
-        self._draw_lantern(target, awake=False)
-        target.blit(
-            self._prompt,
-            (REFERENCE_WIDTH // 2 - self._prompt.get_width() // 2, 365),
-        )
+        self._art.draw_lantern(target, LANTERN_CENTER[0], LANTERN_CENTER[1], awake=False)
+
+        # Prompt Banner
+        p_x = REFERENCE_WIDTH // 2 - self._prompt.get_width() // 2
+        p_y = 365
+        banner_rect = pygame.Rect(p_x - 20, p_y - 6, self._prompt.get_width() + 40, self._prompt.get_height() + 12)
+        pygame.draw.rect(target, (15, 23, 42, 180), banner_rect, border_radius=16)
+        pygame.draw.rect(target, (217, 119, 6), banner_rect, width=2, border_radius=16)
+        target.blit(self._prompt, (p_x, p_y))
+
+        # 3 Choice Buttons with 3D bevel and tactile lift
         for rect, value in zip(CHOICE_RECTS, round_.choice_values):
-            pygame.draw.rect(target, (255, 246, 215), rect, border_radius=26)
-            pygame.draw.rect(target, (236, 192, 83), rect, width=5, border_radius=26)
+            is_hovered = (value == hovered_value)
+            draw_rect = rect.move(0, -4) if is_hovered else rect
+
+            # Drop shadow
+            shadow_rect = rect.move(0, 6)
+            pygame.draw.rect(target, (5, 10, 20), shadow_rect, border_radius=28)
+
+            # Button body (warm cream paper)
+            pygame.draw.rect(target, (255, 251, 235), draw_rect, border_radius=28)
+
+            # Border
+            if is_hovered:
+                pygame.draw.rect(target, (56, 189, 248), draw_rect, width=6, border_radius=28)
+            else:
+                pygame.draw.rect(target, (245, 158, 11), draw_rect, width=5, border_radius=28)
+
+            # Top highlight line
+            hl_rect = draw_rect.inflate(-16, -draw_rect.height + 8).move(0, -draw_rect.height // 2 + 8)
+            pygame.draw.rect(target, (255, 255, 255), hl_rect, border_radius=4)
+
+            # Numeral
             numeral = self._number_surfaces[value]
             target.blit(
                 numeral,
-                (rect.centerx - numeral.get_width() // 2, rect.centery - numeral.get_height() // 2),
+                (draw_rect.centerx - numeral.get_width() // 2, draw_rect.centery - numeral.get_height() // 2),
             )
-        cx, cy = REPLAY_RECT.center
-        pygame.draw.circle(target, (67, 110, 128), (cx, cy), REPLAY_RECT.width // 2)
-        pygame.draw.circle(target, (255, 255, 255), (cx, cy), REPLAY_RECT.width // 2, width=3)
-        # Circular reload arrow
-        arc_rect = pygame.Rect(cx - 20, cy - 20, 40, 40)
-        pygame.draw.arc(target, (255, 255, 255), arc_rect, 0.6, 5.8, width=4)
+
+        # Replay Button
+        r_draw = REPLAY_RECT.move(0, -4) if hovered_replay else REPLAY_RECT
+        cx, cy = r_draw.center
+        # Shadow
+        pygame.draw.circle(target, (5, 10, 20), (REPLAY_RECT.centerx, REPLAY_RECT.centery + 6), REPLAY_RECT.width // 2)
+        # Body
+        pygame.draw.circle(target, (2, 132, 199) if hovered_replay else (14, 116, 144), (cx, cy), r_draw.width // 2)
+        pygame.draw.circle(target, (255, 255, 255), (cx, cy), r_draw.width // 2, width=4)
+        
+        # Circular reload icon
+        arc_rect = pygame.Rect(cx - 22, cy - 22, 44, 44)
+        pygame.draw.arc(target, (255, 255, 255), arc_rect, 0.6, 5.8, width=5)
         pygame.draw.polygon(
             target,
             (255, 255, 255),
-            [(cx + 16, cy - 14), (cx + 6, cy - 24), (cx + 18, cy - 24)],
+            [(cx + 18, cy - 16), (cx + 6, cy - 28), (cx + 20, cy - 28)],
         )
 
     def choice_at(self, point: tuple[int, int], round_: FireflyRound) -> int | None:
@@ -105,24 +144,4 @@ class FireflyRenderer:
     def _draw_base(self, target: pygame.Surface) -> None:
         target.blit(self._art.background, (0, 0))
         if self._art.momo is not None:
-            target.blit(self._art.momo, (28, 330))
-        else:
-            pygame.draw.circle(target, (238, 151, 192), (115, 425), 65)
-            pygame.draw.circle(target, (45, 44, 57), (92, 410), 5)
-            pygame.draw.circle(target, (45, 44, 57), (138, 410), 5)
-            pygame.draw.arc(target, (45, 44, 57), (91, 412, 48, 34), 3.4, 6.0, 4)
-
-    @staticmethod
-    def _draw_lantern(target: pygame.Surface, *, awake: bool) -> None:
-        x, y = LANTERN_CENTER
-        glow = (255, 211, 89) if awake else (139, 132, 106)
-        pygame.draw.circle(target, glow, (x, y), 54)
-        pygame.draw.rect(target, (88, 65, 48), (x - 44, y - 50, 88, 100), width=8, border_radius=20)
-        pygame.draw.arc(target, (88, 65, 48), (x - 34, y - 84, 68, 66), 3.15, 6.25, 7)
-
-    @staticmethod
-    def _draw_firefly(target: pygame.Surface, x: int, y: int, radius: int) -> None:
-        pygame.draw.circle(target, (255, 218, 81), (x, y), radius)
-        pygame.draw.circle(target, (255, 248, 181), (x, y), max(5, radius // 2))
-        pygame.draw.ellipse(target, (198, 231, 226), (x - radius - 10, y - 7, radius, 14))
-        pygame.draw.ellipse(target, (198, 231, 226), (x + 10, y - 7, radius, 14))
+            target.blit(self._art.momo, (30, 395))

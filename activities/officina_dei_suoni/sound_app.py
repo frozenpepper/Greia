@@ -87,11 +87,14 @@ class SoundWorkshopActivity:
 
         self.state = AppState.PLAYING
         self.state_started = clock()
+        self._highlight_choice: int | None = None
+        self._focused_choice: int | None = None
         self._running = True
         self._ready_published = False
         self._dirty = True
-        self._highlight_choice: int | None = None
-        self._focused_choice: int = 0
+        self._hovered_choice: int | None = None
+        self._hovered_replay = False
+        self._hovered_target = False
 
         self.completion = PygameCompletionScreen(
             typography,
@@ -182,6 +185,21 @@ class SoundWorkshopActivity:
         if self.state is not AppState.PLAYING:
             return
 
+        if event.type == pygame.MOUSEMOTION:
+            logical = self.canvas.pointer(event.pos)
+            if logical is not None:
+                point = (int(logical[0]), int(logical[1]))
+                current = self.session.current_challenge
+                new_choice = self.renderer.choice_at(point, current) if current else None
+                new_replay = self.renderer.replay_contains(point)
+                new_target = self.renderer.target_contains(point) if current else False
+                if new_choice != self._hovered_choice or new_replay != self._hovered_replay or new_target != self._hovered_target:
+                    self._hovered_choice = new_choice
+                    self._hovered_replay = new_replay
+                    self._hovered_target = new_target
+                    self._dirty = True
+            return
+
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if self._handle_pointer(event.pos):
                 self._dirty = True
@@ -192,14 +210,17 @@ class SoundWorkshopActivity:
             return False
 
         num_choices = len(current.choices)
+        if num_choices == 0:
+            return False
+        curr = 0 if self._focused_choice is None else self._focused_choice
         if key in (pygame.K_LEFT, pygame.K_a):
-            self._focused_choice = (self._focused_choice - 1) % num_choices
+            self._focused_choice = (curr - 1) % num_choices
             return True
         elif key in (pygame.K_RIGHT, pygame.K_d):
-            self._focused_choice = (self._focused_choice + 1) % num_choices
+            self._focused_choice = (curr + 1) % num_choices
             return True
         elif key in (pygame.K_SPACE, pygame.K_RETURN):
-            return self._select_choice(self._focused_choice)
+            return self._select_choice(curr)
         elif key == pygame.K_r:
             self._speak_current_challenge()
             return True
@@ -304,6 +325,9 @@ class SoundWorkshopActivity:
             self.session,
             wobble_x=wobble_x,
             highlight_index=highlight,
+            hovered_choice_idx=self._hovered_choice,
+            hovered_replay=self._hovered_replay,
+            hovered_target=self._hovered_target,
         )
 
     def _finish_session(self) -> None:

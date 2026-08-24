@@ -1,4 +1,4 @@
-"""Low-allocation Pygame presentation for Specchi Magici."""
+"""Low-allocation, high-polish Pygame presentation for Specchi Magici."""
 
 from __future__ import annotations
 
@@ -52,6 +52,9 @@ class MirrorRenderer:
         *,
         wobble_x: int = 0,
         shimmer: bool = False,
+        hovered_cell: tuple[int, int] | None = None,
+        hovered_tray_idx: int | None = None,
+        hovered_undo: bool = False,
     ) -> None:
         target.blit(self._art.background, (0, 0))
         self._draw_lilli(target)
@@ -61,13 +64,24 @@ class MirrorRenderer:
             return
 
         # 1. Draw 8x6 Grid Board & Magic Mirror Axis
-        self._draw_board_and_mirror(target, session, wobble_x=wobble_x, shimmer=shimmer)
+        self._draw_board_and_mirror(
+            target,
+            session,
+            wobble_x=wobble_x,
+            shimmer=shimmer,
+            hovered_cell=hovered_cell,
+        )
 
         # 2. Draw Prompt text
         self._draw_prompt(target)
 
         # 3. Draw Tray Pieces & Undo Button
-        self._draw_tray_and_controls(target, session)
+        self._draw_tray_and_controls(
+            target,
+            session,
+            hovered_tray_idx=hovered_tray_idx,
+            hovered_undo=hovered_undo,
+        )
 
         # 4. Progress badge
         self._draw_progress_badge(target, session)
@@ -88,12 +102,12 @@ class MirrorRenderer:
         count = len(session.tray)
         if count == 0:
             return None
-        spacing = 64
+        spacing = 68
         tray_w = count * spacing
         start_x = 512 - tray_w // 2
 
         for i in range(count):
-            rect = pygame.Rect(start_x + i * spacing - 4, 480, 56, 76)
+            rect = pygame.Rect(start_x + i * spacing - 4, 476, 60, 80)
             if rect.collidepoint(point):
                 return i
         return None
@@ -108,91 +122,148 @@ class MirrorRenderer:
         *,
         wobble_x: int = 0,
         shimmer: bool = False,
+        hovered_cell: tuple[int, int] | None = None,
     ) -> None:
-        board_rect = pygame.Rect(BOARD_LEFT - 12 + wobble_x, BOARD_TOP - 12, 444, GRID_ROWS * CELL_SIZE + 24)
-        pygame.draw.rect(target, (30, 18, 54), board_rect, border_radius=16)
-        pygame.draw.rect(target, (147, 51, 234), board_rect, width=3, border_radius=16)
+        board_rect = pygame.Rect(BOARD_LEFT - 14 + wobble_x, BOARD_TOP - 14, 448, GRID_ROWS * CELL_SIZE + 28)
+        # Drop shadow
+        pygame.draw.rect(target, (10, 5, 20), board_rect.move(0, 8), border_radius=20)
+
+        # Ornate golden baroque frame
+        pygame.draw.rect(target, (245, 158, 11), board_rect, width=6, border_radius=20)
+        pygame.draw.rect(target, (217, 119, 6), board_rect.inflate(-6, -6), width=2, border_radius=16)
+        pygame.draw.rect(target, (20, 12, 38), board_rect.inflate(-10, -10), border_radius=14)
+
+        # Corner golden rosettes
+        for cx, cy in [
+            (board_rect.left + 8, board_rect.top + 8),
+            (board_rect.right - 8, board_rect.top + 8),
+            (board_rect.left + 8, board_rect.bottom - 8),
+            (board_rect.right - 8, board_rect.bottom - 8),
+        ]:
+            pygame.draw.circle(target, (251, 191, 36), (cx, cy), 8)
+            pygame.draw.circle(target, (180, 83, 9), (cx, cy), 8, 2)
 
         # Draw Cells
+        selected_piece = session.tray[session.selected_tray_index] if (session.selected_tray_index < len(session.tray)) else None
+
         for r in range(GRID_ROWS):
             for c in range(GRID_COLS):
                 rect = self.cell_rect(r, c).move(wobble_x, 0)
-                # Left side is blue-tinted, right side is purple-tinted
-                bg_col = (42, 28, 74) if c < 4 else (52, 32, 86)
-                pygame.draw.rect(target, bg_col, rect.inflate(-2, -2), border_radius=6)
-                pygame.draw.rect(target, (76, 48, 115), rect.inflate(-2, -2), width=1, border_radius=6)
+                is_hovered = ((r, c) == hovered_cell)
+
+                # Left side (crystal blue tint), Right side (amethyst purple tint)
+                bg_col = (30, 24, 60) if c < 4 else (42, 26, 74)
+                pygame.draw.rect(target, bg_col, rect.inflate(-2, -2), border_radius=8)
+
+                border_c = (56, 189, 248) if is_hovered else (65, 45, 95)
+                border_w = 3 if is_hovered else 1
+                pygame.draw.rect(target, border_c, rect.inflate(-2, -2), width=border_w, border_radius=8)
 
                 # Draw placed piece
                 piece = session.grid.get((r, c))
                 if piece is not None:
                     self._art.draw_piece(target, rect.centerx, rect.centery, 38, piece)
+                elif is_hovered and c >= 4 and selected_piece is not None:
+                    # Ghost preview of selected piece on target cell
+                    ghost = pygame.Surface((CELL_SIZE, CELL_SIZE), pygame.SRCALPHA)
+                    self._art.draw_piece(ghost, CELL_SIZE // 2, CELL_SIZE // 2, 34, selected_piece)
+                    ghost.set_alpha(140)
+                    target.blit(ghost, rect.topleft)
 
-        # Central Magic Mirror Beam
-        beam_rect = pygame.Rect(MIRROR_X - 5 + wobble_x, BOARD_TOP - 18, 10, GRID_ROWS * CELL_SIZE + 36)
-        beam_col = (255, 255, 255) if shimmer else (56, 189, 248)
-        pygame.draw.rect(target, beam_col, beam_rect, border_radius=5)
-        pygame.draw.rect(target, (192, 132, 252), beam_rect.inflate(4, 4), width=2, border_radius=7)
+        # Central Magic Mirror Shimmer Beam
+        beam_rect = pygame.Rect(MIRROR_X - 6 + wobble_x, BOARD_TOP - 20, 12, GRID_ROWS * CELL_SIZE + 40)
+        # Soft glowing outer aura
+        for r in range(16, 4, -3):
+            alpha = int(45 * (1.0 - r / 16.0))
+            aura = pygame.Surface((r * 2, beam_rect.height), pygame.SRCALPHA)
+            pygame.draw.rect(aura, (56, 189, 248, alpha), (0, 0, r * 2, beam_rect.height), border_radius=r)
+            target.blit(aura, (MIRROR_X - r + wobble_x, BOARD_TOP - 20))
 
-    def _draw_tray_and_controls(self, target: pygame.Surface, session: MirrorSession) -> None:
+        beam_col = (255, 255, 255) if shimmer else (186, 230, 253)
+        pygame.draw.rect(target, beam_col, beam_rect, border_radius=6)
+        pygame.draw.rect(target, (56, 189, 248), beam_rect, width=2, border_radius=6)
+
+    def _draw_tray_and_controls(
+        self,
+        target: pygame.Surface,
+        session: MirrorSession,
+        *,
+        hovered_tray_idx: int | None = None,
+        hovered_undo: bool = False,
+    ) -> None:
         count = len(session.tray)
         if count > 0:
-            spacing = 64
+            spacing = 68
             tray_w = count * spacing
             start_x = 512 - tray_w // 2
 
-            tray_bg = pygame.Rect(start_x - 16, 476, tray_w + 32, 84)
-            pygame.draw.rect(target, (30, 18, 54), tray_bg, border_radius=18)
-            pygame.draw.rect(target, (147, 51, 234), tray_bg, width=2, border_radius=18)
+            tray_bg = pygame.Rect(start_x - 16, 474, tray_w + 32, 88)
+            pygame.draw.rect(target, (10, 5, 20), tray_bg.move(0, 6), border_radius=22)
+            pygame.draw.rect(target, (24, 14, 46), tray_bg, border_radius=22)
+            pygame.draw.rect(target, (147, 51, 234), tray_bg, width=3, border_radius=22)
 
             for i, piece in enumerate(session.tray):
-                cx = start_x + i * spacing + 28
+                cx = start_x + i * spacing + 30
                 cy = 518
                 is_selected = (session.selected_tray_index == i)
+                is_hovered = (i == hovered_tray_idx)
+                draw_cy = cy - 4 if (is_hovered or is_selected) else cy
 
                 if is_selected:
-                    pygame.draw.circle(target, (56, 189, 248), (cx, cy), 28, 3)
-                    pygame.draw.circle(target, (255, 255, 255), (cx, cy), 30, 1)
+                    pygame.draw.circle(target, (56, 189, 248), (cx, draw_cy), 30, 4)
+                    pygame.draw.circle(target, (255, 255, 255), (cx, draw_cy), 32, 2)
+                elif is_hovered:
+                    pygame.draw.circle(target, (216, 180, 254), (cx, draw_cy), 28, 3)
 
-                self._art.draw_piece(target, cx, cy, 40, piece)
+                self._art.draw_piece(target, cx, draw_cy, 42, piece)
 
         # Undo button
         can_undo = len(session.undo_stack) > 0
-        btn_col = (147, 51, 234) if can_undo else (75, 85, 99)
-        pygame.draw.rect(target, btn_col, UNDO_RECT, border_radius=16)
-        pygame.draw.rect(target, (255, 255, 255) if can_undo else (107, 114, 128), UNDO_RECT, width=2, border_radius=16)
+        u_draw = UNDO_RECT.move(0, -4) if (hovered_undo and can_undo) else UNDO_RECT
+
+        # Drop shadow
+        pygame.draw.rect(target, (10, 5, 20), UNDO_RECT.move(0, 6), border_radius=20)
+
+        btn_col = (147, 51, 234) if can_undo else (51, 65, 85)
+        border_col = (56, 189, 248) if (hovered_undo and can_undo) else ((255, 255, 255) if can_undo else (71, 85, 105))
+
+        pygame.draw.rect(target, btn_col, u_draw, border_radius=20)
+        pygame.draw.rect(target, border_col, u_draw, width=3, border_radius=20)
+
+        # Highlight line
+        if can_undo:
+            hl = u_draw.inflate(-16, -u_draw.height + 8).move(0, -u_draw.height // 2 + 8)
+            pygame.draw.rect(target, (216, 180, 254, 120), hl, border_radius=4)
+
         target.blit(
             self._undo_label,
             (
-                UNDO_RECT.centerx - self._undo_label.get_width() // 2,
-                UNDO_RECT.centery - self._undo_label.get_height() // 2,
+                u_draw.centerx - self._undo_label.get_width() // 2,
+                u_draw.centery - self._undo_label.get_height() // 2,
             ),
         )
 
     def _draw_prompt(self, target: pygame.Surface) -> None:
         text = self._resources.text("prompt.place")
-        prompt_surf = self._typography.render(text, FontRole.TITLE, 24, (233, 213, 255))
-        target.blit(
-            prompt_surf,
-            (REFERENCE_WIDTH // 2 - prompt_surf.get_width() // 2, 400),
-        )
+        prompt_surf = self._typography.render(text, FontRole.TITLE, 26, (254, 240, 138))
+        p_x = REFERENCE_WIDTH // 2 - prompt_surf.get_width() // 2
+        p_y = 405
+        banner = pygame.Rect(p_x - 24, p_y - 6, prompt_surf.get_width() + 48, prompt_surf.get_height() + 12)
+        pygame.draw.rect(target, (15, 23, 42, 200), banner, border_radius=16)
+        pygame.draw.rect(target, (217, 119, 6), banner, width=2, border_radius=16)
+        target.blit(prompt_surf, (p_x, p_y))
 
     def _draw_lilli(self, target: pygame.Surface) -> None:
         if self._art.lilli is not None:
-            target.blit(self._art.lilli, (20, 390))
-        else:
-            cx, cy = 90, 480
-            pygame.draw.rect(target, (168, 85, 247), (cx - 40, cy - 40, 80, 80), border_radius=16)
-            pygame.draw.circle(target, (255, 255, 255), (cx - 16, cy - 10), 10)
-            pygame.draw.circle(target, (255, 255, 255), (cx + 16, cy - 10), 10)
-            pygame.draw.arc(target, (255, 255, 255), (cx - 20, cy + 2, 40, 24), 3.4, 6.0, 4)
+            target.blit(self._art.lilli, (20, 385))
 
     def _draw_progress_badge(self, target: pygame.Surface, session: MirrorSession) -> None:
         badge_rect = pygame.Rect(870, 24, 130, 44)
-        pygame.draw.rect(target, (15, 23, 42, 180), badge_rect, border_radius=22)
-        pygame.draw.rect(target, (233, 213, 255), badge_rect, width=2, border_radius=22)
+        pygame.draw.rect(target, (15, 23, 42, 200), badge_rect, border_radius=22)
+        pygame.draw.rect(target, (254, 240, 138), badge_rect, width=2, border_radius=22)
 
         txt = f"{session.puzzle_index + 1} / 6"
-        txt_surf = self._typography.render(txt, FontRole.TITLE, 22, (233, 213, 255))
+        txt_surf = self._typography.render(txt, FontRole.TITLE, 22, (254, 240, 138))
         target.blit(
             txt_surf,
             (badge_rect.centerx - txt_surf.get_width() // 2, badge_rect.centery - txt_surf.get_height() // 2),

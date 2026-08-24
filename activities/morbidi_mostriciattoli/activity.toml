@@ -1,0 +1,42 @@
+[activity]
+id = "org.greia.morbidi-mostriciattoli"
+legacy_ids = []
+title_key = "activity.morbidi_mostriciattoli.title"
+version = "0.1.0"
+icon = "package:assets/icon.png"
+languages = ["it", "en"]
+
+[presentation]
+categories = ["create", "play"]
+discovery_tags = ["making", "drawing"]
+
+[education]
+categories = ["creative_expression", "choice_making", "fine_motor"]
+difficulty = 1
+recommended_age_min = 3
+skills = [
+  { id = "art.creative_assembly", weight = 3 },
+  { id = "motor.fine_selection", weight = 3 },
+  { id = "emotional.self_expression", weight = 2 },
+]
+events = [
+  { id = "monster.portrait_created", kind = "creation" },
+]
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "pointer"
+
+[requirements]
+required_capabilities = ["display", "pointer"]
+optional_capabilities = ["keyboard", "touch", "audio.basic"]
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1

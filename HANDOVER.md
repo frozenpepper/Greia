@@ -44,23 +44,25 @@ On-device visual verification covered Collection Home, category grid, hover lift
 
 `docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md` is now the single accumulating performance manual for measured device cost, cache/alpha/invalidation rules, evidence discipline and case studies. The microphone tranche does not supersede or modify that performance work.
 
-## Early-learning Activity expansion: Luci di Momo acceptance (2026-08-24)
+## Early-learning Activity Expansion: Complete Portfolio Acceptance (2026-08-24)
 
-`activities/luci_di_momo` (Luci di Momo / Momo's Fireflies) subitizing Activity is fully implemented, verified, and accepted following `docs/agents/GREIA_EARLY_LEARNING_ACTIVITY_IMPLEMENTATION_RUNBOOK.md` and `skills/greia-activity-authoring/SKILL.md`.
+All 10 Early Learning Activities specified in `docs/plans/2026-08-24_EARLY_LEARNING_ACTIVITY_EXPANSION/` are fully implemented, visually overhauled, and verified under `make verify` (1,300/1,300 tests PASS; 30/30 activities valid):
 
-- Architecture:
-  - `firefly_model.py`: Immutable 5-round quantity challenge generator (L1: 1-3, L2: 1-4, L3: 1-5, L4: 1-5 with varied radius/spacing), deterministic seeding, bounded between-set adaptation, one-shot `firefly.garden_completed` payload.
-  - `firefly_app.py`: Lifecycle, timed phase state machine (REVEAL, CHOOSE, HINT, TERMINAL), low-allocation dirty redraw pacing without continuous idle redraws, safe-viewport pointer routing, and completion screen restart.
-  - `firefly_renderer.py`: 1024x600 reference presentation, three 104x104 choice cards, vector circular reload arrow for replay button, animated sleeping vs awake lanterns, fireflies with wings and soft glow, fail-soft Momo smile fallback.
-  - `firefly_art.py`: Pre-baked garden night backdrop, semantic shared `character.momo` asset preparation.
-  - `firefly_audio.py`: Prepared nonverbal procedural sine tone synthesis (`reveal`, `correct`, `retry`, `complete`); no custom voice required.
-  - `firefly_services.py`: Storage adapter for `luci_di_momo.progress.v1` (bounded to 8 history summaries) and event emitter.
-- Evidence & Verification:
-  - `tests/test_activity_luci_di_momo.py`: 10/10 focused tests passing (model determinism, level bounds, round session invariants, adaptation, storage recovery, manifest declarations, app integration lifecycle/hints/restart, simulator supervisor start/stop).
-  - Platform contract tests reconciled: `test_activity_contract.py`, `test_first_party_activity_audience_metadata.py`, `test_first_party_activity_readiness.py`.
-  - Full test suite `make verify`: PASS.
-  - Package validation digest: `sha256 45f5ea72e154fa62773633608c0f100abdba91d263fc3560cadf7b69c1c54348`.
-  - Visual review executed and verified across Italian and English locales and multiple viewports.
+1. **Luci di Momo (`org.greia.luci-di-momo`)**: Subitizing fireflies in enchanted twilight meadow, glowing multi-tiered moon, 3D lantern and choice cards with hover lift.
+2. **La Casa del Dieci (`org.greia.casa-del-dieci`)**: Number bonds to 10 in a cozy storybook cottage with cobblestone path, chimney smoke, glowing windows, 3D buttons.
+3. **La Bottega delle Misure (`org.greia.bottega-delle-misure`)**: Comparison and non-standard measurement in a warm carpenter workshop with wood walls, hanging scales, brass ruler, 3D satin gift boxes.
+4. **Specchi Magici (`org.greia.specchi-magici`)**: Geometric symmetry and reflection in a royal velvet palace chamber, baroque gold frame, glowing symmetry beam, 3D gems, ghost piece preview.
+5. **Festa delle Rime (`org.greia.festa-delle-rime`)**: Phonological rhyme matching at a festival night market, colorful bunting, hanging paper lanterns with tassels, 3D choice cards.
+6. **Officina dei Suoni (`org.greia.officina-dei-suoni`)**: Initial phoneme and syllable sound workshop with acoustic pegboard, copper resonator tubes, synthesizer workbench, 3D wooden letter tiles and picture cards.
+7. **La Posta di Leo (`org.greia.posta-di-leo`)**: Storybook postcard creation and stamp collecting with mahogany desk, green leather blotter mat with brass corner pins, 3D perforated postage stamps.
+8. **Tre Carte, Una Storia (`org.greia.tre-carte-una-storia`)**: Story sequencing and caption authoring with 4 narrative seeds, audio narration, caption editor, 12-story gallery, and privacy-safe storage/events.
+9. **Nanna delle Nuvolette (`org.greia.nanna-delle-nuvolette`)**: Toddler bedtime care with 3 cloud friends, 6 cozy blanket patterns, wicker star basket, yawning/sleeping animations, privacy-safe storage and `cloud.rest_completed` events.
+10. **Morbidi Mostriciattoli (`org.greia.morbidi-mostriciattoli`)**: Soft monster creator with 6 body shapes, 8 colors, 6 eyes, 6 mouths, 6 tufts, 6 accessories, 24-recipe gallery with LRU thumbnail cache, squash-stretch preview animations, and privacy-safe `monster.portrait_created` events.
+
+Universal UX & Pointer Overhaul:
+- Continuous mouse cursor visibility enabled across all activities (`pygame.mouse.set_visible(True)`).
+- Continuous `MOUSEMOTION` hover tracking across all cards, tabs, and buttons for immediate visual feedback and responsive mouse interaction.
+- Flat programmer art completely replaced with high-contrast, warm, storybook-quality scenery, 3D beveled cards with drop shadows, and rich child UI.
 
 ## Early-learning Activity expansion: Casa del Dieci acceptance (2026-08-24)
 
