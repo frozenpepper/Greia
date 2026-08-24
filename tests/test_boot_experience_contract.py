@@ -88,8 +88,8 @@ class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
         text = BOOT_DESIGN.read_text(encoding="utf-8")
         self.assertIn("Plymouth is not part of the target Greia architecture", text)
         self.assertIn("The launcher owns the actual intro animation", text)
-        self.assertIn("0.75–0.95 seconds", text)
-        self.assertIn("never exceed **1.0 second**", text)
+        self.assertIn("5 seconds", text)
+        self.assertIn("2 seconds", text)
         self.assertIn("Audio also starts here, never in initramfs", text)
 
     def test_boot_design_preserves_diagnostic_recovery_channel(self) -> None:
@@ -275,10 +275,14 @@ class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
         builder_path = ROOT / "tools/build-live-usb.sh"
         self.assertTrue(builder_path.stat().st_mode & 0o111)
 
-    def test_launcher_intro_is_bounded_and_monotonic(self) -> None:
+    def test_launcher_intro_is_five_seconds_plus_two_second_hold_and_monotonic(self) -> None:
         intro = (ROOT / "src/greia_launcher/boot_intro.py").read_text(encoding="utf-8")
-        self.assertIn("MAX_INTRO_SECONDS = 2.5", intro)
-        self.assertIn("TARGET_INTRO_SECONDS = 2.2", intro)
+        self.assertIn("ANIMATION_SECONDS = 5.0", intro)
+        self.assertIn("FINAL_FRAME_HOLD_SECONDS = 2.0", intro)
+        self.assertIn(
+            "MAX_INTRO_SECONDS = ANIMATION_SECONDS + FINAL_FRAME_HOLD_SECONDS",
+            intro,
+        )
         self.assertIn("time.monotonic()", intro)
         self.assertNotIn("time.sleep(", intro)
         self.assertIn("boot-intro-played", intro)
@@ -306,7 +310,9 @@ class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
                         "GREIA_BOOT_LOGO": str(ROOT / "assets/boot/static/greia-boot-logo.png"),
                     },
                     clear=False,
-                ):
+                ), mock.patch.object(boot_intro, "ANIMATION_SECONDS", 0.01), mock.patch.object(
+                    boot_intro, "FINAL_FRAME_HOLD_SECONDS", 0.01
+                ), mock.patch.object(boot_intro, "_RENDER_INTERVAL_SECONDS", 0.001):
                     self.assertFalse(boot_intro.boot_intro_played())
                     boot_intro.run_intro(screen, pygame)
                     self.assertTrue(boot_intro.boot_intro_played())
