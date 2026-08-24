@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "locale": "en",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Momo's Lights",
+    "activity.luci_di_momo.title": "Momo's Lights",
+    "prompt.choose": "How many lights did you see?",
+    "victory.title": "The garden is glowing!",
+    "victory.subtitle": "You woke all of Momo's fireflies.",
+    "button.play_again": "PLAY AGAIN"
+  },
+  "audio": {}
+}
