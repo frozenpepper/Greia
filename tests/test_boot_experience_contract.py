@@ -277,8 +277,8 @@ class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
 
     def test_launcher_intro_is_bounded_and_monotonic(self) -> None:
         intro = (ROOT / "src/greia_launcher/boot_intro.py").read_text(encoding="utf-8")
-        self.assertIn("MAX_INTRO_SECONDS = 1.0", intro)
-        self.assertIn("TARGET_INTRO_SECONDS = 0.85", intro)
+        self.assertIn("MAX_INTRO_SECONDS = 2.5", intro)
+        self.assertIn("TARGET_INTRO_SECONDS = 2.2", intro)
         self.assertIn("time.monotonic()", intro)
         self.assertNotIn("time.sleep(", intro)
         self.assertIn("boot-intro-played", intro)

@@ -23,8 +23,8 @@ from pathlib import Path
 from typing import Any
 
 
-MAX_INTRO_SECONDS = 1.0
-TARGET_INTRO_SECONDS = 0.85
+MAX_INTRO_SECONDS = 2.5
+TARGET_INTRO_SECONDS = 2.2
 
 _ONE_SHOT_MARKER = Path("/run/greia-os/boot-intro-played")
 _DEFAULT_LOGO = Path("/opt/greia-os/assets/boot/static/greia-boot-logo.png")

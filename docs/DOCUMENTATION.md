@@ -58,6 +58,8 @@ Of particular relevance to current UI/Activity/developer/update work:
 
 `GREIA_PERFORMANCE_BEST_PRACTICES.md` is the living measured-performance manual: device cost model, optimization principles (P1–P14), instruments/evidence discipline, append-only case studies and the Activity-facing rules destined for the authoring skill. It operationalizes the foundations' low-resource rules; it adds no new authority beyond them.
 
+`BOOT_PIPELINE_AGENT_GUIDE.md` is the authoritative operational guide for the boot pipeline, resolution-independent display composition, initramfs framebuffer splash, non-root Xorg wrapper contracts, and systemd hardware lifecycle.
+
 ### 2.5 Exact implemented contracts — source/runtime declarations
 
 For exact currently implemented APIs, schemas, command vocabularies and limits, source/runtime declarations are authoritative.
