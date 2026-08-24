@@ -1,123 +1,389 @@
-# Greia OS Boot Pipeline & Display Architecture Guide
+# Greia OS Boot Pipeline & Display Operating Guide
 
-> **Target Audience**: AI Agents and Engineers working on Greia OS boot, graphics, initramfs, systemd services, and display sessions.
-> **Status**: Authoritative Reference / Non-Negotiable Contract.
+> **Audience:** agents and engineers working on Greia OS boot, graphics, initramfs, first-boot/systemd services, installer media, GRUB/Syslinux, Xorg startup and physical recovery.  
+> **Status:** **derived mandatory operating guide**. Exact implemented contracts remain owned by source/runtime declarations; accepted ADRs/product requirements outrank this guide.  
+> **Reviewed:** 2026-08-24 after the reference-Acer boot-loop/recovery incident.
 
----
+For any substantive boot/recovery work, also read the mandatory OS-skill companion:
 
-## 1. Core Architectural Philosophy
+```text
+skills/greia-os-work/BOOT.md
+```
 
-### 1.1. Resolution-Agnostic Assets & Programmatic Runtime Backgrounds
-* **DO NOT bake display-specific resolutions into static image files** (e.g. creating 1024x600, 1366x768, or 1920x1080 letterboxed images).
-* **The Logo is an Immutable Fixed-Size Asset**: The canonical character/logo asset is stored at its native artist-rendered resolution (222x600 px for Professor Pip).
-* **The Screen Background is Created Programmatically**:
-  Every boot layer (GRUB, early framebuffer renderer, and Pygame launcher) is responsible for querying the physical display resolution (W x H) at runtime, filling the entire screen memory with the palette background color (pure white `#ffffff`), and blitting the unscaled 222x600 logo directly into the physical center:
-  `x_0 = (W - 222) / 2`, `y_0 = (H - 600) / 2`
-  - On a 1024x600 screen (e.g., Acer Aspire One): the logo spans 100% of the screen height (y = 0 to y = 600), perfectly centered at x = 401.
-  - On a 1920x1080 screen: the background fills 1920x1080, and the logo sits cleanly centered at x = 849, y = 240 with zero distortion or blur.
+The historical incident record remains in:
 
-### 1.2. Non-Destructive Asset Lineage
-* **NEVER run color-distance thresholding, keying, or automated background removal on character frames.**
-* The 52 animation frames (`frame_0000.png` ... `frame_0051.png`) in `assets/boot/frames/` are the **complete, full-color artist-drawn assets**.
-* Running automated thresholding will replace dark navy/black interior details (eyes, pupils, shading, clothing lines) with white holes, destroying the artwork.
+```text
+docs/INSTALLED_OS_BOOT_POSTMORTEM.md
+docs/INSTALLATION_ISSUES_LOG.md
+docs/INSTALLATION_USB_BOOT_POSTMORTEM.md
+```
 
----
-
-## 2. Boot Pipeline Implementation Layers
-
-### 2.1. Layer 1: GRUB 2 Bootloader
-* **File**: `build/overlay/boot/grub/greia-theme.txt` (and `tools/generate_boot_artwork.py`)
-* **Configuration**:
-  ```text
-  title-text: ""
-  desktop-color: "#ffffff"
-  desktop-image: "greia-boot-logo.png"
-  desktop-image-scale-method: "padding"
-  desktop-image-h-align: "center"
-  desktop-image-v-align: "center"
-  ```
-* **Behavior**: GRUB natively fills whatever VESA or UEFI GOP resolution is active with `#ffffff` and centers `greia-boot-logo.png` without stretching.
-
-### 2.2. Layer 2: Early Framebuffer Splash (`greia-fb-splash.c`)
-* **File**: `build/early-boot/greia-fb-splash.c`
-* **Compiled Path**: `/usr/lib/greia-boot/greia-fb-splash`
-* **Behavior**:
-  1. Opens `/dev/fb0` and reads `xres`, `yres`, and pixel format via `FBIOGET_VSCREENINFO`.
-  2. Fills the entire framebuffer memory with the theme background (`pack_pixel(&var, 255, 255, 255)`).
-  3. Calculates centering coordinates (x0, y0) and copies the 222x600 P6 PPM pixels directly to memory.
-  4. Progress bar drawing has been permanently removed from the splash binary.
-
-### 2.3. Layer 3: Pygame Launcher Animation (`boot_intro.py`)
-* **File**: `src/greia_launcher/boot_intro.py`
-* **Timing Contract**:
-  - `TARGET_INTRO_SECONDS = 2.2`
-  - `MAX_INTRO_SECONDS = 2.5`
-  - Driven monotonically via `time.monotonic()` (never `time.sleep()`).
-  - Plays the 52 sequential frames smoothly at ~24 fps.
-* **Display Hand-off**:
-  - `_draw_frame` fills `screen.fill((255, 255, 255))` and blits the animation frame centered on the active display surface.
-  - One-shot marker written to `/run/greia-os/boot-intro-played` so the intro only runs once per boot.
+Do not copy a command or constant from an old postmortem without checking current source.
 
 ---
 
-## 3. Systemd & Linux Platform Contracts (Critical Gotchas)
+## 1. Boot is a chain of separately owned artifacts
 
-### 3.1. Debian Non-Root Xorg Wrapper (`/etc/X11/Xwrapper.config`)
-> **The Problem**: Debian\x27s `/usr/lib/xorg/Xorg.wrap` denies non-root users from starting Xorg unless they have an active logind console session.
-> Because `greia-launcher.service` runs as unprivileged user `greiakid` in a systemd service (not a console session), Xorg fails immediately on boot if `Xwrapper.config` is missing!
+Treat these layers independently:
 
-* **Required File**: `/etc/X11/Xwrapper.config`
-  ```text
-  allowed_users=anybody
-  needs_root_rights=yes
-  ```
-* **Permissions**: `/usr/lib/xorg/Xorg.wrap` must have SUID permissions (`chmod u+s`).
+```text
+firmware / removable-media bootloader
+  -> GRUB or Syslinux policy
+  -> kernel command line
+  -> initramfs + root-device discovery
+  -> installed root mount
+  -> first-boot / recurring systemd prerequisites
+  -> VT/display-server acquisition
+  -> Greia launcher
+  -> launcher-owned intro
+```
 
-### 3.2. Systemd `ConditionPathExists` vs `Requires=` Deadlock
-> **The Trap**: If service B has `ConditionPathExists=!/file`, when `/file` exists, systemd **skips** service B (leaving it inactive).
-> If service A has `Requires=service-B`, systemd will **refuse to start service A** because service B was skipped!
-
-* **The Rule**: Never put `ConditionPathExists` on a service that other units depend on via `Requires=`.
-* **The Solution**: Use an internal idempotency guard inside the script itself:
-  ```sh
-  marker=/var/lib/greia-os/init*
-  [ ! -e $marker ] || exit 0
-  ```
-  with `RemainAfterExit=yes` in the unit. The service runs, exits 0 in 1 ms, and stays in `active (exited)` state so dependent services start normally.
-
-### 3.3. Kernel Commandline & Intel i915 DPMS Power-down
-> **The Trap**: Setting `console=null` detaches `/dev/tty1` from the kernel console. When `xinit ... vt1` runs, it fails to acquire `/dev/tty1`.
-> Without a DRM master process, the Intel `i915` driver assumes an idle machine and enters DPMS display sleep after 10 seconds (turning off the LCD panel backlight).
-
-* **Canonical Release Bootline**:
-  ```text
-  linux /vmlinuz root=UUID=... rw quiet splash loglevel=0 systemd.show_status=false rd.systemd.show_status=false udev.log_priority=3 vt.global_cursor_default=0 console=tty1 panic=0 systemd.crash_shell=no systemd.crash_chvt=0 consoleblank=0
-  ```
-  - `console=tty1`: Keeps VT1 valid for Xorg display acquisition.
-  - `quiet splash loglevel=0 vt.global_cursor_default=0`: 100% silent boot (zero kernel text, zero blinking cursor).
-  - `panic=0`: Prevents infinite boot loops on fatal errors.
-  - `rw`: Mounts root read-write from second 0 so `systemd-journald` writes persistent logs immediately to `/var/log/journal`.
-
-### 3.4. Persistent Systemd Journal Logging
-* Directory `/var/log/journal/<machine-id>` must exist with ownership `root:systemd-journal` and permissions `2755`.
-* Drop-in `/etc/systemd/journald.conf.d/00-persistent.conf` must contain:
-  ```ini
-  [Journal]
-  Storage=persistent
-  SyncIntervalSec=1s
-  RateLimitIntervalSec=0
-  RateLimitBurst=0
-  ```
+A source edit is not proof of the generated artifact that executes on the machine. Before changing boot behavior, identify the first known-working layer, the first failing layer, which artifact the target actually executes, and what build/install step may regenerate it later.
 
 ---
 
-## 4. Verification Checklist for Agents
+## 2. Current artwork lineage and display behavior
 
-Before declaring any boot or display task complete:
+### 2.1 Canonical source artwork
 
-1. [ ] **Automated Tests**: Run `make verify`. All 1,153+ tests must pass cleanly.
-2. [ ] **Artwork Integrity**: Verify `assets/boot/frames/frame_0000.png` through `frame_0051.png` have not been altered with destructive thresholding.
-3. [ ] **White Background**: Verify `greia-theme.txt` contains `desktop-color: "#ffffff"` and `boot_intro.py` fills `(255, 255, 255)`.
-4. [ ] **Xwrapper Presence**: Verify `/etc/X11/Xwrapper.config` exists on target `/dev/sda1`.
-5. [ ] **Initramfs & GRUB Regeneration**: Run `update-initramfs -u` and `update-grub` in chroot on the target root filesystem.
-6. [ ] **Clean Unmount**: Ensure `/dev/sda1` is synced and cleanly unmounted before requesting a hardware reboot.
+The retained full-colour Professor Pip frame is the source artwork:
+
+```text
+assets/boot/frames/frame_0051.png
+```
+
+Its current expected source size in `tools/generate_boot_artwork.py` is:
+
+```text
+222 x 600
+```
+
+Never use thresholding, colour-distance keying, binary masking or automated background removal on these frames. Earlier experiments destroyed dark pupils, outlines, shading and antialiasing.
+
+### 2.2 Generated GRUB / early-framebuffer presentation canvas
+
+Current source does **not** hand the raw 222×600 portrait directly to every boot layer. `tools/generate_boot_artwork.py` currently creates one canonical **1024×600 white presentation canvas**, pastes the untouched 222×600 source at native size in its center, and emits:
+
+```text
+assets/boot/static/greia-boot-logo.png
+build/overlay/etc/greia-boot/boot-logo.ppm
+build/installer-overlay/etc/greia-boot/boot-logo.ppm
+build/overlay/boot/grub/greia-theme.txt
+```
+
+That 1024×600 canvas is a current intermediate composition, not permission to generate a different baked asset for every physical display. Runtime adapters still fit the whole composition proportionally to the actual viewport.
+
+If this intermediate design changes, update generator source, tests, design docs and finished-image verification together. Do not silently treat an old 1600×900 description or a raw-portrait description as current implementation truth.
+
+### 2.3 GRUB presentation
+
+Current installed GRUB uses a theme rather than raw `background_image` stretching:
+
+```text
+title-text: ""
+desktop-color: "#ffffff"
+desktop-image: "greia-boot-logo.png"
+desktop-image-scale-method: "padding"
+desktop-image-h-align: "center"
+desktop-image-v-align: "center"
+```
+
+The normal Greia menu entry remains automatic and `--unrestricted`. GRUB edit/command access is protected separately by the owner credential.
+
+### 2.4 Early framebuffer renderer
+
+`build/early-boot/greia-fb-splash.c`:
+
+1. opens `/dev/fb0` and reads real geometry/pixel format;
+2. fills the framebuffer using the generated composition's background pixel;
+3. proportionally fits and centers the **whole generated PPM composition**;
+4. fails soft if the framebuffer/pixel layout is unsupported;
+5. emits no console text of its own.
+
+The renderer currently still supports explicit milestone progress through `--progress`. That behavior is also reflected by `docs/design/GREIA_BOOT_PROGRESS.md` and `tests/test_boot_progress_contract.py`.
+
+**Do not claim the progress bar has been removed while those sources still draw and require it.** If the product decision is to remove progress presentation later, source, stage scripts, launcher handoff, tests and docs must change in one reviewed tranche and receive physical visual acceptance.
+
+### 2.5 Launcher intro
+
+`src/greia_launcher/boot_intro.py` currently owns the animated handoff after a real graphical surface exists.
+
+Current source timing:
+
+```text
+TARGET_INTRO_SECONDS = 2.2
+MAX_INTRO_SECONDS = 2.5
+```
+
+It is monotonic-time driven rather than frame sleeps and is one-shot per boot through the runtime marker under `/run/greia-os`.
+
+The older `0.75–0.95 s / <=1.0 s` text in `GREIA_BOOT_EXPERIENCE.md` became stale when the accepted source was changed to the current 2.2/2.5-second values; living docs must follow the source contract rather than preserving both as simultaneous requirements.
+
+---
+
+## 3. GRUB owner recovery contract
+
+The current owner-approved default is intentionally simple:
+
+```text
+GRUB user:     greia
+GRUB password: greia
+```
+
+Normal automatic boot does not ask for it; the Greia OS entry is `--unrestricted`. It protects GRUB editing/command access.
+
+Rules:
+
+- never reintroduce the historical default user `greia-recovery`;
+- never make a generated random string the default owner recovery credential;
+- the installed target stores the password as a PBKDF2 hash;
+- default provisioning does not require a plaintext random recovery-code file on the target;
+- installer-media and installed-target GRUB generation must use the same canonical identity;
+- validate generated `grub.cfg`, not just the template.
+
+Canonical source owners include:
+
+```text
+src/greia_platform/grub_security.py
+build/overlay/etc/grub.d/01_greia_auth
+build/overlay/etc/grub.d/10_greia_appliance
+src/greia_platform/boot_contract.py
+```
+
+---
+
+## 4. Developer SSH is a boot-recovery invariant
+
+For explicit development/test images the owner-approved login is:
+
+```text
+user:     greia
+password: greia
+```
+
+Root SSH remains disabled.
+
+The effective developer policy must allow the password **by itself**:
+
+```text
+PasswordAuthentication yes
+KbdInteractiveAuthentication no
+AuthenticationMethods password
+PermitRootLogin no
+AllowUsers greia
+```
+
+Do not use:
+
+```text
+AuthenticationMethods publickey,password
+```
+
+because OpenSSH interprets that as requiring both methods, defeating password recovery.
+
+`build/overlay/usr/local/lib/greia-os/prepare-developer-ssh` owns the boot-time repair/verification of this policy and creates a machine-local Ed25519 host identity before sshd starts. Server host identity is not an operator login requirement.
+
+A boot/image change on the reference development Acer must preserve automatic SSH recovery unless the owner explicitly changes that policy.
+
+---
+
+## 5. Developer boots must preserve failure evidence
+
+The accepted developer/test generated kernel policy is source-owned by `10_greia_appliance` and `boot_contract.py`. Current required developer arguments include:
+
+```text
+console=tty1
+panic=0
+loglevel=4
+systemd.show_status=true
+rd.systemd.show_status=true
+udev.log_priority=4
+vt.global_cursor_default=1
+```
+
+`panic=0` is critical: a fatal kernel/initramfs problem remains visible instead of rebooting after a few seconds and recreating an opaque loop.
+
+Never reintroduce timed panic reboot (`panic=5`, `panic=30`, etc.) on developer/test hardware during bring-up.
+
+The current **release** source is deliberately different and remains source-owned. Do not invent a replacement "canonical release bootline" in this document. In particular, the provisional Xorg backend and release console policy still require explicit physical acceptance before a release claim. `greia-launcher.service` currently launches Xorg via `xinit ... vt1`; that compatibility fact must be reviewed together with generated kernel args rather than changed from prose alone.
+
+---
+
+## 6. Initramfs: regeneration is a mutation, not verification
+
+This is the most important operational correction from the incident.
+
+**Never run `update-initramfs -u` merely because a task is described as boot/display/GRUB/recovery work.**
+
+Regenerate initramfs only when an initramfs-owned input changed, such as:
+
+- initramfs-tools hooks/scripts/config;
+- the early framebuffer binary/data copied by a hook;
+- boot-critical target-kernel module policy;
+- kernel/initramfs package state;
+- another explicit dependency embedded in the initrd.
+
+A GRUB theme-only, GRUB credential-only, SSH-only, first-boot-only, launcher-animation-only or unrelated systemd change does not automatically require it.
+
+### Why this rule exists
+
+During the historical Acer failure, the installed initramfs was regenerated in a context where host-derived probing did not represent the target laptop. The generated installed initrd lacked the root-storage SATA/AHCI stack even though another payload/source initrd inspected elsewhere contained it. The machine could not see the root disk and booted into an opaque failure loop.
+
+### If regeneration is actually required
+
+Before changing a known-working physical target:
+
+1. identify exact root partition/UUID and kernel version;
+2. preserve the known-working initrd when performing emergency repair;
+3. establish an independent recovery path;
+4. verify target-kernel-aware storage-module inclusion policy.
+
+After regeneration and before reboot:
+
+1. inspect the **new generated installed initrd**;
+2. verify boot-critical storage modules required by that target remain present according to current policy;
+3. verify the expected Greia initramfs hooks/assets are actually embedded;
+4. preserve the command output/evidence.
+
+`update-initramfs` exiting zero proves the command completed. It does not prove the resulting image can mount the physical root disk.
+
+---
+
+## 7. GRUB regeneration and bootloader installation are different operations
+
+Run `update-grub` only when GRUB inputs changed.
+
+After generation and before reboot:
+
+```text
+grub-script-check /boot/grub/grub.cfg
+python3 -m greia_platform.boot_contract ...
+```
+
+Also verify:
+
+- intended root UUID matches the actual target;
+- kernel/initrd paths resolve;
+- exactly one normal Greia entry exists;
+- normal entry is `--unrestricted`;
+- owner auth is `password_pbkdf2 greia ...`;
+- no accidental recovery/alternate entry reappeared.
+
+Do **not** run `grub-install` during a config/policy-only repair merely as a ritual when GRUB is already executing. Reinstall the bootloader only when evidence says the installed bootloader itself is damaged or intentionally being replaced.
+
+---
+
+## 8. First-boot/systemd dependency rule
+
+`greia-launcher.service` has a hard dependency on `greia-first-boot.service`. Therefore the first-boot unit must remain satisfiable on later boots.
+
+Never put a unit-level negative marker condition on that required service, for example:
+
+```text
+ConditionPathExists=!/var/lib/greia-os/initialized
+```
+
+The one-shot service should run and let its script exit successfully when initialization already happened. Current idempotency must use the exact marker:
+
+```sh
+marker=/var/lib/greia-os/initialized
+[ ! -e "$marker" ] || exit 0
+```
+
+Do not use a wildcard marker such as `init*`; if more than one path later matches, the shell test can receive multiple arguments and fail.
+
+`RemainAfterExit=yes` keeps the successful one-shot state available to dependents.
+
+Volatile `/run` paths needed during service setup belong to systemd/tmpfiles ownership, not a late `ExecStartPre` workaround.
+
+---
+
+## 9. Current Xorg compatibility gotchas
+
+R7 direct graphics/session/input remains open. Xorg/xinit is a compatibility implementation, not the final architecture.
+
+Current hardware-proven source includes these constraints:
+
+- launcher/installer launches Xorg on `vt1`;
+- `StandardInput=null` prevents GUI children from being SIGTTIN-stopped by the VT;
+- current Xwrapper policy permits the appliance-owned non-desktop session;
+- desktop-daemon namespace hardening must not block the display owner from VT/DRM/input/runtime paths;
+- current Xorg details must stay below stable platform semantics so R7 can replace them.
+
+Do not copy an Xorg workaround into Activity or portable platform APIs.
+
+---
+
+## 10. Persistent diagnostics
+
+Boot polish must not delete diagnostics.
+
+Persistent journald and authorized developer SSH are the primary non-child-facing evidence channels once userspace is available. If a developer boot fails before SSH, `console=tty1` + `panic=0` deliberately preserves the last fatal evidence on the display.
+
+Do not trade diagnostics for a prettier failure loop.
+
+---
+
+## 11. Physical repair protocol
+
+For an already-installed device:
+
+1. refresh/re-resolve repository `main` and record source SHA;
+2. establish the safest existing independent access path;
+3. identify the target by Greia filesystem identity/UUID and verify its parent disk is non-removable;
+4. never assume `/dev/sda1` without checking;
+5. capture current `grub.cfg`, running/target kernel state, relevant initrd, first-boot/SSH state and files to be modified;
+6. back up the exact target files before mutation;
+7. change one causal layer at a time;
+8. do not repartition, format or reinstall during a targeted boot repair without evidence that layout/filesystem is the cause;
+9. do not mix `grub-install`, initramfs regeneration, GRUB policy, SSH, graphics and unrelated package changes into one unreviewable repair block.
+
+### Mandatory pre-reboot checks
+
+Depending on what changed, verify:
+
+```text
+target identity + UUID
+kernel/initrd paths
+generated initrd contents if regenerated
+grub.cfg syntax + Greia boot contract if regenerated
+developer marker
+SSH enablement/effective auth policy
+known greia / greia recovery credential
+```
+
+If the device is already reachable over SSH, establish a **second fresh SSH connection** before reboot. Do not rely only on an inherited session that may survive despite a broken restart configuration.
+
+### Mandatory post-reboot checks
+
+For a developer target:
+
+- no automatic reboot loop;
+- fresh `greia / greia` SSH returns automatically after userspace/network;
+- inspect actual `/proc/cmdline`;
+- verify launcher/display service state;
+- review `systemctl --failed`;
+- physically observe child-visible presentation if it changed.
+
+---
+
+## 12. Verification checklist for agents
+
+Before declaring boot/display work complete:
+
+1. [ ] Re-resolve current source SHA and review concurrent work.
+2. [ ] Run focused source/unit tests for the touched contract; run the full project gate before claiming repository-wide green.
+3. [ ] Verify artwork/source lineage if presentation changed.
+4. [ ] Verify generated/final image bytes when build output is part of the claim.
+5. [ ] Regenerate initramfs **only if an initramfs-owned input changed**; if regenerated, inspect the new installed artifact before reboot.
+6. [ ] Regenerate GRUB **only if GRUB inputs changed**; validate generated `grub.cfg` before reboot.
+7. [ ] Do not run `grub-install` unless bootloader installation itself is the evidenced problem/change.
+8. [ ] Preserve `greia / greia` GRUB owner recovery and developer SSH recovery where the developer profile applies.
+9. [ ] Preserve `panic=0`/visible diagnostics on developer/test hardware.
+10. [ ] Verify exact first-boot idempotency and required-unit behavior on second/later boots.
+11. [ ] Cleanly sync/unmount any offline-mounted target before reboot.
+12. [ ] Establish a recovery path before the physical reboot.
+13. [ ] After reboot, verify fresh SSH, actual cmdline, launcher/display state and failed units at the claimed scope.
+14. [ ] Update source tests, living docs, `skills/greia-os-work/BOOT.md`, active-plan progress and `HANDOVER.md` when the contract/evidence changed.
+
+A source test PASS is not a physical boot PASS. A successful command is not proof that the artifact it generated is bootable. The standard is: **observable, reversible, artifact-verified and recoverable boot work**.
