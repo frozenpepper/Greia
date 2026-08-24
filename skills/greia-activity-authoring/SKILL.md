@@ -17,10 +17,19 @@ These apply to all substantive Activity work:
 1. An Activity runs under Greia platform authority. Do not bypass platform lifecycle, storage, permissions, progression, Home/Back, input or runtime policy.
 2. First-party implementation must remain maintainable: thin `main.py`, cohesive modules/classes, composition over procedural sprawl, reuse Greia platform primitives before inventing local frameworks.
 3. Do not widen security/runtime policy merely to make one Activity convenient. Package-local code is Activity code; unknown external dependencies remain forbidden unless platform policy deliberately changes.
-4. **A new or substantively changed Activity is not done until the final runtime-relevant source state passes the real Greia Simulator launch/survival gate.** Source validation, imports, unit tests, `make verify`, `python main.py`, or package validation do not replace this.
-5. Simulator launch evidence becomes stale after any runtime-relevant edit. Relaunch the final state.
-6. If the simulator cannot be run, report `INTEGRATION-UNVERIFIED` / `SOURCE-VERIFIED / SIMULATOR-UNVERIFIED`; do not call the Activity complete or working.
-7. Claim only evidence that actually executed. Simulator evidence is not physical Acer/Pi evidence.
+4. **Every new Activity must explicitly decide its child-facing presenter/character and speech plan.** Greia's recurring cast should normally be considered as social anchors, guides, reactions and curiosity hosts; omission must be deliberate, not accidental.
+5. **Subject-rich Activities must explicitly consider an optional researched curiosity/facts interaction.** When appropriate, use short, well-sourced, child-safe facts delivered through multilingual-ready semantic cues and, where voice is part of the feature, reviewed localized speech.
+6. **A new or substantively changed Activity is not done until the final runtime-relevant source state passes the real Greia Simulator launch/survival gate.** Source validation, imports, unit tests, `make verify`, `python main.py`, or package validation do not replace this.
+7. Simulator launch evidence becomes stale after any runtime-relevant edit. Relaunch the final state.
+8. If the simulator cannot be run, report `INTEGRATION-UNVERIFIED` / `SOURCE-VERIFIED / SIMULATOR-UNVERIFIED`; do not call the Activity complete or working.
+9. Claim only evidence that actually executed. Simulator evidence is not physical Acer/Pi evidence.
+
+For presenter/voice/fact design, read:
+
+```text
+skills/greia-activity-authoring/PRESENTERS_AND_CURIOSITY.md
+skills/greia-activity-authoring/VOICE_GENERATION.md
+```
 
 For the exact mandatory launch procedure and failure criteria, read:
 
@@ -32,19 +41,31 @@ An `ImportError`, `ModuleNotFoundError`, startup exception, immediate exit, dead
 
 ## Read by task
 
-### Creating a new Activity or changing Activity code
+### Creating a new Activity
 
-If the Activity is governed by a current named product/design/implementation plan, read that Activity-specific specification first for **what the Activity must do**. Then use this skill for **how one Greia Activity must be engineered, integrated and accepted**. Do not copy project/portfolio sequencing into the Activity skill.
-
-Read:
+If the Activity is governed by a current named product/design/implementation plan, read that Activity-specific specification first for **what the Activity must do**. Then read:
 
 ```text
 skills/greia-activity-authoring/ENGINEERING.md
+skills/greia-activity-authoring/PRESENTERS_AND_CURIOSITY.md
+skills/greia-activity-authoring/VOICE_GENERATION.md
 skills/greia-activity-authoring/LAUNCH_ACCEPTANCE.md
 docs/architecture/GREIA_ACTIVITY_ECOSYSTEM.md
 docs/product/ACTIVITY_SYSTEM_NAVIGATION.md
 docs/product/ACTIVITY_INPUT_STANDARDS.md
+docs/design/GREIA_CANONICAL_CAST_SYSTEM.md
 ```
+
+A new Activity design must record:
+
+```text
+lead presenter/mascot or deliberate none
+speech/shared-utterance plan
+whether optional curiosity facts fit the subject
+supported locales / multilingual speech plan
+```
+
+Do not treat voice as something to consider only after the Activity is otherwise finished.
 
 For Python/runtime/import work also inspect current source authority:
 
@@ -53,6 +74,22 @@ runtime/child-runtime.toml
 src/greia_launcher/runtime_adapter.py
 src/greia_platform/activity_api.py
 src/greia_platform/activities.py
+```
+
+### Changing existing Activity code
+
+Read:
+
+```text
+skills/greia-activity-authoring/ENGINEERING.md
+skills/greia-activity-authoring/LAUNCH_ACCEPTANCE.md
+```
+
+If the change affects character presence, speech, audio, knowledge/facts, localization or child-facing presentation, also read:
+
+```text
+skills/greia-activity-authoring/PRESENTERS_AND_CURIOSITY.md
+skills/greia-activity-authoring/VOICE_GENERATION.md
 ```
 
 ### Refactoring or splitting an existing Activity
@@ -79,11 +116,7 @@ src/greia_platform/activity_discovery.py
 src/greia_launcher/catalogue_view.py
 ```
 
-If runtime-relevant manifest data changed, also run:
-
-```text
-skills/greia-activity-authoring/LAUNCH_ACCEPTANCE.md
-```
+If runtime-relevant manifest data changed, also run `LAUNCH_ACCEPTANCE.md`.
 
 ### UI, layout, canvas, responsive or input work
 
@@ -100,7 +133,7 @@ docs/product/ACTIVITY_INPUT_STANDARDS.md
 docs/design/GREIA_ACTIVITY_CANVAS_AND_VIEWPORT_AUTHORING.md
 ```
 
-For Pygame Activities inspect the current shared primitives instead of copying launcher code:
+For Pygame Activities inspect current shared primitives instead of copying launcher code:
 
 ```text
 src/greia_platform/pygame_ui.py
@@ -150,12 +183,7 @@ src/greia_platform/trust.py
 
 Use the Simulator's canonical package-install path for package acceptance; then follow `LAUNCH_ACCEPTANCE.md`.
 
-Developer-image built-in replacement is a separate platform control path, not
-an Activity package shortcut. The privileged owner resolves an installed
-target only from one validated canonical manifest identity through the shared
-Activity registry, preserving exact path safety, backup/restore state and the
-`BUILT_IN` versus `DEVELOPER_UNSIGNED` trust distinction. Never infer a target
-from a title, slug, legacy alias or directory name.
+Developer-image built-in replacement is a separate platform control path, not an Activity package shortcut. The privileged owner resolves an installed target only from one validated canonical manifest identity through the shared Activity registry, preserving exact path safety, backup/restore state and the `BUILT_IN` versus `DEVELOPER_UNSIGNED` trust distinction. Never infer a target from a title, slug, legacy alias or directory name.
 
 ### Localization, language or grammatical agreement
 
@@ -169,22 +197,27 @@ src/greia_platform/language_presentation.py
 src/greia_platform/profile_presentation.py
 ```
 
+For spoken/localized presenter or fact content also read `PRESENTERS_AND_CURIOSITY.md` and `VOICE_GENERATION.md`.
+
 If visible/runtime resources changed, finish with `LAUNCH_ACCEPTANCE.md` in the materially affected locale/profile configuration.
 
-### Character speech, pedagogical speech or voice generation
+### Character presenter, speech, pedagogical speech, facts or voice generation
 
 Read:
 
 ```text
+skills/greia-activity-authoring/PRESENTERS_AND_CURIOSITY.md
 skills/greia-activity-authoring/VOICE_GENERATION.md
+docs/design/GREIA_CANONICAL_CAST_SYSTEM.md
 docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md
 docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md
 ```
 
-Only read the local production setup when actual custom voice production is requested:
+Only read the local production setup when actual custom voice production/configuration is required:
 
 ```text
 docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md
+docs/agents/GREIA_CHATTERBOX_PRODUCTION_FIELD_GUIDE.md
 ```
 
 ### Microphone/capture work
@@ -213,23 +246,24 @@ Then rerun `LAUNCH_ACCEPTANCE.md` because an optimized Activity that no longer l
 
 ### Broad cross-cutting Activity work
 
-Only when the task genuinely spans several of the areas above, use the broad synthesis reference:
+Only when the task genuinely spans several of the areas above, use:
 
 ```text
 skills/greia-activity-authoring/CORE.md
 ```
 
-`CORE.md` is **not mandatory first reading for every Activity task**. Prefer the narrower files above so agents load only relevant context.
+`CORE.md` is **not mandatory first reading for every Activity task**. Prefer the narrower files above.
 
 ## Completion check
 
-Before saying substantive Activity work is done, answer all four:
+Before saying substantive Activity work is done, answer:
 
 ```text
 1. Which task-specific docs above were read?
-2. Which source/test validation actually ran?
-3. What exact final source SHA/state was launched through Greia Simulator?
-4. Did it reach a usable frame, survive >=10s, survive meaningful input, and return cleanly to Shell?
+2. For a new Activity: what presenter/speech/curiosity-fact decision was made?
+3. Which source/test validation actually ran?
+4. What exact final source SHA/state was launched through Greia Simulator?
+5. Did it reach a usable frame, survive >=10s, survive meaningful input, and return cleanly to Shell?
 ```
 
-If #3 or #4 has no successful evidence, the correct status is **integration-unverified**, not complete.
+If #4 or #5 has no successful evidence, the correct status is **integration-unverified**, not complete.
