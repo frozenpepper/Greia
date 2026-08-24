@@ -1,8 +1,8 @@
 #!/bin/sh
 set -eu
 
-marker=/var/lib/greia-os/init*
-[ ! -e $marker ] || exit 0
+marker=/var/lib/greia-os/initialized
+[ ! -e "$marker" ] || exit 0
 
 boot_progress() {
     value="$1"
@@ -40,8 +40,8 @@ passwd --lock root >/dev/null 2>&1 || true
 # SSH host keys remain absent until an explicitly provisioned developer image or
 # a future parent-owned enablement path creates them. Avoid CPU/entropy work in
 # the child-visible first-boot critical path.
-printf '%s\n' "initialized" > /var/lib/greia-os/initialized
-chown greiapanel:greiapanel /var/lib/greia-os/initialized
+printf '%s\n' "initialized" > "$marker"
+chown greiapanel:greiapanel "$marker"
 
 # Persistent Greia state is now ready. The next visible milestone is owned by
 # the launcher VT/X preflight; retries must not fabricate more progress.
