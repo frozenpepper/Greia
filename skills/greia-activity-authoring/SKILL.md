@@ -20,10 +20,11 @@ These apply to all substantive Activity work:
 4. **Assume the target child may not be able to read. Core gameplay instructions, retry guidance, navigation and completion must not depend on written text.** Design the Activity so the next action is visually obvious; use large icons/pictures/numbers, short visual demonstrations and reviewed spoken cues when language is useful. Text is secondary support, not the primary instruction channel.
 5. **Every new Activity must explicitly decide its child-facing presenter/character and speech plan.** Greia's recurring cast should normally be considered as social anchors, guides, reactions and curiosity hosts; omission must be deliberate, not accidental.
 6. **Subject-rich Activities must explicitly consider an optional researched curiosity/facts interaction.** When appropriate, use short, well-sourced, child-safe facts delivered through multilingual-ready semantic cues and reviewed localized speech.
-7. **A new or substantively changed Activity is not done until the final runtime-relevant source state passes the real Greia Simulator launch/survival gate.** Source validation, imports, unit tests, `make verify`, `python main.py`, or package validation do not replace this.
-8. Simulator launch evidence becomes stale after any runtime-relevant edit. Relaunch the final state.
-9. If the simulator cannot be run, report `INTEGRATION-UNVERIFIED` / `SOURCE-VERIFIED / SIMULATOR-UNVERIFIED`; do not call the Activity complete or working.
-10. Claim only evidence that actually executed. Simulator evidence is not physical Acer/Pi evidence.
+7. **Every new Activity must explicitly decide its score/progress/reward model.** Local score, durable Activity progress, completion/milestone events, personal-best score events, Greia Star eligibility, global achievement opportunities and optional achievement emblem art must each be deliberate decisions. Activities report facts; Greia owns global Stars, badges, trophies and achievement truth.
+8. **A new or substantively changed Activity is not done until the final runtime-relevant source state passes the real Greia Simulator launch/survival gate.** Source validation, imports, unit tests, `make verify`, `python main.py`, or package validation do not replace this.
+9. Simulator launch evidence becomes stale after any runtime-relevant edit. Relaunch the final state.
+10. If the simulator cannot be run, report `INTEGRATION-UNVERIFIED` / `SOURCE-VERIFIED / SIMULATOR-UNVERIFIED`; do not call the Activity complete or working.
+11. Claim only evidence that actually executed. Simulator evidence is not physical Acer/Pi evidence.
 
 For child-facing pre-reader design, read:
 
@@ -36,6 +37,12 @@ For presenter/voice/fact design, read:
 ```text
 skills/greia-activity-authoring/PRESENTERS_AND_CURIOSITY.md
 skills/greia-activity-authoring/VOICE_GENERATION.md
+```
+
+For score/progress/Stars/badges/trophies, read:
+
+```text
+skills/greia-activity-authoring/ACHIEVEMENTS.md
 ```
 
 For the exact mandatory launch procedure and failure criteria, read:
@@ -57,6 +64,7 @@ skills/greia-activity-authoring/ENGINEERING.md
 skills/greia-activity-authoring/PRE_READER_UX.md
 skills/greia-activity-authoring/PRESENTERS_AND_CURIOSITY.md
 skills/greia-activity-authoring/VOICE_GENERATION.md
+skills/greia-activity-authoring/ACHIEVEMENTS.md
 skills/greia-activity-authoring/LAUNCH_ACCEPTANCE.md
 docs/architecture/GREIA_ACTIVITY_ECOSYSTEM.md
 docs/product/ACTIVITY_SYSTEM_NAVIGATION.md
@@ -72,9 +80,16 @@ lead presenter/mascot or deliberate none
 speech/shared-utterance plan
 whether optional curiosity facts fit the subject
 supported locales / multilingual speech plan
+local session score or deliberate none
+durable Activity progress/save model or deliberate none
+completion and milestone events
+personal-best score event or deliberate none
+Greia Star eligibility intent
+global achievement opportunities or deliberate none
+Activity achievement emblem plan or deliberate none
 ```
 
-Do not treat text instructions, voice, presenter design or localization as things to bolt on after gameplay is otherwise finished.
+Do not treat text instructions, voice, presenter design, localization, progress, score or rewards as things to bolt on after gameplay is otherwise finished.
 
 For Python/runtime/import work also inspect current source authority:
 
@@ -107,6 +122,12 @@ skills/greia-activity-authoring/PRESENTERS_AND_CURIOSITY.md
 skills/greia-activity-authoring/VOICE_GENERATION.md
 ```
 
+If it affects score, saved progress, completion/milestone/score events, Stars, badges, trophies or achievement art, also read:
+
+```text
+skills/greia-activity-authoring/ACHIEVEMENTS.md
+```
+
 ### Refactoring or splitting an existing Activity
 
 Read:
@@ -120,6 +141,7 @@ skills/greia-activity-authoring/LAUNCH_ACCEPTANCE.md
 The launch gate is mandatory after the **final** refactor edit. A clean architecture that fails in the Simulator is a failed refactor.
 
 If the refactor changes child-visible flow or controls, rerun the pre-reader UX pass too.
+If it changes progress/event/reward semantics, rerun the `ACHIEVEMENTS.md` review too.
 
 ### Manifest, Collection, age/difficulty or discovery work
 
@@ -133,6 +155,7 @@ src/greia_platform/activity_discovery.py
 src/greia_launcher/catalogue_view.py
 ```
 
+If manifest event declarations or achievement-art declarations are involved, also read `ACHIEVEMENTS.md`.
 If runtime-relevant manifest data changed, also run `LAUNCH_ACCEPTANCE.md`.
 
 ### UI, layout, canvas, responsive or input work
@@ -170,23 +193,36 @@ Read:
 ```text
 skills/greia-activity-authoring/PRE_READER_UX.md
 skills/greia-activity-authoring/TERMINAL_RENDERING.md
+skills/greia-activity-authoring/ACHIEVEMENTS.md
 skills/greia-activity-authoring/LAUNCH_ACCEPTANCE.md
 ```
 
-Exercise the completion/restart path, not just startup. Continue/Replay must be understandable without requiring the child to read the label.
+Exercise the completion/restart path, not just startup. Continue/Replay must be understandable without requiring the child to read the label. If completion should emit a semantic fact, verify that exact event path in the Simulator.
 
-### Achievements, Stars, score or completion events
+### Progress, score, Stars, badges, trophies, completion/milestone events or achievement art
 
 Read:
 
 ```text
 skills/greia-activity-authoring/ACHIEVEMENTS.md
 docs/design/GREIA_ACHIEVEMENTS_AND_BADGE_LIBRARY.md
+docs/design/GREIA_ACTIVITY_ACHIEVEMENT_ART.md
 runtime/progression-policy.toml
 runtime/achievement-policy.toml
 ```
 
-If event-emitting runtime code changed, also run `LAUNCH_ACCEPTANCE.md` and exercise the event-producing path.
+Core authority rule:
+
+```text
+Activity-local state/save     -> Activity + approved Greia storage
+trusted history/best score    -> Greia event/history services
+Greia Stars                   -> platform progression policy
+global badges/trophies        -> platform achievement policy/presentation
+```
+
+A gold trophy is a visual presentation of a platform-owned gold-tier achievement; it is not something an Activity awards directly.
+
+If event-emitting runtime code changed, run `LAUNCH_ACCEPTANCE.md` and exercise the actual event-producing path.
 
 ### Packaging, install or `.greiaactivity` work
 
@@ -217,6 +253,7 @@ src/greia_platform/profile_presentation.py
 ```
 
 For spoken/localized presenter or fact content also read `PRESENTERS_AND_CURIOSITY.md` and `VOICE_GENERATION.md`.
+For badge/trophy child-facing copy or achievement art, also read `ACHIEVEMENTS.md`.
 
 If visible/runtime resources changed, finish with `LAUNCH_ACCEPTANCE.md` in the materially affected locale/profile configuration.
 
@@ -282,11 +319,12 @@ Before saying substantive Activity work is done, answer:
 1. Which task-specific docs above were read?
 2. For new/child-facing work: did the no-reading UX pass succeed? Is any core instruction text-dependent?
 3. For a new Activity: what presenter/speech/curiosity-fact decision was made?
-4. Which source/test validation actually ran?
-5. What exact final source SHA/state was launched through Greia Simulator?
-6. Did it reach a usable frame, survive >=10s, survive meaningful input, and return cleanly to Shell?
+4. For a new Activity: what score/progress/events/Stars/achievement decision was made?
+5. Which source/test validation actually ran?
+6. What exact final source SHA/state was launched through Greia Simulator?
+7. Did it reach a usable frame, survive >=10s, survive meaningful input, exercise relevant completion/score/milestone paths, and return cleanly to Shell?
 ```
 
 If the Activity requires reading for its ordinary core instructions, the child-facing UX is failed even if the code launches and tests pass.
 
-If #5 or #6 has no successful evidence, the correct status is **integration-unverified**, not complete.
+If #6 or #7 has no successful evidence, the correct status is **integration-unverified**, not complete.
