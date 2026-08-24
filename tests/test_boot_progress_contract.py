@@ -67,8 +67,8 @@ class BootProgressContractTests(unittest.TestCase):
         self.assertNotIn("marker=/var/lib/greia-os/init*", text)
         self.assertIn("boot_progress 55", text)
         self.assertIn("boot_progress 65", text)
-        self.assertLess(text.index("boot_progress 55"), text.index("initialized"))
-        self.assertGreater(text.rindex("boot_progress 65"), text.index("initialized"))
+        self.assertLess(text.index("boot_progress 55"), text.index('"initialized"'))
+        self.assertGreater(text.rindex("boot_progress 65"), text.index('"initialized"'))
 
     def test_launcher_retries_do_not_change_compatibility_label(self) -> None:
         text = self.read("build/overlay/usr/local/lib/greia-os/prepare-launcher-vt")
