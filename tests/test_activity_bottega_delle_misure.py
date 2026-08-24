@@ -216,9 +216,22 @@ class _MockEvents:
 class _MockAudio:
     def __init__(self) -> None:
         self.played: list[str] = []
+        self.speech_played: list[str] = []
 
     def play(self, cue: str) -> None:
         self.played.append(cue)
+
+    def play_speech(self, cue: str) -> None:
+        self.speech_played.append(cue)
+
+    def play_feedback(self, correct: bool) -> None:
+        self.played.append("correct" if correct else "retry")
+
+    def stop_speech(self) -> None:
+        pass
+
+    def is_speech_busy(self) -> bool:
+        return False
 
 
 class AppIntegrationTests(unittest.TestCase):
@@ -292,7 +305,9 @@ class AppIntegrationTests(unittest.TestCase):
             choice_idx = next(i for i, v in enumerate(current.choice_values) if v == current.target_units)
             rect = CHOICE_RECTS[choice_idx]
             app._handle_pointer((rect.centerx, rect.centery))
-            sim_time[0] += 0.5
+            sim_time[0] += 0.6
+            app._advance_state()
+            sim_time[0] += 0.3
             app._advance_state()
 
         self.assertEqual(app.state, AppState.TERMINAL)

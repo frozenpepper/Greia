@@ -46,6 +46,7 @@ else:
 class AppState(StrEnum):
     PLAYING = "playing"
     WOBBLE = "wobble"
+    CELEBRATION = "celebration"
     TRANSITION = "transition"
     TERMINAL = "terminal"
 
@@ -91,6 +92,9 @@ class BottegaActivity:
         self._dirty = True
         self._hovered_item: str | None = None
         self._hovered_choice_idx: int | None = None
+        self._hovered_replay = False
+        self._celebrating_item: str | None = None
+        self._spoken_challenge_id: str | None = None
 
         self.completion = PygameCompletionScreen(
             typography,
@@ -122,7 +126,7 @@ class BottegaActivity:
                 if not self._ready_published:
                     mark_activity_ready()
                     self._ready_published = True
-            ticker.tick(30 if self.state in {AppState.WOBBLE, AppState.TRANSITION} else 20)
+            ticker.tick(30 if self.state in {AppState.WOBBLE, AppState.CELEBRATION, AppState.TRANSITION} else 20)
         return 0
 
     def _handle_event(self, event: pygame.event.Event) -> None:
@@ -154,9 +158,15 @@ class BottegaActivity:
                 current = self.session.current_challenge
                 new_item = self.renderer.item_at(point, current) if current else None
                 new_choice = self.renderer.choice_index_at(point, current) if current else None
-                if new_item != self._hovered_item or new_choice != self._hovered_choice_idx:
+                new_replay = self.renderer.replay_contains(point)
+                if (
+                    new_item != self._hovered_item
+                    or new_choice != self._hovered_choice_idx
+                    or new_replay != self._hovered_replay
+                ):
                     self._hovered_item = new_item
                     self._hovered_choice_idx = new_choice
+                    self._hovered_replay = new_replay
                     self._dirty = True
             return
 
@@ -179,17 +189,23 @@ class BottegaActivity:
         if current is None:
             return False
 
-        # 1. Parcel item click in COMPARE / ORDER modes
+        # 1. Replay voice button click
+        if self.renderer.replay_contains(point):
+            cue = current.prompt_key.replace(".", "_")
+            self.audio.play_speech(cue)
+            return True
+
+        # 2. Parcel item click in COMPARE / ORDER modes
         if current.mode in {MeasureMode.COMPARE, MeasureMode.ORDER}:
             item_id = self.renderer.item_at(point, current)
             if item_id is not None:
                 self.audio.play("snap")
                 result = self.session.select_item(item_id)
                 if result is not None:
-                    return self._process_result(result)
+                    return self._process_result(result, item_id=item_id)
                 return True
 
-        # 2. Number choice click in MEASURE / SHELF modes
+        # 3. Number choice click in MEASURE / SHELF modes
         if current.mode in {MeasureMode.MEASURE, MeasureMode.SHELF}:
             val = self.renderer.choice_at(point, current)
             if val is not None:
@@ -198,14 +214,15 @@ class BottegaActivity:
 
         return False
 
-    def _process_result(self, result) -> bool:
+    def _process_result(self, result, item_id: str | None = None) -> bool:
         if not result.correct:
-            self.audio.play("retry")
+            self.audio.play_feedback(False)
             self.state = AppState.WOBBLE
             self.state_started = self.clock()
             return True
 
-        self.audio.play("correct")
+        self._celebrating_item = item_id
+        self.audio.play_feedback(True)
         milestone = self.session.consume_milestone()
         if milestone is not None:
             self.events.parcel_completed(self.session_id, milestone)
@@ -213,20 +230,35 @@ class BottegaActivity:
         if result.session_complete:
             self._finish_session()
         else:
-            self.state = AppState.TRANSITION
+            self.state = AppState.CELEBRATION
             self.state_started = self.clock()
         return True
 
     def _advance_state(self) -> bool:
+        # Automatic voice playback when challenge begins
+        current = self.session.current_challenge
+        if current is not None and current.challenge_id != self._spoken_challenge_id:
+            self._spoken_challenge_id = current.challenge_id
+            self._celebrating_item = None
+            cue = current.prompt_key.replace(".", "_")
+            self.audio.play_speech(cue)
+
         elapsed = self.clock() - self.state_started
         if self.state == AppState.WOBBLE:
-            if elapsed >= 0.28:
+            if elapsed >= 0.35:
                 self.state = AppState.PLAYING
                 return True
             return True
+        if self.state == AppState.CELEBRATION:
+            if elapsed >= 0.55:
+                self.state = AppState.TRANSITION
+                self.state_started = self.clock()
+                return True
+            return True
         if self.state == AppState.TRANSITION:
-            if elapsed >= 0.35:
+            if elapsed >= 0.20:
                 self.state = AppState.PLAYING
+                self._celebrating_item = None
                 return True
             return False
         return False
@@ -240,7 +272,7 @@ class BottegaActivity:
         show_baseline = False
         if self.state == AppState.WOBBLE:
             elapsed = self.clock() - self.state_started
-            wobble_x = int(8 * ((1 - elapsed / 0.28) * ((int(elapsed * 40) % 2) * 2 - 1)))
+            wobble_x = int(8 * ((1 - elapsed / 0.35) * ((int(elapsed * 40) % 2) * 2 - 1)))
             show_baseline = True
 
         self.renderer.draw_scene(
@@ -250,6 +282,8 @@ class BottegaActivity:
             show_baseline=show_baseline,
             hovered_item_id=self._hovered_item,
             hovered_choice_idx=self._hovered_choice_idx,
+            hovered_replay=self._hovered_replay,
+            celebrating_item_id=self._celebrating_item,
         )
 
     def _finish_session(self) -> None:

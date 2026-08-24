@@ -47,6 +47,7 @@ CHOICE_RECTS: Final[tuple[pygame.Rect, ...]] = (
     pygame.Rect(446, 460, 130, 92),
     pygame.Rect(602, 460, 130, 92),
 )
+REPLAY_RECT: Final[pygame.Rect] = pygame.Rect(175, 485, 140, 44)
 
 
 class MeasureRenderer:
@@ -81,18 +82,26 @@ class MeasureRenderer:
         show_baseline: bool = False,
         hovered_item_id: str | None = None,
         hovered_choice_idx: int | None = None,
+        hovered_replay: bool = False,
+        celebrating_item_id: str | None = None,
     ) -> None:
         target.blit(self._art.background, (0, 0))
         self._draw_dani(target)
+
+        # Replay Voice button next to Dani
+        self._draw_replay_button(target, is_hovered=hovered_replay)
+
+        # Progress badge at top right
+        self._draw_progress_badge(target, session)
 
         current = session.current_challenge
         if current is None:
             return
 
-        # 1. Top Goal Placard (Clear, unmistakable goal)
+        # Top Goal Placard (Clear, unmistakable goal)
         self._draw_goal_placard(target, current)
 
-        # 2. Draw Items according to Mode
+        # Draw Items according to Mode
         if current.mode == MeasureMode.COMPARE:
             self._draw_compare_items(
                 target,
@@ -100,6 +109,7 @@ class MeasureRenderer:
                 wobble_x=wobble_x,
                 show_baseline=show_baseline,
                 hovered_item_id=hovered_item_id,
+                celebrating_item_id=celebrating_item_id,
             )
         elif current.mode == MeasureMode.ORDER:
             self._draw_order_items(
@@ -108,39 +118,36 @@ class MeasureRenderer:
                 session,
                 wobble_x=wobble_x,
                 hovered_item_id=hovered_item_id,
+                celebrating_item_id=celebrating_item_id,
             )
         elif current.mode in {MeasureMode.MEASURE, MeasureMode.SHELF}:
             self._draw_measure_item_and_rail(target, current, session, wobble_x=wobble_x)
 
-        # 3. Draw Numerical Choices in Measure / Shelf mode
+        # Draw Numerical Choices in Measure / Shelf mode
         if current.mode in {MeasureMode.MEASURE, MeasureMode.SHELF}:
             self._draw_measure_controls(target, current, hovered_choice_idx=hovered_choice_idx)
-
-        # 4. Progress badge
-        self._draw_progress_badge(target, session)
 
     def item_rect_at(self, challenge: MeasureChallenge, item_index: int) -> pygame.Rect:
         item = challenge.items[item_index]
         if challenge.mode == MeasureMode.COMPARE:
+            cx = 360 if item_index == 0 else 660
             if challenge.attribute == Attribute.LENGTH:
-                w = item.units * UNIT_PX
+                w = item.units * 48
                 h = 76
-                cx = 360 if item_index == 0 else 660
-                return pygame.Rect(cx - w // 2, 335 - h, w, h)
+                return pygame.Rect(cx - w // 2, 336 - h, w, h)
             else:
-                w = 100
-                h = item.units * UNIT_H_PX
-                cx = 360 if item_index == 0 else 660
-                return pygame.Rect(cx - w // 2, 335 - h, w, h)
+                w = 96
+                h = item.units * 42
+                return pygame.Rect(cx - w // 2, 336 - h, w, h)
 
-        if challenge.mode == MeasureMode.ORDER:
+        elif challenge.mode == MeasureMode.ORDER:
             count = len(challenge.items)
             spacing = 220
             start_x = 512 - ((count - 1) * spacing) // 2
             cx = start_x + item_index * spacing
             if challenge.attribute == Attribute.LENGTH:
-                w = item.units * 42
-                h = 68
+                w = item.units * 40
+                h = 72
                 return pygame.Rect(cx - w // 2, 320 - h, w, h)
             else:
                 w = 88
@@ -171,6 +178,41 @@ class MeasureRenderer:
             if rect.collidepoint(point):
                 return idx
         return None
+
+    def replay_contains(self, point: tuple[int, int]) -> bool:
+        return REPLAY_RECT.collidepoint(point)
+
+    def _draw_replay_button(self, target: pygame.Surface, *, is_hovered: bool = False) -> None:
+        r_draw = REPLAY_RECT.move(0, -4) if is_hovered else REPLAY_RECT
+        pygame.draw.rect(target, (10, 15, 25), REPLAY_RECT.move(0, 4), border_radius=18)
+
+        btn_col = (2, 132, 199) if is_hovered else (14, 116, 144)
+        border_col = (56, 189, 248) if is_hovered else (254, 240, 138)
+
+        # Speech bubble pointer triangle toward Dani
+        tail_pts = [
+            (r_draw.left, r_draw.centery - 2),
+            (r_draw.left - 10, r_draw.centery + 6),
+            (r_draw.left, r_draw.centery + 12),
+        ]
+        pygame.draw.polygon(target, btn_col, tail_pts)
+        pygame.draw.lines(target, border_col, False, tail_pts, 3)
+
+        pygame.draw.rect(target, btn_col, r_draw, border_radius=18)
+        pygame.draw.rect(target, border_col, r_draw, width=3, border_radius=18)
+
+        # Highlight
+        hl = r_draw.inflate(-16, -r_draw.height + 8).move(0, -r_draw.height // 2 + 8)
+        pygame.draw.rect(target, (186, 230, 253, 100), hl, border_radius=4)
+
+        label = self._typography.render("🔊 ASCOLTA", FontRole.TITLE, 18, (255, 255, 255))
+        target.blit(
+            label,
+            (
+                r_draw.centerx - label.get_width() // 2,
+                r_draw.centery - label.get_height() // 2,
+            ),
+        )
 
     def _draw_goal_placard(self, target: pygame.Surface, challenge: MeasureChallenge) -> None:
         """Draw the high-contrast goal placard at top center."""
@@ -208,6 +250,7 @@ class MeasureRenderer:
         wobble_x: int = 0,
         show_baseline: bool = False,
         hovered_item_id: str | None = None,
+        celebrating_item_id: str | None = None,
     ) -> None:
         # Golden alignment baseline on table
         pygame.draw.line(target, (245, 158, 11), (200, 336), (820, 336), 4)
@@ -215,8 +258,18 @@ class MeasureRenderer:
         for idx, item in enumerate(challenge.items):
             rect = self.item_rect_at(challenge, idx)
             is_hovered = (item.item_id == hovered_item_id)
-            draw_rect = rect.move(0, -8) if is_hovered else (rect.move(wobble_x, 0) if wobble_x != 0 else rect)
-            self._draw_parcel(target, draw_rect, item, is_hovered=is_hovered)
+            is_celebrating = (item.item_id == celebrating_item_id)
+            draw_rect = rect.move(0, -12 if is_celebrating else (-8 if is_hovered else (wobble_x if wobble_x != 0 else 0)))
+            self._draw_parcel(target, draw_rect, item, is_hovered=is_hovered or is_celebrating)
+
+            # Celebration golden ring / checkmark
+            if is_celebrating:
+                bc_x, bc_y = draw_rect.centerx, draw_rect.top - 20
+                pygame.draw.circle(target, (10, 20, 30), (bc_x, bc_y + 3), 22)
+                pygame.draw.circle(target, (34, 197, 94), (bc_x, bc_y), 22)
+                pygame.draw.circle(target, (255, 255, 255), (bc_x, bc_y), 22, 3)
+                check_pts = [(bc_x - 9, bc_y), (bc_x - 3, bc_y + 8), (bc_x + 9, bc_y - 7)]
+                pygame.draw.lines(target, (255, 255, 255), False, check_pts, 4)
 
     def _draw_order_items(
         self,
@@ -226,6 +279,7 @@ class MeasureRenderer:
         *,
         wobble_x: int = 0,
         hovered_item_id: str | None = None,
+        celebrating_item_id: str | None = None,
     ) -> None:
         count = len(challenge.items)
         spacing = 220
@@ -252,8 +306,9 @@ class MeasureRenderer:
         for idx, item in enumerate(challenge.items):
             rect = self.item_rect_at(challenge, idx)
             is_hovered = (item.item_id == hovered_item_id)
-            draw_rect = rect.move(0, -8) if is_hovered else (rect.move(wobble_x, 0) if wobble_x != 0 else rect)
-            self._draw_parcel(target, draw_rect, item, is_hovered=is_hovered)
+            is_celebrating = (item.item_id == celebrating_item_id)
+            draw_rect = rect.move(0, -12 if is_celebrating else (-8 if is_hovered else (wobble_x if wobble_x != 0 else 0)))
+            self._draw_parcel(target, draw_rect, item, is_hovered=is_hovered or is_celebrating)
 
             if item.item_id in session.selected_order_ids:
                 order_num = session.selected_order_ids.index(item.item_id) + 1
