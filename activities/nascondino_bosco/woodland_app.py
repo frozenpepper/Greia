@@ -182,7 +182,7 @@ class WoodlandApp:
 
         if self.state.is_victory:
             # Check Play Again hit target
-            if self.completion.primary_action_rect.collidepoint(mx, my):
+            if self.completion.primary_contains((mx, my)):
                 self.audio.play("pop")
                 self.state.start_round()
                 return True

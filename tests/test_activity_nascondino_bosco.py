@@ -17,6 +17,7 @@ if str(PROJECT_ROOT / "src") not in sys.path:
 
 import pygame
 
+from activities.nascondino_bosco.woodland_app import WoodlandApp
 from activities.nascondino_bosco.woodland_art import WoodlandArtLibrary
 from activities.nascondino_bosco.woodland_audio import WoodlandAudio
 from activities.nascondino_bosco.woodland_model import (
@@ -36,6 +37,7 @@ from greia_platform.localization import (
     LocalizedResources,
     resolve_activity_locale,
 )
+from greia_platform.pygame_completion import CompletionContent
 from greia_platform.typography import GreiaTypography
 from greia_platform.ui_preferences import InterfaceSize
 
@@ -191,3 +193,52 @@ class NascondinoNelBoscoTests(unittest.TestCase):
             layout = compute_hud_layout(size)
             self.assertIn("target_card_rect", layout)
             self.assertIn("star_pill_rect", layout)
+
+    def test_woodland_app_victory_and_click_handling(self) -> None:
+        support = ActivityLocaleSupport.localized(
+            ("it", "en"),
+            default_ui_locale="it",
+        )
+        ctx = resolve_activity_locale("it", support)
+        assert ctx is not None
+        resources = LocalizedResources(ACTIVITY_DIR, ctx)
+
+        art = WoodlandArtLibrary()
+        renderer = WoodlandRenderer(art, GreiaTypography(), resources)
+        audio = WoodlandAudio()
+        screen = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT))
+        app = WoodlandApp(screen, resources, GreiaTypography(), audio)
+        app.state.total_to_find = 2
+        app.state.start_round()
+        state = app.state
+
+        # Non-spot click
+        self.assertFalse(app._handle_click((50, 50)))
+
+        # Protected UI click
+        self.assertFalse(app._handle_click((36, 36)))
+
+        # Find targets to reach victory
+        for _ in range(2):
+            target_spot = next(
+                spot
+                for spot in GROUNDED_SPOTS
+                if state.hiding_map.get(spot.spot_id) == state.target_animal_id
+            )
+            self.assertTrue(app._handle_click((target_spot.cx, target_spot.cy)))
+
+        self.assertTrue(state.is_victory)
+        content = CompletionContent(
+            title=resources.text("victory.title"),
+            primary_label=resources.text("btn.play_again"),
+            body_lines=(resources.text("victory.subtitle"),),
+            achievement_count=state.found_count,
+        )
+        app.completion.prepare(content)
+        self.assertTrue(app.completion.is_prepared)
+
+        # Click Play Again button on completion screen
+        btn_center = app.completion.primary_rect.center
+        self.assertTrue(app._handle_click(btn_center))
+        self.assertFalse(state.is_victory)
+

@@ -138,8 +138,13 @@ woodland_audio.py       synthesized PCM sound effects (rustle, pop, win)
 **Measured physical Acer Aspire One results:**
 - Pre-rendered background blit: **1.88 ms** (530 fps capability)
 - Active frame render time: **505.35 ms → 9.05 ms** (**55× speedup**, locked at 30 fps with ~27% CPU margin)
-- Grounded scene spots: 5 natural spots (hero oak tree hollow `x=110, y=350`, left round bush `x=125, y=475`, center fallen log `x=485, y=485`, right rock cluster `x=715, y=480`, right flowering bush `x=890, y=470`); all flying trees/floating shapes eliminated.
-- Test suite: `tests/test_activity_nascondino_bosco.py` (8/8 PASS locally and on physical Acer); full suite **1,141 tests PASS**, 19/19 activities valid.
+- Test suite: `tests/test_activity_nascondino_bosco.py` (9/9 PASS); full suite **1,142 tests PASS**, 19/19 activities valid.
+- **Simulator End-to-End Verification**: Tested via `greia_simulator.child_shell` and `greia_simulator_ctl.py` at 1024×600 in Italian:
+  1. Selected profile Explorer → navigated Collection Home → opened `Esplora` → launched `Nascondino nel Bosco`.
+  2. Verified active gameplay rendering: mascot on tree bough, target animal HUD ("SCOIATTOLO", "VOLPE"), 5 grounded spots with peeking animations, responsive star score increments upon discovering animals.
+  3. Verified terminal victory: upon completing 4 animal searches, `PygameCompletionScreen` displays opaque victory frame ("TROVATI TUTTI!", "Tutti gli animaletti sono felici!", 4 gold celebration medals, and green "GIOCA ANCORA" button).
+  4. Verified restart & exit: clicking "GIOCA ANCORA" (`primary_contains`) immediately starts a fresh round with new animal positions and accumulated star score; clicking protected Home button (`(36, 36)`) returns cleanly to the Launcher shell.
+  5. Fixed `primary_action_rect` attribute error on `PygameCompletionScreen` by replacing it with canonical `primary_contains((mx, my))`.
 
 ## Parent Settings overlay tranche (2026-08-23, `3c3e91f`)
 
