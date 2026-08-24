@@ -10,7 +10,7 @@ from greia_platform.boot_contract import (
     validate_grub_config,
     validate_grub_text,
 )
-from greia_platform.grub_security import RECOVERY_USER
+from greia_platform.grub_security import GRUB_USER
 
 
 GOOD_RELEASE_LINE = (
@@ -30,9 +30,9 @@ GOOD_DEVELOPER_LINE = (
     "udev.log_priority=4 vt.global_cursor_default=1 consoleblank=0"
 )
 AUTH = (
-    'set superusers="greia-recovery"\n'
+    f'set superusers="{GRUB_USER}"\n'
     "export superusers\n"
-    "password_pbkdf2 greia-recovery grub.pbkdf2.sha512.10000.ABCD1234\n"
+    f"password_pbkdf2 {GRUB_USER} grub.pbkdf2.sha512.10000.ABCD1234\n"
 )
 
 
@@ -105,7 +105,7 @@ class BootContractTests(unittest.TestCase):
         self.assertIn("rd.systemd.show_status=true", script)
         self.assertNotIn("panic=30", script)
 
-    def test_checked_in_grub_auth_generator_matches_recovery_identity(self) -> None:
+    def test_checked_in_grub_auth_generator_matches_owner_identity(self) -> None:
         script_path = (
             Path(__file__).resolve().parents[1]
             / "build"
@@ -115,8 +115,9 @@ class BootContractTests(unittest.TestCase):
             / "01_greia_auth"
         )
         script = script_path.read_text(encoding="utf-8")
-        self.assertIn(f'set superusers="{RECOVERY_USER}"', script)
-        self.assertIn(f"password_pbkdf2 {RECOVERY_USER} $hash", script)
+        self.assertIn(f'set superusers="{GRUB_USER}"', script)
+        self.assertIn(f"password_pbkdf2 {GRUB_USER} $hash", script)
+        self.assertNotIn("greia-recovery", script)
         self.assertNotIn("pip-recovery", script)
 
     def test_rejects_an_extra_console(self) -> None:
@@ -150,7 +151,7 @@ class BootContractTests(unittest.TestCase):
             "rd.systemd.run=/bin/sh",
             "systemd.wants=debug-shell.service",
             "rd.systemd.wants=debug-shell.service",
-            "earlycon=uart8250,io,0x3f8",
+            "earlycon=uart8250,io=0x3f8",
             "earlyprintk=vga",
             "ignore_loglevel",
             "plymouth.enable=0",
