@@ -15,6 +15,32 @@ This file is the project-wide **current continuation contract**. Chronology belo
 
 # 1. Current state at a glance
 
+## Universal Gender-Neutral Speech & Praise Policy Enforcement (2026-08-25)
+
+Enforced a strict, repository-wide rule across all audio assets, localized copy, code, and authoring guidelines:
+- **Rule**: Never use gender-specific Italian adjectives (or other gender-specific adjectives) such as *"Bravissimo!"*, *"Bravissima!"*, *"Bravo!"*, or *"Brava!"*.
+- **Canonical Praise Set**: Use universal, inclusive gender-neutral praise across all activities:
+  - `Ottimo lavoro!` ("Great job!")
+  - `Ben fatto!` ("Well done!")
+  - `Esatto!` ("Exactly right!")
+  - `Fantastico!` ("Fantastic!")
+  - `Evviva!` ("Hooray!")
+  - `Perfetto!` ("Perfect!")
+  - `Super!` ("Super!")
+  - `Che meraviglia!` ("Wonderful!")
+- **Refactored & Regenerated Audio**:
+  - `activities/casa_del_dieci`: Spoken verbal reinforcement updated to *"Ben fatto!"*, *"Esatto!"*, *"Ottimo lavoro!"*.
+  - `activities/bottega_delle_misure`: Spoken verbal reinforcement updated to *"Ben fatto!"*, *"Esatto!"*, *"Ottimo lavoro!"*.
+  - `activities/foresta_parole`: `bravissima.wav` replaced with `ben_fatto.wav` (*"Ben fatto!"*), Italian copy updated in `it.json` and `main.py`.
+  - `activities/sillabe_magiche`: `bravissima.wav` replaced with `esatto.wav` (*"Esatto!"*), Italian copy updated in `it.json`, `main.py`, and test suite.
+  - `activities/costruiamo_ponti`, `activities/memory_meraviglie`, `activities/orchestra_animali`, `activities/treno_numeri`: Replaced all gendered completion titles and subtitles with `"Ottimo lavoro!"` / `"Evviva!"`.
+- **Guidelines Updated**:
+  - `skills/greia-activity-authoring/VOICE_GENERATION.md` (§11.1)
+  - `skills/greia-activity-authoring/PRE_READER_UX.md` (§4.1)
+  - `skills/greia-activity-authoring/CORE.md` (§10.11)
+- **Verification**:
+  - Full test suite: **1,302/1,302 tests PASS**, project validation PASS, all 30 activities valid.
+
 ## Baia delle Orche (`activities/baia_delle_orche`) Physical Acer Deployment & Acceptance (2026-08-24)
 
 `activities/baia_delle_orche` (Baia delle Orche / Orca Bay) is deployed to the physical Acer Aspire One test hardware (`greia-dev.local` / `192.168.68.104`) and verified live over SSH remote control:
