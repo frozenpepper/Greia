@@ -95,7 +95,7 @@ import sys
 from PIL import Image
 
 root = Path(sys.argv[1])
-raw = Image.open(root / "assets/boot/source/legacy-plymouth-theme/frames/frame_0051.png").convert("RGB")
+raw = Image.open(root / "assets/boot/frames/frame_0051.png").convert("RGB")
 source = Image.open(root / "assets/boot/source/greia-boot-logo.png").convert("RGB")
 canvas = Image.open(root / "assets/boot/static/greia-boot-logo.png").convert("RGB")
 
@@ -134,7 +134,7 @@ for required in (
         raise SystemExit(f"generated GRUB theme missing: {required}")
 PY
 
-BOOT_SOURCE_SHA="$(sha256sum "$PROJECT_ROOT/assets/boot/source/legacy-plymouth-theme/frames/frame_0051.png" | awk '{print $1}')"
+BOOT_SOURCE_SHA="$(sha256sum "$PROJECT_ROOT/assets/boot/frames/frame_0051.png" | awk '{print $1}')"
 BOOT_PNG_SHA="$(sha256sum "$PROJECT_ROOT/assets/boot/static/greia-boot-logo.png" | awk '{print $1}')"
 BOOT_TARGET_PPM_SHA="$(sha256sum "$PROJECT_ROOT/build/overlay/etc/greia-boot/boot-logo.ppm" | awk '{print $1}')"
 BOOT_INSTALLER_PPM_SHA="$(sha256sum "$PROJECT_ROOT/build/installer-overlay/etc/greia-boot/boot-logo.ppm" | awk '{print $1}')"

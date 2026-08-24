@@ -1,8 +1,0 @@
-[Plymouth Theme]
-Name=Greia
-Description=Greia animated boot splash
-ModuleName=script
-
-[script]
-ImageDir=/usr/share/plymouth/themes/greia
-ScriptFile=/usr/share/plymouth/themes/greia/greia.script

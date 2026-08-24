@@ -37,8 +37,6 @@ SOURCE_FRAME = (
     ROOT
     / "assets"
     / "boot"
-    / "source"
-    / "legacy-plymouth-theme"
     / "frames"
     / "frame_0051.png"
 )

@@ -62,7 +62,7 @@ Audio also starts here, never in initramfs.
 The retained final legacy frame is currently the authoritative raw artwork source:
 
 ```text
-assets/boot/source/legacy-plymouth-theme/frames/frame_0051.png
+assets/boot/frames/frame_0051.png
 ```
 
 It is source material, not a runtime Plymouth dependency.

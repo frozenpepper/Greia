@@ -4,12 +4,11 @@ import unittest
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-SOURCE_THEME = (
+SOURCE_FRAMES = (
     PROJECT_ROOT
     / "assets"
     / "boot"
-    / "source"
-    / "legacy-plymouth-theme"
+    / "frames"
 )
 
 
@@ -17,16 +16,13 @@ class BootAnimationMigrationTests(unittest.TestCase):
     """Plymouth is migration debt, not the accepted Greia boot architecture.
 
     The Greia-owned early framebuffer cover replaces Plymouth in target and
-    installer boot. The legacy 52-frame Plymouth theme is preserved only as
-    historical source material for the canonical artwork derivative under
-    ``assets/boot/source/``; it must never be staged into a built image or
-    wired into the builders again.
+    installer boot. The 52-frame animation is preserved under ``assets/boot/frames/``;
+    Plymouth must never be staged into a built image or wired into the builders again.
     """
 
-    def test_legacy_theme_is_only_historical_source_material(self) -> None:
-        # The legacy theme is preserved as artwork source material, outside the
-        # build overlays so it cannot leak into a produced image.
-        self.assertTrue((SOURCE_THEME / "frames" / "frame_0051.png").is_file())
+    def test_animation_frames_are_present_and_no_plymouth_in_overlays(self) -> None:
+        # The 52 animation frames are preserved under assets/boot/frames.
+        self.assertTrue((SOURCE_FRAMES / "frame_0051.png").is_file())
         self.assertFalse((PROJECT_ROOT / "build/overlay/etc/plymouth").exists())
         self.assertFalse((PROJECT_ROOT / "build/installer-overlay/etc/plymouth").exists())
 

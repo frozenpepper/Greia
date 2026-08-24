@@ -172,7 +172,7 @@ That pipeline is no longer the accepted design.
 Current source:
 
 ```text
-assets/boot/source/legacy-plymouth-theme/frames/frame_0051.png
+assets/boot/frames/frame_0051.png
 ```
 
 Current generated presentation:
