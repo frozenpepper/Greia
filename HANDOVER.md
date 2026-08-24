@@ -276,6 +276,16 @@ Overhauled `org.greia.labirinto-magico` (Magical Labyrinth):
   - Full suite: **1,176 tests PASS**.
   - Verified live inside the Activity Simulator (`greia_simulator.child_shell` + `tools/greia_simulator_ctl.py`) across navigation, sliding moves, *Infinito* (89×41) scaling, and protected Home button return.
 
+## Activity terminal freeze repair P2-S1 — PARTIAL/BLOCKED at Acer deployment (2026-08-24)
+
+The three affected terminal paths are now source-migrated to the existing `PygameCompletionScreen` owner: `activities/labirinto_magico/maze_app.py` + `maze_renderer.py`, `activities/piccola_serra/main.py`, and `activities/treno_numeri/main.py`. Active simulation/render stops in terminal state; one prepared opaque frame is presented and reused until semantic invalidation; terminal restart and protected Home/STOP handling remain platform-aligned. Treno emits only declared `train.station_completed` / `train.journey_completed` facts with idempotency keys. Focused regressions are in `tests/test_activity_terminal_rendering.py`.
+
+Local evidence is complete at `Lunacy/runs/activity-terminal-freeze-acer/evidence/p2-s1-local-verification.md`: focused terminal suite 4/4 PASS, three Activity validations PASS, and syntax compilation PASS. `make verify` was required and executed but is not green in this macOS environment (925 tests, 53 errors, including missing `pygame`, `PIL`, and `pytest` plus unrelated existing failures); no source claim is based on those unavailable modules.
+
+The device gate is blocked. Strict-host-key interactive fallback reached the Acer, but the approved `greia-devctl ... deploy-activity ... --replace-system` path rejects the exact package because manifests use opaque IDs (`org.greia.labirinto-magico`, etc.) while installed built-in directories use snake_case (`labirinto_magico`, etc.). No direct root move/symlink, manifest mutation, or trust-bypassing duplicate was used. See `Lunacy/runs/activity-terminal-freeze-acer/evidence/p2-s1-device-gate.md` and `decisions/p2-s1-deployment-mapping.md`.
+
+All Activity/test changes are present in concurrent externally created and already-pushed `5dfe553` (`main` = `origin/main`); history was not amended or reset. No Acer source hashes/screenshots/process samples/win→idle→restart→Home proof are claimed. Next exact step: separately authorize and repair the deployment owner's manifest-ID→installed-directory resolution, add focused duplicate/missing/backup/restore tests, then repeat the three-Activity physical protocol before P2 acceptance.
+
 ## Il Volo del Draghetto performance, arrow input & endless flight overhaul (2026-08-24)
 
 `activities/volo_draghetto` (Il Volo del Draghetto / Dragon Flight) had severe performance issues on the physical Acer Aspire One (Atom N270):
