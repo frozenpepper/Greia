@@ -87,7 +87,7 @@ def compose_boot_canvas(source: Image.Image) -> tuple[Image.Image, tuple[int, in
         raise ValueError(
             f"unexpected canonical source size {source.size}; expected {EXPECTED_SOURCE_SIZE}"
         )
-    background = _background_colour(source)
+    background = (255, 255, 255)
     canvas = Image.new("RGB", CANVAS_SIZE, background)
     x = (CANVAS_SIZE[0] - source.width) // 2
     y = (CANVAS_SIZE[1] - source.height) // 2

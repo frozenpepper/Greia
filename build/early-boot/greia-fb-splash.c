@@ -252,10 +252,6 @@ static int draw(const char *device, const struct ppm_image *image, int progress)
         return 2;
     }
 
-    /* The generated landscape canvas extends the source artwork's own corner
-     * colour into its safe margins. Use that same colour for any letterbox
-     * pixels introduced by a display with a different aspect ratio, so there is
-     * no white flash or visible rectangle around the composition. */
     background = pack_pixel(&var, image->rgb[0], image->rgb[1], image->rgb[2]);
     for (uint32_t y = 0; y < visible_h; ++y) {
         uint8_t *row = memory +

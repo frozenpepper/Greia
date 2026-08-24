@@ -2,7 +2,7 @@
 # The desktop image is a landscape composition with safe margins;
 # padding preserves its aspect ratio on every GRUB framebuffer.
 title-text: ""
-desktop-color: "#020510"
+desktop-color: "#ffffff"
 desktop-image: "greia-boot-logo.png"
 desktop-image-scale-method: "padding"
 desktop-image-h-align: "center"

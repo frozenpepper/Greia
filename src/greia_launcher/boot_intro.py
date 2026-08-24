@@ -150,8 +150,7 @@ def _draw_frame(
 ) -> None:
     """Draw one animation frame centered on screen at full height."""
     width, height = screen.get_size()
-    bg = _background_rgb(frame)
-    screen.fill(bg)
+    screen.fill(_background_rgb(frame))
     frame_w = frame.get_width()
     frame_h = frame.get_height()
     if frame_h != height:
