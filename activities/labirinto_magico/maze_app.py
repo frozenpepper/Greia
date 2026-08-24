@@ -1,9 +1,15 @@
 from __future__ import annotations
 
+from pathlib import Path
+import sys
 import time
 from typing import Any
 
 import pygame
+
+_ACTIVITY_DIR = Path(__file__).resolve().parent
+if str(_ACTIVITY_DIR) not in sys.path:
+    sys.path.insert(0, str(_ACTIVITY_DIR))
 
 from greia_platform.activity_api import (
     activity_stop_requested,
@@ -62,7 +68,17 @@ def _is_safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
 
 
 class MazeApp:
-    def __init__(self) -> None:
+    def __init__(self, screen: pygame.Surface | None = None) -> None:
+        pygame.init()
+        if screen is None:
+            screen = pygame.display.get_surface()
+            if screen is None:
+                screen = pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.RESIZABLE)
+        pygame.mouse.set_visible(False)
+        self.screen = screen
+        self.canvas = PygameReferenceCanvas(screen)
+        self.metrics = ChildUiMetrics.for_size(*screen.get_size())
+
         self.running = False
         self.biome_idx = 0
         self.diff_idx = 0
@@ -74,9 +90,12 @@ class MazeApp:
         self.renderer = MazeRenderer(self.typography)
         self.state: MazeState | None = None
         self.baked_maze: pygame.Surface | None = None
-        self.ambient_particles: list[dict[str, Any]] = []
+        self.ambient_particles: list[dict[str, Any]] = MazeArt.init_ambient_particles(
+            screen.get_width(), screen.get_height(), 25
+        )
         self.celebration_particles: list[dict[str, Any]] = []
         self._load_saved_progress()
+        self.start_game(self.canvas.surface, self.metrics)
 
     def _load_saved_progress(self) -> None:
         if self.storage:
@@ -90,7 +109,6 @@ class MazeApp:
 
     def start_game(self, screen: pygame.Surface, metrics: ChildUiMetrics) -> None:
         diff = DIFFICULTIES[self.diff_idx]
-        biome = BIOMES[self.biome_idx]
         raw_grid, entrance, exit_pos, raw_collectibles = MazeEngine.generate(
             diff["cols"],
             diff["rows"],
@@ -297,17 +315,7 @@ class MazeApp:
         self.celebration_particles = MazeArt.update_celebration_particles(self.celebration_particles)
 
     def run(self) -> int:
-        pygame.init()
-        screen = pygame.display.get_surface()
-        if screen is None:
-            screen = pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.RESIZABLE)
-        pygame.mouse.set_visible(False)
         clock = pygame.time.Clock()
-        metrics = ChildUiMetrics.for_size(*screen.get_size())
-        canvas = PygameReferenceCanvas(screen)
-
-        self.ambient_particles = MazeArt.init_ambient_particles(screen.get_width(), screen.get_height(), 25)
-        self.start_game(canvas.surface, metrics)
         first_frame_ready = False
 
         self.running = True
@@ -331,30 +339,30 @@ class MazeApp:
                         self.trigger_move(0, 1)
 
                 elif event.type == pygame.VIDEORESIZE:
-                    screen = pygame.display.get_surface() or screen
-                    metrics = ChildUiMetrics.for_size(*screen.get_size())
-                    canvas = PygameReferenceCanvas(screen)
-                    self._rebake_maze_surface(canvas.surface, metrics)
+                    self.screen = pygame.display.get_surface() or self.screen
+                    self.metrics = ChildUiMetrics.for_size(*self.screen.get_size())
+                    self.canvas = PygameReferenceCanvas(self.screen)
+                    self._rebake_maze_surface(self.canvas.surface, self.metrics)
 
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    if is_home_clicked(screen, event.pos):
+                    if is_home_clicked(self.screen, event.pos):
                         self.running = False
                         continue
-                    pointer = canvas.pointer(event.pos)
+                    pointer = self.canvas.pointer(event.pos)
                     if pointer is None:
                         continue
                     mx, my = int(pointer[0]), int(pointer[1])
-                    if not _is_safe_point(screen, event.pos):
+                    if not _is_safe_point(self.screen, event.pos):
                         continue
-                    self.handle_click(mx, my, canvas.surface, metrics)
+                    self.handle_click(mx, my, self.canvas.surface, self.metrics)
 
-            self.update(dt, canvas.surface, metrics)
+            self.update(dt, self.canvas.surface, self.metrics)
 
             if self.state is not None and self.baked_maze is not None:
                 biome = BIOMES[self.biome_idx]
                 diff = DIFFICULTIES[self.diff_idx]
                 self.renderer.draw(
-                    canvas.surface,
+                    self.canvas.surface,
                     self.state,
                     biome,
                     diff,
@@ -362,11 +370,11 @@ class MazeApp:
                     self.baked_maze,
                     self.ambient_particles,
                     self.celebration_particles,
-                    metrics,
+                    self.metrics,
                     t_now,
                 )
 
-            canvas.present()
+            self.canvas.present()
             pygame.display.flip()
 
             if not first_frame_ready:
