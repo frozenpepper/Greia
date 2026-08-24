@@ -1,6 +1,9 @@
 #!/bin/sh
 set -eu
 
+marker=/var/lib/greia-os/init*
+[ ! -e $marker ] || exit 0
+
 boot_progress() {
     value="$1"
     renderer=/usr/lib/greia-boot/greia-fb-splash

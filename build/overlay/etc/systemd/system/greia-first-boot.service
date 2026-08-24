@@ -2,7 +2,6 @@
 Description=Greia OS one-time initialization
 After=local-fs.target
 Before=greia-launcher.service greia-parent.service
-ConditionPathExists=!/var/lib/greia-os/initialized
 
 [Service]
 Type=oneshot
