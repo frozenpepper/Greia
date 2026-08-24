@@ -244,7 +244,7 @@ class InstallerEngineTests(unittest.TestCase):
         with self.assertRaisesRegex(InstallationError, "valid UUID"):
             engine._read_filesystem_uuid(Path("/dev/sda1"))
 
-    def test_grub_uuid_and_recovery_material_are_per_install_while_clone_ids_stay_empty(self) -> None:
+    def test_grub_uuid_and_owner_credential_are_deterministic_while_clone_ids_stay_empty(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             (root / "etc/ssh").mkdir(parents=True)
@@ -259,8 +259,9 @@ class InstallerEngineTests(unittest.TestCase):
             filesystem_uuid = "12345678-1234-5678-9abc-def012345678"
             engine._write_grub_root_uuid(root, filesystem_uuid)
             credential = engine._personalize_target(root)
-            self.assertEqual(credential.user, "greia-recovery")
-            self.assertEqual(len(credential.code), 20)
+            self.assertEqual(credential.user, "greia")
+            self.assertEqual(credential.password, "greia")
+            self.assertEqual(credential.code, "greia")
             self.assertEqual((root / "etc/machine-id").read_text(), "")
             self.assertFalse((root / "var/lib/dbus/machine-id").exists())
             self.assertFalse((root / "etc/ssh/ssh_host_rsa_key").exists())
@@ -268,8 +269,12 @@ class InstallerEngineTests(unittest.TestCase):
                 (root / "etc/greia-os/root-filesystem-uuid").read_text().strip(),
                 filesystem_uuid,
             )
-            self.assertTrue((root / "etc/greia-os/grub-recovery.pbkdf2").read_text().startswith("grub.pbkdf2."))
-            self.assertTrue((root / "etc/greia-os/grub-recovery-code").read_text().strip())
+            self.assertTrue(
+                (root / "etc/greia-os/grub-recovery.pbkdf2")
+                .read_text()
+                .startswith("grub.pbkdf2.")
+            )
+            self.assertFalse((root / "etc/greia-os/grub-recovery-code").exists())
 
     def test_verify_installed_boot_config_accepts_consistent_uuid_and_kernel(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
