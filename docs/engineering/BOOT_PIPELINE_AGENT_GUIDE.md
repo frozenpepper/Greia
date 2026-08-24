@@ -106,18 +106,21 @@ The renderer currently still supports explicit milestone progress through `--pro
 
 ### 2.5 Launcher intro
 
-`src/greia_launcher/boot_intro.py` currently owns the animated handoff after a real graphical surface exists.
+`src/greia_launcher/boot_intro.py` owns the animated handoff after a real graphical surface exists.
 
-Current source timing:
+The intended timing contract is:
 
 ```text
-TARGET_INTRO_SECONDS = 2.2
-MAX_INTRO_SECONDS = 2.5
+ANIMATION_SECONDS = 5.0
+FINAL_FRAME_HOLD_SECONDS = 2.0
+MAX_INTRO_SECONDS = 7.0 total intentional presentation time
 ```
 
-It is monotonic-time driven rather than frame sleeps and is one-shot per boot through the runtime marker under `/run/greia-os`.
+The complete 52-frame sequence is spread across the five-second animation phase. After the final animation frame is presented, that exact final frame remains visible for an additional two seconds before the profile picker replaces it.
 
-The older `0.75–0.95 s / <=1.0 s` text in `GREIA_BOOT_EXPERIENCE.md` became stale when the accepted source was changed to the current 2.2/2.5-second values; living docs must follow the source contract rather than preserving both as simultaneous requirements.
+Timing is driven by `time.monotonic()`. The display/event connection is pumped during the intentional presentation so the launcher does not appear frozen. The intro remains one-shot per boot through the runtime marker under `/run/greia-os`.
+
+The temporary 2.2/2.5-second implementation committed during the recovery session was not the intended product design and has been corrected. Do not shorten the animation merely as a generic boot-speed optimization: this seven-second sequence is intentional product presentation unless the owner explicitly changes it.
 
 ---
 
@@ -381,9 +384,10 @@ Before declaring boot/display work complete:
 8. [ ] Preserve `greia / greia` GRUB owner recovery and developer SSH recovery where the developer profile applies.
 9. [ ] Preserve `panic=0`/visible diagnostics on developer/test hardware.
 10. [ ] Verify exact first-boot idempotency and required-unit behavior on second/later boots.
-11. [ ] Cleanly sync/unmount any offline-mounted target before reboot.
-12. [ ] Establish a recovery path before the physical reboot.
-13. [ ] After reboot, verify fresh SSH, actual cmdline, launcher/display state and failed units at the claimed scope.
-14. [ ] Update source tests, living docs, `skills/greia-os-work/BOOT.md`, active-plan progress and `HANDOVER.md` when the contract/evidence changed.
+11. [ ] If launcher intro changed, preserve the intentional **5-second animation + 2-second final-frame hold** unless the owner explicitly changes the product design.
+12. [ ] Cleanly sync/unmount any offline-mounted target before reboot.
+13. [ ] Establish a recovery path before the physical reboot.
+14. [ ] After reboot, verify fresh SSH, actual cmdline, launcher/display state and failed units at the claimed scope.
+15. [ ] Update source tests, living docs, `skills/greia-os-work/BOOT.md`, active-plan progress and `HANDOVER.md` when the contract/evidence changed.
 
 A source test PASS is not a physical boot PASS. A successful command is not proof that the artifact it generated is bootable. The standard is: **observable, reversible, artifact-verified and recoverable boot work**.
