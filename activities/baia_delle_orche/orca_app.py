@@ -210,7 +210,6 @@ class OrcaBayActivity:
                     self.audio.play(ev)
 
             # Draw complete frame to reference canvas
-            self.canvas.clear()
             self.renderer.render_frame(self.canvas.surface, self.pod)
             self.canvas.present()
             pygame.display.flip()

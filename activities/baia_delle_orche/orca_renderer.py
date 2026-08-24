@@ -36,6 +36,58 @@ except ImportError:
     )
 
 
+def _draw_vector_heart(surf: pygame.Surface, cx: int, cy: int, size: int, col: tuple[int, int, int]) -> None:
+    """Draw a smooth cute heart shape at (cx, cy)."""
+    r = size // 4
+    pygame.draw.circle(surf, col, (cx - r, cy - r // 2), r)
+    pygame.draw.circle(surf, col, (cx + r, cy - r // 2), r)
+    pts = [
+        (cx - 2 * r, cy - r // 4),
+        (cx + 2 * r, cy - r // 4),
+        (cx, cy + size // 2),
+    ]
+    pygame.draw.polygon(surf, col, pts)
+
+
+def _draw_vector_fish(surf: pygame.Surface, cx: int, cy: int, size: int, col: tuple[int, int, int]) -> None:
+    """Draw a cute swimming fish icon at (cx, cy)."""
+    w = size
+    h = size // 2
+    pygame.draw.ellipse(surf, col, (cx - w // 2, cy - h // 2, w, h))
+    tail_pts = [(cx + w // 3, cy), (cx + w // 2 + 4, cy - h // 2), (cx + w // 2 + 4, cy + h // 2)]
+    pygame.draw.polygon(surf, col, tail_pts)
+    pygame.draw.circle(surf, (255, 255, 255), (cx - w // 4, cy - 2), max(2, size // 8))
+    pygame.draw.circle(surf, (15, 23, 42), (cx - w // 4 - 1, cy - 2), max(1, size // 14))
+
+
+def _draw_vector_ball(surf: pygame.Surface, cx: int, cy: int, r: int) -> None:
+    """Draw a 4-color beach ball icon at (cx, cy)."""
+    pygame.draw.circle(surf, (244, 63, 94), (cx, cy), r)
+    pygame.draw.circle(surf, (250, 204, 21), (cx, cy), r, draw_top_right=True)
+    pygame.draw.circle(surf, (56, 189, 248), (cx, cy), r, draw_bottom_left=True)
+    pygame.draw.circle(surf, (255, 255, 255), (cx, cy), r, draw_bottom_right=True)
+    pygame.draw.circle(surf, (255, 255, 255), (cx, cy), r, width=2)
+    pygame.draw.circle(surf, (255, 255, 255), (cx, cy), max(2, r // 3))
+
+
+def _draw_vector_music(surf: pygame.Surface, cx: int, cy: int, size: int, col: tuple[int, int, int]) -> None:
+    """Draw twin musical eighth notes at (cx, cy)."""
+    nr = max(3, size // 6)
+    pygame.draw.ellipse(surf, col, (cx - size // 3, cy + size // 4, nr * 2, nr * 2 - 2))
+    pygame.draw.line(surf, col, (cx - size // 3 + nr * 2 - 1, cy + size // 4 + nr), (cx - size // 3 + nr * 2 - 1, cy - size // 3), 2)
+    pygame.draw.ellipse(surf, col, (cx + size // 6, cy + size // 6, nr * 2, nr * 2 - 2))
+    pygame.draw.line(surf, col, (cx + size // 6 + nr * 2 - 1, cy + size // 6 + nr), (cx + size // 6 + nr * 2 - 1, cy - size // 2), 2)
+    pygame.draw.line(surf, col, (cx - size // 3 + nr * 2 - 1, cy - size // 3), (cx + size // 6 + nr * 2 - 1, cy - size // 2), 3)
+
+
+def _draw_vector_moon(surf: pygame.Surface, cx: int, cy: int, r: int, col: tuple[int, int, int]) -> None:
+    """Draw a glowing crescent moon and star at (cx, cy)."""
+    pygame.draw.circle(surf, col, (cx, cy), r)
+    pygame.draw.circle(surf, (15, 23, 42), (cx + r // 2, cy - r // 3), int(r * 0.85))
+    sx, sy = cx + r // 2 + 4, cy + r // 3
+    pygame.draw.polygon(surf, (255, 255, 255), [(sx, sy - 4), (sx + 1, sy - 1), (sx + 4, sy), (sx + 1, sy + 1), (sx, sy + 4), (sx - 1, sy + 1), (sx - 4, sy), (sx - 1, sy - 1)])
+
+
 class OrcaRenderer:
     """Draws the rich Arctic fjord bay, orca pod, interactive toys, food, and UI."""
 
@@ -45,9 +97,9 @@ class OrcaRenderer:
 
         # Bounded static background caches
         self._bg_cache: dict[bool, pygame.Surface] = {}
-        self._tool_font = typography.font(FontRole.DISPLAY, 16)
-        self._badge_font = typography.font(FontRole.DISPLAY, 20)
-        self._note_font = typography.font(FontRole.DISPLAY, 18)
+        self._tool_font = typography.font(FontRole.TITLE, 13)
+        self._badge_font = typography.font(FontRole.DISPLAY, 18)
+        self._note_font = typography.font(FontRole.DISPLAY, 16)
 
         # Pre-calculated toolbar buttons (5 large child buttons at bottom)
         btn_w, btn_h = 165, 72
@@ -56,11 +108,11 @@ class OrcaRenderer:
         btn_y = REFERENCE_HEIGHT - 82
 
         self.tool_rects: list[tuple[pygame.Rect, int, tuple[int, int, int], str, str]] = [
-            (pygame.Rect(start_x + 0 * (btn_w + spacing), btn_y, btn_w, btn_h), 0, (249, 115, 22), "🐟", "tool.feed"),
-            (pygame.Rect(start_x + 1 * (btn_w + spacing), btn_y, btn_w, btn_h), 1, (244, 63, 94), "❤️", "tool.cuddle"),
-            (pygame.Rect(start_x + 2 * (btn_w + spacing), btn_y, btn_w, btn_h), 2, (56, 189, 248), "🎪", "tool.play"),
-            (pygame.Rect(start_x + 3 * (btn_w + spacing), btn_y, btn_w, btn_h), 3, (168, 85, 247), "🎶", "tool.sing"),
-            (pygame.Rect(start_x + 4 * (btn_w + spacing), btn_y, btn_w, btn_h), 4, (16, 185, 129), "🌌", "tool.aurora"),
+            (pygame.Rect(start_x + 0 * (btn_w + spacing), btn_y, btn_w, btn_h), 0, (249, 115, 22), "feed", "tool.feed"),
+            (pygame.Rect(start_x + 1 * (btn_w + spacing), btn_y, btn_w, btn_h), 1, (244, 63, 94), "cuddle", "tool.cuddle"),
+            (pygame.Rect(start_x + 2 * (btn_w + spacing), btn_y, btn_w, btn_h), 2, (56, 189, 248), "play", "tool.play"),
+            (pygame.Rect(start_x + 3 * (btn_w + spacing), btn_y, btn_w, btn_h), 3, (168, 85, 247), "sing", "tool.sing"),
+            (pygame.Rect(start_x + 4 * (btn_w + spacing), btn_y, btn_w, btn_h), 4, (16, 185, 129), "aurora", "tool.aurora"),
         ]
 
         # 4 Floating musical bells on water surface
@@ -176,21 +228,12 @@ class OrcaRenderer:
         state = orca.state
 
         # Base body colors
-        body_col = (30, 41, 59) if not night_mode else (15, 23, 42)
+        body_col = (26, 36, 54) if not night_mode else (15, 23, 42)
         white_col = (255, 255, 255)
         saddle_col = (100, 116, 139)
 
-        # Swimming tail wag angle
+        # Swimming tail wag
         wag = math.sin(orca.swim_phase) * (14.0 * sc)
-
-        # Breach tilt angle
-        tilt = 0.0
-        if state in (OrcaState.BREACHING, OrcaState.RING_LEAP):
-            # Arcing tilt: upwards on rise, downwards on descent
-            prog = orca.state_timer
-            tilt = -35.0 + prog * 70.0  # -35 deg to +35 deg
-            if f < 0:
-                tilt = -tilt
 
         # 1. Tail Fluke (drawn behind body)
         fluke_x = cx - int(f * 52 * sc)
@@ -203,7 +246,7 @@ class OrcaRenderer:
         ]
         pygame.draw.polygon(surface, body_col, fluke_pts)
 
-        # 2. Main Sleek Body (Smooth Ellipse / Capsule)
+        # 2. Main Sleek Body (Smooth Ellipse)
         body_w = int(115 * sc)
         body_h = int(64 * sc)
         body_rect = pygame.Rect(cx - body_w // 2, cy - body_h // 2, body_w, body_h)
@@ -245,44 +288,46 @@ class OrcaRenderer:
         ]
         pygame.draw.polygon(surface, body_col, flip_pts)
 
-        # 7. White Oval Eye Patch
-        patch_x = cx + int(f * 32 * sc)
-        patch_y = cy - int(10 * sc)
+        # 7. Iconic White Eye Patch (Above and behind eye)
+        patch_x = cx + int(f * 22 * sc)
+        patch_y = cy - int(12 * sc)
         pygame.draw.ellipse(surface, white_col, (patch_x - int(12 * sc), patch_y - int(7 * sc), int(24 * sc), int(14 * sc)))
 
-        # 8. Animated Eye & Rosy Cheek
-        eye_x = patch_x + int(f * 8 * sc)
-        eye_y = patch_y + int(10 * sc)
+        # 8. Animated Eye & Catchlight
+        eye_x = cx + int(f * 36 * sc)
+        eye_y = cy - int(2 * sc)
 
         if orca.is_blinking or state in (OrcaState.CUDDLE_BELLY, OrcaState.SLEEPING):
-            # Happy smiling / sleeping closed eye crescent ^_^
-            pygame.draw.arc(surface, (15, 23, 42), (eye_x - int(7 * sc), eye_y - int(6 * sc), int(14 * sc), int(12 * sc)), 0, math.pi, 2)
+            # Happy smiling / sleeping closed eye arc ^_^
+            pygame.draw.arc(surface, (255, 255, 255) if not night_mode else (226, 232, 240), (eye_x - int(7 * sc), eye_y - int(6 * sc), int(14 * sc), int(12 * sc)), 0, math.pi, 3)
         else:
-            # Big adorable glossy eye
+            # Big adorable glossy eye with white twinkle catchlight
             pygame.draw.circle(surface, (15, 23, 42), (eye_x, eye_y), max(3, int(6 * sc)))
+            pygame.draw.circle(surface, (255, 255, 255), (eye_x, eye_y), max(3, int(6 * sc)), 1)
             pygame.draw.circle(surface, (255, 255, 255), (eye_x + int(f * 2 * sc), eye_y - int(2 * sc)), max(1, int(2.2 * sc)))
 
-        # Rosy Cheerful Cheek
-        pygame.draw.ellipse(surface, (251, 113, 133), (patch_x - int(6 * sc), patch_y + int(14 * sc), int(12 * sc), int(8 * sc)))
+        # Rosy Cheerful Cheek (Blushing pink)
+        pygame.draw.ellipse(surface, (251, 113, 133), (eye_x - int(f * 4 * sc) - int(6 * sc), eye_y + int(8 * sc) - int(4 * sc), int(12 * sc), int(8 * sc)))
 
         # 9. Mouth / Smile
-        mouth_x = cx + int(f * 48 * sc)
-        mouth_y = cy + int(14 * sc)
+        mouth_x = cx + int(f * 44 * sc)
+        mouth_y = cy + int(10 * sc)
         pygame.draw.arc(surface, (15, 23, 42), (mouth_x - int(10 * sc), mouth_y - int(6 * sc), int(20 * sc), int(12 * sc)), 0, math.pi, 2)
 
-        # 10. Thought Bubble (If craving food or desiring play)
+        # 10. Cute Blowhole notch on top
+        blow_x = cx + int(f * 14 * sc)
+        blow_y = cy - int(28 * sc)
+        pygame.draw.ellipse(surface, (15, 23, 42), (blow_x - 3, blow_y - 2, 6, 4))
+
+        # 11. Thought Bubble (If craving food in swimming mode)
         if state == OrcaState.SWIMMING and cy > WATER_SURFACE_Y + 20:
             bubble_x = cx + int(f * 35 * sc)
             bubble_y = cy - int(60 * sc)
-            pygame.draw.circle(surface, (255, 255, 255), (cx + int(f * 18 * sc), cy - int(38 * sc)), 5)
-            pygame.draw.circle(surface, (255, 255, 255), (cx + int(f * 24 * sc), cy - int(48 * sc)), 8)
-            pygame.draw.ellipse(surface, (255, 255, 255), (bubble_x - 24, bubble_y - 20, 48, 40))
-            pygame.draw.ellipse(surface, (56, 189, 248), (bubble_x - 24, bubble_y - 20, 48, 40), 2)
-
-            food_icons = {FoodType.HERRING: "🐟", FoodType.SALMON: "🍣", FoodType.SQUID: "🦑", FoodType.ICE: "🍧"}
-            icon_str = food_icons.get(orca.craved_food, "🐟")
-            icon_surf = self.typography.render(icon_str, FontRole.DISPLAY, 18, (249, 115, 22))
-            surface.blit(icon_surf, (bubble_x - icon_surf.get_width() // 2, bubble_y - icon_surf.get_height() // 2))
+            pygame.draw.circle(surface, (255, 255, 255), (cx + int(f * 18 * sc), cy - int(38 * sc)), 4)
+            pygame.draw.circle(surface, (255, 255, 255), (cx + int(f * 24 * sc), cy - int(48 * sc)), 7)
+            pygame.draw.ellipse(surface, (255, 255, 255), (bubble_x - 22, bubble_y - 18, 44, 36))
+            pygame.draw.ellipse(surface, (56, 189, 248), (bubble_x - 22, bubble_y - 18, 44, 36), 2)
+            _draw_vector_fish(surface, bubble_x, bubble_y, 22, (249, 115, 22))
 
     def draw_food(self, surface: pygame.Surface, food: FoodEntity) -> None:
         """Render tasty fish treats tossing through the air or sinking in water."""
@@ -291,28 +336,20 @@ class OrcaRenderer:
         kind = food.kind
 
         if kind == "salmon":
-            # Salmon Steak / Pink Fish
-            pygame.draw.ellipse(surface, (244, 63, 94), (fx - 14, fy - 8, 28, 16))
-            pygame.draw.polygon(surface, (225, 29, 72), [(fx + 10, fy), (fx + 20, fy - 8), (fx + 20, fy + 8)])
-            pygame.draw.circle(surface, (255, 255, 255), (fx - 8, fy - 2), 3)
-            pygame.draw.circle(surface, (15, 23, 42), (fx - 9, fy - 2), 1)
+            _draw_vector_fish(surface, fx, fy, 26, (244, 63, 94))
         elif kind == "squid":
-            # Glowing Violet Squid
-            pygame.draw.ellipse(surface, (168, 85, 247), (fx - 12, fy - 10, 24, 20))
-            pygame.draw.polygon(surface, (147, 51, 234), [(fx - 6, fy + 8), (fx - 10, fy + 18), (fx - 2, fy + 18)])
-            pygame.draw.polygon(surface, (147, 51, 234), [(fx + 2, fy + 8), (fx + 2, fy + 18), (fx + 10, fy + 18)])
-            pygame.draw.circle(surface, (255, 255, 255), (fx - 4, fy - 2), 3)
-            pygame.draw.circle(surface, (255, 255, 255), (fx + 4, fy - 2), 3)
+            pygame.draw.ellipse(surface, (168, 85, 247), (fx - 10, fy - 10, 20, 20))
+            for tx in range(-8, 9, 4):
+                pygame.draw.line(surface, (192, 132, 252), (fx + tx, fy + 8), (fx + tx + 2, fy + 16), 2)
+            pygame.draw.circle(surface, (255, 255, 255), (fx - 3, fy - 2), 2)
+            pygame.draw.circle(surface, (255, 255, 255), (fx + 3, fy - 2), 2)
         elif kind == "ice":
-            # Ice Popsicle
-            pygame.draw.rect(surface, (56, 189, 248), (fx - 10, fy - 14, 20, 24), border_radius=6)
-            pygame.draw.rect(surface, (217, 119, 6), (fx - 3, fy + 10, 6, 10))
+            pygame.draw.circle(surface, (186, 230, 253), (fx, fy), 11)
+            pygame.draw.circle(surface, (255, 255, 255), (fx, fy), 11, width=2)
+            pygame.draw.line(surface, (56, 189, 248), (fx - 7, fy), (fx + 7, fy), 2)
+            pygame.draw.line(surface, (56, 189, 248), (fx, fy - 7), (fx, fy + 7), 2)
         else:
-            # Silver Herring
-            pygame.draw.ellipse(surface, (148, 163, 184), (fx - 16, fy - 7, 32, 14))
-            pygame.draw.polygon(surface, (100, 116, 139), [(fx + 12, fy), (fx + 22, fy - 7), (fx + 22, fy + 7)])
-            pygame.draw.circle(surface, (255, 255, 255), (fx - 10, fy - 2), 3)
-            pygame.draw.circle(surface, (15, 23, 42), (fx - 11, fy - 2), 1)
+            _draw_vector_fish(surface, fx, fy, 24, (148, 163, 184))
 
     def draw_toys(self, surface: pygame.Surface, toys: list[ToyEntity], night_mode: bool) -> None:
         """Render floating beach ball and rainbow jump hoop."""
@@ -320,18 +357,9 @@ class OrcaRenderer:
             tx = int(toy.x)
             ty = int(toy.y)
             if toy.kind == "ball":
-                # Beach Ball (Red, Yellow, Blue, White segments)
-                r = 26
-                pygame.draw.circle(surface, (239, 68, 68), (tx, ty), r)
-                # Colored slices
-                pygame.draw.polygon(surface, (234, 179, 8), [(tx, ty), (tx + r, ty), (tx + int(r * 0.7), ty + int(r * 0.7))])
-                pygame.draw.polygon(surface, (59, 130, 246), [(tx, ty), (tx, ty + r), (tx - int(r * 0.7), ty + int(r * 0.7))])
-                pygame.draw.polygon(surface, (255, 255, 255), [(tx, ty), (tx - r, ty), (tx - int(r * 0.7), ty - int(r * 0.7))])
-                pygame.draw.circle(surface, (255, 255, 255), (tx, ty), 7)
-                pygame.draw.circle(surface, (255, 255, 255), (tx, ty), r, 2)
+                _draw_vector_ball(surface, tx, ty, int(26 * toy.scale))
             elif toy.kind == "ring":
-                # Rainbow Jump Ring floating upright
-                rw, rh = 54, 88
+                rw, rh = int(54 * toy.scale), int(88 * toy.scale)
                 pygame.draw.ellipse(surface, (244, 63, 94), (tx - rw // 2, ty - rh // 2, rw, rh), 6)
                 pygame.draw.ellipse(surface, (250, 204, 21), (tx - rw // 2 + 3, ty - rh // 2 + 3, rw - 6, rh - 6), 4)
                 pygame.draw.ellipse(surface, (56, 189, 248), (tx - rw // 2 + 6, ty - rh // 2 + 6, rw - 12, rh - 12), 4)
@@ -339,16 +367,13 @@ class OrcaRenderer:
     def draw_bells(self, surface: pygame.Surface, night_mode: bool) -> None:
         """Render 4 musical sea bells floating on the surface."""
         for rect, idx, col, label in self.bell_rects:
-            # Glowing bell base
             glow_surf = pygame.Surface((rect.width + 12, rect.height + 12), pygame.SRCALPHA)
             pygame.draw.circle(glow_surf, (*col, 70), (glow_surf.get_width() // 2, glow_surf.get_height() // 2), rect.width // 2 + 4)
             surface.blit(glow_surf, (rect.x - 6, rect.y - 6))
 
-            # Bell Body
             pygame.draw.circle(surface, col, rect.center, rect.width // 2)
             pygame.draw.circle(surface, (255, 255, 255), rect.center, rect.width // 2, 3)
 
-            # Note Label
             note_surf = self._note_font.render(label, True, (255, 255, 255))
             surface.blit(note_surf, (rect.centerx - note_surf.get_width() // 2, rect.centery - note_surf.get_height() // 2))
 
@@ -357,23 +382,21 @@ class OrcaRenderer:
         for p in particles:
             px = int(p.x)
             py = int(p.y)
-            if p.kind == "heart" or p.kind == "note":
-                if p.symbol:
-                    sym_surf = self.typography.render(p.symbol, FontRole.DISPLAY, max(12, int(p.size * p.life)), p.color)
-                    surface.blit(sym_surf, (px - sym_surf.get_width() // 2, py - sym_surf.get_height() // 2))
+            if p.kind == "heart":
+                _draw_vector_heart(surface, px, py, max(6, int(p.size * p.life)), p.color)
+            elif p.kind == "note":
+                _draw_vector_music(surface, px, py, max(8, int(p.size * p.life)), p.color)
             else:
-                # Water splash or bubble circle
                 sz = max(2, int(p.size * p.life))
                 pygame.draw.circle(surface, p.color, (px, py), sz)
                 if p.kind == "bubble":
                     pygame.draw.circle(surface, (255, 255, 255), (px - 1, py - 1), max(1, sz // 2))
 
     def draw_ui(self, surface: pygame.Surface, active_tool: int, pod: OrcaPod) -> None:
-        """Render the child-safe bottom toolbar with large, high-contrast buttons."""
-        for rect, tool_idx, col, icon, label_key in self.tool_rects:
+        """Render the child-safe bottom toolbar with large, high-contrast buttons and crisp vector icons."""
+        for rect, tool_idx, col, icon_kind, label_key in self.tool_rects:
             is_active = (active_tool == tool_idx)
 
-            # Active selection highlight pill
             if is_active:
                 pygame.draw.rect(surface, (255, 255, 255), rect.inflate(8, 8), border_radius=20)
                 btn_col = col
@@ -383,12 +406,25 @@ class OrcaRenderer:
             pygame.draw.rect(surface, btn_col, rect, border_radius=16)
             pygame.draw.rect(surface, (255, 255, 255), rect, width=3, border_radius=16)
 
-            # Icon + Text
-            label_text = self.resources.text(label_key) if label_key else icon
+            # Draw crisp vector icon in top half of button
+            icon_cy = rect.top + 24
+            if icon_kind == "feed":
+                _draw_vector_fish(surface, rect.centerx, icon_cy, 28, (255, 255, 255))
+            elif icon_kind == "cuddle":
+                _draw_vector_heart(surface, rect.centerx, icon_cy, 22, (255, 255, 255))
+            elif icon_kind == "play":
+                _draw_vector_ball(surface, rect.centerx, icon_cy, 12)
+            elif icon_kind == "sing":
+                _draw_vector_music(surface, rect.centerx, icon_cy, 22, (255, 255, 255))
+            elif icon_kind == "aurora":
+                _draw_vector_moon(surface, rect.centerx, icon_cy, 12, (254, 240, 138))
+
+            # Text label in bottom half
+            label_text = self.resources.text(label_key) if label_key else ""
             lbl_surf = self._tool_font.render(label_text, True, (255, 255, 255))
             surface.blit(
                 lbl_surf,
-                (rect.centerx - lbl_surf.get_width() // 2, rect.centery - lbl_surf.get_height() // 2),
+                (rect.centerx - lbl_surf.get_width() // 2, rect.bottom - lbl_surf.get_height() - 8),
             )
 
         # Top Right Activity Badges (Fed & Cuddled counters)
@@ -399,9 +435,15 @@ class OrcaRenderer:
         pygame.draw.rect(badge_surf, (255, 255, 255, 200), (0, 0, 190, 48), width=2, border_radius=24)
         surface.blit(badge_surf, (badge_x, badge_y))
 
-        stats_str = f"🐟 {pod.total_fed}   ❤️ {pod.total_cuddled}"
-        stats_render = self._badge_font.render(stats_str, True, (255, 255, 255))
-        surface.blit(stats_render, (badge_x + 95 - stats_render.get_width() // 2, badge_y + 24 - stats_render.get_height() // 2))
+        # Fish counter
+        _draw_vector_fish(surface, badge_x + 28, badge_y + 24, 22, (249, 115, 22))
+        fed_txt = self._badge_font.render(str(pod.total_fed), True, (255, 255, 255))
+        surface.blit(fed_txt, (badge_x + 46, badge_y + 24 - fed_txt.get_height() // 2))
+
+        # Heart counter
+        _draw_vector_heart(surface, badge_x + 118, badge_y + 24, 18, (244, 63, 94))
+        cuddle_txt = self._badge_font.render(str(pod.total_cuddled), True, (255, 255, 255))
+        surface.blit(cuddle_txt, (badge_x + 134, badge_y + 24 - cuddle_txt.get_height() // 2))
 
     def render_frame(self, canvas_surface: pygame.Surface, pod: OrcaPod) -> None:
         """Compose all layers into a complete, beautiful presentable frame."""

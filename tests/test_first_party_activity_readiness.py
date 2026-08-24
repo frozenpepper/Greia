@@ -139,6 +139,7 @@ class FirstPartyActivityReadinessTests(unittest.TestCase):
                 "cucciolo_mio",
                 "foresta_parole",
                 "labirinto_magico",
+                "luci_di_momo",
                 "memory_meraviglie",
                 "nascondino_bosco",
                 "orchestra_animali",

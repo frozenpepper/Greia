@@ -8,12 +8,12 @@
     "orca.kiko": "Kiko (Baby)",
     "orca.luna": "Luna (Acrobat)",
     "orca.oskar": "Oskar (Elder)",
-    "tool.feed": "🐟 FEED",
-    "tool.cuddle": "❤️ CUDDLE",
-    "tool.play": "🎪 PLAY",
-    "tool.sing": "🎶 SONG",
-    "tool.aurora": "🌌 NIGHT",
-    "tool.day": "☀️ DAY"
+    "tool.feed": "FEED",
+    "tool.cuddle": "CUDDLE",
+    "tool.play": "PLAY",
+    "tool.sing": "SONG",
+    "tool.aurora": "NIGHT",
+    "tool.day": "DAY"
   },
   "audio": {}
 }
