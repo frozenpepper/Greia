@@ -44,6 +44,7 @@ build/build-image.sh
 build/build-installer-image.sh
 build/live-syslinux/syslinux.cfg.in
 build/early-boot/greia-fb-splash.c
+src/greia_launcher/boot_intro.py
 ```
 
 Do not work from remembered commands or an old rescue transcript.
@@ -256,7 +257,7 @@ The current source owns these different representations:
 - P6 PPM used by the raw framebuffer renderer;
 - launcher animation frames/presentation.
 
-Do not infer dimensions from an old document. Inspect `tools/generate_boot_artwork.py` and the current generated assets/tests.
+Do not infer dimensions or timing from an old document. Inspect `tools/generate_boot_artwork.py`, `src/greia_launcher/boot_intro.py` and the current tests.
 
 Rules:
 
@@ -268,6 +269,18 @@ Rules:
 - if they are, apply the initramfs artifact checks from §5.
 
 The current milestone progress implementation is source-owned by `GREIA_BOOT_PROGRESS.md`, initramfs stage scripts, the raw framebuffer renderer and launcher handoff. Do not claim a progress bar was removed while those sources still draw/require it. Any product decision to remove it must change source, tests and docs together and then receive physical visual acceptance.
+
+### Launcher animation timing is intentional product behavior
+
+The intended launcher-owned sequence is:
+
+```text
+5 seconds — animate the complete 52-frame boot sequence
+2 seconds — keep the exact final frame visible
+then       — reveal the profile picker
+```
+
+Do **not** shorten that seven-second intentional presentation as a generic performance/boot-speed optimization. Optimization work should remove hidden stalls, retries, decode overhead or service latency; it must not silently rewrite explicit product timing. A timing change requires an explicit owner/product decision and must update source, regression tests and living boot docs together.
 
 ---
 
@@ -375,8 +388,9 @@ Ask all of these:
 13. Are exact idempotency markers used rather than glob patterns?
 14. Are Xorg/VT requirements being treated as compatibility-backend facts rather than architecture?
 15. Are source, generated artifact, test expectations and living docs consistent?
-16. Is the physical evidence scope stated honestly?
-17. If we are about to reboot, what is the independent recovery path if it fails?
+16. If launcher timing changed, was the explicit 5-second animation + 2-second final-frame hold preserved or intentionally superseded by the owner?
+17. Is the physical evidence scope stated honestly?
+18. If we are about to reboot, what is the independent recovery path if it fails?
 
 If the answer to the last question is “none”, stop and establish one before the reboot unless the owner explicitly accepts the risk.
 
@@ -398,6 +412,7 @@ If the answer to the last question is “none”, stop and establish one before 
 - unit-level conditions that make a required first-boot service skip/fail on later boots;
 - wildcard first-boot marker tests;
 - Xorg service hardening that blocks VT/DRM/input paths;
+- shortening the intentional 5-second animation + 2-second final-frame hold as an incidental performance tweak;
 - relying on a source-test PASS as proof the physical image boots;
 - manually fixing the Acer while leaving the builder/source wrong;
 - updating code without updating the boot guide/postmortem/current handover;
