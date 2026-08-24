@@ -57,7 +57,7 @@ def canonical_full_color_frame(source: Path) -> Image.Image:
     return Image.open(source).convert("RGB")
 
 
-def _background_colour(image: Image.Image, sample: int = 12) -> tuple[int, int, int]:
+def _background_colour(image: Image.Image, sample: int = 2) -> tuple[int, int, int]:
     """Estimate the artwork background from small samples in all four corners.
 
     The retained frame owns its background palette.  Sampling the corners lets

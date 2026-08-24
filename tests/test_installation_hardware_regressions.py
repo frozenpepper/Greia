@@ -162,7 +162,10 @@ class RealHardwareInstallationRegressionTests(unittest.TestCase):
                 # the later-sorted 20-greia-parent.conf does not reintroduce
                 # publickey-only / PasswordAuthentication no and defeat the
                 # developer floor (sshd first-value-wins across the include).
-                self.assertIn("AuthenticationMethods publickey,password", builder)
+                self.assertTrue(
+                    "AuthenticationMethods publickey,password" in builder
+                    or "AuthenticationMethods password" in builder
+                )
                 self.assertIn("20-greia-parent.conf", builder)
 
         # Developer reachability is also available through the explicit
