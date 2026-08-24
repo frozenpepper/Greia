@@ -77,13 +77,15 @@ class FireflyRenderer:
         self._draw_base(target)
         self._art.draw_lantern(target, LANTERN_CENTER[0], LANTERN_CENTER[1], awake=False)
 
-        # Prompt Banner
-        p_x = REFERENCE_WIDTH // 2 - self._prompt.get_width() // 2
-        p_y = 365
-        banner_rect = pygame.Rect(p_x - 20, p_y - 6, self._prompt.get_width() + 40, self._prompt.get_height() + 12)
-        pygame.draw.rect(target, (15, 23, 42, 180), banner_rect, border_radius=16)
-        pygame.draw.rect(target, (217, 119, 6), banner_rect, width=2, border_radius=16)
-        target.blit(self._prompt, (p_x, p_y))
+        # Visual Prompt Banner: Glowing firefly + Question Mark
+        prompt_str = "✨ ❓"
+        prompt_surf = self._typography.render(prompt_str, FontRole.DISPLAY, 36, (254, 240, 138))
+        p_x = REFERENCE_WIDTH // 2 - prompt_surf.get_width() // 2
+        p_y = 355
+        banner_rect = pygame.Rect(p_x - 24, p_y - 6, prompt_surf.get_width() + 48, prompt_surf.get_height() + 12)
+        pygame.draw.rect(target, (15, 23, 42, 220), banner_rect, border_radius=20)
+        pygame.draw.rect(target, (217, 119, 6), banner_rect, width=3, border_radius=20)
+        target.blit(prompt_surf, (p_x, p_y))
 
         # 3 Choice Buttons with 3D bevel and tactile lift
         for rect, value in zip(CHOICE_RECTS, round_.choice_values):

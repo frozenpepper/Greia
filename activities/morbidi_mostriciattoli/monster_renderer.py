@@ -210,8 +210,16 @@ class MonsterRenderer:
             pygame.draw.rect(target, bg_col, t_draw, border_radius=18)
             pygame.draw.rect(target, border_col, t_draw, width=3, border_radius=18)
 
-            label_text = self._resources.text(f"tab.{cat.value}")
-            txt_surf = self._typography.render(label_text, FontRole.TITLE, 18, (255, 255, 255))
+            cat_symbols = {
+                Category.BODY_SHAPE: "⚪",
+                Category.BODY_COLOR: "🎨",
+                Category.EYES: "👀",
+                Category.MOUTH: "👄",
+                Category.TUFT: "🦄",
+                Category.ACCESSORY: "🎀",
+            }
+            sym = cat_symbols.get(cat, "✨")
+            txt_surf = self._typography.render(sym, FontRole.DISPLAY, 32, (255, 255, 255))
             target.blit(
                 txt_surf,
                 (

@@ -46,15 +46,15 @@ class CloudRenderer:
         self._resources = resources
 
         self._basket_label = typography.render(
-            resources.text("basket.label"),
-            FontRole.BODY,
-            16,
+            "⭐",
+            FontRole.TITLE,
+            20,
             (254, 240, 138),
         )
         self._new_night_label = typography.render(
-            resources.text("button.new_night"),
-            FontRole.BODY,
-            15,
+            "🌙 ✨",
+            FontRole.TITLE,
+            24,
             (255, 255, 255),
         )
 

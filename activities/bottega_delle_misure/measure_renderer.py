@@ -286,13 +286,26 @@ class MeasureRenderer:
             pygame.draw.circle(target, (255, 255, 255), (rect.centerx, rect.top - 2), 6)
 
     def _draw_prompt(self, target: pygame.Surface, challenge: MeasureChallenge) -> None:
-        text = self._resources.text(challenge.prompt_key)
-        prompt_surf = self._typography.render(text, FontRole.TITLE, 26, (254, 240, 138))
-        p_x = REFERENCE_WIDTH // 2 - prompt_surf.get_width() // 2
         p_y = 412
+        if challenge.mode == MeasureMode.COMPARE:
+            if challenge.attribute == Attribute.LENGTH:
+                text = "⬅️ 📦 ➡️ ❓" if "longer" in challenge.prompt_key else "📦 ❓"
+            else:
+                text = "⬆️ 📦 ⬇️ ❓" if "taller" in challenge.prompt_key else "📦 ❓"
+        elif challenge.mode == MeasureMode.ORDER:
+            text = "📦 ➡️ 📦📦 ➡️ 📦📦📦"
+        elif challenge.mode == MeasureMode.MEASURE:
+            text = "📏 ❓"
+        elif challenge.mode == MeasureMode.SHELF:
+            text = "📦 ➡️ 🚪 ❓"
+        else:
+            text = "📏 ❓"
+
+        prompt_surf = self._typography.render(text, FontRole.DISPLAY, 36, (254, 240, 138))
+        p_x = REFERENCE_WIDTH // 2 - prompt_surf.get_width() // 2
         banner = pygame.Rect(p_x - 24, p_y - 6, prompt_surf.get_width() + 48, prompt_surf.get_height() + 12)
-        pygame.draw.rect(target, (15, 23, 42, 200), banner, border_radius=16)
-        pygame.draw.rect(target, (217, 119, 6), banner, width=2, border_radius=16)
+        pygame.draw.rect(target, (15, 23, 42, 220), banner, border_radius=20)
+        pygame.draw.rect(target, (217, 119, 6), banner, width=3, border_radius=20)
         target.blit(prompt_surf, (p_x, p_y))
 
     def _draw_measure_controls(

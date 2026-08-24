@@ -199,24 +199,41 @@ class TenHouseRenderer:
         challenge: TenHouseChallenge,
         session: TenHouseSession,
     ) -> None:
+        p_y = 412
         if challenge.mode == OperationMode.COMPOSE:
-            if challenge.target == 1:
-                text = self._resources.text("prompt.compose_one")
-            else:
-                text = self._resources.text("prompt.compose", {"target": str(challenge.target)})
-        elif challenge.mode == OperationMode.ADD:
-            text = f"{challenge.starting_lit} + {challenge.delta} = ?"
-        elif challenge.mode == OperationMode.TAKE_AWAY:
-            text = f"{challenge.starting_lit} - {challenge.delta} = ?"
-        elif challenge.mode == OperationMode.MISSING_PART:
-            text = self._resources.text("prompt.missing_part", {"target": str(challenge.target)})
+            # Giant visual target number + live counter pill
+            target_str = f"🎯 {challenge.target}"
+            t_surf = self._typography.render(target_str, FontRole.DISPLAY, 36, (254, 240, 138))
 
-        prompt_surf = self._typography.render(text, FontRole.TITLE, 28, (254, 240, 138))
+            count_str = f"💡 {session.lit_count} / {challenge.target}"
+            match_col = (134, 239, 172) if session.lit_count == challenge.target else (255, 255, 255)
+            c_surf = self._typography.render(count_str, FontRole.TITLE, 26, match_col)
+
+            total_w = t_surf.get_width() + c_surf.get_width() + 48
+            p_x = REFERENCE_WIDTH // 2 - total_w // 2
+            banner = pygame.Rect(p_x - 20, p_y - 6, total_w + 40, 52)
+            pygame.draw.rect(target, (15, 23, 42, 220), banner, border_radius=20)
+            b_col = (34, 197, 94) if session.lit_count == challenge.target else (217, 119, 6)
+            pygame.draw.rect(target, b_col, banner, width=3, border_radius=20)
+
+            target.blit(t_surf, (p_x, p_y + 2))
+            target.blit(c_surf, (p_x + t_surf.get_width() + 32, p_y + 8))
+            return
+
+        elif challenge.mode == OperationMode.ADD:
+            text = f"{challenge.starting_lit} 💡 + {challenge.delta} 💡 = ❓"
+        elif challenge.mode == OperationMode.TAKE_AWAY:
+            text = f"{challenge.starting_lit} 💡 - {challenge.delta} 💡 = ❓"
+        elif challenge.mode == OperationMode.MISSING_PART:
+            text = f"{challenge.starting_lit} 💡 + ❓ = {challenge.target} 💡"
+        else:
+            text = f"🎯 {challenge.target}"
+
+        prompt_surf = self._typography.render(text, FontRole.DISPLAY, 34, (254, 240, 138))
         p_x = REFERENCE_WIDTH // 2 - prompt_surf.get_width() // 2
-        p_y = 422
         banner = pygame.Rect(p_x - 24, p_y - 6, prompt_surf.get_width() + 48, prompt_surf.get_height() + 12)
-        pygame.draw.rect(target, (15, 23, 42, 200), banner, border_radius=16)
-        pygame.draw.rect(target, (217, 119, 6), banner, width=2, border_radius=16)
+        pygame.draw.rect(target, (15, 23, 42, 220), banner, border_radius=20)
+        pygame.draw.rect(target, (217, 119, 6), banner, width=3, border_radius=20)
         target.blit(prompt_surf, (p_x, p_y))
 
     def _draw_confirm_button(
@@ -244,11 +261,13 @@ class TenHouseRenderer:
             hl = draw_rect.inflate(-16, -draw_rect.height + 8).move(0, -draw_rect.height // 2 + 8)
             pygame.draw.rect(target, (187, 247, 208, 120), hl, border_radius=4)
 
+        # Big OK Checkmark label
+        confirm_surf = self._typography.render("OK ✅", FontRole.TITLE, 30, (255, 255, 255))
         target.blit(
-            self._confirm_label,
+            confirm_surf,
             (
-                draw_rect.centerx - self._confirm_label.get_width() // 2,
-                draw_rect.centery - self._confirm_label.get_height() // 2,
+                draw_rect.centerx - confirm_surf.get_width() // 2,
+                draw_rect.centery - confirm_surf.get_height() // 2,
             ),
         )
 

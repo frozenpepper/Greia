@@ -138,19 +138,18 @@ class RhymeRenderer:
 
     def _draw_prompt(self, target: pygame.Surface, challenge: RhymeChallenge) -> None:
         if challenge.mode == RhymeMode.RHYME_MATCH:
-            key = "prompt.rhyme"
+            text = "🎵 ➡️ ❓"
         elif challenge.mode == RhymeMode.RHYME_ODD:
-            key = "prompt.odd"
+            text = "❌ ❓"
         else:
-            key = "prompt.sound"
+            text = "🔊 ➡️ ❓"
 
-        text = self._resources.text(key)
         y = 250 if challenge.target_item is not None else 180
-        surf = self._typography.render(text, FontRole.TITLE, 26, (254, 240, 138))
+        surf = self._typography.render(text, FontRole.DISPLAY, 36, (254, 240, 138))
         p_x = REFERENCE_WIDTH // 2 - surf.get_width() // 2
         banner = pygame.Rect(p_x - 24, y - 6, surf.get_width() + 48, surf.get_height() + 12)
-        pygame.draw.rect(target, (15, 23, 42, 200), banner, border_radius=16)
-        pygame.draw.rect(target, (217, 119, 6), banner, width=2, border_radius=16)
+        pygame.draw.rect(target, (15, 23, 42, 220), banner, border_radius=20)
+        pygame.draw.rect(target, (217, 119, 6), banner, width=3, border_radius=20)
         target.blit(surf, (p_x, y))
 
     def _draw_top_bar(
@@ -174,11 +173,12 @@ class RhymeRenderer:
         hl = r_draw.inflate(-16, -r_draw.height + 8).move(0, -r_draw.height // 2 + 8)
         pygame.draw.rect(target, (186, 230, 253, 100), hl, border_radius=4)
 
+        speaker_icon = self._typography.render("🔊 ASCOLTA", FontRole.TITLE, 22, (255, 255, 255))
         target.blit(
-            self._replay_label,
+            speaker_icon,
             (
-                r_draw.centerx - self._replay_label.get_width() // 2,
-                r_draw.centery - self._replay_label.get_height() // 2,
+                r_draw.centerx - speaker_icon.get_width() // 2,
+                r_draw.centery - speaker_icon.get_height() // 2,
             ),
         )
 
