@@ -152,12 +152,31 @@ This is not mandatory when the Activity subject has no useful real-world knowled
 
 When it fits, it is strongly encouraged because it turns play into a gateway for curiosity without turning the Activity into a lesson screen.
 
+### Voice-first rule for facts
+
+Greia targets children who may not read yet. Therefore, when a curiosity/facts feature is implemented, **spoken delivery is the normal child-facing contract**. The localized text is a caption/support layer, not the only way to consume the fact.
+
+Preferred pattern:
+
+```text
+child activates curiosity affordance
+-> fitting canonical presenter becomes visibly active
+-> reviewed localized character voice speaks one short fact
+-> optional localized caption shows the same meaning
+-> play continues immediately afterward
+```
+
+If the custom canonical voice toolchain is temporarily unavailable, an agent may scaffold the semantic fact IDs, researched source record, localized text, UI affordance and audio slots. But a voice-first curiosity feature must not be reported as fully accepted until the required spoken locale coverage has actually been produced/reviewed, unless the owner explicitly changes the product requirement to text-only.
+
+Do not substitute arbitrary host TTS for Lilli/Leo/Flash/Tito/Momo merely to make the button speak.
+
 ### Fact interaction rules
 
 The fact feature should normally be:
 
 - optional and child-invoked;
 - one tap/click/controller action away;
+- spoken by a fitting canonical presenter when voice is part of the accepted feature;
 - non-modal or very lightweight;
 - short enough to hear without interrupting play for long;
 - repeatable;
@@ -278,6 +297,7 @@ For a voice-driven presenter/fact feature:
 - use the same canonical speaker identity across localized versions;
 - keep text and spoken wording semantically aligned;
 - if grammatical child-address variants are used, text/audio must resolve the same variant;
+- simulator acceptance must exercise materially supported presenter/fact locales when the feature changed;
 - if custom voice production is unavailable during development, keep semantic/localized cues ready and report the missing audio honestly rather than hard-coding one locale.
 
 A text-only fallback may keep the Activity functional where the product deliberately allows optional speech degradation, but it is **not evidence that multilingual voice production itself is complete**.
@@ -329,6 +349,7 @@ CURIOSITY_FACTS_APPROPRIATE=yes/no
 FACT_RESEARCH_PROVENANCE_PATH=
 SUPPORTED_LOCALES=
 SPOKEN_LOCALE_COVERAGE=
+CURIOSITY_VOICE_ACCEPTED=yes/no/not-applicable
 ```
 
 If the Activity is subject-rich and `CURIOSITY_FACTS_APPROPRIATE=no`, record a brief reason. The purpose is to force the design decision, not to force a fact button into every game.
