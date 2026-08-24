@@ -936,12 +936,26 @@ This plan may be marked complete only when:
 
 ---
 
-## 2026-08-24 — Labirinto Magico Fullscreen Expansion, Extreme Complexity & Sliding Movement (non-closing)
+## 2026-08-24 — Labirinto Magico Fullscreen Expansion, Extreme Complexity & Zero-Allocation Performance Overhaul (non-closing)
 
 - Implemented: Overhauled `org.greia.labirinto-magico` (Magical Labyrinth) following `skills/greia-activity-authoring/ENGINEERING.md`.
   - Removed the cramped on-screen D-pad arrow controls that previously consumed the entire right side of the screen.
   - Expanded the maze across the full viewport (~2.5× screen area) below a streamlined Home-safe top bar HUD (Star score pill, Difficulty switcher, World theme switcher, New Maze button).
   - Scaled up difficulty complexity with 9 progressive levels up to an intricate **89×41** grid ("Infinito") with 35 collectible crystal stars and hundreds of corridors.
+  - Implemented continuous sliding movement (moving at 18 cells/s until hitting a wall, reaching an intersection/crossing with >2 choices, or reaching the exit portal) for arrow keys, WASD, and gamepad D-pad.
+  - Implemented direct click-to-move / touch movement (cardinal impulse towards click position, turning corners when direct axis is blocked, without pathfinding).
+  - Performance Optimization:
+    - Pre-rendered and cached all portal rotation angles (16 discrete pre-rotated frames) to eliminate per-frame floating-point `pygame.transform.rotate()` surface reallocations.
+    - Pre-cached flipped Tito sprites (`get_flipped_asset`).
+    - Pre-cached ambient particle alpha surfaces (`get_particle_surface`) to eliminate 25 per-frame `pygame.Surface(..., pygame.SRCALPHA)` allocations.
+    - Pre-cached typography rendering for all UI buttons and HUD counters (`_text_cache`).
+    - Pre-baked the static maze grid into a display-format `pygame.Surface` on world generation.
+    - Upgraded frame rate loop to 60 FPS tick with bounded delta-time.
+    - Render throughput measured at **0.598 ms/frame** (~1,670 FPS throughput) even on the massive 89×41 grid.
+- Tests & Evidence:
+  - `tests/test_activity_labirinto_magico.py` (**11/11 PASS**).
+  - Full test suite `PYTHONPATH=src:tests:. python3 -m unittest discover tests` (**1,176 tests PASS**).
+  - Live simulator execution via `greia_simulator.child_shell` and `tools/greia_simulator_ctl.py` capturing live gameplay at `1024×600`, sliding navigation, difficulty switching to *Infinito* (89×41), and Home button return to shell.
 ## 2026-08-24 — Il Volo del Draghetto Performance, Responsive Arrow Input & Endless Flight Overhaul (non-closing)
 
 - Implemented: Complete performance, look, and gameplay overhaul of `org.greia.volo-draghetto` (Il Volo del Draghetto / Dragon Flight) following `skills/greia-activity-authoring/ENGINEERING.md`.

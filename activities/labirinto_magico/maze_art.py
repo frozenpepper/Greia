@@ -11,6 +11,9 @@ ASSETS_DIR = Path(__file__).parent / "assets" / "runtime"
 
 _IMAGE_CACHE: dict[str, pygame.Surface | None] = {}
 _SCALE_CACHE: dict[tuple[str, int, int], pygame.Surface | None] = {}
+_FLIP_CACHE: dict[tuple[str, int, int], pygame.Surface | None] = {}
+_PORTAL_FRAMES_CACHE: dict[int, list[pygame.Surface]] = {}
+_PARTICLE_SURF_CACHE: dict[tuple[int, int, int, int], pygame.Surface] = {}
 
 
 def load_asset_surface(filename: str) -> pygame.Surface | None:
@@ -37,6 +40,51 @@ def get_scaled_asset(filename: str, width: int, height: int) -> pygame.Surface |
         else:
             _SCALE_CACHE[key] = None
     return _SCALE_CACHE[key]
+
+
+def get_flipped_asset(filename: str, width: int, height: int) -> pygame.Surface | None:
+    width = max(1, int(width))
+    height = max(1, int(height))
+    key = (filename, width, height)
+    if key not in _FLIP_CACHE:
+        base = get_scaled_asset(filename, width, height)
+        if base is not None:
+            _FLIP_CACHE[key] = pygame.transform.flip(base, True, False)
+        else:
+            _FLIP_CACHE[key] = None
+    return _FLIP_CACHE[key]
+
+
+def get_portal_rotation_frames(size: int, num_frames: int = 16) -> list[pygame.Surface]:
+    size = max(16, int(size))
+    if size not in _PORTAL_FRAMES_CACHE:
+        base = get_scaled_asset("portal_goal.png", size, size)
+        frames: list[pygame.Surface] = []
+        if base is not None:
+            for i in range(num_frames):
+                angle = (360.0 / num_frames) * i
+                rot = pygame.transform.rotate(base, angle)
+                frames.append(rot)
+        else:
+            # Procedural fallback frames
+            for i in range(num_frames):
+                surf = pygame.Surface((size, size), pygame.SRCALPHA)
+                pygame.draw.circle(surf, (168, 85, 247), (size // 2, size // 2), size // 2)
+                pygame.draw.circle(surf, (254, 240, 138), (size // 2, size // 2), size // 3)
+                frames.append(surf)
+        _PORTAL_FRAMES_CACHE[size] = frames
+    return _PORTAL_FRAMES_CACHE[size]
+
+
+def get_particle_surface(color: tuple[int, int, int], alpha: int, radius: int) -> pygame.Surface:
+    alpha = max(0, min(255, int(alpha)))
+    radius = max(1, int(radius))
+    key = (*color, alpha, radius)
+    if key not in _PARTICLE_SURF_CACHE:
+        surf = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+        pygame.draw.circle(surf, (*color, alpha), (radius, radius), radius)
+        _PARTICLE_SURF_CACHE[key] = surf
+    return _PARTICLE_SURF_CACHE[key]
 
 
 class MazeArt:
@@ -104,7 +152,7 @@ class MazeArt:
         return surf
 
     @staticmethod
-    def init_ambient_particles(width: int, height: int, count: int = 30) -> list[dict[str, Any]]:
+    def init_ambient_particles(width: int, height: int, count: int = 15) -> list[dict[str, Any]]:
         particles: list[dict[str, Any]] = []
         for _ in range(count):
             particles.append({
@@ -112,8 +160,8 @@ class MazeArt:
                 "y": random.uniform(20, height - 20),
                 "vx": random.uniform(-0.4, 0.4),
                 "vy": random.uniform(-0.5, -0.1),
-                "size": random.uniform(2, 5),
-                "alpha": random.uniform(80, 200),
+                "size": random.randint(2, 4),
+                "alpha": random.choice([80, 120, 160]),
             })
         return particles
 
@@ -135,18 +183,18 @@ class MazeArt:
                 p["x"] = 10
 
     @staticmethod
-    def create_star_burst(x: float, y: float, color: tuple[int, int, int] = (254, 240, 138), count: int = 14) -> list[dict[str, Any]]:
+    def create_star_burst(x: float, y: float, color: tuple[int, int, int] = (254, 240, 138), count: int = 10) -> list[dict[str, Any]]:
         burst: list[dict[str, Any]] = []
         for _ in range(count):
             angle = random.uniform(0, 6.28)
-            speed = random.uniform(1.5, 4.5)
+            speed = random.uniform(1.5, 4.0)
             burst.append({
                 "x": x,
                 "y": y,
                 "vx": math.cos(angle) * speed,
                 "vy": math.sin(angle) * speed,
                 "color": color,
-                "size": random.uniform(5, 11),
+                "size": random.uniform(4, 8),
             })
         return burst
 

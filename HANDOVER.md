@@ -171,13 +171,25 @@ Reclaimed ~100px of wasted vertical screen space across first-party creation act
   - Full automated functional tests for drawing, erasing, undo, color picking, brush resizing, gallery, text editing, and emoji picking passed cleanly.
   - Multi-resolution simulator visual evidence across 1024×600, 800×600, 1280×720, 1366×768, 1920×1080 and Compact/Normal/Large interface sizes captured in `tmp/simulator_evidence/`.
 
-## Labirinto Magico fullscreen expansion, extreme complexity & sliding movement (2026-08-24)
+## Labirinto Magico fullscreen expansion, extreme complexity & zero-allocation performance overhaul (2026-08-24)
 
 Overhauled `org.greia.labirinto-magico` (Magical Labyrinth):
 - **On-Screen Arrow Controls Removed**: Deleted the cramped right-side D-pad arrow buttons to allow the maze to occupy the entire viewport (~2.5× surface area).
 - **Fullscreen Layout**: Centered the maze grid in the available area (`~988×504` on 1024×600) beneath a streamlined top bar HUD (Star score pill, Difficulty level button, World theme button, New Maze button) respecting platform-owned Home chrome.
 - **Extreme Complexity**: Expanded difficulty to 9 progressive levels from toddler-friendly `13×9` up to an intricate **89×41** grid ("Infinito") with 35 collectible crystal stars and hundreds of labyrinthine branches.
-- **Architecture**: Modular decomposition into `maze_model.py`, `maze_art.py`, `maze_audio.py`, `maze_renderer.py`, `maze_app.py`, and `main.py`. Tests: `tests/test_activity_labirinto_magico.py` (11/11 PASS).
+- **Sliding Continuous Movement & Click-to-Move**: Implemented sliding movement (moving at 18 cells/s until hitting a wall, reaching an intersection/crossing with >2 choices, or reaching the exit portal) for arrow keys, WASD, and gamepad D-pad, plus click-to-move cardinal impulse towards click position without pathfinding.
+- **Zero-Allocation Performance Overhaul**:
+  - Pre-rendered and cached 16 discrete portal rotation angles (`get_portal_rotation_frames`), eliminating per-frame floating-point `pygame.transform.rotate()` allocations.
+  - Pre-cached flipped Tito adventurer sprites (`get_flipped_asset`).
+  - Pre-cached ambient particle alpha surfaces (`get_particle_surface`), eliminating 25 per-frame `pygame.Surface(..., pygame.SRCALPHA)` allocations.
+  - Pre-cached FreeType typography rendering across all UI buttons and HUD counters (`_text_cache`).
+  - Pre-baked static maze background surface on generation/biome switch.
+  - Render throughput measured at **0.598 ms/frame** (~1,670 FPS) even on the 89×41 Infinito grid.
+- **Architecture**: Modular decomposition into `maze_model.py`, `maze_art.py`, `maze_audio.py`, `maze_renderer.py`, `maze_app.py`, and `main.py`.
+- **Tests & Simulator Verification**:
+  - `tests/test_activity_labirinto_magico.py` (11/11 PASS).
+  - Full suite: **1,176 tests PASS**.
+  - Verified live inside the Activity Simulator (`greia_simulator.child_shell` + `tools/greia_simulator_ctl.py`) across navigation, sliding moves, *Infinito* (89×41) scaling, and protected Home button return.
 
 ## Il Volo del Draghetto performance, arrow input & endless flight overhaul (2026-08-24)
 

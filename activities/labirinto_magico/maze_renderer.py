@@ -14,17 +14,41 @@ from greia_platform.system_chrome import ActivitySystemChromeLayout
 from greia_platform.typography import FontRole, GreiaTypography
 
 try:
-    from maze_art import get_scaled_asset
+    from maze_art import (
+        get_flipped_asset,
+        get_particle_surface,
+        get_portal_rotation_frames,
+        get_scaled_asset,
+    )
     from maze_model import BIOMES, DIFFICULTIES, CollectibleStar, MazeState
 except ImportError:
-    from .maze_art import get_scaled_asset
+    from .maze_art import (
+        get_flipped_asset,
+        get_particle_surface,
+        get_portal_rotation_frames,
+        get_scaled_asset,
+    )
     from .maze_model import BIOMES, DIFFICULTIES, CollectibleStar, MazeState
 
 
 class MazeRenderer:
     def __init__(self, typography: GreiaTypography | None = None) -> None:
         self.typography = typography or GreiaTypography()
-        self._cached_labels: dict[str, pygame.Surface] = {}
+        self._text_cache: dict[tuple[str, FontRole, int, tuple[int, ...]], pygame.Surface] = {}
+        self._hud_cache: dict[tuple[int, int, str, str], pygame.Surface] = {}
+        self._victory_overlay_cache: pygame.Surface | None = None
+
+    def _render_text(
+        self,
+        text: str,
+        role: FontRole,
+        size: int,
+        color: tuple[int, int, int],
+    ) -> pygame.Surface:
+        key = (text, role, size, color)
+        if key not in self._text_cache:
+            self._text_cache[key] = self.typography.render(text, role, size, color)
+        return self._text_cache[key]
 
     def get_hud_layout(self, width: int, height: int, metrics: ChildUiMetrics) -> dict[str, pygame.Rect]:
         chrome = ActivitySystemChromeLayout.for_surface(width, height)
@@ -107,36 +131,28 @@ class MazeRenderer:
         # 1. Fill background
         screen.fill(biome["bg"])
 
-        # 2. Ambient particles
+        # 2. Ambient particles (using pre-rendered cached alpha surfaces)
+        part_col = biome["particle_col"]
         for p in ambient_particles:
-            alpha_surf = pygame.Surface((int(p["size"] * 2), int(p["size"] * 2)), pygame.SRCALPHA)
-            pygame.draw.circle(
-                alpha_surf,
-                (*biome["particle_col"], int(p["alpha"])),
-                (int(p["size"]), int(p["size"])),
-                int(p["size"]),
-            )
-            screen.blit(alpha_surf, (p["x"] - p["size"], p["y"] - p["size"]))
+            p_surf = get_particle_surface(part_col, int(p["alpha"]), int(p["size"]))
+            screen.blit(p_surf, (int(p["x"] - p["size"]), int(p["y"] - p["size"])))
 
         # 3. Outer tactile shadow & frame around maze
         frame_shadow = maze_rect.inflate(metrics.px(8), metrics.px(8)).move(0, metrics.px(4))
         pygame.draw.rect(screen, biome["wall_shadow"], frame_shadow, border_radius=metrics.radius + 2)
-        pygame.draw.rect(screen, (255, 255, 255, 40), maze_rect.inflate(metrics.px(4), metrics.px(4)), width=2, border_radius=metrics.radius)
+        pygame.draw.rect(screen, (255, 255, 255), maze_rect.inflate(metrics.px(4), metrics.px(4)), width=2, border_radius=metrics.radius)
 
         # 4. Blit pre-rendered static maze surface
         screen.blit(baked_maze, (ox, oy))
 
-        # 5. Portal goal (rotating animation)
+        # 5. Portal goal (using pre-rendered rotated frames lookup)
         portal_cx = int(ox + (state.exit_pos["c"] + 0.5) * cs)
         portal_cy = int(oy + (state.exit_pos["r"] + 0.5) * cs)
         portal_sz = max(20, int(cs * 1.35))
-        portal_surf = get_scaled_asset("portal_goal.png", portal_sz, portal_sz)
-        if portal_surf is not None:
-            rot_portal = pygame.transform.rotate(portal_surf, (t_now * 50.0) % 360)
-            screen.blit(rot_portal, rot_portal.get_rect(center=(portal_cx, portal_cy)))
-        else:
-            pygame.draw.circle(screen, (168, 85, 247), (portal_cx, portal_cy), portal_sz // 2)
-            pygame.draw.circle(screen, (254, 240, 138), (portal_cx, portal_cy), portal_sz // 3)
+        portal_frames = get_portal_rotation_frames(portal_sz)
+        frame_idx = int(t_now * 12.0) % len(portal_frames)
+        rot_portal = portal_frames[frame_idx]
+        screen.blit(rot_portal, rot_portal.get_rect(center=(portal_cx, portal_cy)))
 
         # 6. Collectible Crystal Stars
         star_sz = max(14, int(cs * 0.8))
@@ -144,19 +160,22 @@ class MazeRenderer:
         for star in state.collectibles:
             if not star.collected:
                 scx = int(ox + (star.c + 0.5) * cs)
-                scy = int(oy + (star.r + 0.5) * cs + math.sin(t_now * 4.0 + star.anim_t) * 2.5)
+                scy = int(oy + (star.r + 0.5) * cs + math.sin(t_now * 4.0 + star.anim_t) * 2.0)
                 if star_surf is not None:
                     screen.blit(star_surf, (scx - star_sz // 2, scy - star_sz // 2))
                 else:
                     pygame.draw.circle(screen, (250, 204, 21), (scx, scy), star_sz // 2)
 
-        # 7. Adventurer Character (Tito)
+        # 7. Adventurer Character (Tito) - using cached flipped sprite
         tito_cx = int(ox + (state.player_x + 0.5) * cs)
         tito_cy = int(oy + (state.player_y + 0.5) * cs - math.sin(t_now * 8.0) * 2.0)
         tito_sz = max(18, int(cs * 1.25))
-        tito_surf = get_scaled_asset("tito_adventurer.png", tito_sz, tito_sz)
-        if tito_surf is not None:
-            char_img = tito_surf if state.facing_right else pygame.transform.flip(tito_surf, True, False)
+        if state.facing_right:
+            char_img = get_scaled_asset("tito_adventurer.png", tito_sz, tito_sz)
+        else:
+            char_img = get_flipped_asset("tito_adventurer.png", tito_sz, tito_sz)
+
+        if char_img is not None:
             screen.blit(char_img, (tito_cx - tito_sz // 2, tito_cy - tito_sz // 2))
         else:
             pygame.draw.circle(screen, (249, 115, 22), (tito_cx, tito_cy), tito_sz // 2)
@@ -174,35 +193,36 @@ class MazeRenderer:
         pygame.draw.rect(screen, (234, 179, 8), sp, width=2, border_radius=metrics.radius)
         pygame.draw.circle(screen, (234, 179, 8), (sp.left + metrics.px(24), sp.centery), metrics.px(14))
         pygame.draw.circle(screen, (254, 240, 138), (sp.left + metrics.px(24), sp.centery), metrics.px(10))
-        s_txt = self.typography.render(str(total_stars), FontRole.DISPLAY, metrics.px(22), (180, 83, 9))
+        s_txt = self._render_text(str(total_stars), FontRole.DISPLAY, metrics.px(22), (180, 83, 9))
         screen.blit(s_txt, (sp.left + metrics.px(46), sp.centery - s_txt.get_height() // 2))
 
         # 9b. Difficulty Button
         db = hud["diff_btn"]
         pygame.draw.rect(screen, (255, 255, 255), db, border_radius=metrics.radius)
         pygame.draw.rect(screen, (56, 189, 248), db, width=2, border_radius=metrics.radius)
-        d_txt = self.typography.render(diff["label_it"], FontRole.DISPLAY, metrics.px(18), (3, 105, 161))
+        d_txt = self._render_text(diff["label_it"], FontRole.DISPLAY, metrics.px(18), (3, 105, 161))
         screen.blit(d_txt, (db.centerx - d_txt.get_width() // 2, db.centery - d_txt.get_height() // 2))
 
         # 9c. Biome Switcher Button
         bb = hud["biome_btn"]
         pygame.draw.rect(screen, (255, 255, 255), bb, border_radius=metrics.radius)
         pygame.draw.rect(screen, biome["wall"], bb, width=2, border_radius=metrics.radius)
-        b_txt = self.typography.render(biome["name_it"], FontRole.DISPLAY, metrics.px(15), (30, 41, 59))
+        b_txt = self._render_text(biome["name_it"], FontRole.DISPLAY, metrics.px(15), (30, 41, 59))
         screen.blit(b_txt, (bb.centerx - b_txt.get_width() // 2, bb.centery - b_txt.get_height() // 2))
 
         # 9d. New Maze Button
         nb = hud["new_btn"]
         pygame.draw.rect(screen, (251, 191, 36), nb, border_radius=metrics.radius)
         pygame.draw.rect(screen, (217, 119, 6), nb, width=2, border_radius=metrics.radius)
-        n_txt = self.typography.render("NUOVO 🔄", FontRole.DISPLAY, metrics.px(16), (120, 53, 15))
+        n_txt = self._render_text("NUOVO 🔄", FontRole.DISPLAY, metrics.px(16), (120, 53, 15))
         screen.blit(n_txt, (nb.centerx - n_txt.get_width() // 2, nb.centery - n_txt.get_height() // 2))
 
         # 10. Victory Modal Card
         if state.is_victory:
-            overlay = pygame.Surface((w, h), pygame.SRCALPHA)
-            overlay.fill((15, 23, 42, 215))
-            screen.blit(overlay, (0, 0))
+            if self._victory_overlay_cache is None or self._victory_overlay_cache.get_size() != (w, h):
+                self._victory_overlay_cache = pygame.Surface((w, h), pygame.SRCALPHA)
+                self._victory_overlay_cache.fill((15, 23, 42, 215))
+            screen.blit(self._victory_overlay_cache, (0, 0))
 
             card_w = min(metrics.px(520), w - 40)
             card_h = min(metrics.px(330), h - 40)
@@ -210,10 +230,10 @@ class MazeRenderer:
             pygame.draw.rect(screen, (255, 252, 245), card, border_radius=metrics.radius + 8)
             pygame.draw.rect(screen, (234, 179, 8), card, width=4, border_radius=metrics.radius + 8)
 
-            vic_title = self.typography.render("PORTALE RAGGIUNTO! 🌀", FontRole.DISPLAY, metrics.px(28), (180, 83, 9))
+            vic_title = self._render_text("PORTALE RAGGIUNTO! 🌀", FontRole.DISPLAY, metrics.px(28), (180, 83, 9))
             screen.blit(vic_title, (card.centerx - vic_title.get_width() // 2, card.top + metrics.px(30)))
 
-            vic_sub = self.typography.render("Tito ha trovato l'uscita magica!", FontRole.BODY, metrics.px(18), (71, 85, 105))
+            vic_sub = self._render_text("Tito ha trovato l'uscita magica!", FontRole.BODY, metrics.px(18), (71, 85, 105))
             screen.blit(vic_sub, (card.centerx - vic_sub.get_width() // 2, card.top + metrics.px(80)))
 
             # Celebration stars row
@@ -226,9 +246,5 @@ class MazeRenderer:
             play_btn = pygame.Rect(card.centerx - metrics.px(130), card.top + metrics.px(190), metrics.px(260), metrics.px(56))
             pygame.draw.rect(screen, (34, 197, 94), play_btn, border_radius=metrics.radius)
             pygame.draw.rect(screen, (22, 101, 52), play_btn, width=2, border_radius=metrics.radius)
-            btn_txt = self.typography.render("NUOVO LABIRINTO 🔄", FontRole.DISPLAY, metrics.px(18), (255, 255, 255))
+            btn_txt = self._render_text("NUOVO LABIRINTO 🔄", FontRole.DISPLAY, metrics.px(18), (255, 255, 255))
             screen.blit(btn_txt, (play_btn.centerx - btn_txt.get_width() // 2, play_btn.centery - btn_txt.get_height() // 2))
-
-        # 11. Platform system chrome & pointer
-        draw_system_chrome_overlay(screen)
-        draw_activity_pointer(screen)

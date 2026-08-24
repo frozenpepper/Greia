@@ -314,7 +314,7 @@ class MazeApp:
 
         self.running = True
         while self.running and not activity_stop_requested():
-            dt = clock.tick(30) / 1000.0
+            dt = min(0.05, clock.tick(60) / 1000.0)
             t_now = time.time()
 
             for event in pygame.event.get():
