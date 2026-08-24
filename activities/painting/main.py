@@ -183,7 +183,15 @@ class PaintingApp:
         self.last_change = 0.0
         self.thumbnail_cache: dict[str, pygame.Surface] = {}
         self.assets: dict[str, pygame.Surface] = {}
+        self._scaled_tool_icons: dict[str, pygame.Surface] = {}
+        self._scaled_tool_icons_disabled: dict[str, pygame.Surface] = {}
+        self._scaled_brush_icons: dict[int, pygame.Surface] = {}
+        self._scaled_dish: pygame.Surface | None = None
+        self._scaled_card_frame: pygame.Surface | None = None
+        self._background_surface: pygame.Surface | None = None
+        self._status_labels: dict[str, pygame.Surface] = {}
         self._load_assets()
+        self._precompute_ui_resources()
 
         # Canvas styling: warm crisp white studio paper
         self.canvas_background = (255, 255, 255)
@@ -221,6 +229,70 @@ class PaintingApp:
             self.empty_icon = load_icon(get_icon_path("rainbow", 64), self.metrics.px(52))
         except Exception:
             self.empty_icon = pygame.Surface((self.metrics.px(52), self.metrics.px(52)), pygame.SRCALPHA)
+
+    def _precompute_ui_resources(self) -> None:
+        # Pre-scale tool icons
+        icon_sz = self.metrics.px(36)
+        self._scaled_tool_icons = {}
+        self._scaled_tool_icons_disabled = {}
+        for name in ("tool_gallery", "tool_undo", "tool_new", "tool_eraser"):
+            icon = self.assets.get(name)
+            if icon is not None:
+                scaled = pygame.transform.smoothscale(icon, (icon_sz, icon_sz))
+                self._scaled_tool_icons[name] = scaled
+                disabled = scaled.copy()
+                disabled.set_alpha(100)
+                self._scaled_tool_icons_disabled[name] = disabled
+
+        # Pre-scale color dish
+        dish_sz = self.metrics.px(38) + self.metrics.px(6)
+        well_dish = self.assets.get("color_well_dish")
+        if well_dish is not None:
+            self._scaled_dish = pygame.transform.smoothscale(well_dish, (dish_sz, dish_sz))
+        else:
+            self._scaled_dish = None
+
+        # Pre-scale brush icons
+        brush_keys = ["brush_small", "brush_medium", "brush_large"]
+        brush_sz = self.metrics.px(34)
+        self._scaled_brush_icons = {}
+        for idx, key in enumerate(brush_keys):
+            b_icon = self.assets.get(key)
+            if b_icon is not None:
+                self._scaled_brush_icons[idx] = pygame.transform.smoothscale(b_icon, (brush_sz, brush_sz))
+
+        # Pre-scale gallery card frame
+        card_frame = self.assets.get("canvas_card_frame")
+        area = self.canvas_rect
+        gap = self.metrics.px(18)
+        card_w = max(1, (area.width - gap * 2) // 3)
+        card_h = max(1, (area.height - gap) // 2)
+        if card_frame is not None:
+            self._scaled_card_frame = pygame.transform.smoothscale(card_frame, (card_w, card_h))
+        else:
+            self._scaled_card_frame = None
+
+        # Pre-render studio background surface
+        bg_top = (252, 248, 238)
+        bg_bottom = (245, 238, 224)
+        w, h = self.screen.get_size()
+        bg_surf = pygame.Surface((w, h)).convert()
+        bg_surf.fill(bg_top)
+        band_h = h // 3
+        band_rect = pygame.Rect(0, h - band_h, w, band_h)
+        pygame.draw.rect(bg_surf, bg_bottom, band_rect)
+        line_y = self.canvas_rect.top - self.metrics.px(8)
+        if line_y > 0:
+            pygame.draw.line(bg_surf, (235, 226, 208), (0, line_y), (w, line_y), 2)
+        self._background_surface = bg_surf
+
+        # Pre-render status labels
+        self.status_font = pygame.font.Font(None, self.metrics.px(16))
+        self._status_labels = {
+            "Salvo": self.status_font.render("Salvo", True, (100, 116, 139)),
+            "Salva...": self.status_font.render("Salva...", True, (100, 116, 139)),
+            "Errore": self.status_font.render("Errore", True, (100, 116, 139)),
+        }
 
     @property
     def palette_height(self) -> int:
@@ -525,17 +597,17 @@ class PaintingApp:
         draw_activity_pointer(self.screen)
 
     def _draw_studio_background(self) -> None:
-        # Storybook warm cream studio tabletop with subtle top-to-bottom warmth
+        if self._background_surface is not None:
+            self.screen.blit(self._background_surface, (0, 0))
+            return
         bg_top = (252, 248, 238)
         bg_bottom = (245, 238, 224)
         h = self.screen.get_height()
         w = self.screen.get_width()
         self.screen.fill(bg_top)
-        # Gentle studio gradient band
         band_h = h // 3
         band_rect = pygame.Rect(0, h - band_h, w, band_h)
         pygame.draw.rect(self.screen, bg_bottom, band_rect)
-        # Subtle woodgrain/mat top line
         line_y = self.canvas_rect.top - self.metrics.px(8)
         if line_y > 0:
             pygame.draw.line(self.screen, (235, 226, 208), (0, line_y), (w, line_y), 2)
@@ -607,8 +679,11 @@ class PaintingApp:
         status_label = "Salvo" if not self.dirty else "Salva..."
         if self.save_error:
             status_label = "Errore"
-        font = pygame.font.Font(None, self.metrics.px(16))
-        txt = font.render(status_label, True, (100, 116, 139))
+        txt = self._status_labels.get(status_label)
+        if txt is None:
+            if not hasattr(self, "status_font"):
+                self.status_font = pygame.font.Font(None, self.metrics.px(16))
+            txt = self.status_font.render(status_label, True, (100, 116, 139))
         self.screen.blit(txt, (pill_rect.left + pill_h + 2, pill_rect.centery - txt.get_height() // 2))
 
     def _draw_tactile_button(
@@ -634,13 +709,13 @@ class PaintingApp:
         border_w = max(2, self.metrics.px(3)) if active else max(1, self.metrics.px(2))
         pygame.draw.rect(self.screen, border_col, rect, width=border_w, border_radius=radius)
 
-        # Draw icon
-        icon = self.assets.get(icon_key)
-        if icon is not None:
-            icon_sz = self.metrics.px(36)
-            scaled_icon = pygame.transform.smoothscale(icon, (icon_sz, icon_sz))
-            if disabled:
-                scaled_icon.set_alpha(100)
+        # Draw pre-scaled icon
+        scaled_icon = (
+            self._scaled_tool_icons_disabled.get(icon_key)
+            if disabled
+            else self._scaled_tool_icons.get(icon_key)
+        )
+        if scaled_icon is not None:
             self.screen.blit(scaled_icon, scaled_icon.get_rect(center=rect.center))
         else:
             # Clean procedural fallback
@@ -687,15 +762,13 @@ class PaintingApp:
         pygame.draw.rect(self.screen, (255, 255, 255), panel, border_radius=self.metrics.radius)
         pygame.draw.rect(self.screen, (226, 218, 202), panel, width=2, border_radius=self.metrics.radius)
 
-        # 1. Color wells
-        well_dish = self.assets.get("color_well_dish")
+        # 1. Color wells (using pre-scaled dish asset)
+        scaled_dish = self._scaled_dish
         for rect, index in self._color_buttons():
-            dish_sz = rect.width + self.metrics.px(6)
-            dish_rect = pygame.Rect(rect.centerx - dish_sz // 2, rect.centery - dish_sz // 2, dish_sz, dish_sz)
-            if well_dish is not None:
-                scaled_dish = pygame.transform.smoothscale(well_dish, (dish_sz, dish_sz))
-                self.screen.blit(scaled_dish, dish_rect)
+            if scaled_dish is not None:
+                self.screen.blit(scaled_dish, scaled_dish.get_rect(center=rect.center))
             else:
+                dish_sz = rect.width + self.metrics.px(6)
                 pygame.draw.circle(self.screen, (241, 245, 249), rect.center, dish_sz // 2)
                 pygame.draw.circle(self.screen, (203, 213, 225), rect.center, dish_sz // 2, 2)
 
@@ -717,8 +790,7 @@ class PaintingApp:
         sep_x = first_size_btn.left - self.metrics.px(14)
         pygame.draw.line(self.screen, (226, 232, 240), (sep_x, panel.top + self.metrics.px(10)), (sep_x, panel.bottom - self.metrics.px(10)), 2)
 
-        # 3. Brush size buttons
-        brush_keys = ["brush_small", "brush_medium", "brush_large"]
+        # 3. Brush size buttons (using pre-scaled brush icons)
         for rect, index in self._size_buttons():
             is_active = (index == self.selected_size)
             btn_bg = (254, 240, 138) if is_active else (248, 250, 252)
@@ -726,10 +798,8 @@ class PaintingApp:
             b_border = (245, 158, 11) if is_active else (226, 232, 240)
             pygame.draw.rect(self.screen, b_border, rect, width=2, border_radius=self.metrics.radius)
 
-            b_icon = self.assets.get(brush_keys[index])
-            if b_icon is not None:
-                sz = self.metrics.px(34)
-                scaled_b = pygame.transform.smoothscale(b_icon, (sz, sz))
+            scaled_b = self._scaled_brush_icons.get(index)
+            if scaled_b is not None:
                 self.screen.blit(scaled_b, scaled_b.get_rect(center=rect.center))
             else:
                 dot_r = max(self.metrics.px(3), self.metrics.px(BRUSH_SIZES[index]) // 2)
@@ -737,10 +807,9 @@ class PaintingApp:
                 pygame.draw.circle(self.screen, dot_col, rect.center, dot_r)
 
     def _draw_gallery(self) -> None:
-        card_frame = self.assets.get("canvas_card_frame")
+        scaled_frame = self._scaled_card_frame
         for rect, record in self._gallery_cards():
-            if card_frame is not None:
-                scaled_frame = pygame.transform.smoothscale(card_frame, rect.size)
+            if scaled_frame is not None and scaled_frame.get_size() == rect.size:
                 self.screen.blit(scaled_frame, rect)
             else:
                 pygame.draw.rect(self.screen, (255, 255, 255), rect, border_radius=self.metrics.radius)
