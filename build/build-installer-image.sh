@@ -313,9 +313,9 @@ provision_developer_ssh() {
 # Live-installer development security floor (owner-approved greia/greia).
 # Enables the development/test SSH identity greia/greia; root stays denied.
 PasswordAuthentication yes
-KbdInteractiveAuthentication yes
+KbdInteractiveAuthentication no
 PermitRootLogin no
-AuthenticationMethods publickey,password
+AuthenticationMethods password
 DenyUsers root
 AllowUsers greia
 FLOOR
@@ -327,9 +327,9 @@ FLOOR
   cat > "$rootfs/etc/ssh/sshd_config.d/20-greia-parent.conf" <<'DEVSSH'
 # Development live-installer SSH policy (owner-approved greia/greia).
 PasswordAuthentication yes
-KbdInteractiveAuthentication yes
+KbdInteractiveAuthentication no
 PermitRootLogin no
-AuthenticationMethods publickey,password
+AuthenticationMethods password
 AllowUsers greia
 X11Forwarding no
 AllowTcpForwarding no
@@ -477,7 +477,8 @@ chmod 0644 "$USB_MOUNT/.disk/live-uuid"
 INSTALLER_GRUB_SECURITY_ROOT="$BUILD_DIR/installer-grub-security"
 INSTALLER_RECOVERY_CODE="$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}-grub-recovery-code.txt"
 mkdir -p "$INSTALLER_GRUB_SECURITY_ROOT"
-PYTHONPATH="$PROJECT_ROOT/src" python3 -m greia_platform.grub_security   "$INSTALLER_GRUB_SECURITY_ROOT" --copy-code-to "$INSTALLER_RECOVERY_CODE"
+PYTHONPATH="$PROJECT_ROOT/src" python3 -m greia_platform.grub_security \
+  "$INSTALLER_GRUB_SECURITY_ROOT" --copy-code-to "$INSTALLER_RECOVERY_CODE"
 installer_grub_hash="$(cat "$INSTALLER_GRUB_SECURITY_ROOT/etc/greia-os/grub-recovery.pbkdf2")"
 install -m 0644 "$PROJECT_ROOT/assets/boot/static/greia-boot-logo.png" \
   "$USB_MOUNT/boot/grub/greia-boot-logo.png"
@@ -494,12 +495,12 @@ if loadfont unicode ; then
 fi
 insmod png
 background_image /boot/grub/greia-boot-logo.png
-set superusers="greia-recovery"
+set superusers="greia"
 export superusers
-password_pbkdf2 greia-recovery $installer_grub_hash
+password_pbkdf2 greia $installer_grub_hash
 menuentry "Install Greia OS" --unrestricted --id greia-installer {
   search --no-floppy --fs-uuid --set=root $usb_root_uuid
-  linux /live/vmlinuz boot=live components live-media-path=/live live-media-timeout=15 nopersistence noeject silent overlay-size=128M greia.live_media_id=$live_media_id quiet splash loglevel=0 console=null panic=5 systemd.show_status=false rd.systemd.show_status=false systemd.crash_shell=no systemd.crash_chvt=0 udev.log_priority=3 vt.global_cursor_default=0 consoleblank=0
+  linux /live/vmlinuz boot=live components live-media-path=/live live-media-timeout=15 nopersistence noeject silent overlay-size=128M greia.live_media_id=$live_media_id quiet splash loglevel=0 console=null panic=0 systemd.show_status=false rd.systemd.show_status=false systemd.crash_shell=no systemd.crash_chvt=0 udev.log_priority=3 vt.global_cursor_default=0 consoleblank=0
   initrd /live/initrd.img
 }
 GRUB
@@ -541,6 +542,7 @@ install -m 0644 "$INSTALLER_PROFILE_MANIFEST" "$INSTALLER_PROFILE_REPORT"
   echo "hardware_support_manifest_sha256=$(sha256sum "$HARDWARE_SUPPORT_REPORT" | awk '{print $1}')"
   echo "hardware_support_pool_packages=$hardware_support_package_count"
   echo "hardware_support_pool_bytes=$hardware_support_pool_bytes"
+  echo "installer_grub_user=greia"
   echo "installer_grub_recovery_code=$INSTALLER_RECOVERY_CODE"
   echo "live_security_support_state=$live_security_support_state"
   echo "live_security_support_probe_exit=$live_support_status_exit"
