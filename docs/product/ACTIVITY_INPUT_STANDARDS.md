@@ -1,7 +1,7 @@
 # Greia Activity Input Standards
 
 **Status:** ACCEPTED PRODUCT REQUIREMENT  
-**Date:** 2026-08-15  
+**Date:** 2026-08-24  
 **Scope:** Greia Shell and every child-facing Activity runtime, including Python/Pygame and future Web/HTML Activities
 
 ## Product goal
@@ -11,6 +11,37 @@ A child should learn Greia's controls once and carry that knowledge between Acti
 Greia therefore standardizes a small set of **interaction profiles** and maps available physical input devices onto those semantics.
 
 An Activity describes the interaction it needs. It does not describe an Xbox controller, PlayStation controller, Nintendo controller, Linux joystick node, SDL button number, or other hardware-specific input layout.
+
+## Pre-reader interaction is a product requirement
+
+Greia's primary child audience includes children who **cannot read yet**. Therefore ordinary Activity operation must never assume literacy.
+
+The core interaction contract is:
+
+> **A child must be able to understand the next meaningful action, act, recover from mistakes, and continue without reading written instructions.**
+
+Written text may support parents, older children, localization review, or reinforce spoken/visual content. It must not be the only channel carrying core gameplay instructions.
+
+Preferred child-facing communication uses, as appropriate:
+
+- visually obvious scene hierarchy;
+- large icons, pictures, shapes and symbols;
+- large numbers when number recognition is part of the Activity;
+- short visual demonstrations, arrows, highlights or character motion;
+- short reviewed spoken cues when language is useful;
+- immediate visual/audio feedback after input.
+
+Do not use voice merely to rescue an otherwise confusing screen. The primary action should be visually discoverable wherever the mechanic allows it.
+
+A reading/literacy Activity is not exempt: written language may be the **learning content**, but the instructions for how to interact must still be understandable to a pre-reader.
+
+Text-only instructions such as "click the blue whale", "choose the number you saw", or "press Continue" are not sufficient child-facing interaction design when the child must read them to proceed.
+
+The focused Activity-authoring acceptance contract lives in:
+
+```text
+skills/greia-activity-authoring/PRE_READER_UX.md
+```
 
 ## Mandatory interaction profiles
 
@@ -186,6 +217,7 @@ Phase 0 is not input-complete until evidence demonstrates at least:
 - no raw Activity `/dev/input` authority introduced merely for controller support;
 - acceptable latency/dead-zone behavior on representative controller hardware;
 - resource cost acceptable on the Acer low-resource reference;
-- equivalent semantic contract ready for the Web runtime boundary.
+- equivalent semantic contract ready for the Web runtime boundary;
+- representative child-facing Activity flows remain understandable without reading written instructions.
 
 First-party Activities receive no exemption from these standards.
