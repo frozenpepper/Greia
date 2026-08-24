@@ -1,8 +1,9 @@
 """Validation for the appliance GRUB and kernel command-line contract.
 
 The child-visible boot path has one automatic unrestricted menu entry. GRUB
-command-line and entry editing are protected by a per-machine PBKDF2 credential,
-and every kernel line is forced onto the silent graphical appliance path.
+command-line and entry editing are protected by the canonical Greia owner
+credential, stored as a PBKDF2 hash, and every kernel line is forced onto the
+appropriate release or developer appliance path.
 """
 
 from __future__ import annotations
@@ -13,6 +14,8 @@ import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Sequence
+
+from greia_platform.grub_security import GRUB_USER
 
 
 _LINUX_COMMANDS = {"linux", "linux16", "linuxefi"}
@@ -199,8 +202,10 @@ def _menu_errors(text: str) -> list[str]:
     if len(menu_lines) != 1:
         errors.append(f"expected exactly one appliance menuentry; found {len(menu_lines)}")
 
-    if 'set superusers="greia-recovery"' not in text and "set superusers='greia-recovery'" not in text:
-        errors.append("missing GRUB greia-recovery superuser declaration")
+    superuser_double = f'set superusers="{GRUB_USER}"'
+    superuser_single = f"set superusers='{GRUB_USER}'"
+    if superuser_double not in text and superuser_single not in text:
+        errors.append(f"missing GRUB {GRUB_USER} superuser declaration")
     if "export superusers" not in text:
         errors.append("missing exported GRUB superusers variable")
     password_lines = [
@@ -210,8 +215,8 @@ def _menu_errors(text: str) -> list[str]:
     ]
     if len(password_lines) != 1:
         errors.append(f"expected exactly one GRUB PBKDF2 password declaration; found {len(password_lines)}")
-    elif not password_lines[0].startswith("password_pbkdf2 greia-recovery grub.pbkdf2."):
-        errors.append("GRUB recovery password must use a greia-recovery PBKDF2 hash")
+    elif not password_lines[0].startswith(f"password_pbkdf2 {GRUB_USER} grub.pbkdf2."):
+        errors.append(f"GRUB password must use a {GRUB_USER} PBKDF2 hash declaration")
     return errors
 
 
@@ -221,7 +226,7 @@ def _line_errors(line: KernelCommandLine, *, live_installer: bool, developer: bo
 
     # Developer/test builds deliberately keep the boot observable: a kernel
     # panic prints to tty1 and does not auto-reboot (panic=0) so failure state
-    # remains observable. Normal/release builds stay fully silent and consoleless.
+    # remains observable. Normal/release builds stay silent and consoleless.
     # See docs/INSTALLED_OS_BOOT_POSTMORTEM.md §16.
     required_pool = set(COMMON_REQUIRED_ARGUMENTS)
     if developer:
