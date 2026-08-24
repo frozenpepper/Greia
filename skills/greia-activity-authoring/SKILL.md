@@ -259,7 +259,15 @@ from greia_platform.activity_api import get_audio_capture_device
 capture_device = get_audio_capture_device()
 ```
 
-Pass that value to the runtime's capture-device open call. When it is `None` in a development/simulator composition, use the runtime's normal default capture endpoint.
+For SDL/pygame capture (pygame._sdl2 AudioDevice), open the platform-designated SDL device instead — SDL cannot open arbitrary ALSA PCM names, so Greia injects a composed ALSA view and designates the SDL-enumerated device that carries the route:
+
+```python
+from greia_platform.activity_api import get_sdl_capture_device
+
+sdl_device = get_sdl_capture_device()
+```
+
+`get_sdl_capture_device()` returns `None` in a development/simulator composition; then use the runtime's normal default capture/enumeration behavior. On a production Greia launch it always returns the platform's route — open it directly and never fall back to choosing a device yourself.
 
 Do **not**:
 

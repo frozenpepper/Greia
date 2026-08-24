@@ -338,7 +338,7 @@ The client remains API-first. It does not gain shell/filesystem/package-manager 
 
 ---
 
-# 3. Platform-owned microphone processing — semantic architecture implemented, Acer DSP backend still PHYSICAL-UNPROVEN
+# 3. Platform-owned microphone processing — PHYSICALLY ACCEPTED on the reference Acer (2026-08-24)
 
 Architecture authority:
 
@@ -347,10 +347,11 @@ docs/adr/0031-platform-owned-microphone-processing.md
 docs/architecture/GREIA_AUDIO_SERVICE.md
 ```
 
-Physical finalization protocol:
+Physical finalization protocol and acceptance evidence:
 
 ```text
 docs/testing/2026-08-23_ACER_MICROPHONE_PROCESSING_ACCEPTANCE.md
+docs/reviews/2026-08-24_ACER_MICROPHONE_PHYSICAL_ACCEPTANCE.md
 ```
 
 ## Product decision
@@ -378,6 +379,12 @@ src/greia_parent/protocol.py
 src/greia_parent/update_api.py
 src/greia_launcher/child_shell.py
 src/greia_platform/activity_api.py
+src/greia_platform/audio_alsa/        (greia_mic_light ExtPlug source)
+runtime/alsa/                         (per-launch SDL ALSA composition)
+build/overlay/etc/asound.conf
+build/overlay/usr/local/lib/greia-os/greia-audio-endpoint-probe
+build/overlay/etc/systemd/system/greia-audio-endpoints.service
+build/package-sets/platform-shell-pygame.txt   (libspeexdsp1)
 ```
 
 The typed `AudioService` owns desired state, backend availability, effective route and truthful fallback. The provisional ALSA adapter names stable logical endpoints:
@@ -394,19 +401,39 @@ An Activity granted `audio.basic` receives the resolved microphone route through
 
 ```python
 from greia_platform.activity_api import get_audio_capture_device
+from greia_platform.activity_api import get_sdl_capture_device
 ```
 
-Activities must not enumerate physical microphones and choose the first host device.
+`get_sdl_capture_device()` designates the SDL-enumerated capture device that carries the route (SDL 2.26 cannot open arbitrary ALSA PCM names; the launcher injects the composed ALSA view for non-off modes). Activities must not enumerate physical microphones and choose the first host device.
 
-Focused source tests now cover the default/no-auto-promotion policy, explicit advanced opt-in, unavailable-backend handling, processing-off route, Activity environment projection and Parent API settings semantics. They require local execution before a PASS is claimed.
+Focused source tests cover the default/no-auto-promotion policy, explicit advanced opt-in, unavailable-backend handling, processing-off route, Activity environment projection, the SDL designation and Parent API settings semantics (31 focused tests PASS at `2972127`).
 
-## Honest physical boundary
+## Physical acceptance state (2026-08-24, Acer Aspire One)
 
-No current claim is made that `greia_mic_light` already exists on the Acer. Until the real backend is installed and its readiness marker is valid, `AudioService` intentionally resolves the desired lightweight policy to raw capture with `lightweight_unavailable` rather than pretending denoising is active.
+The lightweight route is implemented and physically accepted on the reference Acer:
 
-The first physical candidate is SpeexDSP preprocessor denoising because it is a tiny voice-oriented DSP library available for Debian i386. A gate/high-pass chain may be measured as an even cheaper candidate, but it only qualifies if it materially improves the real Acer signal during speech and does not clip/pump. Advanced processing (for example RNNoise) is optional and must be evaluated only after the lightweight path is stable.
+- `greia_mic_light` = in-process ALSA ExtPlug: FIR decimation 48k→24k,
+  SpeexDSP preprocessor denoise (−15 dB, AGC off), FIR interpolation back,
+  primed delay-line FIFO. On-demand only; no daemon; zero idle cost.
+- Boot probe service creates `/run/greia-audio/lightweight-ready` only after
+  a real one-second capture; verified recreated automatically after reboot.
+- Live route proof: during a real launcher-launched Teatrino recording the
+  capture hardware ran at 48000 Hz (route contract) owned by the Teatrino pid.
+- Measured: −19.9 dB stationary noise-floor reduction, voice band preserved
+  (stimulus A/B within ~1.5 dB), zero glitches, ~5–10% of one core, +0.4 MB
+  RSS during capture. Owner A/B verdict: routed clearly better.
+- Parent controls verified against the device API: default (lightweight),
+  off (raw, no ALSA injection), restore, and reboot persistence.
+- Negative check: an Activity without `audio.basic` (painting) receives zero
+  audio-route environment variables.
+- Advanced endpoint intentionally NOT INSTALLED (`available.advanced = false`).
+- Device tuning notes: ALSA Capture level was found maxed (+31.5 dB) causing
+  hard clipping; set to +3 dB on this device. Parent `mic_gain` raised
+  2.0 → 3.0 on this device for post-denoise loudness (Parent-adjustable).
 
-The local Acer agent must also migrate any remaining first-party capture code that still chooses the first SDL/ALSA device; Teatrino was known to do this at protocol creation time.
+Open follow-up: image-build integration must compile
+`src/greia_platform/audio_alsa/` into future i686 images. Images without the
+plugin honestly fall back to raw with `lightweight_unavailable`.
 
 ## Existing microphone gain retained
 

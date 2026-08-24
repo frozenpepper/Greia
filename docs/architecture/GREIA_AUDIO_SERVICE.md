@@ -1,8 +1,9 @@
 # Greia Audio Service
 
-**Status:** implemented semantic service; Acer DSP backend pending physical acceptance  
+**Status:** implemented; physically accepted on the reference Acer (2026-08-24)  
 **Architecture authority:** `docs/adr/0031-platform-owned-microphone-processing.md`  
-**Physical acceptance:** `docs/testing/2026-08-23_ACER_MICROPHONE_PROCESSING_ACCEPTANCE.md`
+**Physical acceptance:** `docs/testing/2026-08-23_ACER_MICROPHONE_PROCESSING_ACCEPTANCE.md`  
+**Physical evidence review:** `docs/reviews/2026-08-24_ACER_MICROPHONE_PHYSICAL_ACCEPTANCE.md`
 
 ## Purpose
 
@@ -115,6 +116,19 @@ Readiness is provisionally signaled under `/run/greia-audio/`. This is deliberat
 
 Do not persist readiness markers. They must represent current boot/runtime truth.
 
+### SDL runtime composition (implemented, Acer-accepted)
+
+SDL 2.26 cannot open arbitrary ALSA PCM names, so for routed `audio.basic`
+launches the launcher additionally injects `ALSA_CONFIG_PATH` pointing at
+`runtime/alsa/greia-activity-capture.conf`. That composition (hooks:
+system alsa.conf, then Greia overrides) hides raw `hw:` enumeration hints and
+resolves `default`/`sysdefault` to a routed asymmetric PCM — capture through
+the `greia_denoise` ExtPlug (SpeexDSP at an in-spec 24 kHz via FIR
+decimation, AGC off, conservative suppression), playback through the stock
+dmix chain. Processing-off launches receive no injection and keep the raw
+system view. The physical slave identity lives only in Greia-owned
+composition files.
+
 ## Activity contract
 
 An Activity that needs microphone capture declares `audio.basic` through the normal manifest/capability path.
@@ -127,7 +141,24 @@ from greia_platform.activity_api import get_audio_capture_device
 capture_device = get_audio_capture_device()
 ```
 
-For SDL/Pygame, pass `capture_device` to the capture-device opening API. When `None`, use SDL's default capture endpoint. Do not choose `get_audio_device_names(True)[0]`.
+SDL/pygame Activities must additionally obtain the SDL-openable device
+designation, because SDL cannot open arbitrary ALSA PCM names:
+
+```python
+from greia_platform.activity_api import get_sdl_capture_device
+
+sdl_device = get_sdl_capture_device()
+```
+
+`get_sdl_capture_device()` returns the platform-designated SDL-enumerated
+capture device when a production route was injected, and `None` in
+development/simulator contexts (where the Activity may use its normal SDL
+default/enumeration fallback). Activities must never enumerate and choose
+hardware themselves on Greia; the selection inside the SDK is the
+platform's route decision, not an Activity choice.
+
+For SDL/Pygame, open `get_sdl_capture_device()`; for other capture APIs,
+open `get_audio_capture_device()`. Do not choose `get_audio_device_names(True)[0]`.
 
 `get_audio_processing_mode()` exists for narrow presentation/diagnostics only. Activities must not branch educational/game behavior around a particular DSP implementation.
 
@@ -164,20 +195,29 @@ Implemented/source-visible:
 - lightweight-default/no-auto-promotion policy;
 - advanced availability and explicit Parent selection;
 - Parent API resources;
-- launcher route injection for `audio.basic`;
-- Activity SDK route accessors;
-- Parent HTML controls in its source repository;
+- launcher route injection for `audio.basic` (route environment plus the
+  SDL ALSA composition for non-off modes);
+- Activity SDK route accessors including the SDL device designation;
+- Parent HTML controls in their source repository;
 - focused source tests.
 
-Still requires physical proof before being called complete on Acer:
+Physically accepted on the reference Acer (2026-08-24, see
+`docs/reviews/2026-08-24_ACER_MICROPHONE_PHYSICAL_ACCEPTANCE.md`):
 
-- exact built-in capture device;
-- implementation of `greia_mic_light`;
-- readiness-marker lifecycle;
-- first-party Activity migration where raw enumeration remains;
-- A/B denoising quality;
-- CPU/RAM/latency/dropout measurements;
-- optional advanced endpoint decision;
-- Parent HTML exact-revision repin/integrity update if not already current at test time.
+- `greia_mic_light` implemented as an in-process ALSA ExtPlug
+  (SpeexDSP denoise at in-spec 24 kHz, on-demand, no daemon);
+- boot-probe readiness marker lifecycle (survives reboot honestly);
+- live route proof during real launcher-driven Teatrino recording;
+- measured −19.9 dB stationary noise-floor reduction with voice band
+  preserved, ~5–10% of one core, +0.4 MB RSS, zero glitches;
+- Parent controls (default/off/restore/reboot persistence) verified;
+- advanced endpoint intentionally absent (`available.advanced = false`).
+
+Still open:
+
+- image-build integration: compiling `src/greia_platform/audio_alsa/` into
+  future i686 images (dev machine currently carries a manually installed
+  build; images without it honestly fall back to raw);
+- advanced endpoint remains intentionally unevaluated on this hardware.
 
 That separation is intentional: Greia reports raw fallback until a real processor endpoint exists rather than faking feature readiness.
