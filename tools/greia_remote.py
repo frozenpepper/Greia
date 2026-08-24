@@ -6,8 +6,10 @@ import json
 import os
 import re
 import shlex
+import stat
 import subprocess
 import sys
+import tempfile
 import time
 import uuid
 from pathlib import Path
@@ -96,16 +98,58 @@ class GreiaRemote:
         ]
         return argv
 
+    def _get_env(self) -> tuple[dict[str, str], Path | None]:
+        env = dict(os.environ)
+        askpass_script: Path | None = None
+        if self.password is not None:
+            import stat
+            with tempfile.NamedTemporaryFile("w", delete=False) as f:
+                f.write('#!/bin/sh\necho "$GREIA_SSH_PASSWORD"\n')
+                askpass_script = Path(f.name)
+            os.chmod(str(askpass_script), stat.S_IRWXU)
+            env["SSH_ASKPASS"] = str(askpass_script)
+            env["SSH_ASKPASS_REQUIRE"] = "force"
+            env["GREIA_SSH_PASSWORD"] = self.password
+            env["DISPLAY"] = "dummydisplay:0"
+        return env, askpass_script
+
+    def _run_subprocess(
+        self,
+        argv: list[str],
+        *,
+        capture_output: bool = True,
+        text: bool = True,
+        check: bool = False,
+    ) -> subprocess.CompletedProcess[bytes] | subprocess.CompletedProcess[str]:
+        env, askpass_script = self._get_env()
+        try:
+            return subprocess.run(
+                argv,
+                env=env,
+                capture_output=capture_output,
+                text=text,
+                check=check,
+            )
+        finally:
+            if askpass_script is not None and askpass_script.exists():
+                try:
+                    askpass_script.unlink()
+                except Exception:
+                    pass
+
     def devctl(
         self,
         *args: str,
         binary: bool = False,
         check: bool = True,
     ) -> subprocess.CompletedProcess[bytes] | subprocess.CompletedProcess[str]:
-        command = shlex.join(["sudo", "-n", "/usr/local/sbin/greia-devctl", *args])
-        completed = subprocess.run(
+        if self.password is not None:
+            devctl_cmd = shlex.join(["/usr/local/sbin/greia-devctl", *args])
+            command = f"echo {shlex.quote(self.password)} | sudo -S -p '' {devctl_cmd}"
+        else:
+            command = shlex.join(["sudo", "-n", "/usr/local/sbin/greia-devctl", *args])
+        completed = self._run_subprocess(
             [*self.ssh_base(), command],
-            check=False,
             capture_output=True,
             text=not binary,
         )
@@ -208,21 +252,21 @@ class GreiaRemote:
         remote_root = f"/var/lib/greia-admin/greia-dev-upload/{token}"
         self._ssh_user_command("mkdir", "-p", remote_root)
         try:
-            completed = subprocess.run(
+            completed = self._run_subprocess(
                 [
                     *self.scp_base(),
                     "-r",
                     str(source) + "/.",
                     f"{self.destination}:{remote_root}/",
                 ],
-                check=False,
                 capture_output=True,
                 text=True,
             )
             if completed.returncode != 0:
+                stderr = completed.stderr if isinstance(completed.stderr, str) else ""
                 raise RemoteError(
                     f"Activity upload failed with status {completed.returncode}: "
-                    f"{completed.stderr.strip()}"
+                    f"{stderr.strip()}"
                 )
             args = ["deploy-activity", remote_root]
             if replace_system:
@@ -272,16 +316,16 @@ class GreiaRemote:
 
     def _ssh_user_command(
         self, *args: str, check: bool = True
-    ) -> subprocess.CompletedProcess[str]:
-        completed = subprocess.run(
+    ) -> subprocess.CompletedProcess[bytes] | subprocess.CompletedProcess[str]:
+        completed = self._run_subprocess(
             [*self.ssh_base(), shlex.join(list(args))],
-            check=False,
             capture_output=True,
             text=True,
         )
         if check and completed.returncode != 0:
+            stderr = completed.stderr if isinstance(completed.stderr, str) else ""
             raise RemoteError(
-                f"remote file-transfer preparation failed: {completed.stderr.strip()}"
+                f"remote user command failed with status {completed.returncode}: {stderr.strip()}"
             )
         return completed
 

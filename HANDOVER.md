@@ -15,6 +15,24 @@ This file is the project-wide **current continuation contract**. Chronology belo
 
 # 1. Current state at a glance
 
+## Baia delle Orche (`activities/baia_delle_orche`) Physical Acer Deployment & Acceptance (2026-08-24)
+
+`activities/baia_delle_orche` (Baia delle Orche / Orca Bay) is deployed to the physical Acer Aspire One test hardware (`greia-dev.local` / `192.168.68.104`) and verified live over SSH remote control:
+
+1. **Remote Deployment & Developer Tooling**:
+   - Enhanced `tools/greia_remote.py` to seamlessly handle SSH and sudo password authentication (`greia` / `greia`) via `SSH_ASKPASS` without external dependencies.
+   - Configured launcher developer environment and deployed `baia_delle_orche` to `/opt/greia-os/activities/baia_delle_orche` and `/var/lib/greia-developer/activities/org.greia.baia-delle-orche`.
+2. **Chatterbox Audio Generation**:
+   - Fixed endpoint speech slicer with `trim_speech_ends()` to preserve natural ~400ms inter-sentence conversational pauses.
+   - Generated and verified all 12 clips (6 Italian, 6 English) voiced by Tito (`tito_fast` / Matchbox) in 22050Hz LEI16 mono WAV with SHA-256 manifest.
+3. **Child-Centric Visual UI & Tito Comic Speech Balloon**:
+   - Replaced text box with a compact animated circular Tito avatar + white comic speech bubble with 3 animated pulsing dots (`• • •`).
+   - Enlarged child-sized toolbar buttons (Pappa 46px fish, Coccole 36px heart, Giochi 36px ball, Canto 36px music notes, Notte 36px moon, Tito 46px avatar).
+4. **Day/Night Simulation & Bioluminescence**:
+   - Bioluminescent cyan outline rendering keeps orca silhouettes and white patches visible at night.
+5. **Physical Hardware Evidence**:
+   - Launched and verified on Acer Aspire One (1024x600, `LVDS1` display): launcher card selection, live swimming pod, food feeding, toy play with ball and hoop, Tito speech playback, and night mode toggle.
+
 ## Latest retained physical performance work
 
 The reference Acer Aspire One launcher hover-transition tranche remains accepted at its measured scope.
