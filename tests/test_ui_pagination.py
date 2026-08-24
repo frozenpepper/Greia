@@ -17,6 +17,12 @@ class PaginationModelTests(unittest.TestCase):
         self.assertTrue(second.can_scroll_backward)
         self.assertFalse(second.can_scroll_forward)
 
+    def test_partial_final_page_counter_is_two_of_two(self) -> None:
+        pager = PaginationModel(capacity=6)
+        second = pager.window(7, selected=6)
+        current_page = second.start // second.capacity + 1
+        self.assertEqual((current_page, pager.page_count(second.total)), (2, 2))
+
     def test_all_partial_second_pages_begin_at_same_boundary(self) -> None:
         pager = PaginationModel(capacity=6)
         for total in range(7, 12):
