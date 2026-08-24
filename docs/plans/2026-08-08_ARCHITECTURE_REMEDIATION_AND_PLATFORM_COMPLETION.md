@@ -942,14 +942,22 @@ This plan may be marked complete only when:
   - Removed the cramped on-screen D-pad arrow controls that previously consumed the entire right side of the screen.
   - Expanded the maze across the full viewport (~2.5× screen area) below a streamlined Home-safe top bar HUD (Star score pill, Difficulty switcher, World theme switcher, New Maze button).
   - Scaled up difficulty complexity with 9 progressive levels up to an intricate **89×41** grid ("Infinito") with 35 collectible crystal stars and hundreds of corridors.
-  - Implemented continuous sliding movement: pressing an arrow/WASD/D-pad key glides Tito continuously at 18 cells/sec along corridors until hitting a wall, reaching an intersection/crossing with branching choices, or reaching the exit portal.
-  - Implemented click-to-move for mouse/touch: clicking in any direction imparts a cardinal impulse towards that direction without pathfinding, sliding until reaching a wall or crossing.
-  - Pre-baked the static maze surface once per maze generation, cutting per-frame draw operations from 10,000+ `draw.rect` calls to 1 single blit (render time: **0.55 ms/frame**).
-  - Decomposed into cohesive modules: `maze_model.py`, `maze_art.py`, `maze_audio.py`, `maze_renderer.py`, `maze_app.py`, and thin `main.py`.
+## 2026-08-24 — Il Volo del Draghetto Performance, Responsive Arrow Input & Endless Flight Overhaul (non-closing)
+
+- Implemented: Complete performance, look, and gameplay overhaul of `org.greia.volo-draghetto` (Il Volo del Draghetto / Dragon Flight) following `skills/greia-activity-authoring/ENGINEERING.md`.
+  - Identified and eliminated the Intel Atom N270 software blitting bottleneck: blitting full-frame un-converted `1280x220` transparent `SRCALPHA` surfaces across the frame twice per tick caused CPU-bound floating-point software alpha-blending that consumed **53.63 ms/frame** alone, pushing frame times to **73.04 ms (~13 FPS)**.
+  - Rewrote `dragon_art.py` and `dragon_renderer.py` using hardware-friendly display-converted colorkey surfaces (`surface.convert()` with `.set_colorkey((1, 2, 3))`).
+  - Replaced giant continuous alpha strips with 3 fast pre-rendered storybook cumulus clouds scrolling with independent parallax velocities (`0.23 ms` total).
+  - Measured physical Acer Aspire One frame render time: dropped from **73.04 ms** to **6.19 ms** (a **12× speedup** / ~161 FPS rendering headroom, running locked at 30 FPS with ~20% CPU load).
+  - Cleaned up HUD and interaction design: removed all intrusive text toast banners ("SCATTO ARCOBALENO", "20 STELLINE", etc.) that caused performance hiccups and readability friction for young children.
+  - Converted gameplay from a 20-star victory interruption into an endless, relaxing flight with cumulative stars (`⭐ 228  🏆 3495`), 10-star fanfare audio cues, and continuous scenery/obstacle generation.
+  - Added responsive, snappy arrow key altitude control (`Up`/`Down`/`W`/`S` at continuous and discrete steps), right-arrow turbo dash, and accessory customization (`👑 Look`).
+- Architecture:
+  - Decomposed into `dragon_model.py`, `dragon_art.py`, `dragon_audio.py`, `dragon_renderer.py`, `dragon_app.py`, and thin `main.py`.
 - Tests & Evidence:
-  - `tests/test_activity_labirinto_magico.py` (**11/11 PASS**).
-  - Activity validation (`tools/validate_activity.py activities/labirinto_magico`): **PASS**.
-  - Project validation (`tools/validate_project.py`): **PASS**.
-  - Interactive simulation tests verified continuous sliding, star pickup, victory condition, difficulty cycling, biome switching, and click-to-move.
+  - `tests/test_activity_volo_draghetto.py` (**10/10 PASS**).
+  - Full test suite `make verify`: **1,167 unit tests PASS**, project validation PASS, all 19 first-party activities valid.
+  - Physical deployment and live verification on Acer Aspire One display `:0` (`greia-dev.local`). Live screenshots confirm smooth 30 FPS animation, responsive arrow controls, rainbow boosts, cloud bounces, accessory toggles, and clean uncluttered HUD.
+
 
 
