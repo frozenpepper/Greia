@@ -13,8 +13,12 @@ from greia_platform.activity_ui import (
 from greia_platform.system_chrome import ActivitySystemChromeLayout
 from greia_platform.typography import FontRole, GreiaTypography
 
-from .maze_art import get_scaled_asset
-from .maze_model import BIOMES, DIFFICULTIES, CollectibleStar, MazeState
+try:
+    from maze_art import get_scaled_asset
+    from maze_model import BIOMES, DIFFICULTIES, CollectibleStar, MazeState
+except ImportError:
+    from .maze_art import get_scaled_asset
+    from .maze_model import BIOMES, DIFFICULTIES, CollectibleStar, MazeState
 
 
 class MazeRenderer:

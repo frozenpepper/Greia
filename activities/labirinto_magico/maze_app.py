@@ -20,17 +20,30 @@ from greia_platform.pygame_canvas import (
 )
 from greia_platform.typography import GreiaTypography
 
-from .maze_art import MazeArt
-from .maze_audio import LabyrinthAudio
-from .maze_model import (
-    BIOMES,
-    DIFFICULTIES,
-    HEROES,
-    CollectibleStar,
-    MazeEngine,
-    MazeState,
-)
-from .maze_renderer import MazeRenderer
+try:
+    from maze_art import MazeArt
+    from maze_audio import LabyrinthAudio
+    from maze_model import (
+        BIOMES,
+        DIFFICULTIES,
+        HEROES,
+        CollectibleStar,
+        MazeEngine,
+        MazeState,
+    )
+    from maze_renderer import MazeRenderer
+except ImportError:
+    from .maze_art import MazeArt
+    from .maze_audio import LabyrinthAudio
+    from .maze_model import (
+        BIOMES,
+        DIFFICULTIES,
+        HEROES,
+        CollectibleStar,
+        MazeEngine,
+        MazeState,
+    )
+    from .maze_renderer import MazeRenderer
 
 REFERENCE_WIDTH = 1024
 REFERENCE_HEIGHT = 600
