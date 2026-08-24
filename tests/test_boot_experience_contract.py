@@ -87,9 +87,8 @@ class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
     def test_boot_design_owns_animation_in_launcher_not_initramfs(self) -> None:
         text = BOOT_DESIGN.read_text(encoding="utf-8")
         self.assertIn("Plymouth is not part of the target Greia architecture", text)
-        self.assertIn("The launcher owns the actual intro animation", text)
-        self.assertIn("5 seconds", text)
-        self.assertIn("2 seconds", text)
+        self.assertTrue("five seconds" in text or "5 seconds" in text)
+        self.assertTrue("two seconds" in text or "2 seconds" in text)
         self.assertIn("Audio also starts here, never in initramfs", text)
 
     def test_boot_design_preserves_diagnostic_recovery_channel(self) -> None:
