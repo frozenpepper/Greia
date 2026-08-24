@@ -50,8 +50,11 @@ class BootProgressContractTests(unittest.TestCase):
                 self.assertIn(f"--progress {progress}", text)
                 self.assertIn("|| true", text)
 
-    def test_first_boot_advances_only_on_state_boundaries(self) -> None:
+    def test_first_boot_uses_exact_idempotency_marker_and_advances_on_state_boundaries(self) -> None:
         text = self.read("build/overlay/usr/local/lib/greia-os/first-boot")
+        self.assertIn("marker=/var/lib/greia-os/initialized", text)
+        self.assertIn('[ ! -e "$marker" ] || exit 0', text)
+        self.assertNotIn("marker=/var/lib/greia-os/init*", text)
         self.assertIn("boot_progress 55", text)
         self.assertIn("boot_progress 65", text)
         self.assertLess(text.index("boot_progress 55"), text.index("initialized"))
