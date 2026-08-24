@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0284c7"/>
+      <stop offset="100%" stop-color="#0369a1"/>
+    </linearGradient>
+    <radialGradient id="lanternGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fef08a" stop-opacity="1"/>
+      <stop offset="60%" stop-color="#f59e0b" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#d97706" stop-opacity="0.7"/>
+    </radialGradient>
+  </defs>
+  <!-- Background card -->
+  <rect width="256" height="256" rx="48" fill="url(#bg)"/>
+  
+  <!-- Glowing Rhyme Lantern -->
+  <!-- Lantern top cap -->
+  <rect x="96" y="44" width="64" height="16" rx="6" fill="#78350f"/>
+  <circle cx="128" cy="38" r="8" fill="none" stroke="#78350f" stroke-width="4"/>
+  
+  <!-- Lantern body -->
+  <rect x="64" y="60" width="128" height="136" rx="28" fill="url(#lanternGlow)" stroke="#78350f" stroke-width="5"/>
+  
+  <!-- Lantern bottom cap -->
+  <rect x="96" y="196" width="64" height="14" rx="6" fill="#78350f"/>
+  
+  <!-- Note / Bell symbol inside lantern -->
+  <circle cx="112" cy="140" r="14" fill="#78350f"/>
+  <circle cx="144" cy="128" r="14" fill="#78350f"/>
+  <rect x="122" y="90" width="8" height="50" fill="#78350f"/>
+  <rect x="154" y="78" width="8" height="50" fill="#78350f"/>
+  <polygon points="122,90 162,78 162,94 122,106" fill="#78350f"/>
+  
+  <!-- Sparkles / Sound wave accents -->
+  <circle cx="40" cy="100" r="6" fill="#38bdf8"/>
+  <circle cx="216" cy="100" r="6" fill="#38bdf8"/>
+  <circle cx="210" cy="160" r="8" fill="#fde047"/>
+  <circle cx="46" cy="160" r="8" fill="#fde047"/>
+</svg>

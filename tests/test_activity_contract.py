@@ -33,6 +33,7 @@ class ActivityContractTests(unittest.TestCase):
                 "org.greia.clinica-cuccioli",
                 "org.greia.costruiamo-ponti",
                 "org.greia.cucciolo-mio",
+                "org.greia.festa-delle-rime",
                 "org.greia.foresta-parole",
                 "org.greia.labirinto-magico",
                 "org.greia.luci-di-momo",

@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "locale": "it",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Festa delle Rime",
+    "activity.festa_delle_rime.title": "Festa delle Rime",
+    "prompt.rhyme": "Ascolta e tocca la lanterna che fa rima!",
+    "prompt.odd": "Tocca la lanterna che non fa rima!",
+    "prompt.sound": "Tocca la lanterna con lo stesso suono iniziale!",
+    "button.replay": "ASCOLTA",
+    "button.play_again": "GIOCA ANCORA",
+    "victory.title": "Festa Splendente!",
+    "victory.subtitle": "Tutte le lanterne delle rime brillano con Leo!"
+  },
+  "audio": {}
+}

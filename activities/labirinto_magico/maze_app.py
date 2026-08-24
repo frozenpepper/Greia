@@ -18,6 +18,7 @@ from greia_platform.pygame_canvas import (
     PygameReferenceCanvas,
     activity_viewport_for_surface,
 )
+from greia_platform.pygame_completion import CompletionContent, PygameCompletionScreen
 from greia_platform.typography import GreiaTypography
 
 try:
@@ -81,6 +82,19 @@ class MazeApp:
         self.storage = get_storage()
         self.sounds = LabyrinthAudio()
         self.typography = GreiaTypography()
+        self.completion = PygameCompletionScreen(
+            self.typography,
+            width=REFERENCE_WIDTH,
+            height=REFERENCE_HEIGHT,
+            primary_rect=pygame.Rect(382, 325, 260, 56),
+        )
+        self.completion_content = CompletionContent(
+            title="PORTALE RAGGIUNTO! 🌀",
+            body_lines=("Tito ha trovato l'uscita magica!",),
+            primary_label="NUOVO LABIRINTO 🔄",
+            achievement_count=5,
+        )
+        self.completion_presented = False
         self.renderer = MazeRenderer(self.typography)
         self.state: MazeState | None = None
         self.baked_maze: pygame.Surface | None = None
@@ -128,6 +142,8 @@ class MazeApp:
             sliding_waypoints=[],
             slide_speed=18.0,
         )
+        self.completion.clear()
+        self.completion_presented = False
         self._rebake_maze_surface(screen, metrics)
 
     def _rebake_maze_surface(self, screen: pygame.Surface, metrics: ChildUiMetrics) -> None:
@@ -182,16 +198,7 @@ class MazeApp:
 
         # 1. Victory modal click
         if self.state.is_victory:
-            card_w = min(metrics.px(520), w - 40)
-            card_h = min(metrics.px(330), h - 40)
-            card = pygame.Rect(w // 2 - card_w // 2, h // 2 - card_h // 2, card_w, card_h)
-            play_btn = pygame.Rect(
-                card.centerx - metrics.px(130),
-                card.top + metrics.px(190),
-                metrics.px(260),
-                metrics.px(56),
-            )
-            if play_btn.collidepoint(mx, my):
+            if self.completion.primary_contains((mx, my)):
                 self.start_game(screen, metrics)
             return
 
@@ -323,6 +330,11 @@ class MazeApp:
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         self.running = False
+                    elif self.state is not None and self.state.is_victory:
+                        if event.key in (pygame.K_SPACE, pygame.K_RETURN):
+                            self.start_game(self.screen, self.metrics)
+                        # Terminal input must never fall through into active controls.
+                        continue
                     elif event.key in (pygame.K_UP, pygame.K_w):
                         self.trigger_move(-1, 0)
                     elif event.key in (pygame.K_DOWN, pygame.K_s):
@@ -336,6 +348,7 @@ class MazeApp:
                     self.screen = pygame.display.get_surface() or self.screen
                     self.metrics = ChildUiMetrics.for_size(*self.screen.get_size())
                     self.canvas = PygameReferenceCanvas(self.screen)
+                    self.completion_presented = False
                     self._rebake_maze_surface(self.canvas.surface, self.metrics)
 
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -349,6 +362,16 @@ class MazeApp:
                     if not _is_safe_point(self.screen, event.pos):
                         continue
                     self.handle_click(mx, my, self.canvas.surface, self.metrics)
+
+            if self.state is not None and self.state.is_victory:
+                if not self.completion_presented:
+                    self.completion.prepare(self.completion_content)
+                    self.completion.draw(self.canvas.surface)
+                    self.canvas.present(clear=BIOMES[self.biome_idx]["bg"])
+                    pygame.display.flip()
+                    self.completion_presented = True
+                clock.tick(25)
+                continue
 
             self.update(dt, self.canvas.surface, self.metrics)
 

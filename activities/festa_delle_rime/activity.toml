@@ -1,0 +1,47 @@
+[activity]
+id = "org.greia.festa-delle-rime"
+legacy_ids = []
+title_key = "activity.festa_delle_rime.title"
+version = "0.1.0"
+icon = "package:assets/icon.png"
+languages = ["it", "en"]
+
+[presentation]
+categories = ["learn", "play"]
+discovery_tags = ["words"]
+
+[education]
+categories = ["language", "phonological_awareness", "rhyme"]
+difficulty = 2
+recommended_age_min = 4
+recommended_age_max = 6
+difficulty_min = 1
+difficulty_max = 4
+adaptive_difficulty = true
+skills = [
+  { id = "language.phonological_awareness.rhyme", weight = 3 },
+  { id = "language.phonological_awareness.alliteration", weight = 3 },
+  { id = "language.listening_comprehension", weight = 2 },
+]
+events = [
+  { id = "rhyme.match_completed", kind = "milestone" },
+  { id = "rhyme.festival_completed", kind = "completion" },
+]
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "pointer"
+
+[requirements]
+required_capabilities = ["display", "pointer", "audio.basic"]
+optional_capabilities = ["touch"]
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1

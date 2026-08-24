@@ -30,6 +30,7 @@ from greia_platform.pygame_canvas import (
     PygameReferenceCanvas,
     activity_viewport_for_surface,
 )
+from greia_platform.pygame_completion import CompletionContent, PygameCompletionScreen
 from greia_platform.typography import FontRole, GreiaTypography
 
 REFERENCE_WIDTH = 1024
@@ -207,6 +208,34 @@ def main() -> int:
     typography = GreiaTypography()
     sounds = TrainAudio()
 
+    package_root = Path(__file__).parent
+    support = ActivityLocaleSupport.localized(("it", "en"), default_ui_locale="it")
+    context = resolve_activity_locale(get_profile_locale(), support)
+    resources = LocalizedResources(package_root, context) if context else None
+
+    def t(key: str, default: str) -> str:
+        if resources is not None:
+            try:
+                value = resources.string(key)
+                if value:
+                    return value
+            except Exception:
+                pass
+        return default
+
+    completion = PygameCompletionScreen(
+        typography,
+        width=REFERENCE_WIDTH,
+        height=REFERENCE_HEIGHT,
+        primary_rect=pygame.Rect(372, 370, 280, 64),
+    )
+    completion_content = CompletionContent(
+        title=t("victory.title", "Evviva! Il treno è arrivato al capolinea! 🚂🌟"),
+        body_lines=(t("victory.subtitle", "Bravissima! Hai completato tutte le stazioni!"),),
+        primary_label=t("btn.play_again", "🎉 Gioca Ancora!"),
+        achievement_count=5,
+    )
+
     # Load persistent stars
     storage = get_storage()
     saved_data = storage.kv_get(STORAGE_KEY) if storage else {}
@@ -235,6 +264,7 @@ def main() -> int:
     flying_items: list[dict[str, Any]] = []
     celebration_timer = 0.0
     celebration_particles: list[dict[str, Any]] = []
+    completion_presented = False
 
     def setup_station(rnd: int) -> None:
         nonlocal mode, val_a, val_b, target_count, loaded_count, current_fruit, train_state, train_offset_x
@@ -269,10 +299,20 @@ def main() -> int:
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     running = False
+                elif is_victory:
+                    if event.key in (pygame.K_SPACE, pygame.K_RETURN):
+                        is_victory = False
+                        round_idx = 0
+                        completion.clear()
+                        completion_presented = False
+                        setup_station(0)
+                    # Terminal input must never fall through into active controls.
+                    continue
             elif event.type == pygame.VIDEORESIZE:
                 screen = pygame.display.get_surface() or screen
                 metrics = ChildUiMetrics.for_size(*screen.get_size())
                 canvas = PygameReferenceCanvas(screen)
+                completion_presented = False
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if is_home_clicked(screen, event.pos):
                     running = False
@@ -286,11 +326,13 @@ def main() -> int:
                     continue
 
                 if is_victory:
-                    play_again_btn = pygame.Rect(REFERENCE_WIDTH // 2 - 140, REFERENCE_HEIGHT // 2 + 70, 280, 64)
-                    if play_again_btn.collidepoint(mx, my):
+                    if completion.primary_contains((mx, my)):
                         is_victory = False
                         round_idx = 0
+                        completion.clear()
+                        completion_presented = False
                         setup_station(0)
+                    # Terminal input must never fall through into active controls.
                     continue
 
                 # Crate tap handlers during loading state
@@ -343,9 +385,23 @@ def main() -> int:
                                 if storage:
                                     storage.kv_set(STORAGE_KEY, {"stars": total_stars})
                                 try:
-                                    emit_activity_event("train.problem_solved", {"mode": mode, "target": target_count, "stars": total_stars})
+                                    emit_activity_event(
+                                        "train.station_completed",
+                                        {"mode": mode, "target": target_count, "stars": total_stars},
+                                        idempotency_key=f"station-{round_idx}",
+                                    )
                                 except Exception:
                                     pass
+
+        if is_victory:
+            if not completion_presented:
+                completion.prepare(completion_content)
+                completion.draw(canvas.surface)
+                canvas.present(clear=theme.background)
+                pygame.display.flip()
+                completion_presented = True
+            clock.tick(25)
+            continue
 
         # Update train animation state machine
         if train_state == "arriving":
@@ -385,6 +441,11 @@ def main() -> int:
                 if round_idx >= total_stations:
                     is_victory = True
                     train_state = "victory"
+                    emit_activity_event(
+                        "train.journey_completed",
+                        {"stations": total_stations, "stars": total_stars},
+                        idempotency_key="journey-completed",
+                    )
                 else:
                     setup_station(round_idx)
 
@@ -665,34 +726,6 @@ def main() -> int:
         for p in celebration_particles:
             pygame.draw.circle(surf, p["color"], (int(p["x"]), int(p["y"])), int(p["size"]))
             pygame.draw.circle(surf, (255, 255, 255), (int(p["x"] - 2), int(p["y"] - 2)), int(p["size"] // 3))
-
-        # 11. Victory Modal Card
-        if is_victory:
-            overlay = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.SRCALPHA)
-            overlay.fill((15, 23, 42, 210))
-            surf.blit(overlay, (0, 0))
-
-            card = pygame.Rect(REFERENCE_WIDTH // 2 - 250, REFERENCE_HEIGHT // 2 - 160, 500, 320)
-            pygame.draw.rect(surf, (255, 252, 245), card, border_radius=28)
-            pygame.draw.rect(surf, (234, 179, 8), card, width=5, border_radius=28)
-
-            vic_title = typography.render("STAZIONE FINALE! 🚂", FontRole.DISPLAY, 38, (180, 83, 9))
-            surf.blit(vic_title, (card.centerx - vic_title.get_width() // 2, card.top + 36))
-
-            vic_sub = typography.render("Tutti i vagoni sono carichi! Bravissima!", FontRole.BODY, 22, (71, 85, 105))
-            surf.blit(vic_sub, (card.centerx - vic_sub.get_width() // 2, card.top + 95))
-
-            for s_idx in range(5):
-                sx = card.centerx - 100 + s_idx * 50
-                sy = card.top + 160
-                pygame.draw.circle(surf, (234, 179, 8), (sx, sy), 18)
-                pygame.draw.circle(surf, (254, 240, 138), (sx, sy), 14)
-
-            play_btn = pygame.Rect(card.centerx - 140, card.top + 215, 280, 64)
-            pygame.draw.rect(surf, (34, 197, 94), play_btn, border_radius=20)
-            pygame.draw.rect(surf, (22, 101, 52), play_btn, width=3, border_radius=20)
-            btn_txt = typography.render("GIOCA ANCORA 🔄", FontRole.DISPLAY, 26, (255, 255, 255))
-            surf.blit(btn_txt, (play_btn.centerx - btn_txt.get_width() // 2, play_btn.centery - btn_txt.get_height() // 2))
 
         canvas.present()
         pygame.display.flip()

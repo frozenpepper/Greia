@@ -30,6 +30,7 @@ from greia_platform.pygame_canvas import (
     PygameReferenceCanvas,
     activity_viewport_for_surface,
 )
+from greia_platform.pygame_completion import CompletionContent, PygameCompletionScreen
 from greia_platform.typography import FontRole, GreiaTypography
 
 REFERENCE_WIDTH = 1024
@@ -200,6 +201,19 @@ def main() -> int:
                 pass
         return default
 
+    completion = PygameCompletionScreen(
+        typography,
+        width=REFERENCE_WIDTH,
+        height=REFERENCE_HEIGHT,
+        primary_rect=pygame.Rect(392, 380, 240, 52),
+    )
+    completion_content = CompletionContent(
+        title=t("victory.title", "Che magnifico raccolto! 🌻🍓🥕"),
+        body_lines=(t("victory.subtitle", "La tua serra è un vero paradiso!"),),
+        primary_label=t("btn.play_again", "🎉 Coltiva Ancora!"),
+        achievement_count=3,
+    )
+
     # Tools: 0 = Seed, 1 = Water, 2 = Sun, 3 = Harvest
     active_tool = 0
     selected_plant_type = 0
@@ -223,11 +237,14 @@ def main() -> int:
 
     particles: list[dict[str, Any]] = []
     is_victory = False
+    completion_presented = False
 
     def reset_greenhouse() -> None:
-        nonlocal harvest_count, is_victory
+        nonlocal harvest_count, is_victory, completion_presented
         harvest_count = 0
         is_victory = False
+        completion.clear()
+        completion_presented = False
         for p in pots:
             p["plant"] = None
             p["stage"] = 0
@@ -241,15 +258,16 @@ def main() -> int:
     while running and not activity_stop_requested():
         t_now = time.time()
 
-        # Particles update
-        surviving = []
-        for p in particles:
-            p["x"] += p["vx"]
-            p["y"] += p["vy"]
-            p["life"] -= p["decay"]
-            if p["life"] > 0:
-                surviving.append(p)
-        particles = surviving
+        # Active-world particles stop advancing once terminal state is entered.
+        if not is_victory:
+            surviving = []
+            for p in particles:
+                p["x"] += p["vx"]
+                p["y"] += p["vy"]
+                p["life"] -= p["decay"]
+                if p["life"] > 0:
+                    surviving.append(p)
+            particles = surviving
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -258,12 +276,16 @@ def main() -> int:
                 screen = pygame.display.get_surface() or screen
                 metrics = ChildUiMetrics.for_size(*screen.get_size())
                 canvas = PygameReferenceCanvas(screen)
+                completion_presented = False
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     running = False
                     continue
-                if event.key in (pygame.K_SPACE, pygame.K_RETURN) and is_victory:
-                    reset_greenhouse()
+                if is_victory:
+                    if event.key in (pygame.K_SPACE, pygame.K_RETURN):
+                        reset_greenhouse()
+                    # Terminal input must never fall through into active controls.
+                    continue
 
             elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                 if is_home_clicked(screen, event.pos):
@@ -277,10 +299,10 @@ def main() -> int:
                 mx, my = logical
 
                 if is_victory:
-                    btn_rect = pygame.Rect(REFERENCE_WIDTH // 2 - 120, REFERENCE_HEIGHT // 2 + 80, 240, 52)
-                    if btn_rect.collidepoint(mx, my):
+                    if completion.primary_contains((int(mx), int(my))):
                         reset_greenhouse()
-                        continue
+                    # Terminal input must never fall through into active controls.
+                    continue
 
                 # Tool selection buttons (Bottom toolbar)
                 tool_y = REFERENCE_HEIGHT - 85
@@ -422,6 +444,16 @@ def main() -> int:
                                         except Exception:
                                             pass
                             break
+
+        if is_victory:
+            if not completion_presented:
+                completion.prepare(completion_content)
+                completion.draw(canvas.surface)
+                canvas.present(clear=theme.background)
+                pygame.display.flip()
+                completion_presented = True
+            clock.tick(25)
+            continue
 
         # RENDER TO CANVAS
         surf = canvas.surface
@@ -636,32 +668,6 @@ def main() -> int:
             # Supporting label underneath
             lbl_surf = typography.render(lbl, FontRole.DISPLAY, 16, (255, 255, 255) if is_sel else col)
             surf.blit(lbl_surf, (cx - lbl_surf.get_width() // 2, b_rect.bottom - 22))
-
-        # 6. Victory Modal
-        if is_victory:
-            overlay = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.SRCALPHA)
-            overlay.fill((10, 15, 30, 200))
-            surf.blit(overlay, (0, 0))
-
-            card = pygame.Rect(REFERENCE_WIDTH // 2 - 220, REFERENCE_HEIGHT // 2 - 140, 440, 280)
-            pygame.draw.rect(surf, (30, 41, 59), card, border_radius=20)
-            pygame.draw.rect(surf, (254, 202, 87), card, width=3, border_radius=20)
-
-            v_title = typography.render("SPLENDIDO RACCOLTO!", FontRole.DISPLAY, 24, (254, 202, 87))
-            surf.blit(v_title, (card.centerx - v_title.get_width() // 2, card.top + 30))
-
-            v_sub = typography.render("La serra e' un vero paradiso!", FontRole.BODY, 18, (241, 245, 249))
-            surf.blit(v_sub, (card.centerx - v_sub.get_width() // 2, card.top + 75))
-
-            for i in range(3):
-                star_x = card.centerx - 50 + i * 50
-                star_y = card.top + 130
-                pygame.draw.circle(surf, (254, 202, 87), (star_x, star_y), 18)
-
-            again_btn = pygame.Rect(card.centerx - 110, card.bottom - 65, 220, 46)
-            pygame.draw.rect(surf, (34, 197, 94), again_btn, border_radius=14)
-            again_lbl = typography.render("COLTIVA ANCORA", FontRole.CONTROL, 20, (255, 255, 255))
-            surf.blit(again_lbl, (again_btn.centerx - again_lbl.get_width() // 2, again_btn.centery - again_lbl.get_height() // 2))
 
         # Present Canvas
         canvas.present(clear=theme.background)

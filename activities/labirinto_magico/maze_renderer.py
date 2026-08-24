@@ -5,11 +5,7 @@ from typing import Any
 
 import pygame
 
-from greia_platform.activity_ui import (
-    ChildUiMetrics,
-    draw_activity_pointer,
-    draw_system_chrome_overlay,
-)
+from greia_platform.activity_ui import ChildUiMetrics
 from greia_platform.system_chrome import ActivitySystemChromeLayout
 from greia_platform.typography import FontRole, GreiaTypography
 
@@ -36,7 +32,6 @@ class MazeRenderer:
         self.typography = typography or GreiaTypography()
         self._text_cache: dict[tuple[str, FontRole, int, tuple[int, ...]], pygame.Surface] = {}
         self._hud_cache: dict[tuple[int, int, str, str], pygame.Surface] = {}
-        self._victory_overlay_cache: pygame.Surface | None = None
 
     def _render_text(
         self,
@@ -216,35 +211,3 @@ class MazeRenderer:
         pygame.draw.rect(screen, (217, 119, 6), nb, width=2, border_radius=metrics.radius)
         n_txt = self._render_text("NUOVO 🔄", FontRole.DISPLAY, metrics.px(16), (120, 53, 15))
         screen.blit(n_txt, (nb.centerx - n_txt.get_width() // 2, nb.centery - n_txt.get_height() // 2))
-
-        # 10. Victory Modal Card
-        if state.is_victory:
-            if self._victory_overlay_cache is None or self._victory_overlay_cache.get_size() != (w, h):
-                self._victory_overlay_cache = pygame.Surface((w, h), pygame.SRCALPHA)
-                self._victory_overlay_cache.fill((15, 23, 42, 215))
-            screen.blit(self._victory_overlay_cache, (0, 0))
-
-            card_w = min(metrics.px(520), w - 40)
-            card_h = min(metrics.px(330), h - 40)
-            card = pygame.Rect(w // 2 - card_w // 2, h // 2 - card_h // 2, card_w, card_h)
-            pygame.draw.rect(screen, (255, 252, 245), card, border_radius=metrics.radius + 8)
-            pygame.draw.rect(screen, (234, 179, 8), card, width=4, border_radius=metrics.radius + 8)
-
-            vic_title = self._render_text("PORTALE RAGGIUNTO! 🌀", FontRole.DISPLAY, metrics.px(28), (180, 83, 9))
-            screen.blit(vic_title, (card.centerx - vic_title.get_width() // 2, card.top + metrics.px(30)))
-
-            vic_sub = self._render_text("Tito ha trovato l'uscita magica!", FontRole.BODY, metrics.px(18), (71, 85, 105))
-            screen.blit(vic_sub, (card.centerx - vic_sub.get_width() // 2, card.top + metrics.px(80)))
-
-            # Celebration stars row
-            for s_idx in range(5):
-                sx = card.centerx - metrics.px(80) + s_idx * metrics.px(40)
-                sy = card.top + metrics.px(140)
-                pygame.draw.circle(screen, (234, 179, 8), (sx, sy), metrics.px(16))
-                pygame.draw.circle(screen, (254, 240, 138), (sx, sy), metrics.px(12))
-
-            play_btn = pygame.Rect(card.centerx - metrics.px(130), card.top + metrics.px(190), metrics.px(260), metrics.px(56))
-            pygame.draw.rect(screen, (34, 197, 94), play_btn, border_radius=metrics.radius)
-            pygame.draw.rect(screen, (22, 101, 52), play_btn, width=2, border_radius=metrics.radius)
-            btn_txt = self._render_text("NUOVO LABIRINTO 🔄", FontRole.DISPLAY, metrics.px(18), (255, 255, 255))
-            screen.blit(btn_txt, (play_btn.centerx - btn_txt.get_width() // 2, play_btn.centery - btn_txt.get_height() // 2))

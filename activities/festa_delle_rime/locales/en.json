@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "locale": "en",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Rhyme Festival",
+    "activity.festa_delle_rime.title": "Rhyme Festival",
+    "prompt.rhyme": "Listen and tap the lantern that rhymes!",
+    "prompt.odd": "Tap the lantern that does not rhyme!",
+    "prompt.sound": "Tap the lantern with the same beginning sound!",
+    "button.replay": "LISTEN",
+    "button.play_again": "PLAY AGAIN",
+    "victory.title": "Glowing Festival!",
+    "victory.subtitle": "All rhyme lanterns are glowing bright with Leo!"
+  },
+  "audio": {}
+}

@@ -7,4 +7,5 @@ tmp/
 *.zip
 GREIA_VISUAL_REVIEW_*/
 .agents/
-
+build/review/
+Lunacy/

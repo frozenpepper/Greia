@@ -109,8 +109,25 @@ On-device visual verification covered Collection Home, category grid, hover lift
   - `tests/test_activity_specchi_magici.py`: 12/12 focused tests passing (model determinism, reflection involution, rotation invariants, tray placement and undo, adaptation, storage recovery, manifest, app pointer integration, simulator supervisor lifecycle).
   - Platform contract tests reconciled: `test_activity_contract.py`, `test_first_party_activity_audience_metadata.py` (24 built-in activities), `test_first_party_activity_readiness.py`.
   - Full test suite `make verify`: **1,231 unit tests PASS**, project validation PASS, all 24 activities valid, footprint and shell checks green.
-  - Package validation digest: `sha256 97ad0c0171209b908b4423a6ab3632f68cffa183c5eb0c3de5e3b532f1ebd374`.
-  - Visual review executed for Italian and English locales and multiple game modes (Level 1, Level 2, Level 3, Level 5, Completion).
+## Early-learning Activity expansion: Festa delle Rime acceptance (2026-08-24)
+
+`activities/festa_delle_rime` (Festa delle Rime / Rhyme Festival) audio-first phonological awareness listening Activity is fully implemented, verified, and accepted following `docs/agents/GREIA_EARLY_LEARNING_ACTIVITY_IMPLEMENTATION_RUNBOOK.md` and `skills/greia-activity-authoring/SKILL.md`.
+
+- Architecture:
+  - `rhyme_content.py`: Bilingual phonological corpora (Italian and English rhyme pairs and alliteration families) matching `docs/reviews/2026-08-24_FESTA_DELLE_RIME_AUDIO_REVIEW.md` without printed text answer leakage.
+  - `rhyme_model.py`: 8 balanced listening challenges per set across L1 (2-choice rhyme matching), L2 (3-choice rhyme matching), L3 (odd-one-out among 3 choices), and L4 (alliteration matching same initial sound), non-repeating pairs, between-set bounded adaptation, and one-shot `rhyme.match_completed` (milestone) and `rhyme.festival_completed` (completion) events.
+  - `rhyme_audio.py`: Bounded `SpeechQueue` (maxlen $\le 4$, non-overlapping, distinct SFX and speech channels, cancellation on round change or stop), loading 64 reviewed LEI16 mono 22050Hz WAV assets and synthetic nonverbal chimes.
+  - `rhyme_art.py`: Twilight meadow garden backdrop with hanging paper lanterns and pre-scaled Leo mascot (`character.leo`).
+  - `rhyme_renderer.py`: 1024x600 festival presentation with top replay button `[ 🔊 ASCOLTA ]`, golden target lantern, distinct colored paper lantern choices, Leo mascot, and progress badge.
+  - `rhyme_app.py`: Pointer/touch interaction orchestrator with safe-viewport validation, timed wobble on retry, celebration chime on success, terminal completion screen with 8 achievements.
+  - `rhyme_services.py`: Storage adapter for `festa_delle_rime.progress.v1` (bounded history <= 8) and event publisher.
+- Evidence & Verification:
+  - `tests/test_activity_festa_delle_rime.py`: 11/11 focused tests passing (corpora completeness, factory determinism across 4 modes, bounded speech queue, round session invariants, adaptation, storage recovery, manifest, app integration, simulator supervisor lifecycle).
+  - Platform contract tests reconciled: `test_activity_contract.py`, `test_first_party_activity_audience_metadata.py` (25 built-in activities), `test_first_party_activity_readiness.py`.
+  - Full test suite `make verify`: **1,246 unit tests PASS**, project validation PASS, all 25 activities valid, footprint and shell checks green.
+  - Package validation digest: `sha256 cff15575de8a452f29c294ae1475c30cbb5ea91956e6932a137ccd2b31c52b37`.
+  - Visual review executed for Italian and English locales and all game modes (Level 1, Level 2, Level 3, Level 4, Completion, English).
+
 
 ## Contributor engineering skills integration (2026-08-23)
 
