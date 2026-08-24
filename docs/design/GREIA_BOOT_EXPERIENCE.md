@@ -21,7 +21,8 @@ For a normal successful boot the child-visible sequence is:
 firmware
   → immediate Greia graphical first frame
   → visually continuous Greia artwork through kernel + initramfs
-  → short launcher-owned animated logo + gentle boot chime
+  → launcher-owned five-second animation
+  → two-second hold on the final frame + gentle boot chime
   → profile picker
 ```
 
@@ -31,7 +32,7 @@ The Greia-owned boot artwork is **full colour**. It must never be reduced to a b
 
 During an open physical-hardware recovery gate, explicit `*-dev` profiles intentionally keep tty1/status output available. Diagnostic visibility is development policy and does not redefine the normal child-facing release UX.
 
-Greia should reach an interactive profile picker as quickly as the hardware permits. Branding must not become a reason to add unbounded or arbitrary delay.
+Greia should reach an interactive profile picker as quickly as the hardware permits **before** the intentional launcher presentation begins. Hidden stalls/retries must be removed; the explicit 5-second animation plus 2-second final-frame hold is product presentation and must not be shortened incidentally as a performance optimization.
 
 ## 2. Ownership boundaries
 
@@ -64,7 +65,7 @@ Initramfs regeneration is **not** part of every boot/presentation change. It is 
 
 ### Graphical session / launcher
 
-The launcher owns the actual intro animation. Animation starts only after Greia has a real graphical surface. The launcher first presents a continuation of the static artwork, then animates it before revealing the profile picker.
+The launcher owns the actual intro animation. Animation starts only after Greia has a real graphical surface. The launcher first presents a continuation of the static artwork, animates the complete sequence for five seconds, then deliberately holds the final frame for two more seconds before revealing the profile picker.
 
 Audio also starts here, never in initramfs.
 
@@ -172,23 +173,33 @@ The launcher owns a real intro. It is distinct from the static early-boot cover.
 Current source timing in `src/greia_launcher/boot_intro.py` is:
 
 ```text
-TARGET_INTRO_SECONDS = 2.2
-MAX_INTRO_SECONDS = 2.5
+ANIMATION_SECONDS = 5.0
+FINAL_FRAME_HOLD_SECONDS = 2.0
+MAX_INTRO_SECONDS = ANIMATION_SECONDS + FINAL_FRAME_HOLD_SECONDS
+```
+
+The intended visual sequence is therefore exactly:
+
+```text
+0.0s → 5.0s   sequential 52-frame animation
+5.0s → 7.0s   exact final frame held unchanged
+then           profile picker
 ```
 
 Requirements:
 
 - first frame visually continues the boot presentation;
-- target duration follows the source timing above until intentionally changed and re-accepted;
-- never exceed the source maximum intentional intro duration;
-- driven from monotonic elapsed time, not `sleep()` per frame;
-- frames may be dropped if rendering/decoding is slow;
+- the complete animation phase lasts five seconds;
+- the exact final frame remains visible for an additional two seconds;
+- timing is driven from monotonic elapsed time;
+- display/events are pumped during the intentional presentation so the session remains responsive;
+- frames may be dropped if rendering is slow, but timing must remain duration-based rather than sleeping a fixed amount per source frame;
 - automatically fit to the real viewport without distorting artwork;
 - no dependency on `/usr/share/plymouth`;
 - play once per machine boot, not on every launcher restart;
 - a development/test escape hatch may skip it, but release UX defaults to enabled.
 
-This supersedes the older living-doc timing of `0.75–0.95 seconds / <=1.0 second`, which no longer matched current source after the 2026-08-24 accepted intro change.
+The earlier 0.75–0.95-second/≤1.0-second prose and the brief 2.2/2.5-second recovery-session implementation were both incorrect for the intended design and are superseded by this explicit 5+2-second contract.
 
 ## 6. Console, diagnostics and owner recovery
 
@@ -253,7 +264,7 @@ A short Greia startup chime is allowed and desired, but sound must never be on t
 Contract:
 
 - start playback only after the launcher has presented its first graphical frame;
-- initialize/play asynchronously or otherwise without blocking profile-picker readiness;
+- initialize/play asynchronously or otherwise without blocking the intentional animation/hold timing;
 - fail silently if no usable audio device exists;
 - play once per boot;
 - respect platform/device mute and future Parent-controlled boot-sound policy;
@@ -297,18 +308,18 @@ See `skills/greia-os-work/BOOT.md` for the physical pre-reboot recovery gate.
 
 ## 10. Boot speed rules
 
-Boot polish is not permission to slow Greia down.
+Boot polish is not permission to tolerate hidden boot latency.
 
 Forbidden on the normal boot critical path:
 
-- arbitrary sleeps;
+- arbitrary sleeps outside the explicit launcher presentation timing;
 - polling loops waiting for graphics/audio;
 - Python or SDL inside initramfs;
 - runtime PNG/JPEG decoding inside initramfs;
-- network waits before profile picker;
+- network waits before the launcher presentation/profile picker;
 - waiting for Parent HTML/network services before showing the child shell;
 - synchronous audio initialization before the first launcher frame.
 
 Measure with systemd/journal timestamps and physical video. Any service blocking launcher start without being a true prerequisite must be challenged.
 
-The launcher intro is currently an intentional bounded 2.2-second target animation. That is a product/presentation choice, not permission for hidden service stalls or unbounded retry time.
+The launcher presentation deliberately consumes seven seconds after the graphical handoff: five seconds of animation and two seconds holding the final frame. That is intentional product timing, not a performance regression. Performance work must reduce everything **around** that explicit sequence rather than silently shortening it.
