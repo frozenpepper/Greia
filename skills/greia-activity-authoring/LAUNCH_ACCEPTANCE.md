@@ -12,6 +12,14 @@ Repository validation, unit tests, import tests, AST/source checks, `python main
 
 The reason is empirical and architectural: Activity work repeatedly passes static/source gates while still failing on the first real Greia launch because of package-local import mistakes, script-vs-package import differences, runtime-adapter policy, lifecycle wiring, missing assets/resources, initialization order, or exceptions reached only once Greia actually starts the Activity.
 
+For every new Activity and every substantive child-facing flow/UI redesign, this runtime gate is paired with:
+
+```text
+skills/greia-activity-authoring/PRE_READER_UX.md
+```
+
+A runtime that launches but requires the target child to read instructions is technically alive but still **not accepted child-facing Greia UX**.
+
 ---
 
 ## 1. When this gate is mandatory
@@ -88,6 +96,28 @@ The mandatory sequence is:
 The ten-second survival period is deliberately simple. It is not a performance benchmark; it exists to catch initialization/lifecycle failures that occur just after the first frame.
 
 For a stateful/game-like Activity, startup survival alone is not full product acceptance. If the work touches gameplay, completion, scoring, storage, events, victory, restart, or input semantics, continue through the applicable happy path described in `ENGINEERING.md` / `REFACTORING.md`, including completion and restart where relevant.
+
+### 3.1 New/child-facing work also requires a no-reading pass
+
+For a new Activity, or whenever instructions/controls/feedback/completion UI changed, continue the same Simulator review as if the child **cannot read any written instruction or button label**.
+
+Follow:
+
+```text
+skills/greia-activity-authoring/PRE_READER_UX.md
+```
+
+At minimum verify:
+
+```text
+first meaningful action is understandable without reading
+primary targets/icons/numbers/pictures are large and visually distinct
+spoken cue exists when language is genuinely necessary
+wrong action produces understandable non-text retry feedback
+start/replay/continue/completion can be understood without prose
+```
+
+If the normal core flow depends on reading sentences or button labels, record the child-facing UX as FAIL even if the process remains alive.
 
 ---
 
@@ -167,6 +197,17 @@ any additional full-session/completion/restart path exercised
 result: PASS or FAIL
 ```
 
+For new Activities or child-facing UI/flow changes also record:
+
+```text
+PRE_READER_CORE_FLOW_PASS=yes/no
+TEXT_REQUIRED_FOR_GAMEPLAY=yes/no
+NO_READING_FIRST_ACTION_PASS=yes/no
+NO_READING_RETRY_PASS=yes/no
+NO_READING_COMPLETION_PASS=yes/no
+PRIMARY_INSTRUCTION_CHANNEL=visual/voice/combined
+```
+
 Do not write `PASS` from expected behavior or from tests that were authored but not executed.
 
 ---
@@ -196,6 +237,8 @@ finished
 
 unless the mandatory simulator launch/survival gate has actually passed.
 
+Likewise, for new/child-facing work, do not call the Activity child-UX accepted if its ordinary flow requires reading written instructions.
+
 If the current execution environment cannot run the simulator, save/commit the work if appropriate, but report the limitation explicitly and leave the Activity **integration-unverified**. Lack of simulator access changes the status; it does not weaken the gate.
 
 ---
@@ -205,6 +248,10 @@ If the current execution environment cannot run the simulator, save/commit the w
 A reviewer evaluating substantive Activity work must ask first:
 
 > **What exact final source SHA was launched in the Greia simulator, and did it survive launch plus a meaningful child interaction?**
+
+For new/child-facing work the reviewer must also ask:
+
+> **Could the target child complete the ordinary interaction without reading the instructions?**
 
 If there is no concrete answer/evidence, the work is not done regardless of source quality or unit-test count.
 
@@ -219,4 +266,4 @@ This applies equally to:
 - localization/audio integration;
 - terminal/victory changes.
 
-The simulator gate exists specifically to stop the recurring pattern of handing the owner Activities that fail on first launch.
+The simulator gate exists specifically to stop the recurring pattern of handing the owner Activities that fail on first launch. The pre-reader gate exists to stop the equally serious pattern of handing young children technically working Activities whose instructions they cannot read.
