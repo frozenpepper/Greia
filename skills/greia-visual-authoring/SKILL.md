@@ -1,500 +1,262 @@
 ---
 name: greia-visual-authoring
-description: Model-agnostic guide for Activity-authoring agents to discover Greia's generic visual toolbox, reuse or adapt suitable assets, create coherent original Activity art, and integrate it through the existing runtime.
+description: Task router for Greia visual asset creation, reuse, adaptation, scene composition, character art, Activity visual integration and visual acceptance. Load only the task-specific local docs required for the work.
 ---
 
-# Greia Visual Authoring Skill
+# Greia Visual Authoring — task router
 
-**Status:** living user-agent skill  
-**Reviewed:** 2026-08-21  
-**Architecture:** `docs/design/GREIA_VISUAL_AUTHORING_ARCHITECTURE.md`  
-**Generic taxonomy:** `docs/design/GREIA_GENERIC_ART_LIBRARY_TAXONOMY.md`  
-**Main visual-system guide:** `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`  
-**Style guide:** `docs/design/GREIA_VISUAL_STYLE_GUIDE.md`
+**Status:** living derived contributor router  
+**Reviewed:** 2026-08-24
 
-## 0. Audience and scope
+Keep this file small. It tells an agent **what to read for the visual task**; it is not a duplicate art/style/runtime manual.
 
-This skill is for **arbitrary agents/models helping a user create or modify a Greia Activity**.
+## Universal rules
 
-It must not assume:
+These apply to substantive Greia visual work:
 
-- a particular model provider;
-- the Greia maintainer's local agent;
-- image-generation access;
-- professional illustration software;
-- strong SVG expertise;
-- one fixed asset-creation technique.
+1. Preserve Greia visual coherence, but do not force reuse when an Activity genuinely needs original art.
+2. Choose deliberately between **REUSE**, **COMPOSE/ADAPT**, and **CREATE ORIGINAL**. Existing library content is a toolbox, not a completeness promise.
+3. Shared/canonical assets are not Activity-owned. Do not modify shared source assets in place from an Activity.
+4. Activity-local art stays portable inside the Activity package. Do not hard-code host filesystem paths or add runtime directory scanning.
+5. Authoring-time richness must become runtime-efficient assets. Do not make low-end Greia hardware repeatedly decode, rasterize, scale or rebuild static art during play.
+6. Do not imitate protected Greia Home/Back/system chrome with Activity artwork.
+7. Meaningful visual work requires inspection of actual rendered pixels. A producer-written `PASS` is not visual acceptance.
+8. If visual work changes Activity runtime code/assets/resources, also follow the Activity authoring router and final Simulator launch gate.
 
-Your job is to make the Activity look coherent, polished and Greia-native by intelligently using the visual resources already available and creating Activity-local art where necessary.
+Start from the task map below. Do **not** read every visual document by default.
 
-Do not confuse this skill with Greia's maintainer-side process for producing source artwork.
+## Read by task
 
----
+### Broad Greia visual-system architecture
 
-## 1. Read the visual authorities before drawing
-
-For substantive visual work, read:
+Use only for genuinely cross-cutting visual-system work:
 
 ```text
-1. docs/design/GREIA_VISUAL_AUTHORING_ARCHITECTURE.md
-2. docs/design/GREIA_GENERIC_ART_LIBRARY_TAXONOMY.md
-3. docs/design/GREIA_ART_GRAPHICS_SYSTEM.md
-4. docs/design/GREIA_VISUAL_STYLE_GUIDE.md
-5. relevant generic authoring-library indexes and previews
-6. deeper source-pack README/catalogue/reference material only when useful
-7. the Activity's manifest, assets and rendering code
+docs/design/GREIA_ART_GRAPHICS_SYSTEM.md
+docs/design/GREIA_VISUAL_AUTHORING_ARCHITECTURE.md
 ```
 
-At authoring time you may inspect repository source assets and metadata. **Runtime directory scanning remains forbidden.**
+These explain source-library/runtime-rendition ownership and the boundary between maintaining Greia's art system and authoring one Activity.
 
----
+### Style, visual language or quality-bar decisions
 
-## 2. Start with the Activity's visual needs
-
-Write a short visual inventory before searching the library.
-
-Typical roles:
+Read:
 
 ```text
-background / room base
-far scenery
-mid scenery
-ground / playfield
-interactive props
-characters / creatures
-feedback / clues / rewards
-foreground framing
-atmosphere / lighting
-Activity-local UI
-launcher icon
+docs/design/GREIA_VISUAL_STYLE_GUIDE.md
+docs/design/GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md
 ```
 
-Do not let existing assets dictate the game design merely because something convenient already exists.
+Use these when deciding shape language, palette/value relationships, material treatment, silhouette quality, typography relationship or the reusable visual quality bar.
 
----
+### Finding reusable generic art
 
-## 3. Search the generic authoring library with discovery tooling
+Read:
 
-The canonical generic authoring index lives under:
+```text
+docs/design/GREIA_GENERIC_ART_LIBRARY_TAXONOMY.md
+```
+
+Use the repository discovery helper instead of manually crawling source folders:
+
+```bash
+python tools/visual_authoring_library.py collections
+python tools/visual_authoring_library.py search <need>
+python tools/visual_authoring_library.py show <semantic-id>
+```
+
+Prefer `library_status = "preferred"` for direct reuse. Treat `candidate_reference` as reference/adaptation material unless a narrower accepted document says otherwise.
+
+The canonical authoring index lives under:
 
 ```text
 assets/visual/authoring_library/
 ```
 
-### Discovery Helper (`tools/visual_authoring_library.py`)
+### Creating or adapting Activity-local art
 
-When working in the repository environment, use the discovery CLI helper to search and inspect library assets rather than manually grepping TOML files or scanning directories:
-
-```bash
-# List all 6 generic collections and counts
-python tools/visual_authoring_library.py collections
-
-# Search for assets across semantic ID, tags, roles, and notes
-python tools/visual_authoring_library.py search chair
-python tools/visual_authoring_library.py search "book storage" --status preferred
-
-# Inspect full metadata, recommended sizes, and exact source path for an asset
-python tools/visual_authoring_library.py show furniture.seating.chair.spindle_wood
-
-# Machine-readable JSON output (ideal for subagents and scripts)
-python tools/visual_authoring_library.py search tableware --json
-```
-
-### Admission Status Rules
-
-The library explicitly distinguishes between two asset states:
-
-1. **`library_status = "preferred"` (Use First for Direct `REUSE`):**
-   - Fully reviewed, high-craft, structurally sound assets.
-   - Recommended as first-choice direct reuse art for Activity scenes.
-2. **`library_status = "candidate_reference"` (Use for `COMPOSE / ADAPT`):**
-   - Useful reference or adaptation material; provisional staging assets.
-   - Use these as inspiration, base geometry, or material reference for Activity-local adaptations rather than direct final art.
-
-Shared UI and canonical characters remain their own stronger-consistency families.
-
-The generic indexes may point into several historical source bundles. Follow their source references when you need:
-
-- a higher-resolution master;
-- material/style context;
-- composition examples;
-- a useful ingredient;
-- a related visual variant.
-
-### Important
-
-Do **not** assume an Activity should browse or copy a theme such as `Clinic`, `Classroom`, or `Fantasy Village` as a whole.
-
-Those folders may contain useful source art, but Activity authors should normally search by reusable semantic need first.
-
-Example:
+Read:
 
 ```text
-need: cabinet
-→ furniture/storage index
-→ inspect useful cabinet sources
+docs/design/GREIA_VISUAL_AUTHORING_ARCHITECTURE.md
+docs/design/GREIA_VISUAL_STYLE_GUIDE.md
 ```
 
-not:
+Then inspect the Activity's own:
 
 ```text
-maybe a clinic has a cabinet
-→ browse medical scene pack
+activity.toml
+assets/
+rendering/presentation code
 ```
 
----
+Do not let library availability dictate gameplay design. If no suitable reusable asset exists, create coherent Activity-local artwork rather than shipping programmer placeholders.
 
-## 4. For each important asset choose: REUSE, COMPOSE/ADAPT, or CREATE ORIGINAL
+### Scene composition, layers or runtime visual integration
 
-### 4.1 REUSE
-
-Reuse a finished Greia asset directly when it genuinely fits.
-
-Good candidates often include:
-
-- canonical UI pieces;
-- generic clouds / rocks / ground details;
-- furniture or containers that suit the scene without compromise;
-- fog/light overlays;
-- contact shadows;
-- canonical recurring characters.
-
-Do not alter shared source files in place from inside an Activity.
-
-### 4.2 COMPOSE / ADAPT
-
-Use Greia source assets, ingredients, material treatment or examples to create a bespoke Activity-local result.
-
-Examples:
-
-- derive a unique hiding tree from generic nature references;
-- combine rocks, reeds, water-edge language and light into a bespoke pond hiding spot;
-- adapt a shelf/window/material treatment into a unique science-machine scene;
-- use a generic bowl/container vocabulary as the basis for a special Activity prop.
-
-Authoring may be rich. The finished runtime result should normally be flattened into one or a small number of efficient Activity-local assets.
-
-### 4.3 CREATE ORIGINAL
-
-Create original Activity-local artwork when the generic toolbox does not provide a suitable basis.
-
-This is normal and expected.
-
-Examples:
-
-- unique puzzle machines;
-- custom animals/poses;
-- unusual vehicles;
-- fantasy props;
-- scientific apparatus;
-- medical/specialized equipment;
-- bespoke hiding places;
-- Activity-specific reward illustrations.
-
-Use Greia's visual relationships so the new asset belongs in the same world.
-
-### Hard rule
-
-> **Never force an unsuitable library asset merely to claim reuse. Never leave ugly programmer-drawn primitives in the finished Activity merely because the exact prop was not already packaged.**
-
----
-
-## 5. The generic library is a toolbox, not a completeness promise
-
-Greia should not ship a finished object for every imaginable Activity need.
-
-A generic pack should provide broadly reusable assets, ingredients and visual references.
-
-Specialized objects often belong in the Activity itself.
-
-Examples:
+Read:
 
 ```text
-generic library:
-window, table, bowl, bottle, cushion, tree, rock, light shaft
-
-Activity-local:
-stethoscope puzzle device, alien microscope, pirate telescope mechanism,
-special tree with a coded door, one-off fantasy musical machine
+docs/design/GREIA_SCENE_COMPOSITION_RUNTIME.md
+docs/design/GREIA_ART_GRAPHICS_SYSTEM.md
 ```
 
-A specialized theme pack should only become a maintained Greia extension when several real Activities justify it.
-
----
-
-## 6. Visual quality bar
-
-Greia's simplified production constraints are not permission for cheap art.
-
-Aim for:
-
-- polished storybook / toy-diorama presentation;
-- strong silhouettes;
-- readable major masses before fine detail;
-- warm controlled color relationships;
-- material-specific light/shadow rather than one generic gradient everywhere;
-- clean alpha edges;
-- convincing grounding/contact;
-- enough internal structure to avoid enlarged-icon appearance at hero sizes;
-- restrained detail that survives downsampling;
-- coherence without identical cloning.
-
-Avoid as final represented art unless intentionally appropriate:
-
-- tutorial circles/rectangles/polygons;
-- programmer-placeholder scenery;
-- identical assets copied everywhere;
-- floating props;
-- glossy balloon foliage used as a universal formula;
-- text baked into decorative art where localization should own it;
-- excessive micro-detail that disappears at runtime size.
-
-### Activity Icon Authoring & Contain-Fit Contract
-
-When authoring package-owned Activity icons (`package:assets/icon.png`):
-- Author clean SVG masters under `assets/source/icon.svg` and bake to 256x256 RGBA PNGs;
-- Maintain **10–12% safe padding** around artwork inside the 256x256 square canvas to avoid card edge/shadow clipping;
-- Design strong, distinct silhouettes so every Activity has an instantly recognizable identity at small launcher scales;
-- Do not bake language flags or text inside icons (Greia owns localization badges and titles).
-
----
-
-## 7. Coherence without sameness
-
-Match Greia through relationships, not literal copying.
-
-Preserve coherence through:
-
-- palette/value relationships;
-- material logic;
-- line/edge language;
-- soft storybook depth;
-- compatible lighting;
-- grounding/contact treatment;
-- character proportions/style;
-- typography and UI conventions;
-- similar visual density at equivalent importance levels.
-
-Create variety through:
-
-- silhouette;
-- proportion;
-- pose;
-- object arrangement;
-- local detail;
-- Activity-specific storytelling;
-- original assets.
-
----
-
-## 8. Scene and gameplay integration
-
-A visual overhaul is incomplete if only the background uses good art while gameplay remains primitive.
-
-The final Activity should visually integrate:
-
-- environment;
-- interactive objects;
-- characters/creatures;
-- feedback;
-- UI.
-
-Interactive objects must remain readable against decoration.
-
-Typical layer order:
+For Activity viewport/layout behavior also read:
 
 ```text
-sky / room base
-far background
-mid background
-ground / playfield
-interactive props
-characters / actors
-foreground framing
-atmosphere / light / FX
-Activity-local UI
-protected Greia platform chrome
+docs/design/GREIA_ACTIVITY_CANVAS_AND_VIEWPORT_AUTHORING.md
+docs/adr/0026-resolution-adaptive-ui-layout.md
+docs/adr/0027-activity-coordinate-spaces-canvas-and-world-camera.md
 ```
 
-Use the existing scene/runtime system where appropriate instead of creating another compositor.
+Use existing Greia scene/runtime boundaries instead of inventing another compositor, global asset catalogue or unbounded cache.
 
----
+### Canonical characters, expressions or motion
 
-## 9. Authoring-time richness, runtime economy
-
-Preferred flow:
+Read:
 
 ```text
-generic Greia art/reference
-+ Activity-specific source work
-        ↓
-authoring-time reuse/composition/adaptation
-        ↓
-reviewed Activity-local master
-        ↓
-build/flatten to efficient runtime rendition
-        ↓
-Greia package/runtime resolver + scene renderer
+docs/design/GREIA_CANONICAL_CAST_SYSTEM.md
+docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md
+docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md
 ```
 
-Do not make the target appliance:
+Preserve canonical identity when using recurring Greia characters. Do not infer current cast/voice facts from older screenshots or stale prose when a narrower current authority exists.
 
-- rasterize ordinary SVG masters at runtime;
-- scan source directories to discover visuals;
-- decode or scale images every frame;
-- rebuild complex authoring compositions during play;
-- maintain an unbounded image cache.
+### Activity launcher icon work
 
-Use existing Greia semantic/shared visual APIs and package boundaries. Do not introduce a parallel global asset catalogue or cache.
-
----
-
-## 10. Shared runtime assets versus Activity-local assets
-
-### Shared runtime asset
-
-Use a semantic shared visual when sameness is useful and the asset is already promoted into the shared runtime catalogue.
-
-Examples:
+Read:
 
 ```text
-ui.card.activity
-ui.panel.base
-ui.shadow.soft
-character.lilli
+docs/design/GREIA_LAUNCHER_INTERACTION_AND_ACTIVITY_CATALOGUE.md
+skills/greia-activity-authoring/SKILL.md
 ```
 
-Use the established semantic resolver/API rather than hard-coding host paths.
-
-### Activity-local asset
-
-Keep bespoke Activity art inside the Activity package, normally under its `assets/` tree.
-
-Activity-local art should remain portable with the package and must not reach arbitrary host filesystem paths.
-
-If a needed Activity-local scene case is not yet supported, extend the existing Greia package/scene boundary cleanly instead of inventing a one-off unbounded loader.
-
----
-
-## 11. Characters
-
-Working shared cast:
-
-- Lilli — unicorn Puff;
-- Nino — owl Bean;
-- Tito — fox Puff;
-- Momo — friendly monster Puff.
-
-Canonical recurring characters should preserve recognizable identity across Activities.
-
-Default grammar:
-
-- dominant readable body mass;
-- large face;
-- limited anatomy;
-- identity through silhouette/color/ears/horn/tuft/tail/accessory;
-- whole-body motion rather than detailed skeletal rigs.
-
-Shared motion vocabulary:
+Inspect the exact current package-icon validator/resolver before authoring final files:
 
 ```text
-idle_bounce
-blink
-happy_hop
-celebrate_pop
-surprised_wobble
-sleepy_sway
+src/greia_platform/activity_assets.py
+src/greia_launcher/title_presentation.py
 ```
 
-A blink must visibly close the eyes.
+Do not bake language flags or localized text into Activity icons; Greia owns dynamic title/language presentation.
 
----
+### Achievement/badge artwork
 
-## 12. UI and typography
+Read:
 
-Use Greia's typography roles and shared UI language for normal Activity controls.
+```text
+docs/design/GREIA_ACTIVITY_ACHIEVEMENT_ART.md
+docs/design/GREIA_ACHIEVEMENTS_AND_BADGE_LIBRARY.md
+```
 
-Do not create a separate tiny desktop-style UI inside each Activity.
+Activity artwork may provide bounded decorative emblems where allowed, but the platform owns achievement truth, tier/frame, localization, profile state and celebration behavior.
 
-Important rules:
+### Shell/launcher visual work
 
-- Nunito Sans is the normal interface family;
-- child-facing text must remain large/readable;
-- meaningful text should respect accepted low-size guardrails;
-- standard controls should use shared visual treatment where appropriate;
-- protected Home/Back semantics remain platform-owned;
-- Activity art must not imitate trusted platform chrome.
+Read:
 
----
+```text
+docs/adr/0018-lightweight-ui-foundation.md
+docs/design/GREIA_LAUNCHER_INTERACTION_AND_ACTIVITY_CATALOGUE.md
+docs/design/GREIA_ART_GRAPHICS_SYSTEM.md
+```
 
-## 13. Review before integration
+For platform implementation changes also route through:
 
-Review important newly created assets individually before hiding them inside a full scene.
+```text
+skills/greia-os-work/SKILL.md
+```
 
-Check:
+### Boot artwork or boot animation
 
-- silhouette;
-- grounding;
-- material treatment;
-- alpha edges;
-- target-size readability;
-- compatibility with adjacent Greia assets;
-- whether it is too obviously copied from a reference;
-- whether it still looks like a programmer placeholder.
+Do not treat this as ordinary asset work. Route through the boot/recovery contract first:
 
-Then inspect the composed Activity.
+```text
+skills/greia-os-work/BOOT.md
+docs/design/GREIA_BOOT_EXPERIENCE.md
+docs/design/GREIA_BOOT_PROGRESS.md
+```
 
-Never use a busy scene to conceal weak assets.
+Any physical boot change must preserve the OS-work boot safety/recovery invariants.
 
----
+### Activity visual refresh that changes runtime assets/code
 
-## 14. Visual acceptance
+Read:
 
-A prose `PASS` from the producing agent is not enough.
+```text
+skills/greia-activity-authoring/SKILL.md
+skills/greia-activity-authoring/LAUNCH_ACCEPTANCE.md
+```
 
-For meaningful visual work:
+The final runtime-relevant Activity state must launch through Greia Simulator and survive the required acceptance path. A beautiful asset set attached to an Activity that no longer launches is failed work.
 
-1. render through the Activity Simulator when runtime behavior is involved;
-2. capture representative screenshots;
-3. inspect clipping, hierarchy, scaling, grounding, occlusion and visual coherence;
-4. include responsive evidence where relevant;
-5. follow `docs/testing/VISUAL_ACCEPTANCE_EVIDENCE_CONTRACT.md`;
-6. prepare the requested screenshot ZIP when owner review is required.
+### Visual acceptance / screenshot evidence
 
-Visual evidence must represent what was actually rendered.
+Read:
 
----
+```text
+docs/testing/VISUAL_ACCEPTANCE_EVIDENCE_CONTRACT.md
+```
 
-## 15. Promotion rule
+For meaningful runtime visual work:
 
-Do not automatically add every Activity-created asset to the generic/global library.
+```text
+render actual target state
+capture representative screenshots
+inspect clipping / hierarchy / scaling / grounding / occlusion / coherence
+include responsive evidence when relevant
+record the exact source state and evidence lane
+```
+
+Simulator visual evidence is not physical Acer/Pi evidence.
+
+### Performance-sensitive visual optimization
+
+Read:
+
+```text
+docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md
+skills/greia-os-work/SKILL.md        # platform/Shell work
+skills/greia-activity-authoring/SKILL.md  # Activity work
+```
+
+Do not trade visual correctness for speed without inspecting the optimized output. Hardware speed claims require named physical hardware and exact source SHA.
+
+### Maintaining/promoting the shared visual library itself
+
+Read:
+
+```text
+docs/design/GREIA_ART_GRAPHICS_SYSTEM.md
+docs/design/GREIA_GENERIC_ART_LIBRARY_TAXONOMY.md
+docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md
+docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md
+```
 
 Promotion is deliberate:
 
 ```text
-Activity-local asset
-→ proven visually useful
-→ broadly reusable?
-→ maintainer review
-→ optional generic-library/source-pack promotion
+Activity-local / source candidate
+-> proven useful
+-> broadly reusable?
+-> maintainer review
+-> optional shared-library promotion
 ```
 
-Likewise, a specialized source asset may remain theme-only even when it is visually good.
+Do not automatically promote every good Activity asset into the global library.
 
----
+## Completion check
 
-## 16. Explicit failure patterns
+Before calling substantive visual work done, record:
 
-Do not:
+```text
+1. What visual task was being performed?
+2. Which task-specific local authorities were read?
+3. Was each important asset REUSE / COMPOSE-ADAPT / CREATE ORIGINAL?
+4. What actual rendered evidence was inspected?
+5. If Activity runtime assets/code changed, what exact final state passed LAUNCH_ACCEPTANCE?
+6. What remains unverified, especially physical-device appearance/performance?
+```
 
-- assume a specific model can reproduce the maintainer's art workflow;
-- treat one maintainer benchmark as a universal capability claim;
-- make Activity authors browse themed folders as the primary discovery method;
-- copy exact pack objects everywhere when adaptation/original art would be better;
-- create a giant runtime warehouse for every possible prop;
-- leave primitive gameplay art behind a polished background;
-- create one-off runtime image loaders/caches;
-- rasterize normal SVG source masters on the low-end target;
-- scan arbitrary visual directories at runtime;
-- overfit authoring rules into rigid geometric templates;
-- claim visual quality without inspecting actual pixels.
+Use this router to load the smallest relevant context. Expand to broad visual-system documents only when the task genuinely crosses several visual subsystems.
