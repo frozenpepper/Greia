@@ -6,7 +6,7 @@ description: Task router for creating, modifying, refactoring, validating, packa
 # Greia Activity Authoring — task router
 
 **Status:** living derived contributor router  
-**Reviewed:** 2026-08-24
+**Reviewed:** 2026-08-25
 
 Keep this file small. It tells an agent **what to read for the task**; it is not a duplicate Activity manual.
 
@@ -17,14 +17,15 @@ These apply to all substantive Activity work:
 1. An Activity runs under Greia platform authority. Do not bypass platform lifecycle, storage, permissions, progression, Home/Back, input or runtime policy.
 2. First-party implementation must remain maintainable: thin `main.py`, cohesive modules/classes, composition over procedural sprawl, reuse Greia platform primitives before inventing local frameworks.
 3. Do not widen security/runtime policy merely to make one Activity convenient. Package-local code is Activity code; unknown external dependencies remain forbidden unless platform policy deliberately changes.
-4. **Assume the target child may not be able to read. Core gameplay instructions, retry guidance, navigation and completion must not depend on written text.** Design the Activity so the next action is visually obvious; use large icons/pictures/numbers, short visual demonstrations and reviewed spoken cues when language is useful. Text is secondary support, not the primary instruction channel.
-5. **Every new Activity must explicitly decide its child-facing presenter/character and speech plan.** Greia's recurring cast should normally be considered as social anchors, guides, reactions and curiosity hosts; omission must be deliberate, not accidental.
-6. **Subject-rich Activities must explicitly consider an optional researched curiosity/facts interaction.** When appropriate, use short, well-sourced, child-safe facts delivered through multilingual-ready semantic cues and reviewed localized speech.
-7. **Every new Activity must explicitly decide its score/progress/reward model.** Local score, durable Activity progress, completion/milestone events, personal-best score events, Greia Star eligibility, global achievement opportunities and optional achievement emblem art must each be deliberate decisions. Activities report facts; Greia owns global Stars, badges, trophies and achievement truth.
-8. **A new or substantively changed Activity is not done until the final runtime-relevant source state passes the real Greia Simulator launch/survival gate.** Source validation, imports, unit tests, `make verify`, `python main.py`, or package validation do not replace this.
-9. Simulator launch evidence becomes stale after any runtime-relevant edit. Relaunch the final state.
-10. If the simulator cannot be run, report `INTEGRATION-UNVERIFIED` / `SOURCE-VERIFIED / SIMULATOR-UNVERIFIED`; do not call the Activity complete or working.
-11. Claim only evidence that actually executed. Simulator evidence is not physical Acer/Pi evidence.
+4. Installed Activity-tree sanitation and broken-package containment are **platform responsibilities** under ADR 0033. Do not add Activity-local cleaners for host/cache files, make an Activity self-repair its package, or weaken package validation because an installed development tree became dirty. The installed OS removes only curated regenerable noise; genuine defects remain isolated package failures.
+5. **Assume the target child may not be able to read. Core gameplay instructions, retry guidance, navigation and completion must not depend on written text.** Design the Activity so the next action is visually obvious; use large icons/pictures/numbers, short visual demonstrations and reviewed spoken cues when language is useful. Text is secondary support, not the primary instruction channel.
+6. **Every new Activity must explicitly decide its child-facing presenter/character and speech plan.** Greia's recurring cast should normally be considered as social anchors, guides, reactions and curiosity hosts; omission must be deliberate, not accidental.
+7. **Subject-rich Activities must explicitly consider an optional researched curiosity/facts interaction.** When appropriate, use short, well-sourced, child-safe facts delivered through multilingual-ready semantic cues and reviewed localized speech.
+8. **Every new Activity must explicitly decide its score/progress/reward model.** Local score, durable Activity progress, completion/milestone events, personal-best score events, Greia Star eligibility, global achievement opportunities and optional achievement emblem art must each be deliberate decisions. Activities report facts; Greia owns global Stars, badges, trophies and achievement truth.
+9. **A new or substantively changed Activity is not done until the final runtime-relevant source state passes the real Greia Simulator launch/survival gate.** Source validation, imports, unit tests, `make verify`, `python main.py`, or package validation do not replace this.
+10. Simulator launch evidence becomes stale after any runtime-relevant edit. Relaunch the final state.
+11. If the simulator cannot be run, report `INTEGRATION-UNVERIFIED` / `SOURCE-VERIFIED / SIMULATOR-UNVERIFIED`; do not call the Activity complete or working.
+12. Claim only evidence that actually executed. Simulator evidence is not physical Acer/Pi evidence.
 
 For child-facing pre-reader design, read:
 
@@ -230,13 +231,17 @@ Read:
 
 ```text
 docs/architecture/GREIA_ACTIVITY_PACKAGE_FORMAT.md
+docs/adr/0033-fail-soft-activity-crossbindings-and-dev-noise-scrub.md
 src/greia_platform/activity_package_format.py
 src/greia_platform/activity_packages.py
 src/greia_platform/activity_assets.py
+src/greia_platform/activity_tree_cleanup.py
 src/greia_platform/trust.py
 ```
 
 Use the Simulator's canonical package-install path for package acceptance; then follow `LAUNCH_ACCEPTANCE.md`.
+
+Development-machine metadata/cache contamination is not part of the Activity package contract and must not be “fixed” by weakening validation or adding package-local deletion logic. Installed Greia owns the narrow sanitation/recovery boundary defined by ADR 0033; genuine package defects remain genuine validation failures.
 
 Developer-image built-in replacement is a separate platform control path, not an Activity package shortcut. The privileged owner resolves an installed target only from one validated canonical manifest identity through the shared Activity registry, preserving exact path safety, backup/restore state and the `BUILT_IN` versus `DEVELOPER_UNSIGNED` trust distinction. Never infer a target from a title, slug, legacy alias or directory name.
 
