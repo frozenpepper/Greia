@@ -19,7 +19,8 @@ This file is the project-wide **current continuation contract**. Chronology belo
 
 Overhauled **Tre Carte Una Storia** (`org.greia.tre-carte-una-storia`) to eliminate reliance on reading text and fully embrace the non-verbal, voice-first pre-reader standard:
 1. **Lilli Spoken Game Introduction & Replay (`🔊 ASCOLTA`)**:
-   - Spoken Italian (*Alice*, 175 wpm) and English (*Samantha*, 180 wpm) audio generated for welcome explanation: *"Ciao! Metti in ordine le tre carte per raccontare la storia: prima, poi, e infine!"* / *"Hello! Put the three cards in order to tell the story: first, then, and last!"*.
+   - Synthesized using the canonical **Chatterbox Multilingual V3** (`mlx-community/chatterbox-multilingual-v3`) voice-cloning pipeline with official character reference master [`assets/audio/characters/canonical/v0.1/lilli-reference-v1.flac`](file:///Users/taio84/Works/Bimbe_GIOCHI/Greia%20OS/Greia/assets/audio/characters/canonical/v0.1/lilli-reference-v1.flac).
+   - Welcome audio: *"Ciao! Metti in ordine le tre carte per raccontare la storia: prima, poi, e infine!"* / *"Hello! Put the three cards in order to tell the story: first, then, and last!"*.
    - Auto-played on activity startup once the initial frame is presented (`mark_activity_ready()`).
    - Added a prominent `[ 🔊 ASCOLTA ]` speech balloon button beside Lilli at the bottom-left `(130, 492, 160, 50)` so kids can tap Lilli or the button to hear the game explanation at any time.
 2. **Step Order Audio & High-Contrast Sequence Tokens**:

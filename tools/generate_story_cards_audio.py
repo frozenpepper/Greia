@@ -1,26 +1,24 @@
 #!/usr/bin/env python3
-"""Audio generator for Tre Carte Una Storia with canonical Lilli voice.
-
-Generates 22050Hz LEI16 mono WAV audio assets for:
-- Welcome and game explanation spoken by Lilli in IT and EN
-- Step order cues (prima / first, poi / then, infine / last)
-- Positive verbal reinforcement (Ottimo lavoro!, Ben fatto!, Fantastico!)
-- Encouraging retry and hints (Quasi, riprova!, Ecco la prima carta!)
-- Caption stage prompts and narration for all story seeds
-"""
+"""Generate Tre Carte Una Storia voice assets using Chatterbox Multilingual V3 with Lilli reference audio."""
 
 from __future__ import annotations
 
-import argparse
 import hashlib
+import os
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
 import time
 
+import numpy as np
+import soundfile as sf
+from mlx_audio.tts.utils import load_model
+from mlx_audio.utils import load_audio
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_AUDIO_ROOT = PROJECT_ROOT / "activities" / "tre_carte_una_storia" / "assets" / "audio"
+REFERENCE_AUDIO = PROJECT_ROOT / "assets" / "audio" / "characters" / "canonical" / "v0.1" / "lilli-reference-v1.flac"
 
 PROMPTS_IT = [
     ("welcome", "Ciao! Metti in ordine le tre carte per raccontare la storia: prima, poi, e infine!"),
@@ -99,57 +97,65 @@ PROMPTS_EN = [
 ]
 
 
-def _write_wav_stub(dest_wav: Path) -> None:
-    import wave
+def convert_to_le16_mono_22050(src_wav: Path, dest_wav: Path) -> None:
     dest_wav.parent.mkdir(parents=True, exist_ok=True)
-    with wave.open(str(dest_wav), "wb") as w:
-        w.setnchannels(1)
-        w.setsampwidth(2)
-        w.setframerate(22050)
-        w.writeframes(b"\x00\x00" * 2205)
+    subprocess.run(
+        [
+            "afconvert",
+            "-f", "WAVE",
+            "-d", "LEI16@22050",
+            "-c", "1",
+            str(src_wav),
+            str(dest_wav),
+        ],
+        check=True,
+        capture_output=True,
+    )
 
 
-def make_wav(text: str, voice: str, rate: int, dest_wav: Path) -> None:
-    dest_wav.parent.mkdir(parents=True, exist_ok=True)
-    for attempt in range(3):
-        with tempfile.NamedTemporaryFile(suffix=".aiff", delete=False) as tmp_file:
-            tmp_aiff = Path(tmp_file.name)
-        try:
-            subprocess.run(
-                ["say", "-v", voice, "-r", str(rate), text.lower(), "-o", str(tmp_aiff)],
-                check=True,
-                capture_output=True,
-            )
-            subprocess.run(
-                ["afconvert", "-f", "WAVE", "-d", "LEI16@22050", "-c", "1", str(tmp_aiff), str(dest_wav)],
-                check=True,
-                capture_output=True,
-            )
-            break
-        except Exception:
-            if attempt == 2:
-                _write_wav_stub(dest_wav)
-            time.sleep(0.1)
-        finally:
-            if tmp_aiff.exists():
-                tmp_aiff.unlink()
+def generate_set(model, ref_audio, prompts, lang_code, out_dir: Path) -> None:
+    out_dir.mkdir(parents=True, exist_ok=True)
+    print(f"Generating {len(prompts)} clips for {lang_code} in {out_dir}...")
+    for idx, (key, text) in enumerate(prompts, start=1):
+        dest_wav = out_dir / f"{key}.wav"
+        print(f"[{idx}/{len(prompts)}] Generating {key}: '{text}'")
+        for attempt in range(3):
+            try:
+                results = model.generate(
+                    text=text,
+                    lang_code=lang_code,
+                    ref_audio=ref_audio,
+                    temperature=0.7,
+                )
+                with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_file:
+                    tmp_wav = Path(tmp_file.name)
+                for res in results:
+                    sf.write(str(tmp_wav), np.array(res.audio), res.sample_rate)
+                    break
+                convert_to_le16_mono_22050(tmp_wav, dest_wav)
+                tmp_wav.unlink(missing_ok=True)
+                break
+            except Exception as e:
+                print(f"  Attempt {attempt + 1} failed: {e}")
+                if attempt == 2:
+                    raise
 
 
-def generate_all(audio_root: Path) -> None:
-    it_dir = audio_root / "it"
-    it_dir.mkdir(parents=True, exist_ok=True)
-    print(f"Generating Italian audio in {it_dir}...")
-    for key, text in PROMPTS_IT:
-        dest = it_dir / f"{key}.wav"
-        make_wav(text, "Alice", 175, dest)
+def main() -> None:
+    if not REFERENCE_AUDIO.exists():
+        print(f"Error: reference audio not found at {REFERENCE_AUDIO}")
+        sys.exit(1)
 
-    en_dir = audio_root / "en"
-    en_dir.mkdir(parents=True, exist_ok=True)
-    print(f"Generating English audio in {en_dir}...")
-    for key, text in PROMPTS_EN:
-        dest = en_dir / f"{key}.wav"
-        make_wav(text, "Samantha", 180, dest)
+    print("Loading Chatterbox Multilingual V3 model on Apple Silicon...")
+    model = load_model("mlx-community/chatterbox-multilingual-v3")
+    ref_audio = load_audio(str(REFERENCE_AUDIO), sample_rate=model.sample_rate)
+    print("Loaded reference:", REFERENCE_AUDIO)
 
+    audio_root = DEFAULT_AUDIO_ROOT
+    generate_set(model, ref_audio, PROMPTS_IT, "it", audio_root / "it")
+    generate_set(model, ref_audio, PROMPTS_EN, "en", audio_root / "en")
+
+    # Update manifest
     manifest_path = audio_root / "audio_manifest.sha256"
     lines = []
     for p in sorted(audio_root.rglob("*.wav")):
@@ -157,14 +163,8 @@ def generate_all(audio_root: Path) -> None:
         digest = hashlib.sha256(p.read_bytes()).hexdigest()
         lines.append(f"{digest}  {rel}")
     manifest_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    print(f"Updated {manifest_path} with {len(lines)} clips.")
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Generate Tre Carte Una Storia audio assets")
-    parser.add_argument("--out-dir", type=Path, default=DEFAULT_AUDIO_ROOT, help="Destination directory")
-    args = parser.parse_args()
-    generate_all(args.out_dir)
+    print(f"Successfully generated all {len(lines)} clips with Lilli canonical voice!")
+    print(f"Updated {manifest_path}")
 
 
 if __name__ == "__main__":
