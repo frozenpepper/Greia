@@ -65,7 +65,7 @@ def main() -> int:
     library = storage.load()
     rng = random.Random()
     round_state = create_shuffled_round(STORY_SEEDS[0], rng)
-    audio = StoryAudio()
+    audio = StoryAudio(Path(__file__).resolve().parent, locale=locale)
     session_id = f"{int(time.time())}-{rng.randrange(1_000_000):06d}"
 
     app = StoryActivity(

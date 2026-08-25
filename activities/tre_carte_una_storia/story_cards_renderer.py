@@ -36,10 +36,12 @@ else:
 REFERENCE_WIDTH: Final = 1024
 REFERENCE_HEIGHT: Final = 600
 
-CHECK_BTN_RECT: Final[pygame.Rect] = pygame.Rect(392, 490, 240, 54)
-GALLERY_BTN_RECT: Final[pygame.Rect] = pygame.Rect(700, 490, 240, 54)
-SAVE_BTN_RECT: Final[pygame.Rect] = pygame.Rect(392, 510, 240, 54)
+CHECK_BTN_RECT: Final[pygame.Rect] = pygame.Rect(362, 488, 300, 58)
+GALLERY_BTN_RECT: Final[pygame.Rect] = pygame.Rect(720, 492, 240, 50)
+SAVE_BTN_RECT: Final[pygame.Rect] = pygame.Rect(382, 510, 260, 56)
 BACK_TO_GAME_RECT: Final[pygame.Rect] = pygame.Rect(80, 24, 240, 52)
+LISTEN_BTN_RECT: Final[pygame.Rect] = pygame.Rect(130, 492, 160, 50)
+MASCOT_RECT: Final[pygame.Rect] = pygame.Rect(45, 470, 80, 80)
 
 
 class StoryRenderer:
@@ -154,9 +156,9 @@ class StoryRenderer:
 
     # --- Interaction hit testing ---
     def slot_rect_at(self, slot_index: int) -> pygame.Rect:
-        x = 92 + slot_index * 290
-        y = 125
-        return pygame.Rect(x, y, 260, 330)
+        x = 82 + slot_index * 300
+        y = 75
+        return pygame.Rect(x, y, 260, 310)
 
     def slot_at(self, point: tuple[int, int]) -> int | None:
         for idx in range(3):
@@ -175,6 +177,9 @@ class StoryRenderer:
 
     def back_to_game_contains(self, point: tuple[int, int]) -> bool:
         return BACK_TO_GAME_RECT.collidepoint(point)
+
+    def listen_contains(self, point: tuple[int, int]) -> bool:
+        return LISTEN_BTN_RECT.collidepoint(point) or MASCOT_RECT.collidepoint(point)
 
     def caption_preset_rect_at(self, index: int) -> pygame.Rect:
         y = 205 + index * 60
@@ -225,7 +230,9 @@ class StoryRenderer:
             24,
             (254, 240, 138),
         )
-        target.blit(p_surf, (REFERENCE_WIDTH // 2 - p_surf.get_width() // 2, 45))
+        target.blit(p_surf, (REFERENCE_WIDTH // 2 - p_surf.get_width() // 2, 28))
+
+        slot_colors = [(34, 197, 94), (249, 115, 22), (168, 85, 247)]
 
         # 3 Card Slots
         for idx, card in enumerate(round_state.current_order):
@@ -243,13 +250,28 @@ class StoryRenderer:
                 slot_number=idx + 1,
             )
 
-            # Slot label under card (Prima / Poi / Infine)
-            label = self._resources.text(f"slot.{idx + 1}")
-            l_surf = self._typography.render(label, FontRole.TITLE, 20, (203, 213, 225))
-            target.blit(l_surf, (rect.centerx - l_surf.get_width() // 2, rect.bottom + 12))
+            # High-contrast Step capsule badge under card (1. PRIMA / 2. POI / 3. INFINE)
+            badge_rect = pygame.Rect(rect.centerx - 75, rect.bottom + 12, 150, 36)
+            pygame.draw.rect(target, slot_colors[idx], badge_rect, border_radius=18)
+            pygame.draw.rect(target, (255, 255, 255), badge_rect, width=2, border_radius=18)
+            label = f"{idx + 1}.  {self._resources.text(f'slot.{idx + 1}').upper()}"
+            l_surf = self._typography.render(label, FontRole.TITLE, 17, (255, 255, 255))
+            target.blit(l_surf, (badge_rect.centerx - l_surf.get_width() // 2, badge_rect.centery - l_surf.get_height() // 2))
 
         # Mascot Lilli at bottom-left
-        target.blit(self._art.mascot, (60, 465))
+        target.blit(self._art.mascot, (45, 470))
+
+        # Replay Voice / Listen Speech Balloon Button
+        pygame.draw.rect(target, (254, 240, 138), LISTEN_BTN_RECT, border_radius=25)
+        pygame.draw.rect(target, (217, 119, 6), LISTEN_BTN_RECT, width=3, border_radius=25)
+        l_txt = self._typography.render("🔊 ASCOLTA", FontRole.DISPLAY, 16, (120, 53, 15))
+        target.blit(
+            l_txt,
+            (
+                LISTEN_BTN_RECT.centerx - l_txt.get_width() // 2,
+                LISTEN_BTN_RECT.centery - l_txt.get_height() // 2,
+            ),
+        )
 
         # Check Order Button
         pygame.draw.rect(target, (22, 163, 74), CHECK_BTN_RECT, border_radius=20)
@@ -317,8 +339,10 @@ class StoryRenderer:
 
             key = round_state.seed.caption_keys[idx]
             sentence = self._resources.text(key)
-            s_surf = self._typography.render(f"{idx + 1}.  {sentence}", FontRole.TITLE, 20, text_color)
-            target.blit(s_surf, (row_rect.left + 24, row_rect.centery - s_surf.get_height() // 2))
+            spk_surf = self._typography.render("🔊", FontRole.DISPLAY, 18, text_color)
+            target.blit(spk_surf, (row_rect.left + 16, row_rect.centery - spk_surf.get_height() // 2))
+            s_surf = self._typography.render(f"{idx + 1}.  {sentence}", FontRole.TITLE, 19, text_color)
+            target.blit(s_surf, (row_rect.left + 48, row_rect.centery - s_surf.get_height() // 2))
 
         # Custom Caption Input Box
         c_rect = self.custom_caption_rect()

@@ -292,6 +292,33 @@ class AppIntegrationTests(unittest.TestCase):
         self.assertEqual(events.created_stories[0].seed_id, "drawing")
         self.assertEqual(events.created_stories[0].caption_mode, "preset_1")
 
+    def test_audio_assets_and_speech_cues(self) -> None:
+        from story_cards_audio import StoryAudio
+        audio_it = StoryAudio(ACTIVITY_ROOT, locale="it")
+        audio_en = StoryAudio(ACTIVITY_ROOT, locale="en")
+
+        self.assertIn("welcome", audio_it._speech_clips)
+        self.assertIn("welcome", audio_en._speech_clips)
+        self.assertIn("slot_1", audio_it._speech_clips)
+        self.assertIn("correct_1", audio_it._speech_clips)
+        self.assertIn("story_drawing_c1", audio_it._speech_clips)
+
+        # Nonverbal and speech playback does not raise
+        audio_it.play("select")
+        audio_it.play_welcome()
+        audio_it.play_slot(0)
+        audio_it.play_story_sentence("drawing", 0)
+        audio_it.play_caption_intro()
+        audio_it.play_feedback(True)
+        audio_it.play_feedback(False)
+
+    def test_listen_button_replays_welcome(self) -> None:
+        from story_cards_renderer import LISTEN_BTN_RECT
+        app, sim_time, events, storage = self._build_app()
+        # Tap listen button
+        handled = app._handle_pointer((LISTEN_BTN_RECT.centerx, LISTEN_BTN_RECT.centery))
+        self.assertTrue(handled)
+
 
 class SimulatorSupervisorTests(unittest.TestCase):
     def test_simulator_supervises_tre_carte_una_storia(self) -> None:

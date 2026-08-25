@@ -114,6 +114,7 @@ class StoryActivity:
                 if not self._ready_published:
                     mark_activity_ready()
                     self._ready_published = True
+                    self.audio.play_welcome()
 
             ticker.tick(20)
 
@@ -226,11 +227,17 @@ class StoryActivity:
 
         # Puzzle mode pointer handling
         if self.round_state.stage == StoryStage.SEQUENCE:
+            # Replay instructions / Mascot tap
+            if self.renderer.listen_contains(point):
+                self.audio.play_welcome()
+                return True
+
             # Tap Card Slot
             slot_idx = self.renderer.slot_at(point)
             if slot_idx is not None:
                 self.round_state.select_slot(slot_idx)
                 self.audio.play("card_swap")
+                self.audio.play_slot(slot_idx)
                 return True
 
             # Check Order Button
@@ -246,11 +253,12 @@ class StoryActivity:
                 self.audio.play("select")
                 return True
         else:  # Caption Stage
-            # Preset Caption tap
+            # Preset Caption tap (sets and reads aloud)
             p_idx = self.renderer.caption_preset_at(point)
             if p_idx is not None:
                 self.round_state.set_preset_caption(p_idx)
                 self.audio.play("select")
+                self.audio.play_story_sentence(self.round_state.seed.seed_id, p_idx)
                 return True
 
             # Custom Caption box tap
@@ -317,9 +325,9 @@ class StoryActivity:
     def _check_order(self) -> None:
         if self.round_state.check_sequence():
             self.events.sequence_completed(self.round_state.seed)
-            self.audio.play("correct")
+            self.audio.play_feedback(True)
         else:
-            self.audio.play("wrong_hint")
+            self.audio.play_feedback(False)
 
     def _save_story(self) -> None:
         if self.library.is_full:

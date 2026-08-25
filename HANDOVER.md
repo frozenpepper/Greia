@@ -15,6 +15,28 @@ This file is the project-wide **current continuation contract**. Chronology belo
 
 # 1. Current state at a glance
 
+## Tre Carte Una Storia (`activities/tre_carte_una_storia`) Pre-Reader & Lilli Voice Overhaul (2026-08-25)
+
+Overhauled **Tre Carte Una Storia** (`org.greia.tre-carte-una-storia`) to eliminate reliance on reading text and fully embrace the non-verbal, voice-first pre-reader standard:
+1. **Lilli Spoken Game Introduction & Replay (`🔊 ASCOLTA`)**:
+   - Spoken Italian (*Alice*, 175 wpm) and English (*Samantha*, 180 wpm) audio generated for welcome explanation: *"Ciao! Metti in ordine le tre carte per raccontare la storia: prima, poi, e infine!"* / *"Hello! Put the three cards in order to tell the story: first, then, and last!"*.
+   - Auto-played on activity startup once the initial frame is presented (`mark_activity_ready()`).
+   - Added a prominent `[ 🔊 ASCOLTA ]` speech balloon button beside Lilli at the bottom-left `(130, 492, 160, 50)` so kids can tap Lilli or the button to hear the game explanation at any time.
+2. **Step Order Audio & High-Contrast Sequence Tokens**:
+   - Enhanced the 3 slot badges with high-contrast colored capsules: `1. PRIMA` (Green), `2. POI` (Orange), `3. INFINE` (Purple).
+   - Tapping any slot plays step audio (`slot_1` / `slot_2` / `slot_3`).
+3. **Gender-Neutral Praise & Encouraging Hints**:
+   - Correct sequence check triggers chime + spoken praise: *"Ottimo lavoro! La storia è perfetta!"*, *"Ben fatto!"*, or *"Fantastico!"*.
+   - Incorrect sequence triggers gentle wobble + spoken retry cue: *"Quasi! Guarda bene cosa succede prima!"*.
+4. **Full Story Read-Aloud (70 Audio Clips Total)**:
+   - Generated narration clips for all 8 narrative seeds × 3 cards (24 sentences per language) in 22050Hz LEI16 mono WAV with SHA-256 integrity manifest.
+   - In Caption stage, tapping any preset caption row plays the sentence audio aloud to pre-readers.
+5. **Clean Layout Geometry & Zero Overlaps**:
+   - Redesigned the 1024×600 sequence layout with generous vertical margins (`y=75..385` for cards, `y=397..433` for step badges, `y=470..550` for controls), eliminating all control overlap.
+6. **Verification**:
+   - `test_activity_tre_carte_una_storia.py`: 11/11 tests PASS.
+   - Full repository test suite: **1,304/1,304 tests PASS**, project validation PASS.
+
 ## Universal Gender-Neutral Speech & Praise Policy Enforcement (2026-08-25)
 
 Enforced a strict, repository-wide rule across all audio assets, localized copy, code, and authoring guidelines:
