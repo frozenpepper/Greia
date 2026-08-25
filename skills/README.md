@@ -1,7 +1,7 @@
 # Greia contributor skill architecture
 
 **Status:** repository convention  
-**Reviewed:** 2026-08-24
+**Reviewed:** 2026-08-25
 
 Greia skills use **progressive disclosure**.
 
@@ -60,6 +60,16 @@ user asks to change Activity imports
     -> LAUNCH_ACCEPTANCE.md
     -> runtime_adapter.py / child-runtime.toml as exact source authority
 
+user asks to add child voice recording to an Activity
+    -> skills/greia-activity-authoring/SKILL.md
+    -> MICROPHONE_RECORDING.md
+    -> ADR 0031 / GREIA_AUDIO_SERVICE.md / activity_api.py as exact authority
+
+user asks to change the Greia microphone processing platform
+    -> skills/greia-os-work/SKILL.md
+    -> ADR 0031 / GREIA_AUDIO_SERVICE.md
+    -> physical microphone acceptance evidence when hardware claims are involved
+
 user asks to work on boot
     -> skills/greia-os-work/SKILL.md
     -> BOOT.md
@@ -70,11 +80,11 @@ user asks to create a canonical character pose
     -> canonical-cast / character-grammar / motion docs
 ```
 
-Do not load unrelated voice, boot, achievement, packaging, visual-library, Parent or simulator manuals merely because they exist in the same project.
+Do not load unrelated voice-generation, boot, achievement, packaging, visual-library, Parent or simulator manuals merely because they exist in the same project. In particular, generated Greia character speech and child microphone recording are separate task routes.
 
 ## When to create a new companion document
 
-Create a focused local companion such as `BOOT.md` or `LAUNCH_ACCEPTANCE.md` when:
+Create a focused local companion such as `BOOT.md`, `LAUNCH_ACCEPTANCE.md` or `MICROPHONE_RECORDING.md` when:
 
 - the procedure is important enough to be reused;
 - several tasks need the same operational guidance;
