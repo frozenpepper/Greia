@@ -1,36 +1,35 @@
-"""Boot-time cleanup of regenerable development-noise files from Activity trees.
+"""Installed/runtime cleanup of regenerable development-noise from Activity trees.
 
-Greia Activities are curated, validated packages. Their validator rejects
-executable/sidecar files such as macOS AppleDouble metadata (``._*``), package
-caches and editor droppings. During development these regenerate whenever a
-host copies or touches the tree, and a single stray file can make an otherwise
-healthy Activity fail registration.
+Greia Activities are curated, validated packages. Host tooling can inject metadata,
+cache and editor files that are not part of an Activity and may cause an otherwise
+healthy package to fail validation. The installed OS removes only this explicit,
+versioned noise set before launcher discovery.
 
-This module removes only well-known, fully regenerable development noise before
-Activities are loaded, so a dirty-but-healthy tree becomes valid again. It is
-**not** an Activity repair mechanism:
+This module is deliberately *not* an Activity repair mechanism:
 
-* a genuinely broken or missing Activity file is deliberately left untouched and
-  is simply not loaded (see the fail-soft progression boundary in ``history``);
-* only the curated dev-noise patterns below are ever deleted.
+* real Activity files are never rewritten, synthesized or restored;
+* broken packages remain broken and are isolated by Activity discovery;
+* cleanup is bounded to configured Activity roots and never follows directory
+  symlinks outside them;
+* cleanup failure itself must never become a launcher boot failure.
 
-The scrub operates strictly inside the configured Activity root: it never follows
-symlinks out of the tree and never touches paths outside it.
+The canonical installed launcher runs cleanup from a privileged ``ExecStartPre``
+helper so read-only/root-owned Activity roots can actually be sanitized while the
+launcher process itself remains unprivileged.
 """
 
 from __future__ import annotations
 
+import argparse
 import logging
 import os
 import shutil
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-# Curated dev-environment noise that is safe to delete. This is an explicit,
-# versioned list; adding a pattern is a review decision, not a habit. Exact
-# names are matched case-insensitively to mirror the Activity validator.
 _JUNK_EXACT: frozenset[str] = frozenset({".ds_store", "thumbs.db", "desktop.ini"})
 _JUNK_SUFFIX: tuple[str, ...] = ("~", ".swp", ".swx", ".tmp", ".pyc")
 _JUNK_DIR: frozenset[str] = frozenset({"__macosx"})
@@ -38,11 +37,59 @@ _JUNK_DIR: frozenset[str] = frozenset({"__macosx"})
 
 @dataclass(frozen=True, slots=True)
 class ScrubResult:
-    """Summary of what a single Activity-tree scrub removed."""
+    """Summary of one or more Activity-tree cleanup attempts."""
 
     removed_files: int
     removed_dirs: int
     roots_scrubbed: int
+    failed_removals: int = 0
+
+    def plus(self, other: "ScrubResult") -> "ScrubResult":
+        return ScrubResult(
+            self.removed_files + other.removed_files,
+            self.removed_dirs + other.removed_dirs,
+            self.roots_scrubbed + other.roots_scrubbed,
+            self.failed_removals + other.failed_removals,
+        )
+
+
+def installed_activity_roots(
+    environ: Mapping[str, str] | None = None,
+) -> tuple[Path, ...]:
+    """Return the Activity roots the installed launcher may discover.
+
+    Defaults mirror the installed launcher/developer/package-service source
+    owners. Environment overrides are honored so test/developer images do not
+    require a second cleanup implementation.
+    """
+
+    env = os.environ if environ is None else environ
+    os_root = Path(env.get("GREIA_OS_ROOT", "/opt/greia-os"))
+    built_in = os_root / "activities"
+    developer = Path(
+        env.get("GREIA_DEVELOPER_ACTIVITY_ROOT", "/var/lib/greia-developer/activities")
+    )
+    parent_override = env.get("GREIA_PARENT_ACTIVITY_ROOT")
+    if parent_override:
+        parent = Path(parent_override)
+    else:
+        parent_state = Path(
+            env.get(
+                "GREIA_PARENT_ACTIVITY_PACKAGE_ROOT",
+                "/var/lib/greia-os/activity-packages",
+            )
+        )
+        parent = parent_state / "active"
+
+    result: list[Path] = []
+    seen: set[str] = set()
+    for root in (built_in, developer, parent):
+        key = os.path.abspath(os.fspath(root))
+        if key in seen:
+            continue
+        seen.add(key)
+        result.append(root)
+    return tuple(result)
 
 
 def _is_junk_name(name: str) -> bool:
@@ -57,83 +104,201 @@ def _is_junk_name(name: str) -> bool:
         return True  # NFS leftover
     if lowered in _JUNK_DIR:
         return True
-    if name.endswith("~"):
-        return True
     return any(lowered.endswith(suffix) for suffix in _JUNK_SUFFIX)
 
 
-def _is_bytecode_dir(name: str) -> bool:
-    return name == "__pycache__"
-
-
 def _under(root: Path, candidate: Path) -> bool:
+    """Return whether ``candidate`` resolves below ``root`` without raising."""
+
     try:
-        candidate.resolve().relative_to(root)
-        return True
-    except ValueError:
+        resolved = candidate.resolve(strict=False)
+        return resolved == root or root in resolved.parents
+    except (OSError, RuntimeError, ValueError):
         return False
 
 
-def scrub_activity_tree(root: Path) -> ScrubResult:
-    """Remove development-noise files/dirs under ``root`` in place.
+def _remove_path(path: Path) -> bool:
+    """Remove one already-approved junk path; return whether cleanup succeeded."""
 
-    ``root`` is resolved defensively: only paths whose resolved-parent chain stays
-    under ``root`` are touched, and directory symlinks are never descended into,
-    so the scrub cannot escape its root or follow a symlinked Activity dir out.
-    Returns a count of what was removed and never raises for a missing root.
-    """
-
-    if not root.is_dir():
-        logger.warning("Activity tree scrub: root not present, skipping: %s", root)
-        return ScrubResult(0, 0, 0)
-
-    root = root.resolve()
-    removed_files = 0
-    removed_dirs = 0
-    roots_scrubbed = 0
-    for dirpath, dirnames, filenames in os.walk(root, followlinks=False):
-        dirpath = Path(dirpath)
-        keep_dirs = []
-        for name in dirnames:
-            target = dirpath / name
-            if name == "__pycache__" and _under(root, target):
-                _remove_dir_tree(target)
-                removed_dirs += 1
-                continue
-            if _is_junk_name(name):
-                if target.is_symlink() or _under(root, target):
-                    _remove_path(target)
-                    removed_dirs += 1
-                    continue
-            if not target.is_symlink():
-                keep_dirs.append(name)
-        dirnames[:] = keep_dirs
-        for name in filenames:
-            target = dirpath / name
-            if _is_junk_name(name) and _under(root, target):
-                _remove_path(target)
-                removed_files += 1
-        roots_scrubbed += 1
-
-    if removed_files or removed_dirs:
-        logger.info(
-            "Activity tree scrub removed %d file(s), %d dir(s) under %s",
-            removed_files,
-            removed_dirs,
-            root,
-        )
-    return ScrubResult(removed_files, removed_dirs, roots_scrubbed)
-
-
-def _remove_path(path: Path) -> None:
     try:
         if path.is_dir() and not path.is_symlink():
             shutil.rmtree(path)
         else:
             path.unlink()
-    except OSError:
-        logger.warning("Activity tree scrub: could not remove %s", path)
+        return True
+    except FileNotFoundError:
+        return True
+    except OSError as exc:
+        logger.warning("Activity tree scrub: could not remove %s: %s", path, exc)
+        return False
 
 
-def _remove_dir_tree(path: Path) -> None:
-    _remove_path(path)
+def scrub_activity_tree(root: Path) -> ScrubResult:
+    """Remove curated development noise below ``root`` without escaping it.
+
+    Missing roots are normal because not every installation enables every
+    Activity source. A symlink used *as the root itself* is deliberately not
+    followed. Walk/delete errors are logged and counted rather than propagated:
+    cleanup is resilience hygiene, never a reason to stop the child shell.
+    """
+
+    try:
+        if root.is_symlink():
+            logger.warning("Activity tree scrub: refusing symlink root: %s", root)
+            return ScrubResult(0, 0, 0, 1)
+        if not root.is_dir():
+            return ScrubResult(0, 0, 0, 0)
+        resolved_root = root.resolve(strict=True)
+    except (OSError, RuntimeError, ValueError) as exc:
+        logger.warning("Activity tree scrub: cannot inspect root %s: %s", root, exc)
+        return ScrubResult(0, 0, 0, 1)
+
+    removed_files = 0
+    removed_dirs = 0
+    roots_scrubbed = 0
+    failures = 0
+
+    def walk_error(exc: OSError) -> None:
+        nonlocal failures
+        failures += 1
+        logger.warning("Activity tree scrub: cannot walk %s: %s", resolved_root, exc)
+
+    try:
+        walker = os.walk(resolved_root, followlinks=False, onerror=walk_error)
+        for dirpath_text, dirnames, filenames in walker:
+            dirpath = Path(dirpath_text)
+            roots_scrubbed += 1
+            keep_dirs: list[str] = []
+            for name in dirnames:
+                target = dirpath / name
+                try:
+                    is_symlink = target.is_symlink()
+                except OSError as exc:
+                    failures += 1
+                    logger.warning(
+                        "Activity tree scrub: cannot inspect directory %s: %s",
+                        target,
+                        exc,
+                    )
+                    continue
+
+                is_junk_dir = name == "__pycache__" or _is_junk_name(name)
+                if is_junk_dir:
+                    # A junk-named symlink may be unlinked safely without
+                    # resolving its destination. Non-symlinks must resolve
+                    # strictly below the trusted root.
+                    safe = (
+                        _under(resolved_root, target.parent)
+                        if is_symlink
+                        else _under(resolved_root, target)
+                    )
+                    if safe:
+                        if _remove_path(target):
+                            removed_dirs += 1
+                        else:
+                            failures += 1
+                        continue
+
+                if not is_symlink:
+                    keep_dirs.append(name)
+            dirnames[:] = keep_dirs
+
+            for name in filenames:
+                if not _is_junk_name(name):
+                    continue
+                target = dirpath / name
+                try:
+                    is_symlink = target.is_symlink()
+                except OSError as exc:
+                    failures += 1
+                    logger.warning(
+                        "Activity tree scrub: cannot inspect file %s: %s",
+                        target,
+                        exc,
+                    )
+                    continue
+                safe = (
+                    _under(resolved_root, target.parent)
+                    if is_symlink
+                    else _under(resolved_root, target)
+                )
+                if not safe:
+                    failures += 1
+                    logger.warning(
+                        "Activity tree scrub: refusing path outside root: %s", target
+                    )
+                    continue
+                if _remove_path(target):
+                    removed_files += 1
+                else:
+                    failures += 1
+    except (OSError, RuntimeError, ValueError) as exc:
+        # ``os.walk`` is intentionally fail-soft, but retain a final defensive
+        # boundary because this function executes in the boot path.
+        failures += 1
+        logger.warning("Activity tree scrub aborted early for %s: %s", resolved_root, exc)
+
+    if removed_files or removed_dirs or failures:
+        logger.info(
+            "Activity tree scrub %s: removed_files=%d removed_dirs=%d "
+            "walked_dirs=%d failures=%d",
+            resolved_root,
+            removed_files,
+            removed_dirs,
+            roots_scrubbed,
+            failures,
+        )
+    return ScrubResult(removed_files, removed_dirs, roots_scrubbed, failures)
+
+
+def scrub_installed_activity_trees(
+    environ: Mapping[str, str] | None = None,
+) -> ScrubResult:
+    """Best-effort sanitize every Activity source used by the installed OS."""
+
+    total = ScrubResult(0, 0, 0, 0)
+    for root in installed_activity_roots(environ):
+        total = total.plus(scrub_activity_tree(root))
+    return total
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        description="Remove curated regenerable host noise from Greia Activity trees"
+    )
+    parser.add_argument(
+        "roots",
+        nargs="*",
+        type=Path,
+        help="Explicit roots to scrub; omitted means all installed Activity roots.",
+    )
+    args = parser.parse_args(argv)
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(levelname)s greia-activity-tree-cleanup: %(message)s",
+    )
+
+    try:
+        if args.roots:
+            result = ScrubResult(0, 0, 0, 0)
+            for root in args.roots:
+                result = result.plus(scrub_activity_tree(root))
+        else:
+            result = scrub_installed_activity_trees()
+        logger.info(
+            "Activity tree cleanup complete: removed_files=%d removed_dirs=%d "
+            "walked_dirs=%d failures=%d",
+            result.removed_files,
+            result.removed_dirs,
+            result.roots_scrubbed,
+            result.failed_removals,
+        )
+    except Exception:
+        # Last-resort installed-boot boundary: malformed/unexpected cleanup state
+        # must never prevent Greia Shell from starting.
+        logger.exception("Unexpected Activity tree cleanup failure; continuing boot")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

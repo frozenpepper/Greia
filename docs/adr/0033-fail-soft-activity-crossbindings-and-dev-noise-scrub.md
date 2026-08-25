@@ -1,6 +1,6 @@
-# ADR 0033 — Fail-soft Activity cross-bindings and boot-time development-noise scrub
+# ADR 0033 — Installed-OS Activity fault containment and development-noise sanitation
 
-Status: **Accepted for staged implementation**
+Status: **Accepted; installed-runtime hardening implemented, physical re-validation pending**
 
 Date: 2026-08-25
 
@@ -8,60 +8,151 @@ Extends: ADR 0017 (platform-owned sessions/events/progression/reward ledger), AD
 
 ## Context
 
-A single broken or not-loadable Activity must never take the whole child OS down. Greia already refuses to *load* an Activity that fails registered-input validation: `ActivityRegistry.discover(fail_closed=False)` skips an invalid/corrupt package with a per-package warning and records it as unvalidated. That per-Activity isolation at discovery is correct and is preserved.
+A single broken or not-loadable Activity must never take the whole child OS down.
 
-The failure observed in practice was not discovery. It was a **downstream cross-binding**: a progression/history policy rule referenced an Activity that had been skipped as not-loaded, and `ProgressionPolicy.load` raised `HistoryPolicyError` for that single dangling reference. That exception propagated through `build_launcher_runtime_services` and aborted `child_shell`, so systemd's `Restart=` produced an endless restart loop with no child-visible degradation. The broken Activity was already an island; the *policy rule referencing it* was not, and it took the launcher down.
+Greia already isolates invalid packages during ordinary discovery: `ActivityRegistry.discover(fail_closed=False)` skips a corrupt Activity with a warning. The physical failure seen during Activity work was downstream of that boundary. Host tooling had injected regenerable macOS/cache files into an Activity tree, validation skipped that Activity, but `ProgressionPolicy.load` then encountered a rule referencing the absent Activity and raised. The exception escaped launcher runtime composition; systemd restarted the launcher; the same deterministic failure repeated.
 
-A second, compounding factor: during development, host tooling (notably macOS `tar`/`scp`) injects fully regenerable sidecar/cache noise into Activity trees — `._*` AppleDouble files, `.DS_Store`, `__MACOSX/`, `__pycache__/*.pyc`, `Thumbs.db`, editor droppings. The Greia validator correctly rejects many of these (e.g. executable AppleDouble files), so an otherwise healthy Activity failed registration purely because of dev-environment dirt.
+The first ADR-0033 tranche fixed the absent-Activity progression binding and added an in-process cleanup. Review of the installed permission model exposed an important flaw in that cleanup placement: `/opt/greia-os` is installed `root:root` and read-only while `greia-launcher.service` runs as `greiakid`. An unprivileged launcher therefore cannot be relied upon to delete contamination from the built-in tree. Developer and parent-installed Activities also live in distinct roots.
+
+The system must be resilient **at the installed OS boundary**, independent of whether a human or coding agent used the preferred copy/deploy workflow.
 
 ## Decision
 
-Two independent, complementary behaviors:
+Greia uses three independent containment layers.
 
-### 1. Fail-soft cross-bindings (progression/history/achievement)
+### 1. Privileged, fail-open pre-launch sanitation
 
-At the boundary where platform policy references Activity identities, distinguish **absence** from **corruption**:
+Immediately before every installed launcher start, systemd runs:
 
-- A policy rule (progression, history, and by extension achievement) that references an Activity **not present in the loaded catalogue** — because it failed validation and was not loaded, or was retired — is **dropped with a warning**, not raised. The launcher boots; progression for every other Activity continues to work; the broken Activity stays an island.
-- A policy that is genuinely **corrupt or inconsistent against loaded Activities** remains a hard failure: unparseable TOML, wrong field types, duplicate rule ids, zero reward delta, and a rule that references an **undeclared event on a loaded Activity**. These indicate a policy contract bug, not an unloaded Activity, and must stay loud.
+```text
+/usr/local/lib/greia-os/scrub-activity-trees
+```
 
-This applies the project's established fail-soft principle to presentation/enrichment authorities: **safety/trust authorities fail closed (permissions, trust, storage, removable media); presentation/enrichment authorities fail soft and independently** (achievement already failed soft to `None`; progression/history now do the same for absent Activities).
+as a privileged `ExecStartPre=+` helper. The launcher process itself remains `greiakid`.
 
-### 2. Boot-time development-noise scrub
+The helper invokes the shared `greia_platform.activity_tree_cleanup` implementation over every Activity source the installed launcher can consume:
 
-Before Activities are loaded, a small Greia-owned scrub removes only the curated, fully regenerable dev-noise files from the built-in Activity root:
+```text
+built-in:  ${GREIA_OS_ROOT:-/opt/greia-os}/activities
+developer: ${GREIA_DEVELOPER_ACTIVITY_ROOT:-/var/lib/greia-developer/activities}
+parent:    ${GREIA_PARENT_ACTIVITY_ROOT:-${GREIA_PARENT_ACTIVITY_PACKAGE_ROOT:-/var/lib/greia-os/activity-packages}/active}
+```
 
-- macOS: `._*` (AppleDouble), `.DS_Store`, `__MACOSX/`
-- Windows: `Thumbs.db`, `desktop.ini`, `~$*` office/editor lock files
-- Linux/editor/cache: `*~`, `*.swp`, `*.swx`, `*.tmp`, `.nfs*`, `__pycache__/`, `*.pyc`
+Only a fixed, reviewed set of fully regenerable development noise is removable:
 
-Guarantees:
+- macOS: `._*`, `.DS_Store`, `__MACOSX/`
+- Windows: `Thumbs.db`, `desktop.ini`, `~$*`
+- editor/cache: `*~`, `*.swp`, `*.swx`, `*.tmp`, `.nfs*`, `__pycache__/`, `*.pyc`
 
-- **Fixed, versioned, curated list.** Every pattern is a review decision, not an open-ended "delete anything suspicious." The list stays in lockstep with the Activity validator's forbidden-file vocabulary.
-- **Bounded and non-escaping.** Operates strictly under the Activity root; never follows symlinks out of the tree; a symlinked directory is never descended into; paths resolving outside the root are never touched.
-- **Not an Activity repair mechanism.** A genuinely broken or missing file is deliberately left untouched and simply not loaded. The scrub only removes regenerable environment noise; it never hides, rewrites, re-validates, or "fixes" a real defect.
-- **Observable.** Removals are logged and counted so a *recurringly* dirty tree is evidence that the push/sync tooling is still wrong, rather than being silently papered over.
+This is intentionally not a general cleaner. Real Activity content is never repaired, rewritten, synthesized or restored.
 
-The scrub runs in `GreiaShell.__init__` (the single launcher boot composition point used by both the child shell and the presentation fallback) before the `ActivityRegistry` is built, so it cannot be skipped by any entry path that loads Activities. It is deliberately cheap and idempotent on a healthy boot.
+The scrubber is:
+
+- bounded to each configured root;
+- non-following for directory symlinks and refusing a symlink used as a root;
+- best-effort for filesystem races, read-only mounts and permission failures;
+- truthful about successful removals versus failed removals;
+- idempotent on a healthy tree;
+- **never boot authority**.
+
+The shell wrapper exits zero even if the Python cleanup process fails unexpectedly. A cleanup defect therefore cannot create the restart loop it exists to prevent.
+
+The earlier in-process cleanup remains only defense in depth; installed correctness no longer depends on the unprivileged launcher being able to mutate `/opt`.
+
+### 2. Per-Activity discovery isolation
+
+After sanitation, `ActivityRegistry` remains the authority for package validity.
+
+A genuinely broken Activity is not auto-healed. It is skipped and recorded/logged as unvalidated while unrelated Activities remain available.
+
+This distinction is deliberate:
+
+```text
+regenerable host dirt -> installed OS may remove
+real package defect   -> Activity remains broken/unloaded
+```
+
+### 3. Enrichment must not become OS availability authority
+
+History storage bounds and trusted event recording remain hard platform authority.
+
+Progression and achievements are enrichment. Their source/build validation remains strict, but the **installed launcher runtime** is fail-soft:
+
+- a progression rule referencing an Activity absent from the loaded catalogue is dropped with a warning;
+- if runtime progression policy is otherwise stale or corrupt, including an undeclared event binding against a loaded Activity, the launcher disables progression for that launcher instance and logs the defect;
+- strict `ProgressionPolicy.load(...)` remains available to source/build/test validation and continues to raise for those defects;
+- achievement policy already follows the same availability principle: invalid achievement enrichment disables the badge service instead of stopping Activity launch/history.
+
+Therefore an Activity edit can temporarily lose its own/global reward enrichment, but it cannot turn a child OS into a launcher restart storm.
+
+## Why runtime and source validation differ
+
+Fail-soft installed runtime is **not** permission to merge bad policy.
+
+The correct split is:
+
+```text
+source/build/test:
+    invalid package or progression contract -> FAIL loudly
+
+installed child runtime:
+    invalid Activity -> isolate Activity
+    invalid progression/achievement enrichment -> disable affected enrichment
+    trust/storage/history safety corruption -> remain fail-closed
+```
+
+This preserves engineering pressure without making a child-facing appliance depend on perfect enrichment metadata at every instant during development or update rollout.
+
+## Restart-loop boundary
+
+`greia-launcher.service` retains systemd restart behavior for genuine launcher/process failures. This ADR removes the known deterministic Activity-contamination path from that failure class instead of trying to paper over it by increasing restart delays or suppressing systemd recovery.
+
+The developer boot contract remains independently observable (`panic=0`, developer SSH, visible diagnostic policy). Kernel/initramfs/first-boot failures are not reclassified as Activity failures.
 
 ## Consequences
 
-- A single not-loadable Activity can no longer brick the child OS: discovery keeps it unloaded, fail-soft cross-bindings keep the launcher up, and `__pycache__`/`*.pyc` scrubbing also ensures Python recompiles from canonical source rather than running stale bytecode.
-- Progression/reward behavior for a retired or broken Activity is absent (its rules are dropped) until the Activity is restored — this is honest and observable, not silent.
-- Policy-authoring bugs that reference undeclared events on real Activities still surface loudly at build/validation time.
-- The scrub is a one-time boot cost, bounded to the Activity root, with no impact on the hot child session path (ADR 0018 low-resource discipline preserved).
+- Root-owned/read-only built-in Activities can actually be sanitized before the unprivileged launcher starts.
+- Developer and parent Activity roots receive the same installed hygiene boundary.
+- Raw SSH/SCP contamination by common host metadata no longer relies on agent discipline for recovery.
+- A dirty-but-otherwise-valid package can become loadable again automatically.
+- A genuinely broken package stays broken and isolated.
+- Stale progression/achievement metadata cannot take down the launcher.
+- History/event safety and package trust remain strict.
+- Cleanup adds one bounded filesystem walk at launcher start/restart, never in the hot child session/render path.
+- Repeated cleanup removals remain useful diagnostics that a development/update path is producing dirty trees; self-healing does not make the contamination invisible.
 
 ## Rejected alternatives
 
-- **Reject the whole install at the device validation gate.** Agents routinely skip a manual validation step; a boot-time behavior that runs at the point of use is self-enforcing and cannot be forgotten. (The junk-scrub choice supersedes a purely gate-based fix for this failure class.)
-- **Auto-heal or re-validate broken Activities at runtime.** This would mask genuine defects and conflict with "a broken Activity is treated as broken." Rejected: the scrub never rebuilds a broken package.
-- **Run the scrub only from developer tooling / parent-install pipeline.** Parent/agent activity installation is a separate pipeline (owned elsewhere); the device must remain self-healing for regenglerable dirt regardless of how bytes arrive.
-- **Make every progression cross-reference fail-soft, including undeclared events.** That would hide genuine policy contract bugs. The decision keeps hard failure for corruption against *loaded* Activities.
+- **Document the correct SSH/deploy procedure and rely on agents to follow it.** Rejected as the primary defense. The installed appliance must be resilient even when development workflows are imperfect.
+- **Run cleanup only inside `LauncherApplication`.** Rejected as the installed authority because the launcher is intentionally unprivileged and `/opt/greia-os` is root-owned/read-only.
+- **Make the launcher run as root.** Rejected. A small privileged pre-start operation is substantially narrower than widening the child Shell's authority.
+- **Auto-repair broken Activities.** Rejected. Missing/invalid real content must remain visible as a package defect.
+- **Keep runtime progression corruption fatal to boot.** Rejected. Progression is enrichment, not an OS availability/safety authority; strict source validation still catches the defect.
+- **Disable systemd restart for the launcher.** Rejected. The service still needs recovery from genuine process failures; deterministic Activity faults should be contained before they reach that layer.
+- **Sanitize only developer uploads.** Rejected. That depends on one ingress path and does not protect an already-dirty installed tree.
 
-## Source closure evidence
+## Source owners
 
-- `src/greia_platform/history.py`: `ProgressionPolicy.load` drops rules referencing absent Activities with a `logger.warning` and keeps hard failure for undeclared events / structural policy corruption.
-- `src/greia_platform/activity_tree_cleanup.py`: `scrub_activity_tree` removes the curated dev-noise patterns, bounded/non-escaping under the Activity root.
-- `src/greia_launcher/main.py`: scrub invoked in `GreiaShell.__init__` before the `ActivityRegistry` is built (covers `child_shell` and `presentation` entry paths).
-- Regression tests: `tests/test_activity_tree_cleanup.py` (4) and fail-soft progression tests in `tests/test_history.py`.
-- `make verify`: full suite **1,313/1,313 tests PASS**. Physical-device re-validation of a scrubbed int after the earlier `._` incident is outstanding.
+```text
+src/greia_platform/activity_tree_cleanup.py
+build/overlay/usr/local/lib/greia-os/scrub-activity-trees
+build/overlay/etc/systemd/system/greia-launcher.service
+src/greia_platform/activities.py
+src/greia_platform/history.py
+src/greia_launcher/composition.py
+```
+
+## Verification boundary
+
+The original ADR tranche recorded `make verify` **1,313/1,313 PASS** at `c8921313`.
+
+The installed-runtime hardening tranche adds focused regression coverage for:
+
+- the complete installed Activity-root set;
+- symlink-root refusal;
+- truthful failed-removal accounting;
+- runtime fail-soft progression corruption/stale event bindings while strict source validation remains strict;
+- privileged pre-launch scrub ordering before the unprivileged launcher;
+- explicit fail-open behavior of the installed scrub wrapper.
+
+Those new tests and the full repository gate must execute on the final source state before this tranche is called source-closed. Physical Acer acceptance must then deliberately contaminate a disposable/test Activity with representative safe junk, restart the launcher, verify the junk is removed by the privileged pre-start helper, verify the Activity/launcher behavior, and prove fresh SSH/launcher recovery without a restart storm.

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -22,7 +23,12 @@ from greia_platform.hal_legacy_x import (
     LegacyXHardwareSessionController,
     LegacyXInputHAL,
 )
-from greia_platform.history import PlatformHistoryService
+from greia_platform.history import (
+    HistoryPolicy,
+    HistoryPolicyError,
+    PlatformHistoryService,
+    ProgressionPolicy,
+)
 from greia_platform.permissions import PermissionBroker
 from greia_platform.storage import ActivityStorageService, StoragePolicy
 
@@ -34,6 +40,8 @@ from .runtime_adapter import (
     RuntimeLaunchAdapter,
     RuntimeManager,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, slots=True)
@@ -98,6 +106,31 @@ def default_runtime_adapters(
     )
 
 
+def load_runtime_progression_policy(
+    progression_policy_path: Path,
+    activities: tuple[ActivityManifest, ...],
+) -> ProgressionPolicy:
+    """Load optional progression enrichment without making it boot authority.
+
+    Source/build validation should continue to call ``ProgressionPolicy.load``
+    directly and fail loudly on malformed policy or undeclared events. The
+    installed launcher has a different availability requirement: if progression
+    policy is stale/corrupt, child Activity launch and history must remain
+    available. In that case progression is disabled for this launcher instance
+    and the defect is left visible in the journal.
+    """
+
+    try:
+        return ProgressionPolicy.load(progression_policy_path, activities)
+    except HistoryPolicyError as exc:
+        logger.error(
+            "Progression policy is invalid at runtime; disabling progression "
+            "for this launcher instance: %s",
+            exc,
+        )
+        return ProgressionPolicy(schema_version=1, rules=())
+
+
 def build_launcher_runtime_services(
     runtime: RuntimeCatalogue,
     activities: tuple[ActivityManifest, ...],
@@ -120,9 +153,9 @@ def build_launcher_runtime_services(
     must inject only those missing-machine/runtime facts; they must not rebuild
     PermissionBroker, storage, history or achievement composition in parallel.
 
-    Achievement policy is sibling runtime configuration by default. Missing or
-    invalid optional policy fails soft at this composition edge so Activity
-    launch/history remain available even if the child badge library cannot load.
+    History storage bounds remain startup/safety authority and fail closed.
+    Progression and achievements are child-facing enrichment: malformed or stale
+    enrichment is disabled with diagnostics rather than taking down Greia Shell.
     """
 
     device_capabilities = DeviceCapabilityService(
@@ -143,8 +176,9 @@ def build_launcher_runtime_services(
     )
     runtime_manager = RuntimeManager(adapters, device_capabilities)
     storage_service = ActivityStorageService(StoragePolicy.load(storage_policy_path))
-    history_service = PlatformHistoryService.load(
-        history_policy_path, progression_policy_path, activities
+    history_service = PlatformHistoryService(
+        HistoryPolicy.load(history_policy_path),
+        load_runtime_progression_policy(progression_policy_path, activities),
     )
 
     resolved_achievement_policy = (
@@ -161,7 +195,7 @@ def build_launcher_runtime_services(
         )
     except (OSError, RuntimeError, ValueError):
         # Achievements are child-facing enrichment, not a launch/safety authority.
-        # Fail closed for the badge feature without taking down the launcher.
+        # Disable badge presentation without taking down the launcher.
         achievement_service = None
 
     return LauncherRuntimeServices(
