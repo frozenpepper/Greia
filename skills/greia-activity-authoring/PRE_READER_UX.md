@@ -2,7 +2,7 @@
 
 **Status:** mandatory focused companion for child-facing Activity design  
 **Audience:** Activity authors, coding agents, reviewers  
-**Reviewed:** 2026-08-24
+**Reviewed:** 2026-08-25
 
 Greia targets young children, and **many intended users cannot read yet**. Therefore ordinary Activity gameplay must not depend on written instructions, labels, menus, or explanatory prose.
 
@@ -32,6 +32,7 @@ clear scene composition
 + large icon / symbol / number
 + motion or demonstration
 + short reviewed spoken cue when language helps
++ optional child voice recording when expression/replay adds value
 + immediate visual/audio feedback
 ```
 
@@ -60,6 +61,7 @@ For pre-reader Activities, prefer semantic visual language:
 ```text
 ▶ / large play symbol       -> start/replay
 🔊 or controlled Greia audio icon -> hear/replay sound
+🎙 / Greia microphone affordance  -> record child voice when appropriate
 large 1, 2, 3, 4            -> quantity/choice
 matching pictures/shapes     -> selection
 arrows / gesture animation   -> movement direction
@@ -117,6 +119,36 @@ skills/greia-activity-authoring/VOICE_GENERATION.md
 ```
 
 for speaker selection, multilingual semantic cues, shared utterances, custom dialogue and pedagogical speech.
+
+### 4.2 Child voice recording is an available pre-reader input/creation tool
+
+Greia also has a platform-owned, lightweight-cleaned microphone path for Activities with `audio.basic`.
+
+When it genuinely helps the experience, **consider letting the child speak instead of requiring typing or written composition**. Good examples include narrating a puppet scene, recording a pretend radio segment, explaining a drawing, imitating an animal sound, or recording/replaying a phrase.
+
+This does not mean every Activity should record. The question is whether voice gives the child a meaningful expressive action that would otherwise be harder for a pre-reader.
+
+A pre-reader recording flow should be visually self-explanatory:
+
+```text
+large mic button
+-> obvious recording state / lightweight level animation
+-> large stop button
+-> large play button
+-> clear re-record/delete option
+```
+
+Do not auto-record on launch. The child should deliberately start recording.
+
+Do not continuously capture ambient audio in the background.
+
+Do not claim speech recognition, pronunciation scoring or semantic understanding merely because the Activity can record audio.
+
+For the exact Activity microphone contract, processing behavior, storage/privacy rules and Parent-owned disable path, read:
+
+```text
+skills/greia-activity-authoring/MICROPHONE_RECORDING.md
+```
 
 ## 5. Visual demonstration beats explanation
 
@@ -215,6 +247,7 @@ Can the first meaningful action be inferred without reading?
 Are primary choices large and visually distinct?
 Are icons/numbers/pictures sufficient where appropriate?
 Is spoken instruction available when language is necessary?
+If microphone recording is included, can start/stop/play/re-record be understood without reading?
 Can a wrong action be understood and retried without reading?
 Can the next round/start/replay action be found without reading?
 Does completion/continue/replay make sense without reading prose?
@@ -233,6 +266,8 @@ PRIMARY_INSTRUCTION_CHANNEL=visual/voice/combined
 NO_READING_FIRST_ACTION_PASS=yes/no
 NO_READING_RETRY_PASS=yes/no
 NO_READING_COMPLETION_PASS=yes/no
+MICROPHONE_RECORDING_USED=yes/no
+MICROPHONE_RECORDING_NO_READING_FLOW_PASS=yes/no/not-applicable
 SUPPORTED_LOCALES=
 SPOKEN_INSTRUCTION_COVERAGE=
 ```
