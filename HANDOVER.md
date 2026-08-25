@@ -15,6 +15,13 @@ This file is the project-wide **current continuation contract**. Chronology belo
 
 # 1. Current state at a glance
 
+## Stelle Incantate Leo Voices Produced (2026-08-25)
+
+All six curiosity facts now speak with the canonical Leo voice in BOTH locales (it/en), cloned from the owner-approved `greia.leo.v1` reference via Chatterbox Multilingual V3 in the pre-existing local voice-production environment. Packaged as locale-audio-table OGGs resolved through `LocalizedResources.audio_cue()`; procedural chirp stays as fail-soft fallback. Generation tool: `tools/generate_stelle_incantate_audio.py` (mandatory batch-safety rules enforced).
+
+- **Verification**: full `make verify` **1,347/1,347 PASS** (two new voice-coverage contract tests); headless cue-resolution check for all 12 clips; simulator gate with fact playback + caption + clean Home return (rc 0); durable-progress resume re-verified after clearing orphaned simulator shell processes that had been holding the bridge port with stale state (test-infra issue, no product change).
+- **Outstanding**: owner listening review of the 12 clips is the final audio-acceptance gate (VOICE_GENERATION §13).
+
 ## New Activity: Stelle Incantate (2026-08-25)
 
 **Stelle Incantate** (`org.greia.stelle-incantate`, 31st first-party Activity) — connect-the-dots **real constellations**: tap numbered stars in order, lines glow, the finished figure celebrates with its real name, Leo hosts an optional researched astronomy fact per figure (it/en captions; voice audio pending — honest scaffold, see `activities/stelle_incantate/research/facts.md`). Durable progress resumes across sessions; whole-sky finish shows the platform completion screen with replay. Pointer profile + number-key shortcuts; events `constellation.completed` (Star-eligible, once/session) + `curiosity.fact_opened`; two decorative emblems declared.

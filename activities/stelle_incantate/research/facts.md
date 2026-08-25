@@ -66,10 +66,23 @@ strings; this record is development material only.
     distances"). https://www.iau.org/IAU/IAU/Science/What-we-do/The-Constellations.aspx
 - Simplification: keeps the projection-effect idea in one sentence.
 
-## Voice coverage status (honest scaffold)
+## Voice coverage status
 
-The fact affordance is implemented as Leo-hosted localized captions with
-semantic cue IDs reserved (`audio` tables in both locales are intentionally
-empty). No canonical Leo voice audio has been produced for these facts yet;
-arbitrary host TTS must not be substituted for Leo. The feature is therefore
-reported as **voice-pending scaffold**, not voice-accepted.
+Leo voice audio produced for all six facts in BOTH shipped locales (it/en)
+with the canonical `greia.leo.v1` reference (`leo-reference-v1.flac`, hash
+verified against the v0.1 voice registry) through Chatterbox Multilingual V3
+(`mlx-community/chatterbox-multilingual-v3`, local Apple Silicon production
+environment). Generation tool: `tools/generate_stelle_incantate_audio.py`
+(single worker, model loaded once, per-clip Metal cache release, idempotent
+skip, loud failures). Packaged as mono 22050 Hz OGG under
+`assets/audio/<locale>/` and wired through the locale `audio` tables so
+`LocalizedResources.audio_cue()` resolves them; the Activity plays the cue
+with a procedural-chirp fail-soft fallback.
+
+Programmatic analysis: durations 3.8-6.3 s (consistent with text length),
+mono, mean loudness ~-15 dB, peak signature matching the already-accepted
+Baia delle Orche production baseline, no meaningful flat-topping.
+
+**Human listening review by the owner is still the final audio acceptance
+gate** (VOICE_GENERATION section 13); process success and analysis are never
+audio acceptance by themselves.

@@ -22,5 +22,24 @@
     "victory.subtitle": "You lit up every constellation of enchanted stars!",
     "button.play_again": "AGAIN!"
   },
-  "audio": {}
+  "audio": {
+    "curiosity.triangolo.fact": {
+      "path": "assets/audio/en/curiosity-triangolo.ogg"
+    },
+    "curiosity.cassiopea.fact": {
+      "path": "assets/audio/en/curiosity-cassiopea.ogg"
+    },
+    "curiosity.cigno.fact": {
+      "path": "assets/audio/en/curiosity-cigno.ogg"
+    },
+    "curiosity.carro.fact": {
+      "path": "assets/audio/en/curiosity-carro.ogg"
+    },
+    "curiosity.leone.fact": {
+      "path": "assets/audio/en/curiosity-leone.ogg"
+    },
+    "curiosity.orione.fact": {
+      "path": "assets/audio/en/curiosity-orione.ogg"
+    }
+  }
 }

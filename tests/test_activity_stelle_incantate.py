@@ -60,6 +60,42 @@ class ConstellationContentTests(unittest.TestCase):
                     self.assertIn(constellation.fact_key, strings)
                     self.assertTrue(strings[constellation.fact_key].strip())
 
+    def test_every_fact_has_packaged_voice_audio_in_every_locale(self) -> None:
+        import json
+        from pathlib import Path
+
+        package = Path(__file__).resolve().parents[1] / "activities" / "stelle_incantate"
+        for locale in ("it", "en"):
+            data = json.loads((package / "locales" / f"{locale}.json").read_text(encoding="utf-8"))
+            audio = data.get("audio") or {}
+            for constellation in ordered_constellations():
+                entry = audio.get(constellation.fact_key)
+                with self.subTest(locale=locale, constellation=constellation.constellation_id):
+                    self.assertIsInstance(entry, dict)
+                    relative = entry["path"]
+                    self.assertNotIn("..", relative)
+                    packaged = package / relative
+                    self.assertTrue(packaged.is_file(), relative)
+                    size = packaged.stat().st_size
+                    self.assertGreater(size, 10_000, "voice cue suspiciously small")
+                    self.assertLess(size, 512 * 1024, "voice cue exceeds package bound")
+
+    def test_voice_audio_paths_are_locale_aligned(self) -> None:
+        # Same semantic cue ids in both locales; each path stays inside its
+        # own locale directory so text and audio always resolve together.
+        import json
+        from pathlib import Path
+
+        package = Path(__file__).resolve().parents[1] / "activities" / "stelle_incantate"
+        keys_by_locale = {}
+        for locale in ("it", "en"):
+            data = json.loads((package / "locales" / f"{locale}.json").read_text(encoding="utf-8"))
+            audio = data.get("audio") or {}
+            keys_by_locale[locale] = set(audio)
+            for path in (entry["path"] for entry in audio.values()):
+                self.assertTrue(path.startswith(f"assets/audio/{locale}/"), path)
+        self.assertEqual(keys_by_locale["it"], keys_by_locale["en"])
+
 
 class SkyRoundTests(unittest.TestCase):
     def test_stars_must_be_connected_in_numeric_order(self) -> None:

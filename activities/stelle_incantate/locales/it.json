@@ -22,5 +22,24 @@
     "victory.subtitle": "Hai acceso tutte le costellazioni di stelle incantate!",
     "button.play_again": "ANCORA!"
   },
-  "audio": {}
+  "audio": {
+    "curiosity.triangolo.fact": {
+      "path": "assets/audio/it/curiosity-triangolo.ogg"
+    },
+    "curiosity.cassiopea.fact": {
+      "path": "assets/audio/it/curiosity-cassiopea.ogg"
+    },
+    "curiosity.cigno.fact": {
+      "path": "assets/audio/it/curiosity-cigno.ogg"
+    },
+    "curiosity.carro.fact": {
+      "path": "assets/audio/it/curiosity-carro.ogg"
+    },
+    "curiosity.leone.fact": {
+      "path": "assets/audio/it/curiosity-leone.ogg"
+    },
+    "curiosity.orione.fact": {
+      "path": "assets/audio/it/curiosity-orione.ogg"
+    }
+  }
 }

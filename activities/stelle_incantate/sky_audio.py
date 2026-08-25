@@ -27,6 +27,7 @@ class SkyAudio:
 
     def __init__(self) -> None:
         self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._cue_sounds: dict[str, pygame.mixer.Sound] = {}
         self._available = False
         try:
             if pygame.mixer.get_init() is not None:
@@ -50,6 +51,30 @@ class SkyAudio:
         sound = self._sounds.get(cue)
         if sound is not None:
             self._play(cue, sound)
+
+    def play_voice_cue(self, path) -> bool:
+        """Play one packaged localized character-voice file.
+
+        The cache is bounded by the finite fact catalogue (one entry per
+        reviewed cue), loaded lazily on first request. Missing or unloadable
+        audio fails soft: the caller keeps its visual/text fallback.
+        """
+
+        if not self._available:
+            return False
+        key = str(path)
+        sound = self._cue_sounds.get(key)
+        if sound is None:
+            try:
+                sound = pygame.mixer.Sound(str(path))
+            except (pygame.error, RuntimeError, FileNotFoundError):
+                return False
+            self._cue_sounds[key] = sound
+        try:
+            sound.play()
+            return True
+        except (pygame.error, RuntimeError):
+            return False
 
     def _play(self, cue: str, sound: pygame.mixer.Sound) -> None:
         if not self._available:

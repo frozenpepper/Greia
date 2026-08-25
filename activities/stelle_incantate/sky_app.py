@@ -243,16 +243,25 @@ class SkyActivity:
 
     def _open_fact(self) -> None:
         constellation_id = self.session.current.constellation.constellation_id
+        fact_key = self.session.current.constellation.fact_key
         try:
-            fact = self.resources.text(
-                self.session.current.constellation.fact_key
-            )
+            fact = self.resources.text(fact_key)
         except Exception:
             fact = None
         if not fact:
             return
         self._fact_text = fact
-        self.audio.play("fact")
+        # Leo speaks the reviewed fact when the localized voice asset exists;
+        # the procedural chirp is the fail-soft fallback, never a substitute
+        # impersonation.
+        try:
+            cue = self.resources.audio_cue(fact_key)
+        except Exception:
+            cue = None
+        if cue is not None and self.audio.play_voice_cue(cue.path):
+            pass
+        else:
+            self.audio.play("fact")
         if self._fact_opened_for != constellation_id:
             self._fact_opened_for = constellation_id
             self.events.fact_opened(self.session_id, constellation_id)
