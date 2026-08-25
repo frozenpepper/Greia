@@ -57,7 +57,7 @@ The scrubber is:
 
 The shell wrapper exits zero even if the Python cleanup process fails unexpectedly. A cleanup defect therefore cannot create the restart loop it exists to prevent.
 
-The earlier in-process cleanup remains only defense in depth; installed correctness no longer depends on the unprivileged launcher being able to mutate `/opt`.
+The earlier in-process call remains useful for source/development compositions, but an unprivileged caller pointed at the installed built-in root explicitly delegates to the privileged pre-start boundary. This avoids a second full `/opt/greia-os/activities` walk on the low-resource Acer and makes the installed ownership boundary unambiguous.
 
 ### 2. Per-Activity discovery isolation
 
@@ -118,7 +118,7 @@ The developer boot contract remains independently observable (`panic=0`, develop
 - A genuinely broken package stays broken and isolated.
 - Stale progression/achievement metadata cannot take down the launcher.
 - History/event safety and package trust remain strict.
-- Cleanup adds one bounded filesystem walk at launcher start/restart, never in the hot child session/render path.
+- Cleanup adds one bounded filesystem walk per configured Activity root at launcher start/restart, never in the hot child session/render path; the built-in root is not immediately re-walked by the unprivileged launcher.
 - Repeated cleanup removals remain useful diagnostics that a development/update path is producing dirty trees; self-healing does not make the contamination invisible.
 
 ## Rejected alternatives
@@ -151,6 +151,7 @@ The installed-runtime hardening tranche adds focused regression coverage for:
 - the complete installed Activity-root set;
 - symlink-root refusal;
 - truthful failed-removal accounting;
+- delegation of the unprivileged installed built-in cleanup to the privileged boundary;
 - runtime fail-soft progression corruption/stale event bindings while strict source validation remains strict;
 - privileged pre-launch scrub ordering before the unprivileged launcher;
 - explicit fail-open behavior of the installed scrub wrapper.

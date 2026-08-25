@@ -92,6 +92,15 @@ def installed_activity_roots(
     return tuple(result)
 
 
+def _is_unprivileged_installed_built_in(root: Path) -> bool:
+    """Whether cleanup of ``root`` belongs to the privileged pre-start helper."""
+
+    if os.geteuid() == 0:
+        return False
+    built_in = installed_activity_roots()[0]
+    return os.path.abspath(os.fspath(root)) == os.path.abspath(os.fspath(built_in))
+
+
 def _is_junk_name(name: str) -> bool:
     lowered = name.casefold()
     if lowered in _JUNK_EXACT:
@@ -141,6 +150,12 @@ def scrub_activity_tree(root: Path) -> ScrubResult:
     followed. Walk/delete errors are logged and counted rather than propagated:
     cleanup is resilience hygiene, never a reason to stop the child shell.
     """
+
+    if _is_unprivileged_installed_built_in(root):
+        # `/opt/greia-os` is intentionally root-owned/read-only on installed
+        # images. The systemd ExecStartPre helper already scrubbed this root as
+        # root; do not pay for a second full tree walk that cannot be authoritative.
+        return ScrubResult(0, 0, 0, 0)
 
     try:
         if root.is_symlink():

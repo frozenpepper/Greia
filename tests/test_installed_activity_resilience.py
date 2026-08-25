@@ -50,6 +50,28 @@ class InstalledActivityResilienceTests(unittest.TestCase):
             Path("/test/parent-active-override"),
         )
 
+    def test_unprivileged_installed_builtin_delegates_to_prestart(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            os_root = Path(temporary) / "os"
+            activities = os_root / "activities"
+            activities.mkdir(parents=True)
+            junk = activities / ".DS_Store"
+            junk.write_bytes(b"x")
+            with (
+                mock.patch.dict(
+                    "os.environ",
+                    {"GREIA_OS_ROOT": str(os_root)},
+                    clear=False,
+                ),
+                mock.patch(
+                    "greia_platform.activity_tree_cleanup.os.geteuid",
+                    return_value=1000,
+                ),
+            ):
+                result = scrub_activity_tree(activities)
+            self.assertTrue(junk.exists())
+            self.assertEqual(result.roots_scrubbed, 0)
+
     def test_cleanup_failure_is_counted_not_reported_as_removed(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
