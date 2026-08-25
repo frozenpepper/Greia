@@ -235,6 +235,21 @@ class _MockAudio:
     def play(self, cue: str) -> None:
         self.played.append(cue)
 
+    def play_welcome(self) -> None:
+        self.played.append("welcome")
+
+    def play_prompt(self) -> None:
+        self.played.append("prompt")
+
+    def play_shape(self, kind: ShapeKind) -> None:
+        self.played.append(f"shape_{kind.value}")
+
+    def play_mosaic_complete(self) -> None:
+        self.played.append("mosaic_complete")
+
+    def play_feedback(self, correct: bool) -> None:
+        self.played.append("correct" if correct else "retry")
+
 
 class AppIntegrationTests(unittest.TestCase):
     @classmethod
@@ -322,6 +337,42 @@ class AppIntegrationTests(unittest.TestCase):
         self.assertTrue(handled)
         self.assertEqual(app.state, AppState.PLAYING)
         self.assertEqual(app.session.puzzle_index, 0)
+
+    def test_listen_button_replays_welcome(self) -> None:
+        from mirror_renderer import LISTEN_BTN_RECT
+
+        app, _sim_time, _events, audio, _progress = self._build_app(level=1)
+        audio.played.clear()
+
+        # Click listen button
+        handled = app._handle_pointer((LISTEN_BTN_RECT.centerx, LISTEN_BTN_RECT.centery))
+        self.assertTrue(handled)
+        self.assertIn("welcome", audio.played)
+
+    def test_audio_assets_and_speech_cues(self) -> None:
+        from mirror_audio import MirrorAudio
+
+        for locale in ("it", "en"):
+            audio = MirrorAudio(ACTIVITY_ROOT, locale=locale)
+            self.assertGreaterEqual(len(audio._speech_clips), 14, f"missing clips for {locale}")
+            for key in (
+                "welcome",
+                "prompt_place",
+                "correct_1",
+                "correct_2",
+                "correct_3",
+                "correct_4",
+                "correct_5",
+                "retry_1",
+                "retry_2",
+                "mosaic_complete",
+                "shape_circle",
+                "shape_square",
+                "shape_triangle",
+                "shape_semicircle",
+            ):
+                self.assertIn(key, audio._speech_clips, f"missing {key} in {locale}")
+
 
 
 class SimulatorSupervisorTests(unittest.TestCase):

@@ -22,7 +22,9 @@ BOARD_TOP: Final[int] = 64
 BOARD_LEFT: Final[int] = 298
 MIRROR_X: Final[int] = 512
 
-UNDO_RECT: Final[pygame.Rect] = pygame.Rect(840, 480, 140, 76)
+LISTEN_BTN_RECT: Final[pygame.Rect] = pygame.Rect(135, 492, 160, 50)
+UNDO_RECT: Final[pygame.Rect] = pygame.Rect(720, 492, 140, 50)
+MASCOT_RECT: Final[pygame.Rect] = pygame.Rect(20, 435, 110, 110)
 
 
 class MirrorRenderer:
@@ -37,13 +39,6 @@ class MirrorRenderer:
         self._art = art
         self._typography = typography
         self._resources = resources
-
-        self._undo_label = typography.render(
-            resources.text("button.undo"),
-            FontRole.TITLE,
-            22,
-            (255, 255, 255),
-        )
 
     def draw_scene(
         self,
@@ -112,6 +107,9 @@ class MirrorRenderer:
                 return i
         return None
 
+    def listen_contains(self, point: tuple[int, int]) -> bool:
+        return LISTEN_BTN_RECT.collidepoint(point) or MASCOT_RECT.collidepoint(point)
+
     def undo_contains(self, point: tuple[int, int]) -> bool:
         return UNDO_RECT.collidepoint(point)
 
@@ -144,7 +142,11 @@ class MirrorRenderer:
             pygame.draw.circle(target, (180, 83, 9), (cx, cy), 8, 2)
 
         # Draw Cells
-        selected_piece = session.tray[session.selected_tray_index] if (session.selected_tray_index < len(session.tray)) else None
+        selected_piece = (
+            session.tray[session.selected_tray_index]
+            if (session.selected_tray_index is not None and session.selected_tray_index < len(session.tray))
+            else None
+        )
 
         for r in range(GRID_ROWS):
             for c in range(GRID_COLS):
@@ -222,24 +224,27 @@ class MirrorRenderer:
         u_draw = UNDO_RECT.move(0, -4) if (hovered_undo and can_undo) else UNDO_RECT
 
         # Drop shadow
-        pygame.draw.rect(target, (10, 5, 20), UNDO_RECT.move(0, 6), border_radius=20)
+        pygame.draw.rect(target, (10, 5, 20), UNDO_RECT.move(0, 4), border_radius=25)
 
-        btn_col = (147, 51, 234) if can_undo else (51, 65, 85)
-        border_col = (56, 189, 248) if (hovered_undo and can_undo) else ((255, 255, 255) if can_undo else (71, 85, 105))
-
-        pygame.draw.rect(target, btn_col, u_draw, border_radius=20)
-        pygame.draw.rect(target, border_col, u_draw, width=3, border_radius=20)
-
-        # Highlight line
         if can_undo:
-            hl = u_draw.inflate(-16, -u_draw.height + 8).move(0, -u_draw.height // 2 + 8)
-            pygame.draw.rect(target, (216, 180, 254, 120), hl, border_radius=4)
+            btn_col = (147, 51, 234)
+            border_col = (251, 191, 36)
+            text_col = (255, 255, 255)
+        else:
+            btn_col = (30, 41, 59)
+            border_col = (51, 65, 85)
+            text_col = (100, 116, 139)
 
+        pygame.draw.rect(target, btn_col, u_draw, border_radius=25)
+        pygame.draw.rect(target, border_col, u_draw, width=3 if can_undo else 2, border_radius=25)
+
+        undo_label = f"↩️ {self._resources.text('button.undo')}"
+        undo_surf = self._typography.render(undo_label, FontRole.TITLE, 18, text_col)
         target.blit(
-            self._undo_label,
+            undo_surf,
             (
-                u_draw.centerx - self._undo_label.get_width() // 2,
-                u_draw.centery - self._undo_label.get_height() // 2,
+                u_draw.centerx - undo_surf.get_width() // 2,
+                u_draw.centery - undo_surf.get_height() // 2,
             ),
         )
 
@@ -255,7 +260,19 @@ class MirrorRenderer:
 
     def _draw_lilli(self, target: pygame.Surface) -> None:
         if self._art.lilli is not None:
-            target.blit(self._art.lilli, (20, 385))
+            target.blit(self._art.lilli, (25, 435))
+
+        # Speech replay capsule beside Lilli
+        pygame.draw.rect(target, (10, 5, 20), LISTEN_BTN_RECT.move(0, 4), border_radius=25)
+        pygame.draw.rect(target, (254, 240, 138), LISTEN_BTN_RECT, border_radius=25)
+        pygame.draw.rect(target, (217, 119, 6), LISTEN_BTN_RECT, width=3, border_radius=25)
+
+        listen_text = "🔊 ASCOLTA" if (self._resources.context.selected.value.startswith("it")) else "🔊 LISTEN"
+        l_surf = self._typography.render(listen_text, FontRole.TITLE, 18, (120, 53, 15))
+        target.blit(
+            l_surf,
+            (LISTEN_BTN_RECT.centerx - l_surf.get_width() // 2, LISTEN_BTN_RECT.centery - l_surf.get_height() // 2),
+        )
 
     def _draw_progress_badge(self, target: pygame.Surface, session: MirrorSession) -> None:
         badge_rect = pygame.Rect(870, 24, 130, 44)
@@ -268,3 +285,4 @@ class MirrorRenderer:
             txt_surf,
             (badge_rect.centerx - txt_surf.get_width() // 2, badge_rect.centery - txt_surf.get_height() // 2),
         )
+

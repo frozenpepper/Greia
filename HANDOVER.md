@@ -15,6 +15,25 @@ This file is the project-wide **current continuation contract**. Chronology belo
 
 # 1. Current state at a glance
 
+## Specchi Magici (`activities/specchi_magici`) Pre-Reader & Lilli Voice Overhaul (2026-08-25)
+
+Overhauled **Specchi Magici** (`org.greia.specchi-magici`) to resolve the giant inactive "ANNULLA" button, eliminate text-only dependence, and implement Lilli's canonical cloned voice pipeline:
+1. **Controls & Undo Button Fix**:
+   - Replaced the oversized 140×76 text rectangle on the far right with a child-sized `↩️ ANNULLA` / `↩️ UNDO` capsule `(720, 492, 140, 50)` styled alongside the piece tray.
+   - Disabled/dimmed in subtle dark slate when `len(session.undo_stack) == 0` (preventing child confusion on empty states) and brightly highlighted in vibrant amethyst + gold border when undo is actionable.
+2. **Lilli Spoken Game Introduction & Replay (`🔊 ASCOLTA`)**:
+   - Generated canonical voice assets using **Chatterbox Multilingual V3** (`mlx-community/chatterbox-multilingual-v3`) on Apple Silicon GPU with [`assets/audio/characters/canonical/v0.1/lilli-reference-v1.flac`](file:///Users/taio84/Works/Bimbe_GIOCHI/Greia%20OS/Greia/assets/audio/characters/canonical/v0.1/lilli-reference-v1.flac).
+   - Welcome intro: *"Ciao! Guarda lo specchio magico e posiziona le forme uguali dall'altra parte!"* / *"Hello! Look in the magic mirror and place the matching shapes on the other side!"*.
+   - Auto-played on activity startup and replayable anytime via the `[ 🔊 ASCOLTA ]` speech balloon button `(135, 492, 160, 50)` beside Lilli `(25, 435)`.
+3. **Shape Pronunciation & Spoken Feedback**:
+   - Tapping pieces in the tray pronounces their geometric shape name (*"Cerchio!"*, *"Quadrato!"*, *"Triangolo!"*, *"Semicerchio!"*).
+   - Placing pieces correctly triggers gentle chime + randomized gender-neutral praise (*"Ottimo lavoro!"*, *"Ben fatto!"*, *"Esatto!"*, *"Fantastico!"*, *"Evviva!"*).
+   - Incorrect placements trigger gentle wobble + encouraging prompt (*"Quasi! Guarda bene la distanza dallo specchio!"*, *"Riprova, sei quasi riuscito!"*).
+   - Puzzle completion triggers fanfare + completion cue (*"Che bello specchio! Ecco il prossimo mosaico!"*).
+4. **Verification**:
+   - `test_activity_specchi_magici.py`: 14/14 tests PASS.
+   - Full repository test suite: **1,306/1,306 tests PASS**, project validation PASS.
+
 ## Tre Carte Una Storia (`activities/tre_carte_una_storia`) Pre-Reader & Lilli Voice Overhaul (2026-08-25)
 
 Overhauled **Tre Carte Una Storia** (`org.greia.tre-carte-una-storia`) to eliminate reliance on reading text and fully embrace the non-verbal, voice-first pre-reader standard:

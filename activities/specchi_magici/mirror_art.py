@@ -39,7 +39,7 @@ class MirrorArt:
             image = pygame.image.load(path)
             if pygame.display.get_surface() is not None:
                 image = image.convert_alpha()
-            return pygame.transform.scale(image, (170, 170))
+            return pygame.transform.scale(image, (110, 110))
         except (OSError, ValueError, pygame.error, RuntimeError):
             return None
 

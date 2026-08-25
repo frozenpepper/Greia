@@ -121,6 +121,7 @@ class MirrorActivity:
                 if not self._ready_published:
                     mark_activity_ready()
                     self._ready_published = True
+                    self.audio.play_welcome()
             ticker.tick(30 if self.state in {AppState.WOBBLE, AppState.SHIMMER} else 20)
         return 0
 
@@ -175,6 +176,11 @@ class MirrorActivity:
             return False
         point = (int(logical[0]), int(logical[1]))
 
+        # 0. Speech replay button / mascot click
+        if self.renderer.listen_contains(point):
+            self.audio.play_welcome()
+            return True
+
         current = self.session.current_puzzle
         if current is None:
             return False
@@ -184,6 +190,8 @@ class MirrorActivity:
         if tray_idx is not None:
             self.session.select_tray_index(tray_idx)
             self.audio.play("place")
+            piece = self.session.tray[tray_idx]
+            self.audio.play_shape(piece.kind)
             return True
 
         # 2. Undo button click
@@ -205,24 +213,25 @@ class MirrorActivity:
 
     def _process_result(self, result) -> bool:
         if not result.correct:
-            self.audio.play("retry")
+            self.audio.play_feedback(False)
             self.state = AppState.WOBBLE
             self.state_started = self.clock()
             return True
 
-        self.audio.play("place")
-
         if result.puzzle_completed:
-            self.audio.play("correct")
             milestone = self.session.consume_milestone()
             if milestone is not None:
                 self.events.mosaic_completed(self.session_id, milestone)
 
             if result.session_complete:
+                self.audio.play("complete")
                 self._finish_session()
             else:
+                self.audio.play_mosaic_complete()
                 self.state = AppState.SHIMMER
                 self.state_started = self.clock()
+        else:
+            self.audio.play_feedback(True)
         return True
 
     def _advance_state(self) -> bool:

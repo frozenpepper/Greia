@@ -29,13 +29,14 @@ else:
     from mirror_services import GreiaMirrorEvents, GreiaMirrorProgress
 
 
-def _resources() -> LocalizedResources:
+def _locale_and_resources() -> tuple[str, LocalizedResources]:
     support = ActivityLocaleSupport.localized(("it", "en"), default_ui_locale="it")
     context = resolve_activity_locale(get_profile_locale(), support)
     if context is None:
         context = resolve_activity_locale("it", support)
     assert context is not None
-    return LocalizedResources(Path(__file__).resolve().parent, context)
+    locale = context.selected.value.split("-")[0]
+    return locale, LocalizedResources(Path(__file__).resolve().parent, context)
 
 
 def main() -> int:
@@ -45,7 +46,7 @@ def main() -> int:
         screen = pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.RESIZABLE)
     pygame.mouse.set_visible(True)
 
-    resources = _resources()
+    locale, resources = _locale_and_resources()
     typography = GreiaTypography()
     canvas = PygameReferenceCanvas(screen)
     art = MirrorArt(REFERENCE_WIDTH, REFERENCE_HEIGHT)
@@ -56,6 +57,7 @@ def main() -> int:
     factory = MirrorRoundFactory(rng)
     session = MirrorSession(factory.build_set(saved.level), level=saved.level, history=saved.history)
     session_id = f"{int(time.time())}-{rng.randrange(1_000_000):06d}"
+    audio = MirrorAudio(Path(__file__).resolve().parent, locale=locale)
 
     app = MirrorActivity(
         screen=screen,
@@ -67,7 +69,7 @@ def main() -> int:
         resources=resources,
         progress=progress,
         events=GreiaMirrorEvents(),
-        audio=MirrorAudio(),
+        audio=audio,
         rng=rng,
         session_id=session_id,
     )
