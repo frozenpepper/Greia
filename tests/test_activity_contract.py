@@ -50,6 +50,7 @@ class ActivityContractTests(unittest.TestCase):
                 "org.greia.shape-garden",
                 "org.greia.sillabe-magiche",
                 "org.greia.specchi-magici",
+                "org.greia.stelle-incantate",
                 "org.greia.teatrino-fiabe",
                 "org.greia.tre-carte-una-storia",
                 "org.greia.treno-numeri",

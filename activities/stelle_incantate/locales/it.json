@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "locale": "it",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Stelle Incantate",
+    "activity.stelle_incantate.title": "Stelle Incantate",
+    "activity.stelle_incantate.description": "Collega le stelle in ordine di numero e guarda le costellazioni vere prendere vita nel cielo notturno con Leo.",
+    "constellation.triangolo.name": "IL TRIANGOLO",
+    "constellation.cassiopea.name": "CASSIOPEA",
+    "constellation.cigno.name": "IL CIGNO",
+    "constellation.carro.name": "IL GRANDE CARRO",
+    "constellation.leone.name": "IL LEONE",
+    "constellation.orione.name": "ORIONE",
+    "curiosity.triangolo.fact": "Nel cielo ci sono 88 costellazioni ufficiali, decise dagli astronomi di tutto il mondo!",
+    "curiosity.cassiopea.fact": "Cassiopea era una regina delle storie antiche: la sua W di stelle brilla ancora ogni notte.",
+    "curiosity.cigno.fact": "Il Cigno vola nel cielo estivo con le sue stelle a forma di grande croce.",
+    "curiosity.carro.fact": "Le due stelle del bordo del Grande Carro indicano la strada verso la Stella Polare!",
+    "curiosity.leone.fact": "Il Leone è una costellazione antichissima: la guardiamo da migliaia di anni.",
+    "curiosity.orione.fact": "Le stelle di una costellazione sembrano vicine, ma in realtà molte sono lontanissime tra loro!",
+    "victory.title": "CHE CIELO MERAVIGLIOSO!",
+    "victory.subtitle": "Hai acceso tutte le costellazioni di stelle incantate!",
+    "button.play_again": "ANCORA!"
+  },
+  "audio": {}
+}

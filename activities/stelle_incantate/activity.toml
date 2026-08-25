@@ -1,0 +1,50 @@
+[activity]
+id = "org.greia.stelle-incantate"
+legacy_ids = []
+title_key = "activity.stelle_incantate.title"
+version = "0.1.0"
+icon = "package:assets/icon.png"
+languages = ["it", "en"]
+
+[presentation]
+categories = ["explore", "learn"]
+discovery_tags = ["nature", "numbers"]
+
+[achievement_art]
+emblems = [
+  { id = "activity", asset = "assets/icon.png" },
+  { id = "stella", asset = "assets/achievements/stella.png" },
+]
+
+[education]
+categories = ["number_recognition", "counting", "shape_recognition", "science_curiosity"]
+difficulty = 2
+recommended_age_min = 4
+recommended_age_max = 7
+skills = [
+  { id = "math.number_order", weight = 3 },
+  { id = "science.astronomy_curiosity", weight = 2 },
+  { id = "cognitive.shape_completion", weight = 2 },
+]
+events = [
+  { id = "constellation.completed", kind = "completion" },
+  { id = "curiosity.fact_opened", kind = "milestone" },
+]
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "pointer"
+
+[requirements]
+required_capabilities = ["display", "pointer"]
+optional_capabilities = ["touch", "audio.basic"]
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1

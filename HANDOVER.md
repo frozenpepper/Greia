@@ -15,6 +15,13 @@ This file is the project-wide **current continuation contract**. Chronology belo
 
 # 1. Current state at a glance
 
+## New Activity: Stelle Incantate (2026-08-25)
+
+**Stelle Incantate** (`org.greia.stelle-incantate`, 31st first-party Activity) — connect-the-dots **real constellations**: tap numbered stars in order, lines glow, the finished figure celebrates with its real name, Leo hosts an optional researched astronomy fact per figure (it/en captions; voice audio pending — honest scaffold, see `activities/stelle_incantate/research/facts.md`). Durable progress resumes across sessions; whole-sky finish shows the platform completion screen with replay. Pointer profile + number-key shortcuts; events `constellation.completed` (Star-eligible, once/session) + `curiosity.fact_opened`; two decorative emblems declared.
+
+- **Verification**: `tests/test_activity_stelle_incantate.py` (12) + reconciled contract/audience/readiness/history-policy fixtures; full `make verify` **1,345/1,345 PASS** (activities=31, progression_rules=5). Simulator gate on the exact final state: Esplora → launch → ≥12 s survival → full Cassiopea round via star taps (completion + event path) → fact opened → Next → clean Home return, rc 0; durable progress proven across sessions. No-reading UX pass passed (`TEXT_REQUIRED_FOR_GAMEPLAY=no`).
+- **Evidence lane**: source tests + simulator visual review. Leo fact voice audio pending production; physical hardware not claimed.
+
 ## Child Text Letter-Case Policy + Launcher Card Scale (2026-08-25)
 
 Implemented (ADR 0034) and simulator-verified on the final source state.

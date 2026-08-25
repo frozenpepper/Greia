@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "locale": "en",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Enchanted Stars",
+    "activity.stelle_incantate.title": "Enchanted Stars",
+    "activity.stelle_incantate.description": "Connect the stars in number order and watch real constellations come alive in the night sky with Leo.",
+    "constellation.triangolo.name": "THE TRIANGLE",
+    "constellation.cassiopea.name": "CASSIOPEIA",
+    "constellation.cigno.name": "THE SWAN",
+    "constellation.carro.name": "THE BIG DIPPER",
+    "constellation.leone.name": "THE LION",
+    "constellation.orione.name": "ORION",
+    "curiosity.triangolo.fact": "There are 88 official constellations, chosen by astronomers all over the world!",
+    "curiosity.cassiopea.fact": "Cassiopeia was a queen from ancient stories: her W of stars still shines every night.",
+    "curiosity.cigno.fact": "The Swan flies across the summer sky with its stars shaped like a big cross.",
+    "curiosity.carro.fact": "The two stars on the edge of the Big Dipper point the way to the North Star!",
+    "curiosity.leone.fact": "The Lion is a very ancient constellation: people have watched it for thousands of years.",
+    "curiosity.orione.fact": "The stars of a constellation look close together, but many are really far, far apart!",
+    "victory.title": "WHAT A MAGICAL SKY!",
+    "victory.subtitle": "You lit up every constellation of enchanted stars!",
+    "button.play_again": "AGAIN!"
+  },
+  "audio": {}
+}

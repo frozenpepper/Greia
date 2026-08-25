@@ -36,3 +36,11 @@ event_id = "bridge.level_completed"
 once_per_session = true
 reward_id = "star"
 reward_delta = 1
+
+[[rules]]
+id = "stelle-completion-star"
+activity_id = "org.greia.stelle-incantate"
+event_id = "constellation.completed"
+once_per_session = true
+reward_id = "star"
+reward_delta = 1
