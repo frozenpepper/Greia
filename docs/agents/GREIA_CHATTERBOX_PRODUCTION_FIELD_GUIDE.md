@@ -83,14 +83,26 @@ ffmpeg -hide_banner -filters | grep -E "silencedetect|atrim|astats"
    - **Never** spawn a new Python subprocess per audio file. Loading model weights takes ~3–5 seconds and re-allocates GBs of Metal buffers.
    - Load the model **once** in memory, iterate over the entire phrase matrix, and cleanly shut down at the end.
 
-3. **Explicit Metal Memory Eviction:**
-   Between character batches or large generation loops, call:
+3. **Explicit Metal Memory Eviction & Garbage Collection After EVERY Utterance:**
+   In autoregressive loops, MLX retains intermediate Metal allocation buffers across generation steps. To prevent memory ballooning, call `mx.clear_cache()` and `gc.collect()` immediately after writing each clip:
    ```python
+   import gc
    import mlx.core as mx
-   mx.clear_cache()
+
+   # Immediately after generating & saving each utterance:
+   mx.clear_cache()  # Note: replaces deprecated mx.metal.clear_cache()
+   gc.collect()
    ```
 
-4. **Strict Post-Task Process Teardown:**
+4. **Idempotency & Pre-check (Skip Existing Valid Clips):**
+   Always check whether the destination `.wav` already exists and is non-empty before calling `model.generate()`. Skipping already produced clips avoids redundant inference passes, eliminates wasted memory overhead, and allows seamless resumption:
+   ```python
+   if dest_wav.exists() and dest_wav.stat().st_size > 1000:
+       print(f"Skipping {key} (already exists)", flush=True)
+       continue
+   ```
+
+5. **Strict Post-Task Process Teardown:**
    Ensure your Python script calls `sys.exit(0)` at completion. After running a background generation task, verify that the process has exited with `ps aux`.
 
 ---

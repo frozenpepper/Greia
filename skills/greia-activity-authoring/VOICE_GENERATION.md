@@ -374,6 +374,28 @@ Prefer complete natural utterances over concatenated fragments.
 
 Do not generate pronunciation-authoritative fragments as character dialogue merely to preserve mascot voice.
 
+### 12.2 Memory Optimization and Safe Inference in Chatterbox Batch Runs (MANDATORY)
+
+When generating character audio batches using Chatterbox Multilingual V3 on Apple Silicon (`mlx-audio` / `mlx`):
+
+1. **Load Model Once per Batch**:
+   - Initialize `load_model("mlx-community/chatterbox-multilingual-v3")` and load the character reference audio once at script startup. Never reload model weights inside utterance loops or spawn child processes per clip.
+2. **Immediate Per-Utterance Cache Clearing & Garbage Collection**:
+   - Autoregressive MLX generation retains intermediate GPU Metal memory buffers in Apple Silicon unified memory. Uncontrolled loop execution can balloon memory usage to 8+ GB.
+   - Call `mx.clear_cache()` and `gc.collect()` immediately after generating and saving each clip:
+   ```python
+   import gc
+   import mlx.core as mx
+
+   # After writing each generated WAV:
+   mx.clear_cache()
+   gc.collect()
+   ```
+3. **Clip Idempotency and Skip Logic**:
+   - Audio generation scripts must check if the target `.wav` file already exists and has non-zero size before generating. Skip already existing clips to avoid redundant inference, GPU thrashing, and wasted memory.
+4. **Never Run Concurrent Inference Instances**:
+   - Execute only one generation worker at a time. Multiple subagents or parallel Python workers will contend for unified memory and cause extreme memory pressure.
+
 ## 13. Human audio gate
 
 Reject custom character speech for:
