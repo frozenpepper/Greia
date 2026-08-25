@@ -22,11 +22,12 @@ These apply to all substantive Activity work:
 6. **Child-facing UI words are presented in CAPITAL letters by default (ADR 0034).** Children learn capitals first. Localized strings comply automatically through `LocalizedResources.text()`; package-local literal strings must go through `greia_platform.child_text.display_text(...)`. Never hand-capitalize or leave child-facing literals mixed-case, and never case-transform child-authored content (for example Writing documents). A parent may choose normal text per child; the policy is presentation-only and must never feed gameplay, difficulty, permissions or stored data.
 7. **Every new Activity must explicitly decide its child-facing presenter/character and speech plan.** Greia's recurring cast should normally be considered as social anchors, guides, reactions and curiosity hosts; omission must be deliberate, not accidental.
 8. **Subject-rich Activities must explicitly consider an optional researched curiosity/facts interaction.** When appropriate, use short, well-sourced, child-safe facts delivered through multilingual-ready semantic cues and reviewed localized speech.
-9. **Every new Activity must explicitly decide its score/progress/reward model.** Local score, durable Activity progress, completion/milestone events, personal-best score events, Greia Star eligibility, global achievement opportunities and optional achievement emblem art must each be deliberate decisions. Activities report facts; Greia owns global Stars, badges, trophies and achievement truth.
-10. **A new or substantively changed Activity is not done until the final runtime-relevant source state passes the real Greia Simulator launch/survival gate.** Source validation, imports, unit tests, `make verify`, `python main.py`, or package validation do not replace this.
-11. Simulator launch evidence becomes stale after any runtime-relevant edit. Relaunch the final state.
-12. If the simulator cannot be run, report `INTEGRATION-UNVERIFIED` / `SOURCE-VERIFIED / SIMULATOR-UNVERIFIED`; do not call the Activity complete or working.
-13. Claim only evidence that actually executed. Simulator evidence is not physical Acer/Pi evidence.
+9. **Every new Activity must explicitly consider child microphone/voice recording as an available Greia capability.** Voice recording is encouraged where it adds real creative, expressive, pre-reader or educational value. Ordinary voice capture should use the platform-owned `audio.basic` route and Greia's lightweight cleanup; do not avoid a good recording interaction merely because the reference hardware microphone is noisy. Omission remains valid when recording adds no value.
+10. **Every new Activity must explicitly decide its score/progress/reward model.** Local score, durable Activity progress, completion/milestone events, personal-best score events, Greia Star eligibility, global achievement opportunities and optional achievement emblem art must each be deliberate decisions. Activities report facts; Greia owns global Stars, badges, trophies and achievement truth.
+11. **A new or substantively changed Activity is not done until the final runtime-relevant source state passes the real Greia Simulator launch/survival gate.** Source validation, imports, unit tests, `make verify`, `python main.py`, or package validation do not replace this.
+12. Simulator launch evidence becomes stale after any runtime-relevant edit. Relaunch the final state.
+13. If the simulator cannot be run, report `INTEGRATION-UNVERIFIED` / `SOURCE-VERIFIED / SIMULATOR-UNVERIFIED`; do not call the Activity complete or working.
+14. Claim only evidence that actually executed. Simulator evidence is not physical Acer/Pi evidence.
 
 For child-facing pre-reader design, read:
 
@@ -39,6 +40,12 @@ For presenter/voice/fact design, read:
 ```text
 skills/greia-activity-authoring/PRESENTERS_AND_CURIOSITY.md
 skills/greia-activity-authoring/VOICE_GENERATION.md
+```
+
+For child microphone/voice-recording design or implementation, read:
+
+```text
+skills/greia-activity-authoring/MICROPHONE_RECORDING.md
 ```
 
 For score/progress/Stars/badges/trophies, read:
@@ -66,6 +73,7 @@ skills/greia-activity-authoring/ENGINEERING.md
 skills/greia-activity-authoring/PRE_READER_UX.md
 skills/greia-activity-authoring/PRESENTERS_AND_CURIOSITY.md
 skills/greia-activity-authoring/VOICE_GENERATION.md
+skills/greia-activity-authoring/MICROPHONE_RECORDING.md
 skills/greia-activity-authoring/ACHIEVEMENTS.md
 skills/greia-activity-authoring/LAUNCH_ACCEPTANCE.md
 docs/architecture/GREIA_ACTIVITY_ECOSYSTEM.md
@@ -81,6 +89,8 @@ pre-reader instruction strategy
 lead presenter/mascot or deliberate none
 speech/shared-utterance plan
 whether optional curiosity facts fit the subject
+microphone/voice-recording decision: included / considered-unnecessary / intentionally excluded
+if recording is included: required-or-optional, child start/stop/replay flow, saved-data policy, fallback
 supported locales / multilingual speech plan
 local session score or deliberate none
 durable Activity progress/save model or deliberate none
@@ -91,7 +101,7 @@ global achievement opportunities or deliberate none
 Activity achievement emblem plan or deliberate none
 ```
 
-Do not treat text instructions, voice, presenter design, localization, progress, score or rewards as things to bolt on after gameplay is otherwise finished.
+Do not treat text instructions, voice, presenter design, localization, microphone recording, progress, score or rewards as things to bolt on after gameplay is otherwise finished.
 
 For Python/runtime/import work also inspect current source authority:
 
@@ -117,11 +127,17 @@ If the change affects child-facing instructions, controls, feedback, layout or c
 skills/greia-activity-authoring/PRE_READER_UX.md
 ```
 
-If it affects character presence, speech, audio, knowledge/facts, localization or child-facing presentation, also read:
+If it affects character presence, generated speech, knowledge/facts, localization or child-facing presentation, also read:
 
 ```text
 skills/greia-activity-authoring/PRESENTERS_AND_CURIOSITY.md
 skills/greia-activity-authoring/VOICE_GENERATION.md
+```
+
+If it affects microphone capture, child voice recording, recording storage/replay or audio-input device handling, also read:
+
+```text
+skills/greia-activity-authoring/MICROPHONE_RECORDING.md
 ```
 
 If it affects score, saved progress, completion/milestone/score events, Stars, badges, trophies or achievement art, also read:
@@ -143,6 +159,7 @@ skills/greia-activity-authoring/LAUNCH_ACCEPTANCE.md
 The launch gate is mandatory after the **final** refactor edit. A clean architecture that fails in the Simulator is a failed refactor.
 
 If the refactor changes child-visible flow or controls, rerun the pre-reader UX pass too.
+If it changes microphone capture/recording ownership, rerun the `MICROPHONE_RECORDING.md` review too.
 If it changes progress/event/reward semantics, rerun the `ACHIEVEMENTS.md` review too.
 
 ### Manifest, Collection, age/difficulty or discovery work
@@ -158,6 +175,7 @@ src/greia_launcher/catalogue_view.py
 ```
 
 If manifest event declarations or achievement-art declarations are involved, also read `ACHIEVEMENTS.md`.
+If `audio.basic` or other microphone capability declarations are involved, also read `MICROPHONE_RECORDING.md`.
 If runtime-relevant manifest data changed, also run `LAUNCH_ACCEPTANCE.md`.
 
 ### UI, layout, canvas, responsive or input work
@@ -259,6 +277,7 @@ src/greia_platform/profile_presentation.py
 ```
 
 For spoken/localized presenter or fact content also read `PRESENTERS_AND_CURIOSITY.md` and `VOICE_GENERATION.md`.
+For microphone/voice-recording interactions also read `MICROPHONE_RECORDING.md`.
 For badge/trophy child-facing copy or achievement art, also read `ACHIEVEMENTS.md`.
 
 If visible/runtime resources changed, finish with `LAUNCH_ACCEPTANCE.md` in the materially affected locale/profile configuration.
@@ -276,6 +295,12 @@ docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md
 docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md
 ```
 
+If the child also records or replays their own voice, add:
+
+```text
+skills/greia-activity-authoring/MICROPHONE_RECORDING.md
+```
+
 Only read the local production setup when actual custom voice production/configuration is required:
 
 ```text
@@ -283,9 +308,15 @@ docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md
 docs/agents/GREIA_CHATTERBOX_PRODUCTION_FIELD_GUIDE.md
 ```
 
-### Microphone/capture work
+### Microphone/capture/child voice-recording work
 
-Read:
+Read **first**:
+
+```text
+skills/greia-activity-authoring/MICROPHONE_RECORDING.md
+```
+
+Then inspect exact authorities as needed:
 
 ```text
 docs/adr/0031-platform-owned-microphone-processing.md
@@ -294,7 +325,9 @@ src/greia_platform/audio.py
 src/greia_platform/activity_api.py
 ```
 
-Do not implement Activity-local device selection or DSP policy.
+For ordinary voice recording, use `audio.basic` and Greia's SDK route. The lightweight cleaned path is an available platform capability and should be used where recording genuinely improves the Activity.
+
+Do not implement Activity-local device selection or DSP policy. Do not bypass the route to obtain raw ALSA input. If genuinely unprocessed signal is an accepted Activity requirement, the current platform needs a typed API/product extension; ordinary Activity code must not silently override the Parent-owned processing policy.
 
 ### Performance optimization
 
@@ -325,12 +358,13 @@ Before saying substantive Activity work is done, answer:
 1. Which task-specific docs above were read?
 2. For new/child-facing work: did the no-reading UX pass succeed? Is any core instruction text-dependent?
 3. For a new Activity: what presenter/speech/curiosity-fact decision was made?
-4. For a new Activity: what score/progress/events/Stars/achievement decision was made?
-5. Which source/test validation actually ran?
-6. What exact final source SHA/state was launched through Greia Simulator?
-7. Did it reach a usable frame, survive >=10s, survive meaningful input, exercise relevant completion/score/milestone paths, and return cleanly to Shell?
+4. For a new Activity: was microphone/voice recording considered, and if included does it use audio.basic + the Greia SDK route?
+5. For a new Activity: what score/progress/events/Stars/achievement decision was made?
+6. Which source/test validation actually ran?
+7. What exact final source SHA/state was launched through Greia Simulator?
+8. Did it reach a usable frame, survive >=10s, survive meaningful input, exercise relevant completion/score/milestone/recording paths, and return cleanly to Shell?
 ```
 
 If the Activity requires reading for its ordinary core instructions, the child-facing UX is failed even if the code launches and tests pass.
 
-If #6 or #7 has no successful evidence, the correct status is **integration-unverified**, not complete.
+If #7 or #8 has no successful evidence, the correct status is **integration-unverified**, not complete.
