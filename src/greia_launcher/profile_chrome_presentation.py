@@ -150,7 +150,11 @@ class SharedUiProfileChromeMixin:
         font_size = max(23, min(38, rect.height // 6))
         max_name_width = rect.width - 18
         name = self._profile_name_surface(
-            profile.display_name, font_size, max_name_width, theme.text, pygame
+            self._child_display_text(profile.display_name),
+            font_size,
+            max_name_width,
+            theme.text,
+            pygame,
         )
         screen.blit(name, name.get_rect(center=(rect.centerx, rect.bottom - rect.height * 0.15)))
 

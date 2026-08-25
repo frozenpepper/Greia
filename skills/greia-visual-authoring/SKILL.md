@@ -45,9 +45,12 @@ Read:
 ```text
 docs/design/GREIA_VISUAL_STYLE_GUIDE.md
 docs/design/GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md
+docs/adr/0034-child-text-letter-case-policy.md
 ```
 
 Use these when deciding shape language, palette/value relationships, material treatment, silhouette quality, typography relationship or the reusable visual quality bar.
+
+Child-facing UI words are presented in CAPITAL letters by default (ADR 0034, style guide §3.3); treat letter case as part of the accepted visual language and never hand-style it per asset.
 
 ### Finding reusable generic art
 

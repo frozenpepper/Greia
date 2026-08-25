@@ -16,6 +16,8 @@ from pathlib import Path, PurePosixPath
 from string import Template
 from typing import Mapping
 
+from .child_text import display_text
+
 
 MAX_BUNDLE_BYTES = 256 * 1024
 MAX_STRING_ENTRIES = 1024
@@ -272,6 +274,12 @@ class LocalizedResources:
         *,
         variant: str | None = None,
     ) -> str:
+        """Resolve one display string under the profile letter-case policy.
+
+        Returned text is child-facing presentation: Greia's default presents
+        it in CAPITAL letters unless this child's parent chose normal text.
+        Semantic keys and audio cue lookup are never case-transformed.
+        """
         key = _resource_key(key)
         lookup_keys = _variant_keys(key, variant)
         value: str | None = None
@@ -296,7 +304,7 @@ class LocalizedResources:
                 raise LocalizationError("localized replacement value is invalid")
             safe[name] = rendered
         try:
-            return Template(value).substitute(safe)
+            return display_text(Template(value).substitute(safe))
         except (KeyError, ValueError) as exc:
             raise LocalizationError(
                 f"localized string {key!r} has an unresolved/invalid placeholder"

@@ -6,6 +6,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from .assets import AssetCatalogue, AssetCatalogueError
+from .child_text import ChildTextCase, child_text_case_from_environment
 from .customization import (
     RemovableImageScanner,
     ResolvedTheme,
@@ -314,6 +315,20 @@ def get_profile_grammatical_gender() -> GrammaticalGender:
             presentation=get_profile_presentation()
         )
         return presentation.grammatical_gender
+
+
+def get_profile_uppercase_text() -> bool:
+    """Return whether this child's launch presents UI words in CAPITAL letters.
+
+    Young Greia children learn capital letters first, so the Shell default is
+    uppercase presentation; a parent may choose normal text per child. This is
+    a display-presentation hint only. Activities must not derive gameplay,
+    difficulty, permissions or stored data from it. Ordinary Activities do not
+    need to call this: ``LocalizedResources.text()`` already applies the
+    policy. Call it only when rendering Activity-owned literal strings.
+    """
+
+    return child_text_case_from_environment() is ChildTextCase.UPPERCASE
 
 
 def get_profile_avatar_choices() -> tuple[str, ...]:

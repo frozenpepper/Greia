@@ -809,7 +809,7 @@ class LauncherApplication:
         side_reserve = 150 if page.page_count > 1 else 30
         gap = max(12, min(22, width // 48))
         usable_w = max(240, width - side_reserve)
-        tile_w = min(205, (usable_w - gap * (page.columns - 1)) // page.columns)
+        tile_w = min(213, (usable_w - gap * (page.columns - 1)) // page.columns)
         tile_h = min(205, (available_h - gap * max(0, page.rows - 1)) // max(1, page.rows))
         tile_w = max(110, tile_w)
         tile_h = max(120, tile_h)
@@ -843,7 +843,11 @@ class LauncherApplication:
             font_size = max(23, min(38, rect.height // 6))
             max_name_width = rect.width - 18
             name = self._profile_name_surface(
-                profile.display_name, font_size, max_name_width, theme.text, pygame
+                self._child_display_text(profile.display_name),
+                font_size,
+                max_name_width,
+                theme.text,
+                pygame,
             )
             screen.blit(name, name.get_rect(center=(rect.centerx, rect.bottom - rect.height * 0.15)))
             if profile.has_secret:
@@ -926,7 +930,7 @@ class LauncherApplication:
         gap = max(16, min(26, width // 42))
         usable_w = max(240, width - side_reserve)
         tile_size = min(
-            210,
+            218,
             (usable_w - gap * (page.columns - 1)) // page.columns,
             (available_h - gap * max(0, page.rows - 1)) // max(1, page.rows),
         )

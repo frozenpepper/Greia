@@ -130,7 +130,10 @@ def render_activity_card_label(
     best_lines: tuple[str, ...] = (text,)
     best_font: Any = None
 
-    for size in range(preferred_size, min_size - 1, -1):
+    # Always try at least the preferred size: when preferred_size is below
+    # min_size the naive range would be empty and no fit check would run.
+    lowest_size = min(min_size, preferred_size)
+    for size in range(preferred_size, lowest_size - 1, -1):
         font = font_provider(size)
         lines = split_title_two_lines(text, font, max_width)
         line_h = font.get_linesize()
@@ -141,16 +144,26 @@ def render_activity_card_label(
             break
 
     if best_font is None:
-        best_font = font_provider(min_size)
+        best_font = font_provider(lowest_size)
         best_lines = split_title_two_lines(text, best_font, max_width)
 
     line_surfaces = [best_font.render(line, True, color) for line in best_lines]
     total_w = min(max_width, max(s.get_width() for s in line_surfaces) if line_surfaces else 1)
     line_h = best_font.get_linesize()
-    total_h = min(max_height, len(line_surfaces) * line_h)
+
+    # Hard guarantee against text crossing the card border: when even the
+    # chosen font cannot stack its lines inside the band, compress leading
+    # instead of letting glyphs clip past the label bounds.
+    tallest_line = max((s.get_height() for s in line_surfaces), default=line_h)
+    count = len(line_surfaces)
+    if count > 1 and count * line_h > max_height:
+        line_h = max(1, min(line_h, (max_height - tallest_line) // (count - 1)))
+
+    needed_h = count * line_h
+    total_h = min(max_height, needed_h)
 
     surface = pygame.Surface((total_w, total_h), pygame.SRCALPHA)
-    y_offset = (total_h - (len(line_surfaces) * line_h)) // 2
+    y_offset = (total_h - needed_h) // 2
     for i, line_s in enumerate(line_surfaces):
         x = (total_w - line_s.get_width()) // 2
         y = y_offset + i * line_h

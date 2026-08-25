@@ -50,6 +50,7 @@ ul{padding-left:1.2rem}.hidden{display:none}
       <label>Optional simple password<input name="secret" maxlength="32"></label>
     </div>
     <label><input type="checkbox" name="mask_secret"> Hide password while the child types</label>
+    <label><input type="checkbox" name="uppercase_text" checked> CAPITAL-letter text (recommended for young children)</label>
     <button type="submit">Add child</button>
   </form>
 </section>
@@ -172,8 +173,13 @@ function renderProfiles(profiles,avatars){
     const body=document.createElement("div");
     body.append(lines([
       `Avatar: ${text(profile.avatar_id)}`,
-      `Password: ${profile.has_secret ? "set" : "none"}`
+      `Password: ${profile.has_secret ? "set" : "none"}`,
+      `Text style: ${profile.uppercase_text === false ? "normal letters" : "CAPITAL letters"}`
     ]));
+    const caseToggle=document.createElement("button");
+    caseToggle.textContent=profile.uppercase_text === false ? "Use CAPITAL letters" : "Use normal letters";
+    caseToggle.onclick=async()=>{ try{ await request(`/profiles/${encodeURIComponent(profile.profile_id)}`,{method:"PATCH",body:JSON.stringify({uppercase_text:profile.uppercase_text===false})}); await load(); }catch(e){ showError(e); } };
+    body.append(caseToggle);
     const remove=document.createElement("button"); remove.className="danger"; remove.textContent="Delete";
     remove.onclick=async()=>{ if(!confirm(`Delete ${profile.display_name}?`)) return; try{await request(`/profiles/${encodeURIComponent(profile.profile_id)}`,{method:"DELETE"});await load()}catch(e){showError(e)} };
     body.append(remove);
@@ -253,7 +259,7 @@ document.getElementById("create-profile").addEventListener("submit",async event=
   event.preventDefault(); const form=new FormData(event.currentTarget);
   try{
     await request("/profiles",{method:"POST",body:JSON.stringify({
-      display_name:form.get("display_name"),avatar_id:form.get("avatar_id"),secret:form.get("secret")||"",mask_secret:form.get("mask_secret")==="on"
+      display_name:form.get("display_name"),avatar_id:form.get("avatar_id"),secret:form.get("secret")||"",mask_secret:form.get("mask_secret")==="on",uppercase_text:form.get("uppercase_text")==="on"
     })});
     event.currentTarget.reset(); await load();
   }catch(error){showError(error)}

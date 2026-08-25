@@ -216,10 +216,12 @@ class CollectionFirstHomeMixin:
 
         avail_cell_w = max(1, (inner.width - gap_x * (columns - 1)) // columns)
         avail_cell_h = max(1, (inner.height - gap_y * (rows - 1)) // rows)
+        # 141 = 136 reference portal +4% so Collection buttons match the
+        # larger Activity-card scale; label font size stays unchanged.
         portal_size = max(
             76,
             min(
-                136,
+                141,
                 avail_cell_w - 12,
                 avail_cell_h - label_gap - label_approx_h - 12,
             ),

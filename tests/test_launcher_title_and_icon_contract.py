@@ -91,6 +91,42 @@ class LauncherTitleAndIconContractTests(unittest.TestCase):
         self.assertLessEqual(label_surf.get_width(), max_w)
         self.assertLessEqual(label_surf.get_height(), max_h)
 
+    def test_two_line_label_fits_even_when_preferred_size_below_min_size(self) -> None:
+        # Regression: a preferred size below min_size used to skip every fit
+        # check and clip two-line text past the card label band.
+        max_h = 26
+        label_surf = render_activity_card_label(
+            "Memory delle Meraviglie",
+            max_width=120,
+            max_height=max_h,
+            font_provider=lambda sz: self.typography.font(FontRole.TITLE, sz),
+            color=(40, 40, 40),
+            preferred_size=12,
+            pygame=pygame,
+            min_size=14,
+        )
+        self.assertLessEqual(label_surf.get_height(), max_h)
+        self.assertGreater(label_surf.get_height(), 0)
+
+    def test_two_line_label_compresses_leading_instead_of_overflowing_band(self) -> None:
+        # Even when the smallest allowed font stacks two full lines taller than
+        # the band, the rendered surface must stay inside it (leading is
+        # compressed) so glyphs never cross the card border.
+        for title in ("Rompicapi della Foresta Incantata", "GIORNO NOTTE"):
+            with self.subTest(title=title):
+                surf = render_activity_card_label(
+                    title,
+                    max_width=100,
+                    max_height=30,
+                    font_provider=lambda sz: self.typography.font(FontRole.TITLE, sz),
+                    color=(40, 40, 40),
+                    preferred_size=14,
+                    pygame=pygame,
+                    min_size=10,
+                )
+                self.assertLessEqual(surf.get_height(), 30)
+                self.assertGreater(surf.get_width(), 0)
+
     def test_full_title_disclosure_preserves_complete_uncapped_title(self) -> None:
         long_title = "Super Avventura Spaziale dei Draghetti nel Regno delle Fiabe Incantate"
         theme = SimpleNamespace(panel=(250, 246, 238), accent=(239, 77, 83), text=(33, 37, 41))

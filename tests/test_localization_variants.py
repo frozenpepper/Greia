@@ -1,16 +1,29 @@
 from __future__ import annotations
 
+import contextlib
 import json
 import tempfile
 import unittest
 from pathlib import Path
 
+from greia_platform.child_text import ChildTextCase, set_child_text_case
 from greia_platform.localization import (
     ActivityLocaleSupport,
     LocalizationError,
     LocalizedResources,
     resolve_activity_locale,
 )
+
+
+@contextlib.contextmanager
+def _child_text_case(case: ChildTextCase):
+    """Pin the process child-text policy for one test scope."""
+
+    set_child_text_case(case)
+    try:
+        yield
+    finally:
+        set_child_text_case(None)
 
 
 class LocalizationVariantTests(unittest.TestCase):
@@ -55,18 +68,19 @@ class LocalizationVariantTests(unittest.TestCase):
             )
             assert context is not None
             resources = LocalizedResources(root, context)
-            self.assertEqual(
-                resources.text("feedback.correct", variant="masculine"),
-                "Bravo!",
-            )
-            self.assertEqual(
-                resources.text("feedback.correct", variant="feminine"),
-                "Brava!",
-            )
-            self.assertEqual(
-                resources.text("feedback.correct", variant="neutral"),
-                "Ottimo lavoro!",
-            )
+            with _child_text_case(ChildTextCase.NORMAL):
+                self.assertEqual(
+                    resources.text("feedback.correct", variant="masculine"),
+                    "Bravo!",
+                )
+                self.assertEqual(
+                    resources.text("feedback.correct", variant="feminine"),
+                    "Brava!",
+                )
+                self.assertEqual(
+                    resources.text("feedback.correct", variant="neutral"),
+                    "Ottimo lavoro!",
+                )
 
     def test_locale_priority_beats_variant_priority_across_languages(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -92,10 +106,11 @@ class LocalizationVariantTests(unittest.TestCase):
             )
             assert context is not None
             resources = LocalizedResources(root, context)
-            self.assertEqual(
-                resources.text("feedback.correct", variant="feminine"),
-                "Ottimo lavoro!",
-            )
+            with _child_text_case(ChildTextCase.NORMAL):
+                self.assertEqual(
+                    resources.text("feedback.correct", variant="feminine"),
+                    "Ottimo lavoro!",
+                )
 
     def test_audio_uses_same_semantic_variant_rule_as_text(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

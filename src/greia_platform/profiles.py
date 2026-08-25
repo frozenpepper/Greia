@@ -180,6 +180,9 @@ class ChildProfile:
     mask_secret: bool
     approximate_age: int | None = None
     challenge_preference: ChallengePreference = ChallengePreference.AUTOMATIC
+    # Child-facing UI words default to CAPITAL letters because target children
+    # learn capitals first. Purely presentational; a parent may disable it.
+    uppercase_text: bool = True
 
     @property
     def has_secret(self) -> bool:
@@ -194,6 +197,7 @@ class ChildProfile:
             "mask_secret": self.mask_secret,
             "approximate_age": self.approximate_age,
             "challenge_preference": self.challenge_preference.value,
+            "uppercase_text": self.uppercase_text,
         }
 
     def storage_dict(self) -> dict[str, object]:
@@ -308,6 +312,7 @@ class ProfileStore:
         mask_secret: bool | None = None,
         approximate_age: int | None = None,
         challenge_preference: ChallengePreference | str = ChallengePreference.AUTOMATIC,
+        uppercase_text: bool = True,
     ) -> ChildProfile:
         with self._mutation_lock():
             profiles = self._read_unlocked()
@@ -320,6 +325,7 @@ class ProfileStore:
                 self.policy.default_mask_secret if mask_secret is None else bool(mask_secret),
                 approximate_age=approximate_age,
                 challenge_preference=challenge_preference,
+                uppercase_text=bool(uppercase_text),
             )
             updated = (*profiles, profile)
             self._write_unlocked(updated)
@@ -338,6 +344,7 @@ class ProfileStore:
         approximate_age: int | None = None,
         clear_approximate_age: bool = False,
         challenge_preference: ChallengePreference | str | None = None,
+        uppercase_text: bool | None = None,
     ) -> ChildProfile:
         _validate_profile_id(profile_id)
         if secret_action not in {"keep", "set", "clear"}:
@@ -368,6 +375,9 @@ class ProfileStore:
                     if challenge_preference is not None
                     else current.challenge_preference
                 )
+                resolved_uppercase = (
+                    current.uppercase_text if uppercase_text is None else bool(uppercase_text)
+                )
                 updated = replace(
                     current,
                     display_name=(
@@ -384,6 +394,7 @@ class ProfileStore:
                     mask_secret=(current.mask_secret if mask_secret is None else bool(mask_secret)),
                     approximate_age=resolved_age,
                     challenge_preference=resolved_challenge,
+                    uppercase_text=resolved_uppercase,
                 )
                 profiles[index] = updated
                 self._write_unlocked(tuple(profiles))
@@ -455,6 +466,7 @@ class ProfileStore:
         *,
         approximate_age: int | None = None,
         challenge_preference: ChallengePreference | str = ChallengePreference.AUTOMATIC,
+        uppercase_text: bool = True,
     ) -> ChildProfile:
         name = self.policy.validate_name(display_name)
         avatar = self.policy.validate_avatar(avatar_id)
@@ -472,6 +484,7 @@ class ProfileStore:
             bool(mask_secret),
             self.policy.validate_approximate_age(approximate_age),
             self.policy.validate_challenge_preference(challenge_preference),
+            bool(uppercase_text),
         )
 
     def _read_unlocked(self) -> tuple[ChildProfile, ...]:
@@ -508,6 +521,7 @@ class ProfileStore:
         challenge_preference = raw.get(
             "challenge_preference", ChallengePreference.AUTOMATIC.value
         )
+        uppercase_text = raw.get("uppercase_text", True)
         if not isinstance(profile_id, str):
             raise ProfileError("profile identifier must be text")
         _validate_profile_id(profile_id)
@@ -515,6 +529,8 @@ class ProfileStore:
             raise ProfileError("profile name and avatar must be text")
         if not isinstance(mask_secret, bool):
             raise ProfileError("mask_secret must be a boolean")
+        if not isinstance(uppercase_text, bool):
+            raise ProfileError("uppercase_text must be a boolean")
         secret_raw = raw.get("secret")
         digest: SecretDigest | None = None
         if secret_raw is not None:
@@ -552,6 +568,7 @@ class ProfileStore:
             mask_secret,
             self.policy.validate_approximate_age(approximate_age),
             self.policy.validate_challenge_preference(challenge_preference),
+            uppercase_text,
         )
 
     def _write_unlocked(self, profiles: tuple[ChildProfile, ...]) -> None:
@@ -705,6 +722,7 @@ class ActiveProfileSession:
                 "mask_secret",
                 "approximate_age",
                 "challenge_preference",
+                "uppercase_text",
             )
         }
 

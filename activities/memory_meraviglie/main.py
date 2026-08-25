@@ -12,6 +12,7 @@ import wave
 
 import pygame
 
+from greia_platform.child_text import display_text
 from greia_platform.activity_api import (
     activity_stop_requested,
     emit_activity_event,
@@ -753,7 +754,7 @@ def main() -> int:
 
                     _draw_card_illustration(surf, item["id"], cur_rect.centerx, emblem_cy, int(emblem_r * 1.5))
 
-                    lbl_text = item["label_it"] if active_locale == "it" else item["label_en"]
+                    lbl_text = display_text(item["label_it"] if active_locale == "it" else item["label_en"])
                     lbl_surf = typography.render(lbl_text, FontRole.DISPLAY, max(12, min(16, card_h // 12)), (30, 41, 59))
                     surf.blit(lbl_surf, (cur_rect.centerx - lbl_surf.get_width() // 2, cur_rect.bottom - lbl_surf.get_height() - 8))
             else:

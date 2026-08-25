@@ -9,6 +9,7 @@ import uuid
 from PIL import Image
 import pygame
 
+from greia_platform.child_text import display_text
 from greia_platform.activity_api import (
     activity_stop_requested,
     get_icon_path,
@@ -286,12 +287,12 @@ class PaintingApp:
             pygame.draw.line(bg_surf, (235, 226, 208), (0, line_y), (w, line_y), 2)
         self._background_surface = bg_surf
 
-        # Pre-render status labels
+        # Pre-render status labels (child text case policy applied)
         self.status_font = pygame.font.Font(None, self.metrics.px(16))
         self._status_labels = {
-            "Salvo": self.status_font.render("Salvo", True, (100, 116, 139)),
-            "Salva...": self.status_font.render("Salva...", True, (100, 116, 139)),
-            "Errore": self.status_font.render("Errore", True, (100, 116, 139)),
+            "Salvo": self.status_font.render(display_text("Salvo"), True, (100, 116, 139)),
+            "Salva...": self.status_font.render(display_text("Salva..."), True, (100, 116, 139)),
+            "Errore": self.status_font.render(display_text("Errore"), True, (100, 116, 139)),
         }
 
     @property

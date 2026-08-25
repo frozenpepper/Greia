@@ -24,6 +24,7 @@ try:
 except ImportError:
     sdl2_audio = None
 
+from greia_platform.child_text import display_text
 from greia_platform.activity_api import (
     activity_stop_requested,
     emit_activity_event,
@@ -955,7 +956,10 @@ def main() -> int:
         key = (text, role, size, color)
         res = text_cache.get(key)
         if res is None:
-            res = typography.render(text, role, size, color)
+            # Single child-text case chokepoint: this Activity reads locale
+            # JSON directly instead of LocalizedResources, so the display
+            # letter-case policy is applied here before rendering.
+            res = typography.render(display_text(text), role, size, color)
             if len(text_cache) > 256:
                 text_cache.clear()
             text_cache[key] = res

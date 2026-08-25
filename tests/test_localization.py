@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import contextlib
 import json
 import tempfile
 import unittest
 from pathlib import Path
 
+from greia_platform.child_text import ChildTextCase, set_child_text_case
 from greia_platform.localization import (
     ActivityLocaleSupport,
     LocaleTag,
@@ -14,6 +16,17 @@ from greia_platform.localization import (
     TextDirection,
     resolve_activity_locale,
 )
+
+
+@contextlib.contextmanager
+def _child_text_case(case: ChildTextCase):
+    """Pin the process child-text policy for one test scope."""
+
+    set_child_text_case(case)
+    try:
+        yield
+    finally:
+        set_child_text_case(None)
 
 
 class LocaleTagTests(unittest.TestCase):
@@ -141,8 +154,12 @@ class LocalizationBundleTests(unittest.TestCase):
             assert context is not None
             resources = LocalizedResources(root, context)
 
-            self.assertEqual(resources.text("hello", {"name": "Gaia"}), "Ciao Gaia")
-            self.assertEqual(resources.text("only.default"), "Default fallback")
+            # Greia's default child text policy presents display strings in
+            # CAPITAL letters; the semantic lookup/fallback order is unchanged.
+            with _child_text_case(ChildTextCase.NORMAL):
+                self.assertEqual(resources.text("hello", {"name": "Gaia"}), "Ciao Gaia")
+                self.assertEqual(resources.text("only.default"), "Default fallback")
+            self.assertEqual(resources.text("hello", {"name": "Gaia"}), "CIAO GAIA")
             cue = resources.audio_cue("hello.voice")
             self.assertEqual(cue.path, root / "audio" / "hello.ogg")
             self.assertEqual(cue.caption_key, "caption.hello")

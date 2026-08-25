@@ -1014,3 +1014,19 @@ This plan may be marked complete only when:
 - Decisions: safety/trust authorities fail closed; presentation/enrichment authorities (progression/history/achievement) fail soft for absent Activities; broken Activities are never auto-healed.
 - Remaining blockers: physical-device re-validation after a scrubbed tree.
 - Next exact step: commit; document in HANDOVER; optional physical re-check on Acer.
+
+## 2026-08-25 — Child text letter-case policy + launcher card scale (non-closing)
+
+- Implemented (ADR 0034):
+  1. **Platform policy**: new `src/greia_platform/child_text.py` — bounded `ChildTextCase` (`uppercase` platform default / `normal`), `display_text()`, process-resolved launch policy (`GREIA_PROFILE_UPPERCASE`), test override seam.
+  2. **Profile preference**: `ChildProfile.uppercase_text` (default `true`), persisted in the registry, backward-compatible parsing (legacy registries default to capitals), exposed via `public_dict`, plumbed through `ProfileStore.create/update` and `ActiveProfileSession`.
+  3. **Parent control**: CAPITAL-text checkbox in Parent App create/update forms (`src/greia_parent/server.py`), `uppercase_text` in the Parent JSON API create/PATCH (`api_server.py`), live per-child toggle + state row in the Parent web client.
+  4. **Launch plumbing**: supervisor writes `GREIA_PROFILE_UPPERCASE=uppercase|normal`; `activity_api.get_profile_uppercase_text()` exposes it; `LocalizedResources.text()` applies the policy to every localized display string (keys/audio lookup never transformed).
+  5. **Shell enforcement**: `_child_display_text()` chokepoint applied to Activity card titles, full-title disclosure, launch badge ("AVVIO..."), profile-picker names, achievement library/badge copy; `_category_label_surface` covers all Collection/Category/discovery labels.
+  6. **Activity enforcement pass**: mixed-case package-local literals routed through `display_text` (painting status, pasticceria UI + feedback fallbacks, posta_di_leo, sillabe_magiche, tre_carte_una_storia incl. presenter fallback, memory_meraviglie card labels, cucciolo_mio/foresta_parole fallbacks, teatrino_fiabe via its `get_text` chokepoint). Child-authored content (Writing) deliberately untouched; `GreiaTypography.render` stays case-neutral.
+  7. **Card scale (+4%)**: Activity tiles 210→218 px (both grid paths + base renderer), Collection portals 136→141, sub-Collection portals 170→177, profile tiles 205→213; label font sizes unchanged. `render_activity_card_label` fit hardened: preferred-size-below-min-size range bug fixed and two-line labels compress leading instead of clipping past the card border.
+- Docs/skills: ADR 0034; style guide §3.3; `greia-activity-authoring` SKILL universal rule 5 + `PRE_READER_UX.md` §7.1; `greia-os-work` localization seam section; `greia-visual-authoring` reading list; `skills/` and `.agents/skills/` trees reconciled into full sync.
+- Tests/evidence: new `tests/test_child_text_case.py` (9), updated localization/title contract tests; full suite **1,324/1,324 PASS**; `make verify` exit 0.
+- Simulator gate (1024×600, isolated state, real `greia_simulator.child_shell`): Collection Home + Activity grid present CAPITAL labels/titles with two-line titles inside card borders; L'Acquario Magico toolbar copy uppercase; Painting status "SALVO" uppercase; parent-disabled profile presents normal case; launch → ≥10 s survival → meaningful interaction (draw/click/space) → clean Home return to Shell, both profiles, clean exits (rc 0).
+- Remaining blockers: none for this tranche; physical-device re-check happens with the next hardware evidence pass.
+- Next exact step: commit; then continue the blocking platform path from R7.

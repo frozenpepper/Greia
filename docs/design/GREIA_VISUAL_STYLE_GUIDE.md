@@ -69,6 +69,15 @@ An Activity may use another appropriately licensed typeface **inside its express
 
 Specialized literacy Activities may require pedagogically specific letterforms. Those cases should be decided for learning value and legibility rather than visual novelty.
 
+### 3.3 Child text letter case — CAPITALS by default
+
+**Accepted product rule (ADR 0034):** child-facing UI words are presented in CAPITAL letters by default, because target children learn and recognize capitals first. This applies to Activity names, Collection/Category labels, instructions, buttons, feedback and achievement copy across the Shell and first-party Activities.
+
+- The policy is platform-owned and per child: a parent may choose normal text in the Parent App (`uppercase_text` profile preference).
+- Implementation authority: `src/greia_platform/child_text.py` (`display_text`), applied automatically by `LocalizedResources.text()`; Activity-local literals must go through `display_text(...)`; the Shell applies it at its child-facing render chokepoints.
+- Child-authored content (Writing documents, child-typed names) is never case-transformed.
+- Parent-facing surfaces keep normal sentence case; the policy is a child presentation rule, not a documentation or adult-UI rule.
+
 ## 4. Nunito Sans licensing and provenance
 
 Nunito Sans is distributed under the **SIL Open Font License 1.1 (OFL-1.1)**.

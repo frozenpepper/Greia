@@ -10,6 +10,7 @@ import wave
 
 import pygame
 
+from greia_platform.child_text import display_text
 from greia_platform.activity_api import (
     activity_stop_requested,
     emit_activity_event,
@@ -373,7 +374,7 @@ def main() -> int:
                             if active_tab == "sleep":
                                 pet.is_sleeping = True
                                 sounds.play("sparkle")
-                                feedback_msg = resources.text("msg.sleep") if resources else "Sogni d'oro... 🌙"
+                                feedback_msg = resources.text("msg.sleep") if resources else display_text("Sogni d'oro... 🌙")
                                 feedback_timer = 2.5
                                 safe_emit("pet.tucked_in", f"sleep-{time.time()}")
                             else:
@@ -386,7 +387,7 @@ def main() -> int:
                         sounds.play("crunch")
                         for _ in range(16):
                             particles.append(Particle(pet.x, pet.y - 40, "💖", PINK))
-                        feedback_msg = resources.text("msg.nom_nom") if resources else "Gnam gnam! 💖"
+                        feedback_msg = resources.text("msg.nom_nom") if resources else display_text("Gnam gnam! 💖")
                         feedback_timer = 2.0
                         safe_emit("pet.fed", f"feed-{time.time()}")
 
@@ -401,7 +402,7 @@ def main() -> int:
                             happiness = min(5, happiness + 1)
                             for _ in range(20):
                                 particles.append(Particle(pet.x, pet.y, "✨", GOLD))
-                            feedback_msg = resources.text("msg.sparkle") if resources else "Tutto pulito! ✨"
+                            feedback_msg = resources.text("msg.sparkle") if resources else display_text("Tutto pulito! ✨")
                             feedback_timer = 2.0
                             pet.bubble_count = 0
                             bubbles.clear()
@@ -414,7 +415,7 @@ def main() -> int:
                         sounds.play("sparkle")
                         for _ in range(14):
                             particles.append(Particle(pet.x, pet.y - 60, "🎀", PINK))
-                        feedback_msg = resources.text("msg.dress") if resources else "Che bel look! 🎀"
+                        feedback_msg = resources.text("msg.dress") if resources else display_text("Che bel look! 🎀")
                         feedback_timer = 2.0
 
         if active_tab == "play":

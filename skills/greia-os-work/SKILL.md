@@ -214,23 +214,40 @@ Read:
 ```text
 docs/design/GREIA_ACHIEVEMENTS_AND_BADGE_LIBRARY.md
 docs/design/GREIA_ACTIVITY_ACHIEVEMENT_ART.md
+docs/adr/0033-fail-soft-activity-crossbindings-and-dev-noise-scrub.md
 runtime/progression-policy.toml
 runtime/achievement-policy.toml
 ```
 
+A progression/history/achievement policy rule that references an Activity
+absent from the loaded catalogue (not loaded, retired, or broken) drops that
+rule at runtime with a warning instead of raising, so a single unloaded
+Activity never takes the child OS down. Undeclared events on a **loaded**
+Activity and structural policy corruption still fail hard. Built-in Activity
+trees are scrubbed of curated regenerable dev-noise (`.DS_Store`, `._*`,
+`__MACOSX/`, `__pycache__/`, `*.pyc`, editor droppings) during launcher
+assembly, before discovery; a genuinely broken Activity is never auto-healed.
+
 Inspect current history/achievement/event-broker source owners before changing policy or presentation.
 
-### Localization, language presentation or profile grammatical agreement
+### Localization, language presentation, profile grammatical agreement or child text letter case
 
 Read:
 
 ```text
 docs/adr/0028-platform-and-activity-localization-language-context.md
 docs/adr/0032-profile-presentation-and-grammatical-agreement.md
+docs/adr/0034-child-text-letter-case-policy.md
 src/greia_platform/localization.py
 src/greia_platform/language_presentation.py
 src/greia_platform/profile_presentation.py
+src/greia_platform/child_text.py
 ```
+
+Child-facing UI text defaults to CAPITAL letters under the profile-owned
+letter-case policy (ADR 0034). `LocalizedResources.text()` and the Shell's
+child-facing render chokepoints apply it automatically; parent-facing surfaces
+and child-authored content deliberately bypass it.
 
 ### Audio service or microphone capture/processing
 

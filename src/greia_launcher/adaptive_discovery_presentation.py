@@ -307,9 +307,10 @@ class AdaptiveActivityDiscoveryMixin:
         label_height = max(30, min(42, inner.height // 9))
         cell_w = max(1, (inner.width - gap_x * (columns - 1)) // columns)
         cell_h = max(1, (inner.height - gap_y * (rows - 1)) // rows)
+        # 177 = 170 reference portal +4% for consistent card/button scale.
         portal_size = max(
             84,
-            min(170, cell_w - 8, cell_h - label_height - 4),
+            min(177, cell_w - 8, cell_h - label_height - 4),
         )
         item_h = portal_size + label_height
         total_h = rows * item_h + gap_y * (rows - 1)

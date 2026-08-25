@@ -171,6 +171,15 @@ If the Activity supports Italian and English, both must have a coherent spoken/v
 
 When spoken language is part of the accepted interaction contract, missing reviewed audio coverage is an acceptance gap, not a reason to fall back silently to text-only instructions.
 
+### 7.1 CAPITAL-letter presentation default (ADR 0034)
+
+Children learn CAPITAL letters first, so Greia presents child-facing UI words in capitals by default: Activity names, Collection/Category labels, instructions, buttons, feedback and achievement copy.
+
+- Localized strings comply automatically: `LocalizedResources.text()` applies the profile letter-case policy.
+- Package-local literal strings must go through `greia_platform.child_text.display_text(...)`; do not hand-capitalize and do not leave child-facing literals mixed-case.
+- A parent may choose normal text per child; the policy is presentation-only and must never feed gameplay, difficulty, permissions or stored data.
+- Never case-transform child-authored content (for example what the child writes in the Writing Activity).
+
 ## 8. Reading-focused Activities are the exception, not a loophole
 
 An Activity may intentionally teach reading, letters, spelling or words. That does not mean the **instructions about how to interact** may depend on reading.

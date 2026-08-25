@@ -378,7 +378,7 @@ class SharedUiActivityCardMixin:
         screen.blit(icon, icon.get_rect(center=content_rect.center))
 
         title = self._render_activity_label(
-            self._activity_title_for_shared_card(activity),
+            self._child_display_text(self._activity_title_for_shared_card(activity)),
             max_width=max(28, label_rect.width - 6),
             max_height=max(22, label_rect.height - 4),
             pygame=pygame,
@@ -410,7 +410,9 @@ class SharedUiActivityCardMixin:
             pygame.draw.rect(screen, (239, 77, 83), badge_rect, border_radius=badge_h // 2)
             pygame.draw.rect(screen, (255, 255, 255), badge_rect, width=2, border_radius=badge_h // 2)
             launch_font = self._font(max(12, min(15, badge_h - 10)), pygame)
-            launch_surf = launch_font.render("Avvio...", True, (255, 255, 255))
+            launch_surf = launch_font.render(
+                self._child_display_text("Avvio..."), True, (255, 255, 255)
+            )
             screen.blit(launch_surf, launch_surf.get_rect(center=badge_rect.center))
 
     def _activity_title_for_shared_card(self, activity: Any) -> str:

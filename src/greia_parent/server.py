@@ -251,6 +251,7 @@ class ParentStatusApplication:
             _form_text(form, "avatar_id"),
             secret=_form_text(form, "secret", default=""),
             mask_secret=_form_checked(form, "mask_secret"),
+            uppercase_text=_form_checked(form, "uppercase_text"),
         )
         return profile.public_dict()
 
@@ -262,6 +263,7 @@ class ParentStatusApplication:
             secret_action=_form_text(form, "secret_action", default="keep"),
             secret=_form_text(form, "secret", default=""),
             mask_secret=_form_checked(form, "mask_secret"),
+            uppercase_text=_form_checked(form, "uppercase_text"),
         )
         return profile.public_dict()
 
@@ -588,7 +590,7 @@ button.danger{{background:var(--danger);color:white}} .actions{{display:flex;gap
 <h1>Parent controls</h1><p><strong>Current child:</strong> {html.escape(str(active_name or "Account picker"))}</p>
 <section><dl><dt>Runtime API</dt><dd>{html.escape(str(payload.get('runtime_api_version','unknown')))}</dd><dt>Uptime</dt><dd>{html.escape(str(payload.get('uptime_seconds',0)))} seconds</dd><dt>Memory available</dt><dd>{gib(payload.get('memory_available_bytes'))} / {gib(payload.get('memory_total_bytes'))}</dd><dt>Disk free</dt><dd>{gib(payload.get('disk_free_bytes'))} / {gib(payload.get('disk_total_bytes'))}</dd></dl></section>
 <section><h2>Child accounts</h2><p>Reset child appearance is available separately for every account.</p><div class="grid">{profile_cards}</div>
-<h3>Add child</h3><form method="post" action="/api/profiles/create"><label>Name<input name="display_name" maxlength="24" required></label><label>Avatar<select name="avatar_id">{avatar_options}</select></label><label>Optional simple password — shown while typing by default<input name="secret" maxlength="32" autocomplete="new-password"></label><label><input type="checkbox" name="mask_secret"> Hide password on the child screen</label><button type="submit">Add child</button></form></section>
+<h3>Add child</h3><form method="post" action="/api/profiles/create"><label>Name<input name="display_name" maxlength="24" required></label><label>Avatar<select name="avatar_id">{avatar_options}</select></label><label>Optional simple password — shown while typing by default<input name="secret" maxlength="32" autocomplete="new-password"></label><label><input type="checkbox" name="mask_secret"> Hide password on the child screen</label><label><input type="checkbox" name="uppercase_text" checked> CAPITAL-letter text (recommended for young children)</label><button type="submit">Add child</button></form></section>
 <section><h2>Progress</h2>{progress_html}</section>
 <section><h2>Mouse, touchpad, and screen</h2><form method="post" action="/api/hardware"><label><input type="checkbox" name="touchpad_tap"{touchpad_tap}> Tap touchpad to click</label><small>Disabled by default. Physical touchpad buttons continue to work.</small><label><input type="checkbox" name="natural_scrolling"{natural_scrolling}> Natural scrolling</label><div class="grid"><label>Keyboard layout<select name="keyboard_layout">{keyboard_layout_options}</select></label><label>Mouse speed<input type="range" name="mouse_speed" min="-1" max="1" step="0.25" value="{mouse_speed}"></label><label>Touchpad speed<input type="range" name="touchpad_speed" min="-1" max="1" step="0.25" value="{touchpad_speed}"></label><label>Screen resolution<select name="resolution">{resolution_options}</select></label></div><p><small>{apply_status}</small></p><button type="submit">Apply hardware settings</button></form><form method="post" action="/api/hardware/reset"><div class="actions"><button class="danger" type="submit">Restore hardware defaults</button></div></form></section>
 <section><h2>Installed activities</h2><ul>{activity_items}</ul></section></main>"""
@@ -605,6 +607,7 @@ def _render_profile_card(
     avatar = str(profile.get("avatar_id", "unicorn"))
     avatar_escaped = html.escape(avatar)
     mask = " checked" if profile.get("mask_secret") else ""
+    uppercase = " checked" if profile.get("uppercase_text", True) else ""
     protected = "Yes" if profile.get("has_secret") else "No"
     customization = profile.get("customization", {})
     wallpaper = "Yes" if isinstance(customization, dict) and customization.get("wallpaper_enabled") else "No"
@@ -612,7 +615,7 @@ def _render_profile_card(
     delete_disabled = " disabled" if profile_count <= 1 or is_active else ""
     delete_note = "<small>Switch to another child before deleting this active account.</small>" if is_active else ""
     return f"""<article class="profile"><img class="avatar" src="/assets/avatar/{avatar_escaped}.png" alt=""><h3>{name}</h3><p>Password: {protected} · Wallpaper: {wallpaper}</p>
-<form method="post" action="/api/profiles/update"><input type="hidden" name="profile_id" value="{profile_id}"><label>Name<input name="display_name" maxlength="24" value="{name}" required></label><label>Avatar<select name="avatar_id">{_avatar_options(avatars, avatar)}</select></label><label>Password action<select name="secret_action"><option value="keep">Keep current</option><option value="set">Set or replace</option><option value="clear">Remove</option></select></label><label>New password<input name="secret" maxlength="32" autocomplete="new-password"></label><label><input type="checkbox" name="mask_secret"{mask}> Hide password while child types</label><button type="submit">Save account</button></form>
+<form method="post" action="/api/profiles/update"><input type="hidden" name="profile_id" value="{profile_id}"><label>Name<input name="display_name" maxlength="24" value="{name}" required></label><label>Avatar<select name="avatar_id">{_avatar_options(avatars, avatar)}</select></label><label>Password action<select name="secret_action"><option value="keep">Keep current</option><option value="set">Set or replace</option><option value="clear">Remove</option></select></label><label>New password<input name="secret" maxlength="32" autocomplete="new-password"></label><label><input type="checkbox" name="mask_secret"{mask}> Hide password while child types</label><label><input type="checkbox" name="uppercase_text"{uppercase}> CAPITAL-letter text (recommended for young children)</label><button type="submit">Save account</button></form>
 <div class="actions"><form method="post" action="/api/customization/reset"><input type="hidden" name="profile_id" value="{profile_id}"><button class="danger" type="submit">Reset child appearance</button></form><form method="post" action="/api/profiles/delete"><input type="hidden" name="profile_id" value="{profile_id}"><input type="hidden" name="confirm" value="delete"><button class="danger" type="submit"{delete_disabled}>Delete child</button>{delete_note}</form></div></article>"""
 
 

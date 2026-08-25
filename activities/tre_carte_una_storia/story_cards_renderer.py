@@ -6,6 +6,7 @@ from typing import Final
 
 import pygame
 
+from greia_platform.child_text import display_text
 from greia_platform.localization import LocalizedResources
 from greia_platform.typography import FontRole, GreiaTypography
 
@@ -104,7 +105,7 @@ class StoryRenderer:
         target.blit(h_surf, (REFERENCE_WIDTH // 2 - h_surf.get_width() // 2, 34))
 
         if library.count == 0:
-            empty_txt = self._typography.render("Nessuna storia ancora!", FontRole.BODY, 24, (148, 163, 184))
+            empty_txt = self._typography.render(display_text("Nessuna storia ancora!"), FontRole.BODY, 24, (148, 163, 184))
             target.blit(empty_txt, (REFERENCE_WIDTH // 2 - empty_txt.get_width() // 2, 280))
             return
 

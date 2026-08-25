@@ -6,6 +6,7 @@ from typing import Final
 
 import pygame
 
+from greia_platform.child_text import display_text
 from greia_platform.activity_api import get_shared_visual_path
 from greia_platform.typography import FontRole, GreiaTypography
 
@@ -38,7 +39,7 @@ class StoryArt:
         except (OSError, ValueError, pygame.error, RuntimeError):
             surf = pygame.Surface((96, 96), pygame.SRCALPHA)
             pygame.draw.circle(surf, (236, 72, 153), (48, 48), 44)
-            txt = self._typography.render("Lilli", FontRole.BODY, 20, (255, 255, 255))
+            txt = self._typography.render(display_text("Lilli"), FontRole.BODY, 20, (255, 255, 255))
             surf.blit(txt, (48 - txt.get_width() // 2, 48 - txt.get_height() // 2))
             return surf
 

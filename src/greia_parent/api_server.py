@@ -419,6 +419,7 @@ class ParentApiRequestHandler(ParentRequestHandler):
                     mask_secret=bool(body.get("mask_secret", False)),
                     approximate_age=approximate_age,
                     challenge_preference=challenge,
+                    uppercase_text=bool(body.get("uppercase_text", True)),
                 )
                 payload = profile.public_dict()
             except (ProfileError, TypeError, ValueError) as exc:
@@ -555,6 +556,7 @@ class ParentApiRequestHandler(ParentRequestHandler):
                     approximate_age_present and body.get("approximate_age") is None
                 ),
                 challenge_preference=challenge,
+                uppercase_text=bool(body.get("uppercase_text", current.uppercase_text)),
             )
             payload = profile.public_dict()
         except StopIteration:

@@ -370,7 +370,7 @@ class AchievementLibraryMixin:
         if not entries:
             empty = self._typography.font(
                 FontRole.BODY, max(20, height // 24)
-            ).render(copy.empty_library, True, theme.text)
+            ).render(self._child_display_text(copy.empty_library), True, theme.text)
             screen.blit(empty, empty.get_rect(center=screen.get_rect().center))
             return
 
@@ -420,7 +420,9 @@ class AchievementLibraryMixin:
                 ),
             )
 
-            label_text = entry.definition.title.resolve(self._achievement_locale)
+            label_text = self._child_display_text(
+                entry.definition.title.resolve(self._achievement_locale)
+            )
             label = self._fit_text(
                 label_text,
                 max_width=rect.width - 16,
@@ -454,7 +456,9 @@ class AchievementLibraryMixin:
         pygame.draw.rect(screen, theme.panel, detail, border_radius=20)
         pygame.draw.rect(screen, theme.accent, detail, width=3, border_radius=20)
         selected_entry = entries[self._achievement_selected]
-        heading = selected_entry.definition.title.resolve(self._achievement_locale)
+        heading = self._child_display_text(
+            selected_entry.definition.title.resolve(self._achievement_locale)
+        )
         heading_surface = self._fit_text(
             heading,
             max_width=detail.width - 36,
@@ -462,7 +466,7 @@ class AchievementLibraryMixin:
             color=theme.text,
         )
         screen.blit(heading_surface, (detail.left + 18, detail.top + 12))
-        description = (
+        description = self._child_display_text(
             selected_entry.definition.description.resolve(self._achievement_locale)
             if selected_entry.unlocked
             else selected_entry.definition.locked_hint.resolve(
@@ -597,7 +601,9 @@ class AchievementLibraryMixin:
             eyebrow.get_rect(center=(panel.centerx, panel.top + 28)),
         )
 
-        title_text = entry.definition.title.resolve(self._achievement_locale)
+        title_text = self._child_display_text(
+            entry.definition.title.resolve(self._achievement_locale)
+        )
         title = self._fit_text(
             title_text,
             max_width=panel.width - 50,
@@ -608,7 +614,9 @@ class AchievementLibraryMixin:
             title,
             title.get_rect(center=(panel.centerx, panel.top + 190)),
         )
-        description = entry.definition.description.resolve(self._achievement_locale)
+        description = self._child_display_text(
+            entry.definition.description.resolve(self._achievement_locale)
+        )
         lines = self._wrap_text(
             description,
             max_width=panel.width - 60,

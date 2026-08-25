@@ -13,6 +13,7 @@ from greia_platform.activities import (
     ActivityValidationError,
 )
 from greia_platform.assets import AssetCatalogueError
+from greia_platform.child_text import ChildTextCase, child_text_case_from_environment
 from greia_platform.pygame_effects import (
     PygameDepthStyle,
     draw_raised_panel,
@@ -797,7 +798,9 @@ class GreiaLauncherPresentation(LauncherApplication):
             if target_activity is None or target_rect is None:
                 return
 
-            full_title = _activity_title(target_activity, self._active_locale)
+            full_title = self._child_display_text(
+                _activity_title(target_activity, self._active_locale)
+            )
             if not full_title:
                 return
 
@@ -921,8 +924,10 @@ class GreiaLauncherPresentation(LauncherApplication):
             pagination_reserve = 38 if has_pagination else 0
             avail_w = max(240, inner_panel.width - pad_x * 2)
             avail_h = max(180, inner_panel.height - pad_y * 2 - pagination_reserve)
+            # 218 = 210 reference tile +4%: larger cards give two-line labels
+            # breathing room while label font sizes stay unchanged.
             tile_size = min(
-                210,
+                218,
                 (avail_w - gap * (columns - 1)) // columns,
                 (avail_h - gap * (rows - 1)) // rows,
             )
@@ -938,7 +943,7 @@ class GreiaLauncherPresentation(LauncherApplication):
             side_reserve = 86
             usable_w = max(240, width - side_reserve)
             tile_size = min(
-                210,
+                218,
                 (usable_w - gap * (columns - 1)) // columns,
                 (available_h - gap * (rows - 1)) // rows,
             )
@@ -1156,6 +1161,9 @@ class GreiaLauncherPresentation(LauncherApplication):
     def _category_label_surface(
         self, text: str, size: int, color: tuple[int, int, int], pygame: Any
     ) -> Any:
+        # Single child-facing case chokepoint for every Collection/Category/
+        # discovery-group label rendered by the Shell and its mixins.
+        text = self._child_display_text(text)
         key = (text, size, color)
         cached = self._category_label_cache.get(key)
         if cached is not None:
@@ -1478,7 +1486,7 @@ class GreiaLauncherPresentation(LauncherApplication):
             icon.get_rect(center=(tile.centerx, icon_center_y)),
         )
         title = self._render_activity_label(
-            _activity_title(activity, self._active_locale),
+            self._child_display_text(_activity_title(activity, self._active_locale)),
             max_width=label_rect.width - 10,
             max_height=label_rect.height - 4,
             pygame=pygame,
@@ -1509,7 +1517,9 @@ class GreiaLauncherPresentation(LauncherApplication):
             pygame.draw.rect(screen, (239, 77, 83), badge_rect, border_radius=badge_h // 2)
             pygame.draw.rect(screen, (255, 255, 255), badge_rect, width=2, border_radius=badge_h // 2)
             font_launch = self._font(max(13, min(17, badge_h // 2)), pygame)
-            launch_text = font_launch.render("Avvio...", True, (255, 255, 255))
+            launch_text = font_launch.render(
+                self._child_display_text("Avvio..."), True, (255, 255, 255)
+            )
             screen.blit(launch_text, launch_text.get_rect(center=badge_rect.center))
 
     def _render_activity_label(
@@ -1541,6 +1551,22 @@ class GreiaLauncherPresentation(LauncherApplication):
         )
         self._label_surface_cache[cache_key] = result
         return result
+
+    def _child_display_text(self, text: str) -> str:
+        """Present child-facing Shell text under the active profile's case policy.
+
+        Greia's youngest children learn CAPITAL letters first, so the platform
+        default upper-cases child-facing words. When no child is active the
+        launch environment policy applies (uppercase unless disabled). Parent
+        surfaces are adult-facing and deliberately bypass this helper.
+        """
+
+        active = getattr(self, "_active_profile", None)
+        if active is not None:
+            return text.upper() if active.profile.uppercase_text else text
+        if child_text_case_from_environment() is ChildTextCase.UPPERCASE:
+            return text.upper()
+        return text
 
     def _activity_icon(
         self, activity: ActivityManifest, size: int, pygame: Any

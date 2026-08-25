@@ -10,6 +10,7 @@ import wave
 
 import pygame
 
+from greia_platform.child_text import display_text
 from greia_platform.activity_api import (
     activity_stop_requested,
     emit_activity_event,
@@ -341,7 +342,7 @@ def main() -> int:
                                     recipes_served += 1
                                     for _ in range(30):
                                         particles.append(Particle(465, 340, random.choice(["🍰", "✨", "🍓", "💖"]), GOLD))
-                                    feedback_text = resources.text("feedback.perfect") if resources else "Perfetto! Delizioso! ✨🍰"
+                                    feedback_text = resources.text("feedback.perfect") if resources else display_text("Perfetto! Delizioso! ✨🍰")
                                     feedback_timer = 3.0
                                     placed_toppings.clear()
                                     # Next recipe
@@ -351,13 +352,13 @@ def main() -> int:
                                     safe_emit("recipe.completed", f"recipe-{time.time()}")
                                 else:
                                     sounds.play("drop")
-                                    feedback_text = resources.text("feedback.try_again") if resources else "Controlla la ricetta 💕"
+                                    feedback_text = resources.text("feedback.try_again") if resources else display_text("Controlla la ricetta 💕")
                                     feedback_timer = 2.5
                             else:
                                 sounds.play("fanfare")
                                 for _ in range(25):
                                     particles.append(Particle(465, 340, "✨", GOLD))
-                                feedback_text = resources.text("feedback.perfect") if resources else "Che capolavoro! ✨"
+                                feedback_text = resources.text("feedback.perfect") if resources else display_text("Che capolavoro! ✨")
                                 feedback_timer = 2.5
                             continue
 
@@ -374,13 +375,13 @@ def main() -> int:
                                     stars += 1
                                     for _ in range(20):
                                         particles.append(Particle(cx + 55, cy + 55, "🌟", GOLD))
-                                    feedback_text = resources.text("feedback.pattern_correct") if resources else "Sequenza completata! 🌟"
+                                    feedback_text = resources.text("feedback.pattern_correct") if resources else display_text("Sequenza completata! 🌟")
                                     feedback_timer = 2.5
                                     pattern_idx = (pattern_idx + 1) % len(pattern_options)
                                     safe_emit("pattern.matched", f"pat-{time.time()}")
                                 else:
                                     sounds.play("drop")
-                                    feedback_text = resources.text("feedback.try_again") if resources else "Riprova 💕"
+                                    feedback_text = resources.text("feedback.try_again") if resources else display_text("Riprova 💕")
                                     feedback_timer = 1.5
 
         # Updates
@@ -434,7 +435,7 @@ def main() -> int:
                 pygame.draw.rect(surf, (255, 200, 220), ticket_rect, width=3, border_radius=20)
                 # Pink Header
                 pygame.draw.rect(surf, PINK, (20, 90, 250, 50), border_top_left_radius=20, border_top_right_radius=20)
-                r_title = typography.render("📋 Ricetta Dolce" if active_locale == "it" else "📋 Sweet Order", FontRole.TITLE, 22, WHITE)
+                r_title = typography.render(display_text("📋 Ricetta Dolce" if active_locale == "it" else "📋 Sweet Order"), FontRole.TITLE, 22, WHITE)
                 surf.blit(r_title, r_title.get_rect(center=(145, 115)))
 
                 for o_idx, (t_id, t_qty) in enumerate(current_order):
@@ -458,7 +459,7 @@ def main() -> int:
                 ticket_rect = pygame.Rect(20, 90, 250, 220)
                 pygame.draw.rect(surf, WHITE, ticket_rect, border_radius=20)
                 pygame.draw.rect(surf, (255, 200, 220), ticket_rect, width=3, border_radius=20)
-                f_title = typography.render("🎨 Decora a piacere!" if active_locale == "it" else "🎨 Decorate freely!", FontRole.TITLE, 22, DARK_TEXT)
+                f_title = typography.render(display_text("🎨 Decora a piacere!" if active_locale == "it" else "🎨 Decorate freely!"), FontRole.TITLE, 22, DARK_TEXT)
                 surf.blit(f_title, f_title.get_rect(center=(145, 200)))
 
             # Center Plate & Cake (x=280..690)
@@ -485,7 +486,7 @@ def main() -> int:
             # Right Pantry Shelf (x = 705..1000)
             pantry_card = pygame.Rect(705, 90, 295, 350)
             pygame.draw.rect(surf, SHELF_COLOR, pantry_card, border_radius=20)
-            p_title = typography.render("Dispensa Topping" if active_locale == "it" else "Pantry Toppings", FontRole.TITLE, 22, WHITE)
+            p_title = typography.render(display_text("Dispensa Topping" if active_locale == "it" else "Pantry Toppings"), FontRole.TITLE, 22, WHITE)
             surf.blit(p_title, p_title.get_rect(center=(852, 115)))
 
             for idx, (t_id, t_icon, _) in enumerate(TOPPINGS):
@@ -504,7 +505,7 @@ def main() -> int:
             pygame.draw.rect(surf, (230, 240, 250), clean_rect, border_radius=18)
             pygame.draw.rect(surf, (180, 205, 230), clean_rect, width=3, border_radius=18)
             c_icon = typography.render("🧹", FontRole.DISPLAY, 48, DARK_TEXT)
-            c_label = typography.render("Pulisci" if active_locale == "it" else "Clear", FontRole.TITLE, 18, DARK_TEXT)
+            c_label = typography.render(display_text("Pulisci" if active_locale == "it" else "Clear"), FontRole.TITLE, 18, DARK_TEXT)
             surf.blit(c_icon, c_icon.get_rect(center=(clean_rect.centerx, clean_rect.centery - 14)))
             surf.blit(c_label, c_label.get_rect(center=(clean_rect.centerx, clean_rect.centery + 24)))
 
@@ -522,7 +523,7 @@ def main() -> int:
             seq, _, candidates = pattern_options[pattern_idx]
             pygame.draw.rect(surf, WHITE, (120, 120, 784, 210), border_radius=24)
             pygame.draw.rect(surf, PINK, (120, 120, 784, 210), width=3, border_radius=24)
-            p_prompt = typography.render("Quale biscotto completa la sequenza?" if active_locale == "it" else "Which cookie completes the pattern?", FontRole.TITLE, 26, DARK_TEXT)
+            p_prompt = typography.render(display_text("Quale biscotto completa la sequenza?" if active_locale == "it" else "Which cookie completes the pattern?"), FontRole.TITLE, 26, DARK_TEXT)
             surf.blit(p_prompt, p_prompt.get_rect(center=(512, 160)))
 
             total_items = len(seq) + 1

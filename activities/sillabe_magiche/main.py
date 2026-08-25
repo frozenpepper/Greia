@@ -10,6 +10,7 @@ import wave
 
 import pygame
 
+from greia_platform.child_text import display_text
 from greia_platform.activity_api import (
     activity_stop_requested,
     emit_activity_event,
@@ -1064,7 +1065,7 @@ def main() -> int:
             pygame.draw.rect(logical_surf, (248, 242, 230), shelf_rect, border_radius=18)
             pygame.draw.rect(logical_surf, (215, 195, 170), shelf_rect, width=3, border_radius=18)
 
-            pal_title = typography.render("Consonanti", FontRole.TITLE, 18, DARK_TEXT)
+            pal_title = typography.render(display_text("Consonanti"), FontRole.TITLE, 18, DARK_TEXT)
             logical_surf.blit(pal_title, (shelf_rect.centerx - pal_title.get_width() // 2, 104))
 
             pal_w = 68
@@ -1100,10 +1101,10 @@ def main() -> int:
             pygame.draw.rect(logical_surf, CARD_BORDER, top_card, width=3, border_radius=22)
 
             # Blending Formula Visual
-            formula_surf = typography.render(f"Fabbrica delle Sillabe:   [ {active_consonant} ]  ➕  Vocali ( A , E , I , O , U )", FontRole.TITLE, 22, DARK_TEXT)
+            formula_surf = typography.render(display_text(f"Fabbrica delle Sillabe:   [ {active_consonant} ]  ➕  Vocali ( A , E , I , O , U )"), FontRole.TITLE, 22, DARK_TEXT)
             logical_surf.blit(formula_surf, (top_card.centerx - formula_surf.get_width() // 2, top_card.y + 20))
 
-            instruct_surf = typography.render("Tocca ogni tessera per ascoltare e imparare la sillaba!", FontRole.BODY, 18, (100, 85, 115))
+            instruct_surf = typography.render(display_text("Tocca ogni tessera per ascoltare e imparare la sillaba!"), FontRole.BODY, 18, (100, 85, 115))
             logical_surf.blit(instruct_surf, (top_card.centerx - instruct_surf.get_width() // 2, top_card.y + 72))
 
             for card in cards_station1:
@@ -1115,7 +1116,7 @@ def main() -> int:
             pygame.draw.rect(logical_surf, CARD_BG, banner_rect, border_radius=18)
             pygame.draw.rect(logical_surf, GOLD_BORDER, banner_rect, width=3, border_radius=18)
 
-            p_txt = "Ascolta e tocca:  "
+            p_txt = display_text("Ascolta e tocca:  ")
             p_surf = typography.render(p_txt, FontRole.TITLE, 28, DARK_TEXT)
             target_surf = typography.render(target_syl, FontRole.DISPLAY, 40, CORAL)
             total_w = p_surf.get_width() + target_surf.get_width()
@@ -1174,7 +1175,7 @@ def main() -> int:
             else:
                 pygame.draw.rect(logical_surf, (244, 244, 244), slot1_rect, border_radius=18)
                 pygame.draw.rect(logical_surf, (160, 160, 175), slot1_rect, width=3, border_radius=18)
-                q1_txt = typography.render("1° Sillaba", FontRole.TITLE, 20, (160, 160, 175))
+                q1_txt = typography.render(display_text("1° Sillaba"), FontRole.TITLE, 20, (160, 160, 175))
                 logical_surf.blit(q1_txt, (slot1_rect.centerx - q1_txt.get_width() // 2, slot1_rect.centery - q1_txt.get_height() // 2))
 
             if slot2_filled:
@@ -1185,7 +1186,7 @@ def main() -> int:
             else:
                 pygame.draw.rect(logical_surf, (244, 244, 244), slot2_rect, border_radius=18)
                 pygame.draw.rect(logical_surf, (160, 160, 175), slot2_rect, width=3, border_radius=18)
-                q2_txt = typography.render("2° Sillaba", FontRole.TITLE, 20, (160, 160, 175))
+                q2_txt = typography.render(display_text("2° Sillaba"), FontRole.TITLE, 20, (160, 160, 175))
                 logical_surf.blit(q2_txt, (slot2_rect.centerx - q2_txt.get_width() // 2, slot2_rect.centery - q2_txt.get_height() // 2))
 
             for tile in word_tiles:

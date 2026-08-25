@@ -10,6 +10,7 @@ import wave
 
 import pygame
 
+from greia_platform.child_text import display_text
 from greia_platform.activity_api import (
     activity_stop_requested,
     emit_activity_event,
@@ -516,7 +517,7 @@ def main() -> int:
                                 for _ in range(35):
                                     particles.append(Particle(512, 300, GOLD))
                             else:
-                                feedback_text = resources.text("feedback.correct") if resources else "Ottimo lavoro! ✨"
+                                feedback_text = resources.text("feedback.correct") if resources else display_text("Ottimo lavoro! ✨")
                                 feedback_timer = 1.8
                         else:
                             hit_orb.wobble()
@@ -538,7 +539,7 @@ def main() -> int:
                 sounds.play_praise(active_locale)
                 words_completed += 1
                 safe_emit("word.completed", f"word-{time.time()}", payload={"letter": cur_letter, "word": cur_word})
-                feedback_text = resources.text("feedback.word_complete") if resources else "Splendido! 🌟"
+                feedback_text = resources.text("feedback.word_complete") if resources else display_text("Splendido! 🌟")
                 celebration_phase = "praise_done"
                 celebration_timer = 1.6
         elif celebration_phase == "praise_done":

@@ -15,6 +15,17 @@ This file is the project-wide **current continuation contract**. Chronology belo
 
 # 1. Current state at a glance
 
+## Child Text Letter-Case Policy + Launcher Card Scale (2026-08-25)
+
+Implemented (ADR 0034) and simulator-verified on the final source state.
+
+- **Policy**: child-facing UI words present in CAPITAL letters by default (children learn capitals first); a parent may choose normal text per child. Platform owner: `src/greia_platform/child_text.py`; profile preference `ChildProfile.uppercase_text` (default true, backward-compatible); Parent App checkbox + Parent API `uppercase_text`; launch env `GREIA_PROFILE_UPPERCASE`; `LocalizedResources.text()` applies it automatically; Shell applies it at child-facing render chokepoints (card titles, disclosure, launch badge, profile names, category/collection/discovery labels, achievement copy).
+- **Activity pass**: mixed-case package-local literals routed through `display_text` (painting, pasticceria_magica, posta_di_leo, sillabe_magiche, tre_carte_una_storia, memory_meraviglie, cucciolo_mio, foresta_parole, teatrino_fiabe). Child-authored content (Writing) is never transformed.
+- **Cards +4%**: Activity tiles 218 px, Collection portals 141 px, sub-Collection portals 177 px, profile tiles 213 px at reference layout; label fonts unchanged; two-line card labels now compress leading instead of clipping past the card border (fit bug fixed in `title_presentation.py`).
+- **Verification**: full `make verify` **1,324/1,324 PASS** (new `tests/test_child_text_case.py`). Simulator gate on the exact final state (1024×600, isolated workspace): uppercase launcher + activities, parent-disabled profile shows normal case, Painting/Acquario launch → ≥10 s survival → interaction → clean Home return, rc 0.
+- **Evidence lane**: source tests + simulator visual review (screenshots reviewed in-session). Physical-device visual re-check rides the next hardware evidence pass.
+- **Docs**: ADR 0034, style guide §3.3, activity-authoring skill rule 5 + PRE_READER_UX §7.1, os-work + visual-authoring skills; `skills/` and `.agents/skills/` fully reconciled.
+
 ## Fail-Soft Activity Cross-Bindings & Boot-Time Dev-Noise Scrub (2026-08-25)
 
 Implemented (ADR 0033) so a single not-loadable Activity can never take down the child OS, and to remove the recurring dev-environment-dirt failure class.
