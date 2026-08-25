@@ -17,8 +17,8 @@ These apply to substantive OS/platform work:
 1. Work from current `main`; preserve concurrent work. Read `AGENTS.md` and `HANDOVER.md` before changing implementation.
 2. Accepted ADRs own architecture; source/runtime declarations own exact implemented APIs/schemas/limits; product docs own accepted child-facing behavior. Do not resolve contradictions by choosing convenient prose.
 3. Greia Shell is the child-facing OS surface. Do not expose generic Linux desktop/shell/package-management UI in normal child operation.
-4. Platform authority stays platform-owned: profiles/session, trust/packages, permissions, Home/Back, physical input, microphone routing, storage/history, progression/rewards, install/update authority and hardware facts.
-5. Low-resource behavior is correctness. The reference Acer remains a real engineering floor; do not introduce heavyweight hot-path work without evidence.
+4. Platform authority stays platform-owned: profiles/session, trust/packages, permissions, Home/Back, physical input, **microphone routing/processing**, storage/history, progression/rewards, install/update authority and hardware facts. The physically accepted microphone contract is lightweight cleanup by default, on-demand, with Parent-owned disable/advanced preferences; Activities consume the route and do not own DSP/device policy.
+5. Low-resource behavior is correctness. The reference Acer remains a real engineering floor; do not introduce heavyweight hot-path work without evidence. Preserve the accepted microphone route's zero-idle-cost character unless new evidence justifies a different platform design.
 6. Never use GitHub-hosted Actions or paid/hosted execution unless the owner explicitly authorizes that specific use.
 7. Claim only evidence that actually executed. Source tests, simulator evidence, VM/image evidence and physical-device evidence are different lanes.
 8. After substantive implementation, update the active plan and `HANDOVER.md` as required by `AGENTS.md` and keep this router/companions synchronized when contributor workflow changes.
@@ -84,6 +84,8 @@ SETUP.md
 ```
 
 Inspect the exact current builders under `build/` before changing generated target state. Boot-impacting changes also require `skills/greia-os-work/BOOT.md`.
+
+If the image/build change affects audio packages, ALSA composition, the Greia microphone ExtPlug or endpoint-readiness service, also read the **Audio service or microphone capture/processing** section below. A fresh image must either provide a genuinely working lightweight endpoint or fall back honestly; never ship a readiness marker without a real capture probe.
 
 ### Shell, launcher, Collections or lightweight UI
 
@@ -197,6 +199,17 @@ docs/architecture/PARENT_APP_SOURCE_INTEGRATION.md
 
 Inspect the current Greia Parent API/source pin and the external Parent client revision before changing either side. Do not bypass capability discovery or platform authority with SSH/shell/file-copy shortcuts.
 
+For microphone controls, preserve the typed Parent semantics:
+
+```text
+Improve microphone sound = Parent-owned microphone_processing_enabled
+OFF -> raw/off route on the next microphone open
+Restore defaults -> lightweight processing desired, advanced false
+Advanced -> visible/selectable only when a real advanced endpoint is available
+```
+
+An Activity must not mutate these Parent settings on its own behalf.
+
 ### System update mechanism
 
 Read:
@@ -257,7 +270,36 @@ Read:
 docs/adr/0031-platform-owned-microphone-processing.md
 docs/architecture/GREIA_AUDIO_SERVICE.md
 docs/testing/2026-08-23_ACER_MICROPHONE_PROCESSING_ACCEPTANCE.md
+docs/reviews/2026-08-24_ACER_MICROPHONE_PHYSICAL_ACCEPTANCE.md
+skills/greia-activity-authoring/MICROPHONE_RECORDING.md   # when the change affects Activity-facing use
 ```
+
+Current accepted product/platform contract:
+
+```text
+ordinary child voice capture
+  -> audio.basic authority
+  -> Greia-owned microphone route
+  -> lightweight cleanup by default when the endpoint is healthy
+  -> zero-idle-cost/on-demand processing
+```
+
+This is an **available platform facility**, not an experimental feature Activity authors should avoid. Activity authoring may actively encourage voice recording where it materially improves creativity, expression, pre-reader access or learning.
+
+Preserve these rules:
+
+- no automatic processor selection or promotion;
+- advanced processing remains optional and Parent-selected only when available;
+- `microphone_processing_enabled = false` is a Parent-owned setting and resolves to raw/off on the next microphone open;
+- ordinary Activities cannot silently override the Parent setting or open physical ALSA hardware to bypass processing;
+- an Activity that genuinely requires raw signal analysis needs an explicit typed platform/API extension rather than a hardware shortcut;
+- missing/broken lightweight backend must fail honestly to raw with a truthful fallback reason;
+- readiness markers represent current-boot successful endpoint probes, never source presence;
+- preserve capability isolation: non-`audio.basic` Activities receive no route environment;
+- keep physical card/codec identity below Greia-owned composition;
+- do not reintroduce an always-running heavy audio service merely for convenience.
+
+For first-party Activity recording behavior itself, switch to `skills/greia-activity-authoring/SKILL.md` and `MICROPHONE_RECORDING.md`.
 
 ### Voice/speech asset production tooling
 
@@ -273,6 +315,8 @@ Only read/install the local production toolchain when actual voice production is
 ```text
 docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md
 ```
+
+Generated presenter speech and child microphone recording are different systems. Do not confuse build-time character voice production with runtime `audio.basic` capture.
 
 ### Performance optimization or low-resource regressions
 
@@ -295,7 +339,7 @@ docs/testing/2026-08-09_DEVELOPER_REMOTE_CONTROL.md
 docs/testing/2026-08-15_ACER_REMOTE_AGENT_ACCEPTANCE.md
 ```
 
-If the task touches boot/reboot/recovery, `skills/greia-os-work/BOOT.md` is additionally mandatory.
+If the task touches microphone processing, also use the current audio-service physical evidence/protocol above. If it touches boot/reboot/recovery, `skills/greia-os-work/BOOT.md` is additionally mandatory.
 
 ### Visual-system or asset integration work
 
@@ -317,7 +361,8 @@ Before calling substantive OS/platform work done, record:
 3. Which source tests/validators actually ran?
 4. Which evidence lane was exercised: source / simulator / VM-image / physical device?
 5. What remains unverified?
-6. Were required active-plan/HANDOVER/manual/skill updates made?
+6. If audio/microphone changed: does audio.basic still receive only the platform route, does Parent OFF still apply on next open, and is readiness truthful?
+7. Were required active-plan/HANDOVER/manual/skill updates made?
 ```
 
 Do not load broad architecture documents just because they exist. Start with this router, read the narrow authorities for the actual task, and expand only when the change genuinely crosses subsystem boundaries.
