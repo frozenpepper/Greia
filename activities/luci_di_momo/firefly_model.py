@@ -179,6 +179,10 @@ class FireflySession:
         return self._rounds[self._index]
 
     @property
+    def rounds(self) -> tuple[FireflyRound, ...]:
+        return tuple(self._rounds)
+
+    @property
     def round_index(self) -> int:
         return self._index
 

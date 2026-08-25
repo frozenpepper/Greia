@@ -28,6 +28,7 @@ else:
 
 
 class PresentationPhase(StrEnum):
+    READY = "ready"
     REVEAL = "reveal"
     CHOOSE = "choose"
     HINT = "hint"
@@ -69,11 +70,12 @@ class FireflyActivity:
         self.rng = rng
         self.session_id = session_id
         self.clock = clock
-        self.phase = PresentationPhase.REVEAL
+        self.phase = PresentationPhase.READY
         self.phase_started = clock()
         self._running = True
         self._ready_published = False
         self._dirty = True
+        self._hovered_start = False
         self._hovered_choice: int | None = None
         self._hovered_replay = False
         self.completion = PygameCompletionScreen(
@@ -102,6 +104,7 @@ class FireflyActivity:
                 if not self._ready_published:
                     mark_activity_ready()
                     self._ready_published = True
+                    self.audio.play_welcome()
             ticker.tick(30 if self.phase in {PresentationPhase.REVEAL, PresentationPhase.HINT} else 20)
         return 0
 
@@ -122,9 +125,15 @@ class FireflyActivity:
             if logical is not None:
                 point = (int(logical[0]), int(logical[1]))
                 current = self.session.current_round
-                new_choice = self.renderer.choice_at(point, current) if current else None
-                new_replay = self.renderer.replay_contains(point)
-                if new_choice != self._hovered_choice or new_replay != self._hovered_replay:
+                new_start = self.renderer.start_contains(point) if self.phase is PresentationPhase.READY else False
+                new_choice = self.renderer.choice_at(point, current) if (current and self.phase is PresentationPhase.CHOOSE) else None
+                new_replay = self.renderer.replay_contains(point) if self.phase is PresentationPhase.CHOOSE else False
+                if (
+                    new_start != self._hovered_start
+                    or new_choice != self._hovered_choice
+                    or new_replay != self._hovered_replay
+                ):
+                    self._hovered_start = new_start
                     self._hovered_choice = new_choice
                     self._hovered_replay = new_replay
                     self._dirty = True
@@ -144,6 +153,14 @@ class FireflyActivity:
             return False
         point = (int(logical[0]), int(logical[1]))
 
+        # Speech replay / mascot click
+        if self.renderer.listen_contains(point):
+            if self.phase is PresentationPhase.CHOOSE:
+                self.audio.play_prompt_choose()
+            else:
+                self.audio.play_welcome()
+            return True
+
         if self.phase is PresentationPhase.TERMINAL:
             if self.completion.primary_contains(point):
                 self._restart()
@@ -151,7 +168,18 @@ class FireflyActivity:
             return False
 
         current = self.session.current_round
-        if current is None or self.phase is not PresentationPhase.CHOOSE:
+        if current is None:
+            return False
+
+        if self.phase is PresentationPhase.READY:
+            if self.renderer.start_contains(point):
+                self.phase = PresentationPhase.REVEAL
+                self.phase_started = self.clock()
+                self.audio.play("reveal")
+                return True
+            return False
+
+        if self.phase is not PresentationPhase.CHOOSE:
             return False
 
         if self.renderer.replay_contains(point):
@@ -166,16 +194,17 @@ class FireflyActivity:
             return False
         result = self.session.choose(value)
         if not result.correct:
-            self.audio.play("retry")
+            self.audio.play_feedback(False)
             self.phase = PresentationPhase.HINT
             self.phase_started = self.clock()
             return True
 
-        self.audio.play("correct")
+        self.audio.play_count(current.quantity)
+        self.audio.play_feedback(True)
         if result.session_complete:
             self._finish_session()
         else:
-            self.phase = PresentationPhase.REVEAL
+            self.phase = PresentationPhase.READY
             self.phase_started = self.clock()
         return True
 
@@ -187,6 +216,7 @@ class FireflyActivity:
         if self.phase is PresentationPhase.REVEAL:
             if elapsed_ms >= current.reveal_ms:
                 self.phase = PresentationPhase.CHOOSE
+                self.audio.play_prompt_choose()
                 return True
             return False
         if self.phase is PresentationPhase.HINT:
@@ -209,10 +239,22 @@ class FireflyActivity:
         current = self.session.current_round
         if current is None:
             return
+        total_rounds = len(self.session.rounds)
+        if self.phase is PresentationPhase.READY:
+            self.renderer.draw_ready(
+                self.canvas.surface,
+                current,
+                round_index=self.session.round_index,
+                total_rounds=total_rounds,
+                hovered_start=self._hovered_start,
+            )
+            return
         if self.phase is PresentationPhase.CHOOSE:
             self.renderer.draw_choices(
                 self.canvas.surface,
                 current,
+                round_index=self.session.round_index,
+                total_rounds=total_rounds,
                 hovered_value=self._hovered_choice,
                 hovered_replay=self._hovered_replay,
             )
@@ -225,6 +267,8 @@ class FireflyActivity:
             self.canvas.surface,
             current,
             level=self.session.level,
+            round_index=self.session.round_index,
+            total_rounds=total_rounds,
             visible_count=visible_count,
         )
 
@@ -234,7 +278,7 @@ class FireflyActivity:
             next_level = adapt_level(self.session.level, self.session.history)
             self.progress.save(next_level, self.session.history)
             self.events.garden_completed(self.session_id, payload)
-        self.audio.play("complete")
+        self.audio.play_garden_complete()
         self.completion.prepare(
             CompletionContent(
                 title=self.resources.text("victory.title"),
@@ -252,9 +296,9 @@ class FireflyActivity:
         self.session_id = f"{self.session_id.rsplit('-', 1)[0]}-{self.rng.randrange(1_000_000):06d}"
         self.session = FireflySession(rounds, level=next_level, history=self.session.history)
         self.completion.clear()
-        self.phase = PresentationPhase.REVEAL
+        self.phase = PresentationPhase.READY
         self.phase_started = self.clock()
-        self.audio.play("reveal")
+        self.audio.play_welcome()
 
 
 def _safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:

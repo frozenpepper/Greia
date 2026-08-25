@@ -6,6 +6,8 @@
     "activity.title": "Momo's Lights",
     "activity.luci_di_momo.title": "Momo's Lights",
     "prompt.choose": "How many lights did you see?",
+    "prompt.tap_to_play": "TAP TO PLAY!",
+    "button.listen": "🔊 LISTEN",
     "victory.title": "The garden is glowing!",
     "victory.subtitle": "You woke all of Momo's fireflies.",
     "button.play_again": "PLAY AGAIN"

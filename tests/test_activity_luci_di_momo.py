@@ -159,9 +159,33 @@ class _MockEvents:
 class _MockAudio:
     def __init__(self) -> None:
         self.played: list[str] = []
+        self.speech_played: list[str] = []
 
     def play(self, cue: str) -> None:
         self.played.append(cue)
+
+    def play_speech(self, cue_id: str) -> None:
+        self.speech_played.append(cue_id)
+
+    def play_welcome(self) -> None:
+        self.speech_played.append("welcome")
+
+    def play_prompt_ready(self) -> None:
+        self.speech_played.append("prompt_ready")
+
+    def play_prompt_choose(self) -> None:
+        self.speech_played.append("prompt_choose")
+
+    def play_count(self, quantity: int) -> None:
+        self.speech_played.append(f"count_{quantity}")
+
+    def play_feedback(self, correct: bool) -> None:
+        self.played.append("correct" if correct else "retry")
+        self.speech_played.append("feedback_correct" if correct else "feedback_retry")
+
+    def play_garden_complete(self) -> None:
+        self.played.append("complete")
+        self.speech_played.append("garden_complete")
 
 
 class FireflyAppIntegrationTests(unittest.TestCase):
@@ -224,12 +248,23 @@ class FireflyAppIntegrationTests(unittest.TestCase):
 
     def test_presentation_cycle_and_wrong_choice_hint(self) -> None:
         from firefly_app import PresentationPhase
-        from firefly_renderer import CHOICE_RECTS
+        from firefly_renderer import CHOICE_RECTS, START_BTN_RECT, LISTEN_BTN_RECT
 
         app, sim_time, events, audio, _ = self._build_app(level=1)
-        self.assertEqual(app.phase, PresentationPhase.REVEAL)
+        self.assertEqual(app.phase, PresentationPhase.READY)
 
-        # Render first frame
+        # Test Listen button in ready phase
+        handled = app._handle_pointer((LISTEN_BTN_RECT.centerx, LISTEN_BTN_RECT.centery))
+        self.assertTrue(handled)
+        self.assertIn("welcome", audio.speech_played)
+
+        # Click BIG START button
+        handled = app._handle_pointer((START_BTN_RECT.centerx, START_BTN_RECT.centery))
+        self.assertTrue(handled)
+        self.assertEqual(app.phase, PresentationPhase.REVEAL)
+        self.assertIn("reveal", audio.played)
+
+        # Render first frame of reveal
         app._render()
         self.assertFalse(app._advance_timed_phase())
 
@@ -237,6 +272,7 @@ class FireflyAppIntegrationTests(unittest.TestCase):
         sim_time[0] += 1.7
         self.assertTrue(app._advance_timed_phase())
         self.assertEqual(app.phase, PresentationPhase.CHOOSE)
+        self.assertIn("prompt_choose", audio.speech_played)
 
         # Render choice screen
         app._render()
@@ -263,11 +299,17 @@ class FireflyAppIntegrationTests(unittest.TestCase):
 
     def test_five_rounds_to_terminal_and_restart(self) -> None:
         from firefly_app import PresentationPhase
-        from firefly_renderer import CHOICE_RECTS
+        from firefly_renderer import CHOICE_RECTS, START_BTN_RECT
 
         app, sim_time, events, audio, progress = self._build_app(level=1)
 
         for round_num in range(5):
+            self.assertEqual(app.phase, PresentationPhase.READY)
+            # Click big start button
+            handled = app._handle_pointer((START_BTN_RECT.centerx, START_BTN_RECT.centery))
+            self.assertTrue(handled)
+            self.assertEqual(app.phase, PresentationPhase.REVEAL)
+
             sim_time[0] += 2.0
             app._advance_timed_phase()
             self.assertEqual(app.phase, PresentationPhase.CHOOSE)
@@ -287,6 +329,7 @@ class FireflyAppIntegrationTests(unittest.TestCase):
         self.assertEqual(session_id, "test-session-1")
         self.assertEqual(payload["level"], 1)
         self.assertEqual(payload["first_attempt_count"], 5)
+        self.assertIn("garden_complete", audio.speech_played)
 
         # Render terminal screen
         app._render()
@@ -294,7 +337,7 @@ class FireflyAppIntegrationTests(unittest.TestCase):
         # Click Play Again (primary button in completion screen)
         handled = app._handle_pointer((app.completion._primary_rect.centerx, app.completion._primary_rect.centery))
         self.assertTrue(handled)
-        self.assertEqual(app.phase, PresentationPhase.REVEAL)
+        self.assertEqual(app.phase, PresentationPhase.READY)
         self.assertEqual(app.session.round_index, 0)
         self.assertFalse(app.session.is_complete)
 
@@ -380,5 +423,32 @@ class SimulatorSupervisorTests(unittest.TestCase):
                 self.assertTrue(result.succeeded)
 
 
+class AudioAndPreReaderTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        import os
+        os.environ["SDL_VIDEODRIVER"] = "dummy"
+        os.environ["SDL_AUDIODRIVER"] = "dummy"
+        pygame.init()
+
+    def test_audio_loads_and_exposes_cues(self) -> None:
+        from firefly_audio import FireflyAudio
+        audio = FireflyAudio(ACTIVITY_ROOT, locale="it")
+        self.assertIsNotNone(audio)
+        audio.play("reveal")
+        audio.play("correct")
+        audio.play("retry")
+        audio.play("complete")
+        audio.play_welcome()
+        audio.play_prompt_ready()
+        audio.play_prompt_choose()
+        audio.play_count(3)
+        audio.play_feedback(True)
+        audio.play_feedback(False)
+        audio.play_garden_complete()
+        audio.stop_speech()
+
+
 if __name__ == "__main__":
     unittest.main()
+

@@ -21,7 +21,7 @@ class FireflyArt:
         try:
             path = get_shared_visual_path("character.momo", variant="happy")
             image = pygame.image.load(path).convert_alpha()
-            return pygame.transform.scale(image, (180, 180))
+            return pygame.transform.scale(image, (120, 120))
         except (OSError, ValueError, pygame.error, RuntimeError):
             return None
 

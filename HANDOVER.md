@@ -15,6 +15,26 @@ This file is the project-wide **current continuation contract**. Chronology belo
 
 # 1. Current state at a glance
 
+## Luci di Momo (`activities/luci_di_momo`) Pre-Reader & Momo Voice Overhaul (2026-08-25)
+
+Overhauled **Luci di Momo** (`org.greia.luci-di-momo`) to give children ample time to prepare, eliminate rushed starts, integrate Momo's canonical cloned voice, and provide non-verbal/spoken pre-reader scaffolding:
+1. **Paced Game Flow with Big Start / Play Button**:
+   - Introduced a prominent `READY` phase at the start of each round: the child is not rushed by immediate flashing lights.
+   - Screen presents Momo, the sleeping lantern in the enchanted night garden, and a **180×180 glowing Play button** `▶️` with a golden aura and `"TOCCA PER GIOCARE!"` / `"TAP TO PLAY!"` at the center of the screen.
+   - Tapping the Play button initiates the firefly reveal with sparkling feedback.
+2. **Canonical Momo Cloned Voice (32 Clips Total)**:
+   - Synthesized using **Chatterbox Multilingual V3** (`mlx-community/chatterbox-multilingual-v3`) with Momo's canonical character reference master [`assets/audio/characters/canonical/v0.1/momo-reference-v1.flac`](file:///Users/taio84/Works/Bimbe_GIOCHI/Greia%20OS/Greia/assets/audio/characters/canonical/v0.1/momo-reference-v1.flac).
+   - Generated with continuous GPU Metal cache clearing (`mx.clear_cache()`) and garbage collection (`gc.collect()`) to ensure small, bounded memory usage.
+   - Welcome intro: *"Ciao! Guarda bene quante lucciole brillano nella notte, poi tocca il numero giusto!"* / *"Hello! Look closely at how many fireflies glow in the night, then tap the right number!"*.
+   - Added `[ 🔊 ASCOLTA ]` speech balloon button `(145, 500, 150, 48)` beside Momo at `(25, 435)` to replay instructions anytime.
+3. **Spoken Quantity & Gender-Neutral Praise**:
+   - Correct choices pronounce the quantity (*"Una lucciola!"*, *"Due lucciole!"*, *"Tre lucciole!"*, etc.) accompanied by gender-neutral spoken praise (*"Ottimo lavoro!"*, *"Ben fatto!"*, *"Esatto!"*, *"Fantastico!"*, *"Evviva!"*).
+   - Incorrect choices offer encouraging cues (*"Quasi! Guarda di nuovo quante lucciole brillano!"*, *"Riprova, guarda bene le lucine!"*) and step through visual hints.
+   - Garden completion triggers joyful victory fanfare and Momo celebration cue (*"Che meraviglia! Tutte le lucciole sono felici e illuminate!"*).
+4. **Verification**:
+   - `tests/test_activity_luci_di_momo.py`: 11/11 tests PASS.
+   - Full repository test suite: **1,307/1,307 tests PASS**, project validation PASS.
+
 ## Specchi Magici (`activities/specchi_magici`) Pre-Reader & Lilli Voice Overhaul (2026-08-25)
 
 Overhauled **Specchi Magici** (`org.greia.specchi-magici`) to resolve the giant inactive "ANNULLA" button, eliminate text-only dependence, and implement Lilli's canonical cloned voice pipeline:
