@@ -1004,3 +1004,13 @@ This plan may be marked complete only when:
 - Remaining blockers: none for this change; full `make verify` not re-run beyond the boot-focused suite.
 - Next exact step: commit the fix and update `HANDOVER.md`.
 
+## 2026-08-25 — Fail-soft Activity cross-bindings + boot-time dev-noise scrub (non-closing)
+
+- Implemented (ADR 0033): a not-loadable Activity can no longer take down the child OS.
+  1. **Fail-soft cross-bindings**: `src/greia_platform/history.py` `ProgressionPolicy.load` now drops a progression rule that references an Activity absent from the loaded catalogue (with a `logger.warning`) instead of raising, so discovery-isolated Activities stay islands. Structural policy corruption and undeclared events against *loaded* Activities remain hard failures.
+  2. **Boot-time dev-noise scrub**: new `src/greia_platform/activity_tree_cleanup.py` (`scrub_activity_tree`) removes the curated, regenerable dev-noise set (`._*`, `.DS_Store`, `__MACOSX/`, `Thumbs.db`, `desktop.ini`, `__pycache__/`, `*.pyc`, editor droppings) before Activity loading. Invoked from `GreiaShell.__init__` before the `ActivityRegistry` is built (covers `child_shell` and `presentation`), bounded/non-escaping under the Activity root, never a broken-Activity repair mechanism.
+- Why: the earlier crash-loop was a progression rule referencing a previously-skipped Activity (macOS `._` sidecars made it unloadable); the dangling rule hard-failed `history.load` → `child_shell` abort → systemd restart loop.
+- Tests/evidence: `tests/test_activity_tree_cleanup.py` (4) + two fail-soft progression tests in `tests/test_history.py`. Full `make verify` **1,313/1,313 PASS**.
+- Decisions: safety/trust authorities fail closed; presentation/enrichment authorities (progression/history/achievement) fail soft for absent Activities; broken Activities are never auto-healed.
+- Remaining blockers: physical-device re-validation after a scrubbed tree.
+- Next exact step: commit; document in HANDOVER; optional physical re-check on Acer.

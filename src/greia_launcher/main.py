@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from greia_platform.activity_tree_cleanup import scrub_activity_tree
 from greia_platform.boot_logo import canonical_boot_logo as _canonical_boot_logo
 from greia_platform.activities import (
     ActivityManifest,
@@ -156,6 +157,7 @@ class LauncherApplication:
 
     def __init__(self, *, windowed: bool = False, allow_exit: bool = False):
         self.paths = LauncherPaths.from_environment()
+        scrub_activity_tree(self.paths.activities)
         self.runtime = RuntimeCatalogue.load(self.paths.runtime_catalogue)
         self.registry = ActivityRegistry(
             _activity_sources(self.paths), self.runtime, fail_closed=False

@@ -15,6 +15,15 @@ This file is the project-wide **current continuation contract**. Chronology belo
 
 # 1. Current state at a glance
 
+## Fail-Soft Activity Cross-Bindings & Boot-Time Dev-Noise Scrub (2026-08-25)
+
+Implemented (ADR 0033) so a single not-loadable Activity can never take down the child OS, and to remove the recurring dev-environment-dirt failure class.
+
+- **Fail-soft cross-bindings**: `src/greia_platform/history.py` `ProgressionPolicy.load` now **drops** a progression rule that references an Activity absent from the loaded catalogue (with a `logger.warning`) instead of raising. Discovery already keeps a broken Activity unloaded; the previously-fatal dangling progression rule is what caused the launcher restart-loop. Structural policy corruption and undeclared events against *loaded* Activities remain hard failures.
+- **Boot-time dev-noise scrub**: new `src/greia_platform/activity_tree_cleanup.py::scrub_activity_tree` removes the curated regenerable dev-noise set (`._*`, `.DS_Store`, `__MACOSX/`, `Thumbs.db`, `desktop.ini`, `__pycache__/`, `*.pyc`, editor droppings) before Activity loading. Invoked from `GreiaShell.__init__` before the `ActivityRegistry` is built (covers both `child_shell` and `presentation`). Bounded/non-escaping under the Activity root; **never** auto-repairs a genuinely broken Activity.
+- **Verification**: `tests/test_activity_tree_cleanup.py` (4) + two fail-soft progression tests. Full `make verify` **1,313/1,313 PASS**.
+- **Evidence lane**: source tests. Physical-device re-validation after a scrubbed tree is outstanding.
+
 ## Launcher Boot-Intro Background White Fix (2026-08-25)
 
 Fixed the animated Greia boot intro so the background around the professor graphics is **pure white** on every display instead of dark/non-uniform.

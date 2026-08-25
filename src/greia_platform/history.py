@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import math
 import os
 import sqlite3
@@ -14,6 +15,9 @@ from typing import Callable, Iterable, Iterator, Mapping
 
 from .activities import ActivityEventDefinition, ActivityManifest
 from .profiles import ProfileContext
+
+
+logger = logging.getLogger(__name__)
 
 
 _HISTORY_SCHEMA_VERSION = 1
@@ -142,9 +146,18 @@ class ProgressionPolicy:
 
             manifest = manifests.get(activity_id)
             if manifest is None:
-                raise HistoryPolicyError(
-                    f"progression rule {rule_id!r} references unknown Activity {activity_id!r}"
+                # A progression rule may reference an Activity that is not
+                # available on this system because it failed registered-input
+                # validation (broken/not loaded) or was retired. A single such
+                # rule must not take the whole launcher down: drop the rule so
+                # the broken Activity stays an island while progression for all
+                # remaining Activities keeps working.
+                logger.warning(
+                    "Dropping progression rule %r: Activity %r is not loaded",
+                    rule_id,
+                    activity_id,
                 )
+                continue
             if event_id not in {event.event_id for event in manifest.events}:
                 raise HistoryPolicyError(
                     f"progression rule {rule_id!r} references undeclared event {event_id!r}"

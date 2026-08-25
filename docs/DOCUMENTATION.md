@@ -37,7 +37,7 @@ Product documents own explicitly accepted child-facing, parent-facing and ecosys
 
 ### 2.3 Normative architecture — accepted ADRs
 
-Accepted ADRs own architectural decisions. Current cross-cutting authorities include ADR 0012/0013/0014/0018/0019/0020/0021/0022/0023/0024/0025/0026/0027/0028/0029/0030.
+Accepted ADRs own architectural decisions. Current cross-cutting authorities include ADR 0012/0013/0014/0017/0018/0019/0020/0021/0022/0023/0024/0025/0026/0027/0028/0029/0030/0031/0032/0033.
 
 Of particular relevance to current UI/Activity/developer/update work:
 
@@ -49,6 +49,7 @@ Of particular relevance to current UI/Activity/developer/update work:
 - ADR 0028 — platform/Activity localization and language context;
 - ADR 0029 — real-runtime Activity Simulator: canonical Greia service composition above synthetic HAL/runtime/display seams, strict non-drift and evidence boundaries;
 - ADR 0030 — platform-owned transactional Greia OS updates: signed transport-neutral `.greiaupdate` artifacts, Parent-client authority boundary, inactive-slot/boot-confirmation/rollback semantics, and fail-closed behavior on current single-root layouts.
+- ADR 0033 — fail-soft Activity cross-bindings + boot-time development-noise scrub: an unloaded Activity never takes the child OS down (absent-Activity progression rules are dropped; corrupt policy and undeclared events stay hard), and built-in Activity trees are scrubbed of curated regenerable dev-noise before discovery.
 
 `docs/architecture/GREIA_ARCHITECTURE.md` is a living synthesis, not a second ADR system.
 

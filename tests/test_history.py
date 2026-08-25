@@ -249,6 +249,58 @@ class HistoryTests(unittest.TestCase):
             12.0,
         )
 
+    def test_progression_rule_referencing_unloaded_activity_is_dropped_not_fatal(
+        self,
+    ) -> None:
+        # A rule that references an Activity missing from the catalogue (because
+        # it failed validation and was not loaded) must not take the launcher
+        # down. It is dropped, while rules for loaded Activities still work.
+        with tempfile.TemporaryDirectory() as temporary:
+            policy_path = Path(temporary) / "progression-policy.toml"
+            policy_path.write_text(
+                "schema_version = 1\n"
+                '[[rules]]\n'
+                # Unknown activity: dropped.
+                'id = "retired-rule"\n'
+                'activity_id = "org.greia.not-present-anywhere"\n'
+                'event_id = "any.event"\n'
+                'once_per_session = true\n'
+                'reward_id = "star"\n'
+                'reward_delta = 1\n'
+                '[[rules]]\n'
+                # Known activity with a declared event: keeps working.
+                'id = "shape-garden-creation-star"\n'
+                'activity_id = "org.greia.shape-garden"\n'
+                'event_id = "creation.completed"\n'
+                'once_per_session = true\n'
+                'reward_id = "star"\n'
+                'reward_delta = 1\n',
+                encoding="utf-8",
+            )
+            policy = ProgressionPolicy.load(policy_path, self.activities)
+        self.assertEqual(len(policy.rules), 1)
+        self.assertEqual(policy.rules[0].activity_id, "org.greia.shape-garden")
+        self.assertEqual(policy.rules[0].rule_id, "shape-garden-creation-star")
+
+    def test_progression_rule_referencing_undeclared_event_still_fails(self) -> None:
+        # A policy referencing an undeclared event on a *loaded* Activity is a
+        # genuine policy contract bug and must still fail loudly.
+        with tempfile.TemporaryDirectory() as temporary:
+            policy_path = Path(temporary) / "progression-policy.toml"
+            policy_path.write_text(
+                "schema_version = 1\n"
+                '[[rules]]\n'
+                'id = "bad-event-rule"\n'
+                'activity_id = "org.greia.shape-garden"\n'
+                'event_id = "never.declared"\n'
+                'once_per_session = true\n'
+                'reward_id = "star"\n'
+                'reward_delta = 1\n',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(HistoryError, "undeclared event"):
+                ProgressionPolicy.load(policy_path, self.activities)
+
     def test_non_score_event_rejects_score_and_bounds_payload_and_key(self) -> None:
         policy = replace(
             self.history_policy,
