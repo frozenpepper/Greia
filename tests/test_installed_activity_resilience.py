@@ -8,6 +8,7 @@ from unittest import mock
 from greia_launcher.composition import load_runtime_progression_policy
 from greia_platform.activities import ActivityRegistry, RuntimeCatalogue
 from greia_platform.activity_tree_cleanup import (
+    _is_unprivileged_installed_built_in,
     installed_activity_roots,
     scrub_activity_tree,
 )
@@ -50,9 +51,37 @@ class InstalledActivityResilienceTests(unittest.TestCase):
             Path("/test/parent-active-override"),
         )
 
-    def test_unprivileged_installed_builtin_delegates_to_prestart(self) -> None:
+    def test_only_canonical_unprivileged_installed_root_delegates_to_prestart(self) -> None:
+        with mock.patch(
+            "greia_platform.activity_tree_cleanup.os.geteuid",
+            return_value=1000,
+        ):
+            with mock.patch.dict(
+                "os.environ",
+                {"GREIA_OS_ROOT": "/opt/greia-os"},
+                clear=False,
+            ):
+                self.assertTrue(
+                    _is_unprivileged_installed_built_in(
+                        Path("/opt/greia-os/activities")
+                    )
+                )
+            with tempfile.TemporaryDirectory() as temporary:
+                source_root = Path(temporary)
+                with mock.patch.dict(
+                    "os.environ",
+                    {"GREIA_OS_ROOT": str(source_root)},
+                    clear=False,
+                ):
+                    self.assertFalse(
+                        _is_unprivileged_installed_built_in(
+                            source_root / "activities"
+                        )
+                    )
+
+    def test_source_checkout_root_keeps_in_process_cleanup(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
-            os_root = Path(temporary) / "os"
+            os_root = Path(temporary) / "checkout"
             activities = os_root / "activities"
             activities.mkdir(parents=True)
             junk = activities / ".DS_Store"
@@ -69,8 +98,9 @@ class InstalledActivityResilienceTests(unittest.TestCase):
                 ),
             ):
                 result = scrub_activity_tree(activities)
-            self.assertTrue(junk.exists())
-            self.assertEqual(result.roots_scrubbed, 0)
+            self.assertFalse(junk.exists())
+            self.assertGreaterEqual(result.roots_scrubbed, 1)
+            self.assertEqual(result.removed_files, 1)
 
     def test_cleanup_failure_is_counted_not_reported_as_removed(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

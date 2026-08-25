@@ -30,6 +30,7 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
+_INSTALLED_OS_ROOT = Path("/opt/greia-os")
 _JUNK_EXACT: frozenset[str] = frozenset({".ds_store", "thumbs.db", "desktop.ini"})
 _JUNK_SUFFIX: tuple[str, ...] = ("~", ".swp", ".swx", ".tmp", ".pyc")
 _JUNK_DIR: frozenset[str] = frozenset({"__macosx"})
@@ -64,7 +65,7 @@ def installed_activity_roots(
     """
 
     env = os.environ if environ is None else environ
-    os_root = Path(env.get("GREIA_OS_ROOT", "/opt/greia-os"))
+    os_root = Path(env.get("GREIA_OS_ROOT", str(_INSTALLED_OS_ROOT)))
     built_in = os_root / "activities"
     developer = Path(
         env.get("GREIA_DEVELOPER_ACTIVITY_ROOT", "/var/lib/greia-developer/activities")
@@ -93,12 +94,25 @@ def installed_activity_roots(
 
 
 def _is_unprivileged_installed_built_in(root: Path) -> bool:
-    """Whether cleanup of ``root`` belongs to the privileged pre-start helper."""
+    """Whether cleanup of ``root`` belongs to the privileged pre-start helper.
+
+    Only the canonical installed `/opt/greia-os` composition delegates here.
+    Source checkouts and Simulator roots may also set `GREIA_OS_ROOT`; those do
+    not have the installed systemd pre-start helper and must retain in-process
+    cleanup.
+    """
 
     if os.geteuid() == 0:
         return False
-    built_in = installed_activity_roots()[0]
-    return os.path.abspath(os.fspath(root)) == os.path.abspath(os.fspath(built_in))
+    configured_os_root = Path(os.environ.get("GREIA_OS_ROOT", str(_INSTALLED_OS_ROOT)))
+    try:
+        if configured_os_root.resolve(strict=False) != _INSTALLED_OS_ROOT:
+            return False
+    except (OSError, RuntimeError, ValueError):
+        return False
+    return os.path.abspath(os.fspath(root)) == os.path.abspath(
+        os.fspath(_INSTALLED_OS_ROOT / "activities")
+    )
 
 
 def _is_junk_name(name: str) -> bool:
