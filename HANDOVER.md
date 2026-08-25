@@ -15,6 +15,15 @@ This file is the project-wide **current continuation contract**. Chronology belo
 
 # 1. Current state at a glance
 
+## Launcher Boot-Intro Background White Fix (2026-08-25)
+
+Fixed the animated Greia boot intro so the background around the professor graphics is **pure white** on every display instead of dark/non-uniform.
+
+- **Root cause**: `src/greia_launcher/boot_intro.py::_background_rgb()` sampled the animation-frame corner pixel (`logo.get_at((0,0))`). The 222×600 portrait frames have dark borders, so the letterboxing painted around the animation was dark.
+- **Fix**: `_background_rgb()` now returns a fixed `(255, 255, 255)` core colour, independent of frame pixel content and resolution. The animation still fits proportionally/centred to any viewport. This aligns source with the already-documented "pure-white surrounding background" design (`docs/design/GREIA_BOOT_EXPERIENCE.md` Stage D). No per-resolution baked full-screen images are introduced.
+- **Verification**: boot contract/diagnostics tests pass (66/66). Verified live on the reference Acer (`greia-dev.local`) over SSH: cleared the `/run/greia-os/boot-intro-played` one-shot marker, replayed the launcher intro, observed white background around the animation graphics.
+- **Evidence lane**: source tests + physical-device visual review.
+
 ## Luci di Momo (`activities/luci_di_momo`) Pre-Reader & Momo Voice Overhaul (2026-08-25)
 
 Overhauled **Luci di Momo** (`org.greia.luci-di-momo`) to give children ample time to prepare, eliminate rushed starts, integrate Momo's canonical cloned voice, and provide non-verbal/spoken pre-reader scaffolding:

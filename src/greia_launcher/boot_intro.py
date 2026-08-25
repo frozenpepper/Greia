@@ -9,8 +9,9 @@ Key design invariants:
 - the 52-frame animation intentionally lasts 5 seconds;
 - the final animation frame then remains visible for an additional 2 seconds;
 - plays the sequential animation frames (222x600) full-height and centered;
-- the source canvas background colour is preserved on aspect-ratio letterbox
-  pixels;
+- the presentation background is a fixed pure-white core colour, never sampled
+  from animation-frame corner pixels, so letterboxing stays white on every
+  display regardless of resolution or aspect ratio;
 - plays only when a one-shot boot marker is absent under ``/run/greia-os``;
 - fail-soft: any asset/decode problem is ignored and boot proceeds.
 """
@@ -116,11 +117,15 @@ def load_logo() -> Any | None:
 
 
 def _background_rgb(logo: Any) -> tuple[int, int, int]:
-    try:
-        pixel = logo.get_at((0, 0))
-        return (int(pixel[0]), int(pixel[1]), int(pixel[2]))
-    except Exception:  # noqa: BLE001
-        return (255, 255, 255)
+    """Return the fixed pure-white presentation background.
+
+    The frames are 222x600 portrait art; the code relies on letterboxing that
+    must stay white on every display. Sampling a corner pixel is wrong because
+    frame borders are dark and differ per resolution. White is therefore hard
+    coded, independent of any image content.
+    """
+
+    return (255, 255, 255)
 
 
 def _draw_canvas(

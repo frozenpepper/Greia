@@ -996,3 +996,11 @@ This plan may be marked complete only when:
   - Project validation `tools/validate_project.py`: **30/30 activities PASS**.
   - Total test suite `make verify`: **1,300/1,300 tests PASS** in 55.8s.
 
+## 2026-08-25 — Launcher boot-intro background white everywhere (non-closing)
+
+- Implemented: `src/greia_launcher/boot_intro.py` `_background_rgb()` now always returns pure white `(255, 255, 255)` instead of sampling the animation-frame corner pixel. The 222×600 portrait frames have dark/non-uniform borders, so corner sampling painted dark letterboxing around the animation. Background is now a fixed core colour independent of image content and resolution, matching the documented "pure-white surrounding background" design (`docs/design/GREIA_BOOT_EXPERIENCE.md`, Stage D) while the animation still fits proportionally/centred on any viewport.
+- Tests/evidence: boot contract/discovery tests pass (66/66 via `test_boot_*.py`). Verified live on reference Acer (`greia-dev.local`) over SSH remote control: cleared the `/run/greia-os/boot-intro-played` one-shot marker, replayed the launcher intro, and observed the white background around the animation graphics (previously dark).
+- Decisions: presentation background is a platform-owned core colour (white), never sampled per-frame; launcher animation owns its own viewport fitting.
+- Remaining blockers: none for this change; full `make verify` not re-run beyond the boot-focused suite.
+- Next exact step: commit the fix and update `HANDOVER.md`.
+
