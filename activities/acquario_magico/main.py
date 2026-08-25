@@ -331,13 +331,20 @@ def main() -> int:
     screen = pygame.display.get_surface()
     if screen is None:
         screen = pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.RESIZABLE)
-    pygame.mouse.set_visible(False)
+    pygame.mouse.set_visible(True)
     clock = pygame.time.Clock()
     theme = get_theme()
     metrics = ChildUiMetrics.for_size(*screen.get_size())
     canvas = PygameReferenceCanvas(screen)
     typography = GreiaTypography()
     sounds = AquariumAudio()
+
+    support = ActivityLocaleSupport.localized(("it", "en"), default_ui_locale="it")
+    try:
+        context = resolve_activity_locale(get_profile_locale(), support)
+    except Exception:
+        context = resolve_activity_locale("it", support)
+    resources = LocalizedResources(Path(__file__).resolve().parent, context)
 
     # Load persistent state
     storage = get_storage()
@@ -418,14 +425,13 @@ def main() -> int:
     ready_published = False
     last_save_time = time.monotonic()
 
-    # Pre-render Tool UI labels for speed
-    lbl_font = typography.font(FontRole.DISPLAY, 16)
+    # Pre-render Tool UI labels for speed using GreiaTypography (crisp & localized)
     tool_labels = {
-        0: lbl_font.render("CREATURE 🐠", True, (255, 255, 255)),
-        1: lbl_font.render("CIBO 🧆", True, (255, 255, 255)),
-        2: lbl_font.render("BOLLE 🫧", True, (255, 255, 255)),
-        "night": lbl_font.render("NOTTE 🌙", True, (255, 255, 255)),
-        "day": lbl_font.render("GIORNO ☀️", True, (255, 255, 255)),
+        0: typography.render(resources.text("tool.add_fish"), FontRole.DISPLAY, 16, (255, 255, 255)),
+        1: typography.render(resources.text("tool.feed"), FontRole.DISPLAY, 16, (255, 255, 255)),
+        2: typography.render(resources.text("tool.bubbles"), FontRole.DISPLAY, 16, (255, 255, 255)),
+        "night": typography.render(resources.text("tool.night"), FontRole.DISPLAY, 16, (255, 255, 255)),
+        "day": typography.render(resources.text("tool.day"), FontRole.DISPLAY, 16, (255, 255, 255)),
     }
 
     tool_y = REFERENCE_HEIGHT - 85
@@ -837,11 +843,19 @@ def main() -> int:
                 pygame.draw.circle(surf, (168, 85, 247), (jx, jelly_y), 16)
                 pygame.draw.circle(surf, (232, 121, 249), (jx, jelly_y), 10)
         else:
-            # Subtle moving caustics overlay
+            # Soft, dreamy translucent underwater sunbeams (Day)
+            ray_layer = pygame.Surface((REFERENCE_WIDTH, 420), pygame.SRCALPHA)
             for ray_i, rx in enumerate([160, 360, 580, 800]):
-                sway = int(math.sin(t_now * 1.2 + ray_i) * 24)
-                pts = [(rx - 20, 0), (rx + 20, 0), (rx + 45 + sway, 360), (rx - 10 + sway, 360)]
-                pygame.draw.polygon(surf, (255, 255, 255), pts, 1)
+                sway = math.sin(t_now * 0.8 + ray_i * 1.5) * 20
+                pts = [
+                    (rx - 15, 0),
+                    (rx + 25, 0),
+                    (rx + 55 + sway, 380),
+                    (rx - 25 + sway, 380),
+                ]
+                alpha = int(14 + math.sin(t_now * 1.4 + ray_i) * 5)
+                pygame.draw.polygon(ray_layer, (254, 240, 138, alpha), pts)
+            surf.blit(ray_layer, (0, 0))
 
         # 3. Interactive Treasure Chest
         chest_surf = _get_scaled_asset("chest.png", 112, 88)
