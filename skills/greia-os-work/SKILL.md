@@ -6,7 +6,7 @@ description: Task router for substantive Greia OS/platform/Shell/Parent/installe
 # Greia OS Work — task router
 
 **Status:** living derived contributor router  
-**Reviewed:** 2026-08-24
+**Reviewed:** 2026-08-25
 
 Keep this file small. It tells an agent **what to read for the task**; it is not a second architecture manual.
 
@@ -144,10 +144,12 @@ docs/architecture/GREIA_ACTIVITY_PACKAGE_FORMAT.md
 docs/adr/0017-platform-owned-sessions-events-progression-and-reward-ledger.md
 docs/adr/0019-platform-owned-activity-system-navigation.md
 docs/adr/0023-open-activity-ecosystem-distribution-and-official-catalogue.md
+docs/adr/0033-fail-soft-activity-crossbindings-and-dev-noise-scrub.md
 runtime/child-runtime.toml
 src/greia_launcher/runtime_adapter.py
 src/greia_platform/activities.py
 src/greia_platform/activity_packages.py
+src/greia_platform/activity_tree_cleanup.py
 src/greia_platform/trust.py
 ```
 
@@ -156,6 +158,15 @@ For Activity implementation itself, switch to:
 ```text
 skills/greia-activity-authoring/SKILL.md
 ```
+
+Installed Activity availability is an **OS-owned containment contract**, not an
+agent-discipline contract. Per ADR 0033, the installed service performs a narrow
+privileged pre-launch scrub of curated regenerable host/cache noise across
+discoverable Activity roots, then the unprivileged registry isolates real broken
+packages. Runtime progression/achievement enrichment must not become launcher
+availability authority. Do not move this responsibility into individual
+Activities, make the launcher run as root, broaden the deletion vocabulary into
+general “cleanup”, or weaken strict source/build Activity/policy validation.
 
 Explicit developer-image built-in replacement remains a platform-owned,
 fail-closed operation. `greia-devctl --replace-system` resolves the target by
