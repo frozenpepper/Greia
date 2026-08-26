@@ -15,6 +15,22 @@ This file is the project-wide **current continuation contract**. Chronology belo
 
 # 1. Current state at a glance
 
+## Il Viaggio del Delfino celebration-freeze root cause fixed + Acer live (2026-08-26)
+
+Owner-reported star/chapter freezes on the Acer were **not** audio: `ActivityEventClient.emit` is a synchronous IPC round-trip whose broker side commits SQLite + Star-ledger state before replying, blocking the Activity frame loop (~1 s per fact event, longer per chapter+Star event). `GreiaDelfinoEvents` now emits through a bounded FIFO worker thread (ordering preserved, never blocks, drop+count on overflow), which required adding **`threading` to the curated child runtime** (one-line deliberate widening beside the already-curated `queue`). Starfish also collect at the dolphin's nose now (owner hitbox report). Launcher card labels/icons fixed earlier this tranche (owner: "icons are perfect").
+
+- **Verification**: 27 focused tests; `make verify` **1,375/1,375 PASS**; simulator gate on `d797d3b` — chapter-banner moment animated, events async-delivered, clean Home, exit `normal`. Acer redeployed + launcher restarted onto the new policy; game relaunched live (66% CPU / ~156 MiB RSS sample; earlier on-device render benchmark 19.5 ms/frame avg ≈ 51 fps capable).
+- **Outstanding**: owner on-device confirmation that star/chapter moments no longer stall; owner listening review of the 14 Tito clips (VOICE_GENERATION §13). R7 remains the blocking platform phase.
+
+## New Activity: Il Viaggio del Delfino + launcher card fix + Acer evidence (2026-08-26)
+
+**Il Viaggio del Delfino** (`org.greia.viaggio-delfino`, 32nd first-party Activity, `activities/viaggio_delfino/`) — steer a swimming dolphin through three ocean chapters; pointer/keyboard/controller steering, dash-breach with somersault, clam pearls + golden starfish treasures, friendly no-harm jellyfish. **Tito** hosts the welcome (now teaching the controls) plus six researched, source-attributed dolphin facts in it/en canonical voice (14 clips; shuffle-bag; starfish triggers a fact only when none is speaking). Durable progress: lifetime pearls + best journey score. Events `dolphin.chapter_completed` (Star-eligible via new `viaggio-delfino-chapter-star` rule), `dolphin.fact_opened`, `dolphin.journey_score`. Owner-review fixes folded in: sleek dolphin silhouette, corrected pitch direction, backflip breach, dynamic dash wake, cream scallop clams distinct from jellyfish, unclipped clouds/arch art, starfish minimum-gap pacing across all chapters, denser kelp groves, startup preloading of voice/banners/captions to kill celebration-moment hitches.
+
+- **Launcher cards**: fixed two-line label clipping under scaled interface sizes (scale-aware label range + clip-proof single-line fallback) and enlarged card icons with smaller label text per owner review; owner confirmed "icons are perfect" on the Acer.
+- **Packaging validation**: `ActivityRegistry._validate_tree` now rejects unparseable packaged Python (a syntax slip had passed `make verify` and only surfaced as a device launch failure; fail-soft containment held).
+- **Verification**: `tests/test_activity_viaggio_delfino.py` (24) + reconciled contract/audience(32)/readiness/history fixtures; full `make verify` **1,372/1,372 PASS**. Simulator gate on final source: launch → survival → interactions → completion → replay → clean Home (3 sessions, all `normal`); events verified in profile history. **Physical Acer evidence** (`b07d3b2`): render benchmark 19.5 ms/frame avg (51 fps capable vs 30 fps budget); live child-path session 66% CPU / ~158 MiB RSS during owner play.
+- **Outstanding**: owner listening review of the 14 Tito clips (VOICE_GENERATION §13); owner re-check that star/chapter moments no longer hitch after the preload fix. R7 remains the blocking platform phase.
+
 ## Stelle Incantate Leo Voices Produced (2026-08-25)
 
 All six curiosity facts now speak with the canonical Leo voice in BOTH locales (it/en), cloned from the owner-approved `greia.leo.v1` reference via Chatterbox Multilingual V3 in the pre-existing local voice-production environment. Packaged as locale-audio-table OGGs resolved through `LocalizedResources.audio_cue()`; procedural chirp stays as fail-soft fallback. Generation tool: `tools/generate_stelle_incantate_audio.py` (mandatory batch-safety rules enforced).
