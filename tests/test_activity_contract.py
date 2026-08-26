@@ -104,6 +104,13 @@ class ActivityContractTests(unittest.TestCase):
             with self.assertRaisesRegex(ActivityValidationError, "executable activity files"):
                 ActivityRegistry([root.parent], self.runtime).validate_package(root)
 
+    def test_unparseable_python_source_is_rejected(self) -> None:
+        with self._copy_sample() as root:
+            module = root / "broken_module.py"
+            module.write_text("def broken(:\n    return cached        max_width = 470\n", encoding="utf-8")
+            with self.assertRaisesRegex(ActivityValidationError, "cannot parse Python source"):
+                ActivityRegistry([root.parent], self.runtime).validate_package(root)
+
     def test_entrypoint_escape_is_rejected(self) -> None:
         with self._copy_sample() as root:
             manifest = (root / "activity.toml").read_text(encoding="utf-8")

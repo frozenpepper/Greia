@@ -96,7 +96,8 @@ class DelfinoRenderer:
     def _wrapped_caption(self, caption: str) -> tuple[pygame.Surface, list[str]]:
         cached = self._caption_cache.get(caption)
         if cached is not None:
-            return cached        max_width = 470
+            return cached
+        max_width = 470
         words = caption.split()
         lines: list[str] = []
         current = ""

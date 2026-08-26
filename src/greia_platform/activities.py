@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import hashlib
 import logging
 import tomllib
@@ -327,6 +328,17 @@ class ActivityRegistry:
                 raise ActivityValidationError(f"forbidden package suffix: {path}")
             if metadata.st_mode & 0o111:
                 raise ActivityValidationError(f"executable activity files are forbidden: {path}")
+            # Every packaged Python file must at least be parseable. Import
+            # policy stays a runtime-layer concern; this catches syntactically
+            # broken sources at packaging/validation time instead of as a
+            # launch-time failure on the device.
+            if path.suffix.casefold() == ".py":
+                try:
+                    ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+                except (OSError, UnicodeDecodeError, SyntaxError) as exc:
+                    raise ActivityValidationError(
+                        f"cannot parse Python source {path}: {exc}"
+                    ) from exc
         if total > self._runtime.maximum_activity_bytes:
             raise ActivityValidationError(
                 f"activity is {total} bytes; limit is {self._runtime.maximum_activity_bytes}"
