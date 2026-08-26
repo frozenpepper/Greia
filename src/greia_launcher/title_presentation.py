@@ -144,18 +144,37 @@ def render_activity_card_label(
             break
 
     if best_font is None:
+        # No requested size stacks two lines inside the band (small tiles or a
+        # scaled font provider). Render ONE ellipsized line instead of letting
+        # the second line clip past the surface — a truncated name always
+        # beats cut glyphs.
         best_font = font_provider(lowest_size)
-        best_lines = split_title_two_lines(text, best_font, max_width)
+        single = cap_title_for_card(text)
+        if best_font.size(single)[0] > max_width:
+            while single and best_font.size(single + "…")[0] > max_width:
+                single = single[:-1].rstrip()
+            single = f"{single}…" if single else "…"
+        best_lines = (single,)
 
     line_surfaces = [best_font.render(line, True, color) for line in best_lines]
     total_w = min(max_width, max(s.get_width() for s in line_surfaces) if line_surfaces else 1)
     line_h = best_font.get_linesize()
 
-    # Hard guarantee against text crossing the card border: when even the
-    # chosen font cannot stack its lines inside the band, compress leading
-    # instead of letting glyphs clip past the label bounds.
+    # Hard guarantee against text crossing the card border: when the stacked
+    # lines cannot fit the band with real glyph heights, drop to a single
+    # ellipsized line instead of compressing leading below the glyph box
+    # (compressed slots clip the second line mid-glyph).
     tallest_line = max((s.get_height() for s in line_surfaces), default=line_h)
     count = len(line_surfaces)
+    if count > 1 and tallest_line + (count - 1) > max_height:
+        single = cap_title_for_card(text)
+        if best_font.size(single)[0] > max_width:
+            while single and best_font.size(single + "…")[0] > max_width:
+                single = single[:-1].rstrip()
+            single = f"{single}…" if single else "…"
+        line_surfaces = [best_font.render(single, True, color)]
+        count = 1
+        line_h = best_font.get_linesize()
     if count > 1 and count * line_h > max_height:
         line_h = max(1, min(line_h, (max_height - tallest_line) // (count - 1)))
 

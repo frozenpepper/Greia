@@ -54,6 +54,7 @@ class ActivityContractTests(unittest.TestCase):
                 "org.greia.teatrino-fiabe",
                 "org.greia.tre-carte-una-storia",
                 "org.greia.treno-numeri",
+                "org.greia.viaggio-delfino",
                 "org.greia.volo-draghetto",
                 "org.greia.workshop-settings",
                 "org.greia.writing",

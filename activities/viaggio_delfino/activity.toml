@@ -1,0 +1,45 @@
+[activity]
+id = "org.greia.viaggio-delfino"
+legacy_ids = []
+title_key = "activity.viaggio_delfino.title"
+version = "0.1.0"
+icon = "package:assets/icon.png"
+languages = ["it", "en"]
+
+[presentation]
+categories = ["play", "explore"]
+discovery_tags = ["action", "nature"]
+
+[education]
+categories = ["motor_skills", "reaction_time", "science_curiosity"]
+difficulty = 2
+recommended_age_min = 4
+recommended_age_max = 8
+skills = [
+  { id = "motor.coordination.hand_eye", weight = 3 },
+  { id = "motor.pointer.continuous_tracking", weight = 2 },
+  { id = "science.nature_curiosity", weight = 2 },
+]
+events = [
+  { id = "dolphin.chapter_completed", kind = "completion" },
+  { id = "dolphin.fact_opened", kind = "milestone" },
+  { id = "dolphin.journey_score", kind = "score", score_order = "higher_better" },
+]
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "hybrid"
+
+[requirements]
+required_capabilities = ["display", "pointer", "audio.basic"]
+optional_capabilities = ["keyboard", "touch"]
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1

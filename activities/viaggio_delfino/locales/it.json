@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "locale": "it",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Il Viaggio del Delfino",
+    "activity.viaggio_delfino.title": "Il Viaggio del Delfino",
+    "chapter.coral_bay.name": "Baia di Corallo",
+    "chapter.kelp_forest.name": "Foresta di Algue",
+    "chapter.open_sea.name": "Alto Mare",
+    "completion.title": "Che viaggio meraviglioso!",
+    "completion.replay": "NUOTA ANCORA!",
+    "completion.body": "Hai raccolto $count perle lungo il percorso!",
+    "presenter.welcome.caption": "Ciao! Io sono Tito! Muovi il mouse o usa le frecce per nuotare, e premi la barra per saltare fuori dall'acqua! Raccogli tutte le perle!",
+    "curiosity.delfino.breaching.caption": "I delfini saltano fuori dall'acqua, finanche a quattro metri! Lo fanno per giocare e per farsi vedere dagli amici lontani.",
+    "curiosity.delfino.echolocation.caption": "Il delfino emette piccoli click: ascoltando l'eco trova i pesci perfino dove non si vede!",
+    "curiosity.delfino.blowhole.caption": "Il delfino non è un pesce: è un mammifero! Respira l'aria dal foro sulla testa, il sfiatatoio.",
+    "curiosity.delfino.pods.caption": "I delfini vivono in famiglie chiamate branchi: insieme cacciano i pesci e si proteggono.",
+    "curiosity.delfino.teeth.caption": "Il delfino ha tanti dentini, ma non mastica mai: afferra il pesce e lo ingoia tutto intero!",
+    "curiosity.delfino.whistle.caption": "Ogni delfino ha un fischietto speciale, quasi un nome: così gli amici lo riconoscono!"
+  },
+  "audio": {
+    "presenter.welcome.voice": {
+      "path": "assets/audio/it/presenter-welcome.ogg"
+    },
+    "curiosity.delfino.breaching.voice": {
+      "path": "assets/audio/it/curiosity-breaching.ogg"
+    },
+    "curiosity.delfino.echolocation.voice": {
+      "path": "assets/audio/it/curiosity-echolocation.ogg"
+    },
+    "curiosity.delfino.blowhole.voice": {
+      "path": "assets/audio/it/curiosity-blowhole.ogg"
+    },
+    "curiosity.delfino.pods.voice": {
+      "path": "assets/audio/it/curiosity-pods.ogg"
+    },
+    "curiosity.delfino.teeth.voice": {
+      "path": "assets/audio/it/curiosity-teeth.ogg"
+    },
+    "curiosity.delfino.whistle.voice": {
+      "path": "assets/audio/it/curiosity-whistle.ogg"
+    }
+  }
+}

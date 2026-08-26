@@ -44,3 +44,11 @@ event_id = "constellation.completed"
 once_per_session = true
 reward_id = "star"
 reward_delta = 1
+
+[[rules]]
+id = "viaggio-delfino-chapter-star"
+activity_id = "org.greia.viaggio-delfino"
+event_id = "dolphin.chapter_completed"
+once_per_session = true
+reward_id = "star"
+reward_delta = 1

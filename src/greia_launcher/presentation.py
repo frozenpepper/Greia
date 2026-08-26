@@ -1477,10 +1477,12 @@ class GreiaLauncherPresentation(LauncherApplication):
             tile.width - 16,
             label_height,
         )
-        icon_room = max(48, label_rect.top - tile.top - 14)
-        icon_size = max(52, min(int(tile.width * 0.76), icon_room))
+        # Icons read slightly larger while labels render a step smaller: the
+        # artwork is the child's primary identifier, the name is support.
+        icon_room = max(48, label_rect.top - tile.top - 10)
+        icon_size = max(56, min(int(tile.width * 0.82), icon_room))
         icon = self._activity_icon(activity, icon_size, pygame)
-        icon_center_y = tile.top + max(12, (label_rect.top - tile.top) // 2)
+        icon_center_y = tile.top + max(10, (label_rect.top - tile.top) // 2)
         screen.blit(
             icon,
             icon.get_rect(center=(tile.centerx, icon_center_y)),
@@ -1491,7 +1493,7 @@ class GreiaLauncherPresentation(LauncherApplication):
             max_height=label_rect.height - 4,
             pygame=pygame,
             color=theme.text,
-            preferred_size=max(16, min(24, tile.height // 8)),
+            preferred_size=max(14, min(22, tile.height // 9)),
         )
         screen.blit(title, title.get_rect(center=label_rect.center))
 
@@ -1539,15 +1541,24 @@ class GreiaLauncherPresentation(LauncherApplication):
         if cached is not None:
             return cached
 
+        # The child Shell's font provider multiplies requested sizes by the
+        # profile interface scale, while card geometry stays in layout pixels.
+        # Divide the requested range by the scale so the *effective* font is
+        # what competes against the label band; otherwise large profiles push
+        # every candidate past the band and the fallback clips glyphs.
+        scale = getattr(self.theme_controller, "interface_scale", 1.0) or 1.0
+        effective_preferred = max(11, int(round(preferred_size / scale)))
+        effective_min = max(9, int(round(12 / scale)))
+
         result = render_activity_card_label(
             text,
             max_width=max_width,
             max_height=max_height,
             font_provider=lambda sz: self._font(sz, pygame),
             color=color,
-            preferred_size=preferred_size,
+            preferred_size=effective_preferred,
             pygame=pygame,
-            min_size=14,
+            min_size=effective_min,
         )
         self._label_surface_cache[cache_key] = result
         return result
