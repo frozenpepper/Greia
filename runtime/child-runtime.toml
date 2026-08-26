@@ -36,6 +36,7 @@ allowed_import_roots = [
   "string",
   "struct",
   "textwrap",
+  "threading",
   "time",
   "tomllib",
   "typing",

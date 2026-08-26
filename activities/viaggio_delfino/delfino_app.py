@@ -322,6 +322,7 @@ class DelfinoJourneyApp:
             clock.tick(30)
 
         self._persist()
+        self.events_service.close()
         self.audio.shutdown()
         pygame.quit()
         return 0

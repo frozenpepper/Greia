@@ -3,10 +3,18 @@
 Thin, injectable wrappers around Greia storage and the platform event
 pipeline so the app layer stays testable with stubs. The Activity reports
 factual events only; Greia owns Stars, badges and achievement truth.
+
+Event emission is a validated synchronous IPC round-trip whose broker side
+commits durable state before replying. On low-resource reference hardware
+that commit can take hundreds of milliseconds, so emission runs on one
+bounded worker thread: ordering is preserved, the frame loop never blocks,
+and a stalled broker can never grow the queue without bound.
 """
 
 from __future__ import annotations
 
+import queue
+import threading
 import time
 from typing import Any
 
@@ -66,29 +74,104 @@ class GreiaDelfinoStorage:
 
 
 class GreiaDelfinoEvents:
-    """Emit exactly the manifest-declared semantic facts."""
+    """Emit exactly the manifest-declared semantic facts, off the frame thread.
+
+    One daemon worker drains a bounded FIFO so celebration moments (star
+    pickups, chapter banners) never stall on broker commits. Facts are
+    best-effort under a dead broker: an overflow drops the newest item and
+    counts it rather than blocking gameplay or growing memory.
+    """
+
+    _CLOSE = object()
+
+    def __init__(self, queue_depth: int = 16, emitter: Any = None) -> None:
+        self._emitter = emitter if emitter is not None else emit_activity_event
+        self._queue: queue.Queue[Any] = queue.Queue(maxsize=max(4, queue_depth))
+        self._dropped = 0
+        self._idle = threading.Event()
+        self._idle.set()
+        self._worker = threading.Thread(
+            target=self._drain, name="delfino-event-worker", daemon=True
+        )
+        self._worker.start()
+
+    # ------------------------------------------------------------------ api
 
     def chapter_completed(self, chapter_number: int) -> None:
-        emit_activity_event(
+        self._submit(
             "dolphin.chapter_completed",
             {"chapter_number": chapter_number},
-            idempotency_key=f"dolphin-chapter-{chapter_number}-{time.time_ns()}",
+            f"dolphin-chapter-{chapter_number}-{time.time_ns()}",
         )
 
     def fact_opened(self, fact_id: str) -> None:
-        emit_activity_event(
+        self._submit(
             "dolphin.fact_opened",
             {"fact_id": fact_id},
-            idempotency_key=f"dolphin-fact-{fact_id}-{time.time_ns()}",
+            f"dolphin-fact-{fact_id}-{time.time_ns()}",
         )
 
     def journey_score(self, score: int) -> None:
-        emit_activity_event(
-            "dolphin.journey_score",
-            {},
-            idempotency_key=f"dolphin-journey-score-{time.time_ns()}",
-            score=max(0, int(score)),
-        )
+        self._submit("dolphin.journey_score", {}, f"dolphin-journey-score-{time.time_ns()}", score)
+
+    def flush(self, timeout: float = 2.0) -> bool:
+        """Wait until everything submitted so far has been handed to Greia."""
+
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            if self._queue.empty() and self._idle.is_set():
+                return True
+            time.sleep(0.005)
+        return self._queue.empty() and self._idle.is_set()
+
+    def close(self) -> None:
+        """Stop the worker after draining whatever was already submitted."""
+
+        try:
+            self._queue.put(self._CLOSE, timeout=1.0)
+        except queue.Full:
+            pass
+        self._worker.join(timeout=2.0)
+        self._idle.set()
+
+    @property
+    def dropped_count(self) -> int:
+        return self._dropped
+
+    # --------------------------------------------------------------- worker
+
+    def _submit(
+        self,
+        event_id: str,
+        payload: dict[str, object],
+        idempotency_key: str,
+        score: float | int | None = None,
+    ) -> None:
+        self._idle.clear()
+        try:
+            self._queue.put_nowait((event_id, payload, idempotency_key, score))
+        except queue.Full:
+            self._dropped += 1
+            if self._queue.empty():
+                self._idle.set()
+
+    def _drain(self) -> None:
+        while True:
+            item = self._queue.get()
+            if item is self._CLOSE:
+                return
+            event_id, payload, idempotency_key, score = item
+            try:
+                self._emitter(
+                    event_id,
+                    payload,
+                    idempotency_key=idempotency_key,
+                    score=score,
+                )
+            except Exception:
+                pass  # facts are fail-soft; gameplay never depends on delivery
+            if self._queue.empty():
+                self._idle.set()
 
 
 def _safe_storage() -> Any:

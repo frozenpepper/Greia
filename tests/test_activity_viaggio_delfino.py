@@ -229,6 +229,25 @@ class JourneyStateTests(unittest.TestCase):
         self.assertTrue(star.collected)
         self.assertEqual(world.session_pearls, 1)
 
+    def test_starfish_collects_at_the_nose_not_only_mid_body(self) -> None:
+        from activities.viaggio_delfino.delfino_model import (
+            DOLPHIN_NOSE_OFFSET,
+            DOLPHIN_RADIUS,
+            Starfish,
+        )
+
+        world = JourneyState()
+        world.start_journey(random.Random(23))
+        # Far beyond the centre radius but inside the nose reach: must collect.
+        star = Starfish(
+            x=world.dolphin.x + DOLPHIN_NOSE_OFFSET + DOLPHIN_RADIUS - 10.0,
+            y=world.dolphin.y,
+        )
+        world.starfish.append(star)
+        events = world.update(1 / 30, random.Random(23))
+        self.assertIn("starfish_collected", events)
+        self.assertTrue(star.collected)
+
     def test_starfish_spawns_respect_the_minimum_gap(self) -> None:
         world = JourneyState()
         world.start_journey(random.Random(31))
@@ -334,6 +353,53 @@ class GreiaDelfinoEventsTests(unittest.TestCase):
         self.assertTrue(hasattr(GreiaDelfinoEvents, "chapter_completed"))
         self.assertTrue(hasattr(GreiaDelfinoEvents, "fact_opened"))
         self.assertTrue(hasattr(GreiaDelfinoEvents, "journey_score"))
+
+    def test_events_emit_asynchronously_without_blocking_the_caller(self) -> None:
+        import time as time_module
+        from activities.viaggio_delfino import delfino_services
+
+        calls: list[tuple[str, object]] = []
+        started = time_module.monotonic()
+
+        def slow_emitter(event_id, payload=None, idempotency_key=None, score=None):
+            time_module.sleep(0.05)
+            calls.append((event_id, score))
+
+        service = GreiaDelfinoEvents(emitter=slow_emitter, queue_depth=8)
+        try:
+            submitted = time_module.monotonic()
+            service.chapter_completed(1)
+            service.fact_opened("curiosity.delfino.pods")
+            service.journey_score(120)
+            submit_ms = (time_module.monotonic() - submitted) * 1000
+            # Submitting must never wait on the slow broker round-trip.
+            self.assertLess(submit_ms, 15.0)
+            self.assertTrue(service.flush(timeout=3.0))
+            self.assertEqual(
+                [name for name, _ in calls],
+                [
+                    "dolphin.chapter_completed",
+                    "dolphin.fact_opened",
+                    "dolphin.journey_score",
+                ],
+            )
+            self.assertEqual(calls[2][1], 120)
+        finally:
+            service.close()
+        del started
+
+    def test_close_drains_pending_events(self) -> None:
+        from activities.viaggio_delfino import delfino_services
+
+        calls: list[str] = []
+        service = GreiaDelfinoEvents(
+            emitter=lambda event_id, payload=None, idempotency_key=None, score=None: calls.append(event_id),
+            queue_depth=8,
+        )
+        service.chapter_completed(2)
+        service.close()
+        self.assertEqual(calls, ["dolphin.chapter_completed"])
+        self.assertTrue(service.flush(timeout=0.1))
 
 
 if __name__ == "__main__":

@@ -38,6 +38,10 @@ MAX_SWIM_Y: Final = 520.0
 #: Collision radius used for all pickups/obstacles against the dolphin centre.
 DOLPHIN_RADIUS: Final = 46.0
 
+#: The dolphin sprite is long; children aim with the nose. Starfish treasure
+#: also collects when the nose reaches it, not only mid-body.
+DOLPHIN_NOSE_OFFSET: Final = 92.0
+
 #: Cruise speed in px/s at 60 fps-normalised dt; dash multiplies it briefly.
 BASE_SPEED: Final = 180.0
 DASH_MULTIPLIER: Final = 1.9
@@ -385,7 +389,9 @@ class JourneyState:
                 self._spawn_sparkle(pearl.x, pearl.effective_y, "sparkle", rng)
         for star in self.starfish:
             star.update(dt)
-            if star.collides_with(dolf.x, dolf.y):
+            if star.collides_with(dolf.x, dolf.y) or star.collides_with(
+                dolf.x + DOLPHIN_NOSE_OFFSET, dolf.y
+            ):
                 star.collected = True
                 self.session_pearls += 1
                 self.chapter_value += SCORE_PER_STARFISH
