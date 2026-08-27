@@ -157,16 +157,17 @@ class MercuryPage(EncyclopediaPage):
             pygame.draw.circle(surface, (172, 166, 154), moving, 10)
             return
 
-        base = (177, 170, 157) if self._temperature_mode == 0 else (129, 137, 153)
-        pygame.draw.circle(surface, base, center, radius)
+        pygame.draw.circle(surface, (177, 170, 157), center, radius)
 
-        # The temperature comparison uses one lit hemisphere and one dark
-        # hemisphere only while the child has asked for that concept.
+        # One circle, two clipped hemispheres: the comparison stays visually a
+        # single world and does not allocate a temporary surface in the hot loop.
         if self._temperature_age > 0:
-            day_rect = pygame.Rect(center[0] - radius, center[1] - radius, radius, radius * 2)
-            night_rect = pygame.Rect(center[0], center[1] - radius, radius, radius * 2)
-            pygame.draw.ellipse(surface, (210, 147, 86), day_rect)
-            pygame.draw.ellipse(surface, (91, 105, 133), night_rect)
+            previous_clip = surface.get_clip()
+            surface.set_clip(pygame.Rect(center[0] - radius, center[1] - radius, radius, radius * 2))
+            pygame.draw.circle(surface, (210, 147, 86), center, radius)
+            surface.set_clip(pygame.Rect(center[0], center[1] - radius, radius, radius * 2))
+            pygame.draw.circle(surface, (91, 105, 133), center, radius)
+            surface.set_clip(previous_clip)
             pygame.draw.line(surface, (237, 215, 165), (505, 235), (505, 417), 3)
             pygame.draw.circle(surface, (250, 202, 73), (420, 253), 14)
             pygame.draw.circle(surface, (191, 222, 244), (585, 395), 12)
@@ -181,7 +182,6 @@ class MercuryPage(EncyclopediaPage):
                 x, y = center[0] + dx, center[1] + dy
                 pygame.draw.line(surface, (217, 210, 193), (x, y), (x + crater_radius * 2, y - crater_radius), 2)
                 pygame.draw.line(surface, (217, 210, 193), (x, y), (x - crater_radius * 2, y + crater_radius), 2)
-            # Small polar-shadow cue: ice is shown only inside a dark polar crater.
             polar = (505, 245)
             pygame.draw.circle(surface, (70, 76, 91), polar, 18)
             pygame.draw.arc(surface, (184, 226, 243), (493, 235, 24, 18), 0.2, 3.0, 4)
