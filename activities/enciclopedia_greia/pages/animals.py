@@ -21,7 +21,16 @@ ANIMALS = (
     ("penguin", "animal.penguin"),
     ("frog", "animal.frog"),
 )
-OCTOPUS_INDEX = 2
+
+# Only real runtime pages are navigable. Adding a finished animal entry requires
+# one explicit mapping here plus registry wiring; planned-but-missing subjects do
+# not pretend to open an empty page.
+IMPLEMENTED_ENTRY_IDS = {
+    "lion": "animals.lion",
+    "elephant": "animals.elephant",
+    "octopus": "animals.octopus",
+    "bee": "animals.bee",
+}
 
 
 class AnimalsPage(EncyclopediaPage):
@@ -44,21 +53,36 @@ class AnimalsPage(EncyclopediaPage):
         self._time += dt
 
     def handle_input(self, event: PageInput) -> None:
-        if event.position is not None and event.kind in {PageInputKind.POINTER_MOVE, PageInputKind.POINTER_PRESS}:
+        if event.position is not None and event.kind in {
+            PageInputKind.POINTER_MOVE,
+            PageInputKind.POINTER_PRESS,
+        }:
             point = (int(event.position[0]), int(event.position[1]))
-            hit = next((i for i, rect in enumerate(self._rects) if rect.collidepoint(point)), None)
+            hit = next(
+                (i for i, rect in enumerate(self._rects) if rect.collidepoint(point)),
+                None,
+            )
             self._hovered = hit
             if event.kind is PageInputKind.POINTER_PRESS and hit is not None:
                 self._selected = hit
-                if hit == OCTOPUS_INDEX:
-                    self.context.host.open_page("animals.octopus")
+                self._open_entry(hit)
             return
         if event.kind is PageInputKind.COMMAND and event.command:
             if event.command is PageCommand.ACTIVATE:
-                if self._selected == OCTOPUS_INDEX:
-                    self.context.host.open_page("animals.octopus")
+                self._open_entry(self._selected)
                 return
-            self._selected = grid_step(self._selected, event.command, columns=3, count=len(ANIMALS))
+            self._selected = grid_step(
+                self._selected,
+                event.command,
+                columns=3,
+                count=len(ANIMALS),
+            )
+
+    def _open_entry(self, index: int) -> None:
+        animal_id = ANIMALS[index][0]
+        page_id = IMPLEMENTED_ENTRY_IDS.get(animal_id)
+        if page_id is not None:
+            self.context.host.open_page(page_id)
 
     def draw(self, surface: pygame.Surface) -> None:
         surface.fill((205, 236, 242))
@@ -79,7 +103,7 @@ class AnimalsPage(EncyclopediaPage):
             pygame.draw.rect(surface, (255, 252, 242), rect, border_radius=24)
             pygame.draw.rect(surface, (81, 136, 89), rect, 4, border_radius=24)
             self._draw_animal(surface, animal_id, rect, i)
-            if i == OCTOPUS_INDEX:
+            if animal_id in IMPLEMENTED_ENTRY_IDS:
                 pygame.draw.circle(surface, (255, 214, 74), (rect.right - 18, rect.top + 18), 9)
             draw_centered_text(
                 surface,
@@ -89,7 +113,7 @@ class AnimalsPage(EncyclopediaPage):
                 size=19,
                 color=self.context.palette.ink,
             )
-            focus_ring(surface, rect, active and i == self._selected)
+            focus_ring(surface, rect, active)
 
         draw_presenter(
             surface,
@@ -101,7 +125,13 @@ class AnimalsPage(EncyclopediaPage):
             fallback_color=(247, 151, 77),
         )
 
-    def _draw_animal(self, surface: pygame.Surface, animal_id: str, rect: pygame.Rect, index: int) -> None:
+    def _draw_animal(
+        self,
+        surface: pygame.Surface,
+        animal_id: str,
+        rect: pygame.Rect,
+        index: int,
+    ) -> None:
         cx, cy = rect.centerx, rect.centery - 10
         bob = int(math.sin(self._time * 2.0 + index) * 3)
         cy += bob
@@ -117,7 +147,14 @@ class AnimalsPage(EncyclopediaPage):
         elif animal_id == "octopus":
             pygame.draw.circle(surface, (183, 103, 173), (cx, cy - 5), 28)
             for dx in (-24, -12, 0, 12, 24):
-                pygame.draw.arc(surface, (183, 103, 173), (cx + dx - 14, cy + 8, 28, 35), 0, math.pi, 5)
+                pygame.draw.arc(
+                    surface,
+                    (183, 103, 173),
+                    (cx + dx - 14, cy + 8, 28, 35),
+                    0,
+                    math.pi,
+                    5,
+                )
         elif animal_id == "bee":
             pygame.draw.ellipse(surface, (247, 204, 63), (cx - 30, cy - 18, 60, 36))
             for x in (cx - 14, cx + 5):
