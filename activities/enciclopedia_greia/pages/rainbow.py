@@ -131,7 +131,6 @@ class RainbowPage(EncyclopediaPage):
 
     def _draw_rainbow_scene(self, surface: pygame.Surface) -> None:
         pygame.draw.rect(surface, (104, 173, 91), (0, 405, 1024, 195))
-        # Viewer and droplets form the fixed part of the geometry.
         viewer = (505, 390)
         pygame.draw.circle(surface, (238, 198, 151), (viewer[0], viewer[1] - 33), 12)
         pygame.draw.line(surface, (74, 70, 68), (viewer[0], viewer[1] - 20), (viewer[0], viewer[1] + 16), 5)
@@ -147,22 +146,32 @@ class RainbowPage(EncyclopediaPage):
         pygame.draw.circle(surface, (251, 210, 66), sun, 27)
         for index in range(8):
             angle = index * math.tau / 8
-            pygame.draw.line(surface, (251, 210, 66), (sun[0] + int(math.cos(angle) * 34), sun[1] + int(math.sin(angle) * 34)), (sun[0] + int(math.cos(angle) * 46), sun[1] + int(math.sin(angle) * 46)), 3)
+            pygame.draw.line(
+                surface,
+                (251, 210, 66),
+                (sun[0] + int(math.cos(angle) * 34), sun[1] + int(math.sin(angle) * 34)),
+                (sun[0] + int(math.cos(angle) * 46), sun[1] + int(math.sin(angle) * 46)),
+                3,
+            )
 
-        # When aligned, the Sun-viewer-droplet ordering is shown by a dashed
-        # schematic line and the familiar ground-level arc appears.
         if self._aligned:
             for y in range(435, 285, -22):
                 pygame.draw.line(surface, (246, 203, 73), (505, y), (505, y - 12), 3)
             for index, color in enumerate(_COLORS):
                 inset = index * 7
-                pygame.draw.arc(surface, color, (350 + inset, 190 + inset, 310 - inset * 2, 245 - inset * 2), 0, math.pi, 6)
+                pygame.draw.arc(
+                    surface,
+                    color,
+                    (350 + inset, 190 + inset, 310 - inset * 2, 245 - inset * 2),
+                    0,
+                    math.pi,
+                    6,
+                )
 
         if self._droplet_age > 0:
             center = (505, 285)
             pygame.draw.circle(surface, (221, 241, 247), center, 72)
             pygame.draw.circle(surface, (91, 163, 204), center, 72, 3)
-            # One enlarged droplet is a schematic of the optical path.
             pygame.draw.line(surface, (248, 235, 182), (382, 255), (458, 276), 5)
             pygame.draw.line(surface, (248, 235, 182), (458, 276), (543, 326), 5)
             pygame.draw.line(surface, (248, 235, 182), (543, 326), (565, 253), 5)
@@ -177,16 +186,21 @@ class RainbowPage(EncyclopediaPage):
                 pygame.draw.line(surface, color, start, (628, 290 + index * 16), 5)
 
         if self._circle_age > 0:
-            center = (505, 292)
+            main_center = (505, 292)
             for index, color in enumerate(_COLORS):
                 radius = 105 - index * 8
-                pygame.draw.circle(surface, color, center, radius, 5)
-            # Ground line hides the lower portion in the ordinary view; a
-            # translucent-looking window beside it reveals the full geometry.
+                pygame.draw.circle(surface, color, main_center, radius, 5)
+            # Ground masks the lower half in the ordinary ground-level view.
             pygame.draw.rect(surface, (104, 173, 91), (355, 292, 300, 135))
             pygame.draw.line(surface, (75, 110, 78), (355, 292), (655, 292), 3)
-            pygame.draw.circle(surface, (247, 232, 182), (685, 330), 30)
-            pygame.draw.arc(surface, (102, 140, 185), (660, 305, 50, 50), 0.1, 3.0, 4)
+            # A separate elevated-view inset explicitly shows the full circle.
+            inset_center = (682, 330)
+            pygame.draw.circle(surface, (231, 241, 244), inset_center, 47)
+            for index, color in enumerate(_COLORS):
+                radius = 41 - index * 5
+                pygame.draw.circle(surface, color, inset_center, radius, 3)
+            pygame.draw.circle(surface, (90, 119, 153), inset_center, 47, 2)
+            pygame.draw.line(surface, (90, 119, 153), (653, 371), (711, 289), 2)
 
     def _draw_hotspots(self, surface: pygame.Surface) -> None:
         for index, (item, rect) in enumerate(zip(DISCOVERIES, self._hotspots)):
@@ -206,7 +220,14 @@ class RainbowPage(EncyclopediaPage):
                     pygame.draw.line(surface, color, (cx - 25, cy - 15 + off * 6), (cx + 24, cy - 15 + off * 6), 4)
             else:
                 for off, color in enumerate(_COLORS):
-                    pygame.draw.arc(surface, color, (cx - 26 + off * 2, cy - 24 + off * 2, 52 - off * 4, 48 - off * 4), 0, math.pi * 2, 3)
+                    pygame.draw.arc(
+                        surface,
+                        color,
+                        (cx - 26 + off * 2, cy - 24 + off * 2, 52 - off * 4, 48 - off * 4),
+                        0,
+                        math.tau,
+                        3,
+                    )
             focus_ring(surface, rect, index == self._selected or index == self._hovered)
 
     def _draw_caption(self, surface: pygame.Surface) -> None:
