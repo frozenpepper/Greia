@@ -44,7 +44,10 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
             (
                 "home",
                 "animals",
+                "animals.lion",
+                "animals.elephant",
                 "animals.octopus",
+                "animals.bee",
                 "space",
                 "space.saturn",
                 "earth",
@@ -72,13 +75,31 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
         self.assertEqual(bundles[0]["audio"], {})
         self.assertEqual(bundles[1]["audio"], {})
 
-    def test_pilot_entries_are_research_backed(self) -> None:
+    def test_researched_entries_keep_authoring_provenance(self) -> None:
         cases = {
+            ROOT / "encyclopedia" / "research" / "animals" / "lion.md": (
+                "Smithsonian's National Zoo",
+                "Social pride",
+                "Roar",
+                "Strong front body",
+            ),
+            ROOT / "encyclopedia" / "research" / "animals" / "elephant.md": (
+                "Smithsonian's National Zoo",
+                "Versatile trunk",
+                "Cooling ears",
+                "Social touch",
+            ),
             ROOT / "encyclopedia" / "research" / "animals" / "octopus.md": (
                 "NOAA Fisheries",
                 "Smithsonian Ocean",
                 "Eight arms, not tentacles",
                 "Three hearts",
+            ),
+            ROOT / "encyclopedia" / "research" / "animals" / "bee.md": (
+                "USDA Forest Service",
+                "Flowers provide food",
+                "Pollen travels",
+                "Most wild bees are solitary",
             ),
             ROOT / "encyclopedia" / "research" / "space" / "saturn.md": (
                 "NASA Science",
@@ -117,7 +138,7 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
                 for marker in required:
                     self.assertIn(marker, text)
 
-    def test_subject_specific_pilots_do_not_leak_into_engine_code(self) -> None:
+    def test_subject_specific_pages_do_not_leak_into_engine_code(self) -> None:
         source = (ACTIVITY / "enciclopedia_engine.py").read_text(encoding="utf-8")
         tree = ast.parse(source)
         identifiers = {
@@ -130,7 +151,17 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
             for node in ast.walk(tree)
             if isinstance(node, ast.ImportFrom) and node.module
         }
-        for subject in ("octopus", "saturn", "volcano", "heart", "gears", "fossils"):
+        for subject in (
+            "lion",
+            "elephant",
+            "octopus",
+            "bee",
+            "saturn",
+            "volcano",
+            "heart",
+            "gears",
+            "fossils",
+        ):
             with self.subTest(subject=subject):
                 self.assertNotIn(subject, identifiers)
                 self.assertFalse(
