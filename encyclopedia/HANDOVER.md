@@ -1,7 +1,7 @@
 # Greia Encyclopedia workstream handover
 
 **Updated:** 2026-08-27  
-**Construction state:** v0.1 source breadth complete  
+**Construction state:** v0.1 source breadth complete and frozen for closure  
 **Runtime pages:** **43 / 43 planned executable pages**  
 **Evidence:** **SOURCE-REVIEWED / TESTS-UNEXECUTED / SIMULATOR-UNVERIFIED**  
 **Runtime Activity:** `activities/enciclopedia_greia/` (`org.greia.enciclopedia`)
@@ -16,26 +16,15 @@
 - No speech recognition, runtime narration TTS, runtime AI or network factual lookup.
 - Narration is prerecorded during authoring. Dani/system speech is also generated on development/parent hardware and packaged as static audio.
 - Italian and English are the initial locales.
-- `encyclopedia/VOICE_RECORDING_REQUESTS.md` is the single coordination authority for encyclopedia-specific voice production.
-- Do not run per-page Simulator gates during this first construction pass. The owner explicitly wants one consolidated Simulator/visual/input pass after the source base is solid.
-- Do not call v0.1 runtime-accepted until that consolidated gate has actually executed on the final runtime-relevant source.
+- `encyclopedia/VOICE_RECORDING_REQUESTS.md` is the single human/agent coordination authority for encyclopedia-specific voice production.
+- The first construction pass intentionally skipped per-page Simulator gates. Do not claim runtime acceptance until the later consolidated source-test + Simulator/visual/input pass actually runs.
+- Do not add more v0.1 topics. The 43-page breadth is frozen unless the owner deliberately changes scope.
 
-## Product scope — source complete
-
-The original v0.1 target remains exactly:
+## Exact v0.1 inventory
 
 ```text
-1 Home
-6 section pages
-36 final entries
-= 43 executable pages
-```
+home
 
-All 43 now exist and are registered in `enciclopedia_catalogue.py`.
-
-### Animals — complete
-
-```text
 animals
 ├── animals.lion
 ├── animals.elephant
@@ -43,11 +32,7 @@ animals
 ├── animals.bee
 ├── animals.penguin
 └── animals.frog
-```
 
-### Space — complete
-
-```text
 space
 ├── space.sun
 ├── space.mercury
@@ -59,44 +44,28 @@ space
 ├── space.saturn
 ├── space.uranus
 └── space.neptune
-```
 
-### Earth & Nature — complete
-
-```text
 earth
 ├── earth.volcano
 ├── earth.rain
 ├── earth.ocean
 ├── earth.tree
 └── earth.rainbow
-```
 
-### My Body — complete
-
-```text
 body
 ├── body.heart
 ├── body.lungs
 ├── body.bones
 ├── body.teeth
 └── body.senses
-```
 
-### Science & Machines — complete
-
-```text
 machines
 ├── machines.gears
 ├── machines.magnet
 ├── machines.bicycle
 ├── machines.airplane
 └── machines.bridge
-```
 
-### Long Ago — complete
-
-```text
 history
 ├── history.dinosaurs
 ├── history.fossils
@@ -105,178 +74,115 @@ history
 └── history.pyramids
 ```
 
+The authoring catalogue `encyclopedia/pages/catalogue.py` and runtime `enciclopedia_catalogue.py` currently contain the same 43 IDs. `tests/test_activity_enciclopedia.py` now explicitly guards that equality.
+
 ## Architecture state
 
-`enciclopedia_engine.py` remains subject-neutral and owns only:
+`enciclopedia_engine.py` owns only lifecycle, `PageContext`, explicit registry, bounded navigation history and semantic input vocabulary. No subject knowledge has leaked into it.
 
-- `EncyclopediaPage` lifecycle;
-- `PageContext` dependency seam;
-- explicit `PageRegistry`;
-- bounded `PageNavigator` history;
-- semantic pointer/command input vocabulary.
+Small model objects exist only where real coupled state warrants them, including `BeePollinationModel`, `FrogLifeCycleModel`, `MoonPhaseModel`, `WaterCycleModel`, `VolcanoModel`, `HeartModel`, `BreathingModel`, `GearTrainModel`, `DrivetrainModel`, `BridgeLoadModel`, `FossilDigModel` and `PyramidBuildModel`.
 
-No animal, planet, anatomy, geology, machine or history behavior belongs to the engine.
+There is intentionally no generic exhibit DSL, `PlanetPage`, `AnatomyPage`, `MachinePage`, history base class or physics framework.
 
-Model classes exist only where a page owns real coupled mutable invariants. Current examples include:
+Performance owners are bounded: text-surface cache max 160, character rendition cache bounded, page effects finite, and page hot paths should not decode images, smooth-scale reusable assets, build fonts, walk filesystems or perform provider/network work.
 
-```text
-BeePollinationModel
-FrogLifeCycleModel
-MoonPhaseModel
-VolcanoModel
-HeartModel
-GearTrainModel
-FossilDigModel
-BreathingModel
-DrivetrainModel
-BridgeLoadModel
-PyramidBuildModel
-```
+## Research/localization state
 
-Simple pages remain page-owned state. Do not manufacture model/manager/ABC layers for consistency alone.
-
-There is intentionally no generic `PlanetPage`, `AnatomyPage`, `MachinePage`, `HistoryPageBase`, exhibit DSL or physics framework.
-
-Shared performance owners remain bounded:
-
-- `CachedEncyclopediaTypography`: max 160 cached text surfaces;
-- shared character rendition cache: hard bounded;
-- page animations/effects: finite timers/counts;
-- no page hot path should decode images, `smoothscale` reusable assets, build fonts, walk filesystems or perform network/provider work.
-
-## Navigation state
-
-All visible planned subjects now lead to real pages.
-
-- Animals uses one explicit subject-ID mapping.
-- Space exposes Sun, eight major planets and Earth's Moon; Moon remains a satellite, not a ninth planet.
-- Earth & Nature uses five semantic scene destinations.
-- My Body uses five body callouts.
-- Science & Machines uses five workshop stations.
-- Long Ago uses five timeline moments.
-
-Pointer/touch and Greia semantic keyboard/controller paths are intended to reach the same destinations and page actions.
-
-## Research/provenance state
-
-Every one of the **36 factual final entries** has an authoring authority under:
+All **36 factual final entries** have one authority at:
 
 ```text
 encyclopedia/research/<section>/<entry>.md
 ```
 
-Each record contains:
+Each includes sources, accepted claims, misconception/scope guardrails, interaction-to-fact mapping and exact approved Italian/English narration.
 
-- primary source links;
-- accepted claims;
-- scope/misconception guardrails;
-- interaction → fact mapping;
-- exact approved Italian narration;
-- exact approved English narration.
+Italian and English runtime string bundles cover all 43 pages and have matching child-facing keys. Runtime `audio` maps remain empty until owner-accepted recordings are packaged.
 
-Important corrections deliberately preserved include:
+## Voice pipeline — local-agent workflow
 
-- most wild bees are solitary; generic bees are not all hive-dwellers;
-- not all penguins live on ice;
-- classic aquatic frog metamorphosis is common, not universal;
-- Venus, not Mercury, is the hottest planet;
-- Moon phases are changing views of sunlight and the Moon really rotates;
-- clouds are droplets/ice particles, not giant bags of vapor;
-- named oceans are regions of one connected global ocean;
-- the adult 206-bone count is not taught as the count for every child;
-- the tongue taste map is false;
-- magnets do not attract every metal;
-- bicycle gears do not create energy;
-- airplane lift does not use the false equal-transit-time story;
-- no bridge type is universally strongest;
-- humans never lived alongside non-avian dinosaurs and birds are living dinosaurs;
-- mammoths are elephant relatives, not dinosaurs;
-- cave-art meanings are not invented when unknown;
-- Egyptian pyramids are human engineering, not alien work, and the simplistic chained-slave story is not presented as settled archaeology.
+### Step 1 — populate/validate the complete queue
 
-## Localization state
+The checked-in Markdown queue is still the older **176-row** checkpoint. The deterministic synchronizer must be run in a repository checkout before the queue is considered complete:
 
-`activities/enciclopedia_greia/locales/it.json` and `en.json` now contain matching child-facing key sets for the complete 43-page source inventory.
-
-Runtime `audio` tables intentionally remain empty until generated clips are technically reviewed and owner-accepted. Missing custom narration must fail soft to silence; it must never trigger child-device TTS.
-
-## Voice-production queue state — IMPORTANT
-
-The unified file is:
-
-```text
-encyclopedia/VOICE_RECORDING_REQUESTS.md
+```bash
+python3 encyclopedia/sync_voice_requests.py
+python3 encyclopedia/sync_voice_requests.py --check
 ```
 
-At the last verified synchronization point it still contains **176 `REQUESTED` rows** through:
+Expected result:
 
 ```text
-Space: Sun, Mercury, Venus, Earth, Moon
+36 factual topics
+378 total bilingual rows
 ```
 
-No recorder-owned status/note changes were observed at that synchronization point.
+`sync_voice_requests.py` reads exact wording from research, preserves recorder-owned `STATUS`/`RECORDER_NOTES`, rejects duplicates, and refuses immutable drift on locked recorded rows.
 
-Research-ready narration not yet appended to that queue:
+### Step 2 — record gradually
+
+The local recording agent processes only `REQUESTED` rows. It changes only `STATUS` and `RECORDER_NOTES` and adds the requested staging OGG.
+
+Status flow:
 
 ```text
-Space:            Mars, Jupiter, Uranus, Neptune                 40 rows
-Earth & Nature:   Rain, Ocean, Tree, Rainbow                    42 rows
-My Body:          Lungs, Bones, Teeth, Senses                   40 rows
-Machines:         Magnet, Bicycle, Airplane, Bridge             40 rows
-Long Ago:         Dinosaurs, Mammoth, Cave Paintings, Pyramids  40 rows
-                                                               --------
-Pending:                                                      202 rows
+REQUESTED
+→ RECORDED_UNREVIEWED
+→ OWNER_ACCEPTED
 ```
 
-Expected full v0.1 queue after synchronization:
+Rejected/revised rows use the existing queue protocol; never silently alter immutable text/voice/path after recording starts.
 
-```text
-176 existing + 202 pending = 378 exact bilingual recording rows
+### Step 3 — package only owner-accepted clips
+
+After one or more clips become `OWNER_ACCEPTED`:
+
+```bash
+python3 encyclopedia/integrate_voice_assets.py
+python3 encyclopedia/integrate_voice_assets.py --check
 ```
 
-Before changing the queue:
+The integrator:
 
-1. refetch it from current `main`;
-2. preserve every recorder-owned `STATUS` and `RECORDER_NOTES` change;
-3. never rewrite wording/path in place once a row is `RECORDED_UNREVIEWED` or later;
-4. if wording later changes, append a revised cue/new filename and mark the old row `SUPERSEDED`.
+- ignores all non-`OWNER_ACCEPTED` rows;
+- validates staging path/locale/filename and OGG container header;
+- preflights the whole accepted set before mutation;
+- atomically writes runtime files under `activities/enciclopedia_greia/assets/audio/<locale>/<page-path>/...`;
+- updates locale `audio` mappings only after files exist;
+- preserves locale strings/metadata;
+- never generates speech and is never imported by child runtime.
 
-## Current source-contract state
+Shared ledger grammar lives in `encyclopedia/voice_ledger.py` so the queue synchronizer and accepted-asset integrator cannot diverge on row parsing.
 
-Focused contracts are in:
+## Tests authored, not executed
+
+Runtime/source contracts:
 
 ```text
 tests/test_activity_enciclopedia.py
 ```
 
-They have been authored to cover:
+Authoring-tool contracts:
 
-- exact 43-page runtime inventory and uniqueness;
-- one research authority per implemented factual entry;
-- research-document structural requirements;
-- targeted high-risk misconception guardrails;
-- Italian/English key parity;
-- complete Space targets;
-- Earth/Body/Machines/History semantic destination maps;
-- subject-neutral engine imports/identifiers;
-- bounded text cache;
-- no per-page image decode/smoothscale/font construction in source hot paths;
-- no runtime TTS, speech recognition, AI provider or network-fetch backend;
-- Python source parsing.
+```text
+tests/test_encyclopedia_authoring_tools.py
+```
 
-**Those tests have not been executed against the final 43-page source state in this construction pass.** Do not report them as passing until a real local execution does so.
+The latter covers the 378-row rendered invariant, duplicate ledger rows, OWNER_ACCEPTED-only packaging, ignored unreviewed clips, missing/corrupt OGG rejection, path traversal rejection and preservation of locale strings.
 
-No Greia Simulator run, rendered visual acceptance or physical Acer/Pi evidence has been performed for the complete encyclopedia yet, by explicit owner direction.
+**Neither final contract suite has been executed against the current frozen source in this construction pass.** Do not report them as passing.
 
-## Next exact work
+## Current exact evidence
 
-Do not add more v0.1 topics. Scope expansion is forbidden until the 43-page base is reviewed.
+```text
+SOURCE-REVIEWED / TESTS-UNEXECUTED / SIMULATOR-UNVERIFIED
+```
 
-Next work order:
+No consolidated Simulator pass, rendered visual acceptance, or physical Acer/Pi acceptance has run yet. No accepted narration is integrated yet.
 
-1. synchronize the 202 pending exact bilingual requests into the unified voice file;
-2. update `encyclopedia/PROGRESS.md` with the Earth/Body/Machines/Long-Ago completion milestones and correction of the old accidental `earth.rocks` note to planned `earth.ocean`;
-3. when the owner is ready, execute one consolidated source-test + Greia Simulator + no-reading visual/input acceptance pass across representative paths in every section;
-4. review screenshots/interaction quality and fix defects as a coherent acceptance tranche;
-5. integrate only technically reviewed + owner-accepted recordings into locale audio tables;
-6. only after the 43-page v0.1 base is accepted discuss new packs/topics.
+## Next work order
+
+1. On a local checkout, run `python3 encyclopedia/sync_voice_requests.py` and commit the resulting 378-row ledger, preserving any recorder changes.
+2. Run the focused provider-free source/authoring tests and fix only real failures.
+3. Let the recording agent continue independently; integrate only `OWNER_ACCEPTED` clips with `integrate_voice_assets.py` as they become available.
+4. When enough narration exists to evaluate the real experience, run the owner-requested **single consolidated** Simulator/visual/input acceptance pass across every section and representative final entries.
+5. Fix discovered UX/performance/content defects coherently; do not broaden topic scope until v0.1 is accepted.
