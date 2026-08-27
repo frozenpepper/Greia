@@ -393,7 +393,76 @@ encyclopedia/research/animals/frog.md
 
 ---
 
-## 15. Pending future batches
+## 15. Requested batch E5-SUN-01
+
+Research/provenance authority for this batch:
+
+```text
+encyclopedia/research/space/sun.md
+```
+
+| STATUS | CUE_ID | KIND | SPEAKER | VOICE_ID | LOCALE | EXACT_TEXT | FINAL_FILENAME | FINAL_PATH | RECORDER_NOTES |
+|---|---|---|---|---|---|---|---|---|---|
+| REQUESTED | `encyclopedia.space.sun.intro` | character_dialogue | Leo | `greia.leo.v1` | it | Questa è la nostra stella: il Sole! È una gigantesca palla di plasma caldissimo e tiene il Sistema Solare unito con la sua gravità. | `intro-leo.ogg` | `encyclopedia/pages/space/sun/assets/audio/it/intro-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.sun.intro` | character_dialogue | Leo | `greia.leo.v1` | en | This is our star: the Sun! It is a gigantic ball of extremely hot plasma, and its gravity helps hold the solar system together. | `intro-leo.ogg` | `encyclopedia/pages/space/sun/assets/audio/en/intro-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.sun.plasma` | character_dialogue | Leo | `greia.leo.v1` | it | Il Sole è l'unica stella del nostro Sistema Solare. Non ha una superficie solida come la Terra: è fatto soprattutto di plasma, idrogeno ed elio. | `plasma-leo.ogg` | `encyclopedia/pages/space/sun/assets/audio/it/plasma-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.sun.plasma` | character_dialogue | Leo | `greia.leo.v1` | en | The Sun is the only star in our solar system. It has no solid surface like Earth; it is made mostly of plasma, hydrogen, and helium. | `plasma-leo.ogg` | `encyclopedia/pages/space/sun/assets/audio/en/plasma-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.sun.scale` | character_dialogue | Leo | `greia.leo.v1` | it | Il Sole è enorme: è largo circa cento volte la Terra. Guarda quante piccole Terre servono per attraversare il suo diametro! | `scale-leo.ogg` | `encyclopedia/pages/space/sun/assets/audio/it/scale-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.sun.scale` | character_dialogue | Leo | `greia.leo.v1` | en | The Sun is enormous: it is about one hundred times wider than Earth. Look how many tiny Earth widths fit across its diameter! | `scale-leo.ogg` | `encyclopedia/pages/space/sun/assets/audio/en/scale-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.sun.fusion` | character_dialogue | Leo | `greia.leo.v1` | it | Nel nucleo del Sole, l'idrogeno si unisce e forma elio. Questo processo si chiama fusione e libera l'energia che ci arriva come luce e calore. | `fusion-leo.ogg` | `encyclopedia/pages/space/sun/assets/audio/it/fusion-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.sun.fusion` | character_dialogue | Leo | `greia.leo.v1` | en | In the Sun's core, hydrogen joins together to form helium. This process is called fusion, and it releases the energy that reaches us as light and heat. | `fusion-leo.ogg` | `encyclopedia/pages/space/sun/assets/audio/en/fusion-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.sun.rotation` | character_dialogue | Leo | `greia.leo.v1` | it | Il Sole non è solido, quindi non gira tutto alla stessa velocità. Vicino all'equatore ruota più in fretta che vicino ai poli. | `rotation-leo.ogg` | `encyclopedia/pages/space/sun/assets/audio/it/rotation-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.sun.rotation` | character_dialogue | Leo | `greia.leo.v1` | en | The Sun is not solid, so it does not all rotate at the same speed. Near its equator it turns faster than near its poles. | `rotation-leo.ogg` | `encyclopedia/pages/space/sun/assets/audio/en/rotation-leo.ogg` | |
+
+---
+
+## 16. Requested batch E5-MERCURY-01
+
+Research/provenance authority for this batch:
+
+```text
+encyclopedia/research/space/mercury.md
+```
+
+| STATUS | CUE_ID | KIND | SPEAKER | VOICE_ID | LOCALE | EXACT_TEXT | FINAL_FILENAME | FINAL_PATH | RECORDER_NOTES |
+|---|---|---|---|---|---|---|---|---|---|
+| REQUESTED | `encyclopedia.space.mercury.intro` | character_dialogue | Leo | `greia.leo.v1` | it | Questo piccolo mondo è Mercurio, il pianeta più vicino al Sole. È il più piccolo dei pianeti principali e corre intorno al Sole molto velocemente. | `intro-leo.ogg` | `encyclopedia/pages/space/mercury/assets/audio/it/intro-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.mercury.intro` | character_dialogue | Leo | `greia.leo.v1` | en | This small world is Mercury, the planet closest to the Sun. It is the smallest major planet, and it races around the Sun very quickly. | `intro-leo.ogg` | `encyclopedia/pages/space/mercury/assets/audio/en/intro-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.mercury.place` | character_dialogue | Leo | `greia.leo.v1` | it | Mercurio è il pianeta più vicino al Sole ed è anche il più piccolo degli otto pianeti principali. | `place-leo.ogg` | `encyclopedia/pages/space/mercury/assets/audio/it/place-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.mercury.place` | character_dialogue | Leo | `greia.leo.v1` | en | Mercury is the planet closest to the Sun, and it is also the smallest of the eight major planets. | `place-leo.ogg` | `encyclopedia/pages/space/mercury/assets/audio/en/place-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.mercury.orbit` | character_dialogue | Leo | `greia.leo.v1` | it | Mercurio completa un giro intorno al Sole in appena ottantotto giorni terrestri. Il suo anno è molto più corto del nostro. | `orbit-leo.ogg` | `encyclopedia/pages/space/mercury/assets/audio/it/orbit-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.mercury.orbit` | character_dialogue | Leo | `greia.leo.v1` | en | Mercury goes around the Sun in only eighty-eight Earth days. Its year is much shorter than ours. | `orbit-leo.ogg` | `encyclopedia/pages/space/mercury/assets/audio/en/orbit-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.mercury.temperature` | character_dialogue | Leo | `greia.leo.v1` | it | Mercurio non ha una spessa atmosfera che trattenga il calore. Al Sole può diventare caldissimo, mentre nella notte può diventare freddissimo. | `temperature-leo.ogg` | `encyclopedia/pages/space/mercury/assets/audio/it/temperature-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.mercury.temperature` | character_dialogue | Leo | `greia.leo.v1` | en | Mercury does not have a thick atmosphere to hold heat. In sunlight it can become extremely hot, while at night it can become extremely cold. | `temperature-leo.ogg` | `encyclopedia/pages/space/mercury/assets/audio/en/temperature-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.mercury.craters` | character_dialogue | Leo | `greia.leo.v1` | it | La superficie di Mercurio è piena di crateri. E c'è una sorpresa: nei crateri polari che restano sempre in ombra può conservarsi ghiaccio d'acqua. | `craters-leo.ogg` | `encyclopedia/pages/space/mercury/assets/audio/it/craters-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.mercury.craters` | character_dialogue | Leo | `greia.leo.v1` | en | Mercury's surface is covered with craters. And there is a surprise: water ice can survive in polar craters that stay permanently in shadow. | `craters-leo.ogg` | `encyclopedia/pages/space/mercury/assets/audio/en/craters-leo.ogg` | |
+
+---
+
+## 17. Requested batch E5-VENUS-01
+
+Research/provenance authority for this batch:
+
+```text
+encyclopedia/research/space/venus.md
+```
+
+| STATUS | CUE_ID | KIND | SPEAKER | VOICE_ID | LOCALE | EXACT_TEXT | FINAL_FILENAME | FINAL_PATH | RECORDER_NOTES |
+|---|---|---|---|---|---|---|---|---|---|
+| REQUESTED | `encyclopedia.space.venus.intro` | character_dialogue | Leo | `greia.leo.v1` | it | Questa è Venere. Da lontano sembra avvolta da nuvole tranquille, ma sotto quelle nuvole c'è un mondo roccioso caldissimo. | `intro-leo.ogg` | `encyclopedia/pages/space/venus/assets/audio/it/intro-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.venus.intro` | character_dialogue | Leo | `greia.leo.v1` | en | This is Venus. From far away it looks wrapped in calm clouds, but beneath those clouds is an extremely hot rocky world. | `intro-leo.ogg` | `encyclopedia/pages/space/venus/assets/audio/en/intro-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.venus.compare` | character_dialogue | Leo | `greia.leo.v1` | it | Venere è il secondo pianeta dal Sole ed è quasi grande quanto la Terra. Per questo i due pianeti vengono spesso confrontati. | `compare-leo.ogg` | `encyclopedia/pages/space/venus/assets/audio/it/compare-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.venus.compare` | character_dialogue | Leo | `greia.leo.v1` | en | Venus is the second planet from the Sun and is nearly the same size as Earth, so the two planets are often compared. | `compare-leo.ogg` | `encyclopedia/pages/space/venus/assets/audio/en/compare-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.venus.heat` | character_dialogue | Leo | `greia.leo.v1` | it | Venere è il pianeta più caldo del Sistema Solare. La sua atmosfera molto densa, ricca di anidride carbonica, intrappola tantissimo calore. | `heat-leo.ogg` | `encyclopedia/pages/space/venus/assets/audio/it/heat-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.venus.heat` | character_dialogue | Leo | `greia.leo.v1` | en | Venus is the hottest planet in the solar system. Its very dense, carbon-dioxide-rich atmosphere traps an enormous amount of heat. | `heat-leo.ogg` | `encyclopedia/pages/space/venus/assets/audio/en/heat-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.venus.clouds` | character_dialogue | Leo | `greia.leo.v1` | it | Spesse nuvole nascondono la superficie di Venere. Sotto ci sono rocce, montagne, valli e tantissime forme vulcaniche. | `clouds-leo.ogg` | `encyclopedia/pages/space/venus/assets/audio/it/clouds-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.venus.clouds` | character_dialogue | Leo | `greia.leo.v1` | en | Thick clouds hide Venus's surface. Underneath are rocks, mountains, valleys, and many volcanic features. | `clouds-leo.ogg` | `encyclopedia/pages/space/venus/assets/audio/en/clouds-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.venus.rotation` | character_dialogue | Leo | `greia.leo.v1` | it | Venere gira molto lentamente e ruota al contrario rispetto alla maggior parte dei pianeti. Lì il Sole sembrerebbe sorgere a ovest e tramontare a est. | `rotation-leo.ogg` | `encyclopedia/pages/space/venus/assets/audio/it/rotation-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.venus.rotation` | character_dialogue | Leo | `greia.leo.v1` | en | Venus turns very slowly and rotates backward compared with most planets. There, the Sun would appear to rise in the west and set in the east. | `rotation-leo.ogg` | `encyclopedia/pages/space/venus/assets/audio/en/rotation-leo.ogg` | |
+
+---
+
+## 18. Pending future batches
 
 Do **not** record these yet.
 
