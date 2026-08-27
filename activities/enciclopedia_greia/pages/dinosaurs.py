@@ -1,0 +1,178 @@
+"""Dinosaurs entry: diversity, deep time, living birds and fossil evidence."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+import math
+
+import pygame
+
+from greia_platform.typography import FontRole
+
+if __package__ and "." in __package__:
+    from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
+    from .common import draw_centered_text, draw_presenter, focus_ring, grid_step
+else:
+    from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
+    from pages.common import draw_centered_text, draw_presenter, focus_ring, grid_step
+
+
+@dataclass(frozen=True, slots=True)
+class DinosaurDiscovery:
+    discovery_id: str
+    caption_key: str
+    cue_id: str
+    center: tuple[int, int]
+
+
+DISCOVERIES = (
+    DinosaurDiscovery("diversity", "dinosaurs.diversity", "encyclopedia.history.dinosaurs.diversity", (250, 190)),
+    DinosaurDiscovery("time", "dinosaurs.time", "encyclopedia.history.dinosaurs.time", (755, 190)),
+    DinosaurDiscovery("birds", "dinosaurs.birds", "encyclopedia.history.dinosaurs.birds", (250, 420)),
+    DinosaurDiscovery("evidence", "dinosaurs.evidence", "encyclopedia.history.dinosaurs.evidence", (755, 420)),
+)
+
+
+class DinosaursPage(EncyclopediaPage):
+    page_id = "history.dinosaurs"
+
+    def __init__(self, context) -> None:
+        super().__init__(context)
+        self._time = 0.0
+        self._selected = 0
+        self._hovered: int | None = None
+        self._caption_key = "dinosaurs.intro"
+        self._silhouette = 0
+        self._time_age = 0.0
+        self._birds_age = 0.0
+        self._evidence_age = 0.0
+        self._hotspots = tuple(
+            pygame.Rect(cx - 43, cy - 43, 86, 86)
+            for cx, cy in (item.center for item in DISCOVERIES)
+        )
+
+    def on_enter(self) -> None:
+        self.context.audio.play("encyclopedia.history.dinosaurs.intro")
+
+    def update(self, dt: float) -> None:
+        self._time += dt
+        self._time_age = max(0.0, self._time_age - dt)
+        self._birds_age = max(0.0, self._birds_age - dt)
+        self._evidence_age = max(0.0, self._evidence_age - dt)
+
+    def handle_input(self, event: PageInput) -> None:
+        if event.position is not None and event.kind in {PageInputKind.POINTER_MOVE, PageInputKind.POINTER_PRESS}:
+            point = (int(event.position[0]), int(event.position[1]))
+            hit = next((i for i, rect in enumerate(self._hotspots) if rect.collidepoint(point)), None)
+            self._hovered = hit
+            if event.kind is PageInputKind.POINTER_PRESS and hit is not None:
+                self._selected = hit
+                self._activate(hit)
+            return
+        if event.kind is not PageInputKind.COMMAND or event.command is None:
+            return
+        if event.command is PageCommand.ACTIVATE:
+            self._activate(self._selected)
+        else:
+            self._selected = grid_step(self._selected, event.command, columns=2, count=len(DISCOVERIES))
+
+    def _activate(self, index: int) -> None:
+        item = DISCOVERIES[index]
+        self._caption_key = item.caption_key
+        if item.discovery_id == "diversity":
+            self._silhouette = (self._silhouette + 1) % 3
+        elif item.discovery_id == "time":
+            self._time_age = 5.0
+        elif item.discovery_id == "birds":
+            self._birds_age = 5.0
+        else:
+            self._evidence_age = 5.0
+        self.context.audio.play(item.cue_id)
+
+    def draw(self, surface: pygame.Surface) -> None:
+        surface.fill((239, 229, 198))
+        draw_centered_text(surface, self.context.typography, self.context.resources.text("dinosaurs.title"), center=(500, 92), size=40, color=self.context.palette.ink, role=FontRole.DISPLAY)
+        self._draw_scene(surface)
+        self._draw_hotspots(surface)
+        self._draw_caption(surface)
+        draw_presenter(surface, self.context.visuals, "leo", position=(925, 565), height=142, variant="default")
+
+    def _draw_scene(self, surface: pygame.Surface) -> None:
+        pygame.draw.rect(surface, (177, 194, 126), (330, 365, 350, 92), border_radius=24)
+        center = (505, 327)
+        colors = ((111, 151, 92), (173, 128, 86), (104, 145, 111))
+        color = colors[self._silhouette]
+        if self._silhouette == 0:  # tyrannosaur-like biped
+            pygame.draw.ellipse(surface, color, (448, 288, 118, 58))
+            pygame.draw.circle(surface, color, (570, 285), 30)
+            pygame.draw.line(surface, color, (460, 322), (405, 298), 20)
+            pygame.draw.line(surface, color, (480, 336), (465, 392), 15)
+            pygame.draw.line(surface, color, (525, 336), (540, 392), 15)
+        elif self._silhouette == 1:  # ceratopsian-like quadruped
+            pygame.draw.ellipse(surface, color, (430, 300, 145, 62))
+            pygame.draw.circle(surface, color, (586, 310), 34)
+            pygame.draw.polygon(surface, color, [(573, 285), (607, 265), (603, 298)])
+            for x in (455, 492, 535, 565):
+                pygame.draw.line(surface, color, (x, 342), (x - 4, 390), 13)
+        else:  # sauropod-like long neck
+            pygame.draw.ellipse(surface, color, (425, 310, 140, 55))
+            pygame.draw.line(surface, color, (545, 322), (595, 245), 25)
+            pygame.draw.circle(surface, color, (602, 236), 16)
+            pygame.draw.line(surface, color, (438, 325), (382, 292), 20)
+            for x in (450, 485, 530, 555):
+                pygame.draw.line(surface, color, (x, 345), (x - 3, 393), 13)
+
+        if self._time_age > 0.0:
+            pygame.draw.line(surface, (92, 72, 55), (365, 230), (645, 230), 5)
+            pygame.draw.circle(surface, (114, 149, 90), (405, 230), 12)
+            pygame.draw.circle(surface, (217, 171, 97), (605, 230), 12)
+            draw_centered_text(surface, self.context.typography, "66 000 000", center=(405, 205), size=16, color=(78, 65, 54))
+            pygame.draw.circle(surface, (232, 188, 143), (605, 195), 10)
+
+        if self._birds_age > 0.0:
+            wing = 10 + int(math.sin(self._time * 5.0) * 4)
+            pygame.draw.ellipse(surface, (77, 113, 157), (635, 245, 42, 24))
+            pygame.draw.line(surface, (77, 113, 157), (651, 257), (635, 257 - wing), 6)
+            pygame.draw.line(surface, (77, 113, 157), (661, 257), (679, 257 - wing), 6)
+            pygame.draw.polygon(surface, (220, 159, 69), [(678, 252), (691, 258), (678, 263)])
+
+        if self._evidence_age > 0.0:
+            pygame.draw.rect(surface, (198, 171, 126), (350, 395, 310, 70), border_radius=18)
+            for x in range(390, 610, 45):
+                pygame.draw.circle(surface, (239, 226, 193), (x, 430), 13, 5)
+            pygame.draw.line(surface, (239, 226, 193), (390, 430), (608, 430), 7)
+
+    @staticmethod
+    def _draw_icon(surface: pygame.Surface, item: DinosaurDiscovery) -> None:
+        cx, cy = item.center
+        if item.discovery_id == "diversity":
+            for dx, radius in ((-18, 10), (0, 15), (20, 8)):
+                pygame.draw.circle(surface, (111, 151, 92), (cx + dx, cy), radius)
+        elif item.discovery_id == "time":
+            pygame.draw.line(surface, (101, 82, 61), (cx - 26, cy), (cx + 26, cy), 5)
+            pygame.draw.circle(surface, (111, 151, 92), (cx - 18, cy), 7)
+            pygame.draw.circle(surface, (221, 171, 105), (cx + 19, cy), 7)
+        elif item.discovery_id == "birds":
+            pygame.draw.ellipse(surface, (77, 113, 157), (cx - 16, cy - 8, 32, 17))
+            pygame.draw.line(surface, (77, 113, 157), (cx - 5, cy), (cx - 24, cy - 15), 5)
+            pygame.draw.line(surface, (77, 113, 157), (cx + 5, cy), (cx + 24, cy - 15), 5)
+        else:
+            pygame.draw.circle(surface, (202, 176, 132), (cx, cy), 23)
+            pygame.draw.circle(surface, (248, 238, 207), (cx, cy), 12, 5)
+
+    def _draw_hotspots(self, surface: pygame.Surface) -> None:
+        for index, (item, rect) in enumerate(zip(DISCOVERIES, self._hotspots)):
+            pygame.draw.circle(surface, (255, 248, 226), item.center, 37)
+            pygame.draw.circle(surface, (91, 73, 57), item.center, 37, 3)
+            self._draw_icon(surface, item)
+            focus_ring(surface, rect, index == self._selected or index == self._hovered)
+
+    def _draw_caption(self, surface: pygame.Surface) -> None:
+        panel = pygame.Rect(305, 510, 400, 68)
+        pygame.draw.rect(surface, (255, 248, 226), panel, border_radius=22)
+        pygame.draw.rect(surface, (91, 73, 57), panel, 3, border_radius=22)
+        text = self.context.resources.text(self._caption_key)
+        rendered = self.context.typography.render(text, FontRole.BODY, 18, (61, 53, 46))
+        if rendered.get_width() > panel.width - 26:
+            rendered = self.context.typography.render(text, FontRole.BODY, 15, (61, 53, 46))
+        surface.blit(rendered, rendered.get_rect(center=panel.center))
