@@ -1,6 +1,6 @@
 # Greia Encyclopedia — authoring root
 
-**Status:** v0.1 source breadth complete; closure/audio synchronization in progress  
+**Status:** v0.1 source breadth complete; closure/audio synchronization ready for local execution  
 **Created:** 2026-08-27  
 **Runtime Activity:** `activities/enciclopedia_greia/` (`org.greia.enciclopedia`)  
 **Runtime inventory:** 43/43 planned executable pages  
@@ -109,13 +109,20 @@ All six planned content families are source-complete:
 
 Every factual final entry has a research authority containing accepted claims, scope guardrails, interaction-to-fact mapping, sources and approved Italian/English narration.
 
+The source review deliberately preserves two historical research-document generations rather than rewriting research history:
+
+- early entries use `Child-facing wording contract` with named human headings and `Italian` / `English` lines;
+- later entries use `Approved narration wording` with explicit semantic cue IDs and `it` / `en` lines.
+
+`sync_voice_requests.py` understands both forms. Legacy topics are retained only when their already-established queue cue IDs, presenter, voice ID and bilingual wording exactly match their research authority. New/canonical topics are generated directly from semantic cue blocks. A mismatch fails closed rather than silently changing a recorded request.
+
 ## Voice-production pipeline
 
 `VOICE_RECORDING_REQUESTS.md` remains the **single human/agent coordination queue**. The recorder may change only `STATUS` and `RECORDER_NOTES` and add the requested staging audio files.
 
 ### 1. Synchronize research into the queue
 
-The deterministic synchronizer prevents factual rows from being hand-transcribed:
+Run:
 
 ```bash
 python3 encyclopedia/sync_voice_requests.py
@@ -129,13 +136,21 @@ Expected full-v0.1 invariant:
 378 total bilingual recording rows, including 14 manual Home/section navigation rows
 ```
 
-It reads exact approved narration from `encyclopedia/research/**`, derives stable cue/locale filenames and staging paths, preserves recorder-owned status/notes, rejects duplicate identities and refuses immutable drift on locked rows.
+The synchronizer reads exact approved narration from `encyclopedia/research/**`, preserves recorder-owned status/notes, rejects duplicate identities, validates the canonical presenter/voice pairing and refuses immutable drift on locked rows.
 
-At the current repository checkpoint the tool exists and is hardened, but `VOICE_RECORDING_REQUESTS.md` has **not yet been regenerated from the old 176-row checkpoint**. Run the synchronizer before treating the queue as complete.
+At the current repository checkpoint `VOICE_RECORDING_REQUESTS.md` is still the old 176-row checkpoint. The first local closure action is therefore to run the synchronizer and prove the 378-row result before the recording queue is called complete.
 
-### 2. Record and review
+### 2. Recorder staging and review
 
 The recording agent processes only `REQUESTED` rows using the voice-production authorities referenced at the top of the queue. A technically valid generated clip becomes `RECORDED_UNREVIEWED`. Only the owner/human listening gate changes it to `OWNER_ACCEPTED`.
+
+The queue column named `FINAL_PATH` is the recorder's **final staging destination**, not the shipped Activity location. These staging paths live under:
+
+```text
+encyclopedia/pages/**/assets/audio/
+```
+
+and are intentionally git-ignored. This avoids committing hundreds of unreviewed or rejected takes and avoids storing the same accepted audio twice in source control.
 
 Do not edit immutable cue/text/voice/path fields to repair a recorded request. Create a revised cue/filename and supersede the old row instead.
 
@@ -155,26 +170,37 @@ The integrator:
 - requires an OGG container;
 - preflights the complete accepted set before any mutation;
 - atomically packages accepted files under `activities/enciclopedia_greia/assets/audio/<locale>/<page-path>/...`;
+- writes Greia's canonical locale-audio schema (`"cue": {"path": "assets/..."}`), never a bare path string;
 - updates locale `audio` mappings only after their target files exist;
-- preserves locale strings and metadata;
+- preserves locale strings, metadata and unrelated non-ledger audio entries;
 - never generates speech and never adds a runtime dependency;
 - deliberately does not delete unreferenced files from the runtime audio tree.
 
-This makes partial delivery safe: the local agent may record clips over many sessions, and the runtime can package only the subset the owner has actually accepted.
+The accepted runtime copy is the file that may be committed and shipped. This makes gradual independent recording safe while keeping the runtime package deterministic.
 
-## Provider-free authoring contracts
+## Provider-free authoring/source contracts
 
 `tests/test_encyclopedia_authoring_tools.py` covers the deterministic authoring seams without invoking any model/provider:
 
 - rendered v0.1 queue must contain exactly 378 rows;
+- runtime semantic narration cue IDs must equal the synchronized ledger cue set;
 - duplicate cue/locale rows are rejected;
 - only `OWNER_ACCEPTED` rows are packaged;
 - `RECORDED_UNREVIEWED` rows stay unreferenced;
 - missing or non-OGG accepted sources fail closed;
 - staging path traversal is rejected;
-- existing locale strings survive audio-map integration.
+- existing locale strings and unrelated audio mappings survive integration.
 
-These tests are authored but have not yet been executed in this construction pass.
+`tests/test_activity_enciclopedia.py` separately guards:
+
+- runtime catalogue equality with the 43-page authoring catalogue;
+- exactly one research authority for every factual runtime entry, discovered from the research tree rather than copied into a third topic list;
+- both accepted historical research-document formats;
+- high-risk factual misconception guardrails;
+- canonical Greia locale-audio object shape;
+- section navigation maps, subject-neutral engine boundaries and bounded hot-loop/resource rules.
+
+These contracts are authored but have **not** yet executed against the current reviewed source. Do not turn source inspection into a PASS claim.
 
 ## Current first-pass testing rule
 
