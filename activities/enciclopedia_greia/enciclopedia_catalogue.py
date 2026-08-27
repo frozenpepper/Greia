@@ -7,23 +7,31 @@ if __package__:
     from .pages.animals import AnimalsPage
     from .pages.body import BodyPage
     from .pages.earth import EarthPage
+    from .pages.fossils import FossilsPage
+    from .pages.gears import GearsPage
+    from .pages.heart import HeartPage
     from .pages.history import HistoryPage
     from .pages.home import HomePage
     from .pages.machines import MachinesPage
     from .pages.octopus import OctopusPage
     from .pages.saturn import SaturnPage
     from .pages.space import SpacePage
+    from .pages.volcano import VolcanoPage
 else:
     from enciclopedia_engine import PageRegistry
     from pages.animals import AnimalsPage
     from pages.body import BodyPage
     from pages.earth import EarthPage
+    from pages.fossils import FossilsPage
+    from pages.gears import GearsPage
+    from pages.heart import HeartPage
     from pages.history import HistoryPage
     from pages.home import HomePage
     from pages.machines import MachinesPage
     from pages.octopus import OctopusPage
     from pages.saturn import SaturnPage
     from pages.space import SpacePage
+    from pages.volcano import VolcanoPage
 
 IMPLEMENTED_PAGE_IDS = (
     "home",
@@ -32,9 +40,13 @@ IMPLEMENTED_PAGE_IDS = (
     "space",
     "space.saturn",
     "earth",
+    "earth.volcano",
     "body",
+    "body.heart",
     "machines",
+    "machines.gears",
     "history",
+    "history.fossils",
 )
 
 
@@ -47,9 +59,13 @@ def build_page_registry() -> PageRegistry:
         SpacePage,
         SaturnPage,
         EarthPage,
+        VolcanoPage,
         BodyPage,
+        HeartPage,
         MachinesPage,
+        GearsPage,
         HistoryPage,
+        FossilsPage,
     ):
         registry.register(page_type.page_id, page_type)
     if registry.page_ids() != IMPLEMENTED_PAGE_IDS:
