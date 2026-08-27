@@ -1,76 +1,133 @@
-# Greia Shared Character Utterances — Local Recording Instructions
+# Greia Shared Character Utterances — Production & Review
 
-**Purpose:** generate and review the first shared Greia character-reaction library with Chatterbox Multilingual V3.  
+**Purpose:** produce and review Greia's central shared reaction library through the canonical Voice Production Engine.  
 **Languages:** Italian (`it`) and English (`en`).  
-**Characters:** Lilli, Leo, Flash, Tito, Momo. Dani is **not** generated with Chatterbox; leave Dani for the Greia system-TTS profile.
+**Characters:** Lilli, Leo, Flash, Tito, Momo and Dani.
 
-## 1. Read first
+## 1. Canonical production rule
 
-From the Greia repository root, read:
+Use:
+
+```text
+tools/record_shared_character_utterances.py
+```
+
+That script is a thin semantic producer over `VoiceEngine`. It must remain free of direct Chatterbox, Whisper, native-TTS and FFmpeg implementation logic.
+
+Do not use the historical direct Chatterbox recording mechanics for new library production.
+
+Read first:
 
 ```text
 AGENTS.md
 SETUP.md
+skills/greia-voice-production/SKILL.md
+tools/greia_voice_core/README.md
 docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md
 docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md
-skills/greia-activity-authoring/VOICE_GENERATION.md
-assets/audio/characters/canonical/v0.1/manifest.toml
 ```
 
-Use the Chatterbox installation that is already known to work on this machine. Do not reinstall or change model/backend versions for this task.
+If the production environment needs installation or troubleshooting:
 
-## 2. Output location
+```text
+docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md
+```
 
-Work under a project-local temporary directory:
+The Chatterbox field guide is only for Voice Engine maintainers diagnosing provider internals.
+
+## 2. What the engine does
+
+For this library every line is submitted as:
+
+```text
+kind = shared_character_utterance
+```
+
+Routing is automatic:
+
+```text
+Lilli/Leo/Flash/Tito/Momo -> canonical cloned-character provider
+Dani                       -> deterministic system/native provider
+```
+
+Suitable multi-word cloned-character lines may receive advisory Whisper verification. Tiny reactions and Dani normally skip ASR.
+
+The engine owns:
+
+```text
+canonical voice/reference selection and hash validation
+model loading/reuse
+single-worker protection
+MLX cache cleanup
+short-output limits/trim rules
+native TTS profiles
+optional Whisper checks
+WAV production
+receipts
+```
+
+The recording runbook does not duplicate those mechanics.
+
+## 3. Before production
+
+Run the non-mutating readiness probe:
+
+```bash
+python3 tools/greia_voice.py doctor
+```
+
+If a needed provider is unavailable, follow the engine installation guide. Do not silently substitute another TTS backend.
+
+Default review workspace:
 
 ```text
 ./tmp/shared-character-utterances/
 ```
 
-Recommended structure:
+Generated/rejected review material is not a runtime asset and must not be committed as accepted library content until human review is complete.
+
+## 4. Produce the library
+
+Full current phrase matrix:
+
+```bash
+python3 tools/record_shared_character_utterances.py
+```
+
+Optional subset during testing/review:
+
+```bash
+python3 tools/record_shared_character_utterances.py \
+  --characters leo,dani
+```
+
+The script keeps one engine/model warm, holds the global generation lock for the complete run and refuses to overwrite an existing audio/receipt candidate blindly.
+
+Expected output shape:
 
 ```text
 tmp/shared-character-utterances/
-  lilli/
-    it/
-    en/
-  leo/
-    it/
-    en/
-  flash/
-    it/
-    en/
-  tito/
-    it/
-    en/
-  momo/
-    it/
-    en/
+  lilli/it/*.wav
+  lilli/en/*.wav
+  leo/...
+  flash/...
+  tito/...
+  momo/...
+  dani/...
   review.csv
 ```
 
-Do not commit generated files until they have been listened to and accepted.
+Each newly generated audio file also has:
 
-## 3. Generation rules
+```text
+<audio>.receipt.json
+```
 
-For every line:
+All engine-generated candidates remain `human_review = PENDING`.
 
-- use the character's canonical reference voice;
-- use the correct language/locale;
-- preserve the punctuation below exactly;
-- **keep the exclamation marks**: these are reactions and should sound alive;
-- do not use the rejected `ma. ma. ma.` repetition technique;
-- use the already-tested bounded Chatterbox output-token limit for short speech;
-- if Chatterbox adds an unwanted tail, use the established FFmpeg/audio-analysis trim path;
-- trimming may remove only unwanted leading/trailing material;
-- if pronunciation, words, or voice identity are wrong **inside** the intended phrase, reject and regenerate rather than editing the speech;
-- listen to every accepted clip.
+## 5. Phrase matrix
 
-Do not over-tune the model per phrase. Prefer regeneration over a growing pile of per-line parameters.
-
-## 4. Phrases to generate
-
-Each semantic family has three interchangeable variants. Generate **all three variants for every character and both languages**.
+Each semantic family has three interchangeable source variants.
 
 ### `praise.general`
 
@@ -90,7 +147,7 @@ Great work!
 Well done!
 ```
 
-Default animation family:
+Default animation:
 
 ```text
 expression: happy
@@ -115,7 +172,7 @@ Hooray!
 Wonderful!
 ```
 
-Default animation family:
+Default animation:
 
 ```text
 expression: happy
@@ -140,7 +197,7 @@ Almost! Let's try again!
 One more time!
 ```
 
-Default animation family:
+Default animation:
 
 ```text
 expression: happy
@@ -165,7 +222,7 @@ Almost there!
 You're doing great!
 ```
 
-Default animation family:
+Default animation:
 
 ```text
 expression: happy
@@ -190,70 +247,55 @@ Ready? Go!
 Here we go!
 ```
 
-Default animation family:
+Default animation:
 
 ```text
 expression: happy
 motion: happy_hop
 ```
 
-## 5. Naming
+Preserve punctuation exactly. These are reactions and should remain lively.
 
-Use stable variant numbers. Example:
+## 6. Expected candidate count
+
+```text
+6 characters
+× 5 semantic families
+× 3 variants
+× 2 locales
+= 180 review candidates
+```
+
+The five natural characters use their canonical cloned identities. Dani uses his system-TTS identity. Never clone a natural character voice for Dani.
+
+## 7. Naming
+
+Stable example filenames:
 
 ```text
 lilli__it__praise.general__01.wav
-lilli__it__praise.general__02.wav
-lilli__it__praise.general__03.wav
-
-leo__en__ready.go__01.wav
-leo__en__ready.go__02.wav
 leo__en__ready.go__03.wav
+dani__it__encourage.retry__02.wav
 ```
 
-Variant numbers correspond to the phrase order in this document.
+Variant numbers correspond to phrase order here. Do not encode model parameters/seeds in canonical names.
 
-Do not encode model parameters or random seeds into the final canonical filename.
+## 8. Machine result vs human review
 
-## 6. Expected recording count
-
-Chatterbox batch:
+`review.csv` initially records machine-production dispositions such as:
 
 ```text
-5 cloned characters
-× 5 semantic families
-× 3 variants
-× 2 languages
-= 150 reviewed Chatterbox clips
+REVIEW_REQUIRED
+REVIEW_REQUIRED_ASR_WARNING
+EXISTING_REVIEW_CANDIDATE
+UNAVAILABLE
+REJECTED
+BLOCKED_PARTIAL_OUTPUT
 ```
 
-Dani is separate:
+These are **not human acceptance results**.
 
-```text
-1 character
-× 5 semantic families
-× 3 variants
-× 2 languages
-= 30 future Greia system-TTS clips
-```
-
-Final complete shared library target:
-
-```text
-180 clips
-```
-
-Do not generate Dani through Lilli/Leo/Flash/Tito/Momo or an arbitrary natural voice.
-
-## 7. Review
-
-Create `review.csv` with:
-
-```text
-character,locale,family,variant,text,file,result,notes
-```
-
-Allowed results:
+During human review, record/derive a separate final disposition such as:
 
 ```text
 ACCEPT
@@ -269,40 +311,37 @@ OTHER
 `ACCEPT` requires:
 
 - exact words;
-- correct Italian/English pronunciation;
+- correct locale/pronunciation;
 - no invented/repeated sounds;
 - no unwanted tail;
-- no clipped initial consonant;
-- recognisable canonical character identity;
-- pleasant short-reaction delivery;
-- no excessive silence;
-- no obvious audio artifact.
+- no clipped initial/final sound;
+- correct canonical character identity where applicable;
+- suitable delivery and small-speaker intelligibility.
 
-For these shared reactions, energetic delivery is desirable. The exclamation marks are intentional.
+For Dani, verify that the selected system voice remains clearly synthetic/robotic enough for the character identity.
 
-## 8. Do not normalize away character personality
+Whisper PASS never substitutes for this listening gate.
 
-The five characters should remain distinguishable. Do not force identical pitch, speed or emotional contour.
+## 9. Preserve character personality
 
-The phrases within one semantic family are interchangeable in **meaning**, not identical in performance.
+Do not normalize all characters into the same performance style.
 
-A good result is:
+Desired identities remain approximately:
 
 ```text
-Lilli → warm and delighted
-Leo   → warm, older, quietly pleased
-Flash → lively and energetic
-Tito  → adventurous and encouraging
-Momo  → playful and expressive
+Lilli -> warm and delighted
+Leo   -> warm, older, quietly pleased
+Flash -> lively and energetic
+Tito  -> adventurous and encouraging
+Momo  -> playful and expressive
+Dani  -> concise, fun and clearly robotic
 ```
 
-while preserving the exact words.
+Variants within one family are interchangeable in meaning, not identical performances.
 
-## 9. Random-variant system contract
+## 10. Runtime shared-family contract
 
-Activities do **not** select filenames or variant numbers.
-
-They request only:
+Activities do not choose generated filenames or variant numbers. They request only:
 
 ```text
 character
@@ -310,55 +349,31 @@ semantic family
 locale
 ```
 
-Example:
+Greia owns the reviewed available array:
 
 ```text
-character = "lilli"
-utterance = "praise.general"
-locale = "it"
+one accepted file       -> use it
+multiple accepted files -> choose a reviewed variant for presentation variety
 ```
 
-Greia owns the reviewed array of available files.
+A rejected/missing variant is simply absent. Random selection must never affect score, correctness, rewards, difficulty or progression.
 
-Conceptually:
+This recording tool is authoring-only; it does not create child-runtime synthesis.
 
-```python
-variants = catalogue[character][locale][utterance]
-
-if len(variants) == 1:
-    selected = variants[0]
-else:
-    selected = random.choice(variants)
-```
-
-Therefore:
-
-- one reviewed file is completely valid and is always selected;
-- adding a second or third reviewed file automatically adds variety;
-- a missing/rejected variant is simply absent from the available array;
-- Activities never depend on `01`, `02`, or `03`;
-- all variants inside one array must be semantically safe substitutes;
-- animation is selected from the semantic family, not from the filename.
-
-Do not create separate Activity logic for each phrase.
-
-## 10. Evidence to return
+## 11. Evidence to return
 
 Return:
 
 ```text
-1. Greia git SHA
-2. Chatterbox model/backend/version
-3. canonical reference hashes used
-4. exact Chatterbox short-output/token settings
-5. output directory
-6. review.csv
-7. accepted/rejected count per character and language
-8. any phrase that repeatedly failed
-9. representative accepted clips for each character
-10. whether all 150 Chatterbox-target clips were accepted
+1. exact Greia git SHA
+2. `doctor` result
+3. output directory
+4. review.csv
+5. generated/existing/blocked count per character + locale
+6. representative receipt(s)
+7. any phrase that repeatedly failed
+8. human accepted/rejected count after listening
+9. whether all 180 intended variants are accepted or which remain absent
 ```
 
-Do not hide failed generations. Keep rejected files in the temporary evidence directory until review is complete.
-
-Do not package models, Chatterbox environments, canonical reference voices, or temporary generations into an Activity.
+Do not hide failures and do not commit model environments, caches, canonical references or rejected review audio.
