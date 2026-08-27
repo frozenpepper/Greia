@@ -5,13 +5,16 @@ from __future__ import annotations
 if __package__:
     from .enciclopedia_engine import PageRegistry
     from .pages.animals import AnimalsPage
+    from .pages.bee import BeePage
     from .pages.body import BodyPage
     from .pages.earth import EarthPage
+    from .pages.elephant import ElephantPage
     from .pages.fossils import FossilsPage
     from .pages.gears import GearsPage
     from .pages.heart import HeartPage
     from .pages.history import HistoryPage
     from .pages.home import HomePage
+    from .pages.lion import LionPage
     from .pages.machines import MachinesPage
     from .pages.octopus import OctopusPage
     from .pages.saturn import SaturnPage
@@ -20,13 +23,16 @@ if __package__:
 else:
     from enciclopedia_engine import PageRegistry
     from pages.animals import AnimalsPage
+    from pages.bee import BeePage
     from pages.body import BodyPage
     from pages.earth import EarthPage
+    from pages.elephant import ElephantPage
     from pages.fossils import FossilsPage
     from pages.gears import GearsPage
     from pages.heart import HeartPage
     from pages.history import HistoryPage
     from pages.home import HomePage
+    from pages.lion import LionPage
     from pages.machines import MachinesPage
     from pages.octopus import OctopusPage
     from pages.saturn import SaturnPage
@@ -36,7 +42,10 @@ else:
 IMPLEMENTED_PAGE_IDS = (
     "home",
     "animals",
+    "animals.lion",
+    "animals.elephant",
     "animals.octopus",
+    "animals.bee",
     "space",
     "space.saturn",
     "earth",
@@ -55,7 +64,10 @@ def build_page_registry() -> PageRegistry:
     for page_type in (
         HomePage,
         AnimalsPage,
+        LionPage,
+        ElephantPage,
         OctopusPage,
+        BeePage,
         SpacePage,
         SaturnPage,
         EarthPage,
