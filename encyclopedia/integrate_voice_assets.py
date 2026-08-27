@@ -166,20 +166,22 @@ def _expected_locale_payload(
     if not isinstance(current_audio, dict):
         raise ValueError(f"locale {locale!r} is missing an audio object")
 
+    # Greia's canonical localization schema requires each audio value to be an
+    # object containing at least ``path``; it is not a bare path string.
     accepted_audio = {
-        asset.cue_id: asset.runtime_relative
+        asset.cue_id: {"path": asset.runtime_relative}
         for asset in assets
         if asset.locale == locale
     }
     if len(accepted_audio) != sum(1 for asset in assets if asset.locale == locale):
         raise ValueError(f"duplicate accepted cue mapping in locale {locale!r}")
 
-    # The voice ledger owns narration cues only. Preserve any unrelated Activity
-    # audio mapping (for example a future licensed animal call) rather than
-    # treating the entire locale audio object as voice-tool property.
+    # The voice ledger owns narration cues only. Preserve unrelated Activity
+    # audio mappings (for example a future licensed animal call) exactly rather
+    # than treating the entire locale audio object as voice-tool property.
     expected_audio = {
-        str(cue_id): str(relative_path)
-        for cue_id, relative_path in current_audio.items()
+        cue_id: value
+        for cue_id, value in current_audio.items()
         if cue_id not in managed_cues
     }
     expected_audio.update(accepted_audio)
