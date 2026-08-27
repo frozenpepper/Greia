@@ -47,7 +47,10 @@ def transcript_similarity(expected: str, actual: str) -> float:
 def asr_eligible(request: VoiceRequest) -> bool:
     if request.verification is VerificationMode.OFF:
         return False
-    if request.kind is not SpeechKind.CHARACTER_DIALOGUE:
+    if request.kind not in {
+        SpeechKind.CHARACTER_DIALOGUE,
+        SpeechKind.SHARED_CHARACTER_UTTERANCE,
+    }:
         return False
     words = normalize_transcript(request.text).split()
     # Whisper-tiny is not a pronunciation authority and is particularly noisy on
