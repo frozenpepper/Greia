@@ -25,10 +25,12 @@ class OctopusDiscovery:
     center: tuple[int, int]
 
 
+# Tuple order is deliberately the same as the visible 2×2 grid so Greia's
+# semantic directional navigation matches what the child sees.
 DISCOVERIES = (
-    OctopusDiscovery("arms", "octopus.arms", "encyclopedia.animals.octopus.arms", (265, 405)),
     OctopusDiscovery("camouflage", "octopus.camouflage", "encyclopedia.animals.octopus.camouflage", (300, 215)),
     OctopusDiscovery("ink", "octopus.ink", "encyclopedia.animals.octopus.ink", (735, 230)),
+    OctopusDiscovery("arms", "octopus.arms", "encyclopedia.animals.octopus.arms", (265, 405)),
     OctopusDiscovery("hearts", "octopus.hearts", "encyclopedia.animals.octopus.hearts", (740, 405)),
 )
 
@@ -53,7 +55,10 @@ class OctopusPage(EncyclopediaPage):
         self._sucker_age = 0.0
         self._heart_age = 0.0
         self._caption_key = "octopus.intro"
-        self._hotspots = tuple(pygame.Rect(cx - 44, cy - 44, 88, 88) for cx, cy in (item.center for item in DISCOVERIES))
+        self._hotspots = tuple(
+            pygame.Rect(cx - 44, cy - 44, 88, 88)
+            for cx, cy in (item.center for item in DISCOVERIES)
+        )
 
     def on_enter(self) -> None:
         self.context.audio.play("encyclopedia.animals.octopus.intro")
@@ -65,9 +70,15 @@ class OctopusPage(EncyclopediaPage):
         self._heart_age = max(0.0, self._heart_age - dt)
 
     def handle_input(self, event: PageInput) -> None:
-        if event.position is not None and event.kind in {PageInputKind.POINTER_MOVE, PageInputKind.POINTER_PRESS}:
+        if event.position is not None and event.kind in {
+            PageInputKind.POINTER_MOVE,
+            PageInputKind.POINTER_PRESS,
+        }:
             point = (int(event.position[0]), int(event.position[1]))
-            hit = next((i for i, rect in enumerate(self._hotspots) if rect.collidepoint(point)), None)
+            hit = next(
+                (i for i, rect in enumerate(self._hotspots) if rect.collidepoint(point)),
+                None,
+            )
             self._hovered = hit
             if event.kind is PageInputKind.POINTER_PRESS and hit is not None:
                 self._selected = hit
@@ -78,7 +89,12 @@ class OctopusPage(EncyclopediaPage):
         if event.command is PageCommand.ACTIVATE:
             self._activate(self._selected)
             return
-        self._selected = grid_step(self._selected, event.command, columns=2, count=len(DISCOVERIES))
+        self._selected = grid_step(
+            self._selected,
+            event.command,
+            columns=2,
+            count=len(DISCOVERIES),
+        )
 
     def _activate(self, index: int) -> None:
         discovery = DISCOVERIES[index]
@@ -171,18 +187,51 @@ class OctopusPage(EncyclopediaPage):
             pygame.draw.circle(surface, (255, 250, 236), item.center, 38)
             pygame.draw.circle(surface, (54, 72, 82), item.center, 38, 3)
             if item.discovery_id == "arms":
-                pygame.draw.line(surface, (183, 103, 173), (item.center[0] - 20, item.center[1] + 15), (item.center[0] + 20, item.center[1] - 15), 10)
+                pygame.draw.line(
+                    surface,
+                    (183, 103, 173),
+                    (item.center[0] - 20, item.center[1] + 15),
+                    (item.center[0] + 20, item.center[1] - 15),
+                    10,
+                )
                 for n in range(4):
-                    pygame.draw.circle(surface, (227, 170, 204), (item.center[0] - 14 + n * 10, item.center[1] + 5 - n * 7), 4)
+                    pygame.draw.circle(
+                        surface,
+                        (227, 170, 204),
+                        (item.center[0] - 14 + n * 10, item.center[1] + 5 - n * 7),
+                        4,
+                    )
             elif item.discovery_id == "camouflage":
-                for n, color in enumerate(_BODY_COLORS):
-                    pygame.draw.circle(surface, color, (item.center[0] - 16 + (n % 2) * 32, item.center[1] - 16 + (n // 2) * 32), 10)
+                for n, swatch in enumerate(_BODY_COLORS):
+                    pygame.draw.circle(
+                        surface,
+                        swatch,
+                        (
+                            item.center[0] - 16 + (n % 2) * 32,
+                            item.center[1] - 16 + (n // 2) * 32,
+                        ),
+                        10,
+                    )
             elif item.discovery_id == "ink":
-                for dx, dy, radius in ((0, 0, 14), (-13, 8, 9), (14, 9, 10), (6, -12, 8)):
-                    pygame.draw.circle(surface, (35, 38, 55), (item.center[0] + dx, item.center[1] + dy), radius)
+                for dx, dy, radius in (
+                    (0, 0, 14),
+                    (-13, 8, 9),
+                    (14, 9, 10),
+                    (6, -12, 8),
+                ):
+                    pygame.draw.circle(
+                        surface,
+                        (35, 38, 55),
+                        (item.center[0] + dx, item.center[1] + dy),
+                        radius,
+                    )
             else:
                 for dx, dy in ((-14, 6), (0, -8), (14, 6)):
-                    self._draw_heart(surface, (item.center[0] + dx, item.center[1] + dy), 7)
+                    self._draw_heart(
+                        surface,
+                        (item.center[0] + dx, item.center[1] + dy),
+                        7,
+                    )
             focus_ring(surface, rect, active or hover)
 
     def _draw_caption(self, surface: pygame.Surface) -> None:
@@ -190,15 +239,33 @@ class OctopusPage(EncyclopediaPage):
         pygame.draw.rect(surface, (255, 250, 236), panel, border_radius=22)
         pygame.draw.rect(surface, (54, 72, 82), panel, 3, border_radius=22)
         text = self.context.resources.text(self._caption_key)
-        rendered = self.context.typography.render(text, FontRole.BODY, 18, (54, 57, 61))
+        rendered = self.context.typography.render(
+            text,
+            FontRole.BODY,
+            18,
+            (54, 57, 61),
+        )
         if rendered.get_width() > panel.width - 26:
-            rendered = self.context.typography.render(text, FontRole.BODY, 15, (54, 57, 61))
+            rendered = self.context.typography.render(
+                text,
+                FontRole.BODY,
+                15,
+                (54, 57, 61),
+            )
         surface.blit(rendered, rendered.get_rect(center=panel.center))
 
     @staticmethod
-    def _draw_heart(surface: pygame.Surface, center: tuple[int, int], size: int) -> None:
+    def _draw_heart(
+        surface: pygame.Surface,
+        center: tuple[int, int],
+        size: int,
+    ) -> None:
         cx, cy = center
         color = (206, 69, 84)
         pygame.draw.circle(surface, color, (cx - size // 2, cy), size // 2 + 1)
         pygame.draw.circle(surface, color, (cx + size // 2, cy), size // 2 + 1)
-        pygame.draw.polygon(surface, color, [(cx - size, cy), (cx + size, cy), (cx, cy + size * 2)])
+        pygame.draw.polygon(
+            surface,
+            color,
+            [(cx - size, cy), (cx + size, cy), (cx, cy + size * 2)],
+        )
