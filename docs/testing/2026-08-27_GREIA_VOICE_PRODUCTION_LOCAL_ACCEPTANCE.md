@@ -1,8 +1,8 @@
-# Greia Voice Production Engine — Local Finalization & Acceptance Protocol
+# Greia Voice Production Engine — Local Provider Acceptance Protocol
 
-**Date:** 2026-08-27  
-**Audience:** local owner-controlled coding/test agent  
-**Purpose:** finish integration of the new authoring-time voice engine on the real production workstation, exercise actual Chatterbox/native/Whisper providers, and only then switch Greia authoring guidance away from legacy one-off generator mechanics.
+**Reviewed:** 2026-08-28  
+**Audience:** owner-controlled local coding/test agent  
+**Purpose:** verify the canonical Voice Production Engine against the real workstation providers and audio outputs. The engine is already the repository-wide authoring interface; this protocol establishes machine/provider evidence, not permission to bypass the engine.
 
 ## 0. Non-negotiable boundaries
 
@@ -12,29 +12,31 @@ Do not:
 - use GitHub-hosted Actions;
 - expose the voice service on `0.0.0.0` or a LAN address;
 - run two Chatterbox inference workers concurrently;
-- regenerate or overwrite already owner-accepted Activity audio merely to test the engine;
+- regenerate/overwrite owner-accepted Activity audio merely to test the engine;
 - edit canonical reference recordings or hashes;
-- write silent placeholder audio on failure;
-- mark any generated clip human-accepted because Whisper passed;
-- change the semantic routing policy to make a test convenient;
-- install/download a missing heavy toolchain unless the owner has explicitly authorized voice setup.
+- write or accept silent placeholder audio;
+- mark any clip human-accepted because Whisper passed;
+- bypass `tools/greia_voice.py` with direct Chatterbox/native-TTS commands to make a test pass;
+- install/download missing heavy dependencies or model weights unless the owner authorizes voice setup.
 
-Preserve unrelated current work. Stop on source-integrity or canonical-reference hash failures.
+Preserve unrelated work. Stop immediately on canonical-reference hash or source-integrity failures.
 
 ## 1. Read first
-
-From the current Greia checkout:
 
 ```text
 AGENTS.md
 SETUP.md
 HANDOVER.md
-skills/greia-os-work/SKILL.md
-skills/greia-activity-authoring/SKILL.md
 skills/greia-voice-production/SKILL.md
-docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md
+tools/greia_voice_core/README.md
 docs/architecture/GREIA_VOICE_PRODUCTION_ENGINE.md
+docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md
 docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md
+```
+
+Only if provider troubleshooting is required, additionally read:
+
+```text
 docs/agents/GREIA_CHATTERBOX_PRODUCTION_FIELD_GUIDE.md
 ```
 
@@ -46,7 +48,7 @@ git rev-parse HEAD
 python3 --version
 ```
 
-If the checkout has unrelated uncommitted work, preserve it. Do not reset/clean it away.
+If unrelated uncommitted work exists, preserve it. Do not reset/clean it.
 
 ## 2. Provider-free source gate
 
@@ -56,7 +58,7 @@ Run exactly:
 python3 -m unittest tests.test_greia_voice_tool -v
 ```
 
-Expected: all Greia voice-tool tests PASS.
+Expected: all tests PASS, including semantic routing, shared-library routing, Dani separation, pedagogical safeguards, advisory ASR behavior, receipts and worker locking.
 
 Then run:
 
@@ -66,21 +68,21 @@ make verify
 
 Expected: full repository verification PASS.
 
-**STOP** if either command fails. Fix the implementation cleanly; do not skip tests or weaken assertions.
+**STOP on the first failure.** Fix the implementation cleanly; do not skip tests or weaken assertions.
 
-## 3. Create machine-local evidence area
+## 3. Machine-local evidence area
 
-Use the existing Greia voice-production home if configured:
+On macOS:
 
 ```bash
 export GREIA_VOICE_HOME="${GREIA_VOICE_HOME:-${HOME}/Library/Application Support/Greia/voice-production}"
-export VOICE_ACCEPTANCE_DIR="${GREIA_VOICE_HOME}/acceptance/2026-08-27-engine"
+export VOICE_ACCEPTANCE_DIR="${GREIA_VOICE_HOME}/acceptance/voice-engine"
 mkdir -p "${VOICE_ACCEPTANCE_DIR}"
 ```
 
-Do not put model weights/venvs/caches in the repository.
+Model weights, venvs, caches and rejected scratch audio stay outside Git.
 
-## 4. Non-mutating doctor gate
+## 4. Doctor gate
 
 Run:
 
@@ -88,25 +90,28 @@ Run:
 python3 tools/greia_voice.py doctor | tee "${VOICE_ACCEPTANCE_DIR}/doctor.json"
 ```
 
-Required observations for full Apple-Silicon character-voice acceptance:
+For a full Apple-Silicon acceptance run, require:
 
 ```text
-canonical anchor hashes: OK for lilli/leo/flash/tito/momo
-ffmpeg.available: true
-chatterbox-mlx-multilingual-v3.available: true
-macos-native-say.available: true
-mlx-whisper-tiny.available: true  # optional for generation, required for the ASR acceptance subsection below
+canonical Lilli/Leo/Flash/Tito/Momo anchors present + hash-valid
+ffmpeg available
+chatterbox-mlx-multilingual-v3 available
+macos-native-say available
+mlx-whisper-tiny available for the optional ASR lane
 ```
 
-If canonical anchor hash validation fails: **STOP**. Do not repair the manifest/reference ad hoc.
+If the environment is absent and installation is authorized, install only from:
 
-If Chatterbox is unavailable but the existing voice environment is expected to exist, diagnose against `GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md`; do not create another venv in the repo.
+```text
+tools/greia_voice_core/README.md
+tools/greia_voice_requirements_mlx.txt
+```
 
-If Whisper alone is unavailable, character generation may still be tested but classify ASR acceptance as `NOT_RUN / BLOCKED`; do not claim the complete engine acceptance gate.
+Then rerun `doctor`. Never modify canonical hashes to obtain PASS.
 
-## 5. Pedagogical/system TTS pilot
+## 5. Deterministic pedagogical speech gate
 
-Generate three Italian pedagogical clips without touching Activity assets:
+Generate three deliberately pronunciation-sensitive samples:
 
 ```bash
 python3 tools/greia_voice.py generate \
@@ -116,8 +121,7 @@ python3 tools/greia_voice.py generate \
   --text "ma" \
   --cue-id acceptance.phonics.ma \
   --verification off \
-  --output "${VOICE_ACCEPTANCE_DIR}/pedagogical-ma.wav" \
-  | tee "${VOICE_ACCEPTANCE_DIR}/pedagogical-ma.result.json"
+  --output "${VOICE_ACCEPTANCE_DIR}/phonics-ma.wav"
 
 python3 tools/greia_voice.py generate \
   --speaker pedagogical \
@@ -126,64 +130,64 @@ python3 tools/greia_voice.py generate \
   --text "to" \
   --cue-id acceptance.phonics.to \
   --verification off \
-  --output "${VOICE_ACCEPTANCE_DIR}/pedagogical-to.wav" \
-  | tee "${VOICE_ACCEPTANCE_DIR}/pedagogical-to.result.json"
+  --output "${VOICE_ACCEPTANCE_DIR}/phonics-to.wav"
 
 python3 tools/greia_voice.py generate \
   --speaker pedagogical \
   --kind pedagogical_speech \
   --locale it \
-  --text "B" \
+  --text "b" \
   --cue-id acceptance.letter.b \
   --verification off \
-  --output "${VOICE_ACCEPTANCE_DIR}/pedagogical-b.wav" \
-  | tee "${VOICE_ACCEPTANCE_DIR}/pedagogical-b.result.json"
+  --output "${VOICE_ACCEPTANCE_DIR}/letter-b.wav"
 ```
 
 Verify:
 
-- each result disposition is `REVIEW_REQUIRED`, not accepted;
-- each output and `.receipt.json` exists;
-- output is mono 22,050 Hz;
-- the receipt request retains exact target text (`to`), while native generation parameters may show provider-only synthesis text (`tò`);
-- lowercase handling prevents the host voice from saying “maiuscola/capital” for the letter target.
+- each file exists and is audible;
+- receipts say `human_review=PENDING`;
+- the receipt request text remains the exact semantic target (`to`, not the provider's accent workaround);
+- a fluent Italian listener approves the actual educational pronunciation.
 
-**Human listening required:** listen to all three. `ma`, `to` and the letter name must be educationally correct and unambiguous. If not, tune only the native provider profile/override layer, add a provider-free regression test, and rerun this section.
+A wrong/ambiguous phoneme is FAIL even if the synthesis sounds pleasant.
 
-## 6. Character-dialogue + Whisper pilot
+## 6. Character + Whisper gate
 
-Use a normal multi-word Leo sentence so ASR is eligible:
+Generate one normal multi-word Leo line:
 
 ```bash
 python3 tools/greia_voice.py generate \
   --speaker leo \
   --kind character_dialogue \
   --locale it \
-  --text "Guardiamo con calma questa piccola meraviglia." \
-  --cue-id acceptance.leo.dialogue \
-  --verification auto \
-  --max-attempts 2 \
-  --output "${VOICE_ACCEPTANCE_DIR}/leo-dialogue.ogg" \
-  | tee "${VOICE_ACCEPTANCE_DIR}/leo-dialogue.result.json"
+  --text "Guardiamo con calma cosa succede." \
+  --cue-id acceptance.leo.normal \
+  --output "${VOICE_ACCEPTANCE_DIR}/leo-normal.ogg"
 ```
 
-Required machine behavior:
+Inspect its receipt. Verify:
 
-- canonical Leo reference hash is validated before generation;
-- output is not a stub/silence;
-- receipt records `greia.leo.v1` and the canonical reference SHA-256;
-- receipt records `model_load_count = 1`;
-- Whisper uses Italian explicitly;
-- normal result is `REVIEW_REQUIRED`; `REVIEW_REQUIRED_ASR_WARNING` is allowed only if the produced audio is then inspected manually and the warning is understood;
-- no result ever says human accepted.
+```text
+provider = canonical Chatterbox/MLX provider
+voice_id = greia.leo.v1
+reference hash matches registry
+verification is recorded
+human_review = PENDING
+```
 
-**Human listening required:** confirm exact words, Italian pronunciation, Leo's oldish/savvy canonical identity, no invented/repeated tail, no clipping/click, suitable delivery.
+Listen and require:
 
-If Chatterbox says the wrong words internally, reject/regenerate; do not waveform-splice the phrase into correctness.
+- exact Italian words;
+- recognizable warm older/savvy Leo identity;
+- no invented/repeated speech;
+- no clipped onset/end or generated tail;
+- suitable intelligibility.
 
-## 7. Ultra-short character reaction pilot
+Whisper PASS does not replace listening. If Whisper warns but the audio is actually correct, record that as verifier false-negative evidence rather than rewriting acceptance rules.
 
-Exercise the short-dialogue trim path separately:
+## 7. Short-character gate
+
+Generate:
 
 ```bash
 python3 tools/greia_voice.py generate \
@@ -192,95 +196,14 @@ python3 tools/greia_voice.py generate \
   --locale it \
   --text "Vai!" \
   --cue-id acceptance.flash.short \
-  --verification auto \
-  --max-attempts 2 \
-  --output "${VOICE_ACCEPTANCE_DIR}/flash-vai.wav" \
-  | tee "${VOICE_ACCEPTANCE_DIR}/flash-vai.result.json"
+  --output "${VOICE_ACCEPTANCE_DIR}/flash-vai.ogg"
 ```
 
-Expected:
+Verify that tiny speech is not falsely treated as ASR authority and listen for clean primary-utterance trimming/no tail.
 
-- Whisper reports `NOT_APPLICABLE` because the one-word reaction is intentionally below the reliable ASR gate;
-- short-dialogue token/trim policy is used;
-- no extra Chatterbox tail survives obvious review;
-- human listening remains the only semantic/identity acceptance gate.
+## 8. Dani gate
 
-## 8. Warm-service / one-model lifecycle gate
-
-Start the localhost service:
-
-```bash
-python3 tools/greia_voice.py serve \
-  > "${VOICE_ACCEPTANCE_DIR}/service.log" 2>&1 &
-VOICE_SERVICE_PID=$!
-```
-
-Wait until the log contains a `READY` JSON line. If the process exits, inspect the log and stop.
-
-Send three Leo requests through the same service:
-
-```bash
-python3 tools/greia_voice.py request --speaker leo --kind character_dialogue --locale it \
-  --text "Prima osserviamo." --cue-id acceptance.service.1 \
-  --output "${VOICE_ACCEPTANCE_DIR}/service-1.wav" \
-  > "${VOICE_ACCEPTANCE_DIR}/service-1.result.json"
-
-python3 tools/greia_voice.py request --speaker leo --kind character_dialogue --locale it \
-  --text "Poi proviamo insieme." --cue-id acceptance.service.2 \
-  --output "${VOICE_ACCEPTANCE_DIR}/service-2.wav" \
-  > "${VOICE_ACCEPTANCE_DIR}/service-2.result.json"
-
-python3 tools/greia_voice.py request --speaker leo --kind character_dialogue --locale it \
-  --text "Infine guardiamo il risultato." --cue-id acceptance.service.3 \
-  --output "${VOICE_ACCEPTANCE_DIR}/service-3.wav" \
-  > "${VOICE_ACCEPTANCE_DIR}/service-3.result.json"
-```
-
-Inspect the three receipts. **All must report `model_load_count = 1`.** This proves the daemon keeps the Chatterbox model instance warm instead of reloading per clip.
-
-Stop cleanly:
-
-```bash
-python3 tools/greia_voice.py shutdown | tee "${VOICE_ACCEPTANCE_DIR}/shutdown.json"
-wait "${VOICE_SERVICE_PID}"
-```
-
-Confirm no stale `greia_voice.py serve` process remains.
-
-## 9. Cross-process single-worker gate
-
-The provider-free unit test already proves the lock primitive. Perform one real smoke check only if easy to overlap safely:
-
-1. start one long character request;
-2. while it is actively generating, launch a second one-shot character request;
-3. the second request must fail fast with a message that another Greia voice worker is active;
-4. it must **not** start another model instance.
-
-Do not repeat this test if timing makes it unreliable. The deterministic unit test is the primary gate; this is supplemental workstation evidence.
-
-## 10. Batch gate
-
-Create:
-
-```bash
-cat > "${VOICE_ACCEPTANCE_DIR}/batch.jsonl" <<'EOF'
-{"speaker":"tito","kind":"character_dialogue","locale":"it","text":"Osserviamo questo dettaglio.","cue_id":"acceptance.batch.1"}
-{"speaker":"tito","kind":"character_dialogue","locale":"it","text":"Adesso scopriamo qualcosa di nuovo.","cue_id":"acceptance.batch.2"}
-EOF
-```
-
-Run:
-
-```bash
-python3 tools/greia_voice.py batch --input "${VOICE_ACCEPTANCE_DIR}/batch.jsonl" \
-  | tee "${VOICE_ACCEPTANCE_DIR}/batch.result.json"
-```
-
-Confirm both outputs exist in the machine-local default review tree and both receipts report `model_load_count = 1` for that batch engine lifecycle.
-
-## 11. Dani gate — provisional profile review
-
-Generate one Dani line:
+Generate:
 
 ```bash
 python3 tools/greia_voice.py generate \
@@ -289,77 +212,106 @@ python3 tools/greia_voice.py generate \
   --locale it \
   --text "Schema completato!" \
   --cue-id acceptance.dani \
-  --verification off \
-  --output "${VOICE_ACCEPTANCE_DIR}/dani.wav" \
-  | tee "${VOICE_ACCEPTANCE_DIR}/dani.result.json"
+  --output "${VOICE_ACCEPTANCE_DIR}/dani.ogg"
 ```
 
-Listen. The important architecture gate is that Dani never routes through Chatterbox. The **voice identity itself is still provisional**. If the current host voice is not robotic/fun enough, set/tune `GREIA_VOICE_DANI_VOICE_IT`/`EN` or adjust the native Dani profile centrally. Do not add Dani-specific voice commands to Activities.
+Require:
 
-Record whether Dani identity is:
+- system/native provider, never cloned-character provider;
+- ASR `NOT_APPLICABLE`/not used;
+- human review of intelligibility and sufficiently synthetic/robotic Dani identity.
 
-```text
-ACCEPTED_FOR_NOW
-or
-PROVISIONAL_NEEDS_PROFILE_TUNING
+If current host voice is not robotic enough, tune the engine-owned Dani profile/override and document it. Do not create a separate Dani generator.
+
+## 9. Shared-library routing gate
+
+Test a tiny subset through the central producer:
+
+```bash
+python3 tools/record_shared_character_utterances.py \
+  --characters leo,dani \
+  --output-root "${VOICE_ACCEPTANCE_DIR}/shared"
 ```
 
-Do not block the rest of the engine acceptance solely because Dani profile taste needs tuning, provided routing is correct and this limitation is documented honestly.
+Verify:
 
-## 12. Final source integration after provider gates are green
+- Leo routes through cloned provider;
+- Dani routes through system/native provider;
+- no direct TTS implementation exists in the producer;
+- `review.csv` is written;
+- each new candidate has a receipt;
+- candidates remain review-required, not accepted.
 
-Only after Sections 2–10 are green:
+Do not run the full 180-clip library merely for this smoke gate unless the owner requests it.
 
-1. update `skills/greia-activity-authoring/VOICE_GENERATION.md` so actual production says **use `tools/greia_voice.py` / `skills/greia-voice-production/SKILL.md`** instead of teaching agents to invoke providers directly;
-2. update `skills/greia-activity-authoring/SKILL.md` voice section to route actual generation to the new voice skill/tool;
-3. update `skills/greia-os-work/SKILL.md` voice-production section the same way;
-4. update `SETUP.md` readiness ledger: unified provider probe and authoring engine are now implemented; native adapters beyond macOS remain pending;
-5. keep `GREIA_CHATTERBOX_PRODUCTION_FIELD_GUIDE.md` as **engine-maintainer/troubleshooting** documentation, not ordinary Activity-author instructions;
-6. update `HANDOVER.md` with exact provider evidence, Dani disposition, test counts and any remaining migration work;
-7. append an accurate non-blocking implementation entry to `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md` without claiming R7 completion;
-8. update `docs/DOCUMENTATION.md` only if documentation ownership changed materially;
-9. commit directly to current `main`, preserving any concurrent owner work.
+## 10. Warm-service/model-reuse gate
 
-## 13. Legacy generator migration — do not mass-regenerate audio
+Start:
 
-After the engine is accepted, migrate **code**, not already-reviewed sound assets.
-
-First pilots:
-
-```text
-tools/generate_sillabe_audio.py
-tools/generate_stelle_incantate_audio.py (or another currently-used Chatterbox generator)
+```bash
+python3 tools/greia_voice.py serve > "${VOICE_ACCEPTANCE_DIR}/service.log" 2>&1 &
+VOICE_SERVICE_PID=$!
 ```
 
-Goal:
-
-- retain each script only as a thin semantic batch definition/compatibility entry point if still useful;
-- call `greia_voice_core` / `tools/greia_voice.py` for actual production;
-- delete duplicated Chatterbox model-load/cache/trim/hash/Whisper mechanics from the legacy script;
-- delete duplicated macOS `say`/phonetic-override mechanics from Sillabe and use the native provider;
-- do **not** regenerate accepted Activity assets just because the generator changed;
-- add focused regression tests for any behavior moved out of the script.
-
-Once two opposite pilots are clean, migrate other `generate_*_audio.py` scripts opportunistically rather than in one risky mass rewrite.
-
-## 14. Evidence to return to the owner
-
-Return a concise report containing:
+Submit at least three character requests using `request` to distinct files. Inspect receipts and require:
 
 ```text
-source SHA tested
-provider-free test result/count
-full make verify result/count
-doctor status summary
-pedagogical ma/to/B listening disposition
-Leo dialogue listening disposition + Whisper result
-Flash short-reaction listening disposition
+first Chatterbox load count = 1
+subsequent requests          = model_load_count remains 1
+```
+
+While the service is live, attempt a separate one-shot character generation. It must fail fast on the cross-process generation lock instead of loading a second model.
+
+Stop cleanly:
+
+```bash
+python3 tools/greia_voice.py shutdown
+wait "${VOICE_SERVICE_PID}"
+```
+
+Confirm no stale Greia voice/Chatterbox process remains.
+
+## 11. Batch gate
+
+Create a small JSONL file with at least two cloned-character requests and run:
+
+```bash
+python3 tools/greia_voice.py batch --input "${VOICE_ACCEPTANCE_DIR}/batch.jsonl" \
+  | tee "${VOICE_ACCEPTANCE_DIR}/batch-result.json"
+```
+
+Require model reuse and valid receipts. Do not use parallel workers.
+
+## 12. Final evidence/report
+
+Return:
+
+```text
+exact git SHA
+focused test result
+make verify result
+doctor JSON
+Python + host architecture
+voice requirements versions actually installed
+character/native/Whisper provider status
+paths to generated acceptance clips + receipts
+human listening result per clip
 warm-service model_load_count evidence
-batch model_load_count evidence
-Dani routing + profile disposition
-paths to machine-local acceptance outputs/receipts/logs
-files changed during final integration
-remaining blockers/limitations
+second-worker rejection evidence
+shared-library routing smoke result
+batch reuse result
+all remaining failures/limitations
 ```
 
-Do not create a ZIP unless the owner explicitly requests one. Keep evidence in the named machine-local acceptance directory and source changes in the repository.
+If all gates pass, update `HANDOVER.md` with the exact provider/audio evidence. Do not claim Windows/Linux provider support or physical Acer evidence from this workstation test.
+
+## 13. What this protocol does not authorize
+
+A PASS does not authorize:
+
+- child-runtime TTS or Whisper;
+- shipping model weights/caches/venvs;
+- cloud upload of canonical reference voices;
+- replacing human listening with ASR;
+- exposing the warm service beyond localhost;
+- regenerating existing accepted audio without a content reason.
