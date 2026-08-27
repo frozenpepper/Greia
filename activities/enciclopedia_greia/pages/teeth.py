@@ -132,7 +132,7 @@ class TeethPage(EncyclopediaPage):
         # A complete primary set has 20 teeth; the permanent comparison has 32.
         # The rows are schematic and evenly spaced for readability, not a dental chart.
         per_row = 16 if self._show_permanent else 10
-        radius = 7 if self._show_permanent else 10
+        radius = 5 if self._show_permanent else 10
         width = 184
         start_x = 413
         gap = width / max(1, per_row - 1)
@@ -152,25 +152,18 @@ class TeethPage(EncyclopediaPage):
     def _draw_job_demo(self, surface: pygame.Surface) -> None:
         center = (505, 335)
         if self._job_index == 0:
-            # Incisor: flat cutting edge and a piece of food split in two.
             pygame.draw.rect(surface, (252, 248, 226), (480, 296, 50, 56), border_radius=11)
             pygame.draw.line(surface, (130, 117, 103), (481, 349), (529, 349), 3)
             pygame.draw.circle(surface, (116, 181, 91), (470, 375), 15)
             pygame.draw.circle(surface, (116, 181, 91), (540, 375), 15)
             pygame.draw.line(surface, (236, 188, 68), (505, 359), (505, 391), 5)
         elif self._job_index == 1:
-            # Canine: one pointed crown and a gentle grip/tear cue.
-            pygame.draw.polygon(
-                surface,
-                (252, 248, 226),
-                [(480, 305), (530, 305), (505, 357)],
-            )
+            pygame.draw.polygon(surface, (252, 248, 226), [(480, 305), (530, 305), (505, 357)])
             pygame.draw.line(surface, (130, 117, 103), (480, 305), (505, 357), 3)
             pygame.draw.line(surface, (130, 117, 103), (530, 305), (505, 357), 3)
             pygame.draw.ellipse(surface, (231, 159, 76), (474, 366, 62, 24))
             pygame.draw.line(surface, (236, 188, 68), (491, 370), (519, 386), 4)
         else:
-            # Molar: broad chewing surface with repeated crush arrows.
             pygame.draw.rect(surface, (252, 248, 226), (472, 304, 66, 53), border_radius=17)
             for dx in (486, 505, 524):
                 pygame.draw.circle(surface, (206, 196, 173), (dx, 316), 5)
