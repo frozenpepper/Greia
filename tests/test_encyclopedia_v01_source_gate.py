@@ -1,13 +1,23 @@
 from __future__ import annotations
 
+import importlib.util
+from pathlib import Path
+import sys
 import unittest
 
-from tools.encyclopedia_v01_source_gate import (
-    GateFailure,
-    integration_disposition,
-    porcelain_path,
-    unexpected_initial_paths,
-)
+
+ROOT = Path(__file__).resolve().parents[1]
+TOOL_PATH = ROOT / "tools" / "encyclopedia_v01_source_gate.py"
+SPEC = importlib.util.spec_from_file_location("greia_encyclopedia_v01_source_gate", TOOL_PATH)
+assert SPEC is not None and SPEC.loader is not None
+MODULE = importlib.util.module_from_spec(SPEC)
+sys.modules[SPEC.name] = MODULE
+SPEC.loader.exec_module(MODULE)
+
+GateFailure = MODULE.GateFailure
+integration_disposition = MODULE.integration_disposition
+porcelain_path = MODULE.porcelain_path
+unexpected_initial_paths = MODULE.unexpected_initial_paths
 
 
 class EncyclopediaV01SourceGateTests(unittest.TestCase):
