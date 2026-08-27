@@ -6,6 +6,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
+from encyclopedia.export_voice_batch import batch_requests, render_jsonl
 from encyclopedia.integrate_voice_assets import (
     integrate_accepted_assets,
     plan_accepted_assets,
@@ -95,6 +96,100 @@ class VoiceLedgerAuthoringTests(unittest.TestCase):
         rendered = render_ledger(LEDGER.read_text(encoding="utf-8"))
         ledger_cues = {row.cue_id for row in parse_ledger_rows(rendered).values()}
         self.assertEqual(_runtime_narration_cues(), ledger_cues)
+
+    def test_full_synchronized_requested_rows_translate_to_voice_engine_contract(self) -> None:
+        rendered = render_ledger(LEDGER.read_text(encoding="utf-8"))
+        rows = parse_ledger_rows(rendered)
+        requests = batch_requests(rendered, ROOT, reject_existing=False)
+        expected = [row for row in rows.values() if row.status == "REQUESTED"]
+
+        self.assertEqual(len(requests), len(expected))
+        self.assertEqual(len({str(request["output"]) for request in requests}), len(requests))
+        for request in requests:
+            with self.subTest(cue=request["cue_id"], locale=request["locale"]):
+                self.assertIn(request["speaker"], {"leo", "lilli", "flash", "tito", "momo"})
+                self.assertEqual(request["kind"], "character_dialogue")
+                self.assertIn(request["locale"], {"it", "en"})
+                self.assertTrue(str(request["cue_id"]).startswith("encyclopedia."))
+                self.assertTrue(str(request["output"]).endswith(".ogg"))
+                self.assertEqual(request["verification"], "auto")
+                self.assertEqual(request["max_attempts"], 2)
+
+        parsed_jsonl = [json.loads(line) for line in render_jsonl(requests).splitlines()]
+        self.assertEqual(parsed_jsonl, list(requests))
+
+    def test_voice_batch_exports_only_requested_rows(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            requested = "encyclopedia/pages/animals/lion/assets/audio/it/intro-tito.ogg"
+            accepted = "encyclopedia/pages/animals/lion/assets/audio/en/intro-tito.ogg"
+            requests = batch_requests(
+                _ledger(
+                    _row(
+                        status="REQUESTED",
+                        cue="encyclopedia.animals.lion.intro",
+                        locale="it",
+                        path=requested,
+                    ),
+                    _row(
+                        status="OWNER_ACCEPTED",
+                        cue="encyclopedia.animals.lion.intro",
+                        locale="en",
+                        path=accepted,
+                    ),
+                ),
+                root,
+            )
+            self.assertEqual(
+                requests,
+                (
+                    {
+                        "speaker": "tito",
+                        "kind": "character_dialogue",
+                        "locale": "it",
+                        "text": "Exact approved line.",
+                        "cue_id": "encyclopedia.animals.lion.intro",
+                        "output": requested,
+                        "verification": "auto",
+                        "max_attempts": 2,
+                    },
+                ),
+            )
+
+    def test_voice_batch_refuses_to_overwrite_existing_requested_take(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            relative = "encyclopedia/pages/animals/lion/assets/audio/it/intro-tito.ogg"
+            target = root / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(b"existing review take")
+            with self.assertRaisesRegex(FileExistsError, "already exists"):
+                batch_requests(
+                    _ledger(
+                        _row(
+                            status="REQUESTED",
+                            cue="encyclopedia.animals.lion.intro",
+                            locale="it",
+                            path=relative,
+                        )
+                    ),
+                    root,
+                )
+
+    def test_voice_batch_rejects_path_traversal(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaisesRegex(ValueError, "unsafe staging path"):
+                batch_requests(
+                    _ledger(
+                        _row(
+                            status="REQUESTED",
+                            cue="encyclopedia.animals.lion.intro",
+                            locale="it",
+                            path="encyclopedia/pages/../outside/assets/audio/it/intro-tito.ogg",
+                        )
+                    ),
+                    Path(tmp),
+                )
 
     def test_shared_parser_rejects_duplicate_cue_locale(self) -> None:
         row = _row(
