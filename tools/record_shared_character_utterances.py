@@ -32,58 +32,18 @@ CHARACTERS = ("lilli", "leo", "flash", "tito", "momo", "dani")
 
 PHRASES = {
     "it": {
-        "praise.general": [
-            "Complimenti!",
-            "Ottimo lavoro!",
-            "Ben fatto!",
-        ],
-        "celebrate.success": [
-            "Ce l'hai fatta!",
-            "Evviva!",
-            "Che meraviglia!",
-        ],
-        "encourage.retry": [
-            "Riproviamo!",
-            "Quasi! Proviamo ancora!",
-            "Ancora una volta!",
-        ],
-        "encourage.progress": [
-            "Continua così!",
-            "Ci sei quasi!",
-            "Vai avanti!",
-        ],
-        "ready.go": [
-            "Forza, andiamo!",
-            "Ci siamo? Via!",
-            "Si parte!",
-        ],
+        "praise.general": ["Complimenti!", "Ottimo lavoro!", "Ben fatto!"],
+        "celebrate.success": ["Ce l'hai fatta!", "Evviva!", "Che meraviglia!"],
+        "encourage.retry": ["Riproviamo!", "Quasi! Proviamo ancora!", "Ancora una volta!"],
+        "encourage.progress": ["Continua così!", "Ci sei quasi!", "Vai avanti!"],
+        "ready.go": ["Forza, andiamo!", "Ci siamo? Via!", "Si parte!"],
     },
     "en": {
-        "praise.general": [
-            "Congratulations!",
-            "Great work!",
-            "Well done!",
-        ],
-        "celebrate.success": [
-            "You did it!",
-            "Hooray!",
-            "Wonderful!",
-        ],
-        "encourage.retry": [
-            "Let's try again!",
-            "Almost! Let's try again!",
-            "One more time!",
-        ],
-        "encourage.progress": [
-            "Keep going!",
-            "Almost there!",
-            "You're doing great!",
-        ],
-        "ready.go": [
-            "Come on, let's go!",
-            "Ready? Go!",
-            "Here we go!",
-        ],
+        "praise.general": ["Congratulations!", "Great work!", "Well done!"],
+        "celebrate.success": ["You did it!", "Hooray!", "Wonderful!"],
+        "encourage.retry": ["Let's try again!", "Almost! Let's try again!", "One more time!"],
+        "encourage.progress": ["Keep going!", "Almost there!", "You're doing great!"],
+        "ready.go": ["Come on, let's go!", "Ready? Go!", "Here we go!"],
     },
 }
 
@@ -96,6 +56,14 @@ def _selected_characters(raw: str) -> tuple[str, ...]:
     if not requested:
         raise ValueError("at least one character must be selected")
     return requested
+
+
+def _portable_path(path: Path) -> str:
+    """Prefer repository-relative evidence paths without rejecting external workspaces."""
+    try:
+        return str(path.resolve().relative_to(PROJECT_ROOT))
+    except ValueError:
+        return str(path.resolve())
 
 
 def _request(
@@ -134,7 +102,7 @@ def _row(
         "family": family,
         "variant": variant,
         "text": text,
-        "file": str(output.relative_to(PROJECT_ROOT)),
+        "file": _portable_path(output),
         "result": result,
         "notes": notes,
     }
@@ -152,18 +120,12 @@ def run(output_root: Path, characters: tuple[str, ...]) -> list[dict[str, object
                 for locale, families in PHRASES.items():
                     for family, variants in families.items():
                         for variant, text in enumerate(variants, 1):
-                            filename = (
-                                f"{character}__{locale}__{family}__{variant:02d}.wav"
-                            )
+                            filename = f"{character}__{locale}__{family}__{variant:02d}.wav"
                             output = output_root / character / locale / filename
                             receipt = output.with_suffix(output.suffix + ".receipt.json")
 
                             if output.exists() or receipt.exists():
-                                if (
-                                    output.is_file()
-                                    and output.stat().st_size > 1000
-                                    and receipt.is_file()
-                                ):
+                                if output.is_file() and output.stat().st_size > 1000 and receipt.is_file():
                                     rows.append(
                                         _row(
                                             character=character,
@@ -191,23 +153,16 @@ def run(output_root: Path, characters: tuple[str, ...]) -> list[dict[str, object
                                 )
                                 continue
 
-                            request = _request(
-                                character,
-                                locale,
-                                family,
-                                variant,
-                                text,
-                                output,
+                            result = engine.generate(
+                                _request(character, locale, family, variant, text, output)
                             )
-                            result = engine.generate(request)
                             notes = result.detail
-                            if result.verification is not None:
-                                verification = result.verification
-                                notes = (
-                                    f"{notes}; verifier={verification.verifier_id}; "
-                                    f"verification={verification.disposition.value}; "
-                                    f"transcript={verification.transcript!r}; score={verification.score}"
-                                )
+                            verification = result.verification
+                            notes = (
+                                f"{notes}; verifier={verification.verifier_id}; "
+                                f"verification={verification.disposition.value}; "
+                                f"transcript={verification.transcript!r}; score={verification.score}"
+                            )
                             rows.append(
                                 _row(
                                     character=character,
@@ -232,14 +187,7 @@ def run(output_root: Path, characters: tuple[str, ...]) -> list[dict[str, object
 def write_review_csv(output_root: Path, rows: list[dict[str, object]]) -> Path:
     path = output_root / "review.csv"
     fieldnames = [
-        "character",
-        "locale",
-        "family",
-        "variant",
-        "text",
-        "file",
-        "result",
-        "notes",
+        "character", "locale", "family", "variant", "text", "file", "result", "notes"
     ]
     with path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
@@ -265,9 +213,10 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
+    output_root = args.output_root.resolve()
     characters = _selected_characters(args.characters)
-    rows = run(args.output_root.resolve(), characters)
-    csv_path = write_review_csv(args.output_root.resolve(), rows)
+    rows = run(output_root, characters)
+    csv_path = write_review_csv(output_root, rows)
 
     failures = [
         row
