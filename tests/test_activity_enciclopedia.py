@@ -10,8 +10,92 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 ACTIVITY = ROOT / "activities" / "enciclopedia_greia"
 
+SECTION_PAGE_IDS = {"home", "animals", "space", "earth", "body", "machines", "history"}
+
+IMPLEMENTED_PAGE_IDS = (
+    "home",
+    "animals",
+    "animals.lion",
+    "animals.elephant",
+    "animals.octopus",
+    "animals.bee",
+    "animals.penguin",
+    "animals.frog",
+    "space",
+    "space.sun",
+    "space.mercury",
+    "space.venus",
+    "space.earth",
+    "space.moon",
+    "space.mars",
+    "space.jupiter",
+    "space.saturn",
+    "space.uranus",
+    "space.neptune",
+    "earth",
+    "earth.volcano",
+    "earth.rain",
+    "earth.ocean",
+    "earth.tree",
+    "earth.rainbow",
+    "body",
+    "body.heart",
+    "body.lungs",
+    "body.bones",
+    "body.teeth",
+    "body.senses",
+    "machines",
+    "machines.gears",
+    "history",
+    "history.fossils",
+)
+
+RESEARCH_FILES = {
+    page_id: ROOT / "encyclopedia" / "research" / category / f"{topic}.md"
+    for category, topics in {
+        "animals": ("lion", "elephant", "octopus", "bee", "penguin", "frog"),
+        "space": ("sun", "mercury", "venus", "earth", "moon", "mars", "jupiter", "saturn", "uranus", "neptune"),
+        "earth": ("volcano", "rain", "ocean", "tree", "rainbow"),
+        "body": ("heart", "lungs", "bones", "teeth", "senses"),
+        "machines": ("gears",),
+        "history": ("fossils",),
+    }.items()
+    for topic in topics
+    for page_id in (f"{category}.{topic}",)
+}
+
 
 class EncyclopediaSourceContractTests(unittest.TestCase):
+    @staticmethod
+    def _assignment(tree: ast.Module, name: str) -> ast.AST:
+        return next(
+            node.value
+            for node in tree.body
+            if isinstance(node, ast.Assign)
+            and any(isinstance(target, ast.Name) and target.id == name for target in node.targets)
+        )
+
+    @staticmethod
+    def _literal_strings(node: ast.AST) -> tuple[str, ...]:
+        assert isinstance(node, (ast.Tuple, ast.List))
+        return tuple(
+            item.value
+            for item in node.elts
+            if isinstance(item, ast.Constant) and isinstance(item.value, str)
+        )
+
+    @staticmethod
+    def _call_second_string_args(node: ast.AST) -> tuple[str, ...]:
+        assert isinstance(node, (ast.Tuple, ast.List))
+        values: list[str] = []
+        for item in node.elts:
+            if not isinstance(item, ast.Call) or len(item.args) < 2:
+                continue
+            value = item.args[1]
+            if isinstance(value, ast.Constant) and isinstance(value.value, str):
+                values.append(value.value)
+        return tuple(values)
+
     def test_manifest_is_offline_first_and_bilingual(self) -> None:
         with (ACTIVITY / "activity.toml").open("rb") as handle:
             raw = tomllib.load(handle)
@@ -22,241 +106,57 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
         self.assertNotIn("network", raw["requirements"]["optional_capabilities"])
         self.assertEqual(raw["permissions"]["requested"], [])
 
-    def test_first_pass_runtime_registry_tracks_only_real_pages(self) -> None:
+    def test_runtime_registry_tracks_only_real_pages(self) -> None:
         source = (ACTIVITY / "enciclopedia_catalogue.py").read_text(encoding="utf-8")
         tree = ast.parse(source)
-        value = next(
-            node.value
-            for node in tree.body
-            if isinstance(node, ast.Assign)
-            and any(
-                isinstance(target, ast.Name) and target.id == "IMPLEMENTED_PAGE_IDS"
-                for target in node.targets
-            )
-        )
-        ids = tuple(item.value for item in value.elts if isinstance(item, ast.Constant))
-        self.assertEqual(
-            ids,
-            (
-                "home",
-                "animals",
-                "animals.lion",
-                "animals.elephant",
-                "animals.octopus",
-                "animals.bee",
-                "animals.penguin",
-                "animals.frog",
-                "space",
-                "space.sun",
-                "space.mercury",
-                "space.venus",
-                "space.earth",
-                "space.moon",
-                "space.mars",
-                "space.jupiter",
-                "space.saturn",
-                "space.uranus",
-                "space.neptune",
-                "earth",
-                "earth.volcano",
-                "body",
-                "body.heart",
-                "machines",
-                "machines.gears",
-                "history",
-                "history.fossils",
-            ),
-        )
+        actual = self._literal_strings(self._assignment(tree, "IMPLEMENTED_PAGE_IDS"))
+        self.assertEqual(actual, IMPLEMENTED_PAGE_IDS)
+        self.assertEqual(len(actual), 35)
+
+    def test_every_implemented_factual_entry_has_research_authority(self) -> None:
+        expected_factual = set(IMPLEMENTED_PAGE_IDS) - SECTION_PAGE_IDS
+        self.assertEqual(set(RESEARCH_FILES), expected_factual)
+        for page_id, path in RESEARCH_FILES.items():
+            with self.subTest(page_id=page_id):
+                text = path.read_text(encoding="utf-8")
+                self.assertIn(f"**Page ID:** `{page_id}`", text)
+                self.assertIn("**Research state:** READY FOR AUTHORING", text)
+                self.assertIn("## Accepted claims", text)
+                self.assertIn("## Scope guardrails", text)
+                self.assertIn("## Interaction → fact mapping", text)
+                self.assertIn("## Approved narration wording", text)
+                self.assertIn("https://", text)
+
+    def test_high_risk_misconception_guardrails_are_preserved(self) -> None:
+        cases = {
+            "animals.bee": "Most wild bees are solitary",
+            "animals.penguin": "Not all ice",
+            "animals.frog": "Not one universal recipe",
+            "space.venus": "Hottest planet",
+            "space.moon": "The Moon really rotates",
+            "earth.rain": "Clouds are not giant bags",
+            "earth.ocean": "one connected global ocean",
+            "earth.tree": "Do not say all tree roots",
+            "body.lungs": "Do not describe lungs as balloons",
+            "body.bones": "Do not teach the adult count of 206 bones",
+            "body.teeth": "Do not imply every child has the same number",
+            "body.senses": "tongue taste-map",
+        }
+        for page_id, marker in cases.items():
+            with self.subTest(page_id=page_id):
+                self.assertIn(marker, RESEARCH_FILES[page_id].read_text(encoding="utf-8"))
 
     def test_locales_have_matching_child_facing_keys(self) -> None:
-        bundles = []
-        for locale in ("it", "en"):
-            bundles.append(
-                json.loads((ACTIVITY / "locales" / f"{locale}.json").read_text(encoding="utf-8"))
-            )
+        bundles = [
+            json.loads((ACTIVITY / "locales" / f"{locale}.json").read_text(encoding="utf-8"))
+            for locale in ("it", "en")
+        ]
         self.assertEqual(set(bundles[0]["strings"]), set(bundles[1]["strings"]))
         self.assertEqual(bundles[0]["audio"], {})
         self.assertEqual(bundles[1]["audio"], {})
 
-    def test_researched_entries_keep_authoring_provenance(self) -> None:
-        cases = {
-            ROOT / "encyclopedia" / "research" / "animals" / "lion.md": (
-                "Smithsonian's National Zoo",
-                "Social pride",
-                "Roar",
-                "Strong front body",
-            ),
-            ROOT / "encyclopedia" / "research" / "animals" / "elephant.md": (
-                "Smithsonian's National Zoo",
-                "Versatile trunk",
-                "Cooling ears",
-                "Social touch",
-            ),
-            ROOT / "encyclopedia" / "research" / "animals" / "octopus.md": (
-                "NOAA Fisheries",
-                "Smithsonian Ocean",
-                "Eight arms, not tentacles",
-                "Three hearts",
-            ),
-            ROOT / "encyclopedia" / "research" / "animals" / "bee.md": (
-                "USDA Forest Service",
-                "Flowers provide food",
-                "Pollen travels",
-                "Most wild bees are solitary",
-            ),
-            ROOT / "encyclopedia" / "research" / "animals" / "penguin.md": (
-                "Australian Antarctic Program",
-                "A bird built for swimming",
-                "Not all ice",
-                "Breeding varies by species",
-            ),
-            ROOT / "encyclopedia" / "research" / "animals" / "frog.md": (
-                "American Museum of Natural History",
-                "A common frog cycle",
-                "Metamorphosis changes the body",
-                "Not one universal recipe",
-            ),
-            ROOT / "encyclopedia" / "research" / "space" / "sun.md": (
-                "NASA Science",
-                "Our star",
-                "Fusion powers it",
-                "Different parts rotate at different speeds",
-            ),
-            ROOT / "encyclopedia" / "research" / "space" / "mercury.md": (
-                "NASA Science",
-                "Closest and smallest",
-                "Fast year",
-                "Polar ice",
-            ),
-            ROOT / "encyclopedia" / "research" / "space" / "venus.md": (
-                "NASA Science",
-                "Hottest planet",
-                "Cloud-covered rocky surface",
-                "Backward, slow rotation",
-            ),
-            ROOT / "encyclopedia" / "research" / "space" / "earth.md": (
-                "NASA Science",
-                "Rotation makes day and night",
-                "A water world",
-                "Tilt makes seasons",
-            ),
-            ROOT / "encyclopedia" / "research" / "space" / "moon.md": (
-                "NASA Science",
-                "Phases are changing views of sunlight",
-                "The Moon really rotates",
-                "Lower gravity",
-            ),
-            ROOT / "encyclopedia" / "research" / "space" / "mars.md": (
-                "NASA Science",
-                "The red planet",
-                "A wetter ancient world",
-                "A gigantic volcano",
-            ),
-            ROOT / "encyclopedia" / "research" / "space" / "jupiter.md": (
-                "NASA Science",
-                "The largest planet",
-                "A very short day",
-                "No Earth-like surface",
-            ),
-            ROOT / "encyclopedia" / "research" / "space" / "saturn.md": (
-                "NASA Science",
-                "sixth planet",
-                "gas giant",
-                "billions of separate",
-            ),
-            ROOT / "encyclopedia" / "research" / "space" / "uranus.md": (
-                "NASA Science",
-                "A planet tipped on its side",
-                "Very long, extreme seasons",
-                "Blue-green color and rings",
-            ),
-            ROOT / "encyclopedia" / "research" / "space" / "neptune.md": (
-                "NASA Science",
-                "The farthest major planet",
-                "A very long year",
-                "strongest planetary winds",
-            ),
-            ROOT / "encyclopedia" / "research" / "earth" / "volcano.md": (
-                "U.S. Geological Survey",
-                "Magma below, lava above",
-                "Gas and pressure matter",
-                "Ash and fragments",
-            ),
-            ROOT / "encyclopedia" / "research" / "body" / "heart.md": (
-                "National Heart, Lung, and Blood Institute",
-                "Four chambers",
-                "Heartbeat and valves",
-                "Faster during exercise",
-            ),
-            ROOT / "encyclopedia" / "research" / "machines" / "gears.md": (
-                "Open University",
-                "Neighbors reverse direction",
-                "Size changes speed",
-                "Rotary motion can become straight motion",
-            ),
-            ROOT / "encyclopedia" / "research" / "history" / "fossils.md": (
-                "National Park Service",
-                "Body and trace fossils differ",
-                "Fossilization is rare",
-                "Fossils tell stories about the past",
-            ),
-        }
-        for path, required in cases.items():
-            with self.subTest(page=path.stem):
-                text = path.read_text(encoding="utf-8")
-                for marker in required:
-                    self.assertIn(marker, text)
-
-    def test_subject_specific_pages_do_not_leak_into_engine_code(self) -> None:
-        source = (ACTIVITY / "enciclopedia_engine.py").read_text(encoding="utf-8")
-        tree = ast.parse(source)
-        identifiers = {node.id.casefold() for node in ast.walk(tree) if isinstance(node, ast.Name)}
-        imported_modules = {
-            node.module.casefold()
-            for node in ast.walk(tree)
-            if isinstance(node, ast.ImportFrom) and node.module
-        }
-        for subject in (
-            "lion",
-            "elephant",
-            "octopus",
-            "bee",
-            "penguin",
-            "frog",
-            "sun",
-            "mercury",
-            "venus",
-            "moon",
-            "mars",
-            "jupiter",
-            "saturn",
-            "uranus",
-            "neptune",
-            "volcano",
-            "heart",
-            "gears",
-            "fossils",
-        ):
-            with self.subTest(subject=subject):
-                self.assertNotIn(subject, identifiers)
-                self.assertFalse(
-                    any(subject in module for module in imported_modules),
-                    f"engine imports subject-specific module containing {subject!r}",
-                )
-
-    def test_space_section_uses_semantic_targets_and_pre_reader_hit_radius(self) -> None:
-        source = (ACTIVITY / "pages" / "space.py").read_text(encoding="utf-8")
-        tree = ast.parse(source)
-        assignments = {
-            target.id: node.value
-            for node in tree.body
-            if isinstance(node, ast.Assign)
-            for target in node.targets
-            if isinstance(target, ast.Name)
-        }
-        target_ids = tuple(
-            item.value for item in assignments["_TARGET_IDS"].elts if isinstance(item, ast.Constant)
-        )
+    def test_space_section_has_no_dead_major_body_destinations(self) -> None:
+        tree = ast.parse((ACTIVITY / "pages" / "space.py").read_text(encoding="utf-8"))
         expected = (
             "sun",
             "mercury",
@@ -269,14 +169,55 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
             "uranus",
             "neptune",
         )
+        target_ids = self._literal_strings(self._assignment(tree, "_TARGET_IDS"))
         self.assertEqual(target_ids, expected)
-        implemented = assignments["IMPLEMENTED_ENTRY_IDS"]
+        implemented = self._assignment(tree, "IMPLEMENTED_ENTRY_IDS")
         self.assertIsInstance(implemented, ast.Dict)
         implemented_ids = tuple(
             key.value for key in implemented.keys if isinstance(key, ast.Constant)
         )
         self.assertEqual(implemented_ids, expected)
-        self.assertGreaterEqual(assignments["_TARGET_HIT_RADIUS"].value, 32)
+        hit_radius = self._assignment(tree, "_TARGET_HIT_RADIUS")
+        self.assertIsInstance(hit_radius, ast.Constant)
+        self.assertGreaterEqual(hit_radius.value, 32)
+
+    def test_earth_and_body_sections_map_every_visible_subject_to_real_page(self) -> None:
+        earth_tree = ast.parse((ACTIVITY / "pages" / "earth.py").read_text(encoding="utf-8"))
+        earth_pages = self._call_second_string_args(self._assignment(earth_tree, "DESTINATIONS"))
+        self.assertEqual(
+            earth_pages,
+            ("earth.rain", "earth.tree", "earth.rainbow", "earth.volcano", "earth.ocean"),
+        )
+
+        body_tree = ast.parse((ACTIVITY / "pages" / "body.py").read_text(encoding="utf-8"))
+        body_pages = self._call_second_string_args(self._assignment(body_tree, "BODY_TARGETS"))
+        self.assertEqual(
+            body_pages,
+            ("body.senses", "body.teeth", "body.lungs", "body.heart", "body.bones"),
+        )
+        self.assertTrue(set(earth_pages + body_pages).issubset(IMPLEMENTED_PAGE_IDS))
+
+    def test_subject_specific_pages_do_not_leak_into_engine_code(self) -> None:
+        source = (ACTIVITY / "enciclopedia_engine.py").read_text(encoding="utf-8")
+        tree = ast.parse(source)
+        identifiers = {node.id.casefold() for node in ast.walk(tree) if isinstance(node, ast.Name)}
+        imported_modules = {
+            node.module.casefold()
+            for node in ast.walk(tree)
+            if isinstance(node, ast.ImportFrom) and node.module
+        }
+        subject_tokens = {
+            page_id.rsplit(".", 1)[-1]
+            for page_id in IMPLEMENTED_PAGE_IDS
+            if page_id not in SECTION_PAGE_IDS
+        }
+        for subject in subject_tokens:
+            with self.subTest(subject=subject):
+                self.assertNotIn(subject, identifiers)
+                self.assertFalse(
+                    any(subject in module for module in imported_modules),
+                    f"engine imports subject-specific module containing {subject!r}",
+                )
 
     def test_repeated_text_rasterization_is_activity_bounded(self) -> None:
         source = (ACTIVITY / "enciclopedia_services.py").read_text(encoding="utf-8")
@@ -294,6 +235,16 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
             if isinstance(target, ast.Name)
         }
         self.assertEqual(assignments["MAX_TEXT_SURFACES"].value, 160)
+
+    def test_page_hot_paths_do_not_decode_or_smoothscale_assets(self) -> None:
+        combined = "\n".join(
+            path.read_text(encoding="utf-8")
+            for path in (ACTIVITY / "pages").glob("*.py")
+        )
+        self.assertNotIn("pygame.image.load(", combined)
+        self.assertNotIn("pygame.transform.smoothscale(", combined)
+        self.assertNotIn("pygame.font.Font(", combined)
+        self.assertNotIn("pygame.font.SysFont(", combined)
 
     def test_no_runtime_tts_or_speech_recognition_backends(self) -> None:
         forbidden = ("speech_recognition", "pyttsx", "gtts", "whisper", "vosk")
