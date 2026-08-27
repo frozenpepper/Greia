@@ -2,19 +2,24 @@
 """Synchronize the encyclopedia's single voice-request ledger from research.
 
 This is an authoring-time tool, never child-runtime code. It reads the approved
-Italian/English narration blocks from ``encyclopedia/research/**`` and writes
-those factual requests into ``VOICE_RECORDING_REQUESTS.md`` while preserving
-recorder-owned status and notes for already-known cue/locale rows.
+Italian/English narration authorities under ``encyclopedia/research/**`` and
+writes factual requests into ``VOICE_RECORDING_REQUESTS.md`` while preserving
+recorder-owned status and notes.
 
-The tool exists to prevent three forms of drift:
+Two research generations intentionally coexist in v0.1:
 
-1. runtime semantic cue IDs diverging from the research authority;
-2. manual copy/paste changing approved narration or output paths;
-3. a later author overwriting the recording agent's status/notes.
+- early pages use the original human-readable ``Child-facing wording contract``;
+- later pages use machine-readable semantic cue headings under
+  ``Approved narration wording``.
 
-It deliberately does not generate speech. Greia narration remains prerecorded
-through the established voice-production workflow on development/parent
-hardware.
+The synchronizer supports both without mass-rewriting historical authorities.
+Legacy-format topics must already exist in the ledger; their queued bilingual
+wording is checked exactly against research before being retained. Canonical
+format topics are generated directly from semantic cue blocks.
+
+The tool deliberately does not generate speech. Greia narration remains
+prerecorded through the established voice-production workflow on
+development/parent hardware.
 """
 
 from __future__ import annotations
@@ -38,12 +43,26 @@ EXPECTED_V01_TOPIC_COUNT = 36
 EXPECTED_V01_RECORDING_ROWS = 378
 
 _PRESENTER_RE = re.compile(r"^\*\*Presenter:\*\*\s+(.+?)\s+\(`([^`]+)`\)\s*$", re.MULTILINE)
-_CUE_RE = re.compile(
+_CANONICAL_CUE_RE = re.compile(
     r"^### `(?P<cue>encyclopedia\.[^`]+)`\s*\n\n"
     r"\*\*it:\*\* (?P<it>.*?)\n\n"
     r"\*\*en:\*\* (?P<en>.*?)(?=\n\n### `|\Z)",
     re.MULTILINE | re.DOTALL,
 )
+_LEGACY_CUE_RE = re.compile(
+    r"^### (?P<label>[^\n]+?) — (?P<speaker>[^\n]+?)\s*\n\n"
+    r"\*\*Italian\*\*\s*\n`(?P<it>[^`]*)`\s*\n\n"
+    r"\*\*English\*\*\s*\n`(?P<en>[^`]*)`",
+    re.MULTILINE,
+)
+_CANONICAL_VOICE_IDS = {
+    "Dani": "greia.dani.system-v1",
+    "Flash": "greia.flash.v1",
+    "Leo": "greia.leo.v1",
+    "Lilli": "greia.lilli.v1",
+    "Momo": "greia.momo.v1",
+    "Tito": "greia.tito.v1",
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -122,22 +141,47 @@ def _validate_topic_inventory() -> None:
         raise ValueError("duplicate batch_id in voice TOPICS")
 
 
-def _parse_topic(spec: TopicSpec) -> list[RequestRow]:
-    path = _research_path(spec.page_id)
-    text = path.read_text(encoding="utf-8")
+def _expected_voice_id(speaker: str) -> str:
+    try:
+        return _CANONICAL_VOICE_IDS[speaker]
+    except KeyError as exc:
+        raise ValueError(f"unknown encyclopedia presenter: {speaker!r}") from exc
+
+
+def _request_from_existing(row: VoiceLedgerRow) -> RequestRow:
+    return RequestRow(
+        cue_id=row.cue_id,
+        kind=row.kind,
+        speaker=row.speaker,
+        voice_id=row.voice_id,
+        locale=row.locale,
+        exact_text=row.exact_text,
+        filename=row.filename,
+        path=row.path,
+    )
+
+
+def _parse_canonical_topic(spec: TopicSpec, text: str) -> list[RequestRow] | None:
+    cue_matches = list(_CANONICAL_CUE_RE.finditer(text))
+    if not cue_matches:
+        return None
+
     presenter_match = _PRESENTER_RE.search(text)
     if presenter_match is None:
-        raise ValueError(f"missing Presenter metadata in {path}")
+        raise ValueError(f"missing Presenter metadata in {_research_path(spec.page_id)}")
     speaker = presenter_match.group(1).strip()
     voice_id = presenter_match.group(2).strip()
+    expected_voice = _expected_voice_id(speaker)
+    if voice_id != expected_voice:
+        raise ValueError(
+            f"presenter voice drift in {_research_path(spec.page_id)}: "
+            f"{voice_id!r} != {expected_voice!r}"
+        )
     kind = "dani_system_speech" if voice_id == "greia.dani.system-v1" else "character_dialogue"
     speaker_slug = speaker.casefold().replace(" ", "-")
     section, topic = spec.page_id.split(".", 1)
 
     rows: list[RequestRow] = []
-    cue_matches = list(_CUE_RE.finditer(text))
-    if not cue_matches:
-        raise ValueError(f"missing Approved narration cue blocks in {path}")
     for cue_match in cue_matches:
         cue_id = cue_match["cue"]
         expected_prefix = f"encyclopedia.{spec.page_id}."
@@ -162,6 +206,90 @@ def _parse_topic(spec: TopicSpec) -> list[RequestRow]:
                 )
             )
     return rows
+
+
+def _parse_legacy_topic(
+    spec: TopicSpec,
+    text: str,
+    existing_rows: dict[tuple[str, str], VoiceLedgerRow],
+) -> list[RequestRow]:
+    """Validate original human-readable wording against already-queued rows.
+
+    Legacy authorities predate semantic cue headings, so cue IDs/filenames are
+    retained from the established queue rather than guessed from prose labels.
+    The research document still owns the wording: both locale strings and the
+    named speaker must match exactly, in established cue order.
+    """
+
+    blocks = list(_LEGACY_CUE_RE.finditer(text))
+    if not blocks:
+        raise ValueError(
+            f"research authority has neither canonical nor legacy narration blocks: "
+            f"{_research_path(spec.page_id)}"
+        )
+
+    prefix = f"encyclopedia.{spec.page_id}."
+    topic_rows = [
+        row for row in existing_rows.values() if row.cue_id.startswith(prefix)
+    ]
+    if not topic_rows:
+        raise ValueError(
+            f"legacy narration for {spec.page_id!r} has no established ledger rows; "
+            "migrate that research authority to canonical semantic cue headings first"
+        )
+
+    cue_ids: list[str] = []
+    seen: set[str] = set()
+    for row in topic_rows:
+        if row.cue_id not in seen:
+            seen.add(row.cue_id)
+            cue_ids.append(row.cue_id)
+    if len(cue_ids) != len(blocks):
+        raise ValueError(
+            f"legacy narration block count drift for {spec.page_id!r}: "
+            f"research={len(blocks)} ledger={len(cue_ids)}"
+        )
+
+    rows: list[RequestRow] = []
+    for cue_id, block in zip(cue_ids, blocks):
+        speaker = block["speaker"].strip()
+        expected_voice = _expected_voice_id(speaker)
+        for locale in ("it", "en"):
+            key = (cue_id, locale)
+            try:
+                existing = existing_rows[key]
+            except KeyError as exc:
+                raise ValueError(f"legacy ledger is missing bilingual row {key!r}") from exc
+            approved_text = block[locale].strip()
+            if existing.exact_text != approved_text:
+                raise ValueError(
+                    f"legacy research/ledger wording drift for {key!r}; "
+                    "do not overwrite recorded wording in place"
+                )
+            if existing.speaker != speaker:
+                raise ValueError(
+                    f"legacy research/ledger speaker drift for {key!r}: "
+                    f"{existing.speaker!r} != {speaker!r}"
+                )
+            if existing.voice_id != expected_voice:
+                raise ValueError(
+                    f"legacy voice-id drift for {key!r}: "
+                    f"{existing.voice_id!r} != {expected_voice!r}"
+                )
+            rows.append(_request_from_existing(existing))
+    return rows
+
+
+def _parse_topic(
+    spec: TopicSpec,
+    existing_rows: dict[tuple[str, str], VoiceLedgerRow],
+) -> list[RequestRow]:
+    path = _research_path(spec.page_id)
+    text = path.read_text(encoding="utf-8")
+    canonical = _parse_canonical_topic(spec, text)
+    if canonical is not None:
+        return canonical
+    return _parse_legacy_topic(spec, text, existing_rows)
 
 
 def _row_markdown(row: RequestRow, existing: VoiceLedgerRow | None) -> str:
@@ -213,7 +341,7 @@ def render_ledger(existing_text: str) -> str:
     generated_rows: list[RequestRow] = []
 
     for ordinal, spec in enumerate(TOPICS, start=4):
-        rows = _parse_topic(spec)
+        rows = _parse_topic(spec, existing_rows)
         generated_rows.extend(rows)
         research_rel = _research_path(spec.page_id).relative_to(ROOT.parent).as_posix()
         parts.extend(
