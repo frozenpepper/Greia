@@ -119,7 +119,10 @@ class MagnetPage(EncyclopediaPage):
         left = pygame.Rect(395, 292, 95, 52)
         right = pygame.Rect(520, 292, 95, 52)
         self._draw_bar_magnet(surface, left, reverse=False)
-        self._draw_bar_magnet(surface, right, reverse=not self._same_poles)
+        # Left magnet faces right with its blue pole. A normal right magnet
+        # therefore presents red (opposite) for attraction; reversing it makes
+        # blue face blue for the same-pole repulsion state.
+        self._draw_bar_magnet(surface, right, reverse=self._same_poles)
 
         if self._same_poles:
             pygame.draw.line(surface, (219, 91, 83), (500, 303), (485, 290), 5)
@@ -153,10 +156,10 @@ class MagnetPage(EncyclopediaPage):
 
     def _draw_material_sample(self, surface: pygame.Surface) -> None:
         samples = (
-            ((118, 120, 125), True),   # iron-like
-            ((184, 190, 197), False),  # aluminum-like
-            ((191, 117, 69), False),   # copper-like
-            ((135, 137, 142), True),   # steel-like
+            ((118, 120, 125), True),
+            ((184, 190, 197), False),
+            ((191, 117, 69), False),
+            ((135, 137, 142), True),
         )
         color, responds = samples[self._material_index]
         x = 690 if not responds else 650 - int((1.0 + math.sin(self._time * 3.0)) * 12)
