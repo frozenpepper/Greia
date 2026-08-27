@@ -347,7 +347,53 @@ encyclopedia/research/animals/bee.md
 
 ---
 
-## 13. Pending future batches
+## 13. Requested batch E4-PENGUIN-01
+
+Research/provenance authority for this batch:
+
+```text
+encyclopedia/research/animals/penguin.md
+```
+
+| STATUS | CUE_ID | KIND | SPEAKER | VOICE_ID | LOCALE | EXACT_TEXT | FINAL_FILENAME | FINAL_PATH | RECORDER_NOTES |
+|---|---|---|---|---|---|---|---|---|---|
+| REQUESTED | `encyclopedia.animals.penguin.intro` | character_dialogue | Tito | `greia.tito.v1` | it | Il pinguino è un uccello che non vola nell'aria: le sue ali sono diventate pinne fortissime per nuotare. Tocca i simboli e tuffiamoci! | `intro-tito.ogg` | `encyclopedia/pages/animals/penguin/assets/audio/it/intro-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.penguin.intro` | character_dialogue | Tito | `greia.tito.v1` | en | A penguin is a bird that does not fly through the air: its wings have become powerful flippers for swimming. Touch the symbols and let's dive in! | `intro-tito.ogg` | `encyclopedia/pages/animals/penguin/assets/audio/en/intro-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.penguin.swim` | character_dialogue | Tito | `greia.tito.v1` | it | Sott'acqua le pinne spingono il pinguino in avanti, mentre piedi e coda aiutano a cambiare direzione. | `swim-tito.ogg` | `encyclopedia/pages/animals/penguin/assets/audio/it/swim-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.penguin.swim` | character_dialogue | Tito | `greia.tito.v1` | en | Underwater, a penguin's flippers push it forward while its feet and tail help it steer. | `swim-tito.ogg` | `encyclopedia/pages/animals/penguin/assets/audio/en/swim-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.penguin.feathers` | character_dialogue | Tito | `greia.tito.v1` | it | Il pinguino ha tante penne corte e sovrapposte che aiutano a tenere fuori l'acqua. Le penne e uno strato di grasso aiutano anche a trattenere il calore. | `feathers-tito.ogg` | `encyclopedia/pages/animals/penguin/assets/audio/it/feathers-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.penguin.feathers` | character_dialogue | Tito | `greia.tito.v1` | en | A penguin has many short overlapping feathers that help keep water out. Feathers and a layer of body fat also help hold in heat. | `feathers-tito.ogg` | `encyclopedia/pages/animals/penguin/assets/audio/en/feathers-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.penguin.world` | character_dialogue | Tito | `greia.tito.v1` | it | Non tutti i pinguini vivono sul ghiaccio! Vivono nell'emisfero sud, ma alcune specie abitano zone temperate o perfino molto calde. | `world-tito.ogg` | `encyclopedia/pages/animals/penguin/assets/audio/it/world-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.penguin.world` | character_dialogue | Tito | `greia.tito.v1` | en | Not every penguin lives on ice! Penguins live in the Southern Hemisphere, but some species live in temperate or even very warm places. | `world-tito.ogg` | `encyclopedia/pages/animals/penguin/assets/audio/en/world-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.penguin.breeding` | character_dialogue | Tito | `greia.tito.v1` | it | Molte specie si riuniscono in colonie per riprodursi, ma non fanno tutte lo stesso nido. I pinguini imperatore e reale tengono perfino l'uovo sopra i piedi. | `breeding-tito.ogg` | `encyclopedia/pages/animals/penguin/assets/audio/it/breeding-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.penguin.breeding` | character_dialogue | Tito | `greia.tito.v1` | en | Many penguin species gather in colonies to breed, but they do not all make the same kind of nest. Emperor and king penguins even keep the egg on top of their feet. | `breeding-tito.ogg` | `encyclopedia/pages/animals/penguin/assets/audio/en/breeding-tito.ogg` | |
+
+---
+
+## 14. Requested batch E4-FROG-01
+
+Research/provenance authority for this batch:
+
+```text
+encyclopedia/research/animals/frog.md
+```
+
+| STATUS | CUE_ID | KIND | SPEAKER | VOICE_ID | LOCALE | EXACT_TEXT | FINAL_FILENAME | FINAL_PATH | RECORDER_NOTES |
+|---|---|---|---|---|---|---|---|---|---|
+| REQUESTED | `encyclopedia.animals.frog.intro` | character_dialogue | Tito | `greia.tito.v1` | it | Le rane sono anfibi e durante la crescita possono cambiare tantissimo. Segui una trasformazione molto comune: dall'uovo al girino, poi alla piccola rana! | `intro-tito.ogg` | `encyclopedia/pages/animals/frog/assets/audio/it/intro-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.frog.intro` | character_dialogue | Tito | `greia.tito.v1` | en | Frogs are amphibians and can change enormously as they grow. Follow one very common transformation: from egg to tadpole and then to a little frog! | `intro-tito.ogg` | `encyclopedia/pages/animals/frog/assets/audio/en/intro-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.frog.cycle` | character_dialogue | Tito | `greia.tito.v1` | it | In un ciclo molto comune, dall'uovo nasce un girino che vive nell'acqua. Crescendo diventa una ranocchietta e poi una rana adulta. | `cycle-tito.ogg` | `encyclopedia/pages/animals/frog/assets/audio/it/cycle-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.frog.cycle` | character_dialogue | Tito | `greia.tito.v1` | en | In one very common life cycle, an egg hatches into a tadpole that lives in water. As it grows, it becomes a froglet and then an adult frog. | `cycle-tito.ogg` | `encyclopedia/pages/animals/frog/assets/audio/en/cycle-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.frog.metamorphosis` | character_dialogue | Tito | `greia.tito.v1` | it | Questa grande trasformazione si chiama metamorfosi. Nel ciclo classico il girino sviluppa le zampe e i polmoni, mentre la coda diventa sempre più piccola. | `metamorphosis-tito.ogg` | `encyclopedia/pages/animals/frog/assets/audio/it/metamorphosis-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.frog.metamorphosis` | character_dialogue | Tito | `greia.tito.v1` | en | This big transformation is called metamorphosis. In the classic cycle, the tadpole grows legs and lungs while its tail becomes smaller and smaller. | `metamorphosis-tito.ogg` | `encyclopedia/pages/animals/frog/assets/audio/en/metamorphosis-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.frog.skin` | character_dialogue | Tito | `greia.tito.v1` | it | La pelle delle rane è umida e permeabile e partecipa anche alla respirazione. Per questo l'acqua e l'umidità sono molto importanti per molti anfibi. | `skin-tito.ogg` | `encyclopedia/pages/animals/frog/assets/audio/it/skin-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.frog.skin` | character_dialogue | Tito | `greia.tito.v1` | en | Frog skin is moist and permeable and also helps with breathing. That is why water and moisture are very important for many amphibians. | `skin-tito.ogg` | `encyclopedia/pages/animals/frog/assets/audio/en/skin-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.frog.variety` | character_dialogue | Tito | `greia.tito.v1` | it | Attenzione: non tutte le rane crescono nello stesso modo! Molte usano acqua e girini, ma altre depongono le uova in nidi umidi molto diversi. | `variety-tito.ogg` | `encyclopedia/pages/animals/frog/assets/audio/it/variety-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.frog.variety` | character_dialogue | Tito | `greia.tito.v1` | en | But not every frog grows in exactly the same way! Many use water and tadpoles, while others lay eggs in very different moist nurseries. | `variety-tito.ogg` | `encyclopedia/pages/animals/frog/assets/audio/en/variety-tito.ogg` | |
+
+---
+
+## 15. Pending future batches
 
 Do **not** record these yet.
 
