@@ -51,6 +51,9 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
                 "animals.penguin",
                 "animals.frog",
                 "space",
+                "space.sun",
+                "space.mercury",
+                "space.venus",
                 "space.saturn",
                 "earth",
                 "earth.volcano",
@@ -115,6 +118,24 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
                 "Metamorphosis changes the body",
                 "Not one universal recipe",
             ),
+            ROOT / "encyclopedia" / "research" / "space" / "sun.md": (
+                "NASA Science",
+                "Our star",
+                "Fusion powers it",
+                "Different parts rotate at different speeds",
+            ),
+            ROOT / "encyclopedia" / "research" / "space" / "mercury.md": (
+                "NASA Science",
+                "Closest and smallest",
+                "Fast year",
+                "Polar ice",
+            ),
+            ROOT / "encyclopedia" / "research" / "space" / "venus.md": (
+                "NASA Science",
+                "Hottest planet",
+                "Cloud-covered rocky surface",
+                "Backward, slow rotation",
+            ),
             ROOT / "encyclopedia" / "research" / "space" / "saturn.md": (
                 "NASA Science",
                 "sixth planet",
@@ -172,6 +193,9 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
             "bee",
             "penguin",
             "frog",
+            "sun",
+            "mercury",
+            "venus",
             "saturn",
             "volcano",
             "heart",
@@ -184,6 +208,30 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
                     any(subject in module for module in imported_modules),
                     f"engine imports subject-specific module containing {subject!r}",
                 )
+
+    def test_repeated_text_rasterization_is_activity_bounded(self) -> None:
+        source = (ACTIVITY / "enciclopedia_services.py").read_text(encoding="utf-8")
+        tree = ast.parse(source)
+        classes = {
+            node.name: node
+            for node in tree.body
+            if isinstance(node, ast.ClassDef)
+        }
+        cached = classes["CachedEncyclopediaTypography"]
+        self.assertTrue(
+            any(
+                isinstance(base, ast.Name) and base.id == "GreiaTypography"
+                for base in cached.bases
+            )
+        )
+        assignments = {
+            target.id: node.value
+            for node in cached.body
+            if isinstance(node, ast.Assign)
+            for target in node.targets
+            if isinstance(target, ast.Name)
+        }
+        self.assertEqual(assignments["MAX_TEXT_SURFACES"].value, 160)
 
     def test_no_runtime_tts_or_speech_recognition_backends(self) -> None:
         forbidden = ("speech_recognition", "pyttsx", "gtts", "whisper", "vosk")
