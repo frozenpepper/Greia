@@ -18,8 +18,10 @@ if __package__:
     from .pages.lion import LionPage
     from .pages.machines import MachinesPage
     from .pages.mercury import MercuryPage
+    from .pages.moon import MoonPage
     from .pages.octopus import OctopusPage
     from .pages.penguin import PenguinPage
+    from .pages.planet_earth import EarthPlanetPage
     from .pages.saturn import SaturnPage
     from .pages.space import SpacePage
     from .pages.sun import SunPage
@@ -41,8 +43,10 @@ else:
     from pages.lion import LionPage
     from pages.machines import MachinesPage
     from pages.mercury import MercuryPage
+    from pages.moon import MoonPage
     from pages.octopus import OctopusPage
     from pages.penguin import PenguinPage
+    from pages.planet_earth import EarthPlanetPage
     from pages.saturn import SaturnPage
     from pages.space import SpacePage
     from pages.sun import SunPage
@@ -62,6 +66,8 @@ IMPLEMENTED_PAGE_IDS = (
     "space.sun",
     "space.mercury",
     "space.venus",
+    "space.earth",
+    "space.moon",
     "space.saturn",
     "earth",
     "earth.volcano",
@@ -89,6 +95,8 @@ def build_page_registry() -> PageRegistry:
         SunPage,
         MercuryPage,
         VenusPage,
+        EarthPlanetPage,
+        MoonPage,
         SaturnPage,
         EarthPage,
         VolcanoPage,
