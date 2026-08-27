@@ -139,6 +139,7 @@ class FirstPartyActivityReadinessTests(unittest.TestCase):
                 "clinica_cuccioli",
                 "costruiamo_ponti",
                 "cucciolo_mio",
+                "enciclopedia_greia",
                 "festa_delle_rime",
                 "foresta_parole",
                 "labirinto_magico",
