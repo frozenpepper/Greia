@@ -136,6 +136,28 @@ class VoiceRequestTests(unittest.TestCase):
         request = VoiceRequest("leo", SpeechKind.CHARACTER_DIALOGUE, "it", "Guarda qui!")
         self.assertTrue(asr_eligible(request))
 
+    def test_shared_two_word_utterance_is_asr_eligible_but_tiny_reaction_is_not(self):
+        self.assertTrue(
+            asr_eligible(
+                VoiceRequest(
+                    "leo",
+                    SpeechKind.SHARED_CHARACTER_UTTERANCE,
+                    "it",
+                    "Ottimo lavoro!",
+                )
+            )
+        )
+        self.assertFalse(
+            asr_eligible(
+                VoiceRequest(
+                    "leo",
+                    SpeechKind.SHARED_CHARACTER_UTTERANCE,
+                    "it",
+                    "Evviva!",
+                )
+            )
+        )
+
     def test_pedagogical_macos_hints_do_not_change_request_text(self):
         request = VoiceRequest("pedagogical", SpeechKind.PEDAGOGICAL_SPEECH, "it", "Trova TO")
         self.assertEqual(request.text, "Trova TO")
@@ -183,6 +205,58 @@ class VoiceEngineTests(unittest.TestCase):
             self.assertEqual(receipt["attempts"], 2)
             self.assertEqual(receipt["voice_id"], "greia.leo.v1")
 
+    def test_shared_character_library_production_routes_through_engine(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            provider = FakeProvider(SpeechKind.SHARED_CHARACTER_UTTERANCE)
+            engine = VoiceEngine(
+                root,
+                make_registry(root),
+                [provider],
+                verifier=SequenceVerifier([VerificationDisposition.PASS]),
+                audio_pipeline=FakeAudioPipeline(),
+                generation_lock=NullLock(),
+            )
+            result = engine.generate(
+                VoiceRequest(
+                    "leo",
+                    SpeechKind.SHARED_CHARACTER_UTTERANCE,
+                    "it",
+                    "Ottimo lavoro!",
+                    cue_id="shared.praise.general.01",
+                    output=root / "shared.wav",
+                )
+            )
+            self.assertEqual(result.disposition, GenerationDisposition.REVIEW_REQUIRED)
+            receipt = json.loads(result.receipt_path.read_text(encoding="utf-8"))
+            self.assertEqual(receipt["voice_id"], "greia.leo.v1")
+            self.assertEqual(receipt["request"]["kind"], "shared_character_utterance")
+
+    def test_shared_dani_library_production_keeps_dani_system_profile(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            provider = FakeProvider(SpeechKind.SHARED_CHARACTER_UTTERANCE)
+            engine = VoiceEngine(
+                root,
+                make_registry(root),
+                [provider],
+                verifier=SequenceVerifier([VerificationDisposition.NOT_APPLICABLE]),
+                audio_pipeline=FakeAudioPipeline(),
+                generation_lock=NullLock(),
+            )
+            result = engine.generate(
+                VoiceRequest(
+                    "dani",
+                    SpeechKind.SHARED_CHARACTER_UTTERANCE,
+                    "it",
+                    "Ottimo lavoro!",
+                    output=root / "dani-shared.wav",
+                )
+            )
+            self.assertEqual(result.disposition, GenerationDisposition.REVIEW_REQUIRED)
+            receipt = json.loads(result.receipt_path.read_text(encoding="utf-8"))
+            self.assertEqual(receipt["voice_id"], "greia.dani.system-v1")
+
     def test_asr_warning_never_becomes_acceptance(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -197,7 +271,13 @@ class VoiceEngineTests(unittest.TestCase):
                 generation_lock=NullLock(),
             )
             result = engine.generate(
-                VoiceRequest("leo", SpeechKind.CHARACTER_DIALOGUE, "it", "Guarda qui!", output=root / "x.wav")
+                VoiceRequest(
+                    "leo",
+                    SpeechKind.CHARACTER_DIALOGUE,
+                    "it",
+                    "Guarda qui!",
+                    output=root / "x.wav",
+                )
             )
             self.assertEqual(result.disposition, GenerationDisposition.REVIEW_REQUIRED_ASR_WARNING)
             self.assertEqual(provider.calls, 2)
