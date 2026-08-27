@@ -462,7 +462,53 @@ encyclopedia/research/space/venus.md
 
 ---
 
-## 18. Pending future batches
+## 18. Requested batch E5-EARTH-01
+
+Research/provenance authority for this batch:
+
+```text
+encyclopedia/research/space/earth.md
+```
+
+| STATUS | CUE_ID | KIND | SPEAKER | VOICE_ID | LOCALE | EXACT_TEXT | FINAL_FILENAME | FINAL_PATH | RECORDER_NOTES |
+|---|---|---|---|---|---|---|---|---|---|
+| REQUESTED | `encyclopedia.space.earth.intro` | character_dialogue | Leo | `greia.leo.v1` | it | Questa è casa nostra vista dallo spazio: la Terra, il terzo pianeta dal Sole. È un mondo roccioso con oceani, aria e vita. | `intro-leo.ogg` | `encyclopedia/pages/space/earth/assets/audio/it/intro-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.earth.intro` | character_dialogue | Leo | `greia.leo.v1` | en | This is our home seen from space: Earth, the third planet from the Sun. It is a rocky world with oceans, air, and life. | `intro-leo.ogg` | `encyclopedia/pages/space/earth/assets/audio/en/intro-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.earth.rotation` | character_dialogue | Leo | `greia.leo.v1` | it | La Terra gira continuamente. La parte rivolta verso il Sole è illuminata e vive il giorno; quella girata dall'altra parte vive la notte. | `rotation-leo.ogg` | `encyclopedia/pages/space/earth/assets/audio/it/rotation-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.earth.rotation` | character_dialogue | Leo | `greia.leo.v1` | en | Earth is always turning. The side facing the Sun is lit and has daytime; the side turned away has nighttime. | `rotation-leo.ogg` | `encyclopedia/pages/space/earth/assets/audio/en/rotation-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.earth.water` | character_dialogue | Leo | `greia.leo.v1` | it | La maggior parte della superficie terrestre è coperta d'acqua. Quasi tutta l'acqua del pianeta si trova negli oceani. | `water-leo.ogg` | `encyclopedia/pages/space/earth/assets/audio/it/water-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.earth.water` | character_dialogue | Leo | `greia.leo.v1` | en | Most of Earth's surface is covered by water. Almost all of the planet's water is held in the oceans. | `water-leo.ogg` | `encyclopedia/pages/space/earth/assets/audio/en/water-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.earth.seasons` | character_dialogue | Leo | `greia.leo.v1` | it | L'asse della Terra è inclinato. Mentre la Terra gira intorno al Sole, questa inclinazione cambia quanta luce ricevono i due emisferi e crea le stagioni. | `seasons-leo.ogg` | `encyclopedia/pages/space/earth/assets/audio/it/seasons-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.earth.seasons` | character_dialogue | Leo | `greia.leo.v1` | en | Earth's axis is tilted. As Earth travels around the Sun, that tilt changes how much sunlight each hemisphere receives and creates the seasons. | `seasons-leo.ogg` | `encyclopedia/pages/space/earth/assets/audio/en/seasons-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.earth.life` | character_dialogue | Leo | `greia.leo.v1` | it | La Terra è avvolta da un'atmosfera di gas. È anche l'unico mondo che conosciamo finora dove esiste la vita. | `life-leo.ogg` | `encyclopedia/pages/space/earth/assets/audio/it/life-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.earth.life` | character_dialogue | Leo | `greia.leo.v1` | en | Earth is wrapped in an atmosphere of gases. It is also the only world we currently know that has life. | `life-leo.ogg` | `encyclopedia/pages/space/earth/assets/audio/en/life-leo.ogg` | |
+
+---
+
+## 19. Requested batch E5-MOON-01
+
+Research/provenance authority for this batch:
+
+```text
+encyclopedia/research/space/moon.md
+```
+
+| STATUS | CUE_ID | KIND | SPEAKER | VOICE_ID | LOCALE | EXACT_TEXT | FINAL_FILENAME | FINAL_PATH | RECORDER_NOTES |
+|---|---|---|---|---|---|---|---|---|---|
+| REQUESTED | `encyclopedia.space.moon.intro` | character_dialogue | Leo | `greia.leo.v1` | it | Ecco la Luna, il satellite naturale della Terra. Le gira intorno e ci mostra quasi sempre la stessa faccia, ma la Luna gira davvero anche su se stessa. | `intro-leo.ogg` | `encyclopedia/pages/space/moon/assets/audio/it/intro-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.moon.intro` | character_dialogue | Leo | `greia.leo.v1` | en | Here is the Moon, Earth's natural satellite. It travels around Earth and shows us almost the same face, but the Moon really does spin on its axis too. | `intro-leo.ogg` | `encyclopedia/pages/space/moon/assets/audio/en/intro-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.moon.phases` | character_dialogue | Leo | `greia.leo.v1` | it | La Luna non cambia forma. Il Sole ne illumina sempre metà e, mentre la Luna gira intorno alla Terra, noi vediamo porzioni diverse della metà illuminata: sono le fasi lunari. | `phases-leo.ogg` | `encyclopedia/pages/space/moon/assets/audio/it/phases-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.moon.phases` | character_dialogue | Leo | `greia.leo.v1` | en | The Moon does not change shape. The Sun always lights half of it, and as the Moon travels around Earth we see different portions of that lit half. Those are the Moon's phases. | `phases-leo.ogg` | `encyclopedia/pages/space/moon/assets/audio/en/phases-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.moon.rotation` | character_dialogue | Leo | `greia.leo.v1` | it | La Luna ruota una volta mentre completa un giro intorno alla Terra. Per questo ci mostra quasi sempre lo stesso lato. Il lato lontano non è sempre buio: riceve anche lui la luce del Sole. | `rotation-leo.ogg` | `encyclopedia/pages/space/moon/assets/audio/it/rotation-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.moon.rotation` | character_dialogue | Leo | `greia.leo.v1` | en | The Moon rotates once while it completes one orbit around Earth. That is why it shows us almost the same side. The far side is not always dark; it receives sunlight too. | `rotation-leo.ogg` | `encyclopedia/pages/space/moon/assets/audio/en/rotation-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.moon.surface` | character_dialogue | Leo | `greia.leo.v1` | it | La Luna è un mondo roccioso coperto di polvere e crateri da impatto. Le grandi zone scure sono antiche pianure riempite molto tempo fa da lava. | `surface-leo.ogg` | `encyclopedia/pages/space/moon/assets/audio/it/surface-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.moon.surface` | character_dialogue | Leo | `greia.leo.v1` | en | The Moon is a rocky world covered with dust and impact craters. Its large dark areas are ancient plains that were filled by lava long ago. | `surface-leo.ogg` | `encyclopedia/pages/space/moon/assets/audio/en/surface-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.moon.gravity` | character_dialogue | Leo | `greia.leo.v1` | it | Sulla Luna la gravità in superficie è circa un sesto di quella terrestre. Per questo gli astronauti possono sembrare molto più leggeri quando si muovono. | `gravity-leo.ogg` | `encyclopedia/pages/space/moon/assets/audio/it/gravity-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.moon.gravity` | character_dialogue | Leo | `greia.leo.v1` | en | Surface gravity on the Moon is about one-sixth as strong as Earth's. That is why astronauts can look much lighter as they move around. | `gravity-leo.ogg` | `encyclopedia/pages/space/moon/assets/audio/en/gravity-leo.ogg` | |
+
+---
+
+## 20. Pending future batches
 
 Do **not** record these yet.
 
