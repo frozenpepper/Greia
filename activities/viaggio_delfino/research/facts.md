@@ -84,12 +84,14 @@ development material only and is not packaged as runtime content.
 
 ## Voice production
 
-Welcome + six facts were generated for `it` and `en` with the canonical
-`greia.tito.v1` reference via Chatterbox Multilingual V3 following the
-mandatory batch-safety rules (VOICE_GENERATION.md §12.2): model loaded once,
-`mx.clear_cache()` + `gc.collect()` after each clip, idempotent skip of
-existing outputs, single worker, loud failures. Masters kept outside the
-checkout; packaged artifacts are mono OGG under `assets/audio/<locale>/`.
+Tito is the semantic speaker for the welcome and six facts in both shipped
+locales. Current production is submitted only through the canonical Greia Voice
+Production Engine via `tools/generate_viaggio_delfino_audio.py`, which is a thin
+batch producer for `tools/greia_voice.py`. The Activity does not select or load a
+TTS model, inspect canonical reference files, set token budgets, trim audio, run
+Whisper, convert containers, or manage accelerator memory.
 
-Owner listening review of all 14 clips is the outstanding final
-audio-acceptance gate (VOICE_GENERATION §13).
+Existing packaged OGG files remain historical reviewed runtime assets and are not
+regenerated merely because the authoring path changed. Any future generated take
+lands in a review workspace with `human_review = PENDING`; owner listening review
+is required before it may replace packaged Activity audio.
