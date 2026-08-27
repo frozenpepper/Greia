@@ -136,8 +136,6 @@ class SensesPage(EncyclopediaPage):
         pygame.draw.arc(surface, (139, 94, 86), (578, 286, 30, 66), -math.pi / 2, math.pi / 2, 5)
         pygame.draw.circle(surface, (209, 126, 124), (505, 332), 7)
 
-        # Calm central brain symbol reinforces that sense organs send signals
-        # rather than independently "understanding" what they detect.
         brain_center = (505, 245)
         for dx, dy in ((-16, 0), (0, -9), (16, 0), (-7, 13), (10, 14)):
             pygame.draw.circle(surface, (202, 141, 178), (brain_center[0] + dx, brain_center[1] + dy), 17)
@@ -153,7 +151,14 @@ class SensesPage(EncyclopediaPage):
             source = (650, 360)
             pygame.draw.circle(surface, (94, 148, 197), source, 8)
             for radius in (18, 33, 48):
-                pygame.draw.arc(surface, (94, 148, 197), (source[0] - radius, source[1] - radius, radius * 2, radius * 2), math.pi * 0.72, math.pi * 1.28, 3)
+                pygame.draw.arc(
+                    surface,
+                    (94, 148, 197),
+                    (source[0] - radius, source[1] - radius, radius * 2, radius * 2),
+                    math.pi * 0.72,
+                    math.pi * 1.28,
+                    3,
+                )
             pygame.draw.line(surface, (116, 104, 160), (594, 320), brain_center, 3)
 
         self._draw_flavor_demo(surface)
@@ -168,8 +173,6 @@ class SensesPage(EncyclopediaPage):
         pygame.draw.circle(surface, (216, 91, 86), (655, 435), 20)
         pygame.draw.line(surface, (90, 150, 88), (655, 414), (663, 401), 4)
         if self._flavor_step == 1:
-            # Taste-only view: several taste cells spread across the tongue,
-            # deliberately not grouped into a false taste-map diagram.
             pygame.draw.ellipse(surface, (216, 126, 137), (684, 421, 55, 30))
             for x, y in ((696, 431), (710, 438), (724, 429), (731, 440)):
                 pygame.draw.circle(surface, (147, 79, 98), (x, y), 3)
@@ -187,7 +190,21 @@ class SensesPage(EncyclopediaPage):
         panel = pygame.Rect(240, 394, 150, 82)
         pygame.draw.rect(surface, (252, 248, 237), panel, border_radius=18)
         pygame.draw.rect(surface, (101, 85, 100), panel, 2, border_radius=18)
-        hand = [(275, 453), (267, 426), (275, 415), (283, 428), (288, 405), (297, 405), (300, 429), (308, 409), (317, 412), (316, 438), (330, 427), (338, 434), (324, 461)]
+        hand = [
+            (275, 453),
+            (267, 426),
+            (275, 415),
+            (283, 428),
+            (288, 405),
+            (297, 405),
+            (300, 429),
+            (308, 409),
+            (317, 412),
+            (316, 438),
+            (330, 427),
+            (338, 434),
+            (324, 461),
+        ]
         pygame.draw.polygon(surface, (234, 190, 162), hand)
         if self._touch_step == 1:
             for index in range(6):
@@ -207,7 +224,14 @@ class SensesPage(EncyclopediaPage):
         elif item.discovery_id == "hearing":
             pygame.draw.arc(surface, (183, 129, 119), (cx - 16, cy - 27, 32, 54), -math.pi / 2, math.pi / 2, 6)
             for radius in (20, 29):
-                pygame.draw.arc(surface, (86, 145, 195), (cx - radius, cy - radius, radius * 2, radius * 2), math.pi * 1.65, math.pi * 0.35, 3)
+                pygame.draw.arc(
+                    surface,
+                    (86, 145, 195),
+                    (cx - radius, cy - radius, radius * 2, radius * 2),
+                    math.pi * 0.65,
+                    math.pi * 1.35,
+                    3,
+                )
         elif item.discovery_id == "flavor":
             pygame.draw.circle(surface, (215, 90, 85), (cx - 14, cy - 5), 14)
             pygame.draw.ellipse(surface, (216, 126, 137), (cx + 1, cy - 3, 31, 20))
