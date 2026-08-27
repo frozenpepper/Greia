@@ -14,7 +14,7 @@ tools/greia_voice.py
 
 Activity code and Activity-specific authoring scripts must **not** invoke Chatterbox, MLX, Whisper, macOS `say`, `afconvert`, FFmpeg trimming or canonical reference recordings directly. Those mechanics belong behind `VoiceEngine`.
 
-Historical `generate_*_audio.py` scripts may remain as evidence/compatibility code. Do not copy them for new work. If one must be extended, turn it into a thin semantic request/batch producer for the canonical engine.
+Tracked `tools/generate_*_audio.py` Activity scripts are thin semantic request/batch producers only. Do not copy backend mechanics into them and do not create a new Activity-local TTS implementation.
 
 For presenter/fact design read first:
 
@@ -112,6 +112,8 @@ The Activity owns the semantic educational target (`"to"`, `"ma"`, etc.). Provid
 
 A fluent speaker/educator must review pronunciation-critical output.
 
+Ordinary instructions are not `pedagogical_speech` merely because the Activity is educational. Give them a real semantic speaker (canonical presenter, a shared utterance family, or Dani where the Activity deliberately uses Dani).
+
 ## 5. Multilingual-ready from the beginning
 
 Use stable semantic cue IDs independent of language:
@@ -142,7 +144,7 @@ First probe the current workstation:
 python3 tools/greia_voice.py doctor
 ```
 
-Generate one line:
+Generate one line into a **review workspace**, not directly into the Activity package:
 
 ```bash
 python3 tools/greia_voice.py generate \
@@ -151,7 +153,7 @@ python3 tools/greia_voice.py generate \
   --locale it \
   --text "Guardiamo con calma." \
   --cue-id presenter.hint \
-  --output activities/<activity>/assets/audio/it/presenter-hint.ogg
+  --output ./tmp/voice-review/my_activity/it/presenter-hint.ogg
 ```
 
 Pedagogical example:
@@ -164,10 +166,12 @@ python3 tools/greia_voice.py generate \
   --text "ma" \
   --cue-id phonics.ma \
   --verification off \
-  --output activities/<activity>/assets/audio/it/phonics-ma.wav
+  --output ./tmp/voice-review/my_activity/it/phonics-ma.wav
 ```
 
 For several lines use `batch`, or start the warm localhost service with `serve` and submit requests with `request`.
+
+Only after human listening acceptance may the owning Activity workflow copy/integrate the accepted static audio into `activities/<activity>/assets/audio/...` and update its locale/audio mapping or manifest as needed.
 
 Installation/setup instructions are in:
 
@@ -253,9 +257,10 @@ correct speech kind selected
 supported locales covered
 canonical speaker correct
 production performed through tools/greia_voice.py / VoiceEngine
+review candidates generated outside the runtime package
 receipts retained where appropriate
 human listening completed
-runtime package contains only accepted audio
+only accepted audio integrated into runtime package
 Activity still works if optional character audio is unavailable where product policy permits degradation
 ```
 
