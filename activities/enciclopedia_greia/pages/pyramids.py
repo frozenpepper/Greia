@@ -33,9 +33,10 @@ DISCOVERIES = (
 
 
 class PyramidBuildModel:
-    """Own the finite schematic course-building state and timed evidence reveals."""
+    """Own finite construction state and all timed evidence-reveal transitions."""
 
     MAX_COURSES = 6
+    REVEAL_SECONDS = 5.0
 
     def __init__(self) -> None:
         self.courses = 1
@@ -50,6 +51,15 @@ class PyramidBuildModel:
 
     def add_course(self) -> None:
         self.courses = 1 if self.courses >= self.MAX_COURSES else self.courses + 1
+
+    def reveal_workers(self) -> None:
+        self.workers_age = self.REVEAL_SECONDS
+
+    def reveal_inside(self) -> None:
+        self.inside_age = self.REVEAL_SECONDS
+
+    def reveal_engineering(self) -> None:
+        self.engineering_age = self.REVEAL_SECONDS
 
 
 class PyramidsPage(EncyclopediaPage):
@@ -94,11 +104,11 @@ class PyramidsPage(EncyclopediaPage):
         if item.discovery_id == "blocks":
             self._model.add_course()
         elif item.discovery_id == "workers":
-            self._model.workers_age = 5.0
+            self._model.reveal_workers()
         elif item.discovery_id == "inside":
-            self._model.inside_age = 5.0
+            self._model.reveal_inside()
         else:
-            self._model.engineering_age = 5.0
+            self._model.reveal_engineering()
         self.context.audio.play(item.cue_id)
 
     def draw(self, surface: pygame.Surface) -> None:
@@ -112,7 +122,7 @@ class PyramidsPage(EncyclopediaPage):
     def _draw_scene(self, surface: pygame.Surface) -> None:
         pygame.draw.circle(surface, (250, 202, 75), (810, 155), 36)
         pygame.draw.rect(surface, (221, 181, 104), (310, 392, 395, 75), border_radius=25)
-        # Schematic courses: deliberately diagrammatic, not a literal construction sequence.
+        # Schematic courses are deliberately diagrammatic, not a literal build sequence.
         base_y = 405
         for course in range(self._model.courses):
             width = 260 - course * 34
