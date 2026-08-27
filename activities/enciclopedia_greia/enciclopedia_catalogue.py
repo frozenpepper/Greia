@@ -10,6 +10,7 @@ if __package__:
     from .pages.earth import EarthPage
     from .pages.elephant import ElephantPage
     from .pages.fossils import FossilsPage
+    from .pages.frog import FrogPage
     from .pages.gears import GearsPage
     from .pages.heart import HeartPage
     from .pages.history import HistoryPage
@@ -17,6 +18,7 @@ if __package__:
     from .pages.lion import LionPage
     from .pages.machines import MachinesPage
     from .pages.octopus import OctopusPage
+    from .pages.penguin import PenguinPage
     from .pages.saturn import SaturnPage
     from .pages.space import SpacePage
     from .pages.volcano import VolcanoPage
@@ -28,6 +30,7 @@ else:
     from pages.earth import EarthPage
     from pages.elephant import ElephantPage
     from pages.fossils import FossilsPage
+    from pages.frog import FrogPage
     from pages.gears import GearsPage
     from pages.heart import HeartPage
     from pages.history import HistoryPage
@@ -35,6 +38,7 @@ else:
     from pages.lion import LionPage
     from pages.machines import MachinesPage
     from pages.octopus import OctopusPage
+    from pages.penguin import PenguinPage
     from pages.saturn import SaturnPage
     from pages.space import SpacePage
     from pages.volcano import VolcanoPage
@@ -46,6 +50,8 @@ IMPLEMENTED_PAGE_IDS = (
     "animals.elephant",
     "animals.octopus",
     "animals.bee",
+    "animals.penguin",
+    "animals.frog",
     "space",
     "space.saturn",
     "earth",
@@ -68,6 +74,8 @@ def build_page_registry() -> PageRegistry:
         ElephantPage,
         OctopusPage,
         BeePage,
+        PenguinPage,
+        FrogPage,
         SpacePage,
         SaturnPage,
         EarthPage,
