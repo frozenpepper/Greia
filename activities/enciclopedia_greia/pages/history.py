@@ -20,6 +20,7 @@ MOMENTS = (
     ("history.cave_paintings", (191, 114, 76)),
     ("history.pyramids", (219, 181, 94)),
 )
+_FOSSILS_INDEX = 1
 
 
 class HistoryPage(EncyclopediaPage):
@@ -29,7 +30,11 @@ class HistoryPage(EncyclopediaPage):
         super().__init__(context)
         self._time = 0.0
         self._selected = 0
-        self._rects = tuple(pygame.Rect(75 + i * 170, 260, 140, 170) for i in range(5))
+        self._hovered: int | None = None
+        self._rects = tuple(
+            pygame.Rect(75 + i * 170, 260, 140, 170)
+            for i in range(len(MOMENTS))
+        )
 
     def on_enter(self) -> None:
         self.context.audio.play("encyclopedia.history.intro")
@@ -43,17 +48,38 @@ class HistoryPage(EncyclopediaPage):
                 self._selected = max(0, self._selected - 1)
             elif event.command is PageCommand.RIGHT:
                 self._selected = min(len(MOMENTS) - 1, self._selected + 1)
+            elif event.command is PageCommand.ACTIVATE and self._selected == _FOSSILS_INDEX:
+                self.context.host.open_page("history.fossils")
+            return
+        if event.kind is PageInputKind.POINTER_MOVE and event.position:
+            point = (int(event.position[0]), int(event.position[1]))
+            self._hovered = next(
+                (index for index, rect in enumerate(self._rects) if rect.collidepoint(point)),
+                None,
+            )
             return
         if event.kind is PageInputKind.POINTER_PRESS and event.position:
             point = (int(event.position[0]), int(event.position[1]))
-            for i, rect in enumerate(self._rects):
-                if rect.collidepoint(point):
-                    self._selected = i
-                    break
+            hit = next(
+                (index for index, rect in enumerate(self._rects) if rect.collidepoint(point)),
+                None,
+            )
+            if hit is None:
+                return
+            self._selected = hit
+            if hit == _FOSSILS_INDEX:
+                self.context.host.open_page("history.fossils")
 
     def draw(self, surface: pygame.Surface) -> None:
         surface.fill((244, 229, 194))
-        draw_centered_text(surface, self.context.typography, self.context.resources.text("section.history"), center=(500, 95), size=40, color=self.context.palette.ink)
+        draw_centered_text(
+            surface,
+            self.context.typography,
+            self.context.resources.text("section.history"),
+            center=(500, 95),
+            size=40,
+            color=self.context.palette.ink,
+        )
         pygame.draw.line(surface, (130, 94, 61), (95, 470), (880, 470), 8)
         for i, ((label_key, color), rect) in enumerate(zip(MOMENTS, self._rects)):
             bob = int(math.sin(self._time * 1.5 + i) * 3)
@@ -61,13 +87,36 @@ class HistoryPage(EncyclopediaPage):
             pygame.draw.rect(surface, (255, 248, 227), body, border_radius=24)
             pygame.draw.rect(surface, color, body, 4, border_radius=24)
             self._draw_moment(surface, i, body, color)
-            draw_centered_text(surface, self.context.typography, self.context.resources.text(label_key), center=(body.centerx, body.bottom - 22), size=17, color=self.context.palette.ink)
-            focus_ring(surface, body, i == self._selected)
+            draw_centered_text(
+                surface,
+                self.context.typography,
+                self.context.resources.text(label_key),
+                center=(body.centerx, body.bottom - 22),
+                size=17,
+                color=self.context.palette.ink,
+            )
+            focus_ring(
+                surface,
+                body,
+                i == self._selected or i == self._hovered,
+            )
             pygame.draw.circle(surface, (130, 94, 61), (body.centerx, 470), 7)
-        draw_presenter(surface, self.context.visuals, "leo", position=(945, 565), height=145, variant="default")
+        draw_presenter(
+            surface,
+            self.context.visuals,
+            "leo",
+            position=(945, 565),
+            height=145,
+            variant="default",
+        )
 
     @staticmethod
-    def _draw_moment(surface: pygame.Surface, index: int, rect: pygame.Rect, color: tuple[int, int, int]) -> None:
+    def _draw_moment(
+        surface: pygame.Surface,
+        index: int,
+        rect: pygame.Rect,
+        color: tuple[int, int, int],
+    ) -> None:
         cx, cy = rect.centerx, rect.centery - 20
         if index == 0:
             pygame.draw.ellipse(surface, color, (cx - 40, cy - 15, 80, 36))
