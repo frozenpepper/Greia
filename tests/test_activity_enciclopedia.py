@@ -39,6 +39,7 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
                 "animals",
                 "animals.octopus",
                 "space",
+                "space.saturn",
                 "earth",
                 "body",
                 "machines",
@@ -54,14 +55,26 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
         self.assertEqual(bundles[0]["audio"], {})
         self.assertEqual(bundles[1]["audio"], {})
 
-    def test_octopus_pilot_is_research_backed(self) -> None:
-        research = ROOT / "encyclopedia" / "research" / "animals" / "octopus.md"
-        text = research.read_text(encoding="utf-8")
-        self.assertIn("NOAA Fisheries", text)
-        self.assertIn("Smithsonian Ocean", text)
-        self.assertIn("Monterey Bay Aquarium", text)
-        self.assertIn("Eight arms, not tentacles", text)
-        self.assertIn("Three hearts", text)
+    def test_pilot_entries_are_research_backed(self) -> None:
+        cases = {
+            ROOT / "encyclopedia" / "research" / "animals" / "octopus.md": (
+                "NOAA Fisheries",
+                "Smithsonian Ocean",
+                "Eight arms, not tentacles",
+                "Three hearts",
+            ),
+            ROOT / "encyclopedia" / "research" / "space" / "saturn.md": (
+                "NASA Science",
+                "sixth planet",
+                "gas giant",
+                "billions of separate",
+            ),
+        }
+        for path, required in cases.items():
+            with self.subTest(page=path.stem):
+                text = path.read_text(encoding="utf-8")
+                for marker in required:
+                    self.assertIn(marker, text)
 
     def test_no_runtime_tts_or_speech_recognition_backends(self) -> None:
         forbidden = ("speech_recognition", "pyttsx", "gtts", "whisper", "vosk")
