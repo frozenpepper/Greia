@@ -134,6 +134,14 @@ encyclopedia/export_voice_batch.py
 
 It converts only eligible ledger rows into the repository-wide Voice Production Engine JSONL contract without synthesizing speech or changing status. The Markdown ledger remains the single request/review authority and `OWNER_ACCEPTED` remains the packaging gate.
 
+A fail-closed deterministic pre-Simulator helper also exists at:
+
+```text
+tools/encyclopedia_v01_source_gate.py
+```
+
+It automates only the source/ledger/accepted-audio part of the canonical acceptance runbook. Its own tests have not yet executed against current source, so the handwritten runbook remains authoritative and no source-gate PASS is claimed.
+
 Exact closure procedure:
 
 ```text
@@ -150,7 +158,7 @@ A repository-wide provider-neutral authoring-time voice subsystem now exists:
 
 ```text
 tools/greia_voice.py
-greia_voice_core / associated provider modules
+tools/greia_voice_core/
 docs/architecture/GREIA_VOICE_PRODUCTION_ENGINE.md
 skills/greia-voice-production/
 ```
