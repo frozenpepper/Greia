@@ -48,8 +48,16 @@ class FrogLifeCycleModel:
     def update(self, dt: float) -> None:
         self.skin_age = max(0.0, self.skin_age - dt)
         self.variety_age = max(0.0, self.variety_age - dt)
-        if self.metamorphosis_progress > 0.0:
-            self.metamorphosis_progress = min(1.0, self.metamorphosis_progress + dt * 0.4)
+        if self.metamorphosis_progress <= 0.0:
+            return
+        next_progress = self.metamorphosis_progress + dt * 0.4
+        if next_progress >= 1.0:
+            # Settle the demonstration into the froglet stage. The finite model
+            # never remains in an artificial permanent "animation complete" state.
+            self.stage = 2
+            self.metamorphosis_progress = 0.0
+        else:
+            self.metamorphosis_progress = next_progress
 
     def advance_stage(self) -> None:
         self.stage = (self.stage + 1) % _STAGE_COUNT
@@ -194,8 +202,6 @@ class FrogPage(EncyclopediaPage):
             legs = 4
         tail_scale = max(0.12, 1.0 - progress * 0.85)
         self._draw_tadpole(surface, (cx, cy), legs=legs, tail_scale=tail_scale)
-        if progress >= 1.0:
-            self._draw_frog(surface, (cx, cy), scale=0.65)
 
     @staticmethod
     def _draw_tadpole(
