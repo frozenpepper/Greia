@@ -1,6 +1,6 @@
 # Greia — Current Engineering Handover
 
-**Updated:** 2026-08-27  
+**Updated:** 2026-08-28  
 **Canonical repository:** `frozenpepper/Greia`  
 **Canonical branch:** `main`  
 **Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**  
@@ -12,7 +12,7 @@ The previous long-form root handover is preserved verbatim as:
 docs/handovers/GREIA_ROOT_HANDOVER_ARCHIVE_2026-08-27.md
 ```
 
-Git history remains canonical for every earlier root-handover revision.
+Git history remains canonical for earlier root-handover revisions.
 
 ---
 
@@ -20,9 +20,9 @@ Git history remains canonical for every earlier root-handover revision.
 
 Before substantive work, read `AGENTS.md`, `README.md`, `docs/DOCUMENTATION.md`, the active architecture plan, this handover, and the relevant OS/Activity/visual/voice skill.
 
-Do not use GitHub-hosted Actions unless the owner explicitly authorizes that specific execution. Work on current `main`; refresh the head before writes and preserve concurrent work.
+Do not use GitHub-hosted Actions unless the owner explicitly authorizes that execution. Work on current `main`; refresh the head before writes and preserve concurrent work.
 
-No current-head PASS may be claimed unless it actually executed on that exact state. Source review, Simulator evidence and physical-device evidence are separate evidence classes.
+No current-head PASS may be claimed unless it actually executed on that exact state. Source review, local provider/audio review, Simulator evidence and physical-device evidence are separate evidence classes.
 
 ---
 
@@ -107,16 +107,7 @@ The post-build drift review is:
 docs/reviews/2026-08-27_ENCYCLOPEDIA_V01_POST_BUILD_DRIFT_REVIEW.md
 ```
 
-That review found and repaired real closure blockers including:
-
-1. locale audio integration previously emitted the wrong schema; accepted cues now use Greia's canonical `{"path": ...}` object form;
-2. the 378-row voice synchronizer originally understood only the newer research narration template; it now supports both historical research generations fail-closed;
-3. source tests no longer maintain unnecessary shadow copies of the full research/topic inventory;
-4. runtime semantic narration cue identities are guarded against synchronized-ledger drift;
-5. encyclopedia audio lookup now catches the typed localization failure rather than arbitrary exceptions;
-6. unreviewed recorder staging audio is git-ignored and only accepted runtime copies are shipped.
-
-Current truthful evidence label:
+Current truthful evidence label remains:
 
 ```text
 SOURCE-REVIEWED / TESTS-UNEXECUTED / SIMULATOR-UNVERIFIED
@@ -126,13 +117,19 @@ No consolidated 43-page Simulator pass or physical Acer/Pi acceptance has execut
 
 The checked-in recording queue remains the earlier 176-row snapshot until the synchronizer actually runs locally. Expected synchronized invariant is 378 bilingual rows.
 
-A deterministic bridge now exists at:
+Voice production is now explicitly centralized:
 
 ```text
-encyclopedia/export_voice_batch.py
+VOICE_RECORDING_REQUESTS.md
+-> encyclopedia/export_voice_batch.py
+-> tools/greia_voice.py batch
+-> staging audio + Voice Engine receipts
+-> human review / OWNER_ACCEPTED
+-> encyclopedia/integrate_voice_assets.py
+-> packaged runtime audio
 ```
 
-It converts only eligible ledger rows into the repository-wide Voice Production Engine JSONL contract without synthesizing speech or changing status. The Markdown ledger remains the single request/review authority and `OWNER_ACCEPTED` remains the packaging gate.
+The Markdown ledger remains authority for exact text/cues/speaker/status. The Voice Engine owns Chatterbox/native/Whisper/packaging mechanics. Historical direct-backend instructions in old queue prose are superseded by the canonical voice-production skill/README; do not alter immutable voice rows merely to migrate implementation guidance.
 
 A fail-closed deterministic pre-Simulator helper also exists at:
 
@@ -140,7 +137,7 @@ A fail-closed deterministic pre-Simulator helper also exists at:
 tools/encyclopedia_v01_source_gate.py
 ```
 
-It automates only the source/ledger/accepted-audio part of the canonical acceptance runbook. Its own tests have not yet executed against current source, so the handwritten runbook remains authoritative and no source-gate PASS is claimed.
+Its tests have not yet executed against current source, so no source-gate PASS is claimed.
 
 Exact closure procedure:
 
@@ -148,30 +145,110 @@ Exact closure procedure:
 docs/testing/GREIA_ENCYCLOPEDIA_V01_CONSOLIDATED_ACCEPTANCE.md
 ```
 
-Do not add more v0.1 topics before that gate is reviewed. Recording may continue independently; only `OWNER_ACCEPTED` clips may be packaged into runtime resources.
+Do not add more v0.1 topics before that gate is reviewed. Only `OWNER_ACCEPTED` clips may be packaged into runtime resources.
 
 ---
 
-## 5. Greia Voice Production Engine — authoring subsystem candidate
+## 5. Greia Voice Production Engine — canonical authoring subsystem
 
-A repository-wide provider-neutral authoring-time voice subsystem now exists:
+The repository-wide authoring-time voice subsystem is now the canonical path for **all new prerecorded Greia speech production**:
 
 ```text
 tools/greia_voice.py
 tools/greia_voice_core/
+tools/greia_voice_core/README.md
+tools/greia_voice_requirements_mlx.txt
+skills/greia-voice-production/SKILL.md
 docs/architecture/GREIA_VOICE_PRODUCTION_ENGINE.md
-skills/greia-voice-production/
 ```
 
-Its purpose is to hide Chatterbox/native-system/Whisper/mechanical production details behind semantic requests containing speaker, speech kind, locale, reviewed text and cue/output identity.
+Caller-facing semantic contract:
 
-Important boundary: the subsystem is **authoring-time only** and adds no child-runtime TTS/model dependency.
+```text
+speaker
+kind
+locale
+exact reviewed text
+cue/output identity
+```
 
-Current status is still **implementation candidate / local provider acceptance pending**. Existing accepted Activity audio must not be regenerated merely to test it. Human listening remains acceptance authority; Whisper is advisory only.
+Current kinds:
 
-Exact local finalization procedure is the voice-engine acceptance document committed with the subsystem. Do not switch every historical generator/skill to the new engine until that local provider gate is genuinely green.
+```text
+character_dialogue
+shared_character_utterance
+pedagogical_speech
+dani_system_speech
+```
 
-The encyclopedia now feeds this engine from its existing ledger through `encyclopedia/export_voice_batch.py`; that adapter is deterministic and provider-free. Actual use of the generated batch still waits for the Voice Production Engine's separate local provider acceptance. Encyclopedia `OWNER_ACCEPTED` packaging remains authoritative even after production is centralized.
+Current implementation routes:
+
+```text
+Lilli/Leo/Flash/Tito/Momo character/shared production -> Chatterbox MLX provider
+pedagogical pronunciation                            -> macOS native/system provider
+Dani Activity/shared production                      -> macOS native/system provider
+suitable multi-word natural-character speech         -> optional advisory Whisper check
+```
+
+Important boundaries:
+
+- authoring-time only; no child-runtime TTS/model/Whisper dependency;
+- canonical reference hashes are checked before cloned generation;
+- warm service/batch reuse one model and a cross-process lock prevents a second inference worker;
+- no silent placeholder success;
+- every receipt says `human_review=PENDING`;
+- Whisper may warn/retry but never accepts audio;
+- existing owner-accepted historical audio is not regenerated merely to migrate tooling.
+
+### Repository-wide adoption completed in source/docs
+
+The following now point production through the engine rather than teaching backend mechanics:
+
+- `skills/greia-voice-production/SKILL.md` — canonical voice production skill;
+- `skills/greia-activity-authoring/VOICE_GENERATION.md` — Activity-facing semantic guidance;
+- `SETUP.md` — workstation role/install/readiness routing;
+- `docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md` — accepted semantic/identity policy;
+- `docs/architecture/GREIA_VOICE_PRODUCTION_ENGINE.md` — architecture/provider ownership;
+- `docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md` — installation/runbook;
+- `docs/agents/GREIA_CHATTERBOX_PRODUCTION_FIELD_GUIDE.md` — now maintainer/troubleshooting only;
+- `docs/agents/GREIA_SHARED_CHARACTER_UTTERANCE_RECORDING.md` — shared library through engine;
+- `encyclopedia/README.md` — Encyclopedia exporter/batch/review pipeline.
+
+`tools/record_shared_character_utterances.py` has also been migrated from direct MLX/Whisper calls into a thin `VoiceEngine` semantic producer. It now supports all six characters; Dani is routed through the system provider.
+
+### Installation
+
+Quick install/use:
+
+```text
+tools/greia_voice_core/README.md
+```
+
+Tested Apple-Silicon dependency declaration:
+
+```text
+tools/greia_voice_requirements_mlx.txt
+```
+
+Readiness probe:
+
+```bash
+python3 tools/greia_voice.py doctor
+```
+
+The heavy cloned-character environment remains optional on a general developer machine and must not be silently installed. When actual production is requested and owner-authorized, install it outside Git using the canonical README/setup procedure.
+
+### Evidence status
+
+The canonical routing/docs/code are committed, but the changes in this adoption tranche have **not yet been executed on the owner workstation in this session**. Do not claim current-head focused-test, `make verify`, actual Chatterbox/native/Whisper, or human-listening PASS merely because the code/runbooks exist.
+
+The exact local provider acceptance protocol is:
+
+```text
+docs/testing/2026-08-27_GREIA_VOICE_PRODUCTION_LOCAL_ACCEPTANCE.md
+```
+
+That protocol now tests the already-canonical engine rather than treating its result as permission to switch documentation later.
 
 ---
 
@@ -189,31 +266,39 @@ advanced requires explicit parent opt-in and real availability
 no automatic model/processor promotion
 ```
 
+Build-time prerecorded voice production and runtime child microphone capture are separate systems. `tools/greia_voice.py` must not be introduced into child `audio.basic` capture.
+
 Current x86 system-update layout remains single-root with activation disabled. Signed update foundations do not authorize in-place active-root mutation; A/B/rollback closure remains future platform work.
 
 ---
 
 ## 7. Immediate next work
 
+### Voice-engine evidence lane
+
+On the owner-controlled production workstation execute exactly:
+
+```text
+docs/testing/2026-08-27_GREIA_VOICE_PRODUCTION_LOCAL_ACCEPTANCE.md
+```
+
+It must first run the focused provider-free voice tests and `make verify`, then `doctor`, deterministic pedagogical/Dani samples, real Chatterbox + Whisper sample generation, shared-library routing, warm-service/model-reuse and cross-process-lock tests, followed by human listening.
+
+Stop on the first genuine failure. Do not bypass the engine or regenerate existing accepted Activity audio to manufacture evidence.
+
 ### Encyclopedia closure lane
 
-On an owner-controlled local checkout, execute exactly:
+Execute:
 
 ```text
 docs/testing/GREIA_ENCYCLOPEDIA_V01_CONSOLIDATED_ACCEPTANCE.md
 ```
 
-The run must first synchronize/check the recording queue, prove the 378-row invariant, execute focused provider-free contracts and `make verify`, then integrate only already-`OWNER_ACCEPTED` clips, and only then perform the deferred real Simulator traversal/input/no-reading/responsive review.
-
-Stop on the first genuine failure and return evidence. Do not repair source inside the acceptance run.
-
-### Voice-engine lane
-
-Execute the dedicated local Voice Production Engine finalization/acceptance protocol on the real production workstation. Preserve existing accepted audio. Do not run concurrent Chatterbox workers and do not promote Whisper output to human acceptance.
+Synchronize/check the recording queue, prove the 378-row invariant, execute focused provider-free contracts and `make verify`, integrate only already-`OWNER_ACCEPTED` clips, and perform the deferred Simulator traversal/input/no-reading/responsive review.
 
 ### Blocking platform lane
 
-Resume R7 from the first incomplete gate in the active architecture plan. The encyclopedia and voice-engine lanes are parallel workstreams and do not change R7 status.
+Resume R7 from the first incomplete gate in the active architecture plan. Encyclopedia and voice production are parallel workstreams and do not change R7 status.
 
 ---
 
@@ -226,6 +311,7 @@ Resume R7 from the first incomplete gate in the active architecture plan. The en
 - multiple input paths for one child action converge on one semantic/domain rule;
 - child-facing flows remain offline-first and pre-reader friendly;
 - ordinary Activities never gain runtime AI/TTS/speech-recognition merely to fill missing content;
+- **all new prerecorded voice production goes through the Greia Voice Production Engine**;
 - visual/runtime/Activity caches stay bounded with explicit invalidation;
 - performance claims require measurement on the claimed execution scope;
 - R7 remains open until its own evidence/closure criteria are satisfied.
