@@ -162,7 +162,6 @@ class CavePaintingsPage(EncyclopediaPage):
             for dx in (-14, -7, 0, 7, 14):
                 pygame.draw.line(surface, (203, 151, 103), (cx + dx // 2, cy + 2), (cx + dx, cy - 19), 4)
         else:
-            draw_centered_text(surface, pygame.font.Font(None, 1), "", center=(cx, cy), size=1, color=(0, 0, 0)) if False else None
             pygame.draw.circle(surface, (232, 217, 177), (cx, cy), 22)
             pygame.draw.line(surface, (89, 72, 58), (cx, cy - 11), (cx, cy + 3), 4)
             pygame.draw.circle(surface, (89, 72, 58), (cx, cy + 13), 3)
