@@ -168,13 +168,23 @@ A process exit, receipt, valid audio container or Whisper PASS is never final ac
 
 The owning workflow keeps its final acceptance authority. For example, Encyclopedia audio is not packageable until the ledger says `OWNER_ACCEPTED`.
 
-## Legacy scripts
+## Activity-specific generator rule
 
-Historical `tools/generate_*_audio.py` scripts and direct-provider recording scripts may remain as evidence/compatibility code, but they are not the extension point for new work.
+Tracked `tools/generate_*_audio.py` Activity scripts are allowed only as **thin semantic request/batch producers** for `tools/greia_voice.py`. They may own Activity-specific cue IDs, exact reviewed localized text, semantic speaker/kind assignment and review-output naming.
 
-Do not copy them to create a new Activity generator. When touching one for new production, convert it into a thin semantic request/batch producer for `VoiceEngine` rather than maintaining another TTS implementation.
+They must not own or reintroduce:
 
-Existing owner-accepted audio does not need regeneration merely because its historical generator predates the engine.
+- Chatterbox/MLX imports or model IDs;
+- canonical reference paths/hashes;
+- native host voice names, rates, `say` or `afconvert` calls;
+- Whisper calls;
+- FFmpeg trimming/conversion policy;
+- token budgets, model retries or accelerator cache lifecycle;
+- silent/synthetic placeholder audio on generation failure.
+
+When an Activity needs ordinary neutral guidance rather than pronunciation-authoritative sound, choose an actual semantic speaker (for the current legacy neutral Activities this is Dani) rather than misclassifying the line as `pedagogical_speech` or inventing another speech kind.
+
+Existing owner-accepted audio does not need regeneration merely because its historical generator predates the engine. New/replacement takes must be generated into review staging and accepted before integration.
 
 ## Maintainer extension rule
 
