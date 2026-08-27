@@ -1,0 +1,40 @@
+[activity]
+id = "org.greia.enciclopedia"
+legacy_ids = []
+title_key = "activity.enciclopedia.title"
+version = "0.1.0"
+icon = "globe"
+languages = ["it", "en"]
+
+[presentation]
+categories = ["explore", "learn"]
+discovery_tags = ["nature"]
+
+[education]
+categories = ["science_curiosity", "world_knowledge"]
+difficulty = 1
+recommended_age_min = 3
+recommended_age_max = 8
+skills = [
+  { id = "science.curiosity.exploration", weight = 3 },
+  { id = "world.concepts.relationships", weight = 2 },
+]
+events = []
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "navigation"
+
+[requirements]
+required_capabilities = ["display", "pointer", "audio.basic"]
+optional_capabilities = ["keyboard", "touch", "controller"]
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1
