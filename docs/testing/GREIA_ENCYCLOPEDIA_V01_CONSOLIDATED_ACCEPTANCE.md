@@ -38,6 +38,7 @@ The local test agent MUST follow these rules:
 10. Evidence must describe what actually ran. Do not infer PASS from source inspection.
 11. Simulator state must remain **outside** the repository checkout. Use the state directory specified below.
 12. Keep evidence project-local under `./tmp/encyclopedia-v01-acceptance/...`; do not commit the evidence directory.
+13. Run the shell blocks in **Bash**. The owner machine may default to zsh, but this procedure deliberately uses Bash `PIPESTATUS` so provider/test exit codes survive `tee`.
 
 A source/test failure is a hard stop before Simulator work. A Simulator/runtime failure is a hard stop before any claim of acceptance. Do not silently fix-and-rerun inside the same evidence run.
 
@@ -45,13 +46,20 @@ A source/test failure is a hard stop before Simulator work. A Simulator/runtime 
 
 ## 2. Create the evidence directory and record the starting state
 
-From the Greia repository root:
+From the Greia repository root, start a Bash shell first:
+
+```bash
+bash
+```
+
+Then, in that Bash shell:
 
 ```bash
 set -u
 RUN_ID="$(date +%Y%m%d_%H%M%S)"
 EVIDENCE="./tmp/encyclopedia-v01-acceptance/${RUN_ID}"
 mkdir -p "${EVIDENCE}/screenshots"
+printf '%s\n' "${EVIDENCE}" > ./tmp/encyclopedia-v01-acceptance/.latest-run
 
 git rev-parse --show-toplevel | tee "${EVIDENCE}/repo-root.txt"
 git branch --show-current | tee "${EVIDENCE}/branch.txt"
@@ -104,6 +112,8 @@ print(f"recorded_unreviewed={sum(r.status == 'RECORDED_UNREVIEWED' for r in rows
 print(f"requested={sum(r.status == 'REQUESTED' for r in rows.values())}")
 assert len(rows) == 378, len(rows)
 PY
+ROW_COUNT_RC=${PIPESTATUS[0]}
+[ "${ROW_COUNT_RC}" -eq 0 ] || exit "${ROW_COUNT_RC}"
 ```
 
 Expected invariant:
@@ -237,11 +247,21 @@ protected Greia Home remains reachable
 return to Shell succeeds cleanly
 ```
 
-Capture initial evidence from a second terminal:
+For CLI screenshots/status, open a **second terminal**, `cd` to the same Greia repository, start Bash, and recover the exact evidence path:
+
+```bash
+bash
+EVIDENCE="$(cat ./tmp/encyclopedia-v01-acceptance/.latest-run)"
+```
+
+Then capture initial evidence:
 
 ```bash
 python3 tools/greia_simulator_ctl.py status \
   | tee "${EVIDENCE}/simulator-status-initial.txt"
+SIM_STATUS_RC=${PIPESTATUS[0]}
+[ "${SIM_STATUS_RC}" -eq 0 ] || exit "${SIM_STATUS_RC}"
+
 python3 tools/greia_simulator_ctl.py screenshot \
   "${EVIDENCE}/screenshots/00-home.png"
 ```
@@ -457,11 +477,13 @@ Changing the simulator preset may restart the child Shell. Reload/relaunch throu
 
 After the final interaction, use Greia Home and confirm clean return to the Shell.
 
-Then capture:
+In the second Bash terminal, capture:
 
 ```bash
 python3 tools/greia_simulator_ctl.py status \
   | tee "${EVIDENCE}/simulator-status-final.txt"
+SIM_FINAL_RC=${PIPESTATUS[0]}
+[ "${SIM_FINAL_RC}" -eq 0 ] || exit "${SIM_FINAL_RC}"
 
 git diff --check \
   2>&1 | tee "${EVIDENCE}/git-diff-check.txt"
