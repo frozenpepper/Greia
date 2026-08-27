@@ -21,7 +21,8 @@ This directory is the long-lived authoring source of truth for the Greia Encyclo
 9. `PROGRESS.md`;
 10. `VOICE_RECORDING_REQUESTS.md`;
 11. `HANDOVER.md`;
-12. runtime `activities/enciclopedia_greia/` source relevant to the current task.
+12. `docs/testing/GREIA_ENCYCLOPEDIA_V01_CONSOLIDATED_ACCEPTANCE.md` when executing the frozen-v0.1 closure gate;
+13. runtime `activities/enciclopedia_greia/` source relevant to the current task.
 
 The repository's platform authorities remain authoritative. The encyclopedia is one normal first-party Activity and may not bypass Greia lifecycle, protected chrome/Home, semantic input, localization, profile, package or runtime-policy ownership.
 
@@ -185,4 +186,10 @@ The current truthful evidence label is:
 SOURCE-REVIEWED / TESTS-UNEXECUTED / SIMULATOR-UNVERIFIED
 ```
 
-The next acceptance stage is a **consolidated** source-test + Simulator/visual/input review of the frozen 43-page base, followed by targeted fixes rather than new topic breadth.
+The next acceptance stage is the exact fail-closed procedure in:
+
+```text
+docs/testing/GREIA_ENCYCLOPEDIA_V01_CONSOLIDATED_ACCEPTANCE.md
+```
+
+It synchronizes the 378-row queue, runs focused + repository source gates, packages only already-`OWNER_ACCEPTED` narration, then performs the deferred full 1024x600 reachability/signature-interaction pass plus input-parity, no-reading and responsive Simulator review. Targeted fixes follow from concrete evidence; new topic breadth remains frozen.
