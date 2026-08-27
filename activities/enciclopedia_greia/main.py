@@ -12,18 +12,25 @@ from greia_platform.localization import (
     LocalizedResources,
     resolve_activity_locale,
 )
-from greia_platform.typography import GreiaTypography
 
 if __package__:
     from .enciclopedia_app import EncyclopediaApp
     from .enciclopedia_audio import EncyclopediaAudio
     from .enciclopedia_catalogue import build_page_registry
-    from .enciclopedia_services import EncyclopediaPalette, VisualLibrary
+    from .enciclopedia_services import (
+        CachedEncyclopediaTypography,
+        EncyclopediaPalette,
+        VisualLibrary,
+    )
 else:
     from enciclopedia_app import EncyclopediaApp
     from enciclopedia_audio import EncyclopediaAudio
     from enciclopedia_catalogue import build_page_registry
-    from enciclopedia_services import EncyclopediaPalette, VisualLibrary
+    from enciclopedia_services import (
+        CachedEncyclopediaTypography,
+        EncyclopediaPalette,
+        VisualLibrary,
+    )
 
 REFERENCE_SIZE = (1024, 600)
 
@@ -46,7 +53,7 @@ def main() -> int:
 
     package_root = Path(__file__).resolve().parent
     resources = _localized_resources(package_root)
-    typography = GreiaTypography()
+    typography = CachedEncyclopediaTypography()
     visuals = VisualLibrary()
     audio = EncyclopediaAudio(resources)
     palette = EncyclopediaPalette.from_theme(get_theme())
