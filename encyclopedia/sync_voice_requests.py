@@ -25,6 +25,11 @@ import argparse
 import re
 import sys
 
+try:
+    from .voice_ledger import LOCKED_STATUSES, VoiceLedgerRow, parse_ledger_rows
+except ImportError:  # Direct script execution from the repository checkout.
+    from voice_ledger import LOCKED_STATUSES, VoiceLedgerRow, parse_ledger_rows
+
 
 ROOT = Path(__file__).resolve().parent
 LEDGER = ROOT / "VOICE_RECORDING_REQUESTS.md"
@@ -32,12 +37,6 @@ RESEARCH_ROOT = ROOT / "research"
 EXPECTED_V01_TOPIC_COUNT = 36
 EXPECTED_V01_RECORDING_ROWS = 378
 
-_ROW_RE = re.compile(
-    r"^\| (?P<status>[^|]+?) \| `(?P<cue>[^`]+)` \| (?P<kind>[^|]+?) \| "
-    r"(?P<speaker>[^|]+?) \| `(?P<voice>[^`]+)` \| (?P<locale>it|en) \| "
-    r"(?P<text>.*?) \| `(?P<filename>[^`]+)` \| `(?P<path>[^`]+)` \| "
-    r"(?P<notes>.*?) \|$"
-)
 _PRESENTER_RE = re.compile(r"^\*\*Presenter:\*\*\s+(.+?)\s+\(`([^`]+)`\)\s*$", re.MULTILINE)
 _CUE_RE = re.compile(
     r"^### `(?P<cue>encyclopedia\.[^`]+)`\s*\n\n"
@@ -51,20 +50,6 @@ _CUE_RE = re.compile(
 class TopicSpec:
     batch_id: str
     page_id: str
-
-
-@dataclass(frozen=True, slots=True)
-class ExistingRow:
-    status: str
-    cue_id: str
-    kind: str
-    speaker: str
-    voice_id: str
-    locale: str
-    exact_text: str
-    filename: str
-    path: str
-    notes: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -120,8 +105,6 @@ TOPICS: tuple[TopicSpec, ...] = (
     TopicSpec("E10-PYRAMIDS-01", "history.pyramids"),
 )
 
-_LOCKED_STATUSES = {"RECORDED_UNREVIEWED", "OWNER_ACCEPTED", "REJECTED_REDO", "SUPERSEDED", "BLOCKED"}
-
 
 def _research_path(page_id: str) -> Path:
     section, topic = page_id.split(".", 1)
@@ -137,31 +120,6 @@ def _validate_topic_inventory() -> None:
         raise ValueError("duplicate page_id in voice TOPICS")
     if len(set(batch_ids)) != len(batch_ids):
         raise ValueError("duplicate batch_id in voice TOPICS")
-
-
-def _parse_existing_rows(text: str) -> dict[tuple[str, str], ExistingRow]:
-    rows: dict[tuple[str, str], ExistingRow] = {}
-    for line in text.splitlines():
-        match = _ROW_RE.match(line)
-        if not match:
-            continue
-        row = ExistingRow(
-            status=match["status"].strip(),
-            cue_id=match["cue"],
-            kind=match["kind"].strip(),
-            speaker=match["speaker"].strip(),
-            voice_id=match["voice"],
-            locale=match["locale"],
-            exact_text=match["text"].strip(),
-            filename=match["filename"],
-            path=match["path"],
-            notes=match["notes"].strip(),
-        )
-        key = (row.cue_id, row.locale)
-        if key in rows:
-            raise ValueError(f"duplicate existing voice row: {key}")
-        rows[key] = row
-    return rows
 
 
 def _parse_topic(spec: TopicSpec) -> list[RequestRow]:
@@ -206,11 +164,11 @@ def _parse_topic(spec: TopicSpec) -> list[RequestRow]:
     return rows
 
 
-def _row_markdown(row: RequestRow, existing: ExistingRow | None) -> str:
+def _row_markdown(row: RequestRow, existing: VoiceLedgerRow | None) -> str:
     status = existing.status if existing is not None else "REQUESTED"
     notes = existing.notes if existing is not None else ""
 
-    if existing is not None and existing.status in _LOCKED_STATUSES:
+    if existing is not None and existing.status in LOCKED_STATUSES:
         immutable_expected = (
             row.kind,
             row.speaker,
@@ -250,7 +208,7 @@ def _manual_prefix(existing_text: str) -> str:
 
 def render_ledger(existing_text: str) -> str:
     _validate_topic_inventory()
-    existing_rows = _parse_existing_rows(existing_text)
+    existing_rows = parse_ledger_rows(existing_text)
     parts = [_manual_prefix(existing_text)]
     generated_rows: list[RequestRow] = []
 
