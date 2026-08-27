@@ -97,3 +97,114 @@ Next construction tranche:
 4. append bilingual factual cues to the unified recording queue only after wording is research-ready;
 5. keep the tiny engine free of subject-specific branches;
 6. after the coherent first-pass base is sufficiently broad, run one consolidated Greia Simulator/visual/input acceptance pass as directed by the owner.
+
+---
+
+## 2026-08-27 — E3 six architecture-stress pilots source-ready
+
+The planned one-entry-per-section stress tranche was completed in source:
+
+```text
+animals.octopus
+space.saturn
+earth.volcano
+body.heart
+machines.gears
+history.fossils
+```
+
+For every pilot:
+
+- authoritative authoring-time provenance exists under `encyclopedia/research/`;
+- short Italian/English child-facing captions exist;
+- stable semantic narration cue IDs are requested by runtime code;
+- exact bilingual narration was appended to the unified recording queue only after research;
+- pointer and semantic controller/keyboard interaction use the same page-owned state transitions;
+- subject-specific behavior remains outside `enciclopedia_engine.py`.
+
+Architecture review result:
+
+- the engine did not need a subject framework, physics system or content DSL;
+- `VolcanoModel`, `HeartModel`, `GearTrainModel` and `FossilDigModel` exist only because those pages own non-trivial mutable invariants;
+- Octopus and Saturn remain page-owned state without artificial model layers;
+- Fossils completion announcement was encapsulated inside `FossilDigModel` rather than mutated by the page;
+- Gears received a source-level geometry correction so pitch-circle distances, tooth counts, angular ratios, pinion rotation and rack motion agree with the teaching visual.
+
+Research-quality corrections preserved:
+
+- Heart does not depict oxygen-poor blood as literally blue;
+- Saturn avoids a changing moon-count fact;
+- Volcano does not imply all eruptions are explosive;
+- Fossils are presented as evidence of past life, not simply `old bones`.
+
+Evidence remains:
+
+```text
+SOURCE-VERIFIED / SIMULATOR-UNVERIFIED
+```
+
+No per-page Simulator run was performed, per owner direction.
+
+---
+
+## 2026-08-27 — E4 Animals breadth tranche 1: Lion, Elephant, Bee
+
+Implemented and registered:
+
+```text
+animals.lion
+animals.elephant
+animals.bee
+```
+
+Runtime registry increased to 16 real pages.
+
+### Lion
+
+- Smithsonian-backed research record;
+- Tito presenter;
+- bounded mane variation;
+- pride reveal;
+- visual roar-wave interaction;
+- foreleg/paw emphasis;
+- real lion audio deliberately deferred until a licensed/provenance-reviewed sound source exists.
+
+### Elephant
+
+- Smithsonian-backed research record;
+- Tito presenter;
+- three deterministic trunk poses;
+- bounded water-spray visualization;
+- accelerated ear-flap/cooling visualization;
+- second-elephant trunk-touch social interaction;
+- no fluid simulation or species-specific weight/lifespan trivia.
+
+### Bee
+
+- USDA-backed research record;
+- Tito presenter;
+- `BeePollinationModel` owns the causal pollen-transfer state;
+- nectar/pollen reveal;
+- bounded flight between two flowers;
+- visible pollen carried on the bee and transferred to the next flower;
+- pollination/seed-fruit visual consequence;
+- explicit solitary-wild-bee vs honey-bee-colony comparison.
+
+Important science correction:
+
+> A generic bee page must not teach that all bees live in hives. Most wild bees are solitary; honey bees are a familiar social colony case.
+
+Animals section navigation was generalized with one explicit `animal_id -> implemented page_id` mapping rather than growing special-case index branches. Penguin and Frog remain visible but intentionally non-navigable until their pages exist.
+
+Italian/English locale bundles and `tests/test_activity_enciclopedia.py` were updated for the 16-page state and nine research-backed final entries.
+
+The unified recording queue was refetched immediately before modification; no recording-agent status/note changes were present. Lion, Elephant and Bee added 30 Tito recordings, bringing the queue to 106 exact bilingual rows at that synchronization point.
+
+Next exact tranche:
+
+```text
+animals.penguin
+animals.frog
+```
+
+These two pages will complete Animals v0.1 source breadth. Generic wording must preserve species diversity: not all penguins live on ice, and the familiar aquatic egg -> tadpole -> frog route is common but not universal among frogs.
