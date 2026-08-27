@@ -17,6 +17,7 @@ SPEC.loader.exec_module(MODULE)
 GateFailure = MODULE.GateFailure
 integration_disposition = MODULE.integration_disposition
 porcelain_path = MODULE.porcelain_path
+unexpected_final_paths = MODULE.unexpected_final_paths
 unexpected_initial_paths = MODULE.unexpected_initial_paths
 
 
@@ -51,6 +52,52 @@ class EncyclopediaV01SourceGateTests(unittest.TestCase):
         )
         self.assertEqual(
             unexpected_initial_paths(dirty),
+            (
+                "activities/enciclopedia_greia/pages/lion.py",
+                "src/greia_platform/localization.py",
+            ),
+        )
+
+    def test_final_worktree_without_audio_integration_allows_only_coordination_state(self) -> None:
+        allowed = (
+            " M encyclopedia/VOICE_RECORDING_REQUESTS.md",
+            "?? encyclopedia/pages/animals/lion/assets/audio/it/intro.ogg",
+            "?? tmp/encyclopedia-v01-acceptance/example/source-gate-summary.json",
+        )
+        self.assertEqual(
+            unexpected_final_paths(allowed, integration_executed=False),
+            (),
+        )
+
+    def test_final_worktree_allows_runtime_audio_only_when_integrator_ran(self) -> None:
+        runtime_changes = (
+            " M encyclopedia/VOICE_RECORDING_REQUESTS.md",
+            " M activities/enciclopedia_greia/locales/it.json",
+            " M activities/enciclopedia_greia/locales/en.json",
+            "?? activities/enciclopedia_greia/assets/audio/it/animals/lion/intro-tito.ogg",
+        )
+        self.assertEqual(
+            unexpected_final_paths(runtime_changes, integration_executed=True),
+            (),
+        )
+        self.assertEqual(
+            unexpected_final_paths(runtime_changes, integration_executed=False),
+            (
+                "activities/enciclopedia_greia/locales/it.json",
+                "activities/enciclopedia_greia/locales/en.json",
+                "activities/enciclopedia_greia/assets/audio/it/animals/lion/intro-tito.ogg",
+            ),
+        )
+
+    def test_final_worktree_rejects_unrelated_mutations_even_after_integration(self) -> None:
+        dirty = (
+            " M encyclopedia/VOICE_RECORDING_REQUESTS.md",
+            " M activities/enciclopedia_greia/locales/it.json",
+            " M activities/enciclopedia_greia/pages/lion.py",
+            " M src/greia_platform/localization.py",
+        )
+        self.assertEqual(
+            unexpected_final_paths(dirty, integration_executed=True),
             (
                 "activities/enciclopedia_greia/pages/lion.py",
                 "src/greia_platform/localization.py",
