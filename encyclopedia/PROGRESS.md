@@ -466,3 +466,36 @@ SOURCE-REVIEWED / TESTS-UNEXECUTED / SIMULATOR-UNVERIFIED
 ```
 
 No page-by-page Simulator run was performed, per owner direction. The next major runtime stage is one consolidated source-test + Simulator/visual/input acceptance pass after the voice ledger is synchronized and enough accepted recordings exist to make audio behavior meaningful.
+
+---
+
+## 2026-08-27 — post-build drift review before consolidated acceptance
+
+Performed a source-wide freeze review covering the page engine, app/composition seams, navigation maps, low-resource hot paths, localization/audio integration, research authorities, voice-ledger synchronization, contract tests and repository hygiene.
+
+Architecture result:
+
+- `enciclopedia_engine.py` remains subject-neutral; no animal/planet/body/machine/history branch leaked into the engine;
+- `main.py` remains a thin composition root;
+- model classes remain limited to real coupled state rather than consistency-for-its-own-sake inheritance;
+- typography, character and sound caches remain explicitly bounded;
+- the Activity still owns no runtime TTS, speech recognition, AI/provider or network-fact dependency.
+
+Concrete drift defects found and fixed:
+
+1. **Canonical locale-audio schema:** `integrate_voice_assets.py` had been emitting bare path strings even though Greia's `LocalizedResources` requires each audio cue to be an object containing `path`. The integrator and both contract suites now emit/validate the canonical object form and preserve unrelated audio objects.
+2. **Mixed historical research formats:** early research authorities use `Child-facing wording contract` + human headings/Italian/English blocks, while later authorities use semantic cue IDs under `Approved narration wording`. The first synchronizer implementation only understood the later format and would have failed before reaching 378 rows. It now supports both generations fail-closed: established legacy rows are validated against exact research wording/speaker/voice IDs and retained; canonical rows are generated from semantic cue blocks.
+3. **Test inventory/template drift:** the Activity contract had become a third copied topic inventory and assumed only the newer research template. It now derives runtime vs authoring catalogue equality directly and discovers research files from the authority tree, while deliberately accepting the two documented research generations.
+4. **Runtime cue/recording drift:** the authoring-tool suite now requires the runtime page semantic narration cue set to equal the full synchronized ledger cue set.
+5. **Exception hygiene:** `EncyclopediaAudio.play()` no longer catches arbitrary `Exception` from localization; it handles `LocalizationError` explicitly while mixer/file failures retain their own fail-soft paths.
+6. **Recorder staging hygiene:** `encyclopedia/pages/**/assets/audio/` is now git-ignored. Queue `FINAL_PATH` means the recorder's local final staging destination; only owner-accepted copies under the runtime Activity audio tree are intended to be committed/shipped.
+
+The complete queue is still **not claimed synchronized** because this GitHub-only environment did not execute `sync_voice_requests.py`. The checked-in Markdown remains the old 176-row checkpoint; local execution must produce and prove exactly 378 rows.
+
+No focused tests, `make verify`, Simulator launch, responsive review or physical hardware run executed against this post-review source. The evidence label therefore remains exactly:
+
+```text
+SOURCE-REVIEWED / TESTS-UNEXECUTED / SIMULATOR-UNVERIFIED
+```
+
+The exact next step is the fail-closed local procedure at `docs/testing/GREIA_ENCYCLOPEDIA_V01_CONSOLIDATED_ACCEPTANCE.md`. Do not add more v0.1 topics before that evidence is reviewed.
