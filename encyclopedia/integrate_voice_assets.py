@@ -18,8 +18,8 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 import argparse
 import json
-import shutil
 import sys
+import tempfile
 
 try:
     from .voice_ledger import VoiceLedgerRow, parse_ledger_rows
@@ -182,6 +182,28 @@ def _serialize_json(payload: dict[str, object]) -> bytes:
     return (json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
 
 
+def _atomic_write(path: Path, payload: bytes) -> None:
+    """Replace one file atomically after writing a sibling temporary file."""
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="wb",
+            dir=path.parent,
+            prefix=f".{path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as handle:
+            handle.write(payload)
+            handle.flush()
+            temporary = Path(handle.name)
+        temporary.replace(path)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
+
+
 def integrate_accepted_assets(
     repo_root: Path = DEFAULT_REPO_ROOT,
     *,
@@ -224,16 +246,16 @@ def integrate_accepted_assets(
     if check_only or not changed:
         return IntegrationReport(len(assets), tuple(changed))
 
-    # Preflight succeeded; mutations are now safe and deterministic.
+    # Preflight succeeded. Package files first; locale maps are replaced last so
+    # runtime never points at an accepted asset that has not been written yet.
     for asset, payload in source_payloads.items():
-        asset.target.parent.mkdir(parents=True, exist_ok=True)
         if not asset.target.is_file() or asset.target.read_bytes() != payload:
-            asset.target.write_bytes(payload)
+            _atomic_write(asset.target, payload)
 
     for locale in SUPPORTED_LOCALES:
         locale_path, expected_bytes = locale_expected[locale]
         if locale_path.read_bytes() != expected_bytes:
-            locale_path.write_bytes(expected_bytes)
+            _atomic_write(locale_path, expected_bytes)
 
     return IntegrationReport(len(assets), tuple(changed))
 
