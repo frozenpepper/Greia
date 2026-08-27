@@ -52,7 +52,11 @@ class ChatterboxMLXProvider(VoiceProvider):
 
     def supports(self, request: VoiceRequest, profile: VoiceProfile | None) -> bool:
         return (
-            request.kind is SpeechKind.CHARACTER_DIALOGUE
+            request.kind
+            in {
+                SpeechKind.CHARACTER_DIALOGUE,
+                SpeechKind.SHARED_CHARACTER_UTTERANCE,
+            }
             and profile is not None
             and profile.production == "cloned_reference"
         )
@@ -68,12 +72,16 @@ class ChatterboxMLXProvider(VoiceProvider):
             self.provider_id,
             True,
             self.model_id,
-            capabilities=(SpeechKind.CHARACTER_DIALOGUE.value,),
+            capabilities=(
+                SpeechKind.CHARACTER_DIALOGUE.value,
+                SpeechKind.SHARED_CHARACTER_UTTERANCE.value,
+            ),
         )
 
     def _load_model(self) -> Any:
         if self._model is None:
             from mlx_audio.tts import load
+
             self._model = load(self.model_id)
             self._model_load_count += 1
         return self._model
@@ -93,6 +101,7 @@ class ChatterboxMLXProvider(VoiceProvider):
     @staticmethod
     def _trim_audio(audio: Any, sample_rate: int, short: bool) -> Any:
         import numpy as np
+
         samples = np.asarray(audio, dtype=np.float32)
         frame_len = max(1, int(0.010 * sample_rate))
         frame_count = len(samples) // frame_len
@@ -103,7 +112,10 @@ class ChatterboxMLXProvider(VoiceProvider):
         peak = float(np.max(rms))
         if peak < 1e-4:
             return samples
-        threshold = max(0.005 if not short else 0.010, peak * (10 ** ((-38 if not short else -35) / 20.0)))
+        threshold = max(
+            0.005 if not short else 0.010,
+            peak * (10 ** ((-38 if not short else -35) / 20.0)),
+        )
         active = np.where(rms > threshold)[0]
         if not len(active):
             return samples
@@ -120,8 +132,14 @@ class ChatterboxMLXProvider(VoiceProvider):
         else:
             lead_ms, trail_ms = 40.0, 180.0
 
-        start = max(0, int((start_frame * 0.010 - lead_ms / 1000.0) * sample_rate))
-        end = min(len(samples), int(((end_frame + 1) * 0.010 + trail_ms / 1000.0) * sample_rate))
+        start = max(
+            0,
+            int((start_frame * 0.010 - lead_ms / 1000.0) * sample_rate),
+        )
+        end = min(
+            len(samples),
+            int(((end_frame + 1) * 0.010 + trail_ms / 1000.0) * sample_rate),
+        )
         return samples[start:end]
 
     def generate(self, request: VoiceRequest, profile: VoiceProfile | None) -> GeneratedTake:
@@ -181,6 +199,7 @@ class ChatterboxMLXProvider(VoiceProvider):
         if self._model is not None:
             try:
                 import mlx.core as mx
+
                 mx.clear_cache()
             except Exception:
                 pass
@@ -192,10 +211,19 @@ class MacOSNativeSpeechProvider(VoiceProvider):
     provider_id = "macos-native-say"
 
     def supports(self, request: VoiceRequest, profile: VoiceProfile | None) -> bool:
-        return sys.platform == "darwin" and request.kind in {
+        if sys.platform != "darwin":
+            return False
+        if request.kind in {
             SpeechKind.PEDAGOGICAL_SPEECH,
             SpeechKind.DANI_SYSTEM_SPEECH,
-        }
+        }:
+            return True
+        return (
+            request.kind is SpeechKind.SHARED_CHARACTER_UTTERANCE
+            and profile is not None
+            and profile.character == "dani"
+            and profile.production == "greia_os_tts"
+        )
 
     def probe(self) -> ProviderStatus:
         available = sys.platform == "darwin" and shutil.which("say") and shutil.which("afconvert")
@@ -206,16 +234,21 @@ class MacOSNativeSpeechProvider(VoiceProvider):
             capabilities=(
                 SpeechKind.PEDAGOGICAL_SPEECH.value,
                 SpeechKind.DANI_SYSTEM_SPEECH.value,
+                SpeechKind.SHARED_CHARACTER_UTTERANCE.value,
             ),
         )
 
     @staticmethod
-    def _profile(request: VoiceRequest) -> NativeSpeechProfile:
-        profiles = (
-            MACOS_DANI_PROFILES
-            if request.kind is SpeechKind.DANI_SYSTEM_SPEECH
-            else MACOS_PEDAGOGICAL_PROFILES
+    def _profile(
+        request: VoiceRequest,
+        voice_profile: VoiceProfile | None,
+    ) -> NativeSpeechProfile:
+        is_dani = request.kind is SpeechKind.DANI_SYSTEM_SPEECH or (
+            request.kind is SpeechKind.SHARED_CHARACTER_UTTERANCE
+            and voice_profile is not None
+            and voice_profile.character == "dani"
         )
+        profiles = MACOS_DANI_PROFILES if is_dani else MACOS_PEDAGOGICAL_PROFILES
         try:
             profile = profiles[request.language]
         except KeyError as exc:
@@ -225,17 +258,20 @@ class MacOSNativeSpeechProvider(VoiceProvider):
 
         env_name = (
             f"GREIA_VOICE_DANI_VOICE_{request.language.upper()}"
-            if request.kind is SpeechKind.DANI_SYSTEM_SPEECH
+            if is_dani
             else f"GREIA_VOICE_PEDAGOGICAL_VOICE_{request.language.upper()}"
         )
         override = os.environ.get(env_name, "").strip()
-        return NativeSpeechProfile(voice=override or profile.voice, rate_wpm=profile.rate_wpm)
+        return NativeSpeechProfile(
+            voice=override or profile.voice,
+            rate_wpm=profile.rate_wpm,
+        )
 
     def generate(self, request: VoiceRequest, profile: VoiceProfile | None) -> GeneratedTake:
         status = self.probe()
         if not status.available:
             raise VoiceProviderError(status.detail)
-        native = self._profile(request)
+        native = self._profile(request, profile)
         synthesis_text = (
             pedagogical_synthesis_text(request.text, request.language)
             if request.kind is SpeechKind.PEDAGOGICAL_SPEECH
@@ -248,8 +284,14 @@ class MacOSNativeSpeechProvider(VoiceProvider):
             try:
                 subprocess.run(
                     [
-                        "say", "-v", native.voice, "-r", str(native.rate_wpm),
-                        synthesis_text, "-o", str(aiff),
+                        "say",
+                        "-v",
+                        native.voice,
+                        "-r",
+                        str(native.rate_wpm),
+                        synthesis_text,
+                        "-o",
+                        str(aiff),
                     ],
                     check=True,
                     capture_output=True,
@@ -257,8 +299,15 @@ class MacOSNativeSpeechProvider(VoiceProvider):
                 )
                 subprocess.run(
                     [
-                        "afconvert", "-f", "WAVE", "-d", "LEI16@22050", "-c", "1",
-                        str(aiff), str(wav),
+                        "afconvert",
+                        "-f",
+                        "WAVE",
+                        "-d",
+                        "LEI16@22050",
+                        "-c",
+                        "1",
+                        str(aiff),
+                        str(wav),
                     ],
                     check=True,
                     capture_output=True,
@@ -266,7 +315,9 @@ class MacOSNativeSpeechProvider(VoiceProvider):
                 )
             except subprocess.CalledProcessError as exc:
                 detail = (exc.stderr or exc.stdout or str(exc)).strip()
-                raise VoiceProviderError(f"macOS native speech generation failed: {detail}") from exc
+                raise VoiceProviderError(
+                    f"macOS native speech generation failed: {detail}"
+                ) from exc
             fd, tmp_name = tempfile.mkstemp(prefix="greia-voice-native-", suffix=".wav")
             os.close(fd)
             tmp_path = Path(tmp_name)
@@ -287,10 +338,17 @@ class UnsupportedNativeSpeechProvider(VoiceProvider):
     provider_id = "native-system-unavailable"
 
     def supports(self, request: VoiceRequest, profile: VoiceProfile | None) -> bool:
-        return request.kind in {
+        if request.kind in {
             SpeechKind.PEDAGOGICAL_SPEECH,
             SpeechKind.DANI_SYSTEM_SPEECH,
-        }
+        }:
+            return True
+        return (
+            request.kind is SpeechKind.SHARED_CHARACTER_UTTERANCE
+            and profile is not None
+            and profile.character == "dani"
+            and profile.production == "greia_os_tts"
+        )
 
     def probe(self) -> ProviderStatus:
         return ProviderStatus(
