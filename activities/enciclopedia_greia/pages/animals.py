@@ -21,6 +21,7 @@ ANIMALS = (
     ("penguin", "animal.penguin"),
     ("frog", "animal.frog"),
 )
+OCTOPUS_INDEX = 2
 
 
 class AnimalsPage(EncyclopediaPage):
@@ -49,9 +50,13 @@ class AnimalsPage(EncyclopediaPage):
             self._hovered = hit
             if event.kind is PageInputKind.POINTER_PRESS and hit is not None:
                 self._selected = hit
+                if hit == OCTOPUS_INDEX:
+                    self.context.host.open_page("animals.octopus")
             return
         if event.kind is PageInputKind.COMMAND and event.command:
             if event.command is PageCommand.ACTIVATE:
+                if self._selected == OCTOPUS_INDEX:
+                    self.context.host.open_page("animals.octopus")
                 return
             self._selected = grid_step(self._selected, event.command, columns=3, count=len(ANIMALS))
 
@@ -74,6 +79,8 @@ class AnimalsPage(EncyclopediaPage):
             pygame.draw.rect(surface, (255, 252, 242), rect, border_radius=24)
             pygame.draw.rect(surface, (81, 136, 89), rect, 4, border_radius=24)
             self._draw_animal(surface, animal_id, rect, i)
+            if i == OCTOPUS_INDEX:
+                pygame.draw.circle(surface, (255, 214, 74), (rect.right - 18, rect.top + 18), 9)
             draw_centered_text(
                 surface,
                 self.context.typography,
