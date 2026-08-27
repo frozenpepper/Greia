@@ -11,6 +11,7 @@ if __package__:
     from .pages.home import HomePage
     from .pages.machines import MachinesPage
     from .pages.octopus import OctopusPage
+    from .pages.saturn import SaturnPage
     from .pages.space import SpacePage
 else:
     from enciclopedia_engine import PageRegistry
@@ -21,6 +22,7 @@ else:
     from pages.home import HomePage
     from pages.machines import MachinesPage
     from pages.octopus import OctopusPage
+    from pages.saturn import SaturnPage
     from pages.space import SpacePage
 
 IMPLEMENTED_PAGE_IDS = (
@@ -28,6 +30,7 @@ IMPLEMENTED_PAGE_IDS = (
     "animals",
     "animals.octopus",
     "space",
+    "space.saturn",
     "earth",
     "body",
     "machines",
@@ -42,6 +45,7 @@ def build_page_registry() -> PageRegistry:
         AnimalsPage,
         OctopusPage,
         SpacePage,
+        SaturnPage,
         EarthPage,
         BodyPage,
         MachinesPage,
