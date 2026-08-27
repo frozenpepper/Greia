@@ -46,7 +46,7 @@ def _write_locale(
     root: Path,
     locale: str,
     *,
-    audio: dict[str, str] | None = None,
+    audio: dict[str, object] | None = None,
 ) -> None:
     path = root / "activities" / "enciclopedia_greia" / "locales" / f"{locale}.json"
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -108,7 +108,9 @@ class VoiceLedgerAuthoringTests(unittest.TestCase):
             ledger_path.parent.mkdir(parents=True, exist_ok=True)
             ledger_path.write_text(ledger, encoding="utf-8")
             unrelated_it = {
-                "encyclopedia.animals.lion.real_roar": "assets/sfx/lion-real-roar.ogg"
+                "encyclopedia.animals.lion.real_roar": {
+                    "path": "assets/sfx/lion-real-roar.ogg"
+                }
             }
             _write_locale(root, "it", audio=unrelated_it)
             _write_locale(root, "en")
@@ -163,10 +165,12 @@ class VoiceLedgerAuthoringTests(unittest.TestCase):
             self.assertEqual(
                 it_bundle["audio"],
                 {
-                    "encyclopedia.animals.lion.intro": (
-                        "assets/audio/it/animals/lion/intro-tito.ogg"
-                    ),
-                    "encyclopedia.animals.lion.real_roar": "assets/sfx/lion-real-roar.ogg",
+                    "encyclopedia.animals.lion.intro": {
+                        "path": "assets/audio/it/animals/lion/intro-tito.ogg"
+                    },
+                    "encyclopedia.animals.lion.real_roar": {
+                        "path": "assets/sfx/lion-real-roar.ogg"
+                    },
                 },
             )
             self.assertEqual(en_bundle["audio"], {})
