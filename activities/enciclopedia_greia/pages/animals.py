@@ -22,14 +22,15 @@ ANIMALS = (
     ("frog", "animal.frog"),
 )
 
-# Only real runtime pages are navigable. Adding a finished animal entry requires
-# one explicit mapping here plus registry wiring; planned-but-missing subjects do
-# not pretend to open an empty page.
+# Explicit finished-page mapping keeps section navigation honest: an animal is
+# only marked/openable after its real runtime page exists and is registered.
 IMPLEMENTED_ENTRY_IDS = {
     "lion": "animals.lion",
     "elephant": "animals.elephant",
     "octopus": "animals.octopus",
     "bee": "animals.bee",
+    "penguin": "animals.penguin",
+    "frog": "animals.frog",
 }
 
 
