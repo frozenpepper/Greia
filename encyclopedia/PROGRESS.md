@@ -208,3 +208,104 @@ animals.frog
 ```
 
 These two pages will complete Animals v0.1 source breadth. Generic wording must preserve species diversity: not all penguins live on ice, and the familiar aquatic egg -> tadpole -> frog route is common but not universal among frogs.
+
+---
+
+## 2026-08-27 — E4 Animals source breadth complete
+
+Implemented and registered:
+
+```text
+animals.penguin
+animals.frog
+```
+
+Animals now has all six planned v0.1 final entries and no dead subject anchors. Runtime registry reached 18 real pages.
+
+Quality decisions preserved:
+
+- Penguin explicitly avoids the myth that every penguin lives on Antarctic ice; the page demonstrates cold, temperate and warmer Southern Hemisphere habitats;
+- Frog presents egg -> tadpole -> froglet -> adult as a common route rather than a universal rule;
+- `FrogLifeCycleModel` owns ordered stage/metamorphosis state because that sequence is a real domain invariant;
+- Penguin remains page-owned state because its demonstrations do not justify a separate model class;
+- section navigation remains one explicit subject-ID mapping rather than a growing branch chain.
+
+The voice queue added Penguin/Frog bilingual Tito batches after a fresh synchronization, reaching 126 exact rows at that point.
+
+Evidence remains `SOURCE-VERIFIED / SIMULATOR-UNVERIFIED`; Simulator is still intentionally deferred.
+
+---
+
+## 2026-08-27 — fast architecture/drift review before E5
+
+Review covered engine neutrality, page responsibility, hot-loop cost, navigation parity, localization/audio boundaries and stale documentation.
+
+Findings:
+
+- no subject-specific behavior leaked into `enciclopedia_engine.py`;
+- `main.py` remains a thin composition root;
+- shared visual cache is bounded;
+- page modules remain comfortably below the engineering decomposition threshold;
+- no generic planet/exhibit inheritance hierarchy is justified yet;
+- one repeated performance smell was real: static title/caption surfaces were being rerasterized every frame even though fonts themselves were cached.
+
+Fix:
+
+- introduced `CachedEncyclopediaTypography`, a bounded Activity-owned substitution of `GreiaTypography` with a 160-surface LRU-style text cache;
+- the existing `PageContext.typography` seam required no page changes and no platform widening;
+- cleanup remains explicit through the normal composition-root lifetime.
+
+A Space product mismatch was also found: prerecorded section narration already told children they could touch the Sun, planets or Moon, while the section originally exposed only planet targets. Rather than rewriting coordinated narration, the section was corrected to make Sun and Moon genuine semantic targets as their pages arrived.
+
+---
+
+## 2026-08-27 — E5 Space breadth complete
+
+Space v0.1 is now source-complete. Added researched executable entries:
+
+```text
+space.sun
+space.mercury
+space.venus
+space.earth
+space.moon
+space.mars
+space.jupiter
+space.uranus
+space.neptune
+```
+
+Together with the earlier `space.saturn`, the Space section now has real destinations for the Sun, all eight major planets and Earth's Moon. Runtime registry is now **27 real pages** overall.
+
+Architecture/UX outcomes:
+
+- eight planets remain the only members of the orbiting `PLANETS` tuple;
+- Moon is rendered and navigated explicitly as Earth's satellite, not a ninth planet;
+- semantic order is `Sun -> Mercury -> Venus -> Earth -> Moon -> Mars -> Jupiter -> Saturn -> Uranus -> Neptune`;
+- pointer target order matches keyboard/controller semantic order;
+- all Space targets use at least a 64 logical-pixel hit diameter and overlapping Earth/Moon regions resolve by nearest target;
+- the old Saturn-only navigation branch was replaced by one explicit `body_id -> page_id` mapping;
+- no planet base class or planet-specific branch was added to the engine.
+
+Research/provenance now exists for every Space final entry under `encyclopedia/research/space/`, using NASA Science as primary authority. Volatile moon counts were deliberately excluded from Jupiter/Uranus/Neptune content.
+
+Notable science/visual guardrails:
+
+- Mercury is not taught as the hottest planet; Venus is;
+- Mars is red because iron-rich minerals oxidized, not because it is hot;
+- ancient Martian water is shown as past evidence, not modern open rivers;
+- Jupiter's visible bands are atmospheric clouds, not a solid surface;
+- Uranus's near-98-degree axial tilt is shown as orientation, without claiming a collision cause as certain;
+- Neptune is not portrayed as a solid blue ocean world; methane contributes to its blue appearance;
+- Moon phases are changing views of sunlight, not ordinary Earth-shadow events;
+- Earth's seasons are tied to axial tilt, not changing Sun distance.
+
+`tests/test_activity_enciclopedia.py` now describes the 27-page runtime, all researched Space provenance, complete Space semantic target mapping, bounded text-cache contract, bilingual key parity and engine neutrality.
+
+No Simulator was run, by owner direction. Exact evidence remains:
+
+```text
+SOURCE-VERIFIED / SIMULATOR-UNVERIFIED
+```
+
+Next breadth family after documentation/audio synchronization: **Earth & Nature** (`earth.rain`, `earth.tree`, `earth.rainbow`, `earth.rocks` alongside the already implemented `earth.volcano`).
