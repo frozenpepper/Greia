@@ -45,7 +45,7 @@ class FossilDigModel:
     def __init__(self) -> None:
         self._cleared = [False] * (_COLUMNS * _ROWS)
         self._next_index = 0
-        self.rare_announced = False
+        self._rare_announced = False
         self.burial_age = 0.0
         self.clue_age = 0.0
         self.types_age = 0.0
@@ -80,6 +80,14 @@ class FossilDigModel:
         index = self._next_index
         self._cleared[index] = True
         self._advance_next()
+        return True
+
+    def consume_completion_announcement(self) -> bool:
+        """Return True exactly once when the finite dig becomes complete."""
+
+        if not self.complete or self._rare_announced:
+            return False
+        self._rare_announced = True
         return True
 
     def _advance_next(self) -> None:
@@ -172,8 +180,7 @@ class FossilsPage(EncyclopediaPage):
             self._after_clear()
 
     def _after_clear(self) -> None:
-        if self._model.complete and not self._model.rare_announced:
-            self._model.rare_announced = True
+        if self._model.consume_completion_announcement():
             self._caption_key = "fossils.rare"
             self.context.audio.play("encyclopedia.history.fossils.rare")
 
@@ -225,7 +232,12 @@ class FossilsPage(EncyclopediaPage):
                 _CELL_H,
             )
             shade = 188 + (index % 3) * 8
-            pygame.draw.rect(surface, (shade, 151, 102), rect.inflate(-2, -2), border_radius=8)
+            pygame.draw.rect(
+                surface,
+                (shade, 151, 102),
+                rect.inflate(-2, -2),
+                border_radius=8,
+            )
             for pebble in range(3):
                 px = rect.x + 15 + ((index * 17 + pebble * 19) % max(20, rect.width - 30))
                 py = rect.y + 16 + ((index * 11 + pebble * 23) % max(20, rect.height - 30))
@@ -278,7 +290,13 @@ class FossilsPage(EncyclopediaPage):
                 pygame.draw.ellipse(surface, (139, 105, 73), (cx + 7, cy - 3, 22, 29))
             elif item.discovery_id == "burial":
                 for row in range(3):
-                    pygame.draw.line(surface, (157, 113 + row * 12, 78), (cx - 24, cy - 15 + row * 14), (cx + 24, cy - 15 + row * 14), 7)
+                    pygame.draw.line(
+                        surface,
+                        (157, 113 + row * 12, 78),
+                        (cx - 24, cy - 15 + row * 14),
+                        (cx + 24, cy - 15 + row * 14),
+                        7,
+                    )
             else:
                 pygame.draw.circle(surface, (249, 222, 128), (cx - 5, cy - 4), 15, 4)
                 pygame.draw.line(surface, (88, 67, 52), (cx + 7, cy + 8), (cx + 22, cy + 23), 7)
