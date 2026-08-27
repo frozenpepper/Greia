@@ -146,8 +146,6 @@ Research/provenance authority for this batch:
 encyclopedia/research/animals/octopus.md
 ```
 
-The exact child-facing narration below is intentionally short and maps one-to-one to the four visible discovery interactions on `animals.octopus`.
-
 | STATUS | CUE_ID | KIND | SPEAKER | VOICE_ID | LOCALE | EXACT_TEXT | FINAL_FILENAME | FINAL_PATH | RECORDER_NOTES |
 |---|---|---|---|---|---|---|---|---|---|
 | REQUESTED | `encyclopedia.animals.octopus.intro` | character_dialogue | Tito | `greia.tito.v1` | it | Guarda che polpo! Ha otto braccia morbide, piene di ventose. Tocca il polpo e scopri i suoi trucchi! | `intro-tito.ogg` | `encyclopedia/pages/animals/octopus/assets/audio/it/intro-tito.ogg` | |
@@ -163,7 +161,30 @@ The exact child-facing narration below is intentionally short and maps one-to-on
 
 ---
 
-## 5. Pending future batches
+## 5. Requested batch E3-SATURN-01
+
+Research/provenance authority for this batch:
+
+```text
+encyclopedia/research/space/saturn.md
+```
+
+| STATUS | CUE_ID | KIND | SPEAKER | VOICE_ID | LOCALE | EXACT_TEXT | FINAL_FILENAME | FINAL_PATH | RECORDER_NOTES |
+|---|---|---|---|---|---|---|---|---|---|
+| REQUESTED | `encyclopedia.space.saturn.intro` | character_dialogue | Leo | `greia.leo.v1` | it | Ecco Saturno, il gigante con gli anelli! Tocca il pianeta e i suoi anelli per scoprire come sono fatti. | `intro-leo.ogg` | `encyclopedia/pages/space/saturn/assets/audio/it/intro-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.saturn.intro` | character_dialogue | Leo | `greia.leo.v1` | en | Here is Saturn, the giant with rings! Touch the planet and its rings to discover what they are made of. | `intro-leo.ogg` | `encyclopedia/pages/space/saturn/assets/audio/en/intro-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.saturn.place` | character_dialogue | Leo | `greia.leo.v1` | it | Saturno è il sesto pianeta dal Sole ed è il secondo pianeta più grande del nostro Sistema Solare. | `place-leo.ogg` | `encyclopedia/pages/space/saturn/assets/audio/it/place-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.saturn.place` | character_dialogue | Leo | `greia.leo.v1` | en | Saturn is the sixth planet from the Sun and the second-largest planet in our solar system. | `place-leo.ogg` | `encyclopedia/pages/space/saturn/assets/audio/en/place-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.saturn.gas` | character_dialogue | Leo | `greia.leo.v1` | it | Saturno è un gigante gassoso fatto soprattutto di idrogeno ed elio. Non ha una superficie solida come la Terra. | `gas-leo.ogg` | `encyclopedia/pages/space/saturn/assets/audio/it/gas-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.saturn.gas` | character_dialogue | Leo | `greia.leo.v1` | en | Saturn is a gas giant made mostly of hydrogen and helium. It does not have a solid surface like Earth. | `gas-leo.ogg` | `encyclopedia/pages/space/saturn/assets/audio/en/gas-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.saturn.rings` | character_dialogue | Leo | `greia.leo.v1` | it | Gli anelli di Saturno non sono cerchi solidi. Sono formati da miliardi di pezzetti di ghiaccio e roccia che orbitano intorno al pianeta. | `rings-leo.ogg` | `encyclopedia/pages/space/saturn/assets/audio/it/rings-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.saturn.rings` | character_dialogue | Leo | `greia.leo.v1` | en | Saturn's rings are not solid hoops. They are made of billions of pieces of ice and rock orbiting the planet. | `rings-leo.ogg` | `encyclopedia/pages/space/saturn/assets/audio/en/rings-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.saturn.tilt` | character_dialogue | Leo | `greia.leo.v1` | it | Saturno è inclinato e i suoi anelli sono inclinati con lui. Mentre gira intorno al Sole, dalla Terra vediamo gli anelli da angolazioni diverse. | `tilt-leo.ogg` | `encyclopedia/pages/space/saturn/assets/audio/it/tilt-leo.ogg` | |
+| REQUESTED | `encyclopedia.space.saturn.tilt` | character_dialogue | Leo | `greia.leo.v1` | en | Saturn is tilted, and its rings are tilted with it. As Saturn travels around the Sun, from Earth we see the rings at different angles. | `tilt-leo.ogg` | `encyclopedia/pages/space/saturn/assets/audio/en/tilt-leo.ogg` | |
+
+---
+
+## 6. Pending future batches
 
 Do **not** record these yet.
 
@@ -171,7 +192,6 @@ Future batches are appended only after page research and wording are ready:
 
 ```text
 E2-SECTION-*     additional section-page interaction cues if needed
-E3-SATURN-*      space.saturn
 E3-VOLCANO-*     earth.volcano
 E3-HEART-*       body.heart
 E3-GEARS-*       machines.gears
