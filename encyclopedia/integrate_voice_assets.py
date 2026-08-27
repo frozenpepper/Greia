@@ -154,6 +154,7 @@ def _expected_locale_payload(
     current: dict[str, object],
     locale: str,
     assets: tuple[AcceptedAsset, ...],
+    managed_cues: set[str],
 ) -> dict[str, object]:
     if current.get("locale") != locale:
         raise ValueError(
@@ -165,13 +166,23 @@ def _expected_locale_payload(
     if not isinstance(current_audio, dict):
         raise ValueError(f"locale {locale!r} is missing an audio object")
 
-    expected_audio = {
+    accepted_audio = {
         asset.cue_id: asset.runtime_relative
         for asset in assets
         if asset.locale == locale
     }
-    if len(expected_audio) != sum(1 for asset in assets if asset.locale == locale):
+    if len(accepted_audio) != sum(1 for asset in assets if asset.locale == locale):
         raise ValueError(f"duplicate accepted cue mapping in locale {locale!r}")
+
+    # The voice ledger owns narration cues only. Preserve any unrelated Activity
+    # audio mapping (for example a future licensed animal call) rather than
+    # treating the entire locale audio object as voice-tool property.
+    expected_audio = {
+        str(cue_id): str(relative_path)
+        for cue_id, relative_path in current_audio.items()
+        if cue_id not in managed_cues
+    }
+    expected_audio.update(accepted_audio)
 
     result = dict(current)
     result["audio"] = dict(sorted(expected_audio.items()))
@@ -215,7 +226,16 @@ def integrate_accepted_assets(
     ledger_path = repo_root / LEDGER_RELATIVE
     activity_root = repo_root / ACTIVITY_RELATIVE
     ledger_text = ledger_path.read_text(encoding="utf-8")
+    ledger_rows = parse_ledger_rows(ledger_text)
     assets = plan_accepted_assets(ledger_text, repo_root)
+    managed_cues_by_locale = {
+        locale: {
+            row.cue_id
+            for row in ledger_rows.values()
+            if row.locale == locale
+        }
+        for locale in SUPPORTED_LOCALES
+    }
 
     # Full preflight: validate every accepted source and both locale bundles
     # before any filesystem mutation.
@@ -229,7 +249,12 @@ def integrate_accepted_assets(
         current = json.loads(locale_path.read_text(encoding="utf-8"))
         if not isinstance(current, dict):
             raise ValueError(f"locale bundle must be a JSON object: {locale_path}")
-        expected = _expected_locale_payload(current, locale, assets)
+        expected = _expected_locale_payload(
+            current,
+            locale,
+            assets,
+            managed_cues_by_locale[locale],
+        )
         locale_expected[locale] = (locale_path, _serialize_json(expected))
 
     changed: list[str] = []
