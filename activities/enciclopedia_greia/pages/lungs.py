@@ -38,7 +38,7 @@ class BreathingModel:
 
     def __init__(self) -> None:
         self.time = 0.0
-        self.manual_inhale = True
+        self.manual_inhale = False
         self.breath_demo_age = 0.0
         self.airways_age = 0.0
         self.exchange_age = 0.0
