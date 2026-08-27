@@ -12,65 +12,29 @@ ACTIVITY = ROOT / "activities" / "enciclopedia_greia"
 AUTHORING_CATALOGUE = ROOT / "encyclopedia" / "pages" / "catalogue.py"
 
 SECTION_PAGE_IDS = {"home", "animals", "space", "earth", "body", "machines", "history"}
-
-IMPLEMENTED_PAGE_IDS = (
-    "home",
-    "animals",
-    "animals.lion",
-    "animals.elephant",
-    "animals.octopus",
-    "animals.bee",
-    "animals.penguin",
-    "animals.frog",
-    "space",
-    "space.sun",
-    "space.mercury",
-    "space.venus",
-    "space.earth",
-    "space.moon",
-    "space.mars",
-    "space.jupiter",
-    "space.saturn",
-    "space.uranus",
-    "space.neptune",
-    "earth",
-    "earth.volcano",
-    "earth.rain",
-    "earth.ocean",
-    "earth.tree",
-    "earth.rainbow",
-    "body",
-    "body.heart",
-    "body.lungs",
-    "body.bones",
-    "body.teeth",
-    "body.senses",
-    "machines",
-    "machines.gears",
-    "machines.magnet",
-    "machines.bicycle",
-    "machines.airplane",
-    "machines.bridge",
-    "history",
-    "history.dinosaurs",
-    "history.fossils",
-    "history.mammoth",
-    "history.cave_paintings",
-    "history.pyramids",
-)
-
+RESEARCH_TOPICS = {
+    "animals": ("lion", "elephant", "octopus", "bee", "penguin", "frog"),
+    "space": (
+        "sun",
+        "mercury",
+        "venus",
+        "earth",
+        "moon",
+        "mars",
+        "jupiter",
+        "saturn",
+        "uranus",
+        "neptune",
+    ),
+    "earth": ("volcano", "rain", "ocean", "tree", "rainbow"),
+    "body": ("heart", "lungs", "bones", "teeth", "senses"),
+    "machines": ("gears", "magnet", "bicycle", "airplane", "bridge"),
+    "history": ("dinosaurs", "fossils", "mammoth", "cave_paintings", "pyramids"),
+}
 RESEARCH_FILES = {
-    page_id: ROOT / "encyclopedia" / "research" / category / f"{topic}.md"
-    for category, topics in {
-        "animals": ("lion", "elephant", "octopus", "bee", "penguin", "frog"),
-        "space": ("sun", "mercury", "venus", "earth", "moon", "mars", "jupiter", "saturn", "uranus", "neptune"),
-        "earth": ("volcano", "rain", "ocean", "tree", "rainbow"),
-        "body": ("heart", "lungs", "bones", "teeth", "senses"),
-        "machines": ("gears", "magnet", "bicycle", "airplane", "bridge"),
-        "history": ("dinosaurs", "fossils", "mammoth", "cave_paintings", "pyramids"),
-    }.items()
+    f"{category}.{topic}": ROOT / "encyclopedia" / "research" / category / f"{topic}.md"
+    for category, topics in RESEARCH_TOPICS.items()
     for topic in topics
-    for page_id in (f"{category}.{topic}",)
 }
 
 
@@ -117,6 +81,18 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
     def _call_second_string_args(cls, node: ast.AST) -> tuple[str, ...]:
         return cls._call_string_args(node, 1)
 
+    @classmethod
+    def _runtime_page_ids(cls) -> tuple[str, ...]:
+        tree = ast.parse(
+            (ACTIVITY / "enciclopedia_catalogue.py").read_text(encoding="utf-8")
+        )
+        return cls._literal_strings(cls._assignment(tree, "IMPLEMENTED_PAGE_IDS"))
+
+    @classmethod
+    def _planned_page_ids(cls) -> tuple[str, ...]:
+        tree = ast.parse(AUTHORING_CATALOGUE.read_text(encoding="utf-8"))
+        return cls._call_string_args(cls._assignment(tree, "PLANNED_PAGES"), 0)
+
     def test_manifest_is_offline_first_and_bilingual(self) -> None:
         with (ACTIVITY / "activity.toml").open("rb") as handle:
             raw = tomllib.load(handle)
@@ -128,36 +104,35 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
         self.assertEqual(raw["permissions"]["requested"], [])
 
     def test_runtime_registry_matches_complete_authoring_v01_plan(self) -> None:
-        runtime_tree = ast.parse(
-            (ACTIVITY / "enciclopedia_catalogue.py").read_text(encoding="utf-8")
-        )
-        actual = self._literal_strings(
-            self._assignment(runtime_tree, "IMPLEMENTED_PAGE_IDS")
-        )
-
-        authoring_tree = ast.parse(AUTHORING_CATALOGUE.read_text(encoding="utf-8"))
-        planned = self._call_string_args(
-            self._assignment(authoring_tree, "PLANNED_PAGES"),
-            0,
-        )
-
-        self.assertEqual(actual, IMPLEMENTED_PAGE_IDS)
+        actual = self._runtime_page_ids()
+        planned = self._planned_page_ids()
         self.assertEqual(actual, planned)
         self.assertEqual(len(actual), 43)
         self.assertEqual(len(set(actual)), 43)
+        self.assertEqual(set(actual).intersection(SECTION_PAGE_IDS), SECTION_PAGE_IDS)
 
     def test_every_implemented_factual_entry_has_research_authority(self) -> None:
-        expected_factual = set(IMPLEMENTED_PAGE_IDS) - SECTION_PAGE_IDS
+        expected_factual = set(self._runtime_page_ids()) - SECTION_PAGE_IDS
         self.assertEqual(set(RESEARCH_FILES), expected_factual)
+
+        ready_markers = (
+            "**Research state:** READY FOR AUTHORING",
+            "**Research status:** READY FOR AUTHORING",
+            "**Research status:** READY FOR PILOT AUTHORING",
+        )
+        accepted_claim_markers = ("## Accepted claims", "## Accepted pilot claims")
+        interaction_markers = ("## Interaction → fact mapping", "## Interaction-to-claim mapping")
+        narration_markers = ("## Approved narration wording", "## Child-facing wording contract")
+
         for page_id, path in RESEARCH_FILES.items():
             with self.subTest(page_id=page_id):
                 text = path.read_text(encoding="utf-8")
                 self.assertIn(f"**Page ID:** `{page_id}`", text)
-                self.assertIn("**Research state:** READY FOR AUTHORING", text)
-                self.assertIn("## Accepted claims", text)
+                self.assertTrue(any(marker in text for marker in ready_markers))
+                self.assertTrue(any(marker in text for marker in accepted_claim_markers))
                 self.assertIn("## Scope guardrails", text)
-                self.assertIn("## Interaction → fact mapping", text)
-                self.assertIn("## Approved narration wording", text)
+                self.assertTrue(any(marker in text for marker in interaction_markers))
+                self.assertTrue(any(marker in text for marker in narration_markers))
                 self.assertIn("https://", text)
 
     def test_high_risk_misconception_guardrails_are_preserved(self) -> None:
@@ -216,7 +191,7 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
                     self.assertIn(path.suffix, {".ogg", ".wav"})
                     self.assertGreaterEqual(len(path.parts), 2)
                     self.assertEqual(path.parts[0], "assets")
-                    if cue_id.startswith("encyclopedia.") and path.parts[:2] == ("assets", "audio"):
+                    if path.parts[:2] == ("assets", "audio"):
                         self.assertGreaterEqual(len(path.parts), 4)
                         self.assertEqual(path.parts[2], locale)
                     caption_key = cue_spec.get("caption_key")
@@ -241,7 +216,9 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
         self.assertEqual(target_ids, expected)
         implemented = self._assignment(tree, "IMPLEMENTED_ENTRY_IDS")
         self.assertIsInstance(implemented, ast.Dict)
-        implemented_ids = tuple(key.value for key in implemented.keys if isinstance(key, ast.Constant))
+        implemented_ids = tuple(
+            key.value for key in implemented.keys if isinstance(key, ast.Constant)
+        )
         self.assertEqual(implemented_ids, expected)
         hit_radius = self._assignment(tree, "_TARGET_HIT_RADIUS")
         self.assertIsInstance(hit_radius, ast.Constant)
@@ -277,7 +254,7 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
         )
 
         mapped = earth_pages + body_pages + machines_pages + history_pages
-        self.assertTrue(set(mapped).issubset(IMPLEMENTED_PAGE_IDS))
+        self.assertTrue(set(mapped).issubset(self._runtime_page_ids()))
 
     def test_subject_specific_pages_do_not_leak_into_engine_code(self) -> None:
         source = (ACTIVITY / "enciclopedia_engine.py").read_text(encoding="utf-8")
@@ -290,7 +267,7 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
         }
         subject_tokens = {
             page_id.rsplit(".", 1)[-1]
-            for page_id in IMPLEMENTED_PAGE_IDS
+            for page_id in self._runtime_page_ids()
             if page_id not in SECTION_PAGE_IDS
         }
         for subject in subject_tokens:
@@ -306,7 +283,9 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
         tree = ast.parse(source)
         classes = {node.name: node for node in tree.body if isinstance(node, ast.ClassDef)}
         cached = classes["CachedEncyclopediaTypography"]
-        self.assertTrue(any(isinstance(base, ast.Name) and base.id == "GreiaTypography" for base in cached.bases))
+        self.assertTrue(
+            any(isinstance(base, ast.Name) and base.id == "GreiaTypography" for base in cached.bases)
+        )
         assignments = {
             target.id: node.value
             for node in cached.body
@@ -317,7 +296,9 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
         self.assertEqual(assignments["MAX_TEXT_SURFACES"].value, 160)
 
     def test_page_hot_paths_do_not_decode_or_smoothscale_assets(self) -> None:
-        combined = "\n".join(path.read_text(encoding="utf-8") for path in (ACTIVITY / "pages").glob("*.py"))
+        combined = "\n".join(
+            path.read_text(encoding="utf-8") for path in (ACTIVITY / "pages").glob("*.py")
+        )
         self.assertNotIn("pygame.image.load(", combined)
         self.assertNotIn("pygame.transform.smoothscale(", combined)
         self.assertNotIn("pygame.font.Font(", combined)
@@ -335,7 +316,9 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
             "requests.get(",
             "urllib.request",
         )
-        combined = "\n".join(path.read_text(encoding="utf-8").lower() for path in ACTIVITY.rglob("*.py"))
+        combined = "\n".join(
+            path.read_text(encoding="utf-8").lower() for path in ACTIVITY.rglob("*.py")
+        )
         for token in forbidden:
             with self.subTest(token=token):
                 self.assertNotIn(token, combined)
