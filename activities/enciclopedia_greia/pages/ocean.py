@@ -39,22 +39,12 @@ class OceanDepthModel:
 
     def __init__(self) -> None:
         self.zone_index = 0
-        self.transition = 0.0
-
-    def update(self, dt: float) -> None:
-        self.transition = max(0.0, self.transition - dt)
 
     def descend(self) -> None:
         self.zone_index = min(self.ZONE_COUNT - 1, self.zone_index + 1)
-        self.transition = 1.2
-
-    def ascend(self) -> None:
-        self.zone_index = max(0, self.zone_index - 1)
-        self.transition = 1.2
 
     def show_deep(self) -> None:
         self.zone_index = self.ZONE_COUNT - 1
-        self.transition = 1.2
 
 
 class OceanPage(EncyclopediaPage):
@@ -79,7 +69,6 @@ class OceanPage(EncyclopediaPage):
 
     def update(self, dt: float) -> None:
         self._time += dt
-        self._depth.update(dt)
         self._world_age = max(0.0, self._world_age - dt)
         self._salt_age = max(0.0, self._salt_age - dt)
 
@@ -155,12 +144,16 @@ class OceanPage(EncyclopediaPage):
             pygame.draw.rect(surface, color, rect)
         pygame.draw.rect(surface, (239, 233, 199), panel, 3, border_radius=26)
 
-        # Sunlight rays fade rather than ending at one scientifically exact line.
         for index in range(7):
             end_y = 226 + index * 13
-            pygame.draw.line(surface, (248, 230, 128), (427 + index * 25, 161), (439 + index * 19, end_y), max(1, 4 - index // 2))
+            pygame.draw.line(
+                surface,
+                (248, 230, 128),
+                (427 + index * 25, 161),
+                (439 + index * 19, end_y),
+                max(1, 4 - index // 2),
+            )
 
-        # Representative habitats are intentionally schematic and friendly.
         for x, y, size in ((440, 212, 10), (514, 231, 8), (565, 192, 11)):
             pygame.draw.ellipse(surface, (241, 176, 77), (x - size, y - size // 2, size * 2, size))
             pygame.draw.polygon(surface, (241, 176, 77), [(x - size, y), (x - size - 8, y - 6), (x - size - 8, y + 6)])
@@ -168,8 +161,6 @@ class OceanPage(EncyclopediaPage):
         pygame.draw.polygon(surface, (157, 188, 212), [(462, 300), (448, 291), (448, 309)])
         pygame.draw.ellipse(surface, (116, 123, 154), (525, 389, 54, 20))
         pygame.draw.polygon(surface, (116, 123, 154), [(525, 399), (510, 389), (510, 409)])
-        # A few bioluminescent points communicate that the deep is inhabited,
-        # without claiming every deep animal produces light.
         for x, y in ((447, 383), (488, 424), (592, 370)):
             pygame.draw.circle(surface, (109, 227, 213), (x, y), 4)
 
