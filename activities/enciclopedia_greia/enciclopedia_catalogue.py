@@ -4,10 +4,13 @@ from __future__ import annotations
 
 if __package__:
     from .enciclopedia_engine import PageRegistry
+    from .pages.airplane import AirplanePage
     from .pages.animals import AnimalsPage
     from .pages.bee import BeePage
+    from .pages.bicycle import BicyclePage
     from .pages.body import BodyPage
     from .pages.bones import BonesPage
+    from .pages.bridge import BridgePage
     from .pages.earth import EarthPage
     from .pages.elephant import ElephantPage
     from .pages.fossils import FossilsPage
@@ -20,6 +23,7 @@ if __package__:
     from .pages.lion import LionPage
     from .pages.lungs import LungsPage
     from .pages.machines import MachinesPage
+    from .pages.magnet import MagnetPage
     from .pages.mars import MarsPage
     from .pages.mercury import MercuryPage
     from .pages.moon import MoonPage
@@ -41,10 +45,13 @@ if __package__:
     from .pages.volcano import VolcanoPage
 else:
     from enciclopedia_engine import PageRegistry
+    from pages.airplane import AirplanePage
     from pages.animals import AnimalsPage
     from pages.bee import BeePage
+    from pages.bicycle import BicyclePage
     from pages.body import BodyPage
     from pages.bones import BonesPage
+    from pages.bridge import BridgePage
     from pages.earth import EarthPage
     from pages.elephant import ElephantPage
     from pages.fossils import FossilsPage
@@ -57,6 +64,7 @@ else:
     from pages.lion import LionPage
     from pages.lungs import LungsPage
     from pages.machines import MachinesPage
+    from pages.magnet import MagnetPage
     from pages.mars import MarsPage
     from pages.mercury import MercuryPage
     from pages.moon import MoonPage
@@ -111,6 +119,10 @@ IMPLEMENTED_PAGE_IDS = (
     "body.senses",
     "machines",
     "machines.gears",
+    "machines.magnet",
+    "machines.bicycle",
+    "machines.airplane",
+    "machines.bridge",
     "history",
     "history.fossils",
 )
@@ -152,6 +164,10 @@ def build_page_registry() -> PageRegistry:
         SensesPage,
         MachinesPage,
         GearsPage,
+        MagnetPage,
+        BicyclePage,
+        AirplanePage,
+        BridgePage,
         HistoryPage,
         FossilsPage,
     ):
