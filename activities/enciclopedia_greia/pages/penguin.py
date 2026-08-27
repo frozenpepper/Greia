@@ -99,6 +99,9 @@ class PenguinPage(EncyclopediaPage):
         elif discovery.discovery_id == "feathers":
             self._feather_age = 4.0
         elif discovery.discovery_id == "world":
+            # Habitat variety is the lesson here, so return to the land scene
+            # before cycling it; otherwise a swimming view would hide the change.
+            self._swimming = False
             self._world_state = (self._world_state + 1) % len(_WORLD_SCENES)
         else:
             self._breeding_state = 1 - self._breeding_state
