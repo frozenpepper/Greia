@@ -126,6 +126,14 @@ No consolidated 43-page Simulator pass or physical Acer/Pi acceptance has execut
 
 The checked-in recording queue remains the earlier 176-row snapshot until the synchronizer actually runs locally. Expected synchronized invariant is 378 bilingual rows.
 
+A deterministic bridge now exists at:
+
+```text
+encyclopedia/export_voice_batch.py
+```
+
+It converts only eligible ledger rows into the repository-wide Voice Production Engine JSONL contract without synthesizing speech or changing status. The Markdown ledger remains the single request/review authority and `OWNER_ACCEPTED` remains the packaging gate.
+
 Exact closure procedure:
 
 ```text
@@ -155,7 +163,7 @@ Current status is still **implementation candidate / local provider acceptance p
 
 Exact local finalization procedure is the voice-engine acceptance document committed with the subsystem. Do not switch every historical generator/skill to the new engine until that local provider gate is genuinely green.
 
-The encyclopedia should eventually feed this engine from its existing voice ledger rather than create a second request authority; its `OWNER_ACCEPTED` packaging gate remains authoritative even after production is centralized.
+The encyclopedia now feeds this engine from its existing ledger through `encyclopedia/export_voice_batch.py`; that adapter is deterministic and provider-free. Actual use of the generated batch still waits for the Voice Production Engine's separate local provider acceptance. Encyclopedia `OWNER_ACCEPTED` packaging remains authoritative even after production is centralized.
 
 ---
 
