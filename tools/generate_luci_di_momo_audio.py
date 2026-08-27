@@ -1,24 +1,17 @@
 #!/usr/bin/env python3
-"""Generate Luci di Momo audio assets using Chatterbox Multilingual V3 with canonical Momo voice."""
+"""Prepare Luci di Momo character speech through Greia VoiceEngine."""
 
 from __future__ import annotations
 
-import gc
-import hashlib
+import argparse
+import json
 from pathlib import Path
 import subprocess
 import sys
-import tempfile
-
-import mlx.core as mx
-import numpy as np
-import soundfile as sf
-from mlx_audio.tts.utils import load_model
-from mlx_audio.utils import load_audio
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_AUDIO_ROOT = PROJECT_ROOT / "activities" / "luci_di_momo" / "assets" / "audio"
-REFERENCE_AUDIO = PROJECT_ROOT / "assets" / "audio" / "characters" / "canonical" / "v0.1" / "momo-reference-v1.flac"
+VOICE_CLI = PROJECT_ROOT / "tools" / "greia_voice.py"
+DEFAULT_REVIEW_DIR = PROJECT_ROOT / "tmp" / "voice-review" / "luci_di_momo"
 
 PROMPTS_IT = [
     ("welcome", "Ciao! Guarda bene quante lucciole brillano nella notte, poi tocca il numero giusto!"),
@@ -59,82 +52,50 @@ PROMPTS_EN = [
 ]
 
 
-def convert_to_le16_mono_22050(src_wav: Path, dest_wav: Path) -> None:
-    dest_wav.parent.mkdir(parents=True, exist_ok=True)
-    subprocess.run(
-        [
-            "afconvert",
-            "-f", "WAVE",
-            "-d", "LEI16@22050",
-            "-c", "1",
-            str(src_wav),
-            str(dest_wav),
-        ],
-        check=True,
-        capture_output=True,
+def _output_path(review_dir: Path, locale: str, key: str) -> str:
+    output = review_dir / locale / f"{key}.wav"
+    try:
+        return str(output.resolve().relative_to(PROJECT_ROOT))
+    except ValueError:
+        return str(output.resolve())
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--review-dir", type=Path, default=DEFAULT_REVIEW_DIR)
+    args = parser.parse_args()
+    review_dir = args.review_dir.resolve()
+    review_dir.mkdir(parents=True, exist_ok=True)
+
+    prompts = {"it": PROMPTS_IT, "en": PROMPTS_EN}
+    requests = [
+        {
+            "speaker": "momo",
+            "kind": "character_dialogue",
+            "locale": locale,
+            "text": text,
+            "cue_id": f"luci_di_momo.{key}",
+            "output": _output_path(review_dir, locale, key),
+            "verification": "auto",
+            "max_attempts": 2,
+        }
+        for locale, items in prompts.items()
+        for key, text in items
+    ]
+    batch_path = review_dir / "voice_requests.jsonl"
+    batch_path.write_text(
+        "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in requests),
+        encoding="utf-8",
     )
-
-
-def generate_set(model, ref_audio, prompts, lang_code, out_dir: Path) -> None:
-    out_dir.mkdir(parents=True, exist_ok=True)
-    print(f"Generating {len(prompts)} clips for {lang_code} in {out_dir}...", flush=True)
-    for idx, (key, text) in enumerate(prompts, start=1):
-        dest_wav = out_dir / f"{key}.wav"
-        if dest_wav.exists() and dest_wav.stat().st_size > 1000:
-            print(f"[{idx}/{len(prompts)}] Skipping {key} (already exists)", flush=True)
-            continue
-        print(f"[{idx}/{len(prompts)}] Generating {key}: {text}", flush=True)
-        for attempt in range(3):
-            try:
-                results = model.generate(
-                    text=text,
-                    lang_code=lang_code,
-                    ref_audio=ref_audio,
-                    temperature=0.7,
-                )
-                with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_file:
-                    tmp_wav = Path(tmp_file.name)
-                for res in results:
-                    sf.write(str(tmp_wav), np.array(res.audio), res.sample_rate)
-                    break
-                convert_to_le16_mono_22050(tmp_wav, dest_wav)
-                tmp_wav.unlink(missing_ok=True)
-                # Clear Metal and Python memory cache immediately after generation
-                mx.metal.clear_cache()
-                gc.collect()
-                break
-            except Exception as e:
-                print(f"  Attempt {attempt + 1} failed: {e}", flush=True)
-                mx.metal.clear_cache()
-                gc.collect()
-                if attempt == 2:
-                    raise
-
-
-def main() -> None:
-    if not REFERENCE_AUDIO.exists():
-        print(f"Error: reference audio not found at {REFERENCE_AUDIO}")
-        sys.exit(1)
-
-    print("Loading Chatterbox Multilingual V3 model on Apple Silicon...")
-    model = load_model("mlx-community/chatterbox-multilingual-v3")
-    ref_audio = load_audio(str(REFERENCE_AUDIO), sample_rate=model.sample_rate)
-    print("Loaded reference:", REFERENCE_AUDIO)
-
-    audio_root = DEFAULT_AUDIO_ROOT
-    generate_set(model, ref_audio, PROMPTS_IT, "it", audio_root / "it")
-    generate_set(model, ref_audio, PROMPTS_EN, "en", audio_root / "en")
-
-    manifest_path = audio_root / "audio_manifest.sha256"
-    lines = []
-    for p in sorted(audio_root.rglob("*.wav")):
-        rel = p.relative_to(audio_root)
-        digest = hashlib.sha256(p.read_bytes()).hexdigest()
-        lines.append(f"{digest}  {rel}")
-    manifest_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    print(f"Successfully generated all {len(lines)} clips with Momo canonical voice!")
-    print(f"Updated {manifest_path}")
+    result = subprocess.run(
+        [sys.executable, str(VOICE_CLI), "batch", "--input", str(batch_path)],
+        cwd=PROJECT_ROOT,
+    )
+    if result.returncode == 0:
+        print(f"Generated {len(requests)} Momo review candidates under {review_dir}")
+        print("Human listening review is required before Activity integration.")
+    return result.returncode
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
