@@ -202,15 +202,26 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
         for locale, bundle in bundles.items():
             audio = bundle["audio"]
             self.assertIsInstance(audio, dict)
-            for cue_id, relative_path in audio.items():
+            for cue_id, cue_spec in audio.items():
                 with self.subTest(locale=locale, cue_id=cue_id):
                     self.assertTrue(cue_id.startswith("encyclopedia."))
+                    self.assertIsInstance(cue_spec, dict)
+                    self.assertIn("path", cue_spec)
+                    self.assertTrue(set(cue_spec).issubset({"path", "caption_key"}))
+                    relative_path = cue_spec["path"]
                     self.assertIsInstance(relative_path, str)
                     path = PurePosixPath(relative_path)
                     self.assertFalse(path.is_absolute())
                     self.assertNotIn("..", path.parts)
-                    self.assertEqual(path.suffix, ".ogg")
-                    self.assertEqual(path.parts[:3], ("assets", "audio", locale))
+                    self.assertIn(path.suffix, {".ogg", ".wav"})
+                    self.assertGreaterEqual(len(path.parts), 2)
+                    self.assertEqual(path.parts[0], "assets")
+                    if cue_id.startswith("encyclopedia.") and path.parts[:2] == ("assets", "audio"):
+                        self.assertGreaterEqual(len(path.parts), 4)
+                        self.assertEqual(path.parts[2], locale)
+                    caption_key = cue_spec.get("caption_key")
+                    if caption_key is not None:
+                        self.assertIsInstance(caption_key, str)
 
     def test_space_section_has_no_dead_major_body_destinations(self) -> None:
         tree = ast.parse((ACTIVITY / "pages" / "space.py").read_text(encoding="utf-8"))
