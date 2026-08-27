@@ -1,143 +1,87 @@
 # Greia Local Voice Production Setup for Agents
 
-**Status:** optional local developer/Activity Designer setup procedure  
-**Date:** 2026-08-23  
-**Purpose:** configure local custom Greia character speech production when the owner explicitly wants it  
-**Not required for:** ordinary Activity authoring, shared Greia character utterances, pedagogical/system speech, or child-runtime playback
+**Status:** canonical authoring-workstation setup for the Voice Production Engine  
+**Reviewed:** 2026-08-28  
+**Purpose:** install/probe the optional local providers used by `tools/greia_voice.py`  
+**Not shipped to:** Greia child devices or Activity packages
 
-## 1. Read first
+## 1. Canonical boundary
 
-Before custom character-voice production, read:
+Greia voice production is invoked through:
+
+```text
+tools/greia_voice.py
+```
+
+Do not install a TTS backend and then call it directly from an Activity, OS/shared-library or Encyclopedia script. Chatterbox, native TTS, Whisper and FFmpeg are providers/helpers behind the Greia Voice Production Engine.
+
+Read first:
 
 ```text
 AGENTS.md
 SETUP.md
+skills/greia-voice-production/SKILL.md
+tools/greia_voice_core/README.md
 docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md
-docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md
-skills/greia-activity-authoring/SKILL.md
-skills/greia-activity-authoring/VOICE_GENERATION.md
+docs/architecture/GREIA_VOICE_PRODUCTION_ENGINE.md
 assets/audio/characters/canonical/v0.1/manifest.toml
 ```
 
-If producing/extending the OS-owned shared utterance library, also read:
+The low-level Chatterbox field guide is maintainer/troubleshooting material only:
 
 ```text
-docs/agents/GREIA_SHARED_CHARACTER_UTTERANCE_RECORDING.md
 docs/agents/GREIA_CHATTERBOX_PRODUCTION_FIELD_GUIDE.md
 ```
 
-## 2. Opt-in rule
+## 2. Start with `doctor`
 
-**Do not install this toolchain automatically.**
-
-A normal Activity authoring environment does not need a cloning model.
-
-Before installing anything, determine whether the Activity can use:
-
-```text
-shared Greia character utterance
-or
-deterministic pedagogical/system speech
-or
-visual/text feedback without custom dialogue
-```
-
-Only configure Chatterbox when the owner explicitly requests custom canonical character dialogue or has already opted into the `voice` setup profile.
-
-If the toolchain is absent and the user has not requested installation, return `UNAVAILABLE` to the authoring workflow and let the Activity skill drop optional custom character speech.
-
-## 3. Current renderer policy
-
-Current custom character renderer:
-
-```text
-Chatterbox Multilingual V3
-upstream: Resemble AI Chatterbox
-license: MIT
-Italian: supported
-purpose: reviewed zero-shot cloning for normal character speech
-```
-
-Rejected paths:
-
-```text
-MOSS-TTS-Nano                       REJECTED — production quality unsuitable
-repeated "ma. ma. ma." generation  REJECTED — local test worsened results
-Chatterbox for phonics/syllables    REJECTED — pronunciation inconsistency
-```
-
-For pronunciation-authoritative teaching audio, use the pedagogical/system path defined by the voice design document.
-
-## 4. Canonical reference integrity
-
-Use the manifest; do not guess filenames or replace references locally.
-
-Current cloning IDs:
-
-```text
-greia.lilli.v1
-greia.leo.v1
-greia.flash.v1
-greia.tito.v1
-greia.momo.v1
-```
-
-Dani is not cloned:
-
-```text
-greia.dani.system-v1
-```
-
-Verify source/anchor hashes against:
-
-```text
-assets/audio/characters/canonical/v0.1/manifest.toml
-```
-
-A hash mismatch is a stop condition.
-
-## 5. Cross-platform audio prerequisite
-
-Use FFmpeg + ffprobe for authoring-time inspection, bounded trimming and package conversion.
-
-Verify:
+The engine source is already in the repository. Before installing anything run:
 
 ```bash
-ffmpeg -version
-ffprobe -version
+python3 tools/greia_voice.py doctor
 ```
 
-These are authoring tools. Do not put FFmpeg binaries into an Activity package merely because they were used during production.
-
-Typical host installation, only with owner approval:
-
-### macOS
-
-```bash
-brew install ffmpeg
-```
-
-### Windows
-
-Use an existing trusted FFmpeg install or an owner-approved package-manager install.
-
-### Debian/Ubuntu
-
-```bash
-sudo apt-get install ffmpeg
-```
-
-## 6. Preferred Apple Silicon path: MLX Audio
-
-On Apple Silicon, the preferred current path is the MLX conversion:
+This is non-mutating. It checks:
 
 ```text
-mlx-community/chatterbox-multilingual-v3
+canonical reference presence/hash
+FFmpeg availability
+Chatterbox MLX provider imports
+native/system speech provider availability
+Whisper availability
 ```
 
-Keep the environment and model cache outside the Greia checkout.
+It does not install packages or download model weights.
 
-Example setup:
+If the provider required for the requested work is already available, do not reinstall it.
+
+## 3. Installation policy
+
+The heavy cloned-character stack is optional for a general Greia development workstation, but when **actual character voice production is requested**, install/use the canonical voice profile rather than improvising another TTS setup.
+
+Do not silently install multi-GB models merely while designing an Activity. Installation or first model download requires owner authorization.
+
+Machine-local material stays outside Git:
+
+```text
+virtual environment
+Hugging Face/model caches
+scratch/rejected audio
+service locks/state
+```
+
+## 4. Current full production host: Apple Silicon macOS
+
+The current implemented full path is:
+
+```text
+character/shared cloned speech -> mlx-community/chatterbox-multilingual-v3
+optional verification          -> mlx-community/whisper-tiny
+pedagogical/Dani speech         -> macOS say + afconvert
+packaging                       -> FFmpeg
+```
+
+Recommended environment:
 
 ```bash
 export GREIA_VOICE_HOME="${HOME}/Library/Application Support/Greia/voice-production"
@@ -146,218 +90,222 @@ export HF_HOME="${GREIA_VOICE_CACHE}/huggingface"
 export HF_HUB_DISABLE_TELEMETRY=1
 
 mkdir -p "${GREIA_VOICE_HOME}" "${GREIA_VOICE_CACHE}" "${HF_HOME}"
-
-python3 -m venv "${GREIA_VOICE_HOME}/venv"
-source "${GREIA_VOICE_HOME}/venv/bin/activate"
-python -m pip install -U pip mlx-audio
 ```
 
-Do not create the environment inside an Activity or repository directory.
-
-The first model use may download weights. Do not trigger that download unless the owner has opted into custom voice generation.
-
-Example Italian smoke test:
+### 4.1 Install with `uv` (preferred)
 
 ```bash
-mlx_audio.tts.generate \
-  --model mlx-community/chatterbox-multilingual-v3 \
-  --text "Ciao! Giochiamo insieme?" \
-  --ref_audio assets/audio/characters/canonical/v0.1/lilli-reference-v1.flac \
-  --lang_code it
+uv venv "${GREIA_VOICE_HOME}/venv" --python 3.12
+uv pip install --python "${GREIA_VOICE_HOME}/venv" \
+  -r tools/greia_voice_requirements_mlx.txt
 ```
 
-Listen to the result. Process success is not audio acceptance.
+### 4.2 Standard `venv` / `pip` alternative
 
-## 7. Upstream/PyTorch path
+```bash
+python3.12 -m venv "${GREIA_VOICE_HOME}/venv"
+"${GREIA_VOICE_HOME}/venv/bin/python" -m pip install -U pip
+"${GREIA_VOICE_HOME}/venv/bin/python" -m pip install \
+  -r tools/greia_voice_requirements_mlx.txt
+```
 
-On a supported non-MLX authoring machine, use the official Resemble AI Chatterbox package/repository and record the exact version/device backend.
-
-The current upstream package exposes `chatterbox-tts`; follow the upstream version's installation instructions rather than copying an old Greia command blindly.
-
-Keep:
+The tested dependency file currently pins:
 
 ```text
-virtual environment
-model weights/cache
-generation scratch
+mlx-audio==0.5.0
+mlx==0.32.1
+soundfile==0.14.0
+sentencepiece==0.2.2
+mlx-whisper==0.4.3
 ```
 
-outside the repository.
+Do not move this venv into the repository or an Activity folder.
 
-Do not make CUDA, PyTorch or Chatterbox an Activity dependency.
+## 5. FFmpeg
 
-## 8. Non-mutating availability probe
+FFmpeg is the canonical authoring-time packaging/inspection dependency.
 
-Before an Activity authoring agent attempts custom dialogue, it should check the already-configured environment rather than installing one.
+Check:
 
-A successful probe should establish:
+```bash
+ffmpeg -version
+ffprobe -version
+```
+
+On macOS, if missing and installation is owner-authorized:
+
+```bash
+brew install ffmpeg
+```
+
+Do not package FFmpeg in an Activity merely because authoring used it.
+
+## 6. Native pedagogical/Dani provider
+
+On macOS, `say` and `afconvert` are OS-provided. No Python model is required for deterministic pedagogical/Dani speech.
+
+The engine currently owns the tested profiles and pronunciation workarounds. Activity scripts must not hard-code Alice/Samantha, speech rates or accent overrides.
+
+Optional host-voice overrides are engine configuration only:
 
 ```text
-configured Python/environment exists
-Chatterbox implementation imports/starts
-configured multilingual V3 model is known
-canonical reference assets exist and hash correctly
-ffmpeg/ffprobe exist when trimming is required
+GREIA_VOICE_PEDAGOGICAL_VOICE_IT
+GREIA_VOICE_PEDAGOGICAL_VOICE_EN
+GREIA_VOICE_DANI_VOICE_IT
+GREIA_VOICE_DANI_VOICE_EN
 ```
 
-Do not treat network access or `pip` availability as a successful voice-toolchain probe.
+Any changed profile still requires human listening.
 
-If no configured environment is found, return `UNAVAILABLE` and let the Activity skill continue without optional custom voice.
+## 7. Activate and verify
 
-A future `tools/greia_setup.py --profile voice --check` should own this probe centrally; do not proliferate incompatible ad-hoc probes once that tool exists.
+```bash
+source "${GREIA_VOICE_HOME}/venv/bin/activate"
+python tools/greia_voice.py doctor
+```
 
-## 9. Generation scope
-
-Use Chatterbox for:
+A full Apple-Silicon character-production environment should show:
 
 ```text
-normal character dialogue
-narration spoken by a canonical character
-character instructions/reactions
-reviewed short character exclamations
+canonical anchors: OK
+ffmpeg: available
+chatterbox-mlx-multilingual-v3: available
+macos-native-say: available
+mlx-whisper-tiny: available   # optional but recommended
 ```
 
-Do not use it for:
+A canonical reference hash mismatch is a hard stop. Do not replace/re-hash a reference locally to make `doctor` green.
+
+## 8. Model download
+
+`doctor` only probes imports and references. It does not intentionally load/download Chatterbox weights.
+
+The first actual character/shared-library generation may fetch:
 
 ```text
-letters as teaching targets
-syllables as teaching targets
-phonics
-spelling/pronunciation authority
-foreign-language target pronunciation when exact sound is being taught
+mlx-community/chatterbox-multilingual-v3
 ```
 
-Those use the pedagogical/system speech path.
-
-## 10. Short character clips
-
-Ultra-short Chatterbox generation can append unwanted sounds.
-
-For short **character dialogue**, a local production worker may use:
+The first Whisper verification may fetch:
 
 ```text
-bounded max output tokens
-→ inspect generated WAV
-→ ffmpeg/ffprobe analysis
-→ bounded tail/edge trimming if the intended utterance itself is correct
-→ human review
+mlx-community/whisper-tiny
 ```
 
-Do not use trimming to repair a wrong pronunciation or invented sound inside the intended utterance.
+Do not trigger those downloads without owner authorization/network expectations.
 
-Do not use repeated prompt padding. The repeated-middle experiment is rejected.
+## 9. Smoke tests through the engine
 
-For shared reactions, preserve the punctuation in the canonical recording runbook. In particular, exclamation marks are intentional and should not be silently replaced with periods to make generation calmer.
+### Character dialogue
 
-## 11. Shared utterances require no local cloning setup for Activity authors
+```bash
+python tools/greia_voice.py generate \
+  --speaker leo \
+  --kind character_dialogue \
+  --locale it \
+  --text "Guardiamo con calma." \
+  --cue-id smoke.leo \
+  --output "${GREIA_VOICE_HOME}/smoke/leo.ogg"
+```
 
-Generic reactions should preferably request Greia's shared semantic families:
+### Pedagogical syllable
+
+```bash
+python tools/greia_voice.py generate \
+  --speaker pedagogical \
+  --kind pedagogical_speech \
+  --locale it \
+  --text "ma" \
+  --cue-id smoke.phonics.ma \
+  --verification off \
+  --output "${GREIA_VOICE_HOME}/smoke/ma.wav"
+```
+
+### Dani
+
+```bash
+python tools/greia_voice.py generate \
+  --speaker dani \
+  --kind dani_system_speech \
+  --locale it \
+  --text "Schema completato!" \
+  --cue-id smoke.dani \
+  --output "${GREIA_VOICE_HOME}/smoke/dani.ogg"
+```
+
+Listen to every smoke clip. Process success is not acceptance.
+
+## 10. Warm service / batch use
+
+For repeated agent work:
+
+```bash
+python tools/greia_voice.py serve
+```
+
+Submit with `request`, then stop with:
+
+```bash
+python tools/greia_voice.py shutdown
+```
+
+For known queues:
+
+```bash
+python tools/greia_voice.py batch --input requests.jsonl
+```
+
+The engine owns model reuse, MLX cache clearing and the cross-process single-worker guard. Caller agents must not implement their own parallel inference loops.
+
+## 11. Shared library production
+
+The central Greia reaction library is also produced through the engine using:
 
 ```text
-praise.general
-celebrate.success
-encourage.retry
-encourage.progress
-ready.go
+kind = shared_character_utterance
 ```
 
-See:
+Lilli/Leo/Flash/Tito/Momo route to the cloned-character provider. Dani routes to native/system speech.
 
-```text
-docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md
-```
+Normal Activities do not synthesize these at runtime; they resolve the reviewed shared family.
 
-A family resolves to the currently available reviewed file array for character + locale (+ grammatical agreement where applicable):
-
-```text
-one file      → always selected
-multiple files→ random reviewed variant
-```
-
-Activity code does not choose exact phrase text, filenames or variant numbers.
-
-Once those assets are implemented in Greia, Activity authors consume them through the shared semantic resolver and do not need Chatterbox locally.
-
-To produce or extend the shared library itself, follow:
+The exact phrase/library runbook is:
 
 ```text
 docs/agents/GREIA_SHARED_CHARACTER_UTTERANCE_RECORDING.md
 ```
 
-## 12. Review masters and package conversion
+## 12. Unsupported hosts
 
-Keep generated review masters as WAV.
-
-For an accepted non-pronunciation-critical custom clip, OGG Vorbis is generally appropriate under current localized audio policy.
-
-Example conversion:
-
-```bash
-ffmpeg -hide_banner -nostdin -y \
-  -i build/voice-review/it/welcome.wav \
-  -af "loudnorm=I=-18:LRA=7:TP=-1.5" \
-  -ac 1 \
-  -c:a libvorbis -q:a 5 \
-  activities/<activity>/locales/it/audio/welcome.ogg
-```
-
-Listen again after conversion.
-
-Do not normalize or overwrite canonical reference masters.
-
-## 13. Generation receipt
-
-For custom character speech preserve at least:
+The semantic engine can run `doctor` elsewhere, but current repository providers are intentionally honest:
 
 ```text
-Activity ID
-cue ID
-locale
-exact text
-voice ID
-voice/reference manifest version
-reference SHA-256
-Chatterbox implementation/model ID
-model/package revision
-backend/device
-generation parameters
-max token limit if used
-post-processing/trimming parameters
-output SHA-256
-human reviewer/disposition
+Apple-Silicon macOS -> full cloned-character + native system path
+other macOS         -> native system path; MLX character path depends on actual provider support
+Linux/Windows       -> no accepted native/character provider yet unless a new VoiceProvider is implemented
 ```
 
-No secrets or private absolute user paths belong in portable source metadata.
+Do not bypass `UNAVAILABLE` by teaching Activities direct host-specific TTS commands. Add a provider behind `VoiceEngine` instead.
 
-## 14. Human review gate
+## 13. Review/package boundary
 
-Every accepted custom character line must be listened to for:
+Successful generation writes audio + `.receipt.json` and leaves:
 
 ```text
-exact words
-correct language
-canonical character identity
-no repeated/invented words or tail sounds
-acceptable pronunciation
-appropriate emotion
-unclipped onset/ending
-small-speaker intelligibility
-no overlap with surrounding Activity speech
+human_review = PENDING
 ```
 
-If the clip is pronunciation-authoritative, it should not have been routed through Chatterbox in the first place.
+Human listening must verify exact words/locale, character identity where applicable, pronunciation, clipping/tails, delivery and small-speaker intelligibility.
 
-## 15. Child/package boundary
+Only the owning workflow may mark/package accepted audio. For example, Encyclopedia clips remain subject to `OWNER_ACCEPTED` in its ledger.
 
 Never package:
 
 ```text
-Chatterbox weights
+model weights
+venvs
 model caches
-MLX/PyTorch environment
-canonical voice references
-FFmpeg binaries solely for authoring
-rejected generations
+canonical reference masters
+rejected/unreviewed takes
+Whisper as a runtime dependency
 ```
-
-The child receives only final reviewed Activity-owned audio or resolves Greia shared/system speech through platform-owned interfaces.
