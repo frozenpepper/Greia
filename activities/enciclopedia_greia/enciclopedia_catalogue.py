@@ -11,6 +11,8 @@ if __package__:
     from .pages.body import BodyPage
     from .pages.bones import BonesPage
     from .pages.bridge import BridgePage
+    from .pages.cave_paintings import CavePaintingsPage
+    from .pages.dinosaurs import DinosaursPage
     from .pages.earth import EarthPage
     from .pages.elephant import ElephantPage
     from .pages.fossils import FossilsPage
@@ -24,6 +26,7 @@ if __package__:
     from .pages.lungs import LungsPage
     from .pages.machines import MachinesPage
     from .pages.magnet import MagnetPage
+    from .pages.mammoth import MammothPage
     from .pages.mars import MarsPage
     from .pages.mercury import MercuryPage
     from .pages.moon import MoonPage
@@ -32,6 +35,7 @@ if __package__:
     from .pages.octopus import OctopusPage
     from .pages.penguin import PenguinPage
     from .pages.planet_earth import EarthPlanetPage
+    from .pages.pyramids import PyramidsPage
     from .pages.rain import RainPage
     from .pages.rainbow import RainbowPage
     from .pages.saturn import SaturnPage
@@ -52,6 +56,8 @@ else:
     from pages.body import BodyPage
     from pages.bones import BonesPage
     from pages.bridge import BridgePage
+    from pages.cave_paintings import CavePaintingsPage
+    from pages.dinosaurs import DinosaursPage
     from pages.earth import EarthPage
     from pages.elephant import ElephantPage
     from pages.fossils import FossilsPage
@@ -65,6 +71,7 @@ else:
     from pages.lungs import LungsPage
     from pages.machines import MachinesPage
     from pages.magnet import MagnetPage
+    from pages.mammoth import MammothPage
     from pages.mars import MarsPage
     from pages.mercury import MercuryPage
     from pages.moon import MoonPage
@@ -73,6 +80,7 @@ else:
     from pages.octopus import OctopusPage
     from pages.penguin import PenguinPage
     from pages.planet_earth import EarthPlanetPage
+    from pages.pyramids import PyramidsPage
     from pages.rain import RainPage
     from pages.rainbow import RainbowPage
     from pages.saturn import SaturnPage
@@ -124,7 +132,11 @@ IMPLEMENTED_PAGE_IDS = (
     "machines.airplane",
     "machines.bridge",
     "history",
+    "history.dinosaurs",
     "history.fossils",
+    "history.mammoth",
+    "history.cave_paintings",
+    "history.pyramids",
 )
 
 
@@ -169,7 +181,11 @@ def build_page_registry() -> PageRegistry:
         AirplanePage,
         BridgePage,
         HistoryPage,
+        DinosaursPage,
         FossilsPage,
+        MammothPage,
+        CavePaintingsPage,
+        PyramidsPage,
     ):
         registry.register(page_type.page_id, page_type)
     if registry.page_ids() != IMPLEMENTED_PAGE_IDS:
