@@ -17,10 +17,13 @@ if __package__:
     from .pages.home import HomePage
     from .pages.lion import LionPage
     from .pages.machines import MachinesPage
+    from .pages.mercury import MercuryPage
     from .pages.octopus import OctopusPage
     from .pages.penguin import PenguinPage
     from .pages.saturn import SaturnPage
     from .pages.space import SpacePage
+    from .pages.sun import SunPage
+    from .pages.venus import VenusPage
     from .pages.volcano import VolcanoPage
 else:
     from enciclopedia_engine import PageRegistry
@@ -37,10 +40,13 @@ else:
     from pages.home import HomePage
     from pages.lion import LionPage
     from pages.machines import MachinesPage
+    from pages.mercury import MercuryPage
     from pages.octopus import OctopusPage
     from pages.penguin import PenguinPage
     from pages.saturn import SaturnPage
     from pages.space import SpacePage
+    from pages.sun import SunPage
+    from pages.venus import VenusPage
     from pages.volcano import VolcanoPage
 
 IMPLEMENTED_PAGE_IDS = (
@@ -53,6 +59,9 @@ IMPLEMENTED_PAGE_IDS = (
     "animals.penguin",
     "animals.frog",
     "space",
+    "space.sun",
+    "space.mercury",
+    "space.venus",
     "space.saturn",
     "earth",
     "earth.volcano",
@@ -77,6 +86,9 @@ def build_page_registry() -> PageRegistry:
         PenguinPage,
         FrogPage,
         SpacePage,
+        SunPage,
+        MercuryPage,
+        VenusPage,
         SaturnPage,
         EarthPage,
         VolcanoPage,
