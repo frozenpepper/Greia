@@ -1,9 +1,9 @@
 # Greia Shared Character Utterances
 
-**Status:** accepted design direction; audio asset production/runtime catalogue integration pending  
-**Date:** 2026-08-23  
+**Status:** accepted design direction; Voice Engine production implemented; reviewed audio/runtime catalogue completion remains separate  
+**Reviewed:** 2026-08-28  
 **Scope:** small OS-owned multilingual character interjections shared across Activities  
-**Related:** `docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md`, `docs/design/GREIA_CANONICAL_CAST_SYSTEM.md`, `docs/adr/0032-profile-presentation-and-grammatical-agreement.md`
+**Related:** `docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md`, `docs/design/GREIA_CANONICAL_CAST_SYSTEM.md`, `docs/adr/0032-profile-presentation-and-grammatical-agreement.md`, `skills/greia-voice-production/SKILL.md`
 
 ## 1. Decision
 
@@ -19,14 +19,14 @@ utterance = praise.general
 locale = it
 ```
 
-The Activity does **not** select an exact sentence or filename.
+The Activity does **not** select an exact sentence or filename and does not synthesize the line at child runtime.
 
 Greia resolves the reviewed array of available recordings for that character/locale/family, randomly selects one available variant, and presents it with the family's canonical expression/motion.
 
 This library has three goals:
 
 1. give Activities useful character personality even when the developer has **no local voice-cloning toolchain**;
-2. keep common praise/encouragement consistent across Greia while still providing some variety;
+2. keep common praise/encouragement consistent across Greia while still providing variety;
 3. avoid storing the same short audio in dozens of Activity packages.
 
 It is not a general dialogue system and it is not the source of educational pronunciation truth.
@@ -35,9 +35,7 @@ It is not a general dialogue system and it is not the source of educational pron
 
 The semantic ID names the **meaning**, not one sentence.
 
-Every variant inside one family must be safe wherever that family is requested. Do not put stronger/weaker or context-specific meanings into the same random pool merely because the wording sounds similar.
-
-The initial v0.1 families are:
+Every variant inside one family must be safe wherever that family is requested. Do not put stronger/weaker or context-specific meanings into the same random pool merely because wording sounds similar.
 
 | Family | Italian variants | English variants | Default expression | Default motion |
 |---|---|---|---|---|
@@ -47,11 +45,11 @@ The initial v0.1 families are:
 | `encourage.progress` | `Continua così!` · `Ci sei quasi!` · `Vai avanti!` | `Keep going!` · `Almost there!` · `You're doing great!` | `happy` | `idle_bounce` |
 | `ready.go` | `Forza, andiamo!` · `Ci siamo? Via!` · `Si parte!` | `Come on, let's go!` · `Ready? Go!` · `Here we go!` | `happy` | `happy_hop` |
 
-The Italian v0.1 phrases deliberately avoid child-gender agreement such as `bravo/brava`. Gender-aware variants may be introduced later through the profile/localization agreement layer, but random selection happens **after** locale/agreement resolution so one random pool never mixes grammatically incompatible child-directed forms.
+The Italian v0.1 phrases deliberately avoid child-gender agreement such as `bravo/brava`. Gender-aware variants may be introduced later through profile/localization agreement, but random selection happens **after** locale/agreement resolution so one pool never mixes incompatible forms.
 
-Exclamation marks and question/exclamation combinations in the reviewed source text are intentional. These are short character reactions, not neutral narration.
+Punctuation is intentional. These are short character reactions, not neutral narration.
 
-## 3. Character coverage
+## 3. Character coverage and production route
 
 The complete v0.1 target matrix is:
 
@@ -74,19 +72,24 @@ tito
 momo
 ```
 
-Production split:
+All central library production goes through the Greia Voice Production Engine with:
 
 ```text
-Lilli/Leo/Flash/Tito/Momo:
-5 × 5 × 3 × 2 = 150 reviewed Chatterbox clips
-
-Dani:
-1 × 5 × 3 × 2 = 30 reviewed Greia system-TTS clips
+kind = shared_character_utterance
 ```
 
-Dani remains intentionally system-TTS/robotic. His shared clips must use the approved Greia Dani system-TTS profile, not a cloned natural voice.
+The engine routes automatically:
 
-A family is still valid when fewer than three variants survive review. The runtime catalogue contains only accepted recordings.
+```text
+Lilli/Leo/Flash/Tito/Momo -> canonical cloned-character provider
+Dani                       -> deterministic native/system Dani provider
+```
+
+The underlying provider is an engine implementation detail. Do not maintain a parallel shared-library Chatterbox/Dani production stack.
+
+Dani remains intentionally system-TTS/robotic. His shared clips must use `greia.dani.system-v1`, not a cloned natural voice.
+
+A family is valid when fewer than three variants survive review. Runtime catalogue arrays contain only accepted recordings.
 
 ## 4. Variant-array and random-picker contract
 
@@ -102,74 +105,66 @@ shared_utterances[character][locale][family] = [
 ]
 ```
 
-Selection semantics are deliberately simple:
+Selection semantics:
 
 ```python
 variants = resolved_family.variants
-
-if len(variants) == 1:
-    selected = variants[0]
-else:
-    selected = rng.choice(variants)
+selected = variants[0] if len(variants) == 1 else rng.choice(variants)
 ```
 
 Rules:
 
-- one available recording is completely valid and is always selected;
-- two or more available recordings are randomly selected to provide variety;
-- rejected/missing recordings are absent from the runtime array rather than represented as empty placeholders;
+- one available recording is valid and always selected;
+- two or more provide presentation variety;
+- rejected/missing recordings are absent, not empty placeholders;
 - Activities never request `variant 01`, a filename, or an array index;
-- adding a reviewed variant later must not require Activity changes;
-- removing a bad variant must not require Activity changes;
-- the random source belongs to the Greia resolver/presentation layer and should be injectable in tests;
-- deterministic tests may supply a seeded/test RNG without changing production semantics;
-- the semantic family owns expression/motion defaults, so a randomly selected filename cannot accidentally choose a different animation contract.
+- adding/removing a reviewed variant requires no Activity change;
+- random source belongs to Greia resolver/presentation and should be injectable in tests;
+- semantic family owns expression/motion defaults;
+- randomness must never alter correctness, score, rewards, difficulty or progression.
 
-Greia may later add optional immediate-repeat suppression above this primitive, but the v0.1 contract is simply random choice from the current reviewed array. Do not build shuffle bags, histories, weighted selection, or adaptive reinforcement until there is evidence they are needed.
+Greia may later add immediate-repeat suppression, but do not add shuffle bags, histories, weighting or adaptive reinforcement without evidence.
 
 ## 5. Relationship to canonical animation
 
-Shared speech may request only the established semantic expression/motion vocabulary from the canonical cast system:
+Shared speech may request only established semantic expression/motion vocabulary such as:
 
 ```text
 neutral
 happy
 surprised
-
 idle_bounce
 happy_hop
 celebrate_pop
 surprised_wobble
 ```
 
-The family table provides defaults, not an instruction for an Activity to animate raw frames itself. Greia's character presentation layer owns the actual implementation and must respect resource bounds.
+The family table provides defaults. Greia's character presentation layer owns actual animation implementation and resource bounds.
 
-The selected voice clip and its expression/motion are one presentation event. A caller must not start a different character animation and independently pick a speech file that implies another semantic state.
+The selected voice clip and expression/motion form one presentation event. Do not independently pick semantically conflicting speech/animation.
 
-A shared utterance should be scheduled at a safe moment. Do not interrupt a timed answer, drawing gesture, text entry, pronunciation target, or another spoken instruction merely to play praise.
+Schedule shared utterances safely. Do not interrupt a timed answer, drawing gesture, text entry, pronunciation target or another spoken instruction merely to play praise.
 
 ## 6. Selection, cooldown and repetition policy
 
-Activities should request **semantics**, not precise wording.
+Activities request **semantics**, not precise wording.
 
-The random picker provides wording variety, but it is not permission to spam feedback:
+The random picker provides wording variety, not permission to spam feedback:
 
-- do not play a spoken interjection for every trivial interaction;
-- use a short platform/presentation cooldown or repetition-suppression policy where needed;
+- do not play speech for every trivial interaction;
+- use bounded cooldown/repetition suppression where needed;
 - never overlap two character clips;
-- do not begin the next spoken instruction until the interjection has completed or been deliberately skipped;
-- visual feedback must remain sufficient when speech is disabled;
-- do not use randomness to change educational meaning, scoring, rewards, difficulty, or progression.
+- do not start another spoken instruction until the interjection completes or is deliberately skipped;
+- visual feedback remains sufficient when speech is unavailable/disabled;
+- randomness is presentation-only.
 
-Randomness here is presentation-only.
+## 7. Activity package/runtime boundary
 
-## 7. Activity package boundary
+Shared utterance audio belongs to Greia's shared asset/runtime catalogue.
 
-Shared utterance audio belongs to the Greia shared asset/runtime catalogue.
+An Activity package must **not** copy these files merely to use them.
 
-An Activity package must **not** copy these files into its own `locales/<locale>/audio/` directory merely to use them.
-
-Future source/runtime integration should expose a semantic resolver conceptually equivalent to:
+Future/current source integration should expose a semantic resolver conceptually equivalent to:
 
 ```text
 resolve_character_utterance(
@@ -181,86 +176,90 @@ resolve_character_utterance(
 ) -> selected shared audio + expression/motion metadata
 ```
 
-Resolution order is conceptually:
+Resolution order:
 
 ```text
 character
-→ locale/fallback
-→ grammatical agreement/fallback where relevant
-→ semantic family
-→ non-empty reviewed variant array
-→ random file selection
-→ expression/motion metadata
+-> locale/fallback
+-> grammatical agreement/fallback where relevant
+-> semantic family
+-> non-empty reviewed variant array
+-> random file selection
+-> expression/motion metadata
 ```
 
-The exact API is implementation-owned and is not created by this design document.
+If a target Greia version lacks the requested family/locale, fail soft with visual feedback; do not substitute an unrelated phrase.
 
-If a target Greia version lacks the requested family/locale, the Activity must fail soft: keep visual feedback and continue. Do not substitute an unrelated phrase.
+`shared_character_utterance` in `VoiceEngine` is solely the **authoring-production** kind used to create this central library. It does not mean Activities synthesize shared speech at runtime.
 
 ## 8. Why this is separate from pedagogical speech
 
-These utterances communicate emotion and feedback. They do not teach the child how a letter, syllable, phoneme, spelling unit, or foreign-language target is pronounced.
+These utterances communicate emotion/feedback. They do not teach how a letter, syllable, phoneme, spelling unit or foreign-language target is pronounced.
 
-Greia therefore applies a stronger rule:
+> If the sound itself is the educational truth being taught, use the deterministic `pedagogical_speech` route, not a character interjection or cloned character voice.
 
-> If the sound itself is the educational truth being taught, use the deterministic pedagogical-speech path, not a character interjection or generative character voice.
+A pedagogical clip may intentionally sound less characterful when necessary for stable correct pronunciation.
 
-For example:
+## 9. Production and acceptance
+
+Canonical producer:
 
 ```text
-Lilli shared reaction:
-randomly one of "Complimenti!" / "Ottimo lavoro!" / "Ben fatto!"
-
-Pedagogical speech:
-"ma"
+tools/record_shared_character_utterances.py
 ```
 
-The pedagogical clip may intentionally sound less characterful if that is required for stable correct pronunciation.
-
-## 9. Recording and acceptance
-
-The simple local-agent production runbook is:
+Canonical runbook:
 
 ```text
 docs/agents/GREIA_SHARED_CHARACTER_UTTERANCE_RECORDING.md
 ```
 
-Before any shared clip is promoted:
+The producer is intentionally a thin `VoiceEngine` client. It does not directly own Chatterbox, Whisper, native TTS, trimming or model lifecycle.
 
-- exact locale/text must be reviewed by a fluent speaker;
-- generated content must contain no invented/repeated sounds;
-- character identity must be recognizable where applicable;
-- Dani must remain clearly robotic;
-- beginnings/endings must not be clipped;
-- loudness must be consistent with other Greia speech;
-- expression/motion association must be appropriate;
-- the clip must be tested on small speakers;
-- provenance/model/provider information must be retained outside the runtime asset where appropriate.
+Every generated candidate has an engine receipt and remains:
 
-One failed variant does not invalidate the entire family. Remove/reject that variant and keep the accepted non-empty array. A family with zero accepted variants is unavailable and must fail soft.
+```text
+human_review = PENDING
+```
 
-The library is versioned. Do not replace accepted bytes silently; publish a new asset/version when a materially different recording is accepted.
+Before promotion:
+
+- exact locale/text is reviewed by a fluent speaker;
+- no invented/repeated sounds;
+- character identity recognizable where applicable;
+- Dani clearly robotic;
+- beginnings/endings not clipped;
+- loudness consistent enough with Greia speech;
+- expression/motion association appropriate;
+- small-speaker playback acceptable.
+
+Whisper may be used by the engine as an advisory filter for suitable natural-character multi-word lines. It never accepts a clip. Tiny reactions and Dani normally skip ASR.
+
+One failed variant does not invalidate a family. A family with zero accepted variants is unavailable and must fail soft.
+
+The library is versioned. Do not replace accepted bytes silently; publish a new accepted asset/version when materially changing a recording.
 
 ## 10. Implementation status
 
-Accepted now:
+Implemented/accepted now:
 
 - platform/shared ownership rather than per-Activity duplication;
 - five semantic families with three Italian/English source variants each;
-- six-character coverage target;
-- 180-clip complete v0.1 target;
-- random choice from the current reviewed variant array;
-- one-element arrays naturally resolving to the only available file;
-- canonical family-level animation association;
-- semantic request/fail-soft direction;
+- six-character / 180-clip target;
+- semantic runtime request/fail-soft direction;
+- one/multiple reviewed-variant array semantics;
+- family-level animation association;
 - pedagogical-speech separation;
-- local Chatterbox recording/review runbook for the five cloned characters.
+- repository-wide Voice Production Engine route for central library production;
+- `tools/record_shared_character_utterances.py` as a thin engine producer for all six characters;
+- Dani system-provider routing;
+- optional advisory ASR for eligible natural-character shared lines;
+- machine receipts/human-review boundary.
 
-Not yet implemented by this documentation change:
+Still separately incomplete/evidence-owned where applicable:
 
-- the 180 audio files;
-- runtime/shared-asset catalogue entries;
-- semantic resolver API/source;
+- actual human acceptance of all 180 target clips;
+- runtime/shared-asset catalogue population/resolver if not already implemented elsewhere;
 - cooldown source;
 - Activity Designer picker UI;
-- automated asset validation.
+- complete runtime asset validation/coverage evidence.
