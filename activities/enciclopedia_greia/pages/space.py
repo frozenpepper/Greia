@@ -35,6 +35,7 @@ PLANETS = (
     Planet("planet.uranus", 300, 119, 10, 0.24, (153, 214, 220), 4.8),
     Planet("planet.neptune", 340, 134, 10, 0.20, (82, 116, 201), 5.4),
 )
+SATURN_INDEX = 5
 
 
 class SpacePage(EncyclopediaPage):
@@ -58,14 +59,21 @@ class SpacePage(EncyclopediaPage):
                 self._selected = max(0, self._selected - 1)
             elif event.command is PageCommand.RIGHT:
                 self._selected = min(len(PLANETS) - 1, self._selected + 1)
+            elif event.command is PageCommand.ACTIVATE and self._selected == SATURN_INDEX:
+                self.context.host.open_page("space.saturn")
             return
         if event.kind is PageInputKind.POINTER_PRESS and event.position:
             px, py = event.position
             if self._planet_positions:
-                distances = [((px - x) ** 2 + (py - y) ** 2, i) for i, (x, y) in enumerate(self._planet_positions)]
+                distances = [
+                    ((px - x) ** 2 + (py - y) ** 2, i)
+                    for i, (x, y) in enumerate(self._planet_positions)
+                ]
                 distance, index = min(distances)
                 if distance <= 28 ** 2:
                     self._selected = index
+                    if index == SATURN_INDEX:
+                        self.context.host.open_page("space.saturn")
 
     def draw(self, surface: pygame.Surface) -> None:
         surface.fill((20, 28, 67))
@@ -85,15 +93,32 @@ class SpacePage(EncyclopediaPage):
         pygame.draw.circle(surface, (251, 205, 66), center, 27)
         self._planet_positions = []
         for i, planet in enumerate(PLANETS):
-            orbit = pygame.Rect(center[0] - planet.radius_x, center[1] - planet.radius_y, planet.radius_x * 2, planet.radius_y * 2)
+            orbit = pygame.Rect(
+                center[0] - planet.radius_x,
+                center[1] - planet.radius_y,
+                planet.radius_x * 2,
+                planet.radius_y * 2,
+            )
             pygame.draw.ellipse(surface, (68, 78, 120), orbit, 1)
             angle = self._time * planet.speed + planet.phase
             x = center[0] + int(math.cos(angle) * planet.radius_x)
             y = center[1] + int(math.sin(angle) * planet.radius_y)
             self._planet_positions.append((x, y))
             pygame.draw.circle(surface, planet.color, (x, y), planet.size)
+            if i == SATURN_INDEX:
+                pygame.draw.ellipse(
+                    surface,
+                    (236, 218, 164),
+                    (x - planet.size - 8, y - 5, (planet.size + 8) * 2, 10),
+                    2,
+                )
             if i == self._selected:
-                ring = pygame.Rect(x - planet.size - 8, y - planet.size - 8, 2 * (planet.size + 8), 2 * (planet.size + 8))
+                ring = pygame.Rect(
+                    x - planet.size - 8,
+                    y - planet.size - 8,
+                    2 * (planet.size + 8),
+                    2 * (planet.size + 8),
+                )
                 pygame.draw.ellipse(surface, (255, 222, 91), ring, 3)
         selected = PLANETS[self._selected]
         label_rect = pygame.Rect(350, 500, 300, 55)
@@ -107,4 +132,11 @@ class SpacePage(EncyclopediaPage):
             size=22,
             color=(48, 43, 61),
         )
-        draw_presenter(surface, self.context.visuals, "leo", position=(925, 565), height=145, variant="surprised")
+        draw_presenter(
+            surface,
+            self.context.visuals,
+            "leo",
+            position=(925, 565),
+            height=145,
+            variant="surprised",
+        )
