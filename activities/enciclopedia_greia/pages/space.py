@@ -38,16 +38,20 @@ PLANETS = (
     Planet("neptune", "planet.neptune", 340, 134, 10, 0.20, (82, 116, 201), 5.4),
 )
 
-# The section may display the complete Solar System before every detail page is
-# authored. Gold markers identify real runtime entries; planned bodies remain
-# visible/selectable as part of the model without opening empty placeholder pages.
+# Runtime navigation is explicit and contains only pages that genuinely exist.
+# The section itself remains a visual Solar System model rather than a file or
+# taxonomy browser; subject behavior stays inside each destination page.
 IMPLEMENTED_ENTRY_IDS = {
     "sun": "space.sun",
     "mercury": "space.mercury",
     "venus": "space.venus",
     "earth": "space.earth",
     "moon": "space.moon",
+    "mars": "space.mars",
+    "jupiter": "space.jupiter",
     "saturn": "space.saturn",
+    "uranus": "space.uranus",
+    "neptune": "space.neptune",
 }
 
 # Moon is a satellite, not a planet, so semantic navigation order is explicit
