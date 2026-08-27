@@ -9,6 +9,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 ACTIVITY = ROOT / "activities" / "enciclopedia_greia"
+AUTHORING_CATALOGUE = ROOT / "encyclopedia" / "pages" / "catalogue.py"
 
 SECTION_PAGE_IDS = {"home", "animals", "space", "earth", "body", "machines", "history"}
 
@@ -93,16 +94,20 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
         )
 
     @staticmethod
-    def _call_second_string_args(node: ast.AST) -> tuple[str, ...]:
+    def _call_string_args(node: ast.AST, index: int) -> tuple[str, ...]:
         assert isinstance(node, (ast.Tuple, ast.List))
         values: list[str] = []
         for item in node.elts:
-            if not isinstance(item, ast.Call) or len(item.args) < 2:
+            if not isinstance(item, ast.Call) or len(item.args) <= index:
                 continue
-            value = item.args[1]
+            value = item.args[index]
             if isinstance(value, ast.Constant) and isinstance(value.value, str):
                 values.append(value.value)
         return tuple(values)
+
+    @classmethod
+    def _call_second_string_args(cls, node: ast.AST) -> tuple[str, ...]:
+        return cls._call_string_args(node, 1)
 
     def test_manifest_is_offline_first_and_bilingual(self) -> None:
         with (ACTIVITY / "activity.toml").open("rb") as handle:
@@ -114,11 +119,22 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
         self.assertNotIn("network", raw["requirements"]["optional_capabilities"])
         self.assertEqual(raw["permissions"]["requested"], [])
 
-    def test_runtime_registry_matches_complete_v01_plan(self) -> None:
-        source = (ACTIVITY / "enciclopedia_catalogue.py").read_text(encoding="utf-8")
-        tree = ast.parse(source)
-        actual = self._literal_strings(self._assignment(tree, "IMPLEMENTED_PAGE_IDS"))
+    def test_runtime_registry_matches_complete_authoring_v01_plan(self) -> None:
+        runtime_tree = ast.parse(
+            (ACTIVITY / "enciclopedia_catalogue.py").read_text(encoding="utf-8")
+        )
+        actual = self._literal_strings(
+            self._assignment(runtime_tree, "IMPLEMENTED_PAGE_IDS")
+        )
+
+        authoring_tree = ast.parse(AUTHORING_CATALOGUE.read_text(encoding="utf-8"))
+        planned = self._call_string_args(
+            self._assignment(authoring_tree, "PLANNED_PAGES"),
+            0,
+        )
+
         self.assertEqual(actual, IMPLEMENTED_PAGE_IDS)
+        self.assertEqual(actual, planned)
         self.assertEqual(len(actual), 43)
         self.assertEqual(len(set(actual)), 43)
 
