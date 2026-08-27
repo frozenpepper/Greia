@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""Audio generator for Foresta delle Parole.
+"""Prepare Foresta delle Parole speech through Greia VoiceEngine.
 
-IMPORTANT RULE:
-Always pass lowercase strings to TTS so macOS say never speaks 'maiuscola' or 'capital'.
+Letters, words and letter/word association prompts are pronunciation-authoritative
+pedagogical speech. Generic praise is Dani system speech. The Activity never chooses
+host voices or native-TTS commands directly.
 """
 
 from __future__ import annotations
 
+import argparse
+import json
 from pathlib import Path
 import subprocess
 import sys
@@ -17,44 +20,77 @@ sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from activities.foresta_parole.main import PHONICS_DATA
 
-AUDIO_ROOT = PROJECT_ROOT / "activities" / "foresta_parole" / "assets" / "audio"
-TMP_AIFF = Path("/tmp/greia_speech_gen.aiff")
+VOICE_CLI = PROJECT_ROOT / "tools" / "greia_voice.py"
+DEFAULT_REVIEW_DIR = PROJECT_ROOT / "tmp" / "voice-review" / "foresta_parole"
+
+PRAISE = {
+    "it": [("ben_fatto", "Ben fatto!"), ("fantastico", "Fantastico!"), ("ottimo", "Ottimo!")],
+    "en": [("great_job", "Great job!"), ("wonderful", "Wonderful!"), ("you_did_it", "You did it!")],
+}
 
 
-def make_wav(text: str, voice: str, rate: int, dest_wav: Path) -> None:
-    # Always ensure text is lowercase to prevent TTS 'maiuscola' / 'capital' announcements
-    lower_text = text.lower()
-    subprocess.run(["say", "-v", voice, "-r", str(rate), lower_text, "-o", str(TMP_AIFF)], check=True)
-    subprocess.run(["afconvert", "-f", "WAVE", "-d", "LEI16@22050", "-c", "1", str(TMP_AIFF), str(dest_wav)], check=True)
+def _output_path(review_dir: Path, locale: str, filename: str) -> str:
+    output = review_dir / locale / filename
+    try:
+        return str(output.resolve().relative_to(PROJECT_ROOT))
+    except ValueError:
+        return str(output.resolve())
 
 
-def generate_all() -> None:
-    # Italian (Alice, 180 wpm)
-    it_dir = AUDIO_ROOT / "it"
-    it_dir.mkdir(parents=True, exist_ok=True)
-    for letter, letter_id, prompt_id, word_display, emoji, word_stem in PHONICS_DATA["it"]:
-        make_wav(f"{letter} come {word_display}", "Alice", 180, it_dir / f"{prompt_id}.wav")
-        make_wav(letter, "Alice", 175, it_dir / f"{letter_id}.wav")
-        make_wav(word_display, "Alice", 175, it_dir / f"{word_stem}.wav")
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--review-dir", type=Path, default=DEFAULT_REVIEW_DIR)
+    args = parser.parse_args()
+    review_dir = args.review_dir.resolve()
+    review_dir.mkdir(parents=True, exist_ok=True)
 
-    make_wav("Ben fatto!", "Alice", 180, it_dir / "ben_fatto.wav")
-    make_wav("Fantastico!", "Alice", 180, it_dir / "fantastico.wav")
-    make_wav("Ottimo!", "Alice", 180, it_dir / "ottimo.wav")
+    requests: list[dict[str, object]] = []
+    for locale in ("it", "en"):
+        for letter, letter_id, prompt_id, word_display, _emoji, word_stem in PHONICS_DATA[locale]:
+            association = f"{letter} come {word_display}" if locale == "it" else f"{letter} as {word_display}"
+            for cue_id, text, filename in (
+                (prompt_id, association, f"{prompt_id}.wav"),
+                (letter_id, letter, f"{letter_id}.wav"),
+                (word_stem, word_display, f"{word_stem}.wav"),
+            ):
+                requests.append(
+                    {
+                        "speaker": "pedagogical",
+                        "kind": "pedagogical_speech",
+                        "locale": locale,
+                        "text": text,
+                        "cue_id": f"foresta_parole.{cue_id}",
+                        "output": _output_path(review_dir, locale, filename),
+                        "verification": "off",
+                        "max_attempts": 1,
+                    }
+                )
+        for cue_id, text in PRAISE[locale]:
+            requests.append(
+                {
+                    "speaker": "dani",
+                    "kind": "dani_system_speech",
+                    "locale": locale,
+                    "text": text,
+                    "cue_id": f"foresta_parole.{cue_id}",
+                    "output": _output_path(review_dir, locale, f"{cue_id}.wav"),
+                    "verification": "off",
+                    "max_attempts": 1,
+                }
+            )
 
-    # English (Samantha, 185 wpm)
-    en_dir = AUDIO_ROOT / "en"
-    en_dir.mkdir(parents=True, exist_ok=True)
-    for letter, letter_id, prompt_id, word_display, emoji, word_stem in PHONICS_DATA["en"]:
-        make_wav(f"{letter} as {word_display}", "Samantha", 185, en_dir / f"{prompt_id}.wav")
-        make_wav(letter, "Samantha", 180, en_dir / f"{letter_id}.wav")
-        make_wav(word_display, "Samantha", 180, en_dir / f"{word_stem}.wav")
-
-    make_wav("Great job!", "Samantha", 185, en_dir / "great_job.wav")
-    make_wav("Wonderful!", "Samantha", 185, en_dir / "wonderful.wav")
-    make_wav("You did it!", "Samantha", 185, en_dir / "you_did_it.wav")
-
-    print("Audio files generated cleanly with lowercase inputs!")
+    batch_path = review_dir / "voice_requests.jsonl"
+    batch_path.write_text(
+        "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in requests), encoding="utf-8"
+    )
+    result = subprocess.run(
+        [sys.executable, str(VOICE_CLI), "batch", "--input", str(batch_path)], cwd=PROJECT_ROOT
+    )
+    if result.returncode == 0:
+        print(f"Generated {len(requests)} review candidates under {review_dir}")
+        print("Human listening review is required before Activity integration.")
+    return result.returncode
 
 
 if __name__ == "__main__":
-    generate_all()
+    raise SystemExit(main())
