@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import json
 from pathlib import Path
 import tempfile
@@ -18,6 +19,7 @@ from encyclopedia.voice_ledger import parse_ledger_rows
 
 ROOT = Path(__file__).resolve().parents[1]
 LEDGER = ROOT / "encyclopedia" / "VOICE_RECORDING_REQUESTS.md"
+ACTIVITY_PAGES = ROOT / "activities" / "enciclopedia_greia" / "pages"
 
 _TABLE_HEADER = """| STATUS | CUE_ID | KIND | SPEAKER | VOICE_ID | LOCALE | EXACT_TEXT | FINAL_FILENAME | FINAL_PATH | RECORDER_NOTES |
 |---|---|---|---|---|---|---|---|---|---|"""
@@ -67,6 +69,20 @@ def _write_locale(
     )
 
 
+def _runtime_narration_cues() -> set[str]:
+    cues: set[str] = set()
+    for path in ACTIVITY_PAGES.glob("*.py"):
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        cues.update(
+            node.value
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Constant)
+            and isinstance(node.value, str)
+            and node.value.startswith("encyclopedia.")
+        )
+    return cues
+
+
 class VoiceLedgerAuthoringTests(unittest.TestCase):
     def test_full_v01_render_contains_exact_expected_row_count(self) -> None:
         rendered = render_ledger(LEDGER.read_text(encoding="utf-8"))
@@ -74,6 +90,11 @@ class VoiceLedgerAuthoringTests(unittest.TestCase):
         self.assertEqual(len(rows), EXPECTED_V01_RECORDING_ROWS)
         self.assertIn(("encyclopedia.history.pyramids.engineering", "en"), rows)
         self.assertIn(("encyclopedia.home.welcome", "it"), rows)
+
+    def test_runtime_narration_cues_match_full_synchronized_ledger(self) -> None:
+        rendered = render_ledger(LEDGER.read_text(encoding="utf-8"))
+        ledger_cues = {row.cue_id for row in parse_ledger_rows(rendered).values()}
+        self.assertEqual(_runtime_narration_cues(), ledger_cues)
 
     def test_shared_parser_rejects_duplicate_cue_locale(self) -> None:
         row = _row(
