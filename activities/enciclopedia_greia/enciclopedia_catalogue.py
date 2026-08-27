@@ -7,6 +7,7 @@ if __package__:
     from .pages.animals import AnimalsPage
     from .pages.bee import BeePage
     from .pages.body import BodyPage
+    from .pages.bones import BonesPage
     from .pages.earth import EarthPage
     from .pages.elephant import ElephantPage
     from .pages.fossils import FossilsPage
@@ -17,6 +18,7 @@ if __package__:
     from .pages.home import HomePage
     from .pages.jupiter import JupiterPage
     from .pages.lion import LionPage
+    from .pages.lungs import LungsPage
     from .pages.machines import MachinesPage
     from .pages.mars import MarsPage
     from .pages.mercury import MercuryPage
@@ -29,8 +31,10 @@ if __package__:
     from .pages.rain import RainPage
     from .pages.rainbow import RainbowPage
     from .pages.saturn import SaturnPage
+    from .pages.senses import SensesPage
     from .pages.space import SpacePage
     from .pages.sun import SunPage
+    from .pages.teeth import TeethPage
     from .pages.tree import TreePage
     from .pages.uranus import UranusPage
     from .pages.venus import VenusPage
@@ -40,6 +44,7 @@ else:
     from pages.animals import AnimalsPage
     from pages.bee import BeePage
     from pages.body import BodyPage
+    from pages.bones import BonesPage
     from pages.earth import EarthPage
     from pages.elephant import ElephantPage
     from pages.fossils import FossilsPage
@@ -50,6 +55,7 @@ else:
     from pages.home import HomePage
     from pages.jupiter import JupiterPage
     from pages.lion import LionPage
+    from pages.lungs import LungsPage
     from pages.machines import MachinesPage
     from pages.mars import MarsPage
     from pages.mercury import MercuryPage
@@ -62,8 +68,10 @@ else:
     from pages.rain import RainPage
     from pages.rainbow import RainbowPage
     from pages.saturn import SaturnPage
+    from pages.senses import SensesPage
     from pages.space import SpacePage
     from pages.sun import SunPage
+    from pages.teeth import TeethPage
     from pages.tree import TreePage
     from pages.uranus import UranusPage
     from pages.venus import VenusPage
@@ -97,6 +105,10 @@ IMPLEMENTED_PAGE_IDS = (
     "earth.rainbow",
     "body",
     "body.heart",
+    "body.lungs",
+    "body.bones",
+    "body.teeth",
+    "body.senses",
     "machines",
     "machines.gears",
     "history",
@@ -134,6 +146,10 @@ def build_page_registry() -> PageRegistry:
         RainbowPage,
         BodyPage,
         HeartPage,
+        LungsPage,
+        BonesPage,
+        TeethPage,
+        SensesPage,
         MachinesPage,
         GearsPage,
         HistoryPage,
