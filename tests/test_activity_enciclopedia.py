@@ -54,6 +54,8 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
                 "space.sun",
                 "space.mercury",
                 "space.venus",
+                "space.earth",
+                "space.moon",
                 "space.saturn",
                 "earth",
                 "earth.volcano",
@@ -136,6 +138,18 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
                 "Cloud-covered rocky surface",
                 "Backward, slow rotation",
             ),
+            ROOT / "encyclopedia" / "research" / "space" / "earth.md": (
+                "NASA Science",
+                "Rotation makes day and night",
+                "A water world",
+                "Tilt makes seasons",
+            ),
+            ROOT / "encyclopedia" / "research" / "space" / "moon.md": (
+                "NASA Science",
+                "Phases are changing views of sunlight",
+                "The Moon really rotates",
+                "Lower gravity",
+            ),
             ROOT / "encyclopedia" / "research" / "space" / "saturn.md": (
                 "NASA Science",
                 "sixth planet",
@@ -196,6 +210,7 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
             "sun",
             "mercury",
             "venus",
+            "moon",
             "saturn",
             "volcano",
             "heart",
@@ -208,6 +223,38 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
                     any(subject in module for module in imported_modules),
                     f"engine imports subject-specific module containing {subject!r}",
                 )
+
+    def test_space_section_uses_semantic_targets_and_pre_reader_hit_radius(self) -> None:
+        source = (ACTIVITY / "pages" / "space.py").read_text(encoding="utf-8")
+        tree = ast.parse(source)
+        assignments = {
+            target.id: node.value
+            for node in tree.body
+            if isinstance(node, ast.Assign)
+            for target in node.targets
+            if isinstance(target, ast.Name)
+        }
+        target_ids = tuple(
+            item.value
+            for item in assignments["_TARGET_IDS"].elts
+            if isinstance(item, ast.Constant)
+        )
+        self.assertEqual(
+            target_ids,
+            (
+                "sun",
+                "mercury",
+                "venus",
+                "earth",
+                "moon",
+                "mars",
+                "jupiter",
+                "saturn",
+                "uranus",
+                "neptune",
+            ),
+        )
+        self.assertGreaterEqual(assignments["_TARGET_HIT_RADIUS"].value, 32)
 
     def test_repeated_text_rasterization_is_activity_bounded(self) -> None:
         source = (ACTIVITY / "enciclopedia_services.py").read_text(encoding="utf-8")
