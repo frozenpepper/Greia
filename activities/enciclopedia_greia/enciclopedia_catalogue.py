@@ -15,16 +15,20 @@ if __package__:
     from .pages.heart import HeartPage
     from .pages.history import HistoryPage
     from .pages.home import HomePage
+    from .pages.jupiter import JupiterPage
     from .pages.lion import LionPage
     from .pages.machines import MachinesPage
+    from .pages.mars import MarsPage
     from .pages.mercury import MercuryPage
     from .pages.moon import MoonPage
+    from .pages.neptune import NeptunePage
     from .pages.octopus import OctopusPage
     from .pages.penguin import PenguinPage
     from .pages.planet_earth import EarthPlanetPage
     from .pages.saturn import SaturnPage
     from .pages.space import SpacePage
     from .pages.sun import SunPage
+    from .pages.uranus import UranusPage
     from .pages.venus import VenusPage
     from .pages.volcano import VolcanoPage
 else:
@@ -40,16 +44,20 @@ else:
     from pages.heart import HeartPage
     from pages.history import HistoryPage
     from pages.home import HomePage
+    from pages.jupiter import JupiterPage
     from pages.lion import LionPage
     from pages.machines import MachinesPage
+    from pages.mars import MarsPage
     from pages.mercury import MercuryPage
     from pages.moon import MoonPage
+    from pages.neptune import NeptunePage
     from pages.octopus import OctopusPage
     from pages.penguin import PenguinPage
     from pages.planet_earth import EarthPlanetPage
     from pages.saturn import SaturnPage
     from pages.space import SpacePage
     from pages.sun import SunPage
+    from pages.uranus import UranusPage
     from pages.venus import VenusPage
     from pages.volcano import VolcanoPage
 
@@ -68,7 +76,11 @@ IMPLEMENTED_PAGE_IDS = (
     "space.venus",
     "space.earth",
     "space.moon",
+    "space.mars",
+    "space.jupiter",
     "space.saturn",
+    "space.uranus",
+    "space.neptune",
     "earth",
     "earth.volcano",
     "body",
@@ -97,7 +109,11 @@ def build_page_registry() -> PageRegistry:
         VenusPage,
         EarthPlanetPage,
         MoonPage,
+        MarsPage,
+        JupiterPage,
         SaturnPage,
+        UranusPage,
+        NeptunePage,
         EarthPage,
         VolcanoPage,
         BodyPage,
