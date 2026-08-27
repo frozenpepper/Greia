@@ -69,6 +69,7 @@ encyclopedia/
     VOICE_RECORDING_REQUESTS.md   # single human/agent recording queue
     voice_ledger.py               # shared deterministic ledger grammar
     sync_voice_requests.py        # research -> recording queue
+    export_voice_batch.py         # REQUESTED ledger rows -> Greia Voice Engine JSONL
     integrate_voice_assets.py     # OWNER_ACCEPTED -> runtime assets/maps
     research/                     # one factual authority per final entry
     pages/catalogue.py            # complete planned 43-page v0.1 inventory
@@ -140,9 +141,48 @@ The synchronizer reads exact approved narration from `encyclopedia/research/**`,
 
 At the current repository checkpoint `VOICE_RECORDING_REQUESTS.md` is still the old 176-row checkpoint. The first local closure action is therefore to run the synchronizer and prove the 378-row result before the recording queue is called complete.
 
-### 2. Recorder staging and review
+### 2. Translate REQUESTED rows into the shared Voice Production Engine contract
 
-The recording agent processes only `REQUESTED` rows using the voice-production authorities referenced at the top of the queue. A technically valid generated clip becomes `RECORDED_UNREVIEWED`. Only the owner/human listening gate changes it to `OWNER_ACCEPTED`.
+The encyclopedia no longer needs a second hand-authored JSON/request list when the repository-wide Voice Production Engine is used. The deterministic adapter is:
+
+```bash
+python3 encyclopedia/export_voice_batch.py \
+  --output ./tmp/encyclopedia-requested-voices.jsonl
+```
+
+It does **not** synthesize speech. It only converts `REQUESTED` ledger rows into the stable semantic request contract consumed by:
+
+```bash
+python3 tools/greia_voice.py batch --input ./tmp/encyclopedia-requested-voices.jsonl
+```
+
+The exporter preserves, without reinterpretation:
+
+```text
+speaker
+speech kind
+locale
+exact reviewed text
+semantic cue ID
+staging output path
+```
+
+and derives only the Voice Engine's provider-independent verification/default-attempt fields.
+
+Safety rules:
+
+- only the selected ledger status is exported; default is `REQUESTED`;
+- staging paths must remain inside `encyclopedia/pages/**/assets/audio/<locale>/`;
+- filename/locale/path mismatches fail closed;
+- unsupported speech kinds/speakers fail before any provider is invoked;
+- by default a `REQUESTED` row whose staging OGG already exists fails closed rather than overwriting a take that may simply be missing a status update;
+- the adapter never edits `VOICE_RECORDING_REQUESTS.md` and never marks a clip reviewed or accepted.
+
+The Voice Production Engine itself is still subject to its separate owner-controlled local provider acceptance. Until that subsystem is accepted, the pre-existing proven recording workflow remains valid. Once accepted, this adapter is the preferred encyclopedia input seam rather than duplicating Chatterbox/native/Whisper rules in encyclopedia tooling.
+
+### 3. Recorder staging and review
+
+The recording agent processes only `REQUESTED` rows using the currently accepted voice-production authority. A technically valid generated clip becomes `RECORDED_UNREVIEWED`. Only the owner/human listening gate changes it to `OWNER_ACCEPTED`.
 
 The queue column named `FINAL_PATH` is the recorder's **final staging destination**, not the shipped Activity location. These staging paths live under:
 
@@ -154,7 +194,7 @@ and are intentionally git-ignored. This avoids committing hundreds of unreviewed
 
 Do not edit immutable cue/text/voice/path fields to repair a recorded request. Create a revised cue/filename and supersede the old row instead.
 
-### 3. Package only OWNER_ACCEPTED audio
+### 4. Package only OWNER_ACCEPTED audio
 
 Once one or more clips are owner-accepted:
 
@@ -184,6 +224,8 @@ The accepted runtime copy is the file that may be committed and shipped. This ma
 
 - rendered v0.1 queue must contain exactly 378 rows;
 - runtime semantic narration cue IDs must equal the synchronized ledger cue set;
+- every synchronized `REQUESTED` row must translate into a valid semantic Voice Engine batch request;
+- Voice Engine export is status-filtered and refuses existing requested outputs/path traversal by default;
 - duplicate cue/locale rows are rejected;
 - only `OWNER_ACCEPTED` rows are packaged;
 - `RECORDED_UNREVIEWED` rows stay unreferenced;
