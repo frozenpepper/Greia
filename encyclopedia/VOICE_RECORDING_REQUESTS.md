@@ -138,7 +138,32 @@ These are navigation/orientation lines only. They intentionally avoid scientific
 
 ---
 
-## 4. Pending future batches
+## 4. Requested batch E3-OCTOPUS-01
+
+Research/provenance authority for this batch:
+
+```text
+encyclopedia/research/animals/octopus.md
+```
+
+The exact child-facing narration below is intentionally short and maps one-to-one to the four visible discovery interactions on `animals.octopus`.
+
+| STATUS | CUE_ID | KIND | SPEAKER | VOICE_ID | LOCALE | EXACT_TEXT | FINAL_FILENAME | FINAL_PATH | RECORDER_NOTES |
+|---|---|---|---|---|---|---|---|---|---|
+| REQUESTED | `encyclopedia.animals.octopus.intro` | character_dialogue | Tito | `greia.tito.v1` | it | Guarda che polpo! Ha otto braccia morbide, piene di ventose. Tocca il polpo e scopri i suoi trucchi! | `intro-tito.ogg` | `encyclopedia/pages/animals/octopus/assets/audio/it/intro-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.octopus.intro` | character_dialogue | Tito | `greia.tito.v1` | en | Look at this octopus! It has eight soft arms covered in suckers. Touch it and discover its tricks! | `intro-tito.ogg` | `encyclopedia/pages/animals/octopus/assets/audio/en/intro-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.octopus.arms` | character_dialogue | Tito | `greia.tito.v1` | it | Un polpo ha otto braccia, non tentacoli. Le ventose lungo le braccia lo aiutano a toccare e afferrare. | `arms-tito.ogg` | `encyclopedia/pages/animals/octopus/assets/audio/it/arms-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.octopus.arms` | character_dialogue | Tito | `greia.tito.v1` | en | An octopus has eight arms, not tentacles. Suckers along its arms help it touch and hold things. | `arms-tito.ogg` | `encyclopedia/pages/animals/octopus/assets/audio/en/arms-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.octopus.camouflage` | character_dialogue | Tito | `greia.tito.v1` | it | Molti polpi possono cambiare molto in fretta il colore e il disegno della pelle. Così possono confondersi con quello che hanno intorno. | `camouflage-tito.ogg` | `encyclopedia/pages/animals/octopus/assets/audio/it/camouflage-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.octopus.camouflage` | character_dialogue | Tito | `greia.tito.v1` | en | Many octopuses can change the color and pattern of their skin very quickly. That helps them blend into their surroundings. | `camouflage-tito.ogg` | `encyclopedia/pages/animals/octopus/assets/audio/en/camouflage-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.octopus.ink` | character_dialogue | Tito | `greia.tito.v1` | it | Se c'è pericolo, molti polpi possono spruzzare una nuvola d'inchiostro e scappare mentre il predatore è confuso. | `ink-tito.ogg` | `encyclopedia/pages/animals/octopus/assets/audio/it/ink-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.octopus.ink` | character_dialogue | Tito | `greia.tito.v1` | en | When danger comes, many octopuses can release a cloud of ink and escape while the predator is confused. | `ink-tito.ogg` | `encyclopedia/pages/animals/octopus/assets/audio/en/ink-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.octopus.hearts` | character_dialogue | Tito | `greia.tito.v1` | it | Sorpresa: un polpo ha tre cuori! Due spingono il sangue verso le branchie e uno lo manda nel resto del corpo. | `hearts-tito.ogg` | `encyclopedia/pages/animals/octopus/assets/audio/it/hearts-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.octopus.hearts` | character_dialogue | Tito | `greia.tito.v1` | en | Surprise: an octopus has three hearts! Two send blood to the gills, and one sends it around the rest of the body. | `hearts-tito.ogg` | `encyclopedia/pages/animals/octopus/assets/audio/en/hearts-tito.ogg` | |
+
+---
+
+## 5. Pending future batches
 
 Do **not** record these yet.
 
@@ -146,7 +171,6 @@ Future batches are appended only after page research and wording are ready:
 
 ```text
 E2-SECTION-*     additional section-page interaction cues if needed
-E3-OCTOPUS-*     animals.octopus
 E3-SATURN-*      space.saturn
 E3-VOLCANO-*     earth.volcano
 E3-HEART-*       body.heart
@@ -155,4 +179,4 @@ E3-FOSSILS-*     history.fossils
 ...
 ```
 
-A future factual batch is not `REQUESTED` until its `research/facts.md` provenance exists.
+A future factual batch is not `REQUESTED` until its research provenance exists.
