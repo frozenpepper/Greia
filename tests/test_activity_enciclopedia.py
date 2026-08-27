@@ -34,11 +34,7 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
                 for target in node.targets
             )
         )
-        ids = tuple(
-            item.value
-            for item in value.elts
-            if isinstance(item, ast.Constant)
-        )
+        ids = tuple(item.value for item in value.elts if isinstance(item, ast.Constant))
         self.assertEqual(
             ids,
             (
@@ -56,7 +52,11 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
                 "space.venus",
                 "space.earth",
                 "space.moon",
+                "space.mars",
+                "space.jupiter",
                 "space.saturn",
+                "space.uranus",
+                "space.neptune",
                 "earth",
                 "earth.volcano",
                 "body",
@@ -72,11 +72,7 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
         bundles = []
         for locale in ("it", "en"):
             bundles.append(
-                json.loads(
-                    (ACTIVITY / "locales" / f"{locale}.json").read_text(
-                        encoding="utf-8"
-                    )
-                )
+                json.loads((ACTIVITY / "locales" / f"{locale}.json").read_text(encoding="utf-8"))
             )
         self.assertEqual(set(bundles[0]["strings"]), set(bundles[1]["strings"]))
         self.assertEqual(bundles[0]["audio"], {})
@@ -150,11 +146,35 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
                 "The Moon really rotates",
                 "Lower gravity",
             ),
+            ROOT / "encyclopedia" / "research" / "space" / "mars.md": (
+                "NASA Science",
+                "The red planet",
+                "A wetter ancient world",
+                "A gigantic volcano",
+            ),
+            ROOT / "encyclopedia" / "research" / "space" / "jupiter.md": (
+                "NASA Science",
+                "The largest planet",
+                "A very short day",
+                "No Earth-like surface",
+            ),
             ROOT / "encyclopedia" / "research" / "space" / "saturn.md": (
                 "NASA Science",
                 "sixth planet",
                 "gas giant",
                 "billions of separate",
+            ),
+            ROOT / "encyclopedia" / "research" / "space" / "uranus.md": (
+                "NASA Science",
+                "A planet tipped on its side",
+                "Very long, extreme seasons",
+                "Blue-green color and rings",
+            ),
+            ROOT / "encyclopedia" / "research" / "space" / "neptune.md": (
+                "NASA Science",
+                "The farthest major planet",
+                "A very long year",
+                "strongest planetary winds",
             ),
             ROOT / "encyclopedia" / "research" / "earth" / "volcano.md": (
                 "U.S. Geological Survey",
@@ -190,11 +210,7 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
     def test_subject_specific_pages_do_not_leak_into_engine_code(self) -> None:
         source = (ACTIVITY / "enciclopedia_engine.py").read_text(encoding="utf-8")
         tree = ast.parse(source)
-        identifiers = {
-            node.id.casefold()
-            for node in ast.walk(tree)
-            if isinstance(node, ast.Name)
-        }
+        identifiers = {node.id.casefold() for node in ast.walk(tree) if isinstance(node, ast.Name)}
         imported_modules = {
             node.module.casefold()
             for node in ast.walk(tree)
@@ -211,7 +227,11 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
             "mercury",
             "venus",
             "moon",
+            "mars",
+            "jupiter",
             "saturn",
+            "uranus",
+            "neptune",
             "volcano",
             "heart",
             "gears",
@@ -235,41 +255,36 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
             if isinstance(target, ast.Name)
         }
         target_ids = tuple(
-            item.value
-            for item in assignments["_TARGET_IDS"].elts
-            if isinstance(item, ast.Constant)
+            item.value for item in assignments["_TARGET_IDS"].elts if isinstance(item, ast.Constant)
         )
-        self.assertEqual(
-            target_ids,
-            (
-                "sun",
-                "mercury",
-                "venus",
-                "earth",
-                "moon",
-                "mars",
-                "jupiter",
-                "saturn",
-                "uranus",
-                "neptune",
-            ),
+        expected = (
+            "sun",
+            "mercury",
+            "venus",
+            "earth",
+            "moon",
+            "mars",
+            "jupiter",
+            "saturn",
+            "uranus",
+            "neptune",
         )
+        self.assertEqual(target_ids, expected)
+        implemented = assignments["IMPLEMENTED_ENTRY_IDS"]
+        self.assertIsInstance(implemented, ast.Dict)
+        implemented_ids = tuple(
+            key.value for key in implemented.keys if isinstance(key, ast.Constant)
+        )
+        self.assertEqual(implemented_ids, expected)
         self.assertGreaterEqual(assignments["_TARGET_HIT_RADIUS"].value, 32)
 
     def test_repeated_text_rasterization_is_activity_bounded(self) -> None:
         source = (ACTIVITY / "enciclopedia_services.py").read_text(encoding="utf-8")
         tree = ast.parse(source)
-        classes = {
-            node.name: node
-            for node in tree.body
-            if isinstance(node, ast.ClassDef)
-        }
+        classes = {node.name: node for node in tree.body if isinstance(node, ast.ClassDef)}
         cached = classes["CachedEncyclopediaTypography"]
         self.assertTrue(
-            any(
-                isinstance(base, ast.Name) and base.id == "GreiaTypography"
-                for base in cached.bases
-            )
+            any(isinstance(base, ast.Name) and base.id == "GreiaTypography" for base in cached.bases)
         )
         assignments = {
             target.id: node.value
@@ -282,10 +297,7 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
 
     def test_no_runtime_tts_or_speech_recognition_backends(self) -> None:
         forbidden = ("speech_recognition", "pyttsx", "gtts", "whisper", "vosk")
-        combined = "\n".join(
-            path.read_text(encoding="utf-8").lower()
-            for path in ACTIVITY.rglob("*.py")
-        )
+        combined = "\n".join(path.read_text(encoding="utf-8").lower() for path in ACTIVITY.rglob("*.py"))
         for token in forbidden:
             with self.subTest(token=token):
                 self.assertNotIn(token, combined)
