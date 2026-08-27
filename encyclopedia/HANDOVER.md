@@ -1,42 +1,41 @@
 # Greia Encyclopedia workstream handover
 
 **Updated:** 2026-08-27  
-**Current construction state:** Home + six sections + complete Animals + complete Space + four cross-section pilots  
-**Runtime pages:** 27 real executable pages  
-**Evidence:** SOURCE-VERIFIED / SIMULATOR-UNVERIFIED  
+**Construction state:** v0.1 source breadth complete  
+**Runtime pages:** **43 / 43 planned executable pages**  
+**Evidence:** **SOURCE-REVIEWED / TESTS-UNEXECUTED / SIMULATOR-UNVERIFIED**  
 **Runtime Activity:** `activities/enciclopedia_greia/` (`org.greia.enciclopedia`)
 
 ## Owner direction that must not drift
 
-- Keep the encyclopedia engine very small.
-- Section pages and final entries are executable Python pages with a shared minimal lifecycle contract.
-- Subject-specific behavior belongs in the page/module that owns it, not in `enciclopedia_engine.py`.
-- Use Greia platform lifecycle, protected Home/chrome, semantic input, localization, typography, shared character visuals and approved runtime policy instead of Activity-local replacements.
-- Target Acer Aspire One-class hardware: simple geometry/sprites, bounded state/particles, no per-frame decode/scale/font construction, no heavy physics.
+- Keep the encyclopedia engine tiny and stable.
+- Sections and final entries are executable Python pages sharing one minimal lifecycle/navigation contract.
+- Subject behavior belongs in its page/module, never in `enciclopedia_engine.py`.
+- Reuse Greia lifecycle, protected system chrome, semantic input, localization, typography, visual assets and runtime policy.
+- Acer Aspire One-class hardware is the floor: simple geometry/sprites, bounded state, no heavy physics or unbounded effects.
 - No speech recognition, runtime narration TTS, runtime AI or network factual lookup.
-- All presenter narration is prerecorded during authoring. Dani/system speech is also generated ahead of time and packaged as static audio.
+- Narration is prerecorded during authoring. Dani/system speech is also generated on development/parent hardware and packaged as static audio.
 - Italian and English are the initial locales.
-- `encyclopedia/VOICE_RECORDING_REQUESTS.md` is the single concurrency-safe audio queue; never silently rewrite a row after recording starts.
-- First construction pass is source-first. Do not run Simulator acceptance page-by-page. One consolidated Simulator/visual/input pass comes later.
-- Until that pass runs against the final runtime-relevant source, report `SOURCE-VERIFIED / SIMULATOR-UNVERIFIED`.
+- `encyclopedia/VOICE_RECORDING_REQUESTS.md` is the single coordination authority for encyclopedia-specific voice production.
+- Do not run per-page Simulator gates during this first construction pass. The owner explicitly wants one consolidated Simulator/visual/input pass after the source base is solid.
+- Do not call v0.1 runtime-accepted until that consolidated gate has actually executed on the final runtime-relevant source.
 
-## Product scope
+## Product scope — source complete
 
-v0.1 remains **43 executable pages**:
-
-- 1 Home;
-- 6 sections;
-- 36 final entries.
-
-The long-lived product/content authority is `encyclopedia/PLAN.md`. `encyclopedia/PROGRESS.md` is the append-only implementation ledger. The runtime registry contains only pages that actually exist.
-
-## Implemented runtime inventory
-
-Current registry has **27 real pages**:
+The original v0.1 target remains exactly:
 
 ```text
-home
+1 Home
+6 section pages
+36 final entries
+= 43 executable pages
+```
 
+All 43 now exist and are registered in `enciclopedia_catalogue.py`.
+
+### Animals — complete
+
+```text
 animals
 ├── animals.lion
 ├── animals.elephant
@@ -44,7 +43,11 @@ animals
 ├── animals.bee
 ├── animals.penguin
 └── animals.frog
+```
 
+### Space — complete
+
+```text
 space
 ├── space.sun
 ├── space.mercury
@@ -56,21 +59,51 @@ space
 ├── space.saturn
 ├── space.uranus
 └── space.neptune
-
-earth
-└── earth.volcano
-
-body
-└── body.heart
-
-machines
-└── machines.gears
-
-history
-└── history.fossils
 ```
 
-Animals v0.1 and Space v0.1 are source-complete. The remaining breadth families are Earth & Nature, My Body, Science & Machines, and Long Ago.
+### Earth & Nature — complete
+
+```text
+earth
+├── earth.volcano
+├── earth.rain
+├── earth.ocean
+├── earth.tree
+└── earth.rainbow
+```
+
+### My Body — complete
+
+```text
+body
+├── body.heart
+├── body.lungs
+├── body.bones
+├── body.teeth
+└── body.senses
+```
+
+### Science & Machines — complete
+
+```text
+machines
+├── machines.gears
+├── machines.magnet
+├── machines.bicycle
+├── machines.airplane
+└── machines.bridge
+```
+
+### Long Ago — complete
+
+```text
+history
+├── history.dinosaurs
+├── history.fossils
+├── history.mammoth
+├── history.cave_paintings
+└── history.pyramids
+```
 
 ## Architecture state
 
@@ -82,110 +115,168 @@ Animals v0.1 and Space v0.1 are source-complete. The remaining breadth families 
 - bounded `PageNavigator` history;
 - semantic pointer/command input vocabulary.
 
-No animal, planet, volcano, heart, gear or fossil behavior is in the engine.
+No animal, planet, anatomy, geology, machine or history behavior belongs to the engine.
 
-Important implementation rules now demonstrated in real pages:
-
-- simple independent state stays page-local;
-- a small model class is used only where a concept owns real coupled mutable invariants (`FrogLifeCycleModel`, `MoonPhaseModel`, `VolcanoModel`, `HeartModel`, `GearTrainModel`, `FossilDigModel`, `BeePollinationModel`);
-- no generic exhibit framework or planet inheritance tree exists;
-- section destinations use explicit semantic-ID mappings rather than growing index branch chains;
-- `main.py` remains a thin composition root;
-- `CachedEncyclopediaTypography` provides a hard-bounded 160-surface cache so static localized text is not rerasterized every frame;
-- `VisualLibrary` remains a separate hard-bounded shared-character rendition cache.
-
-## Space section contract
-
-The Space scene deliberately distinguishes content model from navigation:
-
-- `PLANETS` contains exactly the eight major planets;
-- Sun is a separate central target;
-- Moon is rendered as Earth's satellite, not a ninth planet;
-- semantic navigation order is:
+Model classes exist only where a page owns real coupled mutable invariants. Current examples include:
 
 ```text
-Sun -> Mercury -> Venus -> Earth -> Moon -> Mars -> Jupiter -> Saturn -> Uranus -> Neptune
+BeePollinationModel
+FrogLifeCycleModel
+MoonPhaseModel
+VolcanoModel
+HeartModel
+GearTrainModel
+FossilDigModel
+BreathingModel
+DrivetrainModel
+BridgeLoadModel
+PyramidBuildModel
 ```
 
-All ten targets now map to real pages. Pointer and semantic navigation orders match. Hit regions are at least 64 logical pixels in diameter; Earth/Moon overlap resolves by nearest target.
+Simple pages remain page-owned state. Do not manufacture model/manager/ABC layers for consistency alone.
+
+There is intentionally no generic `PlanetPage`, `AnatomyPage`, `MachinePage`, `HistoryPageBase`, exhibit DSL or physics framework.
+
+Shared performance owners remain bounded:
+
+- `CachedEncyclopediaTypography`: max 160 cached text surfaces;
+- shared character rendition cache: hard bounded;
+- page animations/effects: finite timers/counts;
+- no page hot path should decode images, `smoothscale` reusable assets, build fonts, walk filesystems or perform network/provider work.
+
+## Navigation state
+
+All visible planned subjects now lead to real pages.
+
+- Animals uses one explicit subject-ID mapping.
+- Space exposes Sun, eight major planets and Earth's Moon; Moon remains a satellite, not a ninth planet.
+- Earth & Nature uses five semantic scene destinations.
+- My Body uses five body callouts.
+- Science & Machines uses five workshop stations.
+- Long Ago uses five timeline moments.
+
+Pointer/touch and Greia semantic keyboard/controller paths are intended to reach the same destinations and page actions.
 
 ## Research/provenance state
 
-Research records exist for every implemented factual final entry. Current Space records:
+Every one of the **36 factual final entries** has an authoring authority under:
 
 ```text
-encyclopedia/research/space/sun.md
-encyclopedia/research/space/mercury.md
-encyclopedia/research/space/venus.md
-encyclopedia/research/space/earth.md
-encyclopedia/research/space/moon.md
-encyclopedia/research/space/mars.md
-encyclopedia/research/space/jupiter.md
-encyclopedia/research/space/saturn.md
-encyclopedia/research/space/uranus.md
-encyclopedia/research/space/neptune.md
+encyclopedia/research/<section>/<entry>.md
 ```
 
-NASA Science is the primary Space authority. Volatile moon counts are intentionally excluded from Jupiter/Uranus/Neptune child content. Factual narration is never added to the recording queue before research exists.
+Each record contains:
 
-## Audio state
+- primary source links;
+- accepted claims;
+- scope/misconception guardrails;
+- interaction → fact mapping;
+- exact approved Italian narration;
+- exact approved English narration.
 
-Runtime locale `audio` tables intentionally remain empty until requested recordings are produced and owner-reviewed. Missing custom narration fails soft to silence; it never triggers runtime TTS.
+Important corrections deliberately preserved include:
 
-Before appending any future batch:
+- most wild bees are solitary; generic bees are not all hive-dwellers;
+- not all penguins live on ice;
+- classic aquatic frog metamorphosis is common, not universal;
+- Venus, not Mercury, is the hottest planet;
+- Moon phases are changing views of sunlight and the Moon really rotates;
+- clouds are droplets/ice particles, not giant bags of vapor;
+- named oceans are regions of one connected global ocean;
+- the adult 206-bone count is not taught as the count for every child;
+- the tongue taste map is false;
+- magnets do not attract every metal;
+- bicycle gears do not create energy;
+- airplane lift does not use the false equal-transit-time story;
+- no bridge type is universally strongest;
+- humans never lived alongside non-avian dinosaurs and birds are living dinosaurs;
+- mammoths are elephant relatives, not dinosaurs;
+- cave-art meanings are not invented when unknown;
+- Egyptian pyramids are human engineering, not alien work, and the simplistic chained-slave story is not presented as settled archaeology.
 
-1. refetch `VOICE_RECORDING_REQUESTS.md` from current `main`;
-2. preserve all local-agent status/note changes;
-3. never alter wording/path of `RECORDED_UNREVIEWED` or later rows in place;
-4. if wording changes after recording, create a revision/new filename and supersede the old row.
+## Localization state
 
-The recording queue is currently synchronized through Sun, Mercury, Venus, Earth and Moon. Mars/Jupiter/Uranus/Neptune research and runtime cues are ready; their four bilingual Leo batches are the immediate remaining queue-sync bookkeeping item if not yet present when resuming.
+`activities/enciclopedia_greia/locales/it.json` and `en.json` now contain matching child-facing key sets for the complete 43-page source inventory.
 
-## Current verification state
+Runtime `audio` tables intentionally remain empty until generated clips are technically reviewed and owner-accepted. Missing custom narration must fail soft to silence; it must never trigger child-device TTS.
 
-Focused source contracts live in:
+## Voice-production queue state — IMPORTANT
+
+The unified file is:
+
+```text
+encyclopedia/VOICE_RECORDING_REQUESTS.md
+```
+
+At the last verified synchronization point it still contains **176 `REQUESTED` rows** through:
+
+```text
+Space: Sun, Mercury, Venus, Earth, Moon
+```
+
+No recorder-owned status/note changes were observed at that synchronization point.
+
+Research-ready narration not yet appended to that queue:
+
+```text
+Space:            Mars, Jupiter, Uranus, Neptune                 40 rows
+Earth & Nature:   Rain, Ocean, Tree, Rainbow                    42 rows
+My Body:          Lungs, Bones, Teeth, Senses                   40 rows
+Machines:         Magnet, Bicycle, Airplane, Bridge             40 rows
+Long Ago:         Dinosaurs, Mammoth, Cave Paintings, Pyramids  40 rows
+                                                               --------
+Pending:                                                      202 rows
+```
+
+Expected full v0.1 queue after synchronization:
+
+```text
+176 existing + 202 pending = 378 exact bilingual recording rows
+```
+
+Before changing the queue:
+
+1. refetch it from current `main`;
+2. preserve every recorder-owned `STATUS` and `RECORDER_NOTES` change;
+3. never rewrite wording/path in place once a row is `RECORDED_UNREVIEWED` or later;
+4. if wording later changes, append a revised cue/new filename and mark the old row `SUPERSEDED`.
+
+## Current source-contract state
+
+Focused contracts are in:
 
 ```text
 tests/test_activity_enciclopedia.py
 ```
 
-They now describe:
+They have been authored to cover:
 
-- the 27-page runtime registry;
-- matching Italian/English key sets;
-- provenance for every implemented researched entry;
-- complete Space semantic target mapping;
-- minimum Space hit radius;
-- bounded typography cache;
+- exact 43-page runtime inventory and uniqueness;
+- one research authority per implemented factual entry;
+- research-document structural requirements;
+- targeted high-risk misconception guardrails;
+- Italian/English key parity;
+- complete Space targets;
+- Earth/Body/Machines/History semantic destination maps;
 - subject-neutral engine imports/identifiers;
-- absence of runtime TTS/speech-recognition backends;
+- bounded text cache;
+- no per-page image decode/smoothscale/font construction in source hot paths;
+- no runtime TTS, speech recognition, AI provider or network-fetch backend;
 - Python source parsing.
 
-These source contracts were updated but have **not been executed against the final Space-complete SHA in this construction pass**. Do not convert source review into test-execution evidence.
+**Those tests have not been executed against the final 43-page source state in this construction pass.** Do not report them as passing until a real local execution does so.
 
-Simulator, rendered visual acceptance, physical Acer/Pi evidence and integrated owner-accepted narration remain deliberately pending.
+No Greia Simulator run, rendered visual acceptance or physical Acer/Pi evidence has been performed for the complete encyclopedia yet, by explicit owner direction.
 
-## Next exact construction tranche
+## Next exact work
 
-After completing any pending Mars/Jupiter/Uranus/Neptune voice-queue synchronization, move to **Earth & Nature breadth**:
+Do not add more v0.1 topics. Scope expansion is forbidden until the 43-page base is reviewed.
 
-```text
-earth.rain
-earth.tree
-earth.rainbow
-earth.rocks
-```
+Next work order:
 
-`earth.volcano` already exists.
-
-Protocol for each entry:
-
-1. authoritative research first;
-2. record scope guardrails and approved bilingual narration;
-3. implement one memorable page-local interaction whose motion teaches the fact;
-4. do not create a generic nature-page framework unless repeated semantics genuinely require one;
-5. wire the existing Earth section via one explicit semantic destination mapping;
-6. add short bilingual captions;
-7. update registry/source contracts;
-8. refetch and append exact voice requests without clobbering recording-agent changes;
-9. keep Simulator deferred until the consolidated owner-directed pass.
+1. synchronize the 202 pending exact bilingual requests into the unified voice file;
+2. update `encyclopedia/PROGRESS.md` with the Earth/Body/Machines/Long-Ago completion milestones and correction of the old accidental `earth.rocks` note to planned `earth.ocean`;
+3. when the owner is ready, execute one consolidated source-test + Greia Simulator + no-reading visual/input acceptance pass across representative paths in every section;
+4. review screenshots/interaction quality and fix defects as a coherent acceptance tranche;
+5. integrate only technically reviewed + owner-accepted recordings into locale audio tables;
+6. only after the 43-page v0.1 base is accepted discuss new packs/topics.
