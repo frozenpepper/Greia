@@ -1,36 +1,34 @@
 #!/usr/bin/env python3
-"""Greia Shared Character Reactions - Recording & Evaluation Runner.
+"""Produce Greia's shared character utterance library through VoiceEngine.
 
-Generates the 150 shared character-reaction clips (5 characters x 5 families x 3 variants x 2 locales)
-using Chatterbox Multilingual V3 on Apple Silicon MLX Audio.
+This is intentionally a thin semantic producer. It does not import Chatterbox,
+Whisper, MLX, native TTS or FFmpeg directly; provider mechanics belong to
+``tools/greia_voice_core``.
 
-Adheres to:
-- GREIA_SHARED_CHARACTER_UTTERANCE_RECORDING.md
-- docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md
+Generated clips remain human-review pending. This tool never marks shared audio
+accepted merely because generation or ASR succeeds.
 """
 
 from __future__ import annotations
 
+import argparse
 import csv
-import json
-import os
 from pathlib import Path
-import re
 import sys
-import time
-import numpy as np
-import soundfile as sf
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-WORK_DIR = PROJECT_ROOT / "tmp/shared-character-utterances"
+TOOLS_ROOT = PROJECT_ROOT / "tools"
+if str(TOOLS_ROOT) not in sys.path:
+    sys.path.insert(0, str(TOOLS_ROOT))
 
-CHARACTERS = {
-    "lilli": PROJECT_ROOT / "assets/audio/characters/canonical/v0.1/lilli-reference-v1.flac",
-    "leo": PROJECT_ROOT / "assets/audio/characters/canonical/v0.1/leo-reference-v1.flac",
-    "flash": PROJECT_ROOT / "assets/audio/characters/canonical/v0.1/flash-reference-v1.flac",
-    "tito": PROJECT_ROOT / "assets/audio/characters/canonical/v0.1/tito-reference-v1.flac",
-    "momo": PROJECT_ROOT / "assets/audio/characters/canonical/v0.1/momo-reference-v1.flac",
-}
+from greia_voice import build_engine
+from greia_voice_core.locking import InterprocessGenerationLock, NullGenerationLock
+from greia_voice_core.models import SpeechKind, VoiceRequest
+from greia_voice_core.paths import voice_home
+
+WORK_DIR = PROJECT_ROOT / "tmp" / "shared-character-utterances"
+
+CHARACTERS = ("lilli", "leo", "flash", "tito", "momo", "dani")
 
 PHRASES = {
     "it": {
@@ -90,195 +88,204 @@ PHRASES = {
 }
 
 
-def trim_speech_island(
-    audio: np.ndarray,
-    sr: int,
-    noise_db: float = -35.0,
-    pad_leading_ms: float = 25.0,
-    pad_trailing_ms: float = 40.0,
-) -> tuple[np.ndarray, float, float]:
-    """Trim leading and trailing silence around primary speech."""
-    frame_len = int(0.010 * sr)  # 10ms
-    num_frames = len(audio) // frame_len
-    if num_frames == 0:
-        return audio, 0.0, len(audio) / sr
-
-    frames = audio[:num_frames * frame_len].reshape(num_frames, frame_len)
-    frame_rms = np.sqrt(np.mean(frames**2, axis=1))
-
-    peak_rms = np.max(frame_rms)
-    if peak_rms < 1e-4:
-        return audio, 0.0, len(audio) / sr
-
-    threshold = max(0.010, peak_rms * (10 ** (noise_db / 20.0)))
-    active = np.where(frame_rms > threshold)[0]
-    if len(active) == 0:
-        return audio, 0.0, len(audio) / sr
-
-    island_start_frame = active[0]
-    island_end_frame = active[0]
-
-    for idx in active[1:]:
-        if idx - island_end_frame > 12:  # >120ms gap
-            break
-        island_end_frame = idx
-
-    start_s = max(0.0, (island_start_frame * 0.010) - (pad_leading_ms / 1000.0))
-    end_s = min(len(audio) / sr, ((island_end_frame + 1) * 0.010) + (pad_trailing_ms / 1000.0))
-
-    start_samp = int(start_s * sr)
-    end_samp = int(end_s * sr)
-
-    return audio[start_samp:end_samp], round(start_s, 3), round(end_s, 3)
+def _selected_characters(raw: str) -> tuple[str, ...]:
+    requested = tuple(part.strip().lower() for part in raw.split(",") if part.strip())
+    unknown = sorted(set(requested) - set(CHARACTERS))
+    if unknown:
+        raise ValueError(f"unknown shared-utterance characters: {', '.join(unknown)}")
+    if not requested:
+        raise ValueError("at least one character must be selected")
+    return requested
 
 
-def normalize_text(text: str) -> str:
-    """Normalize text for comparison."""
-    text = text.lower()
-    text = re.sub(r"[^\w\s]", "", text)
-    return " ".join(text.split())
+def _request(
+    character: str,
+    locale: str,
+    family: str,
+    variant: int,
+    text: str,
+    output: Path,
+) -> VoiceRequest:
+    return VoiceRequest(
+        speaker=character,
+        kind=SpeechKind.SHARED_CHARACTER_UTTERANCE,
+        locale=locale,
+        text=text,
+        cue_id=f"shared.{family}.{variant:02d}",
+        output=output,
+        max_attempts=2,
+    )
 
 
-def main() -> int:
-    import mlx.core as mx
-    import mlx_whisper
-    from mlx_audio.tts import load
+def _row(
+    *,
+    character: str,
+    locale: str,
+    family: str,
+    variant: int,
+    text: str,
+    output: Path,
+    result: str,
+    notes: str,
+) -> dict[str, object]:
+    return {
+        "character": character,
+        "locale": locale,
+        "family": family,
+        "variant": variant,
+        "text": text,
+        "file": str(output.relative_to(PROJECT_ROOT)),
+        "result": result,
+        "notes": notes,
+    }
 
-    WORK_DIR.mkdir(parents=True, exist_ok=True)
-    for c in CHARACTERS:
-        (WORK_DIR / c / "it").mkdir(parents=True, exist_ok=True)
-        (WORK_DIR / c / "en").mkdir(parents=True, exist_ok=True)
 
-    print("Loading mlx-community/chatterbox-multilingual-v3...", flush=True)
-    t0 = time.time()
-    model = load("mlx-community/chatterbox-multilingual-v3")
-    print(f"Model loaded in {time.time() - t0:.2f}s", flush=True)
+def run(output_root: Path, characters: tuple[str, ...]) -> list[dict[str, object]]:
+    output_root.mkdir(parents=True, exist_ok=True)
+    rows: list[dict[str, object]] = []
 
-    total_tasks = len(CHARACTERS) * 2 * 5 * 3
-    current = 0
-    review_rows = []
-
-    for char_name, ref_path in CHARACTERS.items():
-        if not ref_path.is_file():
-            raise FileNotFoundError(f"Reference voice missing: {ref_path}")
-
-        print(f"\n=======================================================", flush=True)
-        print(f"--- Recording Character: {char_name.upper()} ---", flush=True)
-        print(f"=======================================================", flush=True)
-
-        for locale in ["it", "en"]:
-            locale_phrases = PHRASES[locale]
-
-            for family, variants in locale_phrases.items():
-                for v_idx, text in enumerate(variants, 1):
-                    current += 1
-                    filename = f"{char_name}__{locale}__{family}__{v_idx:02d}.wav"
-                    out_path = WORK_DIR / char_name / locale / filename
-
-                    word_count = len(text.split())
-                    max_tokens = 65 if word_count >= 3 else 45
-
-                    best_audio = None
-                    best_sr = 24000
-                    best_transcript = ""
-                    best_result = "REGENERATE"
-                    best_notes = ""
-                    best_dur = 0.0
-
-                    for take in range(1, 3):
-                        res = next(model.generate(
-                            text=text,
-                            ref_audio=str(ref_path),
-                            lang_code=locale,
-                            max_new_tokens=max_tokens,
-                            verbose=False,
-                        ))
-                        raw_audio = np.array(res.audio)
-                        best_sr = res.sample_rate
-
-                        clean_audio, start_s, end_s = trim_speech_island(raw_audio, best_sr)
-                        dur = len(clean_audio) / best_sr
-
-                        tmp_take = WORK_DIR / f"_tmp_{char_name}_{locale}_{take}.wav"
-                        sf.write(str(tmp_take), clean_audio, best_sr)
-                        try:
-                            tr = mlx_whisper.transcribe(
-                                str(tmp_take),
-                                path_or_hf_repo="mlx-community/whisper-tiny",
-                                language=locale,
+    # Hold the global generation lock for the complete recording run so the
+    # engine can keep its model warm without another process loading a second copy.
+    with InterprocessGenerationLock(voice_home() / "generation.lock"):
+        with build_engine(generation_lock=NullGenerationLock()) as engine:
+            for character in characters:
+                for locale, families in PHRASES.items():
+                    for family, variants in families.items():
+                        for variant, text in enumerate(variants, 1):
+                            filename = (
+                                f"{character}__{locale}__{family}__{variant:02d}.wav"
                             )
-                            transcript = tr.get("text", "").strip()
-                        except Exception as e:
-                            transcript = f"ERR: {e}"
-                        if tmp_take.exists():
-                            tmp_take.unlink()
+                            output = output_root / character / locale / filename
+                            receipt = output.with_suffix(output.suffix + ".receipt.json")
 
-                        norm_target = normalize_text(text)
-                        norm_tr = normalize_text(transcript)
+                            if output.exists() or receipt.exists():
+                                if (
+                                    output.is_file()
+                                    and output.stat().st_size > 1000
+                                    and receipt.is_file()
+                                ):
+                                    rows.append(
+                                        _row(
+                                            character=character,
+                                            locale=locale,
+                                            family=family,
+                                            variant=variant,
+                                            text=text,
+                                            output=output,
+                                            result="EXISTING_REVIEW_CANDIDATE",
+                                            notes="not regenerated; inspect existing audio + receipt",
+                                        )
+                                    )
+                                    continue
+                                rows.append(
+                                    _row(
+                                        character=character,
+                                        locale=locale,
+                                        family=family,
+                                        variant=variant,
+                                        text=text,
+                                        output=output,
+                                        result="BLOCKED_PARTIAL_OUTPUT",
+                                        notes="audio/receipt pair is incomplete; inspect before retry",
+                                    )
+                                )
+                                continue
 
-                        is_clean = False
-                        notes = f"take {take} ({dur:.2f}s, '{transcript}')"
+                            request = _request(
+                                character,
+                                locale,
+                                family,
+                                variant,
+                                text,
+                                output,
+                            )
+                            result = engine.generate(request)
+                            notes = result.detail
+                            if result.verification is not None:
+                                verification = result.verification
+                                notes = (
+                                    f"{notes}; verifier={verification.verifier_id}; "
+                                    f"verification={verification.disposition.value}; "
+                                    f"transcript={verification.transcript!r}; score={verification.score}"
+                                )
+                            rows.append(
+                                _row(
+                                    character=character,
+                                    locale=locale,
+                                    family=family,
+                                    variant=variant,
+                                    text=text,
+                                    output=output,
+                                    result=result.disposition.value,
+                                    notes=notes,
+                                )
+                            )
+                            print(
+                                f"{character:5s} | {locale} | {family:18s} | "
+                                f"v{variant:02d} -> {result.disposition.value}",
+                                flush=True,
+                            )
 
-                        if dur < 0.20:
-                            result = "CLIPPED"
-                        elif dur > 3.5:
-                            result = "EXTRA_SPEECH"
-                        else:
-                            target_words = set(norm_target.split())
-                            tr_words = set(norm_tr.split())
-                            common = target_words.intersection(tr_words)
+    return rows
 
-                            if norm_target in norm_tr or norm_tr in norm_target:
-                                result = "ACCEPT"
-                                is_clean = True
-                            elif len(common) >= max(1, len(target_words) - 1):
-                                result = "ACCEPT"
-                                is_clean = True
-                            elif any(w[:3] in norm_tr for w in target_words if len(w) >= 4):
-                                result = "ACCEPT"
-                                is_clean = True
-                            else:
-                                result = "ACCEPT" if dur > 0.35 else "WRONG_WORDS"
-                                is_clean = (result == "ACCEPT")
 
-                        best_audio = clean_audio
-                        best_dur = dur
-                        best_transcript = transcript
-                        best_result = result
-                        best_notes = notes
-
-                        if is_clean:
-                            break
-
-                    sf.write(str(out_path), best_audio, best_sr)
-
-                    print(
-                        f"[{current:03d}/{total_tasks:03d}] {char_name:5s} | {locale:2s} | {family:18s} | v{v_idx:02d}: "
-                        f"'{text:26s}' -> {best_result:10s} ({best_dur:.2f}s, '{best_transcript}')",
-                        flush=True,
-                    )
-
-                    review_rows.append({
-                        "character": char_name,
-                        "locale": locale,
-                        "family": family,
-                        "variant": v_idx,
-                        "text": text,
-                        "file": str(out_path.relative_to(PROJECT_ROOT)),
-                        "result": best_result,
-                        "notes": best_notes,
-                    })
-
-    csv_path = WORK_DIR / "review.csv"
-    fieldnames = ["character", "locale", "family", "variant", "text", "file", "result", "notes"]
-    with csv_path.open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
+def write_review_csv(output_root: Path, rows: list[dict[str, object]]) -> Path:
+    path = output_root / "review.csv"
+    fieldnames = [
+        "character",
+        "locale",
+        "family",
+        "variant",
+        "text",
+        "file",
+        "result",
+        "notes",
+    ]
+    with path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
-        writer.writerows(review_rows)
+        writer.writerows(rows)
+    return path
 
-    print(f"\nWrote review CSV to {csv_path}", flush=True)
-    mx.clear_cache()
-    return 0
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        description="Produce Greia shared character utterance review candidates through VoiceEngine"
+    )
+    parser.add_argument(
+        "--output-root",
+        type=Path,
+        default=WORK_DIR,
+        help="review workspace (default: ./tmp/shared-character-utterances)",
+    )
+    parser.add_argument(
+        "--characters",
+        default=",".join(CHARACTERS),
+        help="comma-separated subset; default: lilli,leo,flash,tito,momo,dani",
+    )
+    args = parser.parse_args(argv)
+
+    characters = _selected_characters(args.characters)
+    rows = run(args.output_root.resolve(), characters)
+    csv_path = write_review_csv(args.output_root.resolve(), rows)
+
+    failures = [
+        row
+        for row in rows
+        if row["result"]
+        not in {
+            "REVIEW_REQUIRED",
+            "REVIEW_REQUIRED_ASR_WARNING",
+            "EXISTING_REVIEW_CANDIDATE",
+        }
+    ]
+    print(f"Review CSV: {csv_path}", flush=True)
+    print(
+        f"Candidates: {len(rows) - len(failures)}; blocked/unavailable/rejected: {len(failures)}",
+        flush=True,
+    )
+    print("Human listening review remains mandatory.", flush=True)
+    return 0 if not failures else 2
 
 
 if __name__ == "__main__":
