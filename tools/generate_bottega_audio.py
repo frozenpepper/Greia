@@ -1,24 +1,23 @@
 #!/usr/bin/env python3
-"""Pedagogical speech audio generator for La Bottega delle Misure.
+"""Prepare La Bottega delle Misure guidance as Dani system speech.
 
-Generates 22050Hz LEI16 mono WAV audio assets for:
-- Italian and English challenge instruction prompts (compare longer/shorter/taller/lower, order, measure, shelf)
-- Positive verbal reinforcement clips ("Ben fatto!", "Esatto!", "Ottimo lavoro!", "Great job!", "You got it!")
-- Encouraging retry verbal clips ("Riprova!", "Quasi, riprova!", "Try again!")
+These lines are ordinary Activity guidance/reinforcement, not pronunciation-authoritative
+pedagogical targets. The Activity therefore names Dani explicitly and delegates native
+TTS selection/rates/conversion to Greia VoiceEngine. Existing packaged audio is left
+untouched; generated takes go to review and require human acceptance before integration.
 """
 
 from __future__ import annotations
 
 import argparse
-import hashlib
+import json
 from pathlib import Path
 import subprocess
-import tempfile
-import time
-
+import sys
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_AUDIO_ROOT = PROJECT_ROOT / "activities" / "bottega_delle_misure" / "assets" / "audio"
+VOICE_CLI = PROJECT_ROOT / "tools" / "greia_voice.py"
+DEFAULT_REVIEW_DIR = PROJECT_ROOT / "tmp" / "voice-review" / "bottega_delle_misure"
 
 PROMPTS_IT = [
     ("prompt_compare_longer", "Tocca il pacco più lungo!"),
@@ -29,11 +28,8 @@ PROMPTS_IT = [
     ("prompt_order_height", "Metti i pacchi in ordine, dal più basso al più alto!"),
     ("prompt_measure", "Conta quanti blocchi è lungo il pacco e tocca il numero!"),
     ("prompt_shelf", "Quale pacco entra nello scaffale?"),
-    ("correct_1", "Ben fatto!"),
-    ("correct_2", "Esatto!"),
-    ("correct_3", "Ottimo lavoro!"),
-    ("retry_1", "Riprova!"),
-    ("retry_2", "Quasi, prova ancora!"),
+    ("correct_1", "Ben fatto!"), ("correct_2", "Esatto!"), ("correct_3", "Ottimo lavoro!"),
+    ("retry_1", "Riprova!"), ("retry_2", "Quasi, prova ancora!"),
 ]
 
 PROMPTS_EN = [
@@ -45,90 +41,51 @@ PROMPTS_EN = [
     ("prompt_order_height", "Put the parcels in order, from shortest to tallest!"),
     ("prompt_measure", "Count how many blocks long the parcel is and tap the number!"),
     ("prompt_shelf", "Which parcel fits in the shelf?"),
-    ("correct_1", "Great job!"),
-    ("correct_2", "You got it!"),
-    ("correct_3", "Awesome!"),
-    ("retry_1", "Try again!"),
-    ("retry_2", "Almost, try again!"),
+    ("correct_1", "Great job!"), ("correct_2", "You got it!"), ("correct_3", "Awesome!"),
+    ("retry_1", "Try again!"), ("retry_2", "Almost, try again!"),
 ]
 
 
-def _write_wav_stub(dest_wav: Path) -> None:
-    """Create a minimal valid 22050Hz LEI16 mono WAV stub."""
-    import wave
-    dest_wav.parent.mkdir(parents=True, exist_ok=True)
-    with wave.open(str(dest_wav), "wb") as w:
-        w.setnchannels(1)
-        w.setsampwidth(2)
-        w.setframerate(22050)
-        w.writeframes(b"\x00\x00" * 2205)  # 0.1s of silence
-
-
-def make_wav(text: str, voice: str, rate: int, dest_wav: Path) -> None:
-    dest_wav.parent.mkdir(parents=True, exist_ok=True)
-    for attempt in range(3):
-        with tempfile.NamedTemporaryFile(suffix=".aiff", delete=False) as tmp_file:
-            tmp_aiff = Path(tmp_file.name)
-        try:
-            subprocess.run(
-                ["say", "-v", voice, "-r", str(rate), text, "-o", str(tmp_aiff)],
-                check=True,
-                capture_output=True,
-            )
-            subprocess.run(
-                ["afconvert", "-f", "WAVE", "-d", "LEI16@22050", "-c", "1", str(tmp_aiff), str(dest_wav)],
-                check=True,
-                capture_output=True,
-            )
-            break
-        except Exception:
-            if attempt == 2:
-                _write_wav_stub(dest_wav)
-            time.sleep(0.1)
-        finally:
-            if tmp_aiff.exists():
-                tmp_aiff.unlink()
-
-
-def generate_locale(locale: str, out_dir: Path) -> dict[str, str]:
-    manifest: dict[str, str] = {}
-    if locale == "it":
-        voice = "Alice"
-        rate = 175
-        prompts = PROMPTS_IT
-    else:
-        voice = "Samantha"
-        rate = 180
-        prompts = PROMPTS_EN
-
-    target_dir = out_dir / locale
-    target_dir.mkdir(parents=True, exist_ok=True)
-
-    for prompt_id, prompt_text in prompts:
-        p = target_dir / f"{prompt_id}.wav"
-        make_wav(prompt_text, voice, rate, p)
-        manifest[f"{locale}/{prompt_id}.wav"] = hashlib.sha256(p.read_bytes()).hexdigest()
-
-    return manifest
+def _output_path(review_dir: Path, locale: str, key: str) -> str:
+    output = review_dir / locale / f"{key}.wav"
+    try:
+        return str(output.resolve().relative_to(PROJECT_ROOT))
+    except ValueError:
+        return str(output.resolve())
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Generate Bottega delle Misure audio clips")
-    parser.add_argument("--locale", choices=["it", "en", "all"], default="all")
-    parser.add_argument("--output-dir", type=Path, default=DEFAULT_AUDIO_ROOT)
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--review-dir", type=Path, default=DEFAULT_REVIEW_DIR)
     args = parser.parse_args()
-
-    locales = ["it", "en"] if args.locale == "all" else [args.locale]
-    full_manifest: dict[str, str] = {}
-    for loc in locales:
-        m = generate_locale(loc, args.output_dir)
-        full_manifest.update(m)
-
-    manifest_file = args.output_dir / "audio_manifest.sha256"
-    manifest_lines = [f"{digest}  {path}\n" for path, digest in sorted(full_manifest.items())]
-    manifest_file.write_text("".join(manifest_lines), encoding="utf-8")
-    print(f"Generated {len(full_manifest)} audio clips in {args.output_dir}")
-    return 0
+    review_dir = args.review_dir.resolve()
+    review_dir.mkdir(parents=True, exist_ok=True)
+    prompts = {"it": PROMPTS_IT, "en": PROMPTS_EN}
+    requests = [
+        {
+            "speaker": "dani",
+            "kind": "dani_system_speech",
+            "locale": locale,
+            "text": text,
+            "cue_id": f"bottega_delle_misure.{key}",
+            "output": _output_path(review_dir, locale, key),
+            "verification": "off",
+            "max_attempts": 1,
+        }
+        for locale, items in prompts.items()
+        for key, text in items
+    ]
+    batch_path = review_dir / "voice_requests.jsonl"
+    batch_path.write_text(
+        "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in requests), encoding="utf-8"
+    )
+    result = subprocess.run(
+        [sys.executable, str(VOICE_CLI), "batch", "--input", str(batch_path)], cwd=PROJECT_ROOT
+    )
+    if result.returncode == 0:
+        print(f"Generated {len(requests)} Dani review candidates under {review_dir}")
+        print("Human listening review is required before Activity integration.")
+    return result.returncode
 
 
 if __name__ == "__main__":
