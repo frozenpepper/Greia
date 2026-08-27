@@ -216,6 +216,8 @@ The following now point production through the engine rather than teaching backe
 
 `tools/record_shared_character_utterances.py` has also been migrated from direct MLX/Whisper calls into a thin `VoiceEngine` semantic producer. It now supports all six characters; Dani is routed through the system provider.
 
+All twelve historical Activity-specific `tools/generate_*_audio.py` speech generators have now been migrated away from direct backend ownership as well. Character-hosted Activities submit `character_dialogue`; pronunciation-authoritative letters/syllables/phonemes/words submit `pedagogical_speech`; legacy neutral guidance explicitly names Dani via `dani_system_speech`. Those scripts are thin semantic batch producers for `tools/greia_voice.py`, generate into review workspaces, and no longer load MLX models, reference files, native voice names, FFmpeg/afconvert pipelines, token budgets, accelerator caches, or silent/synthetic fallback audio. Existing packaged reviewed assets are preserved until separately human-reviewed replacements are accepted.
+
 ### Installation
 
 Quick install/use:
