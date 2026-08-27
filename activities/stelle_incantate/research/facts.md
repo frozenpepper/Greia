@@ -68,21 +68,15 @@ strings; this record is development material only.
 
 ## Voice coverage status
 
-Leo voice audio produced for all six facts in BOTH shipped locales (it/en)
-with the canonical `greia.leo.v1` reference (`leo-reference-v1.flac`, hash
-verified against the v0.1 voice registry) through Chatterbox Multilingual V3
-(`mlx-community/chatterbox-multilingual-v3`, local Apple Silicon production
-environment). Generation tool: `tools/generate_stelle_incantate_audio.py`
-(single worker, model loaded once, per-clip Metal cache release, idempotent
-skip, loud failures). Packaged as mono 22050 Hz OGG under
-`assets/audio/<locale>/` and wired through the locale `audio` tables so
-`LocalizedResources.audio_cue()` resolves them; the Activity plays the cue
-with a procedural-chirp fail-soft fallback.
+Leo is the semantic speaker for all six facts in both shipped locales. Current
+production is submitted only through the canonical Greia Voice Production Engine
+via `tools/generate_stelle_incantate_audio.py`, which is now a thin semantic batch
+producer for `tools/greia_voice.py`. The Activity does not select Chatterbox, load
+canonical reference files, set token budgets, trim audio, manage Metal memory,
+invoke Whisper, or convert containers itself.
 
-Programmatic analysis: durations 3.8-6.3 s (consistent with text length),
-mono, mean loudness ~-15 dB, peak signature matching the already-accepted
-Baia delle Orche production baseline, no meaningful flat-topping.
-
-**Human listening review by the owner is still the final audio acceptance
-gate** (VOICE_GENERATION section 13); process success and analysis are never
-audio acceptance by themselves.
+The currently packaged mono OGG files remain historical reviewed runtime assets;
+they are not regenerated merely because the authoring path changed. Future takes
+are generated into a review workspace with machine receipts and remain
+`human_review = PENDING` until the owner listens and explicitly accepts them for
+integration.
