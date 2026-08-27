@@ -1,233 +1,162 @@
 #!/usr/bin/env python3
-"""Audio generator for Sillabe Magiche (Magic Syllables).
+"""Prepare Sillabe Magiche speech through Greia VoiceEngine.
 
-Generates crystal-clear 22050Hz LEI16 mono WAV audio assets for:
-- All Italian and English consonant-vowel (CV) syllables
-- Syllable listening challenge prompts ("Trova ba", "Find ba")
-- 2-Syllable words and their component syllables
-- Cheerful child praise and encouragement
-
-CRITICAL RULES:
-1. Always pass lowercase strings to TTS so macOS `say` never pronounces 'maiuscola' or 'capital'.
-2. Use toddler-friendly speech rate: ~175 wpm for Italian (Alice), ~180 wpm for English (Samantha).
+Letters, syllables, target-bearing "find" prompts, words and word components use
+``pedagogical_speech`` because exact pronunciation is educational truth. Generic
+instructions and praise are Dani system speech. macOS voice names, lowercasing and
+Italian pronunciation overrides are owned by the VoiceEngine provider, not this Activity.
 """
 
 from __future__ import annotations
 
+import argparse
+import json
 from pathlib import Path
 import subprocess
 import sys
-import tempfile
-import time
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-AUDIO_ROOT = PROJECT_ROOT / "activities" / "sillabe_magiche" / "assets" / "audio"
+VOICE_CLI = PROJECT_ROOT / "tools" / "greia_voice.py"
+DEFAULT_REVIEW_DIR = PROJECT_ROOT / "tmp" / "voice-review" / "sillabe_magiche"
 
 CONSONANTS_IT = ["B", "C", "D", "F", "G", "L", "M", "N", "P", "R", "S", "T", "V", "Z"]
 VOWELS_IT = ["A", "E", "I", "O", "U"]
 
 WORDS_DATA_IT = [
-    ("CASA", ("CA", "SA"), "🏠", "casa"),
-    ("SOLE", ("SO", "LE"), "☀️", "sole"),
-    ("LUNA", ("LU", "NA"), "🌙", "luna"),
-    ("MELA", ("ME", "LA"), "🍎", "mela"),
-    ("RANA", ("RA", "NA"), "🐸", "rana"),
-    ("TOPO", ("TO", "PO"), "🐭", "topo"),
-    ("MANO", ("MA", "NO"), "🖐️", "mano"),
-    ("PANE", ("PA", "NE"), "🥖", "pane"),
-    ("NAVE", ("NA", "VE"), "🚢", "nave"),
-    ("VASO", ("VA", "SO"), "🏺", "vaso"),
-    ("PERA", ("PE", "RA"), "🍐", "pera"),
-    ("MURO", ("MU", "RO"), "🧱", "muro"),
-    ("LUPO", ("LU", "PO"), "🐺", "lupo"),
-    ("FILO", ("FI", "LO"), "🧵", "filo"),
-    ("ROSA", ("RO", "SA"), "🌹", "rosa"),
-    ("FARO", ("FA", "RO"), "🗼", "faro"),
-    ("GUFO", ("GU", "FO"), "🦉", "gufo"),
-    ("MOTO", ("MO", "TO"), "🏍️", "moto"),
-    ("LAMA", ("LA", "MA"), "🦙", "lama"),
-    ("PINO", ("PI", "NO"), "🌲", "pino"),
-    ("RETE", ("RE", "TE"), "🥅", "rete"),
-    ("SUCO", ("SU", "CO"), "🧃", "suco"),
-    ("VELA", ("VE", "LA"), "⛵", "vela"),
-    ("DADO", ("DA", "DO"), "🎲", "dado"),
-    ("FATA", ("FA", "TA"), "🧚", "fata"),
-    ("CANE", ("CA", "NE"), "🐶", "cane"),
-    ("PIZZA", ("PI", "ZZA"), "🍕", "pizza"),
+    ("CASA", ("CA", "SA"), "casa"), ("SOLE", ("SO", "LE"), "sole"),
+    ("LUNA", ("LU", "NA"), "luna"), ("MELA", ("ME", "LA"), "mela"),
+    ("RANA", ("RA", "NA"), "rana"), ("TOPO", ("TO", "PO"), "topo"),
+    ("MANO", ("MA", "NO"), "mano"), ("PANE", ("PA", "NE"), "pane"),
+    ("NAVE", ("NA", "VE"), "nave"), ("VASO", ("VA", "SO"), "vaso"),
+    ("PERA", ("PE", "RA"), "pera"), ("MURO", ("MU", "RO"), "muro"),
+    ("LUPO", ("LU", "PO"), "lupo"), ("FILO", ("FI", "LO"), "filo"),
+    ("ROSA", ("RO", "SA"), "rosa"), ("FARO", ("FA", "RO"), "faro"),
+    ("GUFO", ("GU", "FO"), "gufo"), ("MOTO", ("MO", "TO"), "moto"),
+    ("LAMA", ("LA", "MA"), "lama"), ("PINO", ("PI", "NO"), "pino"),
+    ("RETE", ("RE", "TE"), "rete"), ("SUCO", ("SU", "CO"), "suco"),
+    ("VELA", ("VE", "LA"), "vela"), ("DADO", ("DA", "DO"), "dado"),
+    ("FATA", ("FA", "TA"), "fata"), ("CANE", ("CA", "NE"), "cane"),
+    ("PIZZA", ("PI", "ZZA"), "pizza"),
 ]
 
 WORDS_DATA_EN = [
-    ("BABY", ("BA", "BY"), "👶", "baby"),
-    ("TIGER", ("TI", "GER"), "🐯", "tiger"),
-    ("ROBOT", ("RO", "BOT"), "🤖", "robot"),
-    ("LEMON", ("LE", "MON"), "🍋", "lemon"),
-    ("PAPER", ("PA", "PER"), "📄", "paper"),
-    ("WATER", ("WA", "TER"), "💧", "water"),
-    ("MUSIC", ("MU", "SIC"), "🎵", "music"),
-    ("RABBIT", ("RAB", "BIT"), "🐰", "rabbit"),
-    ("PIZZA", ("PIZ", "ZA"), "🍕", "pizza"),
-    ("ZEBRA", ("ZE", "BRA"), "🦓", "zebra"),
-    ("PANDA", ("PAN", "DA"), "🐼", "panda"),
-    ("ROCKET", ("ROCK", "ET"), "🚀", "rocket"),
-    ("SUNNY", ("SUN", "NY"), "☀️", "sunny"),
+    ("BABY", ("BA", "BY"), "baby"), ("TIGER", ("TI", "GER"), "tiger"),
+    ("ROBOT", ("RO", "BOT"), "robot"), ("LEMON", ("LE", "MON"), "lemon"),
+    ("PAPER", ("PA", "PER"), "paper"), ("WATER", ("WA", "TER"), "water"),
+    ("MUSIC", ("MU", "SIC"), "music"), ("RABBIT", ("RAB", "BIT"), "rabbit"),
+    ("PIZZA", ("PIZ", "ZA"), "pizza"), ("ZEBRA", ("ZE", "BRA"), "zebra"),
+    ("PANDA", ("PAN", "DA"), "panda"), ("ROCKET", ("ROCK", "ET"), "rocket"),
+    ("SUNNY", ("SUN", "NY"), "sunny"),
 ]
 
 PRAISES_IT = [
-    ("esatto", "esatto"),
-    ("fantastico", "fantastico"),
-    ("super", "super"),
-    ("magnifico", "magnifico"),
-    ("ottimo", "ottimo lavoro"),
-    ("ben_fatto", "ben fatto"),
+    ("esatto", "esatto"), ("fantastico", "fantastico"), ("super", "super"),
+    ("magnifico", "magnifico"), ("ottimo", "ottimo lavoro"), ("ben_fatto", "ben fatto"),
     ("parola_composta", "hai composto la parola"),
 ]
-
 PRAISES_EN = [
-    ("great_job", "great job"),
-    ("wonderful", "wonderful"),
-    ("you_did_it", "you did it"),
-    ("fantastic", "fantastic"),
-    ("super", "super"),
-    ("well_done", "well done"),
+    ("great_job", "great job"), ("wonderful", "wonderful"), ("you_did_it", "you did it"),
+    ("fantastic", "fantastic"), ("super", "super"), ("well_done", "well done"),
     ("word_complete", "you made the word"),
 ]
-
-
-def make_wav(text: str, voice: str, rate: int, dest_wav: Path) -> None:
-    lower_text = text.lower()
-    for attempt in range(3):
-        with tempfile.NamedTemporaryFile(suffix=".aiff", delete=False) as tmp_file:
-            tmp_aiff = Path(tmp_file.name)
-        try:
-            subprocess.run(["say", "-v", voice, "-r", str(rate), lower_text, "-o", str(tmp_aiff)], check=True)
-            subprocess.run(["afconvert", "-f", "WAVE", "-d", "LEI16@22050", "-c", "1", str(tmp_aiff), str(dest_wav)], check=True)
-            break
-        except Exception:
-            if attempt == 2:
-                raise
-            time.sleep(0.1)
-        finally:
-            if tmp_aiff.exists():
-                tmp_aiff.unlink()
-
-
-PHONETIC_OVERRIDE_IT = {
-    "to": "tò",
-    "do": "dò",
-    "no": "nò",
-    "so": "sò",
-    "po": "pò",
-    "bo": "bò",
-    "co": "cò",
-    "fo": "fò",
-    "go": "gò",
-    "lo": "lò",
-    "mo": "mò",
-    "ro": "rò",
-    "vo": "vò",
-    "zo": "zò",
-    "be": "bè",
-    "de": "dè",
-    "fe": "fè",
-    "ge": "gè",
-    "le": "lè",
-    "me": "mè",
-    "ne": "nè",
-    "pe": "pè",
-    "re": "rè",
-    "se": "sè",
-    "te": "tè",
-    "ve": "vè",
-    "ze": "zè",
+INSTRUCTIONS = {
+    "it": [
+        ("instruction_catch", "ascolta e tocca la sillaba"),
+        ("instruction_build", "componi la parola"),
+        ("instruction_explore", "tocca una consonante"),
+    ],
+    "en": [
+        ("instruction_catch", "listen and find the syllable"),
+        ("instruction_build", "build the word"),
+        ("instruction_explore", "tap a consonant"),
+    ],
 }
 
 
-def generate_italian() -> None:
-    it_dir = AUDIO_ROOT / "it"
-    it_dir.mkdir(parents=True, exist_ok=True)
-    voice = "Alice"
-    rate = 175
+def _output_path(review_dir: Path, locale: str, filename: str) -> str:
+    output = review_dir / locale / filename
+    try:
+        return str(output.resolve().relative_to(PROJECT_ROOT))
+    except ValueError:
+        return str(output.resolve())
 
-    print(f"Generating Italian audio in {it_dir}...")
 
-    # 1. Single Consonants and Vowels
+def _request(review_dir: Path, locale: str, cue_id: str, text: str, *, pedagogical: bool) -> dict[str, object]:
+    return {
+        "speaker": "pedagogical" if pedagogical else "dani",
+        "kind": "pedagogical_speech" if pedagogical else "dani_system_speech",
+        "locale": locale,
+        "text": text,
+        "cue_id": f"sillabe_magiche.{cue_id}",
+        "output": _output_path(review_dir, locale, f"{cue_id}.wav"),
+        "verification": "off",
+        "max_attempts": 1,
+    }
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--review-dir", type=Path, default=DEFAULT_REVIEW_DIR)
+    args = parser.parse_args()
+    review_dir = args.review_dir.resolve()
+    review_dir.mkdir(parents=True, exist_ok=True)
+
+    requests: dict[tuple[str, str], dict[str, object]] = {}
+
+    def add(locale: str, cue_id: str, text: str, *, pedagogical: bool) -> None:
+        requests[(locale, cue_id)] = _request(review_dir, locale, cue_id, text, pedagogical=pedagogical)
+
     for c in CONSONANTS_IT:
-        make_wav(c, voice, rate, it_dir / f"letter_{c.lower()}.wav")
+        add("it", f"letter_{c.lower()}", c, pedagogical=True)
     for v in VOWELS_IT:
-        make_wav(v, voice, rate, it_dir / f"vowel_{v.lower()}.wav")
-
-    # 2. All Consonant+Vowel Syllables and "Trova..." prompts
+        add("it", f"vowel_{v.lower()}", v, pedagogical=True)
     for c in CONSONANTS_IT:
         for v in VOWELS_IT:
-            syl = f"{c}{v}".lower()
-            spoken_syl = PHONETIC_OVERRIDE_IT.get(syl, syl)
-            make_wav(spoken_syl, voice, rate, it_dir / f"syl_{syl}.wav")
-            make_wav(f"trova {spoken_syl}", voice, rate, it_dir / f"find_{syl}.wav")
+            syllable = f"{c}{v}".lower()
+            add("it", f"syl_{syllable}", syllable, pedagogical=True)
+            add("it", f"find_{syllable}", f"trova {syllable}", pedagogical=True)
+    for syllable in {"zza", "ne", "re", "te", "co", "do", "ta"}:
+        add("it", f"syl_{syllable}", syllable, pedagogical=True)
+        add("it", f"find_{syllable}", f"trova {syllable}", pedagogical=True)
+    for _display, components, stem in WORDS_DATA_IT:
+        add("it", f"word_{stem}", stem, pedagogical=True)
+        for component in components:
+            syllable = component.lower()
+            add("it", f"syl_{syllable}", syllable, pedagogical=True)
+    for cue_id, text in PRAISES_IT:
+        add("it", cue_id, text, pedagogical=False)
+    for cue_id, text in INSTRUCTIONS["it"]:
+        add("it", cue_id, text, pedagogical=False)
 
-    # 3. Special syllables needed for words (like 'zza', 'ne', etc. if not standard)
-    extra_sylls = {"zza", "ne", "re", "te", "co", "do", "ta"}
-    for es in extra_sylls:
-        dest = it_dir / f"syl_{es}.wav"
-        spoken_es = PHONETIC_OVERRIDE_IT.get(es, es)
-        make_wav(spoken_es, voice, rate, dest)
-        make_wav(f"trova {spoken_es}", voice, rate, it_dir / f"find_{es}.wav")
-
-    # 4. Words
-    for word_display, (s1, s2), emoji, stem in WORDS_DATA_IT:
-        make_wav(stem, voice, rate, it_dir / f"word_{stem}.wav")
-        for s in (s1, s2):
-            syl_path = it_dir / f"syl_{s.lower()}.wav"
-            if not syl_path.exists():
-                make_wav(s.lower(), voice, rate, syl_path)
-
-    # 5. Praises & UI prompts
-    for key, phrase in PRAISES_IT:
-        make_wav(phrase, voice, rate, it_dir / f"{key}.wav")
-
-    make_wav("ascolta e tocca la sillaba", voice, rate, it_dir / "instruction_catch.wav")
-    make_wav("componi la parola", voice, rate, it_dir / "instruction_build.wav")
-    make_wav("tocca una consonante", voice, rate, it_dir / "instruction_explore.wav")
-
-
-def generate_english() -> None:
-    en_dir = AUDIO_ROOT / "en"
-    en_dir.mkdir(parents=True, exist_ok=True)
-    voice = "Samantha"
-    rate = 180
-
-    print(f"Generating English audio in {en_dir}...")
-
-    # 1. Consonant+Vowel Syllables
     for c in ["B", "C", "D", "F", "G", "L", "M", "N", "P", "R", "S", "T", "V", "W", "Z"]:
         for v in ["A", "E", "I", "O", "U"]:
-            syl = f"{c}{v}".lower()
-            make_wav(syl, voice, rate, en_dir / f"syl_{syl}.wav")
-            make_wav(f"find {syl}", voice, rate, en_dir / f"find_{syl}.wav")
+            syllable = f"{c}{v}".lower()
+            add("en", f"syl_{syllable}", syllable, pedagogical=True)
+            add("en", f"find_{syllable}", f"find {syllable}", pedagogical=True)
+    for _display, components, stem in WORDS_DATA_EN:
+        add("en", f"word_{stem}", stem, pedagogical=True)
+        for component in components:
+            syllable = component.lower()
+            add("en", f"syl_{syllable}", syllable, pedagogical=True)
+            add("en", f"find_{syllable}", f"find {syllable}", pedagogical=True)
+    for cue_id, text in PRAISES_EN:
+        add("en", cue_id, text, pedagogical=False)
+    for cue_id, text in INSTRUCTIONS["en"]:
+        add("en", cue_id, text, pedagogical=False)
 
-    # 2. English Words & component syllables
-    for word_display, (s1, s2), emoji, stem in WORDS_DATA_EN:
-        make_wav(stem, voice, rate, en_dir / f"word_{stem}.wav")
-        for s in (s1, s2):
-            s_low = s.lower()
-            dest = en_dir / f"syl_{s_low}.wav"
-            if not dest.exists():
-                make_wav(s_low, voice, rate, dest)
-                make_wav(f"find {s_low}", voice, rate, en_dir / f"find_{s_low}.wav")
-
-    # 3. Praises & Instructions
-    for key, phrase in PRAISES_EN:
-        make_wav(phrase, voice, rate, en_dir / f"{key}.wav")
-
-    make_wav("listen and find the syllable", voice, rate, en_dir / "instruction_catch.wav")
-    make_wav("build the word", voice, rate, en_dir / "instruction_build.wav")
-    make_wav("tap a consonant", voice, rate, en_dir / "instruction_explore.wav")
-
-
-def generate_all() -> None:
-    generate_italian()
-    generate_english()
-    print("All Sillabe Magiche audio assets successfully generated!")
+    rows = list(requests.values())
+    batch_path = review_dir / "voice_requests.jsonl"
+    batch_path.write_text(
+        "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows), encoding="utf-8"
+    )
+    result = subprocess.run(
+        [sys.executable, str(VOICE_CLI), "batch", "--input", str(batch_path)], cwd=PROJECT_ROOT
+    )
+    if result.returncode == 0:
+        print(f"Generated {len(rows)} review candidates under {review_dir}")
+        print("Human listening review is required before Activity integration.")
+    return result.returncode
 
 
 if __name__ == "__main__":
-    generate_all()
+    raise SystemExit(main())
