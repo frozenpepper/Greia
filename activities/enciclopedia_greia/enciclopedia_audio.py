@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pygame
 
-from greia_platform.localization import LocalizedResources
+from greia_platform.localization import LocalizationError, LocalizedResources
 
 
 class EncyclopediaAudio:
@@ -26,7 +26,7 @@ class EncyclopediaAudio:
     def play(self, cue_id: str) -> bool:
         try:
             cue = self._resources.audio_cue(cue_id)
-        except Exception:
+        except LocalizationError:
             return False
         sound = self._sound(cue.path)
         if sound is None:
