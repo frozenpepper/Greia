@@ -33,6 +33,12 @@ class VoiceEngine:
     The engine owns provider selection, one long-lived provider instance per backend,
     canonical reference validation, bounded regeneration, packaging, machine receipts,
     and cleanup. It never marks generated audio human-accepted.
+
+    ``shared_character_utterance`` is valid here only because this is an
+    *authoring* engine: it allows the central reviewed shared library to be
+    produced through the same provider abstraction. Runtime Activities still
+    resolve shared families from Greia's reviewed catalogue and never synthesize
+    them on the child device.
     """
 
     def __init__(
@@ -71,20 +77,26 @@ class VoiceEngine:
                     "do not pretend a canonical character speaks pronunciation-authoritative audio"
                 )
             return None
+
         if request.kind is SpeechKind.DANI_SYSTEM_SPEECH:
             if request.speaker != "dani":
                 raise VoiceRoutingError("dani_system_speech requires speaker 'dani'")
             return self.registry.get("dani")
+
         if request.kind is SpeechKind.SHARED_CHARACTER_UTTERANCE:
-            raise VoiceRoutingError(
-                "shared_character_utterance is resolved from Greia's reviewed shared library; "
-                "it is not synthesized by the voice generation engine"
-            )
+            profile = self.registry.get(request.speaker)
+            if profile.production not in {"cloned_reference", "greia_os_tts"}:
+                raise VoiceRoutingError(
+                    f"speaker {request.speaker} has no production profile for shared utterances"
+                )
+            return profile
+
         profile = self.registry.get(request.speaker)
         if profile.production != "cloned_reference":
             if profile.character == "dani":
                 raise VoiceRoutingError(
-                    "Dani must use kind=dani_system_speech, never cloned character dialogue"
+                    "Dani must use kind=dani_system_speech for Activity-specific dialogue, "
+                    "never cloned character dialogue"
                 )
             raise VoiceRoutingError(
                 f"speaker {request.speaker} does not have a cloned character-speech profile"
@@ -160,7 +172,10 @@ class VoiceEngine:
                 "A human listening gate is still required."
             ),
         }
-        receipt_path.write_text(json.dumps(receipt, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        receipt_path.write_text(
+            json.dumps(receipt, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
         return receipt_path
 
     def generate(self, request: VoiceRequest) -> GenerationResult:
