@@ -29,6 +29,8 @@ import sys
 ROOT = Path(__file__).resolve().parent
 LEDGER = ROOT / "VOICE_RECORDING_REQUESTS.md"
 RESEARCH_ROOT = ROOT / "research"
+EXPECTED_V01_TOPIC_COUNT = 36
+EXPECTED_V01_RECORDING_ROWS = 378
 
 _ROW_RE = re.compile(
     r"^\| (?P<status>[^|]+?) \| `(?P<cue>[^`]+)` \| (?P<kind>[^|]+?) \| "
@@ -126,6 +128,17 @@ def _research_path(page_id: str) -> Path:
     return RESEARCH_ROOT / section / f"{topic}.md"
 
 
+def _validate_topic_inventory() -> None:
+    if len(TOPICS) != EXPECTED_V01_TOPIC_COUNT:
+        raise ValueError(f"v0.1 topic inventory drifted: {len(TOPICS)} != {EXPECTED_V01_TOPIC_COUNT}")
+    page_ids = tuple(spec.page_id for spec in TOPICS)
+    batch_ids = tuple(spec.batch_id for spec in TOPICS)
+    if len(set(page_ids)) != len(page_ids):
+        raise ValueError("duplicate page_id in voice TOPICS")
+    if len(set(batch_ids)) != len(batch_ids):
+        raise ValueError("duplicate batch_id in voice TOPICS")
+
+
 def _parse_existing_rows(text: str) -> dict[tuple[str, str], ExistingRow]:
     rows: dict[tuple[str, str], ExistingRow] = {}
     for line in text.splitlines():
@@ -151,7 +164,7 @@ def _parse_existing_rows(text: str) -> dict[tuple[str, str], ExistingRow]:
     return rows
 
 
-def _parse_topic(spec: TopicSpec) -> tuple[str, str, list[RequestRow]]:
+def _parse_topic(spec: TopicSpec) -> list[RequestRow]:
     path = _research_path(spec.page_id)
     text = path.read_text(encoding="utf-8")
     presenter_match = _PRESENTER_RE.search(text)
@@ -190,7 +203,7 @@ def _parse_topic(spec: TopicSpec) -> tuple[str, str, list[RequestRow]]:
                     path=f"encyclopedia/pages/{section}/{topic}/assets/audio/{locale}/{filename}",
                 )
             )
-    return speaker, voice_id, rows
+    return rows
 
 
 def _row_markdown(row: RequestRow, existing: ExistingRow | None) -> str:
@@ -236,11 +249,14 @@ def _manual_prefix(existing_text: str) -> str:
 
 
 def render_ledger(existing_text: str) -> str:
+    _validate_topic_inventory()
     existing_rows = _parse_existing_rows(existing_text)
     parts = [_manual_prefix(existing_text)]
+    generated_rows: list[RequestRow] = []
 
     for ordinal, spec in enumerate(TOPICS, start=4):
-        speaker, voice_id, rows = _parse_topic(spec)
+        rows = _parse_topic(spec)
+        generated_rows.extend(rows)
         research_rel = _research_path(spec.page_id).relative_to(ROOT.parent).as_posix()
         parts.extend(
             (
@@ -262,20 +278,23 @@ def render_ledger(existing_text: str) -> str:
         for row in rows:
             parts.append(_row_markdown(row, existing_rows.get((row.cue_id, row.locale))))
 
-    generated_keys = {
-        (row.cue_id, row.locale)
-        for spec in TOPICS
-        for _speaker, _voice, rows in (_parse_topic(spec),)
-        for row in rows
-    }
-    manual_keys = {
-        key for key in existing_rows if key[0].startswith("encyclopedia.home.") or key[0].count(".") == 2
-    }
+    generated_keys = {(row.cue_id, row.locale) for row in generated_rows}
+    if len(generated_keys) != len(generated_rows):
+        raise ValueError("generated factual voice rows contain duplicate cue/locale keys")
+
+    # E0 navigation/orientation is deliberately manual because it has no
+    # factual research record. All of its cue IDs have exactly two dots.
+    manual_keys = {key for key in existing_rows if key[0].count(".") == 2}
     unexplained = set(existing_rows) - generated_keys - manual_keys
     if unexplained:
         raise ValueError(f"existing factual rows are not represented by TOPICS: {sorted(unexplained)!r}")
 
     total_rows = len(generated_keys) + len(manual_keys)
+    if total_rows != EXPECTED_V01_RECORDING_ROWS:
+        raise ValueError(
+            f"v0.1 recording row count drifted: {total_rows} != {EXPECTED_V01_RECORDING_ROWS}"
+        )
+
     parts.extend(
         (
             "",
