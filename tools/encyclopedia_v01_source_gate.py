@@ -11,7 +11,8 @@ process:
 4. run ``make verify``;
 5. package only already-``OWNER_ACCEPTED`` narration when required;
 6. rerun Encyclopedia contracts after runtime-audio changes;
-7. run ``git diff --check`` and write a machine-readable summary.
+7. reject unexpected post-gate worktree mutations;
+8. run ``git diff --check`` and write a machine-readable summary.
 
 It deliberately does NOT generate speech, change recorder statuses, launch the
 Simulator, repair source, commit, push, or use GitHub-hosted execution.
@@ -35,16 +36,26 @@ LEDGER_RELATIVE = Path("encyclopedia/VOICE_RECORDING_REQUESTS.md")
 EXPECTED_ROWS = 378
 EXPECTED_BRANCH = "main"
 EVIDENCE_DEFAULT = Path("tmp/encyclopedia-v01-acceptance")
+RUNTIME_AUDIO_PREFIX = "activities/enciclopedia_greia/assets/audio/"
+RUNTIME_LOCALE_PATHS = frozenset(
+    {
+        "activities/enciclopedia_greia/locales/it.json",
+        "activities/enciclopedia_greia/locales/en.json",
+    }
+)
 
 FOCUSED_TESTS = (
     "tests.test_encyclopedia_authoring_tools",
+    "tests.test_encyclopedia_voice_batch_state",
     "tests.test_activity_enciclopedia",
+    "tests.test_encyclopedia_v01_source_gate",
     "tests.test_activity_contract",
     "tests.test_first_party_activity_audience_metadata",
     "tests.test_first_party_activity_readiness",
 )
 POST_AUDIO_TESTS = (
     "tests.test_encyclopedia_authoring_tools",
+    "tests.test_encyclopedia_voice_batch_state",
     "tests.test_activity_enciclopedia",
 )
 
@@ -152,14 +163,15 @@ def porcelain_path(line: str) -> str:
 
 
 def _is_recording_staging_path(path: str) -> bool:
-    return (
-        path.startswith("encyclopedia/pages/")
-        and "/assets/audio/" in path
-    )
+    return path.startswith("encyclopedia/pages/") and "/assets/audio/" in path
 
 
 def _is_evidence_path(path: str) -> bool:
     return path.startswith("tmp/encyclopedia-v01-acceptance/")
+
+
+def _is_runtime_audio_path(path: str) -> bool:
+    return path.startswith(RUNTIME_AUDIO_PREFIX)
 
 
 def unexpected_initial_paths(status_lines: Sequence[str]) -> tuple[str, ...]:
@@ -173,6 +185,37 @@ def unexpected_initial_paths(status_lines: Sequence[str]) -> tuple[str, ...]:
         if path == LEDGER_RELATIVE.as_posix():
             continue
         if _is_recording_staging_path(path) or _is_evidence_path(path):
+            continue
+        unexpected.append(path)
+    return tuple(unexpected)
+
+
+def unexpected_final_paths(
+    status_lines: Sequence[str],
+    *,
+    integration_executed: bool,
+) -> tuple[str, ...]:
+    """Reject mutations outside the gate's explicitly owned output surfaces.
+
+    Voice synchronization may update the Markdown ledger. Evidence and recorder
+    staging state are workflow-local. Runtime audio files and the two locale
+    bundles are allowed only when the OWNER_ACCEPTED integrator actually ran.
+    Any other source/runtime mutation means the deterministic gate did more than
+    its contract permits and must not report PASS.
+    """
+
+    unexpected: list[str] = []
+    for line in status_lines:
+        if not line:
+            continue
+        path = porcelain_path(line)
+        if path == LEDGER_RELATIVE.as_posix():
+            continue
+        if _is_recording_staging_path(path) or _is_evidence_path(path):
+            continue
+        if integration_executed and (
+            _is_runtime_audio_path(path) or path in RUNTIME_LOCALE_PATHS
+        ):
             continue
         unexpected.append(path)
     return tuple(unexpected)
@@ -319,6 +362,16 @@ def run_gate(repo_root: Path, evidence_root: Path) -> GateSummary:
         runner.run("git-diff-check", ("git", "diff", "--check"))
         final_status = _status_lines(repo_root)
         _write_lines(evidence / "git-status-after.txt", final_status)
+        unexpected_final = unexpected_final_paths(
+            final_status,
+            integration_executed=integration_executed,
+        )
+        if unexpected_final:
+            raise GateFailure(
+                "worktree-postflight",
+                "unexpected paths changed during Encyclopedia source gate: "
+                + ", ".join(unexpected_final),
+            )
 
         summary = GateSummary(
             starting_sha=starting_sha,
@@ -385,7 +438,7 @@ def main(argv: list[str] | None = None) -> int:
         print("5. make verify")
         print("6. OWNER_ACCEPTED integration check/integration if required")
         print("7. post-audio focused tests if runtime resources changed")
-        print("8. git diff --check + summary")
+        print("8. git diff --check + strict worktree postflight + summary")
         print("9. STOP: real Simulator pass remains manual and mandatory")
         return 0
 
