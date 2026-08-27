@@ -66,7 +66,9 @@ encyclopedia/
     PROGRESS.md                   # append-only implementation ledger
     HANDOVER.md                   # exact continuation state
     VOICE_RECORDING_REQUESTS.md   # single human/agent recording queue
-    sync_voice_requests.py        # deterministic research -> queue synchronizer
+    voice_ledger.py               # shared deterministic ledger grammar
+    sync_voice_requests.py        # research -> recording queue
+    integrate_voice_assets.py     # OWNER_ACCEPTED -> runtime assets/maps
     research/                     # one factual authority per final entry
     pages/catalogue.py            # complete planned 43-page v0.1 inventory
 
@@ -79,7 +81,8 @@ activities/enciclopedia_greia/
     enciclopedia_services.py      # bounded shared presentation services
     enciclopedia_catalogue.py     # exact implemented runtime registry
     pages/                        # 43 executable section/entry modules
-    locales/                      # Italian/English runtime resources
+    locales/                      # Italian/English runtime resources/audio maps
+    assets/audio/                 # only accepted packaged narration
 ```
 
 ## v0.1 source breadth
@@ -105,34 +108,72 @@ All six planned content families are source-complete:
 
 Every factual final entry has a research authority containing accepted claims, scope guardrails, interaction-to-fact mapping, sources and approved Italian/English narration.
 
-## Voice-production coordination
+## Voice-production pipeline
 
-`VOICE_RECORDING_REQUESTS.md` remains the **single human/agent coordination queue**. The recorder may change only `STATUS` and `RECORDER_NOTES` and add the requested audio files.
+`VOICE_RECORDING_REQUESTS.md` remains the **single human/agent coordination queue**. The recorder may change only `STATUS` and `RECORDER_NOTES` and add the requested staging audio files.
 
-The deterministic synchronizer exists so factual rows are never hand-transcribed from research:
+### 1. Synchronize research into the queue
+
+The deterministic synchronizer prevents factual rows from being hand-transcribed:
 
 ```bash
 python3 encyclopedia/sync_voice_requests.py
 python3 encyclopedia/sync_voice_requests.py --check
 ```
 
-Expected full-v0.1 invariant after synchronization:
+Expected full-v0.1 invariant:
 
 ```text
 36 factual topics
-378 total bilingual recording rows, including the 14 manual Home/section navigation rows
+378 total bilingual recording rows, including 14 manual Home/section navigation rows
 ```
 
-The synchronizer:
+It reads exact approved narration from `encyclopedia/research/**`, derives stable cue/locale filenames and staging paths, preserves recorder-owned status/notes, rejects duplicate identities and refuses immutable drift on locked rows.
 
-- reads exact approved narration from `encyclopedia/research/**`;
-- derives stable cue/locale filenames and staging paths;
-- preserves recorder-owned status/notes;
-- refuses duplicate topics/batches/rows;
-- refuses to overwrite immutable fields on recorded, rejected, superseded or blocked rows;
-- fails if the complete v0.1 queue is not exactly 378 rows.
+At the current repository checkpoint the tool exists and is hardened, but `VOICE_RECORDING_REQUESTS.md` has **not yet been regenerated from the old 176-row checkpoint**. Run the synchronizer before treating the queue as complete.
 
-At the current repository checkpoint the synchronizer exists and is hardened, but `VOICE_RECORDING_REQUESTS.md` has **not yet been regenerated from the old 176-row checkpoint**. Run the synchronizer before treating the queue as complete.
+### 2. Record and review
+
+The recording agent processes only `REQUESTED` rows using the voice-production authorities referenced at the top of the queue. A technically valid generated clip becomes `RECORDED_UNREVIEWED`. Only the owner/human listening gate changes it to `OWNER_ACCEPTED`.
+
+Do not edit immutable cue/text/voice/path fields to repair a recorded request. Create a revised cue/filename and supersede the old row instead.
+
+### 3. Package only OWNER_ACCEPTED audio
+
+Once one or more clips are owner-accepted:
+
+```bash
+python3 encyclopedia/integrate_voice_assets.py
+python3 encyclopedia/integrate_voice_assets.py --check
+```
+
+The integrator:
+
+- ignores `RECORDED_UNREVIEWED` and every non-accepted status;
+- validates the requested staging path, locale and filename;
+- requires an OGG container;
+- preflights the complete accepted set before any mutation;
+- atomically packages accepted files under `activities/enciclopedia_greia/assets/audio/<locale>/<page-path>/...`;
+- updates locale `audio` mappings only after their target files exist;
+- preserves locale strings and metadata;
+- never generates speech and never adds a runtime dependency;
+- deliberately does not delete unreferenced files from the runtime audio tree.
+
+This makes partial delivery safe: the local agent may record clips over many sessions, and the runtime can package only the subset the owner has actually accepted.
+
+## Provider-free authoring contracts
+
+`tests/test_encyclopedia_authoring_tools.py` covers the deterministic authoring seams without invoking any model/provider:
+
+- rendered v0.1 queue must contain exactly 378 rows;
+- duplicate cue/locale rows are rejected;
+- only `OWNER_ACCEPTED` rows are packaged;
+- `RECORDED_UNREVIEWED` rows stay unreferenced;
+- missing or non-OGG accepted sources fail closed;
+- staging path traversal is rejected;
+- existing locale strings survive audio-map integration.
+
+These tests are authored but have not yet been executed in this construction pass.
 
 ## Current first-pass testing rule
 
