@@ -6,7 +6,7 @@ description: Task router for substantive Greia OS/platform/Shell/Parent/installe
 # Greia OS Work — task router
 
 **Status:** living derived contributor router  
-**Reviewed:** 2026-08-25
+**Reviewed:** 2026-08-28
 
 Keep this file small. It tells an agent **what to read for the task**; it is not a second architecture manual.
 
@@ -20,10 +20,11 @@ These apply to substantive OS/platform work:
 4. Platform authority stays platform-owned: profiles/session, trust/packages, permissions, Home/Back, physical input, **microphone routing/processing**, storage/history, progression/rewards, install/update authority and hardware facts. The physically accepted microphone contract is lightweight cleanup by default, on-demand, with Parent-owned disable/advanced preferences; Activities consume the route and do not own DSP/device policy.
 5. Low-resource behavior is correctness. The reference Acer remains a real engineering floor; do not introduce heavyweight hot-path work without evidence. Preserve the accepted microphone route's zero-idle-cost character unless new evidence justifies a different platform design.
 6. Never use GitHub-hosted Actions or paid/hosted execution unless the owner explicitly authorizes that specific use.
-7. Claim only evidence that actually executed. Source tests, simulator evidence, VM/image evidence and physical-device evidence are different lanes.
+7. Claim only evidence that actually executed. Source tests, simulator evidence, VM/image evidence, authoring-provider/audio evidence and physical-device evidence are different lanes.
 8. After substantive implementation, update the active plan and `HANDOVER.md` as required by `AGENTS.md` and keep this router/companions synchronized when contributor workflow changes.
+9. New prerecorded Greia speech production is authoring-time work and must use the canonical Voice Production Engine. OS/shared-library scripts must not grow a parallel Chatterbox/native-TTS/Whisper implementation.
 
-Before installing/configuring any toolchain, build host, simulator dependency, Parent checkout, developer-remote environment or voice backend, read:
+Before installing/configuring any toolchain, build host, simulator dependency, Parent checkout, developer-remote environment or voice provider, read:
 
 ```text
 SETUP.md
@@ -59,7 +60,7 @@ Read **first**:
 skills/greia-os-work/BOOT.md
 ```
 
-Then the relevant exact authorities:
+Then:
 
 ```text
 docs/engineering/BOOT_PIPELINE_AGENT_GUIDE.md
@@ -83,9 +84,9 @@ docs/engineering/BOOT_PIPELINE_AGENT_GUIDE.md
 SETUP.md
 ```
 
-Inspect the exact current builders under `build/` before changing generated target state. Boot-impacting changes also require `skills/greia-os-work/BOOT.md`.
+Inspect exact current builders under `build/` before changing generated target state. Boot-impacting changes also require `skills/greia-os-work/BOOT.md`.
 
-If the image/build change affects audio packages, ALSA composition, the Greia microphone ExtPlug or endpoint-readiness service, also read the **Audio service or microphone capture/processing** section below. A fresh image must either provide a genuinely working lightweight endpoint or fall back honestly; never ship a readiness marker without a real capture probe.
+If image/build work affects audio packages, ALSA composition, the Greia microphone ExtPlug or endpoint-readiness service, also read the audio/microphone section below. A fresh image must either provide a genuinely working lightweight endpoint or fall back honestly; never ship a readiness marker without a real capture probe.
 
 ### Shell, launcher, Collections or lightweight UI
 
@@ -161,21 +162,9 @@ For Activity implementation itself, switch to:
 skills/greia-activity-authoring/SKILL.md
 ```
 
-Installed Activity availability is an **OS-owned containment contract**, not an
-agent-discipline contract. Per ADR 0033, the installed service performs a narrow
-privileged pre-launch scrub of curated regenerable host/cache noise across
-discoverable Activity roots, then the unprivileged registry isolates real broken
-packages. Runtime progression/achievement enrichment must not become launcher
-availability authority. Do not move this responsibility into individual
-Activities, make the launcher run as root, broaden the deletion vocabulary into
-general “cleanup”, or weaken strict source/build Activity/policy validation.
+Installed Activity availability is an **OS-owned containment contract**, not an agent-discipline contract. Per ADR 0033, the installed service performs a narrow privileged pre-launch scrub of curated regenerable host/cache noise across discoverable Activity roots, then the unprivileged registry isolates real broken packages. Runtime progression/achievement enrichment must not become launcher availability authority. Do not move this responsibility into individual Activities, make the launcher run as root, broaden the deletion vocabulary into general “cleanup”, or weaken strict source/build Activity/policy validation.
 
-Explicit developer-image built-in replacement remains a platform-owned,
-fail-closed operation. `greia-devctl --replace-system` resolves the target by
-an exact validated canonical manifest identity through `ActivityRegistry`; it
-must not derive a path from a display title, slug, legacy alias or directory
-name. Use the same owner for replacement backup/state/restore and preserve the
-`BUILT_IN` versus `DEVELOPER_UNSIGNED` trust boundary.
+Explicit developer-image built-in replacement remains platform-owned and fail-closed. `greia-devctl --replace-system` resolves the target by exact validated canonical manifest identity through `ActivityRegistry`; it must not derive a path from display title, slug, alias or directory name. Preserve backup/state/restore and `BUILT_IN` versus `DEVELOPER_UNSIGNED` trust boundaries.
 
 ### Activity Simulator
 
@@ -197,13 +186,13 @@ docs/architecture/GREIA_PARENT_MANAGEMENT.md
 docs/architecture/PARENT_APP_SOURCE_INTEGRATION.md
 ```
 
-Inspect the current Greia Parent API/source pin and the external Parent client revision before changing either side. Do not bypass capability discovery or platform authority with SSH/shell/file-copy shortcuts.
+Inspect the current Greia Parent API/source pin and external Parent client revision before changing either side. Do not bypass capability discovery or platform authority with SSH/shell/file-copy shortcuts.
 
-For microphone controls, preserve the typed Parent semantics:
+For microphone controls, preserve:
 
 ```text
 Improve microphone sound = Parent-owned microphone_processing_enabled
-OFF -> raw/off route on the next microphone open
+OFF -> raw/off route on next microphone open
 Restore defaults -> lightweight processing desired, advanced false
 Advanced -> visible/selectable only when a real advanced endpoint is available
 ```
@@ -232,14 +221,7 @@ runtime/progression-policy.toml
 runtime/achievement-policy.toml
 ```
 
-A progression/history/achievement policy rule that references an Activity
-absent from the loaded catalogue (not loaded, retired, or broken) drops that
-rule at runtime with a warning instead of raising, so a single unloaded
-Activity never takes the child OS down. Undeclared events on a **loaded**
-Activity and structural policy corruption still fail hard. Built-in Activity
-trees are scrubbed of curated regenerable dev-noise (`.DS_Store`, `._*`,
-`__MACOSX/`, `__pycache__/`, `*.pyc`, editor droppings) during launcher
-assembly, before discovery; a genuinely broken Activity is never auto-healed.
+A progression/history/achievement policy rule referencing an Activity absent from the loaded catalogue drops that rule at runtime with a warning instead of raising. Undeclared events on a loaded Activity and structural policy corruption still fail hard. Built-in Activity trees are scrubbed of curated regenerable dev-noise before discovery; genuinely broken Activities are never auto-healed.
 
 Inspect current history/achievement/event-broker source owners before changing policy or presentation.
 
@@ -257,10 +239,7 @@ src/greia_platform/profile_presentation.py
 src/greia_platform/child_text.py
 ```
 
-Child-facing UI text defaults to CAPITAL letters under the profile-owned
-letter-case policy (ADR 0034). `LocalizedResources.text()` and the Shell's
-child-facing render chokepoints apply it automatically; parent-facing surfaces
-and child-authored content deliberately bypass it.
+Child-facing UI text defaults to CAPITAL letters under ADR 0034. `LocalizedResources.text()` and Shell child-facing render chokepoints apply it automatically; parent-facing surfaces and child-authored content bypass it deliberately.
 
 ### Audio service or microphone capture/processing
 
@@ -271,7 +250,7 @@ docs/adr/0031-platform-owned-microphone-processing.md
 docs/architecture/GREIA_AUDIO_SERVICE.md
 docs/testing/2026-08-23_ACER_MICROPHONE_PROCESSING_ACCEPTANCE.md
 docs/reviews/2026-08-24_ACER_MICROPHONE_PHYSICAL_ACCEPTANCE.md
-skills/greia-activity-authoring/MICROPHONE_RECORDING.md   # when the change affects Activity-facing use
+skills/greia-activity-authoring/MICROPHONE_RECORDING.md   # when Activity-facing use changes
 ```
 
 Current accepted product/platform contract:
@@ -280,43 +259,66 @@ Current accepted product/platform contract:
 ordinary child voice capture
   -> audio.basic authority
   -> Greia-owned microphone route
-  -> lightweight cleanup by default when the endpoint is healthy
+  -> lightweight cleanup by default when endpoint is healthy
   -> zero-idle-cost/on-demand processing
 ```
 
-This is an **available platform facility**, not an experimental feature Activity authors should avoid. Activity authoring may actively encourage voice recording where it materially improves creativity, expression, pre-reader access or learning.
+This is an available platform facility, not an experimental feature Activities should avoid.
 
-Preserve these rules:
+Preserve:
 
-- no automatic processor selection or promotion;
-- advanced processing remains optional and Parent-selected only when available;
-- `microphone_processing_enabled = false` is a Parent-owned setting and resolves to raw/off on the next microphone open;
-- ordinary Activities cannot silently override the Parent setting or open physical ALSA hardware to bypass processing;
-- an Activity that genuinely requires raw signal analysis needs an explicit typed platform/API extension rather than a hardware shortcut;
-- missing/broken lightweight backend must fail honestly to raw with a truthful fallback reason;
-- readiness markers represent current-boot successful endpoint probes, never source presence;
-- preserve capability isolation: non-`audio.basic` Activities receive no route environment;
-- keep physical card/codec identity below Greia-owned composition;
-- do not reintroduce an always-running heavy audio service merely for convenience.
+- no automatic processor selection/promotion;
+- advanced processing is optional and Parent-selected only when available;
+- `microphone_processing_enabled = false` resolves to raw/off on next microphone open;
+- ordinary Activities cannot bypass Parent policy by opening physical ALSA hardware;
+- genuine raw-signal requirements need a typed platform/API extension;
+- broken lightweight backend fails honestly to raw with truthful reason;
+- readiness markers represent current-boot endpoint probes, never source presence;
+- non-`audio.basic` Activities receive no route environment;
+- physical card/codec identity stays below Greia-owned composition;
+- do not reintroduce an always-running heavy audio service for convenience.
 
-For first-party Activity recording behavior itself, switch to `skills/greia-activity-authoring/SKILL.md` and `MICROPHONE_RECORDING.md`.
+For first-party Activity recording behavior switch to `skills/greia-activity-authoring/SKILL.md` + `MICROPHONE_RECORDING.md`.
 
 ### Voice/speech asset production tooling
+
+All new prerecorded Greia speech production uses the authoring-time Voice Production Engine.
 
 Read:
 
 ```text
+skills/greia-voice-production/SKILL.md
+tools/greia_voice_core/README.md
 docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md
+docs/architecture/GREIA_VOICE_PRODUCTION_ENGINE.md
 docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md
 ```
 
-Only read/install the local production toolchain when actual voice production is requested:
+Canonical entry point:
+
+```text
+tools/greia_voice.py
+```
+
+Before actual production run:
+
+```bash
+python3 tools/greia_voice.py doctor
+```
+
+Only when installing/troubleshooting the optional authoring providers, read:
 
 ```text
 docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md
 ```
 
-Generated presenter speech and child microphone recording are different systems. Do not confuse build-time character voice production with runtime `audio.basic` capture.
+The low-level Chatterbox field guide is for Voice Engine maintainers/troubleshooting only, not ordinary OS/shared-library production.
+
+OS/shared-library scripts must not call Chatterbox, MLX, Whisper, native `say`/`afconvert`, FFmpeg trimming or canonical references directly. If a historical producer does so and needs new work, migrate it to a thin semantic `VoiceEngine` client.
+
+Shared-library production uses `kind=shared_character_utterance`; Dani routes through the system provider. Normal Activities consume reviewed shared assets and do not synthesize them on the child.
+
+Generated presenter speech and child microphone recording are different systems. Do not confuse build-time voice production with runtime `audio.basic` capture.
 
 ### Performance optimization or low-resource regressions
 
@@ -359,10 +361,11 @@ Before calling substantive OS/platform work done, record:
 1. Which task-specific authorities were read?
 2. What exact source SHA/state was changed/tested?
 3. Which source tests/validators actually ran?
-4. Which evidence lane was exercised: source / simulator / VM-image / physical device?
+4. Which evidence lane was exercised: source / authoring-provider+listening / simulator / VM-image / physical device?
 5. What remains unverified?
 6. If audio/microphone changed: does audio.basic still receive only the platform route, does Parent OFF still apply on next open, and is readiness truthful?
-7. Were required active-plan/HANDOVER/manual/skill updates made?
+7. If prerecorded speech was produced: did it go through VoiceEngine, retain human-review authority, and avoid adding child-runtime model dependencies?
+8. Were required active-plan/HANDOVER/manual/skill updates made?
 ```
 
 Do not load broad architecture documents just because they exist. Start with this router, read the narrow authorities for the actual task, and expand only when the change genuinely crosses subsystem boundaries.
