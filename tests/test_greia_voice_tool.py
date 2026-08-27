@@ -158,6 +158,18 @@ class VoiceRequestTests(unittest.TestCase):
             )
         )
 
+    def test_dani_shared_utterance_skips_asr_even_when_multiword(self):
+        self.assertFalse(
+            asr_eligible(
+                VoiceRequest(
+                    "dani",
+                    SpeechKind.SHARED_CHARACTER_UTTERANCE,
+                    "it",
+                    "Ottimo lavoro!",
+                )
+            )
+        )
+
     def test_pedagogical_macos_hints_do_not_change_request_text(self):
         request = VoiceRequest("pedagogical", SpeechKind.PEDAGOGICAL_SPEECH, "it", "Trova TO")
         self.assertEqual(request.text, "Trova TO")
