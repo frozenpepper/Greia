@@ -1,107 +1,89 @@
 # Greia Voice Generation and Canonical Character Voices
 
-**Status:** accepted Activity-authoring / Activity Designer direction; production compiler/runtime integration pending  
-**Date:** 2026-08-24  
-**Scope:** Activity presenter/speech planning, optional local character-voice production, researched curiosity narration, deterministic pedagogical speech, shared character utterances, localized package audio, and the Dani system-TTS identity  
-**Related authorities:** `docs/adr/0028-platform-and-activity-localization-language-context.md`, `docs/design/GREIA_CANONICAL_CAST_SYSTEM.md`, `docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md`, `skills/greia-activity-authoring/PRESENTERS_AND_CURIOSITY.md`, `skills/greia-activity-authoring/VOICE_GENERATION.md`
+**Status:** accepted voice policy + canonical authoring production path  
+**Reviewed:** 2026-08-28  
+**Scope:** presenter speech, researched narration, shared character utterances, deterministic pedagogical speech, Dani system speech, multilingual prerecorded assets and human review  
+**Canonical production tool:** `tools/greia_voice.py`
 
-## 1. Core decision: speech has different semantic jobs
-
-Greia must not treat all speech as one TTS problem.
+Related authorities:
 
 ```text
-A. CHARACTER SPEECH
-   personality, presenter welcome, narration, researched curiosity facts,
-   reactions, contextual instructions, story/dialogue
-   -> canonical character identity
-   -> optional local Chatterbox Multilingual V3 authoring
-   -> human-reviewed prerecorded Activity audio
-
-B. SHARED CHARACTER UTTERANCES
-   praise, success, retry, progress, start reactions
-   -> OS/shared asset library
-   -> semantic family with one or more reviewed recordings
-   -> Greia randomly selects one available reviewed variant
-   -> no per-Activity voice-generation toolchain required
-
-C. PEDAGOGICAL SPEECH
-   letters, letter names, syllables, phonics, spelling/pronunciation targets
-   -> deterministic/system/native TTS path
-   -> correctness and consistency outrank character identity
-
-D. DANI
-   clearly robotic character identity
-   -> Greia system-TTS profile
-```
-
-The governing rule is:
-
-> **If the sound itself is the educational truth being taught, use pedagogical speech. If speech communicates content through a character, use character speech.**
-
-Text length is not the selector. `Vai!` may be character dialogue; `mamma` may be a pronunciation target; a short researched animal fact is character dialogue.
-
-## 2. Presenter/speech design is part of Activity design
-
-Every new Activity must explicitly consider:
-
-```text
-lead presenter/mascot or deliberate none
-shared character reaction plan
-custom Activity-specific dialogue
-pedagogical speech, if any
-optional researched curiosity/fact narration when the subject supports it
-supported locales and spoken coverage
-```
-
-This does **not** mean every Activity needs lots of speech. Greia remains child-driven and language-light. It means character presence and speech must be intentional rather than omitted because implementation started from game mechanics alone.
-
-The recurring cast is a product continuity mechanism. A fitting character may welcome the child, frame the first interaction, react to progress, offer a contextual hint, celebrate completion, or host a small curiosity/facts affordance.
-
-Detailed presenter/fact design is owned by:
-
-```text
+skills/greia-voice-production/SKILL.md
+tools/greia_voice_core/README.md
+docs/architecture/GREIA_VOICE_PRODUCTION_ENGINE.md
+docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md
 skills/greia-activity-authoring/PRESENTERS_AND_CURIOSITY.md
 ```
 
-## 3. Multilingual-ready from the beginning
+## 1. Core decision: speech has different semantic jobs
 
-All Activity-owned speech uses semantic cue identity independent of language.
-
-Conceptually:
+Greia does not treat all speech as one TTS problem.
 
 ```text
-presenter.welcome
-curiosity.orca.family_pods
-curiosity.orca_unique_calls
+A. character_dialogue
+   presenter welcome, narration, researched facts, contextual hints, story/dialogue
+   -> canonical Lilli/Leo/Flash/Tito/Momo identity
+
+B. shared_character_utterance
+   praise, success, retry, progress, start reactions
+   -> central Greia reviewed shared library
+   -> library production uses the same Voice Production Engine
+   -> normal Activities resolve the reviewed family at runtime
+
+C. pedagogical_speech
+   letters, syllables, phonics, spelling/pronunciation targets
+   -> deterministic native/system speech
+   -> correctness and consistency outrank mascot identity
+
+D. dani_system_speech
+   Activity-specific Dani dialogue
+   -> deterministic system speech preserving a clearly robotic identity
 ```
 
-Each supported locale owns reviewed wording. When custom character audio is part of the accepted feature, each shipped locale also needs reviewed audio in the same canonical speaker identity.
+Governing rule:
 
-Do not:
+> **If the sound itself is the educational truth being taught, use pedagogical speech. If speech communicates content through a character, use character speech.**
 
-- hard-code Italian/English branches in gameplay;
-- ship an Italian-only spoken presenter/fact feature in an Activity that declares English support;
-- let localized audio drift semantically from displayed localized text;
-- use arbitrary system voices to impersonate canonical characters in one locale merely because generation is missing there.
+Text length is not the selector. `Vai!` may be character dialogue; `ma` may be a teaching target.
 
-A text fallback may preserve functionality when speech is deliberately optional, but it is not evidence that multilingual voice coverage is complete.
+## 2. The Voice Production Engine is the canonical authoring boundary
 
-## 4. Evaluated renderer policy
+All new voice production goes through:
 
-Local evaluation established:
+```text
+tools/greia_voice.py
+```
 
-- **MOSS-TTS-Nano is REJECTED** for Greia production quality;
-- **Chatterbox Multilingual V3** produces substantially better natural character speech and voice similarity and is the current optional local character-speech renderer;
-- Chatterbox is not reliable enough for pronunciation-authoritative individual letters/syllables;
-- bounded generated-token output plus bounded FFmpeg analysis/cutting is useful for unwanted tails on short **character reactions**;
-- the repeated `ma. ma. ma.` / middle-extraction workaround made results worse and is **REJECTED**;
-- a wrong or inconsistent pedagogical syllable must never be accepted merely because the voice sounds good.
+Activity, OS/shared-library and Encyclopedia authoring code provides semantic intent:
 
-Do not reopen MOSS or triple repetition as silent fallbacks.
+```text
+speaker
+kind
+locale
+exact reviewed text
+cue/output identity
+```
 
-## 5. Canonical character speech
+It does **not** choose or operate:
 
-Current character voice IDs:
+```text
+Chatterbox model IDs
+MLX lifecycle/cache rules
+canonical reference filenames/hashes
+native host voice names/rates
+pedagogical synthesis workarounds
+Whisper commands/models
+FFmpeg trim/packaging commands
+short-utterance token budgets
+```
+
+Those mechanics belong behind `VoiceEngine` and its providers.
+
+Direct Chatterbox/native/Whisper instructions in historical one-off scripts are legacy implementation evidence, not the extension point for new work.
+
+Existing owner-accepted audio does not need regeneration solely because its historical generator predates the engine.
+
+## 3. Canonical character identities
 
 | Character | Voice ID | Character reason |
 |---|---|---|
@@ -112,82 +94,123 @@ Current character voice IDs:
 | Momo | `greia.momo.v1` | musical, unusual, playful emotion and celebration |
 | Dani | `greia.dani.system-v1` | fun, clearly robotic logic/pattern feedback |
 
-Canonical source masters remain under:
+Canonical source masters:
 
 ```text
 assets/source/audio/character-voice-masters/v0.1/
 ```
 
-Reviewed derived references remain under:
+Reviewed cloning references and registry:
 
 ```text
 assets/audio/characters/canonical/v0.1/
+assets/audio/characters/canonical/v0.1/manifest.toml
 ```
 
-Lilli, Leo, Flash, Tito and Momo may use optional local Chatterbox Multilingual V3 generation from those reviewed references.
+The engine verifies cloning-reference SHA-256 values from the manifest before generation.
 
-Dani intentionally has no cloning reference in v0.1. A clearly synthetic platform voice is more correct for Dani than a natural clone that loses his robotic identity.
+Dani intentionally has no cloned natural-voice reference in v0.1. Dani is system-generated.
 
-Every generated character line requires human listening review. A process exit code is never audio acceptance.
+## 4. Current provider implementation
 
-## 6. Curiosity/factual narration
-
-Subject-rich Activities should consider an optional, child-invoked curiosity/facts interaction when it enriches the experience without interrupting play.
-
-Example:
+Current providers behind the engine are implementation details, not caller contracts:
 
 ```text
-orca Activity
--> child activates a small curiosity/info affordance
--> Tito or Leo says one short researched orca fact
--> localized text presents the same meaning
--> another activation selects another reviewed fact without immediate repetition
+Lilli/Leo/Flash/Tito/Momo
+    -> Chatterbox Multilingual V3 on the accepted Apple-Silicon MLX path
+
+pedagogical_speech
+    -> macOS deterministic native/system provider
+
+Dani
+    -> macOS deterministic native/system provider
+
+optional semantic checking
+    -> mlx-whisper-tiny for suitable multi-word character/shared-library lines
 ```
 
-Curiosity facts:
+Rejected production directions remain rejected:
 
-- are Activity-specific `character_dialogue`;
-- are researched and provenance-recorded during authoring;
-- are finite reviewed content, never runtime LLM output;
-- require no network access on the child device;
-- remain optional and presentation-only;
-- never affect scoring, correctness, rewards, difficulty or progression;
-- must be multilingual-ready using semantic IDs and locale resources.
+- MOSS-TTS-Nano for canonical Greia character speech;
+- repeated `ma. ma. ma.` / middle-extraction prompting;
+- cloned character speech as pronunciation authority for syllables/phonics;
+- runtime voice models on the child device.
 
-Research/source rules and child-facing writing guidance live in:
+A future provider is added behind the engine. Activities do not learn a new backend command.
+
+## 5. Presenter/speech design is part of Activity design
+
+Every new Activity explicitly considers:
+
+```text
+lead presenter/mascot or deliberate none
+shared character reaction plan
+custom Activity-specific dialogue
+pedagogical speech, if any
+optional researched curiosity/fact narration
+supported locales and spoken coverage
+```
+
+This does not mean every Activity needs a lot of speech. It means omission and inclusion are deliberate.
+
+Detailed presenter/fact design:
 
 ```text
 skills/greia-activity-authoring/PRESENTERS_AND_CURIOSITY.md
 ```
 
-## 7. Short character reactions
-
-Chatterbox can add unwanted speech/tails on ultra-short inputs.
-
-For short **character dialogue/reactions** only, an authoring provider may use:
+Production procedure:
 
 ```text
-bounded output-token budget
-+ FFmpeg/ffprobe analysis
-+ bounded leading/trailing trim
-+ mandatory human review
+skills/greia-voice-production/SKILL.md
 ```
 
-This may be used for reactions such as:
+## 6. Multilingual-ready from the beginning
+
+Speech uses stable semantic cue IDs independent of language:
 
 ```text
-Vai!
-Wow!
-Ancora!
+presenter.welcome
+curiosity.orca.family_pods
+phonics.ma
 ```
 
-Audio cutting may remove unwanted material outside the intended phrase. It must not repair wrong pronunciation, invented sounds inside the phrase, or voice drift. Reject/regenerate those outputs.
+Each supported locale owns reviewed wording. If speech is an accepted feature, each shipped locale also needs reviewed audio with the correct semantic speaker.
 
-Do not use repeated prompt padding such as `ma. ma. ma.`.
+Do not:
+
+- hard-code Italian/English branches in gameplay;
+- let displayed and spoken wording drift semantically;
+- impersonate a canonical character with arbitrary system TTS in one locale;
+- make scoring/correctness/difficulty depend on locale or voice variant.
+
+If a provider is temporarily unavailable, keep the semantic cue and localized text ready and report audio as pending/unavailable. Do not erase the design.
+
+## 7. Character dialogue and curiosity narration
+
+Use `character_dialogue` for:
+
+```text
+brief welcome/orientation
+contextual hints
+short story/narration beats
+Activity-specific explanation
+researched curiosity facts
+```
+
+Subject-rich Activities should consider a small optional fact pool when it genuinely adds curiosity.
+
+Facts are:
+
+- finite reviewed authoring content;
+- researched and provenance-recorded;
+- never runtime LLM output;
+- offline on the child device;
+- presentation-only and unable to change score/correctness/rewards/difficulty/progression.
 
 ## 8. Pedagogical speech
 
-Pedagogical speech covers cases where the child is expected to learn or imitate the sound itself:
+Use `pedagogical_speech` when the child is expected to learn or imitate the sound itself:
 
 ```text
 letters
@@ -199,31 +222,15 @@ pronunciation exercises
 foreign-language pronunciation targets
 ```
 
-Use deterministic/native/system TTS for this role even when it sounds less natural than the canonical character voices.
+A beautiful but occasionally wrong syllable is worse than synthetic but reliable pronunciation.
 
-A beautiful but occasionally wrong syllable is worse than a synthetic but reliably correct one.
+The exact educational text belongs to the semantic request. Provider-specific spelling/accent hints used to make a native synthesizer pronounce it correctly are private engine implementation details and must not rewrite Activity localization.
 
-The long-term abstraction is a small Greia-owned provider seam such as:
-
-```text
-PedagogicalSpeechProvider
-```
-
-with platform adapters such as native macOS, Windows, and Greia/Linux system speech. Activities must not hard-code host voice names or invoke platform-specific shell commands.
-
-If the pedagogical voice is visibly different from the mascot voice, present it as an educational audio object rather than pretending the mascot is speaking it.
+A fluent speaker/educator must review pronunciation-critical output.
 
 ## 9. Shared character utterances
 
-Greia should ship common character feedback as a small shared library so Activities can have personality without requiring developers to install Chatterbox.
-
-The exact semantic families, Italian/English wording, animation defaults, variant-array rules, and complete v0.1 coverage target are owned by:
-
-```text
-docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md
-```
-
-Current families are:
+Current shared semantic families:
 
 ```text
 praise.general
@@ -233,170 +240,136 @@ encourage.progress
 ready.go
 ```
 
-Each resolved character + locale + semantic family owns a **non-empty array of reviewed files**.
-
-Selection contract:
-
-```text
-one available file
--> always use that file
-
-more than one available file
--> randomly choose one from the reviewed array
-```
-
-Activities request only:
+Normal Activities request:
 
 ```text
 character + semantic family + locale
 ```
 
-They never choose the phrase text, filename, array index, or variant number.
+They do not choose phrase text, filename, array index or variant number and do not synthesize speech at runtime.
 
-Randomness is presentation-only. It must not affect correctness, scoring, rewards, progression, difficulty, or gameplay.
+One reviewed file is valid; multiple reviewed files add presentation variety. Random selection must never affect gameplay semantics.
 
-The family's semantic ID owns its default expression/motion, so all randomly selectable files must be safe substitutes for the same presentation event.
-
-For future grammatical-agreement variants, resolve locale/agreement first, then randomly choose inside the resulting compatible array. Never mix grammatically incompatible child-directed phrases in one random pool.
-
-The local production runbook for this shared library is:
+The shared library itself is produced during authoring through the same Voice Production Engine with:
 
 ```text
+kind = shared_character_utterance
+```
+
+Lilli/Leo/Flash/Tito/Momo use their canonical character profile. Dani uses the system profile.
+
+Exact phrase/runbook authority:
+
+```text
+docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md
 docs/agents/GREIA_SHARED_CHARACTER_UTTERANCE_RECORDING.md
 ```
 
-## 10. Voice toolchain is optional; presenter/speech architecture is not optional to consider
+## 10. Whisper is advisory
 
-A normal Greia Activity-authoring workstation does **not** require Chatterbox.
+For suitable multi-word character/shared-library audio the engine may run Whisper with the requested language explicitly set.
 
-When an Activity authoring agent identifies useful speech:
+It is a cheap automatic warning/regeneration aid, not an acceptance authority.
 
 ```text
-shared generic reaction?
-    -> request a Greia shared utterance family
-
-pedagogical pronunciation?
-    -> use deterministic/system speech
-
-custom presenter/fact/dialogue?
-    -> use local Chatterbox only if already configured
-      or if the user explicitly requests installation/configuration
+PASS -> plausible transcript match; human listening still required
+WARN -> likely mismatch; regenerate/inspect
+NOT_RUN / NOT_APPLICABLE -> no machine transcription gate
 ```
 
-The Activity skill must not silently install Chatterbox, download model weights, or create a multi-gigabyte environment merely because a mascot could speak.
+Do not use Whisper to certify letters, syllables or phonics.
 
-If custom character speech is intended but Chatterbox is unavailable or unwanted during that session:
+## 11. Human acceptance
 
-- preserve semantic cue IDs and localized text;
-- preserve the presenter/fact design;
-- use matching shared utterance families where appropriate;
-- never use arbitrary system TTS to impersonate Lilli/Leo/Flash/Tito/Momo;
-- report custom localized audio as unavailable/pending rather than quietly reducing the design to one language;
-- continue building and validating the core Activity normally when the missing custom audio is genuinely optional.
+Every generated result remains:
 
-If custom character speech is explicitly required for acceptance, use the opt-in setup guide:
+```text
+human_review = PENDING
+```
+
+Human listening verifies:
+
+- exact intended words and locale;
+- canonical character identity when applicable;
+- no invented/repeated words or sounds;
+- pronunciation/stress;
+- no clipping or unwanted tail;
+- appropriate delivery;
+- small-speaker intelligibility.
+
+For factual narration also verify the researched meaning is preserved.
+
+For pedagogical speech exact target pronunciation is the primary gate.
+
+A process exit code, audio file, receipt or Whisper PASS is never acceptance.
+
+The owning workflow remains final authority. Example: Encyclopedia audio is not packageable until its ledger says `OWNER_ACCEPTED`.
+
+## 12. Installation and readiness
+
+The engine source ships in the Greia repository. The heavy character-production environment is authoring-workstation only.
+
+Start with:
+
+```bash
+python3 tools/greia_voice.py doctor
+```
+
+Quick install/use guide:
+
+```text
+tools/greia_voice_core/README.md
+```
+
+Detailed setup:
 
 ```text
 docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md
 ```
 
-## 11. Activity Designer semantic model
+The low-level Chatterbox field guide is engine-maintainer/troubleshooting documentation, not normal Activity/Encyclopedia operating procedure.
 
-Activity Designer should store speech **intent**, not backend commands or generated filenames.
+## 13. Package/runtime boundary
 
-Conceptual example; this is not current `activity.toml` syntax:
-
-```yaml
-cues:
-  intro:
-    kind: character_dialogue
-    speaker: leo
-    text:
-      it: "Guardiamo con calma."
-      en: "Let's look carefully."
-
-  curiosity.orca.family_pods:
-    kind: character_dialogue
-    speaker: tito
-    text:
-      it: "..."
-      en: "..."
-
-  phonics.ma:
-    kind: pedagogical_syllable
-    text:
-      it: "ma"
-
-  result.correct:
-    kind: shared_character_utterance
-    speaker: lilli
-    utterance: praise.general
-```
-
-The semantic kind controls production/resolution. Do not infer pedagogical authority from string length alone.
-
-## 12. Package/runtime boundary
-
-Activity packages may contain reviewed custom playback assets, but must not contain:
+Activity/runtime packages may contain reviewed static audio, but must not contain:
 
 ```text
-Chatterbox/model weights
+Chatterbox/Whisper model weights
 MLX/PyTorch environments
 model caches
-canonical reference masters
-FFmpeg binaries merely because authoring used FFmpeg
-voice-design models
+canonical cloning-reference masters
+FFmpeg binaries used only for authoring
 cloud credentials
+rejected/unreviewed generation scratch
 ```
 
-Shared character utterance recordings belong to the Greia platform/shared asset catalogue and are not duplicated into each Activity package.
+No child runtime TTS/model is introduced by this authoring architecture.
 
-Dynamic platform/system TTS remains Greia-owned capability, not arbitrary shell/TTS authority exposed to Activities.
+Runtime child microphone capture is a different Greia platform subsystem (`audio.basic`) and must not be confused with prerecorded voice production.
 
-## 13. Human review, privacy and provenance
+## 14. Current implementation status
 
-Character/shared speech review must confirm:
+Implemented now:
 
-- exact intended words and locale;
-- canonical character identity where applicable;
-- no invented/repeated words or sounds;
-- no bad pronunciation;
-- no clipped onset/ending;
-- no unwanted generated tail;
-- appropriate delivery and animation association;
-- acceptable playback on small speakers.
+- semantic `VoiceRequest` / `VoiceEngine` abstraction;
+- canonical voice registry + hash validation;
+- Chatterbox MLX canonical-character provider;
+- macOS pedagogical/Dani native provider;
+- central shared-library authoring through the same engine;
+- optional Whisper advisory verifier;
+- bounded retry policy;
+- cross-process single-worker lock;
+- warm localhost service and batch mode;
+- WAV/OGG packaging;
+- machine generation receipts with `human_review=PENDING`;
+- non-mutating `doctor` command;
+- repository quickstart/install guide + tested dependency set.
 
-For factual narration, review must additionally confirm that the spoken wording preserves the researched meaning in that locale.
+Still future/host-specific:
 
-Pedagogical speech review is stricter: a fluent speaker/educator must approve the exact educational target sound.
+- Windows/Linux native/system provider;
+- non-MLX accepted cloned-character provider;
+- Activity Designer speech-kind UI/schema integration;
+- complete shared utterance runtime catalogue/resolver if not yet completed elsewhere.
 
-Local production is preferred. Agents must not upload Greia reference voices to cloud services without explicit owner authorization. Preserve reference hashes and provider/model versions in production evidence.
-
-## 14. Current implementation boundary
-
-Accepted policy now:
-
-- presenter/speech decision: mandatory design consideration for new Activities;
-- subject-rich curiosity/facts interaction: strongly considered and used when appropriate;
-- fact narration: finite researched multilingual-ready character dialogue, never runtime generation;
-- MOSS-TTS-Nano: **REJECTED**;
-- Chatterbox Multilingual V3: optional local renderer for reviewed character speech;
-- triple repetition/middle extraction: **REJECTED**;
-- bounded token output + audio analysis/cutting: useful for short character reactions only;
-- pedagogical pronunciation: deterministic/system speech;
-- Dani: robotic system-TTS path;
-- local cloning toolchain: optional and never silently installed;
-- shared character library: five semantic families, up to three reviewed source variants per family/character/locale, random choice from the currently available array;
-- one accepted shared variant is sufficient; additional accepted files add variety without Activity changes.
-
-Not yet implemented:
-
-- Activity Designer speech-kind schema/UI;
-- provider capability probe API;
-- native/system pedagogical TTS adapters;
-- shared utterance audio files/runtime catalogue/resolver;
-- Dani production profile;
-- Chatterbox production worker/cache/receipts;
-- generic audio-analysis wrapper integration into Activity Designer.
-
-Exact future APIs/schemas belong in source and tests. Keep `skills/greia-activity-authoring/SKILL.md`, `PRESENTERS_AND_CURIOSITY.md`, `VOICE_GENERATION.md`, `SETUP.md`, and the local voice setup/recording guides synchronized with this policy.
+Exact command/API behavior belongs to source/tests under `tools/greia_voice.py` and `tools/greia_voice_core/`.
