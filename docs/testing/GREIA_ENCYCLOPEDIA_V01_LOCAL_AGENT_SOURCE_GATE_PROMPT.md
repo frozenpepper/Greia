@@ -4,6 +4,8 @@
 
 You are performing **only the deterministic pre-Simulator source acceptance gate** for the Greia Encyclopedia v0.1.
 
+**CRITICAL: the `378` invariant means 378 Markdown voice-request rows, NOT 378 generated audio files. This task generates ZERO narration files.**
+
 Do **not** edit or repair source during this run.
 Do **not** generate voices.
 Do **not** run the Simulator yet.
@@ -74,11 +76,11 @@ Expected high-level sequence:
 
 ```text
 1. branch/worktree preflight
-2. sync voice ledger
-3. sync --check + 378-row invariant
+2. sync voice ledger METADATA ONLY — no synthesis
+3. sync --check + 378 Markdown-row invariant
 4. focused provider-free tests
 5. make verify
-6. OWNER_ACCEPTED audio integration check/integration if required
+6. OWNER_ACCEPTED audio integration check/integration if already-existing accepted clips require packaging
 7. post-audio focused tests if runtime resources changed
 8. git diff --check + strict worktree postflight + summary
 9. STOP: Simulator acceptance remains pending
@@ -101,9 +103,13 @@ Do not patch source during this run.
 Do not manually change voice-ledger statuses.
 Do not delete staging audio or receipts.
 
-The tool is allowed to perform only its documented deterministic mutations, principally synchronizing the voice ledger and packaging audio that was already explicitly marked `OWNER_ACCEPTED`.
+The tool is allowed to perform only its documented deterministic mutations, principally synchronizing the Markdown voice-request ledger and packaging audio that was **already explicitly marked `OWNER_ACCEPTED` before this run**.
 
 It must never generate speech or mark a recording owner-accepted.
+
+**Do NOT invoke `encyclopedia/export_voice_batch.py`, `tools/greia_voice.py`, Chatterbox, native/system speech synthesis, Whisper generation/verification workflows, or any other audio generator during this task.**
+
+The source gate does not require all narration to exist. Missing/requested narration is allowed and remains a separate production/acceptance stream.
 
 ---
 
@@ -193,7 +199,9 @@ During this task you MUST NOT:
 - change `REQUESTED`, `RECORDED_UNREVIEWED`, `REJECTED_REDO`, or other recorder statuses by hand;
 - mark anything `OWNER_ACCEPTED`;
 - generate narration;
-- invoke Chatterbox, native speech generation, Whisper generation workflows, or any LLM/provider;
+- invoke `encyclopedia/export_voice_batch.py`;
+- invoke `tools/greia_voice.py`;
+- invoke Chatterbox, native/system speech generation, Whisper generation/verification workflows, or any LLM/provider;
 - delete `.ogg` files or `.receipt.json` files;
 - run `git reset`, `git clean`, `git checkout --`, or equivalent destructive commands;
 - commit or push;
