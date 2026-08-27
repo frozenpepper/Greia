@@ -42,7 +42,12 @@ def _ledger(*rows: str) -> str:
     return _TABLE_HEADER + "\n" + "\n".join(rows) + "\n"
 
 
-def _write_locale(root: Path, locale: str) -> None:
+def _write_locale(
+    root: Path,
+    locale: str,
+    *,
+    audio: dict[str, str] | None = None,
+) -> None:
     path = root / "activities" / "enciclopedia_greia" / "locales" / f"{locale}.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
@@ -52,7 +57,7 @@ def _write_locale(root: Path, locale: str) -> None:
                 "locale": locale,
                 "direction": "ltr",
                 "strings": {"keep.me": f"value-{locale}"},
-                "audio": {},
+                "audio": audio or {},
             },
             ensure_ascii=False,
             indent=2,
@@ -102,7 +107,10 @@ class VoiceLedgerAuthoringTests(unittest.TestCase):
             ledger_path = root / "encyclopedia" / "VOICE_RECORDING_REQUESTS.md"
             ledger_path.parent.mkdir(parents=True, exist_ok=True)
             ledger_path.write_text(ledger, encoding="utf-8")
-            _write_locale(root, "it")
+            unrelated_it = {
+                "encyclopedia.animals.lion.real_roar": "assets/sfx/lion-real-roar.ogg"
+            }
+            _write_locale(root, "it", audio=unrelated_it)
             _write_locale(root, "en")
 
             accepted_source = root / accepted_path
@@ -157,7 +165,8 @@ class VoiceLedgerAuthoringTests(unittest.TestCase):
                 {
                     "encyclopedia.animals.lion.intro": (
                         "assets/audio/it/animals/lion/intro-tito.ogg"
-                    )
+                    ),
+                    "encyclopedia.animals.lion.real_roar": "assets/sfx/lion-real-roar.ogg",
                 },
             )
             self.assertEqual(en_bundle["audio"], {})
