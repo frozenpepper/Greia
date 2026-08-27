@@ -39,17 +39,44 @@ PLANETS = (
 )
 
 # The section may display the complete Solar System before every detail page is
-# authored. The gold open marker appears only on real runtime entries, and this
-# explicit mapping grows without subject-specific branches in the engine.
+# authored. Gold markers identify real runtime entries; planned bodies remain
+# visible/selectable as part of the model without opening empty placeholder pages.
 IMPLEMENTED_ENTRY_IDS = {
     "sun": "space.sun",
     "mercury": "space.mercury",
     "venus": "space.venus",
+    "earth": "space.earth",
+    "moon": "space.moon",
     "saturn": "space.saturn",
 }
 
-_TARGET_IDS = ("sun", *(planet.planet_id for planet in PLANETS))
-_TARGET_LABEL_KEYS = ("sun.title", *(planet.label_key for planet in PLANETS))
+# Moon is a satellite, not a planet, so semantic navigation order is explicit
+# rather than being inferred from the planet drawing tuple.
+_TARGET_IDS = (
+    "sun",
+    "mercury",
+    "venus",
+    "earth",
+    "moon",
+    "mars",
+    "jupiter",
+    "saturn",
+    "uranus",
+    "neptune",
+)
+_TARGET_LABEL_KEYS = (
+    "sun.title",
+    "planet.mercury",
+    "planet.venus",
+    "planet.earth",
+    "moon.title",
+    "planet.mars",
+    "planet.jupiter",
+    "planet.saturn",
+    "planet.uranus",
+    "planet.neptune",
+)
+_TARGET_HIT_RADIUS = 32
 
 
 class SpacePage(EncyclopediaPage):
@@ -58,7 +85,7 @@ class SpacePage(EncyclopediaPage):
     def __init__(self, context) -> None:
         super().__init__(context)
         self._time = 0.0
-        self._selected = 3  # Earth in the Sun + planet sequence.
+        self._selected = 3  # Earth.
         self._target_positions: list[tuple[str, int, int, int]] = []
 
     def on_enter(self) -> None:
@@ -109,15 +136,18 @@ class SpacePage(EncyclopediaPage):
         )
 
         center = (500, 340)
-        self._target_positions = [("sun", center[0], center[1], 34)]
-        sun_selected = self._selected == 0
+        selected_id = _TARGET_IDS[self._selected]
+        positions: dict[str, tuple[int, int, int]] = {
+            "sun": (center[0], center[1], _TARGET_HIT_RADIUS)
+        }
+
         pygame.draw.circle(surface, (251, 205, 66), center, 27)
-        if "sun" in IMPLEMENTED_ENTRY_IDS:
-            pygame.draw.circle(surface, (255, 222, 91), (524, 318), 6)
-        if sun_selected:
+        self._draw_open_marker(surface, "sun", (524, 318), 6)
+        if selected_id == "sun":
             pygame.draw.circle(surface, (255, 222, 91), center, 36, 3)
 
-        for planet_index, planet in enumerate(PLANETS):
+        earth_position: tuple[int, int] | None = None
+        for planet in PLANETS:
             orbit = pygame.Rect(
                 center[0] - planet.radius_x,
                 center[1] - planet.radius_y,
@@ -128,9 +158,10 @@ class SpacePage(EncyclopediaPage):
             angle = self._time * planet.speed + planet.phase
             x = center[0] + int(math.cos(angle) * planet.radius_x)
             y = center[1] + int(math.sin(angle) * planet.radius_y)
-            target_index = planet_index + 1
-            hit_radius = max(22, planet.size + 10)
-            self._target_positions.append((planet.planet_id, x, y, hit_radius))
+            positions[planet.planet_id] = (x, y, _TARGET_HIT_RADIUS)
+            if planet.planet_id == "earth":
+                earth_position = (x, y)
+
             pygame.draw.circle(surface, planet.color, (x, y), planet.size)
             if planet.planet_id == "saturn":
                 pygame.draw.ellipse(
@@ -139,22 +170,35 @@ class SpacePage(EncyclopediaPage):
                     (x - planet.size - 8, y - 5, (planet.size + 8) * 2, 10),
                     2,
                 )
-            if planet.planet_id in IMPLEMENTED_ENTRY_IDS:
-                pygame.draw.circle(
-                    surface,
-                    (255, 222, 91),
-                    (x + planet.size + 6, y - planet.size - 5),
-                    4,
-                )
-            if target_index == self._selected:
-                ring_radius = planet.size + 8
-                ring = pygame.Rect(
-                    x - ring_radius,
-                    y - ring_radius,
-                    ring_radius * 2,
-                    ring_radius * 2,
-                )
-                pygame.draw.ellipse(surface, (255, 222, 91), ring, 3)
+            self._draw_open_marker(
+                surface,
+                planet.planet_id,
+                (x + planet.size + 6, y - planet.size - 5),
+                4,
+            )
+            if selected_id == planet.planet_id:
+                ring_radius = max(planet.size + 8, 15)
+                pygame.draw.circle(surface, (255, 222, 91), (x, y), ring_radius, 3)
+
+        if earth_position is not None:
+            ex, ey = earth_position
+            moon_angle = self._time * 1.8 + 0.4
+            moon_x = ex + int(math.cos(moon_angle) * 28)
+            moon_y = ey + int(math.sin(moon_angle) * 14)
+            positions["moon"] = (moon_x, moon_y, _TARGET_HIT_RADIUS)
+            pygame.draw.ellipse(surface, (93, 102, 139), (ex - 30, ey - 16, 60, 32), 1)
+            pygame.draw.circle(surface, (194, 193, 188), (moon_x, moon_y), 4)
+            self._draw_open_marker(surface, "moon", (moon_x + 9, moon_y - 8), 3)
+            if selected_id == "moon":
+                pygame.draw.circle(surface, (255, 222, 91), (moon_x, moon_y), 15, 3)
+
+        # Pointer hit order is identical to semantic keyboard/controller order;
+        # overlapping 64-px hit regions are resolved by nearest target.
+        self._target_positions = [
+            (target_id, *positions[target_id])
+            for target_id in _TARGET_IDS
+            if target_id in positions
+        ]
 
         label_rect = pygame.Rect(350, 500, 300, 55)
         pygame.draw.rect(surface, (248, 244, 222), label_rect, border_radius=20)
@@ -175,3 +219,13 @@ class SpacePage(EncyclopediaPage):
             height=145,
             variant="surprised",
         )
+
+    @staticmethod
+    def _draw_open_marker(
+        surface: pygame.Surface,
+        target_id: str,
+        position: tuple[int, int],
+        radius: int,
+    ) -> None:
+        if target_id in IMPLEMENTED_ENTRY_IDS:
+            pygame.draw.circle(surface, (255, 222, 91), position, radius)
