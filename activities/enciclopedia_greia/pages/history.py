@@ -1,8 +1,10 @@
-"""Long Ago section: a visual journey backward through broad historical anchors."""
+"""Long Ago section: a visual journey backward through five semantic anchors."""
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import math
+
 import pygame
 
 if __package__ and "." in __package__:
@@ -13,14 +15,20 @@ else:
     from pages.common import draw_centered_text, draw_presenter, focus_ring
 
 
+@dataclass(frozen=True, slots=True)
+class HistoryMoment:
+    label_key: str
+    page_id: str
+    color: tuple[int, int, int]
+
+
 MOMENTS = (
-    ("history.dinosaurs", (115, 178, 94)),
-    ("history.fossils", (184, 145, 94)),
-    ("history.mammoth", (151, 124, 108)),
-    ("history.cave_paintings", (191, 114, 76)),
-    ("history.pyramids", (219, 181, 94)),
+    HistoryMoment("history.dinosaurs", "history.dinosaurs", (115, 178, 94)),
+    HistoryMoment("history.fossils", "history.fossils", (184, 145, 94)),
+    HistoryMoment("history.mammoth", "history.mammoth", (151, 124, 108)),
+    HistoryMoment("history.cave_paintings", "history.cave_paintings", (191, 114, 76)),
+    HistoryMoment("history.pyramids", "history.pyramids", (219, 181, 94)),
 )
-_FOSSILS_INDEX = 1
 
 
 class HistoryPage(EncyclopediaPage):
@@ -48,9 +56,10 @@ class HistoryPage(EncyclopediaPage):
                 self._selected = max(0, self._selected - 1)
             elif event.command is PageCommand.RIGHT:
                 self._selected = min(len(MOMENTS) - 1, self._selected + 1)
-            elif event.command is PageCommand.ACTIVATE and self._selected == _FOSSILS_INDEX:
-                self.context.host.open_page("history.fossils")
+            elif event.command is PageCommand.ACTIVATE:
+                self._open_selected()
             return
+
         if event.kind is PageInputKind.POINTER_MOVE and event.position:
             point = (int(event.position[0]), int(event.position[1]))
             self._hovered = next(
@@ -58,17 +67,19 @@ class HistoryPage(EncyclopediaPage):
                 None,
             )
             return
+
         if event.kind is PageInputKind.POINTER_PRESS and event.position:
             point = (int(event.position[0]), int(event.position[1]))
             hit = next(
                 (index for index, rect in enumerate(self._rects) if rect.collidepoint(point)),
                 None,
             )
-            if hit is None:
-                return
-            self._selected = hit
-            if hit == _FOSSILS_INDEX:
-                self.context.host.open_page("history.fossils")
+            if hit is not None:
+                self._selected = hit
+                self._open_selected()
+
+    def _open_selected(self) -> None:
+        self.context.host.open_page(MOMENTS[self._selected].page_id)
 
     def draw(self, surface: pygame.Surface) -> None:
         surface.fill((244, 229, 194))
@@ -81,25 +92,21 @@ class HistoryPage(EncyclopediaPage):
             color=self.context.palette.ink,
         )
         pygame.draw.line(surface, (130, 94, 61), (95, 470), (880, 470), 8)
-        for i, ((label_key, color), rect) in enumerate(zip(MOMENTS, self._rects)):
-            bob = int(math.sin(self._time * 1.5 + i) * 3)
+        for index, (moment, rect) in enumerate(zip(MOMENTS, self._rects)):
+            bob = int(math.sin(self._time * 1.5 + index) * 3)
             body = rect.move(0, bob)
             pygame.draw.rect(surface, (255, 248, 227), body, border_radius=24)
-            pygame.draw.rect(surface, color, body, 4, border_radius=24)
-            self._draw_moment(surface, i, body, color)
+            pygame.draw.rect(surface, moment.color, body, 4, border_radius=24)
+            self._draw_moment(surface, index, body, moment.color)
             draw_centered_text(
                 surface,
                 self.context.typography,
-                self.context.resources.text(label_key),
+                self.context.resources.text(moment.label_key),
                 center=(body.centerx, body.bottom - 22),
                 size=17,
                 color=self.context.palette.ink,
             )
-            focus_ring(
-                surface,
-                body,
-                i == self._selected or i == self._hovered,
-            )
+            focus_ring(surface, body, index == self._selected or index == self._hovered)
             pygame.draw.circle(surface, (130, 94, 61), (body.centerx, 470), 7)
         draw_presenter(
             surface,
@@ -124,7 +131,7 @@ class HistoryPage(EncyclopediaPage):
             pygame.draw.polygon(surface, color, [(cx - 42, cy - 5), (cx - 70, cy - 35), (cx - 38, cy + 5)])
         elif index == 1:
             pygame.draw.ellipse(surface, color, (cx - 45, cy - 25, 90, 50), 9)
-            pygame.draw.arc(surface, (255, 248, 227), (cx - 24, cy - 15, 48, 30), 0, math.pi * 2, 7)
+            pygame.draw.arc(surface, (255, 248, 227), (cx - 24, cy - 15, 48, 30), 0, math.tau, 7)
         elif index == 2:
             pygame.draw.ellipse(surface, color, (cx - 42, cy - 20, 84, 50))
             pygame.draw.circle(surface, color, (cx + 35, cy - 22), 26)
