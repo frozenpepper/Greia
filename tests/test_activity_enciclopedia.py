@@ -77,12 +77,20 @@ RESEARCH_FILES = {
 class EncyclopediaSourceContractTests(unittest.TestCase):
     @staticmethod
     def _assignment(tree: ast.Module, name: str) -> ast.AST:
-        return next(
-            node.value
-            for node in tree.body
-            if isinstance(node, ast.Assign)
-            and any(isinstance(target, ast.Name) and target.id == name for target in node.targets)
-        )
+        for node in tree.body:
+            if isinstance(node, ast.Assign) and any(
+                isinstance(target, ast.Name) and target.id == name
+                for target in node.targets
+            ):
+                return node.value
+            if (
+                isinstance(node, ast.AnnAssign)
+                and isinstance(node.target, ast.Name)
+                and node.target.id == name
+                and node.value is not None
+            ):
+                return node.value
+        raise AssertionError(f"missing module assignment: {name}")
 
     @staticmethod
     def _literal_strings(node: ast.AST) -> tuple[str, ...]:
