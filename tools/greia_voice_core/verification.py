@@ -47,6 +47,11 @@ def transcript_similarity(expected: str, actual: str) -> float:
 def asr_eligible(request: VoiceRequest) -> bool:
     if request.verification is VerificationMode.OFF:
         return False
+    # Dani is rendered deterministically by the system/native provider. Running
+    # Whisper adds cost without providing a useful acceptance signal for that route,
+    # including when Dani's line is being produced for the shared utterance library.
+    if request.speaker == "dani":
+        return False
     if request.kind not in {
         SpeechKind.CHARACTER_DIALOGUE,
         SpeechKind.SHARED_CHARACTER_UTTERANCE,
