@@ -73,6 +73,12 @@ def _staging_path(row: VoiceLedgerRow, root: Path) -> Path:
     return resolved
 
 
+def _receipt_path(staging: Path) -> Path:
+    """Match the Voice Production Engine's sibling receipt naming contract."""
+
+    return staging.with_suffix(staging.suffix + ".receipt.json")
+
+
 def request_mapping(row: VoiceLedgerRow, root: Path, *, reject_existing: bool = True) -> dict[str, object]:
     """Translate one ledger row into the stable Voice Production Engine request."""
 
@@ -92,11 +98,23 @@ def request_mapping(row: VoiceLedgerRow, root: Path, *, reject_existing: bool = 
         raise ValueError(f"dani_system_speech must use Dani for {row.key!r}")
 
     staging = _staging_path(row, root)
-    if reject_existing and staging.exists():
-        raise FileExistsError(
-            f"REQUESTED staging output already exists for {row.key!r}: {row.path}; "
-            "inspect the take and update recorder status instead of overwriting it"
+    if reject_existing:
+        existing = tuple(
+            path
+            for path in (staging, _receipt_path(staging))
+            if path.exists()
         )
+        if existing:
+            relative = ", ".join(
+                str(path.relative_to(root.resolve()))
+                if path.is_relative_to(root.resolve())
+                else str(path)
+                for path in existing
+            )
+            raise FileExistsError(
+                f"REQUESTED review output/evidence already exists for {row.key!r}: {relative}; "
+                "inspect the take/receipt and update recorder status instead of overwriting it"
+            )
 
     verification = "auto" if row.kind == "character_dialogue" else "off"
     return {
@@ -147,7 +165,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--allow-existing",
         action="store_true",
-        help="include rows whose staging output already exists (normally unsafe)",
+        help="include rows whose staging output/receipt already exists (normally unsafe)",
     )
     parser.add_argument(
         "--check",
