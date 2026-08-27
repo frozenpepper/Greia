@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import ast
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import tomllib
 import unittest
 
@@ -179,14 +179,30 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
             with self.subTest(page_id=page_id):
                 self.assertIn(marker, RESEARCH_FILES[page_id].read_text(encoding="utf-8"))
 
-    def test_locales_have_matching_child_facing_keys(self) -> None:
-        bundles = [
-            json.loads((ACTIVITY / "locales" / f"{locale}.json").read_text(encoding="utf-8"))
+    def test_locales_have_matching_strings_and_safe_audio_mappings(self) -> None:
+        bundles = {
+            locale: json.loads(
+                (ACTIVITY / "locales" / f"{locale}.json").read_text(encoding="utf-8")
+            )
             for locale in ("it", "en")
-        ]
-        self.assertEqual(set(bundles[0]["strings"]), set(bundles[1]["strings"]))
-        self.assertEqual(bundles[0]["audio"], {})
-        self.assertEqual(bundles[1]["audio"], {})
+        }
+        self.assertEqual(
+            set(bundles["it"]["strings"]),
+            set(bundles["en"]["strings"]),
+        )
+
+        for locale, bundle in bundles.items():
+            audio = bundle["audio"]
+            self.assertIsInstance(audio, dict)
+            for cue_id, relative_path in audio.items():
+                with self.subTest(locale=locale, cue_id=cue_id):
+                    self.assertTrue(cue_id.startswith("encyclopedia."))
+                    self.assertIsInstance(relative_path, str)
+                    path = PurePosixPath(relative_path)
+                    self.assertFalse(path.is_absolute())
+                    self.assertNotIn("..", path.parts)
+                    self.assertEqual(path.suffix, ".ogg")
+                    self.assertEqual(path.parts[:3], ("assets", "audio", locale))
 
     def test_space_section_has_no_dead_major_body_destinations(self) -> None:
         tree = ast.parse((ACTIVITY / "pages" / "space.py").read_text(encoding="utf-8"))
