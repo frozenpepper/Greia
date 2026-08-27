@@ -17,6 +17,7 @@
 - Narration is prerecorded during authoring. Dani/system speech is also generated on development/parent hardware and packaged as static audio.
 - Italian and English are the initial locales.
 - `encyclopedia/VOICE_RECORDING_REQUESTS.md` is the single human/agent coordination authority for encyclopedia-specific voice production.
+- The repository-wide Voice Production Engine may consume the ledger through the deterministic adapter; it does not replace the ledger or owner listening/`OWNER_ACCEPTED` authority.
 - The first construction pass intentionally skipped per-page Simulator gates. Do not claim runtime acceptance until the consolidated source-test + Simulator/visual/input pass actually runs.
 - Do not add more v0.1 topics. The 43-page breadth is frozen unless the owner deliberately changes scope.
 
@@ -148,7 +149,46 @@ The synchronizer:
 
 `tests/test_encyclopedia_authoring_tools.py` additionally requires the set of semantic narration cue IDs present in runtime page modules to equal the synchronized ledger cue set.
 
-### Step 2 — record gradually into local staging
+### Step 2 — translate REQUESTED rows to the shared Voice Production Engine contract
+
+New deterministic adapter:
+
+```text
+encyclopedia/export_voice_batch.py
+```
+
+Example:
+
+```bash
+python3 encyclopedia/export_voice_batch.py \
+  --output ./tmp/encyclopedia-requested-voices.jsonl
+```
+
+This tool performs **no synthesis**. It maps the ledger's already-reviewed semantics into Voice Engine JSONL:
+
+```text
+speaker
+speech kind
+locale
+exact text
+cue ID
+staging output path
+verification mode
+bounded attempt count
+```
+
+It exports only `REQUESTED` rows by default, validates safe locale-scoped encyclopedia staging paths and refuses to overwrite an already-existing requested take unless an operator explicitly bypasses that safety check.
+
+After the repository-wide Voice Production Engine passes its own separate local provider acceptance, the resulting JSONL can be processed by:
+
+```bash
+python3 tools/greia_voice.py batch \
+  --input ./tmp/encyclopedia-requested-voices.jsonl
+```
+
+Until that provider subsystem is locally accepted, the established direct recording workflow remains valid. The adapter exists now so the encyclopedia never needs a second hand-maintained request authority.
+
+### Step 3 — record gradually into local staging
 
 The local recording agent processes only `REQUESTED` rows. It changes only `STATUS` and `RECORDER_NOTES` and adds the requested staging OGG.
 
@@ -166,11 +206,11 @@ The existing queue column `FINAL_PATH` means the recorder's final **staging** de
 encyclopedia/pages/**/assets/audio/
 ```
 
-and is now git-ignored. Do not commit unreviewed/rejected takes or duplicate accepted audio in both authoring and runtime trees.
+and is git-ignored. Do not commit unreviewed/rejected takes or duplicate accepted audio in both authoring and runtime trees.
 
 Rejected/revised rows use the existing queue protocol; never silently alter immutable text/voice/path after recording starts.
 
-### Step 3 — package only owner-accepted clips
+### Step 4 — package only owner-accepted clips
 
 After one or more clips become `OWNER_ACCEPTED`:
 
@@ -192,7 +232,7 @@ The integrator:
 
 Only the accepted runtime copy is intended for normal source packaging/shipping.
 
-Shared ledger grammar lives in `encyclopedia/voice_ledger.py` so the queue synchronizer and accepted-asset integrator cannot diverge on row parsing.
+Shared ledger grammar lives in `encyclopedia/voice_ledger.py` so the synchronizer, Voice Engine adapter and accepted-asset integrator cannot diverge on row parsing.
 
 ## Source-contract state — authored, not executed
 
@@ -226,11 +266,15 @@ They cover:
 
 - exact 378-row rendered queue;
 - runtime semantic cue-set == synchronized ledger cue-set;
+- all synchronized `REQUESTED` rows translate into the provider-neutral Voice Engine request contract;
+- status-filtered Voice Engine export;
+- existing-requested-take overwrite refusal;
+- unsafe Voice Engine staging-path rejection;
 - duplicate ledger rows;
 - OWNER_ACCEPTED-only packaging;
 - ignored unreviewed clips;
 - missing/corrupt OGG rejection;
-- staging path traversal rejection;
+- accepted staging path traversal rejection;
 - canonical locale-audio object output;
 - preservation of locale strings and unrelated audio mappings.
 
@@ -258,6 +302,8 @@ It is intentionally fail-closed and tells the local agent to:
 10. spot-check responsive layouts;
 11. return exact evidence without repairing source inside the acceptance run.
 
+The provider-free contracts now also validate the new ledger → Voice Engine adapter, but the acceptance run still does **not** generate narration. Voice production remains its own workflow.
+
 This Simulator pass can evaluate the frozen visual/input source even if narration production is incomplete. Missing reviewed narration is **audio acceptance pending**, never an invitation to add runtime synthesis. Any later accepted-audio integration changes runtime resources and therefore requires a fresh focused launch/survival/interaction gate on that later exact state.
 
 ## Current exact evidence
@@ -273,6 +319,7 @@ No consolidated Simulator pass, rendered visual acceptance, or physical Acer/Pi 
 1. Execute `docs/testing/GREIA_ENCYCLOPEDIA_V01_CONSOLIDATED_ACCEPTANCE.md` on an owner-controlled local checkout without source repair during the run.
 2. The first stage must synchronize the old 176-row queue into the validated 378-row full-v0.1 ledger; stop on any legacy/canonical research mismatch rather than rewriting evidence.
 3. Return the exact first failure if any; otherwise return complete test/Simulator/no-reading evidence and the deterministic voice-ledger/runtime-audio diff.
-4. Review evidence and fix only concrete UX/performance/content defects as a coherent tranche; rerun invalidated gates on the final repaired source.
-5. Let recording continue independently and integrate only `OWNER_ACCEPTED` clips.
-6. Do not broaden topic scope until the 43-page v0.1 base is accepted.
+4. In parallel, execute the repository-wide Voice Production Engine's own local provider acceptance. Only after it is green should the new JSONL adapter become the default encyclopedia generation path.
+5. Review evidence and fix only concrete UX/performance/content defects as a coherent tranche; rerun invalidated gates on the final repaired source.
+6. Let recording continue independently and integrate only `OWNER_ACCEPTED` clips.
+7. Do not broaden topic scope until the 43-page v0.1 base is accepted.
