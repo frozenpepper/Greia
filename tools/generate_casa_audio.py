@@ -1,24 +1,17 @@
 #!/usr/bin/env python3
-"""Pedagogical speech audio generator for La Casa del Dieci.
-
-Generates 22050Hz LEI16 mono WAV audio assets for:
-- Italian and English challenge instruction prompts (compose 1..10, add, take away, missing part)
-- Positive verbal reinforcement clips ("Ben fatto!", "Esatto!", "Ottimo!", "Great job!", "You got it!")
-- Encouraging retry verbal clips ("Quasi, riprova!", "Conta bene e riprova!", "Almost, try again!")
-"""
+"""Prepare La Casa del Dieci guidance as Dani system speech via VoiceEngine."""
 
 from __future__ import annotations
 
 import argparse
-import hashlib
+import json
 from pathlib import Path
 import subprocess
-import tempfile
-import time
-
+import sys
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_AUDIO_ROOT = PROJECT_ROOT / "activities" / "casa_del_dieci" / "assets" / "audio"
+VOICE_CLI = PROJECT_ROOT / "tools" / "greia_voice.py"
+DEFAULT_REVIEW_DIR = PROJECT_ROOT / "tmp" / "voice-review" / "casa_del_dieci"
 
 PROMPTS_IT = [
     ("prompt_compose_1", "Accendi una luce nella casa!"),
@@ -34,11 +27,8 @@ PROMPTS_IT = [
     ("prompt_add", "Quante luci accese ci sono in tutto?"),
     ("prompt_take_away", "Quante luci restano accese?"),
     ("prompt_missing_part", "Quante luci mancano da accendere?"),
-    ("correct_1", "Ben fatto!"),
-    ("correct_2", "Esatto!"),
-    ("correct_3", "Ottimo lavoro!"),
-    ("retry_1", "Quasi, riprova!"),
-    ("retry_2", "Conta bene e prova ancora!"),
+    ("correct_1", "Ben fatto!"), ("correct_2", "Esatto!"), ("correct_3", "Ottimo lavoro!"),
+    ("retry_1", "Quasi, riprova!"), ("retry_2", "Conta bene e prova ancora!"),
 ]
 
 PROMPTS_EN = [
@@ -55,90 +45,51 @@ PROMPTS_EN = [
     ("prompt_add", "How many lights are on in all?"),
     ("prompt_take_away", "How many lights are left on?"),
     ("prompt_missing_part", "How many lights are missing?"),
-    ("correct_1", "Great job!"),
-    ("correct_2", "You got it!"),
-    ("correct_3", "Awesome!"),
-    ("retry_1", "Almost, try again!"),
-    ("retry_2", "Count carefully and try again!"),
+    ("correct_1", "Great job!"), ("correct_2", "You got it!"), ("correct_3", "Awesome!"),
+    ("retry_1", "Almost, try again!"), ("retry_2", "Count carefully and try again!"),
 ]
 
 
-def _write_wav_stub(dest_wav: Path) -> None:
-    """Create a minimal valid 22050Hz LEI16 mono WAV stub."""
-    import wave
-    dest_wav.parent.mkdir(parents=True, exist_ok=True)
-    with wave.open(str(dest_wav), "wb") as w:
-        w.setnchannels(1)
-        w.setsampwidth(2)
-        w.setframerate(22050)
-        w.writeframes(b"\x00\x00" * 2205)  # 0.1s of silence
-
-
-def make_wav(text: str, voice: str, rate: int, dest_wav: Path) -> None:
-    dest_wav.parent.mkdir(parents=True, exist_ok=True)
-    for attempt in range(3):
-        with tempfile.NamedTemporaryFile(suffix=".aiff", delete=False) as tmp_file:
-            tmp_aiff = Path(tmp_file.name)
-        try:
-            subprocess.run(
-                ["say", "-v", voice, "-r", str(rate), text, "-o", str(tmp_aiff)],
-                check=True,
-                capture_output=True,
-            )
-            subprocess.run(
-                ["afconvert", "-f", "WAVE", "-d", "LEI16@22050", "-c", "1", str(tmp_aiff), str(dest_wav)],
-                check=True,
-                capture_output=True,
-            )
-            break
-        except Exception:
-            if attempt == 2:
-                _write_wav_stub(dest_wav)
-            time.sleep(0.1)
-        finally:
-            if tmp_aiff.exists():
-                tmp_aiff.unlink()
-
-
-def generate_locale(locale: str, out_dir: Path) -> dict[str, str]:
-    manifest: dict[str, str] = {}
-    if locale == "it":
-        voice = "Alice"
-        rate = 175
-        prompts = PROMPTS_IT
-    else:
-        voice = "Samantha"
-        rate = 180
-        prompts = PROMPTS_EN
-
-    target_dir = out_dir / locale
-    target_dir.mkdir(parents=True, exist_ok=True)
-
-    for prompt_id, prompt_text in prompts:
-        p = target_dir / f"{prompt_id}.wav"
-        make_wav(prompt_text, voice, rate, p)
-        manifest[f"{locale}/{prompt_id}.wav"] = hashlib.sha256(p.read_bytes()).hexdigest()
-
-    return manifest
+def _output_path(review_dir: Path, locale: str, key: str) -> str:
+    output = review_dir / locale / f"{key}.wav"
+    try:
+        return str(output.resolve().relative_to(PROJECT_ROOT))
+    except ValueError:
+        return str(output.resolve())
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Generate Casa del Dieci audio clips")
-    parser.add_argument("--locale", choices=["it", "en", "all"], default="all")
-    parser.add_argument("--output-dir", type=Path, default=DEFAULT_AUDIO_ROOT)
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--review-dir", type=Path, default=DEFAULT_REVIEW_DIR)
     args = parser.parse_args()
-
-    locales = ["it", "en"] if args.locale == "all" else [args.locale]
-    full_manifest: dict[str, str] = {}
-    for loc in locales:
-        m = generate_locale(loc, args.output_dir)
-        full_manifest.update(m)
-
-    manifest_file = args.output_dir / "audio_manifest.sha256"
-    manifest_lines = [f"{digest}  {path}\n" for path, digest in sorted(full_manifest.items())]
-    manifest_file.write_text("".join(manifest_lines), encoding="utf-8")
-    print(f"Generated {len(full_manifest)} audio clips in {args.output_dir}")
-    return 0
+    review_dir = args.review_dir.resolve()
+    review_dir.mkdir(parents=True, exist_ok=True)
+    prompts = {"it": PROMPTS_IT, "en": PROMPTS_EN}
+    requests = [
+        {
+            "speaker": "dani",
+            "kind": "dani_system_speech",
+            "locale": locale,
+            "text": text,
+            "cue_id": f"casa_del_dieci.{key}",
+            "output": _output_path(review_dir, locale, key),
+            "verification": "off",
+            "max_attempts": 1,
+        }
+        for locale, items in prompts.items()
+        for key, text in items
+    ]
+    batch_path = review_dir / "voice_requests.jsonl"
+    batch_path.write_text(
+        "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in requests), encoding="utf-8"
+    )
+    result = subprocess.run(
+        [sys.executable, str(VOICE_CLI), "batch", "--input", str(batch_path)], cwd=PROJECT_ROOT
+    )
+    if result.returncode == 0:
+        print(f"Generated {len(requests)} Dani review candidates under {review_dir}")
+        print("Human listening review is required before Activity integration.")
+    return result.returncode
 
 
 if __name__ == "__main__":
