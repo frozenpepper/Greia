@@ -1,0 +1,54 @@
+[activity]
+id = "org.greia.storie-della-mia-voce"
+legacy_ids = []
+title_key = "activity.storie_della_mia_voce.title"
+version = "0.1.0"
+icon = "package:assets/icon.png"
+languages = ["it", "en"]
+
+[presentation]
+categories = ["create", "play"]
+discovery_tags = ["stories", "making"]
+
+[achievement_art]
+emblems = [
+  { id = "activity", asset = "assets/icon.png" },
+  { id = "voice", asset = "assets/emblem_voice.png" },
+]
+
+[education]
+categories = ["language", "narrative_sequencing", "creativity"]
+difficulty = 2
+recommended_age_min = 4
+recommended_age_max = 7
+skills = [
+  { id = "language.oral_expression.narration", weight = 3 },
+  { id = "narrative.sequencing.scene_to_scene", weight = 3 },
+  { id = "creativity.voice.improvisation", weight = 3 },
+  { id = "audio.recording.turn_taking", weight = 2 },
+]
+events = [
+  { id = "voice.recording_started", kind = "milestone" },
+  { id = "voice.recording_stopped", kind = "milestone" },
+  { id = "voice.recording_replayed", kind = "milestone" },
+  { id = "voice.story_saved", kind = "creation" },
+  { id = "voice.first_story_recorded", kind = "creation" },
+]
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "hybrid"
+
+[requirements]
+required_capabilities = ["display", "pointer", "audio.basic"]
+optional_capabilities = ["keyboard", "touch"]
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1

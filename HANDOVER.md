@@ -28,6 +28,8 @@ No current-head PASS may be claimed unless it actually executed on that exact st
 
 ## 2. Platform state
 
+Triaged on 2026-08-26 (non-closing): retired `tre_carte_una_storia`; shipped two new first-party Activities — `la_discesa_della_biglia` (real 2D marble physics for pre-readers) and `storie_della_mia_voce` (microphone-first pre-reader narrative). First-party manifest count is now **34** (was 33 before `enciclopedia_greia` landed from the encyclopedia workstream). `make verify` was **1,380/1,380 PASS** with both Activities inserted in their alphabetical positions and the retired Activity removed. Voice production for both Activities remains **UNPROVEN** at v1 — placeholder semantic cue ids are shipped, Lilli (for `storie_della_mia_voce`) and Leo (for `la_discesa_della_biglia`) are reserved for a future voice-production pass. The full long-form triage detail lives in the active plan's progress ledger at `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`.
+
 R7 remains the first incomplete blocking platform phase. Current production continues to use the provisional Xorg/xinit compatibility path while direct appliance display/session/input ownership is resolved.
 
 R7 invariants remain:

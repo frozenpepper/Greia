@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "locale": "it",
+  "direction": "ltr",
+  "strings": {
+    "activity.la_discesa_della_biglia.title": "LA DISCESA DELLA BIGLIA",
+    "ui.welcome": "FAI CADERE LA BIGLIA NEL CESTO!",
+    "ui.play": "GIOCA!",
+    "ui.retry": "ANCORA!",
+    "ui.next": "AVANTI!",
+    "ui.back": "INDIETRO",
+    "ui.win": "NEL CESTO!",
+    "ui.miss": "FUORI!",
+    "ui.new_best": "TEMPO MIGLIORE!",
+    "ui.tool_slope": "PIANO",
+    "ui.tool_bumper": "PARACOLPI",
+    "ui.tool_fan": "VENTOLA",
+    "ui.tool_spring": "MOLLA",
+    "ui.basket_label": "CESTO",
+    "ui.level_label": "LIVELLO",
+    "ui.best_label": "MIGLIORE",
+    "ui.tools_label": "STRUMENTI",
+    "ui.clear": "PULISCI",
+    "ui.drop": "FAI CADERE!"
+  },
+  "audio": {}
+}

@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "locale": "it",
+  "direction": "ltr",
+  "strings": {
+    "activity.storie_della_mia_voce.title": "STORIE DELLA MIA VOCE",
+    "ui.welcome": "REGISTRA LA TUA VOCE!",
+    "ui.scene_intro": "SCEGLI UNA SCENA!",
+    "ui.scene_intro_sub": "QUATRO SCHERMATE DA RIEMPIRE CON LA TUA VOCE",
+    "ui.scene_forest": "FORESTA",
+    "ui.scene_sea": "MARE",
+    "ui.scene_sky": "CIELO",
+    "ui.scene_friends": "AMICI",
+    "ui.record": "REGISTRA",
+    "ui.stop": "STOP",
+    "ui.replay": "RIASCOLTA",
+    "ui.re_record": "RIPROVA",
+    "ui.next_scene": "PROSSIMA SCENA",
+    "ui.save": "SALVA STORIA",
+    "ui.saved": "STORIA SALVATA!",
+    "ui.mic_required_title": "SERVE IL MICROFONO",
+    "ui.mic_required_body": "PER REGISTRARE LA TUA VOCE, CHIEDI AD UN ADULTO DI ACCENDERE IL MICROFONO IN IMPOSTAZIONI.",
+    "ui.library": "LE MIE STORIE",
+    "ui.no_stories": "ANCORA NESSUNA STORIA!",
+    "ui.story": "STORIA",
+    "ui.scenes": "SCENE",
+    "ui.durations": "DURATA"
+  },
+  "audio": {}
+}
