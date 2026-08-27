@@ -1,7 +1,7 @@
 # Greia Encyclopedia workstream handover
 
 **Updated:** 2026-08-27  
-**Construction state:** v0.1 source breadth complete and frozen for closure  
+**Construction state:** v0.1 source breadth complete; post-build drift review applied; frozen for local closure  
 **Runtime pages:** **43 / 43 planned executable pages**  
 **Evidence:** **SOURCE-REVIEWED / TESTS-UNEXECUTED / SIMULATOR-UNVERIFIED**  
 **Runtime Activity:** `activities/enciclopedia_greia/` (`org.greia.enciclopedia`)
@@ -74,17 +74,19 @@ history
 └── history.pyramids
 ```
 
-The authoring catalogue `encyclopedia/pages/catalogue.py` and runtime `enciclopedia_catalogue.py` currently contain the same 43 IDs. `tests/test_activity_enciclopedia.py` explicitly guards that equality.
+The authoring catalogue `encyclopedia/pages/catalogue.py` and runtime `enciclopedia_catalogue.py` contain the same 43 IDs. `tests/test_activity_enciclopedia.py` derives the runtime and authoring inventories and guards that exact equality rather than carrying another copied 43-page list.
 
-## Architecture state
+## Architecture state after freeze review
 
-`enciclopedia_engine.py` owns only lifecycle, `PageContext`, explicit registry, bounded navigation history and semantic input vocabulary. No subject knowledge has leaked into it.
+`enciclopedia_engine.py` still owns only lifecycle, `PageContext`, explicit registry, bounded navigation history and semantic input vocabulary. The freeze review found no subject-specific branch or page-type hierarchy leaking into it.
 
 Small model objects exist only where real coupled state warrants them, including `BeePollinationModel`, `FrogLifeCycleModel`, `MoonPhaseModel`, `WaterCycleModel`, `VolcanoModel`, `HeartModel`, `BreathingModel`, `GearTrainModel`, `DrivetrainModel`, `BridgeLoadModel`, `FossilDigModel` and `PyramidBuildModel`.
 
 There is intentionally no generic exhibit DSL, `PlanetPage`, `AnatomyPage`, `MachinePage`, history base class or physics framework.
 
-Performance owners are bounded: text-surface cache max 160, character rendition cache bounded, page effects finite, and page hot paths should not decode images, smooth-scale reusable assets, build fonts, walk filesystems or perform provider/network work.
+Performance owners remain bounded: text-surface cache max 160, character rendition cache max 24, voice-sound cache max 32, page effects finite, and page hot paths should not decode images, smooth-scale reusable assets, build fonts, walk filesystems or perform provider/network work.
+
+One cleanup from the freeze review narrowed `EncyclopediaAudio.play()` from a broad `except Exception` to the canonical `LocalizationError`; ordinary mixer/file failures still fail soft through their explicit bounded exception paths.
 
 ## Research/localization state
 
@@ -96,7 +98,26 @@ encyclopedia/research/<section>/<entry>.md
 
 Each includes sources, accepted claims, misconception/scope guardrails, interaction-to-fact mapping and exact approved Italian/English narration.
 
-Italian and English runtime string bundles cover all 43 pages and have matching child-facing keys. Runtime narration maps change only through deterministic packaging of owner-accepted recordings.
+The review identified two historical research-document generations:
+
+1. early/pilot authorities use `Child-facing wording contract`, human headings such as `Intro — Tito`, and `Italian` / `English` backticked lines;
+2. later authorities use `Approved narration wording`, explicit semantic cue IDs, `Presenter` metadata and `it` / `en` lines.
+
+This is now an explicitly supported compatibility boundary rather than accidental format drift. `sync_voice_requests.py` does **not** rewrite the early authorities. It validates their established ledger cue order, speaker, canonical voice ID and exact bilingual text against research, while generating later rows directly from semantic cue blocks. Missing/mismatched legacy rows fail closed.
+
+Italian and English runtime string bundles cover all 43 pages and have matching child-facing keys.
+
+The review also found and fixed an accepted-audio integration bug: Greia's `LocalizedResources` schema requires audio entries such as:
+
+```json
+{
+  "encyclopedia.animals.lion.intro": {
+    "path": "assets/audio/it/animals/lion/intro-tito.ogg"
+  }
+}
+```
+
+not a bare path string. `integrate_voice_assets.py` and both contract suites now use/validate the canonical object shape.
 
 ## Voice pipeline — local-agent workflow
 
@@ -116,9 +137,18 @@ Expected result:
 378 total bilingual rows
 ```
 
-`sync_voice_requests.py` reads exact wording from research, preserves recorder-owned `STATUS`/`RECORDER_NOTES`, rejects duplicates, and refuses immutable drift on locked recorded rows.
+The synchronizer:
 
-### Step 2 — record gradually
+- preserves recorder-owned `STATUS` / `RECORDER_NOTES`;
+- supports and validates both historical research narration formats;
+- rejects duplicate identities;
+- validates presenter-to-canonical-voice pairing;
+- refuses immutable drift on locked recorded rows;
+- enforces the complete 378-row invariant.
+
+`tests/test_encyclopedia_authoring_tools.py` additionally requires the set of semantic narration cue IDs present in runtime page modules to equal the synchronized ledger cue set.
+
+### Step 2 — record gradually into local staging
 
 The local recording agent processes only `REQUESTED` rows. It changes only `STATUS` and `RECORDER_NOTES` and adds the requested staging OGG.
 
@@ -129,6 +159,14 @@ REQUESTED
 → RECORDED_UNREVIEWED
 → OWNER_ACCEPTED
 ```
+
+The existing queue column `FINAL_PATH` means the recorder's final **staging** destination. Staging lives under:
+
+```text
+encyclopedia/pages/**/assets/audio/
+```
+
+and is now git-ignored. Do not commit unreviewed/rejected takes or duplicate accepted audio in both authoring and runtime trees.
 
 Rejected/revised rows use the existing queue protocol; never silently alter immutable text/voice/path after recording starts.
 
@@ -147,13 +185,16 @@ The integrator:
 - validates staging path/locale/filename and OGG container header;
 - preflights the whole accepted set before mutation;
 - atomically writes runtime files under `activities/enciclopedia_greia/assets/audio/<locale>/<page-path>/...`;
-- updates locale `audio` mappings only after files exist;
+- emits canonical Greia locale `audio` objects with a `path` member;
+- updates locale maps only after files exist;
 - preserves locale strings/metadata and unrelated non-ledger audio mappings;
 - never generates speech and is never imported by child runtime.
 
+Only the accepted runtime copy is intended for normal source packaging/shipping.
+
 Shared ledger grammar lives in `encyclopedia/voice_ledger.py` so the queue synchronizer and accepted-asset integrator cannot diverge on row parsing.
 
-## Tests authored, not executed
+## Source-contract state — authored, not executed
 
 Runtime/source contracts:
 
@@ -161,19 +202,43 @@ Runtime/source contracts:
 tests/test_activity_enciclopedia.py
 ```
 
+They now guard:
+
+- runtime catalogue == authoring catalogue == 43 unique pages;
+- research files are discovered from the research tree and must exactly cover all factual runtime entries;
+- both accepted historical research-document formats;
+- high-risk factual guardrails;
+- Italian/English string parity;
+- canonical Greia audio-object schema and safe package-relative paths;
+- complete section destination maps;
+- subject-neutral engine imports/identifiers;
+- bounded text cache and page hot-loop policy;
+- no runtime TTS, speech recognition, AI provider or network-fetch backend;
+- Python source parsing.
+
 Authoring-tool contracts:
 
 ```text
 tests/test_encyclopedia_authoring_tools.py
 ```
 
-The latter covers the 378-row rendered invariant, duplicate ledger rows, OWNER_ACCEPTED-only packaging, ignored unreviewed clips, missing/corrupt OGG rejection, path traversal rejection and preservation of locale strings/unrelated audio mappings.
+They cover:
 
-**Neither final contract suite has been executed against the current frozen source in this construction pass.** Do not report them as passing.
+- exact 378-row rendered queue;
+- runtime semantic cue-set == synchronized ledger cue-set;
+- duplicate ledger rows;
+- OWNER_ACCEPTED-only packaging;
+- ignored unreviewed clips;
+- missing/corrupt OGG rejection;
+- staging path traversal rejection;
+- canonical locale-audio object output;
+- preservation of locale strings and unrelated audio mappings.
+
+**Neither final contract suite has been executed against this reviewed source in the current GitHub-only construction/review environment.** Do not report them as passing.
 
 ## Consolidated acceptance authority
 
-The exact deferred closure procedure is now:
+The exact deferred closure procedure is:
 
 ```text
 docs/testing/GREIA_ENCYCLOPEDIA_V01_CONSOLIDATED_ACCEPTANCE.md
@@ -193,7 +258,7 @@ It is intentionally fail-closed and tells the local agent to:
 10. spot-check responsive layouts;
 11. return exact evidence without repairing source inside the acceptance run.
 
-This Simulator pass can and should now evaluate the frozen visual/input source even if narration production is incomplete. Missing reviewed narration is reported as **audio acceptance pending**, not hidden and not replaced with runtime synthesis. Any later accepted-audio integration changes runtime resources and therefore requires a fresh focused launch/survival/interaction gate on that later exact state.
+This Simulator pass can evaluate the frozen visual/input source even if narration production is incomplete. Missing reviewed narration is **audio acceptance pending**, never an invitation to add runtime synthesis. Any later accepted-audio integration changes runtime resources and therefore requires a fresh focused launch/survival/interaction gate on that later exact state.
 
 ## Current exact evidence
 
@@ -201,12 +266,13 @@ This Simulator pass can and should now evaluate the frozen visual/input source e
 SOURCE-REVIEWED / TESTS-UNEXECUTED / SIMULATOR-UNVERIFIED
 ```
 
-No consolidated Simulator pass, rendered visual acceptance, or physical Acer/Pi acceptance has run yet. The complete 378-row queue has not yet been written into the checked-in Markdown ledger.
+No consolidated Simulator pass, rendered visual acceptance, or physical Acer/Pi acceptance has run against this reviewed final source. The complete 378-row queue has not yet been written into the checked-in Markdown ledger.
 
 ## Next exact work
 
 1. Execute `docs/testing/GREIA_ENCYCLOPEDIA_V01_CONSOLIDATED_ACCEPTANCE.md` on an owner-controlled local checkout without source repair during the run.
-2. Return the exact first failure if any; otherwise return the complete test/Simulator/no-reading evidence and the deterministic voice-ledger/runtime-audio diff.
-3. Review evidence and fix only concrete UX/performance/content defects as a coherent tranche; rerun invalidated gates on the final repaired source.
-4. Let recording continue independently and integrate only `OWNER_ACCEPTED` clips.
-5. Do not broaden topic scope until the 43-page v0.1 base is accepted.
+2. The first stage must synchronize the old 176-row queue into the validated 378-row full-v0.1 ledger; stop on any legacy/canonical research mismatch rather than rewriting evidence.
+3. Return the exact first failure if any; otherwise return complete test/Simulator/no-reading evidence and the deterministic voice-ledger/runtime-audio diff.
+4. Review evidence and fix only concrete UX/performance/content defects as a coherent tranche; rerun invalidated gates on the final repaired source.
+5. Let recording continue independently and integrate only `OWNER_ACCEPTED` clips.
+6. Do not broaden topic scope until the 43-page v0.1 base is accepted.
