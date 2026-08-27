@@ -184,19 +184,102 @@ encyclopedia/research/space/saturn.md
 
 ---
 
-## 6. Pending future batches
+## 6. Requested batch E3-VOLCANO-01
+
+Research/provenance authority for this batch:
+
+```text
+encyclopedia/research/earth/volcano.md
+```
+
+| STATUS | CUE_ID | KIND | SPEAKER | VOICE_ID | LOCALE | EXACT_TEXT | FINAL_FILENAME | FINAL_PATH | RECORDER_NOTES |
+|---|---|---|---|---|---|---|---|---|---|
+| REQUESTED | `encyclopedia.earth.volcano.intro` | character_dialogue | Tito | `greia.tito.v1` | it | Dentro un vulcano può esserci roccia fusa chiamata magma. Tocca la camera magmatica e vediamo come può iniziare un'eruzione! | `intro-tito.ogg` | `encyclopedia/pages/earth/volcano/assets/audio/it/intro-tito.ogg` | |
+| REQUESTED | `encyclopedia.earth.volcano.intro` | character_dialogue | Tito | `greia.tito.v1` | en | Inside a volcano there can be melted rock called magma. Touch the magma chamber and let's see how an eruption can begin! | `intro-tito.ogg` | `encyclopedia/pages/earth/volcano/assets/audio/en/intro-tito.ogg` | |
+| REQUESTED | `encyclopedia.earth.volcano.magma` | character_dialogue | Tito | `greia.tito.v1` | it | Sotto la superficie si chiama magma. Quando esce sulla superficie, la roccia fusa si chiama lava. | `magma-tito.ogg` | `encyclopedia/pages/earth/volcano/assets/audio/it/magma-tito.ogg` | |
+| REQUESTED | `encyclopedia.earth.volcano.magma` | character_dialogue | Tito | `greia.tito.v1` | en | Below the surface it is called magma. When the melted rock comes out onto the surface, it is called lava. | `magma-tito.ogg` | `encyclopedia/pages/earth/volcano/assets/audio/en/magma-tito.ogg` | |
+| REQUESTED | `encyclopedia.earth.volcano.vent` | character_dialogue | Tito | `greia.tito.v1` | it | Il magma può risalire e raccogliersi sotto il vulcano, poi spingersi verso l'alto attraverso crepe e condotti. | `vent-tito.ogg` | `encyclopedia/pages/earth/volcano/assets/audio/it/vent-tito.ogg` | |
+| REQUESTED | `encyclopedia.earth.volcano.vent` | character_dialogue | Tito | `greia.tito.v1` | en | Magma can rise and collect beneath a volcano, then push upward through cracks and vents. | `vent-tito.ogg` | `encyclopedia/pages/earth/volcano/assets/audio/en/vent-tito.ogg` | |
+| REQUESTED | `encyclopedia.earth.volcano.style` | character_dialogue | Tito | `greia.tito.v1` | it | Se i gas riescono a uscire facilmente, la lava può scorrere. Se restano intrappolati in un magma molto denso, la pressione può aumentare e l'eruzione può essere esplosiva. | `style-tito.ogg` | `encyclopedia/pages/earth/volcano/assets/audio/it/style-tito.ogg` | |
+| REQUESTED | `encyclopedia.earth.volcano.style` | character_dialogue | Tito | `greia.tito.v1` | en | If gases can escape easily, lava may flow out. If gas stays trapped in very thick magma, pressure can build and the eruption can be explosive. | `style-tito.ogg` | `encyclopedia/pages/earth/volcano/assets/audio/en/style-tito.ogg` | |
+| REQUESTED | `encyclopedia.earth.volcano.ash` | character_dialogue | Tito | `greia.tito.v1` | it | In un'eruzione esplosiva il magma può rompersi in tanti frammenti. I pezzetti più piccoli formano la cenere vulcanica. | `ash-tito.ogg` | `encyclopedia/pages/earth/volcano/assets/audio/it/ash-tito.ogg` | |
+| REQUESTED | `encyclopedia.earth.volcano.ash` | character_dialogue | Tito | `greia.tito.v1` | en | In an explosive eruption, magma can break into many fragments. The tiniest pieces form volcanic ash. | `ash-tito.ogg` | `encyclopedia/pages/earth/volcano/assets/audio/en/ash-tito.ogg` | |
+
+---
+
+## 7. Requested batch E3-HEART-01
+
+Research/provenance authority for this batch:
+
+```text
+encyclopedia/research/body/heart.md
+```
+
+| STATUS | CUE_ID | KIND | SPEAKER | VOICE_ID | LOCALE | EXACT_TEXT | FINAL_FILENAME | FINAL_PATH | RECORDER_NOTES |
+|---|---|---|---|---|---|---|---|---|---|
+| REQUESTED | `encyclopedia.body.heart.intro` | character_dialogue | Lilli | `greia.lilli.v1` | it | Il cuore è un muscolo grande più o meno come il tuo pugno. Lavora senza sosta per spingere il sangue in tutto il corpo. | `intro-lilli.ogg` | `encyclopedia/pages/body/heart/assets/audio/it/intro-lilli.ogg` | |
+| REQUESTED | `encyclopedia.body.heart.intro` | character_dialogue | Lilli | `greia.lilli.v1` | en | Your heart is a muscle about the size of your fist. It keeps working to pump blood around your whole body. | `intro-lilli.ogg` | `encyclopedia/pages/body/heart/assets/audio/en/intro-lilli.ogg` | |
+| REQUESTED | `encyclopedia.body.heart.chambers` | character_dialogue | Lilli | `greia.lilli.v1` | it | Dentro il cuore ci sono quattro camere. Le due in alto ricevono il sangue e le due in basso lo spingono fuori dal cuore. | `chambers-lilli.ogg` | `encyclopedia/pages/body/heart/assets/audio/it/chambers-lilli.ogg` | |
+| REQUESTED | `encyclopedia.body.heart.chambers` | character_dialogue | Lilli | `greia.lilli.v1` | en | Inside the heart there are four chambers. The two on top receive blood, and the two below pump it out of the heart. | `chambers-lilli.ogg` | `encyclopedia/pages/body/heart/assets/audio/en/chambers-lilli.ogg` | |
+| REQUESTED | `encyclopedia.body.heart.circulation` | character_dialogue | Lilli | `greia.lilli.v1` | it | Una parte del cuore manda il sangue ai polmoni per prendere ossigeno. Poi l'altra parte lo spinge verso tutto il corpo. | `circulation-lilli.ogg` | `encyclopedia/pages/body/heart/assets/audio/it/circulation-lilli.ogg` | |
+| REQUESTED | `encyclopedia.body.heart.circulation` | character_dialogue | Lilli | `greia.lilli.v1` | en | One side of the heart sends blood to the lungs to pick up oxygen. Then the other side pumps it out to the rest of the body. | `circulation-lilli.ogg` | `encyclopedia/pages/body/heart/assets/audio/en/circulation-lilli.ogg` | |
+| REQUESTED | `encyclopedia.body.heart.beat` | character_dialogue | Lilli | `greia.lilli.v1` | it | Ogni battito è una contrazione che spinge il sangue. Le valvole si chiudono e aiutano a fare il famoso suono: lub-dub! | `beat-lilli.ogg` | `encyclopedia/pages/body/heart/assets/audio/it/beat-lilli.ogg` | |
+| REQUESTED | `encyclopedia.body.heart.beat` | character_dialogue | Lilli | `greia.lilli.v1` | en | Each heartbeat is a squeeze that pumps blood. Valves close and help make the familiar sound: lub-dub! | `beat-lilli.ogg` | `encyclopedia/pages/body/heart/assets/audio/en/beat-lilli.ogg` | |
+| REQUESTED | `encyclopedia.body.heart.exercise` | character_dialogue | Lilli | `greia.lilli.v1` | it | Quando corri o giochi con energia, il cuore batte più in fretta per portare più ossigeno ai muscoli. | `exercise-lilli.ogg` | `encyclopedia/pages/body/heart/assets/audio/it/exercise-lilli.ogg` | |
+| REQUESTED | `encyclopedia.body.heart.exercise` | character_dialogue | Lilli | `greia.lilli.v1` | en | When you run or play energetically, your heart beats faster to bring more oxygen to your muscles. | `exercise-lilli.ogg` | `encyclopedia/pages/body/heart/assets/audio/en/exercise-lilli.ogg` | |
+
+---
+
+## 8. Requested batch E3-GEARS-01
+
+Research/provenance authority for this batch:
+
+```text
+encyclopedia/research/machines/gears.md
+```
+
+| STATUS | CUE_ID | KIND | SPEAKER | VOICE_ID | LOCALE | EXACT_TEXT | FINAL_FILENAME | FINAL_PATH | RECORDER_NOTES |
+|---|---|---|---|---|---|---|---|---|---|
+| REQUESTED | `encyclopedia.machines.gears.intro` | dani_system_speech | Dani | `greia.dani.system-v1` | it | Ingranaggi pronti! I denti si incastrano e fanno passare il movimento da una ruota all'altra. Prova a farli girare! | `intro-dani.ogg` | `encyclopedia/pages/machines/gears/assets/audio/it/intro-dani.ogg` | |
+| REQUESTED | `encyclopedia.machines.gears.intro` | dani_system_speech | Dani | `greia.dani.system-v1` | en | Gears ready! Their teeth mesh together and pass motion from one wheel to the next. Try turning them! | `intro-dani.ogg` | `encyclopedia/pages/machines/gears/assets/audio/en/intro-dani.ogg` | |
+| REQUESTED | `encyclopedia.machines.gears.teeth` | dani_system_speech | Dani | `greia.dani.system-v1` | it | I denti di due ingranaggi si incontrano. Quando uno gira, spinge i denti dell'altro e lo fa girare. | `teeth-dani.ogg` | `encyclopedia/pages/machines/gears/assets/audio/it/teeth-dani.ogg` | |
+| REQUESTED | `encyclopedia.machines.gears.teeth` | dani_system_speech | Dani | `greia.dani.system-v1` | en | The teeth of two gears meet. When one turns, it pushes the teeth of the other and makes it turn. | `teeth-dani.ogg` | `encyclopedia/pages/machines/gears/assets/audio/en/teeth-dani.ogg` | |
+| REQUESTED | `encyclopedia.machines.gears.direction` | dani_system_speech | Dani | `greia.dani.system-v1` | it | Due ingranaggi che si toccano girano in direzioni opposte. Se il primo gira a destra, il vicino gira a sinistra. | `direction-dani.ogg` | `encyclopedia/pages/machines/gears/assets/audio/it/direction-dani.ogg` | |
+| REQUESTED | `encyclopedia.machines.gears.direction` | dani_system_speech | Dani | `greia.dani.system-v1` | en | Two gears that mesh turn in opposite directions. If the first turns one way, its neighbor turns the other way. | `direction-dani.ogg` | `encyclopedia/pages/machines/gears/assets/audio/en/direction-dani.ogg` | |
+| REQUESTED | `encyclopedia.machines.gears.ratio` | dani_system_speech | Dani | `greia.dani.system-v1` | it | Se un ingranaggio grande fa girare uno piccolo, quello piccolo gira più veloce. Se uno piccolo fa girare uno grande, quello grande gira più lentamente. | `ratio-dani.ogg` | `encyclopedia/pages/machines/gears/assets/audio/it/ratio-dani.ogg` | |
+| REQUESTED | `encyclopedia.machines.gears.ratio` | dani_system_speech | Dani | `greia.dani.system-v1` | en | When a large gear drives a small gear, the small one turns faster. When a small gear drives a large gear, the large one turns more slowly. | `ratio-dani.ogg` | `encyclopedia/pages/machines/gears/assets/audio/en/ratio-dani.ogg` | |
+| REQUESTED | `encyclopedia.machines.gears.rack` | dani_system_speech | Dani | `greia.dani.system-v1` | it | Un ingranaggio rotondo può anche spingere una barra con denti e trasformare un movimento che gira in un movimento diritto. | `rack-dani.ogg` | `encyclopedia/pages/machines/gears/assets/audio/it/rack-dani.ogg` | |
+| REQUESTED | `encyclopedia.machines.gears.rack` | dani_system_speech | Dani | `greia.dani.system-v1` | en | A round gear can also push a toothed rack and turn spinning motion into straight-line motion. | `rack-dani.ogg` | `encyclopedia/pages/machines/gears/assets/audio/en/rack-dani.ogg` | |
+
+---
+
+## 9. Requested batch E3-FOSSILS-01
+
+Research/provenance authority for this batch:
+
+```text
+encyclopedia/research/history/fossils.md
+```
+
+| STATUS | CUE_ID | KIND | SPEAKER | VOICE_ID | LOCALE | EXACT_TEXT | FINAL_FILENAME | FINAL_PATH | RECORDER_NOTES |
+|---|---|---|---|---|---|---|---|---|---|
+| REQUESTED | `encyclopedia.history.fossils.intro` | character_dialogue | Leo | `greia.leo.v1` | it | Sotto questi strati può nascondersi una traccia di vita antica. Usa il pennello e scopri che cosa è rimasto nel tempo! | `intro-leo.ogg` | `encyclopedia/pages/history/fossils/assets/audio/it/intro-leo.ogg` | |
+| REQUESTED | `encyclopedia.history.fossils.intro` | character_dialogue | Leo | `greia.leo.v1` | en | Under these layers there may be a clue from ancient life. Use the brush and discover what has lasted through time! | `intro-leo.ogg` | `encyclopedia/pages/history/fossils/assets/audio/en/intro-leo.ogg` | |
+| REQUESTED | `encyclopedia.history.fossils.definition` | character_dialogue | Leo | `greia.leo.v1` | it | Un fossile è una prova di vita del passato conservata nelle rocce, nei sedimenti o in un altro ambiente geologico. | `definition-leo.ogg` | `encyclopedia/pages/history/fossils/assets/audio/it/definition-leo.ogg` | |
+| REQUESTED | `encyclopedia.history.fossils.definition` | character_dialogue | Leo | `greia.leo.v1` | en | A fossil is evidence of past life preserved in rock, sediment, or another geologic setting. | `definition-leo.ogg` | `encyclopedia/pages/history/fossils/assets/audio/en/definition-leo.ogg` | |
+| REQUESTED | `encyclopedia.history.fossils.types` | character_dialogue | Leo | `greia.leo.v1` | it | Un osso, un dente o una conchiglia possono diventare fossili del corpo. Un'impronta o una tana possono diventare fossili di traccia. | `types-leo.ogg` | `encyclopedia/pages/history/fossils/assets/audio/it/types-leo.ogg` | |
+| REQUESTED | `encyclopedia.history.fossils.types` | character_dialogue | Leo | `greia.leo.v1` | en | A bone, tooth, or shell can become a body fossil. A footprint or burrow can become a trace fossil. | `types-leo.ogg` | `encyclopedia/pages/history/fossils/assets/audio/en/types-leo.ogg` | |
+| REQUESTED | `encyclopedia.history.fossils.burial` | character_dialogue | Leo | `greia.leo.v1` | it | Essere coperti rapidamente dai sedimenti aiuta a conservare i resti. Le parti dure, come ossa, denti e conchiglie, si conservano più facilmente. | `burial-leo.ogg` | `encyclopedia/pages/history/fossils/assets/audio/it/burial-leo.ogg` | |
+| REQUESTED | `encyclopedia.history.fossils.burial` | character_dialogue | Leo | `greia.leo.v1` | en | Being buried quickly by sediment helps preserve remains. Hard parts such as bones, teeth, and shells are more likely to survive. | `burial-leo.ogg` | `encyclopedia/pages/history/fossils/assets/audio/en/burial-leo.ogg` | |
+| REQUESTED | `encyclopedia.history.fossils.rare` | character_dialogue | Leo | `greia.leo.v1` | it | Diventare un fossile è raro. Per questo i fossili sono indizi preziosi, ma non raccontano ogni cosa vissuta nel passato. | `rare-leo.ogg` | `encyclopedia/pages/history/fossils/assets/audio/it/rare-leo.ogg` | |
+| REQUESTED | `encyclopedia.history.fossils.rare` | character_dialogue | Leo | `greia.leo.v1` | en | Becoming a fossil is rare. Fossils are precious clues, but they do not record every living thing from the past. | `rare-leo.ogg` | `encyclopedia/pages/history/fossils/assets/audio/en/rare-leo.ogg` | |
+| REQUESTED | `encyclopedia.history.fossils.clues` | character_dialogue | Leo | `greia.leo.v1` | it | Studiando fossili e rocce, gli scienziati possono capire meglio quali esseri vivevano tanto tempo fa e com'era il loro ambiente. | `clues-leo.ogg` | `encyclopedia/pages/history/fossils/assets/audio/it/clues-leo.ogg` | |
+| REQUESTED | `encyclopedia.history.fossils.clues` | character_dialogue | Leo | `greia.leo.v1` | en | By studying fossils and rocks, scientists can learn what lived long ago and what those ancient environments were like. | `clues-leo.ogg` | `encyclopedia/pages/history/fossils/assets/audio/en/clues-leo.ogg` | |
+
+---
+
+## 10. Pending future batches
 
 Do **not** record these yet.
 
-Future batches are appended only after page research and wording are ready:
-
-```text
-E2-SECTION-*     additional section-page interaction cues if needed
-E3-VOLCANO-*     earth.volcano
-E3-HEART-*       body.heart
-E3-GEARS-*       machines.gears
-E3-FOSSILS-*     history.fossils
-...
-```
-
-A future factual batch is not `REQUESTED` until its research provenance exists.
+Future batches are appended only after page research and wording are ready. No additional factual batch is `REQUESTED` until its research provenance exists.
