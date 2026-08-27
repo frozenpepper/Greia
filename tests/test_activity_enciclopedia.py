@@ -22,7 +22,7 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
         self.assertNotIn("network", raw["requirements"]["optional_capabilities"])
         self.assertEqual(raw["permissions"]["requested"], [])
 
-    def test_first_pass_runtime_registry_has_home_plus_six_sections(self) -> None:
+    def test_first_pass_runtime_registry_tracks_only_real_pages(self) -> None:
         source = (ACTIVITY / "enciclopedia_catalogue.py").read_text(encoding="utf-8")
         tree = ast.parse(source)
         value = next(
@@ -34,7 +34,16 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
         ids = tuple(item.value for item in value.elts if isinstance(item, ast.Constant))
         self.assertEqual(
             ids,
-            ("home", "animals", "space", "earth", "body", "machines", "history"),
+            (
+                "home",
+                "animals",
+                "animals.octopus",
+                "space",
+                "earth",
+                "body",
+                "machines",
+                "history",
+            ),
         )
 
     def test_locales_have_matching_child_facing_keys(self) -> None:
@@ -44,6 +53,15 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
         self.assertEqual(set(bundles[0]["strings"]), set(bundles[1]["strings"]))
         self.assertEqual(bundles[0]["audio"], {})
         self.assertEqual(bundles[1]["audio"], {})
+
+    def test_octopus_pilot_is_research_backed(self) -> None:
+        research = ROOT / "encyclopedia" / "research" / "animals" / "octopus.md"
+        text = research.read_text(encoding="utf-8")
+        self.assertIn("NOAA Fisheries", text)
+        self.assertIn("Smithsonian Ocean", text)
+        self.assertIn("Monterey Bay Aquarium", text)
+        self.assertIn("Eight arms, not tentacles", text)
+        self.assertIn("Three hearts", text)
 
     def test_no_runtime_tts_or_speech_recognition_backends(self) -> None:
         forbidden = ("speech_recognition", "pyttsx", "gtts", "whisper", "vosk")
