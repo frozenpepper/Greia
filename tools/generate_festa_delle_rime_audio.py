@@ -1,99 +1,47 @@
 #!/usr/bin/env python3
-"""Pedagogical speech audio generator for Festa delle Rime (Festival of Rhymes).
+"""Prepare Festa delle Rime speech through Greia VoiceEngine.
 
-Generates 22050Hz LEI16 mono WAV audio assets for:
-- Italian and English rhyme word pairs
-- Italian and English alliteration words
-- Non-word verbal prompts ("Ascolta la rima", "Listen to the rhyme", etc.)
+Rhyme/alliteration words are pronunciation-authoritative pedagogical speech. Generic
+instructions are Dani system speech. No Activity code chooses native voices, commands,
+conversion tools or silent fallbacks.
 """
 
 from __future__ import annotations
 
 import argparse
-import hashlib
+import json
 from pathlib import Path
 import subprocess
-import tempfile
-import time
-
+import sys
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_AUDIO_ROOT = PROJECT_ROOT / "activities" / "festa_delle_rime" / "assets" / "audio"
+VOICE_CLI = PROJECT_ROOT / "tools" / "greia_voice.py"
+DEFAULT_REVIEW_DIR = PROJECT_ROOT / "tmp" / "voice-review" / "festa_delle_rime"
 
 WORDS_IT = [
-    # Rhyme pairs
-    ("cane", "cane"),
-    ("pane", "pane"),
-    ("gatto", "gatto"),
-    ("piatto", "piatto"),
-    ("rana", "rana"),
-    ("lana", "lana"),
-    ("mela", "mela"),
-    ("vela", "vela"),
-    ("fiore", "fiore"),
-    ("cuore", "cuore"),
-    ("palla", "palla"),
-    ("farfalla", "farfalla"),
-    ("torta", "torta"),
-    ("porta", "porta"),
-    ("naso", "naso"),
-    ("vaso", "vaso"),
-    # Alliteration words
-    ("mare", "mare"),
-    ("mano", "mano"),
-    ("pera", "pera"),
-    ("luna", "luna"),
-    ("luce", "luce"),
-    ("fata", "fata"),
-    ("foglia", "foglia"),
-    ("topo", "topo"),
-    ("tenda", "tenda"),
-    ("sole", "sole"),
-    ("sasso", "sasso"),
-    ("sedia", "sedia"),
+    ("cane", "cane"), ("pane", "pane"), ("gatto", "gatto"), ("piatto", "piatto"),
+    ("rana", "rana"), ("lana", "lana"), ("mela", "mela"), ("vela", "vela"),
+    ("fiore", "fiore"), ("cuore", "cuore"), ("palla", "palla"), ("farfalla", "farfalla"),
+    ("torta", "torta"), ("porta", "porta"), ("naso", "naso"), ("vaso", "vaso"),
+    ("mare", "mare"), ("mano", "mano"), ("pera", "pera"), ("luna", "luna"),
+    ("luce", "luce"), ("fata", "fata"), ("foglia", "foglia"), ("topo", "topo"),
+    ("tenda", "tenda"), ("sole", "sole"), ("sasso", "sasso"), ("sedia", "sedia"),
 ]
-
 PROMPTS_IT = [
     ("prompt_rhyme", "ascolta la parola e trova la rima"),
     ("prompt_odd", "trova la parola che non fa rima"),
     ("prompt_sound", "trova la parola con lo stesso suono iniziale"),
 ]
-
 WORDS_EN = [
-    # Rhyme pairs
-    ("cat", "cat"),
-    ("hat", "hat"),
-    ("moon", "moon"),
-    ("spoon", "spoon"),
-    ("cake", "cake"),
-    ("snake", "snake"),
-    ("log", "log"),
-    ("frog", "frog"),
-    ("bear", "bear"),
-    ("chair", "chair"),
-    ("boat", "boat"),
-    ("goat", "goat"),
-    ("star", "star"),
-    ("car", "car"),
-    ("mouse", "mouse"),
-    ("house", "house"),
-    # Alliteration words
-    ("map", "map"),
-    ("pig", "pig"),
-    ("pan", "pan"),
-    ("pear", "pear"),
-    ("leaf", "leaf"),
-    ("lamp", "lamp"),
-    ("fish", "fish"),
-    ("fan", "fan"),
-    ("fox", "fox"),
-    ("top", "top"),
-    ("tent", "tent"),
-    ("turtle", "turtle"),
-    ("sun", "sun"),
-    ("sock", "sock"),
+    ("cat", "cat"), ("hat", "hat"), ("moon", "moon"), ("spoon", "spoon"),
+    ("cake", "cake"), ("snake", "snake"), ("log", "log"), ("frog", "frog"),
+    ("bear", "bear"), ("chair", "chair"), ("boat", "boat"), ("goat", "goat"),
+    ("star", "star"), ("car", "car"), ("mouse", "mouse"), ("house", "house"),
+    ("map", "map"), ("pig", "pig"), ("pan", "pan"), ("pear", "pear"),
+    ("leaf", "leaf"), ("lamp", "lamp"), ("fish", "fish"), ("fan", "fan"),
+    ("fox", "fox"), ("top", "top"), ("tent", "tent"), ("turtle", "turtle"),
+    ("sun", "sun"), ("sock", "sock"),
 ]
-
 PROMPTS_EN = [
     ("prompt_rhyme", "listen to the word and find the rhyme"),
     ("prompt_odd", "find the word that does not rhyme"),
@@ -101,94 +49,64 @@ PROMPTS_EN = [
 ]
 
 
-def make_wav(text: str, voice: str, rate: int, dest_wav: Path) -> None:
-    lower_text = text.lower()
-    dest_wav.parent.mkdir(parents=True, exist_ok=True)
-    for attempt in range(3):
-        with tempfile.NamedTemporaryFile(suffix=".aiff", delete=False) as tmp_file:
-            tmp_aiff = Path(tmp_file.name)
-        try:
-            subprocess.run(
-                ["say", "-v", voice, "-r", str(rate), lower_text, "-o", str(tmp_aiff)],
-                check=True,
-                capture_output=True,
-            )
-            subprocess.run(
-                ["afconvert", "-f", "WAVE", "-d", "LEI16@22050", "-c", "1", str(tmp_aiff), str(dest_wav)],
-                check=True,
-                capture_output=True,
-            )
-            break
-        except Exception:
-            if attempt == 2:
-                # If host lacks say/afconvert, write a silent WAV stub for offline CI/Linux environments
-                _write_wav_stub(dest_wav)
-            time.sleep(0.1)
-        finally:
-            if tmp_aiff.exists():
-                tmp_aiff.unlink()
-
-
-def _write_wav_stub(dest_wav: Path) -> None:
-    """Create a minimal valid 22050Hz LEI16 mono WAV stub."""
-    import wave
-    dest_wav.parent.mkdir(parents=True, exist_ok=True)
-    with wave.open(str(dest_wav), "wb") as w:
-        w.setnchannels(1)
-        w.setsampwidth(2)
-        w.setframerate(22050)
-        w.writeframes(b"\x00\x00" * 2205)  # 0.1s of silence
-
-
-def generate_locale(locale: str, out_dir: Path) -> dict[str, str]:
-    manifest: dict[str, str] = {}
-    if locale == "it":
-        voice = "Alice"
-        rate = 175
-        words = WORDS_IT
-        prompts = PROMPTS_IT
-    else:
-        voice = "Samantha"
-        rate = 180
-        words = WORDS_EN
-        prompts = PROMPTS_EN
-
-    target_dir = out_dir / locale
-    target_dir.mkdir(parents=True, exist_ok=True)
-
-    for word_id, word_text in words:
-        p = target_dir / f"{word_id}.wav"
-        make_wav(word_text, voice, rate, p)
-        manifest[f"{locale}/{word_id}.wav"] = hashlib.sha256(p.read_bytes()).hexdigest()
-
-    for prompt_id, prompt_text in prompts:
-        p = target_dir / f"{prompt_id}.wav"
-        make_wav(prompt_text, voice, rate, p)
-        manifest[f"{locale}/{prompt_id}.wav"] = hashlib.sha256(p.read_bytes()).hexdigest()
-
-    return manifest
+def _output_path(review_dir: Path, locale: str, key: str) -> str:
+    output = review_dir / locale / f"{key}.wav"
+    try:
+        return str(output.resolve().relative_to(PROJECT_ROOT))
+    except ValueError:
+        return str(output.resolve())
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Generate Festa delle Rime audio clips")
-    parser.add_argument("--locale", choices=["it", "en", "all"], default="all")
-    parser.add_argument("--output-dir", type=Path, default=DEFAULT_AUDIO_ROOT)
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--review-dir", type=Path, default=DEFAULT_REVIEW_DIR)
     args = parser.parse_args()
+    review_dir = args.review_dir.resolve()
+    review_dir.mkdir(parents=True, exist_ok=True)
 
-    locales = ["it", "en"] if args.locale == "all" else [args.locale]
-    full_manifest: dict[str, str] = {}
-    for loc in locales:
-        m = generate_locale(loc, args.output_dir)
-        full_manifest.update(m)
+    requests: list[dict[str, object]] = []
+    for locale, words, prompts in (
+        ("it", WORDS_IT, PROMPTS_IT),
+        ("en", WORDS_EN, PROMPTS_EN),
+    ):
+        for cue_id, text in words:
+            requests.append(
+                {
+                    "speaker": "pedagogical",
+                    "kind": "pedagogical_speech",
+                    "locale": locale,
+                    "text": text,
+                    "cue_id": f"festa_delle_rime.{cue_id}",
+                    "output": _output_path(review_dir, locale, cue_id),
+                    "verification": "off",
+                    "max_attempts": 1,
+                }
+            )
+        for cue_id, text in prompts:
+            requests.append(
+                {
+                    "speaker": "dani",
+                    "kind": "dani_system_speech",
+                    "locale": locale,
+                    "text": text,
+                    "cue_id": f"festa_delle_rime.{cue_id}",
+                    "output": _output_path(review_dir, locale, cue_id),
+                    "verification": "off",
+                    "max_attempts": 1,
+                }
+            )
 
-    manifest_path = args.output_dir / "audio_manifest.sha256"
-    manifest_path.parent.mkdir(parents=True, exist_ok=True)
-    with manifest_path.open("w", encoding="utf-8") as f:
-        for filename in sorted(full_manifest.keys()):
-            f.write(f"{full_manifest[filename]}  {filename}\n")
-
-    print(f"Generated {len(full_manifest)} audio clips in {args.output_dir}")
-    return 0
+    batch_path = review_dir / "voice_requests.jsonl"
+    batch_path.write_text(
+        "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in requests), encoding="utf-8"
+    )
+    result = subprocess.run(
+        [sys.executable, str(VOICE_CLI), "batch", "--input", str(batch_path)], cwd=PROJECT_ROOT
+    )
+    if result.returncode == 0:
+        print(f"Generated {len(requests)} review candidates under {review_dir}")
+        print("Human listening review is required before Activity integration.")
+    return result.returncode
 
 
 if __name__ == "__main__":
