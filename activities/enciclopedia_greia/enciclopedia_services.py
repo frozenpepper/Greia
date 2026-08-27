@@ -8,6 +8,7 @@ from dataclasses import dataclass
 import pygame
 
 from greia_platform.activity_api import get_shared_visual_path
+from greia_platform.typography import FontRole, GreiaTypography
 
 
 @dataclass(frozen=True, slots=True)
@@ -27,6 +28,47 @@ class EncyclopediaPalette:
             accent=tuple(getattr(theme, "accent", (255, 194, 52))),
             text=tuple(getattr(theme, "text", (61, 44, 31))),
         )
+
+
+class CachedEncyclopediaTypography(GreiaTypography):
+    """Greia typography with a hard-bounded cache for repeated static lines.
+
+    Encyclopedia pages redraw at 30 fps, while most titles and captions change
+    only after a child action. GreiaTypography already caches font objects but
+    deliberately does not cache ordinary rendered text surfaces, so this
+    Activity-owned subtype removes repeated rasterization without changing the
+    platform typography contract or letting pages own ad-hoc caches.
+    """
+
+    MAX_TEXT_SURFACES = 160
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._text_surfaces: OrderedDict[
+            tuple[str, FontRole, int, tuple[int, ...]], pygame.Surface
+        ] = OrderedDict()
+
+    def render(
+        self,
+        text: str,
+        role: FontRole,
+        size: int,
+        color: tuple[int, int, int] | tuple[int, int, int, int],
+    ) -> pygame.Surface:
+        key = (text, role, int(size), tuple(int(channel) for channel in color))
+        cached = self._text_surfaces.pop(key, None)
+        if cached is not None:
+            self._text_surfaces[key] = cached
+            return cached
+        surface = super().render(text, role, size, color)
+        self._text_surfaces[key] = surface
+        while len(self._text_surfaces) > self.MAX_TEXT_SURFACES:
+            self._text_surfaces.popitem(last=False)
+        return surface
+
+    def clear(self) -> None:
+        self._text_surfaces.clear()
+        super().clear()
 
 
 class VisualLibrary:
