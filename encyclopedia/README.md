@@ -14,15 +14,16 @@ This directory is the long-lived authoring source of truth for the Greia Encyclo
 2. repository-root `README.md`;
 3. `skills/greia-activity-authoring/SKILL.md` and its required companions;
 4. `skills/greia-visual-authoring/SKILL.md` when creating/integrating visual assets;
-5. `docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md`;
-6. `docs/adr/0028-platform-and-activity-localization-language-context.md`;
-7. `docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md`;
-8. `PLAN.md`;
-9. `PROGRESS.md`;
-10. `VOICE_RECORDING_REQUESTS.md`;
-11. `HANDOVER.md`;
-12. `docs/testing/GREIA_ENCYCLOPEDIA_V01_CONSOLIDATED_ACCEPTANCE.md` when executing the frozen-v0.1 closure gate;
-13. runtime `activities/enciclopedia_greia/` source relevant to the current task.
+5. **`skills/greia-voice-production/SKILL.md` and `tools/greia_voice_core/README.md` whenever producing narration**;
+6. `docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md`;
+7. `docs/adr/0028-platform-and-activity-localization-language-context.md`;
+8. `docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md`;
+9. `PLAN.md`;
+10. `PROGRESS.md`;
+11. `VOICE_RECORDING_REQUESTS.md`;
+12. `HANDOVER.md`;
+13. `docs/testing/GREIA_ENCYCLOPEDIA_V01_CONSOLIDATED_ACCEPTANCE.md` when executing the frozen-v0.1 closure gate;
+14. runtime `activities/enciclopedia_greia/` source relevant to the current task.
 
 The repository's platform authorities remain authoritative. The encyclopedia is one normal first-party Activity and may not bypass Greia lifecycle, protected chrome/Home, semantic input, localization, profile, package or runtime-policy ownership.
 
@@ -66,10 +67,10 @@ encyclopedia/
     PLAN.md                       # product/architecture/content authority
     PROGRESS.md                   # append-only implementation ledger
     HANDOVER.md                   # exact continuation state
-    VOICE_RECORDING_REQUESTS.md   # single human/agent recording queue
+    VOICE_RECORDING_REQUESTS.md   # request/review/status authority
     voice_ledger.py               # shared deterministic ledger grammar
     sync_voice_requests.py        # research -> recording queue
-    export_voice_batch.py         # REQUESTED ledger rows -> Greia Voice Engine JSONL
+    export_voice_batch.py         # REQUESTED ledger rows -> VoiceEngine JSONL
     integrate_voice_assets.py     # OWNER_ACCEPTED -> runtime assets/maps
     research/                     # one factual authority per final entry
     pages/catalogue.py            # complete planned 43-page v0.1 inventory
@@ -117,11 +118,33 @@ The source review deliberately preserves two historical research-document genera
 
 `sync_voice_requests.py` understands both forms. Legacy topics are retained only when their already-established queue cue IDs, presenter, voice ID and bilingual wording exactly match their research authority. New/canonical topics are generated directly from semantic cue blocks. A mismatch fails closed rather than silently changing a recorded request.
 
-## Voice-production pipeline
+# Voice-production pipeline
 
-`VOICE_RECORDING_REQUESTS.md` remains the **single human/agent coordination queue**. The recorder may change only `STATUS` and `RECORDER_NOTES` and add the requested staging audio files.
+The Encyclopedia uses the **repository-wide Greia Voice Production Engine** for all new narration generation. It does not maintain a second Chatterbox/native-TTS/Whisper implementation.
 
-### 1. Synchronize research into the queue
+```text
+VOICE_RECORDING_REQUESTS.md
+        -> export_voice_batch.py
+        -> tools/greia_voice.py batch
+        -> staging audio + engine receipts
+        -> human review/status update
+        -> OWNER_ACCEPTED
+        -> integrate_voice_assets.py
+        -> runtime Activity assets
+```
+
+The ledger remains authority for exact text, semantic cue, speaker, target path and review status. The Voice Engine owns provider mechanics.
+
+If historical prose in `VOICE_RECORDING_REQUESTS.md` describes direct Chatterbox/native provider mechanics, that mechanical guidance is superseded by:
+
+```text
+skills/greia-voice-production/SKILL.md
+tools/greia_voice_core/README.md
+```
+
+Do **not** bypass the engine. Preserve the queue's semantic rows and status ownership.
+
+## 1. Synchronize research into the queue
 
 Run:
 
@@ -137,26 +160,35 @@ Expected full-v0.1 invariant:
 378 total bilingual recording rows, including 14 manual Home/section navigation rows
 ```
 
-The synchronizer reads exact approved narration from `encyclopedia/research/**`, preserves recorder-owned status/notes, rejects duplicate identities, validates the canonical presenter/voice pairing and refuses immutable drift on locked rows.
+The synchronizer reads exact approved narration from `encyclopedia/research/**`, preserves recorder-owned status/notes, rejects duplicate identities, validates canonical presenter/voice pairing and refuses immutable drift on locked rows.
 
-At the current repository checkpoint `VOICE_RECORDING_REQUESTS.md` is still the old 176-row checkpoint. The first local closure action is therefore to run the synchronizer and prove the 378-row result before the recording queue is called complete.
+At the current repository checkpoint `VOICE_RECORDING_REQUESTS.md` is still the old 176-row checkpoint. The first local closure action is therefore to run the synchronizer and prove the 378-row result before the queue is called complete.
 
-### 2. Translate REQUESTED rows into the shared Voice Production Engine contract
+## 2. Probe the canonical production environment
 
-The encyclopedia no longer needs a second hand-authored JSON/request list when the repository-wide Voice Production Engine is used. The deterministic adapter is:
+Before synthesis:
+
+```bash
+python3 tools/greia_voice.py doctor
+```
+
+If a required provider is unavailable, follow:
+
+```text
+tools/greia_voice_core/README.md
+docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md
+```
+
+Do not replace an unavailable canonical route with direct ad-hoc TTS/model commands.
+
+## 3. Export REQUESTED rows to VoiceEngine
 
 ```bash
 python3 encyclopedia/export_voice_batch.py \
   --output ./tmp/encyclopedia-requested-voices.jsonl
 ```
 
-It does **not** synthesize speech. It only converts `REQUESTED` ledger rows into the stable semantic request contract consumed by:
-
-```bash
-python3 tools/greia_voice.py batch --input ./tmp/encyclopedia-requested-voices.jsonl
-```
-
-The exporter preserves, without reinterpretation:
+The exporter does **not** synthesize speech. It only converts eligible ledger rows into the stable semantic request contract:
 
 ```text
 speaker
@@ -167,36 +199,70 @@ semantic cue ID
 staging output path
 ```
 
-and derives only the Voice Engine's provider-independent verification/default-attempt fields.
-
 Safety rules:
 
-- only the selected ledger status is exported; default is `REQUESTED`;
+- only selected ledger statuses are exported; default is `REQUESTED`;
 - staging paths must remain inside `encyclopedia/pages/**/assets/audio/<locale>/`;
 - filename/locale/path mismatches fail closed;
-- unsupported speech kinds/speakers fail before any provider is invoked;
-- by default a `REQUESTED` row whose staging OGG already exists fails closed rather than overwriting a take that may simply be missing a status update;
-- the adapter never edits `VOICE_RECORDING_REQUESTS.md` and never marks a clip reviewed or accepted.
+- unsupported kinds/speakers fail before a provider is invoked;
+- by default a requested row whose staging OGG already exists fails closed instead of overwriting a possibly unrecorded status update;
+- the exporter never edits `VOICE_RECORDING_REQUESTS.md` and never marks a clip accepted.
 
-The Voice Production Engine itself is still subject to its separate owner-controlled local provider acceptance. Until that subsystem is accepted, the pre-existing proven recording workflow remains valid. Once accepted, this adapter is the preferred encyclopedia input seam rather than duplicating Chatterbox/native/Whisper rules in encyclopedia tooling.
+## 4. Generate through the shared engine
 
-### 3. Recorder staging and review
+Run the exported queue as one warm, single-worker batch:
 
-The recording agent processes only `REQUESTED` rows using the currently accepted voice-production authority. A technically valid generated clip becomes `RECORDED_UNREVIEWED`. Only the owner/human listening gate changes it to `OWNER_ACCEPTED`.
+```bash
+python3 tools/greia_voice.py batch \
+  --input ./tmp/encyclopedia-requested-voices.jsonl
+```
 
-The queue column named `FINAL_PATH` is the recorder's **final staging destination**, not the shipped Activity location. These staging paths live under:
+The engine automatically owns:
+
+```text
+canonical reference/hash validation
+Chatterbox vs deterministic system routing
+Dani routing
+model loading/reuse
+single-worker locking
+MLX cache cleanup
+short-output rules
+optional Whisper verification
+WAV/OGG packaging
+machine receipts
+```
+
+No Encyclopedia-specific authoring script should duplicate those mechanics.
+
+Every generated clip is still **unreviewed** even when the engine returns `REVIEW_REQUIRED` and Whisper reports a plausible transcript.
+
+## 5. Recorder staging and human review
+
+The recording agent processes only `REQUESTED` rows.
+
+After a technically viable generated take has been listened to and is ready for owner review, set:
+
+```text
+RECORDED_UNREVIEWED
+```
+
+Only the owner/human listening gate sets:
+
+```text
+OWNER_ACCEPTED
+```
+
+The queue column `FINAL_PATH` is the recorder's staging destination, not the shipped Activity location. Staging lives under:
 
 ```text
 encyclopedia/pages/**/assets/audio/
 ```
 
-and are intentionally git-ignored. This avoids committing hundreds of unreviewed or rejected takes and avoids storing the same accepted audio twice in source control.
+and is intentionally git-ignored. This avoids committing hundreds of unreviewed/rejected takes and storing accepted audio twice.
 
 Do not edit immutable cue/text/voice/path fields to repair a recorded request. Create a revised cue/filename and supersede the old row instead.
 
-### 4. Package only OWNER_ACCEPTED audio
-
-Once one or more clips are owner-accepted:
+## 6. Package only OWNER_ACCEPTED audio
 
 ```bash
 python3 encyclopedia/integrate_voice_assets.py
@@ -206,47 +272,36 @@ python3 encyclopedia/integrate_voice_assets.py --check
 The integrator:
 
 - ignores `RECORDED_UNREVIEWED` and every non-accepted status;
-- validates the requested staging path, locale and filename;
-- requires an OGG container;
-- preflights the complete accepted set before any mutation;
+- validates staging path, locale and filename;
+- requires OGG;
+- preflights the complete accepted set before mutation;
 - atomically packages accepted files under `activities/enciclopedia_greia/assets/audio/<locale>/<page-path>/...`;
-- writes Greia's canonical locale-audio schema (`"cue": {"path": "assets/..."}`), never a bare path string;
-- updates locale `audio` mappings only after their target files exist;
-- preserves locale strings, metadata and unrelated non-ledger audio entries;
-- never generates speech and never adds a runtime dependency;
-- deliberately does not delete unreferenced files from the runtime audio tree.
+- writes Greia's canonical locale-audio schema (`"cue": {"path": "assets/..."}`);
+- updates locale audio mappings only after targets exist;
+- preserves locale strings/metadata/unrelated audio entries;
+- never generates speech and never adds a runtime dependency.
 
-The accepted runtime copy is the file that may be committed and shipped. This makes gradual independent recording safe while keeping the runtime package deterministic.
+The accepted runtime copy is the file that may be committed and shipped.
 
 ## Provider-free authoring/source contracts
 
-`tests/test_encyclopedia_authoring_tools.py` covers the deterministic authoring seams without invoking any model/provider:
+`tests/test_encyclopedia_authoring_tools.py` covers deterministic authoring seams without invoking a provider:
 
 - rendered v0.1 queue must contain exactly 378 rows;
-- runtime semantic narration cue IDs must equal the synchronized ledger cue set;
-- every synchronized `REQUESTED` row must translate into a valid semantic Voice Engine batch request;
-- Voice Engine export is status-filtered and refuses existing requested outputs/path traversal by default;
+- runtime semantic narration cue IDs must equal synchronized ledger cues;
+- every synchronized `REQUESTED` row must translate to a valid Voice Engine request;
+- export is status-filtered and refuses existing requested outputs/path traversal by default;
 - duplicate cue/locale rows are rejected;
 - only `OWNER_ACCEPTED` rows are packaged;
 - `RECORDED_UNREVIEWED` rows stay unreferenced;
-- missing or non-OGG accepted sources fail closed;
-- staging path traversal is rejected;
-- existing locale strings and unrelated audio mappings survive integration.
+- missing/non-OGG accepted sources fail closed;
+- existing locale strings/unrelated audio mappings survive integration.
 
-`tests/test_activity_enciclopedia.py` separately guards:
-
-- runtime catalogue equality with the 43-page authoring catalogue;
-- exactly one research authority for every factual runtime entry, discovered from the research tree rather than copied into a third topic list;
-- both accepted historical research-document formats;
-- high-risk factual misconception guardrails;
-- canonical Greia locale-audio object shape;
-- section navigation maps, subject-neutral engine boundaries and bounded hot-loop/resource rules.
+`tests/test_activity_enciclopedia.py` separately guards catalogue/research parity, accepted research formats, misconception guardrails, locale-audio schema, page navigation/engine boundaries and bounded resource behavior.
 
 These contracts are authored but have **not** yet executed against the current reviewed source. Do not turn source inspection into a PASS claim.
 
 ## Current first-pass testing rule
-
-At owner direction, the initial construction pass was source-first. Do not retrospectively claim Simulator evidence for pages that were intentionally built without page-by-page launches.
 
 The current truthful evidence label is:
 
@@ -254,10 +309,10 @@ The current truthful evidence label is:
 SOURCE-REVIEWED / TESTS-UNEXECUTED / SIMULATOR-UNVERIFIED
 ```
 
-The next acceptance stage is the exact fail-closed procedure in:
+The next acceptance stage is:
 
 ```text
 docs/testing/GREIA_ENCYCLOPEDIA_V01_CONSOLIDATED_ACCEPTANCE.md
 ```
 
-It synchronizes the 378-row queue, runs focused + repository source gates, packages only already-`OWNER_ACCEPTED` narration, then performs the deferred full 1024x600 reachability/signature-interaction pass plus input-parity, no-reading and responsive Simulator review. Targeted fixes follow from concrete evidence; new topic breadth remains frozen.
+It synchronizes the queue, runs focused + repository source gates, packages only already-`OWNER_ACCEPTED` narration, then performs the deferred full Simulator traversal/input/no-reading/responsive review. Targeted fixes follow concrete evidence; new topic breadth remains frozen.
