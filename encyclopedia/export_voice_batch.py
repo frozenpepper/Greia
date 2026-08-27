@@ -13,7 +13,10 @@ import json
 from pathlib import Path, PurePosixPath
 import sys
 
-from encyclopedia.voice_ledger import VoiceLedgerRow, parse_ledger_rows
+try:
+    from .voice_ledger import VoiceLedgerRow, parse_ledger_rows
+except ImportError:  # Direct script execution from the repository checkout.
+    from voice_ledger import VoiceLedgerRow, parse_ledger_rows
 
 
 ROOT = Path(__file__).resolve().parents[1]
