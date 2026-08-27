@@ -309,3 +309,160 @@ SOURCE-VERIFIED / SIMULATOR-UNVERIFIED
 ```
 
 Next breadth family after documentation/audio synchronization: **Earth & Nature** (`earth.rain`, `earth.tree`, `earth.rainbow`, `earth.rocks` alongside the already implemented `earth.volcano`).
+
+---
+
+## 2026-08-27 — correction: Earth & Nature scope and E7 completion
+
+The preceding Space-era note incorrectly listed `earth.rocks`. The authoritative `PLAN.md` scope was re-read before implementation and the mistake was not allowed into runtime scope. Earth & Nature v0.1 is:
+
+```text
+earth.volcano
+earth.rain
+earth.ocean
+earth.tree
+earth.rainbow
+```
+
+The section is now source-complete and all five visible destinations map to real pages. Runtime inventory reached 31 pages.
+
+Quality/architecture outcomes:
+
+- `WaterCycleModel` owns bounded rain-process state without forcing a false one-way water-cycle conveyor;
+- Ocean uses a finite depth-zone model rather than a generic scrolling/camera framework;
+- Tree keeps simple page-owned state and explicitly compares deciduous/evergreen behavior without implying every tree follows one seasonal costume;
+- Rainbow interaction makes Sun/viewer/droplet geometry causal and shows the complete circular geometry truthfully;
+- the old Earth `ACTIVATE -> Volcano` special case was removed in favor of one semantic destination set;
+- no Earth/Nature-specific behavior entered the encyclopedia engine.
+
+Research guardrails include clouds as droplets/ice rather than bags of vapor, named oceans as connected regions of one global ocean, variable tree root/season behavior, and rainbows as observer-dependent optical phenomena rather than physical arches.
+
+---
+
+## 2026-08-27 — E8 My Body source breadth complete
+
+Implemented and registered the remaining Body entries:
+
+```text
+body.lungs
+body.bones
+body.teeth
+body.senses
+```
+
+Together with `body.heart`, the section is source-complete and the runtime inventory reached 35 pages. The Body section now has one five-target semantic/pointer map rather than the earlier `ACTIVATE -> Heart` shortcut.
+
+OOP remained selective:
+
+- `BreathingModel` owns coupled inhale/exhale/exercise timing;
+- Bones, Teeth and Senses remain flatter page-owned state because they do not need ornamental model layers.
+
+Important medical/educational guardrails include lungs not inflating themselves like balloons, children not being taught the adult 206-bone count as universal, eruption/tooth counts varying with age, no tongue taste-map myth, inclusive sensory language, and no painful/loud/flash-based demonstrations.
+
+The encyclopedia source-contract test was also refactored here so research coverage is structural/scalable rather than a growing wall of hand-copied factual phrases; high-risk misconceptions retain explicit guard assertions.
+
+---
+
+## 2026-08-27 — E9 Science & Machines source breadth complete
+
+Implemented and registered:
+
+```text
+machines.magnet
+machines.bicycle
+machines.airplane
+machines.bridge
+```
+
+Together with `machines.gears`, the workshop is source-complete and runtime inventory reached 39 pages. The section now exposes five real 86x86 visual/semantic stations instead of `ACTIVATE -> Gears`.
+
+Architecture outcomes:
+
+- no generic `MachinePage` hierarchy was introduced;
+- `DrivetrainModel` owns coupled bicycle crank/ratio/rear-wheel state;
+- `BridgeLoadModel` owns finite bridge form/load/path state;
+- Magnet and Airplane remain page-owned state;
+- Magnet's first visual implementation was corrected because its facing-pole colors contradicted its attraction/repulsion state.
+
+Scientific guardrails include magnets not attracting all metals, gear ratios trading force/motion rather than creating energy, NASA's explicit rejection of the false equal-transit-time lift story, and bridge load paths/force diagrams being schematic rather than universal structural claims.
+
+---
+
+## 2026-08-27 — E10 Long Ago and 43/43 v0.1 source breadth complete
+
+Implemented and registered:
+
+```text
+history.dinosaurs
+history.mammoth
+history.cave_paintings
+history.pyramids
+```
+
+Together with `history.fossils`, Long Ago is source-complete. The timeline's Fossils-only navigation special case was removed; all five moments are now real destinations.
+
+The runtime registry now matches the original v0.1 scope exactly:
+
+```text
+1 Home
+6 section pages
+36 factual final entries
+-----------------------
+43 executable pages
+```
+
+Every factual entry has an authoring research authority with sources, accepted claims, scope guardrails, interaction-to-fact mapping and approved Italian/English narration.
+
+History guardrails preserve that birds are living dinosaurs, non-avian dinosaurs and humans did not coexist, mammoths are elephant relatives rather than dinosaurs, cave-art meanings are often uncertain, and Egyptian pyramids are human engineering by organized workforces rather than alien construction or a simplistic one-line slave myth.
+
+A source review removed dead Cave Paintings drafting residue and encapsulated Pyramid reveal transitions behind `PyramidBuildModel` methods rather than letting the page mutate model timers directly.
+
+At this point new v0.1 topic breadth is frozen. Further work should be closure, audio production/integration, consolidated testing and targeted fixes unless the owner deliberately changes scope.
+
+---
+
+## 2026-08-27 — voice coordination and accepted-audio integration tooling
+
+The original manually maintained factual queue became large enough that continued hand transcription was itself a drift risk. Two authoring-time tools now own the deterministic coordination seams:
+
+```text
+encyclopedia/sync_voice_requests.py
+encyclopedia/integrate_voice_assets.py
+```
+
+A shared `encyclopedia/voice_ledger.py` owns the Markdown row grammar and duplicate detection.
+
+`sync_voice_requests.py`:
+
+- reads exact approved narration from all 36 research authorities;
+- preserves the manually-owned E0 Home/section navigation rows;
+- preserves recorder-owned `STATUS` and `RECORDER_NOTES`;
+- refuses immutable drift once a row is recorded/accepted/rejected/superseded/blocked;
+- fails closed on duplicate topic/batch/cue-locale identities;
+- enforces exactly 36 factual topics and **378 total bilingual v0.1 recording rows**.
+
+The checked-in `VOICE_RECORDING_REQUESTS.md` is still the earlier 176-row checkpoint until this synchronizer is actually executed in a repository checkout. Do not claim it is already synchronized.
+
+`integrate_voice_assets.py`:
+
+- considers only `OWNER_ACCEPTED` rows;
+- ignores `RECORDED_UNREVIEWED` and all other statuses;
+- validates staging paths, locale/filename identity, OGG container headers and Activity-root containment;
+- preflights every accepted source before writes;
+- packages narration under `activities/enciclopedia_greia/assets/audio/<locale>/<page-path>/...`;
+- rewrites only the locale `audio` maps while preserving child-facing strings/metadata;
+- writes packaged OGGs atomically and updates locale mappings only after assets exist;
+- supports a non-mutating `--check` mode;
+- deliberately does not delete unreferenced files from the Activity audio tree.
+
+Provider-free contracts were added in `tests/test_encyclopedia_authoring_tools.py` for the 378-row render invariant, duplicate rows, partial OWNER_ACCEPTED integration, ignored unreviewed clips, missing/corrupt OGG rejection and path traversal rejection.
+
+These tests have been **authored but not executed** in this construction pass.
+
+Current truthful evidence label for the frozen v0.1 source is therefore:
+
+```text
+SOURCE-REVIEWED / TESTS-UNEXECUTED / SIMULATOR-UNVERIFIED
+```
+
+No page-by-page Simulator run was performed, per owner direction. The next major runtime stage is one consolidated source-test + Simulator/visual/input acceptance pass after the voice ledger is synchronized and enough accepted recordings exist to make audio behavior meaningful.
