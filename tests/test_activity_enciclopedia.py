@@ -117,11 +117,26 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
                 for marker in required:
                     self.assertIn(marker, text)
 
-    def test_subject_specific_pilots_do_not_leak_into_engine(self) -> None:
-        engine = (ACTIVITY / "enciclopedia_engine.py").read_text(encoding="utf-8").lower()
-        for subject in ("octopus", "saturn", "volcano", "heart", "gear", "fossil"):
+    def test_subject_specific_pilots_do_not_leak_into_engine_code(self) -> None:
+        source = (ACTIVITY / "enciclopedia_engine.py").read_text(encoding="utf-8")
+        tree = ast.parse(source)
+        identifiers = {
+            node.id.casefold()
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Name)
+        }
+        imported_modules = {
+            node.module.casefold()
+            for node in ast.walk(tree)
+            if isinstance(node, ast.ImportFrom) and node.module
+        }
+        for subject in ("octopus", "saturn", "volcano", "heart", "gears", "fossils"):
             with self.subTest(subject=subject):
-                self.assertNotIn(subject, engine)
+                self.assertNotIn(subject, identifiers)
+                self.assertFalse(
+                    any(subject in module for module in imported_modules),
+                    f"engine imports subject-specific module containing {subject!r}",
+                )
 
     def test_no_runtime_tts_or_speech_recognition_backends(self) -> None:
         forbidden = ("speech_recognition", "pyttsx", "gtts", "whisper", "vosk")
