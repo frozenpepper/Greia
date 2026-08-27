@@ -278,7 +278,76 @@ encyclopedia/research/history/fossils.md
 
 ---
 
-## 10. Pending future batches
+## 10. Requested batch E4-LION-01
+
+Research/provenance authority for this batch:
+
+```text
+encyclopedia/research/animals/lion.md
+```
+
+| STATUS | CUE_ID | KIND | SPEAKER | VOICE_ID | LOCALE | EXACT_TEXT | FINAL_FILENAME | FINAL_PATH | RECORDER_NOTES |
+|---|---|---|---|---|---|---|---|---|---|
+| REQUESTED | `encyclopedia.animals.lion.intro` | character_dialogue | Tito | `greia.tito.v1` | it | Ecco il leone! Guarda la criniera, le zampe forti e il grande ruggito. Tocca i simboli e scopri come vive. | `intro-tito.ogg` | `encyclopedia/pages/animals/lion/assets/audio/it/intro-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.lion.intro` | character_dialogue | Tito | `greia.tito.v1` | en | Here is the lion! Look at its mane, strong front legs, and mighty roar. Touch the symbols and discover how it lives. | `intro-tito.ogg` | `encyclopedia/pages/animals/lion/assets/audio/en/intro-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.lion.mane` | character_dialogue | Tito | `greia.tito.v1` | it | Molti leoni maschi adulti hanno una grande criniera intorno alla testa e al collo. Colore e grandezza possono cambiare da un leone all'altro. | `mane-tito.ogg` | `encyclopedia/pages/animals/lion/assets/audio/it/mane-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.lion.mane` | character_dialogue | Tito | `greia.tito.v1` | en | Many adult male lions have a large mane around the head and neck. Its color and size can vary from one lion to another. | `mane-tito.ogg` | `encyclopedia/pages/animals/lion/assets/audio/en/mane-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.lion.pride` | character_dialogue | Tito | `greia.tito.v1` | it | I leoni sono i felini più sociali. Spesso vivono in gruppi chiamati branchi, dove diversi leoni restano in contatto e crescono i piccoli. | `pride-tito.ogg` | `encyclopedia/pages/animals/lion/assets/audio/it/pride-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.lion.pride` | character_dialogue | Tito | `greia.tito.v1` | en | Lions are the most social cats. They often live in groups called prides, where several lions stay connected and raise their young. | `pride-tito.ogg` | `encyclopedia/pages/animals/lion/assets/audio/en/pride-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.lion.roar` | character_dialogue | Tito | `greia.tito.v1` | it | Il ruggito aiuta i leoni a comunicare e a segnalare il loro territorio. È così potente che può sentirsi da molto lontano. | `roar-tito.ogg` | `encyclopedia/pages/animals/lion/assets/audio/it/roar-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.lion.roar` | character_dialogue | Tito | `greia.tito.v1` | en | A roar helps lions communicate and signal their territory. It is so powerful that it can be heard from very far away. | `roar-tito.ogg` | `encyclopedia/pages/animals/lion/assets/audio/en/roar-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.lion.forelegs` | character_dialogue | Tito | `greia.tito.v1` | it | Il leone ha zampe anteriori molto forti. Insieme al corpo compatto, lo aiutano a muoversi e ad afferrare con forza. | `forelegs-tito.ogg` | `encyclopedia/pages/animals/lion/assets/audio/it/forelegs-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.lion.forelegs` | character_dialogue | Tito | `greia.tito.v1` | en | A lion has very strong front legs. Together with its compact body, they help it move and grip powerfully. | `forelegs-tito.ogg` | `encyclopedia/pages/animals/lion/assets/audio/en/forelegs-tito.ogg` | |
+
+---
+
+## 11. Requested batch E4-ELEPHANT-01
+
+Research/provenance authority for this batch:
+
+```text
+encyclopedia/research/animals/elephant.md
+```
+
+| STATUS | CUE_ID | KIND | SPEAKER | VOICE_ID | LOCALE | EXACT_TEXT | FINAL_FILENAME | FINAL_PATH | RECORDER_NOTES |
+|---|---|---|---|---|---|---|---|---|---|
+| REQUESTED | `encyclopedia.animals.elephant.intro` | character_dialogue | Tito | `greia.tito.v1` | it | Ecco l'elefante! La proboscide è forte e delicata, le grandi orecchie aiutano a rinfrescarsi e il contatto serve anche per comunicare. | `intro-tito.ogg` | `encyclopedia/pages/animals/elephant/assets/audio/it/intro-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.elephant.intro` | character_dialogue | Tito | `greia.tito.v1` | en | Here is the elephant! Its trunk is strong and delicate, its large ears help it cool down, and touch is also part of elephant communication. | `intro-tito.ogg` | `encyclopedia/pages/animals/elephant/assets/audio/en/intro-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.elephant.trunk` | character_dialogue | Tito | `greia.tito.v1` | it | La proboscide unisce naso e labbro superiore. È piena di muscoli e serve per annusare, toccare, prendere il cibo e spostare oggetti. | `trunk-tito.ogg` | `encyclopedia/pages/animals/elephant/assets/audio/it/trunk-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.elephant.trunk` | character_dialogue | Tito | `greia.tito.v1` | en | The trunk combines the nose and upper lip. It is packed with muscles and is used to smell, touch, pick up food, and move objects. | `trunk-tito.ogg` | `encyclopedia/pages/animals/elephant/assets/audio/en/trunk-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.elephant.water` | character_dialogue | Tito | `greia.tito.v1` | it | L'elefante aspira l'acqua nella proboscide e poi la spruzza dentro la bocca per bere. Può usarla anche per fare il bagno. | `water-tito.ogg` | `encyclopedia/pages/animals/elephant/assets/audio/it/water-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.elephant.water` | character_dialogue | Tito | `greia.tito.v1` | en | An elephant draws water into its trunk and then squirts it into its mouth to drink. It can also use the trunk for bathing. | `water-tito.ogg` | `encyclopedia/pages/animals/elephant/assets/audio/en/water-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.elephant.ears` | character_dialogue | Tito | `greia.tito.v1` | it | Le grandi orecchie hanno molti vasi sanguigni. Quando l'elefante le muove, possono aiutarlo a disperdere calore e rinfrescarsi. | `ears-tito.ogg` | `encyclopedia/pages/animals/elephant/assets/audio/it/ears-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.elephant.ears` | character_dialogue | Tito | `greia.tito.v1` | en | Large elephant ears contain many blood vessels. Flapping them can help move heat away and cool the elephant. | `ears-tito.ogg` | `encyclopedia/pages/animals/elephant/assets/audio/en/ears-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.elephant.social` | character_dialogue | Tito | `greia.tito.v1` | it | Gli elefanti sono animali molto sociali. Si toccano spesso con la proboscide per salutarsi, esplorare e comunicare. | `social-tito.ogg` | `encyclopedia/pages/animals/elephant/assets/audio/it/social-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.elephant.social` | character_dialogue | Tito | `greia.tito.v1` | en | Elephants are very social animals. They often touch with their trunks to greet, explore, and communicate. | `social-tito.ogg` | `encyclopedia/pages/animals/elephant/assets/audio/en/social-tito.ogg` | |
+
+---
+
+## 12. Requested batch E4-BEE-01
+
+Research/provenance authority for this batch:
+
+```text
+encyclopedia/research/animals/bee.md
+```
+
+| STATUS | CUE_ID | KIND | SPEAKER | VOICE_ID | LOCALE | EXACT_TEXT | FINAL_FILENAME | FINAL_PATH | RECORDER_NOTES |
+|---|---|---|---|---|---|---|---|---|---|
+| REQUESTED | `encyclopedia.animals.bee.intro` | character_dialogue | Tito | `greia.tito.v1` | it | Guarda l'ape tra i fiori! Cerca nettare e polline e, volando da un fiore all'altro, può aiutare le piante a riprodursi. | `intro-tito.ogg` | `encyclopedia/pages/animals/bee/assets/audio/it/intro-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.bee.intro` | character_dialogue | Tito | `greia.tito.v1` | en | Look at the bee among the flowers! It searches for nectar and pollen and, by flying from flower to flower, can help plants reproduce. | `intro-tito.ogg` | `encyclopedia/pages/animals/bee/assets/audio/en/intro-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.bee.food` | character_dialogue | Tito | `greia.tito.v1` | it | I fiori offrono due cibi importanti: il nettare è ricco di zuccheri, mentre il polline contiene sostanze nutritive importanti per le api. | `food-tito.ogg` | `encyclopedia/pages/animals/bee/assets/audio/it/food-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.bee.food` | character_dialogue | Tito | `greia.tito.v1` | en | Flowers offer two important foods: nectar is rich in sugars, while pollen contains important nutrients for bees. | `food-tito.ogg` | `encyclopedia/pages/animals/bee/assets/audio/en/food-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.bee.pollen` | character_dialogue | Tito | `greia.tito.v1` | it | Quando un'ape visita un fiore, un po' di polline può restare sul suo corpo. Sul fiore successivo, parte di quel polline può essere trasferita. | `pollen-tito.ogg` | `encyclopedia/pages/animals/bee/assets/audio/it/pollen-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.bee.pollen` | character_dialogue | Tito | `greia.tito.v1` | en | When a bee visits a flower, some pollen can stick to its body. At the next flower, some of that pollen can be transferred. | `pollen-tito.ogg` | `encyclopedia/pages/animals/bee/assets/audio/en/pollen-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.bee.pollination` | character_dialogue | Tito | `greia.tito.v1` | it | Questo trasporto di polline si chiama impollinazione. Per molte piante è un passaggio importante per formare nuovi semi e frutti. | `pollination-tito.ogg` | `encyclopedia/pages/animals/bee/assets/audio/it/pollination-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.bee.pollination` | character_dialogue | Tito | `greia.tito.v1` | en | This movement of pollen is called pollination. For many plants it is an important step in making new seeds and fruits. | `pollination-tito.ogg` | `encyclopedia/pages/animals/bee/assets/audio/en/pollination-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.bee.homes` | character_dialogue | Tito | `greia.tito.v1` | it | Non tutte le api vivono in un alveare. La maggior parte delle api selvatiche vive da sola; le api da miele, invece, vivono in grandi colonie. | `homes-tito.ogg` | `encyclopedia/pages/animals/bee/assets/audio/it/homes-tito.ogg` | |
+| REQUESTED | `encyclopedia.animals.bee.homes` | character_dialogue | Tito | `greia.tito.v1` | en | Not all bees live in a hive. Most wild bees live alone, while honey bees live together in large colonies. | `homes-tito.ogg` | `encyclopedia/pages/animals/bee/assets/audio/en/homes-tito.ogg` | |
+
+---
+
+## 13. Pending future batches
 
 Do **not** record these yet.
 
