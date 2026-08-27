@@ -10,32 +10,9 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 ACTIVITY = ROOT / "activities" / "enciclopedia_greia"
 AUTHORING_CATALOGUE = ROOT / "encyclopedia" / "pages" / "catalogue.py"
+RESEARCH_ROOT = ROOT / "encyclopedia" / "research"
 
 SECTION_PAGE_IDS = {"home", "animals", "space", "earth", "body", "machines", "history"}
-RESEARCH_TOPICS = {
-    "animals": ("lion", "elephant", "octopus", "bee", "penguin", "frog"),
-    "space": (
-        "sun",
-        "mercury",
-        "venus",
-        "earth",
-        "moon",
-        "mars",
-        "jupiter",
-        "saturn",
-        "uranus",
-        "neptune",
-    ),
-    "earth": ("volcano", "rain", "ocean", "tree", "rainbow"),
-    "body": ("heart", "lungs", "bones", "teeth", "senses"),
-    "machines": ("gears", "magnet", "bicycle", "airplane", "bridge"),
-    "history": ("dinosaurs", "fossils", "mammoth", "cave_paintings", "pyramids"),
-}
-RESEARCH_FILES = {
-    f"{category}.{topic}": ROOT / "encyclopedia" / "research" / category / f"{topic}.md"
-    for category, topics in RESEARCH_TOPICS.items()
-    for topic in topics
-}
 
 
 class EncyclopediaSourceContractTests(unittest.TestCase):
@@ -93,6 +70,16 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
         tree = ast.parse(AUTHORING_CATALOGUE.read_text(encoding="utf-8"))
         return cls._call_string_args(cls._assignment(tree, "PLANNED_PAGES"), 0)
 
+    @staticmethod
+    def _research_files() -> dict[str, Path]:
+        files: dict[str, Path] = {}
+        for path in sorted(RESEARCH_ROOT.glob("*/*.md")):
+            page_id = f"{path.parent.name}.{path.stem}"
+            if page_id in files:
+                raise AssertionError(f"duplicate research authority for {page_id}")
+            files[page_id] = path
+        return files
+
     def test_manifest_is_offline_first_and_bilingual(self) -> None:
         with (ACTIVITY / "activity.toml").open("rb") as handle:
             raw = tomllib.load(handle)
@@ -113,7 +100,8 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
 
     def test_every_implemented_factual_entry_has_research_authority(self) -> None:
         expected_factual = set(self._runtime_page_ids()) - SECTION_PAGE_IDS
-        self.assertEqual(set(RESEARCH_FILES), expected_factual)
+        research_files = self._research_files()
+        self.assertEqual(set(research_files), expected_factual)
 
         ready_markers = (
             "**Research state:** READY FOR AUTHORING",
@@ -124,7 +112,7 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
         interaction_markers = ("## Interaction → fact mapping", "## Interaction-to-claim mapping")
         narration_markers = ("## Approved narration wording", "## Child-facing wording contract")
 
-        for page_id, path in RESEARCH_FILES.items():
+        for page_id, path in research_files.items():
             with self.subTest(page_id=page_id):
                 text = path.read_text(encoding="utf-8")
                 self.assertIn(f"**Page ID:** `{page_id}`", text)
@@ -136,6 +124,7 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
                 self.assertIn("https://", text)
 
     def test_high_risk_misconception_guardrails_are_preserved(self) -> None:
+        research_files = self._research_files()
         cases = {
             "animals.bee": "Most wild bees are solitary",
             "animals.penguin": "Not all ice",
@@ -160,7 +149,7 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
         }
         for page_id, marker in cases.items():
             with self.subTest(page_id=page_id):
-                self.assertIn(marker, RESEARCH_FILES[page_id].read_text(encoding="utf-8"))
+                self.assertIn(marker, research_files[page_id].read_text(encoding="utf-8"))
 
     def test_locales_have_matching_strings_and_safe_audio_mappings(self) -> None:
         bundles = {
