@@ -32,17 +32,6 @@ DISCOVERIES = (
     MoonDiscovery("gravity", "moon.gravity", "encyclopedia.space.moon.gravity", (755, 420)),
 )
 
-_PHASE_NAMES = (
-    "moon.phase.new",
-    "moon.phase.crescent",
-    "moon.phase.quarter",
-    "moon.phase.gibbous",
-    "moon.phase.full",
-    "moon.phase.gibbous",
-    "moon.phase.quarter",
-    "moon.phase.crescent",
-)
-
 
 class MoonPhaseModel:
     """Own phase/orbit state; renderer only visualizes its finite geometry."""
