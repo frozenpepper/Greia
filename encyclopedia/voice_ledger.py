@@ -12,8 +12,8 @@ import re
 ROW_RE = re.compile(
     r"^\| (?P<status>[^|]+?) \| `(?P<cue>[^`]+)` \| (?P<kind>[^|]+?) \| "
     r"(?P<speaker>[^|]+?) \| `(?P<voice>[^`]+)` \| (?P<locale>it|en) \| "
-    r"(?P<text>.*?) \| `(?P<filename>[^`]+)` \| `(?P<path>[^`]+)` \| "
-    r"(?P<notes>.*?) \|$"
+    r"(?P<text>.*?) \| `(?P<filename>[^`]+)` \| `(?P<path>[^`]+)`"
+    r"(?: \| (?P<notes>.*?))?\|?$"
 )
 
 LOCKED_STATUSES = frozenset(

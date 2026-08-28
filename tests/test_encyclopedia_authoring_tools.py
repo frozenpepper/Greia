@@ -107,12 +107,23 @@ class VoiceLedgerAuthoringTests(unittest.TestCase):
         self.assertEqual(len({str(request["output"]) for request in requests}), len(requests))
         for request in requests:
             with self.subTest(cue=request["cue_id"], locale=request["locale"]):
-                self.assertIn(request["speaker"], {"leo", "lilli", "flash", "tito", "momo"})
-                self.assertEqual(request["kind"], "character_dialogue")
+                self.assertIn(request["kind"], {"character_dialogue", "dani_system_speech", "pedagogical_speech"})
+                if request["kind"] == "character_dialogue":
+                    self.assertIn(request["speaker"], {"leo", "lilli", "flash", "tito", "momo"})
+                    self.assertEqual(request["verification"], "auto")
+                else:
+                    # dani_system_speech routes through the native/system provider;
+                    # pedagogical_speech is the system/pedagogical route. Both bypass
+                    # the Whisper verifier by design (see voice_ledger VOICE_PRODUCTION_ENGINE
+                    # and SKILL.md guidance).
+                    if request["kind"] == "dani_system_speech":
+                        self.assertEqual(request["speaker"], "dani")
+                    else:
+                        self.assertEqual(request["speaker"], "pedagogical")
+                    self.assertEqual(request["verification"], "off")
                 self.assertIn(request["locale"], {"it", "en"})
                 self.assertTrue(str(request["cue_id"]).startswith("encyclopedia."))
                 self.assertTrue(str(request["output"]).endswith(".ogg"))
-                self.assertEqual(request["verification"], "auto")
                 self.assertEqual(request["max_attempts"], 2)
 
         parsed_jsonl = [json.loads(line) for line in render_jsonl(requests).splitlines()]
