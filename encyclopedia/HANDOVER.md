@@ -1,12 +1,11 @@
 # Greia Encyclopedia workstream handover
 
 **Updated:** 2026-08-28  
-**Construction state:** v0.1 source breadth complete and source gate GREEN; local-branch reconciliation check precedes headless Shell-route retest  
 **Runtime pages:** **43 / 43 planned executable pages**  
-**Current evidence:** **SOURCE-VERIFIED / SIMULATOR-UNVERIFIED / NARRATION ACCEPTANCE PENDING**  
-**Runtime Activity:** `activities/enciclopedia_greia/` (`org.greia.enciclopedia`)
+**Runtime Activity:** `activities/enciclopedia_greia/` (`org.greia.enciclopedia`)  
+**Current evidence:** **SOURCE-VERIFIED / HEADLESS-LIFECYCLE-SMOKE-PASS / 43-PAGE-MECHANICAL-TRAVERSAL-PENDING / NARRATION ACCEPTANCE PENDING**
 
-This is the current continuation contract for the Encyclopedia workstream. Historical construction detail remains in `encyclopedia/PROGRESS.md` and dated reviews.
+This is the current continuation contract. Historical construction detail remains in `encyclopedia/PROGRESS.md` and dated reviews.
 
 ---
 
@@ -16,91 +15,48 @@ Exactly 43 executable pages:
 
 ```text
 home
-
-animals
-├── animals.lion
-├── animals.elephant
-├── animals.octopus
-├── animals.bee
-├── animals.penguin
-└── animals.frog
-
-space
-├── space.sun
-├── space.mercury
-├── space.venus
-├── space.earth
-├── space.moon
-├── space.mars
-├── space.jupiter
-├── space.saturn
-├── space.uranus
-└── space.neptune
-
-earth
-├── earth.volcano
-├── earth.rain
-├── earth.ocean
-├── earth.tree
-└── earth.rainbow
-
-body
-├── body.heart
-├── body.lungs
-├── body.bones
-├── body.teeth
-└── body.senses
-
-machines
-├── machines.gears
-├── machines.magnet
-├── machines.bicycle
-├── machines.airplane
-└── machines.bridge
-
-history
-├── history.dinosaurs
-├── history.fossils
-├── history.mammoth
-├── history.cave_paintings
-└── history.pyramids
+animals + 6 entries
+space + 10 entries
+earth + 5 entries
+body + 5 entries
+machines + 5 entries
+history + 5 entries
 ```
 
-Do not add v0.1 topics unless the owner deliberately changes scope.
+The 36 factual entry IDs are frozen by `encyclopedia/pages/catalogue.py` and the runtime registry. Do not add v0.1 topics unless the owner deliberately changes scope.
 
 ---
 
-## 2. Architecture invariants
+## 2. Runtime architecture invariants
 
-- `main.py` stays a thin composition root.
-- `enciclopedia_engine.py` owns lifecycle, semantic input, explicit registry and bounded navigation only.
-- Subject behavior stays inside page modules.
-- Use small domain models only when coupled mutable invariants justify them; do not invent generic exhibit/planet/anatomy/machine/history frameworks.
-- Runtime remains offline and low-resource: no runtime TTS, speech recognition, AI/LLM, network factual lookup or heavy physics.
-- Greia protected Home remains platform-owned; Encyclopedia internal Back remains distinct.
+- `main.py` remains a thin composition root.
+- `enciclopedia_engine.py` owns only lifecycle, explicit page registry, semantic input and bounded internal navigation.
+- Subject behavior stays in page modules.
+- No runtime TTS, speech recognition, AI/LLM, network factual lookup or heavy physics.
+- Spoken material is authoring-time prerecorded audio only.
+- Greia protected Home remains platform-owned; Encyclopedia internal Back is separate.
 - Italian and English are the initial locales.
 - Visual/text/audio caches remain explicitly bounded.
-- The Acer Aspire One-class machine remains the performance floor.
+- Acer Aspire One-class hardware remains the performance floor.
+- Do not introduce giant procedural page scripts or generic abstraction layers without real shared invariants.
 
 ---
 
-## 3. Research and narration authorities
+## 3. Research and narration authority
 
-All 36 factual final pages have one provenance/wording authority under:
+Every factual page has one authority under:
 
 ```text
 encyclopedia/research/<section>/<entry>.md
 ```
 
-The research corpus intentionally contains two historical wording formats; `sync_voice_requests.py` supports both fail-closed.
-
-The canonical voice coordination file is:
+Canonical narration coordination:
 
 ```text
 encyclopedia/VOICE_RECORDING_REQUESTS.md
 ```
 
-It is now checked in at exactly:
+Current Encyclopedia ledger state remains:
 
 ```text
 378 rows
@@ -111,133 +67,51 @@ It is now checked in at exactly:
 
 `378` means request rows, not generated files.
 
-Voice generation remains a separate authoring/parent-machine workflow. Simulator acceptance does **not** wait for those recordings.
-
-Status flow:
-
-```text
-REQUESTED
-→ RECORDED_UNREVIEWED
-→ OWNER_ACCEPTED
-```
-
-Only real owner listening can set `OWNER_ACCEPTED`.
-
-Accepted recordings are packaged deterministically with:
-
-```bash
-python3 encyclopedia/integrate_voice_assets.py
-python3 encyclopedia/integrate_voice_assets.py --check
-```
-
-The integrator never generates speech and packages only already-`OWNER_ACCEPTED` rows.
+Voice generation/review is a separate authoring workflow. Simulator acceptance does **not** wait for narration production. Only real owner listening can set `OWNER_ACCEPTED`, and only accepted rows may be integrated into runtime audio assets.
 
 ---
 
-## 4. Source gate — GREEN
+## 4. Deterministic source gate — GREEN
 
-Green runtime/source commit:
+Green source/runtime SHA:
 
 ```text
 d89809a43cdfe62c85775ccdcfd04eb6e34fbd05
 ```
 
-Evidence directory:
+Evidence:
 
 ```text
 tmp/encyclopedia-v01-acceptance/20260828_044052/
 ```
 
-Proven by the owner-machine local agent:
+Proven there:
 
 ```text
-voice-sync                         PASS
-voice-sync-check                   PASS
-voice rows                         378 / 378
-focused Encyclopedia tests          53 / 53 PASS
-make verify                       1431 / 1431 PASS
-first-party Activity validations    35 / 35 PASS
-accepted-audio sync check            PASS (0 OWNER_ACCEPTED rows)
-git diff --check                     PASS
-worktree postflight                  clean
+voice-sync                           PASS
+voice-sync-check                     PASS
+voice rows                           378 / 378
+focused Encyclopedia tests            53 / 53 PASS
+make verify                         1431 / 1431 PASS
+first-party Activity validations      35 / 35 PASS
+accepted-audio sync check              PASS (0 OWNER_ACCEPTED)
+git diff --check                       PASS
+worktree postflight                    clean
 ```
 
-Source-gate summary:
-
-```json
-{
-  "branch": "main",
-  "integration_check_after": "not-applicable",
-  "integration_check_before": "PASS",
-  "integration_executed": false,
-  "simulator_pending": true,
-  "starting_sha": "d89809a43cdfe62c85775ccdcfd04eb6e34fbd05",
-  "status_counts": {"REQUESTED": 378},
-  "voice_rows": 378
-}
-```
-
-This establishes:
-
-```text
-SOURCE-VERIFIED / SIMULATOR-UNVERIFIED
-```
-
-Do not rerun the source gate merely to begin Simulator review unless runtime/source files change.
+Do not rerun the source gate merely to continue Simulator acceptance unless Encyclopedia runtime/source changes.
 
 ---
 
-## 5. Source drifts already resolved during closure
+## 5. Headless Simulator harness history
 
-The source gate successfully exposed and drove fixes for:
+### 5.1 Duplicate-identity failure
 
-- voice-ledger row parser rejecting empty notes;
-- synchronizer non-idempotent separator accumulation;
-- source-gate silent preflight exits;
-- invalid `tests.test_xxx` unittest invocation from non-package `tests/`;
-- missing Saturn `## Scope guardrails` authority section;
-- stale `org.greia.piccola_serra` test expectation vs authoritative `org.greia.piccola-serra` manifest ID;
-- Encyclopedia generic `globe` launcher icon replaced by unique package-owned `assets/icon.png`.
+The first headless attempt incorrectly republished the built-in Encyclopedia as developer-unsigned. Greia's duplicate-ID guard correctly rejected it. The helper now recognizes built-in Activities and never republishes them.
 
-Do not revert these fixes.
+### 5.2 Collection-first routing failure
 
----
-
-## 6. Simulator harness evidence and next exact task
-
-Single rolling local-agent instruction:
-
-```text
-docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md
-```
-
-### 6.1 First terminal-only Simulator attempt
-
-The first headless attempt failed before launch because the helper republished the already built-in Encyclopedia as developer-unsigned and correctly hit the duplicate-identity guard. That was a **Simulator harness defect**, not Encyclopedia runtime evidence. The helper was changed so built-in Activities launch in place.
-
-### 6.2 Second terminal-only Simulator attempt
-
-Evidence:
-
-```text
-tmp/encyclopedia-v01-acceptance/20260828_061732-headless-smoke/
-```
-
-Owner-machine report:
-
-```text
-FOCUSED_SIMULATOR_TESTS       PASS
-HEADLESS_BUILTIN_DETECTION    PASS
-SHELL_FIRST_FRAME             PASS
-HEADLESS_SMOKE_RC             7
-worktree                      clean
-```
-
-The real child Shell and remote bridge reached a 1024x600 `mode=profiles` frame. No duplicate-ID collision remained. The run then failed to obtain an Encyclopedia Activity frame.
-
-Review established that the second helper still modeled the launcher incorrectly: it computed a raw ActivityRegistry index and sent RIGHT repeatedly after profile activation. The production child UI is **Collection-first**, so those keys operate on Collection portals, not raw Activity cards.
-
-Current production navigation shape:
+The second attempt reached the real Shell but treated the raw Activity registry as the child navigation grid. That was wrong because production Greia is Collection-first:
 
 ```text
 profile picker
@@ -247,92 +121,138 @@ profile picker
 → Activity
 ```
 
-That harness drift is now repaired:
+The helper now uses typed `ShellLaunchRoute` derived from the same profile-visible `ActivityCatalogue`, including profile visibility/age/challenge policy.
 
-- headless routing is represented by typed `ShellLaunchRoute`;
-- the route is derived from the same profile-visible `ActivityCatalogue` projection used by the child Shell;
-- built-in, developer and Parent-installed Activity sources are represented;
-- selected-profile visibility, age and challenge policy are applied;
-- the route records Collection Home index, optional sub-Collection index and Activity-card index;
-- every semantic Shell navigation step requires a fresh real `mode=activities` frame before continuing;
-- focused tests cover both direct Collection → Activity and Collection → sub-Collection → Activity routes.
+### 5.3 Corrected lifecycle smoke — GREEN
 
-This is still harness work. No Encyclopedia runtime failure should be claimed until the corrected route actually reaches `mode=activity` and the Activity itself fails.
-
-### 6.3 Owner-machine branch preservation gate
-
-The second smoke report started from local SHA:
+Owner-machine SHA:
 
 ```text
-7417e20729fd1c0562491e26f9fe564deccac058
+621c1950133151b9c89c14ec74e4628e4c665147
 ```
 
-GitHub does **not** contain that SHA. Therefore the owner checkout may have unpublished local commits. Since GitHub `main` now also contains the corrected Collection-first harness, the next run must classify ancestry before modifying the local branch.
-
-The rolling prompt now requires:
+Evidence:
 
 ```text
-fetch origin
-compare HEAD vs origin/main
-classify equal / fast-forward-safe / local-ahead / diverged
+tmp/encyclopedia-v01-acceptance/20260828_070951-headless-route-smoke/
 ```
 
-If local-ahead or diverged, stop and report local-only commits and changed paths. Do **not** reset, merge, rebase, cherry-pick, push or pull until those commits are deliberately reviewed. This is a source-preservation gate, not a Simulator failure.
-
-### 6.4 Next exact gate after branch safety is established
-
-The rolling prompt performs only:
+Proven:
 
 ```text
-focused Simulator tooling tests
-one real built-in Encyclopedia headless smoke
-profile → Collection Home → optional sub-Collection → Encyclopedia
-first Encyclopedia frame
-12 s survival + one bounded interaction
-protected Home → Shell
+focused Simulator tests                 45 / 45 PASS
+built-in Activity detection             PASS
+route                                   home[2]=learn -> activity[4]=org.greia.enciclopedia
+real Shell first frame                  PASS
+profile -> Collection Home              PASS
+Collection route navigation             PASS
+real Shell -> Encyclopedia              PASS
+first Encyclopedia frame                PASS
+12-second survival                      PASS
+bounded semantic RETURN interaction     PASS
+protected Greia Home -> real Shell      PASS
+headless smoke rc                       0
+worktree                                clean
 ```
 
-Do **not** run the 43-page traversal until that smoke is green.
-Do **not** rerun the 1431-test source gate.
-Do **not** generate voices.
+This is a real lifecycle acceptance checkpoint. It proves Shell ↔ Encyclopedia launch/survival/input/Home-return plumbing, **not** all 43 pages and not subjective UX quality.
 
-After the headless smoke is green, the next tranche is mechanical 43-page reachability/interactions/screenshot capture. Subjective pre-reader/no-reading and visual-quality judgment remains a separate human/vision review rather than a terminal-agent claim.
-
-Missing narration is always reported separately:
+The child log also contained:
 
 ```text
-NARRATION ACCEPTANCE PENDING
+libpng error: bad adaptive filter value
 ```
 
-It is not a reason to add runtime TTS and is not itself a blocker for visual/input Simulator acceptance.
+The four captured smoke PNGs were valid and the run passed. Therefore this warning is non-blocking evidence but remains diagnostically unresolved. Do not claim it is caused by the screenshot encoder; it may represent a PNG asset decode that fell back visually.
 
-If every later Simulator/input/pre-reader/responsive gate passes, the exact truthful label becomes:
+Durable review:
 
 ```text
-SOURCE + SIMULATOR ACCEPTED / NARRATION ACCEPTANCE PENDING
+docs/reviews/2026-08-28_ENCYCLOPEDIA_V01_HEADLESS_LIFECYCLE_ACCEPTANCE.md
 ```
 
 ---
 
-## 7. Evidence authority
+## 6. Current next gate — 43-page mechanical traversal
 
-Canonical reusable runbook:
+Tool:
 
 ```text
-docs/testing/GREIA_ENCYCLOPEDIA_V01_CONSOLIDATED_ACCEPTANCE.md
+tools/encyclopedia_v01_headless_traversal.py
 ```
 
-Current one-step operator prompt:
+Contract tests:
+
+```text
+tests/test_encyclopedia_v01_headless_traversal.py
+```
+
+Single operator instruction:
 
 ```text
 docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md
 ```
 
-Durable reviews:
+The tool must, in one real Shell-launched session:
+
+```text
+capture Encyclopedia Home
+capture all 6 section pages
+reach all 36 factual entries
+send one bounded primary semantic ACTIVATE interaction per entry
+capture before/after PNGs for every factual entry
+return from every entry through internal semantic Back
+return from each section to Encyclopedia Home
+return through protected Greia Home to the real Shell
+```
+
+It uses semantic keyboard navigation only for Encyclopedia content. It does not instantiate page classes, read hidden page state, or use pointer coordinates to locate hotspots.
+
+A changed frame is **not** equivalent to visual/signature acceptance. The mechanical tool records change metrics and screenshots; the next visual review must inspect whether the intended interaction is actually understandable and correct.
+
+---
+
+## 7. Acceptance layers that remain separate
+
+After mechanical traversal passes, still pending:
+
+```text
+visual/signature-interaction review of captured before/after frames
+pointer vs semantic-keyboard parity sample
+pre-reader/no-reading UX review
+responsive viewport/profile matrix
+narration owner acceptance/integration
+physical Acer/Pi acceptance
+```
+
+Only after Simulator visual/input/pre-reader/responsive gates pass may the label become:
+
+```text
+SOURCE + SIMULATOR ACCEPTED / NARRATION ACCEPTANCE PENDING
+```
+
+Narration remains a separate gate and must never be replaced with runtime TTS.
+
+---
+
+## 8. Evidence authorities
+
+Reusable acceptance runbook:
+
+```text
+docs/testing/GREIA_ENCYCLOPEDIA_V01_CONSOLIDATED_ACCEPTANCE.md
+```
+
+Current local-agent task:
+
+```text
+docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md
+```
+
+Key reviews:
 
 ```text
 docs/reviews/2026-08-27_ENCYCLOPEDIA_V01_POST_BUILD_DRIFT_REVIEW.md
 docs/reviews/2026-08-27_ENCYCLOPEDIA_V01_CLOSURE_TOOLING_REVIEW.md
+docs/reviews/2026-08-28_ENCYCLOPEDIA_V01_HEADLESS_LIFECYCLE_ACCEPTANCE.md
 ```
-
-Physical Acer/Pi acceptance and complete owner-approved narration coverage remain separate later gates.
