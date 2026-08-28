@@ -4,14 +4,14 @@ This is the single rolling instruction for the **next** owner-machine task.
 
 ## Current accepted evidence
 
-Source gate remains GREEN:
+Source gate is GREEN:
 
 ```text
 runtime/source SHA: d89809a43cdfe62c85775ccdcfd04eb6e34fbd05
 evidence: tmp/encyclopedia-v01-acceptance/20260828_044052/
 ```
 
-The corrected headless lifecycle smoke is also GREEN:
+Real headless lifecycle smoke is GREEN:
 
 ```text
 owner-machine SHA: 621c1950133151b9c89c14ec74e4628e4c665147
@@ -28,16 +28,16 @@ worktree: clean
 
 This proves the real Shell/Activity lifecycle lane. It does **not** prove all 43 pages or subjective visual/pre-reader quality.
 
-A dedicated mechanical traversal driver now exists:
+The next tool is:
 
 ```text
 tools/encyclopedia_v01_headless_traversal.py
 tests/test_encyclopedia_v01_headless_traversal.py
 ```
 
-It launches the real built-in Encyclopedia through the real child Shell, visits all six section pages and all 36 factual entries using only semantic keyboard navigation, sends one bounded primary ACTIVATE interaction per entry, captures before/after PNG evidence, uses the Encyclopedia's own semantic Back path, and finally returns through protected Greia Home.
+It traverses all six sections and all 36 factual entries through the real Shell-launched Activity using semantic keyboard navigation only. It captures a before/after PNG pair for each factual entry, delivers one bounded primary ACTIVATE interaction, uses the Encyclopedia's own semantic Back path, and finally returns through protected Greia Home.
 
-It deliberately does **not** claim that an interaction is visually correct merely because a frame changed. Signature-interaction correctness, pointer parity and pre-reader quality remain a separate visual review of the captured frames.
+It does **not** claim visual/signature correctness merely because a frame changed. Those screenshots are evidence for the later visual review.
 
 Truthful state entering this task:
 
@@ -51,14 +51,12 @@ NARRATION ACCEPTANCE PENDING
 
 This task generates **ZERO voice files**.
 Do **not** rerun the Encyclopedia source gate.
-Do **not** make runtime/source repairs during the evidence run.
+Do **not** repair source during the evidence run.
 Do **not** rerun a failed traversal.
 
 ---
 
-## Step 1 — update safely
-
-From the existing Greia checkout:
+## 1. Update safely
 
 ```bash
 git branch --show-current
@@ -70,24 +68,22 @@ printf 'LOCAL_HEAD=%s\nREMOTE_HEAD=%s\n' "$LOCAL_HEAD" "$REMOTE_HEAD"
 git rev-list --left-right --count HEAD...origin/main
 ```
 
-Required before changing anything:
+Required:
 
 ```text
 branch = main
 worktree = clean
 ```
 
-If dirty, STOP and report the paths. Do not reset/clean/stash/discard.
+If dirty, STOP. Do not reset/clean/stash/discard.
 
-If `LOCAL_HEAD == REMOTE_HEAD`, continue.
-
-If local HEAD is an ancestor of `origin/main`, fast-forward only:
+If equal, continue. If local HEAD is an ancestor of `origin/main`, fast-forward only:
 
 ```bash
 git merge --ff-only origin/main
 ```
 
-If local is ahead or histories diverged, STOP. Do not merge/rebase/reset/cherry-pick/push. Return:
+If local is ahead or histories diverged, STOP without modifying history and return:
 
 ```bash
 git log --oneline --decorate --graph --max-count=40 --all
@@ -106,9 +102,9 @@ Record exact HEAD as `STARTING_SHA`.
 
 ---
 
-## Step 2 — focused tooling tests, once
+## 2. Focused tooling tests — once
 
-`tests/` is intentionally not a package:
+`tests/` is intentionally not a Python package:
 
 ```bash
 cd tests
@@ -121,17 +117,13 @@ TEST_RC=$?
 cd ..
 ```
 
-Required:
+Required: `TEST_RC=0`.
 
-```text
-TEST_RC=0
-```
-
-If this fails: STOP, do not fix and do not rerun. Return the first failure.
+If tests fail, STOP. Do not fix or rerun. Return the first failure.
 
 ---
 
-## Step 3 — create one fresh traversal evidence run
+## 3. Create one fresh traversal run
 
 Use Bash:
 
@@ -152,9 +144,7 @@ Simulator mutable state remains outside the checkout in `$WORKSPACE`.
 
 ---
 
-## Step 4 — run exactly one 43-page mechanical traversal
-
-Run once:
+## 4. Run exactly one 43-page mechanical traversal
 
 ```bash
 python3 tools/encyclopedia_v01_headless_traversal.py \
@@ -168,24 +158,23 @@ TRAVERSAL_RC=${PIPESTATUS[0]}
 
 Do not interrupt a healthy run.
 
-Expected PASS contract:
+A PASS must establish:
 
 ```text
-real Shell route resolves to org.greia.enciclopedia
-real Shell first frame arrives
-real Encyclopedia home frame arrives
-6 / 6 section pages captured
+real Shell -> org.greia.enciclopedia
+real Encyclopedia home frame
+6 / 6 sections captured
 36 / 36 factual entries reached
 36 / 36 bounded semantic ACTIVATE interactions delivered
-before + after PNG captured for every factual entry
-internal semantic ESCAPE/Back returns from every entry
-section -> Encyclopedia home returns work
+36 / 36 before+after PNG pairs captured
+internal semantic Back returns from every entry
+all six sections return to Encyclopedia home
 protected Greia Home returns to real Shell
 traversal-summary.json status = PASS
 TRAVERSAL_RC = 0
 ```
 
-Expected screenshot structure includes:
+Expected screenshot structure:
 
 ```text
 screenshots/00-shell-profile-picker.png
@@ -202,23 +191,13 @@ screenshots/98-encyclopedia-home-after-traversal.png
 screenshots/99-returned-shell.png
 ```
 
-The driver records `changed_pixel_fraction` for each before/after pair. That metric only proves the frame changed; it is **not** permission to claim the planned signature interaction is visually correct.
+`changed_pixel_fraction` is diagnostic only. It proves a frame changed; it does not prove the intended educational/signature behavior is visually correct.
 
-### Hard stop
-
-If `TRAVERSAL_RC != 0`, STOP. Do not edit source and do not rerun. Preserve:
-
-```text
-FIRST_FAILURE.txt
-traversal-summary.json
-mechanical-traversal.txt
-enciclopedia-child.log
-all screenshots produced before failure
-```
+If `TRAVERSAL_RC != 0`, STOP. Do not edit or rerun. Preserve all evidence including `FIRST_FAILURE.txt`, `traversal-summary.json`, child log and partial screenshots.
 
 ---
 
-## Step 5 — inspect the libpng warning honestly
+## 5. Preserve the libpng warning honestly
 
 The previous green smoke emitted:
 
@@ -226,17 +205,15 @@ The previous green smoke emitted:
 libpng error: bad adaptive filter value
 ```
 
-Do not assume this came from screenshot encoding. The smoke PNGs were valid, so this may instead be a failed PNG asset decode with a fail-soft visual fallback.
+Do not assume this came from screenshot encoding. The previous screenshots were valid, so this may instead indicate an asset decode that fell back visually.
 
-The traversal summary automatically collects `libpng` / warning lines from the child log under `child_warnings`.
-
-Report those lines exactly. Do not repair them in this run.
+The traversal summary records `libpng` / warning lines from the child log under `child_warnings`. Return those lines exactly. Do not fix them in this run.
 
 ---
 
-## Step 6 — final clean state
+## 6. Final clean state and evidence ZIP
 
-Regardless of traversal PASS/FAIL:
+Regardless of PASS/FAIL:
 
 ```bash
 git diff --check > "$EVIDENCE/git-diff-check.txt" 2>&1
@@ -246,19 +223,20 @@ git status --short > "$EVIDENCE/git-status-after.txt"
 
 Source worktree must remain clean. `tmp/` is gitignored.
 
-Create one evidence archive for owner/primary-agent visual review; this is evidence only, not a project package:
+Create one evidence-only ZIP so the owner can upload the screenshots for visual review:
 
 ```bash
-python3 - <<'PY'
+EVIDENCE="$EVIDENCE" python3 - <<'PY'
+import os
 from pathlib import Path
 import shutil
-p = Path("$(cat ./tmp/encyclopedia-v01-acceptance/.latest-run)")
-shutil.make_archive(str(p), "zip", root_dir=p)
-print(str(p) + ".zip")
+p = Path(os.environ["EVIDENCE"])
+archive = shutil.make_archive(str(p), "zip", root_dir=p)
+print(archive)
 PY
 ```
 
-If the shell does not expand the command substitution inside that quoted Python block on your environment, instead resolve `EVIDENCE` first and use Python with that exact path. Do not modify source to create the archive.
+Do not create a project ZIP and do not modify source.
 
 ---
 
@@ -286,11 +264,11 @@ EVIDENCE_ZIP=
 
 Also return:
 
-- the complete PASS summary or failure tail from `mechanical-traversal.txt`;
+- complete PASS summary or failure tail from `mechanical-traversal.txt`;
 - `traversal-summary.json`;
 - `FIRST_FAILURE.txt` if present;
-- the complete short `enciclopedia-child.log`, or relevant warning/error tail if it becomes large;
-- count of PNG files and total evidence size;
+- child log (complete if short, otherwise relevant warnings/errors);
+- PNG count and total evidence size;
 - final `git status --short`.
 
 Do **not** claim from this task:
@@ -303,4 +281,4 @@ responsive-layout matrix accepted
 narration accepted
 ```
 
-If the mechanical traversal is green, the next task is **visual review of these captured frames plus the remaining pointer/pre-reader/responsive acceptance**, not another source-gate run.
+If mechanical traversal is green, the next task is visual review of the evidence ZIP plus the remaining pointer/pre-reader/responsive acceptance. Do not rerun the source gate.
