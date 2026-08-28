@@ -116,15 +116,27 @@ A healthy full Apple-Silicon setup should report:
 
 The first actual Chatterbox generation may download `mlx-community/chatterbox-multilingual-v3` weights if they are not already cached. Do not trigger that network download without owner authorization.
 
-## 3. Other hosts
+## 3. Per-host install
 
-The semantic engine and `doctor` are portable, but the current repository implementation has:
+Pick the section that matches your machine. The semantic engine and `doctor` are portable, but each provider is OS-specific.
 
-- full cloned-character generation: Apple-Silicon MLX provider;
-- deterministic pedagogical/Dani generation: macOS native provider;
-- other hosts: truthful `UNAVAILABLE` until a provider is implemented.
+### macOS on Apple Silicon (M1/M2/M3/M4, arm64) — full cloned-character production
 
-Add future backends behind the `VoiceProvider` interface. Do not teach Activities or skills a new backend command.
+Same as §2 above. This is the **only** configuration with a complete provider stack today.
+
+### Intel macOS — pedagogical/Dani only
+
+The MLX provider requires Apple Silicon, so `chatterbox-mlx-multilingual-v3` and `mlx-whisper-tiny` are `UNAVAILABLE`. Install only `soundfile` and `sentencepiece` and keep `macos-native-say` for `pedagogical_speech` and `dani_system_speech`.
+
+### Linux — system speech only (no cloned character yet)
+
+No `VoiceProvider` for `pedagogical_speech`/`dani_system_speech` ships for Linux; the engine reports `UNAVAILABLE` honestly. Install `ffmpeg` and `espeak-ng` via your package manager so they are present whenever a Linux provider lands. Do not synthesize speech through `subprocess`/`espeak`/`piper` directly from Activity or skill code.
+
+### Windows — no providers yet
+
+The engine source and `doctor` work; every provider reports `UNAVAILABLE` until a Windows-native `VoiceProvider` is implemented. Install `ffmpeg` (e.g. `winget install Gyan.FFmpeg`) but do not route speech through `System.Speech`/`Add-Type` to make providers appear available.
+
+Add future backends behind the `VoiceProvider` interface in `tools/greia_voice_core/providers.py`. Do not teach Activities, OS, shared-library or Encyclopedia scripts a new host-specific backend command.
 
 For detailed installation/troubleshooting, see:
 

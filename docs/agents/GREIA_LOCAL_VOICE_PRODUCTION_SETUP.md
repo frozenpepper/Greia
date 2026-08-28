@@ -275,17 +275,124 @@ The exact phrase/library runbook is:
 docs/agents/GREIA_SHARED_CHARACTER_UTTERANCE_RECORDING.md
 ```
 
-## 12. Unsupported hosts
+## 12. Per-OS host installation
 
-The semantic engine can run `doctor` elsewhere, but current repository providers are intentionally honest:
+The semantic engine and `doctor` are portable, but the current repository providers target a specific host per OS. Pick the section that matches your machine. All commands assume `uv` is on `PATH` (macOS/Linux: `brew install uv` or `pipx install uv`; Windows: `winget install astral-sh.uv` or `pip install uv`).
 
-```text
-Apple-Silicon macOS -> full cloned-character + native system path
-other macOS         -> native system path; MLX character path depends on actual provider support
-Linux/Windows       -> no accepted native/character provider yet unless a new VoiceProvider is implemented
+### 12.1 Apple-Silicon macOS — full cloned-character production (tested)
+
+Path: `character/shared cloned speech -> mlx-community/chatterbox-multilingual-v3`, optional ASR `mlx-community/whisper-tiny`, pedagogical/Dani via macOS `say` + `afconvert`, packaging via `ffmpeg`.
+
+Architecture: **M1/M2/M3/M4 (arm64)** required for the MLX provider. Intel macOS falls back to §12.2 below.
+
+```bash
+export GREIA_VOICE_HOME="${HOME}/Library/Application Support/Greia/voice-production"
+export GREIA_VOICE_CACHE="${HOME}/Library/Caches/Greia/voice-production"
+export HF_HOME="${GREIA_VOICE_CACHE}/huggingface"
+export HF_HUB_DISABLE_TELEMETRY=1
+mkdir -p "${GREIA_VOICE_HOME}" "${GREIA_VOICE_CACHE}" "${HF_HOME}"
+
+uv venv "${GREIA_VOICE_HOME}/venv" --python 3.12
+uv pip install --python "${GREIA_VOICE_HOME}/venv/bin/python" \
+  -r tools/greia_voice_requirements_mlx.txt
+
+brew install ffmpeg   # if not already present
+
+source "${GREIA_VOICE_HOME}/venv/bin/activate"
+python tools/greia_voice.py doctor
 ```
 
-Do not bypass `UNAVAILABLE` by teaching Activities direct host-specific TTS commands. Add a provider behind `VoiceEngine` instead.
+Expected doctor output:
+
+```text
+canonical anchors: OK
+ffmpeg: available
+chatterbox-mlx-multilingual-v3: available
+macos-native-say: available
+mlx-whisper-tiny: available   # optional but recommended
+```
+
+The first actual character generation downloads `mlx-community/chatterbox-multilingual-v3` weights (~3 GB) into `${HF_HOME}/hub/`. The first Whisper verification downloads `mlx-community/whisper-tiny`. Do not trigger those downloads without owner authorization.
+
+### 12.2 Intel macOS — pedagogical/Dani only
+
+The MLX provider requires Apple Silicon. On Intel macOS only `macos-native-say` is available; `chatterbox-mlx-multilingual-v3` reports `UNAVAILABLE` and so does `mlx-whisper-tiny`. Cloned character production must wait for a non-MLX provider; do **not** install torch/CUDA/Coqui variants just to bypass the unavailability gate.
+
+```bash
+export GREIA_VOICE_HOME="${HOME}/Library/Application Support/Greia/voice-production"
+export GREIA_VOICE_CACHE="${HOME}/Library/Caches/Greia/voice-production"
+export HF_HOME="${GREIA_VOICE_CACHE}/huggingface"
+export HF_HUB_DISABLE_TELEMETRY=1
+mkdir -p "${GREIA_VOICE_HOME}" "${GREIA_VOICE_CACHE}" "${HF_HOME}"
+
+uv venv "${GREIA_VOICE_HOME}/venv" --python 3.12
+# Do NOT install tools/greia_voice_requirements_mlx.txt; mlx is arm64-only.
+uv pip install --python "${GREIA_VOICE_HOME}/venv/bin/python" soundfile sentencepiece
+
+brew install ffmpeg   # if not already present
+
+source "${GREIA_VOICE_HOME}/venv/bin/activate"
+python tools/greia_voice.py doctor
+```
+
+Expected: `macos-native-say: available`; `chatterbox-mlx-multilingual-v3: UNAVAILABLE (MLX requires Apple Silicon)`; `mlx-whisper-tiny: UNAVAILABLE (no Apple Silicon)`. All `pedagogical_speech` and `dani_system_speech` smoke tests pass.
+
+### 12.3 Linux — pedagogical/system speech only
+
+No cloned-character provider or Whisper verifier is implemented for Linux yet; cloned character production must wait for a real `VoiceProvider` implementation. Pedagogical/Dani generation uses `espeak-ng` if installed, otherwise `piper` TTS through a small adapter (WIP). Today, on most Linux distributions the system provider reports `UNAVAILABLE` and only FFmpeg is wired up.
+
+```bash
+export GREIA_VOICE_HOME="${XDG_DATA_HOME:-$HOME/.local/share}/Greia/voice-production"
+export GREIA_VOICE_CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/Greia/voice-production"
+export HF_HOME="${GREIA_VOICE_CACHE}/huggingface"
+export HF_HUB_DISABLE_TELEMETRY=1
+mkdir -p "${GREIA_VOICE_HOME}" "${GREIA_VOICE_CACHE}" "${HF_HOME}"
+
+uv venv "${GREIA_VOICE_HOME}/venv" --python 3.12
+# Do NOT install tools/greia_voice_requirements_mlx.txt; mlx is macOS-only.
+uv pip install --python "${GREIA_VOICE_HOME}/venv/bin/python" soundfile sentencepiece
+
+# ffmpeg + (optional) native TTS
+sudo apt-get update && sudo apt-get install -y ffmpeg espeak-ng   # Debian/Ubuntu
+# Fedora:        sudo dnf install -y ffmpeg espeak-ng
+# Arch:          sudo pacman -S ffmpeg espeak-ng
+
+source "${GREIA_VOICE_HOME}/venv/bin/activate"
+python tools/greia_voice.py doctor
+```
+
+Expected on a stock distribution: `ffmpeg: available`, `espeak-ng-native: UNAVAILABLE (provider not yet implemented on this host)`. Cloned character and Whisper providers are `UNAVAILABLE` until a Linux provider lands.
+
+When (and only when) a real Linux provider has been added to `tools/greia_voice_core/providers.py` and accepted via `VoiceProvider` can the `native-system-unavailable` slot flip green; do not seed it with arbitrary `say`/`espeak` shell calls to make `doctor` green.
+
+### 12.4 Windows — pedagogical/system speech only
+
+Native and cloned-character generation are **NOT** implemented for Windows. The engine source is portable and `doctor` runs, but every provider will report `UNAVAILABLE`. Do not attempt a `pyenv-win` + Coqui + CUDA workaround to flip the provider list green.
+
+```powershell
+# PowerShell — Windows 10/11
+$env:GREIA_VOICE_HOME      = Join-Path $env:LOCALAPPDATA "Greia\voice-production"
+$env:GREIA_VOICE_CACHE     = Join-Path $env:LOCALAPPDATA "Greia\voice-production\cache"
+$env:HF_HOME               = Join-Path $env:GREIA_VOICE_CACHE "huggingface"
+$env:HF_HUB_DISABLE_TELEMETRY = "1"
+New-Item -ItemType Directory -Force -Path $env:GREIA_VOICE_HOME,$env:GREIA_VOICE_CACHE,$env:HF_HOME | Out-Null
+
+uv venv "$env:GREIA_VOICE_HOME\venv" --python 3.12
+# Do NOT install tools/greia_voice_requirements_mlx.txt; mlx is macOS-only.
+uv pip install --python "$env:GREIA_VOICE_HOME\venv\Scripts\python.exe" soundfile sentencepiece
+
+# Install ffmpeg (winget) and an accessible path if missing
+winget install Gyan.FFmpeg
+
+& "$env:GREIA_VOICE_HOME\venv\Scripts\Activate.ps1"
+python tools\greia_voice.py doctor
+```
+
+Expected on a stock Windows install: `ffmpeg: available` (after winget + PATH refresh); every provider reports `UNAVAILABLE (no implemented … adapter for this host)`. The `native-system-unavailable` placeholder is **deliberate**; do not synthesize speech through a different code path to avoid it.
+
+## 13. Hard rule across all hosts
+
+The semantic engine can run `doctor` on any host, but a provider that does not exist on a platform must report `UNAVAILABLE` truthfully. Never bypass `UNAVAILABLE` by teaching Activities, OS/shared-library scripts or Encyclopedia tools a direct host-specific TTS command (e.g. `say …`, `espeak …`, `Add-Type -AssemblyName System.Speech`, `piper …`). Add a `VoiceProvider` implementation under `tools/greia_voice_core/providers.py` instead, and have it return `UNAVAILABLE` until it is feature-complete and reviewed.
 
 ## 13. Review/package boundary
 
