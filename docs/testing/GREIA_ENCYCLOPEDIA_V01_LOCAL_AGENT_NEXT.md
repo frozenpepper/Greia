@@ -1,64 +1,85 @@
 # Greia Encyclopedia v0.1 — LOCAL AGENT NEXT TASK
 
-The visual evidence review of the green 43-page mechanical traversal is complete.
+## Broad acceptance runs are paused for visual reauthoring
 
-Authoritative review:
+The owner has rejected the current Encyclopedia graphics quality as a product target.
 
-```text
-docs/reviews/2026-08-28_ENCYCLOPEDIA_V01_VISUAL_EVIDENCE_REVIEW.md
-```
+The mechanical architecture remains useful, but the Activity now enters a serious visual reauthoring phase before another full 43-page visual acceptance run.
 
-It found:
+Authoritative visual forensic review:
 
 ```text
-43-page reachability/back                 PASS
-coherent first-interaction visual pairs   34 / 36
-space.sun before/after                     capture race
-space.neptune before/after                 capture race
-history.pyramids intro caption             overflow defect
-Body Teeth section target                  low-contrast defect
+docs/reviews/2026-08-28_ENCYCLOPEDIA_GRAPHICS_FORENSIC_AUDIT.md
 ```
 
-The primary agent has already fixed the Pyramids caption rendering and Body Teeth affordance on `main`.
-
-The next owner-machine task is now the **traversal transition-settle repair + verification + fresh evidence recapture**.
-
-Follow exactly:
+Active Encyclopedia visual subplan:
 
 ```text
-docs/testing/GREIA_ENCYCLOPEDIA_V01_VISUAL_REPAIR_LOCAL_AGENT.md
+docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md
 ```
 
-Do not use an older cached copy of this rolling file.
-Do not use the broad consolidated acceptance runbook.
-Do not generate or integrate narration.
-Do not start pointer/responsive acceptance yet.
+The generic headless page-transition settle fix has already landed on `main` and must be preserved.
 
-This tranche is allowed to change only the traversal helper/test required to fix the generic page-transition capture race. The runtime Pyramids/Body fixes are already landed and must not be casually rewritten.
+Do **not** now run another broad 43-page recapture merely because the harness is ready. The existing screenshots are sufficient to prove the present graphics need replacement.
 
-Required sequence is exactly:
+Do not:
 
 ```text
-safe update
-→ implement generic traversal transition-settle contract + regression
-→ focused tests once
-→ commit/push harness/test fix
-→ Encyclopedia source gate once (runtime source changed)
-→ fresh 43-page mechanical traversal once
-→ evidence ZIP
-→ stop for primary visual review
+rerun the 43-page traversal
+generate or integrate narration
+start pointer/responsive final acceptance
+bulk-redraw all 43 pages
+make one-off cosmetic patches to random pages
+change the protected Greia Home chrome
+invent a second asset/cache/scene system
 ```
+
+The next implementation tranche is the visual plan's:
+
+```text
+E1 — Encyclopedia visual foundation
+E2 — golden-master prototypes
+```
+
+Golden-master target set:
+
+```text
+Home
+Animals section
+Lion
+Saturn
+Gears
+Pyramids
+optional Body/Heart proof if anatomy direction remains uncertain
+```
+
+The intended workflow is:
+
+```text
+read visual authorities
+→ inventory reusable assets
+→ build only genuinely shared Encyclopedia presentation primitives
+→ author/reuse strong Activity-local art
+→ integrate Home + Animals + Lion first
+→ extend the same grammar to Saturn/Gears/Pyramids
+→ run focused tests
+→ capture actual Simulator prototype pixels
+→ produce one contact sheet
+→ STOP for primary/owner visual review
+```
+
+Do not propagate the design across all 43 pages until the golden-master direction is explicitly accepted.
 
 Current truthful state:
 
 ```text
-SOURCE-VERIFIED AT PRIOR SHA
-HEADLESS-LIFECYCLE-SMOKE-PASS
+SOURCE / MECHANICAL RUNTIME FOUNDATION HEALTHY
 43-PAGE REACHABILITY/BACK PASS
-34/36 COHERENT FIRST-INTERACTION VISUAL PAIRS
-VISUAL REPAIRS LANDED / REVERIFY PENDING
-POINTER PARITY PENDING
+CURRENT GRAPHICS PRODUCT TARGET REJECTED
+ENCYCLOPEDIA VISUAL REAUTHORING ACTIVE
+GOLDEN-MASTER DIRECTION NOT YET ACCEPTED
+POINTER PARITY FINAL ACCEPTANCE PENDING
 PRE-READER FINAL ACCEPTANCE PENDING
-RESPONSIVE MATRIX PENDING
+RESPONSIVE FINAL ACCEPTANCE PENDING
 NARRATION ACCEPTANCE PENDING
 ```
