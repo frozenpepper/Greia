@@ -19,16 +19,26 @@ smoke evidence: tmp/encyclopedia-v01-acceptance/20260828_070951-headless-route-s
 real route: home[2]=learn -> activity[4]=org.greia.enciclopedia
 ```
 
+The previous first attempt at this task stopped **before traversal** because the focused test process exposed an import-shadowing bug: `tools/greia_simulator.py` could be imported as top-level `greia_simulator` when `tools/` moved ahead of `src/`, causing `greia_simulator.device` to fail with "not a package".
+
+That tooling defect is now fixed centrally:
+
+- the CLI shim safely exposes the real `src/greia_simulator` package path if it is accidentally imported as `greia_simulator`;
+- `tests/test_greia_simulator_import_shadowing.py` deliberately reproduces a tools-first import path and proves submodule imports remain valid.
+
 The mechanical driver is:
 
 ```text
 tools/encyclopedia_v01_headless_traversal.py
 ```
 
-Focused contract test:
+Focused contract tests include:
 
 ```text
+tests/test_greia_simulator_import_shadowing.py
 tests/test_encyclopedia_v01_headless_traversal.py
+tests/test_headless_greia_simulator.py
+tests/test_greia_simulator.py
 ```
 
 This run must generate **ZERO voice files**.
@@ -122,11 +132,12 @@ If it does not exist, STOP: the checkout is not on the required task revision.
 
 ## Step 2 — focused tooling tests, exactly once
 
-`tests/` is intentionally not a Python package:
+`tests/` is intentionally not a Python package. Put the real source package path first:
 
 ```bash
 cd tests
-PYTHONPATH=..:../src python3 -m unittest \
+PYTHONPATH=../src:.. python3 -m unittest \
+  test_greia_simulator_import_shadowing.py \
   test_encyclopedia_v01_headless_traversal.py \
   test_headless_greia_simulator.py \
   test_greia_simulator.py \
@@ -140,6 +151,8 @@ Required:
 ```text
 TEST_RC=0
 ```
+
+This exact combined process is intentional: it proves the traversal test can no longer poison later `greia_simulator.*` imports even if it temporarily exposes `tools/`.
 
 If tests fail, STOP. Do not fix and do not rerun. Return the first failure.
 
