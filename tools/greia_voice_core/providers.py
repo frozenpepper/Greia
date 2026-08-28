@@ -105,18 +105,6 @@ class ChatterboxMLXProvider(VoiceProvider):
         return self._model
 
     @staticmethod
-    def _token_budget(text: str) -> int:
-        words = len(text.split())
-        if words <= 2:
-            return 45
-        if words <= 4:
-            return 65
-        if words <= 12:
-            return 160
-        # Long factual/narrative lines need headroom; keep a bounded ceiling.
-        return min(700, max(180, words * 24))
-
-    @staticmethod
     def _trim_audio(audio: Any, sample_rate: int, short: bool) -> Any:
         import numpy as np
 
@@ -171,10 +159,12 @@ class ChatterboxMLXProvider(VoiceProvider):
         import numpy as np
         import soundfile as sf
 
-        max_tokens = self._token_budget(request.text)
-        # Locals we want to release as soon as the WAV is written. Listing them
-        # explicitly lets us drop them before gc.collect() so the autoregressive
-        # Metal buffers don't keep the lazy MLX graph alive across calls.
+        # Do not derive an acoustic-token ceiling from source word count. Chatterbox
+        # speech-token length is not predictable from a 1:1 text-word heuristic, and
+        # the old 45/65-token caps truncated ordinary words and phrases. Pedagogical
+        # letters/syllables no longer route through Chatterbox, so that historical
+        # workaround has no place in normal character/shared speech production.
+        # Let the backend's normal generation policy determine when the utterance ends.
         generator = result = audio_tensor = cleaned = None
         try:
             try:
@@ -185,7 +175,6 @@ class ChatterboxMLXProvider(VoiceProvider):
                     text=request.text,
                     ref_audio=str(profile.anchor_path),
                     lang_code=request.language,
-                    max_new_tokens=max_tokens,
                     verbose=False,
                 )
                 result = next(generator)
@@ -209,7 +198,6 @@ class ChatterboxMLXProvider(VoiceProvider):
                     sample_rate_hz=sample_rate,
                     generation_parameters={
                         "model_id": self.model_id,
-                        "max_new_tokens": max_tokens,
                         "lang_code": request.language,
                         "model_load_count": self._model_load_count,
                     },
