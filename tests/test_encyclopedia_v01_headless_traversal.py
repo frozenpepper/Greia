@@ -4,7 +4,9 @@ import importlib.util
 from pathlib import Path
 import sys
 import tempfile
+import types
 import unittest
+from unittest import mock
 
 from PIL import Image
 
@@ -106,6 +108,131 @@ class EncyclopediaHeadlessTraversalContractTests(unittest.TestCase):
                 traversal.changed_pixel_fraction(before, changed),
                 1 / 16,
             )
+
+    def test_post_key_frame_predicate_rejects_under_advance_and_accepts_threshold(self) -> None:
+        predicate = traversal.HeadlessEncyclopediaTraversal._post_key_frame_predicate
+        base = {"mode": "activity", "frame_count": 100}
+
+        # Default one-frame behavior: +1 must be enough, +0 must not.
+        self.assertTrue(predicate(base, before=99, min_frame_advance=1))
+        self.assertFalse(predicate(base, before=100, min_frame_advance=1))
+
+        # Multi-frame settle: +1 and +2 must not satisfy a three-frame requirement.
+        for advance in (1, 2):
+            state = {"mode": "activity", "frame_count": 100 + advance}
+            self.assertFalse(
+                predicate(state, before=100, min_frame_advance=3),
+                f"predicate accepted +{advance} advance when min_frame_advance=3",
+            )
+
+        # +3 satisfies the three-frame requirement; +4 is also fine.
+        self.assertTrue(
+            predicate({"mode": "activity", "frame_count": 103}, before=100, min_frame_advance=3)
+        )
+        self.assertTrue(
+            predicate({"mode": "activity", "frame_count": 104}, before=100, min_frame_advance=3)
+        )
+
+        # Non-activity frames must never satisfy the predicate, regardless of count.
+        self.assertFalse(
+            predicate({"mode": "profiles", "frame_count": 200}, before=100, min_frame_advance=1)
+        )
+        self.assertFalse(
+            predicate({"mode": "profiles", "frame_count": 200}, before=100, min_frame_advance=3)
+        )
+
+    def test_post_key_frame_predicate_rejects_zero_or_negative_advance(self) -> None:
+        predicate = traversal.HeadlessEncyclopediaTraversal._post_key_frame_predicate
+        with self.assertRaises(ValueError):
+            predicate({"mode": "activity", "frame_count": 5}, before=5, min_frame_advance=0)
+        with self.assertRaises(ValueError):
+            predicate({"mode": "activity", "frame_count": 5}, before=5, min_frame_advance=-1)
+
+    def test_key_min_frame_advance_uses_predicate_and_dispatches_bridge(self) -> None:
+        runner = traversal.HeadlessEncyclopediaTraversal(
+            workspace_dir=Path(tempfile.gettempdir()) / "unused-workspace",
+            evidence_dir=Path(tempfile.gettempdir()) / "unused-evidence",
+            locale="it",
+            viewport="1024x600",
+        )
+        # Fake child: only attribute _key reads through the helper chain.
+        runner._child = mock.MagicMock()
+        runner._child.poll.return_value = None
+
+        with mock.patch.object(
+            traversal.headless,
+            "_http_get_json",
+            return_value={"mode": "activity", "frame_count": 10},
+        ) as state_calls, mock.patch.object(
+            traversal.headless,
+            "_bridge_key",
+            return_value=True,
+        ) as bridge_calls, mock.patch.object(
+            traversal.headless,
+            "_wait_for_state",
+            return_value={"mode": "activity", "frame_count": 13},
+        ) as wait_calls:
+            returned = runner._key(
+                "RETURN",
+                stage="test settle",
+                min_frame_advance=traversal.PAGE_CHANGE_FRAME_ADVANCE,
+            )
+
+        # Bridge received exactly the requested key.
+        self.assertEqual([call.args for call in bridge_calls.call_args_list], [("RETURN",)])
+        # The wait predicate used the three-frame minimum (returns +3 frame, satisfies +3).
+        self.assertEqual(returned["frame_count"], 13)
+        self.assertEqual(state_calls.call_count, 1)
+        predicate_arg = wait_calls.call_args.args[0]
+        self.assertFalse(predicate_arg({"mode": "activity", "frame_count": 11}))
+        self.assertFalse(predicate_arg({"mode": "activity", "frame_count": 12}))
+        self.assertTrue(predicate_arg({"mode": "activity", "frame_count": 13}))
+        self.assertFalse(predicate_arg({"mode": "profiles", "frame_count": 13}))
+
+    def test_keys_propagates_min_frame_advance(self) -> None:
+        runner = traversal.HeadlessEncyclopediaTraversal(
+            workspace_dir=Path(tempfile.gettempdir()) / "unused-workspace",
+            evidence_dir=Path(tempfile.gettempdir()) / "unused-evidence",
+            locale="it",
+            viewport="1024x600",
+        )
+        with mock.patch.object(runner, "_key", return_value={"mode": "activity"}) as key_calls:
+            runner._keys(
+                ("DOWN", "RIGHT"),
+                stage="settle focus",
+                min_frame_advance=traversal.PAGE_CHANGE_FRAME_ADVANCE,
+            )
+        self.assertEqual(key_calls.call_count, 2)
+        for recorded in key_calls.call_args_list:
+            self.assertEqual(
+                recorded.kwargs.get("min_frame_advance"),
+                traversal.PAGE_CHANGE_FRAME_ADVANCE,
+            )
+
+    def test_page_change_call_sites_use_multi_frame_settle(self) -> None:
+        source = TOOL.read_text(encoding="utf-8")
+        # The page-changing settle contract is a single global constant. No
+        # call site is allowed to silently fall back to the one-frame default
+        # for any reason, and no per-page branch is allowed to add a special
+        # case to the key/settle helper.
+        self.assertEqual(source.count("PAGE_CHANGE_FRAME_ADVANCE = 3"), 1)
+        # Four page-changing call sites (Home->section RETURN, section->entry
+        # RETURN, entry->section ESCAPE, section->Home ESCAPE) must each
+        # request the multi-frame settle explicitly.
+        self.assertGreaterEqual(
+            source.count("min_frame_advance=PAGE_CHANGE_FRAME_ADVANCE"),
+            4,
+        )
+        # The one-frame "frame_count > before" predicate must not reappear
+        # anywhere in the file: the settle contract is the only path.
+        self.assertNotIn("frame_count > before", source)
+        # Page-specific identifiers (Sun/Neptune) must not appear inside a
+        # branch of the key/settle helper. SECTION_ENTRY_ORDER legitimately
+        # contains them as child-visible nav order, so we scope the check to
+        # the body of the new helper.
+        helper = source.split("def _post_key_frame_predicate", 1)[1]
+        self.assertNotIn('"space.sun"', helper)
+        self.assertNotIn('"space.neptune"', helper)
 
 
 if __name__ == "__main__":

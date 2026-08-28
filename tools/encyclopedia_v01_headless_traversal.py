@@ -106,6 +106,15 @@ SECTION_ENTRY_ORDER: dict[str, tuple[str, ...]] = {
 # the planned signature interaction; this mechanical gate only delivers it.
 PRIMARY_INTERACTION_KEYS = ("RETURN",)
 
+# Page-changing semantic keys (Encyclopedia Home -> section, section -> entry,
+# entry -> section, section -> Home) wait for at least this many Activity
+# frames after the key is delivered before the helper continues. Animated
+# sections have been observed to render the old page for one to two extra
+# frames after a key is consumed, so a single-frame wait was enough to capture
+# a stale "before" PNG. Three frames is the smallest value that reliably lets
+# the new page settle on every section observed in source-verified v0.1.
+PAGE_CHANGE_FRAME_ADVANCE = 3
+
 
 class TraversalFailure(RuntimeError):
     def __init__(self, stage: str, message: str) -> None:
@@ -277,27 +286,66 @@ class HeadlessEncyclopediaTraversal:
             )
         return state
 
-    def _key(self, key: str, *, stage: str, timeout: float = 4.0) -> dict[str, object]:
+    @staticmethod
+    def _post_key_frame_predicate(
+        state: dict[str, object], *, before: int, min_frame_advance: int
+    ) -> bool:
+        """Return True when ``state`` is a fresh Activity frame that has advanced
+        at least ``min_frame_advance`` frames past the pre-key ``before`` count.
+
+        The default ``min_frame_advance=1`` keeps ordinary focus/input movement
+        behaving the same as before. Page-changing key call sites pass
+        ``min_frame_advance=3`` so animated sections cannot trigger a stale
+        "before" capture before the previous page has actually been replaced.
+        """
+        if min_frame_advance < 1:
+            raise ValueError("min_frame_advance must be a positive integer")
+        return (
+            state.get("mode") == "activity"
+            and int(state.get("frame_count", 0)) - before >= min_frame_advance
+        )
+
+    def _key(
+        self,
+        key: str,
+        *,
+        stage: str,
+        timeout: float = 4.0,
+        min_frame_advance: int = 1,
+    ) -> dict[str, object]:
         child = self._require_child()
         state = self._current_activity_state()
         before = int(state.get("frame_count", 0))
         if not headless._bridge_key(key):
             raise TraversalFailure(stage, f"remote key {key} was rejected")
         updated = headless._wait_for_state(
-            lambda candidate: (
-                candidate.get("mode") == "activity"
-                and int(candidate.get("frame_count", 0)) > before
+            lambda candidate: self._post_key_frame_predicate(
+                candidate, before=before, min_frame_advance=min_frame_advance
             ),
             timeout=timeout,
             child=child,
         )
         if updated is None:
-            raise TraversalFailure(stage, f"no fresh Activity frame after semantic key {key}")
+            raise TraversalFailure(
+                stage,
+                f"no fresh Activity frame after semantic key {key} "
+                f"(required min_frame_advance={min_frame_advance})",
+            )
         return updated
 
-    def _keys(self, keys: Iterable[str], *, stage: str) -> None:
+    def _keys(
+        self,
+        keys: Iterable[str],
+        *,
+        stage: str,
+        min_frame_advance: int = 1,
+    ) -> None:
         for index, key in enumerate(tuple(keys), start=1):
-            self._key(key, stage=f"{stage} [{index}] {key}")
+            self._key(
+                key,
+                stage=f"{stage} [{index}] {key}",
+                min_frame_advance=min_frame_advance,
+            )
 
     def _capture(self, relative: str) -> Path:
         path = self.screenshots_dir / relative
@@ -413,7 +461,11 @@ class HeadlessEncyclopediaTraversal:
                 _section_home_route(section_id),
                 stage=f"home -> {section_id} focus",
             )
-            self._key("RETURN", stage=f"home -> {section_id} activate")
+            self._key(
+                "RETURN",
+                stage=f"home -> {section_id} activate",
+                min_frame_advance=PAGE_CHANGE_FRAME_ADVANCE,
+            )
             section_png = self._capture(f"sections/{section_index:02d}-{section_id}.png")
             self._section_pngs[section_id] = section_png.relative_to(self.evidence_dir).as_posix()
 
@@ -425,7 +477,11 @@ class HeadlessEncyclopediaTraversal:
                     plan.entry_keys,
                     stage=f"{section_id} -> {plan.page_id} focus",
                 )
-                self._key("RETURN", stage=f"{section_id} -> {plan.page_id} activate")
+                self._key(
+                    "RETURN",
+                    stage=f"{section_id} -> {plan.page_id} activate",
+                    min_frame_advance=PAGE_CHANGE_FRAME_ADVANCE,
+                )
                 before = self._capture(f"entries/{plan.page_id}-before.png")
 
                 self._keys(
@@ -452,9 +508,17 @@ class HeadlessEncyclopediaTraversal:
                         "interaction-frame",
                         f"{plan.page_id} produced an identical before/after frame",
                     )
-                self._key("ESCAPE", stage=f"{plan.page_id} internal Back -> {section_id}")
+                self._key(
+                    "ESCAPE",
+                    stage=f"{plan.page_id} internal Back -> {section_id}",
+                    min_frame_advance=PAGE_CHANGE_FRAME_ADVANCE,
+                )
 
-            self._key("ESCAPE", stage=f"{section_id} internal Back -> home")
+            self._key(
+                "ESCAPE",
+                stage=f"{section_id} internal Back -> home",
+                min_frame_advance=PAGE_CHANGE_FRAME_ADVANCE,
+            )
 
         if len(self._records) != 36:
             raise TraversalFailure(
