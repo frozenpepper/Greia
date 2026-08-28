@@ -1,70 +1,64 @@
 # Greia Encyclopedia v0.1 — LOCAL AGENT NEXT TASK
 
-## No owner-machine run is currently authorized
+The visual evidence review of the green 43-page mechanical traversal is complete.
 
-The 43-page mechanical traversal is GREEN and complete.
-
-Accepted owner-machine evidence:
+Authoritative review:
 
 ```text
-source gate:
-  tmp/encyclopedia-v01-acceptance/20260828_044052/
-
-headless lifecycle smoke:
-  tmp/encyclopedia-v01-acceptance/20260828_070951-headless-route-smoke/
-
-43-page mechanical traversal:
-  tmp/encyclopedia-v01-acceptance/20260828_074819-mechanical-traversal/
-  tmp/encyclopedia-v01-acceptance/20260828_074819-mechanical-traversal.zip
+docs/reviews/2026-08-28_ENCYCLOPEDIA_V01_VISUAL_EVIDENCE_REVIEW.md
 ```
 
-Mechanical traversal status:
+It found:
 
 ```text
-focused traversal/Simulator tests       53 / 53 PASS
-Shell -> Encyclopedia                   PASS
-sections                               6 / 6
-factual entries                        36 / 36
-entry interactions                     36 / 36
-before/after pairs                     36 / 36
-internal Back                          36 / 36
-Encyclopedia Home return               PASS
-protected Home -> Shell                PASS
-traversal-summary                      PASS
-worktree                               clean
+43-page reachability/back                 PASS
+coherent first-interaction visual pairs   34 / 36
+space.sun before/after                     capture race
+space.neptune before/after                 capture race
+history.pyramids intro caption             overflow defect
+Body Teeth section target                  low-contrast defect
 ```
 
-The next gate is **visual review of the existing evidence ZIP** by the primary/vision-capable reviewer.
+The primary agent has already fixed the Pyramids caption rendering and Body Teeth affordance on `main`.
 
-Therefore, until that review returns a targeted follow-up task, do **not**:
+The next owner-machine task is now the **traversal transition-settle repair + verification + fresh evidence recapture**.
+
+Follow exactly:
 
 ```text
-rerun the source gate
-rerun the headless lifecycle smoke
-rerun the 43-page mechanical traversal
-generate or integrate voices
-run the broad consolidated acceptance sequence
-start pointer/responsive acceptance speculatively
-repair source based only on changed-pixel metrics
+docs/testing/GREIA_ENCYCLOPEDIA_V01_VISUAL_REPAIR_LOCAL_AGENT.md
 ```
 
-The visual review must inspect the existing screenshots for signature-interaction correctness, pre-reader clarity, missing/fallback imagery and any visible clue related to the unresolved:
+Do not use an older cached copy of this rolling file.
+Do not use the broad consolidated acceptance runbook.
+Do not generate or integrate narration.
+Do not start pointer/responsive acceptance yet.
+
+This tranche is allowed to change only the traversal helper/test required to fix the generic page-transition capture race. The runtime Pyramids/Body fixes are already landed and must not be casually rewritten.
+
+Required sequence is exactly:
 
 ```text
-libpng error: bad adaptive filter value
+safe update
+→ implement generic traversal transition-settle contract + regression
+→ focused tests once
+→ commit/push harness/test fix
+→ Encyclopedia source gate once (runtime source changed)
+→ fresh 43-page mechanical traversal once
+→ evidence ZIP
+→ stop for primary visual review
 ```
-
-After that review, this file will be replaced with one targeted owner-machine task for the remaining pointer parity / responsive / verified defect work.
 
 Current truthful state:
 
 ```text
-SOURCE-VERIFIED
+SOURCE-VERIFIED AT PRIOR SHA
 HEADLESS-LIFECYCLE-SMOKE-PASS
-43-PAGE-MECHANICAL-TRAVERSAL-PASS
-VISUAL/SIGNATURE REVIEW PENDING
+43-PAGE REACHABILITY/BACK PASS
+34/36 COHERENT FIRST-INTERACTION VISUAL PAIRS
+VISUAL REPAIRS LANDED / REVERIFY PENDING
 POINTER PARITY PENDING
-PRE-READER UX PENDING
+PRE-READER FINAL ACCEPTANCE PENDING
 RESPONSIVE MATRIX PENDING
 NARRATION ACCEPTANCE PENDING
 ```
