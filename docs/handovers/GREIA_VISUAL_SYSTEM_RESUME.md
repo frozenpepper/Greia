@@ -1,52 +1,87 @@
 # Greia Visual System — Current Resume File
 
 **Status:** current visual-workstream continuation contract  
-**Last reviewed:** 2026-08-22  
+**Last reviewed:** 2026-08-28  
 **Repository:** `frozenpepper/Greia`  
 **Branch:** `main`  
 **Visual-system guide:** `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`  
+**Active visual plan:** `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`  
+**Current Activity visual subplan:** `docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md`  
 **Visual-authoring architecture:** `docs/design/GREIA_VISUAL_AUTHORING_ARCHITECTURE.md`  
 **Generic art taxonomy:** `docs/design/GREIA_GENERIC_ART_LIBRARY_TAXONOMY.md`  
 **Canonical cast system:** `docs/design/GREIA_CANONICAL_CAST_SYSTEM.md`  
-**Character grammar:** `docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md`  
-**Character motion:** `docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md`  
-**User-agent skill:** `skills/greia-visual-authoring/SKILL.md`  
-**Maintainer plan:** `docs/plans/2026-08-21_BASE_ART_PACK_REAUTHORING.md`
+**User-agent skill:** `skills/greia-visual-authoring/SKILL.md`
 
 ---
 
-# 1. Architecture
+# 1. Current focus — Encyclopedia visual reauthoring
 
-Greia has two distinct visual-authoring tracks.
+The owner rejected the present `org.greia.enciclopedia` graphics quality as a final product target after reviewing the complete 43-page 1024×600 mechanical traversal evidence.
+
+The problem is systemic rather than a small polish list. The current Activity relies too heavily on raw Pygame primitives for its main illustrated subjects and environments, producing mechanically clear but crude screens that conflict with Greia's accepted storybook/felt-board/toy-diorama art direction.
+
+Forensic review:
+
+```text
+docs/reviews/2026-08-28_ENCYCLOPEDIA_GRAPHICS_FORENSIC_AUDIT.md
+```
+
+Active bounded reauthoring plan:
+
+```text
+docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md
+```
+
+Current rule:
+
+> **Do not bulk-redraw 43 pages. Build an Encyclopedia visual foundation, then a representative golden-master set, obtain owner direction approval, and only then migrate the complete Activity.**
+
+Golden-master targets:
+
+```text
+Home
+Animals section
+Lion
+Saturn
+Gears
+Pyramids
+optional Body/Heart anatomy proof
+```
+
+No broad 43-page visual recapture is useful until this direction is reauthored.
+
+---
+
+# 2. Architecture to preserve
+
+Greia still uses two visual-authoring tracks.
 
 ## Track A — maintainer-side source/toolbox/canonical-cast production
 
-The owner's local maintainer agent may create/improve Greia source art. Its drawing ability is not a product dependency and is not evidence about arbitrary future Activity-authoring agents.
+The owner's local maintainer agent may create or improve Greia source art. That drawing ability is not a product dependency and is not evidence about arbitrary future Activity-authoring agents.
 
 ## Track B — arbitrary Activity-authoring agents
 
-The model/tool-agnostic workflow remains:
+Model/tool-agnostic workflow:
 
 ```text
 inventory Activity needs
 → query/search generic semantic library
-→ use canonical Greia characters/states where appropriate
-→ prefer reviewed/preferred resources where they fit
-→ inspect candidate/source references as needed
+→ use canonical characters/states where appropriate
 → REUSE / COMPOSE-ADAPT / CREATE ORIGINAL
-→ create Activity-local final art
-→ flatten/build efficient runtime rendition
+→ create Activity-local final art where required
+→ flatten/build efficient runtime renditions
 → integrate through existing Greia package/scene boundaries
-→ inspect actual pixels
+→ inspect actual rendered pixels
 ```
 
-Theme/source bundles are provenance pools. Generic semantic collections are the primary discovery interface.
+For the Encyclopedia, the library is a toolbox rather than a requirement to force reuse. Most topic-specific heroes will legitimately require original Activity-local artwork.
 
 ---
 
-# 2. Generic toolbox state — DISCOVERY TOOLING AVAILABLE
+# 3. Generic toolbox state
 
-Current indexed state:
+Current indexed state remains:
 
 ```text
 57 preferred finished assets
@@ -57,40 +92,39 @@ Current indexed state:
 
 Discovery helper:
 
-`tools/visual_authoring_library.py`
-
-Focused tests:
-
-`tests/test_visual_authoring_library.py`
+```text
+tools/visual_authoring_library.py
+```
 
 Permanent rules:
 
-- `preferred` is the first-choice direct-reuse state;
-- `candidate_reference` is primarily adaptation/reference material;
+- `preferred` is first-choice direct reuse;
+- `candidate_reference` is primarily reference/adaptation material;
 - generic assets encode reusable form while Activity-specific meaning stays separable where practical;
-- absence of a perfect asset does not automatically authorize new generic production;
-- **Generic Batch B remains unauthorized** until real Activity demand demonstrates a concrete generic gap.
+- **Generic Batch B remains unauthorized** unless real demand proves a concrete generic gap.
+
+The Encyclopedia redesign does not automatically authorize a new generic pack. Topic-specific art should normally stay Activity-local.
 
 ---
 
-# 3. Canonical cast v0.1 — ACCEPTED AT SIMULATOR RUNTIME SCOPE
+# 4. Canonical cast v0.1 — accepted runtime family
 
 Current cast:
 
 ```text
-Lilli — unicorn                        → creativity / stories / art / imagination
-Leo   — owl with integrated glasses   → learning / reading / language / knowledge
-Flash — white rabbit + lightning top  → games / speed / action / playful challenge
-Dani  — friendly robot                → math / logic / patterns / sequencing
-Tito  — fox                            → exploration / nature / discovery / investigation
-Momo  — monster                        → emotion / music / silly play / celebration
+Lilli — unicorn                        creativity / stories / art / imagination
+Leo   — owl with integrated glasses   learning / reading / language / knowledge
+Flash — white rabbit + lightning top  games / speed / action / challenge
+Dani  — friendly robot                math / logic / patterns / sequencing
+Tito  — fox                           exploration / nature / discovery
+Momo  — monster                       emotion / music / silly play / celebration
 ```
-
-Historical Nino remains provenance. Current owl identity is Leo.
 
 Stable source:
 
-`assets/visual/characters/canonical/v0.1/`
+```text
+assets/visual/characters/canonical/v0.1/
+```
 
 Accepted states:
 
@@ -102,7 +136,7 @@ surprised
 sleepy
 ```
 
-Accepted semantic motions:
+Accepted motions:
 
 ```text
 idle_bounce
@@ -113,27 +147,19 @@ surprised_wobble
 sleepy_sway
 ```
 
-Runtime architecture:
+Runtime rule remains:
 
-> **complete authored state art + authoring-time semantic source components + build-time PNG renditions + simple whole-character fixed-size runtime transforms**
+> complete authored state art + authoring-time semantic source components + build-time PNG renditions + simple whole-character fixed-size transforms.
 
-Do not replace this with skeletal rigs, runtime body-part composition, continuously varying raster sizes, or a second runtime asset/cache architecture.
-
-Final owner acceptance:
-
-`docs/reviews/visual/2026-08-22_canonical-cast-v01-final-capture/OWNER_REVIEW.md`
-
-Evidence class: **SIMULATOR VISUAL REVIEW**.
-
-No further cast proof fixture or pure-art cast pass is currently required.
+For the Encyclopedia specifically, characters should be integrated compositionally rather than stamped as tiny bottom-corner mascots.
 
 ---
 
-# 4. Stable runtime foundation to preserve
+# 5. Stable runtime foundation to preserve
 
 ```text
 explicit semantic asset catalogues
-build-time SVG/source → runtime PNG renditions
+build-time source/SVG → runtime PNG renditions
 bounded Pygame visual cache
 bounded failed-rendition memory
 SceneDefinition / SceneNode / SceneCamera
@@ -142,181 +168,104 @@ SceneActorDefinition / actor_scene_sample
 Greia Activity Simulator real Shell/runtime composition
 ```
 
-Runtime rules remain:
+Runtime rules:
 
 - no arbitrary runtime source scanning;
 - no normal runtime SVG rasterization;
 - no per-frame disk decode/scale;
 - bounded caches;
-- Activity-local assets stay inside Activity packages;
-- generic authoring indexes/tooling are authoring-time facilities, not a second runtime catalogue.
+- Activity-local assets remain inside Activity packages;
+- generic authoring indexes remain authoring-time facilities;
+- rich authored art should be cropped/flattened into economical runtime surfaces.
 
 ---
 
-# 5. Platform relationship
+# 6. Existing accepted visual work remains valid
 
-Soft lead-mascot affinities remain:
+Prior accepted/reviewed work is not invalidated by the Encyclopedia failure. Stable evidence/history remains in the active visual plan and dated review directories, including:
+
+- canonical cast v0.1 runtime acceptance;
+- Shape Garden authoring workflow;
+- Costruiamo Ponti stress exercise;
+- Painting productization;
+- Activity title/icon gate;
+- launcher Shell/category-navigation productization;
+- first-party visual audit and Batch 1 productization (`treno_numeri`, `labirinto_magico`, `acquario_magico`).
+
+The lesson from the Encyclopedia is narrower but important: **mechanical completion does not excuse programmer-art presentation, and a page-heavy Activity needs a reusable visual grammar before mass content production.**
+
+---
+
+# 7. Current Encyclopedia evidence boundary
+
+Already proven and preserved:
 
 ```text
-create  → Lilli often leads
-play    → Flash often leads
-learn   → Leo often leads
-explore → Tito often leads
+43-page source/runtime structure
+real Shell launch
+43/43 reachability
+36/36 internal Back return
+protected Greia Home return
+bounded semantic interactions
+headless transition-settle harness repair
 ```
 
-Dani and Momo remain cross-cutting. `my_greia` remains child/profile-centered.
+Not visually accepted:
 
-Do not create six top-level Home Collections.
+```text
+current Home aesthetic
+current six section-page aesthetics
+current factual-entry art direction
+current discovery-token treatment
+current presenter composition
+final pre-reader visual quality
+final responsive visual quality
+```
 
-Do **not** implement `lead_character` / `supporting_characters` package metadata merely because character presentation is available. Let real Activity-authoring demand establish whether that schema is useful.
-
----
-
-# 6. Shape Garden authoring workflow — OWNER ACCEPTED
-
-Executed gate:
-
-`docs/testing/2026-08-22_SHAPE_GARDEN_VISUAL_AUTHORING_WORKFLOW_EXERCISE.md`
-
-Implementation/evidence commit:
-
-`072004174237ca15727283dc19850e8a1765c6e3`
-
-Owner review:
-
-`docs/reviews/visual/2026-08-22_shape-garden-visual-authoring-workflow/OWNER_REVIEW.md`
-
-Disposition: **ACCEPTED — SIMULATOR VISUAL REVIEW**.
-
-Shape Garden primarily proved disciplined direct `REUSE`, light Activity-local adaptation, and justified Dani companion use. Library-gap result: **NO_GAP**.
+Narration remains a separate owner-listening workflow.
 
 ---
 
-# 7. Costruiamo Ponti authoring stress exercise — OWNER ACCEPTED
+# 8. Immediate next action
 
-Executed gate:
+Implement only:
 
-`docs/testing/2026-08-22_COSTRUIAMO_PONTI_VISUAL_AUTHORING_STRESS_EXERCISE.md`
+```text
+E1 — Encyclopedia shared visual foundation
++
+E2 — golden-master prototypes
+```
 
-Implementation/evidence commit:
+Sequence:
 
-`cf349b7`
+```text
+inventory reusable assets
+→ define Activity-local source/runtime art structure
+→ implement DiscoveryToken + hero-stage/page-shell helpers only where genuinely shared
+→ reauthor Home + Animals section + Lion
+→ extend same grammar to Saturn + Gears + Pyramids
+→ focused tests
+→ actual Simulator prototype captures
+→ one contact sheet
+→ STOP for owner/primary visual review
+```
 
-Owner review:
-
-`docs/reviews/visual/2026-08-22_costruiamo-ponti-visual-authoring-stress/OWNER_REVIEW.md`
-
-Disposition: **ACCEPTED — SIMULATOR VISUAL REVIEW**.
-
-This second real first-party exercise proved the harder authoring paths:
-
-- `REUSE` of generic scenery/character resources;
-- `COMPOSE_ADAPT` across materially distinct River / Canyon / Space worlds;
-- `CREATE_ORIGINAL` for gameplay-critical bridge-material and prop art;
-- preservation of puzzle mechanics, storage, events, audio, and platform navigation.
-
-Library-gap result: **NO_GAP**.
-
-Therefore:
-
-- Generic Batch B remains unauthorized;
-- no new character package metadata is justified;
-- no further Costruiamo Ponti acceptance rerun is required.
+Do not migrate the remaining pages before direction approval.
 
 ---
 
-# 8. Completed visual-authoring gate — PAINTING PRODUCTIZATION
+# 9. Drift to avoid
 
-Completed runbook:
+- no 43-page bulk redraw before golden-master approval;
+- no primitive-art polishing loop;
+- no generic Batch B by inertia;
+- no second runtime asset/cache/scene system;
+- no runtime SVG;
+- no AI-generated inconsistent full-screen art dump;
+- no detailed skeletal character rigs;
+- no tiny corner-mascot default;
+- no text-heavy rescue of unclear visuals;
+- no broad acceptance reruns before a visually meaningful state changes;
+- no R7/hardware claims from Activity visual work.
 
-`docs/testing/2026-08-22_PAINTING_VISUAL_PRODUCTIZATION_EXERCISE.md`
-
-Target:
-
-`activities/painting/` (`org.greia.painting`)
-
-Outcome: **COMPLETE & VERIFIED**
-- Proved authoring workflow on a UI-heavy Phase-0 core creation activity:
-  - `COMPOSE_ADAPT`: Storybook warm cream studio tabletop mat background framing the drawing canvas without eating screen space.
-  - `CREATE_ORIGINAL`: Complete tactile activity-local UI asset family in `activities/painting/assets/` (`tool_gallery.png`, `tool_undo.png`, `tool_new.png`, `tool_eraser.png`, `brush_small.png`, `brush_medium.png`, `brush_large.png`, `canvas_card_frame.png`, `color_well_dish.png`) with clean SVG masters in `source/` and build-time PNGs in `runtime/`.
-  - `KEEP_EXISTING_INTENTIONAL`: 100% preservation of PaintingRepository, StrokeHistory, autosave idle loop, undo limits, and platform Home button integration.
-  - Mascot Decision: Intentionally omitted mascot to ensure the child's drawing canvas remains generous, uncluttered, and unencumbered.
-- Captured complete 12-PNG curated evidence suite in `docs/reviews/visual/2026-08-22_painting-visual-productization/` with `AUTHORING_AUDIT.md`, `authoring-audit.json`, `simulator-trace.json`, and `OWNER_RECHECK.md`.
-- Packaged owner transfer ZIP: `GREIA_VISUAL_REVIEW_PAINTING_PRODUCTIZATION_2026-08-22.zip`.
-- Generic library gap outcome: **`NO_GAP`**. Generic Batch B remains unauthorized.
-
-
----
-
-# 9. Completed launcher gate — ACTIVITY CARD TITLES & UNIQUE ICONS
-
-Completed runbook:
-
-`docs/testing/2026-08-22_ACTIVITY_CARD_TITLES_AND_UNIQUE_ICONS.md`
-
-Outcome: **COMPLETE & VERIFIED**
-- Two-line centered title wrapping with safe Unicode grapheme cluster fallback and 48-grapheme cluster defensive cap.
-- Full uncapped localized title disclosure on pointer hover and keyboard selection via floating callout pill avoiding protected controls.
-- Aspect-ratio preserving contain-fit icon scaling with 10–12% safe padding around artwork.
-- 100% unique package-owned icon migration (`package:assets/icon.png`) with clean SVG masters and baked PNGs across all 19 first-party Activities.
-- 12 curated Simulator captures in `docs/reviews/visual/2026-08-22_activity-card-titles-and-unique-icons/`, `runtime-audit.json`, `OWNER_RECHECK.md`, and root review archive `GREIA_VISUAL_REVIEW_ACTIVITY_CARD_TITLES_UNIQUE_ICONS_2026-08-22.zip`.
-
----
-
-# 10. Completed launcher gate — LAUNCHER SHELL PRODUCTIZATION & CATEGORY NAVIGATION
-
-Completed runbook:
-
-`docs/testing/2026-08-22_LAUNCHER_SHELL_PRODUCTIZATION_AND_CATEGORY_NAVIGATION.md`
-
-Outcome: **COMPLETE & VERIFIED**
-- Full Category Switcher Strip in the in-category header with active category pill (`Crea (6)`), interactive chips for other categories, and tactile Back/Home button returning to Collection Home.
-- Responsive pagination controls when activities exceed 3x2 grid capacity: bottom pagination capsule pill (`● ○`, `1 / 2`), floating tactile side arrows (`[ < ]` and `[ > ]`), and `PAGE_UP` / `PAGE_DOWN` keyboard support.
-- Rich selection, hover, and launching visual polish: card hover elevation (-3px lift, soft shadow, accent outline), distinct keyboard focus ring with golden star badge (`⭐`), and animated launching badge (`Avvio...` coral pill with white border).
-- 12 curated Simulator captures in `docs/reviews/visual/2026-08-22_launcher-shell-productization/`, `runtime-audit.json`, `simulator-trace.json`, `OWNER_RECHECK.md`, and root transfer archive `GREIA_VISUAL_REVIEW_LAUNCHER_SHELL_PRODUCTIZATION_2026-08-22.zip`.
-
----
-
-
-# 11. Completed tranche — FIRST-PARTY ACTIVITY VISUAL AUDIT & BATCH 1 PRODUCTIZATION
-
-Completed runbook:
-
-`docs/testing/2026-08-22_FIRST_PARTY_ACTIVITY_VISUAL_AUDIT_AND_BATCH_1_PRODUCTIZATION.md`
-
-Outcome: **COMPLETE & VERIFIED**
-- Real Simulator-based visual audit executed across all 19 first-party Activities at 1024×600, scored 1–5 on 8 dimensions.
-- 5×4 owner contact sheet: `docs/reviews/visual/2026-08-22_first-party-activity-visual-audit/CONTACT_SHEET.png`.
-- Batch 1 priority targets productized:
-  - `org.greia.treno-numeri` (1.9 → **4.8**): Illustrated steam locomotive, Dani robot conductor mascot, rotating brass wheels, wooden fruit crates, rolling countryside scenery.
-  - `org.greia.labirinto-magico` (1.9 → **4.8**): Tito the Fox adventurer mascot, rotating magical portal goal, 3D faceted crystal stars, beveled 3D walls, tactile arrow D-pad.
-  - `org.greia.acquario-magico` (2.4 → **4.7**): Illustrated tropical species (clownfish, turtle, octopus, dolphin, pufferfish), dual coral reefs, sunlight water caustics, day/night bioluminescence.
-- Full 8-screenshot evidence suite + `AUTHORING_AUDIT.md` for each target under `docs/reviews/visual/2026-08-22_first-party-batch-1/<activity>/`.
-- Review bundle `docs/reviews/visual/2026-08-22_first-party-batch-1/OWNER_RECHECK.md` and root transfer ZIP `GREIA_VISUAL_REVIEW_FIRST_PARTY_ACTIVITY_BATCH_1_2026-08-22.zip`.
-- Generic library gap conclusion: `NO_GAP`. Generic Batch B remains unauthorized.
-
-# 12. Drift to avoid
-
-- no theme-by-theme pack roadmap;
-- no Generic Batch B by inertia;
-- no redraw of every candidate reference;
-- no hero-tree/specimen rabbit hole;
-- no further Lilli/Leo/Flash/Dani/Tito/Momo redesign absent a concrete defect;
-- no detailed skeletal character rig;
-- no runtime wardrobe system;
-- no six-character → six-Home-category mapping;
-- no treating maintainer-agent drawing ability as arbitrary-agent evidence;
-- no second runtime asset system;
-- no proof-only Activity when a real first-party Activity can exercise the system;
-- no package character metadata before a real use case demonstrates value;
-- no relabeling untouched shared assets as `COMPOSE_ADAPT`;
-- no promotion of Activity-specific art into the generic library without demonstrated cross-Activity value;
-- no turning Painting into a desktop-class graphics editor.
-
----
-
-# 10. Platform boundary
-
-R7 remains the primary blocking platform phase. Nothing in this visual/content work closes, reorders, or bypasses R7.
-
-No physical Acer/Pi acceptance should be claimed without actual hardware evidence.
+R7 remains the primary blocking platform phase. No physical Acer/Pi acceptance is claimed without real hardware evidence.
