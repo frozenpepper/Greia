@@ -125,7 +125,9 @@ The rejected triple-prompt workaround (`ma. ma. ma.` followed by middle extracti
 
 ## 6. Waveform trimming lesson
 
-For very short character speech the provider uses a bounded primary-speech-island trim. For general dialogue it trims only outer silence while preserving internal pauses.
+The provider may trim **outer leading/trailing inactivity only**. It must preserve every internal pause and low-energy region between the first and last detected speech activity.
+
+A previous special path for lines of four words or fewer stopped at the first inactive gap of roughly 120 ms. That was incorrect: normal pauses, breaths and low-energy consonants could be interpreted as the end of the utterance, deterministically cutting otherwise complete Chatterbox output. That internal-island truncation is retired.
 
 Trimming may remove unwanted material outside the intended utterance. It may not repair:
 
