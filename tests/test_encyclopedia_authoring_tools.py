@@ -373,6 +373,35 @@ class VoiceLedgerAuthoringTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "unsafe staging path"):
                 plan_accepted_assets(malicious, root)
 
+    def test_render_ledger_is_idempotent_on_preserved_ledger(self) -> None:
+        current = LEDGER.read_text(encoding="utf-8")
+        once = render_ledger(current)
+        twice = render_ledger(once)
+        self.assertEqual(twice, once)
+
+    def test_empty_notes_cell_parses_with_empty_string(self) -> None:
+        from encyclopedia.voice_ledger import parse_ledger_rows
+
+        text = (
+            _TABLE_HEADER
+            + "\n| REQUESTED | `encyclopedia.animals.lion.intro` | character_dialogue | Tito | `greia.tito.v1` | it | Ecco il leone! | `intro-tito.ogg` | `encyclopedia/pages/animals/lion/assets/audio/it/intro-tito.ogg` | |\n"
+        )
+        rows = parse_ledger_rows(text)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(
+            rows[("encyclopedia.animals.lion.intro", "it")].notes, ""
+        )
+
+    def test_missing_notes_column_does_not_parse_as_data_row(self) -> None:
+        from encyclopedia.voice_ledger import parse_ledger_rows
+
+        text = (
+            _TABLE_HEADER
+            + "\n| REQUESTED | `encyclopedia.animals.lion.intro` | character_dialogue | Tito | `greia.tito.v1` | it | Ecco il leone! | `intro-tito.ogg` | `encyclopedia/pages/animals/lion/assets/audio/it/intro-tito.ogg`\n"
+        )
+        rows = parse_ledger_rows(text)
+        self.assertEqual(rows, {})
+
 
 if __name__ == "__main__":
     unittest.main()

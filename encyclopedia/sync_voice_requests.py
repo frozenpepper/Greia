@@ -327,7 +327,7 @@ def _row_markdown(row: RequestRow, existing: VoiceLedgerRow | None) -> str:
 
 def _manual_prefix(existing_text: str) -> str:
     """Keep instructions, vocabulary and the manually-owned E0 navigation batch."""
-    marker = "\n## 4. Requested batch "
+    marker = "\n---\n\n## 4. Requested batch "
     index = existing_text.find(marker)
     if index < 0:
         raise ValueError("cannot find first factual-batch boundary in voice ledger")
