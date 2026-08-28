@@ -1,7 +1,7 @@
 # Greia Encyclopedia workstream handover
 
 **Updated:** 2026-08-28  
-**Construction state:** v0.1 source breadth complete and source gate GREEN; headless Shell-route retest pending  
+**Construction state:** v0.1 source breadth complete and source gate GREEN; local-branch reconciliation check precedes headless Shell-route retest  
 **Runtime pages:** **43 / 43 planned executable pages**  
 **Current evidence:** **SOURCE-VERIFIED / SIMULATOR-UNVERIFIED / NARRATION ACCEPTANCE PENDING**  
 **Runtime Activity:** `activities/enciclopedia_greia/` (`org.greia.enciclopedia`)
@@ -259,9 +259,29 @@ That harness drift is now repaired:
 
 This is still harness work. No Encyclopedia runtime failure should be claimed until the corrected route actually reaches `mode=activity` and the Activity itself fails.
 
-### 6.3 Next exact gate
+### 6.3 Owner-machine branch preservation gate
 
-Run the rolling prompt above. It performs only:
+The second smoke report started from local SHA:
+
+```text
+7417e20729fd1c0562491e26f9fe564deccac058
+```
+
+GitHub does **not** contain that SHA. Therefore the owner checkout may have unpublished local commits. Since GitHub `main` now also contains the corrected Collection-first harness, the next run must classify ancestry before modifying the local branch.
+
+The rolling prompt now requires:
+
+```text
+fetch origin
+compare HEAD vs origin/main
+classify equal / fast-forward-safe / local-ahead / diverged
+```
+
+If local-ahead or diverged, stop and report local-only commits and changed paths. Do **not** reset, merge, rebase, cherry-pick, push or pull until those commits are deliberately reviewed. This is a source-preservation gate, not a Simulator failure.
+
+### 6.4 Next exact gate after branch safety is established
+
+The rolling prompt performs only:
 
 ```text
 focused Simulator tooling tests
