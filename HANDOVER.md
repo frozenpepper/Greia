@@ -1,6 +1,6 @@
 # Greia — Current Engineering Handover
 
-**Updated:** 2026-08-28
+**Updated:** 2026-08-29
 **Canonical repository:** `frozenpepper/Greia`
 **Canonical branch:** `main`
 **Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**
@@ -31,6 +31,12 @@ HANDOVER.md
 
 Then load the relevant OS/Activity/visual/voice skill.
 
+For R7 display/session/input work also read:
+
+```text
+docs/reviews/2026-08-29_R7_ACTIVITY_BACKEND_INDEPENDENCE_AND_DISPLAY_SESSION_REVIEW.md
+```
+
 For visual work also read:
 
 ```text
@@ -47,7 +53,16 @@ No PASS claim may be generalized beyond the exact source/evidence lane that actu
 
 ## 2. Platform state
 
-R7 remains the first incomplete blocking platform phase. Current production still uses the provisional Xorg/xinit compatibility path while direct appliance display/session/input ownership is resolved.
+R7 remains the first incomplete blocking platform phase. Current production still uses the provisional Xorg/xinit compatibility path while the final appliance display/session/input implementation is resolved.
+
+The 2026-08-29 R7 review clarified the execution architecture without closing any R7 gate:
+
+- Activity rendering is backend-independent by invariant. Ordinary Pygame/SDL drawing is valid; Activities must not know/select/probe X11, Wayland, DRM/KMS, evdev/libinput or backend-specific environment.
+- Do **not** invent a Greia drawing API. SDL/Pygame remains the renderer abstraction.
+- `src/greia_launcher/display_session.py` is the existing polymorphic runtime seam. Complete `DisplaySessionCoordinator` / `DisplaySessionBackend`; do not create a parallel giant HAL.
+- `LegacyXDisplaySessionBackend` is the first/reference compatibility implementation. A Wayland implementation may later sit behind the same contract and must require zero Activity changes.
+- The major current Activity drift is not widespread direct Xlib usage; it is cooperative trust: first-party Activities/shared canvas helpers still draw and hit-test the nominally trusted Home chrome inside the Activity process.
+- R7 implementation must first enforce backend independence, then implement real trusted chrome/input above Activities, then migrate first-party Activities by shared pattern before comparing Xorg and Wayland on physical hardware.
 
 R7 invariants remain:
 
@@ -56,11 +71,18 @@ R7 invariants remain:
 - protected system input is intercepted before Activity delivery;
 - controller discovery/normalization is platform-owned;
 - ordinary Activities do not gain raw `/dev/input` or DRM authority;
-- any direct/compositor migration requires its own exact source, VM and physical legacy-x86 evidence.
+- backend selection is trusted platform/profile composition, never Activity logic;
+- any backend migration requires exact source, VM/simulator where applicable, and physical reference-device evidence.
+
+Current detailed R7 execution review:
+
+```text
+docs/reviews/2026-08-29_R7_ACTIVITY_BACKEND_INDEPENDENCE_AND_DISPLAY_SESSION_REVIEW.md
+```
 
 Activity, visual, voice, launcher, microphone and Encyclopedia work do **not** close or reorder R7.
 
-Authority:
+Primary phase authority remains:
 
 ```text
 docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md
@@ -150,46 +172,25 @@ The first bounded E1/E2 source tranche is now on `main`:
 ```text
 activities/enciclopedia_greia/enciclopedia_presentation.py
 activities/enciclopedia_greia/enciclopedia_services.py
-activities/enciclopedia_greia/assets/source/*.svg   # six golden-master masters
-activities/enciclopedia_greia/assets/runtime/*.png  # six built runtime renditions
+activities/enciclopedia_greia/assets/source/*.svg
+activities/enciclopedia_greia/assets/runtime/*.png
 Home / Animals / Lion / Saturn / Gears / Pyramids page integrations
 tools/build_encyclopedia_visual_assets.py
 tools/encyclopedia_v01_golden_master_capture.py
 tools/encyclopedia_v01_golden_master_review.py
 tools/encyclopedia_v01_golden_master_zip.py
 tests/test_activity_enciclopedia_visual_foundation.py
-tests/test_encyclopedia_authoring_tools.py        # tightened to subtract VisualLibrary.ART_ASSETS
+tests/test_encyclopedia_authoring_tools.py
 ```
 
-The build tool now supports:
+The build tool supports:
 
 ```bash
 python3 tools/build_encyclopedia_visual_assets.py
 python3 tools/build_encyclopedia_visual_assets.py --check
 ```
 
-`--check` rebuilds the six masters temporarily and byte-compares them against the committed runtime PNG pack, preventing stale generated art from silently passing.
-
-Current truthful visual state:
-
-```text
-E1 SHARED PRESENTATION SOURCE: IMPLEMENTED ON MAIN
-E2 SIX GOLDEN-MASTER PAGE SOURCES: IMPLEMENTED ON MAIN
-EDITABLE SVG MASTERS: 6 / 6 ON MAIN
-RUNTIME PNG PACK: 6 / 6 COMMITTED + SHA256-VERIFIED BY --CHECK
-FOCUSED ENCYCLOPEDIA TESTS: 19 / 19 PASS
-make verify ON REAL CHECKOUT AT FINAL SHA 08fe71b: 1462 / 1462 PASS
-REAL GREIA SIMULATOR LAUNCH/SURVIVAL: 6 / 6 SESSIONS PASS AT FINAL SHA
-PROTECTED GREIA HOME RETURN: 6 / 6 SESSIONS VERIFIED
-ACTIVATE PAYOFFS CAPTURED: 4 / 4 FACTUAL ENTRIES
-PRE-READER / NO-READING PROTOTYPE REVIEW: yes/yes/yes/visual
-CURATED REVIEW SET: docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/
-OWNER-TRANSFER ZIP: GREIA_VISUAL_REVIEW_ENCYCLOPEDIA_GOLDEN_MASTER_2026-08-28.zip
-OWNER VISUAL DIRECTION APPROVAL: PENDING
-E3 / E4 BULK MIGRATION: BLOCKED
-```
-
-The Activity fails soft to its previous procedural scenes when the generated runtime art is absent, so current `main` remains mechanically usable. That fallback does **not** count as golden-master visual evidence. With the runtime PNGs now committed and the curated review set + owner-transfer ZIP in place, the next step is the owner visual direction decision, not more code.
+Current truthful visual state remains governed by the visual workstream documents. The Activity fails soft to its previous procedural scenes when generated runtime art is absent; that fallback does not count as golden-master visual evidence.
 
 Current Encyclopedia continuation authority:
 
@@ -208,13 +209,6 @@ Canonical coordination:
 
 ```text
 encyclopedia/VOICE_RECORDING_REQUESTS.md
-```
-
-Current ledger checkpoint:
-
-```text
-378 rows
-378 REQUESTED
 ```
 
 Only owner-listened `OWNER_ACCEPTED` clips may be integrated. No runtime TTS is allowed.
@@ -261,33 +255,28 @@ Current x86 update architecture remains provisional single-root; signed-update f
 
 ## 7. Immediate next work
 
+### Blocking platform lane — R7
+
+Resume with the R7.1 tranche defined in:
+
+```text
+docs/reviews/2026-08-29_R7_ACTIVITY_BACKEND_INDEPENDENCE_AND_DISPLAY_SESSION_REVIEW.md
+```
+
+Exact next sequence:
+
+1. add/enforce the Activity backend-independence validator and contributor contract;
+2. run a repository-wide first-party Activity scan and classify backend/trusted-chrome/raw-input findings;
+3. harden the existing `DisplaySessionBackend` seam with Legacy X as the reference implementation, moving generic-launcher X-specific behavior behind it;
+4. implement trusted system chrome/input for the current Xorg session through the existing `SystemChromeCoordinator` boundary;
+5. migrate Writing/Painting first, then reference-canvas exemplars, then capability-rich Activities, then the remaining catalogue;
+6. only after the contract is proven on Legacy X, implement/prototype Wayland behind the same contract and compare on real Acer/Pi hardware.
+
+Do not begin by replacing Xorg. First make the rest of Greia genuinely independent of it.
+
 ### Current Encyclopedia visual lane
 
-The local-agent golden-master validation gate is now complete at the
-final runtime-relevant SHA `08fe71b`. The next action is the owner
-visual direction decision on the six prototypes, not more code.
-
-```text
-local validation gate:                COMPLETE at SHA 08fe71b
-curated review set:                   docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/
-owner-transfer ZIP:                   GREIA_VISUAL_REVIEW_ENCYCLOPEDIA_GOLDEN_MASTER_2026-08-28.zip
-owner visual direction approval:      PENDING
-```
-
-Exact review/run-book for the owner:
-
-```text
-docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/REVIEW.md
-docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/contact-sheet-primary.png
-docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md
-```
-
-Do not run the broad 43-page visual recapture and do not enter E3/E4
-until the owner explicitly accepts the golden-master direction.
-
-### Blocking platform lane
-
-R7 remains open and may continue independently from the first incomplete gate in the active architecture plan.
+The Encyclopedia visual workstream remains independent of R7 and follows its own current owner-review checkpoint in the visual handover/plan. Do not let visual work deepen Activity-side system chrome or backend coupling.
 
 ---
 
@@ -297,6 +286,8 @@ R7 remains open and may continue independently from the first incomplete gate in
 - GitHub is canonical persistence;
 - no unauthorized hosted Actions execution/inspection;
 - Activity `main.py` stays a bootstrap/composition boundary;
+- Activities are display-backend independent; backend plumbing terminates in trusted Greia composition/adapters;
+- Activities never implement the real Home/Back or own physical controller/device authority;
 - multiple physical inputs converge on semantic/domain actions;
 - child-facing flows remain offline-first and pre-reader friendly;
 - no runtime AI/TTS/speech recognition merely to fill content gaps;
