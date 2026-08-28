@@ -60,24 +60,49 @@ class HeadlessGreiaSimulatorTests(unittest.TestCase):
                     "org.greia.shape-garden",
                 )
 
-    def test_builtin_activity_index_comes_from_canonical_registry(self) -> None:
+    def test_encyclopedia_route_comes_from_child_visible_collection_hierarchy(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             workspace = SimulatorWorkspace(REPO, Path(directory) / "state")
             workspace.ensure()
-            index, identities = headless._discover_activity_index(
+            route, identities = headless._discover_launch_route(
                 workspace,
                 "org.greia.enciclopedia",
+                locale="it",
             )
-            self.assertEqual(identities[index], "org.greia.enciclopedia")
-            self.assertEqual(len(identities), len(set(identities)))
+            self.assertIn("org.greia.enciclopedia", identities)
+            self.assertEqual(route.activity_id, "org.greia.enciclopedia")
+            self.assertIn(route.collection_id, {"learn", "explore"})
+            self.assertGreaterEqual(route.home_collection_index, 0)
+            self.assertGreaterEqual(route.activity_index, 0)
+            if route.subcollection_id is None:
+                self.assertIsNone(route.subcollection_index)
+            else:
+                self.assertIsNotNone(route.subcollection_index)
+                assert route.subcollection_index is not None
+                self.assertGreaterEqual(route.subcollection_index, 0)
+            self.assertGreater(route.navigation_cost, 0)
+            self.assertIn("org.greia.enciclopedia", route.describe())
 
-    def test_semantic_launcher_driver_selects_profile_then_target_index(self) -> None:
+    def test_semantic_launcher_driver_follows_collection_first_route(self) -> None:
         child = mock.Mock()
         child.poll.return_value = None
-        states = (
-            {"mode": "activities", "frame_count": 4},
-            {"mode": "activity", "frame_count": 9},
+        route = headless.ShellLaunchRoute(
+            activity_id="org.example.target",
+            collection_id="explore",
+            home_collection_index=2,
+            subcollection_id="nature",
+            subcollection_index=1,
+            activity_index=3,
         )
+
+        # profile transition; 2 home-right frames; enter Collection;
+        # 1 group-right frame; enter group; 3 Activity-right frames; Activity frame.
+        states = [
+            {"mode": "activities", "frame_count": count}
+            for count in range(2, 11)
+        ]
+        states.append({"mode": "activity", "frame_count": 11})
+
         with mock.patch.object(
             headless,
             "_bridge_key",
@@ -86,21 +111,64 @@ class HeadlessGreiaSimulatorTests(unittest.TestCase):
             headless,
             "_wait_for_state",
             side_effect=states,
-        ) as wait_for_state, mock.patch.object(
-            headless.time,
-            "sleep",
+        ) as wait_for_state:
+            result = headless._send_profile_and_activity_launch(
+                child=child,
+                route=route,
+            )
+
+        self.assertEqual(result, states[-1])
+        self.assertEqual(
+            [call.args[0] for call in bridge_key.call_args_list],
+            [
+                "RETURN",                 # choose child profile
+                "RIGHT", "RIGHT",        # select Explore on Collection Home
+                "RETURN",                 # enter Explore
+                "RIGHT",                  # select Nature group
+                "RETURN",                 # enter Nature
+                "RIGHT", "RIGHT", "RIGHT",  # select target Activity
+                "RETURN",                 # launch through real supervisor path
+            ],
+        )
+        self.assertEqual(wait_for_state.call_count, 10)
+
+    def test_semantic_launcher_driver_supports_direct_collection_without_group(self) -> None:
+        child = mock.Mock()
+        child.poll.return_value = None
+        route = headless.ShellLaunchRoute(
+            activity_id="org.example.target",
+            collection_id="learn",
+            home_collection_index=1,
+            subcollection_id=None,
+            subcollection_index=None,
+            activity_index=2,
+        )
+        states = [
+            {"mode": "activities", "frame_count": 2},
+            {"mode": "activities", "frame_count": 3},
+            {"mode": "activities", "frame_count": 4},
+            {"mode": "activities", "frame_count": 5},
+            {"mode": "activities", "frame_count": 6},
+            {"mode": "activity", "frame_count": 7},
+        ]
+        with mock.patch.object(
+            headless,
+            "_bridge_key",
+            return_value=True,
+        ) as bridge_key, mock.patch.object(
+            headless,
+            "_wait_for_state",
+            side_effect=states,
         ):
             result = headless._send_profile_and_activity_launch(
                 child=child,
-                target_index=3,
+                route=route,
             )
-
-        self.assertEqual(result, states[1])
+        self.assertEqual(result, states[-1])
         self.assertEqual(
             [call.args[0] for call in bridge_key.call_args_list],
-            ["RETURN", "RIGHT", "RIGHT", "RIGHT", "RETURN"],
+            ["RETURN", "RIGHT", "RETURN", "RIGHT", "RIGHT", "RETURN"],
         )
-        self.assertEqual(wait_for_state.call_count, 2)
 
     def test_protected_home_coordinate_uses_platform_chrome_authority(self) -> None:
         viewport = "1024x600"
