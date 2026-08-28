@@ -4,7 +4,7 @@
 **Canonical repository:** `frozenpepper/Greia`  
 **Canonical branch:** `main`  
 **Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**  
-**Current parallel visual focus:** **Encyclopedia visual reauthoring / golden-master gate**  
+**Current parallel visual focus:** **Encyclopedia golden-master runtime validation / owner visual gate**  
 **Purpose:** short current continuation contract. Detailed chronology belongs in active plans and dated reviews/handovers.
 
 Historical long-form root state remains preserved under:
@@ -129,11 +129,9 @@ protected Greia Home -> Shell                PASS
 
 The headless traversal's generic page-transition capture race has since been repaired on `main`; preserve that fix.
 
-### Important current correction: graphics rejected
+### Graphics correction and E1/E2 source status
 
-The owner has rejected the current Encyclopedia graphics quality as a product target.
-
-The existing visual layer relies too heavily on raw Pygame circles/ellipses/rectangles/lines/polygons for actual animals, machines, anatomy, history scenes and section worlds. It is mechanically clear but does not meet Greia's accepted polished storybook/felt-board/toy-diorama direction.
+The owner rejected the old Encyclopedia graphics quality as a product target. The forensic diagnosis remains that the old visual layer relied too heavily on raw Pygame primitives, sparse flat environments, instrumentation-like discovery bubbles, corner-stamped presenters and weak visual payoff.
 
 Authoritative forensic review:
 
@@ -147,28 +145,46 @@ Active visual reauthoring subplan:
 docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md
 ```
 
-Current rule:
-
-> **Do not bulk-redraw 43 pages and do not run another broad final visual acceptance yet. First build the Encyclopedia visual foundation and a representative golden-master set, then obtain owner direction approval.**
-
-Golden-master targets:
+The first bounded E1/E2 source tranche is now on `main`:
 
 ```text
-Home
-Animals section
-Lion
-Saturn
-Gears
-Pyramids
-optional Body/Heart proof
+activities/enciclopedia_greia/enciclopedia_presentation.py
+activities/enciclopedia_greia/enciclopedia_services.py
+activities/enciclopedia_greia/assets/source/*.svg   # six golden-master masters
+Home / Animals / Lion / Saturn / Gears / Pyramids page integrations
+tools/build_encyclopedia_visual_assets.py
+tests/test_activity_enciclopedia_visual_foundation.py
 ```
 
-The new presentation should use authored Activity-local art, layered economical composition, tactile DiscoveryToken states, stronger environmental context, integrated canonical characters, and clear first-interaction payoff while preserving existing page mechanics/research/navigation.
+The build tool now supports:
+
+```bash
+python3 tools/build_encyclopedia_visual_assets.py
+python3 tools/build_encyclopedia_visual_assets.py --check
+```
+
+`--check` rebuilds the six masters temporarily and byte-compares them against the committed runtime PNG pack, preventing stale generated art from silently passing.
+
+Current truthful visual state:
+
+```text
+E1 SHARED PRESENTATION SOURCE: IMPLEMENTED ON MAIN
+E2 SIX GOLDEN-MASTER PAGE SOURCES: IMPLEMENTED ON MAIN
+EDITABLE SVG MASTERS: 6 / 6 ON MAIN
+SOURCE CONTRACTS: IMPLEMENTED; local mirror checks passed where recorded
+RUNTIME PNG PACK: BUILD / COMMIT PENDING ON OWNER-MACHINE CHECKOUT
+FINAL-SHA SIMULATOR GATE: PENDING
+OWNER VISUAL DIRECTION APPROVAL: PENDING
+E3 / E4 BULK MIGRATION: BLOCKED
+```
+
+The Activity fails soft to its previous procedural scenes when the generated runtime art is absent, so current `main` remains mechanically usable. That fallback does **not** count as golden-master visual evidence.
 
 Current Encyclopedia continuation authority:
 
 ```text
 encyclopedia/HANDOVER.md
+docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md
 docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md
 ```
 
@@ -235,28 +251,31 @@ Current x86 update architecture remains provisional single-root; signed-update f
 
 ### Current Encyclopedia visual lane
 
-Implement only the visual plan's:
+Do **not** implement more Encyclopedia pages yet. Execute the existing golden-master validation gate:
 
 ```text
-E1 — shared Encyclopedia visual foundation
-E2 — golden-master prototypes
+refresh clean main
+→ build six runtime PNGs
+→ run build tool --check
+→ focused Encyclopedia tests + required local source verification
+→ commit/push the generated PNG pack
+→ record exact final SHA
+→ real Greia Simulator launch/survival on that SHA
+→ capture Home / Animals / Lion / Saturn / Gears / Pyramids at 1024×600
+→ capture representative ACTIVATE payoffs
+→ capture one compact + one larger responsive sample
+→ perform no-reading prototype review
+→ produce one curated contact sheet
+→ STOP for owner visual direction approval
 ```
 
-Required sequence:
+Exact local execution contract:
 
 ```text
-inventory reusable visual assets
-→ define package-local source/runtime art structure
-→ implement only genuinely shared presentation primitives
-→ Home + Animals + Lion
-→ Saturn + Gears + Pyramids
-→ focused tests
-→ actual Simulator prototype screenshots
-→ one contact sheet
-→ STOP for owner/primary visual review
+docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md
 ```
 
-Do not migrate the remaining 43-page set until the owner approves the visual direction.
+Do not run the broad 43-page visual recapture and do not enter E3/E4 until the owner explicitly accepts the golden-master direction.
 
 ### Blocking platform lane
 
