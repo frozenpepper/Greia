@@ -4,6 +4,7 @@ import ast
 from pathlib import Path
 import struct
 import unittest
+import xml.etree.ElementTree as ET
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -33,6 +34,24 @@ class EncyclopediaVisualFoundationTests(unittest.TestCase):
             ):
                 return node.value
         raise AssertionError(f"missing module assignment: {name}")
+
+    @classmethod
+    def _literal_assignment(cls, path: Path, name: str):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        return ast.literal_eval(cls._assignment(tree, name))
+
+    @staticmethod
+    def _svg_target_centers(path: Path) -> dict[str, tuple[int, int]]:
+        root = ET.parse(path).getroot()
+        result: dict[str, tuple[int, int]] = {}
+        for element in root.iter():
+            target = element.attrib.get("data-target")
+            center = element.attrib.get("data-center")
+            if target is None or center is None:
+                continue
+            x_text, y_text = center.split(",", 1)
+            result[target] = (int(x_text), int(y_text))
+        return result
 
     def test_six_editable_golden_master_sources_exist(self) -> None:
         actual = {path.stem for path in SOURCE.glob("*.svg")}
@@ -99,6 +118,23 @@ class EncyclopediaVisualFoundationTests(unittest.TestCase):
             with self.subTest(filename=filename):
                 self.assertIn("draw_authored_scene", text)
                 self.assertIn(semantic_id, text)
+
+    def test_selection_world_art_centers_match_input_semantics(self) -> None:
+        home_path = ACTIVITY / "pages" / "home.py"
+        home_ids = self._literal_assignment(home_path, "PORTAL_IDS")
+        home_centers = self._literal_assignment(home_path, "PORTAL_CENTERS")
+        self.assertEqual(
+            dict(zip(home_ids, home_centers)),
+            self._svg_target_centers(SOURCE / "home_discovery_book.svg"),
+        )
+
+        animals_path = ACTIVITY / "pages" / "animals.py"
+        animal_centers = self._literal_assignment(animals_path, "ANIMAL_CENTERS")
+        animal_ids = ("lion", "elephant", "octopus", "bee", "penguin", "frog")
+        self.assertEqual(
+            dict(zip(animal_ids, animal_centers)),
+            self._svg_target_centers(SOURCE / "animals_field_table.svg"),
+        )
 
     def test_runtime_pack_is_complete_if_generated(self) -> None:
         """Source stage may precede generated PNG commit; partial packs are forbidden."""
