@@ -18,23 +18,52 @@ tmp/encyclopedia-v01-acceptance/20260828_044052/
 
 That source evidence proved 378/378 canonical voice-request rows, 53/53 focused Encyclopedia tests, 1431/1431 full repository tests, 35/35 Activity validations, and a clean worktree.
 
-The first Simulator attempt did **not** prove an Encyclopedia runtime defect. It exposed a headless-Simulator tooling defect: `tools/headless_greia_simulator.py` republished a built-in Activity as developer-unsigned and therefore correctly hit Greia's duplicate-identity guard.
+Two successive terminal-only Simulator smoke attempts then exposed **headless harness defects, not proven Encyclopedia runtime defects**:
 
-That Simulator tooling has now been repaired on `main`:
+1. the first headless helper republished the built-in Encyclopedia as developer-unsigned, correctly hitting Greia's duplicate-identity guard;
+2. after that was fixed, the helper correctly reached the real child Shell and profile picker, but it navigated the post-profile screen as though it were the raw `ActivityRegistry` tuple.
 
-- a built-in `--activity-dir` is recognized as built-in and is **not** copied to the developer root;
-- its canonical Activity ID is resolved from the manifest;
-- the target index is resolved through Greia's real `ActivityRegistry`;
-- the headless runner selects the normal child profile, navigates the real Shell Activity catalogue with semantic keys, and launches through the production launcher/supervisor path;
-- the runner waits for a real `mode=activity` remote frame;
-- after the interaction/survival window it invokes the platform-owned protected Home hitbox and requires a real return to `mode=activities`;
-- child stdout/stderr is preserved beside the screenshots instead of sitting in an undrained pipe;
-- focused regression tests are in `tests/test_headless_greia_simulator.py`.
+The second assumption was wrong. The production Greia child Shell is **Collection-first**:
+
+```text
+profile picker
+→ Collection Home (Create / Play / Learn / Explore / ...)
+→ optional adaptive sub-Collection
+→ Activity cards
+→ Activity launch
+```
+
+The failed smoke evidence is:
+
+```text
+tmp/encyclopedia-v01-acceptance/20260828_061732-headless-smoke/
+```
+
+It proved:
+
+```text
+focused Simulator tests             PASS (44 tests in that checkout)
+built-in detection                   PASS
+remote bridge                        PASS
+first real Shell frame               PASS (mode=profiles, 1024x600)
+duplicate-ID collision               GONE
+Activity launch                      NOT PROVEN
+```
+
+The route defect has now been repaired on `main`:
+
+- `tools/headless_greia_simulator.py` no longer computes a raw launcher index;
+- it derives a typed `ShellLaunchRoute` from the same profile-visible `ActivityCatalogue` projection used by the child Shell;
+- the route includes Collection Home index, optional adaptive sub-Collection index, and final Activity-card index;
+- built-in, developer and Parent-installed Activity sources are included in the route projection;
+- the selected Simulator profile's visibility policy, approximate age and challenge preference are applied before route selection;
+- semantic navigation now waits for a fresh real Shell frame after each hierarchy transition/key step;
+- focused tests cover both direct Collection → Activity and Collection → adaptive sub-Collection → Activity paths.
 
 Truthful state entering this task:
 
 ```text
-SOURCE-VERIFIED / SIMULATOR-TOOLING-RETEST-PENDING
+SOURCE-VERIFIED / HEADLESS-SHELL-ROUTE-RETEST-PENDING
 NARRATION ACCEPTANCE PENDING
 ```
 
@@ -91,6 +120,8 @@ Required:
 TEST_RC=0
 ```
 
+The headless test module must now include explicit Collection-first route coverage.
+
 If the tests fail, STOP. Do not repair or rerun. Return the exact first failure.
 
 ---
@@ -101,7 +132,7 @@ From repository root:
 
 ```bash
 RUN_ID="$(date +%Y%m%d_%H%M%S)"
-EVIDENCE="./tmp/encyclopedia-v01-acceptance/${RUN_ID}-headless-smoke"
+EVIDENCE="./tmp/encyclopedia-v01-acceptance/${RUN_ID}-headless-route-smoke"
 WORKSPACE="$HOME/.greia-simulator-encyclopedia-v01-headless-${RUN_ID}"
 mkdir -p "$EVIDENCE"
 printf '%s\n' "$EVIDENCE" > ./tmp/encyclopedia-v01-acceptance/.latest-run
@@ -110,13 +141,15 @@ git rev-parse HEAD > "$EVIDENCE/starting-sha.txt"
 git status --short > "$EVIDENCE/git-status-before.txt"
 printf '%s\n' "tmp/encyclopedia-v01-acceptance/20260828_044052/" \
   > "$EVIDENCE/source-gate-evidence.txt"
+printf '%s\n' "tmp/encyclopedia-v01-acceptance/20260828_061732-headless-smoke/" \
+  > "$EVIDENCE/previous-smoke-evidence.txt"
 ```
 
 Simulator mutable state stays outside the checkout in `$WORKSPACE`.
 
 ---
 
-## Step 4 — run exactly one repaired built-in headless launch
+## Step 4 — run exactly one Collection-first built-in headless launch
 
 Run exactly once:
 
@@ -139,20 +172,29 @@ Expected behavior, in order:
 
 ```text
 built-in Activity detected; skipping developer publication
+semantic route is logged as:
+  home[...] = <Collection>
+  [optional group[...] = <sub-Collection>]
+  activity[...] = org.greia.enciclopedia
 real Greia child Shell starts
 remote bridge comes up
-first Shell frame captured
-normal profile selection succeeds
-org.greia.enciclopedia is selected through semantic Shell navigation
-real Activity frame arrives with mode=activity
-RETURN is delivered to the Activity as the bounded meaningful interaction
+first Shell frame captured in mode=profiles
+profile RETURN reaches mode=activities / Collection Home
+semantic RIGHT/RETURN steps traverse the logged Collection-first route
+real Encyclopedia frame arrives with mode=activity
+RETURN is delivered to the Encyclopedia as the bounded interaction
 Activity/Shell survive >=12 seconds
 protected Greia Home is invoked through platform chrome
 remote bridge returns to mode=activities
 runner reports PASS
 ```
 
-There must be **no** `Activity identity/alias collision`.
+There must be **no**:
+
+```text
+Activity identity/alias collision
+raw "launcher index X/Y" navigation
+```
 
 Expected evidence files include:
 
@@ -165,7 +207,12 @@ enciclopedia-child.log
 headless-smoke.txt
 ```
 
-If `SMOKE_RC != 0`, STOP. Do not repair and do not rerun. Return the first failure plus the child log and whatever screenshots were produced.
+If `SMOKE_RC != 0`, STOP. Do not repair and do not rerun. Return:
+
+- the exact logged semantic route;
+- the exact first navigation stage that stalled, if any;
+- the child log;
+- every screenshot that was actually produced.
 
 ---
 
@@ -196,7 +243,11 @@ The project-local `tmp/` evidence is gitignored and does not count as source dir
 STARTING_SHA=
 FOCUSED_SIMULATOR_TESTS=PASS/FAIL
 HEADLESS_BUILTIN_DETECTION=PASS/FAIL/not-reached
+COLLECTION_FIRST_ROUTE_RESOLVED=PASS/FAIL/not-reached
+ROUTE=<exact logged route or not-reached>
 SHELL_FIRST_FRAME=PASS/FAIL/not-reached
+PROFILE_TO_COLLECTION_HOME=PASS/FAIL/not-reached
+COLLECTION_ROUTE_NAVIGATION=PASS/FAIL/not-reached
 ENCYCLOPEDIA_LAUNCH_VIA_REAL_SHELL=PASS/FAIL/not-reached
 ENCYCLOPEDIA_FIRST_ACTIVITY_FRAME=PASS/FAIL/not-reached
 SURVIVAL_12S=PASS/FAIL/not-reached
@@ -217,4 +268,4 @@ Also return:
 
 Do not claim the full 43-page Simulator traversal or pre-reader acceptance from this task.
 
-If this passes, the next tranche will build/run the **mechanical 43-page traversal and screenshot capture** on the now-proven headless lane. Subjective pre-reader/visual-quality judgment will remain a separate human/vision review of those captured frames.
+If this passes, the next tranche will build/run the **mechanical 43-page traversal and screenshot capture** on the now-proven headless lane. Subjective pre-reader/visual-quality judgment remains a separate human/vision review of those captured frames.
