@@ -21,6 +21,7 @@ workspace teardown. It does not claim subjective visual/pre-reader quality.
 from __future__ import annotations
 
 import argparse
+from dataclasses import dataclass
 import json
 import os
 import shutil
@@ -43,6 +44,42 @@ BRIDGE_URL = f"http://127.0.0.1:{DEFAULT_PORT}"
 _SRC_PATH = str(REPO_ROOT / "src")
 if _SRC_PATH not in sys.path:
     sys.path.insert(0, _SRC_PATH)
+
+
+@dataclass(frozen=True, slots=True)
+class ShellLaunchRoute:
+    """Semantic child-Shell route to one currently visible Activity.
+
+    The production child Home is Collection-first, and a large Collection may
+    insert one adaptive sub-Collection chooser. The headless driver therefore
+    records the exact presentation hierarchy instead of pretending the raw
+    ActivityRegistry tuple is a directly navigable grid.
+    """
+
+    activity_id: str
+    collection_id: str
+    home_collection_index: int
+    subcollection_id: str | None
+    subcollection_index: int | None
+    activity_index: int
+
+    @property
+    def navigation_cost(self) -> int:
+        cost = self.home_collection_index + 1
+        if self.subcollection_index is not None:
+            cost += self.subcollection_index + 1
+        return cost + self.activity_index + 1
+
+    def describe(self) -> str:
+        segments = [
+            f"home[{self.home_collection_index}]={self.collection_id}",
+        ]
+        if self.subcollection_id is not None:
+            segments.append(
+                f"group[{self.subcollection_index}]={self.subcollection_id}"
+            )
+        segments.append(f"activity[{self.activity_index}]={self.activity_id}")
+        return " -> ".join(segments)
 
 
 def _log(msg: str) -> None:
@@ -189,14 +226,32 @@ def _prepare_workspace(
         raise
 
 
-def _discover_activity_index(ws, activity_id: str) -> tuple[int, tuple[str, ...]]:
-    """Resolve target index using the same source classes as the Shell."""
+def _discover_launch_route(
+    ws,
+    activity_id: str,
+    *,
+    locale: str,
+) -> tuple[ShellLaunchRoute, tuple[str, ...]]:
+    """Resolve the route through the same effective child catalogue as the Shell.
 
+    This mirrors the production composition relevant to child navigation:
+    built-in/developer/parent Activity sources, the selected profile's discovery
+    policy, age/challenge projection, Collection-first Home and optional adaptive
+    sub-Collections. It deliberately does not mutate the policy's hysteresis
+    state; on a fresh Simulator workspace the Shell computes the same catalogue
+    before accepting the first navigation key.
+    """
+
+    from greia_launcher.catalogue_view import ActivityCatalogue
     from greia_platform.activities import ActivityRegistry, RuntimeCatalogue
+    from greia_platform.activity_discovery import (
+        ActivityDiscoveryPolicyStore,
+        ActivityDiscoveryService,
+    )
     from greia_platform.trust import ActivitySource, PackageTrust
 
     runtime = RuntimeCatalogue.load(REPO_ROOT / "runtime" / "child-runtime.toml")
-    sources = [
+    sources = (
         ActivitySource(
             REPO_ROOT / "activities",
             trust=PackageTrust.BUILT_IN,
@@ -207,16 +262,88 @@ def _discover_activity_index(ws, activity_id: str) -> tuple[int, tuple[str, ...]
             trust=PackageTrust.DEVELOPER_UNSIGNED,
             source_id="greia-developer-remote",
         ),
-    ]
-    discovered = ActivityRegistry(tuple(sources), runtime, fail_closed=False).discover()
-    ids = tuple(activity.activity_id for activity in discovered)
-    try:
-        return ids.index(activity_id), ids
-    except ValueError as exc:
+        ActivitySource(
+            ws.package_root / "active",
+            trust=PackageTrust.PARENT_TRUSTED_UNSIGNED,
+            source_id="greia-parent-package-service",
+        ),
+    )
+    discovered = ActivityRegistry(sources, runtime, fail_closed=False).discover()
+
+    profile_store = ws.profile_store()
+    profiles = profile_store.ensure_initialized()
+    if not profiles:
+        raise ValueError("Simulator workspace has no selectable child profile")
+    profile = profiles[0]
+    context = profile_store.context(profile.profile_id)
+    policy = ActivityDiscoveryPolicyStore(
+        context.activity_discovery_policy_path
+    ).read()
+    effective = ActivityDiscoveryService().effective_activities(
+        discovered,
+        approximate_age=profile.approximate_age,
+        challenge_preference=profile.challenge_preference,
+        policy=policy,
+    )
+    visible_ids = tuple(activity.activity_id for activity in effective)
+    if activity_id not in visible_ids:
         raise ValueError(
-            f"Activity {activity_id!r} is not discoverable; "
-            f"catalogue contains {len(ids)} identities"
-        ) from exc
+            f"Activity {activity_id!r} is not visible to the selected Simulator profile"
+        )
+
+    catalogue = ActivityCatalogue.from_activities(
+        effective,
+        locale=locale,
+        previously_subdivided=policy.subdivided_collections,
+    )
+    candidates: list[ShellLaunchRoute] = []
+    for home_index, collection in enumerate(catalogue.home_collections):
+        collection_ids = tuple(item.activity_id for item in collection.items)
+        if activity_id not in collection_ids:
+            continue
+        groups = catalogue.subcollections_for(collection.collection_id)
+        if groups:
+            for group_index, group in enumerate(groups):
+                group_ids = tuple(item.activity_id for item in group.items)
+                if activity_id not in group_ids:
+                    continue
+                candidates.append(
+                    ShellLaunchRoute(
+                        activity_id=activity_id,
+                        collection_id=collection.collection_id,
+                        home_collection_index=home_index,
+                        subcollection_id=group.collection_id,
+                        subcollection_index=group_index,
+                        activity_index=group_ids.index(activity_id),
+                    )
+                )
+        else:
+            candidates.append(
+                ShellLaunchRoute(
+                    activity_id=activity_id,
+                    collection_id=collection.collection_id,
+                    home_collection_index=home_index,
+                    subcollection_id=None,
+                    subcollection_index=None,
+                    activity_index=collection_ids.index(activity_id),
+                )
+            )
+
+    if not candidates:
+        raise ValueError(
+            f"Activity {activity_id!r} has no child-navigable Collection route"
+        )
+    route = min(
+        candidates,
+        key=lambda item: (
+            item.navigation_cost,
+            item.home_collection_index,
+            item.subcollection_index if item.subcollection_index is not None else -1,
+            item.activity_index,
+            item.collection_id,
+        ),
+    )
+    return route, visible_ids
 
 
 def _wait_for_state(
@@ -240,30 +367,116 @@ def _wait_for_state(
     return None
 
 
+def _send_shell_key_and_wait(
+    *,
+    child: subprocess.Popen,
+    state: dict[str, Any],
+    key: str,
+    stage: str,
+    timeout: float = 4.0,
+) -> dict[str, Any] | None:
+    """Send one semantic Shell key and require a new activities-mode frame."""
+
+    before = int(state.get("frame_count", 0))
+    if not _bridge_key(key):
+        return None
+    updated = _wait_for_state(
+        lambda candidate: (
+            candidate.get("mode") == "activities"
+            and int(candidate.get("frame_count", 0)) > before
+        ),
+        timeout=timeout,
+        child=child,
+    )
+    if updated is None:
+        _log(f"Shell navigation stalled during {stage} after key {key}")
+    return updated
+
+
+def _send_right_steps(
+    *,
+    child: subprocess.Popen,
+    state: dict[str, Any],
+    count: int,
+    stage: str,
+) -> dict[str, Any] | None:
+    current = state
+    for index in range(count):
+        updated = _send_shell_key_and_wait(
+            child=child,
+            state=current,
+            key="RIGHT",
+            stage=f"{stage} step {index + 1}/{count}",
+        )
+        if updated is None:
+            return None
+        current = updated
+    return current
+
+
 def _send_profile_and_activity_launch(
     *,
     child: subprocess.Popen,
-    target_index: int,
+    route: ShellLaunchRoute,
 ) -> dict[str, Any] | None:
-    """Launch via the real profile picker and semantic Activity selection."""
+    """Launch through profile -> Collection Home -> optional group -> Activity."""
 
     if not _bridge_key("RETURN"):
         return None
-    activities_state = _wait_for_state(
+    current = _wait_for_state(
         lambda state: state.get("mode") == "activities",
         timeout=8.0,
         child=child,
     )
-    if activities_state is None:
-        _log("profile selection never reached Activity catalogue")
+    if current is None:
+        _log("profile selection never reached Collection Home")
         return None
 
-    for _ in range(target_index):
-        if not _bridge_key("RIGHT"):
-            return None
-        time.sleep(0.025)
+    current = _send_right_steps(
+        child=child,
+        state=current,
+        count=route.home_collection_index,
+        stage="Collection Home selection",
+    )
+    if current is None:
+        return None
+    current = _send_shell_key_and_wait(
+        child=child,
+        state=current,
+        key="RETURN",
+        stage=f"enter Collection {route.collection_id}",
+    )
+    if current is None:
+        return None
 
-    before_launch_count = int(activities_state.get("frame_count", 0))
+    if route.subcollection_index is not None:
+        current = _send_right_steps(
+            child=child,
+            state=current,
+            count=route.subcollection_index,
+            stage=f"sub-Collection selection in {route.collection_id}",
+        )
+        if current is None:
+            return None
+        current = _send_shell_key_and_wait(
+            child=child,
+            state=current,
+            key="RETURN",
+            stage=f"enter sub-Collection {route.subcollection_id}",
+        )
+        if current is None:
+            return None
+
+    current = _send_right_steps(
+        child=child,
+        state=current,
+        count=route.activity_index,
+        stage=f"Activity selection in {route.subcollection_id or route.collection_id}",
+    )
+    if current is None:
+        return None
+
+    before_launch_count = int(current.get("frame_count", 0))
     if not _bridge_key("RETURN"):
         return None
     activity_state = _wait_for_state(
@@ -377,20 +590,24 @@ def main(argv: list[str] | None = None) -> int:
         _log(f"failed to prepare Activity/workspace: {exc}")
         return 3
 
-    target_index: int | None = None
+    target_route: ShellLaunchRoute | None = None
     if target_id is not None:
         try:
-            target_index, activity_ids = _discover_activity_index(ws, target_id)
+            target_route, visible_ids = _discover_launch_route(
+                ws,
+                target_id,
+                locale=args.locale,
+            )
         except Exception as exc:  # noqa: BLE001
-            _log(f"failed to resolve target Activity: {exc}")
+            _log(f"failed to resolve target Activity route: {exc}")
             try:
                 ws.release_lock()
             except Exception:  # noqa: BLE001
                 pass
             return 3
         _log(
-            f"target Activity {target_id} is launcher index "
-            f"{target_index}/{max(0, len(activity_ids) - 1)}"
+            f"target Activity route ({len(visible_ids)} visible): "
+            f"{target_route.describe()}"
         )
 
     _log("spawning real Greia child Shell in --headless mode")
@@ -460,10 +677,10 @@ def main(argv: list[str] | None = None) -> int:
             return 6
         _log(f"first Shell frame: {shell_frame_path}; state={shell_state}")
 
-        if target_index is not None:
+        if target_route is not None:
             activity_state = _send_profile_and_activity_launch(
                 child=child,
-                target_index=target_index,
+                route=target_route,
             )
             if activity_state is None:
                 _log(f"Activity launch failed; child log: {child_log_path}")
@@ -506,7 +723,7 @@ def main(argv: list[str] | None = None) -> int:
             return 9
         _log(f"post-interaction screenshot: {post_path}")
 
-        if target_index is not None:
+        if target_route is not None:
             returned = _return_home(child=child, viewport=args.viewport)
             if returned is None:
                 _log(f"Home return failed; child log: {child_log_path}")
