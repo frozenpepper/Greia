@@ -1,7 +1,7 @@
 # Greia Encyclopedia workstream handover
 
 **Updated:** 2026-08-28  
-**Construction state:** v0.1 source breadth complete and source gate GREEN; Simulator acceptance is next  
+**Construction state:** v0.1 source breadth complete and source gate GREEN; headless Shell-route retest pending  
 **Runtime pages:** **43 / 43 planned executable pages**  
 **Current evidence:** **SOURCE-VERIFIED / SIMULATOR-UNVERIFIED / NARRATION ACCEPTANCE PENDING**  
 **Runtime Activity:** `activities/enciclopedia_greia/` (`org.greia.enciclopedia`)
@@ -203,7 +203,7 @@ Do not revert these fixes.
 
 ---
 
-## 6. Next exact task — Simulator/UX acceptance
+## 6. Simulator harness evidence and next exact task
 
 Single rolling local-agent instruction:
 
@@ -211,49 +211,86 @@ Single rolling local-agent instruction:
 docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md
 ```
 
-It now performs **Simulator-only acceptance**. It must not rerun the 1431-test source gate and must not generate voices.
+### 6.1 First terminal-only Simulator attempt
 
-The Simulator pass must establish on the frozen runtime state:
+The first headless attempt failed before launch because the helper republished the already built-in Encyclopedia as developer-unsigned and correctly hit the duplicate-identity guard. That was a **Simulator harness defect**, not Encyclopedia runtime evidence. The helper was changed so built-in Activities launch in place.
+
+### 6.2 Second terminal-only Simulator attempt
+
+Evidence:
 
 ```text
-launch + >=10 s survival
-all 6 sections reachable
-all 36 factual entries reachable
-all 36 signature interactions visibly work
-internal Back works across traversal
-protected Greia Home + clean return to Shell
-pointer vs semantic-keyboard parity on:
-  animals.octopus
-  space.saturn
-  earth.volcano
-  body.heart
-  machines.gears
-  history.fossils
-mandatory pre-reader/no-reading review
-responsive sample across required viewport/profile presets
+tmp/encyclopedia-v01-acceptance/20260828_061732-headless-smoke/
 ```
 
-Missing narration is reported separately:
+Owner-machine report:
+
+```text
+FOCUSED_SIMULATOR_TESTS       PASS
+HEADLESS_BUILTIN_DETECTION    PASS
+SHELL_FIRST_FRAME             PASS
+HEADLESS_SMOKE_RC             7
+worktree                      clean
+```
+
+The real child Shell and remote bridge reached a 1024x600 `mode=profiles` frame. No duplicate-ID collision remained. The run then failed to obtain an Encyclopedia Activity frame.
+
+Review established that the second helper still modeled the launcher incorrectly: it computed a raw ActivityRegistry index and sent RIGHT repeatedly after profile activation. The production child UI is **Collection-first**, so those keys operate on Collection portals, not raw Activity cards.
+
+Current production navigation shape:
+
+```text
+profile picker
+→ Collection Home
+→ optional adaptive sub-Collection
+→ Activity cards
+→ Activity
+```
+
+That harness drift is now repaired:
+
+- headless routing is represented by typed `ShellLaunchRoute`;
+- the route is derived from the same profile-visible `ActivityCatalogue` projection used by the child Shell;
+- built-in, developer and Parent-installed Activity sources are represented;
+- selected-profile visibility, age and challenge policy are applied;
+- the route records Collection Home index, optional sub-Collection index and Activity-card index;
+- every semantic Shell navigation step requires a fresh real `mode=activities` frame before continuing;
+- focused tests cover both direct Collection → Activity and Collection → sub-Collection → Activity routes.
+
+This is still harness work. No Encyclopedia runtime failure should be claimed until the corrected route actually reaches `mode=activity` and the Activity itself fails.
+
+### 6.3 Next exact gate
+
+Run the rolling prompt above. It performs only:
+
+```text
+focused Simulator tooling tests
+one real built-in Encyclopedia headless smoke
+profile → Collection Home → optional sub-Collection → Encyclopedia
+first Encyclopedia frame
+12 s survival + one bounded interaction
+protected Home → Shell
+```
+
+Do **not** run the 43-page traversal until that smoke is green.
+Do **not** rerun the 1431-test source gate.
+Do **not** generate voices.
+
+After the headless smoke is green, the next tranche is mechanical 43-page reachability/interactions/screenshot capture. Subjective pre-reader/no-reading and visual-quality judgment remains a separate human/vision review rather than a terminal-agent claim.
+
+Missing narration is always reported separately:
 
 ```text
 NARRATION ACCEPTANCE PENDING
 ```
 
-It is not a reason to add runtime TTS and is not itself a blocker for the visual/input Simulator pass.
+It is not a reason to add runtime TTS and is not itself a blocker for visual/input Simulator acceptance.
 
-If every Simulator/input/pre-reader/responsive gate passes, the exact truthful label becomes:
+If every later Simulator/input/pre-reader/responsive gate passes, the exact truthful label becomes:
 
 ```text
 SOURCE + SIMULATOR ACCEPTED / NARRATION ACCEPTANCE PENDING
 ```
-
-If a blocking runtime/Simulator defect appears:
-
-```text
-SOURCE-VERIFIED / SIMULATOR-FAILED
-```
-
-Stop and preserve evidence; do not repair inside the acceptance run.
 
 ---
 
