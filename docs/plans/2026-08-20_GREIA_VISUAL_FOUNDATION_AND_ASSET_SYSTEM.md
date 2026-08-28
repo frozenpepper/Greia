@@ -1,7 +1,7 @@
 # Greia Visual Foundation and Asset System — Active Art Workstream Plan
 
 **Status:** ACTIVE ART/VISUAL WORKSTREAM  
-**Last checkpoint review:** 2026-08-22  
+**Last checkpoint review:** 2026-08-28  
 **Repository:** `frozenpepper/Greia`  
 **Branch:** `main`  
 **Stable system/index guide:** `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`  
@@ -11,7 +11,7 @@ This plan owns **sequencing, current checkpoint, milestone state and append-only
 
 > **excellent individual assets → reusable asset packs → layered composition → subtle parallax / ambient motion / light / shadow → shared UI system → explicit semantic runtime consumption → Shell/Activity reuse**
 
-Broad source-art coverage already exists. **V5 shared consumption/integration remains active.** The reusable runtime seam is now proven across cards, panels, buttons, profile identity, feedback and Shell-local navigation. The current source-authoring gate is no longer more themed art production: Greia is consolidating a generic semantic authoring toolbox and the model-agnostic discovery/skill workflow that arbitrary Activity-authoring agents can use.
+Broad source-art coverage already exists. **V5 shared consumption/integration remains active.** The reusable runtime seam is proven across Shell UI, canonical characters, scenes and multiple first-party Activity productizations. The current visible art focus is now the **Greia Encyclopedia visual reauthoring**, where complete mechanical breadth exposed a systemic quality failure caused by overuse of programmer-drawn Pygame primitives for final subject art. The response is not another generic pack or a 43-page bulk redraw: build a bounded Encyclopedia visual foundation, then owner-review a representative golden-master set before migration.
 
 ---
 
@@ -289,14 +289,15 @@ Evidence class: **SIMULATOR VISUAL REVIEW**.
 | Stable guide | `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` |
 | Resume | `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` |
 | Product discovery authority | `docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md` |
-| Runtime visual focus | **V5 runtime/scene/shared UI accepted at simulator scope where recorded** |
-| Authoring focus | **Whole-Catalogue Visual Audit (19 Activities) Complete + Batch 1 Productization Complete** |
+| Runtime visual focus | **Existing V5 runtime/scene/shared UI foundations accepted where recorded; current visible focus is Encyclopedia reauthoring** |
+| Authoring focus | **Encyclopedia E1 visual foundation + E2 golden-master prototypes** |
+| Encyclopedia forensic audit | `docs/reviews/2026-08-28_ENCYCLOPEDIA_GRAPHICS_FORENSIC_AUDIT.md` — current graphics rejected as final product quality |
+| Encyclopedia visual subplan | `docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md` |
 | Generic library | full source harvest complete; Batch A owner-reviewed selectively |
-| Batch A disposition | 9 preferred finished + 7 candidate-reference finished + 2 preferred ingredients |
-| Generic Batch B rule | `NO_GAP` confirmed across 6 real Activity productizations; Batch B remains unauthorized |
-| Launcher gates | Title/Icon gate & Shell Productization/Category Navigation gates **ACCEPTED & VERIFIED** |
-| Batch 1 productization | `treno_numeri` (1.9 → 4.8), `labirinto_magico` (1.9 → 4.8), `acquario_magico` (2.4 → 4.7) **ACCEPTED** |
-| Next exact action | Owner Review of `GREIA_VISUAL_REVIEW_FIRST_PARTY_ACTIVITY_BATCH_1_2026-08-22.zip` |
+| Generic Batch B rule | remains unauthorized; Encyclopedia topic-specific art should normally stay Activity-local |
+| Canonical cast | six-character v0.1 runtime family accepted; integrate intentionally rather than tiny corner stamps |
+| Prior first-party Batch 1 | `treno_numeri`, `labirinto_magico`, `acquario_magico` accepted historical productization evidence |
+| Next exact action | Build Home + Animals section + Lion golden-master direction, extend to Saturn/Gears/Pyramids, capture one curated Simulator contact sheet, then STOP for owner visual approval before bulk migration |
 
 ---
 
@@ -407,7 +408,10 @@ Committed source is not PASS by itself. Generated runtime output is not consumer
 - exposing Collections as filesystem folders or building deep taxonomies;
 - treating themed source bundles as the generic authoring taxonomy;
 - redrawing every candidate-reference asset until it becomes preferred;
-- expanding asset count by inertia before making the toolbox discoverable to user agents.
+- expanding asset count by inertia before making the toolbox discoverable to user agents;
+- treating a mechanically complete page set as visually complete;
+- using raw Pygame primitives as the default final illustration method for real-world subjects;
+- bulk-migrating a large Activity before a representative visual direction is owner-approved.
 
 ---
 
@@ -448,7 +452,7 @@ The entries below preserve the workstream chronology. Corrections/new state are 
 - Reading pack landed on `main` at `6b94d6ddd8cdbecea171f40a1e47c1ac49f3aec9`.
 
 ## 2026-08-20 — Fantasy/Village/Night v0.1
-- Built a bounded 15-master night/fantasy village pack.
+- Built a bounded 15-master night/fantasy village source pack.
 - Reused Forest greenery/fireflies semantically instead of creating unnecessary duplicates.
 - Revised weak cottages, tower, lantern, well and cobblestone treatments before final desktop review.
 - Source + composition/review metadata committed in `0958f8a0ca1b583798a245464b9e3e87a74d883c`.
@@ -611,7 +615,7 @@ The entries below preserve the workstream chronology. Corrections/new state are 
   - Mascot Decision: Intentionally omitted mascot to ensure the child's drawing canvas remains generous, uncluttered, and unencumbered.
 - Captured complete 12-PNG evidence suite in `docs/reviews/visual/2026-08-22_painting-visual-productization/` across empty canvas, drawing in progress, rich multi-color drawing, palette selection affordances, best product proof, 3 responsive viewports (1024x600 large, 1366x768 compact, 1280x800 normal), static motion-disabled mode, fail-soft procedural fallback, and gallery saved thumbnail persistence.
 - Packaged owner transfer bundle: `GREIA_VISUAL_REVIEW_PAINTING_PRODUCTIZATION_2026-08-22.zip`.
-- Generic library gap outcome: `NO_GAP`. Generic Batch B remains unauthorized.
+- Generic library gap outcome: **`NO_GAP`**. Generic Batch B remains unauthorized.
 
 ## 2026-08-22 — First-Party Activity Visual Audit & Batch 1 Productization
 - Executed full headless Simulator visual audit across all 19 first-party Activities at 1024×600, scoring each 1–5 on 8 dimensions.
@@ -628,6 +632,16 @@ The entries below preserve the workstream chronology. Corrections/new state are 
 - Batch review document `OWNER_RECHECK.md` and root transfer bundle `GREIA_VISUAL_REVIEW_FIRST_PARTY_ACTIVITY_BATCH_1_2026-08-22.zip` packaged.
 - Generic library gap conclusion: `NO_GAP`. Generic Batch B remains unauthorized.
 
-**Next exact action:** Owner Review and Signoff of `GREIA_VISUAL_REVIEW_FIRST_PARTY_ACTIVITY_BATCH_1_2026-08-22.zip`.
+## 2026-08-28 — Encyclopedia visual forensic correction and reauthoring gate
+- Owner rejected the complete 43-page Encyclopedia screenshot set as aesthetically unacceptable despite green mechanical breadth.
+- Primary forensic review identified the systemic cause: final real-world subject art and section worlds are dominated by raw Pygame primitives, sparse flat backgrounds, floating instrumentation-like discovery bubbles, corner-stamped mascots and weak interaction payoff.
+- Recorded the rejection and preservation boundary in `docs/reviews/2026-08-28_ENCYCLOPEDIA_GRAPHICS_FORENSIC_AUDIT.md`.
+- Added bounded visual subplan `docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md`.
+- Preserved the healthy 43-page runtime/navigation/research architecture and the already-landed generic headless capture-settle repair.
+- Paused broad 43-page visual recapture and final pointer/responsive acceptance until real graphics change.
+- Established mandatory E1/E2 gate: shared Encyclopedia visual foundation + golden-master prototypes for Home, Animals section, Lion, Saturn, Gears and Pyramids (optional Body/Heart proof), followed by actual Simulator contact-sheet owner review.
+- Explicitly prohibited bulk 43-page migration before owner direction approval and prohibited Generic Batch B by inertia.
+- Current evidence class for the rejected presentation: **REJECTED EXPERIMENT / mechanically useful runtime foundation**.
 
+**Next exact action:** implement Encyclopedia E1 visual foundation and E2 golden masters, capture a small curated real-Simulator prototype set, and stop for owner visual approval before migrating the remaining pages.
 
