@@ -1,4 +1,4 @@
-"""Animals section golden master: an illustrated field table, not six cards."""
+"""Animals golden master: six selectable subjects inside one illustrated habitat world."""
 
 from __future__ import annotations
 
@@ -32,13 +32,20 @@ IMPLEMENTED_ENTRY_IDS = {
     "frog": "animals.frog",
 }
 
-_TARGET_RECTS = (
-    pygame.Rect(120, 202, 190, 112),
-    pygame.Rect(355, 196, 190, 118),
-    pygame.Rect(585, 195, 200, 120),
-    pygame.Rect(155, 330, 200, 110),
-    pygame.Rect(392, 330, 190, 110),
-    pygame.Rect(625, 330, 200, 110),
+# Centers are mirrored in the authored SVG as data-target/data-center metadata.
+# One geometry therefore owns pointer focus, controller topology, and the
+# illustrated subject location instead of letting those drift independently.
+ANIMAL_CENTERS = (
+    (190, 260),
+    (430, 260),
+    (670, 260),
+    (190, 410),
+    (430, 410),
+    (670, 410),
+)
+_TARGET_RECTS = tuple(
+    pygame.Rect(center[0] - 95, center[1] - 60, 190, 120)
+    for center in ANIMAL_CENTERS
 )
 
 
