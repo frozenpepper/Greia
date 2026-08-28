@@ -1,16 +1,17 @@
-"""Animals section page: one lively habitat collage with six planned subjects."""
+"""Animals section golden master: an illustrated field table, not six cards."""
 
 from __future__ import annotations
 
-import math
 import pygame
 
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
-    from .common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from ..enciclopedia_presentation import draw_authored_scene, draw_focus_patch, draw_title
+    from .common import draw_presenter, grid_step
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
-    from pages.common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from enciclopedia_presentation import draw_authored_scene, draw_focus_patch, draw_title
+    from pages.common import draw_presenter, grid_step
 
 
 ANIMALS = (
@@ -22,8 +23,6 @@ ANIMALS = (
     ("frog", "animal.frog"),
 )
 
-# Explicit finished-page mapping keeps section navigation honest: an animal is
-# only marked/openable after its real runtime page exists and is registered.
 IMPLEMENTED_ENTRY_IDS = {
     "lion": "animals.lion",
     "elephant": "animals.elephant",
@@ -33,25 +32,26 @@ IMPLEMENTED_ENTRY_IDS = {
     "frog": "animals.frog",
 }
 
+_TARGET_RECTS = (
+    pygame.Rect(120, 202, 190, 112),
+    pygame.Rect(355, 196, 190, 118),
+    pygame.Rect(585, 195, 200, 120),
+    pygame.Rect(155, 330, 200, 110),
+    pygame.Rect(392, 330, 190, 110),
+    pygame.Rect(625, 330, 200, 110),
+)
+
 
 class AnimalsPage(EncyclopediaPage):
     page_id = "animals"
 
     def __init__(self, context) -> None:
         super().__init__(context)
-        self._time = 0.0
         self._selected = 0
         self._hovered: int | None = None
-        self._rects = tuple(
-            pygame.Rect(95 + (i % 3) * 240, 200 + (i // 3) * 150, 190, 120)
-            for i in range(len(ANIMALS))
-        )
 
     def on_enter(self) -> None:
         self.context.audio.play("encyclopedia.animals.intro")
-
-    def update(self, dt: float) -> None:
-        self._time += dt
 
     def handle_input(self, event: PageInput) -> None:
         if event.position is not None and event.kind in {
@@ -60,7 +60,7 @@ class AnimalsPage(EncyclopediaPage):
         }:
             point = (int(event.position[0]), int(event.position[1]))
             hit = next(
-                (i for i, rect in enumerate(self._rects) if rect.collidepoint(point)),
+                (index for index, rect in enumerate(_TARGET_RECTS) if rect.collidepoint(point)),
                 None,
             )
             self._hovered = hit
@@ -80,95 +80,36 @@ class AnimalsPage(EncyclopediaPage):
             )
 
     def _open_entry(self, index: int) -> None:
-        animal_id = ANIMALS[index][0]
-        page_id = IMPLEMENTED_ENTRY_IDS.get(animal_id)
+        page_id = IMPLEMENTED_ENTRY_IDS.get(ANIMALS[index][0])
         if page_id is not None:
             self.context.host.open_page(page_id)
 
     def draw(self, surface: pygame.Surface) -> None:
-        surface.fill((205, 236, 242))
-        pygame.draw.circle(surface, (255, 230, 113), (875, 125), 42)
-        pygame.draw.ellipse(surface, (124, 188, 113), (-50, 385, 1120, 250))
-        pygame.draw.rect(surface, (81, 161, 184), (0, 455, 1024, 145))
-        draw_centered_text(
+        if not draw_authored_scene(
+            surface,
+            self.context.visuals,
+            "encyclopedia.animals.field_table",
+        ):
+            surface.fill((207, 232, 221))
+        draw_title(
             surface,
             self.context.typography,
             self.context.resources.text("section.animals"),
-            center=(505, 110),
-            size=40,
-            color=self.context.palette.ink,
+            self.context.palette.ink,
         )
-
-        for i, ((animal_id, label_key), rect) in enumerate(zip(ANIMALS, self._rects)):
-            active = i == self._selected or i == self._hovered
-            pygame.draw.rect(surface, (255, 252, 242), rect, border_radius=24)
-            pygame.draw.rect(surface, (81, 136, 89), rect, 4, border_radius=24)
-            self._draw_animal(surface, animal_id, rect, i)
-            if animal_id in IMPLEMENTED_ENTRY_IDS:
-                pygame.draw.circle(surface, (255, 214, 74), (rect.right - 18, rect.top + 18), 9)
-            draw_centered_text(
+        for index, rect in enumerate(_TARGET_RECTS):
+            draw_focus_patch(
                 surface,
-                self.context.typography,
-                self.context.resources.text(label_key),
-                center=(rect.centerx, rect.bottom - 18),
-                size=19,
-                color=self.context.palette.ink,
+                rect,
+                active=index == self._selected or index == self._hovered,
+                radius=24,
             )
-            focus_ring(surface, rect, active)
-
         draw_presenter(
             surface,
             self.context.visuals,
             "tito",
-            position=(930, 565),
-            height=150,
+            position=(920, 575),
+            height=190,
             variant="happy",
             fallback_color=(247, 151, 77),
         )
-
-    def _draw_animal(
-        self,
-        surface: pygame.Surface,
-        animal_id: str,
-        rect: pygame.Rect,
-        index: int,
-    ) -> None:
-        cx, cy = rect.centerx, rect.centery - 10
-        bob = int(math.sin(self._time * 2.0 + index) * 3)
-        cy += bob
-        ink = (74, 55, 42)
-        if animal_id == "lion":
-            pygame.draw.circle(surface, (194, 122, 58), (cx, cy), 34)
-            pygame.draw.circle(surface, (239, 177, 77), (cx, cy), 24)
-        elif animal_id == "elephant":
-            pygame.draw.circle(surface, (151, 163, 174), (cx, cy), 30)
-            pygame.draw.circle(surface, (151, 163, 174), (cx - 25, cy), 18)
-            pygame.draw.circle(surface, (151, 163, 174), (cx + 25, cy), 18)
-            pygame.draw.line(surface, (151, 163, 174), (cx + 8, cy + 10), (cx + 26, cy + 35), 12)
-        elif animal_id == "octopus":
-            pygame.draw.circle(surface, (183, 103, 173), (cx, cy - 5), 28)
-            for dx in (-24, -12, 0, 12, 24):
-                pygame.draw.arc(
-                    surface,
-                    (183, 103, 173),
-                    (cx + dx - 14, cy + 8, 28, 35),
-                    0,
-                    math.pi,
-                    5,
-                )
-        elif animal_id == "bee":
-            pygame.draw.ellipse(surface, (247, 204, 63), (cx - 30, cy - 18, 60, 36))
-            for x in (cx - 14, cx + 5):
-                pygame.draw.line(surface, ink, (x, cy - 15), (x, cy + 15), 5)
-            pygame.draw.ellipse(surface, (213, 238, 246), (cx - 28, cy - 40, 24, 25))
-            pygame.draw.ellipse(surface, (213, 238, 246), (cx + 3, cy - 40, 24, 25))
-        elif animal_id == "penguin":
-            pygame.draw.ellipse(surface, (48, 57, 69), (cx - 25, cy - 36, 50, 72))
-            pygame.draw.ellipse(surface, (245, 245, 236), (cx - 16, cy - 10, 32, 40))
-            pygame.draw.polygon(surface, (241, 170, 60), [(cx, cy - 5), (cx + 14, cy), (cx, cy + 5)])
-        else:
-            pygame.draw.ellipse(surface, (100, 177, 91), (cx - 30, cy - 20, 60, 40))
-            pygame.draw.circle(surface, (100, 177, 91), (cx - 20, cy - 23), 12)
-            pygame.draw.circle(surface, (100, 177, 91), (cx + 20, cy - 23), 12)
-        pygame.draw.circle(surface, ink, (cx - 8, cy - 6), 3)
-        pygame.draw.circle(surface, ink, (cx + 8, cy - 6), 3)
