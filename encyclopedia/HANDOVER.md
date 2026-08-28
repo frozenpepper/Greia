@@ -3,7 +3,7 @@
 **Updated:** 2026-08-28  
 **Runtime pages:** **43 / 43 planned executable pages**  
 **Runtime Activity:** `activities/enciclopedia_greia/` (`org.greia.enciclopedia`)  
-**Current evidence:** **SOURCE-VERIFIED / HEADLESS-LIFECYCLE-SMOKE-PASS / 43-PAGE-MECHANICAL-TRAVERSAL-PASS / VISUAL+INPUT ACCEPTANCE PENDING / NARRATION ACCEPTANCE PENDING**
+**Current evidence:** **SOURCE-VERIFIED AT PRIOR SHA / HEADLESS-LIFECYCLE-SMOKE-PASS / 43-PAGE REACHABILITY+BACK PASS / VISUAL REPAIRS LANDED + REVERIFY PENDING / NARRATION ACCEPTANCE PENDING**
 
 This is the current continuation contract. Historical construction detail remains in `encyclopedia/PROGRESS.md` and dated reviews.
 
@@ -69,7 +69,7 @@ Voice generation/review is a separate authoring workflow. Simulator acceptance d
 
 ---
 
-## 4. Deterministic source gate — GREEN
+## 4. Deterministic source gate — prior GREEN checkpoint
 
 Green source/runtime SHA:
 
@@ -95,7 +95,7 @@ accepted-audio sync check               PASS
 worktree                                clean
 ```
 
-Do not rerun the source gate merely to continue visual/Simulator acceptance unless relevant runtime/source changes require it.
+Runtime visual source has changed since that checkpoint, so the current repair tranche must run the source gate exactly once after the traversal-harness fix is committed.
 
 Durable review:
 
@@ -123,11 +123,7 @@ Proven:
 
 ```text
 focused Simulator tests                 45 / 45 PASS
-built-in Activity detection             PASS
 route                                   home[2]=learn -> activity[4]=org.greia.enciclopedia
-real Shell first frame                  PASS
-profile -> Collection Home              PASS
-Collection route navigation             PASS
 real Shell -> Encyclopedia              PASS
 first Encyclopedia frame                PASS
 12-second survival                      PASS
@@ -135,8 +131,6 @@ bounded semantic interaction            PASS
 protected Greia Home -> real Shell      PASS
 worktree                                clean
 ```
-
-This proves the real Shell/Activity lifecycle lane, not full visual quality.
 
 Durable review:
 
@@ -146,7 +140,7 @@ docs/reviews/2026-08-28_ENCYCLOPEDIA_V01_HEADLESS_LIFECYCLE_ACCEPTANCE.md
 
 ---
 
-## 6. Complete 43-page mechanical traversal — GREEN
+## 6. 43-page mechanical traversal — reachability/back GREEN
 
 Owner-machine tested SHA:
 
@@ -154,28 +148,21 @@ Owner-machine tested SHA:
 8cda9cbaa4beb4f5c38a9945479f0f4c88f8ee65
 ```
 
-Evidence directory:
+Evidence:
 
 ```text
 tmp/encyclopedia-v01-acceptance/20260828_074819-mechanical-traversal/
-```
-
-Evidence ZIP:
-
-```text
 tmp/encyclopedia-v01-acceptance/20260828_074819-mechanical-traversal.zip
 ```
 
-Proven:
+Mechanically proven:
 
 ```text
 focused traversal/Simulator tests       53 / 53 PASS
-mechanical traversal rc                 0
 Shell -> Encyclopedia                   PASS
-sections captured                       6 / 6
+sections reached                        6 / 6
 factual entries reached                36 / 36
 semantic ACTIVATE delivered            36 / 36
-before/after entry pairs               36 / 36
 internal Back returns                  36 / 36
 all sections -> Encyclopedia Home       PASS
 protected Greia Home -> Shell           PASS
@@ -183,13 +170,11 @@ traversal-summary status                PASS
 worktree                                clean
 ```
 
-The evidence contains 82 PNGs: Shell/profile state, Encyclopedia Home, all six section pages, before/after frames for all 36 entries, final Encyclopedia Home and returned Shell.
+This establishes complete 43-page runtime reachability and Back/Home continuity.
 
-This establishes complete **mechanical runtime breadth** for the frozen 43-page v0.1 base.
+The run created 36 `before` and 36 `after` files, but the later visual review found that **two of those pairs are not coherent entry-interaction comparisons**; see §7.
 
-It does **not** establish that each signature interaction is visually/educationally correct. `changed_pixel_fraction` is diagnostic only.
-
-Durable review:
+Durable mechanical review:
 
 ```text
 docs/reviews/2026-08-28_ENCYCLOPEDIA_V01_MECHANICAL_TRAVERSAL_ACCEPTANCE.md
@@ -197,51 +182,120 @@ docs/reviews/2026-08-28_ENCYCLOPEDIA_V01_MECHANICAL_TRAVERSAL_ACCEPTANCE.md
 
 ---
 
-## 7. Unresolved child warning
+## 7. Primary visual evidence review — repair required
 
-Both the green lifecycle smoke and the green mechanical traversal emitted:
+The actual uploaded screenshot ZIP was reviewed visually by the primary/vision-capable reviewer.
+
+Durable review:
+
+```text
+docs/reviews/2026-08-28_ENCYCLOPEDIA_V01_VISUAL_EVIDENCE_REVIEW.md
+```
+
+### 7.1 Positive result
+
+The core visual architecture is viable at 1024×600:
+
+- coherent procedural style;
+- large, clear focus targets;
+- six distinctive section worlds;
+- clear internal Back vs protected Greia Home;
+- presenter characters render normally;
+- most first interactions produce understandable visual changes;
+- no broad frame corruption or obvious global missing-asset fallback.
+
+### 7.2 Capture race — Sun and Neptune
+
+These files are not coherent entry-before states:
+
+```text
+space.sun-before.png
+space.neptune-before.png
+```
+
+They still display the animated Space section. The corresponding `after` files display the Sun/Neptune entry pages.
+
+Therefore the previous archive provides:
+
+```text
+43 / 43 page reachability       PASS
+36 / 36 Back continuity         PASS
+34 / 36 coherent first-action visual pairs
+```
+
+The likely cause is generic traversal timing: the helper accepted the first later global Activity frame even when that frame belonged to the previous animated page. This is a harness/evidence defect, not a Sun/Neptune runtime defect.
+
+### 7.3 Pyramids caption overflow — runtime defect
+
+`history.pyramids-before.png` showed the approved Italian intro wording overflowing horizontally outside the caption panel at 1024×600.
+
+The primary agent has already fixed `pages/pyramids.py` so layout adapts to the authoritative wording: it prefers a fitted single line, then a balanced two-line caption, with a defensive final fallback. The wording itself was not changed.
+
+### 7.4 Body Teeth target contrast — runtime/pre-reader defect
+
+`sections/04-body.png` showed the Teeth target as nearly blank because light enamel circles were drawn on an almost-identical warm-white target disk.
+
+The primary agent has already fixed `pages/body.py` with a stronger pastel enamel fill and darker compact outline, preserving navigation and content.
+
+### 7.5 UX notes, not yet blockers
+
+- Home `TANTO TEMPO FA` remains more abstract than the other section portals and may merit a more concrete historical icon later.
+- Some default first ACTIVATE states are subtle; the old mechanical run exercises only one default-focus action and does not certify every multi-step signature interaction.
+
+---
+
+## 8. `libpng` warning remains diagnostic
+
+Both the lifecycle smoke and mechanical traversal emitted:
 
 ```text
 libpng error: bad adaptive filter value
 ```
 
-The runs completed and expected Simulator screenshots were valid. The warning remains unresolved and must not be attributed to the screenshot encoder without evidence. During visual evidence review, explicitly check for missing/fallback imagery that could indicate a failed PNG asset decode.
+The visual review found no broad missing presenter, broken section composition or obvious blank asset placeholder that explains it.
+
+The warning remains unresolved diagnostic evidence. Do not assign it to the screenshot encoder or a specific asset without direct evidence. Do not block the visual repair tranche on speculative repair of this warning.
 
 ---
 
-## 8. Current next gate — visual review first
+## 9. Current exact owner-machine task
 
-The next step is **not another owner-machine traversal**.
-
-The evidence ZIP from the green mechanical traversal must be uploaded to the primary/vision-capable reviewer and inspected for:
-
-```text
-all 6 section-page visual states
-all 36 before/after factual-entry pairs
-intended signature-interaction visibility/correctness
-fallback or missing imagery, including possible libpng-related symptoms
-visual hierarchy and child affordances
-pre-reader/no-reading usability problems visible in the captured states
-```
-
-Until that review is complete, do not start another broad Simulator run merely for momentum.
-
-Rolling owner-machine authority:
+Rolling pointer:
 
 ```text
 docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md
 ```
 
-That file should currently say there is **no authorized local-agent run** until the evidence ZIP has been visually reviewed and the next targeted input/responsive task is defined.
+Dedicated authoritative task:
+
+```text
+docs/testing/GREIA_ENCYCLOPEDIA_V01_VISUAL_REPAIR_LOCAL_AGENT.md
+```
+
+Required sequence:
+
+```text
+safe update
+→ implement only generic traversal page-transition settle contract + regression
+→ focused tests once
+→ commit/push harness/test fix
+→ source gate once (runtime source changed)
+→ fresh 43-page traversal once
+→ evidence ZIP
+→ stop for primary visual review
+```
+
+The harness fix must remain generic: no Sun/Neptune special cases, hidden page-state hooks or pointer-coordinate discovery.
 
 ---
 
-## 9. Acceptance layers still pending
+## 10. Acceptance layers still pending
 
 ```text
-visual/signature-interaction review of captured frames
+fresh visual re-review after repair/recapture
+complete signature-interaction review beyond one default ACTIVATE where needed
 pointer vs semantic-keyboard parity sample
-pre-reader/no-reading UX acceptance
+pre-reader/no-reading final acceptance
 responsive viewport/profile matrix
 narration owner acceptance/integration
 physical Acer/Pi acceptance
@@ -257,26 +311,14 @@ Narration remains separate and must never be replaced with runtime TTS.
 
 ---
 
-## 10. Key evidence authorities
-
-Reusable broad acceptance runbook:
+## 11. Key evidence authorities
 
 ```text
-docs/testing/GREIA_ENCYCLOPEDIA_V01_CONSOLIDATED_ACCEPTANCE.md
-```
-
-Current owner-machine pointer:
-
-```text
-docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md
-```
-
-Durable reviews:
-
-```text
-docs/reviews/2026-08-27_ENCYCLOPEDIA_V01_POST_BUILD_DRIFT_REVIEW.md
-docs/reviews/2026-08-27_ENCYCLOPEDIA_V01_CLOSURE_TOOLING_REVIEW.md
 docs/reviews/2026-08-28_ENCYCLOPEDIA_V01_SOURCE_GATE_ACCEPTANCE.md
 docs/reviews/2026-08-28_ENCYCLOPEDIA_V01_HEADLESS_LIFECYCLE_ACCEPTANCE.md
 docs/reviews/2026-08-28_ENCYCLOPEDIA_V01_MECHANICAL_TRAVERSAL_ACCEPTANCE.md
+docs/reviews/2026-08-28_ENCYCLOPEDIA_V01_VISUAL_EVIDENCE_REVIEW.md
+
+docs/testing/GREIA_ENCYCLOPEDIA_V01_VISUAL_REPAIR_LOCAL_AGENT.md
+docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md
 ```
