@@ -152,9 +152,16 @@ class BodyPage(EncyclopediaPage):
             for radius in (20, 28):
                 pygame.draw.arc(surface, (90, 145, 193), (cx - radius, cy - radius, radius * 2, radius * 2), math.pi * 0.68, math.pi * 1.32, 2)
         elif target.target_id == "teeth":
+            # Teeth must remain readable against the warm-white target disk at
+            # netbook scale. A darker enamel fill plus a compact gum-colored
+            # outline preserves the pastel palette without making the icon
+            # disappear for pre-readers.
+            tooth_fill = (238, 220, 184)
+            tooth_outline = (132, 91, 83)
             for x in (cx - 18, cx - 6, cx + 6, cx + 18):
-                pygame.draw.circle(surface, (250, 246, 224), (x, cy - 7), 7)
-                pygame.draw.circle(surface, (250, 246, 224), (x, cy + 9), 7)
+                for y in (cy - 7, cy + 9):
+                    pygame.draw.circle(surface, tooth_fill, (x, y), 7)
+                    pygame.draw.circle(surface, tooth_outline, (x, y), 7, 2)
         elif target.target_id == "lungs":
             pygame.draw.ellipse(surface, (226, 154, 161), (cx - 27, cy - 27, 22, 53))
             pygame.draw.ellipse(surface, (226, 154, 161), (cx + 5, cy - 27, 22, 53))
