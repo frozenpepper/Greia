@@ -50,7 +50,7 @@ duplicate-ID collision               GONE
 Activity launch                      NOT PROVEN
 ```
 
-The route defect has now been repaired on `main`:
+The route defect has now been repaired on GitHub `main`:
 
 - `tools/headless_greia_simulator.py` no longer computes a raw launcher index;
 - it derives a typed `ShellLaunchRoute` from the same profile-visible `ActivityCatalogue` projection used by the child Shell;
@@ -60,10 +60,19 @@ The route defect has now been repaired on `main`:
 - semantic navigation now waits for a fresh real Shell frame after each hierarchy transition/key step;
 - focused tests cover both direct Collection → Activity and Collection → adaptive sub-Collection → Activity paths.
 
+One additional repository-state issue must be handled safely before retest: the previous owner-machine report started at local SHA
+
+```text
+7417e20729fd1c0562491e26f9fe564deccac058
+```
+
+and that SHA is **not present in GitHub's repository history**. Therefore do not assume the owner checkout can fast-forward to current `origin/main`. Preserve any local-only commits before running anything.
+
 Truthful state entering this task:
 
 ```text
-SOURCE-VERIFIED / HEADLESS-SHELL-ROUTE-RETEST-PENDING
+SOURCE-VERIFIED / LOCAL-BRANCH-RECONCILIATION-CHECK-PENDING
+HEADLESS-SHELL-ROUTE-RETEST-PENDING
 NARRATION ACCEPTANCE PENDING
 ```
 
@@ -74,29 +83,92 @@ Do **not** make subjective pre-reader/visual claims from a terminal-only context
 
 ---
 
-## Step 1 — update safely
+## Step 1 — inspect branch ancestry before changing the checkout
 
 From the existing Greia checkout:
 
 ```bash
 git branch --show-current
 git status --short
-git fetch origin
-git pull --ff-only origin main
 git rev-parse HEAD
-git status --short
+git fetch origin
+git rev-parse origin/main
 ```
 
-Required:
+Required before any update:
 
 ```text
 branch = main
 worktree = clean
 ```
 
-If unrelated source is dirty or the pull cannot fast-forward, STOP and report it. Do not reset, clean, stash, checkout, or discard anything.
+If the worktree is dirty, STOP and report the paths. Do not reset, clean, stash, checkout, or discard anything.
 
-Record the exact HEAD as `STARTING_SHA`.
+Now classify the local branch **without modifying it**:
+
+```bash
+LOCAL_HEAD="$(git rev-parse HEAD)"
+REMOTE_HEAD="$(git rev-parse origin/main)"
+
+printf 'LOCAL_HEAD=%s\n' "$LOCAL_HEAD"
+printf 'REMOTE_HEAD=%s\n' "$REMOTE_HEAD"
+git rev-list --left-right --count HEAD...origin/main
+
+git log --oneline --decorate --graph --max-count=30 HEAD origin/main
+```
+
+Then use these exact ancestry checks:
+
+```bash
+if [ "$LOCAL_HEAD" = "$REMOTE_HEAD" ]; then
+  printf '%s\n' 'BRANCH_RELATION=equal'
+elif git merge-base --is-ancestor HEAD origin/main; then
+  printf '%s\n' 'BRANCH_RELATION=local-behind-fast-forward-safe'
+elif git merge-base --is-ancestor origin/main HEAD; then
+  printf '%s\n' 'BRANCH_RELATION=local-ahead-unpublished'
+else
+  printf '%s\n' 'BRANCH_RELATION=diverged'
+fi
+```
+
+### If `BRANCH_RELATION=equal`
+
+Continue to Step 2.
+
+### If `BRANCH_RELATION=local-behind-fast-forward-safe`
+
+Fast-forward only:
+
+```bash
+git merge --ff-only origin/main
+git rev-parse HEAD
+git status --short
+```
+
+Then continue to Step 2.
+
+### If `BRANCH_RELATION=local-ahead-unpublished` or `BRANCH_RELATION=diverged`
+
+**STOP. Do not merge, rebase, reset, cherry-pick, push or pull.**
+
+Return enough evidence for owner review:
+
+```bash
+git log --oneline --decorate --graph --max-count=40 --all
+git log --oneline origin/main..HEAD
+git diff --name-status origin/main...HEAD
+git diff --stat origin/main...HEAD
+```
+
+Also return the commit message and changed paths for every local-only commit:
+
+```bash
+git log --format='%H %s' origin/main..HEAD
+```
+
+Do not proceed to Simulator tests until those unpublished commits are reconciled deliberately.
+
+After a safe equality/fast-forward, record the exact resulting HEAD as `STARTING_SHA`.
 
 ---
 
@@ -238,6 +310,20 @@ The project-local `tmp/` evidence is gitignored and does not count as source dir
 ---
 
 ## Return exactly this report
+
+If Step 1 stops for unpublished/diverged history, return:
+
+```text
+LOCAL_HEAD=
+REMOTE_HEAD=
+BRANCH_RELATION=local-ahead-unpublished/diverged
+LOCAL_ONLY_COMMITS=
+LOCAL_ONLY_CHANGED_PATHS=
+WORKTREE=clean/dirty
+FIRST_FAILURE=branch histories require deliberate reconciliation
+```
+
+Otherwise return the smoke report:
 
 ```text
 STARTING_SHA=
