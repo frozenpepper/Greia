@@ -49,6 +49,8 @@ class ChatterboxMLXProvider(VoiceProvider):
     def __init__(self) -> None:
         self._model: Any | None = None
         self._model_load_count = 0
+        self._probe_cache: ProviderStatus | None = None
+        self._gc_frozen = False
 
     def supports(self, request: VoiceRequest, profile: VoiceProfile | None) -> bool:
         return (
@@ -62,13 +64,19 @@ class ChatterboxMLXProvider(VoiceProvider):
         )
 
     def probe(self) -> ProviderStatus:
+        # Probe once per process: every call would re-import mlx_audio.tts.load and
+        # re-import mlx.core. The cost is small but adds up under high-throughput
+        # warm-service loads.
+        if self._probe_cache is not None:
+            return self._probe_cache
         try:
             import mlx.core  # noqa: F401
             from mlx_audio.tts import load  # noqa: F401
             import soundfile  # noqa: F401
         except Exception as exc:
-            return ProviderStatus(self.provider_id, False, f"MLX voice stack unavailable: {exc}")
-        return ProviderStatus(
+            self._probe_cache = ProviderStatus(self.provider_id, False, f"MLX voice stack unavailable: {exc}")
+            return self._probe_cache
+        self._probe_cache = ProviderStatus(
             self.provider_id,
             True,
             self.model_id,
@@ -77,13 +85,23 @@ class ChatterboxMLXProvider(VoiceProvider):
                 SpeechKind.SHARED_CHARACTER_UTTERANCE.value,
             ),
         )
+        return self._probe_cache
 
     def _load_model(self) -> Any:
         if self._model is None:
             from mlx_audio.tts import load
 
+            # Mark the long-lived model objects as gc-untrackable so the per-call
+            # gc.collect() does not re-scan them on every utterance.
             self._model = load(self.model_id)
             self._model_load_count += 1
+            try:
+                import gc as _gc
+
+                _gc.freeze()
+                self._gc_frozen = True
+            except Exception:
+                pass
         return self._model
 
     @staticmethod
@@ -154,21 +172,30 @@ class ChatterboxMLXProvider(VoiceProvider):
         import soundfile as sf
 
         max_tokens = self._token_budget(request.text)
+        # Locals we want to release as soon as the WAV is written. Listing them
+        # explicitly lets us drop them before gc.collect() so the autoregressive
+        # Metal buffers don't keep the lazy MLX graph alive across calls.
+        generator = result = audio_tensor = cleaned = None
         try:
             try:
                 model = self._load_model()
-                result = next(
-                    model.generate(
-                        text=request.text,
-                        ref_audio=str(profile.anchor_path),
-                        lang_code=request.language,
-                        max_new_tokens=max_tokens,
-                        verbose=False,
-                    )
+                # model.generate is a generator. Force the first take, then break
+                # the generator reference so remaining stream frames get freed.
+                generator = model.generate(
+                    text=request.text,
+                    ref_audio=str(profile.anchor_path),
+                    lang_code=request.language,
+                    max_new_tokens=max_tokens,
+                    verbose=False,
                 )
+                result = next(generator)
+                # Materialize the autoregressive output so the lazy MLX graph
+                # associated with the just-finished stream can be released.
+                audio_tensor = result.audio
+                mx.eval(audio_tensor)
                 sample_rate = int(result.sample_rate)
                 cleaned = self._trim_audio(
-                    np.asarray(result.audio),
+                    np.asarray(audio_tensor),
                     sample_rate,
                     short=len(request.text.split()) <= 4,
                 )
@@ -190,12 +217,28 @@ class ChatterboxMLXProvider(VoiceProvider):
             except Exception as exc:
                 raise VoiceProviderError(f"Chatterbox generation failed: {exc}") from exc
         finally:
-            # MLX autoregressive generation retains Metal buffers. Clear after every
-            # utterance while keeping model weights alive in this provider instance.
-            mx.clear_cache()
-            gc.collect()
+            # Drop per-call intermediates explicitly so gc.collect() actually
+            # releases the buffers, then clear the Metal cache and run a full
+            # collection. Warm model weights (held by self._model) are excluded
+            # from re-scan via gc.freeze() applied at first model load.
+            if generator is not None:
+                generator.close()
+            del generator, result, audio_tensor, cleaned
+            try:
+                mx.clear_cache()
+            except Exception:
+                pass
+            gc.collect(2 if self._gc_frozen else 0)
 
     def close(self) -> None:
+        if self._gc_frozen:
+            try:
+                import gc as _gc
+
+                _gc.unfreeze()
+            except Exception:
+                pass
+            self._gc_frozen = False
         if self._model is not None:
             try:
                 import mlx.core as mx
@@ -204,7 +247,8 @@ class ChatterboxMLXProvider(VoiceProvider):
             except Exception:
                 pass
         self._model = None
-        gc.collect()
+        self._probe_cache = None
+        gc.collect(2)
 
 
 class MacOSNativeSpeechProvider(VoiceProvider):
