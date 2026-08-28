@@ -272,6 +272,58 @@ Actions and evidence on this same checkout:
 
 Outstanding: full local acceptance runbook still pending — `docs/testing/2026-08-27_GREIA_VOICE_PRODUCTION_LOCAL_ACCEPTANCE.md` covers the same providers this session confirmed, but a structured pass (warm service + batch + cross-process lock check + listening review) has not been executed. R7 remains the blocking platform phase. The owner's narrow ask was: delete the previous install, follow the README, and add Linux/Windows sections; that scope is complete on this commit and no further voice or model work was claimed.
 
+### 2026-08-28 — Shared character reaction library v0.2 + 12 character introductions accepted
+
+On owner workstation `darwin arm64` against the post-`1eb4169` engine (token-heuristic
+removed, internal-pause truncation forbidden), the full 192-clip owner-acceptance
+tranche for the shared-character library was executed end-to-end:
+
+- **180 / 180** shared character reaction candidates (6 characters × 5 families ×
+  3 variants × 2 locales it/en) generated through `tools/record_shared_character_utterances.py`
+  into `tmp/shared-character-utterances/` with full engine receipts.
+- **12 / 12** OS-owned character introduction candidates (6 characters × 2 locales)
+  generated through `tools/greia_voice.py batch` into `tmp/character-intros/` with
+  full engine receipts.
+- Owner listened to the full set in-session. 19 short-speech clips (Lilli/Leo/Flash/
+  Momo/Tito across the most-used 1–3-word reactions) were flagged as broken on the
+  first pass and regenerated after the `1eb4169` fix; the second pass through the
+  fixed engine was owner-accepted.
+- Whisper (`mlx-whisper-tiny`) returned `WARN` on 27 of the 192 clips, all of which
+  the owner classified as verifier noise on Italian diacritics and 3-syllable
+  exclamatives. Those clips were accepted on owner ears, not on verifier PASS.
+  Full transcript list in `tmp/shared-character-utterances/WHISPER_MISMATCH_REPORT.md`.
+- All 192 engine receipts stamped `human_review = OWNER_ACCEPTED` with
+  `owner_decision_at_utc = 2026-08-28T03:00:00+00:00` and a session-quote
+  acceptance note pointing at this conversation.
+
+The accepted set is now published to:
+
+```text
+assets/audio/characters/shared/v0.2/
+  manifest.toml        (registry_version v0.2, total_clips 192)
+  review.csv
+  lilli/{it,en}/*.wav + ...
+  leo/...
+  flash/...
+  tito/...
+  momo/...
+  dani/...
+  _intros/{it,en}/*.ogg   (6 characters × 2 locales)
+```
+
+v0.1 (2026-08-23) is **RETIRED** — its manifest, review.csv and 150 .wav files are
+preserved on disk as historical evidence of the 2026-08-23 acceptance ledger. A
+`v0.1/RETIRED.md` documents the supersession and the engine-state change (removed
+token heuristic `f8b33ad`; internal-pause fix `1eb4169`; doc `fcc9a17`). The runtime
+shared library now resolves from `v0.2/`. v0.1 is not deleted and not regenerated.
+
+This is the first time the shared library and the introduction pack have left
+`PENDING`. The voice production pipeline as a whole remains UNPROVEN for runtime
+use (R7 still owns display/session/input authority); the audio assets themselves
+are now accepted and the only remaining work is to wire the runtime resolver to
+`v0.2/`. That resolver wiring is out of scope for this entry and is a separate
+child-runtime task.
+
 ### 2026-08-28 — Voice engine memory-growth mitigations + measurement probe
 
 Owner memory of the previous direct-Chatterbox workflow: each generation visibly grew RSS in the running Python. That was the dropped `d4bebd6` script path, not the canonical `tools/greia_voice.py` engine. Investigation on this commit (`b0ae7e8` + follow-ups) on Apple-Silicon macOS confirmed the engine already uses one long-lived model instance per process and a cross-process generation lock, so the architectural footgun is closed at the engine level — but the lazy `mlx_audio` autoregressive path was still leaking per-call Metal buffers through the `model.generate(...)` Python generator. Patch applied (in `tools/greia_voice_core/providers.py` only):

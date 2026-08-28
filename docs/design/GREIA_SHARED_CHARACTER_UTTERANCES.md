@@ -81,10 +81,11 @@ Current authoritative state:
 ```text
 Voice Engine / producer: IMPLEMENTED
 phrase matrix:          DEFINED
-generation:             PENDING
-owner listening:        PENDING
-accepted asset set:     NOT YET ESTABLISHED
-runtime completeness:   NOT YET CLAIMABLE
+generation:             COMPLETE (192 candidates: 180 shared + 12 intros)
+owner listening:        COMPLETE (in-session 2026-08-28)
+accepted asset set:     assets/audio/characters/shared/v0.2/   (registry_version v0.2, 192 clips, OWNER_ACCEPTED)
+retired predecessor:    assets/audio/characters/shared/v0.1/   (RETIRED.md; preserved as historical evidence)
+runtime completeness:   PENDING (assets accepted; runtime resolver wiring to v0.2/ is a separate child-runtime task)
 ```
 
 A future partial accepted library is valid: one or two accepted variants may survive for a family. Zero accepted variants means that family is unavailable and must fail soft.

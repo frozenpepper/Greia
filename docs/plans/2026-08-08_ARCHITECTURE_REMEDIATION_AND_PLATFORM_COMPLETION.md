@@ -1089,3 +1089,57 @@ Owner triage directive: the father cannot understand `tre_carte_una_storia` (emo
 - Voice audio for both Activities (Lilli for `storie_della_mia_voce`, Leo for `la_discesa_della_biglia`) remains a v2 voice-production pass; v1 ships placeholder semantic cue ids.
 - The 9 other Activities from the design pass (toy clock, breathe with Momo, music composition, weather diorama, sorting basket, geography passport, feelings faces, snack recipe, parent-and-me two-player, garden puzzle) are deferred to follow-up sessions.
 - The Greia Star and gold-tier `voice-storyteller-star` rules still need to be added to `runtime/progression-policy.toml`; the v1 ship only emits the candidate events and the manifest declarations.
+
+## 2026-08-28 — Shared character reaction library v0.2 + 12-introduction pack owner-accepted (non-closing; supersedes v0.1)
+
+Tranche executed end-to-end against the post-`1eb4169` engine on owner workstation
+`darwin arm64` (post-pull `0cad91c`). The voice production subsystem's content side
+moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
+
+- **180 / 180 shared reactions** generated via `tools/record_shared_character_utterances.py`
+  into `tmp/shared-character-utterances/` (6 characters × 5 families × 3 variants × 2 locales).
+  Producer re-emitted the master `review.csv` from existing receipts (no new regeneration
+  in this pass). 19 of the 180 had been regenerated twice earlier in the session after
+  the `_token_budget` removal (`f8b33ad`) and the internal-pause trim fix (`1eb4169`).
+- **12 / 12 OS-owned character introductions** generated via
+  `tools/greia_voice.py batch --input tmp/character-intro-requests.jsonl` into
+  `tmp/character-intros/` (6 characters × 2 locales; Dani uses `dani_system_speech`,
+  the other five use `character_dialogue`).
+- **Whisper (`mlx-whisper-tiny`) `WARN` count: 27 of 192** (15.0%), all on Italian
+  diacritics, 3-syllable exclamatives, and the multi-clause retry phrase. Owner judged
+  all 27 to be verifier noise rather than real audio defects. Full per-clip transcript
+  table in `tmp/shared-character-utterances/WHISPER_MISMATCH_REPORT.md`.
+- **All 192 engine receipts stamped** `human_review = OWNER_ACCEPTED` with
+  `owner_decision_at_utc = 2026-08-28T03:00:00+00:00` and a session-quote
+  `acceptance_note` pointing at the owner-authorization in this conversation.
+- **v0.2 catalogue published** at `assets/audio/characters/shared/v0.2/`: 192 clips
+  (180 shared `wav` + 12 intros `ogg`), 8 388 040 bytes, with
+  `manifest.toml` (`registry_version v0.2`, `total_clips 192`, `supersedes v0.1`)
+  and `review.csv` (192 `OWNER_ACCEPTED` rows). Per-clip `provider_id`,
+  `voice_id`, `voice_registry_version`, `verification_disposition`,
+  `verification_score`, `whisper_transcript`, `attempts` and SHA-256 are all
+  recorded in the manifest for audit.
+- **v0.1 retired** at `assets/audio/characters/shared/v0.1/`: manifest, review.csv
+  and 150 .wav files preserved on disk as historical evidence of the 2026-08-23
+  acceptance ledger; `v0.1/RETIRED.md` documents the supersession and the
+  engine-state change (removed token heuristic, internal-pause fix). v0.1 is not
+  deleted, not regenerated, and not byte-mutated.
+- **Dani still uses `macos-native-say`** (Alice @ 185 wpm), no cloned natural voice
+  reference, as per `docs/design/GREIA_CANONICAL_CAST_SYSTEM.md` v0.1.
+- **Lilli/Leo/Flash/Tito/Momo** still use `chatterbox-mlx-multilingual-v3` on
+  Apple-Silicon MLX; canonical voice anchor SHA-256s unchanged.
+- **Updated**: `HANDOVER.md` (new §5.5); `docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md`
+  §3 status block; `docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md` §10
+  and §16; `docs/agents/GREIA_SHARED_CHARACTER_UTTERANCE_RECORDING.md` front matter
+  + §2 status.
+- **Runtime resolver wiring to v0.2 is a separate child-runtime task** and is
+  **PENDING**. The accepted assets are now the source of truth, but the resolver
+  in the running Greia image has not yet been pointed at `v0.2/`. R7 still owns
+  display/session/input authority and is the first incomplete blocking platform
+  phase.
+- **Out of scope this entry**: integration of any Activity-specific Lilli/Leo/Flash/
+  Tito/Momo dialogue beyond the 12 intro cues; the 27 WARN clips are accepted and
+  the decision not to chase further regeneration of those 27 stands.
+- **Next exact step**: R7 (blocking platform phase). Resolver work that points the
+  shared library at v0.2 is a child-runtime task in the R7 lane, not a voice
+  production task.

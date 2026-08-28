@@ -1,6 +1,6 @@
 # Greia Shared Character Utterances — Production & Review
 
-**Status:** production runbook; shared library and character-intro audio are still pending generation/listening  
+**Status:** production runbook; v0.2 shared library and 12-intro pack are **OWNER_ACCEPTED** (2026-08-28) and live in `assets/audio/characters/shared/v0.2/`. v0.1 (2026-08-23) is **RETIRED** — see `assets/audio/characters/shared/v0.1/RETIRED.md`. Future regenerations of any cue land in the same v0.2 catalogue (incremental promotion), not in a new v0.3.  
 **Languages:** Italian (`it`) and English (`en`)  
 **Characters:** Lilli, Leo, Flash, Tito, Momo and Dani  
 **Canonical engine:** `tools/greia_voice.py`
@@ -32,18 +32,29 @@ For installation/readiness:
 docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md
 ```
 
-## 2. What is still unfinished
+## 2. Current state
 
-Do not infer content completion from the existence of the producer.
+Do not infer content completion from the existence of the producer — confirm against the
+catalogue, not the script.
 
-Current target status:
+Current state (post 2026-08-28):
 
 ```text
-shared reaction candidates: 180 intended, production/listening still pending
-character intro candidates:  12 intended, production/listening still pending
+shared reaction candidates: 180 generated, 180 OWNER_ACCEPTED; published to assets/audio/characters/shared/v0.2/
+character intro candidates:  12 generated,  12 OWNER_ACCEPTED; published to assets/audio/characters/shared/v0.2/_intros/
+catalogue manifest:          assets/audio/characters/shared/v0.2/manifest.toml   (registry_version v0.2, total_clips 192)
+catalogue review ledger:     assets/audio/characters/shared/v0.2/review.csv      (192 OWNER_ACCEPTED rows)
+engine receipt ledger:       every receipt stamped human_review=OWNER_ACCEPTED + owner_decision_at_utc
+runtime resolver wiring:     PENDING (separate child-runtime task; v0.2 is the source of truth)
+v0.1 status:                 RETIRED 2026-08-28; see assets/audio/characters/shared/v0.1/RETIRED.md
 ```
 
-The work becomes accepted only through generation + human listening + explicit promotion of accepted static assets.
+The work becomes accepted only through generation + human listening + explicit promotion
+of accepted static assets. Future incremental promotion of additional accepted clips
+(e.g. a per-Activity requested Lilli line) follows the same procedure: produce via the
+engine, listen, mark `OWNER_ACCEPTED`, append a new `[[utterance]]` to v0.2/manifest.toml
+with its actual SHA-256. The v0.1 → v0.2 path was a wholesale supersession driven by
+engine changes; future work is incremental within v0.2.
 
 ## 3. Engine routing
 

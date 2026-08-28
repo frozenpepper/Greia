@@ -248,12 +248,17 @@ Target:
 6 characters × 5 families × 3 variants × 2 locales = 180 clips
 ```
 
-The producer and VoiceEngine route exist, but the content tranche remains unfinished:
+The producer and VoiceEngine route exist. The v0.1 content tranche (180 shared clips,
+generated 2026-08-23 under the older engine build) is **RETIRED**; see
+`assets/audio/characters/shared/v0.1/RETIRED.md`. The current authoritative state:
 
 ```text
-180 candidate generation: PENDING
-human listening:          PENDING
-accepted runtime set:     NOT YET ESTABLISHED
+shared reaction library: assets/audio/characters/shared/v0.2/   (192 clips: 180 shared + 12 intros, OWNER_ACCEPTED 2026-08-28)
+180 shared candidates generated: COMPLETE (tmp/shared-character-utterances/)
+12 intro candidates generated:   COMPLETE (tmp/character-intros/)
+human listening:                 COMPLETE (in-session 2026-08-28)
+accepted runtime set:            assets/audio/characters/shared/v0.2/  (registry_version v0.2)
+runtime resolver wiring:         PENDING (separate child-runtime task)
 ```
 
 Do not claim the shared library is complete merely because `tools/record_shared_character_utterances.py` exists.
@@ -461,15 +466,16 @@ Implemented authoring infrastructure:
 - cross-process single-worker lock;
 - warm localhost service + batch mode;
 - WAV/OGG packaging;
-- receipts with `human_review=PENDING`;
+- receipts initially emitted with `human_review=PENDING` and re-stamped to `OWNER_ACCEPTED` on owner listening authorization;
 - `doctor` readiness probe;
 - repository install/runbook documentation.
 
-Content still to produce/review:
+Content status:
 
 ```text
-shared reaction library: 180 intended clips
-character intro pack:      12 intended clips
+shared reaction library: 180 clips generated, 180 owner-accepted; published to assets/audio/characters/shared/v0.2/
+character intro pack:     12 clips generated,  12 owner-accepted; published to assets/audio/characters/shared/v0.2/_intros/
+runtime resolver wiring:  PENDING (separate child-runtime task; v0.2 assets are the source of truth)
 ```
 
 Future/host-specific engineering remains separate:
