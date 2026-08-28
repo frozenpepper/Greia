@@ -15,6 +15,7 @@ sys.modules[SPEC.name] = MODULE
 SPEC.loader.exec_module(MODULE)
 
 GateFailure = MODULE.GateFailure
+_focused_command = MODULE._focused_command
 integration_disposition = MODULE.integration_disposition
 porcelain_path = MODULE.porcelain_path
 unexpected_final_paths = MODULE.unexpected_final_paths
@@ -115,6 +116,31 @@ class EncyclopediaV01SourceGateTests(unittest.TestCase):
     def test_malformed_porcelain_row_fails_closed(self) -> None:
         with self.assertRaises(ValueError):
             porcelain_path("??")
+
+    def test_focused_command_translates_dotted_ids_to_file_paths(self) -> None:
+        # The stable dotted identifiers in FOCUSED_TESTS / POST_AUDIO_TESTS
+        # (e.g. 'tests.test_encyclopedia_authoring_tools') are translated
+        # into bare .py basenames suitable for `python3 -m unittest …`
+        # invoked with cwd=<repo>/tests. The EvidenceRunner call sites set
+        # that cwd; emitting the 'tests/' prefix would be mis-parsed by
+        # unittest as a dotted module name and would also be shadowed by
+        # any unrelated 'tests' package on sys.path.
+        command = _focused_command(
+            (
+                "tests.test_encyclopedia_authoring_tools",
+                "tests.test_activity_enciclopedia",
+            )
+        )
+        self.assertIn("test_encyclopedia_authoring_tools.py", command)
+        self.assertIn("test_activity_enciclopedia.py", command)
+        self.assertNotIn("tests.test_encyclopedia_authoring_tools.py", command)
+        self.assertNotIn("tests.test_activity_enciclopedia.py", command)
+        self.assertNotIn("tests.test_encyclopedia_authoring_tools", command)
+        self.assertNotIn("tests.test_activity_enciclopedia", command)
+        self.assertEqual(command[0], sys.executable)
+        self.assertEqual(command[1], "-m")
+        self.assertEqual(command[2], "unittest")
+        self.assertEqual(command[-1], "-v")
 
 
 if __name__ == "__main__":

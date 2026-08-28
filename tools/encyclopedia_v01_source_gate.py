@@ -117,15 +117,39 @@ class EvidenceRunner:
         command: Sequence[str],
         *,
         accepted_codes: Iterable[int] = (0,),
+        cwd: Path | None = None,
+        env: dict[str, str] | None = None,
     ) -> CommandResult:
         accepted = frozenset(accepted_codes)
         log_path = self.evidence_dir / f"{step}.txt"
         rendered_command = " ".join(command)
         print(f"[{step}] {rendered_command}", flush=True)
 
+        # Default: prepend the repository root, src/, and encyclopedia/ to
+        # PYTHONPATH so test modules under tests/ that import from
+        # greia_platform, greia_launcher and encyclopedia resolve correctly
+        # when the subprocess is run with cwd=tests/ (i.e. when 'tests' is
+        # a directory, not a package). Callers can override by passing an
+        # explicit env mapping.
+        import os as _os
+        run_env = _os.environ.copy()
+        if env is not None:
+            run_env.update(env)
+        extra_paths = [
+            str(self.repo_root),
+            str(self.repo_root / "src"),
+            str(self.repo_root / "encyclopedia"),
+        ]
+        existing = run_env.get("PYTHONPATH", "")
+        for entry in reversed(extra_paths):
+            if entry and entry not in existing.split(_os.pathsep):
+                existing = entry + _os.pathsep + existing
+        run_env["PYTHONPATH"] = existing
+
         completed = subprocess.run(
             list(command),
-            cwd=self.repo_root,
+            cwd=cwd if cwd is not None else self.repo_root,
+            env=run_env,
             text=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
@@ -278,7 +302,14 @@ def _voice_counts(repo_root: Path) -> tuple[int, dict[str, int]]:
 
 
 def _focused_command(tests: Sequence[str]) -> tuple[str, ...]:
-    return (sys.executable, "-m", "unittest", *tests, "-v")
+    # Translate the stable dotted identifiers (e.g. 'tests.test_xxx') into
+    # bare module basenames so unittest can import them when the subprocess
+    # is run with cwd=tests/. The EvidenceRunner call sites pass that cwd;
+    # the file-path form would be mis-parsed by unittest as a dotted
+    # module name (and would also be shadowed by any unrelated 'tests'
+    # package on sys.path, e.g. an Anaconda site-packages/tests install).
+    basenames = tuple(test.rsplit(".", 1)[-1] + ".py" for test in tests)
+    return (sys.executable, "-m", "unittest", *basenames, "-v")
 
 
 def _make_evidence_dir(repo_root: Path, evidence_root: Path) -> Path:
@@ -343,7 +374,7 @@ def run_gate(repo_root: Path, evidence_root: Path) -> GateSummary:
             + "\n",
             encoding="utf-8",
         )
-        runner.run("focused-tests", _focused_command(FOCUSED_TESTS))
+        runner.run("focused-tests", _focused_command(FOCUSED_TESTS), cwd=repo_root / "tests")
         runner.run("make-verify", ("make", "verify"))
 
         integration_check = runner.run(
@@ -363,7 +394,11 @@ def run_gate(repo_root: Path, evidence_root: Path) -> GateSummary:
                 "voice-assets-check-after",
                 (sys.executable, "encyclopedia/integrate_voice_assets.py", "--check"),
             )
-            runner.run("post-audio-focused-tests", _focused_command(POST_AUDIO_TESTS))
+            runner.run(
+                "post-audio-focused-tests",
+                _focused_command(POST_AUDIO_TESTS),
+                cwd=repo_root / "tests",
+            )
             after = "PASS"
 
         runner.run("git-diff-check", ("git", "diff", "--check"))
