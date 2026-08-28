@@ -1,6 +1,6 @@
 # Greia Encyclopedia v0.1 — Visual Reauthoring Plan
 
-**Status:** ACTIVE SUBPLAN OF THE GREIA VISUAL WORKSTREAM  
+**Status:** ACTIVE SUBPLAN — E1/E2 SOURCE IMPLEMENTED; RUNTIME BUILD + SIMULATOR GOLDEN-MASTER REVIEW CURRENT  
 **Date:** 2026-08-28  
 **Parent visual authority:** `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`  
 **Stable visual architecture:** `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`  
@@ -9,7 +9,7 @@
 
 This is a **bounded Activity-level visual reauthoring subplan**, not a competing platform implementation plan. The platform R7 architecture plan remains the primary blocking platform authority.
 
-The Encyclopedia runtime/navigation/research architecture is healthy enough to preserve. The visual layer is not. This plan replaces "polish the existing procedural pages" with a controlled art-system reauthoring.
+The Encyclopedia runtime/navigation/research architecture is healthy enough to preserve. The old visual layer is not. This plan replaces "polish the existing procedural pages" with a controlled art-system reauthoring.
 
 ---
 
@@ -96,7 +96,7 @@ The visual shell must not force identical compositions. It defines safe zones an
 
 ## 3.2 Discovery token
 
-Replace the current floating white circles with a reusable **DiscoveryToken** presentation.
+Replace the old floating white circles with a reusable **DiscoveryToken** presentation.
 
 Desired states:
 
@@ -290,27 +290,14 @@ Do not force a weak generic asset into a page merely because the library contain
 
 ## 5.2 Source location
 
-Activity-specific art should live under a clear package-local structure such as:
+Activity-specific art lives under:
 
 ```text
 activities/enciclopedia_greia/assets/source/
 activities/enciclopedia_greia/assets/runtime/
 ```
 
-Recommended semantic subfolders:
-
-```text
-shell/
-sections/
-animals/
-space/
-earth/
-body/
-machines/
-history/
-discovery_tokens/
-fx/
-```
+Semantic subfolders may be introduced when page count makes them useful, but the six golden-master masters intentionally remain one shallow set while the direction is still under review. Do not create folder hierarchy for its own sake.
 
 Keep source masters editable and runtime PNGs economical.
 
@@ -325,6 +312,8 @@ Prefer existing Greia scene/visual seams where useful:
 - bounded PNG cache
 
 Do not force every page into a TOML scene if a small Activity-local compositor/helper is simpler. The key rule is one bounded architecture, no per-page bespoke decode/scaling logic.
+
+The golden-master tranche uses one Activity-local `VisualLibrary` facade with an explicit semantic-id map and bounded cache. Pages do not decode/scale art themselves.
 
 ## 5.4 Procedural drawing policy
 
@@ -389,39 +378,46 @@ If the owner does not like the direction, revise the golden masters. Do not prop
 
 # 7. Migration phases after golden-master approval
 
-## E0 — Freeze and forensic baseline **[CURRENT]**
+## E0 — Freeze and forensic baseline **[COMPLETE]**
 
 - [x] mechanical 43-page breadth proven;
-- [x] current visual evidence reviewed;
+- [x] old visual evidence reviewed;
 - [x] systemic visual failure documented;
-- [x] current art declared non-final;
-- [ ] stop broad acceptance churn while visual direction is being replaced.
+- [x] old art declared non-final;
+- [x] broad acceptance churn stopped while visual direction is being replaced.
 
-## E1 — Encyclopedia visual foundation
+## E1 — Encyclopedia visual foundation **[SOURCE IMPLEMENTED; FINAL RUNTIME VALIDATION PENDING]**
 
 Build only what multiple prototype pages truly share:
 
-- [ ] page-shell safe-zone/layout helper;
-- [ ] DiscoveryToken component/state language;
-- [ ] hero-stage composition helper;
-- [ ] caption ribbon/helper;
-- [ ] presenter placement/reaction helper;
-- [ ] Activity-local asset loader facade over existing bounded visual cache/runtime seams;
-- [ ] source/runtime folder conventions and deterministic build recipe;
-- [ ] focused tests for containment/cache/fallback/layout contracts.
+- [x] page-shell safe-zone/layout helper (`PageShellLayout`);
+- [x] DiscoveryToken component/state language;
+- [x] hero-stage safe region/composition contract;
+- [x] caption ribbon/helper with adaptive fitting;
+- [x] presenter placement reuses the existing shared `draw_presenter` seam plus explicit page composition; no second presenter framework added;
+- [x] Activity-local asset loader facade over a bounded visual cache/runtime seam;
+- [x] source/runtime folder convention and deterministic authoring-time build recipe;
+- [x] focused source contracts for asset mapping/cache/hot-path/source/build invariants; local mirror 6/6 PASS;
+- [ ] real-checkout focused tests after runtime PNG generation;
+- [ ] final-SHA Greia Simulator launch/survival after current visual edits.
 
 Avoid abstraction theatre: if a helper is used by only one page, keep it local until a second use proves a shared invariant.
 
-## E2 — Golden masters
+## E2 — Golden masters **[SOURCE IMPLEMENTED; ACTUAL-PIXEL REVIEW CURRENT]**
 
-- [ ] Home;
-- [ ] Animals section;
-- [ ] Lion;
-- [ ] Saturn;
-- [ ] Gears;
-- [ ] Pyramids;
-- [ ] optional Body/Heart proof;
+- [x] Home — source integrated with authored discovery-book scene;
+- [x] Animals section — source integrated with authored field-table scene;
+- [x] Lion — source integrated with authored hero scene + retained discoveries;
+- [x] Saturn — source integrated with authored observatory scene + retained discoveries;
+- [x] Gears — source integrated with authored workbench scene + retained mechanism model;
+- [x] Pyramids — source integrated with authored historical diorama + retained build/reveal model;
+- [ ] six runtime PNG renditions built and committed on `main`;
+- [ ] actual 1024×600 Simulator screenshots;
+- [ ] representative activated-state screenshots;
+- [ ] compact responsive sample;
+- [ ] larger responsive sample;
 - [ ] actual Simulator contact sheet;
+- [ ] pre-reader/no-reading prototype review;
 - [ ] owner direction approval.
 
 **Hard gate:** no E3 before E2 direction approval.
@@ -523,6 +519,14 @@ editable source master
 
 rather than runtime vector rendering or procedural reconstruction.
 
+The committed golden-master build tool is:
+
+```text
+tools/build_encyclopedia_visual_assets.py
+```
+
+`CairoSVG` is authoring/maintainer tooling only. It must not become a Greia child-runtime or Activity runtime dependency.
+
 ## 8.2 Surface budget discipline
 
 Avoid multiple unnecessary full-screen RGBA layers. Crop assets to meaningful bounds.
@@ -536,6 +540,8 @@ A 1024×600 RGBA surface is ~2.35 MiB before library/runtime overhead. Four full
 - do not create per-resolution duplicate art unless evidence proves it necessary.
 
 These are engineering estimates, not a claim of measured Acer memory acceptance.
+
+The current golden-master `VisualLibrary` is hard-bounded; actual runtime PNG byte size/RSS must be recorded after local generation rather than inferred from source SVG size.
 
 ## 8.3 Animation cost
 
@@ -591,14 +597,45 @@ During work:
 
 **Do not run another broad 43-page visual acceptance now.**
 
-The next implementation tranche is:
+The rolling local execution authority is:
 
 ```text
-E1 visual foundation
-+
-E2 first golden-master prototypes
+docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md
 ```
 
-Start with Home + Animals section + Lion, then add Saturn/Gears/Pyramids using the same visual grammar. Produce actual Simulator screenshots and a contact sheet for owner review before bulk migration.
+Next exact tranche:
 
-The previous headless capture-settle harness repair remains useful and should be preserved, but it no longer justifies another full 43-page capture before the graphics are reauthored.
+```text
+refresh main
+→ build six runtime PNGs from committed SVG masters
+→ run focused tests + required local verification
+→ commit/push runtime PNG pack
+→ run final-SHA real Greia Simulator launch/survival
+→ capture the six golden-master prototypes at 1024×600
+→ capture representative ACTIVATE payoffs
+→ inspect one compact and one larger responsive sample
+→ produce one curated contact sheet
+→ perform no-reading prototype review
+→ STOP for owner visual direction approval
+```
+
+The previous headless capture-settle harness repair remains useful and should be preserved, but it does not justify another full 43-page capture before golden-master approval.
+
+---
+
+# 12. Progress ledger
+
+## 2026-08-28 — E1/E2 source implementation tranche
+
+- Added Activity-local `enciclopedia_presentation.py` with a bounded shared page-shell safe-zone model, tactile DiscoveryToken presentation, authored-scene placement, object focus treatment and adaptive caption ribbon.
+- Extended `VisualLibrary` into the single hard-bounded Activity-local facade for canonical characters plus explicitly mapped authored runtime PNGs; page hot paths still do not decode or smoothscale assets.
+- Kept `main.py` a thin composition root; it now passes the package root to the visual facade rather than teaching pages about filesystem paths.
+- Authored and committed six editable 1024×600 SVG golden-master masters: Home discovery book, Animals field table, Lion savanna, Saturn observatory, Gears workbench and Pyramids diorama.
+- Reauthored only the six required golden-master page sources. Stable semantic navigation, factual state models and audio cue IDs were preserved.
+- Added authoring-only deterministic SVG→PNG build tool; no runtime SVG/CairoSVG dependency was introduced.
+- Added focused source contracts covering source/build agreement, explicit semantic asset mapping, hard cache bounds and absence of page-local image decode/scale.
+- Local mirror verification: **6/6 visual-foundation source contracts PASS; changed-source AST parse PASS**. This is source/static evidence only.
+- Runtime PNG build/commit, focused tests on the real checkout, final-SHA Simulator launch/survival, actual visual contact sheet, responsive samples and owner direction approval remain pending.
+- E3/E4 remain hard-blocked.
+
+**Next exact action:** execute `docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md`; stop after the golden-master contact sheet/evidence for owner review.
