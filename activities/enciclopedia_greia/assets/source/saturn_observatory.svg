@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="600" viewBox="0 0 1024 600">
+<defs>
+  <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="12"/></filter>
+  <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur in="SourceAlpha" stdDeviation="7" result="blur"/><feOffset dy="8" result="off"/><feColorMatrix in="off" type="matrix" values="0 0 0 0 0.12  0 0 0 0 0.09  0 0 0 0 0.07  0 0 0 .28 0"/><feBlend in="SourceGraphic"/></filter>
+  <filter id="grain" x="0" y="0" width="100%" height="100%"><feTurbulence baseFrequency="0.72" numOctaves="2" seed="7" type="fractalNoise" result="n"/><feColorMatrix in="n" type="saturate" values="0"/><feComponentTransfer><feFuncA type="table" tableValues="0 0.045"/></feComponentTransfer></filter>
+  <linearGradient id="paper" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#fff9e9"/><stop offset="1" stop-color="#f2dfbd"/></linearGradient>
+  <linearGradient id="skyDay" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#bfe8ef"/><stop offset="1" stop-color="#f5e9bd"/></linearGradient>
+  <linearGradient id="skySpace" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#121934"/><stop offset="1" stop-color="#2d315f"/></linearGradient>
+  <radialGradient id="sun" cx="50%" cy="50%"><stop offset="0" stop-color="#fff7bd"/><stop offset=".55" stop-color="#ffd85d"/><stop offset="1" stop-color="#f4a62c"/></radialGradient>
+  <radialGradient id="saturn" cx="35%" cy="30%"><stop offset="0" stop-color="#fff0c6"/><stop offset=".6" stop-color="#d8a964"/><stop offset="1" stop-color="#8b6338"/></radialGradient>
+  <linearGradient id="wood" x1="0" x2="1"><stop offset="0" stop-color="#a86635"/><stop offset=".45" stop-color="#d09150"/><stop offset="1" stop-color="#8a512b"/></linearGradient>
+  <linearGradient id="stone" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#e9c87d"/><stop offset="1" stop-color="#b98345"/></linearGradient>
+</defs>
+
+<rect width="1024" height="600" fill="url(#skySpace)"/>
+<g fill="#edf1ff" opacity=".9"><circle cx="53" cy="90" r="2"/><circle cx="136" cy="137" r="1"/><circle cx="219" cy="184" r="1"/><circle cx="302" cy="231" r="2"/><circle cx="385" cy="278" r="1"/><circle cx="468" cy="325" r="1"/><circle cx="551" cy="372" r="2"/><circle cx="634" cy="419" r="1"/><circle cx="717" cy="466" r="1"/><circle cx="800" cy="513" r="2"/><circle cx="883" cy="130" r="1"/><circle cx="966" cy="177" r="1"/><circle cx="39" cy="224" r="2"/><circle cx="122" cy="271" r="1"/><circle cx="205" cy="318" r="1"/><circle cx="288" cy="365" r="2"/><circle cx="371" cy="412" r="1"/><circle cx="454" cy="459" r="1"/><circle cx="537" cy="506" r="2"/><circle cx="620" cy="123" r="1"/><circle cx="703" cy="170" r="1"/><circle cx="786" cy="217" r="2"/><circle cx="869" cy="264" r="1"/><circle cx="952" cy="311" r="1"/><circle cx="25" cy="358" r="2"/><circle cx="108" cy="405" r="1"/><circle cx="191" cy="452" r="1"/><circle cx="274" cy="499" r="2"/><circle cx="357" cy="116" r="1"/><circle cx="440" cy="163" r="1"/><circle cx="523" cy="210" r="2"/><circle cx="606" cy="257" r="1"/><circle cx="689" cy="304" r="1"/><circle cx="772" cy="351" r="2"/><circle cx="855" cy="398" r="1"/><circle cx="938" cy="445" r="1"/><circle cx="11" cy="492" r="2"/><circle cx="94" cy="109" r="1"/></g>
+<ellipse cx="510" cy="335" rx="245" ry="95" fill="#c49b64" opacity=".20" filter="url(#soft)"/>
+<g filter="url(#shadow)" transform="translate(510 335) rotate(-12)">
+  <ellipse rx="220" ry="67" fill="none" stroke="#e8d5a1" stroke-width="28"/>
+  <ellipse rx="190" ry="51" fill="none" stroke="#a98458" stroke-width="10" opacity=".8"/>
+  <circle r="112" fill="url(#saturn)" stroke="#7f5934" stroke-width="5"/>
+  <path d="M-98-45 Q0-15 98-45 M-105-10 Q0 18 105-10 M-100 28 Q0 52 100 28 M-83 62 Q0 78 83 62" fill="none" stroke="#f3d9a0" stroke-width="10" opacity=".55"/>
+  <path d="M-215 10 Q0 88 215 10" fill="none" stroke="#f0dfb4" stroke-width="24" stroke-linecap="round"/>
+  <path d="M-185 18 Q0 72 185 18" fill="none" stroke="#9c744d" stroke-width="8" opacity=".75"/>
+</g>
+<path d="M0 525 Q140 470 285 500 L285 600 H0Z" fill="#222743"/>
+<path d="M1024 525 Q884 470 739 500 L739 600 H1024Z" fill="#222743"/>
+<g stroke="#5f678d" stroke-width="10" opacity=".8"><path d="M68 600 L210 480 M956 600 L820 482"/></g>
+<circle cx="180" cy="505" r="28" fill="#38405f" stroke="#7981a6" stroke-width="5"/>
+<rect width="1024" height="600" filter="url(#grain)" opacity=".35"/></svg>
