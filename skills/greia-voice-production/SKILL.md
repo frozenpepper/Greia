@@ -146,11 +146,21 @@ python3 tools/greia_voice.py serve
 
 Then use `request`, or use `batch` for JSONL queues. Never launch concurrent Chatterbox workers. The engine owns a cross-process generation lock and will reject competing workers.
 
+## Chatterbox output-length policy
+
+For `character_dialogue` and natural-character `shared_character_utterance`, Greia must **not derive `max_new_tokens` from text word count**. Chatterbox acoustic-token length is not predictable from a simple words→tokens formula, and the previous short-prompt caps caused ordinary phrases to be truncated.
+
+Letters/syllables/phonics do not justify such a cap because they route through `pedagogical_speech`, not Chatterbox.
+
+Do not reintroduce a guessed word-count token table in callers or in the provider.
+
 ## Whisper
 
-Whisper is advisory. Suitable multi-word character/shared-library lines may be transcribed automatically. A mismatch can trigger bounded regeneration.
+Whisper is advisory for human acceptance, but its warnings are actionable production evidence. Suitable multi-word character/shared-library lines may be transcribed automatically. A mismatch triggers bounded regeneration.
 
-`PASS` means only that the transcript plausibly matches. `WARN` means inspect/regenerate. Neither state accepts audio.
+`PASS` means only that the transcript plausibly matches. `WARN` means the generated take remains unresolved and must be inspected/regenerated. Neither state accepts audio.
+
+For the shared-library producer specifically, a final `REVIEW_REQUIRED_ASR_WARNING` is **not counted as a clean successful candidate**; the audio/receipt remain available for diagnosis, and the batch remains non-green until that cue is resolved.
 
 Do not use Whisper as pronunciation authority for letters, syllables or phonics.
 
