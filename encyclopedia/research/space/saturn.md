@@ -75,3 +75,11 @@ The first child page does not use Saturn's currently confirmed moon count becaus
 - tilt hotspot -> cycle clearly different ring viewing angles while Saturn remains central.
 
 The page uses lightweight mathematical animation only. It is not an orbital/atmospheric simulation and must not imply physical scale fidelity.
+
+## Scope guardrails
+
+- Do not depict Saturn's rings as solid hoops or a continuous rigid disk; they are made of many separate orbiting particles.
+- Do not depict Saturn as having a solid walkable surface like Earth; it is a gas giant.
+- Do not teach a hard-coded current moon count in this v0.1 page because the confirmed catalogue can change.
+- Do not imply that the schematic size, distance, orbit speed, ring thickness, or viewing-angle animation is physically to scale.
+- Do not imply that the changing apparent ring angle means the rings themselves detach, wobble independently, or change their equatorial orientation around Saturn.
