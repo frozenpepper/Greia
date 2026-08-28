@@ -1,10 +1,8 @@
 # Greia Encyclopedia v0.1 — LOCAL AGENT NEXT TASK
 
-## Broad acceptance runs are paused for visual reauthoring
+## E1/E2 source is on `main`; build runtime art, verify, capture prototypes, then STOP
 
-The owner has rejected the current Encyclopedia graphics quality as a product target.
-
-The mechanical architecture remains useful, but the Activity now enters a serious visual reauthoring phase before another full 43-page visual acceptance run.
+The owner rejected the old Encyclopedia graphics as a product target. The 43-page mechanical/runtime/research foundation remains useful and must be preserved.
 
 Authoritative visual forensic review:
 
@@ -18,30 +16,224 @@ Active Encyclopedia visual subplan:
 docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md
 ```
 
-The generic headless page-transition settle fix has already landed on `main` and must be preserved.
-
-Do **not** now run another broad 43-page recapture merely because the harness is ready. The existing screenshots are sufficient to prove the present graphics need replacement.
-
-Do not:
+The first E1/E2 source tranche is now on `main`:
 
 ```text
-rerun the 43-page traversal
+shared Encyclopedia presentation primitives
+bounded Activity-local authored-art cache
+six editable SVG golden-master masters
+Home golden-master page source
+Animals golden-master page source
+Lion golden-master page source
+Saturn golden-master page source
+Gears golden-master page source
+Pyramids golden-master page source
+deterministic authoring-time SVG -> PNG build tool
+focused source contracts
+```
+
+The runtime PNG renditions are intentionally generated build products. They must now be built on the normal local maintainer checkout, verified, committed, and tested through the real Greia Simulator before the visual direction can be reviewed.
+
+---
+
+# 1. Hard prohibitions
+
+Do **not**:
+
+```text
+redraw or migrate any additional Encyclopedia page
+run the broad 43-page traversal/recapture
 generate or integrate narration
-start pointer/responsive final acceptance
-bulk-redraw all 43 pages
-make one-off cosmetic patches to random pages
-change the protected Greia Home chrome
-invent a second asset/cache/scene system
+start final pointer/responsive acceptance across all pages
+change protected Greia Home chrome
+change the stable 43-page factual scope
+invent another asset/cache/scene system
+add CairoSVG or SVG rasterization to the child runtime
+weaken Activity/runtime/package validation
+use GitHub-hosted Actions
 ```
 
-The next implementation tranche is the visual plan's:
+If a golden-master direction looks poor, record it and stop. Do not hide that by propagating it.
+
+---
+
+# 2. Refresh and inspect first
+
+From the existing Greia checkout:
+
+```bash
+git status --short
+git fetch origin
+git switch main
+git pull --ff-only origin main
+git status --short
+git rev-parse HEAD
+```
+
+Expected: clean working tree before generation. If the tree is not clean, **STOP** and report the paths; do not discard or overwrite owner/concurrent work.
+
+Read before execution:
 
 ```text
-E1 — Encyclopedia visual foundation
-E2 — golden-master prototypes
+SETUP.md
+AGENTS.md
+skills/greia-activity-authoring/SKILL.md
+skills/greia-activity-authoring/LAUNCH_ACCEPTANCE.md
+skills/greia-activity-authoring/PRE_READER_UX.md
+skills/greia-visual-authoring/SKILL.md
+docs/testing/VISUAL_ACCEPTANCE_EVIDENCE_CONTRACT.md
+docs/development/GREIA_ACTIVITY_SIMULATOR.md
+docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md
 ```
 
-Golden-master target set:
+Do not substitute old local notes for these current authorities.
+
+---
+
+# 3. Build the six runtime PNGs
+
+The editable masters are:
+
+```text
+activities/enciclopedia_greia/assets/source/home_discovery_book.svg
+activities/enciclopedia_greia/assets/source/animals_field_table.svg
+activities/enciclopedia_greia/assets/source/lion_savanna.svg
+activities/enciclopedia_greia/assets/source/saturn_observatory.svg
+activities/enciclopedia_greia/assets/source/gears_workbench.svg
+activities/enciclopedia_greia/assets/source/pyramids_diorama.svg
+```
+
+Build command:
+
+```bash
+python3 tools/build_encyclopedia_visual_assets.py
+```
+
+Expected outputs:
+
+```text
+activities/enciclopedia_greia/assets/runtime/home_discovery_book.png
+activities/enciclopedia_greia/assets/runtime/animals_field_table.png
+activities/enciclopedia_greia/assets/runtime/lion_savanna.png
+activities/enciclopedia_greia/assets/runtime/saturn_observatory.png
+activities/enciclopedia_greia/assets/runtime/gears_workbench.png
+activities/enciclopedia_greia/assets/runtime/pyramids_diorama.png
+```
+
+`CairoSVG` is an **authoring/maintainer dependency only**. If the command reports it missing, follow the maintainer/tooling setup rules in `SETUP.md` and install it only in the authoring environment. Do not add it to Greia's child runtime or Activity manifest/runtime dependencies.
+
+Immediately verify:
+
+```bash
+ls -lh activities/enciclopedia_greia/assets/runtime/*.png
+file activities/enciclopedia_greia/assets/runtime/*.png
+```
+
+All six outputs must exist, be real PNGs, and be non-empty. A partial pack is failure.
+
+---
+
+# 4. Focused source/runtime checks
+
+Run exactly:
+
+```bash
+python3 -m unittest \
+  tests.test_activity_enciclopedia \
+  tests.test_activity_enciclopedia_visual_foundation
+```
+
+Then run the repository's normal non-hosted local verification required for a changed first-party Activity, following `AGENTS.md` / Activity authoring authority. If `make verify` is the current local source gate in this checkout, run:
+
+```bash
+make verify
+```
+
+Do not invoke, inspect, rerun, or depend on GitHub-hosted Actions.
+
+If any focused test or required local verification fails:
+
+1. capture the exact command and complete failure;
+2. identify the root cause;
+3. make the smallest coherent fix;
+4. rerun the failed focused gate;
+5. if runtime-relevant source changes, remember that all later Simulator evidence must be from the final source state.
+
+Do not continue to visual acceptance with red tests.
+
+---
+
+# 5. Commit generated runtime art before Simulator acceptance
+
+Refresh `main` again before the write:
+
+```bash
+git fetch origin
+git status --short
+git rev-parse HEAD
+git rev-parse origin/main
+```
+
+If `origin/main` advanced, reconcile normally on `main`; do not create a feature branch and do not overwrite concurrent work.
+
+Commit the six generated PNGs and only any necessary coherent fixes:
+
+```bash
+git add activities/enciclopedia_greia/assets/runtime/
+git status --short
+git commit -m "Encyclopedia: build golden-master runtime art"
+git push origin main
+```
+
+If additional source/test/doc fixes were genuinely required, include them only when coherent and describe them in the returned evidence.
+
+Record the exact pushed SHA:
+
+```bash
+git rev-parse HEAD
+```
+
+The Simulator must test this final runtime-relevant SHA. If anything runtime-relevant changes afterward, restart Simulator acceptance from the beginning.
+
+---
+
+# 6. Real Greia Simulator launch gate
+
+Use the real Simulator path documented by:
+
+```text
+docs/development/GREIA_ACTIVITY_SIMULATOR.md
+skills/greia-activity-authoring/LAUNCH_ACCEPTANCE.md
+```
+
+Current canonical launcher is expected to be:
+
+```bash
+python3 tools/greia_simulator.py
+```
+
+Load the source Activity through **Load Activity Folder…**, not by manually copying files into simulator-managed storage.
+
+Minimum launch gate:
+
+```text
+Activity appears in Greia launcher/catalogue
+launch from Greia Shell
+first usable frame appears
+survive >= 10 seconds
+perform meaningful interaction
+remain alive afterward
+internal Back works where applicable
+protected Greia Home returns cleanly to Shell
+```
+
+Record the exact source SHA, locale/profile, viewport and result.
+
+---
+
+# 7. Golden-master visual evidence — only six prototypes
+
+At minimum capture real Simulator pixels at **1024×600** for:
 
 ```text
 Home
@@ -50,36 +242,127 @@ Lion
 Saturn
 Gears
 Pyramids
-optional Body/Heart proof if anatomy direction remains uncertain
 ```
 
-The intended workflow is:
+For Lion, Saturn, Gears and Pyramids capture:
 
 ```text
-read visual authorities
-→ inventory reusable assets
-→ build only genuinely shared Encyclopedia presentation primitives
-→ author/reuse strong Activity-local art
-→ integrate Home + Animals + Lion first
-→ extend the same grammar to Saturn/Gears/Pyramids
-→ run focused tests
-→ capture actual Simulator prototype pixels
-→ produce one contact sheet
-→ STOP for primary/owner visual review
+one clean initial state
+one representative post-ACTIVATE state
 ```
 
-Do not propagate the design across all 43 pages until the golden-master direction is explicitly accepted.
+The activated screenshot must prove that discovery interaction has a visible payoff, not merely that an audio cue fired.
 
-Current truthful state:
+Also capture a small responsive proof, not the full final matrix:
 
 ```text
-SOURCE / MECHANICAL RUNTIME FOUNDATION HEALTHY
-43-PAGE REACHABILITY/BACK PASS
-CURRENT GRAPHICS PRODUCT TARGET REJECTED
-ENCYCLOPEDIA VISUAL REAUTHORING ACTIVE
-GOLDEN-MASTER DIRECTION NOT YET ACCEPTED
-POINTER PARITY FINAL ACCEPTANCE PENDING
-PRE-READER FINAL ACCEPTANCE PENDING
-RESPONSIVE FINAL ACCEPTANCE PENDING
-NARRATION ACCEPTANCE PENDING
+one compact viewport/profile row
+one larger viewport/profile row
+```
+
+Use representative prototypes rather than all 43 pages. Follow `VISUAL_ACCEPTANCE_EVIDENCE_CONTRACT.md` for evidence naming/classification.
+
+Produce **one contact sheet** containing the six primary 1024×600 golden-master screens. If practical, also produce a second concise comparison sheet for the activated states / responsive samples. Do not generate giant redundant screenshot dumps.
+
+Review the real pixels for:
+
+```text
+subject recognizability
+composition/hierarchy
+depth/material quality
+palette/lighting coherence
+discovery affordance clarity
+interaction payoff
+presenter integration
+pre-reader first-action clarity
+low-resolution legibility
+Greia-family coherence
+clipping/occlusion/protected-chrome conflicts
+```
+
+Do not call the direction accepted yourself. The owner is the aesthetic authority.
+
+---
+
+# 8. No-reading check
+
+On the six prototypes, review as if the child cannot read:
+
+```text
+Can Home's first action be inferred from pictures/selection treatment?
+Can Animals selection be understood without reading labels?
+Are discovery tokens visibly actionable?
+Does ACTIVATE produce understandable visual cause/effect?
+Can the child return with internal Back / protected Home without prose?
+```
+
+Record:
+
+```text
+PRE_READER_CORE_FLOW_PASS=yes/no
+TEXT_REQUIRED_FOR_GAMEPLAY=yes/no
+NO_READING_FIRST_ACTION_PASS=yes/no
+PRIMARY_INSTRUCTION_CHANNEL=visual/voice/combined
+```
+
+Do not use missing final narration as an excuse for unclear visuals; narration remains a separate acceptance lane.
+
+---
+
+# 9. Update continuation docs after evidence
+
+After the final Simulator/evidence state, update truthfully:
+
+```text
+encyclopedia/HANDOVER.md
+docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md
+docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md
+docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md
+HANDOVER.md
+```
+
+Append progress; do not rewrite old history to make experiments look cleaner.
+
+Then commit/push the evidence/doc handoff on `main`.
+
+---
+
+# 10. STOP condition
+
+After the six-prototype contact sheet and evidence are committed, **STOP**.
+
+Do not start E3 or migrate another page.
+
+Return to the owner/primary agent with:
+
+```text
+exact final Git SHA
+six generated PNG paths and total bytes
+focused test results
+local verification result
+Simulator launch/survival result
+interaction exercised
+Back/Home result
+1024x600 screenshot directory
+responsive sample directory
+contact-sheet path
+pre-reader/no-reading result
+any visual defects you observed
+anything still unverified
+```
+
+Current truthful state before this task executes:
+
+```text
+MECHANICAL 43-PAGE FOUNDATION: PREVIOUSLY PROVEN
+OLD GRAPHICS PRODUCT TARGET: REJECTED
+E1 SHARED PRESENTATION SOURCE: IMPLEMENTED ON MAIN
+E2 SIX GOLDEN-MASTER PAGE SOURCES: IMPLEMENTED ON MAIN
+EDITABLE SVG MASTERS: IMPLEMENTED ON MAIN
+RUNTIME PNG PACK: BUILD/COMMIT PENDING
+FOCUSED LOCAL REPO TESTS: PENDING ON REAL CHECKOUT
+SIMULATOR FINAL-SHA ACCEPTANCE: PENDING
+OWNER VISUAL DIRECTION APPROVAL: PENDING
+E3/E4 BULK MIGRATION: BLOCKED
+NARRATION ACCEPTANCE: SEPARATE / PENDING
 ```
