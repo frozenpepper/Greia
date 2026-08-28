@@ -1,35 +1,51 @@
 # Greia Encyclopedia v0.1 — LOCAL AGENT NEXT TASK
 
-This file is the single rolling instruction for the **next** owner-machine task. Follow it exactly. Do not continue past the first unexpected failure.
+This is the single rolling instruction for the **next** owner-machine task.
 
-## Current state
+## Current proven state
 
-- `origin/main` includes `56b87b5` and `bbdc08d`.
-- The local working tree intentionally still contains the first synchronized 378-row `encyclopedia/VOICE_RECORDING_REQUESTS.md` produced by the failed gate.
-- Diagnostic result already established:
-  - `CURRENT_ROWS = 378`
-  - `NEXT_ROWS = 378`
-  - `ADDED_KEYS = 0`
-  - `REMOVED_KEYS = 0`
-  - non-idempotency is only an accumulating `---` separator before batch 4.
-- Do **not** discard or regenerate the ledger before this task.
-- This task generates **ZERO voice files**.
+The previous source-gate run stopped at `focused-tests` only because the gate built invalid unittest module names for this repository layout.
 
-## Goal
+Already proven and committed/pushed:
 
-1. Fix the synchronizer separator idempotency bug.
-2. Tighten the ledger row regex so an empty notes cell is valid but a missing notes column is not silently accepted.
-3. Add regression tests for both behaviors.
-4. Prove the preserved 378-row ledger is canonical and idempotent.
-5. Commit/push the source fixes.
-6. Commit/push the canonical 378-row ledger.
-7. Run the deterministic Encyclopedia source gate exactly once.
+- `cdb7b8d` — voice-ledger synchronization idempotency + strict row parsing regression coverage.
+- `d62d63f` — canonical complete v0.1 voice-request ledger.
+- `encyclopedia/VOICE_RECORDING_REQUESTS.md` is clean, canonical and contains exactly **378 rows**.
+- `voice-sync` PASS.
+- `voice-sync-check` PASS.
+- `voice-row-count.json`: 378 rows, all currently `REQUESTED`.
+- The focused Encyclopedia tests themselves pass when invoked from a valid unittest discovery/import context.
+- The failed gate left the worktree clean.
+- This task generates **ZERO voice files** and does **not** run the Simulator unless the source gate itself fully passes and you have returned the result first.
 
-Do not start the Simulator in this task.
+Previous evidence directory:
+
+```text
+tmp/encyclopedia-v01-acceptance/20260828_034742/
+```
+
+## Root cause to fix
+
+`tools/encyclopedia_v01_source_gate.py` currently builds the focused command using dotted names such as:
+
+```text
+tests.test_activity_enciclopedia
+```
+
+but `tests/` is not a Python package (`tests/__init__.py` does not exist).
+
+Do **not** add `tests/__init__.py` merely to satisfy the gate.
+Do **not** change the test modules themselves.
+
+Python `unittest` accepts test **file paths** from the repository root, so the gate should translate its stable dotted identifiers to paths such as:
+
+```text
+tests/test_activity_enciclopedia.py
+```
 
 ---
 
-## Step 1 — refresh safely
+## Step 1 — refresh and inspect
 
 From the existing Greia checkout:
 
@@ -37,215 +53,167 @@ From the existing Greia checkout:
 git branch --show-current
 git status --short
 git fetch origin
+git pull --ff-only origin main
 ```
 
-Required branch: `main`.
+Required:
 
-The dirty `encyclopedia/VOICE_RECORDING_REQUESTS.md` is expected and must be preserved.
-
-Do not reset/clean/checkout it.
+```text
+branch = main
+worktree = clean
+```
 
 If unrelated source is dirty, STOP and report it.
 
 ---
 
-## Step 2 — fix `sync_voice_requests.py`
+## Step 2 — fix only the gate command builder
 
-In `encyclopedia/sync_voice_requests.py`, change `_manual_prefix()` so the preserved manual prefix stops **before the separator introducing batch 4**, rather than before only the `## 4` heading.
-
-The function must become semantically equivalent to:
-
-```python
-def _manual_prefix(existing_text: str) -> str:
-    """Keep instructions, vocabulary and the manually-owned E0 navigation batch."""
-    marker = "\n---\n\n## 4. Requested batch "
-    index = existing_text.find(marker)
-    if index < 0:
-        raise ValueError("cannot find first factual-batch boundary in voice ledger")
-    return existing_text[:index].rstrip()
-```
-
-Do not change topic order, cue IDs, wording, filenames, paths, status ownership, or the 378-row invariant.
-
----
-
-## Step 3 — tighten `voice_ledger.py`
-
-The current parser fix correctly surfaced empty notes rows, but it is more permissive than necessary because it can accept the notes column being absent entirely.
-
-Keep the table grammar strict. The final part of `ROW_RE` should require the notes column while allowing it to be empty, semantically equivalent to:
-
-```python
-ROW_RE = re.compile(
-    r"^\| (?P<status>[^|]+?) \| `(?P<cue>[^`]+)` \| (?P<kind>[^|]+?) \| "
-    r"(?P<speaker>[^|]+?) \| `(?P<voice>[^`]+)` \| (?P<locale>it|en) \| "
-    r"(?P<text>.*?) \| `(?P<filename>[^`]+)` \| `(?P<path>[^`]+)` \| "
-    r"(?P<notes>.*?)\|$"
-)
-```
-
-`parse_ledger_rows()` already strips the parsed notes value; leave that behavior unchanged.
-
----
-
-## Step 4 — add regression tests
-
-Add focused tests to `tests/test_encyclopedia_authoring_tools.py` (or a new narrowly named provider-free test module if cleaner) proving all of the following:
-
-### A. Render idempotency
-
-```python
-current = LEDGER.read_text(encoding="utf-8")
-once = render_ledger(current)
-twice = render_ledger(once)
-self.assertEqual(twice, once)
-```
-
-### B. Empty notes cell parses
-
-A normal ledger row ending with an empty notes cell (`... | |`) must parse and produce `notes == ""`.
-
-### C. Missing notes column does not parse as a valid data row
-
-Construct a malformed otherwise-row-like line that ends immediately after the backticked path (no ` | |` notes column). Confirm it is not returned as a parsed row.
-
-Do not weaken duplicate-row rejection or any locked-status invariant.
-
----
-
-## Step 5 — run only the focused repair tests
-
-Run:
-
-```bash
-python3 -m unittest \
-  tests.test_encyclopedia_authoring_tools \
-  tests.test_encyclopedia_voice_batch_state \
-  tests.test_encyclopedia_v01_source_gate \
-  -v
-```
-
-If any test fails: STOP. Do not rerun. Return the failure.
-
----
-
-## Step 6 — prove the preserved dirty ledger is now canonical
-
-Do **not** run the mutating synchronizer yet.
-
-Run:
-
-```bash
-python3 encyclopedia/sync_voice_requests.py --check
-```
-
-Expected:
+Edit:
 
 ```text
-voice request ledger already synchronized
+tools/encyclopedia_v01_source_gate.py
 ```
 
-Then run:
+Keep `FOCUSED_TESTS` and `POST_AUDIO_TESTS` as their existing stable dotted identifiers if desired, but `_focused_command()` must build valid file-path arguments for this repository layout.
+
+A clean implementation is semantically equivalent to:
+
+```python
+def _focused_command(tests: Sequence[str]) -> tuple[str, ...]:
+    paths = tuple(test.replace(".", "/") + ".py" for test in tests)
+    return (sys.executable, "-m", "unittest", *paths, "-v")
+```
+
+This should turn:
+
+```text
+tests.test_encyclopedia_authoring_tools
+```
+
+into:
+
+```text
+tests/test_encyclopedia_authoring_tools.py
+```
+
+Do not add shell wrapping, `cd tests`, package markers or repository-global `PYTHONPATH` changes unless the path-based invocation demonstrably cannot work.
+
+---
+
+## Step 3 — add a regression test for the command builder
+
+Edit:
+
+```text
+tests/test_encyclopedia_v01_source_gate.py
+```
+
+Import `_focused_command` from the loaded gate module and add a focused test proving that:
+
+```python
+command = _focused_command((
+    "tests.test_encyclopedia_authoring_tools",
+    "tests.test_activity_enciclopedia",
+))
+```
+
+contains exactly these test targets:
+
+```text
+tests/test_encyclopedia_authoring_tools.py
+tests/test_activity_enciclopedia.py
+```
+
+and does **not** contain:
+
+```text
+tests.test_encyclopedia_authoring_tools
+tests.test_activity_enciclopedia
+```
+
+Also verify the command still begins with the current Python executable + `-m unittest` and ends with `-v`.
+
+Do not weaken any existing source-gate tests.
+
+---
+
+## Step 4 — run only the repair test first
+
+From the repository root run:
+
+```bash
+python3 -m unittest tests/test_encyclopedia_v01_source_gate.py -v
+```
+
+If it fails: STOP and return the failure. Do not continue.
+
+Then prove the exact gate-built focused command works without running the whole gate:
 
 ```bash
 python3 - <<'PY'
+import importlib.util
 from pathlib import Path
-from encyclopedia.sync_voice_requests import render_ledger
-from encyclopedia.voice_ledger import parse_ledger_rows
+import subprocess
+import sys
 
-path = Path("encyclopedia/VOICE_RECORDING_REQUESTS.md")
-current = path.read_text(encoding="utf-8")
-once = render_ledger(current)
-twice = render_ledger(once)
-rows = parse_ledger_rows(current)
+path = Path("tools/encyclopedia_v01_source_gate.py")
+spec = importlib.util.spec_from_file_location("encyclopedia_source_gate_probe", path)
+module = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = module
+spec.loader.exec_module(module)
 
-print("ROWS       =", len(rows))
-print("CHECK_EQ   =", current == once)
-print("IDEMPOTENT =", once == twice)
-
-assert len(rows) == 378
-assert current == once
-assert once == twice
+command = module._focused_command(module.FOCUSED_TESTS)
+print("COMMAND:", " ".join(command))
+completed = subprocess.run(command, cwd=Path.cwd())
+print("RETURN_CODE:", completed.returncode)
+raise SystemExit(completed.returncode)
 PY
 ```
 
 Required:
 
 ```text
-ROWS       = 378
-CHECK_EQ   = True
-IDEMPOTENT = True
+RETURN_CODE: 0
 ```
 
-If not: STOP. Do not modify the ledger further.
+If it fails: STOP. Do not patch test content to force green.
 
 ---
 
-## Step 7 — commit and push the source fixes
+## Step 5 — commit and push the gate fix
 
-Stage only the source/test files changed in Steps 2–4. Do **not** stage the ledger in this commit.
-
-Commit with a clear message such as:
+Stage only:
 
 ```text
-Encyclopedia: make voice ledger synchronization idempotent
+tools/encyclopedia_v01_source_gate.py
+tests/test_encyclopedia_v01_source_gate.py
+```
+
+Commit with a message such as:
+
+```text
+Encyclopedia: fix source-gate unittest invocation
 ```
 
 Push to `origin/main`.
 
 Record the commit SHA.
 
----
-
-## Step 8 — validate and commit the canonical 378-row ledger
-
-Before committing, run:
-
-```bash
-git diff --check -- encyclopedia/VOICE_RECORDING_REQUESTS.md
-python3 encyclopedia/sync_voice_requests.py --check
-python3 - <<'PY'
-from pathlib import Path
-from encyclopedia.voice_ledger import parse_ledger_rows
-p = Path("encyclopedia/VOICE_RECORDING_REQUESTS.md")
-rows = parse_ledger_rows(p.read_text(encoding="utf-8"))
-assert len(rows) == 378
-print("rows=378")
-print("unique_keys=378" if len(set(rows)) == 378 else "duplicate_keys")
-assert len(set(rows)) == 378
-PY
-```
-
-If all pass, stage **only**:
-
-```text
-encyclopedia/VOICE_RECORDING_REQUESTS.md
-```
-
-Commit with a clear message such as:
-
-```text
-Encyclopedia: synchronize complete v0.1 voice request ledger
-```
-
-Push to `origin/main`.
-
-This commits metadata/request rows only. It does not generate or accept narration.
-
----
-
-## Step 9 — run the source gate exactly once
-
-First confirm:
+Confirm afterward:
 
 ```bash
 git status --short
 git rev-parse HEAD
 ```
 
-The worktree should be clean except legitimate ignored local staging/evidence state.
+Worktree must be clean.
 
-Then run exactly once:
+---
+
+## Step 6 — rerun the Encyclopedia source gate exactly ONCE
+
+Run:
 
 ```bash
 python3 tools/encyclopedia_v01_source_gate.py
@@ -254,42 +222,44 @@ python3 tools/encyclopedia_v01_source_gate.py
 Do not rerun on failure.
 Do not repair during the gate.
 Do not generate voices.
-Do not start the Simulator.
+Do not start the Simulator manually.
 
-### On failure
+### If it fails
 
-STOP and return:
+STOP immediately and return:
 
 - exact starting SHA;
-- failing step and exit code;
-- terminal failure output;
+- failing step + exit code;
 - `FIRST_FAILURE.txt`;
 - failed-step log;
 - `git-status-before.txt`;
 - `git-status-at-failure.txt`;
-- exact evidence directory path;
+- `voice-row-count.json` if it exists;
+- exact evidence-directory path;
 - final `git status --short`.
 
-### On PASS
+Do not make another fix until the primary agent reviews that first failure.
+
+### If it passes
 
 Return:
 
-- exact starting SHA;
-- exact final SHA/current `git rev-parse HEAD`;
+- exact starting/current SHA;
 - `source-gate-summary.json`;
 - `voice-row-count.json`;
 - `focused-tests.txt`;
 - `make-verify.txt`;
-- voice-assets check/integration logs if present;
+- `voice-assets-check-before.txt`;
+- integration/post-audio logs if they exist;
 - `git-diff-check.txt`;
 - `git-status-after.txt`;
-- exact evidence directory path;
+- exact evidence-directory path;
 - final `git status --short`.
 
-Do not call the Encyclopedia Simulator-accepted. A green source gate means only:
+A PASS means only:
 
 ```text
 SOURCE-VERIFIED / SIMULATOR-UNVERIFIED
 ```
 
-Stop there and return the evidence to the owner/primary agent.
+Do **not** start the full Simulator traversal in this task. Stop and return the evidence first.
