@@ -1,4 +1,4 @@
-"""Gears final-entry pilot: meshing, direction, ratio and rack motion."""
+"""Gears golden master: authored workshop board with semantic mechanism overlays."""
 
 from __future__ import annotations
 
@@ -7,14 +7,24 @@ import math
 
 import pygame
 
-from greia_platform.typography import FontRole
-
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
-    from .common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from ..enciclopedia_presentation import (
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
+        draw_title,
+    )
+    from .common import draw_presenter, grid_step
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
-    from pages.common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from enciclopedia_presentation import (
+        draw_authored_scene,
+        draw_caption_ribbon,
+        draw_discovery_token,
+        draw_title,
+    )
+    from pages.common import draw_presenter, grid_step
 
 
 @dataclass(frozen=True, slots=True)
@@ -25,35 +35,21 @@ class GearDiscovery:
     center: tuple[int, int]
 
 
-@dataclass(frozen=True, slots=True)
-class GearSpec:
-    center: tuple[int, int]
-    teeth: int
-    radius: int
-    color: tuple[int, int, int]
-
-
 DISCOVERIES = (
-    GearDiscovery("teeth", "gears.teeth", "encyclopedia.machines.gears.teeth", (255, 190)),
-    GearDiscovery("direction", "gears.direction", "encyclopedia.machines.gears.direction", (755, 190)),
-    GearDiscovery("ratio", "gears.ratio", "encyclopedia.machines.gears.ratio", (255, 420)),
-    GearDiscovery("rack", "gears.rack", "encyclopedia.machines.gears.rack", (755, 420)),
+    GearDiscovery("teeth", "gears.teeth", "encyclopedia.machines.gears.teeth", (235, 195)),
+    GearDiscovery(
+        "direction",
+        "gears.direction",
+        "encyclopedia.machines.gears.direction",
+        (775, 195),
+    ),
+    GearDiscovery("ratio", "gears.ratio", "encyclopedia.machines.gears.ratio", (235, 405)),
+    GearDiscovery("rack", "gears.rack", "encyclopedia.machines.gears.rack", (775, 405)),
 )
-
-# Radii, center distances and tooth counts deliberately share one coherent
-# schematic pitch: adjacent pitch circles touch and larger gears have more teeth.
-GEARS = (
-    GearSpec((395, 330), 28, 74, (83, 145, 181)),
-    GearSpec((521, 330), 20, 52, (231, 157, 71)),
-    GearSpec((611, 330), 14, 38, (119, 177, 102)),
-)
-_PINION = GearSpec((680, 330), 12, 31, (155, 117, 183))
-_RACK_BASE_X = 645
-_RACK_Y = 369
 
 
 class GearTrainModel:
-    """Own idealized gear relationships; rendering consumes derived motion."""
+    """Own the finite interaction state shown over the authored mechanism board."""
 
     def __init__(self) -> None:
         self.driver_angle = 0.0
@@ -70,23 +66,6 @@ class GearTrainModel:
         self.direction_age = max(0.0, self.direction_age - dt)
         self.ratio_age = max(0.0, self.ratio_age - dt)
         self.rack_age = max(0.0, self.rack_age - dt)
-
-    def angles(self) -> tuple[float, float, float]:
-        first = self.driver_angle
-        second = -first * GEARS[0].teeth / GEARS[1].teeth
-        third = -second * GEARS[1].teeth / GEARS[2].teeth
-        return first, second, third
-
-    @property
-    def pinion_angle(self) -> float:
-        third = self.angles()[2]
-        return -third * GEARS[2].teeth / _PINION.teeth
-
-    @property
-    def rack_offset(self) -> int:
-        # Bounded oscillation makes rotary-to-linear conversion visible without
-        # allowing the teaching rack to wander off-screen.
-        return int(math.sin(self.pinion_angle) * 34)
 
     def show_teeth(self) -> None:
         self.teeth_age = 3.2
@@ -112,7 +91,7 @@ class GearsPage(EncyclopediaPage):
         self._hovered: int | None = None
         self._caption_key = "gears.intro"
         self._hotspots = tuple(
-            pygame.Rect(cx - 43, cy - 43, 86, 86)
+            pygame.Rect(cx - 50, cy - 50, 100, 100)
             for cx, cy in (item.center for item in DISCOVERIES)
         )
 
@@ -141,220 +120,154 @@ class GearsPage(EncyclopediaPage):
             return
         if event.command is PageCommand.ACTIVATE:
             self._activate(self._selected)
-            return
-        self._selected = grid_step(
-            self._selected,
-            event.command,
-            columns=2,
-            count=len(DISCOVERIES),
-        )
+        else:
+            self._selected = grid_step(
+                self._selected,
+                event.command,
+                columns=2,
+                count=len(DISCOVERIES),
+            )
 
     def _activate(self, index: int) -> None:
-        discovery = DISCOVERIES[index]
-        self._caption_key = discovery.caption_key
-        if discovery.discovery_id == "teeth":
+        item = DISCOVERIES[index]
+        self._caption_key = item.caption_key
+        if item.discovery_id == "teeth":
             self._model.show_teeth()
-        elif discovery.discovery_id == "direction":
+        elif item.discovery_id == "direction":
             self._model.reverse()
-        elif discovery.discovery_id == "ratio":
+        elif item.discovery_id == "ratio":
             self._model.show_ratio()
         else:
             self._model.show_rack()
-        self.context.audio.play(discovery.cue_id)
+        self.context.audio.play(item.cue_id)
 
     def draw(self, surface: pygame.Surface) -> None:
-        surface.fill((239, 231, 205))
-        pygame.draw.rect(surface, (175, 125, 78), (0, 470, 1024, 130))
-        draw_centered_text(
+        if not draw_authored_scene(
+            surface,
+            self.context.visuals,
+            "encyclopedia.machines.gears.workbench",
+        ):
+            surface.fill((239, 231, 205))
+        draw_title(
             surface,
             self.context.typography,
             self.context.resources.text("gears.title"),
-            center=(500, 92),
-            size=40,
-            color=self.context.palette.ink,
-            role=FontRole.DISPLAY,
+            self.context.palette.ink,
         )
-        self._draw_train(surface)
-        self._draw_hotspots(surface)
-        self._draw_caption(surface)
+        self._draw_reveals(surface)
+        for index, item in enumerate(DISCOVERIES):
+            draw_discovery_token(
+                surface,
+                item.center,
+                selected=index == self._selected,
+                hovered=index == self._hovered,
+                recently_activated=self._recent(item.discovery_id),
+                icon=lambda target, center, item=item: self._draw_icon(
+                    target,
+                    center,
+                    item.discovery_id,
+                ),
+            )
+        draw_caption_ribbon(
+            surface,
+            self.context.typography,
+            self.context.resources.text(self._caption_key),
+        )
         draw_presenter(
             surface,
             self.context.visuals,
             "dani",
-            position=(925, 565),
-            height=142,
+            position=(900, 575),
+            height=185,
             variant="happy",
             fallback_color=(101, 171, 211),
         )
 
-    def _draw_train(self, surface: pygame.Surface) -> None:
-        angles = self._model.angles()
-        for spec, angle in zip(GEARS, angles):
-            self._draw_gear(surface, spec, angle)
-        self._draw_gear(surface, _PINION, self._model.pinion_angle)
+    def _recent(self, discovery_id: str) -> bool:
+        ages = {
+            "teeth": self._model.teeth_age,
+            "direction": self._model.direction_age,
+            "ratio": self._model.ratio_age,
+            "rack": self._model.rack_age,
+        }
+        return ages[discovery_id] > 0
 
+    def _draw_reveals(self, surface: pygame.Surface) -> None:
         if self._model.teeth_age > 0:
-            for point in ((469, 330), (573, 330), (649, 330)):
-                pygame.draw.circle(surface, (255, 233, 102), point, 15, 5)
+            for point in ((472, 316), (607, 316), (700, 316)):
+                pygame.draw.circle(surface, (255, 228, 91), point, 15, 5)
 
         if self._model.direction_age > 0:
-            for spec, angle in (*tuple(zip(GEARS, angles)), (_PINION, self._model.pinion_angle)):
-                self._draw_direction_arrow(
-                    surface,
-                    spec.center,
-                    spec.radius + 14,
-                    angle,
-                    self._model.direction,
+            specs = (
+                ((390, 316), 108, self._model.direction),
+                ((545, 316), 83, -self._model.direction),
+                ((660, 316), 63, self._model.direction),
+            )
+            for center, radius, _direction in specs:
+                rect = pygame.Rect(
+                    center[0] - radius,
+                    center[1] - radius,
+                    radius * 2,
+                    radius * 2,
                 )
+                pygame.draw.arc(surface, (255, 221, 89), rect, 0.3, 1.9, 5)
 
         if self._model.ratio_age > 0:
-            speeds = (
-                abs(self._model.speed),
-                abs(self._model.speed * GEARS[0].teeth / GEARS[1].teeth),
-                abs(self._model.speed * GEARS[0].teeth / GEARS[2].teeth),
-            )
-            maximum = max(speeds)
-            for spec, speed in zip(GEARS, speeds):
-                bars = max(1, int(round(4 * speed / maximum)))
-                for index in range(bars):
-                    x = spec.center[0] - 25 + index * 16
+            for x, count in ((390, 2), (545, 3), (660, 4)):
+                for index in range(count):
                     pygame.draw.rect(
                         surface,
-                        (246, 202, 72),
-                        (x, spec.center[1] - spec.radius - 30, 10, 18),
+                        (255, 218, 80),
+                        (x - 30 + index * 18, 205, 11, 20),
                         border_radius=4,
                     )
 
-        rack_x = _RACK_BASE_X + (
-            self._model.rack_offset if self._model.rack_age > 0 else 0
-        )
-        pygame.draw.rect(
-            surface,
-            (102, 84, 67),
-            (rack_x, _RACK_Y, 135, 15),
-            border_radius=4,
-        )
-        for index in range(10):
-            pygame.draw.rect(
-                surface,
-                (102, 84, 67),
-                (rack_x + index * 14, _RACK_Y - 8, 8, 10),
-            )
         if self._model.rack_age > 0:
-            arrow_y = _RACK_Y + 28
+            offset = int(math.sin(self._model.driver_angle * 2.2) * 28)
             pygame.draw.line(
                 surface,
-                (246, 202, 72),
-                (rack_x - 25, arrow_y),
-                (rack_x + 155, arrow_y),
-                5,
+                (255, 220, 86),
+                (690 + offset, 410),
+                (815 + offset, 410),
+                6,
             )
-            positive = self._model.rack_offset >= 0
-            tip_x = rack_x + 155 if positive else rack_x - 25
-            sign = 1 if positive else -1
             pygame.draw.polygon(
                 surface,
-                (246, 202, 72),
+                (255, 220, 86),
                 [
-                    (tip_x, arrow_y),
-                    (tip_x - 14 * sign, arrow_y - 10),
-                    (tip_x - 14 * sign, arrow_y + 10),
+                    (815 + offset, 410),
+                    (799 + offset, 399),
+                    (799 + offset, 421),
                 ],
             )
 
     @staticmethod
-    def _draw_gear(surface: pygame.Surface, spec: GearSpec, angle: float) -> None:
-        cx, cy = spec.center
-        points: list[tuple[int, int]] = []
-        tooth_depth = max(8, spec.radius // 6)
-        for index in range(spec.teeth * 2):
-            theta = angle + index * math.pi / spec.teeth
-            radius = spec.radius if index % 2 == 0 else spec.radius - tooth_depth
-            points.append(
-                (
-                    cx + int(math.cos(theta) * radius),
-                    cy + int(math.sin(theta) * radius),
-                )
-            )
-        pygame.draw.polygon(surface, spec.color, points)
-        hub = max(10, spec.radius // 3)
-        pygame.draw.circle(surface, (239, 231, 205), spec.center, hub)
-        pygame.draw.circle(surface, (91, 80, 66), spec.center, hub, 4)
-
-    @staticmethod
-    def _draw_direction_arrow(
+    def _draw_icon(
         surface: pygame.Surface,
         center: tuple[int, int],
-        radius: int,
-        angle: float,
-        direction: float,
+        discovery_id: str,
     ) -> None:
         cx, cy = center
-        start = angle
-        end = angle + direction * 1.6
-        rect = pygame.Rect(cx - radius, cy - radius, radius * 2, radius * 2)
-        if direction > 0:
-            pygame.draw.arc(surface, (245, 211, 79), rect, start, end, 5)
-        else:
-            pygame.draw.arc(surface, (245, 211, 79), rect, end, start, 5)
-
-    def _draw_hotspots(self, surface: pygame.Surface) -> None:
-        for index, (item, rect) in enumerate(zip(DISCOVERIES, self._hotspots)):
-            pygame.draw.circle(surface, (255, 249, 229), item.center, 37)
-            pygame.draw.circle(surface, (78, 65, 56), item.center, 37, 3)
-            cx, cy = item.center
-            if item.discovery_id == "teeth":
-                for offset in (-15, 0, 15):
-                    pygame.draw.rect(
-                        surface,
-                        (83, 145, 181),
-                        (cx + offset - 6, cy - 20, 12, 40),
-                        border_radius=3,
-                    )
-            elif item.discovery_id == "direction":
-                pygame.draw.arc(
+        if discovery_id == "teeth":
+            for offset in (-15, 0, 15):
+                pygame.draw.rect(
                     surface,
-                    (231, 157, 71),
-                    (cx - 23, cy - 23, 46, 46),
-                    0.2,
-                    math.pi * 1.6,
-                    6,
+                    (83, 145, 181),
+                    (cx + offset - 6, cy - 20, 12, 40),
+                    border_radius=3,
                 )
-                pygame.draw.polygon(
-                    surface,
-                    (231, 157, 71),
-                    [(cx - 18, cy - 13), (cx - 27, cy - 2), (cx - 11, cy - 2)],
-                )
-            elif item.discovery_id == "ratio":
-                pygame.draw.circle(surface, (83, 145, 181), (cx - 13, cy), 18)
-                pygame.draw.circle(surface, (231, 157, 71), (cx + 19, cy), 10)
-            else:
-                pygame.draw.circle(surface, (155, 117, 183), (cx - 11, cy - 6), 13, 5)
-                pygame.draw.rect(surface, (102, 84, 67), (cx, cy + 4, 27, 8))
-                for offset in range(0, 26, 8):
-                    pygame.draw.rect(
-                        surface,
-                        (102, 84, 67),
-                        (cx + offset, cy - 2, 5, 8),
-                    )
-            focus_ring(surface, rect, index == self._selected or index == self._hovered)
-
-    def _draw_caption(self, surface: pygame.Surface) -> None:
-        panel = pygame.Rect(305, 510, 400, 68)
-        pygame.draw.rect(surface, (255, 249, 229), panel, border_radius=22)
-        pygame.draw.rect(surface, (78, 65, 56), panel, 3, border_radius=22)
-        text = self.context.resources.text(self._caption_key)
-        rendered = self.context.typography.render(
-            text,
-            FontRole.BODY,
-            18,
-            (58, 50, 45),
-        )
-        if rendered.get_width() > panel.width - 26:
-            rendered = self.context.typography.render(
-                text,
-                FontRole.BODY,
-                15,
-                (58, 50, 45),
+        elif discovery_id == "direction":
+            pygame.draw.arc(
+                surface,
+                (231, 157, 71),
+                (cx - 23, cy - 23, 46, 46),
+                0.2,
+                math.pi * 1.6,
+                6,
             )
-        surface.blit(rendered, rendered.get_rect(center=panel.center))
+        elif discovery_id == "ratio":
+            pygame.draw.circle(surface, (83, 145, 181), (cx - 13, cy), 18)
+            pygame.draw.circle(surface, (231, 157, 71), (cx + 19, cy), 10)
+        else:
+            pygame.draw.circle(surface, (155, 117, 183), (cx - 11, cy - 6), 13, 5)
+            pygame.draw.rect(surface, (102, 84, 67), (cx, cy + 4, 27, 8))
