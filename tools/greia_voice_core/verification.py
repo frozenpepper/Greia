@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from difflib import SequenceMatcher
+import gc
 import re
 from pathlib import Path
 from typing import Protocol
@@ -63,6 +64,28 @@ def asr_eligible(request: VoiceRequest) -> bool:
     return len(words) >= 2 and len(request.text) <= 500
 
 
+def _release_mlx_transient_memory() -> None:
+    """Return verifier intermediates cached by MLX to the system allocator.
+
+    ``mlx_whisper`` intentionally caches its model for reuse but does not clear the
+    shared MLX allocator cache after ``transcribe``. In Greia the verifier runs in
+    the same long-lived process as Chatterbox, so leaving those transient buffers in
+    the allocator can make the voice studio retain a much larger footprint than a
+    one-shot Chatterbox process. Keep the tiny Whisper model warm, but explicitly
+    release reusable/intermediate buffers after every verification pass.
+    """
+
+    gc.collect()
+    try:
+        import mlx.core as mx
+
+        mx.clear_cache()
+    except Exception:
+        # Verification availability/probe owns reporting. Cleanup must never turn a
+        # completed transcription into a new production failure on non-MLX hosts.
+        pass
+
+
 @dataclass
 class WhisperVerifier:
     model_id: str = "mlx-community/whisper-tiny"
@@ -98,7 +121,12 @@ class WhisperVerifier:
 
         import mlx_whisper
 
+        result = None
         try:
+            # Chatterbox already clears its own transient MLX cache after a take.
+            # Clear once more at this provider boundary so Whisper starts from a
+            # predictable allocator state in a warm mixed-model worker.
+            _release_mlx_transient_memory()
             result = mlx_whisper.transcribe(
                 str(wav_path),
                 path_or_hf_repo=self.model_id,
@@ -111,6 +139,13 @@ class WhisperVerifier:
                 verifier_id=self.verifier_id,
                 detail=f"Whisper verification failed: {exc}",
             )
+        finally:
+            # Drop the transcription result before clearing the allocator. The
+            # mlx_whisper ModelHolder may keep the small model resident by design;
+            # its per-call mel/decoder/intermediate buffers must not remain cached
+            # beside the warm Chatterbox model.
+            result = None
+            _release_mlx_transient_memory()
 
         score = transcript_similarity(request.text, transcript)
         disposition = (
