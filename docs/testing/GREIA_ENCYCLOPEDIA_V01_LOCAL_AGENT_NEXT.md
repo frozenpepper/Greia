@@ -2,183 +2,118 @@
 
 This is the single rolling instruction for the **next** owner-machine task.
 
-## Current evidence
+## Current accepted evidence
 
-The Encyclopedia source gate remains GREEN on:
-
-```text
-d89809a43cdfe62c85775ccdcfd04eb6e34fbd05
-```
-
-Evidence:
+Source gate remains GREEN:
 
 ```text
-tmp/encyclopedia-v01-acceptance/20260828_044052/
+runtime/source SHA: d89809a43cdfe62c85775ccdcfd04eb6e34fbd05
+evidence: tmp/encyclopedia-v01-acceptance/20260828_044052/
 ```
 
-That source evidence proved 378/378 canonical voice-request rows, 53/53 focused Encyclopedia tests, 1431/1431 full repository tests, 35/35 Activity validations, and a clean worktree.
-
-Two successive terminal-only Simulator smoke attempts then exposed **headless harness defects, not proven Encyclopedia runtime defects**:
-
-1. the first headless helper republished the built-in Encyclopedia as developer-unsigned, correctly hitting Greia's duplicate-identity guard;
-2. after that was fixed, the helper correctly reached the real child Shell and profile picker, but it navigated the post-profile screen as though it were the raw `ActivityRegistry` tuple.
-
-The second assumption was wrong. The production Greia child Shell is **Collection-first**:
+The corrected headless lifecycle smoke is also GREEN:
 
 ```text
-profile picker
-→ Collection Home (Create / Play / Learn / Explore / ...)
-→ optional adaptive sub-Collection
-→ Activity cards
-→ Activity launch
+owner-machine SHA: 621c1950133151b9c89c14ec74e4628e4c665147
+evidence: tmp/encyclopedia-v01-acceptance/20260828_070951-headless-route-smoke/
+route: home[2]=learn -> activity[4]=org.greia.enciclopedia
+focused Simulator tests: 45/45 PASS
+real Shell -> Encyclopedia: PASS
+first Activity frame: PASS
+12 s survival: PASS
+bounded semantic interaction: PASS
+protected Home -> Shell: PASS
+worktree: clean
 ```
 
-The failed smoke evidence is:
+This proves the real Shell/Activity lifecycle lane. It does **not** prove all 43 pages or subjective visual/pre-reader quality.
+
+A dedicated mechanical traversal driver now exists:
 
 ```text
-tmp/encyclopedia-v01-acceptance/20260828_061732-headless-smoke/
+tools/encyclopedia_v01_headless_traversal.py
+tests/test_encyclopedia_v01_headless_traversal.py
 ```
 
-It proved:
+It launches the real built-in Encyclopedia through the real child Shell, visits all six section pages and all 36 factual entries using only semantic keyboard navigation, sends one bounded primary ACTIVATE interaction per entry, captures before/after PNG evidence, uses the Encyclopedia's own semantic Back path, and finally returns through protected Greia Home.
 
-```text
-focused Simulator tests             PASS (44 tests in that checkout)
-built-in detection                   PASS
-remote bridge                        PASS
-first real Shell frame               PASS (mode=profiles, 1024x600)
-duplicate-ID collision               GONE
-Activity launch                      NOT PROVEN
-```
-
-The route defect has now been repaired on GitHub `main`:
-
-- `tools/headless_greia_simulator.py` no longer computes a raw launcher index;
-- it derives a typed `ShellLaunchRoute` from the same profile-visible `ActivityCatalogue` projection used by the child Shell;
-- the route includes Collection Home index, optional adaptive sub-Collection index, and final Activity-card index;
-- built-in, developer and Parent-installed Activity sources are included in the route projection;
-- the selected Simulator profile's visibility policy, approximate age and challenge preference are applied before route selection;
-- semantic navigation now waits for a fresh real Shell frame after each hierarchy transition/key step;
-- focused tests cover both direct Collection → Activity and Collection → adaptive sub-Collection → Activity paths.
-
-One additional repository-state issue must be handled safely before retest: the previous owner-machine report started at local SHA
-
-```text
-7417e20729fd1c0562491e26f9fe564deccac058
-```
-
-and that SHA is **not present in GitHub's repository history**. Therefore do not assume the owner checkout can fast-forward to current `origin/main`. Preserve any local-only commits before running anything.
+It deliberately does **not** claim that an interaction is visually correct merely because a frame changed. Signature-interaction correctness, pointer parity and pre-reader quality remain a separate visual review of the captured frames.
 
 Truthful state entering this task:
 
 ```text
-SOURCE-VERIFIED / LOCAL-BRANCH-RECONCILIATION-CHECK-PENDING
-HEADLESS-SHELL-ROUTE-RETEST-PENDING
+SOURCE-VERIFIED
+HEADLESS-LIFECYCLE-SMOKE-PASS
+43-PAGE-MECHANICAL-TRAVERSAL-PENDING
+VISUAL/PRE-READER REVIEW PENDING
 NARRATION ACCEPTANCE PENDING
 ```
 
 This task generates **ZERO voice files**.
 Do **not** rerun the Encyclopedia source gate.
-Do **not** attempt the full 43-page traversal yet.
-Do **not** make subjective pre-reader/visual claims from a terminal-only context.
+Do **not** make runtime/source repairs during the evidence run.
+Do **not** rerun a failed traversal.
 
 ---
 
-## Step 1 — inspect branch ancestry before changing the checkout
+## Step 1 — update safely
 
 From the existing Greia checkout:
 
 ```bash
 git branch --show-current
 git status --short
-git rev-parse HEAD
 git fetch origin
-git rev-parse origin/main
+LOCAL_HEAD="$(git rev-parse HEAD)"
+REMOTE_HEAD="$(git rev-parse origin/main)"
+printf 'LOCAL_HEAD=%s\nREMOTE_HEAD=%s\n' "$LOCAL_HEAD" "$REMOTE_HEAD"
+git rev-list --left-right --count HEAD...origin/main
 ```
 
-Required before any update:
+Required before changing anything:
 
 ```text
 branch = main
 worktree = clean
 ```
 
-If the worktree is dirty, STOP and report the paths. Do not reset, clean, stash, checkout, or discard anything.
+If dirty, STOP and report the paths. Do not reset/clean/stash/discard.
 
-Now classify the local branch **without modifying it**:
+If `LOCAL_HEAD == REMOTE_HEAD`, continue.
 
-```bash
-LOCAL_HEAD="$(git rev-parse HEAD)"
-REMOTE_HEAD="$(git rev-parse origin/main)"
-
-printf 'LOCAL_HEAD=%s\n' "$LOCAL_HEAD"
-printf 'REMOTE_HEAD=%s\n' "$REMOTE_HEAD"
-git rev-list --left-right --count HEAD...origin/main
-
-git log --oneline --decorate --graph --max-count=30 HEAD origin/main
-```
-
-Then use these exact ancestry checks:
-
-```bash
-if [ "$LOCAL_HEAD" = "$REMOTE_HEAD" ]; then
-  printf '%s\n' 'BRANCH_RELATION=equal'
-elif git merge-base --is-ancestor HEAD origin/main; then
-  printf '%s\n' 'BRANCH_RELATION=local-behind-fast-forward-safe'
-elif git merge-base --is-ancestor origin/main HEAD; then
-  printf '%s\n' 'BRANCH_RELATION=local-ahead-unpublished'
-else
-  printf '%s\n' 'BRANCH_RELATION=diverged'
-fi
-```
-
-### If `BRANCH_RELATION=equal`
-
-Continue to Step 2.
-
-### If `BRANCH_RELATION=local-behind-fast-forward-safe`
-
-Fast-forward only:
+If local HEAD is an ancestor of `origin/main`, fast-forward only:
 
 ```bash
 git merge --ff-only origin/main
-git rev-parse HEAD
-git status --short
 ```
 
-Then continue to Step 2.
-
-### If `BRANCH_RELATION=local-ahead-unpublished` or `BRANCH_RELATION=diverged`
-
-**STOP. Do not merge, rebase, reset, cherry-pick, push or pull.**
-
-Return enough evidence for owner review:
+If local is ahead or histories diverged, STOP. Do not merge/rebase/reset/cherry-pick/push. Return:
 
 ```bash
 git log --oneline --decorate --graph --max-count=40 --all
 git log --oneline origin/main..HEAD
 git diff --name-status origin/main...HEAD
-git diff --stat origin/main...HEAD
 ```
 
-Also return the commit message and changed paths for every local-only commit:
+After equality/fast-forward:
 
 ```bash
-git log --format='%H %s' origin/main..HEAD
+git rev-parse HEAD
+git status --short
 ```
 
-Do not proceed to Simulator tests until those unpublished commits are reconciled deliberately.
-
-After a safe equality/fast-forward, record the exact resulting HEAD as `STARTING_SHA`.
+Record exact HEAD as `STARTING_SHA`.
 
 ---
 
-## Step 2 — run the focused Simulator tooling tests once
+## Step 2 — focused tooling tests, once
 
-`tests/` is intentionally not a Python package. Run from inside that directory:
+`tests/` is intentionally not a package:
 
 ```bash
 cd tests
 PYTHONPATH=..:../src python3 -m unittest \
+  test_encyclopedia_v01_headless_traversal.py \
   test_headless_greia_simulator.py \
   test_greia_simulator.py \
   -v
@@ -192,105 +127,116 @@ Required:
 TEST_RC=0
 ```
 
-The headless test module must now include explicit Collection-first route coverage.
-
-If the tests fail, STOP. Do not repair or rerun. Return the exact first failure.
+If this fails: STOP, do not fix and do not rerun. Return the first failure.
 
 ---
 
-## Step 3 — create evidence for one real built-in Encyclopedia smoke launch
+## Step 3 — create one fresh traversal evidence run
 
-From repository root:
+Use Bash:
 
 ```bash
 RUN_ID="$(date +%Y%m%d_%H%M%S)"
-EVIDENCE="./tmp/encyclopedia-v01-acceptance/${RUN_ID}-headless-route-smoke"
-WORKSPACE="$HOME/.greia-simulator-encyclopedia-v01-headless-${RUN_ID}"
+EVIDENCE="./tmp/encyclopedia-v01-acceptance/${RUN_ID}-mechanical-traversal"
+WORKSPACE="$HOME/.greia-simulator-encyclopedia-v01-traversal-${RUN_ID}"
 mkdir -p "$EVIDENCE"
 printf '%s\n' "$EVIDENCE" > ./tmp/encyclopedia-v01-acceptance/.latest-run
 
 git rev-parse HEAD > "$EVIDENCE/starting-sha.txt"
 git status --short > "$EVIDENCE/git-status-before.txt"
-printf '%s\n' "tmp/encyclopedia-v01-acceptance/20260828_044052/" \
-  > "$EVIDENCE/source-gate-evidence.txt"
-printf '%s\n' "tmp/encyclopedia-v01-acceptance/20260828_061732-headless-smoke/" \
-  > "$EVIDENCE/previous-smoke-evidence.txt"
+printf '%s\n' "tmp/encyclopedia-v01-acceptance/20260828_044052/" > "$EVIDENCE/source-gate-evidence.txt"
+printf '%s\n' "tmp/encyclopedia-v01-acceptance/20260828_070951-headless-route-smoke/" > "$EVIDENCE/lifecycle-smoke-evidence.txt"
 ```
 
-Simulator mutable state stays outside the checkout in `$WORKSPACE`.
+Simulator mutable state remains outside the checkout in `$WORKSPACE`.
 
 ---
 
-## Step 4 — run exactly one Collection-first built-in headless launch
+## Step 4 — run exactly one 43-page mechanical traversal
 
-Run exactly once:
+Run once:
 
 ```bash
-python3 tools/headless_greia_simulator.py \
-  --activity-dir activities/enciclopedia_greia \
+python3 tools/encyclopedia_v01_headless_traversal.py \
   --workspace-dir "$WORKSPACE" \
+  --evidence-dir "$EVIDENCE" \
   --locale it \
   --viewport 1024x600 \
-  --survival-seconds 12 \
-  --press-key RETURN \
-  --screenshot-prefix "$EVIDENCE/enciclopedia" \
-  2>&1 | tee "$EVIDENCE/headless-smoke.txt"
-SMOKE_RC=${PIPESTATUS[0]}
+  2>&1 | tee "$EVIDENCE/mechanical-traversal.txt"
+TRAVERSAL_RC=${PIPESTATUS[0]}
 ```
 
-Run this command in **Bash** so `PIPESTATUS[0]` is the real simulator exit code.
+Do not interrupt a healthy run.
 
-Expected behavior, in order:
+Expected PASS contract:
 
 ```text
-built-in Activity detected; skipping developer publication
-semantic route is logged as:
-  home[...] = <Collection>
-  [optional group[...] = <sub-Collection>]
-  activity[...] = org.greia.enciclopedia
-real Greia child Shell starts
-remote bridge comes up
-first Shell frame captured in mode=profiles
-profile RETURN reaches mode=activities / Collection Home
-semantic RIGHT/RETURN steps traverse the logged Collection-first route
-real Encyclopedia frame arrives with mode=activity
-RETURN is delivered to the Encyclopedia as the bounded interaction
-Activity/Shell survive >=12 seconds
-protected Greia Home is invoked through platform chrome
-remote bridge returns to mode=activities
-runner reports PASS
+real Shell route resolves to org.greia.enciclopedia
+real Shell first frame arrives
+real Encyclopedia home frame arrives
+6 / 6 section pages captured
+36 / 36 factual entries reached
+36 / 36 bounded semantic ACTIVATE interactions delivered
+before + after PNG captured for every factual entry
+internal semantic ESCAPE/Back returns from every entry
+section -> Encyclopedia home returns work
+protected Greia Home returns to real Shell
+traversal-summary.json status = PASS
+TRAVERSAL_RC = 0
 ```
 
-There must be **no**:
+Expected screenshot structure includes:
 
 ```text
-Activity identity/alias collision
-raw "launcher index X/Y" navigation
+screenshots/00-shell-profile-picker.png
+screenshots/00-encyclopedia-home.png
+screenshots/sections/01-animals.png
+...
+screenshots/sections/06-history.png
+screenshots/entries/animals.lion-before.png
+screenshots/entries/animals.lion-after.png
+...
+screenshots/entries/history.pyramids-before.png
+screenshots/entries/history.pyramids-after.png
+screenshots/98-encyclopedia-home-after-traversal.png
+screenshots/99-returned-shell.png
 ```
 
-Expected evidence files include:
+The driver records `changed_pixel_fraction` for each before/after pair. That metric only proves the frame changed; it is **not** permission to claim the planned signature interaction is visually correct.
+
+### Hard stop
+
+If `TRAVERSAL_RC != 0`, STOP. Do not edit source and do not rerun. Preserve:
 
 ```text
-enciclopedia-01-shell-frame.png
-enciclopedia-02-activity-first-frame.png
-enciclopedia-03-post-interaction.png
-enciclopedia-04-returned-shell.png
+FIRST_FAILURE.txt
+traversal-summary.json
+mechanical-traversal.txt
 enciclopedia-child.log
-headless-smoke.txt
+all screenshots produced before failure
 ```
-
-If `SMOKE_RC != 0`, STOP. Do not repair and do not rerun. Return:
-
-- the exact logged semantic route;
-- the exact first navigation stage that stalled, if any;
-- the child log;
-- every screenshot that was actually produced.
 
 ---
 
-## Step 5 — final clean-state evidence
+## Step 5 — inspect the libpng warning honestly
 
-If the smoke run passes:
+The previous green smoke emitted:
+
+```text
+libpng error: bad adaptive filter value
+```
+
+Do not assume this came from screenshot encoding. The smoke PNGs were valid, so this may instead be a failed PNG asset decode with a fail-soft visual fallback.
+
+The traversal summary automatically collects `libpng` / warning lines from the child log under `child_warnings`.
+
+Report those lines exactly. Do not repair them in this run.
+
+---
+
+## Step 6 — final clean state
+
+Regardless of traversal PASS/FAIL:
 
 ```bash
 git diff --check > "$EVIDENCE/git-diff-check.txt" 2>&1
@@ -298,60 +244,63 @@ DIFF_RC=$?
 git status --short > "$EVIDENCE/git-status-after.txt"
 ```
 
-Required:
+Source worktree must remain clean. `tmp/` is gitignored.
 
-```text
-DIFF_RC=0
-source worktree remains clean
+Create one evidence archive for owner/primary-agent visual review; this is evidence only, not a project package:
+
+```bash
+python3 - <<'PY'
+from pathlib import Path
+import shutil
+p = Path("$(cat ./tmp/encyclopedia-v01-acceptance/.latest-run)")
+shutil.make_archive(str(p), "zip", root_dir=p)
+print(str(p) + ".zip")
+PY
 ```
 
-The project-local `tmp/` evidence is gitignored and does not count as source dirt.
+If the shell does not expand the command substitution inside that quoted Python block on your environment, instead resolve `EVIDENCE` first and use Python with that exact path. Do not modify source to create the archive.
 
 ---
 
 ## Return exactly this report
 
-If Step 1 stops for unpublished/diverged history, return:
-
-```text
-LOCAL_HEAD=
-REMOTE_HEAD=
-BRANCH_RELATION=local-ahead-unpublished/diverged
-LOCAL_ONLY_COMMITS=
-LOCAL_ONLY_CHANGED_PATHS=
-WORKTREE=clean/dirty
-FIRST_FAILURE=branch histories require deliberate reconciliation
-```
-
-Otherwise return the smoke report:
-
 ```text
 STARTING_SHA=
-FOCUSED_SIMULATOR_TESTS=PASS/FAIL
-HEADLESS_BUILTIN_DETECTION=PASS/FAIL/not-reached
-COLLECTION_FIRST_ROUTE_RESOLVED=PASS/FAIL/not-reached
-ROUTE=<exact logged route or not-reached>
-SHELL_FIRST_FRAME=PASS/FAIL/not-reached
-PROFILE_TO_COLLECTION_HOME=PASS/FAIL/not-reached
-COLLECTION_ROUTE_NAVIGATION=PASS/FAIL/not-reached
-ENCYCLOPEDIA_LAUNCH_VIA_REAL_SHELL=PASS/FAIL/not-reached
-ENCYCLOPEDIA_FIRST_ACTIVITY_FRAME=PASS/FAIL/not-reached
-SURVIVAL_12S=PASS/FAIL/not-reached
-BOUNDED_RETURN_INTERACTION=PASS/FAIL/not-reached
+FOCUSED_TRAVERSAL_TESTS=PASS/FAIL
+MECHANICAL_TRAVERSAL_RC=
+SHELL_TO_ENCYCLOPEDIA=PASS/FAIL/not-reached
+SECTIONS_CAPTURED=<n>/6
+ENTRIES_REACHED=<n>/36
+ENTRY_INTERACTIONS_DELIVERED=<n>/36
+ENTRY_BEFORE_AFTER_PAIRS=<n>/36
+INTERNAL_BACK_RETURNS=<n>/36
+ENCYCLOPEDIA_HOME_RETURN=PASS/FAIL/not-reached
 PROTECTED_HOME_RETURN_TO_SHELL=PASS/FAIL/not-reached
-HEADLESS_SMOKE_RC=
-WORKTREE_AFTER=
-FIRST_FAILURE=<none or exact failure>
+TRAVERSAL_SUMMARY_STATUS=
+CHILD_WARNINGS=<exact warning lines or none>
+WORKTREE_AFTER=clean/dirty
+FIRST_FAILURE=<none or exact stage/message>
 EVIDENCE_DIR=
+EVIDENCE_ZIP=
 ```
 
 Also return:
 
-- complete `headless-smoke.txt` failure tail or PASS summary;
-- `enciclopedia-child.log` (or relevant tail if large);
-- names and sizes of every produced PNG;
+- the complete PASS summary or failure tail from `mechanical-traversal.txt`;
+- `traversal-summary.json`;
+- `FIRST_FAILURE.txt` if present;
+- the complete short `enciclopedia-child.log`, or relevant warning/error tail if it becomes large;
+- count of PNG files and total evidence size;
 - final `git status --short`.
 
-Do not claim the full 43-page Simulator traversal or pre-reader acceptance from this task.
+Do **not** claim from this task:
 
-If this passes, the next tranche will build/run the **mechanical 43-page traversal and screenshot capture** on the now-proven headless lane. Subjective pre-reader/visual-quality judgment remains a separate human/vision review of those captured frames.
+```text
+signature interactions visually accepted
+pointer/keyboard parity accepted
+pre-reader UX accepted
+responsive-layout matrix accepted
+narration accepted
+```
+
+If the mechanical traversal is green, the next task is **visual review of these captured frames plus the remaining pointer/pre-reader/responsive acceptance**, not another source-gate run.
