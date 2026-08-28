@@ -186,8 +186,51 @@ class PyramidsPage(EncyclopediaPage):
         panel = pygame.Rect(305, 510, 400, 68)
         pygame.draw.rect(surface, (255, 245, 214), panel, border_radius=22)
         pygame.draw.rect(surface, (91, 70, 55), panel, 3, border_radius=22)
+
         text = self.context.resources.text(self._caption_key)
-        rendered = self.context.typography.render(text, FontRole.BODY, 18, (56, 49, 43))
-        if rendered.get_width() > panel.width - 26:
-            rendered = self.context.typography.render(text, FontRole.BODY, 15, (56, 49, 43))
+        color = (56, 49, 43)
+        max_width = panel.width - 28
+
+        # Prefer one readable line when possible. Approved narration wording is
+        # authoritative, so layout adapts to text rather than truncating or
+        # rewriting it.
+        for size in (18, 17, 16, 15, 14):
+            rendered = self.context.typography.render(text, FontRole.BODY, size, color)
+            if rendered.get_width() <= max_width:
+                surface.blit(rendered, rendered.get_rect(center=panel.center))
+                return
+
+        # Long localized wording receives a balanced two-line treatment. Try
+        # the largest body size that fits both lines and the panel height.
+        words = text.split()
+        for size in (15, 14, 13, 12):
+            candidates: list[tuple[int, pygame.Surface, pygame.Surface]] = []
+            for split in range(1, len(words)):
+                first = " ".join(words[:split])
+                second = " ".join(words[split:])
+                first_surface = self.context.typography.render(first, FontRole.BODY, size, color)
+                second_surface = self.context.typography.render(second, FontRole.BODY, size, color)
+                if max(first_surface.get_width(), second_surface.get_width()) > max_width:
+                    continue
+                total_height = first_surface.get_height() + second_surface.get_height() + 2
+                if total_height > panel.height - 12:
+                    continue
+                balance = abs(first_surface.get_width() - second_surface.get_width())
+                candidates.append((balance, first_surface, second_surface))
+            if not candidates:
+                continue
+            _, first_surface, second_surface = min(candidates, key=lambda item: item[0])
+            total_height = first_surface.get_height() + second_surface.get_height() + 2
+            top = panel.centery - total_height // 2
+            first_rect = first_surface.get_rect(centerx=panel.centerx, top=top)
+            second_rect = second_surface.get_rect(
+                centerx=panel.centerx,
+                top=first_rect.bottom + 2,
+            )
+            surface.blit(first_surface, first_rect)
+            surface.blit(second_surface, second_rect)
+            return
+
+        # Defensive final fallback for unexpectedly long future localization.
+        rendered = self.context.typography.render(text, FontRole.BODY, 10, color)
         surface.blit(rendered, rendered.get_rect(center=panel.center))
