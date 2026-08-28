@@ -54,7 +54,7 @@ def main() -> int:
     package_root = Path(__file__).resolve().parent
     resources = _localized_resources(package_root)
     typography = CachedEncyclopediaTypography()
-    visuals = VisualLibrary()
+    visuals = VisualLibrary(package_root)
     audio = EncyclopediaAudio(resources)
     palette = EncyclopediaPalette.from_theme(get_theme())
 
