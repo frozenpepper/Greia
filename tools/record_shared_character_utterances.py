@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 from pathlib import Path
 import sys
 
@@ -108,6 +109,45 @@ def _row(
     }
 
 
+def _existing_candidate_state(receipt: Path) -> tuple[str, str]:
+    """Surface the verifier state from an existing receipt instead of hiding it."""
+    try:
+        payload = json.loads(receipt.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return "BLOCKED_PARTIAL_OUTPUT", f"existing receipt is unreadable: {exc}"
+
+    verification = payload.get("verification") or {}
+    disposition = str(verification.get("disposition") or "")
+    verifier = verification.get("verifier_id") or "unknown"
+    transcript = verification.get("transcript")
+    score = verification.get("score")
+
+    if disposition == "WARN":
+        return (
+            "REVIEW_REQUIRED_ASR_WARNING",
+            "existing candidate remains unresolved; "
+            f"verifier={verifier}; verification=WARN; "
+            f"transcript={transcript!r}; score={score}",
+        )
+
+    return (
+        "EXISTING_REVIEW_CANDIDATE",
+        "not regenerated; inspect existing audio + receipt; "
+        f"verifier={verifier}; verification={disposition or 'UNKNOWN'}; "
+        f"transcript={transcript!r}; score={score}",
+    )
+
+
+def _result_counts_as_success(result: str) -> bool:
+    # A final Whisper WARN is useful evidence, but it is not a clean production
+    # result. Keep the candidate + receipt for inspection and make the batch
+    # non-green so the warned cue remains explicit work.
+    return result in {
+        "REVIEW_REQUIRED",
+        "EXISTING_REVIEW_CANDIDATE",
+    }
+
+
 def run(output_root: Path, characters: tuple[str, ...]) -> list[dict[str, object]]:
     output_root.mkdir(parents=True, exist_ok=True)
     rows: list[dict[str, object]] = []
@@ -126,6 +166,7 @@ def run(output_root: Path, characters: tuple[str, ...]) -> list[dict[str, object
 
                             if output.exists() or receipt.exists():
                                 if output.is_file() and output.stat().st_size > 1000 and receipt.is_file():
+                                    existing_result, existing_notes = _existing_candidate_state(receipt)
                                     rows.append(
                                         _row(
                                             character=character,
@@ -134,8 +175,8 @@ def run(output_root: Path, characters: tuple[str, ...]) -> list[dict[str, object
                                             variant=variant,
                                             text=text,
                                             output=output,
-                                            result="EXISTING_REVIEW_CANDIDATE",
-                                            notes="not regenerated; inspect existing audio + receipt",
+                                            result=existing_result,
+                                            notes=existing_notes,
                                         )
                                     )
                                     continue
@@ -216,25 +257,24 @@ def main(argv: list[str] | None = None) -> int:
     output_root = args.output_root.resolve()
     characters = _selected_characters(args.characters)
     rows = run(output_root, characters)
+
+    # Re-write the CSV on every pass so existing receipts (including old WARNs)
+    # remain visible in the current review ledger.
     csv_path = write_review_csv(output_root, rows)
 
-    failures = [
-        row
-        for row in rows
-        if row["result"]
-        not in {
-            "REVIEW_REQUIRED",
-            "REVIEW_REQUIRED_ASR_WARNING",
-            "EXISTING_REVIEW_CANDIDATE",
-        }
+    unresolved = [row for row in rows if not _result_counts_as_success(str(row["result"]))]
+    asr_warnings = [
+        row for row in rows if row["result"] == "REVIEW_REQUIRED_ASR_WARNING"
     ]
     print(f"Review CSV: {csv_path}", flush=True)
     print(
-        f"Candidates: {len(rows) - len(failures)}; blocked/unavailable/rejected: {len(failures)}",
+        f"Clean review candidates: {len(rows) - len(unresolved)}; "
+        f"ASR warnings: {len(asr_warnings)}; other blocked/unavailable/rejected: "
+        f"{len(unresolved) - len(asr_warnings)}",
         flush=True,
     )
     print("Human listening review remains mandatory.", flush=True)
-    return 0 if not failures else 2
+    return 0 if not unresolved else 2
 
 
 if __name__ == "__main__":
