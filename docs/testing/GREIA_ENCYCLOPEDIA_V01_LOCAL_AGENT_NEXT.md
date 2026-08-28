@@ -4,23 +4,33 @@ This is the single rolling instruction for the **next** owner-machine task.
 
 ## Current state
 
-The previous source-gate run reached `focused-tests` and executed the real test suite successfully enough to expose two genuine pre-existing drifts:
+The previous source-gate run reached the repository-wide `make verify` stage and ran **1431 tests**. Exactly one failure remained:
 
-1. `encyclopedia/research/space/saturn.md` was the only factual authority missing the required `## Scope guardrails` section.
-2. `tests/test_activity_contract.py` expected `org.greia.piccola_serra`, while the authoritative Activity manifest uses `org.greia.piccola-serra`.
+```text
+Activity org.greia.enciclopedia must declare package-owned icon (got globe)
+```
 
-Both have now been corrected on `origin/main` by the primary agent.
+That source drift has now been corrected on `origin/main`:
 
-Already proven in earlier runs:
+- `activities/enciclopedia_greia/assets/icon.png` now exists as a unique package-owned **256x256 RGBA** PNG;
+- `activities/enciclopedia_greia/activity.toml` now declares:
+
+```text
+icon = "package:assets/icon.png"
+```
+
+Already proven in earlier source-gate runs:
 
 - voice ledger is canonical and idempotent;
 - exactly **378** voice-request rows exist;
 - all 378 rows are currently `REQUESTED`;
-- voice synchronization generates **zero** audio files;
-- the source-gate unittest invocation now actually executes the repository tests;
-- the previous failed run left the worktree clean.
+- `voice-sync` PASS;
+- `voice-sync-check` PASS;
+- focused source tests PASS: **53/53**;
+- the previous `make verify` run reached **1431 tests with only the icon failure**;
+- the previous failed run left the worktree clean;
+- this workflow generates **ZERO voice files**.
 
-This task generates **ZERO voice files**.
 Do **not** start the Simulator in this task.
 
 ---
@@ -45,7 +55,7 @@ branch = main
 worktree = clean
 ```
 
-If unrelated source is dirty or the pull cannot fast-forward, STOP and report it. Do not reset/clean/discard anything.
+If unrelated source is dirty or the pull cannot fast-forward, STOP and report it. Do not reset, clean, checkout, stash, or discard anything.
 
 ---
 
