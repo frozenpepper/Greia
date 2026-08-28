@@ -4,7 +4,7 @@
 **Canonical repository:** `frozenpepper/Greia`
 **Canonical branch:** `main`
 **Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**
-**Current parallel visual focus:** **Encyclopedia golden-master capture complete / owner visual direction gate**
+**Current parallel visual focus:** **Encyclopedia E2R refinement complete / owner visual direction gate**
 **Purpose:** short current continuation contract. Detailed chronology belongs in active plans and dated reviews/handovers.
 
 Historical long-form root state remains preserved under:
@@ -145,7 +145,8 @@ Active visual reauthoring subplan:
 docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md
 ```
 
-The first bounded E1/E2 source tranche is now on `main`:
+The first bounded E1/E2 source tranche and the E2R visual refinement
+are now on `main`:
 
 ```text
 activities/enciclopedia_greia/enciclopedia_presentation.py
@@ -155,7 +156,7 @@ activities/enciclopedia_greia/assets/runtime/*.png  # six built runtime renditio
 Home / Animals / Lion / Saturn / Gears / Pyramids page integrations
 tools/build_encyclopedia_visual_assets.py
 tools/encyclopedia_v01_golden_master_capture.py
-tools/encyclopedia_v01_golden_master_review.py
+tools/encyclopedia_v01_golden_master_review.py        # adds initial-vs-activated
 tools/encyclopedia_v01_golden_master_zip.py
 tests/test_activity_enciclopedia_visual_foundation.py
 tests/test_encyclopedia_authoring_tools.py        # tightened to subtract VisualLibrary.ART_ASSETS
@@ -168,28 +169,35 @@ python3 tools/build_encyclopedia_visual_assets.py
 python3 tools/build_encyclopedia_visual_assets.py --check
 ```
 
-`--check` rebuilds the six masters temporarily and byte-compares them against the committed runtime PNG pack, preventing stale generated art from silently passing.
+`--check` rebuilds the six masters temporarily and byte-compares
+them against the committed runtime PNG pack, preventing stale
+generated art from silently passing.
 
 Current truthful visual state:
 
 ```text
-E1 SHARED PRESENTATION SOURCE: IMPLEMENTED ON MAIN
-E2 SIX GOLDEN-MASTER PAGE SOURCES: IMPLEMENTED ON MAIN
-EDITABLE SVG MASTERS: 6 / 6 ON MAIN
-RUNTIME PNG PACK: 6 / 6 COMMITTED + SHA256-VERIFIED BY --CHECK
-FOCUSED ENCYCLOPEDIA TESTS: 19 / 19 PASS
-make verify ON REAL CHECKOUT AT FINAL SHA 08fe71b: 1462 / 1462 PASS
-REAL GREIA SIMULATOR LAUNCH/SURVIVAL: 6 / 6 SESSIONS PASS AT FINAL SHA
-PROTECTED GREIA HOME RETURN: 6 / 6 SESSIONS VERIFIED
-ACTIVATE PAYOFFS CAPTURED: 4 / 4 FACTUAL ENTRIES
-PRE-READER / NO-READING PROTOTYPE REVIEW: yes/yes/yes/visual
-CURATED REVIEW SET: docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/
-OWNER-TRANSFER ZIP: GREIA_VISUAL_REVIEW_ENCYCLOPEDIA_GOLDEN_MASTER_2026-08-28.zip
-OWNER VISUAL DIRECTION APPROVAL: PENDING
-E3 / E4 BULK MIGRATION: BLOCKED
+E1 SHARED PRESENTATION SOURCE:               IMPLEMENTED ON MAIN
+E2 SIX GOLDEN-MASTER PAGE SOURCES:           IMPLEMENTED ON MAIN
+E2R VISUAL REFINEMENT:                      IMPLEMENTED ON MAIN
+EDITABLE SVG MASTERS:                       6 / 6 ON MAIN
+RUNTIME PNG PACK:                           6 / 6 COMMITTED + SHA256-VERIFIED BY --CHECK
+FOCUSED ENCYCLOPEDIA TESTS:                 19 / 19 PASS
+make verify ON REAL CHECKOUT AT FINAL SHA 8fa41a3:    1462 / 1462 PASS
+REAL GREIA SIMULATOR LAUNCH/SURVIVAL:        6 / 6 SESSIONS PASS AT FINAL SHA
+PROTECTED GREIA HOME RETURN:                6 / 6 SESSIONS VERIFIED
+ACTIVATE PAYOFFS CAPTURED:                  4 / 4 FACTUAL ENTRIES (with strengthened visuals)
+PRE-READER / NO-READING PROTOTYPE REVIEW:    yes/yes/yes/visual
+CURATED REVIEW SET:                         docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/
+OWNER-TRANSFER ZIP:                         GREIA_VISUAL_REVIEW_ENCYCLOPEDIA_GOLDEN_MASTER_2026-08-28.zip
+OWNER VISUAL DIRECTION APPROVAL:            PENDING
+E3 / E4 BULK MIGRATION:                      BLOCKED
 ```
 
-The Activity fails soft to its previous procedural scenes when the generated runtime art is absent, so current `main` remains mechanically usable. That fallback does **not** count as golden-master visual evidence. With the runtime PNGs now committed and the curated review set + owner-transfer ZIP in place, the next step is the owner visual direction decision, not more code.
+The Activity fails soft to its previous procedural scenes when the
+generated runtime art is absent, so current `main` remains
+mechanically usable. That fallback does **not** count as
+golden-master visual evidence. The next step is the owner visual
+direction decision on the E2R prototypes, not more code.
 
 Current Encyclopedia continuation authority:
 
@@ -263,12 +271,13 @@ Current x86 update architecture remains provisional single-root; signed-update f
 
 ### Current Encyclopedia visual lane
 
-The local-agent golden-master validation gate is now complete at the
-final runtime-relevant SHA `08fe71b`. The next action is the owner
-visual direction decision on the six prototypes, not more code.
+The local-agent golden-master validation gate is now complete
+through E2R at the final runtime-relevant SHA `8fa41a3`. The next
+action is the owner visual direction decision on the six
+prototypes, not more code.
 
 ```text
-local validation gate:                COMPLETE at SHA 08fe71b
+local validation gate:                COMPLETE at SHA 8fa41a3 (E2R refinement)
 curated review set:                   docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/
 owner-transfer ZIP:                   GREIA_VISUAL_REVIEW_ENCYCLOPEDIA_GOLDEN_MASTER_2026-08-28.zip
 owner visual direction approval:      PENDING
@@ -279,11 +288,12 @@ Exact review/run-book for the owner:
 ```text
 docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/REVIEW.md
 docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/contact-sheet-primary.png
+docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/initial-vs-activated.png
 docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md
 ```
 
 Do not run the broad 43-page visual recapture and do not enter E3/E4
-until the owner explicitly accepts the golden-master direction.
+until the owner explicitly accepts the E2R direction.
 
 ### Blocking platform lane
 

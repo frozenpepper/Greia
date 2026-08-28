@@ -422,6 +422,63 @@ Avoid abstraction theatre: if a helper is used by only one page, keep it local u
 
 **Hard gate:** no E3 before E2 direction approval.
 
+## E2R — Golden-master visual refinement **[SOURCE + RUNTIME ART + ACTUAL-PIXEL CAPTURE COMPLETE; OWNER DIRECTION STILL PENDING]**
+
+Every required correction in the primary review
+(`docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/PRIMARY_REVIEW_2026-08-29.md`)
+was addressed on the same six pages:
+
+- Home portals are miniature illustrated worlds (habitat vignette,
+  observatory, landscape, body, workbench, excavation). Leo leans
+  over the book; a magnifying glass floats above.
+- Animals sun moved top-left, Back area is clear, six animals on
+  habitat props inside one continuous landscape. Tito peeks in
+  the foreground grass.
+- Lion: deeper mane with concentric ring detail, layered hills,
+  foreground acacia, Tito integrated foreground-left, scene-native
+  felt-tag tokens, mane ACTIVATE with two growth rings + spike
+  marks + color shift.
+- Saturn: deep-space reference palette preserved, atmospheric
+  halo + banding + Cassini-like ring gap + glow, telescope on
+  tripod, star chart + compass, Leo beside the telescope,
+  telescope-card tokens, full orbit path on ACTIVATE (sun + dotted
+  line + Earth + Saturn marker).
+- Gears: real workshop wall, hanging tools, pegboard shelf,
+  chalkboard, blueprint, wooden workbench, three meshing gears on
+  bench with NO rack collision, Dani integrated on the bench,
+  workshop-tag tokens, three contact-point rings + motion arrows
+  on ACTIVATE.
+- Pyramids: hero pyramid with capstone, three **authored** workers
+  (no more stick figures), wooden ramp, Leo as field-guide with
+  field notebook, excavation tokens, outlined base block + label
+  arrows on ACTIVATE.
+- Discovery-token silhouettes are now scene-native (felt tag /
+  telescope card / workshop tag / excavation marker); shared
+  interaction/state logic remains one component.
+- Baked presenters removed from the four entry-page SVGs and from
+  Home/Animals; the runtime canonical character is the single
+  source of truth, drawn at the integrated scene position.
+
+Source state at `8fa41a3`:
+
+```text
+make verify:                                          1462 / 1462 PASS
+tests.test_activity_enciclopedia + visual_foundation:  19 / 19 PASS
+build --check:                                        PASS 6
+real Greia Simulator (6 sessions, headless):            6 / 6 PASS
+protected Greia Home return:                          6 / 6 PASS
+ACTIVATE payoff captured:                              4 / 4 PASS
+pre-reader/no-reading prototype review:               yes/yes/yes/visual
+```
+
+Owner-transfer archive (not committed):
+`GREIA_VISUAL_REVIEW_ENCYCLOPEDIA_GOLDEN_MASTER_2026-08-28.zip`
+(685 KB; REVIEW.md, layout-audit.json, contact-sheet-primary.png,
+initial-vs-activated.png, 4 curated PNGs).
+
+**Hard gate:** no E3 before the owner direction decision on the
+six refined prototypes.
+
 ## E3 — Section-page reauthoring
 
 Reauthor all six section pages first so navigation feels coherent:
@@ -658,3 +715,41 @@ The previous headless capture-settle harness repair remains useful and should be
 
 
 **Next exact action:** execute `docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md`; stop after the golden-master contact sheet/evidence for owner review.
+
+## 2026-08-28 — E2R visual refinement (this work, at SHA `8fa41a3`)
+
+- Addressed every E2R correction in the primary review
+  (`docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/PRIMARY_REVIEW_2026-08-29.md`)
+  on the same six pages.
+- Discovery-token silhouettes are now scene-native (felt tag /
+  telescope card / workshop tag / excavation marker); shared
+  interaction/state logic remains one component via a new
+  `token_shape` parameter on `draw_discovery_token`.
+- Baked presenters removed from all six SVGs; runtime canonical
+  character draws at the integrated scene position.
+- First-ACTIVATE payoffs strengthened: lion mane growth rings +
+  spike marks + color shift, Saturn full orbit path (sun + dotted
+  line + Earth + Saturn marker), Gears contact-point rings +
+  motion arrows, Pyramids outlined base block + label arrows.
+- New permanent review tool `tools/encyclopedia_v01_golden_master_review.py`
+  produces the curated 4-shot set, the 3×2 contact sheet, and a
+  new 2×4 initial-vs-activated comparison sheet.
+- `make verify` 1462/1462, focused Encyclopedia tests 19/19,
+  build `--check` PASS 6, headless Simulator 6/6 sessions PASS,
+  protected Greia Home 6/6, ACTIVATE payoffs 4/4, pre-reader/no-
+  reading `yes/yes/yes/visual`.
+- Updated curated review set under
+  `docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/`
+  (REVIEW.md updated for E2R, layout-audit.json reflects new token
+  shapes and presenter positions, contact-sheet-primary.png,
+  initial-vs-activated.png, 4 curated PNGs).
+- New non-committed owner ZIP:
+  `GREIA_VISUAL_REVIEW_ENCYCLOPEDIA_GOLDEN_MASTER_2026-08-28.zip`
+  (685 KB; 8 files).
+- `libpng error: bad adaptive filter value` line in the child log
+  remains an unresolved diagnostic per the local-agent brief §7.
+- **Owner direction approval still pending.** E3 section-page
+  migration and E4 entry migration remain hard-blocked.
+
+**Next exact action:** STOP and wait for owner direction decision
+on the E2R prototypes before any E3 / E4 page migration.

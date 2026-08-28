@@ -26,6 +26,7 @@ def build_zip() -> Path:
             "REVIEW.md",
             "layout-audit.json",
             "contact-sheet-primary.png",
+            "initial-vs-activated.png",
             "screenshots/01-home.png",
             "screenshots/02-lion-activated.png",
             "screenshots/03-home-compact.png",

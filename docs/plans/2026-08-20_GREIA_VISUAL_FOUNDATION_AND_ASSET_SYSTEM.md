@@ -656,3 +656,13 @@ The entries below preserve the workstream chronology. Corrections/new state are 
 - Pre-reader/no-reading review on the six prototypes: `PRE_READER_CORE_FLOW_PASS=yes`, `TEXT_REQUIRED_FOR_GAMEPLAY=no`, `NO_READING_FIRST_ACTION_PASS=yes`, `PRIMARY_INSTRUCTION_CHANNEL=visual`.
 - This is `SIMULATOR VISUAL REVIEW` evidence only. **Owner direction approval still pending.** E3 section-page migration and E4 entry migration remain hard-blocked.
 
+## 2026-08-28 — Encyclopedia E2R refinement (per primary review)
+
+- Addressed every E2R correction in `docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/PRIMARY_REVIEW_2026-08-29.md` on the same six pages: Home miniature worlds, Animals sun/Back fix + habitat props, Lion deeper mane + felt-tag tokens + integrated Tito + strengthened mane reveal, Saturn preserved reference + telescope-card tokens + Leo at telescope + full orbit path reveal, Gears real workshop + no rack collision + workshop-tag tokens + contact-point motion reveal, Pyramids authored workers + excavation tokens + Leo field-guide + outlined base block reveal.
+- Discovery-token silhouettes are now scene-native (felt tag / telescope card / workshop tag / excavation marker). Shared interaction/state logic remains one component (`draw_discovery_token` accepts a `token_shape` parameter).
+- Baked presenters removed from the six SVGs; runtime canonical character draws at the integrated scene position.
+- Source at `8fa41a3`: `make verify` 1462/1462, focused Encyclopedia tests 19/19, build `--check` PASS 6, headless Simulator 6/6 sessions PASS, protected Greia Home 6/6, ACTIVATE payoffs 4/4, pre-reader/no-reading `yes/yes/yes/visual`.
+- Updated curated review set + new `initial-vs-activated` comparison sheet under `docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/`. New non-committed owner ZIP `GREIA_VISUAL_REVIEW_ENCYCLOPEDIA_GOLDEN_MASTER_2026-08-28.zip` (685 KB).
+- `libpng error: bad adaptive filter value` line in the child log remains an unresolved diagnostic per the local-agent brief §7.
+- **Owner direction approval is still pending.** E3/E4 remain hard-blocked.
+

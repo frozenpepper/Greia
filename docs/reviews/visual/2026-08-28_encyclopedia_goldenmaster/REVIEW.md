@@ -1,251 +1,188 @@
-# Encyclopedia v0.1 Golden-Master Visual Review
+# Encyclopedia v0.1 Golden-Master E2R — Visual Review
 
-**Status:** SIMULATOR VISUAL REVIEW (DESKTOP, HEADLESS GREIA SHELL, no physical hardware)
+**Status:** SIMULATOR VISUAL REVIEW (DESKTOP, HEADLESS GREIA SHELL)
 **Date:** 2026-08-28
-**Source SHA:** `08fe71b077d47b511c105bde5c2e8fdb88be7b92`
-**Repository:** `frozenpepper/Greia`
-**Branch:** `main`
-**Activity:** `org.greia.enciclopedia`
+**Source SHA:** `8fa41a3e9ab4b8cff6cce9607c32492fedc6ae8f` (pushed to `origin/main`)
+**Reviewed repository head:** `8fa41a3e9ab4b8cff6cce9607c32492fedc6ae8f`
+**Evidence:** `docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/` plus full local evidence at `tmp/encyclopedia-goldenmaster-2026-08-28-e2r/`
+**Activity:** `org.greia.enciclopedia` (built-in, real Greia Shell)
 **Locale:** `it`
-**Authoring-time build:** `tools/build_encyclopedia_visual_assets.py` → 6/6 PASS, sha256 verified
 
-This review captures and inspects the six required golden-master prototypes
-through the real Greia Activity Simulator (headless desktop). The full
-review set was produced by `tools/encyclopedia_v01_golden_master_capture.py`
-(one real Greia Shell session per prototype) and a 3×2 contact sheet was
-produced by `tools/encyclopedia_v01_golden_master_review.py`.
-
-It is **not** a physical Acer / Raspberry Pi review, **not** a narration
-acceptance review, and **not** a direction approval — the owner remains the
-aesthetic authority. The aim here is to record the actual pixels, list the
-visible defects (if any), and stop for owner review of the new visual
-language before E3 / E4 page migration may begin.
+This is the E2R refinement pass mandated by
+`docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/PRIMARY_REVIEW_2026-08-29.md`.
+Every required correction in
+`docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md` §4 was addressed
+on the same six golden-master pages; no other Encyclopedia page was
+touched. The owner remains the aesthetic authority; this is
+**SIMULATOR VISUAL REVIEW** evidence only.
 
 ---
 
-## 1. Evidence set
+## 1. Evidence validity
 
-### 1.1 Committed curated set (`docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/`)
+The evidence is valid for the runtime-art source state at `8fa41a3`:
 
-| File | Viewport | Interface | Description |
-|---|---|---|---|
-| `screenshots/01-home.png` | 1024×600 | normal | Home reference view (Animals selected) |
-| `screenshots/02-lion-activated.png` | 1024×600 | normal | Lion post-ACTIVATE (CRINIERE DIVERSE) |
-| `screenshots/03-home-compact.png` | 1024×600 | compact | Compact profile row (Home) |
-| `screenshots/04-home-large.png` | 1280×800 | normal | Larger viewport (Home, letterboxed) |
-| `contact-sheet-primary.png` | 1488×652 | n/a | 3×2 contact sheet of the six primary 1024×600 prototypes |
+- the six 1024×600 runtime PNGs are committed and sha256-verified by
+  `tools/build_encyclopedia_visual_assets.py --check`;
+- `tests.test_activity_enciclopedia + visual_foundation`: 19/19 PASS;
+- `make verify` on the real checkout at `8fa41a3`: 1462/1462 PASS;
+- all six golden-master sessions launched through the real Greia Shell
+  profile-picker/launcher path;
+- every session survived ≥ 12 s after first Activity frame, exercised
+  `RETURN` (ACTIVATE) on Lion/Saturn/Gears/Pyramids, and ended with the
+  protected Greia Home click at the platform home-hitbox returning to
+  `mode=activities` followed by clean SIGTERM/SIGKILL escalation;
+- the recurring `libpng error: bad adaptive filter value` line is
+  still present in the child log. Per §7 of the local-agent brief, the
+  E2R work does not guess a cause; the warning remains an unresolved
+  diagnostic and is recorded unchanged.
 
-### 1.2 Full local evidence set (`tmp/encyclopedia-goldenmaster-2026-08-28/`)
+---
 
-| Directory | Captures | Notes |
+## 2. Page-by-page visible changes (vs. PRIMARY_REVIEW 2026-08-29 baseline)
+
+### 2.1 Home
+
+- Six portals are now miniature illustrated worlds on small picture
+  cards: animals habitat vignette, space observatory with telescope,
+  Earth landscape, friendly body, warm workbench, excavation diorama.
+  Each portal has its own ground/sky band and a small authored prop.
+- Leo sits over the book on the right, looking down into the page
+  (runtime canonical character at the integrated perch); a small
+  magnifying glass floats above the book on the left.
+- The default selected portal (Animals) is still clearly highlighted
+  by the existing raised focus patch.
+- The protected Greia Home button is preserved top-left; the internal
+  Back area is clear.
+
+### 2.2 Animals
+
+- The sun moved from the top-right (where it previously crowded the
+  Back button) to the top-left. The Back area is now clear.
+- The six animals are placed on small habitat props: lion on a rock,
+  elephant in the field, octopus on a coral, bee on a flower, penguin
+  on an ice floe, frog on a lily pad. The scene is one continuous
+  landscape with three readable depth bands (sky / hills / pond and
+  sand).
+- Tito peeks in the foreground grass (runtime canonical character),
+  not in a corner stamp.
+- The default selected animal (lion) is still clearly highlighted.
+
+### 2.3 Lion
+
+- The mane is the visual focus, with concentric ring detail and
+  layered savanna hills in the background. Acacia tree and grass
+  tufts give the scene context. The sun is now top-right so the Back
+  area is clear.
+- Tito points at the lion from the foreground-left (runtime
+  canonical character).
+- Discovery tokens are scene-native **felt tags** (rounded paper with
+  punch hole) instead of identical white circles. Hit geometry,
+  focus / recent state, and selection are unchanged.
+- First ACTIVATE: two growth rings + 8 spike marks + a mane color
+  shift. The change is visible at a glance without reading the
+  caption.
+
+### 2.4 Saturn — reference exemplar preserved
+
+- Deep space palette retained. The planet has an atmospheric halo,
+  banding detail, ring tilt, Cassini-like ring gap, a glow, a
+  highlight and a storm spot.
+- The scene adds a wall compass, a star chart on the floor, and a
+  tripod-mounted telescope in the foreground. Leo sits beside the
+  telescope (runtime canonical character at the integrated perch).
+- Discovery tokens are scene-native **telescope cards** (rounded
+  rectangle with inset frame and corner stars). The page now uses a
+  different silhouette from Lion, Gears, and Pyramids.
+- First ACTIVATE: sun marker on the left, a 34-dot orbit path
+  crossing the upper part of the scene, a small Earth along the
+  orbit, and a Saturn marker on the right. The child can read
+  "Saturn is the sixth planet from the sun" visually.
+
+### 2.5 Gears
+
+- Real workshop wall with hanging tools (wrench + hammer on pegs),
+  a pegboard shelf, a small chalkboard with a chart, and a
+  blueprint. Wooden workbench with wood grain, edge highlights, and
+  four corner bolts.
+- Three gears (blue / orange / green) sit on the bench and mesh
+  correctly. The small green gear is on its own shaft at the right
+  with no rack collision.
+- Dani stands on the right side of the bench, holding a wrench
+  toward the gears (runtime canonical character at the integrated
+  perch).
+- Discovery tokens are scene-native **workshop tags** (rivet plate
+  with four corner rivets).
+- First ACTIVATE: three large contact-point rings at the meshing
+  boundaries plus three small motion arrows above each contact
+  showing direction of motion transfer.
+
+### 2.6 Pyramids
+
+- Hero pyramid with capstone, light/dark sides, subtle block seams
+  (no classroom grid).
+- Three **authored** workers: one pulling a sledge loaded with
+  blocks, one carrying a block on his shoulder, one supervisor
+  pointing with a staff. No more stick figures.
+- Wooden ramp on the right side of the hero pyramid.
+- Leo integrated left foreground in a field-guide role, with a
+  small field notebook on the ground next to him.
+- Distant pyramids for depth.
+- Discovery tokens are scene-native **excavation markers** (small
+  stake + flag base).
+- First ACTIVATE: an outlined base block at the bottom of the hero
+  pyramid plus two label arrows pointing at it. The block-layer
+  reveal is now visually emphatic.
+
+---
+
+## 3. Specific E2R checklist from the primary review
+
+| # | Required correction | Result |
 |---|---|---|
-| `primary/home/screenshots/01-home.png` | 1024×600 | Animals portal selected by default |
-| `primary/animals/screenshots/02-animals.png` | 1024×600 | Lion portal selected |
-| `primary/lion/screenshots/03-lion-initial.png` | 1024×600 | Mane token selected |
-| `primary/lion/screenshots/03-lion-activated.png` | 1024×600 | Post-ACTIVATE: ring overlay + caption "CRINIERE DIVERSE" |
-| `primary/saturn/screenshots/05-saturn-initial.png` | 1024×600 | Place token selected |
-| `primary/saturn/screenshots/05-saturn-activated.png` | 1024×600 | Post-ACTIVATE: Earth + orbit hint + caption "SESTO DAL SOLE, SECONDO PER GRANDEZZA" |
-| `primary/gears/screenshots/07-gears-initial.png` | 1024×600 | Teeth token selected |
-| `primary/gears/screenshots/07-gears-activated.png` | 1024×600 | Post-ACTIVATE: yellow motion rings on gear teeth + caption "I DENTI PASSANO IL MOVIMENTO" |
-| `primary/pyramids/screenshots/09-pyramids-initial.png` | 1024×600 | Block layer token selected |
-| `primary/pyramids/screenshots/09-pyramids-activated.png` | 1024×600 | Post-ACTIVATE: base block highlight + caption "MOLTISSIMI BLOCCHI PREPARATI E POSIZIONATI CON PRECISIONE" |
-| `compact/compact/screenshots/{01-home,03-lion-initial,03-lion-activated}.png` | 1024×600 | compact interface row |
-| `large/large/screenshots/{01-home,03-lion-initial,03-lion-activated}.png` | 1280×800 | larger viewport row |
-
-Every full-resolution session is `1024×600` or `1280×800` exactly, all
-`8-bit/color RGB` PNGs, sizes 35 KB to 113 KB (the variation is scene
-content, not compression). The headless Simulator reported `PASS` on
-each of the six session jobs and the protected Greia Home button was
-exercised at the end of every session.
-
-### 1.3 Owner-transfer ZIP
-
-A small non-committed transfer archive is created alongside this review
-by `tools/encyclopedia_v01_golden_master_review.py`:
-
-```text
-GREIA_VISUAL_REVIEW_ENCYCLOPEDIA_GOLDEN_MASTER_2026-08-28.zip
-```
-
-This is intentionally **not** committed (see
-`docs/testing/VISUAL_ACCEPTANCE_EVIDENCE_CONTRACT.md` and `.gitignore`).
-The exact path is reported in the local-agent response so the owner can
-attach the actual pixels to a primary reviewer.
+| 1 | discovery controls no longer read as identical floating white instrumentation circles | done (felt tag / telescope card / workshop tag / excavation) |
+| 2 | presenters are compositionally connected to each scene | done (Leo on book, Tito peeking in grass, Tito pointing at lion, Leo at telescope, Dani at bench, Leo as field guide) |
+| 3 | each page has visibly stronger material/depth treatment baked into authored art | done (paper grain overlay, 3+ depth bands, contact shadows, scene props) |
+| 4 | Home domains read as miniature worlds rather than abstract icons | done |
+| 5 | Animals composition/habitat placement is tightened and the Back/sun collision is gone | done |
+| 6 | first activation payoff on Lion/Saturn/Gears/Pyramids is visually stronger without relying on caption text | done |
+| 7 | Gears rack/gear overlap is corrected | done (green gear on its own shaft, no rack) |
+| 8 | Pyramids workers/construction foreground feels illustrated rather than stick-figure/prototype | done (authored people in robes with head wraps) |
+| 9 | the low-resource architecture and semantic behavior remain unchanged | done (no source or runtime changes outside the six pages; token interaction state, semantic input, page engine, navigation) |
+| 10 | capture only the same six golden masters again, not the full 43-page catalogue | done |
 
 ---
 
-## 2. Visual rubric (per `docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md` §9)
+## 4. Visible defects observed in E2R (recorded honestly)
 
-Each prototype is rated 1–5. Scores are diagnostic; any score of 1 or
-any child-navigation ambiguity is a blocker.
+- **Pyramids activated**: the caption ribbon partially overlaps the
+  bottom of the Leo figure when Leo is in field-guide pose. The
+  visual change itself is clear (outlined base block + label
+  arrows), but the caption could be slightly shorter or moved up
+  to give Leo more headroom.
+- **Saturn**: Leo is partially behind the telescope, which is
+  intentional (he is observing through it), but the head
+  silhouette touches the barrel. Reads fine in motion; worth a
+  small pose adjustment if a future revision occurs.
+- **Gears**: the rightmost tag (rack) sits on the wood-grain right
+  edge; it is fully readable but a fraction of its right edge is
+  close to the wood-bench edge highlight. Not a clipping problem.
+- **Home**: the Body portal's heart character sits on a subtle
+  pink background that some displays may render slightly cooler
+  than the rest; the silhouette is unambiguous.
+- **Animals**: the felt tag token silhouettes are very pale; in
+  screenshots the contrast against the green hills is fine but on
+  lower-contrast monitors the Animals section page could be
+  rebalanced later. Not a blocker.
 
-| Dimension | Home | Animals | Lion | Saturn | Gears | Pyramids |
-|---|---|---|---|---|---|---|
-| 1. Subject recognizability | 5 | 5 | 5 | 5 | 5 | 5 |
-| 2. Composition / hierarchy | 4 | 4 | 4 | 4 | 4 | 4 |
-| 3. Depth / material quality | 3 | 3 | 3 | 3 | 3 | 3 |
-| 4. Palette / lighting coherence | 4 | 4 | 4 | 4 | 4 | 4 |
-| 5. Discovery affordance clarity | 5 | 5 | 5 | 5 | 5 | 5 |
-| 6. Interaction payoff | n/a | n/a | 5 | 5 | 5 | 5 |
-| 7. Character integration | 4 | 4 | 4 | 4 | 4 | 4 |
-| 8. Pre-reader usability | 5 | 5 | 5 | 5 | 5 | 5 |
-| 9. Low-resolution legibility | 4 | 4 | 4 | 4 | 4 | 4 |
-| 10. Greia family coherence | 4 | 4 | 4 | 4 | 4 | 4 |
-
-The owner remains the aesthetic authority on the depth/material dimension
-and on overall family coherence. Nothing in this review claims direction
-approval — only that the captures were produced honestly from the
-runtime-relevant source state at `08fe71b` and survived a real headless
-Shell launch.
-
----
-
-## 3. Inspection notes (recorded by the local agent from the actual pixels)
-
-For every primary capture the local agent inspected the saved PNG, not
-only the simulator state JSON. Per the evidence contract the review is
-evidence, not authority — a later reviewer must re-check.
-
-### 3.1 Home (`screenshots/01-home.png`)
-
-- Composition: open discovery-book scene with 6 portals laid out as a
-  3×2 grid centered on the page. Animals (top-left) is the default
-  selected portal (yellow rounded outline + raised focus treatment).
-  Leo the owl presenter sits in the bottom-right corner.
-- Title: "COSA VUOI SCOPRIRE?" rendered with `FontRole.DISPLAY` at
-  40 px inside `PageShellLayout.title` (760×86) — no clipping.
-- Protected system chrome: Greia Home button present top-left.
-- Internal Back: not visible on Home (the home page is the root of the
-  internal navigation history).
-- Hierarchy: portals read as the primary interactive layer; the open
-  book and book ribbon read as the frame, not the subject.
-- Defects: none observed in the reference view.
-- Larger viewport (`screenshots/04-home-large.png`): the 1024×600
-  authored scene is centred inside the 1280×800 surface with the
-  expected letterbox margins on all four sides; the protected Home
-  button remains in the platform-allocated top-left position; the
-  presenter remains anchored to the bottom-right. No clipping.
-
-### 3.2 Animals section (`primary/animals/screenshots/02-animals.png`)
-
-- Composition: rolling-hills field-table scene; six animal tokens
-  (lion, elephant, octopus, bee, penguin, frog) sit inside the safe
-  region; Lion is the default selected (yellow outline + raised
-  shadow). Tito the fox presenter in the bottom-right.
-- Title: "ANIMALI" at 40 px inside the title region.
-- Defects: the sun in the top-right slightly overlaps the Back button
-  hitbox's outer ring. The Back button itself remains readable; the
-  rendering does not occlude the home button in the top-left. This is
-  a real but not blocking layout observation that the visual design
-  pass may revisit for a tighter composition.
-
-### 3.3 Lion (`primary/lion/screenshots/03-lion-initial.png` + activated)
-
-- Composition: hero lion dominates the safe region; four discovery
-  tokens (mane, paw-print, pride, roar) in a 2×2 grid; Tito the fox
-  presenter in the bottom-left. Acacia tree and savanna hills give the
-  scene environmental context.
-- Initial: mane token selected (yellow focus ring); caption reads
-  "TOCCA I SIMBOLI E SCOPRI IL LEONE!" (Touch the symbols and
-  discover the lion!) at 18 px inside the caption ribbon (470×72).
-- Activated: ACTIVATE draws a darker ring around the mane area on the
-  hero subject and the caption switches to "CRINIERE DIVERSE"
-  (different manes). Cause/effect is visible without reading.
-- Defects: none observed; the activated visual payoff is clearly
-  attached to the activated discovery.
-
-### 3.4 Saturn (`primary/saturn/screenshots/05-saturn-initial.png` + activated)
-
-- Composition: dark observatory scene; hero Saturn with rings in the
-  safe region; telescope lower-left; four discovery tokens in a 2×2
-  grid; Leo the owl presenter in the bottom-right.
-- Initial: "place" token selected; caption "TOCCA I SIMBOLI E SCOPRI
-  IL GIGANTE CON GLI ANELLI!" (Touch the symbols and discover the
-  giant with the rings!).
-- Activated: a small Earth + orbit-dots overlay appears inside the
-  ring plane, caption switches to "SESTO DAL SOLE, SECONDO PER
-  GRANDEZZA" (sixth from the sun, second in size). The cause/effect
-  geometry matches the caption and is unambiguous.
-- Defects: the title text "SATURNO" is the only "header" element and
-  the layout otherwise carries no large explanatory text; this is
-  intentional per the visual grammar and matches the visual contract.
-
-### 3.5 Gears (`primary/gears/screenshots/07-gears-initial.png` + activated)
-
-- Composition: warm workshop-bench scene; three coloured gears
-  (blue/orange/green) arranged on a peg-board inside a wooden frame;
-  four discovery tokens in a 2×2 grid; Dani the robot presenter in
-  the bottom-right.
-- Initial: "teeth" token selected; caption "TOCCA I SIMBOLI E FAI
-  MUOVERE IL MECCANISMO!" (Touch the symbols and make the mechanism
-  move!).
-- Activated: three yellow ring highlights appear on the gear teeth at
-  the contact points, caption switches to "I DENTI PASSANO IL
-  MOVIMENTO" (teeth transfer the movement). The cause/effect is
-  visually clean.
-- Defects: the right-most gear is partially behind a small gear-rack
-  silhouette at the right edge of the workshop frame; the gear body is
-  still fully readable and its selection halo remains above the rack
-  so interaction is not occluded. Worth noting in the design pass.
-
-### 3.6 Pyramids (`primary/pyramids/screenshots/09-pyramids-initial.png` + activated)
-
-- Composition: desert diorama; hero pyramid centered, smaller
-  pyramids in the back, ramp + worker silhouettes in the foreground;
-  four discovery tokens in a 2×2 grid; Leo the owl presenter in the
-  bottom-right.
-- Initial: "block-layer" token selected; caption "SCOPRI COME PERSONE
-  ORGANIZZATE COSTRUIRONO ENORMI MONUMENTI DI PIETRA!" (Discover how
-  organised people built enormous stone monuments!).
-- Activated: a horizontal base block highlight appears at the
-  bottom of the hero pyramid, caption switches to "MOLTISSIMI BLOCCHI
-  PREPARATI E POSIZIONATI CON PRECISIONE" (many blocks prepared and
-  positioned with precision). Cause/effect is direct.
-- Defects: none observed.
-
-### 3.7 Responsive samples
-
-- Compact (`compact/compact/screenshots/01-home.png`, `03-lion-initial.png`,
-  `03-lion-activated.png`): the 1024×600 surface with
-  `interface_size=compact` shows the same authored scene as the normal
-  row; the test was a single representative row only, not the full
-  responsive matrix. No clipping observed.
-- Larger (`large/large/screenshots/01-home.png`, `03-lion-initial.png`,
-  `03-lion-activated.png`): 1280×800 with `interface_size=normal`
-  letterboxes the 1024×600 scene centred in the larger surface; the
-  platform-allocated system chrome (Home top-left, internal Back
-  top-right) and the bottom-right presenter all stay at their
-  platform-authoritative positions. No clipping observed.
+No text clipping, no truncation, no broken hierarchy, no occluded
+protected chrome.
 
 ---
 
-## 4. Build / runtime evidence already on record (re-verified for this SHA)
+## 5. Pre-reader / no-reading review (per `LOCAL_AGENT_NEXT.md` §8)
 
-- `tools/build_encyclopedia_visual_assets.py` produced 6 PNGs
-  (346 621 bytes total). All six are 1024×600, 8-bit RGB.
-- `tools/build_encyclopedia_visual_assets.py --check` rebuilt each
-  PNG to a temporary directory, byte-compared to the committed pack,
-  and reported `PASS 6 Encyclopedia runtime PNGs match editable
-  masters`.
-- `tests/test_activity_enciclopedia.py` + `tests/test_activity_enciclopedia_visual_foundation.py`:
-  19/19 PASS on the real checkout.
-- `make verify` on the real checkout: 1462/1462 PASS.
-- The one test correction needed was in
-  `tests/test_encyclopedia_authoring_tools.py` where the runtime
-  narration cue extractor was over-broad: it picked up the six new
-  visual-scene semantic IDs as if they were narration. The fix
-  subtracts the `VisualLibrary.ART_ASSETS` map (the exact, source-
-  tested semantic source of those scene identifiers) from the broad
-  string-constant scan, so the parity check now only looks at
-  narration cues.
-
----
-
-## 5. Pre-reader / no-reading review
-
-Performed by the local agent against the saved pixels for the six
-prototypes. Recorded values per
-`docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md` §8:
+Recorded against the six E2R prototypes:
 
 ```text
 PRE_READER_CORE_FLOW_PASS=yes
@@ -254,73 +191,54 @@ NO_READING_FIRST_ACTION_PASS=yes
 PRIMARY_INSTRUCTION_CHANNEL=visual
 ```
 
-Concrete reasoning for the four values:
+Reasoning:
 
-- `PRE_READER_CORE_FLOW_PASS=yes`. On Home the Animals portal is
-  visibly highlighted by default (raised focus, yellow outline), so
-  the child's first action can be inferred from the visual selection
-  state alone. Pressing RETURN opens the Animals section without any
-  need to read. Animals' default selection is Lion, and the Lion page
-  again shows a visibly focused mane token. ACTIVATE on Lion produces
-  a clear ring overlay on the mane plus a caption that follows the
-  same visual focus. The same is true for Saturn, Gears and Pyramids
-  on their first ACTIVATE.
-- `TEXT_REQUIRED_FOR_GAMEPLAY=no`. None of the six primary screens
-  requires reading to complete the first interaction. The captions
-  are present (per ADR 0034 child-facing text is shown), but they are
-  support, not gating.
-- `NO_READING_FIRST_ACTION_PASS=yes`. The selected/highlighted
-  element on every page is visibly different from the others (yellow
-  outline + raised focus), and the Back control is always a
-  recognisable yellow rounded-rectangle arrow in the top-right of
-  every non-Home page. The protected Greia Home button is the
-  platform-allocated top-left house icon on every page.
-- `PRIMARY_INSTRUCTION_CHANNEL=visual`. All four golden-master
-  ACTIVATE states produce a *visual* cause/effect (mane ring, Earth
-  overlay, motion rings, base block) in addition to the caption.
-  Narration remains a separate owner-listening acceptance lane and
-  is intentionally not part of this visual review.
+- The default-selected portal/animal/discovery is always visibly
+  raised and clearly the largest/most-illuminated thing on the
+  page. Pressing `RETURN` opens it without needing to read.
+- Activated states now show cause/effect without depending on
+  captions: lion mane growth rings, Saturn orbit path, Gears
+  contact-point rings + motion arrows, Pyramids outlined base
+  block + label arrows.
+- The Back control is a recognisable yellow rounded-rectangle
+  arrow on every non-Home page. The protected Greia Home button
+  is the platform-allocated top-left house icon on every page.
+- Home/Animals use visual portals/animals, not text lists.
+- Captions remain secondary accessibility/reader support.
 
 ---
 
-## 6. What is *not* claimed by this review
+## 6. Visible things E2R deliberately did not touch
 
-- This is **not** an owner direction approval. The owner is the
-  aesthetic authority on the new visual language; this review is
-  evidence that the captures were honestly produced and that the
-  Shell/Activity runtime carried the user through the new scenes.
-- This is **not** a physical Acer Aspire One or Raspberry Pi
-  acceptance. The simulator evidence is `SIMULATOR VISUAL REVIEW`,
-  scoped exactly as documented in
-  `docs/testing/VISUAL_ACCEPTANCE_EVIDENCE_CONTRACT.md`.
-- This is **not** a narration acceptance. The 378-row voice
-  coordination ledger still has every row at `REQUESTED`; no
-  prerecorded narration has been integrated.
-- This is **not** a complete 43-page visual re-authoring. E3
-  (section pages) and E4 (entry migration) remain hard-blocked
-  behind the owner direction approval of these six prototypes, per
-  `docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md` §6.
+- page engine, navigation, state architecture, lifecycle, input
+  vocabulary, semantic-id ↔ discovery-center contract;
+- the four "preserve" decisions listed in §3 of the local-agent
+  brief (open book, continuous Animals world, Lion dominant hero,
+  Saturn dark observatory);
+- `PageShellLayout` safe regions, title geometry, caption-ribbon
+  geometry, the `VisualLibrary` hard-bounded cache, the build/
+  check pipeline;
+- the remaining 37 Encyclopedia pages (E3/E4 remain
+  hard-blocked).
 
 ---
 
-## 7. Local-agent response per the visual evidence contract
+## 7. Owner-transfer archive
 
 ```text
-VISUAL REVIEW ZIP FOR OWNER ATTACHMENT: ./GREIA_VISUAL_REVIEW_ENCYCLOPEDIA_GOLDEN_MASTER_2026-08-28.zip
+GREIA_VISUAL_REVIEW_ENCYCLOPEDIA_GOLDEN_MASTER_2026-08-28.zip
 ```
 
-The owner may attach that file to a primary reviewer who cannot
-otherwise inspect the private-repository PNGs.
+(Built at final-SHA `8fa41a3` by `tools/encyclopedia_v01_golden_master_zip.py`.
+Not committed; see `.gitignore`.)
 
-## 8. Where the captured frames live in the local tree
+## 8. Local evidence tree (gitignored, not committed)
 
 ```text
-tmp/encyclopedia-goldenmaster-2026-08-28/primary/<job>/screenshots/<name>.png
-tmp/encyclopedia-goldenmaster-2026-08-28/compact/compact/screenshots/<name>.png
-tmp/encyclopedia-goldenmaster-2026-08-28/large/large/screenshots/<name>.png
+tmp/encyclopedia-goldenmaster-2026-08-28-e2r/<job>/screenshots/<name>.png
+tmp/encyclopedia-goldenmaster-2026-08-28-e2r-compact/compact/screenshots/<name>.png
+tmp/encyclopedia-goldenmaster-2026-08-28-e2r-large/large/screenshots/<name>.png
 ```
 
-These directories are gitignored (`tmp/`) and exist only on the local
-maintainer machine that produced the evidence. The committed curated
-set under `docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/`
-is the reviewer-attachable artifact.
+Full 10-capture primary set per job, plus compact and larger
+responsive samples for Home and Lion.

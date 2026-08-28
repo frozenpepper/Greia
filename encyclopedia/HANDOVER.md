@@ -3,8 +3,8 @@
 **Updated:** 2026-08-28
 **Runtime pages:** **43 / 43 planned executable pages**
 **Runtime Activity:** `activities/enciclopedia_greia/` (`org.greia.enciclopedia`)
-**Final runtime-relevant SHA (Simulator-captured):** `08fe71b077d47b511c105bde5c2e8fdb88be7b92`
-**Current state:** **MECHANICAL RUNTIME FOUNDATION HEALTHY / OLD GRAPHICS REJECTED / E1+E2 SOURCE + RUNTIME ART + SIMULATOR CAPTURE COMPLETE / OWNER DIRECTION APPROVAL PENDING / NARRATION ACCEPTANCE PENDING**
+**Final runtime-relevant SHA (Simulator-captured):** `8fa41a3e9ab4b8cff6cce9607c32492fedc6ae8f`
+**Current state:** **MECHANICAL RUNTIME FOUNDATION HEALTHY / OLD GRAPHICS REJECTED / E1+E2+E2R SOURCE + RUNTIME ART + SIMULATOR CAPTURE COMPLETE / OWNER DIRECTION APPROVAL PENDING / NARRATION ACCEPTANCE PENDING**
 
 This is the current continuation contract. Historical construction detail remains in `encyclopedia/PROGRESS.md` and dated reviews.
 
@@ -199,9 +199,11 @@ Procedural drawing remains appropriate for real diagrams, small annotations, par
 
 ---
 
-## 7. E1/E2 source + runtime art + Simulator capture (this work)
+## 7. E1+E2+E2R source + runtime art + Simulator capture (this work, at SHA `8fa41a3`)
 
-The bounded visual-foundation/golden-master tranche is now end-to-end complete on the source, runtime-art and Simulator-capture axes.
+The bounded visual-foundation/golden-master tranche is now
+end-to-end complete on the source, runtime-art and Simulator-capture
+axes, including the E2R refinement mandated by the primary review.
 
 ### Shared foundation
 
@@ -214,7 +216,7 @@ Implemented source contracts include:
 
 ```text
 PageShellLayout safe regions
-DiscoveryToken tactile state language
+DiscoveryToken tactile state language + per-page token_shape silhouettes
 caption ribbon helper
 authored-scene placement helper
 object focus/lift treatment
@@ -223,7 +225,9 @@ explicit semantic art-id -> runtime PNG map
 no page-local image decode / smoothscale
 ```
 
-`VisualLibrary` remains hard-bounded and is the single Activity-local facade for these authored runtime renditions plus shared canonical characters.
+`VisualLibrary` remains hard-bounded and is the single Activity-local
+facade for these authored runtime renditions plus shared canonical
+characters.
 
 ### Editable source masters + committed runtime PNG pack
 
@@ -243,8 +247,9 @@ activities/enciclopedia_greia/assets/runtime/gears_workbench.png
 activities/enciclopedia_greia/assets/runtime/pyramids_diorama.png
 ```
 
-All six runtime PNGs are 1024×600 8-bit RGB; the build tool's `--check`
-rebuilds them temporarily and byte-compares against the committed pack.
+All six runtime PNGs are 1024×600 8-bit RGB; the build tool's
+`--check` rebuilds them temporarily and byte-compares against the
+committed pack.
 
 ### Golden-master page source
 
@@ -257,46 +262,56 @@ Gears
 Pyramids
 ```
 
-The page/state/navigation models were retained. The visual code now consumes authored scenes and uses procedural drawing primarily for focus/discovery UI and bounded educational reveal overlays.
+The page/state/navigation models were retained. The visual code
+now consumes authored scenes, uses procedural drawing for
+focus/discovery UI and bounded educational reveal overlays, and
+draws the runtime canonical character at the integrated scene
+position (no more corner stamps; no more identical white
+circles; tokens are now felt tag / telescope card / workshop tag
+/ excavation marker silhouettes).
 
 ### Build, capture, review tooling
 
 ```text
 tools/build_encyclopedia_visual_assets.py             # authoring-only SVG -> PNG (CairoSVG)
 tools/encyclopedia_v01_golden_master_capture.py       # one real Greia Shell session per page
-tools/encyclopedia_v01_golden_master_review.py        # curated 4-shot set + 3x2 contact sheet
+tools/encyclopedia_v01_golden_master_review.py        # curated 4-shot set + 3x2 contact sheet + 2x4 initial-vs-activated
 tools/encyclopedia_v01_golden_master_zip.py           # non-committed owner-transfer ZIP
 tests/test_activity_enciclopedia_visual_foundation.py
 tests/test_encyclopedia_authoring_tools.py            # tightened to subtract VisualLibrary.ART_ASSETS
 ```
 
-### Source-gate evidence at the final runtime-relevant SHA `08fe71b`
+### Source-gate evidence at the final runtime-relevant SHA `8fa41a3`
 
 ```text
-make verify                                          1462 / 1462 PASS
-tests.test_activity_enciclopedia + visual_foundation    19 / 19 PASS
-tools/build_encyclopedia_visual_assets.py --check      PASS 6 Encyclopedia runtime PNGs match editable masters
-real Greia Simulator launch (6 sessions)               6 / 6 PASS
-protected Greia Home return (every session)            6 / 6 PASS
-ACTIVATE payoff captured on every factual entry         4 / 4 PASS
+make verify                                                          1462 / 1462 PASS
+tests.test_activity_enciclopedia + visual_foundation                    19 / 19 PASS
+tools/build_encyclopedia_visual_assets.py --check                      PASS 6
+real Greia Simulator launch (6 sessions)                               6 / 6 PASS
+protected Greia Home return (every session)                            6 / 6 PASS
+ACTIVATE payoff captured on every factual entry (stronger visuals)     4 / 4 PASS
 ```
 
 ### Simulated visual evidence
 
 ```text
 docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/
-  REVIEW.md
-  layout-audit.json
-  contact-sheet-primary.png
+  REVIEW.md                  # E2R review notes + defect log
+  layout-audit.json          # source-derived geometry + per-page token shape
+  contact-sheet-primary.png  # 3x2 of the six primary 1024x600 screens
+  initial-vs-activated.png   # 2x4 of the four entries (initial | activated)
   screenshots/01-home.png
   screenshots/02-lion-activated.png
   screenshots/03-home-compact.png
   screenshots/04-home-large.png
 GREIA_VISUAL_REVIEW_ENCYCLOPEDIA_GOLDEN_MASTER_2026-08-28.zip   # NOT committed
-tmp/encyclopedia-goldenmaster-2026-08-28/                       # full local evidence
+tmp/encyclopedia-goldenmaster-2026-08-28-e2r/                   # full local evidence
+tmp/encyclopedia-goldenmaster-2026-08-28-e2r-compact/           # compact responsive row
+tmp/encyclopedia-goldenmaster-2026-08-28-e2r-large/             # larger responsive row
 ```
 
-Pre-reader / no-reading review recorded against the six prototypes:
+Pre-reader / no-reading review recorded against the six E2R
+prototypes:
 
 ```text
 PRE_READER_CORE_FLOW_PASS=yes
@@ -304,6 +319,18 @@ TEXT_REQUIRED_FOR_GAMEPLAY=no
 NO_READING_FIRST_ACTION_PASS=yes
 PRIMARY_INSTRUCTION_CHANNEL=visual
 ```
+
+Visible defects observed in E2R (recorded honestly in REVIEW.md):
+
+```text
+- Pyramids activated: caption ribbon partially overlaps Leo.
+- Saturn: Leo head silhouette touches the telescope barrel.
+- Gears: rightmost tag (rack) sits close to the wood-bench edge.
+- Home: Body portal's pink background may render slightly cooler.
+- Animals: pale felt-tag silhouettes could be rebalanced later.
+```
+
+None of these are blockers; they are noted for the design pass.
 
 ---
 

@@ -14,27 +14,51 @@
 
 ---
 
-# 1. Current focus — Encyclopedia golden-master validation
+# 1. Current focus — Encyclopedia golden-master E2R refinement
 
-The owner rejected the old `org.greia.enciclopedia` graphics quality as a final product target after reviewing the complete 43-page 1024×600 mechanical traversal evidence.
+The owner rejected the old `org.greia.enciclopedia` graphics quality
+as a final product target after reviewing the complete 43-page
+1024×600 mechanical traversal evidence. The first E2 source/runtimer-
+artefact/Simulator-capture pass is recorded in
+`docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/REVIEW.md`.
 
-The diagnosis remains systemic: final subjects/environments were dominated by raw Pygame primitives, sparse flat backgrounds, instrumentation-like discovery bubbles, corner-stamped presenters and weak visual payoff.
+The first E2 visual pass proved the architecture and produced a
+coherent authored visual system, but the primary review
+(`PRIMARY_REVIEW_2026-08-29.md`) required E2R refinement on the
+same six prototypes:
 
-Forensic review:
+- discovery controls no longer read as identical floating white
+  instrumentation circles;
+- presenters are compositionally connected to each scene;
+- each page has visibly stronger material/depth treatment baked
+  into authored art;
+- Home domains read as miniature worlds rather than abstract
+  icons;
+- Animals composition/habitat placement is tightened and the
+  Back/sun collision is gone;
+- first activation payoff on Lion/Saturn/Gears/Pyramids is
+  visually stronger without relying on caption text;
+- Gears rack/gear overlap is corrected;
+- Pyramids workers/construction foreground feels illustrated
+  rather than stick-figure/prototype;
+- the low-resource architecture and semantic behavior remain
+  unchanged;
+- capture only the same six golden masters again, not the full
+  43-page catalogue.
 
-```text
-docs/reviews/2026-08-28_ENCYCLOPEDIA_GRAPHICS_FORENSIC_AUDIT.md
-```
+The current E2R pass has been pushed on `main` at `8fa41a3`. The
+real Greia Simulator was launched against the final SHA. The
+current rule is therefore narrower still:
+
+> **STOP. The owner must now approve the refined visual direction
+> on the six golden-master prototypes. No E3 / E4 page migration
+> before that approval.**
 
 Active bounded reauthoring plan:
 
 ```text
 docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md
 ```
-
-E1 + E2 source and runtime art are now implemented on `main`, the six golden-master runtime PNGs are committed and sha256-verified by the build tool's `--check`, and the real Greia Simulator has been launched at the final SHA (`08fe71b`) to capture one curated set of 1024×600 + responsive screenshots. The current rule is therefore narrower still:
-
-> **STOP. The owner must now approve the new visual direction on the six golden-master prototypes. No E3 / E4 page migration before that approval.**
 
 Golden-master targets remain:
 
@@ -48,15 +72,16 @@ Pyramids
 optional Body/Heart anatomy proof only if a later review shows it is needed
 ```
 
-Curated review set:
+Curated E2R review set:
 
 ```text
 docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/
   REVIEW.md
   layout-audit.json
-  contact-sheet-primary.png
-  screenshots/01-home.png            1024x600
-  screenshots/02-lion-activated.png  1024x600
+  contact-sheet-primary.png          3x2 of the six primary 1024x600 screens
+  initial-vs-activated.png           2x4 of the four entries (initial | activated)
+  screenshots/01-home.png            1024x600 reference
+  screenshots/02-lion-activated.png  1024x600 representative interaction
   screenshots/03-home-compact.png    1024x600 + interface_size=compact
   screenshots/04-home-large.png      1280x800
 ```
