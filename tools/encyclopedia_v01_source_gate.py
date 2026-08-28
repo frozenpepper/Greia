@@ -294,30 +294,37 @@ def _make_evidence_dir(repo_root: Path, evidence_root: Path) -> Path:
 
 def run_gate(repo_root: Path, evidence_root: Path) -> GateSummary:
     repo_root = repo_root.resolve()
-    branch = _git_output(repo_root, "branch", "--show-current")
-    starting_sha = _git_output(repo_root, "rev-parse", "HEAD")
-    if branch != EXPECTED_BRANCH:
-        raise GateFailure(
-            "branch",
-            f"expected branch {EXPECTED_BRANCH!r}, found {branch!r}",
-        )
-
-    initial_status = _status_lines(repo_root)
-    unexpected = unexpected_initial_paths(initial_status)
-    if unexpected:
-        raise GateFailure(
-            "worktree-preflight",
-            "unexpected dirty paths before Encyclopedia acceptance: "
-            + ", ".join(unexpected),
-        )
-
-    evidence = _make_evidence_dir(repo_root, evidence_root)
-    _write_lines(evidence / "git-status-before.txt", initial_status)
-    (evidence / "starting-sha.txt").write_text(f"{starting_sha}\n", encoding="utf-8")
-    (evidence / "branch.txt").write_text(f"{branch}\n", encoding="utf-8")
-    runner = EvidenceRunner(repo_root, evidence)
-
+    # The whole body is wrapped so a GateFailure at any step (including the
+    # preflight checks that run before the evidence dir exists) is reported
+    # on stderr and captured to FIRST_FAILURE.txt. Previously, preflight
+    # failures (e.g. wrong branch, dirty worktree, failing git command) raised
+    # out of run_gate before the inner try/except was entered, leaving the
+    # operator with rc=1 and zero output.
+    evidence: Path | None = None
     try:
+        branch = _git_output(repo_root, "branch", "--show-current")
+        starting_sha = _git_output(repo_root, "rev-parse", "HEAD")
+        if branch != EXPECTED_BRANCH:
+            raise GateFailure(
+                "branch",
+                f"expected branch {EXPECTED_BRANCH!r}, found {branch!r}",
+            )
+
+        initial_status = _status_lines(repo_root)
+        unexpected = unexpected_initial_paths(initial_status)
+        if unexpected:
+            raise GateFailure(
+                "worktree-preflight",
+                "unexpected dirty paths before Encyclopedia acceptance: "
+                + ", ".join(unexpected),
+            )
+
+        evidence = _make_evidence_dir(repo_root, evidence_root)
+        _write_lines(evidence / "git-status-before.txt", initial_status)
+        (evidence / "starting-sha.txt").write_text(f"{starting_sha}\n", encoding="utf-8")
+        (evidence / "branch.txt").write_text(f"{branch}\n", encoding="utf-8")
+        runner = EvidenceRunner(repo_root, evidence)
+
         runner.run(
             "voice-sync",
             (sys.executable, "encyclopedia/sync_voice_requests.py"),
@@ -395,13 +402,28 @@ def run_gate(repo_root: Path, evidence_root: Path) -> GateSummary:
         print(f"Evidence: {summary.evidence_dir}")
         return summary
     except GateFailure as exc:
-        (evidence / "FIRST_FAILURE.txt").write_text(
-            f"step={exc.step}\nreturncode={exc.returncode}\nmessage={exc}\n",
-            encoding="utf-8",
-        )
-        _write_lines(evidence / "git-status-at-failure.txt", _status_lines(repo_root))
-        print(f"SOURCE GATE STOPPED at {exc.step}: {exc}", file=sys.stderr)
-        print(f"Evidence: {evidence}", file=sys.stderr)
+        # The evidence dir may not exist yet (preflight failure). Create it
+        # on demand so FIRST_FAILURE.txt and git-status-at-failure.txt are
+        # always available to the operator.
+        if evidence is None:
+            try:
+                evidence = _make_evidence_dir(repo_root, evidence_root)
+            except (OSError, ValueError):
+                evidence = None
+        if evidence is not None:
+            (evidence / "FIRST_FAILURE.txt").write_text(
+                f"step={exc.step}\nreturncode={exc.returncode}\nmessage={exc}\n",
+                encoding="utf-8",
+            )
+            try:
+                _write_lines(evidence / "git-status-at-failure.txt", _status_lines(repo_root))
+            except GateFailure:
+                # Avoid masking the original failure if git itself misbehaves.
+                pass
+            print(f"SOURCE GATE STOPPED at {exc.step}: {exc}", file=sys.stderr)
+            print(f"Evidence: {evidence}", file=sys.stderr)
+        else:
+            print(f"SOURCE GATE STOPPED at {exc.step}: {exc}", file=sys.stderr)
         raise
 
 
