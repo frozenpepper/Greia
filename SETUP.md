@@ -27,12 +27,13 @@ Do not install packages, create model environments, download weights, enable SSH
 1. **The repository copy is canonical.** Read skills/setup docs from the active checkout.
 2. **Choose a role profile.** An Activity creator does not need the raw-image build stack; an OS builder does not automatically need local voice models.
 3. **Voice production has one Greia entry point.** New prerecorded character/shared/pedagogical/Dani speech is produced through `tools/greia_voice.py`; caller scripts do not operate TTS/ASR backends directly.
-4. **The heavy character-production profile is optional on a general workstation.** The Voice Engine source/semantic contract is repository-standard; Chatterbox/Whisper model installation is required only when the requested production route needs it.
-5. **Keep machine-local material outside Git.** Venvs, model weights, caches, private keys, scratch audio, simulator state and build work roots stay outside the repository.
-6. **Do not silently auto-install privileged/heavy dependencies.** Inspect first and obtain owner approval.
-7. **Verify the exact checkout.** Record source SHA for retained simulator/image/physical evidence.
-8. **Developer remote access is opt-in.** Normal/release Greia keeps SSH off.
-9. **Setup success is not product evidence.** Source, simulator, VM/image, provider/audio-listening and physical evidence remain distinct.
+4. **The heavy character-production profile is optional on a general workstation.** The Voice Engine source/semantic contract is repository-standard; Chatterbox/Whisper model installation is required only when actual natural-character production needs it.
+5. **Voice infrastructure readiness is not voice-content completion.** The shared reaction matrix and character-introduction scripts may be defined while their actual audio remains pending generation/listening.
+6. **Keep machine-local material outside Git.** Venvs, model weights, caches, private keys, scratch audio, simulator state and build work roots stay outside the repository.
+7. **Do not silently auto-install privileged/heavy dependencies.** Inspect first and obtain owner approval.
+8. **Verify the exact checkout.** Record source SHA for retained simulator/image/physical/provider evidence.
+9. **Developer remote access is opt-in.** Normal/release Greia keeps SSH off.
+10. **Setup success is not product evidence.** Source, simulator, VM/image, provider/audio-listening and physical evidence remain distinct.
 
 ## 3. Common repository bootstrap
 
@@ -59,7 +60,7 @@ Do not weaken validation to make a workstation look ready.
 
 ## 4. Repository-local skills
 
-Greia currently owns task routers/skills including:
+Greia owns task routers/skills including:
 
 ```text
 skills/greia-os-work/SKILL.md
@@ -76,15 +77,13 @@ skills/greia-activity-authoring/DISCOVERY.md
 skills/greia-activity-authoring/VOICE_GENERATION.md
 ```
 
-`VOICE_GENERATION.md` delegates actual speech production to `skills/greia-voice-production/SKILL.md` and the Voice Engine. Agents should consume repository skills directly from the active checkout whenever possible.
+`VOICE_GENERATION.md` delegates actual speech production to the Voice Production Engine. Agents should consume repository skills directly from the active checkout whenever possible.
 
 There is not yet a universal cross-agent skill installer.
 
 ## 5. Role profiles
 
 ### 5.1 Activity creator — standard profile
-
-Use for creating/modifying/validating Activities.
 
 Read:
 
@@ -118,7 +117,7 @@ Validate one Activity:
 PYTHONPATH=src python3 tools/validate_activity.py activities/<activity-directory>
 ```
 
-Focused simulator gate:
+Focused simulator contracts:
 
 ```bash
 PYTHONPATH=src python3 -m unittest tests.test_greia_simulator -v
@@ -150,13 +149,15 @@ make visual-assets
 make visual-assets-check
 ```
 
-### 5.3 Voice Production Engine — canonical authoring profile
+### 5.3 Voice Production Engine / authoring Voice Studio — canonical profile
 
 All new Greia prerecorded speech production uses:
 
 ```text
 tools/greia_voice.py
 ```
+
+“Voice Studio” is shorthand for the authoring workflow around `VoiceEngine`; it currently means the CLI/service + review workflow, not child-runtime TTS and not necessarily a GUI.
 
 Read:
 
@@ -167,13 +168,13 @@ docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md
 docs/architecture/GREIA_VOICE_PRODUCTION_ENGINE.md
 ```
 
-The first command on any workstation is the non-mutating probe:
+First command on any workstation:
 
 ```bash
 python3 tools/greia_voice.py doctor
 ```
 
-The engine handles four semantic production classes:
+Semantic production classes:
 
 ```text
 character_dialogue
@@ -184,18 +185,18 @@ dani_system_speech
 
 #### Base engine
 
-The source is part of the repository; no engine package is installed into Greia OS. Python 3.11+ is required for the authoring CLI (`3.12` is the current tested production version).
+The source is part of the repository; it is not installed into Greia OS. Python 3.11+ is required for the authoring CLI; Python 3.12 is the current tested production version.
 
 #### Full Apple-Silicon character-production profile
 
-When actual Lilli/Leo/Flash/Tito/Momo generation is requested and owner-authorized, follow:
+For actual Lilli/Leo/Flash/Tito/Momo generation, follow:
 
 ```text
 tools/greia_voice_core/README.md
 docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md
 ```
 
-The tested dependency declaration is:
+Tested dependency declaration:
 
 ```text
 tools/greia_voice_requirements_mlx.txt
@@ -203,20 +204,22 @@ tools/greia_voice_requirements_mlx.txt
 
 Machine-local venv/cache/model data stays below `GREIA_VOICE_HOME` / `GREIA_VOICE_CACHE`, outside Git.
 
-Current provider composition:
+Current implemented provider composition:
 
 ```text
 canonical cloned characters -> Chatterbox Multilingual V3 / MLX
-optional transcript check    -> mlx-whisper-tiny
+optional transcript warning  -> mlx-whisper-tiny
 pedagogical + Dani speech    -> macOS native/system speech
 packaging                    -> FFmpeg
 ```
 
-The Activity/OS/Encyclopedia skills do not call those pieces directly.
+Activity/OS/Encyclopedia code does not call those pieces directly.
 
-#### Shared Greia character utterances
+Other hosts must report unavailable provider gaps truthfully until accepted provider implementations exist. Do not bypass `VoiceEngine` with direct `espeak`, Piper, Windows Speech, Coqui or arbitrary host commands.
 
-Normal Activities consume semantic families such as:
+#### Shared Greia reactions — production still pending
+
+Designed families:
 
 ```text
 praise.general
@@ -226,31 +229,74 @@ encourage.progress
 ready.go
 ```
 
-They do not need a local cloning model merely to play the reviewed shared library.
+Target:
 
-When producing/extending the **central library itself**, use:
+```text
+6 characters × 5 families × 3 variants × 2 locales = 180 review candidates
+```
+
+Producer exists:
 
 ```bash
 python3 tools/record_shared_character_utterances.py
 ```
 
-This script is a thin Voice Engine client and covers Lilli/Leo/Flash/Tito/Momo plus Dani through the proper provider routes.
+But the existence of the producer is **not** completion. Treat the shared audio set as pending until generation, owner listening, accepted-set promotion and runtime resolver evidence are complete.
+
+Read:
+
+```text
+docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md
+docs/agents/GREIA_SHARED_CHARACTER_UTTERANCE_RECORDING.md
+```
+
+Normal Activities do not need a cloning environment merely to play a future accepted shared library; they consume static reviewed assets semantically.
+
+#### Character introductions — new pending OS content pack
+
+Greia also defines one fun self-introduction for each canonical character in Italian and English:
+
+```text
+6 characters × 2 locales = 12 review candidates
+```
+
+Cue family:
+
+```text
+character.intro.<character>
+```
+
+Natural characters use `character_dialogue`; Dani uses `dani_system_speech`.
+
+The scripts are in:
+
+```text
+docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md
+```
+
+The exact batch-production instructions are in:
+
+```text
+docs/agents/GREIA_SHARED_CHARACTER_UTTERANCE_RECORDING.md
+```
+
+Final UX placement is deliberately open: optional first-run meet-the-cast, tappable/wandering Home characters, future gallery, or another non-blocking platform surface.
 
 #### Pedagogical/system speech
 
-Letters, syllables, phonics and pronunciation-authoritative audio use `pedagogical_speech` through the Voice Engine. Activity scripts do not call macOS `say` or hard-code host voice names/pronunciation overrides.
+Letters, syllables, phonics and pronunciation-authoritative audio use `pedagogical_speech` through the engine. Activity scripts do not call macOS `say` or hard-code host voice names/pronunciation overrides.
 
 #### Human review
 
-Every successful engine generation writes a receipt with:
+Every successful generation writes a receipt with:
 
 ```text
 human_review = PENDING
 ```
 
-Whisper PASS, process success or a valid audio file is never acceptance. Human listening remains mandatory before the owning workflow packages/promotes audio.
+Whisper PASS, process success or a valid audio file is never acceptance. Human listening remains mandatory before the owning workflow promotes audio.
 
-The low-level Chatterbox field guide is now for **Voice Engine maintainers/troubleshooting only**:
+Low-level Chatterbox guide (maintainers/troubleshooting only):
 
 ```text
 docs/agents/GREIA_CHATTERBOX_PRODUCTION_FIELD_GUIDE.md
@@ -349,11 +395,11 @@ Do not put destructive disk/removable-media writes into a generic setup helper.
 | Voice production skill | `skills/greia-voice-production/SKILL.md` |
 | Voice engine quick install/use | `tools/greia_voice_core/README.md` |
 | Voice architecture | `docs/architecture/GREIA_VOICE_PRODUCTION_ENGINE.md` |
-| Voice policy/canonical identities | `docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md` |
+| Voice policy/canonical identities/intros | `docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md` |
 | Voice workstation setup | `docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md` |
 | Chatterbox internals/troubleshooting | `docs/agents/GREIA_CHATTERBOX_PRODUCTION_FIELD_GUIDE.md` |
-| Shared character utterances | `docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md` |
-| Shared utterance production | `docs/agents/GREIA_SHARED_CHARACTER_UTTERANCE_RECORDING.md` |
+| Shared character reactions | `docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md` |
+| Shared reactions + intro production runbook | `docs/agents/GREIA_SHARED_CHARACTER_UTTERANCE_RECORDING.md` |
 | Parent App source/staging | `docs/architecture/PARENT_APP_SOURCE_INTEGRATION.md` |
 | Parent management/API | `docs/architecture/GREIA_PARENT_MANAGEMENT.md` |
 | Developer remote control | `docs/agents/GREIA_AGENT_OPERATIONS.md`, `docs/testing/2026-08-09_DEVELOPER_REMOTE_CONTROL.md` |
@@ -372,17 +418,18 @@ Do not put destructive disk/removable-media writes into a generic setup helper.
 | Parent App local demo | Dependency-light in separate client repository |
 | Developer remote control | Implemented for explicit developer images only |
 | Voice Production Engine | Implemented and canonical for new authoring production; real provider readiness is workstation-specific and reported by `doctor` |
-| Pedagogical/system speech | macOS adapter implemented behind Voice Engine; other hosts require future providers |
+| Pedagogical/system speech | macOS adapter implemented behind Voice Engine; other hosts require future accepted providers |
 | Chatterbox character production | Apple-Silicon MLX provider implemented behind Voice Engine; optional heavy workstation profile |
-| Whisper verification | Optional advisory verifier implemented behind Voice Engine; never acceptance authority |
-| Shared-library producer | Engine-based producer implemented; human-reviewed runtime catalogue completeness remains separately evidence-owned |
+| Whisper verification | Optional advisory verifier behind Voice Engine; never acceptance authority |
+| Shared reaction producer | Implemented, but 180-clip generation/listening/promotion is still pending |
+| Character intro pack | Scripts/cues defined; 12-clip generation/listening and final OS placement still pending |
 | One-command role-based workstation bootstrap | Not implemented; voice profile has explicit install guide + `doctor` |
 
 ## 8. Future setup assistant
 
-A future `tools/greia_setup.py` may unify role bootstrap, but it must consume rather than replace the current Voice Engine provider probe and never silently install heavy/privileged dependencies.
+A future `tools/greia_setup.py` may unify role bootstrap, but it must consume rather than replace current role authorities and must never silently install heavy/privileged dependencies.
 
-Desired profiles may include:
+Possible profiles:
 
 ```text
 activity
@@ -397,7 +444,7 @@ Until then, this file is the setup router/readiness ledger and `tools/greia_voic
 
 ## 9. Maintenance rule
 
-Whenever a change adds/removes/materially changes a required tool, skill, external repository, connection path, Parent App launch path, simulator prerequisite, voice backend, image-build prerequisite or setup verification command:
+Whenever a change adds/removes/materially changes a required tool, skill, external repository, connection path, simulator prerequisite, voice backend/content-production workflow, image-build prerequisite or setup verification command:
 
 1. update the narrower owner document;
 2. update this index in the same tranche;

@@ -1,20 +1,19 @@
 # Greia Shared Character Utterances — Production & Review
 
-**Purpose:** produce and review Greia's central shared reaction library through the canonical Voice Production Engine.  
-**Languages:** Italian (`it`) and English (`en`).  
-**Characters:** Lilli, Leo, Flash, Tito, Momo and Dani.
+**Status:** production runbook; shared library and character-intro audio are still pending generation/listening  
+**Languages:** Italian (`it`) and English (`en`)  
+**Characters:** Lilli, Leo, Flash, Tito, Momo and Dani  
+**Canonical engine:** `tools/greia_voice.py`
 
-## 1. Canonical production rule
+## 1. Canonical rule
 
-Use:
+Generate the shared reaction library with:
 
 ```text
 tools/record_shared_character_utterances.py
 ```
 
-That script is a thin semantic producer over `VoiceEngine`. It must remain free of direct Chatterbox, Whisper, native-TTS and FFmpeg implementation logic.
-
-Do not use the historical direct Chatterbox recording mechanics for new library production.
+The script is a thin semantic producer over `VoiceEngine`. It must remain free of direct Chatterbox, Whisper, native-TTS, trimming and FFmpeg implementation logic.
 
 Read first:
 
@@ -27,17 +26,28 @@ docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md
 docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md
 ```
 
-If the production environment needs installation or troubleshooting:
+For installation/readiness:
 
 ```text
 docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md
 ```
 
-The Chatterbox field guide is only for Voice Engine maintainers diagnosing provider internals.
+## 2. What is still unfinished
 
-## 2. What the engine does
+Do not infer content completion from the existence of the producer.
 
-For this library every line is submitted as:
+Current target status:
+
+```text
+shared reaction candidates: 180 intended, production/listening still pending
+character intro candidates:  12 intended, production/listening still pending
+```
+
+The work becomes accepted only through generation + human listening + explicit promotion of accepted static assets.
+
+## 3. Engine routing
+
+Every shared reaction line uses:
 
 ```text
 kind = shared_character_utterance
@@ -50,33 +60,38 @@ Lilli/Leo/Flash/Tito/Momo -> canonical cloned-character provider
 Dani                       -> deterministic system/native provider
 ```
 
-Suitable multi-word cloned-character lines may receive advisory Whisper verification. Tiny reactions and Dani normally skip ASR.
+Suitable multi-word natural-character lines may receive advisory Whisper verification. Tiny reactions and Dani may legitimately skip ASR.
 
 The engine owns:
 
 ```text
-canonical voice/reference selection and hash validation
+canonical identity/reference validation
 model loading/reuse
 single-worker protection
-MLX cache cleanup
-short-output limits/trim rules
-native TTS profiles
+MLX cleanup
+native voice profiles
 optional Whisper checks
-WAV production
+WAV/OGG packaging
 receipts
 ```
 
-The recording runbook does not duplicate those mechanics.
+## 4. Preflight
 
-## 3. Before production
+Record source identity:
 
-Run the non-mutating readiness probe:
+```bash
+git status --short
+git rev-parse HEAD
+python3 --version
+```
+
+Run:
 
 ```bash
 python3 tools/greia_voice.py doctor
 ```
 
-If a needed provider is unavailable, follow the engine installation guide. Do not silently substitute another TTS backend.
+A cloning-reference hash failure is a hard stop. If a required provider is unavailable, follow the canonical setup guide; do not substitute a different backend directly.
 
 Default review workspace:
 
@@ -84,26 +99,26 @@ Default review workspace:
 ./tmp/shared-character-utterances/
 ```
 
-Generated/rejected review material is not a runtime asset and must not be committed as accepted library content until human review is complete.
+Review/rejected audio is not runtime content.
 
-## 4. Produce the library
+## 5. Generate the 180 shared-reaction candidates
 
-Full current phrase matrix:
+Full matrix:
 
 ```bash
 python3 tools/record_shared_character_utterances.py
 ```
 
-Optional subset during testing/review:
+Useful subset while validating the workstation:
 
 ```bash
 python3 tools/record_shared_character_utterances.py \
   --characters leo,dani
 ```
 
-The script keeps one engine/model warm, holds the global generation lock for the complete run and refuses to overwrite an existing audio/receipt candidate blindly.
+The producer keeps one engine/model warm, holds the global generation lock for the complete run and refuses to overwrite an existing audio/receipt pair blindly.
 
-Expected output shape:
+Expected layout:
 
 ```text
 tmp/shared-character-utterances/
@@ -117,17 +132,19 @@ tmp/shared-character-utterances/
   review.csv
 ```
 
-Each newly generated audio file also has:
+Each generated candidate also has:
 
 ```text
 <audio>.receipt.json
 ```
 
-All engine-generated candidates remain `human_review = PENDING`.
+All remain:
 
-## 5. Phrase matrix
+```text
+human_review = PENDING
+```
 
-Each semantic family has three interchangeable source variants.
+## 6. Shared phrase matrix
 
 ### `praise.general`
 
@@ -145,13 +162,6 @@ English:
 Congratulations!
 Great work!
 Well done!
-```
-
-Default animation:
-
-```text
-expression: happy
-motion: happy_hop
 ```
 
 ### `celebrate.success`
@@ -172,13 +182,6 @@ Hooray!
 Wonderful!
 ```
 
-Default animation:
-
-```text
-expression: happy
-motion: celebrate_pop
-```
-
 ### `encourage.retry`
 
 Italian:
@@ -195,13 +198,6 @@ English:
 Let's try again!
 Almost! Let's try again!
 One more time!
-```
-
-Default animation:
-
-```text
-expression: happy
-motion: idle_bounce
 ```
 
 ### `encourage.progress`
@@ -222,13 +218,6 @@ Almost there!
 You're doing great!
 ```
 
-Default animation:
-
-```text
-expression: happy
-motion: idle_bounce
-```
-
 ### `ready.go`
 
 Italian:
@@ -247,42 +236,19 @@ Ready? Go!
 Here we go!
 ```
 
-Default animation:
+Preserve source wording/punctuation during a run. If owner listening leads to a wording change, update the design authority and regenerate that cue rather than silently changing bytes.
+
+## 7. Expected shared count
 
 ```text
-expression: happy
-motion: happy_hop
+6 characters × 5 families × 3 variants × 2 locales = 180
 ```
 
-Preserve punctuation exactly. These are reactions and should remain lively.
+One failed variant does not invalidate a family. A family with zero accepted variants remains unavailable.
 
-## 6. Expected candidate count
+## 8. Review the shared candidates
 
-```text
-6 characters
-× 5 semantic families
-× 3 variants
-× 2 locales
-= 180 review candidates
-```
-
-The five natural characters use their canonical cloned identities. Dani uses his system-TTS identity. Never clone a natural character voice for Dani.
-
-## 7. Naming
-
-Stable example filenames:
-
-```text
-lilli__it__praise.general__01.wav
-leo__en__ready.go__03.wav
-dani__it__encourage.retry__02.wav
-```
-
-Variant numbers correspond to phrase order here. Do not encode model parameters/seeds in canonical names.
-
-## 8. Machine result vs human review
-
-`review.csv` initially records machine-production dispositions such as:
+`review.csv` contains machine dispositions such as:
 
 ```text
 REVIEW_REQUIRED
@@ -293,9 +259,9 @@ REJECTED
 BLOCKED_PARTIAL_OUTPUT
 ```
 
-These are **not human acceptance results**.
+These are not acceptance decisions.
 
-During human review, record/derive a separate final disposition such as:
+Human review should record a separate disposition, for example:
 
 ```text
 ACCEPT
@@ -305,6 +271,7 @@ EXTRA_SPEECH
 WRONG_WORDS
 VOICE_DRIFT
 CLIPPED
+BAD_DELIVERY
 OTHER
 ```
 
@@ -312,68 +279,103 @@ OTHER
 
 - exact words;
 - correct locale/pronunciation;
-- no invented/repeated sounds;
-- no unwanted tail;
-- no clipped initial/final sound;
-- correct canonical character identity where applicable;
-- suitable delivery and small-speaker intelligibility.
+- no invented/repeated speech;
+- no clipped starts/ends or unwanted tails;
+- recognizable canonical identity for natural characters;
+- clearly fun/robotic Dani identity;
+- delivery suitable for repeated child-facing use;
+- acceptable playback on small speakers.
 
-For Dani, verify that the selected system voice remains clearly synthetic/robotic enough for the character identity.
+Whisper PASS never replaces listening.
 
-Whisper PASS never substitutes for this listening gate.
+## 9. Do not promote review output automatically
 
-## 9. Preserve character personality
+Generation success must **not** copy candidates directly into runtime assets.
 
-Do not normalize all characters into the same performance style.
+After listening, the later integration tranche should:
 
-Desired identities remain approximately:
+1. take only `ACCEPT` candidates;
+2. place them in the versioned OS/shared audio catalogue;
+3. expose only accepted variants through the semantic resolver;
+4. omit rejected/missing variants rather than using placeholders;
+5. test fail-soft behavior for unavailable families/locales;
+6. verify at least one real Activity consumes a semantic family without copying the bytes into its package.
 
-```text
-Lilli -> warm and delighted
-Leo   -> warm, older, quietly pleased
-Flash -> lively and energetic
-Tito  -> adventurous and encouraging
-Momo  -> playful and expressive
-Dani  -> concise, fun and clearly robotic
-```
-
-Variants within one family are interchangeable in meaning, not identical performances.
-
-## 10. Runtime shared-family contract
-
-Activities do not choose generated filenames or variant numbers. They request only:
+Until that exists, report:
 
 ```text
-character
-semantic family
-locale
+SHARED-UTTERANCE-AUDIO-PENDING
 ```
 
-Greia owns the reviewed available array:
+not “shared library complete”.
+
+## 10. Generate the 12 character introductions
+
+The introduction pack is separate from shared generic reactions. It can be generated in the same workstation session after the shared run.
+
+Create a review queue:
+
+```bash
+mkdir -p ./tmp/character-intros
+cat > ./tmp/character-intro-requests.jsonl <<'EOF'
+{"speaker":"lilli","kind":"character_dialogue","locale":"it","text":"Ciao! Io sono Lilli! Adoro inventare storie, disegnare cose colorate e trovare un po' di magia dappertutto. Hai un'idea buffa? Vieni con me!","cue_id":"character.intro.lilli","output":"tmp/character-intros/it/lilli.ogg","verification":"auto","max_attempts":2}
+{"speaker":"lilli","kind":"character_dialogue","locale":"en","text":"Hi! I'm Lilli! I love making up stories, drawing colorful things, and finding a little magic everywhere. Got a silly idea? Come with me!","cue_id":"character.intro.lilli","output":"tmp/character-intros/en/lilli.ogg","verification":"auto","max_attempts":2}
+{"speaker":"leo","kind":"character_dialogue","locale":"it","text":"Oh, ciao! Io sono Leo. Mi piacciono le storie, le parole e tutte quelle domande che cominciano con perché. Se c'è qualcosa da scoprire, io sono pronto!","cue_id":"character.intro.leo","output":"tmp/character-intros/it/leo.ogg","verification":"auto","max_attempts":2}
+{"speaker":"leo","kind":"character_dialogue","locale":"en","text":"Oh, hello! I'm Leo. I like stories, words, and all those questions that start with why. If there's something to discover, I'm ready!","cue_id":"character.intro.leo","output":"tmp/character-intros/en/leo.ogg","verification":"auto","max_attempts":2}
+{"speaker":"flash","kind":"character_dialogue","locale":"it","text":"Ehi! Io sono Flash! Adoro correre, giocare e provare sfide velocissime. Se senti qualcuno gridare via, probabilmente sono già partito!","cue_id":"character.intro.flash","output":"tmp/character-intros/it/flash.ogg","verification":"auto","max_attempts":2}
+{"speaker":"flash","kind":"character_dialogue","locale":"en","text":"Hey! I'm Flash! I love running, playing, and trying super-fast challenges. If you hear someone shout go, I've probably already started!","cue_id":"character.intro.flash","output":"tmp/character-intros/en/flash.ogg","verification":"auto","max_attempts":2}
+{"speaker":"dani","kind":"dani_system_speech","locale":"it","text":"Bip-bop! Io sono Dani! Mi piacciono numeri, schemi, puzzle e cose che fanno clic proprio al posto giusto. Modalità amicizia: attivata!","cue_id":"character.intro.dani","output":"tmp/character-intros/it/dani.ogg","verification":"off","max_attempts":1}
+{"speaker":"dani","kind":"dani_system_speech","locale":"en","text":"Beep-bop! I'm Dani! I like numbers, patterns, puzzles, and things that click into exactly the right place. Friendship mode: activated!","cue_id":"character.intro.dani","output":"tmp/character-intros/en/dani.ogg","verification":"off","max_attempts":1}
+{"speaker":"tito","kind":"character_dialogue","locale":"it","text":"Ciao, esploratore! Io sono Tito! Mi piace curiosare tra boschi, mari, sentieri e piccoli misteri. Andiamo a vedere cosa c'è dietro l'angolo!","cue_id":"character.intro.tito","output":"tmp/character-intros/it/tito.ogg","verification":"auto","max_attempts":2}
+{"speaker":"tito","kind":"character_dialogue","locale":"en","text":"Hello, explorer! I'm Tito! I love poking around forests, seas, trails, and little mysteries. Let's see what's around the corner!","cue_id":"character.intro.tito","output":"tmp/character-intros/en/tito.ogg","verification":"auto","max_attempts":2}
+{"speaker":"momo","kind":"character_dialogue","locale":"it","text":"Buuu! Scherzavo! Io sono Momo! Adoro musica, rumori buffi, esperimenti strani e feste improvvise. Se qualcosa fa boing, voglio provarla!","cue_id":"character.intro.momo","output":"tmp/character-intros/it/momo.ogg","verification":"auto","max_attempts":2}
+{"speaker":"momo","kind":"character_dialogue","locale":"en","text":"Booo! Just kidding! I'm Momo! I love music, silly noises, strange experiments, and surprise parties. If something goes boing, I want to try it!","cue_id":"character.intro.momo","output":"tmp/character-intros/en/momo.ogg","verification":"auto","max_attempts":2}
+EOF
+
+python3 tools/greia_voice.py batch --input ./tmp/character-intro-requests.jsonl
+```
+
+The canonical text authority remains:
 
 ```text
-one accepted file       -> use it
-multiple accepted files -> choose a reviewed variant for presentation variety
+docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md
 ```
 
-A rejected/missing variant is simply absent. Random selection must never affect score, correctness, rewards, difficulty or progression.
+If shell-safe queue wording differs only by removed quotation marks around `perché/why/via/go`, the intended spoken meaning must be checked during listening. Prefer the design-document wording when manually regenerating a line.
 
-This recording tool is authoring-only; it does not create child-runtime synthesis.
+## 11. Review the introductions separately
 
-## 11. Evidence to return
+Do not mix intro acceptance with generic shared-family acceptance.
+
+For each intro verify:
+
+- the character sounds immediately recognizable;
+- the line is fun and short enough for optional OS use;
+- personality matches the canonical cast;
+- no line sounds like a mandatory tutorial;
+- pronunciation is natural;
+- the clip works when triggered alone;
+- Dani remains charming/robotic rather than generic navigation TTS.
+
+Possible future placement—first-run, tappable Home characters, gallery—is **not** decided by this audio run.
+
+## 12. Evidence to return
 
 Return:
 
 ```text
-1. exact Greia git SHA
-2. `doctor` result
-3. output directory
-4. review.csv
-5. generated/existing/blocked count per character + locale
-6. representative receipt(s)
-7. any phrase that repeatedly failed
-8. human accepted/rejected count after listening
-9. whether all 180 intended variants are accepted or which remain absent
+1. exact Greia source SHA
+2. doctor result
+3. shared review output directory
+4. shared review.csv
+5. shared generated/existing/blocked count per character + locale
+6. representative receipts
+7. human accepted/rejected shared count
+8. missing/retry shared variants
+9. character intro batch result
+10. human accepted/rejected intro count
+11. Dani voice assessment
+12. any script wording recommended for revision after listening
 ```
 
-Do not hide failures and do not commit model environments, caches, canonical references or rejected review audio.
+Do not hide failures and do not commit model environments, caches, canonical references or rejected/unreviewed review audio.
