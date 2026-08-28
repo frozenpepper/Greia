@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="600" viewBox="0 0 1024 600">
+<defs>
+  <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="12"/></filter>
+  <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur in="SourceAlpha" stdDeviation="7" result="blur"/><feOffset dy="8" result="off"/><feColorMatrix in="off" type="matrix" values="0 0 0 0 0.12  0 0 0 0 0.09  0 0 0 0 0.07  0 0 0 .28 0"/><feBlend in="SourceGraphic"/></filter>
+  <filter id="grain" x="0" y="0" width="100%" height="100%"><feTurbulence baseFrequency="0.72" numOctaves="2" seed="7" type="fractalNoise" result="n"/><feColorMatrix in="n" type="saturate" values="0"/><feComponentTransfer><feFuncA type="table" tableValues="0 0.045"/></feComponentTransfer></filter>
+  <linearGradient id="paper" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#fff9e9"/><stop offset="1" stop-color="#f2dfbd"/></linearGradient>
+  <linearGradient id="skyDay" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#bfe8ef"/><stop offset="1" stop-color="#f5e9bd"/></linearGradient>
+  <linearGradient id="skySpace" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#121934"/><stop offset="1" stop-color="#2d315f"/></linearGradient>
+  <radialGradient id="sun" cx="50%" cy="50%"><stop offset="0" stop-color="#fff7bd"/><stop offset=".55" stop-color="#ffd85d"/><stop offset="1" stop-color="#f4a62c"/></radialGradient>
+  <radialGradient id="saturn" cx="35%" cy="30%"><stop offset="0" stop-color="#fff0c6"/><stop offset=".6" stop-color="#d8a964"/><stop offset="1" stop-color="#8b6338"/></radialGradient>
+  <linearGradient id="wood" x1="0" x2="1"><stop offset="0" stop-color="#a86635"/><stop offset=".45" stop-color="#d09150"/><stop offset="1" stop-color="#8a512b"/></linearGradient>
+  <linearGradient id="stone" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#e9c87d"/><stop offset="1" stop-color="#b98345"/></linearGradient>
+</defs>
+<rect width="1024" height="600" fill="url(#skyDay)"/>
+<circle cx="892" cy="118" r="52" fill="url(#sun)" opacity=".9"/>
+<path d="M0 388 C150 310 280 380 410 342 C570 294 720 360 1024 300 L1024 600 L0 600Z" fill="#8fc07b"/>
+<path d="M0 456 C180 406 325 470 500 428 C720 375 842 446 1024 410 L1024 600 L0 600Z" fill="#5f9f68"/>
+<g filter="url(#shadow)">
+  <path d="M132 180 C255 135 392 155 500 214 L500 530 C372 470 245 474 115 516 Z" fill="url(#paper)" stroke="#7f5b3c" stroke-width="5"/>
+  <path d="M500 214 C610 155 750 135 888 180 L908 516 C768 474 630 470 500 530 Z" fill="url(#paper)" stroke="#7f5b3c" stroke-width="5"/>
+  <path d="M500 213 L500 530" stroke="#8b6544" stroke-width="8" opacity=".55"/>
+</g>
+<g transform="translate(205 250)"><ellipse cx="0" cy="56" rx="78" ry="18" fill="#5d3e2c" opacity=".2"/><path d="M-70 45 Q0-85 70 45Z" fill="#c7d996" stroke="#6c8d52" stroke-width="5"/><circle cx="-12" cy="12" r="30" fill="#d38b45"/><circle cx="-12" cy="12" r="20" fill="#efbb6a"/><path d="M-42 12 Q-64-10-55-34 Q-30-22-22-6" fill="#bd7138"/><path d="M18 12 Q40-10 31-34 Q6-22-2-6" fill="#bd7138"/></g>
+<g transform="translate(350 350)"><ellipse cx="0" cy="54" rx="70" ry="18" fill="#4f6c53" opacity=".25"/><circle cx="0" cy="3" r="58" fill="#68acd0" stroke="#4e7894" stroke-width="5"/><path d="M-50 5 Q-25-34 2-15 Q25-3 14 23 Q-18 24-33 38Z" fill="#79ae63"/><path d="M18-40 Q55-15 40 18 Q14 3 18-40Z" fill="#79ae63"/></g>
+<g transform="translate(210 420)"><ellipse cx="0" cy="42" rx="66" ry="17" fill="#6e3944" opacity=".2"/><path d="M0 38 C-64-2-46-68-7-54 C0-52 7-43 10-37 C16-49 30-58 45-52 C84-35 67 18 0 38Z" fill="#df7e8f" stroke="#9f4d60" stroke-width="5"/></g>
+<g transform="translate(660 252)"><ellipse cx="0" cy="53" rx="80" ry="20" fill="#29284e" opacity=".25"/><circle cx="0" cy="0" r="58" fill="#2a2d58" stroke="#6b6fa4" stroke-width="5"/><circle cx="-20" cy="-8" r="12" fill="#f4d56d"/><ellipse cx="22" cy="8" rx="30" ry="12" fill="none" stroke="#dfbd70" stroke-width="5" transform="rotate(-15 22 8)"/><circle cx="22" cy="8" r="14" fill="#cfa56d"/><circle cx="-2" cy="30" r="5" fill="#9fb8e1"/><circle cx="32" cy="-25" r="4" fill="#f7f0d0"/></g>
+<g transform="translate(805 350)"><ellipse cx="0" cy="52" rx="76" ry="18" fill="#5c3d2d" opacity=".25"/><rect x="-70" y="-48" width="140" height="98" rx="18" fill="url(#wood)" stroke="#744424" stroke-width="5"/><g fill="#5c9bb4" stroke="#36586a" stroke-width="4"><circle cx="-20" cy="0" r="31"/><circle cx="35" cy="4" r="23"/></g><g fill="none" stroke="#f0c268" stroke-width="8"><circle cx="-20" cy="0" r="13"/><circle cx="35" cy="4" r="9"/></g></g>
+<g transform="translate(660 430)"><ellipse cx="0" cy="42" rx="75" ry="17" fill="#5d432d" opacity=".22"/><path d="M-68 32 L0-62 L68 32Z" fill="#d3ad69" stroke="#8f693f" stroke-width="5"/><path d="M-50 32 L0-36 L50 32Z" fill="#e7c685" opacity=".65"/></g>
+<g fill="#f7d875" stroke="#8b6544" stroke-width="3"><circle cx="205" cy="305" r="13"/><circle cx="350" cy="405" r="13"/><circle cx="210" cy="462" r="13"/><circle cx="660" cy="305" r="13"/><circle cx="805" cy="405" r="13"/><circle cx="660" cy="472" r="13"/></g>
+<rect width="1024" height="600" filter="url(#grain)" opacity=".35"/></svg>
