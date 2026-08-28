@@ -18,6 +18,12 @@ class ChatterboxProviderPolicyTests(unittest.TestCase):
         source = inspect.getsource(ChatterboxMLXProvider.generate)
         self.assertNotIn("max_new_tokens", source)
 
+    def test_short_speech_trim_does_not_stop_at_internal_gap(self):
+        source = inspect.getsource(ChatterboxMLXProvider._trim_audio)
+        self.assertNotIn("if int(idx) - end_frame > 12", source)
+        self.assertNotIn("for idx in active[1:]", source)
+        self.assertIn("end_frame = int(active[-1])", source)
+
     def test_shared_asr_warning_is_unresolved_production_work(self):
         self.assertTrue(_result_counts_as_success("REVIEW_REQUIRED"))
         self.assertTrue(_result_counts_as_success("EXISTING_REVIEW_CANDIDATE"))
