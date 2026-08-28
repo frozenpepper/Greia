@@ -2,9 +2,9 @@
 """Build or verify Encyclopedia editable SVG masters as runtime PNGs.
 
 Authoring-only tool. Runtime Greia images never depend on CairoSVG or SVG
-rasterization. ``--check`` rebuilds to a temporary directory and compares
-normalized RGBA pixels against the committed runtime pack, so harmless PNG
-compression metadata differences do not create false drift failures.
+rasterization. ``--check`` rebuilds to a temporary directory and byte-compares
+against the committed runtime pack. A CairoSVG/toolchain change that alters the
+build product therefore requires an intentional rebuild and commit.
 """
 from __future__ import annotations
 
@@ -12,8 +12,6 @@ import argparse
 import hashlib
 from pathlib import Path
 from tempfile import TemporaryDirectory
-
-import pygame
 
 try:
     import cairosvg
@@ -49,9 +47,8 @@ def _build_one(name: str, target_root: Path) -> Path:
     return target
 
 
-def _normalized_pixels(path: Path) -> tuple[tuple[int, int], bytes]:
-    image = pygame.image.load(str(path))
-    return image.get_size(), pygame.image.tobytes(image, "RGBA")
+def _sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def build() -> int:
@@ -60,13 +57,17 @@ def build() -> int:
         target = _build_one(name, RUNTIME)
         size = target.stat().st_size
         total += size
-        print(f"built {target.relative_to(ROOT)} ({size} bytes)")
+        print(f"built {target.relative_to(ROOT)} ({size} bytes) sha256={_sha256(target)}")
     print(f"built {len(NAMES)} runtime PNGs ({total} bytes total)")
     return 0
 
 
 def check() -> int:
-    missing = [RUNTIME / f"{name}.png" for name in NAMES if not (RUNTIME / f"{name}.png").is_file()]
+    missing = [
+        RUNTIME / f"{name}.png"
+        for name in NAMES
+        if not (RUNTIME / f"{name}.png").is_file()
+    ]
     if missing:
         for path in missing:
             print(f"MISSING {path.relative_to(ROOT)}")
@@ -77,19 +78,13 @@ def check() -> int:
         for name in NAMES:
             rebuilt = _build_one(name, rebuilt_root)
             committed = RUNTIME / f"{name}.png"
-            rebuilt_size, rebuilt_pixels = _normalized_pixels(rebuilt)
-            committed_size, committed_pixels = _normalized_pixels(committed)
-            if rebuilt_size != REFERENCE_SIZE or committed_size != REFERENCE_SIZE:
+            if rebuilt.read_bytes() != committed.read_bytes():
                 print(
-                    f"DIMENSION-DRIFT {name}: rebuilt={rebuilt_size} committed={committed_size} "
-                    f"expected={REFERENCE_SIZE}"
+                    f"BUILD-DRIFT {name}: rebuilt_sha256={_sha256(rebuilt)} "
+                    f"committed_sha256={_sha256(committed)}"
                 )
                 return 1
-            if rebuilt_pixels != committed_pixels:
-                print(f"PIXEL-DRIFT {name}: committed runtime art is stale or mismatched")
-                return 1
-            digest = hashlib.sha256(committed_pixels).hexdigest()
-            print(f"PASS {name} rgba_sha256={digest}")
+            print(f"PASS {name} sha256={_sha256(committed)}")
     print(f"PASS {len(NAMES)} Encyclopedia runtime PNGs match editable masters")
     return 0
 
@@ -99,7 +94,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--check",
         action="store_true",
-        help="rebuild temporarily and verify committed runtime pixels without modifying them",
+        help="rebuild temporarily and verify committed runtime PNGs without modifying them",
     )
     return parser.parse_args()
 
