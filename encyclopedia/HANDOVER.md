@@ -3,7 +3,7 @@
 **Updated:** 2026-08-28  
 **Runtime pages:** **43 / 43 planned executable pages**  
 **Runtime Activity:** `activities/enciclopedia_greia/` (`org.greia.enciclopedia`)  
-**Current state:** **MECHANICAL RUNTIME FOUNDATION HEALTHY / CURRENT GRAPHICS REJECTED / VISUAL REAUTHORING ACTIVE / NARRATION ACCEPTANCE PENDING**
+**Current state:** **MECHANICAL RUNTIME FOUNDATION HEALTHY / OLD GRAPHICS REJECTED / E1+E2 GOLDEN-MASTER SOURCE LANDED / RUNTIME PNG BUILD + SIMULATOR REVIEW PENDING / NARRATION ACCEPTANCE PENDING**
 
 This is the current continuation contract. Historical construction detail remains in `encyclopedia/PROGRESS.md` and dated reviews.
 
@@ -139,29 +139,31 @@ continuous run                   PASS
 
 The later screenshot review found a generic capture-settle race for Sun/Neptune before-frames. The generic headless transition-settle repair has since landed on `main` and should be preserved.
 
+These older runtime passes predate the current E1/E2 visual edits and therefore **do not** count as launch/visual acceptance of the new golden-master source.
+
 ---
 
-## 5. Important correction — current graphics are NOT accepted
+## 5. Important correction — old graphics are NOT accepted
 
 The earlier visual-evidence review was too charitable about the overall art direction.
 
-After owner review, the correct disposition is:
+After owner review, the correct disposition remains:
 
 ```text
 MECHANICAL PAGE/INPUT ARCHITECTURE: useful
-CURRENT ENCYCLOPEDIA GRAPHICS: rejected as product quality
+OLD ENCYCLOPEDIA GRAPHICS: rejected as product quality
 ```
 
-The problem is systemic:
+The systemic failure was:
 
-- main illustrated subjects are too often raw `pygame.draw` circles/ellipses/rectangles/lines/polygons;
-- backgrounds are flat and sparse;
-- section pages resemble menus/diagrams rather than inviting illustrated worlds;
-- discovery controls look like small instrumentation bubbles;
-- canonical characters are commonly pasted into corners rather than composed into scenes;
-- interaction payoffs are frequently subtle diagram changes;
-- text/caption strips carry too much of the explanatory burden for a pre-reader-first Activity;
-- the current result conflicts with Greia's accepted storybook/felt-board/toy-diorama visual system.
+- main illustrated subjects too often built from raw `pygame.draw` circles/ellipses/rectangles/lines/polygons;
+- flat sparse backgrounds;
+- section pages resembling menus/diagrams rather than inviting illustrated worlds;
+- instrumentation-like discovery bubbles;
+- canonical characters commonly pasted into corners rather than composed into scenes;
+- subtle interaction payoffs;
+- too much explanatory burden carried by captions;
+- conflict with Greia's accepted storybook/felt-board/toy-diorama visual system.
 
 Authoritative forensic audit:
 
@@ -196,11 +198,44 @@ Procedural drawing remains appropriate for real diagrams, small annotations, par
 
 ---
 
-## 7. Golden-master gate before bulk migration
+## 7. E1/E2 source tranche now landed on `main`
 
-Do **not** redraw all 43 pages immediately.
+The first bounded visual-foundation/golden-master source tranche is committed.
 
-Required representative prototypes:
+### Shared foundation
+
+```text
+activities/enciclopedia_greia/enciclopedia_presentation.py
+activities/enciclopedia_greia/enciclopedia_services.py
+```
+
+Implemented source contracts include:
+
+```text
+PageShellLayout safe regions
+DiscoveryToken tactile state language
+caption ribbon helper
+authored-scene placement helper
+object focus/lift treatment
+bounded package-local authored-art cache
+explicit semantic art-id -> runtime PNG map
+no page-local image decode / smoothscale
+```
+
+`VisualLibrary` remains hard-bounded and is the single Activity-local facade for these authored runtime renditions plus shared canonical characters.
+
+### Editable source masters
+
+```text
+activities/enciclopedia_greia/assets/source/home_discovery_book.svg
+activities/enciclopedia_greia/assets/source/animals_field_table.svg
+activities/enciclopedia_greia/assets/source/lion_savanna.svg
+activities/enciclopedia_greia/assets/source/saturn_observatory.svg
+activities/enciclopedia_greia/assets/source/gears_workbench.svg
+activities/enciclopedia_greia/assets/source/pyramids_diorama.svg
+```
+
+### Golden-master page source
 
 ```text
 Home
@@ -209,48 +244,79 @@ Lion
 Saturn
 Gears
 Pyramids
-optional Body/Heart proof
 ```
 
-These must demonstrate:
+The page/state/navigation models were retained. The visual code now consumes authored scenes and uses procedural drawing primarily for focus/discovery UI and bounded educational reveal overlays.
 
-- root navigation;
-- section navigation;
-- organic illustration;
-- astronomy/dark-scene treatment;
-- mechanical/diagram treatment;
-- history/scene treatment;
-- optional anatomy direction.
-
-Required workflow:
+### Build and source contract
 
 ```text
-E1 shared visual foundation
-→ E2 golden-master implementation
-→ actual Simulator screenshots
-→ one contact sheet
-→ primary/owner visual review
-→ explicit direction approval
-→ only then migrate remaining pages
+tools/build_encyclopedia_visual_assets.py
+tests/test_activity_enciclopedia_visual_foundation.py
 ```
 
-If the owner rejects the direction, revise the golden masters rather than propagating them.
+The build tool is authoring-only and converts the six editable SVG masters into six 1024×600 runtime PNGs. **CairoSVG is not a child-runtime dependency and must not become one.**
+
+A local mirror of the exact source-contract shape passed:
+
+```text
+visual-foundation source contracts  6 / 6 PASS
+changed module AST parse             PASS
+```
+
+This is source/static evidence only. It is not evidence that the current Git checkout has built runtime PNGs, launched through Greia, or looks good in the Simulator.
 
 ---
 
-## 8. Previous small fixes to retain
+## 8. Golden-master hard gate before bulk migration
+
+Required representative prototypes remain:
+
+```text
+Home
+Animals section
+Lion
+Saturn
+Gears
+Pyramids
+optional Body/Heart proof only if needed later
+```
+
+Required workflow is now:
+
+```text
+E1/E2 source landed
+→ build six runtime PNGs on local maintainer checkout
+→ focused real-checkout tests
+→ commit/push generated runtime PNGs
+→ final-SHA real Greia Simulator launch/survival
+→ actual 1024×600 prototype screenshots
+→ compact + larger responsive sample
+→ one curated contact sheet
+→ owner visual review
+→ explicit direction approval
+→ only then E3/E4 migration
+```
+
+If the owner rejects the direction, revise these six prototypes rather than propagating them.
+
+**No remaining Encyclopedia page may be migrated before this gate.**
+
+---
+
+## 9. Previous small fixes to retain
 
 Already landed and still valid:
 
-- Pyramids caption safe fitting/wrapping;
+- Pyramids caption safe fitting/wrapping intent; the new shared caption ribbon retains adaptive fitting rather than truncation;
 - Body Teeth target contrast improvement;
 - generic headless page-transition settle repair.
 
-These fixes solve real local defects but do not constitute visual acceptance.
+These fixes solve real local defects but do not constitute current visual acceptance.
 
 ---
 
-## 9. Current local-agent authority
+## 10. Current local-agent authority
 
 Rolling pointer:
 
@@ -258,19 +324,33 @@ Rolling pointer:
 docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md
 ```
 
-Current rule:
+It now owns the exact next execution task:
 
 ```text
-DO NOT run another broad 43-page visual recapture yet.
-DO NOT start final pointer/responsive acceptance yet.
-DO NOT bulk-redraw all pages.
+refresh main
+build six runtime PNGs
+run focused tests / local verification
+commit runtime PNG pack
+run final-SHA real Simulator gate
+capture six prototypes + responsive samples
+produce contact sheet
+perform no-reading review
+update evidence/docs
+STOP for owner review
 ```
 
-Next implementation work is **E1 + E2** from the visual reauthoring plan, ending in a small curated prototype evidence set for review.
+Explicitly prohibited before owner approval:
+
+```text
+another broad 43-page visual recapture
+final all-page pointer/responsive acceptance
+narration generation/integration
+bulk redraw/migration of remaining pages
+```
 
 ---
 
-## 10. `libpng` warning
+## 11. `libpng` warning
 
 Prior headless runs emitted:
 
@@ -280,14 +360,18 @@ libpng error: bad adaptive filter value
 
 No broad visible missing-asset/fallback pattern was identified in the old evidence. The warning remains unresolved diagnostic evidence and must not be attributed to a specific cause without direct proof.
 
-Do not let speculative warning repair derail the graphics reauthoring unless new evidence points to a concrete asset failure.
+The new golden-master runtime PNGs must be checked normally when built. Do not assume the old warning applies to them and do not let speculative warning repair derail the visual gate without concrete evidence.
 
 ---
 
-## 11. Acceptance still pending
+## 12. Acceptance still pending
 
 ```text
-golden-master visual direction approval
+six runtime PNG renditions built + committed
+focused tests on real checkout after build
+final-SHA Simulator launch/survival after current visual edits
+golden-master actual-pixel contact sheet
+golden-master owner direction approval
 complete visual migration
 interaction visual-language pass
 pointer vs semantic-keyboard parity sample
@@ -303,9 +387,15 @@ Only after final visual/input/pre-reader/responsive Simulator gates pass may the
 SOURCE + SIMULATOR ACCEPTED / NARRATION ACCEPTANCE PENDING
 ```
 
+Current allowed status is:
+
+```text
+E1/E2 SOURCE IMPLEMENTED / RUNTIME ART BUILD + SIMULATOR UNVERIFIED / OWNER DIRECTION PENDING
+```
+
 ---
 
-## 12. Current authorities
+## 13. Current authorities
 
 ```text
 docs/reviews/2026-08-28_ENCYCLOPEDIA_GRAPHICS_FORENSIC_AUDIT.md
@@ -316,4 +406,6 @@ docs/design/GREIA_ART_GRAPHICS_SYSTEM.md
 docs/design/GREIA_VISUAL_STYLE_GUIDE.md
 docs/design/GREIA_VISUAL_AUTHORING_ARCHITECTURE.md
 skills/greia-visual-authoring/SKILL.md
+skills/greia-activity-authoring/LAUNCH_ACCEPTANCE.md
+skills/greia-activity-authoring/PRE_READER_UX.md
 ```
