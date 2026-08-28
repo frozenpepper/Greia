@@ -81,7 +81,35 @@ def _runtime_narration_cues() -> set[str]:
             and isinstance(node.value, str)
             and node.value.startswith("encyclopedia.")
         )
+    cues.difference_update(_visual_scene_ids())
     return cues
+
+
+def _visual_scene_ids() -> set[str]:
+    services_path = (
+        Path(__file__).resolve().parents[1]
+        / "activities"
+        / "enciclopedia_greia"
+        / "enciclopedia_services.py"
+    )
+    tree = ast.parse(services_path.read_text(encoding="utf-8"))
+    for node in tree.body:
+        if isinstance(node, ast.ClassDef) and node.name == "VisualLibrary":
+            for child in node.body:
+                if (
+                    isinstance(child, ast.Assign)
+                    and any(
+                        isinstance(target, ast.Name) and target.id == "ART_ASSETS"
+                        for target in child.targets
+                    )
+                    and isinstance(child.value, ast.Dict)
+                ):
+                    return {
+                        key.value
+                        for key in child.value.keys
+                        if isinstance(key, ast.Constant) and isinstance(key.value, str)
+                    }
+    raise AssertionError("VisualLibrary.ART_ASSETS map not found")
 
 
 class VoiceLedgerAuthoringTests(unittest.TestCase):
