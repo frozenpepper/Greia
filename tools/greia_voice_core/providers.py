@@ -126,15 +126,15 @@ class ChatterboxMLXProvider(VoiceProvider):
         if not len(active):
             return samples
 
+        # Trim only the outer inactive regions. Internal pauses, breaths and low-energy
+        # consonants are part of the utterance and must never define an early endpoint.
+        # The previous <=4-word path stopped at the first >120 ms inactive gap, which
+        # deterministically cut valid short phrases even after Chatterbox had generated
+        # the complete speech.
         start_frame = int(active[0])
         end_frame = int(active[-1])
         if short:
-            end_frame = start_frame
-            for idx in active[1:]:
-                if int(idx) - end_frame > 12:
-                    break
-                end_frame = int(idx)
-            lead_ms, trail_ms = 25.0, 40.0
+            lead_ms, trail_ms = 25.0, 80.0
         else:
             lead_ms, trail_ms = 40.0, 180.0
 
