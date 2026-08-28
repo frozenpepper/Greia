@@ -99,20 +99,27 @@ assets/audio/characters/canonical/v0.1/manifest.toml
 
 Never bypass or rewrite a hash locally to make production continue.
 
-## 5. Token budget lesson
+## 5. Chatterbox output-length policy
 
-The current provider deliberately bounds output tokens because short Chatterbox prompts may fail to emit EOS and continue with repeated/foreign/tail sounds.
+**Do not derive Chatterbox acoustic-token limits from source word count.**
 
-Current policy in `ChatterboxMLXProvider`:
+An earlier workaround used small `max_new_tokens` values for very short prompts because Chatterbox had been explored for isolated letters/syllables. That workaround was later inherited by ordinary character/shared speech and caused real words and phrases to be cut off mid-word.
+
+That policy is retired.
+
+Current Greia rule:
 
 ```text
-1–2 words   -> 45
-3–4 words   -> 65
-5–12 words  -> 160
-longer      -> bounded formula, ceiling 700
+character_dialogue / shared_character_utterance
+    -> do not pass a Greia word-count-derived max_new_tokens override
+    -> let the Chatterbox backend use its normal generation stopping policy
+
+pedagogical letters / syllables / phonics
+    -> do not use Chatterbox
+    -> route through pedagogical_speech / deterministic native-system provider
 ```
 
-Treat source as exact authority. Do not copy this table into callers and then tune it independently.
+Do not replace the removed 45/65-token table with a different guessed table. If Chatterbox output-length behavior needs future tuning, diagnose the backend behavior directly and justify the change with real generated evidence.
 
 The rejected triple-prompt workaround (`ma. ma. ma.` followed by middle extraction) remains rejected.
 
@@ -144,6 +151,8 @@ The requested locale language is passed explicitly.
 Suitable multi-word character/shared-library lines may be checked. Tiny one-word reactions and pedagogical speech normally skip ASR.
 
 Whisper PASS is never human acceptance.
+
+A Whisper `WARN` is nevertheless actionable production evidence: the engine retries within the request's bounded attempt count. If the final attempt still warns, the audio and receipt are preserved for inspection, but shared-library production treats that row as unresolved rather than counting it as a clean candidate.
 
 ## 8. Troubleshooting sequence
 
