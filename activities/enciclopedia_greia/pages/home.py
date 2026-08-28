@@ -1,4 +1,4 @@
-"""Home page golden master: an illustrated discovery book with six portals."""
+"""Home golden master: one illustrated discovery book with six spatial portals."""
 
 from __future__ import annotations
 
@@ -10,11 +10,11 @@ import pygame
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import draw_authored_scene, draw_focus_patch, draw_title
-    from .common import draw_presenter
+    from .common import draw_presenter, grid_step
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import draw_authored_scene, draw_focus_patch, draw_title
-    from pages.common import draw_presenter
+    from pages.common import draw_presenter, grid_step
 
 
 @dataclass(frozen=True, slots=True)
@@ -24,25 +24,39 @@ class Portal:
     rect: pygame.Rect
 
 
-PORTALS = (
-    Portal("animals", "section.animals", pygame.Rect(126, 178, 158, 140)),
-    Portal("space", "section.space", pygame.Rect(582, 178, 158, 142)),
-    Portal("earth", "section.earth", pygame.Rect(287, 288, 132, 132)),
-    Portal("body", "section.body", pygame.Rect(137, 355, 146, 124)),
-    Portal("machines", "section.machines", pygame.Rect(730, 288, 150, 132)),
-    Portal("history", "section.history", pygame.Rect(583, 365, 154, 120)),
+PORTAL_IDS = ("animals", "space", "earth", "body", "machines", "history")
+PORTAL_LABEL_KEYS = (
+    "section.animals",
+    "section.space",
+    "section.earth",
+    "section.body",
+    "section.machines",
+    "section.history",
 )
+# These centers are also authored into the SVG master as data-center metadata.
+# Keeping the semantic geometry explicit prevents illustrated portals from
+# drifting away from the regions a child can actually activate.
+PORTAL_CENTERS = (
+    (192, 225),
+    (437, 225),
+    (682, 225),
+    (192, 415),
+    (437, 415),
+    (682, 415),
+)
+_PORTAL_SIZE = (176, 140)
 
-# Visual topology is two book columns with three vertical stops. Keep semantic
-# controller navigation spatially honest instead of pretending this is a card grid.
-_MOVE = {
-    0: {PageCommand.RIGHT: 1, PageCommand.DOWN: 2},
-    1: {PageCommand.LEFT: 0, PageCommand.DOWN: 4},
-    2: {PageCommand.UP: 0, PageCommand.RIGHT: 4, PageCommand.DOWN: 3},
-    3: {PageCommand.UP: 2, PageCommand.RIGHT: 5},
-    4: {PageCommand.UP: 1, PageCommand.LEFT: 2, PageCommand.DOWN: 5},
-    5: {PageCommand.UP: 4, PageCommand.LEFT: 3},
-}
+
+def _portal_rect(center: tuple[int, int]) -> pygame.Rect:
+    rect = pygame.Rect(0, 0, *_PORTAL_SIZE)
+    rect.center = center
+    return rect
+
+
+PORTALS = tuple(
+    Portal(page_id, label_key, _portal_rect(center))
+    for page_id, label_key, center in zip(PORTAL_IDS, PORTAL_LABEL_KEYS, PORTAL_CENTERS)
+)
 
 
 class HomePage(EncyclopediaPage):
@@ -77,7 +91,12 @@ class HomePage(EncyclopediaPage):
         if event.command is PageCommand.ACTIVATE:
             self.context.host.open_page(PORTALS[self._selected].page_id)
             return
-        self._selected = _MOVE.get(self._selected, {}).get(event.command, self._selected)
+        self._selected = grid_step(
+            self._selected,
+            event.command,
+            columns=3,
+            count=len(PORTALS),
+        )
 
     def draw(self, surface: pygame.Surface) -> None:
         if not draw_authored_scene(
