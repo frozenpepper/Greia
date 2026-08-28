@@ -32,9 +32,9 @@ Active bounded reauthoring plan:
 docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md
 ```
 
-The first E1/E2 source tranche has now landed on `main`. The current rule is therefore narrower:
+E1 + E2 source and runtime art are now implemented on `main`, the six golden-master runtime PNGs are committed and sha256-verified by the build tool's `--check`, and the real Greia Simulator has been launched at the final SHA (`08fe71b`) to capture one curated set of 1024×600 + responsive screenshots. The current rule is therefore narrower still:
 
-> **Build/verify the six golden-master runtime renditions, inspect real Greia Simulator pixels, obtain owner direction approval, and only then migrate the remaining Encyclopedia.**
+> **STOP. The owner must now approve the new visual direction on the six golden-master prototypes. No E3 / E4 page migration before that approval.**
 
 Golden-master targets remain:
 
@@ -46,6 +46,25 @@ Saturn
 Gears
 Pyramids
 optional Body/Heart anatomy proof only if a later review shows it is needed
+```
+
+Curated review set:
+
+```text
+docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/
+  REVIEW.md
+  layout-audit.json
+  contact-sheet-primary.png
+  screenshots/01-home.png            1024x600
+  screenshots/02-lion-activated.png  1024x600
+  screenshots/03-home-compact.png    1024x600 + interface_size=compact
+  screenshots/04-home-large.png      1280x800
+```
+
+Owner-transfer archive (not committed):
+
+```text
+GREIA_VISUAL_REVIEW_ENCYCLOPEDIA_GOLDEN_MASTER_2026-08-28.zip
 ```
 
 ---

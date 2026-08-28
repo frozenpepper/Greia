@@ -290,14 +290,15 @@ Evidence class: **SIMULATOR VISUAL REVIEW**.
 | Resume | `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` |
 | Product discovery authority | `docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md` |
 | Runtime visual focus | **Existing V5 runtime/scene/shared UI foundations accepted where recorded; current visible focus is Encyclopedia reauthoring** |
-| Authoring focus | **Encyclopedia E1 visual foundation + E2 golden-master prototypes** |
+| Authoring focus | **Encyclopedia E1 + E2 source + runtime art + real-Simulator capture COMPLETE; awaiting owner direction approval** |
 | Encyclopedia forensic audit | `docs/reviews/2026-08-28_ENCYCLOPEDIA_GRAPHICS_FORENSIC_AUDIT.md` — current graphics rejected as final product quality |
 | Encyclopedia visual subplan | `docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md` |
+| Encyclopedia golden-master review | `docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/` (REVIEW.md, layout-audit.json, contact-sheet-primary.png, 4 curated PNGs) + non-committed `GREIA_VISUAL_REVIEW_ENCYCLOPEDIA_GOLDEN_MASTER_2026-08-28.zip` |
 | Generic library | full source harvest complete; Batch A owner-reviewed selectively |
 | Generic Batch B rule | remains unauthorized; Encyclopedia topic-specific art should normally stay Activity-local |
 | Canonical cast | six-character v0.1 runtime family accepted; integrate intentionally rather than tiny corner stamps |
 | Prior first-party Batch 1 | `treno_numeri`, `labirinto_magico`, `acquario_magico` accepted historical productization evidence |
-| Next exact action | Build Home + Animals section + Lion golden-master direction, extend to Saturn/Gears/Pyramids, capture one curated Simulator contact sheet, then STOP for owner visual approval before bulk migration |
+| Next exact action | STOP and wait for owner direction approval on the six golden-master prototypes before any E3 section-page or E4 entry migration |
 
 ---
 
@@ -644,4 +645,14 @@ The entries below preserve the workstream chronology. Corrections/new state are 
 - Current evidence class for the rejected presentation: **REJECTED EXPERIMENT / mechanically useful runtime foundation**.
 
 **Next exact action:** implement Encyclopedia E1 visual foundation and E2 golden masters, capture a small curated real-Simulator prototype set, and stop for owner visual approval before migrating the remaining pages.
+
+## 2026-08-28 — Encyclopedia E1 + E2 runtime art, Simulator prototype capture, review/contact-sheet (this work)
+
+- Encyclopedia visual subplan E1 + E2 closed on the source/runtimer-artefact axis. Six 1024×600 PNGs built from the committed SVG masters (346 621 bytes), committed and pushed on `main` at `08fe71b`; `tools/build_encyclopedia_visual_assets.py --check` byte-verifies the committed pack against rebuilt masters.
+- Three permanent review tools added under `tools/`: golden-master capture (one real Greia Shell session per page, launches the built-in `org.greia.enciclopedia` through the real launcher/profile-picker/catalogue path, captures initial + post-ACTIVATE frames, exercises the protected Greia Home return), review-set builder (3×2 contact sheet + 4 curated PNGs), and owner-transfer ZIP packager.
+- Captured 10 1024×600 prototype frames (Home, Animals, Lion initial+ACTIVATE, Saturn initial+ACTIVATE, Gears initial+ACTIVATE, Pyramids initial+ACTIVATE) plus one compact (1024×600 + `interface_size=compact`) and one larger (1280×800 + `interface_size=normal`) responsive row, from the real headless Greia Simulator at `08fe71b`.
+- Curated review set committed at `docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/` with `REVIEW.md` (including a per-page defect log) and `layout-audit.json` derived from the real `PageShellLayout`, `PORTAL_CENTERS`, and per-page discovery centers. Non-committed owner-transfer ZIP: `GREIA_VISUAL_REVIEW_ENCYCLOPEDIA_GOLDEN_MASTER_2026-08-28.zip` (677 KB).
+- `make verify`: 1462/1462 PASS on the real checkout at the final SHA. Focused Encyclopedia tests: 19/19 PASS. The only source correction needed was a one-file tightening of the over-broad runtime-cue vs voice-ledger parity check in `tests/test_encyclopedia_authoring_tools.py` (subtract `VisualLibrary.ART_ASSETS`).
+- Pre-reader/no-reading review on the six prototypes: `PRE_READER_CORE_FLOW_PASS=yes`, `TEXT_REQUIRED_FOR_GAMEPLAY=no`, `NO_READING_FIRST_ACTION_PASS=yes`, `PRIMARY_INSTRUCTION_CHANNEL=visual`.
+- This is `SIMULATOR VISUAL REVIEW` evidence only. **Owner direction approval still pending.** E3 section-page migration and E4 entry migration remain hard-blocked.
 

@@ -386,7 +386,7 @@ If the owner does not like the direction, revise the golden masters. Do not prop
 - [x] old art declared non-final;
 - [x] broad acceptance churn stopped while visual direction is being replaced.
 
-## E1 — Encyclopedia visual foundation **[SOURCE IMPLEMENTED; FINAL RUNTIME VALIDATION PENDING]**
+## E1 — Encyclopedia visual foundation **[SOURCE + RUNTIME-ART IMPLEMENTED; SIMULATOR GATE PASSED]**
 
 Build only what multiple prototype pages truly share:
 
@@ -398,12 +398,12 @@ Build only what multiple prototype pages truly share:
 - [x] Activity-local asset loader facade over a bounded visual cache/runtime seam;
 - [x] source/runtime folder convention and deterministic authoring-time build recipe;
 - [x] focused source contracts for asset mapping/cache/hot-path/source/build invariants; local mirror 6/6 PASS;
-- [ ] real-checkout focused tests after runtime PNG generation;
-- [ ] final-SHA Greia Simulator launch/survival after current visual edits.
+- [x] real-checkout focused tests after runtime PNG generation;
+- [x] final-SHA Greia Simulator launch/survival after current visual edits.
 
 Avoid abstraction theatre: if a helper is used by only one page, keep it local until a second use proves a shared invariant.
 
-## E2 — Golden masters **[SOURCE IMPLEMENTED; ACTUAL-PIXEL REVIEW CURRENT]**
+## E2 — Golden masters **[SOURCE + RUNTIME ART + ACTUAL-PIXEL CAPTURE COMPLETE; OWNER DIRECTION PENDING]**
 
 - [x] Home — source integrated with authored discovery-book scene;
 - [x] Animals section — source integrated with authored field-table scene;
@@ -411,13 +411,13 @@ Avoid abstraction theatre: if a helper is used by only one page, keep it local u
 - [x] Saturn — source integrated with authored observatory scene + retained discoveries;
 - [x] Gears — source integrated with authored workbench scene + retained mechanism model;
 - [x] Pyramids — source integrated with authored historical diorama + retained build/reveal model;
-- [ ] six runtime PNG renditions built and committed on `main`;
-- [ ] actual 1024×600 Simulator screenshots;
-- [ ] representative activated-state screenshots;
-- [ ] compact responsive sample;
-- [ ] larger responsive sample;
-- [ ] actual Simulator contact sheet;
-- [ ] pre-reader/no-reading prototype review;
+- [x] six runtime PNG renditions built and committed on `main` (sha256 verified by `--check`);
+- [x] actual 1024×600 Simulator screenshots;
+- [x] representative activated-state screenshots;
+- [x] compact responsive sample;
+- [x] larger responsive sample;
+- [x] actual Simulator contact sheet;
+- [x] pre-reader/no-reading prototype review;
 - [ ] owner direction approval.
 
 **Hard gate:** no E3 before E2 direction approval.
@@ -637,5 +637,24 @@ The previous headless capture-settle harness repair remains useful and should be
 - Local mirror verification: **6/6 visual-foundation source contracts PASS; changed-source AST parse PASS**. This is source/static evidence only.
 - Runtime PNG build/commit, focused tests on the real checkout, final-SHA Simulator launch/survival, actual visual contact sheet, responsive samples and owner direction approval remain pending.
 - E3/E4 remain hard-blocked.
+
+## 2026-08-28 — E2 runtime build + real Greia Simulator prototype capture (this work)
+
+- Built the six 1024×600 runtime PNGs from the committed SVG masters using `tools/build_encyclopedia_visual_assets.py` (346 621 bytes total, all real 1024×600 8-bit RGB). Re-running `--check` after the build reported `PASS 6 Encyclopedia runtime PNGs match editable masters`.
+- Pushed the generated PNG pack on `main` at SHA `08fe71b077d47b511c105bde5c2e8fdb88be7b92`. Reran `--check` and the focused Encyclopedia tests against the pushed tree: 6/6 PNGs still match, 19/19 focused tests PASS.
+- Tightened `tests/test_encyclopedia_authoring_tools.py` so the runtime-cue vs voice-ledger parity check excludes the new `VisualLibrary.ART_ASSETS` scene keys (which are visual identifiers, not narration cues) from the over-broad string-constant heuristic. The fix loads the exact `ART_ASSETS` map as the single source of truth for "not narration".
+- `make verify` on the real checkout: **1462/1462 PASS**.
+- Added three permanent review tools to `tools/`:
+  - `encyclopedia_v01_golden_master_capture.py` — one real Greia Shell session per golden-master page, navigates through the real launcher/profile/catalogue/profile-picker/Shell path, captures initial + ACTIVATE frames, exercises the protected Greia Home return.
+  - `encyclopedia_v01_golden_master_review.py` — builds the curated 4-shot review set and the 3×2 primary contact sheet from the captured PNGs.
+  - `encyclopedia_v01_golden_master_zip.py` — produces the non-committed owner-transfer ZIP.
+- Captured 10 1024×600 PNGs from the headless Greia Simulator at SHA `08fe71b` (Home, Animals, Lion initial+ACTIVATE, Saturn initial+ACTIVATE, Gears initial+ACTIVATE, Pyramids initial+ACTIVATE). All six session jobs reported `PASS`. Every session exercised the protected Greia Home return at the platform-allocated home-hitbox.
+- Captured one compact (1024×600 + `interface_size=compact`) and one larger (1280×800 + `interface_size=normal`) responsive row from the same Shell.
+- Wrote `docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/` with the curated 4 PNGs, the 3×2 primary contact sheet, `REVIEW.md` and `layout-audit.json` (sourced from the real `PageShellLayout`, `PORTAL_CENTERS` and discovery-token centers, not invented).
+- Wrote the non-committed owner-transfer ZIP `GREIA_VISUAL_REVIEW_ENCYCLOPEDIA_GOLDEN_MASTER_2026-08-28.zip` (677 KB) per the visual evidence contract.
+- Pre-reader / no-reading review on the six prototypes: `PRE_READER_CORE_FLOW_PASS=yes`, `TEXT_REQUIRED_FOR_GAMEPLAY=no`, `NO_READING_FIRST_ACTION_PASS=yes`, `PRIMARY_INSTRUCTION_CHANNEL=visual`.
+- Visible defects recorded honestly in `REVIEW.md` (sun vs Back button on Animals, right-most gear partly behind a rack silhouette on Gears) — neither blocks the gate, both are noted for the design pass.
+- This evidence is `SIMULATOR VISUAL REVIEW` only. **Owner direction approval is still pending.** E3/E4 remain hard-blocked until that approval lands.
+
 
 **Next exact action:** execute `docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md`; stop after the golden-master contact sheet/evidence for owner review.

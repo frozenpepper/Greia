@@ -1,10 +1,10 @@
 # Greia — Current Engineering Handover
 
-**Updated:** 2026-08-28  
-**Canonical repository:** `frozenpepper/Greia`  
-**Canonical branch:** `main`  
-**Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**  
-**Current parallel visual focus:** **Encyclopedia golden-master runtime validation / owner visual gate**  
+**Updated:** 2026-08-28
+**Canonical repository:** `frozenpepper/Greia`
+**Canonical branch:** `main`
+**Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**
+**Current parallel visual focus:** **Encyclopedia golden-master capture complete / owner visual direction gate**
 **Purpose:** short current continuation contract. Detailed chronology belongs in active plans and dated reviews/handovers.
 
 Historical long-form root state remains preserved under:
@@ -151,9 +151,14 @@ The first bounded E1/E2 source tranche is now on `main`:
 activities/enciclopedia_greia/enciclopedia_presentation.py
 activities/enciclopedia_greia/enciclopedia_services.py
 activities/enciclopedia_greia/assets/source/*.svg   # six golden-master masters
+activities/enciclopedia_greia/assets/runtime/*.png  # six built runtime renditions
 Home / Animals / Lion / Saturn / Gears / Pyramids page integrations
 tools/build_encyclopedia_visual_assets.py
+tools/encyclopedia_v01_golden_master_capture.py
+tools/encyclopedia_v01_golden_master_review.py
+tools/encyclopedia_v01_golden_master_zip.py
 tests/test_activity_enciclopedia_visual_foundation.py
+tests/test_encyclopedia_authoring_tools.py        # tightened to subtract VisualLibrary.ART_ASSETS
 ```
 
 The build tool now supports:
@@ -171,21 +176,28 @@ Current truthful visual state:
 E1 SHARED PRESENTATION SOURCE: IMPLEMENTED ON MAIN
 E2 SIX GOLDEN-MASTER PAGE SOURCES: IMPLEMENTED ON MAIN
 EDITABLE SVG MASTERS: 6 / 6 ON MAIN
-SOURCE CONTRACTS: IMPLEMENTED; local mirror checks passed where recorded
-RUNTIME PNG PACK: BUILD / COMMIT PENDING ON OWNER-MACHINE CHECKOUT
-FINAL-SHA SIMULATOR GATE: PENDING
+RUNTIME PNG PACK: 6 / 6 COMMITTED + SHA256-VERIFIED BY --CHECK
+FOCUSED ENCYCLOPEDIA TESTS: 19 / 19 PASS
+make verify ON REAL CHECKOUT AT FINAL SHA 08fe71b: 1462 / 1462 PASS
+REAL GREIA SIMULATOR LAUNCH/SURVIVAL: 6 / 6 SESSIONS PASS AT FINAL SHA
+PROTECTED GREIA HOME RETURN: 6 / 6 SESSIONS VERIFIED
+ACTIVATE PAYOFFS CAPTURED: 4 / 4 FACTUAL ENTRIES
+PRE-READER / NO-READING PROTOTYPE REVIEW: yes/yes/yes/visual
+CURATED REVIEW SET: docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/
+OWNER-TRANSFER ZIP: GREIA_VISUAL_REVIEW_ENCYCLOPEDIA_GOLDEN_MASTER_2026-08-28.zip
 OWNER VISUAL DIRECTION APPROVAL: PENDING
 E3 / E4 BULK MIGRATION: BLOCKED
 ```
 
-The Activity fails soft to its previous procedural scenes when the generated runtime art is absent, so current `main` remains mechanically usable. That fallback does **not** count as golden-master visual evidence.
+The Activity fails soft to its previous procedural scenes when the generated runtime art is absent, so current `main` remains mechanically usable. That fallback does **not** count as golden-master visual evidence. With the runtime PNGs now committed and the curated review set + owner-transfer ZIP in place, the next step is the owner visual direction decision, not more code.
 
 Current Encyclopedia continuation authority:
 
 ```text
 encyclopedia/HANDOVER.md
 docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md
-docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md
+docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md
+docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/REVIEW.md
 ```
 
 ### Narration
@@ -251,31 +263,27 @@ Current x86 update architecture remains provisional single-root; signed-update f
 
 ### Current Encyclopedia visual lane
 
-Do **not** implement more Encyclopedia pages yet. Execute the existing golden-master validation gate:
+The local-agent golden-master validation gate is now complete at the
+final runtime-relevant SHA `08fe71b`. The next action is the owner
+visual direction decision on the six prototypes, not more code.
 
 ```text
-refresh clean main
-→ build six runtime PNGs
-→ run build tool --check
-→ focused Encyclopedia tests + required local source verification
-→ commit/push the generated PNG pack
-→ record exact final SHA
-→ real Greia Simulator launch/survival on that SHA
-→ capture Home / Animals / Lion / Saturn / Gears / Pyramids at 1024×600
-→ capture representative ACTIVATE payoffs
-→ capture one compact + one larger responsive sample
-→ perform no-reading prototype review
-→ produce one curated contact sheet
-→ STOP for owner visual direction approval
+local validation gate:                COMPLETE at SHA 08fe71b
+curated review set:                   docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/
+owner-transfer ZIP:                   GREIA_VISUAL_REVIEW_ENCYCLOPEDIA_GOLDEN_MASTER_2026-08-28.zip
+owner visual direction approval:      PENDING
 ```
 
-Exact local execution contract:
+Exact review/run-book for the owner:
 
 ```text
-docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md
+docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/REVIEW.md
+docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/contact-sheet-primary.png
+docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md
 ```
 
-Do not run the broad 43-page visual recapture and do not enter E3/E4 until the owner explicitly accepts the golden-master direction.
+Do not run the broad 43-page visual recapture and do not enter E3/E4
+until the owner explicitly accepts the golden-master direction.
 
 ### Blocking platform lane
 

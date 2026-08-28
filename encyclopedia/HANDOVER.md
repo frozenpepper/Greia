@@ -1,9 +1,10 @@
 # Greia Encyclopedia workstream handover
 
-**Updated:** 2026-08-28  
-**Runtime pages:** **43 / 43 planned executable pages**  
-**Runtime Activity:** `activities/enciclopedia_greia/` (`org.greia.enciclopedia`)  
-**Current state:** **MECHANICAL RUNTIME FOUNDATION HEALTHY / OLD GRAPHICS REJECTED / E1+E2 GOLDEN-MASTER SOURCE LANDED / RUNTIME PNG BUILD + SIMULATOR REVIEW PENDING / NARRATION ACCEPTANCE PENDING**
+**Updated:** 2026-08-28
+**Runtime pages:** **43 / 43 planned executable pages**
+**Runtime Activity:** `activities/enciclopedia_greia/` (`org.greia.enciclopedia`)
+**Final runtime-relevant SHA (Simulator-captured):** `08fe71b077d47b511c105bde5c2e8fdb88be7b92`
+**Current state:** **MECHANICAL RUNTIME FOUNDATION HEALTHY / OLD GRAPHICS REJECTED / E1+E2 SOURCE + RUNTIME ART + SIMULATOR CAPTURE COMPLETE / OWNER DIRECTION APPROVAL PENDING / NARRATION ACCEPTANCE PENDING**
 
 This is the current continuation contract. Historical construction detail remains in `encyclopedia/PROGRESS.md` and dated reviews.
 
@@ -198,9 +199,9 @@ Procedural drawing remains appropriate for real diagrams, small annotations, par
 
 ---
 
-## 7. E1/E2 source tranche now landed on `main`
+## 7. E1/E2 source + runtime art + Simulator capture (this work)
 
-The first bounded visual-foundation/golden-master source tranche is committed.
+The bounded visual-foundation/golden-master tranche is now end-to-end complete on the source, runtime-art and Simulator-capture axes.
 
 ### Shared foundation
 
@@ -224,7 +225,7 @@ no page-local image decode / smoothscale
 
 `VisualLibrary` remains hard-bounded and is the single Activity-local facade for these authored runtime renditions plus shared canonical characters.
 
-### Editable source masters
+### Editable source masters + committed runtime PNG pack
 
 ```text
 activities/enciclopedia_greia/assets/source/home_discovery_book.svg
@@ -233,7 +234,17 @@ activities/enciclopedia_greia/assets/source/lion_savanna.svg
 activities/enciclopedia_greia/assets/source/saturn_observatory.svg
 activities/enciclopedia_greia/assets/source/gears_workbench.svg
 activities/enciclopedia_greia/assets/source/pyramids_diorama.svg
+
+activities/enciclopedia_greia/assets/runtime/home_discovery_book.png
+activities/enciclopedia_greia/assets/runtime/animals_field_table.png
+activities/enciclopedia_greia/assets/runtime/lion_savanna.png
+activities/enciclopedia_greia/assets/runtime/saturn_observatory.png
+activities/enciclopedia_greia/assets/runtime/gears_workbench.png
+activities/enciclopedia_greia/assets/runtime/pyramids_diorama.png
 ```
+
+All six runtime PNGs are 1024×600 8-bit RGB; the build tool's `--check`
+rebuilds them temporarily and byte-compares against the committed pack.
 
 ### Golden-master page source
 
@@ -248,23 +259,51 @@ Pyramids
 
 The page/state/navigation models were retained. The visual code now consumes authored scenes and uses procedural drawing primarily for focus/discovery UI and bounded educational reveal overlays.
 
-### Build and source contract
+### Build, capture, review tooling
 
 ```text
-tools/build_encyclopedia_visual_assets.py
+tools/build_encyclopedia_visual_assets.py             # authoring-only SVG -> PNG (CairoSVG)
+tools/encyclopedia_v01_golden_master_capture.py       # one real Greia Shell session per page
+tools/encyclopedia_v01_golden_master_review.py        # curated 4-shot set + 3x2 contact sheet
+tools/encyclopedia_v01_golden_master_zip.py           # non-committed owner-transfer ZIP
 tests/test_activity_enciclopedia_visual_foundation.py
+tests/test_encyclopedia_authoring_tools.py            # tightened to subtract VisualLibrary.ART_ASSETS
 ```
 
-The build tool is authoring-only and converts the six editable SVG masters into six 1024×600 runtime PNGs. **CairoSVG is not a child-runtime dependency and must not become one.**
-
-A local mirror of the exact source-contract shape passed:
+### Source-gate evidence at the final runtime-relevant SHA `08fe71b`
 
 ```text
-visual-foundation source contracts  6 / 6 PASS
-changed module AST parse             PASS
+make verify                                          1462 / 1462 PASS
+tests.test_activity_enciclopedia + visual_foundation    19 / 19 PASS
+tools/build_encyclopedia_visual_assets.py --check      PASS 6 Encyclopedia runtime PNGs match editable masters
+real Greia Simulator launch (6 sessions)               6 / 6 PASS
+protected Greia Home return (every session)            6 / 6 PASS
+ACTIVATE payoff captured on every factual entry         4 / 4 PASS
 ```
 
-This is source/static evidence only. It is not evidence that the current Git checkout has built runtime PNGs, launched through Greia, or looks good in the Simulator.
+### Simulated visual evidence
+
+```text
+docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/
+  REVIEW.md
+  layout-audit.json
+  contact-sheet-primary.png
+  screenshots/01-home.png
+  screenshots/02-lion-activated.png
+  screenshots/03-home-compact.png
+  screenshots/04-home-large.png
+GREIA_VISUAL_REVIEW_ENCYCLOPEDIA_GOLDEN_MASTER_2026-08-28.zip   # NOT committed
+tmp/encyclopedia-goldenmaster-2026-08-28/                       # full local evidence
+```
+
+Pre-reader / no-reading review recorded against the six prototypes:
+
+```text
+PRE_READER_CORE_FLOW_PASS=yes
+TEXT_REQUIRED_FOR_GAMEPLAY=no
+NO_READING_FIRST_ACTION_PASS=yes
+PRIMARY_INSTRUCTION_CHANNEL=visual
+```
 
 ---
 
@@ -367,18 +406,14 @@ The new golden-master runtime PNGs must be checked normally when built. Do not a
 ## 12. Acceptance still pending
 
 ```text
-six runtime PNG renditions built + committed
-focused tests on real checkout after build
-final-SHA Simulator launch/survival after current visual edits
-golden-master actual-pixel contact sheet
-golden-master owner direction approval
-complete visual migration
-interaction visual-language pass
-pointer vs semantic-keyboard parity sample
-pre-reader/no-reading final acceptance
-responsive viewport/profile matrix
-narration owner acceptance/integration
-physical Acer/Pi acceptance
+golden-master owner direction approval           (captures ready, owner is the aesthetic authority)
+complete visual migration                        (E3 sections + E4 entries, hard-blocked)
+interaction visual-language pass                  (E5)
+pointer vs semantic-keyboard parity sample        (E6)
+pre-reader/no-reading final acceptance            (E6, narrow prototype pass already yes)
+responsive viewport/profile matrix                (E6; one compact + one larger row already captured)
+narration owner acceptance/integration            (separate lane, 378 rows still REQUESTED)
+physical Acer/Pi acceptance                      (separate lane)
 ```
 
 Only after final visual/input/pre-reader/responsive Simulator gates pass may the Encyclopedia become:
@@ -387,10 +422,17 @@ Only after final visual/input/pre-reader/responsive Simulator gates pass may the
 SOURCE + SIMULATOR ACCEPTED / NARRATION ACCEPTANCE PENDING
 ```
 
-Current allowed status is:
+Current truthful status:
 
 ```text
-E1/E2 SOURCE IMPLEMENTED / RUNTIME ART BUILD + SIMULATOR UNVERIFIED / OWNER DIRECTION PENDING
+E1/E2 SOURCE + RUNTIME ART + SIMULATOR CAPTURE COMPLETE
+  (1462/1462 make verify PASS at SHA 08fe71b,
+   6/6 runtime PNGs committed and sha256-verified by --check,
+   6/6 headless Shell sessions PASS at the final SHA,
+   protected Greia Home return verified on every session,
+   4/4 ACTIVATE payoffs captured and visible.)
+OWNER DIRECTION APPROVAL: PENDING (contact sheet and owner ZIP ready)
+NARRATION ACCEPTANCE: SEPARATE / PENDING
 ```
 
 ---
