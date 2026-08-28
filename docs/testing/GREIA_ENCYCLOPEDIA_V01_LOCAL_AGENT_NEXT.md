@@ -1,38 +1,38 @@
 # Greia Encyclopedia v0.1 — LOCAL AGENT NEXT TASK
 
-## E1/E2 source is on `main`; build runtime art, verify, capture prototypes, then STOP
+## E2R — refine the same six golden masters, recapture, then STOP
 
-The owner rejected the old Encyclopedia graphics as a product target. The 43-page mechanical/runtime/research foundation remains useful and must be preserved.
+The first golden-master Simulator run is complete and technically valid.
 
-Authoritative visual forensic review:
+Primary review authority:
 
 ```text
-docs/reviews/2026-08-28_ENCYCLOPEDIA_GRAPHICS_FORENSIC_AUDIT.md
+docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/PRIMARY_REVIEW_2026-08-29.md
 ```
 
-Active Encyclopedia visual subplan:
+Existing evidence:
+
+```text
+docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/
+```
+
+Active plan:
 
 ```text
 docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md
 ```
 
-The first E1/E2 source tranche is now on `main`:
+Current disposition:
 
 ```text
-shared Encyclopedia presentation primitives
-bounded Activity-local authored-art cache
-six editable SVG golden-master masters
-Home golden-master page source
-Animals golden-master page source
-Lion golden-master page source
-Saturn golden-master page source
-Gears golden-master page source
-Pyramids golden-master page source
-authoring-time SVG -> PNG build/check tool
-focused source contracts
+E1 VISUAL ARCHITECTURE: ACCEPTED
+E2 RUNTIME/TEST/SIMULATOR EVIDENCE: VALID
+E2 VISUAL DIRECTION FOR PROPAGATION: NOT YET APPROVED
+E2R GOLDEN-MASTER REFINEMENT: REQUIRED
+E3/E4: BLOCKED
 ```
 
-The runtime PNG renditions are generated build products. They must now be built on the normal local maintainer checkout, verified, committed, and tested through the real Greia Simulator before the visual direction can be reviewed.
+This is a refinement of the existing six prototypes, **not a restart** and not permission to touch the remaining Encyclopedia pages.
 
 ---
 
@@ -41,23 +41,24 @@ The runtime PNG renditions are generated build products. They must now be built 
 Do **not**:
 
 ```text
-redraw or migrate any additional Encyclopedia page
-run the broad 43-page traversal/recapture
+migrate any additional Encyclopedia page
+run the 43-page traversal/recapture
+start E3 or E4
 generate or integrate narration
-start final pointer/responsive acceptance across all pages
-change protected Greia Home chrome
-change the stable 43-page factual scope
+change the frozen factual/page scope
+rewrite the page engine/navigation/state architecture
 invent another asset/cache/scene system
-add CairoSVG or SVG rasterization to the child runtime
-weaken Activity/runtime/package validation
+add runtime SVG/CairoSVG or expensive runtime graphics
+change protected Greia Home chrome
+replace the six concepts wholesale without evidence
 use GitHub-hosted Actions
 ```
 
-If a golden-master direction looks poor, record it and stop. Do not hide that by propagating it.
+Keep the existing authored-art/build/cache architecture and stable mechanics.
 
 ---
 
-# 2. Refresh and inspect first
+# 2. Refresh safely
 
 From the existing Greia checkout:
 
@@ -70,323 +71,305 @@ git status --short
 git rev-parse HEAD
 ```
 
-Expected: clean working tree before generation. If the tree is not clean, **STOP** and report the paths; do not discard or overwrite owner/concurrent work.
+Expected clean tree. If local/concurrent owner work exists, STOP and report it; do not discard or overwrite it.
 
-Read before execution:
+Read before editing:
 
 ```text
-SETUP.md
 AGENTS.md
+skills/greia-visual-authoring/SKILL.md
 skills/greia-activity-authoring/SKILL.md
 skills/greia-activity-authoring/LAUNCH_ACCEPTANCE.md
 skills/greia-activity-authoring/PRE_READER_UX.md
-skills/greia-visual-authoring/SKILL.md
-docs/testing/VISUAL_ACCEPTANCE_EVIDENCE_CONTRACT.md
-docs/development/GREIA_ACTIVITY_SIMULATOR.md
 docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md
+docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/REVIEW.md
+docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/PRIMARY_REVIEW_2026-08-29.md
 ```
-
-Do not substitute old local notes for these current authorities.
 
 ---
 
-# 3. Build and verify the six runtime PNGs
+# 3. Preserve what already works
 
-Editable masters:
+Do not regress:
+
+- Home open-book architecture;
+- Animals continuous-world architecture;
+- Lion dominant hero composition;
+- Saturn dark observatory composition — current strongest reference;
+- Gears real mechanism relationships/state model;
+- Pyramids construction/diorama concept;
+- semantic target-center contract for Home/Animals;
+- keyboard/controller/pointer semantic behavior;
+- bounded `VisualLibrary` and deterministic build/check flow;
+- current title/Back/Home safe regions;
+- first-action focus clarity.
+
+This pass improves the visual language; it does not reopen the proven mechanics.
+
+---
+
+# 4. E2R required visual corrections
+
+## 4.1 Discovery controls — highest-priority shared correction
+
+Current problem: Lion/Saturn/Gears/Pyramids still use large pale circular controls that read like instrumentation floating over an illustration.
+
+Keep the semantic hit/focus behavior, but redesign presentation so discoveries feel native to each scene.
+
+Allowed examples:
 
 ```text
-activities/enciclopedia_greia/assets/source/home_discovery_book.svg
-activities/enciclopedia_greia/assets/source/animals_field_table.svg
-activities/enciclopedia_greia/assets/source/lion_savanna.svg
-activities/enciclopedia_greia/assets/source/saturn_observatory.svg
-activities/enciclopedia_greia/assets/source/gears_workbench.svg
-activities/enciclopedia_greia/assets/source/pyramids_diorama.svg
+felt/paper specimen tags
+pinned field-guide badges
+workshop tokens/labels
+observatory/telescope markers
+archaeology/excavation markers
+small scene-attached medallions
 ```
 
-Build:
+Requirements:
+
+- no identical white-circle default across all four pages;
+- strong low-resolution silhouette;
+- focused state remains obvious;
+- pressed/recent state remains tactile;
+- do not reduce hit targets merely because visual chrome becomes subtler;
+- do not make text labels necessary for understanding the first action.
+
+Shared interaction/state logic may remain one component while page-specific skins/compositions vary.
+
+## 4.2 Presenter integration
+
+Current problem: presenters remain visually detached corner mascots.
+
+Integrate the existing canonical character assets compositionally without skeletal rigs or heavy animation.
+
+Target roles:
+
+```text
+Home: Leo visibly connected to/opening/pointing into the book
+Animals: Tito peeking through grass / inspecting the habitat
+Lion: Tito reacting beside the lion or foreground habitat
+Saturn: Leo beside/using the telescope or observing Saturn
+Gears: Dani beside the bench, holding/inspecting a tool or mechanism
+Pyramids: Leo observing the construction foreground / notebook/field-guide role
+```
+
+Use whole-character placement, overlap and simple reaction states. Do not create a new character animation subsystem.
+
+## 4.3 Material and depth
+
+Current problem: clean but still generic flat-vector appearance.
+
+Improve only through authored/build-time art:
+
+- baked subtle paper/felt/paint variation;
+- contact shadows;
+- edge/overlap treatment;
+- foreground/background separation;
+- local light/rim accents where appropriate;
+- shallow toy-diorama depth.
+
+Do not use runtime shaders, blur, per-pixel effects, large dynamic alpha layers or expensive continuous parallax.
+
+## 4.4 Home
+
+Keep the open book.
+
+Improve the six domain selections from simple symbols toward miniature illustrated worlds:
+
+```text
+Animals  -> habitat vignette
+Space    -> tiny observatory/planet vignette
+Earth    -> landscape/geology vignette
+Body     -> friendly body-discovery vignette
+Machines -> warm workbench/mechanism vignette
+History  -> excavation/pyramid/time vignette
+```
+
+Selection still uses the existing 3x2 semantic centers.
+
+## 4.5 Animals
+
+- preserve the continuous landscape;
+- remove the sun/Back crowding/overlap;
+- improve habitat/context cues so animals feel intentionally placed rather than floating stickers;
+- preserve the 3x2 semantic centers and target mapping;
+- integrate Tito into the environment.
+
+## 4.6 Lion
+
+Keep the current hero layout and recognizability.
+
+Improve:
+
+- mane/body material depth;
+- scene-native discovery presentation;
+- Tito relationship to hero;
+- first ACTIVATE payoff so the mane change/reveal is more visually emphatic than the current dark ring alone.
+
+Do not replace the lion concept from scratch.
+
+## 4.7 Saturn — reference exemplar
+
+Preserve its palette, hero scale and dark observatory identity.
+
+Improve only:
+
+- discovery markers integrated into observatory/space composition;
+- Leo visibly connected to telescope/observation;
+- first ACTIVATE payoff larger/clearer than the current small Earth/orbit hint.
+
+Do not make Saturn busier merely to match other pages.
+
+## 4.8 Gears
+
+- preserve true gear relationships and mechanism clarity;
+- remove rack/green-gear visual collision;
+- increase toy/workbench material depth;
+- integrate Dani with the mechanism;
+- replace floating white discovery circles with workshop-native controls;
+- make first ACTIVATE movement transfer more visually obvious while remaining cheap.
+
+## 4.9 Pyramids
+
+- preserve construction/diorama framing;
+- improve workers from stick-figure/prototype treatment into simple authored people/silhouettes appropriate to Greia style;
+- reduce classroom-grid dominance on the main pyramid without losing the educational block structure;
+- improve foreground tools/ramp/sledge material treatment;
+- integrate Leo into the archaeology/construction observation role;
+- strengthen first ACTIVATE block-layer reveal substantially.
+
+Do not introduce unsupported historical specifics simply for decoration.
+
+## 4.10 Caption hierarchy
+
+Captions remain useful accessibility/reader support but must stay secondary to the visual teaching action.
+
+If a caption currently explains something the activated image barely shows, strengthen the image rather than enlarging or lengthening the caption.
+
+---
+
+# 5. Source/build/test sequence
+
+Work only in the existing E1/E2 source/runtime seams.
+
+After visual edits:
 
 ```bash
 python3 tools/build_encyclopedia_visual_assets.py
-```
-
-Expected outputs:
-
-```text
-activities/enciclopedia_greia/assets/runtime/home_discovery_book.png
-activities/enciclopedia_greia/assets/runtime/animals_field_table.png
-activities/enciclopedia_greia/assets/runtime/lion_savanna.png
-activities/enciclopedia_greia/assets/runtime/saturn_observatory.png
-activities/enciclopedia_greia/assets/runtime/gears_workbench.png
-activities/enciclopedia_greia/assets/runtime/pyramids_diorama.png
-```
-
-`CairoSVG` is an **authoring/maintainer dependency only**. If it is missing, follow `SETUP.md` maintainer/tooling rules. Do not add it to the child runtime, Activity manifest, or runtime dependencies.
-
-Inspect the outputs:
-
-```bash
-ls -lh activities/enciclopedia_greia/assets/runtime/*.png
-file activities/enciclopedia_greia/assets/runtime/*.png
-```
-
-All six must exist, be real non-empty 1024x600 PNGs. A partial pack is failure.
-
-Then run the stale/generated-art guard:
-
-```bash
 python3 tools/build_encyclopedia_visual_assets.py --check
-```
-
-Expected final line:
-
-```text
-PASS 6 Encyclopedia runtime PNGs match editable masters
-```
-
-`--check` rebuilds into a temporary directory and byte-compares against the runtime pack. Any `MISSING` or `BUILD-DRIFT` result is a hard stop. Do not continue to Simulator evidence with stale or mismatched generated art.
-
----
-
-# 4. Focused source/runtime checks
-
-Run exactly:
-
-```bash
 python3 -m unittest \
   tests.test_activity_enciclopedia \
-  tests.test_activity_enciclopedia_visual_foundation
-```
-
-Then run the repository's current normal local verification required for a changed first-party Activity, following `AGENTS.md` and the Activity skill. If `make verify` is the current local source gate in this checkout, run:
-
-```bash
+  tests.test_activity_enciclopedia_visual_foundation \
+  tests.test_encyclopedia_authoring_tools
 make verify
 ```
 
-Do not invoke, inspect, rerun, or depend on GitHub-hosted Actions.
-
-If any focused test or required local verification fails:
-
-1. capture the exact command and complete failure;
-2. identify the root cause;
-3. make the smallest coherent fix;
-4. rerun the failed focused gate;
-5. rerun `python3 tools/build_encyclopedia_visual_assets.py --check` if source/build/runtime art was touched;
-6. remember that later Simulator evidence must be from the final runtime-relevant source state.
-
-Do not continue to visual acceptance with red tests.
-
----
-
-# 5. Commit generated runtime art before Simulator acceptance
-
-Refresh `main` again before the write:
-
-```bash
-git fetch origin
-git status --short
-git rev-parse HEAD
-git rev-parse origin/main
-```
-
-If `origin/main` advanced, reconcile normally on `main`; do not create a feature branch and do not overwrite concurrent work.
-
-Commit the six generated PNGs and only any necessary coherent fixes:
-
-```bash
-git add activities/enciclopedia_greia/assets/runtime/
-git status --short
-git commit -m "Encyclopedia: build golden-master runtime art"
-git push origin main
-```
-
-Record the exact pushed SHA:
-
-```bash
-git rev-parse HEAD
-```
-
-Now rerun against the pushed final tree:
-
-```bash
-python3 tools/build_encyclopedia_visual_assets.py --check
-python3 -m unittest \
-  tests.test_activity_enciclopedia \
-  tests.test_activity_enciclopedia_visual_foundation
-```
-
-The Simulator must test this final runtime-relevant SHA. If anything runtime-relevant changes afterward, restart Simulator acceptance from the beginning.
-
----
-
-# 6. Real Greia Simulator launch gate
-
-Use the real Simulator path documented by:
+Expected:
 
 ```text
-docs/development/GREIA_ACTIVITY_SIMULATOR.md
-skills/greia-activity-authoring/LAUNCH_ACCEPTANCE.md
+build --check: PASS 6
+focused tests: all PASS
+make verify: all PASS
 ```
 
-Current canonical launcher is expected to be:
+If a test exposes a genuine changed contract, fix the smallest correct source/test boundary. Do not weaken a test just to allow the new art.
 
-```bash
-python3 tools/greia_simulator.py
-```
-
-Load the source Activity through **Load Activity Folder…**, not by manually copying files into simulator-managed storage.
-
-Minimum launch gate:
-
-```text
-Activity appears in Greia launcher/catalogue
-launch from Greia Shell
-first usable frame appears
-survive >= 10 seconds
-perform meaningful interaction
-remain alive afterward
-internal Back works where applicable
-protected Greia Home returns cleanly to Shell
-```
-
-Record the exact source SHA, locale/profile, viewport and result.
+Before committing/pushing, refresh `origin/main` and reconcile safely. Do not overwrite concurrent work.
 
 ---
 
-# 7. Golden-master visual evidence — only six prototypes
+# 6. Simulator evidence after E2R
 
-At minimum capture real Simulator pixels at **1024x600** for:
+Once the revised runtime PNGs and source are pushed, capture from the exact final runtime-relevant SHA using the existing golden-master capture tooling / real Greia Simulator path.
+
+Capture only:
 
 ```text
 Home
-Animals section
-Lion
-Saturn
-Gears
-Pyramids
+Animals
+Lion initial + activated
+Saturn initial + activated
+Gears initial + activated
+Pyramids initial + activated
 ```
 
-For Lion, Saturn, Gears and Pyramids capture:
+Plus the same narrow compact/larger sample if runtime-relevant layout changed.
+
+Do **not** run the full 43-page traversal.
+
+Produce:
+
+- one 3x2 primary contact sheet;
+- one concise initial-vs-activated comparison sheet for Lion/Saturn/Gears/Pyramids if tooling supports it;
+- updated review notes listing visible defects honestly.
+
+Specifically verify:
 
 ```text
-one clean initial state
-one representative post-ACTIVATE state
+discovery markers no longer read as generic floating white instrumentation
+presenters are compositionally connected
+material/depth is visibly stronger
+Home portals read as miniature worlds
+Animals sun/Back conflict is gone
+Gears rack collision is gone
+Pyramids foreground/people are no longer stick-figure prototype quality
+first activation payoff is strong without reading caption text
+protected Home/internal Back remain clear
 ```
-
-The activated screenshot must prove that discovery interaction has a visible payoff, not merely that an audio cue fired.
-
-Also capture a small responsive proof, not the full final matrix:
-
-```text
-one compact viewport/profile row
-one larger viewport/profile row
-```
-
-Use representative prototypes rather than all 43 pages. Follow `VISUAL_ACCEPTANCE_EVIDENCE_CONTRACT.md` for evidence naming/classification.
-
-Produce **one contact sheet** containing the six primary 1024x600 golden-master screens. If practical, also produce a second concise comparison sheet for the activated states/responsive samples. Do not generate giant redundant screenshot dumps.
-
-Review the real pixels for:
-
-```text
-subject recognizability
-composition/hierarchy
-depth/material quality
-palette/lighting coherence
-discovery affordance clarity
-interaction payoff
-presenter integration
-pre-reader first-action clarity
-low-resolution legibility
-Greia-family coherence
-clipping/occlusion/protected-chrome conflicts
-```
-
-Do not call the direction accepted yourself. The owner is the aesthetic authority.
 
 ---
 
-# 8. No-reading check
+# 7. Separate libpng diagnostic
 
-On the six prototypes, review as if the child cannot read:
-
-```text
-Can Home's first action be inferred from pictures/selection treatment?
-Can Animals selection be understood without reading labels?
-Are discovery tokens visibly actionable?
-Does ACTIVATE produce understandable visual cause/effect?
-Can the child return with internal Back / protected Home without prose?
-```
-
-Record:
+Every current golden-master child log still emits:
 
 ```text
-PRE_READER_CORE_FLOW_PASS=yes/no
-TEXT_REQUIRED_FOR_GAMEPLAY=yes/no
-NO_READING_FIRST_ACTION_PASS=yes/no
-PRIMARY_INSTRUCTION_CHANNEL=visual/voice/combined
+libpng error: bad adaptive filter value
 ```
 
-Do not use missing final narration as an excuse for unclear visuals; narration remains a separate acceptance lane.
+Do **not** let this derail E2R and do not guess the cause.
+
+If the warning still appears after the revised capture, record it unchanged. A separate narrow diagnostic may later identify the source asset/load path. Do not perform broad asset rewrites during E2R merely to silence an unattributed warning.
 
 ---
 
-# 9. Update continuation docs after evidence
+# 8. STOP condition
 
-After the final Simulator/evidence state, update truthfully:
+After the revised six-prototype evidence/contact sheet is complete and pushed/documented, STOP.
 
-```text
-encyclopedia/HANDOVER.md
-docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md
-docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md
-docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md
-HANDOVER.md
-```
-
-Append progress; do not rewrite old history to make experiments look cleaner.
-
-Then commit/push the evidence/doc handoff on `main`.
-
----
-
-# 10. STOP condition
-
-After the six-prototype contact sheet and evidence are committed, **STOP**.
-
-Do not start E3 or migrate another page.
-
-Return to the owner/primary agent with:
+Return:
 
 ```text
-exact final Git SHA
-six generated PNG paths and total bytes
+final Git SHA
+runtime-art SHA tested by Simulator
 build --check result
-focused test results
-local verification result
-Simulator launch/survival result
-interaction exercised
-Back/Home result
-1024x600 screenshot directory
-responsive sample directory
-contact-sheet path
+focused test counts
+make verify result
+6-session Simulator result
+new contact-sheet path
+activated comparison path if produced
+page-by-page visible changes
+remaining visible defects
 pre-reader/no-reading result
-any visual defects observed
-anything still unverified
+libpng warning present yes/no
+anything unverified
 ```
 
-Current truthful state before this task executes:
+Do not mark owner direction approved yourself.
+Do not start E3/E4.
+
+Current truthful state:
 
 ```text
-MECHANICAL 43-PAGE FOUNDATION: PREVIOUSLY PROVEN
-OLD GRAPHICS PRODUCT TARGET: REJECTED
-E1 SHARED PRESENTATION SOURCE: IMPLEMENTED ON MAIN
-E2 SIX GOLDEN-MASTER PAGE SOURCES: IMPLEMENTED ON MAIN
-EDITABLE SVG MASTERS: 6 / 6 ON MAIN
-RUNTIME PNG PACK: BUILD/COMMIT PENDING
-GENERATED-ART --CHECK GATE: IMPLEMENTED ON MAIN / EXECUTION PENDING ON REAL CHECKOUT
-FOCUSED LOCAL REPO TESTS: PENDING ON REAL CHECKOUT
-SIMULATOR FINAL-SHA ACCEPTANCE: PENDING
-OWNER VISUAL DIRECTION APPROVAL: PENDING
-E3/E4 BULK MIGRATION: BLOCKED
-NARRATION ACCEPTANCE: SEPARATE / PENDING
+MECHANICAL 43-PAGE FOUNDATION: PROVEN
+E1 ARCHITECTURE: ACCEPTED
+E2 FIRST GOLDEN-MASTER RUNTIME EVIDENCE: VALID
+E2 FIRST ART PASS: PRIMARY REVIEW REQUIRES REFINEMENT
+E2R: NEXT TASK
+E3/E4: BLOCKED
+OWNER DIRECTION APPROVAL: PENDING
+NARRATION: SEPARATE / PENDING
+PHYSICAL HARDWARE: SEPARATE / PENDING
 ```
