@@ -14,11 +14,11 @@
 
 ---
 
-# 1. Current focus — Encyclopedia visual reauthoring
+# 1. Current focus — Encyclopedia golden-master validation
 
-The owner rejected the present `org.greia.enciclopedia` graphics quality as a final product target after reviewing the complete 43-page 1024×600 mechanical traversal evidence.
+The owner rejected the old `org.greia.enciclopedia` graphics quality as a final product target after reviewing the complete 43-page 1024×600 mechanical traversal evidence.
 
-The problem is systemic rather than a small polish list. The current Activity relies too heavily on raw Pygame primitives for its main illustrated subjects and environments, producing mechanically clear but crude screens that conflict with Greia's accepted storybook/felt-board/toy-diorama art direction.
+The diagnosis remains systemic: final subjects/environments were dominated by raw Pygame primitives, sparse flat backgrounds, instrumentation-like discovery bubbles, corner-stamped presenters and weak visual payoff.
 
 Forensic review:
 
@@ -32,11 +32,11 @@ Active bounded reauthoring plan:
 docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md
 ```
 
-Current rule:
+The first E1/E2 source tranche has now landed on `main`. The current rule is therefore narrower:
 
-> **Do not bulk-redraw 43 pages. Build an Encyclopedia visual foundation, then a representative golden-master set, obtain owner direction approval, and only then migrate the complete Activity.**
+> **Build/verify the six golden-master runtime renditions, inspect real Greia Simulator pixels, obtain owner direction approval, and only then migrate the remaining Encyclopedia.**
 
-Golden-master targets:
+Golden-master targets remain:
 
 ```text
 Home
@@ -45,14 +45,90 @@ Lion
 Saturn
 Gears
 Pyramids
-optional Body/Heart anatomy proof
+optional Body/Heart anatomy proof only if a later review shows it is needed
 ```
-
-No broad 43-page visual recapture is useful until this direction is reauthored.
 
 ---
 
-# 2. Architecture to preserve
+# 2. E1 visual foundation now present in source
+
+Activity-local source owners:
+
+```text
+activities/enciclopedia_greia/enciclopedia_presentation.py
+activities/enciclopedia_greia/enciclopedia_services.py
+```
+
+The bounded foundation now provides:
+
+```text
+PageShellLayout safe zones
+DiscoveryToken tactile idle/focus/recent language
+caption ribbon with adaptive fitting
+authored-scene placement
+object focus/lift treatment
+bounded Activity-local visual cache
+explicit semantic-id -> runtime PNG mapping
+```
+
+The stable page engine/navigation/factual models were not replaced. The new presentation code is an Activity-local layer over existing Greia boundaries, not a second platform compositor.
+
+Runtime rules remain:
+
+```text
+no runtime SVG rasterization
+no arbitrary runtime source scanning
+no page hot-path pygame.image.load
+no page hot-path smoothscale
+bounded cache misses only
+protected Greia Home untouched
+```
+
+---
+
+# 3. E2 golden-master source now present
+
+Editable Activity-local source masters:
+
+```text
+activities/enciclopedia_greia/assets/source/home_discovery_book.svg
+activities/enciclopedia_greia/assets/source/animals_field_table.svg
+activities/enciclopedia_greia/assets/source/lion_savanna.svg
+activities/enciclopedia_greia/assets/source/saturn_observatory.svg
+activities/enciclopedia_greia/assets/source/gears_workbench.svg
+activities/enciclopedia_greia/assets/source/pyramids_diorama.svg
+```
+
+Golden-master page source has been migrated for:
+
+```text
+Home
+Animals section
+Lion
+Saturn
+Gears
+Pyramids
+```
+
+The pages preserve their semantic input/state contracts. Authored scenes now carry the main pictorial burden while procedural drawing is retained for legitimate dynamic teaching overlays, particles/focus/discovery affordances and interaction responses.
+
+Authoring-only build recipe:
+
+```text
+tools/build_encyclopedia_visual_assets.py
+```
+
+Focused source contract:
+
+```text
+tests/test_activity_enciclopedia_visual_foundation.py
+```
+
+A local mirror check of this source shape passed 6/6 plus AST parse. This is **SOURCE/STATIC evidence only**, not Simulator acceptance.
+
+---
+
+# 4. Architecture to preserve
 
 Greia still uses two visual-authoring tracks.
 
@@ -75,11 +151,11 @@ inventory Activity needs
 → inspect actual rendered pixels
 ```
 
-For the Encyclopedia, the library is a toolbox rather than a requirement to force reuse. Most topic-specific heroes will legitimately require original Activity-local artwork.
+For the Encyclopedia, the library is a toolbox rather than a requirement to force reuse. Topic-specific heroes legitimately remain Activity-local.
 
 ---
 
-# 3. Generic toolbox state
+# 5. Generic toolbox state
 
 Current indexed state remains:
 
@@ -103,11 +179,11 @@ Permanent rules:
 - generic assets encode reusable form while Activity-specific meaning stays separable where practical;
 - **Generic Batch B remains unauthorized** unless real demand proves a concrete generic gap.
 
-The Encyclopedia redesign does not automatically authorize a new generic pack. Topic-specific art should normally stay Activity-local.
+The Encyclopedia redesign does not authorize Generic Batch B by inertia.
 
 ---
 
-# 4. Canonical cast v0.1 — accepted runtime family
+# 6. Canonical cast v0.1 — accepted runtime family
 
 Current cast:
 
@@ -151,11 +227,11 @@ Runtime rule remains:
 
 > complete authored state art + authoring-time semantic source components + build-time PNG renditions + simple whole-character fixed-size transforms.
 
-For the Encyclopedia specifically, characters should be integrated compositionally rather than stamped as tiny bottom-corner mascots.
+The Encyclopedia golden masters deliberately enlarge/integrate presenters rather than using the old tiny bottom-corner default. Actual composition quality still requires Simulator review.
 
 ---
 
-# 5. Stable runtime foundation to preserve
+# 7. Stable runtime foundation to preserve
 
 ```text
 explicit semantic asset catalogues
@@ -176,11 +252,11 @@ Runtime rules:
 - bounded caches;
 - Activity-local assets remain inside Activity packages;
 - generic authoring indexes remain authoring-time facilities;
-- rich authored art should be cropped/flattened into economical runtime surfaces.
+- rich authored art should be flattened/cropped into economical runtime surfaces.
 
 ---
 
-# 6. Existing accepted visual work remains valid
+# 8. Existing accepted visual work remains valid
 
 Prior accepted/reviewed work is not invalidated by the Encyclopedia failure. Stable evidence/history remains in the active visual plan and dated review directories, including:
 
@@ -192,17 +268,17 @@ Prior accepted/reviewed work is not invalidated by the Encyclopedia failure. Sta
 - launcher Shell/category-navigation productization;
 - first-party visual audit and Batch 1 productization (`treno_numeri`, `labirinto_magico`, `acquario_magico`).
 
-The lesson from the Encyclopedia is narrower but important: **mechanical completion does not excuse programmer-art presentation, and a page-heavy Activity needs a reusable visual grammar before mass content production.**
+The Encyclopedia lesson remains: **mechanical completion does not excuse programmer-art presentation, and a page-heavy Activity needs a reviewed reusable visual grammar before mass content production.**
 
 ---
 
-# 7. Current Encyclopedia evidence boundary
+# 9. Current Encyclopedia evidence boundary
 
-Already proven and preserved:
+Previously proven and preserved mechanically:
 
 ```text
 43-page source/runtime structure
-real Shell launch
+real Shell launch on older source
 43/43 reachability
 36/36 internal Back return
 protected Greia Home return
@@ -210,62 +286,78 @@ bounded semantic interactions
 headless transition-settle harness repair
 ```
 
-Not visually accepted:
+New source evidence:
 
 ```text
-current Home aesthetic
-current six section-page aesthetics
-current factual-entry art direction
-current discovery-token treatment
-current presenter composition
-final pre-reader visual quality
-final responsive visual quality
+E1 shared presentation source landed
+six editable golden-master SVG masters landed
+six golden-master page visual integrations landed
+authoring-time build recipe landed
+focused visual-foundation source contract landed
+local mirror source contracts 6/6 PASS
+changed source AST parse PASS
+```
+
+Still unverified on the final visual source:
+
+```text
+six generated runtime PNGs committed to main
+real-checkout focused tests after generation
+final-SHA Greia Simulator launch/survival
+actual 1024×600 golden-master pixels
+activated-state visual payoff
+compact/larger responsive samples
+pre-reader/no-reading prototype review
+owner direction approval
 ```
 
 Narration remains a separate owner-listening workflow.
 
 ---
 
-# 8. Immediate next action
+# 10. Immediate next action
 
-Implement only:
-
-```text
-E1 — Encyclopedia shared visual foundation
-+
-E2 — golden-master prototypes
-```
-
-Sequence:
+The rolling execution pointer is now:
 
 ```text
-inventory reusable assets
-→ define Activity-local source/runtime art structure
-→ implement DiscoveryToken + hero-stage/page-shell helpers only where genuinely shared
-→ reauthor Home + Animals section + Lion
-→ extend same grammar to Saturn + Gears + Pyramids
-→ focused tests
-→ actual Simulator prototype captures
-→ one contact sheet
-→ STOP for owner/primary visual review
+docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md
 ```
 
-Do not migrate the remaining pages before direction approval.
+Exact sequence:
+
+```text
+refresh main
+→ build six runtime PNGs from committed SVG masters
+→ focused tests + required local verification
+→ commit/push generated PNG pack
+→ run final-SHA real Greia Simulator gate
+→ capture Home / Animals / Lion / Saturn / Gears / Pyramids
+→ capture representative ACTIVATE payoffs
+→ one compact + one larger responsive sample
+→ produce curated contact sheet
+→ perform no-reading review
+→ update evidence/docs
+→ STOP for owner visual direction review
+```
+
+**No E3/E4 page migration before owner approval.**
 
 ---
 
-# 9. Drift to avoid
+# 11. Drift to avoid
 
 - no 43-page bulk redraw before golden-master approval;
 - no primitive-art polishing loop;
 - no generic Batch B by inertia;
 - no second runtime asset/cache/scene system;
 - no runtime SVG;
+- no CairoSVG child-runtime dependency;
 - no AI-generated inconsistent full-screen art dump;
 - no detailed skeletal character rigs;
 - no tiny corner-mascot default;
 - no text-heavy rescue of unclear visuals;
-- no broad acceptance reruns before a visually meaningful state changes;
+- no broad acceptance reruns before the golden masters are runtime-complete;
+- no narration integration in this visual gate;
 - no R7/hardware claims from Activity visual work.
 
 R7 remains the primary blocking platform phase. No physical Acer/Pi acceptance is claimed without real hardware evidence.
