@@ -124,7 +124,7 @@ class HomePage(EncyclopediaPage):
             surface,
             self.context.visuals,
             "leo",
-            position=(930, 575 + bob),
-            height=185,
+            position=(880, 535 + bob),
+            height=190,
             variant="happy",
         )

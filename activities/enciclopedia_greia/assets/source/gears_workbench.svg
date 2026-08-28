@@ -1,1 +1,211 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="600" viewBox="0 0 1024 600"><defs><filter id="shadow" x="-30%" y="-30%" width="160%" height="170%"><feGaussianBlur in="SourceAlpha" stdDeviation="7" result="b"/><feOffset dy="8" result="o"/><feColorMatrix in="o" type="matrix" values="0 0 0 0 .08 0 0 0 0 .06 0 0 0 0 .04 0 0 0 .30 0"/><feBlend in="SourceGraphic"/></filter><filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".65" numOctaves="2" seed="11"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="table" tableValues="0 .035"/></feComponentTransfer></filter><linearGradient id="wood" x1="0" x2="1"><stop stop-color="#80502f"/><stop offset=".35" stop-color="#b97943"/><stop offset=".7" stop-color="#9c6138"/><stop offset="1" stop-color="#70432a"/></linearGradient></defs><rect width="1024" height="600" fill="#d9c4a0"/><rect y="452" width="1024" height="148" fill="url(#wood)"/><path d="M0 475H1024" stroke="#613c28" stroke-width="7" opacity=".55"/><rect x="118" y="112" width="788" height="358" rx="40" fill="#b98550" stroke="#6e472f" stroke-width="8" filter="url(#shadow)"/><rect x="148" y="142" width="728" height="298" rx="28" fill="#ead7ae" stroke="#9b7046" stroke-width="5"/><g fill="#8d6947" opacity=".6"><circle cx="180" cy="175" r="3"/><circle cx="220" cy="175" r="3"/><circle cx="260" cy="175" r="3"/><circle cx="300" cy="175" r="3"/><circle cx="340" cy="175" r="3"/><circle cx="380" cy="175" r="3"/><circle cx="420" cy="175" r="3"/><circle cx="460" cy="175" r="3"/><circle cx="500" cy="175" r="3"/><circle cx="540" cy="175" r="3"/><circle cx="580" cy="175" r="3"/><circle cx="620" cy="175" r="3"/><circle cx="660" cy="175" r="3"/><circle cx="700" cy="175" r="3"/><circle cx="740" cy="175" r="3"/><circle cx="780" cy="175" r="3"/><circle cx="820" cy="175" r="3"/><circle cx="180" cy="215" r="3"/><circle cx="220" cy="215" r="3"/><circle cx="260" cy="215" r="3"/><circle cx="300" cy="215" r="3"/><circle cx="340" cy="215" r="3"/><circle cx="380" cy="215" r="3"/><circle cx="420" cy="215" r="3"/><circle cx="460" cy="215" r="3"/><circle cx="500" cy="215" r="3"/><circle cx="540" cy="215" r="3"/><circle cx="580" cy="215" r="3"/><circle cx="620" cy="215" r="3"/><circle cx="660" cy="215" r="3"/><circle cx="700" cy="215" r="3"/><circle cx="740" cy="215" r="3"/><circle cx="780" cy="215" r="3"/><circle cx="820" cy="215" r="3"/><circle cx="180" cy="255" r="3"/><circle cx="220" cy="255" r="3"/><circle cx="260" cy="255" r="3"/><circle cx="300" cy="255" r="3"/><circle cx="340" cy="255" r="3"/><circle cx="380" cy="255" r="3"/><circle cx="420" cy="255" r="3"/><circle cx="460" cy="255" r="3"/><circle cx="500" cy="255" r="3"/><circle cx="540" cy="255" r="3"/><circle cx="580" cy="255" r="3"/><circle cx="620" cy="255" r="3"/><circle cx="660" cy="255" r="3"/><circle cx="700" cy="255" r="3"/><circle cx="740" cy="255" r="3"/><circle cx="780" cy="255" r="3"/><circle cx="820" cy="255" r="3"/><circle cx="180" cy="295" r="3"/><circle cx="220" cy="295" r="3"/><circle cx="260" cy="295" r="3"/><circle cx="300" cy="295" r="3"/><circle cx="340" cy="295" r="3"/><circle cx="380" cy="295" r="3"/><circle cx="420" cy="295" r="3"/><circle cx="460" cy="295" r="3"/><circle cx="500" cy="295" r="3"/><circle cx="540" cy="295" r="3"/><circle cx="580" cy="295" r="3"/><circle cx="620" cy="295" r="3"/><circle cx="660" cy="295" r="3"/><circle cx="700" cy="295" r="3"/><circle cx="740" cy="295" r="3"/><circle cx="780" cy="295" r="3"/><circle cx="820" cy="295" r="3"/><circle cx="180" cy="335" r="3"/><circle cx="220" cy="335" r="3"/><circle cx="260" cy="335" r="3"/><circle cx="300" cy="335" r="3"/><circle cx="340" cy="335" r="3"/><circle cx="380" cy="335" r="3"/><circle cx="420" cy="335" r="3"/><circle cx="460" cy="335" r="3"/><circle cx="500" cy="335" r="3"/><circle cx="540" cy="335" r="3"/><circle cx="580" cy="335" r="3"/><circle cx="620" cy="335" r="3"/><circle cx="660" cy="335" r="3"/><circle cx="700" cy="335" r="3"/><circle cx="740" cy="335" r="3"/><circle cx="780" cy="335" r="3"/><circle cx="820" cy="335" r="3"/><circle cx="180" cy="375" r="3"/><circle cx="220" cy="375" r="3"/><circle cx="260" cy="375" r="3"/><circle cx="300" cy="375" r="3"/><circle cx="340" cy="375" r="3"/><circle cx="380" cy="375" r="3"/><circle cx="420" cy="375" r="3"/><circle cx="460" cy="375" r="3"/><circle cx="500" cy="375" r="3"/><circle cx="540" cy="375" r="3"/><circle cx="580" cy="375" r="3"/><circle cx="620" cy="375" r="3"/><circle cx="660" cy="375" r="3"/><circle cx="700" cy="375" r="3"/><circle cx="740" cy="375" r="3"/><circle cx="780" cy="375" r="3"/><circle cx="820" cy="375" r="3"/><circle cx="180" cy="415" r="3"/><circle cx="220" cy="415" r="3"/><circle cx="260" cy="415" r="3"/><circle cx="300" cy="415" r="3"/><circle cx="340" cy="415" r="3"/><circle cx="380" cy="415" r="3"/><circle cx="420" cy="415" r="3"/><circle cx="460" cy="415" r="3"/><circle cx="500" cy="415" r="3"/><circle cx="540" cy="415" r="3"/><circle cx="580" cy="415" r="3"/><circle cx="620" cy="415" r="3"/><circle cx="660" cy="415" r="3"/><circle cx="700" cy="415" r="3"/><circle cx="740" cy="415" r="3"/><circle cx="780" cy="415" r="3"/><circle cx="820" cy="415" r="3"/></g><path d="M160 145L450 145L604 440L350 440Z" fill="#fff5c4" opacity=".16"/><g filter="url(#shadow)"><g transform="translate(380 305)"><circle r="92" fill="#4f94ad" stroke="#2e5666" stroke-width="7"/><g fill="#4f94ad"><rect x="-12" y="-112" width="24" height="34" rx="5" transform="rotate(0)"/><rect x="-12" y="-112" width="24" height="34" rx="5" transform="rotate(30)"/><rect x="-12" y="-112" width="24" height="34" rx="5" transform="rotate(60)"/><rect x="-12" y="-112" width="24" height="34" rx="5" transform="rotate(90)"/><rect x="-12" y="-112" width="24" height="34" rx="5" transform="rotate(120)"/><rect x="-12" y="-112" width="24" height="34" rx="5" transform="rotate(150)"/><rect x="-12" y="-112" width="24" height="34" rx="5" transform="rotate(180)"/><rect x="-12" y="-112" width="24" height="34" rx="5" transform="rotate(210)"/><rect x="-12" y="-112" width="24" height="34" rx="5" transform="rotate(240)"/><rect x="-12" y="-112" width="24" height="34" rx="5" transform="rotate(270)"/><rect x="-12" y="-112" width="24" height="34" rx="5" transform="rotate(300)"/><rect x="-12" y="-112" width="24" height="34" rx="5" transform="rotate(330)"/></g><circle r="33" fill="#e8d2a4" stroke="#2e5666" stroke-width="6"/><circle r="11" fill="#d2a453"/></g><g transform="translate(556 305)"><circle r="66" fill="#d99a43" stroke="#81562f" stroke-width="7"/><g fill="#d99a43"><rect x="-10" y="-82" width="20" height="28" rx="4" transform="rotate(0)"/><rect x="-10" y="-82" width="20" height="28" rx="4" transform="rotate(36)"/><rect x="-10" y="-82" width="20" height="28" rx="4" transform="rotate(72)"/><rect x="-10" y="-82" width="20" height="28" rx="4" transform="rotate(108)"/><rect x="-10" y="-82" width="20" height="28" rx="4" transform="rotate(144)"/><rect x="-10" y="-82" width="20" height="28" rx="4" transform="rotate(180)"/><rect x="-10" y="-82" width="20" height="28" rx="4" transform="rotate(216)"/><rect x="-10" y="-82" width="20" height="28" rx="4" transform="rotate(252)"/><rect x="-10" y="-82" width="20" height="28" rx="4" transform="rotate(288)"/><rect x="-10" y="-82" width="20" height="28" rx="4" transform="rotate(324)"/></g><circle r="24" fill="#f1dfb8" stroke="#81562f" stroke-width="5"/><circle r="8" fill="#557d78"/></g><g transform="translate(684 305)"><circle r="48" fill="#72a261" stroke="#47653f" stroke-width="6"/><g fill="#72a261"><rect x="-9" y="-62" width="18" height="24" rx="4" transform="rotate(0)"/><rect x="-9" y="-62" width="18" height="24" rx="4" transform="rotate(45)"/><rect x="-9" y="-62" width="18" height="24" rx="4" transform="rotate(90)"/><rect x="-9" y="-62" width="18" height="24" rx="4" transform="rotate(135)"/><rect x="-9" y="-62" width="18" height="24" rx="4" transform="rotate(180)"/><rect x="-9" y="-62" width="18" height="24" rx="4" transform="rotate(225)"/><rect x="-9" y="-62" width="18" height="24" rx="4" transform="rotate(270)"/><rect x="-9" y="-62" width="18" height="24" rx="4" transform="rotate(315)"/></g><circle r="18" fill="#e5d4ae" stroke="#47653f" stroke-width="5"/></g></g><path d="M690 370H842" stroke="#5f4a39" stroke-width="16" stroke-linecap="round"/><g fill="#5f4a39"><rect x="700" y="354" width="9" height="16" rx="2"/><rect x="715" y="354" width="9" height="16" rx="2"/><rect x="730" y="354" width="9" height="16" rx="2"/><rect x="745" y="354" width="9" height="16" rx="2"/><rect x="760" y="354" width="9" height="16" rx="2"/><rect x="775" y="354" width="9" height="16" rx="2"/><rect x="790" y="354" width="9" height="16" rx="2"/><rect x="805" y="354" width="9" height="16" rx="2"/><rect x="820" y="354" width="9" height="16" rx="2"/></g><path d="M715 405H829" stroke="#d8a33d" stroke-width="6"/><path d="M829 405L812 394V416Z" fill="#d8a33d"/><g stroke="#6d5038" stroke-width="8" stroke-linecap="round"><path d="M205 365L255 415"/><path d="M228 350L267 389"/></g><path d="M188 347Q215 320 242 347L219 371Z" fill="#7d97a1"/><rect x="180" y="414" width="620" height="18" rx="8" fill="#80583a" opacity=".75"/><rect width="1024" height="600" filter="url(#grain)" opacity=".28" pointer-events="none"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="600" viewBox="0 0 1024 600">
+<defs>
+  <filter id="softshadow" x="-20%" y="-20%" width="140%" height="160%">
+    <feGaussianBlur in="SourceAlpha" stdDeviation="6"/>
+    <feOffset dy="8"/>
+    <feComponentTransfer><feFuncA type="linear" slope="0.32"/></feComponentTransfer>
+    <feComposite in2="SourceGraphic" operator="in" result="shadow"/>
+    <feMerge><feMergeNode in="shadow"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="tightshadow" x="-10%" y="-10%" width="120%" height="140%">
+    <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+    <feOffset dy="3"/>
+    <feComponentTransfer><feFuncA type="linear" slope="0.4"/></feComponentTransfer>
+    <feComposite in2="SourceGraphic" operator="in" result="shadow"/>
+    <feMerge><feMergeNode in="shadow"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="paperGrain">
+    <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="17"/>
+    <feColorMatrix type="saturate" values="0"/>
+    <feComponentTransfer><feFuncA type="table" tableValues="0 0.06"/></feComponentTransfer>
+    <feComposite in2="SourceGraphic" operator="in"/>
+  </filter>
+  <linearGradient id="benchTop" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#a07048"/>
+    <stop offset="0.6" stop-color="#7a4a2c"/>
+    <stop offset="1" stop-color="#4e2a14"/>
+  </linearGradient>
+  <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#3a2b22"/>
+    <stop offset="1" stop-color="#1a0f0a"/>
+  </linearGradient>
+  <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#5b3520"/>
+    <stop offset="1" stop-color="#2a1c14"/>
+  </linearGradient>
+  <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#fff5d8"/>
+    <stop offset="1" stop-color="#e8c97a"/>
+  </linearGradient>
+</defs>
+
+<!-- Workshop wall -->
+<rect width="1024" height="600" fill="url(#wall)"/>
+
+<!-- Wall accents: pegboard shelf line -->
+<line x1="0" y1="180" x2="1024" y2="180" stroke="#5b3520" stroke-width="3" opacity="0.6"/>
+<g fill="#5b3520" opacity="0.7">
+  <circle cx="120" cy="120" r="4"/>
+  <circle cx="260" cy="120" r="4"/>
+  <circle cx="400" cy="120" r="4"/>
+  <circle cx="540" cy="120" r="4"/>
+  <circle cx="680" cy="120" r="4"/>
+  <circle cx="820" cy="120" r="4"/>
+  <circle cx="960" cy="120" r="4"/>
+</g>
+
+<!-- Hanging tool: wrench left -->
+<g transform="translate(78 230)" filter="url(#tightshadow)">
+  <line x1="0" y1="-30" x2="0" y2="0" stroke="#5b3520" stroke-width="3"/>
+  <rect x="-10" y="0" width="20" height="36" rx="3" fill="#7a8a9a" stroke="#3a4452" stroke-width="2"/>
+  <path d="M-12 0 L-12 -8 L-4 -8 L-4 0Z" fill="#3a4452"/>
+  <path d="M-14 36 L-4 50 L4 50 L14 36Z" fill="#7a8a9a" stroke="#3a4452" stroke-width="2"/>
+</g>
+
+<!-- Hanging tool: hammer right -->
+<g transform="translate(940 220)" filter="url(#tightshadow)">
+  <line x1="0" y1="-30" x2="0" y2="-4" stroke="#5b3520" stroke-width="3"/>
+  <rect x="-3" y="-4" width="6" height="56" fill="#7a4a2c" stroke="#3a2110" stroke-width="2"/>
+  <rect x="-16" y="48" width="32" height="14" fill="#5b6a7a" stroke="#2a3340" stroke-width="2"/>
+</g>
+
+<!-- Hanging blueprint paper top-right -->
+<g transform="translate(820 90)" filter="url(#tightshadow)">
+  <rect x="-46" y="0" width="92" height="60" fill="url(#paper)" stroke="#7a4a2c" stroke-width="2"/>
+  <g stroke="#5b3520" stroke-width="1" fill="none" opacity="0.6">
+    <line x1="-40" y1="14" x2="40" y2="14"/>
+    <line x1="-40" y1="26" x2="40" y2="26"/>
+    <line x1="-40" y1="38" x2="40" y2="38"/>
+    <line x1="-40" y1="50" x2="40" y2="50"/>
+  </g>
+  <g stroke="#5b3520" stroke-width="1.5" fill="none">
+    <circle cx="0" cy="30" r="14"/>
+    <line x1="0" y1="20" x2="0" y2="14"/>
+  </g>
+</g>
+
+<!-- Hanging small chalkboard top-left -->
+<g transform="translate(180 80)" filter="url(#tightshadow)">
+  <rect x="-44" y="0" width="88" height="56" fill="#2a4030" stroke="#5b3520" stroke-width="3"/>
+  <rect x="-40" y="4" width="80" height="48" fill="#1a3020"/>
+  <g stroke="#fff5d8" stroke-width="1.5" fill="none" opacity="0.8">
+    <path d="M-30 12 L-20 18 L-10 10 L0 20 L10 14 L20 24"/>
+    <line x1="-30" y1="34" x2="20" y2="34"/>
+    <line x1="-30" y1="42" x2="10" y2="42"/>
+  </g>
+</g>
+
+<!-- Floor -->
+<path d="M0 470 H1024 V600 H0Z" fill="url(#floor)"/>
+<path d="M0 470 H1024" stroke="#3a2110" stroke-width="2" opacity="0.7"/>
+<ellipse cx="512" cy="478" rx="380" ry="10" fill="#0a0500" opacity="0.5"/>
+
+<!-- Workbench -->
+<g filter="url(#softshadow)">
+  <!-- Bench top -->
+  <rect x="80" y="370" width="864" height="110" rx="8" fill="url(#benchTop)" stroke="#3a2110" stroke-width="3"/>
+  <!-- Wood grain -->
+  <g stroke="#3a2110" stroke-width="1" opacity="0.5">
+    <line x1="100" y1="390" x2="920" y2="390"/>
+    <line x1="100" y1="410" x2="920" y2="410"/>
+    <line x1="100" y1="430" x2="920" y2="430"/>
+    <line x1="100" y1="450" x2="920" y2="450"/>
+  </g>
+  <!-- Bench front -->
+  <rect x="80" y="480" width="864" height="80" fill="#4e2a14" stroke="#2a1408" stroke-width="2"/>
+  <!-- Bench legs -->
+  <rect x="100" y="480" width="20" height="80" fill="#3a1f0c" stroke="#1a0a04" stroke-width="2"/>
+  <rect x="904" y="480" width="20" height="80" fill="#3a1f0c" stroke="#1a0a04" stroke-width="2"/>
+</g>
+
+<!-- ============ Three Gears (toy/workbench) ============ -->
+<!-- Big blue gear left-center -->
+<g transform="translate(360 320)" filter="url(#softshadow)">
+  <g>
+    <circle r="60" fill="#4f91a8" stroke="#2a4452" stroke-width="3"/>
+    <g fill="#2a4452">
+      <rect x="-6" y="-72" width="12" height="14"/>
+      <rect x="-6" y="58" width="12" height="14"/>
+      <rect x="-72" y="-6" width="14" height="12"/>
+      <rect x="58" y="-6" width="14" height="12"/>
+    </g>
+    <g fill="#2a4452" transform="rotate(45)">
+      <rect x="-6" y="-72" width="12" height="14"/>
+      <rect x="-6" y="58" width="12" height="14"/>
+      <rect x="-72" y="-6" width="14" height="12"/>
+      <rect x="58" y="-6" width="14" height="12"/>
+    </g>
+    <circle r="20" fill="#e7c57c" stroke="#7a4a2c" stroke-width="2.5"/>
+    <circle r="6" fill="#5b3520"/>
+    <!-- subtle highlight -->
+    <ellipse cx="-18" cy="-18" rx="22" ry="12" fill="#fff" opacity="0.15"/>
+  </g>
+</g>
+
+<!-- Medium orange gear right-center, meshing -->
+<g transform="translate(580 350)" filter="url(#softshadow)">
+  <g>
+    <circle r="44" fill="#d79a44" stroke="#5e3a14" stroke-width="3"/>
+    <g fill="#5e3a14">
+      <rect x="-5" y="-54" width="10" height="12"/>
+      <rect x="-5" y="42" width="10" height="12"/>
+      <rect x="-54" y="-5" width="12" height="10"/>
+      <rect x="42" y="-5" width="12" height="10"/>
+    </g>
+    <g fill="#5e3a14" transform="rotate(45)">
+      <rect x="-5" y="-54" width="10" height="12"/>
+      <rect x="-5" y="42" width="10" height="12"/>
+      <rect x="-54" y="-5" width="12" height="10"/>
+      <rect x="42" y="-5" width="12" height="10"/>
+    </g>
+    <circle r="14" fill="#f3dfb4" stroke="#7a4a2c" stroke-width="2"/>
+    <circle r="4" fill="#5b3520"/>
+  </g>
+</g>
+
+<!-- Small green gear top-right (away from any rack) -->
+<g transform="translate(740 250)" filter="url(#softshadow)">
+  <g>
+    <circle r="32" fill="#74a363" stroke="#3f6e3a" stroke-width="3"/>
+    <g fill="#3f6e3a">
+      <rect x="-4" y="-40" width="8" height="10"/>
+      <rect x="-4" y="30" width="8" height="10"/>
+      <rect x="-40" y="-4" width="10" height="8"/>
+      <rect x="30" y="-4" width="10" height="8"/>
+    </g>
+    <circle r="10" fill="#a8c98a" stroke="#3f6e3a" stroke-width="1.5"/>
+    <circle r="3" fill="#2a1c14"/>
+  </g>
+</g>
+
+<!-- Connecting shaft under the green gear (clearly on top of bench, no rack collision) -->
+<g transform="translate(740 320)">
+  <rect x="-6" y="-10" width="12" height="60" fill="#5b3520" stroke="#3a2110" stroke-width="1.5"/>
+  <ellipse cx="0" cy="50" rx="14" ry="4" fill="#3a2110" opacity="0.4"/>
+</g>
+
+<!-- Small bolts on bench corners -->
+<g fill="#3a2110">
+  <circle cx="100" cy="380" r="3"/>
+  <circle cx="924" cy="380" r="3"/>
+  <circle cx="100" cy="468" r="3"/>
+  <circle cx="924" cy="468" r="3"/>
+</g>
+
+<!-- ============ Foreground tools (left side, on the bench) ============ -->
+<g transform="translate(140 440)" filter="url(#tightshadow)">
+  <!-- screwdriver -->
+  <g transform="rotate(-20)">
+    <rect x="-40" y="-4" width="50" height="8" rx="2" fill="#c9a25c" stroke="#5e3a14" stroke-width="1.5"/>
+    <rect x="10" y="-2" width="30" height="4" fill="#7a8a9a" stroke="#2a3340" stroke-width="1"/>
+  </g>
+</g>
+
+<!-- Dani the robot integrated right side, holding a wrench -->
+<g transform="translate(880 430)" filter="url(#softshadow)">
+  <ellipse cx="0" cy="64" rx="60" ry="6" fill="#2a1c14" opacity="0.25"/>
+</g>
+
+<!-- Subtle paper grain overlay -->
+<rect width="1024" height="600" filter="url(#paperGrain)" opacity="0.45" pointer-events="none"/>
+</svg>

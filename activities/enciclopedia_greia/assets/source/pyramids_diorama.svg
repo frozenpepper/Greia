@@ -1,22 +1,230 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="600" viewBox="0 0 1024 600">
 <defs>
-  <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%"><feGaussianBlur in="SourceAlpha" stdDeviation="7" result="b"/><feOffset dy="8" result="o"/><feColorMatrix in="o" type="matrix" values="0 0 0 0 .08 0 0 0 0 .06 0 0 0 0 .04 0 0 0 .30 0"/><feBlend in="SourceGraphic"/></filter>
-  <filter id="soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="16"/></filter>
-  <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".65" numOctaves="2" seed="11"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="table" tableValues="0 .035"/></feComponentTransfer></filter>
-  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#bce8e5"/><stop offset=".55" stop-color="#f3e2a9"/><stop offset="1" stop-color="#edbe75"/></linearGradient>
-  <linearGradient id="wood" x1="0" x2="1"><stop stop-color="#80502f"/><stop offset=".35" stop-color="#b97943"/><stop offset=".7" stop-color="#9c6138"/><stop offset="1" stop-color="#70432a"/></linearGradient>
-  <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff9e8"/><stop offset="1" stop-color="#ead6a9"/></linearGradient>
-  <radialGradient id="sun"><stop stop-color="#fff8c7"/><stop offset=".55" stop-color="#ffd36a"/><stop offset="1" stop-color="#e99a2d"/></radialGradient>
-  <linearGradient id="sand" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#e9c77c"/><stop offset="1" stop-color="#b77b42"/></linearGradient>
+  <filter id="softshadow" x="-20%" y="-20%" width="140%" height="160%">
+    <feGaussianBlur in="SourceAlpha" stdDeviation="6"/>
+    <feOffset dy="8"/>
+    <feComponentTransfer><feFuncA type="linear" slope="0.32"/></feComponentTransfer>
+    <feComposite in2="SourceGraphic" operator="in" result="shadow"/>
+    <feMerge><feMergeNode in="shadow"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="tightshadow" x="-10%" y="-10%" width="120%" height="140%">
+    <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+    <feOffset dy="3"/>
+    <feComponentTransfer><feFuncA type="linear" slope="0.4"/></feComponentTransfer>
+    <feComposite in2="SourceGraphic" operator="in" result="shadow"/>
+    <feMerge><feMergeNode in="shadow"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="paperGrain">
+    <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="19"/>
+    <feColorMatrix type="saturate" values="0"/>
+    <feComponentTransfer><feFuncA type="table" tableValues="0 0.06"/></feComponentTransfer>
+    <feComposite in2="SourceGraphic" operator="in"/>
+  </filter>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#e8c89a"/>
+    <stop offset="0.5" stop-color="#d6a568"/>
+    <stop offset="1" stop-color="#b07538"/>
+  </linearGradient>
+  <linearGradient id="sandA" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#d6a568"/>
+    <stop offset="1" stop-color="#a37038"/>
+  </linearGradient>
+  <linearGradient id="sandB" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#c8915c"/>
+    <stop offset="1" stop-color="#8a5530"/>
+  </linearGradient>
+  <linearGradient id="pyramidLight" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#e8c47e"/>
+    <stop offset="1" stop-color="#b07a3a"/>
+  </linearGradient>
+  <linearGradient id="pyramidDark" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#c8915c"/>
+    <stop offset="1" stop-color="#7a4a20"/>
+  </linearGradient>
+  <radialGradient id="sun">
+    <stop offset="0" stop-color="#fff5c2"/>
+    <stop offset="0.55" stop-color="#ffd36a"/>
+    <stop offset="1" stop-color="#e99a2d"/>
+  </radialGradient>
 </defs>
-<rect width="1024" height="600" fill="#efd7a0"/><circle cx="847" cy="92" r="48" fill="url(#sun)" opacity=".88"/>
-<path d="M0 328Q180 280 360 326T680 310T1024 292V600H0Z" fill="#d9b46d"/>
-<path d="M0 435Q240 386 500 444T850 410T1024 404V600H0Z" fill="#b9854b"/>
-<g opacity=".26"><path d="M63 347L180 209L297 347Z" fill="#b78b52"/><path d="M715 333L805 227L895 333Z" fill="#aa7c49"/></g>
-<ellipse cx="486" cy="492" rx="270" ry="34" fill="#604429" opacity=".20" filter="url(#soft)"/>
-<g filter="url(#shadow)"><path d="M250 455L486 132L722 455Z" fill="url(#sand)" stroke="#805a37" stroke-width="7"/><path d="M486 132L722 455H588L486 310Z" fill="#b57b42" opacity=".28"/><g stroke="#9b6d40" stroke-width="3" opacity=".7"><path d="M282 412H691M305 380H668M329 347H644M353 315H620M377 282H596M402 249H571M426 217H547M451 184H522"/></g><g stroke="#9f7448" stroke-width="2" opacity=".5"><path d="M352 315L384 455M418 217L441 455M486 132V455M555 226L532 455M620 315L588 455"/></g></g>
-<path d="M615 452L893 452L893 404L615 438Z" fill="#9b673c" stroke="#6c452e" stroke-width="5"/><g filter="url(#shadow)"><rect x="733" y="378" width="72" height="48" rx="4" fill="#c99355" stroke="#704a31" stroke-width="4"/><path d="M712 431H825" stroke="#5f432f" stroke-width="7"/><circle cx="747" cy="440" r="8" fill="#5f432f"/><circle cx="793" cy="440" r="8" fill="#5f432f"/></g>
-<g stroke="#784f36" fill="#9a6640" stroke-width="6" stroke-linecap="round"><circle cx="196" cy="414" r="10"/><path d="M196 425V463M196 440L177 453M196 440L216 450M196 463L181 490M196 463L211 490"/><circle cx="842" cy="368" r="10"/><path d="M842 379V417M842 394L824 407M842 394L861 405M842 417L827 442M842 417L857 442"/></g>
-<path d="M0 535Q120 485 254 530L235 600H0Z" fill="#805a3c" opacity=".78"/><path d="M92 551L145 484" stroke="#5a4030" stroke-width="10"/><path d="M134 494L177 514" stroke="#5a4030" stroke-width="8"/><g fill="#e8ca83" stroke="#7d5839" stroke-width="3"><rect x="280" y="509" width="45" height="32"/><rect x="332" y="520" width="35" height="24"/></g>
-<g fill="#fff0b8" opacity=".35"><circle cx="132" cy="218" r="5"/><circle cx="215" cy="272" r="4"/><circle cx="758" cy="220" r="5"/><circle cx="918" cy="257" r="4"/></g>
-<rect width="1024" height="600" filter="url(#grain)" opacity=".28" pointer-events="none"/></svg>
+
+<!-- Sky -->
+<rect width="1024" height="600" fill="url(#sky)"/>
+<g transform="translate(180 90)">
+  <circle r="40" fill="url(#sun)" opacity="0.9"/>
+  <g stroke="#f5cf61" stroke-width="3" stroke-linecap="round" opacity="0.7">
+    <line x1="-56" y1="0" x2="-50" y2="0"/>
+    <line x1="50" y1="0" x2="56" y2="0"/>
+    <line x1="0" y1="-56" x2="0" y2="-50"/>
+    <line x1="-38" y1="-38" x2="-34" y2="-34"/>
+    <line x1="38" y1="38" x2="34" y2="34"/>
+    <line x1="-38" y1="38" x2="-34" y2="34"/>
+    <line x1="38" y1="-38" x2="34" y2="-34"/>
+  </g>
+</g>
+
+<!-- Distant dunes (deeper depth) -->
+<path d="M0 280 Q200 230 400 260 T800 250 T1024 235 V370 H0Z" fill="url(#sandA)"/>
+<path d="M0 340 Q260 290 520 320 T880 310 T1024 295 V430 H0Z" fill="url(#sandB)"/>
+
+<!-- Distant smaller pyramids -->
+<g transform="translate(120 290)" filter="url(#tightshadow)">
+  <path d="M-50 80 L0 -50 L50 80Z" fill="url(#pyramidLight)" stroke="#7a4a20" stroke-width="2.5"/>
+  <path d="M-30 80 L0 -30 L30 80Z" fill="url(#pyramidDark)" opacity="0.5"/>
+</g>
+<g transform="translate(900 280)" filter="url(#tightshadow)">
+  <path d="M-40 70 L0 -40 L40 70Z" fill="url(#pyramidLight)" stroke="#7a4a20" stroke-width="2.5"/>
+  <path d="M-24 70 L0 -22 L24 70Z" fill="url(#pyramidDark)" opacity="0.5"/>
+</g>
+<g transform="translate(820 330)" filter="url(#tightshadow)">
+  <path d="M-30 50 L0 -28 L30 50Z" fill="url(#pyramidLight)" stroke="#7a4a20" stroke-width="2"/>
+  <path d="M-16 50 L0 -14 L16 50Z" fill="url(#pyramidDark)" opacity="0.5"/>
+</g>
+
+<!-- Foreground sand -->
+<path d="M0 430 Q300 410 600 425 T1024 418 V600 H0Z" fill="#a37038"/>
+<path d="M0 430 Q300 410 600 425 T1024 418" fill="none" stroke="#7a4a20" stroke-width="2" opacity="0.6"/>
+
+<!-- ============ Hero Pyramid (centered, dominant) ============ -->
+<g transform="translate(512 430)" filter="url(#softshadow)">
+  <!-- contact shadow -->
+  <ellipse cx="0" cy="92" rx="220" ry="14" fill="#2a1c14" opacity="0.3"/>
+  <!-- Light side (left) -->
+  <path d="M-160 90 L0 -180 L0 90Z" fill="url(#pyramidLight)" stroke="#7a4a20" stroke-width="3"/>
+  <!-- Dark side (right) -->
+  <path d="M0 90 L0 -180 L160 90Z" fill="url(#pyramidDark)" stroke="#7a4a20" stroke-width="3"/>
+  <!-- Edge highlight -->
+  <line x1="0" y1="-180" x2="0" y2="90" stroke="#fff" stroke-width="1.5" opacity="0.4"/>
+  <!-- Block rows (subtle, less classroom-grid) -->
+  <g fill="none" stroke="#7a4a20" stroke-width="1.5" opacity="0.4">
+    <!-- horizontal seams only, no full grid -->
+    <line x1="-150" y1="-100" x2="150" y2="-100"/>
+    <line x1="-130" y1="-40" x2="130" y2="-40"/>
+    <line x1="-110" y1="20" x2="110" y2="20"/>
+    <line x1="-90" y1="60" x2="90" y2="60"/>
+  </g>
+  <!-- Stacked block rows (small subtle jags) -->
+  <g fill="#7a4a20" opacity="0.25">
+    <path d="M-150 -100 L-130 -100 L-130 -94 L-150 -94Z"/>
+    <path d="M130 -100 L150 -100 L150 -94 L130 -94Z"/>
+    <path d="M-130 -40 L-110 -40 L-110 -34 L-130 -34Z"/>
+    <path d="M110 -40 L130 -40 L130 -34 L110 -34Z"/>
+    <path d="M-110 20 L-90 20 L-90 26 L-110 26Z"/>
+    <path d="M90 20 L110 20 L110 26 L90 26Z"/>
+  </g>
+  <!-- Apex ornament (small capstone) -->
+  <rect x="-6" y="-186" width="12" height="10" fill="#d6a568" stroke="#7a4a20" stroke-width="2"/>
+  <polygon points="-6,-186 0,-200 6,-186" fill="#d6a568" stroke="#7a4a20" stroke-width="2"/>
+</g>
+
+<!-- ============ Authored workers (people, not stick figures) ============ -->
+
+<!-- Worker 1: pulling a sledge with a block (left foreground) -->
+<g transform="translate(170 470)" filter="url(#softshadow)">
+  <ellipse cx="0" cy="60" rx="40" ry="5" fill="#2a1c14" opacity="0.25"/>
+  <!-- Sledge with block -->
+  <g transform="translate(-12 50)">
+    <rect x="-18" y="-2" width="36" height="6" fill="#5b3520" stroke="#2a1408" stroke-width="1.5"/>
+    <rect x="-14" y="-22" width="28" height="20" fill="#c8915c" stroke="#7a4a20" stroke-width="2"/>
+    <line x1="-7" y1="-22" x2="-7" y2="-2" stroke="#7a4a20" stroke-width="1"/>
+    <line x1="0" y1="-22" x2="0" y2="-2" stroke="#7a4a20" stroke-width="1"/>
+    <line x1="7" y1="-22" x2="7" y2="-2" stroke="#7a4a20" stroke-width="1"/>
+    <line x1="-14" y1="-12" x2="14" y2="-12" stroke="#7a4a20" stroke-width="1"/>
+  </g>
+  <!-- Body -->
+  <ellipse cx="0" cy="0" rx="10" ry="14" fill="#d9690a" stroke="#7a3a04" stroke-width="2"/>
+  <!-- Head -->
+  <circle cx="0" cy="-20" r="9" fill="#e8b48a" stroke="#7a4a2c" stroke-width="1.5"/>
+  <!-- Head wrap -->
+  <path d="M-9 -22 Q0 -34 9 -22" fill="#fff5d8" stroke="#a88c66" stroke-width="1.5"/>
+  <!-- Arms reaching forward -->
+  <path d="M-8 -4 L-22 8" stroke="#d9690a" stroke-width="6" stroke-linecap="round"/>
+  <path d="M8 -4 L22 8" stroke="#d9690a" stroke-width="6" stroke-linecap="round"/>
+  <!-- Legs -->
+  <path d="M-6 12 L-10 50" stroke="#7a4a2c" stroke-width="6" stroke-linecap="round"/>
+  <path d="M6 12 L12 50" stroke="#7a4a2c" stroke-width="6" stroke-linecap="round"/>
+  <!-- Hands -->
+  <ellipse cx="-22" cy="8" rx="3" ry="2" fill="#e8b48a" stroke="#7a4a2c" stroke-width="1"/>
+  <ellipse cx="22" cy="8" rx="3" ry="2" fill="#e8b48a" stroke="#7a4a2c" stroke-width="1"/>
+</g>
+
+<!-- Worker 2: supervisor with stick (right foreground) -->
+<g transform="translate(830 480)" filter="url(#softshadow)">
+  <ellipse cx="0" cy="56" rx="40" ry="5" fill="#2a1c14" opacity="0.25"/>
+  <!-- Robe body -->
+  <path d="M-16 -10 L-22 50 L22 50 L16 -10Z" fill="#f0c870" stroke="#7a4a2c" stroke-width="2"/>
+  <path d="M-12 -10 L-16 50 L16 50 L12 -10Z" fill="#fff5d8" opacity="0.4"/>
+  <!-- Head -->
+  <circle cx="0" cy="-22" r="10" fill="#e8b48a" stroke="#7a4a2c" stroke-width="1.5"/>
+  <!-- Head cloth -->
+  <path d="M-10 -24 Q0 -38 10 -24 L10 -18 L-10 -18Z" fill="#fff5d8" stroke="#a88c66" stroke-width="1.5"/>
+  <!-- Beard hint -->
+  <path d="M-5 -18 L0 -10 L5 -18" fill="#5b3520" opacity="0.6"/>
+  <!-- Stick in right hand pointing at pyramid -->
+  <line x1="14" y1="-2" x2="-50" y2="-30" stroke="#5b3520" stroke-width="3" stroke-linecap="round"/>
+  <ellipse cx="-50" cy="-30" rx="3" ry="2" fill="#5b3520"/>
+  <ellipse cx="14" cy="-2" rx="3" ry="2" fill="#e8b48a" stroke="#7a4a2c" stroke-width="1"/>
+  <!-- Eyes -->
+  <circle cx="-3" cy="-22" r="1.5" fill="#1a1620"/>
+  <circle cx="3" cy="-22" r="1.5" fill="#1a1620"/>
+</g>
+
+<!-- Worker 3: carrying a block on shoulder (small, mid-distance right) -->
+<g transform="translate(680 480)" filter="url(#tightshadow)">
+  <!-- Block on shoulder -->
+  <rect x="-12" y="-22" width="24" height="14" fill="#c8915c" stroke="#7a4a20" stroke-width="1.5"/>
+  <line x1="-6" y1="-22" x2="-6" y2="-8" stroke="#7a4a20" stroke-width="0.8"/>
+  <line x1="0" y1="-22" x2="0" y2="-8" stroke="#7a4a20" stroke-width="0.8"/>
+  <line x1="6" y1="-22" x2="6" y2="-8" stroke="#7a4a20" stroke-width="0.8"/>
+  <!-- Body -->
+  <ellipse cx="0" cy="2" rx="8" ry="10" fill="#5b8db0" stroke="#2a4452" stroke-width="1.5"/>
+  <!-- Head -->
+  <circle cx="0" cy="-14" r="6" fill="#e8b48a" stroke="#7a4a2c" stroke-width="1.2"/>
+  <path d="M-6 -16 Q0 -22 6 -16" fill="#fff5d8" stroke="#a88c66" stroke-width="1"/>
+  <!-- Arms holding rope on block -->
+  <path d="M-6 -8 L-10 -16" stroke="#5b8db0" stroke-width="3" stroke-linecap="round"/>
+  <path d="M6 -8 L10 -16" stroke="#5b8db0" stroke-width="3" stroke-linecap="round"/>
+  <!-- Legs -->
+  <path d="M-4 12 L-6 40" stroke="#3a2110" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M4 12 L6 40" stroke="#3a2110" stroke-width="3.5" stroke-linecap="round"/>
+</g>
+
+<!-- Ramp on the right side of the pyramid -->
+<g transform="translate(680 360)" filter="url(#tightshadow)">
+  <path d="M-90 60 L-30 -8 L-30 60Z" fill="#c8915c" stroke="#7a4a20" stroke-width="2"/>
+  <g stroke="#7a4a20" stroke-width="1" opacity="0.4">
+    <line x1="-84" y1="56" x2="-36" y2="6"/>
+    <line x1="-78" y1="56" x2="-36" y2="20"/>
+    <line x1="-72" y1="56" x2="-36" y2="34"/>
+    <line x1="-66" y1="56" x2="-36" y2="48"/>
+  </g>
+  <!-- support posts -->
+  <line x1="-60" y1="60" x2="-60" y2="76" stroke="#5b3520" stroke-width="3"/>
+  <line x1="-40" y1="60" x2="-40" y2="76" stroke="#5b3520" stroke-width="3"/>
+</g>
+
+<!-- Small footprint of loose stone on the foreground (bottom left) -->
+<g transform="translate(80 540)">
+  <ellipse cx="0" cy="0" rx="22" ry="6" fill="#7a4a20" opacity="0.7"/>
+  <g fill="#c8915c" stroke="#7a4a20" stroke-width="1.2">
+    <rect x="-16" y="-8" width="10" height="6" rx="1"/>
+    <rect x="-2" y="-6" width="8" height="6" rx="1"/>
+    <rect x="8" y="-4" width="6" height="6" rx="1"/>
+  </g>
+</g>
+
+<!-- Leo the owl integrated left foreground with field notebook -->
+<g transform="translate(360 480)" filter="url(#softshadow)">
+  <ellipse cx="0" cy="60" rx="50" ry="6" fill="#2a1c14" opacity="0.25"/>
+  <!-- Field notebook on the ground (cue for the presenter) -->
+  <g transform="translate(-46 26) rotate(-12)">
+    <rect x="-12" y="-4" width="24" height="18" rx="1" fill="#f0c870" stroke="#7a4a2c" stroke-width="1.5"/>
+    <line x1="-8" y1="0" x2="8" y2="0" stroke="#7a4a2c" stroke-width="0.8"/>
+    <line x1="-8" y1="4" x2="8" y2="4" stroke="#7a4a2c" stroke-width="0.8"/>
+    <line x1="-8" y1="8" x2="6" y2="8" stroke="#7a4a2c" stroke-width="0.8"/>
+  </g>
+</g>
+
+<!-- Subtle paper grain overlay -->
+<rect width="1024" height="600" filter="url(#paperGrain)" opacity="0.45" pointer-events="none"/>
+</svg>

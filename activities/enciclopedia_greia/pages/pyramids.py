@@ -9,6 +9,7 @@ import pygame
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import (
+        TOKEN_SHAPE_EXCAVATION,
         draw_authored_scene,
         draw_caption_ribbon,
         draw_discovery_token,
@@ -18,6 +19,7 @@ if __package__ and "." in __package__:
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import (
+        TOKEN_SHAPE_EXCAVATION,
         draw_authored_scene,
         draw_caption_ribbon,
         draw_discovery_token,
@@ -178,6 +180,7 @@ class PyramidsPage(EncyclopediaPage):
                     center,
                     item.discovery_id,
                 ),
+                token_shape=TOKEN_SHAPE_EXCAVATION,
             )
         draw_caption_ribbon(
             surface,
@@ -188,8 +191,8 @@ class PyramidsPage(EncyclopediaPage):
             surface,
             self.context.visuals,
             "leo",
-            position=(900, 575),
-            height=180,
+            position=(360, 575),
+            height=190,
             variant="default",
         )
 
@@ -218,6 +221,7 @@ class PyramidsPage(EncyclopediaPage):
                 pygame.draw.circle(surface, (255, 221, 104), (x, 455), 12, 4)
 
         if self._model.inside_age > 0:
+            # Outlined inner chambers so the cross-section reads clearly.
             pygame.draw.polygon(
                 surface,
                 (255, 246, 208),
@@ -225,8 +229,11 @@ class PyramidsPage(EncyclopediaPage):
             )
             pygame.draw.line(surface, (93, 66, 46), (505, 265), (505, 395), 5)
             pygame.draw.rect(surface, (93, 66, 46), (488, 344, 34, 24), 3)
+            # Burial chamber highlight.
+            pygame.draw.rect(surface, (255, 220, 100), (488, 344, 34, 24), 4)
 
         if self._model.engineering_age > 0:
+            # Sledge direction of travel.
             pygame.draw.line(
                 surface,
                 (255, 224, 96),
@@ -239,6 +246,36 @@ class PyramidsPage(EncyclopediaPage):
                 (255, 224, 96),
                 [(865, 405), (846, 397), (850, 417)],
             )
+
+        if self._model.engineering_age > 0 and self._model.courses > 1:
+            # A clearly outlined base block (the "first course" being placed).
+            base_width = 110
+            pygame.draw.rect(
+                surface,
+                (255, 240, 170),
+                (505 - base_width // 2, 432, base_width, 16),
+                border_radius=3,
+            )
+            pygame.draw.rect(
+                surface,
+                (93, 66, 46),
+                (505 - base_width // 2, 432, base_width, 16),
+                width=3,
+                border_radius=3,
+            )
+            # Two label arrows pointing at the base block.
+            for arrow_x in (505 - base_width // 2 - 10, 505 + base_width // 2 + 10):
+                direction = 1 if arrow_x < 505 else -1
+                pygame.draw.line(surface, (93, 66, 46), (arrow_x, 440), (arrow_x + direction * 18, 440), 3)
+                pygame.draw.polygon(
+                    surface,
+                    (93, 66, 46),
+                    [
+                        (arrow_x + direction * 18, 440),
+                        (arrow_x + direction * 12, 435),
+                        (arrow_x + direction * 12, 445),
+                    ],
+                )
 
     @staticmethod
     def _draw_icon(

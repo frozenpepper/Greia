@@ -1,1 +1,247 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="600" viewBox="0 0 1024 600"><defs><filter id="shadow" x="-30%" y="-30%" width="160%" height="170%"><feGaussianBlur in="SourceAlpha" stdDeviation="7" result="b"/><feOffset dy="8" result="o"/><feColorMatrix in="o" type="matrix" values="0 0 0 0 .08 0 0 0 0 .06 0 0 0 0 .04 0 0 0 .30 0"/><feBlend in="SourceGraphic"/></filter><filter id="soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="16"/></filter><filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".65" numOctaves="2" seed="11"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="table" tableValues="0 .035"/></feComponentTransfer></filter><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#bce8e5"/><stop offset=".55" stop-color="#f3e2a9"/><stop offset="1" stop-color="#edbe75"/></linearGradient><radialGradient id="sun"><stop stop-color="#fff8c7"/><stop offset=".55" stop-color="#ffd36a"/><stop offset="1" stop-color="#e99a2d"/></radialGradient></defs><rect width="1024" height="600" fill="url(#sky)"/><circle cx="866" cy="95" r="45" fill="url(#sun)" opacity=".9"/><path d="M0 270Q180 178 370 245T690 230T1024 205V420H0Z" fill="#86b779"/><path d="M0 352Q230 287 455 355T810 326T1024 310V493H0Z" fill="#4f8d60"/><g transform="translate(88 164)" filter="url(#shadow)"><path d="M94 235Q87 150 99 88" stroke="#6f4a32" stroke-width="18"/><path d="M97 102Q55 86 27 114M99 106Q140 80 169 108" fill="none" stroke="#6f4a32" stroke-width="12"/><ellipse cx="93" cy="75" rx="102" ry="48" fill="#5e8f52"/><ellipse cx="42" cy="86" rx="57" ry="31" fill="#6da15b"/><ellipse cx="146" cy="86" rx="58" ry="32" fill="#6da15b"/></g><path d="M505 452Q725 387 1024 430V600H488Q520 530 505 452Z" fill="#5ba8b4"/><path d="M520 462Q730 410 1024 446" fill="none" stroke="#b8e2d8" stroke-width="8" opacity=".7"/><path d="M704 478Q790 450 850 480T982 469" fill="none" stroke="#d8f0e7" stroke-width="5" opacity=".55"/><path d="M604 425Q679 395 756 418L731 487Q656 507 590 478Z" fill="#e6f1ee" stroke="#a6c8cd" stroke-width="4"/><g transform="translate(85 465)"><g fill="#e7c13f"><circle cx="0" cy="0" r="8"/><circle cx="28" cy="15" r="9"/><circle cx="58" cy="-2" r="8"/></g><g fill="#d47c8a"><circle cx="12" cy="25" r="7"/><circle cx="48" cy="29" r="7"/></g><g stroke="#547b4c" stroke-width="4"><path d="M0 8V52M28 22V54M58 6V54"/></g></g><g data-target="lion" data-center="190,260" transform="translate(190 260)" filter="url(#shadow)"><ellipse cx="25" cy="53" rx="62" ry="18" fill="#2f3928" opacity=".2"/><ellipse cx="34" cy="20" rx="58" ry="38" fill="#cf8741"/><circle cx="-20" cy="-5" r="48" fill="#8d5232"/><circle cx="-20" cy="-5" r="32" fill="#e0a44e"/><path d="M-42-27L-56-51L-26-36M2-27L16-51L-14-36" fill="#bd703a"/><circle cx="-31" cy="-11" r="4" fill="#352921"/><circle cx="-9" cy="-11" r="4" fill="#352921"/><path d="M-27 5Q-20 12-13 5" fill="none" stroke="#6f412d" stroke-width="4"/><path d="M7 38L2 82M48 36L56 82" stroke="#cf8741" stroke-width="13" stroke-linecap="round"/><path d="M88 13Q120 4 132 27" fill="none" stroke="#cf8741" stroke-width="12"/><circle cx="135" cy="29" r="9" fill="#89502f"/></g><g data-target="elephant" data-center="430,260" transform="translate(430 260)" filter="url(#shadow)"><ellipse cx="10" cy="62" rx="70" ry="18" fill="#33434a" opacity=".18"/><ellipse cx="18" cy="16" rx="65" ry="44" fill="#8799a0"/><circle cx="-45" cy="2" r="37" fill="#9aa9ad"/><circle cx="14" cy="-4" r="29" fill="#8799a0" opacity=".85"/><path d="M-55 20Q-59 56-39 75" fill="none" stroke="#8799a0" stroke-width="17" stroke-linecap="round"/><circle cx="-55" cy="-7" r="4" fill="#2f3c42"/><path d="M-15 47L-18 88M45 47L53 88" stroke="#8799a0" stroke-width="15" stroke-linecap="round"/></g><g data-target="octopus" data-center="670,260" transform="translate(670 260)" filter="url(#shadow)" fill="#9f5b9d"><ellipse rx="53" ry="43"/><path d="M-42 25Q-68 78-35 81T-9 34M-15 32Q-33 86 0 83T16 32M23 31Q12 83 46 72T55 27" fill="none" stroke="#9f5b9d" stroke-width="14" stroke-linecap="round"/><circle cx="-15" cy="-5" r="5" fill="#352b3b"/><circle cx="15" cy="-5" r="5" fill="#352b3b"/></g><g data-target="bee" data-center="190,410" transform="translate(190 410) rotate(-8)" filter="url(#shadow)"><ellipse rx="35" ry="22" fill="#efc33f" stroke="#5c4c2f" stroke-width="4"/><path d="M-15-19V19M6-21V21" stroke="#5c4c2f" stroke-width="7"/><ellipse cx="-13" cy="-28" rx="19" ry="12" fill="#e9f6f3" opacity=".9" transform="rotate(-28 -13 -28)"/><ellipse cx="16" cy="-28" rx="19" ry="12" fill="#e9f6f3" opacity=".9" transform="rotate(28 16 -28)"/></g><g data-target="penguin" data-center="430,410" transform="translate(430 410)" filter="url(#shadow)"><ellipse cy="5" rx="32" ry="49" fill="#303b48"/><ellipse cy="15" rx="21" ry="34" fill="#f5f2e8"/><path d="M-31 5L-48 25L-29 21M31 5L48 25L29 21" fill="#303b48"/><path d="M0-4L15 2L0 9Z" fill="#efa83a"/><circle cx="-9" cy="-13" r="3"/><circle cx="9" cy="-13" r="3"/></g><g data-target="frog" data-center="670,410" transform="translate(670 410)" filter="url(#shadow)"><ellipse cy="12" rx="49" ry="31" fill="#62a65c"/><circle cx="-28" cy="-18" r="18" fill="#73b56a"/><circle cx="28" cy="-18" r="18" fill="#73b56a"/><circle cx="-28" cy="-20" r="5" fill="#243426"/><circle cx="28" cy="-20" r="5" fill="#243426"/><path d="M-20 17Q0 32 20 17" fill="none" stroke="#356d3c" stroke-width="4"/></g><g fill="#f4ce66" stroke="#7d6042" stroke-width="3" filter="url(#shadow)"><circle cx="145" cy="290" r="12"/><circle cx="385" cy="290" r="12"/><circle cx="625" cy="290" r="12"/><circle cx="145" cy="440" r="12"/><circle cx="385" cy="440" r="12"/><circle cx="625" cy="440" r="12"/></g><g stroke="#3d6c48" stroke-width="7" stroke-linecap="round"><path d="M490 600Q490 535 520 505M530 600Q532 530 557 495M992 600Q983 528 951 500"/></g><rect width="1024" height="600" filter="url(#grain)" opacity=".28" pointer-events="none"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="600" viewBox="0 0 1024 600">
+<defs>
+  <filter id="softshadow" x="-20%" y="-20%" width="140%" height="160%">
+    <feGaussianBlur in="SourceAlpha" stdDeviation="6"/>
+    <feOffset dy="8"/>
+    <feComponentTransfer><feFuncA type="linear" slope="0.32"/></feComponentTransfer>
+    <feComposite in2="SourceGraphic" operator="in" result="shadow"/>
+    <feMerge><feMergeNode in="shadow"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="tightshadow" x="-10%" y="-10%" width="120%" height="140%">
+    <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+    <feOffset dy="3"/>
+    <feComponentTransfer><feFuncA type="linear" slope="0.4"/></feComponentTransfer>
+    <feComposite in2="SourceGraphic" operator="in" result="shadow"/>
+    <feMerge><feMergeNode in="shadow"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="paperGrain">
+    <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="5"/>
+    <feColorMatrix type="saturate" values="0"/>
+    <feComponentTransfer><feFuncA type="table" tableValues="0 0.05"/></feComponentTransfer>
+    <feComposite in2="SourceGraphic" operator="in"/>
+  </filter>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#bce8e5"/>
+    <stop offset="0.5" stop-color="#dff1c5"/>
+    <stop offset="1" stop-color="#f0e2a4"/>
+  </linearGradient>
+  <linearGradient id="grassA" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#a6c98c"/>
+    <stop offset="1" stop-color="#86b779"/>
+  </linearGradient>
+  <linearGradient id="grassB" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#7aac68"/>
+    <stop offset="1" stop-color="#4f8d60"/>
+  </linearGradient>
+  <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#7fc1c5"/>
+    <stop offset="1" stop-color="#3e8a9c"/>
+  </linearGradient>
+  <linearGradient id="sand" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#e8c983"/>
+    <stop offset="1" stop-color="#b88a55"/>
+  </linearGradient>
+  <radialGradient id="sun">
+    <stop offset="0" stop-color="#fff5c2"/>
+    <stop offset="0.55" stop-color="#ffd36a"/>
+    <stop offset="1" stop-color="#e99a2d"/>
+  </radialGradient>
+</defs>
+
+<!-- Background -->
+<rect width="1024" height="600" fill="url(#sky)"/>
+<!-- Sun moved to top-LEFT corner, away from Back button area -->
+<g transform="translate(86 78)">
+  <circle r="38" fill="url(#sun)"/>
+  <g stroke="#f5cf61" stroke-width="3" stroke-linecap="round" opacity="0.7">
+    <line x1="-52" y1="0" x2="-46" y2="0"/>
+    <line x1="46" y1="0" x2="52" y2="0"/>
+    <line x1="0" y1="-52" x2="0" y2="-46"/>
+    <line x1="-36" y1="-36" x2="-32" y2="-32"/>
+    <line x1="36" y1="36" x2="32" y2="32"/>
+    <line x1="-36" y1="36" x2="-32" y2="32"/>
+    <line x1="36" y1="-36" x2="32" y2="-32"/>
+  </g>
+</g>
+
+<!-- Distant rolling hills (deeper depth bands) -->
+<path d="M0 280 Q160 220 320 245 T640 235 T1024 215 V360 H0Z" fill="url(#grassA)"/>
+<path d="M0 340 Q200 295 410 325 T780 320 T1024 305 V430 H0Z" fill="url(#grassB)"/>
+
+<!-- Acacia tree (left) -->
+<g transform="translate(74 218)" filter="url(#softshadow)">
+  <ellipse cx="0" cy="60" rx="38" ry="5" fill="#2a1c14" opacity="0.2"/>
+  <path d="M0 60 L-4 12 L4 12Z" fill="#6f4a32"/>
+  <path d="M0 18 Q-22 4 -36 14 M0 20 Q22 0 38 8" fill="none" stroke="#6f4a32" stroke-width="6" stroke-linecap="round"/>
+  <ellipse cx="0" cy="-4" rx="56" ry="22" fill="#5e8f52" stroke="#3f6e3a" stroke-width="2"/>
+  <ellipse cx="-22" cy="2" rx="28" ry="14" fill="#6da15b"/>
+  <ellipse cx="22" cy="2" rx="28" ry="14" fill="#6da15b"/>
+</g>
+
+<!-- Right pond -->
+<path d="M520 432 Q700 392 880 422 Q970 432 1024 426 V500 H520 Q500 460 520 432Z" fill="url(#water)"/>
+<path d="M540 448 Q700 412 880 432" fill="none" stroke="#b8e2d8" stroke-width="6" opacity="0.7"/>
+<path d="M720 460 Q800 444 860 462" fill="none" stroke="#d8f0e7" stroke-width="4" opacity="0.55"/>
+<!-- Reeds -->
+<g transform="translate(908 380)" stroke="#3f6e3a" stroke-width="2.5" stroke-linecap="round">
+  <line x1="0" y1="0" x2="-2" y2="-22"/>
+  <line x1="4" y1="0" x2="2" y2="-26"/>
+  <line x1="8" y1="0" x2="10" y2="-20"/>
+  <line x1="-4" y1="0" x2="-6" y2="-18"/>
+</g>
+
+<!-- Foreground sand strip with grass tufts -->
+<path d="M0 500 H1024 V600 H0Z" fill="url(#sand)"/>
+<g transform="translate(60 540)" fill="#3f6e3a">
+  <ellipse cx="0" cy="0" rx="22" ry="6"/>
+  <path d="M-12 0 L-14 -10 M-4 0 L-6 -14 M6 0 L4 -12 M14 0 L16 -10" stroke="#3f6e3a" stroke-width="2"/>
+</g>
+<g transform="translate(180 558)" fill="#3f6e3a">
+  <ellipse cx="0" cy="0" rx="18" ry="5"/>
+  <path d="M-10 0 L-12 -8 M-2 0 L-4 -12 M6 0 L4 -10" stroke="#3f6e3a" stroke-width="2"/>
+</g>
+<g transform="translate(360 544)" fill="#3f6e3a">
+  <ellipse cx="0" cy="0" rx="24" ry="6"/>
+  <path d="M-14 0 L-16 -10 M-4 0 L-6 -14 M6 0 L4 -12 M14 0 L16 -10" stroke="#3f6e3a" stroke-width="2"/>
+</g>
+<g transform="translate(560 562)" fill="#3f6e3a">
+  <ellipse cx="0" cy="0" rx="20" ry="5"/>
+  <path d="M-10 0 L-12 -8 M0 0 L-2 -12 M10 0 L8 -10" stroke="#3f6e3a" stroke-width="2"/>
+</g>
+<g transform="translate(820 552)" fill="#3f6e3a">
+  <ellipse cx="0" cy="0" rx="22" ry="6"/>
+  <path d="M-12 0 L-14 -10 M-2 0 L-4 -14 M8 0 L6 -12" stroke="#3f6e3a" stroke-width="2"/>
+</g>
+
+<!-- ============ Animal tokens (scene-native, habitat cues) ============ -->
+
+<!-- Lion (190,260) - perched on a small rock with mane halo -->
+<g data-target="lion" data-center="190,260" transform="translate(140 210)" filter="url(#softshadow)">
+  <ellipse cx="50" cy="106" rx="60" ry="8" fill="#2a1c14" opacity="0.28"/>
+  <ellipse cx="50" cy="118" rx="68" ry="10" fill="#a88c66" stroke="#6e5a3e" stroke-width="2"/>
+  <ellipse cx="50" cy="112" rx="64" ry="6" fill="#c1a47a" opacity="0.7"/>
+  <g transform="translate(50 56)">
+    <ellipse cx="0" cy="6" rx="46" ry="34" fill="#a85e2a" stroke="#6f3d12" stroke-width="2.5"/>
+    <g fill="#6f3d12">
+      <circle cx="-30" cy="-12" r="10"/>
+      <circle cx="0" cy="-22" r="11"/>
+      <circle cx="30" cy="-12" r="10"/>
+      <circle cx="-32" cy="14" r="9"/>
+      <circle cx="32" cy="14" r="9"/>
+    </g>
+    <ellipse cx="0" cy="2" rx="28" ry="22" fill="#f0b65e" stroke="#6f3d12" stroke-width="2.5"/>
+    <circle cx="-9" cy="-2" r="3.5" fill="#2a1c14"/>
+    <circle cx="9" cy="-2" r="3.5" fill="#2a1c14"/>
+    <path d="M-3 8 Q0 12 3 8" fill="none" stroke="#2a1c14" stroke-width="1.5" stroke-linecap="round"/>
+  </g>
+</g>
+
+<!-- Elephant (430,260) - standing on grass, body in profile -->
+<g data-target="elephant" data-center="430,260" transform="translate(370 198)" filter="url(#softshadow)">
+  <ellipse cx="60" cy="116" rx="68" ry="8" fill="#2a1c14" opacity="0.28"/>
+  <g transform="translate(60 64)">
+    <ellipse cx="0" cy="6" rx="46" ry="32" fill="#9aa3b3" stroke="#5a5670" stroke-width="2.5"/>
+    <ellipse cx="36" cy="-14" rx="22" ry="20" fill="#9aa3b3" stroke="#5a5670" stroke-width="2.5"/>
+    <ellipse cx="22" cy="-30" rx="12" ry="14" fill="#a8b0bf" stroke="#5a5670" stroke-width="2"/>
+    <path d="M42 -8 Q56 0 50 14" fill="none" stroke="#5a5670" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="-2" cy="0" r="3" fill="#2a1c14"/>
+    <path d="M-30 30 L-30 50 M-12 30 L-12 50 M14 32 L14 50 M30 32 L30 50" stroke="#5a5670" stroke-width="6" stroke-linecap="round"/>
+  </g>
+</g>
+
+<!-- Octopus (670,260) - on a coral rock by the pond edge -->
+<g data-target="octopus" data-center="670,260" transform="translate(610 208)" filter="url(#softshadow)">
+  <ellipse cx="60" cy="116" rx="56" ry="8" fill="#2a1c14" opacity="0.28"/>
+  <g transform="translate(60 64)">
+    <ellipse cx="0" cy="-10" rx="32" ry="28" fill="#a96bb6" stroke="#6c3f7a" stroke-width="2.5"/>
+    <ellipse cx="0" cy="10" rx="36" ry="14" fill="#c084cf" opacity="0.7"/>
+    <circle cx="-10" cy="-12" r="4" fill="#fff"/><circle cx="-10" cy="-12" r="2" fill="#1a1620"/>
+    <circle cx="10" cy="-12" r="4" fill="#fff"/><circle cx="10" cy="-12" r="2" fill="#1a1620"/>
+    <path d="M-3 0 Q0 4 3 0" fill="none" stroke="#6c3f7a" stroke-width="1.5" stroke-linecap="round"/>
+    <g fill="#a96bb6" stroke="#6c3f7a" stroke-width="2">
+      <path d="M-30 14 Q-32 28 -22 36 Q-14 28 -18 14Z"/>
+      <path d="M-12 18 Q-14 32 -4 38 Q4 30 -2 18Z"/>
+      <path d="M6 18 Q4 32 14 38 Q22 30 18 18Z"/>
+      <path d="M22 14 Q20 28 30 36 Q38 28 32 14Z"/>
+    </g>
+  </g>
+  <!-- coral rock -->
+  <ellipse cx="0" cy="62" rx="46" ry="10" fill="#c98a6a" stroke="#7e4920" stroke-width="2"/>
+  <ellipse cx="-22" cy="58" rx="8" ry="3" fill="#e8b48a"/>
+  <ellipse cx="20" cy="62" rx="10" ry="4" fill="#e8b48a"/>
+</g>
+
+<!-- Bee (190,410) - on a flower in the foreground sand -->
+<g data-target="bee" data-center="190,410" transform="translate(150 364)" filter="url(#softshadow)">
+  <ellipse cx="40" cy="98" rx="34" ry="6" fill="#2a1c14" opacity="0.25"/>
+  <!-- flower stem -->
+  <g transform="translate(60 60)">
+    <line x1="0" y1="0" x2="0" y2="38" stroke="#3f6e3a" stroke-width="3"/>
+    <ellipse cx="-6" cy="20" rx="6" ry="2" fill="#3f6e3a"/>
+    <g transform="translate(0 -6)">
+      <circle r="14" fill="#f3c14a" stroke="#9a6c1a" stroke-width="1.5"/>
+      <g fill="#fff5d8" stroke="#9a6c1a" stroke-width="1.5">
+        <ellipse cx="0" cy="-12" rx="5" ry="9"/>
+        <ellipse cx="0" cy="12" rx="5" ry="9"/>
+        <ellipse cx="-12" cy="0" rx="9" ry="5"/>
+        <ellipse cx="12" cy="0" rx="9" ry="5"/>
+      </g>
+      <circle r="6" fill="#d9690a" stroke="#7a3a04" stroke-width="1.5"/>
+    </g>
+  </g>
+  <!-- bee -->
+  <g transform="translate(28 40)">
+    <ellipse cx="0" cy="0" rx="14" ry="10" fill="#f5cf3f" stroke="#7a4a04" stroke-width="1.5"/>
+    <path d="M-7 -4 Q-3 0 -7 4 M0 -5 Q4 0 0 5 M7 -4 Q11 0 7 4" fill="none" stroke="#2a1c14" stroke-width="2"/>
+    <ellipse cx="-10" cy="-6" rx="10" ry="6" fill="#fff" opacity="0.7" stroke="#7a4a04" stroke-width="1"/>
+    <ellipse cx="8" cy="-7" rx="8" ry="5" fill="#fff" opacity="0.7" stroke="#7a4a04" stroke-width="1"/>
+    <ellipse cx="0" cy="-2" rx="2" ry="1.5" fill="#1a1620"/>
+    <path d="M-2 -10 L-4 -14 M2 -10 L4 -14" stroke="#1a1620" stroke-width="1.2"/>
+  </g>
+</g>
+
+<!-- Penguin (430,410) - on a small ice floe by the water -->
+<g data-target="penguin" data-center="430,410" transform="translate(390 360)" filter="url(#softshadow)">
+  <ellipse cx="40" cy="100" rx="38" ry="6" fill="#2a1c14" opacity="0.25"/>
+  <!-- ice floe -->
+  <ellipse cx="40" cy="92" rx="44" ry="10" fill="#e0f0f5" stroke="#7e9aa6" stroke-width="1.5"/>
+  <ellipse cx="20" cy="88" rx="10" ry="3" fill="#fff" opacity="0.8"/>
+  <ellipse cx="56" cy="90" rx="8" ry="2" fill="#fff" opacity="0.6"/>
+  <!-- penguin -->
+  <g transform="translate(40 50)">
+    <ellipse cx="0" cy="0" rx="22" ry="36" fill="#1a1f2c" stroke="#0a0d14" stroke-width="2"/>
+    <ellipse cx="0" cy="4" rx="14" ry="24" fill="#fff" stroke="#c2c8d4" stroke-width="1"/>
+    <ellipse cx="0" cy="-28" rx="14" ry="12" fill="#1a1f2c" stroke="#0a0d14" stroke-width="1.5"/>
+    <circle cx="-5" cy="-28" r="2.5" fill="#fff"/><circle cx="-5" cy="-28" r="1.2" fill="#1a1620"/>
+    <circle cx="5" cy="-28" r="2.5" fill="#fff"/><circle cx="5" cy="-28" r="1.2" fill="#1a1620"/>
+    <path d="M-3 -22 L0 -18 L3 -22 Z" fill="#f3a020" stroke="#a56004" stroke-width="1"/>
+    <path d="M-12 24 L-16 36 M-2 30 L-2 38 M8 30 L8 38 M14 24 L18 36" stroke="#f3a020" stroke-width="4" stroke-linecap="round"/>
+  </g>
+</g>
+
+<!-- Frog (670,410) - on a lily pad on the water -->
+<g data-target="frog" data-center="670,410" transform="translate(630 366)" filter="url(#softshadow)">
+  <ellipse cx="40" cy="92" rx="48" ry="10" fill="#2a1c14" opacity="0.25"/>
+  <!-- lily pad -->
+  <ellipse cx="40" cy="86" rx="52" ry="12" fill="#5e8d50" stroke="#3f6e3a" stroke-width="2"/>
+  <path d="M-12 86 L-4 86" stroke="#3f6e3a" stroke-width="2"/>
+  <ellipse cx="-30" cy="84" rx="6" ry="2" fill="#74a363" opacity="0.6"/>
+  <ellipse cx="60" cy="84" rx="8" ry="3" fill="#74a363" opacity="0.6"/>
+  <!-- frog -->
+  <g transform="translate(40 56)">
+    <ellipse cx="0" cy="10" rx="34" ry="20" fill="#74a363" stroke="#3f6e3a" stroke-width="2.5"/>
+    <circle cx="-12" cy="-14" r="9" fill="#74a363" stroke="#3f6e3a" stroke-width="2"/>
+    <circle cx="12" cy="-14" r="9" fill="#74a363" stroke="#3f6e3a" stroke-width="2"/>
+    <circle cx="-12" cy="-15" r="5" fill="#fff"/><circle cx="-12" cy="-15" r="2.5" fill="#1a1620"/>
+    <circle cx="12" cy="-15" r="5" fill="#fff"/><circle cx="12" cy="-15" r="2.5" fill="#1a1620"/>
+    <path d="M-12 4 Q0 12 12 4" fill="none" stroke="#3f6e3a" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M-22 24 L-26 32 M-10 28 L-10 34 M10 28 L10 34 M22 24 L26 32" stroke="#74a363" stroke-width="4" stroke-linecap="round"/>
+  </g>
+</g>
+
+<!-- Tito fox perch (foreground, runtime character draws here) -->
+<ellipse cx="478" cy="546" rx="50" ry="6" fill="#2a1c14" opacity="0.22"/>
+
+<!-- Subtle paper grain overlay -->
+<rect width="1024" height="600" filter="url(#paperGrain)" opacity="0.45" pointer-events="none"/>
+</svg>

@@ -41,6 +41,102 @@ class DiscoveryTokenTheme:
 TOKEN_THEME = DiscoveryTokenTheme()
 
 
+# Available scene-native token silhouettes. Each page may pass a different
+# one so the four golden-master entries do not share an identical pale
+# circle. The shared interaction/state logic in draw_discovery_token
+# remains the same; only the outer silhouette changes.
+TOKEN_SHAPE_CIRCLE = "circle"
+TOKEN_SHAPE_FELT_TAG = "felt_tag"        # Lion: pinned paper tag
+TOKEN_SHAPE_TELESCOPE_CARD = "telescope_card"  # Saturn: rounded telescope card
+TOKEN_SHAPE_WORKSHOP_TAG = "workshop_tag"  # Gears: rectangle rivet plate
+TOKEN_SHAPE_EXCAVATION = "excavation"   # Pyramids: small marker/flag base
+
+
+def _draw_token_silhouette(
+    surface: pygame.Surface,
+    center: tuple[int, int],
+    *,
+    shape: str,
+    radius: int,
+    fill: tuple[int, int, int],
+    edge: tuple[int, int, int],
+) -> None:
+    cx, cy = center
+    if shape == TOKEN_SHAPE_CIRCLE or shape not in (
+        TOKEN_SHAPE_FELT_TAG,
+        TOKEN_SHAPE_TELESCOPE_CARD,
+        TOKEN_SHAPE_WORKSHOP_TAG,
+        TOKEN_SHAPE_EXCAVATION,
+    ):
+        pygame.draw.circle(surface, fill, center, radius)
+        pygame.draw.circle(surface, edge, center, radius, 4)
+        pygame.draw.arc(
+            surface,
+            (255, 255, 247),
+            pygame.Rect(cx - radius + 8, cy - radius + 8, radius * 2 - 16, radius * 2 - 16),
+            0.55,
+            2.55,
+            4,
+        )
+        return
+    if shape == TOKEN_SHAPE_FELT_TAG:
+        # Rounded rectangle with a small notch at the top (like a pinned paper tag).
+        w, h = radius * 2 - 4, radius * 2 - 4
+        rect = pygame.Rect(cx - w // 2, cy - h // 2, w, h)
+        pygame.draw.rect(surface, fill, rect, border_radius=10)
+        pygame.draw.rect(surface, edge, rect, width=4, border_radius=10)
+        # Punch hole
+        pygame.draw.circle(surface, (255, 255, 247), (cx, cy - h // 2 + 12), 5)
+        pygame.draw.circle(surface, edge, (cx, cy - h // 2 + 12), 5, 2)
+        # Subtle inner highlight (felt)
+        pygame.draw.line(
+            surface,
+            (255, 255, 247),
+            (rect.x + 14, rect.y + 14),
+            (rect.x + 24, rect.y + 14),
+            2,
+        )
+        return
+    if shape == TOKEN_SHAPE_TELESCOPE_CARD:
+        # Rounded rectangle, slightly wider than tall, with a small lens eyepiece.
+        w, h = radius * 2 + 2, radius * 2 - 8
+        rect = pygame.Rect(cx - w // 2, cy - h // 2, w, h)
+        pygame.draw.rect(surface, fill, rect, border_radius=14)
+        pygame.draw.rect(surface, edge, rect, width=4, border_radius=14)
+        # Inner inset
+        inset = rect.inflate(-10, -8)
+        pygame.draw.rect(surface, edge, inset, width=2, border_radius=10)
+        # Tiny corner stars
+        for sx, sy in ((rect.x + 6, rect.y + 6), (rect.right - 8, rect.y + 6)):
+            pygame.draw.circle(surface, edge, (sx, sy), 2)
+        return
+    if shape == TOKEN_SHAPE_WORKSHOP_TAG:
+        # Rivet plate: rectangle with four corner rivets.
+        w, h = radius * 2 - 2, radius * 2 - 10
+        rect = pygame.Rect(cx - w // 2, cy - h // 2, w, h)
+        pygame.draw.rect(surface, fill, rect, border_radius=4)
+        pygame.draw.rect(surface, edge, rect, width=4, border_radius=4)
+        # Corner rivets
+        for rx, ry in (
+            (rect.x + 6, rect.y + 6),
+            (rect.right - 6, rect.y + 6),
+            (rect.x + 6, rect.bottom - 6),
+            (rect.right - 6, rect.bottom - 6),
+        ):
+            pygame.draw.circle(surface, edge, (rx, ry), 3)
+            pygame.draw.circle(surface, (255, 235, 189), (rx, ry), 1)
+        return
+    # TOKEN_SHAPE_EXCAVATION: small marker stake with a flag base.
+    w, h = radius * 2 - 6, radius * 2 - 12
+    rect = pygame.Rect(cx - w // 2, cy - h // 2 + 4, w, h)
+    pygame.draw.rect(surface, fill, rect, border_radius=3)
+    pygame.draw.rect(surface, edge, rect, width=4, border_radius=3)
+    # Top stake (a small dark point)
+    stake = [(cx - 8, rect.y + 2), (cx + 8, rect.y + 2), (cx, rect.y - 14)]
+    pygame.draw.polygon(surface, edge, stake)
+    pygame.draw.polygon(surface, fill, [(cx - 6, rect.y + 2), (cx + 6, rect.y + 2), (cx, rect.y - 12)])
+
+
 def draw_authored_scene(surface: pygame.Surface, visuals: object, asset_id: str) -> bool:
     """Blit one prebuilt 1024x600 scene, returning False on a contained fallback."""
 
@@ -65,8 +161,14 @@ def draw_discovery_token(
     hovered: bool = False,
     recently_activated: bool = False,
     icon: Callable[[pygame.Surface, tuple[int, int]], None] | None = None,
+    token_shape: str = TOKEN_SHAPE_CIRCLE,
 ) -> pygame.Rect:
-    """Render the common tactile discovery medallion and return its hit rect."""
+    """Render the common tactile discovery medallion and return its hit rect.
+
+    Pages may pass a page-specific ``token_shape`` so the four golden-master
+    entries do not share an identical pale circle. The hit rect and
+    focus/recent state behavior are identical regardless of silhouette.
+    """
 
     active = selected or hovered
     radius = 42 + (3 if active else 0)
@@ -83,22 +185,41 @@ def draw_discovery_token(
     fill = TOKEN_THEME.fill
     if recently_activated:
         fill = (255, 235, 189)
-    pygame.draw.circle(surface, fill, center, radius)
-    pygame.draw.circle(surface, TOKEN_THEME.edge, center, radius, 4)
-    pygame.draw.arc(
+    _draw_token_silhouette(
         surface,
-        (255, 255, 247),
-        pygame.Rect(cx - radius + 8, cy - radius + 8, radius * 2 - 16, radius * 2 - 16),
-        0.55,
-        2.55,
-        4,
+        center,
+        shape=token_shape,
+        radius=radius,
+        fill=fill,
+        edge=TOKEN_THEME.edge,
     )
     if icon is not None:
         icon(surface, center)
     if active:
-        pygame.draw.circle(surface, TOKEN_THEME.focus, center, radius + 7, 5)
+        if token_shape == TOKEN_SHAPE_CIRCLE:
+            pygame.draw.circle(surface, TOKEN_THEME.focus, center, radius + 7, 5)
+        else:
+            # Use a rounded bounding outline that matches the silhouette.
+            w = h = (radius + 7) * 2
+            pygame.draw.rect(
+                surface,
+                TOKEN_THEME.focus,
+                pygame.Rect(cx - w // 2, cy - h // 2, w, h),
+                width=5,
+                border_radius=14,
+            )
     elif recently_activated:
-        pygame.draw.circle(surface, TOKEN_THEME.recent, center, radius + 5, 4)
+        if token_shape == TOKEN_SHAPE_CIRCLE:
+            pygame.draw.circle(surface, TOKEN_THEME.recent, center, radius + 5, 4)
+        else:
+            w = h = (radius + 5) * 2
+            pygame.draw.rect(
+                surface,
+                TOKEN_THEME.recent,
+                pygame.Rect(cx - w // 2, cy - h // 2, w, h),
+                width=4,
+                border_radius=12,
+            )
     return pygame.Rect(cx - radius - 8, cy - radius - 8, (radius + 8) * 2, (radius + 8) * 2)
 
 

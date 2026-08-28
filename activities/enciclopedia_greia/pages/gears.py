@@ -10,6 +10,7 @@ import pygame
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import (
+        TOKEN_SHAPE_WORKSHOP_TAG,
         draw_authored_scene,
         draw_caption_ribbon,
         draw_discovery_token,
@@ -19,6 +20,7 @@ if __package__ and "." in __package__:
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import (
+        TOKEN_SHAPE_WORKSHOP_TAG,
         draw_authored_scene,
         draw_caption_ribbon,
         draw_discovery_token,
@@ -167,6 +169,7 @@ class GearsPage(EncyclopediaPage):
                     center,
                     item.discovery_id,
                 ),
+                token_shape=TOKEN_SHAPE_WORKSHOP_TAG,
             )
         draw_caption_ribbon(
             surface,
@@ -177,8 +180,8 @@ class GearsPage(EncyclopediaPage):
             surface,
             self.context.visuals,
             "dani",
-            position=(900, 575),
-            height=185,
+            position=(880, 575),
+            height=190,
             variant="happy",
             fallback_color=(101, 171, 211),
         )
@@ -194,8 +197,36 @@ class GearsPage(EncyclopediaPage):
 
     def _draw_reveals(self, surface: pygame.Surface) -> None:
         if self._model.teeth_age > 0:
-            for point in ((472, 316), (607, 316), (700, 316)):
-                pygame.draw.circle(surface, (255, 228, 91), point, 15, 5)
+            # Three big contact-point rings at the meshing boundaries
+            # between adjacent gears, plus small motion arrows pointing
+            # along the contact arc so the child reads "teeth carry motion".
+            contact_points = ((472, 316), (607, 316), (700, 316))
+            for point in contact_points:
+                pygame.draw.circle(surface, (255, 228, 91), point, 20, 6)
+                pygame.draw.circle(surface, (255, 170, 60), point, 8, 3)
+            for index, point in enumerate(contact_points):
+                # Direction-of-motion arrow above each contact.
+                ax, ay = point
+                ax -= 6
+                ay -= 28
+                if index % 2 == 0:
+                    ax2, ay2 = ax + 12, ay
+                else:
+                    ax2, ay2 = ax - 12, ay
+                pygame.draw.line(surface, (255, 170, 60), (ax, ay), (ax2, ay2), 4)
+                # arrow head
+                if index % 2 == 0:
+                    pygame.draw.polygon(
+                        surface,
+                        (255, 170, 60),
+                        [(ax2, ay2), (ax2 - 7, ay2 - 5), (ax2 - 7, ay2 + 5)],
+                    )
+                else:
+                    pygame.draw.polygon(
+                        surface,
+                        (255, 170, 60),
+                        [(ax2, ay2), (ax2 + 7, ay2 - 5), (ax2 + 7, ay2 + 5)],
+                    )
 
         if self._model.direction_age > 0:
             specs = (

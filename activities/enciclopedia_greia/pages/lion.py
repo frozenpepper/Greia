@@ -10,6 +10,7 @@ import pygame
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import (
+        TOKEN_SHAPE_FELT_TAG,
         draw_authored_scene,
         draw_caption_ribbon,
         draw_discovery_token,
@@ -19,6 +20,7 @@ if __package__ and "." in __package__:
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import (
+        TOKEN_SHAPE_FELT_TAG,
         draw_authored_scene,
         draw_caption_ribbon,
         draw_discovery_token,
@@ -139,6 +141,7 @@ class LionPage(EncyclopediaPage):
                     center,
                     item.discovery_id,
                 ),
+                token_shape=TOKEN_SHAPE_FELT_TAG,
             )
         draw_caption_ribbon(
             surface,
@@ -149,8 +152,8 @@ class LionPage(EncyclopediaPage):
             surface,
             self.context.visuals,
             "tito",
-            position=(105, 575),
-            height=185,
+            position=(130, 575),
+            height=190,
             variant="happy",
             fallback_color=(247, 151, 77),
         )
@@ -164,14 +167,31 @@ class LionPage(EncyclopediaPage):
 
     def _draw_reveals(self, surface: pygame.Surface) -> None:
         if self._mane_state:
-            color = ((125, 72, 40), (74, 54, 42))[self._mane_state - 1]
+            # Two visible growth rings, growing outward, plus a mane
+            # color shift to make the change clearly readable.
+            outer = (125, 72, 40) if self._mane_state == 1 else (74, 54, 42)
+            inner = (168, 100, 58) if self._mane_state == 1 else (122, 84, 58)
             pygame.draw.circle(
                 surface,
-                color,
+                outer,
                 (446, 336),
-                84 + self._mane_state * 4,
-                9,
+                96 + self._mane_state * 8,
+                10,
             )
+            pygame.draw.circle(
+                surface,
+                inner,
+                (446, 336),
+                80 + self._mane_state * 6,
+                6,
+            )
+            # A few small "spike" marks showing the mane growing.
+            import math
+            for index in range(8):
+                angle = index * (math.pi * 2 / 8) - math.pi / 2
+                rx = 446 + int(math.cos(angle) * (108 + self._mane_state * 8))
+                ry = 336 + int(math.sin(angle) * (108 + self._mane_state * 8))
+                pygame.draw.circle(surface, (74, 54, 42), (rx, ry), 4)
         if self._pride_age > 0:
             for x in (620, 690, 755):
                 pygame.draw.ellipse(surface, (202, 143, 70), (x - 22, 418, 44, 30))

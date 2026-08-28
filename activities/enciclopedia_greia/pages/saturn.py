@@ -10,6 +10,7 @@ import pygame
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import (
+        TOKEN_SHAPE_TELESCOPE_CARD,
         draw_authored_scene,
         draw_caption_ribbon,
         draw_discovery_token,
@@ -19,6 +20,7 @@ if __package__ and "." in __package__:
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import (
+        TOKEN_SHAPE_TELESCOPE_CARD,
         draw_authored_scene,
         draw_caption_ribbon,
         draw_discovery_token,
@@ -136,6 +138,7 @@ class SaturnPage(EncyclopediaPage):
                     center,
                     item.discovery_id,
                 ),
+                token_shape=TOKEN_SHAPE_TELESCOPE_CARD,
             )
         draw_caption_ribbon(
             surface,
@@ -147,8 +150,8 @@ class SaturnPage(EncyclopediaPage):
             surface,
             self.context.visuals,
             "leo",
-            position=(890, 575),
-            height=185,
+            position=(228, 575),
+            height=190,
             variant="surprised",
         )
 
@@ -161,9 +164,20 @@ class SaturnPage(EncyclopediaPage):
 
     def _draw_reveals(self, surface: pygame.Surface) -> None:
         if self._place_age > 0:
-            pygame.draw.circle(surface, (72, 143, 214), (650, 300), 18)
-            pygame.draw.ellipse(surface, (90, 177, 104), (640, 291, 18, 10))
-            pygame.draw.line(surface, (248, 225, 136), (622, 300), (592, 300), 4)
+            # Sun (top-left of the orbit, smaller than Saturn but clearly the sun).
+            pygame.draw.circle(surface, (255, 200, 90), (218, 174), 14)
+            pygame.draw.circle(surface, (255, 234, 138), (218, 174), 7)
+            # Long dotted orbit path from the sun past Saturn, so the
+            # child sees "Saturn is far out from the sun".
+            for index in range(34):
+                px = 226 + index * 18
+                pygame.draw.circle(surface, (200, 220, 255), (px, 174), 1.4)
+            # Earth (small) along the orbit.
+            pygame.draw.circle(surface, (72, 143, 214), (640, 174), 18)
+            pygame.draw.ellipse(surface, (90, 177, 104), (630, 165, 18, 10))
+            # Saturn marker along the same orbit (the planet itself is
+            # the large hero; we just label its position here).
+            pygame.draw.circle(surface, (255, 220, 117), (842, 174), 5)
         if self._gas_age > 0:
             for dy in (-35, -15, 8, 28):
                 shift = int(math.sin(self._time * 2.2 + dy) * 8)
