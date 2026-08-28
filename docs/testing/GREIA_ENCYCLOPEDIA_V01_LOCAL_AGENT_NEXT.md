@@ -28,11 +28,11 @@ Lion golden-master page source
 Saturn golden-master page source
 Gears golden-master page source
 Pyramids golden-master page source
-deterministic authoring-time SVG -> PNG build tool
+authoring-time SVG -> PNG build/check tool
 focused source contracts
 ```
 
-The runtime PNG renditions are intentionally generated build products. They must now be built on the normal local maintainer checkout, verified, committed, and tested through the real Greia Simulator before the visual direction can be reviewed.
+The runtime PNG renditions are generated build products. They must now be built on the normal local maintainer checkout, verified, committed, and tested through the real Greia Simulator before the visual direction can be reviewed.
 
 ---
 
@@ -90,9 +90,9 @@ Do not substitute old local notes for these current authorities.
 
 ---
 
-# 3. Build the six runtime PNGs
+# 3. Build and verify the six runtime PNGs
 
-The editable masters are:
+Editable masters:
 
 ```text
 activities/enciclopedia_greia/assets/source/home_discovery_book.svg
@@ -103,7 +103,7 @@ activities/enciclopedia_greia/assets/source/gears_workbench.svg
 activities/enciclopedia_greia/assets/source/pyramids_diorama.svg
 ```
 
-Build command:
+Build:
 
 ```bash
 python3 tools/build_encyclopedia_visual_assets.py
@@ -120,16 +120,30 @@ activities/enciclopedia_greia/assets/runtime/gears_workbench.png
 activities/enciclopedia_greia/assets/runtime/pyramids_diorama.png
 ```
 
-`CairoSVG` is an **authoring/maintainer dependency only**. If the command reports it missing, follow the maintainer/tooling setup rules in `SETUP.md` and install it only in the authoring environment. Do not add it to Greia's child runtime or Activity manifest/runtime dependencies.
+`CairoSVG` is an **authoring/maintainer dependency only**. If it is missing, follow `SETUP.md` maintainer/tooling rules. Do not add it to the child runtime, Activity manifest, or runtime dependencies.
 
-Immediately verify:
+Inspect the outputs:
 
 ```bash
 ls -lh activities/enciclopedia_greia/assets/runtime/*.png
 file activities/enciclopedia_greia/assets/runtime/*.png
 ```
 
-All six outputs must exist, be real PNGs, and be non-empty. A partial pack is failure.
+All six must exist, be real non-empty 1024x600 PNGs. A partial pack is failure.
+
+Then run the stale/generated-art guard:
+
+```bash
+python3 tools/build_encyclopedia_visual_assets.py --check
+```
+
+Expected final line:
+
+```text
+PASS 6 Encyclopedia runtime PNGs match editable masters
+```
+
+`--check` rebuilds into a temporary directory and byte-compares against the runtime pack. Any `MISSING` or `BUILD-DRIFT` result is a hard stop. Do not continue to Simulator evidence with stale or mismatched generated art.
 
 ---
 
@@ -143,7 +157,7 @@ python3 -m unittest \
   tests.test_activity_enciclopedia_visual_foundation
 ```
 
-Then run the repository's normal non-hosted local verification required for a changed first-party Activity, following `AGENTS.md` / Activity authoring authority. If `make verify` is the current local source gate in this checkout, run:
+Then run the repository's current normal local verification required for a changed first-party Activity, following `AGENTS.md` and the Activity skill. If `make verify` is the current local source gate in this checkout, run:
 
 ```bash
 make verify
@@ -157,7 +171,8 @@ If any focused test or required local verification fails:
 2. identify the root cause;
 3. make the smallest coherent fix;
 4. rerun the failed focused gate;
-5. if runtime-relevant source changes, remember that all later Simulator evidence must be from the final source state.
+5. rerun `python3 tools/build_encyclopedia_visual_assets.py --check` if source/build/runtime art was touched;
+6. remember that later Simulator evidence must be from the final runtime-relevant source state.
 
 Do not continue to visual acceptance with red tests.
 
@@ -185,12 +200,19 @@ git commit -m "Encyclopedia: build golden-master runtime art"
 git push origin main
 ```
 
-If additional source/test/doc fixes were genuinely required, include them only when coherent and describe them in the returned evidence.
-
 Record the exact pushed SHA:
 
 ```bash
 git rev-parse HEAD
+```
+
+Now rerun against the pushed final tree:
+
+```bash
+python3 tools/build_encyclopedia_visual_assets.py --check
+python3 -m unittest \
+  tests.test_activity_enciclopedia \
+  tests.test_activity_enciclopedia_visual_foundation
 ```
 
 The Simulator must test this final runtime-relevant SHA. If anything runtime-relevant changes afterward, restart Simulator acceptance from the beginning.
@@ -233,7 +255,7 @@ Record the exact source SHA, locale/profile, viewport and result.
 
 # 7. Golden-master visual evidence — only six prototypes
 
-At minimum capture real Simulator pixels at **1024×600** for:
+At minimum capture real Simulator pixels at **1024x600** for:
 
 ```text
 Home
@@ -262,7 +284,7 @@ one larger viewport/profile row
 
 Use representative prototypes rather than all 43 pages. Follow `VISUAL_ACCEPTANCE_EVIDENCE_CONTRACT.md` for evidence naming/classification.
 
-Produce **one contact sheet** containing the six primary 1024×600 golden-master screens. If practical, also produce a second concise comparison sheet for the activated states / responsive samples. Do not generate giant redundant screenshot dumps.
+Produce **one contact sheet** containing the six primary 1024x600 golden-master screens. If practical, also produce a second concise comparison sheet for the activated states/responsive samples. Do not generate giant redundant screenshot dumps.
 
 Review the real pixels for:
 
@@ -338,6 +360,7 @@ Return to the owner/primary agent with:
 ```text
 exact final Git SHA
 six generated PNG paths and total bytes
+build --check result
 focused test results
 local verification result
 Simulator launch/survival result
@@ -347,7 +370,7 @@ Back/Home result
 responsive sample directory
 contact-sheet path
 pre-reader/no-reading result
-any visual defects you observed
+any visual defects observed
 anything still unverified
 ```
 
@@ -358,8 +381,9 @@ MECHANICAL 43-PAGE FOUNDATION: PREVIOUSLY PROVEN
 OLD GRAPHICS PRODUCT TARGET: REJECTED
 E1 SHARED PRESENTATION SOURCE: IMPLEMENTED ON MAIN
 E2 SIX GOLDEN-MASTER PAGE SOURCES: IMPLEMENTED ON MAIN
-EDITABLE SVG MASTERS: IMPLEMENTED ON MAIN
+EDITABLE SVG MASTERS: 6 / 6 ON MAIN
 RUNTIME PNG PACK: BUILD/COMMIT PENDING
+GENERATED-ART --CHECK GATE: IMPLEMENTED ON MAIN / EXECUTION PENDING ON REAL CHECKOUT
 FOCUSED LOCAL REPO TESTS: PENDING ON REAL CHECKOUT
 SIMULATOR FINAL-SHA ACCEPTANCE: PENDING
 OWNER VISUAL DIRECTION APPROVAL: PENDING
