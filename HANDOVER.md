@@ -35,6 +35,8 @@ For R7 display/session/input work also read:
 
 ```text
 docs/reviews/2026-08-29_R7_ACTIVITY_BACKEND_INDEPENDENCE_AND_DISPLAY_SESSION_REVIEW.md
+docs/reviews/2026-08-29_R7_R72_LEGACY_X_CONTAINMENT_INVENTORY.md
+docs/testing/2026-08-29_R7_R72_LEGACY_X_CONTAINMENT_SOURCE_AND_ACER_ACCEPTANCE.md
 docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md
 ```
 
@@ -63,9 +65,74 @@ The 2026-08-29 R7 review clarified the execution architecture without closing an
 - `src/greia_launcher/display_session.py` is the existing polymorphic runtime seam. Complete `DisplaySessionCoordinator` / `DisplaySessionBackend`; do not create a parallel giant HAL.
 - `LegacyXDisplaySessionBackend` is the first/reference compatibility implementation. A Wayland implementation may later sit behind the same contract and must require zero Activity changes.
 - The major current Activity drift is not widespread direct Xlib usage; it is cooperative trust: first-party Activities/shared canvas helpers still draw and hit-test the nominally trusted Home chrome inside the Activity process.
-- R7 implementation must first enforce backend independence, then implement real trusted chrome/input above Activities, then migrate first-party Activities by shared pattern before comparing Xorg and Wayland on physical hardware.
+- R7 implementation must first enforce backend independence, then implement real trusted chrome/input above Activities, then migrate first-party Activities by shared pattern before final backend selection.
 - **Backend independence must not create an abstraction tax.** Existing low-resource optimization strategies remain valid and must survive the migration: precomposed opaque backdrops, converted surfaces, bounded caches, cached transforms, dirty/invalidation rendering, adaptive pacing and direct high-rate SDL pointer/text handling where safe.
 - Backend-specific fast paths are allowed and expected below the common contract. Portable semantics do not require identical backend internals.
+
+### R7.1 source status — backend independence
+
+R7.1 is materially source-integrated on `main`:
+
+- structured `greia_platform.activity_backend_policy` exists;
+- standalone Activity validation enforces it;
+- project validation enforces it;
+- installed Python runtime validation enforces it;
+- `tools/audit_activity_backend_independence.py` provides a repository-wide non-executing audit;
+- ordinary backend-neutral Pygame/SDL APIs remain valid rather than being mistaken for X11 dependence.
+
+This source state is **not promoted to a new current-head PASS claim** merely because the code/tests are committed. The exact-current focused suite and aggregate `make verify` remain part of the R7.2 acceptance protocol below.
+
+### R7.2 source status — Legacy-X containment
+
+R7.2 containment is materially source-integrated but **execution and physical acceptance remain pending**.
+
+Implemented boundary changes include:
+
+- generic launcher no longer owns native Xlib focus code;
+- `ShellWindowController` is the one-shot trusted Shell-window setup seam;
+- installed composition selects `LegacyXShellWindowController`; development uses a no-op controller;
+- the Legacy-X controller does not inspect `SDL_VIDEODRIVER` to decide whether it is active;
+- generic `greia_platform.hardware_session` is backend-neutral and requires an injected semantic controller;
+- `greia_platform.hardware_session_legacy_x` is the explicit current Legacy-X executable composition edge;
+- `greia-x-session` explicitly invokes that Legacy-X entrypoint;
+- ordinary Activity Bubblewrap no longer grants `/dev/dri` device nodes;
+- regression source pins ordinary Activity sandboxes away from `/dev/dri`, `/dev/input`, `/sys/class/drm` and `/sys/class/input`;
+- existing Xorg package/profile/session/Xwrapper/input files remain explicit compatibility plumbing rather than being deleted before a replacement backend passes Acer evidence.
+
+Detailed ownership inventory:
+
+```text
+docs/reviews/2026-08-29_R7_R72_LEGACY_X_CONTAINMENT_INVENTORY.md
+```
+
+Acceptance protocol:
+
+```text
+docs/testing/2026-08-29_R7_R72_LEGACY_X_CONTAINMENT_SOURCE_AND_ACER_ACCEPTANCE.md
+```
+
+The acceptance protocol requires, on one exact SHA:
+
+```text
+focused R7.1/R7.2 source suite
+→ Activity backend audit with blockers=0
+→ make verify
+→ reference Acer Shell/focus/pointer acceptance
+→ Writing launch/input/save/relaunch/return
+→ Painting launch/draw/save/relaunch/return
+→ abrupt Activity crash recovery
+→ 20/20 launch-return cycles
+→ log + resource/performance sanity review
+```
+
+No R7.2 PASS is currently claimed because those exact-current execution and Acer steps have not yet been returned.
+
+### Current provisional debt / constraints
+
+- `greia-x-session` still contains literal `SynPS/2 Synaptics TouchPad` startup tuning. It is contained in Legacy-X compatibility plumbing but should not survive into the final common input/session architecture.
+- `Xwrapper.config` currently uses the provisional appliance-session privilege required by the Xorg compatibility path; if Xorg remains for v1 it requires explicit release threat-model/negative-security acceptance.
+- a future Wayland Activity transport cannot simply pass the host `XDG_RUNTIME_DIR`: the Activity sandbox masks `/run`; the selected compositor backend must project only its required socket into a narrow child runtime directory rather than bind the whole host runtime directory.
+- **tap-to-click policy is presently contradictory across authorities:** current runtime source intentionally sets `touchpad_tap = true` after the 2026-08-23 Acer responsiveness fix, while `AGENTS.md` still says tap-to-click defaults off. Do not silently change working touchpad behavior during R7.2. Resolve this as a separate explicit product/policy reconciliation with owner disposition, then align source/tests/docs together.
 
 R7 invariants remain:
 
@@ -288,13 +355,27 @@ Current x86 update architecture remains provisional single-root; signed-update f
 
 ### Blocking platform lane — R7
 
-Resume with the R7.1 tranche defined in:
+Do **not** restart R7.1 implementation and do **not** begin R7.3 before the current containment gate is executed.
+
+Exact next sequence:
 
 ```text
-docs/reviews/2026-08-29_R7_ACTIVITY_BACKEND_INDEPENDENCE_AND_DISPLAY_SESSION_REVIEW.md
+refresh current main
+→ run docs/testing/2026-08-29_R7_R72_LEGACY_X_CONTAINMENT_SOURCE_AND_ACER_ACCEPTANCE.md
+→ focused R7.1/R7.2 tests
+→ Activity backend audit (blockers=0; strict migration not required yet)
+→ make verify
+→ if source green, deploy that exact SHA to the reference Acer
+→ Shell focus/pointer + Writing + Painting + crash recovery + 20 launch/return cycles
+→ record performance/log sanity
+→ ACCEPT / REJECT / INCOMPLETE honestly
 ```
 
-Exact next sequence remains owned by that review/active architecture plan. Do not let the visual lane reorder R7.
+If R7.2 is accepted, the next blocking implementation tranche is **R7.3 — real trusted system Home/Back chrome and protected-input authority on the current compatibility backend**, using the existing `SystemChromeCoordinator` / display-session lifecycle seams. Do not combine that tranche with the final backend migration decision.
+
+Backend comparison remains later evidence work behind the common contracts. The current architectural preference is one Greia userspace display/session stack across supported hardware if evidence permits; no per-platform split should be made merely for convenience.
+
+Separate policy item: resolve the current tap-to-click `AGENTS.md` versus runtime-source contradiction explicitly; do not let it mutate R7.2 evidence mid-run.
 
 ### Current Encyclopedia visual lane
 
