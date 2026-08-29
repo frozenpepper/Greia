@@ -42,7 +42,8 @@ activities/enciclopedia_greia/assets/source/history_gallery_time_trail.svg
 
 - one continuous layered landscape, not destination cards;
 - rain cloud, tree, rainbow, volcano and ocean are distinct physical features of the same world;
-- authored subject placement follows the existing destination hit regions closely;
+- the rain target received a second source pass after review because the tree canopy hid too much of the rain; near-layer rain streaks now keep the concept readable without changing its hit region;
+- authored subject placement follows the existing destination hit regions exactly;
 - Tito remains the runtime canonical presenter.
 
 ### Body
@@ -76,16 +77,18 @@ This correction specifically addresses the visual-plan requirement that Body fee
 - T-rex silhouette was explicitly revised after the first source review because the initial draft was not recognizable enough;
 - fossil slab, mammoth, cave-painting fragment and pyramid mini-diorama remain distinct at 1024×600;
 - existing left-to-right semantic chronology is preserved;
+- the five target centers are now explicit page constants rather than implicit arithmetic, so source metadata and pointer geometry can be compared directly;
 - Leo remains the runtime canonical presenter.
 
 ## Source review findings
 
-The first section contact sheets exposed weaknesses before runtime integration:
+The section contact sheets exposed weaknesses before runtime integration:
 
 ```text
 Body      too schematic / too close to a mannequin diagram
 Machines  miniature gears too simplified / bridge too weak
 History   dinosaur silhouette ambiguous
+Earth     rain cue too hidden behind the tree canopy
 ```
 
 Those were corrected in source. The current six-section source family now passes the intended first recognizability/composition check:
@@ -93,13 +96,32 @@ Those were corrected in source. The current six-section source family now passes
 ```text
 Animals          coherent continuous habitat, corrected lion + elephant
 Space            observatory context supports rather than replaces live orbits
-Earth & Nature   five destinations read as one landscape
+Earth & Nature   five destinations read as one landscape; rain remains visible
 Body             friendly discovery room with physical learning props
 Machines         recognizable mechanisms/objects; gears visibly mesh
 History          T-rex/fossil/mammoth/cave/pyramid sequence readable
 ```
 
-The current maintainer-local contact sheet is `encyclopedia_e3_section_source_contact_v3.png`; it is source-review evidence only and is deliberately not committed as Simulator evidence.
+The current maintainer-local contact sheet is `encyclopedia_e3_section_source_contact_v5.png`; it is source-review evidence only and is deliberately not committed as Simulator evidence.
+
+## Geometry contract
+
+E3 now carries the same visual/input alignment protection that caught the earlier Home drift.
+
+`tests/test_activity_enciclopedia_visual_foundation.py` compares SVG `data-target` / `data-center` metadata with the actual page input geometry for:
+
+```text
+Home
+Animals
+Earth & Nature
+Body
+Machines
+History
+```
+
+Space is intentionally excluded from the static-center check because its Sun, planets and Moon move continuously and runtime owns those positions.
+
+This means an authored object cannot silently move away from the region that receives pointer/controller focus without breaking the focused source contract.
 
 ## Staged runtime integration
 
@@ -132,6 +154,7 @@ E2/E2R owner visual direction                  APPROVED
 latest corrected E2 runtime PNG rebuild        PENDING
 latest corrected E2 exact-SHA Simulator proof  PENDING
 E3 six-section source direction                IMPLEMENTED / SOURCE-REVIEWED
+E3 static visual/input geometry contract       IMPLEMENTED
 E3 five new runtime PNGs                       PENDING
 E3 six-section Simulator/contact-sheet review  PENDING
 E4 factual-entry migration                     BLOCKED
