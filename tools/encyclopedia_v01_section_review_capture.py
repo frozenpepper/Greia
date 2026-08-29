@@ -7,11 +7,11 @@ instead of creating another Simulator authority. Each job launches the built-in
 navigates to one section with semantic keyboard input, captures one frame, and
 exercises the protected Greia Home return before shutdown.
 
-The driver binds evidence to one clean tracked Git tree. It requires the exact
-complete eleven-PNG Activity art inventory, records the source SHA and SHA-256
-digest of every Activity runtime PNG before capture, then proves that neither
-the tracked checkout nor HEAD nor the runtime-art inventory changed while the
-sessions ran.
+The driver binds evidence to one clean Git tree. It requires the exact complete
+eleven-PNG Activity art inventory, proves every runtime PNG is committed in
+``HEAD`` and byte-identical to its committed Git blob, records the source SHA,
+Git blob IDs and SHA-256 digests before capture, then proves that neither the
+checkout nor HEAD nor the runtime-art inventory changed while the sessions ran.
 
 It does not walk factual entries and it does not replace the 43-page mechanical
 traversal. E4 remains outside this tool.
@@ -105,9 +105,13 @@ def _git_output(*args: str) -> str:
 
 
 def _tracked_status() -> str:
-    """Return tracked changes only; project-local ignored evidence is allowed."""
+    """Return non-ignored repository changes; ignored evidence remains allowed."""
 
-    return _git_output("status", "--short", "--untracked-files=no")
+    # ``--untracked-files=all`` is intentional. The capture must not accept a
+    # runtime-relevant file that exists only in the working tree while claiming
+    # evidence for HEAD. Project-local evidence under ignored paths stays absent
+    # from this status without weakening source/runtime binding.
+    return _git_output("status", "--short", "--untracked-files=all")
 
 
 def _runtime_art_sha256() -> dict[str, str]:
@@ -117,6 +121,29 @@ def _runtime_art_sha256() -> dict[str, str]:
         for path in sorted(runtime.glob("*.png"))
         if path.is_file()
     }
+
+
+def _runtime_art_git_blobs() -> dict[str, str]:
+    """Return HEAD blob IDs after proving working runtime PNGs are committed."""
+
+    runtime = golden.ACTIVITY_DIR / "assets" / "runtime"
+    blobs: dict[str, str] = {}
+    for filename in sorted(EXPECTED_RUNTIME_ART):
+        path = runtime / filename
+        relative = path.relative_to(REPO_ROOT).as_posix()
+        try:
+            head_blob = _git_output("rev-parse", f"HEAD:{relative}")
+            working_blob = _git_output("hash-object", relative)
+        except (OSError, subprocess.CalledProcessError) as exc:
+            raise RuntimeError(
+                f"runtime art is not committed in HEAD: {relative}"
+            ) from exc
+        if head_blob != working_blob:
+            raise RuntimeError(
+                f"runtime art differs from committed HEAD blob: {relative}"
+            )
+        blobs[filename] = head_blob
+    return blobs
 
 
 def _write_manifest(
@@ -129,6 +156,7 @@ def _write_manifest(
     selected_jobs: list[str],
     completed_jobs: list[str],
     runtime_art_sha256: dict[str, str],
+    runtime_art_git_blobs: dict[str, str],
     status: str,
     failure: str | None = None,
 ) -> None:
@@ -142,6 +170,7 @@ def _write_manifest(
         "selected_jobs": selected_jobs,
         "completed_jobs": completed_jobs,
         "runtime_art_sha256": runtime_art_sha256,
+        "runtime_art_git_blobs": runtime_art_git_blobs,
         "status": status,
         "failure": failure,
     }
@@ -183,7 +212,7 @@ def main(argv: list[str] | None = None) -> int:
         golden._log(f"cannot bind E3 capture to Git source: {exc}")
         return 2
     if dirty:
-        golden._log("tracked checkout is dirty; commit or restore source before capture")
+        golden._log("checkout is not clean; commit or restore source before capture")
         golden._log(dirty)
         return 2
 
@@ -198,6 +227,12 @@ def main(argv: list[str] | None = None) -> int:
         if extra:
             golden._log(f"unexpected runtime art: {extra}")
         return 3
+
+    try:
+        runtime_git_blobs = _runtime_art_git_blobs()
+    except RuntimeError as exc:
+        golden._log(str(exc))
+        return 4
 
     requested = {tag.strip() for tag in args.jobs.split(",") if tag.strip()}
     valid = {"home", *SECTION_ORDER}
@@ -231,6 +266,7 @@ def main(argv: list[str] | None = None) -> int:
         selected_jobs=selected_tags,
         completed_jobs=completed_tags,
         runtime_art_sha256=runtime_hashes,
+        runtime_art_git_blobs=runtime_git_blobs,
         status="RUNNING",
     )
 
@@ -259,6 +295,7 @@ def main(argv: list[str] | None = None) -> int:
                 selected_jobs=selected_tags,
                 completed_jobs=completed_tags,
                 runtime_art_sha256=runtime_hashes,
+                runtime_art_git_blobs=runtime_git_blobs,
                 status="FAIL",
                 failure=failure,
             )
@@ -280,6 +317,7 @@ def main(argv: list[str] | None = None) -> int:
             selected_jobs=selected_tags,
             completed_jobs=completed_tags,
             runtime_art_sha256=runtime_hashes,
+            runtime_art_git_blobs=runtime_git_blobs,
             status="FAIL",
             failure=failure,
         )
@@ -287,7 +325,7 @@ def main(argv: list[str] | None = None) -> int:
         return 10
 
     if final_sha != source_sha or final_dirty:
-        failure = "tracked source changed while E3 Simulator evidence was being captured"
+        failure = "source tree changed while E3 Simulator evidence was being captured"
         _write_manifest(
             evidence_root,
             source_sha=source_sha,
@@ -297,6 +335,7 @@ def main(argv: list[str] | None = None) -> int:
             selected_jobs=selected_tags,
             completed_jobs=completed_tags,
             runtime_art_sha256=runtime_hashes,
+            runtime_art_git_blobs=runtime_git_blobs,
             status="FAIL",
             failure=failure,
         )
@@ -319,6 +358,44 @@ def main(argv: list[str] | None = None) -> int:
             selected_jobs=selected_tags,
             completed_jobs=completed_tags,
             runtime_art_sha256=runtime_hashes,
+            runtime_art_git_blobs=runtime_git_blobs,
+            status="FAIL",
+            failure=failure,
+        )
+        golden._log(failure)
+        return 10
+
+    try:
+        final_runtime_git_blobs = _runtime_art_git_blobs()
+    except RuntimeError as exc:
+        failure = f"runtime-art Git binding failed after E3 capture: {exc}"
+        _write_manifest(
+            evidence_root,
+            source_sha=source_sha,
+            locale=args.locale,
+            viewport=args.viewport,
+            interface_size=args.interface_size,
+            selected_jobs=selected_tags,
+            completed_jobs=completed_tags,
+            runtime_art_sha256=runtime_hashes,
+            runtime_art_git_blobs=runtime_git_blobs,
+            status="FAIL",
+            failure=failure,
+        )
+        golden._log(failure)
+        return 10
+    if final_runtime_git_blobs != runtime_git_blobs:
+        failure = "committed runtime-art blobs changed while E3 evidence was being captured"
+        _write_manifest(
+            evidence_root,
+            source_sha=source_sha,
+            locale=args.locale,
+            viewport=args.viewport,
+            interface_size=args.interface_size,
+            selected_jobs=selected_tags,
+            completed_jobs=completed_tags,
+            runtime_art_sha256=runtime_hashes,
+            runtime_art_git_blobs=runtime_git_blobs,
             status="FAIL",
             failure=failure,
         )
@@ -334,6 +411,7 @@ def main(argv: list[str] | None = None) -> int:
         selected_jobs=selected_tags,
         completed_jobs=completed_tags,
         runtime_art_sha256=runtime_hashes,
+        runtime_art_git_blobs=runtime_git_blobs,
         status="PASS",
     )
     golden._log(f"E3 Home + section review capture PASS at {source_sha}")
