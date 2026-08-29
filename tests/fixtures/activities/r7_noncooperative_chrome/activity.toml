@@ -1,0 +1,35 @@
+[activity]
+id = "org.greia.fixture.r7-noncooperative-chrome"
+title_key = "activity.r7_noncooperative_chrome.title"
+version = "0.1.0"
+icon = "close_button"
+languages = ["*"]
+
+[presentation]
+categories = ["test"]
+
+[education]
+categories = ["development", "inspection"]
+difficulty = 1
+skills = [
+  { id = "platform.navigation.trust", weight = 1 },
+]
+events = []
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "pointer"
+
+[requirements]
+required_capabilities = ["display", "pointer"]
+optional_capabilities = []
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1
