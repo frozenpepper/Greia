@@ -195,7 +195,7 @@ class TrustedChromeActivitySupervisorTests(unittest.TestCase):
         self.assertEqual(session.state, ActivitySessionState.STOPPING)
         self.assertIsNotNone(session.stop_requested_at)
 
-    def test_prepare_failure_force_stops_before_ready(self) -> None:
+    def test_prepare_failure_force_stops_before_ready_but_does_not_poison_next_launch(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             manifest = _manifest(root / "activity")
@@ -211,7 +211,8 @@ class TrustedChromeActivitySupervisorTests(unittest.TestCase):
         self.assertTrue(process.killed)
         self.assertIsNotNone(session.result)
         self.assertEqual(session.result.exit_reason, ActivityExitReason.PLATFORM_FAILURE)
-        self.assertEqual(coordinator.snapshot.phase, SystemChromePhase.FAILED)
+        self.assertEqual(coordinator.snapshot.phase, SystemChromePhase.HIDDEN)
+        self.assertIn(("hide", session.session_id), backend.calls)
 
     def test_show_failure_becomes_platform_failure_and_recovers_chrome(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
