@@ -1,4 +1,4 @@
-"""Earth & Nature section: one landscape with five semantic destinations."""
+"""Earth & Nature section: one authored landscape with five semantic destinations."""
 
 from __future__ import annotations
 
@@ -9,10 +9,12 @@ import pygame
 
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
-    from .common import draw_centered_text, draw_presenter, focus_ring
+    from ..enciclopedia_presentation import draw_authored_scene, draw_title
+    from .common import draw_presenter, focus_ring
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
-    from pages.common import draw_centered_text, draw_presenter, focus_ring
+    from enciclopedia_presentation import draw_authored_scene, draw_title
+    from pages.common import draw_presenter, focus_ring
 
 
 @dataclass(frozen=True, slots=True)
@@ -74,18 +76,48 @@ class EarthPage(EncyclopediaPage):
         self.context.host.open_page(DESTINATIONS[self._selected].page_id)
 
     def draw(self, surface: pygame.Surface) -> None:
-        surface.fill((184, 225, 242))
-        draw_centered_text(
+        authored = draw_authored_scene(
+            surface,
+            self.context.visuals,
+            "encyclopedia.earth.gallery.landscape",
+        )
+        if not authored:
+            self._draw_fallback_scene(surface)
+
+        draw_title(
             surface,
             self.context.typography,
             self.context.resources.text("section.earth"),
-            center=(500, 95),
-            size=40,
-            color=self.context.palette.ink,
+            self.context.palette.ink,
         )
+
+        for index, item in enumerate(DESTINATIONS):
+            active = index == self._selected or index == self._hovered
+            focus_ring(surface, item.rect, active)
+            if active:
+                pygame.draw.circle(
+                    surface,
+                    (255, 220, 78),
+                    (item.rect.right - 14, item.rect.top + 14),
+                    7,
+                )
+
+        draw_presenter(
+            surface,
+            self.context.visuals,
+            "tito",
+            position=(930, 565),
+            height=150,
+            variant="surprised",
+            fallback_color=(247, 151, 77),
+        )
+
+    def _draw_fallback_scene(self, surface: pygame.Surface) -> None:
+        """Retain the proven procedural scene until the E3 PNG pack is built."""
+
+        surface.fill((184, 225, 242))
         pygame.draw.circle(surface, (252, 218, 89), (855, 130), 42)
 
-        # Rain cloud and droplets.
         pygame.draw.ellipse(surface, (255, 255, 255), (120, 145, 150, 55))
         pygame.draw.ellipse(surface, (255, 255, 255), (230, 150, 110, 45))
         for index in range(8):
@@ -93,18 +125,22 @@ class EarthPage(EncyclopediaPage):
             y = 215 + (index % 2) * 7
             pygame.draw.line(surface, (89, 155, 210), (x, y), (x - 5, y + 25), 3)
 
-        # Ocean and rolling land.
         pygame.draw.rect(surface, (72, 164, 190), (0, 445, 1024, 155))
         for wave_x in range(315, 625, 55):
-            pygame.draw.arc(surface, (164, 218, 227), (wave_x, 460, 58, 18), 0.1, math.pi - 0.1, 3)
+            pygame.draw.arc(
+                surface,
+                (164, 218, 227),
+                (wave_x, 460, 58, 18),
+                0.1,
+                math.pi - 0.1,
+                3,
+            )
         pygame.draw.ellipse(surface, (120, 184, 102), (-90, 380, 870, 170))
 
-        # Tree.
         pygame.draw.rect(surface, (120, 83, 51), (185, 310, 28, 145), border_radius=8)
         for cx, cy, radius in ((170, 305, 45), (220, 300, 50), (195, 265, 48)):
             pygame.draw.circle(surface, (89, 166, 83), (cx, cy), radius)
 
-        # Rainbow.
         for index, color in enumerate(
             (
                 (221, 84, 91),
@@ -124,26 +160,8 @@ class EarthPage(EncyclopediaPage):
                 6,
             )
 
-        # Volcano: ambient glow only; eruption behavior belongs to earth.volcano.
         pygame.draw.polygon(surface, (121, 99, 80), [(655, 445), (735, 300), (815, 445)])
         pygame.draw.polygon(surface, (160, 122, 89), [(710, 345), (735, 300), (760, 345)])
         glow = 5 + int((math.sin(self._time * 2.4) + 1.0) * 2.0)
         pygame.draw.ellipse(surface, (228, 91, 43), (720, 294, 30, 13))
         pygame.draw.ellipse(surface, (250, 183, 71), (727, 298, 16, glow))
-
-        # Focus follows the same semantic order used by keyboard/controller.
-        for index, item in enumerate(DESTINATIONS):
-            active = index == self._selected or index == self._hovered
-            focus_ring(surface, item.rect, active)
-            if active:
-                pygame.draw.circle(surface, (255, 220, 78), (item.rect.right - 14, item.rect.top + 14), 7)
-
-        draw_presenter(
-            surface,
-            self.context.visuals,
-            "tito",
-            position=(930, 565),
-            height=150,
-            variant="surprised",
-            fallback_color=(247, 151, 77),
-        )
