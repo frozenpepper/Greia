@@ -28,6 +28,13 @@ class EncyclopediaE3ReviewToolTests(unittest.TestCase):
                 for target in node.targets
             ):
                 return node.value
+            if (
+                isinstance(node, ast.AnnAssign)
+                and isinstance(node.target, ast.Name)
+                and node.target.id == name
+                and node.value is not None
+            ):
+                return node.value
         raise AssertionError(f"missing module assignment: {name}")
 
     def test_capture_scope_is_home_plus_exact_six_sections(self) -> None:
