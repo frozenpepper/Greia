@@ -20,43 +20,19 @@
     <feComponentTransfer><feFuncA type="table" tableValues="0 0.06"/></feComponentTransfer>
     <feComposite in2="SourceGraphic" operator="in"/>
   </filter>
-  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0" stop-color="#b9e3df"/>
-    <stop offset="0.55" stop-color="#f3e2a9"/>
-    <stop offset="1" stop-color="#edbe75"/>
-  </linearGradient>
-  <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0" stop-color="#a4704a"/>
-    <stop offset="0.45" stop-color="#7a4a2c"/>
-    <stop offset="1" stop-color="#5b3520"/>
-  </linearGradient>
-  <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0" stop-color="#fff9e8"/>
-    <stop offset="0.6" stop-color="#f4e6c3"/>
-    <stop offset="1" stop-color="#e3c890"/>
-  </linearGradient>
-  <radialGradient id="sun">
-    <stop offset="0" stop-color="#fff5c2"/>
-    <stop offset="0.55" stop-color="#ffd36a"/>
-    <stop offset="1" stop-color="#e99a2d"/>
-  </radialGradient>
-  <linearGradient id="grass" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0" stop-color="#88b87a"/>
-    <stop offset="1" stop-color="#4d8758"/>
-  </linearGradient>
-  <linearGradient id="sand" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0" stop-color="#e9c77c"/>
-    <stop offset="1" stop-color="#a87038"/>
-  </linearGradient>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b9e3df"/><stop offset="0.55" stop-color="#f3e2a9"/><stop offset="1" stop-color="#edbe75"/></linearGradient>
+  <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a4704a"/><stop offset="0.45" stop-color="#7a4a2c"/><stop offset="1" stop-color="#5b3520"/></linearGradient>
+  <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff9e8"/><stop offset="0.6" stop-color="#f4e6c3"/><stop offset="1" stop-color="#e3c890"/></linearGradient>
+  <radialGradient id="sun"><stop offset="0" stop-color="#fff5c2"/><stop offset="0.55" stop-color="#ffd36a"/><stop offset="1" stop-color="#e99a2d"/></radialGradient>
+  <linearGradient id="grass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#88b87a"/><stop offset="1" stop-color="#4d8758"/></linearGradient>
+  <linearGradient id="sand" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9c77c"/><stop offset="1" stop-color="#a87038"/></linearGradient>
 </defs>
 
-<!-- Background sky + table -->
 <rect width="1024" height="600" fill="url(#sky)"/>
 <rect y="430" width="1024" height="170" fill="url(#wood)"/>
 <path d="M0 430H1024" stroke="#3e2b22" stroke-width="4" opacity="0.55"/>
 <ellipse cx="512" cy="505" rx="455" ry="46" fill="#2a1c14" opacity="0.18"/>
 
-<!-- Book: deliberately oversized so all six portal worlds sit inside the paper -->
 <g filter="url(#softshadow)">
   <path d="M78 112 Q280 66 512 124 L512 520 Q286 472 82 516Z" fill="url(#paper)" stroke="#76523a" stroke-width="5"/>
   <path d="M512 124 Q744 66 946 112 L942 516 Q738 472 512 520Z" fill="url(#paper)" stroke="#76523a" stroke-width="5"/>
@@ -64,174 +40,56 @@
   <path d="M505 138V510" stroke="#fff7e5" stroke-width="2" opacity="0.85"/>
 </g>
 
-<!-- ============ Portals (miniature illustrated worlds) ============ -->
-
-<!-- Animals portal: habitat vignette on a page -->
-<g data-target="animals" data-center="192,225" transform="translate(112 162)" filter="url(#softshadow)">
+<g data-target="animals" data-center="267,225" transform="translate(187 162)" filter="url(#softshadow)">
   <rect x="0" y="0" width="160" height="124" rx="8" fill="#fff9e8" stroke="#8d6638" stroke-width="3"/>
   <path d="M0 84 Q40 70 80 82 T160 78 V124 H0Z" fill="url(#grass)"/>
-  <circle cx="40" cy="38" r="14" fill="#fff5d8"/>
-  <circle cx="40" cy="38" r="9" fill="#ffd36a"/>
-  <g transform="translate(40 70)">
-    <ellipse cx="0" cy="20" rx="22" ry="3" fill="#2a1c14" opacity="0.25"/>
-    <path d="M-22 4 Q-12 -16 12 -16 Q26 -12 22 8 L-22 8Z" fill="#d9923f" stroke="#7e4920" stroke-width="2.5"/>
-    <circle cx="14" cy="-12" r="11" fill="#d9923f" stroke="#7e4920" stroke-width="2.5"/>
-    <circle cx="16" cy="-14" r="2" fill="#3a2b25"/>
-    <path d="M19 -8 Q24 -10 27 -6" fill="none" stroke="#7e4920" stroke-width="2" stroke-linecap="round"/>
-  </g>
-  <g transform="translate(96 78)">
-    <ellipse cx="0" cy="14" rx="14" ry="2" fill="#2a1c14" opacity="0.22"/>
-    <ellipse cx="0" cy="2" rx="14" ry="11" fill="#b8b6c9" stroke="#5a5670" stroke-width="2"/>
-    <circle cx="-3" cy="-2" r="2" fill="#fff"/><circle cx="-3" cy="-2" r="1" fill="#1a1620"/>
-    <circle cx="4" cy="-2" r="2" fill="#fff"/><circle cx="4" cy="-2" r="1" fill="#1a1620"/>
-    <path d="M-2 4 Q1 7 4 4" fill="none" stroke="#5a5670" stroke-width="1.5" stroke-linecap="round"/>
-  </g>
-  <g transform="translate(132 82)">
-    <ellipse cx="0" cy="12" rx="12" ry="2" fill="#2a1c14" opacity="0.22"/>
-    <path d="M-10 0 Q-4 -8 4 -8 Q12 -6 10 4 L-10 4Z" fill="#e6c25a" stroke="#7e4920" stroke-width="2"/>
-    <path d="M-2 -10 L-2 -14 M2 -10 L2 -14" stroke="#3a2b25" stroke-width="1.5"/>
-    <path d="M-10 4 L-12 8 M10 4 L12 8" stroke="#7e4920" stroke-width="2" stroke-linecap="round"/>
-  </g>
+  <circle cx="40" cy="38" r="14" fill="#fff5d8"/><circle cx="40" cy="38" r="9" fill="#ffd36a"/>
+  <g transform="translate(40 70)"><ellipse cx="0" cy="20" rx="22" ry="3" fill="#2a1c14" opacity="0.25"/><path d="M-22 4 Q-12 -16 12 -16 Q26 -12 22 8 L-22 8Z" fill="#d9923f" stroke="#7e4920" stroke-width="2.5"/><circle cx="14" cy="-12" r="11" fill="#d9923f" stroke="#7e4920" stroke-width="2.5"/><circle cx="16" cy="-14" r="2" fill="#3a2b25"/><path d="M19 -8 Q24 -10 27 -6" fill="none" stroke="#7e4920" stroke-width="2" stroke-linecap="round"/></g>
+  <g transform="translate(96 78)"><ellipse cx="0" cy="14" rx="14" ry="2" fill="#2a1c14" opacity="0.22"/><ellipse cx="0" cy="2" rx="14" ry="11" fill="#b8b6c9" stroke="#5a5670" stroke-width="2"/><circle cx="-3" cy="-2" r="2" fill="#fff"/><circle cx="-3" cy="-2" r="1" fill="#1a1620"/><circle cx="4" cy="-2" r="2" fill="#fff"/><circle cx="4" cy="-2" r="1" fill="#1a1620"/><path d="M-2 4 Q1 7 4 4" fill="none" stroke="#5a5670" stroke-width="1.5" stroke-linecap="round"/></g>
+  <g transform="translate(132 82)"><ellipse cx="0" cy="12" rx="12" ry="2" fill="#2a1c14" opacity="0.22"/><path d="M-10 0 Q-4 -8 4 -8 Q12 -6 10 4 L-10 4Z" fill="#e6c25a" stroke="#7e4920" stroke-width="2"/><path d="M-2 -10 L-2 -14 M2 -10 L2 -14" stroke="#3a2b25" stroke-width="1.5"/><path d="M-10 4 L-12 8 M10 4 L12 8" stroke="#7e4920" stroke-width="2" stroke-linecap="round"/></g>
 </g>
 
-<!-- Space portal: tiny observatory -->
-<g data-target="space" data-center="437,225" transform="translate(357 162)" filter="url(#softshadow)">
+<g data-target="space" data-center="512,225" transform="translate(432 162)" filter="url(#softshadow)">
   <rect x="0" y="0" width="160" height="124" rx="8" fill="#1a2240" stroke="#4b557a" stroke-width="3"/>
-  <g fill="#f1eecf">
-    <circle cx="20" cy="20" r="1.5"/>
-    <circle cx="50" cy="32" r="1.5"/>
-    <circle cx="90" cy="18" r="1.2"/>
-    <circle cx="120" cy="42" r="1.5"/>
-    <circle cx="142" cy="22" r="1.2"/>
-    <circle cx="32" cy="50" r="1"/>
-  </g>
-  <g transform="translate(80 80) rotate(-15)">
-    <ellipse rx="42" ry="11" fill="none" stroke="#e5cd8e" stroke-width="6"/>
-    <circle r="22" fill="#c89355" stroke="#7a4a2c" stroke-width="2"/>
-    <path d="M-19-5 Q0 3 19-5 M-19 6 Q0 14 19 6" fill="none" stroke="#e0bb78" stroke-width="3"/>
-  </g>
-  <g transform="translate(28 92)" stroke="#8b96b5" stroke-width="2.5" fill="none" stroke-linecap="round">
-    <path d="M0 18 L-10 4 L0 4 L0 -8 L18 -8"/>
-  </g>
-  <circle cx="132" cy="100" r="6" fill="#5b8db0" stroke="#3a5e7a" stroke-width="2"/>
-  <path d="M125 100 Q132 96 139 100 Q132 104 125 100" fill="#74a3c2"/>
+  <g fill="#f1eecf"><circle cx="20" cy="20" r="1.5"/><circle cx="50" cy="32" r="1.5"/><circle cx="90" cy="18" r="1.2"/><circle cx="120" cy="42" r="1.5"/><circle cx="142" cy="22" r="1.2"/><circle cx="32" cy="50" r="1"/></g>
+  <g transform="translate(80 80) rotate(-15)"><ellipse rx="42" ry="11" fill="none" stroke="#e5cd8e" stroke-width="6"/><circle r="22" fill="#c89355" stroke="#7a4a2c" stroke-width="2"/><path d="M-19-5 Q0 3 19-5 M-19 6 Q0 14 19 6" fill="none" stroke="#e0bb78" stroke-width="3"/></g>
+  <g transform="translate(28 92)" stroke="#8b96b5" stroke-width="2.5" fill="none" stroke-linecap="round"><path d="M0 18 L-10 4 L0 4 L0 -8 L18 -8"/></g>
+  <circle cx="132" cy="100" r="6" fill="#5b8db0" stroke="#3a5e7a" stroke-width="2"/><path d="M125 100 Q132 96 139 100 Q132 104 125 100" fill="#74a3c2"/>
 </g>
 
-<!-- Earth portal: landscape vignette -->
-<g data-target="earth" data-center="682,225" transform="translate(602 162)" filter="url(#softshadow)">
+<g data-target="earth" data-center="757,225" transform="translate(677 162)" filter="url(#softshadow)">
   <rect x="0" y="0" width="160" height="124" rx="8" fill="#cfe7e4" stroke="#5b6f67" stroke-width="3"/>
-  <path d="M0 70 Q40 50 80 60 T160 56 V90 L0 90Z" fill="url(#grass)"/>
-  <path d="M0 90 H160 V124 H0Z" fill="url(#sand)"/>
-  <g transform="translate(34 50)">
-    <path d="M0 0 L0 -34" stroke="#6f4a32" stroke-width="3"/>
-    <path d="M0 -32 Q-10 -34 -14 -26 M0 -28 Q10 -32 14 -22" fill="none" stroke="#6f4a32" stroke-width="3" stroke-linecap="round"/>
-    <ellipse cx="0" cy="-34" rx="18" ry="6" fill="#5e8f52"/>
-    <ellipse cx="-10" cy="-32" rx="9" ry="4" fill="#6da15b"/>
-    <ellipse cx="10" cy="-32" rx="9" ry="4" fill="#6da15b"/>
-  </g>
-  <g transform="translate(70 84)">
-    <ellipse cx="0" cy="2" rx="10" ry="2" fill="#2a1c14" opacity="0.2"/>
-    <path d="M-8 0 L8 0 L4 -16 L-4 -16Z" fill="#9b3a40" stroke="#5a1f23" stroke-width="2"/>
-    <path d="M-3 -16 L-3 -22 M3 -16 L3 -22" stroke="#5a1f23" stroke-width="2"/>
-  </g>
-  <circle cx="120" cy="100" r="6" fill="#5b8db0" stroke="#3a5e7a" stroke-width="2"/>
-  <path d="M114 100 Q120 96 126 100 Q120 104 114 100" fill="#74a3c2"/>
-  <g transform="translate(40 18)" fill="#f3c14a" stroke="#9a6c1a" stroke-width="1.5">
-    <circle r="6"/><path d="M0 -10 L0 10 M-10 0 L10 0 M-7 -7 L7 7 M-7 7 L7 -7" stroke-width="1.2"/>
-  </g>
+  <path d="M0 70 Q40 50 80 60 T160 56 V90 L0 90Z" fill="url(#grass)"/><path d="M0 90 H160 V124 H0Z" fill="url(#sand)"/>
+  <g transform="translate(34 50)"><path d="M0 0 L0 -34" stroke="#6f4a32" stroke-width="3"/><path d="M0 -32 Q-10 -34 -14 -26 M0 -28 Q10 -32 14 -22" fill="none" stroke="#6f4a32" stroke-width="3" stroke-linecap="round"/><ellipse cx="0" cy="-34" rx="18" ry="6" fill="#5e8f52"/><ellipse cx="-10" cy="-32" rx="9" ry="4" fill="#6da15b"/><ellipse cx="10" cy="-32" rx="9" ry="4" fill="#6da15b"/></g>
+  <g transform="translate(70 84)"><ellipse cx="0" cy="2" rx="10" ry="2" fill="#2a1c14" opacity="0.2"/><path d="M-8 0 L8 0 L4 -16 L-4 -16Z" fill="#9b3a40" stroke="#5a1f23" stroke-width="2"/><path d="M-3 -16 L-3 -22 M3 -16 L3 -22" stroke="#5a1f23" stroke-width="2"/></g>
+  <circle cx="120" cy="100" r="6" fill="#5b8db0" stroke="#3a5e7a" stroke-width="2"/><path d="M114 100 Q120 96 126 100 Q120 104 114 100" fill="#74a3c2"/>
+  <g transform="translate(40 18)" fill="#f3c14a" stroke="#9a6c1a" stroke-width="1.5"><circle r="6"/><path d="M0 -10 L0 10 M-10 0 L10 0 M-7 -7 L7 7 M-7 7 L7 -7" stroke-width="1.2"/></g>
 </g>
 
-<!-- Body portal: friendly body discovery vignette -->
-<g data-target="body" data-center="192,415" transform="translate(112 345)" filter="url(#softshadow)">
+<g data-target="body" data-center="267,415" transform="translate(187 345)" filter="url(#softshadow)">
   <rect x="0" y="0" width="160" height="124" rx="8" fill="#fce4dc" stroke="#a05164" stroke-width="3"/>
-  <g transform="translate(80 60)">
-    <ellipse cx="0" cy="42" rx="48" ry="4" fill="#2a1c14" opacity="0.18"/>
-    <path d="M-32 28 C-50 -8 -10 -32 0 -10 C10 -32 50 -8 32 28 C24 38 -24 38 -32 28Z" fill="#d96b78" stroke="#7d3645" stroke-width="2.5"/>
-    <ellipse cx="-12" cy="-10" rx="6" ry="9" fill="#f0a8b0" opacity="0.7"/>
-    <ellipse cx="12" cy="-10" rx="6" ry="9" fill="#f0a8b0" opacity="0.7"/>
-    <circle cx="-7" cy="2" r="2.5" fill="#3a2b25"/>
-    <circle cx="7" cy="2" r="2.5" fill="#3a2b25"/>
-    <path d="M-4 12 Q0 18 4 12" fill="none" stroke="#7d3645" stroke-width="2" stroke-linecap="round"/>
-  </g>
-  <g transform="translate(28 30)">
-    <path d="M0 8 L8 0 L0 -8 L-8 0Z" fill="#f0a8b0" stroke="#7d3645" stroke-width="2"/>
-    <path d="M-8 0 L-16 0" stroke="#7d3645" stroke-width="2"/>
-  </g>
-  <g transform="translate(132 96)">
-    <ellipse cx="0" cy="6" rx="12" ry="2" fill="#2a1c14" opacity="0.2"/>
-    <rect x="-8" y="-8" width="16" height="14" rx="2" fill="#fff" stroke="#7d3645" stroke-width="2"/>
-    <path d="M-4 -4 L4 -4 M-4 0 L4 0 M-4 4 L0 4" stroke="#7d3645" stroke-width="1.5"/>
-  </g>
+  <g transform="translate(80 60)"><ellipse cx="0" cy="42" rx="48" ry="4" fill="#2a1c14" opacity="0.18"/><path d="M-32 28 C-50 -8 -10 -32 0 -10 C10 -32 50 -8 32 28 C24 38 -24 38 -32 28Z" fill="#d96b78" stroke="#7d3645" stroke-width="2.5"/><ellipse cx="-12" cy="-10" rx="6" ry="9" fill="#f0a8b0" opacity="0.7"/><ellipse cx="12" cy="-10" rx="6" ry="9" fill="#f0a8b0" opacity="0.7"/><circle cx="-7" cy="2" r="2.5" fill="#3a2b25"/><circle cx="7" cy="2" r="2.5" fill="#3a2b25"/><path d="M-4 12 Q0 18 4 12" fill="none" stroke="#7d3645" stroke-width="2" stroke-linecap="round"/></g>
+  <g transform="translate(28 30)"><path d="M0 8 L8 0 L0 -8 L-8 0Z" fill="#f0a8b0" stroke="#7d3645" stroke-width="2"/><path d="M-8 0 L-16 0" stroke="#7d3645" stroke-width="2"/></g>
+  <g transform="translate(132 96)"><ellipse cx="0" cy="6" rx="12" ry="2" fill="#2a1c14" opacity="0.2"/><rect x="-8" y="-8" width="16" height="14" rx="2" fill="#fff" stroke="#7d3645" stroke-width="2"/><path d="M-4 -4 L4 -4 M-4 0 L4 0 M-4 4 L0 4" stroke="#7d3645" stroke-width="1.5"/></g>
 </g>
 
-<!-- Machines portal: warm workbench -->
-<g data-target="machines" data-center="437,415" transform="translate(357 345)" filter="url(#softshadow)">
+<g data-target="machines" data-center="512,415" transform="translate(432 345)" filter="url(#softshadow)">
   <rect x="0" y="0" width="160" height="124" rx="8" fill="#e8d2a4" stroke="#765038" stroke-width="3"/>
   <rect x="6" y="6" width="148" height="80" rx="6" fill="#fff5d8" stroke="#765038" stroke-width="2"/>
-  <g transform="translate(48 50)" filter="url(#tightshadow)">
-    <circle r="22" fill="#4f91a8" stroke="#315b6a" stroke-width="2.5"/>
-    <g fill="#315b6a">
-      <rect x="-3" y="-26" width="6" height="6"/>
-      <rect x="-3" y="20" width="6" height="6"/>
-      <rect x="-26" y="-3" width="6" height="6"/>
-      <rect x="20" y="-3" width="6" height="6"/>
-      <rect x="-19" y="-19" width="6" height="6" transform="rotate(45)"/>
-      <rect x="13" y="-19" width="6" height="6" transform="rotate(45)"/>
-      <rect x="-19" y="13" width="6" height="6" transform="rotate(45)"/>
-      <rect x="13" y="13" width="6" height="6" transform="rotate(45)"/>
-    </g>
-    <circle r="6" fill="#e7c57c" stroke="#7a4a2c" stroke-width="1.5"/>
-  </g>
-  <g transform="translate(96 50)" filter="url(#tightshadow)">
-    <circle r="14" fill="#d79a44" stroke="#7a4a2c" stroke-width="2.5"/>
-    <g fill="#7a4a2c">
-      <rect x="-2" y="-18" width="4" height="4"/>
-      <rect x="-2" y="14" width="4" height="4"/>
-      <rect x="-18" y="-2" width="4" height="4"/>
-      <rect x="14" y="-2" width="4" height="4"/>
-    </g>
-    <circle r="4" fill="#f3dfb4"/>
-  </g>
-  <g transform="translate(128 100)" filter="url(#tightshadow)">
-    <rect x="-14" y="-6" width="28" height="12" rx="2" fill="#a86b3a" stroke="#5e3a1f" stroke-width="2"/>
-    <rect x="-12" y="-4" width="6" height="8" fill="#5e3a1f"/>
-    <rect x="6" y="-4" width="6" height="8" fill="#5e3a1f"/>
-  </g>
+  <g transform="translate(48 50)" filter="url(#tightshadow)"><circle r="22" fill="#4f91a8" stroke="#315b6a" stroke-width="2.5"/><g fill="#315b6a"><rect x="-3" y="-26" width="6" height="6"/><rect x="-3" y="20" width="6" height="6"/><rect x="-26" y="-3" width="6" height="6"/><rect x="20" y="-3" width="6" height="6"/><rect x="-19" y="-19" width="6" height="6" transform="rotate(45)"/><rect x="13" y="-19" width="6" height="6" transform="rotate(45)"/><rect x="-19" y="13" width="6" height="6" transform="rotate(45)"/><rect x="13" y="13" width="6" height="6" transform="rotate(45)"/></g><circle r="6" fill="#e7c57c" stroke="#7a4a2c" stroke-width="1.5"/></g>
+  <g transform="translate(96 50)" filter="url(#tightshadow)"><circle r="14" fill="#d79a44" stroke="#7a4a2c" stroke-width="2.5"/><g fill="#7a4a2c"><rect x="-2" y="-18" width="4" height="4"/><rect x="-2" y="14" width="4" height="4"/><rect x="-18" y="-2" width="4" height="4"/><rect x="14" y="-2" width="4" height="4"/></g><circle r="4" fill="#f3dfb4"/></g>
+  <g transform="translate(128 100)" filter="url(#tightshadow)"><rect x="-14" y="-6" width="28" height="12" rx="2" fill="#a86b3a" stroke="#5e3a1f" stroke-width="2"/><rect x="-12" y="-4" width="6" height="8" fill="#5e3a1f"/><rect x="6" y="-4" width="6" height="8" fill="#5e3a1f"/></g>
 </g>
 
-<!-- History portal: excavation vignette -->
-<g data-target="history" data-center="682,415" transform="translate(602 345)" filter="url(#softshadow)">
+<g data-target="history" data-center="757,415" transform="translate(677 345)" filter="url(#softshadow)">
   <rect x="0" y="0" width="160" height="124" rx="8" fill="url(#sand)" stroke="#8d643c" stroke-width="3"/>
-  <g transform="translate(80 60)" filter="url(#tightshadow)">
-    <path d="M-44 36 L-26 -32 L26 -32 L44 36Z" fill="#d6ab63" stroke="#8d643c" stroke-width="3"/>
-    <path d="M-30 36 L-15 -16 L15 -16 L30 36Z" fill="#e8c47e" opacity="0.55"/>
-    <path d="M-44 36 L0 12 L44 36" fill="none" stroke="#8d643c" stroke-width="2"/>
-  </g>
-  <g transform="translate(30 92)" filter="url(#tightshadow)">
-    <ellipse cx="0" cy="6" rx="6" ry="2" fill="#2a1c14" opacity="0.25"/>
-    <rect x="-4" y="-22" width="8" height="22" fill="#9c6138" stroke="#5e3a1f" stroke-width="2"/>
-    <path d="M-8 -22 L8 -22 L4 -28 L-4 -28Z" fill="#a86b3a" stroke="#5e3a1f" stroke-width="2"/>
-  </g>
-  <g transform="translate(132 100)">
-    <ellipse cx="0" cy="6" rx="10" ry="2" fill="#2a1c14" opacity="0.25"/>
-    <path d="M-8 -2 L-2 -16 L2 -16 L8 -2Z" fill="#5b3520" stroke="#3a2110" stroke-width="2"/>
-    <circle cx="0" cy="-18" r="3" fill="#c2a26e" stroke="#5b3520" stroke-width="1.5"/>
-  </g>
+  <g transform="translate(80 60)" filter="url(#tightshadow)"><path d="M-44 36 L-26 -32 L26 -32 L44 36Z" fill="#d6ab63" stroke="#8d643c" stroke-width="3"/><path d="M-30 36 L-15 -16 L15 -16 L30 36Z" fill="#e8c47e" opacity="0.55"/><path d="M-44 36 L0 12 L44 36" fill="none" stroke="#8d643c" stroke-width="2"/></g>
+  <g transform="translate(30 92)" filter="url(#tightshadow)"><ellipse cx="0" cy="6" rx="6" ry="2" fill="#2a1c14" opacity="0.25"/><rect x="-4" y="-22" width="8" height="22" fill="#9c6138" stroke="#5e3a1f" stroke-width="2"/><path d="M-8 -22 L8 -22 L4 -28 L-4 -28Z" fill="#a86b3a" stroke="#5e3a1f" stroke-width="2"/></g>
+  <g transform="translate(132 100)"><ellipse cx="0" cy="6" rx="10" ry="2" fill="#2a1c14" opacity="0.25"/><path d="M-8 -2 L-2 -16 L2 -16 L8 -2Z" fill="#5b3520" stroke="#3a2110" stroke-width="2"/><circle cx="0" cy="-18" r="3" fill="#c2a26e" stroke="#5b3520" stroke-width="1.5"/></g>
 </g>
 
-<!-- Book ribbon + bookmark -->
 <path d="M496 516 L528 516 L524 580 L513 563 L502 580Z" fill="#ba5754" opacity="0.92"/>
-
-<!-- Leo's perch (right side of the book, runtime character draws here) -->
 <ellipse cx="880" cy="552" rx="60" ry="8" fill="#2a1c14" opacity="0.22"/>
-
-<!-- Magnifying glass floating above the book -->
-<g transform="translate(150 460) rotate(-22)">
-  <circle cx="0" cy="0" r="20" fill="none" stroke="#6c543d" stroke-width="6"/>
-  <circle cx="0" cy="0" r="20" fill="#fff5d8" opacity="0.25"/>
-  <path d="M14 14 L28 28" stroke="#6c543d" stroke-width="8" stroke-linecap="round"/>
-</g>
-
-<!-- Subtle paper grain overlay -->
+<g transform="translate(150 460) rotate(-22)"><circle cx="0" cy="0" r="20" fill="none" stroke="#6c543d" stroke-width="6"/><circle cx="0" cy="0" r="20" fill="#fff5d8" opacity="0.25"/><path d="M14 14 L28 28" stroke="#6c543d" stroke-width="8" stroke-linecap="round"/></g>
 <rect width="1024" height="600" filter="url(#paperGrain)" opacity="0.5" pointer-events="none"/>
 </svg>
