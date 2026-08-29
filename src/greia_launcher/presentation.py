@@ -44,7 +44,6 @@ from .main import (
     LauncherApplication,
     _activity_sources,
     _development_hal,
-    _set_x11_input_focus,
 )
 from .supervisor import ActivitySupervisor
 
@@ -224,7 +223,7 @@ class GreiaLauncherPresentation(LauncherApplication):
         screen = pygame.display.set_mode(default_size, display_flags)
         pygame.display.set_caption(self._display_caption())
         pygame.mouse.set_visible(False)
-        _set_x11_input_focus(screen, pygame)
+        self._shell_window_backend.after_window_created(pygame)
         clock = pygame.time.Clock()
         running = True
         last_display_size = screen.get_size()
