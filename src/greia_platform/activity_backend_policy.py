@@ -147,6 +147,7 @@ def migration_findings(activity_root: Path) -> tuple[BackendPolicyFinding, ...]:
 
 def _scan_tree(path: Path, tree: ast.AST) -> Iterable[BackendPolicyFinding]:
     findings: list[BackendPolicyFinding] = []
+    aliases = _import_aliases(tree)
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
@@ -199,7 +200,7 @@ def _scan_tree(path: Path, tree: ast.AST) -> Iterable[BackendPolicyFinding]:
                             )
                         )
         elif isinstance(node, ast.Subscript):
-            key = _environment_subscript_key(node)
+            key = _environment_subscript_key(node, aliases)
             if key in _FORBIDDEN_ENVIRONMENT_KEYS:
                 findings.append(
                     _finding(
@@ -211,7 +212,7 @@ def _scan_tree(path: Path, tree: ast.AST) -> Iterable[BackendPolicyFinding]:
                     )
                 )
         elif isinstance(node, ast.Call):
-            env_key = _environment_call_key(node)
+            env_key = _environment_call_key(node, aliases)
             if env_key in _FORBIDDEN_ENVIRONMENT_KEYS:
                 findings.append(
                     _finding(
@@ -222,7 +223,7 @@ def _scan_tree(path: Path, tree: ast.AST) -> Iterable[BackendPolicyFinding]:
                         f"Activity source must not read or set platform-owned {env_key}",
                     )
                 )
-            command = _static_process_command(node)
+            command = _static_process_command(node, aliases)
             if command in _FORBIDDEN_COMMANDS:
                 findings.append(
                     _finding(
@@ -233,7 +234,7 @@ def _scan_tree(path: Path, tree: ast.AST) -> Iterable[BackendPolicyFinding]:
                         f"host display/input command {command!r} is platform-owned",
                     )
                 )
-            library = _static_native_library_probe(node)
+            library = _static_native_library_probe(node, aliases)
             if library is not None and library.casefold() in _FORBIDDEN_NATIVE_LIBRARIES:
                 findings.append(
                     _finding(
@@ -257,10 +258,9 @@ def _scan_tree(path: Path, tree: ast.AST) -> Iterable[BackendPolicyFinding]:
                             f"Activity source must not address platform-owned device path {prefix}",
                         )
                     )
-        elif isinstance(node, ast.Attribute) and _attribute_chain(node)[:2] == (
-            "pygame",
-            "joystick",
-        ):
+        elif isinstance(node, (ast.Attribute, ast.Name)) and _resolved_chain(
+            node, aliases
+        )[:2] == ("pygame", "joystick"):
             findings.append(
                 _finding(
                     path,
@@ -273,14 +273,43 @@ def _scan_tree(path: Path, tree: ast.AST) -> Iterable[BackendPolicyFinding]:
     return _deduplicate(findings)
 
 
-def _environment_subscript_key(node: ast.Subscript) -> str | None:
-    if _attribute_chain(node.value) != ("os", "environ"):
+def _import_aliases(tree: ast.AST) -> dict[str, tuple[str, ...]]:
+    """Resolve simple import aliases so policy cannot be bypassed by renaming imports."""
+
+    aliases: dict[str, tuple[str, ...]] = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                target = tuple(alias.name.split("."))
+                if alias.asname:
+                    aliases[alias.asname] = target
+                else:
+                    root = target[0]
+                    aliases[root] = (root,)
+        elif isinstance(node, ast.ImportFrom) and not node.level and node.module:
+            module = tuple(node.module.split("."))
+            for alias in node.names:
+                if alias.name == "*":
+                    continue
+                local = alias.asname or alias.name
+                aliases[local] = module + (alias.name,)
+    return aliases
+
+
+def _environment_subscript_key(
+    node: ast.Subscript,
+    aliases: dict[str, tuple[str, ...]],
+) -> str | None:
+    if _resolved_chain(node.value, aliases) != ("os", "environ"):
         return None
     return _constant_text(node.slice)
 
 
-def _environment_call_key(node: ast.Call) -> str | None:
-    chain = _attribute_chain(node.func)
+def _environment_call_key(
+    node: ast.Call,
+    aliases: dict[str, tuple[str, ...]],
+) -> str | None:
+    chain = _resolved_chain(node.func, aliases)
     if chain in {
         ("os", "getenv"),
         ("os", "putenv"),
@@ -300,8 +329,11 @@ def _environment_call_key(node: ast.Call) -> str | None:
     return None
 
 
-def _static_process_command(node: ast.Call) -> str | None:
-    chain = _attribute_chain(node.func)
+def _static_process_command(
+    node: ast.Call,
+    aliases: dict[str, tuple[str, ...]],
+) -> str | None:
+    chain = _resolved_chain(node.func, aliases)
     if chain not in {
         ("os", "system"),
         ("subprocess", "Popen"),
@@ -323,8 +355,11 @@ def _static_process_command(node: ast.Call) -> str | None:
     return Path(text.split()[0]).name.casefold()
 
 
-def _static_native_library_probe(node: ast.Call) -> str | None:
-    chain = _attribute_chain(node.func)
+def _static_native_library_probe(
+    node: ast.Call,
+    aliases: dict[str, tuple[str, ...]],
+) -> str | None:
+    chain = _resolved_chain(node.func, aliases)
     if chain not in {
         ("ctypes", "CDLL"),
         ("ctypes", "PyDLL"),
@@ -339,6 +374,19 @@ def _static_native_library_probe(node: ast.Call) -> str | None:
     if name.startswith("lib") and ".so" in name:
         name = name.split(".so", 1)[0]
     return name
+
+
+def _resolved_chain(
+    node: ast.AST,
+    aliases: dict[str, tuple[str, ...]],
+) -> tuple[str, ...]:
+    chain = _attribute_chain(node)
+    if not chain:
+        return ()
+    target = aliases.get(chain[0])
+    if target is None:
+        return chain
+    return target + chain[1:]
 
 
 def _attribute_chain(node: ast.AST) -> tuple[str, ...]:
