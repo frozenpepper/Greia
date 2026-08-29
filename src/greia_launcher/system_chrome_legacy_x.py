@@ -152,7 +152,7 @@ class CtypesLegacyXChromeBridge:
         self._draw()
 
     def poll_pointer_release(self) -> tuple[int, int] | None:
-        x11, display, _window, _gc, _layout = self._require_prepared()
+        x11, display, _window, _gc, layout = self._require_prepared()
         event = _XEvent()
         selected: tuple[int, int] | None = None
         while x11.XPending(display) > 0:
@@ -165,7 +165,11 @@ class CtypesLegacyXChromeBridge:
                 and event.xbutton.button == self._LEFT_BUTTON
                 and selected is None
             ):
-                selected = (int(event.xbutton.x), int(event.xbutton.y))
+                protected = layout.protected_region
+                selected = (
+                    protected.x + int(event.xbutton.x),
+                    protected.y + int(event.xbutton.y),
+                )
         return selected
 
     def hide(self) -> None:
@@ -177,25 +181,32 @@ class CtypesLegacyXChromeBridge:
         x11, display, window, gc, layout = self._require_prepared()
         x11.XClearWindow(display, window)
         x11.XSetForeground(display, gc, self._black_pixel)
-        self._draw_button(x11, display, window, gc, layout.home_hitbox)
-        self._draw_home_glyph(x11, display, window, gc, layout.home_hitbox)
+        protected = layout.protected_region
+        self._draw_button(x11, display, window, gc, layout.home_hitbox, protected)
+        self._draw_home_glyph(x11, display, window, gc, layout.home_hitbox, protected)
         if layout.back_available:
-            self._draw_button(x11, display, window, gc, layout.back_hitbox)
-            self._draw_back_glyph(x11, display, window, gc, layout.back_hitbox)
+            self._draw_button(x11, display, window, gc, layout.back_hitbox, protected)
+            self._draw_back_glyph(x11, display, window, gc, layout.back_hitbox, protected)
         x11.XFlush(display)
 
     @staticmethod
-    def _draw_button(x11, display: int, window: int, gc: int, rect) -> None:
+    def _local_origin(rect, protected) -> tuple[int, int]:
+        return rect.x - protected.x, rect.y - protected.y
+
+    @classmethod
+    def _draw_button(cls, x11, display: int, window: int, gc: int, rect, protected) -> None:
+        local_x, local_y = cls._local_origin(rect, protected)
         inset = max(5, rect.width // 10)
-        x = rect.x + inset
-        y = rect.y + inset
+        x = local_x + inset
+        y = local_y + inset
         width = max(1, rect.width - inset * 2)
         height = max(1, rect.height - inset * 2)
         x11.XDrawArc(display, window, gc, x, y, width, height, 0, 360 * 64)
 
-    @staticmethod
-    def _draw_home_glyph(x11, display: int, window: int, gc: int, rect) -> None:
-        cx, cy = rect.x + rect.width // 2, rect.y + rect.height // 2
+    @classmethod
+    def _draw_home_glyph(cls, x11, display: int, window: int, gc: int, rect, protected) -> None:
+        local_x, local_y = cls._local_origin(rect, protected)
+        cx, cy = local_x + rect.width // 2, local_y + rect.height // 2
         span = max(8, rect.width // 5)
         roof_y = cy - span
         wall_y = cy + span
@@ -207,9 +218,10 @@ class CtypesLegacyXChromeBridge:
         x11.XDrawLine(display, window, gc, right, cy - 2, right, wall_y)
         x11.XDrawLine(display, window, gc, left, wall_y, right, wall_y)
 
-    @staticmethod
-    def _draw_back_glyph(x11, display: int, window: int, gc: int, rect) -> None:
-        cx, cy = rect.x + rect.width // 2, rect.y + rect.height // 2
+    @classmethod
+    def _draw_back_glyph(cls, x11, display: int, window: int, gc: int, rect, protected) -> None:
+        local_x, local_y = cls._local_origin(rect, protected)
+        cx, cy = local_x + rect.width // 2, local_y + rect.height // 2
         span = max(8, rect.width // 5)
         x11.XDrawLine(display, window, gc, cx + span, cy, cx - span, cy)
         x11.XDrawLine(display, window, gc, cx - span, cy, cx, cy - span)
