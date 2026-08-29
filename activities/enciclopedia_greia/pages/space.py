@@ -78,6 +78,11 @@ _TARGET_LABEL_KEYS = (
     "planet.neptune",
 )
 _TARGET_HIT_RADIUS = 32
+SOLAR_SYSTEM_CENTER = (500, 340)
+# x, y, width, height. Mirrors the non-rendering data-stage metadata in the
+# authored observatory SVG; the static source test keeps live and authored
+# geometry from drifting apart.
+SOLAR_SYSTEM_STAGE_BOUNDS = (128, 108, 744, 377)
 
 
 class SpacePage(EncyclopediaPage):
@@ -170,7 +175,7 @@ class SpacePage(EncyclopediaPage):
     def _draw_live_solar_system(self, surface: pygame.Surface, *, authored: bool) -> None:
         """Preserve the continuously orbiting teaching model over either backdrop."""
 
-        center = (500, 340)
+        center = SOLAR_SYSTEM_CENTER
         selected_id = _TARGET_IDS[self._selected]
         positions: dict[str, tuple[int, int, int]] = {
             "sun": (center[0], center[1], _TARGET_HIT_RADIUS)
