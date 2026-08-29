@@ -19,7 +19,7 @@ from greia_platform.activity_api import (
     get_theme,
     mark_activity_ready,
 )
-from greia_platform.activity_ui import ChildUiMetrics, is_home_clicked, mix
+from greia_platform.activity_ui import ChildUiMetrics, mix
 from greia_platform.localization import (
     ActivityLocaleSupport,
     LocalizedResources,
@@ -342,9 +342,6 @@ def main() -> int:
                         is_dragging_ball = True
                         ball_vel = [0.0, 0.0]
             elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-                if is_home_clicked(screen, event.pos):
-                    running = False
-                    continue
                 if is_dragging_ball:
                     is_dragging_ball = False
                     ball_vel[0] = max(-16.0, min(16.0, (ball_pos[0] - ball_last_pos[0]) * 0.9))
