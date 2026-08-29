@@ -45,6 +45,7 @@ activities/enciclopedia_greia/assets/source/history_gallery_time_trail.svg
 - rain cloud, tree, rainbow, volcano and ocean are distinct physical features of the same world;
 - the rain artwork received a second source pass because the tree canopy hid too much of the rain; near-layer rain streaks now keep the concept readable;
 - a later input review found the Rain and Tree pointer rectangles overlapped by 18 pixels; the Rain hit region was shortened while preserving the same authored center `(217,203)`, so the two regions now meet cleanly instead of resolving part of the visible tree to Rain;
+- the extra floating yellow corner dot from the prototype focus treatment was removed; authored selection now relies on the shared non-occluding halo only;
 - authored subject placement follows the destination semantics exactly;
 - Tito remains the runtime canonical presenter.
 
@@ -92,7 +93,8 @@ Machines  miniature gears too simplified / bridge too weak
 History   dinosaur silhouette ambiguous
 Earth     rain cue too hidden behind the tree canopy
 Earth     Rain and Tree pointer regions overlapped
-E3 static sections still used generic rectangular runtime focus rings
+E3 focus  translucent filled patch still washed authored objects toward UI cards
+Earth     extra floating yellow focus dot duplicated the selection cue
 ```
 
 Those were corrected before runtime acceptance. The current six-section source family now passes the intended first recognizability/composition check:
@@ -107,6 +109,8 @@ History          T-rex/fossil/mammoth/cave/pyramid sequence readable
 ```
 
 The current maintainer-local contact sheet is `encyclopedia_e3_section_source_contact_v5.png`; it is source-review evidence only and is deliberately not committed as Simulator evidence.
+
+A later local focus-treatment preview was also inspected against the actual Earth/Body/Machines/History authored PNGs. The shared focus treatment now draws only two elliptical perimeter strokes on a transparent overlay. It does **not** paint a translucent filled rectangle over the exhibit, so the authored subject retains its own color, texture and depth. That preview remains **SOURCE / DESKTOP VISUAL REVIEW**, not Simulator evidence.
 
 ## Geometry and focus contracts
 
@@ -132,20 +136,39 @@ Space cannot use fixed target centers because its Sun, planets and Moon move con
 - Body/Machines keep deliberately generous authored-object footprints instead of regressing to the old 86×86 prototype hotspots;
 - all four authored pages use `draw_focus_patch(...)` when the authored scene is present, while the old rectangular `focus_ring(...)` remains only as fail-soft procedural-state treatment.
 
+`tests/test_encyclopedia_focus_treatment.py` now pins the visual implementation detail that matters here:
+
+- `draw_focus_patch(...)` is outline-only and uses ellipse strokes rather than a filled rectangular overlay;
+- the historical translucent yellow fill cannot silently return;
+- Earth does not add a second floating corner dot on top of the shared authored focus cue.
+
 This keeps runtime focus visually integrated with the scene rather than reintroducing generic UI cards over authored illustrations.
 
 ## Exact-source Simulator evidence contract
 
-The E3 runtime review is now source-bound rather than relying on manually transcribed SHAs.
+The E3 runtime review is source-bound rather than relying on manually transcribed SHAs.
 
-`tools/encyclopedia_v01_section_review_capture.py` requires a clean tracked tree, records starting `HEAD` and SHA-256 for every Encyclopedia runtime PNG, runs exactly Home + the six sections, and fails if source or runtime-art hashes change during capture. It writes:
+`tools/encyclopedia_v01_section_review_capture.py` now requires a fully clean checkout including untracked files, except for paths ignored by repository policy such as `tmp/`. It records starting `HEAD`, SHA-256 for every Encyclopedia runtime PNG, and the Git blob ID for every runtime PNG committed in that `HEAD`.
+
+Before the first Simulator session, every one of the eleven expected runtime PNGs must therefore satisfy both:
+
+```text
+file exists in the working tree
+working-tree bytes == committed HEAD blob bytes
+```
+
+This closes the loophole where an untracked or merely staged five-PNG E3 pack could otherwise be captured and incorrectly attributed to a Git SHA that did not actually contain those binaries.
+
+The capture then runs exactly Home + the six sections and fails if source, runtime-art hashes, or committed runtime-art blob identities change during capture. It writes:
 
 ```text
 source-sha.txt
 capture-manifest.json
 ```
 
-`tools/encyclopedia_v01_section_review.py` accepts only a `PASS` manifest with exactly the seven required jobs and the complete eleven-PNG art inventory, and preserves that provenance beside the curated screenshots/contact sheet.
+The manifest records source SHA, locale, viewport, interface size, selected/completed jobs, runtime-art SHA-256 values, runtime-art Git blob IDs and status.
+
+`tools/encyclopedia_v01_section_review.py` accepts only a `PASS` manifest with exactly the seven required jobs, the complete eleven-PNG art inventory, and valid Git blob IDs for all eleven files, and preserves that provenance beside the curated screenshots/contact sheet.
 
 `tests/test_encyclopedia_e3_review_tools.py` pins that evidence contract without launching Pygame.
 
@@ -170,22 +193,22 @@ golden runtime pack     6 / 6 when runtime art exists
 E3 section runtime pack 0 / 5 or 5 / 5 — never partial
 ```
 
-This allows source integration to advance without pretending missing generated images are current runtime evidence.
+A recoverable maintainer-local nine-file runtime-art staging bundle also exists outside the repository. It contains the four changed golden-master PNGs plus the five E3 section PNGs; Earth and Body were refreshed to the latest source-reviewed renders after the earlier staging bundle was found stale. This staging bundle is explicitly **not** acceptance evidence and is not allowed to satisfy the exact-committed-art capture precondition.
 
 ## Current gate
 
 ```text
 E1 visual architecture                         COMPLETE
 E2/E2R owner visual direction                  APPROVED
-latest corrected E2 runtime PNG rebuild        PENDING
+latest corrected E2 runtime PNG rebuild        STAGED LOCALLY / NOT COMMITTED
 latest corrected E2 exact-SHA Simulator proof  PENDING
 E3 six-section source direction                IMPLEMENTED / SOURCE-REVIEWED
 E3 static visual/input geometry contract       IMPLEMENTED
 E3 Space live-stage geometry contract          IMPLEMENTED
 E3 static hit-region non-overlap contract      IMPLEMENTED
-E3 authored scene-native focus treatment       IMPLEMENTED
-E3 exact-source capture provenance contract    IMPLEMENTED
-E3 five new runtime PNGs                       PENDING
+E3 non-occluding scene focus treatment         IMPLEMENTED
+E3 exact-source + committed-art provenance      IMPLEMENTED
+E3 five new runtime PNGs                       STAGED LOCALLY / NOT COMMITTED
 E3 six-section Simulator/contact-sheet review  PENDING
 E4 factual-entry migration                     BLOCKED
 ```
