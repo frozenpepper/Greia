@@ -5,6 +5,10 @@ Authoring-only tool. Runtime Greia images never depend on CairoSVG or SVG
 rasterization. ``--check`` rebuilds to a temporary directory and byte-compares
 against the committed runtime pack. A CairoSVG/toolchain change that alters the
 build product therefore requires an intentional rebuild and commit.
+
+The visual migration is deliberately tranche-based. ``golden`` owns the six
+accepted golden-master renditions and ``sections`` owns the five E3 section
+worlds. The default ``all`` group produces both tranches together.
 """
 from __future__ import annotations
 
@@ -23,7 +27,7 @@ except ImportError as exc:  # pragma: no cover - maintainer setup guard
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "activities" / "enciclopedia_greia" / "assets" / "source"
 RUNTIME = ROOT / "activities" / "enciclopedia_greia" / "assets" / "runtime"
-NAMES = (
+GOLDEN_MASTER_NAMES = (
     "home_discovery_book",
     "animals_field_table",
     "lion_savanna",
@@ -31,6 +35,14 @@ NAMES = (
     "gears_workbench",
     "pyramids_diorama",
 )
+SECTION_NAMES = (
+    "space_gallery_observatory",
+    "earth_gallery_landscape",
+    "body_gallery_discovery_room",
+    "machines_gallery_workbench",
+    "history_gallery_time_trail",
+)
+NAMES = GOLDEN_MASTER_NAMES + SECTION_NAMES
 REFERENCE_SIZE = (1024, 600)
 
 
@@ -51,21 +63,29 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def build() -> int:
+def _selected_names(group: str) -> tuple[str, ...]:
+    if group == "golden":
+        return GOLDEN_MASTER_NAMES
+    if group == "sections":
+        return SECTION_NAMES
+    return NAMES
+
+
+def build(names: tuple[str, ...]) -> int:
     total = 0
-    for name in NAMES:
+    for name in names:
         target = _build_one(name, RUNTIME)
         size = target.stat().st_size
         total += size
         print(f"built {target.relative_to(ROOT)} ({size} bytes) sha256={_sha256(target)}")
-    print(f"built {len(NAMES)} runtime PNGs ({total} bytes total)")
+    print(f"built {len(names)} runtime PNGs ({total} bytes total)")
     return 0
 
 
-def check() -> int:
+def check(names: tuple[str, ...]) -> int:
     missing = [
         RUNTIME / f"{name}.png"
-        for name in NAMES
+        for name in names
         if not (RUNTIME / f"{name}.png").is_file()
     ]
     if missing:
@@ -75,7 +95,7 @@ def check() -> int:
 
     with TemporaryDirectory(prefix="greia-encyclopedia-art-") as temporary:
         rebuilt_root = Path(temporary)
-        for name in NAMES:
+        for name in names:
             rebuilt = _build_one(name, rebuilt_root)
             committed = RUNTIME / f"{name}.png"
             if rebuilt.read_bytes() != committed.read_bytes():
@@ -85,7 +105,7 @@ def check() -> int:
                 )
                 return 1
             print(f"PASS {name} sha256={_sha256(committed)}")
-    print(f"PASS {len(NAMES)} Encyclopedia runtime PNGs match editable masters")
+    print(f"PASS {len(names)} Encyclopedia runtime PNGs match editable masters")
     return 0
 
 
@@ -96,12 +116,19 @@ def _parse_args() -> argparse.Namespace:
         action="store_true",
         help="rebuild temporarily and verify committed runtime PNGs without modifying them",
     )
+    parser.add_argument(
+        "--group",
+        choices=("all", "golden", "sections"),
+        default="all",
+        help="build/check all art, only the six golden masters, or only the five E3 section worlds",
+    )
     return parser.parse_args()
 
 
 def main() -> int:
     args = _parse_args()
-    return check() if args.check else build()
+    names = _selected_names(args.group)
+    return check(names) if args.check else build(names)
 
 
 if __name__ == "__main__":
