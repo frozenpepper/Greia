@@ -9,11 +9,11 @@ import pygame
 
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
-    from ..enciclopedia_presentation import draw_authored_scene, draw_title
+    from ..enciclopedia_presentation import draw_authored_scene, draw_focus_patch, draw_title
     from .common import draw_centered_text, draw_presenter, focus_ring
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
-    from enciclopedia_presentation import draw_authored_scene, draw_title
+    from enciclopedia_presentation import draw_authored_scene, draw_focus_patch, draw_title
     from pages.common import draw_centered_text, draw_presenter, focus_ring
 
 
@@ -121,7 +121,10 @@ class HistoryPage(EncyclopediaPage):
 
         for index, (moment, rect) in enumerate(zip(MOMENTS, self._rects)):
             active = index == self._selected or index == self._hovered
-            focus_ring(surface, rect, active)
+            if authored:
+                draw_focus_patch(surface, rect, active=active, radius=20)
+            else:
+                focus_ring(surface, rect, active)
             if authored:
                 draw_centered_text(
                     surface,
