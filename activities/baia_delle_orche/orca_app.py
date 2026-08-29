@@ -9,7 +9,6 @@ from greia_platform.activity_api import (
     activity_stop_requested,
     mark_activity_ready,
 )
-from greia_platform.activity_ui import is_home_clicked
 from greia_platform.pygame_canvas import PygameReferenceCanvas
 
 try:
@@ -206,11 +205,6 @@ class OrcaBayActivity:
                         w, h = self.screen.get_size()
                         pos = (int(event.x * w), int(event.y * h))
                     if pos is None:
-                        continue
-
-                    # Platform Protected Home/Back navigation
-                    if is_home_clicked(self.screen, pos):
-                        self._running = False
                         continue
 
                     pointer = self.canvas.pointer(pos)
