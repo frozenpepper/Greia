@@ -5,6 +5,9 @@ from pathlib import Path
 
 from greia_launcher.runtime_adapter import PythonRuntimeAdapter, PythonRuntimePolicy, RuntimeManager
 from greia_platform.activities import ActivityRegistry, RuntimeCatalogue
+from greia_platform.activity_backend_policy import (
+    assert_python_activity_backend_independent,
+)
 from greia_platform.assets import AssetCatalogue
 from greia_platform.customization import ThemePalette
 from greia_platform.device_capabilities import DeviceCapabilityService
@@ -36,6 +39,8 @@ def main() -> int:
     ).discover()
     for activity in activities:
         runtime_manager.validate_package(activity)
+        if activity.runtime_type == "python":
+            assert_python_activity_backend_independent(activity.root)
 
     assets = AssetCatalogue.load(root / "assets" / "catalog" / "core_icons_v1.toml")
     palette = ThemePalette.load(root / "runtime" / "theme-defaults.toml")
