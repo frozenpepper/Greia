@@ -5,7 +5,6 @@ import time
 import pygame
 
 from greia_platform.activity_api import activity_stop_requested, mark_activity_ready
-from greia_platform.activity_ui import is_home_clicked
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 
 try:
@@ -98,9 +97,6 @@ class ClinicActivity:
         return False
 
     def _handle_pointer(self, screen_position: tuple[int, int]) -> bool:
-        if is_home_clicked(self._screen, screen_position):
-            self._running = False
-            return False
         if not _is_safe_point(self._screen, screen_position):
             return False
 
