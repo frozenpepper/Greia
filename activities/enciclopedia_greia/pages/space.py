@@ -10,11 +10,11 @@ import pygame
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import draw_authored_scene
-    from .common import draw_centered_text, draw_presenter, focus_ring
+    from .common import draw_centered_text, draw_presenter
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import draw_authored_scene
-    from pages.common import draw_centered_text, draw_presenter, focus_ring
+    from pages.common import draw_centered_text, draw_presenter
 
 
 @dataclass(frozen=True, slots=True)
@@ -145,9 +145,12 @@ class SpacePage(EncyclopediaPage):
         )
         self._draw_live_solar_system(surface, authored=authored)
 
+        # The selected planet/Moon itself owns the bright focus indication.
+        # This plaque is only reading support, so keep it visually quiet rather
+        # than drawing a second permanent yellow selection ring around text.
         label_rect = pygame.Rect(350, 500, 300, 55)
         pygame.draw.rect(surface, (248, 244, 222), label_rect, border_radius=20)
-        focus_ring(surface, label_rect, True)
+        pygame.draw.rect(surface, (92, 82, 72), label_rect, 2, border_radius=20)
         draw_centered_text(
             surface,
             self.context.typography,
