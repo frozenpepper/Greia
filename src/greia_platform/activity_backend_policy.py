@@ -131,7 +131,7 @@ def scan_python_activity_backend_policy(activity_root: Path) -> tuple[BackendPol
             raise ActivityBackendPolicyError(
                 f"cannot inspect Activity backend policy for {path}: {exc}"
             ) from exc
-        findings.extend(_scan_tree(path, tree))
+        findings.extend(scan_python_source_tree_backend_policy(path, tree))
     return tuple(
         sorted(
             findings,
@@ -146,36 +146,18 @@ def scan_python_activity_backend_policy(activity_root: Path) -> tuple[BackendPol
     )
 
 
-def assert_python_activity_backend_independent(activity_root: Path) -> None:
-    """Fail when Activity source contains forbidden backend authority."""
+def scan_python_source_tree_backend_policy(
+    path: Path,
+    tree: ast.AST,
+) -> tuple[BackendPolicyFinding, ...]:
+    """Inspect one already-parsed Python source tree.
 
-    blockers = tuple(
-        finding
-        for finding in scan_python_activity_backend_policy(activity_root)
-        if finding.severity is BackendFindingSeverity.BLOCKER
-    )
-    if not blockers:
-        return
-    rendered = "; ".join(
-        f"{finding.path}:{finding.line} [{finding.code}] {finding.detail}"
-        for finding in blockers
-    )
-    raise ActivityBackendPolicyError(
-        "Activity source must be display/input-backend independent: " + rendered
-    )
+    Runtime adapters use this seam while they already hold the AST so launch
+    validation does not perform a second source read/parse merely to enforce
+    the R7 policy. Validation-time efficiency matters on Greia's low-resource
+    floor even though this code never runs in a render/input hot path.
+    """
 
-
-def migration_findings(activity_root: Path) -> tuple[BackendPolicyFinding, ...]:
-    """Return R7 compatibility debt without weakening the hard blocker gate."""
-
-    return tuple(
-        finding
-        for finding in scan_python_activity_backend_policy(activity_root)
-        if finding.severity is BackendFindingSeverity.MIGRATION
-    )
-
-
-def _scan_tree(path: Path, tree: ast.AST) -> Iterable[BackendPolicyFinding]:
     findings: list[BackendPolicyFinding] = []
     aliases = _import_aliases(tree)
     for node in ast.walk(tree):
@@ -312,6 +294,35 @@ def _scan_tree(path: Path, tree: ast.AST) -> Iterable[BackendPolicyFinding]:
                 )
             )
     return _deduplicate(findings)
+
+
+def assert_python_activity_backend_independent(activity_root: Path) -> None:
+    """Fail when Activity source contains forbidden backend authority."""
+
+    blockers = tuple(
+        finding
+        for finding in scan_python_activity_backend_policy(activity_root)
+        if finding.severity is BackendFindingSeverity.BLOCKER
+    )
+    if not blockers:
+        return
+    rendered = "; ".join(
+        f"{finding.path}:{finding.line} [{finding.code}] {finding.detail}"
+        for finding in blockers
+    )
+    raise ActivityBackendPolicyError(
+        "Activity source must be display/input-backend independent: " + rendered
+    )
+
+
+def migration_findings(activity_root: Path) -> tuple[BackendPolicyFinding, ...]:
+    """Return R7 compatibility debt without weakening the hard blocker gate."""
+
+    return tuple(
+        finding
+        for finding in scan_python_activity_backend_policy(activity_root)
+        if finding.severity is BackendFindingSeverity.MIGRATION
+    )
 
 
 def _import_aliases(tree: ast.AST) -> dict[str, tuple[str, ...]]:
@@ -491,4 +502,5 @@ __all__ = [
     "assert_python_activity_backend_independent",
     "migration_findings",
     "scan_python_activity_backend_policy",
+    "scan_python_source_tree_backend_policy",
 ]
