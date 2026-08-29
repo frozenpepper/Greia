@@ -115,7 +115,12 @@ Read:
 ```text
 docs/adr/0019-platform-owned-activity-system-navigation.md
 docs/product/ACTIVITY_SYSTEM_NAVIGATION.md
+docs/testing/2026-08-29_R7_R73_TRUSTED_SYSTEM_CHROME_SOURCE_AND_ACER_ACCEPTANCE.md
+src/greia_launcher/system_chrome.py
+src/greia_launcher/trusted_chrome_supervisor.py
 ```
+
+The real Home/Back path is platform authority, not an Activity helper. Current R7.3 source composes a Legacy-X migration backend through `SystemChromeCoordinator`; do not move trusted navigation back into Activity drawing/event code. The installed primary child shell and installed fallback must both preserve trusted chrome. A Legacy-X overlay PASS is migration evidence only and does not supersede ADR 0014's direct/appliance target.
 
 ### Input, controller, pointer or touch ownership
 
@@ -138,22 +143,41 @@ docs/product/RESPONSIVE_UI_AND_DISPLAY_LAYOUT.md
 docs/design/GREIA_ACTIVITY_CANVAS_AND_VIEWPORT_AUTHORING.md
 ```
 
-### R7 display/session backend or backend-independence work
+### R7 display/session backend, trusted chrome or backend-independence work
 
 Read:
 
 ```text
+docs/adr/0014-greia-identity-arm-parity-and-direct-graphics-direction.md
 docs/adr/0019-platform-owned-activity-system-navigation.md
 docs/adr/0020-runtime-neutral-input-profiles-and-controller-support.md
 docs/reviews/2026-08-29_R7_ACTIVITY_BACKEND_INDEPENDENCE_AND_DISPLAY_SESSION_REVIEW.md
+docs/reviews/2026-08-29_R7_R72_LEGACY_X_CONTAINMENT_INVENTORY.md
+docs/testing/2026-08-29_R7_R72_LEGACY_X_CONTAINMENT_SOURCE_AND_ACER_ACCEPTANCE.md
+docs/testing/2026-08-29_R7_R73_TRUSTED_SYSTEM_CHROME_SOURCE_AND_ACER_ACCEPTANCE.md
 docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md
 src/greia_launcher/display_session.py
 src/greia_launcher/display_session_legacy_x.py
 src/greia_launcher/system_chrome.py
+src/greia_launcher/system_chrome_legacy_x.py
+src/greia_launcher/trusted_chrome_supervisor.py
+src/greia_launcher/trusted_presentation.py
 src/greia_platform/activity_backend_policy.py
 ```
 
-Preserve the existing seams rather than inventing a parallel platform layer. `DisplaySessionCoordinator` owns shell/Activity surface lifecycle; concrete backends own Xorg/Wayland/KMS-private mechanics. Activity source stays backend-neutral and may continue using ordinary SDL/Pygame rendering/performance techniques. `tools/audit_activity_backend_independence.py` inventories blockers and temporary migration debt. A backend is not acceptable merely because it is architecturally tidy: measure the exact user-visible path and preserve the Acer-class performance envelope.
+Preserve the existing seams rather than inventing a parallel platform layer:
+
+- `DisplaySessionCoordinator` owns Shell/Activity surface lifecycle;
+- concrete display backends own Xorg/direct/compositor-private transport mechanics;
+- `SystemChromeCoordinator` owns mandatory Home/optional Back semantic authority;
+- `TrustedChromeActivitySupervisor` binds chrome to the same Activity lifecycle and graceful/forced stop authority;
+- installed primary and fallback launcher compositions must both use trusted chrome;
+- Activity source stays backend-neutral and may continue using ordinary SDL/Pygame rendering/performance techniques;
+- `tools/audit_activity_backend_independence.py` inventories blockers and temporary migration debt.
+
+The current `LegacyXSystemChromeBackend` is intentionally a tiny migration adapter: one launcher-process window limited to the protected region, event-driven redraw, no Activity pixel copies and no second Pygame process. Do not expand it into a desktop/window manager or call it final third-party isolation. Shared X11 remains a migration limitation under ADR 0014.
+
+Performance rules for R7 are mandatory: trusted chrome must stay bounded/invalidation-driven, direct Activity SDL rendering must survive, Painting/Writing high-rate paths must not be proxied, and a backend is not acceptable merely because it is architecturally tidy. Measure exact CPU/RSS/latency/render behavior on the Acer floor.
 
 ### Activity runtime, package, permissions, trust or lifecycle integration
 
@@ -360,6 +384,12 @@ docs/testing/2026-08-09_DEVELOPER_REMOTE_CONTROL.md
 docs/testing/2026-08-15_ACER_REMOTE_AGENT_ACCEPTANCE.md
 ```
 
+For current R7 trusted-chrome acceptance also read:
+
+```text
+docs/testing/2026-08-29_R7_R73_TRUSTED_SYSTEM_CHROME_SOURCE_AND_ACER_ACCEPTANCE.md
+```
+
 If the task touches microphone processing, also use the current audio-service physical evidence/protocol above. If it touches boot/reboot/recovery, `skills/greia-os-work/BOOT.md` is additionally mandatory.
 
 ### Visual-system or asset integration work
@@ -385,7 +415,7 @@ Before calling substantive OS/platform work done, record:
 6. If audio/microphone changed: does audio.basic still receive only the platform route, does Parent OFF still apply on next open, and is readiness truthful?
 7. If prerecorded speech was produced: did it go through VoiceEngine, retain human-review authority, and avoid adding child-runtime model dependencies?
 8. Were required active-plan/HANDOVER/manual/skill updates made?
-9. If display/session/input changed: is Activity source still backend-neutral, is trusted authority outside Activities, and were existing low-resource optimization opportunities preserved rather than hidden behind a slow common path?
+9. If display/session/input changed: is Activity source still backend-neutral, is trusted authority outside Activities, are installed primary/fallback paths both protected, and were existing low-resource optimization opportunities preserved rather than hidden behind a slow common path?
 ```
 
 Do not load broad architecture documents just because they exist. Start with this router, read the narrow authorities for the actual task, and expand only when the change genuinely crosses subsystem boundaries.
