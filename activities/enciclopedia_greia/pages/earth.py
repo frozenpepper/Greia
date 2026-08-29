@@ -25,7 +25,11 @@ class EarthDestination:
 
 
 DESTINATIONS = (
-    EarthDestination("rain", "earth.rain", pygame.Rect(105, 138, 225, 130)),
+    # Preserve the authored rain center (217,203) while ending exactly above
+    # the Tree region. The previous 130px height overlapped the tree canopy and
+    # made part of the visible tree resolve to Rain because pointer hits are
+    # checked in destination order.
+    EarthDestination("rain", "earth.rain", pygame.Rect(105, 156, 225, 94)),
     EarthDestination("tree", "earth.tree", pygame.Rect(120, 250, 180, 205)),
     EarthDestination("rainbow", "earth.rainbow", pygame.Rect(340, 210, 270, 205)),
     EarthDestination("volcano", "earth.volcano", pygame.Rect(645, 278, 190, 185)),
