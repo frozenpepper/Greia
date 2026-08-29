@@ -58,6 +58,15 @@ class EncyclopediaE3ReviewToolTests(unittest.TestCase):
         self.assertEqual(tuple(shot_numbers), EXPECTED_REVIEW_TAGS)
         self.assertEqual(tuple(shot_numbers.values()), tuple(range(1, 8)))
 
+    def test_capture_requires_the_complete_eleven_png_runtime_pack(self) -> None:
+        source = CAPTURE_TOOL.read_text(encoding="utf-8")
+        tree = ast.parse(source)
+        runtime_art = set(ast.literal_eval(self._assignment(tree, "EXPECTED_RUNTIME_ART")))
+        self.assertEqual(runtime_art, EXPECTED_RUNTIME_ART)
+        self.assertIn("present_art != EXPECTED_RUNTIME_ART", source)
+        self.assertIn("missing runtime art", source)
+        self.assertIn("unexpected runtime art", source)
+
     def test_capture_evidence_is_bound_to_one_clean_exact_source_tree(self) -> None:
         source = CAPTURE_TOOL.read_text(encoding="utf-8")
         required_fragments = (
