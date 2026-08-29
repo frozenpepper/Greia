@@ -22,27 +22,50 @@ from typing import Final
 
 import pygame
 
-from ramp_content import (
-    LEVELS,
-    MARBLE_COLOR,
-    MARBLE_OUTLINE,
-    MARBLE_RADIUS,
-    MARBLE_START,
-    PLAYFIELD_BOTTOM,
-    PLAYFIELD_LEFT,
-    PLAYFIELD_RIGHT,
-    PLAYFIELD_TOP,
-    REFERENCE_HEIGHT,
-    REFERENCE_WIDTH,
-    SPRING_RADIUS,
-    TOOL_BUMPER_RADIUS,
-    TOOL_CATALOGUE,
-    TOOL_PALETTE_TOP,
-    TOOL_RADIUS,
-    ToolKind,
-    Level,
-    PlacedTool,
-)
+if __package__:
+    from .ramp_content import (
+        LEVELS,
+        MARBLE_COLOR,
+        MARBLE_OUTLINE,
+        MARBLE_RADIUS,
+        MARBLE_START,
+        PLAYFIELD_BOTTOM,
+        PLAYFIELD_LEFT,
+        PLAYFIELD_RIGHT,
+        PLAYFIELD_TOP,
+        REFERENCE_HEIGHT,
+        REFERENCE_WIDTH,
+        SPRING_RADIUS,
+        TOOL_BUMPER_RADIUS,
+        TOOL_CATALOGUE,
+        TOOL_PALETTE_TOP,
+        TOOL_RADIUS,
+        ToolKind,
+        Level,
+        PlacedTool,
+    )
+else:
+    from ramp_content import (
+        LEVELS,
+        MARBLE_COLOR,
+        MARBLE_OUTLINE,
+        MARBLE_RADIUS,
+        MARBLE_START,
+        PLAYFIELD_BOTTOM,
+        PLAYFIELD_LEFT,
+        PLAYFIELD_RIGHT,
+        PLAYFIELD_TOP,
+        REFERENCE_HEIGHT,
+        REFERENCE_WIDTH,
+        SPRING_RADIUS,
+        TOOL_BUMPER_RADIUS,
+        TOOL_CATALOGUE,
+        TOOL_PALETTE_TOP,
+        TOOL_RADIUS,
+        ToolKind,
+        Level,
+        PlacedTool,
+    )
 
 
 PALETTE_BUTTON_SIZE: Final = 96

@@ -17,7 +17,10 @@ from typing import Any
 
 from greia_platform.activity_api import emit_activity_event, get_storage
 
-from ramp_content import ProgressState, empty_progress
+if __package__:
+    from .ramp_content import ProgressState, empty_progress
+else:
+    from ramp_content import ProgressState, empty_progress
 
 
 STORAGE_KEY = "la_discesa_della_biglia.progress.v1"

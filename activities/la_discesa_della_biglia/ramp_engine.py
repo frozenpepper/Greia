@@ -17,26 +17,48 @@ import math
 from dataclasses import dataclass, field
 from typing import Final
 
-from ramp_content import (
-    FAN_WIND,
-    FRICTION_PER_SECOND,
-    GRAVITY,
-    MARBLE_RADIUS,
-    MARBLE_START,
-    PHYSICS_SUBSTEPS,
-    PLAYFIELD_BOTTOM,
-    PLAYFIELD_LEFT,
-    PLAYFIELD_RIGHT,
-    PLAYFIELD_TOP,
-    RESTITUTION,
-    SPRING_IMPULSE,
-    SPRING_RADIUS,
-    TOOL_BUMPER_RADIUS,
-    TOOL_RADIUS,
-    Level,
-    PlacedTool,
-    ToolKind,
-)
+if __package__:
+    from .ramp_content import (
+        FAN_WIND,
+        FRICTION_PER_SECOND,
+        GRAVITY,
+        MARBLE_RADIUS,
+        MARBLE_START,
+        PHYSICS_SUBSTEPS,
+        PLAYFIELD_BOTTOM,
+        PLAYFIELD_LEFT,
+        PLAYFIELD_RIGHT,
+        PLAYFIELD_TOP,
+        RESTITUTION,
+        SPRING_IMPULSE,
+        SPRING_RADIUS,
+        TOOL_BUMPER_RADIUS,
+        TOOL_RADIUS,
+        Level,
+        PlacedTool,
+        ToolKind,
+    )
+else:
+    from ramp_content import (
+        FAN_WIND,
+        FRICTION_PER_SECOND,
+        GRAVITY,
+        MARBLE_RADIUS,
+        MARBLE_START,
+        PHYSICS_SUBSTEPS,
+        PLAYFIELD_BOTTOM,
+        PLAYFIELD_LEFT,
+        PLAYFIELD_RIGHT,
+        PLAYFIELD_TOP,
+        RESTITUTION,
+        SPRING_IMPULSE,
+        SPRING_RADIUS,
+        TOOL_BUMPER_RADIUS,
+        TOOL_RADIUS,
+        Level,
+        PlacedTool,
+        ToolKind,
+    )
 
 
 @dataclass

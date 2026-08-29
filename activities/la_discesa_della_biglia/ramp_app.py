@@ -25,11 +25,7 @@ from greia_platform.activity_api import (
     get_theme,
     mark_activity_ready,
 )
-from greia_platform.activity_ui import (
-    ChildUiMetrics,
-    draw_system_chrome_overlay,
-    is_home_clicked,
-)
+from greia_platform.activity_ui import ChildUiMetrics
 from greia_platform.child_text import display_text
 from greia_platform.localization import (
     ActivityLocaleSupport,
@@ -38,21 +34,38 @@ from greia_platform.localization import (
 )
 from greia_platform.typography import FontRole, GreiaTypography
 
-from ramp_audio import RampAudio
-from ramp_content import (
-    LEVELS,
-    PLAYFIELD_BOTTOM,
-    PLAYFIELD_LEFT,
-    PLAYFIELD_RIGHT,
-    PLAYFIELD_TOP,
-    REFERENCE_HEIGHT,
-    REFERENCE_WIDTH,
-    TOOL_CATALOGUE,
-    PlacedTool,
-)
-from ramp_engine import RampEngine
-from ramp_renderer import RampRenderer
-from ramp_services import RampEvents, RampStorage
+if __package__:
+    from .ramp_audio import RampAudio
+    from .ramp_content import (
+        LEVELS,
+        PLAYFIELD_BOTTOM,
+        PLAYFIELD_LEFT,
+        PLAYFIELD_RIGHT,
+        PLAYFIELD_TOP,
+        REFERENCE_HEIGHT,
+        REFERENCE_WIDTH,
+        TOOL_CATALOGUE,
+        PlacedTool,
+    )
+    from .ramp_engine import RampEngine
+    from .ramp_renderer import RampRenderer
+    from .ramp_services import RampEvents, RampStorage
+else:
+    from ramp_audio import RampAudio
+    from ramp_content import (
+        LEVELS,
+        PLAYFIELD_BOTTOM,
+        PLAYFIELD_LEFT,
+        PLAYFIELD_RIGHT,
+        PLAYFIELD_TOP,
+        REFERENCE_HEIGHT,
+        REFERENCE_WIDTH,
+        TOOL_CATALOGUE,
+        PlacedTool,
+    )
+    from ramp_engine import RampEngine
+    from ramp_renderer import RampRenderer
+    from ramp_services import RampEvents, RampStorage
 
 
 PALETTE_TAPBOX_PADDING: Final = 8
@@ -119,9 +132,6 @@ class RampApp:
                         *self.screen.get_size()
                     )
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    if is_home_clicked(self.screen, event.pos):
-                        running = False
-                        continue
                     self._handle_click(event.pos)
                 elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                     self._handle_release(event.pos)
@@ -295,7 +305,6 @@ class RampApp:
             and self.finished_banner_timer <= 0
         ):
             self._advance_after_banner()
-        draw_system_chrome_overlay(self.screen)
 
     def _advance_after_banner(self) -> None:
         if self.last_outcome == "hit":

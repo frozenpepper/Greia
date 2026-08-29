@@ -17,7 +17,10 @@ from __future__ import annotations
 
 import pygame
 
-from ramp_app import RampApp
+if __package__:
+    from .ramp_app import build_app
+else:
+    from ramp_app import build_app
 
 
 def main() -> int:
@@ -28,8 +31,6 @@ def main() -> int:
             (1024, 600), pygame.RESIZABLE
         )
     pygame.mouse.set_visible(True)
-    app = RampApp.__class__  # avoid an unused import lint
-    from ramp_app import build_app
     app = build_app(screen, locale="it")
     return app.run()
 
