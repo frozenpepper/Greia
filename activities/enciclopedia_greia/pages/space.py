@@ -1,4 +1,4 @@
-"""Space section page: a lightweight continuously orbiting Solar System."""
+"""Space section: a live Solar System inside an authored observatory."""
 
 from __future__ import annotations
 
@@ -9,9 +9,11 @@ import pygame
 
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
+    from ..enciclopedia_presentation import draw_authored_scene
     from .common import draw_centered_text, draw_presenter, focus_ring
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
+    from enciclopedia_presentation import draw_authored_scene
     from pages.common import draw_centered_text, draw_presenter, focus_ring
 
 
@@ -38,9 +40,6 @@ PLANETS = (
     Planet("neptune", "planet.neptune", 340, 134, 10, 0.20, (82, 116, 201), 5.4),
 )
 
-# Runtime navigation is explicit and contains only pages that genuinely exist.
-# The section itself remains a visual Solar System model rather than a file or
-# taxonomy browser; subject behavior stays inside each destination page.
 IMPLEMENTED_ENTRY_IDS = {
     "sun": "space.sun",
     "mercury": "space.mercury",
@@ -54,8 +53,6 @@ IMPLEMENTED_ENTRY_IDS = {
     "neptune": "space.neptune",
 }
 
-# Moon is a satellite, not a planet, so semantic navigation order is explicit
-# rather than being inferred from the planet drawing tuple.
 _TARGET_IDS = (
     "sun",
     "mercury",
@@ -125,25 +122,60 @@ class SpacePage(EncyclopediaPage):
             self.context.host.open_page(page_id)
 
     def draw(self, surface: pygame.Surface) -> None:
+        authored = draw_authored_scene(
+            surface,
+            self.context.visuals,
+            "encyclopedia.space.gallery.observatory",
+        )
+        if not authored:
+            self._draw_fallback_background(surface)
+
+        draw_centered_text(
+            surface,
+            self.context.typography,
+            self.context.resources.text("section.space"),
+            center=(500, 95),
+            size=40,
+            color=(247, 242, 214),
+        )
+        self._draw_live_solar_system(surface, authored=authored)
+
+        label_rect = pygame.Rect(350, 500, 300, 55)
+        pygame.draw.rect(surface, (248, 244, 222), label_rect, border_radius=20)
+        focus_ring(surface, label_rect, True)
+        draw_centered_text(
+            surface,
+            self.context.typography,
+            self.context.resources.text(_TARGET_LABEL_KEYS[self._selected]),
+            center=label_rect.center,
+            size=22,
+            color=(48, 43, 61),
+        )
+        draw_presenter(
+            surface,
+            self.context.visuals,
+            "leo",
+            position=(925, 565),
+            height=145,
+            variant="surprised",
+        )
+
+    def _draw_fallback_background(self, surface: pygame.Surface) -> None:
         surface.fill((20, 28, 67))
         for index in range(38):
             x = (index * 83 + 17) % 1010
             y = 80 + ((index * 47) % 480)
             pygame.draw.circle(surface, (225, 231, 248), (x, y), 1 + (index % 2))
-        draw_centered_text(
-            surface,
-            self.context.typography,
-            self.context.resources.text("section.space"),
-            center=(500, 100),
-            size=40,
-            color=(247, 242, 214),
-        )
+
+    def _draw_live_solar_system(self, surface: pygame.Surface, *, authored: bool) -> None:
+        """Preserve the continuously orbiting teaching model over either backdrop."""
 
         center = (500, 340)
         selected_id = _TARGET_IDS[self._selected]
         positions: dict[str, tuple[int, int, int]] = {
             "sun": (center[0], center[1], _TARGET_HIT_RADIUS)
         }
+        orbit_color = (83, 107, 159) if authored else (68, 78, 120)
 
         pygame.draw.circle(surface, (251, 205, 66), center, 27)
         self._draw_open_marker(surface, "sun", (524, 318), 6)
@@ -158,7 +190,7 @@ class SpacePage(EncyclopediaPage):
                 planet.radius_x * 2,
                 planet.radius_y * 2,
             )
-            pygame.draw.ellipse(surface, (68, 78, 120), orbit, 1)
+            pygame.draw.ellipse(surface, orbit_color, orbit, 1)
             angle = self._time * planet.speed + planet.phase
             x = center[0] + int(math.cos(angle) * planet.radius_x)
             y = center[1] + int(math.sin(angle) * planet.radius_y)
@@ -190,39 +222,17 @@ class SpacePage(EncyclopediaPage):
             moon_x = ex + int(math.cos(moon_angle) * 28)
             moon_y = ey + int(math.sin(moon_angle) * 14)
             positions["moon"] = (moon_x, moon_y, _TARGET_HIT_RADIUS)
-            pygame.draw.ellipse(surface, (93, 102, 139), (ex - 30, ey - 16, 60, 32), 1)
+            pygame.draw.ellipse(surface, orbit_color, (ex - 30, ey - 16, 60, 32), 1)
             pygame.draw.circle(surface, (194, 193, 188), (moon_x, moon_y), 4)
             self._draw_open_marker(surface, "moon", (moon_x + 9, moon_y - 8), 3)
             if selected_id == "moon":
                 pygame.draw.circle(surface, (255, 222, 91), (moon_x, moon_y), 15, 3)
 
-        # Pointer hit order is identical to semantic keyboard/controller order;
-        # overlapping 64-px hit regions are resolved by nearest target.
         self._target_positions = [
             (target_id, *positions[target_id])
             for target_id in _TARGET_IDS
             if target_id in positions
         ]
-
-        label_rect = pygame.Rect(350, 500, 300, 55)
-        pygame.draw.rect(surface, (248, 244, 222), label_rect, border_radius=20)
-        focus_ring(surface, label_rect, True)
-        draw_centered_text(
-            surface,
-            self.context.typography,
-            self.context.resources.text(_TARGET_LABEL_KEYS[self._selected]),
-            center=label_rect.center,
-            size=22,
-            color=(48, 43, 61),
-        )
-        draw_presenter(
-            surface,
-            self.context.visuals,
-            "leo",
-            position=(925, 565),
-            height=145,
-            variant="surprised",
-        )
 
     @staticmethod
     def _draw_open_marker(
