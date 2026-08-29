@@ -6,6 +6,7 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
+BUILD_TOOL = ROOT / "tools" / "build_encyclopedia_visual_assets.py"
 CAPTURE_TOOL = ROOT / "tools" / "encyclopedia_v01_section_review_capture.py"
 REVIEW_TOOL = ROOT / "tools" / "encyclopedia_v01_section_review.py"
 EXPECTED_SECTIONS = (
@@ -49,6 +50,16 @@ class EncyclopediaE3ReviewToolTests(unittest.TestCase):
             ):
                 return node.value
         raise AssertionError(f"missing module assignment: {name}")
+
+    def test_full_build_check_rejects_stale_runtime_pngs(self) -> None:
+        source = BUILD_TOOL.read_text(encoding="utf-8")
+        tree = ast.parse(source)
+        names = tuple(ast.literal_eval(self._assignment(tree, "NAMES")))
+        expected_names = tuple(filename.removesuffix(".png") for filename in EXPECTED_RUNTIME_ART)
+        self.assertEqual(set(names), set(expected_names))
+        self.assertIn("if names == NAMES", source)
+        self.assertIn("unexpected = sorted(present - expected)", source)
+        self.assertIn("UNEXPECTED", source)
 
     def test_capture_scope_is_home_plus_exact_six_sections(self) -> None:
         tree = ast.parse(CAPTURE_TOOL.read_text(encoding="utf-8"))
