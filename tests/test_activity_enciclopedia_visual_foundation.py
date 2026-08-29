@@ -13,7 +13,7 @@ SOURCE = ACTIVITY / "assets" / "source"
 RUNTIME = ACTIVITY / "assets" / "runtime"
 BUILD_TOOL = ROOT / "tools" / "build_encyclopedia_visual_assets.py"
 
-EXPECTED_STEMS = {
+GOLDEN_MASTER_STEMS = {
     "home_discovery_book",
     "animals_field_table",
     "lion_savanna",
@@ -21,7 +21,17 @@ EXPECTED_STEMS = {
     "gears_workbench",
     "pyramids_diorama",
 }
-EXPECTED_ART = {f"{stem}.png" for stem in EXPECTED_STEMS}
+SECTION_STEMS = {
+    "space_gallery_observatory",
+    "earth_gallery_landscape",
+    "body_gallery_discovery_room",
+    "machines_gallery_workbench",
+    "history_gallery_time_trail",
+}
+EXPECTED_STEMS = GOLDEN_MASTER_STEMS | SECTION_STEMS
+GOLDEN_MASTER_ART = {f"{stem}.png" for stem in GOLDEN_MASTER_STEMS}
+SECTION_ART = {f"{stem}.png" for stem in SECTION_STEMS}
+EXPECTED_ART = GOLDEN_MASTER_ART | SECTION_ART
 
 
 class EncyclopediaVisualFoundationTests(unittest.TestCase):
@@ -53,7 +63,7 @@ class EncyclopediaVisualFoundationTests(unittest.TestCase):
             result[target] = (int(x_text), int(y_text))
         return result
 
-    def test_six_editable_golden_master_sources_exist(self) -> None:
+    def test_editable_golden_master_and_section_sources_exist(self) -> None:
         actual = {path.stem for path in SOURCE.glob("*.svg")}
         self.assertTrue(EXPECTED_STEMS.issubset(actual))
         for stem in EXPECTED_STEMS:
@@ -66,13 +76,17 @@ class EncyclopediaVisualFoundationTests(unittest.TestCase):
     def test_build_recipe_is_explicit_and_matches_sources(self) -> None:
         source = BUILD_TOOL.read_text(encoding="utf-8")
         tree = ast.parse(source)
-        names = ast.literal_eval(self._assignment(tree, "NAMES"))
-        self.assertEqual(set(names), EXPECTED_STEMS)
+        golden = set(ast.literal_eval(self._assignment(tree, "GOLDEN_MASTER_NAMES")))
+        sections = set(ast.literal_eval(self._assignment(tree, "SECTION_NAMES")))
+        self.assertEqual(golden, GOLDEN_MASTER_STEMS)
+        self.assertEqual(sections, SECTION_STEMS)
+        self.assertEqual(golden | sections, EXPECTED_STEMS)
         self.assertIn("cairosvg.svg2png", source)
         self.assertIn("output_width=REFERENCE_SIZE[0]", source)
         self.assertIn("output_height=REFERENCE_SIZE[1]", source)
         self.assertIn("TemporaryDirectory", source)
         self.assertIn('"--check"', source)
+        self.assertIn('choices=("all", "golden", "sections")', source)
         self.assertIn("rebuilt.read_bytes() != committed.read_bytes()", source)
 
     def test_visual_library_has_hard_bound_and_explicit_art_map(self) -> None:
@@ -119,6 +133,21 @@ class EncyclopediaVisualFoundationTests(unittest.TestCase):
                 self.assertIn("draw_authored_scene", text)
                 self.assertIn(semantic_id, text)
 
+    def test_e3_section_pages_use_authored_scenes_with_fallbacks(self) -> None:
+        cases = {
+            "space.py": "encyclopedia.space.gallery.observatory",
+            "earth.py": "encyclopedia.earth.gallery.landscape",
+            "body.py": "encyclopedia.body.gallery.discovery_room",
+            "machines.py": "encyclopedia.machines.gallery.workbench",
+            "history.py": "encyclopedia.history.gallery.time_trail",
+        }
+        for filename, semantic_id in cases.items():
+            text = (ACTIVITY / "pages" / filename).read_text(encoding="utf-8")
+            with self.subTest(filename=filename):
+                self.assertIn("draw_authored_scene", text)
+                self.assertIn(semantic_id, text)
+                self.assertIn("fallback", text.lower())
+
     def test_selection_world_art_centers_match_input_semantics(self) -> None:
         home_path = ACTIVITY / "pages" / "home.py"
         home_ids = self._literal_assignment(home_path, "PORTAL_IDS")
@@ -136,17 +165,22 @@ class EncyclopediaVisualFoundationTests(unittest.TestCase):
             self._svg_target_centers(SOURCE / "animals_field_table.svg"),
         )
 
-    def test_runtime_pack_is_complete_if_generated(self) -> None:
-        """Source stage may precede generated PNG commit; partial packs are forbidden."""
+    def test_runtime_pack_is_complete_per_visual_tranche(self) -> None:
+        """Golden art is complete; E3 section art may be absent, never partial."""
 
         if not RUNTIME.exists():
             return
         present = {path.name for path in RUNTIME.glob("*.png")}
         if not present:
             return
-        self.assertEqual(present.intersection(EXPECTED_ART), EXPECTED_ART)
+
+        self.assertEqual(present.intersection(GOLDEN_MASTER_ART), GOLDEN_MASTER_ART)
+        section_present = present.intersection(SECTION_ART)
+        self.assertIn(len(section_present), (0, len(SECTION_ART)))
+
+        expected_present = GOLDEN_MASTER_ART | section_present
         total = 0
-        for name in EXPECTED_ART:
+        for name in expected_present:
             data = (RUNTIME / name).read_bytes()
             with self.subTest(name=name):
                 self.assertTrue(data.startswith(b"\x89PNG\r\n\x1a\n"))
@@ -154,7 +188,7 @@ class EncyclopediaVisualFoundationTests(unittest.TestCase):
                 self.assertGreaterEqual(len(data), 24)
                 self.assertEqual(struct.unpack(">II", data[16:24]), (1024, 600))
             total += len(data)
-        self.assertLess(total, 2 * 1024 * 1024)
+        self.assertLess(total, 4 * 1024 * 1024)
 
 
 if __name__ == "__main__":
