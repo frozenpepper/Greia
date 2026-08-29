@@ -8,6 +8,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 ACTIVITY = ROOT / "activities" / "enciclopedia_greia"
 PRESENTATION = ACTIVITY / "enciclopedia_presentation.py"
+SERVICES = ACTIVITY / "enciclopedia_services.py"
 EARTH = ACTIVITY / "pages" / "earth.py"
 
 
@@ -37,6 +38,13 @@ class EncyclopediaFocusTreatmentTests(unittest.TestCase):
         self.assertNotIn("item.rect.right - 14", draw)
         self.assertNotIn("item.rect.top + 14", draw)
         self.assertNotIn("pygame.draw.circle", draw)
+
+    def test_full_screen_authored_scenes_use_opaque_display_surfaces(self) -> None:
+        art = self._function_source(SERVICES, "art")
+        character = self._function_source(SERVICES, "_shared_character")
+        self.assertIn(".convert()", art)
+        self.assertNotIn(".convert_alpha()", art)
+        self.assertIn(".convert_alpha()", character)
 
 
 if __name__ == "__main__":
