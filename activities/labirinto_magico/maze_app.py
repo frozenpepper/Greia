@@ -13,7 +13,7 @@ from greia_platform.activity_api import (
     get_theme,
     mark_activity_ready,
 )
-from greia_platform.activity_ui import ChildUiMetrics, is_home_clicked
+from greia_platform.activity_ui import ChildUiMetrics
 from greia_platform.pygame_canvas import (
     PygameReferenceCanvas,
     activity_viewport_for_surface,
@@ -352,9 +352,6 @@ class MazeApp:
                     self._rebake_maze_surface(self.canvas.surface, self.metrics)
 
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    if is_home_clicked(self.screen, event.pos):
-                        self.running = False
-                        continue
                     pointer = self.canvas.pointer(event.pos)
                     if pointer is None:
                         continue
