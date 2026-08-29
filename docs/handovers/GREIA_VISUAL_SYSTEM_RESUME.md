@@ -8,6 +8,7 @@
 **Active visual plan:** `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`  
 **Current Activity visual subplan:** `docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md`  
 **Current E3 source review:** `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/SOURCE_REVIEW.md`  
+**E3 runtime gate:** `docs/testing/2026-08-29_ENCYCLOPEDIA_E3_SECTION_RUNTIME_REVIEW.md`  
 **Visual-authoring skill:** `skills/greia-visual-authoring/SKILL.md`
 
 ---
@@ -33,8 +34,10 @@ E2/E2R visual direction                 OWNER APPROVED
 latest corrected golden runtime PNGs    STALE / REBUILD PENDING
 latest exact-source Simulator proof     PENDING
 E3 six-section source direction         IMPLEMENTED / SOURCE-REVIEWED
-E3 target geometry/hit areas            HARDENED
-E3 runtime PNG + Simulator review       PENDING
+E3 target geometry/stage contracts      HARDENED
+E3 evidence-integrity tooling           HARDENED
+E3 committed 11-PNG runtime pack        PENDING
+E3 exact-SHA Simulator review           PENDING
 E4 factual-entry migration              BLOCKED
 ```
 
@@ -165,7 +168,9 @@ Behavior while generated E3 PNGs are absent:
 - semantic destinations/input/page IDs remain unchanged;
 - Space always retains its live orbiting Sun/planets/Moon model; the authored scene is only the observatory context.
 
-Static source/input alignment is now machine-checkable for Home, Animals, Earth, Body, Machines and History through SVG `data-target`/`data-center` metadata and the focused visual-foundation test. Space remains runtime-dynamic and is intentionally excluded from that static-center assertion.
+Static source/input alignment is machine-checkable for Home, Animals, Earth, Body, Machines and History through SVG `data-target`/`data-center` metadata and focused tests.
+
+Space is runtime-dynamic, so it does not use a static target-center equality assertion. Instead it now has an explicit authored **Solar System stage contract**: the observatory SVG carries `data-stage="solar-system"` bounds, `space.py` exposes matching literal center/stage constants, and the visual-foundation test proves the full moving planet discs, Saturn ring/marker margin and Moon excursion remain inside that authored stage.
 
 Body and Machines no longer use the old uniform 86×86 prototype pointer areas. Their hit/focus rectangles follow the actual authored exhibit/object footprints while retaining the same semantic centers and keyboard/controller order.
 
@@ -186,22 +191,42 @@ Runtime-pack source contract:
 ```text
 golden tranche   6 / 6
 E3 tranche       0 / 5 or 5 / 5; partial section packs forbidden
+final E3 review  exact 11 / 11 committed PNGs required
 ```
 
 ---
 
 # 6. E3 Simulator review harness
 
-The runtime gate now has dedicated bounded tooling:
+The runtime gate has dedicated bounded tooling:
 
 ```text
 tools/encyclopedia_v01_section_review_capture.py
 tools/encyclopedia_v01_section_review.py
+tests/test_encyclopedia_e3_review_tools.py
 ```
 
 The capture tool reuses the existing golden-master Shell driver. It runs exactly Home plus the six section worlds through the real Greia Shell/profile/catalogue route, captures one reference frame per page, and exercises protected Greia Home return. It does not walk the factual entries.
 
+Evidence binding is now fail-closed:
+
+- checkout must be clean, including non-ignored untracked files;
+- exactly 11 Encyclopedia runtime PNGs must be present;
+- every PNG must already exist in the exact `HEAD` being captured;
+- each working PNG must hash to the same Git blob as `HEAD:<path>`;
+- the manifest records source SHA, SHA-256 of all 11 PNGs and all 11 committed Git blob IDs;
+- HEAD, working status, PNG SHA-256 inventory and Git-blob inventory are rechecked after all seven sessions;
+- the review builder refuses evidence that lacks the complete Git-bound manifest.
+
+This specifically prevents an untracked or stale generated E3 PNG from being presented as evidence for a Git SHA that did not contain it.
+
 The review builder copies the seven bounded reference frames and creates one contact sheet. It does not auto-score or auto-approve visuals.
+
+Canonical protocol:
+
+```text
+docs/testing/2026-08-29_ENCYCLOPEDIA_E3_SECTION_RUNTIME_REVIEW.md
+```
 
 ---
 
@@ -215,12 +240,15 @@ Therefore:
 OWNER VISUAL DIRECTION                  APPROVED
 LATEST SOURCE ART                       CURRENT
 OLDER E2R RUNTIME PNG/SIMULATOR PIXELS  STALE FOR EXACT CURRENT SOURCE
+LOCAL NINE-PNG STAGING BUNDLE           RECOVERABLE / NOT COMMITTED EVIDENCE
 FIVE E3 SECTION PNGs                    NOT COMMITTED YET
 FRESH FINAL-SHA SIMULATOR               NOT RUN YET
 E3 RUNTIME VISUAL ACCEPTANCE            NOT CLAIMED
 ```
 
-Do not call E3 complete until the full current art pack is built and the six sections are reviewed together through the real Greia runtime.
+A local recoverability bundle may exist for the nine changed/new renditions, but it is not `--check` evidence and must never be used to bypass the committed-art requirement.
+
+Do not call E3 complete until the full current 11-PNG art pack is built, committed, checked and the six sections are reviewed together through the real Greia runtime.
 
 ---
 
@@ -290,9 +318,10 @@ Next exact visual gate:
 build corrected six golden-master PNGs + five E3 section PNGs
 → verify all current SVG/PNG renditions
 → focused Encyclopedia tests + required repository verification
-→ commit/push the complete current runtime-art state
+→ commit/push the exact complete 11-PNG runtime-art state
+→ rerun --check and focused tests on that pushed SHA
 → fresh exact-SHA real Greia Simulator
-→ capture Home + all six section pages with the E3 review harness
+→ capture Home + all six section pages with the Git-bound E3 review harness
 → inspect the single runtime contact sheet + interaction/navigation sanity
 → if accepted, close E3 and unblock E4
 ```
