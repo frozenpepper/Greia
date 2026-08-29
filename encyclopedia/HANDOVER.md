@@ -4,7 +4,7 @@
 **Runtime pages:** **43 / 43 planned executable pages**  
 **Runtime Activity:** `activities/enciclopedia_greia/` (`org.greia.enciclopedia`)  
 **Last Simulator-captured visual SHA:** `8fa41a3e9ab4b8cff6cce9607c32492fedc6ae8f` — technically valid E2R capture, aesthetically superseded  
-**Current state:** **MECHANICAL FOUNDATION HEALTHY / E1 COMPLETE / GOLDEN-MASTER DIRECTION OWNER-APPROVED AFTER DIRECT REPAIRS / E3 SECTION SOURCE IMPLEMENTED + SOURCE-REVIEWED / RUNTIME PNG + FRESH SIMULATOR EVIDENCE PENDING / E4 BLOCKED / NARRATION SEPARATE**
+**Current state:** **MECHANICAL FOUNDATION HEALTHY / E1 COMPLETE / GOLDEN-MASTER DIRECTION OWNER-APPROVED AFTER DIRECT REPAIRS / E3 SECTION SOURCE IMPLEMENTED + SOURCE-REVIEWED + GEOMETRY-HARDENED / RUNTIME PNG + FRESH SIMULATOR EVIDENCE PENDING / E4 BLOCKED / NARRATION SEPARATE**
 
 This file is the current continuation contract. Historical construction detail remains in `encyclopedia/PROGRESS.md`, Git history, and dated visual reviews.
 
@@ -119,7 +119,7 @@ Animals remains the accepted section-world reference:
 activities/enciclopedia_greia/assets/source/animals_field_table.svg
 ```
 
-Five new authored section masters are now on `main`:
+Five authored section masters are now on `main`:
 
 ```text
 activities/enciclopedia_greia/assets/source/space_gallery_observatory.svg
@@ -139,12 +139,13 @@ Machines         one real workbench with recognizable gears/magnet/bicycle/plane
 History          one continuous time/excavation trail with T-rex/fossil/mammoth/cave/pyramid
 ```
 
-A first source contact review caught and corrected three issues before persistence:
+Source review caught and corrected issues before runtime acceptance:
 
 ```text
-Body      too panel-like -> converted lungs/heart/bones into physical exhibits
+Body      mannequin/schematic feeling -> friendly room + physical learning props
 Machines  weak gear/bridge silhouettes -> real meshing gear pair + clearer suspension bridge
 History   ambiguous dinosaur -> unmistakable T-rex silhouette
+Earth     rain hidden behind tree canopy -> visible near-layer rain streaks
 ```
 
 Current source-review authority:
@@ -153,13 +154,19 @@ Current source-review authority:
 docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/SOURCE_REVIEW.md
 ```
 
-Evidence class remains **SOURCE / DESKTOP VISUAL REVIEW**, not Simulator acceptance.
+Current maintainer source contact sheet:
+
+```text
+encyclopedia_e3_section_source_contact_v5.png
+```
+
+It is **SOURCE / DESKTOP VISUAL REVIEW**, not Simulator acceptance.
 
 ---
 
-## 7. E3 staged runtime integration
+## 7. E3 runtime integration and input geometry
 
-The five section pages are now wired to semantic authored-scene IDs through the existing bounded `VisualLibrary`:
+The five section pages are wired to semantic authored-scene IDs through the existing bounded `VisualLibrary`:
 
 ```text
 space.py      encyclopedia.space.gallery.observatory
@@ -176,7 +183,22 @@ Important behavior:
 - Until the five E3 runtime PNGs are generated, every page deliberately falls back to its previous proven procedural rendering.
 - Existing semantic destinations, input handling and page IDs are preserved.
 
-The build tool now supports explicit visual tranches:
+The static section worlds now have a machine-checkable source/input alignment contract. `tests/test_activity_enciclopedia_visual_foundation.py` compares SVG `data-target`/`data-center` metadata with page input geometry for:
+
+```text
+Home
+Animals
+Earth & Nature
+Body
+Machines
+History
+```
+
+Space is excluded because its targets move continuously at runtime.
+
+History target centers are explicit page constants rather than implicit arithmetic. Body and Machines also no longer use the old uniform 86x86 prototype hit boxes: pointer/focus rectangles now follow the actual authored exhibit/object footprints while preserving the same semantic centers and keyboard/controller ordering.
+
+The build tool supports explicit visual tranches:
 
 ```bash
 python3 tools/build_encyclopedia_visual_assets.py --group golden
@@ -193,11 +215,36 @@ golden runtime tranche    6 / 6 when runtime assets exist
 E3 section tranche        0 / 5 or 5 / 5 — a partial E3 pack is forbidden
 ```
 
-This staged state is intentional; it keeps `main` fail-soft while source authoring advances.
+---
+
+## 8. E3 Simulator review tooling
+
+Two narrow tools now exist for the E3 gate:
+
+```text
+tools/encyclopedia_v01_section_review_capture.py
+tools/encyclopedia_v01_section_review.py
+```
+
+The capture tool reuses `encyclopedia_v01_golden_master_capture.py` rather than introducing a second Shell/Simulator harness. It runs exactly seven small sessions:
+
+```text
+Home
+Animals
+Space
+Earth & Nature
+Body
+Machines
+History
+```
+
+Each session uses the real Greia Shell/profile/catalogue launch path, semantic internal navigation, one reference screenshot, and protected Greia Home return. It does not walk the 36 factual entries.
+
+The review builder copies only the seven bounded reference frames and creates one Home+six-sections contact sheet. It does not auto-score or auto-approve the artwork.
 
 ---
 
-## 8. Current E3 gate
+## 9. Current E3 gate
 
 ```text
 Animals section source                         READY
@@ -206,12 +253,14 @@ Earth & Nature section source                  READY
 Body section source                            READY
 Machines section source                        READY
 History section source                         READY
+static visual/input geometry contract          IMPLEMENTED
+Body/Machines authored-object hit regions      IMPLEMENTED
 five new E3 runtime PNGs                       PENDING
 rebuild corrected golden-master PNGs           PENDING
 build --check on complete current art pack     PENDING
 focused real-checkout tests / make verify      PENDING
 fresh final-SHA real Greia Simulator           PENDING
-six-section runtime contact-sheet review       PENDING
+Home + six-section runtime contact sheet       PENDING
 E4 factual-entry migration                     BLOCKED
 ```
 
@@ -219,7 +268,7 @@ Do not begin E4 until all six section pages are rendered through the real Greia 
 
 ---
 
-## 9. Local-agent boundary
+## 10. Local-agent boundary
 
 The owner explicitly asked the primary agent to perform this visual work directly. Do **not** delegate the current art-authoring work to the local agent.
 
@@ -227,7 +276,7 @@ The owner explicitly asked the primary agent to perform this visual work directl
 
 ---
 
-## 10. Narration remains separate
+## 11. Narration remains separate
 
 Canonical coordination:
 
@@ -239,7 +288,7 @@ The historical ledger checkpoint remains 378 REQUESTED rows. Only owner-listened
 
 ---
 
-## 11. Immediate next step
+## 12. Immediate next step
 
 Do **not** start E4.
 
@@ -253,13 +302,16 @@ rebuild corrected six golden-master PNGs
 → required local repository verification
 → commit/push complete current runtime art
 → real Greia Simulator on the exact final SHA
-→ review Home + six section pages together, with interaction/navigation sanity
+→ capture Home + six section pages with the E3 review harness
+→ inspect the single runtime contact sheet + interaction/navigation sanity
 → if E3 runtime family is accepted, close E3 and unblock E4
 ```
 
+This environment currently has no real Greia checkout/Shell runtime, so no `make verify` or Simulator PASS is claimed here.
+
 ---
 
-## 12. Current authorities
+## 13. Current authorities
 
 ```text
 docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md
