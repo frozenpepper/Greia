@@ -8,7 +8,7 @@ the recorder/playback wiring. State transitions are:
                           -> SCENE_PICKER (back)
   SCENE_PICKER -> LIBRARY (browse) -> SCENE_PICKER (back)
   SCENE_PICKER -> MIC_REQUIRED (no audio.basic granted) -> SCENE_PICKER (back)
-  any -> (Back key on system chrome) -> Shell
+  any -> Greia platform Home/Back -> Shell
 """
 
 from __future__ import annotations
@@ -27,11 +27,7 @@ from greia_platform.activity_api import (
     get_theme,
     mark_activity_ready,
 )
-from greia_platform.activity_ui import (
-    ChildUiMetrics,
-    draw_system_chrome_overlay,
-    is_home_clicked,
-)
+from greia_platform.activity_ui import ChildUiMetrics
 from greia_platform.child_text import display_text
 from greia_platform.localization import (
     ActivityLocaleSupport,
@@ -109,9 +105,6 @@ class VoiceApp:
                         *self.screen.get_size()
                     )
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    if is_home_clicked(self.screen, event.pos):
-                        running = False
-                        continue
                     self._handle_click(event.pos)
             self._update(dt)
             self._draw()
@@ -369,7 +362,6 @@ class VoiceApp:
             self.renderer.draw_library(self.storage._library, text_fn)
         elif self.phase == Phase.MIC_REQUIRED:
             self.renderer.draw_mic_required(text_fn)
-        draw_system_chrome_overlay(self.screen)
 
     def _make_text_fn(self):
         """Return a callable that turns a semantic string into a
