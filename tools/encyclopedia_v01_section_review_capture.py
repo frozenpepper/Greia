@@ -7,9 +7,11 @@ instead of creating another Simulator authority. Each job launches the built-in
 navigates to one section with semantic keyboard input, captures one frame, and
 exercises the protected Greia Home return before shutdown.
 
-The driver binds evidence to one clean tracked Git tree. It records the source
-SHA and SHA-256 digest of every Activity runtime PNG before capture, then proves
-that neither the tracked checkout nor HEAD changed while the sessions ran.
+The driver binds evidence to one clean tracked Git tree. It requires the exact
+complete eleven-PNG Activity art inventory, records the source SHA and SHA-256
+digest of every Activity runtime PNG before capture, then proves that neither
+the tracked checkout nor HEAD nor the runtime-art inventory changed while the
+sessions ran.
 
 It does not walk factual entries and it does not replace the 43-page mechanical
 traversal. E4 remains outside this tool.
@@ -48,6 +50,19 @@ SHOT_NUMBER = {
     "body": 5,
     "machines": 6,
     "history": 7,
+}
+EXPECTED_RUNTIME_ART = {
+    "home_discovery_book.png",
+    "animals_field_table.png",
+    "lion_savanna.png",
+    "saturn_observatory.png",
+    "gears_workbench.png",
+    "pyramids_diorama.png",
+    "space_gallery_observatory.png",
+    "earth_gallery_landscape.png",
+    "body_gallery_discovery_room.png",
+    "machines_gallery_workbench.png",
+    "history_gallery_time_trail.png",
 }
 
 
@@ -173,6 +188,17 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     runtime_hashes = _runtime_art_sha256()
+    present_art = set(runtime_hashes)
+    if present_art != EXPECTED_RUNTIME_ART:
+        missing = sorted(EXPECTED_RUNTIME_ART - present_art)
+        extra = sorted(present_art - EXPECTED_RUNTIME_ART)
+        golden._log("E3 capture requires the exact complete 11-PNG runtime-art pack")
+        if missing:
+            golden._log(f"missing runtime art: {missing}")
+        if extra:
+            golden._log(f"unexpected runtime art: {extra}")
+        return 3
+
     requested = {tag.strip() for tag in args.jobs.split(",") if tag.strip()}
     valid = {"home", *SECTION_ORDER}
     if "all" in requested:
