@@ -10,7 +10,7 @@
 
 ## 1. Purpose
 
-Close the runtime evidence gap after the owner-approved golden-master source repairs and the E3 section-world source tranche.
+Close the runtime evidence gap after the owner-approved golden-master source repairs and the E3 v6 section-world source tranche.
 
 This protocol deliberately does **not**:
 
@@ -69,7 +69,9 @@ E4 must still be blocked when this protocol starts.
 
 ---
 
-## 3. Build the complete current Encyclopedia art pack
+## 3. Materialize the complete current Encyclopedia art pack
+
+### Preferred path — rebuild from committed SVG masters
 
 Build both visual tranches from the committed editable masters:
 
@@ -78,7 +80,44 @@ python3 tools/build_encyclopedia_visual_assets.py --group all
 python3 tools/build_encyclopedia_visual_assets.py --check --group all
 ```
 
-Expected current set: **11 / 11** 1024×600 PNG renditions:
+### Optional recovery path — validated primary-maintainer v6 staging bundle
+
+If the current reviewed v6 staging ZIP is being used to recover the primary maintainer's already-rendered nine changed/new outputs, validate it before any write:
+
+```bash
+python3 tools/import_encyclopedia_runtime_art_staging.py \
+  --check-only /path/to/ENCYCLOPEDIA_E3_RUNTIME_ART_STAGING_V6_2026-08-29.zip
+```
+
+Then import those nine files while preserving the unchanged accepted Saturn/Pyramids runtime files:
+
+```bash
+python3 tools/import_encyclopedia_runtime_art_staging.py \
+  /path/to/ENCYCLOPEDIA_E3_RUNTIME_ART_STAGING_V6_2026-08-29.zip
+```
+
+The staging importer is a bounded recovery helper, **not** an alternate visual build authority. Immediately after import, the canonical source comparison is still mandatory:
+
+```bash
+python3 tools/build_encyclopedia_visual_assets.py --check --group all
+```
+
+If even one imported PNG does not rebuild byte-for-byte from the committed SVG master, stop. Do not commit the staging output and do not weaken the build check.
+
+The staging helper itself must reject:
+
+```text
+legacy duplicate manifest.json
+missing/extra staged PNGs
+unsafe ZIP paths or symlinks
+manifest SHA/byte/dimension/mode mismatch
+non-1024x600 or alpha-bearing scene PNGs
+missing accepted Saturn/Pyramids runtime files
+unexpected runtime PNGs
+post-import inventory other than exact 11/11
+```
+
+Expected complete runtime set: **11 / 11** 1024×600 opaque RGB PNG renditions:
 
 ```text
 home_discovery_book.png
@@ -100,8 +139,9 @@ Stop on:
 missing source
 missing runtime PNG
 BUILD-DRIFT
-wrong dimensions
+wrong dimensions/color type
 partial 1..4-file E3 section tranche
+staging-import validation failure
 ```
 
 CairoSVG remains an authoring/maintainer dependency only. Do not add it to the child runtime.
@@ -119,7 +159,8 @@ python3 -m unittest \
   tests.test_encyclopedia_authoring_tools \
   tests.test_encyclopedia_e3_review_tools \
   tests.test_encyclopedia_section_hit_geometry \
-  tests.test_encyclopedia_focus_treatment
+  tests.test_encyclopedia_focus_treatment \
+  tests.test_encyclopedia_runtime_art_staging
 ```
 
 The focused visual/review suites must prove at least:
@@ -137,6 +178,8 @@ The focused visual/review suites must prove at least:
 - Earth does not add a second floating corner-dot focus cue;
 - the golden runtime tranche is complete;
 - the E3 runtime tranche is all-or-none, never partial;
+- the staging importer validates the entire nine-file payload before write and preserves Saturn/Pyramids;
+- stale/duplicate-manifest/wrong-inventory/hash-drift staging bundles are rejected;
 - the E3 review harness is exactly Home + the six section pages;
 - the capture harness refuses to start without the exact complete eleven-PNG runtime-art inventory;
 - E3 capture evidence is bound to one clean source SHA;
@@ -167,10 +210,12 @@ git diff -- activities/enciclopedia_greia/assets/source \
              activities/enciclopedia_greia/enciclopedia_presentation.py \
              activities/enciclopedia_greia/enciclopedia_services.py \
              tools/build_encyclopedia_visual_assets.py \
+             tools/import_encyclopedia_runtime_art_staging.py \
              tests/test_activity_enciclopedia_visual_foundation.py \
              tests/test_encyclopedia_e3_review_tools.py \
              tests/test_encyclopedia_section_hit_geometry.py \
-             tests/test_encyclopedia_focus_treatment.py
+             tests/test_encyclopedia_focus_treatment.py \
+             tests/test_encyclopedia_runtime_art_staging.py
 ```
 
 The SVG/source/code should already be committed. The expected new generated diff is the current runtime PNG pack.
@@ -191,7 +236,8 @@ python3 -m unittest \
   tests.test_encyclopedia_authoring_tools \
   tests.test_encyclopedia_e3_review_tools \
   tests.test_encyclopedia_section_hit_geometry \
-  tests.test_encyclopedia_focus_treatment
+  tests.test_encyclopedia_focus_treatment \
+  tests.test_encyclopedia_runtime_art_staging
 ```
 
 If the pushed SHA no longer matches the source/runtime state that was tested, stop and reconcile before Simulator capture.
@@ -315,21 +361,21 @@ Review the actual Simulator contact sheet at 100% and each 1024×600 frame indiv
 ### Earth & Nature
 
 - rain, tree, rainbow, volcano and ocean read without labels;
-- rain remains visible despite tree overlap;
+- the v6 rain curtain remains visible in front of the tree canopy;
 - Rain and Tree pointer/focus regions do not visually or behaviorally compete at their boundary;
 - authored focus is a perimeter halo only: no filled yellow wash and no second floating corner dot.
 
 ### Body
 
-- page reads as a friendly discovery room, not a medical mannequin diagram;
-- senses board, jaw/teeth model, lungs, heart and bones box are recognizable physical exhibits;
+- v6 page reads as a hands-on discovery room with **no central mannequin**;
+- sculptural senses models, hinged jaw, cased lungs, heart model and skeleton lightbox are recognizable physical exhibits;
 - focus/hit treatment follows the visible exhibit rather than a tiny central hotspot;
 - authored focus remains integrated with the exhibit and does not obscure its texture/color.
 
 ### Machines
 
-- gears unmistakably have teeth and visibly mesh;
-- magnet, bicycle, airplane and bridge are recognizable at 1024×600;
+- the mounted v6 three-gear train unmistakably has teeth and visibly meshes at two contact zones;
+- magnet, bicycle, airplane and suspension bridge are recognizable physical workshop models at 1024×600;
 - focus/hit areas follow the complete authored objects rather than the old 86×86 prototype circles;
 - authored focus remains a non-occluding halo rather than restoring generic selection cards.
 
@@ -337,7 +383,7 @@ Review the actual Simulator contact sheet at 100% and each 1024×600 frame indiv
 
 - T-rex is immediately recognizable;
 - fossil, mammoth, cave painting and pyramid remain distinct;
-- left-to-right time/excavation trail reads as one authored scene, not five cards;
+- v6 jungle/dig/ice-age/cave/desert trail reads as one authored environment rather than five shelf objects or cards;
 - selected authored object receives a non-occluding halo rather than a hard rectangular UI outline.
 
 ### Whole family
