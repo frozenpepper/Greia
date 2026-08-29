@@ -31,10 +31,12 @@ Current disposition:
 ```text
 E1 visual/asset architecture            COMPLETE
 E2/E2R visual direction                 OWNER APPROVED
-latest corrected golden runtime PNGs    STALE / REBUILD PENDING
+latest corrected golden runtime PNGs    STAGED LOCALLY / REBUILD+COMMIT PENDING
 latest exact-source Simulator proof     PENDING
 E3 six-section source direction         IMPLEMENTED / SOURCE-REVIEWED
 E3 target geometry/stage contracts      HARDENED
+E3 focus treatment                      NON-OCCLUDING HALO / SOURCE-REVIEWED
+E3 runtime scene surface policy         OPAQUE FULL-SCREEN SCENES OPTIMIZED
 E3 evidence-integrity tooling           HARDENED
 E3 committed 11-PNG runtime pack        PENDING
 E3 exact-SHA Simulator review           PENDING
@@ -129,6 +131,9 @@ Body      mannequin/schematic feeling -> friendly room + physical learning props
 Machines  weak gear/bridge read -> meshing toothed pair + clearer bridge
 History   ambiguous dinosaur -> explicit T-rex silhouette
 Earth     rain hidden by tree canopy -> visible near-layer rain streaks
+Earth     overlapping Rain/Tree input -> disjoint authored regions
+Focus     translucent filled patch -> perimeter-only non-occluding halo
+Earth     duplicate floating focus dot -> removed
 ```
 
 Current source review:
@@ -143,7 +148,7 @@ Current maintainer-local six-section contact sheet:
 encyclopedia_e3_section_source_contact_v5.png
 ```
 
-Evidence class: **SOURCE / DESKTOP VISUAL REVIEW** only.
+A later maintainer-local Earth/Body/Machines/History focus preview confirmed the new halo keeps authored colors/textures visible. Both are **SOURCE / DESKTOP VISUAL REVIEW** only.
 
 ---
 
@@ -170,11 +175,15 @@ Behavior while generated E3 PNGs are absent:
 
 Static source/input alignment is machine-checkable for Home, Animals, Earth, Body, Machines and History through SVG `data-target`/`data-center` metadata and focused tests.
 
-Space is runtime-dynamic, so it does not use a static target-center equality assertion. Instead it now has an explicit authored **Solar System stage contract**: the observatory SVG carries `data-stage="solar-system"` bounds, `space.py` exposes matching literal center/stage constants, and the visual-foundation test proves the full moving planet discs, Saturn ring/marker margin and Moon excursion remain inside that authored stage.
+Space is runtime-dynamic, so it does not use a static target-center equality assertion. Instead it has an explicit authored **Solar System stage contract**: the observatory SVG carries `data-stage="solar-system"` bounds, `space.py` exposes matching literal center/stage constants, and the visual-foundation test proves the full moving planet discs, Saturn ring/marker margin and Moon excursion remain inside that authored stage.
 
 Body and Machines no longer use the old uniform 86×86 prototype pointer areas. Their hit/focus rectangles follow the actual authored exhibit/object footprints while retaining the same semantic centers and keyboard/controller order.
 
 History target centers are explicit constants rather than implicit positional arithmetic.
+
+Authored Earth/Body/Machines/History selection uses `draw_focus_patch(...)`, whose current implementation is a transparent perimeter halo rather than a filled card-like overlay. The older rectangular `focus_ring(...)` remains only for procedural fail-soft presentation. Space's moving selected subject owns its focus; its bottom label remains neutral.
+
+All eleven authored scene renditions are flattened opaque full-screen RGB assets. `VisualLibrary.art()` now uses display-optimized `Surface.convert()` for those scenes instead of paying per-pixel-alpha cost. Canonical character sprites continue to use `convert_alpha()` because their transparent silhouettes require it. `tests/test_encyclopedia_focus_treatment.py` pins both the non-occluding focus treatment and this opaque-scene runtime policy.
 
 Build groups:
 
@@ -204,11 +213,12 @@ The runtime gate has dedicated bounded tooling:
 tools/encyclopedia_v01_section_review_capture.py
 tools/encyclopedia_v01_section_review.py
 tests/test_encyclopedia_e3_review_tools.py
+tests/test_encyclopedia_focus_treatment.py
 ```
 
 The capture tool reuses the existing golden-master Shell driver. It runs exactly Home plus the six section worlds through the real Greia Shell/profile/catalogue route, captures one reference frame per page, and exercises protected Greia Home return. It does not walk the factual entries.
 
-Evidence binding is now fail-closed:
+Evidence binding is fail-closed:
 
 - checkout must be clean, including non-ignored untracked files;
 - exactly 11 Encyclopedia runtime PNGs must be present;
@@ -232,13 +242,13 @@ docs/testing/2026-08-29_ENCYCLOPEDIA_E3_SECTION_RUNTIME_REVIEW.md
 
 # 7. Critical evidence boundary
 
-The current editable SVG source is newer than the previous E2R runtime pack.
+The current editable SVG/runtime source is newer than the previous E2R runtime pack.
 
 Therefore:
 
 ```text
 OWNER VISUAL DIRECTION                  APPROVED
-LATEST SOURCE ART                       CURRENT
+LATEST SOURCE ART/CODE                  CURRENT
 OLDER E2R RUNTIME PNG/SIMULATOR PIXELS  STALE FOR EXACT CURRENT SOURCE
 LOCAL NINE-PNG STAGING BUNDLE           RECOVERABLE / NOT COMMITTED EVIDENCE
 FIVE E3 SECTION PNGs                    NOT COMMITTED YET
@@ -246,7 +256,7 @@ FRESH FINAL-SHA SIMULATOR               NOT RUN YET
 E3 RUNTIME VISUAL ACCEPTANCE            NOT CLAIMED
 ```
 
-A local recoverability bundle may exist for the nine changed/new renditions, but it is not `--check` evidence and must never be used to bypass the committed-art requirement.
+The local nine-file recoverability bundle contains the four changed golden-master renditions plus five E3 section renditions; Earth and Body were refreshed after their later source refinements. It is not `--check` evidence and must never be used to bypass the committed-art requirement.
 
 Do not call E3 complete until the full current 11-PNG art pack is built, committed, checked and the six sections are reviewed together through the real Greia runtime.
 
@@ -317,7 +327,8 @@ Next exact visual gate:
 ```text
 build corrected six golden-master PNGs + five E3 section PNGs
 → verify all current SVG/PNG renditions
-→ focused Encyclopedia tests + required repository verification
+→ focused Encyclopedia tests including focus/opaque-scene regression
+→ required repository verification
 → commit/push the exact complete 11-PNG runtime-art state
 → rerun --check and focused tests on that pushed SHA
 → fresh exact-SHA real Greia Simulator
