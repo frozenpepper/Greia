@@ -4,7 +4,7 @@
 **Runtime pages:** **43 / 43 planned executable pages**  
 **Runtime Activity:** `activities/enciclopedia_greia/` (`org.greia.enciclopedia`)  
 **Last Simulator-captured visual SHA:** `8fa41a3e9ab4b8cff6cce9607c32492fedc6ae8f` — technically valid E2R capture, aesthetically superseded  
-**Current state:** **MECHANICAL FOUNDATION HEALTHY / E1 COMPLETE / GOLDEN-MASTER DIRECTION OWNER-APPROVED AFTER DIRECT REPAIRS / E3 SECTION SOURCE IMPLEMENTED + SOURCE-REVIEWED + GEOMETRY-HARDENED / RUNTIME PNG + FRESH SIMULATOR EVIDENCE PENDING / E4 BLOCKED / NARRATION SEPARATE**
+**Current state:** **MECHANICAL FOUNDATION HEALTHY / E1 COMPLETE / GOLDEN-MASTER DIRECTION OWNER-APPROVED AFTER DIRECT REPAIRS / E3 SECTION SOURCE IMPLEMENTED + SOURCE-REVIEWED + GEOMETRY/EVIDENCE-HARDENED / RUNTIME PNG + FRESH SIMULATOR EVIDENCE PENDING / E4 BLOCKED / NARRATION SEPARATE**
 
 This file is the current continuation contract. Historical construction detail remains in `encyclopedia/PROGRESS.md`, Git history, and dated visual reviews.
 
@@ -183,7 +183,7 @@ Important behavior:
 - Until the five E3 runtime PNGs are generated, every page deliberately falls back to its previous proven procedural rendering.
 - Existing semantic destinations, input handling and page IDs are preserved.
 
-The static section worlds now have a machine-checkable source/input alignment contract. `tests/test_activity_enciclopedia_visual_foundation.py` compares SVG `data-target`/`data-center` metadata with page input geometry for:
+The static section worlds have a machine-checkable source/input alignment contract. `tests/test_activity_enciclopedia_visual_foundation.py` compares SVG `data-target`/`data-center` metadata with page input geometry for:
 
 ```text
 Home
@@ -194,7 +194,7 @@ Machines
 History
 ```
 
-Space is excluded because its targets move continuously at runtime.
+Space remains dynamic rather than pretending to use fixed target centers. Its authored observatory now carries a non-rendering `data-stage="solar-system"` / `data-bounds` contract, while `space.py` exposes literal `SOLAR_SYSTEM_CENTER` and `SOLAR_SYSTEM_STAGE_BOUNDS`. The same visual-foundation test parses every `Planet(...)` orbit and proves the complete rendered planet discs/markers, plus the Moon excursion, remain inside the authored observation stage.
 
 History target centers are explicit page constants rather than implicit arithmetic. Body and Machines also no longer use the old uniform 86x86 prototype hit boxes: pointer/focus rectangles now follow the actual authored exhibit/object footprints while preserving the same semantic centers and keyboard/controller ordering.
 
@@ -217,9 +217,9 @@ E3 section tranche        0 / 5 or 5 / 5 — a partial E3 pack is forbidden
 
 ---
 
-## 8. E3 Simulator review tooling
+## 8. E3 Simulator review tooling — exact-SHA bound
 
-Two narrow tools now exist for the E3 gate:
+Two narrow tools exist for the E3 gate:
 
 ```text
 tools/encyclopedia_v01_section_review_capture.py
@@ -240,7 +240,32 @@ History
 
 Each session uses the real Greia Shell/profile/catalogue launch path, semantic internal navigation, one reference screenshot, and protected Greia Home return. It does not walk the 36 factual entries.
 
-The review builder copies only the seven bounded reference frames and creates one Home+six-sections contact sheet. It does not auto-score or auto-approve the artwork.
+Evidence integrity is now part of the tool rather than a manual convention. Before capture it requires a clean **tracked** checkout, records `git rev-parse HEAD` and SHA-256 of every Activity runtime PNG, and writes:
+
+```text
+source-sha.txt
+capture-manifest.json
+```
+
+The manifest records source SHA, locale, viewport, interface size, selected/completed jobs, runtime-art hashes and status. At the end the tool fails if `HEAD`, tracked source, or the runtime-PNG hash inventory changed during capture.
+
+The review builder accepts only:
+
+```text
+status = PASS
+selected_jobs = Home + all six sections
+completed_jobs = Home + all six sections
+runtime_art_sha256 = exact complete 11-PNG Encyclopedia pack
+source-sha.txt = capture-manifest source_sha
+```
+
+It then preserves both integrity files beside the seven curated screenshots/contact sheet. `tests/test_encyclopedia_e3_review_tools.py` pins the seven-job scope and evidence-integrity contract without launching Pygame.
+
+Canonical maintainer protocol:
+
+```text
+docs/testing/2026-08-29_ENCYCLOPEDIA_E3_SECTION_RUNTIME_REVIEW.md
+```
 
 ---
 
@@ -248,13 +273,14 @@ The review builder copies only the seven bounded reference frames and creates on
 
 ```text
 Animals section source                         READY
-Space section source                           READY
+Space section source                           READY + LIVE-STAGE BOUNDS GUARDED
 Earth & Nature section source                  READY
 Body section source                            READY
 Machines section source                        READY
 History section source                         READY
 static visual/input geometry contract          IMPLEMENTED
 Body/Machines authored-object hit regions      IMPLEMENTED
+exact-SHA Simulator evidence contract          IMPLEMENTED
 five new E3 runtime PNGs                       PENDING
 rebuild corrected golden-master PNGs           PENDING
 build --check on complete current art pack     PENDING
@@ -298,11 +324,12 @@ Next exact runtime closure for the current art tranche:
 rebuild corrected six golden-master PNGs
 + build five E3 section PNGs
 → verify 11/11 current SVG->PNG renditions
-→ focused Encyclopedia tests
+→ focused Encyclopedia tests including E3 review-tool contracts
 → required local repository verification
 → commit/push complete current runtime art
 → real Greia Simulator on the exact final SHA
-→ capture Home + six section pages with the E3 review harness
+→ capture Home + six section pages with exact-SHA manifest/hashes
+→ build the bounded provenance-preserving review set
 → inspect the single runtime contact sheet + interaction/navigation sanity
 → if E3 runtime family is accepted, close E3 and unblock E4
 ```
@@ -317,6 +344,7 @@ This environment currently has no real Greia checkout/Shell runtime, so no `make
 docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md
 docs/reviews/visual/2026-08-29_encyclopedia_owner_direct_repairs/REVIEW.md
 docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/SOURCE_REVIEW.md
+docs/testing/2026-08-29_ENCYCLOPEDIA_E3_SECTION_RUNTIME_REVIEW.md
 docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md
 
 docs/design/GREIA_ART_GRAPHICS_SYSTEM.md
