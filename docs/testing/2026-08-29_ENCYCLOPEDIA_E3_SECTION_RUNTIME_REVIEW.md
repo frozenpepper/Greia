@@ -136,7 +136,9 @@ The focused visual/review suites must prove at least:
 - the E3 runtime tranche is all-or-none, never partial;
 - the E3 review harness is exactly Home + the six section pages;
 - the capture harness refuses to start without the exact complete eleven-PNG runtime-art inventory;
-- E3 capture evidence is bound to one clean tracked source SHA and an unchanged runtime-PNG hash inventory.
+- E3 capture evidence is bound to one clean source SHA;
+- **all eleven runtime PNGs must already be committed in that exact `HEAD` and their working bytes must match the committed Git blobs**;
+- review evidence records both SHA-256 digests and Git blob IDs for the eleven runtime PNGs.
 
 Then run the repository-local aggregate gate required by current `main`:
 
@@ -150,7 +152,7 @@ Do not use or inspect GitHub-hosted Actions as evidence.
 
 ## 5. Commit the generated runtime state before Simulator evidence
 
-The Simulator must capture one exact committed source/runtime state.
+The Simulator must capture one exact committed source/runtime state. **Untracked or merely generated PNGs are not eligible evidence even if they render correctly.**
 
 Review the generated diff:
 
@@ -162,6 +164,7 @@ git diff -- activities/enciclopedia_greia/assets/source \
              activities/enciclopedia_greia/enciclopedia_services.py \
              tools/build_encyclopedia_visual_assets.py \
              tests/test_activity_enciclopedia_visual_foundation.py \
+             tests/test_encyclopedia_e3_review_tools.py \
              tests/test_encyclopedia_section_hit_geometry.py
 ```
 
@@ -223,12 +226,14 @@ Before the first session the harness itself requires the exact eleven-PNG runtim
 
 The harness enforces evidence integrity:
 
-- tracked source must be clean before capture (`git status --short --untracked-files=no`);
+- the checkout must be clean before capture, including non-ignored untracked files (`git status --short --untracked-files=all`);
 - the runtime directory must contain the exact eleven expected Encyclopedia PNGs—no missing E3 tranche and no unexpected runtime art;
+- for every runtime PNG, `git rev-parse HEAD:<path>` must succeed and equal `git hash-object <path>`; therefore an untracked/stale working PNG can never masquerade as evidence for `HEAD`;
 - `source-sha.txt` records the exact starting `HEAD`;
-- `capture-manifest.json` records source SHA, selected/completed jobs, viewport/locale/interface size and SHA-256 of every Activity runtime PNG;
-- the final `HEAD` and tracked status must match the start;
+- `capture-manifest.json` records source SHA, selected/completed jobs, viewport/locale/interface size, SHA-256 of every Activity runtime PNG, and the committed Git blob ID of every Activity runtime PNG;
+- the final `HEAD` and checkout status must match the start;
 - the final runtime-PNG hash inventory must equal the starting inventory;
+- the final committed runtime-art blob inventory must equal the starting inventory;
 - successful completion writes `"status": "PASS"`.
 
 After the command succeeds, inspect:
@@ -238,7 +243,7 @@ tmp/encyclopedia-e3-section-review-2026-08-29/source-sha.txt
 tmp/encyclopedia-e3-section-review-2026-08-29/capture-manifest.json
 ```
 
-The manifest must show exactly the requested seven jobs in `completed_jobs`, exactly eleven runtime-art hashes, and `status=PASS` before any screenshot is treated as current evidence.
+The manifest must show exactly the requested seven jobs in `completed_jobs`, exactly eleven entries in both `runtime_art_sha256` and `runtime_art_git_blobs`, and `status=PASS` before any screenshot is treated as current evidence.
 
 Stop on the first failed session or evidence-integrity failure. Do not substitute direct page-module rendering or isolated Pygame screenshots.
 
@@ -254,7 +259,7 @@ python3 tools/encyclopedia_v01_section_review.py \
   --output-root docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/runtime
 ```
 
-The review builder independently refuses a non-PASS, incomplete, wrong-SHA, or non-eleven-PNG manifest before copying screenshots.
+The review builder independently refuses a non-PASS, incomplete, wrong-SHA, non-eleven-PNG, or non-Git-bound manifest before copying screenshots. It preserves the exact source SHA, PNG SHA-256 inventory, and committed Git blob inventory beside the curated screenshots.
 
 Expected curated outputs:
 
