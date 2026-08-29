@@ -117,7 +117,8 @@ python3 -m unittest \
   tests.test_activity_enciclopedia \
   tests.test_activity_enciclopedia_visual_foundation \
   tests.test_encyclopedia_authoring_tools \
-  tests.test_encyclopedia_e3_review_tools
+  tests.test_encyclopedia_e3_review_tools \
+  tests.test_encyclopedia_section_hit_geometry
 ```
 
 The focused visual/review suites must prove at least:
@@ -128,9 +129,13 @@ The focused visual/review suites must prove at least:
 - E3 section pages use the authored-scene seam with fail-soft fallback;
 - Home/Animals/Earth/Body/Machines/History source target centers match actual input geometry;
 - Space's live planet geometry stays inside the authored observatory stage bounds;
+- Earth/Body/Machines/History static selection regions are pairwise non-overlapping and stay within the logical surface;
+- Body/Machines keep large authored-object hit regions rather than the old 86×86 prototype hotspots;
+- Earth/Body/Machines/History use scene-native authored focus patches rather than generic rectangular focus rings when authored art is present;
 - the golden runtime tranche is complete;
 - the E3 runtime tranche is all-or-none, never partial;
 - the E3 review harness is exactly Home + the six section pages;
+- the capture harness refuses to start without the exact complete eleven-PNG runtime-art inventory;
 - E3 capture evidence is bound to one clean tracked source SHA and an unchanged runtime-PNG hash inventory.
 
 Then run the repository-local aggregate gate required by current `main`:
@@ -156,7 +161,8 @@ git diff -- activities/enciclopedia_greia/assets/source \
              activities/enciclopedia_greia/pages \
              activities/enciclopedia_greia/enciclopedia_services.py \
              tools/build_encyclopedia_visual_assets.py \
-             tests/test_activity_enciclopedia_visual_foundation.py
+             tests/test_activity_enciclopedia_visual_foundation.py \
+             tests/test_encyclopedia_section_hit_geometry.py
 ```
 
 The SVG/source/code should already be committed. The expected new generated diff is the current runtime PNG pack.
@@ -175,7 +181,8 @@ python3 -m unittest \
   tests.test_activity_enciclopedia \
   tests.test_activity_enciclopedia_visual_foundation \
   tests.test_encyclopedia_authoring_tools \
-  tests.test_encyclopedia_e3_review_tools
+  tests.test_encyclopedia_e3_review_tools \
+  tests.test_encyclopedia_section_hit_geometry
 ```
 
 If the pushed SHA no longer matches the source/runtime state that was tested, stop and reconcile before Simulator capture.
@@ -207,16 +214,17 @@ machines
 history
 ```
 
-The harness reuses the established golden-master Simulator driver. Every job must:
+Before the first session the harness itself requires the exact eleven-PNG runtime-art inventory. It then reuses the established golden-master Simulator driver. Every job must:
 
 - launch built-in `org.greia.enciclopedia` through the real Greia Shell/profile/catalogue path;
 - navigate from Encyclopedia Home using semantic input;
 - capture the requested page;
 - exercise protected Greia Home return before shutdown.
 
-The harness itself now enforces evidence integrity:
+The harness enforces evidence integrity:
 
 - tracked source must be clean before capture (`git status --short --untracked-files=no`);
+- the runtime directory must contain the exact eleven expected Encyclopedia PNGs—no missing E3 tranche and no unexpected runtime art;
 - `source-sha.txt` records the exact starting `HEAD`;
 - `capture-manifest.json` records source SHA, selected/completed jobs, viewport/locale/interface size and SHA-256 of every Activity runtime PNG;
 - the final `HEAD` and tracked status must match the start;
@@ -230,7 +238,7 @@ tmp/encyclopedia-e3-section-review-2026-08-29/source-sha.txt
 tmp/encyclopedia-e3-section-review-2026-08-29/capture-manifest.json
 ```
 
-The manifest must show exactly the requested seven jobs in `completed_jobs` and `status=PASS` before any screenshot is treated as current evidence.
+The manifest must show exactly the requested seven jobs in `completed_jobs`, exactly eleven runtime-art hashes, and `status=PASS` before any screenshot is treated as current evidence.
 
 Stop on the first failed session or evidence-integrity failure. Do not substitute direct page-module rendering or isolated Pygame screenshots.
 
@@ -246,16 +254,20 @@ python3 tools/encyclopedia_v01_section_review.py \
   --output-root docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/runtime
 ```
 
+The review builder independently refuses a non-PASS, incomplete, wrong-SHA, or non-eleven-PNG manifest before copying screenshots.
+
 Expected curated outputs:
 
 ```text
-docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/runtime/screenshots/01-home.png
-.../02-animals.png
-.../03-space.png
-.../04-earth.png
-.../05-body.png
-.../06-machines.png
-.../07-history.png
+docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/runtime/source-sha.txt
+.../capture-manifest.json
+.../screenshots/01-home.png
+.../screenshots/02-animals.png
+.../screenshots/03-space.png
+.../screenshots/04-earth.png
+.../screenshots/05-body.png
+.../screenshots/06-machines.png
+.../screenshots/07-history.png
 .../contact-sheet.png
 ```
 
@@ -278,38 +290,44 @@ Review the actual Simulator contact sheet at 100% and each 1024×600 frame indiv
 
 - lion, elephant, octopus, bee, penguin and frog are immediately recognizable;
 - elephant trunk/ear/body silhouette survives netbook scale;
-- continuous habitat still reads as one world.
+- continuous habitat still reads as one world;
+- selected/hovered subject is lifted by the soft authored focus patch, not enclosed in a generic menu-card rectangle.
 
 ### Space
 
 - authored observatory and live Solar System complement one another;
 - observatory does not obscure moving planet/Moon targets;
 - dynamic targets remain visually dominant enough to select;
-- no planet/ring/marker visibly escapes the authored observation stage.
+- no planet/ring/marker visibly escapes the authored observation stage;
+- the selected moving subject carries the bright focus indication; the bottom text plaque remains visually secondary rather than receiving a second permanent yellow focus ring.
 
 ### Earth & Nature
 
 - rain, tree, rainbow, volcano and ocean read without labels;
 - rain remains visible despite tree overlap;
-- focus treatment does not make the landscape look like a card menu.
+- Rain and Tree pointer/focus regions do not visually or behaviorally compete at their boundary;
+- authored focus is a soft object lift, not a generic rectangular menu-card outline.
 
 ### Body
 
 - page reads as a friendly discovery room, not a medical mannequin diagram;
 - senses board, jaw/teeth model, lungs, heart and bones box are recognizable physical exhibits;
-- focus/hit treatment follows the visible exhibit rather than a tiny central hotspot.
+- focus/hit treatment follows the visible exhibit rather than a tiny central hotspot;
+- authored focus remains integrated with the exhibit instead of enclosing it in a hard UI card.
 
 ### Machines
 
 - gears unmistakably have teeth and visibly mesh;
 - magnet, bicycle, airplane and bridge are recognizable at 1024×600;
-- focus/hit areas follow the complete authored objects rather than the old 86×86 prototype circles.
+- focus/hit areas follow the complete authored objects rather than the old 86×86 prototype circles;
+- authored focus remains integrated with the workbench objects rather than restoring generic selection cards.
 
 ### History
 
 - T-rex is immediately recognizable;
 - fossil, mammoth, cave painting and pyramid remain distinct;
-- left-to-right time/excavation trail reads as one authored scene, not five cards.
+- left-to-right time/excavation trail reads as one authored scene, not five cards;
+- selected authored object receives a soft lift rather than a hard rectangular UI outline.
 
 ### Whole family
 
@@ -318,7 +336,9 @@ Block E3 closure for:
 - unrecognizable subject silhouettes;
 - detached/floating body parts;
 - mechanically false diagrams;
+- overlapping pointer targets that make one visible object activate another;
 - visual/input mismatch;
+- generic hard card-like focus treatment reappearing over authored section worlds;
 - clipped/occluded protected system chrome;
 - text required to identify the primary choices;
 - one section falling visibly back to programmer-art presentation because its authored PNG failed to load.
