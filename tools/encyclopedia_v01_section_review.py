@@ -2,10 +2,12 @@
 
 Input is produced by ``tools/encyclopedia_v01_section_review_capture.py``.
 The tool accepts only a PASS capture manifest for the exact seven-page review
-scope and complete eleven-PNG Activity runtime-art inventory, preserves that
-integrity metadata in the curated review directory, copies the seven reference
-frames, and builds one contact sheet. It does not score or approve the artwork;
-the result remains Simulator evidence for owner/maintainer visual review.
+scope and complete eleven-PNG Activity runtime-art inventory. The manifest must
+bind every runtime PNG both to a SHA-256 digest and to the exact committed Git
+blob captured from HEAD. The builder preserves that integrity metadata in the
+curated review directory, copies the seven reference frames, and builds one
+contact sheet. It does not score or approve the artwork; the result remains
+Simulator evidence for owner/maintainer visual review.
 """
 from __future__ import annotations
 
@@ -65,6 +67,14 @@ def _source(evidence_root: Path, tag: str, filename: str) -> Path:
     return path
 
 
+def _is_lower_hex(value: object, length: int) -> bool:
+    return (
+        isinstance(value, str)
+        and len(value) == length
+        and all(character in "0123456789abcdef" for character in value)
+    )
+
+
 def _load_capture_manifest(evidence_root: Path) -> tuple[dict[str, object], str]:
     manifest_path = evidence_root / "capture-manifest.json"
     source_sha_path = evidence_root / "source-sha.txt"
@@ -83,7 +93,7 @@ def _load_capture_manifest(evidence_root: Path) -> tuple[dict[str, object], str]
     source_sha = source_sha_path.read_text(encoding="utf-8").strip()
     if manifest.get("status") != "PASS":
         raise SystemExit("E3 capture manifest is not PASS")
-    if manifest.get("source_sha") != source_sha or len(source_sha) != 40:
+    if manifest.get("source_sha") != source_sha or not _is_lower_hex(source_sha, 40):
         raise SystemExit("E3 capture source SHA metadata disagrees")
 
     selected = tuple(manifest.get("selected_jobs", ()))
@@ -97,13 +107,17 @@ def _load_capture_manifest(evidence_root: Path) -> tuple[dict[str, object], str]
     if not isinstance(hashes, dict) or set(hashes) != EXPECTED_RUNTIME_ART:
         raise SystemExit("E3 capture manifest does not describe the complete 11-PNG art pack")
     for filename, digest in hashes.items():
-        if (
-            not isinstance(filename, str)
-            or not isinstance(digest, str)
-            or len(digest) != 64
-            or any(character not in "0123456789abcdef" for character in digest)
-        ):
+        if not isinstance(filename, str) or not _is_lower_hex(digest, 64):
             raise SystemExit("E3 capture manifest contains an invalid runtime-art digest")
+
+    git_blobs = manifest.get("runtime_art_git_blobs")
+    if not isinstance(git_blobs, dict) or set(git_blobs) != EXPECTED_RUNTIME_ART:
+        raise SystemExit(
+            "E3 capture manifest does not bind the complete runtime-art pack to Git"
+        )
+    for filename, blob_sha in git_blobs.items():
+        if not isinstance(filename, str) or not _is_lower_hex(blob_sha, 40):
+            raise SystemExit("E3 capture manifest contains an invalid runtime-art Git blob")
 
     return manifest, source_sha
 
