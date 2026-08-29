@@ -23,11 +23,7 @@ from greia_platform.activity_api import (
     set_interface_size,
     set_theme_color,
 )
-from greia_platform.activity_ui import (
-    draw_activity_pointer,
-    draw_system_chrome_overlay,
-    is_home_clicked,
-)
+from greia_platform.activity_ui import draw_activity_pointer
 from greia_platform.activity_viewport import ActivityViewport
 from greia_platform.customization import ColorSwatch, WallpaperCandidate
 from greia_platform.responsive_layout import AdaptiveGridPolicy, UiRect, Viewport
@@ -155,9 +151,6 @@ class MyGreiaSettings:
             self._apply_size(sizes[(current + delta) % len(sizes)])
 
     def _handle_click(self, position: tuple[int, int]) -> None:
-        if is_home_clicked(self.screen, position):
-            self.running = False
-            return
         for target in reversed(self.targets):
             if not target.rect.collidepoint(position):
                 continue
@@ -274,7 +267,6 @@ class MyGreiaSettings:
         else:
             self._draw_avatars()
         self._draw_feedback()
-        draw_system_chrome_overlay(self.screen)
         self._draw_pointer()
 
     def _draw_mode_bar(self) -> None:
