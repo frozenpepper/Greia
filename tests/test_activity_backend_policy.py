@@ -71,6 +71,20 @@ pygame.display.flip()
                 ):
                     assert_python_activity_backend_independent(root)
 
+    def test_import_aliases_do_not_bypass_environment_or_command_policy(self) -> None:
+        cases = (
+            'import os as host\nvalue = host.getenv("DISPLAY")\n',
+            'from os import environ as host_env\nvalue = host_env["XAUTHORITY"]\n',
+            'from os import getenv as read_env\nvalue = read_env("WAYLAND_DISPLAY")\n',
+            'import subprocess as process\nprocess.run(["xinput", "list"])\n',
+            'from subprocess import run as execute\nexecute(["xrandr", "--query"])\n',
+        )
+        for source in cases:
+            with self.subTest(source=source):
+                root = self._activity(source)
+                with self.assertRaises(ActivityBackendPolicyError):
+                    assert_python_activity_backend_independent(root)
+
     def test_raw_input_and_drm_device_paths_are_blockers(self) -> None:
         root = self._activity(
             'INPUT = "/dev/input/event0"\nDRM = "/dev/dri/card0"\n'
@@ -94,16 +108,18 @@ subprocess.run(["xrandr", "--query"])
         assert_python_activity_backend_independent(harmless)
 
     def test_native_x11_wayland_drm_library_probes_are_blockers(self) -> None:
-        root = self._activity(
-            """
-import ctypes.util
-name = ctypes.util.find_library("X11")
-"""
+        cases = (
+            'import ctypes.util\nname = ctypes.util.find_library("X11")\n',
+            'import ctypes.util as libraries\nname = libraries.find_library("gbm")\n',
+            'from ctypes.util import find_library as find\nname = find("wayland-client")\n',
         )
-        with self.assertRaisesRegex(
-            ActivityBackendPolicyError, "backend-native-library"
-        ):
-            assert_python_activity_backend_independent(root)
+        for source in cases:
+            with self.subTest(source=source):
+                root = self._activity(source)
+                with self.assertRaisesRegex(
+                    ActivityBackendPolicyError, "backend-native-library"
+                ):
+                    assert_python_activity_backend_independent(root)
 
     def test_current_activity_side_system_chrome_is_migration_debt_not_new_blocker(self) -> None:
         root = self._activity(
@@ -119,20 +135,31 @@ from greia_platform.activity_ui import draw_system_chrome_overlay, is_home_click
         assert_python_activity_backend_independent(root)
 
     def test_direct_pygame_joystick_is_migration_debt(self) -> None:
-        root = self._activity(
+        cases = (
             """
 import pygame
 pygame.joystick.init()
 pad = pygame.joystick.Joystick(0)
-"""
+""",
+            """
+import pygame as pg
+pg.joystick.init()
+""",
+            """
+from pygame import joystick as pads
+pads.init()
+""",
         )
-        findings = scan_python_activity_backend_policy(root)
-        self.assertTrue(findings)
-        self.assertTrue(
-            all(item.severity is BackendFindingSeverity.MIGRATION for item in findings)
-        )
-        self.assertEqual({item.code for item in findings}, {"raw-controller"})
-        assert_python_activity_backend_independent(root)
+        for source in cases:
+            with self.subTest(source=source):
+                root = self._activity(source)
+                findings = scan_python_activity_backend_policy(root)
+                self.assertTrue(findings)
+                self.assertTrue(
+                    all(item.severity is BackendFindingSeverity.MIGRATION for item in findings)
+                )
+                self.assertEqual({item.code for item in findings}, {"raw-controller"})
+                assert_python_activity_backend_independent(root)
 
     def test_comments_and_docstrings_do_not_trigger_keyword_false_positives(self) -> None:
         root = self._activity(
