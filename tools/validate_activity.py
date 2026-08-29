@@ -10,6 +10,9 @@ if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
 from greia_platform.activities import ActivityRegistry, RuntimeCatalogue, package_digest
+from greia_platform.activity_backend_policy import (
+    assert_python_activity_backend_independent,
+)
 from greia_platform.trust import ActivitySource, PackageTrust
 
 
@@ -43,6 +46,12 @@ def main() -> int:
     source = validation_source(root, project_root)
     registry = ActivityRegistry([source], runtime)
     manifest = registry.validate_registration(root, source).manifest
+    if manifest.runtime_type == "python":
+        # R7 hard gate: SDL/Pygame rendering remains valid, but Activity source
+        # may not select/probe/own X11, Wayland, DRM/KMS or raw host input.
+        # Existing cooperative Home/controller debt is inventory-only until its
+        # dedicated R7 migration wave removes it.
+        assert_python_activity_backend_independent(root)
     print(f"PASS {manifest.activity_id} {manifest.version}")
     print(f"sha256 {package_digest(root)}")
     return 0
