@@ -4,7 +4,7 @@
 **Canonical repository:** `frozenpepper/Greia`
 **Canonical branch:** `main`
 **Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**
-**Current parallel visual focus:** **Encyclopedia E3 six-section source reauthoring after owner approval of corrected golden-master direction**
+**Current parallel visual focus:** **Encyclopedia E3 six-section runtime closure after owner approval of corrected golden-master direction**
 **Active Activity-modernization plan:** `docs/plans/2026-08-29_R7_R73_ACTIVITY_MODERNIZATION.md` (one Activity at a time, sequential, scoped to R7.3)
 **Purpose:** short current continuation contract. Detailed chronology belongs in active plans and dated reviews/handovers.
 
@@ -296,9 +296,9 @@ Golden-master direction is owner-approved after direct source repair. Current ga
 ```text
 E1 VISUAL/ASSET ARCHITECTURE:        COMPLETE
 E2/E2R VISUAL DIRECTION:             OWNER APPROVED
-LATEST CORRECTED RUNTIME PNGS:       REBUILD PENDING
+LATEST CORRECTED RUNTIME PNGS:       LOCAL STAGING / COMMITTED PACK PENDING
 LATEST EXACT-SOURCE SIMULATOR PROOF: PENDING
-E3 SECTION-PAGE REAUTHORING:         ACTIVE
+E3 SECTION-PAGE REAUTHORING:         SOURCE-IMPLEMENTED / RUNTIME REVIEW PENDING
 E4 FACTUAL-ENTRY MIGRATION:          BLOCKED UNTIL E3 REVIEW
 ```
 
@@ -320,6 +320,19 @@ docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/SOURCE_REVIEW.md
 
 The five section pages are source-wired through bounded `VisualLibrary`; missing E3 generated PNGs fall back to the prior procedural scene. Space preserves its live orbiting Solar System model. Runtime section art is either 0/5 during staged source work or 5/5 after generation; partial pack is forbidden.
 
+The source side is now hardened before runtime capture:
+
+- Home/Animals/Earth/Body/Machines/History authored target positions are machine-bound to input geometry;
+- Earth/Body/Machines/History static hit regions are bounded and non-overlapping;
+- Space has an authored Solar-System stage contract proving the moving planets/Moon stay inside the observatory stage;
+- authored section selection uses a non-occluding perimeter halo instead of a filled translucent UI-card wash;
+- Earth's duplicate floating focus dot is removed;
+- full-screen authored scenes are flattened opaque RGB and use display-optimized `Surface.convert()`; transparent canonical character sprites retain `convert_alpha()`;
+- the authoring builder rejects wrong-size or alpha-bearing/non-RGB Encyclopedia scene PNGs;
+- E3 evidence requires exactly eleven PNGs already committed in the exact captured `HEAD`, with working bytes equal to the committed Git blobs, and records both SHA-256 and Git blob IDs.
+
+The current local nine-PNG staging set is recoverability/source-review material only. It cannot satisfy the E3 gate until the complete eleven-PNG state is rebuilt, checked and committed in the canonical repository.
+
 Current Encyclopedia continuation authority:
 
 ```text
@@ -327,6 +340,7 @@ encyclopedia/HANDOVER.md
 docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md
 docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/SOURCE_REVIEW.md
 docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md
+docs/testing/2026-08-29_ENCYCLOPEDIA_E3_SECTION_RUNTIME_REVIEW.md
 ```
 
 No local-agent visual-authoring task is currently authorized; the owner asked the primary agent to perform this work directly.
@@ -481,11 +495,13 @@ Next exact visual gate:
 
 ```text
 build corrected six golden-master PNGs + five E3 section PNGs
-→ verify all 11 current SVG/PNG renditions
-→ focused Encyclopedia tests + required repository verification
-→ commit/push complete current runtime-art state
+→ verify all 11 current SVG/PNG renditions, including opaque RGB contract
+→ focused Encyclopedia tests including focus/evidence/runtime-surface regressions
+→ required repository verification
+→ commit/push exact complete 11-PNG runtime-art state
+→ rerun build --check + focused tests on that pushed SHA
 → fresh exact-SHA real Greia Simulator
-→ review Home + all six section pages as one family
+→ capture/review Home + all six section pages as one family through the Git-bound E3 harness
 → if accepted, close E3 and unblock E4
 ```
 

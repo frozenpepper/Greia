@@ -14,42 +14,35 @@ ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = ROOT / "tests" / "fixtures" / "activities" / "r7_noncooperative_chrome"
 
 
-def _fixture_names() -> set[str]:
-    """AST-walk the fixture and return every Name / Attribute tail used.
+def _python_symbols(source: str) -> set[str]:
+    """Return executable/imported Python symbols, excluding comments/docstrings."""
 
-    This is the strict source invariant: a comment or docstring that happens
-    to contain a forbidden token must not be reported as a real reference.
-    """
-    source = (FIXTURE / "main.py").read_text(encoding="utf-8")
     tree = ast.parse(source)
-    names: set[str] = set()
+    symbols: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.Name):
-            names.add(node.id)
+            symbols.add(node.id)
         elif isinstance(node, ast.Attribute):
-            names.add(node.attr)
-    return names
+            symbols.add(node.attr)
+        elif isinstance(node, ast.alias):
+            symbols.add(node.asname or node.name.rsplit(".", 1)[-1])
+    return symbols
 
 
 class R7NonCooperativeChromeFixtureTests(unittest.TestCase):
     def test_fixture_has_no_activity_owned_escape_or_chrome_path(self) -> None:
         source = (FIXTURE / "main.py").read_text(encoding="utf-8")
-        self.assertIn("mark_activity_ready", source)
-        names = _fixture_names()
+        symbols = _python_symbols(source)
+        self.assertIn("mark_activity_ready", symbols)
         for forbidden in (
             "activity_stop_requested",
             "draw_system_chrome_overlay",
             "is_home_clicked",
+            "K_ESCAPE",
+            "QUIT",
         ):
-            self.assertNotIn(
-                forbidden,
-                names,
-                f"fixture must not reference {forbidden} as a real symbol",
-            )
-        # Pygame input keys are real Name lookups; they show up in the AST
-        # walk above if the fixture references them.
-        self.assertNotIn("K_ESCAPE", names)
-        self.assertNotIn("QUIT", names)
+            with self.subTest(forbidden=forbidden):
+                self.assertNotIn(forbidden, symbols)
 
     def test_fixture_is_backend_independent(self) -> None:
         findings = scan_python_activity_backend_policy(FIXTURE)

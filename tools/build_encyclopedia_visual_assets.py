@@ -8,13 +8,23 @@ build product therefore requires an intentional rebuild and commit.
 
 The visual migration is deliberately tranche-based. ``golden`` owns the six
 accepted golden-master renditions and ``sections`` owns the five E3 section
-worlds. The default ``all`` group produces both tranches together.
+worlds. The default ``all`` group produces both tranches together. A full
+``--check --group all`` additionally requires the runtime directory to contain
+exactly those eleven PNGs, preventing stale or abandoned renditions from being
+silently carried into exact-SHA Simulator evidence.
+
+Every Encyclopedia scene is a flattened full-screen backdrop and must therefore
+build as an opaque RGB PNG. Transparent character sprites remain separate shared
+assets. Rejecting alpha-bearing scene renditions here keeps the low-resource
+runtime free to use display-optimized opaque surfaces without silently flattening
+an unintended transparent master.
 """
 from __future__ import annotations
 
 import argparse
 import hashlib
 from pathlib import Path
+import struct
 from tempfile import TemporaryDirectory
 
 try:
@@ -44,6 +54,26 @@ SECTION_NAMES = (
 )
 NAMES = GOLDEN_MASTER_NAMES + SECTION_NAMES
 REFERENCE_SIZE = (1024, 600)
+PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+PNG_COLOR_TYPE_RGB = 2
+
+
+def _validate_runtime_png(path: Path) -> None:
+    data = path.read_bytes()
+    if len(data) < 26 or not data.startswith(PNG_SIGNATURE):
+        raise RuntimeError(f"invalid PNG rendition: {path}")
+    width, height = struct.unpack(">II", data[16:24])
+    if (width, height) != REFERENCE_SIZE:
+        raise RuntimeError(
+            f"wrong Encyclopedia rendition size for {path}: "
+            f"{width}x{height}, expected {REFERENCE_SIZE[0]}x{REFERENCE_SIZE[1]}"
+        )
+    color_type = data[25]
+    if color_type != PNG_COLOR_TYPE_RGB:
+        raise RuntimeError(
+            f"Encyclopedia scene rendition must be opaque RGB: {path} "
+            f"PNG color_type={color_type}, expected {PNG_COLOR_TYPE_RGB}"
+        )
 
 
 def _build_one(name: str, target_root: Path) -> Path:
@@ -56,6 +86,7 @@ def _build_one(name: str, target_root: Path) -> Path:
         output_width=REFERENCE_SIZE[0],
         output_height=REFERENCE_SIZE[1],
     )
+    _validate_runtime_png(target)
     return target
 
 
@@ -71,6 +102,12 @@ def _selected_names(group: str) -> tuple[str, ...]:
     return NAMES
 
 
+def _runtime_png_names() -> set[str]:
+    if not RUNTIME.exists():
+        return set()
+    return {path.name for path in RUNTIME.glob("*.png") if path.is_file()}
+
+
 def build(names: tuple[str, ...]) -> int:
     total = 0
     for name in names:
@@ -83,21 +120,29 @@ def build(names: tuple[str, ...]) -> int:
 
 
 def check(names: tuple[str, ...]) -> int:
-    missing = [
-        RUNTIME / f"{name}.png"
-        for name in names
-        if not (RUNTIME / f"{name}.png").is_file()
-    ]
-    if missing:
-        for path in missing:
-            print(f"MISSING {path.relative_to(ROOT)}")
+    expected = {f"{name}.png" for name in names}
+    present = _runtime_png_names()
+    missing_names = sorted(expected - present)
+    if missing_names:
+        for filename in missing_names:
+            print(f"MISSING {(RUNTIME / filename).relative_to(ROOT)}")
         return 1
+
+    # Tranche checks intentionally coexist with the other tranche. The full
+    # check is the release/review contract and therefore rejects stale extras.
+    if names == NAMES:
+        unexpected = sorted(present - expected)
+        if unexpected:
+            for filename in unexpected:
+                print(f"UNEXPECTED {(RUNTIME / filename).relative_to(ROOT)}")
+            return 1
 
     with TemporaryDirectory(prefix="greia-encyclopedia-art-") as temporary:
         rebuilt_root = Path(temporary)
         for name in names:
             rebuilt = _build_one(name, rebuilt_root)
             committed = RUNTIME / f"{name}.png"
+            _validate_runtime_png(committed)
             if rebuilt.read_bytes() != committed.read_bytes():
                 print(
                     f"BUILD-DRIFT {name}: rebuilt_sha256={_sha256(rebuilt)} "

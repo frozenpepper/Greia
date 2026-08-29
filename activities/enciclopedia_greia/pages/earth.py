@@ -9,11 +9,11 @@ import pygame
 
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
-    from ..enciclopedia_presentation import draw_authored_scene, draw_title
+    from ..enciclopedia_presentation import draw_authored_scene, draw_focus_patch, draw_title
     from .common import draw_presenter, focus_ring
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
-    from enciclopedia_presentation import draw_authored_scene, draw_title
+    from enciclopedia_presentation import draw_authored_scene, draw_focus_patch, draw_title
     from pages.common import draw_presenter, focus_ring
 
 
@@ -25,7 +25,11 @@ class EarthDestination:
 
 
 DESTINATIONS = (
-    EarthDestination("rain", "earth.rain", pygame.Rect(105, 138, 225, 130)),
+    # Preserve the authored rain center (217,203) while ending exactly above
+    # the Tree region. The previous 130px height overlapped the tree canopy and
+    # made part of the visible tree resolve to Rain because pointer hits are
+    # checked in destination order.
+    EarthDestination("rain", "earth.rain", pygame.Rect(105, 156, 225, 94)),
     EarthDestination("tree", "earth.tree", pygame.Rect(120, 250, 180, 205)),
     EarthDestination("rainbow", "earth.rainbow", pygame.Rect(340, 210, 270, 205)),
     EarthDestination("volcano", "earth.volcano", pygame.Rect(645, 278, 190, 185)),
@@ -93,14 +97,10 @@ class EarthPage(EncyclopediaPage):
 
         for index, item in enumerate(DESTINATIONS):
             active = index == self._selected or index == self._hovered
-            focus_ring(surface, item.rect, active)
-            if active:
-                pygame.draw.circle(
-                    surface,
-                    (255, 220, 78),
-                    (item.rect.right - 14, item.rect.top + 14),
-                    7,
-                )
+            if authored:
+                draw_focus_patch(surface, item.rect, active=active, radius=22)
+            else:
+                focus_ring(surface, item.rect, active)
 
         draw_presenter(
             surface,

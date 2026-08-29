@@ -102,6 +102,21 @@ class EncyclopediaVisualFoundationTests(unittest.TestCase):
             result[target] = (int(x_text), int(y_text))
         return result
 
+    @staticmethod
+    def _svg_stage_bounds(path: Path, stage_id: str) -> tuple[int, int, int, int]:
+        root = ET.parse(path).getroot()
+        for element in root.iter():
+            if element.attrib.get("data-stage") != stage_id:
+                continue
+            raw = element.attrib.get("data-bounds")
+            if raw is None:
+                raise AssertionError(f"SVG stage {stage_id!r} is missing data-bounds")
+            values = tuple(int(part) for part in raw.split(","))
+            if len(values) != 4:
+                raise AssertionError(f"SVG stage {stage_id!r} needs x,y,width,height")
+            return values
+        raise AssertionError(f"missing SVG stage: {stage_id}")
+
     def test_editable_golden_master_and_section_sources_exist(self) -> None:
         actual = {path.stem for path in SOURCE.glob("*.svg")}
         self.assertTrue(EXPECTED_STEMS.issubset(actual))
@@ -238,6 +253,54 @@ class EncyclopediaVisualFoundationTests(unittest.TestCase):
             dict(zip(history_ids, history_centers)),
             self._svg_target_centers(SOURCE / "history_gallery_time_trail.svg"),
         )
+
+    def test_space_live_solar_system_stays_inside_authored_stage(self) -> None:
+        space_path = ACTIVITY / "pages" / "space.py"
+        tree = ast.parse(space_path.read_text(encoding="utf-8"))
+        center_x, center_y = ast.literal_eval(self._assignment(tree, "SOLAR_SYSTEM_CENTER"))
+        code_bounds = tuple(
+            ast.literal_eval(self._assignment(tree, "SOLAR_SYSTEM_STAGE_BOUNDS"))
+        )
+        svg_bounds = self._svg_stage_bounds(
+            SOURCE / "space_gallery_observatory.svg",
+            "solar-system",
+        )
+        self.assertEqual(code_bounds, svg_bounds)
+        stage_x, stage_y, stage_width, stage_height = code_bounds
+        stage_right = stage_x + stage_width
+        stage_bottom = stage_y + stage_height
+
+        planets = self._assignment(tree, "PLANETS")
+        self.assertIsInstance(planets, (ast.Tuple, ast.List))
+        for item in planets.elts:
+            self.assertIsInstance(item, ast.Call)
+            planet_id = str(ast.literal_eval(item.args[0]))
+            radius_x = int(ast.literal_eval(item.args[2]))
+            radius_y = int(ast.literal_eval(item.args[3]))
+            size = int(ast.literal_eval(item.args[4]))
+            # Saturn's visible ring extends eight pixels beyond its disc. The
+            # open-entry marker may extend ten pixels beyond a planet on x.
+            visual_x_margin = max(size + 10, size + (8 if planet_id == "saturn" else 0))
+            visual_y_margin = size
+            with self.subTest(planet=planet_id):
+                self.assertGreaterEqual(center_x - radius_x - visual_x_margin, stage_x)
+                self.assertLessEqual(center_x + radius_x + visual_x_margin, stage_right)
+                self.assertGreaterEqual(center_y - radius_y - visual_y_margin, stage_y)
+                self.assertLessEqual(center_y + radius_y + visual_y_margin, stage_bottom)
+
+        # The Moon orbits Earth, so its maximum excursion is Earth's orbit plus
+        # the 28x14 Moon orbit and four-pixel disc.
+        earth = next(
+            item
+            for item in planets.elts
+            if str(ast.literal_eval(item.args[0])) == "earth"
+        )
+        earth_rx = int(ast.literal_eval(earth.args[2]))
+        earth_ry = int(ast.literal_eval(earth.args[3]))
+        self.assertGreaterEqual(center_x - earth_rx - 28 - 4, stage_x)
+        self.assertLessEqual(center_x + earth_rx + 28 + 4, stage_right)
+        self.assertGreaterEqual(center_y - earth_ry - 14 - 4, stage_y)
+        self.assertLessEqual(center_y + earth_ry + 14 + 4, stage_bottom)
 
     def test_runtime_pack_is_complete_per_visual_tranche(self) -> None:
         """Golden art is complete; E3 section art may be absent, never partial."""

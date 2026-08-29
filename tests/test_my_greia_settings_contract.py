@@ -50,8 +50,8 @@ class MyGreiaSettingsContractTests(unittest.TestCase):
             / "greia-x-session"
         ).read_text(encoding="utf-8")
         self.assertIn("-m greia_launcher.child_shell", wrapper)
-        # R7.3: installed fallback path is the trusted presentation module.
         self.assertIn("-m greia_launcher.trusted_presentation", wrapper)
+        self.assertNotIn("-m greia_launcher.presentation", wrapper)
 
 
 if __name__ == "__main__":

@@ -9,11 +9,11 @@ import pygame
 
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
-    from ..enciclopedia_presentation import draw_authored_scene, draw_title
+    from ..enciclopedia_presentation import draw_authored_scene, draw_focus_patch, draw_title
     from .common import draw_presenter, focus_ring, grid_step
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
-    from enciclopedia_presentation import draw_authored_scene, draw_title
+    from enciclopedia_presentation import draw_authored_scene, draw_focus_patch, draw_title
     from pages.common import draw_presenter, focus_ring, grid_step
 
 
@@ -109,11 +109,11 @@ class BodyPage(EncyclopediaPage):
             self.context.palette.ink,
         )
         for index, rect in enumerate(self._target_rects):
-            focus_ring(
-                surface,
-                rect,
-                index == self._selected or index == self._hovered,
-            )
+            active = index == self._selected or index == self._hovered
+            if authored:
+                draw_focus_patch(surface, rect, active=active, radius=18)
+            else:
+                focus_ring(surface, rect, active)
 
         draw_presenter(
             surface,

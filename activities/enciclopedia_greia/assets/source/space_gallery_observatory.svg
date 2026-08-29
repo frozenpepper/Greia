@@ -34,6 +34,7 @@
   <path d="M142 470V272 Q142 140 500 130 Q858 140 858 272V470Z" fill="none" stroke="#d0a34c" stroke-width="3" opacity="0.65"/>
   <path d="M500 116V472" stroke="#735128" stroke-width="3" opacity="0.35"/>
 </g>
+<rect data-stage="solar-system" data-bounds="128,108,744,377" x="128" y="108" width="744" height="377" fill="none" pointer-events="none"/>
 
 <g fill="#f7f0cb" opacity="0.9">
   <circle cx="174" cy="194" r="2"/><circle cx="205" cy="266" r="1.5"/><circle cx="251" cy="166" r="1.7"/>

@@ -8,14 +8,12 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class LauncherBootFallbackTests(unittest.TestCase):
-    def test_x_session_keeps_profile_shell_primary_and_presentation_fallback(self) -> None:
+    def test_x_session_keeps_profile_shell_primary_and_trusted_presentation_fallback(self) -> None:
         session = (
             ROOT / "build/overlay/usr/local/lib/greia-os/greia-x-session"
         ).read_text(encoding="utf-8")
 
         primary = "/usr/bin/python3 -m greia_launcher.child_shell"
-        # R7.3: the installed fallback is the trusted presentation path;
-        # the older plain presentation module is no longer an installed fallback.
         fallback = "/usr/bin/python3 -m greia_launcher.trusted_presentation"
         self.assertIn(primary, session)
         self.assertIn(fallback, session)

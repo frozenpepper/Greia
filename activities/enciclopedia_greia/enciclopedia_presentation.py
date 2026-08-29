@@ -230,25 +230,35 @@ def draw_focus_patch(
     active: bool,
     radius: int = 22,
 ) -> None:
-    """Lift an authored object without placing it inside a generic UI card."""
+    """Lift an authored object with a non-occluding scene halo.
+
+    The focus treatment must not repaint the exhibit inside a translucent UI
+    card. Only the perimeter is drawn, so the authored subject keeps its own
+    color, texture and depth while still receiving an obvious child-sized
+    selection cue.
+    """
 
     if not active:
         return
-    glow = pygame.Surface((rect.width + 28, rect.height + 28), pygame.SRCALPHA)
-    pygame.draw.rect(
+
+    pad = 16
+    glow = pygame.Surface((rect.width + pad * 2, rect.height + pad * 2), pygame.SRCALPHA)
+    outer = glow.get_rect().inflate(-4, -4)
+    inner = outer.inflate(-12, -12)
+    outer_width = max(5, min(9, radius // 3))
+    pygame.draw.ellipse(
         glow,
-        (255, 216, 83, 46),
-        glow.get_rect(),
-        border_radius=radius + 10,
+        (255, 216, 83, 92),
+        outer,
+        width=outer_width,
     )
-    pygame.draw.rect(
+    pygame.draw.ellipse(
         glow,
-        (255, 216, 83, 220),
-        glow.get_rect().inflate(-7, -7),
-        width=5,
-        border_radius=radius,
+        (255, 240, 176, 215),
+        inner,
+        width=3,
     )
-    surface.blit(glow, (rect.x - 14, rect.y - 14))
+    surface.blit(glow, (rect.x - pad, rect.y - pad))
 
 
 def draw_caption_ribbon(

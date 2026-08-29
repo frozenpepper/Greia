@@ -8,11 +8,12 @@
 **Active visual plan:** `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`  
 **Current Activity visual subplan:** `docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md`  
 **Current E3 source review:** `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/SOURCE_REVIEW.md`  
+**E3 runtime gate:** `docs/testing/2026-08-29_ENCYCLOPEDIA_E3_SECTION_RUNTIME_REVIEW.md`  
 **Visual-authoring skill:** `skills/greia-visual-authoring/SKILL.md`
 
 ---
 
-# 1. Current focus — Encyclopedia E3 section worlds
+# 1. Current focus — Encyclopedia E3 runtime closure
 
 The owner rejected the earlier Encyclopedia/E2R pixels, then directly reviewed the primary-agent source repairs to Home, Animals, Lion and Gears.
 
@@ -25,16 +26,21 @@ middle Space/Machines column deliberately straddles the x=512 spine
 
 After inspecting the corrected source direction, the owner explicitly approved moving forward with the visual-reauthoring plan.
 
+The subsequent E3 section-family source review reached **v6** after the primary agent rejected its own flatter Body/Earth/Machines/History v5 designs and reauthored those four pages again.
+
 Current disposition:
 
 ```text
 E1 visual/asset architecture            COMPLETE
 E2/E2R visual direction                 OWNER APPROVED
-latest corrected golden runtime PNGs    STALE / REBUILD PENDING
-latest exact-source Simulator proof     PENDING
-E3 six-section source direction         IMPLEMENTED / SOURCE-REVIEWED
-E3 target geometry/hit areas            HARDENED
-E3 runtime PNG + Simulator review       PENDING
+E3 six-section source direction         V6 SOURCE-REVIEWED / FROZEN
+E3 target geometry/stage contracts      HARDENED
+E3 focus treatment                      NON-OCCLUDING HALO / SOURCE-REVIEWED
+E3 runtime scene surface policy         OPAQUE FULL-SCREEN SCENES OPTIMIZED
+E3 staging-import recovery path         IMPLEMENTED / MAINTAINER-ONLY
+E3 evidence-integrity tooling           HARDENED
+E3 committed 11-PNG runtime pack        PENDING
+E3 exact-SHA Simulator review           PENDING
 E4 factual-entry migration              BLOCKED
 ```
 
@@ -90,7 +96,7 @@ The owner asked the primary agent to perform this visual work directly. Do not h
 
 ---
 
-# 4. E3 six-section source family
+# 4. E3 six-section source family — v6
 
 Animals remains the section-world reference:
 
@@ -98,7 +104,7 @@ Animals remains the section-world reference:
 activities/enciclopedia_greia/assets/source/animals_field_table.svg
 ```
 
-New source masters:
+Section masters:
 
 ```text
 activities/enciclopedia_greia/assets/source/space_gallery_observatory.svg
@@ -108,25 +114,27 @@ activities/enciclopedia_greia/assets/source/machines_gallery_workbench.svg
 activities/enciclopedia_greia/assets/source/history_gallery_time_trail.svg
 ```
 
-Current source direction:
+Current family:
 
 ```text
-Animals          one continuous habitat
+Animals          continuous habitat; corrected lion + elephant
 Space            authored observatory around the live Solar System
-Earth & Nature   one layered landscape with five physical destinations
-Body             one discovery room with physical anatomy exhibits
-Machines         one workshop with real object/mechanism silhouettes
-History          one time/excavation trail rather than five cards
+Earth & Nature   layered landscape; storm/tree/rainbow/volcano/bay
+Body             hands-on discovery room; no central mannequin
+Machines         real workshop with physical teaching models
+History          continuous time/excavation trail rather than shelf objects
 ```
 
-Source contact review caught and corrected issues before runtime acceptance:
+The v6 pass specifically corrected the remaining source-quality issues:
 
 ```text
-Body      mannequin/schematic feeling -> friendly room + physical learning props
-Machines  weak gear/bridge read -> meshing toothed pair + clearer bridge
-History   ambiguous dinosaur -> explicit T-rex silhouette
-Earth     rain hidden by tree canopy -> visible near-layer rain streaks
+Earth     deeper landscape; rain curtain remains visible in front of tree
+Body      mannequin removed; five physical museum-style exhibits
+Machines  physical workbench; three clearly toothed gears visibly mesh
+History   jungle -> dig -> ice age -> cave -> desert continuous trail
 ```
+
+All four reauthored v6 pages preserved their existing semantic centers. A local static audit confirmed their SVG target metadata still equals the page centers and their direct renders remain 1024×600 RGB. This is source evidence only.
 
 Current source review:
 
@@ -137,14 +145,14 @@ docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/SOURCE_REVIEW.md
 Current maintainer-local six-section contact sheet:
 
 ```text
-encyclopedia_e3_section_source_contact_v5.png
+encyclopedia_e3_section_source_contact_v6.png
 ```
 
 Evidence class: **SOURCE / DESKTOP VISUAL REVIEW** only.
 
 ---
 
-# 5. E3 staged runtime integration and geometry
+# 5. E3 runtime integration, geometry and focus
 
 `VisualLibrary.ART_ASSETS` registers the five E3 semantic IDs in addition to the six golden-master assets.
 
@@ -165,11 +173,15 @@ Behavior while generated E3 PNGs are absent:
 - semantic destinations/input/page IDs remain unchanged;
 - Space always retains its live orbiting Sun/planets/Moon model; the authored scene is only the observatory context.
 
-Static source/input alignment is now machine-checkable for Home, Animals, Earth, Body, Machines and History through SVG `data-target`/`data-center` metadata and the focused visual-foundation test. Space remains runtime-dynamic and is intentionally excluded from that static-center assertion.
+Static source/input alignment is machine-checkable for Home, Animals, Earth, Body, Machines and History through SVG `data-target`/`data-center` metadata and focused tests.
 
-Body and Machines no longer use the old uniform 86×86 prototype pointer areas. Their hit/focus rectangles follow the actual authored exhibit/object footprints while retaining the same semantic centers and keyboard/controller order.
+Space is runtime-dynamic, so it uses an authored **Solar System stage contract** instead of fake fixed target centers. The observatory SVG carries `data-stage="solar-system"` bounds, `space.py` exposes matching literal center/stage constants, and the visual-foundation test proves the full moving planet discs, Saturn ring/marker margin and Moon excursion remain inside that stage.
 
-History target centers are explicit constants rather than implicit positional arithmetic.
+Body and Machines use generous exhibit/object pointer regions instead of the old uniform 86×86 prototype hotspots. History target centers are explicit constants. Earth Rain/Tree regions are disjoint.
+
+Authored Earth/Body/Machines/History selection uses `draw_focus_patch(...)`, a transparent perimeter halo rather than a filled card-like overlay. The older rectangular `focus_ring(...)` remains only for procedural fail-soft presentation. Space's moving selected subject owns its focus; its bottom label remains neutral.
+
+All eleven authored scene renditions are flattened opaque full-screen RGB assets. `VisualLibrary.art()` uses display-optimized `Surface.convert()` for those scenes. Canonical character sprites continue to use `convert_alpha()` because their transparent silhouettes require it.
 
 Build groups:
 
@@ -179,84 +191,125 @@ python3 tools/build_encyclopedia_visual_assets.py --group sections
 python3 tools/build_encyclopedia_visual_assets.py --group all
 ```
 
-The corresponding `--check` path verifies committed renditions byte-for-byte.
+The corresponding `--check` path validates size/color type and verifies committed renditions byte-for-byte against rebuilt masters.
 
-Runtime-pack source contract:
+Runtime-pack contract:
 
 ```text
 golden tranche   6 / 6
 E3 tranche       0 / 5 or 5 / 5; partial section packs forbidden
+final E3 review  exact 11 / 11 committed PNGs required
 ```
 
 ---
 
-# 6. E3 Simulator review harness
+# 6. Runtime-art staging recovery path
 
-The runtime gate now has dedicated bounded tooling:
+The current out-of-repository v6 recoverability bundle is:
+
+```text
+ENCYCLOPEDIA_E3_RUNTIME_ART_STAGING_V6_2026-08-29.zip
+```
+
+It contains exactly the nine changed/new renditions:
+
+```text
+Home
+Animals
+Lion
+Gears
+Space section
+Earth section
+Body section
+Machines section
+History section
+```
+
+Saturn and Pyramids are intentionally omitted because their accepted runtime Git blobs are unchanged.
+
+The previous staging ZIP is superseded because it contained stale Body/Earth metadata and earlier source renders. Do not use it.
+
+Maintainer-only helper:
+
+```text
+tools/import_encyclopedia_runtime_art_staging.py
+tests/test_encyclopedia_runtime_art_staging.py
+```
+
+The importer:
+
+- requires exactly one `runtime-manifest.json` and rejects legacy duplicate `manifest.json`;
+- rejects unsafe ZIP paths/symlinks;
+- requires exactly the nine expected staged PNGs and no extra PNG;
+- verifies manifest SHA-256, byte count, 1024×600 dimensions and RGB mode metadata;
+- validates the actual PNG header/dimensions/color type;
+- refuses unexpected runtime PNGs;
+- requires the existing Saturn/Pyramids runtime files to remain present and valid;
+- prevalidates the entire staging payload before writing;
+- uses temporary files plus `os.replace` for each of the nine changed/new targets;
+- requires the post-import runtime directory to contain exactly 11 expected PNGs.
+
+This helper does **not** make the staging ZIP authoritative. After import, `build_encyclopedia_visual_assets.py --check --group all`, focused tests, `make verify`, commit/push and exact-SHA Simulator evidence remain mandatory.
+
+---
+
+# 7. E3 Simulator review harness
+
+Runtime gate tooling:
 
 ```text
 tools/encyclopedia_v01_section_review_capture.py
 tools/encyclopedia_v01_section_review.py
+tests/test_encyclopedia_e3_review_tools.py
+tests/test_encyclopedia_focus_treatment.py
+tests/test_encyclopedia_runtime_art_staging.py
 ```
 
-The capture tool reuses the existing golden-master Shell driver. It runs exactly Home plus the six section worlds through the real Greia Shell/profile/catalogue route, captures one reference frame per page, and exercises protected Greia Home return. It does not walk the factual entries.
+The capture tool reuses the existing golden-master Shell driver. It runs exactly Home plus the six section worlds through the real Greia Shell/profile/catalogue route, captures one reference frame per page, and exercises protected Greia Home return. It does not walk factual entries.
 
-The review builder copies the seven bounded reference frames and creates one contact sheet. It does not auto-score or auto-approve visuals.
+Evidence binding is fail-closed:
+
+- checkout must be clean, including non-ignored untracked files;
+- exactly 11 Encyclopedia runtime PNGs must be present;
+- every PNG must already exist in the exact `HEAD` being captured;
+- each working PNG must hash to the same Git blob as `HEAD:<path>`;
+- the manifest records source SHA, SHA-256 of all 11 PNGs and all 11 committed Git blob IDs;
+- HEAD, working status, PNG SHA-256 inventory and Git-blob inventory are rechecked after all seven sessions;
+- the review builder refuses evidence that lacks the complete Git-bound manifest.
+
+Canonical protocol:
+
+```text
+docs/testing/2026-08-29_ENCYCLOPEDIA_E3_SECTION_RUNTIME_REVIEW.md
+```
 
 ---
 
-# 7. Critical evidence boundary
-
-The current editable SVG source is newer than the previous E2R runtime pack.
+# 8. Critical evidence boundary
 
 Therefore:
 
 ```text
 OWNER VISUAL DIRECTION                  APPROVED
-LATEST SOURCE ART                       CURRENT
+E3 V6 SOURCE FAMILY                     CURRENT / FROZEN
 OLDER E2R RUNTIME PNG/SIMULATOR PIXELS  STALE FOR EXACT CURRENT SOURCE
-FIVE E3 SECTION PNGs                    NOT COMMITTED YET
-FRESH FINAL-SHA SIMULATOR               NOT RUN YET
+OLDER PRE-V6 STAGING ZIP                SUPERSEDED
+V6 NINE-PNG STAGING BUNDLE              RECOVERABLE / NOT COMMITTED EVIDENCE
+COMPLETE 11-PNG COMMITTED PACK          PENDING
+FRESH FINAL-SHA SIMULATOR               PENDING
 E3 RUNTIME VISUAL ACCEPTANCE            NOT CLAIMED
+E4                                       BLOCKED
 ```
 
-Do not call E3 complete until the full current art pack is built and the six sections are reviewed together through the real Greia runtime.
+Do not call E3 complete until the full current 11-PNG art pack is built/imported, verified against the current SVG masters, committed, checked, and the six sections are reviewed together through the real Greia runtime.
 
 ---
 
-# 8. Stable generic visual foundation
+# 9. Stable generic/runtime foundation to preserve
 
-Generic toolbox remains:
+Generic toolbox remains the established semantic visual library and canonical six-character cast. Generic Batch B remains unauthorized unless real demand proves a concrete generic gap.
 
-```text
-57 preferred finished assets
-37 candidate-reference finished assets
-7 preferred authoring ingredients
-101 indexed reusable visual resources
-```
-
-Discovery helper:
-
-```text
-tools/visual_authoring_library.py
-```
-
-Permanent rules remain:
-
-- `preferred` is first-choice direct reuse;
-- `candidate_reference` is reference/adaptation material;
-- Activity-specific hero/topic art may remain Activity-local;
-- Generic Batch B remains unauthorized unless real demand proves a concrete generic gap.
-
-Canonical cast remains the accepted six-member family:
-
-```text
-Lilli / Leo / Flash / Dani / Tito / Momo
-```
-
----
-
-# 9. Stable runtime foundation to preserve
+Runtime invariants remain:
 
 ```text
 explicit semantic visual catalogues
@@ -269,14 +322,7 @@ SceneActorDefinition / actor_scene_sample
 Greia Activity Simulator real Shell/runtime composition
 ```
 
-Runtime rules:
-
-- no arbitrary runtime source scanning;
-- no normal runtime SVG rasterization;
-- no per-frame disk decode/scale;
-- bounded caches;
-- Activity-local assets remain inside Activity packages;
-- rich authored art is flattened into economical runtime surfaces.
+No arbitrary runtime source scanning, runtime SVG rasterization, per-frame disk decode/scale, or unbounded caches.
 
 ---
 
@@ -287,17 +333,20 @@ Do not begin E4.
 Next exact visual gate:
 
 ```text
-build corrected six golden-master PNGs + five E3 section PNGs
-→ verify all current SVG/PNG renditions
-→ focused Encyclopedia tests + required repository verification
-→ commit/push the complete current runtime-art state
+materialize the exact complete 11-PNG runtime pack from current v6 masters
+  (canonical rebuild from SVG, or validated v6 staging import followed by canonical --check)
+→ python3 tools/build_encyclopedia_visual_assets.py --check --group all
+→ focused Encyclopedia tests including staging/focus/evidence/runtime-surface regressions
+→ required repository verification
+→ commit/push the exact complete 11-PNG runtime-art state
+→ rerun --check + focused tests on that pushed SHA
 → fresh exact-SHA real Greia Simulator
-→ capture Home + all six section pages with the E3 review harness
+→ capture Home + all six section pages with the Git-bound E3 review harness
 → inspect the single runtime contact sheet + interaction/navigation sanity
 → if accepted, close E3 and unblock E4
 ```
 
-This execution environment does not contain a real Greia checkout/Shell runtime, so no current `make verify` or Simulator PASS is claimed here.
+This execution environment still does not contain a real Greia checkout/Shell runtime, so no current `make verify` or Simulator PASS is claimed here.
 
 `docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md` remains HOLD unless the owner explicitly changes the direct-work instruction.
 
