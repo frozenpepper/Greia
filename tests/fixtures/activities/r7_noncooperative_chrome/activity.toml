@@ -6,13 +6,13 @@ icon = "close_button"
 languages = ["*"]
 
 [presentation]
-categories = ["test"]
+categories = ["learn"]
 
 [education]
 categories = ["development", "inspection"]
 difficulty = 1
 skills = [
-  { id = "platform.navigation.trust", weight = 1 },
+  { id = "motor.pointer.control", weight = 1 },
 ]
 events = []
 
