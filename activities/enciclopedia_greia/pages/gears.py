@@ -197,15 +197,13 @@ class GearsPage(EncyclopediaPage):
 
     def _draw_reveals(self, surface: pygame.Surface) -> None:
         if self._model.teeth_age > 0:
-            # Three big contact-point rings at the meshing boundaries
-            # between adjacent gears, plus small motion arrows pointing
-            # along the contact arc so the child reads "teeth carry motion".
-            contact_points = ((472, 316), (607, 316), (700, 316))
+            # The authored train has exactly two mesh boundaries. Keep the
+            # teaching highlight tied to those real tooth-contact points.
+            contact_points = ((450, 318), (550, 318))
             for point in contact_points:
                 pygame.draw.circle(surface, (255, 228, 91), point, 20, 6)
                 pygame.draw.circle(surface, (255, 170, 60), point, 8, 3)
             for index, point in enumerate(contact_points):
-                # Direction-of-motion arrow above each contact.
                 ax, ay = point
                 ax -= 6
                 ay -= 28
@@ -214,7 +212,6 @@ class GearsPage(EncyclopediaPage):
                 else:
                     ax2, ay2 = ax - 12, ay
                 pygame.draw.line(surface, (255, 170, 60), (ax, ay), (ax2, ay2), 4)
-                # arrow head
                 if index % 2 == 0:
                     pygame.draw.polygon(
                         surface,
@@ -230,9 +227,9 @@ class GearsPage(EncyclopediaPage):
 
         if self._model.direction_age > 0:
             specs = (
-                ((390, 316), 108, self._model.direction),
-                ((545, 316), 83, -self._model.direction),
-                ((660, 316), 63, self._model.direction),
+                ((385, 318), 72, self._model.direction),
+                ((500, 318), 58, -self._model.direction),
+                ((592, 318), 47, self._model.direction),
             )
             for center, radius, _direction in specs:
                 rect = pygame.Rect(
@@ -244,7 +241,7 @@ class GearsPage(EncyclopediaPage):
                 pygame.draw.arc(surface, (255, 221, 89), rect, 0.3, 1.9, 5)
 
         if self._model.ratio_age > 0:
-            for x, count in ((390, 2), (545, 3), (660, 4)):
+            for x, count in ((385, 2), (500, 3), (592, 4)):
                 for index in range(count):
                     pygame.draw.rect(
                         surface,
