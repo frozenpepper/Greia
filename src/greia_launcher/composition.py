@@ -42,6 +42,8 @@ from .runtime_adapter import (
 )
 from .shell_window import NoopShellWindowController, ShellWindowController
 from .shell_window_legacy_x import LegacyXShellWindowController
+from .system_chrome import SystemChromeCoordinator
+from .system_chrome_legacy_x import LegacyXSystemChromeBackend
 
 logger = logging.getLogger(__name__)
 
@@ -86,6 +88,17 @@ def provisional_installed_display_session() -> DisplaySessionCoordinator:
     """
 
     return DisplaySessionCoordinator(LegacyXDisplaySessionBackend())
+
+
+def provisional_installed_system_chrome() -> SystemChromeCoordinator:
+    """Compose trusted Home/Back above the provisional Legacy-X Activity surface.
+
+    The concrete backend owns one tiny launcher-process X11 window covering only
+    Greia's protected navigation region. It is a migration adapter for R7.3,
+    not an acceptance of shared X11 as the target architecture.
+    """
+
+    return SystemChromeCoordinator(LegacyXSystemChromeBackend())
 
 
 def provisional_installed_shell_window_backend() -> ShellWindowController:
