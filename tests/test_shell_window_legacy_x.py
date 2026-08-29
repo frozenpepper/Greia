@@ -40,49 +40,36 @@ class LegacyXShellWindowControllerTests(unittest.TestCase):
     def test_x11_window_is_forwarded_to_native_bridge_once(self) -> None:
         bridge = _FocusBridge()
         pygame = _Pygame({"window": 42})
-        controller = LegacyXShellWindowController(
-            {"SDL_VIDEODRIVER": "x11"},
-            focus_bridge=bridge,
-        )
+        controller = LegacyXShellWindowController(focus_bridge=bridge)
 
         self.assertTrue(controller.after_window_created(pygame))
         self.assertEqual(bridge.windows, [42])
         self.assertEqual(pygame.display.calls, 1)
 
-    def test_non_x_backend_never_uses_x11_window_introspection(self) -> None:
+    def test_controller_does_not_read_environment_to_choose_backend(self) -> None:
         bridge = _FocusBridge()
         pygame = _Pygame({"window": 42})
-        controller = LegacyXShellWindowController(
-            {"SDL_VIDEODRIVER": "wayland"},
-            focus_bridge=bridge,
-        )
+        controller = LegacyXShellWindowController(focus_bridge=bridge)
 
-        self.assertFalse(controller.after_window_created(pygame))
-        self.assertEqual(bridge.windows, [])
-        self.assertEqual(pygame.display.calls, 0)
+        self.assertTrue(controller.after_window_created(pygame))
+        self.assertEqual(bridge.windows, [42])
+        self.assertFalse(hasattr(controller, "_environment"))
 
     def test_missing_or_invalid_window_id_fails_soft(self) -> None:
         for info in ({}, {"window": 0}, {"window": "42"}, None):
             with self.subTest(info=info):
                 bridge = _FocusBridge()
-                controller = LegacyXShellWindowController(
-                    {"SDL_VIDEODRIVER": "x11"},
-                    focus_bridge=bridge,
-                )
+                controller = LegacyXShellWindowController(focus_bridge=bridge)
                 self.assertFalse(controller.after_window_created(_Pygame(info)))
                 self.assertEqual(bridge.windows, [])
 
     def test_wm_info_and_native_focus_errors_fail_soft(self) -> None:
         controller = LegacyXShellWindowController(
-            {"SDL_VIDEODRIVER": "x11"},
             focus_bridge=_FocusBridge(error=RuntimeError("x11 failed")),
         )
         self.assertFalse(controller.after_window_created(_Pygame({"window": 42})))
 
-        controller = LegacyXShellWindowController(
-            {"SDL_VIDEODRIVER": "x11"},
-            focus_bridge=_FocusBridge(),
-        )
+        controller = LegacyXShellWindowController(focus_bridge=_FocusBridge())
         self.assertFalse(
             controller.after_window_created(_Pygame(RuntimeError("wm info failed")))
         )
