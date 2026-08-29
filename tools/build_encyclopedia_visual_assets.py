@@ -12,12 +12,19 @@ worlds. The default ``all`` group produces both tranches together. A full
 ``--check --group all`` additionally requires the runtime directory to contain
 exactly those eleven PNGs, preventing stale or abandoned renditions from being
 silently carried into exact-SHA Simulator evidence.
+
+Every Encyclopedia scene is a flattened full-screen backdrop and must therefore
+build as an opaque RGB PNG. Transparent character sprites remain separate shared
+assets. Rejecting alpha-bearing scene renditions here keeps the low-resource
+runtime free to use display-optimized opaque surfaces without silently flattening
+an unintended transparent master.
 """
 from __future__ import annotations
 
 import argparse
 import hashlib
 from pathlib import Path
+import struct
 from tempfile import TemporaryDirectory
 
 try:
@@ -47,6 +54,26 @@ SECTION_NAMES = (
 )
 NAMES = GOLDEN_MASTER_NAMES + SECTION_NAMES
 REFERENCE_SIZE = (1024, 600)
+PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+PNG_COLOR_TYPE_RGB = 2
+
+
+def _validate_runtime_png(path: Path) -> None:
+    data = path.read_bytes()
+    if len(data) < 26 or not data.startswith(PNG_SIGNATURE):
+        raise RuntimeError(f"invalid PNG rendition: {path}")
+    width, height = struct.unpack(">II", data[16:24])
+    if (width, height) != REFERENCE_SIZE:
+        raise RuntimeError(
+            f"wrong Encyclopedia rendition size for {path}: "
+            f"{width}x{height}, expected {REFERENCE_SIZE[0]}x{REFERENCE_SIZE[1]}"
+        )
+    color_type = data[25]
+    if color_type != PNG_COLOR_TYPE_RGB:
+        raise RuntimeError(
+            f"Encyclopedia scene rendition must be opaque RGB: {path} "
+            f"PNG color_type={color_type}, expected {PNG_COLOR_TYPE_RGB}"
+        )
 
 
 def _build_one(name: str, target_root: Path) -> Path:
@@ -59,6 +86,7 @@ def _build_one(name: str, target_root: Path) -> Path:
         output_width=REFERENCE_SIZE[0],
         output_height=REFERENCE_SIZE[1],
     )
+    _validate_runtime_png(target)
     return target
 
 
@@ -114,6 +142,7 @@ def check(names: tuple[str, ...]) -> int:
         for name in names:
             rebuilt = _build_one(name, rebuilt_root)
             committed = RUNTIME / f"{name}.png"
+            _validate_runtime_png(committed)
             if rebuilt.read_bytes() != committed.read_bytes():
                 print(
                     f"BUILD-DRIFT {name}: rebuilt_sha256={_sha256(rebuilt)} "
