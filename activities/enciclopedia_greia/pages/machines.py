@@ -22,14 +22,18 @@ class MachineTarget:
     target_id: str
     page_id: str
     center: tuple[int, int]
+    size: tuple[int, int]
 
 
+# E3 replaces tiny icon bubbles with real workshop objects. Pointer/focus bounds
+# therefore follow the visible object footprints while the semantic centers
+# remain exactly aligned with SVG data-target/data-center metadata.
 MACHINE_TARGETS = (
-    MachineTarget("gears", "machines.gears", (225, 220)),
-    MachineTarget("magnet", "machines.magnet", (500, 190)),
-    MachineTarget("bicycle", "machines.bicycle", (775, 220)),
-    MachineTarget("airplane", "machines.airplane", (335, 415)),
-    MachineTarget("bridge", "machines.bridge", (665, 415)),
+    MachineTarget("gears", "machines.gears", (225, 220), (190, 120)),
+    MachineTarget("magnet", "machines.magnet", (500, 190), (160, 130)),
+    MachineTarget("bicycle", "machines.bicycle", (775, 220), (190, 130)),
+    MachineTarget("airplane", "machines.airplane", (335, 415), (180, 120)),
+    MachineTarget("bridge", "machines.bridge", (665, 415), (190, 140)),
 )
 
 
@@ -42,7 +46,12 @@ class MachinesPage(EncyclopediaPage):
         self._selected = 0
         self._hovered: int | None = None
         self._target_rects = tuple(
-            pygame.Rect(target.center[0] - 43, target.center[1] - 43, 86, 86)
+            pygame.Rect(
+                target.center[0] - target.size[0] // 2,
+                target.center[1] - target.size[1] // 2,
+                target.size[0],
+                target.size[1],
+            )
             for target in MACHINE_TARGETS
         )
 
