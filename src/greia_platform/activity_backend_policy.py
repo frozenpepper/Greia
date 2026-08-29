@@ -36,9 +36,14 @@ class BackendPolicyFinding:
 
 _FORBIDDEN_IMPORT_ROOTS = frozenset(
     {
+        "drm",
         "evdev",
+        "gbm",
         "libinput",
+        "pykms",
+        "pyudev",
         "pywayland",
+        "xcb",
         "xcffib",
         "xlib",
     }
@@ -51,8 +56,27 @@ _FORBIDDEN_ENVIRONMENT_KEYS = frozenset(
         "XAUTHORITY",
     }
 )
-_FORBIDDEN_DEVICE_PREFIXES = ("/dev/input", "/dev/dri")
-_FORBIDDEN_COMMANDS = frozenset({"xinput", "xrandr", "xdotool"})
+_FORBIDDEN_DEVICE_PREFIXES = (
+    "/dev/input",
+    "/dev/dri",
+    "/sys/class/input",
+    "/sys/class/drm",
+)
+_FORBIDDEN_COMMANDS = frozenset(
+    {
+        "cage",
+        "drm_info",
+        "kmscube",
+        "labwc",
+        "modetest",
+        "sway",
+        "weston",
+        "wlr-randr",
+        "xinput",
+        "xrandr",
+        "xdotool",
+    }
+)
 _FORBIDDEN_NATIVE_LIBRARIES = frozenset(
     {
         "drm",
@@ -63,6 +87,12 @@ _FORBIDDEN_NATIVE_LIBRARIES = frozenset(
         "libx11",
         "wayland-client",
         "x11",
+    }
+)
+_FORBIDDEN_API_CHAINS = frozenset(
+    {
+        ("pygame", "display", "get_driver"),
+        ("pygame", "display", "get_wm_info"),
     }
 )
 _MIGRATION_CHROME_SYMBOLS = frozenset(
@@ -212,6 +242,17 @@ def _scan_tree(path: Path, tree: ast.AST) -> Iterable[BackendPolicyFinding]:
                     )
                 )
         elif isinstance(node, ast.Call):
+            chain = _resolved_chain(node.func, aliases)
+            if chain in _FORBIDDEN_API_CHAINS:
+                findings.append(
+                    _finding(
+                        path,
+                        node,
+                        BackendFindingSeverity.BLOCKER,
+                        "backend-introspection",
+                        f"backend-introspection API {'.'.join(chain)} is platform-owned",
+                    )
+                )
             env_key = _environment_call_key(node, aliases)
             if env_key in _FORBIDDEN_ENVIRONMENT_KEYS:
                 findings.append(
