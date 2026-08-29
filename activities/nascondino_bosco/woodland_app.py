@@ -14,7 +14,6 @@ from greia_platform.activity_api import (
     get_ui_preferences,
     mark_activity_ready,
 )
-from greia_platform.activity_ui import is_home_clicked
 from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_canvas import (
     PygameReferenceCanvas,
@@ -168,10 +167,6 @@ class WoodlandApp:
 
     def _handle_click(self, raw_pos: tuple[int, int]) -> bool:
         """Dispatch child clicks cleanly to spots or completion controls."""
-        if is_home_clicked(self.screen, raw_pos):
-            self._running = False
-            return False
-
         if not _is_safe_point(self.screen, raw_pos):
             return False
 
