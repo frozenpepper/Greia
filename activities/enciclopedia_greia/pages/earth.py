@@ -101,13 +101,6 @@ class EarthPage(EncyclopediaPage):
                 draw_focus_patch(surface, item.rect, active=active, radius=22)
             else:
                 focus_ring(surface, item.rect, active)
-            if active:
-                pygame.draw.circle(
-                    surface,
-                    (255, 220, 78),
-                    (item.rect.right - 14, item.rect.top + 14),
-                    7,
-                )
 
         draw_presenter(
             surface,
