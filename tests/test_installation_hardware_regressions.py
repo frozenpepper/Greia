@@ -123,9 +123,24 @@ class RealHardwareInstallationRegressionTests(unittest.TestCase):
         self.assertNotIn('"--disable-userns"', supervisor)
 
     def test_launcher_keeps_explicit_x11_focus_handoff_without_a_window_manager(self) -> None:
+        # R7.2: the launcher's direct X11 focus repair was extracted behind
+        # ShellWindowController. The composed backend (Legacy-X for installed
+        # images, no-op for development) owns the one-shot X11 setup; the
+        # generic launcher and presentation must use the composed seam, not
+        # inline Xlib calls.
         launcher = self.read("src/greia_launcher/main.py")
-        self.assertIn("_set_x11_input_focus(screen, pygame)", launcher)
-        self.assertIn("XSetInputFocus", launcher)
+        presentation = self.read("src/greia_launcher/presentation.py")
+        composition = self.read("src/greia_launcher/composition.py")
+        legacy_x_controller = self.read("src/greia_launcher/shell_window_legacy_x.py")
+        self.assertIn("ShellWindowController", composition)
+        self.assertIn("provisional_installed_shell_window_backend", composition)
+        self.assertIn("LegacyXShellWindowController", composition)
+        self.assertIn("after_window_created", launcher)
+        self.assertIn("after_window_created", presentation)
+        self.assertIn("after_window_created", legacy_x_controller)
+        self.assertNotIn("_set_x11_input_focus(", launcher)
+        self.assertNotIn("XSetInputFocus", launcher)
+        self.assertNotIn("XSetInputFocus", presentation)
 
     def test_canonical_builders_never_mint_root_or_unguarded_password_ssh(self) -> None:
         # Root SSH and unguarded password SSH are always forbidden. The

@@ -14,12 +14,14 @@ class LauncherBootFallbackTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
 
         primary = "/usr/bin/python3 -m greia_launcher.child_shell"
-        fallback = "/usr/bin/python3 -m greia_launcher.presentation"
+        # R7.3: the installed fallback is the trusted presentation path;
+        # the older plain presentation module is no longer an installed fallback.
+        fallback = "/usr/bin/python3 -m greia_launcher.trusted_presentation"
         self.assertIn(primary, session)
         self.assertIn(fallback, session)
         self.assertLess(session.index(primary), session.index(fallback))
         self.assertIn('if [ "$launcher_status" -ne 0 ]; then', session)
-        self.assertIn("trying presentation fallback", session)
+        self.assertIn("trying trusted presentation fallback", session)
 
     def test_hardware_watcher_is_reaped_across_both_launcher_paths(self) -> None:
         session = (
