@@ -4,7 +4,7 @@
 **Runtime pages:** **43 / 43 planned executable pages**  
 **Runtime Activity:** `activities/enciclopedia_greia/` (`org.greia.enciclopedia`)  
 **Last Simulator-captured visual SHA:** `8fa41a3e9ab4b8cff6cce9607c32492fedc6ae8f` — technically valid E2R capture, aesthetically superseded  
-**Current state:** **MECHANICAL FOUNDATION HEALTHY / E1 COMPLETE / GOLDEN-MASTER DIRECTION OWNER-APPROVED AFTER DIRECT REPAIRS / E3 SECTION SOURCE IMPLEMENTED + SOURCE-REVIEWED + GEOMETRY/EVIDENCE-HARDENED / RUNTIME PNG + FRESH SIMULATOR EVIDENCE PENDING / E4 BLOCKED / NARRATION SEPARATE**
+**Current state:** **MECHANICAL FOUNDATION HEALTHY / E1 COMPLETE / GOLDEN-MASTER DIRECTION OWNER-APPROVED AFTER DIRECT REPAIRS / E3 SECTION SOURCE IMPLEMENTED + SOURCE-REVIEWED + GEOMETRY/FOCUS/EVIDENCE-HARDENED / RUNTIME PNG + FRESH SIMULATOR EVIDENCE PENDING / E4 BLOCKED / NARRATION SEPARATE**
 
 This file is the current continuation contract. Historical construction detail remains in `encyclopedia/PROGRESS.md`, Git history, and dated visual reviews.
 
@@ -139,13 +139,16 @@ Machines         one real workbench with recognizable gears/magnet/bicycle/plane
 History          one continuous time/excavation trail with T-rex/fossil/mammoth/cave/pyramid
 ```
 
-Source review caught and corrected issues before runtime acceptance:
+Source/runtime review caught and corrected issues before final Simulator acceptance:
 
 ```text
 Body      mannequin/schematic feeling -> friendly room + physical learning props
 Machines  weak gear/bridge silhouettes -> real meshing gear pair + clearer suspension bridge
 History   ambiguous dinosaur -> unmistakable T-rex silhouette
 Earth     rain hidden behind tree canopy -> visible near-layer rain streaks
+Earth     Rain/Tree hit regions overlapped -> Rain region shortened, authored center preserved
+E3 pages  generic authored-scene focus rings -> soft scene-native focus patches
+Space     bottom text carried duplicate yellow focus -> selected live subject now owns focus
 ```
 
 Current source-review authority:
@@ -164,7 +167,7 @@ It is **SOURCE / DESKTOP VISUAL REVIEW**, not Simulator acceptance.
 
 ---
 
-## 7. E3 runtime integration and input geometry
+## 7. E3 runtime integration, geometry and focus
 
 The five section pages are wired to semantic authored-scene IDs through the existing bounded `VisualLibrary`:
 
@@ -194,9 +197,19 @@ Machines
 History
 ```
 
-Space remains dynamic rather than pretending to use fixed target centers. Its authored observatory now carries a non-rendering `data-stage="solar-system"` / `data-bounds` contract, while `space.py` exposes literal `SOLAR_SYSTEM_CENTER` and `SOLAR_SYSTEM_STAGE_BOUNDS`. The same visual-foundation test parses every `Planet(...)` orbit and proves the complete rendered planet discs/markers, plus the Moon excursion, remain inside the authored observation stage.
+Space remains dynamic rather than pretending to use fixed target centers. Its authored observatory carries a non-rendering `data-stage="solar-system"` / `data-bounds` contract, while `space.py` exposes literal `SOLAR_SYSTEM_CENTER` and `SOLAR_SYSTEM_STAGE_BOUNDS`. The visual-foundation test parses every `Planet(...)` orbit and proves the complete rendered planet discs/markers, plus the Moon excursion, remain inside the authored observation stage.
 
-History target centers are explicit page constants rather than implicit arithmetic. Body and Machines also no longer use the old uniform 86x86 prototype hit boxes: pointer/focus rectangles now follow the actual authored exhibit/object footprints while preserving the same semantic centers and keyboard/controller ordering.
+History target centers are explicit page constants rather than implicit arithmetic. Body and Machines no longer use the old uniform 86x86 prototype hit boxes: pointer/focus rectangles follow actual authored exhibit/object footprints while preserving semantic centers and keyboard/controller ordering.
+
+`tests/test_encyclopedia_section_hit_geometry.py` now checks Earth, Body, Machines and History selection geometry directly:
+
+- all static authored hit regions stay inside the 1024×600 logical surface;
+- each page's target rectangles are pairwise disjoint, preventing one visible subject from resolving to another;
+- Body/Machines keep generously sized authored-object target areas;
+- Earth Rain/Tree cannot regress to their earlier overlap;
+- authored Earth/Body/Machines/History use `draw_focus_patch(...)`, while `focus_ring(...)` is retained only for procedural fail-soft presentation.
+
+Animals already used `draw_focus_patch(...)`. Space does not need a static object patch: the selected live Sun/planet/Moon draws its own yellow subject ring, while the bottom text plaque is deliberately neutral and secondary.
 
 The build tool supports explicit visual tranches:
 
@@ -240,7 +253,14 @@ History
 
 Each session uses the real Greia Shell/profile/catalogue launch path, semantic internal navigation, one reference screenshot, and protected Greia Home return. It does not walk the 36 factual entries.
 
-Evidence integrity is now part of the tool rather than a manual convention. Before capture it requires a clean **tracked** checkout, records `git rev-parse HEAD` and SHA-256 of every Activity runtime PNG, and writes:
+Evidence integrity is part of the tool rather than a manual convention. Before launching even the first session it requires:
+
+```text
+clean tracked checkout
+exact complete 11-PNG Encyclopedia runtime-art inventory
+```
+
+It then records `git rev-parse HEAD` and SHA-256 of every Activity runtime PNG and writes:
 
 ```text
 source-sha.txt
@@ -259,7 +279,7 @@ runtime_art_sha256 = exact complete 11-PNG Encyclopedia pack
 source-sha.txt = capture-manifest source_sha
 ```
 
-It then preserves both integrity files beside the seven curated screenshots/contact sheet. `tests/test_encyclopedia_e3_review_tools.py` pins the seven-job scope and evidence-integrity contract without launching Pygame.
+It then preserves both integrity files beside the seven curated screenshots/contact sheet. `tests/test_encyclopedia_e3_review_tools.py` pins the seven-job scope, exact eleven-art precondition and evidence-integrity contract without launching Pygame.
 
 Canonical maintainer protocol:
 
@@ -274,12 +294,14 @@ docs/testing/2026-08-29_ENCYCLOPEDIA_E3_SECTION_RUNTIME_REVIEW.md
 ```text
 Animals section source                         READY
 Space section source                           READY + LIVE-STAGE BOUNDS GUARDED
-Earth & Nature section source                  READY
-Body section source                            READY
-Machines section source                        READY
-History section source                         READY
+Earth & Nature section source                  READY + NON-OVERLAPPING INPUT
+Body section source                            READY + AUTHORED-OBJECT INPUT
+Machines section source                        READY + AUTHORED-OBJECT INPUT
+History section source                         READY + EXPLICIT TARGET GEOMETRY
 static visual/input geometry contract          IMPLEMENTED
-Body/Machines authored-object hit regions      IMPLEMENTED
+static hit-region non-overlap contract         IMPLEMENTED
+authored scene-native focus treatment          IMPLEMENTED
+exact 11-art capture precondition              IMPLEMENTED
 exact-SHA Simulator evidence contract          IMPLEMENTED
 five new E3 runtime PNGs                       PENDING
 rebuild corrected golden-master PNGs           PENDING
@@ -316,7 +338,7 @@ The historical ledger checkpoint remains 378 REQUESTED rows. Only owner-listened
 
 ## 12. Immediate next step
 
-Do **not** start E4.
+Do **not** start E4 and do not continue speculative section-art polishing without runtime pixels.
 
 Next exact runtime closure for the current art tranche:
 
@@ -324,7 +346,12 @@ Next exact runtime closure for the current art tranche:
 rebuild corrected six golden-master PNGs
 + build five E3 section PNGs
 → verify 11/11 current SVG->PNG renditions
-→ focused Encyclopedia tests including E3 review-tool contracts
+→ focused Encyclopedia tests:
+   tests.test_activity_enciclopedia
+   tests.test_activity_enciclopedia_visual_foundation
+   tests.test_encyclopedia_authoring_tools
+   tests.test_encyclopedia_e3_review_tools
+   tests.test_encyclopedia_section_hit_geometry
 → required local repository verification
 → commit/push complete current runtime art
 → real Greia Simulator on the exact final SHA
