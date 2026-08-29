@@ -23,14 +23,19 @@ class BodyTarget:
     page_id: str
     center: tuple[int, int]
     connector: tuple[int, int]
+    size: tuple[int, int]
 
 
+# Centers stay aligned with the SVG data-target/data-center metadata. Sizes are
+# deliberately exhibit-specific: the E3 art uses real physical props, so the
+# child should be able to click/touch the visible object rather than a tiny
+# leftover 86x86 prototype hotspot in its middle.
 BODY_TARGETS = (
-    BodyTarget("senses", "body.senses", (250, 180), (505, 176)),
-    BodyTarget("teeth", "body.teeth", (755, 180), (505, 210)),
-    BodyTarget("lungs", "body.lungs", (250, 405), (486, 300)),
-    BodyTarget("heart", "body.heart", (755, 405), (520, 334)),
-    BodyTarget("bones", "body.bones", (505, 470), (555, 395)),
+    BodyTarget("senses", "body.senses", (250, 180), (505, 176), (190, 130)),
+    BodyTarget("teeth", "body.teeth", (755, 180), (505, 210), (190, 130)),
+    BodyTarget("lungs", "body.lungs", (250, 405), (486, 300), (160, 130)),
+    BodyTarget("heart", "body.heart", (755, 405), (520, 334), (160, 140)),
+    BodyTarget("bones", "body.bones", (505, 470), (555, 395), (130, 110)),
 )
 
 
@@ -43,7 +48,12 @@ class BodyPage(EncyclopediaPage):
         self._selected = 0
         self._hovered: int | None = None
         self._target_rects = tuple(
-            pygame.Rect(target.center[0] - 43, target.center[1] - 43, 86, 86)
+            pygame.Rect(
+                target.center[0] - target.size[0] // 2,
+                target.center[1] - target.size[1] // 2,
+                target.size[0],
+                target.size[1],
+            )
             for target in BODY_TARGETS
         )
 
