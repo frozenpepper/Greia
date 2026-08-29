@@ -1,12 +1,9 @@
 from __future__ import annotations
 
-import io
 import math
 from pathlib import Path
 import random
-import struct
 import time
-import wave
 
 import pygame
 
@@ -18,7 +15,7 @@ from greia_platform.activity_api import (
     get_theme,
     mark_activity_ready,
 )
-from greia_platform.activity_ui import ChildUiMetrics, is_home_clicked, mix
+from greia_platform.activity_ui import ChildUiMetrics, mix
 from greia_platform.localization import (
     ActivityLocaleSupport,
     LocalizedResources,
@@ -30,154 +27,48 @@ from greia_platform.pygame_canvas import (
 )
 from greia_platform.typography import FontRole, GreiaTypography
 
-
-REFERENCE_WIDTH = 1024
-REFERENCE_HEIGHT = 600
-STORAGE_KEY = "orchestra_animali.state.v3"
-
-# Grand Theater Palette
-STAGE_WALL_TOP = (22, 18, 42)
-STAGE_WALL_BOTTOM = (45, 30, 65)
-STAGE_CURTAIN = (175, 30, 45)
-STAGE_CURTAIN_DARK = (120, 18, 30)
-STAGE_CURTAIN_GOLD = (245, 195, 60)
-STAGE_WOOD_TOP = (180, 115, 60)
-STAGE_WOOD_BOTTOM = (110, 65, 30)
-STAGE_GOLD = (255, 215, 60)
-WHITE = (255, 255, 255)
-DARK_TEXT = (30, 41, 59)
-
-RAINBOW_COLORS = [
-    (245, 75, 75),    # 1: C (Do) - Red
-    (250, 140, 45),   # 2: D (Re) - Orange
-    (255, 215, 45),   # 3: E (Mi) - Yellow
-    (85, 205, 105),   # 4: F (Fa) - Green
-    (65, 180, 245),   # 5: G (Sol) - Cyan
-    (115, 110, 235),  # 6: A (La) - Indigo
-    (200, 85, 215),   # 7: B (Si) - Violet
-    (255, 95, 160),   # 8: C5 (Do alto) - Pink
-]
-
-NOTE_NAMES_IT = ["DO", "RE", "MI", "FA", "SOL", "LA", "SI", "DO"]
-NOTE_NAMES_EN = ["C", "D", "E", "F", "G", "A", "B", "C"]
-NOTE_FREQS = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25]
-KEYBOARD_SHORTCUTS = ["1", "2", "3", "4", "5", "6", "7", "8"]
-
-
-def _synth_wav(samples: list[int], rate: int = 22050) -> bytes:
-    buf = io.BytesIO()
-    with wave.open(buf, "wb") as w:
-        w.setnchannels(1)
-        w.setsampwidth(2)
-        w.setframerate(rate)
-        raw = b"".join(struct.pack("<h", max(-32767, min(32767, int(s)))) for s in samples)
-        w.writeframes(raw)
-    return buf.getvalue()
-
-
-class SoundManager:
-    def __init__(self) -> None:
-        self._notes: list[pygame.mixer.Sound] = []
-        self._inst_sounds: dict[str, pygame.mixer.Sound] = {}
-        self._enabled = False
-        try:
-            if not pygame.mixer.get_init():
-                pygame.mixer.init(22050, -16, 1, 512)
-            self._init_sounds()
-            self._enabled = True
-        except Exception:
-            self._enabled = False
-
-    def _init_sounds(self) -> None:
-        # Piano 8 notes (Rich acoustic timbre)
-        for freq in NOTE_FREQS:
-            samples = []
-            for i in range(8800):
-                t = i / 22050.0
-                env = math.exp(-t * 4.0)
-                val = int((math.sin(2 * math.pi * freq * t) * 0.68 +
-                           math.sin(4 * math.pi * freq * t) * 0.24 +
-                           math.sin(6 * math.pi * freq * t) * 0.08) * env * 15000)
-                samples.append(val)
-            self._notes.append(pygame.mixer.Sound(io.BytesIO(_synth_wav(samples))))
-
-        # 1. Grand Piano Chord Arpeggio
-        pn_samples = []
-        chord = [261.63, 329.63, 392.00, 523.25]
-        for i in range(10000):
-            t = i / 22050.0
-            env = math.exp(-t * 3.2)
-            v = 0.0
-            for idx, f in enumerate(chord):
-                sub_t = max(0.0, t - idx * 0.04)
-                sub_env = math.exp(-sub_t * 3.5) if t >= idx * 0.04 else 0.0
-                v += (math.sin(2 * math.pi * f * sub_t) * 0.7 + math.sin(4 * math.pi * f * sub_t) * 0.3) * sub_env
-            pn_samples.append(int(v * 0.28 * 16000))
-        self._inst_sounds["piano"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(pn_samples)))
-
-        # 2. Drums (Bass Drum Thump + Snare Crack)
-        bd_samples = []
-        for i in range(5500):
-            t = i / 22050.0
-            freq = max(45.0, 160.0 - t * 480.0)
-            env_bass = math.exp(-t * 12.0)
-            snare_noise = random.uniform(-1, 1) * math.exp(-max(0.0, t - 0.03) * 16.0) if t >= 0.03 else 0.0
-            val = int((math.sin(2 * math.pi * freq * t) * env_bass * 0.7 + snare_noise * 0.3) * 18000)
-            bd_samples.append(val)
-        self._inst_sounds["drums"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(bd_samples)))
-
-        # 3. Trumpet Fanfare
-        tr_samples = []
-        notes = [523.25, 659.25, 783.99]
-        for i in range(9000):
-            t = i / 22050.0
-            n_idx = min(len(notes) - 1, int(t / 0.08))
-            f = notes[n_idx]
-            env = max(0.0, 1.0 - t / 0.38)
-            val = int((math.sin(2 * math.pi * f * t) * 0.55 +
-                       math.sin(4 * math.pi * f * t) * 0.30 +
-                       math.sin(6 * math.pi * f * t) * 0.15) * env * 15000)
-            tr_samples.append(val)
-        self._inst_sounds["trumpet"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(tr_samples)))
-
-        # 4. Guitar Pluck / Arpeggio
-        gt_samples = []
-        g_chord = [329.63, 440.00, 554.37, 659.25]
-        for i in range(10000):
-            t = i / 22050.0
-            v = 0.0
-            for idx, f in enumerate(g_chord):
-                sub_t = max(0.0, t - idx * 0.05)
-                sub_env = math.exp(-sub_t * 4.0) if t >= idx * 0.05 else 0.0
-                v += math.sin(2 * math.pi * f * sub_t) * sub_env
-            gt_samples.append(int(v * 0.28 * 16000))
-        self._inst_sounds["guitar"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(gt_samples)))
-
-        # 5. Maracas Shaker
-        mr_samples = []
-        for i in range(4000):
-            t = i / 22050.0
-            # Double shake pulse
-            p1 = math.exp(-t * 28.0)
-            p2 = math.exp(-max(0.0, t - 0.07) * 24.0) if t >= 0.07 else 0.0
-            env = max(p1, p2)
-            val = int(random.uniform(-1, 1) * env * 14000)
-            mr_samples.append(val)
-        self._inst_sounds["maracas"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(mr_samples)))
-
-    def play_note(self, index: int) -> None:
-        if self._enabled and 0 <= index < len(self._notes):
-            try:
-                self._notes[index].play()
-            except Exception:
-                pass
-
-    def play_inst(self, name: str) -> None:
-        if self._enabled and name in self._inst_sounds:
-            try:
-                self._inst_sounds[name].play()
-            except Exception:
-                pass
+if __package__:
+    from .orchestra_audio import SoundManager
+    from .orchestra_content import (
+        DARK_TEXT,
+        KEYBOARD_SHORTCUTS,
+        NOTE_NAMES_EN,
+        NOTE_NAMES_IT,
+        RAINBOW_COLORS,
+        REFERENCE_HEIGHT,
+        REFERENCE_WIDTH,
+        STAGE_CURTAIN,
+        STAGE_CURTAIN_DARK,
+        STAGE_CURTAIN_GOLD,
+        STAGE_GOLD,
+        STAGE_WALL_BOTTOM,
+        STAGE_WALL_TOP,
+        STAGE_WOOD_BOTTOM,
+        STAGE_WOOD_TOP,
+        STORAGE_KEY,
+        WHITE,
+    )
+else:
+    from orchestra_audio import SoundManager
+    from orchestra_content import (
+        DARK_TEXT,
+        KEYBOARD_SHORTCUTS,
+        NOTE_NAMES_EN,
+        NOTE_NAMES_IT,
+        RAINBOW_COLORS,
+        REFERENCE_HEIGHT,
+        REFERENCE_WIDTH,
+        STAGE_CURTAIN,
+        STAGE_CURTAIN_DARK,
+        STAGE_CURTAIN_GOLD,
+        STAGE_GOLD,
+        STAGE_WALL_BOTTOM,
+        STAGE_WALL_TOP,
+        STAGE_WOOD_BOTTOM,
+        STAGE_WOOD_TOP,
+        STORAGE_KEY,
+        WHITE,
+    )
 
 
 class Particle:
@@ -418,9 +309,6 @@ def main() -> int:
                 metrics = ChildUiMetrics.for_size(*screen.get_size())
                 canvas = PygameReferenceCanvas(screen)
             elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-                if is_home_clicked(screen, event.pos):
-                    running = False
-                    continue
                 if not _is_safe_point(screen, event.pos):
                     continue
                 logical = canvas.pointer(event.pos)
