@@ -36,14 +36,16 @@ activities/enciclopedia_greia/assets/source/history_gallery_time_trail.svg
 - authored dark observatory rather than a bare star field;
 - arched observation window, star-chart material, telescope, compass/workbench details;
 - intentionally leaves the central stage clear for the existing continuously orbiting Solar System model;
-- live planet/Moon target geometry remains runtime-owned and dynamic.
+- live planet/Moon target geometry remains runtime-owned and dynamic;
+- the SVG now exposes a non-rendering `data-stage="solar-system"` / `data-bounds` rectangle, paired with literal `SOLAR_SYSTEM_CENTER` / `SOLAR_SYSTEM_STAGE_BOUNDS` in `space.py`, so the static source gate can prove that every moving planet, marker and Moon excursion fits inside the authored observation stage.
 
 ### Earth & Nature
 
 - one continuous layered landscape, not destination cards;
 - rain cloud, tree, rainbow, volcano and ocean are distinct physical features of the same world;
-- the rain target received a second source pass after review because the tree canopy hid too much of the rain; near-layer rain streaks now keep the concept readable without changing its hit region;
-- authored subject placement follows the existing destination hit regions exactly;
+- the rain artwork received a second source pass because the tree canopy hid too much of the rain; near-layer rain streaks now keep the concept readable;
+- a later input review found the Rain and Tree pointer rectangles overlapped by 18 pixels; the Rain hit region was shortened while preserving the same authored center `(217,203)`, so the two regions now meet cleanly instead of resolving part of the visible tree to Rain;
+- authored subject placement follows the destination semantics exactly;
 - Tito remains the runtime canonical presenter.
 
 ### Body
@@ -82,16 +84,18 @@ This correction specifically addresses the visual-plan requirement that Body fee
 
 ## Source review findings
 
-The section contact sheets exposed weaknesses before runtime integration:
+The section contact sheets and follow-up runtime-source review exposed weaknesses before final runtime capture:
 
 ```text
 Body      too schematic / too close to a mannequin diagram
 Machines  miniature gears too simplified / bridge too weak
 History   dinosaur silhouette ambiguous
 Earth     rain cue too hidden behind the tree canopy
+Earth     Rain and Tree pointer regions overlapped
+E3 static sections still used generic rectangular runtime focus rings
 ```
 
-Those were corrected in source. The current six-section source family now passes the intended first recognizability/composition check:
+Those were corrected before runtime acceptance. The current six-section source family now passes the intended first recognizability/composition check:
 
 ```text
 Animals          coherent continuous habitat, corrected lion + elephant
@@ -104,7 +108,7 @@ History          T-rex/fossil/mammoth/cave/pyramid sequence readable
 
 The current maintainer-local contact sheet is `encyclopedia_e3_section_source_contact_v5.png`; it is source-review evidence only and is deliberately not committed as Simulator evidence.
 
-## Geometry contract
+## Geometry and focus contracts
 
 E3 now carries the same visual/input alignment protection that caught the earlier Home drift.
 
@@ -119,9 +123,31 @@ Machines
 History
 ```
 
-Space is intentionally excluded from the static-center check because its Sun, planets and Moon move continuously and runtime owns those positions.
+Space cannot use fixed target centers because its Sun, planets and Moon move continuously. Instead, the same suite compares the authored Solar-System stage bounds with literal runtime geometry and proves the maximum visible extent of every orbiting subject remains inside that stage.
 
-This means an authored object cannot silently move away from the region that receives pointer/controller focus without breaking the focused source contract.
+`tests/test_encyclopedia_section_hit_geometry.py` separately guards the static E3 selection regions:
+
+- Earth, Body, Machines and History regions remain inside the 1024×600 logical surface;
+- each family is pairwise non-overlapping, preventing ambiguous pointer resolution;
+- Body/Machines keep deliberately generous authored-object footprints instead of regressing to the old 86×86 prototype hotspots;
+- all four authored pages use `draw_focus_patch(...)` when the authored scene is present, while the old rectangular `focus_ring(...)` remains only as fail-soft procedural-state treatment.
+
+This keeps runtime focus visually integrated with the scene rather than reintroducing generic UI cards over authored illustrations.
+
+## Exact-source Simulator evidence contract
+
+The E3 runtime review is now source-bound rather than relying on manually transcribed SHAs.
+
+`tools/encyclopedia_v01_section_review_capture.py` requires a clean tracked tree, records starting `HEAD` and SHA-256 for every Encyclopedia runtime PNG, runs exactly Home + the six sections, and fails if source or runtime-art hashes change during capture. It writes:
+
+```text
+source-sha.txt
+capture-manifest.json
+```
+
+`tools/encyclopedia_v01_section_review.py` accepts only a `PASS` manifest with exactly the seven required jobs and the complete eleven-PNG art inventory, and preserves that provenance beside the curated screenshots/contact sheet.
+
+`tests/test_encyclopedia_e3_review_tools.py` pins that evidence contract without launching Pygame.
 
 ## Staged runtime integration
 
@@ -155,6 +181,10 @@ latest corrected E2 runtime PNG rebuild        PENDING
 latest corrected E2 exact-SHA Simulator proof  PENDING
 E3 six-section source direction                IMPLEMENTED / SOURCE-REVIEWED
 E3 static visual/input geometry contract       IMPLEMENTED
+E3 Space live-stage geometry contract          IMPLEMENTED
+E3 static hit-region non-overlap contract      IMPLEMENTED
+E3 authored scene-native focus treatment       IMPLEMENTED
+E3 exact-source capture provenance contract    IMPLEMENTED
 E3 five new runtime PNGs                       PENDING
 E3 six-section Simulator/contact-sheet review  PENDING
 E4 factual-entry migration                     BLOCKED
