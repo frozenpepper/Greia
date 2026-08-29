@@ -4,7 +4,7 @@
 **Runtime pages:** **43 / 43 planned executable pages**  
 **Runtime Activity:** `activities/enciclopedia_greia/` (`org.greia.enciclopedia`)  
 **Last Simulator-captured visual SHA:** `8fa41a3e9ab4b8cff6cce9607c32492fedc6ae8f` — technically valid E2R capture, aesthetically superseded  
-**Current state:** **MECHANICAL FOUNDATION HEALTHY / E1 COMPLETE / GOLDEN-MASTER DIRECTION OWNER-APPROVED AFTER DIRECT REPAIRS / E3 SECTION SOURCE IMPLEMENTED + SOURCE-REVIEWED + GEOMETRY/FOCUS/EVIDENCE-HARDENED / RUNTIME PNG + FRESH SIMULATOR EVIDENCE PENDING / E4 BLOCKED / NARRATION SEPARATE**
+**Current state:** **MECHANICAL FOUNDATION HEALTHY / E1 COMPLETE / GOLDEN-MASTER DIRECTION OWNER-APPROVED AFTER DIRECT REPAIRS / E3 SECTION SOURCE IMPLEMENTED + SOURCE-REVIEWED + GEOMETRY/FOCUS/EVIDENCE-HARDENED / COMMITTED 11-PNG PACK + FRESH SIMULATOR EVIDENCE PENDING / E4 BLOCKED / NARRATION SEPARATE**
 
 This file is the current continuation contract. Historical construction detail remains in `encyclopedia/PROGRESS.md`, Git history, and dated visual reviews.
 
@@ -104,10 +104,11 @@ owner visual-direction decision                         CURRENT / APPROVED
 corrected editable SVG source                          CURRENT
 old committed runtime PNGs for changed golden masters STALE
 old E2R Simulator screenshots                         STALE FOR EXACT CURRENT SOURCE
+local nine-PNG staging bundle                         RECOVERABLE / NOT COMMITTED EVIDENCE
 fresh final-source Simulator acceptance               PENDING
 ```
 
-Do not turn the owner approval into a false claim that the newest files have already passed final-SHA Simulator acceptance.
+Do not turn the owner approval into a false claim that the newest files have already passed final-SHA Simulator acceptance. A locally rendered PNG is not current Simulator evidence until it is committed, byte-bound to the tested `HEAD`, and captured through the real Greia runtime.
 
 ---
 
@@ -197,11 +198,11 @@ Machines
 History
 ```
 
-Space remains dynamic rather than pretending to use fixed target centers. Its authored observatory carries a non-rendering `data-stage="solar-system"` / `data-bounds` contract, while `space.py` exposes literal `SOLAR_SYSTEM_CENTER` and `SOLAR_SYSTEM_STAGE_BOUNDS`. The visual-foundation test parses every `Planet(...)` orbit and proves the complete rendered planet discs/markers, plus the Moon excursion, remain inside the authored observation stage.
+Space remains dynamic rather than pretending to use fixed target centers. Its authored observatory carries a non-rendering `data-stage="solar-system"` / `data-bounds` contract, while `space.py` exposes literal `SOLAR_SYSTEM_CENTER` and `SOLAR_SYSTEM_STAGE_BOUNDS`. The visual-foundation test parses every `Planet(...)` orbit and proves the complete rendered planet discs/markers, Saturn ring margin, and Moon excursion remain inside the authored observation stage.
 
 History target centers are explicit page constants rather than implicit arithmetic. Body and Machines no longer use the old uniform 86x86 prototype hit boxes: pointer/focus rectangles follow actual authored exhibit/object footprints while preserving semantic centers and keyboard/controller ordering.
 
-`tests/test_encyclopedia_section_hit_geometry.py` now checks Earth, Body, Machines and History selection geometry directly:
+`tests/test_encyclopedia_section_hit_geometry.py` checks Earth, Body, Machines and History selection geometry directly:
 
 - all static authored hit regions stay inside the 1024×600 logical surface;
 - each page's target rectangles are pairwise disjoint, preventing one visible subject from resolving to another;
@@ -209,7 +210,7 @@ History target centers are explicit page constants rather than implicit arithmet
 - Earth Rain/Tree cannot regress to their earlier overlap;
 - authored Earth/Body/Machines/History use `draw_focus_patch(...)`, while `focus_ring(...)` is retained only for procedural fail-soft presentation.
 
-Animals already used `draw_focus_patch(...)`. Space does not need a static object patch: the selected live Sun/planet/Moon draws its own yellow subject ring, while the bottom text plaque is deliberately neutral and secondary.
+Animals already uses `draw_focus_patch(...)`. Space does not need a static object patch: the selected live Sun/planet/Moon draws its own yellow subject ring, while the bottom text plaque is deliberately neutral and secondary.
 
 The build tool supports explicit visual tranches:
 
@@ -230,7 +231,7 @@ E3 section tranche        0 / 5 or 5 / 5 — a partial E3 pack is forbidden
 
 ---
 
-## 8. E3 Simulator review tooling — exact-SHA bound
+## 8. E3 Simulator review tooling — exact-SHA and committed-art bound
 
 Two narrow tools exist for the E3 gate:
 
@@ -256,18 +257,33 @@ Each session uses the real Greia Shell/profile/catalogue launch path, semantic i
 Evidence integrity is part of the tool rather than a manual convention. Before launching even the first session it requires:
 
 ```text
-clean tracked checkout
+clean checkout, including non-ignored untracked files
 exact complete 11-PNG Encyclopedia runtime-art inventory
+every one of those PNGs committed in the exact HEAD being captured
+working PNG bytes identical to HEAD:<path> Git blob bytes
 ```
 
-It then records `git rev-parse HEAD` and SHA-256 of every Activity runtime PNG and writes:
+For each PNG the harness resolves the committed blob with `git rev-parse HEAD:<path>` and compares it with `git hash-object <path>`. This prevents an untracked/generated/stale E3 PNG from being presented as evidence for a Git SHA that did not contain it.
+
+It then writes:
 
 ```text
 source-sha.txt
 capture-manifest.json
 ```
 
-The manifest records source SHA, locale, viewport, interface size, selected/completed jobs, runtime-art hashes and status. At the end the tool fails if `HEAD`, tracked source, or the runtime-PNG hash inventory changed during capture.
+The manifest records:
+
+```text
+source_sha
+locale / viewport / interface_size
+selected_jobs / completed_jobs
+runtime_art_sha256       # all 11 PNGs
+runtime_art_git_blobs    # all 11 PNGs
+status / failure
+```
+
+At the end the tool fails if `HEAD`, working status, runtime-PNG SHA-256 inventory, or committed Git-blob inventory changed during capture.
 
 The review builder accepts only:
 
@@ -276,10 +292,11 @@ status = PASS
 selected_jobs = Home + all six sections
 completed_jobs = Home + all six sections
 runtime_art_sha256 = exact complete 11-PNG Encyclopedia pack
+runtime_art_git_blobs = exact complete 11-PNG committed blob inventory
 source-sha.txt = capture-manifest source_sha
 ```
 
-It then preserves both integrity files beside the seven curated screenshots/contact sheet. `tests/test_encyclopedia_e3_review_tools.py` pins the seven-job scope, exact eleven-art precondition and evidence-integrity contract without launching Pygame.
+It validates SHA formats and preserves both integrity files beside the seven curated screenshots/contact sheet. `tests/test_encyclopedia_e3_review_tools.py` pins the seven-job scope, exact eleven-art precondition, clean-checkout rule, committed-art rule and evidence-integrity contract without launching Pygame.
 
 Canonical maintainer protocol:
 
@@ -302,9 +319,10 @@ static visual/input geometry contract          IMPLEMENTED
 static hit-region non-overlap contract         IMPLEMENTED
 authored scene-native focus treatment          IMPLEMENTED
 exact 11-art capture precondition              IMPLEMENTED
+committed-art Git-blob capture contract        IMPLEMENTED
 exact-SHA Simulator evidence contract          IMPLEMENTED
-five new E3 runtime PNGs                       PENDING
-rebuild corrected golden-master PNGs           PENDING
+five new E3 runtime PNGs                       PENDING COMMIT
+rebuild corrected golden-master PNGs           PENDING COMMIT
 build --check on complete current art pack     PENDING
 focused real-checkout tests / make verify      PENDING
 fresh final-SHA real Greia Simulator           PENDING
@@ -353,9 +371,10 @@ rebuild corrected six golden-master PNGs
    tests.test_encyclopedia_e3_review_tools
    tests.test_encyclopedia_section_hit_geometry
 → required local repository verification
-→ commit/push complete current runtime art
+→ commit/push exact complete current 11-PNG runtime art
+→ rerun build --check + focused tests on that pushed SHA
 → real Greia Simulator on the exact final SHA
-→ capture Home + six section pages with exact-SHA manifest/hashes
+→ capture Home + six section pages with source SHA + SHA256 + committed Git-blob manifest
 → build the bounded provenance-preserving review set
 → inspect the single runtime contact sheet + interaction/navigation sanity
 → if E3 runtime family is accepted, close E3 and unblock E4
