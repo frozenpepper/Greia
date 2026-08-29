@@ -54,14 +54,14 @@
 <rect width="1024" height="600" fill="url(#sky)"/>
 <rect y="430" width="1024" height="170" fill="url(#wood)"/>
 <path d="M0 430H1024" stroke="#3e2b22" stroke-width="4" opacity="0.55"/>
-<ellipse cx="512" cy="478" rx="420" ry="44" fill="#2a1c14" opacity="0.18"/>
+<ellipse cx="512" cy="505" rx="455" ry="46" fill="#2a1c14" opacity="0.18"/>
 
-<!-- Book -->
+<!-- Book: deliberately oversized so all six portal worlds sit inside the paper -->
 <g filter="url(#softshadow)">
-  <path d="M120 122 Q280 80 510 134 L510 488 Q300 432 122 482Z" fill="url(#paper)" stroke="#76523a" stroke-width="5"/>
-  <path d="M510 134 Q744 80 904 122 L894 482 Q706 432 510 488Z" fill="url(#paper)" stroke="#76523a" stroke-width="5"/>
-  <path d="M510 134V486" stroke="#a7815a" stroke-width="6" opacity="0.8"/>
-  <path d="M503 146V478" stroke="#fff7e5" stroke-width="2" opacity="0.85"/>
+  <path d="M78 112 Q280 66 512 124 L512 520 Q286 472 82 516Z" fill="url(#paper)" stroke="#76523a" stroke-width="5"/>
+  <path d="M512 124 Q744 66 946 112 L942 516 Q738 472 512 520Z" fill="url(#paper)" stroke="#76523a" stroke-width="5"/>
+  <path d="M512 124V518" stroke="#a7815a" stroke-width="6" opacity="0.8"/>
+  <path d="M505 138V510" stroke="#fff7e5" stroke-width="2" opacity="0.85"/>
 </g>
 
 <!-- ============ Portals (miniature illustrated worlds) ============ -->
@@ -220,7 +220,7 @@
 </g>
 
 <!-- Book ribbon + bookmark -->
-<path d="M500 488 L532 488 L524 575 L514 558 L502 575Z" fill="#ba5754" opacity="0.92"/>
+<path d="M496 516 L528 516 L524 580 L513 563 L502 580Z" fill="#ba5754" opacity="0.92"/>
 
 <!-- Leo's perch (right side of the book, runtime character draws here) -->
 <ellipse cx="880" cy="552" rx="60" ry="8" fill="#2a1c14" opacity="0.22"/>
