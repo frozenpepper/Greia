@@ -5,6 +5,7 @@
 **Canonical branch:** `main`
 **Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**
 **Current parallel visual focus:** **Encyclopedia E3 six-section source reauthoring after owner approval of corrected golden-master direction**
+**Active Activity-modernization plan:** `docs/plans/2026-08-29_R7_R73_ACTIVITY_MODERNIZATION.md` (one Activity at a time, sequential, scoped to R7.3)
 **Purpose:** short current continuation contract. Detailed chronology belongs in active plans and dated reviews/handovers.
 
 Historical long-form root state remains preserved under:
@@ -407,6 +408,22 @@ Only after the exact R7.3 gate is accepted:
 Do not combine Activity authority migration with unrelated gameplay/visual refactors.
 
 Separate policy item: resolve tap-to-click `AGENTS.md` versus runtime-source contradiction explicitly; do not mutate R7 evidence opportunistically.
+
+### Activity-modernization tranche (2026-08-29, plan-only)
+
+A new Activity-modernization plan has been written to drive the R7.3 strict-queue Activity work, one Activity at a time, against current `main`:
+
+```text
+docs/plans/2026-08-29_R7_R73_ACTIVITY_MODERNIZATION.md
+```
+
+The plan is staged:
+
+- **Stage A** — repair the two source-gate failures that are independent of Activity work: the `test_r7_noncooperative_chrome_fixture` docstring false positive, and the three contract tests that still expect the retired `-m greia_launcher.presentation` substring in `greia-x-session` (now `-m greia_launcher.trusted_presentation`). Both are pre-existing on the current SHA.
+- **Stage B** — process the strict-audit queue (17 Activities) one at a time, with the lighter architecture/performance pass for the remaining 16 (excluding `enciclopedia_greia`, which is owned by the E3/E4 plan). One Activity per coherent commit. Ledger rows appended; HANDOVER updated at session boundaries.
+- **Stage C** — final repository gate: `audit_activity_system_chrome_ownership.py --strict` → `blockers=0`; `audit_activity_backend_independence.py activities` → `blockers=0`; `make verify` → exit 0.
+
+The plan is subordinate to this R7.3 acceptance gate. Do not begin Acer acceptance from the Activity-modernization plan; Acer acceptance continues to be owned by `docs/testing/2026-08-29_R7_R73_TRUSTED_SYSTEM_CHROME_SOURCE_AND_ACER_ACCEPTANCE.md`.
 
 ### Current Encyclopedia visual lane
 
