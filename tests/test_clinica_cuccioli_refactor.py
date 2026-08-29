@@ -179,9 +179,11 @@ class ClinicInteractionTests(unittest.TestCase):
             events=events,
         )
 
-        with patch("clinic_app.is_home_clicked", return_value=False), patch(
-            "clinic_app._is_safe_point", return_value=True
-        ):
+        # The real Greia Home/Back path is no longer owned by the
+        # Activity; is_home_clicked is gone from clinic_app. The
+        # protected-region gate _is_safe_point is the only pointer
+        # filter remaining under the Activity's control.
+        with patch("clinic_app._is_safe_point", return_value=True):
             self.assertFalse(app._handle_pointer(renderer.PATIENT_POINT))
             self.assertEqual(session.completed_steps, [])
 
