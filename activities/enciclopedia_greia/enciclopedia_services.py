@@ -71,6 +71,11 @@ class VisualLibrary:
     Runtime art is an explicit semantic-id map; the Activity never scans the
     package or rasterizes SVG at runtime. Scaling happens only on a bounded
     cache miss and page hot paths only receive prepared Surfaces.
+
+    E3 section-world IDs are registered before their generated PNG tranche is
+    committed. Missing renditions therefore fail soft to the page's retained
+    procedural fallback; a partial generated section pack is forbidden by the
+    visual-foundation source contract.
     """
 
     MAX_SURFACES = 40
@@ -81,6 +86,11 @@ class VisualLibrary:
         "encyclopedia.space.saturn.observatory": "saturn_observatory.png",
         "encyclopedia.machines.gears.workbench": "gears_workbench.png",
         "encyclopedia.history.pyramids.diorama": "pyramids_diorama.png",
+        "encyclopedia.space.gallery.observatory": "space_gallery_observatory.png",
+        "encyclopedia.earth.gallery.landscape": "earth_gallery_landscape.png",
+        "encyclopedia.body.gallery.discovery_room": "body_gallery_discovery_room.png",
+        "encyclopedia.machines.gallery.workbench": "machines_gallery_workbench.png",
+        "encyclopedia.history.gallery.time_trail": "history_gallery_time_trail.png",
     }
 
     def __init__(self, package_root: Path) -> None:
