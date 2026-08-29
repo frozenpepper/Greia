@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import ctypes
 import ctypes.util
-import os
 from typing import Any, Callable, Mapping, Protocol
 
 
@@ -95,23 +94,18 @@ class CtypesX11FocusBridge:
 
 
 class LegacyXShellWindowController:
-    """Legacy-X implementation of Greia's one-shot Shell window setup."""
+    """Legacy-X implementation of Greia's one-shot Shell window setup.
+
+    This class is instantiated only by the trusted Legacy-X composition path.
+    It therefore never chooses or detects the active display backend itself.
+    """
 
     backend_id = "legacy-x11-shell-window"
 
-    def __init__(
-        self,
-        environment: Mapping[str, str] | None = None,
-        *,
-        focus_bridge: X11FocusBridge | None = None,
-    ) -> None:
-        self._environment = os.environ if environment is None else environment
+    def __init__(self, *, focus_bridge: X11FocusBridge | None = None) -> None:
         self._focus_bridge = focus_bridge or CtypesX11FocusBridge()
 
     def after_window_created(self, pygame: Any) -> bool:
-        selected_driver = self._environment.get("SDL_VIDEODRIVER")
-        if selected_driver is not None and selected_driver != "x11":
-            return False
         try:
             info = pygame.display.get_wm_info()
         except Exception:
