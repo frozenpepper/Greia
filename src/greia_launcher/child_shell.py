@@ -26,7 +26,11 @@ from greia_platform.ui_preferences import UiPreferencesStore
 from .adaptive_discovery_presentation import AdaptiveActivityDiscoveryMixin
 from .achievement_presentation import AchievementLibraryMixin
 from .collection_home_presentation import CollectionFirstHomeMixin
-from .composition import build_launcher_runtime_services, provisional_installed_display_session
+from .composition import (
+    build_launcher_runtime_services,
+    provisional_installed_display_session,
+    provisional_installed_system_chrome,
+)
 from .display_session import DisplaySessionCoordinator
 from .event_broker import ActivityEventBroker
 from .feedback_presentation import SharedUiFeedbackMixin
@@ -41,10 +45,12 @@ from .shared_ui_presentation import (
     SharedUiShellPanelMixin,
 )
 from .supervisor import ActivitySupervisor
+from .system_chrome import SystemChromeCoordinator
+from .trusted_chrome_supervisor import TrustedChromeActivitySupervisor
 
 
-class ProfileVisualActivitySupervisor(ActivitySupervisor):
-    """Add profile visuals, audio routing and trusted achievement evaluation."""
+class ProfileVisualActivitySupervisor(TrustedChromeActivitySupervisor):
+    """Add profile visuals/audio on top of trusted Activity lifecycle chrome."""
 
     def __init__(
         self,
@@ -153,6 +159,9 @@ class GreiaChildShell(
     def _display_session_coordinator(self) -> DisplaySessionCoordinator | None:
         return provisional_installed_display_session() if self._installed_root() else None
 
+    def _system_chrome_coordinator(self) -> SystemChromeCoordinator | None:
+        return provisional_installed_system_chrome() if self._installed_root() else None
+
     def _rebuild_runtime_services(self) -> None:
         runtime_services = build_launcher_runtime_services(
             self.runtime,
@@ -181,6 +190,7 @@ class GreiaChildShell(
             history_service=runtime_services.history_service,
             achievement_service=runtime_services.achievement_service,
             display_coordinator=self._display_session_coordinator(),
+            system_chrome_coordinator=self._system_chrome_coordinator(),
             audio_service=audio_service,
         )
         self.runtime_services = runtime_services
