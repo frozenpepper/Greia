@@ -17,6 +17,19 @@ EXPECTED_SECTIONS = (
     "history",
 )
 EXPECTED_REVIEW_TAGS = ("home", *EXPECTED_SECTIONS)
+EXPECTED_RUNTIME_ART = {
+    "home_discovery_book.png",
+    "animals_field_table.png",
+    "lion_savanna.png",
+    "saturn_observatory.png",
+    "gears_workbench.png",
+    "pyramids_diorama.png",
+    "space_gallery_observatory.png",
+    "earth_gallery_landscape.png",
+    "body_gallery_discovery_room.png",
+    "machines_gallery_workbench.png",
+    "history_gallery_time_trail.png",
+}
 
 
 class EncyclopediaE3ReviewToolTests(unittest.TestCase):
@@ -81,6 +94,23 @@ class EncyclopediaE3ReviewToolTests(unittest.TestCase):
                 "07-history.png",
             ),
         )
+
+    def test_review_builder_refuses_incomplete_or_unbound_evidence(self) -> None:
+        source = REVIEW_TOOL.read_text(encoding="utf-8")
+        tree = ast.parse(source)
+        runtime_art = set(ast.literal_eval(self._assignment(tree, "EXPECTED_RUNTIME_ART")))
+        self.assertEqual(runtime_art, EXPECTED_RUNTIME_ART)
+        required_fragments = (
+            'manifest.get("status") != "PASS"',
+            'manifest.get("source_sha") != source_sha',
+            "selected != EXPECTED_TAGS or completed != EXPECTED_TAGS",
+            "set(hashes) != EXPECTED_RUNTIME_ART",
+            '"source-sha.txt"',
+            '"capture-manifest.json"',
+        )
+        for fragment in required_fragments:
+            with self.subTest(fragment=fragment):
+                self.assertIn(fragment, source)
 
 
 if __name__ == "__main__":
