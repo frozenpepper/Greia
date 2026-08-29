@@ -80,7 +80,7 @@ def _build_contact_sheet(evidence_root: Path, output: Path) -> None:
         source = _source(evidence_root, tag, filename)
         with Image.open(source) as opened:
             image = opened.convert("RGB")
-        image.thumbnail((cell_w, cell_h), Image.Resampling.LANCZOS)
+        image.thumbnail((cell_w, cell_h), Image.LANCZOS)
 
         col = index % cols
         row = index // cols
