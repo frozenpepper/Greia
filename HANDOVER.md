@@ -36,6 +36,7 @@ For R7 display/session/input work also read:
 ```text
 docs/reviews/2026-08-29_R7_ACTIVITY_BACKEND_INDEPENDENCE_AND_DISPLAY_SESSION_REVIEW.md
 docs/reviews/2026-08-29_R7_R72_LEGACY_X_CONTAINMENT_INVENTORY.md
+docs/reviews/2026-08-29_R7_R73_TRUSTED_CHROME_SOURCE_TRANCHE.md
 docs/testing/2026-08-29_R7_R72_LEGACY_X_CONTAINMENT_SOURCE_AND_ACER_ACCEPTANCE.md
 docs/testing/2026-08-29_R7_R73_TRUSTED_SYSTEM_CHROME_SOURCE_AND_ACER_ACCEPTANCE.md
 docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md
@@ -108,20 +109,23 @@ Acceptance:
 docs/testing/2026-08-29_R7_R72_LEGACY_X_CONTAINMENT_SOURCE_AND_ACER_ACCEPTANCE.md
 ```
 
-### R7.3 — trusted Greia Home source tranche
+### R7.3 — trusted Greia Home + Activity ownership migration
 
-R7.3 has now begun and is **source-integrated but unexecuted/unaccepted**. Beginning this isolated source tranche does not retroactively close R7.2 and does not authorize final backend migration.
+R7.3 is **source-integrated but unexecuted/unaccepted**. Beginning this isolated source tranche does not retroactively close R7.2 and does not authorize final backend migration.
 
-New/changed trusted boundaries:
+Trusted source boundaries now include:
 
 ```text
+src/greia_platform/pygame_canvas.py
 src/greia_launcher/system_chrome_legacy_x.py
 src/greia_launcher/trusted_chrome_supervisor.py
 src/greia_launcher/trusted_presentation.py
 src/greia_launcher/system_chrome.py
 src/greia_launcher/child_shell.py
 src/greia_launcher/composition.py
+src/greia_simulator/python_activity.py
 build/overlay/usr/local/lib/greia-os/greia-x-session
+tools/audit_activity_system_chrome_ownership.py
 ```
 
 Architecture:
@@ -132,11 +136,50 @@ Architecture:
 - it does not copy Activity pixels, create a second Pygame renderer/process, or add a full-screen composition layer;
 - chrome is drawn on show/expose only and input polling is nonblocking;
 - `TrustedChromeActivitySupervisor` binds the chrome lease to the authoritative Activity session and existing graceful/forced stop lifecycle;
-- the installed `GreiaChildShell` composes trusted chrome; its X-session fallback now uses `greia_launcher.trusted_presentation`, which composes the same authority rather than falling back to plain unprotected presentation;
+- the installed `GreiaChildShell` composes trusted chrome; its X-session fallback uses `greia_launcher.trusted_presentation`, which composes the same authority rather than falling back to plain unprotected presentation;
+- the Simulator's trusted Python bootstrap independently draws/intercepts its compatibility Home above Activity code, so Activity migration does not remove Simulator navigation;
 - Home is the first mandatory action closed here. Optional Back remains disabled in the installed supervisor until real launch-origin context is passed through the trusted boundary;
 - chrome prepare/show/poll/cleanup failures fail the Activity path closed as `platform_failure`;
-- failed preparation now performs one bounded rollback attempt and returns the coordinator to `HIDDEN` when cleanup succeeds, preventing one transient failed launch from poisoning every later session;
-- if rollback itself fails, the coordinator remains `FAILED`.
+- failed preparation performs one bounded rollback attempt and returns the coordinator to `HIDDEN` when cleanup succeeds; if rollback fails, the coordinator remains `FAILED`.
+
+The shared Activity canvas no longer renders trusted chrome:
+
+- `PygameReferenceCanvas.present()` retains renderer-neutral safe/protected viewport geometry and Activity-local pointer presentation;
+- the legacy `system_chrome=` keyword is temporarily accepted but ignored during catalogue migration;
+- new Activity code must not use that keyword or the retired cooperative helper functions.
+
+Explicit migrated exemplars now include:
+
+```text
+activities/writing/main.py
+activities/painting/main.py
+activities/labirinto_magico/maze_app.py
+activities/volo_draghetto/dragon_app.py
+activities/shape_garden/main.py
+activities/storie_della_mia_voce/voice_app.py
+```
+
+For these Activities the edits were authority-only: Activity-owned Home drawing/hit-testing was removed while platform stop handling, safe-region geometry, gameplay, storage, microphone routing and direct Pygame performance paths were preserved.
+
+Catalogue-wide authority inventory is now source-owned by:
+
+```text
+tools/audit_activity_system_chrome_ownership.py
+```
+
+It is AST-based and reports retired helper imports/calls plus lingering `PygameReferenceCanvas.present(system_chrome=...)` requests. The R7.3 acceptance protocol now requires:
+
+```bash
+PYTHONPATH=src python3 tools/audit_activity_system_chrome_ownership.py --strict
+```
+
+with:
+
+```text
+Activity system chrome ownership audit: blockers=0
+```
+
+**Do not claim catalogue-wide zero debt yet:** the strict scanner has not executed on this current source state in this connector-only tranche. If it reports remaining callers, migrate exactly those callers without gameplay/visual rewrites, then restart the source gate on the new SHA.
 
 Permanent hostile acceptance fixture:
 
@@ -146,7 +189,7 @@ tests/fixtures/activities/r7_noncooperative_chrome/
 
 It fills its complete SDL surface, draws no Home, ignores local input, ignores the graceful STOP marker and therefore can return only through trusted Home + bounded platform forced termination.
 
-Source regression coverage now includes:
+R7.3 regression source now includes:
 
 ```text
 tests/test_system_chrome.py
@@ -154,6 +197,8 @@ tests/test_system_chrome_legacy_x.py
 tests/test_trusted_chrome_supervisor.py
 tests/test_r7_child_shell_trusted_chrome_composition.py
 tests/test_r7_noncooperative_chrome_fixture.py
+tests/test_activity_system_chrome_audit.py
+tests/test_r7_first_wave_activity_trusted_chrome_migration.py
 ```
 
 Exact source + Acer protocol:
@@ -162,7 +207,7 @@ Exact source + Acer protocol:
 docs/testing/2026-08-29_R7_R73_TRUSTED_SYSTEM_CHROME_SOURCE_AND_ACER_ACCEPTANCE.md
 ```
 
-The protocol requires Writing, Painting, hostile non-cooperative Home/forced return, 10/10 hostile cycles, crash cleanup and exact-device performance evidence.
+The protocol requires both Activity audits, Writing, Painting, hostile non-cooperative Home/forced return, 10/10 hostile cycles, crash cleanup and exact-device performance evidence.
 
 **Important limitation:** shared X11 cannot become final hostile-third-party isolation merely because a sibling trusted window works against ordinary/non-cooperative Pygame content. ADR 0014 still requires replacement by the target DRM/KMS-centered direct/appliance architecture; a minimal compositor is allowed if measurement shows it is the thinnest practical trusted session path.
 
@@ -172,7 +217,7 @@ The protocol requires Writing, Painting, hostile non-cooperative Home/forced ret
 - `Xwrapper.config` remains security-sensitive migration plumbing. Retaining Xorg as a target shipping architecture would require an explicit amendment/supersession of ADR 0014.
 - a future Wayland Activity transport cannot simply pass host `XDG_RUNTIME_DIR`: Activity sandbox masks `/run`; project only the required compositor socket into a narrow child runtime directory.
 - **tap-to-click policy contradiction remains unresolved:** current runtime source intentionally sets `touchpad_tap = true` after the 2026-08-23 Acer responsiveness fix, while `AGENTS.md` still says defaults off. Do not silently change working touchpad behavior inside R7; resolve product policy explicitly and align source/tests/docs together.
-- first-party Activities/shared canvas helpers still contain cooperative `draw_system_chrome_overlay()` / `is_home_clicked()` migration debt. Do not bulk-delete it until the trusted host passes its source/physical gate; migrate by shared pattern afterward.
+- catalogue-wide absence of retired Activity Home helpers remains **unverified until the strict audit executes**; do not infer zero from the six migrated exemplars or incomplete GitHub code search.
 
 R7 invariants:
 
@@ -328,17 +373,20 @@ Current x86 update architecture remains provisional single-root; signed-update f
 
 Do **not** restart R7.1/R7.2/R7.3 implementation from scratch and do not claim acceptance from committed source alone.
 
-The exact next gate is now combined evidence on current `main`:
+The exact next gate is combined evidence on current `main`:
 
 ```text
 refresh current main
 → run the R7.3 focused source suite from
   docs/testing/2026-08-29_R7_R73_TRUSTED_SYSTEM_CHROME_SOURCE_AND_ACER_ACCEPTANCE.md
 → Activity backend audit (blockers=0)
+→ Activity system-chrome ownership audit --strict (blockers=0)
+→ if that strict audit reports remaining callers: migrate exactly those callers,
+  preserve Activity behavior/performance/safe geometry, commit, restart source gate
 → make verify
 → if source green, deploy exact SHA to reference Acer
 → satisfy remaining R7.2 focus/pointer/Writing/Painting/crash/cycle evidence
-→ prove trusted Home with Writing + Painting
+→ prove trusted Home with migrated Writing + Painting
 → deploy hostile r7_noncooperative_chrome fixture
 → hostile fullscreen cannot cover Home
 → Home request -> fixture ignores graceful STOP -> bounded forced return
@@ -348,16 +396,14 @@ refresh current main
 → ACCEPT / REJECT / INCOMPLETE honestly
 ```
 
-After trusted-host acceptance, migrate cooperative first-party chrome debt by pattern rather than one-off rewrites:
+Only after the exact R7.3 gate is accepted:
 
-1. shared viewport/canvas helpers retain protected geometry but stop drawing/hit-testing the real Home;
-2. Writing/Painting first with typing/drawing performance remeasurement;
-3. Labyrinth/Dragon/Shape Garden shared-canvas exemplars;
-4. Voice Stories capability-rich exemplar;
-5. repository-wide remaining helper removal;
-6. continue R7.4 physical controller/system-input ownership and ADR-0014 direct/compositor backend evidence.
+1. promote the zero-debt Activity system-chrome rule into normal Activity validation;
+2. remove the temporary ignored `PygameReferenceCanvas.present(system_chrome=...)` compatibility keyword after zero callers are proven;
+3. preserve renderer-neutral protected/safe geometry;
+4. continue R7.4 physical controller/system-input ownership and ADR-0014 direct/compositor backend evidence.
 
-Do not combine the helper migration with unrelated gameplay/visual refactors.
+Do not combine Activity authority migration with unrelated gameplay/visual refactors.
 
 Separate policy item: resolve tap-to-click `AGENTS.md` versus runtime-source contradiction explicitly; do not mutate R7 evidence opportunistically.
 
@@ -390,6 +436,7 @@ build corrected six golden-master PNGs + five E3 section PNGs
 - Activities are display-backend independent;
 - backend plumbing terminates in trusted Greia composition/adapters;
 - Activities never implement the real Home/Back or own physical controller/device authority;
+- Activities may reserve Greia protected geometry but must not import/call retired cooperative Home helpers or request Activity-side canvas chrome;
 - performance is a correctness contract on the Acer floor;
 - preserve Activity-side optimization strategies and allow backend-private fast paths;
 - do not add generic pixel proxying, avoidable full-frame copies, continuous chrome redraw/composition or high-rate input IPC for symmetry;
