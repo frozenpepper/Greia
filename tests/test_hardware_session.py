@@ -140,7 +140,7 @@ class HardwareSessionTests(unittest.TestCase):
         self.assertEqual(store.validations, [("1024x600",)])
         self.assertEqual(controller.calls, ["topology", "probe", "apply"])
 
-    def test_generic_watcher_source_contains_no_x_command_implementation(self) -> None:
+    def test_generic_watcher_source_contains_no_x_backend_selection_or_commands(self) -> None:
         import greia_platform.hardware_session as hardware_session
 
         source = Path(hardware_session.__file__).read_text(encoding="utf-8")
@@ -148,6 +148,15 @@ class HardwareSessionTests(unittest.TestCase):
         self.assertNotIn('"xinput"', source)
         self.assertNotIn("libinput Tapping Enabled", source)
         self.assertNotIn("libinput Accel Speed", source)
+        self.assertNotIn("LegacyXHardwareSessionController", source)
+        self.assertNotIn("hal_legacy_x", source)
+
+    def test_legacy_x_entrypoint_owns_current_backend_selection(self) -> None:
+        import greia_platform.hardware_session_legacy_x as legacy_entrypoint
+
+        source = Path(legacy_entrypoint.__file__).read_text(encoding="utf-8")
+        self.assertIn("LegacyXHardwareSessionController", source)
+        self.assertIn("run_watcher", source)
 
 
 if __name__ == "__main__":
