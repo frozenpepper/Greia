@@ -9,7 +9,6 @@ from greia_platform.activity_api import (
     get_input_profile,
     mark_activity_ready,
 )
-from greia_platform.activity_ui import is_home_clicked
 from greia_platform.input_core import InputEdge, SemanticAction
 from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
@@ -93,7 +92,7 @@ class EncyclopediaApp:
             self.navigator.update(dt)
             self.navigator.draw(self.canvas.surface)
             self._draw_internal_back()
-            self.canvas.present(system_chrome=True, pointer=True)
+            self.canvas.present(pointer=True)
             pygame.display.flip()
             if not self._ready_published:
                 mark_activity_ready()
@@ -116,9 +115,6 @@ class EncyclopediaApp:
             return
 
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            if is_home_clicked(self.screen, event.pos):
-                self._running = False
-                return
             if not self._point_in_activity_viewport(event.pos):
                 return
             logical = self.canvas.pointer(event.pos)
