@@ -32,7 +32,6 @@ launcher_status=$?
 if [ "$launcher_status" -ne 0 ]; then
   echo "Greia profile-aware child shell exited with status $launcher_status; trying trusted presentation fallback" >&2
   /usr/bin/python3 -m greia_launcher.trusted_presentation
-  /usr/bin/python3 -m greia_launcher.trusted_presentation
   launcher_status=$?
 fi
 set -e
