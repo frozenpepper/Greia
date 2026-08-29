@@ -367,6 +367,11 @@ class LegacyXSystemChromeBackend:
         return layout.action_at(*point)
 
     def hide(self, session_id: str) -> None:
+        # Coordinator recovery may call hide twice after a show failure: once as
+        # the immediate best-effort rollback and once while aborting the failed
+        # lease. No active window means cleanup already succeeded.
+        if self._session_id is None:
+            return
         self._require_session(session_id)
         try:
             self._bridge.hide()
