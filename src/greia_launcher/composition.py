@@ -30,6 +30,11 @@ from greia_platform.history import (
     ProgressionPolicy,
 )
 from greia_platform.permissions import PermissionBroker
+from greia_platform.shell_window_backend import (
+    LegacyX11ShellWindowBackend,
+    NoopShellWindowBackend,
+    ShellWindowBackend,
+)
 from greia_platform.storage import ActivityStorageService, StoragePolicy
 
 from .display_session import DisplaySessionCoordinator
@@ -84,6 +89,24 @@ def provisional_installed_display_session() -> DisplaySessionCoordinator:
     """
 
     return DisplaySessionCoordinator(LegacyXDisplaySessionBackend())
+
+
+def provisional_installed_shell_window_backend() -> ShellWindowBackend:
+    """Return the installed shell's current Legacy-X native window adapter.
+
+    The launcher must not inspect ``SDL_VIDEODRIVER`` or call Xlib itself.
+    R7 backend selection belongs to trusted platform composition.  Replacing
+    the installed display/session architecture therefore swaps this adapter at
+    the same composition boundary without changing launcher rendering code.
+    """
+
+    return LegacyX11ShellWindowBackend()
+
+
+def development_shell_window_backend() -> ShellWindowBackend:
+    """Return the backend-neutral shell hook for host development windows."""
+
+    return NoopShellWindowBackend()
 
 
 def default_runtime_adapters(
