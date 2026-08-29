@@ -91,7 +91,10 @@ def _read_staging(zip_path: Path) -> tuple[dict[str, bytes], dict[str, object]]:
             for info, path in paths
             if path.name in {"runtime-manifest.json", "manifest.json"}
         ]
-        if len(manifest_infos) != 1 or PurePosixPath(manifest_infos[0].filename).name != "runtime-manifest.json":
+        if (
+            len(manifest_infos) != 1
+            or PurePosixPath(manifest_infos[0].filename).name != "runtime-manifest.json"
+        ):
             raise ValueError(
                 "staging ZIP must contain exactly one authoritative runtime-manifest.json "
                 "and no legacy manifest.json"
@@ -192,14 +195,10 @@ def import_staging(
             )
             temp_path = Path(raw_path)
             temp_paths.append(temp_path)
-            try:
-                with os.fdopen(descriptor, "wb") as handle:
-                    handle.write(payloads[name])
-                    handle.flush()
-                    os.fsync(handle.fileno())
-            except Exception:
-                os.close(descriptor)
-                raise
+            with os.fdopen(descriptor, "wb") as handle:
+                handle.write(payloads[name])
+                handle.flush()
+                os.fsync(handle.fileno())
 
         for name, temp_path in zip(STAGED_NAMES, temp_paths, strict=True):
             os.replace(temp_path, runtime / name)
