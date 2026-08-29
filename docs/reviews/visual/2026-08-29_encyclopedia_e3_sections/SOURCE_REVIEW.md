@@ -21,7 +21,7 @@ Animals remains the section-world reference and already has its corrected author
 activities/enciclopedia_greia/assets/source/animals_field_table.svg
 ```
 
-Five new section-world masters were authored on `main`:
+Five new section-world masters are now authored on `main`:
 
 ```text
 activities/enciclopedia_greia/assets/source/space_gallery_observatory.svg
@@ -47,11 +47,20 @@ activities/enciclopedia_greia/assets/source/history_gallery_time_trail.svg
 
 ### Body
 
-- one warm discovery room with a central friendly body figure;
-- senses uses a hanging eye/ear chart;
-- tooth/dental mirror, lungs model, heart model and bone/x-ray object are physical exhibits rather than five generic UI cards;
-- existing semantic target centers remain unchanged;
+The first E3 Body draft was still too close to a mannequin/schematic and was revised again before runtime acceptance.
+
+The current source is a warm child-scale discovery room:
+
+- a friendly central wooden/cloth explorer figure provides body context without acting as a medical diagram;
+- **senses** is a framed eye-and-ear learning board;
+- **teeth** is an oversized jaw/tooth model with inspection mirror;
+- **lungs** is a tactile paired-lung model on a low stool;
+- **heart** is an oversized museum-style heart model on a small pedestal;
+- **bones** is an illuminated x-ray-style discovery box on the floor;
+- all five existing semantic target centers remain unchanged;
 - Lilli remains the runtime canonical presenter.
+
+This correction specifically addresses the visual-plan requirement that Body feel like a friendly anatomy discovery room rather than a medical mannequin diagram or five generic UI cards.
 
 ### Machines
 
@@ -71,32 +80,32 @@ activities/enciclopedia_greia/assets/source/history_gallery_time_trail.svg
 
 ## Source review findings
 
-A first six-section source contact sheet exposed three weaknesses before runtime integration:
+The first section contact sheets exposed weaknesses before runtime integration:
 
 ```text
-Body      too many panel-like stations
+Body      too schematic / too close to a mannequin diagram
 Machines  miniature gears too simplified / bridge too weak
 History   dinosaur silhouette ambiguous
 ```
 
-Those were corrected before the source masters were persisted. The revised source contact sheet now passes the intended first recognizability/composition check:
+Those were corrected in source. The current six-section source family now passes the intended first recognizability/composition check:
 
 ```text
 Animals          coherent continuous habitat, corrected lion + elephant
 Space            observatory context supports rather than replaces live orbits
 Earth & Nature   five destinations read as one landscape
-Body             physical discovery-room exhibits, not five UI cards
+Body             friendly discovery room with physical learning props
 Machines         recognizable mechanisms/objects; gears visibly mesh
 History          T-rex/fossil/mammoth/cave/pyramid sequence readable
 ```
 
-The contact sheet itself is maintainer-local source-review evidence and is not committed as Simulator evidence.
+The current maintainer-local contact sheet is `encyclopedia_e3_section_source_contact_v3.png`; it is source-review evidence only and is deliberately not committed as Simulator evidence.
 
 ## Staged runtime integration
 
 The five E3 pages are wired to authored semantic IDs through the existing bounded `VisualLibrary`. Until the generated E3 PNG tranche is present, each page deliberately fails soft to its retained procedural rendering.
 
-The authoring build tool now has explicit groups:
+The authoring build tool has explicit groups:
 
 ```bash
 python3 tools/build_encyclopedia_visual_assets.py --group golden
