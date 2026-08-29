@@ -34,15 +34,16 @@ PORTAL_LABEL_KEYS = (
     "section.history",
 )
 # These centers are also authored into the SVG master as data-center metadata.
-# Keeping the semantic geometry explicit prevents illustrated portals from
-# drifting away from the regions a child can actually activate.
+# The 3x2 portal block is centered on the book as one composition; the middle
+# column deliberately straddles the book spine instead of treating each page
+# as an independent layout surface.
 PORTAL_CENTERS = (
-    (192, 225),
-    (437, 225),
-    (682, 225),
-    (192, 415),
-    (437, 415),
-    (682, 415),
+    (267, 225),
+    (512, 225),
+    (757, 225),
+    (267, 415),
+    (512, 415),
+    (757, 415),
 )
 _PORTAL_SIZE = (176, 140)
 
