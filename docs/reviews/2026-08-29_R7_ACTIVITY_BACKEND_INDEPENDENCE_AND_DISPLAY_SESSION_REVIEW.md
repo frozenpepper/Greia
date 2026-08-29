@@ -26,6 +26,22 @@ DisplaySessionCoordinator
 
 Build/hardware profiles may select an implementation. Activities and the common launcher/runtime contracts must remain identical.
 
+A second invariant is equally important: **backend independence must not create an abstraction tax. Performance is a correctness property on the Acer floor.** Greia must preserve the optimization capabilities already established by `docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md` and `skills/greia-activity-authoring/ENGINEERING.md`.
+
+The design principle is:
+
+```text
+portable semantics
++ backend-neutral Activity source
++ backend-specific fast paths below the boundary
+```
+
+not:
+
+```text
+one slow generic implementation shared by every backend
+```
+
 ## 2. Boundary: what belongs where
 
 ### Activity / runtime-neutral layer
@@ -37,7 +53,8 @@ Allowed:
 - ordinary local keyboard/mouse/touch events appropriate to the Activity;
 - Greia semantic input APIs and interaction profiles;
 - Greia-provided viewport/safe-region/session context;
-- Greia lifecycle, storage, event, locale and permission APIs.
+- Greia lifecycle, storage, event, locale and permission APIs;
+- the existing Greia performance patterns: precomposed opaque backdrops, converted surfaces, bounded caches, dirty-region rendering, cached transforms, invalidation-driven redraw and adaptive pacing.
 
 Forbidden as an Activity dependency:
 
@@ -63,7 +80,8 @@ Owns:
 - controller discovery/normalization and reserved Guide/system input;
 - crash/hang recovery and surface reclamation;
 - backend-specific focus/cursor/session quirks;
-- display/input settings adapters.
+- display/input settings adapters;
+- backend-private performance choices and acceleration that do not change the Activity contract.
 
 ### HAL versus display-session boundary
 
@@ -142,17 +160,20 @@ Activity code
   |-- Pygame/SDL rendering
   |-- Greia Activity API
   |-- semantic input / viewport context
+  |-- existing Activity-side caches / dirty rendering / prepared resources
   v
 Activity runtime adapter + supervisor
   |-- injects backend-private client transport
   |-- injects only approved capabilities
   |-- owns lifecycle process boundary
+  |-- does not proxy normal pixels or high-rate pointer/text input
   v
 DisplaySessionCoordinator + trusted input/chrome coordinators
   |
   +-- selected DisplaySessionBackend
   |     +-- Xorg compatibility
   |     +-- Wayland candidate
+  |     +-- backend-private measured fast paths
   |
   +-- trusted Home/Back host
   +-- controller/input broker
@@ -162,26 +183,123 @@ Linux graphics/input stack
 
 `DisplayTransport` is launcher-internal. X11/Wayland environment values may be injected into the child process because SDL needs them, but they are plumbing, not Activity API. Activity source must not read or branch on them.
 
-## 5. Implementation sequence
+## 5. Performance preservation contract
 
-### R7.1 — freeze the Activity/backend invariant
+R7 must preserve the performance model already measured on the reference Acer. The existing manual records the important cost shape: opaque full-screen copies are cheap, large per-pixel-alpha blends are expensive, `smoothscale`/decode in hot paths are unacceptable, and idle wake cadence materially consumes the single Atom core. Backend work must be designed around those facts rather than assuming desktop-class headroom.
 
-1. Add the invariant to OS and Activity contributor guidance.
+### 5.1 No pixel-proxy abstraction
+
+The platform abstraction must not turn Activity presentation into a Greia IPC framebuffer protocol or copy every rendered frame through Python merely to make backends look uniform.
+
+The Activity should continue rendering through SDL/Pygame directly to the backend-provided client surface. `DisplaySessionBackend` supplies/owns session transport and authority; it does not become the renderer.
+
+This preserves:
+
+- Pygame/SDL surface conversion and optimized blit paths;
+- Activity precomposed opaque backdrops;
+- dirty-region and invalidation-driven rendering;
+- cached scale/flip/decoded assets;
+- local high-rate drawing such as Painting strokes;
+- backend/SDL acceleration or transport improvements where the selected stack supports them.
+
+### 5.2 No high-rate input IPC by default
+
+Do not route every mouse motion, text event or drawing sample through a Python broker solely for architectural symmetry.
+
+Protected system actions and physical-controller ownership are trusted-platform responsibilities. Ordinary high-rate Activity input may remain on the direct SDL event path when the selected backend can guarantee that reserved Greia input is consumed first.
+
+If a backend requires a bridge, it must be measured on the Acer floor before adoption and must not silently degrade Painting, pointer games or text entry.
+
+### 5.3 Trusted chrome must be tiny and cheap
+
+Moving Home/Back out of Activities must not replace one cheap local draw with a continuously composited full-screen alpha layer.
+
+The trusted chrome implementation should, where the backend permits:
+
+- redraw only on state/invalidation, not every idle tick;
+- pre-render/cache stable chrome pixels;
+- keep alpha/composited area to the small protected footprint;
+- avoid full-screen translucent surfaces for ordinary Activity presentation;
+- avoid polling work while idle when event-driven wakeup is available;
+- keep resource ownership bounded;
+- measure any compositor/session host rather than assuming its cost is negligible.
+
+A backend that can enforce trusted chrome only by imposing a large permanent frame/composition cost is not automatically acceptable.
+
+### 5.4 Backend specialization is allowed and expected
+
+The backend interface standardizes semantics and lifecycle, not implementation mechanics.
+
+`LegacyXDisplaySessionBackend`, a future Wayland backend and any measured KMS path may use different backend-private mechanisms for presentation, focus, buffers, input interception or synchronization. SDL/backend facilities such as shared-memory or hardware-assisted paths may be used internally when available and measured.
+
+Do not expose those mechanisms to Activities, but do not prohibit them below the boundary.
+
+### 5.5 Preserve optimization opportunities, not identical internals
+
+The acceptance requirement is that the same Activity code can retain the same optimization strategy on every production backend:
+
+```text
+prepare/decode once
+convert once
+precompose static scene
+cache bounded reusable transforms
+redraw only invalidated regions
+present through SDL
+sleep/pace when idle
+```
+
+The backend may implement the final presentation differently. It must not force the Activity to abandon those optimizations.
+
+### 5.6 Performance baselines precede migration
+
+Before changing a representative Activity or backend path, capture a baseline for the exact user interaction being touched. For R7 this includes at least:
+
+- Writing steady typing/editing;
+- Painting sustained pointer drawing;
+- one static/turn-based dirty-render Activity;
+- one continuously animated game;
+- Shell -> Activity launch and Activity -> Shell return;
+- trusted Home activation;
+- idle Activity with no visible changes.
+
+Record frame/update cost, process CPU, RSS/PSS sanity, input responsiveness and relevant redraw/invalidation counts where practical.
+
+After the migration, repeat the same workload on the same hardware and source state. A backend/security refactor that materially degrades an accepted hot path is not complete merely because functional tests pass.
+
+### 5.7 Existing performance targets remain in force
+
+R7 does not relax the current Activity engineering targets:
+
+```text
+smooth gameplay target: ~30 fps on Atom-class floor
+added input latency:     <= 50 ms
+static/paused idle CPU:  near zero where architecture permits
+```
+
+Physical claims require named hardware and exact SHA. Backend selection must consider user-visible performance alongside authority, reliability, memory, disk and compatibility.
+
+## 6. Implementation sequence
+
+### R7.1 — freeze the Activity/backend and performance invariants
+
+1. Add/enforce the backend-independence invariant in contributor guidance/validation.
 2. Add a repository validator for backend-specific Activity dependencies.
-3. Scan every first-party Activity and classify findings before changing behavior.
+3. Scan every first-party Activity and classify backend/trusted-chrome/raw-input findings before changing behavior.
 4. Explicitly allow ordinary Pygame/SDL APIs; do not create false positives for `pygame.display` or normal event handling.
+5. Record the representative physical performance baselines required by §5.6 before changing those hot paths.
 
-**Exit:** new Activity code cannot intentionally deepen X11/Wayland/KMS/raw-input coupling.
+**Exit:** new Activity code cannot deepen backend coupling, and the migration has explicit before-state performance evidence rather than relying on memory.
 
-### R7.2 — harden the existing display-session seam
+### R7.2 — harden the existing display-session seam without adding render copies
 
 1. Keep `DisplaySessionCoordinator` as the state-machine owner.
 2. Review `DisplaySessionBackend` against the real needs: prepare, present, restore, trusted overlay coordination, focus/session recovery and backend-private launch transport.
-3. Move any generic-launcher X11 behavior (including focus workarounds) behind `LegacyXDisplaySessionBackend` or another narrowly X-specific collaborator.
+3. Move any generic-launcher X11 behavior behind `LegacyXDisplaySessionBackend` or another narrowly X-specific collaborator.
 4. Compose the backend in `greia_launcher.composition`; do not scatter backend conditionals.
 5. Keep `DisplayTransport` private to trusted launcher/supervisor code.
+6. Reject designs that proxy normal Activity frames through Python or insert unnecessary full-frame copies.
 
-**Exit:** replacing the backend implementation requires no Activity source/API changes.
+**Exit:** replacing the backend implementation requires no Activity source/API changes and the seam itself does not impose a measurable hot-path rendering tax.
 
 ### R7.3 — move trusted chrome out of Activities
 
@@ -190,9 +308,10 @@ Linux graphics/input stack
 3. Ensure Home/Back input is consumed before Activity input and invokes Greia stop/forced-return authority.
 4. Change viewport/canvas helpers to receive trusted reserved-region geometry rather than instantiate chrome authority.
 5. Remove Activity-side `draw_system_chrome_overlay()` and `is_home_clicked()` usage.
-6. Fail closed: do not present an Activity if mandatory Home cannot be preserved.
+6. Make the chrome path invalidation/event driven and bounded as specified in §5.3.
+7. Fail closed: do not present an Activity if mandatory Home cannot be preserved.
 
-**Exit:** a deliberately non-cooperative test Activity cannot hide, cover, intercept or disable real Home.
+**Exit:** a deliberately non-cooperative test Activity cannot hide, cover, intercept or disable real Home, and the trusted chrome path does not create a persistent full-screen composition/redraw penalty.
 
 ### R7.4 — input ownership completion
 
@@ -202,31 +321,32 @@ Linux graphics/input stack
 4. Provide semantic controller actions and virtual pointer according to the manifest interaction profile.
 5. Preserve direct local Pygame text/pointer paths where safe and performance-sensitive rather than forcing high-rate IPC without evidence.
 
-**Exit:** keyboard/pointer/touch/controller coexist, controller reconnect works, and protected input remains outside Activity authority.
+**Exit:** keyboard/pointer/touch/controller coexist, controller reconnect works, protected input remains outside Activity authority, and high-rate pointer/text workloads remain within accepted latency/performance behavior.
 
 ### R7.5 — migrate first-party Activities by pattern
 
 **Wave 1 — canonical/mandatory:** Writing, Painting.  
-Remove cooperative Home/chrome ownership and prove save/recovery behavior survives.
+Remove cooperative Home/chrome ownership; preserve existing caches/render cadence; prove save/recovery and typing/drawing performance survive.
 
 **Wave 2 — shared reference-canvas exemplars:** Labyrinth, Dragon Flight, Shape Garden.  
-Use these to prove the central canvas/viewport migration and establish the preferred authoring pattern.
+Use these to prove the central canvas/viewport migration without discarding Activity-side scene/preparation optimizations.
 
 **Wave 3 — capability-rich exemplar:** Voice Stories.  
 Prove microphone/platform service behavior is unaffected by graphics/session migration.
 
 **Wave 4 — repository-wide mechanical migration:** remaining first-party Activities, grouped by shared helper usage rather than one-off rewrites.
 
-Do not combine this with unrelated visual/gameplay rewrites.
+Do not combine this with unrelated visual/gameplay rewrites. Do not "simplify" an Activity by removing an accepted optimization merely to make backend migration easier.
 
 ### R7.6 — Wayland implementation behind the same contract
 
 Only after Legacy X passes the completed contract:
 
-1. implement `WaylandDisplaySessionBackend` (and the minimum trusted compositor/session host needed by ADR 0019);
-2. run the exact same contract/security tests;
+1. implement `WaylandDisplaySessionBackend` and only the minimum trusted compositor/session host actually required by ADR 0019;
+2. run the exact same functional/security contract tests;
 3. require zero Activity code changes;
-4. benchmark against Xorg on the real Acer and Pi reference hardware.
+4. repeat the representative Activity performance workloads from the Legacy X baseline;
+5. benchmark against Xorg on the real Acer and Pi reference hardware.
 
 Direct KMSDRM remains an optional measured experiment, not an architectural prerequisite. If it cannot preserve trusted chrome/input without recreating compositor responsibilities, do not promote it.
 
@@ -240,6 +360,11 @@ Measure at minimum:
 - Shell startup and Activity launch/return latency;
 - frame pacing and idle CPU;
 - pointer/controller latency;
+- Painting sustained-input responsiveness;
+- Writing text-input responsiveness;
+- dirty-render/static Activity steady-state cost;
+- animated Activity frame cost;
+- trusted-chrome steady and activation cost;
 - 100 launch/return cycles;
 - deliberate Activity crash/hang recovery;
 - controller disconnect/reconnect;
@@ -248,7 +373,9 @@ Measure at minimum:
 
 Prefer one backend everywhere if physical evidence supports it. If hardware genuinely requires different implementations, profile selection is acceptable because the public Greia contract remains one architecture.
 
-## 6. Validator rules
+Performance is a gate, not a decorative benchmark. A backend that is architecturally elegant but materially worsens accepted child-visible performance on the reference floor does not win automatically.
+
+## 7. Validator rules
 
 The Activity source/package validator should reject ordinary Activity source that imports/uses backend authority such as:
 
@@ -263,7 +390,9 @@ trusted-system-chrome renderer/hit-test helpers after migration
 
 Validation must be AST/structured where practical and language/runtime appropriate; do not build a brittle English-keyword game. Test fixtures/tooling get explicit narrow exceptions.
 
-## 7. Contract and negative tests
+The validator must **not** reject legitimate performance-oriented Pygame/SDL code such as surface conversion, bounded caches, `pygame.display`, dirty rects, direct local pointer/text events or cached transforms merely because those are close to the renderer.
+
+## 8. Contract, negative and performance tests
 
 Every production backend must pass the same behavioral contract. Include at least:
 
@@ -282,9 +411,19 @@ Every production backend must pass the same behavioral contract. Include at leas
 - text input and high-rate Painting pointer input remain responsive;
 - backend switch requires no Activity changes.
 
+Performance-sensitive equivalence also requires:
+
+- no accidental per-frame decode/scale/font/config/device work introduced by the migration;
+- no new unbounded caches;
+- no continuous Activity redraw caused solely by trusted chrome;
+- no mandatory full-frame Python copy/proxy path;
+- no mandatory high-rate pointer/text IPC path without physical evidence;
+- representative pre/post physical measurements from §5.6;
+- pixel/behavior equivalence for cache/dirty-region fast paths where applicable.
+
 Use a deterministic fake backend for state-machine unit tests, then execute the same contract against Legacy X and later Wayland. Simulator evidence does not replace physical backend evidence.
 
-## 8. Files expected to change during implementation
+## 9. Files expected to change during implementation
 
 Primary platform owners:
 
@@ -311,18 +450,19 @@ src/greia_launcher/display_session_wayland.py
 
 Do not create `AcerBackend`, `PiBackend` or a giant all-purpose `PlatformBackend`.
 
-## 9. Activity migration rule of thumb
+## 10. Activity migration rule of thumb
 
-For each Activity ask four questions:
+For each Activity ask five questions:
 
 1. Does it render only through runtime-neutral APIs? If yes, keep the rendering.
-2. Does it draw/hit-test Greia Home/Back? Remove that responsibility.
-3. Does it need essential controls near a reserved region? Consume the trusted viewport/safe-area context.
-4. Does it own physical input/controller/backend state? Move that ownership to Greia and expose only semantic/runtime-neutral behavior.
+2. Which existing performance optimizations does it rely on, and will the migration preserve them unchanged?
+3. Does it draw/hit-test Greia Home/Back? Remove that responsibility.
+4. Does it need essential controls near a reserved region? Consume the trusted viewport/safe-area context.
+5. Does it own physical input/controller/backend state? Move that ownership to Greia and expose only semantic/runtime-neutral behavior.
 
-The intended result is deliberately boring: gameplay code should scarcely notice whether Greia is running on Xorg or Wayland.
+The intended result is deliberately boring: gameplay code and its optimization strategy should scarcely notice whether Greia is running on Xorg or Wayland.
 
-## 10. R7 completion interpretation
+## 11. R7 completion interpretation
 
 R7 is no longer interpreted as "remove Xorg" or "make Activities use direct KMS".
 
@@ -330,9 +470,10 @@ R7 means:
 
 - one stable Greia display/session/input authority contract;
 - backend-independent Activities;
+- no generic abstraction tax that discards accepted low-resource optimization strategies;
 - trusted Home/Back and reserved input genuinely above Activity authority;
 - physical input owned/brokered by Greia;
 - at least one production backend proven on each claimed reference platform;
-- backend selection made from measured compatibility/resource evidence.
+- backend selection made from measured compatibility, authority, resource and performance evidence.
 
-Xorg can remain an implementation if it wins the evidence. Wayland can replace it globally or on selected profiles without changing the Activity model. That is the purpose of the abstraction boundary.
+Xorg can remain an implementation if it wins the evidence. Wayland can replace it globally or on selected profiles without changing the Activity model. Different backends may use different optimized internals. That is the purpose of the abstraction boundary.
