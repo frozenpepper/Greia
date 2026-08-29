@@ -2,53 +2,66 @@
 
 **Status:** HOLD — no delegated Encyclopedia visual-authoring task is currently authorized.
 
-The owner rejected the E2R visual package after reviewing the actual pixels. The rejection is aesthetic/content-specific, not a rejection of the existing Activity/runtime architecture.
+The owner asked the primary agent to perform the current visual-authoring work directly. That instruction remains active.
 
 Current authority:
 
 ```text
 docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md
 encyclopedia/HANDOVER.md
+docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md
 ```
 
 Current disposition:
 
 ```text
 MECHANICAL 43-PAGE FOUNDATION: PRESERVE
-E1 VISUAL/ASSET ARCHITECTURE: PRESERVE
-E2/E2R OWNER VISUAL DIRECTION: REJECTED
-E3 SECTION MIGRATION: BLOCKED
+E1 VISUAL/ASSET ARCHITECTURE: COMPLETE
+E2/E2R CORRECTED VISUAL DIRECTION: OWNER APPROVED
+E3 SIX-SECTION SOURCE DIRECTION: IMPLEMENTED / SOURCE-REVIEWED
+E3 RUNTIME PNG + SIMULATOR REVIEW: PENDING
 E4 ENTRY MIGRATION: BLOCKED
-CURRENT VISUAL CORRECTION: PRIMARY AGENT / OWNER-DIRECTED, NOT DELEGATED
+CURRENT VISUAL AUTHORING: PRIMARY AGENT / OWNER-DIRECTED, NOT DELEGATED
 ```
 
 ## Do not execute visual-authoring work from this file
 
-Until the owner or primary agent explicitly creates a new bounded local-agent task, do **not**:
+Until the owner explicitly changes the direct-work instruction or the primary agent creates a new bounded **non-aesthetic execution task**, do **not**:
 
 ```text
 modify Encyclopedia SVG/PNG artwork
-redesign golden-master pages
-build/commit replacement runtime art as an aesthetic decision
-migrate additional section or entry pages
-run a 43-page visual recapture
+redesign section or entry pages
+make aesthetic decisions on behalf of the owner
+migrate E4 factual entries
+run a broad 43-page visual recapture
 generate or integrate narration
-reinterpret the rejected E2R package as owner approval
+reinterpret older E2R screenshots as current exact-source evidence
 ```
 
-If asked only to run a specifically defined mechanical/test command later, follow that new explicit instruction rather than this historical E2R protocol.
+A later explicit mechanical/test task may supersede this HOLD for the exact commands named in that new instruction. Do not infer authorization from the existence of build/capture tools.
 
-## Current owner-directed repair notes
+## Current direct-work checkpoint
 
-The owner identified these concrete failures in the E2R pixels:
+The primary-agent/owner-directed path has already:
 
 ```text
-Home      — the six category worlds did not fit naturally inside the illustrated open book.
-Lion      — face/head/mane read as disconnected; tail appeared detached from the body.
-Animals   — lion/elephant silhouettes were not reliably recognizable.
-Gears     — gears did not read as real gears and, critically, did not physically mesh.
+corrected Home / Animals / Lion / Gears
+received owner approval to proceed with the plan
+authored five new E3 section-world SVG masters
+source-wired Space / Earth / Body / Machines / History with fail-soft fallback
+extended the build tool into golden / sections / all tranches
+recorded the E3 source review
 ```
 
-The primary agent is correcting these source assets directly and slowly on `main`, inspecting actual SVG renders between changes. Runtime PNG rebuild and fresh Simulator evidence must wait until the owner-directed source-art correction tranche is visually ready.
+The remaining E3 runtime gate is deliberately not delegated from this file:
 
-This HOLD intentionally replaces the completed/rejected E2R local-agent protocol so a future agent cannot accidentally repeat or propagate that rejected direction.
+```text
+build corrected golden + E3 section PNGs
+→ verify current renditions
+→ focused repository tests
+→ fresh exact-SHA Greia Simulator
+→ review Home + six section pages
+→ only then consider E3 complete / E4 unblocked
+```
+
+This HOLD prevents a future agent from accidentally restarting the rejected E2R protocol or propagating section artwork without owner/primary-agent control.
