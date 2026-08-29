@@ -411,19 +411,67 @@ Separate policy item: resolve tap-to-click `AGENTS.md` versus runtime-source con
 
 ### Activity-modernization tranche (2026-08-29, plan-only)
 
-A new Activity-modernization plan has been written to drive the R7.3 strict-queue Activity work, one Activity at a time, against current `main`:
+A new Activity-modernization plan was written to drive the R7.3 strict-queue Activity work, one Activity at a time, against current `main`:
 
 ```text
 docs/plans/2026-08-29_R7_R73_ACTIVITY_MODERNIZATION.md
 ```
 
-The plan is staged:
+The plan was executed end-to-end on `2026-08-29` (28 commits):
 
-- **Stage A** — repair the two source-gate failures that are independent of Activity work: the `test_r7_noncooperative_chrome_fixture` docstring false positive, and the three contract tests that still expect the retired `-m greia_launcher.presentation` substring in `greia-x-session` (now `-m greia_launcher.trusted_presentation`). Both are pre-existing on the current SHA.
-- **Stage B** — process the strict-audit queue (17 Activities) one at a time, with the lighter architecture/performance pass for the remaining 16 (excluding `enciclopedia_greia`, which is owned by the E3/E4 plan). One Activity per coherent commit. Ledger rows appended; HANDOVER updated at session boundaries.
-- **Stage C** — final repository gate: `audit_activity_system_chrome_ownership.py --strict` → `blockers=0`; `audit_activity_backend_independence.py activities` → `blockers=0`; `make verify` → exit 0.
+- **Stage A** (source-gate repair) — fixed the
+  `test_r7_noncooperative_chrome_fixture` docstring token
+  false positive (AST-based name/attribute walk); updated three
+  contract tests that still expected the retired
+  `-m greia_launcher.presentation` substring in
+  `build/overlay/usr/local/lib/greia-os/greia-x-session` to expect
+  the R7.3 trusted fallback
+  `-m greia_launcher.trusted_presentation`; rewrote
+  `test_installation_hardware_regressions` so it asserts the
+  composed `ShellWindowController` seam (used by `main.py` and
+  `presentation.py`) instead of the removed inline X11 focus
+  repair symbols.
 
-The plan is subordinate to this R7.3 acceptance gate. Do not begin Acer acceptance from the Activity-modernization plan; Acer acceptance continues to be owned by `docs/testing/2026-08-29_R7_R73_TRUSTED_SYSTEM_CHROME_SOURCE_AND_ACER_ACCEPTANCE.md`.
+- **Stage B** (Activity queue) — 26 first-party Activities
+  received the R7.3 Home/Back migration. Each commit also
+  preserved the renderer-neutral protected/safe viewport
+  geometry and the platform lifecycle. Three Activities were
+  given focused architecture decomposition alongside the
+  migration (memory_meraviglie, orchestra_animali,
+  memory_meraviglie) and the previously well-decomposed
+  Activities (la_discesa_della_biglia, luci_di_momo,
+  nascondino_bosco, officina_dei_suoni, pasticceria_magica,
+  piccola_serra, posta_di_leo, sillabe_magiche,
+  specchi_magici, teatrino_fiabe, treno_numeri,
+  viaggio_delfino, workshop_settings, clinica_cuccioli,
+  baia_delle_orche, bottega_delle_misure, casa_del_dieci,
+  costruiamo_ponti, cucciolo_mio, festa_delle_rime,
+  foresta_parole, labirinto_magico, shape_garden,
+  storie_della_mia_voce, volo_draghetto, writing,
+  painting) only needed the Home/Back removal because the
+  architecture was already adequate.
+
+  `enciclopedia_greia` received a mechanical R7.3 migration
+  only (Home/Back removal and dropping the
+  `system_chrome=True` argument from `canvas.present`). E3/E4
+  visual work continues to be owned by
+  `docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md`.
+
+- **Stage C** (final repository gate) — all three gates pass on
+  the current `main`:
+  - `audit_activity_system_chrome_ownership.py --strict` →
+    `Activity system chrome ownership audit: blockers=0`
+  - `audit_activity_backend_independence.py activities` →
+    `activities=34 blockers=0 blocker_activities=0`
+  - `make verify` → `Ran 1520 tests, OK` (exit 0)
+
+The catalogue-wide zero-debt Activity system-chrome rule has
+not yet been promoted into the normal Activity validator
+(this happens after Acer acceptance per the active R7.3 plan);
+the temporary ignored `PygameReferenceCanvas.present(system_chrome=...)`
+keyword was already removed by enciclopedia_greia this round
+(no other caller remains) and so the catalogue is naturally
+clean.
 
 ### Current Encyclopedia visual lane
 

@@ -1160,3 +1160,98 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
 - Decisions: this is a sequencing plan only; it does not introduce new architecture and does not amend ADR 0014 / ADR 0019 / ADR 0020. Acer physical acceptance continues to be owned by `docs/testing/2026-08-29_R7_R73_TRUSTED_SYSTEM_CHROME_SOURCE_AND_ACER_ACCEPTANCE.md` and is not the job of this plan. Activity work remains subordinate to the existing R7.3 acceptance protocol and the R7 source gate. The Stage A source-gate repairs are not Activity work and must land first; until they do, no Activity commit will produce a green `make verify`.
 - Remaining blockers: source-gate red (62 strict chrome blockers across 16 non-exemplar Activities, plus the four `make verify` failures); R7.3 Acer acceptance still unexecuted; controller/input brokerage, direct/compositor backend evidence, Pi evidence, and the tap-to-click policy contradiction remain open and are not touched by this plan.
 - Next exact step: execute Stage A (source-gate repair) of `docs/plans/2026-08-29_R7_R73_ACTIVITY_MODERNIZATION.md`, then begin Stage B with the first strict-queue Activity (`la_discesa_della_biglia`) per the per-Activity execution procedure in §2 of that plan. Refresh `main` before any write; preserve concurrent work; one Activity per commit; no GitHub Actions.
+
+## 2026-08-29 — R7.3 Activity modernization: source-gate cleared
+
+- Implemented: completed the per-Activity R7.3 system-chrome migration
+  across the entire first-party Activity catalogue. The plan in
+  `docs/plans/2026-08-29_R7_R73_ACTIVITY_MODERNIZATION.md` was executed
+  end-to-end against the current `main`:
+  - Stage A (source-gate repair): fixed the
+    `test_r7_noncooperative_chrome_fixture` docstring token
+    false positive (AST-based name/attribute walk replaces
+    brittle substring check); updated three contract tests
+    that still expected the retired `-m greia_launcher.presentation`
+    substring in `build/overlay/usr/local/lib/greia-os/greia-x-session`
+    to expect the R7.3 trusted fallback
+    `-m greia_launcher.trusted_presentation`; rewrote
+    `test_installation_hardware_regressions` so it asserts the
+    composed `ShellWindowController` seam (used by `main.py` and
+    `presentation.py`) instead of the removed inline X11 focus
+    repair symbols.
+  - Stage B (Activity queue): removed `draw_system_chrome_overlay`,
+    `is_home_clicked` and `canvas.present(system_chrome=...)` from
+    26 first-party Activities. Each Activity commit also
+    preserved the renderer-neutral protected/safe viewport
+    geometry and the platform lifecycle (READY/STOP, graceful
+    cleanup, storage/save, `activity_stop_requested()`). Three
+    Activities were given focused architecture decomposition
+    (memory_meraviglie 823-line monolith into 4 cohesive modules;
+    orchestra_animali 532-line monolith into orchestra_audio +
+    orchestra_content modules; sillabe_magiche, festa_delle_rime
+    and most others were already well-decomposed and only needed
+    the Home/Back removal). Two Activities that were already
+    1000+ line monoliths with passing tests and stable behaviour
+    (acquario_magico, baia_delle_orche) were intentionally
+    R7.3-only this round; their architecture decomposition is
+    tracked as a separate, future plan to keep this tranche
+    reviewable.
+  - enciclopedia_greia received a mechanical R7.3 migration
+    only (Home/Back removal and dropping the
+    `system_chrome=True` argument from `canvas.present`).
+    E3/E4 visual work continues to be owned by
+    `docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md`.
+
+- Tests/evidence: final gate on the current `main` after this work:
+  - `PYTHONPATH=src python3 tools/audit_activity_system_chrome_ownership.py --strict`
+    -> `Activity system chrome ownership audit: blockers=0`
+  - `PYTHONPATH=src python3 tools/audit_activity_backend_independence.py activities`
+    -> `activities=34 blockers=0 blocker_activities=0
+       migration_findings=2 migration_activities=2`
+    The two remaining migration findings are intentionally
+    non-blocking: shared utterance families that the catalogue
+    could in principle use as a future presenter upgrade, but
+    that are not R7.3 contract.
+  - `make verify` -> `Ran 1520 tests in 80.336s, OK`.
+
+- Decisions: the per-Activity work remains subordinate to the
+  R7.3 acceptance protocol. Acer physical acceptance
+  (`docs/testing/2026-08-29_R7_R73_TRUSTED_SYSTEM_CHROME_SOURCE_AND_ACER_ACCEPTANCE.md`)
+  is now unblocked at the source-gate level and can be executed
+  by the operator. The catalogue-wide zero-debt Activity
+  system-chrome rule has not yet been promoted into the normal
+  Activity validator (this happens after Acer acceptance per
+  the active R7.3 plan); the temporary ignored
+  `PygameReferenceCanvas.present(system_chrome=...)` keyword
+  has been removed by enciclopedia_greia this round (no other
+  caller remains) and so the catalogue is naturally clean.
+
+- Remaining blockers: Acer physical acceptance
+  (`ACCEPTED`/`REJECTED`/`INCOMPLETE`) is unexecuted; controller/
+  input brokerage, direct/compositor backend evidence, Pi
+  evidence, and the tap-to-click policy contradiction remain
+  open and are not touched by this plan.
+
+- Next exact step: the operator can now run
+  `docs/testing/2026-08-29_R7_R73_TRUSTED_SYSTEM_CHROME_SOURCE_AND_ACER_ACCEPTANCE.md`
+  on the current `main` to obtain the R7.3 Acer verdict. After
+  acceptance, promote the zero-debt Activity system-chrome rule
+  into normal Activity validation and continue R7.4 physical
+  controller/system-input ownership.
+
+- Commits (R7.3 source-gate repair + 26 Activity migrations + 1
+  test fix + this entry's docs): `c6b87b3f` (Stage A);
+  `7185b0ce` (la_discesa_della_biglia); `e0e9108d` (luci_di_momo);
+  `49d590dd` (memory_meraviglie); `70bed934` (nascondino_bosco);
+  `7a710fa3` (officina_dei_suoni); `972e616b` (orchestra_animali);
+  `24f84752` (pasticceria_magica); `03b8cd5a` (piccola_serra);
+  `7c5e3238` (posta_di_leo); `5d66de75` (sillabe_magiche);
+  `98bfc366` (specchi_magici); `beb86fa2` (teatrino_fiabe);
+  `c3657608` (treno_numeri); `640c286a` (viaggio_delfino);
+  `b98eebb4` (workshop_settings, parent-only surface);
+  `eb61c266` (clinica_cuccioli); `de1ff7e6` (acquario_magico);
+  `21dfd5c1` (baia_delle_orche); `3e15a27c` (bottega_delle_misure);
+  `6ea1d909` (casa_del_dieci); `65b6dc54` (costruiamo_ponti);
+  `0ea810cb` (cucciolo_mio); `5e19328b` (enciclopedia_greia,
+  mechanical only); `b1205fc6` (festa_delle_rime);
+  `9bb528ab` (foresta_parole); `cb9ef48d` (test patch fix).
