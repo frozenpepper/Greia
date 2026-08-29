@@ -33,6 +33,7 @@ E2/E2R visual direction                 OWNER APPROVED
 latest corrected golden runtime PNGs    STALE / REBUILD PENDING
 latest exact-source Simulator proof     PENDING
 E3 six-section source direction         IMPLEMENTED / SOURCE-REVIEWED
+E3 target geometry/hit areas            HARDENED
 E3 runtime PNG + Simulator review       PENDING
 E4 factual-entry migration              BLOCKED
 ```
@@ -68,7 +69,7 @@ The visual migration is not permission to invent a second compositor/cache/navig
 
 ---
 
-# 3. Owner-approved golden-master repairs now on main
+# 3. Owner-approved golden-master repairs on main
 
 Direct corrections include:
 
@@ -118,12 +119,13 @@ Machines         one workshop with real object/mechanism silhouettes
 History          one time/excavation trail rather than five cards
 ```
 
-The first source contact sheet caught and corrected three defects before persistence:
+Source contact review caught and corrected issues before runtime acceptance:
 
 ```text
-Body      panel-like stations -> physical models
+Body      mannequin/schematic feeling -> friendly room + physical learning props
 Machines  weak gear/bridge read -> meshing toothed pair + clearer bridge
 History   ambiguous dinosaur -> explicit T-rex silhouette
+Earth     rain hidden by tree canopy -> visible near-layer rain streaks
 ```
 
 Current source review:
@@ -132,13 +134,19 @@ Current source review:
 docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/SOURCE_REVIEW.md
 ```
 
+Current maintainer-local six-section contact sheet:
+
+```text
+encyclopedia_e3_section_source_contact_v5.png
+```
+
 Evidence class: **SOURCE / DESKTOP VISUAL REVIEW** only.
 
 ---
 
-# 5. E3 staged runtime integration
+# 5. E3 staged runtime integration and geometry
 
-`VisualLibrary.ART_ASSETS` now registers the five E3 semantic IDs in addition to the six golden-master assets.
+`VisualLibrary.ART_ASSETS` registers the five E3 semantic IDs in addition to the six golden-master assets.
 
 The five pages are source-wired:
 
@@ -156,6 +164,12 @@ Behavior while generated E3 PNGs are absent:
 - no runtime SVG or source scan occurs;
 - semantic destinations/input/page IDs remain unchanged;
 - Space always retains its live orbiting Sun/planets/Moon model; the authored scene is only the observatory context.
+
+Static source/input alignment is now machine-checkable for Home, Animals, Earth, Body, Machines and History through SVG `data-target`/`data-center` metadata and the focused visual-foundation test. Space remains runtime-dynamic and is intentionally excluded from that static-center assertion.
+
+Body and Machines no longer use the old uniform 86×86 prototype pointer areas. Their hit/focus rectangles follow the actual authored exhibit/object footprints while retaining the same semantic centers and keyboard/controller order.
+
+History target centers are explicit constants rather than implicit positional arithmetic.
 
 Build groups:
 
@@ -176,26 +190,41 @@ E3 tranche       0 / 5 or 5 / 5; partial section packs forbidden
 
 ---
 
-# 6. Critical evidence boundary
+# 6. E3 Simulator review harness
+
+The runtime gate now has dedicated bounded tooling:
+
+```text
+tools/encyclopedia_v01_section_review_capture.py
+tools/encyclopedia_v01_section_review.py
+```
+
+The capture tool reuses the existing golden-master Shell driver. It runs exactly Home plus the six section worlds through the real Greia Shell/profile/catalogue route, captures one reference frame per page, and exercises protected Greia Home return. It does not walk the factual entries.
+
+The review builder copies the seven bounded reference frames and creates one contact sheet. It does not auto-score or auto-approve visuals.
+
+---
+
+# 7. Critical evidence boundary
 
 The current editable SVG source is newer than the previous E2R runtime pack.
 
 Therefore:
 
 ```text
-OWNER VISUAL DIRECTION                 APPROVED
-LATEST SOURCE ART                      CURRENT
-OLDER E2R RUNTIME PNG/SIMULATOR PIXELS STALE FOR EXACT CURRENT SOURCE
-FIVE E3 SECTION PNGs                   NOT COMMITTED YET
-FRESH FINAL-SHA SIMULATOR              NOT RUN YET
-E3 RUNTIME VISUAL ACCEPTANCE           NOT CLAIMED
+OWNER VISUAL DIRECTION                  APPROVED
+LATEST SOURCE ART                       CURRENT
+OLDER E2R RUNTIME PNG/SIMULATOR PIXELS  STALE FOR EXACT CURRENT SOURCE
+FIVE E3 SECTION PNGs                    NOT COMMITTED YET
+FRESH FINAL-SHA SIMULATOR               NOT RUN YET
+E3 RUNTIME VISUAL ACCEPTANCE            NOT CLAIMED
 ```
 
 Do not call E3 complete until the full current art pack is built and the six sections are reviewed together through the real Greia runtime.
 
 ---
 
-# 7. Stable generic visual foundation
+# 8. Stable generic visual foundation
 
 Generic toolbox remains:
 
@@ -227,7 +256,7 @@ Lilli / Leo / Flash / Dani / Tito / Momo
 
 ---
 
-# 8. Stable runtime foundation to preserve
+# 9. Stable runtime foundation to preserve
 
 ```text
 explicit semantic visual catalogues
@@ -251,7 +280,7 @@ Runtime rules:
 
 ---
 
-# 9. Immediate next action
+# 10. Immediate next action
 
 Do not begin E4.
 
@@ -263,15 +292,18 @@ build corrected six golden-master PNGs + five E3 section PNGs
 → focused Encyclopedia tests + required repository verification
 → commit/push the complete current runtime-art state
 → fresh exact-SHA real Greia Simulator
-→ review Home + all six section pages as one family
+→ capture Home + all six section pages with the E3 review harness
+→ inspect the single runtime contact sheet + interaction/navigation sanity
 → if accepted, close E3 and unblock E4
 ```
+
+This execution environment does not contain a real Greia checkout/Shell runtime, so no current `make verify` or Simulator PASS is claimed here.
 
 `docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md` remains HOLD unless the owner explicitly changes the direct-work instruction.
 
 ---
 
-# 10. Drift to avoid
+# 11. Drift to avoid
 
 - no E4 entry migration before E3 runtime review;
 - no 43-page broad recapture during the section gate;
