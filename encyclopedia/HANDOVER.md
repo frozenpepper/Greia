@@ -4,7 +4,7 @@
 **Runtime pages:** **43 / 43 planned executable pages**  
 **Runtime Activity:** `activities/enciclopedia_greia/` (`org.greia.enciclopedia`)  
 **Last Simulator-captured visual SHA:** `8fa41a3e9ab4b8cff6cce9607c32492fedc6ae8f` — technically valid E2R capture, aesthetically superseded  
-**Current state:** **MECHANICAL FOUNDATION HEALTHY / E1 COMPLETE / GOLDEN-MASTER DIRECTION OWNER-APPROVED AFTER DIRECT REPAIRS / E3 SECTION SOURCE IMPLEMENTED + SOURCE-REVIEWED + GEOMETRY/FOCUS/EVIDENCE-HARDENED / COMMITTED 11-PNG PACK + FRESH SIMULATOR EVIDENCE PENDING / E4 BLOCKED / NARRATION SEPARATE**
+**Current state:** **MECHANICAL FOUNDATION HEALTHY / E1 COMPLETE / GOLDEN-MASTER DIRECTION OWNER-APPROVED AFTER DIRECT REPAIRS / E3 SECTION SOURCE IMPLEMENTED + SOURCE-REVIEWED + GEOMETRY/FOCUS/EVIDENCE/PERFORMANCE-HARDENED / COMMITTED 11-PNG PACK + FRESH SIMULATOR EVIDENCE PENDING / E4 BLOCKED / NARRATION SEPARATE**
 
 This file is the current continuation contract. Historical construction detail remains in `encyclopedia/PROGRESS.md`, Git history, and dated visual reviews.
 
@@ -42,6 +42,7 @@ The 36 factual entry IDs remain frozen by `encyclopedia/pages/catalogue.py` and 
 - Keep the Activity-local authored-art source/runtime split and deterministic SVG→PNG authoring build.
 - No runtime SVG/CairoSVG and no page-hot-path image decode/scale.
 - Missing authored renditions must fail soft without inventing a second asset system.
+- Full-screen authored Encyclopedia scene renditions are opaque RGB assets; transparent canonical character sprites remain a separate shared visual path.
 
 ---
 
@@ -148,7 +149,8 @@ Machines  weak gear/bridge silhouettes -> real meshing gear pair + clearer suspe
 History   ambiguous dinosaur -> unmistakable T-rex silhouette
 Earth     rain hidden behind tree canopy -> visible near-layer rain streaks
 Earth     Rain/Tree hit regions overlapped -> Rain region shortened, authored center preserved
-E3 pages  generic authored-scene focus rings -> soft scene-native focus patches
+E3 focus  translucent filled highlight -> non-occluding perimeter halo
+Earth     second floating yellow focus dot -> removed
 Space     bottom text carried duplicate yellow focus -> selected live subject now owns focus
 ```
 
@@ -164,11 +166,11 @@ Current maintainer source contact sheet:
 encyclopedia_e3_section_source_contact_v5.png
 ```
 
-It is **SOURCE / DESKTOP VISUAL REVIEW**, not Simulator acceptance.
+A later maintainer-local focus preview of Earth/Body/Machines/History confirmed that the new halo keeps the authored subject itself unobscured. Both the contact sheet and the focus preview are **SOURCE / DESKTOP VISUAL REVIEW**, not Simulator acceptance.
 
 ---
 
-## 7. E3 runtime integration, geometry and focus
+## 7. E3 runtime integration, geometry, focus and surface policy
 
 The five section pages are wired to semantic authored-scene IDs through the existing bounded `VisualLibrary`:
 
@@ -210,7 +212,31 @@ History target centers are explicit page constants rather than implicit arithmet
 - Earth Rain/Tree cannot regress to their earlier overlap;
 - authored Earth/Body/Machines/History use `draw_focus_patch(...)`, while `focus_ring(...)` is retained only for procedural fail-soft presentation.
 
-Animals already uses `draw_focus_patch(...)`. Space does not need a static object patch: the selected live Sun/planet/Moon draws its own yellow subject ring, while the bottom text plaque is deliberately neutral and secondary.
+Authored selection now uses an explicitly non-occluding visual treatment:
+
+- `draw_focus_patch(...)` paints only two elliptical perimeter strokes on a transparent overlay;
+- it does not place a filled translucent yellow card over the selected exhibit;
+- Earth no longer adds the earlier floating yellow corner dot;
+- Animals uses the same authored focus helper;
+- Space does not need a static object patch: the selected live Sun/planet/Moon draws its own yellow subject ring, while the bottom text plaque stays neutral and secondary.
+
+`tests/test_encyclopedia_focus_treatment.py` pins those details so the filled-card look cannot silently return.
+
+### Opaque full-screen scene runtime contract
+
+All eleven Encyclopedia authored scene renditions are flattened 1024×600 opaque RGB backdrops. They do not need per-pixel alpha in the Activity runtime.
+
+`VisualLibrary.art()` therefore loads authored scene PNGs with display-optimized `Surface.convert()` and keeps any scaled scene opaque. Canonical character sprites remain on the shared `convert_alpha()` path because their transparent silhouettes genuinely require alpha.
+
+`tools/build_encyclopedia_visual_assets.py` now validates this assumption instead of relying on convention. Every built or checked Encyclopedia scene PNG must have:
+
+```text
+valid PNG signature
+exact dimensions 1024x600
+PNG color type 2 (opaque RGB)
+```
+
+An alpha-bearing or otherwise incompatible scene rendition fails the authoring build/check rather than being silently flattened at runtime. The currently staged nine changed/new PNGs were inspected locally and are all PNG color type 2.
 
 The build tool supports explicit visual tranches:
 
@@ -317,10 +343,13 @@ Machines section source                        READY + AUTHORED-OBJECT INPUT
 History section source                         READY + EXPLICIT TARGET GEOMETRY
 static visual/input geometry contract          IMPLEMENTED
 static hit-region non-overlap contract         IMPLEMENTED
-authored scene-native focus treatment          IMPLEMENTED
+non-occluding authored focus treatment         IMPLEMENTED
+opaque authored-scene runtime policy           IMPLEMENTED
+RGB rendition build validation                 IMPLEMENTED
 exact 11-art capture precondition              IMPLEMENTED
 committed-art Git-blob capture contract        IMPLEMENTED
 exact-SHA Simulator evidence contract          IMPLEMENTED
+nine changed/new runtime PNGs                  STAGED LOCALLY / NOT COMMITTED EVIDENCE
 five new E3 runtime PNGs                       PENDING COMMIT
 rebuild corrected golden-master PNGs           PENDING COMMIT
 build --check on complete current art pack     PENDING
@@ -363,13 +392,14 @@ Next exact runtime closure for the current art tranche:
 ```text
 rebuild corrected six golden-master PNGs
 + build five E3 section PNGs
-→ verify 11/11 current SVG->PNG renditions
+→ verify 11/11 current SVG->PNG renditions, including opaque RGB contract
 → focused Encyclopedia tests:
    tests.test_activity_enciclopedia
    tests.test_activity_enciclopedia_visual_foundation
    tests.test_encyclopedia_authoring_tools
    tests.test_encyclopedia_e3_review_tools
    tests.test_encyclopedia_section_hit_geometry
+   tests.test_encyclopedia_focus_treatment
 → required local repository verification
 → commit/push exact complete current 11-PNG runtime art
 → rerun build --check + focused tests on that pushed SHA
