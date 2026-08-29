@@ -19,7 +19,6 @@ from greia_platform.activity_api import (
     get_theme,
     mark_activity_ready,
 )
-from greia_platform.activity_ui import is_home_clicked
 from greia_platform.localization import (
     ActivityLocaleSupport,
     LocalizedResources,
@@ -369,9 +368,6 @@ class DelfinoJourneyApp:
                     self.screen = new_screen
                     self.canvas = PygameReferenceCanvas(new_screen)
             elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-                if is_home_clicked(screen, event.pos):
-                    running = False
-                    continue
                 if not _is_safe_point(screen, event.pos):
                     continue
                 logical = canvas.pointer(event.pos)
