@@ -1,15 +1,17 @@
 # Greia Encyclopedia v0.1 — Visual Reauthoring Plan
 
-**Status:** ACTIVE SUBPLAN — E1/E2 SOURCE IMPLEMENTED; RUNTIME BUILD + SIMULATOR GOLDEN-MASTER REVIEW CURRENT  
+**Status:** ACTIVE SUBPLAN — E2 DIRECTION OWNER-APPROVED; E3 SECTION SOURCE IMPLEMENTED; RUNTIME BUILD + SIX-SECTION SIMULATOR REVIEW CURRENT  
 **Date:** 2026-08-28  
+**Current checkpoint:** 2026-08-29  
 **Parent visual authority:** `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`  
 **Stable visual architecture:** `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`  
 **Forensic audit:** `docs/reviews/2026-08-28_ENCYCLOPEDIA_GRAPHICS_FORENSIC_AUDIT.md`  
+**Current E3 source review:** `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/SOURCE_REVIEW.md`  
 **Activity:** `activities/enciclopedia_greia/` (`org.greia.enciclopedia`)
 
 This is a **bounded Activity-level visual reauthoring subplan**, not a competing platform implementation plan. The platform R7 architecture plan remains the primary blocking platform authority.
 
-The Encyclopedia runtime/navigation/research architecture is healthy enough to preserve. The old visual layer is not. This plan replaces "polish the existing procedural pages" with a controlled art-system reauthoring.
+The Encyclopedia runtime/navigation/research architecture is healthy enough to preserve. The old visual layer was not. This plan replaces "polish the existing procedural pages" with a controlled art-system reauthoring.
 
 ---
 
@@ -22,6 +24,17 @@ The target experience for a young child is:
 > **I see a beautiful thing → I know what looks touchable → I activate it → the picture comes alive and teaches me something.**
 
 Audio remains the primary explanatory channel for pre-readers. Text supports the experience but must not rescue unclear graphics.
+
+The frozen v0.1 information architecture remains:
+
+```text
+1 Home
+6 section pages
+36 factual entries
+43 executable pages total
+```
+
+Visual work is not permission to change that scope.
 
 ---
 
@@ -47,7 +60,14 @@ Avoid photorealism, glossy 3D, generic flat-vector SaaS illustration, and raw ge
 - rounded but not amorphous forms;
 - simplified internal detail only where it reinforces identity or learning;
 - strong value separation between subject, interactive elements and background;
-- no important information carried by tiny line details.
+- no important information carried by tiny line details;
+- real-world subjects must remain immediately recognizable at 1024×600.
+
+For a section-selection subject, the recognition question is deliberately simple:
+
+> **Can a child or adult name what this is immediately, without reading a label?**
+
+If not, the silhouette is not finished.
 
 ## 2.3 Depth language
 
@@ -59,7 +79,7 @@ hero subject / scene
 foreground / discovery controls / character
 ```
 
-Depth may be created with separate authored layers, contact shadow, overlap and local lighting. It does not require expensive continuous parallax.
+Depth may be created with authored overlap, contact shadow and local lighting. It does not require expensive continuous parallax.
 
 ## 2.4 Motion language
 
@@ -77,13 +97,11 @@ Motion must enrich a good still image rather than compensate for a bad one.
 
 ---
 
-# 3. New Encyclopedia visual grammar
-
-The Encyclopedia needs reusable visual primitives of its own, implemented on existing Greia seams rather than inventing a second UI/runtime framework.
+# 3. Encyclopedia visual grammar
 
 ## 3.1 Page shell
 
-Every page may share:
+Shared pages may use:
 
 - quiet title region;
 - content-safe hero region;
@@ -92,13 +110,22 @@ Every page may share:
 - optional caption/narration-support ribbon;
 - protected Greia Home remains platform-owned and untouched.
 
-The visual shell must not force identical compositions. It defines safe zones and consistent control behavior only.
+The shell defines safe relationships; it must not force every page into the same composition.
 
-## 3.2 Discovery token
+## 3.2 Discovery controls
 
-Replace the old floating white circles with a reusable **DiscoveryToken** presentation.
+The old identical floating white circles were rejected.
 
-Desired states:
+Current accepted direction keeps one semantic interaction component while allowing **scene-native silhouettes** such as:
+
+```text
+felt tag
+telescope card
+workshop tag
+excavation marker
+```
+
+States remain:
 
 ```text
 idle
@@ -107,95 +134,86 @@ pressed
 activated / recently discovered
 ```
 
-Visual treatment:
-
-- tactile badge/sticker/felt medallion shape;
-- clear pictogram;
-- visible shadow or raised rim;
-- focus = lift + warm outline/glow + slight scale;
-- press = short depress/squash;
-- activation = short pop/pulse and scene response.
-
-The semantic input remains `PageCommand` / pointer hit-testing. This is presentation, not new navigation authority.
+Focus must be visible without turning the scene back into a card-grid UI.
 
 ## 3.3 Hero stage
 
-Factual entry pages should use a reusable layout helper that reserves a dominant **hero stage** rather than letting every page invent coordinates.
+Factual entry pages reserve dominant visual attention for the actual subject/scene.
 
 Baseline intent at 1024×600:
 
 ```text
 hero scene / subject: ~55–70% of usable visual attention
-interactive discovery tokens: ~15–25%
+interactive discoveries: ~15–25%
 presenter + caption/support: remaining space
 ```
 
-Exact percentages are design guidance, not a renderer API.
+These are design targets, not renderer API percentages.
 
 ## 3.4 Presenter integration
 
-Canonical characters must be used intentionally.
+Canonical characters should be composed into the scene rather than stamped into a corner.
 
-Possible roles:
+Appropriate roles include:
 
-- pointing toward selected discovery;
-- reacting to activation;
-- holding a prop/lens/flashlight;
-- peeking from foreground;
+- leaning over or peeking into a scene;
+- pointing at a discovery;
+- using a telescope/lens/notebook/tool;
+- reacting from the foreground;
 - standing partly behind foreground framing.
 
-Do not reduce every presenter to a tiny mascot in the bottom-right corner.
-
-Presenter should usually be roughly 150–220 logical px tall at 1024×600 when present, adjusted by composition.
+Runtime canonical character art remains the single source of truth; do not bake duplicate presenters into Activity SVG masters.
 
 ## 3.5 Caption support
 
-Keep captions secondary.
+Captions remain secondary:
 
 - audio explains the fact;
-- caption may repeat a short key sentence for readers;
+- caption may repeat one short key sentence;
 - no long paragraph boxes;
-- use a quiet tactile ribbon/speech card with good wrapping;
-- never let text dominate the hero illustration.
+- adaptive fitting/wrapping rather than truncation;
+- captions must not rescue ambiguous artwork.
 
 ---
 
 # 4. Page archetypes
 
-The 43 pages do not need 43 unique layout systems. Define a small set of reusable archetypes.
+The 43 pages do not need 43 layout systems.
 
 ## A. Discovery Home
 
 Purpose: choose one of six domains.
 
-Target:
+Current approved source direction:
 
-- an illustrated "book opening / discovery room / meadow of portals" composition;
-- six large mini-diorama portals, each visually depicting the domain;
-- portals are spatially composed, not generic launcher cards;
-- Leo acts as guide, visibly connected to the scene;
-- selection lifts/illuminates one portal.
+- oversized illustrated open book;
+- six miniature domain worlds;
+- complete 3×2 portal block centered on the **book as one object**, not separately on the two pages;
+- column centers `x=267 / 512 / 757` at 1024×600;
+- the middle Space/Machines column deliberately straddles the `x=512` spine;
+- Leo integrated as guide;
+- selection/focus geometry matches the authored centers exactly.
 
 ## B. Section Gallery / World
 
-Purpose: choose one final topic.
+Purpose: choose one final topic from an authored environment.
 
-Examples:
+Current section family:
 
-- Animals → explorer field table / habitat window set;
-- Space → observatory / solar-system mobile;
-- Earth & Nature → landscape field guide / layered terrain scene;
-- Body → friendly anatomy discovery room, not a medical mannequin diagram;
-- Machines → warm workshop bench with real object silhouettes;
-- History → illustrated time trail / museum shelf / excavation table.
+```text
+Animals          continuous habitat
+Space            observatory + live Solar System
+Earth & Nature   layered landscape
+Body             friendly anatomy discovery room
+Machines         warm workshop/workbench
+History          illustrated time/excavation trail
+```
 
-Subjects should look like authored miniatures/objects inside the world, not six plain white cards.
+Subjects should appear as physical parts of the world, not six generic cards.
 
-## C. Hero Subject + 4 Discoveries
+## C. Hero Subject + 3–4 Discoveries
 
-Most factual pages.
-
-Examples:
+Used by many factual entries:
 
 ```text
 lion
@@ -212,13 +230,11 @@ mammoth
 pyramids
 ```
 
-One large hero illustration + 3–4 discovery tokens + visual reveal state.
+One dominant subject + a small number of meaningful discovery affordances + an obvious visual response.
 
 ## D. Process / Transformation
 
-Used where the fact is a sequence or process.
-
-Examples:
+Used where sequence matters:
 
 ```text
 frog life cycle
@@ -228,13 +244,11 @@ dinosaur/fossil discovery
 machine transfer
 ```
 
-Prefer a visual strip/scene progression rather than four disconnected icons around a central object.
+Prefer a scene/strip progression rather than disconnected symbols.
 
 ## E. System / Mechanism
 
-Used when relationships matter more than one object.
-
-Examples:
+Used when relationships matter more than one object:
 
 ```text
 gears
@@ -244,7 +258,7 @@ heart circulation
 solar-system overview
 ```
 
-These may retain more diagrammatic drawing, but the diagram must sit inside authored material/context and use polished pictorial elements.
+Mechanisms must remain physically/educationally believable. A gear page whose gears do not mesh is failed art, even if attractive.
 
 ---
 
@@ -252,22 +266,20 @@ These may retain more diagrammatic drawing, but the diagram must sit inside auth
 
 ## 5.1 REUSE / COMPOSE-ADAPT / CREATE ORIGINAL
 
-For every important object, make an explicit decision.
-
 ### REUSE
 
-Strong candidates:
+Prefer accepted shared assets for:
 
 - canonical characters;
 - contact shadows;
 - clouds;
 - atmosphere/light overlays;
-- rocks/grass/reeds where appropriate;
-- shared UI/focus treatments where they genuinely fit.
+- generic rocks/grass/reeds where they genuinely fit;
+- shared focus/control treatments.
 
 ### COMPOSE-ADAPT
 
-Likely for:
+Appropriate for:
 
 - section backgrounds;
 - nature/landscape framing;
@@ -277,7 +289,7 @@ Likely for:
 
 ### CREATE ORIGINAL
 
-Required for much of the Encyclopedia's identity:
+Expected for much of the Encyclopedia identity:
 
 - animals;
 - planets/astronomy hero assets;
@@ -288,7 +300,7 @@ Required for much of the Encyclopedia's identity:
 
 Do not force a weak generic asset into a page merely because the library contains something related.
 
-## 5.2 Source location
+## 5.2 Source/runtime location
 
 Activity-specific art lives under:
 
@@ -297,86 +309,72 @@ activities/enciclopedia_greia/assets/source/
 activities/enciclopedia_greia/assets/runtime/
 ```
 
-Semantic subfolders may be introduced when page count makes them useful, but the six golden-master masters intentionally remain one shallow set while the direction is still under review. Do not create folder hierarchy for its own sake.
-
 Keep source masters editable and runtime PNGs economical.
+
+No normal runtime SVG rasterization. CairoSVG remains authoring-only.
 
 ## 5.3 Runtime composition
 
-Prefer existing Greia scene/visual seams where useful:
+Use the existing Activity-local `VisualLibrary` facade over a bounded cache.
 
-- `SceneDefinition`
-- `SceneNode`
-- `PygameSceneRenderer`
-- canonical character renderer
-- bounded PNG cache
+Pages request explicit semantic art IDs. They do not scan directories, decode image files directly, or smoothscale in page hot paths.
 
-Do not force every page into a TOML scene if a small Activity-local compositor/helper is simpler. The key rule is one bounded architecture, no per-page bespoke decode/scaling logic.
-
-The golden-master tranche uses one Activity-local `VisualLibrary` facade with an explicit semantic-id map and bounded cache. Pages do not decode/scale art themselves.
+E3 source integration deliberately registers the five new section semantic IDs before their PNG tranche is committed. Missing files return `None`, and the page uses its retained procedural fallback.
 
 ## 5.4 Procedural drawing policy
 
-Procedural primitives remain allowed for:
+Procedural primitives remain appropriate for:
 
 - focus rings;
 - paths/arrows;
 - measurement lines;
 - particles;
-- small diagram annotations;
+- small annotations;
 - dynamic reveal overlays;
-- true geometric educational content.
+- true geometric/mechanical educational state;
+- the live orbiting Space model.
 
-They should not be the primary final artwork for real-world subjects.
-
----
-
-# 6. Golden-master phase — mandatory before bulk migration
-
-Do **not** reauthor all 43 pages immediately.
-
-Create a representative golden-master set that proves the new visual language on real runtime screens.
-
-Required prototypes:
-
-1. **Home** — proves portal/navigation language.
-2. **Animals section** — proves section-world selection.
-3. **Lion entry** — proves organic hero subject + discoveries.
-4. **Saturn entry** — proves astronomy/material/glow while preserving low-cost runtime.
-5. **Gears entry** — proves mechanisms can be beautiful without losing clarity.
-6. **Pyramids entry** — proves history/diagram balance.
-
-Optional seventh if needed to resolve anatomy direction:
-
-7. **Body section or Heart entry**.
-
-Why these:
-
-- warm organic;
-- dark space;
-- technical mechanism;
-- historical construction;
-- section navigation;
-- root navigation.
-
-A single attractive animal page is not enough proof.
-
-## Golden-master acceptance
-
-Before bulk migration:
-
-- capture actual 1024×600 Simulator pixels for all prototypes;
-- produce one contact sheet;
-- compare against the rejected current screenshots side by side;
-- inspect at least one compact and one larger responsive row;
-- user/owner explicitly approves the **direction**, not only correctness;
-- only then lock reusable Encyclopedia presentation primitives.
-
-If the owner does not like the direction, revise the golden masters. Do not propagate rejected aesthetics.
+They are no longer the default final illustration method for recognizable real-world subjects.
 
 ---
 
-# 7. Migration phases after golden-master approval
+# 6. Golden-master gate — direction now approved
+
+Required prototypes were:
+
+1. Home
+2. Animals section
+3. Lion
+4. Saturn
+5. Gears
+6. Pyramids
+
+The original E2/E2R runtime evidence was technically valid but aesthetically rejected. The owner then directed source repairs to the actual weak objects rather than another delegated bulk pass.
+
+Owner-directed corrections included:
+
+```text
+Home      larger book; final centered 3x2 portal block
+Animals   recognizable lion + elephant
+Lion      unified head/face/mane + attached tail + connected legs
+Gears     real toothed, physically meshing gear train
+```
+
+After reviewing those direct source corrections, the owner explicitly approved moving forward.
+
+Therefore the **visual-direction gate is closed**:
+
+```text
+OWNER VISUAL DIRECTION: APPROVED
+```
+
+Evidence caveat:
+
+The newest corrected SVG masters are newer than the old E2R runtime PNGs/Simulator screenshots. Direction approval does **not** mean the latest files have fresh final-SHA Simulator evidence. That runtime closure is folded into the current E3 build/review gate rather than running another separate design cycle.
+
+---
+
+# 7. Migration phases
 
 ## E0 — Freeze and forensic baseline **[COMPLETE]**
 
@@ -384,117 +382,89 @@ If the owner does not like the direction, revise the golden masters. Do not prop
 - [x] old visual evidence reviewed;
 - [x] systemic visual failure documented;
 - [x] old art declared non-final;
-- [x] broad acceptance churn stopped while visual direction is being replaced.
+- [x] broad acceptance churn stopped while visual direction was replaced.
 
-## E1 — Encyclopedia visual foundation **[SOURCE + RUNTIME-ART IMPLEMENTED; SIMULATOR GATE PASSED]**
+## E1 — Encyclopedia visual foundation **[COMPLETE]**
 
-Build only what multiple prototype pages truly share:
+- [x] `PageShellLayout` safe-zone/layout helper;
+- [x] shared DiscoveryToken behavior/state language;
+- [x] hero-stage composition contract;
+- [x] adaptive caption ribbon;
+- [x] presenter placement through existing canonical-character seam;
+- [x] bounded Activity-local visual facade;
+- [x] source/runtime convention and deterministic authoring build;
+- [x] no runtime SVG/CairoSVG;
+- [x] no page-hot-path image decode/scale;
+- [x] focused source contracts;
+- [x] prior real-Simulator proof of the architecture at its then-current source.
 
-- [x] page-shell safe-zone/layout helper (`PageShellLayout`);
-- [x] DiscoveryToken component/state language;
-- [x] hero-stage safe region/composition contract;
-- [x] caption ribbon/helper with adaptive fitting;
-- [x] presenter placement reuses the existing shared `draw_presenter` seam plus explicit page composition; no second presenter framework added;
-- [x] Activity-local asset loader facade over a bounded visual cache/runtime seam;
-- [x] source/runtime folder convention and deterministic authoring-time build recipe;
-- [x] focused source contracts for asset mapping/cache/hot-path/source/build invariants; local mirror 6/6 PASS;
-- [x] real-checkout focused tests after runtime PNG generation;
-- [x] final-SHA Greia Simulator launch/survival after current visual edits.
+## E2 / E2R — Golden masters **[DIRECTION OWNER-APPROVED; LATEST RUNTIME RENDITIONS NEED REBUILD]**
 
-Avoid abstraction theatre: if a helper is used by only one page, keep it local until a second use proves a shared invariant.
+- [x] Home source architecture;
+- [x] Animals source architecture;
+- [x] Lion source architecture;
+- [x] Saturn source architecture;
+- [x] Gears source architecture;
+- [x] Pyramids source architecture;
+- [x] prior six-PNG build + Simulator capture proved the technical pipeline;
+- [x] owner inspected actual runtime pixels and rejected weak visual execution;
+- [x] direct Home/Animals/Lion/Gears source repairs completed;
+- [x] owner explicitly approved corrected visual direction;
+- [ ] rebuild current corrected six PNGs;
+- [ ] fresh exact-current-source runtime check (combined with E3 section gate).
 
-## E2 — Golden masters **[SOURCE + RUNTIME ART + ACTUAL-PIXEL CAPTURE COMPLETE; OWNER DIRECTION PENDING]**
+## E3 — Section-page reauthoring **[SOURCE IMPLEMENTED / SOURCE-REVIEWED; RUNTIME REVIEW PENDING]**
 
-- [x] Home — source integrated with authored discovery-book scene;
-- [x] Animals section — source integrated with authored field-table scene;
-- [x] Lion — source integrated with authored hero scene + retained discoveries;
-- [x] Saturn — source integrated with authored observatory scene + retained discoveries;
-- [x] Gears — source integrated with authored workbench scene + retained mechanism model;
-- [x] Pyramids — source integrated with authored historical diorama + retained build/reveal model;
-- [x] six runtime PNG renditions built and committed on `main` (sha256 verified by `--check`);
-- [x] actual 1024×600 Simulator screenshots;
-- [x] representative activated-state screenshots;
-- [x] compact responsive sample;
-- [x] larger responsive sample;
-- [x] actual Simulator contact sheet;
-- [x] pre-reader/no-reading prototype review;
-- [ ] owner direction approval.
+Reauthor all six sections before any entry batch.
 
-**Hard gate:** no E3 before E2 direction approval.
+### Source state
 
-## E2R — Golden-master visual refinement **[SOURCE + RUNTIME ART + ACTUAL-PIXEL CAPTURE COMPLETE; OWNER DIRECTION STILL PENDING]**
+- [x] Animals — corrected continuous habitat reference;
+- [x] Space — authored observatory master around live Solar System;
+- [x] Earth & Nature — one layered landscape;
+- [x] Body — one discovery room with physical anatomy exhibits;
+- [x] Machines — one workshop with recognizable objects/mechanisms;
+- [x] History — one time/excavation trail.
 
-Every required correction in the primary review
-(`docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/PRIMARY_REVIEW_2026-08-29.md`)
-was addressed on the same six pages:
-
-- Home portals are miniature illustrated worlds (habitat vignette,
-  observatory, landscape, body, workbench, excavation). Leo leans
-  over the book; a magnifying glass floats above.
-- Animals sun moved top-left, Back area is clear, six animals on
-  habitat props inside one continuous landscape. Tito peeks in
-  the foreground grass.
-- Lion: deeper mane with concentric ring detail, layered hills,
-  foreground acacia, Tito integrated foreground-left, scene-native
-  felt-tag tokens, mane ACTIVATE with two growth rings + spike
-  marks + color shift.
-- Saturn: deep-space reference palette preserved, atmospheric
-  halo + banding + Cassini-like ring gap + glow, telescope on
-  tripod, star chart + compass, Leo beside the telescope,
-  telescope-card tokens, full orbit path on ACTIVATE (sun + dotted
-  line + Earth + Saturn marker).
-- Gears: real workshop wall, hanging tools, pegboard shelf,
-  chalkboard, blueprint, wooden workbench, three meshing gears on
-  bench with NO rack collision, Dani integrated on the bench,
-  workshop-tag tokens, three contact-point rings + motion arrows
-  on ACTIVATE.
-- Pyramids: hero pyramid with capstone, three **authored** workers
-  (no more stick figures), wooden ramp, Leo as field-guide with
-  field notebook, excavation tokens, outlined base block + label
-  arrows on ACTIVATE.
-- Discovery-token silhouettes are now scene-native (felt tag /
-  telescope card / workshop tag / excavation marker); shared
-  interaction/state logic remains one component.
-- Baked presenters removed from the four entry-page SVGs and from
-  Home/Animals; the runtime canonical character is the single
-  source of truth, drawn at the integrated scene position.
-
-Source state at `8fa41a3`:
+Five new masters:
 
 ```text
-make verify:                                          1462 / 1462 PASS
-tests.test_activity_enciclopedia + visual_foundation:  19 / 19 PASS
-build --check:                                        PASS 6
-real Greia Simulator (6 sessions, headless):            6 / 6 PASS
-protected Greia Home return:                          6 / 6 PASS
-ACTIVATE payoff captured:                              4 / 4 PASS
-pre-reader/no-reading prototype review:               yes/yes/yes/visual
+space_gallery_observatory.svg
+earth_gallery_landscape.svg
+body_gallery_discovery_room.svg
+machines_gallery_workbench.svg
+history_gallery_time_trail.svg
 ```
 
-Owner-transfer archive (not committed):
-`GREIA_VISUAL_REVIEW_ENCYCLOPEDIA_GOLDEN_MASTER_2026-08-28.zip`
-(685 KB; REVIEW.md, layout-audit.json, contact-sheet-primary.png,
-initial-vs-activated.png, 4 curated PNGs).
+First source review caught and corrected:
 
-**Hard gate:** no E3 before the owner direction decision on the
-six refined prototypes.
+```text
+Body      panel-like stations
+Machines  weak miniature gears / weak bridge
+History   ambiguous dinosaur silhouette
+```
 
-## E3 — Section-page reauthoring
+### Runtime integration state
 
-Reauthor all six section pages first so navigation feels coherent:
+- [x] five section semantic art IDs registered in bounded `VisualLibrary`;
+- [x] Space source-wired while preserving live orbit model;
+- [x] Earth source-wired with procedural fallback;
+- [x] Body source-wired with procedural fallback;
+- [x] Machines source-wired with procedural fallback;
+- [x] History source-wired with procedural fallback;
+- [x] build tool supports `--group golden|sections|all`;
+- [x] source contract forbids partial E3 runtime pack (`0/5` or `5/5` only);
+- [ ] build five E3 runtime PNGs;
+- [ ] rebuild corrected six golden-master runtime PNGs;
+- [ ] verify current 11-PNG pack against SVG masters;
+- [ ] run focused tests / required repository verification;
+- [ ] fresh final-SHA real Greia Simulator;
+- [ ] review Home + six sections together in one runtime contact sheet;
+- [ ] close E3.
 
-- [ ] Animals;
-- [ ] Space;
-- [ ] Earth & Nature;
-- [ ] Body;
-- [ ] Machines;
-- [ ] History.
+**Hard gate:** E4 remains blocked until the six-section runtime family is accepted.
 
-Run one six-section visual review, not six disconnected acceptance ceremonies.
-
-## E4 — Entry migration by archetype
-
-Migrate in coherent batches:
+## E4 — Entry migration by archetype **[BLOCKED]**
 
 ### E4-A Organic/nature
 
@@ -527,7 +497,7 @@ gears magnet bicycle airplane bridge
 dinosaurs fossils mammoth cave_paintings pyramids
 ```
 
-Each batch gets a contact sheet and targeted visual review. Do not run the full 43-page acceptance after every small asset correction.
+Each batch gets a targeted contact sheet/review. Do not run the full 43-page acceptance after every small correction.
 
 ## E5 — Interaction visual-language pass
 
@@ -554,7 +524,7 @@ After all pages have strong static art:
 
 ## E7 — Final Simulator visual acceptance
 
-Only now run a fresh complete 43-page capture against final graphics.
+Only after E4–E6 run a fresh complete 43-page capture against final graphics.
 
 Narration remains a separate authoring/owner-listening lane.
 
@@ -574,45 +544,49 @@ editable source master
 → bounded runtime decode/cache
 ```
 
-rather than runtime vector rendering or procedural reconstruction.
-
-The committed golden-master build tool is:
+The canonical Encyclopedia visual builder is:
 
 ```text
 tools/build_encyclopedia_visual_assets.py
 ```
 
-`CairoSVG` is authoring/maintainer tooling only. It must not become a Greia child-runtime or Activity runtime dependency.
+Current groups:
+
+```bash
+python3 tools/build_encyclopedia_visual_assets.py --group golden
+python3 tools/build_encyclopedia_visual_assets.py --group sections
+python3 tools/build_encyclopedia_visual_assets.py --group all
+```
+
+`--check` may be combined with any group.
+
+CairoSVG is maintainer tooling only and must not enter child runtime.
 
 ## 8.2 Surface budget discipline
 
-Avoid multiple unnecessary full-screen RGBA layers. Crop assets to meaningful bounds.
+Avoid unnecessary independent full-screen RGBA surfaces.
 
-A 1024×600 RGBA surface is ~2.35 MiB before library/runtime overhead. Four full-screen independent decoded overlays already approach ~9.4 MiB. Therefore:
+A 1024×600 RGBA surface is about 2.35 MiB before runtime/library overhead. Therefore:
 
-- keep backgrounds flattened when their layers never move independently;
-- crop characters/props/FX tightly;
-- cache only actual requested renditions;
-- clear page-local/cache state on meaningful transitions where architecture permits;
-- do not create per-resolution duplicate art unless evidence proves it necessary.
+- flatten static backgrounds;
+- crop movable props/characters/FX tightly;
+- cache only requested renditions;
+- keep cache bounds explicit;
+- avoid per-resolution duplicate art unless evidence requires it.
 
-These are engineering estimates, not a claim of measured Acer memory acceptance.
-
-The current golden-master `VisualLibrary` is hard-bounded; actual runtime PNG byte size/RSS must be recorded after local generation rather than inferred from source SVG size.
+These are engineering estimates, not physical-Acer measurements.
 
 ## 8.3 Animation cost
 
-No particle swarms, per-pixel shaders, large alpha surfaces rebuilt every frame, or dynamic blur.
+No particle swarms, per-pixel shaders, dynamic blur or large alpha surfaces rebuilt every frame.
 
-Use pre-authored glow/shadow overlays and simple transforms.
+Use pre-authored lighting/shadow and simple transforms. Space's orbit model remains lightweight procedural educational state over one static authored observatory surface.
 
 ---
 
 # 9. Visual acceptance rubric
 
-Each golden master and later batch should be reviewed on a 1–5 scale, but scores are diagnostic rather than permission to average away a blocker.
-
-Dimensions:
+Review each golden master/section/batch on:
 
 1. **Subject recognizability**
 2. **Composition / hierarchy**
@@ -625,58 +599,62 @@ Dimensions:
 9. **Low-resolution legibility**
 10. **Greia family coherence**
 
+Scores are diagnostic; blockers cannot be averaged away.
+
 Minimum target before owner review:
 
 - no dimension below 3;
 - visual-quality dimensions should generally land at 4+;
-- any child-navigation ambiguity is a blocker regardless of average.
+- any child-navigation ambiguity is a blocker regardless of average;
+- any real-world subject that is not immediately recognizable is a blocker;
+- any mechanism that is physically misleading is a blocker.
 
-The owner remains the final aesthetic authority.
+The owner remains final aesthetic authority.
 
 ---
 
 # 10. Documentation and evidence
 
-This plan is subordinate to the active Greia visual workstream.
-
 During work:
 
-- update `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md` checkpoint/progress;
+- update the parent visual-workstream checkpoint/progress;
 - update `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md`;
 - update `encyclopedia/HANDOVER.md`;
-- update `skills/greia-visual-authoring/SKILL.md` only if reusable contributor guidance changes;
-- preserve curated review evidence under `docs/reviews/visual/` when a direction is important enough for future comparison;
-- do not commit giant redundant screenshot dumps merely because the Simulator can generate them.
+- update root `HANDOVER.md` when the active visual checkpoint changes materially;
+- preserve meaningful comparison/review records under `docs/reviews/visual/`;
+- do not commit giant redundant screenshot dumps;
+- do not convert source-only inspection into a Simulator claim.
+
+Current reviews:
+
+```text
+docs/reviews/2026-08-28_ENCYCLOPEDIA_GRAPHICS_FORENSIC_AUDIT.md
+docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/
+docs/reviews/visual/2026-08-29_encyclopedia_owner_direct_repairs/REVIEW.md
+docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/SOURCE_REVIEW.md
+```
 
 ---
 
 # 11. Immediate next action
 
-**Do not run another broad 43-page visual acceptance now.**
+Do **not** run a broad 43-page visual acceptance and do **not** begin E4.
 
-The rolling local execution authority is:
-
-```text
-docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md
-```
-
-Next exact tranche:
+Current exact gate:
 
 ```text
-refresh main
-→ build six runtime PNGs from committed SVG masters
-→ run focused tests + required local verification
-→ commit/push runtime PNG pack
-→ run final-SHA real Greia Simulator launch/survival
-→ capture the six golden-master prototypes at 1024×600
-→ capture representative ACTIVATE payoffs
-→ inspect one compact and one larger responsive sample
-→ produce one curated contact sheet
-→ perform no-reading prototype review
-→ STOP for owner visual direction approval
+build corrected six golden-master PNGs
++ build five E3 section PNGs
+→ verify all 11 current SVG/PNG renditions
+→ focused Encyclopedia tests
+→ required repository verification
+→ commit/push complete current runtime art
+→ fresh exact-SHA real Greia Simulator
+→ capture/review Home + all six section pages as one family
+→ if accepted, mark E3 complete and unblock E4
 ```
 
-The previous headless capture-settle harness repair remains useful and should be preserved, but it does not justify another full 43-page capture before golden-master approval.
+The owner explicitly asked the primary agent to perform the current visual-authoring work directly. `docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md` remains HOLD unless the owner later changes that instruction.
 
 ---
 
@@ -684,72 +662,55 @@ The previous headless capture-settle harness repair remains useful and should be
 
 ## 2026-08-28 — E1/E2 source implementation tranche
 
-- Added Activity-local `enciclopedia_presentation.py` with a bounded shared page-shell safe-zone model, tactile DiscoveryToken presentation, authored-scene placement, object focus treatment and adaptive caption ribbon.
-- Extended `VisualLibrary` into the single hard-bounded Activity-local facade for canonical characters plus explicitly mapped authored runtime PNGs; page hot paths still do not decode or smoothscale assets.
-- Kept `main.py` a thin composition root; it now passes the package root to the visual facade rather than teaching pages about filesystem paths.
-- Authored and committed six editable 1024×600 SVG golden-master masters: Home discovery book, Animals field table, Lion savanna, Saturn observatory, Gears workbench and Pyramids diorama.
-- Reauthored only the six required golden-master page sources. Stable semantic navigation, factual state models and audio cue IDs were preserved.
-- Added authoring-only deterministic SVG→PNG build tool; no runtime SVG/CairoSVG dependency was introduced.
-- Added focused source contracts covering source/build agreement, explicit semantic asset mapping, hard cache bounds and absence of page-local image decode/scale.
-- Local mirror verification: **6/6 visual-foundation source contracts PASS; changed-source AST parse PASS**. This is source/static evidence only.
-- Runtime PNG build/commit, focused tests on the real checkout, final-SHA Simulator launch/survival, actual visual contact sheet, responsive samples and owner direction approval remain pending.
-- E3/E4 remain hard-blocked.
+- Added Activity-local `enciclopedia_presentation.py` with page-shell safe regions, DiscoveryToken presentation, authored-scene placement, object-focus treatment and adaptive caption ribbon.
+- Extended `VisualLibrary` into the hard-bounded Activity-local facade for canonical characters plus explicitly mapped authored runtime PNGs.
+- Kept `main.py` a thin composition root.
+- Authored six editable 1024×600 SVG golden-master masters: Home, Animals, Lion, Saturn, Gears and Pyramids.
+- Reauthored only the six required golden-master page sources; semantic navigation, factual models and audio cue IDs were preserved.
+- Added authoring-only deterministic SVG→PNG build tool; no runtime SVG/CairoSVG dependency.
+- Added focused source contracts covering source/build agreement, asset mapping, cache bounds and absence of page-local image decode/scale.
+- Local mirror verification passed the source/static contracts at that stage.
+- E3/E4 remained blocked pending runtime/owner review.
 
-## 2026-08-28 — E2 runtime build + real Greia Simulator prototype capture (this work)
+## 2026-08-28 — E2 runtime build + real Greia Simulator prototype capture
 
-- Built the six 1024×600 runtime PNGs from the committed SVG masters using `tools/build_encyclopedia_visual_assets.py` (346 621 bytes total, all real 1024×600 8-bit RGB). Re-running `--check` after the build reported `PASS 6 Encyclopedia runtime PNGs match editable masters`.
-- Pushed the generated PNG pack on `main` at SHA `08fe71b077d47b511c105bde5c2e8fdb88be7b92`. Reran `--check` and the focused Encyclopedia tests against the pushed tree: 6/6 PNGs still match, 19/19 focused tests PASS.
-- Tightened `tests/test_encyclopedia_authoring_tools.py` so the runtime-cue vs voice-ledger parity check excludes the new `VisualLibrary.ART_ASSETS` scene keys (which are visual identifiers, not narration cues) from the over-broad string-constant heuristic. The fix loads the exact `ART_ASSETS` map as the single source of truth for "not narration".
-- `make verify` on the real checkout: **1462/1462 PASS**.
-- Added three permanent review tools to `tools/`:
-  - `encyclopedia_v01_golden_master_capture.py` — one real Greia Shell session per golden-master page, navigates through the real launcher/profile/catalogue/profile-picker/Shell path, captures initial + ACTIVATE frames, exercises the protected Greia Home return.
-  - `encyclopedia_v01_golden_master_review.py` — builds the curated 4-shot review set and the 3×2 primary contact sheet from the captured PNGs.
-  - `encyclopedia_v01_golden_master_zip.py` — produces the non-committed owner-transfer ZIP.
-- Captured 10 1024×600 PNGs from the headless Greia Simulator at SHA `08fe71b` (Home, Animals, Lion initial+ACTIVATE, Saturn initial+ACTIVATE, Gears initial+ACTIVATE, Pyramids initial+ACTIVATE). All six session jobs reported `PASS`. Every session exercised the protected Greia Home return at the platform-allocated home-hitbox.
-- Captured one compact (1024×600 + `interface_size=compact`) and one larger (1280×800 + `interface_size=normal`) responsive row from the same Shell.
-- Wrote `docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/` with the curated 4 PNGs, the 3×2 primary contact sheet, `REVIEW.md` and `layout-audit.json` (sourced from the real `PageShellLayout`, `PORTAL_CENTERS` and discovery-token centers, not invented).
-- Wrote the non-committed owner-transfer ZIP `GREIA_VISUAL_REVIEW_ENCYCLOPEDIA_GOLDEN_MASTER_2026-08-28.zip` (677 KB) per the visual evidence contract.
-- Pre-reader / no-reading review on the six prototypes: `PRE_READER_CORE_FLOW_PASS=yes`, `TEXT_REQUIRED_FOR_GAMEPLAY=no`, `NO_READING_FIRST_ACTION_PASS=yes`, `PRIMARY_INSTRUCTION_CHANNEL=visual`.
-- Visible defects recorded honestly in `REVIEW.md` (sun vs Back button on Animals, right-most gear partly behind a rack silhouette on Gears) — neither blocks the gate, both are noted for the design pass.
-- This evidence is `SIMULATOR VISUAL REVIEW` only. **Owner direction approval is still pending.** E3/E4 remain hard-blocked until that approval lands.
+- Built the six 1024×600 runtime PNGs and verified byte agreement through `--check`.
+- Pushed the generated pack at `08fe71b077d47b511c105bde5c2e8fdb88be7b92`.
+- Focused Encyclopedia tests and `make verify` passed on that then-current tree.
+- Added permanent golden-master capture/review/ZIP tooling.
+- Captured Home, Animals, Lion, Saturn, Gears and Pyramids through the real Greia Shell/Simulator path, including representative ACTIVATE states and protected Greia Home return.
+- Captured compact/larger samples and performed the pre-reader/no-reading prototype review.
+- This established technical pipeline evidence, not permanent aesthetic approval.
 
+## 2026-08-28 — E2R visual refinement at `8fa41a3`
 
-**Next exact action:** execute `docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md`; stop after the golden-master contact sheet/evidence for owner review.
+- Reworked token silhouettes to scene-native forms while keeping one interaction/state component.
+- Removed baked presenters; runtime canonical characters remained the identity authority.
+- Strengthened ACTIVATE payoffs for Lion, Saturn, Gears and Pyramids.
+- Re-ran focused tests, build check, `make verify`, six real Simulator sessions, protected Home returns and four ACTIVATE captures successfully at that then-current state.
+- Owner later rejected visible defects in the resulting real pixels. Green technical evidence was retained only for its actual scope.
 
-## 2026-08-28 — E2R visual refinement (this work, at SHA `8fa41a3`)
+## 2026-08-29 — owner-directed golden-master correction and direction approval
 
-- Addressed every E2R correction in the primary review
-  (`docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/PRIMARY_REVIEW_2026-08-29.md`)
-  on the same six pages.
-- Discovery-token silhouettes are now scene-native (felt tag /
-  telescope card / workshop tag / excavation marker); shared
-  interaction/state logic remains one component via a new
-  `token_shape` parameter on `draw_discovery_token`.
-- Baked presenters removed from all six SVGs; runtime canonical
-  character draws at the integrated scene position.
-- First-ACTIVATE payoffs strengthened: lion mane growth rings +
-  spike marks + color shift, Saturn full orbit path (sun + dotted
-  line + Earth + Saturn marker), Gears contact-point rings +
-  motion arrows, Pyramids outlined base block + label arrows.
-- New permanent review tool `tools/encyclopedia_v01_golden_master_review.py`
-  produces the curated 4-shot set, the 3×2 contact sheet, and a
-  new 2×4 initial-vs-activated comparison sheet.
-- `make verify` 1462/1462, focused Encyclopedia tests 19/19,
-  build `--check` PASS 6, headless Simulator 6/6 sessions PASS,
-  protected Greia Home 6/6, ACTIVATE payoffs 4/4, pre-reader/no-
-  reading `yes/yes/yes/visual`.
-- Updated curated review set under
-  `docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/`
-  (REVIEW.md updated for E2R, layout-audit.json reflects new token
-  shapes and presenter positions, contact-sheet-primary.png,
-  initial-vs-activated.png, 4 curated PNGs).
-- New non-committed owner ZIP:
-  `GREIA_VISUAL_REVIEW_ENCYCLOPEDIA_GOLDEN_MASTER_2026-08-28.zip`
-  (685 KB; 8 files).
-- `libpng error: bad adaptive filter value` line in the child log
-  remains an unresolved diagnostic per the local-agent brief §7.
-- **Owner direction approval still pending.** E3 section-page
-  migration and E4 entry migration remain hard-blocked.
+- Owner identified four concrete blockers in the real E2R pixels: Home book/card fit, Lion disconnected anatomy, Animals ambiguous lion/elephant, and non-meshing/non-gear-like Gears.
+- Primary agent repaired the actual repository source directly; no delegated art pass and no generated mockup substitution.
+- Home book enlarged, then the complete 3×2 portal block was centered on the book at `x=267/512/757`, with middle cards intentionally crossing the spine; `home.py` pointer/focus centers were updated identically.
+- Animals lion/elephant were redrawn as immediately recognizable full-body silhouettes without moving semantic target centers.
+- Lion face/head/mane/tail/body continuity and visible legs were corrected.
+- Gears became a physically meshing toothed train and educational reveal coordinates were aligned to the actual contacts.
+- Owner reviewed these direct corrections and explicitly approved moving forward with the plan.
+- Runtime PNGs/screenshots from the prior E2R capture remain stale for exact-current-source evidence.
 
-**Next exact action:** STOP and wait for owner direction decision
-on the E2R prototypes before any E3 / E4 page migration.
+## 2026-08-29 — E3 six-section source tranche
+
+- Kept corrected Animals as the section-world reference.
+- Added five authored section masters: Space observatory, Earth landscape, Body discovery room, Machines workbench and History time trail.
+- First source contact review caught three defects before persistence: Body was still too panel-like, Machines gear/bridge silhouettes were weak, and History's dinosaur was ambiguous. All three were corrected.
+- Local source renders for the five new masters parse as valid 1024×600 SVG and rasterize to 1024×600 RGB PNGs.
+- Registered the five E3 semantic art IDs in the existing bounded `VisualLibrary`.
+- Source-wired Space/Earth/Body/Machines/History to authored scenes with retained procedural fallback while generated E3 PNGs are absent.
+- Preserved Space's continuously orbiting Sun/planets/Moon as live teaching state inside the authored observatory.
+- Extended the build tool with explicit `golden`, `sections` and `all` groups.
+- Extended the visual-foundation contract so E3 generated art is staged atomically: 0/5 during source work or 5/5 when committed; partial section packs are forbidden.
+- Added `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/SOURCE_REVIEW.md`.
+- E3 runtime PNG build, fresh tests/verify, exact-SHA Simulator and six-section runtime review remain pending. E4 remains blocked.
