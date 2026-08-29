@@ -19,9 +19,7 @@ from greia_platform.activity_ui import (
     draw_activity_pointer,
     draw_icon_button,
     draw_plus_symbol,
-    draw_system_chrome_overlay,
     draw_undo_symbol,
-    is_home_clicked,
     load_icon,
     mix,
 )
@@ -406,9 +404,6 @@ class WritingApp:
         return True
 
     def _click(self, pos: tuple[int, int]) -> bool:
-        if is_home_clicked(self.screen, pos):
-            return not self._save()
-
         gallery = self.metrics.activity_toolbar_button(0, side="left")
         undo = self.metrics.activity_toolbar_button(1, side="left")
         emoji = self.metrics.activity_toolbar_button(2, side="left")
@@ -797,7 +792,6 @@ class WritingApp:
             self._draw_editor()
             if self.emoji_picker_open:
                 self._draw_emoji_picker()
-        draw_system_chrome_overlay(self.screen)
         draw_activity_pointer(self.screen)
 
     def _draw_editor(self) -> None:
