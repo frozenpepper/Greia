@@ -53,7 +53,9 @@ from greia_platform.profiles import (
 
 from .composition import (
     build_launcher_runtime_services,
+    development_shell_window_backend,
     provisional_installed_display_session,
+    provisional_installed_shell_window_backend,
 )
 from .key_chord import KeyChordTracker
 from .lifecycle import ActivityResult
@@ -196,7 +198,8 @@ class LauncherApplication:
         self.windowed = windowed
         self._activities = self.registry.discover()
         self._activity_discovery_token = self.registry.discovery_token()
-        development_hal = None if self._installed_root() else _development_hal()
+        installed_root = self._installed_root()
+        development_hal = None if installed_root else _development_hal()
         self.runtime_services = build_launcher_runtime_services(
             self.runtime,
             self._activities,
@@ -216,7 +219,12 @@ class LauncherApplication:
             except HistoryError:
                 self._history_recovery_failures.add(child.profile_id)
         display_coordinator = (
-            provisional_installed_display_session() if self._installed_root() else None
+            provisional_installed_display_session() if installed_root else None
+        )
+        self._shell_window_backend = (
+            provisional_installed_shell_window_backend()
+            if installed_root
+            else development_shell_window_backend()
         )
         self.supervisor = ActivitySupervisor(
             runtime_manager=self.runtime_services.runtime_manager,
@@ -323,7 +331,7 @@ class LauncherApplication:
         screen = pygame.display.set_mode(default_size, display_flags)
         pygame.display.set_caption("Greia OS")
         pygame.mouse.set_visible(False)
-        _set_x11_input_focus(screen, pygame)
+        self._shell_window_backend.after_window_created(pygame)
         clock = pygame.time.Clock()
         running = True
         last_display_size = screen.get_size()
@@ -1188,40 +1196,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--windowed", action="store_true")
     parser.add_argument("--allow-exit", action="store_true")
     return parser.parse_args()
-
-
-def _set_x11_input_focus(screen: Any, pygame: Any) -> None:
-    """Give the fullscreen window X input focus when no window manager runs.
-
-    Greia boots Xorg directly with no WM, so keyboard events go nowhere unless
-    the launcher window is focused. This sets X input focus to the SDL window.
-    """
-    import ctypes
-    import ctypes.util
-
-    try:
-        if os.environ.get("SDL_VIDEODRIVER", "x11") != "x11":
-            return
-        info = pygame.display.get_wm_info()
-        raw_window = info.get("window", 0)
-        if not isinstance(raw_window, int) or not raw_window:
-            return
-        x11_lib = ctypes.util.find_library("X11")
-        if not x11_lib:
-            return
-        x11 = ctypes.CDLL(x11_lib)
-        display = x11.XOpenDisplay(None)
-        if not display:
-            return
-        revert_to = 1  # RevertToParent
-        current = ctypes.c_ulong()
-        revert = ctypes.c_int()
-        x11.XGetInputFocus(display, ctypes.byref(current), ctypes.byref(revert))
-        if current.value != raw_window:
-            x11.XSetInputFocus(display, raw_window, revert_to, 0)
-        x11.XCloseDisplay(display)
-    except Exception:
-        return
 
 
 def main() -> int:
