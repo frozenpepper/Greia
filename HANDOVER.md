@@ -35,6 +35,7 @@ For R7 display/session/input work also read:
 
 ```text
 docs/reviews/2026-08-29_R7_ACTIVITY_BACKEND_INDEPENDENCE_AND_DISPLAY_SESSION_REVIEW.md
+docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md
 ```
 
 For visual work also read:
@@ -63,6 +64,8 @@ The 2026-08-29 R7 review clarified the execution architecture without closing an
 - `LegacyXDisplaySessionBackend` is the first/reference compatibility implementation. A Wayland implementation may later sit behind the same contract and must require zero Activity changes.
 - The major current Activity drift is not widespread direct Xlib usage; it is cooperative trust: first-party Activities/shared canvas helpers still draw and hit-test the nominally trusted Home chrome inside the Activity process.
 - R7 implementation must first enforce backend independence, then implement real trusted chrome/input above Activities, then migrate first-party Activities by shared pattern before comparing Xorg and Wayland on physical hardware.
+- **Backend independence must not create an abstraction tax.** Existing low-resource optimization strategies remain valid and must survive the migration: precomposed opaque backdrops, converted surfaces, bounded caches, cached transforms, dirty/invalidation rendering, adaptive pacing and direct high-rate SDL pointer/text handling where safe.
+- Backend-specific fast paths are allowed and expected below the common contract. Portable semantics do not require identical backend internals.
 
 R7 invariants remain:
 
@@ -72,7 +75,10 @@ R7 invariants remain:
 - controller discovery/normalization is platform-owned;
 - ordinary Activities do not gain raw `/dev/input` or DRM authority;
 - backend selection is trusted platform/profile composition, never Activity logic;
-- any backend migration requires exact source, VM/simulator where applicable, and physical reference-device evidence.
+- normal Activity pixels must not be proxied through a generic Python framebuffer/IPC layer merely for abstraction;
+- trusted chrome must remain bounded/event-driven and must not impose a permanent full-screen composition/redraw cost;
+- accepted Activity optimization opportunities must remain available on every production backend;
+- any backend migration requires exact source, VM/simulator where applicable, and physical reference-device evidence including performance evidence.
 
 Current detailed R7 execution review:
 
@@ -200,18 +206,18 @@ Current truthful visual state:
 ```text
 E1 SHARED PRESENTATION SOURCE:               IMPLEMENTED ON MAIN
 E2 SIX GOLDEN-MASTER PAGE SOURCES:           IMPLEMENTED ON MAIN
-E2R VISUAL REFINEMENT:                      IMPLEMENTED ON MAIN
-EDITABLE SVG MASTERS:                       6 / 6 ON MAIN
-RUNTIME PNG PACK:                           6 / 6 COMMITTED + SHA256-VERIFIED BY --CHECK
-FOCUSED ENCYCLOPEDIA TESTS:                 19 / 19 PASS
+E2R VISUAL REFINEMENT:                       IMPLEMENTED ON MAIN
+EDITABLE SVG MASTERS:                        6 / 6 ON MAIN
+RUNTIME PNG PACK:                            6 / 6 COMMITTED + SHA256-VERIFIED BY --CHECK
+FOCUSED ENCYCLOPEDIA TESTS:                  19 / 19 PASS
 make verify ON REAL CHECKOUT AT FINAL SHA 8fa41a3:    1462 / 1462 PASS
 REAL GREIA SIMULATOR LAUNCH/SURVIVAL:        6 / 6 SESSIONS PASS AT FINAL SHA
-PROTECTED GREIA HOME RETURN:                6 / 6 SESSIONS VERIFIED
-ACTIVATE PAYOFFS CAPTURED:                  4 / 4 FACTUAL ENTRIES (with strengthened visuals)
+PROTECTED GREIA HOME RETURN:                 6 / 6 SESSIONS VERIFIED
+ACTIVATE PAYOFFS CAPTURED:                   4 / 4 FACTUAL ENTRIES (with strengthened visuals)
 PRE-READER / NO-READING PROTOTYPE REVIEW:    yes/yes/yes/visual
-CURATED REVIEW SET:                         docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/
-OWNER-TRANSFER ZIP:                         GREIA_VISUAL_REVIEW_ENCYCLOPEDIA_GOLDEN_MASTER_2026-08-28.zip
-OWNER VISUAL DIRECTION APPROVAL:            PENDING
+CURATED REVIEW SET:                          docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/
+OWNER-TRANSFER ZIP:                          GREIA_VISUAL_REVIEW_ENCYCLOPEDIA_GOLDEN_MASTER_2026-08-28.zip
+OWNER VISUAL DIRECTION APPROVAL:             PENDING
 E3 / E4 BULK MIGRATION:                      BLOCKED
 ```
 
@@ -296,12 +302,13 @@ Exact next sequence:
 
 1. add/enforce the Activity backend-independence validator and contributor contract;
 2. run a repository-wide first-party Activity scan and classify backend/trusted-chrome/raw-input findings;
-3. harden the existing `DisplaySessionBackend` seam with Legacy X as the reference implementation, moving generic-launcher X-specific behavior behind it;
-4. implement trusted system chrome/input for the current Xorg session through the existing `SystemChromeCoordinator` boundary;
-5. migrate Writing/Painting first, then reference-canvas exemplars, then capability-rich Activities, then the remaining catalogue;
-6. only after the contract is proven on Legacy X, implement/prototype Wayland behind the same contract and compare on real Acer/Pi hardware.
+3. capture physical performance baselines for Writing, Painting, one dirty-render/static Activity, one animated Activity, launch/return and idle before changing those paths;
+4. harden the existing `DisplaySessionBackend` seam with Legacy X as the reference implementation, moving generic-launcher X-specific behavior behind it **without adding frame proxying/copies or high-rate input IPC**;
+5. implement trusted system chrome/input for the current Xorg session through the existing `SystemChromeCoordinator` boundary, keeping it bounded/event-driven rather than a continuous full-screen compositing cost;
+6. migrate Writing/Painting first, then reference-canvas exemplars, then capability-rich Activities, then the remaining catalogue, preserving each Activity's accepted performance optimizations;
+7. only after the contract and baseline performance are proven on Legacy X, implement/prototype Wayland behind the same contract and compare on real Acer/Pi hardware.
 
-Do not begin by replacing Xorg. First make the rest of Greia genuinely independent of it.
+Do not begin by replacing Xorg. First make the rest of Greia genuinely independent of it, and do not trade away measured performance merely to make the abstraction look cleaner.
 
 ### Current Encyclopedia visual lane
 
@@ -348,6 +355,9 @@ coupling.
 - Activity `main.py` stays a bootstrap/composition boundary;
 - Activities are display-backend independent; backend plumbing terminates in trusted Greia composition/adapters;
 - Activities never implement the real Home/Back or own physical controller/device authority;
+- performance is a correctness contract on the Acer floor, not a secondary optimization pass;
+- backend abstraction must preserve accepted Activity optimization strategies and allow backend-private fast paths;
+- do not add generic pixel proxying, avoidable full-frame copies, continuous chrome redraw/composition or high-rate input IPC merely for architectural symmetry;
 - multiple physical inputs converge on semantic/domain actions;
 - child-facing flows remain offline-first and pre-reader friendly;
 - no runtime AI/TTS/speech recognition merely to fill content gaps;
