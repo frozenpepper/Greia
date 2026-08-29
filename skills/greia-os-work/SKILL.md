@@ -6,7 +6,7 @@ description: Task router for substantive Greia OS/platform/Shell/Parent/installe
 # Greia OS Work — task router
 
 **Status:** living derived contributor router  
-**Reviewed:** 2026-08-28
+**Reviewed:** 2026-08-29
 
 Keep this file small. It tells an agent **what to read for the task**; it is not a second architecture manual.
 
@@ -23,6 +23,7 @@ These apply to substantive OS/platform work:
 7. Claim only evidence that actually executed. Source tests, simulator evidence, VM/image evidence, authoring-provider/audio evidence and physical-device evidence are different lanes.
 8. After substantive implementation, update the active plan and `HANDOVER.md` as required by `AGENTS.md` and keep this router/companions synchronized when contributor workflow changes.
 9. New prerecorded Greia speech production is authoring-time work and must use the canonical Voice Production Engine. OS/shared-library scripts must not grow a parallel Chatterbox/native-TTS/Whisper implementation.
+10. Display/session/input abstraction must preserve performance. Activities remain backend-neutral while SDL/Pygame keeps direct rendering and safe high-rate input paths; backend-specific acceleration belongs below the trusted Greia boundary. Do not introduce a generic Python framebuffer proxy, avoidable full-frame copies, high-rate pointer/text IPC, or continuously redrawn full-screen trusted chrome merely to make Xorg/Wayland/KMS implementations look identical.
 
 Before installing/configuring any toolchain, build host, simulator dependency, Parent checkout, developer-remote environment or voice provider, read:
 
@@ -137,6 +138,23 @@ docs/product/RESPONSIVE_UI_AND_DISPLAY_LAYOUT.md
 docs/design/GREIA_ACTIVITY_CANVAS_AND_VIEWPORT_AUTHORING.md
 ```
 
+### R7 display/session backend or backend-independence work
+
+Read:
+
+```text
+docs/adr/0019-platform-owned-activity-system-navigation.md
+docs/adr/0020-runtime-neutral-input-profiles-and-controller-support.md
+docs/reviews/2026-08-29_R7_ACTIVITY_BACKEND_INDEPENDENCE_AND_DISPLAY_SESSION_REVIEW.md
+docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md
+src/greia_launcher/display_session.py
+src/greia_launcher/display_session_legacy_x.py
+src/greia_launcher/system_chrome.py
+src/greia_platform/activity_backend_policy.py
+```
+
+Preserve the existing seams rather than inventing a parallel platform layer. `DisplaySessionCoordinator` owns shell/Activity surface lifecycle; concrete backends own Xorg/Wayland/KMS-private mechanics. Activity source stays backend-neutral and may continue using ordinary SDL/Pygame rendering/performance techniques. `tools/audit_activity_backend_independence.py` inventories blockers and temporary migration debt. A backend is not acceptable merely because it is architecturally tidy: measure the exact user-visible path and preserve the Acer-class performance envelope.
+
 ### Activity runtime, package, permissions, trust or lifecycle integration
 
 Read:
@@ -154,6 +172,7 @@ src/greia_platform/activities.py
 src/greia_platform/activity_packages.py
 src/greia_platform/activity_tree_cleanup.py
 src/greia_platform/trust.py
+src/greia_platform/activity_backend_policy.py
 ```
 
 For Activity implementation itself, switch to:
@@ -329,7 +348,7 @@ docs/engineering/ENGINEERING_FOUNDATIONS.md
 docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md
 ```
 
-Measure the interaction actually being optimized. Desktop/source reasoning is not Acer/Pi performance evidence.
+Measure the interaction actually being optimized. Desktop/source reasoning is not Acer/Pi performance evidence. For R7/backend work, preserve direct SDL presentation, dirty/invalidation rendering, bounded caches and safe direct high-rate input; backend-specific fast paths are valid below the common semantic contract.
 
 ### Physical Acer / developer remote-control testing
 
@@ -366,6 +385,7 @@ Before calling substantive OS/platform work done, record:
 6. If audio/microphone changed: does audio.basic still receive only the platform route, does Parent OFF still apply on next open, and is readiness truthful?
 7. If prerecorded speech was produced: did it go through VoiceEngine, retain human-review authority, and avoid adding child-runtime model dependencies?
 8. Were required active-plan/HANDOVER/manual/skill updates made?
+9. If display/session/input changed: is Activity source still backend-neutral, is trusted authority outside Activities, and were existing low-resource optimization opportunities preserved rather than hidden behind a slow common path?
 ```
 
 Do not load broad architecture documents just because they exist. Start with this router, read the narrow authorities for the actual task, and expand only when the change genuinely crosses subsystem boundaries.
