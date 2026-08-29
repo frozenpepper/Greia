@@ -33,13 +33,27 @@ Source owners:
 
 ```text
 src/greia_platform/system_chrome.py
+src/greia_platform/pygame_canvas.py
 src/greia_launcher/system_chrome.py
 src/greia_launcher/system_chrome_legacy_x.py
 src/greia_launcher/trusted_chrome_supervisor.py
 src/greia_launcher/trusted_presentation.py
 src/greia_launcher/child_shell.py
 src/greia_launcher/composition.py
+src/greia_simulator/python_activity.py
 build/overlay/usr/local/lib/greia-os/greia-x-session
+tools/audit_activity_system_chrome_ownership.py
+```
+
+First migrated exemplars include:
+
+```text
+activities/writing/main.py
+activities/painting/main.py
+activities/labirinto_magico/maze_app.py
+activities/volo_draghetto/dragon_app.py
+activities/shape_garden/main.py
+activities/storie_della_mia_voce/voice_app.py
 ```
 
 Hostile acceptance fixture:
@@ -96,6 +110,8 @@ PYTHONPATH=src python3 -m unittest \
   tests.test_supervisor_display_session \
   tests.test_r7_activity_device_authority \
   tests.test_activity_backend_policy \
+  tests.test_activity_system_chrome_audit \
+  tests.test_r7_first_wave_activity_trusted_chrome_migration \
   -v
 ```
 
@@ -111,7 +127,19 @@ Required summary:
 blockers=0
 ```
 
-Migration findings for cooperative first-party Home helpers may still exist until R7.5. Record their exact count; do not hide them.
+Then run the dedicated Activity system-chrome ownership audit in strict mode:
+
+```bash
+PYTHONPATH=src python3 tools/audit_activity_system_chrome_ownership.py --strict
+```
+
+Required summary:
+
+```text
+Activity system chrome ownership audit: blockers=0
+```
+
+Any first-party import/call of `draw_system_chrome_overlay` or `is_home_clicked`, or any remaining `PygameReferenceCanvas.present(system_chrome=...)` request, is now an R7.3 source blocker. Do not hide it as “temporary migration debt”; migrate the caller while preserving its Activity-local behavior and protected-region geometry.
 
 Then run:
 
@@ -125,6 +153,7 @@ Source gate is PASS only if:
 
 - all focused tests pass;
 - Activity backend blockers are zero;
+- Activity system-chrome ownership blockers are zero;
 - `make verify` exits zero;
 - no source change was made during the gate;
 - exact SHA is recorded.
@@ -137,17 +166,20 @@ On the exact green source SHA, inspect the implementation contract before touchi
 
 ```bash
 grep -R "draw_system_chrome_overlay\|is_home_clicked" \
-  src/greia_launcher src/greia_platform/system_chrome.py \
-  src/greia_launcher/system_chrome*.py \
-  src/greia_launcher/trusted_chrome_supervisor.py || true
+  activities src/greia_platform src/greia_simulator src/greia_launcher \
+  --include='*.py' || true
 ```
 
 Expected:
 
+- no first-party Activity source imports/calls the retired cooperative Home helpers;
+- `src/greia_platform/pygame_canvas.py` does not render system chrome;
+- the trusted Simulator bootstrap may still use the canonical renderer/hitbox as its platform-owned compatibility implementation;
 - trusted launcher/chrome implementation does not call Activity helper Home functions;
-- Activity/shared-helper migration debt may remain elsewhere and is not an R7.3 failure by itself;
 - `system_chrome_legacy_x.py` contains no Pygame renderer/process proxy;
 - installed `greia-x-session` primary path is `greia_launcher.child_shell` and fallback is `greia_launcher.trusted_presentation`.
+
+Do not mechanically delete renderer-neutral `ActivitySystemChromeLayout`, safe/protected geometry, or Activity viewport exclusions. Reserving the region is correct; owning the Home renderer/input action is not.
 
 ## 6. Deploy exact source to the reference Acer
 
@@ -310,7 +342,8 @@ Do not manufacture a universal numeric percentage threshold from unrelated old m
 
 A Legacy-X PASS means:
 
-- Activities no longer need to draw/handle the **real** platform Home to obtain a return path;
+- Activities no longer draw/handle the **real** platform Home;
+- the first-party catalogue is free of the retired cooperative Home helper/request pattern under the strict source audit;
 - a deliberately non-cooperative ordinary Pygame Activity cannot cover the trusted window merely by repainting its own fullscreen surface;
 - the launcher owns Home lifecycle and pointer handling in the tested compatibility session;
 - Activity `/dev/dri` and raw input authority remain denied;
@@ -337,6 +370,7 @@ Return exactly one disposition:
 Only when:
 
 - exact-current source gate is green;
+- Activity system-chrome ownership audit reports zero blockers;
 - R7.2 containment prerequisite is green on compatible/current evidence;
 - normal Writing/Painting trusted Home works;
 - hostile fixture proves non-cooperative forced return;
@@ -354,6 +388,7 @@ Use when a required invariant fails, especially:
 - hostile Activity cannot be forcibly returned;
 - chrome state/window leaks across Activity sessions;
 - current source gate fails;
+- any first-party Activity still owns the retired Home helper/request path;
 - the implementation materially regresses Acer interaction/performance.
 
 ### `INCOMPLETE`
@@ -362,13 +397,12 @@ Use only when the environment/evidence lane genuinely cannot execute a required 
 
 ## 13. After acceptance
 
-R7.3 Legacy-X acceptance does **not** authorize immediate deletion of all cooperative Activity Home helpers. The next migration step is controlled:
+Once this exact R7.3 gate is accepted:
 
-1. change shared Activity canvas/viewport helpers so they retain safe/protected geometry but stop rendering/hit-testing the real system chrome;
-2. migrate Writing/Painting first and remeasure typing/drawing paths;
-3. migrate shared-canvas exemplars by pattern;
-4. remove the remaining first-party helper calls repository-wide;
-5. keep the backend-independence validator green;
-6. continue R7.4 physical controller/system-input ownership and the ADR-0014 direct/compositor backend evidence path.
+1. promote the zero-debt Activity system-chrome rule from migration audit into normal Activity validation;
+2. remove the temporary ignored `PygameReferenceCanvas.present(system_chrome=...)` compatibility keyword after confirming no external first-party caller remains;
+3. keep renderer-neutral protected/safe geometry intact;
+4. preserve the trusted Simulator bootstrap as the simulator's platform-chrome implementation until its session architecture is replaced deliberately;
+5. continue R7.4 physical controller/system-input ownership and the ADR-0014 direct/compositor backend evidence path.
 
-Do not combine that migration with unrelated gameplay/visual rewrites.
+Do not combine those follow-on changes with unrelated gameplay/visual rewrites.
