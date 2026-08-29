@@ -7,41 +7,41 @@
 **Visual-system guide:** `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`  
 **Active visual plan:** `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`  
 **Current Activity visual subplan:** `docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md`  
-**Current direct repair review:** `docs/reviews/visual/2026-08-29_encyclopedia_owner_direct_repairs/REVIEW.md`  
-**User-agent skill:** `skills/greia-visual-authoring/SKILL.md`
+**Current E3 source review:** `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/SOURCE_REVIEW.md`  
+**Visual-authoring skill:** `skills/greia-visual-authoring/SKILL.md`
 
 ---
 
-# 1. Current focus — Encyclopedia owner-directed golden-master repair
+# 1. Current focus — Encyclopedia E3 section worlds
 
-The owner rejected both the original Encyclopedia graphics and the later E2R golden-master visual package after reviewing the actual Simulator pixels.
+The owner rejected the earlier Encyclopedia/E2R pixels, then directly reviewed the primary-agent source repairs to Home, Animals, Lion and Gears.
 
-The E2R run remains valid technical evidence for its exact SHA, but **it is not aesthetic approval and must not be propagated**.
-
-Owner-identified E2R failures:
+The final Home correction enlarged the book and centered the complete 3×2 category block on the book as one composition:
 
 ```text
-Home      category worlds did not fit naturally inside the illustrated book
-Lion      face/head/mane looked disconnected; tail looked detached
-Animals   elephant was not recognizable; adjacent lion was also ambiguous
-Gears     wheels did not convincingly look like gears and did not physically mesh
+column centers x = 267 / 512 / 757
+middle Space/Machines column deliberately straddles the x=512 spine
 ```
 
-The owner explicitly requested that the primary agent make these corrections directly and slowly rather than delegate another visual-authoring pass.
+After inspecting the corrected source direction, the owner explicitly approved moving forward with the visual-reauthoring plan.
 
-Current rule:
-
-> **Repair only the rejected golden-master source art, inspect actual 1024×600 source renders, and keep E3/E4 blocked. Do not hand the aesthetic work to the local agent.**
-
-Rolling local-agent pointer is intentionally a HOLD notice:
+Current disposition:
 
 ```text
-docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md
+E1 visual/asset architecture            COMPLETE
+E2/E2R visual direction                 OWNER APPROVED
+latest corrected golden runtime PNGs    STALE / REBUILD PENDING
+latest exact-source Simulator proof     PENDING
+E3 six-section source direction         IMPLEMENTED / SOURCE-REVIEWED
+E3 runtime PNG + Simulator review       PENDING
+E4 factual-entry migration              BLOCKED
 ```
+
+Owner approval is an aesthetic-direction decision. It does not retroactively make the old E2R Simulator screenshots current evidence for the repaired source.
 
 ---
 
-# 2. E1 architecture remains valid
+# 2. E1 architecture to preserve
 
 Activity-local source owners:
 
@@ -61,121 +61,141 @@ no runtime SVG
 no page-hot-path image decode / smoothscale
 semantic PageCommand input
 protected Greia Home ownership
+fail-soft missing authored renditions
 ```
 
-The owner rejected the artwork, not these boundaries.
+The visual migration is not permission to invent a second compositor/cache/navigation system.
 
 ---
 
-# 3. Direct corrections now on main
+# 3. Owner-approved golden-master repairs now on main
 
-## Home
-
-Commit:
+Direct corrections include:
 
 ```text
-46a937616610b3ce8c089ef8a1f0dc835373b36e
+Home      oversized open book + centered 3x2 portal block
+Animals   recognizable full-body lion and elephant
+Lion      unified face/head/mane, attached tail, connected visible legs
+Gears     real toothed three-gear train with actual mesh points
 ```
 
-The six existing miniature category worlds and their semantic centers were preserved. The illustrated book spread was simply enlarged from roughly `x=120..904 / bottom≈488` to `x=78..946 / bottom≈520`, with a larger grounding shadow and lower bookmark. This directly addresses the owner's instruction that the current cards would fit if the book were wider and slightly taller.
-
-## Animals
-
-Commit:
-
-```text
-51f20f0ae6fbf204a155bdf96962d2330985195c
-```
-
-The continuous habitat composition and exact selection centers remain unchanged. The weak top-row lion/elephant were redrawn for immediate recognition:
-
-```text
-lion      full body + mane/head + legs + attached tail
-elephant  large body + oversized ear + attached curved trunk + tusks + four legs + tail
-```
-
-## Lion entry
-
-Commits:
-
-```text
-a7b8840528118f393aad91bb5b5692d6149799cf
-e955d3e3d662d45ff53018a6197a4ed21f659cef
-```
-
-The face is nested into one head/mane mass, the muzzle anchors the face, the tail grows continuously from the rump, and visible connected legs/paws make the animal read as one standing lion rather than disconnected pieces.
-
-## Gears
-
-Commits:
-
-```text
-bbc3ca209a471202e57adc6630ee79e65da734f0
-eab952ea75f6b0d4b67ec27b82ccf27d8bbde39f
-```
-
-The separated disc-like wheels were replaced by a compact three-gear train with 12 visible teeth per gear. Adjacent tooth envelopes overlap at two real mesh boundaries. The runtime teaching overlays were moved to those same contacts and the new gear centers.
-
-Current approximate authored mechanism geometry:
-
-```text
-blue   center=(385,318), outer radius≈70
-orange center=(500,318), outer radius≈56
-green  center=(592,318), outer radius≈46
-
-blue↔orange overlap ≈11 px
-orange↔green overlap ≈10 px
-```
-
----
-
-# 4. Current source evidence
-
-The four corrected SVGs were rendered locally at 1024×600 using CairoSVG and inspected as actual source art.
-
-Static checks performed:
-
-```text
-Home XML parse                         PASS
-Animals XML parse                      PASS
-Lion XML parse                         PASS
-Gears XML parse                        PASS
-Home data-target centers               MATCH page semantic centers
-Animals data-target centers            MATCH page semantic centers
-Gear mesh geometry                     PASS
-```
-
-This is **SOURCE/STATIC evidence only**.
-
-Correction record:
+Primary correction record:
 
 ```text
 docs/reviews/visual/2026-08-29_encyclopedia_owner_direct_repairs/REVIEW.md
 ```
 
+The owner asked the primary agent to perform this visual work directly. Do not hand the current aesthetic-authoring lane to the local agent.
+
 ---
 
-# 5. Critical runtime evidence boundary
+# 4. E3 six-section source family
 
-The committed runtime PNG pack still corresponds to the rejected E2R source state for Home, Animals, Lion and Gears.
-
-Therefore current truth is:
+Animals remains the section-world reference:
 
 ```text
-EDITABLE SOURCE:                         NEWER / OWNER-DIRECTED CORRECTIONS PRESENT
-HOME/ANIMALS/LION/GEARS RUNTIME PNGS:    STALE
-build_encyclopedia_visual_assets.py --check: EXPECTED TO FAIL UNTIL REBUILD
-PREVIOUS E2R SIMULATOR CAPTURES:         STALE FOR CURRENT SOURCE
-FINAL-SHA SIMULATOR ACCEPTANCE:          PENDING
-OWNER DIRECTION APPROVAL:                NOT GRANTED
-E3/E4:                                   BLOCKED
+activities/enciclopedia_greia/assets/source/animals_field_table.svg
 ```
 
-Do not call the repaired screens complete/accepted until the runtime pack is regenerated and fresh final-SHA Greia Simulator pixels are reviewed.
+New source masters:
+
+```text
+activities/enciclopedia_greia/assets/source/space_gallery_observatory.svg
+activities/enciclopedia_greia/assets/source/earth_gallery_landscape.svg
+activities/enciclopedia_greia/assets/source/body_gallery_discovery_room.svg
+activities/enciclopedia_greia/assets/source/machines_gallery_workbench.svg
+activities/enciclopedia_greia/assets/source/history_gallery_time_trail.svg
+```
+
+Current source direction:
+
+```text
+Animals          one continuous habitat
+Space            authored observatory around the live Solar System
+Earth & Nature   one layered landscape with five physical destinations
+Body             one discovery room with physical anatomy exhibits
+Machines         one workshop with real object/mechanism silhouettes
+History          one time/excavation trail rather than five cards
+```
+
+The first source contact sheet caught and corrected three defects before persistence:
+
+```text
+Body      panel-like stations -> physical models
+Machines  weak gear/bridge read -> meshing toothed pair + clearer bridge
+History   ambiguous dinosaur -> explicit T-rex silhouette
+```
+
+Current source review:
+
+```text
+docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/SOURCE_REVIEW.md
+```
+
+Evidence class: **SOURCE / DESKTOP VISUAL REVIEW** only.
 
 ---
 
-# 6. Stable generic visual foundation to preserve
+# 5. E3 staged runtime integration
+
+`VisualLibrary.ART_ASSETS` now registers the five E3 semantic IDs in addition to the six golden-master assets.
+
+The five pages are source-wired:
+
+```text
+space.py      encyclopedia.space.gallery.observatory
+earth.py      encyclopedia.earth.gallery.landscape
+body.py       encyclopedia.body.gallery.discovery_room
+machines.py   encyclopedia.machines.gallery.workbench
+history.py    encyclopedia.history.gallery.time_trail
+```
+
+Behavior while generated E3 PNGs are absent:
+
+- each page deliberately falls back to its previous proven procedural rendering;
+- no runtime SVG or source scan occurs;
+- semantic destinations/input/page IDs remain unchanged;
+- Space always retains its live orbiting Sun/planets/Moon model; the authored scene is only the observatory context.
+
+Build groups:
+
+```bash
+python3 tools/build_encyclopedia_visual_assets.py --group golden
+python3 tools/build_encyclopedia_visual_assets.py --group sections
+python3 tools/build_encyclopedia_visual_assets.py --group all
+```
+
+The corresponding `--check` path verifies committed renditions byte-for-byte.
+
+Runtime-pack source contract:
+
+```text
+golden tranche   6 / 6
+E3 tranche       0 / 5 or 5 / 5; partial section packs forbidden
+```
+
+---
+
+# 6. Critical evidence boundary
+
+The current editable SVG source is newer than the previous E2R runtime pack.
+
+Therefore:
+
+```text
+OWNER VISUAL DIRECTION                 APPROVED
+LATEST SOURCE ART                      CURRENT
+OLDER E2R RUNTIME PNG/SIMULATOR PIXELS STALE FOR EXACT CURRENT SOURCE
+FIVE E3 SECTION PNGs                   NOT COMMITTED YET
+FRESH FINAL-SHA SIMULATOR              NOT RUN YET
+E3 RUNTIME VISUAL ACCEPTANCE           NOT CLAIMED
+```
+
+Do not call E3 complete until the full current art pack is built and the six sections are reviewed together through the real Greia runtime.
+
+---
+
+# 7. Stable generic visual foundation
 
 Generic toolbox remains:
 
@@ -192,33 +212,22 @@ Discovery helper:
 tools/visual_authoring_library.py
 ```
 
-Permanent rules:
+Permanent rules remain:
 
 - `preferred` is first-choice direct reuse;
-- `candidate_reference` is primarily reference/adaptation material;
-- Activity-specific hero subjects may remain Activity-local;
+- `candidate_reference` is reference/adaptation material;
+- Activity-specific hero/topic art may remain Activity-local;
 - Generic Batch B remains unauthorized unless real demand proves a concrete generic gap.
 
 Canonical cast remains the accepted six-member family:
 
 ```text
-Lilli
-Leo
-Flash
-Dani
-Tito
-Momo
-```
-
-Stable source:
-
-```text
-assets/visual/characters/canonical/v0.1/
+Lilli / Leo / Flash / Dani / Tito / Momo
 ```
 
 ---
 
-# 7. Stable runtime foundation to preserve
+# 8. Stable runtime foundation to preserve
 
 ```text
 explicit semantic visual catalogues
@@ -238,56 +247,38 @@ Runtime rules:
 - no per-frame disk decode/scale;
 - bounded caches;
 - Activity-local assets remain inside Activity packages;
-- generic authoring indexes remain authoring-time facilities;
-- rich authored art should be flattened/cropped into economical runtime surfaces.
-
----
-
-# 8. Existing accepted visual work remains valid
-
-The Encyclopedia failure does not invalidate earlier accepted/reviewed visual work, including:
-
-- canonical cast v0.1 runtime acceptance;
-- Shape Garden authoring workflow;
-- Costruiamo Ponti stress exercise;
-- Painting productization;
-- launcher Shell/category-navigation work;
-- first-party Batch 1 productization (`treno_numeri`, `labirinto_magico`, `acquario_magico`).
-
-The Encyclopedia lesson remains: **mechanical completion and green tests do not establish visual quality.**
+- rich authored art is flattened into economical runtime surfaces.
 
 ---
 
 # 9. Immediate next action
 
-Continue direct owner/primary-agent inspection of the corrected Home, Animals, Lion and Gears source renders.
+Do not begin E4.
 
-Do not broaden the page set yet.
-
-When the corrected source-art tranche is worth runtime review:
+Next exact visual gate:
 
 ```text
-rebuild canonical six-PNG pack
-→ build --check
-→ focused Encyclopedia tests
-→ required local verification
-→ commit/push runtime assets
-→ fresh final-SHA real Greia Simulator launch
-→ capture only the relevant golden masters
-→ owner visual review
+build corrected six golden-master PNGs + five E3 section PNGs
+→ verify all current SVG/PNG renditions
+→ focused Encyclopedia tests + required repository verification
+→ commit/push the complete current runtime-art state
+→ fresh exact-SHA real Greia Simulator
+→ review Home + all six section pages as one family
+→ if accepted, close E3 and unblock E4
 ```
 
-**No E3/E4 migration before explicit owner approval.**
+`docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md` remains HOLD unless the owner explicitly changes the direct-work instruction.
 
 ---
 
 # 10. Drift to avoid
 
-- no 43-page bulk redraw/recapture before golden-master approval;
-- no local-agent aesthetic delegation while the current HOLD is active;
-- no generated mockup substituted for real repository source art;
+- no E4 entry migration before E3 runtime review;
+- no 43-page broad recapture during the section gate;
+- no local-agent aesthetic delegation under the current owner instruction;
+- no generated mockup substituted for repository source art;
 - no second runtime asset/cache/scene system;
 - no runtime SVG/CairoSVG;
-- no generic Batch B by inertia;
-- no narration integration in this visual gate;
+- no Generic Batch B by inertia;
+- no narration integration in this visual lane;
 - no R7/hardware claims from Activity visual work.
