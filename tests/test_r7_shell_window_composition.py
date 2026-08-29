@@ -13,6 +13,7 @@ from greia_launcher.shell_window_legacy_x import LegacyXShellWindowController
 
 ROOT = Path(__file__).resolve().parents[1]
 LAUNCHER_MAIN = ROOT / "src" / "greia_launcher" / "main.py"
+LAUNCHER_PRESENTATION = ROOT / "src" / "greia_launcher" / "presentation.py"
 LEGACY_X_WINDOW = ROOT / "src" / "greia_launcher" / "shell_window_legacy_x.py"
 
 
@@ -29,6 +30,17 @@ class ShellWindowCompositionBoundaryTests(unittest.TestCase):
 
     def test_generic_launcher_contains_no_direct_x11_focus_mechanics(self) -> None:
         source = LAUNCHER_MAIN.read_text(encoding="utf-8")
+        self.assertNotIn("_set_x11_input_focus", source)
+        self.assertNotIn("XSetInputFocus", source)
+        self.assertNotIn("XOpenDisplay", source)
+        self.assertNotIn("SDL_VIDEODRIVER", source)
+        self.assertIn(
+            "self._shell_window_backend.after_window_created(pygame)",
+            source,
+        )
+
+    def test_rich_presentation_uses_same_composed_shell_window_backend(self) -> None:
+        source = LAUNCHER_PRESENTATION.read_text(encoding="utf-8")
         self.assertNotIn("_set_x11_input_focus", source)
         self.assertNotIn("XSetInputFocus", source)
         self.assertNotIn("XOpenDisplay", source)
