@@ -1,4 +1,4 @@
-"""Science & Machines section: five visual stations on a friendly workshop table."""
+"""Science & Machines section: five semantic objects on an authored workbench."""
 
 from __future__ import annotations
 
@@ -9,10 +9,12 @@ import pygame
 
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
-    from .common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from ..enciclopedia_presentation import draw_authored_scene, draw_title
+    from .common import draw_presenter, focus_ring, grid_step
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
-    from pages.common import draw_centered_text, draw_presenter, focus_ring, grid_step
+    from enciclopedia_presentation import draw_authored_scene, draw_title
+    from pages.common import draw_presenter, focus_ring, grid_step
 
 
 @dataclass(frozen=True, slots=True)
@@ -51,9 +53,15 @@ class MachinesPage(EncyclopediaPage):
         self._time += dt
 
     def handle_input(self, event: PageInput) -> None:
-        if event.position is not None and event.kind in {PageInputKind.POINTER_MOVE, PageInputKind.POINTER_PRESS}:
+        if event.position is not None and event.kind in {
+            PageInputKind.POINTER_MOVE,
+            PageInputKind.POINTER_PRESS,
+        }:
             point = (int(event.position[0]), int(event.position[1]))
-            hit = next((i for i, rect in enumerate(self._target_rects) if rect.collidepoint(point)), None)
+            hit = next(
+                (i for i, rect in enumerate(self._target_rects) if rect.collidepoint(point)),
+                None,
+            )
             self._hovered = hit
             if event.kind is PageInputKind.POINTER_PRESS and hit is not None:
                 self._selected = hit
@@ -75,20 +83,27 @@ class MachinesPage(EncyclopediaPage):
         self.context.host.open_page(MACHINE_TARGETS[self._selected].page_id)
 
     def draw(self, surface: pygame.Surface) -> None:
-        surface.fill((239, 231, 205))
-        pygame.draw.rect(surface, (178, 125, 77), (0, 455, 1024, 145))
-        draw_centered_text(
+        authored = draw_authored_scene(
+            surface,
+            self.context.visuals,
+            "encyclopedia.machines.gallery.workbench",
+        )
+        if not authored:
+            self._draw_fallback_scene(surface)
+
+        draw_title(
             surface,
             self.context.typography,
             self.context.resources.text("section.machines"),
-            center=(500, 95),
-            size=40,
-            color=self.context.palette.ink,
+            (245, 235, 208) if authored else self.context.palette.ink,
         )
-        pygame.draw.rect(surface, (215, 190, 142), (105, 130, 790, 330), border_radius=30)
-        pygame.draw.rect(surface, (112, 82, 62), (105, 130, 790, 330), 4, border_radius=30)
-        self._draw_workshop_hints(surface)
-        self._draw_targets(surface)
+        for index, rect in enumerate(self._target_rects):
+            focus_ring(
+                surface,
+                rect,
+                index == self._selected or index == self._hovered,
+            )
+
         draw_presenter(
             surface,
             self.context.visuals,
@@ -98,6 +113,16 @@ class MachinesPage(EncyclopediaPage):
             variant="happy",
             fallback_color=(101, 171, 211),
         )
+
+    def _draw_fallback_scene(self, surface: pygame.Surface) -> None:
+        """Retain the proven workshop while the authored PNG is absent."""
+
+        surface.fill((239, 231, 205))
+        pygame.draw.rect(surface, (178, 125, 77), (0, 455, 1024, 145))
+        pygame.draw.rect(surface, (215, 190, 142), (105, 130, 790, 330), border_radius=30)
+        pygame.draw.rect(surface, (112, 82, 62), (105, 130, 790, 330), 4, border_radius=30)
+        self._draw_workshop_hints(surface)
+        self._draw_targets(surface)
 
     def _draw_workshop_hints(self, surface: pygame.Surface) -> None:
         self._gear(surface, (180, 310), 42, 10, self._time, (83, 145, 181))
