@@ -175,6 +175,11 @@ class PygameReferenceCanvas:
     This helper intentionally does not support EXPAND: a finite reference bitmap
     cannot invent the additional logical world that EXPAND reveals.  Use
     `PygameCanvasMapper.world` and render visible world objects instead.
+
+    Greia Home/Back is deliberately not rendered here.  System chrome belongs
+    to the trusted launcher/simulator layer above the Activity surface.  The
+    legacy ``system_chrome`` keyword remains accepted temporarily during the R7
+    catalogue migration, but it is ignored and must not be used by new code.
     """
 
     def __init__(
@@ -210,9 +215,14 @@ class PygameReferenceCanvas:
         *,
         clear: tuple[int, int, int] | tuple[int, int, int, int] | None = None,
         smooth: bool = False,
-        system_chrome: bool = True,
+        system_chrome: bool = False,
         pointer: bool = True,
     ) -> None:
+        # R7 compatibility only: trusted Home/Back is no longer an Activity
+        # rendering option.  Retain the keyword until first-party callers have
+        # migrated so this authority correction does not become an API break.
+        del system_chrome
+
         if clear is not None:
             self.target.fill(clear)
 
@@ -247,11 +257,6 @@ class PygameReferenceCanvas:
             )
         finally:
             self.target.set_clip(previous_clip)
-
-        if system_chrome:
-            from .activity_ui import draw_system_chrome_overlay
-
-            draw_system_chrome_overlay(self.target)
 
         if pointer:
             from .activity_ui import draw_activity_pointer
