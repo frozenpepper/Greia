@@ -54,9 +54,10 @@ class EncyclopediaE3ReviewToolTests(unittest.TestCase):
     def test_full_build_check_rejects_stale_runtime_pngs(self) -> None:
         source = BUILD_TOOL.read_text(encoding="utf-8")
         tree = ast.parse(source)
-        names = tuple(ast.literal_eval(self._assignment(tree, "NAMES")))
-        expected_names = tuple(filename.removesuffix(".png") for filename in EXPECTED_RUNTIME_ART)
-        self.assertEqual(set(names), set(expected_names))
+        golden = tuple(ast.literal_eval(self._assignment(tree, "GOLDEN_MASTER_NAMES")))
+        sections = tuple(ast.literal_eval(self._assignment(tree, "SECTION_NAMES")))
+        expected_names = {filename.removesuffix(".png") for filename in EXPECTED_RUNTIME_ART}
+        self.assertEqual(set(golden + sections), expected_names)
         self.assertIn("if names == NAMES", source)
         self.assertIn("unexpected = sorted(present - expected)", source)
         self.assertIn("UNEXPECTED", source)
