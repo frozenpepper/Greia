@@ -72,6 +72,11 @@ class VisualLibrary:
     package or rasterizes SVG at runtime. Scaling happens only on a bounded
     cache miss and page hot paths only receive prepared Surfaces.
 
+    Encyclopedia authored scenes are flattened opaque full-screen RGB
+    renditions, so they use ``Surface.convert()`` rather than per-pixel-alpha
+    conversion. Canonical character sprites keep ``convert_alpha()`` because
+    their transparent silhouettes genuinely require it.
+
     E3 section-world IDs are registered before their generated PNG tranche is
     committed. Missing renditions therefore fail soft to the page's retained
     procedural fallback; a partial generated section pack is forbidden by the
@@ -126,9 +131,9 @@ class VisualLibrary:
 
         result: pygame.Surface | None = None
         try:
-            source = pygame.image.load(str(self._runtime_root / relative)).convert_alpha()
+            source = pygame.image.load(str(self._runtime_root / relative)).convert()
             if size is not None and source.get_size() != size:
-                source = pygame.transform.smoothscale(source, size)
+                source = pygame.transform.smoothscale(source, size).convert()
             result = source
         except (OSError, RuntimeError, ValueError, pygame.error):
             result = None
