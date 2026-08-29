@@ -683,18 +683,19 @@ The ledger is the source of truth for what has been done in this plan. Append a 
 
 ```text
 Activity: la_discesa_della_biglia
-R7.3 migration: PENDING
-Architecture: PENDING
-Main entrypoint: PENDING
-Presenter: PENDING
-Voice: PENDING
-Pre-reader UX: PENDING
-Assets: PENDING
-Performance: PENDING
-Manifest/localization/storage/events: PENDING
-Simulator: PENDING
-Commit: PENDING
-Notes: First strict-queue Activity; small surface; expect one coherent commit.
+R7.3 migration: done (commit 7185b0ce)
+Architecture: already well-decomposed (ramp_app/ramp_engine/ramp_renderer/ramp_audio/ramp_services/ramp_content); only package-import compat was missing
+Main entrypoint: thin (38 lines)
+Presenter: none (mechanical/physics Activity; no canonical character was used and adding one would obstruct the gameplay)
+Voice: none
+Pre-reader UX: pass (palette buttons large, ball drop visual, finished banner visual-only)
+Assets: pass
+Performance: pass (engine deterministic, renderer builds palette surfaces once)
+Manifest/localization/storage/events: pass (storage key namespaced, events tool_placed/run_started/basket_hit/etc)
+Simulator: PASS (15 frames @ 30fps headless; activity builds and draws)
+Commit: 7185b0ce
+Notes: First Activity processed. Other fixes: removed unused 'RampApp'
+       import and the dead 'RampApp.__class__' workaround in main.py.
 
 Activity: labirinto_magico
 R7.3 migration: PENDING (first-wave exemplar; remaining blocker is in maze_renderer.py:9 ActivitySystemChromeLayout reference)
