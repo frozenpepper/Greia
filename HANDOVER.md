@@ -130,7 +130,7 @@ No R7.2 PASS is currently claimed because those exact-current execution and Acer
 ### Current provisional debt / constraints
 
 - `greia-x-session` still contains literal `SynPS/2 Synaptics TouchPad` startup tuning. It is contained in Legacy-X compatibility plumbing but should not survive into the final common input/session architecture.
-- `Xwrapper.config` currently uses the provisional appliance-session privilege required by the Xorg compatibility path; if Xorg remains for v1 it requires explicit release threat-model/negative-security acceptance.
+- `Xwrapper.config` currently uses the provisional appliance-session privilege required by the Xorg compatibility path; while this Legacy-X migration path remains installed it requires explicit threat-model/negative-security acceptance. Retaining Xorg as a target shipping architecture would require an explicit amendment or supersession of accepted ADR 0014.
 - a future Wayland Activity transport cannot simply pass the host `XDG_RUNTIME_DIR`: the Activity sandbox masks `/run`; the selected compositor backend must project only its required socket into a narrow child runtime directory rather than bind the whole host runtime directory.
 - **tap-to-click policy is presently contradictory across authorities:** current runtime source intentionally sets `touchpad_tap = true` after the 2026-08-23 Acer responsiveness fix, while `AGENTS.md` still says tap-to-click defaults off. Do not silently change working touchpad behavior during R7.2. Resolve this as a separate explicit product/policy reconciliation with owner disposition, then align source/tests/docs together.
 
