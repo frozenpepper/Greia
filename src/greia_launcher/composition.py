@@ -30,11 +30,6 @@ from greia_platform.history import (
     ProgressionPolicy,
 )
 from greia_platform.permissions import PermissionBroker
-from greia_platform.shell_window_backend import (
-    LegacyX11ShellWindowBackend,
-    NoopShellWindowBackend,
-    ShellWindowBackend,
-)
 from greia_platform.storage import ActivityStorageService, StoragePolicy
 
 from .display_session import DisplaySessionCoordinator
@@ -45,6 +40,8 @@ from .runtime_adapter import (
     RuntimeLaunchAdapter,
     RuntimeManager,
 )
+from .shell_window import NoopShellWindowController, ShellWindowController
+from .shell_window_legacy_x import LegacyXShellWindowController
 
 logger = logging.getLogger(__name__)
 
@@ -91,22 +88,22 @@ def provisional_installed_display_session() -> DisplaySessionCoordinator:
     return DisplaySessionCoordinator(LegacyXDisplaySessionBackend())
 
 
-def provisional_installed_shell_window_backend() -> ShellWindowBackend:
-    """Return the installed shell's current Legacy-X native window adapter.
+def provisional_installed_shell_window_backend() -> ShellWindowController:
+    """Return the installed shell's current Legacy-X native window controller.
 
-    The launcher must not inspect ``SDL_VIDEODRIVER`` or call Xlib itself.
-    R7 backend selection belongs to trusted platform composition.  Replacing
-    the installed display/session architecture therefore swaps this adapter at
+    The launcher does not inspect SDL backend environment or call Xlib itself.
+    R7 backend selection belongs to trusted platform composition. Replacing the
+    installed display/session architecture therefore swaps this collaborator at
     the same composition boundary without changing launcher rendering code.
     """
 
-    return LegacyX11ShellWindowBackend()
+    return LegacyXShellWindowController()
 
 
-def development_shell_window_backend() -> ShellWindowBackend:
+def development_shell_window_backend() -> ShellWindowController:
     """Return the backend-neutral shell hook for host development windows."""
 
-    return NoopShellWindowBackend()
+    return NoopShellWindowController()
 
 
 def default_runtime_adapters(
