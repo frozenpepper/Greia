@@ -7,13 +7,15 @@ export GREIA_ACTIVE_PROFILE_STATUS=/run/greia-os/active-profile.json
 export GREIA_HARDWARE_STATUS=/run/greia-hardware/status.json
 export PYTHONPATH=/opt/greia-os/src
 
-# Configure pointer acceleration, scaling, tap-to-click, and disable keyboard-freeze on session start
+# Provisional Legacy-X compatibility defaults before the parent-owned hardware
+# controller applies the persisted Greia settings. These stay in the X session
+# adapter and must not leak into generic launcher or Activity code.
 xinput set-prop "SynPS/2 Synaptics TouchPad" "libinput Tapping Enabled" 1 2>/dev/null || true
 xinput set-prop "SynPS/2 Synaptics TouchPad" "libinput Accel Speed" 1.0 2>/dev/null || true
 xinput set-prop "SynPS/2 Synaptics TouchPad" "Coordinate Transformation Matrix" 2.4 0 0 0 2.4 0 0 0 1 2>/dev/null || true
 xinput set-prop "SynPS/2 Synaptics TouchPad" "libinput Disable While Typing Enabled" 0 2>/dev/null || true
 
-/usr/bin/python3 -m greia_platform.hardware_session \
+/usr/bin/python3 -m greia_platform.hardware_session_legacy_x \
   --root "$GREIA_OS_ROOT" \
   --state-dir "$GREIA_SYSTEM_SETTINGS_DIR" \
   --status-path "$GREIA_HARDWARE_STATUS" &
