@@ -15,7 +15,11 @@ class LegacyXBuildContainmentTests(unittest.TestCase):
     def test_x_session_selects_explicit_legacy_hardware_entrypoint(self) -> None:
         source = X_SESSION.read_text(encoding="utf-8")
         self.assertIn("greia_platform.hardware_session_legacy_x", source)
-        self.assertNotIn("-m greia_platform.hardware_session \\", source)
+        legacy_generic_invocation = any(
+            line.strip().startswith("/usr/bin/python3 -m greia_platform.hardware_session ")
+            for line in source.splitlines()
+        )
+        self.assertFalse(legacy_generic_invocation)
 
     def test_generic_hardware_watcher_has_no_legacy_backend_selection(self) -> None:
         source = GENERIC_HARDWARE_SESSION.read_text(encoding="utf-8")
