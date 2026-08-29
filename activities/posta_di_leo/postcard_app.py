@@ -10,7 +10,6 @@ from typing import Callable
 import pygame
 
 from greia_platform.activity_api import activity_stop_requested, mark_activity_ready
-from greia_platform.activity_ui import is_home_clicked
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 from greia_platform.typography import GreiaTypography
 
@@ -182,9 +181,6 @@ class PostcardActivity:
                 self._dirty = True
 
     def _handle_pointer(self, raw_pos: tuple[int, int]) -> bool:
-        if is_home_clicked(self.screen, raw_pos):
-            self._running = False
-            return False
         if not _safe_point(self.screen, raw_pos):
             return False
         logical = self.canvas.pointer(raw_pos)
