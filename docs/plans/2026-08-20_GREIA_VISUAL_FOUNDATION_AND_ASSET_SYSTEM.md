@@ -1,7 +1,7 @@
 # Greia Visual Foundation and Asset System — Active Art Workstream Plan
 
 **Status:** ACTIVE ART/VISUAL WORKSTREAM  
-**Last checkpoint review:** 2026-08-28  
+**Last checkpoint review:** 2026-08-29  
 **Repository:** `frozenpepper/Greia`  
 **Branch:** `main`  
 **Stable system/index guide:** `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`  
@@ -11,7 +11,7 @@ This plan owns **sequencing, current checkpoint, milestone state and append-only
 
 > **excellent individual assets → reusable asset packs → layered composition → subtle parallax / ambient motion / light / shadow → shared UI system → explicit semantic runtime consumption → Shell/Activity reuse**
 
-Broad source-art coverage already exists. **V5 shared consumption/integration remains active.** The reusable runtime seam is proven across Shell UI, canonical characters, scenes and multiple first-party Activity productizations. The current visible art focus is now the **Greia Encyclopedia visual reauthoring**, where complete mechanical breadth exposed a systemic quality failure caused by overuse of programmer-drawn Pygame primitives for final subject art. The response is not another generic pack or a 43-page bulk redraw: build a bounded Encyclopedia visual foundation, then owner-review a representative golden-master set before migration.
+Broad source-art coverage already exists. **V5 shared consumption/integration remains active.** The reusable runtime seam is proven across Shell UI, canonical characters, scenes and multiple first-party Activity productizations. The current visible art focus is the **Greia Encyclopedia visual reauthoring**. The Encyclopedia golden-master direction is now owner-approved after direct source correction; the active subphase is E3 six-section runtime closure before any factual-entry migration.
 
 ---
 
@@ -289,16 +289,17 @@ Evidence class: **SIMULATOR VISUAL REVIEW**.
 | Stable guide | `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` |
 | Resume | `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` |
 | Product discovery authority | `docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md` |
-| Runtime visual focus | **Existing V5 runtime/scene/shared UI foundations accepted where recorded; current visible focus is Encyclopedia reauthoring** |
-| Authoring focus | **Encyclopedia E1 + E2 source + runtime art + real-Simulator capture COMPLETE; awaiting owner direction approval** |
-| Encyclopedia forensic audit | `docs/reviews/2026-08-28_ENCYCLOPEDIA_GRAPHICS_FORENSIC_AUDIT.md` — current graphics rejected as final product quality |
+| Runtime visual focus | **Existing V5 runtime/scene/shared UI foundations accepted where recorded; current visible focus is Encyclopedia E3 runtime closure** |
+| Authoring focus | **Encyclopedia E2/E2R direction OWNER APPROVED; E3 six-section source IMPLEMENTED/SOURCE-REVIEWED; exact committed 11-PNG build + real-Simulator family review pending** |
+| Encyclopedia forensic audit | `docs/reviews/2026-08-28_ENCYCLOPEDIA_GRAPHICS_FORENSIC_AUDIT.md` — prior graphics rejected as final product quality |
 | Encyclopedia visual subplan | `docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md` |
-| Encyclopedia golden-master review | `docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/` (REVIEW.md, layout-audit.json, contact-sheet-primary.png, 4 curated PNGs) + non-committed `GREIA_VISUAL_REVIEW_ENCYCLOPEDIA_GOLDEN_MASTER_2026-08-28.zip` |
+| Encyclopedia current source review | `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/SOURCE_REVIEW.md` |
+| Encyclopedia runtime gate | `docs/testing/2026-08-29_ENCYCLOPEDIA_E3_SECTION_RUNTIME_REVIEW.md` |
 | Generic library | full source harvest complete; Batch A owner-reviewed selectively |
 | Generic Batch B rule | remains unauthorized; Encyclopedia topic-specific art should normally stay Activity-local |
 | Canonical cast | six-character v0.1 runtime family accepted; integrate intentionally rather than tiny corner stamps |
 | Prior first-party Batch 1 | `treno_numeri`, `labirinto_magico`, `acquario_magico` accepted historical productization evidence |
-| Next exact action | STOP and wait for owner direction approval on the six golden-master prototypes before any E3 section-page or E4 entry migration |
+| Next exact action | Build/check/commit the exact current 11-PNG Encyclopedia art pack, run focused tests + required verification on the committed SHA, then capture/review Home + all six sections through the Git-bound real Simulator harness. E4 stays blocked. |
 
 ---
 
@@ -666,3 +667,16 @@ The entries below preserve the workstream chronology. Corrections/new state are 
 - `libpng error: bad adaptive filter value` line in the child log remains an unresolved diagnostic per the local-agent brief §7.
 - **Owner direction approval is still pending.** E3/E4 remain hard-blocked.
 
+## 2026-08-29 — Encyclopedia owner-directed correction, E3 section source, focus and evidence hardening
+
+- Owner rejected the E2R visual execution despite green technical evidence and identified concrete visual blockers: Home cards escaping the book, disconnected Lion anatomy, ambiguous Animals silhouettes and non-meshing Gears.
+- Primary agent corrected the actual repository masters directly. Home now uses the enlarged book and centered 3×2 portal block (`x=267/512/757`); Animals has recognizable lion/elephant silhouettes; Lion anatomy is contiguous; Gears is a real toothed meshing train.
+- Owner explicitly approved the corrected golden-master **visual direction**, closing the E2 design gate and authorizing E3 source work. Older E2R runtime pixels remain stale for exact current source.
+- Authored and source-reviewed the five remaining section worlds around the accepted Animals reference: Space observatory, Earth landscape, Body discovery room, Machines workbench and History time trail. Follow-up source review corrected Body's schematic feel, weak Machines/History silhouettes and hidden Earth rain.
+- Added machine-checkable section target geometry, non-overlapping hit regions, generous Body/Machines authored-object target areas and a live Solar-System stage-bounds contract for Space.
+- Replaced the authored-section translucent filled focus patch with a perimeter-only non-occluding halo and removed Earth's duplicate floating yellow focus dot. Local desktop preview confirms the authored objects retain their color/texture instead of becoming yellow UI cards.
+- Optimized full-screen authored scene consumption to opaque `Surface.convert()` while preserving `convert_alpha()` for transparent canonical character sprites. The Encyclopedia build contract now rejects non-RGB/alpha-bearing scene renditions; the current staged nine changed/new PNGs all report PNG color type 2 (RGB).
+- Hardened E3 evidence provenance: capture requires a clean checkout, exactly eleven runtime PNGs already committed in the captured `HEAD`, byte identity between working PNG and `HEAD:<path>`, and records/rechecks both SHA-256 and Git blob IDs. The review builder rejects incomplete/non-Git-bound manifests.
+- Added/updated focused regressions for section hit geometry, exact-SHA review tooling, non-occluding focus treatment and opaque scene surfaces.
+- A recoverable nine-PNG maintainer-local staging bundle exists for the four changed golden masters + five E3 sections, with later Earth/Body renders refreshed. It is explicitly **not** Simulator or committed-art evidence.
+- **Current gate:** E4 remains blocked. Build/check/commit the exact eleven-PNG current art pack on a real checkout, run focused tests + required verification, then capture Home + six sections through the Git-bound real Simulator harness and visually review the resulting family before E3 can close.
