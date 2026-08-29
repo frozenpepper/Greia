@@ -720,9 +720,6 @@ class ActivitySupervisor:
             "/proc",
             "--dev",
             "/dev",
-            "--dev-bind-try",
-            "/dev/dri",
-            "/dev/dri",
             # /run is read-only under --ro-bind / /, which would prevent bwrap
             # from creating the mount points for the per-session storage/event
             # sockets and activity data. A private tmpfs keeps those writable.
