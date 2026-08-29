@@ -19,7 +19,7 @@ from greia_platform.activity_api import (
     get_theme,
     mark_activity_ready,
 )
-from greia_platform.activity_ui import ChildUiMetrics, is_home_clicked, mix
+from greia_platform.activity_ui import ChildUiMetrics, mix
 from greia_platform.localization import (
     ActivityLocaleSupport,
     LocalizedResources,
@@ -847,14 +847,8 @@ def main() -> int:
                     virtual_pointer = logical
             elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                 pointer_down = False
-                if is_home_clicked(screen, event.pos):
-                    running = False
-                    continue
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 pointer_down = True
-                if is_home_clicked(screen, event.pos):
-                    running = False
-                    continue
                 logical = canvas.pointer(event.pos)
                 if logical is None:
                     continue
