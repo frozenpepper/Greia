@@ -32,6 +32,25 @@ MOMENTS = (
     HistoryMoment("history.pyramids", "history.pyramids", (219, 181, 94)),
 )
 
+# The authored SVG carries the same data-target/data-center metadata. Keeping
+# these centers explicit makes pointer geometry and source-art placement one
+# contract instead of coupling them to a positional arithmetic expression.
+HISTORY_TARGET_IDS = (
+    "dinosaurs",
+    "fossils",
+    "mammoth",
+    "cave_paintings",
+    "pyramids",
+)
+HISTORY_TARGET_CENTERS = (
+    (145, 345),
+    (315, 345),
+    (485, 345),
+    (655, 345),
+    (825, 345),
+)
+_HISTORY_TARGET_SIZE = (140, 170)
+
 
 class HistoryPage(EncyclopediaPage):
     page_id = "history"
@@ -41,9 +60,10 @@ class HistoryPage(EncyclopediaPage):
         self._time = 0.0
         self._selected = 0
         self._hovered: int | None = None
+        width, height = _HISTORY_TARGET_SIZE
         self._rects = tuple(
-            pygame.Rect(75 + i * 170, 260, 140, 170)
-            for i in range(len(MOMENTS))
+            pygame.Rect(cx - width // 2, cy - height // 2, width, height)
+            for cx, cy in HISTORY_TARGET_CENTERS
         )
 
     def on_enter(self) -> None:
