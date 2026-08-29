@@ -20,7 +20,7 @@ from greia_platform.activity_api import (
     get_theme,
     mark_activity_ready,
 )
-from greia_platform.activity_ui import ChildUiMetrics, is_home_clicked
+from greia_platform.activity_ui import ChildUiMetrics
 from greia_platform.localization import (
     ActivityLocaleSupport,
     LocalizedResources,
@@ -475,10 +475,6 @@ def main() -> int:
                     w, h = screen.get_size()
                     pos = (int(event.x * w), int(event.y * h))
                 if pos is None:
-                    continue
-
-                if is_home_clicked(screen, pos):
-                    running = False
                     continue
 
                 pointer = canvas.pointer(pos)
