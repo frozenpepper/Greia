@@ -120,8 +120,15 @@ class SystemChromeCoordinator:
         try:
             self._backend.prepare(session_id, back_available=self._back_available)
         except Exception as exc:
+            failure = f"prepare: {exc}"
+            # No lease has been issued yet, so there is no later caller that can
+            # safely recover this generation through abort(). Give the backend
+            # one bounded rollback attempt now. A successfully cleaned failed
+            # launch must not poison every later Activity until Shell restart.
             self._phase = SystemChromePhase.FAILED
-            self._failure = f"prepare: {exc}"
+            self._failure = failure
+            if self._attempt_hide(session_id):
+                self._reset_hidden()
             raise SystemChromeError("system chrome backend could not prepare") from exc
 
         self._generation += 1
