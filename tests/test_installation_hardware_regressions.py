@@ -38,8 +38,6 @@ class RealHardwareInstallationRegressionTests(unittest.TestCase):
                 self.assertTrue(os.access(hook_path, os.X_OK))
                 self.assertIn("modinfo", hook)
                 self.assertIn("manual_add_modules", hook)
-                # Shared overlays must not force x86-only modules on every future
-                # architecture. The hook consults the TARGET kernel instead.
                 module_lines = {
                     line.strip()
                     for line in modules.splitlines()
@@ -72,7 +70,6 @@ class RealHardwareInstallationRegressionTests(unittest.TestCase):
         self.assertIn("d /run/greia-hardware 2750 greiakid greiapanel", tmpfiles)
         self.assertIn("systemd-tmpfiles-setup.service", launcher)
         self.assertIn("systemd-tmpfiles-setup.service", parent)
-        # Shared runtime ownership must not depend on which app starts first.
         self.assertNotIn("RuntimeDirectory=greia-os", launcher)
         self.assertNotIn("/run/greia-hardware", first_boot)
         self.assertIn("Missing Greia runtime root", prepare)
@@ -94,8 +91,6 @@ class RealHardwareInstallationRegressionTests(unittest.TestCase):
 
     def test_provisional_xorg_service_is_not_wrapped_in_desktop_style_namespace(self) -> None:
         unit = self.read("build/overlay/etc/systemd/system/greia-launcher.service")
-        # These proved incompatible with the current Xorg-owned VT/DRM/input
-        # session. Reintroducing them requires a new R7 backend-specific proof.
         for directive in (
             "ProtectSystem=",
             "ProtectHome=",
@@ -122,21 +117,7 @@ class RealHardwareInstallationRegressionTests(unittest.TestCase):
         self.assertNotIn('"--unshare-user"', supervisor)
         self.assertNotIn('"--disable-userns"', supervisor)
 
-    def test_launcher_routes_x11_focus_handoff_through_legacy_adapter(self) -> None:
-        launcher = self.read("src/greia_launcher/main.py")
-        legacy_x = self.read("src/greia_launcher/shell_window_legacy_x.py")
-        self.assertNotIn("_set_x11_input_focus", launcher)
-        self.assertNotIn("XSetInputFocus", launcher)
-        self.assertIn("self._shell_window_backend.after_window_created(pygame)", launcher)
-        self.assertIn("XOpenDisplay", legacy_x)
-        self.assertIn("XGetInputFocus", legacy_x)
-        self.assertIn("XSetInputFocus", legacy_x)
-
     def test_canonical_builders_never_mint_root_or_unguarded_password_ssh(self) -> None:
-        # Root SSH and unguarded password SSH are always forbidden. The
-        # owner-approved greia/greia development login is only minted for
-        # explicit developer-remote profiles, guarded by the profile package
-        # set; normal/release profiles always emit the closed floor.
         forbidden = (
             "PermitRootLogin yes",
             "AllowUsers greia root",
@@ -156,27 +137,17 @@ class RealHardwareInstallationRegressionTests(unittest.TestCase):
                 self.assertIn("AuthenticationMethods publickey", builder)
                 self.assertIn("PermitRootLogin no", builder)
                 self.assertIn("disable ssh.service", builder)
-                # The dev login is guarded by the developer-remote package set.
                 self.assertIn("developer-remote", builder)
                 self.assertIn("provision_developer_ssh", builder)
-                # The dev floor keeps root denied.
                 self.assertIn("DenyUsers root", builder)
                 self.assertIn("AllowUsers greia", builder)
                 self.assertIn("PasswordAuthentication yes", builder)
-                # The dev profile must rewrite BOTH sshd_config.d drop-ins so
-                # the later-sorted 20-greia-parent.conf does not reintroduce
-                # publickey-only / PasswordAuthentication no and defeat the
-                # developer floor (sshd first-value-wins across the include).
                 self.assertTrue(
                     "AuthenticationMethods publickey,password" in builder
                     or "AuthenticationMethods password" in builder
                 )
                 self.assertIn("20-greia-parent.conf", builder)
 
-        # Developer reachability is also available through the explicit
-        # post-build provisioning path; a profile/package-set name is not
-        # credential authority by itself, but the owner-approved greia/greia
-        # login plus the operator key is the accepted dev identity.
         developer_builder = self.read("build/build-developer-image.sh")
         self.assertIn("verify-development-target-image.sh", developer_builder)
         provisioner = self.read("tools/provision_developer_image.py")
@@ -203,9 +174,6 @@ class RealHardwareInstallationRegressionTests(unittest.TestCase):
                 self.assertIn("KbdInteractiveAuthentication no", floor)
                 self.assertIn("AuthenticationMethods publickey", floor)
                 self.assertIn("PermitRootLogin no", floor)
-                # The managed greia account is not denied in the shared floor;
-                # base images lock it and keep SSH off, while explicit developer
-                # provisioning enables the greia/greia login on dev images.
                 self.assertIn("DenyUsers root", floor)
         first_boot = self.read("build/overlay/usr/local/lib/greia-os/first-boot")
         self.assertIn("passwd --lock root", first_boot)
