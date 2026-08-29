@@ -118,7 +118,8 @@ python3 -m unittest \
   tests.test_activity_enciclopedia_visual_foundation \
   tests.test_encyclopedia_authoring_tools \
   tests.test_encyclopedia_e3_review_tools \
-  tests.test_encyclopedia_section_hit_geometry
+  tests.test_encyclopedia_section_hit_geometry \
+  tests.test_encyclopedia_focus_treatment
 ```
 
 The focused visual/review suites must prove at least:
@@ -126,12 +127,14 @@ The focused visual/review suites must prove at least:
 - eleven editable masters are known to the build contract;
 - `VisualLibrary` maps exactly the eleven runtime PNGs;
 - page hot paths do not decode/scale assets;
+- full-screen authored scenes use opaque display-optimized surfaces while transparent canonical character sprites retain per-pixel alpha;
 - E3 section pages use the authored-scene seam with fail-soft fallback;
 - Home/Animals/Earth/Body/Machines/History source target centers match actual input geometry;
 - Space's live planet geometry stays inside the authored observatory stage bounds;
 - Earth/Body/Machines/History static selection regions are pairwise non-overlapping and stay within the logical surface;
 - Body/Machines keep large authored-object hit regions rather than the old 86×86 prototype hotspots;
-- Earth/Body/Machines/History use scene-native authored focus patches rather than generic rectangular focus rings when authored art is present;
+- Earth/Body/Machines/History use the non-occluding authored focus halo rather than filled or generic rectangular focus cards when authored art is present;
+- Earth does not add a second floating corner-dot focus cue;
 - the golden runtime tranche is complete;
 - the E3 runtime tranche is all-or-none, never partial;
 - the E3 review harness is exactly Home + the six section pages;
@@ -161,11 +164,13 @@ git status --short
 git diff --stat
 git diff -- activities/enciclopedia_greia/assets/source \
              activities/enciclopedia_greia/pages \
+             activities/enciclopedia_greia/enciclopedia_presentation.py \
              activities/enciclopedia_greia/enciclopedia_services.py \
              tools/build_encyclopedia_visual_assets.py \
              tests/test_activity_enciclopedia_visual_foundation.py \
              tests/test_encyclopedia_e3_review_tools.py \
-             tests/test_encyclopedia_section_hit_geometry.py
+             tests/test_encyclopedia_section_hit_geometry.py \
+             tests/test_encyclopedia_focus_treatment.py
 ```
 
 The SVG/source/code should already be committed. The expected new generated diff is the current runtime PNG pack.
@@ -185,7 +190,8 @@ python3 -m unittest \
   tests.test_activity_enciclopedia_visual_foundation \
   tests.test_encyclopedia_authoring_tools \
   tests.test_encyclopedia_e3_review_tools \
-  tests.test_encyclopedia_section_hit_geometry
+  tests.test_encyclopedia_section_hit_geometry \
+  tests.test_encyclopedia_focus_treatment
 ```
 
 If the pushed SHA no longer matches the source/runtime state that was tested, stop and reconcile before Simulator capture.
@@ -296,7 +302,7 @@ Review the actual Simulator contact sheet at 100% and each 1024×600 frame indiv
 - lion, elephant, octopus, bee, penguin and frog are immediately recognizable;
 - elephant trunk/ear/body silhouette survives netbook scale;
 - continuous habitat still reads as one world;
-- selected/hovered subject is lifted by the soft authored focus patch, not enclosed in a generic menu-card rectangle.
+- selected/hovered subject is lifted by the authored halo without washing the animal into a translucent card.
 
 ### Space
 
@@ -311,28 +317,28 @@ Review the actual Simulator contact sheet at 100% and each 1024×600 frame indiv
 - rain, tree, rainbow, volcano and ocean read without labels;
 - rain remains visible despite tree overlap;
 - Rain and Tree pointer/focus regions do not visually or behaviorally compete at their boundary;
-- authored focus is a soft object lift, not a generic rectangular menu-card outline.
+- authored focus is a perimeter halo only: no filled yellow wash and no second floating corner dot.
 
 ### Body
 
 - page reads as a friendly discovery room, not a medical mannequin diagram;
 - senses board, jaw/teeth model, lungs, heart and bones box are recognizable physical exhibits;
 - focus/hit treatment follows the visible exhibit rather than a tiny central hotspot;
-- authored focus remains integrated with the exhibit instead of enclosing it in a hard UI card.
+- authored focus remains integrated with the exhibit and does not obscure its texture/color.
 
 ### Machines
 
 - gears unmistakably have teeth and visibly mesh;
 - magnet, bicycle, airplane and bridge are recognizable at 1024×600;
 - focus/hit areas follow the complete authored objects rather than the old 86×86 prototype circles;
-- authored focus remains integrated with the workbench objects rather than restoring generic selection cards.
+- authored focus remains a non-occluding halo rather than restoring generic selection cards.
 
 ### History
 
 - T-rex is immediately recognizable;
 - fossil, mammoth, cave painting and pyramid remain distinct;
 - left-to-right time/excavation trail reads as one authored scene, not five cards;
-- selected authored object receives a soft lift rather than a hard rectangular UI outline.
+- selected authored object receives a non-occluding halo rather than a hard rectangular UI outline.
 
 ### Whole family
 
@@ -343,7 +349,7 @@ Block E3 closure for:
 - mechanically false diagrams;
 - overlapping pointer targets that make one visible object activate another;
 - visual/input mismatch;
-- generic hard card-like focus treatment reappearing over authored section worlds;
+- generic hard card-like or filled focus treatment reappearing over authored section worlds;
 - clipped/occluded protected system chrome;
 - text required to identify the primary choices;
 - one section falling visibly back to programmer-art presentation because its authored PNG failed to load.
