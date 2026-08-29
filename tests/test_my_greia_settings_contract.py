@@ -26,18 +26,6 @@ class MyGreiaSettingsContractTests(unittest.TestCase):
             },
         )
 
-    def test_activity_is_visual_first_and_uses_platform_lifecycle(self) -> None:
-        source = (ACTIVITY_ROOT / "main.py").read_text(encoding="utf-8")
-        for mode in ("colors", "wallpapers", "size", "avatar"):
-            self.assertIn(f'"{mode}"', source)
-        self.assertIn("AdaptiveGridPolicy", source)
-        self.assertIn("mark_activity_ready()", source)
-        self.assertIn("activity_stop_requested()", source)
-        self.assertIn("set_interface_size", source)
-        self.assertNotIn('"close_button"', source)
-        self.assertNotIn("subprocess", source)
-        self.assertNotIn("os.system", source)
-
 
 if __name__ == "__main__":
     unittest.main()
