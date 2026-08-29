@@ -83,8 +83,8 @@ class EncyclopediaE3ReviewToolTests(unittest.TestCase):
         source = CAPTURE_TOOL.read_text(encoding="utf-8")
         required_fragments = (
             '"rev-parse", "HEAD"',
-            '"status", "--short", "--untracked-files=no"',
-            "tracked checkout is dirty",
+            '"status", "--short", "--untracked-files=all"',
+            "checkout is not clean",
             "_runtime_art_sha256()",
             '"source-sha.txt"',
             '"capture-manifest.json"',
@@ -92,6 +92,23 @@ class EncyclopediaE3ReviewToolTests(unittest.TestCase):
             "final_sha != source_sha",
             "final_runtime_hashes != runtime_hashes",
             'status="PASS"',
+        )
+        for fragment in required_fragments:
+            with self.subTest(fragment=fragment):
+                self.assertIn(fragment, source)
+        self.assertNotIn('"--untracked-files=no"', source)
+
+    def test_capture_requires_each_runtime_png_to_match_committed_head_blob(self) -> None:
+        source = CAPTURE_TOOL.read_text(encoding="utf-8")
+        required_fragments = (
+            "def _runtime_art_git_blobs()",
+            '"rev-parse", f"HEAD:{relative}"',
+            '"hash-object", relative',
+            "runtime art is not committed in HEAD",
+            "runtime art differs from committed HEAD blob",
+            '"runtime_art_git_blobs"',
+            "final_runtime_git_blobs != runtime_git_blobs",
+            "committed runtime-art blobs changed while E3 evidence was being captured",
         )
         for fragment in required_fragments:
             with self.subTest(fragment=fragment):
@@ -126,6 +143,9 @@ class EncyclopediaE3ReviewToolTests(unittest.TestCase):
             'manifest.get("source_sha") != source_sha',
             "selected != EXPECTED_TAGS or completed != EXPECTED_TAGS",
             "set(hashes) != EXPECTED_RUNTIME_ART",
+            'manifest.get("runtime_art_git_blobs")',
+            "set(git_blobs) != EXPECTED_RUNTIME_ART",
+            "invalid runtime-art Git blob",
             '"source-sha.txt"',
             '"capture-manifest.json"',
         )
