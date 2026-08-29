@@ -9,11 +9,11 @@ import pygame
 
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
-    from ..enciclopedia_presentation import draw_authored_scene, draw_title
+    from ..enciclopedia_presentation import draw_authored_scene, draw_focus_patch, draw_title
     from .common import draw_presenter, focus_ring
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
-    from enciclopedia_presentation import draw_authored_scene, draw_title
+    from enciclopedia_presentation import draw_authored_scene, draw_focus_patch, draw_title
     from pages.common import draw_presenter, focus_ring
 
 
@@ -93,7 +93,10 @@ class EarthPage(EncyclopediaPage):
 
         for index, item in enumerate(DESTINATIONS):
             active = index == self._selected or index == self._hovered
-            focus_ring(surface, item.rect, active)
+            if authored:
+                draw_focus_patch(surface, item.rect, active=active, radius=22)
+            else:
+                focus_ring(surface, item.rect, active)
             if active:
                 pygame.draw.circle(
                     surface,
