@@ -1,12 +1,12 @@
 # Greia Encyclopedia workstream handover
 
-**Updated:** 2026-08-28
-**Runtime pages:** **43 / 43 planned executable pages**
-**Runtime Activity:** `activities/enciclopedia_greia/` (`org.greia.enciclopedia`)
-**Final runtime-relevant SHA (Simulator-captured):** `8fa41a3e9ab4b8cff6cce9607c32492fedc6ae8f`
-**Current state:** **MECHANICAL RUNTIME FOUNDATION HEALTHY / OLD GRAPHICS REJECTED / E1+E2+E2R SOURCE + RUNTIME ART + SIMULATOR CAPTURE COMPLETE / OWNER DIRECTION APPROVAL PENDING / NARRATION ACCEPTANCE PENDING**
+**Updated:** 2026-08-29  
+**Runtime pages:** **43 / 43 planned executable pages**  
+**Runtime Activity:** `activities/enciclopedia_greia/` (`org.greia.enciclopedia`)  
+**Last Simulator-captured visual SHA:** `8fa41a3e9ab4b8cff6cce9607c32492fedc6ae8f` — **E2R pixels rejected by owner**  
+**Current state:** **MECHANICAL FOUNDATION HEALTHY / E1 ARCHITECTURE PRESERVED / E2R VISUAL DIRECTION REJECTED / OWNER-DIRECTED SOURCE REPAIR ACTIVE / RUNTIME PNGS STALE / E3+E4 BLOCKED / NARRATION SEPARATE**
 
-This is the current continuation contract. Historical construction detail remains in `encyclopedia/PROGRESS.md` and dated reviews.
+This file is the current continuation contract. Historical construction detail remains in `encyclopedia/PROGRESS.md`, Git history, and dated visual reviews.
 
 ---
 
@@ -24,7 +24,7 @@ machines + 5 entries
 history + 5 entries
 ```
 
-The 36 factual entry IDs remain frozen by `encyclopedia/pages/catalogue.py` and the runtime registry. Do not add topics merely because the visual layer is being reauthored.
+The 36 factual entry IDs remain frozen by `encyclopedia/pages/catalogue.py` and the runtime registry. Visual repair is not permission to change factual scope.
 
 ---
 
@@ -34,447 +34,236 @@ The 36 factual entry IDs remain frozen by `encyclopedia/pages/catalogue.py` and 
 - `enciclopedia_engine.py` owns lifecycle, explicit page registry, semantic input and bounded internal navigation.
 - Subject behavior stays in page modules/models.
 - Runtime remains offline and low-resource: no runtime TTS, speech recognition, AI/LLM, network factual lookup or heavy physics.
-- Spoken material is authoring-time prerecorded audio only.
+- Spoken material remains authoring-time prerecorded audio only.
 - Greia protected Home remains platform-owned; Encyclopedia internal Back is separate.
 - Italian and English remain the initial locales.
 - Visual/text/audio caches remain explicitly bounded.
 - Acer Aspire One-class hardware remains the performance floor.
-- Preserve pragmatic OOP; do not replace page modules with giant procedural scripts or fake abstraction layers.
+- Keep the Activity-local authored-art source/runtime split and deterministic SVG→PNG authoring build.
+- No runtime SVG/CairoSVG and no page-hot-path image decode/scale.
 
-The visual redesign is not permission to rewrite these stable mechanics.
+The owner rejected the art, **not** these architectural boundaries.
 
 ---
 
-## 3. Research and narration authority
+## 3. Previously proven mechanical foundation
 
-Every factual page has research/wording authority under:
+Older evidence established:
 
 ```text
-encyclopedia/research/<section>/<entry>.md
+43 / 43 page reachability
+36 / 36 entry semantic ACTIVATE delivery
+36 / 36 internal Back returns
+protected Greia Home -> Shell
+continuous real-Shell lifecycle
+focused source gates / make verify
 ```
 
-Canonical narration coordination:
+That evidence remains useful for mechanics. It does not aesthetically approve newer artwork and does not substitute for fresh Simulator evidence after runtime-relevant visual edits.
+
+---
+
+## 4. E2/E2R evidence disposition
+
+The real E2R Simulator capture at:
+
+```text
+8fa41a3e9ab4b8cff6cce9607c32492fedc6ae8f
+```
+
+was technically valid, but the owner rejected its visual quality after inspecting the actual pixels.
+
+Owner-identified failures:
+
+```text
+Home      six category worlds did not fit naturally inside the illustrated book
+Lion      face/head/mane looked disconnected; tail looked detached from body
+Animals   elephant was not recognizable; adjacent lion was also ambiguous
+Gears     wheels did not convincingly look like gears and did not physically mesh
+```
+
+Therefore:
+
+```text
+E1 VISUAL/ASSET ARCHITECTURE: PRESERVE
+E2/E2R AESTHETIC DIRECTION: REJECTED
+OWNER DIRECTION APPROVAL: NOT GRANTED
+E3 SECTION MIGRATION: BLOCKED
+E4 ENTRY MIGRATION: BLOCKED
+```
+
+Do not reinterpret the prior green tests or Simulator survival as visual approval.
+
+Primary correction record:
+
+```text
+docs/reviews/visual/2026-08-29_encyclopedia_owner_direct_repairs/REVIEW.md
+```
+
+---
+
+## 5. Current owner-directed source repairs on `main`
+
+The owner explicitly requested that the primary agent make the visual corrections directly and slowly rather than delegate another art pass to the local agent.
+
+### Home — enlarge the existing book, do not redesign the menu
+
+Commit:
+
+```text
+46a937616610b3ce8c089ef8a1f0dc835373b36e
+```
+
+The existing six miniature category worlds and semantic centers were retained. Only the illustrated book/grounding was enlarged so the cards sit inside the page artwork:
+
+```text
+book width:  roughly x=120..904 -> x=78..946
+book height: bottom roughly 488 -> 520
+```
+
+### Lion — coherent animal silhouette
+
+Commits:
+
+```text
+a7b8840528118f393aad91bb5b5692d6149799cf
+e955d3e3d662d45ff53018a6197a4ed21f659cef
+```
+
+The face is nested into one head/mane mass, the tail grows continuously from the rump, and connected visible legs/paws now make the subject read as one standing lion.
+
+### Animals — recognizable selection subjects
+
+Commit:
+
+```text
+51f20f0ae6fbf204a155bdf96962d2330985195c
+```
+
+The continuous habitat and all semantic centers remain unchanged. The weak lion/elephant silhouettes were redrawn with unmistakable body cues:
+
+```text
+lion      body + mane/head + legs + attached tail
+elephant  profile body + oversized ear + attached trunk + tusks + four legs + tail
+```
+
+### Gears — actual meshing mechanism
+
+Commits:
+
+```text
+bbc3ca209a471202e57adc6630ee79e65da734f0
+eab952ea75f6b0d4b67ec27b82ccf27d8bbde39f
+```
+
+Three separated wheel-like objects were replaced by a 12-tooth three-gear train. Adjacent tooth envelopes visibly overlap at exactly two mesh boundaries. The teaching overlays now point at those real contact points instead of the obsolete geometry.
+
+---
+
+## 6. Current source-art evidence
+
+The four corrected SVGs were rendered locally at 1024×600 through CairoSVG and inspected as source art.
+
+Static checks:
+
+```text
+Home XML parse                         PASS
+Animals XML parse                      PASS
+Lion XML parse                         PASS
+Gears XML parse                        PASS
+Home SVG target centers                MATCH page semantic centers
+Animals SVG target centers             MATCH page semantic centers
+blue↔orange gear tooth overlap         ~11 px
+aorange↔green gear tooth overlap       ~10 px
+gear mesh geometry                     PASS
+```
+
+These are **source/static checks only**.
+
+---
+
+## 7. Important current evidence boundary
+
+The committed runtime PNG pack still represents the rejected E2R SVG state. The edited SVG masters are now newer than these runtime files.
+
+Current truth:
+
+```text
+activities/enciclopedia_greia/assets/source/home_discovery_book.svg   UPDATED
+activities/enciclopedia_greia/assets/source/animals_field_table.svg   UPDATED
+activities/enciclopedia_greia/assets/source/lion_savanna.svg          UPDATED
+activities/enciclopedia_greia/assets/source/gears_workbench.svg       UPDATED
+
+corresponding assets/runtime/*.png                                     STALE
+```
+
+Consequences:
+
+```text
+build_encyclopedia_visual_assets.py --check   expected to fail until runtime rebuild
+previous E2R Simulator captures               stale for current source
+final-SHA Activity launch acceptance           pending
+owner review of final runtime composition      pending
+```
+
+Do not call the current source repairs complete/accepted until the runtime pack is regenerated and a fresh final-source Simulator review occurs.
+
+---
+
+## 8. No delegated visual task right now
+
+The rolling file:
+
+```text
+docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md
+```
+
+is intentionally a **HOLD** notice. The local agent is not authorized to continue visual-authoring work unless the owner/primary agent explicitly creates a new bounded task.
+
+---
+
+## 9. Narration remains separate
+
+Canonical coordination:
 
 ```text
 encyclopedia/VOICE_RECORDING_REQUESTS.md
 ```
 
-The source-gate ledger checkpoint was:
-
-```text
-378 rows
-378 REQUESTED
-```
-
-`378` means coordination rows, not 378 generated audio files.
-
-Voice generation/review is separate. Only owner listening may establish `OWNER_ACCEPTED`; only owner-accepted recordings may be integrated into runtime audio assets.
+The historical ledger checkpoint is 378 REQUESTED rows. Only owner-listened `OWNER_ACCEPTED` clips may enter runtime audio. This visual repair does not generate or integrate narration.
 
 ---
 
-## 4. Previously proven mechanical/runtime evidence
+## 10. Immediate next step
 
-### Source gate prior green checkpoint
+Continue direct owner/primary-agent inspection of the corrected Home, Animals, Lion and Gears source renders. Make only targeted visual corrections that are evident in the actual pixels.
 
-SHA:
-
-```text
-d89809a43cdfe62c85775ccdcfd04eb6e34fbd05
-```
-
-Evidence:
+When the source-art tranche is worth runtime review:
 
 ```text
-tmp/encyclopedia-v01-acceptance/20260828_044052/
-```
-
-Proven there:
-
-```text
-378 / 378 voice-request rows canonical
-focused Encyclopedia tests PASS
-make verify PASS
-first-party Activity validations PASS
-accepted-audio sync check PASS
-clean worktree
-```
-
-### Real Shell lifecycle smoke
-
-Evidence:
-
-```text
-tmp/encyclopedia-v01-acceptance/20260828_070951-headless-route-smoke/
-```
-
-Proven:
-
-```text
-real Shell -> Encyclopedia PASS
-first Activity frame PASS
-12-second survival PASS
-bounded interaction PASS
-protected Greia Home -> Shell PASS
-```
-
-### Full 43-page mechanical traversal
-
-Evidence:
-
-```text
-tmp/encyclopedia-v01-acceptance/20260828_074819-mechanical-traversal/
-tmp/encyclopedia-v01-acceptance/20260828_074819-mechanical-traversal.zip
-```
-
-Mechanically proven:
-
-```text
-sections reached                  6 / 6
-factual entries reached          36 / 36
-semantic ACTIVATE delivered      36 / 36
-internal Back returns            36 / 36
-section -> Encyclopedia Home     PASS
-protected Greia Home -> Shell    PASS
-continuous run                   PASS
-```
-
-The later screenshot review found a generic capture-settle race for Sun/Neptune before-frames. The generic headless transition-settle repair has since landed on `main` and should be preserved.
-
-These older runtime passes predate the current E1/E2 visual edits and therefore **do not** count as launch/visual acceptance of the new golden-master source.
-
----
-
-## 5. Important correction — old graphics are NOT accepted
-
-The earlier visual-evidence review was too charitable about the overall art direction.
-
-After owner review, the correct disposition remains:
-
-```text
-MECHANICAL PAGE/INPUT ARCHITECTURE: useful
-OLD ENCYCLOPEDIA GRAPHICS: rejected as product quality
-```
-
-The systemic failure was:
-
-- main illustrated subjects too often built from raw `pygame.draw` circles/ellipses/rectangles/lines/polygons;
-- flat sparse backgrounds;
-- section pages resembling menus/diagrams rather than inviting illustrated worlds;
-- instrumentation-like discovery bubbles;
-- canonical characters commonly pasted into corners rather than composed into scenes;
-- subtle interaction payoffs;
-- too much explanatory burden carried by captions;
-- conflict with Greia's accepted storybook/felt-board/toy-diorama visual system.
-
-Authoritative forensic audit:
-
-```text
-docs/reviews/2026-08-28_ENCYCLOPEDIA_GRAPHICS_FORENSIC_AUDIT.md
-```
-
----
-
-## 6. Active visual reauthoring subplan
-
-Authoritative plan:
-
-```text
-docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md
-```
-
-The redesign preserves mechanics and replaces the visual layer with:
-
-- authored hero illustrations;
-- layered storybook/toy-diorama scene composition;
-- Activity-local source masters + economical runtime PNG renditions;
-- tactile reusable DiscoveryToken states;
-- reusable page-shell/hero-stage/caption/presenter helpers only where real shared invariants exist;
-- meaningful environmental context;
-- stronger integrated use of canonical characters;
-- clear first-interaction visual payoff;
-- audio-first/pre-reader composition;
-- bounded low-resource runtime behavior.
-
-Procedural drawing remains appropriate for real diagrams, small annotations, particles, focus rings and dynamic overlays. It is no longer acceptable as the default final illustration method for real-world hero subjects.
-
----
-
-## 7. E1+E2+E2R source + runtime art + Simulator capture (this work, at SHA `8fa41a3`)
-
-The bounded visual-foundation/golden-master tranche is now
-end-to-end complete on the source, runtime-art and Simulator-capture
-axes, including the E2R refinement mandated by the primary review.
-
-### Shared foundation
-
-```text
-activities/enciclopedia_greia/enciclopedia_presentation.py
-activities/enciclopedia_greia/enciclopedia_services.py
-```
-
-Implemented source contracts include:
-
-```text
-PageShellLayout safe regions
-DiscoveryToken tactile state language + per-page token_shape silhouettes
-caption ribbon helper
-authored-scene placement helper
-object focus/lift treatment
-bounded package-local authored-art cache
-explicit semantic art-id -> runtime PNG map
-no page-local image decode / smoothscale
-```
-
-`VisualLibrary` remains hard-bounded and is the single Activity-local
-facade for these authored runtime renditions plus shared canonical
-characters.
-
-### Editable source masters + committed runtime PNG pack
-
-```text
-activities/enciclopedia_greia/assets/source/home_discovery_book.svg
-activities/enciclopedia_greia/assets/source/animals_field_table.svg
-activities/enciclopedia_greia/assets/source/lion_savanna.svg
-activities/enciclopedia_greia/assets/source/saturn_observatory.svg
-activities/enciclopedia_greia/assets/source/gears_workbench.svg
-activities/enciclopedia_greia/assets/source/pyramids_diorama.svg
-
-activities/enciclopedia_greia/assets/runtime/home_discovery_book.png
-activities/enciclopedia_greia/assets/runtime/animals_field_table.png
-activities/enciclopedia_greia/assets/runtime/lion_savanna.png
-activities/enciclopedia_greia/assets/runtime/saturn_observatory.png
-activities/enciclopedia_greia/assets/runtime/gears_workbench.png
-activities/enciclopedia_greia/assets/runtime/pyramids_diorama.png
-```
-
-All six runtime PNGs are 1024×600 8-bit RGB; the build tool's
-`--check` rebuilds them temporarily and byte-compares against the
-committed pack.
-
-### Golden-master page source
-
-```text
-Home
-Animals section
-Lion
-Saturn
-Gears
-Pyramids
-```
-
-The page/state/navigation models were retained. The visual code
-now consumes authored scenes, uses procedural drawing for
-focus/discovery UI and bounded educational reveal overlays, and
-draws the runtime canonical character at the integrated scene
-position (no more corner stamps; no more identical white
-circles; tokens are now felt tag / telescope card / workshop tag
-/ excavation marker silhouettes).
-
-### Build, capture, review tooling
-
-```text
-tools/build_encyclopedia_visual_assets.py             # authoring-only SVG -> PNG (CairoSVG)
-tools/encyclopedia_v01_golden_master_capture.py       # one real Greia Shell session per page
-tools/encyclopedia_v01_golden_master_review.py        # curated 4-shot set + 3x2 contact sheet + 2x4 initial-vs-activated
-tools/encyclopedia_v01_golden_master_zip.py           # non-committed owner-transfer ZIP
-tests/test_activity_enciclopedia_visual_foundation.py
-tests/test_encyclopedia_authoring_tools.py            # tightened to subtract VisualLibrary.ART_ASSETS
-```
-
-### Source-gate evidence at the final runtime-relevant SHA `8fa41a3`
-
-```text
-make verify                                                          1462 / 1462 PASS
-tests.test_activity_enciclopedia + visual_foundation                    19 / 19 PASS
-tools/build_encyclopedia_visual_assets.py --check                      PASS 6
-real Greia Simulator launch (6 sessions)                               6 / 6 PASS
-protected Greia Home return (every session)                            6 / 6 PASS
-ACTIVATE payoff captured on every factual entry (stronger visuals)     4 / 4 PASS
-```
-
-### Simulated visual evidence
-
-```text
-docs/reviews/visual/2026-08-28_encyclopedia_goldenmaster/
-  REVIEW.md                  # E2R review notes + defect log
-  layout-audit.json          # source-derived geometry + per-page token shape
-  contact-sheet-primary.png  # 3x2 of the six primary 1024x600 screens
-  initial-vs-activated.png   # 2x4 of the four entries (initial | activated)
-  screenshots/01-home.png
-  screenshots/02-lion-activated.png
-  screenshots/03-home-compact.png
-  screenshots/04-home-large.png
-GREIA_VISUAL_REVIEW_ENCYCLOPEDIA_GOLDEN_MASTER_2026-08-28.zip   # NOT committed
-tmp/encyclopedia-goldenmaster-2026-08-28-e2r/                   # full local evidence
-tmp/encyclopedia-goldenmaster-2026-08-28-e2r-compact/           # compact responsive row
-tmp/encyclopedia-goldenmaster-2026-08-28-e2r-large/             # larger responsive row
-```
-
-Pre-reader / no-reading review recorded against the six E2R
-prototypes:
-
-```text
-PRE_READER_CORE_FLOW_PASS=yes
-TEXT_REQUIRED_FOR_GAMEPLAY=no
-NO_READING_FIRST_ACTION_PASS=yes
-PRIMARY_INSTRUCTION_CHANNEL=visual
-```
-
-Visible defects observed in E2R (recorded honestly in REVIEW.md):
-
-```text
-- Pyramids activated: caption ribbon partially overlaps Leo.
-- Saturn: Leo head silhouette touches the telescope barrel.
-- Gears: rightmost tag (rack) sits close to the wood-bench edge.
-- Home: Body portal's pink background may render slightly cooler.
-- Animals: pale felt-tag silhouettes could be rebalanced later.
-```
-
-None of these are blockers; they are noted for the design pass.
-
----
-
-## 8. Golden-master hard gate before bulk migration
-
-Required representative prototypes remain:
-
-```text
-Home
-Animals section
-Lion
-Saturn
-Gears
-Pyramids
-optional Body/Heart proof only if needed later
-```
-
-Required workflow is now:
-
-```text
-E1/E2 source landed
-→ build six runtime PNGs on local maintainer checkout
-→ focused real-checkout tests
-→ commit/push generated runtime PNGs
-→ final-SHA real Greia Simulator launch/survival
-→ actual 1024×600 prototype screenshots
-→ compact + larger responsive sample
-→ one curated contact sheet
+rebuild canonical six-PNG pack
+→ build --check
+→ focused Encyclopedia tests
+→ required local source verification
+→ commit/push final runtime assets
+→ fresh final-SHA Greia Simulator launch
+→ capture only the relevant golden masters
 → owner visual review
-→ explicit direction approval
-→ only then E3/E4 migration
 ```
 
-If the owner rejects the direction, revise these six prototypes rather than propagating them.
-
-**No remaining Encyclopedia page may be migrated before this gate.**
+No E3/E4 migration before explicit owner approval.
 
 ---
 
-## 9. Previous small fixes to retain
-
-Already landed and still valid:
-
-- Pyramids caption safe fitting/wrapping intent; the new shared caption ribbon retains adaptive fitting rather than truncation;
-- Body Teeth target contrast improvement;
-- generic headless page-transition settle repair.
-
-These fixes solve real local defects but do not constitute current visual acceptance.
-
----
-
-## 10. Current local-agent authority
-
-Rolling pointer:
+## 11. Current authorities
 
 ```text
-docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md
-```
-
-It now owns the exact next execution task:
-
-```text
-refresh main
-build six runtime PNGs
-run focused tests / local verification
-commit runtime PNG pack
-run final-SHA real Simulator gate
-capture six prototypes + responsive samples
-produce contact sheet
-perform no-reading review
-update evidence/docs
-STOP for owner review
-```
-
-Explicitly prohibited before owner approval:
-
-```text
-another broad 43-page visual recapture
-final all-page pointer/responsive acceptance
-narration generation/integration
-bulk redraw/migration of remaining pages
-```
-
----
-
-## 11. `libpng` warning
-
-Prior headless runs emitted:
-
-```text
-libpng error: bad adaptive filter value
-```
-
-No broad visible missing-asset/fallback pattern was identified in the old evidence. The warning remains unresolved diagnostic evidence and must not be attributed to a specific cause without direct proof.
-
-The new golden-master runtime PNGs must be checked normally when built. Do not assume the old warning applies to them and do not let speculative warning repair derail the visual gate without concrete evidence.
-
----
-
-## 12. Acceptance still pending
-
-```text
-golden-master owner direction approval           (captures ready, owner is the aesthetic authority)
-complete visual migration                        (E3 sections + E4 entries, hard-blocked)
-interaction visual-language pass                  (E5)
-pointer vs semantic-keyboard parity sample        (E6)
-pre-reader/no-reading final acceptance            (E6, narrow prototype pass already yes)
-responsive viewport/profile matrix                (E6; one compact + one larger row already captured)
-narration owner acceptance/integration            (separate lane, 378 rows still REQUESTED)
-physical Acer/Pi acceptance                      (separate lane)
-```
-
-Only after final visual/input/pre-reader/responsive Simulator gates pass may the Encyclopedia become:
-
-```text
-SOURCE + SIMULATOR ACCEPTED / NARRATION ACCEPTANCE PENDING
-```
-
-Current truthful status:
-
-```text
-E1/E2 SOURCE + RUNTIME ART + SIMULATOR CAPTURE COMPLETE
-  (1462/1462 make verify PASS at SHA 08fe71b,
-   6/6 runtime PNGs committed and sha256-verified by --check,
-   6/6 headless Shell sessions PASS at the final SHA,
-   protected Greia Home return verified on every session,
-   4/4 ACTIVATE payoffs captured and visible.)
-OWNER DIRECTION APPROVAL: PENDING (contact sheet and owner ZIP ready)
-NARRATION ACCEPTANCE: SEPARATE / PENDING
-```
-
----
-
-## 13. Current authorities
-
-```text
-docs/reviews/2026-08-28_ENCYCLOPEDIA_GRAPHICS_FORENSIC_AUDIT.md
 docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md
+docs/reviews/visual/2026-08-29_encyclopedia_owner_direct_repairs/REVIEW.md
 docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md
 
 docs/design/GREIA_ART_GRAPHICS_SYSTEM.md
 docs/design/GREIA_VISUAL_STYLE_GUIDE.md
-docs/design/GREIA_VISUAL_AUTHORING_ARCHITECTURE.md
 skills/greia-visual-authoring/SKILL.md
 skills/greia-activity-authoring/LAUNCH_ACCEPTANCE.md
-skills/greia-activity-authoring/PRE_READER_UX.md
 ```
