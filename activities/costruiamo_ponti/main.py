@@ -22,7 +22,7 @@ from greia_platform.activity_api import (
     get_ui_preferences,
     mark_activity_ready,
 )
-from greia_platform.activity_ui import ChildUiMetrics, is_home_clicked
+from greia_platform.activity_ui import ChildUiMetrics
 from greia_platform.localization import (
     ActivityLocaleSupport,
     LocalizedResources,
@@ -377,9 +377,6 @@ def main() -> int:
                 canvas = PygameReferenceCanvas(screen)
                 completion_presented = False
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if is_home_clicked(screen, event.pos):
-                    running = False
-                    continue
                 pointer = canvas.pointer(event.pos)
                 if pointer is None:
                     continue
