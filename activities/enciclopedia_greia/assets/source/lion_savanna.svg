@@ -1,128 +1,33 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="600" viewBox="0 0 1024 600">
 <defs>
-  <filter id="softshadow" x="-20%" y="-20%" width="140%" height="160%">
-    <feGaussianBlur in="SourceAlpha" stdDeviation="6"/>
-    <feOffset dy="8"/>
-    <feComponentTransfer><feFuncA type="linear" slope="0.32"/></feComponentTransfer>
-    <feComposite in2="SourceGraphic" operator="in" result="shadow"/>
-    <feMerge><feMergeNode in="shadow"/><feMergeNode in="SourceGraphic"/></feMerge>
-  </filter>
-  <filter id="tightshadow" x="-10%" y="-10%" width="120%" height="140%">
-    <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
-    <feOffset dy="3"/>
-    <feComponentTransfer><feFuncA type="linear" slope="0.4"/></feComponentTransfer>
-    <feComposite in2="SourceGraphic" operator="in" result="shadow"/>
-    <feMerge><feMergeNode in="shadow"/><feMergeNode in="SourceGraphic"/></feMerge>
-  </filter>
-  <filter id="paperGrain">
-    <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="9"/>
-    <feColorMatrix type="saturate" values="0"/>
-    <feComponentTransfer><feFuncA type="table" tableValues="0 0.05"/></feComponentTransfer>
-    <feComposite in2="SourceGraphic" operator="in"/>
-  </filter>
-  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0" stop-color="#cfe2d0"/>
-    <stop offset="0.55" stop-color="#e8d5a4"/>
-    <stop offset="1" stop-color="#b88a55"/>
-  </linearGradient>
-  <linearGradient id="grassA" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0" stop-color="#a6c98c"/>
-    <stop offset="1" stop-color="#86b779"/>
-  </linearGradient>
-  <linearGradient id="grassB" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0" stop-color="#7aac68"/>
-    <stop offset="1" stop-color="#4f8d60"/>
-  </linearGradient>
-  <linearGradient id="maneGrad" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0" stop-color="#a85e2a"/>
-    <stop offset="0.5" stop-color="#7a3d10"/>
-    <stop offset="1" stop-color="#5a2a08"/>
-  </linearGradient>
-  <linearGradient id="bodyGrad" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0" stop-color="#f0b65e"/>
-    <stop offset="1" stop-color="#c88838"/>
-  </linearGradient>
+  <filter id="softshadow" x="-20%" y="-20%" width="140%" height="160%"><feGaussianBlur in="SourceAlpha" stdDeviation="6"/><feOffset dy="8"/><feComponentTransfer><feFuncA type="linear" slope="0.32"/></feComponentTransfer><feComposite in2="SourceGraphic" operator="in" result="shadow"/><feMerge><feMergeNode in="shadow"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="paperGrain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="9"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="table" tableValues="0 0.05"/></feComponentTransfer><feComposite in2="SourceGraphic" operator="in"/></filter>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cfe2d0"/><stop offset="0.55" stop-color="#e8d5a4"/><stop offset="1" stop-color="#b88a55"/></linearGradient>
+  <linearGradient id="grassA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a6c98c"/><stop offset="1" stop-color="#86b779"/></linearGradient>
+  <linearGradient id="grassB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7aac68"/><stop offset="1" stop-color="#4f8d60"/></linearGradient>
+  <linearGradient id="maneGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a85e2a"/><stop offset="0.5" stop-color="#7a3d10"/><stop offset="1" stop-color="#5a2a08"/></linearGradient>
+  <linearGradient id="bodyGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0b65e"/><stop offset="1" stop-color="#c88838"/></linearGradient>
 </defs>
-
 <rect width="1024" height="600" fill="url(#sky)"/>
 <path d="M0 240 Q200 180 400 220 T800 210 T1024 195 V380 H0Z" fill="url(#grassA)"/>
 <path d="M0 320 Q260 268 500 304 T880 300 T1024 290 V440 H0Z" fill="url(#grassB)"/>
 <path d="M0 420 Q300 388 600 408 T1024 402 V600 H0Z" fill="#a87038"/>
-
-<g transform="translate(945 70)">
-  <circle r="32" fill="#ffd36a" opacity="0.95"/>
-  <g stroke="#f5cf61" stroke-width="3" stroke-linecap="round" opacity="0.7">
-    <line x1="-44" y1="0" x2="-40" y2="0"/><line x1="40" y1="0" x2="44" y2="0"/><line x1="0" y1="-44" x2="0" y2="-40"/>
-    <line x1="-30" y1="-30" x2="-27" y2="-27"/><line x1="30" y1="30" x2="27" y2="27"/><line x1="-30" y1="30" x2="-27" y2="27"/><line x1="30" y1="-30" x2="27" y2="-27"/>
-  </g>
-</g>
-
-<g transform="translate(160 210)" filter="url(#softshadow)">
-  <ellipse cx="0" cy="74" rx="40" ry="5" fill="#2a1c14" opacity="0.22"/>
-  <path d="M0 74 L-4 8 L4 8Z" fill="#6f4a32"/>
-  <path d="M0 16 Q-22 0 -36 12 M0 18 Q22 -2 38 6" fill="none" stroke="#6f4a32" stroke-width="6" stroke-linecap="round"/>
-  <ellipse cx="0" cy="-8" rx="56" ry="22" fill="#5e8f52" stroke="#3f6e3a" stroke-width="2"/>
-  <ellipse cx="-22" cy="0" rx="28" ry="14" fill="#6da15b"/><ellipse cx="22" cy="0" rx="28" ry="14" fill="#6da15b"/>
-</g>
-
-<g transform="translate(800 256)" opacity="0.7"><ellipse cx="0" cy="0" rx="20" ry="12" fill="#5e8f52" stroke="#3f6e3a" stroke-width="1.5"/><path d="M0 12 L0 24" stroke="#6f4a32" stroke-width="2"/></g>
-<g transform="translate(720 250)" opacity="0.6"><ellipse cx="0" cy="0" rx="14" ry="8" fill="#5e8f52" stroke="#3f6e3a" stroke-width="1.2"/><path d="M0 8 L0 18" stroke="#6f4a32" stroke-width="1.5"/></g>
-
-<g transform="translate(60 470)" fill="#3f6e3a"><ellipse cx="0" cy="0" rx="22" ry="6"/><path d="M-12 0 L-14 -10 M-4 0 L-6 -14 M6 0 L4 -12 M14 0 L16 -10" stroke="#3f6e3a" stroke-width="2"/></g>
-<g transform="translate(900 480)" fill="#3f6e3a"><ellipse cx="0" cy="0" rx="22" ry="6"/><path d="M-12 0 L-14 -10 M-4 0 L-6 -14 M6 0 L4 -12 M14 0 L16 -10" stroke="#3f6e3a" stroke-width="2"/></g>
-
-<!-- Hero lion: one continuous readable animal silhouette -->
+<g transform="translate(945 70)"><circle r="32" fill="#ffd36a" opacity="0.95"/><g stroke="#f5cf61" stroke-width="3" stroke-linecap="round" opacity="0.7"><line x1="-44" y1="0" x2="-40" y2="0"/><line x1="40" y1="0" x2="44" y2="0"/><line x1="0" y1="-44" x2="0" y2="-40"/><line x1="-30" y1="-30" x2="-27" y2="-27"/><line x1="30" y1="30" x2="27" y2="27"/><line x1="-30" y1="30" x2="-27" y2="27"/><line x1="30" y1="-30" x2="27" y2="-27"/></g></g>
+<g transform="translate(160 210)" filter="url(#softshadow)"><ellipse cx="0" cy="74" rx="40" ry="5" fill="#2a1c14" opacity="0.22"/><path d="M0 74 L-4 8 L4 8Z" fill="#6f4a32"/><path d="M0 16 Q-22 0 -36 12 M0 18 Q22 -2 38 6" fill="none" stroke="#6f4a32" stroke-width="6" stroke-linecap="round"/><ellipse cx="0" cy="-8" rx="56" ry="22" fill="#5e8f52" stroke="#3f6e3a" stroke-width="2"/><ellipse cx="-22" cy="0" rx="28" ry="14" fill="#6da15b"/><ellipse cx="22" cy="0" rx="28" ry="14" fill="#6da15b"/></g>
+<g transform="translate(800 256)" opacity="0.7"><ellipse rx="20" ry="12" fill="#5e8f52" stroke="#3f6e3a" stroke-width="1.5"/><path d="M0 12 L0 24" stroke="#6f4a32" stroke-width="2"/></g><g transform="translate(720 250)" opacity="0.6"><ellipse rx="14" ry="8" fill="#5e8f52" stroke="#3f6e3a" stroke-width="1.2"/><path d="M0 8 L0 18" stroke="#6f4a32" stroke-width="1.5"/></g>
+<g transform="translate(60 470)" fill="#3f6e3a"><ellipse rx="22" ry="6"/><path d="M-12 0 L-14 -10 M-4 0 L-6 -14 M6 0 L4 -12 M14 0 L16 -10" stroke="#3f6e3a" stroke-width="2"/></g><g transform="translate(900 480)" fill="#3f6e3a"><ellipse rx="22" ry="6"/><path d="M-12 0 L-14 -10 M-4 0 L-6 -14 M6 0 L4 -12 M14 0 L16 -10" stroke="#3f6e3a" stroke-width="2"/></g>
 <g transform="translate(512 360)" filter="url(#softshadow)">
-  <ellipse cx="0" cy="86" rx="200" ry="14" fill="#2a1c14" opacity="0.32"/>
-
-  <!-- Tail grows directly from the rump; no floating segment. -->
-  <path d="M108 26 C145 42 172 28 178 5 C184 -13 181 -27 184 -38" fill="none" stroke="#d89a45" stroke-width="16" stroke-linecap="round"/>
-  <ellipse cx="184" cy="-42" rx="10" ry="16" fill="#6a330d" transform="rotate(-8 184 -42)"/>
-
-  <ellipse cx="104" cy="78" rx="22" ry="12" fill="url(#bodyGrad)" stroke="#7a3d10" stroke-width="2"/>
-  <ellipse cx="-92" cy="78" rx="22" ry="12" fill="url(#bodyGrad)" stroke="#7a3d10" stroke-width="2"/>
-  <ellipse cx="24" cy="22" rx="112" ry="62" fill="url(#bodyGrad)" stroke="#7a3d10" stroke-width="2.5"/>
-  <ellipse cx="32" cy="36" rx="76" ry="34" fill="#f8c874" opacity="0.52"/>
-
-  <!-- Mane and head share the same center so the face cannot detach visually. -->
-  <g>
-    <ellipse cx="-54" cy="-28" rx="80" ry="82" fill="url(#maneGrad)" stroke="#5a2a08" stroke-width="3"/>
-    <g fill="none" stroke="#5a2a08" stroke-width="1.5" opacity="0.7">
-      <circle cx="-54" cy="-28" r="63"/><circle cx="-54" cy="-28" r="49"/><circle cx="-54" cy="-28" r="36"/>
-    </g>
-    <g fill="url(#maneGrad)" stroke="#5a2a08" stroke-width="2">
-      <ellipse cx="-114" cy="-60" rx="20" ry="14" transform="rotate(-30 -114 -60)"/>
-      <ellipse cx="-134" cy="-30" rx="18" ry="14" transform="rotate(-15 -134 -30)"/>
-      <ellipse cx="-124" cy="2" rx="20" ry="14" transform="rotate(15 -124 2)"/>
-      <ellipse cx="-94" cy="24" rx="18" ry="14" transform="rotate(40 -94 24)"/>
-      <ellipse cx="-34" cy="-90" rx="18" ry="14" transform="rotate(-50 -34 -90)"/>
-      <ellipse cx="8" cy="-82" rx="16" ry="12" transform="rotate(-20 8 -82)"/>
-    </g>
-  </g>
-
-  <!-- Unified head nested inside the mane. -->
-  <ellipse cx="-48" cy="-24" rx="49" ry="45" fill="url(#bodyGrad)" stroke="#7a3d10" stroke-width="2.5"/>
-  <ellipse cx="-78" cy="-60" rx="14" ry="12" fill="#7a3d10" stroke="#5a2a08" stroke-width="2"/>
-  <ellipse cx="-78" cy="-58" rx="8" ry="6" fill="#f8b894"/>
-  <ellipse cx="-18" cy="-59" rx="14" ry="12" fill="#7a3d10" stroke="#5a2a08" stroke-width="2"/>
-  <ellipse cx="-18" cy="-57" rx="8" ry="6" fill="#f8b894"/>
-
-  <circle cx="-62" cy="-29" r="6" fill="#fff" stroke="#2a1c14" stroke-width="1.5"/>
-  <circle cx="-34" cy="-29" r="6" fill="#fff" stroke="#2a1c14" stroke-width="1.5"/>
-  <circle cx="-60" cy="-29" r="3.5" fill="#5a3a14"/><circle cx="-32" cy="-29" r="3.5" fill="#5a3a14"/>
-  <circle cx="-59" cy="-30" r="1" fill="#fff"/><circle cx="-31" cy="-30" r="1" fill="#fff"/>
-
-  <!-- Muzzle anchors the face to the head mass. -->
-  <ellipse cx="-58" cy="-8" rx="18" ry="14" fill="#efbd70" opacity="0.9"/>
-  <ellipse cx="-38" cy="-8" rx="18" ry="14" fill="#efbd70" opacity="0.9"/>
-  <path d="M-54 -12 Q-48 -5 -42 -12 Q-48 -8 -54 -12Z" fill="#5a2a08" stroke="#2a1c14" stroke-width="1.5"/>
-  <path d="M-60 0 Q-54 8 -48 4 Q-42 8 -36 0" fill="none" stroke="#5a2a08" stroke-width="2" stroke-linecap="round"/>
-  <g stroke="#5a2a08" stroke-width="1" opacity="0.7">
-    <line x1="-68" y1="-2" x2="-84" y2="-6"/><line x1="-68" y1="2" x2="-84" y2="2"/>
-    <line x1="-28" y1="-2" x2="-12" y2="-6"/><line x1="-28" y1="2" x2="-12" y2="2"/>
-  </g>
+<ellipse cx="0" cy="86" rx="200" ry="14" fill="#2a1c14" opacity="0.32"/>
+<path d="M125 14 C154 27 176 19 181 -3 C185 -20 181 -31 184 -42" fill="none" stroke="#d89a45" stroke-width="15" stroke-linecap="round"/><ellipse cx="184" cy="-46" rx="10" ry="16" fill="#6a330d" transform="rotate(-8 184 -46)"/>
+<ellipse cx="25" cy="8" rx="112" ry="50" fill="url(#bodyGrad)" stroke="#7a3d10" stroke-width="2.5"/><ellipse cx="36" cy="18" rx="75" ry="29" fill="#f8c874" opacity="0.50"/>
+<path d="M-8 38 Q-2 42 -3 73 Q-3 82 -15 83 Q-28 82 -25 72 L-22 38Z" fill="url(#bodyGrad)" stroke="#7a3d10" stroke-width="2"/>
+<path d="M83 36 Q94 38 97 70 Q100 81 88 83 Q74 82 75 71 L72 38Z" fill="url(#bodyGrad)" stroke="#7a3d10" stroke-width="2"/>
+<ellipse cx="-14" cy="82" rx="19" ry="9" fill="#e3a44e" stroke="#7a3d10" stroke-width="2"/><ellipse cx="89" cy="82" rx="19" ry="9" fill="#e3a44e" stroke="#7a3d10" stroke-width="2"/>
+<ellipse cx="-54" cy="-28" rx="80" ry="82" fill="url(#maneGrad)" stroke="#5a2a08" stroke-width="3"/><g fill="none" stroke="#5a2a08" stroke-width="1.5" opacity="0.7"><circle cx="-54" cy="-28" r="63"/><circle cx="-54" cy="-28" r="49"/><circle cx="-54" cy="-28" r="36"/></g><g fill="url(#maneGrad)" stroke="#5a2a08" stroke-width="2"><ellipse cx="-114" cy="-60" rx="20" ry="14" transform="rotate(-30 -114 -60)"/><ellipse cx="-134" cy="-30" rx="18" ry="14" transform="rotate(-15 -134 -30)"/><ellipse cx="-124" cy="2" rx="20" ry="14" transform="rotate(15 -124 2)"/><ellipse cx="-94" cy="24" rx="18" ry="14" transform="rotate(40 -94 24)"/><ellipse cx="-34" cy="-90" rx="18" ry="14" transform="rotate(-50 -34 -90)"/><ellipse cx="8" cy="-82" rx="16" ry="12" transform="rotate(-20 8 -82)"/></g>
+<ellipse cx="-48" cy="-24" rx="49" ry="45" fill="url(#bodyGrad)" stroke="#7a3d10" stroke-width="2.5"/><ellipse cx="-78" cy="-60" rx="14" ry="12" fill="#7a3d10" stroke="#5a2a08" stroke-width="2"/><ellipse cx="-78" cy="-58" rx="8" ry="6" fill="#f8b894"/><ellipse cx="-18" cy="-59" rx="14" ry="12" fill="#7a3d10" stroke="#5a2a08" stroke-width="2"/><ellipse cx="-18" cy="-57" rx="8" ry="6" fill="#f8b894"/>
+<circle cx="-62" cy="-29" r="6" fill="#fff" stroke="#2a1c14" stroke-width="1.5"/><circle cx="-34" cy="-29" r="6" fill="#fff" stroke="#2a1c14" stroke-width="1.5"/><circle cx="-60" cy="-29" r="3.5" fill="#5a3a14"/><circle cx="-32" cy="-29" r="3.5" fill="#5a3a14"/><circle cx="-59" cy="-30" r="1" fill="#fff"/><circle cx="-31" cy="-30" r="1" fill="#fff"/>
+<ellipse cx="-58" cy="-8" rx="18" ry="14" fill="#efbd70" opacity="0.9"/><ellipse cx="-38" cy="-8" rx="18" ry="14" fill="#efbd70" opacity="0.9"/><path d="M-54 -12 Q-48 -5 -42 -12 Q-48 -8 -54 -12Z" fill="#5a2a08" stroke="#2a1c14" stroke-width="1.5"/><path d="M-60 0 Q-54 8 -48 4 Q-42 8 -36 0" fill="none" stroke="#5a2a08" stroke-width="2" stroke-linecap="round"/><g stroke="#5a2a08" stroke-width="1" opacity="0.7"><line x1="-68" y1="-2" x2="-84" y2="-6"/><line x1="-68" y1="2" x2="-84" y2="2"/><line x1="-28" y1="-2" x2="-12" y2="-6"/><line x1="-28" y1="2" x2="-12" y2="2"/></g>
 </g>
-
 <g transform="translate(140 480)" filter="url(#softshadow)"><ellipse cx="0" cy="68" rx="56" ry="6" fill="#2a1c14" opacity="0.25"/></g>
 <rect width="1024" height="600" filter="url(#paperGrain)" opacity="0.45" pointer-events="none"/>
 </svg>
