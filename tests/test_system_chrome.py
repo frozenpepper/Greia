@@ -20,9 +20,13 @@ class RecordingChromeBackend:
     def __init__(self) -> None:
         self.events: list[tuple[object, ...]] = []
         self.actions: list[SystemNavigationAction] = []
+        self.fail_prepare = False
+        self.fail_hide = False
 
     def prepare(self, session_id: str, *, back_available: bool) -> None:
         self.events.append(("prepare", session_id, back_available))
+        if self.fail_prepare:
+            raise RuntimeError("prepare failed")
 
     def show(self, session_id: str) -> None:
         self.events.append(("show", session_id))
@@ -33,6 +37,8 @@ class RecordingChromeBackend:
 
     def hide(self, session_id: str) -> None:
         self.events.append(("hide", session_id))
+        if self.fail_hide:
+            raise RuntimeError("hide failed")
 
 
 class RecordingStopController:
@@ -116,6 +122,38 @@ class SystemChromeCoordinatorTests(unittest.TestCase):
                 ("hide", "session-a"),
             ],
         )
+
+    def test_prepare_failure_recovers_hidden_when_backend_cleanup_succeeds(self) -> None:
+        backend = RecordingChromeBackend()
+        backend.fail_prepare = True
+        coordinator = SystemChromeCoordinator(backend)
+
+        with self.assertRaisesRegex(SystemChromeError, "could not prepare"):
+            coordinator.prepare("session-a", back_available=False)
+
+        self.assertIs(coordinator.snapshot.phase, SystemChromePhase.HIDDEN)
+        self.assertIsNone(coordinator.snapshot.session_id)
+        self.assertEqual(
+            backend.events,
+            [("prepare", "session-a", False), ("hide", "session-a")],
+        )
+
+        backend.fail_prepare = False
+        lease = coordinator.prepare("session-b", back_available=False)
+        self.assertEqual(lease.session_id, "session-b")
+
+    def test_prepare_failure_stays_failed_when_backend_cleanup_fails(self) -> None:
+        backend = RecordingChromeBackend()
+        backend.fail_prepare = True
+        backend.fail_hide = True
+        coordinator = SystemChromeCoordinator(backend)
+
+        with self.assertRaises(SystemChromeError):
+            coordinator.prepare("session-a", back_available=False)
+
+        self.assertIs(coordinator.snapshot.phase, SystemChromePhase.FAILED)
+        self.assertEqual(coordinator.snapshot.session_id, "session-a")
+        self.assertIn("prepare failed", coordinator.snapshot.failure or "")
 
     def test_home_action_is_reported_without_activity_participation(self) -> None:
         backend = RecordingChromeBackend()
