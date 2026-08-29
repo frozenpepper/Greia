@@ -1,4 +1,4 @@
-"""Long Ago section: a visual journey backward through five semantic anchors."""
+"""Long Ago section: five semantic anchors on one authored time trail."""
 
 from __future__ import annotations
 
@@ -9,9 +9,11 @@ import pygame
 
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
+    from ..enciclopedia_presentation import draw_authored_scene, draw_title
     from .common import draw_centered_text, draw_presenter, focus_ring
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
+    from enciclopedia_presentation import draw_authored_scene, draw_title
     from pages.common import draw_centered_text, draw_presenter, focus_ring
 
 
@@ -82,15 +84,47 @@ class HistoryPage(EncyclopediaPage):
         self.context.host.open_page(MOMENTS[self._selected].page_id)
 
     def draw(self, surface: pygame.Surface) -> None:
-        surface.fill((244, 229, 194))
-        draw_centered_text(
+        authored = draw_authored_scene(
+            surface,
+            self.context.visuals,
+            "encyclopedia.history.gallery.time_trail",
+        )
+        if not authored:
+            self._draw_fallback_scene(surface)
+
+        draw_title(
             surface,
             self.context.typography,
             self.context.resources.text("section.history"),
-            center=(500, 95),
-            size=40,
-            color=self.context.palette.ink,
+            self.context.palette.ink,
         )
+
+        for index, (moment, rect) in enumerate(zip(MOMENTS, self._rects)):
+            active = index == self._selected or index == self._hovered
+            focus_ring(surface, rect, active)
+            if authored:
+                draw_centered_text(
+                    surface,
+                    self.context.typography,
+                    self.context.resources.text(moment.label_key),
+                    center=(rect.centerx, rect.bottom - 16),
+                    size=16,
+                    color=self.context.palette.ink,
+                )
+
+        draw_presenter(
+            surface,
+            self.context.visuals,
+            "leo",
+            position=(945, 565),
+            height=145,
+            variant="default",
+        )
+
+    def _draw_fallback_scene(self, surface: pygame.Surface) -> None:
+        """Retain the previous timeline until the E3 PNG tranche exists."""
+
+        surface.fill((244, 229, 194))
         pygame.draw.line(surface, (130, 94, 61), (95, 470), (880, 470), 8)
         for index, (moment, rect) in enumerate(zip(MOMENTS, self._rects)):
             bob = int(math.sin(self._time * 1.5 + index) * 3)
@@ -106,16 +140,7 @@ class HistoryPage(EncyclopediaPage):
                 size=17,
                 color=self.context.palette.ink,
             )
-            focus_ring(surface, body, index == self._selected or index == self._hovered)
             pygame.draw.circle(surface, (130, 94, 61), (body.centerx, 470), 7)
-        draw_presenter(
-            surface,
-            self.context.visuals,
-            "leo",
-            position=(945, 565),
-            height=145,
-            variant="default",
-        )
 
     @staticmethod
     def _draw_moment(
