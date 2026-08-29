@@ -122,10 +122,15 @@ class RealHardwareInstallationRegressionTests(unittest.TestCase):
         self.assertNotIn('"--unshare-user"', supervisor)
         self.assertNotIn('"--disable-userns"', supervisor)
 
-    def test_launcher_keeps_explicit_x11_focus_handoff_without_a_window_manager(self) -> None:
+    def test_launcher_routes_x11_focus_handoff_through_legacy_adapter(self) -> None:
         launcher = self.read("src/greia_launcher/main.py")
-        self.assertIn("_set_x11_input_focus(screen, pygame)", launcher)
-        self.assertIn("XSetInputFocus", launcher)
+        legacy_x = self.read("src/greia_launcher/shell_window_legacy_x.py")
+        self.assertNotIn("_set_x11_input_focus", launcher)
+        self.assertNotIn("XSetInputFocus", launcher)
+        self.assertIn("self._shell_window_backend.after_window_created(pygame)", launcher)
+        self.assertIn("XOpenDisplay", legacy_x)
+        self.assertIn("XGetInputFocus", legacy_x)
+        self.assertIn("XSetInputFocus", legacy_x)
 
     def test_canonical_builders_never_mint_root_or_unguarded_password_ssh(self) -> None:
         # Root SSH and unguarded password SSH are always forbidden. The
