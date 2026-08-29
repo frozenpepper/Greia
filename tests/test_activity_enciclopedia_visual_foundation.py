@@ -50,6 +50,45 @@ class EncyclopediaVisualFoundationTests(unittest.TestCase):
         tree = ast.parse(path.read_text(encoding="utf-8"))
         return ast.literal_eval(cls._assignment(tree, name))
 
+    @classmethod
+    def _dataclass_target_centers(
+        cls,
+        path: Path,
+        assignment_name: str,
+        *,
+        center_arg: int,
+    ) -> dict[str, tuple[int, int]]:
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        value = cls._assignment(tree, assignment_name)
+        if not isinstance(value, (ast.Tuple, ast.List)):
+            raise AssertionError(f"{assignment_name} must be a literal tuple/list")
+        result: dict[str, tuple[int, int]] = {}
+        for item in value.elts:
+            if not isinstance(item, ast.Call):
+                raise AssertionError(f"{assignment_name} items must be constructor calls")
+            target_id = ast.literal_eval(item.args[0])
+            center = ast.literal_eval(item.args[center_arg])
+            result[str(target_id)] = (int(center[0]), int(center[1]))
+        return result
+
+    @classmethod
+    def _earth_destination_centers(cls, path: Path) -> dict[str, tuple[int, int]]:
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        value = cls._assignment(tree, "DESTINATIONS")
+        if not isinstance(value, (ast.Tuple, ast.List)):
+            raise AssertionError("DESTINATIONS must be a literal tuple/list")
+        result: dict[str, tuple[int, int]] = {}
+        for item in value.elts:
+            if not isinstance(item, ast.Call) or len(item.args) < 3:
+                raise AssertionError("DESTINATIONS items must be EarthDestination calls")
+            target_id = str(ast.literal_eval(item.args[0]))
+            rect_call = item.args[2]
+            if not isinstance(rect_call, ast.Call) or len(rect_call.args) != 4:
+                raise AssertionError("EarthDestination rect must be pygame.Rect(x, y, w, h)")
+            x, y, width, height = (int(ast.literal_eval(arg)) for arg in rect_call.args)
+            result[target_id] = (x + width // 2, y + height // 2)
+        return result
+
     @staticmethod
     def _svg_target_centers(path: Path) -> dict[str, tuple[int, int]]:
         root = ET.parse(path).getroot()
@@ -163,6 +202,41 @@ class EncyclopediaVisualFoundationTests(unittest.TestCase):
         self.assertEqual(
             dict(zip(animal_ids, animal_centers)),
             self._svg_target_centers(SOURCE / "animals_field_table.svg"),
+        )
+
+    def test_e3_static_section_art_centers_match_input_semantics(self) -> None:
+        earth_centers = self._earth_destination_centers(ACTIVITY / "pages" / "earth.py")
+        self.assertEqual(
+            earth_centers,
+            self._svg_target_centers(SOURCE / "earth_gallery_landscape.svg"),
+        )
+
+        body_centers = self._dataclass_target_centers(
+            ACTIVITY / "pages" / "body.py",
+            "BODY_TARGETS",
+            center_arg=2,
+        )
+        self.assertEqual(
+            body_centers,
+            self._svg_target_centers(SOURCE / "body_gallery_discovery_room.svg"),
+        )
+
+        machine_centers = self._dataclass_target_centers(
+            ACTIVITY / "pages" / "machines.py",
+            "MACHINE_TARGETS",
+            center_arg=2,
+        )
+        self.assertEqual(
+            machine_centers,
+            self._svg_target_centers(SOURCE / "machines_gallery_workbench.svg"),
+        )
+
+        history_path = ACTIVITY / "pages" / "history.py"
+        history_ids = self._literal_assignment(history_path, "HISTORY_TARGET_IDS")
+        history_centers = self._literal_assignment(history_path, "HISTORY_TARGET_CENTERS")
+        self.assertEqual(
+            dict(zip(history_ids, history_centers)),
+            self._svg_target_centers(SOURCE / "history_gallery_time_trail.svg"),
         )
 
     def test_runtime_pack_is_complete_per_visual_tranche(self) -> None:
