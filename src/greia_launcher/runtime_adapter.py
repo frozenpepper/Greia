@@ -11,6 +11,10 @@ from pathlib import Path
 from typing import Callable, Mapping, Protocol, Sequence
 
 from greia_platform.activities import ActivityManifest
+from greia_platform.activity_backend_policy import (
+    BackendFindingSeverity,
+    scan_python_source_tree_backend_policy,
+)
 from greia_platform.device_capabilities import DeviceCapabilityService
 
 from .lifecycle import (
@@ -252,6 +256,22 @@ class PythonRuntimeAdapter:
                 tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
             except (OSError, UnicodeDecodeError, SyntaxError) as exc:
                 raise RuntimeValidationError(f"cannot parse Python source {path}: {exc}") from exc
+
+            backend_blockers = tuple(
+                finding
+                for finding in scan_python_source_tree_backend_policy(path, tree)
+                if finding.severity is BackendFindingSeverity.BLOCKER
+            )
+            if backend_blockers:
+                rendered = "; ".join(
+                    f"{finding.path}:{finding.line} [{finding.code}] {finding.detail}"
+                    for finding in backend_blockers
+                )
+                raise RuntimeValidationError(
+                    "Activity source must be display/input-backend independent: "
+                    + rendered
+                )
+
             for node in ast.walk(tree):
                 root_name: str | None = None
                 if isinstance(node, ast.Import):
@@ -274,9 +294,9 @@ class PythonRuntimeAdapter:
     ) -> None:
         policy = self._policy
         if policy is None:
-            # Unit/development fallback preserves syntax and dynamic-import
-            # rejection, while production/build composition must inject the
-            # curated PythonRuntimePolicy from child-runtime.toml.
+            # Unit/development fallback preserves syntax, backend independence
+            # and dynamic-import rejection. Production/build composition also
+            # injects the curated PythonRuntimePolicy from child-runtime.toml.
             return
         if root_name in policy.forbidden_import_roots:
             raise RuntimeValidationError(f"forbidden Python import {root_name!r} in {path}")
