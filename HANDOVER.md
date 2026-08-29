@@ -4,7 +4,7 @@
 **Canonical repository:** `frozenpepper/Greia`
 **Canonical branch:** `main`
 **Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**
-**Current parallel visual focus:** **Encyclopedia owner-directed golden-master source repair after E2R rejection**
+**Current parallel visual focus:** **Encyclopedia E3 six-section source reauthoring after owner approval of corrected golden-master direction**
 **Purpose:** short current continuation contract. Detailed chronology belongs in active plans and dated reviews/handovers.
 
 Historical long-form root state remains preserved under:
@@ -157,62 +157,80 @@ protected Greia Home -> Shell                PASS
 
 The headless traversal's generic page-transition capture race has since been repaired on `main`; preserve that fix.
 
-### E2R visuals rejected; direct correction active
+### Golden-master direction owner-approved after direct repair
 
-The original Encyclopedia graphics were rejected, and the later E2R golden-master package was also rejected by the owner after review of the actual Simulator pixels.
+The original Encyclopedia graphics and the first E2R golden-master package were rejected aesthetically despite valid technical evidence.
 
-The E2R technical evidence remains valid for its exact SHA, but **it is not visual approval**.
-
-Owner-identified E2R failures:
+The primary agent then repaired the actual source assets directly at owner request:
 
 ```text
-Home      — six category worlds did not fit naturally inside the illustrated book
-Lion      — face/head/mane looked disconnected and the tail looked detached
-Animals   — elephant was not recognizable; adjacent lion was also ambiguous
-Gears     — wheels did not convincingly look like gears and did not physically mesh
-```
-
-Current direct repair record:
-
-```text
-docs/reviews/visual/2026-08-29_encyclopedia_owner_direct_repairs/REVIEW.md
-```
-
-Current source repairs on `main` include:
-
-```text
-Home      enlarged book spread while preserving portal artwork/centers
+Home      enlarged book + complete 3x2 portal block centered at x=267/512/757
+          with the middle column intentionally straddling the book spine
 Animals   recognizable full-body lion + clear elephant profile/trunk/ear/tusks
-Lion      unified head/mane/face, attached tail, visible connected legs
-Gears     three 12-tooth gears in a real meshing train + corrected reveal geometry
+Lion      unified face/head/mane, attached tail, connected visible legs
+Gears     unmistakably toothed gears in a real meshing train + corrected reveal contacts
 ```
 
-The previous six runtime PNGs have **not** yet been rebuilt after these source edits. Therefore:
+After inspecting these source corrections, the owner explicitly approved proceeding with the plan.
+
+Current gate:
 
 ```text
-EDITABLE SVG MASTERS:                    UPDATED FOR HOME/ANIMALS/LION/GEARS
-COMMITTED RUNTIME PNG PACK:              STALE FOR THOSE FOUR SCENES
-build --check:                           EXPECTED TO FAIL UNTIL REBUILD
-PREVIOUS E2R SIMULATOR SCREENSHOTS:      STALE FOR CURRENT SOURCE
-OWNER VISUAL DIRECTION APPROVAL:         NOT GRANTED
-E3 / E4:                                 BLOCKED
+E1 VISUAL/ASSET ARCHITECTURE:        COMPLETE
+E2/E2R VISUAL DIRECTION:             OWNER APPROVED
+LATEST CORRECTED RUNTIME PNGS:       REBUILD PENDING
+LATEST EXACT-SOURCE SIMULATOR PROOF: PENDING
+E3 SECTION-PAGE REAUTHORING:         ACTIVE
+E4 FACTUAL-ENTRY MIGRATION:          BLOCKED UNTIL E3 REVIEW
 ```
 
-Source-art rendering/inspection has been performed locally at 1024×600 for the four corrected scenes. Home/Animals semantic target centers remain unchanged, and the new gear tooth envelopes visibly overlap at their two real mesh boundaries.
+The old E2R runtime PNGs/screenshots predate the latest Home/Animals/Lion/Gears source corrections and are stale for exact-current-source claims.
 
-No local-agent art task is currently authorized. The rolling task file is intentionally a HOLD notice:
+### E3 six-section source family
+
+Animals remains the section-world reference. Five new authored section masters are now on `main`:
 
 ```text
-docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md
+space_gallery_observatory.svg
+earth_gallery_landscape.svg
+body_gallery_discovery_room.svg
+machines_gallery_workbench.svg
+history_gallery_time_trail.svg
 ```
+
+Source direction:
+
+```text
+Animals          continuous habitat
+Space            observatory around the existing live orbiting Solar System
+Earth & Nature   one layered landscape with rain/tree/rainbow/volcano/ocean
+Body             one discovery room with physical anatomy exhibits
+Machines         one workshop with recognizable gears/magnet/bicycle/plane/bridge
+History          one time/excavation trail with T-rex/fossil/mammoth/cave/pyramid
+```
+
+The first source contact review caught and corrected panel-like Body stations, weak Machines gear/bridge silhouettes and an ambiguous History dinosaur before persistence.
+
+Source-review authority:
+
+```text
+docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/SOURCE_REVIEW.md
+```
+
+The five section pages are source-wired through the existing bounded `VisualLibrary`. Missing E3 generated PNGs deliberately fall back to the prior procedural scene. Space preserves its live orbital teaching model regardless of backdrop.
+
+Build groups now exist for `golden`, `sections`, or `all`. The source contract forbids a partial E3 runtime pack: section art may be 0/5 during staged source work or 5/5 when generated.
 
 Current Encyclopedia continuation authority:
 
 ```text
 encyclopedia/HANDOVER.md
-docs/reviews/visual/2026-08-29_encyclopedia_owner_direct_repairs/REVIEW.md
+docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md
+docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/SOURCE_REVIEW.md
 docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md
 ```
+
+No local-agent visual-authoring task is currently authorized; the owner asked the primary agent to perform this work directly.
 
 ### Narration
 
@@ -276,35 +294,25 @@ Resume with the R7.1 tranche defined in:
 docs/reviews/2026-08-29_R7_ACTIVITY_BACKEND_INDEPENDENCE_AND_DISPLAY_SESSION_REVIEW.md
 ```
 
-Exact next sequence:
-
-1. add/enforce the Activity backend-independence validator and contributor contract;
-2. run a repository-wide first-party Activity scan and classify backend/trusted-chrome/raw-input findings;
-3. capture physical performance baselines for Writing, Painting, one dirty-render/static Activity, one animated Activity, launch/return and idle before changing those paths;
-4. harden the existing `DisplaySessionBackend` seam with Legacy X as the reference implementation, moving generic-launcher X-specific behavior behind it **without adding frame proxying/copies or high-rate input IPC**;
-5. implement trusted system chrome/input for the current Xorg session through the existing `SystemChromeCoordinator` boundary, keeping it bounded/event-driven rather than a continuous full-screen compositing cost;
-6. migrate Writing/Painting first, then reference-canvas exemplars, then capability-rich Activities, then the remaining catalogue, preserving each Activity's accepted performance optimizations;
-7. only after the contract and baseline performance are proven on Legacy X, implement/prototype Wayland behind the same contract and compare on real Acer/Pi hardware.
-
-Do not begin by replacing Xorg. First make the rest of Greia genuinely independent of it, and do not trade away measured performance merely to make the abstraction look cleaner.
+Exact next sequence remains owned by that review/active architecture plan. Do not let the visual lane reorder R7.
 
 ### Current Encyclopedia visual lane
 
-Continue **direct owner/primary-agent source-art repair** of the rejected golden masters. Do not delegate another visual-authoring pass and do not start E3/E4.
+Do **not** begin E4.
 
-Current sequence:
+Next exact visual gate:
 
 ```text
-inspect corrected Home / Animals / Lion / Gears source renders
-→ make only obvious targeted corrections
-→ when source art is worth runtime review, rebuild canonical PNG pack
-→ build --check
-→ focused tests / required local verification
-→ fresh final-SHA real Greia Simulator capture
-→ owner review
+build corrected six golden-master PNGs + five E3 section PNGs
+→ verify all 11 current SVG/PNG renditions
+→ focused Encyclopedia tests + required repository verification
+→ commit/push the complete current runtime-art state
+→ fresh exact-SHA real Greia Simulator
+→ review Home + all six section pages as one family
+→ if accepted, close E3 and unblock E4
 ```
 
-No broad 43-page visual recapture before the corrected golden-master direction is explicitly accepted.
+`docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md` remains HOLD unless the owner explicitly changes the direct-work instruction.
 
 ---
 
